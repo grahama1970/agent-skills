@@ -105,6 +105,8 @@ services:
       RELAYFORGE_PORT: "8080"
     networks:
       - relayforge-internal
+    volumes:
+      - relayforge-state:/var/lib/relayforge/state
 
   judge-probe:
     <<: *relayforge-service

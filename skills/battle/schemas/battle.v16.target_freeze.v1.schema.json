@@ -124,7 +124,7 @@
     },
     "blockers": {
       "type": "array",
-      "minItems": 5,
+      "minItems": 2,
       "uniqueItems": true,
       "items": {
         "type": "string",

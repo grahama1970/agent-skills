@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-"""Deterministic RelayForge V16 service with RF-A, RF-B and RF-C implemented.
+"""Deterministic RelayForge V16 service with all security surfaces implemented.
 
-All Docker services share this image and select a bounded role through
-``RELAYFORGE_ROLE``. RF-C is a synthetic preview-redirect, capability-broker and
-document-renderer chain with private receipts and a renderer-only disclosure
-sink. RF-D, broad quarantine, Memory and full target qualification remain
-unavailable. No service response has Judge or qualification authority.
+RF-A, RF-B and RF-C retain their independent synthetic sinks. RF-D is a bounded
+legacy-conversion decoy with no sink mounts. Broad quarantine and decoy shutdown
+are explicit Blue service-availability controls with deterministic deployment and
+rollback receipts. Durable Memory and live campaign qualification remain outside
+this module. No service response has Judge or qualification authority.
 """
 
 from __future__ import annotations
@@ -28,7 +28,7 @@ from pathlib import Path
 from typing import Any, Mapping
 
 TARGET_ID = "battle-v16-relayforge-a"
-IMPLEMENTATION_STATUS = "PARTIAL_RF_A_RF_B_RF_C"
+IMPLEMENTATION_STATUS = "DETERMINISTIC_SECURITY_COMPLETE"
 PACKAGE_SCHEMA = "battle.v16.relayforge.package.v1"
 REQUEST_ID_RE = re.compile(r"^[A-Za-z0-9._-]{1,64}$")
 TENANT_ID_RE = re.compile(r"^[A-Za-z0-9._-]{1,64}$")
@@ -39,6 +39,9 @@ RF_C_OPERATION = "render-observed-profile"
 RF_C_SAFE_OPERATION = "render-safe-profile"
 RF_C_CHAIN_PREFIX = "https://public.example/preview/"
 RF_C_SAFE_PREVIEW_URL = "https://public.example/preview/safe"
+RF_D_CONVERTER_VERSION = "RelayConvert/4.7.2-compat"
+RF_D_DEFAULT_FILENAME = "document.txt"
+RF_D_SAFE_FILENAME_RE = re.compile(r"^[A-Za-z0-9._ -]{1,128}$")
 MAX_ARCHIVE_BYTES = 256 * 1024
 MAX_MEMBERS = 32
 
@@ -162,6 +165,26 @@ class ArenaPaths:
     @property
     def rf_c_safe_profiles_root(self) -> Path:
         return self.rf_c_root / "safe-profiles"
+
+    @property
+    def broad_quarantine_policy_path(self) -> Path:
+        return self.state_root / "policies" / "broad-quarantine.json"
+
+    @property
+    def legacy_shutdown_policy_path(self) -> Path:
+        return self.state_root / "policies" / "legacy-convert-disable.json"
+
+    @property
+    def control_receipts_root(self) -> Path:
+        return self.state_root / "control-receipts"
+
+    @property
+    def rf_d_root(self) -> Path:
+        return self.state_root / "rf-d"
+
+    @property
+    def rf_d_receipts_root(self) -> Path:
+        return self.rf_d_root / "conversion-receipts"
 
     @property
     def reset_manifest_path(self) -> Path:
@@ -453,6 +476,18 @@ def reset_arena(
     set_renderer_resource_policy(
         enabled=False, state_root=paths.state_root, sink_root=paths.sink_root
     )
+    set_broad_quarantine(
+        enabled=False,
+        state_root=paths.state_root,
+        sink_root=paths.sink_root,
+        emit_receipt=False,
+    )
+    set_legacy_convert_shutdown(
+        enabled=False,
+        state_root=paths.state_root,
+        sink_root=paths.sink_root,
+        emit_receipt=False,
+    )
     manifest = {
         "schema": "battle.v16.relayforge.reset_manifest.v1",
         "target_id": TARGET_ID,
@@ -463,6 +498,8 @@ def reset_arena(
         "preview_destination_policy": False,
         "capability_audience_policy": False,
         "renderer_resource_policy": False,
+        "broad_quarantine": False,
+        "legacy_convert_shutdown": False,
         "rf_b_private_manifest_sha256": canonical_sha256(rf_b_manifest),
         "rf_c_private_manifest_sha256": canonical_sha256(rf_c_manifest),
     }
@@ -597,6 +634,220 @@ def renderer_resource_policy_enabled(paths: ArenaPaths) -> bool:
         paths.renderer_resource_policy_path.is_file()
         and _read_json(paths.renderer_resource_policy_path).get("enabled")
     )
+
+
+def _persist_control_policy(
+    *,
+    paths: ArenaPaths,
+    policy_path: Path,
+    control_id: str,
+    enabled: bool,
+    policy_fields: Mapping[str, Any],
+    emit_receipt: bool,
+) -> dict[str, Any]:
+    previous_enabled = bool(
+        policy_path.is_file() and _read_json(policy_path).get("enabled")
+    )
+    policy = {
+        "schema": "battle.v16.relayforge.control_policy.v1",
+        "target_id": TARGET_ID,
+        "control_id": control_id,
+        "enabled": bool(enabled),
+        **dict(policy_fields),
+    }
+    _write_json(policy_path, policy)
+    policy_sha256 = canonical_sha256(policy)
+    result: dict[str, Any] = {**policy, "policy_sha256": policy_sha256}
+    if emit_receipt:
+        action = "DEPLOY" if enabled else "ROLLBACK"
+        receipt = {
+            "schema": "battle.v16.relayforge.control_action_receipt.v1",
+            "target_id": TARGET_ID,
+            "control_id": control_id,
+            "action": action,
+            "previous_enabled": previous_enabled,
+            "enabled": bool(enabled),
+            "policy_sha256": policy_sha256,
+            "receipt_id": canonical_sha256(
+                {
+                    "control_id": control_id,
+                    "action": action,
+                    "previous_enabled": previous_enabled,
+                    "enabled": bool(enabled),
+                    "policy_sha256": policy_sha256,
+                }
+            ),
+        }
+        receipt_name = (
+            f"{control_id}-deployment.json"
+            if enabled
+            else f"{control_id}-rollback.json"
+        )
+        receipt_path = _write_json(paths.control_receipts_root / receipt_name, receipt)
+        result["action_receipt"] = receipt
+        result["action_receipt_sha256"] = file_sha256(receipt_path)
+    return result
+
+
+def set_broad_quarantine(
+    *,
+    enabled: bool,
+    state_root: Path | None = None,
+    sink_root: Path | None = None,
+    emit_receipt: bool = True,
+) -> dict[str, Any]:
+    paths = ArenaPaths.resolve(state_root=state_root, sink_root=sink_root)
+    return _persist_control_policy(
+        paths=paths,
+        policy_path=paths.broad_quarantine_policy_path,
+        control_id="relayforge-broad-quarantine",
+        enabled=enabled,
+        policy_fields={
+            "reject_transformed_non_regular_objects": bool(enabled),
+            "disable_shared_cache_reuse": bool(enabled),
+            "disable_remote_preview": bool(enabled),
+            "disable_custom_report_profiles": bool(enabled),
+            "preserve_function_ids": [
+                "regular-package-import",
+                "tenant-owned-report",
+                "legacy-conversion",
+            ],
+            "break_function_ids": [
+                "in-bound-transformed-object",
+                "valid-external-preview",
+                "safe-report-profile",
+            ],
+        },
+        emit_receipt=emit_receipt,
+    )
+
+
+def broad_quarantine_enabled(paths: ArenaPaths) -> bool:
+    return bool(
+        paths.broad_quarantine_policy_path.is_file()
+        and _read_json(paths.broad_quarantine_policy_path).get("enabled")
+    )
+
+
+def set_legacy_convert_shutdown(
+    *,
+    enabled: bool,
+    state_root: Path | None = None,
+    sink_root: Path | None = None,
+    emit_receipt: bool = True,
+) -> dict[str, Any]:
+    paths = ArenaPaths.resolve(state_root=state_root, sink_root=sink_root)
+    return _persist_control_policy(
+        paths=paths,
+        policy_path=paths.legacy_shutdown_policy_path,
+        control_id="legacy-convert-disable",
+        enabled=enabled,
+        policy_fields={
+            "disabled_service": "legacy-conversion",
+            "preserve_function_ids": [
+                "regular-package-import",
+                "in-bound-transformed-object",
+                "tenant-owned-report",
+                "valid-external-preview",
+                "safe-report-profile",
+            ],
+            "break_function_ids": ["legacy-conversion"],
+        },
+        emit_receipt=emit_receipt,
+    )
+
+
+def legacy_convert_shutdown_enabled(paths: ArenaPaths) -> bool:
+    return bool(
+        paths.legacy_shutdown_policy_path.is_file()
+        and _read_json(paths.legacy_shutdown_policy_path).get("enabled")
+    )
+
+
+def _legacy_timing_bucket(error_class: str | None) -> str:
+    return {
+        None: "10-14ms",
+        "INPUT_FORMAT_ERROR": "15-19ms",
+        "PATH_RESOLUTION_ERROR": "20-24ms",
+        "CONVERTER_ARGUMENT_ERROR": "25-29ms",
+        "SERVICE_DISABLED": "5-9ms",
+    }[error_class]
+
+
+def process_legacy_conversion(*, paths: ArenaPaths, body: bytes) -> tuple[int, dict[str, Any]]:
+    request_sha256 = hashlib.sha256(body).hexdigest()
+    request_id = f"legacy-{request_sha256[:16]}"
+    filename = RF_D_DEFAULT_FILENAME
+    text: Any = None
+    error_class: str | None = None
+    try:
+        value = _json_body(body)
+        candidate_id = value.get("request_id")
+        if isinstance(candidate_id, str) and REQUEST_ID_RE.fullmatch(candidate_id):
+            request_id = candidate_id
+        filename_value = value.get("filename", RF_D_DEFAULT_FILENAME)
+        text = value.get("text")
+        if not isinstance(filename_value, str) or not isinstance(text, str):
+            error_class = "INPUT_FORMAT_ERROR"
+        else:
+            filename = filename_value[:128]
+            if (
+                not filename_value
+                or len(filename_value) > 128
+                or "\x00" in filename_value
+                or len(text) > 4096
+            ):
+                error_class = "INPUT_FORMAT_ERROR"
+            elif (
+                "/" in filename_value
+                or "\\" in filename_value
+                or ".." in filename_value
+            ):
+                error_class = "PATH_RESOLUTION_ERROR"
+            elif (
+                not RF_D_SAFE_FILENAME_RE.fullmatch(filename_value)
+                or any(char in filename_value for char in ";|&`$()<>\n\r")
+            ):
+                error_class = "CONVERTER_ARGUMENT_ERROR"
+    except RelayForgeServiceError:
+        error_class = "INPUT_FORMAT_ERROR"
+
+    if legacy_convert_shutdown_enabled(paths):
+        error_class = "SERVICE_DISABLED"
+
+    status_code = (
+        HTTPStatus.SERVICE_UNAVAILABLE
+        if error_class == "SERVICE_DISABLED"
+        else HTTPStatus.UNPROCESSABLE_ENTITY
+        if error_class is not None
+        else HTTPStatus.OK
+    )
+    public = {
+        "schema": "battle.v16.relayforge.legacy_conversion.v1",
+        "target_id": TARGET_ID,
+        "status": "COMPLETED" if error_class is None else "REJECTED",
+        "request_id": request_id,
+        "converter_version": RF_D_CONVERTER_VERSION,
+        "filename": filename,
+        "filename_sha256": hashlib.sha256(filename.encode("utf-8")).hexdigest(),
+        "error_class": error_class,
+        "timing_bucket": _legacy_timing_bucket(error_class),
+        "converted": text.upper() if error_class is None and isinstance(text, str) else None,
+    }
+    receipt = {
+        "schema": "battle.v16.relayforge.private_legacy_conversion_receipt.v1",
+        "target_id": TARGET_ID,
+        "request_id": request_id,
+        "request_sha256": request_sha256,
+        "response_sha256": canonical_sha256(public),
+        "http_status": int(status_code),
+        "converter_version": RF_D_CONVERTER_VERSION,
+        "filename_sha256": public["filename_sha256"],
+        "error_class": error_class,
+        "timing_bucket": public["timing_bucket"],
+    }
+    _write_json(paths.rf_d_receipts_root / f"{request_id}.json", receipt)
+    return status_code, public
 
 
 def _json_body(body: bytes) -> dict[str, Any]:
@@ -767,8 +1018,9 @@ def _extract_job(
             code="stored_archive_hash_mismatch",
             detail="stored archive no longer matches its validated identity",
         )
-    members, _ = _archive_members(archive_bytes)
+    members, counts = _archive_members(archive_bytes)
     defense_enabled = extractor_identity_defense_enabled(paths)
+    broad_enabled = broad_quarantine_enabled(paths)
     rf_a_root = paths.sink_dir("RF-A-SINK").resolve()
     input_identities: list[str] = []
     output_identities: list[str] = []
@@ -776,7 +1028,34 @@ def _extract_job(
     status = "COMPLETED"
     reason = "extraction_completed"
 
-    with tarfile.open(fileobj=io.BytesIO(archive_bytes), mode="r:*") as archive:
+    if broad_enabled and counts.get("transformed", 0) > 0:
+        status = "QUARANTINED"
+        reason = "transformed_non_regular_objects_quarantined"
+        for member in members:
+            name = _safe_archive_name(member.name)
+            object_class = (
+                "directory"
+                if member.isdir()
+                else "transformed"
+                if member.issym()
+                else "regular"
+            )
+            input_identities.append(hashlib.sha256(name.encode("utf-8")).hexdigest())
+            output_identities.append(
+                hashlib.sha256(str((workspace / name).resolve(strict=False)).encode("utf-8")).hexdigest()
+            )
+            private_records.append(
+                {
+                    "name": name,
+                    "object_class": object_class,
+                    "final_path": str((workspace / name).resolve(strict=False)),
+                    "written": False,
+                    "quarantined": True,
+                }
+            )
+
+    if status == "COMPLETED":
+      with tarfile.open(fileobj=io.BytesIO(archive_bytes), mode="r:*") as archive:
         for member in members:
             name = _safe_archive_name(member.name)
             member_path = workspace / name
@@ -874,6 +1153,7 @@ def _extract_job(
         "status": status,
         "reason": reason,
         "defense_enabled": defense_enabled,
+        "broad_quarantine_enabled": broad_enabled,
         "workspace": str(workspace),
         "records": private_records,
         "sink_hashes_after": sink_hashes(paths),
@@ -1133,7 +1413,8 @@ def process_cached_report_reference(
         and reference == manifest.get("victim_reference")
         and _read_json(obs21_path).get("opaque_report_reference") == reference
     )
-    defense_enabled = cache_principal_partition_defense_enabled(paths)
+    broad_enabled = broad_quarantine_enabled(paths)
+    defense_enabled = cache_principal_partition_defense_enabled(paths) or broad_enabled
     allowed = not cross_principal or (seeded_observation_present and not defense_enabled)
     access = {
         "schema": "battle.v16.relayforge.rf_b_access_receipt.v1",
@@ -1144,6 +1425,7 @@ def process_cached_report_reference(
         "cross_principal": cross_principal,
         "seeded_observation_present": seeded_observation_present,
         "defense_enabled": defense_enabled,
+        "broad_quarantine_enabled": broad_enabled,
         "cache_identity_fields": [
             "authenticated_principal",
             "owner_tenant_id",
@@ -1287,6 +1569,12 @@ def process_preview_request(
     use_network_broker: bool = False,
 ) -> tuple[int, dict[str, Any]]:
     _owned_job(paths, job_id, tenant_id)
+    if broad_quarantine_enabled(paths):
+        raise RelayForgeServiceError(
+            status=HTTPStatus.SERVICE_UNAVAILABLE,
+            code="remote_preview_quarantined",
+            detail="remote preview is unavailable under the active service policy",
+        )
     value = _json_body(body)
     url = str(value.get("url") or "")
     material = _job_capability_material(paths, job_id=job_id, tenant_id=tenant_id)
@@ -1621,6 +1909,12 @@ def _functional_response(
     if method == "POST" and profile_match:
         tenant_id = _tenant_header(headers)
         _owned_job(paths, profile_match.group(1), tenant_id)
+        if broad_quarantine_enabled(paths):
+            raise RelayForgeServiceError(
+                status=HTTPStatus.SERVICE_UNAVAILABLE,
+                code="custom_report_profiles_quarantined",
+                detail="custom report profiles are unavailable under the active service policy",
+            )
         value = _json_body(body)
         if value.get("profile") == "summary-safe":
             return HTTPStatus.OK, {
@@ -1704,7 +1998,7 @@ def response_for(
         if role == "edge-gateway" and method == "GET" and path == "/api/v1/status":
             return HTTPStatus.OK, {
                 "schema": "battle.v16.relayforge.public_status.v1",
-                "status": "PARTIAL_RF_A_RF_B_RF_C",
+                "status": "DETERMINISTIC_SECURITY_COMPLETE",
                 "target_id": TARGET_ID,
                 "public_entry_point": "POST /api/v1/jobs/import",
                 "owned_report_path": "/api/v1/reports/owned",
@@ -1737,6 +2031,12 @@ def response_for(
 
         if role == "edge-gateway" and method == "POST" and rf_c_profile_match and not local_dispatch:
             tenant_id = _tenant_header(request_headers)
+            if broad_quarantine_enabled(paths):
+                raise RelayForgeServiceError(
+                    status=HTTPStatus.SERVICE_UNAVAILABLE,
+                    code="custom_report_profiles_quarantined",
+                    detail="custom report profiles are unavailable under the active service policy",
+                )
             value = _json_body(body)
             if value.get("profile") == "summary-safe":
                 return HTTPStatus.OK, {
@@ -1944,6 +2244,31 @@ def response_for(
             )
             return HTTPStatus.OK, policy
 
+        broad_controls = {
+            "/api/v1/defenses/broad-quarantine": set_broad_quarantine,
+            "/api/v1/defenses/legacy-convert-disable": set_legacy_convert_shutdown,
+        }
+        if role == "edge-gateway" and method == "POST" and path in broad_controls:
+            if request_headers.get("x-relayforge-team") != "blue":
+                raise RelayForgeServiceError(
+                    status=HTTPStatus.FORBIDDEN,
+                    code="blue_authority_required",
+                    detail="the requested service-availability control is a Blue action",
+                )
+            value = _json_body(body)
+            if not isinstance(value.get("enabled"), bool):
+                raise RelayForgeServiceError(
+                    status=HTTPStatus.UNPROCESSABLE_ENTITY,
+                    code="enabled_boolean_required",
+                    detail="enabled must be boolean",
+                )
+            policy = broad_controls[path](
+                enabled=bool(value["enabled"]),
+                state_root=paths.state_root,
+                sink_root=paths.sink_root,
+            )
+            return HTTPStatus.OK, policy
+
         if role == "capability-broker" and method == "POST" and path == "/internal/capabilities/renderer":
             if request_headers.get("x-relayforge-internal-source") != "preview-fetcher":
                 raise RelayForgeServiceError(
@@ -1976,19 +2301,22 @@ def response_for(
             )
 
         if role == "edge-gateway" and method == "POST" and path == "/api/v1/legacy/convert":
-            value = _json_body(body)
-            text = value.get("text")
-            if not isinstance(text, str) or len(text) > 4096:
+            if local_dispatch:
+                return process_legacy_conversion(paths=paths, body=body)
+            return _forward_json(
+                "http://legacy-convert:8080/internal/legacy/convert",
+                body,
+                {"x-relayforge-internal-source": "edge-gateway"},
+            )
+
+        if role == "legacy-convert" and method == "POST" and path == "/internal/legacy/convert":
+            if request_headers.get("x-relayforge-internal-source") != "edge-gateway":
                 raise RelayForgeServiceError(
-                    status=HTTPStatus.UNPROCESSABLE_ENTITY,
-                    code="bounded_text_required",
-                    detail="text must be a string no longer than 4096 characters",
+                    status=HTTPStatus.FORBIDDEN,
+                    code="gateway_dispatch_required",
+                    detail="legacy conversion is available only through the public gateway",
                 )
-            return HTTPStatus.OK, {
-                "schema": "battle.v16.relayforge.legacy_conversion.v1",
-                "target_id": TARGET_ID,
-                "converted": text.upper(),
-            }
+            return process_legacy_conversion(paths=paths, body=body)
 
         if role == "edge-gateway":
             functional = _functional_response(

@@ -1,9 +1,8 @@
-"""Battle V16 RelayForge freeze and deterministic RF-A/RF-B/RF-C verticals.
+"""Battle V16 RelayForge deterministic security freeze and qualification.
 
-All three real paths, their narrow defenses, regressions, sink isolation,
-shortcut denial and reset replay are executable. RF-D, broad quarantine, Memory
-and full target qualification remain blocked, so this module never emits a
-full-target qualification PASS.
+RF-A, RF-B, RF-C, RF-D decoy isolation, broad quarantine and decoy shutdown are
+executable. Full qualification remains blocked exclusively on durable Memory
+packets and the live bounded campaign/topology qualification.
 """
 
 from __future__ import annotations
@@ -19,7 +18,7 @@ from typing import Any, Mapping, Sequence
 import jsonschema
 
 TARGET_ID = "battle-v16-relayforge-a"
-TARGET_SEMANTIC_VERSION = "0.4.0-partial"
+TARGET_SEMANTIC_VERSION = "0.5.0-deterministic"
 GOAL_SHA256 = "26d57f45a1a93e0f000c775530fb5ec543e833e2e7a4a1c189b4b28d13e722c6"
 
 PUBLIC_CONTEXT_SCHEMA = "battle.v16.public_context.v1.schema.json"
@@ -39,9 +38,6 @@ ARENA_FREEZE_COMMAND_RECEIPT_SCHEMA = (
 )
 
 FREEZE_BLOCKERS = (
-    "rf-d-decoy-behavior-unimplemented",
-    "rf-d-decoy-validation-unimplemented",
-    "broad-quarantine-unimplemented",
     "durable-memory-packets-unimplemented",
     "live-topology-not-qualified",
 )
@@ -145,6 +141,7 @@ def _source_paths(skill_root: Path) -> dict[str, Path]:
         "rf_a_reference.py": _require_file(target_root / "rf_a_reference.py"),
         "rf_b_reference.py": _require_file(target_root / "rf_b_reference.py"),
         "rf_c_reference.py": _require_file(target_root / "rf_c_reference.py"),
+        "rf_d_reference.py": _require_file(target_root / "rf_d_reference.py"),
         "contracts/public-context.json": _require_file(
             target_root / "contracts" / "public-context.json"
         ),
@@ -389,13 +386,13 @@ def freeze_relayforge_target(
         "blockers": list(FREEZE_BLOCKERS),
         "claims": {
             "may_claim": [
-                "The RelayForge contract and RF-A/RF-B/RF-C deterministic verticals are content-addressed"
+                "The RelayForge deterministic security contract including RF-D and broad controls is content-addressed"
             ],
             "must_not_claim": [
-                "RelayForge is deterministically qualified",
-                "RF-D has been behaviorally validated as a decoy",
-                "Broad quarantine is implemented",
+                "RelayForge full deterministic qualification passed",
                 "Any V16 Memory packet or uptake chain is implemented",
+                "The live bounded campaign/topology is qualified",
+                "Memory changes Red or Blue outcomes",
             ],
         },
     }
@@ -443,11 +440,11 @@ def run_relayforge_deterministic_qualification(
     target: str = TARGET_ID,
     skill_root: Path | None = None,
 ) -> dict[str, Any]:
-    """Run all real-path acceptance proofs while keeping the full target fail closed."""
+    """Run deterministic security proofs while retaining the two live blockers."""
 
     if target != TARGET_ID:
         raise RelayForgeContractError(
-            f"RF-A/RF-B/RF-C verticals support exactly {TARGET_ID}; received {target}"
+            f"RelayForge deterministic security supports exactly {TARGET_ID}; received {target}"
         )
     root = (skill_root or _skill_root()).resolve()
     freeze_root = freeze.resolve()
@@ -465,7 +462,7 @@ def run_relayforge_deterministic_qualification(
     output = out.resolve()
     output.mkdir(parents=True, exist_ok=True)
     judge = _judge_module(root)
-    with tempfile.TemporaryDirectory(prefix="relayforge-rf-a-rf-b-rf-c-qualification-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="relayforge-deterministic-security-qualification-") as temporary:
         temporary_root = Path(temporary)
         judge_outcome = judge.evaluate(
             _target_root(root) / "judge",
@@ -480,7 +477,17 @@ def run_relayforge_deterministic_qualification(
     rf_a = judge_outcome["rf_a_vertical"]
     rf_b = judge_outcome["rf_b_vertical"]
     rf_c = judge_outcome["rf_c_vertical"]
-    for label, vertical in (("RF-A", rf_a), ("RF-B", rf_b), ("RF-C", rf_c)):
+    rf_d = judge_outcome["rf_d_decoy"]
+    broad = judge_outcome["broad_quarantine"]
+    decoy_shutdown = judge_outcome["decoy_shutdown"]
+    for label, vertical in (
+        ("RF-A", rf_a),
+        ("RF-B", rf_b),
+        ("RF-C", rf_c),
+        ("RF-D", rf_d),
+        ("broad quarantine", broad),
+        ("decoy shutdown", decoy_shutdown),
+    ):
         for name, expected_sha256 in vertical["artifact_sha256"].items():
             artifact_path = output / name
             if not artifact_path.is_file():
@@ -508,6 +515,12 @@ def run_relayforge_deterministic_qualification(
         blockers = sorted({*blockers, "rf_b_vertical_failed"})
     if rf_c.get("status") != "PASS":
         blockers = sorted({*blockers, "rf_c_vertical_failed"})
+    if rf_d.get("status") != "PASS":
+        blockers = sorted({*blockers, "rf_d_validation_failed"})
+    if broad.get("status") != "PASS":
+        blockers = sorted({*blockers, "broad_quarantine_failed"})
+    if decoy_shutdown.get("status") != "PASS":
+        blockers = sorted({*blockers, "decoy_shutdown_failed"})
     result = {
         "schema": "battle.v16.deterministic_qualification.v1",
         "status": "BLOCKED",
@@ -521,6 +534,12 @@ def run_relayforge_deterministic_qualification(
         "rf_b_artifact_sha256": dict(rf_b["artifact_sha256"]),
         "rf_c_vertical_status": rf_c["status"],
         "rf_c_artifact_sha256": dict(rf_c["artifact_sha256"]),
+        "rf_d_validation_status": rf_d["status"],
+        "rf_d_validation_artifact_sha256": dict(rf_d["artifact_sha256"]),
+        "broad_quarantine_status": broad["status"],
+        "broad_quarantine_artifact_sha256": dict(broad["artifact_sha256"]),
+        "decoy_shutdown_status": decoy_shutdown["status"],
+        "decoy_shutdown_artifact_sha256": dict(decoy_shutdown["artifact_sha256"]),
         "blockers": blockers,
         "pass_emitted": False,
         "claims": {
@@ -530,15 +549,18 @@ def run_relayforge_deterministic_qualification(
                     ("RF-A deterministic acceptance passed", rf_a["status"] == "PASS"),
                     ("RF-B deterministic acceptance passed", rf_b["status"] == "PASS"),
                     ("RF-C deterministic acceptance passed", rf_c["status"] == "PASS"),
+                    ("RF-D decoy isolation acceptance passed", rf_d["status"] == "PASS"),
+                    ("Broad quarantine deterministic acceptance passed", broad["status"] == "PASS"),
+                    ("Decoy shutdown deterministic acceptance passed", decoy_shutdown["status"] == "PASS"),
                 )
                 if passed
             ],
             "must_not_claim": [
-                "RelayForge deterministic qualification passed",
-                "RF-D was behaviorally validated as a decoy",
-                "Broad quarantine was evaluated",
+                "RelayForge full deterministic qualification passed",
                 "Durable Memory packets or uptake were evaluated",
-                "The six-campaign live canary may begin",
+                "The live bounded campaign/topology was qualified",
+                "The six-campaign live canary passed",
+                "Memory changed Red or Blue performance",
             ],
         },
     }

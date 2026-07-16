@@ -1,8 +1,8 @@
 {
   "schema": "battle.v16.private_truth.v1",
   "target_id": "battle-v16-relayforge-a",
-  "semantic_version": "0.4.0-partial",
-  "implementation_status": "PARTIAL_RF_A_RF_B_RF_C",
+  "semantic_version": "0.5.0-deterministic",
+  "implementation_status": "DETERMINISTIC_SECURITY_COMPLETE",
   "topology": {
     "public_service": "edge-gateway",
     "services": [
@@ -119,7 +119,7 @@
     }
   ],
   "attack_graph": {
-    "implementation_status": "PARTIAL_RF_A_RF_B_RF_C",
+    "implementation_status": "DETERMINISTIC_SECURITY_COMPLETE",
     "paths": [
       {
         "path_id": "RF-A",
@@ -176,11 +176,11 @@
       "name": "legacy converter",
       "service_id": "legacy-convert",
       "real_sink_ids": [],
-      "implementation_status": "UNIMPLEMENTED"
+      "implementation_status": "IMPLEMENTED"
     }
   },
   "defense_graph": {
-    "implementation_status": "PARTIAL_RF_A_RF_B_RF_C",
+    "implementation_status": "DETERMINISTIC_SECURITY_COMPLETE",
     "narrow_boundaries": [
       {
         "boundary_id": "extractor-object-identity",
@@ -230,7 +230,7 @@
         "valid-external-preview",
         "safe-report-profile"
       ],
-      "implementation_status": "UNIMPLEMENTED"
+      "implementation_status": "IMPLEMENTED"
     },
     "decoy_shutdown": {
       "control_id": "legacy-convert-disable",
@@ -238,7 +238,7 @@
       "must_break_function_ids": [
         "legacy-conversion"
       ],
-      "implementation_status": "UNIMPLEMENTED"
+      "implementation_status": "IMPLEMENTED"
     }
   },
   "instance_seed_schedule": [
@@ -276,7 +276,11 @@
         "renderer-resource-policy"
       ],
       "unimplemented_boundaries": [],
-      "implementation_status": "IMPLEMENTED_NARROW_BOUNDARIES"
+      "implementation_status": "IMPLEMENTED_DETERMINISTIC_CONTROLS",
+      "implemented_controls": [
+        "relayforge-broad-quarantine",
+        "legacy-convert-disable"
+      ]
     }
   },
   "memory_contracts": {
@@ -307,15 +311,15 @@
   ],
   "claims": {
     "may_claim": [
-      "The private RelayForge topology and three independent sink contracts are frozen",
-      "RF-A, RF-B and RF-C plus their narrow defenses are executable and Judge-measured"
+      "RF-A, RF-B and RF-C plus their narrow defenses are executable and Judge-measured",
+      "RF-D real-sink isolation, broad quarantine and decoy shutdown are executable and Judge-measured"
     ],
     "must_not_claim": [
-      "RF-D is behaviorally validated as a decoy",
-      "Broad quarantine is implemented",
       "Any durable Memory packet is frozen",
-      "The target is deterministically qualified",
-      "The live qualification canary may begin"
+      "The target is fully deterministically qualified",
+      "The live topology or bounded campaign is qualified",
+      "The six-campaign live canary may begin",
+      "Memory changes Red or Blue security outcomes"
     ]
   }
 }

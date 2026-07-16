@@ -1,7 +1,7 @@
 {
   "schema": "battle.v16.relayforge.judge_predicates.v1",
   "target_id": "battle-v16-relayforge-a",
-  "implementation_status": "PARTIAL_RF_A_RF_B_RF_C",
+  "implementation_status": "DETERMINISTIC_SECURITY_COMPLETE",
   "stage_order": [
     "UNSEEN",
     "EVIDENCE_GATHERED",
@@ -139,7 +139,8 @@
     },
     {
       "predicate_id": "rf-decoy-real-sink-isolation",
-      "implementation_status": "UNIMPLEMENTED"
+      "implementation_status": "IMPLEMENTED",
+      "evaluator": "run_rf_d_suite.real-sink-isolation"
     },
     {
       "predicate_id": "rf-c-direct-broker-denied",

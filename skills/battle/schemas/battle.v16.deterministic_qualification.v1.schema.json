@@ -101,6 +101,45 @@
       "additionalProperties": {
         "$ref": "#/$defs/sha256"
       }
+    },
+    "rf_d_validation_status": {
+      "enum": [
+        "PASS",
+        "FAIL"
+      ]
+    },
+    "rf_d_validation_artifact_sha256": {
+      "type": "object",
+      "minProperties": 2,
+      "additionalProperties": {
+        "$ref": "#/$defs/sha256"
+      }
+    },
+    "broad_quarantine_status": {
+      "enum": [
+        "PASS",
+        "FAIL"
+      ]
+    },
+    "broad_quarantine_artifact_sha256": {
+      "type": "object",
+      "minProperties": 2,
+      "additionalProperties": {
+        "$ref": "#/$defs/sha256"
+      }
+    },
+    "decoy_shutdown_status": {
+      "enum": [
+        "PASS",
+        "FAIL"
+      ]
+    },
+    "decoy_shutdown_artifact_sha256": {
+      "type": "object",
+      "minProperties": 2,
+      "additionalProperties": {
+        "$ref": "#/$defs/sha256"
+      }
     }
   },
   "required": [
@@ -116,6 +155,12 @@
     "rf_b_artifact_sha256",
     "rf_c_vertical_status",
     "rf_c_artifact_sha256",
+    "rf_d_validation_status",
+    "rf_d_validation_artifact_sha256",
+    "broad_quarantine_status",
+    "broad_quarantine_artifact_sha256",
+    "decoy_shutdown_status",
+    "decoy_shutdown_artifact_sha256",
     "blockers",
     "pass_emitted",
     "claims"

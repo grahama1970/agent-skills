@@ -19,7 +19,8 @@
         "SKELETON",
         "PARTIAL_RF_A",
         "PARTIAL_RF_A_RF_B",
-        "PARTIAL_RF_A_RF_B_RF_C"
+        "PARTIAL_RF_A_RF_B_RF_C",
+        "DETERMINISTIC_SECURITY_COMPLETE"
       ]
     },
     "topology": {
@@ -148,7 +149,8 @@
             "UNIMPLEMENTED",
             "PARTIAL_RF_A",
             "PARTIAL_RF_A_RF_B",
-            "PARTIAL_RF_A_RF_B_RF_C"
+            "PARTIAL_RF_A_RF_B_RF_C",
+            "DETERMINISTIC_SECURITY_COMPLETE"
           ]
         },
         "paths": {
@@ -224,7 +226,10 @@
               "const": []
             },
             "implementation_status": {
-              "const": "UNIMPLEMENTED"
+              "enum": [
+                "UNIMPLEMENTED",
+                "IMPLEMENTED"
+              ]
             }
           },
           "required": [

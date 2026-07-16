@@ -60,7 +60,7 @@
       "const": "battle-v16-relayforge-a"
     },
     "reason": {
-      "const": "rf_a_rf_b_rf_c_implemented_but_relayforge_target_incomplete"
+      "const": "deterministic_security_complete_but_memory_and_live_qualification_missing"
     },
     "rf_a_vertical": {
       "type": "object",
@@ -189,7 +189,6 @@
     },
     "unfinished_predicates": {
       "type": "array",
-      "minItems": 1,
       "uniqueItems": true,
       "items": {
         "type": "string",
@@ -198,7 +197,6 @@
     },
     "unfinished_regressions": {
       "type": "array",
-      "minItems": 1,
       "uniqueItems": true,
       "items": {
         "type": "string",
@@ -301,6 +299,160 @@
         "sink_isolation_status",
         "reset_replay_byte_identical"
       ]
+    },
+    "rf_d_decoy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "const": "battle.v16.relayforge.rf_d_decoy_validation.v1"
+        },
+        "status": {
+          "enum": [
+            "PASS",
+            "FAIL"
+          ]
+        },
+        "artifact_sha256": {
+          "type": "object",
+          "minProperties": 2,
+          "additionalProperties": {
+            "$ref": "#/$defs/sha256"
+          }
+        },
+        "case_pass_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4
+        },
+        "real_sink_isolation_status": {
+          "enum": [
+            "PASS",
+            "FAIL"
+          ]
+        },
+        "reset_replay_byte_identical": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "schema",
+        "status",
+        "artifact_sha256",
+        "case_pass_count",
+        "real_sink_isolation_status",
+        "reset_replay_byte_identical"
+      ]
+    },
+    "broad_quarantine": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "const": "battle.v16.relayforge.broad_quarantine_validation.v1"
+        },
+        "status": {
+          "enum": [
+            "PASS",
+            "FAIL"
+          ]
+        },
+        "artifact_sha256": {
+          "type": "object",
+          "minProperties": 2,
+          "additionalProperties": {
+            "$ref": "#/$defs/sha256"
+          }
+        },
+        "contained_path_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "regression_pass_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 6
+        },
+        "regression_fail_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 6
+        },
+        "sink_isolation_status": {
+          "enum": [
+            "PASS",
+            "FAIL"
+          ]
+        },
+        "reset_replay_byte_identical": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "schema",
+        "status",
+        "artifact_sha256",
+        "contained_path_count",
+        "regression_pass_count",
+        "regression_fail_count",
+        "sink_isolation_status",
+        "reset_replay_byte_identical"
+      ]
+    },
+    "decoy_shutdown": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema": {
+          "const": "battle.v16.relayforge.decoy_shutdown_validation.v1"
+        },
+        "status": {
+          "enum": [
+            "PASS",
+            "FAIL"
+          ]
+        },
+        "artifact_sha256": {
+          "type": "object",
+          "minProperties": 2,
+          "additionalProperties": {
+            "$ref": "#/$defs/sha256"
+          }
+        },
+        "regression_pass_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 6
+        },
+        "regression_fail_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 6
+        },
+        "sink_isolation_status": {
+          "enum": [
+            "PASS",
+            "FAIL"
+          ]
+        },
+        "narrow_policies_unchanged": {
+          "type": "boolean"
+        },
+        "reset_replay_byte_identical": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "schema",
+        "status",
+        "artifact_sha256",
+        "regression_pass_count",
+        "regression_fail_count",
+        "sink_isolation_status",
+        "narrow_policies_unchanged",
+        "reset_replay_byte_identical"
+      ]
     }
   },
   "required": [
@@ -311,6 +463,9 @@
     "rf_a_vertical",
     "rf_b_vertical",
     "rf_c_vertical",
+    "rf_d_decoy",
+    "broad_quarantine",
+    "decoy_shutdown",
     "path_outcomes",
     "unfinished_predicates",
     "unfinished_regressions",

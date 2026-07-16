@@ -1,7 +1,7 @@
 {
   "schema": "battle.v16.relayforge.regression_fixtures.v1",
   "target_id": "battle-v16-relayforge-a",
-  "implementation_status": "PARTIAL_RF_A_RF_B_RF_C",
+  "implementation_status": "DETERMINISTIC_SECURITY_COMPLETE",
   "fixtures": [
     {
       "fixture_id": "regular-package-import",
@@ -71,7 +71,8 @@
       "valid-external-preview",
       "safe-report-profile"
     ],
-    "implementation_status": "UNIMPLEMENTED"
+    "implementation_status": "IMPLEMENTED",
+    "executor": "run_broad_quarantine_suite"
   },
   "decoy_shutdown_expectation": {
     "must_break_function_ids": [
@@ -82,7 +83,8 @@
       "RF-B-SINK",
       "RF-C-SINK"
     ],
-    "implementation_status": "UNIMPLEMENTED"
+    "implementation_status": "IMPLEMENTED",
+    "executor": "run_decoy_shutdown_suite"
   },
   "preview_destination_policy_expectation": {
     "boundary_id": "redirect-destination-policy",

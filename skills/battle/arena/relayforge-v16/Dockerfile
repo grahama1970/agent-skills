@@ -6,6 +6,7 @@ COPY service.py /opt/relayforge/service.py
 COPY rf_a_reference.py /opt/relayforge/rf_a_reference.py
 COPY rf_b_reference.py /opt/relayforge/rf_b_reference.py
 COPY rf_c_reference.py /opt/relayforge/rf_c_reference.py
+COPY rf_d_reference.py /opt/relayforge/rf_d_reference.py
 COPY judge /opt/relayforge/judge
 
 RUN mkdir -p \

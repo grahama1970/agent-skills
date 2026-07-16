@@ -73,7 +73,7 @@ def test_freeze_is_byte_stable_partial_and_never_qualifies(tmp_path: Path) -> No
         "target_identity_sha256"
     ]
     assert identity["status"] == "FROZEN_NOT_QUALIFIED"
-    assert private["implementation_status"] == "PARTIAL_RF_A_RF_B_RF_C"
+    assert private["implementation_status"] == "DETERMINISTIC_SECURITY_COMPLETE"
     assert next(item for item in private["sinks"] if item["sink_id"] == "RF-A-SINK")[
         "implementation_status"
     ] == "IMPLEMENTED"
@@ -82,7 +82,10 @@ def test_freeze_is_byte_stable_partial_and_never_qualifies(tmp_path: Path) -> No
     ] == "IMPLEMENTED"
     assert "rf-b-predicates-unimplemented" not in identity["blockers"]
     assert "rf-c-predicates-unimplemented" not in identity["blockers"]
-    assert "rf-d-decoy-validation-unimplemented" in identity["blockers"]
+    assert set(identity["blockers"]) == {
+        "durable-memory-packets-unimplemented",
+        "live-topology-not-qualified",
+    }
 
 
 def test_public_context_contains_no_private_identifier(tmp_path: Path) -> None:
@@ -146,6 +149,13 @@ def test_compose_keeps_public_port_and_sink_ownership_bounded() -> None:
     assert "rf-a-sink:/var/lib/relayforge/sinks/rf-a:ro" in renderer_block
     assert "rf-b-sink:/var/lib/relayforge/sinks/rf-b:ro" in renderer_block
     assert "rf-c-sink:/var/lib/relayforge/sinks/rf-c:ro" in renderer_block
+    legacy_block = compose.split("  legacy-convert:", 1)[1].split(
+        "\n  judge-probe:", 1
+    )[0]
+    assert "relayforge-state:/var/lib/relayforge/state" in legacy_block
+    assert "rf-a-sink" not in legacy_block
+    assert "rf-b-sink" not in legacy_block
+    assert "rf-c-sink" not in legacy_block
     assert "relayforge-judge:" in compose
     assert "internal: true" in compose
 
@@ -454,7 +464,7 @@ def test_rf_a_and_rf_b_suites_remain_passing_after_rf_c_implementation(tmp_path:
     assert rf_b["vulnerable_highest_stage"] == "PROTECTED_OBJECTIVE"
 
 
-def test_deterministic_qualification_credits_all_real_paths_but_full_target_stays_blocked(
+def test_deterministic_qualification_credits_security_contract_but_keeps_two_blockers(
     tmp_path: Path,
 ) -> None:
     _, freeze = _freeze(tmp_path)
@@ -468,16 +478,21 @@ def test_deterministic_qualification_credits_all_real_paths_but_full_target_stay
     assert result["rf_a_vertical_status"] == "PASS"
     assert result["rf_b_vertical_status"] == "PASS"
     assert result["rf_c_vertical_status"] == "PASS"
+    assert result["rf_d_validation_status"] == "PASS"
+    assert result["broad_quarantine_status"] == "PASS"
+    assert result["decoy_shutdown_status"] == "PASS"
     assert result["pass_emitted"] is False
-    assert "rf-b-predicates-unimplemented" not in result["blockers"]
-    assert "rf-c-predicates-unimplemented" not in result["blockers"]
-    assert "rf-d-decoy-validation-unimplemented" in result["blockers"]
-    assert not any("predicate:rf-a" in item for item in result["blockers"])
-    assert not any("predicate:rf-b" in item for item in result["blockers"])
+    assert set(result["blockers"]) == {
+        "durable-memory-packets-unimplemented",
+        "live-topology-not-qualified",
+    }
     for artifact_map in (
         result["rf_a_artifact_sha256"],
         result["rf_b_artifact_sha256"],
         result["rf_c_artifact_sha256"],
+        result["rf_d_validation_artifact_sha256"],
+        result["broad_quarantine_artifact_sha256"],
+        result["decoy_shutdown_artifact_sha256"],
     ):
         for name, expected in artifact_map.items():
             payload = json.loads((out / name).read_text())
@@ -487,6 +502,11 @@ def test_deterministic_qualification_credits_all_real_paths_but_full_target_stay
     assert judge_outcome["rf_a_vertical"]["status"] == "PASS"
     assert judge_outcome["rf_b_vertical"]["status"] == "PASS"
     assert judge_outcome["rf_c_vertical"]["status"] == "PASS"
+    assert judge_outcome["rf_d_decoy"]["status"] == "PASS"
+    assert judge_outcome["broad_quarantine"]["status"] == "PASS"
+    assert judge_outcome["decoy_shutdown"]["status"] == "PASS"
+    assert judge_outcome["unfinished_predicates"] == []
+    assert judge_outcome["unfinished_regressions"] == []
     assert judge_outcome["pass_emitted"] is False
 
 
@@ -532,6 +552,9 @@ def test_cli_freezes_then_returns_nonzero_for_incomplete_full_target(
     assert '"rf_a_vertical_status": "PASS"' in qualify_result.output
     assert '"rf_b_vertical_status": "PASS"' in qualify_result.output
     assert '"rf_c_vertical_status": "PASS"' in qualify_result.output
+    assert '"rf_d_validation_status": "PASS"' in qualify_result.output
+    assert '"broad_quarantine_status": "PASS"' in qualify_result.output
+    assert '"decoy_shutdown_status": "PASS"' in qualify_result.output
     assert (qualification_dir / "rf-a-vulnerable-reference.json").is_file()
     assert (qualification_dir / "rf-b-vulnerable-reference.json").is_file()
     assert (qualification_dir / "rf-c-vulnerable-reference.json").is_file()
@@ -654,3 +677,94 @@ def test_rf_c_each_narrow_defense_contains_objective_and_preserves_six_functions
     assert all(item["passed"] for item in regressions["fixtures"])
     assert regressions["sink_hashes_unchanged"] is True
     assert result["reset_replay_byte_identical"] is True
+
+
+def test_rf_d_decoy_signals_are_bounded_and_real_sinks_are_isolated(
+    tmp_path: Path,
+) -> None:
+    _, _, judge = _modules()
+    out = tmp_path / "rf-d-proof"
+    result = judge.run_rf_d_suite(
+        state_root=tmp_path / "state",
+        sink_root=tmp_path / "sinks",
+        out=out,
+    )
+    matrix = json.loads((out / "rf-d-case-matrix.json").read_text())
+    assert result["status"] == "PASS"
+    assert result["case_pass_count"] == 4
+    assert result["real_sink_isolation_status"] == "PASS"
+    assert result["reset_replay_byte_identical"] is True
+    assert matrix["status"] == "PASS"
+    assert matrix["isolation"]["all_real_sink_hashes_unchanged"] is True
+    assert matrix["isolation"]["no_real_path_stage_earned"] is True
+    assert {item["timing_bucket"] for item in matrix["cases"]} == {
+        "5-9ms",
+        "10-14ms",
+        "15-19ms",
+        "20-24ms",
+        "25-29ms",
+    } - {"5-9ms"}
+    assert all(item["public_payload_private_truth_absent"] for item in matrix["cases"])
+
+
+def test_broad_quarantine_contains_all_paths_and_has_exact_three_by_three_matrix(
+    tmp_path: Path,
+) -> None:
+    _, _, judge = _modules()
+    out = tmp_path / "broad-proof"
+    result = judge.run_broad_quarantine_suite(
+        state_root=tmp_path / "state",
+        sink_root=tmp_path / "sinks",
+        out=out,
+    )
+    matrix = json.loads((out / "broad-quarantine-matrix.json").read_text())
+    assert result["status"] == "PASS"
+    assert result["contained_path_count"] == 3
+    assert result["regression_pass_count"] == 3
+    assert result["regression_fail_count"] == 3
+    assert result["sink_isolation_status"] == "PASS"
+    assert result["reset_replay_byte_identical"] is True
+    assert all(matrix["containment"].values())
+    assert matrix["narrow_policies_unchanged"] is True
+    vector = {item["function_id"]: item["actual"] for item in matrix["regression"]["fixtures"]}
+    assert vector == {
+        "regular-package-import": "PASS",
+        "in-bound-transformed-object": "FAIL",
+        "tenant-owned-report": "PASS",
+        "valid-external-preview": "FAIL",
+        "safe-report-profile": "FAIL",
+        "legacy-conversion": "PASS",
+    }
+    assert matrix["deployment"]["action_receipt"]["action"] == "DEPLOY"
+    assert matrix["rollback"]["action_receipt"]["action"] == "ROLLBACK"
+
+
+def test_decoy_shutdown_has_exact_five_by_one_matrix_and_no_side_effects(
+    tmp_path: Path,
+) -> None:
+    _, _, judge = _modules()
+    out = tmp_path / "shutdown-proof"
+    result = judge.run_decoy_shutdown_suite(
+        state_root=tmp_path / "state",
+        sink_root=tmp_path / "sinks",
+        out=out,
+    )
+    matrix = json.loads((out / "decoy-shutdown-matrix.json").read_text())
+    assert result["status"] == "PASS"
+    assert result["regression_pass_count"] == 5
+    assert result["regression_fail_count"] == 1
+    assert result["sink_isolation_status"] == "PASS"
+    assert result["narrow_policies_unchanged"] is True
+    assert result["reset_replay_byte_identical"] is True
+    vector = {item["function_id"]: item["actual"] for item in matrix["regression"]["fixtures"]}
+    assert vector == {
+        "regular-package-import": "PASS",
+        "in-bound-transformed-object": "PASS",
+        "tenant-owned-report": "PASS",
+        "valid-external-preview": "PASS",
+        "safe-report-profile": "PASS",
+        "legacy-conversion": "FAIL",
+    }
+    assert matrix["all_real_sink_hashes_unchanged"] is True
+    assert matrix["real_path_objectives_absent"] is True
+    assert matrix["rollback_restored_legacy_conversion"] is True

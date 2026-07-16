@@ -4,15 +4,42 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "schema": {"const": "battle.v16.arena_freeze_command_receipt.v1"},
-    "status": {"const": "CONTRACT_FROZEN"},
-    "target_id": {"const": "battle-v16-relayforge-a"},
-    "target_identity_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
-    "target_identity_path": {"type": "string", "minLength": 1},
-    "freeze_manifest_path": {"type": "string", "minLength": 1},
-    "qualification_eligible": {"const": false},
-    "blockers": {"type": "array", "minItems": 5, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
-    "pass_emitted": {"const": false}
+    "schema": {
+      "const": "battle.v16.arena_freeze_command_receipt.v1"
+    },
+    "status": {
+      "const": "CONTRACT_FROZEN"
+    },
+    "target_id": {
+      "const": "battle-v16-relayforge-a"
+    },
+    "target_identity_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "target_identity_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "freeze_manifest_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "qualification_eligible": {
+      "const": false
+    },
+    "blockers": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "pass_emitted": {
+      "const": false
+    }
   },
   "required": [
     "schema",

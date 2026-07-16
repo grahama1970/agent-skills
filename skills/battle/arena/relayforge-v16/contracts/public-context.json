@@ -1,7 +1,7 @@
 {
   "schema": "battle.v16.public_context.v1",
   "target_id": "battle-v16-relayforge-a",
-  "semantic_version": "0.4.0-partial",
+  "semantic_version": "0.5.0-deterministic",
   "public_entry_points": [
     {
       "method": "POST",
@@ -47,6 +47,16 @@
       "method": "POST",
       "path": "/api/v1/legacy/convert",
       "purpose": "Run the required legacy conversion workflow"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/defenses/broad-quarantine",
+      "purpose": "Deploy or roll back the broad service-availability quarantine"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/defenses/legacy-convert-disable",
+      "purpose": "Deploy or roll back legacy conversion service shutdown"
     }
   ],
   "business_capabilities": [
@@ -126,7 +136,14 @@
       "opaque_final_destination_sha256",
       "capability_material_sha256",
       "report_profile_alias",
-      "principal_identity_sha256"
+      "principal_identity_sha256",
+      "converter_version",
+      "filename",
+      "filename_sha256",
+      "error_class",
+      "timing_bucket",
+      "policy_sha256",
+      "action_receipt_sha256"
     ],
     "forbidden_fields": [
       "internal service identifiers",
@@ -140,13 +157,13 @@
   "claims": {
     "may_claim": [
       "The public RelayForge contract and bounded campaign budget are frozen",
-      "Three staged security verticals and all six public functionality contracts are executable"
+      "Three staged real paths, legacy conversion behavior and deterministic Blue controls are executable"
     ],
     "must_not_claim": [
-      "The legacy surface is behaviorally validated as a decoy",
-      "Broad quarantine is implemented",
-      "The full target is deterministically qualified",
-      "The live qualification canary may begin"
+      "The legacy conversion surface is publicly identified as a decoy",
+      "The full target is qualified",
+      "The live qualification canary passed",
+      "Memory changes Red or Blue security outcomes"
     ]
   }
 }
