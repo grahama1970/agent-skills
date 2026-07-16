@@ -1,5 +1,5 @@
 import express from 'express'
-import { readFileSync, existsSync, statSync, realpathSync, mkdirSync, writeFileSync } from 'fs'
+import { readFileSync, existsSync, statSync, realpathSync, mkdirSync, writeFileSync, readdirSync } from 'fs'
 import { createReadStream } from 'fs'
 import { spawn } from 'child_process'
 import path from 'path'
@@ -28,6 +28,10 @@ const WATCH_YOLO_LABEL_DIR = process.env.WATCH_YOLO_LABEL_DIR || path.join(
 const WATCH_OVERLAY_PAYLOAD_PATH = process.env.WATCH_OVERLAY_PAYLOAD_PATH || path.join(
   WATCH_SKILL_DIR,
   'docs/architecture/generated/bad_santa_marcus_0248_yolo_overlay_payload/watch_ui_overlay_payload.bad_santa_marcus.json',
+)
+const WATCH_DETECTOR_CANDIDATES_DIR = process.env.WATCH_DETECTOR_CANDIDATES_DIR || path.join(
+  WATCH_SKILL_DIR,
+  'docs/architecture/generated',
 )
 
 function safeFilePart(value: unknown, fallback: string): string {
@@ -61,6 +65,30 @@ function readYoloLabelReceipt(assetUid: unknown, rowIndex: unknown): any {
     }
   }
   return JSON.parse(readFileSync(receiptPath, 'utf-8'))
+}
+
+function findDetectorCandidatesFile(rowIndex: number): string | null {
+  const target = `detector_candidates_row${rowIndex}.json`
+  const stack = [WATCH_DETECTOR_CANDIDATES_DIR]
+  while (stack.length > 0) {
+    const current = stack.pop()
+    if (!current) continue
+    let entries
+    try {
+      entries = readdirSync(current, { withFileTypes: true })
+    } catch {
+      continue
+    }
+    for (const entry of entries) {
+      const fullPath = path.join(current, entry.name)
+      if (entry.isDirectory()) {
+        stack.push(fullPath)
+      } else if (entry.isFile() && entry.name === target) {
+        return fullPath
+      }
+    }
+  }
+  return null
 }
 
 async function storeYoloLabelInMemory(document: Record<string, unknown>): Promise<{ ok: boolean; error?: string }> {
@@ -132,6 +160,74 @@ app.get('/api/projects/watch/overlay-payload', async (req, res) => {
       error: String(err),
       path: requestedPath,
       default_path: WATCH_OVERLAY_PAYLOAD_PATH,
+    })
+  }
+})
+
+app.get('/api/projects/watch/detector-candidates', async (req, res) => {
+  const rowIndex = typeof req.query.row_index === 'string' ? Number(req.query.row_index) : NaN
+  const assetUid = typeof req.query.asset_uid === 'string' ? req.query.asset_uid : ''
+  if (!Number.isFinite(rowIndex)) {
+    res.status(400).json({ error: 'row_index is required' })
+    return
+  }
+
+  const requestedPath = typeof req.query.path === 'string' && req.query.path.trim()
+    ? req.query.path.trim()
+    : findDetectorCandidatesFile(rowIndex)
+
+  if (!requestedPath) {
+    res.status(404).json({
+      schema: 'watch.detector_candidates.v1',
+      row_index: rowIndex,
+      asset_uid: assetUid || null,
+      candidates: [],
+      total: 0,
+      error: 'detector candidates file not found',
+    })
+    return
+  }
+
+  try {
+    const realPayloadPath = realpathSync(requestedPath)
+    const realWatchSkillDir = realpathSync(WATCH_SKILL_DIR)
+    const realTmpDir = realpathSync('/tmp')
+    const allowed = realPayloadPath.startsWith(`${realWatchSkillDir}${path.sep}`) ||
+      realPayloadPath.startsWith(`${realTmpDir}${path.sep}`)
+
+    if (!allowed) {
+      res.status(403).json({ error: 'detector candidates path is outside allowed roots', path: requestedPath })
+      return
+    }
+
+    const payload = JSON.parse(readFileSync(realPayloadPath, 'utf-8'))
+    if (payload?.schema !== 'watch.detector_candidates.v1') {
+      res.status(422).json({
+        error: 'unexpected detector candidates schema',
+        schema: payload?.schema || null,
+        path: realPayloadPath,
+      })
+      return
+    }
+    if (assetUid && payload.asset_uid && payload.asset_uid !== assetUid) {
+      res.status(409).json({
+        error: 'detector candidates asset mismatch',
+        requested_asset_uid: assetUid,
+        payload_asset_uid: payload.asset_uid,
+        path: realPayloadPath,
+      })
+      return
+    }
+    res.json({ ...payload, source_path: realPayloadPath })
+  } catch (err) {
+    res.status(404).json({
+      schema: 'watch.detector_candidates.v1',
+      row_index: rowIndex,
+      asset_uid: assetUid || null,
+      candidates: [],
+      total: 0,
+      error: String(err),
+      path: requestedPath,
     })
   }
 })

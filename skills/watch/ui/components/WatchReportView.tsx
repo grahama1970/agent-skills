@@ -181,6 +181,34 @@ interface WatchOverlayPayload {
 }
 
 type NormalizedBbox = [number, number, number, number]
+
+interface WatchDetectorCandidate {
+  id: string
+  row_index: number
+  asset_uid: string
+  track_id: string
+  detected_class: string
+  bbox: NormalizedBbox
+  bbox_format: 'normalized_xyxy' | string
+  time_seconds: number
+  media_time_seconds?: number
+  confidence?: number | null
+}
+
+interface WatchDetectorCandidatesPayload {
+  schema: 'watch.detector_candidates.v1'
+  row_index: number
+  asset_uid: string
+  segment_start_seconds?: number
+  segment_end_seconds?: number
+  source_width?: number
+  source_height?: number
+  candidates: WatchDetectorCandidate[]
+  total: number
+  source_path?: string
+  error?: string
+}
+
 type BboxResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w'
 
 const EMPTY_ANNOTATION_SESSION_ROW: SessionRow = {
@@ -712,6 +740,63 @@ function overlaysForClip(
       )
     )
   })
+}
+
+function detectorCandidateOverlaysForTime(
+  candidates: WatchDetectorCandidate[],
+  timeSeconds: number,
+): WatchOverlayPayloadOverlay[] {
+  if (!Array.isArray(candidates) || candidates.length === 0) return []
+  const boundedTime = Number.isFinite(timeSeconds) ? Math.max(0, timeSeconds) : 0
+  const nearestByTrack = new Map<string, { candidate: WatchDetectorCandidate; delta: number }>()
+
+  for (const candidate of candidates) {
+    if (!candidate.track_id || !Array.isArray(candidate.bbox) || candidate.bbox.length !== 4) continue
+    const candidateTime = Number.isFinite(candidate.time_seconds) ? candidate.time_seconds : 0
+    const delta = Math.abs(candidateTime - boundedTime)
+    if (delta > 0.35) continue
+    const current = nearestByTrack.get(candidate.track_id)
+    if (!current || delta < current.delta) {
+      nearestByTrack.set(candidate.track_id, { candidate, delta })
+    }
+  }
+
+  return Array.from(nearestByTrack.values())
+    .sort((a, b) => a.candidate.track_id.localeCompare(b.candidate.track_id, undefined, { numeric: true }))
+    .map(({ candidate }) => {
+      const [x1, y1, x2, y2] = candidate.bbox
+      const candidateTime = Number.isFinite(candidate.time_seconds) ? candidate.time_seconds : boundedTime
+      return {
+        overlay_id: `detector:${candidate.id || `${candidate.row_index}:${candidate.track_id}:${candidateTime}`}`,
+        segment_id: `detector-row-${candidate.row_index}`,
+        track_id: candidate.track_id,
+        time_range: {
+          start_seconds: Math.max(0, candidateTime - 0.18),
+          end_seconds: candidateTime + 0.18,
+        },
+        anchor_media_time_seconds: candidate.media_time_seconds ?? candidateTime,
+        valid_at_media_time_seconds: candidate.media_time_seconds ?? candidateTime,
+        bbox_policy: 'detector_candidate',
+        track_lifecycle_status: 'detector_observation',
+        stale_after_ms: 0,
+        detected_class: candidate.detected_class || 'person',
+        classification: 'yolo_detector_candidate',
+        identity_status: 'UNASSIGNED',
+        visibility_proof: false,
+        bbox_percent: {
+          left: x1 * 100,
+          top: y1 * 100,
+          width: (x2 - x1) * 100,
+          height: (y2 - y1) * 100,
+        },
+        render_policy: {
+          stroke: 'dashed',
+          stroke_color: '#22d3ee',
+          fill_opacity: 0.08,
+          pointer_events: 'auto',
+        },
+      }
+    })
 }
 
 function mediaUrl(path: string | undefined, prefix: string): string | null {
@@ -2177,6 +2262,8 @@ export function WatchReportView({
   const clipModalYoloInitializedRowKeyRef = useRef('')
   const [clipModalMemorySuggestions, setClipModalMemorySuggestions] = useState<Record<string, WatchYoloTrackLabel>>({})
   const [clipModalYoloStatus, setClipModalYoloStatus] = useState('')
+  const [clipModalDetectorCandidates, setClipModalDetectorCandidates] = useState<WatchDetectorCandidate[]>([])
+  const [clipModalDetectorCandidateTotal, setClipModalDetectorCandidateTotal] = useState(0)
   const [clipModalCharacterName, setClipModalCharacterName] = useState('')
   const [clipModalActorName, setClipModalActorName] = useState('')
   const [clipModalPlaybackSeconds, setClipModalPlaybackSeconds] = useState(0)
@@ -3509,6 +3596,8 @@ export function WatchReportView({
     if (isNewYoloRow) {
       setClipModalYoloBoxRejections({})
       setClipModalYoloLabelEvents([])
+      setClipModalDetectorCandidates([])
+      setClipModalDetectorCandidateTotal(0)
     }
     if (annotationSessionRow) {
       annotationDispatch(annotationSessionActions.hydrateFromMemory(
@@ -3548,6 +3637,37 @@ export function WatchReportView({
       .catch((err) => {
         if (!cancelled) {
           setClipModalYoloStatus(`Server YOLO label load failed; using local cache only: ${String(err)}`)
+        }
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [expandedClipRowKey, reportWithDiff])
+
+  useEffect(() => {
+    if (!expandedClipRow || !reportWithDiff) return undefined
+    let cancelled = false
+    const assetUid = watchAssetUid(reportWithDiff.watch_report.title)
+    const params = new URLSearchParams({
+      asset_uid: assetUid,
+      row_index: String(expandedClipRow.index),
+    })
+    fetch(`/api/projects/watch/detector-candidates?${params.toString()}`)
+      .then((response) => response.ok ? response.json() : Promise.reject(new Error(`HTTP ${response.status}`)))
+      .then((data: WatchDetectorCandidatesPayload) => {
+        if (cancelled) return
+        const candidates = Array.isArray(data?.candidates) ? data.candidates : []
+        setClipModalDetectorCandidates(candidates)
+        setClipModalDetectorCandidateTotal(typeof data?.total === 'number' ? data.total : candidates.length)
+        setClipModalYoloStatus(candidates.length > 0
+          ? `${typeof data?.total === 'number' ? data.total : candidates.length} YOLO person candidates loaded.`
+          : 'No YOLO detector candidates for this row.')
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setClipModalDetectorCandidates([])
+          setClipModalDetectorCandidateTotal(0)
+          setClipModalYoloStatus(`YOLO detector candidates unavailable: ${String(err)}`)
         }
       })
     return () => {
@@ -3641,6 +3761,15 @@ export function WatchReportView({
       yoloLabelForOverlay(overlay, clipModalYoloLabelEvents, clipModalYoloLabels, clipModalMemorySuggestions, clipModalYoloBoxRejections, clipModalPlaybackSeconds),
     )
   ))
+  const detectorCandidateModalOverlays = detectorCandidateOverlaysForTime(
+    clipModalDetectorCandidates,
+    clipModalPlaybackSeconds,
+  ).map((overlay) => (
+    yoloOverlayWithLabel(
+      overlay,
+      yoloLabelForOverlay(overlay, clipModalYoloLabelEvents, clipModalYoloLabels, clipModalMemorySuggestions, clipModalYoloBoxRejections, clipModalPlaybackSeconds),
+    )
+  ))
   const sessionVisibleOverlays = expandedClipRow
     ? selectVisibleOverlays(annotationSession, clipModalPlaybackSeconds)
     : []
@@ -3687,10 +3816,13 @@ export function WatchReportView({
     .join(' | ')
   const modalOverlays = [
     ...labeledEventModalOverlays,
+    ...detectorCandidateModalOverlays,
     ...(clipModalManualDrawEnabled ? annotationModalOverlays : []),
   ]
   const modalOverlaySource = [
-    labeledEventModalOverlays.length > 0 ? `${labeledEventModalOverlays.length} YOLO person box${labeledEventModalOverlays.length === 1 ? '' : 'es'}` : '',
+    (labeledEventModalOverlays.length + detectorCandidateModalOverlays.length) > 0
+      ? `${labeledEventModalOverlays.length + detectorCandidateModalOverlays.length} YOLO person box${(labeledEventModalOverlays.length + detectorCandidateModalOverlays.length) === 1 ? '' : 'es'}`
+      : '',
     clipModalManualDrawEnabled && annotationModalOverlays.length > 0 ? `${annotationModalOverlays.length} human keyframe annotation${annotationModalOverlays.length === 1 ? '' : 's'}` : '',
   ].filter(Boolean).join(' · ')
   const clipModalDeleteTarget = selectDeleteTarget(annotationSession)
