@@ -8,6 +8,7 @@ import hashlib
 import json
 from pathlib import Path
 import subprocess
+import time
 from typing import Any
 
 import httpx
@@ -59,6 +60,41 @@ def post(
     return value
 
 
+def read_json(path: Path) -> dict[str, Any]:
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(value, dict):
+        raise ValueError(f"json_object_required:{path}")
+    return value
+
+
+def reuse_call_receipt(
+    path: Path,
+    *,
+    schema: str,
+    request: dict[str, Any],
+    source_event_id: str | None = None,
+) -> dict[str, Any] | None:
+    if not path.is_file():
+        return None
+    receipt = read_json(path)
+    if receipt.get("schema") != schema or receipt.get("request") != request:
+        raise ValueError(f"partial_receipt_contract_mismatch:{path}")
+    if receipt.get("request_sha256") != event_hash(request):
+        raise ValueError(f"partial_receipt_request_hash_mismatch:{path}")
+    if source_event_id is not None and (
+        receipt.get("source_event", {}).get("event_id") != source_event_id
+    ):
+        raise ValueError(f"partial_receipt_source_event_mismatch:{path}")
+    response = receipt.get("response")
+    if not isinstance(response, dict):
+        raise ValueError(f"partial_receipt_response_missing:{path}")
+    return response
+
+
+def file_locator(path: Path) -> dict[str, str]:
+    return {"path": str(path.resolve()), "sha256": sha256_path(path)}
+
+
 def append_derived(
     journal: httpx.Client,
     source: dict[str, Any],
@@ -91,6 +127,37 @@ def append_derived(
         "receipt_hash": event_hash(seed),
         "payload": payload,
     }
+    snapshot_response = journal.get(
+        f"/v1/sessions/{source['session_id']}/journal"
+    )
+    snapshot_response.raise_for_status()
+    existing = next(
+        (
+            item
+            for item in snapshot_response.json().get("events", [])
+            if item.get("event_id") == event["event_id"]
+        ),
+        None,
+    )
+    if existing is not None:
+        immutable_fields = (
+            "schema",
+            "event_id",
+            "session_id",
+            "turn_id",
+            "type",
+            "causation_id",
+            "correlation_id",
+            "producer",
+            "mocked",
+            "live",
+            "artifact_hashes",
+            "receipt_hash",
+            "payload",
+        )
+        if any(existing.get(key) != event.get(key) for key in immutable_fields):
+            raise ValueError(f"derived_event_conflict:{event['event_id']}")
+        return existing
     return post(journal, "/v1/listener/events", event)["event"]
 
 
@@ -328,6 +395,8 @@ def main() -> int:
     parser.add_argument("--tau-repo", required=True, type=Path)
     parser.add_argument("--output-dir", required=True, type=Path)
     parser.add_argument("--lease-seconds", default=300, type=int)
+    parser.add_argument("--memory-read-timeout-seconds", default=90.0, type=float)
+    parser.add_argument("--answer-retry-authorization", type=Path)
     args = parser.parse_args()
 
     out = args.output_dir.resolve()
@@ -382,10 +451,18 @@ def main() -> int:
             contract,
         )
 
-        claim_response = post(
-            journal,
-            "/v1/listener/events/claim-one",
-            {
+        claim_path = out / "source-event-claim-receipt.json"
+        if claim_path.is_file():
+            claim_receipt = read_json(claim_path)
+            if claim_receipt.get("source_event", {}).get("event_id") != source["event_id"]:
+                raise ValueError("stored_source_claim_event_mismatch")
+            if claim_receipt.get("claim", {}).get("consumer_name") != args.consumer_name:
+                raise ValueError("stored_source_claim_consumer_mismatch")
+        else:
+            claim_response = post(
+                journal,
+                "/v1/listener/events/claim-one",
+                {
                 "consumer_name": args.consumer_name,
                 "event_id": args.event_id,
                 "expected_session_id": args.expected_session_id,
@@ -393,9 +470,9 @@ def main() -> int:
                 "expected_sequence": args.expected_sequence,
                 "expected_type": "listener.final_transcript",
                 "lease_seconds": args.lease_seconds,
-            },
-        )
-        claim_receipt = {
+                },
+            )
+            claim_receipt = {
             "schema": "embry.voice.source_event_claim_receipt.v1",
             "claim": {
                 "consumer_name": args.consumer_name,
@@ -409,11 +486,16 @@ def main() -> int:
                 "service_url": args.journal_url,
                 "session_journal_sha256_at_claim": "sha256:" + journal_payload["sha256"],
             },
-        }
-        claim_path = out / "source-event-claim-receipt.json"
-        write_json(claim_path, claim_receipt)
+            }
+            write_json(claim_path, claim_receipt)
 
-        with httpx.Client(base_url=args.memory_url, timeout=20.0) as memory:
+        memory_timeout = httpx.Timeout(
+            connect=10.0,
+            read=args.memory_read_timeout_seconds,
+            write=10.0,
+            pool=10.0,
+        )
+        with httpx.Client(base_url=args.memory_url, timeout=memory_timeout) as memory:
             speaker_request, expected_speaker_id, expected_personal_memory = (
                 _memory_source_request(
                     source,
@@ -423,7 +505,12 @@ def main() -> int:
                     contract,
                 )
             )
-            speaker_response = post(memory, "/speaker/resolve", speaker_request)
+            speaker_path = out / "memory-speaker-resolution-receipt.json"
+            speaker_response = reuse_call_receipt(
+                speaker_path,
+                schema="embry.memory.speaker_resolution_call_receipt.v1",
+                request=speaker_request,
+            ) or post(memory, "/speaker/resolve", speaker_request)
             if args.source_mode in CLONE_SOURCE_MODES:
                 if speaker_response.get("status") != "unknown":
                     raise ValueError("memory_clone_source_resolution_not_unknown")
@@ -455,8 +542,8 @@ def main() -> int:
                 "response_sha256": event_hash(speaker_response),
                 "source_contract": contract_name,
             }
-            speaker_path = out / "memory-speaker-resolution-receipt.json"
-            write_json(speaker_path, speaker_call)
+            if not speaker_path.exists():
+                write_json(speaker_path, speaker_call)
             memory_source_event = append_derived(
                 journal,
                 source,
@@ -504,7 +591,13 @@ def main() -> int:
                         "speaker_resolution": speaker_response,
                     }
                 )
-            intent_response = post(memory, "/intent", intent_request)
+            intent_path = out / "memory-intent-receipt.json"
+            intent_response = reuse_call_receipt(
+                intent_path,
+                schema="embry.memory.intent_call_receipt.v1",
+                request=intent_request,
+                source_event_id=source["event_id"],
+            ) or post(memory, "/intent", intent_request)
             intent_call = {
                 "schema": "embry.memory.intent_call_receipt.v1",
                 "request": intent_request,
@@ -524,8 +617,8 @@ def main() -> int:
                     )
                 },
             }
-            intent_path = out / "memory-intent-receipt.json"
-            write_json(intent_path, intent_call)
+            if not intent_path.exists():
+                write_json(intent_path, intent_call)
             intent_event = append_derived(
                 journal,
                 source,
@@ -543,7 +636,97 @@ def main() -> int:
                 "scope": "embry",
                 "persona_id": "embry",
             }
-            answer_response = post(memory, "/answer", answer_request)
+            answer_path = out / "memory-answer-receipt.json"
+            answer_response = reuse_call_receipt(
+                answer_path,
+                schema="embry.memory.answer_call_receipt.v1",
+                request=answer_request,
+                source_event_id=source["event_id"],
+            )
+            attempts = sorted(out.glob("memory-answer-attempt-*.json"))
+            authorization = None
+            if args.answer_retry_authorization:
+                authorization = read_json(args.answer_retry_authorization.resolve())
+                required = {
+                    "schema": "embry.audio_e2e.memory_answer_retry_authorization.v1",
+                    "status": "PASS",
+                    "source_event_id": source["event_id"],
+                    "source_event_sequence": source["sequence"],
+                    "session_id": source["session_id"],
+                    "turn_id": source["turn_id"],
+                    "authorized_execution_index": 2,
+                    "prior_result": "transport_timeout_response_unknown",
+                    "provider_execution_may_have_continued": True,
+                    "idempotent_recovery_available": False,
+                    "explicit_second_provider_execution_authorized": True,
+                    "suite_ready": False,
+                    "release_readiness_authority": False,
+                }
+                for key, expected in required.items():
+                    if authorization.get(key) != expected:
+                        raise ValueError(f"answer_retry_authorization_invalid:{key}")
+                if not attempts:
+                    first_attempt = {
+                        "schema": "embry.memory.answer_transport_attempt.v1",
+                        "status": "TRANSPORT_TIMEOUT_RESPONSE_UNKNOWN",
+                        "execution_index": 1,
+                        "request": answer_request,
+                        "request_sha256": event_hash(answer_request),
+                        "source_event_id": source["event_id"],
+                        "provider_execution_may_have_continued": True,
+                        "idempotent_recovery_available": False,
+                        "inferred_from_campaign_failure": True,
+                        "retry_authorization": file_locator(
+                            args.answer_retry_authorization.resolve()
+                        ),
+                        "suite_ready": False,
+                    }
+                    first_path = out / "memory-answer-attempt-001.json"
+                    write_json(first_path, first_attempt)
+                    attempts = [first_path]
+            if answer_response is None:
+                if attempts and authorization is None:
+                    raise RuntimeError("memory_answer_prior_timeout_response_unknown")
+                if len(attempts) >= 2:
+                    raise RuntimeError("memory_answer_retry_budget_exhausted")
+                execution_index = len(attempts) + 1
+                attempt_path = out / f"memory-answer-attempt-{execution_index:03d}.json"
+                attempt = {
+                    "schema": "embry.memory.answer_transport_attempt.v1",
+                    "status": "STARTED",
+                    "execution_index": execution_index,
+                    "request": answer_request,
+                    "request_sha256": event_hash(answer_request),
+                    "source_event_id": source["event_id"],
+                    "read_timeout_seconds": args.memory_read_timeout_seconds,
+                    "retried_provider_call": execution_index > 1,
+                    "idempotent_recovery": False,
+                    "suite_ready": False,
+                    "started_at": datetime.now(timezone.utc).isoformat(),
+                }
+                write_json(attempt_path, attempt)
+                started = time.monotonic()
+                try:
+                    answer_response = post(memory, "/answer", answer_request)
+                except httpx.ReadTimeout as exc:
+                    attempt.update({
+                        "status": "TRANSPORT_TIMEOUT_RESPONSE_UNKNOWN",
+                        "elapsed_seconds": round(time.monotonic() - started, 3),
+                        "provider_execution_may_have_continued": True,
+                        "completed_at": datetime.now(timezone.utc).isoformat(),
+                    })
+                    write_json(attempt_path, attempt)
+                    raise RuntimeError(
+                        "memory_answer_transport_timeout_response_unknown"
+                    ) from exc
+                attempt.update({
+                    "status": "COMPLETED",
+                    "elapsed_seconds": round(time.monotonic() - started, 3),
+                    "response_sha256": event_hash(answer_response),
+                    "completed_at": datetime.now(timezone.utc).isoformat(),
+                })
+                write_json(attempt_path, attempt)
+                attempts.append(attempt_path)
             answer_call = {
                 "schema": "embry.memory.answer_call_receipt.v1",
                 "request": answer_request,
@@ -561,9 +744,22 @@ def main() -> int:
                         "type",
                     )
                 },
+                "transport": {
+                    "recovery_mode": (
+                        "explicit_second_provider_execution"
+                        if len(attempts) > 1
+                        else "first_execution"
+                    ),
+                    "idempotent_recovery_available": False,
+                    "retried_provider_call": len(attempts) > 1,
+                    "provider_execution_count": len(attempts),
+                    "prior_transport_timeout_response_unknown": len(attempts) > 1,
+                    "attempt_receipts": [file_locator(path) for path in attempts],
+                    "suite_ready": False,
+                },
             }
-            answer_path = out / "memory-answer-receipt.json"
-            write_json(answer_path, answer_call)
+            if not answer_path.exists():
+                write_json(answer_path, answer_call)
             answer_event = append_derived(
                 journal,
                 source,

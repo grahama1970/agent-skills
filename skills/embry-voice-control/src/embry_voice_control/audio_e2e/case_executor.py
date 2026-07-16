@@ -12,7 +12,11 @@ import time
 from typing import Any
 import re
 
-from .event_waiter import wait_for_managed_turn, wait_for_managed_wake
+from .event_waiter import (
+    journal_sequence_boundary,
+    wait_for_managed_turn,
+    wait_for_managed_wake,
+)
 
 
 def _canonical(value: Any) -> bytes:
@@ -179,6 +183,10 @@ class CaseExecutor:
             turn,
             source_asset,
         )
+        journal_boundary = journal_sequence_boundary(
+            Path(self.config["journal_db"]),
+            session_id=case["session_id"],
+        )
         ack = self.listener.arm({
             "schema": "embry.listener_turn_command.v1",
             "command": "arm",
@@ -263,6 +271,7 @@ class CaseExecutor:
                         Path(self.config["journal_db"]),
                         session_id=case["session_id"],
                         expected=managed_lineage,
+                        after_sequence=journal_boundary,
                         timeout_seconds=min(
                             10.0,
                             self.config["turn_timeout_seconds"],
@@ -307,6 +316,7 @@ class CaseExecutor:
                 "turn_id",
                 "source_authority_id",
             )},
+            after_sequence=journal_boundary,
             timeout_seconds=self.config["turn_timeout_seconds"],
         )
         if source_process is not None:
@@ -347,7 +357,9 @@ class CaseExecutor:
                 "spoken_text_sha256", turn["utterance_sha256"]
             ),
             "source_authority_id": source_authority_id,
+            "journal_sequence_boundary": journal_boundary,
             "arm_event_id": chain["listener.turn_armed"]["event_id"],
+            "arm_sequence": chain["listener.turn_armed"]["sequence"],
             "wake_event_id": wake_event["event_id"] if wake_event else None,
             "final_event_id": final["event_id"],
             "final_sequence": final["sequence"],

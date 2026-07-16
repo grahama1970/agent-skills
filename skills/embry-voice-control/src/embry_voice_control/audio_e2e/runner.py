@@ -8,7 +8,7 @@ per-turn receipt locators.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 import hashlib
 import json
 from pathlib import Path
@@ -1064,7 +1064,62 @@ def _memory_tau_stage(
         live_config["tau_repo"],
         "--output-dir",
         str(output),
+        "--memory-read-timeout-seconds",
+        str(live_config["memory_answer_read_timeout_seconds"]),
     ]
+    answer_path = output / "memory-answer-receipt.json"
+    prior_timeout = any(
+        failure.get("stage") == "memory_tau"
+        and "ReadTimeout" in str(failure.get("error") or "")
+        for failure in turn_state.get("failure_history", [])
+    )
+    if prior_timeout and not answer_path.exists():
+        if not live_config.get("allow_memory_answer_retry_after_timeout"):
+            raise RuntimeError("memory_answer_retry_requires_explicit_authorization")
+        failure = next(
+            failure
+            for failure in reversed(turn_state["failure_history"])
+            if failure.get("stage") == "memory_tau"
+            and "ReadTimeout" in str(failure.get("error") or "")
+        )
+        retry_not_before = datetime.fromisoformat(failure["created_at"]) + timedelta(
+            seconds=60
+        )
+        if datetime.now(timezone.utc) < retry_not_before:
+            raise RuntimeError(
+                "memory_answer_retry_not_before:" + retry_not_before.isoformat()
+            )
+        partials = [
+            output / "source-event-claim-receipt.json",
+            output / "memory-speaker-resolution-receipt.json",
+            output / "memory-intent-receipt.json",
+            output / "stderr.log",
+        ]
+        if not all(path.is_file() for path in partials):
+            raise RuntimeError("memory_answer_retry_partial_receipts_missing")
+        authorization = {
+            "schema": "embry.audio_e2e.memory_answer_retry_authorization.v1",
+            "status": "PASS",
+            "campaign_id": live_config["campaign_id"],
+            "case_id": case["case_id"],
+            "turn_id": turn["turn_id"],
+            "source_event_id": source["event_id"],
+            "source_event_sequence": source["sequence"],
+            "session_id": source["session_id"],
+            "prior_result": "transport_timeout_response_unknown",
+            "provider_execution_may_have_continued": True,
+            "idempotent_recovery_available": False,
+            "explicit_second_provider_execution_authorized": True,
+            "authorized_execution_index": 2,
+            "retry_not_before": retry_not_before.isoformat(),
+            "source_failure": failure,
+            "suite_ready": False,
+            "release_readiness_authority": False,
+            "created_at": utc_now(),
+        }
+        authorization_path = output / "memory-answer-retry-authorization.json"
+        write_json(authorization_path, authorization)
+        command.extend(["--answer-retry-authorization", str(authorization_path)])
     _run_command(
         command,
         cwd=SKILL_ROOT,

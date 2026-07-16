@@ -10,13 +10,16 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import re
 import shutil
+import struct
 import tempfile
 from typing import Any
 from urllib.parse import urljoin
+import wave
 
 import httpx
 
@@ -30,6 +33,12 @@ GENERATION_POLICY_SCHEMA = "embry.audio_e2e.orpheus_generation_policy.v1"
 QUALIFICATION_POLICY_SCHEMA = "embry.audio_e2e.asr_qualification_policy.v1"
 QUALIFICATION_RECEIPT_SCHEMA = "embry.audio_e2e.asr_qualification_receipt.v1"
 CANDIDATE_RECEIPT_SCHEMA = "embry.audio_e2e.orpheus_asr_candidate.v1"
+UTTERANCE_BOUNDARY_POLICY_SCHEMA = (
+    "embry.audio_e2e.utterance_boundary_policy.v1"
+)
+UTTERANCE_BOUNDARY_RECEIPT_SCHEMA = (
+    "embry.audio_e2e.utterance_boundary_receipt.v1"
+)
 WAKE_PREFIX = re.compile(
     r"^\s*hey(?:[\s,;:!?.-]+)embry\b(?:[\s,;:!?.-]+)",
     re.IGNORECASE,
@@ -200,6 +209,315 @@ def request_wer(expected_text: str, actual_text: str) -> float:
     return previous[-1] / max(1, len(expected))
 
 
+def _utterance_boundary_policy(
+    max_internal_silence_seconds: float,
+) -> dict[str, Any]:
+    """Build the managed-listener-compatible internal-silence policy.
+
+    The live listener finalizes after its configured post-speech silence. This
+    analyzer uses 20 ms PCM RMS frames, enters speech at -42 dBFS, and leaves
+    speech only after 200 ms below -45 dBFS. The 3 dB release hysteresis and
+    100 ms minimum speech run prevent ordinary word gaps or isolated noise
+    spikes from being treated as separate clauses.
+    """
+
+    max_internal_silence_seconds = float(max_internal_silence_seconds)
+    if max_internal_silence_seconds <= 0.0:
+        raise ValueError("max_internal_silence_seconds_out_of_range")
+    return {
+        "schema": UTTERANCE_BOUNDARY_POLICY_SCHEMA,
+        "algorithm": "pcm_rms_hysteresis_v1",
+        "max_internal_silence_seconds": max_internal_silence_seconds,
+        "comparison": "strictly_less_than",
+        "frame_duration_milliseconds": 20.0,
+        "speech_threshold_dbfs": -42.0,
+        "speech_release_threshold_dbfs": -45.0,
+        "speech_hysteresis_db": 3.0,
+        "minimum_speech_duration_seconds": 0.10,
+        "minimum_silence_duration_seconds": 0.20,
+        "leading_trailing_silence_ignored": True,
+    }
+
+
+def _pcm_rms_dbfs(frame: bytes, sample_width: int) -> float:
+    if sample_width not in {1, 2, 3, 4}:
+        raise ValueError(f"wav_sample_width_unsupported:{sample_width}")
+    if not frame:
+        return -120.0
+
+    square_sum = 0.0
+    sample_count = len(frame) // sample_width
+    if sample_count == 0:
+        return -120.0
+
+    if sample_width == 1:
+        for value in frame:
+            sample = value - 128
+            square_sum += float(sample * sample)
+        full_scale = 127.0
+    else:
+        usable_bytes = sample_count * sample_width
+        for offset in range(0, usable_bytes, sample_width):
+            sample = int.from_bytes(
+                frame[offset : offset + sample_width],
+                byteorder="little",
+                signed=True,
+            )
+            square_sum += float(sample * sample)
+        full_scale = float((1 << (sample_width * 8 - 1)) - 1)
+
+    rms = math.sqrt(square_sum / sample_count)
+    if rms <= 0.0:
+        return -120.0
+    return max(-120.0, 20.0 * math.log10(rms / full_scale))
+
+
+def _float_pcm_rms_dbfs(frame: bytes, sample_width: int) -> float:
+    format_code = {4: "<f", 8: "<d"}.get(sample_width)
+    if format_code is None:
+        raise ValueError(f"wav_float_sample_width_unsupported:{sample_width}")
+    usable_bytes = len(frame) - (len(frame) % sample_width)
+    if usable_bytes == 0:
+        return -120.0
+    sample_count = usable_bytes // sample_width
+    square_sum = sum(
+        float(value) * float(value)
+        for (value,) in struct.iter_unpack(format_code, frame[:usable_bytes])
+    )
+    rms = math.sqrt(square_sum / sample_count)
+    if rms <= 0.0:
+        return -120.0
+    return max(-120.0, 20.0 * math.log10(rms))
+
+
+def _read_ieee_float_wav(
+    audio_path: Path,
+    frame_duration_seconds: float,
+) -> tuple[int, int, int, int, list[float]]:
+    data = audio_path.read_bytes()
+    if len(data) < 12 or data[:4] != b"RIFF" or data[8:12] != b"WAVE":
+        raise ValueError("wav_riff_contract_invalid")
+    fmt_chunk: bytes | None = None
+    audio_data: bytes | None = None
+    offset = 12
+    while offset + 8 <= len(data):
+        chunk_id = data[offset : offset + 4]
+        chunk_size = struct.unpack_from("<I", data, offset + 4)[0]
+        chunk_start = offset + 8
+        chunk_end = chunk_start + chunk_size
+        if chunk_end > len(data):
+            raise ValueError("wav_chunk_truncated")
+        if chunk_id == b"fmt ":
+            fmt_chunk = data[chunk_start:chunk_end]
+        elif chunk_id == b"data":
+            audio_data = data[chunk_start:chunk_end]
+        offset = chunk_end + (chunk_size & 1)
+    if fmt_chunk is None or audio_data is None or len(fmt_chunk) < 16:
+        raise ValueError("wav_required_chunk_missing")
+    format_tag, channels, sample_rate, _, block_align, bits_per_sample = (
+        struct.unpack_from("<HHIIHH", fmt_chunk)
+    )
+    if format_tag != 3:
+        raise ValueError(f"wav_format_unsupported:{format_tag}")
+    sample_width = bits_per_sample // 8
+    if channels < 1 or sample_rate < 1 or block_align != channels * sample_width:
+        raise ValueError("wav_audio_contract_invalid")
+    total_frames = len(audio_data) // block_align
+    frame_samples = max(1, int(round(sample_rate * frame_duration_seconds)))
+    frame_bytes = frame_samples * block_align
+    levels = [
+        _float_pcm_rms_dbfs(audio_data[start : start + frame_bytes], sample_width)
+        for start in range(0, total_frames * block_align, frame_bytes)
+    ]
+    return channels, sample_width, sample_rate, total_frames, levels
+
+
+def analyze_internal_silence(
+    audio_path: Path,
+    boundary_policy: dict[str, Any],
+) -> dict[str, Any]:
+    """Measure silence only when bounded by confirmed speech on both sides."""
+
+    audio_path = Path(audio_path).resolve()
+    frame_duration_seconds = (
+        float(boundary_policy["frame_duration_milliseconds"]) / 1000.0
+    )
+    try:
+        with wave.open(str(audio_path), "rb") as stream:
+            if stream.getcomptype() != "NONE":
+                raise ValueError(
+                    f"wav_compression_unsupported:{stream.getcomptype()}"
+                )
+            channels = int(stream.getnchannels())
+            sample_width = int(stream.getsampwidth())
+            sample_rate = int(stream.getframerate())
+            total_frames = int(stream.getnframes())
+            if channels < 1 or sample_rate < 1 or total_frames < 1:
+                raise ValueError("wav_audio_contract_invalid")
+
+            analysis_frame_samples = max(
+                1, int(round(sample_rate * frame_duration_seconds))
+            )
+            levels: list[float] = []
+            while True:
+                raw = stream.readframes(analysis_frame_samples)
+                if not raw:
+                    break
+                levels.append(_pcm_rms_dbfs(raw, sample_width))
+    except wave.Error as exc:
+        if "unknown format: 3" not in str(exc):
+            raise
+        # Orpheus emits IEEE-float WAVs, which Python's wave module rejects.
+        channels, sample_width, sample_rate, total_frames, levels = (
+            _read_ieee_float_wav(audio_path, frame_duration_seconds)
+        )
+
+    enter_threshold = float(boundary_policy["speech_threshold_dbfs"])
+    release_threshold = float(
+        boundary_policy["speech_release_threshold_dbfs"]
+    )
+    minimum_speech_frames = max(
+        1,
+        int(
+            math.ceil(
+                float(boundary_policy["minimum_speech_duration_seconds"])
+                / frame_duration_seconds
+            )
+        ),
+    )
+    minimum_silence_frames = max(
+        1,
+        int(
+            math.ceil(
+                float(boundary_policy["minimum_silence_duration_seconds"])
+                / frame_duration_seconds
+            )
+        ),
+    )
+
+    speech_segments_frames: list[tuple[int, int]] = []
+    in_speech = False
+    speech_candidate_start: int | None = None
+    silence_candidate_start: int | None = None
+    segment_start: int | None = None
+
+    for index, level in enumerate(levels):
+        if not in_speech:
+            if level >= enter_threshold:
+                if speech_candidate_start is None:
+                    speech_candidate_start = index
+                if index - speech_candidate_start + 1 >= minimum_speech_frames:
+                    in_speech = True
+                    segment_start = speech_candidate_start
+                    speech_candidate_start = None
+                    silence_candidate_start = None
+            else:
+                speech_candidate_start = None
+            continue
+
+        if level < release_threshold:
+            if silence_candidate_start is None:
+                silence_candidate_start = index
+            if index - silence_candidate_start + 1 >= minimum_silence_frames:
+                if segment_start is None:
+                    raise RuntimeError("utterance_boundary_segment_state_invalid")
+                speech_segments_frames.append(
+                    (segment_start, silence_candidate_start)
+                )
+                in_speech = False
+                segment_start = None
+                speech_candidate_start = None
+                silence_candidate_start = None
+        else:
+            silence_candidate_start = None
+
+    if in_speech and segment_start is not None:
+        segment_end = (
+            silence_candidate_start
+            if silence_candidate_start is not None
+            else len(levels)
+        )
+        if segment_end - segment_start >= minimum_speech_frames:
+            speech_segments_frames.append((segment_start, segment_end))
+
+    speech_segments: list[dict[str, float]] = []
+    for start_frame, end_frame in speech_segments_frames:
+        start_seconds = start_frame * frame_duration_seconds
+        end_seconds = min(
+            total_frames / sample_rate,
+            end_frame * frame_duration_seconds,
+        )
+        speech_segments.append(
+            {
+                "start_seconds": round(start_seconds, 6),
+                "end_seconds": round(end_seconds, 6),
+                "duration_seconds": round(
+                    max(0.0, end_seconds - start_seconds), 6
+                ),
+            }
+        )
+
+    internal_silences: list[dict[str, float]] = []
+    for left, right in zip(speech_segments, speech_segments[1:]):
+        start_seconds = float(left["end_seconds"])
+        end_seconds = float(right["start_seconds"])
+        duration_seconds = max(0.0, end_seconds - start_seconds)
+        internal_silences.append(
+            {
+                "start_seconds": round(start_seconds, 6),
+                "end_seconds": round(end_seconds, 6),
+                "duration_seconds": round(duration_seconds, 6),
+            }
+        )
+
+    longest = max(
+        (item["duration_seconds"] for item in internal_silences),
+        default=0.0,
+    )
+    limit = float(boundary_policy["max_internal_silence_seconds"])
+    accepted = longest < limit
+    return {
+        "schema": UTTERANCE_BOUNDARY_RECEIPT_SCHEMA,
+        "status": "PASS",
+        "policy": boundary_policy,
+        "audio": locator(audio_path),
+        "wav": {
+            "sample_rate_hz": sample_rate,
+            "channels": channels,
+            "sample_width_bytes": sample_width,
+            "frame_count": total_frames,
+            "duration_seconds": round(total_frames / sample_rate, 6),
+        },
+        "analysis_frame_count": len(levels),
+        "speech_segment_count": len(speech_segments),
+        "speech_segments": speech_segments,
+        "internal_silence_count": len(internal_silences),
+        "internal_silences": internal_silences,
+        "longest_internal_silence_seconds": round(longest, 6),
+        "max_internal_silence_seconds": limit,
+        "accepted": accepted,
+        "rejection_reason": (
+            None
+            if accepted
+            else "internal_silence_exceeds_listener_boundary"
+        ),
+    }
+
+
+def qualification_rejection_reasons(
+    *,
+    wer: float,
+    boundary: dict[str, Any],
+    qualification_policy: dict[str, Any],
+) -> list[str]:
+    reasons: list[str] = []
+    if wer > float(qualification_policy["max_request_wer"]):
+        reasons.append("wer_exceeds_threshold")
+    if not bool(boundary.get("accepted")):
+        reasons.append("internal_silence_exceeds_listener_boundary")
+    return reasons
+
+
 def build_qualification_policy(
     *,
     model: str,
@@ -207,6 +525,7 @@ def build_qualification_policy(
     compute_type: str,
     max_request_wer: float,
     max_candidates: int,
+    max_internal_silence_seconds: float,
 ) -> dict[str, Any]:
     model = str(model).strip()
     device = str(device).strip()
@@ -223,7 +542,7 @@ def build_qualification_policy(
         raise ValueError("max_request_wer_out_of_range")
     if max_candidates < 1 or max_candidates > 100:
         raise ValueError("max_candidates_out_of_range")
-    return {
+    value = {
         "schema": QUALIFICATION_POLICY_SCHEMA,
         "model": model,
         "device": device,
@@ -236,7 +555,12 @@ def build_qualification_policy(
         "normalization": "lowercase_ascii_alnum_tokens_v1",
         "wer_algorithm": "token_levenshtein_v1",
         "initial_prompt_used": False,
+        "utterance_boundary": _utterance_boundary_policy(
+            max_internal_silence_seconds
+        ),
     }
+    value["identity_sha256"] = sha256_bytes(canonical_json(value))
+    return value
 
 
 class QualificationTranscriber:
@@ -820,10 +1144,34 @@ def _validate_asr_receipt(
         raise AssetConflictError("candidate_asr_wer_missing") from exc
     if abs(stored_wer - computed_wer) > 1e-12:
         raise AssetConflictError("candidate_asr_wer_mismatch")
-    accepted = computed_wer <= qualification_policy["max_request_wer"]
+
+    boundary = analyze_internal_silence(
+        audio_path,
+        qualification_policy["utterance_boundary"],
+    )
+    if value.get("utterance_boundary") != boundary:
+        raise AssetConflictError(
+            "candidate_asr_utterance_boundary_mismatch"
+        )
+    reasons = qualification_rejection_reasons(
+        wer=computed_wer,
+        boundary=boundary,
+        qualification_policy=qualification_policy,
+    )
+    accepted = not reasons
+    if value.get("rejection_reasons") != reasons:
+        raise AssetConflictError(
+            "candidate_asr_rejection_reasons_mismatch"
+        )
+    if value.get("rejection_reason") != (reasons[0] if reasons else None):
+        raise AssetConflictError(
+            "candidate_asr_rejection_reason_mismatch"
+        )
     if value.get("accepted") is not accepted:
         raise AssetConflictError("candidate_asr_acceptance_mismatch")
     value["computed_wer"] = computed_wer
+    value["computed_utterance_boundary"] = boundary
+    value["computed_rejection_reasons"] = reasons
     return value
 
 
@@ -923,6 +1271,8 @@ def validate_candidate(
         qualification_policy=qualification_policy,
     )
     computed_wer = float(asr["computed_wer"])
+    boundary = asr["computed_utterance_boundary"]
+    reasons = list(asr["computed_rejection_reasons"])
     try:
         stored_wer = float(receipt["wer"])
     except (KeyError, TypeError, ValueError) as exc:
@@ -931,13 +1281,38 @@ def validate_candidate(
         raise AssetConflictError("candidate_wer_mismatch")
     if receipt.get("transcript") != asr.get("transcript"):
         raise AssetConflictError("candidate_transcript_mismatch")
-    accepted = computed_wer <= qualification_policy["max_request_wer"]
+    if receipt.get("utterance_boundary") != boundary:
+        raise AssetConflictError("candidate_utterance_boundary_mismatch")
+    if receipt.get("rejection_reasons") != reasons:
+        raise AssetConflictError("candidate_rejection_reasons_mismatch")
+    if receipt.get("rejection_reason") != (reasons[0] if reasons else None):
+        raise AssetConflictError("candidate_rejection_reason_mismatch")
+    longest_internal_silence = float(
+        boundary["longest_internal_silence_seconds"]
+    )
+    try:
+        stored_internal_silence = float(
+            receipt["longest_internal_silence_seconds"]
+        )
+    except (KeyError, TypeError, ValueError) as exc:
+        raise AssetConflictError(
+            "candidate_internal_silence_missing"
+        ) from exc
+    if abs(stored_internal_silence - longest_internal_silence) > 1e-12:
+        raise AssetConflictError(
+            "candidate_internal_silence_mismatch"
+        )
+    accepted = not reasons
     if accepted != (status == "ACCEPTED"):
         raise AssetConflictError("candidate_acceptance_mismatch")
     return {
         "status": status,
         "candidate_index": candidate_index,
         "wer": computed_wer,
+        "longest_internal_silence_seconds": longest_internal_silence,
+        "utterance_boundary": boundary,
+        "rejection_reasons": reasons,
+        "rejection_reason": reasons[0] if reasons else None,
         "transcript": str(asr.get("transcript") or ""),
         "normalized_transcript": str(
             asr.get("normalized_transcript") or ""
@@ -953,6 +1328,243 @@ def validate_candidate(
             "original_inference_receipt_source"
         ),
     }
+
+
+def _qualification_policy_archive_id(value: Any) -> str:
+    return hashlib.sha256(canonical_json(value)).hexdigest()[:16]
+
+
+def _archive_qualification_artifact(
+    *,
+    path: Path,
+    asset_dir: Path,
+    archive_root: Path,
+    case_id: str,
+    turn_id: str,
+    prior_policy: Any,
+) -> None:
+    if not path.exists():
+        return
+    if not path.is_file():
+        raise AssetConflictError(
+            f"qualification_artifact_not_file:{path}"
+        )
+    relative = path.relative_to(asset_dir)
+    target = (
+        archive_root
+        / "qualification-policy"
+        / safe_component(case_id)
+        / safe_component(turn_id)
+        / _qualification_policy_archive_id(prior_policy)
+        / relative
+    )
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if target.exists():
+        if not target.is_file() or sha256_file(target) != sha256_file(path):
+            raise AssetConflictError(
+                f"qualification_archive_conflict:{target}"
+            )
+        path.unlink()
+        return
+    shutil.move(str(path), str(target))
+
+
+def _validate_candidate_provider_artifacts_for_requalification(
+    *,
+    candidate_dir: Path,
+    prompt: str,
+    contract_locator: dict[str, str],
+    checkpoint_id: str,
+    checkpoint_sha256: str,
+    case_id: str,
+    turn_id: str,
+    planned_spoken_text_sha256: str,
+    generation_policy: dict[str, Any],
+) -> Any:
+    paths = _candidate_paths(candidate_dir)
+    for key in ("audio", "response", "original"):
+        if not paths[key].is_file():
+            raise AssetConflictError(
+                f"candidate_provider_artifact_missing:{candidate_dir}:{key}"
+            )
+    validate_wav_envelope(paths["audio"].read_bytes())
+    response = read_json(paths["response"])
+    _, request_id = _validated_synthesis_payload(response)
+    validate_original_inference_receipt(
+        read_json(paths["original"]),
+        prompt=prompt,
+        request_id=request_id,
+        generation_policy=generation_policy,
+    )
+
+    receipt_path = paths["receipt"]
+    if not receipt_path.is_file():
+        return None
+    receipt = read_json(receipt_path)
+    required = {
+        "schema": CANDIDATE_RECEIPT_SCHEMA,
+        "live": True,
+        "mocked": False,
+        "source_contract": SOURCE_CONTRACT,
+        "source_contract_receipt": contract_locator,
+        "fresh_physical_human_speech": False,
+        "speaker_identity_proven": False,
+        "allow_personal_memory": False,
+        "release_readiness_authority": False,
+        "suite_ready": False,
+        "typed_transcript_used": False,
+        "authority_scope": "campaign_intermediate_source_binding_only",
+        "asset_role": "turn_query",
+        "case_id": case_id,
+        "turn_id": turn_id,
+        "planned_spoken_text_sha256": planned_spoken_text_sha256,
+        "generated_prompt_sha256": sha256_text(prompt),
+        "generation_policy": generation_policy,
+        "request": request_for_prompt(prompt, generation_policy),
+    }
+    for key, expected in required.items():
+        if receipt.get(key) != expected:
+            raise AssetConflictError(
+                "candidate_provider_receipt_conflict:"
+                f"{candidate_dir}:{key}:"
+                f"{receipt.get(key)!r}:{expected!r}"
+            )
+    checkpoint = receipt.get("checkpoint") or {}
+    if checkpoint.get("id") != checkpoint_id:
+        raise AssetConflictError(
+            "candidate_provider_checkpoint_id_mismatch"
+        )
+    if normalize_sha256(
+        checkpoint.get("sha256"),
+        label="candidate_provider_checkpoint",
+    ) != checkpoint_sha256:
+        raise AssetConflictError(
+            "candidate_provider_checkpoint_hash_mismatch"
+        )
+    if receipt.get("audio") != locator(paths["audio"]):
+        raise AssetConflictError(
+            "candidate_provider_audio_locator_mismatch"
+        )
+    if receipt.get("synthesis_response") != locator(paths["response"]):
+        raise AssetConflictError(
+            "candidate_provider_response_locator_mismatch"
+        )
+    if receipt.get("original_inference_receipt") != locator(
+        paths["original"]
+    ):
+        raise AssetConflictError(
+            "candidate_provider_original_locator_mismatch"
+        )
+    if normalize_sha256(
+        receipt.get("generated_audio_sha256"),
+        label="candidate_provider_audio",
+    ) != sha256_file(paths["audio"]):
+        raise AssetConflictError(
+            "candidate_provider_audio_hash_mismatch"
+        )
+    if str(receipt.get("request_id") or "") != request_id:
+        raise AssetConflictError(
+            "candidate_provider_request_id_mismatch"
+        )
+    return receipt.get("qualification_policy")
+
+
+def migrate_qualification_policy_conflicts(
+    *,
+    asset_dir: Path,
+    archive_root: Path,
+    prompt: str,
+    contract_locator: dict[str, str],
+    checkpoint_id: str,
+    checkpoint_sha256: str,
+    case_id: str,
+    turn_id: str,
+    planned_spoken_text_sha256: str,
+    generation_policy: dict[str, Any],
+    qualification_policy: dict[str, Any],
+) -> bool:
+    """Archive only derived qualification state and retain provider assets."""
+
+    if not asset_dir.exists():
+        return False
+    migrated = False
+    candidate_migrated = False
+    binding_path = asset_dir / "binding-receipt.json"
+    binding = read_json(binding_path) if binding_path.is_file() else None
+    binding_prior_policy = (
+        binding.get("qualification_policy")
+        if isinstance(binding, dict)
+        else None
+    )
+
+    candidates_root = asset_dir / "candidates"
+    if candidates_root.is_dir():
+        for candidate_dir in sorted(candidates_root.iterdir()):
+            if not candidate_dir.is_dir() or not re.fullmatch(
+                r"candidate-\d{3}", candidate_dir.name
+            ):
+                continue
+            paths = _candidate_paths(candidate_dir)
+            if not any(path.exists() for path in paths.values()):
+                continue
+            # Response-only and provider-only crash states have no derived
+            # qualification policy to migrate; complete_candidate resumes them.
+            if not paths["asr"].exists() and not paths["receipt"].exists():
+                continue
+            prior_policy = _validate_candidate_provider_artifacts_for_requalification(
+                candidate_dir=candidate_dir,
+                prompt=prompt,
+                contract_locator=contract_locator,
+                checkpoint_id=checkpoint_id,
+                checkpoint_sha256=checkpoint_sha256,
+                case_id=case_id,
+                turn_id=turn_id,
+                planned_spoken_text_sha256=planned_spoken_text_sha256,
+                generation_policy=generation_policy,
+            )
+            if prior_policy == qualification_policy:
+                continue
+            for derived in (paths["asr"], paths["receipt"]):
+                _archive_qualification_artifact(
+                    path=derived,
+                    asset_dir=asset_dir,
+                    archive_root=archive_root,
+                    case_id=case_id,
+                    turn_id=turn_id,
+                    prior_policy=prior_policy,
+                )
+            migrated = True
+            candidate_migrated = True
+
+    if binding_path.is_file() and (
+        binding_prior_policy != qualification_policy
+        or candidate_migrated
+    ):
+        _archive_qualification_artifact(
+            path=binding_path,
+            asset_dir=asset_dir,
+            archive_root=archive_root,
+            case_id=case_id,
+            turn_id=turn_id,
+            prior_policy=binding_prior_policy,
+        )
+        migrated = True
+
+    exhaustion_path = asset_dir / "qualification-exhausted.json"
+    if exhaustion_path.is_file():
+        exhaustion = read_json(exhaustion_path)
+        prior_policy = exhaustion.get("qualification_policy")
+        if prior_policy != qualification_policy:
+            _archive_qualification_artifact(
+                path=exhaustion_path,
+                asset_dir=asset_dir,
+                archive_root=archive_root,
+                case_id=case_id,
+                turn_id=turn_id,
+                prior_policy=prior_policy,
+            )
+            migrated = True
+    return migrated
 
 
 def validate_legacy_asset(
@@ -1232,15 +1844,31 @@ def complete_candidate(
         asr["normalized_expected_text"] = " ".join(
             normalized_tokens(prompt)
         )
-        asr["wer"] = request_wer(prompt, str(asr.get("transcript") or ""))
-        asr["accepted"] = (
-            asr["wer"] <= qualification_policy["max_request_wer"]
+        asr["wer"] = request_wer(
+            prompt, str(asr.get("transcript") or "")
         )
+        boundary = analyze_internal_silence(
+            paths["audio"],
+            qualification_policy["utterance_boundary"],
+        )
+        asr["utterance_boundary"] = boundary
+        reasons = qualification_rejection_reasons(
+            wer=float(asr["wer"]),
+            boundary=boundary,
+            qualification_policy=qualification_policy,
+        )
+        asr["rejection_reasons"] = reasons
+        asr["rejection_reason"] = reasons[0] if reasons else None
+        asr["accepted"] = not reasons
         atomic_write_json(paths["asr"], asr)
         asr["computed_wer"] = float(asr["wer"])
+        asr["computed_utterance_boundary"] = boundary
+        asr["computed_rejection_reasons"] = reasons
 
-    computed_wer = request_wer(prompt, str(asr.get("transcript") or ""))
-    accepted = computed_wer <= qualification_policy["max_request_wer"]
+    computed_wer = float(asr["computed_wer"])
+    boundary = asr["computed_utterance_boundary"]
+    reasons = list(asr["computed_rejection_reasons"])
+    accepted = not reasons
     candidate_receipt = {
         "schema": CANDIDATE_RECEIPT_SCHEMA,
         "status": "ACCEPTED" if accepted else "REJECTED",
@@ -1289,6 +1917,15 @@ def complete_candidate(
         ),
         "wer": computed_wer,
         "max_request_wer": qualification_policy["max_request_wer"],
+        "utterance_boundary": boundary,
+        "longest_internal_silence_seconds": boundary[
+            "longest_internal_silence_seconds"
+        ],
+        "max_internal_silence_seconds": qualification_policy[
+            "utterance_boundary"
+        ]["max_internal_silence_seconds"],
+        "rejection_reasons": reasons,
+        "rejection_reason": reasons[0] if reasons else None,
     }
     if paths["receipt"].exists():
         raise AssetConflictError(
@@ -1372,6 +2009,14 @@ def _accepted_binding(
             "asr_device": qualification_policy["device"],
             "asr_compute_type": qualification_policy["compute_type"],
             "asr_receipt": accepted["asr"],
+            "utterance_boundary": accepted["utterance_boundary"],
+            "longest_internal_silence_seconds": accepted[
+                "longest_internal_silence_seconds"
+            ],
+            "max_internal_silence_seconds": qualification_policy[
+                "utterance_boundary"
+            ]["max_internal_silence_seconds"],
+            "rejection_reasons": [],
         },
     }
     if binding_path.exists():
@@ -1476,6 +2121,34 @@ def validate_reusable_asset(
         raise AssetConflictError("accepted_binding_wer_mismatch")
     if candidate["wer"] > qualification_policy["max_request_wer"]:
         raise AssetConflictError("accepted_binding_wer_exceeds_threshold")
+    boundary_limit = qualification_policy["utterance_boundary"][
+        "max_internal_silence_seconds"
+    ]
+    if candidate["longest_internal_silence_seconds"] >= boundary_limit:
+        raise AssetConflictError(
+            "accepted_binding_internal_silence_exceeds_threshold"
+        )
+    if qualification.get("utterance_boundary") != candidate[
+        "utterance_boundary"
+    ]:
+        raise AssetConflictError(
+            "accepted_binding_utterance_boundary_mismatch"
+        )
+    if abs(
+        float(
+            qualification.get(
+                "longest_internal_silence_seconds", -1.0
+            )
+        )
+        - candidate["longest_internal_silence_seconds"]
+    ) > 1e-12:
+        raise AssetConflictError(
+            "accepted_binding_internal_silence_mismatch"
+        )
+    if qualification.get("rejection_reasons") != []:
+        raise AssetConflictError(
+            "accepted_binding_rejection_reasons_not_empty"
+        )
     expected_rejected: list[dict[str, str]] = []
     for index in range(1, accepted_index):
         prior = validate_candidate(
@@ -1596,6 +2269,15 @@ def _prepare_one_asset_once(
                     "max_request_wer": qualification_policy[
                         "max_request_wer"
                     ],
+                    "longest_internal_silence_seconds": candidate[
+                        "longest_internal_silence_seconds"
+                    ],
+                    "max_internal_silence_seconds": qualification_policy[
+                        "utterance_boundary"
+                    ]["max_internal_silence_seconds"],
+                    "rejection_reasons": candidate[
+                        "rejection_reasons"
+                    ],
                     "provider_called": provider_called,
                     "candidate_receipt": candidate["receipt"],
                 },
@@ -1667,8 +2349,28 @@ def prepare_one_asset(
     qualification_policy: dict[str, Any],
     regenerate_conflicts: bool,
 ) -> tuple[dict[str, Any], str]:
+    policy_migrated = False
+    if regenerate_conflicts:
+        try:
+            policy_migrated = migrate_qualification_policy_conflicts(
+                asset_dir=asset_dir,
+                archive_root=archive_root,
+                prompt=prompt,
+                contract_locator=contract_locator,
+                checkpoint_id=checkpoint_id,
+                checkpoint_sha256=checkpoint_sha256,
+                case_id=case_id,
+                turn_id=turn_id,
+                planned_spoken_text_sha256=planned_spoken_text_sha256,
+                generation_policy=generation_policy,
+                qualification_policy=qualification_policy,
+            )
+        except (AssetConflictError, ValueError, FileNotFoundError):
+            archive_conflict(asset_dir, archive_root)
+            asset_dir.mkdir(parents=True, exist_ok=True)
+
     try:
-        return _prepare_one_asset_once(
+        bundle, action = _prepare_one_asset_once(
             client=client,
             qualifier=qualifier,
             orpheus_url=orpheus_url,
@@ -1684,6 +2386,12 @@ def prepare_one_asset(
             generation_policy=generation_policy,
             qualification_policy=qualification_policy,
         )
+        if policy_migrated and action in {
+            "QUALIFIED_FROM_RESUME",
+            "REUSED",
+        }:
+            action = "REQUALIFIED_FROM_IMMUTABLE_PROVIDER"
+        return bundle, action
     except (AssetConflictError, ValueError, FileNotFoundError):
         if not regenerate_conflicts:
             raise
@@ -1726,6 +2434,7 @@ def prepare_clone_assets(
     qualification_compute_type: str = "int8",
     max_request_wer: float = 0.25,
     max_candidates: int = 5,
+    max_internal_silence_seconds: float = 2.0,
     regenerate_conflicts: bool = False,
 ) -> dict[str, Any]:
     manifest_path = Path(manifest_path).resolve()
@@ -1758,6 +2467,9 @@ def prepare_clone_assets(
         compute_type=qualification_compute_type,
         max_request_wer=max_request_wer,
         max_candidates=max_candidates,
+        max_internal_silence_seconds=(
+            max_internal_silence_seconds
+        ),
     )
 
     manifest = read_json(manifest_path)
@@ -1895,6 +2607,7 @@ def prepare_clone_assets(
     original_hashes: list[str] = []
     request_ids: list[str] = []
     accepted_wers: list[float] = []
+    accepted_internal_silences: list[float] = []
     accepted_candidate_indices: list[int] = []
     for case in cases:
         for turn in case["turns"]:
@@ -1921,7 +2634,34 @@ def prepare_clone_assets(
                     "prepared_binding_wer_exceeds_threshold:"
                     f"{turn['turn_id']}:{wer}"
                 )
+            boundary = qualification.get("utterance_boundary") or {}
+            try:
+                internal_silence = float(
+                    qualification[
+                        "longest_internal_silence_seconds"
+                    ]
+                )
+            except (KeyError, TypeError, ValueError) as exc:
+                raise RuntimeError(
+                    "prepared_binding_internal_silence_missing:"
+                    f"{turn['turn_id']}"
+                ) from exc
+            if boundary.get("accepted") is not True:
+                raise RuntimeError(
+                    "prepared_binding_utterance_boundary_not_accepted:"
+                    f"{turn['turn_id']}"
+                )
+            boundary_limit = qualification_policy[
+                "utterance_boundary"
+            ]["max_internal_silence_seconds"]
+            if internal_silence >= boundary_limit:
+                raise RuntimeError(
+                    "prepared_binding_internal_silence_exceeds_threshold:"
+                    f"{turn['turn_id']}:{internal_silence}:"
+                    f"{boundary_limit}"
+                )
             accepted_wers.append(wer)
+            accepted_internal_silences.append(internal_silence)
             accepted_candidate_indices.append(
                 int(binding["accepted_candidate_index"])
             )
@@ -1974,7 +2714,14 @@ def prepare_clone_assets(
             "qualified_wake_asset_count": 1,
             "generated_query_asset_count": len(turn_ids),
             "asr_qualified_query_asset_count": len(accepted_wers),
+            "utterance_boundary_qualified_query_asset_count": len(
+                accepted_internal_silences
+            ),
             "max_accepted_request_wer": max(accepted_wers, default=0.0),
+            "max_accepted_internal_silence_seconds": max(
+                accepted_internal_silences,
+                default=0.0,
+            ),
             "max_accepted_candidate_index": max(
                 accepted_candidate_indices, default=0
             ),

@@ -53,6 +53,16 @@ def parser() -> argparse.ArgumentParser:
     prepare_parser.add_argument("--max-request-wer", type=float, default=0.25)
     prepare_parser.add_argument("--max-candidates", type=int, default=5)
     prepare_parser.add_argument(
+        "--max-internal-silence-seconds",
+        type=float,
+        required=True,
+        help=(
+            "Reject query WAVs whose longest speech-bounded internal silence "
+            "is greater than or equal to the managed listener post-speech "
+            "silence boundary. Pass the same value used by the live listener."
+        ),
+    )
+    prepare_parser.add_argument(
         "--regenerate-conflicts",
         action="store_true",
         help=(
@@ -98,6 +108,10 @@ def parser() -> argparse.ArgumentParser:
             ),
         )
         run_parser.add_argument("--memory-tau-timeout-seconds", type=float, default=300)
+        run_parser.add_argument("--memory-answer-read-timeout-seconds", type=float, default=90.0)
+        run_parser.add_argument(
+            "--allow-memory-answer-retry-after-timeout", action="store_true"
+        )
         run_parser.add_argument("--render-timeout-seconds", type=float, default=240)
 
         # Existing managed-listener boundary. These are required only when an
@@ -186,6 +200,7 @@ def main() -> int:
             qualification_compute_type=args.qualification_compute_type,
             max_request_wer=args.max_request_wer,
             max_candidates=args.max_candidates,
+            max_internal_silence_seconds=args.max_internal_silence_seconds,
             regenerate_conflicts=args.regenerate_conflicts,
         )
         return 0
@@ -230,6 +245,12 @@ def main() -> int:
                     else None
                 ),
                 "memory_tau_timeout_seconds": args.memory_tau_timeout_seconds,
+                "memory_answer_read_timeout_seconds": (
+                    args.memory_answer_read_timeout_seconds
+                ),
+                "allow_memory_answer_retry_after_timeout": (
+                    args.allow_memory_answer_retry_after_timeout
+                ),
                 "render_timeout_seconds": args.render_timeout_seconds,
                 "realtimestt_repo": (
                     str(args.realtimestt_repo) if args.realtimestt_repo else None
