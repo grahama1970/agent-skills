@@ -161,9 +161,64 @@ def test_goal_lock_skipped_for_none_mode(tmp_path: Path) -> None:
 def test_submit_runs_browser_oracle_before_provenance_and_surf() -> None:
     source = MODULE_PATH.read_text()
     submit_source = source[source.index("def submit(") : source.index("def _raise_deliverable_missing")]
-    assert submit_source.index("_browser_oracle_doctor") < submit_source.index("_source_provenance")
+    assert submit_source.index("_resolve_submission_target") < submit_source.index("_source_provenance")
     submit_stage = source[source.index("def _submit_stage(") : source.index("def _latest_bundle")]
     assert "webgpt.preflight" in submit_stage
+    assert '"kimi.submit"' in submit_stage
+
+
+def test_provider_is_inferred_from_authoritative_url() -> None:
+    assert webgpt_cli._provider_for_url("https://chatgpt.com/c/example") == (
+        "webgpt",
+        "webgpt",
+    )
+    assert webgpt_cli._provider_for_url("https://www.kimi.com/chat/example") == (
+        "webkimi",
+        "kimi",
+    )
+
+
+def test_unsupported_provider_fails_loudly() -> None:
+    with pytest.raises(webgpt_cli.TargetResolutionError) as captured:
+        webgpt_cli._provider_for_url("https://example.com/chat")
+    assert captured.value.code == "PROVIDER_UNSUPPORTED"
+
+
+def test_explicit_tab_resolution_uses_live_url_and_oracle_backend(monkeypatch) -> None:
+    kimi_url = "https://www.kimi.com/chat/example"
+    monkeypatch.setattr(
+        webgpt_cli,
+        "_tab_identity",
+        lambda tab_id: {"id": tab_id, "url": kimi_url},
+    )
+    monkeypatch.setattr(
+        webgpt_cli,
+        "_browser_oracle_binding_for_tab",
+        lambda backend, tab_id, url: {
+            "name": "kimi-tab",
+            "backend": backend,
+            "tab_id": tab_id,
+            "conversation_url": url,
+        },
+    )
+    binding, transport, tab_id, url = webgpt_cli._resolve_submission_target(
+        "ignored", ".", "837357145", ""
+    )
+    assert binding["backend"] == "webkimi"
+    assert (transport, tab_id, url) == ("kimi", "837357145", kimi_url)
+
+
+def test_explicit_tab_url_assertion_fails_before_oracle(monkeypatch) -> None:
+    monkeypatch.setattr(
+        webgpt_cli,
+        "_tab_identity",
+        lambda tab_id: {"id": tab_id, "url": "https://www.kimi.com/chat/right"},
+    )
+    with pytest.raises(webgpt_cli.TargetResolutionError) as captured:
+        webgpt_cli._resolve_submission_target(
+            "ignored", ".", "837357145", "https://www.kimi.com/chat/wrong"
+        )
+    assert captured.value.code == "TAB_IDENTITY_MISMATCH"
 
 
 def test_provenance_block_contains_clone_sha_and_relative_paths() -> None:

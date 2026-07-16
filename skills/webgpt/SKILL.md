@@ -29,17 +29,27 @@ All commands default to `--background` (no KDE switch, no window focus).
 
 ## Hard tab-id preservation rule
 
-When the human gives an explicit WebGPT/ChatGPT tab id, that tab id is
-authoritative. Do not create, select, discover, or reuse any other tab.
+When the human gives an explicit ChatGPT or Kimi tab id, that tab id is
+authoritative. The project agent does not select a provider. WebGPT resolves the
+live URL for that exact tab and dispatches by hostname:
+
+| Live hostname | Browser Oracle backend | Surf transport |
+|---|---|---|
+| `chatgpt.com` | `webgpt` | `webgpt.submit` |
+| `kimi.com` | `webkimi` | `kimi.submit` |
+
+Unsupported hosts fail with `BLOCKED_WEBGPT_PROVIDER_UNSUPPORTED`. Do not
+create, select, discover, or reuse any other tab.
 
 Required behavior before submitting:
 
-1. Run a tab identity preflight against the exact tab id and expected URL.
-2. Submit only with that exact tab id and expected URL.
-3. Do not pass `--create-tab`.
-4. Do not rely on project binding alone.
-5. Do not rely on `/tmp/surf-webgpt-controlled-tab-id`.
-6. If the wrapper cannot expose explicit tab-id submission, use the composed
+1. Resolve the live URL from the exact tab id without activation.
+2. Infer the provider from that URL; `--expect-url` is an optional assertion.
+3. Require a ready Browser Oracle binding for the inferred backend and exact tab.
+4. Submit only with that exact tab id and resolved URL.
+5. Do not pass `--create-tab`.
+6. Do not rely on project binding alone or provider-specific state files.
+7. If the wrapper cannot expose explicit tab-id submission, use the composed
    Surf transport directly:
 
 ```bash
@@ -59,6 +69,14 @@ skills/surf/run.sh webgpt.submit \
   --expect-url "<EXPECTED_CHATGPT_CONVERSATION_URL>" \
   --no-activate \
   --no-remember
+
+# Kimi uses the same exact-tab rule through its provider transport.
+skills/surf/run.sh kimi.submit \
+  --input bundle.md \
+  --output response.md \
+  --meta-output response.meta.json \
+  --tab-id <HUMAN_TAB_ID> \
+  --no-activate
 ```
 
 The proof metadata must show:
@@ -74,10 +92,11 @@ resubmit through a path that can create a new tab.
 
 ## Mandatory Browser Oracle and source-provenance preflight
 
-Every `submit` calls Browser Oracle `doctor` before repository validation or
-Surf transport. The Oracle binding must be `ready` and its project, tab id, and
-conversation URL must exactly match the submission target. WebGPT does not
-silently discover, replace, or bypass a missing binding.
+For an explicit `--tab-id`, `submit` performs a non-mutating Surf inventory to
+resolve the live URL, then verifies the matching `webgpt` or `webkimi` Browser
+Oracle binding before repository validation or prompt injection. The binding's
+tab id and conversation URL must exactly match the live tab. WebGPT does not
+silently create, replace, or bypass a missing binding.
 
 Every repository-backed mode (`assess`, `plan`, `code`, and `all`) also requires:
 
@@ -235,18 +254,17 @@ python scripts/webgpt_cli.py submit bundle.md -p <project> \
   --repo-root "$PWD" --source-path src/service.py --source-path tests/test_service.py
 ```
 
-**Step 2 — target the exact Browser Oracle binding (never auto-pick one).**
-Browser Oracle must already resolve the project to the live tab and URL. Inline
-tab and URL flags are optional assertions; when supplied they must match Oracle:
+**Step 2 — pass the exact tab ID (never choose a provider).** Browser Oracle
+must already contain a live binding for that tab under the inferred backend.
+`--expect-url` is optional and only asserts that the tab did not navigate:
 
 ```bash
-# inline (preferred, most explicit)
-python scripts/webgpt_cli.py submit bundle.md -p <project> \
-  --tab-id <HUMAN_TAB_ID> --expect-url "https://chatgpt.com/c/<id>"
+# Provider-neutral: works for a bound ChatGPT or Kimi tab.
+python scripts/webgpt_cli.py submit bundle.md --tab-id <HUMAN_TAB_ID>
 
-# or bind once, then submit
-python scripts/webgpt_cli.py config -p <project> --tab-id <HUMAN_TAB_ID> --url "https://chatgpt.com/c/<id>" --kde-desktop 2
-python scripts/webgpt_cli.py submit bundle.md -p <project>
+# Optional URL race assertion.
+python scripts/webgpt_cli.py submit bundle.md --tab-id <HUMAN_TAB_ID> \
+  --expect-url "https://www.kimi.com/chat/<id>"
 ```
 
 **Step 3 — choose exactly one mode.** Modes, the flag they need, the required
@@ -269,6 +287,8 @@ machine-checkable:
 | 1 | `Bundle not found` | bad bundle path |
 | 2 | `--output-contract must be one of: …` | invalid mode |
 | 2 | `BLOCKED_WEBGPT_BROWSER_ORACLE_UNAVAILABLE` / `…_PROOF_MISSING` / `…_NOT_READY` / `…_IDENTITY_MISMATCH` | Browser Oracle is missing, unhealthy, or disagrees with the target |
+| 2 | `BLOCKED_WEBGPT_PROVIDER_UNSUPPORTED` | exact tab URL has no supported provider transport |
+| 2 | `BLOCKED_WEBGPT_TAB_INVENTORY_UNAVAILABLE` / `…_INVALID` / `…_IDENTITY_MISSING` / `…_IDENTITY_MISMATCH` | exact tab cannot be resolved or changed URL before injection |
 | 2 | `BLOCKED_WEBGPT_SOURCE_PATH_REQUIRED` / `…_ABSOLUTE` / `…_OUTSIDE_REPO` / `…_NOT_COMMITTED` / `…_UNCOMMITTED` | declared source is absent or not reproducible from `HEAD` |
 | 2 | `BLOCKED_WEBGPT_SOURCE_REPO_REQUIRED` / `…_UPSTREAM_MISSING` / `…_REMOTE_UNAVAILABLE` / `…_COMMIT_UNPUSHED` | repository or pushed-upstream proof failed |
 | 2 | `BLOCKED_WEBGPT_EXACT_TAB_REQUIRED` | no exact tab id + conversation URL |
@@ -321,10 +341,14 @@ This ensures every failure is tracked and can be debugged. No silent failures.
 | `listen` | auto-file issue on failure, surf webgpt.extract with sentinel polling |
 | `close` | surf tab.close |
 
-## Project binding
+## Browser Oracle binding
 
 ```bash
-python scripts/webgpt_cli.py config --tab-id 837356566 --url "https://chatgpt.com/c/..." --kde-desktop 2
+skills/browser-oracle/run.sh bind <name> --backend webgpt \
+  --tab-id <id> --url "https://chatgpt.com/c/<id>" --manual
+
+skills/browser-oracle/run.sh bind <name> --backend webkimi \
+  --tab-id <id> --url "https://www.kimi.com/chat/<id>" --manual
 ```
 
-Stored in `~/.pi/webgpt-projects/<project>.json`.
+Stored in `~/.pi/webgpt-projects/` or `~/.pi/webkimi-projects/`.

@@ -225,6 +225,14 @@ class SourceProvenanceError(RuntimeError):
         self.code = code
 
 
+class TargetResolutionError(RuntimeError):
+    """The exact tab cannot be mapped to one supported, Oracle-bound provider."""
+
+    def __init__(self, code: str, detail: str):
+        super().__init__(detail)
+        self.code = code
+
+
 def _git(repo: Path, *args: str, timeout: int = 60) -> subprocess.CompletedProcess:
     return subprocess.run(
         ["git", "-C", str(repo), *args],
@@ -388,47 +396,143 @@ def _source_provenance_block(provenance: dict) -> str:
     )
 
 
-def _browser_oracle_doctor(project: str, from_path: str) -> dict:
-    """Require Browser Oracle readiness before any Surf/browser operation."""
+def _run_browser_oracle(*args: str) -> subprocess.CompletedProcess:
     if not BROWSER_ORACLE.exists():
-        raise RuntimeError("BLOCKED_WEBGPT_BROWSER_ORACLE_UNAVAILABLE: runtime missing")
+        raise TargetResolutionError("BROWSER_ORACLE_UNAVAILABLE", "runtime missing")
     try:
-        result = subprocess.run(
-            [
-                str(BROWSER_ORACLE),
-                "doctor",
-                "--from",
-                str(Path(from_path).expanduser().resolve()),
-                "--backend",
-                "webgpt",
-                "--project",
-                project,
-                "--json",
-            ],
+        return subprocess.run(
+            [str(BROWSER_ORACLE), *args],
             capture_output=True,
             text=True,
             timeout=30,
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
-        raise RuntimeError(f"BLOCKED_WEBGPT_BROWSER_ORACLE_UNAVAILABLE: {exc}") from exc
+        raise TargetResolutionError("BROWSER_ORACLE_UNAVAILABLE", str(exc)) from exc
+
+
+def _browser_oracle_doctor(project: str, from_path: str, backend: str) -> dict:
+    """Require Browser Oracle readiness before any Surf/browser operation."""
+    result = _run_browser_oracle(
+        "doctor",
+        "--from",
+        str(Path(from_path).expanduser().resolve()),
+        "--backend",
+        backend,
+        "--project",
+        project,
+        "--json",
+    )
     try:
         payload = json.loads(result.stdout)
     except json.JSONDecodeError as exc:
-        raise RuntimeError(
-            f"BLOCKED_WEBGPT_BROWSER_ORACLE_PROOF_MISSING: {exc}"
-        ) from exc
+        raise TargetResolutionError("BROWSER_ORACLE_PROOF_MISSING", str(exc)) from exc
     if result.returncode != 0 or payload.get("readiness") != "ready":
         issues = ",".join(payload.get("issues", [])) or result.stderr.strip() or "not_ready"
-        raise RuntimeError(f"BLOCKED_WEBGPT_BROWSER_ORACLE_NOT_READY: {issues}")
+        raise TargetResolutionError("BROWSER_ORACLE_NOT_READY", issues)
     if str(payload.get("project", "")) != project:
-        raise RuntimeError(
-            "BLOCKED_WEBGPT_BROWSER_ORACLE_IDENTITY_MISMATCH: project mismatch"
+        raise TargetResolutionError(
+            "BROWSER_ORACLE_IDENTITY_MISMATCH", "project mismatch"
         )
     if not payload.get("tab_id") or not payload.get("conversation_url"):
-        raise RuntimeError(
-            "BLOCKED_WEBGPT_BROWSER_ORACLE_IDENTITY_MISMATCH: tab id or URL missing"
+        raise TargetResolutionError(
+            "BROWSER_ORACLE_IDENTITY_MISMATCH", "tab id or URL missing"
         )
     return payload
+
+
+def _provider_for_url(url: str) -> tuple[str, str]:
+    """Map an authoritative tab URL to (Browser Oracle backend, Surf transport)."""
+    host = (urlsplit(url).hostname or "").lower()
+    if host == "chatgpt.com" or host.endswith(".chatgpt.com"):
+        return "webgpt", "webgpt"
+    if host == "kimi.com" or host.endswith(".kimi.com"):
+        return "webkimi", "kimi"
+    raise TargetResolutionError(
+        "PROVIDER_UNSUPPORTED", f"no WebGPT transport is registered for host {host or '<missing>'}"
+    )
+
+
+def _same_url(left: str, right: str) -> bool:
+    return left.rstrip("/") == right.rstrip("/")
+
+
+def _tab_identity(tab_id: str) -> dict:
+    """Resolve one exact Chrome tab without selecting or activating another tab."""
+    result = _surf("tab.list", "--json")
+    if result.returncode != 0:
+        raise TargetResolutionError(
+            "TAB_INVENTORY_UNAVAILABLE", result.stderr.strip() or "surf tab.list failed"
+        )
+    try:
+        payload = json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        raise TargetResolutionError("TAB_INVENTORY_INVALID", str(exc)) from exc
+    tabs = payload.get("tabs", []) if isinstance(payload, dict) else payload
+    matches = [tab for tab in tabs if str(tab.get("id", "")) == tab_id]
+    if len(matches) != 1:
+        raise TargetResolutionError(
+            "TAB_IDENTITY_MISSING", f"expected one open tab {tab_id}, found {len(matches)}"
+        )
+    url = str(matches[0].get("url", "")).strip()
+    if not url:
+        raise TargetResolutionError("TAB_IDENTITY_MISSING", f"tab {tab_id} has no URL")
+    return matches[0]
+
+
+def _browser_oracle_binding_for_tab(backend: str, tab_id: str, url: str) -> dict:
+    """Find the ready Browser Oracle binding that owns an explicit tab identity."""
+    result = _run_browser_oracle("list", "--backend", backend, "--verify", "--json")
+    if result.returncode != 0:
+        raise TargetResolutionError(
+            "BROWSER_ORACLE_NOT_READY", result.stderr.strip() or f"{backend} list failed"
+        )
+    try:
+        rows = json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        raise TargetResolutionError("BROWSER_ORACLE_PROOF_MISSING", str(exc)) from exc
+    matches = [row for row in rows if str(row.get("tab_id", "")) == tab_id]
+    if len(matches) != 1:
+        raise TargetResolutionError(
+            "BROWSER_ORACLE_NOT_READY",
+            f"expected one {backend} binding for tab {tab_id}, found {len(matches)}",
+        )
+    binding = matches[0]
+    if binding.get("tab_open") is not True:
+        raise TargetResolutionError(
+            "BROWSER_ORACLE_NOT_READY", f"{backend} binding for tab {tab_id} is not open"
+        )
+    if not _same_url(str(binding.get("conversation_url", "")), url):
+        raise TargetResolutionError(
+            "BROWSER_ORACLE_IDENTITY_MISMATCH", "bound URL does not match the live tab URL"
+        )
+    return binding
+
+
+def _resolve_submission_target(
+    project: str,
+    from_path: str,
+    tab_id_override: str,
+    expected_url_override: str,
+) -> tuple[dict, str, str, str]:
+    """Resolve (binding, provider transport, tab id, URL) fail-closed."""
+    explicit_tab = tab_id_override.strip()
+    if explicit_tab:
+        if not explicit_tab.isdigit():
+            raise TargetResolutionError("TAB_IDENTITY_INVALID", "--tab-id must be numeric")
+        tab = _tab_identity(explicit_tab)
+        live_url = str(tab["url"]).strip()
+        if expected_url_override and not _same_url(expected_url_override.strip(), live_url):
+            raise TargetResolutionError(
+                "TAB_IDENTITY_MISMATCH", "--expect-url does not match the live tab URL"
+            )
+        backend, transport = _provider_for_url(live_url)
+        binding = _browser_oracle_binding_for_tab(backend, explicit_tab, live_url)
+        return binding, transport, explicit_tab, live_url
+
+    binding = _browser_oracle_doctor(project, from_path, "webgpt")
+    tab_id, url = _exact_submission_target(binding, "", expected_url_override)
+    _backend, transport = _provider_for_url(url)
+    return binding, transport, tab_id, url
 
 
 def _active_chatgpt_tab() -> str:
@@ -618,7 +722,7 @@ def submit(
     ),
     tab_id_override: str = typer.Option("", "--tab-id", help="Exact human-supplied tab id"),
     expected_url_override: str = typer.Option(
-        "", "--expect-url", help="Exact expected ChatGPT conversation URL"
+        "", "--expect-url", help="Optional assertion for the exact provider conversation URL"
     ),
     repo_root: str = typer.Option(
         ".", "--repo-root", help="Project Git repository root"
@@ -651,23 +755,12 @@ def submit(
         raise typer.Exit(2)
 
     try:
-        b = _browser_oracle_doctor(project, repo_root)
-    except RuntimeError as exc:
-        typer.echo(str(exc), err=True)
-        raise typer.Exit(2)
-    try:
-        tab_id, conversation_url = _exact_submission_target(
-            b, tab_id_override, expected_url_override
+        b, transport, tab_id, conversation_url = _resolve_submission_target(
+            project, repo_root, tab_id_override, expected_url_override
         )
-    except ValueError as exc:
-        typer.echo(f"BLOCKED_WEBGPT_EXACT_TAB_REQUIRED: {exc}", err=True)
-        raise typer.Exit(2)
-
-    if (
-        tab_id != str(b.get("tab_id", ""))
-        or conversation_url != str(b.get("conversation_url", ""))
-    ):
-        typer.echo("BLOCKED_WEBGPT_BROWSER_ORACLE_IDENTITY_MISMATCH", err=True)
+    except (TargetResolutionError, ValueError) as exc:
+        code = exc.code if isinstance(exc, TargetResolutionError) else "EXACT_TAB_REQUIRED"
+        typer.echo(f"BLOCKED_WEBGPT_{code}: {exc}", err=True)
         raise typer.Exit(2)
 
     provenance = None
@@ -683,7 +776,7 @@ def submit(
     modes = ("assess", "plan", "code") if output_contract == "all" else (output_contract,)
     for mode in modes:
         ok, _resp = _submit_stage(
-            bp, mode, tab_id, conversation_url, b, timeout, provenance
+            bp, mode, transport, tab_id, conversation_url, b, timeout, provenance
         )
         if not ok:
             _raise_deliverable_missing(mode, bp, b)
@@ -708,6 +801,7 @@ def _raise_deliverable_missing(mode: str, bp: Path, binding: dict) -> None:
 def _submit_stage(
     bp: Path,
     mode: str,
+    transport: str,
     tab_id: str,
     conversation_url: str,
     b: dict,
@@ -720,17 +814,30 @@ def _submit_stage(
     (deliverable_satisfied, response_path).
     """
     aug = _augment_bundle(bp, mode, provenance)
-    preflight = _surf(
-        "webgpt.preflight",
-        "--tab-id", tab_id,
-        "--expect-url", conversation_url,
-        "--no-activate",
-        "--json",
-    )
-    if preflight.returncode != 0:
-        _report_failure("submit-preflight", preflight, binding=b, bundle=str(bp))
-        typer.echo("BLOCKED_WEBGPT_TAB_IDENTITY_PREFLIGHT", err=True)
-        raise typer.Exit(preflight.returncode)
+    if transport == "webgpt":
+        preflight = _surf(
+            "webgpt.preflight",
+            "--tab-id", tab_id,
+            "--expect-url", conversation_url,
+            "--no-activate",
+            "--json",
+        )
+        if preflight.returncode != 0:
+            _report_failure("submit-preflight", preflight, binding=b, bundle=str(bp))
+            typer.echo("BLOCKED_WEBGPT_TAB_IDENTITY_PREFLIGHT", err=True)
+            raise typer.Exit(preflight.returncode)
+    elif transport == "kimi":
+        try:
+            live_tab = _tab_identity(tab_id)
+        except TargetResolutionError as exc:
+            typer.echo(f"BLOCKED_WEBGPT_{exc.code}: {exc}", err=True)
+            raise typer.Exit(2)
+        if not _same_url(str(live_tab.get("url", "")), conversation_url):
+            typer.echo("BLOCKED_WEBGPT_TAB_IDENTITY_MISMATCH", err=True)
+            raise typer.Exit(2)
+    else:
+        typer.echo(f"BLOCKED_WEBGPT_PROVIDER_UNSUPPORTED: {transport}", err=True)
+        raise typer.Exit(2)
 
     tag = "" if mode in {"code", "none"} else f"-{mode}"
     resp_path = bp.with_name(f"{bp.stem}{tag}-response.md")
@@ -740,25 +847,40 @@ def _submit_stage(
     receipt_path = bp.with_name(f"{bp.stem}{tag}-response.receipt.json")
 
     typer.echo(f"Submitting {bp.name} [{mode}]...", err=True)
-    cmd: list[str | int] = [
-        "webgpt.submit",
-        "--input", str(aug),
-        "--output", str(resp_path),
-        "--raw-output", str(raw_path),
-        "--meta-output", str(meta_path),
-        "--receipt-output", str(receipt_path),
-        "--timeout", str(timeout),
-        "--tab-id", tab_id,
-        "--expect-url", conversation_url,
-        "--no-activate",
-        "--no-remember",
-    ]
+    if transport == "webgpt":
+        cmd: list[str | int] = [
+            "webgpt.submit",
+            "--input", str(aug),
+            "--output", str(resp_path),
+            "--raw-output", str(raw_path),
+            "--meta-output", str(meta_path),
+            "--receipt-output", str(receipt_path),
+            "--timeout", str(timeout),
+            "--tab-id", tab_id,
+            "--expect-url", conversation_url,
+            "--no-activate",
+            "--no-remember",
+        ]
+    else:
+        cmd = [
+            "kimi.submit",
+            "--input", str(aug),
+            "--output", str(resp_path),
+            "--raw-output", str(raw_path),
+            "--meta-output", str(meta_path),
+            "--timeout", str(timeout),
+            "--tab-id", tab_id,
+            "--url", conversation_url,
+            "--no-activate",
+        ]
     if bp.suffix == ".zip":
         cmd += ["--attach-file", str(bp)]
     result = _surf(*cmd)
 
     if result.returncode != 0:
-        _report_failure("submit", result, binding=b, bundle=str(bp), timeout=str(timeout))
+        _report_failure(
+            f"submit-{transport}", result, binding=b, bundle=str(bp), timeout=str(timeout)
+        )
         typer.echo("Submit failed", err=True)
         raise typer.Exit(result.returncode)
 
@@ -770,6 +892,23 @@ def _submit_stage(
     if not _routing_meta_is_exact(meta, tab_id):
         typer.echo("BLOCKED_WEBGPT_ROUTING_PROOF_MISMATCH", err=True)
         raise typer.Exit(3)
+    if transport == "kimi":
+        receipt_path.write_text(
+            json.dumps(
+                {
+                    "schema": "webgpt.provider_route_receipt.v1",
+                    "transport": transport,
+                    "browser_oracle_backend": str(b.get("backend", "")),
+                    "browser_oracle_project": str(b.get("name", b.get("project", ""))),
+                    "requested_tab_id": tab_id,
+                    "conversation_url": conversation_url,
+                    "meta_output": str(meta_path),
+                    "source_provenance": provenance,
+                },
+                indent=2,
+            )
+            + "\n"
+        )
     typer.echo(f"Response: {resp_path}")
 
     if mode == "code" and not _has_code_deliverable(resp_path, zip_path):
