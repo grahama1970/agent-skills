@@ -34,6 +34,7 @@ def run_submit(
     env = os.environ.copy()
     env["SURF_RUN_SH"] = str(fake_run)
     env["SURF_WEBGPT_EXTRACT_FALLBACK_BUDGET"] = "0"
+    env["TMPDIR"] = str(tmp_path)
     return subprocess.run(
         [
             "bash",
@@ -188,6 +189,7 @@ esac
     assert "extension.reload" in invocations
     assert "tab.new" not in invocations
     assert "chatgpt" not in invocations
+    assert not list(tmp_path.glob("surf-webgpt-cdp-*.log"))
 
 
 def test_webgpt_submit_blocks_concurrent_submit_to_same_tab(tmp_path: Path) -> None:
@@ -303,6 +305,7 @@ esac
     assert "extension.reload" in invocations
     assert "chatgpt" in invocations
     assert "tab.new" not in invocations
+    assert not list(tmp_path.glob("surf-webgpt-cdp-*.log"))
 
 
 def test_webgpt_submit_allow_foreground_flag_does_not_activate_tab(tmp_path: Path) -> None:

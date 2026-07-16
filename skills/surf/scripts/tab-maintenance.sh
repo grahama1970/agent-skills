@@ -161,6 +161,13 @@ def guard_value_is_inactive(v):
     return v is False
 
 
+def guard_value_is_known(v):
+    if isinstance(v, dict):
+        value = v.get("value", v.get("active", v.get("isActive", v.get("ok"))))
+        return isinstance(value, bool)
+    return isinstance(v, bool)
+
+
 def guards_safe(state):
     guards = (state or {}).get("guards") or {}
     required = ["chatgptGeneration", "nonEmptyEditableDraft", "activeDownload"]
@@ -172,7 +179,9 @@ def guards_safe(state):
         "download_inactive": guard_value_is_inactive(guards["activeDownload"]),
     }
     if not all(safety.values()):
-        return False, safety, {"known": False, "reason": "hazard guard active or unknown", "guards": guards}
+        known = all(guard_value_is_known(guards[key]) for key in required)
+        reason = "hazard guard true" if known else "hazard guard active or unknown"
+        return False, safety, {"known": known, "reason": reason, "guards": guards}
     return True, safety, {"known": True, "reason": "all hazard guards false", "guards": guards}
 
 
