@@ -57,6 +57,14 @@ _COMMON_ALIASES = {
     "santa": "Willie T. Soke",
 }
 
+def _wikipedia_parse_url(title: str) -> str:
+    import urllib.parse
+
+    movie_name = title.split("(")[0].strip().replace(" ", "_")
+    page = urllib.parse.quote(movie_name)
+    return f"https://en.wikipedia.org/w/api.php?action=parse&page={page}&prop=text&section=2&format=json"
+
+
 def _word_in(phrase: str, word: str) -> bool:
     return word in phrase.split()
 
@@ -67,8 +75,7 @@ def _fetch_cast_map(title: str) -> dict[str, str]:
     cache_key = title.lower().strip()
     if cache_key in _CAST_CACHE:
         return _CAST_CACHE[cache_key]
-    movie_name = title.split("(")[0].strip().replace(" ", "_")
-    api_url = f"https://en.wikipedia.org/w/api.php?action=parse&page={urllib.request.quote(movie_name)}&prop=text&section=2&format=json"
+    api_url = _wikipedia_parse_url(title)
     cast_map: dict[str, str] = {}
     try:
         req = urllib.request.Request(api_url, headers={"User-Agent": "WatchSkill/1.0"})

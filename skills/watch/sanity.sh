@@ -24,7 +24,7 @@ from scenes import parse_srt, find_scenes, analyze_emotions, VALID_TAGS, VALID_E
 from report import write_report, write_markdown_report, write_html_report, write_frames_manifest, build_scene_elements
 from video_memory import recall_video_question, corroborate_movie_question, ask_movie_question
 import bad_santa_canary
-from watch import _env_without_venv, _find_movie_in_library, _find_video_in_dir, _find_srt_in_dir, _check_radarr_library, _resolve_movie_source, MOVIE_LIBRARY, SKILLS_DIR
+from watch import _env_without_venv, _find_movie_in_library, _find_video_in_dir, _find_srt_in_dir, _check_radarr_library, _resolve_movie_source, _wikipedia_parse_url, MOVIE_LIBRARY, SKILLS_DIR
 " 2>/dev/null && pass "all imports OK" || fail "imports failed"
 
 # ---------------------------------------------------------------------------
@@ -94,6 +94,12 @@ else:
 result = _check_radarr_library('The Devil Wears Prada')
 assert result is None, 'Watch must not return direct Radarr state'
 print('  acquisition: delegated to ingest-movie')
+
+from watch import _wikipedia_parse_url
+cast_url = _wikipedia_parse_url('The Devil Wears Prada (2006)')
+assert 'page=The_Devil_Wears_Prada' in cast_url, cast_url
+assert 'section=2' in cast_url, cast_url
+print('  cast lookup URL quoting OK')
 " 2>/dev/null && pass "movie resolution checks OK" || fail "movie resolution checks failed"
 
 # ---------------------------------------------------------------------------
