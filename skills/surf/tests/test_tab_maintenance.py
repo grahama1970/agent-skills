@@ -131,4 +131,24 @@ def test_reload_blocks_unknown_guard_value(tmp_path):
     assert receipt["status"] == "skipped_guarded"
     assert receipt["success"] is False
     assert receipt["guard_success"] is False
+    assert receipt["guard_observation"]["known"] is False
+    assert "tab.reload" not in log.read_text()
+
+
+def test_reload_records_active_guard_as_known_hazard(tmp_path):
+    root = tmp_path / "projects"
+    root.mkdir()
+    (root / "p.json").write_text(json.dumps({"name": "p", "backend": "webgpt", "tab_id": "1", "conversation_url": "https://chatgpt.com/c/abc"}))
+    log = tmp_path / "surf.log"
+    surf = tmp_path / "surf"
+    recovery = {"guards": {"chatgptGeneration": {"value": True}, "nonEmptyEditableDraft": {"value": False}, "activeDownload": {"value": False}}}
+    write_fake_surf(surf, log, "1\tChatGPT\thttps://chatgpt.com/c/abc\n", recovery)
+
+    proc = run(tmp_path, "--repair", "--root", str(root), "--surf-run", str(surf), "--receipt-dir", str(tmp_path / "r"), "--project", "p", "--trigger", "discarded")
+
+    assert proc.returncode == 0, proc.stderr
+    receipt = json.loads((tmp_path / "r" / "p.json").read_text())
+    assert receipt["status"] == "skipped_guarded"
+    assert receipt["guard_observation"]["known"] is True
+    assert receipt["guard_observation"]["reason"] == "hazard guard true"
     assert "tab.reload" not in log.read_text()

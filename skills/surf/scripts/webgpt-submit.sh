@@ -956,10 +956,10 @@ focus_before_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
 # Surf once and retry the same tab, then fail closed before submission.
 if [[ -n "${requested_tab_id:-}" ]]; then
   no_activate=1
-  cdp_probe_err="$(mktemp /tmp/surf-webgpt-cdp-probe.XXXXXX.log)"
+  cdp_probe_err="$(mktemp "${TMPDIR:-/tmp}/surf-webgpt-cdp-probe.XXXXXX.log")"
   cdp_ok="$("$RUN_SH" js "return 'cdp-ok'" --no-activate --tab-id "$requested_tab_id" 2>"$cdp_probe_err" || true)"
   if [[ "$cdp_ok" != "cdp-ok" && "$cdp_ok" != '"cdp-ok"' ]]; then
-    cdp_retry_err="$(mktemp /tmp/surf-webgpt-cdp-retry.XXXXXX.log)"
+    cdp_retry_err="$(mktemp "${TMPDIR:-/tmp}/surf-webgpt-cdp-retry.XXXXXX.log")"
     "$RUN_SH" extension.reload >/dev/null 2>"$cdp_retry_err" || true
     for _surf_ping_attempt in $(seq 1 30); do
       if "$RUN_SH" extension.ping >/dev/null 2>>"$cdp_retry_err"; then
@@ -1008,9 +1008,11 @@ pathlib.Path(meta).write_text(json.dumps({
 }, indent=2) + "\n", encoding="utf-8")
 PY
     enrich_agent_diagnosis
+    rm -f -- "$cdp_probe_err" "${cdp_retry_err:-}"
     echo "webgpt.submit blocked: stale CDP on explicit tab $requested_tab_id after same-tab extension reload retry; no prompt submitted and no fallback tab created." >&2
     exit 6
   fi
+  rm -f -- "$cdp_probe_err" "${cdp_retry_err:-}"
 fi
 
 if [[ "$no_activate" -eq 1 ]]; then
