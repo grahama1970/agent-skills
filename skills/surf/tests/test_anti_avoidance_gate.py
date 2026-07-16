@@ -1,0 +1,129 @@
+"""Real tests for the anti-avoidance gate: no mocks.
+
+Every test runs a genuine blocker command (a shell test against a marker file)
+in a real temp dir and inspects real persisted state. The blocker "passes" only
+when the marker file exists, mimicking a real live-proof command flipping from
+fail to pass when the actual defect is fixed.
+"""
+import importlib.util
+import sys
+from pathlib import Path
+
+import pytest
+
+MOD = Path(__file__).resolve().parent.parent / "scripts" / "lib" / "anti_avoidance_gate.py"
+spec = importlib.util.spec_from_file_location("anti_avoidance_gate", MOD)
+gate = importlib.util.module_from_spec(spec)
+sys.modules["anti_avoidance_gate"] = gate
+spec.loader.exec_module(gate)
+
+
+def _gate_dict(repo: Path, **over):
+    d = {
+        "goal_id": "battle-arena-live",
+        "goal_lock": "Battle Arena must render a live turn end-to-end.",
+        "current_milestone": "server emits a turn event the client renders",
+        "top_blocker": "no turn event reaches the client",
+        "blocker_evidence": {
+            # passes (rc 0) only once the marker file exists == real fix landed
+            "command": "test -f fixed.marker",
+            "cwd": str(repo),
+        },
+        "allowed_paths": ["src/**", "server/**"],
+        "attempt_budget": 2,
+    }
+    d.update(over)
+    return d
+
+
+def test_multiple_milestones_rejected(tmp_path):
+    g = _gate_dict(tmp_path, current_milestone=["a", "b"])
+    with pytest.raises(gate.GateError) as ei:
+        gate.validate_gate(g)
+    assert ei.value.code == "MULTIPLE_MILESTONES"
+
+
+def test_open_requires_failing_blocker(tmp_path):
+    (tmp_path / "fixed.marker").write_text("done")  # blocker already passes
+    with pytest.raises(gate.GateError) as ei:
+        gate.open_gate(_gate_dict(tmp_path), tmp_path / "state")
+    assert ei.value.code == "GATE_BLOCKER_NOT_FAILING"
+
+
+def test_open_locks_gate_and_freezes_hash(tmp_path):
+    g = _gate_dict(tmp_path)
+    res = gate.open_gate(g, tmp_path / "state")
+    assert res.verdict == "GATE_OPEN"
+    assert res.goal_hash.startswith("sha256:")
+    # hash is stable across identical gates and changes when a core field changes
+    assert gate.compute_goal_hash(g) == res.goal_hash
+    g2 = _gate_dict(tmp_path, top_blocker="different blocker")
+    assert gate.compute_goal_hash(g2) != res.goal_hash
+
+
+def test_tests_only_round_earns_zero_credit_then_halts(tmp_path):
+    """A tests-only diff that does not flip the blocker earns no credit, and a
+    second such round trips AGENT_AVOIDANCE_DETECTED (budget=2)."""
+    state = tmp_path / "state"
+    g = _gate_dict(tmp_path)
+    gate.open_gate(g, state)
+
+    r1 = gate.check_gate(g, state, ["src/battle/__tests__/turn.test.ts"])
+    assert r1.verdict == "ZERO_CREDIT_NONBLOCKER"
+    assert r1.credited is False
+    assert r1.exit_code == gate.EXIT_NO_PROGRESS
+
+    r2 = gate.check_gate(g, state, ["src/battle/turn.test.ts"])
+    assert r2.verdict == "AGENT_AVOIDANCE_DETECTED"
+    assert r2.credited is False
+    assert r2.exit_code == gate.EXIT_AVOIDANCE
+
+
+def test_real_fix_flips_blocker_and_closes_milestone(tmp_path):
+    state = tmp_path / "state"
+    g = _gate_dict(tmp_path)
+    gate.open_gate(g, state)
+    # agent does real work that makes the live-proof command pass
+    (tmp_path / "fixed.marker").write_text("turn event now renders")
+    res = gate.check_gate(g, state, ["src/battle/turnEmitter.ts"])
+    assert res.verdict == "MILESTONE_CLOSED"
+    assert res.credited is True
+    assert res.exit_code == gate.EXIT_MILESTONE_CLOSED
+
+
+def test_out_of_scope_change_is_flagged(tmp_path):
+    state = tmp_path / "state"
+    g = _gate_dict(tmp_path)
+    gate.open_gate(g, state)
+    res = gate.check_gate(g, state, ["docs/UNRELATED.md", "infra/ci.yml"])
+    assert res.verdict == "OUT_OF_SCOPE"
+    assert "infra/ci.yml" in res.out_of_scope
+    assert res.credited is False
+
+
+def test_new_gate_rejected_until_current_passes(tmp_path):
+    state = tmp_path / "state"
+    g1 = _gate_dict(tmp_path)
+    gate.open_gate(g1, state)
+    # a different milestone while g1 is still OPEN -> rejected
+    g2 = _gate_dict(tmp_path, goal_id="other", current_milestone="something else",
+                    top_blocker="other blocker")
+    with pytest.raises(gate.GateError) as ei:
+        gate.open_gate(g2, state)
+    assert ei.value.code == "ACTIVE_GATE_NOT_CLOSED"
+    # explicit human override is allowed
+    res = gate.open_gate(g2, state, override=True)
+    assert res.verdict == "GATE_OPEN"
+
+
+def test_passing_current_gate_frees_the_next_one(tmp_path):
+    state = tmp_path / "state"
+    g1 = _gate_dict(tmp_path)
+    gate.open_gate(g1, state)
+    (tmp_path / "fixed.marker").write_text("done")
+    assert gate.check_gate(g1, state, ["src/x.ts"]).verdict == "MILESTONE_CLOSED"
+    # now a new gate opens without override because the active one closed
+    g2 = _gate_dict(tmp_path, goal_id="phase2", current_milestone="next thing",
+                    top_blocker="next blocker",
+                    blocker_evidence={"command": "test -f phase2.marker", "cwd": str(tmp_path)})
+    assert gate.open_gate(g2, state).verdict == "GATE_OPEN"

@@ -129,6 +129,48 @@ existing answer instead of submitting a duplicate prompt:
   --meta-output .webgpt/recovered.meta.json
 ```
 
+## Anti-Avoidance Gate
+
+`scripts/lib/anti_avoidance_gate.py` is a deterministic referee for a
+project-agent/oracle loop. It is transport-agnostic and is not another agent,
+reviewer, or source of semantic truth. Credit is granted only when the declared
+blocker command changes from failing to passing.
+
+The gate JSON must declare one immutable goal and milestone, one blocker command,
+and the paths permitted for the repair:
+
+```json
+{
+  "goal_id": "repair-web-transport",
+  "goal_lock": "The controlled browser round must return its terminal marker.",
+  "current_milestone": "recover one exact-tab response",
+  "top_blocker": "the extraction command returns no marker",
+  "blocker_evidence": {
+    "command": "./scripts/prove-exact-tab-response.sh",
+    "cwd": "/absolute/path/to/repository"
+  },
+  "allowed_paths": ["skills/surf/**"],
+  "attempt_budget": 2
+}
+```
+
+Open the gate while the blocker is failing, then check each repair round against
+the real Git diff:
+
+```bash
+G=skills/surf/scripts/lib/anti_avoidance_gate.py
+python3 "$G" open --gate gate.json --receipt gate-open.receipt.json
+python3 "$G" check --gate gate.json --git-diff /path/to/repository \
+  --receipt gate-check.receipt.json
+python3 "$G" status --gate gate.json
+```
+
+Stable exit codes are `0` for an opened/closed milestone, `10` for no credited
+progress, `20` when the no-delta attempt budget is exhausted, and `2` for a
+malformed or invalid gate. Tests-, docs-, schemas-, or receipts-only changes
+receive zero credit while the blocker still fails; out-of-scope changes also
+fail closed.
+
 ## Tab Identity Rules
 
 Before a long WebGPT round, prove the tab is the intended session.
