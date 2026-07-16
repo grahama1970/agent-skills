@@ -39,12 +39,15 @@ if pkg.exists():
 
 if Path(lock_path).exists():
     payload["lock"] = json.loads(Path(lock_path).read_text())
-    expected = (payload["lock"].get("content_identity") or {}).get("sha256")
+    identity = payload["lock"].get("content_identity") or {}
+    expected = identity.get("sha256")
     if expected:
         digest = hashlib.sha256()
+        excludes = set(identity.get("excludes") or ["VENDOR.lock.json"])
         files = sorted(
             path for path in vendor.rglob("*")
-            if path.is_file() and path.name != "VENDOR.lock.json"
+            if path.is_file()
+            and path.relative_to(vendor).as_posix() not in excludes
         )
         for path in files:
             data = path.read_bytes()

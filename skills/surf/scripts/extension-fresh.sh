@@ -17,7 +17,7 @@ dist_sw="$SURF_CLI/dist/service-worker/index.js"
 src_host="$SURF_CLI/native/host.cjs"
 
 python3 - "$SURF_CLI" "$src_sw" "$dist_sw" "$src_host" "$JSON" << 'PY'
-import json, os, re, subprocess, sys
+import json, re, subprocess, sys
 from pathlib import Path
 
 surf_cli, src_sw, dist_sw, src_host, json_out = sys.argv[1:6]
