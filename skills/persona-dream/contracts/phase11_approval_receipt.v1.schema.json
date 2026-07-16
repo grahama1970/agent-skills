@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/persona-dream/phase11_approval_receipt.v1.schema.json",
+  "type": "object",
+  "required": [
+    "schema",
+    "status",
+    "approval_type",
+    "run_id",
+    "revision_id",
+    "activation_transaction_id",
+    "provider_id",
+    "endpoint",
+    "request_body_sha256",
+    "provider_source_snapshot_sha256",
+    "pricing_snapshot_sha256",
+    "approved_by",
+    "approved_at",
+    "expires_at",
+    "actual_provider_call_attempts",
+    "media_input_contract_sha256",
+    "approval_binding_kind",
+    "approval_binding_sha256"
+  ],
+  "properties": {
+    "schema": {
+      "const": "persona_dream.phase11_approval_receipt.v1"
+    },
+    "status": {
+      "const": "APPROVED"
+    },
+    "approval_type": {
+      "enum": [
+        "publication_authorization",
+        "visual_media_acceptance",
+        "exact_request_acceptance",
+        "cost_acceptance",
+        "paid_call_authorization"
+      ]
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "revision_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "activation_transaction_id": {
+      "type": "string",
+      "pattern": "^activation-[a-f0-9]{32}$"
+    },
+    "provider_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "endpoint": {
+      "type": "string",
+      "minLength": 1
+    },
+    "request_body_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "media_binding_manifest_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "provider_source_snapshot_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "pricing_snapshot_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "approved_by": {
+      "type": "string",
+      "minLength": 1
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "actual_provider_call_attempts": {
+      "const": 0
+    },
+    "media_input_contract_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "approval_binding_kind": {
+      "enum": [
+        "media_input_contract",
+        "phase11_request_bundle"
+      ]
+    },
+    "approval_binding_sha256": {
+      "$ref": "#/$defs/sha256"
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    }
+  }
+}

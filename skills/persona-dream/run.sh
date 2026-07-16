@@ -74,6 +74,11 @@ Commands:
   check-video-provider-packet-routing  Prove provider packet routing stays dry-run and fail-closed
   check-fal-api-preflight  Check FAL auth and non-generation API/docs access without submitting jobs
   check-fal-api-preflight-fixtures  Prove FAL auth discovery preflight stays fail-closed
+  check-pipeline-contract  Validate the canonical Phase 01-16 pipeline contract
+  write-phase10-reproducibility-receipt  Prove Phase 10 committed artifacts are canonically reproducible
+  compile-phase11-canonical-live-request  Compile the ACTIVE_CONSISTENT zero-call Phase 11 request bundle
+  validate-phase11-canonical-live-request Independently validate and optionally persist the Phase 11 boundary
+  tailscale-funnel-publication-canary  Plan or run authorized Funnel publish/probe/teardown with zero provider calls
   validate-local-media-lock  Validate local media hash and localhost serving for a run root
   review-clipboard-bridge    Serve clipboard + regenerate bridge for pipeline review UI (:8893)
   storyboard-fixture   Build the Horus/Embry storyboard-first Kling dry-run fixture
@@ -357,6 +362,36 @@ case "$COMMAND" in
     ;;
   check-fal-api-preflight-fixtures)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_fal_api_preflight_fixtures.py" "$@"
+    ;;
+  check-pipeline-contract)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_persona_dream_pipeline_contract.py" "$@"
+    ;;
+  write-phase10-reproducibility-receipt)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/write_phase10_reproducibility_receipt.py" "$@"
+    ;;
+  write-dream-observation-packet)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/write_dream_observation_packet.py" "$@"
+    ;;
+  check-dream-observation-packet)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_dream_observation_packet.py" "$@"
+    ;;
+  write-phase11-media-requirement-manifest)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/write_phase11_media_requirement_manifest.py" "$@"
+    ;;
+  write-phase11-dry-run-bundle)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/write_phase11_dry_run_bundle.py" "$@"
+    ;;
+  compile-phase11-canonical-live-request)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/compile_phase11_canonical_live_request.py" "$@"
+    ;;
+  validate-phase11-canonical-live-request)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_phase11_canonical_live_request.py" "$@"
+    ;;
+  write-cognitive-loop-dry-run)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/write_cognitive_loop_dry_run.py" "$@"
+    ;;
+  tailscale-funnel-publication-canary)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/tailscale_funnel_publication_canary.py" "$@"
     ;;
   validate-local-media-lock)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_local_media_lock.py" "$@"

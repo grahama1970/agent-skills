@@ -1,0 +1,62 @@
+{
+  "actual_provider_call_attempts": 0,
+  "bindings": {
+    "activation_transaction_id": "activation-d8b7a1b0713d566ff14b49ada1824c9e",
+    "actual_provider_call_attempts": 0,
+    "endpoint": "",
+    "media_binding_manifest_sha256": "sha256:acfb3313c3eb925b6486b7d2b167fc0ea4e3fc0030399915739fda12a661e7c2",
+    "media_input_contract_sha256": "sha256:e366e67753f662c27636ac5788fe5335eacb5a5c25f5bea347aeec627014733f",
+    "pricing_snapshot_sha256": "sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "provider_id": "kling",
+    "provider_source_snapshot_sha256": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "request_body_sha256": "sha256:293078b202cb22b69c316ed7c072550a46e8514f51f1d0c4d6e06d530779122b",
+    "revision_id": "rev_repair_a8b93ffeca8f",
+    "run_id": "pipeline-complete"
+  },
+  "blockers": [],
+  "missing_approval_types": [
+    "cost_acceptance",
+    "exact_request_acceptance",
+    "paid_call_authorization",
+    "publication_authorization",
+    "visual_media_acceptance"
+  ],
+  "provider_live": false,
+  "receipts": {
+    "cost_acceptance": {
+      "path": "/tmp/persona-dream-main-push-20260715/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/preflight/approvals/cost_acceptance_receipt.json",
+      "sha256": null,
+      "state": "MISSING"
+    },
+    "exact_request_acceptance": {
+      "path": "/tmp/persona-dream-main-push-20260715/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/preflight/approvals/exact_request_acceptance_receipt.json",
+      "sha256": null,
+      "state": "MISSING"
+    },
+    "paid_call_authorization": {
+      "path": "/tmp/persona-dream-main-push-20260715/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/preflight/approvals/paid_call_authorization_receipt.json",
+      "sha256": null,
+      "state": "MISSING"
+    },
+    "publication_authorization": {
+      "path": "/tmp/persona-dream-main-push-20260715/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/preflight/approvals/publication_authorization_receipt.json",
+      "sha256": null,
+      "state": "MISSING"
+    },
+    "visual_media_acceptance": {
+      "path": "/tmp/persona-dream-main-push-20260715/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_repair_a8b93ffeca8f/phase_11_submit_return/preflight/approvals/visual_media_acceptance_receipt.json",
+      "sha256": null,
+      "state": "MISSING"
+    }
+  },
+  "required_approval_types": [
+    "publication_authorization",
+    "visual_media_acceptance",
+    "exact_request_acceptance",
+    "cost_acceptance",
+    "paid_call_authorization"
+  ],
+  "schema": "persona_dream.phase11_approval_requirements.v1",
+  "status": "INCOMPLETE",
+  "submitted": false
+}

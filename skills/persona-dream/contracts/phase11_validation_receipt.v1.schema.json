@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/persona-dream/phase11_validation_receipt.v1.schema.json",
+  "type": "object",
+  "required": [
+    "schema", "validator_status", "gate_status", "run_id", "revision_id",
+    "activation_transaction_id", "validated_at", "files", "request_body_sha256",
+    "request_output_file_sha256", "technical_blockers", "missing_approval_types",
+    "memory", "command", "mocked", "live", "provider_live", "paid_call_authorized",
+    "submitted", "provider_ready", "live_submit_ready", "actual_provider_call_attempts", "claims"
+  ],
+  "properties": {
+    "schema": {"const": "persona_dream.phase11_validation_receipt.v1"},
+    "validator_status": {"const": "PASS_PHASE11_CANONICAL_BOUNDARY_VALIDATED"},
+    "gate_status": {"enum": ["BLOCKED_PROVIDER_GATE", "BLOCKED_AWAITING_HUMAN_APPROVAL"]},
+    "activation_transaction_id": {"type": "string", "pattern": "^activation-[a-f0-9]{32}$"},
+    "request_body_sha256": {"$ref": "#/$defs/sha256"},
+    "request_output_file_sha256": {"$ref": "#/$defs/sha256"},
+    "technical_blockers": {"type": "array", "items": {"type": "string"}},
+    "missing_approval_types": {"type": "array", "items": {"type": "string"}},
+    "memory": {"type": "object", "required": ["persisted"]},
+    "mocked": {"type": "boolean"},
+    "live": {"type": "boolean"},
+    "provider_live": {"const": false},
+    "paid_call_authorized": {"const": false},
+    "submitted": {"const": false},
+    "provider_ready": {"const": false},
+    "live_submit_ready": {"const": false},
+    "actual_provider_call_attempts": {"const": 0}
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+  }
+}
