@@ -1,0 +1,77 @@
+{
+  "schema": "watch.yolo_track_labels.v1",
+  "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+  "row_index": 9,
+  "timecode": "03:36",
+  "movie_segment": "03:36-04:00",
+  "labels": {
+    "track_2": {
+      "trackId": "track_2",
+      "characterName": "Marcus",
+      "actorName": "Tony Cox",
+      "status": "accepted",
+      "source": "human",
+      "confidence": 1,
+      "updatedAt": "2026-07-16T18:30:11.600Z"
+    }
+  },
+  "box_rejections": {
+    "track_2@0": {
+      "boxKey": "track_2@0",
+      "trackId": "track_2",
+      "timeSeconds": 0,
+      "status": "rejected",
+      "source": "human",
+      "updatedAt": "2026-07-16T17:44:31.173Z"
+    }
+  },
+  "events": [
+    {
+      "id": "yolo_label_1784222422276_track_2",
+      "action": "accept",
+      "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+      "row_index": 9,
+      "timecode": "03:36",
+      "movie_segment": "03:36-04:00",
+      "time_seconds": 0,
+      "track_id": "track_2",
+      "box_key": "track_2@0",
+      "created_at": "2026-07-16T17:20:22.275Z",
+      "status": "accepted",
+      "character_name": "Marcus",
+      "actor_name": "Tony Cox",
+      "confidence": 1
+    },
+    {
+      "id": "yolo_label_1784223871173_track_2",
+      "action": "reject_box",
+      "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+      "row_index": 9,
+      "timecode": "03:36",
+      "movie_segment": "03:36-04:00",
+      "time_seconds": 0,
+      "track_id": "track_2",
+      "box_key": "track_2@0",
+      "created_at": "2026-07-16T17:44:31.173Z",
+      "status": "rejected_box"
+    },
+    {
+      "id": "yolo_label_1784226611600_track_2",
+      "action": "accept",
+      "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+      "row_index": 9,
+      "timecode": "03:36",
+      "movie_segment": "03:36-04:00",
+      "time_seconds": 18.98,
+      "track_id": "track_2",
+      "box_key": "track_2@1898",
+      "created_at": "2026-07-16T18:30:11.600Z",
+      "status": "accepted",
+      "character_name": "Marcus",
+      "actor_name": "Tony Cox",
+      "confidence": 1
+    }
+  ],
+  "receipt_path": "/tmp/agent-skills-watch-main/skills/watch/docs/architecture/generated/watch_yolo_track_labels/bad_santa_unrated_2003_brrip_xvidhd_720p_npw_row0009.json",
+  "updated_at": "2026-07-16T18:30:11.600Z"
+}
