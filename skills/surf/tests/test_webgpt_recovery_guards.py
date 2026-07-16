@@ -41,6 +41,14 @@ def test_submit_finalizer_has_no_implicit_followup_submission() -> None:
     assert "No follow-up was submitted" in auto_download
 
 
+def test_submit_never_deletes_or_clears_existing_drafts() -> None:
+    source = SUBMIT.read_text(encoding="utf-8")
+
+    assert "localStorage.removeItem" not in source
+    assert "keys.forEach" not in source
+    assert "ta.innerHTML = '<p></p>'" not in source
+
+
 def test_native_reconnect_waits_on_same_tab_without_activation() -> None:
     source = CLI.read_text(encoding="utf-8")
     recovery = source.split("async function attemptChatgptRecovery()", 1)[1].split("const performAutoCapture", 1)[0]
