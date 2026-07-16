@@ -1,0 +1,211 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "battle.v16.public_context.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "battle.v16.public_context.v1"
+    },
+    "target_id": {
+      "const": "battle-v16-relayforge-a"
+    },
+    "semantic_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "public_entry_points": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "method": {
+            "enum": [
+              "GET",
+              "POST"
+            ]
+          },
+          "path": {
+            "type": "string",
+            "pattern": "^/api/v1/"
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "method",
+          "path",
+          "purpose"
+        ]
+      }
+    },
+    "business_capabilities": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "functionality_contract": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "function_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "function_id",
+          "description"
+        ]
+      }
+    },
+    "action_budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "parent_cycles": {
+          "const": 4
+        },
+        "child_cycles": {
+          "const": 4
+        },
+        "max_actions_per_team": {
+          "const": 8
+        },
+        "max_ranked_proposals_per_cycle": {
+          "const": 2
+        },
+        "campaign_timeout_seconds": {
+          "const": 1800
+        }
+      },
+      "required": [
+        "parent_cycles",
+        "child_cycles",
+        "max_actions_per_team",
+        "max_ranked_proposals_per_cycle",
+        "campaign_timeout_seconds"
+      ]
+    },
+    "observation_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allowed_fields": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "forbidden_fields": {
+          "type": "array",
+          "minItems": 5,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "allowed_fields",
+        "forbidden_fields"
+      ]
+    },
+    "claims": {
+      "$ref": "#/$defs/claims"
+    },
+    "action_schema": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "proposal_slots": {
+          "const": 2
+        },
+        "required_fields": {
+          "type": "array",
+          "minItems": 5,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "selection_authority": {
+          "const": "BATTLE"
+        },
+        "forbidden_operations": {
+          "type": "array",
+          "minItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "proposal_slots",
+        "required_fields",
+        "selection_authority",
+        "forbidden_operations"
+      ]
+    }
+  },
+  "required": [
+    "schema",
+    "target_id",
+    "semantic_version",
+    "public_entry_points",
+    "business_capabilities",
+    "functionality_contract",
+    "action_schema",
+    "action_budget",
+    "observation_contract",
+    "claims"
+  ],
+  "$defs": {
+    "claims": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "may_claim": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "must_not_claim": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "required": [
+        "may_claim",
+        "must_not_claim"
+      ]
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "battle.v16.judge_outcome.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "battle.v16.judge_outcome.v1"},
+    "status": {"const": "BLOCKED"},
+    "target_id": {"const": "battle-v16-relayforge-a"},
+    "reason": {"type": "string", "minLength": 1},
+    "unfinished_predicates": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "unfinished_regressions": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "blockers": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "pass_emitted": {"const": false},
+    "claims": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "may_claim": {"type": "array", "items": {"type": "string"}},
+        "must_not_claim": {"type": "array", "minItems": 4, "items": {"type": "string"}}
+      },
+      "required": ["may_claim", "must_not_claim"]
+    }
+  },
+  "required": ["schema", "status", "target_id", "reason", "unfinished_predicates", "unfinished_regressions", "blockers", "pass_emitted", "claims"]
+}

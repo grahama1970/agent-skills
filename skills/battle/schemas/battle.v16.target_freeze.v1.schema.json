@@ -1,0 +1,200 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "battle.v16.target_freeze.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "battle.v16.target_freeze.v1"
+    },
+    "status": {
+      "const": "FROZEN_NOT_QUALIFIED"
+    },
+    "target_id": {
+      "const": "battle-v16-relayforge-a"
+    },
+    "semantic_version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "repository_commit": {
+      "pattern": "^[0-9a-f]{40}$",
+      "type": "string"
+    },
+    "architecture_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "image_digest_manifest_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "public_context_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "private_truth_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "topology_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "attack_graph_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "defense_graph_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "public_context_schema_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "private_truth_schema_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "target_freeze_schema_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "deterministic_qualification_schema_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "arena_freeze_command_receipt_schema_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "judge_outcome_schema_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "judge_predicate_corpus_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "regression_corpus_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "reference_exploit_contract_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "reference_defense_contract_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "instance_seed_schedule_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "source_memory_contract_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "action_schema_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "action_budget_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "source_files": {
+      "type": "object",
+      "minProperties": 7,
+      "additionalProperties": {
+        "$ref": "#/$defs/sha256"
+      }
+    },
+    "artifacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "public_context": {
+          "const": "public-context-manifest.json"
+        },
+        "private_truth": {
+          "const": "private-truth-manifest.json"
+        },
+        "image_digests": {
+          "const": "image-digest-manifest.json"
+        },
+        "attack_graph": {
+          "const": "attack-graph.json"
+        },
+        "defense_graph": {
+          "const": "defense-graph.json"
+        }
+      },
+      "required": [
+        "public_context",
+        "private_truth",
+        "image_digests",
+        "attack_graph",
+        "defense_graph"
+      ]
+    },
+    "qualification_eligible": {
+      "const": false
+    },
+    "blockers": {
+      "type": "array",
+      "minItems": 5,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "claims": {
+      "$ref": "#/$defs/claims"
+    }
+  },
+  "required": [
+    "schema",
+    "status",
+    "target_id",
+    "semantic_version",
+    "repository_commit",
+    "architecture_sha256",
+    "image_digest_manifest_sha256",
+    "public_context_sha256",
+    "private_truth_sha256",
+    "topology_sha256",
+    "attack_graph_sha256",
+    "defense_graph_sha256",
+    "public_context_schema_sha256",
+    "private_truth_schema_sha256",
+    "target_freeze_schema_sha256",
+    "deterministic_qualification_schema_sha256",
+    "arena_freeze_command_receipt_schema_sha256",
+    "judge_outcome_schema_sha256",
+    "judge_predicate_corpus_sha256",
+    "regression_corpus_sha256",
+    "reference_exploit_contract_sha256",
+    "reference_defense_contract_sha256",
+    "instance_seed_schedule_sha256",
+    "source_memory_contract_sha256",
+    "action_schema_sha256",
+    "action_budget_sha256",
+    "source_files",
+    "artifacts",
+    "qualification_eligible",
+    "blockers",
+    "claims"
+  ],
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "claims": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "may_claim": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "must_not_claim": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "may_claim",
+        "must_not_claim"
+      ]
+    }
+  }
+}

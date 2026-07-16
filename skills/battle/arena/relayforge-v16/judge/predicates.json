@@ -1,0 +1,57 @@
+{
+  "schema": "battle.v16.relayforge.judge_predicates.v1",
+  "target_id": "battle-v16-relayforge-a",
+  "implementation_status": "UNIMPLEMENTED",
+  "stage_order": [
+    "UNSEEN",
+    "EVIDENCE_GATHERED",
+    "REPRODUCIBLE_PROBE",
+    "BOUNDARY_VIOLATION",
+    "PROTECTED_OBJECTIVE"
+  ],
+  "paths": [
+    {
+      "path_id": "RF-A",
+      "sink_id": "RF-A-SINK",
+      "predicates": [
+        {"predicate_id": "rf-a-evidence", "stage": "EVIDENCE_GATHERED", "implementation_status": "UNIMPLEMENTED"},
+        {"predicate_id": "rf-a-probe", "stage": "REPRODUCIBLE_PROBE", "implementation_status": "UNIMPLEMENTED"},
+        {"predicate_id": "rf-a-boundary", "stage": "BOUNDARY_VIOLATION", "implementation_status": "UNIMPLEMENTED"},
+        {"predicate_id": "rf-a-objective", "stage": "PROTECTED_OBJECTIVE", "implementation_status": "UNIMPLEMENTED"}
+      ]
+    },
+    {
+      "path_id": "RF-B",
+      "sink_id": "RF-B-SINK",
+      "predicates": [
+        {"predicate_id": "rf-b-evidence", "stage": "EVIDENCE_GATHERED", "implementation_status": "UNIMPLEMENTED"},
+        {"predicate_id": "rf-b-probe", "stage": "REPRODUCIBLE_PROBE", "implementation_status": "UNIMPLEMENTED"},
+        {"predicate_id": "rf-b-boundary", "stage": "BOUNDARY_VIOLATION", "implementation_status": "UNIMPLEMENTED"},
+        {"predicate_id": "rf-b-objective", "stage": "PROTECTED_OBJECTIVE", "implementation_status": "UNIMPLEMENTED"}
+      ]
+    },
+    {
+      "path_id": "RF-C",
+      "sink_id": "RF-C-SINK",
+      "predicates": [
+        {"predicate_id": "rf-c-evidence", "stage": "EVIDENCE_GATHERED", "implementation_status": "UNIMPLEMENTED"},
+        {"predicate_id": "rf-c-probe", "stage": "REPRODUCIBLE_PROBE", "implementation_status": "UNIMPLEMENTED"},
+        {"predicate_id": "rf-c-boundary", "stage": "BOUNDARY_VIOLATION", "implementation_status": "UNIMPLEMENTED"},
+        {"predicate_id": "rf-c-objective", "stage": "PROTECTED_OBJECTIVE", "implementation_status": "UNIMPLEMENTED"}
+      ]
+    }
+  ],
+  "shortcut_denials": [
+    {"predicate_id": "rf-c-direct-broker-denied", "implementation_status": "UNIMPLEMENTED"},
+    {"predicate_id": "rf-c-direct-renderer-denied", "implementation_status": "UNIMPLEMENTED"},
+    {"predicate_id": "rf-c-guessed-capability-denied", "implementation_status": "UNIMPLEMENTED"},
+    {"predicate_id": "rf-b-reference-bruteforce-denied", "implementation_status": "UNIMPLEMENTED"},
+    {"predicate_id": "rf-decoy-real-sink-isolation", "implementation_status": "UNIMPLEMENTED"}
+  ],
+  "terminal_policy": {
+    "implementation_status": "UNIMPLEMENTED",
+    "latency_can_decide_security_outcome": false,
+    "requires_sink_hashes": true,
+    "requires_regression_results": true
+  }
+}

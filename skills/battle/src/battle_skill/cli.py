@@ -2340,6 +2340,86 @@ def generate_ux_fixture(
     )
 
 
+@app.command("v16-arena-freeze")
+def v16_arena_freeze(
+    targets: str = typer.Option(
+        "battle-v16-relayforge-a",
+        "--targets",
+        help="Comma-separated V16 target IDs. Slice 1 supports RelayForge only.",
+    ),
+    out: Path = typer.Option(..., "--out", help="Deterministic freeze output directory."),
+    image_digest: str = typer.Option(
+        ...,
+        "--image-digest",
+        help="Immutable local service image id, sha256:<64 lowercase hex>.",
+    ),
+    base_image_digest: str = typer.Option(
+        ...,
+        "--base-image-digest",
+        help="Resolved base image repository digest, name@sha256:<64 lowercase hex>.",
+    ),
+    repository_commit: str = typer.Option(
+        ...,
+        "--repository-commit",
+        help="40-character agent-skills commit containing this target source.",
+    ),
+):
+    """Freeze the RelayForge V16 target contract without claiming qualification."""
+    from .relayforge_v16 import RelayForgeContractError, freeze_relayforge_target
+
+    try:
+        result = freeze_relayforge_target(
+            out=out,
+            image_digest=image_digest,
+            base_image_digest=base_image_digest,
+            repository_commit=repository_commit,
+            targets=targets,
+        )
+    except RelayForgeContractError as exc:
+        console.print(f"[red]RelayForge V16 freeze blocked:[/red]\n{exc}")
+        raise typer.Exit(1) from exc
+    console.print_json(data=result)
+
+
+@app.command("v16-arena-deterministic-qualify")
+def v16_arena_deterministic_qualify(
+    target: str = typer.Option(
+        "battle-v16-relayforge-a",
+        "--target",
+        help="V16 target ID. Slice 2 skeleton supports RelayForge only.",
+    ),
+    freeze: Path = typer.Option(
+        ...,
+        "--freeze",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="RelayForge freeze artifact directory.",
+    ),
+    out: Path = typer.Option(
+        ..., "--out", help="Deterministic qualification artifact directory."
+    ),
+):
+    """Run the fail-closed RelayForge deterministic qualification skeleton."""
+    from .relayforge_v16 import (
+        RelayForgeContractError,
+        run_relayforge_deterministic_qualification,
+    )
+
+    try:
+        result = run_relayforge_deterministic_qualification(
+            target=target,
+            freeze=freeze,
+            out=out,
+        )
+    except RelayForgeContractError as exc:
+        console.print(f"[red]RelayForge V16 qualification blocked:[/red]\n{exc}")
+        raise typer.Exit(1) from exc
+    console.print_json(data=result)
+    if result.get("status") != "PASS":
+        raise typer.Exit(1)
+
 @app.command()
 def status():
     """Check status of running or recent battles."""

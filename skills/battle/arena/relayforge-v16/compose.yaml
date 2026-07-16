@@ -1,0 +1,117 @@
+name: battle-v16-relayforge-a
+
+x-relayforge-service: &relayforge-service
+  image: ${RELAYFORGE_IMAGE:?set RELAYFORGE_IMAGE to the frozen sha256 image id}
+  restart: "no"
+  read_only: true
+  tmpfs:
+    - /tmp:size=16m,mode=1777
+  healthcheck:
+    test:
+      - CMD
+      - python
+      - -c
+      - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz', timeout=2).read()"
+    interval: 2s
+    timeout: 2s
+    retries: 10
+    start_period: 1s
+
+services:
+  edge-gateway:
+    <<: *relayforge-service
+    environment:
+      RELAYFORGE_ROLE: edge-gateway
+      RELAYFORGE_PORT: "8080"
+    ports:
+      - "127.0.0.1:${RELAYFORGE_PUBLIC_PORT:-18080}:8080"
+    networks:
+      - relayforge-public
+      - relayforge-internal
+
+  package-api:
+    <<: *relayforge-service
+    environment:
+      RELAYFORGE_ROLE: package-api
+      RELAYFORGE_PORT: "8080"
+    networks:
+      - relayforge-internal
+
+  extract-worker:
+    <<: *relayforge-service
+    environment:
+      RELAYFORGE_ROLE: extract-worker
+      RELAYFORGE_PORT: "8080"
+    networks:
+      - relayforge-internal
+    volumes:
+      - rf-a-sink:/var/lib/relayforge/sinks/rf-a
+
+  report-cache:
+    <<: *relayforge-service
+    environment:
+      RELAYFORGE_ROLE: report-cache
+      RELAYFORGE_PORT: "8080"
+    networks:
+      - relayforge-internal
+    volumes:
+      - rf-b-sink:/var/lib/relayforge/sinks/rf-b
+
+  preview-fetcher:
+    <<: *relayforge-service
+    environment:
+      RELAYFORGE_ROLE: preview-fetcher
+      RELAYFORGE_PORT: "8080"
+    networks:
+      - relayforge-internal
+
+  capability-broker:
+    <<: *relayforge-service
+    environment:
+      RELAYFORGE_ROLE: capability-broker
+      RELAYFORGE_PORT: "8080"
+    networks:
+      - relayforge-internal
+
+  document-renderer:
+    <<: *relayforge-service
+    environment:
+      RELAYFORGE_ROLE: document-renderer
+      RELAYFORGE_PORT: "8080"
+    networks:
+      - relayforge-internal
+    volumes:
+      - rf-c-sink:/var/lib/relayforge/sinks/rf-c
+
+  legacy-convert:
+    <<: *relayforge-service
+    environment:
+      RELAYFORGE_ROLE: legacy-convert
+      RELAYFORGE_PORT: "8080"
+    networks:
+      - relayforge-internal
+
+  judge-probe:
+    <<: *relayforge-service
+    environment:
+      RELAYFORGE_ROLE: judge-probe
+      RELAYFORGE_PORT: "8080"
+    networks:
+      - relayforge-judge
+    volumes:
+      - rf-a-sink:/var/lib/relayforge/sinks/rf-a:ro
+      - rf-b-sink:/var/lib/relayforge/sinks/rf-b:ro
+      - rf-c-sink:/var/lib/relayforge/sinks/rf-c:ro
+
+networks:
+  relayforge-public:
+    internal: false
+  relayforge-internal:
+    internal: true
+  relayforge-judge:
+    internal: true
+
+volumes:
+  rf-a-sink:
+  rf-b-sink:
+  rf-c-sink:

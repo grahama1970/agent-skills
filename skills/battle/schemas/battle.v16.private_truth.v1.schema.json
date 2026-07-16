@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "battle.v16.private_truth.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "battle.v16.private_truth.v1"},
+    "target_id": {"const": "battle-v16-relayforge-a"},
+    "semantic_version": {"type": "string", "minLength": 1},
+    "implementation_status": {"const": "SKELETON"},
+    "topology": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "public_service": {"const": "edge-gateway"},
+        "services": {
+          "type": "array",
+          "minItems": 9,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "service_id": {"type": "string", "minLength": 1},
+              "exposure": {"enum": ["PUBLIC", "INTERNAL", "INTERNAL_ONLY", "GATEWAY_REACHABLE", "JUDGE_ONLY"]},
+              "responsibility": {"type": "string", "minLength": 1},
+              "networks": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+            },
+            "required": ["service_id", "exposure", "responsibility", "networks"]
+          }
+        },
+        "networks": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "network_id": {"type": "string", "minLength": 1},
+              "internal": {"type": "boolean"}
+            },
+            "required": ["network_id", "internal"]
+          }
+        }
+      },
+      "required": ["public_service", "services", "networks"]
+    },
+    "sinks": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "sink_id": {"pattern": "^RF-[ABC]-SINK$", "type": "string"},
+          "owner_service": {"type": "string", "minLength": 1},
+          "volume": {"type": "string", "minLength": 1},
+          "purpose": {"type": "string", "minLength": 1},
+          "implementation_status": {"const": "UNIMPLEMENTED"}
+        },
+        "required": ["sink_id", "owner_service", "volume", "purpose", "implementation_status"]
+      }
+    },
+    "attack_graph": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "implementation_status": {"const": "UNIMPLEMENTED"},
+        "paths": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "path_id": {"pattern": "^RF-[ABC]$", "type": "string"},
+              "name": {"type": "string", "minLength": 1},
+              "prerequisites": {"type": "array", "minItems": 4, "items": {"type": "string", "minLength": 1}},
+              "sink_id": {"pattern": "^RF-[ABC]-SINK$", "type": "string"},
+              "independent_from": {"type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true, "items": {"pattern": "^RF-[ABC]$", "type": "string"}},
+              "implementation_status": {"const": "UNIMPLEMENTED"}
+            },
+            "required": ["path_id", "name", "prerequisites", "sink_id", "independent_from", "implementation_status"]
+          }
+        },
+        "decoy": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "path_id": {"const": "RF-D"},
+            "name": {"type": "string", "minLength": 1},
+            "service_id": {"const": "legacy-convert"},
+            "real_sink_ids": {"const": []},
+            "implementation_status": {"const": "UNIMPLEMENTED"}
+          },
+          "required": ["path_id", "name", "service_id", "real_sink_ids", "implementation_status"]
+        }
+      },
+      "required": ["implementation_status", "paths", "decoy"]
+    },
+    "defense_graph": {"type": "object", "minProperties": 4},
+    "instance_seed_schedule": {"type": "array", "minItems": 2, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "reference_contracts": {"type": "object", "minProperties": 2},
+    "memory_contracts": {"type": "object", "required": ["red", "blue"]},
+    "private_identifiers": {"type": "array", "minItems": 10, "uniqueItems": true, "items": {"type": "string", "minLength": 3}},
+    "claims": {"$ref": "#/$defs/claims"}
+  },
+  "required": [
+    "schema",
+    "target_id",
+    "semantic_version",
+    "implementation_status",
+    "topology",
+    "sinks",
+    "attack_graph",
+    "defense_graph",
+    "instance_seed_schedule",
+    "reference_contracts",
+    "memory_contracts",
+    "private_identifiers",
+    "claims"
+  ],
+  "$defs": {
+    "claims": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "may_claim": {"type": "array", "items": {"type": "string"}},
+        "must_not_claim": {"type": "array", "minItems": 5, "items": {"type": "string", "minLength": 1}}
+      },
+      "required": ["may_claim", "must_not_claim"]
+    }
+  }
+}
