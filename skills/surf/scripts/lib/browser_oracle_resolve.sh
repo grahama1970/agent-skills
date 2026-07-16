@@ -33,6 +33,97 @@ browser_oracle_resolve_json() {
   printf '%s' "$out"
 }
 
+browser_oracle_reconcile_json() {
+  local backend="${1:-webgpt}"
+  local project="${2:-}"
+  local prune_missing="${3:-0}"
+
+  local skill_dir
+  skill_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+  local bo_run="${BROWSER_ORACLE_RUN:-${skill_dir}/../browser-oracle/run.sh}"
+
+  if [[ ! -x "$bo_run" ]]; then
+    echo '{"status":"skipped","reason":"browser_oracle_missing","rows":[]}'
+    return 1
+  fi
+
+  local -a cmd=("$bo_run" reconcile --backend "$backend" --json)
+  if [[ -n "$project" ]]; then
+    cmd+=(--project "$project")
+  fi
+  if [[ "$prune_missing" == "1" || "$prune_missing" == "true" ]]; then
+    cmd+=(--prune-missing)
+  fi
+
+  local out err
+  err="$(mktemp /tmp/surf-browser-oracle-reconcile.XXXXXX.log)"
+  if out="$("${cmd[@]}" 2>"$err")"; then
+    rm -f "$err"
+    printf '%s' "$out"
+    return 0
+  fi
+
+  # Older browser-oracle runtimes expose verify but not reconcile. Normalize
+  # verify into the reconcile row contract instead of skipping validation.
+  if grep -q "No such command 'reconcile'" "$err" && [[ -n "$project" ]]; then
+    rm -f "$err"
+    local verify_out
+    if verify_out="$("$bo_run" verify "$project" --backend "$backend" --json 2>/dev/null)"; then
+      python3 - "$verify_out" <<'PY'
+import json
+import sys
+
+row = json.loads(sys.argv[1])
+print(json.dumps({
+    "backend": row.get("backend"),
+    "project": row.get("name"),
+    "rows": [{
+        "name": row.get("name"),
+        "backend": row.get("backend"),
+        "tab_id": row.get("tab_id"),
+        "conversation_url": row.get("conversation_url"),
+        "status": "ready" if row.get("verified") else "missing_live_tab",
+    }],
+}))
+PY
+      return 0
+    fi
+    echo '{"rows":[{"status":"missing_live_tab"}]}'
+    return 0
+  fi
+
+  rm -f "$err"
+  [[ -n "$out" ]] && printf '%s' "$out"
+  return 2
+}
+
+browser_oracle_open_bind_json() {
+  local project="${1:-}"
+  local backend="${2:-webgpt}"
+  local url="${3:-}"
+
+  local skill_dir
+  skill_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+  local bo_run="${BROWSER_ORACLE_RUN:-${skill_dir}/../browser-oracle/run.sh}"
+
+  if [[ ! -x "$bo_run" ]]; then
+    echo '{"status":"skipped","reason":"browser_oracle_missing"}'
+    return 1
+  fi
+  if [[ -z "$project" || -z "$url" ]]; then
+    echo '{"status":"skipped","reason":"browser_oracle_open_bind_missing_project_or_url"}'
+    return 2
+  fi
+
+  local -a cmd=("$bo_run" open-bind "$project" --backend "$backend" --url "$url" --manual --json)
+  local out
+  if ! out="$("${cmd[@]}" 2>/dev/null)"; then
+    [[ -n "$out" ]] && printf '%s' "$out"
+    return 3
+  fi
+  printf '%s' "$out"
+}
+
 # Apply resolved tab/url to caller variables: tab_id_var expect_url_var project_var
 browser_oracle_apply_webgpt() {
   local from_path="${1:-.}"

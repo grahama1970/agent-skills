@@ -194,8 +194,17 @@ if [[ -z "$tab_id" && -z "$target_url" && "$create_tab" -eq 0 ]]; then
     bo_resolved_url="$(python3 -c 'import json,sys; print(json.load(sys.stdin).get("conversation_url") or "")' <<<"$bo_payload")"
     bo_reconcile_status=""
     bo_reconcile_payload=""
+    if [[ -n "$bo_resolved_project" ]]; then
+      # A resolved project binding is authoritative. Never fall through to the
+      # process-global remembered tab when its binding cannot be validated.
+      no_remember=1
+    fi
     if [[ -n "$bo_resolved_project" && -n "$bo_resolved_tab" ]]; then
-      bo_reconcile_payload="$(browser_oracle_reconcile_json webgpt "$bo_resolved_project" "${SURF_BROWSER_ORACLE_PRUNE_MISSING:-0}" || true)"
+      if ! bo_reconcile_payload="$(browser_oracle_reconcile_json webgpt "$bo_resolved_project" "${SURF_BROWSER_ORACLE_PRUNE_MISSING:-0}")"; then
+        echo "webgpt.submit blocked: browser-oracle reconciliation failed for project ${bo_resolved_project}." >&2
+        [[ -n "$bo_reconcile_payload" ]] && echo "$bo_reconcile_payload" >&2
+        exit 3
+      fi
       bo_reconcile_status="$(python3 -c 'import json,sys; d=json.load(sys.stdin); rows=d.get("rows") or []; print((rows[0].get("status") if rows else ""))' <<<"$bo_reconcile_payload" 2>/dev/null || true)"
       if [[ "$bo_reconcile_status" == "missing_live_tab" && -n "$bo_resolved_url" && ( "${SURF_BROWSER_ORACLE_CREATE_MISSING:-0}" == "1" || "${SURF_BROWSER_ORACLE_CREATE_MISSING:-0}" == "true" ) ]]; then
         bo_open_payload="$(browser_oracle_open_bind_json "$bo_resolved_project" webgpt "$bo_resolved_url" 2>/dev/null || true)"
@@ -206,6 +215,14 @@ if [[ -z "$tab_id" && -z "$target_url" && "$create_tab" -eq 0 ]]; then
           bo_reconcile_status="ready"
         fi
       fi
+      if [[ "$bo_reconcile_status" != "ready" ]]; then
+        echo "webgpt.submit blocked: browser-oracle binding for project ${bo_resolved_project} is ${bo_reconcile_status:-invalid}." >&2
+        [[ -n "$bo_reconcile_payload" ]] && echo "$bo_reconcile_payload" >&2
+        exit 3
+      fi
+    elif [[ -n "$bo_resolved_project" ]]; then
+      echo "webgpt.submit blocked: browser-oracle binding for project ${bo_resolved_project} has no tab id." >&2
+      exit 3
     fi
     if [[ -z "$project" ]]; then
       project="$bo_resolved_project"
