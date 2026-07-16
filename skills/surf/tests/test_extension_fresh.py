@@ -19,6 +19,11 @@ def make_surf_cli(root: Path) -> Path:
     (surf_cli / "dist/service-worker/index.js").write_text("// dist\n", encoding="utf-8")
     (surf_cli / "native/host.cjs").write_text("// host\n", encoding="utf-8")
     (surf_cli / "native/cli.cjs").write_text("// cli\n", encoding="utf-8")
+    older = 1_700_000_000_000_000_000
+    newer = older + 1_000_000_000
+    os.utime(surf_cli / "src/service-worker/index.ts", ns=(older, older))
+    os.utime(surf_cli / "native/host.cjs", ns=(older, older))
+    os.utime(surf_cli / "dist/service-worker/index.js", ns=(newer, newer))
     return surf_cli
 
 

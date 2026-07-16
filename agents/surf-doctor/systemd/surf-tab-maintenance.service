@@ -1,0 +1,14 @@
+[Unit]
+Description=Surf Doctor proactive tab maintenance
+Documentation=man:systemd.service(5)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+Environment=SURF_TAB_MAINTENANCE_RECEIPT_DIR=@RECEIPT_DIR@
+Environment=SURF_TAB_MAINTENANCE_TIMEOUT=@TIMEOUT_SECONDS@
+ExecStartPre=/usr/bin/mkdir -p @RECEIPT_DIR@
+ExecStart=/usr/bin/flock -n %t/surf-tab-maintenance.lock @TAB_MAINTENANCE_SCRIPT@ --repair-safe --receipt-dir @RECEIPT_DIR@ --timeout @TIMEOUT_SECONDS@
+RuntimeMaxSec=@RUNTIME_MAX_SEC@
+TimeoutStartSec=@RUNTIME_MAX_SEC@

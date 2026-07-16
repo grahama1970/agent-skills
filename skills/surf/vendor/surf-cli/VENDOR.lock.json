@@ -1,9 +1,18 @@
 {
-  "synced_at": "2026-05-29T21:05:23Z",
-  "source_kind": "local",
-  "source_path": "/home/graham/workspace/experiments/surf-cli",
-  "source_ref": "feat/webgpt-no-activate",
-  "source_commit": "3acf60f98f3a2a8679774ec6f3ecc88433b0e2fb",
-  "vendor_path": "/home/graham/workspace/experiments/agent-skills/skills/surf/vendor/surf-cli",
-  "package_version": "2.2.0"
+  "recorded_at": "2026-07-16T16:55:00Z",
+  "source_kind": "downstream_modified_vendor_tree",
+  "upstream_repository": "https://github.com/nicobailon/surf-cli.git",
+  "upstream_base_commit": "3acf60f98f3a2a8679774ec6f3ecc88433b0e2fb",
+  "downstream_repository": "https://github.com/grahama1970/agent-skills.git",
+  "last_vendor_import_commit": "ee9e4b1ac",
+  "clean_upstream_copy": false,
+  "package_version": "2.2.0",
+  "content_identity": {
+    "algorithm": "sha256(relative_path_nul_size_nul_content)",
+    "excludes": [
+      "VENDOR.lock.json"
+    ],
+    "file_count": 73,
+    "sha256": "c0a024254a7b9c98bca427148c03232e8e0e02964353a8055e80d560b17b9201"
+  }
 }

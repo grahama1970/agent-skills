@@ -139,7 +139,7 @@ echo "  source: ${SOURCE_PATH} (${SOURCE_KIND})" >&2
 rsync "${RSYNC_FLAGS[@]}" "${FROM}/" "${VENDOR_DIR}/"
 
 if ! $DRY_RUN; then
-  SYNCED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  RECORDED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   VERSION="$(python3 - <<PY
 import json
 try:
@@ -148,18 +148,41 @@ except Exception:
     print("")
 PY
 )"
-  python3 - "$LOCK_FILE" << PY
-import json, os
+  python3 - "$LOCK_FILE" "$VENDOR_DIR" << PY
+import hashlib, json, pathlib, sys
+
+lock_path = pathlib.Path(sys.argv[1])
+vendor = pathlib.Path(sys.argv[2])
+excludes = ["VENDOR.lock.json"]
+digest = hashlib.sha256()
+files = sorted(
+    path for path in vendor.rglob("*")
+    if path.is_file() and path.relative_to(vendor).as_posix() not in excludes
+)
+for path in files:
+    data = path.read_bytes()
+    digest.update(path.relative_to(vendor).as_posix().encode())
+    digest.update(b"\0")
+    digest.update(str(len(data)).encode())
+    digest.update(b"\0")
+    digest.update(data)
 lock = {
-    "synced_at": "${SYNCED_AT}",
+    "recorded_at": "${RECORDED_AT}",
     "source_kind": "${SOURCE_KIND}",
     "source_path": "${SOURCE_PATH}",
     "source_ref": "${SOURCE_REF}",
-    "source_commit": "${SOURCE_COMMIT}",
-    "vendor_path": "${VENDOR_DIR}",
+    "source_repository": "${FORK_REPO}",
+    "upstream_base_commit": "${SOURCE_COMMIT}",
+    "clean_upstream_copy": False,
     "package_version": "${VERSION}",
+    "content_identity": {
+        "algorithm": "sha256(relative_path_nul_size_nul_content)",
+        "excludes": excludes,
+        "file_count": len(files),
+        "sha256": digest.hexdigest(),
+    },
 }
-json.dump(lock, open("${LOCK_FILE}", "w"), indent=2)
+lock_path.write_text(json.dumps(lock, indent=2) + "\n")
 print(json.dumps(lock, indent=2))
 PY
 fi
