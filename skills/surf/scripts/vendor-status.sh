@@ -16,7 +16,7 @@ for arg in "$@"; do
 done
 
 python3 - "$LOCK_FILE" "$FORK_JSON" "$SURF_CLI_PATH" "$JSON" << 'PY'
-import json, subprocess, sys
+import hashlib, json, subprocess, sys
 from pathlib import Path
 
 lock_path, fork_json, vendor, json_out = sys.argv[1:5]
@@ -30,6 +30,7 @@ payload = {
     "package_version": None,
     "upstream_ahead": None,
     "dist_fresh": None,
+    "content_identity_matches": None,
 }
 
 pkg = vendor / "package.json"
@@ -38,6 +39,25 @@ if pkg.exists():
 
 if Path(lock_path).exists():
     payload["lock"] = json.loads(Path(lock_path).read_text())
+    expected = (payload["lock"].get("content_identity") or {}).get("sha256")
+    if expected:
+        digest = hashlib.sha256()
+        files = sorted(
+            path for path in vendor.rglob("*")
+            if path.is_file() and path.name != "VENDOR.lock.json"
+        )
+        for path in files:
+            data = path.read_bytes()
+            digest.update(path.relative_to(vendor).as_posix().encode())
+            digest.update(b"\0")
+            digest.update(str(len(data)).encode())
+            digest.update(b"\0")
+            digest.update(data)
+        payload["content_identity"] = {
+            "file_count": len(files),
+            "sha256": digest.hexdigest(),
+        }
+        payload["content_identity_matches"] = digest.hexdigest() == expected
 
 # dist freshness via extension-fresh logic
 src_sw = vendor / "src/service-worker/index.ts"
@@ -59,8 +79,9 @@ try:
     if local and Path(local).is_dir() and (Path(local) / ".git").is_dir():
         head = subprocess.check_output(["git", "-C", local, "rev-parse", "HEAD"], text=True).strip()
         payload["local_dev_head"] = head
-        if lock.get("source_commit"):
-            payload["upstream_ahead"] = head != lock["source_commit"]
+        base_commit = lock.get("source_commit") or lock.get("upstream_base_commit")
+        if base_commit:
+            payload["upstream_ahead"] = head != base_commit
 except Exception as exc:
     payload["local_dev_check_error"] = str(exc)
 
@@ -70,11 +91,14 @@ if json_out:
 else:
     print(f"vendor: {payload['vendor_path']}")
     if payload["lock"]:
-        print(f"  synced: {payload['lock'].get('synced_at')} @ {payload['lock'].get('source_commit','')[:12]}")
+        recorded = payload['lock'].get('recorded_at') or payload['lock'].get('synced_at')
+        base = payload['lock'].get('source_commit') or payload['lock'].get('upstream_base_commit', '')
+        print(f"  recorded: {recorded} @ {base[:12]}")
     else:
         print("  lock: missing (run: surf vendor.sync)")
     print(f"  package: {payload.get('package_version')}")
     print(f"  dist fresh: {payload.get('dist_fresh')} {payload.get('dist_reason','')}")
+    print(f"  content identity: {payload.get('content_identity_matches')}")
     if payload.get("upstream_ahead") is True:
         print("  note: local dev fork is ahead of vendored lock — run surf vendor.sync --build --reload")
 PY
