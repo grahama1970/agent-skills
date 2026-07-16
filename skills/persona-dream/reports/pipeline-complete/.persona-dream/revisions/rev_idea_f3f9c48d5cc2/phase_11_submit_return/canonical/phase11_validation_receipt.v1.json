@@ -26,6 +26,10 @@
       "http://127.0.0.1:8601",
       "--collection",
       "project_knowledge",
+      "--connect-timeout",
+      "5",
+      "--read-timeout",
+      "60",
       "--json"
     ],
     "cwd": "/home/graham/workspace/experiments/agent-skills-main",
@@ -41,19 +45,19 @@
     },
     "approval_requirements": {
       "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/canonical/phase11_approval_requirements.v1.json",
-      "sha256": "sha256:fcb7915b75175a66cd05a24352dc3c034381e170eccf54c3ddd732cd52368613"
+      "sha256": "sha256:e4b26bdcafada98ab082ea21a533a515e51d7891284b89834586d4dc5bf2eb01"
     },
     "live_request": {
       "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/canonical/phase11_live_request.v1.json",
-      "sha256": "sha256:628aee47df19684981b3b5d912e7785ce15065a2815235c79b0e356403da3d0d"
+      "sha256": "sha256:a4e4b4a686ac9b46647a6abc6bca1bf23a3ef2af06f86d0642ced9a54dcb3616"
     },
     "media_binding_manifest": {
       "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/canonical/phase11_media_binding_manifest.v2.json",
-      "sha256": "sha256:291adcf0b500a0666d525e3627d356d117edcacf53525351447e9d99e91a55f6"
+      "sha256": "sha256:a7aecf73843c8f4003ae543c9d02cebdbfdb1d0dc23e36bc47891d6a769ecd0d"
     },
     "provider_source_snapshot": {
       "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_source_snapshot.json",
-      "sha256": "sha256:1a4d434408ea50ce39e99fb1636decb7275a0f022e0fc8fd69ce9d95478b764f"
+      "sha256": "sha256:c7acba3a4dc8431d7a5417b4d1f306614ff99e4ee87199a7e9bfd80b8b37fc18"
     }
   },
   "gate_status": "BLOCKED_AWAITING_HUMAN_APPROVAL",
@@ -69,19 +73,19 @@
     "exact_reread_count": 1,
     "legacy_phase11_key": "pd_phase11_d1440cf980f38c916f0fa93bff648b17e036e58feb43a941",
     "persisted": true,
-    "phase11_key": "pd_phase11_11c0a72cef02a4966cb3f21852341629a21dccbc6d2789ad",
+    "phase11_key": "pd_phase11_eb5dbe1257f6152103d1ce1e2700f9582d8ef6e5fb87e90e",
     "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
-    "qdrant_point_id": "3cf679c9-5a6a-516b-b3b5-14af58aeca4b",
+    "qdrant_point_id": "8a9bf9b4-0e98-533e-b468-ff1164f6310f",
     "recall": {
       "dense_matching_count": 1,
       "matching_identity_count": 1,
-      "max_dense": 0.792625,
-      "question": "What is the canonical pre-Kling Phase 11 state for Persona Dream run pipeline-complete, revision rev_idea_f3f9c48d5cc2, exact request sha256:9966f6b65cc323ef4780aa2109e8814d0d61c64e81e33dbb33d023679dd42e16, Memory key pd_phase11_11c0a72cef02a4966cb3f21852341629a21dccbc6d2789ad?",
+      "max_dense": 0.7866844,
+      "question": "What is the canonical pre-Kling Phase 11 state for Persona Dream run pipeline-complete, revision rev_idea_f3f9c48d5cc2, exact request sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41, Memory key pd_phase11_eb5dbe1257f6152103d1ce1e2700f9582d8ef6e5fb87e90e?",
       "tags": [
-        "phase11-request:9966f6b65cc323ef4780aa2109e8814d0d61c64e81e33dbb33d023679dd42e16"
+        "phase11-request:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41"
       ]
     },
-    "request_body_sha256": "sha256:9966f6b65cc323ef4780aa2109e8814d0d61c64e81e33dbb33d023679dd42e16",
+    "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
     "requests": {
       "active_pointer_list": {
         "endpoint": "/list",
@@ -96,8 +100,8 @@
       },
       "exact_list": {
         "endpoint": "/list",
-        "request_payload_sha256": "sha256:57784ffb1f3c9a3bbbe7fe4ddbe8198a3a2428343aa93f1579e73da4b5830f27",
-        "response_sha256": "sha256:4087dbef32cb69f75d9ad6e1eb9a21a9764515e54dbcee5c2524fc2c773ca43e",
+        "request_payload_sha256": "sha256:ebbe4f34a791f0287cad4af52a948e8ad8b50e4201fa9e078ecf06327b81970e",
+        "response_sha256": "sha256:01b95556b2e76950f3e3565cd9e39ed56f526dcd323440f74391d059f2d7abee",
         "returned_counts": {
           "collection": "project_knowledge",
           "count": 1,
@@ -107,8 +111,8 @@
       },
       "recall": {
         "endpoint": "/recall",
-        "request_payload_sha256": "sha256:6c3462e26eff9467df612f9300e0bfedd862efb51f718ffeab665dfcbc6a8f8a",
-        "response_sha256": "sha256:2f5952e1d3fd496ee86a51e3c3d1b9762fdd68f7623b2e24650b41472f449bbe",
+        "request_payload_sha256": "sha256:65a7ffcae508281317f47944c5dbb948dd8dbd15f02121c18b34611f6e7d0d2d",
+        "response_sha256": "sha256:7b7e04fa0c844d3dc25fb75d9a345fcba1c09eef7fdb1e4bfc631c0dedc4ca2b",
         "returned_counts": {
           "errors": []
         },
@@ -116,21 +120,21 @@
       },
       "upsert": {
         "endpoint": "/upsert",
-        "request_payload_sha256": "sha256:a854d3074b5e014aa146c266130e1c18652025f290f1e12fea05c8f7d290b1c7",
-        "response_sha256": "sha256:aea229c05cd6cb04a6cdb3bb310e126af3e5e4e6992fcbae018388db5a28bfec",
+        "request_payload_sha256": "sha256:acbb698360f92549e70b222d2904e703cb9d463e5341f11a287d85a9b079c3e2",
+        "response_sha256": "sha256:a60535a88e81ad6bbe781dfb1fb27b23e9944b0bee2039d447df83fa16d6b8f0",
         "returned_counts": {
           "collection": "project_knowledge",
           "errors": [],
           "inserted": 0,
           "total": 1,
           "updated": 1,
-          "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_project_knowledge_20260716T150745331901Z_13_128387576235712.jsonl"
+          "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_project_knowledge_20260716T170250354755Z_13_128387555264192.jsonl"
         },
         "status_code": 200
       }
     },
     "semantic_sync_state": "synced",
-    "text_hash": "0b803f5404e48f0c745ef89499cd9db5f21d54b3"
+    "text_hash": "4cdda5694f1819aa243c39c61cc22e22ba5f15d0"
   },
   "missing_approval_types": [
     "cost_acceptance",
@@ -143,8 +147,8 @@
   "paid_call_authorized": false,
   "provider_live": false,
   "provider_ready": false,
-  "request_body_sha256": "sha256:9966f6b65cc323ef4780aa2109e8814d0d61c64e81e33dbb33d023679dd42e16",
-  "request_output_file_sha256": "sha256:628aee47df19684981b3b5d912e7785ce15065a2815235c79b0e356403da3d0d",
+  "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+  "request_output_file_sha256": "sha256:a4e4b4a686ac9b46647a6abc6bca1bf23a3ef2af06f86d0642ced9a54dcb3616",
   "revision_id": "rev_idea_f3f9c48d5cc2",
   "run_id": "pipeline-complete",
   "runtime_release_id": "agent-skills@2d8b75e85e5856b079c81dfe847ef76ca8873502",
@@ -153,6 +157,6 @@
   "source_revision_id": "rev_repair_a8b93ffeca8f",
   "submitted": false,
   "technical_blockers": [],
-  "validated_at": "2026-07-16T15:07:45.019408+00:00",
+  "validated_at": "2026-07-16T17:02:50.039879+00:00",
   "validator_status": "PASS_PHASE11_CANONICAL_BOUNDARY_VALIDATED"
 }

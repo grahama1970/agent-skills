@@ -14,9 +14,9 @@
     "revision_id": {"type": "string", "minLength": 1},
     "activation_transaction_id": {"type": "string", "pattern": "^activation-[a-f0-9]{32}$"},
     "checked_at": {"type": "string", "format": "date-time"},
-    "request_asset_count": {"const": 7},
+    "request_asset_count": {"const": 6},
     "entries": {
-      "type": "array", "minItems": 7, "maxItems": 7,
+      "type": "array", "minItems": 6, "maxItems": 6,
       "items": {
         "type": "object",
         "required": [

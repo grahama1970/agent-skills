@@ -45,7 +45,7 @@
       "type": "object",
       "required": [
         "multi_prompt", "start_image_url", "duration", "generate_audio",
-        "end_image_url", "elements", "shot_type", "negative_prompt", "cfg_scale"
+        "elements", "shot_type", "negative_prompt", "cfg_scale"
       ],
       "properties": {
         "multi_prompt": {
@@ -63,7 +63,6 @@
         "start_image_url": {"$ref": "#/$defs/url"},
         "duration": {"const": "10"},
         "generate_audio": {"const": false},
-        "end_image_url": {"$ref": "#/$defs/url"},
         "elements": {
           "type": "array", "minItems": 2, "maxItems": 2,
           "items": {
@@ -88,22 +87,21 @@
     "media_roles": {
       "type": "object",
       "required": [
-        "role_counts", "global_start_anchor", "global_end_anchor",
+        "role_counts", "global_start_anchor",
         "continuity_only", "character_element_packs"
       ],
       "properties": {
         "role_counts": {
           "const": {
             "global_start_anchor": 1,
-            "global_end_anchor": 1,
-            "continuity_only": 6,
+            "global_end_anchor": 0,
+            "continuity_only": 7,
             "element_packs": 2
           }
         },
         "global_start_anchor": {"$ref": "#/$defs/media_record"},
-        "global_end_anchor": {"$ref": "#/$defs/media_record"},
         "continuity_only": {
-          "type": "array", "minItems": 6, "maxItems": 6,
+          "type": "array", "minItems": 7, "maxItems": 7,
           "items": {"$ref": "#/$defs/media_record"}
         },
         "character_element_packs": {
@@ -131,14 +129,16 @@
       "type": "object",
       "required": [
         "binding_built_from_active_revision", "request_asset_count", "generate_audio",
-        "provider_media_probes_passed", "provider_media_probes_required"
+        "provider_media_probes_passed", "provider_media_probes_required",
+        "end_frame_review_only"
       ],
       "properties": {
         "binding_built_from_active_revision": {"const": true},
-        "request_asset_count": {"const": 7},
+        "request_asset_count": {"const": 6},
         "generate_audio": {"const": false},
         "provider_media_probes_passed": {"const": 0},
-        "provider_media_probes_required": {"const": 7}
+        "provider_media_probes_required": {"const": 6},
+        "end_frame_review_only": {"const": true}
       },
       "additionalProperties": false
     },
@@ -166,7 +166,7 @@
       "required": ["artifact_id", "role", "sha256", "revision_relative_path", "public_url"],
       "properties": {
         "artifact_id": {"type": "string", "minLength": 1},
-        "role": {"enum": ["global_start_anchor", "global_end_anchor", "continuity_only", "character_frontal"]},
+        "role": {"enum": ["global_start_anchor", "continuity_only", "character_frontal"]},
         "sha256": {"$ref": "#/$defs/sha256"},
         "revision_relative_path": {"type": "string", "minLength": 1},
         "public_url": {"$ref": "#/$defs/url"}

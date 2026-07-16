@@ -19,8 +19,8 @@
       "required": ["global_start_anchor", "global_end_anchor", "continuity_only", "element_packs"],
       "properties": {
         "global_start_anchor": {"const": 1},
-        "global_end_anchor": {"const": 1},
-        "continuity_only": {"const": 6},
+        "global_end_anchor": {"const": 0},
+        "continuity_only": {"const": 7},
         "element_packs": {"const": 2}
       }
     },

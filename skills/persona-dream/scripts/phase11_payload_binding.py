@@ -28,11 +28,10 @@ FRAME_IDS = tuple(
 )
 FRAME_ROLES = {
     "sb_001.start_frame": "global_start_anchor",
-    "sb_004.end_frame": "global_end_anchor",
     **{
         artifact_id: "continuity_only"
         for artifact_id in FRAME_IDS
-        if artifact_id not in {"sb_001.start_frame", "sb_004.end_frame"}
+        if artifact_id != "sb_001.start_frame"
     },
 }
 CHARACTER_REFERENCE_SUFFIXES = {
@@ -509,7 +508,6 @@ def build_payload_binding(
         "start_image_url": frame_records["sb_001.start_frame"]["public_url"],
         "duration": "10",
         "generate_audio": False,
-        "end_image_url": frame_records["sb_004.end_frame"]["public_url"],
         "elements": [
             {
                 "frontal_image_url": pack["frontal"]["public_url"],
@@ -559,12 +557,11 @@ def build_payload_binding(
         "media_roles": {
             "role_counts": {
                 "global_start_anchor": 1,
-                "global_end_anchor": 1,
-                "continuity_only": 6,
+                "global_end_anchor": 0,
+                "continuity_only": 7,
                 "element_packs": 2,
             },
             "global_start_anchor": frame_records["sb_001.start_frame"],
-            "global_end_anchor": frame_records["sb_004.end_frame"],
             "continuity_only": [
                 frame_records[artifact_id]
                 for artifact_id in FRAME_IDS
@@ -574,10 +571,11 @@ def build_payload_binding(
         },
         "technical_gate": {
             "binding_built_from_active_revision": True,
-            "request_asset_count": 7,
+            "request_asset_count": 6,
             "generate_audio": False,
             "provider_media_probes_passed": 0,
-            "provider_media_probes_required": 7,
+            "provider_media_probes_required": 6,
+            "end_frame_review_only": True,
         },
         "actual_provider_call_attempts": 0,
         "provider_live": False,
@@ -588,7 +586,7 @@ def build_payload_binding(
         "claims": {
             "proves": [
                 "the request binding was derived from the active revision artifact index, Phase 10 payload, and media lock",
-                "the request contains one start anchor, one end anchor, six continuity-only frames, and two character element packs",
+                "the request contains one provider start anchor and two character element packs; all seven remaining storyboard frames are continuity-only review evidence",
             ],
             "does_not_prove": [
                 "the URLs were fetched by fal or any provider",
@@ -618,6 +616,9 @@ def validate_payload_binding(
     phase10_payload_path: Path,
     media_lock_path: Path,
 ) -> dict[str, Any]:
+    request_input = binding.get("input")
+    if isinstance(request_input, Mapping) and "multi_prompt" in request_input and "end_image_url" in request_input:
+        raise PayloadBindingBlocked("BLOCKED_PROVIDER_MULTI_PROMPT_END_IMAGE_URL_CONFLICT")
     errors = schema_errors(binding)
     if errors:
         raise PayloadBindingBlocked("BLOCKED_PHASE11_PAYLOAD_BINDING_SCHEMA", details={"errors": errors})
@@ -656,27 +657,24 @@ def validate_payload_binding(
         raise PayloadBindingBlocked("BLOCKED_MEDIA_ROLE_COUNTS")
     expected_counts = {
         "global_start_anchor": 1,
-        "global_end_anchor": 1,
-        "continuity_only": 6,
+        "global_end_anchor": 0,
+        "continuity_only": 7,
         "element_packs": 2,
     }
     if media_roles.get("role_counts") != expected_counts:
         raise PayloadBindingBlocked("BLOCKED_MEDIA_ROLE_COUNTS", details={"observed": media_roles.get("role_counts")})
     start = media_roles.get("global_start_anchor")
-    end = media_roles.get("global_end_anchor")
     continuity = media_roles.get("continuity_only")
     packs = media_roles.get("character_element_packs")
     if not isinstance(start, Mapping) or start.get("artifact_id") != "sb_001.start_frame":
         raise PayloadBindingBlocked("BLOCKED_PHASE11_GLOBAL_START_ANCHOR")
-    if not isinstance(end, Mapping) or end.get("artifact_id") != "sb_004.end_frame":
-        raise PayloadBindingBlocked("BLOCKED_PHASE11_GLOBAL_END_ANCHOR")
-    expected_continuity = [artifact_id for artifact_id in FRAME_IDS if FRAME_ROLES[artifact_id] == "continuity_only"]
+    expected_continuity = [artifact_id for artifact_id in FRAME_IDS if artifact_id != "sb_001.start_frame"]
     if not isinstance(continuity, list) or [item.get("artifact_id") for item in continuity if isinstance(item, Mapping)] != expected_continuity:
         raise PayloadBindingBlocked("BLOCKED_PHASE11_CONTINUITY_FRAME_SET")
     if not isinstance(packs, list) or len(packs) != 2 or [item.get("identity") for item in packs if isinstance(item, Mapping)] != ["embry", "kai"]:
         raise PayloadBindingBlocked("BLOCKED_CHARACTER_ELEMENT_PACK_COUNT")
 
-    records: list[Mapping[str, Any]] = [start, end, *continuity]
+    records: list[Mapping[str, Any]] = [start, *continuity]
     for pack in packs:
         if not isinstance(pack, Mapping):
             raise PayloadBindingBlocked("BLOCKED_CHARACTER_ELEMENT_PACK_COUNT")
@@ -706,7 +704,9 @@ def validate_payload_binding(
     request_input = binding.get("input")
     if not isinstance(request_input, Mapping) or _contains_null(request_input):
         raise PayloadBindingBlocked("BLOCKED_PROVIDER_REQUEST_NULL_FIELD")
-    if request_input.get("start_image_url") != start.get("public_url") or request_input.get("end_image_url") != end.get("public_url"):
+    if "end_image_url" in request_input:
+        raise PayloadBindingBlocked("BLOCKED_PROVIDER_MULTI_PROMPT_END_IMAGE_URL_CONFLICT")
+    if request_input.get("start_image_url") != start.get("public_url"):
         raise PayloadBindingBlocked("BLOCKED_PROVIDER_ANCHOR_MAPPING")
     if request_input.get("generate_audio") is not False or request_input.get("duration") != "10":
         raise PayloadBindingBlocked("BLOCKED_PROVIDER_AUDIO_STRATEGY")

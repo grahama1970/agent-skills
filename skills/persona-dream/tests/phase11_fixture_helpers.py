@@ -301,7 +301,6 @@ def make_compilation_inputs(tmp_path: Path):
         "start_image_url": urls["sb_001.start_frame"],
         "duration": "10",
         "generate_audio": False,
-        "end_image_url": urls["sb_004.end_frame"],
         "elements": elements,
         "shot_type": "customize",
         "negative_prompt": "blur and low quality",
@@ -352,7 +351,6 @@ def make_compilation_inputs(tmp_path: Path):
         record["artifact_id"]: record["public_url"]
         for record in [
             binding["media_roles"]["global_start_anchor"],
-            binding["media_roles"]["global_end_anchor"],
             *binding["media_roles"]["continuity_only"],
             *[pack["frontal"] for pack in binding["media_roles"]["character_element_packs"]],
         ]

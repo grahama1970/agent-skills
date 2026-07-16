@@ -4,7 +4,7 @@
   "endpoint": "fal-ai/kling-video/v3/standard/image-to-video",
   "mode": "standard",
   "phase10_endpoint_migration": {
-    "candidate_binding_sha256": "sha256:032eaae3703b3a4567e86c4390e9a89782b69f3ce6f020b88fbdf0ce0818803e",
+    "candidate_binding_sha256": "sha256:0797cca271e417c72b8777b15febc8ec8ffe806c554eb42c013227186795689d",
     "from_endpoint": "fal-ai/kling-video/v3/pro/image-to-video",
     "phase10_payload_sha256": "sha256:6fc7763911a57e3cc003f4d5df457cb63bc254a6399155cb545184b80ceaaa22",
     "reason": "Phase 11 canonical request is bound to the current official Kling v3 Standard endpoint; historical Phase 10 endpoint identity is retained as migration evidence.",
@@ -19,7 +19,7 @@
     "final_url": "https://fal.ai/models/fal-ai/kling-video/v3/standard/image-to-video",
     "http_status": 200,
     "maximum_expected_cost_usd": 0.84,
-    "remote_content_sha256": "sha256:ffd8e7eb001d7785a8e50cff9cfebf4e06908d1bf88839d5658a106a61869e36",
+    "remote_content_sha256": "sha256:9738e6b7ed063fbe9524adac639da1d57061a05e37e9fe45e4fd478d36a5c616",
     "requested_url": "https://fal.ai/models/fal-ai/kling-video/v3/standard/image-to-video",
     "usd_per_second_audio_off": 0.084,
     "usd_per_second_audio_on": 0.126,
@@ -43,11 +43,11 @@
       "--ttl-seconds",
       "86400",
       "--now",
-      "2026-07-16T11:10:43.031723+00:00"
+      "2026-07-16T16:57:09.733473+00:00"
     ],
     "provider_generation_call_attempted": false
   },
-  "retrieved_at": "2026-07-16T11:10:43.031723+00:00",
+  "retrieved_at": "2026-07-16T16:57:09.733473+00:00",
   "revision_id": "rev_idea_f3f9c48d5cc2",
   "run_id": "pipeline-complete",
   "schema": "persona_dream.phase11_provider_source_snapshot.v1",
@@ -120,7 +120,7 @@
       }
     },
     "normalized_schema_sha256": "sha256:15e0eee93842595b6a2dad7aaea4bae34f607afbb0a3176df204675a7244bad9",
-    "remote_content_sha256": "sha256:e646a7d5137c678263ddbcbce6c657554ee56adbfed563c3dea0a19bf23030c1",
+    "remote_content_sha256": "sha256:8f3d58ff6d8154438db487b458f7cc4ac877fe139b67dd5881ce227032f90995",
     "requested_url": "https://fal.ai/models/fal-ai/kling-video/v3/standard/image-to-video/api"
   },
   "status": "PASS_PROVIDER_SOURCE_SNAPSHOT",

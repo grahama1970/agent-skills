@@ -89,7 +89,7 @@ def test_provider_snapshot_is_official_hash_bound_ttl_limited_and_zero_call(tmp_
     assert "BLOCKED_PROVIDER_SOURCE_SNAPSHOT_TTL_EXPIRED" in stale.blockers
 
 
-def test_public_media_capture_binds_seven_unique_assets_without_human_authorization(
+def test_public_media_capture_binds_six_unique_request_assets_without_human_authorization(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ):
     inputs, _candidate, _urls = make_compilation_inputs(tmp_path)
@@ -107,7 +107,7 @@ def test_public_media_capture_binds_seven_unique_assets_without_human_authorizat
         allow_test_host=True,
     )
     assert manifest["status"] == "PASS_PROVIDER_MEDIA_TRANSITIONS_TECHNICAL"
-    assert manifest["request_asset_count"] == 7
+    assert manifest["request_asset_count"] == 6
     assert manifest["publication_authorization_present"] is False
     assert all(entry["publication_authorization"]["state"] == "MISSING_HUMAN_APPROVAL" for entry in manifest["entries"])
     assert all(entry["public_probe"]["sha256"].startswith("sha256:") for entry in manifest["entries"])

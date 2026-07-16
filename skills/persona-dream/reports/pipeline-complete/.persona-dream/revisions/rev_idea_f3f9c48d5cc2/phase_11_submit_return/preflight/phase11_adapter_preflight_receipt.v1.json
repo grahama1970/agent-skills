@@ -2,7 +2,7 @@
   "activation_transaction_id": "activation-f316f5e66ba900751235c2ee3cd27da3",
   "actual_provider_call_attempts": 0,
   "adapter_script_sha256": "sha256:eee4ff6f2a0c37da7457c7048ed8657665d1240cedb0156880b932073965d6f4",
-  "approval_binding_sha256": "sha256:a2c1ba04951a8aab5143955a8f3ca4a7647d18b9e71926aa90689eb5a775fa80",
+  "approval_binding_sha256": "sha256:723c6113af0aaa6bd0765f1584b46cc848366af8c2200df9ba4bf911e3e4c35a",
   "approval_validation": {
     "invalid_blockers": [],
     "missing_types": [
@@ -49,13 +49,13 @@
   },
   "attempt_ledger": {
     "actual_provider_call_attempts": 0,
-    "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/attempts/9966f6b65cc323ef4780aa2109e8814d0d61c64e81e33dbb33d023679dd42e16/attempt_ledger.v1.json",
-    "request_key": "9966f6b65cc323ef4780aa2109e8814d0d61c64e81e33dbb33d023679dd42e16",
-    "sha256": "sha256:5a2b246c862f7bc4a16ba487c029c52aaa8f1526df758aa164d64b0816e311ef",
+    "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/attempts/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/attempt_ledger.v1.json",
+    "request_key": "ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+    "sha256": "sha256:b2fde2879737f0bbd3547cdf02346186ca3e45f7633c5ca4a7874fdf9b8eca89",
     "state": "PREFLIGHT_READY",
     "submit_intent_count": 0
   },
-  "created_at": "2026-07-16T15:07:28.694904+00:00",
+  "created_at": "2026-07-16T16:57:54.215062+00:00",
   "credential": {
     "present": true,
     "runtime_variable": "FAL_KEY",
@@ -64,11 +64,11 @@
     "source_variable": "FAL_KEY"
   },
   "download_directory": {
-    "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/9966f6b65cc323ef4780aa2109e8814d0d61c64e81e33dbb33d023679dd42e16",
+    "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
     "writable": true
   },
   "endpoint": "fal-ai/kling-video/v3/standard/image-to-video",
-  "expires_at": "2026-07-16T16:07:28.694904+00:00",
+  "expires_at": "2026-07-16T17:57:54.215062+00:00",
   "fal_client": {
     "api_surface": {
       "SyncClient": true,
@@ -97,7 +97,7 @@
   },
   "live": true,
   "live_submit_ready": false,
-  "media_input_contract_sha256": "sha256:3fb193ccd0fa8d497fbcabb71bb4f235298ce4ef3491e6329043d4496d8e8517",
+  "media_input_contract_sha256": "sha256:b2571d6016880d4b9fb04e8e38f0ba8cef1b9cf906cc5fc4566fcf938acd0b55",
   "mocked": false,
   "paid_call_authorized": false,
   "poll_policy": {
@@ -105,11 +105,11 @@
     "max_polls": 180,
     "maximum_elapsed_seconds": 900.0
   },
-  "pricing_snapshot_sha256": "sha256:241d79ab092e1a475dddd7b65392376096fedb09e4e868a4b60131b4bcc3c0fe",
+  "pricing_snapshot_sha256": "sha256:6d0fced064e7a04a1ee37f1c32624855ab0943c10400fc96e6f7b0f63a522192",
   "provider_live": false,
   "provider_ready": false,
-  "provider_source_snapshot_sha256": "sha256:1a4d434408ea50ce39e99fb1636decb7275a0f022e0fc8fd69ce9d95478b764f",
-  "request_body_sha256": "sha256:9966f6b65cc323ef4780aa2109e8814d0d61c64e81e33dbb33d023679dd42e16",
+  "provider_source_snapshot_sha256": "sha256:c7acba3a4dc8431d7a5417b4d1f306614ff99e4ee87199a7e9bfd80b8b37fc18",
+  "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
   "revision_id": "rev_idea_f3f9c48d5cc2",
   "run_id": "pipeline-complete",
   "schema": "persona_dream.phase11_adapter_preflight_receipt.v1",

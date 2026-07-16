@@ -1,7 +1,7 @@
 {
   "activation_transaction_id": "activation-f316f5e66ba900751235c2ee3cd27da3",
   "actual_provider_call_attempts": 0,
-  "checked_at": "2026-07-16T11:11:02.538311+00:00",
+  "checked_at": "2026-07-16T16:57:11.881500+00:00",
   "entries": [
     {
       "artifact_id": "phase07.phase.07.storyboard.live.tau.references.01.embry.character.sheet.jpg",
@@ -10,7 +10,7 @@
       ],
       "public_probe": {
         "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.01.embry.character.sheet.jpg/public_probe_receipt.json",
-        "sha256": "sha256:6e9e78e27777a0c780e7ecc5141f48166bda715309dcca7600e97abdd4ddfbf3"
+        "sha256": "sha256:48d2e898345355ca77d25c47e1a8721fe76442b6a1a84d1ccadc9efd067a754a"
       },
       "publication_authorization": {
         "approval_type": "publication_authorization",
@@ -18,7 +18,7 @@
       },
       "publication_receipt": {
         "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.01.embry.character.sheet.jpg/existing_publication_receipt.json",
-        "sha256": "sha256:b65d3cb622cc120c400b06b54b253b74428c610648fa4bfd49afdc7c8ccd798d"
+        "sha256": "sha256:26581fe684858bb06e37f4d45e4677653b06ace559e57de27c32632b072db000"
       },
       "sha256": "sha256:b93c3fed77959d783cdc5788189117d8a8fed6b92fc689eba1154d080d323840",
       "teardown_policy": {
@@ -34,7 +34,7 @@
       ],
       "public_probe": {
         "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.02.kai.character.sheet.png/public_probe_receipt.json",
-        "sha256": "sha256:1077f01ce2f73dcc01e3a56c8cac6ae1720327b0225f8e2c5cc01748eb08ea88"
+        "sha256": "sha256:f76b4eb59b094b2a0be1ca66e2924da056d17207bc0196a41e0e39babd57b8f0"
       },
       "publication_authorization": {
         "approval_type": "publication_authorization",
@@ -42,7 +42,7 @@
       },
       "publication_receipt": {
         "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.02.kai.character.sheet.png/existing_publication_receipt.json",
-        "sha256": "sha256:1477d60fdb43c97b71470cb6dbe6ccae6adfafa32c0bba92e7efabedc7c2d7b5"
+        "sha256": "sha256:230008f4da7cce4476186043d63d817d30e3cfb3000d1007bedb6fa113b282e2"
       },
       "sha256": "sha256:692cf37c5e7915f8b4ebceabd03b5d01ff69c9d428e94333bc1a01ac5e497700",
       "teardown_policy": {
@@ -59,7 +59,7 @@
       ],
       "public_probe": {
         "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/sb_001.start_frame/public_probe_receipt.json",
-        "sha256": "sha256:a448e437f28d936f6c12b0e50d22fdb28d8c735e42c6695610b82597d5a27366"
+        "sha256": "sha256:4874b0a63350ac5a5bbd4849ccfcaafc76b3982883c87a6ec554ae1ea98da27f"
       },
       "publication_authorization": {
         "approval_type": "publication_authorization",
@@ -67,7 +67,7 @@
       },
       "publication_receipt": {
         "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/sb_001.start_frame/existing_publication_receipt.json",
-        "sha256": "sha256:fd12469721c74e9f8f3e9921546c51f32d050bee6b42d2121f7dea78fdbb072a"
+        "sha256": "sha256:c4bbfa500ff1154ba35a45786a6d0a960ad64c0fdf07274fcda25f2f9919f191"
       },
       "sha256": "sha256:bbd7a63110b1c42af94e682ae93bf055bbe1c84e48468b3470a2032db70d09bb",
       "teardown_policy": {
@@ -83,7 +83,7 @@
       ],
       "public_probe": {
         "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/sb_002.start_frame/public_probe_receipt.json",
-        "sha256": "sha256:8259d5e97fe2aa88e000fb4999f2f574971586cfb51883493ac4cde9837dee68"
+        "sha256": "sha256:79e125e3454945658b10debea2dc5653f56f47ca6cbd5577a83f2a217427752f"
       },
       "publication_authorization": {
         "approval_type": "publication_authorization",
@@ -91,7 +91,7 @@
       },
       "publication_receipt": {
         "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/sb_002.start_frame/existing_publication_receipt.json",
-        "sha256": "sha256:03e728f64f327b42e1a4f439889b373b9494edd3dbf821e3759a0109be2a6061"
+        "sha256": "sha256:54eb64d2a721899dc706120aca779dafc252ee268a520ec442d9a6ffc6f3fdb7"
       },
       "sha256": "sha256:3f7a1d4e9def3f6f0e726ef9cd25b1f5dfeacbf0eabd4e43e871479f7a219b6a",
       "teardown_policy": {
@@ -107,7 +107,7 @@
       ],
       "public_probe": {
         "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/sb_003.start_frame/public_probe_receipt.json",
-        "sha256": "sha256:652c5f10653430a18a2a83a121fb8d41b4565e56f85b3c37df09e2a2a7086832"
+        "sha256": "sha256:5972be24d05f3ecaad296f3c90f637b2bb9f18612e534e8d203dc8b1c3e8fee9"
       },
       "publication_authorization": {
         "approval_type": "publication_authorization",
@@ -115,7 +115,7 @@
       },
       "publication_receipt": {
         "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/sb_003.start_frame/existing_publication_receipt.json",
-        "sha256": "sha256:66da750af54e82a7d1e4fa496641a7c5b9e4cc1a1f8cb251e6d525ba985da91e"
+        "sha256": "sha256:d04ea72dcd27729fd20ad157223804b7be509cab6c62e4848c93958299d4ac4b"
       },
       "sha256": "sha256:471513b449fb6c39b576360064d831c357bfa0233bb7a96a84ee1d7ef3eaaa20",
       "teardown_policy": {
@@ -125,37 +125,13 @@
       "url": "https://raw.githubusercontent.com/grahama1970/agent-skills/9ce346f4e508382350f49f42563b998f1aa8efe7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_003_start_frame.png"
     },
     {
-      "artifact_id": "sb_004.end_frame",
-      "json_pointers": [
-        "/input/end_image_url"
-      ],
-      "public_probe": {
-        "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/sb_004.end_frame/public_probe_receipt.json",
-        "sha256": "sha256:06a0f5ebe4e3bb1bb2198e478a5514b4d8004b8f45b1902f82df3b1fd571ba97"
-      },
-      "publication_authorization": {
-        "approval_type": "publication_authorization",
-        "state": "MISSING_HUMAN_APPROVAL"
-      },
-      "publication_receipt": {
-        "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/sb_004.end_frame/existing_publication_receipt.json",
-        "sha256": "sha256:e8173f508417b086d84fcd213c49f05a05ec424783065bb4a44cab90fd585ea9"
-      },
-      "sha256": "sha256:97846479c7e3d1a1e35d651bb5873de13e424ba1a58f77c824eaf4cf5eeb267f",
-      "teardown_policy": {
-        "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/sb_004.end_frame/teardown_policy_receipt.json",
-        "sha256": "sha256:fdb9ac282816795522edb2b8cc1c5d22cc3db304d0193dc7fca94fd18714239d"
-      },
-      "url": "https://raw.githubusercontent.com/grahama1970/agent-skills/9ce346f4e508382350f49f42563b998f1aa8efe7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_004_end_frame.png"
-    },
-    {
       "artifact_id": "sb_004.start_frame",
       "json_pointers": [
         "/input/elements/0/reference_image_urls/1"
       ],
       "public_probe": {
         "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/sb_004.start_frame/public_probe_receipt.json",
-        "sha256": "sha256:70a89500ff4ae9fb9e16b10daa876e7e80fdc2a726f287b00e622e998699eced"
+        "sha256": "sha256:4ce5c2699c696f5064ae0d481ebd3e652e7b27c012ad713a3b0f693e9689fffe"
       },
       "publication_authorization": {
         "approval_type": "publication_authorization",
@@ -163,7 +139,7 @@
       },
       "publication_receipt": {
         "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/sb_004.start_frame/existing_publication_receipt.json",
-        "sha256": "sha256:cced30f2a744763edbf8941615f90a2fc8d0e79e9a35de318846770e7c8c52df"
+        "sha256": "sha256:8262607c745bdcf4e86b106c1890c2631e30507bebcca95118bc0af154baa65f"
       },
       "sha256": "sha256:8fcd2045314c7c464c920bd6e7bf370a4cf90bcfd529bcf8e22f7100e5994a29",
       "teardown_policy": {
@@ -177,7 +153,7 @@
   "publication_authorization_present": false,
   "publication_authorization_required": true,
   "publication_performed_by_this_command": false,
-  "request_asset_count": 7,
+  "request_asset_count": 6,
   "revision_id": "rev_idea_f3f9c48d5cc2",
   "run_id": "pipeline-complete",
   "schema": "persona_dream.provider_media_transition_manifest.v1",

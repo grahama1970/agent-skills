@@ -6,12 +6,12 @@
     "activation_transaction_id": "activation-f316f5e66ba900751235c2ee3cd27da3",
     "actual_provider_call_attempts": 0,
     "endpoint": "fal-ai/kling-video/v3/standard/image-to-video",
-    "media_binding_manifest_sha256": "sha256:291adcf0b500a0666d525e3627d356d117edcacf53525351447e9d99e91a55f6",
-    "media_input_contract_sha256": "sha256:3fb193ccd0fa8d497fbcabb71bb4f235298ce4ef3491e6329043d4496d8e8517",
-    "pricing_snapshot_sha256": "sha256:241d79ab092e1a475dddd7b65392376096fedb09e4e868a4b60131b4bcc3c0fe",
+    "media_binding_manifest_sha256": "sha256:a7aecf73843c8f4003ae543c9d02cebdbfdb1d0dc23e36bc47891d6a769ecd0d",
+    "media_input_contract_sha256": "sha256:b2571d6016880d4b9fb04e8e38f0ba8cef1b9cf906cc5fc4566fcf938acd0b55",
+    "pricing_snapshot_sha256": "sha256:6d0fced064e7a04a1ee37f1c32624855ab0943c10400fc96e6f7b0f63a522192",
     "provider_id": "kling",
-    "provider_source_snapshot_sha256": "sha256:1a4d434408ea50ce39e99fb1636decb7275a0f022e0fc8fd69ce9d95478b764f",
-    "request_body_sha256": "sha256:9966f6b65cc323ef4780aa2109e8814d0d61c64e81e33dbb33d023679dd42e16",
+    "provider_source_snapshot_sha256": "sha256:c7acba3a4dc8431d7a5417b4d1f306614ff99e4ee87199a7e9bfd80b8b37fc18",
+    "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
     "revision_id": "rev_idea_f3f9c48d5cc2",
     "run_id": "pipeline-complete"
   },
@@ -34,7 +34,7 @@
     "final_url": "https://fal.ai/models/fal-ai/kling-video/v3/standard/image-to-video",
     "http_status": 200,
     "maximum_expected_cost_usd": 0.84,
-    "remote_content_sha256": "sha256:ffd8e7eb001d7785a8e50cff9cfebf4e06908d1bf88839d5658a106a61869e36",
+    "remote_content_sha256": "sha256:9738e6b7ed063fbe9524adac639da1d57061a05e37e9fe45e4fd478d36a5c616",
     "requested_url": "https://fal.ai/models/fal-ai/kling-video/v3/standard/image-to-video",
     "usd_per_second_audio_off": 0.084,
     "usd_per_second_audio_on": 0.126,
@@ -111,7 +111,6 @@
         ]
       }
     ],
-    "end_image_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/9ce346f4e508382350f49f42563b998f1aa8efe7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_004_end_frame.png",
     "generate_audio": false,
     "multi_prompt": [
       {
@@ -145,7 +144,7 @@
     ],
     "sort_keys": true
   },
-  "request_body_sha256": "sha256:9966f6b65cc323ef4780aa2109e8814d0d61c64e81e33dbb33d023679dd42e16",
+  "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
   "revision_id": "rev_idea_f3f9c48d5cc2",
   "run_id": "pipeline-complete",
   "runtime_release_id": "agent-skills@2d8b75e85e5856b079c81dfe847ef76ca8873502",
@@ -154,27 +153,27 @@
   "source_files": {
     "adapter_preflight": {
       "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/phase11_adapter_preflight_receipt.v1.json",
-      "sha256": "sha256:6ee852f7fdf01a40ef21f5e8e3f47b9dbf302f3ae3775adc51d9b595e9c7c7bf"
+      "sha256": "sha256:42eaceac819da05798a8bffd64a6d80ba464fc2935cfeb8e8059c5e3229117b1"
     },
     "attempt_ledger": {
       "actual_provider_call_attempts": 0,
-      "ledger_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/attempts/9966f6b65cc323ef4780aa2109e8814d0d61c64e81e33dbb33d023679dd42e16/attempt_ledger.v1.json",
-      "ledger_sha256": "sha256:5a2b246c862f7bc4a16ba487c029c52aaa8f1526df758aa164d64b0816e311ef",
+      "ledger_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/attempts/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/attempt_ledger.v1.json",
+      "ledger_sha256": "sha256:b2fde2879737f0bbd3547cdf02346186ca3e45f7633c5ca4a7874fdf9b8eca89",
       "request_id": null,
       "state": "PREFLIGHT_READY"
     },
     "candidate_binding": {
       "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/phase11_payload_binding.json",
-      "sha256": "sha256:032eaae3703b3a4567e86c4390e9a89782b69f3ce6f020b88fbdf0ce0818803e"
+      "sha256": "sha256:0797cca271e417c72b8777b15febc8ec8ffe806c554eb42c013227186795689d"
     },
-    "media_binding_manifest_sha256": "sha256:291adcf0b500a0666d525e3627d356d117edcacf53525351447e9d99e91a55f6",
+    "media_binding_manifest_sha256": "sha256:a7aecf73843c8f4003ae543c9d02cebdbfdb1d0dc23e36bc47891d6a769ecd0d",
     "phase10_payload": {
       "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_10_provider_contract/final_provider_payload_by_panel.json",
       "sha256": "sha256:6fc7763911a57e3cc003f4d5df457cb63bc254a6399155cb545184b80ceaaa22"
     },
     "provider_source_snapshot": {
       "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_source_snapshot.json",
-      "sha256": "sha256:1a4d434408ea50ce39e99fb1636decb7275a0f022e0fc8fd69ce9d95478b764f"
+      "sha256": "sha256:c7acba3a4dc8431d7a5417b4d1f306614ff99e4ee87199a7e9bfd80b8b37fc18"
     }
   },
   "source_revision_id": "rev_repair_a8b93ffeca8f",

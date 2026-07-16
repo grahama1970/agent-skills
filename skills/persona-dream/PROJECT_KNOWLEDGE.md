@@ -18,23 +18,33 @@
   the run-scoped active pointer and terminal event
   `repair-454b255245a1a162/000001-completed.json` agree with the activation
   receipt. Live run-detail reports all ten phases `accepted_current` and
-  `ACTIVE_CONSISTENT`. Phase 11 remains `BLOCKED_PROVIDER_GATE`; provider call
-  attempts remain zero.
+  `ACTIVE_CONSISTENT`. That qualification remains scoped to Phases 01-10 and
+  does not inherit any Phase 11 provider result.
 - 2026-07-16: The canonical Phase 11 pre-Kling boundary for
   `rev_idea_f3f9c48d5cc2` is now live-validated and Memory-persisted. The exact
   Standard/audio-off request body hash is
-  `sha256:9966f6b65cc323ef4780aa2109e8814d0d61c64e81e33dbb33d023679dd42e16`.
+  `sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41`.
   Its four prompts are 247, 268, 362, and 271 characters; SB_003 is silent,
-  and the adapter preflight passed with a request-scoped submit-once fence.
+  `multi_prompt` is present, `end_image_url` is absent, and the adapter
+  preflight passed with a request-scoped submit-once fence.
   Memory `/upsert` wrote request-scoped key
-  `pd_phase11_11c0a72cef02a4966cb3f21852341629a21dccbc6d2789ad`, `/list`
+  `pd_phase11_eb5dbe1257f6152103d1ce1e2700f9582d8ef6e5fb87e90e`, `/list`
   exactly reread it and the active pointer, semantic sync is `synced`, and
   question-shaped recall returned the same identity with dense score
-  `0.792625`. Current gate: `BLOCKED_AWAITING_HUMAN_APPROVAL` for five new
+  `0.7866844`. Current gate: `BLOCKED_AWAITING_HUMAN_APPROVAL` for five new
   hash-bound receipts: publication authorization, visual/media acceptance,
   exact-request acceptance, cost acceptance, and paid-call authorization.
   `actual_provider_call_attempts=0`, `provider_ready=false`,
   `live_submit_ready=false`, and no provider return or Watch observation exists.
+- 2026-07-16: The separately authorized request
+  `sha256:9966f6b65cc323ef4780aa2109e8814d0d61c64e81e33dbb33d023679dd42e16`
+  consumed exactly one attempt, request ID
+  `019f6b89-e69a-7371-9b98-313a96f5f020`, and failed with HTTP 422 because
+  fal does not support `end_image_url` with `multi_prompt`. Its ledger is
+  `FAILED`, `submit_intent_count=1`, `actual_provider_call_attempts=1`, and
+  `automatic_resubmit_allowed=false`. The failure is Memory-persisted with
+  exact reread, semantic sync, and dense recall. The compiler now preserves
+  `sb_004.end_frame` as continuity-only evidence instead of a provider input.
 - 2026-07-16: Graham explicitly authorized all five Phase 11 decisions for
   request body
   `sha256:444a5a27e35c70848819aa561fc429f6e48d633c2bcc8ac805f675ac5b5f4b71`
@@ -118,6 +128,7 @@
 | 2026-07-16 | Phase 11 may await humans only after technical validation and Memory proof | `BLOCKED_AWAITING_HUMAN_APPROVAL` is valid only when the active revision chain, exact request, media bindings, fresh provider evidence, adapter preflight, submit-once fence, Memory exact reread, semantic sync, and dense recall pass with zero provider attempts. |
 | 2026-07-16 | A failed authorized canary consumes the one-attempt authorization | Request `444a5a27...` was submitted once and rejected by fal result validation because all four shot prompts exceeded 512 characters. Never reset or reuse its ledger; a repaired request must have a new hash and separate explicit authorization. |
 | 2026-07-16 | Phase 11 Memory identity is exact-request scoped | Run/revision-only keys collide when a repaired payload is compiled. New Phase 11 writes include `request_body_sha256` in the deterministic key so failed and corrected requests coexist without merge residue. |
+| 2026-07-16 | `multi_prompt` and `end_image_url` are incompatible on the selected fal endpoint | Live request `9966f6b6...` returned HTTP 422: `End Image Url is not supported with Multi Prompt`. Keep the accepted end frame as continuity-only evidence, omit it from the request body, and reject this field combination before submission. |
 
 ## Open Questions
 

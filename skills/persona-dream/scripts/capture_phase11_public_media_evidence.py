@@ -170,10 +170,10 @@ def capture(
             raise Phase11Blocked("BLOCKED_PUBLIC_MEDIA_ARTIFACT_MULTI_BINDING_CONFLICT", details={"artifact_id": artifact_id})
         current["json_pointers"].append(pointer)
 
-    if len(grouped) != 7:
+    if len(grouped) != 6:
         raise Phase11Blocked(
             "BLOCKED_PUBLIC_MEDIA_REQUEST_ASSET_CARDINALITY",
-            details={"observed": len(grouped), "expected": 7, "artifact_ids": sorted(grouped)},
+            details={"observed": len(grouped), "expected": 6, "artifact_ids": sorted(grouped)},
         )
 
     evidence_root = inputs.context.revision_root / "phase_11_submit_return" / "preflight" / "provider_media_evidence"

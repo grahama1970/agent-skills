@@ -1,7 +1,7 @@
 {
   "actual_provider_call_attempts": 0,
   "artifact_id": "sb_003.start_frame",
-  "observed_at": "2026-07-16T11:11:02.538311+00:00",
+  "observed_at": "2026-07-16T16:57:11.881500+00:00",
   "publication_authorization_present": false,
   "publication_performed_by_this_command": false,
   "schema": "persona_dream.phase11_existing_publication_receipt.v1",

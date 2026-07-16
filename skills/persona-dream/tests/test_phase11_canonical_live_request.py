@@ -58,12 +58,11 @@ def install_transition_evidence(
         current["json_pointers"].append(pointer)
 
     add("/input/start_image_url", request_body["start_image_url"])
-    add("/input/end_image_url", request_body["end_image_url"])
     for element_index, element in enumerate(request_body["elements"]):
         add(f"/input/elements/{element_index}/frontal_image_url", element["frontal_image_url"])
         for reference_index, url in enumerate(element["reference_image_urls"]):
             add(f"/input/elements/{element_index}/reference_image_urls/{reference_index}", url)
-    assert len(slots) == 7
+    assert len(slots) == 6
 
     entries = []
     for artifact_id, binding in sorted(slots.items()):
@@ -133,7 +132,7 @@ def install_transition_evidence(
         "revision_id": inputs.context.revision_id,
         "activation_transaction_id": inputs.context.activation_transaction_id,
         "checked_at": "2026-07-15T11:00:00+00:00",
-        "request_asset_count": 7,
+        "request_asset_count": 6,
         "entries": entries,
         "publication_authorization_required": True,
         "publication_authorization_present": False,
@@ -157,8 +156,8 @@ def test_canonical_compiler_normalizes_tier_timing_and_silent_sb003(tmp_path: Pa
 
     assert media["role_counts"] == {
         "global_start_anchor": 1,
-        "global_end_anchor": 1,
-        "continuity_only": 6,
+        "global_end_anchor": 0,
+        "continuity_only": 7,
         "element_packs": 2,
     }
     assert media["blockers"] == []
@@ -167,6 +166,12 @@ def test_canonical_compiler_normalizes_tier_timing_and_silent_sb003(tmp_path: Pa
     assert start_frame["transition_evidence"]["public_probe"]["status"] == "PASS_PROVIDER_MEDIA_PUBLIC_FETCH"
     assert media["element_packs"][0]["images"][0]["json_pointer"] == "/input/elements/0/frontal_image_url"
     assert media["element_packs"][0]["images"][0]["transition_evidence"]["public_probe"]["status"] == "PASS_PROVIDER_MEDIA_PUBLIC_FETCH"
+    end_frame = next(item for item in media["storyboard_frames"] if item["artifact_id"] == "sb_004.end_frame")
+    assert end_frame["role"] == "continuity_only"
+    assert end_frame["json_pointer"] is None
+    assert end_frame["public_url"] is None
+    assert end_frame["transition_evidence"] is None
+    assert "end_image_url" not in request["provider_request_body"]
     assert request["status"] == "BLOCKED_AWAITING_HUMAN_APPROVAL"
     assert request["technical_blockers"] == []
     assert request["missing_approval_types"] == [

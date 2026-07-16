@@ -38,12 +38,11 @@ def test_bootstrap_binding_has_exact_roles_two_packs_standard_and_silent_sb003(t
     assert binding["mode"] == "standard"
     assert binding["media_roles"]["role_counts"] == {
         "global_start_anchor": 1,
-        "global_end_anchor": 1,
-        "continuity_only": 6,
+        "global_end_anchor": 0,
+        "continuity_only": 7,
         "element_packs": 2,
     }
     assert binding["media_roles"]["global_start_anchor"]["artifact_id"] == "sb_001.start_frame"
-    assert binding["media_roles"]["global_end_anchor"]["artifact_id"] == "sb_004.end_frame"
     assert [item["artifact_id"] for item in binding["media_roles"]["continuity_only"]] == [
         "sb_001.end_frame",
         "sb_002.start_frame",
@@ -51,6 +50,7 @@ def test_bootstrap_binding_has_exact_roles_two_packs_standard_and_silent_sb003(t
         "sb_003.start_frame",
         "sb_003.end_frame",
         "sb_004.start_frame",
+        "sb_004.end_frame",
     ]
     packs = binding["media_roles"]["character_element_packs"]
     assert [pack["identity"] for pack in packs] == ["embry", "kai"]
@@ -65,6 +65,8 @@ def test_bootstrap_binding_has_exact_roles_two_packs_standard_and_silent_sb003(t
     assert "quietly says" not in sb003
     assert "No spoken dialogue." in sb003
     assert binding["input"]["generate_audio"] is False
+    assert "end_image_url" not in binding["input"]
+    assert binding["technical_gate"]["end_frame_review_only"] is True
     assert binding["actual_provider_call_attempts"] == 0
     assert binding["submitted"] is False
     assert binding["provider_ready"] is False
@@ -176,8 +178,8 @@ def test_bootstrap_command_writes_missing_binding_from_active_revision(
     assert receipt["created"] is True
     assert receipt["role_counts"] == {
         "global_start_anchor": 1,
-        "global_end_anchor": 1,
-        "continuity_only": 6,
+        "global_end_anchor": 0,
+        "continuity_only": 7,
         "element_packs": 2,
     }
     assert receipt["actual_provider_call_attempts"] == 0

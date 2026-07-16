@@ -81,11 +81,10 @@ FRAME_IDS = tuple(
 )
 FRAME_ROLES = {
     "sb_001.start_frame": "global_start_anchor",
-    "sb_004.end_frame": "global_end_anchor",
     **{
         artifact_id: "continuity_only"
         for artifact_id in FRAME_IDS
-        if artifact_id not in {"sb_001.start_frame", "sb_004.end_frame"}
+        if artifact_id != "sb_001.start_frame"
     },
 }
 SHA256_RE = re.compile(r"^sha256:[a-f0-9]{64}$")
@@ -715,7 +714,6 @@ def build_media_binding_manifest(inputs: CompilationInputs, request_body: Mappin
         blockers.append("BLOCKED_LOCKED_STORYBOARD_FRAME_SET")
 
     start_url = str(request_body.get("start_image_url") or "")
-    end_url = str(request_body.get("end_image_url") or "")
     frame_records: list[dict[str, Any]] = []
     for artifact_id in FRAME_IDS:
         source = by_id.get(artifact_id, {})
@@ -737,8 +735,8 @@ def build_media_binding_manifest(inputs: CompilationInputs, request_body: Mappin
                 except GateBlocked:
                     blockers.append(f"BLOCKED_MEDIA_ARTIFACT_INDEX_PATH:{artifact_id}")
         role = FRAME_ROLES[artifact_id]
-        pointer = "/input/start_image_url" if role == "global_start_anchor" else "/input/end_image_url" if role == "global_end_anchor" else None
-        url = start_url if role == "global_start_anchor" else end_url if role == "global_end_anchor" else None
+        pointer = "/input/start_image_url" if role == "global_start_anchor" else None
+        url = start_url if role == "global_start_anchor" else None
         record = {
             "artifact_id": artifact_id,
             "role": role,
@@ -821,7 +819,7 @@ def build_media_binding_manifest(inputs: CompilationInputs, request_body: Mappin
         "continuity_only": sum(item["role"] == "continuity_only" for item in frame_records),
         "element_packs": len(element_packs),
     }
-    if role_counts != {"global_start_anchor": 1, "global_end_anchor": 1, "continuity_only": 6, "element_packs": 2}:
+    if role_counts != {"global_start_anchor": 1, "global_end_anchor": 0, "continuity_only": 7, "element_packs": 2}:
         blockers.append("BLOCKED_MEDIA_ROLE_COUNTS")
 
     source_contract = {
@@ -1008,7 +1006,6 @@ def compile_request_body(inputs: CompilationInputs) -> tuple[dict[str, Any], lis
         "start_image_url": candidate_input.get("start_image_url"),
         "duration": "10",
         "generate_audio": False,
-        "end_image_url": candidate_input.get("end_image_url"),
         "elements": candidate_input.get("elements") if isinstance(candidate_input.get("elements"), list) else [],
         "shot_type": candidate_input.get("shot_type") or "customize",
         "negative_prompt": str(candidate_input.get("negative_prompt") or "").strip(),
@@ -1034,8 +1031,8 @@ def validate_request_body(body: Mapping[str, Any], *, endpoint: str, mode: str) 
         blockers.append("BLOCKED_PROVIDER_AUDIO_STRATEGY")
     if not isinstance(body.get("start_image_url"), str) or not body.get("start_image_url"):
         blockers.append("BLOCKED_PROVIDER_START_IMAGE_URL_MISSING")
-    if not isinstance(body.get("end_image_url"), str) or not body.get("end_image_url"):
-        blockers.append("BLOCKED_PROVIDER_END_IMAGE_URL_MISSING")
+    if "end_image_url" in body:
+        blockers.append("BLOCKED_PROVIDER_MULTI_PROMPT_END_IMAGE_URL_CONFLICT")
     if body.get("duration") != "10":
         blockers.append("BLOCKED_PROVIDER_DURATION")
     if not isinstance(body.get("elements"), list) or len(body.get("elements")) != 2:

@@ -193,7 +193,7 @@ The README uses these proof terms consistently:
 | Grounded dream packets | **Implemented** | Source links, contradiction reports, reflections, and receipts exist |
 | Image and storyboard production | **Live slices proven** | Live image generation, visual review, creator/reviewer repair, and accepted-frame evidence exist |
 | Phases 01-10 - Qualified revision | **Qualified revision** | `rev_idea_f3f9c48d5cc2` is `ACTIVE_CONSISTENT`; the explicit human idea has 10/10 phase lineage bindings, and 10 phase records plus 16 required-artifact references are persisted and semantically synchronized through Memory |
-| Phase 11 - Submit and Return | **Corrected preflight awaiting new approvals** | Failed request `444a5a27...` remains terminal with one attempt and no MP4. Corrected request `9966f6b6...` has four prompts under 512 characters, zero technical blockers, live Memory/Qdrant proof, zero attempts, and five stale/missing request-bound approvals |
+| Phase 11 - Submit and Return | **Corrected preflight awaiting new approvals** | Requests `444a5a27...` and `9966f6b6...` each remain terminal with one attempt and no MP4. Current request `ff2ce7f3...` omits the unsupported multi-prompt end image, has zero technical blockers, live Memory/Qdrant proof, zero attempts, and five missing request-bound approvals |
 | Phases 12-15 - Watch through persistence | **Designed** | The evidence architecture exists, but one accepted closed run does not |
 | Phase 16 - Later persona behavior | **Not implemented as a closed proof** | No persisted dream has yet been shown to alter later behavior while preserving identity |
 
@@ -457,29 +457,31 @@ has analyzed the actual media.
 Current canonical evidence for `rev_idea_f3f9c48d5cc2`:
 
 ```text
-request_body_sha256: sha256:9966f6b65cc323ef4780aa2109e8814d0d61c64e81e33dbb33d023679dd42e16
+request_body_sha256: sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41
 validator_status: PASS_PHASE11_CANONICAL_BOUNDARY_VALIDATED
 adapter_status: PASS_PHASE11_ADAPTER_PREFLIGHT
 gate_status: BLOCKED_AWAITING_HUMAN_APPROVAL
 technical_blockers: []
 missing_approval_count: 5
 actual_provider_call_attempts: 0
-memory_key: pd_phase11_11c0a72cef02a4966cb3f21852341629a21dccbc6d2789ad
-memory_dense_recall_max: 0.792625
+memory_key: pd_phase11_eb5dbe1257f6152103d1ce1e2700f9582d8ef6e5fb87e90e
+memory_dense_recall_max: 0.7866844
 provider_ready: false
 live_submit_ready: false
 ```
 
-That zero-call receipt is the current corrected-request authority. The prior
-request remains immutable failed-attempt history:
+That zero-call receipt is the current corrected-request authority. Two prior
+requests remain immutable failed-attempt history. Request `444a5a27...` failed
+because all four prompts exceeded 512 characters. Request `9966f6b6...` failed
+because fal rejects `end_image_url` with `multi_prompt`:
 
 ```text
-request_id: 019f6acb-853c-7552-bc73-ff8a6548afb1
-request_body_sha256: sha256:444a5a27e35c70848819aa561fc429f6e48d633c2bcc8ac805f675ac5b5f4b71
+request_id: 019f6b89-e69a-7371-9b98-313a96f5f020
+request_body_sha256: sha256:9966f6b65cc323ef4780aa2109e8814d0d61c64e81e33dbb33d023679dd42e16
 state: FAILED
 actual_provider_call_attempts: 1
 provider_result_http_status: 422
-provider_error_count: 4
+provider_error: End Image Url is not supported with Multi Prompt
 automatic_resubmit_allowed: false
 returned_video: false
 ```

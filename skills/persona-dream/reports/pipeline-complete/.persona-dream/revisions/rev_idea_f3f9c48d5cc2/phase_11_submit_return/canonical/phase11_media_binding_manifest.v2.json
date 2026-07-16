@@ -22,7 +22,7 @@
             "manifest_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_transition_manifest.json",
             "public_probe": {
               "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.01.embry.character.sheet.jpg/public_probe_receipt.json",
-              "sha256": "sha256:6e9e78e27777a0c780e7ecc5141f48166bda715309dcca7600e97abdd4ddfbf3",
+              "sha256": "sha256:48d2e898345355ca77d25c47e1a8721fe76442b6a1a84d1ccadc9efd067a754a",
               "status": "PASS_PROVIDER_MEDIA_PUBLIC_FETCH"
             },
             "publication_authorization": {
@@ -31,7 +31,7 @@
             },
             "publication_receipt": {
               "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.01.embry.character.sheet.jpg/existing_publication_receipt.json",
-              "sha256": "sha256:b65d3cb622cc120c400b06b54b253b74428c610648fa4bfd49afdc7c8ccd798d",
+              "sha256": "sha256:26581fe684858bb06e37f4d45e4677653b06ace559e57de27c32632b072db000",
               "status": "OBSERVED_EXISTING_PUBLIC_COMMIT_PINNED"
             },
             "teardown_policy": {
@@ -56,7 +56,7 @@
             "manifest_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_transition_manifest.json",
             "public_probe": {
               "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/sb_002.start_frame/public_probe_receipt.json",
-              "sha256": "sha256:8259d5e97fe2aa88e000fb4999f2f574971586cfb51883493ac4cde9837dee68",
+              "sha256": "sha256:79e125e3454945658b10debea2dc5653f56f47ca6cbd5577a83f2a217427752f",
               "status": "PASS_PROVIDER_MEDIA_PUBLIC_FETCH"
             },
             "publication_authorization": {
@@ -65,7 +65,7 @@
             },
             "publication_receipt": {
               "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/sb_002.start_frame/existing_publication_receipt.json",
-              "sha256": "sha256:03e728f64f327b42e1a4f439889b373b9494edd3dbf821e3759a0109be2a6061",
+              "sha256": "sha256:54eb64d2a721899dc706120aca779dafc252ee268a520ec442d9a6ffc6f3fdb7",
               "status": "OBSERVED_EXISTING_PUBLIC_COMMIT_PINNED"
             },
             "teardown_policy": {
@@ -90,7 +90,7 @@
             "manifest_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_transition_manifest.json",
             "public_probe": {
               "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/sb_004.start_frame/public_probe_receipt.json",
-              "sha256": "sha256:70a89500ff4ae9fb9e16b10daa876e7e80fdc2a726f287b00e622e998699eced",
+              "sha256": "sha256:4ce5c2699c696f5064ae0d481ebd3e652e7b27c012ad713a3b0f693e9689fffe",
               "status": "PASS_PROVIDER_MEDIA_PUBLIC_FETCH"
             },
             "publication_authorization": {
@@ -99,7 +99,7 @@
             },
             "publication_receipt": {
               "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/sb_004.start_frame/existing_publication_receipt.json",
-              "sha256": "sha256:cced30f2a744763edbf8941615f90a2fc8d0e79e9a35de318846770e7c8c52df",
+              "sha256": "sha256:8262607c745bdcf4e86b106c1890c2631e30507bebcca95118bc0af154baa65f",
               "status": "OBSERVED_EXISTING_PUBLIC_COMMIT_PINNED"
             },
             "teardown_policy": {
@@ -131,7 +131,7 @@
             "manifest_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_transition_manifest.json",
             "public_probe": {
               "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.02.kai.character.sheet.png/public_probe_receipt.json",
-              "sha256": "sha256:1077f01ce2f73dcc01e3a56c8cac6ae1720327b0225f8e2c5cc01748eb08ea88",
+              "sha256": "sha256:f76b4eb59b094b2a0be1ca66e2924da056d17207bc0196a41e0e39babd57b8f0",
               "status": "PASS_PROVIDER_MEDIA_PUBLIC_FETCH"
             },
             "publication_authorization": {
@@ -140,7 +140,7 @@
             },
             "publication_receipt": {
               "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.02.kai.character.sheet.png/existing_publication_receipt.json",
-              "sha256": "sha256:1477d60fdb43c97b71470cb6dbe6ccae6adfafa32c0bba92e7efabedc7c2d7b5",
+              "sha256": "sha256:230008f4da7cce4476186043d63d817d30e3cfb3000d1007bedb6fa113b282e2",
               "status": "OBSERVED_EXISTING_PUBLIC_COMMIT_PINNED"
             },
             "teardown_policy": {
@@ -166,7 +166,7 @@
             "manifest_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_transition_manifest.json",
             "public_probe": {
               "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/sb_001.start_frame/public_probe_receipt.json",
-              "sha256": "sha256:a448e437f28d936f6c12b0e50d22fdb28d8c735e42c6695610b82597d5a27366",
+              "sha256": "sha256:4874b0a63350ac5a5bbd4849ccfcaafc76b3982883c87a6ec554ae1ea98da27f",
               "status": "PASS_PROVIDER_MEDIA_PUBLIC_FETCH"
             },
             "publication_authorization": {
@@ -175,7 +175,7 @@
             },
             "publication_receipt": {
               "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/sb_001.start_frame/existing_publication_receipt.json",
-              "sha256": "sha256:fd12469721c74e9f8f3e9921546c51f32d050bee6b42d2121f7dea78fdbb072a",
+              "sha256": "sha256:c4bbfa500ff1154ba35a45786a6d0a960ad64c0fdf07274fcda25f2f9919f191",
               "status": "OBSERVED_EXISTING_PUBLIC_COMMIT_PINNED"
             },
             "teardown_policy": {
@@ -200,7 +200,7 @@
             "manifest_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_transition_manifest.json",
             "public_probe": {
               "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/sb_003.start_frame/public_probe_receipt.json",
-              "sha256": "sha256:652c5f10653430a18a2a83a121fb8d41b4565e56f85b3c37df09e2a2a7086832",
+              "sha256": "sha256:5972be24d05f3ecaad296f3c90f637b2bb9f18612e534e8d203dc8b1c3e8fee9",
               "status": "PASS_PROVIDER_MEDIA_PUBLIC_FETCH"
             },
             "publication_authorization": {
@@ -209,7 +209,7 @@
             },
             "publication_receipt": {
               "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/sb_003.start_frame/existing_publication_receipt.json",
-              "sha256": "sha256:66da750af54e82a7d1e4fa496641a7c5b9e4cc1a1f8cb251e6d525ba985da91e",
+              "sha256": "sha256:d04ea72dcd27729fd20ad157223804b7be509cab6c62e4848c93958299d4ac4b",
               "status": "OBSERVED_EXISTING_PUBLIC_COMMIT_PINNED"
             },
             "teardown_policy": {
@@ -223,7 +223,7 @@
       "prompt_token": "@Element2"
     }
   ],
-  "media_input_contract_sha256": "sha256:3fb193ccd0fa8d497fbcabb71bb4f235298ce4ef3491e6329043d4496d8e8517",
+  "media_input_contract_sha256": "sha256:b2571d6016880d4b9fb04e8e38f0ba8cef1b9cf906cc5fc4566fcf938acd0b55",
   "provider_live": false,
   "publication_policy": {
     "authorization_required": true,
@@ -234,9 +234,9 @@
   },
   "revision_id": "rev_idea_f3f9c48d5cc2",
   "role_counts": {
-    "continuity_only": 6,
+    "continuity_only": 7,
     "element_packs": 2,
-    "global_end_anchor": 1,
+    "global_end_anchor": 0,
     "global_start_anchor": 1
   },
   "run_id": "pipeline-complete",
@@ -248,7 +248,7 @@
     },
     "candidate_binding": {
       "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/phase11_payload_binding.json",
-      "sha256": "sha256:032eaae3703b3a4567e86c4390e9a89782b69f3ce6f020b88fbdf0ce0818803e"
+      "sha256": "sha256:0797cca271e417c72b8777b15febc8ec8ffe806c554eb42c013227186795689d"
     },
     "media_lock": {
       "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_08_media_lock/storyboard_media_lock_manifest.json",
@@ -256,7 +256,7 @@
     },
     "transition_manifest": {
       "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_transition_manifest.json",
-      "sha256": "sha256:eed9d7cb63949dd0ac6d920e5fe766fbcbbbc2f0a4825b6622a077451a007f52"
+      "sha256": "sha256:7c8f0b46a81cb25307b762560ffeceb3631a28bc711ee4d40888f0f49070be0c"
     }
   },
   "status": "PASS_PHASE11_MEDIA_BINDING_TECHNICAL",
@@ -277,7 +277,7 @@
         "manifest_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_transition_manifest.json",
         "public_probe": {
           "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/sb_001.start_frame/public_probe_receipt.json",
-          "sha256": "sha256:a448e437f28d936f6c12b0e50d22fdb28d8c735e42c6695610b82597d5a27366",
+          "sha256": "sha256:4874b0a63350ac5a5bbd4849ccfcaafc76b3982883c87a6ec554ae1ea98da27f",
           "status": "PASS_PROVIDER_MEDIA_PUBLIC_FETCH"
         },
         "publication_authorization": {
@@ -286,7 +286,7 @@
         },
         "publication_receipt": {
           "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/sb_001.start_frame/existing_publication_receipt.json",
-          "sha256": "sha256:fd12469721c74e9f8f3e9921546c51f32d050bee6b42d2121f7dea78fdbb072a",
+          "sha256": "sha256:c4bbfa500ff1154ba35a45786a6d0a960ad64c0fdf07274fcda25f2f9919f191",
           "status": "OBSERVED_EXISTING_PUBLIC_COMMIT_PINNED"
         },
         "teardown_policy": {
@@ -352,37 +352,12 @@
     },
     {
       "artifact_id": "sb_004.end_frame",
-      "json_pointer": "/input/end_image_url",
-      "public_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/9ce346f4e508382350f49f42563b998f1aa8efe7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_004_end_frame.png",
+      "json_pointer": null,
+      "public_url": null,
       "revision_relative_path": "phase_07_storyboard_live_tau/generated_storyboard_frames/sb_004_end_frame.png",
-      "role": "global_end_anchor",
+      "role": "continuity_only",
       "sha256": "sha256:97846479c7e3d1a1e35d651bb5873de13e424ba1a58f77c824eaf4cf5eeb267f",
-      "transition_evidence": {
-        "entry_found": true,
-        "json_pointers": [
-          "/input/end_image_url"
-        ],
-        "manifest_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_transition_manifest.json",
-        "public_probe": {
-          "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/sb_004.end_frame/public_probe_receipt.json",
-          "sha256": "sha256:06a0f5ebe4e3bb1bb2198e478a5514b4d8004b8f45b1902f82df3b1fd571ba97",
-          "status": "PASS_PROVIDER_MEDIA_PUBLIC_FETCH"
-        },
-        "publication_authorization": {
-          "approval_type": "publication_authorization",
-          "state": "MISSING_HUMAN_APPROVAL"
-        },
-        "publication_receipt": {
-          "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/sb_004.end_frame/existing_publication_receipt.json",
-          "sha256": "sha256:e8173f508417b086d84fcd213c49f05a05ec424783065bb4a44cab90fd585ea9",
-          "status": "OBSERVED_EXISTING_PUBLIC_COMMIT_PINNED"
-        },
-        "teardown_policy": {
-          "relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/provider_media_evidence/sb_004.end_frame/teardown_policy_receipt.json",
-          "sha256": "sha256:fdb9ac282816795522edb2b8cc1c5d22cc3db304d0193dc7fca94fd18714239d",
-          "status": "NOT_REQUIRED_PERSISTENT_COMMIT_PINNED"
-        }
-      }
+      "transition_evidence": null
     }
   ],
   "submitted": false

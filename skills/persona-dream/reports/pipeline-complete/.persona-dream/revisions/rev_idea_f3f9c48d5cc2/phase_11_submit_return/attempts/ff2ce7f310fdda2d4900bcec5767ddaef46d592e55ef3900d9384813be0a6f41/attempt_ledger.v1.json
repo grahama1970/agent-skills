@@ -1,0 +1,25 @@
+{
+  "activation_transaction_id": "activation-f316f5e66ba900751235c2ee3cd27da3",
+  "actual_provider_call_attempts": 0,
+  "ambiguous_submit": false,
+  "automatic_resubmit_allowed": false,
+  "created_at": "2026-07-16T16:57:54.215062+00:00",
+  "endpoint": "fal-ai/kling-video/v3/standard/image-to-video",
+  "history": [
+    {
+      "actual_provider_call_attempts": 0,
+      "at": "2026-07-16T16:57:54.215062+00:00",
+      "event": "PREFLIGHT_READY"
+    }
+  ],
+  "poll_count": 0,
+  "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+  "request_id": null,
+  "request_key": "ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+  "revision_id": "rev_idea_f3f9c48d5cc2",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.phase11_attempt_ledger.v1",
+  "state": "PREFLIGHT_READY",
+  "submit_intent_count": 0,
+  "updated_at": "2026-07-16T16:57:54.215062+00:00"
+}

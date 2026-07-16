@@ -1,0 +1,366 @@
+from __future__ import annotations
+
+import hashlib
+import json
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any
+
+import pytest
+from jsonschema import Draft202012Validator
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+
+import phase11_canonical_common as common  # noqa: E402
+import phase11_payload_binding as binding_module  # noqa: E402
+
+FAILED_REQUEST_SHA256 = (
+    "sha256:9966f6b65cc323ef4780aa2109e8814d0d61c64e81e33dbb33d023679dd42e16"
+)
+FAILED_REQUEST_ID = "019f6b89-e69a-7371-9b98-313a96f5f020"
+
+
+def sha256_bytes(value: bytes) -> str:
+    return "sha256:" + hashlib.sha256(value).hexdigest()
+
+
+def write_json(path: Path, value: Any) -> Path:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return path
+
+
+def write_bytes(path: Path, value: bytes) -> tuple[Path, str]:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_bytes(value)
+    return path, sha256_bytes(value)
+
+
+def make_inputs(tmp_path: Path) -> common.CompilationInputs:
+    run_root = tmp_path / "pipeline-complete"
+    revision_id = "rev_fixture"
+    revision_root = run_root / ".persona-dream" / "revisions" / revision_id
+    revision_root.mkdir(parents=True)
+    artifacts: dict[str, dict[str, Any]] = {}
+    locked_assets: list[dict[str, Any]] = []
+
+    for number in range(1, 5):
+        panel_id = f"sb_{number:03d}"
+        for role in ("start_frame", "end_frame"):
+            artifact_id = f"{panel_id}.{role}"
+            relative = (
+                "phase_07_storyboard_live_tau/generated_storyboard_frames/"
+                f"{panel_id}_{role}.png"
+            )
+            path, digest = write_bytes(revision_root / relative, b"PNG" + artifact_id.encode())
+            artifacts[artifact_id] = {
+                "phase_id": "07",
+                "relative_path": relative,
+                "sha256": digest,
+                "size_bytes": path.stat().st_size,
+                "kind": "image",
+                "media_type": "image/png",
+                "roles": ["accepted_frame"],
+            }
+            locked_assets.append(
+                {
+                    "asset_id": artifact_id,
+                    "panel_id": panel_id,
+                    "frame_role": role,
+                    "sha256": digest,
+                    "path": relative,
+                }
+            )
+
+    for identity, suffix in (
+        ("embry", "01-embry_character_sheet.jpg"),
+        ("kai", "02-kai_character_sheet.png"),
+    ):
+        relative = f"phase_07_storyboard_live_tau/references/{suffix}"
+        path, digest = write_bytes(revision_root / relative, b"IMAGE" + identity.encode())
+        artifacts[f"phase07.reference.{identity}"] = {
+            "phase_id": "07",
+            "relative_path": relative,
+            "sha256": digest,
+            "size_bytes": path.stat().st_size,
+            "kind": "image",
+            "media_type": "image/jpeg" if suffix.endswith("jpg") else "image/png",
+            "roles": ["identity_reference"],
+        }
+
+    index_path = write_json(
+        revision_root / "revision_artifact_index.json",
+        {
+            "schema": "persona_dream.revision_artifact_index.v1",
+            "run_id": run_root.name,
+            "revision_id": revision_id,
+            "artifact_count": len(artifacts),
+            "required_artifact_count": 0,
+            "artifacts": artifacts,
+        },
+    )
+    manifest_path = write_json(
+        revision_root / "revision_manifest.json",
+        {
+            "schema": "persona_dream.revision_manifest.v1",
+            "runId": run_root.name,
+            "revisionId": revision_id,
+            "sourceRevisionId": "rev_source",
+        },
+    )
+    activation_path = write_json(
+        revision_root / "revision_activation_receipt.json",
+        {"schema": "persona_dream.revision_activation_receipt.v1"},
+    )
+    pointer_path = write_json(
+        run_root / ".persona-dream" / "state" / "active_revision.json",
+        {"runId": run_root.name, "revisionId": revision_id},
+    )
+    context = common.ActiveContext(
+        run_root=run_root.resolve(),
+        revision_root=revision_root.resolve(),
+        run_id=run_root.name,
+        revision_id=revision_id,
+        source_revision_id="rev_source",
+        source_commit="a" * 40,
+        runtime_release_id="fixture@" + "a" * 40,
+        activation_transaction_id="activation-" + "b" * 32,
+        activation_receipt_path=activation_path.resolve(),
+        activation_receipt={"memory": {"active_pointer_key": "pd_active_fixture"}},
+        artifact_index_path=index_path.resolve(),
+        artifact_index=json.loads(index_path.read_text()),
+        artifact_index_sha256=sha256_bytes(index_path.read_bytes()),
+        revision_manifest_path=manifest_path.resolve(),
+        revision_manifest_sha256=sha256_bytes(manifest_path.read_bytes()),
+        local_pointer_path=pointer_path.resolve(),
+        local_pointer_sha256=sha256_bytes(pointer_path.read_bytes()),
+        memory_url="http://127.0.0.1:8601",
+        collection="project_knowledge",
+        mocked=True,
+        live=False,
+    )
+
+    actions = (
+        "Kahaluʻu Bay lineup over visible lava reef; Embry and Kai wait outside with restraint.",
+        "Embry's palm loses grip on hot wax above the reef; heat, sweat, and fatigue remain visible.",
+        "Kai reads the lineup, safe channel, reef, and surf etiquette before signaling Embry.",
+        "Embry chooses the safe channel, commits above the reef, and preserves decision agency.",
+    )
+    prompts = [
+        {
+            "duration": str(duration),
+            "prompt": (
+                f"SB_{index:03d} Kling v3 Pro I2V time range 0s-1s. "
+                f"{action} Preserve @Element1 Embry and @Element2 Kai identity continuity."
+            ),
+        }
+        for index, (duration, action) in enumerate(zip((2, 3, 2, 3), actions), 1)
+    ]
+    phase10_path = write_json(
+        revision_root / "phase_10_provider_contract" / "final_provider_payload_by_panel.json",
+        {
+            "endpoint": binding_module.STANDARD_ENDPOINT,
+            "assembled_request_preview": {
+                "model": binding_module.STANDARD_ENDPOINT,
+                "input": {
+                    "multi_prompt": prompts,
+                    "negative_prompt": "blur and low quality",
+                    "cfg_scale": 0.5,
+                },
+            },
+        },
+    )
+    media_lock_path = write_json(
+        revision_root / "phase_08_media_lock" / "storyboard_media_lock_manifest.json",
+        {"assets": locked_assets},
+    )
+    binding = binding_module.build_payload_binding(
+        context=context,
+        phase10_payload_path=phase10_path,
+        media_lock_path=media_lock_path,
+        publication_commit="0" * 40,
+    )
+    candidate_path = write_json(
+        revision_root / "phase_11_submit_return" / "preflight" / "phase11_payload_binding.json",
+        binding,
+    )
+    provider_path = write_json(
+        revision_root / "phase_11_submit_return" / "preflight" / "provider_source_snapshot.json",
+        {},
+    )
+    validation_path = write_json(
+        run_root / "validation.json",
+        {"status": "PASS", "passed_step_count": 15, "step_count": 15},
+    )
+    return common.CompilationInputs(
+        context=context,
+        phase10_payload_path=phase10_path.resolve(),
+        phase10_payload=json.loads(phase10_path.read_text()),
+        candidate_binding_path=candidate_path.resolve(),
+        candidate_binding=json.loads(candidate_path.read_text()),
+        media_lock_path=media_lock_path.resolve(),
+        media_lock=json.loads(media_lock_path.read_text()),
+        provider_snapshot=common.ProviderSnapshotResult(
+            {
+                "provider_id": "kling",
+                "endpoint": binding_module.STANDARD_ENDPOINT,
+                "mode": "standard",
+                "pricing_source": {},
+            },
+            provider_path.resolve(),
+            sha256_bytes(provider_path.read_bytes()),
+            (),
+        ),
+        transition_manifest_path=(
+            revision_root
+            / "phase_11_submit_return"
+            / "preflight"
+            / "provider_media_transition_manifest.json"
+        ).resolve(),
+        transition_manifest=None,
+        approval_root=(revision_root / "phase_11_submit_return" / "preflight" / "approvals").resolve(),
+        validation_path=validation_path.resolve(),
+        current=datetime(2026, 7, 16, 12, tzinfo=timezone.utc),
+    )
+
+
+def test_canonical_multi_prompt_omits_end_image_and_keeps_end_frame_review_only(tmp_path: Path) -> None:
+    inputs = make_inputs(tmp_path)
+    body, blockers, _changes = common.compile_request_body(inputs)
+    assert blockers == []
+    assert "end_image_url" not in body
+
+    media = common.build_media_binding_manifest(inputs, body)
+    assert media["role_counts"] == {
+        "global_start_anchor": 1,
+        "global_end_anchor": 0,
+        "continuity_only": 7,
+        "element_packs": 2,
+    }
+    end_frame = next(
+        item for item in media["storyboard_frames"] if item["artifact_id"] == "sb_004.end_frame"
+    )
+    assert end_frame["role"] == "continuity_only"
+    assert end_frame["sha256"].startswith("sha256:")
+    assert end_frame["revision_relative_path"].endswith("sb_004_end_frame.png")
+    assert end_frame["json_pointer"] is None
+    assert end_frame["public_url"] is None
+    assert end_frame["transition_evidence"] is None
+
+
+def test_compiler_and_binding_validators_reject_multi_prompt_with_end_image_url(tmp_path: Path) -> None:
+    inputs = make_inputs(tmp_path)
+    body, blockers, _changes = common.compile_request_body(inputs)
+    assert blockers == []
+    body["end_image_url"] = "https://example.invalid/end.png"
+    assert "BLOCKED_PROVIDER_MULTI_PROMPT_END_IMAGE_URL_CONFLICT" in common.validate_request_body(
+        body,
+        endpoint=binding_module.STANDARD_ENDPOINT,
+        mode="standard",
+    )
+
+    binding = json.loads(inputs.candidate_binding_path.read_text(encoding="utf-8"))
+    binding["input"]["end_image_url"] = binding["media_roles"]["continuity_only"][-1][
+        "public_url"
+    ]
+    with pytest.raises(binding_module.PayloadBindingBlocked) as blocked:
+        binding_module.validate_payload_binding(
+            binding,
+            context=inputs.context,
+            phase10_payload_path=inputs.phase10_payload_path,
+            media_lock_path=inputs.media_lock_path,
+        )
+    assert blocked.value.code == "BLOCKED_PROVIDER_MULTI_PROMPT_END_IMAGE_URL_CONFLICT"
+
+
+def test_live_request_schema_forbids_end_image_url_with_multi_prompt(tmp_path: Path) -> None:
+    inputs = make_inputs(tmp_path)
+    body, blockers, _changes = common.compile_request_body(inputs)
+    assert blockers == []
+    schema = json.loads(
+        (ROOT / "contracts" / "phase11_live_request.v1.schema.json").read_text(encoding="utf-8")
+    )["properties"]["provider_request_body"]
+    assert list(Draft202012Validator(schema).iter_errors(body)) == []
+    rejected = dict(body)
+    rejected["end_image_url"] = "https://example.invalid/end.png"
+    errors = list(Draft202012Validator(schema).iter_errors(rejected))
+    assert errors
+    assert any("Additional properties are not allowed" in error.message for error in errors)
+
+
+def test_new_hash_cannot_reuse_failed_9966_ledger_or_approvals(tmp_path: Path) -> None:
+    inputs = make_inputs(tmp_path)
+    body, blockers, _changes = common.compile_request_body(inputs)
+    assert blockers == []
+    new_request_sha256 = common.canonical_sha256(body)
+    assert new_request_sha256 != FAILED_REQUEST_SHA256
+
+    failed_digest = FAILED_REQUEST_SHA256.removeprefix("sha256:")
+    failed_root = inputs.context.revision_root / "phase_11_submit_return" / "attempts" / failed_digest
+    failed_ledger = write_json(
+        failed_root / "attempt_ledger.v1.json",
+        {
+            "schema": "persona_dream.phase11_attempt_ledger.v1",
+            "run_id": inputs.context.run_id,
+            "revision_id": inputs.context.revision_id,
+            "activation_transaction_id": inputs.context.activation_transaction_id,
+            "endpoint": binding_module.STANDARD_ENDPOINT,
+            "request_key": failed_digest,
+            "request_body_sha256": FAILED_REQUEST_SHA256,
+            "state": "FAILED",
+            "submit_intent_count": 1,
+            "actual_provider_call_attempts": 1,
+            "request_id": FAILED_REQUEST_ID,
+            "ambiguous_submit": False,
+            "automatic_resubmit_allowed": False,
+            "poll_count": 2,
+            "created_at": "2026-07-16T15:00:00+00:00",
+            "updated_at": "2026-07-16T15:05:00+00:00",
+            "history": [
+                {
+                    "event": "FAILED",
+                    "at": "2026-07-16T15:05:00+00:00",
+                    "actual_provider_call_attempts": 1,
+                }
+            ],
+        },
+    )
+    failed_ledger_bytes = failed_ledger.read_bytes()
+    failed_approval_root = inputs.approval_root / failed_digest
+    failed_approval_bytes: dict[str, bytes] = {}
+    for approval_type in common.APPROVAL_TYPES:
+        path = write_json(
+            failed_approval_root / common.APPROVAL_FILES[approval_type],
+            {
+                "approval_type": approval_type,
+                "request_body_sha256": FAILED_REQUEST_SHA256,
+            },
+        )
+        failed_approval_bytes[approval_type] = path.read_bytes()
+
+    observation, observation_blockers = common.request_attempt_observation(inputs, new_request_sha256)
+    assert observation_blockers == []
+    assert observation["state"] == "NOT_CREATED"
+    assert observation["actual_provider_call_attempts"] == 0
+
+    bindings = common.approval_bindings(
+        inputs,
+        media_manifest_sha256="sha256:" + "1" * 64,
+        media_input_contract_sha256="sha256:" + "2" * 64,
+        provider_snapshot_sha256="sha256:" + "3" * 64,
+        request_body_sha256=new_request_sha256,
+        actual_provider_call_attempts=0,
+    )
+    statuses, missing, approval_blockers = common.inspect_approvals(
+        inputs, bindings, inputs.current
+    )
+    assert approval_blockers == []
+    assert missing == sorted(common.APPROVAL_TYPES)
+    assert all(statuses[name]["state"] == "MISSING" for name in common.APPROVAL_TYPES)
+    assert failed_ledger.read_bytes() == failed_ledger_bytes
+    for approval_type, expected in failed_approval_bytes.items():
+        assert (
+            failed_approval_root / common.APPROVAL_FILES[approval_type]
+        ).read_bytes() == expected

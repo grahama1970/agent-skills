@@ -453,15 +453,15 @@ does not prove Phase 11 submission/return or Phases 12-16.
 The current canonical Phase 11 pre-Kling boundary for that revision is:
 
 ```text
-request_body_sha256: sha256:9966f6b65cc323ef4780aa2109e8814d0d61c64e81e33dbb33d023679dd42e16
+request_body_sha256: sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41
 validator_status: PASS_PHASE11_CANONICAL_BOUNDARY_VALIDATED
 adapter_status: PASS_PHASE11_ADAPTER_PREFLIGHT
 gate_status: BLOCKED_AWAITING_HUMAN_APPROVAL
 technical_blockers: 0
 missing_hash_bound_approvals: 5
 memory_exact_reread_count: 1
-memory_request_scoped_key: pd_phase11_11c0a72cef02a4966cb3f21852341629a21dccbc6d2789ad
-memory_dense_recall_max: 0.792625
+memory_request_scoped_key: pd_phase11_eb5dbe1257f6152103d1ce1e2700f9582d8ef6e5fb87e90e
+memory_dense_recall_max: 0.7866844
 actual_provider_call_attempts: 0
 provider_ready: false
 live_submit_ready: false
@@ -489,6 +489,23 @@ This attempt must never be reset or reused. A compiler repair must produce a
 new canonical request hash, rerun deterministic and live zero-call validation,
 and obtain new hash-bound approvals plus explicit paid-call authorization
 before any second generation attempt.
+
+The second explicitly authorized canary is also immutable failed history:
+
+```text
+request_id: 019f6b89-e69a-7371-9b98-313a96f5f020
+request_body_sha256: sha256:9966f6b65cc323ef4780aa2109e8814d0d61c64e81e33dbb33d023679dd42e16
+attempt_ledger_state: FAILED
+actual_provider_call_attempts: 1
+provider_result_http_status: 422
+failure: End Image Url is not supported with Multi Prompt
+automatic_resubmit_allowed: false
+returned_video: false
+```
+
+For the selected fal Standard endpoint, a request containing `multi_prompt`
+must omit `end_image_url`. The accepted end frame remains immutable
+continuity-review evidence and must not be rebound to a provider input field.
 
 Before a Kling, Wan, ComfyUI, or other provider video call is allowed, write a
 final provider-readiness gate receipt. A provider packet is not live-submittable

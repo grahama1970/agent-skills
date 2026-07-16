@@ -1,6 +1,6 @@
 {
   "activation_transaction_id": "activation-f316f5e66ba900751235c2ee3cd27da3",
-  "actual_provider_call_attempts": 0,
+  "actual_provider_call_attempts": 1,
   "ambiguous_submit": false,
   "automatic_resubmit_allowed": false,
   "created_at": "2026-07-16T13:38:22.368185+00:00",
@@ -10,16 +10,49 @@
       "actual_provider_call_attempts": 0,
       "at": "2026-07-16T13:38:22.368185+00:00",
       "event": "PREFLIGHT_READY"
+    },
+    {
+      "actual_provider_call_attempts": 0,
+      "at": "2026-07-16T15:27:06.859354+00:00",
+      "event": "SUBMIT_INTENT_WRITTEN"
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-16T15:27:06.859354+00:00",
+      "event": "SUBMITTED",
+      "request_id": "019f6b89-e69a-7371-9b98-313a96f5f020"
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-16T15:27:07.498129+00:00",
+      "event": "POLLING",
+      "poll_count": 1
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-16T15:27:12.787807+00:00",
+      "event": "FAILED",
+      "poll_count": 2,
+      "receipt_sha256": "sha256:eed7953db4b004139de0f0f079c9bc3fba561a9baf0f63f76e533a44fea67621"
     }
   ],
-  "poll_count": 0,
+  "last_error": {
+    "automatic_resubmit_allowed": false,
+    "error_count": 1,
+    "http_status": 422,
+    "receipt_relative_path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/attempts/9966f6b65cc323ef4780aa2109e8814d0d61c64e81e33dbb33d023679dd42e16/provider_result_error_receipt.v1.json",
+    "receipt_sha256": "sha256:eed7953db4b004139de0f0f079c9bc3fba561a9baf0f63f76e533a44fea67621",
+    "status": "BLOCKED_PHASE11_PROVIDER_REQUEST_VALIDATION"
+  },
+  "poll_count": 2,
+  "provider_terminal_state": "RESULT_VALIDATION_FAILED",
   "request_body_sha256": "sha256:9966f6b65cc323ef4780aa2109e8814d0d61c64e81e33dbb33d023679dd42e16",
-  "request_id": null,
+  "request_id": "019f6b89-e69a-7371-9b98-313a96f5f020",
   "request_key": "9966f6b65cc323ef4780aa2109e8814d0d61c64e81e33dbb33d023679dd42e16",
   "revision_id": "rev_idea_f3f9c48d5cc2",
   "run_id": "pipeline-complete",
   "schema": "persona_dream.phase11_attempt_ledger.v1",
-  "state": "PREFLIGHT_READY",
-  "submit_intent_count": 0,
-  "updated_at": "2026-07-16T13:38:22.368185+00:00"
+  "state": "FAILED",
+  "submit_intent_count": 1,
+  "updated_at": "2026-07-16T15:27:12.787807+00:00"
 }
