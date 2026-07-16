@@ -1,0 +1,13 @@
+[Unit]
+Description=Run Surf Doctor proactive tab maintenance periodically
+Documentation=man:systemd.timer(5)
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=@CADENCE@
+RandomizedDelaySec=@RANDOMIZED_DELAY@
+Persistent=true
+Unit=surf-tab-maintenance.service
+
+[Install]
+WantedBy=timers.target
