@@ -13,6 +13,7 @@ from typing import Any
 
 from .asr_comparison import compare_asr_text, compare_managed_listener_asr_text
 from .event_waiter import (
+    find_existing_managed_turn,
     journal_sequence_boundary,
     wait_for_managed_turn,
     wait_for_managed_wake,
@@ -37,12 +38,15 @@ class ManagedListenerProcess(AbstractContextManager["ManagedListenerProcess"]):
         *,
         target_turn_count: int,
         turns_this_run: int,
+        run_dir: Path | None = None,
     ) -> None:
         self.config = config
         self.target_turn_count = target_turn_count
         self.turns_this_run = turns_this_run
         self.process: subprocess.Popen[str] | None = None
         self.socket = Path(config["managed_listener_socket"])
+        self.run_dir = run_dir or Path(config["campaign_dir"]) / "managed-listener"
+        self.log_path = self.run_dir.with_suffix(".log")
 
     def __enter__(self) -> "ManagedListenerProcess":
         self.socket.parent.mkdir(parents=True, exist_ok=True)
@@ -51,7 +55,7 @@ class ManagedListenerProcess(AbstractContextManager["ManagedListenerProcess"]):
         command = [
             self.config["realtimestt_python"],
             str(repo / "proofs/embry_pipewire_ingress/run_physical_hot_mic_listener.py"),
-            "--run-dir", str(Path(self.config["campaign_dir"]) / "managed-listener"),
+            "--run-dir", str(self.run_dir),
             "--source-node", self.config["listener_source_node"],
             "--event-service-url", self.config["journal_url"].rstrip("/") + "/v1/listener/events",
             "--managed-socket", str(self.socket),
@@ -66,13 +70,14 @@ class ManagedListenerProcess(AbstractContextManager["ManagedListenerProcess"]):
             "--post-speech-silence-duration",
             str(self.config["listener_post_speech_silence_seconds"]),
         ]
-        log_path = Path(self.config["campaign_dir"]) / "managed-listener.log"
-        self._log = log_path.open("w", encoding="utf-8")
+        self._log = self.log_path.open("a", encoding="utf-8")
         self.process = subprocess.Popen(command, stdout=self._log, stderr=subprocess.STDOUT, text=True)
         deadline = time.monotonic() + self.config["listener_start_timeout_seconds"]
         while time.monotonic() < deadline:
             if self.process.poll() is not None:
-                raise RuntimeError(f"managed_listener_exited:{self.process.returncode}:{log_path}")
+                raise RuntimeError(
+                    f"managed_listener_exited:{self.process.returncode}:{self.log_path}"
+                )
             if self.socket.exists():
                 return self
             time.sleep(0.1)
@@ -157,6 +162,148 @@ class CaseExecutor:
             "allow_personal_memory": False,
             "source_contract": source_contract,
         }
+
+    @staticmethod
+    def _listener_receipt_from_chain(
+        *,
+        config: dict[str, Any],
+        case: dict[str, Any],
+        turn: dict[str, Any],
+        source_authority_id: str,
+        expected: dict[str, Any],
+        chain: dict[str, dict[str, Any]],
+        journal_boundary: int,
+        wake_event: dict[str, Any],
+        wake_audio: Path | None,
+        source_audio: Path | None,
+        wake_asset: dict[str, Any] | None,
+        source_asset: dict[str, Any] | None,
+        recovered: bool,
+    ) -> dict[str, Any]:
+        final = chain["listener.final_transcript"]
+        request_text = final["payload"].get("request_text") or ""
+        expected_spoken = turn.get("spoken_text", turn["utterance"])
+        asr_comparison = compare_managed_listener_asr_text(
+            expected_spoken,
+            request_text,
+        )
+        request_wer = float(asr_comparison["comparison_wer"])
+        if request_wer > config["max_request_wer"]:
+            raise RuntimeError(
+                f"managed_listener_request_wer_exceeded:{request_wer:.4f}:"
+                f"expected={expected_spoken!r}:actual={request_text!r}"
+            )
+        receipt = {
+            "schema": "embry.audio_e2e.listener_turn_receipt.v1",
+            "status": "PASS",
+            "case_id": case["case_id"],
+            "turn_id": turn["turn_id"],
+            "source_mode": case["source_mode"],
+            "fresh_physical_human_speech": expected["fresh_physical_human_speech"],
+            "speaker_identity_proven": expected["speaker_identity_proven"],
+            "speaker_identity_verification_required": expected[
+                "speaker_identity_verification_required"
+            ],
+            "allow_personal_memory": expected["allow_personal_memory"],
+            "source_contract": expected["source_contract"],
+            "display_text_sha256": turn.get(
+                "display_text_sha256", turn["utterance_sha256"]
+            ),
+            "expected_spoken_text_sha256": turn.get(
+                "spoken_text_sha256", turn["utterance_sha256"]
+            ),
+            "source_authority_id": source_authority_id,
+            "journal_sequence_boundary": journal_boundary,
+            "arm_event_id": chain["listener.turn_armed"]["event_id"],
+            "arm_sequence": chain["listener.turn_armed"]["sequence"],
+            "wake_event_id": wake_event["event_id"],
+            "final_event_id": final["event_id"],
+            "final_sequence": final["sequence"],
+            "request_text": request_text,
+            "request_wer": round(request_wer, 4),
+            "request_raw_wer": round(float(asr_comparison["raw_wer"]), 4),
+            "request_comparison_wer": round(request_wer, 4),
+            "asr_comparison": asr_comparison,
+            "audio_path": final["payload"].get("audio_path"),
+            "audio_sha256": final["payload"].get("audio_sha256"),
+            "completed_event_id": chain["listener.turn_completed"]["event_id"],
+            "live": final["live"],
+            "mocked": final["mocked"],
+            "wake_audio_path": str(wake_audio) if wake_audio else None,
+            "source_audio_path": str(source_audio) if source_audio else None,
+            "wake_playback_volume": config["wake_playback_volume"],
+            "source_playback_volume": config["source_playback_volume"],
+            "wake_asset": wake_asset,
+            "source_asset": source_asset,
+            "typed_transcript_used": False,
+            "recovered_from_existing_journal_chain": recovered,
+        }
+        if recovered:
+            receipt["journal_recovery"] = {
+                "source": "canonical_sqlite_journal",
+                "listener_process_spawned": False,
+                "audio_replayed": False,
+                "journal_events_created": False,
+                "arm_event_id": chain["listener.turn_armed"]["event_id"],
+                "final_event_id": final["event_id"],
+                "completed_event_id": chain["listener.turn_completed"]["event_id"],
+            }
+        return receipt
+
+    @classmethod
+    def recover_listener_turn(
+        cls,
+        config: dict[str, Any],
+        campaign_id: str,
+        case: dict[str, Any],
+        turn: dict[str, Any],
+        *,
+        journal_db: Path,
+        wake_audio: Path | None,
+        source_audio: Path | None,
+        wake_asset: dict[str, Any] | None = None,
+        source_asset: dict[str, Any] | None = None,
+    ) -> dict[str, Any] | None:
+        source_authority_id, expected = cls._source_authority(
+            campaign_id,
+            case,
+            turn,
+            source_asset,
+        )
+        managed_lineage = {
+            key: expected[key]
+            for key in (
+                "campaign_id",
+                "case_id",
+                "attempt_id",
+                "session_id",
+                "turn_id",
+                "source_authority_id",
+            )
+        }
+        chain = find_existing_managed_turn(
+            journal_db,
+            session_id=case["session_id"],
+            expected=managed_lineage,
+        )
+        if chain is None:
+            return None
+        armed = chain["listener.turn_armed"]
+        return cls._listener_receipt_from_chain(
+            config=config,
+            case=case,
+            turn=turn,
+            source_authority_id=source_authority_id,
+            expected=expected,
+            chain=chain,
+            journal_boundary=max(0, int(armed["sequence"]) - 1),
+            wake_event=chain["listener.wake_detected"],
+            wake_audio=wake_audio,
+            source_audio=source_audio,
+            wake_asset=wake_asset,
+            source_asset=source_asset,
+            recovered=True,
+        )
 
     def execute_listener_turn(
         self,
@@ -319,63 +466,23 @@ class CaseExecutor:
                     f"{source_stderr}"
                 )
 
-        final = chain["listener.final_transcript"]
-        request_text = final["payload"].get("request_text") or ""
-        expected_spoken = turn.get("spoken_text", turn["utterance"])
-        asr_comparison = compare_managed_listener_asr_text(
-            expected_spoken, request_text
+        if wake_event is None:
+            raise RuntimeError("managed_listener_wake_event_missing")
+        return self._listener_receipt_from_chain(
+            config=self.config,
+            case=case,
+            turn=turn,
+            source_authority_id=source_authority_id,
+            expected=expected,
+            chain=chain,
+            journal_boundary=journal_boundary,
+            wake_event=wake_event,
+            wake_audio=wake_audio,
+            source_audio=source_audio,
+            wake_asset=wake_asset,
+            source_asset=source_asset,
+            recovered=False,
         )
-        request_wer = float(asr_comparison["comparison_wer"])
-        if request_wer > self.config["max_request_wer"]:
-            raise RuntimeError(
-                f"managed_listener_request_wer_exceeded:{request_wer:.4f}:"
-                f"expected={expected_spoken!r}:actual={request_text!r}"
-            )
-
-        return {
-            "schema": "embry.audio_e2e.listener_turn_receipt.v1",
-            "status": "PASS",
-            "case_id": case["case_id"],
-            "turn_id": turn["turn_id"],
-            "source_mode": case["source_mode"],
-            "fresh_physical_human_speech": expected["fresh_physical_human_speech"],
-            "speaker_identity_proven": expected["speaker_identity_proven"],
-            "speaker_identity_verification_required": expected[
-                "speaker_identity_verification_required"
-            ],
-            "allow_personal_memory": expected["allow_personal_memory"],
-            "source_contract": expected["source_contract"],
-            "display_text_sha256": turn.get(
-                "display_text_sha256", turn["utterance_sha256"]
-            ),
-            "expected_spoken_text_sha256": turn.get(
-                "spoken_text_sha256", turn["utterance_sha256"]
-            ),
-            "source_authority_id": source_authority_id,
-            "journal_sequence_boundary": journal_boundary,
-            "arm_event_id": chain["listener.turn_armed"]["event_id"],
-            "arm_sequence": chain["listener.turn_armed"]["sequence"],
-            "wake_event_id": wake_event["event_id"] if wake_event else None,
-            "final_event_id": final["event_id"],
-            "final_sequence": final["sequence"],
-            "request_text": request_text,
-            "request_wer": round(request_wer, 4),
-            "request_raw_wer": round(float(asr_comparison["raw_wer"]), 4),
-            "request_comparison_wer": round(request_wer, 4),
-            "asr_comparison": asr_comparison,
-            "audio_path": final["payload"].get("audio_path"),
-            "audio_sha256": final["payload"].get("audio_sha256"),
-            "completed_event_id": chain["listener.turn_completed"]["event_id"],
-            "live": final["live"],
-            "mocked": final["mocked"],
-            "wake_audio_path": str(wake_audio) if wake_audio else None,
-            "source_audio_path": str(source_audio) if source_audio else None,
-            "wake_playback_volume": self.config["wake_playback_volume"],
-            "source_playback_volume": self.config["source_playback_volume"],
-            "wake_asset": wake_asset,
-            "source_asset": source_asset,
-            "typed_transcript_used": False,
-        }
 
     def execute_listener_turns(
         self,

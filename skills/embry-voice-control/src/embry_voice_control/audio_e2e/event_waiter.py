@@ -25,6 +25,104 @@ def managed_fields_match(event: dict[str, Any], expected: dict[str, str]) -> boo
     return all(projected.get(key) == value for key, value in expected.items())
 
 
+def find_existing_managed_turn(
+    journal_db: Path,
+    *,
+    session_id: str,
+    expected: dict[str, str],
+) -> dict[str, dict[str, Any]] | None:
+    """Return one exact committed managed-turn chain for crash recovery."""
+    events = session_snapshot(journal_db, session_id)["events"]
+    arms = [
+        event
+        for event in events
+        if event["type"] == "listener.turn_armed"
+        and managed_fields_match(event, expected)
+    ]
+    if not arms:
+        return None
+    if len(arms) != 1:
+        raise ValueError(
+            f"managed_listener_recovery_conflicting_arms:{expected['turn_id']}:"
+            f"{len(arms)}"
+        )
+    armed = arms[0]
+    after_arm = [
+        event for event in events if event["sequence"] > armed["sequence"]
+    ]
+    finals = [
+        event
+        for event in after_arm
+        if event["type"] == "listener.final_transcript"
+        and managed_fields_match(event, expected)
+    ]
+    if not finals:
+        raise ValueError(
+            "managed_listener_recovery_partial_chain_missing_final:"
+            f"{expected['turn_id']}:{armed['event_id']}"
+        )
+    if len(finals) != 1:
+        raise ValueError(
+            f"managed_listener_recovery_conflicting_finals:{expected['turn_id']}:"
+            f"{len(finals)}"
+        )
+    final = finals[0]
+    completion_expected = {
+        key: value
+        for key, value in expected.items()
+        if key != "source_authority_id"
+    }
+    lineage_completions = [
+        event
+        for event in after_arm
+        if event["type"] == "listener.turn_completed"
+        and managed_fields_match(event, completion_expected)
+    ]
+    completions = [
+        event
+        for event in lineage_completions
+        if event["sequence"] > final["sequence"]
+        and event.get("causation_id") == final["event_id"]
+        and event.get("payload", {}).get("source_event_id") == final["event_id"]
+        and event.get("payload", {}).get("source_sequence") == final["sequence"]
+    ]
+    if not lineage_completions:
+        raise ValueError(
+            "managed_listener_recovery_partial_chain_missing_completed:"
+            f"{expected['turn_id']}:{final['event_id']}"
+        )
+    if len(lineage_completions) != 1 or len(completions) != 1:
+        raise ValueError(
+            "managed_listener_recovery_conflicting_completed:"
+            f"{expected['turn_id']}:lineage={len(lineage_completions)}:"
+            f"causal={len(completions)}"
+        )
+    completed = completions[0]
+    wakes = [
+        event
+        for event in after_arm
+        if event["type"] == "listener.wake_detected"
+        and event["sequence"] < final["sequence"]
+        and managed_fields_match(event, expected)
+    ]
+    if len(wakes) != 1:
+        raise ValueError(
+            f"managed_listener_recovery_wake_count_invalid:{expected['turn_id']}:"
+            f"{len(wakes)}"
+        )
+    for event in (armed, wakes[0], final, completed):
+        if event.get("live") is not True or event.get("mocked") is not False:
+            raise ValueError(
+                f"managed_listener_recovery_event_not_live:{event['event_id']}"
+            )
+    return {
+        "listener.turn_armed": armed,
+        "listener.wake_detected": wakes[0],
+        "listener.final_transcript": final,
+        "listener.turn_completed": completed,
+    }
+
+
 def wait_for_managed_turn(
     journal_db: Path,
     *,

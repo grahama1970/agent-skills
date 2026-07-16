@@ -286,6 +286,72 @@ def _persist_listener_receipt(
     return artifact_locator(path)
 
 
+def _managed_listener_state(
+    run_dir: Path,
+    *,
+    expected_source_node: str,
+) -> tuple[int, int] | None:
+    state_path = run_dir / "state.json"
+    if not state_path.exists():
+        if run_dir.exists() and any(run_dir.iterdir()):
+            raise ValueError(f"managed_listener_run_state_missing:{run_dir}")
+        return None
+    if not state_path.is_file():
+        raise ValueError(f"managed_listener_run_state_not_file:{state_path}")
+    state = read_json(state_path)
+    if state.get("schema") != "realtimestt.physical_hot_mic_listener_state.v1":
+        raise ValueError(f"managed_listener_run_state_schema_invalid:{state_path}")
+    if state.get("source_node") != expected_source_node:
+        raise ValueError(f"managed_listener_run_source_node_mismatch:{run_dir}")
+    try:
+        target_cycles = int(state["target_cycles"])
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ValueError(f"managed_listener_run_target_invalid:{state_path}") from exc
+    completed_cycles = state.get("completed_cycles")
+    if target_cycles < 1 or not isinstance(completed_cycles, list):
+        raise ValueError(f"managed_listener_run_cycles_invalid:{state_path}")
+    completed_count = len(completed_cycles)
+    if completed_count > target_cycles:
+        raise ValueError(
+            "managed_listener_run_completed_exceeds_target:"
+            f"{state_path}:{completed_count}:{target_cycles}"
+        )
+    return target_cycles, completed_count
+
+
+def _select_managed_listener_run(
+    *,
+    campaign_dir: Path,
+    source_node: str,
+    campaign_turn_count: int,
+    pending_turn_count: int,
+) -> tuple[Path, int]:
+    base_run_dir = campaign_dir / "managed-listener"
+    base_state = _managed_listener_state(
+        base_run_dir,
+        expected_source_node=source_node,
+    )
+    if base_state is None:
+        return base_run_dir, campaign_turn_count
+    base_target, base_completed = base_state
+    if base_completed < base_target:
+        return base_run_dir, base_target
+
+    rollover_index = 1
+    while True:
+        rollover_dir = campaign_dir / f"managed-listener-rollover-{rollover_index:03d}"
+        rollover_state = _managed_listener_state(
+            rollover_dir,
+            expected_source_node=source_node,
+        )
+        if rollover_state is None:
+            return rollover_dir, pending_turn_count
+        rollover_target, rollover_completed = rollover_state
+        if rollover_completed < rollover_target:
+            return rollover_dir, rollover_target
+        rollover_index += 1
+
+
 def _migrate_inline_listener_receipts(
     state: dict[str, Any],
     manifest: dict[str, Any],
@@ -1789,6 +1855,89 @@ def run_campaign(
                 listener_pending.append((case, turn, turn_state))
 
     if listener_pending:
+        listener_config = {**live_config, "journal_db": str(journal_db)}
+        unrecovered: list[
+            tuple[dict[str, Any], dict[str, Any], dict[str, Any]]
+        ] = []
+        for case, turn, turn_state in listener_pending:
+            case_state = state["cases"][case["case_id"]]
+            try:
+                contract_locator, contract = contracts[case["case_id"]]
+                wake_asset, source_asset = _turn_audio_assets(
+                    case,
+                    turn,
+                    live_config,
+                    assets,
+                    contract_locator,
+                    contract,
+                )
+                wake_audio = (
+                    Path(wake_asset["audio"]["path"])
+                    if wake_asset is not None
+                    else None
+                )
+                source_audio = (
+                    Path(source_asset["audio"]["path"])
+                    if source_asset is not None
+                    else None
+                )
+                receipt = CaseExecutor.recover_listener_turn(
+                    listener_config,
+                    manifest["campaign_id"],
+                    case,
+                    turn,
+                    journal_db=journal_db,
+                    wake_audio=wake_audio,
+                    source_audio=source_audio,
+                    wake_asset=wake_asset,
+                    source_asset=source_asset,
+                )
+                if receipt is None:
+                    unrecovered.append((case, turn, turn_state))
+                    continue
+                turn_state["receipts"]["listener"] = _persist_listener_receipt(
+                    live_config,
+                    case["case_id"],
+                    turn["turn_id"],
+                    receipt,
+                )
+                turn_state["stage"] = "listener_complete"
+                turn_state["failure"] = None
+                turn_state["updated_at"] = utc_now()
+                case_state["stage"] = "running"
+                write_json(state_path, state)
+                print(
+                    json.dumps(
+                        {
+                            "status": "LISTENER_RECEIPT_RECOVERED_FROM_JOURNAL",
+                            "case_id": case["case_id"],
+                            "turn_id": turn["turn_id"],
+                            "arm_event_id": receipt["arm_event_id"],
+                            "final_event_id": receipt["final_event_id"],
+                            "completed_event_id": receipt["completed_event_id"],
+                            "listener_process_spawned": False,
+                            "audio_replayed": False,
+                        },
+                        sort_keys=True,
+                    ),
+                    flush=True,
+                )
+            except Exception as exc:
+                _record_failure(
+                    case_state,
+                    turn_state,
+                    case_id=case["case_id"],
+                    turn_id=turn["turn_id"],
+                    stage="listener",
+                    error=exc,
+                )
+                state["status"] = "blocked_live_failure"
+                state["updated_at"] = utc_now()
+                write_json(state_path, state)
+                return state
+        listener_pending = unrecovered
+
+    if listener_pending:
         physical_cases = {
             case["case_id"]
             for case, _, _ in listener_pending
@@ -1824,12 +1973,18 @@ def run_campaign(
             len(case["turn_script"])
             for case in manifest["cases"]
         )
-        listener_config = {**live_config, "journal_db": str(journal_db)}
+        listener_run_dir, listener_target_turn_count = _select_managed_listener_run(
+            campaign_dir=Path(live_config["campaign_dir"]),
+            source_node=live_config["listener_source_node"],
+            campaign_turn_count=campaign_turn_count,
+            pending_turn_count=total_turn_count,
+        )
         try:
             with ManagedListenerProcess(
                 listener_config,
-                target_turn_count=campaign_turn_count,
+                target_turn_count=listener_target_turn_count,
                 turns_this_run=total_turn_count,
+                run_dir=listener_run_dir,
             ) as listener:
                 executor = CaseExecutor(listener_config, listener)
                 for case, turn, turn_state in listener_pending:
