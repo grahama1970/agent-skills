@@ -221,7 +221,7 @@ def receipt_ok(path: Path, project: str, status: str, reason: str | None = None)
     if not path.exists():
         raise AssertionError(f"missing receipt {path}")
     data = json.loads(path.read_text())
-    if data.get("schema") != "surf.tab_maintenance_receipt.v1":
+    if data.get("schema") != "surf.tab_recovery_receipt.v1":
         raise AssertionError(f"bad receipt schema for {project}: {data}")
     if data.get("project") != project:
         raise AssertionError(f"bad receipt project for {project}: {data}")
