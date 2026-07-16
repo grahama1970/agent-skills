@@ -90,12 +90,10 @@ if MOVIE_LIBRARY and MOVIE_LIBRARY.exists():
 else:
     print(f'  library not mounted: {MOVIE_LIBRARY}')
 
-# Test Radarr check (no-op without API key)
+# Watch must not call Radarr directly; ingest-movie owns acquisition.
 result = _check_radarr_library('The Devil Wears Prada')
-if result is None:
-    print('  Radarr: no key (expected)')
-else:
-    print(f'  Radarr: {result}')
+assert result is None, 'Watch must not return direct Radarr state'
+print('  acquisition: delegated to ingest-movie')
 " 2>/dev/null && pass "movie resolution checks OK" || fail "movie resolution checks failed"
 
 # ---------------------------------------------------------------------------
@@ -183,14 +181,10 @@ if found:
 else:
     print('  OK: not found in library (expected — Warrior 2011 != The 13th Warrior 1999)')
 
-# Radarr check
 radarr = _check_radarr_library('Warrior (2011)')
-if radarr is None:
-    print('  Radarr: no key (expected)')
-else:
-    print(f'  Radarr: in_library={radarr.get(\"in_library\")}, has_file={radarr.get(\"has_file\")}')
+assert radarr is None, 'Watch must not return direct Radarr state'
 
-print('  Acquisition path verified: library miss -> Radarr check -> add instructions')
+print('  Acquisition path verified: library miss -> ingest-movie instructions')
 " 2>/dev/null && pass "Warrior (2011) not-in-library OK" || fail "Warrior (2011) test failed"
 
 # ---------------------------------------------------------------------------
@@ -331,7 +325,7 @@ if [ "$FAIL" -gt 0 ]; then
   if [ "$FAIL" -gt 2 ]; then
     exit 1
   else
-    echo "(failures may be expected if 12TB drive not mounted or Radarr not running)"
+    echo "(failures may be expected if 12TB drive or live local services are unavailable)"
     exit 1
   fi
 fi

@@ -154,24 +154,17 @@ def _find_srt_in_dir(dir_path: Path) -> Path | None:
 
 
 def _check_radarr_library(title: str) -> dict | None:
-    api_key = os.environ.get("RADARR_API_KEY", "")
-    radarr_url = os.environ.get("RADARR_URL", "http://localhost:7878")
-    if not api_key:
-        return None
-    try:
-        resp = httpx.get(f"{radarr_url}/api/v3/movie", params={"apikey": api_key}, timeout=15)
-        if resp.status_code != 200:
-            return None
-        title_lower = title.lower().strip()
-        for m in resp.json():
-            m_title = m.get("title", "").lower()
-            if title_lower in m_title or m_title in title_lower:
-                return {"in_library": True, "has_file": m.get("hasFile", False), "title": m.get("title"),
-                        "year": m.get("year"), "tmdb_id": m.get("tmdbId"), "downloaded": m.get("hasFile", False)}
-        return {"in_library": False}
-    except Exception as exc:
-        logger.debug("Radarr check failed: {}", exc)
-        return None
+    """Deprecated compatibility shim.
+
+    Watch may inspect the local movie library, but acquisition and Radarr state
+    belong to ingest-movie. Keep this function as a no-op for older sanity
+    checks/imports while preventing direct Radarr API access from Watch.
+    """
+    logger.debug(
+        "movie acquisition for '{}' is delegated to ingest-movie; Watch does not query Radarr directly",
+        title,
+    )
+    return None
 
 
 def _resolve_movie_source(source: str) -> str | None:
@@ -182,14 +175,11 @@ def _resolve_movie_source(source: str) -> str | None:
         video = _find_video_in_dir(movie_dir) if movie_dir.is_dir() else movie_dir
         if video and video.exists():
             return str(video)
-    radarr_status = _check_radarr_library(source)
-    if radarr_status:
-        if radarr_status.get("has_file"):
-            pass
-        elif radarr_status.get("in_library"):
-            logger.info("in Radarr but not downloaded (tmdbId={})", radarr_status.get("tmdb_id"))
-        else:
-            logger.info("not in Radarr. Add via ingest-movie: cd {} && ./run.sh acquire radarr --preset horus_standard --execute", SKILLS_DIR / "ingest-movie")
+    _check_radarr_library(source)
+    logger.info(
+        "not found in local movie library. Delegate acquisition to ingest-movie: cd {} && ./run.sh acquire radarr --preset horus_standard --execute",
+        SKILLS_DIR / "ingest-movie",
+    )
     return None
 
 
