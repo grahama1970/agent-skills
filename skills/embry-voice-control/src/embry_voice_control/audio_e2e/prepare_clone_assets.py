@@ -578,7 +578,12 @@ class QualificationTranscriber:
             compute_type=self.policy["compute_type"],
         )
 
-    def transcribe(self, audio_path: Path) -> dict[str, Any]:
+    def transcribe(
+        self,
+        audio_path: Path,
+        *,
+        receipt_policy: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
         segments, info = self.model.transcribe(
             str(Path(audio_path).resolve()),
             language=self.policy["language"],
@@ -608,7 +613,7 @@ class QualificationTranscriber:
             "authority_scope": "campaign_asset_listener_qualification_only",
             "typed_transcript_used": False,
             "initial_prompt_used": False,
-            "policy": self.policy,
+            "policy": dict(receipt_policy or self.policy),
             "audio": locator(audio_path),
             "transcript": transcript,
             "normalized_transcript": " ".join(normalized_tokens(transcript)),
@@ -1079,9 +1084,9 @@ def validate_wav_envelope(value: bytes) -> None:
         raise ValueError("orpheus_generated_audio_not_wav")
 
 
-def archive_conflict(asset_dir: Path, archive_root: Path) -> None:
+def archive_conflict(asset_dir: Path, archive_root: Path) -> Path | None:
     if not asset_dir.exists():
-        return
+        return None
     files = sorted(path for path in asset_dir.rglob("*") if path.is_file())
     inventory = [
         {"relative_path": str(path.relative_to(asset_dir)), "sha256": sha256_file(path)}
@@ -1093,6 +1098,73 @@ def archive_conflict(asset_dir: Path, archive_root: Path) -> None:
         raise AssetConflictError(f"asset_conflict_archive_exists:{target}")
     target.parent.mkdir(parents=True, exist_ok=True)
     shutil.move(str(asset_dir), str(target))
+    return target
+
+
+def _binding_wer(binding: dict[str, Any], *, binding_path: Path) -> float:
+    try:
+        value = float((binding.get("qualification") or {})["wer"])
+    except (KeyError, TypeError, ValueError) as exc:
+        raise AssetConflictError(
+            f"accepted_binding_wer_missing:{binding_path}"
+        ) from exc
+    if not 0.0 <= value <= 1.0:
+        raise AssetConflictError(
+            f"accepted_binding_wer_out_of_range:{binding_path}:{value}"
+        )
+    return value
+
+
+def _runtime_stability_regeneration_receipt(
+    *,
+    case_id: str,
+    turn_id: str,
+    threshold: float,
+    archived_dir: Path,
+    old_binding_path: Path,
+    old_binding: dict[str, Any],
+    new_bundle: dict[str, Any],
+    runtime_policy: dict[str, Any],
+) -> dict[str, Any]:
+    archived_binding = archived_dir / old_binding_path.name
+    new_binding_path = verify_locator(
+        new_bundle["inference_receipt"], label="runtime_stability_new_binding"
+    )
+    new_binding = read_json(new_binding_path)
+    old_wer = _binding_wer(old_binding, binding_path=archived_binding)
+    new_wer = _binding_wer(new_binding, binding_path=new_binding_path)
+    if old_wer <= threshold or new_wer > threshold:
+        raise RuntimeError(
+            f"runtime_stability_regeneration_gate_failed:{turn_id}:"
+            f"{old_wer}:{new_wer}:{threshold}"
+        )
+    value = {
+        "schema": "embry.audio_e2e.runtime_stability_regeneration.v1",
+        "status": "PASS",
+        "live": True,
+        "mocked": False,
+        "case_id": case_id,
+        "turn_id": turn_id,
+        "reason": "accepted_asset_wer_above_campaign_runtime_stability_ceiling",
+        "runtime_stability_policy": runtime_policy,
+        "old": {
+            "wer": old_wer,
+            "audio": old_binding["audio"],
+            "binding": locator(archived_binding),
+            "request_id": old_binding["request_id"],
+        },
+        "new": {
+            "wer": new_wer,
+            "audio": new_binding["audio"],
+            "binding": locator(new_binding_path),
+            "request_id": new_binding["request_id"],
+        },
+        "provider_called": True,
+        "failed_gates": [],
+    }
+    receipt_path = new_binding_path.parent / "runtime-stability-regeneration.json"
+    atomic_write_json(receipt_path, value)
+    return locator(receipt_path)
 
 
 
@@ -1892,7 +1964,9 @@ def complete_candidate(
             qualification_policy=qualification_policy,
         )
     else:
-        asr = qualifier.transcribe(paths["audio"])
+        asr = qualifier.transcribe(
+            paths["audio"], receipt_policy=qualification_policy
+        )
         asr["expected_text"] = prompt
         asr["expected_text_sha256"] = sha256_text(prompt)
         asr["normalized_expected_text"] = " ".join(
@@ -2513,9 +2587,11 @@ def prepare_clone_assets(
     qualification_device: str = "cpu",
     qualification_compute_type: str = "int8",
     max_request_wer: float = 0.25,
+    campaign_runtime_stability_max_wer: float | None = None,
     max_candidates: int = 5,
     max_internal_silence_seconds: float = 2.0,
     regenerate_conflicts: bool = False,
+    regenerate_marginal_assets: bool = False,
 ) -> dict[str, Any]:
     manifest_path = Path(manifest_path).resolve()
     source_contract_path = Path(source_contract_path).resolve()
@@ -2551,6 +2627,34 @@ def prepare_clone_assets(
             max_internal_silence_seconds
         ),
     )
+    if regenerate_marginal_assets and campaign_runtime_stability_max_wer is None:
+        raise ValueError(
+            "campaign_runtime_stability_max_wer_required_for_marginal_regeneration"
+        )
+    runtime_stability_policy: dict[str, Any] | None = None
+    runtime_qualification_policy: dict[str, Any] | None = None
+    if campaign_runtime_stability_max_wer is not None:
+        stability_max_wer = float(campaign_runtime_stability_max_wer)
+        if not 0.0 <= stability_max_wer <= max_request_wer:
+            raise ValueError("campaign_runtime_stability_max_wer_out_of_range")
+        runtime_stability_policy = {
+            "schema": "embry.audio_e2e.runtime_stability_policy.v1",
+            "selection": "existing_binding_qualification_wer_strictly_greater_than",
+            "max_request_wer": stability_max_wer,
+            "base_max_request_wer": float(max_request_wer),
+            "max_candidates": int(max_candidates),
+        }
+        runtime_stability_policy["identity_sha256"] = sha256_bytes(
+            canonical_json(runtime_stability_policy)
+        )
+        runtime_qualification_policy = build_qualification_policy(
+            model=qualification_model,
+            device=qualification_device,
+            compute_type=qualification_compute_type,
+            max_request_wer=stability_max_wer,
+            max_candidates=max_candidates,
+            max_internal_silence_seconds=max_internal_silence_seconds,
+        )
 
     manifest = read_json(manifest_path)
     cases = validate_campaign_manifest(manifest)
@@ -2575,6 +2679,8 @@ def prepare_clone_assets(
     progress_index = 1
     expected_assets = 1 + sum(len(case["turns"]) for case in cases)
     result_cases: dict[str, Any] = {}
+    per_turn_qualification_policy: dict[str, dict[str, Any]] = {}
+    runtime_regeneration_receipts: list[dict[str, str]] = []
 
     print(
         json.dumps(
@@ -2606,6 +2712,70 @@ def prepare_clone_assets(
                 progress_index += 1
                 turn_id = turn["turn_id"]
                 prompt = turn["query"]
+                asset_dir = (
+                    output_dir
+                    / "cases"
+                    / safe_component(case_id)
+                    / "turns"
+                    / safe_component(turn_id)
+                )
+                turn_qualification_policy = qualification_policy
+                marginal_archive: tuple[Path, Path, dict[str, Any]] | None = None
+                binding_path = asset_dir / "binding-receipt.json"
+                runtime_archive_parent = (
+                    archive_root
+                    / "runtime-stability"
+                    / safe_component(asset_dir.name)
+                )
+                archived_runtime_bindings = sorted(
+                    runtime_archive_parent.glob("*/binding-receipt.json")
+                )
+                if len(archived_runtime_bindings) > 1:
+                    raise RuntimeError(
+                        f"multiple_runtime_stability_archives:{case_id}:{turn_id}"
+                    )
+                if archived_runtime_bindings:
+                    archived_binding_path = archived_runtime_bindings[0]
+                    marginal_archive = (
+                        archived_binding_path.parent,
+                        archived_binding_path,
+                        read_json(archived_binding_path),
+                    )
+                    turn_qualification_policy = runtime_qualification_policy
+                if runtime_qualification_policy is not None and binding_path.is_file():
+                    existing_binding = read_json(binding_path)
+                    existing_wer = _binding_wer(
+                        existing_binding, binding_path=binding_path
+                    )
+                    if (
+                        existing_binding.get("qualification_policy")
+                        == runtime_qualification_policy
+                    ):
+                        turn_qualification_policy = runtime_qualification_policy
+                    elif existing_wer > runtime_qualification_policy["max_request_wer"]:
+                        if not regenerate_marginal_assets:
+                            raise RuntimeError(
+                                "marginal_asset_requires_regeneration:"
+                                f"{case_id}:{turn_id}:{existing_wer}:"
+                                f"{runtime_qualification_policy['max_request_wer']}"
+                            )
+                        old_binding = existing_binding
+                        old_binding_name = binding_path.name
+                        archived_dir = archive_conflict(
+                            asset_dir,
+                            archive_root / "runtime-stability",
+                        )
+                        if archived_dir is None:
+                            raise RuntimeError(
+                                f"marginal_asset_archive_missing:{case_id}:{turn_id}"
+                            )
+                        marginal_archive = (
+                            archived_dir,
+                            archived_dir / old_binding_name,
+                            old_binding,
+                        )
+                        turn_qualification_policy = runtime_qualification_policy
+                per_turn_qualification_policy[turn_id] = turn_qualification_policy
                 print(
                     json.dumps(
                         {
@@ -2627,13 +2797,7 @@ def prepare_clone_assets(
                     client=client,
                     qualifier=qualifier,
                     orpheus_url=orpheus_url,
-                    asset_dir=(
-                        output_dir
-                        / "cases"
-                        / safe_component(case_id)
-                        / "turns"
-                        / safe_component(turn_id)
-                    ),
+                    asset_dir=asset_dir,
                     archive_root=archive_root,
                     prompt=prompt,
                     contract_locator=contract_locator,
@@ -2646,9 +2810,27 @@ def prepare_clone_assets(
                         "planned_spoken_text_sha256"
                     ],
                     generation_policy=generation_policy,
-                    qualification_policy=qualification_policy,
-                    regenerate_conflicts=regenerate_conflicts,
+                    qualification_policy=turn_qualification_policy,
+                    regenerate_conflicts=(
+                        regenerate_conflicts
+                        or (marginal_archive is not None and asset_dir.exists())
+                    ),
                 )
+                if marginal_archive is not None:
+                    archived_dir, archived_binding, old_binding = marginal_archive
+                    runtime_regeneration_receipts.append(
+                        _runtime_stability_regeneration_receipt(
+                            case_id=case_id,
+                            turn_id=turn_id,
+                            threshold=runtime_qualification_policy["max_request_wer"],
+                            archived_dir=archived_dir,
+                            old_binding_path=archived_binding,
+                            old_binding=old_binding,
+                            new_bundle=bundle,
+                            runtime_policy=runtime_stability_policy,
+                        )
+                    )
+                    action = "REGENERATED_FOR_RUNTIME_STABILITY"
                 turn_bundles[turn_id] = bundle
                 print(
                     json.dumps(
@@ -2661,7 +2843,7 @@ def prepare_clone_assets(
                             "turn_id": turn_id,
                             "audio_sha256": bundle["audio"]["sha256"],
                             "generation_policy": generation_policy,
-                            "qualification_policy": qualification_policy,
+                            "qualification_policy": turn_qualification_policy,
                         },
                         sort_keys=True,
                     ),
@@ -2702,14 +2884,15 @@ def prepare_clone_assets(
                     "prepared_binding_generation_policy_mismatch:"
                     f"{turn['turn_id']}"
                 )
-            if binding.get("qualification_policy") != qualification_policy:
+            turn_qualification_policy = per_turn_qualification_policy[turn["turn_id"]]
+            if binding.get("qualification_policy") != turn_qualification_policy:
                 raise RuntimeError(
                     "prepared_binding_qualification_policy_mismatch:"
                     f"{turn['turn_id']}"
                 )
             qualification = binding.get("qualification") or {}
             wer = float(qualification.get("wer", 2.0))
-            if wer > qualification_policy["max_request_wer"]:
+            if wer > turn_qualification_policy["max_request_wer"]:
                 raise RuntimeError(
                     "prepared_binding_wer_exceeds_threshold:"
                     f"{turn['turn_id']}:{wer}"
@@ -2731,7 +2914,7 @@ def prepare_clone_assets(
                     "prepared_binding_utterance_boundary_not_accepted:"
                     f"{turn['turn_id']}"
                 )
-            boundary_limit = qualification_policy[
+            boundary_limit = turn_qualification_policy[
                 "utterance_boundary"
             ]["max_internal_silence_seconds"]
             if internal_silence >= boundary_limit:
@@ -2779,6 +2962,8 @@ def prepare_clone_assets(
         },
         "generation_policy": generation_policy,
         "qualification_policy": qualification_policy,
+        "runtime_stability_policy": runtime_stability_policy,
+        "runtime_stability_regeneration_receipts": runtime_regeneration_receipts,
         "asr_comparison_policy": {
             **ASR_COMPARISON_POLICY,
             "sha256": ASR_COMPARISON_POLICY_SHA256,
@@ -2798,6 +2983,9 @@ def prepare_clone_assets(
             "qualified_wake_asset_count": 1,
             "generated_query_asset_count": len(turn_ids),
             "asr_qualified_query_asset_count": len(accepted_wers),
+            "runtime_stability_regenerated_asset_count": len(
+                runtime_regeneration_receipts
+            ),
             "utterance_boundary_qualified_query_asset_count": len(
                 accepted_internal_silences
             ),

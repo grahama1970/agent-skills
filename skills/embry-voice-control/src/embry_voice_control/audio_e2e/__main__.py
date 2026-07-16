@@ -51,6 +51,23 @@ def parser() -> argparse.ArgumentParser:
         "--qualification-compute-type", default="int8"
     )
     prepare_parser.add_argument("--max-request-wer", type=float, default=0.25)
+    prepare_parser.add_argument(
+        "--campaign-runtime-stability-max-wer",
+        type=float,
+        help=(
+            "Stricter WER ceiling for unattended campaign assets. Existing "
+            "bindings above this ceiling are regenerated only when "
+            "--regenerate-marginal-assets is also supplied."
+        ),
+    )
+    prepare_parser.add_argument(
+        "--regenerate-marginal-assets",
+        action="store_true",
+        help=(
+            "Archive and regenerate only existing accepted assets above the "
+            "campaign runtime stability WER ceiling."
+        ),
+    )
     prepare_parser.add_argument("--max-candidates", type=int, default=5)
     prepare_parser.add_argument(
         "--max-internal-silence-seconds",
@@ -199,9 +216,13 @@ def main() -> int:
             qualification_device=args.qualification_device,
             qualification_compute_type=args.qualification_compute_type,
             max_request_wer=args.max_request_wer,
+            campaign_runtime_stability_max_wer=(
+                args.campaign_runtime_stability_max_wer
+            ),
             max_candidates=args.max_candidates,
             max_internal_silence_seconds=args.max_internal_silence_seconds,
             regenerate_conflicts=args.regenerate_conflicts,
+            regenerate_marginal_assets=args.regenerate_marginal_assets,
         )
         return 0
 
