@@ -5,38 +5,32 @@
   "approval_binding_sha256": "sha256:723c6113af0aaa6bd0765f1584b46cc848366af8c2200df9ba4bf911e3e4c35a",
   "approval_validation": {
     "invalid_blockers": [],
-    "missing_types": [
-      "cost_acceptance",
-      "exact_request_acceptance",
-      "paid_call_authorization",
-      "publication_authorization",
-      "visual_media_acceptance"
-    ],
+    "missing_types": [],
     "receipts": {
       "cost_acceptance": {
-        "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/approvals/cost_acceptance_receipt.json",
-        "sha256": "sha256:68ced910d44d6935deb09833d6686554b71f1d628c19ae11700fac1936c5240a",
-        "state": "STALE_OTHER_REQUEST"
+        "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/approvals/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/cost_acceptance_receipt.json",
+        "sha256": "sha256:f78d6b046eac37a53ce4c291f2a91d8e4c26a1cb48a0720172dcd2e6b1b7ed42",
+        "state": "APPROVED"
       },
       "exact_request_acceptance": {
-        "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/approvals/exact_request_acceptance_receipt.json",
-        "sha256": "sha256:4442c0da1110cae15b7c697b35a17781fae3fb6215bb3a3124a83ac5c65d9a6c",
-        "state": "STALE_OTHER_REQUEST"
+        "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/approvals/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/exact_request_acceptance_receipt.json",
+        "sha256": "sha256:773c733df8a3d835f6acbd9b67da16ea9e3818d93ecb58c2cc4d160dfa6c7658",
+        "state": "APPROVED"
       },
       "paid_call_authorization": {
-        "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/approvals/paid_call_authorization_receipt.json",
-        "sha256": "sha256:985a68b2ba21ddac9eaac56622d0020ff79381fe7b69307714b857f76a7b301d",
-        "state": "STALE_OTHER_REQUEST"
+        "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/approvals/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/paid_call_authorization_receipt.json",
+        "sha256": "sha256:4b8019f264a6ab449e57c2f8bdfaf704a3df46f40a9f341c22f12f0904cc5215",
+        "state": "APPROVED"
       },
       "publication_authorization": {
-        "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/approvals/publication_authorization_receipt.json",
-        "sha256": "sha256:df3130982f5eb98dd8e742ea6e2bb28c299e1a5c37acbefd5d1d12b5341e9c82",
-        "state": "STALE_OTHER_REQUEST"
+        "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/approvals/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/publication_authorization_receipt.json",
+        "sha256": "sha256:fd6790cabc11094ab624f8d8498a1a35f53a23b294b921f0db402793bc813b65",
+        "state": "APPROVED"
       },
       "visual_media_acceptance": {
-        "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/approvals/visual_media_acceptance_receipt.json",
-        "sha256": "sha256:ce5a8744dfea087ed1cedc311d575f1f021722ac6a0c2a1359b8f183b36b9ecf",
-        "state": "STALE_OTHER_REQUEST"
+        "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/preflight/approvals/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/visual_media_acceptance_receipt.json",
+        "sha256": "sha256:fab57ead929bcd79a6c10852cc60f9b1cda79fab35c65948ebc740caecbe9deb",
+        "state": "APPROVED"
       }
     },
     "required_types": [
@@ -55,7 +49,7 @@
     "state": "PREFLIGHT_READY",
     "submit_intent_count": 0
   },
-  "created_at": "2026-07-16T16:57:54.215062+00:00",
+  "created_at": "2026-07-16T17:17:18.213156+00:00",
   "credential": {
     "present": true,
     "runtime_variable": "FAL_KEY",
@@ -68,7 +62,7 @@
     "writable": true
   },
   "endpoint": "fal-ai/kling-video/v3/standard/image-to-video",
-  "expires_at": "2026-07-16T17:57:54.215062+00:00",
+  "expires_at": "2026-07-16T18:17:18.213156+00:00",
   "fal_client": {
     "api_surface": {
       "SyncClient": true,

@@ -1,0 +1,583 @@
+{
+  "watch_report": {
+    "generated_at": "2026-07-16T17:33:22.773061+00:00",
+    "source": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/provider_return.mp4",
+    "title": "provider_return",
+    "duration_seconds": 10.041667,
+    "duration_formatted": "10s",
+    "sampling_mode": "uniform-fallback",
+    "frame_count": 12,
+    "metadata": {
+      "width": 1280,
+      "height": 720,
+      "codec": "h264"
+    },
+    "gaps": [
+      "missing_english_srt",
+      "missing_transcript",
+      "image_descriptions_missing",
+      "audio_clip_failed:1",
+      "audio_wav_clip_failed:1",
+      "audio_clip_failed:2",
+      "audio_wav_clip_failed:2",
+      "audio_clip_failed:3",
+      "audio_wav_clip_failed:3",
+      "audio_clip_failed:4",
+      "audio_wav_clip_failed:4",
+      "audio_clip_failed:5",
+      "audio_wav_clip_failed:5",
+      "audio_clip_failed:6",
+      "audio_wav_clip_failed:6",
+      "audio_clip_failed:7",
+      "audio_wav_clip_failed:7",
+      "audio_clip_failed:8",
+      "audio_wav_clip_failed:8",
+      "audio_clip_failed:9",
+      "audio_wav_clip_failed:9",
+      "audio_clip_failed:10",
+      "audio_wav_clip_failed:10",
+      "audio_clip_failed:11",
+      "audio_wav_clip_failed:11",
+      "audio_clip_failed:12",
+      "audio_wav_clip_failed:12"
+    ],
+    "visual_description": []
+  },
+  "scene_elements": [
+    {
+      "index": 0,
+      "timecode": "00:00",
+      "text": "No transcript available",
+      "srt_text": "No transcript available",
+      "scene_marker_image": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0001.jpg \u2014 visual description not analyzed",
+      "scene_marker_image_path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0001.jpg",
+      "video_clip_path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/clips/segment_0001.mp4",
+      "audio_clip_path": "",
+      "audio_wav_clip_path": "",
+      "visual_description": "not_analyzed",
+      "visual_description_source": "none",
+      "visual_description_status": "not_analyzed",
+      "movie_segment": "00:00-00:01",
+      "sound": "Sound not transcribed; audio not analyzed",
+      "audio_path": "",
+      "sound_description_source": "none"
+    },
+    {
+      "index": 1,
+      "timecode": "00:01",
+      "text": "No transcript available",
+      "srt_text": "No transcript available",
+      "scene_marker_image": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0002.jpg \u2014 visual description not analyzed",
+      "scene_marker_image_path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0002.jpg",
+      "video_clip_path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/clips/segment_0002.mp4",
+      "audio_clip_path": "",
+      "audio_wav_clip_path": "",
+      "visual_description": "not_analyzed",
+      "visual_description_source": "none",
+      "visual_description_status": "not_analyzed",
+      "movie_segment": "00:01-00:02",
+      "sound": "Sound not transcribed; audio not analyzed",
+      "audio_path": "",
+      "sound_description_source": "none"
+    },
+    {
+      "index": 2,
+      "timecode": "00:02",
+      "text": "No transcript available",
+      "srt_text": "No transcript available",
+      "scene_marker_image": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0003.jpg \u2014 visual description not analyzed",
+      "scene_marker_image_path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0003.jpg",
+      "video_clip_path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/clips/segment_0003.mp4",
+      "audio_clip_path": "",
+      "audio_wav_clip_path": "",
+      "visual_description": "not_analyzed",
+      "visual_description_source": "none",
+      "visual_description_status": "not_analyzed",
+      "movie_segment": "00:02-00:03",
+      "sound": "Sound not transcribed; audio not analyzed",
+      "audio_path": "",
+      "sound_description_source": "none"
+    },
+    {
+      "index": 3,
+      "timecode": "00:03",
+      "text": "No transcript available",
+      "srt_text": "No transcript available",
+      "scene_marker_image": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0004.jpg \u2014 visual description not analyzed",
+      "scene_marker_image_path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0004.jpg",
+      "video_clip_path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/clips/segment_0004.mp4",
+      "audio_clip_path": "",
+      "audio_wav_clip_path": "",
+      "visual_description": "not_analyzed",
+      "visual_description_source": "none",
+      "visual_description_status": "not_analyzed",
+      "movie_segment": "00:03-00:03",
+      "sound": "Sound not transcribed; audio not analyzed",
+      "audio_path": "",
+      "sound_description_source": "none"
+    },
+    {
+      "index": 4,
+      "timecode": "00:03",
+      "text": "No transcript available",
+      "srt_text": "No transcript available",
+      "scene_marker_image": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0005.jpg \u2014 visual description not analyzed",
+      "scene_marker_image_path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0005.jpg",
+      "video_clip_path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/clips/segment_0005.mp4",
+      "audio_clip_path": "",
+      "audio_wav_clip_path": "",
+      "visual_description": "not_analyzed",
+      "visual_description_source": "none",
+      "visual_description_status": "not_analyzed",
+      "movie_segment": "00:03-00:04",
+      "sound": "Sound not transcribed; audio not analyzed",
+      "audio_path": "",
+      "sound_description_source": "none"
+    },
+    {
+      "index": 5,
+      "timecode": "00:04",
+      "text": "No transcript available",
+      "srt_text": "No transcript available",
+      "scene_marker_image": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0006.jpg \u2014 visual description not analyzed",
+      "scene_marker_image_path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0006.jpg",
+      "video_clip_path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/clips/segment_0006.mp4",
+      "audio_clip_path": "",
+      "audio_wav_clip_path": "",
+      "visual_description": "not_analyzed",
+      "visual_description_source": "none",
+      "visual_description_status": "not_analyzed",
+      "movie_segment": "00:04-00:05",
+      "sound": "Sound not transcribed; audio not analyzed",
+      "audio_path": "",
+      "sound_description_source": "none"
+    },
+    {
+      "index": 6,
+      "timecode": "00:05",
+      "text": "No transcript available",
+      "srt_text": "No transcript available",
+      "scene_marker_image": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0007.jpg \u2014 visual description not analyzed",
+      "scene_marker_image_path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0007.jpg",
+      "video_clip_path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/clips/segment_0007.mp4",
+      "audio_clip_path": "",
+      "audio_wav_clip_path": "",
+      "visual_description": "not_analyzed",
+      "visual_description_source": "none",
+      "visual_description_status": "not_analyzed",
+      "movie_segment": "00:05-00:06",
+      "sound": "Sound not transcribed; audio not analyzed",
+      "audio_path": "",
+      "sound_description_source": "none"
+    },
+    {
+      "index": 7,
+      "timecode": "00:06",
+      "text": "No transcript available",
+      "srt_text": "No transcript available",
+      "scene_marker_image": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0008.jpg \u2014 visual description not analyzed",
+      "scene_marker_image_path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0008.jpg",
+      "video_clip_path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/clips/segment_0008.mp4",
+      "audio_clip_path": "",
+      "audio_wav_clip_path": "",
+      "visual_description": "not_analyzed",
+      "visual_description_source": "none",
+      "visual_description_status": "not_analyzed",
+      "movie_segment": "00:06-00:07",
+      "sound": "Sound not transcribed; audio not analyzed",
+      "audio_path": "",
+      "sound_description_source": "none"
+    },
+    {
+      "index": 8,
+      "timecode": "00:07",
+      "text": "No transcript available",
+      "srt_text": "No transcript available",
+      "scene_marker_image": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0009.jpg \u2014 visual description not analyzed",
+      "scene_marker_image_path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0009.jpg",
+      "video_clip_path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/clips/segment_0009.mp4",
+      "audio_clip_path": "",
+      "audio_wav_clip_path": "",
+      "visual_description": "not_analyzed",
+      "visual_description_source": "none",
+      "visual_description_status": "not_analyzed",
+      "movie_segment": "00:07-00:08",
+      "sound": "Sound not transcribed; audio not analyzed",
+      "audio_path": "",
+      "sound_description_source": "none"
+    },
+    {
+      "index": 9,
+      "timecode": "00:08",
+      "text": "No transcript available",
+      "srt_text": "No transcript available",
+      "scene_marker_image": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0010.jpg \u2014 visual description not analyzed",
+      "scene_marker_image_path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0010.jpg",
+      "video_clip_path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/clips/segment_0010.mp4",
+      "audio_clip_path": "",
+      "audio_wav_clip_path": "",
+      "visual_description": "not_analyzed",
+      "visual_description_source": "none",
+      "visual_description_status": "not_analyzed",
+      "movie_segment": "00:08-00:08",
+      "sound": "Sound not transcribed; audio not analyzed",
+      "audio_path": "",
+      "sound_description_source": "none"
+    },
+    {
+      "index": 10,
+      "timecode": "00:08",
+      "text": "No transcript available",
+      "srt_text": "No transcript available",
+      "scene_marker_image": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0011.jpg \u2014 visual description not analyzed",
+      "scene_marker_image_path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0011.jpg",
+      "video_clip_path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/clips/segment_0011.mp4",
+      "audio_clip_path": "",
+      "audio_wav_clip_path": "",
+      "visual_description": "not_analyzed",
+      "visual_description_source": "none",
+      "visual_description_status": "not_analyzed",
+      "movie_segment": "00:08-00:09",
+      "sound": "Sound not transcribed; audio not analyzed",
+      "audio_path": "",
+      "sound_description_source": "none"
+    },
+    {
+      "index": 11,
+      "timecode": "00:09",
+      "text": "No transcript available",
+      "srt_text": "No transcript available",
+      "scene_marker_image": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0012.jpg \u2014 visual description not analyzed",
+      "scene_marker_image_path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0012.jpg",
+      "video_clip_path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/clips/segment_0012.mp4",
+      "audio_clip_path": "",
+      "audio_wav_clip_path": "",
+      "visual_description": "not_analyzed",
+      "visual_description_source": "none",
+      "visual_description_status": "not_analyzed",
+      "movie_segment": "00:09-00:10",
+      "sound": "Sound not transcribed; audio not analyzed",
+      "audio_path": "",
+      "sound_description_source": "none"
+    }
+  ],
+  "diff_intelligence": {
+    "overall_diff_percentage": 0,
+    "category_counts": {
+      "match": 12
+    },
+    "anomaly_count": 0,
+    "anomalies": [],
+    "character_intel": [],
+    "takeaways": [
+      "No meaningful divergence \u2014 SRT and Whisper agree on all scenes"
+    ]
+  },
+  "frames": [
+    {
+      "index": 0,
+      "timestamp_seconds": 0.0,
+      "timestamp_formatted": "00:00",
+      "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0001.jpg",
+      "source": "uniform-fallback"
+    },
+    {
+      "index": 1,
+      "timestamp_seconds": 0.84,
+      "timestamp_formatted": "00:01",
+      "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0002.jpg",
+      "source": "uniform-fallback"
+    },
+    {
+      "index": 2,
+      "timestamp_seconds": 1.67,
+      "timestamp_formatted": "00:02",
+      "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0003.jpg",
+      "source": "uniform-fallback"
+    },
+    {
+      "index": 3,
+      "timestamp_seconds": 2.51,
+      "timestamp_formatted": "00:03",
+      "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0004.jpg",
+      "source": "uniform-fallback"
+    },
+    {
+      "index": 4,
+      "timestamp_seconds": 3.35,
+      "timestamp_formatted": "00:03",
+      "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0005.jpg",
+      "source": "uniform-fallback"
+    },
+    {
+      "index": 5,
+      "timestamp_seconds": 4.18,
+      "timestamp_formatted": "00:04",
+      "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0006.jpg",
+      "source": "uniform-fallback"
+    },
+    {
+      "index": 6,
+      "timestamp_seconds": 5.02,
+      "timestamp_formatted": "00:05",
+      "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0007.jpg",
+      "source": "uniform-fallback"
+    },
+    {
+      "index": 7,
+      "timestamp_seconds": 5.86,
+      "timestamp_formatted": "00:06",
+      "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0008.jpg",
+      "source": "uniform-fallback"
+    },
+    {
+      "index": 8,
+      "timestamp_seconds": 6.69,
+      "timestamp_formatted": "00:07",
+      "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0009.jpg",
+      "source": "uniform-fallback"
+    },
+    {
+      "index": 9,
+      "timestamp_seconds": 7.53,
+      "timestamp_formatted": "00:08",
+      "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0010.jpg",
+      "source": "uniform-fallback"
+    },
+    {
+      "index": 10,
+      "timestamp_seconds": 8.37,
+      "timestamp_formatted": "00:08",
+      "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0011.jpg",
+      "source": "uniform-fallback"
+    },
+    {
+      "index": 11,
+      "timestamp_seconds": 9.2,
+      "timestamp_formatted": "00:09",
+      "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0012.jpg",
+      "source": "uniform-fallback"
+    }
+  ],
+  "visual_descriptions": [],
+  "visual_description_receipt": {
+    "schema": "watch.visual_description_receipt.v1",
+    "status": "all_models_failed",
+    "mocked": false,
+    "live": true,
+    "requested_model": "vlm-chutes",
+    "fallback_models": [],
+    "frame_count": 12,
+    "described_count": 0,
+    "gate": {
+      "status": "failed",
+      "reason": "no_frame_descriptions"
+    },
+    "frames": [
+      {
+        "index": 0,
+        "timestamp": 0.0,
+        "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0001.jpg",
+        "attempts": [
+          {
+            "provider": "scillm",
+            "requested_model": "vlm-chutes",
+            "served_model": null,
+            "status": "failed",
+            "http_status": 400,
+            "error_type": "http_error",
+            "error": "{\"error\":{\"message\":\"Unknown model 'vlm-chutes'. Did you mean: vlm-openrouter, vlm-free2, vlm? Available: claude, claude-haiku, claude-haiku-4-5-20251001, claude-opus, claude-opus-4-5, claude-opus-4-6, claude-opus-high, claude-sonnet, claude-sonnet-4-6, claude-sonnet-high, codex-vision, deepseek-direct, gemini, gemini-3, gemini-flash, gemini-flash-free2, gemini-flash-high, gemini-flash-high-free2, gemini-flash-high-paid, gemini-flash-oauth, gemini-flash-paid, gpt-4o, gpt-5.5, haiku, local-text, "
+          }
+        ],
+        "status": "not_described"
+      },
+      {
+        "index": 1,
+        "timestamp": 0.84,
+        "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0002.jpg",
+        "attempts": [
+          {
+            "provider": "scillm",
+            "requested_model": "vlm-chutes",
+            "served_model": null,
+            "status": "failed",
+            "http_status": 400,
+            "error_type": "http_error",
+            "error": "{\"error\":{\"message\":\"Unknown model 'vlm-chutes'. Did you mean: vlm-openrouter, vlm-free2, vlm? Available: claude, claude-haiku, claude-haiku-4-5-20251001, claude-opus, claude-opus-4-5, claude-opus-4-6, claude-opus-high, claude-sonnet, claude-sonnet-4-6, claude-sonnet-high, codex-vision, deepseek-direct, gemini, gemini-3, gemini-flash, gemini-flash-free2, gemini-flash-high, gemini-flash-high-free2, gemini-flash-high-paid, gemini-flash-oauth, gemini-flash-paid, gpt-4o, gpt-5.5, haiku, local-text, "
+          }
+        ],
+        "status": "not_described"
+      },
+      {
+        "index": 2,
+        "timestamp": 1.67,
+        "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0003.jpg",
+        "attempts": [
+          {
+            "provider": "scillm",
+            "requested_model": "vlm-chutes",
+            "served_model": null,
+            "status": "failed",
+            "http_status": 400,
+            "error_type": "http_error",
+            "error": "{\"error\":{\"message\":\"Unknown model 'vlm-chutes'. Did you mean: vlm-openrouter, vlm-free2, vlm? Available: claude, claude-haiku, claude-haiku-4-5-20251001, claude-opus, claude-opus-4-5, claude-opus-4-6, claude-opus-high, claude-sonnet, claude-sonnet-4-6, claude-sonnet-high, codex-vision, deepseek-direct, gemini, gemini-3, gemini-flash, gemini-flash-free2, gemini-flash-high, gemini-flash-high-free2, gemini-flash-high-paid, gemini-flash-oauth, gemini-flash-paid, gpt-4o, gpt-5.5, haiku, local-text, "
+          }
+        ],
+        "status": "not_described"
+      },
+      {
+        "index": 3,
+        "timestamp": 2.51,
+        "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0004.jpg",
+        "attempts": [
+          {
+            "provider": "scillm",
+            "requested_model": "vlm-chutes",
+            "served_model": null,
+            "status": "failed",
+            "http_status": 400,
+            "error_type": "http_error",
+            "error": "{\"error\":{\"message\":\"Unknown model 'vlm-chutes'. Did you mean: vlm-openrouter, vlm-free2, vlm? Available: claude, claude-haiku, claude-haiku-4-5-20251001, claude-opus, claude-opus-4-5, claude-opus-4-6, claude-opus-high, claude-sonnet, claude-sonnet-4-6, claude-sonnet-high, codex-vision, deepseek-direct, gemini, gemini-3, gemini-flash, gemini-flash-free2, gemini-flash-high, gemini-flash-high-free2, gemini-flash-high-paid, gemini-flash-oauth, gemini-flash-paid, gpt-4o, gpt-5.5, haiku, local-text, "
+          }
+        ],
+        "status": "not_described"
+      },
+      {
+        "index": 4,
+        "timestamp": 3.35,
+        "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0005.jpg",
+        "attempts": [
+          {
+            "provider": "scillm",
+            "requested_model": "vlm-chutes",
+            "served_model": null,
+            "status": "failed",
+            "http_status": 400,
+            "error_type": "http_error",
+            "error": "{\"error\":{\"message\":\"Unknown model 'vlm-chutes'. Did you mean: vlm-openrouter, vlm-free2, vlm? Available: claude, claude-haiku, claude-haiku-4-5-20251001, claude-opus, claude-opus-4-5, claude-opus-4-6, claude-opus-high, claude-sonnet, claude-sonnet-4-6, claude-sonnet-high, codex-vision, deepseek-direct, gemini, gemini-3, gemini-flash, gemini-flash-free2, gemini-flash-high, gemini-flash-high-free2, gemini-flash-high-paid, gemini-flash-oauth, gemini-flash-paid, gpt-4o, gpt-5.5, haiku, local-text, "
+          }
+        ],
+        "status": "not_described"
+      },
+      {
+        "index": 5,
+        "timestamp": 4.18,
+        "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0006.jpg",
+        "attempts": [
+          {
+            "provider": "scillm",
+            "requested_model": "vlm-chutes",
+            "served_model": null,
+            "status": "failed",
+            "http_status": 400,
+            "error_type": "http_error",
+            "error": "{\"error\":{\"message\":\"Unknown model 'vlm-chutes'. Did you mean: vlm-openrouter, vlm-free2, vlm? Available: claude, claude-haiku, claude-haiku-4-5-20251001, claude-opus, claude-opus-4-5, claude-opus-4-6, claude-opus-high, claude-sonnet, claude-sonnet-4-6, claude-sonnet-high, codex-vision, deepseek-direct, gemini, gemini-3, gemini-flash, gemini-flash-free2, gemini-flash-high, gemini-flash-high-free2, gemini-flash-high-paid, gemini-flash-oauth, gemini-flash-paid, gpt-4o, gpt-5.5, haiku, local-text, "
+          }
+        ],
+        "status": "not_described"
+      },
+      {
+        "index": 6,
+        "timestamp": 5.02,
+        "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0007.jpg",
+        "attempts": [
+          {
+            "provider": "scillm",
+            "requested_model": "vlm-chutes",
+            "served_model": null,
+            "status": "failed",
+            "http_status": 400,
+            "error_type": "http_error",
+            "error": "{\"error\":{\"message\":\"Unknown model 'vlm-chutes'. Did you mean: vlm-openrouter, vlm-free2, vlm? Available: claude, claude-haiku, claude-haiku-4-5-20251001, claude-opus, claude-opus-4-5, claude-opus-4-6, claude-opus-high, claude-sonnet, claude-sonnet-4-6, claude-sonnet-high, codex-vision, deepseek-direct, gemini, gemini-3, gemini-flash, gemini-flash-free2, gemini-flash-high, gemini-flash-high-free2, gemini-flash-high-paid, gemini-flash-oauth, gemini-flash-paid, gpt-4o, gpt-5.5, haiku, local-text, "
+          }
+        ],
+        "status": "not_described"
+      },
+      {
+        "index": 7,
+        "timestamp": 5.86,
+        "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0008.jpg",
+        "attempts": [
+          {
+            "provider": "scillm",
+            "requested_model": "vlm-chutes",
+            "served_model": null,
+            "status": "failed",
+            "http_status": 400,
+            "error_type": "http_error",
+            "error": "{\"error\":{\"message\":\"Unknown model 'vlm-chutes'. Did you mean: vlm-openrouter, vlm-free2, vlm? Available: claude, claude-haiku, claude-haiku-4-5-20251001, claude-opus, claude-opus-4-5, claude-opus-4-6, claude-opus-high, claude-sonnet, claude-sonnet-4-6, claude-sonnet-high, codex-vision, deepseek-direct, gemini, gemini-3, gemini-flash, gemini-flash-free2, gemini-flash-high, gemini-flash-high-free2, gemini-flash-high-paid, gemini-flash-oauth, gemini-flash-paid, gpt-4o, gpt-5.5, haiku, local-text, "
+          }
+        ],
+        "status": "not_described"
+      },
+      {
+        "index": 8,
+        "timestamp": 6.69,
+        "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0009.jpg",
+        "attempts": [
+          {
+            "provider": "scillm",
+            "requested_model": "vlm-chutes",
+            "served_model": null,
+            "status": "failed",
+            "http_status": 400,
+            "error_type": "http_error",
+            "error": "{\"error\":{\"message\":\"Unknown model 'vlm-chutes'. Did you mean: vlm-openrouter, vlm-free2, vlm? Available: claude, claude-haiku, claude-haiku-4-5-20251001, claude-opus, claude-opus-4-5, claude-opus-4-6, claude-opus-high, claude-sonnet, claude-sonnet-4-6, claude-sonnet-high, codex-vision, deepseek-direct, gemini, gemini-3, gemini-flash, gemini-flash-free2, gemini-flash-high, gemini-flash-high-free2, gemini-flash-high-paid, gemini-flash-oauth, gemini-flash-paid, gpt-4o, gpt-5.5, haiku, local-text, "
+          }
+        ],
+        "status": "not_described"
+      },
+      {
+        "index": 9,
+        "timestamp": 7.53,
+        "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0010.jpg",
+        "attempts": [
+          {
+            "provider": "scillm",
+            "requested_model": "vlm-chutes",
+            "served_model": null,
+            "status": "failed",
+            "http_status": 400,
+            "error_type": "http_error",
+            "error": "{\"error\":{\"message\":\"Unknown model 'vlm-chutes'. Did you mean: vlm-openrouter, vlm-free2, vlm? Available: claude, claude-haiku, claude-haiku-4-5-20251001, claude-opus, claude-opus-4-5, claude-opus-4-6, claude-opus-high, claude-sonnet, claude-sonnet-4-6, claude-sonnet-high, codex-vision, deepseek-direct, gemini, gemini-3, gemini-flash, gemini-flash-free2, gemini-flash-high, gemini-flash-high-free2, gemini-flash-high-paid, gemini-flash-oauth, gemini-flash-paid, gpt-4o, gpt-5.5, haiku, local-text, "
+          }
+        ],
+        "status": "not_described"
+      },
+      {
+        "index": 10,
+        "timestamp": 8.37,
+        "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0011.jpg",
+        "attempts": [
+          {
+            "provider": "scillm",
+            "requested_model": "vlm-chutes",
+            "served_model": null,
+            "status": "failed",
+            "http_status": 400,
+            "error_type": "http_error",
+            "error": "{\"error\":{\"message\":\"Unknown model 'vlm-chutes'. Did you mean: vlm-openrouter, vlm-free2, vlm? Available: claude, claude-haiku, claude-haiku-4-5-20251001, claude-opus, claude-opus-4-5, claude-opus-4-6, claude-opus-high, claude-sonnet, claude-sonnet-4-6, claude-sonnet-high, codex-vision, deepseek-direct, gemini, gemini-3, gemini-flash, gemini-flash-free2, gemini-flash-high, gemini-flash-high-free2, gemini-flash-high-paid, gemini-flash-oauth, gemini-flash-paid, gpt-4o, gpt-5.5, haiku, local-text, "
+          }
+        ],
+        "status": "not_described"
+      },
+      {
+        "index": 11,
+        "timestamp": 9.2,
+        "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0012.jpg",
+        "attempts": [
+          {
+            "provider": "scillm",
+            "requested_model": "vlm-chutes",
+            "served_model": null,
+            "status": "failed",
+            "http_status": 400,
+            "error_type": "http_error",
+            "error": "{\"error\":{\"message\":\"Unknown model 'vlm-chutes'. Did you mean: vlm-openrouter, vlm-free2, vlm? Available: claude, claude-haiku, claude-haiku-4-5-20251001, claude-opus, claude-opus-4-5, claude-opus-4-6, claude-opus-high, claude-sonnet, claude-sonnet-4-6, claude-sonnet-high, codex-vision, deepseek-direct, gemini, gemini-3, gemini-flash, gemini-flash-free2, gemini-flash-high, gemini-flash-high-free2, gemini-flash-high-paid, gemini-flash-oauth, gemini-flash-paid, gpt-4o, gpt-5.5, haiku, local-text, "
+          }
+        ],
+        "status": "not_described"
+      }
+    ]
+  }
+}

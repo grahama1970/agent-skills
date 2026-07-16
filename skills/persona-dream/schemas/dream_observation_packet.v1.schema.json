@@ -4,25 +4,130 @@
   "title": "Persona Dream observation packet",
   "type": "object",
   "required": [
-    "schema", "status", "dream_id", "revision_id", "evidence_origin",
-    "fixture_backed", "provider_returned", "persona_watched_provider_dream",
-    "source_video", "source_video_sha256", "duration_seconds", "frame_refs",
-    "visual_facts", "transcript_facts", "audible_facts", "timing_facts",
-    "coverage_gaps", "psychological_interpretation_performed", "claims"
+    "schema", "status", "dream_id", "run_id", "revision_id",
+    "activation_transaction_id", "request_body_sha256", "request_id",
+    "evidence_origin", "fixture_backed", "provider_returned",
+    "persona_watched_provider_dream", "actual_provider_call_attempts",
+    "source_video", "source_video_sha256", "source_video_size_bytes",
+    "duration_seconds", "evidence_files", "provider_lineage", "watch_evidence",
+    "audio_strategy", "frame_refs", "frame_evidence", "visual_facts",
+    "transcript_facts", "audible_facts", "timing_facts", "coverage_gaps",
+    "psychological_interpretation_performed", "claims"
   ],
   "properties": {
     "schema": {"const": "persona_dream.dream_observation_packet.v1"},
-    "status": {"enum": ["PASS_DREAM_OBSERVATION_CONTRACT_FIXTURE", "BLOCKED_DREAM_OBSERVATION_CONTRACT"]},
+    "status": {
+      "enum": [
+        "PASS_DREAM_OBSERVATION_CONTRACT_FIXTURE",
+        "PASS_DREAM_OBSERVATION_CONTRACT_PROVIDER_RETURN",
+        "BLOCKED_DREAM_OBSERVATION_CONTRACT"
+      ]
+    },
     "dream_id": {"type": "string", "minLength": 1},
+    "run_id": {"type": ["string", "null"]},
     "revision_id": {"type": "string", "minLength": 1},
+    "activation_transaction_id": {
+      "type": ["string", "null"],
+      "pattern": "^activation-[a-f0-9]{32}$"
+    },
+    "request_body_sha256": {
+      "type": ["string", "null"],
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "request_id": {"type": ["string", "null"]},
     "evidence_origin": {"enum": ["fixture_video", "provider_return"]},
     "fixture_backed": {"type": "boolean"},
     "provider_returned": {"type": "boolean"},
     "persona_watched_provider_dream": {"type": "boolean"},
+    "actual_provider_call_attempts": {"type": "integer", "minimum": 0, "maximum": 1},
     "source_video": {"type": "string", "minLength": 1},
-    "source_video_sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "source_video_sha256": {"$ref": "#/$defs/sha256"},
+    "source_video_size_bytes": {"type": "integer", "minimum": 1},
     "duration_seconds": {"type": "number", "exclusiveMinimum": 0},
+    "evidence_files": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "required": [
+            "provider_return_envelope", "download_ffprobe_receipt",
+            "canonical_request", "frames_manifest", "watch_report",
+            "visual_description_receipt"
+          ],
+          "properties": {
+            "provider_return_envelope": {"$ref": "#/$defs/file_ref"},
+            "download_ffprobe_receipt": {"$ref": "#/$defs/file_ref"},
+            "canonical_request": {"$ref": "#/$defs/file_ref"},
+            "frames_manifest": {"$ref": "#/$defs/file_ref"},
+            "watch_report": {"$ref": "#/$defs/file_ref"},
+            "visual_description_receipt": {"$ref": "#/$defs/file_ref"}
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "provider_lineage": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "required": [
+            "endpoint", "provider_result_sha256", "downloaded_mp4_sha256",
+            "download_receipt_sha256", "provider_return_envelope_sha256"
+          ],
+          "properties": {
+            "endpoint": {"type": "string", "minLength": 1},
+            "provider_result_sha256": {"$ref": "#/$defs/sha256"},
+            "downloaded_mp4_sha256": {"$ref": "#/$defs/sha256"},
+            "download_receipt_sha256": {"$ref": "#/$defs/sha256"},
+            "provider_return_envelope_sha256": {"$ref": "#/$defs/sha256"}
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "watch_evidence": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "required": [
+            "root", "sampling_mode", "frame_count", "described_count",
+            "scene_element_count", "requested_model", "served_models",
+            "gate_status", "codec", "width", "height"
+          ],
+          "properties": {
+            "root": {"type": "string", "minLength": 1},
+            "sampling_mode": {"type": "string", "minLength": 1},
+            "frame_count": {"type": "integer", "minimum": 1},
+            "described_count": {"type": "integer", "minimum": 1},
+            "scene_element_count": {"type": "integer", "minimum": 0},
+            "requested_model": {"type": "string", "minLength": 1},
+            "served_models": {
+              "type": "array", "minItems": 1, "uniqueItems": true,
+              "items": {"type": "string", "minLength": 1}
+            },
+            "gate_status": {"const": "passed"},
+            "codec": {"type": "string", "minLength": 1},
+            "width": {"type": "integer", "minimum": 1},
+            "height": {"type": "integer", "minimum": 1}
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "audio_strategy": {
+      "type": "object",
+      "required": ["generate_audio", "transcript_present", "missing_audio_is_expected"],
+      "properties": {
+        "generate_audio": {"type": ["boolean", "null"]},
+        "transcript_present": {"type": "boolean"},
+        "missing_audio_is_expected": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
     "frame_refs": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "frame_evidence": {"type": "array", "items": {"$ref": "#/$defs/frame_evidence"}},
     "visual_facts": {"type": "array", "items": {"$ref": "#/$defs/fact"}},
     "transcript_facts": {"type": "array", "items": {"$ref": "#/$defs/fact"}},
     "audible_facts": {"type": "array", "items": {"$ref": "#/$defs/fact"}},
@@ -35,10 +140,83 @@
       "properties": {
         "proves": {"type": "array", "items": {"type": "string"}},
         "does_not_prove": {"type": "array", "items": {"type": "string"}}
-      }
+      },
+      "additionalProperties": false
     }
   },
+  "allOf": [
+    {
+      "if": {"properties": {"evidence_origin": {"const": "provider_return"}}},
+      "then": {
+        "properties": {
+          "status": {"const": "PASS_DREAM_OBSERVATION_CONTRACT_PROVIDER_RETURN"},
+          "run_id": {"type": "string", "minLength": 1},
+          "activation_transaction_id": {"type": "string", "pattern": "^activation-[a-f0-9]{32}$"},
+          "request_body_sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+          "request_id": {"type": "string", "minLength": 1},
+          "fixture_backed": {"const": false},
+          "provider_returned": {"const": true},
+          "persona_watched_provider_dream": {"const": true},
+          "actual_provider_call_attempts": {"const": 1},
+          "evidence_files": {"type": "object"},
+          "provider_lineage": {"type": "object"},
+          "watch_evidence": {"type": "object"},
+          "audio_strategy": {
+            "properties": {
+              "generate_audio": {"const": false},
+              "transcript_present": {"const": false},
+              "missing_audio_is_expected": {"const": true}
+            }
+          },
+          "frame_refs": {"minItems": 12, "maxItems": 12},
+          "frame_evidence": {"minItems": 12, "maxItems": 12},
+          "visual_facts": {"minItems": 12, "maxItems": 12},
+          "transcript_facts": {"maxItems": 0},
+          "audible_facts": {"maxItems": 0}
+        }
+      },
+      "else": {
+        "properties": {
+          "status": {"const": "PASS_DREAM_OBSERVATION_CONTRACT_FIXTURE"},
+          "run_id": {"type": "null"},
+          "activation_transaction_id": {"type": "null"},
+          "request_body_sha256": {"type": "null"},
+          "request_id": {"type": "null"},
+          "fixture_backed": {"const": true},
+          "provider_returned": {"const": false},
+          "persona_watched_provider_dream": {"const": false},
+          "actual_provider_call_attempts": {"const": 0},
+          "evidence_files": {"type": "null"},
+          "provider_lineage": {"type": "null"},
+          "watch_evidence": {"type": "null"}
+        }
+      }
+    }
+  ],
   "$defs": {
+    "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "file_ref": {
+      "type": "object",
+      "required": ["path", "sha256", "size_bytes"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1, "not": {"pattern": "(^/|^[A-Za-z]:[\\\\/]|(^|/)\\.\\.(/|$))"}},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "size_bytes": {"type": "integer", "minimum": 1}
+      },
+      "additionalProperties": false
+    },
+    "frame_evidence": {
+      "type": "object",
+      "required": ["index", "timestamp_seconds", "path", "sha256", "size_bytes"],
+      "properties": {
+        "index": {"type": "integer", "minimum": 0},
+        "timestamp_seconds": {"type": "number", "minimum": 0},
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "size_bytes": {"type": "integer", "minimum": 1}
+      },
+      "additionalProperties": false
+    },
     "fact": {
       "type": "object",
       "required": ["fact_id", "statement", "time_range", "evidence_refs", "confidence"],
@@ -48,7 +226,9 @@
         "time_range": {"type": "array", "prefixItems": [{"type": "number"}, {"type": "number"}], "items": false},
         "evidence_refs": {"type": "array", "minItems": 1, "items": {"type": "string"}},
         "confidence": {"type": "number", "minimum": 0, "maximum": 1}
-      }
+      },
+      "additionalProperties": false
     }
-  }
+  },
+  "additionalProperties": false
 }

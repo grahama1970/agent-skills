@@ -1,0 +1,220 @@
+{
+  "schema": "watch.visual_description_receipt.v1",
+  "status": "all_models_failed",
+  "mocked": false,
+  "live": true,
+  "requested_model": "vlm-chutes",
+  "fallback_models": [],
+  "frame_count": 12,
+  "described_count": 0,
+  "gate": {
+    "status": "failed",
+    "reason": "no_frame_descriptions"
+  },
+  "frames": [
+    {
+      "index": 0,
+      "timestamp": 0.0,
+      "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0001.jpg",
+      "attempts": [
+        {
+          "provider": "scillm",
+          "requested_model": "vlm-chutes",
+          "served_model": null,
+          "status": "failed",
+          "http_status": 400,
+          "error_type": "http_error",
+          "error": "{\"error\":{\"message\":\"Unknown model 'vlm-chutes'. Did you mean: vlm-openrouter, vlm-free2, vlm? Available: claude, claude-haiku, claude-haiku-4-5-20251001, claude-opus, claude-opus-4-5, claude-opus-4-6, claude-opus-high, claude-sonnet, claude-sonnet-4-6, claude-sonnet-high, codex-vision, deepseek-direct, gemini, gemini-3, gemini-flash, gemini-flash-free2, gemini-flash-high, gemini-flash-high-free2, gemini-flash-high-paid, gemini-flash-oauth, gemini-flash-paid, gpt-4o, gpt-5.5, haiku, local-text, "
+        }
+      ],
+      "status": "not_described"
+    },
+    {
+      "index": 1,
+      "timestamp": 0.84,
+      "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0002.jpg",
+      "attempts": [
+        {
+          "provider": "scillm",
+          "requested_model": "vlm-chutes",
+          "served_model": null,
+          "status": "failed",
+          "http_status": 400,
+          "error_type": "http_error",
+          "error": "{\"error\":{\"message\":\"Unknown model 'vlm-chutes'. Did you mean: vlm-openrouter, vlm-free2, vlm? Available: claude, claude-haiku, claude-haiku-4-5-20251001, claude-opus, claude-opus-4-5, claude-opus-4-6, claude-opus-high, claude-sonnet, claude-sonnet-4-6, claude-sonnet-high, codex-vision, deepseek-direct, gemini, gemini-3, gemini-flash, gemini-flash-free2, gemini-flash-high, gemini-flash-high-free2, gemini-flash-high-paid, gemini-flash-oauth, gemini-flash-paid, gpt-4o, gpt-5.5, haiku, local-text, "
+        }
+      ],
+      "status": "not_described"
+    },
+    {
+      "index": 2,
+      "timestamp": 1.67,
+      "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0003.jpg",
+      "attempts": [
+        {
+          "provider": "scillm",
+          "requested_model": "vlm-chutes",
+          "served_model": null,
+          "status": "failed",
+          "http_status": 400,
+          "error_type": "http_error",
+          "error": "{\"error\":{\"message\":\"Unknown model 'vlm-chutes'. Did you mean: vlm-openrouter, vlm-free2, vlm? Available: claude, claude-haiku, claude-haiku-4-5-20251001, claude-opus, claude-opus-4-5, claude-opus-4-6, claude-opus-high, claude-sonnet, claude-sonnet-4-6, claude-sonnet-high, codex-vision, deepseek-direct, gemini, gemini-3, gemini-flash, gemini-flash-free2, gemini-flash-high, gemini-flash-high-free2, gemini-flash-high-paid, gemini-flash-oauth, gemini-flash-paid, gpt-4o, gpt-5.5, haiku, local-text, "
+        }
+      ],
+      "status": "not_described"
+    },
+    {
+      "index": 3,
+      "timestamp": 2.51,
+      "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0004.jpg",
+      "attempts": [
+        {
+          "provider": "scillm",
+          "requested_model": "vlm-chutes",
+          "served_model": null,
+          "status": "failed",
+          "http_status": 400,
+          "error_type": "http_error",
+          "error": "{\"error\":{\"message\":\"Unknown model 'vlm-chutes'. Did you mean: vlm-openrouter, vlm-free2, vlm? Available: claude, claude-haiku, claude-haiku-4-5-20251001, claude-opus, claude-opus-4-5, claude-opus-4-6, claude-opus-high, claude-sonnet, claude-sonnet-4-6, claude-sonnet-high, codex-vision, deepseek-direct, gemini, gemini-3, gemini-flash, gemini-flash-free2, gemini-flash-high, gemini-flash-high-free2, gemini-flash-high-paid, gemini-flash-oauth, gemini-flash-paid, gpt-4o, gpt-5.5, haiku, local-text, "
+        }
+      ],
+      "status": "not_described"
+    },
+    {
+      "index": 4,
+      "timestamp": 3.35,
+      "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0005.jpg",
+      "attempts": [
+        {
+          "provider": "scillm",
+          "requested_model": "vlm-chutes",
+          "served_model": null,
+          "status": "failed",
+          "http_status": 400,
+          "error_type": "http_error",
+          "error": "{\"error\":{\"message\":\"Unknown model 'vlm-chutes'. Did you mean: vlm-openrouter, vlm-free2, vlm? Available: claude, claude-haiku, claude-haiku-4-5-20251001, claude-opus, claude-opus-4-5, claude-opus-4-6, claude-opus-high, claude-sonnet, claude-sonnet-4-6, claude-sonnet-high, codex-vision, deepseek-direct, gemini, gemini-3, gemini-flash, gemini-flash-free2, gemini-flash-high, gemini-flash-high-free2, gemini-flash-high-paid, gemini-flash-oauth, gemini-flash-paid, gpt-4o, gpt-5.5, haiku, local-text, "
+        }
+      ],
+      "status": "not_described"
+    },
+    {
+      "index": 5,
+      "timestamp": 4.18,
+      "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0006.jpg",
+      "attempts": [
+        {
+          "provider": "scillm",
+          "requested_model": "vlm-chutes",
+          "served_model": null,
+          "status": "failed",
+          "http_status": 400,
+          "error_type": "http_error",
+          "error": "{\"error\":{\"message\":\"Unknown model 'vlm-chutes'. Did you mean: vlm-openrouter, vlm-free2, vlm? Available: claude, claude-haiku, claude-haiku-4-5-20251001, claude-opus, claude-opus-4-5, claude-opus-4-6, claude-opus-high, claude-sonnet, claude-sonnet-4-6, claude-sonnet-high, codex-vision, deepseek-direct, gemini, gemini-3, gemini-flash, gemini-flash-free2, gemini-flash-high, gemini-flash-high-free2, gemini-flash-high-paid, gemini-flash-oauth, gemini-flash-paid, gpt-4o, gpt-5.5, haiku, local-text, "
+        }
+      ],
+      "status": "not_described"
+    },
+    {
+      "index": 6,
+      "timestamp": 5.02,
+      "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0007.jpg",
+      "attempts": [
+        {
+          "provider": "scillm",
+          "requested_model": "vlm-chutes",
+          "served_model": null,
+          "status": "failed",
+          "http_status": 400,
+          "error_type": "http_error",
+          "error": "{\"error\":{\"message\":\"Unknown model 'vlm-chutes'. Did you mean: vlm-openrouter, vlm-free2, vlm? Available: claude, claude-haiku, claude-haiku-4-5-20251001, claude-opus, claude-opus-4-5, claude-opus-4-6, claude-opus-high, claude-sonnet, claude-sonnet-4-6, claude-sonnet-high, codex-vision, deepseek-direct, gemini, gemini-3, gemini-flash, gemini-flash-free2, gemini-flash-high, gemini-flash-high-free2, gemini-flash-high-paid, gemini-flash-oauth, gemini-flash-paid, gpt-4o, gpt-5.5, haiku, local-text, "
+        }
+      ],
+      "status": "not_described"
+    },
+    {
+      "index": 7,
+      "timestamp": 5.86,
+      "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0008.jpg",
+      "attempts": [
+        {
+          "provider": "scillm",
+          "requested_model": "vlm-chutes",
+          "served_model": null,
+          "status": "failed",
+          "http_status": 400,
+          "error_type": "http_error",
+          "error": "{\"error\":{\"message\":\"Unknown model 'vlm-chutes'. Did you mean: vlm-openrouter, vlm-free2, vlm? Available: claude, claude-haiku, claude-haiku-4-5-20251001, claude-opus, claude-opus-4-5, claude-opus-4-6, claude-opus-high, claude-sonnet, claude-sonnet-4-6, claude-sonnet-high, codex-vision, deepseek-direct, gemini, gemini-3, gemini-flash, gemini-flash-free2, gemini-flash-high, gemini-flash-high-free2, gemini-flash-high-paid, gemini-flash-oauth, gemini-flash-paid, gpt-4o, gpt-5.5, haiku, local-text, "
+        }
+      ],
+      "status": "not_described"
+    },
+    {
+      "index": 8,
+      "timestamp": 6.69,
+      "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0009.jpg",
+      "attempts": [
+        {
+          "provider": "scillm",
+          "requested_model": "vlm-chutes",
+          "served_model": null,
+          "status": "failed",
+          "http_status": 400,
+          "error_type": "http_error",
+          "error": "{\"error\":{\"message\":\"Unknown model 'vlm-chutes'. Did you mean: vlm-openrouter, vlm-free2, vlm? Available: claude, claude-haiku, claude-haiku-4-5-20251001, claude-opus, claude-opus-4-5, claude-opus-4-6, claude-opus-high, claude-sonnet, claude-sonnet-4-6, claude-sonnet-high, codex-vision, deepseek-direct, gemini, gemini-3, gemini-flash, gemini-flash-free2, gemini-flash-high, gemini-flash-high-free2, gemini-flash-high-paid, gemini-flash-oauth, gemini-flash-paid, gpt-4o, gpt-5.5, haiku, local-text, "
+        }
+      ],
+      "status": "not_described"
+    },
+    {
+      "index": 9,
+      "timestamp": 7.53,
+      "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0010.jpg",
+      "attempts": [
+        {
+          "provider": "scillm",
+          "requested_model": "vlm-chutes",
+          "served_model": null,
+          "status": "failed",
+          "http_status": 400,
+          "error_type": "http_error",
+          "error": "{\"error\":{\"message\":\"Unknown model 'vlm-chutes'. Did you mean: vlm-openrouter, vlm-free2, vlm? Available: claude, claude-haiku, claude-haiku-4-5-20251001, claude-opus, claude-opus-4-5, claude-opus-4-6, claude-opus-high, claude-sonnet, claude-sonnet-4-6, claude-sonnet-high, codex-vision, deepseek-direct, gemini, gemini-3, gemini-flash, gemini-flash-free2, gemini-flash-high, gemini-flash-high-free2, gemini-flash-high-paid, gemini-flash-oauth, gemini-flash-paid, gpt-4o, gpt-5.5, haiku, local-text, "
+        }
+      ],
+      "status": "not_described"
+    },
+    {
+      "index": 10,
+      "timestamp": 8.37,
+      "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0011.jpg",
+      "attempts": [
+        {
+          "provider": "scillm",
+          "requested_model": "vlm-chutes",
+          "served_model": null,
+          "status": "failed",
+          "http_status": 400,
+          "error_type": "http_error",
+          "error": "{\"error\":{\"message\":\"Unknown model 'vlm-chutes'. Did you mean: vlm-openrouter, vlm-free2, vlm? Available: claude, claude-haiku, claude-haiku-4-5-20251001, claude-opus, claude-opus-4-5, claude-opus-4-6, claude-opus-high, claude-sonnet, claude-sonnet-4-6, claude-sonnet-high, codex-vision, deepseek-direct, gemini, gemini-3, gemini-flash, gemini-flash-free2, gemini-flash-high, gemini-flash-high-free2, gemini-flash-high-paid, gemini-flash-oauth, gemini-flash-paid, gpt-4o, gpt-5.5, haiku, local-text, "
+        }
+      ],
+      "status": "not_described"
+    },
+    {
+      "index": 11,
+      "timestamp": 9.2,
+      "path": "/home/graham/.local/share/agent-skills/watch-frames/providerreturn/frame_0012.jpg",
+      "attempts": [
+        {
+          "provider": "scillm",
+          "requested_model": "vlm-chutes",
+          "served_model": null,
+          "status": "failed",
+          "http_status": 400,
+          "error_type": "http_error",
+          "error": "{\"error\":{\"message\":\"Unknown model 'vlm-chutes'. Did you mean: vlm-openrouter, vlm-free2, vlm? Available: claude, claude-haiku, claude-haiku-4-5-20251001, claude-opus, claude-opus-4-5, claude-opus-4-6, claude-opus-high, claude-sonnet, claude-sonnet-4-6, claude-sonnet-high, codex-vision, deepseek-direct, gemini, gemini-3, gemini-flash, gemini-flash-free2, gemini-flash-high, gemini-flash-high-free2, gemini-flash-high-paid, gemini-flash-oauth, gemini-flash-paid, gpt-4o, gpt-5.5, haiku, local-text, "
+        }
+      ],
+      "status": "not_described"
+    }
+  ]
+}

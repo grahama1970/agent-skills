@@ -1,0 +1,47 @@
+{
+  "schema": "persona_dream.phase11_authorization_packet.v1",
+  "decision": "APPROVE",
+  "decision_source": "EXPLICIT_HUMAN",
+  "run_id": "pipeline-complete",
+  "revision_id": "rev_idea_f3f9c48d5cc2",
+  "activation_transaction_id": "activation-f316f5e66ba900751235c2ee3cd27da3",
+  "approver": {
+    "id": "graham",
+    "display_name": "Graham",
+    "authority_basis": "Project owner explicitly reconfirmed all five approvals for the exact pending request in the active Codex session"
+  },
+  "approved_at": "2026-07-16T17:16:09Z",
+  "expires_at": "2026-07-16T19:16:09Z",
+  "purpose": "PERSONA_DREAM_PHASE11_SINGLE_KLING_CANARY",
+  "authorization_scope": "ONE_PAID_PROVIDER_GENERATION_NO_AUTOMATIC_RESUBMIT",
+  "currency": "USD",
+  "maximum_spend_usd": 0.84,
+  "revoked": false,
+  "revocation_state": "NOT_REVOKED",
+  "approval_types": [
+    "publication_authorization",
+    "visual_media_acceptance",
+    "exact_request_acceptance",
+    "cost_acceptance",
+    "paid_call_authorization"
+  ],
+  "bindings": {
+    "run_id": "pipeline-complete",
+    "revision_id": "rev_idea_f3f9c48d5cc2",
+    "activation_transaction_id": "activation-f316f5e66ba900751235c2ee3cd27da3",
+    "provider_id": "kling",
+    "endpoint": "fal-ai/kling-video/v3/standard/image-to-video",
+    "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+    "media_binding_manifest_sha256": "sha256:a7aecf73843c8f4003ae543c9d02cebdbfdb1d0dc23e36bc47891d6a769ecd0d",
+    "media_input_contract_sha256": "sha256:b2571d6016880d4b9fb04e8e38f0ba8cef1b9cf906cc5fc4566fcf938acd0b55",
+    "provider_source_snapshot_sha256": "sha256:c7acba3a4dc8431d7a5417b4d1f306614ff99e4ee87199a7e9bfd80b8b37fc18",
+    "pricing_snapshot_sha256": "sha256:6d0fced064e7a04a1ee37f1c32624855ab0943c10400fc96e6f7b0f63a522192",
+    "actual_provider_call_attempts": 0
+  },
+  "acknowledgements": {
+    "authorize_one_paid_generation": true,
+    "no_automatic_resubmit": true,
+    "ambiguous_submit_requires_human_reconciliation": true,
+    "provider_return_does_not_authorize_watch_or_cognition": true
+  }
+}

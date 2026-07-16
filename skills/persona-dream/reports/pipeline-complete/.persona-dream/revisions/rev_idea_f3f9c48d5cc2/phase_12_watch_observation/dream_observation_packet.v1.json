@@ -1,0 +1,358 @@
+{
+  "activation_transaction_id": "activation-f316f5e66ba900751235c2ee3cd27da3",
+  "actual_provider_call_attempts": 1,
+  "audible_facts": [],
+  "audio_strategy": {
+    "generate_audio": false,
+    "missing_audio_is_expected": true,
+    "transcript_present": false
+  },
+  "claims": {
+    "does_not_prove": [
+      "what the dream means psychologically",
+      "audible content or a transcript",
+      "synthetic-dream Memory persistence",
+      "later persona behavior or identity preservation"
+    ],
+    "proves": [
+      "the Phase 11 provider-return envelope, download receipt, and local MP4 agree on one exact request and MP4 hash",
+      "Watch analyzed the exact provider-return MP4 and passed its live visual-description gate for twelve frames",
+      "the packet contains evidence-only visual observations bound to rehashed frame files"
+    ]
+  },
+  "coverage_gaps": [
+    "transcript_absent_expected_generate_audio_false",
+    "audio_stream_absent_expected_generate_audio_false"
+  ],
+  "dream_id": "dream_ff2ce7f310fdda2d",
+  "duration_seconds": 10.041667,
+  "evidence_files": {
+    "canonical_request": {
+      "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/canonical/phase11_live_request.v1.json",
+      "sha256": "sha256:cfe35df89bddb6fde5d4f40d64c6a20e2f8addcf2a19af2900d47bfea9756fe2",
+      "size_bytes": 9906
+    },
+    "download_ffprobe_receipt": {
+      "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/phase11_download_ffprobe_receipt.v1.json",
+      "sha256": "sha256:b2a261e352b35abe79aedf9d9b4ad8e736b82edd7f2573d71251641b1d707515",
+      "size_bytes": 1157
+    },
+    "frames_manifest": {
+      "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames_manifest.json",
+      "sha256": "sha256:34a78c577684ce9d2475db051b3fba2b831bd7a0db327b5c53d77894af7fd506",
+      "size_bytes": 4904
+    },
+    "provider_return_envelope": {
+      "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/phase11_provider_return_envelope.v1.json",
+      "sha256": "sha256:2a8c72664191d900cbcab33bbdff7e56eaabcd117c7048c5388d3348537fb7d6",
+      "size_bytes": 1304
+    },
+    "visual_description_receipt": {
+      "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/visual_description_receipt.json",
+      "sha256": "sha256:903b9e8fc564d2f12df4d20bfe5a19e1d11766f8fe426e7b40548b9ab161fc74",
+      "size_bytes": 5855
+    },
+    "watch_report": {
+      "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/report.json",
+      "sha256": "sha256:3715a4f3f2f5cf2fe64cd9e731c899049768439aa54791d60343b3e0786f3509",
+      "size_bytes": 49797
+    }
+  },
+  "evidence_origin": "provider_return",
+  "fixture_backed": false,
+  "frame_evidence": [
+    {
+      "index": 0,
+      "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0001.jpg",
+      "sha256": "sha256:5442361ed62cc5370b7b02435f10cd2f71df46e981eb8d54735b5aca4242595f",
+      "size_bytes": 39122,
+      "timestamp_seconds": 0.0
+    },
+    {
+      "index": 1,
+      "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0002.jpg",
+      "sha256": "sha256:b151cd3dc30ec1605bdd2257ba9e83bc60fc4648c48a5c4e8ddbc8c6adaf3842",
+      "size_bytes": 37661,
+      "timestamp_seconds": 0.84
+    },
+    {
+      "index": 2,
+      "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0003.jpg",
+      "sha256": "sha256:18c38a7fe788dddd97c80cc196287ee377e7d705cd84b0f4491c5b74f8402611",
+      "size_bytes": 29650,
+      "timestamp_seconds": 1.67
+    },
+    {
+      "index": 3,
+      "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0004.jpg",
+      "sha256": "sha256:705296846befbf0cd28c3fee2a331f94722ae2da2a2c377c81f6d8ac89133947",
+      "size_bytes": 29538,
+      "timestamp_seconds": 2.51
+    },
+    {
+      "index": 4,
+      "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0005.jpg",
+      "sha256": "sha256:348074c99daee1d05dea60694c12c7dafe06a5ec05161950fd04f57cc90ae4fd",
+      "size_bytes": 30763,
+      "timestamp_seconds": 3.35
+    },
+    {
+      "index": 5,
+      "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0006.jpg",
+      "sha256": "sha256:63be55e067af86548f5851b91ffbc1484232d27ce70063d2bfdaac192aba3036",
+      "size_bytes": 30320,
+      "timestamp_seconds": 4.18
+    },
+    {
+      "index": 6,
+      "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0007.jpg",
+      "sha256": "sha256:0578d09dc0cd96f7662946ef161f9d8b57fc701b12ab728e90a6e33a6740a29c",
+      "size_bytes": 40862,
+      "timestamp_seconds": 5.02
+    },
+    {
+      "index": 7,
+      "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0008.jpg",
+      "sha256": "sha256:22f91f4fe73195ee31a9c2fd9d4d55c509065c22e7d2a13544943e491eb75a3a",
+      "size_bytes": 37705,
+      "timestamp_seconds": 5.86
+    },
+    {
+      "index": 8,
+      "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0009.jpg",
+      "sha256": "sha256:c401be3ab810772d6e4b5f09fddbff7b1076ab5e067a52a4796793449fc96b6c",
+      "size_bytes": 37986,
+      "timestamp_seconds": 6.69
+    },
+    {
+      "index": 9,
+      "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0010.jpg",
+      "sha256": "sha256:b66aabc724c7c2fbbb54d867558ecc7df060e84036b1dba8f9c70e6bf9831423",
+      "size_bytes": 37041,
+      "timestamp_seconds": 7.53
+    },
+    {
+      "index": 10,
+      "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0011.jpg",
+      "sha256": "sha256:269ae09289d0393b9be53c4d0b759e1812bcb45980a6580e1b3972562cf81439",
+      "size_bytes": 36685,
+      "timestamp_seconds": 8.37
+    },
+    {
+      "index": 11,
+      "path": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0012.jpg",
+      "sha256": "sha256:3e16a019b15f71c363a4aae321c1eff152f497575d24a8b425318fd687e49fc7",
+      "size_bytes": 37257,
+      "timestamp_seconds": 9.2
+    }
+  ],
+  "frame_refs": [
+    ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0001.jpg",
+    ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0002.jpg",
+    ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0003.jpg",
+    ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0004.jpg",
+    ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0005.jpg",
+    ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0006.jpg",
+    ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0007.jpg",
+    ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0008.jpg",
+    ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0009.jpg",
+    ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0010.jpg",
+    ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0011.jpg",
+    ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0012.jpg"
+  ],
+  "persona_watched_provider_dream": true,
+  "provider_lineage": {
+    "download_receipt_sha256": "sha256:b2a261e352b35abe79aedf9d9b4ad8e736b82edd7f2573d71251641b1d707515",
+    "downloaded_mp4_sha256": "sha256:2545394fb8e48694acb2751b25cbf6fc55a4dfdbde66e241deecfb5f2f1ecd33",
+    "endpoint": "fal-ai/kling-video/v3/standard/image-to-video",
+    "provider_result_sha256": "sha256:d8ca3f8dc1aaa4b75300dccb2ffe0e73a63514a30c5058fd4c4a2b409d4c9592",
+    "provider_return_envelope_sha256": "sha256:2a8c72664191d900cbcab33bbdff7e56eaabcd117c7048c5388d3348537fb7d6"
+  },
+  "provider_returned": true,
+  "psychological_interpretation_performed": false,
+  "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+  "request_id": "019f6bef-0c0f-7921-8a5e-a1f12890fb75",
+  "revision_id": "rev_idea_f3f9c48d5cc2",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.dream_observation_packet.v1",
+  "source_video": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/provider_return.mp4",
+  "source_video_sha256": "sha256:2545394fb8e48694acb2751b25cbf6fc55a4dfdbde66e241deecfb5f2f1ecd33",
+  "source_video_size_bytes": 18520578,
+  "status": "PASS_DREAM_OBSERVATION_CONTRACT_PROVIDER_RETURN",
+  "timing_facts": [
+    {
+      "confidence": 1.0,
+      "evidence_refs": [
+        ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/provider_return.mp4"
+      ],
+      "fact_id": "timing-duration",
+      "statement": "The provider-return video duration is 10.041667 seconds.",
+      "time_range": [
+        0.0,
+        10.041667
+      ]
+    }
+  ],
+  "transcript_facts": [],
+  "visual_facts": [
+    {
+      "confidence": 1.0,
+      "evidence_refs": [
+        ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0001.jpg"
+      ],
+      "fact_id": "visual-001",
+      "statement": "Two people in wet dark tops sit on surfboards in shallow ocean water, looking in different directions. The sunny coastal setting shows waves, other surfers in the background, palm trees, mountains, and a partly cloudy sky.",
+      "time_range": [
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "confidence": 1.0,
+      "evidence_refs": [
+        ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0002.jpg"
+      ],
+      "fact_id": "visual-002",
+      "statement": "In bright daylight on the ocean near a beach with palm trees, distant mountains, clouds, and other surfers in the water, a woman in a dark blue collared shirt and a man in a black wet shirt are partly submerged beside surfboards. They are sitting or floating in the water, facing forward with the wom",
+      "time_range": [
+        0.84,
+        0.84
+      ]
+    },
+    {
+      "confidence": 1.0,
+      "evidence_refs": [
+        ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0003.jpg"
+      ],
+      "fact_id": "visual-003",
+      "statement": "In bright daylight at a coastal ocean spot, a woman in a dark short-sleeve wetsuit top is chest-deep in turquoise water with clouds, shoreline rocks, and distant swimmers or surfers behind her. She is holding onto a white surfboard and looking off to the side while waves ripple around her.",
+      "time_range": [
+        1.67,
+        1.67
+      ]
+    },
+    {
+      "confidence": 1.0,
+      "evidence_refs": [
+        ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0004.jpg"
+      ],
+      "fact_id": "visual-004",
+      "statement": "In bright daylight on a calm ocean near a rocky shoreline, a woman in a dark short-sleeve rash guard is partly submerged in the water beside a white surfboard. She is holding the board with one hand while her other arm is raised slightly, with swimmers or surfers visible in the background under a cl",
+      "time_range": [
+        2.51,
+        2.51
+      ]
+    },
+    {
+      "confidence": 1.0,
+      "evidence_refs": [
+        ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0005.jpg"
+      ],
+      "fact_id": "visual-005",
+      "statement": "A woman in a dark short-sleeved rash guard is in clear ocean water, leaning on a white surfboard under bright daylight. Behind her are swimmers, a rocky shoreline with greenery, distant land, and a partly cloudy sky.",
+      "time_range": [
+        3.35,
+        3.35
+      ]
+    },
+    {
+      "confidence": 1.0,
+      "evidence_refs": [
+        ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0006.jpg"
+      ],
+      "fact_id": "visual-006",
+      "statement": "A woman in a dark short-sleeve zip-up swim shirt is in bright daylight in the ocean, leaning on a white surfboard with her arms crossed over it. Behind her are swimmers in the water, a rocky shoreline with greenery, distant mountains or clouds, and a blue sky.",
+      "time_range": [
+        4.18,
+        4.18
+      ]
+    },
+    {
+      "confidence": 1.0,
+      "evidence_refs": [
+        ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0007.jpg"
+      ],
+      "fact_id": "visual-007",
+      "statement": "In bright daylight, two surfers in dark short-sleeve rash guards lie on white surfboards in clear ocean water near breaking waves, with a palm-lined shore in the distance. The woman looks to the side while the man looks toward her, and other surfers are visible farther out on the waves.",
+      "time_range": [
+        5.02,
+        5.02
+      ]
+    },
+    {
+      "confidence": 1.0,
+      "evidence_refs": [
+        ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0008.jpg"
+      ],
+      "fact_id": "visual-008",
+      "statement": "In bright daylight on the ocean near breaking waves and distant surfers, two people sit on surfboards in the water. The woman in a navy short-sleeve rash guard looks toward the man, who wears a black rash guard and raises one hand in front of him.",
+      "time_range": [
+        5.86,
+        5.86
+      ]
+    },
+    {
+      "confidence": 1.0,
+      "evidence_refs": [
+        ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0009.jpg"
+      ],
+      "fact_id": "visual-009",
+      "statement": "Two surfers in dark short-sleeve rash guards lie on white surfboards in clear ocean water, facing each other as they talk. The scene is lit by bright daylight under a cloudy sky, with other surfers, a rocky shoreline, trees, parked cars, and distant mountains visible in the background.",
+      "time_range": [
+        6.69,
+        6.69
+      ]
+    },
+    {
+      "confidence": 1.0,
+      "evidence_refs": [
+        ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0010.jpg"
+      ],
+      "fact_id": "visual-010",
+      "statement": "Two surfers in dark rash guards are lying on surfboards in clear ocean water near a rocky shoreline with trees, parked cars, and other surfers in the background. The scene is lit by daylight under a partly cloudy sky, with gentle waves and boards visible around them.",
+      "time_range": [
+        7.53,
+        7.53
+      ]
+    },
+    {
+      "confidence": 1.0,
+      "evidence_refs": [
+        ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0011.jpg"
+      ],
+      "fact_id": "visual-011",
+      "statement": "In bright daylight on a cloudy beachside ocean, two people in dark rash guards lie on white surfboards in shallow blue-green water. Other surfers, a rocky shoreline, trees, parked cars, and distant hills are visible in the background.",
+      "time_range": [
+        8.37,
+        8.37
+      ]
+    },
+    {
+      "confidence": 1.0,
+      "evidence_refs": [
+        ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision/frames/frame_0012.jpg"
+      ],
+      "fact_id": "visual-012",
+      "statement": "In bright daylight on a turquoise ocean near a rocky, tree-lined shore, two people are lying on surfboards in the water. The woman on the left wears a dark short-sleeve rash guard and paddles with one arm, while the man on the right wears a black rash guard and rests on a white surfboard with other",
+      "time_range": [
+        9.2,
+        9.2
+      ]
+    }
+  ],
+  "watch_evidence": {
+    "codec": "h264",
+    "described_count": 12,
+    "frame_count": 12,
+    "gate_status": "passed",
+    "height": 720,
+    "requested_model": "codex-vision",
+    "root": ".persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/watch-codex-vision",
+    "sampling_mode": "uniform-fallback",
+    "scene_element_count": 12,
+    "served_models": [
+      "gpt-5.5"
+    ],
+    "width": 1280
+  }
+}

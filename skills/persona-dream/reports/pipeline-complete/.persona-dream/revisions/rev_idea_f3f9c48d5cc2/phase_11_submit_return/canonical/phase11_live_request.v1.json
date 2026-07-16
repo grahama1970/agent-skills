@@ -44,13 +44,7 @@
   "generation_call_started": false,
   "live": false,
   "live_submit_ready": false,
-  "missing_approval_types": [
-    "cost_acceptance",
-    "exact_request_acceptance",
-    "paid_call_authorization",
-    "publication_authorization",
-    "visual_media_acceptance"
-  ],
+  "missing_approval_types": [],
   "mocked": false,
   "mode": "standard",
   "paid_call_authorized": false,
@@ -177,7 +171,9 @@
     }
   },
   "source_revision_id": "rev_repair_a8b93ffeca8f",
-  "status": "BLOCKED_AWAITING_HUMAN_APPROVAL",
+  "status": "BLOCKED_PROVIDER_GATE",
   "submitted": false,
-  "technical_blockers": []
+  "technical_blockers": [
+    "BLOCKED_PHASE11_EXPLICIT_EXECUTION_NOT_STARTED"
+  ]
 }
