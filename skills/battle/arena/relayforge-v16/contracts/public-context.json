@@ -1,7 +1,7 @@
 {
   "schema": "battle.v16.public_context.v1",
   "target_id": "battle-v16-relayforge-a",
-  "semantic_version": "0.1.0-skeleton",
+  "semantic_version": "0.2.0-partial",
   "public_entry_points": [
     {
       "method": "POST",
@@ -91,7 +91,9 @@
       "cache_result",
       "redirect_hop_count",
       "public_function_id",
-      "functional_result"
+      "functional_result",
+      "observation_id",
+      "transformed_object_count"
     ],
     "forbidden_fields": [
       "internal service identifiers",
@@ -104,13 +106,14 @@
   },
   "claims": {
     "may_claim": [
-      "The public RelayForge contract and bounded campaign budget are frozen"
+      "The public RelayForge contract and bounded campaign budget are frozen",
+      "One transformed-object vertical and all six public functionality contracts are executable"
     ],
     "must_not_claim": [
-      "Any security predicate is implemented",
-      "Any real exploit path is reachable",
-      "Any Blue defense is effective",
-      "The target is qualified"
+      "The remaining hidden security paths are implemented",
+      "The legacy surface is behaviorally validated as a decoy",
+      "The full target is deterministically qualified",
+      "The live qualification canary may begin"
     ]
   }
 }

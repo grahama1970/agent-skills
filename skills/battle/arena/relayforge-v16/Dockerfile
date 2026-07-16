@@ -3,6 +3,7 @@ FROM ${RELAYFORGE_BASE_IMAGE}
 
 WORKDIR /opt/relayforge
 COPY service.py /opt/relayforge/service.py
+COPY rf_a_reference.py /opt/relayforge/rf_a_reference.py
 COPY judge /opt/relayforge/judge
 
 RUN mkdir -p \

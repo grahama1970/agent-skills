@@ -3,11 +3,62 @@
   "$id": "battle.v16.judge_outcome.v1",
   "type": "object",
   "additionalProperties": false,
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "stage": {"enum": ["UNSEEN", "EVIDENCE_GATHERED", "REPRODUCIBLE_PROBE", "BOUNDARY_VIOLATION", "PROTECTED_OBJECTIVE"]},
+    "pathOutcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "path_id": {"enum": ["RF-A", "RF-B", "RF-C"]},
+        "implementation_status": {"enum": ["IMPLEMENTED", "UNIMPLEMENTED"]},
+        "highest_stage": {"$ref": "#/$defs/stage"},
+        "sink_after_sha256": {"$ref": "#/$defs/sha256"}
+      },
+      "required": ["path_id", "implementation_status", "highest_stage", "sink_after_sha256"]
+    }
+  },
   "properties": {
     "schema": {"const": "battle.v16.judge_outcome.v1"},
     "status": {"const": "BLOCKED"},
     "target_id": {"const": "battle-v16-relayforge-a"},
-    "reason": {"type": "string", "minLength": 1},
+    "reason": {"const": "rf_a_implemented_but_relayforge_target_incomplete"},
+    "rf_a_vertical": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema": {"const": "battle.v16.relayforge.rf_a_vertical.v1"},
+        "status": {"enum": ["PASS", "FAIL"]},
+        "artifact_sha256": {
+          "type": "object",
+          "minProperties": 6,
+          "additionalProperties": {"$ref": "#/$defs/sha256"}
+        },
+        "vulnerable_highest_stage": {"$ref": "#/$defs/stage"},
+        "defended_highest_stage": {"$ref": "#/$defs/stage"},
+        "regression_pass_count": {"type": "integer", "minimum": 0, "maximum": 6},
+        "shortcut_pass_count": {"type": "integer", "minimum": 0},
+        "sink_isolation_status": {"enum": ["PASS", "FAIL"]},
+        "reset_replay_byte_identical": {"type": "boolean"}
+      },
+      "required": [
+        "schema",
+        "status",
+        "artifact_sha256",
+        "vulnerable_highest_stage",
+        "defended_highest_stage",
+        "regression_pass_count",
+        "shortcut_pass_count",
+        "sink_isolation_status",
+        "reset_replay_byte_identical"
+      ]
+    },
+    "path_outcomes": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {"$ref": "#/$defs/pathOutcome"}
+    },
     "unfinished_predicates": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
     "unfinished_regressions": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
     "blockers": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
@@ -17,10 +68,22 @@
       "additionalProperties": false,
       "properties": {
         "may_claim": {"type": "array", "items": {"type": "string"}},
-        "must_not_claim": {"type": "array", "minItems": 4, "items": {"type": "string"}}
+        "must_not_claim": {"type": "array", "minItems": 5, "items": {"type": "string"}}
       },
       "required": ["may_claim", "must_not_claim"]
     }
   },
-  "required": ["schema", "status", "target_id", "reason", "unfinished_predicates", "unfinished_regressions", "blockers", "pass_emitted", "claims"]
+  "required": [
+    "schema",
+    "status",
+    "target_id",
+    "reason",
+    "rf_a_vertical",
+    "path_outcomes",
+    "unfinished_predicates",
+    "unfinished_regressions",
+    "blockers",
+    "pass_emitted",
+    "claims"
+  ]
 }

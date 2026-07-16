@@ -1,10 +1,9 @@
-"""Battle V16 RelayForge Slice 1 freeze and Slice 2 fail-closed skeleton.
+"""Battle V16 RelayForge freeze and deterministic RF-A vertical.
 
-This module implements only the frozen-contract boundary for Target A and the
-minimal deterministic qualification blocker.  It does not implement RF-A,
-RF-B, RF-C, RF-D, reference exploits, Blue controls, Memory packets, or a live
-Judge.  Consequently no function in this module can emit a target-qualification
-PASS.
+RF-A, its narrow extractor-object-identity defense, six functional regressions,
+sink isolation, shortcut denial and reset replay are executable.  RF-B, RF-C,
+RF-D, broad quarantine, Memory and full target qualification remain blocked, so
+this module never emits a full-target qualification PASS.
 """
 
 from __future__ import annotations
@@ -13,13 +12,14 @@ import hashlib
 import importlib.util
 import json
 import re
+import tempfile
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 import jsonschema
 
 TARGET_ID = "battle-v16-relayforge-a"
-TARGET_SEMANTIC_VERSION = "0.1.0-skeleton"
+TARGET_SEMANTIC_VERSION = "0.2.0-partial"
 GOAL_SHA256 = "26d57f45a1a93e0f000c775530fb5ec543e833e2e7a4a1c189b4b28d13e722c6"
 
 PUBLIC_CONTEXT_SCHEMA = "battle.v16.public_context.v1.schema.json"
@@ -39,12 +39,16 @@ ARENA_FREEZE_COMMAND_RECEIPT_SCHEMA = (
 )
 
 FREEZE_BLOCKERS = (
-    "judge_predicates_unimplemented",
-    "regression_fixtures_unimplemented",
-    "reference_exploits_unimplemented",
-    "reference_defenses_unimplemented",
-    "durable_memory_packets_unimplemented",
-    "live_topology_not_qualified",
+    "rf-b-predicates-unimplemented",
+    "rf-c-predicates-unimplemented",
+    "rf-d-decoy-validation-unimplemented",
+    "rf-b-reference-exploit-unimplemented",
+    "rf-c-reference-exploit-unimplemented",
+    "rf-b-blue-defense-unimplemented",
+    "rf-c-blue-defenses-unimplemented",
+    "broad-quarantine-unimplemented",
+    "durable-memory-packets-unimplemented",
+    "live-topology-not-qualified",
 )
 
 
@@ -143,6 +147,7 @@ def _source_paths(skill_root: Path) -> dict[str, Path]:
         "compose.yaml": _require_file(target_root / "compose.yaml"),
         "Dockerfile": _require_file(target_root / "Dockerfile"),
         "service.py": _require_file(target_root / "service.py"),
+        "rf_a_reference.py": _require_file(target_root / "rf_a_reference.py"),
         "contracts/public-context.json": _require_file(
             target_root / "contracts" / "public-context.json"
         ),
@@ -387,13 +392,13 @@ def freeze_relayforge_target(
         "blockers": list(FREEZE_BLOCKERS),
         "claims": {
             "may_claim": [
-                "The RelayForge Slice 1 contract and current Slice 2 source skeleton are content-addressed"
+                "The RelayForge contract and RF-A deterministic vertical are content-addressed"
             ],
             "must_not_claim": [
                 "RelayForge is deterministically qualified",
-                "Any RF-A/RF-B/RF-C predicate is implemented",
+                "RF-B or RF-C predicates are implemented",
                 "RF-D has been behaviorally validated as a decoy",
-                "Any Blue defense or regression tradeoff is implemented",
+                "Broad quarantine is implemented",
                 "Any V16 Memory packet or uptake chain is implemented",
             ],
         },
@@ -442,11 +447,11 @@ def run_relayforge_deterministic_qualification(
     target: str = TARGET_ID,
     skill_root: Path | None = None,
 ) -> dict[str, Any]:
-    """Emit the deterministic Slice 2 blocker and never a false qualification."""
+    """Run RF-A acceptance proofs while keeping the full target fail closed."""
 
     if target != TARGET_ID:
         raise RelayForgeContractError(
-            f"Slice 2 skeleton supports exactly {TARGET_ID}; received {target}"
+            f"RF-A vertical supports exactly {TARGET_ID}; received {target}"
         )
     root = (skill_root or _skill_root()).resolve()
     freeze_root = freeze.resolve()
@@ -461,28 +466,45 @@ def run_relayforge_deterministic_qualification(
             "target identity does not match canonical arena-freeze-manifest.json"
         )
 
+    output = out.resolve()
+    output.mkdir(parents=True, exist_ok=True)
     judge = _judge_module(root)
-    judge_outcome = judge.evaluate(_target_root(root) / "judge")
+    with tempfile.TemporaryDirectory(prefix="relayforge-rf-a-qualification-") as temporary:
+        temporary_root = Path(temporary)
+        judge_outcome = judge.evaluate(
+            _target_root(root) / "judge",
+            state_root=temporary_root / "state",
+            sink_root=temporary_root / "sinks",
+            artifact_root=output,
+        )
     _validate_schema(
         judge_outcome, schema_name=JUDGE_OUTCOME_SCHEMA, skill_root=root
     )
-    output = out.resolve()
-    output.mkdir(parents=True, exist_ok=True)
+
+    rf_a = judge_outcome["rf_a_vertical"]
+    for name, expected_sha256 in rf_a["artifact_sha256"].items():
+        artifact_path = output / name
+        if not artifact_path.is_file():
+            raise RelayForgeContractError(
+                f"RF-A Judge artifact is missing: {artifact_path}"
+            )
+        actual_sha256 = canonical_sha256(_read_json(artifact_path))
+        if actual_sha256 != expected_sha256:
+            raise RelayForgeContractError(
+                f"RF-A Judge artifact hash drift for {name}: {actual_sha256} != {expected_sha256}"
+            )
+
     judge_path = _write_json(output / "judge-outcome.json", judge_outcome)
     blockers = sorted(
         set(
             [
                 *freeze_manifest.get("blockers", []),
                 *judge_outcome.get("blockers", []),
-                "reference_exploit_receipts_missing",
-                "reference_defense_receipts_missing",
-                "sink_independence_matrix_missing",
-                "chain_skip_denial_matrix_missing",
-                "regression_matrix_missing",
-                "replay_determinism_proof_missing",
             ]
         )
     )
+    if rf_a.get("status") != "PASS":
+        blockers = sorted({*blockers, "rf_a_vertical_failed"})
     result = {
         "schema": "battle.v16.deterministic_qualification.v1",
         "status": "BLOCKED",
@@ -490,17 +512,21 @@ def run_relayforge_deterministic_qualification(
         "target_identity_sha256": computed_identity,
         "freeze_manifest_sha256": canonical_sha256(freeze_manifest),
         "judge_outcome_sha256": canonical_sha256(judge_outcome),
+        "rf_a_vertical_status": rf_a["status"],
+        "rf_a_artifact_sha256": dict(rf_a["artifact_sha256"]),
         "blockers": blockers,
         "pass_emitted": False,
         "claims": {
             "may_claim": [
-                "The RelayForge deterministic qualification command failed closed"
-            ],
+                "RF-A deterministic acceptance passed"
+            ]
+            if rf_a["status"] == "PASS"
+            else [],
             "must_not_claim": [
                 "RelayForge deterministic qualification passed",
-                "Any path reached an impact sink",
-                "Any narrow or broad defense was evaluated",
-                "Any regression assertion executed",
+                "RF-B or RF-C was evaluated",
+                "RF-D was behaviorally validated as a decoy",
+                "Broad quarantine was evaluated",
                 "The six-campaign live canary may begin",
             ],
         },

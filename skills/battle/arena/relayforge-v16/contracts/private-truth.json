@@ -1,8 +1,8 @@
 {
   "schema": "battle.v16.private_truth.v1",
   "target_id": "battle-v16-relayforge-a",
-  "semantic_version": "0.1.0-skeleton",
-  "implementation_status": "SKELETON",
+  "semantic_version": "0.2.0-partial",
+  "implementation_status": "PARTIAL_RF_A",
   "topology": {
     "public_service": "edge-gateway",
     "services": [
@@ -73,7 +73,7 @@
       "owner_service": "extract-worker",
       "volume": "rf-a-sink",
       "purpose": "Extractor-host filesystem integrity canary",
-      "implementation_status": "UNIMPLEMENTED"
+      "implementation_status": "IMPLEMENTED"
     },
     {
       "sink_id": "RF-B-SINK",
@@ -91,7 +91,7 @@
     }
   ],
   "attack_graph": {
-    "implementation_status": "UNIMPLEMENTED",
+    "implementation_status": "PARTIAL_RF_A",
     "paths": [
       {
         "path_id": "RF-A",
@@ -104,7 +104,7 @@
         ],
         "sink_id": "RF-A-SINK",
         "independent_from": ["RF-B", "RF-C"],
-        "implementation_status": "UNIMPLEMENTED"
+        "implementation_status": "IMPLEMENTED"
       },
       {
         "path_id": "RF-B",
@@ -143,12 +143,12 @@
     }
   },
   "defense_graph": {
-    "implementation_status": "UNIMPLEMENTED",
+    "implementation_status": "PARTIAL_RF_A",
     "narrow_boundaries": [
       {
         "boundary_id": "extractor-object-identity",
         "assigned_paths": ["RF-A"],
-        "implementation_status": "UNIMPLEMENTED"
+        "implementation_status": "IMPLEMENTED"
       },
       {
         "boundary_id": "cache-principal-partition",
@@ -195,7 +195,9 @@
   "reference_contracts": {
     "red_exploits": {
       "required_paths": ["RF-A", "RF-B", "RF-C"],
-      "implementation_status": "UNIMPLEMENTED"
+      "implemented_paths": ["RF-A"],
+      "unimplemented_paths": ["RF-B", "RF-C"],
+      "implementation_status": "PARTIAL_RF_A"
     },
     "blue_defenses": {
       "required_boundaries": [
@@ -205,7 +207,14 @@
         "capability-audience-policy",
         "renderer-resource-policy"
       ],
-      "implementation_status": "UNIMPLEMENTED"
+      "implemented_boundaries": ["extractor-object-identity"],
+      "unimplemented_boundaries": [
+        "cache-principal-partition",
+        "redirect-destination-policy",
+        "capability-audience-policy",
+        "renderer-resource-policy"
+      ],
+      "implementation_status": "PARTIAL_RF_A"
     }
   },
   "memory_contracts": {
@@ -236,12 +245,13 @@
   ],
   "claims": {
     "may_claim": [
-      "The private RelayForge topology, graph and fail-closed skeleton contracts are frozen"
+      "The private RelayForge topology and independent sink contract are frozen",
+      "RF-A and its narrow extractor-object-identity defense are executable and Judge-measured"
     ],
     "must_not_claim": [
-      "Any Judge predicate is implemented",
-      "Any regression fixture is executable",
-      "Any reference exploit or defense exists",
+      "RF-B or RF-C Judge predicates are implemented",
+      "RF-D is behaviorally validated as a decoy",
+      "Broad quarantine is implemented",
       "Any durable Memory packet is frozen",
       "The target is qualified"
     ]

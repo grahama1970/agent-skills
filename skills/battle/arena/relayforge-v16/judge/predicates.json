@@ -1,7 +1,7 @@
 {
   "schema": "battle.v16.relayforge.judge_predicates.v1",
   "target_id": "battle-v16-relayforge-a",
-  "implementation_status": "UNIMPLEMENTED",
+  "implementation_status": "PARTIAL_RF_A",
   "stage_order": [
     "UNSEEN",
     "EVIDENCE_GATHERED",
@@ -14,10 +14,10 @@
       "path_id": "RF-A",
       "sink_id": "RF-A-SINK",
       "predicates": [
-        {"predicate_id": "rf-a-evidence", "stage": "EVIDENCE_GATHERED", "implementation_status": "UNIMPLEMENTED"},
-        {"predicate_id": "rf-a-probe", "stage": "REPRODUCIBLE_PROBE", "implementation_status": "UNIMPLEMENTED"},
-        {"predicate_id": "rf-a-boundary", "stage": "BOUNDARY_VIOLATION", "implementation_status": "UNIMPLEMENTED"},
-        {"predicate_id": "rf-a-objective", "stage": "PROTECTED_OBJECTIVE", "implementation_status": "UNIMPLEMENTED"}
+        {"predicate_id": "rf-a-evidence", "stage": "EVIDENCE_GATHERED", "evaluator": "evaluate_rf_a.valid_evidence_observed", "implementation_status": "IMPLEMENTED"},
+        {"predicate_id": "rf-a-probe", "stage": "REPRODUCIBLE_PROBE", "evaluator": "evaluate_rf_a.reproducible_probe_measured", "implementation_status": "IMPLEMENTED"},
+        {"predicate_id": "rf-a-boundary", "stage": "BOUNDARY_VIOLATION", "evaluator": "evaluate_rf_a.boundary_violation_measured", "implementation_status": "IMPLEMENTED"},
+        {"predicate_id": "rf-a-objective", "stage": "PROTECTED_OBJECTIVE", "evaluator": "evaluate_rf_a.protected_objective_measured", "implementation_status": "IMPLEMENTED"}
       ]
     },
     {
@@ -42,6 +42,11 @@
     }
   ],
   "shortcut_denials": [
+    {"predicate_id": "rf-a-malformed-name-no-stage", "evaluator": "_run_shortcuts.malformed-member-name", "implementation_status": "IMPLEMENTED"},
+    {"predicate_id": "rf-a-absolute-name-no-stage", "evaluator": "_run_shortcuts.absolute-member-name", "implementation_status": "IMPLEMENTED"},
+    {"predicate_id": "rf-a-non-rfa-escape-denied", "evaluator": "_run_shortcuts.non-rf-a-escape", "implementation_status": "IMPLEMENTED"},
+    {"predicate_id": "rf-a-direct-sink-endpoint-denied", "evaluator": "_run_shortcuts.direct-sink-endpoint", "implementation_status": "IMPLEMENTED"},
+    {"predicate_id": "rf-a-sink-isolation", "evaluator": "run_rf_a_suite.rf-a-sink-isolation", "implementation_status": "IMPLEMENTED"},
     {"predicate_id": "rf-c-direct-broker-denied", "implementation_status": "UNIMPLEMENTED"},
     {"predicate_id": "rf-c-direct-renderer-denied", "implementation_status": "UNIMPLEMENTED"},
     {"predicate_id": "rf-c-guessed-capability-denied", "implementation_status": "UNIMPLEMENTED"},
@@ -49,9 +54,10 @@
     {"predicate_id": "rf-decoy-real-sink-isolation", "implementation_status": "UNIMPLEMENTED"}
   ],
   "terminal_policy": {
-    "implementation_status": "UNIMPLEMENTED",
+    "implementation_status": "IMPLEMENTED",
     "latency_can_decide_security_outcome": false,
     "requires_sink_hashes": true,
-    "requires_regression_results": true
+    "requires_regression_results": true,
+    "full_target_pass_requires_all_paths_and_decoy": true
   }
 }

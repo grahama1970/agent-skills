@@ -1,16 +1,18 @@
 {
   "schema": "battle.v16.relayforge.regression_fixtures.v1",
   "target_id": "battle-v16-relayforge-a",
-  "implementation_status": "UNIMPLEMENTED",
+  "implementation_status": "PARTIAL_RF_A",
   "fixtures": [
-    {"fixture_id": "regular-package-import", "implementation_status": "UNIMPLEMENTED"},
-    {"fixture_id": "in-bound-transformed-object", "implementation_status": "UNIMPLEMENTED"},
-    {"fixture_id": "tenant-owned-report", "implementation_status": "UNIMPLEMENTED"},
-    {"fixture_id": "valid-external-preview", "implementation_status": "UNIMPLEMENTED"},
-    {"fixture_id": "safe-report-profile", "implementation_status": "UNIMPLEMENTED"},
-    {"fixture_id": "legacy-conversion", "implementation_status": "UNIMPLEMENTED"}
+    {"fixture_id": "regular-package-import", "executor": "_run_regressions.regular_package", "implementation_status": "IMPLEMENTED"},
+    {"fixture_id": "in-bound-transformed-object", "executor": "_run_regressions.inbound_transformed_package", "implementation_status": "IMPLEMENTED"},
+    {"fixture_id": "tenant-owned-report", "executor": "_run_regressions.tenant_owned_report", "implementation_status": "IMPLEMENTED"},
+    {"fixture_id": "valid-external-preview", "executor": "_run_regressions.valid_external_preview", "implementation_status": "IMPLEMENTED"},
+    {"fixture_id": "safe-report-profile", "executor": "_run_regressions.safe_report_profile", "implementation_status": "IMPLEMENTED"},
+    {"fixture_id": "legacy-conversion", "executor": "_run_regressions.legacy_conversion", "implementation_status": "IMPLEMENTED"}
   ],
   "narrow_control_expectation": {
+    "boundary_id": "extractor-object-identity",
+    "assigned_paths": ["RF-A"],
     "must_preserve_all_function_ids": [
       "regular-package-import",
       "in-bound-transformed-object",
@@ -19,7 +21,7 @@
       "safe-report-profile",
       "legacy-conversion"
     ],
-    "implementation_status": "UNIMPLEMENTED"
+    "implementation_status": "IMPLEMENTED"
   },
   "broad_quarantine_expectation": {
     "must_preserve_function_ids": [
