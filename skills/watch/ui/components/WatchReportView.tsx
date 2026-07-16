@@ -2174,6 +2174,7 @@ export function WatchReportView({
   const [clipModalYoloLabels, setClipModalYoloLabels] = useState<Record<string, WatchYoloTrackLabel>>({})
   const [clipModalYoloBoxRejections, setClipModalYoloBoxRejections] = useState<Record<string, WatchYoloBoxRejection>>({})
   const [clipModalYoloLabelEvents, setClipModalYoloLabelEvents] = useState<WatchYoloLabelEvent[]>([])
+  const clipModalYoloInitializedRowKeyRef = useRef('')
   const [clipModalMemorySuggestions, setClipModalMemorySuggestions] = useState<Record<string, WatchYoloTrackLabel>>({})
   const [clipModalYoloStatus, setClipModalYoloStatus] = useState('')
   const [clipModalCharacterName, setClipModalCharacterName] = useState('')
@@ -3419,9 +3420,15 @@ export function WatchReportView({
     } as WatchChatAdapterOptions['sceneContext']
   }, [selectedRow, reportWithDiff])
 
-	  const expandedClipRow = expandedClip && reportWithDiff
-	    ? reportWithDiff.scene_elements.find((row) => row.index === expandedClip.rowIndex) ?? null
-	    : null
+	  const expandedClipRow = useMemo(() => (
+	    expandedClip && reportWithDiff
+	      ? reportWithDiff.scene_elements.find((row) => row.index === expandedClip.rowIndex) ?? null
+	      : null
+	  ), [expandedClip?.rowIndex, reportWithDiff])
+
+	  const expandedClipRowKey = expandedClipRow
+	    ? `${expandedClipRow.index}:${expandedClipRow.timecode}:${expandedClipRow.movie_segment || ''}`
+	    : ''
 
   const annotationSessionRow = useMemo((): SessionRow | null => {
     if (!expandedClipRow || !reportWithDiff) return null
@@ -3437,7 +3444,7 @@ export function WatchReportView({
       segmentEndSeconds: duration,
       fps: 24,
     }
-  }, [clipModalDurationSeconds, expandedClipRow, reportWithDiff])
+  }, [clipModalDurationSeconds, expandedClipRowKey, reportWithDiff])
 
 	  const clipModalCharacterOptions = useMemo(() => {
 	    if (!expandedClipRow) return ['Unassigned']
@@ -3450,7 +3457,7 @@ export function WatchReportView({
 	      'Unassigned',
 	    ]
 	    return Array.from(new Set(values.filter((value): value is string => !!value && value.trim().length > 0)))
-	  }, [expandedClip, expandedClipRow])
+	  }, [expandedClip?.rowIndex, expandedClipRowKey])
 
 	  function updateClipModalCharacter(name: string): void {
 	    setClipModalCharacterName(name)
@@ -3496,9 +3503,13 @@ export function WatchReportView({
     setClipModalSelectedYoloTrackId(null)
     setClipModalYoloStatus('')
     setClipModalMemorySuggestions({})
+    const isNewYoloRow = clipModalYoloInitializedRowKeyRef.current !== expandedClipRowKey
+    clipModalYoloInitializedRowKeyRef.current = expandedClipRowKey
     setClipModalYoloLabels(readYoloTrackLabels(yoloKey))
-    setClipModalYoloBoxRejections({})
-    setClipModalYoloLabelEvents([])
+    if (isNewYoloRow) {
+      setClipModalYoloBoxRejections({})
+      setClipModalYoloLabelEvents([])
+    }
     if (annotationSessionRow) {
       annotationDispatch(annotationSessionActions.hydrateFromMemory(
         annotationSessionRow,
@@ -3506,7 +3517,7 @@ export function WatchReportView({
       ))
       annotationDispatch(annotationSessionActions.selectCharacter(nextCharacterName, nextActorName || undefined))
     }
-  }, [expandedClip, expandedClipRow, reportWithDiff])
+  }, [expandedClip?.rowIndex, expandedClipRowKey, reportWithDiff])
 
   useEffect(() => {
     if (!expandedClipRow || !reportWithDiff) return undefined
@@ -3542,7 +3553,7 @@ export function WatchReportView({
     return () => {
       cancelled = true
     }
-  }, [expandedClipRow, reportWithDiff])
+  }, [expandedClipRowKey, reportWithDiff])
 
   useEffect(() => {
     if (!expandedClipRow || !reportWithDiff || annotationSession.row.rowIndex !== expandedClipRow.index) return
