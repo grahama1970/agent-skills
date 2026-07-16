@@ -1,6 +1,6 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-16 07:18 by agent
+**Last updated:** 2026-07-16 08:02 by agent
 **Status:** Active development
 
 ## Current Understanding
@@ -35,6 +35,21 @@
   exact-request acceptance, cost acceptance, and paid-call authorization.
   `actual_provider_call_attempts=0`, `provider_ready=false`,
   `live_submit_ready=false`, and no provider return or Watch observation exists.
+- 2026-07-16: Graham explicitly authorized all five Phase 11 decisions for
+  request body
+  `sha256:444a5a27e35c70848819aa561fc429f6e48d633c2bcc8ac805f675ac5b5f4b71`
+  with a maximum spend of `$0.84` and exactly one generation attempt. The
+  adapter submitted once and received request ID
+  `019f6acb-853c-7552-bc73-ff8a6548afb1`. fal queue status reached
+  `Completed`, but result retrieval returned HTTP 422 with four errors: every
+  `multi_prompt[*].prompt` exceeded the provider's 512-character maximum. The
+  durable attempt ledger now records `state=FAILED`,
+  `actual_provider_call_attempts=1`, `submit_intent_count=1`, and
+  `automatic_resubmit_allowed=false`. No MP4 was returned and Watch was not
+  invoked. The compiler also exposed a false-count defect by reporting zero
+  attempts while blocking on the failed ledger. A corrected request requires a
+  new request hash, new hash-bound approvals, and new explicit paid-call
+  authorization; the consumed authorization must not be reused.
 - Project initialized, knowledge tracking started
 - Agent is persona-dream pipeline that generates cinematic Kling Omni sequences from persona memory. Purpose: test whether an AI agent can autonomously dream about events from memory like a real person. The pipeline must be treated as a no-omission serial gate loop from request intake through final report. The full pipeline order is: Request / Idea Intake → Dreaming Persona Selection → Memory Recall → Residue Grounding → Dream Packet → Story / Video Plan → Producer Persona Selection → Producer selects Director → Producer selects Script Writer → Creative Authority Receipts → Look Lock → Script DNA → Storyboard Prompt Composition → Storyboard Panel Receipts → Panel Continuity And Repair Ledger → Panel Generation Loop → Panel Visual Review Loop → Surgical Panel Repair → Panel Repair Gate → Panel Source Receipt → Provider Media Publication Work Order → Local Provider Media Staging → Publication Preflight → Publication Authorization → Public URL Probe → Provider Media Handoff → Provider Media Lock → Kling Scene Packet → Provider Final Gate → Paid Call Authorization → Kling Submit → Kling Poll / Callback → Output Retrieval → FFprobe / Technical Validation → Frame Contact Sheet → Post-Kling Continuity Review → Voice / Audio Handoff Lane when voiced → Final Assembly / Movie Lane → Report Generation → Gate Validation Loop → Upstream Revision Invalidation → Final Acceptance Boundary.
 - 2026-06-30: **Do not omit the creative authority layer.** Producer Persona Selection, Director Selection, Script Writer Selection, and Creative Authority Receipts are mandatory upstream gates. Producer owns creative arbitration and run-level decisions. Director owns camera, lens, blocking, lighting, color grade, pacing, and visual continuity. Script Writer owns dialogue, story pressure, beat logic, scene tension, reveal structure, and Script DNA. Changes to producer/director/script-writer selections invalidate Look Lock, Script DNA, storyboard, panels, provider packets, reports, and downstream receipts unless a migration receipt proves derivation from the current upstream revision.
@@ -95,6 +110,7 @@
 | 2026-07-14 | Phases 01-10 require an immutable ACTIVE_CONSISTENT revision before acceptance | Accepted-looking local files are insufficient. Qualification requires hash-bound local artifacts, exact Memory records, Qdrant semantic sync, a deterministic active pointer, and a terminal repair event. Provider submission remains a separate Phase 11 boundary. |
 | 2026-07-15 | Phase 11 receipt edits are not provider lifecycle implementation | Do not call the Phase 11 preflight complete from credential, price, schema, or payload receipt fields alone. Readiness requires a corrected compiler with audio-consistent prompts, tests and `run.sh` integration, fail-closed report validation, Memory persistence, exact payload-bound approvals, and submit-once/poll/download receipts. |
 | 2026-07-16 | Phase 11 may await humans only after technical validation and Memory proof | `BLOCKED_AWAITING_HUMAN_APPROVAL` is valid only when the active revision chain, exact request, media bindings, fresh provider evidence, adapter preflight, submit-once fence, Memory exact reread, semantic sync, and dense recall pass with zero provider attempts. |
+| 2026-07-16 | A failed authorized canary consumes the one-attempt authorization | Request `444a5a27...` was submitted once and rejected by fal result validation because all four shot prompts exceeded 512 characters. Never reset or reuse its ledger; a repaired request must have a new hash and separate explicit authorization. |
 
 ## Open Questions
 

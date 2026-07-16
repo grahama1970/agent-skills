@@ -470,6 +470,25 @@ This proves the exact zero-call pre-Kling boundary and its Memory projection.
 It does not prove approval, submission, provider acceptance, returned video,
 Watch observation, interpretation, or later behavior.
 
+The first explicitly authorized canary later consumed that zero-attempt state:
+
+```text
+request_id: 019f6acb-853c-7552-bc73-ff8a6548afb1
+request_body_sha256: sha256:444a5a27e35c70848819aa561fc429f6e48d633c2bcc8ac805f675ac5b5f4b71
+attempt_ledger_state: FAILED
+actual_provider_call_attempts: 1
+provider_result_http_status: 422
+provider_error_count: 4
+failure: every multi_prompt prompt exceeded 512 characters
+automatic_resubmit_allowed: false
+returned_video: false
+```
+
+This attempt must never be reset or reused. A compiler repair must produce a
+new canonical request hash, rerun deterministic and live zero-call validation,
+and obtain new hash-bound approvals plus explicit paid-call authorization
+before any second generation attempt.
+
 Before a Kling, Wan, ComfyUI, or other provider video call is allowed, write a
 final provider-readiness gate receipt. A provider packet is not live-submittable
 unless every required gate is `PASS` or explicitly human-accepted as an

@@ -1,0 +1,94 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "a corrected provider request",
+      "authorization for another generation",
+      "returned video",
+      "Watch observation"
+    ],
+    "proves": [
+      "the failed one-attempt Phase 11 state was exactly reread from Memory",
+      "question-shaped recall returned the same failed-attempt identity with dense evidence"
+    ]
+  },
+  "collection": "project_knowledge",
+  "document": {
+    "_id": "project_knowledge/pd_phase11_d1440cf980f38c916f0fa93bff648b17e036e58feb43a941",
+    "_key": "pd_phase11_d1440cf980f38c916f0fa93bff648b17e036e58feb43a941",
+    "_rev": "_l0pTmCq---",
+    "activation_receipt_sha256": "sha256:22b0b1d035fd844863de6730e970f0362481bbc342f59e377cfe557ddcdb5b7d",
+    "activation_transaction_id": "activation-f316f5e66ba900751235c2ee3cd27da3",
+    "active_revision_id": "rev_idea_f3f9c48d5cc2",
+    "actual_provider_call_attempts": 1,
+    "approval_requirements_sha256": "sha256:966bdc8aeabe93efe5eb6dee68e9976e3b260b4d168114405aac184f326b2396",
+    "attempt_ledger_sha256": "sha256:e9bab084f99afc06ab7beda1582f528beb382a6837bdd82cdb9bd22f4ae06428",
+    "authorization_consumed": true,
+    "automatic_resubmit_allowed": false,
+    "document_contract_sha256": "sha256:120a5d3fe8e30269395d792f64eb7a5ef9a10f59842012850d94f33a01ce5ad8",
+    "embedding_model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
+    "embedding_version": "v5-omni-small",
+    "gate_status": "BLOCKED_PHASE11_PROVIDER_REQUEST_VALIDATION",
+    "kind": "persona_dream_phase11_boundary",
+    "lifecycle_state": "FAILED_CANARY",
+    "live_request_file_sha256": "sha256:f9bbdaf0ff5f65f420ffe47c96c4982ba71a8d0b067e74fb952b37bb23fd6ad3",
+    "live_submit_ready": false,
+    "media_binding_manifest_sha256": "sha256:291adcf0b500a0666d525e3627d356d117edcacf53525351447e9d99e91a55f6",
+    "missing_approval_types": [],
+    "observed_at": "2026-07-16T12:09:35.579681+00:00",
+    "paid_call_authorized": false,
+    "phase11_revision_id": "rev_idea_f3f9c48d5cc2",
+    "project": "persona-dream",
+    "provider_error_count": 4,
+    "provider_live": true,
+    "provider_ready": false,
+    "provider_result_error_receipt_sha256": "sha256:e77c0e505a7bd30288f8c53060e2678858c246dd94e677270050654be8b6691c",
+    "provider_result_http_status": 422,
+    "provider_source_snapshot_sha256": "sha256:1a4d434408ea50ce39e99fb1636decb7275a0f022e0fc8fd69ce9d95478b764f",
+    "provider_terminal_state": "RESULT_VALIDATION_FAILED",
+    "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+    "qdrant_point_id": "d7cfc55d-e97d-5ba7-a0d9-ff1fc4cf2650",
+    "record_type": "phase11_boundary",
+    "request_body_sha256": "sha256:444a5a27e35c70848819aa561fc429f6e48d633c2bcc8ac805f675ac5b5f4b71",
+    "request_id": "019f6acb-853c-7552-bc73-ff8a6548afb1",
+    "retrieval_text": "Persona Dream Phase 11 failed canary for run pipeline-complete active revision rev_idea_f3f9c48d5cc2. Exact request 444a5a27e35c70848819aa561fc429f6e48d633c2bcc8ac805f675ac5b5f4b71 was explicitly authorized and submitted once as fal request 019f6acb-853c-7552-bc73-ff8a6548afb1. Provider result returned HTTP 422 because all four multi_prompt prompts exceeded 512 characters. The one-call authorization is consumed, automatic resubmit is forbidden, no video returned, and Watch was not invoked.",
+    "returned_video": false,
+    "run_id": "pipeline-complete",
+    "schema": "persona_dream.phase11_boundary.v1",
+    "scope": "persona-dream:pipeline-complete:rev_idea_f3f9c48d5cc2:phase11",
+    "semantic_sync_state": "synced",
+    "source": "persona-dream://pipeline-complete/revisions/rev_idea_f3f9c48d5cc2/phase11",
+    "submit_intent_count": 1,
+    "submitted": true,
+    "tags": [
+      "persona-dream",
+      "phase11",
+      "run:pipeline-complete",
+      "active-revision:rev_idea_f3f9c48d5cc2",
+      "gate:BLOCKED_PHASE11_PROVIDER_REQUEST_VALIDATION",
+      "attempts:1"
+    ],
+    "technical_blockers": [
+      "BLOCKED_PHASE11_MULTI_PROMPT_MAX_512",
+      "BLOCKED_NEW_PAYLOAD_AUTHORIZATION_REQUIRED"
+    ],
+    "text_hash": "80f3ed88e05e38cf1bea5594d5203741cfacaf56",
+    "watch_invoked": false
+  },
+  "exact_reread_count": 1,
+  "key": "pd_phase11_d1440cf980f38c916f0fa93bff648b17e036e58feb43a941",
+  "live": true,
+  "mocked": false,
+  "recall": {
+    "dense_matching_count": 1,
+    "matching_identity_count": 1,
+    "max_dense": 0.7101375,
+    "question": "What happened during the authorized Persona Dream Phase 11 fal canary for active revision rev_idea_f3f9c48d5cc2, and may it be resubmitted automatically?",
+    "returned_keys": [
+      "pd_active_bb0360b6e2870481e787ce7bfd5a184504a0697bd083b681",
+      "pd_phase11_d1440cf980f38c916f0fa93bff648b17e036e58feb43a941"
+    ],
+    "status_code": 200
+  },
+  "schema": "persona_dream.phase11_failure_memory_persistence_receipt.v1",
+  "status": "PASS_PHASE11_FAILURE_MEMORY_PERSISTED"
+}

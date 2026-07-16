@@ -193,7 +193,7 @@ The README uses these proof terms consistently:
 | Grounded dream packets | **Implemented** | Source links, contradiction reports, reflections, and receipts exist |
 | Image and storyboard production | **Live slices proven** | Live image generation, visual review, creator/reviewer repair, and accepted-frame evidence exist |
 | Phases 01-10 - Qualified revision | **Qualified revision** | `rev_idea_f3f9c48d5cc2` is `ACTIVE_CONSISTENT`; the explicit human idea has 10/10 phase lineage bindings, and 10 phase records plus 16 required-artifact references are persisted and semantically synchronized through Memory |
-| Phase 11 - Submit and Return | **Awaiting explicit approvals** | The exact Standard/audio-off request, media bindings, provider-source snapshot, zero-call adapter preflight, submit-once fence, and Memory boundary validation pass. Five hash-bound human approvals remain; provider attempts are `0` and no return exists |
+| Phase 11 - Submit and Return | **Failed canary; resubmit unauthorized** | One explicitly authorized attempt was submitted as request `019f6acb-853c-7552-bc73-ff8a6548afb1`. fal returned HTTP 422 because all four shot prompts exceeded 512 characters. Attempts are `1`; no MP4 exists and automatic resubmit is forbidden |
 | Phases 12-15 - Watch through persistence | **Designed** | The evidence architecture exists, but one accepted closed run does not |
 | Phase 16 - Later persona behavior | **Not implemented as a closed proof** | No persisted dream has yet been shown to alter later behavior while preserving identity |
 
@@ -466,6 +466,20 @@ missing_approval_count: 5
 actual_provider_call_attempts: 0
 provider_ready: false
 live_submit_ready: false
+```
+
+That zero-call validation receipt records the state before authorization. The
+subsequent immutable execution ledger is now the current Phase 11 authority:
+
+```text
+request_id: 019f6acb-853c-7552-bc73-ff8a6548afb1
+request_body_sha256: sha256:444a5a27e35c70848819aa561fc429f6e48d633c2bcc8ac805f675ac5b5f4b71
+state: FAILED
+actual_provider_call_attempts: 1
+provider_result_http_status: 422
+provider_error_count: 4
+automatic_resubmit_allowed: false
+returned_video: false
 ```
 
 ### 12 - Watch Observation

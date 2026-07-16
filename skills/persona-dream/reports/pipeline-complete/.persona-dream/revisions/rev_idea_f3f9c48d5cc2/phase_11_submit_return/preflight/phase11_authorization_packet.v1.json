@@ -1,0 +1,47 @@
+{
+  "schema": "persona_dream.phase11_authorization_packet.v1",
+  "decision": "APPROVE",
+  "decision_source": "EXPLICIT_HUMAN",
+  "run_id": "pipeline-complete",
+  "revision_id": "rev_idea_f3f9c48d5cc2",
+  "activation_transaction_id": "activation-f316f5e66ba900751235c2ee3cd27da3",
+  "approver": {
+    "id": "graham",
+    "display_name": "Graham",
+    "authority_basis": "Project owner explicit authorization in the active Codex session"
+  },
+  "approved_at": "2026-07-16T11:56:59Z",
+  "expires_at": "2026-07-16T13:56:59Z",
+  "purpose": "PERSONA_DREAM_PHASE11_SINGLE_KLING_CANARY",
+  "authorization_scope": "ONE_PAID_PROVIDER_GENERATION_NO_AUTOMATIC_RESUBMIT",
+  "currency": "USD",
+  "maximum_spend_usd": 0.84,
+  "revoked": false,
+  "revocation_state": "NOT_REVOKED",
+  "approval_types": [
+    "publication_authorization",
+    "visual_media_acceptance",
+    "exact_request_acceptance",
+    "cost_acceptance",
+    "paid_call_authorization"
+  ],
+  "bindings": {
+    "run_id": "pipeline-complete",
+    "revision_id": "rev_idea_f3f9c48d5cc2",
+    "activation_transaction_id": "activation-f316f5e66ba900751235c2ee3cd27da3",
+    "provider_id": "kling",
+    "endpoint": "fal-ai/kling-video/v3/standard/image-to-video",
+    "request_body_sha256": "sha256:444a5a27e35c70848819aa561fc429f6e48d633c2bcc8ac805f675ac5b5f4b71",
+    "media_binding_manifest_sha256": "sha256:291adcf0b500a0666d525e3627d356d117edcacf53525351447e9d99e91a55f6",
+    "media_input_contract_sha256": "sha256:3fb193ccd0fa8d497fbcabb71bb4f235298ce4ef3491e6329043d4496d8e8517",
+    "provider_source_snapshot_sha256": "sha256:1a4d434408ea50ce39e99fb1636decb7275a0f022e0fc8fd69ce9d95478b764f",
+    "pricing_snapshot_sha256": "sha256:241d79ab092e1a475dddd7b65392376096fedb09e4e868a4b60131b4bcc3c0fe",
+    "actual_provider_call_attempts": 0
+  },
+  "acknowledgements": {
+    "authorize_one_paid_generation": true,
+    "no_automatic_resubmit": true,
+    "ambiguous_submit_requires_human_reconciliation": true,
+    "provider_return_does_not_authorize_watch_or_cognition": true
+  }
+}
