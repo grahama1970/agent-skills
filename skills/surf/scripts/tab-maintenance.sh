@@ -56,6 +56,7 @@ export SURF_TAB_MAINTENANCE_RECEIPT_DIR="$RECEIPT_DIR"
 export SURF_TAB_MAINTENANCE_MODE="$MODE"
 export SURF_TAB_MAINTENANCE_GLOBAL_TRIGGER="$GLOBAL_TRIGGER"
 export SURF_TAB_MAINTENANCE_TIMEOUT="$TIMEOUT_SECONDS"
+export SURF_TAB_MAINTENANCE_SCRIPT_DIR="$SCRIPT_DIR"
 export SURF_TAB_MAINTENANCE_PROJECTS_JSON="$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1:]))' "${PROJECTS[@]}")"
 export SURF_TAB_MAINTENANCE_TRIGGERS_JSON="$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1:]))' "${TRIGGER_ARGS[@]}")"
 
@@ -67,6 +68,9 @@ from copy import deepcopy
 from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+
+sys.path.insert(0, os.environ["SURF_TAB_MAINTENANCE_SCRIPT_DIR"])
+from tab_recovery_receipt import write_tab_recovery_receipt
 
 
 def now():
@@ -115,16 +119,24 @@ def normalize_url(url: str) -> str:
 
 
 def receipt(path: Path, **kw):
-    payload = {
-        "schema": "surf.tab_maintenance_receipt.v1",
-        "written_at": now(),
-        "success": kw.get("status") in {"rebound", "reloaded"},
-        **kw,
-    }
-    path.parent.mkdir(parents=True, exist_ok=True)
-    tmp = path.with_name(f".{path.name}.tmp.{os.getpid()}")
-    tmp.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
-    tmp.replace(path)
+    status = kw.pop("status")
+    project = kw.pop("project")
+    write_tab_recovery_receipt(
+        path,
+        status=status,
+        project=project,
+        requested_tab_id=kw.pop("requested_tab_id", None),
+        resolved_tab_id=kw.pop("resolved_tab_id", None),
+        url_evidence=kw.pop("url_evidence", None),
+        guard_values=kw.pop("guard_values", {}),
+        repair_trigger=kw.pop("repair_trigger", None),
+        action_started_at=kw.pop("action_started_at", None),
+        action_finished_at=kw.pop("action_finished_at", None),
+        before_observation=kw.pop("before_observation", None),
+        after_observation=kw.pop("after_observation", None),
+        extra_fields=kw,
+    )
+    payload = json.loads(path.read_text())
     print(json.dumps(payload, sort_keys=True))
 
 
@@ -142,23 +154,26 @@ def parse_tabs(stdout: str):
     return tabs
 
 
-def guard_value_is_hazard(v):
+def guard_value_is_inactive(v):
     if isinstance(v, dict):
         value = v.get("value", v.get("active", v.get("isActive", v.get("ok"))))
-        if "passed" in v and v.get("passed") is True:
-            return False
-        return value is True
-    return v is True
+        return value is False
+    return v is False
 
 
 def guards_safe(state):
     guards = (state or {}).get("guards") or {}
     required = ["chatgptGeneration", "nonEmptyEditableDraft", "activeDownload"]
     if not all(k in guards for k in required):
-        return False, {"known": False, "reason": "missing required guard", "guards": guards}
-    if any(guard_value_is_hazard(guards[k]) for k in required):
-        return False, {"known": True, "reason": "hazard guard true", "guards": guards}
-    return True, {"known": True, "reason": "all hazard guards false", "guards": guards}
+        return False, {}, {"known": False, "reason": "missing required guard", "guards": guards}
+    safety = {
+        "chatgpt_generation_inactive": guard_value_is_inactive(guards["chatgptGeneration"]),
+        "draft_empty": guard_value_is_inactive(guards["nonEmptyEditableDraft"]),
+        "download_inactive": guard_value_is_inactive(guards["activeDownload"]),
+    }
+    if not all(safety.values()):
+        return False, safety, {"known": False, "reason": "hazard guard active or unknown", "guards": guards}
+    return True, safety, {"known": True, "reason": "all hazard guards false", "guards": guards}
 
 
 backend = os.environ["SURF_TAB_MAINTENANCE_BACKEND"]
@@ -234,7 +249,7 @@ for project in projects:
             tmp = path.with_suffix(path.suffix + f".tmp.{os.getpid()}")
             tmp.write_text(json.dumps(state, indent=2, sort_keys=True) + "\n")
             tmp.replace(path)
-            receipt(rpath, **base, status="rebound", requested_tab_id=stored_tab, resolved_tab_id=state["tab_id"], before_observation=before, after_observation={"binding": state}, previous_binding=previous, url_evidence={"stored_url": target_url, "matched_tab": matches[0]})
+            receipt(rpath, **base, status="rebound", requested_tab_id=stored_tab, resolved_tab_id=state["tab_id"], before_observation=before, after_observation={"binding": state}, previous_binding=previous, guard_values={"stored_url_match": True, "unique_live_match": True}, url_evidence={"stored_url": target_url, "matched_tab": matches[0]})
         else:
             receipt(rpath, **base, status="scanned", requested_tab_id=stored_tab, resolved_tab_id=matches[0]["tab_id"], before_observation=before, url_evidence={"stored_url": target_url, "matched_tab": matches[0]}, dry_run_would="rebind")
         continue
@@ -256,14 +271,14 @@ for project in projects:
     except Exception as exc:
         receipt(rpath, **base, status="skipped_guarded", requested_tab_id=stored_tab, resolved_tab_id=stored_tab, before_observation=before, guard_values={"known": False, "reason": str(exc)}, reason="guard_inspection_failed")
         continue
-    safe, guard_values = guards_safe(recovery_state)
+    safe, guard_values, guard_observation = guards_safe(recovery_state)
     if not safe:
-        receipt(rpath, **base, status="skipped_guarded", requested_tab_id=stored_tab, resolved_tab_id=stored_tab, before_observation=before, guard_values=guard_values, reason="guards_not_safe")
+        receipt(rpath, **base, status="skipped_guarded", requested_tab_id=stored_tab, resolved_tab_id=stored_tab, before_observation=before, guard_values=guard_values, guard_observation=guard_observation, reason="guards_not_safe")
         continue
     if repair:
         rp = surf_cmd("tab.reload", "--tab-id", str(stored_tab))
         if rp.returncode == 0:
-            receipt(rpath, **base, status="reloaded", requested_tab_id=stored_tab, resolved_tab_id=stored_tab, before_observation=before, after_observation={"reload": "requested"}, guard_values=guard_values)
+            receipt(rpath, **base, status="reloaded", requested_tab_id=stored_tab, resolved_tab_id=stored_tab, before_observation=before, after_observation={"reload": "requested"}, guard_values=guard_values, guard_observation=guard_observation)
         else:
             receipt(rpath, **base, status="failed", success=False, requested_tab_id=stored_tab, resolved_tab_id=stored_tab, before_observation=before, guard_values=guard_values, reason="reload_failed", error=rp.stderr.strip())
             exit_code = 1

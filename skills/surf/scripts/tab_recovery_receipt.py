@@ -85,6 +85,7 @@ def build_tab_recovery_receipt(
     before_observation: dict[str, Any] | str | None = None,
     after_observation: dict[str, Any] | str | None = None,
     written_at: str | None = None,
+    extra_fields: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build a fail-closed Surf tab recovery receipt payload."""
 
@@ -98,7 +99,7 @@ def build_tab_recovery_receipt(
         success = False
 
     now = written_at or _utc_now()
-    return {
+    payload = {
         "schema": "surf.tab_recovery_receipt.v1",
         "status": status,
         "success": success,
@@ -115,6 +116,11 @@ def build_tab_recovery_receipt(
         "before_observation": before_observation,
         "after_observation": after_observation,
     }
+    protected = set(payload)
+    for key, value in (extra_fields or {}).items():
+        if key not in protected:
+            payload[key] = value
+    return payload
 
 
 def write_tab_recovery_receipt(path: Path, **kwargs: Any) -> Path:
