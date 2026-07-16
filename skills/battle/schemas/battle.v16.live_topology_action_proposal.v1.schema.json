@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "battle.v16.live_topology_action_proposal.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "action_id": {"type": "string", "minLength": 1, "maxLength": 96, "pattern": "^[A-Za-z0-9._-]+$"},
+    "rank": {"type": "integer", "minimum": 1, "maximum": 2},
+    "operation": {"type": "string", "minLength": 1, "maxLength": 96, "pattern": "^[a-z0-9-]+$"},
+    "evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1, "maxLength": 128}
+    },
+    "expected_observation": {"type": "string", "minLength": 1, "maxLength": 1024},
+    "parameters": {"type": "object", "maxProperties": 4}
+  },
+  "required": ["action_id", "rank", "operation", "evidence_refs", "expected_observation", "parameters"]
+}

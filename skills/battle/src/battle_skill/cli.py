@@ -2464,6 +2464,68 @@ def v16_memory_chain_qualify(
         raise typer.Exit(1)
 
 
+@app.command("v16-live-topology-qualify")
+def v16_live_topology_qualify(
+    target: str = typer.Option(
+        "battle-v16-relayforge-a",
+        "--target",
+        help="V16 target ID. This gate supports RelayForge only.",
+    ),
+    freeze: Path = typer.Option(
+        ...,
+        "--freeze",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Hash-bound RelayForge freeze artifact directory.",
+    ),
+    deterministic_qualification: Path = typer.Option(
+        ...,
+        "--deterministic-qualification",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Hash-bound RelayForge deterministic qualification directory.",
+    ),
+    memory_chain: Path = typer.Option(
+        ...,
+        "--memory-chain",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Live RelayForge durable-Memory chain proof directory.",
+    ),
+    out: Path = typer.Option(
+        ..., "--out", help="Live RelayForge topology campaign artifact directory."
+    ),
+):
+    """Qualify one live RelayForge nine-service Red/Blue campaign."""
+    from .relayforge_v16_live_topology import (
+        LiveTopologyContractError,
+        run_relayforge_v16_live_topology,
+        runtime_defaults,
+    )
+
+    try:
+        result = run_relayforge_v16_live_topology(
+            target=target,
+            freeze=freeze,
+            deterministic_qualification=deterministic_qualification,
+            memory_chain=memory_chain,
+            out=out,
+            config=runtime_defaults(),
+        )
+    except LiveTopologyContractError as exc:
+        console.print(f"[red]RelayForge V16 live topology blocked:[/red]\n{exc}")
+        raise typer.Exit(1) from exc
+    console.print_json(data=result)
+    if result.get("status") != "PASS":
+        raise typer.Exit(1)
+
+
 @app.command()
 def status():
     """Check status of running or recent battles."""

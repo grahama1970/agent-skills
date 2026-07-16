@@ -1,0 +1,164 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "battle.v16.live_topology_judge.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "sinkMap": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "RF-A-SINK": {
+          "$ref": "#/$defs/sha"
+        },
+        "RF-B-SINK": {
+          "$ref": "#/$defs/sha"
+        },
+        "RF-C-SINK": {
+          "$ref": "#/$defs/sha"
+        }
+      },
+      "required": [
+        "RF-A-SINK",
+        "RF-B-SINK",
+        "RF-C-SINK"
+      ]
+    }
+  },
+  "properties": {
+    "schema": {
+      "const": "battle.v16.live_topology_judge.v1"
+    },
+    "status": {
+      "const": "PASS"
+    },
+    "target_id": {
+      "const": "battle-v16-relayforge-a"
+    },
+    "verdict": {
+      "enum": [
+        "RED_SUCCESS",
+        "BLUE_SUCCESS",
+        "CONTESTED",
+        "INSUFFICIENT_EVIDENCE"
+      ]
+    },
+    "judge_authority": {
+      "const": "relayforge-private-judge-cli"
+    },
+    "baseline_measurement_sha256": {
+      "$ref": "#/$defs/sha"
+    },
+    "after_red_measurement_sha256": {
+      "$ref": "#/$defs/sha"
+    },
+    "final_measurement_sha256": {
+      "$ref": "#/$defs/sha"
+    },
+    "final_recheck_sha256": {
+      "$ref": "#/$defs/sha"
+    },
+    "regression_receipt_sha256": {
+      "$ref": "#/$defs/sha"
+    },
+    "red_selection_sha256": {
+      "$ref": "#/$defs/sha"
+    },
+    "blue_selection_sha256": {
+      "$ref": "#/$defs/sha"
+    },
+    "red_execution_sha256": {
+      "$ref": "#/$defs/sha"
+    },
+    "blue_execution_sha256": {
+      "$ref": "#/$defs/sha"
+    },
+    "red_replay_sha256": {
+      "$ref": "#/$defs/sha"
+    },
+    "path_stages": {
+      "type": "object"
+    },
+    "sink_hashes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "baseline": {
+          "$ref": "#/$defs/sinkMap"
+        },
+        "after_red": {
+          "$ref": "#/$defs/sinkMap"
+        },
+        "final": {
+          "$ref": "#/$defs/sinkMap"
+        }
+      },
+      "required": [
+        "baseline",
+        "after_red",
+        "final"
+      ]
+    },
+    "regression_vector": {
+      "type": "object",
+      "minProperties": 6,
+      "maxProperties": 6,
+      "additionalProperties": {
+        "type": "boolean"
+      }
+    },
+    "memory_improvement_proven": {
+      "const": false
+    },
+    "production_readiness_proven": {
+      "const": false
+    },
+    "mocked": {
+      "const": false
+    },
+    "live": {
+      "const": true
+    },
+    "fixture_fallback_used": {
+      "const": false
+    },
+    "created_at": {
+      "type": "string",
+      "minLength": 1
+    },
+    "post_regression_measurement_sha256": {
+      "$ref": "#/$defs/sha"
+    }
+  },
+  "required": [
+    "schema",
+    "status",
+    "target_id",
+    "verdict",
+    "judge_authority",
+    "baseline_measurement_sha256",
+    "after_red_measurement_sha256",
+    "final_measurement_sha256",
+    "final_recheck_sha256",
+    "post_regression_measurement_sha256",
+    "regression_receipt_sha256",
+    "red_selection_sha256",
+    "blue_selection_sha256",
+    "red_execution_sha256",
+    "blue_execution_sha256",
+    "red_replay_sha256",
+    "path_stages",
+    "sink_hashes",
+    "regression_vector",
+    "memory_improvement_proven",
+    "production_readiness_proven",
+    "mocked",
+    "live",
+    "fixture_fallback_used",
+    "created_at"
+  ]
+}

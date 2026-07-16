@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "battle.v16.live_topology_action_execution.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {"sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"}},
+  "properties": {
+    "schema": {"const": "battle.v16.live_topology_action_execution.v1"},
+    "status": {"const": "PASS"},
+    "target_id": {"const": "battle-v16-relayforge-a"},
+    "label": {"type": "string", "minLength": 1},
+    "selected_action_sha256": {"$ref": "#/$defs/sha"},
+    "method": {"enum": ["GET", "POST"]},
+    "public_route": {"type": "string", "pattern": "^/api/v1/"},
+    "request_sha256": {"$ref": "#/$defs/sha"},
+    "response_status_code": {"type": "integer", "minimum": 100, "maximum": 499},
+    "response_body_sha256": {"$ref": "#/$defs/sha"},
+    "response_artifact_sha256": {"$ref": "#/$defs/sha"},
+    "source_bindings": {
+      "type": "object",
+      "minProperties": 3,
+      "additionalProperties": {"$ref": "#/$defs/sha"}
+    },
+    "source_time": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "started_at": {"type": "string", "minLength": 1},
+        "ended_at": {"type": "string", "minLength": 1},
+        "duration_seconds": {"type": "number", "minimum": 0}
+      },
+      "required": ["started_at", "ended_at", "duration_seconds"]
+    },
+    "operation": {"type": "string", "minLength": 1},
+    "response_contains_protected_value": {"type": "boolean"},
+    "replay": {"type": "boolean"},
+    "equivalence_basis": {"type": ["string", "null"]},
+    "mocked": {"const": false},
+    "live": {"const": true},
+    "fixture_fallback_used": {"const": false}
+  },
+  "required": [
+    "schema", "status", "target_id", "label", "selected_action_sha256", "method",
+    "public_route", "request_sha256", "response_status_code", "response_body_sha256",
+    "response_artifact_sha256", "source_bindings", "source_time", "operation",
+    "response_contains_protected_value", "replay", "equivalence_basis", "mocked",
+    "live", "fixture_fallback_used"
+  ]
+}

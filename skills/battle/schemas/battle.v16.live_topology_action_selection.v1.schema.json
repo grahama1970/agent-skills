@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "battle.v16.live_topology_action_selection.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {"sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"}},
+  "properties": {
+    "schema": {"const": "battle.v16.live_topology_action_selection.v1"},
+    "status": {"const": "PASS"},
+    "target_id": {"const": "battle-v16-relayforge-a"},
+    "team": {"enum": ["red", "blue"]},
+    "provider_call_sha256": {"$ref": "#/$defs/sha"},
+    "provider_artifact_sha256": {"$ref": "#/$defs/sha"},
+    "strategy_genome_sha256": {"$ref": "#/$defs/sha"},
+    "selected_proposal": {"type": "object"},
+    "selected_proposal_sha256": {"$ref": "#/$defs/sha"},
+    "rejected_proposals": {"type": "array", "items": {"type": "object"}},
+    "eligible_proposal_count": {"type": "integer", "minimum": 1, "maximum": 2},
+    "selection_policy": {"const": "lowest_provider_rank_among_schema_valid_evidence_satisfied_actions"},
+    "private_judge_read_during_selection": {"const": false},
+    "mocked": {"const": false},
+    "live": {"const": true},
+    "created_at": {"type": "string", "minLength": 1}
+  },
+  "required": [
+    "schema", "status", "target_id", "team", "provider_call_sha256",
+    "provider_artifact_sha256", "strategy_genome_sha256", "selected_proposal",
+    "selected_proposal_sha256", "rejected_proposals", "eligible_proposal_count",
+    "selection_policy", "private_judge_read_during_selection", "mocked", "live", "created_at"
+  ]
+}

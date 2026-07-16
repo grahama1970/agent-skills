@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "battle.v16.live_topology_qualification.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {
+    "sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "image": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "absolute_path": {"type": "string", "minLength": 1},
+        "relative_path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/sha"}
+      },
+      "required": ["absolute_path", "relative_path", "sha256"]
+    }
+  },
+  "properties": {
+    "schema": {"const": "battle.v16.live_topology_qualification.v1"},
+    "status": {"const": "PASS"},
+    "target_id": {"const": "battle-v16-relayforge-a"},
+    "goal_hash": {"const": "737abd58a3233793827b1108dcb7132d175a1d6f488ecddbf0c57f62ab200c83"},
+    "immutable_goal_hash": {"const": "26d57f45a1a93e0f000c775530fb5ec543e833e2e7a4a1c189b4b28d13e722c6"},
+    "target_identity_sha256": {"$ref": "#/$defs/sha"},
+    "service_image_id": {"$ref": "#/$defs/image"},
+    "base_image_digest": {"type": "string", "pattern": "^[^@\\s]+@sha256:[0-9a-f]{64}$"},
+    "compose_sha256": {"$ref": "#/$defs/sha"},
+    "topology_sha256": {"$ref": "#/$defs/sha"},
+    "freeze_manifest_sha256": {"$ref": "#/$defs/sha"},
+    "deterministic_qualification_sha256": {"$ref": "#/$defs/sha"},
+    "memory_chain_qualification_sha256": {"$ref": "#/$defs/sha"},
+    "post_memory_strategy_sha256": {"$ref": "#/$defs/sha"},
+    "provider_artifact_sha256": {
+      "type": "object", "additionalProperties": false,
+      "properties": {"red": {"$ref": "#/$defs/sha"}, "blue": {"$ref": "#/$defs/sha"}},
+      "required": ["red", "blue"]
+    },
+    "provider_call_sha256": {
+      "type": "object", "additionalProperties": false,
+      "properties": {"red": {"$ref": "#/$defs/sha"}, "blue": {"$ref": "#/$defs/sha"}},
+      "required": ["red", "blue"]
+    },
+    "selected_action_sha256": {
+      "type": "object", "additionalProperties": false,
+      "properties": {"red": {"$ref": "#/$defs/sha"}, "blue": {"$ref": "#/$defs/sha"}},
+      "required": ["red", "blue"]
+    },
+    "action_execution_sha256": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "red": {"$ref": "#/$defs/sha"},
+        "blue": {"$ref": "#/$defs/sha"},
+        "red_replay": {"$ref": "#/$defs/sha"}
+      },
+      "required": ["red", "blue", "red_replay"]
+    },
+    "regression_receipt_sha256": {"$ref": "#/$defs/sha"},
+    "judge_receipt_sha256": {"$ref": "#/$defs/sha"},
+    "judge_verdict": {"enum": ["RED_SUCCESS", "BLUE_SUCCESS", "CONTESTED", "INSUFFICIENT_EVIDENCE"]},
+    "campaign_journal_sha256": {"$ref": "#/$defs/sha"},
+    "closed_blocker": {"const": "live-topology-not-qualified"},
+    "remaining_blockers": {"const": []},
+    "artifacts": {"type": "object", "minProperties": 13, "additionalProperties": {"$ref": "#/$defs/artifact"}},
+    "mocked": {"const": false},
+    "live": {"const": true},
+    "fixture_fallback_used": {"const": false},
+    "memory_improvement_proven": {"const": false},
+    "production_readiness_proven": {"const": false},
+    "claims": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "proves": {"type": "array", "minItems": 2, "items": {"type": "string"}},
+        "does_not_prove": {"type": "array", "minItems": 3, "items": {"type": "string"}}
+      },
+      "required": ["proves", "does_not_prove"]
+    },
+    "created_at": {"type": "string", "minLength": 1}
+  },
+  "required": [
+    "schema", "status", "target_id", "goal_hash", "immutable_goal_hash",
+    "target_identity_sha256", "service_image_id", "base_image_digest", "compose_sha256",
+    "topology_sha256", "freeze_manifest_sha256", "deterministic_qualification_sha256",
+    "memory_chain_qualification_sha256", "post_memory_strategy_sha256",
+    "provider_artifact_sha256", "provider_call_sha256", "selected_action_sha256",
+    "action_execution_sha256", "regression_receipt_sha256", "judge_receipt_sha256",
+    "judge_verdict", "campaign_journal_sha256", "closed_blocker", "remaining_blockers",
+    "artifacts", "mocked", "live", "fixture_fallback_used",
+    "memory_improvement_proven", "production_readiness_proven", "claims", "created_at"
+  ]
+}

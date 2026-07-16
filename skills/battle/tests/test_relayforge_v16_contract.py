@@ -318,8 +318,10 @@ def test_rf_b_requires_owned_report_then_seeded_reference_and_uses_no_other_path
 
     assert int(owned_status) == 200
     assert owned["observation"]["observation_id"] == "OBS-20"
+    assert "rf-b" not in json.dumps(owned).lower()
     assert int(recent_status) == 200
     assert recent["observation_id"] == "OBS-21"
+    assert "rf-b" not in json.dumps(recent).lower()
     assert int(disclosure_status) == 200
     assert disclosure["protected_canary"]
     assert outcome["highest_stage"] == "PROTECTED_OBJECTIVE"
