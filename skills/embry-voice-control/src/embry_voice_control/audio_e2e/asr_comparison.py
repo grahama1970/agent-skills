@@ -31,6 +31,26 @@ ASR_COMPARISON_POLICY_SHA256 = (
     "sha256:" + hashlib.sha256(_canonical(ASR_COMPARISON_POLICY)).hexdigest()
 )
 
+MANAGED_LISTENER_ASR_COMPARISON_POLICY = {
+    "schema": "embry.audio_e2e.asr_comparison_policy.v1",
+    "policy_id": "managed_listener_expected_conditioned_aliases_v1",
+    "base_policy_sha256": ASR_COMPARISON_POLICY_SHA256,
+    "aliases": [
+        *ASR_COMPARISON_POLICY["aliases"],
+        {
+            "alias_id": "inline_in_line_segmentation_v1",
+            "canonical_expected_tokens": ["inline"],
+            "observed_actual_tokens": ["in", "line"],
+            "comparison_actual_tokens": ["inline"],
+            "max_applications": 1,
+        },
+    ],
+}
+MANAGED_LISTENER_ASR_COMPARISON_POLICY_SHA256 = (
+    "sha256:"
+    + hashlib.sha256(_canonical(MANAGED_LISTENER_ASR_COMPARISON_POLICY)).hexdigest()
+)
+
 
 def normalized_tokens(value: str) -> list[str]:
     return re.sub(r"[^a-z0-9]+", " ", str(value).lower()).split()
@@ -67,10 +87,12 @@ def _replace_once(
     return tokens, None
 
 
-def compare_asr_text(
+def _compare_with_policy(
     expected_text: str,
     actual_text: str,
     *,
+    policy: dict[str, Any],
+    policy_sha256: str,
     strip_expected_wake: bool = True,
 ) -> dict[str, Any]:
     expected = normalized_tokens(expected_text)
@@ -80,7 +102,7 @@ def compare_asr_text(
     comparison_actual = list(actual)
     applied: list[dict[str, Any]] = []
 
-    for alias in ASR_COMPARISON_POLICY["aliases"]:
+    for alias in policy["aliases"]:
         canonical = list(alias["canonical_expected_tokens"])
         if not _contains(expected, canonical):
             continue
@@ -100,8 +122,8 @@ def compare_asr_text(
     comparison_wer = word_error_rate(expected, comparison_actual)
     return {
         "schema": "embry.audio_e2e.asr_comparison.v1",
-        "policy_id": ASR_COMPARISON_POLICY["policy_id"],
-        "policy_sha256": ASR_COMPARISON_POLICY_SHA256,
+        "policy_id": policy["policy_id"],
+        "policy_sha256": policy_sha256,
         "raw_expected_tokens": expected,
         "raw_actual_tokens": actual,
         "comparison_expected_tokens": expected,
@@ -111,3 +133,31 @@ def compare_asr_text(
         "applied_aliases": applied,
         "journal_text_mutated": False,
     }
+
+
+def compare_asr_text(
+    expected_text: str,
+    actual_text: str,
+    *,
+    strip_expected_wake: bool = True,
+) -> dict[str, Any]:
+    return _compare_with_policy(
+        expected_text,
+        actual_text,
+        policy=ASR_COMPARISON_POLICY,
+        policy_sha256=ASR_COMPARISON_POLICY_SHA256,
+        strip_expected_wake=strip_expected_wake,
+    )
+
+
+def compare_managed_listener_asr_text(
+    expected_text: str,
+    actual_text: str,
+) -> dict[str, Any]:
+    return _compare_with_policy(
+        expected_text,
+        actual_text,
+        policy=MANAGED_LISTENER_ASR_COMPARISON_POLICY,
+        policy_sha256=MANAGED_LISTENER_ASR_COMPARISON_POLICY_SHA256,
+        strip_expected_wake=True,
+    )

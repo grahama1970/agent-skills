@@ -11,7 +11,7 @@ import sys
 import time
 from typing import Any
 
-from .asr_comparison import compare_asr_text
+from .asr_comparison import compare_asr_text, compare_managed_listener_asr_text
 from .event_waiter import (
     journal_sequence_boundary,
     wait_for_managed_turn,
@@ -322,7 +322,9 @@ class CaseExecutor:
         final = chain["listener.final_transcript"]
         request_text = final["payload"].get("request_text") or ""
         expected_spoken = turn.get("spoken_text", turn["utterance"])
-        asr_comparison = compare_asr_text(expected_spoken, request_text)
+        asr_comparison = compare_managed_listener_asr_text(
+            expected_spoken, request_text
+        )
         request_wer = float(asr_comparison["comparison_wer"])
         if request_wer > self.config["max_request_wer"]:
             raise RuntimeError(
