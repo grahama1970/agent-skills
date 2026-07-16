@@ -1,18 +1,44 @@
 {
   "schema": "battle.v16.relayforge.regression_fixtures.v1",
   "target_id": "battle-v16-relayforge-a",
-  "implementation_status": "PARTIAL_RF_A_RF_B",
+  "implementation_status": "PARTIAL_RF_A_RF_B_RF_C",
   "fixtures": [
-    {"fixture_id": "regular-package-import", "executor": "_run_regressions.regular_package", "implementation_status": "IMPLEMENTED"},
-    {"fixture_id": "in-bound-transformed-object", "executor": "_run_regressions.inbound_transformed_package", "implementation_status": "IMPLEMENTED"},
-    {"fixture_id": "tenant-owned-report", "executor": "_run_regressions.tenant_owned_report", "implementation_status": "IMPLEMENTED"},
-    {"fixture_id": "valid-external-preview", "executor": "_run_regressions.valid_external_preview", "implementation_status": "IMPLEMENTED"},
-    {"fixture_id": "safe-report-profile", "executor": "_run_regressions.safe_report_profile", "implementation_status": "IMPLEMENTED"},
-    {"fixture_id": "legacy-conversion", "executor": "_run_regressions.legacy_conversion", "implementation_status": "IMPLEMENTED"}
+    {
+      "fixture_id": "regular-package-import",
+      "executor": "_run_regressions.regular_package",
+      "implementation_status": "IMPLEMENTED"
+    },
+    {
+      "fixture_id": "in-bound-transformed-object",
+      "executor": "_run_regressions.inbound_transformed_package",
+      "implementation_status": "IMPLEMENTED"
+    },
+    {
+      "fixture_id": "tenant-owned-report",
+      "executor": "_run_regressions.tenant_owned_report",
+      "implementation_status": "IMPLEMENTED"
+    },
+    {
+      "fixture_id": "valid-external-preview",
+      "executor": "_run_regressions.valid_external_preview",
+      "implementation_status": "IMPLEMENTED"
+    },
+    {
+      "fixture_id": "safe-report-profile",
+      "executor": "_run_regressions.safe_report_profile",
+      "implementation_status": "IMPLEMENTED"
+    },
+    {
+      "fixture_id": "legacy-conversion",
+      "executor": "_run_regressions.legacy_conversion",
+      "implementation_status": "IMPLEMENTED"
+    }
   ],
   "narrow_control_expectation": {
     "boundary_id": "extractor-object-identity",
-    "assigned_paths": ["RF-A"],
+    "assigned_paths": [
+      "RF-A"
+    ],
     "must_preserve_all_function_ids": [
       "regular-package-import",
       "in-bound-transformed-object",
@@ -25,8 +51,12 @@
   },
   "cache_principal_partition_expectation": {
     "boundary_id": "cache-principal-partition",
-    "assigned_paths": ["RF-B"],
-    "must_preserve_function_ids": ["tenant-owned-report"],
+    "assigned_paths": [
+      "RF-B"
+    ],
+    "must_preserve_function_ids": [
+      "tenant-owned-report"
+    ],
     "must_deny_cross_principal_report": true,
     "implementation_status": "IMPLEMENTED"
   },
@@ -44,8 +74,57 @@
     "implementation_status": "UNIMPLEMENTED"
   },
   "decoy_shutdown_expectation": {
-    "must_break_function_ids": ["legacy-conversion"],
-    "must_not_change_sink_ids": ["RF-A-SINK", "RF-B-SINK", "RF-C-SINK"],
+    "must_break_function_ids": [
+      "legacy-conversion"
+    ],
+    "must_not_change_sink_ids": [
+      "RF-A-SINK",
+      "RF-B-SINK",
+      "RF-C-SINK"
+    ],
     "implementation_status": "UNIMPLEMENTED"
+  },
+  "preview_destination_policy_expectation": {
+    "boundary_id": "redirect-destination-policy",
+    "assigned_paths": [
+      "RF-C"
+    ],
+    "must_preserve_function_ids": [
+      "valid-external-preview",
+      "safe-report-profile"
+    ],
+    "must_block_internal_final_destination": true,
+    "implementation_status": "IMPLEMENTED"
+  },
+  "capability_audience_policy_expectation": {
+    "boundary_id": "capability-audience-policy",
+    "assigned_paths": [
+      "RF-C"
+    ],
+    "required_bindings": [
+      "principal",
+      "audience",
+      "scope",
+      "operation",
+      "expiry",
+      "single-use"
+    ],
+    "must_preserve_function_ids": [
+      "valid-external-preview",
+      "safe-report-profile"
+    ],
+    "implementation_status": "IMPLEMENTED"
+  },
+  "renderer_resource_policy_expectation": {
+    "boundary_id": "renderer-resource-policy",
+    "assigned_paths": [
+      "RF-C"
+    ],
+    "must_resolve_before_authorization": true,
+    "must_preserve_function_ids": [
+      "valid-external-preview",
+      "safe-report-profile"
+    ],
+    "implementation_status": "IMPLEMENTED"
   }
 }

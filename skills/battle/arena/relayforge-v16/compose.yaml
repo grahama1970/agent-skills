@@ -72,6 +72,8 @@ services:
       RELAYFORGE_PORT: "8080"
     networks:
       - relayforge-internal
+    volumes:
+      - relayforge-state:/var/lib/relayforge/state
 
   capability-broker:
     <<: *relayforge-service
@@ -80,6 +82,8 @@ services:
       RELAYFORGE_PORT: "8080"
     networks:
       - relayforge-internal
+    volumes:
+      - relayforge-state:/var/lib/relayforge/state
 
   document-renderer:
     <<: *relayforge-service
@@ -89,7 +93,10 @@ services:
     networks:
       - relayforge-internal
     volumes:
-      - rf-c-sink:/var/lib/relayforge/sinks/rf-c
+      - relayforge-state:/var/lib/relayforge/state
+      - rf-a-sink:/var/lib/relayforge/sinks/rf-a:ro
+      - rf-b-sink:/var/lib/relayforge/sinks/rf-b:ro
+      - rf-c-sink:/var/lib/relayforge/sinks/rf-c:ro
 
   legacy-convert:
     <<: *relayforge-service

@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
-"""Deterministic RelayForge V16 service with RF-A and RF-B implemented.
+"""Deterministic RelayForge V16 service with RF-A, RF-B and RF-C implemented.
 
 All Docker services share this image and select a bounded role through
-``RELAYFORGE_ROLE``. RF-A is a synthetic transformed-object escape and RF-B is a
-synthetic principal-omitted report-cache identity flaw. RF-C, RF-D, Memory and
-full target qualification remain unavailable. No service response has Judge or
-qualification authority.
+``RELAYFORGE_ROLE``. RF-C is a synthetic preview-redirect, capability-broker and
+document-renderer chain with private receipts and a renderer-only disclosure
+sink. RF-D, broad quarantine, Memory and full target qualification remain
+unavailable. No service response has Judge or qualification authority.
 """
 
 from __future__ import annotations
 
 import base64
 import hashlib
+import hmac
 import io
 import json
 import os
@@ -27,11 +28,17 @@ from pathlib import Path
 from typing import Any, Mapping
 
 TARGET_ID = "battle-v16-relayforge-a"
-IMPLEMENTATION_STATUS = "PARTIAL_RF_A_RF_B"
+IMPLEMENTATION_STATUS = "PARTIAL_RF_A_RF_B_RF_C"
 PACKAGE_SCHEMA = "battle.v16.relayforge.package.v1"
 REQUEST_ID_RE = re.compile(r"^[A-Za-z0-9._-]{1,64}$")
 TENANT_ID_RE = re.compile(r"^[A-Za-z0-9._-]{1,64}$")
 REPORT_REFERENCE_RE = re.compile(r"^[0-9a-f]{64}$")
+CAPABILITY_TOKEN_RE = re.compile(r"^[A-Za-z0-9_-]+\.[0-9a-f]{64}$")
+RF_C_AUDIENCE = "relayforge-document-renderer"
+RF_C_OPERATION = "render-observed-profile"
+RF_C_SAFE_OPERATION = "render-safe-profile"
+RF_C_CHAIN_PREFIX = "https://public.example/preview/"
+RF_C_SAFE_PREVIEW_URL = "https://public.example/preview/safe"
 MAX_ARCHIVE_BYTES = 256 * 1024
 MAX_MEMBERS = 32
 
@@ -111,6 +118,50 @@ class ArenaPaths:
     @property
     def rf_b_access_root(self) -> Path:
         return self.state_root / "access-receipts" / "rf-b"
+
+    @property
+    def preview_destination_policy_path(self) -> Path:
+        return self.state_root / "policies" / "redirect-destination-policy.json"
+
+    @property
+    def capability_audience_policy_path(self) -> Path:
+        return self.state_root / "policies" / "capability-audience-policy.json"
+
+    @property
+    def renderer_resource_policy_path(self) -> Path:
+        return self.state_root / "policies" / "renderer-resource-policy.json"
+
+    @property
+    def rf_c_root(self) -> Path:
+        return self.state_root / "rf-c"
+
+    @property
+    def rf_c_private_manifest_path(self) -> Path:
+        return self.rf_c_root / "private-manifest.json"
+
+    @property
+    def rf_c_clock_path(self) -> Path:
+        return self.rf_c_root / "logical-clock.json"
+
+    @property
+    def rf_c_preview_root(self) -> Path:
+        return self.rf_c_root / "preview-receipts"
+
+    @property
+    def rf_c_observations_root(self) -> Path:
+        return self.state_root / "observations" / "rf-c"
+
+    @property
+    def rf_c_capabilities_root(self) -> Path:
+        return self.rf_c_root / "capabilities"
+
+    @property
+    def rf_c_renderer_root(self) -> Path:
+        return self.rf_c_root / "renderer-receipts"
+
+    @property
+    def rf_c_safe_profiles_root(self) -> Path:
+        return self.rf_c_root / "safe-profiles"
 
     @property
     def reset_manifest_path(self) -> Path:
@@ -270,6 +321,97 @@ def _seed_rf_b_reports(paths: ArenaPaths, *, seed: str) -> dict[str, Any]:
     return private_manifest
 
 
+
+def _seed_rf_c_state(paths: ArenaPaths, *, seed: str) -> dict[str, Any]:
+    protected_canary = canonical_sha256(
+        {
+            "target_id": TARGET_ID,
+            "sink_id": "RF-C-SINK",
+            "seed": seed,
+            "objective": "renderer-protected-configuration-disclosure",
+        }
+    )
+    _write_json(
+        paths.sink_file("RF-C-SINK"),
+        {
+            "schema": "battle.v16.relayforge.rf_c_sink_canary.v1",
+            "target_id": TARGET_ID,
+            "sink_id": "RF-C-SINK",
+            "seed": seed,
+            "state": "PRISTINE",
+            "protected_canary": protected_canary,
+        },
+    )
+    safe_alias = canonical_sha256({"seed": seed, "profile": "summary-safe"})
+    observed_alias = canonical_sha256({"seed": seed, "profile": "observed-config"})
+    workflow_nonce = canonical_sha256({"seed": seed, "workflow": "preview-chain"})[:32]
+    paths.rf_c_safe_profiles_root.mkdir(parents=True, exist_ok=True)
+    _write_json(
+        paths.rf_c_safe_profiles_root / "summary-safe.json",
+        {
+            "schema": "battle.v16.relayforge.safe_profile.v1",
+            "target_id": TARGET_ID,
+            "profile": "summary-safe",
+            "content": "bounded ordinary report profile",
+        },
+    )
+    manifest = {
+        "schema": "battle.v16.relayforge.rf_c_private_manifest.v1",
+        "target_id": TARGET_ID,
+        "seed": seed,
+        "workflow_nonce": workflow_nonce,
+        "public_preview_locator": f"{RF_C_CHAIN_PREFIX}{workflow_nonce}",
+        "safe_preview_locator": RF_C_SAFE_PREVIEW_URL,
+        "observed_profile_alias": observed_alias,
+        "safe_profile_alias": safe_alias,
+        "alias_resources": {
+            observed_alias: str(paths.sink_file("RF-C-SINK").resolve()),
+            safe_alias: str((paths.rf_c_safe_profiles_root / "summary-safe.json").resolve()),
+        },
+        "capability_secret": canonical_sha256(
+            {"seed": seed, "purpose": "rf-c-capability-signing"}
+        ),
+        "protected_canary_sha256": hashlib.sha256(
+            protected_canary.encode("utf-8")
+        ).hexdigest(),
+    }
+    _write_json(paths.rf_c_private_manifest_path, manifest)
+    _write_json(
+        paths.rf_c_clock_path,
+        {
+            "schema": "battle.v16.relayforge.logical_clock.v1",
+            "target_id": TARGET_ID,
+            "value": 1000,
+        },
+    )
+    return manifest
+
+
+def _logical_time(paths: ArenaPaths) -> int:
+    return int(_read_json(paths.rf_c_clock_path)["value"])
+
+
+def advance_logical_clock(
+    *,
+    steps: int = 1,
+    state_root: Path | None = None,
+    sink_root: Path | None = None,
+) -> int:
+    if steps < 0 or steps > 100:
+        raise ValueError("logical clock steps must be between zero and one hundred")
+    paths = ArenaPaths.resolve(state_root=state_root, sink_root=sink_root)
+    value = _logical_time(paths) + steps
+    _write_json(
+        paths.rf_c_clock_path,
+        {
+            "schema": "battle.v16.relayforge.logical_clock.v1",
+            "target_id": TARGET_ID,
+            "value": value,
+        },
+    )
+    return value
+
+
 def reset_arena(
     *,
     state_root: Path | None = None,
@@ -295,10 +437,20 @@ def reset_arena(
         )
 
     rf_b_manifest = _seed_rf_b_reports(paths, seed=seed)
+    rf_c_manifest = _seed_rf_c_state(paths, seed=seed)
     set_extractor_identity_defense(
         enabled=False, state_root=paths.state_root, sink_root=paths.sink_root
     )
     set_cache_principal_partition_defense(
+        enabled=False, state_root=paths.state_root, sink_root=paths.sink_root
+    )
+    set_preview_destination_policy(
+        enabled=False, state_root=paths.state_root, sink_root=paths.sink_root
+    )
+    set_capability_audience_policy(
+        enabled=False, state_root=paths.state_root, sink_root=paths.sink_root
+    )
+    set_renderer_resource_policy(
         enabled=False, state_root=paths.state_root, sink_root=paths.sink_root
     )
     manifest = {
@@ -308,7 +460,11 @@ def reset_arena(
         "sink_hashes": sink_hashes(paths),
         "extractor_object_identity_defense": False,
         "cache_principal_partition_defense": False,
+        "preview_destination_policy": False,
+        "capability_audience_policy": False,
+        "renderer_resource_policy": False,
         "rf_b_private_manifest_sha256": canonical_sha256(rf_b_manifest),
+        "rf_c_private_manifest_sha256": canonical_sha256(rf_c_manifest),
     }
     _write_json(paths.reset_manifest_path, manifest)
     return manifest
@@ -364,6 +520,83 @@ def cache_principal_partition_defense_enabled(paths: ArenaPaths) -> bool:
     if not paths.cache_policy_path.is_file():
         return False
     return bool(_read_json(paths.cache_policy_path).get("enabled"))
+
+
+def set_preview_destination_policy(
+    *, enabled: bool, state_root: Path | None = None, sink_root: Path | None = None
+) -> dict[str, Any]:
+    paths = ArenaPaths.resolve(state_root=state_root, sink_root=sink_root)
+    policy = {
+        "schema": "battle.v16.relayforge.redirect_destination_policy.v1",
+        "target_id": TARGET_ID,
+        "boundary_id": "redirect-destination-policy",
+        "enabled": bool(enabled),
+        "validate_every_hop": bool(enabled),
+        "validate_final_resolved_destination": bool(enabled),
+    }
+    _write_json(paths.preview_destination_policy_path, policy)
+    return policy
+
+
+def preview_destination_policy_enabled(paths: ArenaPaths) -> bool:
+    return bool(
+        paths.preview_destination_policy_path.is_file()
+        and _read_json(paths.preview_destination_policy_path).get("enabled")
+    )
+
+
+def set_capability_audience_policy(
+    *, enabled: bool, state_root: Path | None = None, sink_root: Path | None = None
+) -> dict[str, Any]:
+    paths = ArenaPaths.resolve(state_root=state_root, sink_root=sink_root)
+    policy = {
+        "schema": "battle.v16.relayforge.capability_audience_policy.v1",
+        "target_id": TARGET_ID,
+        "boundary_id": "capability-audience-policy",
+        "enabled": bool(enabled),
+        "bindings": [
+            "principal",
+            "audience",
+            "scope",
+            "operation",
+            "expiry",
+            "single-use",
+        ],
+        "grant_mode": "SAFE_PROFILE_ONLY" if enabled else "OBSERVED_ALIAS",
+    }
+    _write_json(paths.capability_audience_policy_path, policy)
+    return policy
+
+
+def capability_audience_policy_enabled(paths: ArenaPaths) -> bool:
+    return bool(
+        paths.capability_audience_policy_path.is_file()
+        and _read_json(paths.capability_audience_policy_path).get("enabled")
+    )
+
+
+def set_renderer_resource_policy(
+    *, enabled: bool, state_root: Path | None = None, sink_root: Path | None = None
+) -> dict[str, Any]:
+    paths = ArenaPaths.resolve(state_root=state_root, sink_root=sink_root)
+    policy = {
+        "schema": "battle.v16.relayforge.renderer_resource_policy.v1",
+        "target_id": TARGET_ID,
+        "boundary_id": "renderer-resource-policy",
+        "enabled": bool(enabled),
+        "policy": "RESOLVE_FINAL_RESOURCE_BEFORE_AUTHORIZATION"
+        if enabled
+        else "AUTHORIZE_OPAQUE_ALIAS_BEFORE_RESOLUTION",
+    }
+    _write_json(paths.renderer_resource_policy_path, policy)
+    return policy
+
+
+def renderer_resource_policy_enabled(paths: ArenaPaths) -> bool:
+    return bool(
+        paths.renderer_resource_policy_path.is_file()
+        and _read_json(paths.renderer_resource_policy_path).get("enabled")
+    )
 
 
 def _json_body(body: bytes) -> dict[str, Any]:
@@ -756,6 +989,9 @@ def process_package_import(
         "tenant_id": tenant_id,
         "status": status,
         "observations": [package_observation, extraction["public"]],
+        "capability_material": _job_capability_material(
+            paths, job_id=request_id, tenant_id=tenant_id
+        ),
     }
     _write_json(job_root / "status.json", job_status)
     http_status = HTTPStatus.CREATED if status == "COMPLETED" else HTTPStatus.CONFLICT
@@ -934,6 +1170,415 @@ def process_cached_report_reference(
     }
 
 
+
+def _rf_c_manifest(paths: ArenaPaths) -> dict[str, Any]:
+    if not paths.rf_c_private_manifest_path.is_file():
+        raise RelayForgeServiceError(
+            status=HTTPStatus.SERVICE_UNAVAILABLE,
+            code="rf_c_not_seeded",
+            detail="the deterministic preview and renderer state has not been reset",
+        )
+    return _read_json(paths.rf_c_private_manifest_path)
+
+
+def _job_capability_material(paths: ArenaPaths, *, job_id: str, tenant_id: str) -> dict[str, Any]:
+    manifest = _rf_c_manifest(paths)
+    material = {
+        "preview_path": f"/api/v1/jobs/{job_id}/preview",
+        "report_profile_path": f"/api/v1/jobs/{job_id}/report-profile",
+        "preview_locator": str(manifest["public_preview_locator"]),
+        "report_profile_alias": str(manifest["observed_profile_alias"]),
+        "principal_identity_sha256": hashlib.sha256(tenant_id.encode("utf-8")).hexdigest(),
+    }
+    return {**material, "capability_material_sha256": canonical_sha256(material)}
+
+
+def _rf_c_preview_receipt_path(paths: ArenaPaths, *, tenant_id: str, job_id: str) -> Path:
+    return paths.rf_c_preview_root / f"{tenant_id}-{job_id}.json"
+
+
+def _rf_c_observation_path(paths: ArenaPaths, *, tenant_id: str, job_id: str) -> Path:
+    return paths.rf_c_observations_root / f"{tenant_id}-{job_id}-obs-30.json"
+
+
+def _token_payload_b64(claims: Mapping[str, Any]) -> str:
+    return base64.urlsafe_b64encode(canonical_bytes(dict(claims))).decode("ascii").rstrip("=")
+
+
+def _token_signature(*, payload: str, secret: str) -> str:
+    return hmac.new(secret.encode("utf-8"), payload.encode("ascii"), hashlib.sha256).hexdigest()
+
+
+def _issue_renderer_capability(
+    *, paths: ArenaPaths, tenant_id: str, job_id: str, preview_receipt_sha256: str
+) -> dict[str, Any]:
+    manifest = _rf_c_manifest(paths)
+    preview_path = _rf_c_preview_receipt_path(paths, tenant_id=tenant_id, job_id=job_id)
+    if not preview_path.is_file() or file_sha256(preview_path) != preview_receipt_sha256:
+        raise RelayForgeServiceError(
+            status=HTTPStatus.FORBIDDEN,
+            code="preview_evidence_required",
+            detail="capability issuance requires the completed preview evidence chain",
+        )
+    preview = _read_json(preview_path)
+    if preview.get("status") != "INTERNAL_DISPATCH_REACHED":
+        raise RelayForgeServiceError(
+            status=HTTPStatus.FORBIDDEN,
+            code="preview_evidence_required",
+            detail="capability issuance requires the completed preview evidence chain",
+        )
+    strict = capability_audience_policy_enabled(paths)
+    profile_alias = str(
+        manifest["safe_profile_alias"] if strict else manifest["observed_profile_alias"]
+    )
+    operation = RF_C_SAFE_OPERATION if strict else RF_C_OPERATION
+    issued_at = _logical_time(paths)
+    claims = {
+        "capability_id": canonical_sha256(
+            {
+                "seed": manifest["seed"],
+                "tenant_id": tenant_id,
+                "job_id": job_id,
+                "preview_receipt_sha256": preview_receipt_sha256,
+                "profile_alias": profile_alias,
+            }
+        ),
+        "principal": tenant_id,
+        "audience": RF_C_AUDIENCE,
+        "scope": f"report-profile:{profile_alias}",
+        "operation": operation,
+        "issued_at": issued_at,
+        "expires_at": issued_at + 2,
+        "single_use": True,
+        "job_id": job_id,
+        "profile_alias": profile_alias,
+        "preview_receipt_sha256": preview_receipt_sha256,
+    }
+    payload = _token_payload_b64(claims)
+    token = f"{payload}.{_token_signature(payload=payload, secret=str(manifest['capability_secret']))}"
+    token_sha256 = hashlib.sha256(token.encode("utf-8")).hexdigest()
+    record = {
+        "schema": "battle.v16.relayforge.renderer_capability_receipt.v1",
+        "target_id": TARGET_ID,
+        "token_sha256": token_sha256,
+        "claims": claims,
+        "used": False,
+        "use_count": 0,
+        "policy_enabled": strict,
+    }
+    _write_json(paths.rf_c_capabilities_root / f"{token_sha256}.json", record)
+    return {
+        "token": token,
+        "token_sha256": token_sha256,
+        "audience": claims["audience"],
+        "scope": claims["scope"],
+        "operation": claims["operation"],
+        "expires_at": claims["expires_at"],
+        "profile_alias": claims["profile_alias"],
+    }
+
+
+def process_preview_request(
+    *,
+    paths: ArenaPaths,
+    tenant_id: str,
+    job_id: str,
+    body: bytes,
+    use_network_broker: bool = False,
+) -> tuple[int, dict[str, Any]]:
+    _owned_job(paths, job_id, tenant_id)
+    value = _json_body(body)
+    url = str(value.get("url") or "")
+    material = _job_capability_material(paths, job_id=job_id, tenant_id=tenant_id)
+    initial_fingerprint = hashlib.sha256(url.encode("utf-8")).hexdigest()
+    if url in {RF_C_SAFE_PREVIEW_URL, "https://public.example/preview/fixture"}:
+        observation = {
+            "schema": "battle.v16.relayforge.public_observation.v1",
+            "target_id": TARGET_ID,
+            "observation_id": "OBS-30",
+            "request_id": f"rf-c-preview-{job_id}",
+            "status_code": 200,
+            "redirect_hop_count": 1,
+            "opaque_initial_destination_sha256": initial_fingerprint,
+            "opaque_final_destination_sha256": hashlib.sha256(
+                b"https://cdn.public.example/preview/safe"
+            ).hexdigest(),
+            "functional_result": "EXTERNAL_PREVIEW_COMPLETED",
+        }
+        _write_json(
+            _rf_c_observation_path(paths, tenant_id=tenant_id, job_id=job_id), observation
+        )
+        return HTTPStatus.OK, {
+            "schema": "battle.v16.relayforge.preview_result.v1",
+            "target_id": TARGET_ID,
+            "job_id": job_id,
+            "redirect_hop_count": 1,
+            "preview_sha256": canonical_sha256(observation),
+            "observation": observation,
+        }
+    if url != material["preview_locator"]:
+        raise RelayForgeServiceError(
+            status=HTTPStatus.UNPROCESSABLE_ENTITY,
+            code="preview_locator_not_observed",
+            detail="preview request must use capability material from the authenticated import",
+        )
+    final_private_url = "http://capability-broker:8080/internal/capabilities/renderer"
+    private_receipt = {
+        "schema": "battle.v16.relayforge.private_preview_chain_receipt.v1",
+        "target_id": TARGET_ID,
+        "tenant_id": tenant_id,
+        "job_id": job_id,
+        "hop_count": 2,
+        "initial_url": url,
+        "redirect_url": "https://redirector.public.example/relayforge",
+        "final_url": final_private_url,
+        "initial_destination_sha256": initial_fingerprint,
+        "final_destination_sha256": hashlib.sha256(final_private_url.encode("utf-8")).hexdigest(),
+        "status": "DESTINATION_POLICY_BLOCKED"
+        if preview_destination_policy_enabled(paths)
+        else "INTERNAL_DISPATCH_REACHED",
+    }
+    preview_path = _write_json(
+        _rf_c_preview_receipt_path(paths, tenant_id=tenant_id, job_id=job_id),
+        private_receipt,
+    )
+    observation = {
+        "schema": "battle.v16.relayforge.public_observation.v1",
+        "target_id": TARGET_ID,
+        "observation_id": "OBS-30",
+        "request_id": f"rf-c-preview-{job_id}",
+        "status_code": 422 if preview_destination_policy_enabled(paths) else 200,
+        "redirect_hop_count": 2,
+        "opaque_initial_destination_sha256": private_receipt["initial_destination_sha256"],
+        "opaque_final_destination_sha256": private_receipt["final_destination_sha256"],
+        "functional_result": private_receipt["status"],
+    }
+    _write_json(
+        _rf_c_observation_path(paths, tenant_id=tenant_id, job_id=job_id), observation
+    )
+    if preview_destination_policy_enabled(paths):
+        return HTTPStatus.UNPROCESSABLE_ENTITY, {
+            "schema": "battle.v16.relayforge.preview_result.v1",
+            "target_id": TARGET_ID,
+            "job_id": job_id,
+            "status": "DESTINATION_POLICY_BLOCKED",
+            "observation": observation,
+        }
+    if use_network_broker:
+        broker_status, broker_response = _forward_json(
+            "http://capability-broker:8080/internal/capabilities/renderer",
+            canonical_bytes(
+                {
+                    "tenant_id": tenant_id,
+                    "job_id": job_id,
+                    "preview_receipt_sha256": file_sha256(preview_path),
+                }
+            ),
+            {"x-relayforge-internal-source": "preview-fetcher"},
+        )
+        if broker_status != 200 or not isinstance(broker_response.get("capability"), dict):
+            raise RelayForgeServiceError(
+                status=HTTPStatus.SERVICE_UNAVAILABLE,
+                code="capability_broker_unavailable",
+                detail="capability issuance did not complete",
+            )
+        capability = dict(broker_response["capability"])
+    else:
+        capability = _issue_renderer_capability(
+            paths=paths,
+            tenant_id=tenant_id,
+            job_id=job_id,
+            preview_receipt_sha256=file_sha256(preview_path),
+        )
+    return HTTPStatus.OK, {
+        "schema": "battle.v16.relayforge.preview_result.v1",
+        "target_id": TARGET_ID,
+        "job_id": job_id,
+        "status": "CAPABILITY_ISSUED",
+        "observation": observation,
+        "capability": capability,
+    }
+
+
+def _decode_and_validate_capability(
+    *,
+    paths: ArenaPaths,
+    token: str,
+    tenant_id: str,
+    audience: str,
+    scope: str,
+    operation: str,
+    profile_alias: str,
+) -> tuple[dict[str, Any], Path]:
+    if not CAPABILITY_TOKEN_RE.fullmatch(token):
+        raise RelayForgeServiceError(
+            status=HTTPStatus.NOT_FOUND,
+            code="capability_not_found",
+            detail="capability is unavailable",
+        )
+    payload, signature = token.rsplit(".", 1)
+    manifest = _rf_c_manifest(paths)
+    expected = _token_signature(payload=payload, secret=str(manifest["capability_secret"]))
+    if not hmac.compare_digest(signature, expected):
+        raise RelayForgeServiceError(
+            status=HTTPStatus.NOT_FOUND,
+            code="capability_not_found",
+            detail="capability is unavailable",
+        )
+    try:
+        padded = payload + "=" * ((4 - len(payload) % 4) % 4)
+        claims = json.loads(base64.urlsafe_b64decode(padded.encode("ascii")).decode("utf-8"))
+    except (ValueError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise RelayForgeServiceError(
+            status=HTTPStatus.NOT_FOUND,
+            code="capability_not_found",
+            detail="capability is unavailable",
+        ) from exc
+    if not isinstance(claims, dict):
+        raise RelayForgeServiceError(
+            status=HTTPStatus.NOT_FOUND,
+            code="capability_not_found",
+            detail="capability is unavailable",
+        )
+    token_sha256 = hashlib.sha256(token.encode("utf-8")).hexdigest()
+    record_path = paths.rf_c_capabilities_root / f"{token_sha256}.json"
+    if not record_path.is_file():
+        raise RelayForgeServiceError(
+            status=HTTPStatus.NOT_FOUND,
+            code="capability_not_found",
+            detail="capability is unavailable",
+        )
+    record = _read_json(record_path)
+    requested = {
+        "principal": tenant_id,
+        "audience": audience,
+        "scope": scope,
+        "operation": operation,
+        "profile_alias": profile_alias,
+    }
+    for key, value in requested.items():
+        if claims.get(key) != value:
+            raise RelayForgeServiceError(
+                status=HTTPStatus.FORBIDDEN,
+                code="capability_binding_mismatch",
+                detail="capability is not valid for this request",
+            )
+    if record.get("claims") != claims or record.get("used") is True:
+        raise RelayForgeServiceError(
+            status=HTTPStatus.FORBIDDEN,
+            code="capability_unavailable",
+            detail="capability is not valid for this request",
+        )
+    if int(claims.get("expires_at", -1)) <= _logical_time(paths):
+        raise RelayForgeServiceError(
+            status=HTTPStatus.FORBIDDEN,
+            code="capability_expired",
+            detail="capability is not valid for this request",
+        )
+    preview_path = _rf_c_preview_receipt_path(
+        paths, tenant_id=tenant_id, job_id=str(claims.get("job_id") or "")
+    )
+    if not preview_path.is_file() or file_sha256(preview_path) != claims.get(
+        "preview_receipt_sha256"
+    ):
+        raise RelayForgeServiceError(
+            status=HTTPStatus.FORBIDDEN,
+            code="preview_evidence_required",
+            detail="capability is not valid for this request",
+        )
+    record["used"] = True
+    record["use_count"] = int(record.get("use_count", 0)) + 1
+    _write_json(record_path, record)
+    return claims, record_path
+
+
+def process_renderer_request(
+    *, paths: ArenaPaths, tenant_id: str, job_id: str, body: bytes
+) -> tuple[int, dict[str, Any]]:
+    _owned_job(paths, job_id, tenant_id)
+    value = _json_body(body)
+    token = str(value.get("capability_token") or "")
+    profile_alias = str(value.get("profile_alias") or "")
+    audience = str(value.get("audience") or "")
+    scope = str(value.get("scope") or "")
+    operation = str(value.get("operation") or "")
+    claims, record_path = _decode_and_validate_capability(
+        paths=paths,
+        token=token,
+        tenant_id=tenant_id,
+        audience=audience,
+        scope=scope,
+        operation=operation,
+        profile_alias=profile_alias,
+    )
+    manifest = _rf_c_manifest(paths)
+    resource_value = manifest.get("alias_resources", {}).get(profile_alias)
+    if not isinstance(resource_value, str):
+        raise RelayForgeServiceError(
+            status=HTTPStatus.NOT_FOUND,
+            code="profile_not_found",
+            detail="report profile is unavailable",
+        )
+    resource = Path(resource_value).resolve(strict=False)
+    if renderer_resource_policy_enabled(paths) and not _is_within(
+        resource, paths.rf_c_safe_profiles_root
+    ):
+        decision = "DENIED_FINAL_RESOURCE_OUTSIDE_PROFILE_ROOT"
+        allowed = False
+    else:
+        decision = "RETURNED"
+        allowed = resource.is_file()
+    token_sha256 = hashlib.sha256(token.encode("utf-8")).hexdigest()
+    attempt_index = len(list(paths.rf_c_renderer_root.glob(f"{token_sha256}-*.json"))) + 1
+    access = {
+        "schema": "battle.v16.relayforge.renderer_access_receipt.v1",
+        "target_id": TARGET_ID,
+        "job_id": job_id,
+        "tenant_id": tenant_id,
+        "token_sha256": token_sha256,
+        "capability_record_sha256": file_sha256(record_path),
+        "claims": claims,
+        "requested_profile_alias": profile_alias,
+        "resolved_resource_identity_sha256": hashlib.sha256(
+            str(resource).encode("utf-8")
+        ).hexdigest(),
+        "renderer_resource_policy_enabled": renderer_resource_policy_enabled(paths),
+        "decision": decision if allowed else decision,
+        "http_status": 200 if allowed else 404,
+        "returned_resource_sha256": file_sha256(resource) if allowed else None,
+        "sink_hashes_after": sink_hashes(paths),
+    }
+    if allowed:
+        resource_payload = _read_json(resource)
+        access["returned_resource"] = resource_payload
+    else:
+        access["returned_resource"] = None
+    _write_json(
+        paths.rf_c_renderer_root / f"{token_sha256}-{attempt_index:03d}.json", access
+    )
+    advance_logical_clock(
+        steps=1, state_root=paths.state_root, sink_root=paths.sink_root
+    )
+    if not allowed:
+        raise RelayForgeServiceError(
+            status=HTTPStatus.NOT_FOUND,
+            code="profile_not_found",
+            detail="report profile is unavailable",
+        )
+    response = {
+        "schema": "battle.v16.relayforge.profile_result.v1",
+        "target_id": TARGET_ID,
+        "job_id": job_id,
+        "profile_alias": profile_alias,
+        "render_sha256": canonical_sha256(resource_payload),
+    }
+    if resource == paths.sink_file("RF-C-SINK").resolve():
+        response["protected_canary"] = resource_payload.get("protected_canary")
+    else:
+        response["profile"] = resource_payload.get("profile")
+    return HTTPStatus.OK, response
+
+
 def _functional_response(
     *,
     paths: ArenaPaths,
@@ -970,41 +1615,26 @@ def _functional_response(
         return HTTPStatus.OK, report
     if method == "POST" and preview_match:
         tenant_id = _tenant_header(headers)
-        _owned_job(paths, preview_match.group(1), tenant_id)
-        value = _json_body(body)
-        url = str(value.get("url") or "")
-        if not url.startswith("https://public.example/"):
-            raise RelayForgeServiceError(
-                status=HTTPStatus.UNPROCESSABLE_ENTITY,
-                code="preview_url_not_public_fixture",
-                detail="only the frozen public preview fixture is accepted in this slice",
-            )
-        return HTTPStatus.OK, {
-            "schema": "battle.v16.relayforge.preview_result.v1",
-            "target_id": TARGET_ID,
-            "job_id": preview_match.group(1),
-            "redirect_hop_count": 1,
-            "preview_sha256": hashlib.sha256(url.encode("utf-8")).hexdigest(),
-        }
+        return process_preview_request(
+            paths=paths, tenant_id=tenant_id, job_id=preview_match.group(1), body=body
+        )
     if method == "POST" and profile_match:
         tenant_id = _tenant_header(headers)
         _owned_job(paths, profile_match.group(1), tenant_id)
         value = _json_body(body)
-        if value.get("profile") != "summary-safe":
-            raise RelayForgeServiceError(
-                status=HTTPStatus.UNPROCESSABLE_ENTITY,
-                code="profile_not_allowed",
-                detail="only the frozen safe report profile is available in this slice",
-            )
-        return HTTPStatus.OK, {
-            "schema": "battle.v16.relayforge.profile_result.v1",
-            "target_id": TARGET_ID,
-            "job_id": profile_match.group(1),
-            "profile": "summary-safe",
-            "render_sha256": canonical_sha256(
-                {"job_id": profile_match.group(1), "profile": "summary-safe"}
-            ),
-        }
+        if value.get("profile") == "summary-safe":
+            return HTTPStatus.OK, {
+                "schema": "battle.v16.relayforge.profile_result.v1",
+                "target_id": TARGET_ID,
+                "job_id": profile_match.group(1),
+                "profile": "summary-safe",
+                "render_sha256": canonical_sha256(
+                    {"job_id": profile_match.group(1), "profile": "summary-safe"}
+                ),
+            }
+        return process_renderer_request(
+            paths=paths, tenant_id=tenant_id, job_id=profile_match.group(1), body=body
+        )
     return None
 
 
@@ -1018,7 +1648,11 @@ def _forward_request(
     request_headers: dict[str, str] = {}
     if body:
         request_headers["content-type"] = "application/json"
-    for name in ("x-relayforge-tenant", "x-relayforge-team"):
+    for name in (
+        "x-relayforge-tenant",
+        "x-relayforge-team",
+        "x-relayforge-internal-source",
+    ):
         if name in headers:
             request_headers[name] = headers[name]
     request = urllib.request.Request(
@@ -1070,7 +1704,7 @@ def response_for(
         if role == "edge-gateway" and method == "GET" and path == "/api/v1/status":
             return HTTPStatus.OK, {
                 "schema": "battle.v16.relayforge.public_status.v1",
-                "status": "PARTIAL_RF_A_RF_B",
+                "status": "PARTIAL_RF_A_RF_B_RF_C",
                 "target_id": TARGET_ID,
                 "public_entry_point": "POST /api/v1/jobs/import",
                 "owned_report_path": "/api/v1/reports/owned",
@@ -1079,7 +1713,71 @@ def response_for(
             }
 
         rf_b_report_match = re.fullmatch(r"/api/v1/reports/([0-9a-f]{64})", path)
+        rf_c_preview_match = re.fullmatch(
+            r"/api/v1/jobs/([A-Za-z0-9._-]{1,64})/preview", path
+        )
+        rf_c_profile_match = re.fullmatch(
+            r"/api/v1/jobs/([A-Za-z0-9._-]{1,64})/report-profile", path
+        )
         local_dispatch = os.environ.get("RELAYFORGE_LOCAL_DISPATCH") == "1" or state_root is not None
+
+        if role == "edge-gateway" and method == "POST" and rf_c_preview_match and not local_dispatch:
+            tenant_id = _tenant_header(request_headers)
+            return _forward_json(
+                "http://preview-fetcher:8080/internal/preview",
+                canonical_bytes(
+                    {
+                        "tenant_id": tenant_id,
+                        "job_id": rf_c_preview_match.group(1),
+                        "request": _json_body(body),
+                    }
+                ),
+                {"x-relayforge-internal-source": "edge-gateway"},
+            )
+
+        if role == "edge-gateway" and method == "POST" and rf_c_profile_match and not local_dispatch:
+            tenant_id = _tenant_header(request_headers)
+            value = _json_body(body)
+            if value.get("profile") == "summary-safe":
+                return HTTPStatus.OK, {
+                    "schema": "battle.v16.relayforge.profile_result.v1",
+                    "target_id": TARGET_ID,
+                    "job_id": rf_c_profile_match.group(1),
+                    "profile": "summary-safe",
+                    "render_sha256": canonical_sha256(
+                        {
+                            "job_id": rf_c_profile_match.group(1),
+                            "profile": "summary-safe",
+                        }
+                    ),
+                }
+            return _forward_json(
+                "http://document-renderer:8080/internal/render/profile",
+                canonical_bytes(
+                    {
+                        "tenant_id": tenant_id,
+                        "job_id": rf_c_profile_match.group(1),
+                        "request": value,
+                    }
+                ),
+                {"x-relayforge-internal-source": "edge-gateway"},
+            )
+
+        if role == "preview-fetcher" and method == "POST" and path == "/internal/preview":
+            if request_headers.get("x-relayforge-internal-source") != "edge-gateway":
+                raise RelayForgeServiceError(
+                    status=HTTPStatus.FORBIDDEN,
+                    code="gateway_dispatch_required",
+                    detail="preview operation is unavailable",
+                )
+            value = _json_body(body)
+            return process_preview_request(
+                paths=paths,
+                tenant_id=str(value.get("tenant_id") or ""),
+                job_id=str(value.get("job_id") or ""),
+                body=canonical_bytes(value.get("request") or {}),
+                use_network_broker=True,
+            )
 
         if role == "edge-gateway" and method == "GET" and path == "/api/v1/reports/owned":
             tenant_id = _tenant_header(request_headers)
@@ -1220,6 +1918,63 @@ def response_for(
             )
             return HTTPStatus.OK, policy
 
+        rf_c_defenses = {
+            "/api/v1/defenses/redirect-destination-policy": set_preview_destination_policy,
+            "/api/v1/defenses/capability-audience-policy": set_capability_audience_policy,
+            "/api/v1/defenses/renderer-resource-policy": set_renderer_resource_policy,
+        }
+        if role == "edge-gateway" and method == "POST" and path in rf_c_defenses:
+            if request_headers.get("x-relayforge-team") != "blue":
+                raise RelayForgeServiceError(
+                    status=HTTPStatus.FORBIDDEN,
+                    code="blue_authority_required",
+                    detail="the requested RF-C control is a Blue action",
+                )
+            value = _json_body(body)
+            if not isinstance(value.get("enabled"), bool):
+                raise RelayForgeServiceError(
+                    status=HTTPStatus.UNPROCESSABLE_ENTITY,
+                    code="enabled_boolean_required",
+                    detail="enabled must be boolean",
+                )
+            policy = rf_c_defenses[path](
+                enabled=bool(value["enabled"]),
+                state_root=paths.state_root,
+                sink_root=paths.sink_root,
+            )
+            return HTTPStatus.OK, policy
+
+        if role == "capability-broker" and method == "POST" and path == "/internal/capabilities/renderer":
+            if request_headers.get("x-relayforge-internal-source") != "preview-fetcher":
+                raise RelayForgeServiceError(
+                    status=HTTPStatus.FORBIDDEN,
+                    code="preview_chain_required",
+                    detail="capability issuance is unavailable",
+                )
+            value = _json_body(body)
+            capability = _issue_renderer_capability(
+                paths=paths,
+                tenant_id=str(value.get("tenant_id") or ""),
+                job_id=str(value.get("job_id") or ""),
+                preview_receipt_sha256=str(value.get("preview_receipt_sha256") or ""),
+            )
+            return HTTPStatus.OK, {"status": "CAPABILITY_ISSUED", "capability": capability}
+
+        if role == "document-renderer" and method == "POST" and path == "/internal/render/profile":
+            if request_headers.get("x-relayforge-internal-source") != "edge-gateway":
+                raise RelayForgeServiceError(
+                    status=HTTPStatus.FORBIDDEN,
+                    code="gateway_dispatch_required",
+                    detail="renderer operation is unavailable",
+                )
+            value = _json_body(body)
+            return process_renderer_request(
+                paths=paths,
+                tenant_id=str(value.get("tenant_id") or ""),
+                job_id=str(value.get("job_id") or ""),
+                body=canonical_bytes(value.get("request") or {}),
+            )
+
         if role == "edge-gateway" and method == "POST" and path == "/api/v1/legacy/convert":
             value = _json_body(body)
             text = value.get("text")
@@ -1279,7 +2034,7 @@ def _json_bytes(value: dict[str, Any]) -> bytes:
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "RelayForgeV16/0.3"
+    server_version = "RelayForgeV16/0.4"
 
     def _handle(self) -> None:
         content_length = int(self.headers.get("content-length", "0"))

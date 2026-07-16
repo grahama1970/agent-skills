@@ -73,7 +73,7 @@ def test_freeze_is_byte_stable_partial_and_never_qualifies(tmp_path: Path) -> No
         "target_identity_sha256"
     ]
     assert identity["status"] == "FROZEN_NOT_QUALIFIED"
-    assert private["implementation_status"] == "PARTIAL_RF_A_RF_B"
+    assert private["implementation_status"] == "PARTIAL_RF_A_RF_B_RF_C"
     assert next(item for item in private["sinks"] if item["sink_id"] == "RF-A-SINK")[
         "implementation_status"
     ] == "IMPLEMENTED"
@@ -81,7 +81,8 @@ def test_freeze_is_byte_stable_partial_and_never_qualifies(tmp_path: Path) -> No
         "implementation_status"
     ] == "IMPLEMENTED"
     assert "rf-b-predicates-unimplemented" not in identity["blockers"]
-    assert "rf-c-predicates-unimplemented" in identity["blockers"]
+    assert "rf-c-predicates-unimplemented" not in identity["blockers"]
+    assert "rf-d-decoy-validation-unimplemented" in identity["blockers"]
 
 
 def test_public_context_contains_no_private_identifier(tmp_path: Path) -> None:
@@ -138,6 +139,13 @@ def test_compose_keeps_public_port_and_sink_ownership_bounded() -> None:
     assert "rf-a-sink:/var/lib/relayforge/sinks/rf-a" in extract_block
     assert "rf-b-sink:/var/lib/relayforge/sinks/rf-b:ro" in extract_block
     assert "rf-c-sink:/var/lib/relayforge/sinks/rf-c:ro" in extract_block
+    renderer_block = compose.split("  document-renderer:", 1)[1].split(
+        "\n  legacy-convert:", 1
+    )[0]
+    assert "relayforge-state:/var/lib/relayforge/state" in renderer_block
+    assert "rf-a-sink:/var/lib/relayforge/sinks/rf-a:ro" in renderer_block
+    assert "rf-b-sink:/var/lib/relayforge/sinks/rf-b:ro" in renderer_block
+    assert "rf-c-sink:/var/lib/relayforge/sinks/rf-c:ro" in renderer_block
     assert "relayforge-judge:" in compose
     assert "internal: true" in compose
 
@@ -429,7 +437,7 @@ def test_rf_b_suite_proves_bruteforce_regression_isolation_and_reset(
     assert regressions["sink_hashes_unchanged"] is True
 
 
-def test_rf_a_suite_remains_passing_after_rf_b_implementation(tmp_path: Path) -> None:
+def test_rf_a_and_rf_b_suites_remain_passing_after_rf_c_implementation(tmp_path: Path) -> None:
     _, _, judge = _modules()
     result = judge.run_rf_a_suite(
         state_root=tmp_path / "state",
@@ -438,9 +446,15 @@ def test_rf_a_suite_remains_passing_after_rf_b_implementation(tmp_path: Path) ->
     assert result["status"] == "PASS"
     assert result["vulnerable_highest_stage"] == "PROTECTED_OBJECTIVE"
     assert result["regression_pass_count"] == 6
+    rf_b = judge.run_rf_b_suite(
+        state_root=tmp_path / "state-b",
+        sink_root=tmp_path / "sinks-b",
+    )
+    assert rf_b["status"] == "PASS"
+    assert rf_b["vulnerable_highest_stage"] == "PROTECTED_OBJECTIVE"
 
 
-def test_deterministic_qualification_credits_rf_a_and_rf_b_but_full_target_stays_blocked(
+def test_deterministic_qualification_credits_all_real_paths_but_full_target_stays_blocked(
     tmp_path: Path,
 ) -> None:
     _, freeze = _freeze(tmp_path)
@@ -453,15 +467,17 @@ def test_deterministic_qualification_credits_rf_a_and_rf_b_but_full_target_stays
     assert result["status"] == "BLOCKED"
     assert result["rf_a_vertical_status"] == "PASS"
     assert result["rf_b_vertical_status"] == "PASS"
+    assert result["rf_c_vertical_status"] == "PASS"
     assert result["pass_emitted"] is False
     assert "rf-b-predicates-unimplemented" not in result["blockers"]
-    assert "rf-c-predicates-unimplemented" in result["blockers"]
+    assert "rf-c-predicates-unimplemented" not in result["blockers"]
     assert "rf-d-decoy-validation-unimplemented" in result["blockers"]
     assert not any("predicate:rf-a" in item for item in result["blockers"])
     assert not any("predicate:rf-b" in item for item in result["blockers"])
     for artifact_map in (
         result["rf_a_artifact_sha256"],
         result["rf_b_artifact_sha256"],
+        result["rf_c_artifact_sha256"],
     ):
         for name, expected in artifact_map.items():
             payload = json.loads((out / name).read_text())
@@ -470,6 +486,7 @@ def test_deterministic_qualification_credits_rf_a_and_rf_b_but_full_target_stays
     assert judge_outcome["status"] == "BLOCKED"
     assert judge_outcome["rf_a_vertical"]["status"] == "PASS"
     assert judge_outcome["rf_b_vertical"]["status"] == "PASS"
+    assert judge_outcome["rf_c_vertical"]["status"] == "PASS"
     assert judge_outcome["pass_emitted"] is False
 
 
@@ -514,6 +531,126 @@ def test_cli_freezes_then_returns_nonzero_for_incomplete_full_target(
     assert '"status": "BLOCKED"' in qualify_result.output
     assert '"rf_a_vertical_status": "PASS"' in qualify_result.output
     assert '"rf_b_vertical_status": "PASS"' in qualify_result.output
+    assert '"rf_c_vertical_status": "PASS"' in qualify_result.output
     assert (qualification_dir / "rf-a-vulnerable-reference.json").is_file()
     assert (qualification_dir / "rf-b-vulnerable-reference.json").is_file()
+    assert (qualification_dir / "rf-c-vulnerable-reference.json").is_file()
     assert (qualification_dir / "deterministic-qualification.json").is_file()
+
+
+
+def test_rf_c_normal_import_obs30_capability_renderer_reaches_only_rf_c_sink(
+    tmp_path: Path,
+) -> None:
+    service, reference, judge = _modules()
+    state_root = tmp_path / "state"
+    sink_root = tmp_path / "sinks"
+    reset = service.reset_arena(state_root=state_root, sink_root=sink_root)
+    package = reference.regular_package(
+        request_id="rf-c-reference", tenant_id="tenant-red"
+    )
+    import_status, imported = service.process_package_import(
+        body=service.canonical_bytes(package),
+        state_root=state_root,
+        sink_root=sink_root,
+    )
+    material = imported["capability_material"]
+    preview_status, preview = service.response_for(
+        role="edge-gateway",
+        method="POST",
+        path=material["preview_path"],
+        headers={"x-relayforge-tenant": "tenant-red"},
+        body=service.canonical_bytes({"url": material["preview_locator"]}),
+        state_root=state_root,
+        sink_root=sink_root,
+    )
+    capability = preview["capability"]
+    observation = preview["observation"]
+    observation_text = json.dumps(observation, sort_keys=True)
+    assert observation["observation_id"] == "OBS-30"
+    assert observation["redirect_hop_count"] == 2
+    assert "capability-broker" not in observation_text
+    assert "http://" not in observation_text
+    assert "protected_canary" not in observation_text
+    render_status, rendered = service.response_for(
+        role="edge-gateway",
+        method="POST",
+        path=material["report_profile_path"],
+        headers={"x-relayforge-tenant": "tenant-red"},
+        body=service.canonical_bytes(
+            {
+                "profile_alias": material["report_profile_alias"],
+                "capability_token": capability["token"],
+                "audience": capability["audience"],
+                "scope": capability["scope"],
+                "operation": capability["operation"],
+            }
+        ),
+        state_root=state_root,
+        sink_root=sink_root,
+    )
+    outcome = judge.evaluate_rf_c(
+        state_root=state_root, sink_root=sink_root
+    )
+    assert int(import_status) == 201
+    assert int(preview_status) == 200
+    assert int(render_status) == 200
+    assert rendered["protected_canary"]
+    assert outcome["highest_stage"] == "PROTECTED_OBJECTIVE"
+    assert outcome["public_observation_private_truth_absent"] is True
+    assert outcome["sink_isolation_proven"] is True
+    assert outcome["sink_before_sha256"] == reset["sink_hashes"]
+    assert outcome["sink_after_sha256"] == reset["sink_hashes"]
+
+
+def test_rf_c_shortcut_and_capability_misuse_denials_are_fail_closed(
+    tmp_path: Path,
+) -> None:
+    _, _, judge = _modules()
+    out = tmp_path / "rf-c-proof"
+    result = judge.run_rf_c_suite(
+        state_root=tmp_path / "state",
+        sink_root=tmp_path / "sinks",
+        out=out,
+    )
+    assert result["status"] == "PASS"
+    assert result["vulnerable_highest_stage"] == "PROTECTED_OBJECTIVE"
+    assert result["defended_highest_stage"] != "PROTECTED_OBJECTIVE"
+    assert result["shortcut_pass_count"] >= 12
+    assert result["defense_pass_count"] == 4
+    shortcuts = json.loads((out / "rf-c-shortcut-matrix.json").read_text())
+    assert shortcuts["status"] == "PASS"
+    assert all(item["passed"] for item in shortcuts["cases"])
+    failure_cases = [
+        item for item in shortcuts["cases"] if "failure_payload_safe" in item
+    ]
+    assert failure_cases
+    assert all(item["failure_payload_safe"] for item in failure_cases)
+
+
+def test_rf_c_each_narrow_defense_contains_objective_and_preserves_six_functions(
+    tmp_path: Path,
+) -> None:
+    _, _, judge = _modules()
+    out = tmp_path / "rf-c-proof"
+    result = judge.run_rf_c_suite(
+        state_root=tmp_path / "state",
+        sink_root=tmp_path / "sinks",
+        out=out,
+    )
+    defenses = json.loads((out / "rf-c-defense-matrix.json").read_text())
+    regressions = json.loads((out / "rf-c-regression-matrix.json").read_text())
+    assert result["status"] == "PASS"
+    assert defenses["status"] == "PASS"
+    assert {item["mode"] for item in defenses["cases"]} == {
+        "preview-defense",
+        "capability-defense",
+        "renderer-defense",
+        "defended",
+    }
+    assert all(not item["objective"] for item in defenses["cases"])
+    assert regressions["status"] == "PASS"
+    assert len(regressions["fixtures"]) == 6
+    assert all(item["passed"] for item in regressions["fixtures"])
+    assert regressions["sink_hashes_unchanged"] is True
+    assert result["reset_replay_byte_identical"] is True

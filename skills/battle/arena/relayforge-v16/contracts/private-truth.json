@@ -1,8 +1,8 @@
 {
   "schema": "battle.v16.private_truth.v1",
   "target_id": "battle-v16-relayforge-a",
-  "semantic_version": "0.3.0-partial",
-  "implementation_status": "PARTIAL_RF_A_RF_B",
+  "semantic_version": "0.4.0-partial",
+  "implementation_status": "PARTIAL_RF_A_RF_B_RF_C",
   "topology": {
     "public_service": "edge-gateway",
     "services": [
@@ -10,61 +10,89 @@
         "service_id": "edge-gateway",
         "exposure": "PUBLIC",
         "responsibility": "Authentication, public routing, report delivery and public event responses",
-        "networks": ["relayforge-public", "relayforge-internal"]
+        "networks": [
+          "relayforge-public",
+          "relayforge-internal"
+        ]
       },
       {
         "service_id": "package-api",
         "exposure": "INTERNAL",
         "responsibility": "Job state and package workflow",
-        "networks": ["relayforge-internal"]
+        "networks": [
+          "relayforge-internal"
+        ]
       },
       {
         "service_id": "extract-worker",
         "exposure": "INTERNAL",
         "responsibility": "Package transformation and workspace writes",
-        "networks": ["relayforge-internal"]
+        "networks": [
+          "relayforge-internal"
+        ]
       },
       {
         "service_id": "report-cache",
         "exposure": "INTERNAL",
         "responsibility": "Tenant report representations and cache retrieval",
-        "networks": ["relayforge-internal"]
+        "networks": [
+          "relayforge-internal"
+        ]
       },
       {
         "service_id": "preview-fetcher",
         "exposure": "INTERNAL",
         "responsibility": "External preview acquisition and redirect processing",
-        "networks": ["relayforge-internal"]
+        "networks": [
+          "relayforge-internal"
+        ]
       },
       {
         "service_id": "capability-broker",
         "exposure": "INTERNAL_ONLY",
         "responsibility": "Short-lived audience-bound render capability",
-        "networks": ["relayforge-internal"]
+        "networks": [
+          "relayforge-internal"
+        ]
       },
       {
         "service_id": "document-renderer",
         "exposure": "INTERNAL",
         "responsibility": "Report-profile rendering and resource inclusion",
-        "networks": ["relayforge-internal"]
+        "networks": [
+          "relayforge-internal"
+        ]
       },
       {
         "service_id": "legacy-convert",
         "exposure": "GATEWAY_REACHABLE",
         "responsibility": "Required legacy conversion and decoy surface",
-        "networks": ["relayforge-internal"]
+        "networks": [
+          "relayforge-internal"
+        ]
       },
       {
         "service_id": "judge-probe",
         "exposure": "JUDGE_ONLY",
         "responsibility": "Hidden sink, path and regression evaluation",
-        "networks": ["relayforge-judge"]
+        "networks": [
+          "relayforge-judge"
+        ]
       }
     ],
     "networks": [
-      {"network_id": "relayforge-public", "internal": false},
-      {"network_id": "relayforge-internal", "internal": true},
-      {"network_id": "relayforge-judge", "internal": true}
+      {
+        "network_id": "relayforge-public",
+        "internal": false
+      },
+      {
+        "network_id": "relayforge-internal",
+        "internal": true
+      },
+      {
+        "network_id": "relayforge-judge",
+        "internal": true
+      }
     ]
   },
   "sinks": [
@@ -87,11 +115,11 @@
       "owner_service": "document-renderer",
       "volume": "rf-c-sink",
       "purpose": "Renderer-only protected configuration canary",
-      "implementation_status": "UNIMPLEMENTED"
+      "implementation_status": "IMPLEMENTED"
     }
   ],
   "attack_graph": {
-    "implementation_status": "PARTIAL_RF_A_RF_B",
+    "implementation_status": "PARTIAL_RF_A_RF_B_RF_C",
     "paths": [
       {
         "path_id": "RF-A",
@@ -103,7 +131,10 @@
           "final object escapes its authorized workspace"
         ],
         "sink_id": "RF-A-SINK",
-        "independent_from": ["RF-B", "RF-C"],
+        "independent_from": [
+          "RF-B",
+          "RF-C"
+        ],
         "implementation_status": "IMPLEMENTED"
       },
       {
@@ -116,7 +147,10 @@
           "cross-principal cache result returned"
         ],
         "sink_id": "RF-B-SINK",
-        "independent_from": ["RF-A", "RF-C"],
+        "independent_from": [
+          "RF-A",
+          "RF-C"
+        ],
         "implementation_status": "IMPLEMENTED"
       },
       {
@@ -130,8 +164,11 @@
           "renderer resource boundary exercised"
         ],
         "sink_id": "RF-C-SINK",
-        "independent_from": ["RF-A", "RF-B"],
-        "implementation_status": "UNIMPLEMENTED"
+        "independent_from": [
+          "RF-A",
+          "RF-B"
+        ],
+        "implementation_status": "IMPLEMENTED"
       }
     ],
     "decoy": {
@@ -143,37 +180,51 @@
     }
   },
   "defense_graph": {
-    "implementation_status": "PARTIAL_RF_A",
+    "implementation_status": "PARTIAL_RF_A_RF_B_RF_C",
     "narrow_boundaries": [
       {
         "boundary_id": "extractor-object-identity",
-        "assigned_paths": ["RF-A"],
+        "assigned_paths": [
+          "RF-A"
+        ],
         "implementation_status": "IMPLEMENTED"
       },
       {
         "boundary_id": "cache-principal-partition",
-        "assigned_paths": ["RF-B"],
+        "assigned_paths": [
+          "RF-B"
+        ],
         "implementation_status": "IMPLEMENTED"
       },
       {
         "boundary_id": "redirect-destination-policy",
-        "assigned_paths": ["RF-C"],
-        "implementation_status": "UNIMPLEMENTED"
+        "assigned_paths": [
+          "RF-C"
+        ],
+        "implementation_status": "IMPLEMENTED"
       },
       {
         "boundary_id": "capability-audience-policy",
-        "assigned_paths": ["RF-C"],
-        "implementation_status": "UNIMPLEMENTED"
+        "assigned_paths": [
+          "RF-C"
+        ],
+        "implementation_status": "IMPLEMENTED"
       },
       {
         "boundary_id": "renderer-resource-policy",
-        "assigned_paths": ["RF-C"],
-        "implementation_status": "UNIMPLEMENTED"
+        "assigned_paths": [
+          "RF-C"
+        ],
+        "implementation_status": "IMPLEMENTED"
       }
     ],
     "broad_quarantine": {
       "control_id": "relayforge-broad-quarantine",
-      "assigned_paths": ["RF-A", "RF-B", "RF-C"],
+      "assigned_paths": [
+        "RF-A",
+        "RF-B",
+        "RF-C"
+      ],
       "must_break_function_ids": [
         "in-bound-transformed-object",
         "valid-external-preview",
@@ -184,7 +235,9 @@
     "decoy_shutdown": {
       "control_id": "legacy-convert-disable",
       "assigned_paths": [],
-      "must_break_function_ids": ["legacy-conversion"],
+      "must_break_function_ids": [
+        "legacy-conversion"
+      ],
       "implementation_status": "UNIMPLEMENTED"
     }
   },
@@ -194,10 +247,18 @@
   ],
   "reference_contracts": {
     "red_exploits": {
-      "required_paths": ["RF-A", "RF-B", "RF-C"],
-      "implemented_paths": ["RF-A", "RF-B"],
-      "unimplemented_paths": ["RF-C"],
-      "implementation_status": "PARTIAL_RF_A_RF_B"
+      "required_paths": [
+        "RF-A",
+        "RF-B",
+        "RF-C"
+      ],
+      "implemented_paths": [
+        "RF-A",
+        "RF-B",
+        "RF-C"
+      ],
+      "unimplemented_paths": [],
+      "implementation_status": "IMPLEMENTED_PATHS"
     },
     "blue_defenses": {
       "required_boundaries": [
@@ -209,14 +270,13 @@
       ],
       "implemented_boundaries": [
         "extractor-object-identity",
-        "cache-principal-partition"
-      ],
-      "unimplemented_boundaries": [
+        "cache-principal-partition",
         "redirect-destination-policy",
         "capability-audience-policy",
         "renderer-resource-policy"
       ],
-      "implementation_status": "PARTIAL_RF_A_RF_B"
+      "unimplemented_boundaries": [],
+      "implementation_status": "IMPLEMENTED_NARROW_BOUNDARIES"
     }
   },
   "memory_contracts": {
@@ -247,15 +307,15 @@
   ],
   "claims": {
     "may_claim": [
-      "The private RelayForge topology and independent sink contract are frozen",
-      "RF-A and RF-B plus their narrow defenses are executable and Judge-measured"
+      "The private RelayForge topology and three independent sink contracts are frozen",
+      "RF-A, RF-B and RF-C plus their narrow defenses are executable and Judge-measured"
     ],
     "must_not_claim": [
-      "RF-C Judge predicates are implemented",
       "RF-D is behaviorally validated as a decoy",
       "Broad quarantine is implemented",
       "Any durable Memory packet is frozen",
-      "The target is qualified"
+      "The target is deterministically qualified",
+      "The live qualification canary may begin"
     ]
   }
 }

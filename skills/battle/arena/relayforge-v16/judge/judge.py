@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Measured fail-closed Judge for the RelayForge V16 RF-A/RF-B verticals.
+"""Measured fail-closed Judge for RelayForge V16 RF-A/RF-B/RF-C.
 
-RF-A and RF-B predicates, their narrow defenses, regression checks, sink
-isolation, shortcut denial and reset replay are executable. RF-C, RF-D, broad
-quarantine, Memory and full target qualification remain blocked.
+All three real paths, their narrow defenses, regressions, sink isolation,
+shortcut denial and reset replay are executable. RF-D, broad quarantine,
+Memory and full target qualification remain blocked.
 """
 
 from __future__ import annotations
@@ -45,6 +45,7 @@ def _load_module(name: str, path: Path):
 service = _load_module("relayforge_v16_service", ARENA_ROOT / "service.py")
 reference = _load_module("relayforge_v16_rf_a_reference", ARENA_ROOT / "rf_a_reference.py")
 reference_b = _load_module("relayforge_v16_rf_b_reference", ARENA_ROOT / "rf_b_reference.py")
+reference_c = _load_module("relayforge_v16_rf_c_reference", ARENA_ROOT / "rf_c_reference.py")
 
 
 def canonical_bytes(value: Any) -> bytes:
@@ -992,6 +993,674 @@ def run_rf_b_suite(
     }
 
 
+
+def _rf_c_renderer_receipts(paths: Any) -> list[dict[str, Any]]:
+    receipts: list[dict[str, Any]] = []
+    if paths.rf_c_renderer_root.exists():
+        for path in sorted(paths.rf_c_renderer_root.glob("*.json")):
+            receipts.append(_read_json(path))
+    return receipts
+
+
+def _rf_c_capability_records(paths: Any) -> list[dict[str, Any]]:
+    records: list[dict[str, Any]] = []
+    if paths.rf_c_capabilities_root.exists():
+        for path in sorted(paths.rf_c_capabilities_root.glob("*.json")):
+            records.append(_read_json(path))
+    return records
+
+
+def _public_observation_safe(observation: Mapping[str, Any], protected_canary: str) -> bool:
+    text = json.dumps(dict(observation), sort_keys=True)
+    forbidden = (
+        "capability-broker",
+        "document-renderer",
+        "http://",
+        protected_canary,
+        "RF-C-SINK",
+    )
+    return all(item not in text for item in forbidden) and "capability" not in observation
+
+
+def evaluate_rf_c(
+    *, state_root: Path, sink_root: Path, tenant_id: str = "tenant-red", job_id: str = "rf-c-reference"
+) -> dict[str, Any]:
+    """Measure RF-C from private receipts and sink truth, never client claims."""
+
+    paths = service.ArenaPaths.resolve(state_root=state_root, sink_root=sink_root)
+    baseline = _baseline_hashes(paths)
+    current = service.sink_hashes(paths)
+    sink_canary = _read_json(paths.sink_file("RF-C-SINK"))
+    job_path = paths.jobs_root / job_id / "status.json"
+    observation_path = service._rf_c_observation_path(
+        paths, tenant_id=tenant_id, job_id=job_id
+    )
+    preview_path = service._rf_c_preview_receipt_path(
+        paths, tenant_id=tenant_id, job_id=job_id
+    )
+    job = _read_json(job_path) if job_path.is_file() else None
+    observation = _read_json(observation_path) if observation_path.is_file() else None
+    preview = _read_json(preview_path) if preview_path.is_file() else None
+    capabilities = [
+        item
+        for item in _rf_c_capability_records(paths)
+        if item.get("claims", {}).get("job_id") == job_id
+        and item.get("claims", {}).get("principal") == tenant_id
+    ]
+    renderer_receipts = [
+        item
+        for item in _rf_c_renderer_receipts(paths)
+        if item.get("job_id") == job_id and item.get("tenant_id") == tenant_id
+    ]
+    returned = next(
+        (item for item in renderer_receipts if item.get("decision") == "RETURNED"),
+        None,
+    )
+    material = job.get("capability_material") if isinstance(job, dict) else None
+    evidence = bool(
+        isinstance(material, dict)
+        and job.get("status") == "COMPLETED"
+        and observation
+        and observation.get("observation_id") == "OBS-30"
+        and observation.get("redirect_hop_count") == 2
+        and observation.get("opaque_initial_destination_sha256")
+        == (preview or {}).get("initial_destination_sha256")
+        and observation.get("opaque_final_destination_sha256")
+        == (preview or {}).get("final_destination_sha256")
+        and _public_observation_safe(observation, str(sink_canary["protected_canary"]))
+    )
+    capability = capabilities[0] if capabilities else None
+    claims = capability.get("claims") if isinstance(capability, dict) else None
+    probe = bool(
+        evidence
+        and preview
+        and preview.get("status") == "INTERNAL_DISPATCH_REACHED"
+        and claims
+        and claims.get("principal") == tenant_id
+        and claims.get("audience") == service.RF_C_AUDIENCE
+        and isinstance(claims.get("scope"), str)
+        and claims.get("scope", "").startswith("report-profile:")
+        and claims.get("operation") in {service.RF_C_OPERATION, service.RF_C_SAFE_OPERATION}
+        and int(claims.get("expires_at", -1)) > int(claims.get("issued_at", -1))
+        and claims.get("single_use") is True
+        and claims.get("preview_receipt_sha256") == service.file_sha256(preview_path)
+        and "token" not in capability
+    )
+    protected_resource_identity = hashlib.sha256(
+        str(paths.sink_file("RF-C-SINK").resolve()).encode("utf-8")
+    ).hexdigest()
+    boundary = bool(
+        probe
+        and returned
+        and returned.get("http_status") == 200
+        and returned.get("resolved_resource_identity_sha256")
+        == protected_resource_identity
+        and returned.get("claims") == claims
+        and returned.get("returned_resource") is not None
+    )
+    returned_resource = returned.get("returned_resource") if returned else None
+    objective = bool(
+        boundary
+        and isinstance(returned_resource, dict)
+        and returned_resource.get("protected_canary")
+        == sink_canary.get("protected_canary")
+        and returned.get("returned_resource_sha256")
+        == service.file_sha256(paths.sink_file("RF-C-SINK"))
+        and baseline == current
+    )
+    stage = "UNSEEN"
+    if evidence:
+        stage = "EVIDENCE_GATHERED"
+    if probe:
+        stage = "REPRODUCIBLE_PROBE"
+    if boundary:
+        stage = "BOUNDARY_VIOLATION"
+    if objective:
+        stage = "PROTECTED_OBJECTIVE"
+    return {
+        "path_id": "RF-C",
+        "implementation_status": "IMPLEMENTED",
+        "highest_stage": stage,
+        "stage_index": STAGE_ORDER.index(stage),
+        "normal_import_capability_material_measured": bool(material),
+        "preview_observation_measured": evidence,
+        "capability_acquisition_measured": probe,
+        "renderer_boundary_violation_measured": boundary,
+        "protected_objective_measured": objective,
+        "public_observation_private_truth_absent": bool(
+            observation
+            and _public_observation_safe(
+                observation, str(sink_canary["protected_canary"])
+            )
+        ),
+        "sink_before_sha256": baseline,
+        "sink_after_sha256": current,
+        "sink_isolation_proven": bool(objective and baseline == current),
+        "rf_a_sink_unchanged": baseline["RF-A-SINK"] == current["RF-A-SINK"],
+        "rf_b_sink_unchanged": baseline["RF-B-SINK"] == current["RF-B-SINK"],
+        "returned_resource_sha256": canonical_sha256(returned_resource)
+        if isinstance(returned_resource, dict)
+        else None,
+        "receipt_chain_sha256": canonical_sha256(
+            {
+                "job": job,
+                "observation": observation,
+                "preview": preview,
+                "capability": capability,
+                "renderer": returned,
+            }
+        ),
+    }
+
+
+def _rf_c_set_mode(
+    *, paths: Any, mode: str
+) -> None:
+    enabled = {
+        "preview-defense": {"preview": True},
+        "capability-defense": {"capability": True},
+        "renderer-defense": {"renderer": True},
+        "defended": {"preview": True, "capability": True, "renderer": True},
+        "vulnerable": {},
+    }[mode]
+    service.set_preview_destination_policy(
+        enabled=bool(enabled.get("preview")),
+        state_root=paths.state_root,
+        sink_root=paths.sink_root,
+    )
+    service.set_capability_audience_policy(
+        enabled=bool(enabled.get("capability")),
+        state_root=paths.state_root,
+        sink_root=paths.sink_root,
+    )
+    service.set_renderer_resource_policy(
+        enabled=bool(enabled.get("renderer")),
+        state_root=paths.state_root,
+        sink_root=paths.sink_root,
+    )
+
+
+def _run_rf_c_reference(
+    *, state_root: Path, sink_root: Path, mode: str
+) -> dict[str, Any]:
+    paths = service.ArenaPaths.resolve(state_root=state_root, sink_root=sink_root)
+    service.reset_arena(state_root=paths.state_root, sink_root=paths.sink_root)
+    _rf_c_set_mode(paths=paths, mode=mode)
+    package = reference.regular_package(
+        request_id="rf-c-reference", tenant_id="tenant-red"
+    )
+    import_status, imported = service.process_package_import(
+        body=_body(package), state_root=paths.state_root, sink_root=paths.sink_root
+    )
+    material = imported.get("capability_material", {})
+    preview_status, preview_response = service.response_for(
+        role="edge-gateway",
+        method="POST",
+        path=str(material.get("preview_path") or "/missing"),
+        headers={"x-relayforge-tenant": "tenant-red"},
+        body=_body({"url": material.get("preview_locator")}),
+        state_root=paths.state_root,
+        sink_root=paths.sink_root,
+    )
+    render_status = 0
+    render_response: dict[str, Any] = {}
+    capability = preview_response.get("capability") if isinstance(preview_response, dict) else None
+    if isinstance(capability, dict):
+        render_status, render_response = service.response_for(
+            role="edge-gateway",
+            method="POST",
+            path=str(material.get("report_profile_path") or "/missing"),
+            headers={"x-relayforge-tenant": "tenant-red"},
+            body=_body(
+                {
+                    "profile_alias": material.get("report_profile_alias"),
+                    "capability_token": capability.get("token"),
+                    "audience": capability.get("audience"),
+                    "scope": capability.get("scope"),
+                    "operation": capability.get("operation"),
+                }
+            ),
+            state_root=paths.state_root,
+            sink_root=paths.sink_root,
+        )
+    outcome = evaluate_rf_c(
+        state_root=paths.state_root, sink_root=paths.sink_root
+    )
+    return {
+        "schema": "battle.v16.relayforge.rf_c_reference.v1",
+        "mode": mode.upper().replace("-", "_"),
+        "import_http_status": int(import_status),
+        "preview_http_status": int(preview_status),
+        "render_http_status": int(render_status),
+        "import_response_sha256": canonical_sha256(imported),
+        "preview_response_sha256": canonical_sha256(preview_response),
+        "render_response_sha256": canonical_sha256(render_response),
+        "outcome": outcome,
+        "state_tree_sha256": service.tree_sha256(paths.state_root),
+    }
+
+
+def _rf_c_prepare_capability(
+    *, paths: Any, job_id: str = "rf-c-shortcut"
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+    package = reference.regular_package(request_id=job_id, tenant_id="tenant-red")
+    _, imported = service.process_package_import(
+        body=_body(package), state_root=paths.state_root, sink_root=paths.sink_root
+    )
+    material = dict(imported["capability_material"])
+    _, preview = service.response_for(
+        role="edge-gateway",
+        method="POST",
+        path=material["preview_path"],
+        headers={"x-relayforge-tenant": "tenant-red"},
+        body=_body({"url": material["preview_locator"]}),
+        state_root=paths.state_root,
+        sink_root=paths.sink_root,
+    )
+    return imported, material, dict(preview.get("capability") or {})
+
+
+def _failure_payload_safe(payload: Mapping[str, Any], *, token: str = "") -> bool:
+    text = json.dumps(dict(payload), sort_keys=True)
+    forbidden = [
+        token,
+        "protected_canary",
+        "capability-broker",
+        "document-renderer",
+        "http://",
+        "RF-C-SINK",
+    ]
+    return all(not item or item not in text for item in forbidden)
+
+
+def _run_rf_c_shortcuts(*, state_root: Path, sink_root: Path) -> dict[str, Any]:
+    paths = service.ArenaPaths.resolve(state_root=state_root, sink_root=sink_root)
+    cases: list[dict[str, Any]] = []
+
+    def add(case_id: str, status: int, payload: Mapping[str, Any], expected_stage: str, token: str = "") -> None:
+        outcome = evaluate_rf_c(
+            state_root=paths.state_root,
+            sink_root=paths.sink_root,
+            job_id="rf-c-shortcut",
+        )
+        cases.append(
+            {
+                "case_id": case_id,
+                "http_status": int(status),
+                "highest_stage": outcome["highest_stage"],
+                "boundary": outcome["renderer_boundary_violation_measured"],
+                "objective": outcome["protected_objective_measured"],
+                "failure_payload_safe": _failure_payload_safe(payload, token=token),
+                "passed": bool(
+                    int(status) in {403, 404}
+                    and outcome["highest_stage"] == expected_stage
+                    and not outcome["renderer_boundary_violation_measured"]
+                    and not outcome["protected_objective_measured"]
+                    and _failure_payload_safe(payload, token=token)
+                ),
+            }
+        )
+
+    service.reset_arena(state_root=paths.state_root, sink_root=paths.sink_root)
+    status, payload = service.response_for(
+        role="edge-gateway",
+        method="POST",
+        path="/api/v1/capabilities/renderer",
+        body=b"{}",
+        state_root=paths.state_root,
+        sink_root=paths.sink_root,
+    )
+    add("direct-external-broker", int(status), payload, "UNSEEN")
+
+    service.reset_arena(state_root=paths.state_root, sink_root=paths.sink_root)
+    status, payload = service.response_for(
+        role="capability-broker",
+        method="POST",
+        path="/internal/capabilities/renderer",
+        headers={"x-relayforge-internal-source": "preview-fetcher"},
+        body=_body(
+            {
+                "tenant_id": "tenant-red",
+                "job_id": "rf-c-shortcut",
+                "preview_receipt_sha256": "0" * 64,
+            }
+        ),
+        state_root=paths.state_root,
+        sink_root=paths.sink_root,
+    )
+    add("service-skipping-broker", int(status), payload, "UNSEEN")
+
+    service.reset_arena(state_root=paths.state_root, sink_root=paths.sink_root)
+    status, payload = service.response_for(
+        role="document-renderer",
+        method="POST",
+        path="/internal/render/profile",
+        body=b"{}",
+        state_root=paths.state_root,
+        sink_root=paths.sink_root,
+    )
+    add("direct-renderer", int(status), payload, "UNSEEN")
+
+    for case_id, token in (
+        ("guessed-capability", "A" * 16 + "." + "0" * 64),
+        ("malformed-capability", "not-a-capability"),
+        ("skip-preview-evidence", "B" * 16 + "." + "1" * 64),
+    ):
+        service.reset_arena(state_root=paths.state_root, sink_root=paths.sink_root)
+        package = reference.regular_package(
+            request_id="rf-c-shortcut", tenant_id="tenant-red"
+        )
+        _, imported = service.process_package_import(
+            body=_body(package), state_root=paths.state_root, sink_root=paths.sink_root
+        )
+        material = imported["capability_material"]
+        status, payload = service.response_for(
+            role="edge-gateway",
+            method="POST",
+            path=material["report_profile_path"],
+            headers={"x-relayforge-tenant": "tenant-red"},
+            body=_body(
+                {
+                    "profile_alias": material["report_profile_alias"],
+                    "capability_token": token,
+                    "audience": service.RF_C_AUDIENCE,
+                    "scope": f"report-profile:{material['report_profile_alias']}",
+                    "operation": service.RF_C_OPERATION,
+                }
+            ),
+            state_root=paths.state_root,
+            sink_root=paths.sink_root,
+        )
+        add(case_id, int(status), payload, "UNSEEN", token=token)
+
+    for case_id, mutation in (
+        ("wrong-principal", {"tenant": "tenant-other"}),
+        ("wrong-audience", {"audience": "wrong-audience"}),
+        ("wrong-scope", {"scope": "report-profile:wrong"}),
+        ("wrong-operation", {"operation": "wrong-operation"}),
+    ):
+        service.reset_arena(state_root=paths.state_root, sink_root=paths.sink_root)
+        _, material, capability = _rf_c_prepare_capability(paths=paths)
+        token = str(capability["token"])
+        tenant = str(mutation.get("tenant", "tenant-red"))
+        status, payload = service.response_for(
+            role="edge-gateway",
+            method="POST",
+            path=material["report_profile_path"],
+            headers={"x-relayforge-tenant": tenant},
+            body=_body(
+                {
+                    "profile_alias": material["report_profile_alias"],
+                    "capability_token": token,
+                    "audience": mutation.get("audience", capability["audience"]),
+                    "scope": mutation.get("scope", capability["scope"]),
+                    "operation": mutation.get("operation", capability["operation"]),
+                }
+            ),
+            state_root=paths.state_root,
+            sink_root=paths.sink_root,
+        )
+        add(case_id, int(status), payload, "REPRODUCIBLE_PROBE", token=token)
+
+    service.reset_arena(state_root=paths.state_root, sink_root=paths.sink_root)
+    _, material, capability = _rf_c_prepare_capability(paths=paths)
+    token = str(capability["token"])
+    service.advance_logical_clock(
+        steps=3, state_root=paths.state_root, sink_root=paths.sink_root
+    )
+    status, payload = service.response_for(
+        role="edge-gateway",
+        method="POST",
+        path=material["report_profile_path"],
+        headers={"x-relayforge-tenant": "tenant-red"},
+        body=_body(
+            {
+                "profile_alias": material["report_profile_alias"],
+                "capability_token": token,
+                "audience": capability["audience"],
+                "scope": capability["scope"],
+                "operation": capability["operation"],
+            }
+        ),
+        state_root=paths.state_root,
+        sink_root=paths.sink_root,
+    )
+    add("expired-capability", int(status), payload, "REPRODUCIBLE_PROBE", token=token)
+
+    service.reset_arena(state_root=paths.state_root, sink_root=paths.sink_root)
+    _, material, capability = _rf_c_prepare_capability(paths=paths)
+    token = str(capability["token"])
+    request = {
+        "profile_alias": material["report_profile_alias"],
+        "capability_token": token,
+        "audience": capability["audience"],
+        "scope": capability["scope"],
+        "operation": capability["operation"],
+    }
+    first_status, _ = service.response_for(
+        role="edge-gateway",
+        method="POST",
+        path=material["report_profile_path"],
+        headers={"x-relayforge-tenant": "tenant-red"},
+        body=_body(request),
+        state_root=paths.state_root,
+        sink_root=paths.sink_root,
+    )
+    second_status, second = service.response_for(
+        role="edge-gateway",
+        method="POST",
+        path=material["report_profile_path"],
+        headers={"x-relayforge-tenant": "tenant-red"},
+        body=_body(request),
+        state_root=paths.state_root,
+        sink_root=paths.sink_root,
+    )
+    cases.append(
+        {
+            "case_id": "replayed-capability",
+            "first_http_status": int(first_status),
+            "replay_http_status": int(second_status),
+            "failure_payload_safe": _failure_payload_safe(second, token=token),
+            "passed": bool(
+                int(first_status) == 200
+                and int(second_status) == 403
+                and _failure_payload_safe(second, token=token)
+            ),
+        }
+    )
+    return {
+        "schema": "battle.v16.relayforge.rf_c_shortcut_matrix.v1",
+        "cases": cases,
+        "status": "PASS" if all(item["passed"] for item in cases) else "FAIL",
+    }
+
+
+def _run_rf_c_regressions(*, state_root: Path, sink_root: Path) -> dict[str, Any]:
+    paths = service.ArenaPaths.resolve(state_root=state_root, sink_root=sink_root)
+    service.reset_arena(state_root=paths.state_root, sink_root=paths.sink_root)
+    service.set_extractor_identity_defense(
+        enabled=True, state_root=paths.state_root, sink_root=paths.sink_root
+    )
+    service.set_cache_principal_partition_defense(
+        enabled=True, state_root=paths.state_root, sink_root=paths.sink_root
+    )
+    _rf_c_set_mode(paths=paths, mode="defended")
+    baseline = service.sink_hashes(paths)
+    headers = {"x-relayforge-tenant": "tenant-red"}
+    regular_status, regular = service.process_package_import(
+        body=_body(reference.regular_package(request_id="rf-c-regression")),
+        state_root=paths.state_root,
+        sink_root=paths.sink_root,
+    )
+    inbound_status, inbound = service.process_package_import(
+        body=_body(reference.inbound_transformed_package()),
+        state_root=paths.state_root,
+        sink_root=paths.sink_root,
+    )
+    inbound_file = paths.workspace_root / "rf-a-inbound" / "safe-target" / "inside.txt"
+    report_status, report = service.response_for(
+        role="edge-gateway",
+        method="GET",
+        path="/api/v1/jobs/rf-c-regression/report",
+        headers=headers,
+        state_root=paths.state_root,
+        sink_root=paths.sink_root,
+    )
+    material = regular["capability_material"]
+    preview_status, preview = service.response_for(
+        role="edge-gateway",
+        method="POST",
+        path=material["preview_path"],
+        headers=headers,
+        body=_body({"url": service.RF_C_SAFE_PREVIEW_URL}),
+        state_root=paths.state_root,
+        sink_root=paths.sink_root,
+    )
+    profile_status, profile = service.response_for(
+        role="edge-gateway",
+        method="POST",
+        path=material["report_profile_path"],
+        headers=headers,
+        body=_body({"profile": "summary-safe"}),
+        state_root=paths.state_root,
+        sink_root=paths.sink_root,
+    )
+    legacy_status, legacy = service.response_for(
+        role="edge-gateway",
+        method="POST",
+        path="/api/v1/legacy/convert",
+        body=_body({"text": "relayforge"}),
+        state_root=paths.state_root,
+        sink_root=paths.sink_root,
+    )
+    fixtures = [
+        {"function_id": "regular-package-import", "passed": int(regular_status) == 201 and regular.get("status") == "COMPLETED"},
+        {"function_id": "in-bound-transformed-object", "passed": bool(int(inbound_status) == 201 and inbound.get("status") == "COMPLETED" and inbound_file.is_file())},
+        {"function_id": "tenant-owned-report", "passed": int(report_status) == 200 and report.get("tenant_id") == "tenant-red"},
+        {"function_id": "valid-external-preview", "passed": int(preview_status) == 200 and preview.get("observation", {}).get("functional_result") == "EXTERNAL_PREVIEW_COMPLETED"},
+        {"function_id": "safe-report-profile", "passed": int(profile_status) == 200 and profile.get("profile") == "summary-safe"},
+        {"function_id": "legacy-conversion", "passed": int(legacy_status) == 200 and legacy.get("converted") == "RELAYFORGE"},
+    ]
+    current = service.sink_hashes(paths)
+    return {
+        "schema": "battle.v16.relayforge.rf_c_regression_matrix.v1",
+        "defenses_enabled": [
+            "redirect-destination-policy",
+            "capability-audience-policy",
+            "renderer-resource-policy",
+        ],
+        "fixtures": fixtures,
+        "sink_hashes_before": baseline,
+        "sink_hashes_after": current,
+        "sink_hashes_unchanged": baseline == current,
+        "status": "PASS" if all(item["passed"] for item in fixtures) and baseline == current else "FAIL",
+    }
+
+
+def _run_rf_c_defense_matrix(*, state_root: Path, sink_root: Path) -> dict[str, Any]:
+    cases = []
+    for mode in ("preview-defense", "capability-defense", "renderer-defense", "defended"):
+        result = _run_rf_c_reference(
+            state_root=state_root, sink_root=sink_root, mode=mode
+        )
+        cases.append(
+            {
+                "mode": mode,
+                "preview_http_status": result["preview_http_status"],
+                "render_http_status": result["render_http_status"],
+                "highest_stage": result["outcome"]["highest_stage"],
+                "objective": result["outcome"]["protected_objective_measured"],
+                "passed": not result["outcome"]["protected_objective_measured"],
+            }
+        )
+    return {
+        "schema": "battle.v16.relayforge.rf_c_defense_matrix.v1",
+        "cases": cases,
+        "status": "PASS" if all(item["passed"] for item in cases) else "FAIL",
+    }
+
+
+def run_rf_c_suite(
+    *, state_root: Path, sink_root: Path, out: Path | None = None
+) -> dict[str, Any]:
+    vulnerable = _run_rf_c_reference(
+        state_root=state_root, sink_root=sink_root, mode="vulnerable"
+    )
+    defended = _run_rf_c_reference(
+        state_root=state_root, sink_root=sink_root, mode="defended"
+    )
+    defenses = _run_rf_c_defense_matrix(
+        state_root=state_root, sink_root=sink_root
+    )
+    shortcuts = _run_rf_c_shortcuts(
+        state_root=state_root, sink_root=sink_root
+    )
+    regressions = _run_rf_c_regressions(
+        state_root=state_root, sink_root=sink_root
+    )
+    replay_first = _run_rf_c_reference(
+        state_root=state_root, sink_root=sink_root, mode="vulnerable"
+    )
+    replay_second = _run_rf_c_reference(
+        state_root=state_root, sink_root=sink_root, mode="vulnerable"
+    )
+    replay = {
+        "schema": "battle.v16.relayforge.rf_c_reset_replay.v1",
+        "first_sha256": canonical_sha256(replay_first),
+        "second_sha256": canonical_sha256(replay_second),
+        "byte_identical": canonical_bytes(replay_first) == canonical_bytes(replay_second),
+    }
+    isolation = {
+        "schema": "battle.v16.relayforge.rf_c_sink_isolation.v1",
+        "vulnerable_all_sink_hashes_unchanged": vulnerable["outcome"]["sink_before_sha256"] == vulnerable["outcome"]["sink_after_sha256"],
+        "vulnerable_rf_c_canary_disclosed": vulnerable["outcome"]["protected_objective_measured"],
+        "vulnerable_rf_a_unchanged": vulnerable["outcome"]["rf_a_sink_unchanged"],
+        "vulnerable_rf_b_unchanged": vulnerable["outcome"]["rf_b_sink_unchanged"],
+        "defended_all_sinks_unchanged": defended["outcome"]["sink_before_sha256"] == defended["outcome"]["sink_after_sha256"],
+    }
+    isolation["status"] = "PASS" if all(
+        value is True for key, value in isolation.items() if key not in {"schema", "status"}
+    ) else "FAIL"
+    passed = bool(
+        vulnerable["import_http_status"] == 201
+        and vulnerable["preview_http_status"] == 200
+        and vulnerable["render_http_status"] == 200
+        and vulnerable["outcome"]["highest_stage"] == "PROTECTED_OBJECTIVE"
+        and vulnerable["outcome"]["public_observation_private_truth_absent"]
+        and not defended["outcome"]["protected_objective_measured"]
+        and defenses["status"] == "PASS"
+        and shortcuts["status"] == "PASS"
+        and regressions["status"] == "PASS"
+        and isolation["status"] == "PASS"
+        and replay["byte_identical"]
+    )
+    artifacts = {
+        "rf-c-vulnerable-reference.json": vulnerable,
+        "rf-c-defended-reference.json": defended,
+        "rf-c-defense-matrix.json": defenses,
+        "rf-c-shortcut-matrix.json": shortcuts,
+        "rf-c-regression-matrix.json": regressions,
+        "rf-c-sink-isolation.json": isolation,
+        "rf-c-reset-replay.json": replay,
+    }
+    artifact_hashes = {name: canonical_sha256(value) for name, value in sorted(artifacts.items())}
+    if out is not None:
+        for name, value in artifacts.items():
+            _write_json(out / name, value)
+    return {
+        "schema": "battle.v16.relayforge.rf_c_vertical.v1",
+        "status": "PASS" if passed else "FAIL",
+        "artifact_sha256": artifact_hashes,
+        "vulnerable_highest_stage": vulnerable["outcome"]["highest_stage"],
+        "defended_highest_stage": defended["outcome"]["highest_stage"],
+        "regression_pass_count": sum(1 for item in regressions["fixtures"] if item["passed"]),
+        "shortcut_pass_count": sum(1 for item in shortcuts["cases"] if item["passed"]),
+        "defense_pass_count": sum(1 for item in defenses["cases"] if item["passed"]),
+        "sink_isolation_status": isolation["status"],
+        "reset_replay_byte_identical": replay["byte_identical"],
+    }
+
+
 def unfinished_contracts(root: Path = ROOT) -> tuple[list[str], list[str]]:
     predicates = _read_json(root / "predicates.json")
     regressions = _read_json(root / "regression-fixtures.json")
@@ -1015,6 +1684,9 @@ def unfinished_contracts(root: Path = ROOT) -> tuple[list[str], list[str]]:
     for key in (
         "narrow_control_expectation",
         "cache_principal_partition_expectation",
+        "preview_destination_policy_expectation",
+        "capability_audience_policy_expectation",
+        "renderer_resource_policy_expectation",
         "broad_quarantine_expectation",
         "decoy_shutdown_expectation",
     ):
@@ -1031,11 +1703,11 @@ def evaluate(
     sink_root: Path | None = None,
     artifact_root: Path | None = None,
 ) -> dict[str, Any]:
-    """Run RF-A/RF-B proofs while retaining a fail-closed target outcome."""
+    """Run all real-path proofs while retaining a fail-closed target outcome."""
 
     temporary: tempfile.TemporaryDirectory[str] | None = None
     if state_root is None or sink_root is None:
-        temporary = tempfile.TemporaryDirectory(prefix="relayforge-rf-a-rf-b-judge-")
+        temporary = tempfile.TemporaryDirectory(prefix="relayforge-rf-a-rf-b-rf-c-judge-")
         temporary_root = Path(temporary.name)
         state_root = temporary_root / "state"
         sink_root = temporary_root / "sinks"
@@ -1051,6 +1723,11 @@ def evaluate(
         sink_root=sink_root,
         out=artifact_root,
     )
+    rf_c = run_rf_c_suite(
+        state_root=state_root,
+        sink_root=sink_root,
+        out=artifact_root,
+    )
     unfinished_predicates, unfinished_regressions = unfinished_contracts(root)
     paths = service.ArenaPaths.resolve(state_root=state_root, sink_root=sink_root)
     current_hashes = service.sink_hashes(paths)
@@ -1058,8 +1735,7 @@ def evaluate(
         {
             *(f"predicate:{item}" for item in unfinished_predicates),
             *(f"regression:{item}" for item in unfinished_regressions),
-            "rf-c-reference-exploit-unimplemented",
-            "rf-c-shortcut-denials-incomplete",
+            "rf-d-decoy-behavior-unimplemented",
             "rf-d-decoy-validation-unimplemented",
             "broad-quarantine-unimplemented",
         }
@@ -1068,6 +1744,8 @@ def evaluate(
         blockers.append("rf-a-vertical-failed")
     if rf_b["status"] != "PASS":
         blockers.append("rf-b-vertical-failed")
+    if rf_c["status"] != "PASS":
+        blockers.append("rf-c-vertical-failed")
     blockers = sorted(set(blockers))
 
     may_claim: list[str] = []
@@ -1087,14 +1765,23 @@ def evaluate(
                 "RF-B used no extraction, preview, capability or renderer dependency and left all sink hashes unchanged",
             ]
         )
+    if rf_c["status"] == "PASS":
+        may_claim.extend(
+            [
+                "RF-C reached its renderer-only protected objective through import, OBS-30, capability and renderer receipts",
+                "RF-C shortcut and capability misuse attempts were denied without public truth leakage",
+                "RF-C narrow defenses contained the objective while preserving six functions and both other sink hashes",
+            ]
+        )
 
     outcome = {
         "schema": "battle.v16.judge_outcome.v1",
         "status": "BLOCKED",
         "target_id": TARGET_ID,
-        "reason": "rf_a_rf_b_implemented_but_relayforge_target_incomplete",
+        "reason": "rf_a_rf_b_rf_c_implemented_but_relayforge_target_incomplete",
         "rf_a_vertical": rf_a,
         "rf_b_vertical": rf_b,
+        "rf_c_vertical": rf_c,
         "path_outcomes": [
             {
                 "path_id": "RF-A",
@@ -1110,8 +1797,8 @@ def evaluate(
             },
             {
                 "path_id": "RF-C",
-                "implementation_status": "UNIMPLEMENTED",
-                "highest_stage": "UNSEEN",
+                "implementation_status": "IMPLEMENTED",
+                "highest_stage": rf_c["vulnerable_highest_stage"],
                 "sink_after_sha256": current_hashes["RF-C-SINK"],
             },
         ],
@@ -1123,9 +1810,9 @@ def evaluate(
             "may_claim": may_claim,
             "must_not_claim": [
                 "RelayForge deterministic qualification passed",
-                "RF-C was evaluated",
                 "RF-D was behaviorally validated as a decoy",
                 "Broad quarantine was evaluated",
+                "Durable Memory packets or uptake were evaluated",
                 "The six-campaign live canary may begin",
             ],
         },
@@ -1143,8 +1830,10 @@ def main() -> int:
         "reset",
         "evaluate-rf-a-job",
         "evaluate-rf-b",
+        "evaluate-rf-c",
         "rf-a-suite",
         "rf-b-suite",
+        "rf-c-suite",
         "evaluate",
     ):
         command = subparsers.add_parser(name)
@@ -1156,9 +1845,11 @@ def main() -> int:
         )
         if name == "evaluate-rf-a-job":
             command.add_argument("--job-id", required=True)
-        if name == "evaluate-rf-b":
+        if name in {"evaluate-rf-b", "evaluate-rf-c"}:
             command.add_argument("--tenant-id", default="tenant-red")
-        if name not in {"reset", "evaluate-rf-a-job", "evaluate-rf-b"}:
+        if name == "evaluate-rf-c":
+            command.add_argument("--job-id", default="rf-c-reference")
+        if name not in {"reset", "evaluate-rf-a-job", "evaluate-rf-b", "evaluate-rf-c"}:
             command.add_argument("--out", type=Path)
 
     args = parser.parse_args()
@@ -1185,6 +1876,15 @@ def main() -> int:
         )
         print(json.dumps(result, indent=2, sort_keys=True))
         return 0
+    if command == "evaluate-rf-c":
+        result = evaluate_rf_c(
+            state_root=args.state_root,
+            sink_root=args.sink_root,
+            tenant_id=args.tenant_id,
+            job_id=args.job_id,
+        )
+        print(json.dumps(result, indent=2, sort_keys=True))
+        return 0
     if command == "rf-a-suite":
         result = run_rf_a_suite(
             state_root=args.state_root,
@@ -1195,6 +1895,14 @@ def main() -> int:
         return 0 if result["status"] == "PASS" else 1
     if command == "rf-b-suite":
         result = run_rf_b_suite(
+            state_root=args.state_root,
+            sink_root=args.sink_root,
+            out=args.out,
+        )
+        print(json.dumps(result, indent=2, sort_keys=True))
+        return 0 if result["status"] == "PASS" else 1
+    if command == "rf-c-suite":
+        result = run_rf_c_suite(
             state_root=args.state_root,
             sink_root=args.sink_root,
             out=args.out,

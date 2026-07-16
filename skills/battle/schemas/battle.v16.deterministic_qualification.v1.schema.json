@@ -4,37 +4,103 @@
   "type": "object",
   "additionalProperties": false,
   "$defs": {
-    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
   },
   "properties": {
-    "schema": {"const": "battle.v16.deterministic_qualification.v1"},
-    "status": {"const": "BLOCKED"},
-    "target_id": {"const": "battle-v16-relayforge-a"},
-    "target_identity_sha256": {"$ref": "#/$defs/sha256"},
-    "freeze_manifest_sha256": {"$ref": "#/$defs/sha256"},
-    "judge_outcome_sha256": {"$ref": "#/$defs/sha256"},
-    "rf_a_vertical_status": {"enum": ["PASS", "FAIL"]},
+    "schema": {
+      "const": "battle.v16.deterministic_qualification.v1"
+    },
+    "status": {
+      "const": "BLOCKED"
+    },
+    "target_id": {
+      "const": "battle-v16-relayforge-a"
+    },
+    "target_identity_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "freeze_manifest_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "judge_outcome_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "rf_a_vertical_status": {
+      "enum": [
+        "PASS",
+        "FAIL"
+      ]
+    },
     "rf_a_artifact_sha256": {
       "type": "object",
       "minProperties": 6,
-      "additionalProperties": {"$ref": "#/$defs/sha256"}
+      "additionalProperties": {
+        "$ref": "#/$defs/sha256"
+      }
     },
-    "rf_b_vertical_status": {"enum": ["PASS", "FAIL"]},
+    "rf_b_vertical_status": {
+      "enum": [
+        "PASS",
+        "FAIL"
+      ]
+    },
     "rf_b_artifact_sha256": {
       "type": "object",
       "minProperties": 6,
-      "additionalProperties": {"$ref": "#/$defs/sha256"}
+      "additionalProperties": {
+        "$ref": "#/$defs/sha256"
+      }
     },
-    "blockers": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
-    "pass_emitted": {"const": false},
+    "blockers": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "pass_emitted": {
+      "const": false
+    },
     "claims": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "may_claim": {"type": "array", "items": {"type": "string"}},
-        "must_not_claim": {"type": "array", "minItems": 5, "items": {"type": "string"}}
+        "may_claim": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "must_not_claim": {
+          "type": "array",
+          "minItems": 5,
+          "items": {
+            "type": "string"
+          }
+        }
       },
-      "required": ["may_claim", "must_not_claim"]
+      "required": [
+        "may_claim",
+        "must_not_claim"
+      ]
+    },
+    "rf_c_vertical_status": {
+      "enum": [
+        "PASS",
+        "FAIL"
+      ]
+    },
+    "rf_c_artifact_sha256": {
+      "type": "object",
+      "minProperties": 7,
+      "additionalProperties": {
+        "$ref": "#/$defs/sha256"
+      }
     }
   },
   "required": [
@@ -48,6 +114,8 @@
     "rf_a_artifact_sha256",
     "rf_b_vertical_status",
     "rf_b_artifact_sha256",
+    "rf_c_vertical_status",
+    "rf_c_artifact_sha256",
     "blockers",
     "pass_emitted",
     "claims"
