@@ -72,6 +72,38 @@ tab_was_created == false
 If any of those checks fail, stop and report the routing failure. Do not
 resubmit through a path that can create a new tab.
 
+## Mandatory Browser Oracle and source-provenance preflight
+
+Every `submit` calls Browser Oracle `doctor` before repository validation or
+Surf transport. The Oracle binding must be `ready` and its project, tab id, and
+conversation URL must exactly match the submission target. WebGPT does not
+silently discover, replace, or bypass a missing binding.
+
+Every repository-backed mode (`assess`, `plan`, `code`, and `all`) also requires:
+
+1. `--repo-root` points inside a Git repository with a network upstream.
+2. At least one repeatable `--source-path` is supplied.
+3. Every source path is repository-relative, tracked in `HEAD`, and clean.
+4. The current `HEAD` is reachable from the freshly fetched upstream branch.
+5. The upstream URL is HTTP(S) or SSH and can be represented as a credential-free
+   clone URL for WebGPT.
+
+Unrelated dirty paths are allowed. Declared source paths are not. On success,
+the CLI writes `<bundle>.source-provenance.json` and injects the repository URL,
+exact commit SHA, relative paths, and detached-checkout commands into the
+submitted prompt. WebGPT can then inspect the exact pushed revision rather than
+depending on workstation-only absolute paths.
+
+```bash
+python scripts/webgpt_cli.py submit review.md -p <project> \
+  --repo-root /path/to/project \
+  --source-path src/service.py \
+  --source-path tests/test_service.py
+```
+
+`--output-contract none` is the explicit browser-only exemption from source
+provenance. It still requires Browser Oracle readiness and exact-tab identity.
+
 ## Execution-gate and deliverable contract
 
 WebGPT is an assessor, architect, code creator, or bounded reviewer — but only
@@ -156,7 +188,8 @@ deployment proof.
 
 ```bash
 # One command: submit + wait + download (default --output-contract code)
-python scripts/webgpt_cli.py submit bundle.md
+python scripts/webgpt_cli.py submit bundle.md \
+  --repo-root /path/to/project --source-path src/relative/path.py
 
 # Ask WebGPT to diagnose where the project agent is stuck (no code)
 python scripts/webgpt_cli.py submit bundle.md --output-contract assess
@@ -193,8 +226,18 @@ one deliverable contract. Do **not** loop webgpt yourself — iteration against 
 immutable goal (bounded rounds, drift/fail-closed, receipts, human goal changes)
 is a **Tau DAG** responsibility via a webgpt `skill` node.
 
-**Step 1 — target the exact human tab (never auto-pick one).** Either pass it
-inline or use a stored project binding:
+**Step 1 — declare pushed source.** Pass the project repository and every
+relevant path. Paths must be repository-relative, committed, and pushed:
+
+```bash
+git push
+python scripts/webgpt_cli.py submit bundle.md -p <project> \
+  --repo-root "$PWD" --source-path src/service.py --source-path tests/test_service.py
+```
+
+**Step 2 — target the exact Browser Oracle binding (never auto-pick one).**
+Browser Oracle must already resolve the project to the live tab and URL. Inline
+tab and URL flags are optional assertions; when supplied they must match Oracle:
 
 ```bash
 # inline (preferred, most explicit)
@@ -206,7 +249,7 @@ python scripts/webgpt_cli.py config -p <project> --tab-id <HUMAN_TAB_ID> --url "
 python scripts/webgpt_cli.py submit bundle.md -p <project>
 ```
 
-**Step 2 — choose exactly one mode.** Modes, the flag they need, the required
+**Step 3 — choose exactly one mode.** Modes, the flag they need, the required
 deliverable, and where the response is written (relative to the bundle):
 
 | `--output-contract` | Needs `--architecture-authorized` | Deliverable | Response file(s) |
@@ -217,7 +260,7 @@ deliverable, and where the response is written (relative to the bundle):
 | `all` | **yes** | `assess` → `plan` → `code`, in order, on the same tab; stops fail-closed at the first missing deliverable | all three files above |
 | `none` | no | free-form (no contract) | `<bundle>-response.md` |
 
-**Step 3 — branch on the exit code / stderr marker.** These are stable and
+**Step 4 — branch on the exit code / stderr marker.** These are stable and
 machine-checkable:
 
 | Exit | Marker (stderr) | Meaning |
@@ -225,13 +268,16 @@ machine-checkable:
 | 0 | — | every requested deliverable satisfied |
 | 1 | `Bundle not found` | bad bundle path |
 | 2 | `--output-contract must be one of: …` | invalid mode |
+| 2 | `BLOCKED_WEBGPT_BROWSER_ORACLE_UNAVAILABLE` / `…_PROOF_MISSING` / `…_NOT_READY` / `…_IDENTITY_MISMATCH` | Browser Oracle is missing, unhealthy, or disagrees with the target |
+| 2 | `BLOCKED_WEBGPT_SOURCE_PATH_REQUIRED` / `…_ABSOLUTE` / `…_OUTSIDE_REPO` / `…_NOT_COMMITTED` / `…_UNCOMMITTED` | declared source is absent or not reproducible from `HEAD` |
+| 2 | `BLOCKED_WEBGPT_SOURCE_REPO_REQUIRED` / `…_UPSTREAM_MISSING` / `…_REMOTE_UNAVAILABLE` / `…_COMMIT_UNPUSHED` | repository or pushed-upstream proof failed |
 | 2 | `BLOCKED_WEBGPT_EXACT_TAB_REQUIRED` | no exact tab id + conversation URL |
 | 2 | `REJECTED_SCOPE_EXPANSION` | `plan`/`all` without `--architecture-authorized` |
 | 3 | `BLOCKED_WEBGPT_ROUTING_PROOF_MISSING` / `…_MISMATCH` | routing proof absent or wrong tab |
 | nonzero | `BLOCKED_WEBGPT_TAB_IDENTITY_PREFLIGHT` | tab/URL preflight failed |
 | 4 | `BLOCKED_WEBGPT_<MODE>_DELIVERABLE_MISSING` | the contract was not met |
 
-**Step 4 — verify routing proof.** Always confirm the run hit the intended tab
+**Step 5 — verify routing proof.** Always confirm the run hit the intended tab
 by reading `<bundle>[-<mode>]-response.meta.json`:
 
 ```text

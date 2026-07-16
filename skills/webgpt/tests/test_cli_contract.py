@@ -130,10 +130,13 @@ def test_augment_bundle_injects_research_and_contract(tmp_path: Path) -> None:
     assert "original request body" in text
 
 
-def test_augment_bundle_leaves_zip_untouched(tmp_path: Path) -> None:
+def test_augment_bundle_keeps_zip_as_attachment_and_generates_prompt(tmp_path: Path) -> None:
     bp = tmp_path / "bundle.zip"
     bp.write_bytes(b"PK\x03\x04")
-    assert webgpt_cli._augment_bundle(bp, "code") == bp
+    augmented = webgpt_cli._augment_bundle(bp, "code")
+    assert augmented != bp
+    assert "attached as `bundle.zip`" in augmented.read_text()
+    assert bp.read_bytes() == b"PK\x03\x04"
 
 
 def test_goal_lock_wraps_top_and_bottom(tmp_path: Path) -> None:
@@ -153,3 +156,27 @@ def test_goal_lock_skipped_for_none_mode(tmp_path: Path) -> None:
     bp.write_text("free form\n")
     text = webgpt_cli._augment_bundle(bp, "none").read_text()
     assert "GOAL LOCK" not in text
+
+
+def test_submit_runs_browser_oracle_before_provenance_and_surf() -> None:
+    source = MODULE_PATH.read_text()
+    submit_source = source[source.index("def submit(") : source.index("def _raise_deliverable_missing")]
+    assert submit_source.index("_browser_oracle_doctor") < submit_source.index("_source_provenance")
+    submit_stage = source[source.index("def _submit_stage(") : source.index("def _latest_bundle")]
+    assert "webgpt.preflight" in submit_stage
+
+
+def test_provenance_block_contains_clone_sha_and_relative_paths() -> None:
+    provenance = {
+        "schema": "webgpt.source_provenance.v1",
+        "repository_url": "https://github.com/example/project.git",
+        "branch": "main",
+        "upstream": "origin/main",
+        "commit_sha": "a" * 40,
+        "source_paths": ["src/app.py"],
+        "proof_cwd": ".",
+    }
+    block = webgpt_cli._source_provenance_block(provenance)
+    assert "git clone --filter=blob:none https://github.com/example/project.git" in block
+    assert f"checkout --detach {'a' * 40}" in block
+    assert '"src/app.py"' in block

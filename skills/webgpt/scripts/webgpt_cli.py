@@ -5,17 +5,21 @@ from __future__ import annotations
 import datetime
 import json
 import os
+import re
+import shlex
 import shutil
 import subprocess
 import sys
 import time
 from pathlib import Path
+from urllib.parse import urlsplit, urlunsplit
 
 import typer
 
 app = typer.Typer()
 BINDING_DIR = Path.home() / ".pi" / "webgpt-projects"
 SURF = Path(os.path.expandvars("${HOME}/workspace/experiments/agent-skills/skills/surf/run.sh"))
+BROWSER_ORACLE = Path(__file__).resolve().parents[2] / "browser-oracle" / "run.sh"
 
 
 GITHUB_REPO = "agent-skills"
@@ -213,6 +217,220 @@ def _surf(*args: str | int, capture: bool = True, timeout: int | None = None) ->
     return subprocess.run([str(SURF)] + [str(a) for a in args], **kwargs)
 
 
+class SourceProvenanceError(RuntimeError):
+    """A repository-backed WebGPT request is not reproducible from its upstream."""
+
+    def __init__(self, code: str, detail: str):
+        super().__init__(detail)
+        self.code = code
+
+
+def _git(repo: Path, *args: str, timeout: int = 60) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        ["git", "-C", str(repo), *args],
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+    )
+
+
+def _cloneable_remote_url(url: str) -> str:
+    """Return a credential-free network clone URL suitable for an external reviewer."""
+    value = url.strip()
+    if re.match(r"^[A-Za-z][A-Za-z0-9+.-]*://", value) and not value.startswith(
+        ("http://", "https://", "ssh://")
+    ):
+        raise SourceProvenanceError(
+            "SOURCE_REMOTE_UNAVAILABLE", "local or unsupported upstream URL scheme"
+        )
+    scp_match = re.fullmatch(r"(?:[^@/]+@)?([^:/]+):(.+)", value)
+    if scp_match and not value.startswith(("http://", "https://", "ssh://")):
+        return f"https://{scp_match.group(1)}/{scp_match.group(2)}"
+    if value.startswith("ssh://"):
+        parsed = urlsplit(value)
+        if not parsed.hostname or not parsed.path:
+            raise SourceProvenanceError("SOURCE_REMOTE_UNAVAILABLE", "invalid SSH upstream URL")
+        return f"https://{parsed.hostname}{parsed.path}"
+    if value.startswith(("http://", "https://")):
+        parsed = urlsplit(value)
+        if not parsed.hostname:
+            raise SourceProvenanceError("SOURCE_REMOTE_UNAVAILABLE", "invalid HTTP upstream URL")
+        host = parsed.hostname
+        if parsed.port:
+            host = f"{host}:{parsed.port}"
+        return urlunsplit((parsed.scheme, host, parsed.path, "", ""))
+    raise SourceProvenanceError(
+        "SOURCE_REMOTE_UNAVAILABLE",
+        "upstream must use an HTTP(S) or SSH network URL; local paths are not reviewable",
+    )
+
+
+def _source_provenance(repo_root: str, source_paths: list[str]) -> dict:
+    """Prove declared paths are clean at a commit reachable from the live upstream."""
+    if not source_paths:
+        raise SourceProvenanceError(
+            "SOURCE_PATH_REQUIRED", "at least one --source-path is required"
+        )
+
+    requested_root = Path(repo_root).expanduser().resolve()
+    root_result = _git(requested_root, "rev-parse", "--show-toplevel")
+    if root_result.returncode != 0:
+        raise SourceProvenanceError("SOURCE_REPO_REQUIRED", "--repo-root is not in a Git repository")
+    root = Path(root_result.stdout.strip()).resolve()
+
+    normalized: list[str] = []
+    for raw in source_paths:
+        value = raw.strip()
+        candidate = Path(value)
+        if not value:
+            raise SourceProvenanceError("SOURCE_PATH_REQUIRED", "--source-path cannot be empty")
+        if candidate.is_absolute():
+            raise SourceProvenanceError(
+                "SOURCE_PATH_ABSOLUTE", f"source path must be repository-relative: {value}"
+            )
+        if ".." in candidate.parts:
+            raise SourceProvenanceError(
+                "SOURCE_PATH_OUTSIDE_REPO", f"source path escapes repository: {value}"
+            )
+        canonical = candidate.as_posix().removeprefix("./")
+        if canonical in {"", "."}:
+            raise SourceProvenanceError("SOURCE_PATH_REQUIRED", "source path must name a file or directory")
+        tracked = _git(root, "cat-file", "-e", f"HEAD:{canonical}")
+        if tracked.returncode != 0:
+            raise SourceProvenanceError(
+                "SOURCE_PATH_NOT_COMMITTED", f"source path is not present in HEAD: {canonical}"
+            )
+        dirty = _git(
+            root,
+            "status",
+            "--porcelain=v1",
+            "--untracked-files=all",
+            "--",
+            canonical,
+        )
+        if dirty.returncode != 0 or dirty.stdout.strip():
+            raise SourceProvenanceError(
+                "SOURCE_PATH_UNCOMMITTED", f"source path has uncommitted changes: {canonical}"
+            )
+        normalized.append(canonical)
+
+    branch_result = _git(root, "symbolic-ref", "--quiet", "--short", "HEAD")
+    if branch_result.returncode != 0:
+        raise SourceProvenanceError("SOURCE_UPSTREAM_MISSING", "detached HEAD has no configured upstream")
+    branch = branch_result.stdout.strip()
+    upstream_result = _git(
+        root, "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"
+    )
+    if upstream_result.returncode != 0:
+        raise SourceProvenanceError(
+            "SOURCE_UPSTREAM_MISSING", f"branch {branch!r} has no configured upstream"
+        )
+    upstream = upstream_result.stdout.strip()
+    remote = _git(root, "config", "--get", f"branch.{branch}.remote").stdout.strip()
+    merge_ref = _git(root, "config", "--get", f"branch.{branch}.merge").stdout.strip()
+    if not remote or not merge_ref or remote == ".":
+        raise SourceProvenanceError(
+            "SOURCE_UPSTREAM_MISSING", f"branch {branch!r} has no network upstream"
+        )
+
+    remote_url_result = _git(root, "config", "--get", f"remote.{remote}.url")
+    if remote_url_result.returncode != 0:
+        raise SourceProvenanceError("SOURCE_REMOTE_UNAVAILABLE", f"cannot resolve remote {remote!r}")
+    clone_url = _cloneable_remote_url(remote_url_result.stdout)
+
+    try:
+        fetch_result = _git(
+            root, "fetch", "--quiet", "--no-tags", remote, merge_ref, timeout=120
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise SourceProvenanceError(
+            "SOURCE_REMOTE_UNAVAILABLE", f"upstream fetch timed out after {exc.timeout}s"
+        ) from exc
+    if fetch_result.returncode != 0:
+        detail = fetch_result.stderr.strip() or f"failed to fetch {remote}/{merge_ref}"
+        raise SourceProvenanceError("SOURCE_REMOTE_UNAVAILABLE", detail)
+    head = _git(root, "rev-parse", "HEAD").stdout.strip()
+    pushed = _git(root, "merge-base", "--is-ancestor", head, "FETCH_HEAD")
+    if pushed.returncode != 0:
+        raise SourceProvenanceError(
+            "SOURCE_COMMIT_UNPUSHED", f"HEAD {head} is not reachable from {upstream}"
+        )
+
+    try:
+        proof_cwd = Path.cwd().resolve().relative_to(root).as_posix() or "."
+    except ValueError:
+        proof_cwd = "."
+    return {
+        "schema": "webgpt.source_provenance.v1",
+        "repository_url": clone_url,
+        "branch": branch,
+        "upstream": upstream,
+        "commit_sha": head,
+        "source_paths": normalized,
+        "proof_cwd": proof_cwd,
+    }
+
+
+def _source_provenance_block(provenance: dict) -> str:
+    url = provenance["repository_url"]
+    sha = provenance["commit_sha"]
+    return (
+        "## Authoritative source provenance\n"
+        "Use the pushed repository state below as the only source of truth. Clone it and "
+        "check out the exact detached commit before inspecting the declared paths.\n\n"
+        "```bash\n"
+        f"git clone --filter=blob:none {shlex.quote(url)} webgpt-source\n"
+        f"git -C webgpt-source checkout --detach {sha}\n"
+        "```\n\n"
+        "```json\n"
+        f"{json.dumps(provenance, indent=2)}\n"
+        "```"
+    )
+
+
+def _browser_oracle_doctor(project: str, from_path: str) -> dict:
+    """Require Browser Oracle readiness before any Surf/browser operation."""
+    if not BROWSER_ORACLE.exists():
+        raise RuntimeError("BLOCKED_WEBGPT_BROWSER_ORACLE_UNAVAILABLE: runtime missing")
+    try:
+        result = subprocess.run(
+            [
+                str(BROWSER_ORACLE),
+                "doctor",
+                "--from",
+                str(Path(from_path).expanduser().resolve()),
+                "--backend",
+                "webgpt",
+                "--project",
+                project,
+                "--json",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise RuntimeError(f"BLOCKED_WEBGPT_BROWSER_ORACLE_UNAVAILABLE: {exc}") from exc
+    try:
+        payload = json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError(
+            f"BLOCKED_WEBGPT_BROWSER_ORACLE_PROOF_MISSING: {exc}"
+        ) from exc
+    if result.returncode != 0 or payload.get("readiness") != "ready":
+        issues = ",".join(payload.get("issues", [])) or result.stderr.strip() or "not_ready"
+        raise RuntimeError(f"BLOCKED_WEBGPT_BROWSER_ORACLE_NOT_READY: {issues}")
+    if str(payload.get("project", "")) != project:
+        raise RuntimeError(
+            "BLOCKED_WEBGPT_BROWSER_ORACLE_IDENTITY_MISMATCH: project mismatch"
+        )
+    if not payload.get("tab_id") or not payload.get("conversation_url"):
+        raise RuntimeError(
+            "BLOCKED_WEBGPT_BROWSER_ORACLE_IDENTITY_MISMATCH: tab id or URL missing"
+        )
+    return payload
+
+
 def _active_chatgpt_tab() -> str:
     """Return the most recent ChatGPT tab id from the surf controlled-tab file, or empty."""
     f = Path("/tmp/surf-webgpt-controlled-tab-id")
@@ -309,22 +527,31 @@ return the contract's block/ruling instead of solving an easier, unrelated
 problem."""
 
 
-def _augment_bundle(bp: Path, mode: str) -> Path:
+def _augment_bundle(bp: Path, mode: str, provenance: dict | None = None) -> Path:
     """Wrap a text bundle with a goal lock (top + bottom), the research directive,
     and the mode output-contract.
 
     The goal lock is placed both first and last (LLMs weight the start and end of
     a prompt most) so WebGPT stays on the one stated gate and cannot devolve into
-    easy, off-goal side quests. Zip bundles are attached as-is and cannot be
-    augmented.
+    easy, off-goal side quests. Zip bundles are attached as-is while a generated
+    text prompt carries the contract and source provenance.
     """
-    if bp.suffix == ".zip":
-        return bp
-    original = bp.read_text(errors="replace")
+    original = (
+        f"The request bundle is attached as `{bp.name}`.\n"
+        if bp.suffix == ".zip"
+        else bp.read_text(errors="replace")
+    )
     contract = _MODE_CONTRACTS.get(mode, "")
     lock = mode != "none"
     top_blocks = [
-        blk for blk in (_GOAL_LOCK_TOP if lock else "", _RESEARCH_CLAUSE, contract) if blk
+        blk
+        for blk in (
+            _GOAL_LOCK_TOP if lock else "",
+            _source_provenance_block(provenance) if provenance else "",
+            _RESEARCH_CLAUSE,
+            contract,
+        )
+        if blk
     ]
     header = "\n\n".join(top_blocks) + "\n\n---\n\n"
     footer = ("\n\n---\n\n" + _GOAL_LOCK_BOTTOM) if lock else ""
@@ -393,6 +620,14 @@ def submit(
     expected_url_override: str = typer.Option(
         "", "--expect-url", help="Exact expected ChatGPT conversation URL"
     ),
+    repo_root: str = typer.Option(
+        ".", "--repo-root", help="Project Git repository root"
+    ),
+    source_paths: list[str] = typer.Option(
+        [],
+        "--source-path",
+        help="Repository-relative committed source path (repeatable; required except for none)",
+    ),
 ):
     """Submit a bundle, capture response, enforce the output contract. All complexity hidden.
 
@@ -408,7 +643,18 @@ def submit(
         typer.echo("--output-contract must be one of: assess, plan, code, all, none", err=True)
         raise typer.Exit(2)
 
-    b = _binding(project)
+    if output_contract in {"plan", "all"} and not architecture_authorized:
+        typer.echo(
+            "REJECTED_SCOPE_EXPANSION: plan/all requires --architecture-authorized",
+            err=True,
+        )
+        raise typer.Exit(2)
+
+    try:
+        b = _browser_oracle_doctor(project, repo_root)
+    except RuntimeError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(2)
     try:
         tab_id, conversation_url = _exact_submission_target(
             b, tab_id_override, expected_url_override
@@ -417,16 +663,28 @@ def submit(
         typer.echo(f"BLOCKED_WEBGPT_EXACT_TAB_REQUIRED: {exc}", err=True)
         raise typer.Exit(2)
 
-    if output_contract in {"plan", "all"} and not architecture_authorized:
-        typer.echo(
-            "REJECTED_SCOPE_EXPANSION: plan/all requires --architecture-authorized",
-            err=True,
-        )
+    if (
+        tab_id != str(b.get("tab_id", ""))
+        or conversation_url != str(b.get("conversation_url", ""))
+    ):
+        typer.echo("BLOCKED_WEBGPT_BROWSER_ORACLE_IDENTITY_MISMATCH", err=True)
         raise typer.Exit(2)
+
+    provenance = None
+    if output_contract != "none":
+        try:
+            provenance = _source_provenance(repo_root, source_paths)
+        except SourceProvenanceError as exc:
+            typer.echo(f"BLOCKED_WEBGPT_{exc.code}: {exc}", err=True)
+            raise typer.Exit(2)
+        provenance_path = bp.with_name(f"{bp.stem}.source-provenance.json")
+        provenance_path.write_text(json.dumps(provenance, indent=2) + "\n")
 
     modes = ("assess", "plan", "code") if output_contract == "all" else (output_contract,)
     for mode in modes:
-        ok, _resp = _submit_stage(bp, mode, tab_id, conversation_url, b, timeout)
+        ok, _resp = _submit_stage(
+            bp, mode, tab_id, conversation_url, b, timeout, provenance
+        )
         if not ok:
             _raise_deliverable_missing(mode, bp, b)
 
@@ -454,13 +712,14 @@ def _submit_stage(
     conversation_url: str,
     b: dict,
     timeout: int,
+    provenance: dict | None,
 ) -> tuple[bool, Path]:
     """Run one WebGPT submission for `mode`.
 
     Hard-fails closed (typer.Exit) on preflight or routing-proof errors. Returns
     (deliverable_satisfied, response_path).
     """
-    aug = _augment_bundle(bp, mode)
+    aug = _augment_bundle(bp, mode, provenance)
     preflight = _surf(
         "webgpt.preflight",
         "--tab-id", tab_id,
