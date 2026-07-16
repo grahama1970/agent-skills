@@ -23,6 +23,13 @@ import wave
 
 import httpx
 
+from .case_compiler import (
+    SPOKEN_TEXT_NORMALIZATION,
+    SPOKEN_TEXT_NORMALIZATION_SHA256,
+    sha256_value,
+    spoken_text as derive_spoken_text,
+)
+
 
 CAMPAIGN_MANIFEST_SCHEMA = "embry.audio_e2e_campaign_manifest.v1"
 CLONE_CONTRACT_SCHEMA = "embry.audio_e2e.clone_source_contract.v1"
@@ -682,6 +689,13 @@ def declared_spoken_hash(turn: dict[str, Any], spoken_text: str) -> str:
 def validate_campaign_manifest(value: dict[str, Any]) -> list[dict[str, Any]]:
     if value.get("schema") != CAMPAIGN_MANIFEST_SCHEMA:
         raise ValueError("campaign_manifest_schema_invalid")
+    declared_policy = value.get("spoken_text_normalization")
+    expected_policy = {
+        **SPOKEN_TEXT_NORMALIZATION,
+        "sha256": SPOKEN_TEXT_NORMALIZATION_SHA256,
+    }
+    if declared_policy != expected_policy:
+        raise ValueError("campaign_spoken_text_normalization_policy_invalid")
     execution = value.get("execution") or {}
     for key in (
         "typed_transcript_allowed",
@@ -705,6 +719,13 @@ def validate_campaign_manifest(value: dict[str, Any]) -> list[dict[str, Any]]:
         seen_cases.add(case_id)
         if case.get("source_mode") not in {"qualified_horus_clone", "qualified_horus_audio"}:
             raise ValueError(f"campaign_case_not_clone_mode:{case_id}")
+        if case.get("spoken_text_normalization_sha256") != SPOKEN_TEXT_NORMALIZATION_SHA256:
+            raise ValueError(f"campaign_case_spoken_text_policy_mismatch:{case_id}")
+        contract_material = {
+            key: item for key, item in case.items() if key != "contract_sha256"
+        }
+        if case.get("contract_sha256") != sha256_value(contract_material):
+            raise ValueError(f"campaign_case_contract_hash_mismatch:{case_id}")
         turns = case.get("turn_script")
         if not isinstance(turns, list) or not turns:
             raise ValueError(f"campaign_turn_script_missing:{case_id}")
@@ -719,6 +740,19 @@ def validate_campaign_manifest(value: dict[str, Any]) -> list[dict[str, Any]]:
             spoken_text = str(turn.get("spoken_text") or turn.get("utterance") or "")
             if not spoken_text:
                 raise ValueError(f"campaign_turn_spoken_text_missing:{turn_id}")
+            display_text = str(turn.get("display_text") or "")
+            utterance = str(turn.get("utterance") or "")
+            if not display_text or display_text != utterance:
+                raise ValueError(f"campaign_turn_canonical_text_mismatch:{turn_id}")
+            if turn.get("utterance_sha256") != sha256_value(utterance):
+                raise ValueError(f"campaign_turn_utterance_hash_mismatch:{turn_id}")
+            if turn.get("display_text_sha256") != sha256_value(display_text):
+                raise ValueError(f"campaign_turn_display_text_hash_mismatch:{turn_id}")
+            if turn.get("spoken_text_normalization_sha256") != SPOKEN_TEXT_NORMALIZATION_SHA256:
+                raise ValueError(f"campaign_turn_spoken_text_policy_mismatch:{turn_id}")
+            derived_spoken_text = derive_spoken_text(display_text)
+            if spoken_text != derived_spoken_text:
+                raise ValueError(f"campaign_turn_spoken_text_derivation_mismatch:{turn_id}")
             spoken_hash = declared_spoken_hash(turn, spoken_text)
             query = strip_leading_wake_phrase(spoken_text)
             normalized_turns.append(

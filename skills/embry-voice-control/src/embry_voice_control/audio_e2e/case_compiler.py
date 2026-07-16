@@ -18,8 +18,21 @@ FOLLOWUPS = {
     "soak_followup": "Restate the answer without changing its evidence or conclusion.",
 }
 
-SPOKEN_EXPANSIONS = {
-    "QRA": "Question Reasoning Answer pair",
+SPOKEN_TEXT_NORMALIZATION = {
+    "schema": "embry.audio_e2e.spoken_text_normalization.v1",
+    "algorithm": "exact_machine_token_expansion_v1",
+    "unknown_token_detector": "uppercase_snake_camel_or_alphanumeric_v1",
+    "unknown_token_policy": "reject",
+    "expansions": {
+        "ASR": "automatic speech recognition",
+        "RealtimeSTT": "real-time speech-to-text",
+        "SPARTA": "Space Attack Research and Tactic Analysis",
+        "WebRTC": "web real-time communication",
+        "feed_audio": "feed audio",
+        "getUserMedia": "get user media",
+        "QRA": "Question Reasoning Answer pair",
+        "QRAs": "Question Reasoning Answer pairs",
+    },
 }
 
 
@@ -35,11 +48,32 @@ def sha256_path(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+SPOKEN_TEXT_NORMALIZATION_SHA256 = sha256_value(SPOKEN_TEXT_NORMALIZATION)
+
+
+def _machine_tokens(value: str) -> set[str]:
+    candidates = re.findall(r"\b[A-Za-z][A-Za-z0-9_]*\b", value)
+    return {
+        token
+        for token in candidates
+        if (
+            re.fullmatch(r"[A-Z][A-Z0-9]{1,}", token)
+            or "_" in token
+            or re.search(r"[a-z][A-Z]", token)
+            or (re.search(r"[A-Za-z]", token) and re.search(r"\d", token))
+        )
+    }
+
+
 def spoken_text(display_text: str) -> str:
-    """Expand domain acronyms that are unreliable or unnatural in speech."""
+    """Derive speakable text from canonical display text, failing on unknown machine tokens."""
     result = display_text
-    for acronym, expansion in SPOKEN_EXPANSIONS.items():
-        result = re.sub(rf"\b{re.escape(acronym)}s?\b", expansion, result)
+    expansions = SPOKEN_TEXT_NORMALIZATION["expansions"]
+    for token in sorted(expansions, key=len, reverse=True):
+        result = re.sub(rf"\b{re.escape(token)}\b", expansions[token], result)
+    unknown = sorted(_machine_tokens(result))
+    if unknown:
+        raise ValueError(f"spoken_text_unknown_machine_tokens:{','.join(unknown)}")
     return result
 
 
@@ -111,6 +145,7 @@ def build_turn_script(case: dict[str, Any]) -> list[dict[str, Any]]:
             "display_text_sha256": sha256_value(display),
             "spoken_text": spoken,
             "spoken_text_sha256": sha256_value(spoken),
+            "spoken_text_normalization_sha256": SPOKEN_TEXT_NORMALIZATION_SHA256,
             "purpose": "matrix_question" if index == 1 else "conversation_followup",
             "speech_expectation": "speech_required",
         })
@@ -135,6 +170,7 @@ def compile_campaign(
         "source_policy_sha256": sha256_path(source_policy_path),
         "selection_sha256": selection["sha256"],
         "source_mode": source_mode,
+        "spoken_text_normalization_sha256": SPOKEN_TEXT_NORMALIZATION_SHA256,
     }
     campaign_id = "campaign_" + sha256_value(seed).removeprefix("sha256:")[:24]
     cases = []
@@ -150,6 +186,7 @@ def compile_campaign(
             "difficulty": case["difficulty"],
             "folder_id": case["folder_id"],
             "source_mode": source_mode,
+            "spoken_text_normalization_sha256": SPOKEN_TEXT_NORMALIZATION_SHA256,
             "oracle": case["oracle"],
             "expected_route": case["expected_route"],
             "conversation_requirements": case["conversation_requirements"],
@@ -163,6 +200,10 @@ def compile_campaign(
         "counted_e2e_required": True,
         "matrix": {"path": str(matrix_path.resolve()), "sha256": seed["matrix_sha256"], "schema": matrix["schema"], "source_case_count": len(matrix["sessions"])},
         "source_policy": {"path": str(source_policy_path.resolve()), "sha256": seed["source_policy_sha256"], "schema": policy.get("schema")},
+        "spoken_text_normalization": {
+            **SPOKEN_TEXT_NORMALIZATION,
+            "sha256": SPOKEN_TEXT_NORMALIZATION_SHA256,
+        },
         "selection": {**selection, "requested_count": len(selected)},
         "execution": {"concurrency": 1, "fixture_substitution_allowed": False, "typed_transcript_allowed": False, "browser_microphone_allowed": False},
         "cases": cases,
