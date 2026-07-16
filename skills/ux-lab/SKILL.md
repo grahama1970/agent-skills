@@ -1,14 +1,16 @@
 ---
 name: ux-lab
-description: Launch and validate canonical applications owned by experiments/sparta and experiments/tau.
+description: Launch and validate canonical UX Lab adapters and shared UI owned by agent-skills.
 allowed-tools: Bash, Read
 ---
 
-# ux-lab launcher
+# ux-lab
 
-Canonical Sparta Explorer source and runtime ownership is
+Canonical UX Lab shared UI source is `agent-skills/skills/ux-lab/ui`.
+
+Canonical Sparta Explorer source and runtime ownership remains
 `experiments/sparta/explorer`. Canonical Tau DAG viewer source and runtime
-ownership is `experiments/tau`.
+ownership remains `experiments/tau`.
 
 For Tau DAG viewing, this skill is a launcher and capability-check wrapper
 only. It contains no Tau DAG React application, DAG schemas, journal reader,
@@ -17,6 +19,7 @@ or state reducer.
 - Start Sparta Explorer: `./run.sh`
 - Launch Tau DAG viewer: `./run.sh tau-dag-view --run-dir /path/to/run`
 - Validate ownership and endpoint: `./sanity.sh`
+- Validate shared UI package: `cd ui && npm ci && npm run typecheck`
 - UI: `http://127.0.0.1:3002/#sparta-explorer/threat-matrix`
 - API: `http://127.0.0.1:3001/api/f36/explorer-projection`
 

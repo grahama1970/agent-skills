@@ -2,7 +2,7 @@
   "name": "@agent-skills/ux-lab-ui",
   "version": "0.1.0",
   "private": true,
-  "description": "Self-contained shared chat UI components extracted from pi-mono/ux-lab for the agent-skills ecosystem.",
+  "description": "Canonical shared chat UI components for the agent-skills ecosystem.",
   "type": "module",
   "sideEffects": false,
   "exports": {

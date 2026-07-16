@@ -2,13 +2,8 @@
 
 Self-contained shared chat UI package for ux-lab surfaces.
 
-This directory is the skill-owned copy of the shared chat components that previously lived under:
-
-```text
-pi-mono/packages/ux-lab/src/components/shared-chat/
-```
-
-Source authority for this extraction is the committed pi-mono state identified in the creation bundle as commit `b98746993`. The migration is an extraction and import relocation, not a behavioral rewrite.
+This directory is the canonical agent-skills home for shared chat UI components
+used by skill-owned surfaces.
 
 ## Public imports
 
@@ -43,6 +38,6 @@ import { createAdapterRegistry, type MemoryTurnAdapter } from '@agent-skills/ux-
 
 ```bash
 cd agent-skills/skills/ux-lab/ui
-npm install
+npm ci
 npm run typecheck
 ```
