@@ -1042,6 +1042,11 @@ def adaptive_memory_ablation(
     ),
     timeout_s: float = typer.Option(300.0, "--timeout-s", min=60.0),
     generated_at: Optional[str] = typer.Option(None, "--generated-at"),
+    resume: bool = typer.Option(
+        False,
+        "--resume",
+        help="Reuse only a validated frozen-order prefix of terminal trial receipts.",
+    ),
 ):
     """Plan, validate, preflight, run, or aggregate the bounded V15 2x2x3 memory ablation."""
     import json as _json
@@ -1061,6 +1066,8 @@ def adaptive_memory_ablation(
 
     normalized_phase = phase.strip().lower()
     try:
+        if resume and normalized_phase != "run":
+            raise ContractError("--resume is valid only for the run phase")
         if normalized_phase == "plan":
             if source_root is None or memory_source_root is None or out is None:
                 raise ContractError(
@@ -1123,6 +1130,7 @@ def adaptive_memory_ablation(
                 memory_base_url=memory_base_url,
                 scillm_base_url=scillm_base_url,
                 tau_root=tau_root,
+                resume=resume,
             )
         elif normalized_phase == "aggregate":
             if plan is None or out is None:

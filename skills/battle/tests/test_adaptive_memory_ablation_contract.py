@@ -4,6 +4,8 @@ import hashlib
 import json
 import os
 import sys
+from pathlib import Path
+
 import pytest
 
 from battle_skill import adaptive_memory_ablation as ablation
@@ -156,6 +158,189 @@ def test_preflight_rejects_any_preexisting_trial_output(tmp_path) -> None:
     used.mkdir(parents=True)
     with pytest.raises(ablation.ContractError, match="output paths are already used"):
         ablation._assert_unused_trial_outputs(plan=plan, experiment_root=tmp_path)
+
+
+def _write_test_plan(root: Path) -> tuple[dict, Path, str]:
+    plan = _plan()
+    path = root / "memory-ablation-experiment.json"
+    ablation._write_json(path, plan)
+    return plan, path, ablation.file_sha256(path)
+
+
+def _write_terminal_blocked_receipt(
+    *,
+    plan: dict,
+    trial: dict,
+    plan_file_sha256: str,
+    experiment_root: Path,
+) -> Path:
+    detail = "deterministic terminal test blocker"
+    attempt = {
+        "attempt": 1,
+        "status": "BLOCKED",
+        "family": "test_terminal",
+        "signature": hashlib.sha256(
+            f"test_terminal: {detail}".encode("utf-8")
+        ).hexdigest(),
+        "detail": detail,
+        "live_started": True,
+        "started_at": "2026-07-16T12:34:29Z",
+    }
+    receipt = ablation._blocked_trial_receipt(
+        plan=plan,
+        trial=trial,
+        attempts=[attempt],
+        family="test_terminal",
+        detail=detail,
+        blocked_by_systemic_failure=False,
+        plan_file_sha256=plan_file_sha256,
+    )
+    receipt["attempts"] = [attempt]
+    ablation.validate_trial_receipt(receipt)
+    path = experiment_root / trial["output_relpath"] / "trial-receipt.json"
+    ablation._write_json(path, receipt)
+    return path
+
+
+def test_run_experiment_resume_reuses_valid_terminal_receipt_without_rerun(
+    tmp_path, monkeypatch
+) -> None:
+    plan, plan_path, plan_file_sha256 = _write_test_plan(tmp_path)
+    experiment_root = tmp_path / "run"
+    first_trial = sorted(
+        plan["trials"], key=lambda item: (item["replicate"], item["order_index"])
+    )[0]
+    receipt_path = _write_terminal_blocked_receipt(
+        plan=plan,
+        trial=first_trial,
+        plan_file_sha256=plan_file_sha256,
+        experiment_root=experiment_root,
+    )
+    original_receipt_bytes = receipt_path.read_bytes()
+    preflight_args: dict = {}
+    executed_trial_ids: list[str] = []
+
+    def fake_preflight(**kwargs):
+        preflight_args.update(kwargs)
+        return {"approval": "APPROVED_FOR_LIVE"}
+
+    def fake_execute_live_trial(**kwargs):
+        executed_trial_ids.append(kwargs["trial"]["trial_id"])
+        raise ablation.TrialBlocked(
+            "test_remaining", "bounded deterministic test blocker", retryable=False
+        )
+
+    monkeypatch.setattr(ablation, "preflight_experiment", fake_preflight)
+    monkeypatch.setattr(ablation, "_execute_live_trial", fake_execute_live_trial)
+
+    summary = ablation.run_experiment(
+        plan_path=plan_path,
+        source_root=tmp_path / "source",
+        out_dir=experiment_root,
+        memory_base_url="http://127.0.0.1:8601",
+        scillm_base_url="http://localhost:4001",
+        tau_root=tmp_path / "tau",
+        resume=True,
+    )
+
+    assert len(summary["trial_receipts"]) == 12
+    assert summary["trial_receipts"][0]["trial_id"] == first_trial["trial_id"]
+    assert first_trial["trial_id"] not in executed_trial_ids
+    assert receipt_path.read_bytes() == original_receipt_bytes
+    assert list(preflight_args["reusable_trial_ids"]) == [first_trial["trial_id"]]
+
+
+@pytest.mark.parametrize("receipt_contents", [None, "{not-json"])
+def test_resume_rejects_partial_or_malformed_trial_output(
+    tmp_path, receipt_contents
+) -> None:
+    plan, _plan_path, plan_file_sha256 = _write_test_plan(tmp_path)
+    first_trial = sorted(
+        plan["trials"], key=lambda item: (item["replicate"], item["order_index"])
+    )[0]
+    trial_dir = tmp_path / "run" / first_trial["output_relpath"]
+    trial_dir.mkdir(parents=True)
+    if receipt_contents is not None:
+        (trial_dir / "trial-receipt.json").write_text(
+            receipt_contents, encoding="utf-8"
+        )
+
+    with pytest.raises(
+        ablation.ContractError, match="terminal receipt|trial receipt is malformed"
+    ):
+        ablation._load_resumable_trial_receipts(
+            plan=plan,
+            experiment_root=tmp_path / "run",
+            plan_file_sha256=plan_file_sha256,
+        )
+
+
+def test_resume_rejects_wrong_plan_receipt(tmp_path) -> None:
+    plan, _plan_path, plan_file_sha256 = _write_test_plan(tmp_path)
+    first_trial = sorted(
+        plan["trials"], key=lambda item: (item["replicate"], item["order_index"])
+    )[0]
+    receipt_path = _write_terminal_blocked_receipt(
+        plan=plan,
+        trial=first_trial,
+        plan_file_sha256=plan_file_sha256,
+        experiment_root=tmp_path / "run",
+    )
+    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+    receipt["experiment_plan_file_sha256"] = "0" * 64
+    ablation._write_json(receipt_path, receipt)
+
+    with pytest.raises(ablation.ContractError, match="experiment_plan_file_sha256"):
+        ablation._load_resumable_trial_receipts(
+            plan=plan,
+            experiment_root=tmp_path / "run",
+            plan_file_sha256=plan_file_sha256,
+        )
+
+
+def test_resume_rejects_unknown_trial_directory(tmp_path) -> None:
+    plan, _plan_path, plan_file_sha256 = _write_test_plan(tmp_path)
+    (tmp_path / "run" / "trials" / "unknown-trial").mkdir(parents=True)
+
+    with pytest.raises(ablation.ContractError, match="unknown trial output paths"):
+        ablation._load_resumable_trial_receipts(
+            plan=plan,
+            experiment_root=tmp_path / "run",
+            plan_file_sha256=plan_file_sha256,
+        )
+
+
+def test_run_experiment_fresh_mode_rejects_existing_terminal_receipt(
+    tmp_path, monkeypatch
+) -> None:
+    plan, plan_path, plan_file_sha256 = _write_test_plan(tmp_path)
+    experiment_root = tmp_path / "run"
+    first_trial = sorted(
+        plan["trials"], key=lambda item: (item["replicate"], item["order_index"])
+    )[0]
+    _write_terminal_blocked_receipt(
+        plan=plan,
+        trial=first_trial,
+        plan_file_sha256=plan_file_sha256,
+        experiment_root=experiment_root,
+    )
+
+    def fresh_preflight(**kwargs):
+        return ablation._assert_unused_trial_outputs(
+            plan=kwargs["plan"], experiment_root=kwargs["experiment_root"]
+        )
+
+    monkeypatch.setattr(ablation, "preflight_experiment", fresh_preflight)
+
+    with pytest.raises(ablation.ContractError, match="output paths are already used"):
+        ablation.run_experiment(
+            plan_path=plan_path,
+            source_root=tmp_path / "source",
+            out_dir=experiment_root,
+            memory_base_url="http://127.0.0.1:8601",
+            scillm_base_url="http://localhost:4001",
+            tau_root=tmp_path / "tau",
+        )
 
 
 class _MemoryResponse:

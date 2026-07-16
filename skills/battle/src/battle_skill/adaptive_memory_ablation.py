@@ -1119,18 +1119,57 @@ def _judge_readiness(*, plan: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-def _assert_unused_trial_outputs(
+def _expected_trial_output_paths(
     *, plan: Mapping[str, Any], experiment_root: Path
+) -> dict[Path, Mapping[str, Any]]:
+    root = experiment_root.expanduser().resolve()
+    expected = {
+        root / str(trial["output_relpath"]): trial for trial in plan["trials"]
+    }
+    unknown_paths: list[str] = []
+    for parent in {path.parent for path in expected}:
+        if not parent.exists():
+            continue
+        if parent.is_symlink() or not parent.is_dir():
+            raise ContractError(f"trial output parent is not a directory: {parent}")
+        for child in parent.iterdir():
+            if child.is_symlink() or child not in expected:
+                unknown_paths.append(str(child.relative_to(root)))
+    if unknown_paths:
+        raise ContractError(
+            f"unknown trial output paths exist: {sorted(unknown_paths)}"
+        )
+    return expected
+
+
+def _assert_unused_trial_outputs(
+    *,
+    plan: Mapping[str, Any],
+    experiment_root: Path,
+    reusable_trial_ids: Iterable[str] = (),
 ) -> dict[str, Any]:
     root = experiment_root.expanduser().resolve()
-    used = [
-        str(trial["output_relpath"])
+    _expected_trial_output_paths(plan=plan, experiment_root=root)
+    reusable = set(reusable_trial_ids)
+    used = {
+        str(trial["trial_id"]): str(trial["output_relpath"])
         for trial in plan["trials"]
         if (root / str(trial["output_relpath"])).exists()
+    }
+    unexpected = [
+        output_relpath
+        for trial_id, output_relpath in used.items()
+        if trial_id not in reusable
     ]
-    if used:
-        raise ContractError(f"predeclared trial output paths are already used: {used}")
-    return {"status": "PASS", "checked_count": len(plan["trials"]), "used": []}
+    if unexpected:
+        raise ContractError(
+            f"predeclared trial output paths are already used: {unexpected}"
+        )
+    return {
+        "status": "PASS",
+        "checked_count": len(plan["trials"]),
+        "used": sorted(used.values()),
+    }
 
 
 def _existing_memory_keys(
@@ -1187,6 +1226,8 @@ def preflight_experiment(
     tau_root: Path,
     experiment_root: Path,
     plan_file_sha256: str | None = None,
+    reusable_trial_ids: Iterable[str] = (),
+    reusable_memory_keys: Iterable[str] = (),
 ) -> dict[str, Any]:
     """Fail closed until every dependency for the frozen live trial set is ready."""
 
@@ -1203,7 +1244,9 @@ def preflight_experiment(
         raise ContractError("SciLLM route differs from the frozen experiment plan")
 
     output_readiness = _assert_unused_trial_outputs(
-        plan=plan, experiment_root=experiment_root
+        plan=plan,
+        experiment_root=experiment_root,
+        reusable_trial_ids=reusable_trial_ids,
     )
     tau_readiness = _tau_runtime_readiness(tau_root=tau_root)
     scillm_readiness = _scillm_auth_readiness(
@@ -1271,9 +1314,12 @@ def preflight_experiment(
             existing_keys = _existing_memory_keys(
                 client=client, collection=collection, keys=planned_keys
             )
-            if existing_keys:
+            reusable_keys = set(reusable_memory_keys)
+            unexpected_existing_keys = sorted(set(existing_keys) - reusable_keys)
+            if unexpected_existing_keys:
                 raise ContractError(
-                    f"Memory trial namespace is not clean: {len(existing_keys)} keys exist"
+                    "Memory trial namespace contains keys that are not bound to "
+                    f"validated resumed trials: {unexpected_existing_keys}"
                 )
             write = client.post(
                 "/upsert", json={"collection": collection, "documents": [document]}
@@ -1422,7 +1468,7 @@ def preflight_experiment(
             "health_response_sha256": canonical_sha256(health.json()),
             "collection": collection,
             "planned_key_count": len(planned_keys),
-            "existing_planned_key_count": 0,
+            "existing_planned_key_count": len(existing_keys),
             "namespace_clean": True,
             "probe_key_sha256": hashlib.sha256(probe_key.encode("utf-8")).hexdigest(),
             "probe_document_sha256": canonical_sha256(document),
@@ -2202,6 +2248,181 @@ def _family_applies_to_trial(*, family: str, trial: Mapping[str, Any]) -> bool:
     return True
 
 
+def _ordered_experiment_trials(plan: Mapping[str, Any]) -> list[dict[str, Any]]:
+    return sorted(
+        (dict(trial) for trial in plan["trials"]),
+        key=lambda item: (item["replicate"], item["order_index"]),
+    )
+
+
+def _validate_resumable_trial_receipt(
+    *,
+    plan: Mapping[str, Any],
+    trial: Mapping[str, Any],
+    receipt: Mapping[str, Any],
+    plan_file_sha256: str,
+) -> None:
+    validate_trial_receipt(receipt)
+    expected_plan_sha256 = canonical_sha256(plan)
+    exact_bindings = {
+        "experiment_id": plan["experiment_id"],
+        "battle_id": plan["battle_id"],
+        "experiment_plan_sha256": expected_plan_sha256,
+        "experiment_plan_file_sha256": plan_file_sha256,
+        "trial_id": trial["trial_id"],
+        "block_id": trial["block_id"],
+        "replicate": trial["replicate"],
+        "order_index": trial["order_index"],
+        "condition_id": trial["condition_id"],
+        "condition": trial["condition"],
+    }
+    for field, expected in exact_bindings.items():
+        if receipt.get(field) != expected:
+            raise ContractError(
+                f"resumed trial {trial['trial_id']} has mismatched {field}"
+            )
+    if receipt.get("mocked") is not False or receipt.get("live") is not True:
+        raise ContractError(
+            f"resumed trial {trial['trial_id']} must be live and non-mocked"
+        )
+    if receipt.get("fixture_fallback_used") is not False:
+        raise ContractError(
+            f"resumed trial {trial['trial_id']} used fixture fallback"
+        )
+    status = receipt.get("status")
+    if status not in {"PASS", "BLOCKED"}:
+        raise ContractError(
+            f"resumed trial {trial['trial_id']} is not terminal"
+        )
+    attempts = receipt.get("attempts")
+    if not isinstance(attempts, list) or not attempts:
+        raise ContractError(
+            f"resumed trial {trial['trial_id']} lacks live terminal attempts"
+        )
+    if not any(bool(attempt.get("live_started")) for attempt in attempts):
+        raise ContractError(
+            f"resumed trial {trial['trial_id']} lacks a live-started attempt"
+        )
+    if status == "PASS":
+        if attempts[-1].get("status") != "PASS":
+            raise ContractError(
+                f"resumed PASS trial {trial['trial_id']} lacks a terminal PASS attempt"
+            )
+    else:
+        failure = receipt.get("failure")
+        if not isinstance(failure, Mapping):
+            raise ContractError(
+                f"resumed BLOCKED trial {trial['trial_id']} lacks terminal failure evidence"
+            )
+        if failure.get("attempts") != attempts:
+            raise ContractError(
+                f"resumed BLOCKED trial {trial['trial_id']} attempt history disagrees"
+            )
+        if any(attempt.get("status") != "BLOCKED" for attempt in attempts):
+            raise ContractError(
+                f"resumed BLOCKED trial {trial['trial_id']} has a non-blocked attempt"
+            )
+
+
+def _load_resumable_trial_receipts(
+    *,
+    plan: Mapping[str, Any],
+    experiment_root: Path,
+    plan_file_sha256: str,
+) -> dict[str, dict[str, Any]]:
+    root = experiment_root.expanduser().resolve()
+    ordered_trials = _ordered_experiment_trials(plan)
+    _expected_trial_output_paths(plan=plan, experiment_root=root)
+
+    receipts: dict[str, dict[str, Any]] = {}
+    missing_seen = False
+    for trial in ordered_trials:
+        trial_dir = root / str(trial["output_relpath"])
+        if not trial_dir.exists():
+            missing_seen = True
+            continue
+        if missing_seen:
+            raise ContractError(
+                "existing resumed trial outputs are not a contiguous frozen-order prefix"
+            )
+        if trial_dir.is_symlink() or not trial_dir.is_dir():
+            raise ContractError(
+                f"trial output path is not a normal directory: {trial['output_relpath']}"
+            )
+        receipt_path = trial_dir / "trial-receipt.json"
+        if not receipt_path.is_file():
+            raise ContractError(
+                f"partial trial output lacks terminal receipt: {trial['trial_id']}"
+            )
+        try:
+            receipt = _read_json(receipt_path)
+        except ContractError as exc:
+            raise ContractError(
+                f"trial receipt is malformed: {trial['trial_id']}"
+            ) from exc
+        _validate_resumable_trial_receipt(
+            plan=plan,
+            trial=trial,
+            receipt=receipt,
+            plan_file_sha256=plan_file_sha256,
+        )
+        receipt["receipt_sha256"] = file_sha256(receipt_path)
+        receipts[str(trial["trial_id"])] = receipt
+    return receipts
+
+
+def _resumed_memory_keys(
+    *,
+    plan: Mapping[str, Any],
+    receipts: Mapping[str, Mapping[str, Any]],
+) -> set[str]:
+    trials = {str(trial["trial_id"]): trial for trial in plan["trials"]}
+    keys: set[str] = set()
+    for trial_id, receipt in receipts.items():
+        if receipt.get("status") != "PASS":
+            continue
+        trial = trials[trial_id]
+        for team in TEAMS:
+            if not trial["condition"][f"{team}_memory"]:
+                continue
+            expected_key = str(trial["memory_namespace"][f"{team}_key"])
+            memory = receipt["memory"][team]
+            if (
+                memory.get("memory_key") != expected_key
+                or not memory.get("write_receipt_sha256")
+                or not memory.get("recall_receipt_sha256")
+            ):
+                raise ContractError(
+                    f"resumed trial {trial_id} lacks exact {team} Memory binding"
+                )
+            keys.add(expected_key)
+    return keys
+
+
+def _restore_failure_policy_state(
+    *,
+    receipt: Mapping[str, Any],
+    failure_signature_counts: dict[str, int],
+    systemic_families: set[str],
+    max_identical_failures_per_family: int,
+) -> None:
+    if receipt.get("status") != "BLOCKED":
+        return
+    failure = receipt.get("failure")
+    if not isinstance(failure, Mapping):
+        raise ContractError("resumed BLOCKED trial lacks failure state")
+    family = str(failure["family"])
+    if bool(failure.get("blocked_by_systemic_failure")):
+        systemic_families.add(family)
+        return
+    signature = str(failure["signature"])
+    failure_signature_counts[signature] = (
+        failure_signature_counts.get(signature, 0) + 1
+    )
+    if failure_signature_counts[signature] >= max_identical_failures_per_family:
+        systemic_families.add(family)
+
+
 def run_experiment(
     *,
     plan_path: Path,
@@ -2210,6 +2431,7 @@ def run_experiment(
     memory_base_url: str,
     scillm_base_url: str | None = None,
     tau_root: Path | None = None,
+    resume: bool = False,
 ) -> dict[str, Any]:
     """Run exactly the twelve predeclared trials; never add favorable replacements."""
 
@@ -2227,6 +2449,18 @@ def run_experiment(
             raise ContractError("SciLLM route differs from the frozen experiment plan")
 
     out_dir.mkdir(parents=True, exist_ok=True)
+    resumed_receipts = (
+        _load_resumable_trial_receipts(
+            plan=plan,
+            experiment_root=out_dir,
+            plan_file_sha256=plan_sha,
+        )
+        if resume
+        else {}
+    )
+    reusable_memory_keys = _resumed_memory_keys(
+        plan=plan, receipts=resumed_receipts
+    )
     preflight = preflight_experiment(
         plan=plan,
         source_root=source_root,
@@ -2236,6 +2470,8 @@ def run_experiment(
         or Path(os.environ.get("BATTLE_TAU_ROOT", "/home/graham/workspace/experiments/tau")),
         experiment_root=out_dir,
         plan_file_sha256=plan_sha,
+        reusable_trial_ids=resumed_receipts.keys(),
+        reusable_memory_keys=reusable_memory_keys,
     )
     if preflight.get("approval") != "APPROVED_FOR_LIVE":
         raise ContractError("experiment preflight did not approve live execution")
@@ -2243,10 +2479,21 @@ def run_experiment(
     failure_signature_counts: dict[str, int] = {}
     systemic_families: set[str] = set()
     trial_receipts: list[dict[str, Any]] = []
-    ordered_trials = sorted(
-        plan["trials"], key=lambda item: (item["replicate"], item["order_index"])
+    ordered_trials = _ordered_experiment_trials(plan)
+    max_identical_failures = int(
+        plan["failure_policy"]["max_identical_failures_per_family"]
     )
     for trial in ordered_trials:
+        resumed = resumed_receipts.get(str(trial["trial_id"]))
+        if resumed is not None:
+            trial_receipts.append(resumed)
+            _restore_failure_policy_state(
+                receipt=resumed,
+                failure_signature_counts=failure_signature_counts,
+                systemic_families=systemic_families,
+                max_identical_failures_per_family=max_identical_failures,
+            )
+            continue
         blocking_family = next(
             (
                 family
@@ -2330,9 +2577,7 @@ def run_experiment(
             failure_signature_counts[failure_signature] = (
                 failure_signature_counts.get(failure_signature, 0) + 1
             )
-            if failure_signature_counts[failure_signature] >= int(
-                plan["failure_policy"]["max_identical_failures_per_family"]
-            ):
+            if failure_signature_counts[failure_signature] >= max_identical_failures:
                 systemic_families.add(family)
             receipt = _blocked_trial_receipt(
                 plan=plan,
@@ -2348,6 +2593,10 @@ def run_experiment(
         receipt["receipt_sha256"] = file_sha256(path)
         trial_receipts.append(receipt)
 
+    if len(trial_receipts) != 12:
+        raise ContractError(
+            f"experiment run did not aggregate exactly 12 trial receipts: {len(trial_receipts)}"
+        )
     summary = {
         "schema": "battle.memory_ablation_run_summary.v1",
         "status": "PASS"
