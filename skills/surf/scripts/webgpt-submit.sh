@@ -731,7 +731,8 @@ if [[ "$advisory_after_s" =~ ^[0-9]+$ && "$advisory_after_s" -gt 0 && "$advisory
 fi
 
 heartbeat_output="$(dirname "$meta_output")/webgpt_heartbeat.json"
-args=(chatgpt --query-file "$submitted_output" --sentinel "$sentinel" --stable-polls "$stable_polls" --timeout "$effective_timeout_s" --keep-tab --heartbeat-file "$heartbeat_output")
+submitted_query="$(cat "$submitted_output")"
+args=(chatgpt "$submitted_query" --sentinel "$sentinel" --stable-polls "$stable_polls" --timeout "$effective_timeout_s" --keep-tab --heartbeat-file "$heartbeat_output")
 if [[ -n "$model" ]]; then
   args+=(--model "$model")
 fi
