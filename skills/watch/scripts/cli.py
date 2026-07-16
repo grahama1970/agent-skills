@@ -35,7 +35,7 @@ def watch(
     tag: Optional[str] = typer.Option(None, "--tag", help="SRT cue tag for scene filtering"),
     query: Optional[str] = typer.Option(None, "--query", help="Free-text search in SRT"),
     whisper: bool = typer.Option(True, "--whisper/--no-whisper", help="Enable Whisper fallback"),
-    doc2qra: bool = typer.Option(False, "--doc2qra", help="Feed transcript to doc2qra for QRA extraction"),
+    doc2qra: bool = typer.Option(False, "--doc2qra", help="Compatibility flag; scene-level doc2qra integration is currently disabled"),
     persona: Optional[str] = typer.Option(None, "--persona", help="Persona name (e.g. embry) for persona_memory tagging"),
     out_dir: Optional[Path] = typer.Option(None, "--out-dir", help="Working directory"),
     json_output: bool = typer.Option(False, "--json", help="Output JSON instead of markdown"),

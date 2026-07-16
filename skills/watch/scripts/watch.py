@@ -456,18 +456,12 @@ def run_watch(
     if transcript is None:
         gaps.append("missing_transcript")
 
+    title = transcript.get("video_title") if transcript and transcript.get("video_title") else dl.get("info", {}).get("title") or Path(source).stem
+
     qra_result = None
     if transcript and transcript.get("full_text") and doc2qra:
-        from qra import _build_scene_chunks, _call_doc2qra_scene
-        scenes_text = _build_scene_chunks(transcript["segments"], frames, sampling_mode)
-        if scenes_text:
-            qra_results = []
-            for scene in scenes_text:
-                r = _call_doc2qra_scene(scene["text"], scene["index"], title, scene["start_seconds"], scene["end_seconds"])
-                if r:
-                    qra_results.append(r)
-            if qra_results:
-                qra_result = {"scene_count": len(qra_results), "scenes": qra_results}
+        logger.warning("--doc2qra is disabled in Watch: optional scene-level doc2qra integration is not implemented")
+        gaps.append("doc2qra_disabled")
 
     scenes_analysis = None
     emotion_analysis = None
@@ -479,8 +473,6 @@ def run_watch(
                 scenes_analysis = find_scenes(entries, query=query, tag=tag, emotion=emotion)
         except Exception as exc:
             logger.error("SRT analysis failed: {}", exc)
-
-    title = transcript.get("video_title") if transcript and transcript.get("video_title") else dl.get("info", {}).get("title") or Path(source).stem
 
     manifest_path = work / "frames_manifest.json"
     write_frames_manifest(frames, manifest_path, source=source, sampling_mode=sampling_mode,
