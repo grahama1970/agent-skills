@@ -171,3 +171,53 @@ def test_technical_evidence_leaves_only_five_hash_bound_human_approvals(
     assert request["submitted"] is False
     assert request["provider_ready"] is False
     assert request["live_submit_ready"] is False
+
+
+def test_corrected_upstream_validation_rebinds_to_active_revision_without_rewriting_history(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+):
+    inputs, _candidate, _urls = make_compilation_inputs(tmp_path)
+    write_json(
+        inputs.validation_path,
+        {
+            "schema": "persona_dream.complete_pipeline_report_validation.v1",
+            "status": "PASS_PANEL_REVIEWED",
+            "passed_step_count": 12,
+            "step_count": 15,
+            "first_blocker": None,
+        },
+    )
+    old_root = inputs.context.run_root / ".persona-dream" / "revisions" / "rev_rejected"
+    old_root.mkdir(parents=True)
+    old_context = replace(
+        inputs.context,
+        revision_root=old_root.resolve(),
+        revision_id="rev_rejected",
+        activation_transaction_id="activation-" + "c" * 32,
+    )
+    monkeypatch.setattr(upstream, "resolve_active_context", lambda *_args, **_kwargs: old_context)
+    _corrected, old_receipt = upstream.reconcile(
+        inputs.context.run_root,
+        old_context.revision_id,
+        "2026-07-15T11:00:00+00:00",
+    )
+    old_path = old_root / upstream.MIGRATION_RELATIVE
+    old_bytes = old_path.read_bytes()
+    assert old_receipt["revision_id"] == "rev_rejected"
+
+    monkeypatch.setattr(upstream, "resolve_active_context", lambda *_args, **_kwargs: inputs.context)
+    corrected, active_receipt = upstream.reconcile(
+        inputs.context.run_root,
+        inputs.context.revision_id,
+        "2026-07-15T12:00:00+00:00",
+    )
+    active_path = inputs.context.revision_root / upstream.MIGRATION_RELATIVE
+    assert active_receipt["revision_id"] == inputs.context.revision_id
+    assert active_receipt["activation_transaction_id"] == inputs.context.activation_transaction_id
+    assert active_receipt["source_validation_sha256"] == old_receipt["source_validation_sha256"]
+    assert active_path.is_file()
+    assert old_path.read_bytes() == old_bytes
+    assert corrected["phase11_validation_migration_receipt"].endswith(
+        f"{inputs.context.revision_id}/phase_11_submit_return/preflight/upstream_validation_migration_receipt.json"
+    )
+    assert corrected["actual_provider_call_attempts"] == 0

@@ -193,7 +193,7 @@ The README uses these proof terms consistently:
 | Grounded dream packets | **Implemented** | Source links, contradiction reports, reflections, and receipts exist |
 | Image and storyboard production | **Live slices proven** | Live image generation, visual review, creator/reviewer repair, and accepted-frame evidence exist |
 | Phases 01-10 - Qualified revision | **Qualified revision** | `rev_idea_f3f9c48d5cc2` is `ACTIVE_CONSISTENT`; the explicit human idea has 10/10 phase lineage bindings, and 10 phase records plus 16 required-artifact references are persisted and semantically synchronized through Memory |
-| Phase 11 - Submit and Return | **Blocked provider gate** | The request compiler/lifecycle boundary is not live-submittable; no paid call or live provider return has been authorized or proven |
+| Phase 11 - Submit and Return | **Awaiting explicit approvals** | The exact Standard/audio-off request, media bindings, provider-source snapshot, zero-call adapter preflight, submit-once fence, and Memory boundary validation pass. Five hash-bound human approvals remain; provider attempts are `0` and no return exists |
 | Phases 12-15 - Watch through persistence | **Designed** | The evidence architecture exists, but one accepted closed run does not |
 | Phase 16 - Later persona behavior | **Not implemented as a closed proof** | No persisted dream has yet been shown to alter later behavior while preserving identity |
 
@@ -428,9 +428,9 @@ Phase 10 answers a different question: exactly what would eventually be sent,
 against which endpoint and schema evidence, using which media plan, cost policy,
 and asynchronous return path?
 
-The repository contains a fixture-backed, local dry-run compiler and
-fail-closed gate. The archived run shown here has not been regenerated with that
-contract artifact.
+The canonical run contains a deterministic compiler, independent validator,
+live zero-call adapter preflight, and Memory-persisted fail-closed boundary.
+The archived screenshot shown here predates that current contract artifact.
 
 **What to notice:** the screenshot is correctly blocked even though newer local
 contract tooling exists. Neither state proves live fal.ai compatibility.
@@ -453,6 +453,20 @@ Phase 11 is the live-provider boundary. It requires:
 **What to notice:** this phase is intentionally blocked. The README must not
 claim that the persona watched a dream until a provider return exists and Watch
 has analyzed the actual media.
+
+Current canonical evidence for `rev_idea_f3f9c48d5cc2`:
+
+```text
+request_body_sha256: sha256:444a5a27e35c70848819aa561fc429f6e48d633c2bcc8ac805f675ac5b5f4b71
+validator_status: PASS_PHASE11_CANONICAL_BOUNDARY_VALIDATED
+adapter_status: PASS_PHASE11_ADAPTER_PREFLIGHT
+gate_status: BLOCKED_AWAITING_HUMAN_APPROVAL
+technical_blockers: []
+missing_approval_count: 5
+actual_provider_call_attempts: 0
+provider_ready: false
+live_submit_ready: false
+```
 
 ### 12 - Watch Observation
 

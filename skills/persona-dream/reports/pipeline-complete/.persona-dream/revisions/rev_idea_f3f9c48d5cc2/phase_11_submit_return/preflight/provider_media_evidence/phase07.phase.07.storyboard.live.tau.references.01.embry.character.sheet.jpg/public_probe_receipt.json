@@ -1,0 +1,13 @@
+{
+  "actual_provider_call_attempts": 0,
+  "artifact_id": "phase07.phase.07.storyboard.live.tau.references.01.embry.character.sheet.jpg",
+  "checked_at": "2026-07-16T11:11:02.538311+00:00",
+  "content_length": 429215,
+  "content_type": "image/jpeg",
+  "downloaded_sha256": "sha256:b93c3fed77959d783cdc5788189117d8a8fed6b92fc689eba1154d080d323840",
+  "final_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/9ce346f4e508382350f49f42563b998f1aa8efe7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_07_storyboard_live_tau/references/01-embry_character_sheet.jpg",
+  "http_status": 200,
+  "schema": "persona_dream.phase11_public_media_probe_receipt.v1",
+  "status": "PASS_PROVIDER_MEDIA_PUBLIC_FETCH",
+  "url": "https://raw.githubusercontent.com/grahama1970/agent-skills/9ce346f4e508382350f49f42563b998f1aa8efe7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_07_storyboard_live_tau/references/01-embry_character_sheet.jpg"
+}

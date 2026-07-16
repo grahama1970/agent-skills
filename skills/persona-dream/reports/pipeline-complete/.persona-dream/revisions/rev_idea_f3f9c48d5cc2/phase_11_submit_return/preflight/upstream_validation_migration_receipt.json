@@ -1,0 +1,35 @@
+{
+  "activation_transaction_id": "activation-f316f5e66ba900751235c2ee3cd27da3",
+  "actual_provider_call_attempts": 0,
+  "corrected_contract_sha256": "sha256:18e8beac9cfb02bc80a1dc95d7b684cf980c3bc4bfc249b6eb781e2cf535add8",
+  "corrected_first_blocker": "BLOCKED_PHASE11_PROVIDER_SUBMIT_NOT_EXECUTED",
+  "corrected_status": "BLOCKED_DOWNSTREAM_NOT_EXECUTED",
+  "deferred_steps": [
+    {
+      "status": "NOT_EXECUTED",
+      "step_id": "phase11_submit_and_return"
+    },
+    {
+      "status": "NOT_EXECUTED",
+      "step_id": "phase12_watch_observation"
+    },
+    {
+      "status": "NOT_EXECUTED",
+      "step_id": "phase13_16_cognitive_loop"
+    }
+  ],
+  "provider_live": false,
+  "reconciled_at": "2026-07-16T11:11:02.240286+00:00",
+  "revision_id": "rev_idea_f3f9c48d5cc2",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.phase11_upstream_validation_migration.v1",
+  "source_first_blocker": null,
+  "source_passed_step_count": 12,
+  "source_status": "PASS_PANEL_REVIEWED",
+  "source_step_count": 15,
+  "source_validation_sha256": "sha256:10260c47d50a4550af19d9401ad615ab005916e52cf36e363d8baebe7601c4df",
+  "status": "PASS_PHASE11_UPSTREAM_VALIDATION_RECONCILED",
+  "submitted": false,
+  "upstream_passed_step_count": 12,
+  "upstream_required_step_count": 12
+}

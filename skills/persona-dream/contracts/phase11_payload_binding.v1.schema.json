@@ -1,0 +1,178 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/persona-dream/phase11_payload_binding.v1.schema.json",
+  "title": "Persona Dream Phase 11 active-revision payload binding",
+  "type": "object",
+  "required": [
+    "schema", "status", "gate_status", "run_id", "revision_id",
+    "activation_transaction_id", "source_commit", "artifact_index_sha256",
+    "phase10_payload_sha256", "media_lock_sha256", "provider", "model", "mode",
+    "publication", "input", "media_roles", "technical_gate",
+    "actual_provider_call_attempts", "provider_live", "paid_call_authorized",
+    "submitted", "provider_ready", "live_submit_ready", "claims"
+  ],
+  "properties": {
+    "schema": {"const": "persona_dream.phase11_payload_binding.v1"},
+    "status": {"const": "BLOCKED_PUBLIC_MEDIA_PROBE_REQUIRED"},
+    "gate_status": {"const": "BLOCKED_PROVIDER_GATE"},
+    "run_id": {"type": "string", "minLength": 1},
+    "revision_id": {"type": "string", "minLength": 1},
+    "activation_transaction_id": {"type": "string", "pattern": "^activation-[a-f0-9]{32}$"},
+    "source_commit": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "artifact_index_sha256": {"$ref": "#/$defs/sha256"},
+    "phase10_payload_sha256": {"$ref": "#/$defs/sha256"},
+    "media_lock_sha256": {"$ref": "#/$defs/sha256"},
+    "provider": {"const": "fal.ai"},
+    "model": {"const": "fal-ai/kling-video/v3/standard/image-to-video"},
+    "mode": {"const": "standard"},
+    "publication": {
+      "type": "object",
+      "required": [
+        "state", "repository", "commit", "provider_accessible_urls_proven",
+        "publication_performed_by_this_command", "next_command"
+      ],
+      "properties": {
+        "state": {"const": "UNPROBED_COMMIT_PINNED_URLS"},
+        "repository": {"type": "string", "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"},
+        "commit": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+        "provider_accessible_urls_proven": {"const": false},
+        "publication_performed_by_this_command": {"const": false},
+        "next_command": {"type": "array", "minItems": 1, "items": {"type": "string"}}
+      },
+      "additionalProperties": false
+    },
+    "input": {
+      "type": "object",
+      "required": [
+        "multi_prompt", "start_image_url", "duration", "generate_audio",
+        "end_image_url", "elements", "shot_type", "negative_prompt", "cfg_scale"
+      ],
+      "properties": {
+        "multi_prompt": {
+          "type": "array", "minItems": 4, "maxItems": 4,
+          "items": {
+            "type": "object",
+            "required": ["duration", "prompt"],
+            "properties": {
+              "duration": {"enum": ["2", "3"]},
+              "prompt": {"type": "string", "minLength": 1}
+            },
+            "additionalProperties": false
+          }
+        },
+        "start_image_url": {"$ref": "#/$defs/url"},
+        "duration": {"const": "10"},
+        "generate_audio": {"const": false},
+        "end_image_url": {"$ref": "#/$defs/url"},
+        "elements": {
+          "type": "array", "minItems": 2, "maxItems": 2,
+          "items": {
+            "type": "object",
+            "required": ["frontal_image_url", "reference_image_urls"],
+            "properties": {
+              "frontal_image_url": {"$ref": "#/$defs/url"},
+              "reference_image_urls": {
+                "type": "array", "minItems": 2, "maxItems": 2,
+                "items": {"$ref": "#/$defs/url"}
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "shot_type": {"const": "customize"},
+        "negative_prompt": {"type": "string", "minLength": 1},
+        "cfg_scale": {"type": "number"}
+      },
+      "additionalProperties": false
+    },
+    "media_roles": {
+      "type": "object",
+      "required": [
+        "role_counts", "global_start_anchor", "global_end_anchor",
+        "continuity_only", "character_element_packs"
+      ],
+      "properties": {
+        "role_counts": {
+          "const": {
+            "global_start_anchor": 1,
+            "global_end_anchor": 1,
+            "continuity_only": 6,
+            "element_packs": 2
+          }
+        },
+        "global_start_anchor": {"$ref": "#/$defs/media_record"},
+        "global_end_anchor": {"$ref": "#/$defs/media_record"},
+        "continuity_only": {
+          "type": "array", "minItems": 6, "maxItems": 6,
+          "items": {"$ref": "#/$defs/media_record"}
+        },
+        "character_element_packs": {
+          "type": "array", "minItems": 2, "maxItems": 2,
+          "items": {
+            "type": "object",
+            "required": ["identity", "prompt_token", "element_index", "frontal", "references"],
+            "properties": {
+              "identity": {"enum": ["embry", "kai"]},
+              "prompt_token": {"enum": ["@Element1", "@Element2"]},
+              "element_index": {"type": "integer", "minimum": 0, "maximum": 1},
+              "frontal": {"$ref": "#/$defs/media_record"},
+              "references": {
+                "type": "array", "minItems": 2, "maxItems": 2,
+                "items": {"$ref": "#/$defs/media_record"}
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "technical_gate": {
+      "type": "object",
+      "required": [
+        "binding_built_from_active_revision", "request_asset_count", "generate_audio",
+        "provider_media_probes_passed", "provider_media_probes_required"
+      ],
+      "properties": {
+        "binding_built_from_active_revision": {"const": true},
+        "request_asset_count": {"const": 7},
+        "generate_audio": {"const": false},
+        "provider_media_probes_passed": {"const": 0},
+        "provider_media_probes_required": {"const": 7}
+      },
+      "additionalProperties": false
+    },
+    "actual_provider_call_attempts": {"const": 0},
+    "provider_live": {"const": false},
+    "paid_call_authorized": {"const": false},
+    "submitted": {"const": false},
+    "provider_ready": {"const": false},
+    "live_submit_ready": {"const": false},
+    "claims": {
+      "type": "object",
+      "required": ["proves", "does_not_prove"],
+      "properties": {
+        "proves": {"type": "array", "items": {"type": "string"}},
+        "does_not_prove": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "url": {"type": "string", "pattern": "^https://raw\\.githubusercontent\\.com/"},
+    "media_record": {
+      "type": "object",
+      "required": ["artifact_id", "role", "sha256", "revision_relative_path", "public_url"],
+      "properties": {
+        "artifact_id": {"type": "string", "minLength": 1},
+        "role": {"enum": ["global_start_anchor", "global_end_anchor", "continuity_only", "character_frontal"]},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "revision_relative_path": {"type": "string", "minLength": 1},
+        "public_url": {"$ref": "#/$defs/url"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

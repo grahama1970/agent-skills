@@ -15,6 +15,7 @@ from urllib.parse import urlparse
 
 from phase11_canonical_common import (
     DEFAULT_CANDIDATE_RELATIVE,
+    DEFAULT_MEDIA_LOCK_RELATIVE,
     DEFAULT_PHASE10_RELATIVE,
     DEFAULT_PROVIDER_SNAPSHOT_RELATIVE,
     Phase11Blocked,
@@ -25,6 +26,7 @@ from phase11_canonical_common import (
     sha256_file,
     write_json,
 )
+from phase11_payload_binding import PayloadBindingBlocked, load_and_validate_payload_binding
 
 DEFAULT_SCHEMA_URL = "https://fal.ai/models/fal-ai/kling-video/v3/standard/image-to-video/api"
 DEFAULT_PRICING_URL = "https://fal.ai/models/fal-ai/kling-video/v3/standard/image-to-video"
@@ -166,7 +168,15 @@ def build_snapshot(
         raise Phase11Blocked("BLOCKED_PROVIDER_PRICING_SOURCE_FINAL_URL", details={"final_url": pricing_remote.final_url})
 
     phase10 = read_object(phase10_payload_path)
-    candidate = read_object(candidate_binding_path)
+    try:
+        candidate = load_and_validate_payload_binding(
+            candidate_binding_path,
+            context=context,
+            phase10_payload_path=phase10_payload_path,
+            media_lock_path=context.revision_root / DEFAULT_MEDIA_LOCK_RELATIVE,
+        )
+    except PayloadBindingBlocked as exc:
+        raise Phase11Blocked(exc.code, details=exc.details, exit_code=exc.exit_code) from exc
     phase10_endpoint = endpoint_from_payload(phase10)
     candidate_endpoint = str(candidate.get("model") or "")
     if candidate_endpoint != STANDARD_ENDPOINT:
@@ -262,6 +272,15 @@ def main(argv: list[str] | None = None) -> int:
         output = args.output.expanduser().resolve() if args.output else context.revision_root / DEFAULT_PROVIDER_SNAPSHOT_RELATIVE
         phase10_path = context.revision_root / DEFAULT_PHASE10_RELATIVE
         candidate_path = context.revision_root / DEFAULT_CANDIDATE_RELATIVE
+        try:
+            load_and_validate_payload_binding(
+                candidate_path,
+                context=context,
+                phase10_payload_path=phase10_path,
+                media_lock_path=context.revision_root / DEFAULT_MEDIA_LOCK_RELATIVE,
+            )
+        except PayloadBindingBlocked as exc:
+            raise Phase11Blocked(exc.code, details=exc.details, exit_code=exc.exit_code) from exc
         schema_remote = fetch_remote(args.schema_url, args.timeout)
         pricing_remote = fetch_remote(args.pricing_url, args.timeout)
         snapshot = build_snapshot(
@@ -296,6 +315,7 @@ def main(argv: list[str] | None = None) -> int:
             raise Phase11Blocked("BLOCKED_PROVIDER_SOURCE_SNAPSHOT_SCHEMA", details={"errors": errors})
         write_json(output, snapshot)
         result = {
+            "schema": "persona_dream.phase11_provider_source_capture_receipt.v1",
             "status": "PASS_PROVIDER_SOURCE_SNAPSHOT",
             "snapshot": str(output),
             "snapshot_sha256": sha256_file(output),
@@ -304,18 +324,41 @@ def main(argv: list[str] | None = None) -> int:
             "mode": "standard",
             "actual_provider_call_attempts": 0,
             "provider_live": False,
+            "paid_call_authorized": False,
             "submitted": False,
+            "provider_ready": False,
+            "live_submit_ready": False,
         }
     except Phase11Blocked as exc:
         result = {
+            "schema": "persona_dream.phase11_provider_source_capture_receipt.v1",
             "status": exc.code,
+            "gate_status": "BLOCKED_PROVIDER_GATE",
             "details": exc.details,
             "actual_provider_call_attempts": 0,
             "provider_live": False,
+            "paid_call_authorized": False,
             "submitted": False,
+            "provider_ready": False,
+            "live_submit_ready": False,
         }
         print(json.dumps(result, indent=2, sort_keys=True))
         return exc.exit_code
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        result = {
+            "schema": "persona_dream.phase11_provider_source_capture_receipt.v1",
+            "status": "BLOCKED_PROVIDER_SOURCE_INPUT_INVALID",
+            "gate_status": "BLOCKED_PROVIDER_GATE",
+            "details": {"error": str(exc)},
+            "actual_provider_call_attempts": 0,
+            "provider_live": False,
+            "paid_call_authorized": False,
+            "submitted": False,
+            "provider_ready": False,
+            "live_submit_ready": False,
+        }
+        print(json.dumps(result, indent=2, sort_keys=True))
+        return 2
     print(json.dumps(result, indent=2, sort_keys=True) if args.json else result["status"])
     return 0
 

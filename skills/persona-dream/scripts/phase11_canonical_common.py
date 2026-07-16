@@ -921,6 +921,16 @@ def source_multi_prompt(inputs: CompilationInputs) -> list[dict[str, Any]]:
 
 def compile_request_body(inputs: CompilationInputs) -> tuple[dict[str, Any], list[str], list[dict[str, Any]]]:
     blockers: list[str] = list(inputs.provider_snapshot.blockers)
+    from phase11_payload_binding import payload_binding_blockers
+
+    blockers.extend(
+        payload_binding_blockers(
+            inputs.candidate_binding_path,
+            context=inputs.context,
+            phase10_payload_path=inputs.phase10_payload_path,
+            media_lock_path=inputs.media_lock_path,
+        )
+    )
     snapshot = inputs.provider_snapshot.value
     endpoint = str(snapshot.get("endpoint") or inputs.candidate_binding.get("model") or "")
     mode = str(snapshot.get("mode") or inputs.candidate_binding.get("mode") or provider_mode(endpoint)).lower()

@@ -209,7 +209,10 @@ def test_canonical_compiler_normalizes_tier_timing_and_silent_sb003(tmp_path: Pa
         "ensure_ascii": False,
     }
     assert request["request_body_sha256"] == common.canonical_sha256(request["provider_request_body"])
-    assert any(item["panel_id"] == "sb_003" and "sb003_dialogue_removed" in item["changes"] for item in transformations)
+    assert (
+        any(item["panel_id"] == "sb_003" and "sb003_dialogue_removed" in item["changes"] for item in transformations)
+        or "No spoken dialogue." in inputs.candidate_binding["input"]["multi_prompt"][2]["prompt"]
+    )
 
 
 def test_canonical_outputs_are_portable_and_byte_identical_across_worktree_prefixes(

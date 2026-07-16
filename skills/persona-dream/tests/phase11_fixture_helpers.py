@@ -330,6 +330,25 @@ def make_compilation_inputs(tmp_path: Path):
         revision_root / "phase_08_media_lock" / "storyboard_media_lock_manifest.json",
         {"schema": "persona_dream.storyboard_media_lock_manifest.v1", "assets": locked_assets},
     )
+    from phase11_payload_binding import build_payload_binding
+
+    binding = build_payload_binding(
+        context=context,
+        phase10_payload_path=phase10_path,
+        media_lock_path=media_lock_path,
+        publication_commit="0" * 40,
+    )
+    write_json(candidate_path, binding)
+    request_input = dict(binding["input"])
+    urls = {
+        record["artifact_id"]: record["public_url"]
+        for record in [
+            binding["media_roles"]["global_start_anchor"],
+            binding["media_roles"]["global_end_anchor"],
+            *binding["media_roles"]["continuity_only"],
+            *[pack["frontal"] for pack in binding["media_roles"]["character_element_packs"]],
+        ]
+    }
     provider_root = revision_root / "phase_11_submit_return" / "preflight"
     schema_body = b"fixture fal schema response"
     pricing_body = b"fixture fal pricing response"

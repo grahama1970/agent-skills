@@ -1,6 +1,6 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-15 11:55 by agent
+**Last updated:** 2026-07-16 07:18 by agent
 **Status:** Active development
 
 ## Current Understanding
@@ -20,6 +20,21 @@
   receipt. Live run-detail reports all ten phases `accepted_current` and
   `ACTIVE_CONSISTENT`. Phase 11 remains `BLOCKED_PROVIDER_GATE`; provider call
   attempts remain zero.
+- 2026-07-16: The canonical Phase 11 pre-Kling boundary for
+  `rev_idea_f3f9c48d5cc2` is now live-validated and Memory-persisted. The exact
+  Standard/audio-off request body hash is
+  `sha256:444a5a27e35c70848819aa561fc429f6e48d633c2bcc8ac805f675ac5b5f4b71`;
+  SB_003 is silent, the media manifest binds one start anchor, one end anchor,
+  six continuity references, and two element packs, and the adapter preflight
+  passed with a submit-once fence. Memory `/upsert` updated deterministic key
+  `pd_phase11_d1440cf980f38c916f0fa93bff648b17e036e58feb43a941`, `/list`
+  exactly reread it and the active pointer, semantic sync is `synced`, and
+  question-shaped recall returned the same identity with dense score
+  `0.76713914`. Current gate: `BLOCKED_AWAITING_HUMAN_APPROVAL` for five
+  hash-bound receipts: publication authorization, visual/media acceptance,
+  exact-request acceptance, cost acceptance, and paid-call authorization.
+  `actual_provider_call_attempts=0`, `provider_ready=false`,
+  `live_submit_ready=false`, and no provider return or Watch observation exists.
 - Project initialized, knowledge tracking started
 - Agent is persona-dream pipeline that generates cinematic Kling Omni sequences from persona memory. Purpose: test whether an AI agent can autonomously dream about events from memory like a real person. The pipeline must be treated as a no-omission serial gate loop from request intake through final report. The full pipeline order is: Request / Idea Intake → Dreaming Persona Selection → Memory Recall → Residue Grounding → Dream Packet → Story / Video Plan → Producer Persona Selection → Producer selects Director → Producer selects Script Writer → Creative Authority Receipts → Look Lock → Script DNA → Storyboard Prompt Composition → Storyboard Panel Receipts → Panel Continuity And Repair Ledger → Panel Generation Loop → Panel Visual Review Loop → Surgical Panel Repair → Panel Repair Gate → Panel Source Receipt → Provider Media Publication Work Order → Local Provider Media Staging → Publication Preflight → Publication Authorization → Public URL Probe → Provider Media Handoff → Provider Media Lock → Kling Scene Packet → Provider Final Gate → Paid Call Authorization → Kling Submit → Kling Poll / Callback → Output Retrieval → FFprobe / Technical Validation → Frame Contact Sheet → Post-Kling Continuity Review → Voice / Audio Handoff Lane when voiced → Final Assembly / Movie Lane → Report Generation → Gate Validation Loop → Upstream Revision Invalidation → Final Acceptance Boundary.
 - 2026-06-30: **Do not omit the creative authority layer.** Producer Persona Selection, Director Selection, Script Writer Selection, and Creative Authority Receipts are mandatory upstream gates. Producer owns creative arbitration and run-level decisions. Director owns camera, lens, blocking, lighting, color grade, pacing, and visual continuity. Script Writer owns dialogue, story pressure, beat logic, scene tension, reveal structure, and Script DNA. Changes to producer/director/script-writer selections invalidate Look Lock, Script DNA, storyboard, panels, provider packets, reports, and downstream receipts unless a migration receipt proves derivation from the current upstream revision.
@@ -46,20 +61,10 @@
 - 2026-07-06: Phase 07 storyboard failure mode: the multi-day blocker was not primarily a card/layout problem. The panel prompt and reviewer gate let character identity become secondary to wide establishing-shot composition, reef/location beauty, and crowd/lineup context. For identity-critical storyboard panels, priority must be: required character identity match > faces visible and reference-verifiable > character-readable composition > location/reef/cinematic details. Use medium-wide foreground two-shots when Embry/Kai are required, and pass Embry/Kai reference sheets as actual image inputs/attachments, not only local path text.
 - 2026-07-06: If the human shows a visual counterexample for a persona-dream panel, stop UI/status-copy work and inspect the generated prompt, reference attachment route, reviewer schema, and acceptance gate. Do not spend further cycles styling around bad imagery. The next artifact must be a corrected Tau creator/reviewer run receipt or a precise blocker proving why regeneration cannot proceed.
 - 2026-07-13: Historical qualification of `rev_repair_a8b93ffeca8f` is superseded by the July 15 semantic-lineage validator. That revision is a rejected semantic-mix counterexample, not the current active authority.
-- 2026-07-15: **Phase 11 is not complete or Memory-persisted.** The current
-  `rev_idea_f3f9c48d5cc2` scope contains 27 synchronized Memory documents for
-  Phases 01-10 (1 revision, 10 phases, 16 required artifacts) and no Phase 11
-  record. Commit `972d1a2c1498c9710007fa704ffab7a77f12605b` changed only three
-  preflight receipt JSON files; it did not add or update the dry-run compiler,
-  tests, `run.sh`, or a submit/poll/download lifecycle adapter. The bound
-  request is not live-valid because SB_003 still asks Kai to speak while
-  `generate_audio=false`. `reports/pipeline-complete/validation.json` is
-  false-green: it reports `passed_step_count=12` of `step_count=15`,
-  `status=PASS_PANEL_REVIEWED`, and `first_blocker=null`. Current truthful
-  boundary: Phases 01-10 are persisted and qualified; Phase 11 remains blocked
-  pending a corrected exact-request compiler, fail-closed validation, Memory
-  persistence, payload-bound approvals, and a one-shot provider lifecycle
-  implementation.
+- 2026-07-15: The earlier Phase 11 receipt-only state at commit `972d1a2c` was
+  not Memory-persisted or live-submittable. It is retained as the regression
+  baseline and is superseded by the 2026-07-16 canonical compiler, adapter
+  preflight, fail-closed validation, and Memory persistence evidence above.
 
 ## Recent Decisions
 
@@ -89,6 +94,7 @@
 | 2026-07-06 | Failed identity review invalidates accepted storyboard frames | A generated storyboard frame cannot remain ACCEPTED_START_FRAME or ACCEPTED_END_FRAME when identity_continuity_review.status is FAIL. Reviewer failure must downgrade the frame, write a blocker, and force Tau creator/reviewer regeneration instead of letting the UI display or package the image as accepted. |
 | 2026-07-14 | Phases 01-10 require an immutable ACTIVE_CONSISTENT revision before acceptance | Accepted-looking local files are insufficient. Qualification requires hash-bound local artifacts, exact Memory records, Qdrant semantic sync, a deterministic active pointer, and a terminal repair event. Provider submission remains a separate Phase 11 boundary. |
 | 2026-07-15 | Phase 11 receipt edits are not provider lifecycle implementation | Do not call the Phase 11 preflight complete from credential, price, schema, or payload receipt fields alone. Readiness requires a corrected compiler with audio-consistent prompts, tests and `run.sh` integration, fail-closed report validation, Memory persistence, exact payload-bound approvals, and submit-once/poll/download receipts. |
+| 2026-07-16 | Phase 11 may await humans only after technical validation and Memory proof | `BLOCKED_AWAITING_HUMAN_APPROVAL` is valid only when the active revision chain, exact request, media bindings, fresh provider evidence, adapter preflight, submit-once fence, Memory exact reread, semantic sync, and dense recall pass with zero provider attempts. |
 
 ## Open Questions
 

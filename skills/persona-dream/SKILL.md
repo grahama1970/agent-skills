@@ -450,6 +450,26 @@ live_submit_ready: false
 This is live Memory/Arango/Qdrant qualification evidence for Phases 01-10. It
 does not prove Phase 11 submission/return or Phases 12-16.
 
+The current canonical Phase 11 pre-Kling boundary for that revision is:
+
+```text
+request_body_sha256: sha256:444a5a27e35c70848819aa561fc429f6e48d633c2bcc8ac805f675ac5b5f4b71
+validator_status: PASS_PHASE11_CANONICAL_BOUNDARY_VALIDATED
+adapter_status: PASS_PHASE11_ADAPTER_PREFLIGHT
+gate_status: BLOCKED_AWAITING_HUMAN_APPROVAL
+technical_blockers: 0
+missing_hash_bound_approvals: 5
+memory_exact_reread_count: 1
+memory_dense_recall_max: 0.76713914
+actual_provider_call_attempts: 0
+provider_ready: false
+live_submit_ready: false
+```
+
+This proves the exact zero-call pre-Kling boundary and its Memory projection.
+It does not prove approval, submission, provider acceptance, returned video,
+Watch observation, interpretation, or later behavior.
+
 Before a Kling, Wan, ComfyUI, or other provider video call is allowed, write a
 final provider-readiness gate receipt. A provider packet is not live-submittable
 unless every required gate is `PASS` or explicitly human-accepted as an

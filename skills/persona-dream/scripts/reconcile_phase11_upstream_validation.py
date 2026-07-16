@@ -73,12 +73,69 @@ def reconcile(run_root: Path, revision_id: str | None, now: str) -> tuple[dict[s
         and current.get("phase11_upstream_gate") == "PASS_PHASE11_UPSTREAM_QUALIFIED"
     )
     if already_corrected:
-        if not migration_path.is_file():
+        corrected_sha256 = canonical_sha256(corrected_contract(current))
+        if migration_path.is_file():
+            receipt = read_object(migration_path)
+            errors = validate_schema(receipt, "phase11_upstream_validation_migration.v1.schema.json")
+            identity_matches = (
+                receipt.get("run_id") == context.run_id
+                and receipt.get("revision_id") == context.revision_id
+                and receipt.get("activation_transaction_id") == context.activation_transaction_id
+            )
+            if errors or not identity_matches or receipt.get("corrected_contract_sha256") != corrected_sha256:
+                raise Phase11Blocked(
+                    "BLOCKED_UPSTREAM_VALIDATION_MIGRATION_RECEIPT_INVALID",
+                    details={"errors": errors, "identity_matches": identity_matches},
+                )
+            return current, receipt
+
+        source_reference = str(current.get("phase11_validation_migration_receipt") or "")
+        source_hash = str(current.get("phase11_validation_migration_receipt_sha256") or "")
+        if not source_reference:
             raise Phase11Blocked("BLOCKED_UPSTREAM_VALIDATION_MIGRATION_RECEIPT_MISSING")
-        receipt = read_object(migration_path)
+        source_path = (context.run_root / source_reference).resolve()
+        try:
+            source_path.relative_to(context.run_root)
+        except ValueError as exc:
+            raise Phase11Blocked("BLOCKED_UPSTREAM_VALIDATION_MIGRATION_RECEIPT_PATH") from exc
+        if not source_path.is_file():
+            raise Phase11Blocked(
+                "BLOCKED_UPSTREAM_VALIDATION_MIGRATION_RECEIPT_MISSING",
+                details={"path": str(source_path)},
+            )
+        source_receipt = read_object(source_path)
+        source_errors = validate_schema(source_receipt, "phase11_upstream_validation_migration.v1.schema.json")
+        if source_errors or (source_hash and sha256_file(source_path) != source_hash):
+            raise Phase11Blocked(
+                "BLOCKED_UPSTREAM_VALIDATION_MIGRATION_SOURCE_INVALID",
+                details={"errors": source_errors, "path": str(source_path)},
+            )
+        if source_receipt.get("corrected_contract_sha256") != corrected_sha256:
+            raise Phase11Blocked("BLOCKED_UPSTREAM_VALIDATION_MIGRATION_SOURCE_CONTRACT")
+
+        receipt = dict(source_receipt)
+        receipt.update(
+            {
+                "run_id": context.run_id,
+                "revision_id": context.revision_id,
+                "activation_transaction_id": context.activation_transaction_id,
+                "corrected_contract_sha256": corrected_sha256,
+                "reconciled_at": now,
+                "actual_provider_call_attempts": 0,
+                "provider_live": False,
+                "submitted": False,
+            }
+        )
         errors = validate_schema(receipt, "phase11_upstream_validation_migration.v1.schema.json")
-        if errors or receipt.get("corrected_contract_sha256") != canonical_sha256(corrected_contract(current)):
-            raise Phase11Blocked("BLOCKED_UPSTREAM_VALIDATION_MIGRATION_RECEIPT_INVALID", details={"errors": errors})
+        if errors:
+            raise Phase11Blocked(
+                "BLOCKED_UPSTREAM_VALIDATION_MIGRATION_RECEIPT_SCHEMA",
+                details={"errors": errors},
+            )
+        write_json(migration_path, receipt)
+        current["phase11_validation_migration_receipt"] = portable_run_path(context, migration_path)
+        current["phase11_validation_migration_receipt_sha256"] = sha256_file(migration_path)
+        atomic_write(validation_path, current)
         return current, receipt
 
     try:
