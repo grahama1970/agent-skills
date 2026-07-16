@@ -1,0 +1,41 @@
+{
+  "name": "@agent-skills/ux-lab-ui",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Self-contained shared chat UI components extracted from pi-mono/ux-lab for the agent-skills ecosystem.",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./index.ts",
+      "default": "./index.ts"
+    },
+    "./memory-turn": {
+      "types": "./memory-turn/index.ts",
+      "default": "./memory-turn/index.ts"
+    },
+    "./memory-turn/SpartaComplianceAdapter": {
+      "types": "./memory-turn/SpartaComplianceAdapter.ts",
+      "default": "./memory-turn/SpartaComplianceAdapter.ts"
+    }
+  },
+  "files": [
+    "*.ts",
+    "*.tsx",
+    "memory-turn/*.ts",
+    "PERSONAPLEX_CHATWELL_DEPRECATION.md"
+  ],
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "peerDependencies": {
+    "lucide-react": "^0.468.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "typescript": "^5.6.3"
+  }
+}
