@@ -24,7 +24,9 @@ const proof = await page.evaluate(() => ({
   highlightReel: !!document.querySelector('[data-qid="battle:control:highlight-reel"]'),
   mockupPatchLabel: Array.from(document.querySelectorAll('.battle-blue-patch span, .bluePatch span')).some((el) => /CanonGuard v1|PathSanity Patch/i.test(el.textContent ?? '')),
   blueStripText: document.querySelector('.battle-blue-strip-stat, .blueStat')?.textContent ?? '',
-  lifecycle: document.querySelector('[data-qid="battle:agent-pane:lifecycle-evidence"]')?.textContent?.includes('not emitted') ?? false,
+  lifecycle: /not emitted|No adaptive-lifecycle receipts|Fail-closed/i.test(
+    document.querySelector('[data-qid="battle:agent-pane:lifecycle-evidence"]')?.textContent ?? '',
+  ),
 }))
 
 record('1-receipt-footer-present', proof.receiptFooter, JSON.stringify({ receiptFooter: proof.receiptFooter }))

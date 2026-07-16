@@ -119,8 +119,12 @@ export async function probeBattleLiveTransportAdapter(args: {
 			return { ok: false, error: fail(`Live adapter healthz failed (${response.status}) at ${healthUrl}.`) };
 		}
 		const health = (await response.json()) as Record<string, unknown>;
-		if (health.schema !== "battle.live_transport_health.v1" || health.status !== "PASS") {
-			return { ok: false, error: fail("Live adapter healthz did not return battle.live_transport_health.v1 PASS.") };
+		const healthSchema = String(health.schema ?? "");
+		const schemaOk =
+			healthSchema === "battle.live_transport_health.v1" ||
+			healthSchema === "battle.live_transport_healthz.v1";
+		if (!schemaOk || health.status !== "PASS") {
+			return { ok: false, error: fail("Live adapter healthz did not return Battle live transport PASS.") };
 		}
 		if (health.battle_id !== args.battleId) {
 			return {

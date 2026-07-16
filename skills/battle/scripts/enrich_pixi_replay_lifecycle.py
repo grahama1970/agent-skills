@@ -30,10 +30,20 @@ def _link_public_fixture(out_dir: Path, name: str) -> None:
 DEFAULT_BASE = BATTLE_DIR / "local/battle-004-parent-spawn-pixi-replay/battle.normalized_ux_fixture.json"
 DEFAULT_OUT_DIR = BATTLE_DIR / "local/battle-004-parent-spawn-lifecycle-pixi-replay"
 DEFAULT_COMBINER = Path("/tmp/battle-004-combiner")
+REQUIRED_COMBINER_FILES = (
+    "knowledge-packets/parent-knowledge-packet.json",
+    "knowledge-packets/child-knowledge-packet.json",
+    "spawn-policy-decision.json",
+    "combiner-proof-receipt.json",
+)
 
 
 def _load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def _missing_combiner_files(combiner_dir: Path) -> list[str]:
+    return [name for name in REQUIRED_COMBINER_FILES if not (combiner_dir / name).is_file()]
 
 
 def _lane_by_id(fixture: dict[str, Any], lane_id: str) -> dict[str, Any] | None:
@@ -249,6 +259,13 @@ def main() -> None:
 
     fixture = _load_json(args.base)
     combiner_dir = None if args.skip_combiner else args.combiner_dir
+    if combiner_dir is not None:
+        missing = _missing_combiner_files(combiner_dir)
+        if missing:
+            raise SystemExit(
+                "combiner proof artifacts are required for lifecycle enrichment; "
+                f"missing from {combiner_dir}: {', '.join(missing)}"
+            )
     enriched = enrich_fixture(fixture, combiner_dir=combiner_dir)
 
     args.out_dir.mkdir(parents=True, exist_ok=True)

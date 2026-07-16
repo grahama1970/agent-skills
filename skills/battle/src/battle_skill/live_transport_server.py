@@ -52,11 +52,14 @@ def build_live_transport_source(*, fixture_path: Path, battle_id: str) -> LiveTr
         "schema": SNAPSHOT_SCHEMA,
         "battle_id": battle_id,
         "run_id": run_id,
+        "generated_at": fixture.get("generated_at") or "1970-01-01T00:00:00Z",
+        "mode": "live",
         "source_fixture_schema": fixture.get("schema"),
         "status": fixture.get("status", "SNAPSHOT_READY"),
         "mocked": fixture.get("mocked", False),
         "live": "local_http_sse_adapter",
         "last_seq": len(events),
+        "events": [],
         "snapshot_endpoint": snapshot_endpoint,
         "sse_endpoint": events_endpoint,
         "generated_from": "battle.normalized_ux_fixture.v1",
@@ -172,13 +175,14 @@ def _make_server(*, source: LiveTransportSource, host: str, port: int) -> Thread
             if parsed.path == "/healthz":
                 self._send_json(
                     {
-                        "schema": "battle.live_transport_healthz.v1",
+                        "schema": "battle.live_transport_health.v1",
                         "status": "PASS",
                         "battle_id": source.battle_id,
                         "run_id": source.run_id,
                         "snapshot_endpoint": source.snapshot_endpoint,
                         "sse_endpoint": source.events_endpoint,
                         "event_count": len(source.events),
+                        "last_seq": len(source.events),
                     }
                 )
                 return
@@ -258,27 +262,60 @@ def _ordered_fixture_events(fixture: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def _live_event_from_fixture_event(*, event: dict[str, Any], seq: int, battle_id: str, run_id: str) -> dict[str, Any]:
+    event_id = str(event.get("id") or f"{run_id}:event:{seq}")
+    at_seconds = _event_seconds(event, seq)
+    lane_id = str(event.get("lane_id") or event.get("actor_id") or "battle")
+    receipt_id = str(_receipt_id(event) or event_id)
+    event_type = str(event.get("event_type") or "battle.event")
+    ui = event.get("ui") if isinstance(event.get("ui"), dict) else {}
     payload = {
         "actor_id": event.get("actor_id"),
         "actor_kind": event.get("actor_kind"),
         "team": event.get("team"),
-        "lane_id": event.get("lane_id") or event.get("actor_id"),
-        "receipt_id": _receipt_id(event),
+        "lane_id": lane_id,
+        "receipt_id": receipt_id,
         "summary": event.get("summary"),
-        "ui": event.get("ui", {}),
+        "ui": ui,
     }
     normalized = {
         "schema": LIVE_EVENT_SCHEMA,
-        "event_id": str(event.get("id") or f"{run_id}:event:{seq}"),
+        "event_id": event_id,
         "seq": seq,
         "battle_id": battle_id,
         "run_id": run_id,
-        "event_type": event.get("event_type"),
-        "elapsed_seconds": event.get("elapsed_seconds"),
-        "source_time": event.get("ts"),
+        "at_seconds": at_seconds,
+        "observed_at": str(event.get("ts") or "1970-01-01T00:00:00Z"),
+        "event_type": event_type,
         "payload": _redact_payload(payload),
+        "lifecycle": {
+            "schema": "battle.lifecycle_event.v1",
+            "source_time_seconds": at_seconds,
+            "phase": _event_phase(event_type),
+            "importance": str(ui.get("importance") or "visible"),
+            "lane_id": lane_id,
+            "exploit_id": lane_id,
+            "spawn_type": str(event.get("spawn_type") or ""),
+            "outcome_class": str(event.get("outcome_class") or "unresolved_pressure"),
+            "score_delta": event.get("score_delta") if isinstance(event.get("score_delta"), dict) else {},
+            "receipt_id": receipt_id,
+            "presentation_owner": "ux",
+            "proof_mode": str(event.get("proof_mode") or "receipt_backed_fixture"),
+        },
     }
     return normalized
+
+
+def _event_seconds(event: dict[str, Any], seq: int) -> float:
+    for key in ("at_seconds", "elapsed_seconds"):
+        value = event.get(key)
+        if isinstance(value, (int, float)):
+            return float(value)
+    return float(seq)
+
+
+def _event_phase(event_type: str) -> str:
+    parts = event_type.replace("-", "_").split(".")
+    return parts[-1] if parts and parts[-1] else "event"
 
 
 def _receipt_id(event: dict[str, Any]) -> str | None:

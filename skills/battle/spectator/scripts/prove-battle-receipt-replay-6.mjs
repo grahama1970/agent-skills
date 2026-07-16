@@ -5,7 +5,9 @@ import { chromium } from 'playwright'
 import { resolveBattleProveHost } from './battle-prove-host.mjs'
 
 const host = await resolveBattleProveHost()
-const baseUrl = process.env.BATTLE_RECEIPT_URL ?? `${host}/#battle/receipt?engine=pixi`
+const receiptFixturePath =
+  '/battle-fixtures/battle-004-parent-spawn-lifecycle-pixi-replay/battle.normalized_ux_fixture.json'
+const baseUrl = process.env.BATTLE_RECEIPT_URL ?? `${host}/#battle/receipt?engine=pixi&fixture=battle-004-parent-spawn-lifecycle`
 const outDir = resolve(process.env.BATTLE_RECEIPT_PROOF_DIR ?? '/tmp/battle-receipt-replay-6-proof')
 
 const checks = []
@@ -34,8 +36,8 @@ async function main() {
   }))
   record('1-receipt-lanes', req1.parent && !req1.mockup857 && req1.laneQids.includes('battle:lane:payload-857-receipt'), JSON.stringify(req1))
 
-  const fixtureFetch = await page.evaluate(async () => {
-    const r = await fetch('/battle-fixtures/battle-004-parent-spawn-pixi-replay/battle.normalized_ux_fixture.json')
+  const fixtureFetch = await page.evaluate(async (fixturePath) => {
+    const r = await fetch(fixturePath)
     if (!r.ok) return { ok: false, status: r.status }
     const j = await r.json()
     const spawn = (j.lineage?.spawns ?? []).find((item) => item.child_lane_id === 'payload-857-red-1')
@@ -46,7 +48,7 @@ async function main() {
       spawnAt: spawn?.visible_from_elapsed_seconds ?? spawn?.spawn_elapsed_seconds,
       allottedSeconds: j.battle_clock?.allotted_seconds ?? j.clock?.allotted_seconds ?? 1200,
     }
-  })
+  }, receiptFixturePath)
   record(
     '2-fixture-fetch',
     fixtureFetch.ok && fixtureFetch.laneIds?.includes('payload-857-receipt') && Number.isFinite(fixtureFetch.spawnAt),

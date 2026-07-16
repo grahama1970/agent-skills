@@ -8,10 +8,69 @@ SPECTATOR_DIR="$BATTLE_DIR/spectator"
 HOST="${BATTLE_HOST:-http://127.0.0.1:3002}"
 export BATTLE_HOST="$HOST"
 export BATTLE_PIXI_URL="${BATTLE_PIXI_URL:-$HOST/#battle?engine=pixi}"
-export BATTLE_RECEIPT_URL="${BATTLE_RECEIPT_URL:-$HOST/#battle/receipt?engine=pixi}"
+export BATTLE_RECEIPT_URL="${BATTLE_RECEIPT_URL:-$HOST/#battle/receipt?engine=pixi&fixture=battle-004-parent-spawn-lifecycle}"
 
 export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-${BATTLE_STORAGE_ROOT:-/mnt/storage12tb/skills/battle}/.venv}"
 export PYTHONPATH="$BATTLE_DIR/src${PYTHONPATH:+:$PYTHONPATH}"
+export BATTLE_LIVE_TRANSPORT_BASE="${BATTLE_LIVE_TRANSPORT_BASE:-http://127.0.0.1:18765}"
+
+LIVE_TRANSPORT_PID=""
+cleanup_live_transport() {
+  if [[ -n "$LIVE_TRANSPORT_PID" ]]; then
+    kill "$LIVE_TRANSPORT_PID" 2>/dev/null || true
+    wait "$LIVE_TRANSPORT_PID" 2>/dev/null || true
+    LIVE_TRANSPORT_PID=""
+  fi
+}
+trap cleanup_live_transport EXIT
+
+live_transport_healthy() {
+  python3 - "$BATTLE_LIVE_TRANSPORT_BASE" <<'PY'
+import json
+import sys
+import urllib.error
+import urllib.request
+
+base = sys.argv[1].rstrip("/")
+try:
+    with urllib.request.urlopen(f"{base}/healthz", timeout=2) as response:
+        payload = json.loads(response.read().decode("utf-8"))
+except (OSError, urllib.error.URLError, json.JSONDecodeError):
+    sys.exit(1)
+schema = payload.get("schema")
+if (
+    schema in {"battle.live_transport_health.v1", "battle.live_transport_healthz.v1"}
+    and payload.get("status") == "PASS"
+    and payload.get("battle_id") == "battle-004"
+):
+    sys.exit(0)
+sys.exit(1)
+PY
+}
+
+ensure_live_transport() {
+  if live_transport_healthy; then
+    echo "live_transport=already_running base=$BATTLE_LIVE_TRANSPORT_BASE"
+    return
+  fi
+
+  local port
+  port="${BATTLE_LIVE_TRANSPORT_BASE##*:}"
+  port="${port%%/*}"
+  echo "live_transport=starting base=$BATTLE_LIVE_TRANSPORT_BASE"
+  (cd "$BATTLE_DIR" && ./run.sh serve-live-transport --port "$port") >/tmp/battle-live-transport-proof.log 2>&1 &
+  LIVE_TRANSPORT_PID="$!"
+  for _ in {1..30}; do
+    if live_transport_healthy; then
+      echo "live_transport=started pid=$LIVE_TRANSPORT_PID base=$BATTLE_LIVE_TRANSPORT_BASE"
+      return
+    fi
+    sleep 0.5
+  done
+  echo "live_transport=failed base=$BATTLE_LIVE_TRANSPORT_BASE log=/tmp/battle-live-transport-proof.log" >&2
+  tail -80 /tmp/battle-live-transport-proof.log >&2 || true
+  return 1
+}
 
 echo "=== Battle prove-spectator-local ==="
 echo "battle_dir=$BATTLE_DIR"
@@ -61,6 +120,7 @@ echo "11/15 No-mockup-leakage receipt chrome proof"
 (cd "$SPECTATOR_DIR" && npm run prove:no-mockup-leakage)
 
 echo "12/15 Lifecycle-enriched fixture proof"
+(cd "$BATTLE_DIR" && ./run.sh exploit-combiner-proof battle-004 --out /tmp/battle-004-combiner)
 (cd "$BATTLE_DIR" && python3 scripts/enrich_pixi_replay_lifecycle.py)
 (cd "$SPECTATOR_DIR" && npm run prove:receipt-lifecycle-emitted)
 
@@ -89,6 +149,7 @@ echo "XX/XX PR6 genetic Pixi lifecycle proof"
 (cd "$SPECTATOR_DIR" && npm run prove:pr6-genetic-pixi)
 
 echo "XX/XX PR8 live transport proof"
+ensure_live_transport
 (cd "$SPECTATOR_DIR" && npm run prove:pr8-live-transport)
 
 echo "BATTLE_PROVE_SPECTATOR_PASS"

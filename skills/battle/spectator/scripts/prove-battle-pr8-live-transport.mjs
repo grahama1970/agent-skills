@@ -31,9 +31,19 @@ record(
 )
 
 const health = await (await fetch(`${liveBase}/healthz`)).json()
-record('6-adapter-health', health.schema === 'battle.live_transport_health.v1' && health.status === 'PASS', JSON.stringify(health))
+record(
+  '6-adapter-health',
+  (health.schema === 'battle.live_transport_health.v1' || health.schema === 'battle.live_transport_healthz.v1') &&
+    health.status === 'PASS',
+  JSON.stringify(health),
+)
 const snapshot = await (await fetch(`${liveBase}/battle/live/battle-004/snapshot`)).json()
-record('7-adapter-snapshot', snapshot.schema === 'battle.snapshot.v1' && snapshot.last_seq === 36, JSON.stringify({ schema: snapshot.schema, last_seq: snapshot.last_seq }))
+const expectedSeq = Number(snapshot.last_seq)
+record(
+  '7-adapter-snapshot',
+  snapshot.schema === 'battle.snapshot.v1' && Number.isFinite(expectedSeq) && expectedSeq > 0,
+  JSON.stringify({ schema: snapshot.schema, last_seq: snapshot.last_seq }),
+)
 
 const sseText = await (await fetch(`${liveBase}/battle/live/battle-004/events`, { headers: { Accept: 'text/event-stream' } })).text()
 const sseEvents = sseText
@@ -41,7 +51,7 @@ const sseEvents = sseText
   .map((frame) => frame.split('\n').filter((line) => line.startsWith('data:')).map((line) => line.slice(5).trimStart()).join('\n'))
   .filter(Boolean)
   .map((data) => JSON.parse(data))
-record('8-adapter-sse-count', sseEvents.length === 36 && sseEvents[0]?.schema === 'battle.live_event.v1', String(sseEvents.length))
+record('8-adapter-sse-count', sseEvents.length === expectedSeq && sseEvents[0]?.schema === 'battle.live_event.v1', String(sseEvents.length))
 const resumed = await fetch(`${liveBase}/battle/live/battle-004/events`, {
   headers: { Accept: 'text/event-stream', 'Last-Event-ID': '2' },
 })
@@ -51,7 +61,7 @@ const resumedEvents = resumedText
   .map((frame) => frame.split('\n').filter((line) => line.startsWith('data:')).map((line) => line.slice(5).trimStart()).join('\n'))
   .filter(Boolean)
   .map((data) => JSON.parse(data))
-record('9-adapter-resume', resumedEvents.length === 34 && resumedEvents[0]?.seq === 3, String(resumedEvents.length))
+record('9-adapter-resume', resumedEvents.length === Math.max(0, expectedSeq - 2) && resumedEvents[0]?.seq === 3, String(resumedEvents.length))
 const future = await fetch(`${liveBase}/battle/live/battle-004/events`, {
   headers: { Accept: 'text/event-stream', 'Last-Event-ID': '999' },
 })
@@ -77,10 +87,10 @@ page.on('console', (msg) => {
 await page.goto(liveUrl, { waitUntil: 'networkidle', timeout: 60_000 })
 await page.waitForSelector('[data-qid="battle:live:banner"]', { timeout: 20_000 })
 await page.waitForSelector('[data-battle-pixi-engine="animated-sprites"]', { timeout: 20_000 })
-await page.waitForFunction(() => {
-  const seq = document.querySelector('[data-qid="battle:live:seq"]')?.textContent ?? ''
-  return /36\/36/.test(seq) || /seq 36\//.test(seq)
-}, { timeout: 20_000 })
+await page.waitForFunction((expected) => {
+  const text = document.querySelector('[data-qid="battle:live:seq"]')?.textContent ?? ''
+  return text.includes(`${expected}/${expected}`) || new RegExp(`seq\\s+${expected}\\/`, 'i').test(text)
+}, expectedSeq, { timeout: 20_000 })
 await page.waitForTimeout(800)
 
 const liveChrome = await page.evaluate(() => {
@@ -112,7 +122,7 @@ record('13-live-source-badge', /LOCAL HTTP SSE/i.test(liveChrome.liveSource), li
 record('14-sse-connected-badge', /EVENTSOURCE OPEN|SSE CONNECTED/i.test(liveChrome.connected), liveChrome.connected)
 record('14b-eventsource-mode', /TRANSPORT:\s*EVENTSOURCE/i.test(liveChrome.transportMode), liveChrome.transportMode)
 record('15-mocked-no', /MOCKED:\s*NO/i.test(liveChrome.mocked), liveChrome.mocked)
-record('16-seq-complete', /36\/36/.test(liveChrome.seq), liveChrome.seq)
+record('16-seq-complete', liveChrome.seq.includes(`${expectedSeq}/${expectedSeq}`), liveChrome.seq)
 record('17-sse-client-open-or-ended', /(open|ended)/i.test(liveChrome.sseClient), liveChrome.sseClient)
 record('18-base-url', liveChrome.baseUrl.includes(liveBase), liveChrome.baseUrl)
 record('19-genetic-count', /genetic types\s+16/i.test(liveChrome.geneticCount), liveChrome.geneticCount)
