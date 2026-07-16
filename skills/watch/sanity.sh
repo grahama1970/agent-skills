@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 # e2e sanity for watch skill and subagent
 set -euo pipefail
-export UV_NO_SYNC=true
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR"
 PASS=0
