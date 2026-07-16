@@ -10,6 +10,8 @@ from battle_skill import adaptive_memory_ablation as ablation
 
 
 SHA = "a" * 64
+EXPECTED_PLAN_CANONICAL_SHA256 = "d01edb97c60a04fe11efc9306ebbe830745a6af811ca7aeb162696aaaa9f2bca"
+EXPECTED_PLAN_FILE_SHA256 = "9c3d0f2473eaf56b964888f7785ebd1cf77efbfc45cb32d36688431d268efcdc"
 
 
 def _source_binding() -> dict:
@@ -68,7 +70,9 @@ def _memory_sources() -> dict:
     }
 
 
-def _plan(seed: str = "v15-seed") -> dict:
+def _plan(
+    seed: str = "v15-seed", *, memory_collection: str | None = None
+) -> dict:
     return ablation.build_experiment_plan(
         battle_id="battle-004",
         experiment_id="battle-004-memory-ablation-v15",
@@ -80,6 +84,7 @@ def _plan(seed: str = "v15-seed") -> dict:
         model="gpt-5.5",
         scillm_base_url="http://localhost:4001",
         timeout_s=300,
+        memory_collection=memory_collection,
         generated_at="2026-07-15T13:00:00Z",
     )
 
@@ -97,6 +102,10 @@ def test_plan_is_exact_blocked_2x2_by_three_and_hash_stable() -> None:
         "R1B1": 3,
     }
     assert ablation.canonical_sha256(first) == ablation.canonical_sha256(second)
+    assert ablation.canonical_sha256(first) == EXPECTED_PLAN_CANONICAL_SHA256
+    assert {
+        trial["memory_namespace"]["collection"] for trial in first["trials"]
+    } == {ablation.MEMORY_COLLECTION}
     for block in first["randomization"]["blocks"]:
         assert sorted(block["condition_order"]) == sorted(ablation.CONDITION_ORDER)
 
@@ -109,7 +118,19 @@ def test_written_plan_keeps_canonical_and_file_hashes_distinct(tmp_path) -> None
 
     assert receipt["plan_sha256"] == ablation.canonical_sha256(written)
     assert receipt["plan_file_sha256"] == ablation.file_sha256(plan_path)
+    assert receipt["plan_sha256"] == EXPECTED_PLAN_CANONICAL_SHA256
+    assert receipt["plan_file_sha256"] == EXPECTED_PLAN_FILE_SHA256
     assert ablation.validate_experiment_plan(written)["plan_sha256"] == receipt["plan_sha256"]
+
+
+def test_plan_rejects_any_nonregistered_memory_collection() -> None:
+    with pytest.raises(ablation.ContractError, match="battle_experiment_memory"):
+        _plan(memory_collection="battle-ablation-arbitrary")
+
+    plan = _plan()
+    plan["trials"][0]["memory_namespace"]["collection"] = "other"
+    with pytest.raises(ablation.ContractError, match="memory collection"):
+        ablation.validate_experiment_plan(plan)
 
 
 def test_nested_runtime_command_cannot_repurpose_battle_uv_environment(
@@ -135,6 +156,149 @@ def test_preflight_rejects_any_preexisting_trial_output(tmp_path) -> None:
     used.mkdir(parents=True)
     with pytest.raises(ablation.ContractError, match="output paths are already used"):
         ablation._assert_unused_trial_outputs(plan=plan, experiment_root=tmp_path)
+
+
+class _MemoryResponse:
+    def __init__(self, payload: dict) -> None:
+        self.payload = payload
+
+    def raise_for_status(self) -> None:
+        return None
+
+    def json(self) -> dict:
+        return self.payload
+
+
+class _MemoryClient:
+    def __init__(self) -> None:
+        self.document: dict | None = None
+        self.calls: list[tuple[str, dict]] = []
+
+    def __enter__(self) -> "_MemoryClient":
+        return self
+
+    def __exit__(self, *_args: object) -> None:
+        return None
+
+    def get(self, path: str) -> _MemoryResponse:
+        assert path == "/health"
+        return _MemoryResponse({"status": "ok"})
+
+    def post(self, path: str, json: dict) -> _MemoryResponse:
+        self.calls.append((path, json))
+        assert json.get("collection", ablation.MEMORY_COLLECTION) == ablation.MEMORY_COLLECTION
+        if path == "/list":
+            return _MemoryResponse({"documents": []})
+        if path == "/upsert":
+            self.document = dict(json["documents"][0])
+            return _MemoryResponse(
+                {"collection": ablation.MEMORY_COLLECTION, "inserted": 1, "errors": []}
+            )
+        if path == "/recall":
+            assert self.document is not None
+            if json["tags"] == self.document["tags"]:
+                recalled = {
+                    key: value for key, value in self.document.items() if key != "kind"
+                }
+                return _MemoryResponse({"items": [recalled]})
+            return _MemoryResponse({"items": []})
+        raise AssertionError(f"unexpected Memory path: {path}")
+
+
+def test_preflight_uses_registered_document_and_proves_exact_isolation(
+    tmp_path, monkeypatch
+) -> None:
+    plan = _plan()
+    client = _MemoryClient()
+    monkeypatch.setattr(
+        ablation, "_validate_source_root_against_plan", lambda **_kwargs: None
+    )
+    monkeypatch.setattr(
+        ablation,
+        "resolve_docker_image_identity",
+        lambda _image: plan["immutable_inputs"]["docker_image_identity"],
+    )
+    monkeypatch.setattr(
+        ablation, "_tau_runtime_readiness", lambda **_kwargs: {"status": "PASS"}
+    )
+    monkeypatch.setattr(
+        ablation, "_scillm_auth_readiness", lambda **_kwargs: {"status": "PASS"}
+    )
+    monkeypatch.setattr(
+        ablation, "_judge_readiness", lambda **_kwargs: {"status": "PASS"}
+    )
+    monkeypatch.setattr(ablation.httpx, "Client", lambda **_kwargs: client)
+
+    experiment_root = tmp_path / "experiment"
+    receipt = ablation.preflight_experiment(
+        plan=plan,
+        source_root=tmp_path / "source",
+        memory_base_url="http://127.0.0.1:8601",
+        scillm_base_url="http://localhost:4001",
+        tau_root=tmp_path / "tau",
+        experiment_root=experiment_root,
+        plan_file_sha256=EXPECTED_PLAN_FILE_SHA256,
+    )
+
+    assert receipt["approval"] == "APPROVED_FOR_LIVE"
+    readiness = receipt["memory_readiness"]
+    assert readiness["collection"] == ablation.MEMORY_COLLECTION
+    assert readiness["exact_write_recall_passed"] is True
+    assert readiness["opposite_team_item_count"] == 0
+    assert readiness["other_trial_item_count"] == 0
+    assert readiness["exact_isolation_passed"] is True
+    assert client.document is not None
+    assert set(client.document) == {
+        "_key",
+        "problem",
+        "solution",
+        "kind",
+        "tags",
+        "battle_id",
+        "experiment_id",
+        "trial_id",
+        "block_id",
+        "condition_id",
+        "team",
+        "source_memory_sha256",
+        "status",
+    }
+    assert "visibility_scope" not in client.document
+    recall_calls = [payload for path, payload in client.calls if path == "/recall"]
+    assert len(recall_calls) == 3
+    assert recall_calls[0]["tags"] == client.document["tags"]
+    assert "team:blue" in recall_calls[1]["tags"]
+    assert f"trial:{client.document['trial_id']}-other" in recall_calls[2]["tags"]
+    assert not any(
+        (experiment_root / trial["output_relpath"]).exists()
+        for trial in plan["trials"]
+    )
+
+
+def test_live_memory_recall_uses_the_same_exact_identity_tags(tmp_path) -> None:
+    plan = _plan()
+    trial = next(item for item in plan["trials"] if item["condition_id"] == "R1B0")
+    client = _MemoryClient()
+
+    result = ablation._write_and_recall_memory(
+        client=client,
+        collection=ablation.MEMORY_COLLECTION,
+        plan=plan,
+        trial=trial,
+        team="red",
+        out_dir=tmp_path,
+    )
+
+    assert result["service_request_count"] == 4
+    assert result["recall"]["cross_team_items_absent"] is True
+    assert result["recall"]["cross_trial_items_absent"] is True
+    assert result["recall"]["opposite_team_item_count"] == 0
+    assert result["recall"]["other_trial_item_count"] == 0
+    recall_calls = [payload for path, payload in client.calls if path == "/recall"]
+    assert len(recall_calls) == 3
+    assert recall_calls[0]["tags"] == result["document"]["tags"]
+    assert "team:blue" in recall_calls[1]["tags"]
+    assert f"trial:{trial['trial_id']}-other" in recall_calls[2]["tags"]
 
 
 def test_judge_readiness_binds_frozen_policy_and_executable_hashes() -> None:
@@ -249,6 +413,41 @@ def test_memory_namespaces_are_unique_and_derived_from_battle_id() -> None:
     assert len(keys) == len(set(keys)) == 24
     assert all(key.startswith("battle-004:") for key in keys)
     assert all("battle-004-v13" not in key for key in keys)
+
+
+def test_memory_document_matches_registered_source_and_exact_tags() -> None:
+    plan = _plan()
+    trial = next(item for item in plan["trials"] if item["condition_id"] == "R1B0")
+    document = ablation._memory_document(plan=plan, trial=trial, team="red")
+
+    assert set(document) == {
+        "_key",
+        "problem",
+        "solution",
+        "kind",
+        "tags",
+        "battle_id",
+        "experiment_id",
+        "trial_id",
+        "block_id",
+        "condition_id",
+        "team",
+        "source_memory_sha256",
+        "status",
+    }
+    assert "visibility_scope" not in document
+    assert document["tags"] == [
+        "battle",
+        "memory-ablation-v15",
+        "battle:battle-004",
+        f"experiment:{plan['experiment_id']}",
+        f"trial:{trial['trial_id']}",
+        f"block:{trial['block_id']}",
+        "condition:R1B0",
+        "team:red",
+        "source-memory-sha:"
+        f"{plan['immutable_inputs']['memory_sources']['red']['memory_content_sha256']}",
+    ]
 
 
 def _provider(duration: float = 10.0, tokens: int | None = None) -> dict:

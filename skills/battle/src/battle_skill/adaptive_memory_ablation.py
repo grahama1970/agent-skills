@@ -69,6 +69,7 @@ RANDOMIZATION_ALGORITHM = "sha256-sort-v1"
 ATTENTION_POLICY_ID = "battle-memory-ablation-attention-match-v1"
 COMPARISON_POLICY_ID = "battle-memory-ablation-team-vector-v1"
 FAILURE_POLICY_ID = "battle-memory-ablation-bounded-failure-v1"
+MEMORY_COLLECTION = "battle_experiment_memory"
 
 
 DEFECT_DISPOSITIONS = (
@@ -227,6 +228,31 @@ def _optional_value(value: Any) -> dict[str, Any]:
         "status": "EMITTED" if value is not None else "NOT_EMITTED",
         "value": value,
     }
+
+
+def _memory_tags(
+    *,
+    battle_id: str,
+    experiment_id: str,
+    trial_id: str,
+    block_id: str,
+    condition_id: str,
+    team: str,
+    source_memory_sha256: str,
+) -> list[str]:
+    """Return the exact identity tags shared by preflight and live recall."""
+
+    return [
+        "battle",
+        "memory-ablation-v15",
+        f"battle:{battle_id}",
+        f"experiment:{experiment_id}",
+        f"trial:{trial_id}",
+        f"block:{block_id}",
+        f"condition:{condition_id}",
+        f"team:{team}",
+        f"source-memory-sha:{source_memory_sha256}",
+    ]
 
 
 def load_source_bindings(
@@ -488,7 +514,11 @@ def build_experiment_plan(
     if set(memory_sources) != set(TEAMS):
         raise ContractError("memory sources must contain exactly Red and Blue")
     experiment_id = _safe_id(experiment_id)
-    collection = memory_collection or f"battle-ablation-{experiment_id}"
+    if memory_collection is not None and memory_collection != MEMORY_COLLECTION:
+        raise ContractError(
+            f"Battle V15 memory collection must be exactly {MEMORY_COLLECTION}"
+        )
+    collection = MEMORY_COLLECTION
     context_target = _minimum_context_target(
         experiment_id=experiment_id,
         memory_sources=memory_sources,
@@ -740,6 +770,11 @@ def validate_experiment_plan(plan: Mapping[str, Any]) -> dict[str, Any]:
         )
         if trial["trial_input_binding_sha256"] != canonical_sha256(expected_basis):
             errors.append(f"trial {trial['trial_id']} input binding hash mismatch")
+        if trial["memory_namespace"]["collection"] != MEMORY_COLLECTION:
+            errors.append(
+                f"trial {trial['trial_id']} memory collection must be exactly "
+                f"{MEMORY_COLLECTION}"
+            )
         expected_prefix = f"{plan['battle_id']}:{plan['experiment_id']}:"
         for key_name in ("red_key", "blue_key"):
             key = trial["memory_namespace"][key_name]
@@ -1178,24 +1213,49 @@ def preflight_experiment(
     )
     judge_readiness = _judge_readiness(plan=plan)
 
-    collection = plan["trials"][0]["memory_namespace"]["collection"]
-    probe_key = f"{plan['battle_id']}:{plan['experiment_id']}:preflight"
+    collection = MEMORY_COLLECTION
+    probe_trial_id = f"{plan['experiment_id']}-preflight"
+    probe_block_id = "preflight"
+    probe_condition_id = "preflight"
+    probe_team = "red"
+    probe_key = (
+        f"{plan['battle_id']}:{plan['experiment_id']}:{probe_block_id}:"
+        f"{probe_condition_id}:{probe_trial_id}:{probe_team}"
+    )
     probe_solution = json.dumps(
-        {"kind": "memory-ablation-preflight", "experiment_id": plan["experiment_id"]},
+        {
+            "kind": "memory-ablation-preflight",
+            "battle_id": plan["battle_id"],
+            "experiment_id": plan["experiment_id"],
+            "trial_id": probe_trial_id,
+        },
         sort_keys=True,
         separators=(",", ":"),
     )
+    probe_source_sha256 = hashlib.sha256(probe_solution.encode("utf-8")).hexdigest()
+    probe_tags = _memory_tags(
+        battle_id=str(plan["battle_id"]),
+        experiment_id=str(plan["experiment_id"]),
+        trial_id=probe_trial_id,
+        block_id=probe_block_id,
+        condition_id=probe_condition_id,
+        team=probe_team,
+        source_memory_sha256=probe_source_sha256,
+    )
     document = {
         "_key": probe_key,
+        "kind": "battle_memory_ablation_preflight",
+        "battle_id": plan["battle_id"],
+        "experiment_id": plan["experiment_id"],
+        "trial_id": probe_trial_id,
+        "block_id": probe_block_id,
+        "condition_id": probe_condition_id,
+        "team": probe_team,
+        "source_memory_sha256": probe_source_sha256,
         "problem": "Battle V15 memory service exact-recall preflight",
         "solution": probe_solution,
-        "tags": [
-            "battle",
-            "memory-ablation-v15",
-            "preflight",
-            f"experiment:{plan['experiment_id']}",
-        ],
-        "status": "current",
+        "tags": probe_tags,
+        "status": "preflight_probe",
     }
     try:
         with httpx.Client(
@@ -1219,15 +1279,29 @@ def preflight_experiment(
                 "/upsert", json={"collection": collection, "documents": [document]}
             )
             write.raise_for_status()
+            write_body = write.json()
+            write_errors = (
+                write_body.get("errors") if isinstance(write_body, dict) else None
+            )
+            write_count = (
+                int(write_body.get("inserted", 0) or 0)
+                + int(write_body.get("updated", 0) or 0)
+                if isinstance(write_body, dict)
+                else 0
+            )
+            if write_errors or write_count != 1:
+                raise ContractError(
+                    "Memory preflight probe upsert did not write exactly one record"
+                )
             recalled: dict[str, Any] | None = None
             for attempt in range(10):
                 response = client.post(
                     "/recall",
                     json={
-                        "q": probe_key,
+                        "q": document["problem"],
                         "k": 3,
                         "collections": [collection],
-                        "tags": ["preflight", f"experiment:{plan['experiment_id']}"],
+                        "tags": probe_tags,
                         "threshold": 0.0,
                     },
                 )
@@ -1241,12 +1315,78 @@ def preflight_experiment(
                         if isinstance(item, dict)
                         and item.get("_key") == probe_key
                         and item.get("solution") == probe_solution
+                        and item.get("battle_id") == plan["battle_id"]
+                        and item.get("experiment_id") == plan["experiment_id"]
+                        and item.get("trial_id") == probe_trial_id
+                        and item.get("block_id") == probe_block_id
+                        and item.get("condition_id") == probe_condition_id
+                        and item.get("team") == probe_team
+                        and item.get("source_memory_sha256") == probe_source_sha256
+                        and item.get("tags") == probe_tags
                     ]
                     if len(matches) == 1:
                         recalled = matches[0]
                         break
                 if attempt < 9:
                     time.sleep(1)
+
+            opposite_team_tags = [
+                tag for tag in probe_tags if not tag.startswith("team:")
+            ] + ["team:blue"]
+            opposite_team_response = client.post(
+                "/recall",
+                json={
+                    "q": document["problem"],
+                    "k": 3,
+                    "collections": [collection],
+                    "tags": opposite_team_tags,
+                    "threshold": 0.0,
+                },
+            )
+            opposite_team_response.raise_for_status()
+            opposite_team_body = opposite_team_response.json()
+            opposite_team_items = (
+                opposite_team_body.get("items")
+                if isinstance(opposite_team_body, dict)
+                else None
+            )
+            if not isinstance(opposite_team_items, list):
+                raise ContractError(
+                    "Memory preflight opposite-team recall response lacks items"
+                )
+            if opposite_team_items:
+                raise ContractError(
+                    "Memory preflight opposite-team isolation returned records"
+                )
+
+            other_trial_tags = [
+                tag for tag in probe_tags if not tag.startswith("trial:")
+            ] + [f"trial:{probe_trial_id}-other"]
+            other_trial_response = client.post(
+                "/recall",
+                json={
+                    "q": document["problem"],
+                    "k": 3,
+                    "collections": [collection],
+                    "tags": other_trial_tags,
+                    "threshold": 0.0,
+                },
+            )
+            other_trial_response.raise_for_status()
+            other_trial_body = other_trial_response.json()
+            other_trial_items = (
+                other_trial_body.get("items")
+                if isinstance(other_trial_body, dict)
+                else None
+            )
+            if not isinstance(other_trial_items, list):
+                raise ContractError(
+                    "Memory preflight other-trial recall response lacks items"
+                )
+            if other_trial_items:
+                raise ContractError(
+                    "Memory preflight other-trial isolation returned records"
+                )
     except httpx.HTTPError as exc:
         raise ContractError(f"Memory preflight failed: {exc}") from exc
     if recalled is None:
@@ -1286,8 +1426,12 @@ def preflight_experiment(
             "namespace_clean": True,
             "probe_key_sha256": hashlib.sha256(probe_key.encode("utf-8")).hexdigest(),
             "probe_document_sha256": canonical_sha256(document),
+            "probe_write_response_sha256": canonical_sha256(write_body),
             "probe_recalled_sha256": canonical_sha256(recalled),
             "exact_write_recall_passed": True,
+            "opposite_team_item_count": len(opposite_team_items),
+            "other_trial_item_count": len(other_trial_items),
+            "exact_isolation_passed": True,
         },
         "credentials_exposed": False,
         "created_at": _now(),
@@ -1309,20 +1453,18 @@ def _memory_document(
         "block_id": trial["block_id"],
         "condition_id": trial["condition_id"],
         "team": team,
-        "visibility_scope": f"{team}_only",
         "source_memory_sha256": source["memory_content_sha256"],
         "problem": "What frozen selected evidence is available for this bounded memory ablation trial?",
         "solution": solution,
-        "tags": [
-            "battle",
-            "memory-ablation-v15",
-            f"battle:{plan['battle_id']}",
-            f"experiment:{plan['experiment_id']}",
-            f"trial:{trial['trial_id']}",
-            f"condition:{trial['condition_id']}",
-            f"team:{team}",
-            f"source-memory-sha:{source['memory_content_sha256']}",
-        ],
+        "tags": _memory_tags(
+            battle_id=str(plan["battle_id"]),
+            experiment_id=str(plan["experiment_id"]),
+            trial_id=str(trial["trial_id"]),
+            block_id=str(trial["block_id"]),
+            condition_id=str(trial["condition_id"]),
+            team=team,
+            source_memory_sha256=str(source["memory_content_sha256"]),
+        ),
         "status": "current",
     }
 
@@ -1361,15 +1503,16 @@ def _write_and_recall_memory(
     exact: list[dict[str, Any]] = []
     recall_body: Any = None
     recall_request_count = 0
+    recall_tags = list(document["tags"])
     for attempt in range(10):
         recall_request_count += 1
         response = client.post(
             "/recall",
             json={
-                "q": document["_key"],
+                "q": document["problem"],
                 "k": 5,
                 "collections": [collection],
-                "tags": [f"team:{team}", f"trial:{trial['trial_id']}"],
+                "tags": recall_tags,
                 "threshold": 0.0,
             },
         )
@@ -1385,31 +1528,60 @@ def _write_and_recall_memory(
             and item.get("_key") == document["_key"]
             and item.get("source_memory_sha256") == document["source_memory_sha256"]
             and item.get("solution") == document["solution"]
+            and item.get("battle_id") == document["battle_id"]
+            and item.get("experiment_id") == document["experiment_id"]
+            and item.get("trial_id") == document["trial_id"]
+            and item.get("block_id") == document["block_id"]
+            and item.get("condition_id") == document["condition_id"]
+            and item.get("team") == document["team"]
+            and item.get("tags") == recall_tags
         ]
         if len(exact) == 1:
-            opposite = f"team:{'blue' if team == 'red' else 'red'}"
-            expected_trial_tag = f"trial:{trial['trial_id']}"
-            visible_items = [item for item in items if isinstance(item, dict)]
-            if any(opposite in (item.get("tags") or []) for item in visible_items):
-                raise TrialBlocked(
-                    "memory_isolation",
-                    "opposite-team recall item returned",
-                    retryable=False,
-                )
-            if any(
-                expected_trial_tag not in (item.get("tags") or [])
-                for item in visible_items
-            ):
-                raise TrialBlocked(
-                    "memory_isolation",
-                    "cross-trial recall item returned",
-                    retryable=False,
-                )
             break
         if attempt < 9:
             time.sleep(1)
     if len(exact) != 1:
         raise TrialBlocked("memory_service", f"exact {team} recall did not converge")
+
+    opposite_team = "blue" if team == "red" else "red"
+    opposite_team_tags = [
+        tag for tag in recall_tags if not tag.startswith("team:")
+    ] + [f"team:{opposite_team}"]
+    other_trial_tags = [
+        tag for tag in recall_tags if not tag.startswith("trial:")
+    ] + [f"trial:{trial['trial_id']}-other"]
+    negative_responses: dict[str, Any] = {}
+    for isolation_kind, isolation_tags in (
+        ("opposite_team", opposite_team_tags),
+        ("other_trial", other_trial_tags),
+    ):
+        recall_request_count += 1
+        response = client.post(
+            "/recall",
+            json={
+                "q": document["problem"],
+                "k": 5,
+                "collections": [collection],
+                "tags": isolation_tags,
+                "threshold": 0.0,
+            },
+        )
+        response.raise_for_status()
+        body = response.json()
+        items = body.get("items") if isinstance(body, dict) else None
+        if not isinstance(items, list):
+            raise TrialBlocked(
+                "memory_service",
+                f"{isolation_kind} recall response lacks items",
+            )
+        if items:
+            raise TrialBlocked(
+                "memory_isolation",
+                f"{isolation_kind} recall returned records",
+                retryable=False,
+            )
+        negative_responses[isolation_kind] = body
+
     recall_receipt = {
         "schema": "battle.memory_ablation_recall_receipt.v1",
         "status": "PASS",
@@ -1418,10 +1590,18 @@ def _write_and_recall_memory(
         "memory_key": document["_key"],
         "source_memory_sha256": document["source_memory_sha256"],
         "write_receipt_sha256": write_receipt["receipt_sha256"],
-        "query_sha256": hashlib.sha256(document["_key"].encode("utf-8")).hexdigest(),
+        "query_sha256": hashlib.sha256(document["problem"].encode("utf-8")).hexdigest(),
         "exact_match_count": 1,
         "cross_team_items_absent": True,
         "cross_trial_items_absent": True,
+        "opposite_team_item_count": 0,
+        "other_trial_item_count": 0,
+        "opposite_team_response_sha256": canonical_sha256(
+            negative_responses["opposite_team"]
+        ),
+        "other_trial_response_sha256": canonical_sha256(
+            negative_responses["other_trial"]
+        ),
         "recalled_solution_sha256": hashlib.sha256(
             str(exact[0]["solution"]).encode("utf-8")
         ).hexdigest(),
@@ -2710,6 +2890,7 @@ __all__ = [
     "DEFECT_DISPOSITIONS",
     "CONDITION_ORDER",
     "ContractError",
+    "MEMORY_COLLECTION",
     "aggregate_experiment",
     "build_attention_matched_context",
     "build_experiment_plan",
