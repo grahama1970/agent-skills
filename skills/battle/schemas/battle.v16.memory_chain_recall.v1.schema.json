@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "battle.v16.memory_chain_recall.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {"sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"}},
+  "properties": {
+    "schema": {"const": "battle.v16.memory_chain_recall.v1"},
+    "status": {"const": "PASS"},
+    "target_id": {"const": "battle-v16-relayforge-a"},
+    "team": {"const": "blue"},
+    "collection": {"const": "battle_experiment_memory"},
+    "memory_key": {"type": "string", "minLength": 1},
+    "memory_content_sha256": {"$ref": "#/$defs/sha"},
+    "source_observation_receipt_sha256": {"$ref": "#/$defs/sha"},
+    "memory_write_receipt_sha256": {"$ref": "#/$defs/sha"},
+    "query_sha256": {"$ref": "#/$defs/sha"},
+    "exact_match_count": {"const": 1},
+    "recalled_document_sha256": {"$ref": "#/$defs/sha"},
+    "recalled_solution_sha256": {"$ref": "#/$defs/sha"},
+    "service_response_sha256": {"$ref": "#/$defs/sha"},
+    "negative_item_counts": {
+      "type": "object", "additionalProperties": false,
+      "properties": {"cross_team": {"const": 0}, "wrong_key": {"const": 0}, "wrong_source_hash": {"const": 0}},
+      "required": ["cross_team", "wrong_key", "wrong_source_hash"]
+    },
+    "negative_response_sha256": {
+      "type": "object", "additionalProperties": false,
+      "properties": {"cross_team": {"$ref": "#/$defs/sha"}, "wrong_key": {"$ref": "#/$defs/sha"}, "wrong_source_hash": {"$ref": "#/$defs/sha"}},
+      "required": ["cross_team", "wrong_key", "wrong_source_hash"]
+    },
+    "cross_team_items_absent": {"const": true},
+    "wrong_key_items_absent": {"const": true},
+    "wrong_source_hash_items_absent": {"const": true},
+    "mocked": {"const": false}, "live": {"const": true},
+    "fixture_fallback_used": {"const": false},
+    "created_at": {"type": "string", "minLength": 1}
+  },
+  "required": ["schema", "status", "target_id", "team", "collection", "memory_key", "memory_content_sha256", "source_observation_receipt_sha256", "memory_write_receipt_sha256", "query_sha256", "exact_match_count", "recalled_document_sha256", "recalled_solution_sha256", "service_response_sha256", "negative_item_counts", "negative_response_sha256", "cross_team_items_absent", "wrong_key_items_absent", "wrong_source_hash_items_absent", "mocked", "live", "fixture_fallback_used", "created_at"]
+}

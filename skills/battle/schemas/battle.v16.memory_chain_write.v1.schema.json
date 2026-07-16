@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "battle.v16.memory_chain_write.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {"sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"}},
+  "properties": {
+    "schema": {"const": "battle.v16.memory_chain_write.v1"},
+    "status": {"const": "PASS"},
+    "target_id": {"const": "battle-v16-relayforge-a"},
+    "team": {"const": "blue"},
+    "collection": {"const": "battle_experiment_memory"},
+    "memory_key": {"type": "string", "minLength": 1},
+    "memory_content_sha256": {"$ref": "#/$defs/sha"},
+    "source_observation_receipt_sha256": {"$ref": "#/$defs/sha"},
+    "request_document_sha256": {"$ref": "#/$defs/sha"},
+    "service_response_sha256": {"$ref": "#/$defs/sha"},
+    "mocked": {"const": false},
+    "live": {"const": true},
+    "fixture_fallback_used": {"const": false},
+    "created_at": {"type": "string", "minLength": 1}
+  },
+  "required": ["schema", "status", "target_id", "team", "collection", "memory_key", "memory_content_sha256", "source_observation_receipt_sha256", "request_document_sha256", "service_response_sha256", "mocked", "live", "fixture_fallback_used", "created_at"]
+}

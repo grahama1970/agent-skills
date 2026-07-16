@@ -1,0 +1,159 @@
+{
+  "$defs": {
+    "sha": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    }
+  },
+  "$id": "battle.v16.memory_chain_source_observation.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "battle_approval": {
+      "additionalProperties": false,
+      "properties": {
+        "memory_is_not_outcome_authority": {
+          "const": true
+        },
+        "policy_id": {
+          "const": "battle-v16-measured-evidence-memory-gate-v1"
+        },
+        "source_must_be_judge_bound": {
+          "const": true
+        },
+        "status": {
+          "const": "APPROVED_FOR_DURABLE_WRITE"
+        },
+        "visibility_scope": {
+          "const": "blue_only"
+        }
+      },
+      "required": [
+        "status",
+        "policy_id",
+        "visibility_scope",
+        "source_must_be_judge_bound",
+        "memory_is_not_outcome_authority"
+      ],
+      "type": "object"
+    },
+    "created_at": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "deterministic_qualification_canonical_sha256": {
+      "$ref": "#/$defs/sha"
+    },
+    "deterministic_qualification_path": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "deterministic_qualification_sha256": {
+      "$ref": "#/$defs/sha"
+    },
+    "fixture_fallback_used": {
+      "const": false
+    },
+    "judge_outcome_path": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "judge_outcome_sha256": {
+      "$ref": "#/$defs/sha"
+    },
+    "lesson": {
+      "additionalProperties": false,
+      "properties": {
+        "adopt_method": {
+          "const": "evidence-targeted-boundary-control"
+        },
+        "expected_observation": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "reject_method": {
+          "const": "global-service-quarantine"
+        },
+        "summary": {
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "summary",
+        "adopt_method",
+        "reject_method",
+        "expected_observation"
+      ],
+      "type": "object"
+    },
+    "lesson_sha256": {
+      "$ref": "#/$defs/sha"
+    },
+    "live": {
+      "const": false
+    },
+    "measured_artifact_path": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "measured_artifact_sha256": {
+      "$ref": "#/$defs/sha"
+    },
+    "measured_regression_vector": {
+      "const": {
+        "in-bound-transformed-object": false,
+        "legacy-conversion": true,
+        "regular-package-import": true,
+        "safe-report-profile": false,
+        "tenant-owned-report": true,
+        "valid-external-preview": false
+      }
+    },
+    "measured_regression_vector_sha256": {
+      "$ref": "#/$defs/sha"
+    },
+    "mocked": {
+      "const": false
+    },
+    "outcome_improvement_proven": {
+      "const": false
+    },
+    "schema": {
+      "const": "battle.v16.memory_chain_source_observation.v1"
+    },
+    "status": {
+      "const": "PASS"
+    },
+    "target_id": {
+      "const": "battle-v16-relayforge-a"
+    },
+    "team": {
+      "const": "blue"
+    }
+  },
+  "required": [
+    "schema",
+    "status",
+    "target_id",
+    "team",
+    "deterministic_qualification_path",
+    "deterministic_qualification_sha256",
+    "deterministic_qualification_canonical_sha256",
+    "judge_outcome_path",
+    "judge_outcome_sha256",
+    "measured_artifact_path",
+    "measured_artifact_sha256",
+    "measured_regression_vector",
+    "measured_regression_vector_sha256",
+    "lesson",
+    "lesson_sha256",
+    "battle_approval",
+    "mocked",
+    "live",
+    "fixture_fallback_used",
+    "outcome_improvement_proven",
+    "created_at"
+  ],
+  "type": "object"
+}

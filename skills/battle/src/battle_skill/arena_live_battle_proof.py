@@ -698,10 +698,13 @@ def _run_tau_harness(
         "--blue-workers",
         str(blue_workers),
     ]
+    tau_env = os.environ.copy()
+    tau_env.pop("UV_PROJECT_ENVIRONMENT", None)
+    tau_env.pop("VIRTUAL_ENV", None)
     result = subprocess.run(
         command,
         cwd=TAU_REPO,
-        env=os.environ.copy(),
+        env=tau_env,
         text=True,
         capture_output=True,
         timeout=max(int(timeout_s) * max(red_workers + blue_workers, 1) + 60, 90),

@@ -1,0 +1,196 @@
+{
+  "$defs": {
+    "artifact": {
+      "additionalProperties": false,
+      "properties": {
+        "absolute_path": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "relative_path": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha"
+        }
+      },
+      "required": [
+        "absolute_path",
+        "relative_path",
+        "sha256"
+      ],
+      "type": "object"
+    },
+    "sha": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    }
+  },
+  "$id": "battle.v16.memory_chain_qualification.v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "artifact_paths": {
+      "additionalProperties": false,
+      "properties": {
+        "memory_recall": {
+          "$ref": "#/$defs/artifact"
+        },
+        "memory_write": {
+          "$ref": "#/$defs/artifact"
+        },
+        "provider_call": {
+          "$ref": "#/$defs/artifact"
+        },
+        "provider_context": {
+          "$ref": "#/$defs/artifact"
+        },
+        "provider_use": {
+          "$ref": "#/$defs/artifact"
+        },
+        "source_observation": {
+          "$ref": "#/$defs/artifact"
+        },
+        "strategy_after_memory": {
+          "$ref": "#/$defs/artifact"
+        },
+        "strategy_before_memory": {
+          "$ref": "#/$defs/artifact"
+        },
+        "tau_manifest": {
+          "$ref": "#/$defs/artifact"
+        }
+      },
+      "required": [
+        "source_observation",
+        "strategy_before_memory",
+        "memory_write",
+        "memory_recall",
+        "strategy_after_memory",
+        "provider_use",
+        "provider_context",
+        "tau_manifest",
+        "provider_call"
+      ],
+      "type": "object"
+    },
+    "claims": {
+      "additionalProperties": false,
+      "properties": {
+        "does_not_prove": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 3,
+          "type": "array"
+        },
+        "proves": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "type": "array"
+        }
+      },
+      "required": [
+        "proves",
+        "does_not_prove"
+      ],
+      "type": "object"
+    },
+    "closed_blocker": {
+      "const": "durable-memory-packets-unimplemented"
+    },
+    "collection": {
+      "const": "battle_experiment_memory"
+    },
+    "created_at": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "fixture_fallback_used": {
+      "const": false
+    },
+    "goal_hash": {
+      "const": "a359b76d3cd379e6f3c7cdafadfd0115c33b6079252b401423a7fd8350974d7a"
+    },
+    "live": {
+      "const": true
+    },
+    "memory_content_sha256": {
+      "$ref": "#/$defs/sha"
+    },
+    "memory_key": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "memory_recall_receipt_sha256": {
+      "$ref": "#/$defs/sha"
+    },
+    "memory_write_receipt_sha256": {
+      "$ref": "#/$defs/sha"
+    },
+    "mocked": {
+      "const": false
+    },
+    "outcome_improvement_proven": {
+      "const": false
+    },
+    "post_strategy_artifact_sha256": {
+      "$ref": "#/$defs/sha"
+    },
+    "pre_strategy_artifact_sha256": {
+      "$ref": "#/$defs/sha"
+    },
+    "provider_use_receipt_sha256": {
+      "$ref": "#/$defs/sha"
+    },
+    "remaining_blockers": {
+      "const": [
+        "live-topology-not-qualified"
+      ]
+    },
+    "schema": {
+      "const": "battle.v16.memory_chain_qualification.v1"
+    },
+    "source_observation_receipt_sha256": {
+      "$ref": "#/$defs/sha"
+    },
+    "status": {
+      "const": "PASS"
+    },
+    "target_id": {
+      "const": "battle-v16-relayforge-a"
+    },
+    "team": {
+      "const": "blue"
+    }
+  },
+  "required": [
+    "schema",
+    "status",
+    "target_id",
+    "goal_hash",
+    "team",
+    "collection",
+    "mocked",
+    "live",
+    "fixture_fallback_used",
+    "source_observation_receipt_sha256",
+    "memory_write_receipt_sha256",
+    "memory_recall_receipt_sha256",
+    "provider_use_receipt_sha256",
+    "pre_strategy_artifact_sha256",
+    "post_strategy_artifact_sha256",
+    "memory_key",
+    "memory_content_sha256",
+    "closed_blocker",
+    "remaining_blockers",
+    "artifact_paths",
+    "outcome_improvement_proven",
+    "claims",
+    "created_at"
+  ],
+  "type": "object"
+}

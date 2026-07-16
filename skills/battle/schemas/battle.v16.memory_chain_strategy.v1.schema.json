@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "battle.v16.memory_chain_strategy.v1",
+  "type": "object",
+  "additionalProperties": false,
+  "$defs": {"sha": {"type": "string", "pattern": "^[0-9a-f]{64}$"}},
+  "properties": {
+    "schema": {"const": "battle.v16.memory_chain_strategy.v1"},
+    "status": {"const": "PASS"},
+    "phase": {"enum": ["PRE_MEMORY", "POST_MEMORY"]},
+    "target_id": {"const": "battle-v16-relayforge-a"},
+    "team": {"const": "blue"},
+    "strategy_id": {"type": "string", "minLength": 1},
+    "selected_methods": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "rejected_methods": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "parameters": {"type": "object"},
+    "mutation_origin": {"type": "string", "minLength": 1},
+    "expected_observation": {"type": "string", "minLength": 1},
+    "memory_origin_reason": {"type": ["string", "null"]},
+    "memory_citations": {"type": "object", "additionalProperties": {"type": "string", "minLength": 1}},
+    "source_observation_receipt_sha256": {"$ref": "#/$defs/sha"},
+    "source_lesson_sha256": {"$ref": "#/$defs/sha"},
+    "mocked": {"const": false},
+    "live": {"type": "boolean"},
+    "outcome_improvement_proven": {"const": false}
+  },
+  "required": ["schema", "status", "phase", "target_id", "team", "strategy_id", "selected_methods", "rejected_methods", "parameters", "mutation_origin", "expected_observation", "memory_origin_reason", "memory_citations", "source_observation_receipt_sha256", "source_lesson_sha256", "mocked", "live", "outcome_improvement_proven"],
+  "allOf": [
+    {"if": {"properties": {"phase": {"const": "PRE_MEMORY"}}}, "then": {"properties": {"live": {"const": false}, "memory_origin_reason": {"const": null}, "memory_citations": {"maxProperties": 0}}}},
+    {"if": {"properties": {"phase": {"const": "POST_MEMORY"}}}, "then": {"properties": {"live": {"const": true}, "memory_origin_reason": {"type": "string", "minLength": 1}, "memory_citations": {"minProperties": 4}}}}
+  ]
+}

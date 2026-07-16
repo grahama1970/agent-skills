@@ -2420,6 +2420,50 @@ def v16_arena_deterministic_qualify(
     if result.get("status") != "PASS":
         raise typer.Exit(1)
 
+
+@app.command("v16-memory-chain-qualify")
+def v16_memory_chain_qualify(
+    target: str = typer.Option(
+        "battle-v16-relayforge-a",
+        "--target",
+        help="V16 target ID. This gate supports RelayForge only.",
+    ),
+    deterministic_qualification: Path = typer.Option(
+        ...,
+        "--deterministic-qualification",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help="Hash-bound RelayForge deterministic qualification directory.",
+    ),
+    out: Path = typer.Option(
+        ..., "--out", help="Live durable-Memory chain artifact directory."
+    ),
+):
+    """Qualify one live RelayForge Memory write, recall, and provider-use chain."""
+    from .relayforge_v16_memory_chain import (
+        MemoryChainContractError,
+        run_relayforge_v16_memory_chain,
+        runtime_defaults,
+    )
+
+    defaults = runtime_defaults()
+    try:
+        result = run_relayforge_v16_memory_chain(
+            target=target,
+            deterministic_qualification=deterministic_qualification,
+            out=out,
+            **defaults,
+        )
+    except MemoryChainContractError as exc:
+        console.print(f"[red]RelayForge V16 Memory chain blocked:[/red]\n{exc}")
+        raise typer.Exit(1) from exc
+    console.print_json(data=result)
+    if result.get("status") != "PASS":
+        raise typer.Exit(1)
+
+
 @app.command()
 def status():
     """Check status of running or recent battles."""
