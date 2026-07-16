@@ -68,6 +68,15 @@ def parser() -> argparse.ArgumentParser:
             "campaign runtime stability WER ceiling."
         ),
     )
+    prepare_parser.add_argument(
+        "--regenerate-turn-id",
+        action="append",
+        default=[],
+        help=(
+            "Regenerate only this exact manifest turn under the campaign runtime "
+            "stability ceiling. May be repeated."
+        ),
+    )
     prepare_parser.add_argument("--max-candidates", type=int, default=5)
     prepare_parser.add_argument(
         "--max-internal-silence-seconds",
@@ -223,6 +232,7 @@ def main() -> int:
             max_internal_silence_seconds=args.max_internal_silence_seconds,
             regenerate_conflicts=args.regenerate_conflicts,
             regenerate_marginal_assets=args.regenerate_marginal_assets,
+            regenerate_turn_ids=tuple(args.regenerate_turn_id),
         )
         return 0
 

@@ -1125,6 +1125,8 @@ def _runtime_stability_regeneration_receipt(
     old_binding: dict[str, Any],
     new_bundle: dict[str, Any],
     runtime_policy: dict[str, Any],
+    reason: str = "accepted_asset_wer_above_campaign_runtime_stability_ceiling",
+    require_old_above_threshold: bool = True,
 ) -> dict[str, Any]:
     archived_binding = archived_dir / old_binding_path.name
     new_binding_path = verify_locator(
@@ -1133,7 +1135,7 @@ def _runtime_stability_regeneration_receipt(
     new_binding = read_json(new_binding_path)
     old_wer = _binding_wer(old_binding, binding_path=archived_binding)
     new_wer = _binding_wer(new_binding, binding_path=new_binding_path)
-    if old_wer <= threshold or new_wer > threshold:
+    if (require_old_above_threshold and old_wer <= threshold) or new_wer > threshold:
         raise RuntimeError(
             f"runtime_stability_regeneration_gate_failed:{turn_id}:"
             f"{old_wer}:{new_wer}:{threshold}"
@@ -1145,7 +1147,7 @@ def _runtime_stability_regeneration_receipt(
         "mocked": False,
         "case_id": case_id,
         "turn_id": turn_id,
-        "reason": "accepted_asset_wer_above_campaign_runtime_stability_ceiling",
+        "reason": reason,
         "runtime_stability_policy": runtime_policy,
         "old": {
             "wer": old_wer,
@@ -1165,6 +1167,31 @@ def _runtime_stability_regeneration_receipt(
     receipt_path = new_binding_path.parent / "runtime-stability-regeneration.json"
     atomic_write_json(receipt_path, value)
     return locator(receipt_path)
+
+
+def _compatible_existing_qualification_policy(
+    existing: Any,
+    base: dict[str, Any],
+) -> dict[str, Any] | None:
+    if not isinstance(existing, dict):
+        return None
+    try:
+        existing_max = float(existing["max_request_wer"])
+    except (KeyError, TypeError, ValueError):
+        return None
+    if not 0.0 <= existing_max <= float(base["max_request_wer"]):
+        return None
+    expected = build_qualification_policy(
+        model=base["model"],
+        device=base["device"],
+        compute_type=base["compute_type"],
+        max_request_wer=existing_max,
+        max_candidates=base["max_candidates"],
+        max_internal_silence_seconds=base["utterance_boundary"][
+            "max_internal_silence_seconds"
+        ],
+    )
+    return existing if existing == expected else None
 
 
 
@@ -2592,6 +2619,7 @@ def prepare_clone_assets(
     max_internal_silence_seconds: float = 2.0,
     regenerate_conflicts: bool = False,
     regenerate_marginal_assets: bool = False,
+    regenerate_turn_ids: tuple[str, ...] = (),
 ) -> dict[str, Any]:
     manifest_path = Path(manifest_path).resolve()
     source_contract_path = Path(source_contract_path).resolve()
@@ -2627,7 +2655,12 @@ def prepare_clone_assets(
             max_internal_silence_seconds
         ),
     )
-    if regenerate_marginal_assets and campaign_runtime_stability_max_wer is None:
+    requested_regeneration_turn_ids = {
+        str(value).strip() for value in regenerate_turn_ids if str(value).strip()
+    }
+    if (
+        regenerate_marginal_assets or requested_regeneration_turn_ids
+    ) and campaign_runtime_stability_max_wer is None:
         raise ValueError(
             "campaign_runtime_stability_max_wer_required_for_marginal_regeneration"
         )
@@ -2639,7 +2672,12 @@ def prepare_clone_assets(
             raise ValueError("campaign_runtime_stability_max_wer_out_of_range")
         runtime_stability_policy = {
             "schema": "embry.audio_e2e.runtime_stability_policy.v1",
-            "selection": "existing_binding_qualification_wer_strictly_greater_than",
+            "selection": (
+                "explicit_turn_ids"
+                if requested_regeneration_turn_ids
+                else "existing_binding_qualification_wer_strictly_greater_than"
+            ),
+            "selected_turn_ids": sorted(requested_regeneration_turn_ids),
             "max_request_wer": stability_max_wer,
             "base_max_request_wer": float(max_request_wer),
             "max_candidates": int(max_candidates),
@@ -2658,6 +2696,17 @@ def prepare_clone_assets(
 
     manifest = read_json(manifest_path)
     cases = validate_campaign_manifest(manifest)
+    manifest_turn_ids = {
+        turn["turn_id"] for case in cases for turn in case["turns"]
+    }
+    unknown_regeneration_turn_ids = (
+        requested_regeneration_turn_ids - manifest_turn_ids
+    )
+    if unknown_regeneration_turn_ids:
+        raise ValueError(
+            "regenerate_turn_id_unknown:"
+            + ",".join(sorted(unknown_regeneration_turn_ids))
+        )
     contract_locator, contract = validate_source_contract(
         source_contract_path,
         checkpoint_id=checkpoint_id,
@@ -2722,43 +2771,29 @@ def prepare_clone_assets(
                 turn_qualification_policy = qualification_policy
                 marginal_archive: tuple[Path, Path, dict[str, Any]] | None = None
                 binding_path = asset_dir / "binding-receipt.json"
+                exact_regeneration_selected = (
+                    turn_id in requested_regeneration_turn_ids
+                )
                 runtime_archive_parent = (
                     archive_root
                     / "runtime-stability"
                     / safe_component(asset_dir.name)
                 )
-                archived_runtime_bindings = sorted(
-                    runtime_archive_parent.glob("*/binding-receipt.json")
-                )
-                if len(archived_runtime_bindings) > 1:
-                    raise RuntimeError(
-                        f"multiple_runtime_stability_archives:{case_id}:{turn_id}"
-                    )
-                if archived_runtime_bindings:
-                    archived_binding_path = archived_runtime_bindings[0]
-                    marginal_archive = (
-                        archived_binding_path.parent,
-                        archived_binding_path,
-                        read_json(archived_binding_path),
-                    )
-                    turn_qualification_policy = runtime_qualification_policy
                 if runtime_qualification_policy is not None and binding_path.is_file():
                     existing_binding = read_json(binding_path)
                     existing_wer = _binding_wer(
                         existing_binding, binding_path=binding_path
                     )
-                    if (
+                    if exact_regeneration_selected and (
                         existing_binding.get("qualification_policy")
                         == runtime_qualification_policy
                     ):
                         turn_qualification_policy = runtime_qualification_policy
-                    elif existing_wer > runtime_qualification_policy["max_request_wer"]:
-                        if not regenerate_marginal_assets:
-                            raise RuntimeError(
-                                "marginal_asset_requires_regeneration:"
-                                f"{case_id}:{turn_id}:{existing_wer}:"
-                                f"{runtime_qualification_policy['max_request_wer']}"
-                            )
+                    elif exact_regeneration_selected or (
+                        regenerate_marginal_assets
+                        and existing_wer
+                        > runtime_qualification_policy["max_request_wer"]
+                    ):
                         old_binding = existing_binding
                         old_binding_name = binding_path.name
                         archived_dir = archive_conflict(
@@ -2773,6 +2808,34 @@ def prepare_clone_assets(
                             archived_dir,
                             archived_dir / old_binding_name,
                             old_binding,
+                        )
+                        turn_qualification_policy = runtime_qualification_policy
+                    else:
+                        compatible_policy = (
+                            _compatible_existing_qualification_policy(
+                                existing_binding.get("qualification_policy"),
+                                qualification_policy,
+                            )
+                        )
+                        if compatible_policy is not None:
+                            turn_qualification_policy = compatible_policy
+                elif runtime_qualification_policy is not None and (
+                    exact_regeneration_selected or regenerate_marginal_assets
+                ):
+                    archived_runtime_bindings = sorted(
+                        runtime_archive_parent.glob("*/binding-receipt.json")
+                    )
+                    if len(archived_runtime_bindings) > 1:
+                        raise RuntimeError(
+                            "multiple_runtime_stability_archives:"
+                            f"{case_id}:{turn_id}"
+                        )
+                    if archived_runtime_bindings:
+                        archived_binding_path = archived_runtime_bindings[0]
+                        marginal_archive = (
+                            archived_binding_path.parent,
+                            archived_binding_path,
+                            read_json(archived_binding_path),
                         )
                         turn_qualification_policy = runtime_qualification_policy
                 per_turn_qualification_policy[turn_id] = turn_qualification_policy
@@ -2828,9 +2891,26 @@ def prepare_clone_assets(
                             old_binding=old_binding,
                             new_bundle=bundle,
                             runtime_policy=runtime_stability_policy,
+                            reason=(
+                                "managed_listener_runtime_transcript_failed"
+                                if exact_regeneration_selected
+                                else "accepted_asset_wer_above_campaign_"
+                                "runtime_stability_ceiling"
+                            ),
+                            require_old_above_threshold=(
+                                not exact_regeneration_selected
+                            ),
                         )
                     )
                     action = "REGENERATED_FOR_RUNTIME_STABILITY"
+                else:
+                    existing_regeneration_receipt = (
+                        asset_dir / "runtime-stability-regeneration.json"
+                    )
+                    if existing_regeneration_receipt.is_file():
+                        runtime_regeneration_receipts.append(
+                            locator(existing_regeneration_receipt)
+                        )
                 turn_bundles[turn_id] = bundle
                 print(
                     json.dumps(
