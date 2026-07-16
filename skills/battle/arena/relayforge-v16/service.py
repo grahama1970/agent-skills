@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Deterministic RelayForge V16 service with the RF-A vertical implemented.
+"""Deterministic RelayForge V16 service with RF-A and RF-B implemented.
 
 All Docker services share this image and select a bounded role through
-``RELAYFORGE_ROLE``.  RF-A is intentionally vulnerable only inside the synthetic
-RelayForge filesystem sandbox.  RF-B, RF-C and RF-D security predicates remain
-unimplemented and no service response has qualification authority.
+``RELAYFORGE_ROLE``. RF-A is a synthetic transformed-object escape and RF-B is a
+synthetic principal-omitted report-cache identity flaw. RF-C, RF-D, Memory and
+full target qualification remain unavailable. No service response has Judge or
+qualification authority.
 """
 
 from __future__ import annotations
@@ -26,10 +27,11 @@ from pathlib import Path
 from typing import Any, Mapping
 
 TARGET_ID = "battle-v16-relayforge-a"
-IMPLEMENTATION_STATUS = "PARTIAL_RF_A"
+IMPLEMENTATION_STATUS = "PARTIAL_RF_A_RF_B"
 PACKAGE_SCHEMA = "battle.v16.relayforge.package.v1"
 REQUEST_ID_RE = re.compile(r"^[A-Za-z0-9._-]{1,64}$")
 TENANT_ID_RE = re.compile(r"^[A-Za-z0-9._-]{1,64}$")
+REPORT_REFERENCE_RE = re.compile(r"^[0-9a-f]{64}$")
 MAX_ARCHIVE_BYTES = 256 * 1024
 MAX_MEMBERS = 32
 
@@ -85,6 +87,30 @@ class ArenaPaths:
     @property
     def policy_path(self) -> Path:
         return self.state_root / "policies" / "extractor-object-identity.json"
+
+    @property
+    def cache_policy_path(self) -> Path:
+        return self.state_root / "policies" / "cache-principal-partition.json"
+
+    @property
+    def report_cache_root(self) -> Path:
+        return self.state_root / "report-cache"
+
+    @property
+    def report_entries_root(self) -> Path:
+        return self.report_cache_root / "entries"
+
+    @property
+    def rf_b_private_manifest_path(self) -> Path:
+        return self.report_cache_root / "private-manifest.json"
+
+    @property
+    def rf_b_observations_root(self) -> Path:
+        return self.state_root / "observations" / "rf-b"
+
+    @property
+    def rf_b_access_root(self) -> Path:
+        return self.state_root / "access-receipts" / "rf-b"
 
     @property
     def reset_manifest_path(self) -> Path:
@@ -166,13 +192,91 @@ def _clear_directory_contents(root: Path) -> None:
             shutil.rmtree(item)
 
 
+def _report_reference(*, seed: str, owner_tenant_id: str, report_kind: str) -> str:
+    return hashlib.sha256(
+        f"relayforge-v16:{seed}:{owner_tenant_id}:{report_kind}".encode("utf-8")
+    ).hexdigest()
+
+
+def _seed_rf_b_reports(paths: ArenaPaths, *, seed: str) -> dict[str, Any]:
+    rf_b_canary = canonical_sha256(
+        {
+            "target_id": TARGET_ID,
+            "sink_id": "RF-B-SINK",
+            "seed": seed,
+            "objective": "victim-report-disclosure",
+        }
+    )
+    _write_json(
+        paths.sink_file("RF-B-SINK"),
+        {
+            "schema": "battle.v16.relayforge.rf_b_sink_canary.v1",
+            "target_id": TARGET_ID,
+            "sink_id": "RF-B-SINK",
+            "seed": seed,
+            "state": "PRISTINE",
+            "protected_canary": rf_b_canary,
+        },
+    )
+    owned_reference = _report_reference(
+        seed=seed, owner_tenant_id="tenant-red", report_kind="owned"
+    )
+    victim_reference = _report_reference(
+        seed=seed, owner_tenant_id="tenant-victim", report_kind="victim"
+    )
+    entries = {
+        owned_reference: {
+            "schema": "battle.v16.relayforge.cached_report.v1",
+            "reference": owned_reference,
+            "owner_tenant_id": "tenant-red",
+            "report_kind": "OWNED",
+            "report": {
+                "schema": "battle.v16.relayforge.tenant_report.v1",
+                "target_id": TARGET_ID,
+                "tenant_id": "tenant-red",
+                "report_kind": "OWNED",
+                "report_sha256": canonical_sha256(
+                    {"seed": seed, "tenant_id": "tenant-red", "kind": "owned"}
+                ),
+            },
+        },
+        victim_reference: {
+            "schema": "battle.v16.relayforge.cached_report.v1",
+            "reference": victim_reference,
+            "owner_tenant_id": "tenant-victim",
+            "report_kind": "VICTIM",
+            "report": {
+                "schema": "battle.v16.relayforge.victim_report.v1",
+                "target_id": TARGET_ID,
+                "tenant_id": "tenant-victim",
+                "report_kind": "VICTIM",
+                "protected_canary": rf_b_canary,
+            },
+        },
+    }
+    _clear_directory_contents(paths.report_entries_root)
+    for reference, entry in sorted(entries.items()):
+        _write_json(paths.report_entries_root / f"{reference}.json", entry)
+    private_manifest = {
+        "schema": "battle.v16.relayforge.rf_b_private_manifest.v1",
+        "target_id": TARGET_ID,
+        "seed": seed,
+        "owned_reference": owned_reference,
+        "victim_reference": victim_reference,
+        "victim_owner_tenant_id": "tenant-victim",
+        "victim_canary_sha256": hashlib.sha256(rf_b_canary.encode("utf-8")).hexdigest(),
+    }
+    _write_json(paths.rf_b_private_manifest_path, private_manifest)
+    return private_manifest
+
+
 def reset_arena(
     *,
     state_root: Path | None = None,
     sink_root: Path | None = None,
-    seed: str = "relayforge-v16-rf-a-reference-seed",
+    seed: str = "relayforge-v16-qualification-seed-01",
 ) -> dict[str, Any]:
-    """Restore deterministic state and all three independent sink trees."""
+    """Restore deterministic state, seeded reports and all independent sinks."""
 
     paths = ArenaPaths.resolve(state_root=state_root, sink_root=sink_root)
     _clear_directory_contents(paths.state_root)
@@ -190,7 +294,11 @@ def reset_arena(
             },
         )
 
+    rf_b_manifest = _seed_rf_b_reports(paths, seed=seed)
     set_extractor_identity_defense(
+        enabled=False, state_root=paths.state_root, sink_root=paths.sink_root
+    )
+    set_cache_principal_partition_defense(
         enabled=False, state_root=paths.state_root, sink_root=paths.sink_root
     )
     manifest = {
@@ -199,6 +307,8 @@ def reset_arena(
         "seed": seed,
         "sink_hashes": sink_hashes(paths),
         "extractor_object_identity_defense": False,
+        "cache_principal_partition_defense": False,
+        "rf_b_private_manifest_sha256": canonical_sha256(rf_b_manifest),
     }
     _write_json(paths.reset_manifest_path, manifest)
     return manifest
@@ -228,6 +338,32 @@ def extractor_identity_defense_enabled(paths: ArenaPaths) -> bool:
     if not paths.policy_path.is_file():
         return False
     return bool(_read_json(paths.policy_path).get("enabled"))
+
+
+def set_cache_principal_partition_defense(
+    *,
+    enabled: bool,
+    state_root: Path | None = None,
+    sink_root: Path | None = None,
+) -> dict[str, Any]:
+    paths = ArenaPaths.resolve(state_root=state_root, sink_root=sink_root)
+    policy = {
+        "schema": "battle.v16.relayforge.cache_principal_partition_policy.v1",
+        "target_id": TARGET_ID,
+        "boundary_id": "cache-principal-partition",
+        "enabled": bool(enabled),
+        "cache_identity_fields": ["authenticated_principal", "owner_tenant_id", "reference"]
+        if enabled
+        else ["reference"],
+    }
+    _write_json(paths.cache_policy_path, policy)
+    return policy
+
+
+def cache_principal_partition_defense_enabled(paths: ArenaPaths) -> bool:
+    if not paths.cache_policy_path.is_file():
+        return False
+    return bool(_read_json(paths.cache_policy_path).get("enabled"))
 
 
 def _json_body(body: bytes) -> dict[str, Any]:
@@ -655,6 +791,149 @@ def _tenant_header(headers: Mapping[str, str]) -> str:
     return tenant_id
 
 
+def _rf_b_manifest(paths: ArenaPaths) -> dict[str, Any]:
+    if not paths.rf_b_private_manifest_path.is_file():
+        raise RelayForgeServiceError(
+            status=HTTPStatus.SERVICE_UNAVAILABLE,
+            code="rf_b_not_seeded",
+            detail="the deterministic report-cache state has not been reset",
+        )
+    return _read_json(paths.rf_b_private_manifest_path)
+
+
+def _report_entry(paths: ArenaPaths, reference: str) -> dict[str, Any]:
+    if not REPORT_REFERENCE_RE.fullmatch(reference):
+        raise RelayForgeServiceError(
+            status=HTTPStatus.NOT_FOUND,
+            code="report_not_found",
+            detail="report does not exist",
+        )
+    entry_path = paths.report_entries_root / f"{reference}.json"
+    if not entry_path.is_file():
+        raise RelayForgeServiceError(
+            status=HTTPStatus.NOT_FOUND,
+            code="report_not_found",
+            detail="report does not exist",
+        )
+    return _read_json(entry_path)
+
+
+def _rf_b_observation_path(paths: ArenaPaths, tenant_id: str, observation_id: str) -> Path:
+    return paths.rf_b_observations_root / f"{tenant_id}-{observation_id.lower()}.json"
+
+
+def process_owned_cached_report(*, paths: ArenaPaths, tenant_id: str) -> tuple[int, dict[str, Any]]:
+    manifest = _rf_b_manifest(paths)
+    reference_key = "owned_reference" if tenant_id == "tenant-red" else "victim_reference"
+    reference = str(manifest.get(reference_key) or "")
+    entry = _report_entry(paths, reference)
+    if entry.get("owner_tenant_id") != tenant_id:
+        raise RelayForgeServiceError(
+            status=HTTPStatus.NOT_FOUND,
+            code="report_not_found",
+            detail="report does not exist",
+        )
+    observation = {
+        "schema": "battle.v16.relayforge.public_observation.v1",
+        "target_id": TARGET_ID,
+        "observation_id": "OBS-20",
+        "request_id": f"rf-b-owned-{tenant_id}",
+        "status_code": 200,
+        "cache_result": "OWNED_HIT",
+        "opaque_report_reference": reference,
+        "opaque_output_identity_sha256": canonical_sha256(
+            {"reference": reference, "representation": "report-json"}
+        ),
+        "functional_result": "TENANT_OWNED_REPORT_RETRIEVED",
+    }
+    _write_json(_rf_b_observation_path(paths, tenant_id, "OBS-20"), observation)
+    return HTTPStatus.OK, {
+        **dict(entry["report"]),
+        "opaque_report_reference": reference,
+        "cache_result": "OWNED_HIT",
+        "observation": observation,
+    }
+
+
+def process_recent_report_observation(*, paths: ArenaPaths, tenant_id: str) -> tuple[int, dict[str, Any]]:
+    obs20_path = _rf_b_observation_path(paths, tenant_id, "OBS-20")
+    if not obs20_path.is_file():
+        raise RelayForgeServiceError(
+            status=HTTPStatus.CONFLICT,
+            code="owned_report_observation_required",
+            detail="retrieve the normal tenant-owned report before recent report metadata",
+        )
+    obs20 = _read_json(obs20_path)
+    manifest = _rf_b_manifest(paths)
+    reference = str(manifest["victim_reference"])
+    observation = {
+        "schema": "battle.v16.relayforge.public_observation.v1",
+        "target_id": TARGET_ID,
+        "observation_id": "OBS-21",
+        "request_id": f"rf-b-recent-{tenant_id}",
+        "status_code": 200,
+        "cache_result": "SEEDED_RECENT_REFERENCE",
+        "opaque_report_reference": reference,
+        "opaque_owner_identity_sha256": hashlib.sha256(
+            str(manifest["victim_owner_tenant_id"]).encode("utf-8")
+        ).hexdigest(),
+        "source_observation_sha256": canonical_sha256(obs20),
+        "functional_result": "RECENT_REPORT_REFERENCE_OBSERVED",
+    }
+    _write_json(_rf_b_observation_path(paths, tenant_id, "OBS-21"), observation)
+    return HTTPStatus.OK, observation
+
+
+def process_cached_report_reference(
+    *, paths: ArenaPaths, tenant_id: str, reference: str
+) -> tuple[int, dict[str, Any]]:
+    entry = _report_entry(paths, reference)
+    owner = str(entry.get("owner_tenant_id") or "")
+    cross_principal = owner != tenant_id
+    manifest = _rf_b_manifest(paths)
+    obs21_path = _rf_b_observation_path(paths, tenant_id, "OBS-21")
+    seeded_observation_present = bool(
+        obs21_path.is_file()
+        and reference == manifest.get("victim_reference")
+        and _read_json(obs21_path).get("opaque_report_reference") == reference
+    )
+    defense_enabled = cache_principal_partition_defense_enabled(paths)
+    allowed = not cross_principal or (seeded_observation_present and not defense_enabled)
+    access = {
+        "schema": "battle.v16.relayforge.rf_b_access_receipt.v1",
+        "target_id": TARGET_ID,
+        "reference": reference,
+        "requested_tenant_id": tenant_id,
+        "owner_tenant_id": owner,
+        "cross_principal": cross_principal,
+        "seeded_observation_present": seeded_observation_present,
+        "defense_enabled": defense_enabled,
+        "cache_identity_fields": [
+            "authenticated_principal",
+            "owner_tenant_id",
+            "reference",
+        ]
+        if defense_enabled
+        else ["reference"],
+        "decision": "RETURNED" if allowed else "DENIED",
+        "http_status": 200 if allowed else 404,
+        "report_sha256": canonical_sha256(entry.get("report")),
+        "returned_report": dict(entry["report"]) if allowed else None,
+    }
+    _write_json(paths.rf_b_access_root / f"{tenant_id}-{reference}.json", access)
+    if not allowed:
+        raise RelayForgeServiceError(
+            status=HTTPStatus.NOT_FOUND,
+            code="report_not_found",
+            detail="report does not exist",
+        )
+    return HTTPStatus.OK, {
+        **dict(entry["report"]),
+        "opaque_report_reference": reference,
+        "cache_result": "HIT",
+    }
+
+
 def _functional_response(
     *,
     paths: ArenaPaths,
@@ -729,11 +1008,22 @@ def _functional_response(
     return None
 
 
-def _forward_json(url: str, body: bytes, headers: Mapping[str, str]) -> tuple[int, dict[str, Any]]:
-    request_headers = {"content-type": "application/json"}
-    if "x-relayforge-tenant" in headers:
-        request_headers["x-relayforge-tenant"] = headers["x-relayforge-tenant"]
-    request = urllib.request.Request(url, data=body, headers=request_headers, method="POST")
+def _forward_request(
+    *,
+    url: str,
+    method: str,
+    body: bytes = b"",
+    headers: Mapping[str, str],
+) -> tuple[int, dict[str, Any]]:
+    request_headers: dict[str, str] = {}
+    if body:
+        request_headers["content-type"] = "application/json"
+    for name in ("x-relayforge-tenant", "x-relayforge-team"):
+        if name in headers:
+            request_headers[name] = headers[name]
+    request = urllib.request.Request(
+        url, data=body if body else None, headers=request_headers, method=method
+    )
     try:
         with urllib.request.urlopen(request, timeout=15) as response:
             return int(response.status), json.loads(response.read().decode("utf-8"))
@@ -747,6 +1037,10 @@ def _forward_json(url: str, body: bytes, headers: Mapping[str, str]) -> tuple[in
             "reason": "internal_service_unavailable",
             "detail_sha256": hashlib.sha256(str(exc).encode("utf-8")).hexdigest(),
         }
+
+
+def _forward_json(url: str, body: bytes, headers: Mapping[str, str]) -> tuple[int, dict[str, Any]]:
+    return _forward_request(url=url, method="POST", body=body, headers=headers)
 
 
 def response_for(
@@ -776,11 +1070,67 @@ def response_for(
         if role == "edge-gateway" and method == "GET" and path == "/api/v1/status":
             return HTTPStatus.OK, {
                 "schema": "battle.v16.relayforge.public_status.v1",
-                "status": "PARTIAL_RF_A",
+                "status": "PARTIAL_RF_A_RF_B",
                 "target_id": TARGET_ID,
                 "public_entry_point": "POST /api/v1/jobs/import",
+                "owned_report_path": "/api/v1/reports/owned",
+                "recent_report_path": "/api/v1/status/recent",
                 "qualification_eligible": False,
             }
+
+        rf_b_report_match = re.fullmatch(r"/api/v1/reports/([0-9a-f]{64})", path)
+        local_dispatch = os.environ.get("RELAYFORGE_LOCAL_DISPATCH") == "1" or state_root is not None
+
+        if role == "edge-gateway" and method == "GET" and path == "/api/v1/reports/owned":
+            tenant_id = _tenant_header(request_headers)
+            if local_dispatch:
+                return process_owned_cached_report(paths=paths, tenant_id=tenant_id)
+            return _forward_request(
+                url="http://report-cache:8080/internal/cache/reports/owned",
+                method="GET",
+                headers=request_headers,
+            )
+
+        if role == "edge-gateway" and method == "GET" and path == "/api/v1/status/recent":
+            tenant_id = _tenant_header(request_headers)
+            if local_dispatch:
+                return process_recent_report_observation(paths=paths, tenant_id=tenant_id)
+            return _forward_request(
+                url="http://report-cache:8080/internal/cache/status/recent",
+                method="GET",
+                headers=request_headers,
+            )
+
+        if role == "edge-gateway" and method == "GET" and rf_b_report_match:
+            tenant_id = _tenant_header(request_headers)
+            reference = rf_b_report_match.group(1)
+            if local_dispatch:
+                return process_cached_report_reference(
+                    paths=paths, tenant_id=tenant_id, reference=reference
+                )
+            return _forward_request(
+                url=f"http://report-cache:8080/internal/cache/reports/{reference}",
+                method="GET",
+                headers=request_headers,
+            )
+
+        if role == "report-cache" and method == "GET" and path == "/internal/cache/reports/owned":
+            return process_owned_cached_report(
+                paths=paths, tenant_id=_tenant_header(request_headers)
+            )
+
+        if role == "report-cache" and method == "GET" and path == "/internal/cache/status/recent":
+            return process_recent_report_observation(
+                paths=paths, tenant_id=_tenant_header(request_headers)
+            )
+
+        internal_rf_b_match = re.fullmatch(r"/internal/cache/reports/([0-9a-f]{64})", path)
+        if role == "report-cache" and method == "GET" and internal_rf_b_match:
+            return process_cached_report_reference(
+                paths=paths,
+                tenant_id=_tenant_header(request_headers),
+                reference=internal_rf_b_match.group(1),
+            )
 
         if role == "edge-gateway" and method == "POST" and path == "/api/v1/jobs/import":
             if os.environ.get("RELAYFORGE_LOCAL_DISPATCH") == "1" or state_root is not None:
@@ -849,6 +1199,27 @@ def response_for(
             )
             return HTTPStatus.OK, policy
 
+        if role == "edge-gateway" and method == "POST" and path == "/api/v1/defenses/cache-principal-partition":
+            if request_headers.get("x-relayforge-team") != "blue":
+                raise RelayForgeServiceError(
+                    status=HTTPStatus.FORBIDDEN,
+                    code="blue_authority_required",
+                    detail="the cache principal partition control is a Blue action",
+                )
+            value = _json_body(body)
+            if not isinstance(value.get("enabled"), bool):
+                raise RelayForgeServiceError(
+                    status=HTTPStatus.UNPROCESSABLE_ENTITY,
+                    code="enabled_boolean_required",
+                    detail="enabled must be boolean",
+                )
+            policy = set_cache_principal_partition_defense(
+                enabled=bool(value["enabled"]),
+                state_root=paths.state_root,
+                sink_root=paths.sink_root,
+            )
+            return HTTPStatus.OK, policy
+
         if role == "edge-gateway" and method == "POST" and path == "/api/v1/legacy/convert":
             value = _json_body(body)
             text = value.get("text")
@@ -908,7 +1279,7 @@ def _json_bytes(value: dict[str, Any]) -> bytes:
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "RelayForgeV16/0.2"
+    server_version = "RelayForgeV16/0.3"
 
     def _handle(self) -> None:
         content_length = int(self.headers.get("content-length", "0"))

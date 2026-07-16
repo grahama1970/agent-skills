@@ -73,11 +73,15 @@ def test_freeze_is_byte_stable_partial_and_never_qualifies(tmp_path: Path) -> No
         "target_identity_sha256"
     ]
     assert identity["status"] == "FROZEN_NOT_QUALIFIED"
-    assert private["implementation_status"] == "PARTIAL_RF_A"
+    assert private["implementation_status"] == "PARTIAL_RF_A_RF_B"
     assert next(item for item in private["sinks"] if item["sink_id"] == "RF-A-SINK")[
         "implementation_status"
     ] == "IMPLEMENTED"
-    assert "rf-b-predicates-unimplemented" in identity["blockers"]
+    assert next(item for item in private["sinks"] if item["sink_id"] == "RF-B-SINK")[
+        "implementation_status"
+    ] == "IMPLEMENTED"
+    assert "rf-b-predicates-unimplemented" not in identity["blockers"]
+    assert "rf-c-predicates-unimplemented" in identity["blockers"]
 
 
 def test_public_context_contains_no_private_identifier(tmp_path: Path) -> None:
@@ -258,7 +262,185 @@ def test_rf_a_suite_proves_shortcuts_regressions_isolation_and_reset(
     assert all(item["passed"] for item in regressions["fixtures"])
 
 
-def test_deterministic_qualification_credits_rf_a_but_full_target_stays_blocked(
+
+def test_rf_b_requires_owned_report_then_seeded_reference_and_uses_no_other_path(
+    tmp_path: Path,
+) -> None:
+    service, _, judge = _modules()
+    state_root = tmp_path / "state"
+    sink_root = tmp_path / "sinks"
+    reset = service.reset_arena(state_root=state_root, sink_root=sink_root)
+    headers = {"x-relayforge-tenant": "tenant-red"}
+
+    owned_status, owned = service.response_for(
+        role="edge-gateway",
+        method="GET",
+        path="/api/v1/reports/owned",
+        headers=headers,
+        state_root=state_root,
+        sink_root=sink_root,
+    )
+    recent_status, recent = service.response_for(
+        role="edge-gateway",
+        method="GET",
+        path="/api/v1/status/recent",
+        headers=headers,
+        state_root=state_root,
+        sink_root=sink_root,
+    )
+    disclosure_status, disclosure = service.response_for(
+        role="edge-gateway",
+        method="GET",
+        path=f"/api/v1/reports/{recent['opaque_report_reference']}",
+        headers=headers,
+        state_root=state_root,
+        sink_root=sink_root,
+    )
+    outcome = judge.evaluate_rf_b(state_root=state_root, sink_root=sink_root)
+
+    assert int(owned_status) == 200
+    assert owned["observation"]["observation_id"] == "OBS-20"
+    assert int(recent_status) == 200
+    assert recent["observation_id"] == "OBS-21"
+    assert int(disclosure_status) == 200
+    assert disclosure["protected_canary"]
+    assert outcome["highest_stage"] == "PROTECTED_OBJECTIVE"
+    assert outcome["principal_boundary_violation_measured"] is True
+    assert outcome["protected_objective_measured"] is True
+    assert outcome["dependency_independence_proven"] is True
+    assert outcome["sink_before_sha256"] == reset["sink_hashes"]
+    assert outcome["sink_after_sha256"] == reset["sink_hashes"]
+    assert not any((state_root / "jobs").rglob("private-extraction-receipt.json"))
+
+
+def test_rf_b_guessing_before_obs_21_never_earns_boundary_stage(tmp_path: Path) -> None:
+    service, _, judge = _modules()
+    state_root = tmp_path / "state"
+    sink_root = tmp_path / "sinks"
+    paths = service.ArenaPaths.resolve(state_root=state_root, sink_root=sink_root)
+    reset = service.reset_arena(state_root=state_root, sink_root=sink_root)
+    private = json.loads(paths.rf_b_private_manifest_path.read_text())
+    victim_reference = private["victim_reference"]
+    headers = {"x-relayforge-tenant": "tenant-red"}
+
+    status, _ = service.response_for(
+        role="edge-gateway",
+        method="GET",
+        path=f"/api/v1/reports/{victim_reference}",
+        headers=headers,
+        state_root=state_root,
+        sink_root=sink_root,
+    )
+    unseen = judge.evaluate_rf_b(state_root=state_root, sink_root=sink_root)
+    assert int(status) == 404
+    assert unseen["highest_stage"] == "UNSEEN"
+    assert unseen["sink_after_sha256"] == reset["sink_hashes"]
+
+    service.response_for(
+        role="edge-gateway",
+        method="GET",
+        path="/api/v1/reports/owned",
+        headers=headers,
+        state_root=state_root,
+        sink_root=sink_root,
+    )
+    status, _ = service.response_for(
+        role="edge-gateway",
+        method="GET",
+        path=f"/api/v1/reports/{victim_reference}",
+        headers=headers,
+        state_root=state_root,
+        sink_root=sink_root,
+    )
+    evidence_only = judge.evaluate_rf_b(state_root=state_root, sink_root=sink_root)
+    assert int(status) == 404
+    assert evidence_only["highest_stage"] == "EVIDENCE_GATHERED"
+    assert evidence_only["principal_boundary_violation_measured"] is False
+
+
+def test_rf_b_narrow_defense_binds_principal_and_preserves_owned_reports(
+    tmp_path: Path,
+) -> None:
+    service, _, judge = _modules()
+    state_root = tmp_path / "state"
+    sink_root = tmp_path / "sinks"
+    service.reset_arena(state_root=state_root, sink_root=sink_root)
+    service.set_cache_principal_partition_defense(
+        enabled=True, state_root=state_root, sink_root=sink_root
+    )
+    headers = {"x-relayforge-tenant": "tenant-red"}
+    owned_status, owned = service.response_for(
+        role="edge-gateway",
+        method="GET",
+        path="/api/v1/reports/owned",
+        headers=headers,
+        state_root=state_root,
+        sink_root=sink_root,
+    )
+    _, recent = service.response_for(
+        role="edge-gateway",
+        method="GET",
+        path="/api/v1/status/recent",
+        headers=headers,
+        state_root=state_root,
+        sink_root=sink_root,
+    )
+    disclosure_status, _ = service.response_for(
+        role="edge-gateway",
+        method="GET",
+        path=f"/api/v1/reports/{recent['opaque_report_reference']}",
+        headers=headers,
+        state_root=state_root,
+        sink_root=sink_root,
+    )
+    outcome = judge.evaluate_rf_b(state_root=state_root, sink_root=sink_root)
+
+    assert int(owned_status) == 200
+    assert owned["tenant_id"] == "tenant-red"
+    assert int(disclosure_status) == 404
+    assert outcome["highest_stage"] == "REPRODUCIBLE_PROBE"
+    assert outcome["principal_boundary_violation_measured"] is False
+    assert outcome["protected_objective_measured"] is False
+
+
+def test_rf_b_suite_proves_bruteforce_regression_isolation_and_reset(
+    tmp_path: Path,
+) -> None:
+    _, _, judge = _modules()
+    out = tmp_path / "rf-b-proof"
+    result = judge.run_rf_b_suite(
+        state_root=tmp_path / "state",
+        sink_root=tmp_path / "sinks",
+        out=out,
+    )
+    assert result["status"] == "PASS"
+    assert result["vulnerable_highest_stage"] == "PROTECTED_OBJECTIVE"
+    assert result["defended_highest_stage"] == "REPRODUCIBLE_PROBE"
+    assert result["regression_pass_count"] == 3
+    assert result["shortcut_pass_count"] == 4
+    assert result["sink_isolation_status"] == "PASS"
+    assert result["dependency_independence_proven"] is True
+    assert result["reset_replay_byte_identical"] is True
+    shortcuts = json.loads((out / "rf-b-shortcut-matrix.json").read_text())
+    regressions = json.loads((out / "rf-b-regression-matrix.json").read_text())
+    assert shortcuts["status"] == "PASS"
+    assert all(item["passed"] for item in shortcuts["cases"])
+    assert regressions["status"] == "PASS"
+    assert regressions["sink_hashes_unchanged"] is True
+
+
+def test_rf_a_suite_remains_passing_after_rf_b_implementation(tmp_path: Path) -> None:
+    _, _, judge = _modules()
+    result = judge.run_rf_a_suite(
+        state_root=tmp_path / "state",
+        sink_root=tmp_path / "sinks",
+    )
+    assert result["status"] == "PASS"
+    assert result["vulnerable_highest_stage"] == "PROTECTED_OBJECTIVE"
+    assert result["regression_pass_count"] == 6
+
+
+def test_deterministic_qualification_credits_rf_a_and_rf_b_but_full_target_stays_blocked(
     tmp_path: Path,
 ) -> None:
     _, freeze = _freeze(tmp_path)
@@ -270,17 +452,24 @@ def test_deterministic_qualification_credits_rf_a_but_full_target_stays_blocked(
     )
     assert result["status"] == "BLOCKED"
     assert result["rf_a_vertical_status"] == "PASS"
+    assert result["rf_b_vertical_status"] == "PASS"
     assert result["pass_emitted"] is False
-    assert "rf-b-predicates-unimplemented" in result["blockers"]
+    assert "rf-b-predicates-unimplemented" not in result["blockers"]
     assert "rf-c-predicates-unimplemented" in result["blockers"]
     assert "rf-d-decoy-validation-unimplemented" in result["blockers"]
     assert not any("predicate:rf-a" in item for item in result["blockers"])
-    for name, expected in result["rf_a_artifact_sha256"].items():
-        payload = json.loads((out / name).read_text())
-        assert relayforge_v16.canonical_sha256(payload) == expected
+    assert not any("predicate:rf-b" in item for item in result["blockers"])
+    for artifact_map in (
+        result["rf_a_artifact_sha256"],
+        result["rf_b_artifact_sha256"],
+    ):
+        for name, expected in artifact_map.items():
+            payload = json.loads((out / name).read_text())
+            assert relayforge_v16.canonical_sha256(payload) == expected
     judge_outcome = json.loads((out / "judge-outcome.json").read_text())
     assert judge_outcome["status"] == "BLOCKED"
     assert judge_outcome["rf_a_vertical"]["status"] == "PASS"
+    assert judge_outcome["rf_b_vertical"]["status"] == "PASS"
     assert judge_outcome["pass_emitted"] is False
 
 
@@ -324,5 +513,7 @@ def test_cli_freezes_then_returns_nonzero_for_incomplete_full_target(
     assert qualify_result.exit_code == 1
     assert '"status": "BLOCKED"' in qualify_result.output
     assert '"rf_a_vertical_status": "PASS"' in qualify_result.output
+    assert '"rf_b_vertical_status": "PASS"' in qualify_result.output
     assert (qualification_dir / "rf-a-vulnerable-reference.json").is_file()
+    assert (qualification_dir / "rf-b-vulnerable-reference.json").is_file()
     assert (qualification_dir / "deterministic-qualification.json").is_file()

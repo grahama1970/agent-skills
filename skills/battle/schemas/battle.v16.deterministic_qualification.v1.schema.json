@@ -19,6 +19,12 @@
       "minProperties": 6,
       "additionalProperties": {"$ref": "#/$defs/sha256"}
     },
+    "rf_b_vertical_status": {"enum": ["PASS", "FAIL"]},
+    "rf_b_artifact_sha256": {
+      "type": "object",
+      "minProperties": 6,
+      "additionalProperties": {"$ref": "#/$defs/sha256"}
+    },
     "blockers": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
     "pass_emitted": {"const": false},
     "claims": {
@@ -40,6 +46,8 @@
     "judge_outcome_sha256",
     "rf_a_vertical_status",
     "rf_a_artifact_sha256",
+    "rf_b_vertical_status",
+    "rf_b_artifact_sha256",
     "blockers",
     "pass_emitted",
     "claims"

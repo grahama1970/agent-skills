@@ -7,7 +7,7 @@
     "schema": {"const": "battle.v16.private_truth.v1"},
     "target_id": {"const": "battle-v16-relayforge-a"},
     "semantic_version": {"type": "string", "minLength": 1},
-    "implementation_status": {"enum": ["SKELETON", "PARTIAL_RF_A"]},
+    "implementation_status": {"enum": ["SKELETON", "PARTIAL_RF_A", "PARTIAL_RF_A_RF_B"]},
     "topology": {
       "type": "object",
       "additionalProperties": false,
@@ -66,7 +66,7 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "implementation_status": {"enum": ["UNIMPLEMENTED", "PARTIAL_RF_A"]},
+        "implementation_status": {"enum": ["UNIMPLEMENTED", "PARTIAL_RF_A", "PARTIAL_RF_A_RF_B"]},
         "paths": {
           "type": "array",
           "minItems": 3,

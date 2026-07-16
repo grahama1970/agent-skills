@@ -1,7 +1,7 @@
 {
   "schema": "battle.v16.relayforge.regression_fixtures.v1",
   "target_id": "battle-v16-relayforge-a",
-  "implementation_status": "PARTIAL_RF_A",
+  "implementation_status": "PARTIAL_RF_A_RF_B",
   "fixtures": [
     {"fixture_id": "regular-package-import", "executor": "_run_regressions.regular_package", "implementation_status": "IMPLEMENTED"},
     {"fixture_id": "in-bound-transformed-object", "executor": "_run_regressions.inbound_transformed_package", "implementation_status": "IMPLEMENTED"},
@@ -21,6 +21,13 @@
       "safe-report-profile",
       "legacy-conversion"
     ],
+    "implementation_status": "IMPLEMENTED"
+  },
+  "cache_principal_partition_expectation": {
+    "boundary_id": "cache-principal-partition",
+    "assigned_paths": ["RF-B"],
+    "must_preserve_function_ids": ["tenant-owned-report"],
+    "must_deny_cross_principal_report": true,
     "implementation_status": "IMPLEMENTED"
   },
   "broad_quarantine_expectation": {

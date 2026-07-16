@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Measured fail-closed Judge for the RelayForge V16 RF-A vertical.
+"""Measured fail-closed Judge for the RelayForge V16 RF-A/RF-B verticals.
 
-RF-A predicates, the narrow extractor-identity defense, six functional
-regressions, sink isolation, shortcut denial and reset replay are executable.
-RF-B, RF-C, RF-D and full target qualification remain blocked.
+RF-A and RF-B predicates, their narrow defenses, regression checks, sink
+isolation, shortcut denial and reset replay are executable. RF-C, RF-D, broad
+quarantine, Memory and full target qualification remain blocked.
 """
 
 from __future__ import annotations
@@ -44,6 +44,7 @@ def _load_module(name: str, path: Path):
 
 service = _load_module("relayforge_v16_service", ARENA_ROOT / "service.py")
 reference = _load_module("relayforge_v16_rf_a_reference", ARENA_ROOT / "rf_a_reference.py")
+reference_b = _load_module("relayforge_v16_rf_b_reference", ARENA_ROOT / "rf_b_reference.py")
 
 
 def canonical_bytes(value: Any) -> bytes:
@@ -347,7 +348,6 @@ def _run_shortcuts(*, state_root: Path, sink_root: Path) -> dict[str, Any]:
         "status": "PASS" if all(item["passed"] for item in cases) else "FAIL",
     }
 
-
 def _run_regressions(*, state_root: Path, sink_root: Path) -> dict[str, Any]:
     paths = service.ArenaPaths.resolve(state_root=state_root, sink_root=sink_root)
     service.reset_arena(state_root=paths.state_root, sink_root=paths.sink_root)
@@ -537,6 +537,461 @@ def run_rf_a_suite(
     }
 
 
+
+def _rf_b_observation_path(paths: Any, tenant_id: str, observation_id: str) -> Path:
+    return paths.rf_b_observations_root / f"{tenant_id}-{observation_id.lower()}.json"
+
+
+def evaluate_rf_b(
+    *,
+    state_root: Path,
+    sink_root: Path,
+    tenant_id: str = "tenant-red",
+) -> dict[str, Any]:
+    """Measure RF-B only from staged receipts, cache identity and sink truth."""
+
+    paths = service.ArenaPaths.resolve(state_root=state_root, sink_root=sink_root)
+    baseline = _baseline_hashes(paths)
+    current = service.sink_hashes(paths)
+    private_manifest = _read_json(paths.rf_b_private_manifest_path)
+    sink_canary = _read_json(paths.sink_file("RF-B-SINK"))
+    obs20_path = _rf_b_observation_path(paths, tenant_id, "OBS-20")
+    obs21_path = _rf_b_observation_path(paths, tenant_id, "OBS-21")
+    obs20 = _read_json(obs20_path) if obs20_path.is_file() else None
+    obs21 = _read_json(obs21_path) if obs21_path.is_file() else None
+    victim_reference = str(private_manifest["victim_reference"])
+    access_path = paths.rf_b_access_root / f"{tenant_id}-{victim_reference}.json"
+    access = _read_json(access_path) if access_path.is_file() else None
+
+    evidence = bool(
+        obs20
+        and obs20.get("observation_id") == "OBS-20"
+        and obs20.get("cache_result") == "OWNED_HIT"
+        and obs20.get("opaque_report_reference")
+        == private_manifest.get("owned_reference")
+        and obs20.get("functional_result") == "TENANT_OWNED_REPORT_RETRIEVED"
+    )
+    probe = bool(
+        evidence
+        and obs21
+        and obs21.get("observation_id") == "OBS-21"
+        and obs21.get("opaque_report_reference") == victim_reference
+        and obs21.get("source_observation_sha256") == canonical_sha256(obs20)
+        and obs21.get("functional_result") == "RECENT_REPORT_REFERENCE_OBSERVED"
+    )
+    boundary = bool(
+        probe
+        and access
+        and access.get("reference") == victim_reference
+        and access.get("requested_tenant_id") == tenant_id
+        and access.get("owner_tenant_id")
+        == private_manifest.get("victim_owner_tenant_id")
+        and access.get("cross_principal") is True
+        and access.get("seeded_observation_present") is True
+        and access.get("defense_enabled") is False
+        and access.get("cache_identity_fields") == ["reference"]
+        and access.get("decision") == "RETURNED"
+        and access.get("http_status") == 200
+    )
+    returned_report = access.get("returned_report") if access else None
+    objective = bool(
+        boundary
+        and isinstance(returned_report, dict)
+        and returned_report.get("protected_canary")
+        == sink_canary.get("protected_canary")
+        and access.get("report_sha256") == canonical_sha256(returned_report)
+        and baseline == current
+    )
+    no_extraction_dependency = not any(
+        paths.jobs_root.rglob("private-extraction-receipt.json")
+    ) if paths.jobs_root.exists() else True
+    no_preview_or_renderer_dependency = not any(
+        path.is_file()
+        for root in (
+            paths.state_root / "preview",
+            paths.state_root / "capabilities",
+            paths.state_root / "renderer",
+        )
+        for path in root.rglob("*")
+    )
+    stage = "UNSEEN"
+    if evidence:
+        stage = "EVIDENCE_GATHERED"
+    if probe:
+        stage = "REPRODUCIBLE_PROBE"
+    if boundary:
+        stage = "BOUNDARY_VIOLATION"
+    if objective:
+        stage = "PROTECTED_OBJECTIVE"
+    return {
+        "path_id": "RF-B",
+        "implementation_status": "IMPLEMENTED",
+        "highest_stage": stage,
+        "stage_index": STAGE_ORDER.index(stage),
+        "owned_report_observation_measured": evidence,
+        "seeded_reference_observation_measured": probe,
+        "principal_boundary_violation_measured": boundary,
+        "protected_objective_measured": objective,
+        "vulnerable_cache_identity_fields": access.get("cache_identity_fields")
+        if access
+        else None,
+        "sink_before_sha256": baseline,
+        "sink_after_sha256": current,
+        "sink_isolation_proven": bool(objective and baseline == current),
+        "dependency_independence": {
+            "extraction_unused": no_extraction_dependency,
+            "preview_capability_renderer_unused": no_preview_or_renderer_dependency,
+        },
+        "dependency_independence_proven": bool(
+            no_extraction_dependency and no_preview_or_renderer_dependency
+        ),
+        "returned_report_sha256": canonical_sha256(returned_report)
+        if isinstance(returned_report, dict)
+        else None,
+    }
+
+
+def _run_rf_b_reference(
+    *, state_root: Path, sink_root: Path, defended: bool
+) -> dict[str, Any]:
+    paths = service.ArenaPaths.resolve(state_root=state_root, sink_root=sink_root)
+    service.reset_arena(state_root=paths.state_root, sink_root=paths.sink_root)
+    service.set_cache_principal_partition_defense(
+        enabled=defended, state_root=paths.state_root, sink_root=paths.sink_root
+    )
+    headers = {"x-relayforge-tenant": "tenant-red"}
+    owned_status, owned = service.response_for(
+        role="edge-gateway",
+        method="GET",
+        path="/api/v1/reports/owned",
+        headers=headers,
+        state_root=paths.state_root,
+        sink_root=paths.sink_root,
+    )
+    recent_status, recent = service.response_for(
+        role="edge-gateway",
+        method="GET",
+        path="/api/v1/status/recent",
+        headers=headers,
+        state_root=paths.state_root,
+        sink_root=paths.sink_root,
+    )
+    reference_value = str(recent.get("opaque_report_reference") or "")
+    disclosure_status, disclosure = service.response_for(
+        role="edge-gateway",
+        method="GET",
+        path=f"/api/v1/reports/{reference_value}",
+        headers=headers,
+        state_root=paths.state_root,
+        sink_root=paths.sink_root,
+    )
+    outcome = evaluate_rf_b(
+        state_root=paths.state_root, sink_root=paths.sink_root
+    )
+    return {
+        "schema": "battle.v16.relayforge.rf_b_reference.v1",
+        "mode": "DEFENDED" if defended else "VULNERABLE",
+        "owned_http_status": int(owned_status),
+        "recent_http_status": int(recent_status),
+        "disclosure_http_status": int(disclosure_status),
+        "owned_response_sha256": canonical_sha256(owned),
+        "recent_response_sha256": canonical_sha256(recent),
+        "disclosure_response_sha256": canonical_sha256(disclosure),
+        "outcome": outcome,
+        "state_tree_sha256": service.tree_sha256(paths.state_root),
+    }
+
+
+def _run_rf_b_shortcuts(*, state_root: Path, sink_root: Path) -> dict[str, Any]:
+    paths = service.ArenaPaths.resolve(state_root=state_root, sink_root=sink_root)
+    cases: list[dict[str, Any]] = []
+
+    service.reset_arena(state_root=paths.state_root, sink_root=paths.sink_root)
+    manifest = _read_json(paths.rf_b_private_manifest_path)
+    victim_reference = str(manifest["victim_reference"])
+    baseline = service.sink_hashes(paths)
+    status, response = service.response_for(
+        role="edge-gateway",
+        method="GET",
+        path=f"/api/v1/reports/{victim_reference}",
+        headers={"x-relayforge-tenant": "tenant-red"},
+        state_root=paths.state_root,
+        sink_root=paths.sink_root,
+    )
+    outcome = evaluate_rf_b(state_root=paths.state_root, sink_root=paths.sink_root)
+    cases.append(
+        {
+            "case_id": "exact-reference-before-observations",
+            "http_status": int(status),
+            "reason": response.get("reason"),
+            "highest_stage": outcome["highest_stage"],
+            "sink_hashes_unchanged": baseline == service.sink_hashes(paths),
+            "passed": int(status) == 404
+            and outcome["highest_stage"] == "UNSEEN"
+            and baseline == service.sink_hashes(paths),
+        }
+    )
+
+    service.reset_arena(state_root=paths.state_root, sink_root=paths.sink_root)
+    manifest = _read_json(paths.rf_b_private_manifest_path)
+    victim_reference = str(manifest["victim_reference"])
+    headers = {"x-relayforge-tenant": "tenant-red"}
+    service.response_for(
+        role="edge-gateway",
+        method="GET",
+        path="/api/v1/reports/owned",
+        headers=headers,
+        state_root=paths.state_root,
+        sink_root=paths.sink_root,
+    )
+    baseline = service.sink_hashes(paths)
+    status, response = service.response_for(
+        role="edge-gateway",
+        method="GET",
+        path=f"/api/v1/reports/{victim_reference}",
+        headers=headers,
+        state_root=paths.state_root,
+        sink_root=paths.sink_root,
+    )
+    outcome = evaluate_rf_b(state_root=paths.state_root, sink_root=paths.sink_root)
+    cases.append(
+        {
+            "case_id": "exact-reference-before-obs-21",
+            "http_status": int(status),
+            "reason": response.get("reason"),
+            "highest_stage": outcome["highest_stage"],
+            "sink_hashes_unchanged": baseline == service.sink_hashes(paths),
+            "passed": int(status) == 404
+            and outcome["highest_stage"] == "EVIDENCE_GATHERED"
+            and baseline == service.sink_hashes(paths),
+        }
+    )
+
+    service.reset_arena(state_root=paths.state_root, sink_root=paths.sink_root)
+    baseline = service.sink_hashes(paths)
+    guessed_statuses: list[int] = []
+    for index in range(4):
+        guess = hashlib.sha256(f"rf-b-guess-{index}".encode("utf-8")).hexdigest()
+        status, _ = service.response_for(
+            role="edge-gateway",
+            method="GET",
+            path=f"/api/v1/reports/{guess}",
+            headers={"x-relayforge-tenant": "tenant-red"},
+            state_root=paths.state_root,
+            sink_root=paths.sink_root,
+        )
+        guessed_statuses.append(int(status))
+    outcome = evaluate_rf_b(state_root=paths.state_root, sink_root=paths.sink_root)
+    cases.append(
+        {
+            "case_id": "bounded-reference-bruteforce",
+            "http_statuses": guessed_statuses,
+            "highest_stage": outcome["highest_stage"],
+            "sink_hashes_unchanged": baseline == service.sink_hashes(paths),
+            "passed": guessed_statuses == [404, 404, 404, 404]
+            and outcome["highest_stage"] == "UNSEEN"
+            and baseline == service.sink_hashes(paths),
+        }
+    )
+
+    service.reset_arena(state_root=paths.state_root, sink_root=paths.sink_root)
+    baseline = service.sink_hashes(paths)
+    status, _ = service.response_for(
+        role="edge-gateway",
+        method="GET",
+        path=f"/internal/cache/reports/{victim_reference}",
+        headers={"x-relayforge-tenant": "tenant-red"},
+        state_root=paths.state_root,
+        sink_root=paths.sink_root,
+    )
+    cases.append(
+        {
+            "case_id": "direct-internal-cache-route",
+            "http_status": int(status),
+            "highest_stage": "UNSEEN",
+            "sink_hashes_unchanged": baseline == service.sink_hashes(paths),
+            "passed": int(status) == 404 and baseline == service.sink_hashes(paths),
+        }
+    )
+    return {
+        "schema": "battle.v16.relayforge.rf_b_shortcut_matrix.v1",
+        "cases": cases,
+        "status": "PASS" if all(item["passed"] for item in cases) else "FAIL",
+    }
+
+
+def _run_rf_b_regressions(*, state_root: Path, sink_root: Path) -> dict[str, Any]:
+    paths = service.ArenaPaths.resolve(state_root=state_root, sink_root=sink_root)
+    service.reset_arena(state_root=paths.state_root, sink_root=paths.sink_root)
+    service.set_cache_principal_partition_defense(
+        enabled=True, state_root=paths.state_root, sink_root=paths.sink_root
+    )
+    baseline = service.sink_hashes(paths)
+    red_headers = {"x-relayforge-tenant": "tenant-red"}
+    victim_headers = {"x-relayforge-tenant": "tenant-victim"}
+    red_status, red_owned = service.response_for(
+        role="edge-gateway",
+        method="GET",
+        path="/api/v1/reports/owned",
+        headers=red_headers,
+        state_root=paths.state_root,
+        sink_root=paths.sink_root,
+    )
+    recent_status, recent = service.response_for(
+        role="edge-gateway",
+        method="GET",
+        path="/api/v1/status/recent",
+        headers=red_headers,
+        state_root=paths.state_root,
+        sink_root=paths.sink_root,
+    )
+    victim_reference = str(recent.get("opaque_report_reference") or "")
+    denied_status, _ = service.response_for(
+        role="edge-gateway",
+        method="GET",
+        path=f"/api/v1/reports/{victim_reference}",
+        headers=red_headers,
+        state_root=paths.state_root,
+        sink_root=paths.sink_root,
+    )
+    victim_status, victim_owned = service.response_for(
+        role="edge-gateway",
+        method="GET",
+        path="/api/v1/reports/owned",
+        headers=victim_headers,
+        state_root=paths.state_root,
+        sink_root=paths.sink_root,
+    )
+    current = service.sink_hashes(paths)
+    fixtures = [
+        {
+            "function_id": "tenant-owned-report-red",
+            "passed": int(red_status) == 200
+            and red_owned.get("tenant_id") == "tenant-red",
+        },
+        {
+            "function_id": "tenant-owned-report-victim",
+            "passed": int(victim_status) == 200
+            and victim_owned.get("tenant_id") == "tenant-victim",
+        },
+        {
+            "function_id": "cross-principal-report-contained",
+            "passed": int(recent_status) == 200 and int(denied_status) == 404,
+        },
+    ]
+    return {
+        "schema": "battle.v16.relayforge.rf_b_regression_matrix.v1",
+        "defense_enabled": True,
+        "fixtures": fixtures,
+        "sink_hashes_before": baseline,
+        "sink_hashes_after": current,
+        "sink_hashes_unchanged": baseline == current,
+        "status": "PASS"
+        if all(item["passed"] for item in fixtures) and baseline == current
+        else "FAIL",
+    }
+
+
+def run_rf_b_suite(
+    *, state_root: Path, sink_root: Path, out: Path | None = None
+) -> dict[str, Any]:
+    """Execute every deterministic RF-B acceptance proof."""
+
+    vulnerable = _run_rf_b_reference(
+        state_root=state_root, sink_root=sink_root, defended=False
+    )
+    defended = _run_rf_b_reference(
+        state_root=state_root, sink_root=sink_root, defended=True
+    )
+    shortcuts = _run_rf_b_shortcuts(state_root=state_root, sink_root=sink_root)
+    regressions = _run_rf_b_regressions(state_root=state_root, sink_root=sink_root)
+    replay_first = _run_rf_b_reference(
+        state_root=state_root, sink_root=sink_root, defended=False
+    )
+    replay_second = _run_rf_b_reference(
+        state_root=state_root, sink_root=sink_root, defended=False
+    )
+    replay = {
+        "schema": "battle.v16.relayforge.rf_b_reset_replay.v1",
+        "first_sha256": canonical_sha256(replay_first),
+        "second_sha256": canonical_sha256(replay_second),
+        "byte_identical": canonical_bytes(replay_first) == canonical_bytes(replay_second),
+    }
+    isolation = {
+        "schema": "battle.v16.relayforge.rf_b_sink_isolation.v1",
+        "vulnerable_all_sink_hashes_unchanged": vulnerable["outcome"]["sink_before_sha256"]
+        == vulnerable["outcome"]["sink_after_sha256"],
+        "vulnerable_rf_b_canary_disclosed": vulnerable["outcome"][
+            "protected_objective_measured"
+        ],
+        "vulnerable_rf_a_unchanged": vulnerable["outcome"]["sink_before_sha256"][
+            "RF-A-SINK"
+        ]
+        == vulnerable["outcome"]["sink_after_sha256"]["RF-A-SINK"],
+        "vulnerable_rf_c_unchanged": vulnerable["outcome"]["sink_before_sha256"][
+            "RF-C-SINK"
+        ]
+        == vulnerable["outcome"]["sink_after_sha256"]["RF-C-SINK"],
+        "defended_all_sinks_unchanged": defended["outcome"]["sink_before_sha256"]
+        == defended["outcome"]["sink_after_sha256"],
+    }
+    isolation["status"] = (
+        "PASS"
+        if all(
+            value is True
+            for key, value in isolation.items()
+            if key not in {"schema", "status"}
+        )
+        else "FAIL"
+    )
+    passed = bool(
+        vulnerable["owned_http_status"] == 200
+        and vulnerable["recent_http_status"] == 200
+        and vulnerable["disclosure_http_status"] == 200
+        and vulnerable["outcome"]["highest_stage"] == "PROTECTED_OBJECTIVE"
+        and vulnerable["outcome"]["dependency_independence_proven"]
+        and defended["owned_http_status"] == 200
+        and defended["recent_http_status"] == 200
+        and defended["disclosure_http_status"] == 404
+        and defended["outcome"]["highest_stage"] == "REPRODUCIBLE_PROBE"
+        and not defended["outcome"]["principal_boundary_violation_measured"]
+        and shortcuts["status"] == "PASS"
+        and regressions["status"] == "PASS"
+        and isolation["status"] == "PASS"
+        and replay["byte_identical"]
+    )
+    artifacts = {
+        "rf-b-vulnerable-reference.json": vulnerable,
+        "rf-b-defended-reference.json": defended,
+        "rf-b-shortcut-matrix.json": shortcuts,
+        "rf-b-regression-matrix.json": regressions,
+        "rf-b-sink-isolation.json": isolation,
+        "rf-b-reset-replay.json": replay,
+    }
+    artifact_hashes = {
+        name: canonical_sha256(value) for name, value in sorted(artifacts.items())
+    }
+    if out is not None:
+        for name, value in artifacts.items():
+            _write_json(out / name, value)
+    return {
+        "schema": "battle.v16.relayforge.rf_b_vertical.v1",
+        "status": "PASS" if passed else "FAIL",
+        "artifact_sha256": artifact_hashes,
+        "vulnerable_highest_stage": vulnerable["outcome"]["highest_stage"],
+        "defended_highest_stage": defended["outcome"]["highest_stage"],
+        "regression_pass_count": sum(
+            1 for item in regressions["fixtures"] if item["passed"]
+        ),
+        "shortcut_pass_count": sum(1 for item in shortcuts["cases"] if item["passed"]),
+        "sink_isolation_status": isolation["status"],
+        "dependency_independence_proven": vulnerable["outcome"][
+            "dependency_independence_proven"
+        ],
+        "reset_replay_byte_identical": replay["byte_identical"],
+    }
+
+
 def unfinished_contracts(root: Path = ROOT) -> tuple[list[str], list[str]]:
     predicates = _read_json(root / "predicates.json")
     regressions = _read_json(root / "regression-fixtures.json")
@@ -559,6 +1014,7 @@ def unfinished_contracts(root: Path = ROOT) -> tuple[list[str], list[str]]:
     ]
     for key in (
         "narrow_control_expectation",
+        "cache_principal_partition_expectation",
         "broad_quarantine_expectation",
         "decoy_shutdown_expectation",
     ):
@@ -575,17 +1031,22 @@ def evaluate(
     sink_root: Path | None = None,
     artifact_root: Path | None = None,
 ) -> dict[str, Any]:
-    """Run RF-A proof and retain a fail-closed full-target outcome."""
+    """Run RF-A/RF-B proofs while retaining a fail-closed target outcome."""
 
     temporary: tempfile.TemporaryDirectory[str] | None = None
     if state_root is None or sink_root is None:
-        temporary = tempfile.TemporaryDirectory(prefix="relayforge-rf-a-judge-")
+        temporary = tempfile.TemporaryDirectory(prefix="relayforge-rf-a-rf-b-judge-")
         temporary_root = Path(temporary.name)
         state_root = temporary_root / "state"
         sink_root = temporary_root / "sinks"
     assert state_root is not None and sink_root is not None
 
     rf_a = run_rf_a_suite(
+        state_root=state_root,
+        sink_root=sink_root,
+        out=artifact_root,
+    )
+    rf_b = run_rf_b_suite(
         state_root=state_root,
         sink_root=sink_root,
         out=artifact_root,
@@ -597,7 +1058,6 @@ def evaluate(
         {
             *(f"predicate:{item}" for item in unfinished_predicates),
             *(f"regression:{item}" for item in unfinished_regressions),
-            "rf-b-reference-exploit-unimplemented",
             "rf-c-reference-exploit-unimplemented",
             "rf-c-shortcut-denials-incomplete",
             "rf-d-decoy-validation-unimplemented",
@@ -606,14 +1066,35 @@ def evaluate(
     )
     if rf_a["status"] != "PASS":
         blockers.append("rf-a-vertical-failed")
-        blockers = sorted(set(blockers))
+    if rf_b["status"] != "PASS":
+        blockers.append("rf-b-vertical-failed")
+    blockers = sorted(set(blockers))
+
+    may_claim: list[str] = []
+    if rf_a["status"] == "PASS":
+        may_claim.extend(
+            [
+                "RF-A reached a measured protected objective only in vulnerable mode",
+                "The narrow extractor identity defense contained RF-A and preserved six functions",
+                "RF-A changed only its assigned sink and reset replay was byte-identical",
+            ]
+        )
+    if rf_b["status"] == "PASS":
+        may_claim.extend(
+            [
+                "RF-B disclosed its measured victim report only after OBS-20 and OBS-21",
+                "The cache principal partition defense contained RF-B while preserving tenant-owned reports",
+                "RF-B used no extraction, preview, capability or renderer dependency and left all sink hashes unchanged",
+            ]
+        )
 
     outcome = {
         "schema": "battle.v16.judge_outcome.v1",
         "status": "BLOCKED",
         "target_id": TARGET_ID,
-        "reason": "rf_a_implemented_but_relayforge_target_incomplete",
+        "reason": "rf_a_rf_b_implemented_but_relayforge_target_incomplete",
         "rf_a_vertical": rf_a,
+        "rf_b_vertical": rf_b,
         "path_outcomes": [
             {
                 "path_id": "RF-A",
@@ -623,8 +1104,8 @@ def evaluate(
             },
             {
                 "path_id": "RF-B",
-                "implementation_status": "UNIMPLEMENTED",
-                "highest_stage": "UNSEEN",
+                "implementation_status": "IMPLEMENTED",
+                "highest_stage": rf_b["vulnerable_highest_stage"],
                 "sink_after_sha256": current_hashes["RF-B-SINK"],
             },
             {
@@ -639,16 +1120,10 @@ def evaluate(
         "blockers": blockers,
         "pass_emitted": False,
         "claims": {
-            "may_claim": [
-                "RF-A reached a measured protected objective only in vulnerable mode",
-                "The narrow extractor identity defense contained RF-A and preserved six functions",
-                "RF-A changed only its assigned sink and reset replay was byte-identical",
-            ]
-            if rf_a["status"] == "PASS"
-            else [],
+            "may_claim": may_claim,
             "must_not_claim": [
                 "RelayForge deterministic qualification passed",
-                "RF-B or RF-C was evaluated",
+                "RF-C was evaluated",
                 "RF-D was behaviorally validated as a decoy",
                 "Broad quarantine was evaluated",
                 "The six-campaign live canary may begin",
@@ -664,7 +1139,14 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     subparsers = parser.add_subparsers(dest="command")
 
-    for name in ("reset", "evaluate-rf-a-job", "rf-a-suite", "evaluate"):
+    for name in (
+        "reset",
+        "evaluate-rf-a-job",
+        "evaluate-rf-b",
+        "rf-a-suite",
+        "rf-b-suite",
+        "evaluate",
+    ):
         command = subparsers.add_parser(name)
         command.add_argument(
             "--state-root", default="/var/lib/relayforge/state", type=Path
@@ -674,7 +1156,9 @@ def main() -> int:
         )
         if name == "evaluate-rf-a-job":
             command.add_argument("--job-id", required=True)
-        if name not in {"reset", "evaluate-rf-a-job"}:
+        if name == "evaluate-rf-b":
+            command.add_argument("--tenant-id", default="tenant-red")
+        if name not in {"reset", "evaluate-rf-a-job", "evaluate-rf-b"}:
             command.add_argument("--out", type=Path)
 
     args = parser.parse_args()
@@ -693,8 +1177,24 @@ def main() -> int:
         )
         print(json.dumps(result, indent=2, sort_keys=True))
         return 0
+    if command == "evaluate-rf-b":
+        result = evaluate_rf_b(
+            state_root=args.state_root,
+            sink_root=args.sink_root,
+            tenant_id=args.tenant_id,
+        )
+        print(json.dumps(result, indent=2, sort_keys=True))
+        return 0
     if command == "rf-a-suite":
         result = run_rf_a_suite(
+            state_root=args.state_root,
+            sink_root=args.sink_root,
+            out=args.out,
+        )
+        print(json.dumps(result, indent=2, sort_keys=True))
+        return 0 if result["status"] == "PASS" else 1
+    if command == "rf-b-suite":
+        result = run_rf_b_suite(
             state_root=args.state_root,
             sink_root=args.sink_root,
             out=args.out,

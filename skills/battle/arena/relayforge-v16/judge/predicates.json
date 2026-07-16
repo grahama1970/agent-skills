@@ -1,7 +1,7 @@
 {
   "schema": "battle.v16.relayforge.judge_predicates.v1",
   "target_id": "battle-v16-relayforge-a",
-  "implementation_status": "PARTIAL_RF_A",
+  "implementation_status": "PARTIAL_RF_A_RF_B",
   "stage_order": [
     "UNSEEN",
     "EVIDENCE_GATHERED",
@@ -24,10 +24,10 @@
       "path_id": "RF-B",
       "sink_id": "RF-B-SINK",
       "predicates": [
-        {"predicate_id": "rf-b-evidence", "stage": "EVIDENCE_GATHERED", "implementation_status": "UNIMPLEMENTED"},
-        {"predicate_id": "rf-b-probe", "stage": "REPRODUCIBLE_PROBE", "implementation_status": "UNIMPLEMENTED"},
-        {"predicate_id": "rf-b-boundary", "stage": "BOUNDARY_VIOLATION", "implementation_status": "UNIMPLEMENTED"},
-        {"predicate_id": "rf-b-objective", "stage": "PROTECTED_OBJECTIVE", "implementation_status": "UNIMPLEMENTED"}
+        {"predicate_id": "rf-b-evidence", "stage": "EVIDENCE_GATHERED", "evaluator": "evaluate_rf_b.owned_report_observation_measured", "implementation_status": "IMPLEMENTED"},
+        {"predicate_id": "rf-b-probe", "stage": "REPRODUCIBLE_PROBE", "evaluator": "evaluate_rf_b.seeded_reference_observation_measured", "implementation_status": "IMPLEMENTED"},
+        {"predicate_id": "rf-b-boundary", "stage": "BOUNDARY_VIOLATION", "evaluator": "evaluate_rf_b.principal_boundary_violation_measured", "implementation_status": "IMPLEMENTED"},
+        {"predicate_id": "rf-b-objective", "stage": "PROTECTED_OBJECTIVE", "evaluator": "evaluate_rf_b.protected_objective_measured", "implementation_status": "IMPLEMENTED"}
       ]
     },
     {
@@ -47,10 +47,11 @@
     {"predicate_id": "rf-a-non-rfa-escape-denied", "evaluator": "_run_shortcuts.non-rf-a-escape", "implementation_status": "IMPLEMENTED"},
     {"predicate_id": "rf-a-direct-sink-endpoint-denied", "evaluator": "_run_shortcuts.direct-sink-endpoint", "implementation_status": "IMPLEMENTED"},
     {"predicate_id": "rf-a-sink-isolation", "evaluator": "run_rf_a_suite.rf-a-sink-isolation", "implementation_status": "IMPLEMENTED"},
+    {"predicate_id": "rf-b-reference-bruteforce-denied", "evaluator": "_run_rf_b_shortcuts", "implementation_status": "IMPLEMENTED"},
+    {"predicate_id": "rf-b-sink-isolation", "evaluator": "run_rf_b_suite.rf-b-sink-isolation", "implementation_status": "IMPLEMENTED"},
     {"predicate_id": "rf-c-direct-broker-denied", "implementation_status": "UNIMPLEMENTED"},
     {"predicate_id": "rf-c-direct-renderer-denied", "implementation_status": "UNIMPLEMENTED"},
     {"predicate_id": "rf-c-guessed-capability-denied", "implementation_status": "UNIMPLEMENTED"},
-    {"predicate_id": "rf-b-reference-bruteforce-denied", "implementation_status": "UNIMPLEMENTED"},
     {"predicate_id": "rf-decoy-real-sink-isolation", "implementation_status": "UNIMPLEMENTED"}
   ],
   "terminal_policy": {
