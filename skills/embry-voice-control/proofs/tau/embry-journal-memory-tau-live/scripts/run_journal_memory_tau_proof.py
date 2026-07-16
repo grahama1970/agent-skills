@@ -23,6 +23,8 @@ CLONE_SOURCE_MODES = {
     "qualified_horus_clone",
     "qualified_horus_audio",
 }
+RETRYABLE_MEMORY_ANSWER_STATUS_CODES = {500, 502, 503, 504}
+MEMORY_ANSWER_RETRY_DELAY_SECONDS = 0.25
 
 
 def canonical(value: Any) -> bytes:
@@ -647,6 +649,7 @@ def main() -> int:
             authorization = None
             if args.answer_retry_authorization:
                 authorization = read_json(args.answer_retry_authorization.resolve())
+                prior_result = authorization.get("prior_result")
                 required = {
                     "schema": "embry.audio_e2e.memory_answer_retry_authorization.v1",
                     "status": "PASS",
@@ -655,13 +658,22 @@ def main() -> int:
                     "session_id": source["session_id"],
                     "turn_id": source["turn_id"],
                     "authorized_execution_index": 2,
-                    "prior_result": "transport_timeout_response_unknown",
-                    "provider_execution_may_have_continued": True,
                     "idempotent_recovery_available": False,
                     "explicit_second_provider_execution_authorized": True,
                     "suite_ready": False,
                     "release_readiness_authority": False,
                 }
+                if prior_result == "transport_timeout_response_unknown":
+                    required["provider_execution_may_have_continued"] = True
+                elif prior_result == "http_5xx_response_known_provider_failed":
+                    required["provider_execution_may_have_continued"] = False
+                    status_code = authorization.get("http_status_code")
+                    if status_code not in RETRYABLE_MEMORY_ANSWER_STATUS_CODES:
+                        raise ValueError(
+                            "answer_retry_authorization_invalid:http_status_code"
+                        )
+                else:
+                    raise ValueError("answer_retry_authorization_invalid:prior_result")
                 for key, expected in required.items():
                     if authorization.get(key) != expected:
                         raise ValueError(f"answer_retry_authorization_invalid:{key}")
@@ -684,49 +696,128 @@ def main() -> int:
                     first_path = out / "memory-answer-attempt-001.json"
                     write_json(first_path, first_attempt)
                     attempts = [first_path]
+                elif prior_result == "http_5xx_response_known_provider_failed":
+                    prior_path = attempts[-1]
+                    prior_attempt = read_json(prior_path)
+                    if (
+                        prior_attempt.get("status") != "STARTED"
+                        or prior_attempt.get("execution_index") != 1
+                        or prior_attempt.get("request") != answer_request
+                        or prior_attempt.get("source_event_id") != source["event_id"]
+                    ):
+                        raise ValueError("answer_retry_prior_attempt_invalid")
+                    prior_attempt.update({
+                        "status": "HTTP_5XX_RESPONSE_KNOWN_PROVIDER_FAILED",
+                        "http_status_code": authorization["http_status_code"],
+                        "response_known": True,
+                        "response_body_capture_status": "unavailable_pre_patch",
+                        "provider_execution_may_have_continued": False,
+                        "inferred_from_campaign_failure": True,
+                        "retry_authorization": file_locator(
+                            args.answer_retry_authorization.resolve()
+                        ),
+                        "completed_at": authorization["created_at"],
+                    })
+                    try:
+                        prior_started_at = datetime.fromisoformat(
+                            prior_attempt["started_at"]
+                        )
+                        prior_completed_at = datetime.fromisoformat(
+                            authorization["source_failure"]["created_at"]
+                        )
+                        prior_attempt["elapsed_seconds"] = round(
+                            max(
+                                0.0,
+                                (prior_completed_at - prior_started_at).total_seconds(),
+                            ),
+                            3,
+                        )
+                    except (KeyError, TypeError, ValueError):
+                        prior_attempt["elapsed_seconds"] = None
+                    write_json(prior_path, prior_attempt)
             if answer_response is None:
                 if attempts and authorization is None:
                     raise RuntimeError("memory_answer_prior_timeout_response_unknown")
-                if len(attempts) >= 2:
-                    raise RuntimeError("memory_answer_retry_budget_exhausted")
-                execution_index = len(attempts) + 1
-                attempt_path = out / f"memory-answer-attempt-{execution_index:03d}.json"
-                attempt = {
-                    "schema": "embry.memory.answer_transport_attempt.v1",
-                    "status": "STARTED",
-                    "execution_index": execution_index,
-                    "request": answer_request,
-                    "request_sha256": event_hash(answer_request),
-                    "source_event_id": source["event_id"],
-                    "read_timeout_seconds": args.memory_read_timeout_seconds,
-                    "retried_provider_call": execution_index > 1,
-                    "idempotent_recovery": False,
-                    "suite_ready": False,
-                    "started_at": datetime.now(timezone.utc).isoformat(),
-                }
-                write_json(attempt_path, attempt)
-                started = time.monotonic()
-                try:
-                    answer_response = post(memory, "/answer", answer_request)
-                except httpx.ReadTimeout as exc:
+                while answer_response is None:
+                    if len(attempts) >= 2:
+                        raise RuntimeError("memory_answer_retry_budget_exhausted")
+                    execution_index = len(attempts) + 1
+                    attempt_path = out / f"memory-answer-attempt-{execution_index:03d}.json"
+                    attempt = {
+                        "schema": "embry.memory.answer_transport_attempt.v1",
+                        "status": "STARTED",
+                        "execution_index": execution_index,
+                        "request": answer_request,
+                        "request_sha256": event_hash(answer_request),
+                        "source_event_id": source["event_id"],
+                        "read_timeout_seconds": args.memory_read_timeout_seconds,
+                        "retried_provider_call": execution_index > 1,
+                        "idempotent_recovery": False,
+                        "suite_ready": False,
+                        "started_at": datetime.now(timezone.utc).isoformat(),
+                    }
+                    write_json(attempt_path, attempt)
+                    started = time.monotonic()
+                    try:
+                        answer_response = post(memory, "/answer", answer_request)
+                    except httpx.ReadTimeout as exc:
+                        attempt.update({
+                            "status": "TRANSPORT_TIMEOUT_RESPONSE_UNKNOWN",
+                            "elapsed_seconds": round(time.monotonic() - started, 3),
+                            "provider_execution_may_have_continued": True,
+                            "completed_at": datetime.now(timezone.utc).isoformat(),
+                        })
+                        write_json(attempt_path, attempt)
+                        raise RuntimeError(
+                            "memory_answer_transport_timeout_response_unknown"
+                        ) from exc
+                    except httpx.HTTPStatusError as exc:
+                        status_code = exc.response.status_code
+                        response_body = exc.response.text[:4096]
+                        attempt.update({
+                            "status": "HTTP_ERROR_RESPONSE_KNOWN",
+                            "http_status_code": status_code,
+                            "response_body": response_body,
+                            "response_body_sha256": "sha256:" + hashlib.sha256(
+                                exc.response.content
+                            ).hexdigest(),
+                            "response_body_truncated": len(exc.response.text) > 4096,
+                            "elapsed_seconds": round(time.monotonic() - started, 3),
+                            "provider_execution_may_have_continued": False,
+                            "completed_at": datetime.now(timezone.utc).isoformat(),
+                        })
+                        if status_code in RETRYABLE_MEMORY_ANSWER_STATUS_CODES:
+                            attempt["status"] = (
+                                "HTTP_5XX_RESPONSE_KNOWN_PROVIDER_FAILED"
+                            )
+                        write_json(attempt_path, attempt)
+                        attempts.append(attempt_path)
+                        if (
+                            status_code in RETRYABLE_MEMORY_ANSWER_STATUS_CODES
+                            and len(attempts) < 2
+                        ):
+                            time.sleep(MEMORY_ANSWER_RETRY_DELAY_SECONDS)
+                            continue
+                        raise RuntimeError(
+                            f"memory_answer_http_error_response_known:{status_code}"
+                        ) from exc
                     attempt.update({
-                        "status": "TRANSPORT_TIMEOUT_RESPONSE_UNKNOWN",
+                        "status": "COMPLETED",
                         "elapsed_seconds": round(time.monotonic() - started, 3),
-                        "provider_execution_may_have_continued": True,
+                        "response_sha256": event_hash(answer_response),
                         "completed_at": datetime.now(timezone.utc).isoformat(),
                     })
                     write_json(attempt_path, attempt)
-                    raise RuntimeError(
-                        "memory_answer_transport_timeout_response_unknown"
-                    ) from exc
-                attempt.update({
-                    "status": "COMPLETED",
-                    "elapsed_seconds": round(time.monotonic() - started, 3),
-                    "response_sha256": event_hash(answer_response),
-                    "completed_at": datetime.now(timezone.utc).isoformat(),
-                })
-                write_json(attempt_path, attempt)
-                attempts.append(attempt_path)
+                    attempts.append(attempt_path)
+            attempt_statuses = [read_json(path).get("status") for path in attempts]
+            prior_timeout_response_unknown = any(
+                status == "TRANSPORT_TIMEOUT_RESPONSE_UNKNOWN"
+                for status in attempt_statuses[:-1]
+            )
+            prior_http_response_failure_known = any(
+                status == "HTTP_5XX_RESPONSE_KNOWN_PROVIDER_FAILED"
+                for status in attempt_statuses[:-1]
+            )
             answer_call = {
                 "schema": "embry.memory.answer_call_receipt.v1",
                 "request": answer_request,
@@ -746,14 +837,23 @@ def main() -> int:
                 },
                 "transport": {
                     "recovery_mode": (
-                        "explicit_second_provider_execution"
-                        if len(attempts) > 1
-                        else "first_execution"
+                        "retry_after_known_http_5xx"
+                        if prior_http_response_failure_known
+                        else (
+                            "explicit_second_provider_execution"
+                            if prior_timeout_response_unknown
+                            else "first_execution"
+                        )
                     ),
                     "idempotent_recovery_available": False,
                     "retried_provider_call": len(attempts) > 1,
                     "provider_execution_count": len(attempts),
-                    "prior_transport_timeout_response_unknown": len(attempts) > 1,
+                    "prior_transport_timeout_response_unknown": (
+                        prior_timeout_response_unknown
+                    ),
+                    "prior_http_response_failure_known": (
+                        prior_http_response_failure_known
+                    ),
                     "attempt_receipts": [file_locator(path) for path in attempts],
                     "suite_ready": False,
                 },

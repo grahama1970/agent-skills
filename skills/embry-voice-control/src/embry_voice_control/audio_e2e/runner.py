@@ -12,6 +12,7 @@ from datetime import datetime, timedelta, timezone
 import hashlib
 import json
 from pathlib import Path
+import re
 import subprocess
 import sys
 from typing import Any
@@ -1139,18 +1140,41 @@ def _memory_tau_stage(
         and "ReadTimeout" in str(failure.get("error") or "")
         for failure in turn_state.get("failure_history", [])
     )
-    if prior_timeout and not answer_path.exists():
+    prior_http_5xx = next(
+        (
+            (failure, int(match.group(1)))
+            for failure in reversed(turn_state.get("failure_history", []))
+            if failure.get("stage") == "memory_tau"
+            if (
+                match := re.search(
+                    r"Server error '(500|502|503|504) Internal Server Error'",
+                    str(failure.get("error") or ""),
+                )
+            )
+        ),
+        None,
+    )
+    if (prior_timeout or prior_http_5xx) and not answer_path.exists():
         if not live_config.get("allow_memory_answer_retry_after_timeout"):
             raise RuntimeError("memory_answer_retry_requires_explicit_authorization")
-        failure = next(
-            failure
-            for failure in reversed(turn_state["failure_history"])
-            if failure.get("stage") == "memory_tau"
-            and "ReadTimeout" in str(failure.get("error") or "")
-        )
-        retry_not_before = datetime.fromisoformat(failure["created_at"]) + timedelta(
-            seconds=60
-        )
+        if prior_timeout:
+            failure = next(
+                failure
+                for failure in reversed(turn_state["failure_history"])
+                if failure.get("stage") == "memory_tau"
+                and "ReadTimeout" in str(failure.get("error") or "")
+            )
+            prior_result = "transport_timeout_response_unknown"
+            provider_execution_may_have_continued = True
+            retry_not_before = datetime.fromisoformat(
+                failure["created_at"]
+            ) + timedelta(seconds=60)
+            http_status_code = None
+        else:
+            failure, http_status_code = prior_http_5xx
+            prior_result = "http_5xx_response_known_provider_failed"
+            provider_execution_may_have_continued = False
+            retry_not_before = datetime.fromisoformat(failure["created_at"])
         if datetime.now(timezone.utc) < retry_not_before:
             raise RuntimeError(
                 "memory_answer_retry_not_before:" + retry_not_before.isoformat()
@@ -1172,8 +1196,10 @@ def _memory_tau_stage(
             "source_event_id": source["event_id"],
             "source_event_sequence": source["sequence"],
             "session_id": source["session_id"],
-            "prior_result": "transport_timeout_response_unknown",
-            "provider_execution_may_have_continued": True,
+            "prior_result": prior_result,
+            "provider_execution_may_have_continued": (
+                provider_execution_may_have_continued
+            ),
             "idempotent_recovery_available": False,
             "explicit_second_provider_execution_authorized": True,
             "authorized_execution_index": 2,
@@ -1183,6 +1209,8 @@ def _memory_tau_stage(
             "release_readiness_authority": False,
             "created_at": utc_now(),
         }
+        if http_status_code is not None:
+            authorization["http_status_code"] = http_status_code
         authorization_path = output / "memory-answer-retry-authorization.json"
         write_json(authorization_path, authorization)
         command.extend(["--answer-retry-authorization", str(authorization_path)])
