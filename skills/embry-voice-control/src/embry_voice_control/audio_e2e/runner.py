@@ -1820,9 +1820,17 @@ def run_campaign(
             raise ValueError("source_playback_target_required")
 
         total_turn_count = len(listener_pending)
+        campaign_turn_count = sum(
+            len(case["turn_script"])
+            for case in manifest["cases"]
+        )
         listener_config = {**live_config, "journal_db": str(journal_db)}
         try:
-            with ManagedListenerProcess(listener_config, total_turn_count) as listener:
+            with ManagedListenerProcess(
+                listener_config,
+                target_turn_count=campaign_turn_count,
+                turns_this_run=total_turn_count,
+            ) as listener:
                 executor = CaseExecutor(listener_config, listener)
                 for case, turn, turn_state in listener_pending:
                     case_state = state["cases"][case["case_id"]]

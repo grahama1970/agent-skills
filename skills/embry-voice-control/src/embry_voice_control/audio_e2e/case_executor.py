@@ -10,8 +10,8 @@ import subprocess
 import sys
 import time
 from typing import Any
-import re
 
+from .asr_comparison import compare_asr_text
 from .event_waiter import (
     journal_sequence_boundary,
     wait_for_managed_turn,
@@ -23,32 +23,24 @@ def _canonical(value: Any) -> bytes:
     return json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
 
 
-def _tokens(value: str) -> list[str]:
-    return re.sub(r"[^a-z0-9]+", " ", value.lower()).split()
-
-
 def _request_wer(expected_spoken_text: str, actual_request_text: str) -> float:
-    expected = _tokens(expected_spoken_text)
-    if expected[:2] == ["hey", "embry"]:
-        expected = expected[2:]
-    actual = _tokens(actual_request_text)
-    previous = list(range(len(actual) + 1))
-    for expected_token in expected:
-        current = [previous[0] + 1]
-        for index, actual_token in enumerate(actual, 1):
-            current.append(min(
-                current[-1] + 1,
-                previous[index] + 1,
-                previous[index - 1] + (expected_token != actual_token),
-            ))
-        previous = current
-    return previous[-1] / max(1, len(expected))
+    return float(compare_asr_text(
+        expected_spoken_text,
+        actual_request_text,
+    )["comparison_wer"])
 
 
 class ManagedListenerProcess(AbstractContextManager["ManagedListenerProcess"]):
-    def __init__(self, config: dict[str, Any], turn_count: int) -> None:
+    def __init__(
+        self,
+        config: dict[str, Any],
+        *,
+        target_turn_count: int,
+        turns_this_run: int,
+    ) -> None:
         self.config = config
-        self.turn_count = turn_count
+        self.target_turn_count = target_turn_count
+        self.turns_this_run = turns_this_run
         self.process: subprocess.Popen[str] | None = None
         self.socket = Path(config["managed_listener_socket"])
 
@@ -63,9 +55,9 @@ class ManagedListenerProcess(AbstractContextManager["ManagedListenerProcess"]):
             "--source-node", self.config["listener_source_node"],
             "--event-service-url", self.config["journal_url"].rstrip("/") + "/v1/listener/events",
             "--managed-socket", str(self.socket),
-            "--target-cycles", str(self.turn_count),
-            "--cycles-this-run", str(self.turn_count),
-            "--max-attempts-this-run", str(max(8, self.turn_count * 4)),
+            "--target-cycles", str(self.target_turn_count),
+            "--cycles-this-run", str(self.turns_this_run),
+            "--max-attempts-this-run", str(max(8, self.turns_this_run * 4)),
             "--restart-capture-after-cycle", "0",
             "--model", "small.en",
             "--realtime-model", "tiny.en",
@@ -330,7 +322,8 @@ class CaseExecutor:
         final = chain["listener.final_transcript"]
         request_text = final["payload"].get("request_text") or ""
         expected_spoken = turn.get("spoken_text", turn["utterance"])
-        request_wer = _request_wer(expected_spoken, request_text)
+        asr_comparison = compare_asr_text(expected_spoken, request_text)
+        request_wer = float(asr_comparison["comparison_wer"])
         if request_wer > self.config["max_request_wer"]:
             raise RuntimeError(
                 f"managed_listener_request_wer_exceeded:{request_wer:.4f}:"
@@ -365,6 +358,9 @@ class CaseExecutor:
             "final_sequence": final["sequence"],
             "request_text": request_text,
             "request_wer": round(request_wer, 4),
+            "request_raw_wer": round(float(asr_comparison["raw_wer"]), 4),
+            "request_comparison_wer": round(request_wer, 4),
+            "asr_comparison": asr_comparison,
             "audio_path": final["payload"].get("audio_path"),
             "audio_sha256": final["payload"].get("audio_sha256"),
             "completed_event_id": chain["listener.turn_completed"]["event_id"],

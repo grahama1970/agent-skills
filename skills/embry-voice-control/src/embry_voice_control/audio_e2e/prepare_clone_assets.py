@@ -23,6 +23,12 @@ import wave
 
 import httpx
 
+from .asr_comparison import (
+    ASR_COMPARISON_POLICY,
+    ASR_COMPARISON_POLICY_SHA256,
+    compare_asr_text,
+    normalized_tokens,
+)
 from .case_compiler import (
     SPOKEN_TEXT_NORMALIZATION,
     SPOKEN_TEXT_NORMALIZATION_SHA256,
@@ -193,27 +199,12 @@ def build_generation_policy(
 
 
 
-def normalized_tokens(value: str) -> list[str]:
-    return re.sub(r"[^a-z0-9]+", " ", str(value).lower()).split()
-
-
 def request_wer(expected_text: str, actual_text: str) -> float:
-    expected = normalized_tokens(expected_text)
-    actual = normalized_tokens(actual_text)
-    previous = list(range(len(actual) + 1))
-    for expected_token in expected:
-        current = [previous[0] + 1]
-        for index, actual_token in enumerate(actual, 1):
-            current.append(
-                min(
-                    current[-1] + 1,
-                    previous[index] + 1,
-                    previous[index - 1]
-                    + int(expected_token != actual_token),
-                )
-            )
-        previous = current
-    return previous[-1] / max(1, len(expected))
+    return float(compare_asr_text(
+        expected_text,
+        actual_text,
+        strip_expected_wake=False,
+    )["comparison_wer"])
 
 
 def _utterance_boundary_policy(
@@ -1171,7 +1162,27 @@ def _validate_asr_receipt(
     expected_normalized = " ".join(normalized_tokens(transcript))
     if value.get("normalized_transcript") != expected_normalized:
         raise AssetConflictError("candidate_asr_normalized_transcript_mismatch")
-    computed_wer = request_wer(prompt, transcript)
+    comparison = compare_asr_text(
+        prompt,
+        transcript,
+        strip_expected_wake=False,
+    )
+    stored_comparison = value.get("asr_comparison")
+    computed_wer = float(
+        comparison["comparison_wer"]
+        if stored_comparison is not None
+        else comparison["raw_wer"]
+    )
+    if stored_comparison is not None:
+        if stored_comparison != comparison:
+            raise AssetConflictError("candidate_asr_comparison_mismatch")
+        if abs(float(value.get("raw_wer", -1.0)) - comparison["raw_wer"]) > 1e-12:
+            raise AssetConflictError("candidate_asr_raw_wer_mismatch")
+        if abs(
+            float(value.get("comparison_wer", -1.0))
+            - comparison["comparison_wer"]
+        ) > 1e-12:
+            raise AssetConflictError("candidate_asr_comparison_wer_mismatch")
     try:
         stored_wer = float(value["wer"])
     except (KeyError, TypeError, ValueError) as exc:
@@ -1264,6 +1275,12 @@ def validate_candidate(
                 f"candidate_receipt_conflict:{paths['receipt']}:{key}:"
                 f"{receipt.get(key)!r}:{expected!r}"
             )
+    comparison_policy = receipt.get("asr_comparison_policy")
+    if comparison_policy is not None and comparison_policy != {
+        **ASR_COMPARISON_POLICY,
+        "sha256": ASR_COMPARISON_POLICY_SHA256,
+    }:
+        raise AssetConflictError("candidate_asr_comparison_policy_mismatch")
     checkpoint = receipt.get("checkpoint") or {}
     if checkpoint.get("id") != checkpoint_id:
         raise AssetConflictError("candidate_checkpoint_id_mismatch")
@@ -1343,6 +1360,9 @@ def validate_candidate(
         "status": status,
         "candidate_index": candidate_index,
         "wer": computed_wer,
+        "raw_wer": float(asr.get("raw_wer", computed_wer)),
+        "comparison_wer": float(asr.get("comparison_wer", computed_wer)),
+        "asr_comparison": asr.get("asr_comparison"),
         "longest_internal_silence_seconds": longest_internal_silence,
         "utterance_boundary": boundary,
         "rejection_reasons": reasons,
@@ -1878,9 +1898,15 @@ def complete_candidate(
         asr["normalized_expected_text"] = " ".join(
             normalized_tokens(prompt)
         )
-        asr["wer"] = request_wer(
-            prompt, str(asr.get("transcript") or "")
+        comparison = compare_asr_text(
+            prompt,
+            str(asr.get("transcript") or ""),
+            strip_expected_wake=False,
         )
+        asr["raw_wer"] = comparison["raw_wer"]
+        asr["comparison_wer"] = comparison["comparison_wer"]
+        asr["wer"] = comparison["comparison_wer"]
+        asr["asr_comparison"] = comparison
         boundary = analyze_internal_silence(
             paths["audio"],
             qualification_policy["utterance_boundary"],
@@ -1930,6 +1956,10 @@ def complete_candidate(
         },
         "generation_policy": generation_policy,
         "qualification_policy": qualification_policy,
+        "asr_comparison_policy": {
+            **ASR_COMPARISON_POLICY,
+            "sha256": ASR_COMPARISON_POLICY_SHA256,
+        },
         "request": request,
         "request_id": request_id,
         "audio": locator(paths["audio"]),
@@ -1950,6 +1980,9 @@ def complete_candidate(
             normalized_tokens(str(asr.get("transcript") or ""))
         ),
         "wer": computed_wer,
+        "raw_wer": float(asr.get("raw_wer", computed_wer)),
+        "comparison_wer": float(asr.get("comparison_wer", computed_wer)),
+        "asr_comparison": asr.get("asr_comparison"),
         "max_request_wer": qualification_policy["max_request_wer"],
         "utterance_boundary": boundary,
         "longest_internal_silence_seconds": boundary[
@@ -2023,6 +2056,10 @@ def _accepted_binding(
         },
         "generation_policy": generation_policy,
         "qualification_policy": qualification_policy,
+        "asr_comparison_policy": {
+            **ASR_COMPARISON_POLICY,
+            "sha256": ASR_COMPARISON_POLICY_SHA256,
+        },
         "request": request_for_prompt(prompt, generation_policy),
         "request_id": accepted["request_id"],
         "audio": accepted["audio"],
@@ -2038,6 +2075,9 @@ def _accepted_binding(
             "transcript": accepted["transcript"],
             "normalized_transcript": accepted["normalized_transcript"],
             "wer": accepted["wer"],
+            "raw_wer": accepted["raw_wer"],
+            "comparison_wer": accepted["comparison_wer"],
+            "asr_comparison": accepted["asr_comparison"],
             "max_request_wer": qualification_policy["max_request_wer"],
             "asr_model": qualification_policy["model"],
             "asr_device": qualification_policy["device"],
@@ -2112,6 +2152,12 @@ def validate_reusable_asset(
                 f"accepted_binding_conflict:{binding_path}:{key}:"
                 f"{binding.get(key)!r}:{expected!r}"
             )
+    comparison_policy = binding.get("asr_comparison_policy")
+    if comparison_policy is not None and comparison_policy != {
+        **ASR_COMPARISON_POLICY,
+        "sha256": ASR_COMPARISON_POLICY_SHA256,
+    }:
+        raise AssetConflictError("accepted_binding_asr_comparison_policy_mismatch")
     checkpoint = binding.get("checkpoint") or {}
     if checkpoint.get("id") != checkpoint_id:
         raise AssetConflictError("accepted_binding_checkpoint_id_mismatch")
@@ -2733,6 +2779,10 @@ def prepare_clone_assets(
         },
         "generation_policy": generation_policy,
         "qualification_policy": qualification_policy,
+        "asr_comparison_policy": {
+            **ASR_COMPARISON_POLICY,
+            "sha256": ASR_COMPARISON_POLICY_SHA256,
+        },
         "fresh_physical_human_speech": False,
         "speaker_identity_proven": False,
         "allow_personal_memory": False,
