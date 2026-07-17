@@ -1,0 +1,48 @@
+{
+  "schema": "persona_dream.post_kling_continuity_review_receipt.v2",
+  "status": "FAIL_POST_KLING_IDENTITY_CONTINUITY",
+  "run_id": "pipeline-complete",
+  "revision_id": "rev_upstream_bf3b05d47fb8",
+  "request_body_sha256": "sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f",
+  "source_video": "provider_return.mp4",
+  "source_video_sha256": "sha256:08ee232878508fda8797fd697f6ef80d40b3cf7722f43914040759dfd6c7bb50",
+  "supersedes": {
+    "path": "post_kling_continuity_review_receipt.v1.json",
+    "sha256": "sha256:fbb4d69a2521308380f4589da55b9077f3c796ec59afe1fa5d1d65183f359fe3",
+    "reason": "Human review disproved the prior aggregate identity PASS with visible Embry identity drift."
+  },
+  "identity_reference_qualification": {
+    "path": "../../../../phase_07_storyboard_live_tau/receipts/identity_reference_qualification.v1.json",
+    "sha256": "sha256:271cdb907f1258299a87846b245ba474c675b6d7b477be58e377a09183895175",
+    "status": "FAIL_IDENTITY_REFERENCE_INCONSISTENT"
+  },
+  "identity_temporal_continuity": {
+    "path": "identity_temporal_continuity_review.v1.json",
+    "sha256": "sha256:64ce5fa31d9f7dc53d8890156deca1a31172e631b24e632e423dba096a4e5f74",
+    "status": "FAIL_IDENTITY_TEMPORAL_CONTINUITY"
+  },
+  "subgates": {
+    "embry_reference_identity": "FAIL",
+    "embry_visual_identity_within_return": "FAIL",
+    "kai_visual_identity_within_return": "NOT_REVIEWED_AFTER_TERMINAL_FAILURE",
+    "sb_004_embry_safe_channel_commit": "PASS",
+    "sb_004_visible_lava_reef_boundary": "PASS",
+    "technical_readability": "PASS"
+  },
+  "blocking_findings": [
+    "EMBRY_REFERENCE_SET_NOT_SINGLE_IDENTITY",
+    "EMBRY_IDENTITY_DRIFT_00_03"
+  ],
+  "mocked": false,
+  "live": true,
+  "claims": {
+    "proves": [
+      "the current returned MP4 is not acceptable because Embry identity continuity fails"
+    ],
+    "does_not_prove": [
+      "deterministic face-embedding similarity",
+      "that a replacement provider request would preserve identity"
+    ]
+  },
+  "observed_at": "2026-07-17T16:45:00Z"
+}

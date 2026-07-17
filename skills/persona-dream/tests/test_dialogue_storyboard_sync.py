@@ -1,0 +1,76 @@
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+import pytest
+
+SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
+sys.path.insert(0, str(SCRIPTS))
+
+from write_voice_handoff_plan import resolve_storyboard_timing  # noqa: E402
+from dialogue_alignment_gate import assess_alignment  # noqa: E402
+
+
+SHOT_BIBLE = {
+    "shots": [
+        {"panel_id": "sb_003", "time_range_s": {"start_s": 5.0, "end_s": 7.5}},
+    ]
+}
+
+
+def test_spoken_line_onset_is_bound_to_storyboard_beat() -> None:
+    timing = resolve_storyboard_timing(
+        {"storyboard_beat_id": "sb_003", "start_s": 5.0, "end_s": 8.04},
+        SHOT_BIBLE,
+    )
+    assert timing == {
+        "storyboard_beat_id": "sb_003",
+        "beat_start_s": 5.0,
+        "beat_end_s": 7.5,
+        "line_start_s": 5.0,
+        "line_end_s": 8.04,
+    }
+
+
+@pytest.mark.parametrize(
+    "entry",
+    [
+        {"start_s": 5.0, "end_s": 8.04},
+        {"storyboard_beat_id": "sb_999", "start_s": 5.0, "end_s": 8.04},
+        {"storyboard_beat_id": "sb_003", "start_s": 0.0, "end_s": 3.04},
+    ],
+)
+def test_missing_or_out_of_beat_dialogue_fails_closed(entry: dict[str, object]) -> None:
+    with pytest.raises(SystemExit):
+        resolve_storyboard_timing(entry, SHOT_BIBLE)
+
+
+def test_forced_alignment_accepts_exact_words_inside_tolerance() -> None:
+    result = assess_alignment(
+        canonical_text="If we paddle now, we're cutting across the lineup.",
+        whisper_payload={
+            "text": " If we paddle now, we're cutting across the lineup.",
+            "segments": [{"words": [{"start": 0.0, "end": 0.24}, {"start": 2.38, "end": 2.7}]}],
+        },
+        timeline_offset_seconds=5.0,
+        expected_start_seconds=5.0,
+        expected_end_seconds=8.08,
+    )
+    assert result["status"] == "PASS_FORCED_DIALOGUE_ALIGNMENT"
+    assert result["absolute_spoken_interval_seconds"] == {"start": 5.0, "end": 7.7}
+
+
+def test_forced_alignment_rejects_wrong_word() -> None:
+    result = assess_alignment(
+        canonical_text="If we paddle now, we're cutting across the lineup.",
+        whisper_payload={
+            "text": "If we paddle now, we're cutting across the line of.",
+            "segments": [{"words": [{"start": 0.0, "end": 2.84}]}],
+        },
+        timeline_offset_seconds=5.0,
+        expected_start_seconds=5.0,
+        expected_end_seconds=8.08,
+    )
+    assert result["status"] == "FAIL_FORCED_DIALOGUE_ALIGNMENT"
+    assert result["checks"]["canonical_text_exact_after_normalization"] is False

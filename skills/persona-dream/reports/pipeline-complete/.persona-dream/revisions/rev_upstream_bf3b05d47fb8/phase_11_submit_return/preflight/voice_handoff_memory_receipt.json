@@ -15,7 +15,7 @@
   ],
   "live": true,
   "mocked": false,
-  "observed_at": "2026-07-17T15:37:45.360258+00:00",
+  "observed_at": "2026-07-17T18:02:55.853631+00:00",
   "record_count_before": 42,
   "revision_id": "rev_upstream_bf3b05d47fb8",
   "run_id": "pipeline-complete",
@@ -29,5 +29,5 @@
     37,
     38
   ],
-  "voice_handoff_plan_sha256": "sha256:600c6188d0a98b5c881aab08ceb96ee16e16982f65459c5c0a0816136fe52cd8"
+  "voice_handoff_plan_sha256": "sha256:ff12ba0f65e93e4deb16e208f60a130d71135d23f5ef3fa290f8f9dad4330f42"
 }

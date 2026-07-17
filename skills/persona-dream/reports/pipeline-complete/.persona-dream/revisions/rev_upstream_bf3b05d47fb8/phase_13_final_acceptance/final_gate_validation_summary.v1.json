@@ -1,18 +1,49 @@
 {
-  "blockers": [],
+  "blockers": [
+    {
+      "blocker": "Replace the inconsistent Embry reference set, rerun Tau frame qualification, and submit a newly authorized provider request.",
+      "status": "FAIL_IDENTITY_TEMPORAL_CONTINUITY",
+      "step_name": "Post-Kling Continuity Review",
+      "step_no": 36
+    },
+    {
+      "blocker": "Run the hash-bound video and dialogue WAV through an authorized lip-sync lane, then visually review SB_003 mouth motion.",
+      "status": "FAIL_VISIBLE_SPEAKER_NOT_LIPSYNCED",
+      "step_name": "Final Assembly / Movie Lane",
+      "step_no": 38
+    },
+    {
+      "blocker": "Regenerate only after identity, delivery, and sync gates pass.",
+      "status": "BLOCKED_STALE_FINAL_REPORT",
+      "step_name": "Report Generation",
+      "step_no": 39
+    },
+    {
+      "blocker": "Resolve steps 36-38 before rerunning final validation.",
+      "status": "BLOCKED_NONPASSING_GATES",
+      "step_name": "Gate Validation Loop",
+      "step_no": 40
+    },
+    {
+      "blocker": "Pass all nonpassing late-stage gates and exactly reread their replacement Memory states.",
+      "status": "BLOCKED_FINAL_ACCEPTANCE",
+      "step_name": "Final Acceptance Boundary",
+      "step_no": 42
+    }
+  ],
   "counts": {
-    "blocked": 0,
-    "failed": 0,
-    "passing_or_not_required": 42,
+    "blocked": 3,
+    "failed": 2,
+    "passing_or_not_required": 37,
     "total": 42
   },
   "live": true,
   "live_evidence": {
-    "continuity_pass": true,
+    "continuity_pass": false,
     "ffprobe_pass": true,
     "frame_contact_sheet_pass": true,
     "poll_count": 54,
-    "post_mux_audio_pass": true,
+    "post_mux_audio_pass": false,
     "provider_calls": 1,
     "returned_mp4": true
   },
@@ -22,11 +53,11 @@
     "expected_count": 42
   },
   "mocked": false,
-  "next_critical_action": null,
-  "observed_at": "2026-07-17T15:49:03.394501+00:00",
+  "next_critical_action": "replace the inconsistent Embry reference set and rerun Tau identity qualification before any new provider authorization",
+  "observed_at": "2026-07-17T18:02:53.357426+00:00",
   "request_body_sha256": "sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f",
   "revision_id": "rev_upstream_bf3b05d47fb8",
   "run_id": "pipeline-complete",
   "schema": "persona_dream.final_gate_validation_summary.v1",
-  "status": "PASS_FINAL_GATE_VALIDATION"
+  "status": "BLOCKED_FINAL_GATE_VALIDATION"
 }

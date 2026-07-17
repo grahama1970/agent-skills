@@ -62,18 +62,22 @@ def canonical_record(
         / request_sha.removeprefix("sha256:")
     )
     if step_no == 37:
+        return_root = revision_root / request_dir
+        delivery_receipt = read_json(return_root / "voice_delivery_review_receipt.json") or {}
         rendered = all(
             isinstance(line, Mapping) and line.get("render_status") == "PASS_EXACT_LINE_RENDER"
             for line in plan.get("lines", [])
         )
-        status = "PASS_EXACT_LINE_RENDER_READY_FOR_MUX" if rendered else "BLOCKED_AWAITING_EXACT_LINE_RENDER"
-        blocker = None if rendered else "render the exact Kai transcript line with the bound voice reference, then produce render and evaluation receipts"
-        proves = "the post-mux voice handoff and exact live Kai line render are hash-bound to the active revision, transcript, voice reference, ambient bed, and provider request" if rendered else "the post-mux voice handoff is hash-bound to the active revision, exact transcript, voice reference, ambient bed, and provider request"
+        delivery_passed = delivery_receipt.get("status") == "PASS_VOICE_DELIVERY_CONTRACT"
+        status = "PASS_EXACT_LINE_RENDER_READY_FOR_MUX" if rendered and delivery_passed else "FAIL_VOICE_DELIVERY_CONTRACT" if rendered else "BLOCKED_AWAITING_EXACT_LINE_RENDER"
+        blocker = None if rendered and delivery_passed else "render the exact Kai transcript line with a supported restrained conversational cue and persist a passing delivery receipt"
+        proves = "the post-mux voice handoff, exact live Kai line render, and delivery contract are hash-bound" if rendered and delivery_passed else "the current live Kai render does not satisfy the required delivery contract"
         does_not_prove = "the rendered line has been heard and accepted by a human"
         disposition = "current_pass" if rendered else "current_pending"
-        outputs = [PLAN_RELATIVE]
-        receipt_paths = [PLAN_RELATIVE]
-        artifact_hashes = {PLAN_RELATIVE: plan_sha}
+        delivery_relative = request_dir / "voice_delivery_review_receipt.json"
+        outputs = [PLAN_RELATIVE, str(delivery_relative)] if delivery_receipt else [PLAN_RELATIVE]
+        receipt_paths = outputs
+        artifact_hashes = {path: sha256_file(revision_root / path) for path in outputs}
     else:
         return_root = revision_root / request_dir
         relative_outputs = [
@@ -82,11 +86,17 @@ def canonical_record(
             request_dir / "ffmpeg_mux_receipt.json",
             request_dir / "muxed_provider_return_ffprobe_receipt.json",
             request_dir / "audible_output_review_receipt.json",
+            request_dir / "dialogue_sync_receipt.json",
+            request_dir / "dialogue_forced_alignment_receipt.v1.json",
+            request_dir / "visible_speaker_lipsync_review.v1.json",
         ]
         existing_outputs = [path for path in relative_outputs if (revision_root / path).is_file()]
         mux_receipt = read_json(return_root / "ffmpeg_mux_receipt.json") or {}
         audible_receipt = read_json(return_root / "audible_output_review_receipt.json") or {}
         ffprobe_receipt = read_json(return_root / "muxed_provider_return_ffprobe_receipt.json") or {}
+        sync_receipt = read_json(return_root / "dialogue_sync_receipt.json") or {}
+        alignment_receipt = read_json(return_root / "dialogue_forced_alignment_receipt.v1.json") or {}
+        lipsync_receipt = read_json(return_root / "visible_speaker_lipsync_review.v1.json") or {}
         muxed_video = return_root / "muxed_provider_return.mp4"
         muxed_sha = sha256_file(muxed_video) if muxed_video.is_file() else None
         muxed = (
@@ -94,14 +104,36 @@ def canonical_record(
             and mux_receipt.get("status") == "PASS_POST_MUX"
             and audible_receipt.get("status") == "PASS_DETERMINISTIC_NON_SILENCE"
             and ffprobe_receipt.get("status") == "PASS_MUXED_RETURN_HAS_AUDIO_STREAM"
+            and sync_receipt.get("status") == "PASS_DIALOGUE_STORYBOARD_SYNC"
+            and all((sync_receipt.get("checks") or {}).values())
+            and alignment_receipt.get("status") == "PASS_FORCED_DIALOGUE_ALIGNMENT"
+            and all((alignment_receipt.get("checks") or {}).values())
+            and lipsync_receipt.get("status") in {
+                "PASS_VISIBLE_SPEAKER_LIPSYNC",
+                "PASS_LIPSYNC_NOT_REQUIRED_SPEAKER_NOT_VISIBLE",
+            }
             and mux_receipt.get("output_sha256") == muxed_sha
             and audible_receipt.get("output_sha256") == muxed_sha
             and ffprobe_receipt.get("output_sha256") == muxed_sha
+            and sync_receipt.get("audio_mix_sha256") == mux_receipt.get("audio_mix_sha256")
         )
-        status = "PASS_POST_MUX_AUDIO_ASSEMBLY" if muxed else "BLOCKED_AWAITING_ACTIVE_PROVIDER_RETURN_AND_AUDIO_MUX"
-        blocker = None if muxed else "mix the exact line and ambient bed, FFmpeg mux them, and prove an audible audio stream with matching hashes"
+        if muxed:
+            status = "PASS_POST_MUX_AUDIO_ASSEMBLY"
+            blocker = None
+        elif alignment_receipt.get("status") == "FAIL_FORCED_DIALOGUE_ALIGNMENT":
+            status = "FAIL_FORCED_DIALOGUE_ALIGNMENT"
+            blocker = "rerender the canonical line until local Whisper recognizes the exact text inside the declared transcript interval"
+        elif lipsync_receipt.get("status") == "FAIL_VISIBLE_SPEAKER_NOT_LIPSYNCED":
+            status = "FAIL_VISIBLE_SPEAKER_NOT_LIPSYNCED"
+            blocker = "run a lip-sync pass on the hash-bound MP4 and WAV, then visually review Kai's mouth motion during SB_003"
+        elif sync_receipt.get("status") == "FAIL_DIALOGUE_STORYBOARD_SYNC":
+            status = "FAIL_DIALOGUE_STORYBOARD_SYNC"
+            blocker = "align the rendered line onset to its bound storyboard beat"
+        else:
+            status = "BLOCKED_AWAITING_ACTIVE_PROVIDER_RETURN_AND_AUDIO_MUX"
+            blocker = "produce all hash-bound mux, forced-alignment, and visible-speaker lip-sync review receipts"
         proves = "the exact Kai line and bound ambient bed were mixed into the active provider return, which contains a hash-bound non-silent audio stream" if muxed else "the final assembly requirements for the active post-mux strategy are durably recorded"
-        does_not_prove = "subjective voice quality, lip synchronization, or human listening acceptance"
+        does_not_prove = "subjective voice quality or human listening acceptance"
         disposition = "current_pass" if muxed else "current_pending"
         outputs = [str(path) for path in existing_outputs] or [PLAN_RELATIVE]
         receipt_paths = [str(path) for path in existing_outputs if path.suffix == ".json"] or [PLAN_RELATIVE]

@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os'
 import { resolve } from 'node:path'
 import test from 'node:test'
 import { DreamPathPolicy } from '../src/paths'
-import { buildRunDetail } from '../src/runs'
+import { buildRunDetail, collectRuns } from '../src/runs'
 import { enqueueRepairCandidate, FileTauRepairQueue, promoteRevision, writeRepairAttempt } from '../src/repair'
 import { buildProviderReturnStage } from '../src/stages'
 
@@ -37,6 +37,24 @@ test('provider return projects active post-mux handoff before provider media exi
   rmSync(root, { recursive: true, force: true })
 })
 
+test('run list derives provider call and authorization flags from receipts instead of constants', async () => {
+  const root = mkdtempSync(resolve(tmpdir(), 'persona-dream-run-list-'))
+  const runRoot = resolve(root, 'live-run')
+  mkdirSync(runRoot)
+  writeFileSync(resolve(runRoot, 'status.json'), JSON.stringify({
+    status: 'BLOCKED_FINAL_ACCEPTANCE',
+    policy: { kling_call_performed: true, paid_call_authorized: true },
+  }))
+  writeFileSync(resolve(runRoot, 'validation.json'), JSON.stringify({
+    status: 'BLOCKED_FINAL_ACCEPTANCE', actual_provider_call_attempts: 1,
+  }))
+
+  const runs = await collectRuns([root], [])
+  assert.equal(runs[0]?.klingCalled, true)
+  assert.equal(runs[0]?.paidCallAuthorized, true)
+  rmSync(root, { recursive: true, force: true })
+})
+
 test('provider return prefers completed post-mux video and clears stale pre-submit gaps', () => {
   const root = mkdtempSync(resolve(tmpdir(), 'persona-dream-post-mux-return-'))
   const revisionId = 'rev_audio'
@@ -56,6 +74,9 @@ test('provider return prefers completed post-mux video and clears stale pre-subm
     ffprobe: { format: { duration: '10.041667' } },
   }))
   writeFileSync(resolve(returnRoot, 'audible_output_review_receipt.json'), JSON.stringify({ status: 'PASS_DETERMINISTIC_NON_SILENCE' }))
+  writeFileSync(resolve(returnRoot, 'dialogue_sync_receipt.json'), JSON.stringify({ status: 'PASS_DIALOGUE_STORYBOARD_SYNC' }))
+  writeFileSync(resolve(returnRoot, 'dialogue_forced_alignment_receipt.v1.json'), JSON.stringify({ status: 'PASS_FORCED_DIALOGUE_ALIGNMENT' }))
+  writeFileSync(resolve(returnRoot, 'voice_delivery_review_receipt.json'), JSON.stringify({ status: 'PASS_VOICE_DELIVERY_CONTRACT' }))
   writeFileSync(resolve(returnRoot, 'phase11_provider_return_envelope.v1.json'), JSON.stringify({ status: 'PASS_PHASE11_PROVIDER_RETURN_RECEIVED' }))
   writeFileSync(resolve(returnRoot, 'phase11_download_ffprobe_receipt.v1.json'), JSON.stringify({ status: 'PASS_PHASE11_PROVIDER_RETURN_DOWNLOADED' }))
   writeFileSync(resolve(preflightRoot, 'voice_handoff_plan.json'), JSON.stringify({
@@ -74,6 +95,56 @@ test('provider return prefers completed post-mux video and clears stale pre-subm
   assert.equal(stage?.artifacts[1]?.path.endsWith('muxed_provider_return.mp4'), true)
   assert.ok(stage?.artifacts.some((artifact) => artifact.path.endsWith('audible_output_review_receipt.json')))
   assert.doesNotMatch(stage?.summary ?? '', /awaits .* approvals/)
+  rmSync(root, { recursive: true, force: true })
+})
+
+test('provider return exposes voiced mux but blocks acceptance when visible speaker is not lip-synced', () => {
+  const root = mkdtempSync(resolve(tmpdir(), 'persona-dream-lipsync-failed-return-'))
+  const revisionId = 'rev_lipsync'
+  const requestKey = 'c'.repeat(64)
+  const returnRoot = resolve(root, '.persona-dream', 'revisions', revisionId, 'phase_11_submit_return', 'provider_return', requestKey)
+  mkdirSync(returnRoot, { recursive: true })
+  writeFileSync(resolve(returnRoot, 'provider_return.mp4'), 'silent-source')
+  writeFileSync(resolve(returnRoot, 'muxed_provider_return.mp4'), 'voiced-final')
+  writeFileSync(resolve(returnRoot, 'ffmpeg_mux_receipt.json'), JSON.stringify({ status: 'PASS_POST_MUX' }))
+  writeFileSync(resolve(returnRoot, 'muxed_provider_return_ffprobe_receipt.json'), JSON.stringify({
+    status: 'PASS_MUXED_RETURN_HAS_AUDIO_STREAM', ffprobe: { format: { duration: '10.041667' } },
+  }))
+  writeFileSync(resolve(returnRoot, 'audible_output_review_receipt.json'), JSON.stringify({ status: 'PASS_DETERMINISTIC_NON_SILENCE' }))
+  writeFileSync(resolve(returnRoot, 'dialogue_sync_receipt.json'), JSON.stringify({ status: 'PASS_DIALOGUE_STORYBOARD_SYNC' }))
+  writeFileSync(resolve(returnRoot, 'dialogue_forced_alignment_receipt.v1.json'), JSON.stringify({ status: 'PASS_FORCED_DIALOGUE_ALIGNMENT' }))
+  writeFileSync(resolve(returnRoot, 'voice_delivery_review_receipt.json'), JSON.stringify({ status: 'PASS_VOICE_DELIVERY_CONTRACT' }))
+  writeFileSync(resolve(returnRoot, 'visible_speaker_lipsync_review.v1.json'), JSON.stringify({ status: 'FAIL_VISIBLE_SPEAKER_NOT_LIPSYNCED' }))
+
+  const stage = buildProviderReturnStage(root, revisionId)
+  assert.equal(stage?.status, 'RETURN_RECEIVED_LIPSYNC_FAILED')
+  assert.match(stage?.summary ?? '', /Post-mux final MP4/)
+  assert.match(stage?.failureOrGap ?? '', /Kai's mouth is visible/)
+  assert.equal(stage?.effectiveState, 'blocked_current')
+  assert.equal(stage?.acceptance.state, 'blocked')
+  assert.ok(stage?.artifacts.some((artifact) => artifact.path.endsWith('visible_speaker_lipsync_review.v1.json')))
+  rmSync(root, { recursive: true, force: true })
+})
+
+test('provider return fails closed when temporal identity continuity fails', () => {
+  const root = mkdtempSync(resolve(tmpdir(), 'persona-dream-identity-failed-return-'))
+  const revisionId = 'rev_identity'
+  const requestKey = 'b'.repeat(64)
+  const revisionRoot = resolve(root, '.persona-dream', 'revisions', revisionId)
+  const returnRoot = resolve(revisionRoot, 'phase_11_submit_return', 'provider_return', requestKey)
+  mkdirSync(returnRoot, { recursive: true })
+  writeFileSync(resolve(returnRoot, 'provider_return.mp4'), 'provider-evidence')
+  writeFileSync(resolve(returnRoot, 'identity_temporal_continuity_review.v1.json'), JSON.stringify({
+    status: 'FAIL_IDENTITY_TEMPORAL_CONTINUITY',
+    blocking_findings: ['EMBRY_IDENTITY_DRIFT_00_03'],
+  }))
+
+  const stage = buildProviderReturnStage(root, revisionId)
+  assert.equal(stage?.status, 'RETURN_RECEIVED_IDENTITY_FAILED')
+  assert.equal(stage?.effectiveState, 'blocked_current')
+  assert.equal(stage?.acceptance.state, 'blocked')
+  assert.match(stage?.failureOrGap ?? '', /EMBRY_IDENTITY_DRIFT_00_03/)
+  assert.ok(stage?.artifacts.some((artifact) => artifact.path.endsWith('provider_return.mp4')))
   rmSync(root, { recursive: true, force: true })
 })
 

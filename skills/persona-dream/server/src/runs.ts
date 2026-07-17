@@ -377,6 +377,8 @@ export async function collectRuns(reportRoots: readonly string[], outputRoots: r
         if (![statusPath, validationPath, manifestPath, resolve(runRoot, 'report.html')].some(existsSync)) continue
         const statusDoc = readJson(statusPath)
         const validationDoc = readJson(validationPath)
+        const statusPolicy = record(statusDoc?.policy)
+        const providerCallAttempts = Number(validationDoc?.actual_provider_call_attempts ?? 0)
         const rawStatus = String(validationDoc?.status ?? statusDoc?.status ?? 'UNKNOWN')
         const stats = await Promise.all([statusPath, validationPath, manifestPath].map((path) => stat(path).catch(() => null)))
         const updatedAt = stats.find(Boolean)?.mtime.toISOString() ?? new Date(0).toISOString()
@@ -391,8 +393,8 @@ export async function collectRuns(reportRoots: readonly string[], outputRoots: r
           statusPath: existsSync(statusPath) ? statusPath : undefined,
           validationPath: existsSync(validationPath) ? validationPath : undefined,
           manifestPath: existsSync(manifestPath) ? manifestPath : undefined,
-          klingCalled: false,
-          paidCallAuthorized: false,
+          klingCalled: providerCallAttempts > 0 || statusPolicy?.kling_call_performed === true,
+          paidCallAuthorized: statusPolicy?.paid_call_authorized === true,
           updatedAt,
         })
       }

@@ -1,0 +1,32 @@
+{
+  "schema": "persona_dream.voice_delivery_review_receipt.v1",
+  "status": "PASS_VOICE_DELIVERY_CONTRACT",
+  "speaker": "Kai",
+  "canonical_spoken_text": "If we paddle now, we're cutting across the lineup.",
+  "synthesis_input_text": "[whispering] If we paddle now, we're cutting across the lineup.",
+  "voice_direction": "quiet, practical restraint; conversational warning",
+  "engine": "chatterbox_turbo",
+  "rendered_wav_path": "/mnt/storage12tb/skills/persona-dream/outputs/dream-voice-auditions/2026-07-17T17-28-07-345Z-kai-ab44cdc76abe.wav",
+  "rendered_wav_sha256": "sha256:c240e201c5177693e049a3a4cfc63e7e969cce562a2081e0725bc66d24be3ee2",
+  "render_receipt_path": "/mnt/storage12tb/skills/persona-dream/outputs/dream-voice-auditions/2026-07-17T17-28-07-345Z-kai-ab44cdc76abe.json",
+  "render_receipt_sha256": "sha256:bd90da276e7c4d933739dc1ed194f85ca301e3f303a653bc253e9b8731e670a1",
+  "paralinguistic_tags_requested": ["[whispering]"],
+  "paralinguistic_tags_applied": ["[whispering]"],
+  "requested_tone": "careful_concerned",
+  "requested_delivery_stage": "slightly_concerned",
+  "resolved_delivery": "slightly_concerned",
+  "checks": {
+    "canonical_spoken_words_preserved": true,
+    "supported_paralinguistic_tag_applied": true,
+    "non_neutral_delivery_stage_applied": true,
+    "live_non_mocked_render": true
+  },
+  "blocking_findings": [],
+  "mocked": false,
+  "live": true,
+  "claims": {
+    "proves": ["the exact live Kai render received the supported quiet conversational delivery controls"],
+    "does_not_prove": ["human listening preference", "lip synchronization"]
+  },
+  "observed_at": "2026-07-17T17:28:07.522Z"
+}

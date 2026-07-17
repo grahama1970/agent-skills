@@ -1,0 +1,73 @@
+{
+  "absolute_spoken_interval_seconds": {
+    "end": 7.7,
+    "start": 5.0
+  },
+  "canonical_text": "If we paddle now, we're cutting across the lineup.",
+  "checks": {
+    "canonical_text_exact_after_normalization": true,
+    "spoken_end_within_tolerance": true,
+    "spoken_onset_within_tolerance": true,
+    "words_detected": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "visible mouth motion matches the measured speech",
+      "subjective voice quality"
+    ],
+    "proves": [
+      "local Whisper recognized the canonical line and measured its spoken interval inside the declared transcript timing tolerance"
+    ]
+  },
+  "expected_spoken_interval_seconds": {
+    "end": 8.08,
+    "start": 5.0
+  },
+  "live": true,
+  "mocked": false,
+  "observed_at": "2026-07-17T17:58:41.753321+00:00",
+  "recognized_text": "If we paddle now, we're cutting across the lineup.",
+  "relative_spoken_interval_seconds": {
+    "end": 2.7,
+    "start": 0.0
+  },
+  "rendered_audio_path": "/mnt/storage12tb/skills/persona-dream/outputs/dream-voice-auditions/2026-07-17T17-28-07-345Z-kai-ab44cdc76abe.wav",
+  "rendered_audio_sha256": "sha256:c240e201c5177693e049a3a4cfc63e7e969cce562a2081e0725bc66d24be3ee2",
+  "request_body_sha256": "sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f",
+  "schema": "persona_dream.dialogue_forced_alignment_receipt.v1",
+  "status": "PASS_FORCED_DIALOGUE_ALIGNMENT",
+  "storyboard_beat_id": "sb_003",
+  "timeline_offset_seconds": 5.0,
+  "whisper": {
+    "command": [
+      "/home/graham/.local/bin/whisper",
+      "/mnt/storage12tb/skills/persona-dream/outputs/dream-voice-auditions/2026-07-17T17-28-07-345Z-kai-ab44cdc76abe.wav",
+      "--model",
+      "large-v3-turbo",
+      "--model_dir",
+      "/home/graham/.cache/whisper",
+      "--device",
+      "cuda",
+      "--language",
+      "en",
+      "--task",
+      "transcribe",
+      "--word_timestamps",
+      "True",
+      "--output_format",
+      "json",
+      "--output_dir",
+      "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/whisper_alignment",
+      "--verbose",
+      "False",
+      "--fp16",
+      "True"
+    ],
+    "executable": "/home/graham/.local/bin/whisper",
+    "model": "large-v3-turbo",
+    "model_sha256": "sha256:aff26ae408abcba5fbf8813c21e62b0941638c5f6eebfb145be0c9839262a19a",
+    "raw_result_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/whisper_alignment/2026-07-17T17-28-07-345Z-kai-ab44cdc76abe.json",
+    "raw_result_sha256": "sha256:da366bb4981525703526520b9bbd3fee7be81f07a8130eacd5bc364ee71741f8",
+    "returncode": 0
+  }
+}

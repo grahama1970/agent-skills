@@ -6,16 +6,19 @@
       "step_id": "phase11_submit_and_return"
     },
     {
-      "status": "PASS_VISUAL_CONTINUITY_REVIEW",
+      "status": "FAIL_IDENTITY_TEMPORAL_CONTINUITY",
       "step_id": "phase12_watch_observation"
     },
     {
-      "status": "NOT_REQUIRED_FOR_IMMUTABLE_VIDEO_GOAL",
+      "status": "BLOCKED_VISIBLE_SPEAKER_NOT_LIPSYNCED",
       "step_id": "phase13_16_cognitive_loop"
     }
   ],
   "exercised": "fresh validator command execution, report/status generation, local panel asset copy, pass-count parity",
-  "first_blocker": null,
+  "first_blocker": {
+    "phase": "phase12_watch_observation",
+    "reason": "EMBRY_IDENTITY_DRIFT_00_03"
+  },
   "live": "yes",
   "mocked": "no",
   "passed_step_count": 15,
@@ -24,12 +27,12 @@
   "phase11_validation_migration_receipt_sha256": "sha256:0be7cfd76fc54e6c21ca8c78cb2dc17c9fd55e394ed5ed56851f7d3c82e7ccfc",
   "report": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/report.html",
   "schema": "persona_dream.complete_pipeline_report_validation.v1",
-  "status": "PASS_IMMUTABLE_VIDEO_GOAL",
+  "status": "BLOCKED_FINAL_ACCEPTANCE",
   "status_json": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/status.json",
   "step_count": 15,
   "storyboard_review_verdict": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_review_verdict.json",
-  "unverified": "human subjective voice quality and lip synchronization",
-  "updated_at": "2026-07-17T15:50:30+00:00",
+  "unverified": "stable Embry identity, acceptable visible-speaker lip synchronization, and human subjective voice quality",
+  "updated_at": "2026-07-17T18:05:00+00:00",
   "upstream_passed_step_count": 12,
   "upstream_required_step_count": 12
 }

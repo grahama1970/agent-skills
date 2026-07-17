@@ -10,9 +10,9 @@
     "-i",
     "/mnt/storage12tb/media/personas/shared/embry_kai/assets/youtube/ocean_raw_surfing_audio_2min.wav",
     "-i",
-    "/mnt/storage12tb/skills/persona-dream/outputs/dream-voice-auditions/2026-07-17T15-16-48-135Z-kai-dd83364bef45.wav",
+    "/mnt/storage12tb/skills/persona-dream/outputs/dream-voice-auditions/2026-07-17T17-28-07-345Z-kai-ab44cdc76abe.wav",
     "-filter_complex",
-    "[0:a]atrim=0:10.041667,asetpts=PTS-STARTPTS,volume=0.18[amb];[1:a]adelay=0|0,volume=1.0[voice];[amb][voice]amix=inputs=2:duration=first:dropout_transition=0,alimiter=limit=0.95[mix]",
+    "[0:a]atrim=0:10.041667,asetpts=PTS-STARTPTS,volume=0.18[amb];[1:a]adelay=5000|5000,volume=1.0[voice];[amb][voice]amix=inputs=2:duration=first:dropout_transition=0,alimiter=limit=0.95[mix]",
     "-map",
     "[mix]",
     "-ar",
@@ -23,9 +23,9 @@
     "pcm_s16le",
     "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/audio_mix.wav"
   ],
-  "dialogue_delay_ms": 0,
-  "dialogue_path": "/mnt/storage12tb/skills/persona-dream/outputs/dream-voice-auditions/2026-07-17T15-16-48-135Z-kai-dd83364bef45.wav",
-  "dialogue_sha256": "sha256:44a49ccad6fc7779ece80e4dde5ec2f650300e359643afb6b116f5071bf7fa68",
+  "dialogue_delay_ms": 5000,
+  "dialogue_path": "/mnt/storage12tb/skills/persona-dream/outputs/dream-voice-auditions/2026-07-17T17-28-07-345Z-kai-ab44cdc76abe.wav",
+  "dialogue_sha256": "sha256:c240e201c5177693e049a3a4cfc63e7e969cce562a2081e0725bc66d24be3ee2",
   "dialogue_text": "If we paddle now, we're cutting across the lineup.",
   "ffprobe": {
     "format": {
@@ -86,9 +86,9 @@
   },
   "live": true,
   "mocked": false,
-  "observed_at": "2026-07-17T15:36:29.031686+00:00",
+  "observed_at": "2026-07-17T17:58:27.811851+00:00",
   "output_path": "audio_mix.wav",
-  "output_sha256": "sha256:a2a88f58345e6fc1abfc7ca02bb6d137e4fe570876980a993c97727c2b21a9ae",
+  "output_sha256": "sha256:33edae9a7569196f996014fc414d7079be36c13667bbaa7f72077d96b9a9bc74",
   "request_body_sha256": "sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f",
   "schema": "persona_dream.audio_mix_receipt.v1",
   "status": "PASS_EXACT_DIALOGUE_AND_AMBIENCE_MIX"

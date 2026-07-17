@@ -538,15 +538,18 @@
       "stdout": "{\n  \"exercised\": \"local visual review receipt fields, reviewed image hash parity, reviewer source, eight-check coverage, blocker list discipline\",\n  \"first_blocker\": null,\n  \"live\": \"no\",\n  \"mocked\": \"no\",\n  \"receipt\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/receipts/visual_review_receipt.json\",\n  \"reviewed_image_path\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run/artifacts/panel_01_scillm_panel.png\",\n  \"run_root\": \"/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run\",\n  \"schema\": \"persona_dream.visual_review_validation.v1\",\n  \"sha256\": \"sha256:2c89628513c4c3c34d2b862673e56c656ce1a40409398fbb13fba6718f53c914\",\n  \"status\": \"PASS_VISUAL_REVIEW\",\n  \"unverified\": \"new live VLM/WebGPT review, actual image semantics, provider readiness, Kling submission\"\n}"
     }
   },
-  "first_blocker": null,
+  "first_blocker": {
+    "phase": "phase12_watch_observation",
+    "reason": "EMBRY_IDENTITY_DRIFT_00_03"
+  },
   "generated_at": "2026-06-30T01:26:11Z",
   "passed_step_count": 12,
   "policy": {
-    "kling_call_performed": false,
-    "kling_live_call_block_reason": "Blocked one-scene review packet only: Panel 01 has provider-accessible media, but paid_call_authorized is false and no live Kling call is authorized.",
-    "kling_packet_status": "BLOCKED",
-    "paid_call_authorized": false,
-    "paid_call_performed": false
+    "kling_call_performed": true,
+    "kling_live_call_block_reason": "A second paid provider call is blocked until identity references and visible-speaker lip-sync strategy are repaired and reauthorized.",
+    "kling_packet_status": "COMPLETED_RETURN_BLOCKED_ACCEPTANCE",
+    "paid_call_authorized": true,
+    "paid_call_performed": true
   },
   "provider_media": {
     "content_length": 1777579,
@@ -559,7 +562,7 @@
   },
   "run_root": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/issue-41-persona-dream-dream-packet-loop-20260629T204320Z/dream-run",
   "schema": "persona_dream.complete_pipeline_report_status.v1",
-  "status": "PASS_PANEL_REVIEWED",
+  "status": "BLOCKED_FINAL_ACCEPTANCE",
   "step_count": 15,
   "steps": [
     {
@@ -776,5 +779,5 @@
       "title": "Backward Serial Loop"
     }
   ],
-  "updated_at": "2026-07-05T20:53:57.784401+00:00"
+  "updated_at": "2026-07-17T18:05:00+00:00"
 }

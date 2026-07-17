@@ -1,5 +1,5 @@
 {
-  "audio_mix_sha256": "sha256:a2a88f58345e6fc1abfc7ca02bb6d137e4fe570876980a993c97727c2b21a9ae",
+  "audio_mix_sha256": "sha256:33edae9a7569196f996014fc414d7079be36c13667bbaa7f72077d96b9a9bc74",
   "command": [
     "ffmpeg",
     "-y",
@@ -25,9 +25,9 @@
   ],
   "live": true,
   "mocked": false,
-  "observed_at": "2026-07-17T15:36:30.132306+00:00",
+  "observed_at": "2026-07-17T17:58:42.970556+00:00",
   "output_path": "muxed_provider_return.mp4",
-  "output_sha256": "sha256:ec9da2af5b73ae4cff5df707341d83e59a90e6c56ef1197505ea68ae247d691a",
+  "output_sha256": "sha256:991c311f365f84832b274aad7b8ff757372914f7c516e595a31b1bd05edf4c59",
   "request_body_sha256": "sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f",
   "schema": "persona_dream.ffmpeg_mux_receipt.v1",
   "source_video_sha256": "sha256:08ee232878508fda8797fd697f6ef80d40b3cf7722f43914040759dfd6c7bb50",

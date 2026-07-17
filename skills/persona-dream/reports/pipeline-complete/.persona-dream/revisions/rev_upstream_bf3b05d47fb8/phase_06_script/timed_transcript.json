@@ -7,10 +7,11 @@
     "voice_direction": "action description"
   },
   {
-    "end_s": 10.0,
+    "end_s": 8.08,
     "speaker": "Kai",
-    "start_s": 0.0,
+    "start_s": 5.0,
+    "storyboard_beat_id": "sb_003",
     "text": "If we paddle now, we're cutting across the lineup.",
-    "voice_direction": "quiet, practical restraint"
+    "voice_direction": "quiet, practical restraint; conversational warning"
   }
 ]

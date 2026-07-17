@@ -87,6 +87,9 @@ type ProviderReturnCandidate = {
   ffprobe: Record<string, unknown> | null
   finalProbe: Record<string, unknown> | null
   review: Record<string, unknown> | null
+  identityReview: Record<string, unknown> | null
+  lipSyncReview: Record<string, unknown> | null
+  reconciliation: Record<string, unknown> | null
   contactSheetPath?: string
   mtimeMs: number
 }
@@ -114,10 +117,17 @@ function collectProviderReturns(runRoot: string): ProviderReturnCandidate[] {
       const muxReceipt = readJson(resolve(returnRoot, 'ffmpeg_mux_receipt.json'))
       const muxProbe = readJson(resolve(returnRoot, 'muxed_provider_return_ffprobe_receipt.json'))
       const audibleReceipt = readJson(resolve(returnRoot, 'audible_output_review_receipt.json'))
+      const syncReceipt = readJson(resolve(returnRoot, 'dialogue_sync_receipt.json'))
+      const deliveryReceipt = readJson(resolve(returnRoot, 'voice_delivery_review_receipt.json'))
+      const alignmentReceipt = readJson(resolve(returnRoot, 'dialogue_forced_alignment_receipt.v1.json'))
+      const lipSyncReview = readJson(resolve(returnRoot, 'visible_speaker_lipsync_review.v1.json'))
       const audioReady = existsSync(muxedPath)
         && muxReceipt?.status === 'PASS_POST_MUX'
         && muxProbe?.status === 'PASS_MUXED_RETURN_HAS_AUDIO_STREAM'
         && audibleReceipt?.status === 'PASS_DETERMINISTIC_NON_SILENCE'
+        && syncReceipt?.status === 'PASS_DIALOGUE_STORYBOARD_SYNC'
+        && deliveryReceipt?.status === 'PASS_VOICE_DELIVERY_CONTRACT'
+        && alignmentReceipt?.status === 'PASS_FORCED_DIALOGUE_ALIGNMENT'
       const mp4Path = audioReady ? muxedPath : sourceMp4Path
       const contactSheetPath = resolve(returnRoot, 'frame_contact_sheet.png')
       candidates.push({
@@ -130,7 +140,14 @@ function collectProviderReturns(runRoot: string): ProviderReturnCandidate[] {
         envelope: readJson(resolve(returnRoot, 'phase11_provider_return_envelope.v1.json')),
         ffprobe: readJson(resolve(returnRoot, 'phase11_download_ffprobe_receipt.v1.json')),
         finalProbe: audioReady ? muxProbe : null,
-        review: readJson(resolve(returnRoot, 'post_kling_continuity_review_receipt.v1.json')),
+        review: readJson(resolve(returnRoot, 'post_kling_continuity_review_receipt.v2.json'))
+          ?? readJson(resolve(returnRoot, 'post_kling_continuity_review_receipt.v1.json')),
+        identityReview: readJson(resolve(returnRoot, 'identity_temporal_continuity_review.v1.json')),
+        lipSyncReview,
+        reconciliation: readJson(resolve(
+          revisionsRoot, revisionId, 'phase_13_final_acceptance',
+          'final_acceptance_reconciliation_receipt.v1.json',
+        )),
         contactSheetPath: existsSync(contactSheetPath) ? contactSheetPath : undefined,
         mtimeMs: statSync(sourceMp4Path).mtimeMs,
       })
@@ -192,6 +209,9 @@ export function buildProviderReturnStage(runRoot: string, activeRevisionId?: str
   const images: DreamPhaseProjection['images'] = []
   let status = 'NOT_EXECUTED'
   let summary = 'No provider return has been received for the active revision.'
+  let identityFailed = false
+  let lipSyncFailed = false
+  let reconciledBlocked = false
   const gaps: string[] = []
 
   if (audioHandoff) {
@@ -222,6 +242,11 @@ export function buildProviderReturnStage(runRoot: string, activeRevisionId?: str
   if (chosen) {
     const superseded = chosen.revisionId !== activeRevisionId
     const reviewStatus = typeof chosen.review?.status === 'string' ? chosen.review.status : ''
+    const identityStatus = typeof chosen.identityReview?.status === 'string' ? chosen.identityReview.status : ''
+    const lipSyncStatus = typeof chosen.lipSyncReview?.status === 'string' ? chosen.lipSyncReview.status : ''
+    identityFailed = identityStatus.includes('FAIL') || identityStatus.includes('BLOCK')
+    lipSyncFailed = lipSyncStatus.includes('FAIL') || lipSyncStatus.includes('BLOCK')
+    reconciledBlocked = chosen.reconciliation?.accepted === false
     const displayProbe = chosen.finalProbe ?? chosen.ffprobe
     const format = (displayProbe?.ffprobe as Record<string, unknown> | undefined)?.format as Record<string, unknown> | undefined
     const duration = typeof format?.duration === 'string' ? `${format.duration}s` : ''
@@ -231,6 +256,10 @@ export function buildProviderReturnStage(runRoot: string, activeRevisionId?: str
       : typeof chosen.ffprobe?.downloaded_sha256 === 'string' ? chosen.ffprobe.downloaded_sha256 : ''
     status = superseded
       ? 'RETURN_RECEIVED_SUPERSEDED_PRIOR_REVISION'
+      : identityFailed
+        ? 'RETURN_RECEIVED_IDENTITY_FAILED'
+      : lipSyncFailed
+        ? 'RETURN_RECEIVED_LIPSYNC_FAILED'
       : reviewStatus.includes('FAIL')
         ? 'RETURN_RECEIVED_CONTINUITY_FAILED'
         : 'RETURN_RECEIVED'
@@ -239,12 +268,18 @@ export function buildProviderReturnStage(runRoot: string, activeRevisionId?: str
       duration && sizeBytes ? `(${duration}, ${sizeBytes.toLocaleString()} bytes${mp4Sha ? `, ${mp4Sha.slice(0, 23)}…` : ''})` : '',
       superseded ? 'This return is bound to a superseded revision and is shown as historical evidence, not as the current deliverable.' : '',
     ].filter(Boolean).join(' ')
-    if (reviewStatus.includes('FAIL')) {
-      const findings = Array.isArray(chosen.review?.blocking_findings) ? chosen.review.blocking_findings : []
+    if (reviewStatus.includes('FAIL') || identityFailed) {
+      const findingSource = identityFailed ? chosen.identityReview : chosen.review
+      const findings = Array.isArray(findingSource?.blocking_findings) ? findingSource.blocking_findings : []
       const codes = findings
-        .map((finding) => (finding && typeof finding === 'object' ? String((finding as Record<string, unknown>).code ?? '') : ''))
+        .map((finding) => typeof finding === 'string'
+          ? finding
+          : finding && typeof finding === 'object' ? String((finding as Record<string, unknown>).code ?? '') : '')
         .filter(Boolean)
       gaps.push(`Post-provider continuity review failed${codes.length ? `: ${codes.join(', ')}` : ''}.`)
+    }
+    if (lipSyncFailed) {
+      gaps.push('Visible-speaker lip-sync review failed: Kai\'s mouth is visible during SB_003, but this MP4 only has post-muxed audio and no lip-sync repair.')
     }
     artifacts.push({ label: relative(runRoot, chosen.mp4Path), path: chosen.mp4Path, kind: 'media', url: assetUrl(chosen.mp4Path) })
     if (chosen.audioReady) {
@@ -253,11 +288,16 @@ export function buildProviderReturnStage(runRoot: string, activeRevisionId?: str
     for (const [name, value] of Object.entries({
       'phase11_provider_return_envelope.v1.json': chosen.envelope,
       'phase11_download_ffprobe_receipt.v1.json': chosen.ffprobe,
-      'post_kling_continuity_review_receipt.v1.json': chosen.review,
+      [chosen.review?.schema === 'persona_dream.post_kling_continuity_review_receipt.v2'
+        ? 'post_kling_continuity_review_receipt.v2.json'
+        : 'post_kling_continuity_review_receipt.v1.json']: chosen.review,
+      'identity_temporal_continuity_review.v1.json': chosen.identityReview,
+      'visible_speaker_lipsync_review.v1.json': chosen.lipSyncReview,
       ...(chosen.audioReady ? {
         'ffmpeg_mux_receipt.json': readJson(resolve(chosen.returnRoot, 'ffmpeg_mux_receipt.json')),
         'muxed_provider_return_ffprobe_receipt.json': readJson(resolve(chosen.returnRoot, 'muxed_provider_return_ffprobe_receipt.json')),
         'audible_output_review_receipt.json': readJson(resolve(chosen.returnRoot, 'audible_output_review_receipt.json')),
+        'dialogue_forced_alignment_receipt.v1.json': readJson(resolve(chosen.returnRoot, 'dialogue_forced_alignment_receipt.v1.json')),
       } : {}),
     })) {
       if (!value) continue
@@ -279,7 +319,7 @@ export function buildProviderReturnStage(runRoot: string, activeRevisionId?: str
     artifacts,
     requiredArtifacts: {},
     images,
-    acceptance: { state: 'not_evaluated' },
+    acceptance: { state: chosen && !identityFailed && !lipSyncFailed && !reconciledBlocked && chosen.audioReady ? 'accepted' : 'blocked' },
     evidence: {
       state: chosen ? 'present' : 'missing',
       required: [],
@@ -296,7 +336,9 @@ export function buildProviderReturnStage(runRoot: string, activeRevisionId?: str
         ? [{ code: 'PROVIDER_RETURN_BOUND_TO_SUPERSEDED_REVISION', observed: chosen.revisionId }]
         : [],
     },
-    effectiveState: chosen && chosen.revisionId === activeRevisionId ? 'accepted_current' : 'accepted_stale',
+    effectiveState: chosen && chosen.revisionId === activeRevisionId
+      ? identityFailed || lipSyncFailed || reconciledBlocked || !chosen.audioReady ? 'blocked_current' : 'accepted_current'
+      : 'accepted_stale',
     repair: { eligible: false, reason: 'provider_return_projection_is_read_only' },
   }
 }
@@ -314,6 +356,13 @@ export function projectStages(
 
   return PHASES.map((phase) => {
     const matched = files.filter((path) => phase.matches.test(relative(runRoot, path)))
+    const providerDistillationSupport = phase.id === '10'
+      ? files.filter((path) => [
+        'phase11_live_request.v1.json',
+        'phase11_provider_return_envelope.v1.json',
+        'shot_bible.json',
+      ].includes(basename(path)))
+      : []
     const missingIds = phase.required.filter((requirement) => !requirementPresent(requirement, matched)).map((requirement) => requirement.artifact_id)
     const malformedIds = matched
       .filter((path) => path.endsWith('.json') && readJson(path) === null)
@@ -333,6 +382,7 @@ export function projectStages(
     const artifacts = [...new Set([
       ...requiredArtifacts,
       ...nonImageArtifacts,
+      ...providerDistillationSupport,
     ])]
       .slice(0, 30)
       .map((path) => ({ label: relative(runRoot, path), path, kind: artifactKind(path), url: `/api/projects/dream/asset?path=${encodeURIComponent(path)}` }))

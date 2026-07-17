@@ -60,9 +60,9 @@
     "inserted": 0,
     "total": 42,
     "updated": 42,
-    "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_persona_dream_pipeline_steps_20260717T154904966284Z_10100_133298841978560.jsonl"
+    "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_persona_dream_pipeline_steps_20260717T180255028759Z_10100_133299022333632.jsonl"
   },
-  "observed_at": "2026-07-17T15:49:05.620727+00:00",
+  "observed_at": "2026-07-17T18:02:55.699843+00:00",
   "qdrant_pointer_count": 42,
   "request_body_sha256": "sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f",
   "revision_id": "rev_upstream_bf3b05d47fb8",
@@ -74,7 +74,7 @@
     "inserted": 0,
     "total": 42,
     "updated": 42,
-    "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_persona_dream_pipeline_steps_20260717T154904185726Z_10100_133298841978560.jsonl"
+    "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_persona_dream_pipeline_steps_20260717T180254229870Z_10100_133299022333632.jsonl"
   },
   "semantic_synced_count": 42,
   "status": "PASS_EXACT_REREAD_42_OF_42",
@@ -84,6 +84,6 @@
     "inserted": 0,
     "total": 42,
     "updated": 42,
-    "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_persona_dream_pipeline_steps_20260717T154903509064Z_10100_133298841978560.jsonl"
+    "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_persona_dream_pipeline_steps_20260717T180253490778Z_10100_133299022333632.jsonl"
   }
 }

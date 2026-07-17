@@ -1,0 +1,45 @@
+{
+  "schema": "persona_dream.identity_temporal_continuity_review.v1",
+  "status": "FAIL_IDENTITY_TEMPORAL_CONTINUITY",
+  "run_id": "pipeline-complete",
+  "revision_id": "rev_upstream_bf3b05d47fb8",
+  "request_body_sha256": "sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f",
+  "source_video": "provider_return.mp4",
+  "source_video_sha256": "sha256:08ee232878508fda8797fd697f6ef80d40b3cf7722f43914040759dfd6c7bb50",
+  "frames_manifest": "watch-codex-vision/frames_manifest.json",
+  "frames_manifest_sha256": "sha256:137c9a2d67cf0ea9b98908e303913474b6f2f77b08837ee3f744091967d21f01",
+  "reference_qualification": "../../../../phase_07_storyboard_live_tau/receipts/identity_reference_qualification.v1.json",
+  "review_method": "human report reconciled with original-resolution 12-frame contact-sheet inspection",
+  "character_results": {
+    "Embry": {
+      "status": "FAIL_IDENTITY_DRIFT_00_03",
+      "readable_appearances": [
+        {"frame_index": 0, "timestamp_seconds": 0.0, "frame_sha256": "sha256:0fcc3fab702a528d662b756d8f575122323a34b2a774576e48b61b240ff56e15"},
+        {"frame_index": 1, "timestamp_seconds": 0.836806, "frame_sha256": "sha256:e983486615c5aa26e3efc853a42ba8329e57e9f53c18e69aa2860ff9b4d94427"},
+        {"frame_index": 2, "timestamp_seconds": 1.673611, "frame_sha256": "sha256:2784c823cdfee7428ff6de6a4cb1d59d192e6397116699c5b2aece1da03e2e46"},
+        {"frame_index": 3, "timestamp_seconds": 2.510417, "frame_sha256": "sha256:467fdc51c02874bf280b221c2001e360c967538ac1d68af9c673bb39e03f7148"},
+        {"frame_index": 4, "timestamp_seconds": 3.347222, "frame_sha256": "sha256:78b3d1f4c8d625a9d2a7fe19592d3da0227240c09f6bf46799e3d9577f5bec7f"}
+      ],
+      "blocking_findings": [
+        "Embry's facial identity changes materially between the 0.0-1.67s waterline setup and the 2.51-3.35s close shot."
+      ]
+    },
+    "Kai": {"status": "NOT_REVIEWED_IN_THIS_FAILURE_RECEIPT", "blocking_findings": []}
+  },
+  "blocking_findings": [
+    "EMBRY_IDENTITY_DRIFT_00_03",
+    "UNQUALIFIED_EMBRY_REFERENCE_SET"
+  ],
+  "mocked": false,
+  "live": true,
+  "claims": {
+    "proves": [
+      "the current provider return fails the human-visible Embry temporal identity gate"
+    ],
+    "does_not_prove": [
+      "deterministic face-embedding similarity",
+      "Kai temporal continuity"
+    ]
+  },
+  "observed_at": "2026-07-17T16:45:00Z"
+}

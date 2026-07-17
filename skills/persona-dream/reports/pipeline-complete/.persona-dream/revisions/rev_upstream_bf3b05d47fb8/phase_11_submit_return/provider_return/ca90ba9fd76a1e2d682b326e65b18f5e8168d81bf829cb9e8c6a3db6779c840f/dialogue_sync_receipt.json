@@ -1,0 +1,31 @@
+{
+  "audio_mix_sha256": "sha256:33edae9a7569196f996014fc414d7079be36c13667bbaa7f72077d96b9a9bc74",
+  "checks": {
+    "dialogue_ends_within_video": true,
+    "interval_matches_rendered_audio": true,
+    "onset_inside_bound_storyboard_beat": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "lip synchronization",
+      "subjective timing acceptance"
+    ],
+    "proves": [
+      "the rendered dialogue onset is aligned to its declared storyboard beat"
+    ]
+  },
+  "dialogue_delay_ms": 5000,
+  "dialogue_end_s": 8.08,
+  "dialogue_start_s": 5.0,
+  "live": true,
+  "mocked": false,
+  "observed_at": "2026-07-17T17:58:27.814443+00:00",
+  "rendered_audio_duration_seconds": 3.08,
+  "rendered_audio_sha256": "sha256:c240e201c5177693e049a3a4cfc63e7e969cce562a2081e0725bc66d24be3ee2",
+  "request_body_sha256": "sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f",
+  "schema": "persona_dream.dialogue_sync_receipt.v1",
+  "status": "PASS_DIALOGUE_STORYBOARD_SYNC",
+  "storyboard_beat_end_s": 7.5,
+  "storyboard_beat_id": "sb_003",
+  "storyboard_beat_start_s": 5.0
+}

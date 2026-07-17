@@ -12,13 +12,44 @@
     "non-silence analysis",
     "42 Memory exact rereads"
   ],
-  "audio_result": "PASS_DETERMINISTIC_NON_SILENCE",
-  "blockers": [],
-  "continuity_result": "PASS_POST_KLING_CONTINUITY_REVIEW",
+  "audio_result": "FAIL_VISIBLE_SPEAKER_NOT_LIPSYNCED",
+  "blockers": [
+    {
+      "blocker": "Replace the inconsistent Embry reference set, rerun Tau frame qualification, and submit a newly authorized provider request.",
+      "status": "FAIL_IDENTITY_TEMPORAL_CONTINUITY",
+      "step_name": "Post-Kling Continuity Review",
+      "step_no": 36
+    },
+    {
+      "blocker": "Run the hash-bound video and dialogue WAV through an authorized lip-sync lane, then visually review SB_003 mouth motion.",
+      "status": "FAIL_VISIBLE_SPEAKER_NOT_LIPSYNCED",
+      "step_name": "Final Assembly / Movie Lane",
+      "step_no": 38
+    },
+    {
+      "blocker": "Regenerate only after identity, delivery, and sync gates pass.",
+      "status": "BLOCKED_STALE_FINAL_REPORT",
+      "step_name": "Report Generation",
+      "step_no": 39
+    },
+    {
+      "blocker": "Resolve steps 36-38 before rerunning final validation.",
+      "status": "BLOCKED_NONPASSING_GATES",
+      "step_name": "Gate Validation Loop",
+      "step_no": 40
+    },
+    {
+      "blocker": "Pass all nonpassing late-stage gates and exactly reread their replacement Memory states.",
+      "status": "BLOCKED_FINAL_ACCEPTANCE",
+      "step_name": "Final Acceptance Boundary",
+      "step_no": 42
+    }
+  ],
+  "continuity_result": "FAIL_IDENTITY_TEMPORAL_CONTINUITY",
   "counts": {
-    "blocked": 0,
-    "failed": 0,
-    "passing_or_not_required": 42,
+    "blocked": 3,
+    "failed": 2,
+    "passing_or_not_required": 37,
     "total": 42
   },
   "live": true,
@@ -28,19 +59,19 @@
     "expected_count": 42
   },
   "mocked": false,
-  "observed_at": "2026-07-17T15:49:03.394501+00:00",
+  "observed_at": "2026-07-17T18:02:53.357426+00:00",
   "request_body_sha256": "sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f",
   "revision_id": "rev_upstream_bf3b05d47fb8",
   "run_id": "pipeline-complete",
   "schema": "persona_dream.final_report.v1",
-  "status": "PASS_AGENT_EVIDENCE_ACCEPTANCE",
+  "status": "BLOCKED_FINAL_ACCEPTANCE",
   "verified_outputs": {
     "codec": "h264",
     "contact_sheet": "../phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/frame_contact_sheet.png",
     "dimensions": "1280x720",
     "duration_seconds": 10.041667,
     "final_muxed_mp4": "../phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/muxed_provider_return.mp4",
-    "final_muxed_mp4_sha256": "sha256:ec9da2af5b73ae4cff5df707341d83e59a90e6c56ef1197505ea68ae247d691a",
+    "final_muxed_mp4_sha256": "sha256:991c311f365f84832b274aad7b8ff757372914f7c516e595a31b1bd05edf4c59",
     "fps": 24,
     "provider_mp4": "../phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/provider_return.mp4",
     "provider_mp4_sha256": "sha256:08ee232878508fda8797fd697f6ef80d40b3cf7722f43914040759dfd6c7bb50"

@@ -35,7 +35,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_01_idea/dream_request.json",
         "phase_01_idea/human_idea.json"
@@ -99,7 +99,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_01_idea/dream_request.json",
         "phase_01_idea/human_idea.json"
@@ -163,7 +163,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_01_idea/residue_links.json",
         "revision_memory_verify_receipt.json"
@@ -227,7 +227,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_01_idea/residue_links.json",
         "phase_01_idea/contradiction_report.json"
@@ -292,7 +292,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_01_idea/dream_packet.json",
         "phase_01_idea/dream_prompt.txt",
@@ -356,7 +356,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_02_story/story_contract.json"
       ],
@@ -417,7 +417,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_03_crew/crew_contract.json"
       ],
@@ -478,7 +478,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_03_crew/crew_contract.json"
       ],
@@ -539,7 +539,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_03_crew/crew_contract.json"
       ],
@@ -601,7 +601,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_03_crew/crew_contract.json",
         "phase_03_crew/crew_gate_receipt.json"
@@ -666,7 +666,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_03_crew/technique_selection.json",
         "phase_03_crew/look_lock.json",
@@ -731,7 +731,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_03_crew/script_dna_selection.json"
       ],
@@ -793,7 +793,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_07_storyboard_live_tau/storyboard_packet.json",
         "phase_07_storyboard_live_tau/storyboard_panel_contract.generated.json"
@@ -857,7 +857,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_07_storyboard_live_tau/storyboard_packet.json",
         "revision_artifact_index.json"
@@ -920,7 +920,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_07_storyboard_live_tau/panel_continuity_and_repair_ledger.json"
       ],
@@ -982,7 +982,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_07_storyboard_live_tau/storyboard_packet.json",
         "revision_artifact_index.json"
@@ -1046,7 +1046,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_07_storyboard_live_tau/storyboard_packet.json",
         "phase_07_storyboard_live_tau/receipts/panel_repair_gate_receipt.json"
@@ -1109,7 +1109,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_07_storyboard_live_tau/receipts/panel_repair_gate_receipt.json"
       ],
@@ -1170,7 +1170,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_07_storyboard_live_tau/receipts/panel_repair_gate_receipt.json"
       ],
@@ -1231,7 +1231,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_07_storyboard_live_tau/receipts/panel_source_receipt.json"
       ],
@@ -1292,7 +1292,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_11_submit_return/preflight/provider_media_transition_manifest.json"
       ],
@@ -1353,7 +1353,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_11_submit_return/preflight/provider_media_transition_manifest.json"
       ],
@@ -1415,7 +1415,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_11_submit_return/preflight/phase11_adapter_preflight_receipt.v1.json",
         "phase_11_submit_return/preflight/provider_media_transition_manifest.json"
@@ -1478,7 +1478,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_11_submit_return/preflight/approvals/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/publication_authorization_receipt.json"
       ],
@@ -1539,7 +1539,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_11_submit_return/preflight/provider_media_transition_manifest.json"
       ],
@@ -1600,7 +1600,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_11_submit_return/preflight/provider_media_transition_manifest.json"
       ],
@@ -1661,7 +1661,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_11_submit_return/canonical/phase11_media_binding_manifest.v2.json"
       ],
@@ -1722,7 +1722,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_11_submit_return/canonical/phase11_live_request.v1.json"
       ],
@@ -1784,7 +1784,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_11_submit_return/preflight/phase11_adapter_preflight_receipt.v1.json",
         "phase_11_submit_return/attempts/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/attempt_ledger.v1.json"
@@ -1848,7 +1848,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_11_submit_return/preflight/approvals/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/paid_call_authorization_receipt.json",
         "phase_11_submit_return/attempts/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/attempt_ledger.v1.json"
@@ -1912,7 +1912,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_11_submit_return/attempts/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/attempt_ledger.v1.json",
         "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/phase11_provider_return_envelope.v1.json"
@@ -1975,7 +1975,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_11_submit_return/attempts/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/attempt_ledger.v1.json"
       ],
@@ -2037,7 +2037,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/provider_return.mp4",
         "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/phase11_provider_return_envelope.v1.json"
@@ -2100,7 +2100,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/phase11_download_ffprobe_receipt.v1.json",
         "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/provider_return.mp4"
@@ -2163,7 +2163,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/frame_contact_sheet.png",
         "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/frame_contact_sheet_receipt.v1.json"
@@ -2195,16 +2195,17 @@
     {
       "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:36:post_kling_continuity_review",
       "artifact_hashes": {
-        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/frame_contact_sheet.png": "sha256:9a97c5093d055f50a7b43eee9ad2ae48287f2416c2551e0becfe1442b70540a6",
-        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/post_kling_continuity_review_receipt.v1.json": "sha256:fbb4d69a2521308380f4589da55b9077f3c796ec59afe1fa5d1d65183f359fe3"
+        "phase_07_storyboard_live_tau/receipts/identity_reference_qualification.v1.json": "sha256:271cdb907f1258299a87846b245ba474c675b6d7b477be58e377a09183895175",
+        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/identity_temporal_continuity_review.v1.json": "sha256:64ce5fa31d9f7dc53d8890156deca1a31172e631b24e632e423dba096a4e5f74",
+        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/post_kling_continuity_review_receipt.v2.json": "sha256:dc3813b4d1cae0ee636bca88b34612478814061f6bffead71ac7f99b7ef44ce5"
       },
-      "blocker": null,
+      "blocker": "Replace the inconsistent Embry reference set, rerun Tau frame qualification, and submit a newly authorized provider request.",
       "claims": {
         "does_not_prove": [
-          "Audio quality or lip synchronization."
+          "Deterministic face-embedding similarity."
         ],
         "proves": [
-          "The exact MP4 passes all four intended beats, including SB_004 commit action and reef geometry."
+          "The current returned MP4 was reviewed and rejected for Embry identity drift."
         ]
       },
       "exact_reread_receipt": {
@@ -2226,24 +2227,27 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
-        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/post_kling_continuity_review_receipt.v1.json",
-        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/frame_contact_sheet.png"
+        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/post_kling_continuity_review_receipt.v2.json",
+        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/identity_temporal_continuity_review.v1.json",
+        "phase_07_storyboard_live_tau/receipts/identity_reference_qualification.v1.json"
       ],
       "provider_task_id": "019f70ac-3864-7d81-9e86-5fae6a676e0d",
       "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
       "qdrant_point_id": "77503a3f-75de-5830-911c-962c097edd7f",
       "receipt_paths": [
-        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/post_kling_continuity_review_receipt.v1.json"
+        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/post_kling_continuity_review_receipt.v2.json",
+        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/identity_temporal_continuity_review.v1.json",
+        "phase_07_storyboard_live_tau/receipts/identity_reference_qualification.v1.json"
       ],
       "request_hash": "sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f",
-      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 36 Post-Kling Continuity Review status PASS",
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 36 Post-Kling Continuity Review status FAIL_IDENTITY_TEMPORAL_CONTINUITY",
       "revision_id": "rev_upstream_bf3b05d47fb8",
       "run_id": "pipeline-complete",
       "schema": "persona_dream.pipeline_step_memory.v1",
       "semantic_sync_state": "synced",
-      "status": "PASS",
+      "status": "FAIL_IDENTITY_TEMPORAL_CONTINUITY",
       "step_name": "Post-Kling Continuity Review",
       "step_no": 36,
       "step_slug": "post_kling_continuity_review",
@@ -2252,22 +2256,22 @@
         "run:pipeline-complete",
         "revision:rev_upstream_bf3b05d47fb8",
         "step:36",
-        "status:pass"
+        "status:fail_identity_temporal_continuity"
       ]
     },
     {
       "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:37:voice_audio_handoff",
       "artifact_hashes": {
-        "phase_11_submit_return/preflight/voice_handoff_memory_receipt.json": "sha256:ddcc9a0e4d7c2a923c4055dc9ed3b8210bb0335b276575bcf8da83c1f0b057ad",
-        "phase_11_submit_return/preflight/voice_handoff_plan.json": "sha256:600c6188d0a98b5c881aab08ceb96ee16e16982f65459c5c0a0816136fe52cd8"
+        "phase_11_submit_return/preflight/voice_handoff_plan.json": "sha256:ff12ba0f65e93e4deb16e208f60a130d71135d23f5ef3fa290f8f9dad4330f42",
+        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/voice_delivery_review_receipt.json": "sha256:a495f63ffde1cb9a1c77681e5c07c6841e4e5527be1dff30e8b8f8ad64dae4c4"
       },
       "blocker": null,
       "claims": {
         "does_not_prove": [
-          "Human listening acceptance."
+          "Human listening preference."
         ],
         "proves": [
-          "The exact Kai transcript render and voice/ambience bindings are hash-bound and Memory-synced."
+          "The replacement Kai render applies a supported whispering cue and slightly-concerned conversational delivery stage."
         ]
       },
       "exact_reread_receipt": {
@@ -2289,25 +2293,25 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_11_submit_return/preflight/voice_handoff_plan.json",
-        "phase_11_submit_return/preflight/voice_handoff_memory_receipt.json"
+        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/voice_delivery_review_receipt.json"
       ],
       "provider_task_id": null,
       "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
       "qdrant_point_id": "66e6d841-d2cf-5cb9-9752-34f62775f356",
       "receipt_paths": [
         "phase_11_submit_return/preflight/voice_handoff_plan.json",
-        "phase_11_submit_return/preflight/voice_handoff_memory_receipt.json"
+        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/voice_delivery_review_receipt.json"
       ],
       "request_hash": "sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f",
-      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 37 Voice / Audio Handoff Lane When Voiced status PASS_EXACT_LINE_RENDER_READY_FOR_MUX",
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 37 Voice / Audio Handoff Lane When Voiced status PASS_VOICE_DELIVERY_CONTRACT_READY_FOR_MUX",
       "revision_id": "rev_upstream_bf3b05d47fb8",
       "run_id": "pipeline-complete",
       "schema": "persona_dream.pipeline_step_memory.v1",
       "semantic_sync_state": "synced",
-      "status": "PASS_EXACT_LINE_RENDER_READY_FOR_MUX",
+      "status": "PASS_VOICE_DELIVERY_CONTRACT_READY_FOR_MUX",
       "step_name": "Voice / Audio Handoff Lane When Voiced",
       "step_no": 37,
       "step_slug": "voice_audio_handoff",
@@ -2316,25 +2320,28 @@
         "run:pipeline-complete",
         "revision:rev_upstream_bf3b05d47fb8",
         "step:37",
-        "status:pass_exact_line_render_ready_for_mux"
+        "status:pass_voice_delivery_contract_ready_for_mux"
       ]
     },
     {
       "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:38:final_assembly_movie_lane",
       "artifact_hashes": {
-        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/audible_output_review_receipt.json": "sha256:e0d482cc92ad94cfe03ee40d07cf7d4830a3d6ad79781ff88a20edd62b8bb712",
-        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/audio_mix_receipt.json": "sha256:074e9c1f1454b0adac8bbb439d094dd4edfe3a8acdc73f2523da2a1041abb25e",
-        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/ffmpeg_mux_receipt.json": "sha256:9ad125c23bcddbbe6c65e6b7fbc1a9854a078ae8bff953e73de594475ae117bb",
-        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/muxed_provider_return.mp4": "sha256:ec9da2af5b73ae4cff5df707341d83e59a90e6c56ef1197505ea68ae247d691a",
-        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/muxed_provider_return_ffprobe_receipt.json": "sha256:efd24825c9114ccd6d1b9d4134288c945e200ed5c04e6cd93d5944b3c5222c4f"
+        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/audible_output_review_receipt.json": "sha256:e1b0d46ddcfc36ac167d53196ed21b4efe356efc123745365ca3c1c2810cd971",
+        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/audio_mix_receipt.json": "sha256:abc17449507c6aafb13f24844df7612fa1d6520b3e38870008ea8f0bc5159af4",
+        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/dialogue_forced_alignment_receipt.v1.json": "sha256:0386a2fea12db046fd522a5b335000e7929d82e414f5419f795dad2943546ed2",
+        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/dialogue_sync_receipt.json": "sha256:96af4b1c94fb9a63723a0c1691ac381cab4c53bd23a481b06eadb1fb2a96afdd",
+        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/ffmpeg_mux_receipt.json": "sha256:1f7a199c5322a16b9c519cfe2bd8dbcc2ef6bc0f736c4812d3b97f6507f2d1ff",
+        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/muxed_provider_return.mp4": "sha256:991c311f365f84832b274aad7b8ff757372914f7c516e595a31b1bd05edf4c59",
+        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/muxed_provider_return_ffprobe_receipt.json": "sha256:5013a83c74a23aa9a78664382fb31bd665d5f6f214105a55ceff98d2869a9e11",
+        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/visible_speaker_lipsync_review.v1.json": "sha256:912b468623c786962dcea5d254e03e768f74786234766c5c6ea28764ece52e30"
       },
-      "blocker": null,
+      "blocker": "Run the hash-bound video and dialogue WAV through an authorized lip-sync lane, then visually review SB_003 mouth motion.",
       "claims": {
         "does_not_prove": [
-          "Subjective voice quality or lip synchronization."
+          "A lip-synced accepted movie."
         ],
         "proves": [
-          "The exact line and ocean ambience are muxed into a non-silent final MP4 with matching hashes."
+          "Local Whisper recognizes the exact canonical line at 5.00-7.70s, but Kai's visible mouth was not synchronized by the post-mux operation."
         ]
       },
       "exact_reread_receipt": {
@@ -2356,9 +2363,12 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/muxed_provider_return.mp4",
+        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/dialogue_sync_receipt.json",
+        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/dialogue_forced_alignment_receipt.v1.json",
+        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/visible_speaker_lipsync_review.v1.json",
         "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/audio_mix_receipt.json",
         "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/ffmpeg_mux_receipt.json",
         "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/muxed_provider_return_ffprobe_receipt.json",
@@ -2368,18 +2378,21 @@
       "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
       "qdrant_point_id": "014f53b8-9954-55f4-bdde-e0b22733fa44",
       "receipt_paths": [
+        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/dialogue_sync_receipt.json",
+        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/dialogue_forced_alignment_receipt.v1.json",
+        "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/visible_speaker_lipsync_review.v1.json",
         "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/audio_mix_receipt.json",
         "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/ffmpeg_mux_receipt.json",
         "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/muxed_provider_return_ffprobe_receipt.json",
         "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/audible_output_review_receipt.json"
       ],
       "request_hash": "sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f",
-      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 38 Final Assembly / Movie Lane status PASS_POST_MUX_AUDIO_ASSEMBLY",
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 38 Final Assembly / Movie Lane status FAIL_VISIBLE_SPEAKER_NOT_LIPSYNCED",
       "revision_id": "rev_upstream_bf3b05d47fb8",
       "run_id": "pipeline-complete",
       "schema": "persona_dream.pipeline_step_memory.v1",
       "semantic_sync_state": "synced",
-      "status": "PASS_POST_MUX_AUDIO_ASSEMBLY",
+      "status": "FAIL_VISIBLE_SPEAKER_NOT_LIPSYNCED",
       "step_name": "Final Assembly / Movie Lane",
       "step_no": 38,
       "step_slug": "final_assembly_movie_lane",
@@ -2388,22 +2401,22 @@
         "run:pipeline-complete",
         "revision:rev_upstream_bf3b05d47fb8",
         "step:38",
-        "status:pass_post_mux_audio_assembly"
+        "status:fail_visible_speaker_not_lipsynced"
       ]
     },
     {
       "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:39:report_generation",
       "artifact_hashes": {
-        "phase_13_final_acceptance/final_report.md": "sha256:8725b2a40daf79feca8aa058cdca6ea2082e33569781a8dd9c5054c45b79812f",
-        "phase_13_final_acceptance/final_report.v1.json": "sha256:d163744ad2c567c15a58c7579c3a91e6c138a301f0e8c643aa294d02f6dd84eb"
+        "phase_13_final_acceptance/final_report.md": "sha256:3a77726e9449e4f9ed6d469ede6f48ae74bc0f69b98024ebe18503a7897e510a",
+        "phase_13_final_acceptance/final_report.v1.json": "sha256:8baa85adb522ca7b2cfa5122f77100f40e08e9581876fb24e530e4d84c3269d2"
       },
-      "blocker": null,
+      "blocker": "Regenerate only after identity, delivery, and sync gates pass.",
       "claims": {
         "does_not_prove": [
-          "Human subjective listening acceptance."
+          "Current final acceptance."
         ],
         "proves": [
-          "The final report is source-derived and cites the live provider, visual, audio, and Memory evidence."
+          "The prior report remains as superseded evidence."
         ]
       },
       "exact_reread_receipt": {
@@ -2425,7 +2438,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_13_final_acceptance/final_report.v1.json",
         "phase_13_final_acceptance/final_report.md"
@@ -2437,12 +2450,12 @@
         "phase_13_final_acceptance/final_report.v1.json"
       ],
       "request_hash": "sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f",
-      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 39 Report Generation status PASS",
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 39 Report Generation status BLOCKED_STALE_FINAL_REPORT",
       "revision_id": "rev_upstream_bf3b05d47fb8",
       "run_id": "pipeline-complete",
       "schema": "persona_dream.pipeline_step_memory.v1",
       "semantic_sync_state": "synced",
-      "status": "PASS",
+      "status": "BLOCKED_STALE_FINAL_REPORT",
       "step_name": "Report Generation",
       "step_no": 39,
       "step_slug": "report_generation",
@@ -2451,21 +2464,21 @@
         "run:pipeline-complete",
         "revision:rev_upstream_bf3b05d47fb8",
         "step:39",
-        "status:pass"
+        "status:blocked_stale_final_report"
       ]
     },
     {
       "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:40:gate_validation_loop",
       "artifact_hashes": {
-        "phase_13_final_acceptance/final_gate_validation_summary.v1.json": "sha256:20798b7916715fb6d6bf1d972c327c91b8d01cce8f9108de76cb8a77813acd95"
+        "phase_13_final_acceptance/final_gate_validation_summary.v1.json": "sha256:ba3d1eeade24b08fe308545a60b214410438d3172f13675d64ec43704d4069ac"
       },
-      "blocker": null,
+      "blocker": "Resolve steps 36-38 before rerunning final validation.",
       "claims": {
         "does_not_prove": [
-          "Human subjective listening acceptance."
+          "A working accepted video."
         ],
         "proves": [
-          "All 42 step states pass and the active evidence graph has no unresolved blocker."
+          "The gate summary records nonpassing late-stage gates."
         ]
       },
       "exact_reread_receipt": {
@@ -2487,7 +2500,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "phase_13_final_acceptance/final_gate_validation_summary.v1.json"
       ],
@@ -2498,12 +2511,12 @@
         "phase_13_final_acceptance/final_gate_validation_summary.v1.json"
       ],
       "request_hash": "sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f",
-      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 40 Gate Validation Loop status PASS",
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 40 Gate Validation Loop status BLOCKED_NONPASSING_GATES",
       "revision_id": "rev_upstream_bf3b05d47fb8",
       "run_id": "pipeline-complete",
       "schema": "persona_dream.pipeline_step_memory.v1",
       "semantic_sync_state": "synced",
-      "status": "PASS",
+      "status": "BLOCKED_NONPASSING_GATES",
       "step_name": "Gate Validation Loop",
       "step_no": 40,
       "step_slug": "gate_validation_loop",
@@ -2512,7 +2525,7 @@
         "run:pipeline-complete",
         "revision:rev_upstream_bf3b05d47fb8",
         "step:40",
-        "status:pass"
+        "status:blocked_nonpassing_gates"
       ]
     },
     {
@@ -2550,7 +2563,7 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
         "revision_activation_receipt.json",
         "upstream_contract_invalidation_ledger.v1.json",
@@ -2585,15 +2598,15 @@
     {
       "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:42:final_acceptance_boundary",
       "artifact_hashes": {
-        "phase_13_final_acceptance/final_acceptance_receipt.v1.json": "sha256:7dedc6925bc03aa74d55eb948269458cdfc17ee01ae426482fdeeb37890f795d"
+        "phase_13_final_acceptance/final_acceptance_reconciliation_receipt.v1.json": "sha256:9d565b37f36249b011b6eb4f04c97bd7489ad7dc0a7afbe5b901ea5b782a4ac1"
       },
-      "blocker": null,
+      "blocker": "Pass all nonpassing late-stage gates and exactly reread their replacement Memory states.",
       "claims": {
         "does_not_prove": [
-          "A separate human subjective listening or lip-sync acceptance."
+          "A repaired accepted video."
         ],
         "proves": [
-          "The acceptance boundary cites positive live evidence for provider return, visual continuity, post-mux audio, and 42 exact Memory rereads."
+          "The prior acceptance is explicitly superseded by identity, delivery, and sync failures."
         ]
       },
       "exact_reread_receipt": {
@@ -2615,23 +2628,23 @@
         "collection": "persona_dream_pipeline_steps",
         "status": "PASS"
       },
-      "observed_at": "2026-07-17T15:49:03.394501+00:00",
+      "observed_at": "2026-07-17T18:02:53.357426+00:00",
       "outputs": [
-        "phase_13_final_acceptance/final_acceptance_receipt.v1.json"
+        "phase_13_final_acceptance/final_acceptance_reconciliation_receipt.v1.json"
       ],
       "provider_task_id": null,
       "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
       "qdrant_point_id": "cbbaa855-a159-58ba-8f0a-8ec8796efd47",
       "receipt_paths": [
-        "phase_13_final_acceptance/final_acceptance_receipt.v1.json"
+        "phase_13_final_acceptance/final_acceptance_reconciliation_receipt.v1.json"
       ],
       "request_hash": "sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f",
-      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 42 Final Acceptance Boundary status PASS_AGENT_EVIDENCE_ACCEPTANCE",
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 42 Final Acceptance Boundary status BLOCKED_FINAL_ACCEPTANCE",
       "revision_id": "rev_upstream_bf3b05d47fb8",
       "run_id": "pipeline-complete",
       "schema": "persona_dream.pipeline_step_memory.v1",
       "semantic_sync_state": "synced",
-      "status": "PASS_AGENT_EVIDENCE_ACCEPTANCE",
+      "status": "BLOCKED_FINAL_ACCEPTANCE",
       "step_name": "Final Acceptance Boundary",
       "step_no": 42,
       "step_slug": "final_acceptance_boundary",
@@ -2640,7 +2653,7 @@
         "run:pipeline-complete",
         "revision:rev_upstream_bf3b05d47fb8",
         "step:42",
-        "status:pass_agent_evidence_acceptance"
+        "status:blocked_final_acceptance"
       ]
     }
   ],

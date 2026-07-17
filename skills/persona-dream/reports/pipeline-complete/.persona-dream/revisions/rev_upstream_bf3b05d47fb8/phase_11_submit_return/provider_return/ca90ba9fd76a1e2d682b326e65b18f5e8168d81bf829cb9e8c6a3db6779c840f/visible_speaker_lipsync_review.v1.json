@@ -1,0 +1,50 @@
+{
+  "schema": "persona_dream.visible_speaker_lipsync_review.v1",
+  "status": "FAIL_VISIBLE_SPEAKER_NOT_LIPSYNCED",
+  "request_body_sha256": "sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f",
+  "storyboard_beat_id": "sb_003",
+  "speaker": "Kai",
+  "spoken_interval_seconds": {
+    "start": 5.0,
+    "end": 7.7
+  },
+  "source_video": "muxed_provider_return.mp4",
+  "source_video_sha256": "sha256:991c311f365f84832b274aad7b8ff757372914f7c516e595a31b1bd05edf4c59",
+  "forced_alignment_receipt": "dialogue_forced_alignment_receipt.v1.json",
+  "forced_alignment_receipt_sha256": "sha256:0386a2fea12db046fd522a5b335000e7929d82e414f5419f795dad2943546ed2",
+  "review_method": "human visual inspection of timestamped live-provider frames against the measured spoken interval",
+  "observations": {
+    "speaker_face_visible": true,
+    "speaker_mouth_visible": true,
+    "lip_sync_transform_applied": false,
+    "lip_sync_visually_accepted": false
+  },
+  "evidence_frames": [
+    {
+      "path": "watch-codex-vision/frames/frame_0007.jpg",
+      "timestamp_seconds": 5.020834,
+      "sha256": "sha256:ad244689210b9fc4f6ed45093427e73b41b75af923ac524c0a6c70e1cd96d4c7",
+      "finding": "Kai is in a medium two-shot with his face and mouth clearly visible at dialogue onset."
+    },
+    {
+      "path": "watch-codex-vision/frames/frame_0008.jpg",
+      "timestamp_seconds": 5.857639,
+      "sha256": "sha256:f29b7b63df36b5bcb3441c2cc987dd77361204016c52d0fadce2c06def65e00a",
+      "finding": "Kai remains front-profile visible during the measured spoken interval."
+    }
+  ],
+  "blocker": "Run the hash-bound MP4 and Kai WAV through an authorized lip-sync lane, then visually review mouth motion during SB_003.",
+  "mocked": false,
+  "live": true,
+  "claims": {
+    "proves": [
+      "Kai's face and mouth are visibly readable while his measured dialogue is audible",
+      "the current output is a post-mux and has no lip-sync transform"
+    ],
+    "does_not_prove": [
+      "which lip-sync provider will produce an acceptable repair",
+      "the identity-drift blocker is resolved"
+    ]
+  },
+  "observed_at": "2026-07-17T13:58:55-04:00"
+}

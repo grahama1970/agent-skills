@@ -28,9 +28,11 @@ The active revision `rev_upstream_bf3b05d47fb8` crossed the live Kling boundary
 once for repaired request
 `sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f`.
 Provider request `019f70ac-3864-7d81-9e86-5fae6a676e0d` completed after 54
-polls with no resubmit. The returned source MP4 passes technical validation and
-the twelve-frame continuity review. The exact Kai line and ocean ambience are
-post-muxed into the final MP4.
+polls with no resubmit. The returned source MP4 passes technical validation, but
+visual acceptance is blocked by Embry identity drift. The exact Kai line and
+ocean ambience are post-muxed into the final MP4; forced alignment passes, but
+visible-speaker lip synchronization fails because Kai's mouth is readable
+during SB_003.
 
 Current gate language:
 
@@ -40,15 +42,16 @@ active repaired Kling video returned: yes, 16,957,429-byte source MP4
 active provider request id: 019f70ac-3864-7d81-9e86-5fae6a676e0d
 active ffprobe: readable H.264, 10.041667 seconds
 active frame contact sheet: 12 frames in a 4x3 PNG, sha256:9a97c5093d055f50a7b43eee9ad2ae48287f2416c2551e0becfe1442b70540a6
-active continuity review: pass, including SB_004 commit action and visible lava-reef/safe-channel boundary
+active continuity review: fail, EMBRY_IDENTITY_DRIFT_00_03
 audio strategy: post_mux; Kling request intentionally has generate_audio=false
 step 37 voice handoff: exact live Kai line rendered and hash-bound; ready for mux
-step 38 final assembly: pass; muxed MP4 sha256:ec9da2af5b73ae4cff5df707341d83e59a90e6c56ef1197505ea68ae247d691a
-audio proof: stream present, mean -32.6 dB, max -15.5 dB
-pipeline-step Memory exact reread: 42/42, semantic sync 42/42, Qdrant pointers 42/42
-revision persistence audit: pass, zero failed checks
-agent evidence acceptance: pass
-not proven: human subjective voice quality or lip synchronization
+forced alignment: pass; exact canonical line measured at 5.00-7.70s by local Whisper large-v3-turbo
+step 38 final assembly: fail, FAIL_VISIBLE_SPEAKER_NOT_LIPSYNCED; muxed MP4 sha256:991c311f365f84832b274aad7b8ff757372914f7c516e595a31b1bd05edf4c59
+audio proof: stream present, mean -35.5 dB, max -16.8 dB
+pipeline-step Memory exact reread: 42/42; step 38 is FAIL_VISIBLE_SPEAKER_NOT_LIPSYNCED
+revision persistence audit: pass, six checks, zero failed checks
+agent evidence acceptance: blocked
+not proven: human subjective voice quality, acceptable lip synchronization, or stable Embry identity
 ```
 
 No agent may claim final, green, complete, fixed, or verified for this goal
@@ -167,9 +170,10 @@ through 36 for a real returned Kling video, plus memory persistence evidence
 for steps 01 through 42.
 
 For a voiced run, step 42 must also cite positive Step 37 and 38 evidence: an
-exact transcript render, mix and FFmpeg mux receipts, a final MP4 audio stream,
-and audible-output review. A silent provider return alone cannot satisfy the
-immutable goal.
+exact transcript render, forced-alignment receipt, mix and FFmpeg mux receipts,
+a final MP4 audio stream, audible-output review, and a visible-speaker lip-sync
+review. When the speaker's mouth is visible, post-mux audio without an accepted
+lip-sync transform cannot satisfy the immutable goal.
 
 If any step lacks a memory write receipt and exact reread receipt, the goal is
 not complete.

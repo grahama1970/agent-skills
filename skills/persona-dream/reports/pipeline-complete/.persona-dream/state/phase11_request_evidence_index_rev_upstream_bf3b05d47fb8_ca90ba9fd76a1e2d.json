@@ -149,27 +149,35 @@
       "size_bytes": 1280
     },
     "phase_11_submit_return/preflight/voice_handoff_memory_receipt.json": {
-      "sha256": "sha256:ddcc9a0e4d7c2a923c4055dc9ed3b8210bb0335b276575bcf8da83c1f0b057ad",
+      "sha256": "sha256:03da319a36cfe599999dcd31b2dff0d3288ff433ce0a3457c5c969ebda13bd85",
       "size_bytes": 1271
     },
     "phase_11_submit_return/preflight/voice_handoff_plan.json": {
-      "sha256": "sha256:600c6188d0a98b5c881aab08ceb96ee16e16982f65459c5c0a0816136fe52cd8",
-      "size_bytes": 4046
+      "sha256": "sha256:ff12ba0f65e93e4deb16e208f60a130d71135d23f5ef3fa290f8f9dad4330f42",
+      "size_bytes": 4546
     },
     "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/audible_output_review_receipt.json": {
-      "sha256": "sha256:e0d482cc92ad94cfe03ee40d07cf7d4830a3d6ad79781ff88a20edd62b8bb712",
+      "sha256": "sha256:e1b0d46ddcfc36ac167d53196ed21b4efe356efc123745365ca3c1c2810cd971",
       "size_bytes": 789
     },
     "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/audio_mix.wav": {
-      "sha256": "sha256:a2a88f58345e6fc1abfc7ca02bb6d137e4fe570876980a993c97727c2b21a9ae",
+      "sha256": "sha256:33edae9a7569196f996014fc414d7079be36c13667bbaa7f72077d96b9a9bc74",
       "size_bytes": 1928082
     },
     "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/audio_mix_receipt.json": {
-      "sha256": "sha256:074e9c1f1454b0adac8bbb439d094dd4edfe3a8acdc73f2523da2a1041abb25e",
-      "size_bytes": 3641
+      "sha256": "sha256:abc17449507c6aafb13f24844df7612fa1d6520b3e38870008ea8f0bc5159af4",
+      "size_bytes": 3650
+    },
+    "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/dialogue_forced_alignment_receipt.v1.json": {
+      "sha256": "sha256:0386a2fea12db046fd522a5b335000e7929d82e414f5419f795dad2943546ed2",
+      "size_bytes": 2978
+    },
+    "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/dialogue_sync_receipt.json": {
+      "sha256": "sha256:96af4b1c94fb9a63723a0c1691ac381cab4c53bd23a481b06eadb1fb2a96afdd",
+      "size_bytes": 1082
     },
     "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/ffmpeg_mux_receipt.json": {
-      "sha256": "sha256:9ad125c23bcddbbe6c65e6b7fbc1a9854a078ae8bff953e73de594475ae117bb",
+      "sha256": "sha256:1f7a199c5322a16b9c519cfe2bd8dbcc2ef6bc0f736c4812d3b97f6507f2d1ff",
       "size_bytes": 1700
     },
     "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/frame_contact_sheet.png": {
@@ -180,12 +188,16 @@
       "sha256": "sha256:23b1693756e94e616644175f84c09fe3debe67ba79ccf720f7c8247e981907c9",
       "size_bytes": 5267
     },
+    "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/identity_temporal_continuity_review.v1.json": {
+      "sha256": "sha256:64ce5fa31d9f7dc53d8890156deca1a31172e631b24e632e423dba096a4e5f74",
+      "size_bytes": 2383
+    },
     "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/muxed_provider_return.mp4": {
-      "sha256": "sha256:ec9da2af5b73ae4cff5df707341d83e59a90e6c56ef1197505ea68ae247d691a",
-      "size_bytes": 17204942
+      "sha256": "sha256:991c311f365f84832b274aad7b8ff757372914f7c516e595a31b1bd05edf4c59",
+      "size_bytes": 17204936
     },
     "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/muxed_provider_return_ffprobe_receipt.json": {
-      "sha256": "sha256:efd24825c9114ccd6d1b9d4134288c945e200ed5c04e6cd93d5944b3c5222c4f",
+      "sha256": "sha256:5013a83c74a23aa9a78664382fb31bd665d5f6f214105a55ceff98d2869a9e11",
       "size_bytes": 4258
     },
     "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/phase11_download_ffprobe_receipt.v1.json": {
@@ -200,9 +212,21 @@
       "sha256": "sha256:fbb4d69a2521308380f4589da55b9077f3c796ec59afe1fa5d1d65183f359fe3",
       "size_bytes": 3325
     },
+    "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/post_kling_continuity_review_receipt.v2.json": {
+      "sha256": "sha256:dc3813b4d1cae0ee636bca88b34612478814061f6bffead71ac7f99b7ef44ce5",
+      "size_bytes": 2046
+    },
     "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/provider_return.mp4": {
       "sha256": "sha256:08ee232878508fda8797fd697f6ef80d40b3cf7722f43914040759dfd6c7bb50",
       "size_bytes": 16957429
+    },
+    "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/visible_speaker_lipsync_review.v1.json": {
+      "sha256": "sha256:912b468623c786962dcea5d254e03e768f74786234766c5c6ea28764ece52e30",
+      "size_bytes": 2153
+    },
+    "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/voice_delivery_review_receipt.json": {
+      "sha256": "sha256:a495f63ffde1cb9a1c77681e5c07c6841e4e5527be1dff30e8b8f8ad64dae4c4",
+      "size_bytes": 1644
     },
     "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/watch-codex-vision/frames/frame_0001.jpg": {
       "sha256": "sha256:0fcc3fab702a528d662b756d8f575122323a34b2a774576e48b61b240ff56e15",
@@ -256,33 +280,41 @@
       "sha256": "sha256:137c9a2d67cf0ea9b98908e303913474b6f2f77b08837ee3f744091967d21f01",
       "size_bytes": 6158
     },
+    "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/whisper_alignment/2026-07-17T17-28-07-345Z-kai-ab44cdc76abe.json": {
+      "sha256": "sha256:da366bb4981525703526520b9bbd3fee7be81f07a8130eacd5bc364ee71741f8",
+      "size_bytes": 1186
+    },
     "phase_13_final_acceptance/final_acceptance_receipt.v1.json": {
       "sha256": "sha256:7dedc6925bc03aa74d55eb948269458cdfc17ee01ae426482fdeeb37890f795d",
       "size_bytes": 1213
     },
+    "phase_13_final_acceptance/final_acceptance_reconciliation_receipt.v1.json": {
+      "sha256": "sha256:9d565b37f36249b011b6eb4f04c97bd7489ad7dc0a7afbe5b901ea5b782a4ac1",
+      "size_bytes": 2379
+    },
     "phase_13_final_acceptance/final_gate_validation_summary.v1.json": {
-      "sha256": "sha256:20798b7916715fb6d6bf1d972c327c91b8d01cce8f9108de76cb8a77813acd95",
-      "size_bytes": 889
+      "sha256": "sha256:ba3d1eeade24b08fe308545a60b214410438d3172f13675d64ec43704d4069ac",
+      "size_bytes": 2204
     },
     "phase_13_final_acceptance/final_report.md": {
-      "sha256": "sha256:8725b2a40daf79feca8aa058cdca6ea2082e33569781a8dd9c5054c45b79812f",
-      "size_bytes": 772
+      "sha256": "sha256:3a77726e9449e4f9ed6d469ede6f48ae74bc0f69b98024ebe18503a7897e510a",
+      "size_bytes": 802
     },
     "phase_13_final_acceptance/final_report.v1.json": {
-      "sha256": "sha256:d163744ad2c567c15a58c7579c3a91e6c138a301f0e8c643aa294d02f6dd84eb",
-      "size_bytes": 1846
+      "sha256": "sha256:8baa85adb522ca7b2cfa5122f77100f40e08e9581876fb24e530e4d84c3269d2",
+      "size_bytes": 3037
     },
     "phase_13_final_acceptance/pipeline_step_memory_records.v1.json": {
-      "sha256": "sha256:3a38c4153b82d9af877fa8c029a760e063fe50d0029800243f36b2330d7b85cf",
-      "size_bytes": 106863
+      "sha256": "sha256:9a3f3e312a01e83bf695a5a236dfe00ea3a0b50a6c9ad58dff2f33c95fdca49e",
+      "size_bytes": 109761
     },
     "phase_13_final_acceptance/pipeline_step_memory_write_receipt.v1.json": {
-      "sha256": "sha256:cbfb681b3f56f6bae5cf7b1bdd144d8e4d7dda928ef26ba87ed8245093fd59e3",
+      "sha256": "sha256:ad43d5b72e23ccd7b89dd2818329c8e3722f85a8cd427319d1a060b9e6c26003",
       "size_bytes": 5436
     }
   },
-  "entry_count": 70,
-  "generated_at": "2026-07-17T15:50:32.608893+00:00",
+  "entry_count": 78,
+  "generated_at": "2026-07-17T18:11:08.536067+00:00",
   "request_body_sha256": "sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f",
   "revision_id": "rev_upstream_bf3b05d47fb8",
   "run_id": "pipeline-complete",

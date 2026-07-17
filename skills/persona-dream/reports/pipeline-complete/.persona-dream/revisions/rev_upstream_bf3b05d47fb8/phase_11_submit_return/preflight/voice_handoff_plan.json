@@ -24,30 +24,35 @@
       "exact rendered line equals timed transcript text",
       "final MP4 contains an audio stream",
       "final MP4 has audible output",
-      "mux and ffprobe receipts bind final MP4 hash"
+      "mux and ffprobe receipts bind final MP4 hash",
+      "dialogue sync receipt binds the rendered duration and storyboard onset"
     ],
     "pre_submit": [
       "provider request generate_audio=false",
       "timed transcript path and hash verify",
-      "every voice and ambient reference path and hash verify"
+      "every voice and ambient reference path and hash verify",
+      "every spoken-line onset is inside its bound storyboard beat"
     ]
   },
   "lines": [
     {
-      "end_s": 10.0,
+      "end_s": 8.08,
       "render_status": "PASS_EXACT_LINE_RENDER",
       "rendered_audio": {
-        "duration_seconds": 3.04,
-        "path": "/mnt/storage12tb/skills/persona-dream/outputs/dream-voice-auditions/2026-07-17T15-16-48-135Z-kai-dd83364bef45.wav",
-        "receipt_path": "/mnt/storage12tb/skills/persona-dream/outputs/dream-voice-auditions/2026-07-17T15-16-48-135Z-kai-dd83364bef45.json",
-        "receipt_sha256": "sha256:d8946d8938532fe557f2db8e518e94baa522fa607b551fe5a684676f10be426f",
-        "sha256": "sha256:44a49ccad6fc7779ece80e4dde5ec2f650300e359643afb6b116f5071bf7fa68",
-        "size_bytes": 145998
+        "duration_seconds": 3.08,
+        "path": "/mnt/storage12tb/skills/persona-dream/outputs/dream-voice-auditions/2026-07-17T17-28-07-345Z-kai-ab44cdc76abe.wav",
+        "receipt_path": "/mnt/storage12tb/skills/persona-dream/outputs/dream-voice-auditions/2026-07-17T17-28-07-345Z-kai-ab44cdc76abe.json",
+        "receipt_sha256": "sha256:bd90da276e7c4d933739dc1ed194f85ca301e3f303a653bc253e9b8731e670a1",
+        "sha256": "sha256:c240e201c5177693e049a3a4cfc63e7e969cce562a2081e0725bc66d24be3ee2",
+        "size_bytes": 147918
       },
       "speaker": "Kai",
-      "start_s": 0.0,
+      "start_s": 5.0,
+      "storyboard_beat_end_s": 7.5,
+      "storyboard_beat_id": "sb_003",
+      "storyboard_beat_start_s": 5.0,
       "text": "If we paddle now, we're cutting across the lineup.",
-      "voice_direction": "quiet, practical restraint"
+      "voice_direction": "quiet, practical restraint; conversational warning"
     }
   ],
   "live": true,
@@ -70,16 +75,21 @@
     "muxed_provider_return.mp4",
     "ffmpeg_mux_receipt.json",
     "muxed_provider_return_ffprobe_receipt.json",
-    "audible_output_review_receipt.json"
+    "audible_output_review_receipt.json",
+    "dialogue_sync_receipt.json"
   ],
   "revision_id": "rev_upstream_bf3b05d47fb8",
   "run_id": "pipeline-complete",
   "schema": "persona_dream.voice_handoff_plan.v1",
   "status": "PASS_EXACT_LINE_RENDER_READY_FOR_MUX",
+  "storyboard_timing": {
+    "revision_relative_path": "phase_03_crew/shot_bible.json",
+    "sha256": "sha256:d6925039e3fc352e11e36998fef530c63818a2fa667c1a44fb5cefcd34b3c3ab"
+  },
   "strategy": "post_mux",
   "timed_transcript": {
     "revision_relative_path": "phase_06_script/timed_transcript.json",
-    "sha256": "sha256:281261d628a6d4fa6f26b11e4350a90e7bbb00cdb5d7ba1dbd690deb5cf5bc4b",
+    "sha256": "sha256:595aec7caa41cd83e98774ba530aeccc0ccbe48ffd6f2e9c91f0a2e1db30e606",
     "source_of_truth": true
   },
   "voice_bindings": {

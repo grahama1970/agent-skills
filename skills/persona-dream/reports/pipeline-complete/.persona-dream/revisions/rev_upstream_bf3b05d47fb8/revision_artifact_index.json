@@ -1,6 +1,6 @@
 {
   "actual_provider_call_attempts": 0,
-  "artifact_count": 339,
+  "artifact_count": 340,
   "artifacts": {
     "contact_sheet_gate_receipt": {
       "consumer_contract": null,
@@ -844,8 +844,8 @@
         "optional_evidence"
       ],
       "schema": null,
-      "sha256": "sha256:281261d628a6d4fa6f26b11e4350a90e7bbb00cdb5d7ba1dbd690deb5cf5bc4b",
-      "size_bytes": 456
+      "sha256": "sha256:595aec7caa41cd83e98774ba530aeccc0ccbe48ffd6f2e9c91f0a2e1db30e606",
+      "size_bytes": 516
     },
     "phase07.phase.07.storyboard.live.tau.command.specs.panel.creator.tau.dispatch.command.json": {
       "consumer_contract": null,
@@ -976,6 +976,19 @@
       "schema": null,
       "sha256": "sha256:e9211b4f5955c0a3ff2acbe02a28d105a0dec62dbaabe80d79c6e6e67c6634c4",
       "size_bytes": 403
+    },
+    "phase07.phase.07.storyboard.live.tau.receipts.identity.reference.qualification.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/receipts/identity_reference_qualification.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:271cdb907f1258299a87846b245ba474c675b6d7b477be58e377a09183895175",
+      "size_bytes": 1550
     },
     "phase07.phase.07.storyboard.live.tau.receipts.no.overlay.receipt.json": {
       "consumer_contract": null,
@@ -4370,8 +4383,8 @@
         "required_evidence"
       ],
       "schema": null,
-      "sha256": "sha256:645e15b899c8f69826a0c174ea0f72d4c4936cb4592d139c6643df837efe26d5",
-      "size_bytes": 26709
+      "sha256": "sha256:e3f1cddd606beeae564072107e993d2c420f8b6fd851e1d81422d9140c74ccaf",
+      "size_bytes": 26771
     },
     "story_contract": {
       "consumer_contract": null,

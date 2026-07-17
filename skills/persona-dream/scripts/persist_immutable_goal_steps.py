@@ -80,13 +80,13 @@ STEPS = [
     step(33, "output_retrieval", "Output Retrieval", "PASS_LIVE", [f"{RETURN_REL}/provider_return.mp4", f"{RETURN_REL}/phase11_provider_return_envelope.v1.json"], "The 16,957,429-byte provider MP4 was downloaded and hash-locked.", "Continuity acceptance."),
     step(34, "ffprobe_technical_validation", "FFprobe / Technical Validation", "PASS_LIVE", [f"{RETURN_REL}/phase11_download_ffprobe_receipt.v1.json", f"{RETURN_REL}/provider_return.mp4"], "FFprobe reports readable H.264, 1280x720, 24 fps, and 10.041667 seconds.", "Story continuity."),
     step(35, "frame_contact_sheet", "Frame Contact Sheet", "PASS", [f"{RETURN_REL}/frame_contact_sheet.png", f"{RETURN_REL}/frame_contact_sheet_receipt.v1.json"], "A 4x3 PNG contains all twelve Watch frames from the exact MP4.", "Continuity acceptance."),
-    step(36, "post_kling_continuity_review", "Post-Kling Continuity Review", "PASS", [f"{RETURN_REL}/post_kling_continuity_review_receipt.v1.json", f"{RETURN_REL}/frame_contact_sheet.png"], "The exact MP4 passes all four intended beats, including SB_004 commit action and reef geometry.", "Audio quality or lip synchronization."),
-    step(37, "voice_audio_handoff", "Voice / Audio Handoff Lane When Voiced", "PASS_EXACT_LINE_RENDER_READY_FOR_MUX", ["phase_11_submit_return/preflight/voice_handoff_plan.json", "phase_11_submit_return/preflight/voice_handoff_memory_receipt.json"], "The exact Kai transcript render and voice/ambience bindings are hash-bound and Memory-synced.", "Human listening acceptance."),
-    step(38, "final_assembly_movie_lane", "Final Assembly / Movie Lane", "PASS_POST_MUX_AUDIO_ASSEMBLY", [f"{RETURN_REL}/muxed_provider_return.mp4", f"{RETURN_REL}/audio_mix_receipt.json", f"{RETURN_REL}/ffmpeg_mux_receipt.json", f"{RETURN_REL}/muxed_provider_return_ffprobe_receipt.json", f"{RETURN_REL}/audible_output_review_receipt.json"], "The exact line and ocean ambience are muxed into a non-silent final MP4 with matching hashes.", "Subjective voice quality or lip synchronization."),
-    step(39, "report_generation", "Report Generation", "PASS", [f"{FINAL_REL}/final_report.v1.json", f"{FINAL_REL}/final_report.md"], "The final report is source-derived and cites the live provider, visual, audio, and Memory evidence.", "Human subjective listening acceptance."),
-    step(40, "gate_validation_loop", "Gate Validation Loop", "PASS", [f"{FINAL_REL}/final_gate_validation_summary.v1.json"], "All 42 step states pass and the active evidence graph has no unresolved blocker.", "Human subjective listening acceptance."),
+    step(36, "post_kling_continuity_review", "Post-Kling Continuity Review", "FAIL_IDENTITY_TEMPORAL_CONTINUITY", [f"{RETURN_REL}/post_kling_continuity_review_receipt.v2.json", f"{RETURN_REL}/identity_temporal_continuity_review.v1.json", "phase_07_storyboard_live_tau/receipts/identity_reference_qualification.v1.json"], "The current returned MP4 was reviewed and rejected for Embry identity drift.", "Deterministic face-embedding similarity.", "Replace the inconsistent Embry reference set, rerun Tau frame qualification, and submit a newly authorized provider request."),
+    step(37, "voice_audio_handoff", "Voice / Audio Handoff Lane When Voiced", "PASS_VOICE_DELIVERY_CONTRACT_READY_FOR_MUX", ["phase_11_submit_return/preflight/voice_handoff_plan.json", f"{RETURN_REL}/voice_delivery_review_receipt.json"], "The replacement Kai render applies a supported whispering cue and slightly-concerned conversational delivery stage.", "Human listening preference."),
+    step(38, "final_assembly_movie_lane", "Final Assembly / Movie Lane", "FAIL_VISIBLE_SPEAKER_NOT_LIPSYNCED", [f"{RETURN_REL}/muxed_provider_return.mp4", f"{RETURN_REL}/dialogue_sync_receipt.json", f"{RETURN_REL}/dialogue_forced_alignment_receipt.v1.json", f"{RETURN_REL}/visible_speaker_lipsync_review.v1.json", f"{RETURN_REL}/audio_mix_receipt.json", f"{RETURN_REL}/ffmpeg_mux_receipt.json", f"{RETURN_REL}/muxed_provider_return_ffprobe_receipt.json", f"{RETURN_REL}/audible_output_review_receipt.json"], "Local Whisper recognizes the exact canonical line at 5.00-7.70s, but Kai's visible mouth was not synchronized by the post-mux operation.", "A lip-synced accepted movie.", "Run the hash-bound video and dialogue WAV through an authorized lip-sync lane, then visually review SB_003 mouth motion."),
+    step(39, "report_generation", "Report Generation", "BLOCKED_STALE_FINAL_REPORT", [f"{FINAL_REL}/final_report.v1.json", f"{FINAL_REL}/final_report.md"], "The prior report remains as superseded evidence.", "Current final acceptance.", "Regenerate only after identity, delivery, and sync gates pass."),
+    step(40, "gate_validation_loop", "Gate Validation Loop", "BLOCKED_NONPASSING_GATES", [f"{FINAL_REL}/final_gate_validation_summary.v1.json"], "The gate summary records nonpassing late-stage gates.", "A working accepted video.", "Resolve steps 36-38 before rerunning final validation."),
     step(41, "upstream_revision_invalidation", "Upstream Revision Invalidation", "PASS", ["revision_activation_receipt.json", "upstream_contract_invalidation_ledger.v1.json", "revision_manifest.json"], "The superseded predecessor is separated from the active revision with lineage and invalidation evidence.", "Human subjective listening acceptance."),
-    step(42, "final_acceptance_boundary", "Final Acceptance Boundary", "PASS_AGENT_EVIDENCE_ACCEPTANCE", [f"{FINAL_REL}/final_acceptance_receipt.v1.json"], "The acceptance boundary cites positive live evidence for provider return, visual continuity, post-mux audio, and 42 exact Memory rereads.", "A separate human subjective listening or lip-sync acceptance."),
+    step(42, "final_acceptance_boundary", "Final Acceptance Boundary", "BLOCKED_FINAL_ACCEPTANCE", [f"{FINAL_REL}/final_acceptance_reconciliation_receipt.v1.json"], "The prior acceptance is explicitly superseded by identity, delivery, and sync failures.", "A repaired accepted video.", "Pass all nonpassing late-stage gates and exactly reread their replacement Memory states."),
 ]
 
 
@@ -105,58 +105,60 @@ def dump(path: Path, payload: Any) -> None:
 
 def build_final_artifacts(revision_root: Path, observed_at: str, memory_exact_count: int = 0) -> None:
     final_root = revision_root / FINAL_REL
+    muxed_path = revision_root / RETURN_REL / "muxed_provider_return.mp4"
+    muxed_sha = sha256(muxed_path) if muxed_path.is_file() else None
     blockers = [
         {"step_no": item["step_no"], "step_name": item["step_name"], "status": item["status"], "blocker": item["blocker"]}
         for item in STEPS
-        if item["status"].startswith("BLOCKED") or item["status"] == "FAIL"
+        if item["status"].startswith("BLOCKED") or item["status"].startswith("FAIL")
     ]
     counts = {
         "total": 42,
         "passing_or_not_required": 42 - len(blockers),
-        "failed": sum(item["status"] == "FAIL" for item in STEPS),
+        "failed": sum(item["status"].startswith("FAIL") for item in STEPS),
         "blocked": sum(item["status"].startswith("BLOCKED") for item in STEPS),
     }
     gate = {
         "schema": "persona_dream.final_gate_validation_summary.v1",
-        "status": "PASS_FINAL_GATE_VALIDATION",
+        "status": "BLOCKED_FINAL_GATE_VALIDATION",
         "run_id": RUN_ID,
         "revision_id": REVISION_ID,
         "request_body_sha256": REQUEST_SHA,
         "counts": counts,
         "blockers": blockers,
-        "live_evidence": {"provider_calls": 1, "poll_count": 54, "returned_mp4": True, "ffprobe_pass": True, "frame_contact_sheet_pass": True, "continuity_pass": True, "post_mux_audio_pass": True},
+        "live_evidence": {"provider_calls": 1, "poll_count": 54, "returned_mp4": True, "ffprobe_pass": True, "frame_contact_sheet_pass": True, "continuity_pass": False, "post_mux_audio_pass": False},
         "memory_persistence": {"collection": COLLECTION, "exact_reread_count": memory_exact_count, "expected_count": 42},
-        "next_critical_action": None,
+        "next_critical_action": "replace the inconsistent Embry reference set and rerun Tau identity qualification before any new provider authorization",
         "mocked": False,
         "live": True,
         "observed_at": observed_at,
     }
     acceptance = {
         "schema": "persona_dream.final_acceptance_receipt.v1",
-        "status": "PASS_AGENT_EVIDENCE_ACCEPTANCE",
+        "status": "BLOCKED_FINAL_ACCEPTANCE",
         "run_id": RUN_ID,
         "revision_id": REVISION_ID,
         "request_body_sha256": REQUEST_SHA,
-        "accepted": True,
+        "accepted": False,
         "working_kling_video_returned": True,
         "provider_mp4_sha256": "sha256:08ee232878508fda8797fd697f6ef80d40b3cf7722f43914040759dfd6c7bb50",
-        "final_muxed_mp4_sha256": "sha256:ec9da2af5b73ae4cff5df707341d83e59a90e6c56ef1197505ea68ae247d691a",
+        "final_muxed_mp4_sha256": muxed_sha,
         "technical_validation_passed": True,
         "frame_contact_sheet_passed": True,
-        "post_kling_continuity_passed": True,
-        "post_mux_audio_passed": True,
+        "post_kling_continuity_passed": False,
+        "post_mux_audio_passed": False,
         "pipeline_step_memory_target": 42,
         "pipeline_step_memory_exact_reread": memory_exact_count,
         "blockers": blockers,
         "claims": {
-            "proves": ["a real Kling MP4 was submitted once, polled, downloaded, technically validated, contact-sheeted, visually accepted, and post-muxed with non-silent audio", "all 42 pipeline steps were exactly reread from Memory"],
-            "does_not_prove": ["human subjective voice quality", "lip synchronization"],
+            "proves": ["a real Kling MP4 was submitted once, polled, downloaded, technically validated, contact-sheeted, and post-muxed with non-silent forced-aligned audio", "all 42 pipeline steps were exactly reread from Memory"],
+            "does_not_prove": ["human subjective voice quality", "acceptable lip synchronization", "stable Embry identity"],
         },
         "observed_at": observed_at,
     }
     report = {
         "schema": "persona_dream.final_report.v1",
-        "status": "PASS_AGENT_EVIDENCE_ACCEPTANCE",
+        "status": "BLOCKED_FINAL_ACCEPTANCE",
         "run_id": RUN_ID,
         "revision_id": REVISION_ID,
         "request_body_sha256": REQUEST_SHA,
@@ -168,26 +170,27 @@ def build_final_artifacts(revision_root: Path, observed_at: str, memory_exact_co
             "provider_mp4": f"../phase_11_submit_return/provider_return/{REQUEST_KEY}/provider_return.mp4",
             "provider_mp4_sha256": "sha256:08ee232878508fda8797fd697f6ef80d40b3cf7722f43914040759dfd6c7bb50",
             "final_muxed_mp4": f"../phase_11_submit_return/provider_return/{REQUEST_KEY}/muxed_provider_return.mp4",
-            "final_muxed_mp4_sha256": "sha256:ec9da2af5b73ae4cff5df707341d83e59a90e6c56ef1197505ea68ae247d691a",
+            "final_muxed_mp4_sha256": muxed_sha,
             "duration_seconds": 10.041667,
             "codec": "h264",
             "dimensions": "1280x720",
             "fps": 24,
             "contact_sheet": f"../phase_11_submit_return/provider_return/{REQUEST_KEY}/frame_contact_sheet.png",
         },
-        "continuity_result": "PASS_POST_KLING_CONTINUITY_REVIEW",
-        "audio_result": "PASS_DETERMINISTIC_NON_SILENCE",
+        "continuity_result": "FAIL_IDENTITY_TEMPORAL_CONTINUITY",
+        "audio_result": "FAIL_VISIBLE_SPEAKER_NOT_LIPSYNCED",
         "memory_persistence": {"collection": COLLECTION, "exact_reread_count": memory_exact_count, "expected_count": 42},
         "blockers": blockers,
         "observed_at": observed_at,
     }
     dump(final_root / "final_gate_validation_summary.v1.json", gate)
-    dump(final_root / "final_acceptance_receipt.v1.json", acceptance)
+    if not (final_root / "final_acceptance_reconciliation_receipt.v1.json").is_file():
+        dump(final_root / "final_acceptance_receipt.v1.json", acceptance)
     dump(final_root / "final_report.v1.json", report)
     lines = [
         "# Persona Dream Final Report",
         "",
-        "Status: `PASS_AGENT_EVIDENCE_ACCEPTANCE`",
+        "Status: `BLOCKED_FINAL_ACCEPTANCE`",
         "",
         f"Run: `{RUN_ID}`",
         f"Revision: `{REVISION_ID}`",
@@ -195,7 +198,7 @@ def build_final_artifacts(revision_root: Path, observed_at: str, memory_exact_co
         "",
         "A real 10.041667-second H.264 Kling MP4 was submitted once, polled 54 times, downloaded, ffprobed, sampled into 12 frames, and assembled into a 4x3 contact sheet.",
         "",
-        "The repaired final beat visibly shows Embry committing through the safe channel beside a readable lava-reef boundary. The exact Kai line and ocean ambience were mixed and muxed into the final MP4; deterministic analysis confirms an audio stream with non-silent output.",
+        "The provider return is retained as evidence but is not accepted: Embry identity drifts between 0 and 3 seconds and the supplied Embry contact sheet is internally inconsistent. Kai's replacement line is delivery-tagged and remuxed at the SB_003 boundary, but human listening preference remains unverified.",
         "",
         f"Step counts: {counts['passing_or_not_required']} passing/not-required, {counts['failed']} failed, {counts['blocked']} blocked, 42 total. Memory exact reread: {memory_exact_count}/42.",
         "",

@@ -752,6 +752,8 @@ function PhaseIcon({ phaseId, size = 18 }: { phaseId: string; size?: number }) {
 
 function statusTone(status: string): StatusTone {
   const normalized = status.toUpperCase()
+  if (normalized.includes('BLOCK') || normalized.includes('FAIL') || normalized.includes('STALE') || normalized.startsWith('NO_')) return 'blocked'
+  if (normalized.includes('DRY_RUN')) return 'dry'
   if (
     normalized.includes('PASS')
     || normalized.includes('RETURN_RECEIVED')
@@ -760,8 +762,6 @@ function statusTone(status: string): StatusTone {
     || normalized.includes('CALLED')
     || normalized.includes('AUTHORIZED')
   ) return 'pass'
-  if (normalized.includes('DRY_RUN')) return 'dry'
-  if (normalized.includes('BLOCK') || normalized.includes('FAIL') || normalized.includes('STALE') || normalized.startsWith('NO_')) return 'blocked'
   return 'unknown'
 }
 
@@ -1385,6 +1385,9 @@ function videoProviderArtifactRole(artifact: DreamArtifact): string | null {
 
 function providerContractArtifactRole(artifact: DreamArtifact): string | null {
   const text = `${artifact.label} ${artifact.path}`.toLowerCase()
+  if (/phase11[_-]?live[_-]?request\.v1\.json/.test(text)) return 'submitted_request'
+  if (/phase11[_-]?provider[_-]?return[_-]?envelope\.v1\.json/.test(text)) return 'return_envelope'
+  if (/shot[_-]?bible\.json/.test(text)) return 'shot_bible'
   if (/panel[_-]?distillation[_-]?contract\.json/.test(text)) return 'contract'
   if (/final[_-]?provider[_-]?payload[_-]?by[_-]?panel\.json/.test(text)) return 'payload_by_panel'
   if (/provider[_-]?payload[_-]?field[_-]?mapping\.json/.test(text)) return 'field_mapping'
@@ -1769,14 +1772,22 @@ function ProviderContractPanel({ stage }: { stage: DreamStage }) {
   const probeReceipt = byRole.get('probe_receipt')?.payload ?? null
   const schemaReceipt = byRole.get('schema_receipt')?.payload ?? null
   const reviewReceipt = byRole.get('review_receipt')?.payload ?? null
-  const requestBody = payloadObject(payloadByPanel?.assembled_request_preview)
+  const submittedRequest = byRole.get('submitted_request')?.payload ?? null
+  const returnEnvelope = byRole.get('return_envelope')?.payload ?? null
+  const shotBible = byRole.get('shot_bible')?.payload ?? null
+  const submittedBody = payloadObject(submittedRequest?.provider_request_body)
+  const requestBody = submittedBody
+    ?? payloadObject(payloadByPanel?.assembled_request_preview)
     ?? payloadObject(payloadObject(contract?.provider_request)?.body)
   const providerRequest = {
     status: firstString(payloadByPanel?.status, payloadObject(contract?.provider_request)?.status) ?? 'MISSING_PROVIDER_REQUEST',
     body: requestBody,
-    submitted: payloadByPanel?.submitted ?? receipt?.submitted ?? false,
+    submitted: Boolean(returnEnvelope) || submittedRequest?.submitted === true || payloadByPanel?.submitted === true || receipt?.submitted === true,
   }
-  const providerInput = payloadObject(requestBody?.input)
+  const providerInput = payloadObject(requestBody?.input) ?? requestBody
+  const submittedPrompts = payloadArray(providerInput?.multi_prompt)
+  const lookLock = payloadObject(shotBible?.look_lock)
+  const sourceShots = payloadArray(shotBible?.shots)
   const contractPanels = payloadArray(contract?.panels)
   const projectedPanels = payloadArray(payloadByPanel?.panel_payloads)
   const publicationComplete = dreamNumber(publicationReceipt?.assets_published) != null
@@ -1865,12 +1876,12 @@ function ProviderContractPanel({ stage }: { stage: DreamStage }) {
     ...dreamList(payloadObject(payloadByPanel?.claims)?.does_not_prove),
     ...dreamList(payloadObject(receipt?.claims)?.does_not_prove),
   ])]
-  const providerId = firstString(contract?.selected_provider, payloadByPanel?.provider, schemaReceipt?.provider) ?? 'missing'
-  const endpoint = firstString(contract?.provider_endpoint, payloadByPanel?.endpoint, schemaReceipt?.model_endpoint) ?? 'missing'
+  const providerId = firstString(submittedRequest?.provider_id, contract?.selected_provider, payloadByPanel?.provider, schemaReceipt?.provider) ?? 'missing'
+  const endpoint = firstString(submittedRequest?.endpoint, contract?.provider_endpoint, payloadByPanel?.endpoint, schemaReceipt?.model_endpoint) ?? 'missing'
   const status = firstString(contract?.status, receipt?.status, gateReceipt?.status) ?? 'MISSING_PHASE10_PROVIDER_CONTRACT'
   const liveSubmitStatus = firstString(payloadByPanel?.status, receipt?.live_submit_status, gateReceipt?.live_submit_status) ?? 'DRY_RUN_NOT_LIVE_SUBMITTABLE'
-  const payloadHash = firstString(payloadByPanel?.payload_sha256, receipt?.payload_sha256) ?? 'missing'
-  const submitted = contract?.submitted ?? providerRequest?.submitted ?? receipt?.submitted
+  const payloadHash = firstString(submittedRequest?.request_body_sha256, payloadByPanel?.payload_sha256, receipt?.payload_sha256) ?? 'missing'
+  const submitted = providerRequest.submitted
   const paidCallAuthorized = contract?.paid_call_authorized ?? receipt?.paid_call_authorized
   const providerLive = contract?.live_provider_call ?? payloadByPanel?.live_provider_call ?? receipt?.live_provider_call
   const providerAttempts = dreamNumber(contract?.actual_provider_call_attempts) ?? dreamNumber(receipt?.actual_provider_call_attempts) ?? 0
@@ -1883,17 +1894,25 @@ function ProviderContractPanel({ stage }: { stage: DreamStage }) {
         const sourceEvidence = payloadObject(panelPayload.source_evidence)
         const distillation = payloadObject(panelPayload.distillation)
         const panelId = String(panelPayload.panel_id ?? `panel_${index + 1}`)
+        const submittedPrompt = payloadObject(submittedPrompts[index])
+        const sourceShot = sourceShots.find((item) => item.panel_id === panelId)
         return {
           panelId,
           start: payloadObject(panelPayload.accepted_start_frame) ?? undefined,
           end: payloadObject(panelPayload.accepted_end_frame) ?? undefined,
-          duration: projectionInput?.duration,
+          duration: submittedPrompt?.duration ?? projectionInput?.duration,
           selected: Boolean(projectionInput?.start_image_url || projectionInput?.end_image_url)
             && projectionInput?.start_image_url === providerInput?.start_image_url
             && projectionInput?.end_image_url === providerInput?.end_image_url,
           sourceEvidence,
           distillation,
-          panelRequestJson: JSON.stringify(projection ?? {}, null, 2),
+          dialogue: Array.isArray(sourceEvidence?.dialogue)
+            ? sourceEvidence.dialogue.filter((item): item is Record<string, unknown> => Boolean(item) && typeof item === 'object')
+            : [],
+          submittedPrompt,
+          sourceShot,
+          lookLock,
+          panelRequestJson: JSON.stringify(submittedPrompt ?? projection ?? {}, null, 2),
           panelSummary: `dialogue=${dreamBooleanLabel(sourceEvidence?.dialogue)} / voice=${String(sourceEvidence?.voice_status ?? 'missing')} / duration=${String(projectionInput?.duration ?? 'missing')} / aspect=${String(projectionInput?.aspect_ratio ?? 'missing')}`,
         }
       })
@@ -1938,12 +1957,16 @@ function ProviderContractPanel({ stage }: { stage: DreamStage }) {
         return {
           ...row,
           duration,
+          dialogue: [] as Array<Record<string, unknown>>,
+          submittedPrompt: null,
+          sourceShot: null,
+          lookLock: null,
           selected: startAssetId === selectedStart && endAssetId === selectedEnd,
           panelRequestJson: JSON.stringify(panelRequest, null, 2),
           panelSummary: `image_url=${dreamBooleanLabel(row.start?.provider_accessible_url)} / end_image_url=${dreamBooleanLabel(row.end?.provider_accessible_url)} / duration=${String(duration ?? 'missing')} / aspect=${String(baseInput.aspect_ratio ?? 'missing')}`,
         }
       })
-  }, [contractPanelPayloads, publicationAssets, providerInput, requestBody])
+  }, [contractPanelPayloads, publicationAssets, providerInput, requestBody, submittedPrompts, sourceShots, lookLock])
   const [copyStatus, setCopyStatus] = useState('')
   const copyRequestBody = async () => {
     try {
@@ -2018,16 +2041,52 @@ skills/persona-dream/run.sh check-phase10-provider-contract \\
                 <div style={row.selected ? nvis.providerContractPanelPayloadJson : nvis.providerContractPanelPayloadJsonMuted}>
                   <div style={nvis.providerContractDistillationTextBlock}>
                     <div style={nvis.providerContractDistillationTextItem}>
+                      <span style={nvis.providerContractDistillationLabel}>Exact submitted Kling prompt</span>
+                      <p style={nvis.providerContractDistillationText}>
+                        {String(row.submittedPrompt?.prompt ?? 'No hash-bound Phase 11 prompt found')}
+                      </p>
+                      <code style={nvis.providerContractDistillationAudio}>
+                        duration={String(row.submittedPrompt?.duration ?? 'missing')}s / generate_audio={dreamBooleanLabel(providerInput?.generate_audio)}
+                      </code>
+                    </div>
+                    <div style={nvis.providerContractDistillationTextItem}>
                       <span style={nvis.providerContractDistillationLabel}>Source action</span>
                       <p style={nvis.providerContractDistillationText} title={String(row.sourceEvidence?.action ?? 'missing')}>
                         {String(row.sourceEvidence?.action ?? 'missing')}
                       </p>
                     </div>
                     <div style={nvis.providerContractDistillationTextItem}>
+                      <span style={nvis.providerContractDistillationLabel}>Source dialogue</span>
+                      {row.dialogue.length > 0 ? row.dialogue.map((line, lineIndex) => (
+                        <p key={`${row.panelId}-dialogue-${lineIndex}`} style={nvis.providerContractDistillationText}>
+                          <strong>{String(line.speaker ?? 'Unknown')}:</strong>{' '}
+                          {String(line.text ?? 'missing')}
+                          {line.voice_direction ? ` (${String(line.voice_direction)})` : ''}
+                        </p>
+                      )) : (
+                        <p style={nvis.providerContractDistillationText}>No dialogue</p>
+                      )}
+                    </div>
+                    <div style={nvis.providerContractDistillationTextItem}>
                       <span style={nvis.providerContractDistillationLabel}>Distilled audio</span>
                       <code style={nvis.providerContractDistillationAudio} title={String(row.distillation?.audio_strategy ?? row.distillation?.voice_status ?? 'missing')}>
                         {dreamDisplayCode(String(row.distillation?.audio_strategy ?? row.distillation?.voice_status ?? 'missing'))}
                       </code>
+                    </div>
+                    <div style={nvis.providerContractDistillationTextItem}>
+                      <span style={nvis.providerContractDistillationLabel}>Shot cinematography</span>
+                      <p style={nvis.providerContractDistillationText}>
+                        {[
+                          `equipment: ${String(row.lookLock?.camera_format ?? 'missing')}`,
+                          `lens: ${String(row.lookLock?.lens ?? 'missing')}`,
+                          `framing: ${String(row.sourceShot?.framing ?? 'missing')}`,
+                          `movement: ${String(row.sourceShot?.camera_movement ?? 'missing')}`,
+                          `focus: ${String(row.sourceShot?.focus_target ?? 'missing')}`,
+                          `lighting: ${String(row.lookLock?.lighting ?? 'missing')}`,
+                          `grade: ${String(row.lookLock?.color_grade ?? 'missing')}`,
+                          `atmosphere: ${String(row.lookLock?.atmosphere_texture ?? 'missing')}`,
+                        ].join('\n')}
+                      </p>
                     </div>
                   </div>
                   <ProviderContractAudioSummary value={row.panelSummary} />
@@ -11091,14 +11150,12 @@ const nvis: Record<string, CSSProperties> = {
     textTransform: 'uppercase',
   },
   providerContractDistillationText: {
-    display: '-webkit-box',
+    whiteSpace: 'pre-wrap',
     margin: 0,
     color: '#cbd5e1',
     fontSize: 11,
     lineHeight: 1.45,
-    overflow: 'hidden',
-    WebkitBoxOrient: 'vertical',
-    WebkitLineClamp: 3,
+    overflowWrap: 'anywhere',
   },
   providerContractDistillationAudio: {
     justifySelf: 'start',

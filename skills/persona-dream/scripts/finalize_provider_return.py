@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from audio_strategy_gate import assess_revision_audio_strategy, blockers_for_provider_return
+from dialogue_alignment_gate import verify_with_whisper
 
 PLAN_RELATIVE = Path("phase_11_submit_return/preflight/voice_handoff_plan.json")
 FRAME_COUNT = 12
@@ -150,9 +151,27 @@ def build_mux(revision_root: Path, request_sha256: str) -> dict[str, Any]:
         raise SystemExit("rendered dialogue hash mismatch")
     if sha256_file(ambience) != plan["ambient_beds"][0].get("sha256"):
         raise SystemExit("ambient bed hash mismatch")
+    delivery_receipt = read_json(return_dir / "voice_delivery_review_receipt.json")
+    if (
+        delivery_receipt.get("status") != "PASS_VOICE_DELIVERY_CONTRACT"
+        or delivery_receipt.get("rendered_wav_sha256") != sha256_file(dialogue)
+    ):
+        raise SystemExit("voice delivery contract is missing, failed, or bound to another WAV")
     probe = ffprobe(source_video)
     duration = video_duration(probe)
-    delay_ms = round(float(lines[0].get("start_s") or 0) * 1000)
+    line_start = float(lines[0].get("start_s"))
+    line_end = float(lines[0].get("end_s"))
+    rendered_duration = float(rendered.get("duration_seconds"))
+    beat_id = str(lines[0].get("storyboard_beat_id") or "")
+    beat_start = float(lines[0].get("storyboard_beat_start_s"))
+    beat_end = float(lines[0].get("storyboard_beat_end_s"))
+    if not beat_id or not beat_start <= line_start < beat_end:
+        raise SystemExit("dialogue onset is not bound inside its storyboard beat")
+    if abs((line_end - line_start) - rendered_duration) > 0.05:
+        raise SystemExit("dialogue interval does not match rendered WAV duration")
+    if line_end > duration:
+        raise SystemExit("dialogue interval extends beyond the provider return")
+    delay_ms = round(line_start * 1000)
 
     mix_path = return_dir / "audio_mix.wav"
     mix_command = [
@@ -187,6 +206,48 @@ def build_mux(revision_root: Path, request_sha256: str) -> dict[str, Any]:
         "observed_at": datetime.now(timezone.utc).isoformat(),
     }
     write_json(return_dir / "audio_mix_receipt.json", mix_receipt)
+    sync_receipt = {
+        "schema": "persona_dream.dialogue_sync_receipt.v1",
+        "status": "PASS_DIALOGUE_STORYBOARD_SYNC",
+        "request_body_sha256": request_sha256,
+        "storyboard_beat_id": beat_id,
+        "storyboard_beat_start_s": beat_start,
+        "storyboard_beat_end_s": beat_end,
+        "dialogue_start_s": line_start,
+        "dialogue_end_s": line_end,
+        "dialogue_delay_ms": delay_ms,
+        "rendered_audio_duration_seconds": rendered_duration,
+        "rendered_audio_sha256": sha256_file(dialogue),
+        "audio_mix_sha256": sha256_file(mix_path),
+        "checks": {
+            "onset_inside_bound_storyboard_beat": beat_start <= line_start < beat_end,
+            "interval_matches_rendered_audio": abs((line_end - line_start) - rendered_duration) <= 0.05,
+            "dialogue_ends_within_video": line_end <= duration,
+        },
+        "mocked": False,
+        "live": True,
+        "claims": {
+            "proves": ["the rendered dialogue onset is aligned to its declared storyboard beat"],
+            "does_not_prove": ["lip synchronization", "subjective timing acceptance"],
+        },
+        "observed_at": datetime.now(timezone.utc).isoformat(),
+    }
+    write_json(return_dir / "dialogue_sync_receipt.json", sync_receipt)
+
+    alignment_receipt = verify_with_whisper(
+        dialogue_path=dialogue,
+        canonical_text=str(lines[0]["text"]),
+        timeline_offset_seconds=line_start,
+        expected_start_seconds=line_start,
+        expected_end_seconds=line_end,
+        output_dir=return_dir / "whisper_alignment",
+    )
+    alignment_receipt["request_body_sha256"] = request_sha256
+    alignment_receipt["storyboard_beat_id"] = beat_id
+    alignment_path = return_dir / "dialogue_forced_alignment_receipt.v1.json"
+    write_json(alignment_path, alignment_receipt)
+    if alignment_receipt["status"] != "PASS_FORCED_DIALOGUE_ALIGNMENT":
+        raise SystemExit(f"forced dialogue alignment failed: {alignment_receipt['checks']}")
 
     muxed = return_dir / "muxed_provider_return.mp4"
     mux_command = [
@@ -252,7 +313,13 @@ def build_mux(revision_root: Path, request_sha256: str) -> dict[str, Any]:
     )
     if blockers or not audible:
         raise SystemExit(f"post-mux gate failed: {blockers or audio_receipt['status']}")
-    return {"muxed_video": str(muxed), "muxed_video_sha256": sha256_file(muxed), **audio_receipt}
+    return {
+        "muxed_video": str(muxed),
+        "muxed_video_sha256": sha256_file(muxed),
+        "forced_alignment_receipt": str(alignment_path),
+        "forced_alignment_status": alignment_receipt["status"],
+        **audio_receipt,
+    }
 
 
 def main() -> int:

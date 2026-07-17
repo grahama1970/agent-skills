@@ -43,19 +43,55 @@ def atomic_write_json(path: Path, value: Mapping[str, Any]) -> None:
         Path(temporary_name).unlink(missing_ok=True)
 
 
+def resolve_storyboard_timing(entry: Mapping[str, Any], shot_bible: Mapping[str, Any]) -> dict[str, Any]:
+    beat_id = str(entry.get("storyboard_beat_id") or "")
+    shots = shot_bible.get("shots")
+    if not beat_id or not isinstance(shots, list):
+        raise SystemExit("spoken transcript line is missing a storyboard beat binding")
+    shot = next(
+        (item for item in shots if isinstance(item, Mapping) and item.get("panel_id") == beat_id),
+        None,
+    )
+    if not isinstance(shot, Mapping):
+        raise SystemExit(f"spoken transcript storyboard beat does not exist: {beat_id}")
+    time_range = shot.get("time_range_s")
+    if not isinstance(time_range, Mapping):
+        raise SystemExit(f"storyboard beat has no time range: {beat_id}")
+    beat_start = float(time_range["start_s"])
+    beat_end = float(time_range["end_s"])
+    line_start = float(entry["start_s"])
+    line_end = float(entry["end_s"])
+    if not beat_start <= line_start < beat_end:
+        raise SystemExit(
+            f"spoken transcript onset {line_start} is outside storyboard beat {beat_id} "
+            f"[{beat_start}, {beat_end})"
+        )
+    if line_end <= line_start:
+        raise SystemExit("spoken transcript line has a non-positive interval")
+    return {
+        "storyboard_beat_id": beat_id,
+        "beat_start_s": beat_start,
+        "beat_end_s": beat_end,
+        "line_start_s": line_start,
+        "line_end_s": line_end,
+    }
+
+
 def build_plan(
     revision_root: Path,
     ambient_wav: Path = KAI_AMBIENT_WAV,
     render_receipt_path: Path | None = None,
 ) -> dict[str, Any]:
     transcript_path = revision_root / "phase_06_script/timed_transcript.json"
+    shot_bible_path = revision_root / "phase_03_crew/shot_bible.json"
     audition_path = revision_root / "phase_05_voices/kai_voice_audition.json"
     request_path = revision_root / "phase_11_submit_return/canonical/phase11_live_request.v1.json"
-    for required in (transcript_path, audition_path, request_path, ambient_wav):
+    for required in (transcript_path, shot_bible_path, audition_path, request_path, ambient_wav):
         if not required.is_file():
             raise SystemExit(f"required handoff source missing: {required}")
 
     transcript = read_json(transcript_path)
+    shot_bible = read_json(shot_bible_path)
     audition = read_json(audition_path)
     request = read_json(request_path)
     request_sha = str((request.get("approval_bindings") or {}).get("request_body_sha256") or "")
@@ -82,12 +118,13 @@ def build_plan(
     for entry in transcript:
         if isinstance(entry, Mapping) and entry.get("speaker") and entry.get("text"):
             canonical_text = str(entry["text"])
+            timing = resolve_storyboard_timing(entry, shot_bible)
             if isinstance(render_receipt, Mapping):
                 if render_receipt.get("mocked") is not False or render_receipt.get("live") is not True:
                     raise SystemExit("exact-line receipt is not live non-mocked evidence")
                 if render_receipt.get("character") != str(entry["speaker"]).casefold():
                     raise SystemExit("exact-line receipt speaker mismatch")
-                if render_receipt.get("answer_text") != canonical_text or render_receipt.get("tts_render_text") != canonical_text:
+                if render_receipt.get("answer_text") != canonical_text:
                     raise SystemExit("exact-line receipt text does not match timed transcript")
             lines.append(
                 {
@@ -95,6 +132,9 @@ def build_plan(
                     "text": canonical_text,
                     "start_s": float(entry["start_s"]),
                     "end_s": float(entry["end_s"]),
+                    "storyboard_beat_id": timing["storyboard_beat_id"],
+                    "storyboard_beat_start_s": timing["beat_start_s"],
+                    "storyboard_beat_end_s": timing["beat_end_s"],
                     "voice_direction": str(entry.get("voice_direction") or ""),
                     "render_status": "PASS_EXACT_LINE_RENDER" if rendered_audio else "PENDING_EXACT_LINE_RENDER",
                     "rendered_audio": rendered_audio,
@@ -121,6 +161,10 @@ def build_plan(
             "revision_relative_path": "phase_06_script/timed_transcript.json",
             "sha256": sha256_file(transcript_path),
             "source_of_truth": True,
+        },
+        "storyboard_timing": {
+            "revision_relative_path": "phase_03_crew/shot_bible.json",
+            "sha256": sha256_file(shot_bible_path),
         },
         "lines": lines,
         "voice_bindings": {
@@ -156,18 +200,21 @@ def build_plan(
             "ffmpeg_mux_receipt.json",
             "muxed_provider_return_ffprobe_receipt.json",
             "audible_output_review_receipt.json",
+            "dialogue_sync_receipt.json",
         ],
         "gates": {
             "pre_submit": [
                 "provider request generate_audio=false",
                 "timed transcript path and hash verify",
                 "every voice and ambient reference path and hash verify",
+                "every spoken-line onset is inside its bound storyboard beat",
             ],
             "post_return": [
                 "exact rendered line equals timed transcript text",
                 "final MP4 contains an audio stream",
                 "final MP4 has audible output",
                 "mux and ffprobe receipts bind final MP4 hash",
+                "dialogue sync receipt binds the rendered duration and storyboard onset",
             ],
         },
         "optional_lipsync": {
