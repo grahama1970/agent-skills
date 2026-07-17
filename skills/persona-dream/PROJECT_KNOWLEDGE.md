@@ -1,6 +1,6 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-06 20:33 by agent
+**Last updated:** 2026-07-17 07:03 by agent
 **Status:** Active development
 
 ## Current Understanding
@@ -30,6 +30,7 @@
 - 2026-07-04 correction: A fresh status poll of GET http://127.0.0.1:3001/api/tau/dream/script-draft/latest after the Phase 06 knowledge update returned ok=true, status=PASS_SCRIPT_CONTRACT, script_chars=2114, coverage=7, assets=14. Treat 14 asset-usage rows as the current observed API count unless a newer script_contract.json receipt proves otherwise.
 - 2026-07-06: Phase 07 storyboard failure mode: the multi-day blocker was not primarily a card/layout problem. The panel prompt and reviewer gate let character identity become secondary to wide establishing-shot composition, reef/location beauty, and crowd/lineup context. For identity-critical storyboard panels, priority must be: required character identity match > faces visible and reference-verifiable > character-readable composition > location/reef/cinematic details. Use medium-wide foreground two-shots when Embry/Kai are required, and pass Embry/Kai reference sheets as actual image inputs/attachments, not only local path text.
 - 2026-07-06: If the human shows a visual counterexample for a persona-dream panel, stop UI/status-copy work and inspect the generated prompt, reference attachment route, reviewer schema, and acceptance gate. Do not spend further cycles styling around bad imagery. The next artifact must be a corrected Tau creator/reviewer run receipt or a precise blocker proving why regeneration cannot proceed.
+- 2026-07-17: Phase 11 boundary restore exists as task commit `8ed796cb2 persona-dream: finish phase11 boundary restore`, but it is not on `origin/main` (`git merge-base --is-ancestor 8ed796cb2 origin/main` returned exit 1). The commit restores/validates canonical Phase 11 submit-return files only; proof was `bash -n skills/persona-dream/run.sh`, `./run.sh read`, focused Phase 11 pytest (`11 passed in 1.40s`), and `python3 scripts/check_mock_evidence_claims.py` (`OK: checked 444 test file(s); no mock+proof claim violations`). This is not full pipeline progress, Dreamer readiness, or provider readiness. Current integration task is to cherry-pick this task-only commit plus this knowledge update onto a clean `main` worktree and push `agent-skills@main`.
 
 ## Recent Decisions
 
@@ -57,6 +58,7 @@
 | 2026-07-03 | Phase 05 voice selection may be autonomous only through a creator/reviewer contract | Agents may discover candidate public/provided/local/synthetic voice references, extract clean clips, render Chatterbox demos, and select defaults, but the phase must write `voice_candidate_bundle.json` and `voice_selection_receipt.json` with provenance, rights notes, live non-mocked demo receipts, tone metadata, and reviewer rationale. Silent final voice locking is not accepted. |
 | 2026-07-06 | Phase 07 storyboard prompts must be identity-first for character panels | Wide establishing-shot prompts caused plausible surf/location frames with wrong or unverifiable Embry/Kai identities. Character panels must require foreground, reference-matched, face-visible Embry and Kai before surf composition, reef visibility, crowd pressure, or cinematic beauty. Avoid weak wording like 'for continuity only' for identity references. |
 | 2026-07-06 | Failed identity review invalidates accepted storyboard frames | A generated storyboard frame cannot remain ACCEPTED_START_FRAME or ACCEPTED_END_FRAME when identity_continuity_review.status is FAIL. Reviewer failure must downgrade the frame, write a blocker, and force Tau creator/reviewer regeneration instead of letting the UI display or package the image as accepted. |
+| 2026-07-17 | Integrate Phase 11 boundary restore to `main` from a clean worktree | The active branch `battle-ux8-live-contract` is dirty and `ahead 80, behind 203` relative to `origin/main`, so direct push is unsafe. Reuse the task-only commit `8ed796cb2` and a narrow knowledge commit; do not carry unrelated battle/persona-dream dirty files. |
 
 ## Open Questions
 
