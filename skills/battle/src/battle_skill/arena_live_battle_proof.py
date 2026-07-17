@@ -42,7 +42,9 @@ TERMINAL_BOUNDARY_EVENT_TYPES = frozenset(
         "runtime_parent_terminated_by_blue",
     }
 )
-TAU_REPO = Path("/home/graham/workspace/experiments/tau")
+TAU_REPO = Path(
+    os.environ.get("TAU_REPO", "/home/graham/workspace/experiments/tau")
+).expanduser().resolve()
 CANONICAL_BATTLE004_ALLOTTED_SECONDS = 1200.0
 
 

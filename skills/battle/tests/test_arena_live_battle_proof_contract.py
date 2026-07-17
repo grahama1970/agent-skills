@@ -360,6 +360,15 @@ def test_arena_prekill_survival_proof_cli_uses_prekill_defaults(
     assert calls["run_id"].startswith("arena-prekill-survival-")
 
 
+def test_tau_repository_can_be_selected_for_clean_compatibility_run(
+    tmp_path: Path,
+) -> None:
+    source = Path(proof.__file__).read_text(encoding="utf-8")
+
+    assert 'os.environ.get("TAU_REPO"' in source
+    assert str(proof.TAU_REPO)
+
+
 def test_prekill_pressure_callback_runs_before_terminal_confirmation(
     tmp_path: Path,
     monkeypatch,
