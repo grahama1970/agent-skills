@@ -28,22 +28,62 @@ It does not implement Tau behavior itself.
   emitted `agent_skills.tau.proof_status_receipt.v1` with `ok:true`,
   `sanity_ok:true`, and `status_ok:true`. `skills/tau/run.sh e2e` emitted
   `agent_skills.tau.e2e_receipt.v1` with `alias_for:"proof-status"`.
-- 2026-07-06 UX Lab now has a read-only Tau DAG React Flow inspection route at
-  `http://localhost:3002/#tau/dag`. Commit `711b9c051` in `pi-mono` added a
-  Tau-specific adapter from `tau.dag_contract.v1` plus `tau.dag_receipt.v1`
-  into the existing transport DAG evidence model, static fixture artifacts under
-  `packages/ux-lab/public/tau-dag-runs/`, and a side panel for receipt status,
-  goal hash, mocked/live/provider-live boundaries, alerts, proof scope, and
-  artifact paths. Focused proof observed `npm run test --
-  src/components/tau/tauDagEvidenceAdapter.test.ts
-  src/components/scillm/transport/TransportReactFlowDagWorkspace.test.ts` with
-  `15 passed`, and CDP verification wrote
-  `/home/graham/workspace/experiments/pi-mono/.codex/ui-verification/latest.json`
-  plus screenshot
-  `/tmp/codex-ui-verification/pi-mono/tau-dag-react-flow/20260706T150412Z.png`.
-  This proves artifact-backed DAG renderability in the browser; it does not
-  prove live Tau DAG execution from the browser, Herdr provider execution,
-  GitHub mutation, provider/model semantic quality, or human acceptance.
+- 2026-07-17 Slice 01 wrapper contract: the operator entrypoint exposes
+  `workflows-list`, `workflow-describe`, `workflow-run`, `dag-view`, and
+  `dag-view-capabilities` as bounded invocations of the Tau checkout selected by
+  `TAU_ROOT`. `doctor` queries `tau workflows list --json` and
+  `tau dag-view-capabilities --json`; it reports canonical-workflow and
+  Tau-owned-viewer capability booleans only when those commands succeed.
+  Repository-readiness result artifacts are expected at
+  `<run-dir>/results/repository-readiness.json` and
+  `<run-dir>/results/repository-readiness.md`. Live positive and negative
+  screenshots and proof receipts belong to the Tau repository's Slice 01 proof
+  run; this wrapper change does not fabricate or replace them. The named Tau
+  backend proofs now report PASS; this repository's focused tests still prove
+  wrapper routing only.
+
+### Canonical Workflow Slice 01 Operator Contract
+
+Exact wrapper commands:
+
+```bash
+skills/tau/run.sh workflows-list
+skills/tau/run.sh workflow-describe repository-readiness
+skills/tau/run.sh workflow-run repository-readiness \
+  --repo /path/to/repository \
+  --goal "Determine whether this checkout is ready for focused work." \
+  --require-clean \
+  --run-dir /tmp/tau-repository-readiness \
+  --open-viewer
+skills/tau/run.sh dag-view /tmp/tau-repository-readiness
+skills/tau/run.sh dag-view-capabilities
+```
+
+Expected result artifacts from the Tau backend:
+
+```text
+<run-dir>/results/repository-readiness.json
+<run-dir>/results/repository-readiness.md
+```
+
+Required live proof artifacts from the Tau backend Slice 01 proof run:
+
+```text
+/tmp/tau-repository-readiness-positive-proof.json
+/tmp/tau-repository-readiness-positive.png
+/tmp/tau-repository-readiness-negative-proof.json
+/tmp/tau-repository-readiness-negative.png
+/tmp/tau-repository-readiness-wheel-proof.json
+```
+
+Agent-skills wrapper proof: `uv run --project skills/tau pytest -q
+skills/tau/tests` passed `5` tests on 2026-07-17. This is deterministic wrapper
+evidence with `mocked: true`, `live: false`, and `provider_live: false`; it does
+not independently prove the Tau backend. The named Tau receipts provide the
+separate live evidence: positive and negative browser receipts report PASS with
+GET-only traffic, and the wheel receipt reports `mocked:false`, `live:true`,
+`provider_live:false` after importing Tau from the temporary wheel installation
+and executing the three-node workflow.
 - Full Tau pytest was observed with `804 passed in 60.36s`.
 - Live project-watchdog issue repair was observed on `grahama1970/tau#3`.
 - Tau commit pushed for that repair: `19cd3697d9d834fa049948a7a4fdfcab1076f0ec`.
@@ -67,9 +107,9 @@ It does not implement Tau behavior itself.
 - The skill alone does not prove fresh browser chat rendering.
 - Chat UI claims need `test-interactions` manifests and browser/CDP screenshot
   inspection against the host route.
-- DAG UI claims need browser/CDP screenshot inspection against
-  `http://localhost:3002/#tau/dag` and must preserve the source DAG contract and
-  receipt paths.
+- DAG UI claims need browser/CDP screenshot inspection against the packaged Tau
+  viewer opened by `skills/tau/run.sh dag-view <run-dir>` and must preserve the
+  source DAG, journal, run receipt, screenshot, and browser-proof paths.
 - The skill alone does not prove production Sparta Chat readiness.
 - Unit tests prove code paths only; live GitHub mutation and browser proof need
   separate receipts.
@@ -85,8 +125,8 @@ Tau has four major surfaces:
 3. TUI: terminal-facing state and proof inspection.
 4. Chat: Memory-first React chat renderer intended to converge with Watch and
    Sparta Chat UX patterns.
-5. DAG viewer: UX Lab React Flow inspection route for read-only DAG
-   contract/receipt visualization.
+5. DAG viewer: packaged Tau React Flow application for read-only,
+   journal-authoritative workflow inspection.
 
 The special long-running mode is not a forever-running subagent. Cron or GitHub
 Actions may run repeatedly as infrastructure, but each subagent invocation must

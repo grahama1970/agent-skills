@@ -83,6 +83,33 @@ def uv_command(*parts: str) -> list[str]:
     return [UV_BIN, *parts]
 
 
+def tau_command(*parts: str, timeout_s: int = 120) -> dict[str, Any]:
+    """Invoke the Tau CLI from the configured checkout with a bounded timeout."""
+    return run(
+        uv_command(
+            "run",
+            "--project",
+            str(TAU_ROOT),
+            "tau",
+            *parts,
+        ),
+        timeout_s=timeout_s,
+    )
+
+
+def relay_tau_command(result: dict[str, Any]) -> None:
+    """Relay Tau's public CLI output while preserving its exit status."""
+    stdout = str(result.get("stdout", ""))
+    stderr = str(result.get("stderr", ""))
+    if stdout:
+        typer.echo(stdout, nl=not stdout.endswith("\n"))
+    if stderr:
+        typer.echo(stderr, err=True, nl=not stderr.endswith("\n"))
+    exit_code = int(result.get("exit_code", 1))
+    if exit_code != 0:
+        raise typer.Exit(exit_code)
+
+
 def command_path(name: str) -> str | None:
     """Return the resolved executable path for a command, if available."""
     return shutil.which(name)
@@ -94,9 +121,12 @@ def doctor_payload() -> dict[str, Any]:
     git_path = command_path("git")
     gh_path = command_path("gh")
     herdr_path = command_path("herdr")
-    tau_help = run(uv_command("run", "--project", str(TAU_ROOT), "tau", "--help"), timeout_s=60)
-    tau_doctor = run(uv_command("run", "--project", str(TAU_ROOT), "tau", "doctor"), timeout_s=60)
+    tau_help = tau_command("--help", timeout_s=60)
+    tau_doctor = tau_command("doctor", timeout_s=60)
+    workflow_catalog = tau_command("workflows", "list", "--json", timeout_s=60)
+    viewer_capabilities = tau_command("dag-view-capabilities", "--json", timeout_s=60)
     tau_doctor_payload: dict[str, Any] | None = None
+    workflow_catalog_payload: dict[str, Any] | None = None
     if tau_doctor["exit_code"] == 0:
         try:
             parsed_doctor = json.loads(tau_doctor["stdout"] or "{}")
@@ -104,6 +134,13 @@ def doctor_payload() -> dict[str, Any]:
                 tau_doctor_payload = parsed_doctor
         except json.JSONDecodeError:
             tau_doctor_payload = None
+    if workflow_catalog["exit_code"] == 0:
+        try:
+            parsed_catalog = json.loads(workflow_catalog["stdout"] or "{}")
+            if isinstance(parsed_catalog, dict):
+                workflow_catalog_payload = parsed_catalog
+        except json.JSONDecodeError:
+            workflow_catalog_payload = None
     git_status = run(["git", "status", "--short"], timeout_s=30) if TAU_ROOT.exists() else {
         "command": ["git", "status", "--short"],
         "cwd": str(TAU_ROOT),
@@ -118,12 +155,32 @@ def doctor_payload() -> dict[str, Any]:
         errors.append("uv_missing")
     if tau_help["exit_code"] != 0:
         errors.append("tau_help_failed")
+    if workflow_catalog["exit_code"] != 0:
+        errors.append("tau_workflow_catalog_failed")
+    if viewer_capabilities["exit_code"] != 0:
+        errors.append("tau_dag_view_capabilities_failed")
     if git_status["exit_code"] != 0:
         errors.append("git_status_failed")
 
     can_run_herdr_lane = bool(herdr_path)
     can_run_provider_live_lane = False
     can_run_github_apply_lane = False
+    workflow_catalog_available = workflow_catalog["exit_code"] == 0
+    viewer_capabilities_available = viewer_capabilities["exit_code"] == 0
+    catalog_workflows = (
+        workflow_catalog_payload.get("workflows", [])
+        if workflow_catalog_payload is not None
+        else []
+    )
+    repository_readiness_available = workflow_catalog_available and any(
+        isinstance(item, dict)
+        and item.get("workflow_id") == "repository-readiness"
+        and item.get("availability") == "AVAILABLE"
+        for item in catalog_workflows
+    )
+    canonical_workflow_surface_available = (
+        repository_readiness_available and viewer_capabilities_available
+    )
     return {
         "schema": "agent_skills.tau.doctor.v1",
         "checked_at": now(),
@@ -150,10 +207,15 @@ def doctor_payload() -> dict[str, Any]:
         "can_run_provider_live_lane": can_run_provider_live_lane,
         "can_run_github_dry_run_lane": bool(gh_path),
         "can_run_github_apply_lane": can_run_github_apply_lane,
-        "can_run_browser_cdp_lane": False,
+        "can_run_browser_cdp_lane": canonical_workflow_surface_available,
+        "can_list_canonical_workflows": workflow_catalog_available,
+        "can_run_repository_readiness": repository_readiness_available,
+        "can_run_tau_owned_dag_viewer": viewer_capabilities_available,
         "commands": {
             "tau_help": tau_help,
             "tau_doctor": tau_doctor,
+            "tau_workflow_catalog": workflow_catalog,
+            "tau_dag_view_capabilities": viewer_capabilities,
             "git_status": git_status,
         },
         "tau_runtime_doctor": tau_doctor_payload,
@@ -164,10 +226,12 @@ def doctor_payload() -> dict[str, Any]:
                 "Tau skill wrapper resolved uv or reported it missing",
                 "Tau CLI help was invoked through the wrapper when available",
                 "Tau runtime doctor was invoked through the wrapper when available",
+                "Tau canonical workflow catalog was queried through the wrapper",
+                "Tau-owned DAG viewer capabilities were queried through the wrapper",
             ],
             "does_not_prove": [
                 "Herdr provider DAG execution",
-                "browser/CDP UI proof",
+                "a completed browser/CDP workflow trace",
                 "GitHub live mutation",
                 "provider/model semantic quality",
             ],
@@ -381,6 +445,63 @@ def proof_status_payload(*, command_name: str = "proof-status") -> dict[str, Any
             "Inspect screenshot for visible Memory stage trace and content rendering.",
         ],
     }
+
+
+@app.command("workflows-list")
+def workflows_list_command() -> None:
+    """List packaged canonical Tau workflows as JSON."""
+    relay_tau_command(tau_command("workflows", "list", "--json"))
+
+
+@app.command("workflow-describe")
+def workflow_describe_command(workflow_id: str) -> None:
+    """Describe one packaged canonical Tau workflow as JSON."""
+    relay_tau_command(
+        tau_command("workflows", "describe", workflow_id, "--json")
+    )
+
+
+@app.command("workflow-run")
+def workflow_run_command(
+    workflow_id: str,
+    repo: Path = typer.Option(..., "--repo"),
+    goal: str = typer.Option(..., "--goal"),
+    run_dir: Path = typer.Option(..., "--run-dir"),
+    require_clean: bool = typer.Option(False, "--require-clean"),
+    open_viewer: bool = typer.Option(False, "--open-viewer"),
+    no_browser_open: bool = typer.Option(False, "--no-browser-open"),
+) -> None:
+    """Run one packaged canonical Tau workflow."""
+    parts = [
+        "workflows",
+        "run",
+        workflow_id,
+        "--repo",
+        str(repo),
+        "--goal",
+        goal,
+        "--run-dir",
+        str(run_dir),
+    ]
+    if require_clean:
+        parts.append("--require-clean")
+    if open_viewer:
+        parts.append("--open-viewer")
+    if no_browser_open:
+        parts.append("--no-browser-open")
+    relay_tau_command(tau_command(*parts))
+
+
+@app.command("dag-view")
+def dag_view_command(run_dir: Path) -> None:
+    """Open Tau's packaged read-only DAG viewer for a run directory."""
+    relay_tau_command(tau_command("dag-view", "--run-dir", str(run_dir)))
+
+
+@app.command("dag-view-capabilities")
+def dag_view_capabilities_command() -> None:
+    """Report Tau-owned DAG viewer capabilities as JSON."""
+    relay_tau_command(tau_command("dag-view-capabilities", "--json"))
 
 
 @app.command("doctor")

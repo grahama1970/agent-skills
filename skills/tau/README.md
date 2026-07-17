@@ -23,7 +23,9 @@ the human/operator guide.
 | Run bounded local checks | `skills/tau/run.sh sanity` |
 | Inspect recent proof/status evidence | `skills/tau/run.sh proof-status` |
 | Inspect recent live-proof evidence | `skills/tau/run.sh e2e` |
-| Inspect a Tau DAG as a graph | `http://localhost:3002/#tau/dag` |
+| Discover canonical DAG workflows | `skills/tau/run.sh workflows-list` |
+| Run repository readiness | `skills/tau/run.sh workflow-run repository-readiness ...` |
+| Inspect a Tau DAG | `skills/tau/run.sh dag-view <run-dir>` |
 | Check watchdog receipts | `skills/tau/run.sh watchdog-status` |
 | Summarize latest proof artifacts | `skills/tau/run.sh latest-proofs` |
 
@@ -54,7 +56,7 @@ subagent. Each subagent turn still needs a bounded receipt and a stop condition.
 | Harness | Goal-locked handoffs, subagent routing, and issue orchestration |
 | TUI | Terminal-facing state and proof inspection |
 | Chat | Memory-first chat renderer that can converge with other agent UIs |
-| DAG viewer | UX Lab `#tau/dag` React Flow route for read-only DAG contract/receipt inspection |
+| DAG viewer | Packaged Tau React Flow viewer for read-only journal-backed run inspection |
 
 ## Proof Discipline
 

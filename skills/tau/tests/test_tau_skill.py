@@ -1,0 +1,188 @@
+from __future__ import annotations
+
+import importlib.util
+import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+from typing import Any
+
+from typer.testing import CliRunner
+
+
+SCRIPT_PATH = Path(__file__).parents[1] / "scripts" / "tau_skill.py"
+SPEC = importlib.util.spec_from_file_location("tau_skill", SCRIPT_PATH)
+assert SPEC is not None and SPEC.loader is not None
+tau_skill = importlib.util.module_from_spec(SPEC)
+sys.modules[SPEC.name] = tau_skill
+SPEC.loader.exec_module(tau_skill)
+
+runner = CliRunner()
+
+
+def completed(stdout: str = "{}\n", *, exit_code: int = 0) -> dict[str, Any]:
+    return {
+        "command": [],
+        "cwd": str(tau_skill.TAU_ROOT),
+        "exit_code": exit_code,
+        "stdout": stdout,
+        "stderr": "",
+    }
+
+
+def test_tau_root_can_be_overridden_at_import_time(tmp_path: Path) -> None:
+    command = [
+        sys.executable,
+        "-c",
+        (
+            "import importlib.util; "
+            f"s=importlib.util.spec_from_file_location('tau_override', {str(SCRIPT_PATH)!r}); "
+            "m=importlib.util.module_from_spec(s); s.loader.exec_module(m); "
+            "print(m.TAU_ROOT)"
+        ),
+    ]
+    env = {**os.environ, "TAU_ROOT": str(tmp_path)}
+    result = subprocess.run(command, text=True, capture_output=True, env=env, check=False)
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == str(tmp_path.resolve())
+
+
+def test_catalog_and_viewer_commands_use_bounded_tau_transport(monkeypatch: Any) -> None:
+    calls: list[tuple[tuple[str, ...], int]] = []
+
+    def fake_tau_command(*parts: str, timeout_s: int = 120) -> dict[str, Any]:
+        calls.append((parts, timeout_s))
+        return completed(json.dumps({"parts": parts}) + "\n")
+
+    monkeypatch.setattr(tau_skill, "tau_command", fake_tau_command)
+
+    assert runner.invoke(tau_skill.app, ["workflows-list"]).exit_code == 0
+    assert runner.invoke(
+        tau_skill.app, ["workflow-describe", "repository-readiness"]
+    ).exit_code == 0
+    assert runner.invoke(tau_skill.app, ["dag-view", "/tmp/run"]).exit_code == 0
+    assert runner.invoke(tau_skill.app, ["dag-view-capabilities"]).exit_code == 0
+
+    assert calls == [
+        (("workflows", "list", "--json"), 120),
+        (("workflows", "describe", "repository-readiness", "--json"), 120),
+        (("dag-view", "--run-dir", "/tmp/run"), 120),
+        (("dag-view-capabilities", "--json"), 120),
+    ]
+
+
+def test_workflow_run_forwards_locked_slice_options(monkeypatch: Any) -> None:
+    calls: list[tuple[str, ...]] = []
+
+    def fake_tau_command(*parts: str, timeout_s: int = 120) -> dict[str, Any]:
+        calls.append(parts)
+        return completed()
+
+    monkeypatch.setattr(tau_skill, "tau_command", fake_tau_command)
+    result = runner.invoke(
+        tau_skill.app,
+        [
+            "workflow-run",
+            "repository-readiness",
+            "--repo",
+            ".",
+            "--goal",
+            "Determine whether this checkout is ready for focused work.",
+            "--require-clean",
+            "--run-dir",
+            "/tmp/readiness",
+            "--open-viewer",
+            "--no-browser-open",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert calls == [
+        (
+            "workflows",
+            "run",
+            "repository-readiness",
+            "--repo",
+            ".",
+            "--goal",
+            "Determine whether this checkout is ready for focused work.",
+            "--run-dir",
+            "/tmp/readiness",
+            "--require-clean",
+            "--open-viewer",
+            "--no-browser-open",
+        )
+    ]
+
+
+def test_doctor_reports_slice_capabilities_from_tau_commands(
+    monkeypatch: Any, tmp_path: Path
+) -> None:
+    def fake_tau_command(*parts: str, timeout_s: int = 120) -> dict[str, Any]:
+        assert timeout_s == 60
+        if parts == ("workflows", "list", "--json"):
+            return completed(
+                json.dumps(
+                    {
+                        "workflows": [
+                            {
+                                "workflow_id": "repository-readiness",
+                                "availability": "AVAILABLE",
+                            }
+                        ]
+                    }
+                )
+            )
+        return completed()
+
+    monkeypatch.setattr(tau_skill, "tau_command", fake_tau_command)
+    monkeypatch.setattr(tau_skill, "command_path", lambda name: f"/bin/{name}")
+    monkeypatch.setattr(tau_skill, "TAU_ROOT", tmp_path)
+    monkeypatch.setattr(tau_skill, "run", lambda *args, **kwargs: completed())
+
+    payload = tau_skill.doctor_payload()
+
+    assert payload["ok"] is True
+    assert payload["can_list_canonical_workflows"] is True
+    assert payload["can_run_repository_readiness"] is True
+    assert payload["can_run_tau_owned_dag_viewer"] is True
+    assert payload["can_run_browser_cdp_lane"] is True
+    assert payload["commands"]["tau_workflow_catalog"]["exit_code"] == 0
+    assert payload["commands"]["tau_dag_view_capabilities"]["exit_code"] == 0
+
+
+def test_doctor_fails_closed_when_viewer_capabilities_are_absent(
+    monkeypatch: Any, tmp_path: Path
+) -> None:
+    def fake_tau_command(*parts: str, timeout_s: int = 120) -> dict[str, Any]:
+        if parts == ("dag-view-capabilities", "--json"):
+            return completed(exit_code=2)
+        if parts == ("workflows", "list", "--json"):
+            return completed(
+                json.dumps(
+                    {
+                        "workflows": [
+                            {
+                                "workflow_id": "repository-readiness",
+                                "availability": "AVAILABLE",
+                            }
+                        ]
+                    }
+                )
+            )
+        return completed()
+
+    monkeypatch.setattr(tau_skill, "tau_command", fake_tau_command)
+    monkeypatch.setattr(tau_skill, "command_path", lambda name: f"/bin/{name}")
+    monkeypatch.setattr(tau_skill, "TAU_ROOT", tmp_path)
+    monkeypatch.setattr(tau_skill, "run", lambda *args, **kwargs: completed())
+
+    payload = tau_skill.doctor_payload()
+
+    assert payload["ok"] is False
+    assert payload["can_list_canonical_workflows"] is True
+    assert payload["can_run_repository_readiness"] is True
+    assert payload["can_run_tau_owned_dag_viewer"] is False
+    assert payload["can_run_browser_cdp_lane"] is False
+    assert "tau_dag_view_capabilities_failed" in payload["errors"]

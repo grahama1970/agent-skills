@@ -59,6 +59,16 @@ skills/tau/run.sh proof-status
 skills/tau/run.sh e2e
 skills/tau/run.sh watchdog-status
 skills/tau/run.sh latest-proofs
+skills/tau/run.sh workflows-list
+skills/tau/run.sh workflow-describe repository-readiness
+skills/tau/run.sh workflow-run repository-readiness \
+  --repo /path/to/repo \
+  --goal "Determine whether this checkout is ready for focused work." \
+  --require-clean \
+  --run-dir /tmp/tau-repository-readiness \
+  --open-viewer
+skills/tau/run.sh dag-view /tmp/tau-repository-readiness
+skills/tau/run.sh dag-view-capabilities
 ```
 
 `doctor` checks whether this operator wrapper can resolve and invoke the local
@@ -271,26 +281,26 @@ present.
 
 ### DAG Visualization / Browser Inspection Lane
 
-Use the UX Lab Tau DAG route when a human or project agent needs to inspect a
-Tau DAG contract, receipt, node statuses, and proof boundaries as a graph. The
-current browser inspection route is:
+Use Tau's packaged read-only React Flow viewer when a human or project agent
+needs to inspect a Tau DAG run, node statuses, accepted results, and exact
+blockers:
 
-```text
-http://localhost:3002/#tau/dag
+```bash
+skills/tau/run.sh workflows-list
+skills/tau/run.sh workflow-describe repository-readiness
+skills/tau/run.sh workflow-run repository-readiness \
+  --repo /path/to/repo \
+  --goal "Determine whether this checkout is ready for focused work." \
+  --require-clean \
+  --run-dir /tmp/tau-repository-readiness \
+  --open-viewer
+skills/tau/run.sh dag-view /tmp/tau-repository-readiness
 ```
 
-That route is an integration viewer, not the Tau runtime authority. It should
-render `tau.dag_contract.v1` and `tau.dag_receipt.v1` artifacts through the
-existing React Flow transport DAG workspace. Visible nodes, edges, statuses,
-alerts, and non-claims must be backed by fixture or receipt artifacts. The UI
-must not show fake running state, fake provider progress, mutation controls, or
-dashboard metrics when the source artifacts do not prove them.
-
-Browser DAG claims require the UX Lab CDP verification marker and screenshot
-for the `#tau/dag` route. A static fixture can prove renderability of the
-artifact contract; it does not prove live Tau DAG execution, Herdr provider
-execution, GitHub mutation, provider/model semantic quality, or human
-acceptance.
+The viewer is a renderer of Tau-authored journal replay and remains GET-only.
+Browser DAG claims require a fresh Tau viewer trace and screenshot. The wrapper
+does not independently prove live workflow execution, provider/model semantic
+quality, repository readiness, or human acceptance.
 
 ## Proof Rules
 
@@ -666,7 +676,7 @@ ${HOME}/.local/state/project-watchdog/logs/project-watchdog.log
 ${HOME}/.local/state/project-watchdog/receipts/
 ${HOME}/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/
 ${HOME}/workspace/experiments/tau/ui/tau-chat-contract.json
-http://localhost:3002/#tau/dag
+${HOME}/workspace/experiments/tau/.codex/ui-verification/latest.json
 ```
 
 Use `agents/tau` for Tau-specific bounded worker turns when a global watchdog or
