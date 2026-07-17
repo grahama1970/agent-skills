@@ -1,0 +1,116 @@
+{
+  "checks": [
+    {
+      "audited_revision_is_active": false,
+      "check": "active_pointer",
+      "derived_root_exists": true,
+      "pass": true,
+      "pointer_revision_id": "rev_upstream_bf3b05d47fb8",
+      "recorded_root_exists": true,
+      "recorded_root_stale_note": null
+    },
+    {
+      "check": "frozen_artifact_index",
+      "index_error": null,
+      "indexed_count": 328,
+      "indexed_integrity_mismatches": [],
+      "indexed_integrity_verified": true,
+      "on_disk_count": 455,
+      "pass": true,
+      "unexpected_unindexed": [],
+      "unindexed_classification_counts": {
+        "machinery_receipt": 4,
+        "request_scoped_evidence": 122,
+        "unexpected": 0
+      },
+      "unindexed_count": 126
+    },
+    {
+      "applicable": true,
+      "attempt_ledger": {
+        "actual_provider_call_attempts": 1,
+        "state": "COMPLETED",
+        "submit_intent_count": 1
+      },
+      "check": "request_evidence_index",
+      "evidence_file_count": 122,
+      "evidence_index_path": ".persona-dream/state/phase11_request_evidence_index_rev_idea_f3f9c48d5cc2_ff2ce7f310fdda2d.json",
+      "pass": true,
+      "preflight_hash_agreement": true,
+      "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41"
+    },
+    {
+      "check": "memory_persistence",
+      "pass": true,
+      "phase11_boundary_key_expected": "pd_phase11_eb5dbe1257f6152103d1ce1e2700f9582d8ef6e5fb87e90e",
+      "phase11_boundary_record_found": true,
+      "phase11_related_step_records": [
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31,
+        32,
+        33,
+        34,
+        35,
+        36
+      ],
+      "qualification_expected": 27,
+      "qualification_record_count": 27,
+      "step_expected": 42,
+      "step_record_count": 42
+    },
+    {
+      "check": "broken_absolute_path_references",
+      "json_files_scanned": 341,
+      "missing_by_root_prefix": {
+        "/home/graham": 25,
+        "/mnt/storage12tb": 4,
+        "/tmp/agent-skills-main-funnel": 2,
+        "/tmp/persona-dream-main-final-20260715": 7
+      },
+      "new_artifact_files_with_dead_references": [],
+      "pass": true,
+      "sample_missing_paths": [
+        "/home/graham/.cache/uv/environments-v2/generate-0633ad47e7774b26/lib/python3.13/site-packages/huggingface_hub/constants.py:298:",
+        "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/.rev_repair_a8b93ffeca8f.assembling-925423/phase_04_contact_sheets/source_artifacts/images/contact_sheet_embry_surfboard.png",
+        "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/.rev_repair_a8b93ffeca8f.assembling-925423/phase_04_contact_sheets/source_artifacts/images/contact_sheet_june_swell.png",
+        "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/.rev_repair_a8b93ffeca8f.assembling-925423/phase_04_contact_sheets/source_artifacts/images/contact_sheet_kai_surfboard.png",
+        "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/.rev_repair_a8b93ffeca8f.assembling-925423/phase_04_contact_sheets/source_artifacts/images/contact_sheet_kona_coast.png",
+        "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/.rev_repair_a8b93ffeca8f.assembling-925423/phase_04_contact_sheets/source_artifacts/images/contact_sheet_lava_reef.png",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_04_contact_sheets/reference_asset_manifest.json",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_start_frame.provider.png",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_002_end_frame.provider.png",
+        "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_002_start_frame.provider.png"
+      ],
+      "total_missing_references": 70,
+      "unique_missing_paths": 38
+    },
+    {
+      "applicable": true,
+      "check": "validation_coherence",
+      "coherent": false,
+      "pass": false,
+      "revision_attempt_ledger_total_calls": 3,
+      "validation_phase11_status": "NOT_EXECUTED"
+    }
+  ],
+  "failed_checks": [
+    "validation_coherence"
+  ],
+  "live": true,
+  "mocked": false,
+  "mode": "report",
+  "observed_at": "2026-07-17T14:03:19.133846+00:00",
+  "revision_id": "rev_idea_f3f9c48d5cc2",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.revision_persistence_audit.v1",
+  "status": "REPORTED_REVISION_PERSISTENCE_FINDINGS"
+}

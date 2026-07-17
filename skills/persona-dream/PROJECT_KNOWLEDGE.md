@@ -5,6 +5,26 @@
 
 ## Current Understanding
 
+- 2026-07-17 (afternoon, persistence audit): An external agent audit of
+  `rev_idea_f3f9c48d5cc2` was reconciled with receipts
+  (`scripts/audit_revision_persistence.py`, receipts under
+  `.persona-dream/state/revision_persistence_audit_*.json`). Confirmed real:
+  the frozen Phase 01-10 index never covers post-qualification Phase 11-13
+  evidence (122 request-scoped files in the old revision, now hash-bound by a
+  generated request-evidence index); dead absolute-path references exist in
+  frozen receipts (38 unique missing paths inside the old revision, mostly
+  dead /tmp worktrees); pointer `revisionRoot` values are non-portable
+  absolute paths (cosmetic: all tooling derives roots from
+  run_root + revisionId). Refuted with evidence: "Memory has zero Phase 11/12
+  records" is false - the step collection holds 42 records for the old
+  revision including steps 21-36 with request-scoped hashes, plus
+  `pd_phase11_*` boundary records; "validation.json incorrectly says provider
+  submission never ran" is a misread - the run-root validation describes the
+  ACTIVE revision (new request, zero calls, coherent with its unused ledger),
+  not the frozen revision's consumed request. The systemic fix is the new
+  post-step audit gate; the active revision `rev_upstream_bf3b05d47fb8` passes
+  it with zero unexpected unindexed files and full memory reread (27 + 42 +
+  boundary record for request `ca90ba9f...`).
 - 2026-07-17 (afternoon): The upstream-contract reconstruction gate is done.
   `rev_upstream_bf3b05d47fb8` (source `rev_idea_f3f9c48d5cc2`) was created,
   qualified, and activated in one bounded transaction

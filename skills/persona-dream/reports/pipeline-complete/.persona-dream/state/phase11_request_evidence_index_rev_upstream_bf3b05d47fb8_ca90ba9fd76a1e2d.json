@@ -1,0 +1,134 @@
+{
+  "entries": {
+    "phase_11_submit_return/attempts/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/attempt_ledger.v1.json": {
+      "sha256": "sha256:583b6babe9e22f5adac8e01e5e11e15eb77a394396c4b87a99e866ee0a563474",
+      "size_bytes": 927
+    },
+    "phase_11_submit_return/canonical/phase11_approval_requirements.v1.json": {
+      "sha256": "sha256:d1c8711cd3d3795c4540e33e691b5bf200c51363d02acfa443e40cbfcfeb73c1",
+      "size_bytes": 2934
+    },
+    "phase_11_submit_return/canonical/phase11_live_request.v1.json": {
+      "sha256": "sha256:1941fa0e1d2c756358b1b3f1d4716f16fe59250f2a3387a98a520d63183517ad",
+      "size_bytes": 10227
+    },
+    "phase_11_submit_return/canonical/phase11_media_binding_manifest.v2.json": {
+      "sha256": "sha256:35b87e5290e4dfc92928500afe1ac11812cea9534a8403baf5e03d9f230bb473",
+      "size_bytes": 21907
+    },
+    "phase_11_submit_return/canonical/phase11_validation_receipt.v1.json": {
+      "sha256": "sha256:e7370b510a8a4dad6dfedb5d98398d8c81d81cd77ba028366e98cea65ca597d4",
+      "size_bytes": 7347
+    },
+    "phase_11_submit_return/preflight/phase11_adapter_preflight_receipt.v1.json": {
+      "sha256": "sha256:116678062bfc9d525da19efd042da61a403345d5655d29f424470e319238e125",
+      "size_bytes": 5118
+    },
+    "phase_11_submit_return/preflight/phase11_authorization_packet.v1.pending.json": {
+      "sha256": "sha256:d38f30c4abb339fac78a1a89cf55ef5e02d0485c7f84f5931775a99f303310c4",
+      "size_bytes": 3528
+    },
+    "phase_11_submit_return/preflight/phase11_payload_binding.json": {
+      "sha256": "sha256:ae0f8b187892fb556dad11b49a01b886946d0a93431775a93d67711fbb941547",
+      "size_bytes": 16122
+    },
+    "phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.01.embry.character.sheet.jpg/existing_publication_receipt.json": {
+      "sha256": "sha256:35ab377de062cdfa9a73cd298dd2409460127910687d2a5b2167ffa9e8a74bc2",
+      "size_bytes": 839
+    },
+    "phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.01.embry.character.sheet.jpg/public_probe_receipt.json": {
+      "sha256": "sha256:095e7397dc15a4bb68e9d364761f18bf904b6be951a73056809283226cbfcd78",
+      "size_bytes": 1049
+    },
+    "phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.01.embry.character.sheet.jpg/teardown_policy_receipt.json": {
+      "sha256": "sha256:019454d062badb0e128573415b54347f726240da19d91515dd551140b1ad5a28",
+      "size_bytes": 713
+    },
+    "phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.02.kai.character.sheet.png/existing_publication_receipt.json": {
+      "sha256": "sha256:2832544696f0ef3206d53164ff238042be84cf25a9755c95b6fcd47820c0d00f",
+      "size_bytes": 835
+    },
+    "phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.02.kai.character.sheet.png/public_probe_receipt.json": {
+      "sha256": "sha256:7959c543d10737722e48c5950dc835a8f3f5ca66544ac53eb34415edba033814",
+      "size_bytes": 1043
+    },
+    "phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.02.kai.character.sheet.png/teardown_policy_receipt.json": {
+      "sha256": "sha256:4eda44c2203ae811d3532655c6de213ae495597831d0f73c36366a8b85ab2654",
+      "size_bytes": 709
+    },
+    "phase_11_submit_return/preflight/provider_media_evidence/sb_001.start_frame/existing_publication_receipt.json": {
+      "sha256": "sha256:972f8a2c57d1a5f42f4780b8203de43e02a4141280341641dc62ef99f574090c",
+      "size_bytes": 792
+    },
+    "phase_11_submit_return/preflight/provider_media_evidence/sb_001.start_frame/public_probe_receipt.json": {
+      "sha256": "sha256:a70d62fcf42629e967993f86ed62a6248031c0248c5e0c01f3ed41883acc09fa",
+      "size_bytes": 1013
+    },
+    "phase_11_submit_return/preflight/provider_media_evidence/sb_001.start_frame/teardown_policy_receipt.json": {
+      "sha256": "sha256:f2871bc1aee7d04369289f4af574bc97f5d232291a574867d2a0d244cbbee858",
+      "size_bytes": 666
+    },
+    "phase_11_submit_return/preflight/provider_media_evidence/sb_002.start_frame/existing_publication_receipt.json": {
+      "sha256": "sha256:4190ccbf1514c1bf2649a0b585fe3019bb689b325298f6487bad3fb53b666803",
+      "size_bytes": 792
+    },
+    "phase_11_submit_return/preflight/provider_media_evidence/sb_002.start_frame/public_probe_receipt.json": {
+      "sha256": "sha256:f7cedf68ad129430dfe275f225d8af91bdec7e7fb81022bf3a00b9bf28a65130",
+      "size_bytes": 1013
+    },
+    "phase_11_submit_return/preflight/provider_media_evidence/sb_002.start_frame/teardown_policy_receipt.json": {
+      "sha256": "sha256:22920696c2c677bbbfab8d9d7431186a9a2da1f66a41f0571fcb7858dea4615c",
+      "size_bytes": 666
+    },
+    "phase_11_submit_return/preflight/provider_media_evidence/sb_003.start_frame/existing_publication_receipt.json": {
+      "sha256": "sha256:9b7314c9504e2803386201b77ec10cfc556c49fb72836be1f69ed01e3145c51c",
+      "size_bytes": 792
+    },
+    "phase_11_submit_return/preflight/provider_media_evidence/sb_003.start_frame/public_probe_receipt.json": {
+      "sha256": "sha256:97aa91090f9d70b2ce6dfab86f824ef3e1e2467a123ebaf590f64caf4453c493",
+      "size_bytes": 1013
+    },
+    "phase_11_submit_return/preflight/provider_media_evidence/sb_003.start_frame/teardown_policy_receipt.json": {
+      "sha256": "sha256:6a7c26a7c04615798808ec67905dc8a896df7112ba5c1047a61d1009f4727096",
+      "size_bytes": 666
+    },
+    "phase_11_submit_return/preflight/provider_media_evidence/sb_004.start_frame/existing_publication_receipt.json": {
+      "sha256": "sha256:b98f70b4ae06ac15678abae72729e0662732b2099e1da780b3cb3908a95cebcd",
+      "size_bytes": 792
+    },
+    "phase_11_submit_return/preflight/provider_media_evidence/sb_004.start_frame/public_probe_receipt.json": {
+      "sha256": "sha256:6b3afa3ad3946e1243d94274a6dbf46ed1ce6b605e0adcca239f9cad56755ddb",
+      "size_bytes": 1013
+    },
+    "phase_11_submit_return/preflight/provider_media_evidence/sb_004.start_frame/teardown_policy_receipt.json": {
+      "sha256": "sha256:001f34d6d060059f8180a88abcdb57adaf939ecb55cc617dcf429e2daf134d2a",
+      "size_bytes": 666
+    },
+    "phase_11_submit_return/preflight/provider_media_transition_manifest.json": {
+      "sha256": "sha256:c4e1bc4add3a2f0366c532ade43125f0c9afadd95bf56fdab68e96321ae8b9b5",
+      "size_bytes": 10703
+    },
+    "phase_11_submit_return/preflight/provider_pricing_response.body": {
+      "sha256": "sha256:680bdc68cf04a129aa25d8e8d3225d60ef47b6ae717bd562bfaf28f142431425",
+      "size_bytes": 889547
+    },
+    "phase_11_submit_return/preflight/provider_schema_response.body": {
+      "sha256": "sha256:f09f70855129e8039d1223804131e384b63a6c3054445fe71addbe985102506d",
+      "size_bytes": 1037784
+    },
+    "phase_11_submit_return/preflight/provider_source_snapshot.json": {
+      "sha256": "sha256:d1025615a534f5129457ca3190fa351b7d2cb540c85791e5e907206e63168f1a",
+      "size_bytes": 4261
+    },
+    "phase_11_submit_return/preflight/upstream_validation_migration_receipt.json": {
+      "sha256": "sha256:0be7cfd76fc54e6c21ca8c78cb2dc17c9fd55e394ed5ed56851f7d3c82e7ccfc",
+      "size_bytes": 1280
+    }
+  },
+  "entry_count": 31,
+  "generated_at": "2026-07-17T14:02:58.290458+00:00",
+  "request_body_sha256": "sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f",
+  "revision_id": "rev_upstream_bf3b05d47fb8",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.phase11_request_evidence_index.v1"
+}

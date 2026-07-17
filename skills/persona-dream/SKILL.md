@@ -891,6 +891,26 @@ vectors for recall. Do not store vector arrays in memory/ArangoDB.
 
 ## Validation
 
+After any step that writes artifacts into a revision, run the persistence
+audit gate. It verifies the active pointer, frozen-index integrity, classifies
+every unindexed on-disk file (machinery receipt or request-scoped Phase 11-13
+evidence bound into a generated request-evidence index), exactly rereads the
+27 qualification records, 42 pipeline step records, and the request-scoped
+Phase 11 boundary record, scans for dead absolute-path references, and checks
+run-root validation coherence against the revision's attempt ledgers:
+
+```bash
+uv run --project skills/persona-dream python \
+  skills/persona-dream/scripts/audit_revision_persistence.py \
+  --run-root skills/persona-dream/reports/pipeline-complete \
+  --revision-id <active revision> \
+  --mode gate \
+  --new-artifact-prefix <revision-relative prefix written this session>
+```
+
+Use `--mode report` for frozen historical revisions. Downstream writers must
+not add artifacts without passing this gate afterward.
+
 Run:
 
 ```bash
