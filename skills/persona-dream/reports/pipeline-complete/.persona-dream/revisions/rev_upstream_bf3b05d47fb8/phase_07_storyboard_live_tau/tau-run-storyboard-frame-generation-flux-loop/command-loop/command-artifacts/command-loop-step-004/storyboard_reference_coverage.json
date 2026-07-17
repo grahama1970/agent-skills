@@ -1,0 +1,102 @@
+{
+  "missing_entities": [],
+  "present_entities": [
+    "Embry surfboard",
+    "June Swell",
+    "Kai surfboard",
+    "Kona Coast",
+    "Lava Reef"
+  ],
+  "references": [
+    {
+      "collection": "persona_dream_visual_assets",
+      "description": "Embry Surfboard Contact for persona-dream provider prompts and continuity references.",
+      "entity": "Embry surfboard",
+      "entity_type": "object",
+      "id": "contact_sheet_embry_surfboard",
+      "match_source": "persona_dream_visual_assets_exact",
+      "memory_id": "persona_dream_visual_assets/4c4787d389f39cf33d65f19ca4ad7520",
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/images/contact_sheet_embry_surfboard.png",
+      "provenance": "phase_04_contact_sheet_memory_recall_evidence",
+      "role": "required_prop_reference",
+      "source_phase": "04_contact_sheets",
+      "source_seed_id": "seed-2",
+      "title": "Embry Surfboard Contact Sheet",
+      "type": "contact_sheet"
+    },
+    {
+      "collection": "persona_dream_visual_assets",
+      "description": "Kai Surfboard Contact for persona-dream provider prompts and continuity references.",
+      "entity": "Kai surfboard",
+      "entity_type": "object",
+      "id": "contact_sheet_kai_surfboard",
+      "match_source": "persona_dream_visual_assets_exact",
+      "memory_id": "persona_dream_visual_assets/519e557c4a9fdaab3a95e8c0fbc0db83",
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/images/contact_sheet_kai_surfboard.png",
+      "provenance": "phase_04_contact_sheet_memory_recall_evidence",
+      "role": "required_prop_reference",
+      "source_phase": "04_contact_sheets",
+      "source_seed_id": "seed-3",
+      "title": "Kai Surfboard Contact Sheet",
+      "type": "contact_sheet"
+    },
+    {
+      "collection": "persona_dream_visual_assets",
+      "description": "June Swell Contact for persona-dream provider prompts and continuity references.",
+      "entity": "June Swell",
+      "entity_type": "environment",
+      "id": "contact_sheet_june_swell",
+      "match_source": "persona_dream_visual_assets_exact",
+      "memory_id": "persona_dream_visual_assets/bf846ae444d588d6365abe5f8eaa9b1c",
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/images/contact_sheet_june_swell.png",
+      "provenance": "phase_04_contact_sheet_memory_recall_evidence",
+      "role": "required_environment_reference",
+      "source_phase": "04_contact_sheets",
+      "source_seed_id": "seed-4",
+      "title": "June Swell Contact Sheet",
+      "type": "contact_sheet"
+    },
+    {
+      "collection": "persona_dream_visual_assets",
+      "description": "Lava Reef Contact for persona-dream provider prompts and continuity references.",
+      "entity": "Lava Reef",
+      "entity_type": "environment",
+      "id": "contact_sheet_lava_reef",
+      "match_source": "persona_dream_visual_assets_exact",
+      "memory_id": "persona_dream_visual_assets/f1455b584d104628ec7e8dc3f34f253e",
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/images/contact_sheet_lava_reef.png",
+      "provenance": "phase_04_contact_sheet_memory_recall_evidence",
+      "role": "required_environment_reference",
+      "source_phase": "04_contact_sheets",
+      "source_seed_id": "seed-5",
+      "title": "Lava Reef Contact Sheet",
+      "type": "contact_sheet"
+    },
+    {
+      "collection": "persona_dream_visual_assets",
+      "description": "Kona Coast Contact for persona-dream provider prompts and continuity references.",
+      "entity": "Kona Coast",
+      "entity_type": "environment",
+      "id": "contact_sheet_kona_coast",
+      "match_source": "persona_dream_visual_assets_exact",
+      "memory_id": "persona_dream_visual_assets/31b6117a2bd1e739e35b7da50ca7f3c9",
+      "path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/images/contact_sheet_kona_coast.png",
+      "provenance": "phase_04_contact_sheet_memory_recall_evidence",
+      "role": "required_location_reference",
+      "source_phase": "04_contact_sheets",
+      "source_seed_id": "seed-6",
+      "title": "Kona Coast Contact Sheet",
+      "type": "contact_sheet"
+    }
+  ],
+  "required_entities": [
+    "Embry surfboard",
+    "June Swell",
+    "Kai surfboard",
+    "Kona Coast",
+    "Lava Reef"
+  ],
+  "schema": "persona_dream.storyboard_reference_coverage.v1",
+  "status": "PASS",
+  "storyboard_packet": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json"
+}

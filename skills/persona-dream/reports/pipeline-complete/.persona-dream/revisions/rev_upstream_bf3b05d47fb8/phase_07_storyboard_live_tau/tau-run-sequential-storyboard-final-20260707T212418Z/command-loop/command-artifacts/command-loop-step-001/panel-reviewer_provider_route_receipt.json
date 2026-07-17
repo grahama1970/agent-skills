@@ -1,0 +1,56 @@
+{
+  "blockers": [],
+  "claims": {
+    "does_not_prove": [
+      "No image, Kling, or paid provider call was executed by this route receipt.",
+      "This receipt proves provider route metadata delivery only, not final storyboard image quality."
+    ],
+    "proves": [
+      "Tau injected provider dispatch metadata into the Persona Dream command-backed node stdin.",
+      "Persona Dream recorded the route policy required for the node before producing storyboard evidence."
+    ]
+  },
+  "created_at": "2026-07-07T21:24:18.632892+00:00",
+  "live": true,
+  "mocked": false,
+  "model_policy": {
+    "auth": "codex-oauth",
+    "max_retries": 2,
+    "model": "gpt-5.5",
+    "on_non_json": "retry_then_block",
+    "output_schema": "tau.agent_handoff.v1",
+    "provider": "codex"
+  },
+  "prompt_contract": {
+    "schema": "tau.prompt_contract.v1",
+    "system_prompt": "You are the Persona Dream Phase 07 panel-reviewer. Review the storyboard packet against the immutable goal and accepted upstream Persona Dream artifacts. Reject if panels use contact sheets as main frames, omit Embry/Kai/location/environment continuity, omit first/end frame prompt details, lack seed/entity/reference coverage, or lack gpt-2 OAuth route evidence. For every accepted start_frame and end_frame image, perform visual identity continuity review against the attached Embry and Kai reference/contact-sheet assets. A panel requiring Embry or Kai must be rejected when the visible person is missing, cropped/hidden, merged with another person, an unrelated generic person, wrong age/presentation, wrong rashguard/board continuity, or not visible enough to verify. Do not accept metadata claims as visual proof: the review receipt must name visible_entities, required_entities, reviewer_source, image dimensions, and blocking_findings for each accepted frame. Do not infer missing evidence.",
+    "user_template": "Review storyboard packet {storyboard_packet} under run_root {run_root}. Required model route: provider=codex, auth=codex-oauth, review_model=gpt-5.5; image_generation_model=gpt-2. Return PASS_PANEL_REVIEWED only when storyboard_review_verdict.json, storyboard_reference_coverage.json, storyboard_entity_coverage.json, provider_route_receipt, and per-frame identity_continuity_review receipts prove the contract. The identity_continuity_review must confirm all required Embry/Kai characters are actually visible in the scene and match their reference assets; wrong/random/generic people are blocking failures. Otherwise return exact blockers."
+  },
+  "provider_call_executed": false,
+  "provider_route_metadata_delivered": true,
+  "role": "panel-reviewer",
+  "schema": "persona_dream.provider_route_receipt.v1",
+  "status": "PASS",
+  "tau_dag_node": {
+    "agent": "panel-reviewer",
+    "dag_id": "persona-dream-phase-07-full-storyboard-review-20260707T204134Z",
+    "fail_closed_on": null,
+    "goal": {
+      "goal_hash": "sha256:persona-dream-phase-07-full-storyboard-review-20260707T204134Z",
+      "goal_id": "persona-dream-phase-07-full-storyboard-review-20260707T204134Z",
+      "goal_version": 4,
+      "summary": "Final full-storyboard review with no target scope; all four panels must have reviewer-accepted start/end frames."
+    },
+    "node_id": "panel-reviewer",
+    "required_evidence": [
+      "storyboard_review_verdict.json",
+      "storyboard_reference_coverage.json",
+      "storyboard_entity_coverage.json",
+      "provider_route_receipt"
+    ],
+    "target": {
+      "repo": "grahama1970/agent-skills",
+      "target": "skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau"
+    }
+  }
+}

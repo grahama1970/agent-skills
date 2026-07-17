@@ -1,0 +1,31 @@
+{
+  "actual_provider_call_attempts": 0,
+  "blockers": [],
+  "claims": {
+    "does_not_prove": [
+      "current fal provider schema compatibility",
+      "provider-accessible media URLs",
+      "paid-call authorization",
+      "manual acceptance",
+      "live provider readiness",
+      "live video generation"
+    ],
+    "proves": [
+      "provider-specific dry-run packet was written from a scorecard, scene contract, and media lock",
+      "no provider, paid, URL, submit, or live-ready state was claimed"
+    ]
+  },
+  "external_task_id": null,
+  "fal_model_endpoint": "fal-ai/kling-video/v3/pro/image-to-video",
+  "generated_at": "2026-07-10T15:08:17.654481+00:00",
+  "live_submit_ready": false,
+  "paid_call_authorized": false,
+  "provider_id": "kling",
+  "provider_live": false,
+  "provider_ready": false,
+  "provider_route": "fal-kling",
+  "request_body_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_09_kling_optimized_packet/video_provider_packet/video_provider_packet.json",
+  "schema": "persona_dream.video_provider_payload_mapping_receipt.v1",
+  "status": "PASS_VIDEO_PROVIDER_PACKET_DRY_RUN",
+  "submitted": false
+}

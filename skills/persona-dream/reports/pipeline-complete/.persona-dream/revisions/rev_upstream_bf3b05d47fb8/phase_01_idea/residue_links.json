@@ -1,0 +1,34 @@
+{
+  "actual_provider_call_attempts": 0,
+  "idea_id": "pd_idea_45a9d20d629b4e08863a9618b5f83982",
+  "idea_sha256": "sha256:45a9d20d629b4e08863a9618b5f83982a9eb55bbf52cbd1de5deac09015baf9b",
+  "items": [
+    {
+      "collection": "persona_memory",
+      "persona_id": "embry",
+      "source_id": "embry_age15_19_b03_memory_014",
+      "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age15_19_b03_candidates.jsonl",
+      "text": "Kai gives Embry a surf map annotated with hazards, etiquette, and places where newcomers should wait. The map marks reef, current, entry path, and crowded zones. Kai says knowing the rules does not make her local, but keeps her from harming someone while learning. people: Embry Lawson, kai; places: Ninole; objects: kai surf spot map, POINT/PATH/PEOPLE checklist; concepts: trust Setting: Ninole. Situation: Kai gives Embry a surf map annotated with hazards, etiquette, and places where newcomers should wait. Trigger: Kai shares operational knowledge while naming her status limits. Stakes: She acc"
+    },
+    {
+      "collection": "persona_memory",
+      "persona_id": "embry",
+      "source_id": "embry_age15_19_b02_memory_019",
+      "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age15_19_b02_candidates.jsonl",
+      "text": "After a minor reef scrape, Kai follows Embry's first-aid plan and lets her decide whether to stop. The scrape is shallow. Kai brings the kit, names the visible risk, and asks whether she wants shore or another attempt. Embry chooses shore without defending herself. people: Embry Lawson, Kai; places: Ninole; objects: embry surf first aid repair kit; concepts: boundary, trust Setting: Ninole. Situation: After a minor reef scrape, Kai follows Embry's first-aid plan and lets her decide whether to stop. Trigger: The scrape creates uncertainty about continued footing. Stakes: She ends the session de"
+    },
+    {
+      "collection": "persona_memory",
+      "persona_id": "embry",
+      "source_id": "embry_age15_19_b03_memory_016",
+      "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age15_19_b03_candidates.jsonl",
+      "text": "Kai privately corrects a harmless surf-timing error, and Embry continues instead of punishing herself. Embry enters too early and wastes a wave. Kai waits until shore, demonstrates the timing once, and lets her return to the water. people: Embry Lawson, kai; places: Ninole; concepts: boundary, trust Setting: Ninole. Situation: Kai privately corrects a harmless surf-timing error, and Embry continues instead of punishing herself. Trigger: Kai treats the error as specific and recoverable. Stakes: She applies the correction and continues. Emotions: fear, guilt, longing, trust. Intensity: 4/5. Regu"
+    }
+  ],
+  "provider_live": false,
+  "revision_id": "rev_upstream_bf3b05d47fb8",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.residue_links.v1",
+  "source": "phase_03_crew.memory_recall_evidence",
+  "status": "PASS_IDEA_LINEAGE_REPAIRED"
+}

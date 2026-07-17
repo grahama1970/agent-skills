@@ -1,0 +1,98 @@
+{
+  "created_at": "2026-07-05T20:46:22.909554+00:00",
+  "duration_seconds": 10,
+  "panel_count": 4,
+  "panels": [
+    {
+      "coverage_seed_ids": [
+        "seed-0",
+        "seed-1",
+        "seed-5",
+        "seed-6"
+      ],
+      "panel_id": "sb_001",
+      "reference_count": 2,
+      "required_entities": [
+        "Embry",
+        "Kai",
+        "Lava Reef",
+        "Kona Coast"
+      ],
+      "shot": "Waterline establishing panel at Kahalu'u Bay, low enough to show clear water over dark lava shapes.",
+      "time_range": {
+        "end_s": 2.5,
+        "start_s": 0
+      }
+    },
+    {
+      "coverage_seed_ids": [
+        "seed-0",
+        "seed-2",
+        "seed-4",
+        "seed-5"
+      ],
+      "panel_id": "sb_002",
+      "reference_count": 1,
+      "required_entities": [
+        "Embry",
+        "Embry surfboard",
+        "June Swell",
+        "Lava Reef"
+      ],
+      "shot": "Medium action panel on Embry's borrowed white shortboard, hands and rail grip visible.",
+      "time_range": {
+        "end_s": 5,
+        "start_s": 2.5
+      }
+    },
+    {
+      "coverage_seed_ids": [
+        "seed-0",
+        "seed-1",
+        "seed-3",
+        "seed-6"
+      ],
+      "panel_id": "sb_003",
+      "reference_count": 2,
+      "required_entities": [
+        "Embry",
+        "Kai",
+        "Kai surfboard",
+        "Kona Coast"
+      ],
+      "shot": "Two-character lineup panel with Kai slightly outside and Embry closer to the decision point.",
+      "time_range": {
+        "end_s": 7.5,
+        "start_s": 5
+      }
+    },
+    {
+      "coverage_seed_ids": [
+        "seed-0",
+        "seed-1",
+        "seed-2",
+        "seed-4",
+        "seed-5",
+        "seed-6"
+      ],
+      "panel_id": "sb_004",
+      "reference_count": 1,
+      "required_entities": [
+        "Embry",
+        "Kai",
+        "Embry surfboard",
+        "June Swell",
+        "Lava Reef",
+        "Kona Coast"
+      ],
+      "shot": "Decisive waterline panel as the clean shoulder stands up over the visible reef boundary.",
+      "time_range": {
+        "end_s": 10,
+        "start_s": 7.5
+      }
+    }
+  ],
+  "schema": "persona_dream.storyboard_panel_manifest.v1",
+  "storyboard_packet": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json",
+  "storyboard_packet_sha256": "sha256:f79dbc931a1c2aaff417e3d6395c868346cc973153343c66d42b5595119e2312"
+}

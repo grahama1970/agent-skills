@@ -1,0 +1,208 @@
+{
+  "schema": "persona_dream.visual_entity_context.v1",
+  "created_at_utc": "2026-07-03T13:26:34.550658+00:00",
+  "characters": [],
+  "environments": [
+    {
+      "entity_type": "environment",
+      "entity_id": "contact_sheet_june_swell",
+      "title": "June Swell Contact Sheet",
+      "description": "June Swell Contact for persona-dream provider prompts and continuity references.",
+      "tags": [
+        "persona-dream",
+        "environment",
+        "contact_sheet_june_swell"
+      ],
+      "schema": "persona_dream.visual_asset.v1",
+      "_key": "bf846ae444d588d6365abe5f8eaa9b1c",
+      "kind": "persona_dream_visual_asset",
+      "asset_id": "contact_sheet_june_swell",
+      "image_path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/images/contact_sheet_june_swell.png",
+      "prompt_path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/prompts/contact_sheet_june_swell.prompt.md",
+      "response_path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/receipts/contact_sheet_june_swell.response.json",
+      "sha256": "81b0c71b17fe1ab54e282cfef2070ab4beb57d80b5bf1b4069ae1b231b1a1ef4",
+      "bytes": 2296016,
+      "visual_qdrant_collection": "persona_dream_visual_assets_v1",
+      "visual_qdrant_point_id": "6d4da3cb-69db-58fd-8082-4d37bfd2328a",
+      "semantic_sync_state": "synced",
+      "created_at_utc": "2026-07-03T13:26:32.429952+00:00",
+      "embedding_model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
+      "embedding_model_version": "v5-omni-small",
+      "embedding_dimensions": 1024,
+      "embedding_schema": "text_mm=text_only, image_mm=text_plus_image_b64"
+    },
+    {
+      "entity_type": "environment",
+      "entity_id": "contact_sheet_kona_coast",
+      "title": "Kona Coast Contact Sheet",
+      "description": "Kona Coast Contact for persona-dream provider prompts and continuity references.",
+      "tags": [
+        "persona-dream",
+        "environment",
+        "contact_sheet_kona_coast"
+      ],
+      "schema": "persona_dream.visual_asset.v1",
+      "_key": "31b6117a2bd1e739e35b7da50ca7f3c9",
+      "kind": "persona_dream_visual_asset",
+      "asset_id": "contact_sheet_kona_coast",
+      "image_path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/images/contact_sheet_kona_coast.png",
+      "prompt_path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/prompts/contact_sheet_kona_coast.prompt.md",
+      "response_path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/receipts/contact_sheet_kona_coast.response.json",
+      "sha256": "ec128b50ca867815b28229f990fcf71a761202575a9aad69da00a0f964ce632d",
+      "bytes": 2909525,
+      "visual_qdrant_collection": "persona_dream_visual_assets_v1",
+      "visual_qdrant_point_id": "3b89ba98-1d35-5389-9bed-fde69ed6940b",
+      "semantic_sync_state": "synced",
+      "created_at_utc": "2026-07-03T13:26:32.436701+00:00",
+      "embedding_model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
+      "embedding_model_version": "v5-omni-small",
+      "embedding_dimensions": 1024,
+      "embedding_schema": "text_mm=text_only, image_mm=text_plus_image_b64"
+    },
+    {
+      "entity_type": "environment",
+      "entity_id": "contact_sheet_lava_reef",
+      "title": "Lava Reef Contact Sheet",
+      "description": "Lava Reef Contact for persona-dream provider prompts and continuity references.",
+      "tags": [
+        "persona-dream",
+        "environment",
+        "contact_sheet_lava_reef"
+      ],
+      "schema": "persona_dream.visual_asset.v1",
+      "_key": "f1455b584d104628ec7e8dc3f34f253e",
+      "kind": "persona_dream_visual_asset",
+      "asset_id": "contact_sheet_lava_reef",
+      "image_path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/images/contact_sheet_lava_reef.png",
+      "prompt_path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/prompts/contact_sheet_lava_reef.prompt.md",
+      "response_path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/receipts/contact_sheet_lava_reef.response.json",
+      "sha256": "06f720d9546de7fa549e6ab9b74efa18c354929f7f93c66e19202197138775f7",
+      "bytes": 2947462,
+      "visual_qdrant_collection": "persona_dream_visual_assets_v1",
+      "visual_qdrant_point_id": "9e532c04-2b43-5cc6-a940-680881a73950",
+      "semantic_sync_state": "synced",
+      "created_at_utc": "2026-07-03T13:26:32.440787+00:00",
+      "embedding_model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
+      "embedding_model_version": "v5-omni-small",
+      "embedding_dimensions": 1024,
+      "embedding_schema": "text_mm=text_only, image_mm=text_plus_image_b64"
+    }
+  ],
+  "objects": [
+    {
+      "entity_type": "object",
+      "entity_id": "contact_sheet_embry_surfboard",
+      "title": "Embry Surfboard Contact Sheet",
+      "description": "Embry Surfboard Contact for persona-dream provider prompts and continuity references.",
+      "tags": [
+        "persona-dream",
+        "object",
+        "contact_sheet_embry_surfboard"
+      ],
+      "schema": "persona_dream.visual_asset.v1",
+      "_key": "4c4787d389f39cf33d65f19ca4ad7520",
+      "kind": "persona_dream_visual_asset",
+      "asset_id": "contact_sheet_embry_surfboard",
+      "image_path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/images/contact_sheet_embry_surfboard.png",
+      "prompt_path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/prompts/contact_sheet_embry_surfboard.prompt.md",
+      "response_path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/receipts/contact_sheet_embry_surfboard.response.json",
+      "sha256": "d4052937952bb14e5be77c25b262e30d92822068f5af26dd6cb69d7f03240216",
+      "bytes": 2263007,
+      "visual_qdrant_collection": "persona_dream_visual_assets_v1",
+      "visual_qdrant_point_id": "474cb9b8-960c-5ba4-91f7-fb925b38a47c",
+      "semantic_sync_state": "synced",
+      "created_at_utc": "2026-07-03T13:26:32.426681+00:00",
+      "embedding_model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
+      "embedding_model_version": "v5-omni-small",
+      "embedding_dimensions": 1024,
+      "embedding_schema": "text_mm=text_only, image_mm=text_plus_image_b64"
+    },
+    {
+      "entity_type": "object",
+      "entity_id": "contact_sheet_kai_surfboard",
+      "title": "Kai Surfboard Contact Sheet",
+      "description": "Kai Surfboard Contact for persona-dream provider prompts and continuity references.",
+      "tags": [
+        "persona-dream",
+        "object",
+        "contact_sheet_kai_surfboard"
+      ],
+      "schema": "persona_dream.visual_asset.v1",
+      "_key": "519e557c4a9fdaab3a95e8c0fbc0db83",
+      "kind": "persona_dream_visual_asset",
+      "asset_id": "contact_sheet_kai_surfboard",
+      "image_path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/images/contact_sheet_kai_surfboard.png",
+      "prompt_path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/prompts/contact_sheet_kai_surfboard.prompt.md",
+      "response_path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/receipts/contact_sheet_kai_surfboard.response.json",
+      "sha256": "60474f8b362a582bdb00bb90b434fd48a635543e034cda3d913609222f7ac849",
+      "bytes": 2186168,
+      "visual_qdrant_collection": "persona_dream_visual_assets_v1",
+      "visual_qdrant_point_id": "aadf0f20-54e7-563c-90d0-4cb54a6851e7",
+      "semantic_sync_state": "synced",
+      "created_at_utc": "2026-07-03T13:26:32.432638+00:00",
+      "embedding_model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
+      "embedding_model_version": "v5-omni-small",
+      "embedding_dimensions": 1024,
+      "embedding_schema": "text_mm=text_only, image_mm=text_plus_image_b64"
+    }
+  ],
+  "creatures": [],
+  "scene_bindings": [
+    {
+      "scene_id": "void_tea_dialogue",
+      "characters": [],
+      "environments": [],
+      "objects": [],
+      "creatures": []
+    },
+    {
+      "scene_id": "sparta_archive_dialogue",
+      "characters": [],
+      "environments": [],
+      "objects": [],
+      "creatures": []
+    },
+    {
+      "scene_id": "sparta_graph_room_dialogue",
+      "characters": [],
+      "environments": [],
+      "objects": [],
+      "creatures": []
+    },
+    {
+      "scene_id": "memory_terminal_reflection",
+      "characters": [],
+      "environments": [],
+      "objects": [],
+      "creatures": []
+    }
+  ],
+  "provider_lanes": [
+    "kling_3_0_o3_omni",
+    "seedance_2_0",
+    "elevenlabs_kling_lipsync_control"
+  ],
+  "provider_inputs_path": "/mnt/storage12tb/skills/persona-dream/outputs/embry-kai-surf-phase04-contact-sheets-20260702/artifacts/provider_inputs.json",
+  "timing_source": null,
+  "qdrant": {
+    "collection_created": false,
+    "collection": "persona_dream_visual_assets_v1",
+    "upserted": 5,
+    "upsert_response": {
+      "result": {
+        "operation_id": 9,
+        "status": "completed"
+      },
+      "status": "ok",
+      "time": 0.002618237
+    }
+  },
+  "memory": {
+    "collection": "persona_dream_visual_assets",
+    "inserted": 4,
+    "updated": 1,
+    "errors": [],
+    "total": 5,
+    "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_persona_dream_visual_assets_20260703T132633459679Z_65675_126869764572864.jsonl"
+  }
+}

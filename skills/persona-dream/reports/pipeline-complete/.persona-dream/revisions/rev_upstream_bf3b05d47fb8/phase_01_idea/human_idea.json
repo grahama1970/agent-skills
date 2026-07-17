@@ -1,0 +1,18 @@
+{
+  "actual_provider_call_attempts": 0,
+  "artifact_id": "human_idea",
+  "created_at": "2026-07-17T13:36:17.618810+00:00",
+  "idea_id": "pd_idea_45a9d20d629b4e08863a9618b5f83982",
+  "idea_sha256": "sha256:45a9d20d629b4e08863a9618b5f83982a9eb55bbf52cbd1de5deac09015baf9b",
+  "live_submit_ready": false,
+  "memory_required": true,
+  "provider_live": false,
+  "provider_ready": false,
+  "revision_id": "rev_upstream_bf3b05d47fb8",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.human_idea.v1",
+  "source": "explicit_human",
+  "source_revision_id": "rev_idea_f3f9c48d5cc2",
+  "submitted": false,
+  "text": "Embry and Kai both faked a sick day at their summer jobs to go surfing on the Big Island on a Wednesday in June of 2024 — Kona Coast, Kahaluʻu Bay, summer swell patterns, lava rock reefs, local surf etiquette."
+}

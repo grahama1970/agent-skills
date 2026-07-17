@@ -1,0 +1,2045 @@
+{
+  "collection": "persona_dream_pipeline_steps",
+  "count": 42,
+  "documents": [
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:01:request_idea_intake",
+      "artifact_hashes": {
+        "phase_01_idea/dream_request.json": "sha256:5bea0da948e811970e4d1bc25af27956056b05a7b6cc2b54b51812f256b73827",
+        "phase_01_idea/human_idea.json": "sha256:85407e447f9ef1586ba7673e12545305c0d61b3f6be0bea84cd23c3f37dc81aa"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 01 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "carried_current",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "phase_01_idea/dream_request.json",
+        "phase_01_idea/human_idea.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "phase_01_idea/dream_request.json",
+        "phase_01_idea/human_idea.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 01 Request / Idea Intake status PASS disposition carried_current",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "PASS",
+      "step_name": "Request / Idea Intake",
+      "step_no": 1,
+      "step_slug": "request_idea_intake",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:01",
+        "status:pass",
+        "disposition:carried_current"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:02:dreaming_persona_selection",
+      "artifact_hashes": {
+        "phase_01_idea/dream_request.json": "sha256:5bea0da948e811970e4d1bc25af27956056b05a7b6cc2b54b51812f256b73827",
+        "phase_01_idea/human_idea.json": "sha256:85407e447f9ef1586ba7673e12545305c0d61b3f6be0bea84cd23c3f37dc81aa"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 02 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "carried_current",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "phase_01_idea/dream_request.json",
+        "phase_01_idea/human_idea.json"
+      ],
+      "previous_status_in_source_revision": "PASS_BOUND_REQUEST",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "phase_01_idea/dream_request.json",
+        "phase_01_idea/human_idea.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 02 Dreaming Persona Selection status PASS_BOUND_REQUEST disposition carried_current",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "PASS_BOUND_REQUEST",
+      "step_name": "Dreaming Persona Selection",
+      "step_no": 2,
+      "step_slug": "dreaming_persona_selection",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:02",
+        "status:pass_bound_request",
+        "disposition:carried_current"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:03:memory_recall",
+      "artifact_hashes": {
+        "phase_01_idea/residue_links.json": "sha256:23c2b7ea11f8beedb60572b1b2a7f771d39aae1c2e59fc83ebcb227d2faadbdb"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 03 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "carried_current",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "phase_01_idea/residue_links.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "phase_01_idea/residue_links.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 03 Memory Recall status PASS disposition carried_current",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "PASS",
+      "step_name": "Memory Recall",
+      "step_no": 3,
+      "step_slug": "memory_recall",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:03",
+        "status:pass",
+        "disposition:carried_current"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:04:residue_grounding",
+      "artifact_hashes": {
+        "phase_01_idea/contradiction_report.json": "sha256:a6f0b338cd0086f5843b542a067f2026ce26d38f5abe8008b08f0267a19ca887",
+        "phase_01_idea/residue_links.json": "sha256:23c2b7ea11f8beedb60572b1b2a7f771d39aae1c2e59fc83ebcb227d2faadbdb"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 04 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "carried_current",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "phase_01_idea/residue_links.json",
+        "phase_01_idea/contradiction_report.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "phase_01_idea/residue_links.json",
+        "phase_01_idea/contradiction_report.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 04 Residue Grounding status PASS disposition carried_current",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "PASS",
+      "step_name": "Residue Grounding",
+      "step_no": 4,
+      "step_slug": "residue_grounding",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:04",
+        "status:pass",
+        "disposition:carried_current"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:05:dream_packet",
+      "artifact_hashes": {
+        "phase_01_idea/dream_packet.json": "sha256:b7c85fd1e873e97b73133be56684240c41f3fac4f22e8d9e7a2ff19a2946a308",
+        "phase_01_idea/dream_packet_validation.json": "sha256:65f13535f5859a01fb56a52c7390ddb8dce43e80f45ccae84e86a1b9e9a72438",
+        "phase_01_idea/dream_prompt.txt": "sha256:d3b37f098be2fe924c1402b3898fb826eda82ef3ca240ebb4c1ffd7b94dc9142"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 05 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "reconstructed_current",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "phase_01_idea/dream_packet.json",
+        "phase_01_idea/dream_prompt.txt",
+        "phase_01_idea/dream_packet_validation.json"
+      ],
+      "previous_status_in_source_revision": "BLOCKED_MISSING_REQUIRED_ARTIFACT",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "phase_01_idea/dream_packet.json",
+        "phase_01_idea/dream_packet_validation.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 05 Dream Packet status PASS_RECONSTRUCTED disposition reconstructed_current",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "PASS_RECONSTRUCTED",
+      "step_name": "Dream Packet",
+      "step_no": 5,
+      "step_slug": "dream_packet",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:05",
+        "status:pass_reconstructed",
+        "disposition:reconstructed_current"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:06:story_video_plan",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 06 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 06 Story / Video Plan status STALE_UPSTREAM_CONTRACT_SUPERSEDED disposition stale",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Story / Video Plan",
+      "step_no": 6,
+      "step_slug": "story_video_plan",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:06",
+        "status:stale_upstream_contract_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:07:producer_selection",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 07 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 07 Producer Persona Selection status STALE_UPSTREAM_CONTRACT_SUPERSEDED disposition stale",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Producer Persona Selection",
+      "step_no": 7,
+      "step_slug": "producer_selection",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:07",
+        "status:stale_upstream_contract_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:08:director_selection",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 08 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 08 Director Selection status STALE_UPSTREAM_CONTRACT_SUPERSEDED disposition stale",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Director Selection",
+      "step_no": 8,
+      "step_slug": "director_selection",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:08",
+        "status:stale_upstream_contract_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:09:script_writer_selection",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 09 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 09 Script Writer Selection status STALE_UPSTREAM_CONTRACT_SUPERSEDED disposition stale",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Script Writer Selection",
+      "step_no": 9,
+      "step_slug": "script_writer_selection",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:09",
+        "status:stale_upstream_contract_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:10:creative_authority_receipts",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 10 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 10 Creative Authority Receipts status STALE_UPSTREAM_CONTRACT_SUPERSEDED disposition stale",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Creative Authority Receipts",
+      "step_no": 10,
+      "step_slug": "creative_authority_receipts",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:10",
+        "status:stale_upstream_contract_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:11:look_lock",
+      "artifact_hashes": {
+        "phase_03_crew/look_lock.json": "sha256:a848430991c1fb1a0734caa886b832f200763ca2041d4db44f9a65a7c16cdf77",
+        "phase_03_crew/shot_bible.json": "sha256:d6925039e3fc352e11e36998fef530c63818a2fa667c1a44fb5cefcd34b3c3ab",
+        "phase_03_crew/technique_selection.json": "sha256:e9d2fc53e1a47d50b18e1436a5d42bdbe23c05451d9d9243928d36fecae4e673"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 11 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "reconstructed_current",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "phase_03_crew/technique_selection.json",
+        "phase_03_crew/look_lock.json",
+        "phase_03_crew/shot_bible.json"
+      ],
+      "previous_status_in_source_revision": "BLOCKED_MISSING_REQUIRED_ARTIFACT",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "phase_03_crew/technique_selection.json",
+        "phase_03_crew/look_lock.json",
+        "phase_03_crew/shot_bible.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 11 Look Lock status PASS_RECONSTRUCTED disposition reconstructed_current",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "PASS_RECONSTRUCTED",
+      "step_name": "Look Lock",
+      "step_no": 11,
+      "step_slug": "look_lock",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:11",
+        "status:pass_reconstructed",
+        "disposition:reconstructed_current"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:12:script_dna",
+      "artifact_hashes": {
+        "phase_03_crew/script_dna_selection.json": "sha256:fb4ec8a68954a072e37896255bd63893a868dbab5bf7f60f0a46a4518e7ceb3c"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 12 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "reconstructed_current",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "phase_03_crew/script_dna_selection.json"
+      ],
+      "previous_status_in_source_revision": "BLOCKED_MISSING_REQUIRED_ARTIFACT",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "phase_03_crew/script_dna_selection.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 12 Script DNA status PASS_RECONSTRUCTED disposition reconstructed_current",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "PASS_RECONSTRUCTED",
+      "step_name": "Script DNA",
+      "step_no": 12,
+      "step_slug": "script_dna",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:12",
+        "status:pass_reconstructed",
+        "disposition:reconstructed_current"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:13:storyboard_prompt_composition",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 13 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 13 Storyboard Prompt Composition status STALE_UPSTREAM_CONTRACT_SUPERSEDED disposition stale",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Storyboard Prompt Composition",
+      "step_no": 13,
+      "step_slug": "storyboard_prompt_composition",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:13",
+        "status:stale_upstream_contract_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:14:storyboard_panel_receipts",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 14 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 14 Storyboard Panel Receipts status STALE_UPSTREAM_CONTRACT_SUPERSEDED disposition stale",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Storyboard Panel Receipts",
+      "step_no": 14,
+      "step_slug": "storyboard_panel_receipts",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:14",
+        "status:stale_upstream_contract_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:15:panel_continuity_repair_ledger",
+      "artifact_hashes": {
+        "phase_07_storyboard_live_tau/panel_continuity_and_repair_ledger.json": "sha256:8e7e31d4bfe6dd4723cea248467b118e2f8627198b5cbee00037b0808b7d9831"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 15 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "reconstructed_current",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "phase_07_storyboard_live_tau/panel_continuity_and_repair_ledger.json"
+      ],
+      "previous_status_in_source_revision": "BLOCKED_MISSING_REQUIRED_ARTIFACT",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "phase_07_storyboard_live_tau/panel_continuity_and_repair_ledger.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 15 Panel Continuity And Repair Ledger status PASS_RECONSTRUCTED disposition reconstructed_current",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "PASS_RECONSTRUCTED",
+      "step_name": "Panel Continuity And Repair Ledger",
+      "step_no": 15,
+      "step_slug": "panel_continuity_repair_ledger",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:15",
+        "status:pass_reconstructed",
+        "disposition:reconstructed_current"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:16:panel_generation_loop",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 16 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 16 Panel Generation Loop status STALE_UPSTREAM_CONTRACT_SUPERSEDED disposition stale",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Panel Generation Loop",
+      "step_no": 16,
+      "step_slug": "panel_generation_loop",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:16",
+        "status:stale_upstream_contract_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:17:panel_visual_review_loop",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 17 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 17 Panel Visual Review Loop status STALE_UPSTREAM_CONTRACT_SUPERSEDED disposition stale",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Panel Visual Review Loop",
+      "step_no": 17,
+      "step_slug": "panel_visual_review_loop",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:17",
+        "status:stale_upstream_contract_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:18:surgical_panel_repair",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 18 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS_NO_REPAIR_REQUIRED",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 18 Surgical Panel Repair status STALE_UPSTREAM_CONTRACT_SUPERSEDED disposition stale",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Surgical Panel Repair",
+      "step_no": 18,
+      "step_slug": "surgical_panel_repair",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:18",
+        "status:stale_upstream_contract_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:19:panel_repair_gate",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 19 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 19 Panel Repair Gate status STALE_UPSTREAM_CONTRACT_SUPERSEDED disposition stale",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Panel Repair Gate",
+      "step_no": 19,
+      "step_slug": "panel_repair_gate",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:19",
+        "status:stale_upstream_contract_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:20:panel_source_receipt",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 20 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 20 Panel Source Receipt status STALE_UPSTREAM_CONTRACT_SUPERSEDED disposition stale",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Panel Source Receipt",
+      "step_no": 20,
+      "step_slug": "panel_source_receipt",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:20",
+        "status:stale_upstream_contract_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:21:provider_media_publication_work_order",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 21 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS_EXISTING_PUBLICATION_REUSED",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 21 Provider Media Publication Work Order status STALE_UPSTREAM_CONTRACT_SUPERSEDED disposition stale",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Provider Media Publication Work Order",
+      "step_no": 21,
+      "step_slug": "provider_media_publication_work_order",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:21",
+        "status:stale_upstream_contract_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:22:local_provider_media_staging",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 22 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS_NOT_REQUIRED_ALREADY_PUBLISHED",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 22 Local Provider Media Staging status STALE_UPSTREAM_CONTRACT_SUPERSEDED disposition stale",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Local Provider Media Staging",
+      "step_no": 22,
+      "step_slug": "local_provider_media_staging",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:22",
+        "status:stale_upstream_contract_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:23:publication_preflight",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 23 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 23 Publication Preflight status STALE_UPSTREAM_CONTRACT_SUPERSEDED disposition stale",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Publication Preflight",
+      "step_no": 23,
+      "step_slug": "publication_preflight",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:23",
+        "status:stale_upstream_contract_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:24:publication_authorization",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 24 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS_APPROVED",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 24 Publication Authorization status STALE_UPSTREAM_CONTRACT_SUPERSEDED disposition stale",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Publication Authorization",
+      "step_no": 24,
+      "step_slug": "publication_authorization",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:24",
+        "status:stale_upstream_contract_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:25:public_url_probe",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 25 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 25 Public URL Probe status STALE_UPSTREAM_CONTRACT_SUPERSEDED disposition stale",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Public URL Probe",
+      "step_no": 25,
+      "step_slug": "public_url_probe",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:25",
+        "status:stale_upstream_contract_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:26:provider_media_handoff",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 26 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 26 Provider Media Handoff status STALE_UPSTREAM_CONTRACT_SUPERSEDED disposition stale",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Provider Media Handoff",
+      "step_no": 26,
+      "step_slug": "provider_media_handoff",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:26",
+        "status:stale_upstream_contract_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:27:provider_media_lock",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 27 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 27 Provider Media Lock status STALE_UPSTREAM_CONTRACT_SUPERSEDED disposition stale",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Provider Media Lock",
+      "step_no": 27,
+      "step_slug": "provider_media_lock",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:27",
+        "status:stale_upstream_contract_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:28:kling_scene_packet",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 28 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS_EXECUTED_REQUEST",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 28 Kling Scene Packet status STALE_UPSTREAM_CONTRACT_SUPERSEDED disposition stale",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Kling Scene Packet",
+      "step_no": 28,
+      "step_slug": "kling_scene_packet",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:28",
+        "status:stale_upstream_contract_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:29:provider_final_gate",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 29 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS_EXECUTED_PREFLIGHT",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 29 Provider Final Gate status STALE_UPSTREAM_CONTRACT_SUPERSEDED disposition stale",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Provider Final Gate",
+      "step_no": 29,
+      "step_slug": "provider_final_gate",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:29",
+        "status:stale_upstream_contract_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:30:paid_call_authorization",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "provider evidence remains bound to the prior revision and consumed request hash; a repaired request, new hash-bound approvals, and a new paid-call authorization are required",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 30 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "superseded",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS_APPROVED_CONSUMED",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 30 Paid Call Authorization status SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION disposition superseded",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION",
+      "step_name": "Paid Call Authorization",
+      "step_no": 30,
+      "step_slug": "paid_call_authorization",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:30",
+        "status:superseded_provider_evidence_prior_revision",
+        "disposition:superseded"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:31:kling_submit",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "provider evidence remains bound to the prior revision and consumed request hash; a repaired request, new hash-bound approvals, and a new paid-call authorization are required",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 31 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "superseded",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS_LIVE",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 31 Kling Submit status SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION disposition superseded",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION",
+      "step_name": "Kling Submit",
+      "step_no": 31,
+      "step_slug": "kling_submit",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:31",
+        "status:superseded_provider_evidence_prior_revision",
+        "disposition:superseded"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:32:kling_poll_callback",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "provider evidence remains bound to the prior revision and consumed request hash; a repaired request, new hash-bound approvals, and a new paid-call authorization are required",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 32 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "superseded",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS_LIVE",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 32 Kling Poll / Callback status SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION disposition superseded",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION",
+      "step_name": "Kling Poll / Callback",
+      "step_no": 32,
+      "step_slug": "kling_poll_callback",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:32",
+        "status:superseded_provider_evidence_prior_revision",
+        "disposition:superseded"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:33:output_retrieval",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "provider evidence remains bound to the prior revision and consumed request hash; a repaired request, new hash-bound approvals, and a new paid-call authorization are required",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 33 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "superseded",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS_LIVE",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 33 Output Retrieval status SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION disposition superseded",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION",
+      "step_name": "Output Retrieval",
+      "step_no": 33,
+      "step_slug": "output_retrieval",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:33",
+        "status:superseded_provider_evidence_prior_revision",
+        "disposition:superseded"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:34:ffprobe_technical_validation",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "provider evidence remains bound to the prior revision and consumed request hash; a repaired request, new hash-bound approvals, and a new paid-call authorization are required",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 34 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "superseded",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS_LIVE",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 34 FFprobe / Technical Validation status SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION disposition superseded",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION",
+      "step_name": "FFprobe / Technical Validation",
+      "step_no": 34,
+      "step_slug": "ffprobe_technical_validation",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:34",
+        "status:superseded_provider_evidence_prior_revision",
+        "disposition:superseded"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:35:frame_contact_sheet",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "provider evidence remains bound to the prior revision and consumed request hash; a repaired request, new hash-bound approvals, and a new paid-call authorization are required",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 35 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "superseded",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 35 Frame Contact Sheet status SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION disposition superseded",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION",
+      "step_name": "Frame Contact Sheet",
+      "step_no": 35,
+      "step_slug": "frame_contact_sheet",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:35",
+        "status:superseded_provider_evidence_prior_revision",
+        "disposition:superseded"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:36:post_kling_continuity_review",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "provider evidence remains bound to the prior revision and consumed request hash; a repaired request, new hash-bound approvals, and a new paid-call authorization are required",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 36 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "superseded",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "FAIL",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 36 Post-Kling Continuity Review status SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION disposition superseded",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION",
+      "step_name": "Post-Kling Continuity Review",
+      "step_no": 36,
+      "step_slug": "post_kling_continuity_review",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:36",
+        "status:superseded_provider_evidence_prior_revision",
+        "disposition:superseded"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:37:voice_audio_handoff",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 37 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS_NOT_REQUIRED_AUDIO_OFF",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 37 Voice / Audio Handoff Lane When Voiced status STALE_UPSTREAM_CONTRACT_SUPERSEDED disposition stale",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Voice / Audio Handoff Lane When Voiced",
+      "step_no": 37,
+      "step_slug": "voice_audio_handoff",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:37",
+        "status:stale_upstream_contract_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:38:final_assembly_movie_lane",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 38 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS_NOT_REQUIRED_SINGLE_PROVIDER_OUTPUT",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 38 Final Assembly / Movie Lane status STALE_UPSTREAM_CONTRACT_SUPERSEDED disposition stale",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Final Assembly / Movie Lane",
+      "step_no": 38,
+      "step_slug": "final_assembly_movie_lane",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:38",
+        "status:stale_upstream_contract_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:39:report_generation",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 39 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS_BLOCKED_REPORT",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 39 Report Generation status STALE_UPSTREAM_CONTRACT_SUPERSEDED disposition stale",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Report Generation",
+      "step_no": 39,
+      "step_slug": "report_generation",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:39",
+        "status:stale_upstream_contract_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:40:gate_validation_loop",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 40 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "BLOCKED",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 40 Gate Validation Loop status STALE_UPSTREAM_CONTRACT_SUPERSEDED disposition stale",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Gate Validation Loop",
+      "step_no": 40,
+      "step_slug": "gate_validation_loop",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:40",
+        "status:stale_upstream_contract_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:41:upstream_revision_invalidation",
+      "artifact_hashes": {
+        "upstream_contract_invalidation_ledger.v1.json": "sha256:2cfd344caec83491551c7ffd10f5020bf448d2edaa2f36646c14dd0a91e7db2c"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 41 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "current",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_contract_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 41 Upstream Revision Invalidation status PASS disposition current",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "PASS",
+      "step_name": "Upstream Revision Invalidation",
+      "step_no": 41,
+      "step_slug": "upstream_revision_invalidation",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:41",
+        "status:pass",
+        "disposition:current"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:42:final_acceptance_boundary",
+      "artifact_hashes": {
+        "upstream_reconstruction_gate_summary.v1.json": "sha256:336250c31a07d2053ab95351baa7f98227a1fbea3b4acf24734c5c376a012f5d"
+      },
+      "blocker": "final acceptance requires steps 06-29 revalidation, a repaired SB_004 request, new authorization, and a passing post-Kling continuity review",
+      "claims": {
+        "does_not_prove": [
+          "downstream revalidation, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 42 state for revision rev_upstream_bf3b05d47fb8 is durably recorded"
+        ]
+      },
+      "disposition": "blocked",
+      "inputs": {
+        "repair_kind": "upstream_contract_reconstruction",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-17T13:36:17.618810+00:00",
+      "outputs": [
+        "upstream_reconstruction_gate_summary.v1.json"
+      ],
+      "previous_status_in_source_revision": "BLOCKED",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "upstream_reconstruction_gate_summary.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_upstream_bf3b05d47fb8 step 42 Final Acceptance Boundary status BLOCKED_AWAITING_DOWNSTREAM_REVALIDATION disposition blocked",
+      "revision_id": "rev_upstream_bf3b05d47fb8",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_idea_f3f9c48d5cc2",
+      "status": "BLOCKED_AWAITING_DOWNSTREAM_REVALIDATION",
+      "step_name": "Final Acceptance Boundary",
+      "step_no": 42,
+      "step_slug": "final_acceptance_boundary",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_upstream_bf3b05d47fb8",
+        "step:42",
+        "status:blocked_awaiting_downstream_revalidation",
+        "disposition:blocked"
+      ]
+    }
+  ],
+  "revision_id": "rev_upstream_bf3b05d47fb8",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.pipeline_step_memory_bundle.v1"
+}

@@ -1,0 +1,15 @@
+{
+  "contact_sheet": "/tmp/agent-skills-main-persona-dream-uu5nMV/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_04_contact_sheets/source_artifacts/contact_sheet_index.png",
+  "exercised": "local dream packet shape, residue list, prompt list, contact sheet path and PNG signature",
+  "first_blocker": null,
+  "frame_prompt_count": 4,
+  "live": "no",
+  "mocked": "no",
+  "packet": "/tmp/agent-skills-main-persona-dream-uu5nMV/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_01_idea/dream_packet.json",
+  "persona_id": "embry",
+  "run_id": "pipeline-complete",
+  "run_root": "/tmp/agent-skills-main-persona-dream-uu5nMV/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8",
+  "schema": "persona_dream.dream_packet_validation.v1",
+  "status": "PASS_DREAM_PACKET",
+  "unverified": "live memory recall, residue semantic grounding, story acceptance, panel generation, provider/Kling execution"
+}

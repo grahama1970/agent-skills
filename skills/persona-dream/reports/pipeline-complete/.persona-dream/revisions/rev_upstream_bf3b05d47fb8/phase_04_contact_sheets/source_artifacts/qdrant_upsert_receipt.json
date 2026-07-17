@@ -1,0 +1,13 @@
+{
+  "collection_created": false,
+  "collection": "persona_dream_visual_assets_v1",
+  "upserted": 5,
+  "upsert_response": {
+    "result": {
+      "operation_id": 9,
+      "status": "completed"
+    },
+    "status": "ok",
+    "time": 0.002618237
+  }
+}

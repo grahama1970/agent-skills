@@ -1,0 +1,26 @@
+{
+  "actual_provider_call_attempts": 0,
+  "createdAt": "2026-07-17T13:36:17.618810+00:00",
+  "ideaId": "pd_idea_45a9d20d629b4e08863a9618b5f83982",
+  "ideaSha256": "sha256:45a9d20d629b4e08863a9618b5f83982a9eb55bbf52cbd1de5deac09015baf9b",
+  "live_submit_ready": false,
+  "provider_live": false,
+  "provider_ready": false,
+  "reconstructedArtifacts": {
+    "phase_01_idea/dream_packet.json": "sha256:b7c85fd1e873e97b73133be56684240c41f3fac4f22e8d9e7a2ff19a2946a308",
+    "phase_01_idea/dream_prompt.txt": "sha256:d3b37f098be2fe924c1402b3898fb826eda82ef3ca240ebb4c1ffd7b94dc9142",
+    "phase_03_crew/look_lock.json": "sha256:a848430991c1fb1a0734caa886b832f200763ca2041d4db44f9a65a7c16cdf77",
+    "phase_03_crew/script_dna_selection.json": "sha256:fb4ec8a68954a072e37896255bd63893a868dbab5bf7f60f0a46a4518e7ceb3c",
+    "phase_03_crew/shot_bible.json": "sha256:d6925039e3fc352e11e36998fef530c63818a2fa667c1a44fb5cefcd34b3c3ab",
+    "phase_03_crew/technique_selection.json": "sha256:e9d2fc53e1a47d50b18e1436a5d42bdbe23c05451d9d9243928d36fecae4e673",
+    "phase_07_storyboard_live_tau/panel_continuity_and_repair_ledger.json": "sha256:8e7e31d4bfe6dd4723cea248467b118e2f8627198b5cbee00037b0808b7d9831"
+  },
+  "repairKind": "upstream_contract_reconstruction",
+  "revisionId": "rev_upstream_bf3b05d47fb8",
+  "runId": "pipeline-complete",
+  "schema": "persona_dream.revision_manifest.v1",
+  "sourceCommit": "0c999cef6bf1f27be90e3005cc2f0e8e4d00fa9e",
+  "sourceRevisionId": "rev_idea_f3f9c48d5cc2",
+  "status": "FROZEN_ALL_LOCAL_GATES_PASS",
+  "submitted": false
+}

@@ -1,0 +1,13 @@
+{
+  "blocking_issues": [],
+  "created_at": "2026-07-04T13:37:51Z",
+  "live": true,
+  "matrix_completeness": 7,
+  "mocked": false,
+  "pass": true,
+  "required_repairs": [],
+  "reviewer_model": "deterministic-local-contract-reviewer",
+  "role": "script-reviewer",
+  "schema": "tau.persona_dream.script_reviewer_verdict.v1",
+  "status": "PASS"
+}

@@ -1,0 +1,185 @@
+{
+  "actual_provider_call_attempts": 0,
+  "artifact_index_path": "/tmp/agent-skills-main-persona-dream-uu5nMV/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8/revision_artifact_index.json",
+  "artifact_index_sha256": "sha256:6d69c20206c68dddb473357e0cb013924bbfa2402d297c5623c14827d5a2d41c",
+  "claims": {
+    "does_not_prove": [
+      "Memory revision verification or active-revision promotion",
+      "ACTIVE_CONSISTENT state",
+      "provider readiness, publication, payment, or submission"
+    ],
+    "proves": [
+      "the immutable Phase 01-10 revision hashes were recomputed locally",
+      "one revision, ten phase, and sixteen required-artifact records were durably re-read from Memory",
+      "Memory returned semantic pointer metadata for every prepared record"
+    ]
+  },
+  "collection": "project_knowledge",
+  "command": {
+    "argv": [
+      "scripts/reconstruct_upstream_contract_revision.py",
+      "--run-root",
+      "reports/pipeline-complete",
+      "--source-revision-id",
+      "rev_idea_f3f9c48d5cc2",
+      "--source-commit",
+      "0c999cef6bf1f27be90e3005cc2f0e8e4d00fa9e",
+      "--json"
+    ],
+    "cwd": "/tmp/agent-skills-main-persona-dream-uu5nMV/skills/persona-dream",
+    "platform": "Linux-6.8.0-57-generic-x86_64-with-glibc2.39",
+    "python_version": "3.12.10",
+    "script_path": "/tmp/agent-skills-main-persona-dream-uu5nMV/skills/persona-dream/scripts/prepare_revision_qualification.py",
+    "script_sha256": "sha256:355bdfba3625976c6917d9e11c12966bd603e353e3dc37e591d635388aafe82d",
+    "source_commit": "0c999cef6bf1f27be90e3005cc2f0e8e4d00fa9e"
+  },
+  "hash_validation": {
+    "artifact_count": 339,
+    "artifact_hash_manifest_sha256": "sha256:f7ee6330df016163d2ba44db78659f3e4ef2cfd5b657d1e1369395b0ab55bf4d",
+    "escape_count": 0,
+    "matched_count": 339,
+    "mismatch_count": 0,
+    "recomputed_count": 339,
+    "symlink_count": 0
+  },
+  "lifecycle_state": "PREPARED",
+  "live": true,
+  "memory_url": "http://127.0.0.1:8601",
+  "mocked": false,
+  "paid_call_authorized": false,
+  "prepared_at": "2026-07-17T13:36:19.394802+00:00",
+  "provider_live": false,
+  "records": {
+    "exact_keys": [
+      "pd_rev_acbb57d799ba287a378ecc887a4e404b3e67e3cfcf050e92",
+      "pd_phase_fbfad71df841f3bb49d3c82d9317c275e078570d0fb87282",
+      "pd_phase_4c77b344da657f5f9508e51f2d5715cabc8495944e375120",
+      "pd_phase_9729e8e90eab30bddc8bd8e29de622e8cb552e5ffafce55b",
+      "pd_phase_82726e560e82d81023bad50ff50aaa04bc389af2ea255492",
+      "pd_phase_9b74cfb558451e0fe80c23dcca4d3cff1ac5d8d984743ede",
+      "pd_phase_99e3a32534af255b8453e0271640cda4abdcfbb26e3e5b1b",
+      "pd_phase_57cce02c2f4f349384d4fa53a9a6496d4ca0cec4d62654d0",
+      "pd_phase_494d461e8a770800777e5e033d99588ae617951dd11016b7",
+      "pd_phase_e9f067abaa7a84ce4e8738831f9474c63e6ff1d4fdcd9355",
+      "pd_phase_930ce60b42db89dd3978e15074ac5a734b7e33089808fe6a",
+      "pd_artifact_fa6350c62907b45452a9a376628fedb4464752d7f2b46876",
+      "pd_artifact_75ea262dd262326914571cfd53c8cd5a57a5a796731963cb",
+      "pd_artifact_135aa7c7274035d91eb5f5e356d94d6a516d3822cadf8f9c",
+      "pd_artifact_a149fab23fb122c0e5cdd2ed7bdb97ef850f110ac8317702",
+      "pd_artifact_be651a0b457de834fefb2c299dd0943bf2df055e15ba0276",
+      "pd_artifact_4a8d3cc60548511a989df499cec8b991f5d98b64f9df88ac",
+      "pd_artifact_2513654738ecc3c0e65e567e2ef68cd635dfceb2791e3fad",
+      "pd_artifact_419d84987a403dd2126cfeefbd2806674e86ca1bc56b41af",
+      "pd_artifact_c022a9facf6cb18c8395d861f7df48d240bca9e4c3791de9",
+      "pd_artifact_8e864d813f1245620b2f9e7349ebf401a5d0c29bc57b8ed4",
+      "pd_artifact_ee42b97ed0f09bebe135d19e861c109d8d5ff40e4e66ced2",
+      "pd_artifact_4f8058fe602085b03fbadd180f6a5c94394dc31ccf5ca7c5",
+      "pd_artifact_85d20a53e8d4f58e55fb965e48a8582f807222ecf4527dca",
+      "pd_artifact_3a1b30f8a923208668bd64e4adfc59695715fbf8000364d1",
+      "pd_artifact_92a27506f1d13bd497245d256d0ae36f3bb25b8e44033977",
+      "pd_artifact_6802a94db22b4ab05f02077427f1903e73cfc7151a66a6af"
+    ],
+    "expected_counts": {
+      "phase": 10,
+      "required_artifact": 16,
+      "revision": 1,
+      "total": 27
+    },
+    "phase_keys": {
+      "01": "pd_phase_fbfad71df841f3bb49d3c82d9317c275e078570d0fb87282",
+      "02": "pd_phase_4c77b344da657f5f9508e51f2d5715cabc8495944e375120",
+      "03": "pd_phase_9729e8e90eab30bddc8bd8e29de622e8cb552e5ffafce55b",
+      "04": "pd_phase_82726e560e82d81023bad50ff50aaa04bc389af2ea255492",
+      "05": "pd_phase_9b74cfb558451e0fe80c23dcca4d3cff1ac5d8d984743ede",
+      "06": "pd_phase_99e3a32534af255b8453e0271640cda4abdcfbb26e3e5b1b",
+      "07": "pd_phase_57cce02c2f4f349384d4fa53a9a6496d4ca0cec4d62654d0",
+      "08": "pd_phase_494d461e8a770800777e5e033d99588ae617951dd11016b7",
+      "09": "pd_phase_e9f067abaa7a84ce4e8738831f9474c63e6ff1d4fdcd9355",
+      "10": "pd_phase_930ce60b42db89dd3978e15074ac5a734b7e33089808fe6a"
+    },
+    "required_artifact_keys": {
+      "contact_sheet_gate_receipt": "pd_artifact_419d84987a403dd2126cfeefbd2806674e86ca1bc56b41af",
+      "contact_sheet_manifest": "pd_artifact_2513654738ecc3c0e65e567e2ef68cd635dfceb2791e3fad",
+      "contact_sheet_requirements": "pd_artifact_4a8d3cc60548511a989df499cec8b991f5d98b64f9df88ac",
+      "crew_contract": "pd_artifact_a149fab23fb122c0e5cdd2ed7bdb97ef850f110ac8317702",
+      "crew_gate_receipt": "pd_artifact_be651a0b457de834fefb2c299dd0943bf2df055e15ba0276",
+      "dream_request": "pd_artifact_fa6350c62907b45452a9a376628fedb4464752d7f2b46876",
+      "media_lock": "pd_artifact_4f8058fe602085b03fbadd180f6a5c94394dc31ccf5ca7c5",
+      "panel_distillation_contract": "pd_artifact_92a27506f1d13bd497245d256d0ae36f3bb25b8e44033977",
+      "provider_final_gate": "pd_artifact_3a1b30f8a923208668bd64e4adfc59695715fbf8000364d1",
+      "provider_schema_receipt": "pd_artifact_6802a94db22b4ab05f02077427f1903e73cfc7151a66a6af",
+      "residue_links": "pd_artifact_75ea262dd262326914571cfd53c8cd5a57a5a796731963cb",
+      "script_contract": "pd_artifact_8e864d813f1245620b2f9e7349ebf401a5d0c29bc57b8ed4",
+      "story_contract": "pd_artifact_135aa7c7274035d91eb5f5e356d94d6a516d3822cadf8f9c",
+      "storyboard_packet": "pd_artifact_ee42b97ed0f09bebe135d19e861c109d8d5ff40e4e66ced2",
+      "video_provider_scorecard": "pd_artifact_85d20a53e8d4f58e55fb965e48a8582f807222ecf4527dca",
+      "voice_evidence": "pd_artifact_c022a9facf6cb18c8395d861f7df48d240bca9e4c3791de9"
+    },
+    "returned_counts": {
+      "phase": 10,
+      "required_artifact": 16,
+      "revision": 1,
+      "total": 27
+    },
+    "revision_key": "pd_rev_acbb57d799ba287a378ecc887a4e404b3e67e3cfcf050e92"
+  },
+  "requests": {
+    "control_upsert": {
+      "endpoint": "/upsert",
+      "request_payload_sha256": "sha256:13b629c34941165c289c3eb2c4ef1b169da7db2c850b4eb3cd5ed5458c79e226",
+      "response_sha256": "sha256:b1e5377fc686f9c88af832352d1faeebf9f22333ea6e632401de0937a79e73a6",
+      "returned_counts": {
+        "collection": "project_knowledge",
+        "errors": [],
+        "inserted": 1,
+        "total": 1,
+        "updated": 0,
+        "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_project_knowledge_20260717T133618461858Z_13_126445057738432.jsonl"
+      },
+      "status_code": 200
+    },
+    "list_after_prepare": {
+      "endpoint": "/list",
+      "request_payload_sha256": "sha256:57379c47950b5db65c29808285b5abcc4c4f8484db6a10b3a18ce9b15a802853",
+      "response_sha256": "sha256:b5648357b090debaff440319c64e10ed316dad9e4c124a50162f4a4cc4ea4424",
+      "returned_counts": {
+        "collection": "project_knowledge",
+        "count": 27,
+        "total": 27
+      },
+      "status_code": 200
+    },
+    "semantic_upsert": {
+      "endpoint": "/upsert",
+      "request_payload_sha256": "sha256:d3901f2c539fb89fa17b4007ace6fd87cbea2c525bd7f8befb8a3798351e19d4",
+      "response_sha256": "sha256:f414a35ef0bd09233829041ef15da2f45a4c28ae821d4fb90c7e8028aadcf13f",
+      "returned_counts": {
+        "collection": "project_knowledge",
+        "errors": [],
+        "inserted": 26,
+        "total": 27,
+        "updated": 1,
+        "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_project_knowledge_20260717T133618476592Z_13_126445057738432.jsonl"
+      },
+      "status_code": 200
+    }
+  },
+  "revision_id": "rev_upstream_bf3b05d47fb8",
+  "revision_manifest_sha256": "sha256:31b1a11b7b6f4b910858833c1c061ca289dda7f71c038bcde413360c7e39bccb",
+  "revision_root": "/tmp/agent-skills-main-persona-dream-uu5nMV/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8",
+  "run_id": "pipeline-complete",
+  "runtime_release_id": "agent-skills@0c999cef6bf1f27be90e3005cc2f0e8e4d00fa9e",
+  "schema": "persona_dream.revision_memory_prepare_receipt.v1",
+  "semantic_sync": {
+    "expected_pointer_count": 27,
+    "pointer_count": 27,
+    "required": true,
+    "states": {
+      "synced": 27
+    }
+  },
+  "source_commit": "0c999cef6bf1f27be90e3005cc2f0e8e4d00fa9e",
+  "source_revision_id": "rev_idea_f3f9c48d5cc2",
+  "status": "PASS_MEMORY_REVISION_PREPARED",
+  "submitted": false
+}

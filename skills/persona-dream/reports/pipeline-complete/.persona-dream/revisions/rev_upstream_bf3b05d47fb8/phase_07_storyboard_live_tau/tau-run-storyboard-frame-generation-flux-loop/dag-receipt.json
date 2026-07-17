@@ -1,0 +1,158 @@
+{
+  "active_goal_hash": "sha256:phase07-storyboard-panels-accepted-20260705",
+  "alerts": [
+    {
+      "code": "max_steps_exhausted",
+      "evidence": {
+        "errors": [
+          "command handoff loop exceeded max_steps=4"
+        ]
+      },
+      "message": "Underlying handoff command loop did not pass.",
+      "severity": "BLOCK"
+    }
+  ],
+  "artifacts": [
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/tau-run-storyboard-frame-generation-flux-loop/start-handoff.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/tau-run-storyboard-frame-generation-flux-loop/command-loop/command-loop-receipt.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/tau-run-storyboard-frame-generation-flux-loop/compiled-command-specs/panel-creator/tau-dispatch-command.json",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/tau-run-storyboard-frame-generation-flux-loop/compiled-command-specs/panel-reviewer/tau-dispatch-command.json"
+  ],
+  "command_loop_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/tau-run-storyboard-frame-generation-flux-loop/command-loop/command-loop-receipt.json",
+  "contract_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/phase_07_storyboard_packet_tau_dag_contract.json",
+  "contract_sha256": "sha256:da5a274d25943b21b8e4834f3b4a5654c2c818f1618e381534a60789ef17a562",
+  "dag_error": {
+    "active_goal_hash": "sha256:phase07-storyboard-panels-accepted-20260705",
+    "dag_id": "persona-dream-phase-07-storyboard-packet-panel-review",
+    "evidence": {
+      "alert_codes": [
+        "max_steps_exhausted"
+      ],
+      "alert_count": 1,
+      "errors": [
+        "command handoff loop exceeded max_steps=4"
+      ],
+      "primary_alert": {
+        "code": "max_steps_exhausted",
+        "evidence": {
+          "errors": [
+            "command handoff loop exceeded max_steps=4"
+          ]
+        },
+        "message": "Underlying handoff command loop did not pass.",
+        "severity": "BLOCK"
+      }
+    },
+    "failure_code": "max_steps_exhausted",
+    "message": "Underlying handoff command loop did not pass.",
+    "proof_scope": {
+      "does_not_prove": [
+        "The recommended action has been executed.",
+        "The project agent accepted or applied the course correction.",
+        "Provider/model semantic quality."
+      ],
+      "proves": [
+        "Tau detected a blocked DAG execution.",
+        "Tau packaged the primary failure as a project-agent course-correction payload.",
+        "No DAG route, goal, target, or handoff was mutated by this error contract."
+      ]
+    },
+    "receipt_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/tau-run-storyboard-frame-generation-flux-loop/dag-receipt.json",
+    "recommended_action": {
+      "next_agent": "human",
+      "reason": "Unhandled DAG failure requires human or orchestrator review.",
+      "type": "wait_for_human"
+    },
+    "run_dir": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/tau-run-storyboard-frame-generation-flux-loop",
+    "scheduler": "handoff-loop",
+    "schema": "tau.dag_error.v1",
+    "severity": "BLOCK",
+    "status": "BLOCKED",
+    "target": {
+      "repo": "grahama1970/agent-skills",
+      "target": "skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau"
+    },
+    "verdict": "MAX_STEPS_EXHAUSTED"
+  },
+  "dag_id": "persona-dream-phase-07-storyboard-packet-panel-review",
+  "edge_count": 3,
+  "entry_node": "panel-creator",
+  "errors": [
+    "command handoff loop exceeded max_steps=4"
+  ],
+  "evidence_validation_receipt": null,
+  "execution": "project_agent_dag_via_handoff_command_loop",
+  "live": true,
+  "max_steps": 4,
+  "mocked": false,
+  "node_attempts": {
+    "panel-creator": 2,
+    "panel-reviewer": 2
+  },
+  "node_count": 3,
+  "observed_edges": [
+    {
+      "from_agent": "panel-creator",
+      "from_node": "panel-creator",
+      "to_agent": "panel-reviewer",
+      "to_node": "panel-reviewer"
+    },
+    {
+      "from_agent": "panel-reviewer",
+      "from_node": "panel-reviewer",
+      "to_agent": "panel-creator",
+      "to_node": "panel-creator"
+    },
+    {
+      "from_agent": "panel-creator",
+      "from_node": "panel-creator",
+      "to_agent": "panel-reviewer",
+      "to_node": "panel-reviewer"
+    },
+    {
+      "from_agent": "panel-reviewer",
+      "from_node": "panel-reviewer",
+      "to_agent": "panel-creator",
+      "to_node": "panel-creator"
+    }
+  ],
+  "ok": false,
+  "proof_scope": {
+    "does_not_prove": [
+      "Provider/model semantic quality.",
+      "Parallel DAG scheduling.",
+      "GitHub mutation or ticket closure.",
+      "Unbounded autonomous operation."
+    ],
+    "live": true,
+    "mocked": false,
+    "proves": [
+      "DAG contract parsed and validated.",
+      "Entry node was compiled into a tau.agent_handoff.v1 start handoff.",
+      "Node routing was executed by the real local command-loop subprocess runner.",
+      "Observed edges and retry counts were checked against the DAG contract.",
+      "Reviewer verdict evidence was checked against the immutable goal hash."
+    ]
+  },
+  "provider_live": false,
+  "reviewer_verdicts": [],
+  "run_dir": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/tau-run-storyboard-frame-generation-flux-loop",
+  "scheduler": "handoff-loop",
+  "schema": "tau.dag_receipt.v1",
+  "selected_agents": [
+    "panel-creator",
+    "panel-reviewer",
+    "panel-creator",
+    "panel-reviewer"
+  ],
+  "status": "BLOCKED",
+  "target": {
+    "repo": "grahama1970/agent-skills",
+    "target": "skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau"
+  },
+  "terminal_nodes": [
+    "human"
+  ],
+  "timestamp": "2026-07-05T20:30:14Z",
+  "verdict": "MAX_STEPS_EXHAUSTED"
+}

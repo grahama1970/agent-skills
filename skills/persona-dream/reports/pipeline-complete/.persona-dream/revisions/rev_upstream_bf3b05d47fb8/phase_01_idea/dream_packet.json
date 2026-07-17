@@ -1,0 +1,134 @@
+{
+  "about": "Embry and Kai both faked a sick day at their summer jobs to go surfing on the Big Island on a Wednesday in June of 2024 — Kona Coast, Kahaluʻu Bay, summer swell patterns, lava rock reefs, local surf etiquette.",
+  "actual_provider_call_attempts": 0,
+  "claims": {
+    "does_not_prove": [
+      "a new live memory recall was executed during reconstruction",
+      "story acceptance, panel generation, or provider readiness"
+    ],
+    "proves": [
+      "a canonical dream packet exists for this revision, grounded in the exact recalled residue items",
+      "frame prompts are bound one-to-one to the four accepted storyboard beats"
+    ]
+  },
+  "contact_sheet": "phase_04_contact_sheets/source_artifacts/contact_sheet_index.png",
+  "contradictions": [],
+  "created_at": "2026-07-17T13:36:17.618810+00:00",
+  "dream_prompt": "Synthetic dream for Embry, with Kai as the secondary persona. The requested dream topic is: Embry and Kai both faked a sick day at their summer jobs to go surfing on the Big Island on a Wednesday in June of 2024 — Kona Coast, Kahaluʻu Bay, summer swell patterns, lava rock reefs, local surf etiquette. Memory residue gathers around Kai's annotated surf map and its hazard/etiquette rules, the minor reef scrape where Embry chose shore on her own terms, and Kai's private surf-timing correction that let her continue without self-punishment. Core tension: autonomy versus obligation - a stolen sick day that still obeys the reef, the lineup, and her own careful judgment. Render as symbolic cinematic images, not factual claims. All imagery is synthetic dream content.",
+  "frame_prompts": [
+    {
+      "frame_id": "sb_001",
+      "negative_prompt": "wide establishing shot, crowd lineup shot, distant silhouettes, back-facing two-shot, watermark, UI screenshot",
+      "prompt": "Embry dream frame, sb_001: Embry and Kai wait outside the lineup instead of cutting across it. Heat, glare, and the public reef break establish that the stolen sick day still has rules. Camera: WS, wide water-housing perspective, approximately 24-35mm equivalent, slow observational drift with the swell, no dramatic push. Waterline Kahalu'u Bay, lava reef, continuous daylight, synthetic dream still.",
+      "source_ids": [
+        "embry_age15_19_b03_memory_014",
+        "embry_age15_19_b02_memory_019",
+        "embry_age15_19_b03_memory_016"
+      ],
+      "synthetic": true,
+      "time_range_s": {
+        "end_s": 2.5,
+        "start_s": 0
+      }
+    },
+    {
+      "frame_id": "sb_002",
+      "negative_prompt": "wide establishing shot, crowd lineup shot, distant silhouettes, back-facing two-shot, watermark, UI screenshot",
+      "prompt": "Embry dream frame, sb_002: Embry's phone buzzes from the beach bag as sweat and salt mark her face. Her palm skids on sun-softened wax, forcing her to reset her rail grip before the wave reaches the reef line. Camera: MS, moderate wide water-housing perspective, approximately 28-40mm equivalent, small handheld/swell movement tracking Embry's grip reset. Waterline Kahalu'u Bay, lava reef, continuous daylight, synthetic dream still.",
+      "source_ids": [
+        "embry_age15_19_b03_memory_014",
+        "embry_age15_19_b02_memory_019",
+        "embry_age15_19_b03_memory_016"
+      ],
+      "synthetic": true,
+      "time_range_s": {
+        "end_s": 5,
+        "start_s": 2.5
+      }
+    },
+    {
+      "frame_id": "sb_003",
+      "negative_prompt": "wide establishing shot, crowd lineup shot, distant silhouettes, back-facing two-shot, watermark, UI screenshot",
+      "prompt": "Embry dream frame, sb_003: Kai reads the local, the channel, the reef, and Embry's paddle cadence. He holds position instead of taking the easy wave, then gives one restrained cue. Camera: MWS, wide-to-normal water-housing perspective, approximately 30-45mm equivalent, gentle lateral drift that keeps Kai outside and Embry nearer the decision point. Waterline Kahalu'u Bay, lava reef, continuous daylight, synthetic dream still.",
+      "source_ids": [
+        "embry_age15_19_b03_memory_014",
+        "embry_age15_19_b02_memory_019",
+        "embry_age15_19_b03_memory_016"
+      ],
+      "synthetic": true,
+      "time_range_s": {
+        "end_s": 7.5,
+        "start_s": 5
+      }
+    },
+    {
+      "frame_id": "sb_004",
+      "negative_prompt": "wide establishing shot, crowd lineup shot, distant silhouettes, back-facing two-shot, watermark, UI screenshot",
+      "prompt": "Embry dream frame, sb_004: Embry chooses the safe channel and commits only when the lineup opens. The wave, reef, softened wax, and phone obligation converge into one visible decision. Camera: POV, wide water-housing perspective, approximately 24-35mm equivalent, brief forward glide with the shoulder as Embry chooses the safe line. Waterline Kahalu'u Bay, lava reef, continuous daylight, synthetic dream still.",
+      "source_ids": [
+        "embry_age15_19_b03_memory_014",
+        "embry_age15_19_b02_memory_019",
+        "embry_age15_19_b03_memory_016"
+      ],
+      "synthetic": true,
+      "time_range_s": {
+        "end_s": 10,
+        "start_s": 7.5
+      }
+    }
+  ],
+  "mode": "video_plan",
+  "persona": {
+    "display_name": "Embry",
+    "id": "embry"
+  },
+  "provenance": {
+    "derivation": "deterministic_reconstruction_from_accepted_revision_artifacts",
+    "live_selector_call": false,
+    "reconstruction": true,
+    "source_artifact_hashes": {
+      "phase_01_idea/contradiction_report.json": "sha256:b9beb704a8cdc3a29d4881baab1a8590759aa42c60f9bcaefac59b8de4a091af",
+      "phase_01_idea/human_idea.json": "sha256:db39ccc84d88cd9fa2baded45488f0f7ed46357fc68e72eae2362f1798608f2d",
+      "phase_01_idea/residue_links.json": "sha256:041002d64de215c6a5ba1c2bf93d02c0c1f885be0bc67b57ed0e3d1dbdc54cc1",
+      "phase_02_story/story_contract.json": "sha256:84f4f8b9bf17778f41e2e062f856e2a36b4ca760abc5288b44329e90a87e786e",
+      "phase_07_storyboard_live_tau/storyboard_packet.json": "sha256:a1c1031e697d67dca734a797bbfa438a1ab30358e8dea18eee7c157de8f2fc97"
+    },
+    "source_revision_id": "rev_idea_f3f9c48d5cc2"
+  },
+  "provider_live": false,
+  "reflection": "I woke with the surf map, the reef scrape, and Kai's quiet timing correction still arranged like images rather than answers. The dream stayed synthetic but kept its source traces intact: 3 memory residues and 0 explicit tensions. The stolen sick day still had rules, and choosing carefully was the whole rebellion. Treat this as a reflective lead, not as evidence or a durable identity change.",
+  "residue_items": [
+    {
+      "collection": "persona_memory",
+      "persona_id": "embry",
+      "scope": "persona-dream",
+      "source_id": "embry_age15_19_b03_memory_014",
+      "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age15_19_b03_candidates.jsonl",
+      "text": "Kai gives Embry a surf map annotated with hazards, etiquette, and places where newcomers should wait. The map marks reef, current, entry path, and crowded zones. Kai says knowing the rules does not make her local, but keeps her from harming someone while learning. people: Embry Lawson, kai; places: Ninole; objects: kai surf spot map, POINT/PATH/PEOPLE checklist; concepts: trust Setting: Ninole. Situation: Kai gives Embry a surf map annotated with hazards, etiquette, and places where newcomers should wait. Trigger: Kai shares operational knowledge while naming her status limits. Stakes: She acc"
+    },
+    {
+      "collection": "persona_memory",
+      "persona_id": "embry",
+      "scope": "persona-dream",
+      "source_id": "embry_age15_19_b02_memory_019",
+      "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age15_19_b02_candidates.jsonl",
+      "text": "After a minor reef scrape, Kai follows Embry's first-aid plan and lets her decide whether to stop. The scrape is shallow. Kai brings the kit, names the visible risk, and asks whether she wants shore or another attempt. Embry chooses shore without defending herself. people: Embry Lawson, Kai; places: Ninole; objects: embry surf first aid repair kit; concepts: boundary, trust Setting: Ninole. Situation: After a minor reef scrape, Kai follows Embry's first-aid plan and lets her decide whether to stop. Trigger: The scrape creates uncertainty about continued footing. Stakes: She ends the session de"
+    },
+    {
+      "collection": "persona_memory",
+      "persona_id": "embry",
+      "scope": "persona-dream",
+      "source_id": "embry_age15_19_b03_memory_016",
+      "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age15_19_b03_candidates.jsonl",
+      "text": "Kai privately corrects a harmless surf-timing error, and Embry continues instead of punishing herself. Embry enters too early and wastes a wave. Kai waits until shore, demonstrates the timing once, and lets her return to the water. people: Embry Lawson, kai; places: Ninole; concepts: boundary, trust Setting: Ninole. Situation: Kai privately corrects a harmless surf-timing error, and Embry continues instead of punishing herself. Trigger: Kai treats the error as specific and recoverable. Stakes: She applies the correction and continues. Emotions: fear, guilt, longing, trust. Intensity: 4/5. Regu"
+    }
+  ],
+  "revision_id": "rev_upstream_bf3b05d47fb8",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.packet.v1",
+  "secondary_persona": {
+    "display_name": "Kai",
+    "id": "kai"
+  },
+  "synthetic": true
+}

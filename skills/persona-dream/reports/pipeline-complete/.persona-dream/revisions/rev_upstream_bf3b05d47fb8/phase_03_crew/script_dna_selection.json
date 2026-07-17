@@ -1,0 +1,56 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "a new live cinematic-technique-selector model call was executed",
+      "downstream storyboard or provider artifacts were regenerated against this selection"
+    ],
+    "proves": [
+      "a canonical Look Lock and Script DNA exist for this revision, derived from the accepted story, crew, script, and storyboard artifacts"
+    ]
+  },
+  "created_at": "2026-07-17T13:36:17.618810+00:00",
+  "provenance": {
+    "derivation": "deterministic_reconstruction_from_accepted_revision_artifacts",
+    "live_selector_call": false,
+    "reconstruction": true,
+    "source_artifact_hashes": {
+      "phase_02_story/story_contract.json": "sha256:84f4f8b9bf17778f41e2e062f856e2a36b4ca760abc5288b44329e90a87e786e",
+      "phase_06_script/entity_environment_script_table.json": "sha256:01655698db24e61bc47fc5ebccf7e8c9a50264f2c75ad7a4058a8425c69ebf54",
+      "phase_06_script/script_contract.json": "sha256:645e15b899c8f69826a0c174ea0f72d4c4936cb4592d139c6643df837efe26d5",
+      "phase_06_script/timed_transcript.json": "sha256:281261d628a6d4fa6f26b11e4350a90e7bbb00cdb5d7ba1dbd690deb5cf5bc4b"
+    },
+    "source_revision_id": "rev_idea_f3f9c48d5cc2"
+  },
+  "revision_id": "rev_upstream_bf3b05d47fb8",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.script_dna_selection.v1",
+  "script_dna": {
+    "beat_rules": [
+      "each beat contains one visible physical micro-correction",
+      "Kai never takes over Embry's decision",
+      "the final beat must show an unmistakable Embry-only forward commit through the safe channel",
+      "the lava-reef boundary and safe-channel geometry must remain visually readable in the final beat"
+    ],
+    "conflict_pattern": "autonomy versus obligation, mediated by surf etiquette and the lava-reef hazard",
+    "dialogue_style": "near-silent; at most one quiet practical line from Kai (canonical line: \"If we paddle now, we're cutting across the lineup.\"); no banter, no exposition",
+    "do_not_use": [
+      "spoken exposition",
+      "melodrama",
+      "wide establishing shot",
+      "crowd lineup shot",
+      "distant silhouettes",
+      "back-facing two-shot"
+    ],
+    "influences_as_techniques": [
+      "restraint-first blocking instead of dialogue exposition",
+      "competence shown through physical micro-corrections",
+      "environmental clock pressure from set waves instead of verbal deadlines",
+      "nonverbal cue-and-consent beats between equals"
+    ],
+    "primary_mode": "quiet procedural naturalism",
+    "scene_engine": "a stolen sick day still obeys local rules: wait, read the water, then commit",
+    "structure": "four-beat ten-second arc: shared restraint, physical strain, read-and-cue, Embry-only commit",
+    "theme": "earned autonomy: choosing carefully is the rebellion"
+  },
+  "source_technique_selection": "phase_03_crew/technique_selection.json"
+}

@@ -1,0 +1,50 @@
+{
+  "asset_count": 5,
+  "checks": [
+    {
+      "actual_sha256": "d4052937952bb14e5be77c25b262e30d92822068f5af26dd6cb69d7f03240216",
+      "asset_id": "contact_sheet_embry_surfboard",
+      "expected_sha256": "d4052937952bb14e5be77c25b262e30d92822068f5af26dd6cb69d7f03240216",
+      "match": true,
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/.rev_repair_a8b93ffeca8f.assembling-925423/phase_04_contact_sheets/source_artifacts/images/contact_sheet_embry_surfboard.png"
+    },
+    {
+      "actual_sha256": "81b0c71b17fe1ab54e282cfef2070ab4beb57d80b5bf1b4069ae1b231b1a1ef4",
+      "asset_id": "contact_sheet_june_swell",
+      "expected_sha256": "81b0c71b17fe1ab54e282cfef2070ab4beb57d80b5bf1b4069ae1b231b1a1ef4",
+      "match": true,
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/.rev_repair_a8b93ffeca8f.assembling-925423/phase_04_contact_sheets/source_artifacts/images/contact_sheet_june_swell.png"
+    },
+    {
+      "actual_sha256": "60474f8b362a582bdb00bb90b434fd48a635543e034cda3d913609222f7ac849",
+      "asset_id": "contact_sheet_kai_surfboard",
+      "expected_sha256": "60474f8b362a582bdb00bb90b434fd48a635543e034cda3d913609222f7ac849",
+      "match": true,
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/.rev_repair_a8b93ffeca8f.assembling-925423/phase_04_contact_sheets/source_artifacts/images/contact_sheet_kai_surfboard.png"
+    },
+    {
+      "actual_sha256": "ec128b50ca867815b28229f990fcf71a761202575a9aad69da00a0f964ce632d",
+      "asset_id": "contact_sheet_kona_coast",
+      "expected_sha256": "ec128b50ca867815b28229f990fcf71a761202575a9aad69da00a0f964ce632d",
+      "match": true,
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/.rev_repair_a8b93ffeca8f.assembling-925423/phase_04_contact_sheets/source_artifacts/images/contact_sheet_kona_coast.png"
+    },
+    {
+      "actual_sha256": "06f720d9546de7fa549e6ab9b74efa18c354929f7f93c66e19202197138775f7",
+      "asset_id": "contact_sheet_lava_reef",
+      "expected_sha256": "06f720d9546de7fa549e6ab9b74efa18c354929f7f93c66e19202197138775f7",
+      "match": true,
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/.rev_repair_a8b93ffeca8f.assembling-925423/phase_04_contact_sheets/source_artifacts/images/contact_sheet_lava_reef.png"
+    }
+  ],
+  "claims": {
+    "does_not_prove": [
+      "new image generation or new visual review"
+    ],
+    "proves": [
+      "five existing accepted contact-sheet image hashes match their source manifest"
+    ]
+  },
+  "schema": "persona_dream.contact_sheet_migration_gate_receipt.v1",
+  "status": "PASS_CONTACT_SHEET_SOURCE_REBOUND"
+}

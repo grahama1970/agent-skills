@@ -1,0 +1,93 @@
+{
+  "actual_provider_call_attempts": 0,
+  "blocked_steps": [
+    42
+  ],
+  "counts": {
+    "blocked": 1,
+    "passing_or_current": 9,
+    "stale_or_superseded": 32,
+    "total": 42
+  },
+  "created_at": "2026-07-17T13:36:17.618810+00:00",
+  "invalidation_ledger": "upstream_contract_invalidation_ledger.v1.json",
+  "live": false,
+  "live_submit_ready": false,
+  "memory_persistence": {
+    "collection": "persona_dream_pipeline_steps",
+    "expected_count": 42,
+    "receipt_location": ".persona-dream/state/pipeline_step_memory_receipt_rev_upstream_bf3b05d47fb8.json (outside the frozen revision artifact set)"
+  },
+  "mocked": false,
+  "next_gate": "regenerate or hash-revalidate steps 06-29 in dependency order, compile a repaired SB_004 request, fix its hash, initialize an unused attempt ledger, and stop at step 30 awaiting human hash-bound paid-call authorization",
+  "no_downstream_artifact_silently_current": true,
+  "passing_steps": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    11,
+    12,
+    15,
+    41
+  ],
+  "provider_live": false,
+  "provider_ready": false,
+  "reconstructed_artifacts": {
+    "phase_01_idea/dream_packet.json": "sha256:b7c85fd1e873e97b73133be56684240c41f3fac4f22e8d9e7a2ff19a2946a308",
+    "phase_01_idea/dream_prompt.txt": "sha256:d3b37f098be2fe924c1402b3898fb826eda82ef3ca240ebb4c1ffd7b94dc9142",
+    "phase_03_crew/look_lock.json": "sha256:a848430991c1fb1a0734caa886b832f200763ca2041d4db44f9a65a7c16cdf77",
+    "phase_03_crew/script_dna_selection.json": "sha256:fb4ec8a68954a072e37896255bd63893a868dbab5bf7f60f0a46a4518e7ceb3c",
+    "phase_03_crew/shot_bible.json": "sha256:d6925039e3fc352e11e36998fef530c63818a2fa667c1a44fb5cefcd34b3c3ab",
+    "phase_03_crew/technique_selection.json": "sha256:e9d2fc53e1a47d50b18e1436a5d42bdbe23c05451d9d9243928d36fecae4e673",
+    "phase_07_storyboard_live_tau/panel_continuity_and_repair_ledger.json": "sha256:8e7e31d4bfe6dd4723cea248467b118e2f8627198b5cbee00037b0808b7d9831"
+  },
+  "reconstructed_steps_passing": [
+    5,
+    11,
+    12,
+    15
+  ],
+  "revision_id": "rev_upstream_bf3b05d47fb8",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.upstream_reconstruction_gate_summary.v1",
+  "source_revision_id": "rev_idea_f3f9c48d5cc2",
+  "stale_or_superseded_steps": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    13,
+    14,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40
+  ],
+  "status": "PASS_UPSTREAM_CONTRACT_RECONSTRUCTION",
+  "step_record_bundle": "pipeline_step_records.v1.json",
+  "submitted": false
+}

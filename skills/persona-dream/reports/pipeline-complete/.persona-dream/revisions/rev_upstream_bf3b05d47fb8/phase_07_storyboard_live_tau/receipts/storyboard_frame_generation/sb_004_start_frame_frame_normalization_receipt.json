@@ -1,0 +1,35 @@
+{
+  "command": [
+    "/usr/local/bin/magick",
+    "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_004_start_frame.provider.png",
+    "-auto-orient",
+    "-resize",
+    "1536x864^",
+    "-gravity",
+    "center",
+    "-extent",
+    "1536x864",
+    "PNG24:/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_004_start_frame.png"
+  ],
+  "height": 864,
+  "method": "center_crop_resize_to_storyboard_frame",
+  "normalized": true,
+  "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_004_start_frame.png",
+  "provider_height": 1024,
+  "provider_receipt": {
+    "auth": "codex_oauth_image_gen",
+    "height": 1024,
+    "ok": true,
+    "path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_004_start_frame.png",
+    "sha256": "e8e2790f66925fb12c144cddfc1354e4ae43b42032224c859b2e355ce86ca0fd",
+    "width": 1536
+  },
+  "provider_width": 1536,
+  "raw_provider_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_004_start_frame.provider.png",
+  "raw_sha256": "sha256:e8e2790f66925fb12c144cddfc1354e4ae43b42032224c859b2e355ce86ca0fd",
+  "sha256": "sha256:8fcd2045314c7c464c920bd6e7bf370a4cf90bcfd529bcf8e22f7100e5994a29",
+  "status": "PASS",
+  "target_height": 864,
+  "target_width": 1536,
+  "width": 1536
+}

@@ -1,0 +1,761 @@
+{
+  "candidate_pool_size": 47,
+  "created_at": "2026-07-02T18:42:46Z",
+  "downstream_required": [
+    "cinematic-technique-selector",
+    "camera_lighting_look_lock",
+    "script_dna"
+  ],
+  "live": true,
+  "memory_recall_evidence": {
+    "base_url": "http://127.0.0.1:8601",
+    "collections": [
+      "personas",
+      "persona_memory"
+    ],
+    "created_at": "2026-07-02T18:42:41Z",
+    "roles": {
+      "director": {
+        "item_count": 8,
+        "items": [
+          {
+            "collection": "personas",
+            "id": "personas/peter_abrams",
+            "key": "peter_abrams",
+            "name": "peter_abrams",
+            "persona_id": "peter_abrams",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for Point Break lineage, surf/action feature packaging, and kinetic genre tension. Strong fit when the story needs action-thriller production framing around surf culture and water-adjacent set pieces."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/karen_kehela_sherwood",
+            "key": "karen_kehela_sherwood",
+            "name": "karen_kehela_sherwood",
+            "persona_id": "karen_kehela_sherwood",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for female-athlete surf narrative and grounded water/beach production. Credited producer on Blue Crush; strong fit for surf story continuity, Hawaii/water production context, and athletic authenticity."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/robert_l_levy",
+            "key": "robert_l_levy",
+            "name": "robert_l_levy",
+            "persona_id": "robert_l_levy",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for Point Break lineage and practical action-thriller production packaging. Strong fit for surf/action continuity, water/chase/beach logistics, and director-led kinetic staging."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/andy_weir",
+            "key": "andy_weir",
+            "name": "andy_weir",
+            "persona_id": "andy_weir",
+            "score": null,
+            "source_path": null,
+            "text": "Andy Weir persona identity: science-fiction writer, style reference, technical accuracy, competent protagonists, writer template. # Andy Weir - Science Fiction Writer; Known for: The Martian, Project Hail Mary - technical accuracy, competent protagonists; Template: writer Andy Weir template writer persona identity source-grounded memory. template: writer Andy Weir persona scope filmmaking source-grounded identity memory. scope: filmmaking Mark Watney botanist engineer stranded Mars Andy Weir protagonist template. protagonist: Mark Watney - botanist/engineer stranded on Mars Ryland Grace reluct"
+          },
+          {
+            "collection": "personas",
+            "id": "personas/brian_grazer",
+            "key": "brian_grazer",
+            "name": "brian_grazer",
+            "persona_id": "brian_grazer",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for surf-centered production packaging. Credited producer on Blue Crush; strong fit for mainstream feature packaging, accessible commercial momentum, and practical surf/water production context."
+          },
+          {
+            "collection": "persona_memory",
+            "id": "persona_memory/embry_age15_19_b03_memory_014",
+            "key": "embry_age15_19_b03_memory_014",
+            "name": "embry",
+            "persona_id": "embry",
+            "score": null,
+            "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age15_19_b03_candidates.jsonl",
+            "text": "Kai gives Embry a surf map annotated with hazards, etiquette, and places where newcomers should wait.\nThe map marks reef, current, entry path, and crowded zones. Kai says knowing the rules does not make her local, but keeps her from harming someone while learning.\npeople: Embry Lawson, kai; places: Ninole; objects: kai surf spot map, POINT/PATH/PEOPLE checklist; concepts: trust\nSetting: Ninole. Situation: Kai gives Embry a surf map annotated with hazards, etiquette, and places where newcomers should wait. Trigger: Kai shares operational knowledge while naming her status limits. Stakes: She acc"
+          },
+          {
+            "collection": "persona_memory",
+            "id": "persona_memory/embry_age15_19_b02_memory_019",
+            "key": "embry_age15_19_b02_memory_019",
+            "name": "embry",
+            "persona_id": "embry",
+            "score": null,
+            "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age15_19_b02_candidates.jsonl",
+            "text": "After a minor reef scrape, Kai follows Embry's first-aid plan and lets her decide whether to stop.\nThe scrape is shallow. Kai brings the kit, names the visible risk, and asks whether she wants shore or another attempt. Embry chooses shore without defending herself.\npeople: Embry Lawson, Kai; places: Ninole; objects: embry surf first aid repair kit; concepts: boundary, trust\nSetting: Ninole. Situation: After a minor reef scrape, Kai follows Embry's first-aid plan and lets her decide whether to stop. Trigger: The scrape creates uncertainty about continued footing. Stakes: She ends the session de"
+          },
+          {
+            "collection": "persona_memory",
+            "id": "persona_memory/embry_age15_19_b03_memory_016",
+            "key": "embry_age15_19_b03_memory_016",
+            "name": "embry",
+            "persona_id": "embry",
+            "score": null,
+            "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age15_19_b03_candidates.jsonl",
+            "text": "Kai privately corrects a harmless surf-timing error, and Embry continues instead of punishing herself.\nEmbry enters too early and wastes a wave. Kai waits until shore, demonstrates the timing once, and lets her return to the water.\npeople: Embry Lawson, kai; places: Ninole; concepts: boundary, trust\nSetting: Ninole. Situation: Kai privately corrects a harmless surf-timing error, and Embry continues instead of punishing herself. Trigger: Kai treats the error as specific and recoverable. Stakes: She applies the correction and continues.\nEmotions: fear, guilt, longing, trust. Intensity: 4/5. Regu"
+          }
+        ],
+        "query": "Which director personas in memory fit a kinetic waterline surf scene about Embry and Kai, local etiquette, lava reef danger, female perspective, and embodied autonomy?",
+        "status_code": 200
+      },
+      "producer": {
+        "item_count": 8,
+        "items": [
+          {
+            "collection": "personas",
+            "id": "personas/karen_kehela_sherwood",
+            "key": "karen_kehela_sherwood",
+            "name": "karen_kehela_sherwood",
+            "persona_id": "karen_kehela_sherwood",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for female-athlete surf narrative and grounded water/beach production. Credited producer on Blue Crush; strong fit for surf story continuity, Hawaii/water production context, and athletic authenticity."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/peter_abrams",
+            "key": "peter_abrams",
+            "name": "peter_abrams",
+            "persona_id": "peter_abrams",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for Point Break lineage, surf/action feature packaging, and kinetic genre tension. Strong fit when the story needs action-thriller production framing around surf culture and water-adjacent set pieces."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/robert_l_levy",
+            "key": "robert_l_levy",
+            "name": "robert_l_levy",
+            "persona_id": "robert_l_levy",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for Point Break lineage and practical action-thriller production packaging. Strong fit for surf/action continuity, water/chase/beach logistics, and director-led kinetic staging."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/brian_grazer",
+            "key": "brian_grazer",
+            "name": "brian_grazer",
+            "persona_id": "brian_grazer",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for surf-centered production packaging. Credited producer on Blue Crush; strong fit for mainstream feature packaging, accessible commercial momentum, and practical surf/water production context."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/andy_weir",
+            "key": "andy_weir",
+            "name": "andy_weir",
+            "persona_id": "andy_weir",
+            "score": null,
+            "source_path": null,
+            "text": "Andy Weir persona identity: science-fiction writer, style reference, technical accuracy, competent protagonists, writer template. # Andy Weir - Science Fiction Writer; Known for: The Martian, Project Hail Mary - technical accuracy, competent protagonists; Template: writer Andy Weir template writer persona identity source-grounded memory. template: writer Andy Weir persona scope filmmaking source-grounded identity memory. scope: filmmaking Mark Watney botanist engineer stranded Mars Andy Weir protagonist template. protagonist: Mark Watney - botanist/engineer stranded on Mars Ryland Grace reluct"
+          },
+          {
+            "collection": "persona_memory",
+            "id": "persona_memory/embry_age15_19_b03_memory_014",
+            "key": "embry_age15_19_b03_memory_014",
+            "name": "embry",
+            "persona_id": "embry",
+            "score": null,
+            "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age15_19_b03_candidates.jsonl",
+            "text": "Kai gives Embry a surf map annotated with hazards, etiquette, and places where newcomers should wait.\nThe map marks reef, current, entry path, and crowded zones. Kai says knowing the rules does not make her local, but keeps her from harming someone while learning.\npeople: Embry Lawson, kai; places: Ninole; objects: kai surf spot map, POINT/PATH/PEOPLE checklist; concepts: trust\nSetting: Ninole. Situation: Kai gives Embry a surf map annotated with hazards, etiquette, and places where newcomers should wait. Trigger: Kai shares operational knowledge while naming her status limits. Stakes: She acc"
+          },
+          {
+            "collection": "persona_memory",
+            "id": "persona_memory/embry_age15_19_b02_memory_019",
+            "key": "embry_age15_19_b02_memory_019",
+            "name": "embry",
+            "persona_id": "embry",
+            "score": null,
+            "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age15_19_b02_candidates.jsonl",
+            "text": "After a minor reef scrape, Kai follows Embry's first-aid plan and lets her decide whether to stop.\nThe scrape is shallow. Kai brings the kit, names the visible risk, and asks whether she wants shore or another attempt. Embry chooses shore without defending herself.\npeople: Embry Lawson, Kai; places: Ninole; objects: embry surf first aid repair kit; concepts: boundary, trust\nSetting: Ninole. Situation: After a minor reef scrape, Kai follows Embry's first-aid plan and lets her decide whether to stop. Trigger: The scrape creates uncertainty about continued footing. Stakes: She ends the session de"
+          },
+          {
+            "collection": "persona_memory",
+            "id": "persona_memory/embry_age15_19_b03_memory_016",
+            "key": "embry_age15_19_b03_memory_016",
+            "name": "embry",
+            "persona_id": "embry",
+            "score": null,
+            "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age15_19_b03_candidates.jsonl",
+            "text": "Kai privately corrects a harmless surf-timing error, and Embry continues instead of punishing herself.\nEmbry enters too early and wastes a wave. Kai waits until shore, demonstrates the timing once, and lets her return to the water.\npeople: Embry Lawson, kai; places: Ninole; concepts: boundary, trust\nSetting: Ninole. Situation: Kai privately corrects a harmless surf-timing error, and Embry continues instead of punishing herself. Trigger: Kai treats the error as specific and recoverable. Stakes: She applies the correction and continues.\nEmotions: fear, guilt, longing, trust. Intensity: 4/5. Regu"
+          }
+        ],
+        "query": "Which producer personas in memory fit a grounded Hawaii surf film about Embry and Kai, water logistics, female athlete authenticity, budget feasibility, and production packaging?",
+        "status_code": 200
+      },
+      "scriptwriter": {
+        "item_count": 8,
+        "items": [
+          {
+            "collection": "personas",
+            "id": "personas/karen_kehela_sherwood",
+            "key": "karen_kehela_sherwood",
+            "name": "karen_kehela_sherwood",
+            "persona_id": "karen_kehela_sherwood",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for female-athlete surf narrative and grounded water/beach production. Credited producer on Blue Crush; strong fit for surf story continuity, Hawaii/water production context, and athletic authenticity."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/andy_weir",
+            "key": "andy_weir",
+            "name": "andy_weir",
+            "persona_id": "andy_weir",
+            "score": null,
+            "source_path": null,
+            "text": "Andy Weir persona identity: science-fiction writer, style reference, technical accuracy, competent protagonists, writer template. # Andy Weir - Science Fiction Writer; Known for: The Martian, Project Hail Mary - technical accuracy, competent protagonists; Template: writer Andy Weir template writer persona identity source-grounded memory. template: writer Andy Weir persona scope filmmaking source-grounded identity memory. scope: filmmaking Mark Watney botanist engineer stranded Mars Andy Weir protagonist template. protagonist: Mark Watney - botanist/engineer stranded on Mars Ryland Grace reluct"
+          },
+          {
+            "collection": "personas",
+            "id": "personas/peter_abrams",
+            "key": "peter_abrams",
+            "name": "peter_abrams",
+            "persona_id": "peter_abrams",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for Point Break lineage, surf/action feature packaging, and kinetic genre tension. Strong fit when the story needs action-thriller production framing around surf culture and water-adjacent set pieces."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/robert_l_levy",
+            "key": "robert_l_levy",
+            "name": "robert_l_levy",
+            "persona_id": "robert_l_levy",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for Point Break lineage and practical action-thriller production packaging. Strong fit for surf/action continuity, water/chase/beach logistics, and director-led kinetic staging."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/brian_grazer",
+            "key": "brian_grazer",
+            "name": "brian_grazer",
+            "persona_id": "brian_grazer",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for surf-centered production packaging. Credited producer on Blue Crush; strong fit for mainstream feature packaging, accessible commercial momentum, and practical surf/water production context."
+          },
+          {
+            "collection": "persona_memory",
+            "id": "persona_memory/embry_age15_19_b03_memory_014",
+            "key": "embry_age15_19_b03_memory_014",
+            "name": "embry",
+            "persona_id": "embry",
+            "score": null,
+            "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age15_19_b03_candidates.jsonl",
+            "text": "Kai gives Embry a surf map annotated with hazards, etiquette, and places where newcomers should wait.\nThe map marks reef, current, entry path, and crowded zones. Kai says knowing the rules does not make her local, but keeps her from harming someone while learning.\npeople: Embry Lawson, kai; places: Ninole; objects: kai surf spot map, POINT/PATH/PEOPLE checklist; concepts: trust\nSetting: Ninole. Situation: Kai gives Embry a surf map annotated with hazards, etiquette, and places where newcomers should wait. Trigger: Kai shares operational knowledge while naming her status limits. Stakes: She acc"
+          },
+          {
+            "collection": "persona_memory",
+            "id": "persona_memory/embry_age15_19_b02_memory_019",
+            "key": "embry_age15_19_b02_memory_019",
+            "name": "embry",
+            "persona_id": "embry",
+            "score": null,
+            "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age15_19_b02_candidates.jsonl",
+            "text": "After a minor reef scrape, Kai follows Embry's first-aid plan and lets her decide whether to stop.\nThe scrape is shallow. Kai brings the kit, names the visible risk, and asks whether she wants shore or another attempt. Embry chooses shore without defending herself.\npeople: Embry Lawson, Kai; places: Ninole; objects: embry surf first aid repair kit; concepts: boundary, trust\nSetting: Ninole. Situation: After a minor reef scrape, Kai follows Embry's first-aid plan and lets her decide whether to stop. Trigger: The scrape creates uncertainty about continued footing. Stakes: She ends the session de"
+          },
+          {
+            "collection": "persona_memory",
+            "id": "persona_memory/embry_age15_19_b03_memory_016",
+            "key": "embry_age15_19_b03_memory_016",
+            "name": "embry",
+            "persona_id": "embry",
+            "score": null,
+            "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age15_19_b03_candidates.jsonl",
+            "text": "Kai privately corrects a harmless surf-timing error, and Embry continues instead of punishing herself.\nEmbry enters too early and wastes a wave. Kai waits until shore, demonstrates the timing once, and lets her return to the water.\npeople: Embry Lawson, kai; places: Ninole; concepts: boundary, trust\nSetting: Ninole. Situation: Kai privately corrects a harmless surf-timing error, and Embry continues instead of punishing herself. Trigger: Kai treats the error as specific and recoverable. Stakes: She applies the correction and continues.\nEmotions: fear, guilt, longing, trust. Intensity: 4/5. Regu"
+          }
+        ],
+        "query": "Which writer or scriptwriter personas in memory fit a restrained surf scene with Embry, Kai, sparse dialogue, environment-driven conflict, and physically grounded story structure?",
+        "status_code": 200
+      }
+    },
+    "schema": "persona_dream.crew.memory_recall_evidence.v1",
+    "status": "READY"
+  },
+  "mocked": false,
+  "prompt_payload_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/multiscene-live-smoke/phase_03_producer_writer_director/crew_prompt_payload_receipt.json",
+  "provider_live": false,
+  "quality_checks": {
+    "has_director": true,
+    "has_environment": true,
+    "has_interaction_matrix": true,
+    "has_linked_assets": true,
+    "has_location": true,
+    "has_memory_recall_evidence": true,
+    "has_producer": true,
+    "has_scriptwriter": true,
+    "has_selected_persona_recall_evidence": true,
+    "has_story_text": true
+  },
+  "rationales": {
+    "director": "Kathryn Bigelow is selected for visual grammar, waterline staging, performance direction, pacing, and surf safety realism against the accepted Phase 02 story.",
+    "producer": "Karen Kehela Sherwood is selected for production feasibility, water/surf logistics, genre fit, budget scope, and packaging against the accepted Phase 02 story.",
+    "scriptwriter": "John Stockwell is selected for screenplay structure, restrained dialogue, character fidelity, and surf/environment causality against the accepted Phase 02 story."
+  },
+  "schema": "persona_dream.phase_03_crew_contract.v1",
+  "selected_crew": {
+    "director": {
+      "name": "Kathryn Bigelow",
+      "persona_context": "What source file defines Kathryn Bigelow? Q: What source file defines Kathryn Bigelow? A: Kathryn Bigelow has a source artifact at /mnt/storage12tb/media/personas/directors/kathryn_bigelow.yaml. Source excerpt: # Kathryn Bigelow - Film Director # Known for: The Hurt Locker, Zero Dark Thirty - visceral realism, female protagonists in intense environments # Template: director name: Kathryn Bigelow template: director scope: filmmaking # \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 # Visual Philosophy # \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 visual_philosophy: > Immersion over observation. Put the audience inside the experience. Documentary texture with cinematic tension. The camera is a participant, not a witness. Female perspective on traditionally male spaces\u2014not as outsider, but as professional. # \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 # Signature Techniques # \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 signature_techniques: camera_movement: - Handheld immersion (embedded journalism aesthetic) - Close-quarters tension - Following action, n What source file defines Kathryn Bigelow? Q: What source file defines Kathryn Bigelow? A: Kathryn Bigelow has a source artifact at /mnt/storage12tb/media/personas/directors/kathryn_bigelow.yaml. Source excerpt: # Kathryn Bigelow - Film Director # Known for: The Hurt Locker, Zero Dark Thirty - visceral realism, female protagonists in intense environments # Template: director name: Kathryn Bigelow template: director scope: filmmaking # \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 # Visual Philosophy # \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 visual_philosophy: > Immersion over observation. Put the audience inside the experience. Documentary texture with cinematic tension. The camera is a participant, not a witness. Female perspective on traditionally male spaces\u2014not as outsider, but as professional. # \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 # Signature Techniques # \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500",
+      "persona_id": "kathryn_bigelow",
+      "role": "director",
+      "roles": [
+        "cinematographer",
+        "director"
+      ],
+      "source_paths": [
+        "/mnt/storage12tb/media/personas/directors/kathryn_bigelow.yaml"
+      ],
+      "thumbnail_path": "/mnt/storage12tb/media/personas/directors/kathryn_bigelow/thumbnails/brave_thumbnail_20260702.jpg"
+    },
+    "producer": {
+      "name": "Karen Kehela Sherwood",
+      "persona_context": "Producer persona for female-athlete surf narrative and grounded water/beach production. Credited producer on Blue Crush; strong fit for surf story continuity, Hawaii/water production context, and athletic authenticity. Producer persona for female-athlete surf narrative and grounded water/beach production. Credited producer on Blue Crush; strong fit for surf story continuity, Hawaii/water production context, and athletic authenticity. Production fit: surf film production experience, female-athlete surf narrative support, grounded Hawaii/water production context, feature production continuity. Known for: Blue Crush, A Beautiful Mind, Inside Man. Producer persona for female-athlete surf narrative and grounded water/beach production. Credited producer on Blue Crush; strong fit for surf story continuity, Hawaii/water production context, and athletic authenticity. surf film production experience, female-athlete surf narrative support, grounded Hawaii/water production context, feature production continuity Blue Crush, A Beautiful Mind, Inside Man Producer persona for female-athlete surf narrative and grounded water/beach production. Credited producer on Blue Crush; strong fit for surf story continuity, Hawaii/water production context, and athletic authenticity. surf film production experience, female-athlete surf narrative support, grounded Hawaii/water production context, feature production continuity Blue Crush, A Beautiful Mind, Inside Man /mnt/storage12tb/media/personas/producers/karen_kehela_sherwood.yaml",
+      "persona_id": "karen_kehela_sherwood",
+      "role": "producer",
+      "roles": [
+        "producer"
+      ],
+      "source_paths": [
+        "/mnt/storage12tb/media/personas/producers/karen_kehela_sherwood.yaml"
+      ],
+      "thumbnail_path": "/mnt/storage12tb/media/personas/producers/karen_kehela_sherwood/thumbnails/brave_thumbnail_20260702.jpg"
+    },
+    "scriptwriter": {
+      "name": "John Stockwell",
+      "persona_context": "What source file defines John Stockwell? Q: What source file defines John Stockwell? A: John Stockwell has a source artifact at /mnt/storage12tb/media/personas/directors/john_stockwell.yaml. Source excerpt: # John Stockwell - Film Director # Known for: Blue Crush - authentic female athletes, Hawaii, determination # Template: director name: John Stockwell template: director scope: filmmaking # \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 # Visual Philosophy # \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 visual_philosophy: > Authenticity through physicality. Show young women as athletes, not objects. The ocean doesn't care about gender\u2014neither should the camera. Capture the grind behind the glory. Dawn patrol is unglamorous and essential. # \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 # Signature Techniques # \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 signature_techniques: camera_movement: - Water-level immersion - Following athletic action - Handheld intimacy for personal moments lighting: - Golden hour surf sessions - Harsh midday training - Pre-dawn What source file defines John Stockwell? Q: What source file defines John Stockwell? A: John Stockwell has a source artifact at /mnt/storage12tb/media/personas/directors/john_stockwell.yaml. Source excerpt: # John Stockwell - Film Director # Known for: Blue Crush - authentic female athletes, Hawaii, determination # Template: director name: John Stockwell template: director scope: filmmaking # \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 # Visual Philosophy # \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 visual_philosophy: > Authenticity through physicality. Show young women as athletes, not objects. The ocean doesn't care about gender\u2014neither should the camera. Capture the grind behind the glory. Dawn patrol is unglamorous and essential. # \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 # Signature Techniques # \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 sig",
+      "persona_id": "john_stockwell",
+      "role": "scriptwriter",
+      "roles": [
+        "cinematographer",
+        "director",
+        "scriptwriter"
+      ],
+      "source_paths": [
+        "/mnt/storage12tb/media/personas/directors/john_stockwell.yaml"
+      ],
+      "thumbnail_path": "/mnt/storage12tb/media/personas/directors/john_stockwell/thumbnails/brave_thumbnail_20260702.jpg"
+    }
+  },
+  "selected_persona_recall_evidence": {
+    "base_url": "http://127.0.0.1:8601",
+    "collections": [
+      "personas",
+      "persona_memory"
+    ],
+    "created_at": "2026-07-02T18:42:44Z",
+    "roles": {
+      "director": {
+        "item_count": 6,
+        "items": [
+          {
+            "collection": "personas",
+            "id": "personas/kathryn_bigelow",
+            "key": "kathryn_bigelow",
+            "name": "kathryn_bigelow",
+            "persona_id": "kathryn_bigelow",
+            "score": null,
+            "source_path": null,
+            "text": "What source file defines Kathryn Bigelow? Q: What source file defines Kathryn Bigelow? A: Kathryn Bigelow has a source artifact at /mnt/storage12tb/media/personas/directors/kathryn_bigelow.yaml. Source excerpt: # Kathryn Bigelow - Film Director # Known for: The Hurt Locker, Zero Dark Thirty - visceral realism, female protagonists in intense environments # Template: director name: Kathryn Bigelow template: director scope: filmmaking # \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 # Visual Philosophy # \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500"
+          },
+          {
+            "collection": "personas",
+            "id": "personas/andy_weir",
+            "key": "andy_weir",
+            "name": "andy_weir",
+            "persona_id": "andy_weir",
+            "score": null,
+            "source_path": null,
+            "text": "Andy Weir persona identity: science-fiction writer, style reference, technical accuracy, competent protagonists, writer template. # Andy Weir - Science Fiction Writer; Known for: The Martian, Project Hail Mary - technical accuracy, competent protagonists; Template: writer Andy Weir template writer persona identity source-grounded memory. template: writer Andy Weir persona scope filmmaking source-grounded identity memory. scope: filmmaking Mark Watney botanist engineer stranded Mars Andy Weir protagonist template. protagonist: Mark Watney - botanist/engineer stranded on Mars Ryland Grace reluct"
+          },
+          {
+            "collection": "personas",
+            "id": "personas/karen_kehela_sherwood",
+            "key": "karen_kehela_sherwood",
+            "name": "karen_kehela_sherwood",
+            "persona_id": "karen_kehela_sherwood",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for female-athlete surf narrative and grounded water/beach production. Credited producer on Blue Crush; strong fit for surf story continuity, Hawaii/water production context, and athletic authenticity."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/peter_abrams",
+            "key": "peter_abrams",
+            "name": "peter_abrams",
+            "persona_id": "peter_abrams",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for Point Break lineage, surf/action feature packaging, and kinetic genre tension. Strong fit when the story needs action-thriller production framing around surf culture and water-adjacent set pieces."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/robert_l_levy",
+            "key": "robert_l_levy",
+            "name": "robert_l_levy",
+            "persona_id": "robert_l_levy",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for Point Break lineage and practical action-thriller production packaging. Strong fit for surf/action continuity, water/chase/beach logistics, and director-led kinetic staging."
+          },
+          {
+            "collection": "persona_memory",
+            "id": "persona_memory/embry_age15_19_b03_memory_019",
+            "key": "embry_age15_19_b03_memory_019",
+            "name": "embry",
+            "persona_id": "embry",
+            "score": null,
+            "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age15_19_b03_candidates.jsonl",
+            "text": "Embry lets Kai choose an unplanned food stop after surfing.\nKai turns away from Embry's mapped route and stops at a counter he trusts. She asks where once, then leaves her phone in her bag. The meal is late, good, and uneventful.\npeople: Embry Lawson, kai; places: Ninole; concepts: all uncertainty requires control, safety boundary, trust\nSetting: Ninole. Situation: Embry lets Kai choose an unplanned food stop after surfing. Trigger: Kai changes a low-stakes plan while remaining attentive. Stakes: Embry tolerates not knowing the destination.\nEmotions: guilt, longing, pride, trust, uncertainty. "
+          }
+        ],
+        "matched_selected_persona": true,
+        "query": "What does memory know about the selected director persona Kathryn Bigelow (kathryn_bigelow) for this Embry/Kai surf story? Return matching persona and persona_memory records. Story: Embry\u2019s phone buzzes on the beach bag like obligation had learned echolocation. Ten yards out, a clean June lump lifts over the dark lava reef; glare turns the face silver, and her older white shortboard\u2019s softened wax lets one palm skid. Kai, outside on his familiar board, doesn\u2019t call her in. He waits, trims aside for a local, then points two fingers at the safe channel. Embry resets her rail grip, saves three tired strokes, and chooses the wave.",
+        "status_code": 200
+      },
+      "producer": {
+        "item_count": 6,
+        "items": [
+          {
+            "collection": "personas",
+            "id": "personas/karen_kehela_sherwood",
+            "key": "karen_kehela_sherwood",
+            "name": "karen_kehela_sherwood",
+            "persona_id": "karen_kehela_sherwood",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for female-athlete surf narrative and grounded water/beach production. Credited producer on Blue Crush; strong fit for surf story continuity, Hawaii/water production context, and athletic authenticity."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/peter_abrams",
+            "key": "peter_abrams",
+            "name": "peter_abrams",
+            "persona_id": "peter_abrams",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for Point Break lineage, surf/action feature packaging, and kinetic genre tension. Strong fit when the story needs action-thriller production framing around surf culture and water-adjacent set pieces."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/andy_weir",
+            "key": "andy_weir",
+            "name": "andy_weir",
+            "persona_id": "andy_weir",
+            "score": null,
+            "source_path": null,
+            "text": "Andy Weir persona identity: science-fiction writer, style reference, technical accuracy, competent protagonists, writer template. # Andy Weir - Science Fiction Writer; Known for: The Martian, Project Hail Mary - technical accuracy, competent protagonists; Template: writer Andy Weir template writer persona identity source-grounded memory. template: writer Andy Weir persona scope filmmaking source-grounded identity memory. scope: filmmaking Mark Watney botanist engineer stranded Mars Andy Weir protagonist template. protagonist: Mark Watney - botanist/engineer stranded on Mars Ryland Grace reluct"
+          },
+          {
+            "collection": "personas",
+            "id": "personas/robert_l_levy",
+            "key": "robert_l_levy",
+            "name": "robert_l_levy",
+            "persona_id": "robert_l_levy",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for Point Break lineage and practical action-thriller production packaging. Strong fit for surf/action continuity, water/chase/beach logistics, and director-led kinetic staging."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/brian_grazer",
+            "key": "brian_grazer",
+            "name": "brian_grazer",
+            "persona_id": "brian_grazer",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for surf-centered production packaging. Credited producer on Blue Crush; strong fit for mainstream feature packaging, accessible commercial momentum, and practical surf/water production context."
+          },
+          {
+            "collection": "persona_memory",
+            "id": "persona_memory/embry_age15_19_b03_memory_019",
+            "key": "embry_age15_19_b03_memory_019",
+            "name": "embry",
+            "persona_id": "embry",
+            "score": null,
+            "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age15_19_b03_candidates.jsonl",
+            "text": "Embry lets Kai choose an unplanned food stop after surfing.\nKai turns away from Embry's mapped route and stops at a counter he trusts. She asks where once, then leaves her phone in her bag. The meal is late, good, and uneventful.\npeople: Embry Lawson, kai; places: Ninole; concepts: all uncertainty requires control, safety boundary, trust\nSetting: Ninole. Situation: Embry lets Kai choose an unplanned food stop after surfing. Trigger: Kai changes a low-stakes plan while remaining attentive. Stakes: Embry tolerates not knowing the destination.\nEmotions: guilt, longing, pride, trust, uncertainty. "
+          }
+        ],
+        "matched_selected_persona": true,
+        "query": "What does memory know about the selected producer persona Karen Kehela Sherwood (karen_kehela_sherwood) for this Embry/Kai surf story? Return matching persona and persona_memory records. Story: Embry\u2019s phone buzzes on the beach bag like obligation had learned echolocation. Ten yards out, a clean June lump lifts over the dark lava reef; glare turns the face silver, and her older white shortboard\u2019s softened wax lets one palm skid. Kai, outside on his familiar board, doesn\u2019t call her in. He waits, trims aside for a local, then points two fingers at the safe channel. Embry resets her rail grip, saves three tired strokes, and chooses the wave.",
+        "status_code": 200
+      },
+      "scriptwriter": {
+        "item_count": 6,
+        "items": [
+          {
+            "collection": "personas",
+            "id": "personas/john_stockwell",
+            "key": "john_stockwell",
+            "name": "john_stockwell",
+            "persona_id": "john_stockwell",
+            "score": null,
+            "source_path": null,
+            "text": "What source file defines John Stockwell? Q: What source file defines John Stockwell? A: John Stockwell has a source artifact at /mnt/storage12tb/media/personas/directors/john_stockwell.yaml. Source excerpt: # John Stockwell - Film Director # Known for: Blue Crush - authentic female athletes, Hawaii, determination # Template: director name: John Stockwell template: director scope: filmmaking # \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 # Visual Philosophy # \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500 visual_philosophy: > Authe"
+          },
+          {
+            "collection": "personas",
+            "id": "personas/andy_weir",
+            "key": "andy_weir",
+            "name": "andy_weir",
+            "persona_id": "andy_weir",
+            "score": null,
+            "source_path": null,
+            "text": "Andy Weir persona identity: science-fiction writer, style reference, technical accuracy, competent protagonists, writer template. # Andy Weir - Science Fiction Writer; Known for: The Martian, Project Hail Mary - technical accuracy, competent protagonists; Template: writer Andy Weir template writer persona identity source-grounded memory. template: writer Andy Weir persona scope filmmaking source-grounded identity memory. scope: filmmaking Mark Watney botanist engineer stranded Mars Andy Weir protagonist template. protagonist: Mark Watney - botanist/engineer stranded on Mars Ryland Grace reluct"
+          },
+          {
+            "collection": "personas",
+            "id": "personas/karen_kehela_sherwood",
+            "key": "karen_kehela_sherwood",
+            "name": "karen_kehela_sherwood",
+            "persona_id": "karen_kehela_sherwood",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for female-athlete surf narrative and grounded water/beach production. Credited producer on Blue Crush; strong fit for surf story continuity, Hawaii/water production context, and athletic authenticity."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/peter_abrams",
+            "key": "peter_abrams",
+            "name": "peter_abrams",
+            "persona_id": "peter_abrams",
+            "score": null,
+            "source_path": null,
+            "text": "Producer persona for Point Break lineage, surf/action feature packaging, and kinetic genre tension. Strong fit when the story needs action-thriller production framing around surf culture and water-adjacent set pieces."
+          },
+          {
+            "collection": "personas",
+            "id": "personas/dan_kieft",
+            "key": "dan_kieft",
+            "name": "dan_kieft",
+            "persona_id": "dan_kieft",
+            "score": null,
+            "source_path": null,
+            "text": "What source file defines Dan Kieft? Q: What source file defines Dan Kieft? A: Dan Kieft has a source artifact at /mnt/storage12tb/media/personas/experts/dan_kieft/transcripts/beginner_course.json. Source excerpt: { \"meta\": { \"video_id\": \"RL7FQcw2C6k\", \"language\": \"en\", \"took_ms\": 4100, \"method\": \"proxy\", \"title\": \"How To Create Cinematic AI Videos - AI Filmmaking Beginner Course\", \"channel\": \"Dan Kieft\", \"upload_date\": \"20250807\", \"duration_sec\": 922, \"description\": \"Learn to Create Cinematic AI videos in this AI Filmmaking masterclass\\nAI Tool I used \ud83d\udc49 https://openart.ai/home?ref=filmmaking\\n"
+          },
+          {
+            "collection": "persona_memory",
+            "id": "persona_memory/embry_age15_19_b03_memory_019",
+            "key": "embry_age15_19_b03_memory_019",
+            "name": "embry",
+            "persona_id": "embry",
+            "score": null,
+            "source_path": "/mnt/storage12tb/skills/ask/outputs/embry_tom_memory_collab_20260619/candidate_corpus_20260619/embry_age15_19_b03_candidates.jsonl",
+            "text": "Embry lets Kai choose an unplanned food stop after surfing.\nKai turns away from Embry's mapped route and stops at a counter he trusts. She asks where once, then leaves her phone in her bag. The meal is late, good, and uneventful.\npeople: Embry Lawson, kai; places: Ninole; concepts: all uncertainty requires control, safety boundary, trust\nSetting: Ninole. Situation: Embry lets Kai choose an unplanned food stop after surfing. Trigger: Kai changes a low-stakes plan while remaining attentive. Stakes: Embry tolerates not knowing the destination.\nEmotions: guilt, longing, pride, trust, uncertainty. "
+          }
+        ],
+        "matched_selected_persona": true,
+        "query": "What does memory know about the selected scriptwriter persona John Stockwell (john_stockwell) for this Embry/Kai surf story? Return matching persona and persona_memory records. Story: Embry\u2019s phone buzzes on the beach bag like obligation had learned echolocation. Ten yards out, a clean June lump lifts over the dark lava reef; glare turns the face silver, and her older white shortboard\u2019s softened wax lets one palm skid. Kai, outside on his familiar board, doesn\u2019t call her in. He waits, trims aside for a local, then points two fingers at the safe channel. Embry resets her rail grip, saves three tired strokes, and chooses the wave.",
+        "status_code": 200
+      }
+    },
+    "schema": "persona_dream.crew.selected_persona_recall_evidence.v1",
+    "status": "READY"
+  },
+  "selection_order": [
+    "producer",
+    "scriptwriter",
+    "director"
+  ],
+  "source_context": {
+    "core_idea": "Embry and Kai both faked a sick day at their summer jobs to go surfing on the Big Island on a Wednesday in June of 2024 \u2014 Kona Coast, Kahalu\u02bbu Bay, summer swell patterns, lava rock reefs, local surf etiquette.",
+    "environment": {
+      "active_pressures": [
+        "sweat",
+        "glare",
+        "wax softness",
+        "saltwater",
+        "fatigue",
+        "grip changes",
+        "footing changes",
+        "board control changes",
+        "reef caution",
+        "social patience"
+      ],
+      "story_effect": "Heat, glare, fatigue, and softened wax turn the incoming set into a practical timing problem, while the reef and local lineup rules force Embry and Kai to choose restraint before commitment.",
+      "weather_description": "Hot, humid coastal air with summer swell patterns, harsh glare, saltwater, softened wax, fatigue, and clear water over shallow lava reef."
+    },
+    "interaction_matrix": [
+      {
+        "category": "character",
+        "description": "Embry: Heat and humidity make her physically exposed: sweat, glare, and tired paddling turn autonomy into a bodily choice, not just an idea. Script/panels should show sweat, squinting, salt on skin, careful hand placement, and fatigue in her paddle cadence before dialogue explains anything.",
+        "entity": "Embry",
+        "environment_interaction": "Heat and humidity put sweat and salt on her skin, glare narrows her sightline to the wave face, fatigue limits her paddle strokes, and the reef makes her rail grip and timing matter.",
+        "objects_used": [
+          "navy rashguard",
+          "phone",
+          "family obligations",
+          "borrowed/older shortboard"
+        ],
+        "source_seed_id": "seed-0",
+        "story_function": "Embry carries the autonomy-versus-obligation pivot by ignoring the buzzing phone long enough to make a careful, competent surf decision.",
+        "visible_in_panel": true
+      },
+      {
+        "category": "character",
+        "description": "Kai: Reads the swell while managing heat, glare, and patience; his competence shows in conserving effort instead of forcing the moment. Stage Kai as physically adapted to the heat: calm breathing, economical paddling, shaded glances at the reef line, and small gestures that guide Embry without lecturing.",
+        "entity": "Kai",
+        "environment_interaction": "Kai reads the glare, swell angle, reef line, and lineup pressure without wasting motion; heat and fatigue make his restraint more useful than a lecture.",
+        "objects_used": [
+          "black rashguard",
+          "phone call",
+          "surf ritual",
+          "familiar shortboard"
+        ],
+        "source_seed_id": "seed-1",
+        "story_function": "Kai demonstrates competence by yielding to a local, conserving energy, and giving one practical channel cue rather than taking over Embry\u2019s choice.",
+        "visible_in_panel": true
+      },
+      {
+        "category": "character_object",
+        "description": "Embry surfboard: Humidity and sun soften wax and make footing less certain; the board forces Embry to commit cleanly despite tired arms and slick contact points. Panel details should include wax smears, sun glare on the deck, hands gripping rails, and foot placement uncertainty as the board reacts to chop and reef proximity.",
+        "entity": "Embry surfboard",
+        "environment_interaction": "Sun and humidity soften the wax on the older white performance shortboard, so Embry\u2019s palm slips and her rail pressure must be reset before the wave reaches the reef.",
+        "objects_used": [
+          "White shortboard",
+          "performance shape",
+          "visibly waxed deck",
+          "likely older/borrowed",
+          "rail pressure matters over shallow reef."
+        ],
+        "source_seed_id": "seed-2",
+        "story_function": "The board converts heat and reef caution into visible mechanics: grip, balance, and commitment are not abstract feelings.",
+        "visible_in_panel": true
+      },
+      {
+        "category": "character_object",
+        "description": "Kai surfboard: A waxed, familiar board lets Kai compensate for heat, chop, and glare; restraint is visible when he waits rather than wasting energy. Use the board as proof of familiarity: worn rail marks, confident trim angle, efficient turns, and quick corrections under humid, high-glare conditions.",
+        "entity": "Kai surfboard",
+        "environment_interaction": "The well-used waxed board lets Kai trim efficiently under glare and chop, making small corrections while he waits outside the danger line.",
+        "objects_used": [
+          "White shortboard with darker underside/rail marks",
+          "well-used and waxed",
+          "familiar enough for quick reef-line decisions."
+        ],
+        "source_seed_id": "seed-3",
+        "story_function": "Kai\u2019s familiar board makes his restraint legible as skill: he can move quickly, but chooses patience and positioning.",
+        "visible_in_panel": true
+      },
+      {
+        "category": "environmental_force",
+        "description": "June Swell: Creates the timing pressure that makes hesitation and trust visible. Panels need repeating set rhythm: quiet water, approaching lump, glare on the face, then a fast decision point.",
+        "entity": "June Swell",
+        "environment_interaction": "The summer set rhythm creates a brief decision window: quiet water becomes a silver-glared wave face, forcing Embry to decide before fatigue costs her the takeoff.",
+        "objects_used": [
+          "sets",
+          "tide window",
+          "wave face"
+        ],
+        "source_seed_id": "seed-4",
+        "story_function": "The swell supplies the ten-second clock and turns hesitation, etiquette, and trust into immediate action.",
+        "visible_in_panel": true
+      },
+      {
+        "category": "environmental_force",
+        "description": "Lava Reef: Turns the environment into a hard boundary rather than background scenery. Show the reef as a physical rule: dark shapes below clear water, shallow consequences, and characters adjusting line and timing around it.",
+        "entity": "Lava Reef",
+        "environment_interaction": "Dark lava shapes under clear saltwater mark a shallow hard boundary; Embry and Kai adjust line, paddle timing, and channel choice around it.",
+        "objects_used": [
+          "sharp rock",
+          "shallow line",
+          "safe channel"
+        ],
+        "source_seed_id": "seed-5",
+        "story_function": "The reef prevents generic surf action by making every movement accountable to a visible physical consequence.",
+        "visible_in_panel": true
+      },
+      {
+        "category": "location_social_system",
+        "description": "Kona Coast: Holds the scene inside a public place where local rules shape private choices. Script beats should include public beach pressure, waiting turns, reading locals, and the contrast between private escape and shared water.",
+        "entity": "Kona Coast",
+        "environment_interaction": "The public bay and reef break require waiting turns and reading locals; heat and crowded patience make Kai\u2019s yield and Embry\u2019s timing socially as well as physically necessary.",
+        "objects_used": [
+          "bay",
+          "local etiquette",
+          "reef break"
+        ],
+        "source_seed_id": "seed-6",
+        "story_function": "The location makes their private sick-day escape depend on shared-water rules, preventing reckless or isolated decision-making.",
+        "visible_in_panel": true
+      }
+    ],
+    "linked_assets": [
+      {
+        "asset_id": "embry_media_asset__assets_surfing_embry_surfing_big_island_2024_png",
+        "title": "Embry surfing on the Big Island",
+        "usage_confidence": "caption_grounded",
+        "use_in_story": "Embry\u2019s navy surf top, low crouched surf posture, white surfboard continuity, spray, lava rocks, coastline, palms, green mountains, and warm Big Island light.",
+        "used_for": "Embry\u2019s navy surf top, low crouched surf posture, white surfboard continuity, spray, lava rocks, coastline, palms, green mountains, and warm Big Island light.",
+        "visual_consistency_note": "Embry, a young woman in a navy surf top, crouches low on a white surfboard carving across a small wave, one hand brushing the water as spray bursts around her. Golden light hits the Big Island coastline behind her, with palm trees, dark lava rocks, green mountains, and low clouds creating a dramatic tropical backdrop for Kai to spot her ride or call out from nearby."
+      },
+      {
+        "asset_id": "kai_akana_media_asset__assets_surfing_kai_surfing_big_island_2024_png",
+        "title": "Kai Akana surfing on the Big Island",
+        "usage_confidence": "caption_grounded",
+        "use_in_story": "Kai\u2019s black rashguard, white surfboard, low competent carving posture, spray, and Big Island lava-rock coastal context.",
+        "used_for": "Kai\u2019s black rashguard, white surfboard, low competent carving posture, spray, and Big Island lava-rock coastal context.",
+        "visual_consistency_note": "Kai Akana, a young surfer in a black rash guard and board shorts, carves low on a small glassy wave as spray bursts around his white surfboard. Behind him, the Big Island coastline shows dark lava rocks, palm trees, and steep green mountains under warm golden light with low clouds, setting up a focused surfing moment for Embry/Kai."
+      }
+    ],
+    "location": {
+      "description": "A public Kona Coast reef break where a stolen sick-day surf session is constrained by local etiquette, shared water, and shallow lava rock.",
+      "month": "June",
+      "place": "Kahalu\u02bbu Bay, Kona Coast, Big Island",
+      "time": "Wednesday daylight surf window",
+      "year": 2024
+    },
+    "story_contract": {
+      "artifact_id": "run_story_contract",
+      "created_at": "2026-07-02T12:54:18Z",
+      "downstream_invalidated": {
+        "panels": true,
+        "provider_packets": true,
+        "reason": "New accepted story contract requires downstream regeneration.",
+        "storyboard": true
+      },
+      "input_idea_contract": "Create a one-panel 10-second Embry OS story contract from Phase 02 prompt payload.",
+      "review_evidence": {
+        "basis": "Derived directly from accepted dream_packet frame prompts and residue ids.",
+        "forbidden_actions_observed": {
+          "kling": false,
+          "paid_provider": false,
+          "panel_generation": false,
+          "public_upload": false
+        },
+        "review_status": "ACCEPTED_AUTOMATED",
+        "reviewed_by": "tau.story-writer",
+        "source_ids": [
+          "embry_media_asset__assets_surfing_embry_surfing_big_island_2024_png",
+          "embry_media_asset__assets_character_sheet_montage_jpg",
+          "embry_media_asset__assets_surfing_embry_barrel_wave_big_island_2024_png",
+          "kai_akana_media_asset__assets_surfing_kai_surfing_big_island_2024_png",
+          "kai_akana_media_asset__assets_contact_sheets_kai_akana_character_sheet_png"
+        ],
+        "story_writer_model_call": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/persona-dream-story-ui-dispatch/story-ui-20260702T125257Z/command-loop/command-artifacts/command-loop-step-001/story_writer_model_call_receipt.json"
+      },
+      "schema": "persona_dream.story_contract.v1",
+      "seed": "## Role\nYou are the Phase 02 Story author for Embry OS.\n\n## Task\nGenerate an original 1-panel, 10-second story beat for the Phase 02 Story pane. Return one JSON object that matches the Output Format section at the end of this prompt.\n\n## Input Field Paths\n- source_context.core_idea: story directive text.\n- source_context.location: place, weekday, daylight/time window, month, and year.\n- source_context.environment.description: weather, heat, humidity, swell, reef, light, water, fatigue, and physical constraints.\n- source_context.environment.active_pressures[]: specific physical pressures the story must operationalize.\n- source_context.interaction_rows[].id: stable row id that must be copied into interaction_matrix[].source_seed_id.\n- source_context.interaction_rows[].category: one of character, character_object, environmental_force, location_social_system.\n- source_context.interaction_rows[].objects[]: physical objects or body-worn items.\n- source_context.interaction_rows[].dynamics: how the row behaves under the environment.\n- source_context.interaction_rows[].note: script/panel staging instruction.\n- source_context.linked_assets[].id: stable asset id that must be copied into asset_usage[].asset_id.\n- source_context.linked_assets[].description: stored image, sound, video, or text description.\n- source_context.author.memory_style_context: selected persona memory style that determines how the story is written.\n- generation_directives.author_style_directive: high-level, non-imitative author craft traits.\n- generation_directives.creativity_directive: slider value translated into concrete generation behavior.\n- response_contract: strict JSON schema suitable for Pydantic/dataclass validation.\n\n## Source Material\n<source_context>\n{\n  \"core_idea\": \"Embry and Kai both faked a sick day at their summer jobs to go surfing on the Big Island on a Wednesday in June of 2024 \u2014 Kona Coast, Kahalu\u02bbu Bay, summer swell patterns, lava rock reefs, local surf etiquette.\",\n  \"author\": {\n    \"id\": \"andy_weir\",\n    \"name\": \"Andy Weir\",\n    \"memory_style_context\": \"The protagonist is competent. The problems are real. The solutions are earned. Science is not a backdrop\u2014it's the plot. Humor comes from intelligence under pressure. Every technical detail matters. If you can't explain it, you can't write it.\",\n    \"expanded_style_guide\": \"Requested author reference: Andy Weir. Do not imitate this author directly. Translate the reference into high-level craft traits for an original Phase 02 story treatment. Stored persona style context: The protagonist is competent. The problems are real. The solutions are earned. Science is not a backdrop\u2014it's the plot. Humor comes from intelligence under pressure. Every technical detail matters. If you can't explain it, you can't write it. Use a competent, practical protagonist solving concrete physical problems under pressure. The problems should be real, specific, and visible in the scene. Solutions should be earned through observation, trial, failure, iteration, and clear causal reasoning. Technical detail must function as plot, not decoration. Exposition should feel like active problem-solving rather than lecturing. Every detail about swell timing, reef depth, softened wax, glare, heat, fatigue, phones, and etiquette should have consequences for character choices. Humor should come from intelligence, stress, and self-awareness, not from pasted-on jokes. Keep the tone conversational, optimistic, precise, propulsive, and human. Pacing should move through problem, constraint, attempted solution, complication, and embodied decision. The reader should understand the practical problem well enough to feel the satisfaction of the choice or solution. Avoid direct prose imitation, signature phrasing, borrowed character types, borrowed plots, or fan-fiction echoes. Use the craft traits only.\"\n  },\n  \"location\": {\n    \"place\": \"Kahalu\u02bbu Bay\",\n    \"region\": \"Kona Coast\",\n    \"island\": \"Big Island\",\n    \"weekday\": \"Wednesday\",\n    \"month\": \"June\",\n    \"year\": 2024,\n    \"time_window\": \"daylight surf window\",\n    \"display\": \"Kahalu\u02bbu Bay, Kona Coast \u00b7 Wednesday \u00b7 daylight surf window \u00b7 June \u00b7 2024\"\n  },\n  \"environment\": {\n    \"id\": \"env-0\",\n    \"description\": \"Hot, humid coastal air with summer swell patterns, lava rock reef constraints; sweat, glare, wax softness, saltwater, and fatigue change grip, footing, board control, reef caution, and social patience.\",\n    \"active_pressures\": [\n      \"sweat\",\n      \"glare\",\n      \"wax softness\",\n      \"saltwater\",\n      \"fatigue\",\n      \"grip changes\",\n      \"footing changes\",\n      \"board control changes\",\n      \"reef caution\",\n      \"social patience\"\n    ]\n  },\n  \"interaction_rows\": [\n    {\n      \"id\": \"seed-0\",\n      \"name\": \"Embry\",\n      \"category\": \"character\",\n      \"objects\": [\n        \"navy rashguard\",\n        \"phone\",\n        \"family obligations\",\n        \"borrowed/older shortboard\"\n      ],\n      \"environment_ref\": \"env-0\",\n      \"environment\": \"Hot, humid coastal air with summer swell patterns, lava rock reef constraints; sweat, glare, wax softness, saltwater, and fatigue change grip, footing, board control, reef caution, and social patience.\",\n      \"dynamics\": \"Heat and humidity make her physically exposed: sweat, glare, and tired paddling turn autonomy into a bodily choice, not just an idea.\",\n      \"note\": \"Script/panels should show sweat, squinting, salt on skin, careful hand placement, and fatigue in her paddle cadence before dialogue explains anything.\",\n      \"is_complete\": true\n    },\n    {\n      \"id\": \"seed-1\",\n      \"name\": \"Kai\",\n      \"category\": \"character\",\n      \"objects\": [\n        \"black rashguard\",\n        \"phone call\",\n        \"surf ritual\",\n        \"familiar shortboard\"\n      ],\n      \"environment_ref\": \"env-0\",\n      \"environment\": \"Hot, humid coastal air with summer swell patterns, lava rock reef constraints; sweat, glare, wax softness, saltwater, and fatigue change grip, footing, board control, reef caution, and social patience.\",\n      \"dynamics\": \"Reads the swell while managing heat, glare, and patience; his competence shows in conserving effort instead of forcing the moment.\",\n      \"note\": \"Stage Kai as physically adapted to the heat: calm breathing, economical paddling, shaded glances at the reef line, and small gestures that guide Embry without lecturing.\",\n      \"is_complete\": true\n    },\n    {\n      \"id\": \"seed-2\",\n      \"name\": \"Embry surfboard\",\n      \"category\": \"character_object\",\n      \"objects\": [\n        \"White shortboard\",\n        \"performance shape\",\n        \"visibly waxed deck\",\n        \"likely older/borrowed\",\n        \"rail pressure matters over shallow reef.\"\n      ],\n      \"environment_ref\": \"env-0\",\n      \"environment\": \"Hot, humid coastal air with summer swell patterns, lava rock reef constraints; sweat, glare, wax softness, saltwater, and fatigue change grip, footing, board control, reef caution, and social patience.\",\n      \"dynamics\": \"Humidity and sun soften wax and make footing less certain; the board forces Embry to commit cleanly despite tired arms and slick contact points.\",\n      \"note\": \"Panel details should include wax smears, sun glare on the deck, hands gripping rails, and foot placement uncertainty as the board reacts to chop and reef proximity.\",\n      \"is_complete\": true\n    },\n    {\n      \"id\": \"seed-3\",\n      \"name\": \"Kai surfboard\",\n      \"category\": \"character_object\",\n      \"objects\": [\n        \"White shortboard with darker underside/rail marks\",\n        \"well-used and waxed\",\n        \"familiar enough for quick reef-line decisions.\"\n      ],\n      \"environment_ref\": \"env-0\",\n      \"environment\": \"Hot, humid coastal air with summer swell patterns, lava rock reef constraints; sweat, glare, wax softness, saltwater, and fatigue change grip, footing, board control, reef caution, and social patience.\",\n      \"dynamics\": \"A waxed, familiar board lets Kai compensate for heat, chop, and glare; restraint is visible when he waits rather than wasting energy.\",\n      \"note\": \"Use the board as proof of familiarity: worn rail marks, confident trim angle, efficient turns, and quick corrections under humid, high-glare conditions.\",\n      \"is_complete\": true\n    },\n    {\n      \"id\": \"seed-4\",\n      \"name\": \"June Swell\",\n      \"category\": \"environmental_force\",\n      \"objects\": [\n        \"sets\",\n        \"tide window\",\n        \"wave face\"\n      ],\n      \"environment_ref\": \"env-0\",\n      \"environment\": \"Hot, humid coastal air with summer swell patterns, lava rock reef constraints; sweat, glare, wax softness, saltwater, and fatigue change grip, footing, board control, reef caution, and social patience.\",\n      \"dynamics\": \"Creates the timing pressure that makes hesitation and trust visible.\",\n      \"note\": \"Panels need repeating set rhythm: quiet water, approaching lump, glare on the face, then a fast decision point.\",\n      \"is_complete\": true\n    },\n    {\n      \"id\": \"seed-5\",\n      \"name\": \"Lava Reef\",\n      \"category\": \"environmental_force\",\n      \"objects\": [\n        \"sharp rock\",\n        \"shallow line\",\n        \"safe channel\"\n      ],\n      \"environment_ref\": \"env-0\",\n      \"environment\": \"Hot, humid coastal air with summer swell patterns, lava rock reef constraints; sweat, glare, wax softness, saltwater, and fatigue change grip, footing, board control, reef caution, and social patience.\",\n      \"dynamics\": \"Turns the environment into a hard boundary rather than background scenery.\",\n      \"note\": \"Show the reef as a physical rule: dark shapes below clear water, shallow consequences, and characters adjusting line and timing around it.\",\n      \"is_complete\": true\n    },\n    {\n      \"id\": \"seed-6\",\n      \"name\": \"Kona Coast\",\n      \"category\": \"location_social_system\",\n      \"objects\": [\n        \"bay\",\n        \"local etiquette\",\n        \"reef break\"\n      ],\n      \"environment_ref\": \"env-0\",\n      \"environment\": \"Hot, humid coastal air with summer swell patterns, lava rock reef constraints; sweat, glare, wax softness, saltwater, and fatigue change grip, footing, board control, reef caution, and social patience.\",\n      \"dynamics\": \"Holds the scene inside a public place where local rules shape private choices.\",\n      \"note\": \"Script beats should include public beach pressure, waiting turns, reading locals, and the contrast between private escape and shared water.\",\n      \"is_complete\": true\n    }\n  ],\n  \"linked_assets\": [\n    {\n      \"id\": \"embry_media_asset__assets_surfing_embry_surfing_big_island_2024_png\",\n      \"title\": \"Embry surfing on the Big Island\",\n      \"description\": \"Embry, a young woman in a navy surf top, crouches low on a white surfboard carving across a small wave, one hand brushing the water as spray bursts around her. Golden light hits the Big Island coastline behind her, with palm trees, dark lava rocks, green mountains, and low clouds creating a dramatic tropical backdrop for Kai to spot her ride or call out from nearby.\",\n      \"memory_key\": \"embry_media_asset__assets_surfing_embry_surfing_big_island_2024_png\",\n      \"media_type\": \"png\",\n      \"source\": \"embry_media_asset__assets_surfing_embry_surfing_big_island_2024_png\",\n      \"visibility\": \"caption_grounded\"\n    },\n    {\n      \"id\": \"embry_media_asset__assets_character_sheet_montage_jpg\",\n      \"title\": \"Embry image media asset character sheet montage (assets). Asset path /mnt/storage12tb/media/personas/embry/assets/character sheet montage.jpg Relative path assets/character sheet montage.jpg Media\",\n      \"description\": \"Embry is a young woman with brown hair tied back, expressive green-brown eyes, and a navy polo, shown in multiple reference poses: neutral, focused at a computer, explaining with her hand raised, tired in a hoodie, smiling outdoors, and working at a multi-monitor desk with notes, mugs, and office items. The settings alternate between bright office interiors and warm coastal balcony/beach views with palm trees, ocean, and golden sunlight, establishing her as a thoughtful tech-savvy character ready to enter a 10-second Embry/Kai surfing story.\",\n      \"memory_key\": \"embry_media_asset__assets_character_sheet_montage_jpg\",\n      \"media_type\": \"jpg\",\n      \"source\": \"embry_media_asset__assets_character_sheet_montage_jpg\",\n      \"visibility\": \"caption_grounded\"\n    },\n    {\n      \"id\": \"embry_media_asset__assets_surfing_embry_barrel_wave_big_island_2024_png\",\n      \"title\": \"Embry barrel wave surfing reference\",\n      \"description\": \"Embry/Kai is a young surfer in a dark blue shirt crouched low on a white surfboard, riding inside a curling turquoise barrel wave with one hand skimming the water for balance. Warm golden light hits her focused face as spray arcs overhead, with tropical palms, green mountains, rocky shore, and partly cloudy sky visible beyond the wave.\",\n      \"memory_key\": \"embry_media_asset__assets_surfing_embry_barrel_wave_big_island_2024_png\",\n      \"media_type\": \"png\",\n      \"source\": \"embry_media_asset__assets_surfing_embry_barrel_wave_big_island_2024_png\",\n      \"visibility\": \"caption_grounded\"\n    },\n    {\n      \"id\": \"kai_akana_media_asset__assets_surfing_kai_surfing_big_island_2024_png\",\n      \"title\": \"Kai Akana surfing on the Big Island\",\n      \"description\": \"Kai Akana, a young surfer in a black rash guard and board shorts, carves low on a small glassy wave as spray bursts around his white surfboard. Behind him, the Big Island coastline shows dark lava rocks, palm trees, and steep green mountains under warm golden light with low clouds, setting up a focused surfing moment for Embry/Kai.\",\n      \"memory_key\": \"kai_akana_media_asset__assets_surfing_kai_surfing_big_island_2024_png\",\n      \"media_type\": \"png\",\n      \"source\": \"kai_akana_media_asset__assets_surfing_kai_surfing_big_island_2024_png\",\n      \"visibility\": \"caption_grounded\"\n    },\n    {\n      \"id\": \"kai_akana_media_asset__assets_contact_sheets_kai_akana_character_sheet_png\",\n      \"title\": \"Kai Akana character sheet\",\n      \"description\": \"Kai Akana is a young Hawaiian/Norwegian/Japanese surfer with tan skin, curly dark hair, athletic build, and expressive brown eyes, shown in navy tees, a black wetsuit, and post-surf shirtless with a white surfboard. Use him on a bright tropical beach with blue ocean, green mountains, palms, and warm sun, actively carrying or steadying his board after a surf session while looking toward Embry with an easy, engaged smile.\",\n      \"memory_key\": \"kai_akana_media_asset__assets_contact_sheets_kai_akana_character_sheet_png\",\n      \"media_type\": \"png\",\n      \"source\": \"kai_akana_media_asset__assets_contact_sheets_kai_akana_character_sheet_png\",\n      \"visibility\": \"caption_grounded\"\n    }\n  ]\n}\n</source_context>\n\n## Generation Directives\n<generation_directives>\n{\n  \"thematic_pivot\": \"Autonomy vs. Obligation\",\n  \"author_style_directive\": {\n    \"requested_author\": \"Andy Weir\",\n    \"style_policy\": \"High-level craft traits only; do not directly imitate the living author.\",\n    \"memory_style_context\": \"The protagonist is competent. The problems are real. The solutions are earned. Science is not a backdrop\u2014it's the plot. Humor comes from intelligence under pressure. Every technical detail matters. If you can't explain it, you can't write it.\",\n    \"expanded_style_guide\": \"Requested author reference: Andy Weir. Do not imitate this author directly. Translate the reference into high-level craft traits for an original Phase 02 story treatment. Stored persona style context: The protagonist is competent. The problems are real. The solutions are earned. Science is not a backdrop\u2014it's the plot. Humor comes from intelligence under pressure. Every technical detail matters. If you can't explain it, you can't write it. Use a competent, practical protagonist solving concrete physical problems under pressure. The problems should be real, specific, and visible in the scene. Solutions should be earned through observation, trial, failure, iteration, and clear causal reasoning. Technical detail must function as plot, not decoration. Exposition should feel like active problem-solving rather than lecturing. Every detail about swell timing, reef depth, softened wax, glare, heat, fatigue, phones, and etiquette should have consequences for character choices. Humor should come from intelligence, stress, and self-awareness, not from pasted-on jokes. Keep the tone conversational, optimistic, precise, propulsive, and human. Pacing should move through problem, constraint, attempted solution, complication, and embodied decision. The reader should understand the practical problem well enough to feel the satisfaction of the choice or solution. Avoid direct prose imitation, signature phrasing, borrowed character types, borrowed plots, or fan-fiction echoes. Use the craft traits only.\",\n    \"style_summary\": \"Requested author reference: Andy Weir. Do not imitate this author directly. Translate the reference into high-level craft traits for an original Phase 02 story treatment. Stored persona style context: The protagonist is competent. The problems are real. The solutions are earned. Science is not a backdrop\u2014it's the plot. Humor comes from intelligence under pressure. Every technical detail matters. If you can't explain it, you can't write it. Use a competent, practical protagonist solving concrete physical problems under pressure. The problems should be real, specific, and visible in the scene. Solutions should be earned through observation, trial, failure, iteration, and clear causal reasoning. Technical detail must function as plot, not decoration. Exposition should feel like active problem-solving rather than lecturing. Every detail about swell timing, reef depth, softened wax, glare, heat, fatigue, phones, and etiquette should have consequences for character choices. Humor should come from intelligence, stress, and self-awareness, not from pasted-on jokes. Keep the tone conversational, optimistic, precise, propulsive, and human. Pacing should move through problem, constraint, attempted solution, complication, and embodied decision. The reader should understand the practical problem well enough to feel the satisfaction of the choice or solution. Avoid direct prose imitation, signature phrasing, borrowed character types, borrowed plots, or fan-fiction echoes. Use the craft traits only.\",\n    \"actionable_traits\": [\n      \"practical problem-solving under physical constraints\",\n      \"clear cause-and-effect scene logic\",\n      \"dry, understated observational humor\",\n      \"technical specificity that changes character choices\",\n      \"characters thinking through immediate problems step by step\",\n      \"exposition that feels like active problem-solving rather than lecturing\",\n      \"conversational, precise, propulsive pacing\",\n      \"reader satisfaction from understanding the problem and the earned solution\",\n      \"tension created by real-world timing, physics, etiquette, and limited information\",\n      \"grounded stakes rather than melodrama\"\n    ],\n    \"application_to_this_story\": [\n      \"Use swell timing as a procedural problem.\",\n      \"Use the lava reef as a hard physical constraint.\",\n      \"Use heat, humidity, softened wax, glare, and fatigue as active causes of mistakes or hesitation.\",\n      \"Let Embry and Kai reveal character through how they solve or avoid problems in the water.\",\n      \"Move through problem, constraint, attempted solution, complication, and embodied decision.\",\n      \"Keep humor understated and observational, never jokey or detached from the stakes.\"\n    ],\n    \"prohibited_imitation\": [\n      \"Do not copy the requested author exact prose style.\",\n      \"Do not echo specific phrasing, character types, plots, or scenes from the requested author works.\",\n      \"Do not make the story sound like fan fiction of an existing book.\"\n    ]\n  },\n  \"creativity_directive\": {\n    \"slider_value\": 0.6,\n    \"label\": \"grounded moderate invention\",\n    \"actionable_interpretation\": \"Stay realistic and physically plausible while allowing selective invented details that intensify tension, character contrast, and scene texture.\",\n    \"allowed_inventions\": [\n      \"small work-related phone interruptions\",\n      \"specific family-obligation pressure for Embry\",\n      \"a plausible local-etiquette tension in the lineup\",\n      \"a softened-wax or grip problem caused by heat\",\n      \"a tricky but realistic summer swell set\",\n      \"small practical surf details that clarify risk and decision-making\"\n    ],\n    \"limits\": [\n      \"no surrealism\",\n      \"no supernatural events\",\n      \"no catastrophic rescue sequence unless explicitly requested\",\n      \"no major new plotline unrelated to the sick-day surf premise\",\n      \"no exaggerated recklessness\",\n      \"no melodramatic confession scene\",\n      \"no ignoring the support matrix\"\n    ],\n    \"plot_risk_level\": \"moderate\",\n    \"realism_requirement\": \"Every major beat must be explainable through character choice, surf conditions, reef constraints, social etiquette, heat, fatigue, or phone obligations.\"\n  }\n}\n</generation_directives>\n\n## Asset Policy\n{\n  \"visibility\": \"caption_grounded_or_metadata_only\",\n  \"rule\": \"Use stored media descriptions when present. If a linked asset lacks a description, use its title only and do not invent visual, audio, or video details from an inaccessible URL.\",\n  \"allowed_asset_use\": [\n    \"character identity continuity\",\n    \"surfing pose and board continuity\",\n    \"environment and coastline continuity\",\n    \"sound or video reference only when a stored description exists\"\n  ],\n  \"forbidden_asset_use\": [\n    \"do not infer facial features from a URL\",\n    \"do not infer body type from a URL\",\n    \"do not infer colors or clothing beyond prompt fields and stored descriptions\",\n    \"do not claim to have seen media that is metadata-only\"\n  ]\n}\n\n## Constraints\n- Use only facts present in source_context and generation_directives.\n- Do not imitate any living author directly. Apply generation_directives.author_style_directive as high-level craft guidance only.\n- The selected author determines prose behavior. Use source_context.author.memory_style_context and generation_directives.author_style_directive to shape rhythm, humor, technical detail, and causality.\n- Apply generation_directives.creativity_directive. Creativity 0.6 means grounded moderate invention, not surrealism or melodrama.\n- Treat the environment as plot machinery, not scenery.\n- Produce exactly 1 panel(s) totaling 10 seconds, not a full short story and not an eight-beat treatment.\n- Set panel_count to 1 and duration_seconds to 10.\n- Return panels[] with exactly 1 item(s), and set panel equal to panels[0].\n- Keep story to roughly 45-90 words so the panel sequence stays focused.\n- Include one interaction_matrix row for every source_context.interaction_rows[] item where is_complete is true.\n- The interaction_matrix is the completeness ledger: every character, object, location, environmental force, and relevant pressure used by the story must be explained there.\n- Include asset_usage rows only for source_context.linked_assets[] entries that influence the story.\n- Include top-level location and environment objects. They must be populated from source_context.location and source_context.environment, not omitted.\n- Copy asset_usage[].asset_id from source_context.linked_assets[].id.\n- Copy interaction_matrix[].source_seed_id from source_context.interaction_rows[].id.\n- If Embry, Kai, a surfboard, reef, swell, phone, heat, humidity, glare, wax, or fatigue appears in source_context, show how it changes visible behavior.\n- If a surfboard appears, mention shape, wax state, condition, or age in story or interaction_matrix.\n- Show Kai competence through restraint and efficient movement, not lecturing.\n- Show Embry autonomy through physical choices: hand placement, rail grip, paddle fatigue, uncertain footing, and commitment or withdrawal near reef.\n- Keep dialogue sparse, practical, and character-revealing.\n- Avoid generic surf cliches, melodrama, reckless danger, and savior dynamics.\n\n## Invalid Output\n- The response includes markdown, prose outside JSON, or a code fence.\n- The response includes any top-level key not listed in response_contract.required.\n- The response adds an asset_id that is not present in source_context.linked_assets[].id.\n- The response omits any completed source_context.interaction_rows[].id from interaction_matrix[].source_seed_id.\n- The story or panel ignores source_context.environment when describing character or object behavior.\n- A surfboard appears but the output omits shape, wax state, condition, or age in story, panel, or interaction_matrix.\n- The output expands into a multi-scene treatment instead of one 10-second panel beat.\n- The output directly imitates a living author instead of using high-level craft traits.\n- author_style_directive does not translate the requested author into high-level non-imitative craft traits.\n- creativity_directive does not convert the slider value into concrete allowed inventions and limits.\n\n## Complete Example\nExample input:\n{\n  \"context\": {\n    \"core_idea\": \"Embry and Kai fake a sick day to surf at Kahalu\u02bbu Bay.\",\n    \"location\": \"Kahalu\u02bbu Bay, Kona Coast \u00b7 Wednesday \u00b7 daylight surf window \u00b7 June \u00b7 2024\",\n    \"environment\": \"Hot humid air, bright glare, lava reef, and soft wax change footing and timing.\",\n    \"interaction_rows\": [\n      {\n        \"id\": \"seed-embry\",\n        \"name\": \"Embry\",\n        \"category\": \"character\",\n        \"objects\": [\n          \"navy rashguard\",\n          \"waxed older white shortboard\",\n          \"phone\"\n        ],\n        \"environment_ref\": \"env-0\",\n        \"dynamics\": \"Glare and fatigue make timing a physical test.\",\n        \"note\": \"Show salt, sweat, careful rail grip, and hesitation before the wave.\",\n        \"is_complete\": true\n      }\n    ],\n    \"linked_assets\": [\n      {\n        \"id\": \"embry_media_asset__example_png\",\n        \"title\": \"Embry surfing reference\",\n        \"description\": \"Embry crouches on a white surfboard with lava rocks and green mountains behind her.\",\n        \"memoryKey\": \"embry_media_asset__example_png\",\n        \"mediaType\": \"image\",\n        \"visibility\": \"caption_grounded\"\n      }\n    ]\n  }\n}\n\nExpected output:\n{\n  \"story\": \"Embry\u2019s phone buzzes inside the beach bag just as a clean shoulder stands up over the reef; she squints through the glare, palms slipping on sun-soft wax, and chooses the paddle while Kai, already angled safely outside, only lifts two fingers toward the channel instead of telling her what to do.\",\n  \"panel_count\": 1,\n  \"duration_seconds\": 10,\n  \"location\": {\n    \"place\": \"Kahalu\u02bbu Bay, Kona Coast, Big Island\",\n    \"time\": \"Wednesday daylight surf window\",\n    \"month\": \"June\",\n    \"year\": 2024,\n    \"description\": \"A public Kona Coast surf break where private escape is constrained by shared lineup rules.\"\n  },\n  \"environment\": {\n    \"weather_description\": \"Hot, humid coastal air with bright glare, saltwater, summer swell, shallow lava reef, and sun-softened wax.\",\n    \"active_pressures\": [\n      \"heat\",\n      \"humidity\",\n      \"glare\",\n      \"softened wax\",\n      \"fatigue\",\n      \"lava reef caution\",\n      \"local etiquette\"\n    ],\n    \"story_effect\": \"The weather and reef make each surf decision physical: grip, timing, patience, and restraint all matter.\"\n  },\n  \"panel\": {\n    \"shot\": \"Low waterline three-quarter shot facing the reef line, with Embry in the foreground on the older white shortboard and Kai farther out, half-turned toward the incoming set.\",\n    \"action\": \"A June swell rises over the dark lava shapes; Embry commits to the paddle despite sweat, glare, and the phone buzzing onshore.\",\n    \"emotional_turn\": \"Embry moves from borrowed escape to embodied choice: she is still obligated, still exposed, but the decision is hers.\",\n    \"dialogue\": null\n  },\n  \"panels\": [\n    {\n      \"shot\": \"Low waterline three-quarter shot facing the reef line, with Embry in the foreground on the older white shortboard and Kai farther out, half-turned toward the incoming set.\",\n      \"action\": \"A June swell rises over the dark lava shapes; Embry commits to the paddle despite sweat, glare, and the phone buzzing onshore.\",\n      \"emotional_turn\": \"Embry moves from borrowed escape to embodied choice: she is still obligated, still exposed, but the decision is hers.\",\n      \"dialogue\": null\n    }\n  ],\n  \"interaction_matrix\": [\n    {\n      \"source_seed_id\": \"seed-embry\",\n      \"entity\": \"Embry\",\n      \"category\": \"character\",\n      \"objects_used\": [\n        \"navy rashguard\",\n        \"waxed older white shortboard\",\n        \"phone\"\n      ],\n      \"environment_interaction\": \"Humidity softens wax, glare hides the reef line, and fatigue makes her commitment visible.\",\n      \"story_function\": \"Turns autonomy into a bodily choice in the exact surf moment.\",\n      \"visible_in_panel\": true\n    }\n  ],\n  \"asset_usage\": [\n    {\n      \"asset_id\": \"embry_media_asset__example_png\",\n      \"used_for\": \"Embry body posture, surfboard color, lava rock coastline, and mountain backdrop.\",\n      \"usage_confidence\": \"caption_grounded\"\n    }\n  ],\n  \"style_application\": {\n    \"author_reference_used_as\": \"High-level craft guidance: practical cause-and-effect staging, physical constraints, and dry restraint without direct imitation.\",\n    \"creativity_level_used_as\": \"Grounded moderate invention: a plausible phone buzz and decisive swell heighten the moment without breaking realism.\"\n  },\n  \"quality_checks\": {\n    \"covered_seed_ids\": [\n      \"seed-embry\"\n    ],\n    \"missing_seed_ids\": [],\n    \"used_only_provided_context\": true,\n    \"no_direct_author_imitation\": true,\n    \"valid_one_panel_10_second_moment\": true\n  }\n}\n\n## Output Format\nOutput NOTHING but one raw JSON object. No markdown fence, heading, preamble, explanation, or trailing notes.\nStart with { and end with }.\nReturn this exact JSON schema:\n{\n  \"type\": \"object\",\n  \"additionalProperties\": false,\n  \"required\": [\n    \"story\",\n    \"panel_count\",\n    \"duration_seconds\",\n    \"location\",\n    \"environment\",\n    \"panel\",\n    \"panels\",\n    \"interaction_matrix\",\n    \"asset_usage\",\n    \"style_application\",\n    \"quality_checks\"\n  ],\n  \"properties\": {\n    \"story\": {\n      \"type\": \"string\",\n      \"minLength\": 180,\n      \"maxLength\": 810,\n      \"description\": \"A concise, human-written story beat for 1 panel(s) and 10 seconds, approximately 45-90 words.\"\n    },\n    \"panel_count\": {\n      \"type\": \"number\",\n      \"const\": 1,\n      \"description\": \"The exact number of story panels requested by the Phase 02 controls.\"\n    },\n    \"duration_seconds\": {\n      \"type\": \"number\",\n      \"const\": 10,\n      \"description\": \"Target duration represented by the requested panel sequence.\"\n    },\n    \"location\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"place\",\n        \"time\",\n        \"month\",\n        \"year\",\n        \"description\"\n      ],\n      \"properties\": {\n        \"place\": {\n          \"type\": \"string\",\n          \"description\": \"Place name and region from source_context.location.\"\n        },\n        \"time\": {\n          \"type\": \"string\",\n          \"description\": \"Weekday and daylight/time window from source_context.location.\"\n        },\n        \"month\": {\n          \"type\": \"string\",\n          \"description\": \"Month from source_context.location.\"\n        },\n        \"year\": {\n          \"type\": \"number\",\n          \"description\": \"Year from source_context.location.\"\n        },\n        \"description\": {\n          \"type\": \"string\",\n          \"description\": \"Concise setting description used by the story.\"\n        }\n      }\n    },\n    \"environment\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"weather_description\",\n        \"active_pressures\",\n        \"story_effect\"\n      ],\n      \"properties\": {\n        \"weather_description\": {\n          \"type\": \"string\",\n          \"description\": \"Descriptive weather and surf conditions characters physically respond to.\"\n        },\n        \"active_pressures\": {\n          \"type\": \"array\",\n          \"minItems\": 4,\n          \"items\": {\n            \"type\": \"string\"\n          }\n        },\n        \"story_effect\": {\n          \"type\": \"string\",\n          \"description\": \"How weather, surf, reef, and public beach pressure drive the story beat.\"\n        }\n      }\n    },\n    \"panel\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"shot\",\n        \"action\",\n        \"emotional_turn\",\n        \"dialogue\"\n      ],\n      \"properties\": {\n        \"shot\": {\n          \"type\": \"string\",\n          \"description\": \"Camera/framing for this panel.\"\n        },\n        \"action\": {\n          \"type\": \"string\",\n          \"description\": \"What happens in this panel moment.\"\n        },\n        \"emotional_turn\": {\n          \"type\": \"string\",\n          \"description\": \"The visible internal shift.\"\n        },\n        \"dialogue\": {\n          \"type\": [\n            \"string\",\n            \"null\"\n          ],\n          \"description\": \"One short line or null.\"\n        }\n      },\n      \"description\": \"Primary or first panel, duplicated from panels[0] for consumers that expect a single panel.\"\n    },\n    \"panels\": {\n      \"type\": \"array\",\n      \"minItems\": 1,\n      \"maxItems\": 1,\n      \"items\": {\n        \"type\": \"object\",\n        \"additionalProperties\": false,\n        \"required\": [\n          \"shot\",\n          \"action\",\n          \"emotional_turn\",\n          \"dialogue\"\n        ],\n        \"properties\": {\n          \"shot\": {\n            \"type\": \"string\",\n            \"description\": \"Camera/framing for this panel.\"\n          },\n          \"action\": {\n            \"type\": \"string\",\n            \"description\": \"What happens in this panel moment.\"\n          },\n          \"emotional_turn\": {\n            \"type\": \"string\",\n            \"description\": \"The visible internal shift.\"\n          },\n          \"dialogue\": {\n            \"type\": [\n              \"string\",\n              \"null\"\n            ],\n            \"description\": \"One short line or null.\"\n          }\n        }\n      },\n      \"description\": \"Exactly panel_count panels. For one panel, this array contains the same panel as panel.\"\n    },\n    \"interaction_matrix\": {\n      \"type\": \"array\",\n      \"minItems\": 7,\n      \"items\": {\n        \"type\": \"object\",\n        \"additionalProperties\": false,\n        \"required\": [\n          \"source_seed_id\",\n          \"entity\",\n          \"category\",\n          \"objects_used\",\n          \"environment_interaction\",\n          \"story_function\",\n          \"visible_in_panel\"\n        ],\n        \"properties\": {\n          \"source_seed_id\": {\n            \"type\": \"string\",\n            \"description\": \"Copy from source_context.interaction_rows[].id.\"\n          },\n          \"entity\": {\n            \"type\": \"string\",\n            \"description\": \"Copy from source_context.interaction_rows[].name.\"\n          },\n          \"category\": {\n            \"type\": \"string\",\n            \"enum\": [\n              \"character\",\n              \"character_object\",\n              \"environmental_force\",\n              \"location_social_system\"\n            ]\n          },\n          \"objects_used\": {\n            \"type\": \"array\",\n            \"items\": {\n              \"type\": \"string\"\n            }\n          },\n          \"environment_interaction\": {\n            \"type\": \"string\",\n            \"description\": \"Complete explanation of how heat, humidity, water, reef, light, fatigue, or public etiquette changes this entity/object/force.\"\n          },\n          \"story_function\": {\n            \"type\": \"string\",\n            \"description\": \"Why this row matters to the one-panel story beat and what would be missing if it were removed.\"\n          },\n          \"visible_in_panel\": {\n            \"type\": \"boolean\"\n          }\n        }\n      }\n    },\n    \"asset_usage\": {\n      \"type\": \"array\",\n      \"minItems\": 1,\n      \"items\": {\n        \"type\": \"object\",\n        \"additionalProperties\": false,\n        \"required\": [\n          \"asset_id\",\n          \"used_for\",\n          \"usage_confidence\"\n        ],\n        \"properties\": {\n          \"asset_id\": {\n            \"type\": \"string\",\n            \"description\": \"Copy from source_context.linked_assets[].id.\"\n          },\n          \"used_for\": {\n            \"type\": \"string\",\n            \"description\": \"Specific visual, audio, video, or text grounding role in the story.\"\n          },\n          \"usage_confidence\": {\n            \"type\": \"string\",\n            \"enum\": [\n              \"metadata_only\",\n              \"caption_grounded\",\n              \"image_grounded\",\n              \"audio_grounded\",\n              \"video_grounded\"\n            ]\n          }\n        }\n      }\n    },\n    \"style_application\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"author_reference_used_as\",\n        \"creativity_level_used_as\"\n      ],\n      \"properties\": {\n        \"author_reference_used_as\": {\n          \"type\": \"string\"\n        },\n        \"creativity_level_used_as\": {\n          \"type\": \"string\"\n        }\n      }\n    },\n    \"quality_checks\": {\n      \"type\": \"object\",\n      \"additionalProperties\": false,\n      \"required\": [\n        \"covered_seed_ids\",\n        \"missing_seed_ids\",\n        \"used_only_provided_context\",\n        \"no_direct_author_imitation\",\n        \"valid_one_panel_10_second_moment\"\n      ],\n      \"properties\": {\n        \"covered_seed_ids\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        },\n        \"missing_seed_ids\": {\n          \"type\": \"array\",\n          \"items\": {\n            \"type\": \"string\"\n          }\n        },\n        \"used_only_provided_context\": {\n          \"type\": \"boolean\"\n        },\n        \"no_direct_author_imitation\": {\n          \"type\": \"boolean\"\n        },\n        \"valid_one_panel_10_second_moment\": {\n          \"type\": \"boolean\"\n        }\n      }\n    }\n  }\n}",
+      "source_paths": {
+        "dream_packet": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/persona-dream-story-ui-dispatch/story-ui-20260702T125257Z/dream_packet.json",
+        "work_order": "/home/graham/workspace/experiments/tau/experiments/goal-locked-subagents/proofs/persona-dream-story-ui-dispatch/story-ui-20260702T125257Z/input_story_contract_work_order.json"
+      },
+      "speaking_characters": [
+        "Embry"
+      ],
+      "status": "ACCEPTED_AUTOMATED",
+      "story": "{\n  \"story\": \"Embry\u2019s phone buzzes on the beach bag like obligation had learned echolocation. Ten yards out, a clean June lump lifts over the dark lava reef; glare turns the face silver, and her older white shortboard\u2019s softened wax lets one palm skid. Kai, outside on his familiar board, doesn\u2019t call her in. He waits, trims aside for a local, then points two fingers at the safe channel. Embry resets her rail grip, saves three tired strokes, and chooses the wave.\",\n  \"panel_count\": 1,\n  \"duration_seconds\": 10,\n  \"location\": {\n    \"place\": \"Kahalu\u02bbu Bay, Kona Coast, Big Island\",\n    \"time\": \"Wednesday daylight surf window\",\n    \"month\": \"June\",\n    \"year\": 2024,\n    \"description\": \"A public Kona Coast reef break where a stolen sick-day surf session is constrained by local etiquette, shared water, and shallow lava rock.\"\n  },\n  \"environment\": {\n    \"weather_description\": \"Hot, humid coastal air with summer swell patterns, harsh glare, saltwater, softened wax, fatigue, and clear water over shallow lava reef.\",\n    \"active_pressures\": [\n      \"sweat\",\n      \"glare\",\n      \"wax softness\",\n      \"saltwater\",\n      \"fatigue\",\n      \"grip changes\",\n      \"footing changes\",\n      \"board control changes\",\n      \"reef caution\",\n      \"social patience\"\n    ],\n    \"story_effect\": \"Heat, glare, fatigue, and softened wax turn the incoming set into a practical timing problem, while the reef and local lineup rules force Embry and Kai to choose restraint before commitment.\"\n  },\n  \"panel\": {\n    \"shot\": \"Low waterline three-quarter shot across Kahalu\u02bbu Bay: Embry foreground on an older white shortboard, navy rashguard wet with salt and sweat, Kai farther outside in black, dark reef shapes visible beneath the clear water.\",\n    \"action\": \"A silver-glared swell stands up over the lava reef as Embry\u2019s phone buzzes onshore; her palm slips on sun-soft wax, Kai yields to a local and points at the safe channel, and Embry regrips the rail before committing to three efficient strokes.\",\n    \"emotional_turn\": \"Embry turns a fake sick day from evasion into autonomy by making the safest, smartest physical choice herself.\",\n    \"dialogue\": \"Kai: \u201cChannel, then go.\u201d\"\n  },\n  \"panels\": [\n    {\n      \"shot\": \"Low waterline three-quarter shot across Kahalu\u02bbu Bay: Embry foreground on an older white shortboard, navy rashguard wet with salt and sweat, Kai farther outside in black, dark reef shapes visible beneath the clear water.\",\n      \"action\": \"A silver-glared swell stands up over the lava reef as Embry\u2019s phone buzzes onshore; her palm slips on sun-soft wax, Kai yields to a local and points at the safe channel, and Embry regrips the rail before committing to three efficient strokes.\",\n      \"emotional_turn\": \"Embry turns a fake sick day from evasion into autonomy by making the safest, smartest physical choice herself.\",\n      \"dialogue\": \"Kai: \u201cChannel, then go.\u201d\"\n    }\n  ],\n  \"interaction_matrix\": [\n    {\n      \"source_seed_id\": \"seed-0\",\n      \"entity\": \"Embry\",\n      \"category\": \"character\",\n      \"objects_used\": [\n        \"navy rashguard\",\n        \"phone\",\n        \"family obligations\",\n        \"borrowed/older shortboard\"\n      ],\n      \"environment_interaction\": \"Heat and humidity put sweat and salt on her skin, glare narrows her sightline to the wave face, fatigue limits her paddle strokes, and the reef makes her rail grip and timing matter.\",\n      \"story_function\": \"Embry carries the autonomy-versus-obligation pivot by ignoring the buzzing phone long enough to make a careful, competent surf decision.\",\n      \"visible_in_panel\": true,\n      \"description\": \"Embry: Heat and humidity make her physically exposed: sweat, glare, and tired paddling turn autonomy into a bodily choice, not just an idea. Script/panels should show sweat, squinting, salt on skin, careful hand placement, and fatigue in her paddle cadence before dialogue explains anything.\"\n    },\n    {\n      \"source_seed_id\": \"seed-1\",\n      \"entity\": \"Kai\",\n      \"category\": \"character\",\n      \"objects_used\": [\n        \"black rashguard\",\n        \"phone call\",\n        \"surf ritual\",\n        \"familiar shortboard\"\n      ],\n      \"environment_interaction\": \"Kai reads the glare, swell angle, reef line, and lineup pressure without wasting motion; heat and fatigue make his restraint more useful than a lecture.\",\n      \"story_function\": \"Kai demonstrates competence by yielding to a local, conserving energy, and giving one practical channel cue rather than taking over Embry\u2019s choice.\",\n      \"visible_in_panel\": true,\n      \"description\": \"Kai: Reads the swell while managing heat, glare, and patience; his competence shows in conserving effort instead of forcing the moment. Stage Kai as physically adapted to the heat: calm breathing, economical paddling, shaded glances at the reef line, and small gestures that guide Embry without lecturing.\"\n    },\n    {\n      \"source_seed_id\": \"seed-2\",\n      \"entity\": \"Embry surfboard\",\n      \"category\": \"character_object\",\n      \"objects_used\": [\n        \"White shortboard\",\n        \"performance shape\",\n        \"visibly waxed deck\",\n        \"likely older/borrowed\",\n        \"rail pressure matters over shallow reef.\"\n      ],\n      \"environment_interaction\": \"Sun and humidity soften the wax on the older white performance shortboard, so Embry\u2019s palm slips and her rail pressure must be reset before the wave reaches the reef.\",\n      \"story_function\": \"The board converts heat and reef caution into visible mechanics: grip, balance, and commitment are not abstract feelings.\",\n      \"visible_in_panel\": true,\n      \"description\": \"Embry surfboard: Humidity and sun soften wax and make footing less certain; the board forces Embry to commit cleanly despite tired arms and slick contact points. Panel details should include wax smears, sun glare on the deck, hands gripping rails, and foot placement uncertainty as the board reacts to chop and reef proximity.\"\n    },\n    {\n      \"source_seed_id\": \"seed-3\",\n      \"entity\": \"Kai surfboard\",\n      \"category\": \"character_object\",\n      \"objects_used\": [\n        \"White shortboard with darker underside/rail marks\",\n        \"well-used and waxed\",\n        \"familiar enough for quick reef-line decisions.\"\n      ],\n      \"environment_interaction\": \"The well-used waxed board lets Kai trim efficiently under glare and chop, making small corrections while he waits outside the danger line.\",\n      \"story_function\": \"Kai\u2019s familiar board makes his restraint legible as skill: he can move quickly, but chooses patience and positioning.\",\n      \"visible_in_panel\": true,\n      \"description\": \"Kai surfboard: A waxed, familiar board lets Kai compensate for heat, chop, and glare; restraint is visible when he waits rather than wasting energy. Use the board as proof of familiarity: worn rail marks, confident trim angle, efficient turns, and quick corrections under humid, high-glare conditions.\"\n    },\n    {\n      \"source_seed_id\": \"seed-4\",\n      \"entity\": \"June Swell\",\n      \"category\": \"environmental_force\",\n      \"objects_used\": [\n        \"sets\",\n        \"tide window\",\n        \"wave face\"\n      ],\n      \"environment_interaction\": \"The summer set rhythm creates a brief decision window: quiet water becomes a silver-glared wave face, forcing Embry to decide before fatigue costs her the takeoff.\",\n      \"story_function\": \"The swell supplies the ten-second clock and turns hesitation, etiquette, and trust into immediate action.\",\n      \"visible_in_panel\": true,\n      \"description\": \"June Swell: Creates the timing pressure that makes hesitation and trust visible. Panels need repeating set rhythm: quiet water, approaching lump, glare on the face, then a fast decision point.\"\n    },\n    {\n      \"source_seed_id\": \"seed-5\",\n      \"entity\": \"Lava Reef\",\n      \"category\": \"environmental_force\",\n      \"objects_used\": [\n        \"sharp rock\",\n        \"shallow line\",\n        \"safe channel\"\n      ],\n      \"environment_interaction\": \"Dark lava shapes under clear saltwater mark a shallow hard boundary; Embry and Kai adjust line, paddle timing, and channel choice around it.\",\n      \"story_function\": \"The reef prevents generic surf action by making every movement accountable to a visible physical consequence.\",\n      \"visible_in_panel\": true,\n      \"description\": \"Lava Reef: Turns the environment into a hard boundary rather than background scenery. Show the reef as a physical rule: dark shapes below clear water, shallow consequences, and characters adjusting line and timing around it.\"\n    },\n    {\n      \"source_seed_id\": \"seed-6\",\n      \"entity\": \"Kona Coast\",\n      \"category\": \"location_social_system\",\n      \"objects_used\": [\n        \"bay\",\n        \"local etiquette\",\n        \"reef break\"\n      ],\n      \"environment_interaction\": \"The public bay and reef break require waiting turns and reading locals; heat and crowded patience make Kai\u2019s yield and Embry\u2019s timing socially as well as physically necessary.\",\n      \"story_function\": \"The location makes their private sick-day escape depend on shared-water rules, preventing reckless or isolated decision-making.\",\n      \"visible_in_panel\": true,\n      \"description\": \"Kona Coast: Holds the scene inside a public place where local rules shape private choices. Script beats should include public beach pressure, waiting turns, reading locals, and the contrast between private escape and shared water.\"\n    }\n  ],\n  \"asset_usage\": [\n    {\n      \"asset_id\": \"embry_media_asset__assets_surfing_embry_surfing_big_island_2024_png\",\n      \"used_for\": \"Embry\u2019s navy surf top, low crouched surf posture, white surfboard continuity, spray, lava rocks, coastline, palms, green mountains, and warm Big Island light.\",\n      \"usage_confidence\": \"caption_grounded\",\n      \"title\": \"Embry surfing on the Big Island\",\n      \"use_in_story\": \"Embry\u2019s navy surf top, low crouched surf posture, white surfboard continuity, spray, lava rocks, coastline, palms, green mountains, and warm Big Island light.\",\n      \"visual_consistency_note\": \"Embry, a young woman in a navy surf top, crouches low on a white surfboard carving across a small wave, one hand brushing the water as spray bursts around her. Golden light hits the Big Island coastline behind her, with palm trees, dark lava rocks, green mountains, and low clouds creating a dramatic tropical backdrop for Kai to spot her ride or call out from nearby.\"\n    },\n    {\n      \"asset_id\": \"kai_akana_media_asset__assets_surfing_kai_surfing_big_island_2024_png\",\n      \"used_for\": \"Kai\u2019s black rashguard, white surfboard, low competent carving posture, spray, and Big Island lava-rock coastal context.\",\n      \"usage_confidence\": \"caption_grounded\",\n      \"title\": \"Kai Akana surfing on the Big Island\",\n      \"use_in_story\": \"Kai\u2019s black rashguard, white surfboard, low competent carving posture, spray, and Big Island lava-rock coastal context.\",\n      \"visual_consistency_note\": \"Kai Akana, a young surfer in a black rash guard and board shorts, carves low on a small glassy wave as spray bursts around his white surfboard. Behind him, the Big Island coastline shows dark lava rocks, palm trees, and steep green mountains under warm golden light with low clouds, setting up a focused surfing moment for Embry/Kai.\"\n    }\n  ],\n  \"style_application\": {\n    \"author_reference_used_as\": \"High-level non-imitative craft guidance: the beat uses concrete surf physics, cause-and-effect constraints, practical decision-making, and understated pressure-based humor without copying prose or plot.\",\n    \"creativity_level_used_as\": \"Grounded moderate invention: the buzzing phone and exact lineup cue intensify the sick-day obligation and local-etiquette tension while staying realistic and physically plausible.\"\n  },\n  \"quality_checks\": {\n    \"covered_seed_ids\": [\n      \"seed-0\",\n      \"seed-1\",\n      \"seed-2\",\n      \"seed-3\",\n      \"seed-4\",\n      \"seed-5\",\n      \"seed-6\"\n    ],\n    \"missing_seed_ids\": [],\n    \"used_only_provided_context\": true,\n    \"no_direct_author_imitation\": true,\n    \"valid_one_panel_10_second_moment\": true\n  }\n}",
+      "target_duration_s": 5
+    },
+    "story_text": "Embry\u2019s phone buzzes on the beach bag like obligation had learned echolocation. Ten yards out, a clean June lump lifts over the dark lava reef; glare turns the face silver, and her older white shortboard\u2019s softened wax lets one palm skid. Kai, outside on his familiar board, doesn\u2019t call her in. He waits, trims aside for a local, then points two fingers at the safe channel. Embry resets her rail grip, saves three tired strokes, and chooses the wave."
+  },
+  "status": "CREW_SELECTED"
+}

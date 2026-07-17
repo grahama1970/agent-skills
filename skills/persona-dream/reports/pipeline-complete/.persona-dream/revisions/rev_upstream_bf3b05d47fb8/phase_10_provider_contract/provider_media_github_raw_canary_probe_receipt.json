@@ -1,0 +1,18 @@
+{
+  "blockers": [],
+  "content_length": 1788004,
+  "content_type": "image/png",
+  "created_at": "2026-07-11T12:21:17Z",
+  "exercised": "public HTTP(S) GET and sha256 comparison",
+  "expected_content_type": "image/png",
+  "expected_sha256": "sha256:bbd7a63110b1c42af94e682ae93bf055bbe1c84e48468b3470a2032db70d09bb",
+  "final_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/11c7a00aacac7c46b7d8aad68f76d640f1a6d6fb/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_start_frame.png",
+  "http_status": 200,
+  "live": "yes",
+  "mocked": "no",
+  "observed_sha256": "sha256:bbd7a63110b1c42af94e682ae93bf055bbe1c84e48468b3470a2032db70d09bb",
+  "schema": "persona_dream.provider_media_url_probe_receipt.v1",
+  "status": "PASS_PROVIDER_MEDIA_URL_PROBE",
+  "unverified": "Kling provider fetch behavior, provider task submission, paid-call authorization",
+  "url": "https://raw.githubusercontent.com/grahama1970/agent-skills/11c7a00aacac7c46b7d8aad68f76d640f1a6d6fb/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_start_frame.png"
+}

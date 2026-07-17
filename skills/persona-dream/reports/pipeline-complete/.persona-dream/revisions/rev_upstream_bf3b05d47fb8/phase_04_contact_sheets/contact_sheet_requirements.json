@@ -1,0 +1,11 @@
+{
+  "required_asset_ids": [
+    "contact_sheet_embry_surfboard",
+    "contact_sheet_june_swell",
+    "contact_sheet_kai_surfboard",
+    "contact_sheet_kona_coast",
+    "contact_sheet_lava_reef"
+  ],
+  "required_count": 5,
+  "schema": "persona_dream.contact_sheet_requirements.v1"
+}

@@ -1,0 +1,56 @@
+{
+  "blockers": [
+    "BLOCKED_MANUAL_VISUAL_ACCEPTANCE_MISSING",
+    "BLOCKED_PAID_CALL_AUTHORIZATION_MISSING",
+    "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+    "BLOCKED_PROVIDER_SCHEMA_REQUIRES_LIVE_CANARY_CONFIRMATION",
+    "BLOCKED_PROVIDER_VOICE_IDS_MISSING"
+  ],
+  "checked_panel_count": 4,
+  "checked_panels": [
+    "sb_001",
+    "sb_002",
+    "sb_003",
+    "sb_004"
+  ],
+  "checks": [
+    {
+      "check": "each_panel_has_locked_start_and_end_media",
+      "status": "PASS"
+    },
+    {
+      "check": "each_panel_has_provider_prompt_projection",
+      "status": "PASS"
+    },
+    {
+      "check": "dialogue_audio_duration_aspect_identity_negative_constraints_present",
+      "status": "PASS"
+    },
+    {
+      "check": "public_provider_urls_present",
+      "status": "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING"
+    },
+    {
+      "check": "paid_call_authorized",
+      "status": "BLOCKED_PAID_CALL_AUTHORIZATION_MISSING"
+    },
+    {
+      "check": "manual_visual_acceptance",
+      "status": "BLOCKED_MANUAL_VISUAL_ACCEPTANCE_MISSING"
+    }
+  ],
+  "claims": {
+    "does_not_prove": [
+      "live readiness or provider acceptance"
+    ],
+    "proves": [
+      "dry-run distillation artifacts are internally complete for UI review"
+    ]
+  },
+  "generated_at": "2026-07-11T01:22:52.620661Z",
+  "live_provider_call": false,
+  "mocked": false,
+  "reviewer": "deterministic_phase10_artifact_builder",
+  "schema_version": "persona-dream.panel-distillation-review-receipt.v1",
+  "status": "PASS_DISTILLATION_REVIEW_DRY_RUN_WITH_LIVE_BLOCKERS"
+}
