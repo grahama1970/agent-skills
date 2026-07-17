@@ -63,12 +63,20 @@ def test_catalog_and_viewer_commands_use_bounded_tau_transport(monkeypatch: Any)
     ).exit_code == 0
     assert runner.invoke(tau_skill.app, ["dag-view", "/tmp/run"]).exit_code == 0
     assert runner.invoke(tau_skill.app, ["dag-view-capabilities"]).exit_code == 0
+    assert runner.invoke(
+        tau_skill.app, ["workflow-repair", "/tmp/run", "--node", "qualify-tests"]
+    ).exit_code == 0
+    assert runner.invoke(tau_skill.app, ["workflow-approve", "/tmp/run"]).exit_code == 0
+    assert runner.invoke(tau_skill.app, ["workflow-resume", "/tmp/run"]).exit_code == 0
 
     assert calls == [
         (("workflows", "list", "--json"), 120),
         (("workflows", "describe", "repository-readiness", "--json"), 120),
         (("dag-view", "--run-dir", "/tmp/run"), 120),
         (("dag-view-capabilities", "--json"), 120),
+        (("workflows", "repair", "/tmp/run", "--node", "qualify-tests"), 120),
+        (("workflows", "approve", "/tmp/run"), 120),
+        (("workflows", "resume", "/tmp/run"), 120),
     ]
 
 
@@ -116,6 +124,54 @@ def test_workflow_run_forwards_locked_slice_options(monkeypatch: Any) -> None:
     ]
 
 
+def test_workflow_run_forwards_mixed_workflow_options(monkeypatch: Any) -> None:
+    calls: list[tuple[str, ...]] = []
+
+    def fake_tau_command(*parts: str, timeout_s: int = 120) -> dict[str, Any]:
+        calls.append(parts)
+        return completed()
+
+    monkeypatch.setattr(tau_skill, "tau_command", fake_tau_command)
+    result = runner.invoke(
+        tau_skill.app,
+        [
+            "workflow-run",
+            "durable-repository-qualification",
+            "--repo",
+            ".",
+            "--goal",
+            "Qualify this repository durably.",
+            "--publish-path",
+            "/tmp/published",
+            "--require-tests",
+            "--required-workflow",
+            "repository-readiness",
+            "--run-dir",
+            "/tmp/qualification",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    assert calls == [
+        (
+            "workflows",
+            "run",
+            "durable-repository-qualification",
+            "--repo",
+            ".",
+            "--goal",
+            "Qualify this repository durably.",
+            "--run-dir",
+            "/tmp/qualification",
+            "--require-tests",
+            "--required-workflow",
+            "repository-readiness",
+            "--publish-path",
+            "/tmp/published",
+        )
+    ]
+
+
 def test_doctor_reports_slice_capabilities_from_tau_commands(
     monkeypatch: Any, tmp_path: Path
 ) -> None:
@@ -128,6 +184,10 @@ def test_doctor_reports_slice_capabilities_from_tau_commands(
                         "workflows": [
                             {
                                 "workflow_id": "repository-readiness",
+                                "availability": "AVAILABLE",
+                            },
+                            {
+                                "workflow_id": "durable-repository-qualification",
                                 "availability": "AVAILABLE",
                             }
                         ]
@@ -146,6 +206,7 @@ def test_doctor_reports_slice_capabilities_from_tau_commands(
     assert payload["ok"] is True
     assert payload["can_list_canonical_workflows"] is True
     assert payload["can_run_repository_readiness"] is True
+    assert payload["can_run_durable_repository_qualification"] is True
     assert payload["can_run_tau_owned_dag_viewer"] is True
     assert payload["can_run_browser_cdp_lane"] is True
     assert payload["commands"]["tau_workflow_catalog"]["exit_code"] == 0

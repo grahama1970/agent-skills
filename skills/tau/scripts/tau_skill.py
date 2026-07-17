@@ -178,6 +178,16 @@ def doctor_payload() -> dict[str, Any]:
         and item.get("availability") == "AVAILABLE"
         for item in catalog_workflows
     )
+    available_workflow_ids = {
+        str(item["workflow_id"])
+        for item in catalog_workflows
+        if isinstance(item, dict)
+        and isinstance(item.get("workflow_id"), str)
+        and item.get("availability") == "AVAILABLE"
+    }
+    durable_qualification_available = (
+        "durable-repository-qualification" in available_workflow_ids
+    )
     canonical_workflow_surface_available = (
         repository_readiness_available and viewer_capabilities_available
     )
@@ -210,6 +220,7 @@ def doctor_payload() -> dict[str, Any]:
         "can_run_browser_cdp_lane": canonical_workflow_surface_available,
         "can_list_canonical_workflows": workflow_catalog_available,
         "can_run_repository_readiness": repository_readiness_available,
+        "can_run_durable_repository_qualification": durable_qualification_available,
         "can_run_tau_owned_dag_viewer": viewer_capabilities_available,
         "commands": {
             "tau_help": tau_help,
@@ -468,6 +479,9 @@ def workflow_run_command(
     goal: str = typer.Option(..., "--goal"),
     run_dir: Path = typer.Option(..., "--run-dir"),
     require_clean: bool = typer.Option(False, "--require-clean"),
+    require_tests: bool = typer.Option(False, "--require-tests"),
+    required_workflow: str | None = typer.Option(None, "--required-workflow"),
+    publish_path: Path | None = typer.Option(None, "--publish-path"),
     open_viewer: bool = typer.Option(False, "--open-viewer"),
     no_browser_open: bool = typer.Option(False, "--no-browser-open"),
 ) -> None:
@@ -485,11 +499,40 @@ def workflow_run_command(
     ]
     if require_clean:
         parts.append("--require-clean")
+    if require_tests:
+        parts.append("--require-tests")
+    if required_workflow is not None:
+        parts.extend(["--required-workflow", required_workflow])
+    if publish_path is not None:
+        parts.extend(["--publish-path", str(publish_path)])
     if open_viewer:
         parts.append("--open-viewer")
     if no_browser_open:
         parts.append("--no-browser-open")
     relay_tau_command(tau_command(*parts))
+
+
+@app.command("workflow-repair")
+def workflow_repair_command(
+    run_dir: Path,
+    node_id: str = typer.Option(..., "--node"),
+) -> None:
+    """Authorize the exact supported repair for a blocked packaged workflow."""
+    relay_tau_command(
+        tau_command("workflows", "repair", str(run_dir), "--node", node_id)
+    )
+
+
+@app.command("workflow-approve")
+def workflow_approve_command(run_dir: Path) -> None:
+    """Approve the exact pending transaction for a packaged workflow."""
+    relay_tau_command(tau_command("workflows", "approve", str(run_dir)))
+
+
+@app.command("workflow-resume")
+def workflow_resume_command(run_dir: Path) -> None:
+    """Resume a packaged workflow from its authoritative run directory."""
+    relay_tau_command(tau_command("workflows", "resume", str(run_dir)))
 
 
 @app.command("dag-view")

@@ -25,6 +25,8 @@ the human/operator guide.
 | Inspect recent live-proof evidence | `skills/tau/run.sh e2e` |
 | Discover canonical DAG workflows | `skills/tau/run.sh workflows-list` |
 | Run repository readiness | `skills/tau/run.sh workflow-run repository-readiness ...` |
+| Run durable repository qualification | `skills/tau/run.sh workflow-run durable-repository-qualification ...` |
+| Repair, approve, or resume a workflow | `skills/tau/run.sh workflow-repair\|workflow-approve\|workflow-resume ...` |
 | Inspect a Tau DAG | `skills/tau/run.sh dag-view <run-dir>` |
 | Check watchdog receipts | `skills/tau/run.sh watchdog-status` |
 | Summarize latest proof artifacts | `skills/tau/run.sh latest-proofs` |

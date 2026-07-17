@@ -5,6 +5,18 @@ It does not implement Tau behavior itself.
 
 ## Current Evidence Boundaries
 
+- 2026-07-17 canonical five-workflow alignment: `workflows-list` exposes
+  `repository-readiness`, `tau-operator-reference`, `repository-evidence-map`,
+  `approved-release-bundle`, and `durable-repository-qualification`. The wrapper
+  forwards the fifth workflow's publish path and exposes bounded
+  `workflow-repair`, `workflow-approve`, and `workflow-resume` commands. Tau's
+  installed-wheel receipt is
+  `/tmp/tau-durable-qualification-wheel-proof.json`; its live React Flow receipt
+  is `/tmp/tau-durable-qualification-browser-proof.json`, with desktop and
+  mobile screenshots beside it under `/tmp`. These Tau receipts report
+  `mocked:false`, `live:true`, `provider_live:false`; wrapper tests prove command
+  routing only.
+
 - 2026-07-13 live WebGPT clarification acceptance: Tau ran one native
   `architecture_review/webgpt` skill node against Browser Oracle project `tau`
   and exact tab `837358072`. Round 1 returned `CLARIFY`; the human selected

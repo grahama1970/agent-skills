@@ -67,6 +67,16 @@ skills/tau/run.sh workflow-run repository-readiness \
   --require-clean \
   --run-dir /tmp/tau-repository-readiness \
   --open-viewer
+skills/tau/run.sh workflow-run durable-repository-qualification \
+  --repo /path/to/repo \
+  --goal "Qualify this repository durably." \
+  --publish-path /tmp/tau-qualified \
+  --run-dir /tmp/tau-durable-qualification \
+  --open-viewer
+skills/tau/run.sh workflow-repair /tmp/tau-durable-qualification --node qualify-tests
+skills/tau/run.sh workflow-resume /tmp/tau-durable-qualification
+skills/tau/run.sh workflow-approve /tmp/tau-durable-qualification
+skills/tau/run.sh workflow-resume /tmp/tau-durable-qualification
 skills/tau/run.sh dag-view /tmp/tau-repository-readiness
 skills/tau/run.sh dag-view-capabilities
 ```
