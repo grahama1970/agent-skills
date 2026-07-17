@@ -993,7 +993,7 @@ function StageCard({
           />
         )}
         {stage.id === '08' && (
-          <MediaLockPanel stage={stage} allStages={allStages ?? []} />
+          <MediaLockPanel stage={stage} projection={storyboardProjection} />
         )}
         {stage.id === '09' && (
           <VideoProviderPanel stage={stage} />
@@ -1174,10 +1174,8 @@ type MediaLockFrame = {
   timeLabel: string
 }
 
-function MediaLockPanel({ stage, allStages }: { stage: DreamStage; allStages: DreamStage[] }) {
-  const storyboardStage = allStages.find((candidate) => candidate.id === '07')
-  const packetArtifact = requiredStageArtifact(storyboardStage, 'storyboard_packet')
-  const packetPath = packetArtifact?.path
+function MediaLockPanel({ stage, projection }: { stage: DreamStage; projection?: StoryboardConsumerProjection }) {
+  const packetUrl = projection?.packetUrl
   const [frames, setFrames] = useState<MediaLockFrame[]>([])
   const [packetStatus, setPacketStatus] = useState('loading accepted storyboard packet...')
   const frameGroups = mediaLockFrameGroups(frames)
@@ -1186,11 +1184,11 @@ function MediaLockPanel({ stage, allStages }: { stage: DreamStage; allStages: Dr
     let cancelled = false
     async function loadPacket() {
       try {
-        if (!packetPath) throw new Error('storyboard packet missing from the active revision read model')
-        const response = await fetch(`/api/projects/dream/asset?path=${encodeURIComponent(packetPath)}`)
+        if (!packetUrl) throw new Error('storyboard packet missing from the active revision read model')
+        const response = await fetch(packetUrl)
         if (!response.ok) throw new Error(`HTTP ${response.status}`)
         const packet = await response.json()
-        const nextFrames = mediaLockFramesFromPacket(packet)
+        const nextFrames = mediaLockFramesFromPacket(packet, projection)
         if (cancelled) return
         setFrames(nextFrames)
         setPacketStatus(nextFrames.length > 0
@@ -1204,7 +1202,7 @@ function MediaLockPanel({ stage, allStages }: { stage: DreamStage; allStages: Dr
     }
     void loadPacket()
     return () => { cancelled = true }
-  }, [packetPath])
+  }, [packetUrl, projection?.revisionId])
 
   return (
     <section data-qid="dream:media-lock-panel" style={styles.mediaLockPanel}>
@@ -1306,28 +1304,28 @@ function mediaLockFrameGroups(frames: MediaLockFrame[]): Array<{ panelId: string
   }))
 }
 
-function mediaLockFramesFromPacket(packet: unknown): MediaLockFrame[] {
+function mediaLockFramesFromPacket(packet: unknown, projection?: StoryboardConsumerProjection): MediaLockFrame[] {
   const root = payloadObject(packet)
   const panels = payloadArray(root?.panels)
   const frames: MediaLockFrame[] = []
   for (const panel of panels) {
     const panelId = firstString(panel.panel_id, panel.id) ?? `panel_${frames.length + 1}`
+    const projectedPanel = projection?.panels.find((candidate) => candidate.panelId === panelId)
     const timeRange = payloadObject(panel.time_range)
     for (const role of ['start_frame', 'end_frame']) {
       const frameWrapper = payloadObject(panel[role])
       const acceptedFrame = payloadObject(frameWrapper?.accepted_frame) ?? frameWrapper
-      const path = firstString(acceptedFrame?.path)
-      const url = dreamAssetUrl(path ?? '')
-      if (!path || !url) continue
+      const projectedFrame = role === 'start_frame' ? projectedPanel?.startFrame : projectedPanel?.endFrame
+      if (!projectedFrame?.url) continue
       const identityReview = payloadObject(acceptedFrame?.identity_continuity_review)
       const timeValue = role === 'start_frame' ? timeRange?.start_s : timeRange?.end_s
       frames.push({
         id: `${panelId}.${role}`,
         panelId,
         role,
-        path,
-        url,
-        sha256: firstString(acceptedFrame?.sha256) ?? 'sha256:missing',
+        path: projectedFrame.artifactId,
+        url: projectedFrame.url,
+        sha256: projectedFrame.sha256,
         status: firstString(acceptedFrame?.status) ?? 'ACCEPTED_FRAME',
         identityStatus: firstString(identityReview?.status) ?? 'UNKNOWN',
         acceptedAt: firstString(acceptedFrame?.accepted_at) ?? '',
