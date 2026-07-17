@@ -99,9 +99,17 @@ PANEL_CONCISE_ACTIONS = {
         "Medium-wide lineup: @Element2 Kai reads the safe channel, reef, and surf "
         "etiquette, then signals @Element1 Embry to wait; Embry remains the decision-maker."
     ),
+    # Repaired after the post-Kling continuity review of request
+    # ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41 failed
+    # MISSING_SB004_COMMIT_ACTION and LAVA_REEF_BOUNDARY_NOT_VISUALLY_READABLE:
+    # the final beat must show an unmistakable Embry-only forward commit with
+    # Kai held outside, and the reef/channel geometry must stay readable.
     "sb_004": (
-        "Waterline finish: @Element1 Embry commits through the safe channel above "
-        "visible lava reef; @Element2 Kai stays outside the main action, preserving Embry's agency."
+        "Waterline finish: @Element1 Embry alone commits, paddling hard, popping up, "
+        "and riding forward through the safe channel away from @Element2 Kai, who "
+        "holds position outside the main action; the dark lava reef boundary stays "
+        "sharply readable under clear water on both sides of Embry's line, "
+        "preserving her decision and agency."
     ),
 }
 

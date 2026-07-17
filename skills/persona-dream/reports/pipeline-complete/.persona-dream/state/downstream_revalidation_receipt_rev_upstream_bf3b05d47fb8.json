@@ -1,0 +1,349 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "request-scoped steps 21-29 evidence for a new provider request",
+      "provider readiness, authorization, or submission"
+    ],
+    "proves": [
+      "steps 06-20 evidence artifacts are byte-identical to the accepted source revision set and hash-bound in the new revision index",
+      "the reconstructed upstream contracts are internally consistent with the downstream artifacts they were derived from"
+    ]
+  },
+  "consistency_checks": [
+    {
+      "check": "dream_packet_frame_prompts_match_storyboard_panels",
+      "expected": [
+        "sb_001",
+        "sb_002",
+        "sb_003",
+        "sb_004"
+      ],
+      "observed": [
+        "sb_001",
+        "sb_002",
+        "sb_003",
+        "sb_004"
+      ],
+      "pass": true
+    },
+    {
+      "check": "shot_bible_covers_storyboard_panels",
+      "expected": [
+        "sb_001",
+        "sb_002",
+        "sb_003",
+        "sb_004"
+      ],
+      "observed": [
+        "sb_001",
+        "sb_002",
+        "sb_003",
+        "sb_004"
+      ],
+      "pass": true
+    },
+    {
+      "check": "look_lock_file_matches_technique_selection",
+      "pass": true
+    },
+    {
+      "check": "shot_bible_look_lock_matches_technique_selection",
+      "pass": true
+    },
+    {
+      "check": "script_dna_file_matches_technique_selection",
+      "pass": true
+    },
+    {
+      "check": "script_dna_encodes_final_beat_commit_requirement",
+      "pass": true
+    },
+    {
+      "check": "panel_ledger_covers_storyboard_panels",
+      "expected": [
+        "sb_001",
+        "sb_002",
+        "sb_003",
+        "sb_004"
+      ],
+      "observed": [
+        "sb_001",
+        "sb_002",
+        "sb_003",
+        "sb_004"
+      ],
+      "pass": true
+    },
+    {
+      "check": "panel_ledger_sb004_encodes_commit_and_reef_requirements",
+      "pass": true
+    },
+    {
+      "check": "script_contract_action_blocks_span_target_duration",
+      "pass": true
+    }
+  ],
+  "failed_checks": [],
+  "failed_hashes": [],
+  "live": false,
+  "mocked": false,
+  "observed_at": "2026-07-17T13:44:35.657370+00:00",
+  "remaining_stale_steps": [
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    37,
+    38,
+    39,
+    40
+  ],
+  "revalidated_steps": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    13,
+    14,
+    16,
+    17,
+    18,
+    19,
+    20
+  ],
+  "revision_id": "rev_upstream_bf3b05d47fb8",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.downstream_step_revalidation_receipt.v1",
+  "source_revision_id": "rev_idea_f3f9c48d5cc2",
+  "status": "PASS_LOCAL_DOWNSTREAM_REVALIDATION",
+  "steps": [
+    {
+      "artifacts": [
+        {
+          "bound_in_revision_index": true,
+          "byte_identical_to_source": false,
+          "identity_rewritten": true,
+          "indexed_sha256": "sha256:aa23e96fabf8d0019971b2c60a4b88d966fb6075ace50ec75a6e7c3496307834",
+          "observed_sha256": "sha256:aa23e96fabf8d0019971b2c60a4b88d966fb6075ace50ec75a6e7c3496307834",
+          "relative_path": "phase_02_story/story_contract.json",
+          "semantic_match_excluding_identity_fields": true,
+          "source_revision_sha256": "sha256:84f4f8b9bf17778f41e2e062f856e2a36b4ca760abc5288b44329e90a87e786e"
+        }
+      ],
+      "status": "PASS_REVALIDATED_CURRENT",
+      "step_no": 6
+    },
+    {
+      "artifacts": [
+        {
+          "bound_in_revision_index": true,
+          "byte_identical_to_source": true,
+          "identity_rewritten": false,
+          "indexed_sha256": "sha256:8b3fb7869c3925747ea62b38c1984dd497323f500cb54c81a797d7eb8a7d3626",
+          "observed_sha256": "sha256:8b3fb7869c3925747ea62b38c1984dd497323f500cb54c81a797d7eb8a7d3626",
+          "relative_path": "phase_03_crew/crew_contract.json",
+          "semantic_match_excluding_identity_fields": true,
+          "source_revision_sha256": "sha256:8b3fb7869c3925747ea62b38c1984dd497323f500cb54c81a797d7eb8a7d3626"
+        }
+      ],
+      "status": "PASS_REVALIDATED_CURRENT",
+      "step_no": 7
+    },
+    {
+      "artifacts": [
+        {
+          "bound_in_revision_index": true,
+          "byte_identical_to_source": true,
+          "identity_rewritten": false,
+          "indexed_sha256": "sha256:8b3fb7869c3925747ea62b38c1984dd497323f500cb54c81a797d7eb8a7d3626",
+          "observed_sha256": "sha256:8b3fb7869c3925747ea62b38c1984dd497323f500cb54c81a797d7eb8a7d3626",
+          "relative_path": "phase_03_crew/crew_contract.json",
+          "semantic_match_excluding_identity_fields": true,
+          "source_revision_sha256": "sha256:8b3fb7869c3925747ea62b38c1984dd497323f500cb54c81a797d7eb8a7d3626"
+        }
+      ],
+      "status": "PASS_REVALIDATED_CURRENT",
+      "step_no": 8
+    },
+    {
+      "artifacts": [
+        {
+          "bound_in_revision_index": true,
+          "byte_identical_to_source": true,
+          "identity_rewritten": false,
+          "indexed_sha256": "sha256:8b3fb7869c3925747ea62b38c1984dd497323f500cb54c81a797d7eb8a7d3626",
+          "observed_sha256": "sha256:8b3fb7869c3925747ea62b38c1984dd497323f500cb54c81a797d7eb8a7d3626",
+          "relative_path": "phase_03_crew/crew_contract.json",
+          "semantic_match_excluding_identity_fields": true,
+          "source_revision_sha256": "sha256:8b3fb7869c3925747ea62b38c1984dd497323f500cb54c81a797d7eb8a7d3626"
+        }
+      ],
+      "status": "PASS_REVALIDATED_CURRENT",
+      "step_no": 9
+    },
+    {
+      "artifacts": [
+        {
+          "bound_in_revision_index": true,
+          "byte_identical_to_source": true,
+          "identity_rewritten": false,
+          "indexed_sha256": "sha256:8b3fb7869c3925747ea62b38c1984dd497323f500cb54c81a797d7eb8a7d3626",
+          "observed_sha256": "sha256:8b3fb7869c3925747ea62b38c1984dd497323f500cb54c81a797d7eb8a7d3626",
+          "relative_path": "phase_03_crew/crew_contract.json",
+          "semantic_match_excluding_identity_fields": true,
+          "source_revision_sha256": "sha256:8b3fb7869c3925747ea62b38c1984dd497323f500cb54c81a797d7eb8a7d3626"
+        },
+        {
+          "bound_in_revision_index": true,
+          "byte_identical_to_source": true,
+          "identity_rewritten": false,
+          "indexed_sha256": "sha256:699616686a31bd999d92ee7ace9d4626fb48b16df50e43b8a1b70cfec20dca2d",
+          "observed_sha256": "sha256:699616686a31bd999d92ee7ace9d4626fb48b16df50e43b8a1b70cfec20dca2d",
+          "relative_path": "phase_03_crew/crew_gate_receipt.json",
+          "semantic_match_excluding_identity_fields": true,
+          "source_revision_sha256": "sha256:699616686a31bd999d92ee7ace9d4626fb48b16df50e43b8a1b70cfec20dca2d"
+        }
+      ],
+      "status": "PASS_REVALIDATED_CURRENT",
+      "step_no": 10
+    },
+    {
+      "artifacts": [
+        {
+          "bound_in_revision_index": true,
+          "byte_identical_to_source": true,
+          "identity_rewritten": false,
+          "indexed_sha256": "sha256:a1c1031e697d67dca734a797bbfa438a1ab30358e8dea18eee7c157de8f2fc97",
+          "observed_sha256": "sha256:a1c1031e697d67dca734a797bbfa438a1ab30358e8dea18eee7c157de8f2fc97",
+          "relative_path": "phase_07_storyboard_live_tau/storyboard_packet.json",
+          "semantic_match_excluding_identity_fields": true,
+          "source_revision_sha256": "sha256:a1c1031e697d67dca734a797bbfa438a1ab30358e8dea18eee7c157de8f2fc97"
+        },
+        {
+          "bound_in_revision_index": true,
+          "byte_identical_to_source": true,
+          "identity_rewritten": false,
+          "indexed_sha256": "sha256:82c694f8d887f5d0ab2824b84be7abd36c61b81ec17c928cd21adf11830df366",
+          "observed_sha256": "sha256:82c694f8d887f5d0ab2824b84be7abd36c61b81ec17c928cd21adf11830df366",
+          "relative_path": "phase_07_storyboard_live_tau/storyboard_panel_contract.generated.json",
+          "semantic_match_excluding_identity_fields": true,
+          "source_revision_sha256": "sha256:82c694f8d887f5d0ab2824b84be7abd36c61b81ec17c928cd21adf11830df366"
+        }
+      ],
+      "status": "PASS_REVALIDATED_CURRENT",
+      "step_no": 13
+    },
+    {
+      "artifacts": [
+        {
+          "bound_in_revision_index": true,
+          "byte_identical_to_source": true,
+          "identity_rewritten": false,
+          "indexed_sha256": "sha256:a1c1031e697d67dca734a797bbfa438a1ab30358e8dea18eee7c157de8f2fc97",
+          "observed_sha256": "sha256:a1c1031e697d67dca734a797bbfa438a1ab30358e8dea18eee7c157de8f2fc97",
+          "relative_path": "phase_07_storyboard_live_tau/storyboard_packet.json",
+          "semantic_match_excluding_identity_fields": true,
+          "source_revision_sha256": "sha256:a1c1031e697d67dca734a797bbfa438a1ab30358e8dea18eee7c157de8f2fc97"
+        }
+      ],
+      "status": "PASS_REVALIDATED_CURRENT",
+      "step_no": 14
+    },
+    {
+      "artifacts": [
+        {
+          "bound_in_revision_index": true,
+          "byte_identical_to_source": true,
+          "identity_rewritten": false,
+          "indexed_sha256": "sha256:a1c1031e697d67dca734a797bbfa438a1ab30358e8dea18eee7c157de8f2fc97",
+          "observed_sha256": "sha256:a1c1031e697d67dca734a797bbfa438a1ab30358e8dea18eee7c157de8f2fc97",
+          "relative_path": "phase_07_storyboard_live_tau/storyboard_packet.json",
+          "semantic_match_excluding_identity_fields": true,
+          "source_revision_sha256": "sha256:a1c1031e697d67dca734a797bbfa438a1ab30358e8dea18eee7c157de8f2fc97"
+        }
+      ],
+      "status": "PASS_REVALIDATED_CURRENT",
+      "step_no": 16
+    },
+    {
+      "artifacts": [
+        {
+          "bound_in_revision_index": true,
+          "byte_identical_to_source": true,
+          "identity_rewritten": false,
+          "indexed_sha256": "sha256:a1c1031e697d67dca734a797bbfa438a1ab30358e8dea18eee7c157de8f2fc97",
+          "observed_sha256": "sha256:a1c1031e697d67dca734a797bbfa438a1ab30358e8dea18eee7c157de8f2fc97",
+          "relative_path": "phase_07_storyboard_live_tau/storyboard_packet.json",
+          "semantic_match_excluding_identity_fields": true,
+          "source_revision_sha256": "sha256:a1c1031e697d67dca734a797bbfa438a1ab30358e8dea18eee7c157de8f2fc97"
+        },
+        {
+          "bound_in_revision_index": true,
+          "byte_identical_to_source": true,
+          "identity_rewritten": false,
+          "indexed_sha256": "sha256:1c0dee49b6ec3e8ec3e73a796a3c7df526a7a7b7e79275479a23f806044cfa8c",
+          "observed_sha256": "sha256:1c0dee49b6ec3e8ec3e73a796a3c7df526a7a7b7e79275479a23f806044cfa8c",
+          "relative_path": "phase_07_storyboard_live_tau/receipts/panel_repair_gate_receipt.json",
+          "semantic_match_excluding_identity_fields": true,
+          "source_revision_sha256": "sha256:1c0dee49b6ec3e8ec3e73a796a3c7df526a7a7b7e79275479a23f806044cfa8c"
+        }
+      ],
+      "status": "PASS_REVALIDATED_CURRENT",
+      "step_no": 17
+    },
+    {
+      "artifacts": [
+        {
+          "bound_in_revision_index": true,
+          "byte_identical_to_source": true,
+          "identity_rewritten": false,
+          "indexed_sha256": "sha256:1c0dee49b6ec3e8ec3e73a796a3c7df526a7a7b7e79275479a23f806044cfa8c",
+          "observed_sha256": "sha256:1c0dee49b6ec3e8ec3e73a796a3c7df526a7a7b7e79275479a23f806044cfa8c",
+          "relative_path": "phase_07_storyboard_live_tau/receipts/panel_repair_gate_receipt.json",
+          "semantic_match_excluding_identity_fields": true,
+          "source_revision_sha256": "sha256:1c0dee49b6ec3e8ec3e73a796a3c7df526a7a7b7e79275479a23f806044cfa8c"
+        }
+      ],
+      "status": "PASS_REVALIDATED_CURRENT",
+      "step_no": 18
+    },
+    {
+      "artifacts": [
+        {
+          "bound_in_revision_index": true,
+          "byte_identical_to_source": true,
+          "identity_rewritten": false,
+          "indexed_sha256": "sha256:1c0dee49b6ec3e8ec3e73a796a3c7df526a7a7b7e79275479a23f806044cfa8c",
+          "observed_sha256": "sha256:1c0dee49b6ec3e8ec3e73a796a3c7df526a7a7b7e79275479a23f806044cfa8c",
+          "relative_path": "phase_07_storyboard_live_tau/receipts/panel_repair_gate_receipt.json",
+          "semantic_match_excluding_identity_fields": true,
+          "source_revision_sha256": "sha256:1c0dee49b6ec3e8ec3e73a796a3c7df526a7a7b7e79275479a23f806044cfa8c"
+        }
+      ],
+      "status": "PASS_REVALIDATED_CURRENT",
+      "step_no": 19
+    },
+    {
+      "artifacts": [
+        {
+          "bound_in_revision_index": true,
+          "byte_identical_to_source": true,
+          "identity_rewritten": false,
+          "indexed_sha256": "sha256:9fec8adf08499e39b09034c01b244af1948bed6b75ef26d46a3bb2e5852e6158",
+          "observed_sha256": "sha256:9fec8adf08499e39b09034c01b244af1948bed6b75ef26d46a3bb2e5852e6158",
+          "relative_path": "phase_07_storyboard_live_tau/receipts/panel_source_receipt.json",
+          "semantic_match_excluding_identity_fields": true,
+          "source_revision_sha256": "sha256:9fec8adf08499e39b09034c01b244af1948bed6b75ef26d46a3bb2e5852e6158"
+        }
+      ],
+      "status": "PASS_REVALIDATED_CURRENT",
+      "step_no": 20
+    }
+  ]
+}

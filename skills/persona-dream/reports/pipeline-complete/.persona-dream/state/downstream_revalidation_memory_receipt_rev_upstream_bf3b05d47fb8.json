@@ -1,0 +1,23 @@
+{
+  "collection": "persona_dream_pipeline_steps",
+  "exact_reread_total": 42,
+  "observed_at": "2026-07-17T13:44:35.984258+00:00",
+  "revision_id": "rev_upstream_bf3b05d47fb8",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.downstream_revalidation_memory_receipt.v1",
+  "status": "PASS_EXACT_REREAD_REVALIDATED_STEPS",
+  "updated_steps": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    13,
+    14,
+    16,
+    17,
+    18,
+    19,
+    20
+  ]
+}
