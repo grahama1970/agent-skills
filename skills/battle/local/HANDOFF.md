@@ -1,193 +1,292 @@
-# Handoff Report: Battle
+# Handoff Report: Battle Adaptive Lineage
 
-**Timestamp**: 2026-07-05T12:35:00Z  
-**Active Agent**: Codex  
-**Primary Machine Contract**: `local/battle-004-ux-json-contract-summary.json`
+**Timestamp**: 2026-07-17T16:54:52-04:00
+**Active Agent**: Codex
+**Status**: `PENDING_ADAPTIVE_IMPLEMENTATION`
 
 ## 1. Project Overview
 
-- **Ecosystem**: Python Battle skill producing receipt-backed JSON for the
-  self-contained React spectator package at `skills/battle/spectator/`.
-  `ux-lab` is a thin host only.
-- **Core Purpose**: Run and display Red/Blue Battle proof artifacts for
-  canonical BATTLE-004: `POST /api/import-zip`, `CWE-22`, Zip Slip.
-
-## 2. Current State
-
-- **Implemented Reality**: Bounded Tau worker-matrix rung plus Judge replay.
-  Parent-spawn lineage rung is wired in code, demonstrated by a fresh live
-  receipt artifact, and guarded by adapter/UX-contract validation.
-- **Important Gap**: Live lineage only materializes when parent Red lane gets
-  `BLUE_SUCCESS` and Tau child spawn succeeds. Sparse proofs stay sparse.
-- **Agent Boundary**: Battle backend agents own proof receipts, normalized JSON,
-  schema validation, timing/playhead values, lane cockpit values, replay metadata,
-  spectator-shell values, and fail-closed guards. They do not own React layout,
-  mockup parity, visual design, or CDP screenshot acceptance.
-
-
-- `lineage.spawns[].spawn_elapsed_seconds` = 116.97 (authoritative for child visibility)
-- `child_start_elapsed_seconds` / child `lane.start_elapsed_seconds` = 146.68
-
-UX correctly gates child lane visibility on `spawn_elapsed_seconds` only. Backend must
-regenerate or patch the fixture so derived lane timing aligns with spawn semantics, or
-split visibility (`visible_from_elapsed_seconds`) from first active segment start.
-
-## Pixi Phase 1 spike (spectator package)
-
-Optional Pixi race renderer behind `#battle?engine=pixi` and `#battle/receipt?engine=pixi`. Default remains DOM/SVG. Implementation lives in `skills/battle/spectator/`.
-
-- **Spectator package (canonical UI):** `skills/battle/spectator/`
-- **Contract:** `skills/battle/docs/BATTLE_RACE_ENGINE_PIXI_SPIKE.md`
-- **Backend:** renderer-neutral — see `BACKEND_UX_CONTRACT.md`
-- **Agent skills:** official `pixijs*` + `best-practices-battle-pixi` overlay
-- **Sprite sheets:** not required for Phase 1 (procedural Graphics); see spike doc § Asset pipeline
-
-## 3. What Is Working
-
-- `battle_event_adapter.py` reads `lineage-receipts.json`, emits child lanes,
-  parent `children[]`, `tau.spawned_child` events, and updates claims when
-  lineage is valid.
-- `arena_live_battle_proof.py` runs parent-first Tau matrix, Judge, then optional
-  child spawn via Tau `--spawn-red-child` when parent is blocked.
-- `tau_coding/battle_live_handoff.py` supports spawned Red child receipts and
-  per-spawn lineage artifacts under `tau-live/lineage/`.
-- Standalone HTML mockup baseline lives at
-  `mockups/battle-004-shell-preserving-scroll-timeline.html`.
-- Machine-readable UX handoff lives at
-  `local/battle-004-ux-json-contract-summary.json`; UI agents should consume
-  those JSON paths and values instead of asking Battle to design the interface.
-- The current authoritative parent-spawn fixture is
-  `local/battle-004-parent-spawn.normalized.json`, sourced from live proof
-  `/tmp/battle-004-parent-spawn-live-timing-20260705T125418Z`.
-
-## 4. What Is Broken / Unverified
-
-- React mechanical render + CDP screenshot gate is out of scope for the Battle
-  backend agent under the current human instruction. The UX renderer should
-  consume the normalized JSON contract and run its own visual gates.
-- `sanity.sh` now runs through normalized UX validation after moving the
-  generated root `.venv` to storage and replacing it with a symlink to
-  `/mnt/storage12tb/skills/battle/.venv`. The preserved backup is under
-  `/mnt/storage12tb/skills/battle/.venv-worktree-backup-*`.
-- Some live runs still return `INSUFFICIENT_EVIDENCE`; those are expected to
-  stay sparse and must not render child lineage.
-- Timeline x positions are currently receipt-order percentages, not elapsed
-  seconds. This is explicit in `timeline_time_model.x_position_is_elapsed_time`
-  and must stay visible to renderers until Battle emits per-step elapsed
-  timestamps. The playhead is receipt replay only, not a live timer.
-- The active `/goal` text still mentions React UI ownership; treat that as stale
-  relative to the latest human scope boundary until the human explicitly changes
-  ownership again.
-
-## 5. Next Steps
-
-1. Use the latest receipt-backed parent-spawn proof for backend JSON:
+- **Ecosystem**: Python Battle control plane, Tau/SciLLM model workers, and
+  Docker Judge execution.
+- **Current objective**: Make adaptive lineage perform a bounded,
+  receipt-backed variation-evaluation-selection-reproduction loop for canonical
+  BATTLE-004 Zip Slip.
+- **Accepted gate**:
 
 ```text
-/tmp/battle-004-parent-spawn-live-timing-20260705T125418Z
+G0 -> {G1-A, G1-B} -> deterministic Judge selection -> G2 -> STOP
 ```
 
-2. Re-run canonical proof when a fresh artifact is needed:
+- A G2 patched-target bypass is recorded as improvement but is **not required**
+  for this gate. The gate proves adaptive mechanics, not convergence.
+- No UI, Memory promotion, new arena, unbounded swarm, or broader Battle
+  campaign belongs in this gate.
 
-```bash
-cd /home/graham/workspace/experiments/agent-skills/skills/battle
-./run.sh arena-parent-spawn-proof battle-004 \
-  --red-workers 2 \
-  --blue-workers 2 \
-  --out <fresh-proof-dir>
-```
+## 2. Repository and Worktree State
 
-This command requests one parent Red lane first, Judge-replays the parent/Blue
-pairs, and only asks Tau for the child Red lane after the parent has a
-`BLUE_SUCCESS` handoff. The resulting child is a receipt-backed lineage result,
-not a UI-density signal.
+### Published refs used by the current proof
 
-3. Confirm proof dir contains `run-receipt.json#lineage_request` and, when
-   successful, `lineage-receipts.json` with `status: PASS` and
-   child lane `payload-857-red-1` only when parent lane was `BLUE_SUCCESS`.
+- `grahama1970/agent-skills@c79bc820e153c4e9029b11ed72b560acdb3c3fba`
+- `grahama1970/tau@d03098293a76b07c54c5c1f03d667b02bf542be8`
+- Tau remote `main` was positively checked at `d0309829` after push.
 
-4. Regenerate UX fixture:
+### Human worktree warning
 
-```bash
-./run.sh generate-ux-fixture \
-  --input <fresh-proof-dir> \
-  --battle-id battle-004 \
-  --out /tmp/battle-004.normalized.json
-```
+The main `agent-skills` checkout is on branch `battle-ux8-live-contract` and is
+heavily dirty with unrelated spectator, music, sprite, and other project work.
+Treat every modified/untracked path as irreplaceable human work. Do not stash,
+reset, clean, switch, or stage broadly.
 
-5. Validate the backend UX contract before handing data to any renderer:
-
-```bash
-./run.sh validate-ux-contract /tmp/battle-004.normalized.json
-```
-
-For the checked-in local handoff bundle, use the whole-bundle gate:
-
-```bash
-./run.sh validate-ux-handoff-summary local/battle-004-ux-json-contract-summary.json
-```
-
-6. UI renderer must use JSON-owned values:
-
-- `spectator_shell` for header title, subtitle, fact chips, score labels/values,
-  round-time text, mode/truth labels, and receipt event ticker text.
-- `battle_clock` for allotted/elapsed/remaining time.
-- `timeline.playhead` and `timeline.keyframes` for receipt replay state.
-- `timeline_time_model` to distinguish receipt-order x positions from real
-  elapsed-time placement.
-- `timeline.viewport`, `timeline.supports_pan`, and `timeline.supports_zoom`
-  for scroll/zoom behavior.
-- `lineage_request` for requested/not-requested/proven child-spawn state. This
-  field explains intent only; it must not create child lanes unless
-  `lineage.spawns[]` also contains receipt-backed spawn records.
-- `lineage.groups[]`, lane `children[]`, `parentId`, `collapsible`, and
-  `expandedByDefault` for parent/child collapse.
-- lane `activitySegments[]` for between-marker action labels.
-- lane `cockpit.selected_tau_exploit_subagent` for Agent Detail Tau identity.
-- lane `cockpit.current_turn`, `cockpit.public_trace`, `cockpit.output.stdout`,
-  `cockpit.output.stderr`, `cockpit.skills_tools`, `cockpit.blue_outcome`, and
-  `cockpit.latest_receipt_id` for selected-lane details.
-- lane `replay.cta` for Docker replay button state.
-
-7. Machine-readable renderer binding paths live in:
+Use clean task worktrees for implementation. Existing proof worktrees:
 
 ```text
-local/battle-004-ux-json-contract-summary.json#renderer_binding_contract
+/tmp/agent-skills-lineage-proof-c79bc820
+/tmp/tau-slice05-push
 ```
 
-Those bindings are the contract for shell text, round time, scrollable timeline,
-moving playhead, parent spawn/collapse, lane labels, Agent Detail cockpit, and
-Docker replay CTA state.
+The Tau proof worktree is detached at the pushed task commit. Verify refs before
+reusing or create fresh clean worktrees.
 
-## 6. Key Files
+## 3. What Works
 
-- `GOAL.md`
-- `docs/BATTLE_004_DESIGN_HANDOFF.md`
-- `mockups/battle-004-shell-preserving-scroll-timeline.html`
-- `src/battle_skill/arena_live_battle_proof.py`
-- `src/battle_skill/battle_event_adapter.py`
-- `src/battle_skill/cli.py`
-- `/home/graham/workspace/experiments/tau/src/tau_coding/battle_live_handoff.py`
-- `skills/battle/spectator/src/` (ux-lab mounts via `@agent-skills/battle-spectator`)
+### Causal pressure-backed lineage rung
 
-## 7. Verification Performed This Session
+The original child materialization failure was a Tau validator false negative.
+The live child loaded local `app.py` through the exact standard-library
+`importlib.util.spec_from_file_location` pattern, but Tau only recognized
+literal `from app import import_zip` or `import app` strings.
 
-| Check | mocked | live | Result |
-|---|---|---|---|
-| `py_compile` battle adapter/arena/cli | no | yes | PASS |
-| Parent-spawn proof `/tmp/battle-004-parent-spawn-live-timing-20260705T125418Z` | no | yes | PASS (`child_spawn_count=1`, `tau.spawned_child`) |
-| Adapter + arena contract tests | mixed fixture/control-plane tests | local fixture | PASS (`92 passed`) |
-| `validate-ux-contract` parent-spawn and sparse artifacts | no | yes for parent-spawn source artifact | PASS |
-| renderer bundle/value/index/handoff validators | no | local receipt-backed fixtures | PASS |
-| `python3 scripts/check_mock_evidence_claims.py` | no | local source scan | PASS |
-| `./sanity.sh` | no | local fixture + UX fixture | PASS (`Result: PASS`) |
+Tau commit `d0309829` replaced that substring gate with bounded AST recognition
+and added positive/negative focused tests. Verification before push:
 
-## 8. Operating Rule
+```text
+uv run ruff check ...                                      PASS
+uv run pytest -q tests/test_battle_live_handoff.py \
+  tests/test_battle_adaptive_lineage_tau_contract.py       11 passed
+```
 
-The Battle project agent owns internals, evidence, and JSON values. External UI
-implementation owns visual direction and CDP acceptance. Dense UX must come from
-dense receipts, not UI-invented density.
+Fresh non-mocked live proof:
 
-## Docs
-- Interface spec: `docs/BATTLE_004_INTERFACE_IMPLEMENTATION_SPEC.md`
-- Receipt truth handoff: `docs/BATTLE_004_DESIGN_HANDOFF.md` (renamed scope; filename unchanged)
+```text
+/tmp/battle-adaptive-lineage-live-repair.XCLG1P
+```
+
+Command:
+
+```bash
+cd /tmp/agent-skills-lineage-proof-c79bc820/skills/battle
+TAU_REPO=/tmp/tau-slice05-push \
+  ./run.sh arena-prekill-survival-proof battle-004 \
+  --out /tmp/battle-adaptive-lineage-live-repair.XCLG1P \
+  --red-workers 2 --blue-workers 2
+```
+
+Result: exit `0`, `mocked:false`, real SciLLM calls, Docker Judge execution.
+The receipts show:
+
+```text
+red-0 pressure observed                    80.783404
+red-0 strategic_pre_kill decision          84.533597
+red-1 materialized                        105.334346
+red-0 terminal Judge receipt              105.655068
+red-1 post-terminal Judge attempt starts  105.655241
+```
+
+The child confirmed the vulnerable original and was blocked after the Blue
+patch (`BLUE_SUCCESS`). Important raw artifacts:
+
+```text
+/tmp/battle-adaptive-lineage-live-repair.XCLG1P/run-receipt.json
+/tmp/battle-adaptive-lineage-live-repair.XCLG1P/lineage-receipts.json
+/tmp/battle-adaptive-lineage-live-repair.XCLG1P/tau-live/spawn-decision-receipt.json
+/tmp/battle-adaptive-lineage-live-repair.XCLG1P/tau-live/red/workers/red-1/materialized-artifact-receipt.json
+/tmp/battle-adaptive-lineage-live-repair.XCLG1P/judge/replays/red-1__blue-1/attempt-receipt.json
+```
+
+This proves causal child spawning and post-terminal execution only.
+
+## 4. What Is Still Broken
+
+The current implementation is **not adaptive lineage in the accepted sense**.
+
+1. Descendants receive receipt IDs, paths, and hashes, but not a bounded content
+   packet containing parent source, complete strategy genome, and Judge
+   observations.
+2. `red-1` receives the generic Red prompt. It is not required to declare or
+   perform a parent-relative mutation.
+3. The current run produced near-equivalent parent/child Zip Slip techniques.
+4. There is one child only. No sibling comparison, deterministic selection, or
+   feedback-bound next generation exists.
+5. No `battle.adaptive_lineage_qualification.v1` receipt exists.
+6. No independent blind validator exists. WebGPT failed to deliver the requested
+   implementation/validator ZIP; do not imply otherwise.
+
+Exact current blocker:
+
+```text
+red-1 receives inherited receipt bindings but not bounded parent evidence
+content required to produce and validate a parent-relative mutation
+```
+
+## 5. Accepted Implementation Contract
+
+### Tau responsibilities
+
+- Extend `src/tau_coding/battle_live_handoff.py` and
+  `src/tau_coding/battle_scillm.py`; preserve existing causal mode.
+- Embed hash-bound `battle.parent_evidence_packet.v1` content in descendant
+  handoffs: parent exploit source, complete strategy genome, public scenario
+  constraints, pressure/Judge observations, and G2 selection feedback.
+- Exclude hidden Arena truth and unexposed Blue internals.
+- Require generated descendants to return `mutation_operator` and
+  `technique_delta` alongside `exploit_py` and `strategy_genome`.
+- Use exactly:
+
+```text
+G1-A  method_replace
+G1-B  oracle_or_parameter_mutation
+G2    failure_guided_crossover
+```
+
+- Preserve provider response bytes and all receipt/source hashes. Never rewrite
+  generated exploit code.
+
+### Battle responsibilities
+
+- Extend `src/battle_skill/arena_live_battle_proof.py`; change CLI only if a
+  qualification-mode switch is required.
+- Orchestrate exactly four Red specimens: G0, G1-A, G1-B, selected G2.
+- Reuse one fixed Blue artifact for descendant Judge evaluations.
+- Derive a code-based `battle.technique_signature.v1` from Python AST and
+  normalized literals using:
+
+```text
+app_load_mode
+archive_entry_construction
+traversal_representation
+target_call_form
+success_oracle
+exception_handling
+```
+
+- Write `battle.technique_delta_validation.v1`. Require different source hashes,
+  at least one changed dimension, novelty distance >= 1, and code changes that
+  match the claimed operator.
+- Judge both G1 candidates and write objective
+  `battle.candidate_fitness_receipt.v1` receipts.
+- Select deterministically by: vulnerable original confirmed, patched bypass,
+  greater novelty, lower duration, then lexicographic candidate ID.
+- Write `battle.lineage_selection_receipt.v1` only after both G1 Judge receipts.
+- Spawn G2 with selected G1 evidence, both G1 outcomes, and the selection
+  receipt; then execute one G2 Judge attempt and stop.
+- Write fail-closed `battle.adaptive_lineage_qualification.v1`; this receipt must
+  control top-level status/exit when qualification mode is requested.
+
+### Fixed budgets and stop conditions
+
+```text
+6 primary SciLLM calls maximum
+8 HTTP completions maximum including JSON repair
+4 Red specimens maximum
+2 descendant generations maximum
+1 fixed Blue artifact
+1,200 seconds maximum
+no red-3
+stop after G2 Judge regardless of outcome
+```
+
+Stop immediately for a missing evidence packet, invalid mutation contract,
+duplicate G1 technique signature, both G1 candidates failing the vulnerable
+original, reproduction of a rejected signature, missing G2 feedback bindings,
+or any budget overrun. Three matching live failures are one systemic failure;
+do not continue reproducing it.
+
+## 6. WebGPT Collaboration State
+
+Authoritative assessment artifacts:
+
+```text
+/tmp/battle-adaptive-lineage-learning-assess-20260717-assess-response.md
+/tmp/battle-adaptive-lineage-learning-assess-20260717-assess-response.meta.json
+```
+
+The human accepted the four-specimen/two-generation contract above.
+
+Battle WebGPT tab:
+
+```text
+tab id: 837359249
+url: https://chatgpt.com/g/g-p-6a408ce3c7a081918022e0eb6673aae3-battle/c/6a5a1f2b-0ac0-83ea-84a7-126c8acc0818
+```
+
+Do not create another tab.
+
+Code-bundle generation failed twice:
+
+1. The original attached-source request stalled for over 20 minutes at one
+   narration sentence and was stopped.
+2. Focused recovery returned only the text
+   `PATCH adaptive_lineage_v2_patch.zip`; no downloadable attachment existed.
+   Surf exited `8` with
+   `required_attachment_missing:adaptive_lineage_v2_patch.zip`.
+
+Failure evidence:
+
+```text
+/tmp/battle-adaptive-lineage-v2-code-recovery-response.md
+/tmp/battle-adaptive-lineage-v2-code-recovery-response.raw.md
+/tmp/battle-adaptive-lineage-v2-code-recovery-response.meta.json
+```
+
+The external code-generation family has reached its two-attempt limit. Do not
+spend another cycle requesting the same ZIP. The architecture is accepted;
+implementation remains pending.
+
+## 7. Next Steps for the New Agent
+
+1. Re-read this handoff and keep the accepted gate literal. Do not substitute
+   the already-passing causal rung.
+2. Inventory both repositories and create clean task worktrees from published
+   refs. Do not alter the dirty human Battle worktree.
+3. Implement Tau's bounded parent evidence and mutation-output contract first.
+4. Add focused deterministic Tau tests, including private-evidence exclusion,
+   exact hash binding, operator validation, and backward compatibility.
+5. Implement Battle's code-derived signatures, G1 fitness/selection receipts,
+   feedback-bound G2 orchestration, and qualification reducer.
+6. Run focused Battle/Tau tests. Label them deterministic contract evidence, not
+   live proof.
+7. Run one fresh live qualification within the fixed call/time budgets.
+8. Inspect raw receipts and independently check hashes, ordering, operators,
+   signatures, selection determinism, G2 bindings, and call counts.
+9. Commit and push task-only changes to both `main` branches only after the live
+   qualification and independent artifact checks pass.
+
+The accepted task plan is also preserved at:
+
+```text
+/tmp/battle-adaptive-lineage-v2-tasks.yaml
+```
+
+Its `/tmp` location is non-durable; this handoff is the durable contract.
+
+## 8. Claim Discipline
+
+- Current causal rung: `mocked:no`, `live:yes`, raw Docker/SciLLM proof exists.
+- Four-specimen adaptive qualification: `mocked:no`, `live:no`, not implemented.
+- Unit tests may prove wiring/contracts only. They cannot close the adaptive
+  gate.
+- WebGPT assessments are advisory design evidence, not closure proof.
+- Do not report adaptive lineage working until one fresh qualification receipt
+  and its underlying Tau/Judge artifacts satisfy every accepted assertion.
+
+## 9. Key Files
+
+```text
+skills/battle/src/battle_skill/arena_live_battle_proof.py
+skills/battle/src/battle_skill/cli.py
+skills/battle/tests/test_arena_live_battle_proof_contract.py
+/home/graham/workspace/experiments/tau/src/tau_coding/battle_live_handoff.py
+/home/graham/workspace/experiments/tau/src/tau_coding/battle_scillm.py
+/home/graham/workspace/experiments/tau/tests/test_battle_live_handoff.py
+/home/graham/workspace/experiments/tau/tests/test_battle_adaptive_lineage_tau_contract.py
+```
