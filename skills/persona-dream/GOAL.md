@@ -24,21 +24,30 @@ Minimum final evidence:
 
 ## Current Boundary
 
-The active revision has crossed the live Kling boundary, but it has not crossed
-the final acceptance boundary. The provider returned a technically valid video;
-post-Kling review rejected the final action beat and found missing canonical
-upstream contract artifacts.
+The active revision `rev_upstream_bf3b05d47fb8` has not crossed the live Kling
+boundary. Its repaired request is compiled as
+`sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f`
+with zero provider calls and five human hash-bound approvals outstanding.
+
+A superseded revision returned a technically valid video, but post-Kling review
+rejected its final action beat. That MP4 is historical evidence, not the active
+deliverable.
 
 Current gate language:
 
 ```text
-working Kling video returned: yes
-provider MP4 returned: yes, 18,520,578 bytes
-ffprobe on returned Kling video: yes, H.264 1280x720 24 fps, 10.041667 seconds
-frame contact sheet from returned Kling video: yes, 12 frames in a 4x3 PNG
-post-Kling continuity review: failed on the SB_004 commit action and visible lava-reef boundary
+active repaired Kling request submitted: no, zero provider calls
+active repaired Kling video returned: no
+historical superseded MP4: yes, 18,520,578 bytes
+historical ffprobe: H.264 1280x720 24 fps, 10.041667 seconds
+historical frame contact sheet: 12 frames in a 4x3 PNG
+historical continuity review: failed on the SB_004 commit action and visible lava-reef boundary
+audio strategy: post_mux; Kling request intentionally has generate_audio=false
+step 37 voice handoff: blocked awaiting exact Kai line render
+step 38 final assembly: blocked awaiting active provider return, mix, mux, audio-stream, and audible-output receipts
 pipeline-step Memory exact reread: 42/42
-final acceptance: blocked on steps 05, 11, 12, 15, 36, 40, and 42
+audio-step Memory exact reread: steps 37 and 38 synced to voice_handoff_plan SHA-256
+final acceptance: blocked
 ```
 
 No agent may claim final, green, complete, fixed, or verified for this goal
@@ -155,6 +164,11 @@ non-optional for every row.
 The goal is complete only when step 42 cites positive evidence from steps 31
 through 36 for a real returned Kling video, plus memory persistence evidence
 for steps 01 through 42.
+
+For a voiced run, step 42 must also cite positive Step 37 and 38 evidence: an
+exact transcript render, mix and FFmpeg mux receipts, a final MP4 audio stream,
+and audible-output review. A silent provider return alone cannot satisfy the
+immutable goal.
 
 If any step lacks a memory write receipt and exact reread receipt, the goal is
 not complete.

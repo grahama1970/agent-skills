@@ -7,6 +7,35 @@ import test from 'node:test'
 import { DreamPathPolicy } from '../src/paths'
 import { buildRunDetail } from '../src/runs'
 import { enqueueRepairCandidate, FileTauRepairQueue, promoteRevision, writeRepairAttempt } from '../src/repair'
+import { buildProviderReturnStage } from '../src/stages'
+
+test('provider return projects active post-mux handoff before provider media exists', () => {
+  const root = mkdtempSync(resolve(tmpdir(), 'persona-dream-audio-handoff-'))
+  const revisionId = 'rev_audio'
+  const revisionRoot = resolve(root, '.persona-dream', 'revisions', revisionId)
+  const preflightRoot = resolve(revisionRoot, 'phase_11_submit_return', 'preflight')
+  const canonicalRoot = resolve(revisionRoot, 'phase_11_submit_return', 'canonical')
+  mkdirSync(preflightRoot, { recursive: true })
+  mkdirSync(canonicalRoot, { recursive: true })
+  writeFileSync(resolve(preflightRoot, 'voice_handoff_plan.json'), JSON.stringify({
+    schema: 'persona_dream.voice_handoff_plan.v1',
+    status: 'BLOCKED_AWAITING_EXACT_LINE_RENDER',
+    strategy: 'post_mux',
+    lines: [{ speaker: 'Kai', text: "If we paddle now, we're cutting across the lineup." }],
+  }))
+  writeFileSync(resolve(canonicalRoot, 'phase11_live_request.v1.json'), JSON.stringify({
+    approval_bindings: { request_body_sha256: `sha256:${'a'.repeat(64)}` },
+    missing_approval_types: ['paid_call_authorization'],
+  }))
+
+  const stage = buildProviderReturnStage(root, revisionId)
+  assert.equal(stage?.status, 'NOT_EXECUTED')
+  assert.match(stage?.failureOrGap ?? '', /Audio strategy post_mux/)
+  assert.match(stage?.failureOrGap ?? '', /BLOCKED_AWAITING_EXACT_LINE_RENDER/)
+  assert.match(stage?.failureOrGap ?? '', /awaits 1 human hash-bound approvals/)
+  assert.ok(stage?.artifacts.some((artifact) => artifact.path.endsWith('voice_handoff_plan.json')))
+  rmSync(root, { recursive: true, force: true })
+})
 
 test('path policy rejects prefix collisions and outside files', () => {
   const root = mkdtempSync(resolve(tmpdir(), 'persona-dream-path-'))

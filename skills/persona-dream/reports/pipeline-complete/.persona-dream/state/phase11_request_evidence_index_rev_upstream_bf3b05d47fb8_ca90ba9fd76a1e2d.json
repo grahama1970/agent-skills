@@ -21,7 +21,7 @@
       "size_bytes": 7347
     },
     "phase_11_submit_return/preflight/phase11_adapter_preflight_receipt.v1.json": {
-      "sha256": "sha256:116678062bfc9d525da19efd042da61a403345d5655d29f424470e319238e125",
+      "sha256": "sha256:86f3102d64ac27687a68c9730c3f8669a3f86f45ecf34dc44005a0b91cd8e0fa",
       "size_bytes": 5118
     },
     "phase_11_submit_return/preflight/phase11_authorization_packet.v1.pending.json": {
@@ -123,10 +123,18 @@
     "phase_11_submit_return/preflight/upstream_validation_migration_receipt.json": {
       "sha256": "sha256:0be7cfd76fc54e6c21ca8c78cb2dc17c9fd55e394ed5ed56851f7d3c82e7ccfc",
       "size_bytes": 1280
+    },
+    "phase_11_submit_return/preflight/voice_handoff_memory_receipt.json": {
+      "sha256": "sha256:714de277ff6da93ed415b7c82590557c15bbdfea8fd833b552cccec0611ed0b4",
+      "size_bytes": 1274
+    },
+    "phase_11_submit_return/preflight/voice_handoff_plan.json": {
+      "sha256": "sha256:0b967f9092a514886e341cc1e70ea918df688938e065760bbda43c0538859458",
+      "size_bytes": 3417
     }
   },
-  "entry_count": 31,
-  "generated_at": "2026-07-17T14:02:58.290458+00:00",
+  "entry_count": 33,
+  "generated_at": "2026-07-17T15:12:33.686575+00:00",
   "request_body_sha256": "sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f",
   "revision_id": "rev_upstream_bf3b05d47fb8",
   "run_id": "pipeline-complete",

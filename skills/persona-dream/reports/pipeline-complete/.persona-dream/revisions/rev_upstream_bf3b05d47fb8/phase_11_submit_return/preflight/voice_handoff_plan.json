@@ -1,0 +1,94 @@
+{
+  "ambient_beds": [
+    {
+      "path": "/mnt/storage12tb/media/personas/shared/embry_kai/assets/youtube/ocean_raw_surfing_audio_2min.wav",
+      "role": "ocean_surf_wind_reference_and_mix_bed",
+      "sha256": "sha256:8d5e0d3e14bf9bd7415b232c4deeccb18149bfb7434814db650a07a4e6d55d75",
+      "size_bytes": 21168206
+    }
+  ],
+  "claims": {
+    "does_not_prove": [
+      "the canonical line has been rendered",
+      "the active repaired Kling request has been submitted",
+      "audio has been mixed or muxed",
+      "the final video has audible output"
+    ],
+    "proves": [
+      "the post-mux strategy is explicit and bound to the active revision, exact transcript, provider request, voice reference, and ambient bed"
+    ]
+  },
+  "delivery_mode": "post_mux",
+  "gates": {
+    "post_return": [
+      "exact rendered line equals timed transcript text",
+      "final MP4 contains an audio stream",
+      "final MP4 has audible output",
+      "mux and ffprobe receipts bind final MP4 hash"
+    ],
+    "pre_submit": [
+      "provider request generate_audio=false",
+      "timed transcript path and hash verify",
+      "every voice and ambient reference path and hash verify"
+    ]
+  },
+  "lines": [
+    {
+      "end_s": 10.0,
+      "render_status": "PENDING_EXACT_LINE_RENDER",
+      "rendered_audio": null,
+      "speaker": "Kai",
+      "start_s": 0.0,
+      "text": "If we paddle now, we're cutting across the lineup.",
+      "voice_direction": "quiet, practical restraint"
+    }
+  ],
+  "live": true,
+  "mocked": false,
+  "optional_lipsync": {
+    "enabled": false,
+    "endpoint": "fal-ai/kling-video/lipsync/audio-to-video",
+    "requires_separate_paid_authorization": true
+  },
+  "provider_request": {
+    "dialogue_in_provider_prompts": false,
+    "generate_audio": false,
+    "request_body_sha256": "sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f"
+  },
+  "required_outputs": [
+    "exact_line_render.wav",
+    "exact_line_render_ffprobe_receipt.json",
+    "audio_mix.wav",
+    "audio_mix_receipt.json",
+    "muxed_provider_return.mp4",
+    "ffmpeg_mux_receipt.json",
+    "muxed_provider_return_ffprobe_receipt.json",
+    "audible_output_review_receipt.json"
+  ],
+  "revision_id": "rev_upstream_bf3b05d47fb8",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.voice_handoff_plan.v1",
+  "status": "BLOCKED_AWAITING_EXACT_LINE_RENDER",
+  "strategy": "post_mux",
+  "timed_transcript": {
+    "revision_relative_path": "phase_06_script/timed_transcript.json",
+    "sha256": "sha256:281261d628a6d4fa6f26b11e4350a90e7bbb00cdb5d7ba1dbd690deb5cf5bc4b",
+    "source_of_truth": true
+  },
+  "voice_bindings": {
+    "Kai": {
+      "audition_text": "Kai [laugh], wait. If we paddle now, we are cutting across the lineup.",
+      "canonical_line_match": false,
+      "conditioning_reference": {
+        "path": "/mnt/storage12tb/skills/persona-dream/outputs/dream-voice-auditions/2026-07-03T15-49-53-184Z-kai-12af9cef1db6.wav",
+        "role": "conditioning_reference_only",
+        "sha256": "sha256:cbbb730699dd9667aefce942fa09a245f75b3a7db8da00efbe6f555d0a1b20e4",
+        "size_bytes": 247758
+      },
+      "engine": "chatterbox_turbo",
+      "reuse_audition_as_final_dialogue": false,
+      "source_receipt_relative_path": "phase_05_voices/kai_voice_audition.json",
+      "source_receipt_sha256": "sha256:f960eae052941ccc0dadea1b054e9dc3c51e500ea32527a6e51d019f4b877a19"
+    }
+  }
+}

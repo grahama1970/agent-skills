@@ -19,6 +19,8 @@ from urllib.parse import unquote, urlparse
 
 from jsonschema import Draft202012Validator
 
+from audio_strategy_gate import assess_revision_audio_strategy, blockers_for_kling_request
+
 from activate_revision_qualification import (
     ACTIVATION_RECEIPT_NAME,
     active_pointer_key,
@@ -1015,6 +1017,14 @@ def compile_request_body(inputs: CompilationInputs) -> tuple[dict[str, Any], lis
     if speech_negative.lower() not in request_body["negative_prompt"].lower():
         request_body["negative_prompt"] = (request_body["negative_prompt"].rstrip("; ") + "; " + speech_negative).strip("; ")
 
+    assessment = assess_revision_audio_strategy(inputs.context.revision_root)
+    blockers.extend(
+        blockers_for_kling_request(
+            assessment,
+            generate_audio=request_body.get("generate_audio") is True,
+            multi_prompt=request_body.get("multi_prompt") if isinstance(request_body.get("multi_prompt"), list) else None,
+        )
+    )
     blockers.extend(validate_request_body(request_body, endpoint=endpoint, mode=mode))
     return request_body, sorted(set(blockers)), transformations
 

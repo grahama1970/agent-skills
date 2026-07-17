@@ -1,0 +1,33 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "exact-line TTS rendering, provider return, audio mix, FFmpeg mux, or audible final output"
+    ],
+    "proves": [
+      "audio pipeline steps 37 and 38 are persisted under exact active run/revision keys and reread with their handoff hash"
+    ]
+  },
+  "collection": "persona_dream_pipeline_steps",
+  "exact_reread_count": 2,
+  "exact_reread_keys": [
+    "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:37:voice_audio_handoff",
+    "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:38:final_assembly_movie_lane"
+  ],
+  "live": true,
+  "mocked": false,
+  "observed_at": "2026-07-17T15:10:13.175582+00:00",
+  "record_count_before": 42,
+  "revision_id": "rev_upstream_bf3b05d47fb8",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.voice_handoff_memory_receipt.v1",
+  "semantic_sync_states": {
+    "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:37:voice_audio_handoff": "synced",
+    "persona_dream:pipeline-complete:rev_upstream_bf3b05d47fb8:38:final_assembly_movie_lane": "synced"
+  },
+  "status": "PASS_EXACT_REREAD_STEPS_37_38",
+  "updated_step_numbers": [
+    37,
+    38
+  ],
+  "voice_handoff_plan_sha256": "sha256:0b967f9092a514886e341cc1e70ea918df688938e065760bbda43c0538859458"
+}

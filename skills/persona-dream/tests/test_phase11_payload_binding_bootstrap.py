@@ -246,7 +246,7 @@ def test_compiled_prompts_preserve_required_tokens_and_change_failed_request_has
     body, blockers, _changes = __import__("phase11_canonical_common").compile_request_body(inputs)
     assert blockers == []
     prompts = body["multi_prompt"]
-    assert [len(item["prompt"]) for item in prompts] == [247, 268, 362, 271]
+    assert [len(item["prompt"]) for item in prompts] == [247, 268, 362, 432]
     for index, item in enumerate(prompts):
         panel_id = f"sb_{index + 1:03d}"
         start = sum((2, 3, 2, 3)[:index])

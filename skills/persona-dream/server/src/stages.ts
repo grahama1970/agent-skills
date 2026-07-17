@@ -124,6 +124,21 @@ function collectProviderReturns(runRoot: string): ProviderReturnCandidate[] {
   return candidates.sort((left, right) => right.mtimeMs - left.mtimeMs)
 }
 
+type ActiveAudioHandoff = {
+  path: string
+  value: Record<string, unknown>
+}
+
+function activeAudioHandoff(runRoot: string, activeRevisionId?: string): ActiveAudioHandoff | null {
+  if (!activeRevisionId) return null
+  const path = resolve(
+    runRoot, '.persona-dream', 'revisions', activeRevisionId,
+    'phase_11_submit_return', 'preflight', 'voice_handoff_plan.json',
+  )
+  const value = readJson(path)
+  return value ? { path, value } : null
+}
+
 function pendingRequestGap(runRoot: string, activeRevisionId?: string): string | null {
   if (!activeRevisionId) return null
   const canonical = readJson(resolve(
@@ -152,7 +167,8 @@ function pendingRequestGap(runRoot: string, activeRevisionId?: string): string |
 export function buildProviderReturnStage(runRoot: string, activeRevisionId?: string): DreamPhaseProjection | null {
   const candidates = collectProviderReturns(runRoot)
   const gap = pendingRequestGap(runRoot, activeRevisionId)
-  if (candidates.length === 0 && !gap) return null
+  const audioHandoff = activeAudioHandoff(runRoot, activeRevisionId)
+  if (candidates.length === 0 && !gap && !audioHandoff) return null
   const active = candidates.find((candidate) => candidate.revisionId === activeRevisionId)
   const chosen = active ?? candidates[0]
 
@@ -162,6 +178,29 @@ export function buildProviderReturnStage(runRoot: string, activeRevisionId?: str
   let status = 'NOT_EXECUTED'
   let summary = 'No provider return has been received for the active revision.'
   const gaps: string[] = []
+
+  if (audioHandoff) {
+    artifacts.push({
+      label: relative(runRoot, audioHandoff.path),
+      path: audioHandoff.path,
+      kind: 'json',
+      url: assetUrl(audioHandoff.path),
+    })
+    const strategy = String(audioHandoff.value.strategy ?? 'unknown')
+    const handoffStatus = String(audioHandoff.value.status ?? 'UNKNOWN')
+    const lines = Array.isArray(audioHandoff.value.lines) ? audioHandoff.value.lines : []
+    const spokenLine = lines
+      .map((line) => line && typeof line === 'object' ? String((line as Record<string, unknown>).text ?? '') : '')
+      .find(Boolean)
+    gaps.push([
+      `Audio strategy ${strategy}: Kling remains intentionally silent.`,
+      `Voice handoff ${handoffStatus}.`,
+      spokenLine ? `Canonical Kai line: "${spokenLine}"` : '',
+      'After the active provider return, Step 38 requires mix, FFmpeg mux, audio-stream, and audible-output receipts.',
+    ].filter(Boolean).join(' '))
+  } else if (gap) {
+    gaps.push('Audio strategy is undeclared: voice_handoff_plan.json is missing for the voiced transcript.')
+  }
 
   if (chosen) {
     const superseded = chosen.revisionId !== activeRevisionId

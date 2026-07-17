@@ -1065,7 +1065,7 @@ function StageCardHeader({ stage }: { stage: DreamStage }) {
           <StatusBadge status={headerStatus} />
         </div>
       </div>
-      {!headerPassed && (
+      {!headerPassed && stage.id !== '11' && (
         <div style={styles.stageStatusHelp}>
           {stage.id === '07' && /MISSING|BLOCKED|FAIL/i.test(headerStatus)
             ? 'Storyboard reviewer rejected the current panels. The accepted frames must use the required storyboard aspect ratio and prove Embry/Kai visual identity against the reference/contact sheets before this phase can pass.'
@@ -1086,8 +1086,7 @@ function ProviderReturnPanel({ stage }: { stage: DreamStage }) {
     <section data-qid="dream:provider-return-panel" style={{ display: 'grid', gap: 10, marginBottom: 12 }}>
       {superseded && (
         <div style={{ ...styles.gapBox, borderColor: 'rgba(250,204,21,0.45)', color: '#facc15' }}>
-          Historical provider return from a superseded revision. The active revision&apos;s repaired
-          request has not been submitted yet.
+          Historical return. Active repaired request pending.
         </div>
       )}
       <video
@@ -14098,6 +14097,8 @@ const styles: Record<string, CSSProperties> = {
     color: '#fde68a',
     fontSize: 13,
     lineHeight: 1.45,
+    minWidth: 0,
+    overflowWrap: 'anywhere',
   },
   agentSuccessBox: {
     borderRadius: 12,

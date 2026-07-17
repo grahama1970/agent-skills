@@ -14,6 +14,8 @@ from jsonschema import Draft202012Validator
 
 from prepare_revision_qualification import GateBlocked, read_object, safe_indexed_file, sha256_file
 
+from audio_strategy_gate import assess_and_block_kling_request
+
 ROOT = Path(__file__).resolve().parents[1]
 STANDARD_ENDPOINT = "fal-ai/kling-video/v3/standard/image-to-video"
 DEFAULT_REPOSITORY = "grahama1970/agent-skills"
@@ -119,6 +121,20 @@ SB003_SILENCE = (
     "nonverbal hand signal."
 )
 
+
+
+def _audio_strategy_gate(context: Any, request_input: Mapping[str, Any]) -> dict[str, Any]:
+    assessment = assess_and_block_kling_request(
+        Path(context.revision_root),
+        generate_audio=request_input.get("generate_audio") is True,
+        multi_prompt=request_input.get("multi_prompt") if isinstance(request_input.get("multi_prompt"), list) else None,
+    )
+    if assessment.blockers:
+        raise PayloadBindingBlocked(
+            assessment.blockers[0],
+            details=assessment.to_dict(),
+        )
+    return assessment.to_dict()
 
 class PayloadBindingBlocked(RuntimeError):
     def __init__(self, code: str, *, details: Mapping[str, Any] | None = None, exit_code: int = 2) -> None:
@@ -471,6 +487,17 @@ def build_payload_binding(
         invalid_code="BLOCKED_PHASE11_PHASE10_PAYLOAD_INVALID",
     )
     prompts = _normalized_prompts(phase10)
+    preview = phase10.get("assembled_request_preview")
+    phase10_input = preview.get("input") if isinstance(preview, Mapping) else {}
+    negative_prompt = str(phase10_input.get("negative_prompt") or "blur, distort, and low quality").strip()
+    if SPEECH_NEGATIVE.lower() not in negative_prompt.lower():
+        negative_prompt = f"{negative_prompt.rstrip('; ')}; {SPEECH_NEGATIVE}"
+    provisional_request = {
+        "multi_prompt": prompts,
+        "generate_audio": False,
+        "negative_prompt": negative_prompt,
+    }
+    audio_strategy = _audio_strategy_gate(context, provisional_request)
 
     frame_records = {
         artifact_id: _record(
@@ -584,6 +611,7 @@ def build_payload_binding(
             "provider_media_probes_passed": 0,
             "provider_media_probes_required": 6,
             "end_frame_review_only": True,
+            "audio_strategy": audio_strategy,
         },
         "actual_provider_call_attempts": 0,
         "provider_live": False,
@@ -748,6 +776,8 @@ def validate_payload_binding(
             end=elapsed + expected_duration,
         )
         elapsed += expected_duration
+
+    _audio_strategy_gate(context, request_input)
     if elapsed != 10:
         raise PayloadBindingBlocked("BLOCKED_PROVIDER_TOTAL_DURATION", details={"observed": elapsed})
     elements = request_input.get("elements")
