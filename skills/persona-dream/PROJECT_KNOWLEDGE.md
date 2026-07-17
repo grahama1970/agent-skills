@@ -1,6 +1,6 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-16 11:08 by agent
+**Last updated:** 2026-07-17 07:03 by agent
 **Status:** Active development
 
 ## Current Understanding
@@ -96,6 +96,7 @@
   not Memory-persisted or live-submittable. It is retained as the regression
   baseline and is superseded by the 2026-07-16 canonical compiler, adapter
   preflight, fail-closed validation, and Memory persistence evidence above.
+- 2026-07-17: Phase 11 boundary restore exists as task commit `8ed796cb2 persona-dream: finish phase11 boundary restore`, but it is not on `origin/main` (`git merge-base --is-ancestor 8ed796cb2 origin/main` returned exit 1). A clean `origin/main` worktree cherry-pick attempt proved the commit is superseded, not simply missing: main already has newer Phase 11 lineage commits including `2638b7c persona-dream: add canonical phase 11 boundary`, `c53d68a persona-dream: make phase 11 artifacts portable`, `5214240 persona-dream: clear phase 11 technical blockers`, `5a30f24 persona-dream: add phase 11 canary adapter`, `bbc1c4c fix(persona-dream): bind revisions to explicit human idea`, `a4c9ca6 feat(persona-dream): bind and persist Phase 11 preflight`, `54aa25a fix(persona-dream): scope Phase 11 requests and memory evidence`, and `d249e36 fix(persona-dream): reject multi-prompt end image`. Do not cherry-pick `8ed796cb2` to main. The required main action is to push this knowledge correction after proving the current main Phase 11 path; this is not full pipeline progress, Dreamer readiness, or provider readiness.
 
 ## Recent Decisions
 
@@ -129,6 +130,7 @@
 | 2026-07-16 | A failed authorized canary consumes the one-attempt authorization | Request `444a5a27...` was submitted once and rejected by fal result validation because all four shot prompts exceeded 512 characters. Never reset or reuse its ledger; a repaired request must have a new hash and separate explicit authorization. |
 | 2026-07-16 | Phase 11 Memory identity is exact-request scoped | Run/revision-only keys collide when a repaired payload is compiled. New Phase 11 writes include `request_body_sha256` in the deterministic key so failed and corrected requests coexist without merge residue. |
 | 2026-07-16 | `multi_prompt` and `end_image_url` are incompatible on the selected fal endpoint | Live request `9966f6b6...` returned HTTP 422: `End Image Url is not supported with Multi Prompt`. Keep the accepted end frame as continuity-only evidence, omit it from the request body, and reject this field combination before submission. |
+| 2026-07-17 | Do not cherry-pick obsolete Phase 11 restore commit to `main` | The active branch `battle-ux8-live-contract` is dirty and `ahead 80, behind 203` relative to `origin/main`, so direct push is unsafe. A clean main worktree proved `8ed796cb2` conflicts with newer Phase 11 files already on main; treat it as superseded and integrate only the knowledge correction after focused proof. |
 
 ## Open Questions
 
