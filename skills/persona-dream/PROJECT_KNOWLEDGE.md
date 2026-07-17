@@ -1,10 +1,35 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-17 07:03 by agent
+**Last updated:** 2026-07-17 14:05 by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-17 (afternoon): The upstream-contract reconstruction gate is done.
+  `rev_upstream_bf3b05d47fb8` (source `rev_idea_f3f9c48d5cc2`) was created,
+  qualified, and activated in one bounded transaction
+  (`scripts/reconstruct_upstream_contract_revision.py`): the seven canonical
+  files for steps 05/11/12/15 exist and validate, the step-41 invalidation
+  ledger covers steps 06-42, Memory prepare/verify/activation passed
+  (339/339 hashes, `activation-1662abf63c5270c9d7ca17b46ef34c76`), and 42/42
+  revision-bound step records were exactly reread. Steps 06-20 were then
+  hash-revalidated (9/9 consistency checks). Key lesson: stage every artifact,
+  ledger, and the deterministic step-record bundle inside the revision BEFORE
+  computing the index/manifest; write all post-activation receipts under
+  `.persona-dream/state/` so the frozen artifact set is never mutated.
+- 2026-07-17 (afternoon): The repaired SB_004 request is compiled and fixed at
+  `sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f`
+  with an unused attempt ledger (`PREFLIGHT_READY`, zero calls, zero submit
+  intents). The repair lives in `PANEL_CONCISE_ACTIONS["sb_004"]`
+  (`scripts/phase11_payload_binding.py`): Embry-only forward commit through
+  the safe channel, Kai held outside, lava-reef boundary sharply readable,
+  432 chars. Preflight chain: binding bootstrap at publication commit
+  `8b12d4c8c5af3fff6f0de2aa1a545b502ca71ed2`, reconcile upstream validation,
+  live provider snapshot, live public media probes (6 assets), canonical
+  compile, adapter preflight all PASS with zero technical blockers. Gate:
+  `BLOCKED_AWAITING_HUMAN_APPROVAL` for five hash-bound approvals (template at
+  `phase11_authorization_packet.v1.pending.json`; max spend $0.84). No paid
+  call was made.
 - 2026-07-17: The corrected Phase 11 request
   `sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41`
   made one live provider submission, polled 43 times, and returned an

@@ -1,0 +1,119 @@
+{
+  "activation_transaction_id": "activation-1662abf63c5270c9d7ca17b46ef34c76",
+  "actual_provider_call_attempts": 0,
+  "adapter_script_sha256": "sha256:eee4ff6f2a0c37da7457c7048ed8657665d1240cedb0156880b932073965d6f4",
+  "approval_binding_sha256": "sha256:5bd4c906e97db60fa012812b53cd74651382c0b5a246c92b53fb61dc7bd40e9d",
+  "approval_validation": {
+    "invalid_blockers": [],
+    "missing_types": [
+      "cost_acceptance",
+      "exact_request_acceptance",
+      "paid_call_authorization",
+      "publication_authorization",
+      "visual_media_acceptance"
+    ],
+    "receipts": {
+      "cost_acceptance": {
+        "path": ".persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/preflight/approvals/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/cost_acceptance_receipt.json",
+        "sha256": null,
+        "state": "MISSING"
+      },
+      "exact_request_acceptance": {
+        "path": ".persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/preflight/approvals/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/exact_request_acceptance_receipt.json",
+        "sha256": null,
+        "state": "MISSING"
+      },
+      "paid_call_authorization": {
+        "path": ".persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/preflight/approvals/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/paid_call_authorization_receipt.json",
+        "sha256": null,
+        "state": "MISSING"
+      },
+      "publication_authorization": {
+        "path": ".persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/preflight/approvals/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/publication_authorization_receipt.json",
+        "sha256": null,
+        "state": "MISSING"
+      },
+      "visual_media_acceptance": {
+        "path": ".persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/preflight/approvals/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/visual_media_acceptance_receipt.json",
+        "sha256": null,
+        "state": "MISSING"
+      }
+    },
+    "required_types": [
+      "publication_authorization",
+      "visual_media_acceptance",
+      "exact_request_acceptance",
+      "cost_acceptance",
+      "paid_call_authorization"
+    ]
+  },
+  "attempt_ledger": {
+    "actual_provider_call_attempts": 0,
+    "relative_path": ".persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/attempts/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/attempt_ledger.v1.json",
+    "request_key": "ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f",
+    "sha256": "sha256:583b6babe9e22f5adac8e01e5e11e15eb77a394396c4b87a99e866ee0a563474",
+    "state": "PREFLIGHT_READY",
+    "submit_intent_count": 0
+  },
+  "created_at": "2026-07-17T13:51:17.060278+00:00",
+  "credential": {
+    "present": true,
+    "runtime_variable": "FAL_KEY",
+    "secret_hash_persisted": false,
+    "secret_value_persisted": false,
+    "source_variable": "FAL_KEY"
+  },
+  "download_directory": {
+    "relative_path": ".persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f",
+    "writable": true
+  },
+  "endpoint": "fal-ai/kling-video/v3/standard/image-to-video",
+  "expires_at": "2026-07-17T14:51:17.060278+00:00",
+  "fal_client": {
+    "api_surface": {
+      "SyncClient": true,
+      "SyncClient.get_handle": true,
+      "SyncClient.result": true,
+      "SyncClient.status": true,
+      "SyncClient.submit": true,
+      "SyncRequestHandle.get": true,
+      "SyncRequestHandle.status": true,
+      "single_attempt_control": true
+    },
+    "imported": true,
+    "submit_retry_control": "fal_client.client.MAX_ATTEMPTS=1",
+    "version": "1.0.0"
+  },
+  "ffprobe": {
+    "available": true,
+    "path": "/usr/bin/ffprobe"
+  },
+  "idempotency": {
+    "ambiguous_submit_requires_human_reconciliation": true,
+    "automatic_resubmit_allowed": false,
+    "existing_task_resumes_without_submit": true,
+    "fence_written_before_submit": true,
+    "submit_intent_without_task_id_fails_closed": true
+  },
+  "live": true,
+  "live_submit_ready": false,
+  "media_input_contract_sha256": "sha256:b7ee57c1b667bf87336653fdf9a053f66446cb61bee13180e719ea4fbc5b75fb",
+  "mocked": false,
+  "paid_call_authorized": false,
+  "poll_policy": {
+    "interval_seconds": 5.0,
+    "max_polls": 180,
+    "maximum_elapsed_seconds": 900.0
+  },
+  "pricing_snapshot_sha256": "sha256:408a09cefe5ff9437071dd3e3cedcf6302c195253a747b82fb8da90b39a2e08f",
+  "provider_live": false,
+  "provider_ready": false,
+  "provider_source_snapshot_sha256": "sha256:d1025615a534f5129457ca3190fa351b7d2cb540c85791e5e907206e63168f1a",
+  "request_body_sha256": "sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f",
+  "revision_id": "rev_upstream_bf3b05d47fb8",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.phase11_adapter_preflight_receipt.v1",
+  "status": "PASS_PHASE11_ADAPTER_PREFLIGHT",
+  "submitted": false,
+  "technical_blockers": []
+}

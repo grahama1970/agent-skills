@@ -1,0 +1,64 @@
+{
+  "schema": "persona_dream.phase11_authorization_packet.v1",
+  "decision": "PENDING_HUMAN_DECISION",
+  "decision_source": "TEMPLATE_AWAITING_HUMAN",
+  "template_instructions": [
+    "This is a prepared template, not an authorization. No agent may flip it.",
+    "To authorize exactly one paid Kling attempt for the repaired SB_004 request:",
+    "1. Review the compiled request at phase_11_submit_return/canonical/phase11_live_request.v1.json.",
+    "2. Copy this file to phase11_authorization_packet.v1.json.",
+    "3. Set decision to APPROVE, decision_source to EXPLICIT_HUMAN, and fill approved_at/expires_at.",
+    "4. Run: uv run --project skills/persona-dream python skills/persona-dream/scripts/write_phase11_approval_receipts.py --run-root skills/persona-dream/reports/pipeline-complete --revision-id rev_upstream_bf3b05d47fb8 --authorization-packet <copied packet path> --json",
+    "5. Run: uv run --project skills/persona-dream python skills/persona-dream/scripts/phase11_fal_canary_adapter.py --execute --run-root skills/persona-dream/reports/pipeline-complete --revision-id rev_upstream_bf3b05d47fb8 --json"
+  ],
+  "run_id": "pipeline-complete",
+  "revision_id": "rev_upstream_bf3b05d47fb8",
+  "activation_transaction_id": "activation-1662abf63c5270c9d7ca17b46ef34c76",
+  "approver": {
+    "id": "graham",
+    "display_name": "Graham",
+    "authority_basis": "Project owner explicit authorization"
+  },
+  "approved_at": null,
+  "expires_at": null,
+  "purpose": "PERSONA_DREAM_PHASE11_REPAIRED_SB004_KLING_ATTEMPT",
+  "authorization_scope": "ONE_PAID_PROVIDER_GENERATION_NO_AUTOMATIC_RESUBMIT",
+  "currency": "USD",
+  "maximum_spend_usd": 0.84,
+  "revoked": false,
+  "revocation_state": "NOT_REVOKED",
+  "approval_types": [
+    "publication_authorization",
+    "visual_media_acceptance",
+    "exact_request_acceptance",
+    "cost_acceptance",
+    "paid_call_authorization"
+  ],
+  "bindings": {
+    "run_id": "pipeline-complete",
+    "revision_id": "rev_upstream_bf3b05d47fb8",
+    "activation_transaction_id": "activation-1662abf63c5270c9d7ca17b46ef34c76",
+    "provider_id": "kling",
+    "endpoint": "fal-ai/kling-video/v3/standard/image-to-video",
+    "request_body_sha256": "sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f",
+    "media_binding_manifest_sha256": "sha256:35b87e5290e4dfc92928500afe1ac11812cea9534a8403baf5e03d9f230bb473",
+    "media_input_contract_sha256": "sha256:b7ee57c1b667bf87336653fdf9a053f66446cb61bee13180e719ea4fbc5b75fb",
+    "provider_source_snapshot_sha256": "sha256:d1025615a534f5129457ca3190fa351b7d2cb540c85791e5e907206e63168f1a",
+    "pricing_snapshot_sha256": "sha256:408a09cefe5ff9437071dd3e3cedcf6302c195253a747b82fb8da90b39a2e08f",
+    "actual_provider_call_attempts": 0
+  },
+  "repair_context": {
+    "supersedes_request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+    "post_kling_failure_codes": [
+      "MISSING_SB004_COMMIT_ACTION",
+      "LAVA_REEF_BOUNDARY_NOT_VISUALLY_READABLE"
+    ],
+    "prompt_repair": "SB_004 final beat now demands an unmistakable Embry-only forward commit through the safe channel with Kai held outside and a sharply readable lava-reef boundary; all other prompts, media bindings, wardrobe, and the silent-audio contract are preserved."
+  },
+  "acknowledgements": {
+    "authorize_one_paid_generation": true,
+    "no_automatic_resubmit": true,
+    "ambiguous_submit_requires_human_reconciliation": true,
+    "provider_return_does_not_authorize_watch_or_cognition": true
+  }
+}
