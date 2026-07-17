@@ -4967,6 +4967,31 @@ function CrewConsole({
   )
 }
 
+function distinctAssetDescription(asset: LinkedStoryAsset): string | null {
+  const title = asset.title.replace(/\s+/g, ' ').trim().toLowerCase()
+  const description = (asset.description ?? '').replace(/\s+/g, ' ').trim()
+  const normalizedDescription = description.toLowerCase()
+  if (!description || title === normalizedDescription || title.includes(normalizedDescription) || normalizedDescription.includes(title)) return null
+  return description
+}
+
+function AssetProvenancePreview({ asset }: { asset: LinkedStoryAsset }) {
+  const [broken, setBroken] = useState(false)
+  const mediaType = dreamInferMediaType(asset.url, asset.mediaType)
+  const isImage = ['png', 'jpg', 'jpeg', 'webp', 'gif', 'svg', 'avif'].includes(mediaType)
+  const isAudio = ['wav', 'mp3', 'ogg', 'flac', 'm4a'].includes(mediaType)
+  const Icon = isAudio ? Volume2 : Film
+
+  if (isImage && !broken) {
+    return <img src={asset.url} alt={asset.title} style={nvis.assetThumbImage} onError={() => setBroken(true)} />
+  }
+  return (
+    <span aria-label={isAudio ? 'Audio asset' : 'Video asset'} style={{ ...nvis.scriptAssetFallback, width: '100%', height: '100%' }}>
+      <Icon size={18} />
+    </span>
+  )
+}
+
 function AssetProvenanceStrip({ assets }: { assets: LinkedStoryAsset[] }) {
   useRegisterAction('dream:story:asset-preview', {
     app: 'ux-lab',
@@ -4990,8 +5015,9 @@ function AssetProvenanceStrip({ assets }: { assets: LinkedStoryAsset[] }) {
             </tr>
           </thead>
           <tbody>
-            {assets.map((asset) => (
-              <tr key={asset.id} style={nvis.assetTableRow}>
+            {assets.map((asset) => {
+              const description = distinctAssetDescription(asset)
+              return <tr key={asset.id} style={nvis.assetTableRow}>
                 <td style={nvis.assetTableThumbCell}>
                   <button
                     type="button"
@@ -5001,16 +5027,16 @@ function AssetProvenanceStrip({ assets }: { assets: LinkedStoryAsset[] }) {
                     onClick={() => window.open(asset.url, '_blank', 'noopener,noreferrer')}
                     style={nvis.assetThumbButton}
                   >
-                    <img src={asset.url} alt={asset.title} style={nvis.assetThumbImage} />
+                    <AssetProvenancePreview asset={asset} />
                   </button>
                 </td>
                 <td style={nvis.assetTableDescription}>
                   <span style={nvis.assetTableTitle}>{asset.title}</span>
-                  <span style={nvis.assetTableCaption}>{asset.description || 'Stored description unavailable for this linked asset.'}</span>
+                  {description && <span style={nvis.assetTableCaption}>{description}</span>}
                 </td>
                 <td style={nvis.assetTableSource}>{asset.memoryKey || asset.source || asset.id}</td>
               </tr>
-            ))}
+            })}
           </tbody>
         </table>
       )}
