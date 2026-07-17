@@ -516,9 +516,8 @@ def arena_prekill_survival_proof(
         blue_workers=blue_workers,
     )
     print(_json.dumps(result, indent=2, sort_keys=True))
-    if result.get("status") == "FAIL":
+    if result.get("status") != "PASS":
         raise typer.Exit(1)
-
 
 @app.command("validate-ux-contract")
 def validate_ux_contract(

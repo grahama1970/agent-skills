@@ -360,216 +360,292 @@ def test_arena_prekill_survival_proof_cli_uses_prekill_defaults(
     assert calls["run_id"].startswith("arena-prekill-survival-")
 
 
-def test_prekill_survival_proof_records_pre_terminal_child_and_validates(
+def test_prekill_pressure_callback_runs_before_terminal_confirmation(
     tmp_path: Path,
     monkeypatch,
 ) -> None:
-    calls: dict[str, Any] = {}
+    order: list[str] = []
+    red_path = tmp_path / "red.py"
+    blue_path = tmp_path / "blue.py"
+    red_path.write_text("print('RED_EXPLOIT_CONFIRMED')\n", encoding="utf-8")
+    blue_path.write_text("def import_zip(*args):\n    return None\n", encoding="utf-8")
 
-    def write_json(path: Path, payload: dict[str, Any]) -> Path:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-        return path
+    before_stdout = tmp_path / "before.stdout"
+    before_stderr = tmp_path / "before.stderr"
+    after_stdout = tmp_path / "after.stdout"
+    after_stderr = tmp_path / "after.stderr"
+    before_stdout.write_text("RED_EXPLOIT_CONFIRMED\n", encoding="utf-8")
+    before_stderr.write_text("", encoding="utf-8")
+    after_stdout.write_text("", encoding="utf-8")
+    after_stderr.write_text("blocked\n", encoding="utf-8")
+    commands = [
+        {
+            "exit_code": 0,
+            "stdout_path": str(before_stdout),
+            "stderr_path": str(before_stderr),
+            "command": ["before"],
+        },
+        {
+            "exit_code": 1,
+            "stdout_path": str(after_stdout),
+            "stderr_path": str(after_stderr),
+            "command": ["after"],
+        },
+    ]
 
-    def fake_arena(*, out_dir: Path, battle_id: str, run_id: str, query: str, docker_image: str) -> dict[str, Any]:
-        return {"status": "PASS", "battle_id": battle_id, "run_id": run_id, "query": query}
-
-    def fake_canonical(*, arena_out: Path, battle_id: str, run_id: str, docker_image: str) -> Path:
-        write_json(
-            arena_out / "scenario.json",
-            {
-                "battle_id": battle_id,
-                "run_id": run_id,
-                "scenario_id": "arena-zip-slip-import-001",
-                "title": "Archive import path traversal",
-                "public_entrypoint": "/api/import-zip",
-                "cwe": "CWE-22",
-            },
-        )
-        return write_json(arena_out / "arena-receipt.json", {"status": "PASS"})
-
-    def fake_ledger(*, arena_out: Path, battle_id: str, scenario: dict[str, Any], oracle_receipt: Path) -> Path:
-        return write_json(arena_out / "private" / "ledger.json", {"battle_id": battle_id})
-
-    def fake_context(
-        *,
-        out_dir: Path,
-        battle_id: str,
-        run_id: str,
-        scenario: dict[str, Any],
-        red_workers: int,
-        blue_workers: int,
-    ) -> Path:
-        return write_json(out_dir / "tau-public-context.json", {"red_workers": red_workers, "blue_workers": blue_workers})
-
-    def fake_tau_harness(
-        *,
-        out_dir: Path,
-        battle_id: str,
-        run_id: str,
-        scenario_id: str,
-        context_path: Path,
-        red_persona: str,
-        blue_persona: str,
-        model: str,
-        scillm_base_url: str,
-        timeout_s: float,
-        red_workers: int,
-        blue_workers: int,
-    ) -> Path:
-        calls["initial_red_workers"] = red_workers
-        teams = [
-            {
-                "team": "red",
-                "worker_id": "red-0",
-                "lane_id": "payload-857-receipt",
-                "subagent_receipt": "tau-live/red/red-0/tau-subagent-receipt.json",
-                "materialized": {"path": "tau-live/red/red-0/exploit.py"},
-            },
-            {
-                "team": "red",
-                "worker_id": "red-1",
-                "lane_id": "payload-857-red-1",
-                "subagent_receipt": "tau-live/red/red-1/tau-subagent-receipt.json",
-                "materialized": {"path": "tau-live/red/red-1/exploit.py"},
-            },
-            {
-                "team": "blue",
-                "worker_id": "blue-0",
-                "lane_id": "blue-0",
-                "subagent_receipt": "tau-live/blue/blue-0/tau-subagent-receipt.json",
-                "materialized": {"path": "tau-live/blue/blue-0/patch.py"},
-            },
-        ]
-        write_json(out_dir / "tau-live" / "red" / "red-0" / "tau-subagent-receipt.json", {"status": "PASS"})
-        write_json(out_dir / "tau-live" / "red" / "red-1" / "tau-subagent-receipt.json", {"status": "PASS"})
-        return write_json(
-            out_dir / "tau-live" / "manifest.json",
-            {
-                "status": "PASS",
-                "duration_seconds": 3.0,
-                "started_at": "2026-07-04T00:00:00Z",
-                "ended_at": "2026-07-04T00:00:03Z",
-                "teams": teams,
-            },
-        )
-
-    def fake_validation(*, out_dir: Path, tau_manifest: dict[str, Any]) -> dict[str, Any]:
-        return {"status": "PASS"}
-
-    def fake_judge(
-        *,
-        out_dir: Path,
-        scenario: dict[str, Any],
-        docker_image: str,
-        tau_manifest: dict[str, Any],
-        timing_origin: float | None = None,
-    ) -> dict[str, Any]:
-        return {
-            "status": "PASS",
-            "verdict": "BLUE_SUCCESS",
-            "judged_pair_count": 2,
-            "blue_success_count": 1,
-            "red_success_count": 1,
-            "attempts": [
-                {
-                    "pair_id": "red-0__blue-0",
-                    "red_worker_id": "red-0",
-                    "red_lane_id": "payload-857-receipt",
-                    "blue_worker_id": "blue-0",
-                    "verdict": "BLUE_SUCCESS",
-                    "exploit_confirmed_before_patch": True,
-                    "exploit_blocked_after_patch": True,
-                    "blue_artifact": "tau-live/blue/blue-0/patch.py",
-                    "started_elapsed_seconds": 8.0,
-                    "ended_elapsed_seconds": 8.2,
-                },
-                {
-                    "pair_id": "red-1__blue-0",
-                    "red_worker_id": "red-1",
-                    "red_lane_id": "payload-857-red-1",
-                    "blue_worker_id": "blue-0",
-                    "verdict": "RED_SUCCESS",
-                    "exploit_confirmed_before_patch": True,
-                    "exploit_blocked_after_patch": False,
-                    "blue_artifact": "tau-live/blue/blue-0/patch.py",
-                    "started_elapsed_seconds": 9.0,
-                    "ended_elapsed_seconds": 9.2,
-                },
-            ],
-        }
-
-    monkeypatch.setattr(proof, "run_arena_subagent_proof", fake_arena)
-    monkeypatch.setattr(proof, "_write_canonical_zip_slip_scenario", fake_canonical)
-    monkeypatch.setattr(proof, "_write_multi_vuln_ledger", fake_ledger)
-    monkeypatch.setattr(proof, "_write_tau_public_context", fake_context)
-    monkeypatch.setattr(proof, "_run_tau_harness", fake_tau_harness)
-    monkeypatch.setattr(proof, "_visibility_validation", fake_validation)
-    monkeypatch.setattr(proof, "_judge_tau_artifacts", fake_judge)
-
-    receipt = proof.run_arena_prekill_survival_proof(
-        out_dir=tmp_path / "proof",
-        battle_id="battle-004",
-        run_id="run-prekill-001",
-        red_workers=2,
-        blue_workers=1,
+    monkeypatch.setattr(
+        proof,
+        "_copy_tree",
+        lambda source, destination: destination.mkdir(
+            parents=True,
+            exist_ok=True,
+        ),
+    )
+    monkeypatch.setattr(
+        proof,
+        "_python_docker_command",
+        lambda **kwargs: ["python"],
     )
 
-    assert calls["initial_red_workers"] == 2
-    assert receipt["worker_counts"]["red_prekill_survival_requested"] is True
-    assert receipt["lineage_request"]["mode"] == "prekill_survival_initial_child"
-    assert receipt["prekill_survival_contract"]["status"] == "PASS"
+    call_index = 0
 
-    lifecycle_path = tmp_path / "proof" / "exploit-lifecycle-receipts.json"
-    report = validate_exploit_lifecycle_receipts_path(lifecycle_path)
-    assert report["prekill_survival_status"] == "PASS"
-    assert "strategic_pre_kill" in report["spawn_decisions"]
-    assert "preemptive_spawn_adaptation" in report["outcome_classes"]
-    contract = report["prekill_survival_contract"]
-    assert contract["child_materialized"]["source_time"] < contract["earliest_confirmed_terminal"]["source_time"]
-    assert contract["post_terminal_child_lifecycle_receipt"]["source_time"] > contract["earliest_confirmed_terminal"]["source_time"]
+    def fake_run_command(*args: Any, **kwargs: Any) -> dict[str, Any]:
+        nonlocal call_index
+        command = commands[call_index]
+        call_index += 1
+        return command
 
-    payload = json.loads(lifecycle_path.read_text(encoding="utf-8"))
-    event_types = {receipt["event_type"] for receipt in payload["receipts"]}
-    assert {
-        "observation_drift_detected",
-        "threat_assessment_recorded",
-        "tau_branch_decision_recorded",
-        "spawn_request_recorded",
-        "spawn_decision_recorded",
-        "child_lifecycle_started",
-        "child_inherited_plan_recorded",
-        "child_inherited_probe_recorded",
-        "memory_promotion_evaluated",
-        "replay_event_emitted",
-    } <= event_types
-    spawn_request = next(receipt for receipt in payload["receipts"] if receipt["event_type"] == "spawn_request_recorded")
-    branch_decision = next(receipt for receipt in payload["receipts"] if receipt["event_type"] == "tau_branch_decision_recorded")
-    assert branch_decision["actor"]["team"] == "red"
-    assert branch_decision["tau_branch_decision"]["decision_authority"] == "tau_subagent"
-    assert branch_decision["tau_branch_decision"]["battle_policy_authority"] == "battle"
-    assert branch_decision["tau_branch_decision"]["observed_evidence_refs"]
-    assert spawn_request["actor"]["team"] == "red"
-    assert spawn_request["spawn_request"]["claim_authority"] == "tau_claim_only"
-    assert spawn_request["spawn_request"]["battle_allowed"] is False
-    spawn_decision = next(receipt for receipt in payload["receipts"] if receipt["event_type"] == "spawn_decision_recorded")
-    assert spawn_decision["actor"]["team"] == "orchestrator"
-    assert spawn_decision["spawn_policy"]["owner"] == "battle"
-    child_plan = next(receipt for receipt in payload["receipts"] if receipt["event_type"] == "child_inherited_plan_recorded")
-    assert child_plan["child_plan"]["used_before_first_probe"] is True
-    assert child_plan["child_plan"]["inherited_item_refs"]
-    child_probe = next(receipt for receipt in payload["receipts"] if receipt["event_type"] == "child_inherited_probe_recorded")
-    assert child_probe["inherited_probe"]["used_inherited_state"] is True
-    assert child_probe["observation"]["network_summary"]["full_packet_capture_proven"] is False
-    replay = next(receipt for receipt in payload["receipts"] if receipt["event_type"] == "replay_event_emitted")
-    assert replay["replay_event"]["presentation_owner"] == "ux"
-    assert "cinematic_speed" in replay["replay_event"]["backend_must_not_emit"]
+    monkeypatch.setattr(proof, "_run_command", fake_run_command)
 
-    payload["prekill_survival_contract"]["child_materialized"]["source_time"] = payload["prekill_survival_contract"]["earliest_confirmed_terminal"]["source_time"] + 1.0
-    payload["summary"]["prekill_survival_contract"] = payload["prekill_survival_contract"]
-    with pytest.raises(ContractError, match="child_materialized.source_time must be before"):
-        validate_exploit_lifecycle_receipts(payload)
+    def fake_smoke_import(**kwargs: Any) -> bool:
+        order.append("terminal")
+        return True
 
+    monkeypatch.setattr(proof, "_smoke_import", fake_smoke_import)
+
+    def on_pressure(signal: dict[str, Any]) -> None:
+        order.append("pressure")
+        assert signal["parent_worker_id"] == "red-0"
+        assert signal["parent_lane_id"] == "payload-857-receipt"
+        assert signal["blue_worker_id"] == "blue-0"
+
+    attempt = proof._judge_pair(
+        out_dir=tmp_path / "proof",
+        scenario={"scenario_id": "arena-zip-slip-import-001"},
+        docker_image="python:3.12-slim",
+        red={
+            "worker_id": "red-0",
+            "lane_id": "payload-857-receipt",
+            "path": str(red_path),
+        },
+        blue={
+            "worker_id": "blue-0",
+            "action_id": "blue-0-patch",
+            "path": str(blue_path),
+        },
+        on_parent_pressure_before_terminal=on_pressure,
+    )
+
+    assert order == ["pressure", "terminal"]
+    assert attempt["verdict"] == "BLUE_SUCCESS"
+
+
+def test_prekill_contract_requires_parent_pressure_inheritance_and_child_after_terminal() -> None:
+    parent_lane = "payload-857-receipt"
+    child_lane = "payload-857-red-1"
+    inherited_refs = [
+        {
+            "kind": "parent_pressure",
+            "receipt_id": "pressure-1",
+            "sha256": "a" * 64,
+        },
+        {
+            "kind": "parent_tau_subagent",
+            "receipt_id": "parent-1",
+            "sha256": "b" * 64,
+        },
+        {
+            "kind": "parent_materialized_artifact",
+            "receipt_id": "artifact-1",
+            "sha256": "c" * 64,
+        },
+    ]
+    pressure = proof._make_lifecycle_receipt(
+        battle_id="battle-004",
+        run_id="run-prekill-001",
+        scenario_id="arena-zip-slip-import-001",
+        receipt_id="lifecycle:pressure",
+        lane_id=parent_lane,
+        event_type="pressure_assessed",
+        phase="pressure",
+        actor_team="red",
+        subagent_id="red-0",
+        pressure_observation={
+            "present": True,
+            "signals": ["judge_block_receipt"],
+            "baseline_probe_receipt_id": "before",
+            "current_probe_receipt_id": "after",
+            "pressure_score": 1.0,
+            "confidence": "high",
+            "suspected_pressure": False,
+            "confirmed_blue_action": True,
+            "source_receipt_id": "pressure-1",
+            "source_receipt_sha256": "a" * 64,
+            "overclaim_guard": (
+                "observation_only_unless_blue_or_judge_receipt_present"
+            ),
+        },
+        source_time={
+            "started_elapsed_seconds": 1.0,
+            "ended_elapsed_seconds": 1.0,
+        },
+    )
+    spawn = proof._make_lifecycle_receipt(
+        battle_id="battle-004",
+        run_id="run-prekill-001",
+        scenario_id="arena-zip-slip-import-001",
+        receipt_id="lifecycle:spawn",
+        lane_id=parent_lane,
+        event_type="spawn_decision_recorded",
+        phase="spawn_policy",
+        actor_team="red",
+        subagent_id="red-0",
+        spawn_decision={
+            "present": True,
+            "decision": "strategic_pre_kill",
+            "allowed": True,
+            "parent_state": "alive",
+            "author_worker_id": "red-0",
+            "author_lane_id": parent_lane,
+            "pressure_receipt_id": "pressure-1",
+            "pressure_receipt_sha256": "a" * 64,
+            "inherited_evidence_refs": inherited_refs,
+            "child_exploit_id": child_lane,
+            "confirmed_kill_receipt_before_spawn": False,
+        },
+        source_time={
+            "started_elapsed_seconds": 2.0,
+            "ended_elapsed_seconds": 2.0,
+        },
+    )
+    child_materialized = proof._make_lifecycle_receipt(
+        battle_id="battle-004",
+        run_id="run-prekill-001",
+        scenario_id="arena-zip-slip-import-001",
+        receipt_id="lifecycle:child-materialized",
+        lane_id=child_lane,
+        event_type="child_materialized",
+        phase="spawn",
+        actor_team="red",
+        subagent_id="red-1",
+        parent_exploit_id=parent_lane,
+        generation=1,
+        source_time={
+            "started_elapsed_seconds": 3.0,
+            "ended_elapsed_seconds": 3.0,
+        },
+    )
+    child_started = proof._make_lifecycle_receipt(
+        battle_id="battle-004",
+        run_id="run-prekill-001",
+        scenario_id="arena-zip-slip-import-001",
+        receipt_id="lifecycle:child-started",
+        lane_id=child_lane,
+        event_type="child_lifecycle_started",
+        phase="runtime",
+        actor_team="red",
+        subagent_id="red-1",
+        parent_exploit_id=parent_lane,
+        generation=1,
+        knowledge_packet={
+            "present": True,
+            "packet_id": "decision-1",
+            "inherited_evidence_refs": inherited_refs,
+            "research_goals": ["continue"],
+            "parent_analysis": {},
+            "child_ack": {
+                "required": True,
+                "received": True,
+                "used_before_first_probe": True,
+            },
+        },
+        source_time={
+            "started_elapsed_seconds": 3.0,
+            "ended_elapsed_seconds": 3.0,
+        },
+    )
+    terminal = proof._make_lifecycle_receipt(
+        battle_id="battle-004",
+        run_id="run-prekill-001",
+        scenario_id="arena-zip-slip-import-001",
+        receipt_id="lifecycle:terminal",
+        lane_id=parent_lane,
+        event_type="judge_blue_success",
+        phase="terminal",
+        actor_team="judge",
+        source_time={
+            "started_elapsed_seconds": 3.5,
+            "ended_elapsed_seconds": 4.0,
+        },
+    )
+    lineage = proof._make_lifecycle_receipt(
+        battle_id="battle-004",
+        run_id="run-prekill-001",
+        scenario_id="arena-zip-slip-import-001",
+        receipt_id="lifecycle:lineage",
+        lane_id=child_lane,
+        event_type="lineage_registered",
+        phase="spawn",
+        actor_team="orchestrator",
+        parent_exploit_id=parent_lane,
+        generation=1,
+        source_time={
+            "started_elapsed_seconds": 2.5,
+            "ended_elapsed_seconds": 3.0,
+        },
+    )
+    post_terminal = proof._make_lifecycle_receipt(
+        battle_id="battle-004",
+        run_id="run-prekill-001",
+        scenario_id="arena-zip-slip-import-001",
+        receipt_id="lifecycle:post-terminal",
+        lane_id=child_lane,
+        event_type="child_lifecycle_receipt_after_parent_terminal",
+        phase="post_parent_terminal",
+        actor_team="red",
+        subagent_id="red-1",
+        parent_exploit_id=parent_lane,
+        generation=1,
+        evidence=[
+            {
+                "evidence_id": "child-judge-attempt",
+                "evidence_type": "judge_action",
+                "source": "judge",
+                "sha256": "d" * 64,
+            }
+        ],
+        source_time={
+            "started_elapsed_seconds": 5.0,
+            "ended_elapsed_seconds": 5.0,
+        },
+    )
+
+    receipts = [
+        pressure,
+        spawn,
+        child_materialized,
+        child_started,
+        terminal,
+        lineage,
+        post_terminal,
+    ]
+    contract = proof._prekill_survival_contract_from_receipts(receipts)
+    assert contract["status"] == "PASS"
+
+    spawn["spawn_decision"]["pressure_receipt_sha256"] = "wrong"
+    contract = proof._prekill_survival_contract_from_receipts(receipts)
+    assert contract["status"] == "INSUFFICIENT_EVIDENCE"
+    assert "spawn decision pressure receipt hash does not match" in contract["errors"]
 
 def test_live_lifecycle_receipts_reject_pressure_overclaimed_as_kill() -> None:
     bundle = {
