@@ -22,6 +22,21 @@ from phase11_fixture_helpers import (  # noqa: E402
 from test_phase11_canonical_live_request import install_transition_evidence  # noqa: E402
 
 
+def test_active_completed_attempt_has_completed_terminal_state():
+    ledger = ROOT / (
+        "reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8/"
+        "phase_11_submit_return/attempts/"
+        "ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/"
+        "attempt_ledger.v1.json"
+    )
+    if not ledger.is_file():
+        pytest.skip("active live attempt ledger not installed")
+    payload = json.loads(ledger.read_text(encoding="utf-8"))
+    assert payload["state"] == "COMPLETED"
+    assert payload["history"][-1]["event"] == "COMPLETED"
+    assert payload["provider_terminal_state"] == "COMPLETED"
+
+
 def ready_inputs(tmp_path: Path):
     inputs, _candidate, _urls = make_compilation_inputs(tmp_path)
     request_body, blockers, _ = common.compile_request_body(inputs)

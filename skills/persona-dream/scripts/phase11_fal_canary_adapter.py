@@ -320,6 +320,7 @@ def execute_canary(inputs: Any, args: argparse.Namespace, current: Any) -> dict[
         current=now_from_argument(None),
         poll_count=poll_count,
         fields={
+            "provider_terminal_state": "COMPLETED",
             "provider_return_envelope_sha256": sha256_file(envelope_path),
             "download_receipt_sha256": sha256_file(download_path),
             "downloaded_mp4_sha256": downloaded_sha,

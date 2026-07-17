@@ -37,6 +37,46 @@ test('provider return projects active post-mux handoff before provider media exi
   rmSync(root, { recursive: true, force: true })
 })
 
+test('provider return prefers completed post-mux video and clears stale pre-submit gaps', () => {
+  const root = mkdtempSync(resolve(tmpdir(), 'persona-dream-post-mux-return-'))
+  const revisionId = 'rev_audio'
+  const requestKey = 'a'.repeat(64)
+  const revisionRoot = resolve(root, '.persona-dream', 'revisions', revisionId)
+  const returnRoot = resolve(revisionRoot, 'phase_11_submit_return', 'provider_return', requestKey)
+  const preflightRoot = resolve(revisionRoot, 'phase_11_submit_return', 'preflight')
+  const canonicalRoot = resolve(revisionRoot, 'phase_11_submit_return', 'canonical')
+  mkdirSync(returnRoot, { recursive: true })
+  mkdirSync(preflightRoot, { recursive: true })
+  mkdirSync(canonicalRoot, { recursive: true })
+  writeFileSync(resolve(returnRoot, 'provider_return.mp4'), 'silent-source')
+  writeFileSync(resolve(returnRoot, 'muxed_provider_return.mp4'), 'voiced-final')
+  writeFileSync(resolve(returnRoot, 'ffmpeg_mux_receipt.json'), JSON.stringify({ status: 'PASS_POST_MUX' }))
+  writeFileSync(resolve(returnRoot, 'muxed_provider_return_ffprobe_receipt.json'), JSON.stringify({
+    status: 'PASS_MUXED_RETURN_HAS_AUDIO_STREAM', output_sha256: 'sha256:final',
+    ffprobe: { format: { duration: '10.041667' } },
+  }))
+  writeFileSync(resolve(returnRoot, 'audible_output_review_receipt.json'), JSON.stringify({ status: 'PASS_DETERMINISTIC_NON_SILENCE' }))
+  writeFileSync(resolve(returnRoot, 'phase11_provider_return_envelope.v1.json'), JSON.stringify({ status: 'PASS_PHASE11_PROVIDER_RETURN_RECEIVED' }))
+  writeFileSync(resolve(returnRoot, 'phase11_download_ffprobe_receipt.v1.json'), JSON.stringify({ status: 'PASS_PHASE11_PROVIDER_RETURN_DOWNLOADED' }))
+  writeFileSync(resolve(preflightRoot, 'voice_handoff_plan.json'), JSON.stringify({
+    schema: 'persona_dream.voice_handoff_plan.v1', status: 'PASS_EXACT_LINE_RENDER_READY_FOR_MUX',
+    strategy: 'post_mux', lines: [{ speaker: 'Kai', text: 'line' }],
+  }))
+  writeFileSync(resolve(canonicalRoot, 'phase11_live_request.v1.json'), JSON.stringify({
+    approval_bindings: { request_body_sha256: `sha256:${requestKey}` },
+    missing_approval_types: ['paid_call_authorization'],
+  }))
+
+  const stage = buildProviderReturnStage(root, revisionId)
+  assert.equal(stage?.status, 'RETURN_RECEIVED')
+  assert.match(stage?.summary ?? '', /Post-mux final MP4/)
+  assert.equal(stage?.failureOrGap, null)
+  assert.equal(stage?.artifacts[1]?.path.endsWith('muxed_provider_return.mp4'), true)
+  assert.ok(stage?.artifacts.some((artifact) => artifact.path.endsWith('audible_output_review_receipt.json')))
+  assert.doesNotMatch(stage?.summary ?? '', /awaits .* approvals/)
+  rmSync(root, { recursive: true, force: true })
+})
+
 test('path policy rejects prefix collisions and outside files', () => {
   const root = mkdtempSync(resolve(tmpdir(), 'persona-dream-path-'))
   const allowed = resolve(root, 'allowed')

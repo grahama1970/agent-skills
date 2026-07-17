@@ -1,0 +1,29 @@
+{
+  "accepted": true,
+  "blockers": [],
+  "claims": {
+    "does_not_prove": [
+      "human subjective voice quality",
+      "lip synchronization"
+    ],
+    "proves": [
+      "a real Kling MP4 was submitted once, polled, downloaded, technically validated, contact-sheeted, visually accepted, and post-muxed with non-silent audio",
+      "all 42 pipeline steps were exactly reread from Memory"
+    ]
+  },
+  "final_muxed_mp4_sha256": "sha256:ec9da2af5b73ae4cff5df707341d83e59a90e6c56ef1197505ea68ae247d691a",
+  "frame_contact_sheet_passed": true,
+  "observed_at": "2026-07-17T15:49:03.394501+00:00",
+  "pipeline_step_memory_exact_reread": 42,
+  "pipeline_step_memory_target": 42,
+  "post_kling_continuity_passed": true,
+  "post_mux_audio_passed": true,
+  "provider_mp4_sha256": "sha256:08ee232878508fda8797fd697f6ef80d40b3cf7722f43914040759dfd6c7bb50",
+  "request_body_sha256": "sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f",
+  "revision_id": "rev_upstream_bf3b05d47fb8",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.final_acceptance_receipt.v1",
+  "status": "PASS_AGENT_EVIDENCE_ACCEPTANCE",
+  "technical_validation_passed": true,
+  "working_kling_video_returned": true
+}

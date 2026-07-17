@@ -1,10 +1,10 @@
 {
   "claims": {
     "does_not_prove": [
-      "provider return, audio mix, FFmpeg mux, or audible final output"
+      "subjective voice quality, lip synchronization, or human listening acceptance"
     ],
     "proves": [
-      "audio pipeline steps 37 and 38 are persisted under exact active run/revision keys and reread with their handoff hash"
+      "audio pipeline steps 37 and 38 are persisted under exact active run/revision keys and exactly reread with hash-bound artifacts"
     ]
   },
   "collection": "persona_dream_pipeline_steps",
@@ -15,7 +15,7 @@
   ],
   "live": true,
   "mocked": false,
-  "observed_at": "2026-07-17T15:18:13.095669+00:00",
+  "observed_at": "2026-07-17T15:37:45.360258+00:00",
   "record_count_before": 42,
   "revision_id": "rev_upstream_bf3b05d47fb8",
   "run_id": "pipeline-complete",

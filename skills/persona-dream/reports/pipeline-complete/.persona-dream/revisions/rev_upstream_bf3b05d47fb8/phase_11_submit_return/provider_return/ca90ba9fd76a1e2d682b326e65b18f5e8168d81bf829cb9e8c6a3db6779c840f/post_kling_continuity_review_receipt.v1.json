@@ -1,0 +1,66 @@
+{
+  "blocking_findings": [],
+  "claims": {
+    "does_not_prove": [
+      "subjective audio quality or lip synchronization",
+      "Memory persistence for all pipeline steps",
+      "human final acceptance"
+    ],
+    "proves": [
+      "the exact active returned MP4 was inspected through twelve hash-bound chronological frames",
+      "the repaired SB_004 forward-commit action is visibly present",
+      "the lava-reef shelf and safe-channel water boundary are visibly readable",
+      "identity, wardrobe, board, and environment continuity pass in the sampled return"
+    ]
+  },
+  "contact_sheet": "frame_contact_sheet.png",
+  "contact_sheet_sha256": "sha256:9a97c5093d055f50a7b43eee9ad2ae48287f2416c2551e0becfe1442b70540a6",
+  "frame_count_reviewed": 12,
+  "frames_manifest": "watch-codex-vision/frames_manifest.json",
+  "frames_manifest_sha256": "sha256:137c9a2d67cf0ea9b98908e303913474b6f2f77b08837ee3f744091967d21f01",
+  "live": true,
+  "mocked": false,
+  "non_blocking_findings": [
+    "SB_002 fatigue is expressed through Embry's lowered gaze and two-handed board grip.",
+    "SB_003 uses restrained gaze and body orientation rather than an exaggerated hand gesture."
+  ],
+  "observed_at": "2026-07-17T15:44:30Z",
+  "request_body_sha256": "sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f",
+  "review_method": "manual pixel inspection of the 4x3 contact sheet and final full-resolution sampled frame, reconciled with one exact-tab WebGPT advisory review",
+  "revision_id": "rev_upstream_bf3b05d47fb8",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.post_kling_continuity_review_receipt.v1",
+  "source_video": "provider_return.mp4",
+  "source_video_sha256": "sha256:08ee232878508fda8797fd697f6ef80d40b3cf7722f43914040759dfd6c7bb50",
+  "status": "PASS_POST_KLING_CONTINUITY_REVIEW",
+  "subgates": {
+    "board_continuity": "PASS",
+    "embry_visual_identity_within_return": "PASS",
+    "environment_and_daylight_continuity": "PASS",
+    "kai_visual_identity_within_return": "PASS",
+    "sb_001_two_character_waterline_setup": "PASS",
+    "sb_002_embry_board_grip_and_fatigue_beat": "PASS",
+    "sb_003_kai_restrained_nonverbal_cue": "PASS",
+    "sb_004_embry_safe_channel_commit": "PASS",
+    "sb_004_visible_lava_reef_boundary": "PASS",
+    "surfboard_continuity": "PASS",
+    "technical_readability": "PASS",
+    "wardrobe_continuity": "PASS"
+  },
+  "webgpt_advisory": {
+    "clean_response_path": "../../../../../../../../review-bundles/active-return-continuity-review-response.md",
+    "clean_response_sha256": "sha256:d35d21b633ea46259ae6a6f28d78455f917f5935038a0d5c1a8a8c898a567168",
+    "controlled_tab_id": "837359230",
+    "controlled_tab_id_mismatch": false,
+    "focus_changed": true,
+    "meta_path": "../../../../../../../../review-bundles/active-return-continuity-review-response.meta.json",
+    "meta_sha256": "sha256:0dfa5e52e1e3464015bd2b6738f36427c945953c9a53e60e8ee466e25c62e721",
+    "requested_tab_id": "837359230",
+    "response_proof_status": "response_proven",
+    "ruling": "PASS_CURRENT_GATE",
+    "sentinel_proven": true,
+    "tab_was_created": false,
+    "transport_status": "recovered_focus_changed",
+    "transport_warning": "advisory response is degraded transport evidence because focus changed during no-activate mode; it is not closure proof"
+  }
+}

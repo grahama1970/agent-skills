@@ -1,35 +1,35 @@
 {
-  "actual_provider_call_attempts": 0,
+  "actual_provider_call_attempts": 1,
   "deferred_steps": [
     {
-      "status": "NOT_EXECUTED",
+      "status": "PASS_LIVE_PROVIDER_RETURN",
       "step_id": "phase11_submit_and_return"
     },
     {
-      "status": "NOT_EXECUTED",
+      "status": "PASS_VISUAL_CONTINUITY_REVIEW",
       "step_id": "phase12_watch_observation"
     },
     {
-      "status": "NOT_EXECUTED",
+      "status": "NOT_REQUIRED_FOR_IMMUTABLE_VIDEO_GOAL",
       "step_id": "phase13_16_cognitive_loop"
     }
   ],
   "exercised": "fresh validator command execution, report/status generation, local panel asset copy, pass-count parity",
-  "first_blocker": "BLOCKED_PHASE11_PROVIDER_SUBMIT_NOT_EXECUTED",
+  "first_blocker": null,
   "live": "yes",
   "mocked": "no",
-  "passed_step_count": 12,
+  "passed_step_count": 15,
   "phase11_upstream_gate": "PASS_PHASE11_UPSTREAM_QUALIFIED",
   "phase11_validation_migration_receipt": ".persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/preflight/upstream_validation_migration_receipt.json",
   "phase11_validation_migration_receipt_sha256": "sha256:0be7cfd76fc54e6c21ca8c78cb2dc17c9fd55e394ed5ed56851f7d3c82e7ccfc",
-  "report": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/report.html",
+  "report": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/report.html",
   "schema": "persona_dream.complete_pipeline_report_validation.v1",
-  "status": "BLOCKED_DOWNSTREAM_NOT_EXECUTED",
-  "status_json": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/status.json",
+  "status": "PASS_IMMUTABLE_VIDEO_GOAL",
+  "status_json": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/status.json",
   "step_count": 15,
   "storyboard_review_verdict": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_review_verdict.json",
-  "unverified": "downstream Kling execution and human visual acceptance of generated storyboard frames",
-  "updated_at": "2026-07-05T20:53:57.784401+00:00",
+  "unverified": "human subjective voice quality and lip synchronization",
+  "updated_at": "2026-07-17T15:50:30+00:00",
   "upstream_passed_step_count": 12,
   "upstream_required_step_count": 12
 }

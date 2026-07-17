@@ -1,0 +1,48 @@
+{
+  "actually_exercised": [
+    "one live Kling submit",
+    "54 provider polls",
+    "MP4 retrieval",
+    "ffprobe",
+    "12-frame analysis",
+    "4x3 contact-sheet inspection",
+    "exact Kai voice render",
+    "ocean ambience mix",
+    "FFmpeg mux",
+    "non-silence analysis",
+    "42 Memory exact rereads"
+  ],
+  "audio_result": "PASS_DETERMINISTIC_NON_SILENCE",
+  "blockers": [],
+  "continuity_result": "PASS_POST_KLING_CONTINUITY_REVIEW",
+  "counts": {
+    "blocked": 0,
+    "failed": 0,
+    "passing_or_not_required": 42,
+    "total": 42
+  },
+  "live": true,
+  "memory_persistence": {
+    "collection": "persona_dream_pipeline_steps",
+    "exact_reread_count": 42,
+    "expected_count": 42
+  },
+  "mocked": false,
+  "observed_at": "2026-07-17T15:49:03.394501+00:00",
+  "request_body_sha256": "sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f",
+  "revision_id": "rev_upstream_bf3b05d47fb8",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.final_report.v1",
+  "status": "PASS_AGENT_EVIDENCE_ACCEPTANCE",
+  "verified_outputs": {
+    "codec": "h264",
+    "contact_sheet": "../phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/frame_contact_sheet.png",
+    "dimensions": "1280x720",
+    "duration_seconds": 10.041667,
+    "final_muxed_mp4": "../phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/muxed_provider_return.mp4",
+    "final_muxed_mp4_sha256": "sha256:ec9da2af5b73ae4cff5df707341d83e59a90e6c56ef1197505ea68ae247d691a",
+    "fps": 24,
+    "provider_mp4": "../phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/provider_return.mp4",
+    "provider_mp4_sha256": "sha256:08ee232878508fda8797fd697f6ef80d40b3cf7722f43914040759dfd6c7bb50"
+  }
+}

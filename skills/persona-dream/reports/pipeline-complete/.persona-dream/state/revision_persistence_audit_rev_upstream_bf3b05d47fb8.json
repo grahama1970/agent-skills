@@ -15,25 +15,25 @@
       "indexed_count": 339,
       "indexed_integrity_mismatches": [],
       "indexed_integrity_verified": true,
-      "on_disk_count": 376,
+      "on_disk_count": 413,
       "pass": true,
       "unexpected_unindexed": [],
       "unindexed_classification_counts": {
         "machinery_receipt": 3,
-        "request_scoped_evidence": 33,
+        "request_scoped_evidence": 70,
         "unexpected": 0
       },
-      "unindexed_count": 36
+      "unindexed_count": 73
     },
     {
       "applicable": true,
       "attempt_ledger": {
-        "actual_provider_call_attempts": 0,
-        "state": "PREFLIGHT_READY",
-        "submit_intent_count": 0
+        "actual_provider_call_attempts": 1,
+        "state": "COMPLETED",
+        "submit_intent_count": 1
       },
       "check": "request_evidence_index",
-      "evidence_file_count": 33,
+      "evidence_file_count": 70,
       "evidence_index_path": ".persona-dream/state/phase11_request_evidence_index_rev_upstream_bf3b05d47fb8_ca90ba9fd76a1e2d.json",
       "pass": true,
       "preflight_hash_agreement": true,
@@ -69,7 +69,7 @@
     },
     {
       "check": "broken_absolute_path_references",
-      "json_files_scanned": 306,
+      "json_files_scanned": 326,
       "missing_by_root_prefix": {
         "/home/graham": 25,
         "/mnt/storage12tb": 4,
@@ -97,15 +97,15 @@
       "check": "validation_coherence",
       "coherent": true,
       "pass": true,
-      "revision_attempt_ledger_total_calls": 0,
-      "validation_phase11_status": "NOT_EXECUTED"
+      "revision_attempt_ledger_total_calls": 1,
+      "validation_phase11_status": "PASS_LIVE_PROVIDER_RETURN"
     }
   ],
   "failed_checks": [],
   "live": true,
   "mocked": false,
   "mode": "gate",
-  "observed_at": "2026-07-17T15:18:32.753210+00:00",
+  "observed_at": "2026-07-17T15:50:32.834448+00:00",
   "revision_id": "rev_upstream_bf3b05d47fb8",
   "run_id": "pipeline-complete",
   "schema": "persona_dream.revision_persistence_audit.v1",

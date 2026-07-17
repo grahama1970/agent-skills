@@ -24,30 +24,31 @@ Minimum final evidence:
 
 ## Current Boundary
 
-The active revision `rev_upstream_bf3b05d47fb8` has not crossed the live Kling
-boundary. Its repaired request is compiled as
-`sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f`
-with zero provider calls and five human hash-bound approvals outstanding.
-
-A superseded revision returned a technically valid video, but post-Kling review
-rejected its final action beat. That MP4 is historical evidence, not the active
-deliverable.
+The active revision `rev_upstream_bf3b05d47fb8` crossed the live Kling boundary
+once for repaired request
+`sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f`.
+Provider request `019f70ac-3864-7d81-9e86-5fae6a676e0d` completed after 54
+polls with no resubmit. The returned source MP4 passes technical validation and
+the twelve-frame continuity review. The exact Kai line and ocean ambience are
+post-muxed into the final MP4.
 
 Current gate language:
 
 ```text
-active repaired Kling request submitted: no, zero provider calls
-active repaired Kling video returned: no
-historical superseded MP4: yes, 18,520,578 bytes
-historical ffprobe: H.264 1280x720 24 fps, 10.041667 seconds
-historical frame contact sheet: 12 frames in a 4x3 PNG
-historical continuity review: failed on the SB_004 commit action and visible lava-reef boundary
+active repaired Kling request submitted: yes, exactly one provider call
+active repaired Kling video returned: yes, 16,957,429-byte source MP4
+active provider request id: 019f70ac-3864-7d81-9e86-5fae6a676e0d
+active ffprobe: readable H.264, 10.041667 seconds
+active frame contact sheet: 12 frames in a 4x3 PNG, sha256:9a97c5093d055f50a7b43eee9ad2ae48287f2416c2551e0becfe1442b70540a6
+active continuity review: pass, including SB_004 commit action and visible lava-reef/safe-channel boundary
 audio strategy: post_mux; Kling request intentionally has generate_audio=false
 step 37 voice handoff: exact live Kai line rendered and hash-bound; ready for mux
-step 38 final assembly: blocked awaiting active provider return, mix, mux, audio-stream, and audible-output receipts
-pipeline-step Memory exact reread: 42/42
-audio-step Memory exact reread: steps 37 and 38 synced to voice_handoff_plan SHA-256
-final acceptance: blocked
+step 38 final assembly: pass; muxed MP4 sha256:ec9da2af5b73ae4cff5df707341d83e59a90e6c56ef1197505ea68ae247d691a
+audio proof: stream present, mean -32.6 dB, max -15.5 dB
+pipeline-step Memory exact reread: 42/42, semantic sync 42/42, Qdrant pointers 42/42
+revision persistence audit: pass, zero failed checks
+agent evidence acceptance: pass
+not proven: human subjective voice quality or lip synchronization
 ```
 
 No agent may claim final, green, complete, fixed, or verified for this goal

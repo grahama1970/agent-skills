@@ -754,6 +754,7 @@ function statusTone(status: string): StatusTone {
   const normalized = status.toUpperCase()
   if (
     normalized.includes('PASS')
+    || normalized.includes('RETURN_RECEIVED')
     || normalized.includes('EVIDENCE_FOUND')
     || normalized.includes('READY')
     || normalized.includes('CALLED')

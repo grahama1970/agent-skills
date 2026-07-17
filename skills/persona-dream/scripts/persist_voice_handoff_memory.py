@@ -24,6 +24,12 @@ def sha256_file(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def read_json(path: Path) -> Any:
+    if not path.is_file():
+        return None
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
 def response_documents(payload: Mapping[str, Any]) -> list[dict[str, Any]]:
     value = payload.get("documents") or payload.get("items") or []
     return [dict(item) for item in value if isinstance(item, Mapping)]
@@ -42,6 +48,7 @@ def contains_authored_value(observed: Any, expected: Any) -> bool:
 def canonical_record(
     existing: Mapping[str, Any],
     *,
+    revision_root: Path,
     plan: Mapping[str, Any],
     plan_sha: str,
     step_no: int,
@@ -50,6 +57,10 @@ def canonical_record(
     record = {key: value for key, value in existing.items() if key not in SERVER_FIELDS}
     request_sha = str((plan.get("provider_request") or {}).get("request_body_sha256") or "")
     transcript_sha = str((plan.get("timed_transcript") or {}).get("sha256") or "")
+    request_dir = (
+        Path("phase_11_submit_return/provider_return")
+        / request_sha.removeprefix("sha256:")
+    )
     if step_no == 37:
         rendered = all(
             isinstance(line, Mapping) and line.get("render_status") == "PASS_EXACT_LINE_RENDER"
@@ -58,24 +69,58 @@ def canonical_record(
         status = "PASS_EXACT_LINE_RENDER_READY_FOR_MUX" if rendered else "BLOCKED_AWAITING_EXACT_LINE_RENDER"
         blocker = None if rendered else "render the exact Kai transcript line with the bound voice reference, then produce render and evaluation receipts"
         proves = "the post-mux voice handoff and exact live Kai line render are hash-bound to the active revision, transcript, voice reference, ambient bed, and provider request" if rendered else "the post-mux voice handoff is hash-bound to the active revision, exact transcript, voice reference, ambient bed, and provider request"
-        does_not_prove = "the rendered line has been mixed, muxed, or heard in a final video"
+        does_not_prove = "the rendered line has been heard and accepted by a human"
+        disposition = "current_pass" if rendered else "current_pending"
+        outputs = [PLAN_RELATIVE]
+        receipt_paths = [PLAN_RELATIVE]
+        artifact_hashes = {PLAN_RELATIVE: plan_sha}
     else:
-        status = "BLOCKED_AWAITING_ACTIVE_PROVIDER_RETURN_AND_AUDIO_MUX"
-        blocker = "after the active repaired provider return exists, mix the exact line and ambient bed, FFmpeg mux them, and prove an audible audio stream"
-        proves = "the final assembly requirements for the active post-mux strategy are durably recorded"
-        does_not_prove = "the active request has returned media or that final audio assembly has run"
+        return_root = revision_root / request_dir
+        relative_outputs = [
+            request_dir / "muxed_provider_return.mp4",
+            request_dir / "audio_mix_receipt.json",
+            request_dir / "ffmpeg_mux_receipt.json",
+            request_dir / "muxed_provider_return_ffprobe_receipt.json",
+            request_dir / "audible_output_review_receipt.json",
+        ]
+        existing_outputs = [path for path in relative_outputs if (revision_root / path).is_file()]
+        mux_receipt = read_json(return_root / "ffmpeg_mux_receipt.json") or {}
+        audible_receipt = read_json(return_root / "audible_output_review_receipt.json") or {}
+        ffprobe_receipt = read_json(return_root / "muxed_provider_return_ffprobe_receipt.json") or {}
+        muxed_video = return_root / "muxed_provider_return.mp4"
+        muxed_sha = sha256_file(muxed_video) if muxed_video.is_file() else None
+        muxed = (
+            len(existing_outputs) == len(relative_outputs)
+            and mux_receipt.get("status") == "PASS_POST_MUX"
+            and audible_receipt.get("status") == "PASS_DETERMINISTIC_NON_SILENCE"
+            and ffprobe_receipt.get("status") == "PASS_MUXED_RETURN_HAS_AUDIO_STREAM"
+            and mux_receipt.get("output_sha256") == muxed_sha
+            and audible_receipt.get("output_sha256") == muxed_sha
+            and ffprobe_receipt.get("output_sha256") == muxed_sha
+        )
+        status = "PASS_POST_MUX_AUDIO_ASSEMBLY" if muxed else "BLOCKED_AWAITING_ACTIVE_PROVIDER_RETURN_AND_AUDIO_MUX"
+        blocker = None if muxed else "mix the exact line and ambient bed, FFmpeg mux them, and prove an audible audio stream with matching hashes"
+        proves = "the exact Kai line and bound ambient bed were mixed into the active provider return, which contains a hash-bound non-silent audio stream" if muxed else "the final assembly requirements for the active post-mux strategy are durably recorded"
+        does_not_prove = "subjective voice quality, lip synchronization, or human listening acceptance"
+        disposition = "current_pass" if muxed else "current_pending"
+        outputs = [str(path) for path in existing_outputs] or [PLAN_RELATIVE]
+        receipt_paths = [str(path) for path in existing_outputs if path.suffix == ".json"] or [PLAN_RELATIVE]
+        artifact_hashes = {
+            str(path): sha256_file(revision_root / path)
+            for path in existing_outputs
+        } or {PLAN_RELATIVE: plan_sha}
     record.update({
         "status": status,
-        "disposition": "current_pending",
+        "disposition": disposition,
         "inputs": {
             "source_revision_id": str(plan.get("revision_id") or ""),
             "audio_strategy": "post_mux",
             "timed_transcript_sha256": transcript_sha,
             "request_body_sha256": request_sha,
         },
-        "outputs": [PLAN_RELATIVE],
-        "receipt_paths": [PLAN_RELATIVE],
-        "artifact_hashes": {PLAN_RELATIVE: plan_sha},
+        "outputs": outputs,
+        "receipt_paths": receipt_paths,
+        "artifact_hashes": artifact_hashes,
         "request_hash": request_sha,
         "provider_task_id": None,
         "memory_write_method": "/upsert",
@@ -93,7 +138,7 @@ def canonical_record(
             f"step:{step_no}",
             f"status:{status.lower()}",
             "audio-strategy:post-mux",
-            "disposition:current-pending",
+            f"disposition:{disposition.replace('_', '-')}",
         ],
     })
     return record
@@ -127,7 +172,14 @@ def main() -> int:
 
         plan_sha = sha256_file(plan_path)
         documents = [
-            canonical_record(by_step[step_no], plan=plan, plan_sha=plan_sha, step_no=step_no, observed_at=observed_at)
+            canonical_record(
+                by_step[step_no],
+                revision_root=revision_root,
+                plan=plan,
+                plan_sha=plan_sha,
+                step_no=step_no,
+                observed_at=observed_at,
+            )
             for step_no in (37, 38)
         ]
         write_response = client.post("/upsert", json={"collection": COLLECTION, "documents": documents})
@@ -164,12 +216,8 @@ def main() -> int:
         "live": True,
         "observed_at": observed_at,
         "claims": {
-            "proves": ["audio pipeline steps 37 and 38 are persisted under exact active run/revision keys and reread with their handoff hash"],
-            "does_not_prove": [
-                "provider return, audio mix, FFmpeg mux, or audible final output"
-                if plan.get("status") == "PASS_EXACT_LINE_RENDER_READY_FOR_MUX"
-                else "exact-line TTS rendering, provider return, audio mix, FFmpeg mux, or audible final output"
-            ],
+            "proves": ["audio pipeline steps 37 and 38 are persisted under exact active run/revision keys and exactly reread with hash-bound artifacts"],
+            "does_not_prove": ["subjective voice quality, lip synchronization, or human listening acceptance"],
         },
     }
     receipt_path = revision_root / RECEIPT_RELATIVE

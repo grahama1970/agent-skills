@@ -1,0 +1,21 @@
+{
+  "activation_transaction_id": "activation-1662abf63c5270c9d7ca17b46ef34c76",
+  "actual_provider_call_attempts": 1,
+  "download_receipt_relative_path": ".persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/phase11_download_ffprobe_receipt.v1.json",
+  "download_receipt_sha256": "sha256:5c016a0bcd51a57adf8100d5d07b2bf73c26bd8af0238026c3f8124f8d77a569",
+  "downloaded_mp4_sha256": "sha256:08ee232878508fda8797fd697f6ef80d40b3cf7722f43914040759dfd6c7bb50",
+  "endpoint": "fal-ai/kling-video/v3/standard/image-to-video",
+  "poll_count": 54,
+  "provider_live": true,
+  "provider_result_sha256": "sha256:1813bc03d8e4213217bc1733bcd65bcab0a94f59132326f4490e226982e89999",
+  "request_body_sha256": "sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f",
+  "request_id": "019f70ac-3864-7d81-9e86-5fae6a676e0d",
+  "revision_id": "rev_upstream_bf3b05d47fb8",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.phase11_provider_return_envelope.v1",
+  "source_revision_id": "rev_idea_f3f9c48d5cc2",
+  "status": "PASS_PHASE11_PROVIDER_RETURN_RECEIVED",
+  "submitted": true,
+  "video_url": "https://v3b.fal.media/files/b/0aa2a0fb/DRM5w46VrZl5eBy0DkisO_output.mp4",
+  "watch_started": false
+}

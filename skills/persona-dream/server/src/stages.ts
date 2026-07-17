@@ -81,8 +81,11 @@ type ProviderReturnCandidate = {
   requestKey: string
   returnRoot: string
   mp4Path: string
+  sourceMp4Path: string
+  audioReady: boolean
   envelope: Record<string, unknown> | null
   ffprobe: Record<string, unknown> | null
+  finalProbe: Record<string, unknown> | null
   review: Record<string, unknown> | null
   contactSheetPath?: string
   mtimeMs: number
@@ -105,19 +108,31 @@ function collectProviderReturns(runRoot: string): ProviderReturnCandidate[] {
     const returnsRoot = resolve(revisionsRoot, revisionId, 'phase_11_submit_return', 'provider_return')
     for (const requestKey of listDirectories(returnsRoot)) {
       const returnRoot = resolve(returnsRoot, requestKey)
-      const mp4Path = resolve(returnRoot, 'provider_return.mp4')
-      if (!existsSync(mp4Path)) continue
+      const sourceMp4Path = resolve(returnRoot, 'provider_return.mp4')
+      if (!existsSync(sourceMp4Path)) continue
+      const muxedPath = resolve(returnRoot, 'muxed_provider_return.mp4')
+      const muxReceipt = readJson(resolve(returnRoot, 'ffmpeg_mux_receipt.json'))
+      const muxProbe = readJson(resolve(returnRoot, 'muxed_provider_return_ffprobe_receipt.json'))
+      const audibleReceipt = readJson(resolve(returnRoot, 'audible_output_review_receipt.json'))
+      const audioReady = existsSync(muxedPath)
+        && muxReceipt?.status === 'PASS_POST_MUX'
+        && muxProbe?.status === 'PASS_MUXED_RETURN_HAS_AUDIO_STREAM'
+        && audibleReceipt?.status === 'PASS_DETERMINISTIC_NON_SILENCE'
+      const mp4Path = audioReady ? muxedPath : sourceMp4Path
       const contactSheetPath = resolve(returnRoot, 'frame_contact_sheet.png')
       candidates.push({
         revisionId,
         requestKey,
         returnRoot,
         mp4Path,
+        sourceMp4Path,
+        audioReady,
         envelope: readJson(resolve(returnRoot, 'phase11_provider_return_envelope.v1.json')),
         ffprobe: readJson(resolve(returnRoot, 'phase11_download_ffprobe_receipt.v1.json')),
+        finalProbe: audioReady ? muxProbe : null,
         review: readJson(resolve(returnRoot, 'post_kling_continuity_review_receipt.v1.json')),
         contactSheetPath: existsSync(contactSheetPath) ? contactSheetPath : undefined,
-        mtimeMs: statSync(mp4Path).mtimeMs,
+        mtimeMs: statSync(sourceMp4Path).mtimeMs,
       })
     }
   }
@@ -192,12 +207,14 @@ export function buildProviderReturnStage(runRoot: string, activeRevisionId?: str
     const spokenLine = lines
       .map((line) => line && typeof line === 'object' ? String((line as Record<string, unknown>).text ?? '') : '')
       .find(Boolean)
-    gaps.push([
-      `Audio strategy ${strategy}: Kling remains intentionally silent.`,
-      `Voice handoff ${handoffStatus}.`,
-      spokenLine ? `Canonical Kai line: "${spokenLine}"` : '',
-      'After the active provider return, Step 38 requires mix, FFmpeg mux, audio-stream, and audible-output receipts.',
-    ].filter(Boolean).join(' '))
+    if (!chosen?.audioReady) {
+      gaps.push([
+        `Audio strategy ${strategy}: Kling remains intentionally silent.`,
+        `Voice handoff ${handoffStatus}.`,
+        spokenLine ? `Canonical Kai line: "${spokenLine}"` : '',
+        'Step 38 requires mix, FFmpeg mux, audio-stream, and audible-output receipts.',
+      ].filter(Boolean).join(' '))
+    }
   } else if (gap) {
     gaps.push('Audio strategy is undeclared: voice_handoff_plan.json is missing for the voiced transcript.')
   }
@@ -205,17 +222,20 @@ export function buildProviderReturnStage(runRoot: string, activeRevisionId?: str
   if (chosen) {
     const superseded = chosen.revisionId !== activeRevisionId
     const reviewStatus = typeof chosen.review?.status === 'string' ? chosen.review.status : ''
-    const format = (chosen.ffprobe?.ffprobe as Record<string, unknown> | undefined)?.format as Record<string, unknown> | undefined
+    const displayProbe = chosen.finalProbe ?? chosen.ffprobe
+    const format = (displayProbe?.ffprobe as Record<string, unknown> | undefined)?.format as Record<string, unknown> | undefined
     const duration = typeof format?.duration === 'string' ? `${format.duration}s` : ''
-    const sizeBytes = typeof chosen.ffprobe?.size_bytes === 'number' ? chosen.ffprobe.size_bytes : undefined
-    const mp4Sha = typeof chosen.ffprobe?.downloaded_sha256 === 'string' ? chosen.ffprobe.downloaded_sha256 : ''
+    const sizeBytes = statSync(chosen.mp4Path).size
+    const mp4Sha = typeof displayProbe?.output_sha256 === 'string'
+      ? displayProbe.output_sha256
+      : typeof chosen.ffprobe?.downloaded_sha256 === 'string' ? chosen.ffprobe.downloaded_sha256 : ''
     status = superseded
       ? 'RETURN_RECEIVED_SUPERSEDED_PRIOR_REVISION'
       : reviewStatus.includes('FAIL')
         ? 'RETURN_RECEIVED_CONTINUITY_FAILED'
         : 'RETURN_RECEIVED'
     summary = [
-      `Real provider MP4 returned for request ${chosen.requestKey.slice(0, 16)}… in revision ${chosen.revisionId}`,
+      `${chosen.audioReady ? 'Post-mux final MP4' : 'Real provider MP4'} returned for request ${chosen.requestKey.slice(0, 16)}… in revision ${chosen.revisionId}`,
       duration && sizeBytes ? `(${duration}, ${sizeBytes.toLocaleString()} bytes${mp4Sha ? `, ${mp4Sha.slice(0, 23)}…` : ''})` : '',
       superseded ? 'This return is bound to a superseded revision and is shown as historical evidence, not as the current deliverable.' : '',
     ].filter(Boolean).join(' ')
@@ -227,10 +247,18 @@ export function buildProviderReturnStage(runRoot: string, activeRevisionId?: str
       gaps.push(`Post-provider continuity review failed${codes.length ? `: ${codes.join(', ')}` : ''}.`)
     }
     artifacts.push({ label: relative(runRoot, chosen.mp4Path), path: chosen.mp4Path, kind: 'media', url: assetUrl(chosen.mp4Path) })
+    if (chosen.audioReady) {
+      artifacts.push({ label: relative(runRoot, chosen.sourceMp4Path), path: chosen.sourceMp4Path, kind: 'media', url: assetUrl(chosen.sourceMp4Path) })
+    }
     for (const [name, value] of Object.entries({
       'phase11_provider_return_envelope.v1.json': chosen.envelope,
       'phase11_download_ffprobe_receipt.v1.json': chosen.ffprobe,
       'post_kling_continuity_review_receipt.v1.json': chosen.review,
+      ...(chosen.audioReady ? {
+        'ffmpeg_mux_receipt.json': readJson(resolve(chosen.returnRoot, 'ffmpeg_mux_receipt.json')),
+        'muxed_provider_return_ffprobe_receipt.json': readJson(resolve(chosen.returnRoot, 'muxed_provider_return_ffprobe_receipt.json')),
+        'audible_output_review_receipt.json': readJson(resolve(chosen.returnRoot, 'audible_output_review_receipt.json')),
+      } : {}),
     })) {
       if (!value) continue
       const path = resolve(chosen.returnRoot, name)
@@ -240,7 +268,7 @@ export function buildProviderReturnStage(runRoot: string, activeRevisionId?: str
       images.push({ label: relative(runRoot, chosen.contactSheetPath), path: chosen.contactSheetPath, url: assetUrl(chosen.contactSheetPath) })
     }
   }
-  if (gap) gaps.push(gap)
+  if (gap && !active) gaps.push(gap)
 
   return {
     id: '11',

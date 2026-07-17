@@ -1,0 +1,82 @@
+{
+  "duration_seconds": 10.041667,
+  "frame_count": 12,
+  "frames": [
+    {
+      "index": 0,
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/watch-codex-vision/frames/frame_0001.jpg",
+      "sha256": "sha256:0fcc3fab702a528d662b756d8f575122323a34b2a774576e48b61b240ff56e15",
+      "timestamp_seconds": 0.0
+    },
+    {
+      "index": 1,
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/watch-codex-vision/frames/frame_0002.jpg",
+      "sha256": "sha256:e983486615c5aa26e3efc853a42ba8329e57e9f53c18e69aa2860ff9b4d94427",
+      "timestamp_seconds": 0.836806
+    },
+    {
+      "index": 2,
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/watch-codex-vision/frames/frame_0003.jpg",
+      "sha256": "sha256:2784c823cdfee7428ff6de6a4cb1d59d192e6397116699c5b2aece1da03e2e46",
+      "timestamp_seconds": 1.673611
+    },
+    {
+      "index": 3,
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/watch-codex-vision/frames/frame_0004.jpg",
+      "sha256": "sha256:467fdc51c02874bf280b221c2001e360c967538ac1d68af9c673bb39e03f7148",
+      "timestamp_seconds": 2.510417
+    },
+    {
+      "index": 4,
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/watch-codex-vision/frames/frame_0005.jpg",
+      "sha256": "sha256:78b3d1f4c8d625a9d2a7fe19592d3da0227240c09f6bf46799e3d9577f5bec7f",
+      "timestamp_seconds": 3.347222
+    },
+    {
+      "index": 5,
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/watch-codex-vision/frames/frame_0006.jpg",
+      "sha256": "sha256:dc4fd84e55a1d2b96cb553fccf1809ec7ca8745ad74767dfa9e2ec7e4c76af30",
+      "timestamp_seconds": 4.184028
+    },
+    {
+      "index": 6,
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/watch-codex-vision/frames/frame_0007.jpg",
+      "sha256": "sha256:ad244689210b9fc4f6ed45093427e73b41b75af923ac524c0a6c70e1cd96d4c7",
+      "timestamp_seconds": 5.020834
+    },
+    {
+      "index": 7,
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/watch-codex-vision/frames/frame_0008.jpg",
+      "sha256": "sha256:f29b7b63df36b5bcb3441c2cc987dd77361204016c52d0fadce2c06def65e00a",
+      "timestamp_seconds": 5.857639
+    },
+    {
+      "index": 8,
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/watch-codex-vision/frames/frame_0009.jpg",
+      "sha256": "sha256:94d5ca349153b8a78f592160551653217ec6ffd39dc3ab7f079437ffb13c8320",
+      "timestamp_seconds": 6.694445
+    },
+    {
+      "index": 9,
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/watch-codex-vision/frames/frame_0010.jpg",
+      "sha256": "sha256:a32feb7987211833dc140fba6668b5af5ee0fe8e7e6471a046696322be4a06c7",
+      "timestamp_seconds": 7.53125
+    },
+    {
+      "index": 10,
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/watch-codex-vision/frames/frame_0011.jpg",
+      "sha256": "sha256:ccbc61557e46b75dda7e219c48686f64dd6357bbbcb71117881c05ae1d5c6297",
+      "timestamp_seconds": 8.368056
+    },
+    {
+      "index": 11,
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/watch-codex-vision/frames/frame_0012.jpg",
+      "sha256": "sha256:56216bcde34e172a93da283adda0ba9389f4db28b28608ad29e6d8fe0a23b43e",
+      "timestamp_seconds": 9.204861
+    }
+  ],
+  "resolution": 768,
+  "sampling_mode": "uniform",
+  "source": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/provider_return.mp4",
+  "source_sha256": "sha256:08ee232878508fda8797fd697f6ef80d40b3cf7722f43914040759dfd6c7bb50"
+}
