@@ -24,19 +24,21 @@ Minimum final evidence:
 
 ## Current Boundary
 
-The current active objective is still before live Kling success. A prepared
-provider request, dry-run bundle, local report, or reviewer response is not a
-working Kling video.
+The active revision has crossed the live Kling boundary, but it has not crossed
+the final acceptance boundary. The provider returned a technically valid video;
+post-Kling review rejected the final action beat and found missing canonical
+upstream contract artifacts.
 
 Current gate language:
 
 ```text
-working Kling video: not yet proven
-provider MP4 returned: no
-ffprobe on returned Kling video: no
-frame contact sheet from returned Kling video: no
-post-Kling continuity review: no
-final acceptance: blocked until the above exist
+working Kling video returned: yes
+provider MP4 returned: yes, 18,520,578 bytes
+ffprobe on returned Kling video: yes, H.264 1280x720 24 fps, 10.041667 seconds
+frame contact sheet from returned Kling video: yes, 12 frames in a 4x3 PNG
+post-Kling continuity review: failed on the SB_004 commit action and visible lava-reef boundary
+pipeline-step Memory exact reread: 42/42
+final acceptance: blocked on steps 05, 11, 12, 15, 36, 40, and 42
 ```
 
 No agent may claim final, green, complete, fixed, or verified for this goal

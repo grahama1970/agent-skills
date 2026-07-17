@@ -1,0 +1,73 @@
+{
+  "blockers": [
+    {
+      "blocker": "missing dream_packet.json and dream_prompt.txt",
+      "status": "BLOCKED_MISSING_REQUIRED_ARTIFACT",
+      "step_name": "Dream Packet",
+      "step_no": 5
+    },
+    {
+      "blocker": "missing canonical Look Lock artifacts",
+      "status": "BLOCKED_MISSING_REQUIRED_ARTIFACT",
+      "step_name": "Look Lock",
+      "step_no": 11
+    },
+    {
+      "blocker": "missing script_dna_selection.json",
+      "status": "BLOCKED_MISSING_REQUIRED_ARTIFACT",
+      "step_name": "Script DNA",
+      "step_no": 12
+    },
+    {
+      "blocker": "missing panel_continuity_and_repair_ledger.json",
+      "status": "BLOCKED_MISSING_REQUIRED_ARTIFACT",
+      "step_name": "Panel Continuity And Repair Ledger",
+      "step_no": 15
+    },
+    {
+      "blocker": "SB_004 commit action and visible lava-reef boundary are missing",
+      "status": "FAIL",
+      "step_name": "Post-Kling Continuity Review",
+      "step_no": 36
+    },
+    {
+      "blocker": "seven non-passing or missing-contract step states remain",
+      "status": "BLOCKED",
+      "step_name": "Gate Validation Loop",
+      "step_no": 40
+    },
+    {
+      "blocker": "post-Kling continuity failed and required upstream contract artifacts are absent",
+      "status": "BLOCKED",
+      "step_name": "Final Acceptance Boundary",
+      "step_no": 42
+    }
+  ],
+  "counts": {
+    "blocked": 6,
+    "failed": 1,
+    "passing_or_not_required": 35,
+    "total": 42
+  },
+  "live": true,
+  "live_evidence": {
+    "ffprobe_pass": true,
+    "frame_contact_sheet_pass": true,
+    "poll_count": 43,
+    "provider_calls": 1,
+    "returned_mp4": true
+  },
+  "memory_persistence": {
+    "collection": "persona_dream_pipeline_steps",
+    "exact_reread_count": 42,
+    "expected_count": 42
+  },
+  "mocked": false,
+  "next_critical_action": "restore the missing upstream contract artifacts, then compile a repaired SB_004 request and obtain separate authorization for one new paid attempt",
+  "observed_at": "2026-07-17T12:22:37.024609+00:00",
+  "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+  "revision_id": "rev_idea_f3f9c48d5cc2",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.final_gate_validation_summary.v1",
+  "status": "BLOCKED_FINAL_ACCEPTANCE"
+}

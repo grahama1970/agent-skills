@@ -5,6 +5,19 @@
 
 ## Current Understanding
 
+- 2026-07-17: The corrected Phase 11 request
+  `sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41`
+  made one live provider submission, polled 43 times, and returned an
+  18,520,578-byte H.264 1280x720 24 fps MP4 lasting 10.041667 seconds. The MP4
+  SHA-256 is
+  `sha256:2545394fb8e48694acb2751b25cbf6fc55a4dfdbde66e241deecfb5f2f1ecd33`.
+  Twelve Watch frames were assembled into a 4x3 contact sheet and inspected.
+  Post-Kling continuity is `FAIL`: identity, wardrobe, boards, setting, and
+  Kai's hand signal remain coherent, but SB_004 does not visibly show Embry's
+  safe-channel commit or a readable lava-reef boundary. Memory exact reread is
+  42/42 with 42 semantic syncs and 42 Qdrant pointers. Final acceptance remains
+  blocked on steps 05, 11, 12, 15, 36, 40, and 42. Do not resubmit: the paid
+  authorization was consumed and a repaired hash requires separate authority.
 - 2026-07-15: `rev_repair_a8b93ffeca8f` is a semantic-mix counterexample: its
   Phase 01 request belongs to the Tau issue-41 fixture while Phase 03-10 belong
   to the Embry/Kai surfing idea. It must not be reported `ACTIVE_CONSISTENT`.

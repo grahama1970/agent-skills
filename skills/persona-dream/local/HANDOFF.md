@@ -2,7 +2,24 @@
 
 **Timestamp**: 2026-07-16T19:40:00Z
 **Active Agent**: Codex
-**Operational status**: `BLOCKED_CURRENT_GATE: PHASE_13_EXECUTABLE_INTERPRETATION_MISSING`
+**Operational status**: `BLOCKED_FINAL_ACCEPTANCE: POST_KLING_CONTINUITY_FAILED`
+
+## 0. Immutable Goal Audit Update (2026-07-17)
+
+- The corrected request returned a real 18,520,578-byte Kling MP4 after one
+  submission and 43 polls.
+- FFprobe: H.264, 1280x720, 24 fps, 10.041667 seconds.
+- Twelve existing Watch frames were assembled into
+  `frame_contact_sheet.png`; the sheet was visually inspected.
+- Post-Kling continuity failed because SB_004 does not visibly show Embry's
+  safe-channel commit or a readable lava-reef boundary.
+- `persona_dream_pipeline_steps` exact reread is 42/42; all 42 records have
+  semantic sync and Qdrant pointers.
+- Final acceptance is blocked on steps 05, 11, 12, 15, 36, 40, and 42.
+- Do not submit again without a new request hash and separate paid-call
+  authorization. The successful request's one-attempt authorization is consumed.
+- Canonical audit artifacts are under
+  `reports/pipeline-complete/.persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_13_final_acceptance/`.
 
 ## 1. Project Overview
 

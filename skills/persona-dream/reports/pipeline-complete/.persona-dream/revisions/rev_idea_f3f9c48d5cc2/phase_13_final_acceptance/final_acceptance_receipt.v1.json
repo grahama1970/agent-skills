@@ -1,0 +1,69 @@
+{
+  "accepted": false,
+  "blockers": [
+    {
+      "blocker": "missing dream_packet.json and dream_prompt.txt",
+      "status": "BLOCKED_MISSING_REQUIRED_ARTIFACT",
+      "step_name": "Dream Packet",
+      "step_no": 5
+    },
+    {
+      "blocker": "missing canonical Look Lock artifacts",
+      "status": "BLOCKED_MISSING_REQUIRED_ARTIFACT",
+      "step_name": "Look Lock",
+      "step_no": 11
+    },
+    {
+      "blocker": "missing script_dna_selection.json",
+      "status": "BLOCKED_MISSING_REQUIRED_ARTIFACT",
+      "step_name": "Script DNA",
+      "step_no": 12
+    },
+    {
+      "blocker": "missing panel_continuity_and_repair_ledger.json",
+      "status": "BLOCKED_MISSING_REQUIRED_ARTIFACT",
+      "step_name": "Panel Continuity And Repair Ledger",
+      "step_no": 15
+    },
+    {
+      "blocker": "SB_004 commit action and visible lava-reef boundary are missing",
+      "status": "FAIL",
+      "step_name": "Post-Kling Continuity Review",
+      "step_no": 36
+    },
+    {
+      "blocker": "seven non-passing or missing-contract step states remain",
+      "status": "BLOCKED",
+      "step_name": "Gate Validation Loop",
+      "step_no": 40
+    },
+    {
+      "blocker": "post-Kling continuity failed and required upstream contract artifacts are absent",
+      "status": "BLOCKED",
+      "step_name": "Final Acceptance Boundary",
+      "step_no": 42
+    }
+  ],
+  "claims": {
+    "does_not_prove": [
+      "the returned video satisfies the final action contract",
+      "the immutable goal is accepted"
+    ],
+    "proves": [
+      "a real Kling MP4 was submitted, polled, downloaded, technically validated, contact-sheeted, and visually reviewed"
+    ]
+  },
+  "frame_contact_sheet_passed": true,
+  "observed_at": "2026-07-17T12:22:37.024609+00:00",
+  "pipeline_step_memory_exact_reread": 42,
+  "pipeline_step_memory_target": 42,
+  "post_kling_continuity_passed": false,
+  "provider_mp4_sha256": "sha256:2545394fb8e48694acb2751b25cbf6fc55a4dfdbde66e241deecfb5f2f1ecd33",
+  "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+  "revision_id": "rev_idea_f3f9c48d5cc2",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.final_acceptance_receipt.v1",
+  "status": "BLOCKED_FINAL_ACCEPTANCE",
+  "technical_validation_passed": true,
+  "working_kling_video_returned": true
+}

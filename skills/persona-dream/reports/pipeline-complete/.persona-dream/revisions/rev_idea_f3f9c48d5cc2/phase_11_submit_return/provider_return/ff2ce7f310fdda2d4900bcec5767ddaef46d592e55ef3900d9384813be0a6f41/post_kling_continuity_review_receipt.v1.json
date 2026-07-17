@@ -1,0 +1,81 @@
+{
+  "schema": "persona_dream.post_kling_continuity_review_receipt.v1",
+  "status": "FAILED_POST_KLING_CONTINUITY_REVIEW",
+  "run_id": "pipeline-complete",
+  "revision_id": "rev_idea_f3f9c48d5cc2",
+  "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+  "source_video": "provider_return.mp4",
+  "source_video_sha256": "sha256:2545394fb8e48694acb2751b25cbf6fc55a4dfdbde66e241deecfb5f2f1ecd33",
+  "contact_sheet": "frame_contact_sheet.png",
+  "contact_sheet_sha256": "sha256:de37f319b3834ae37fe08217c4848d891adf234017c59a64295f01f96d660dfa",
+  "watch_report": "watch-codex-vision/report.json",
+  "watch_report_sha256": "sha256:3715a4f3f2f5cf2fe64cd9e731c899049768439aa54791d60343b3e0786f3509",
+  "visual_description_receipt": "watch-codex-vision/visual_description_receipt.json",
+  "visual_description_receipt_sha256": "sha256:903b9e8fc564d2f12df4d20bfe5a19e1d11766f8fe426e7b40548b9ab161fc74",
+  "review_method": "manual inspection of the 4x3 contact sheet plus source-derived comparison to canonical multi_prompt and storyboard time ranges",
+  "frame_count_reviewed": 12,
+  "subgates": {
+    "technical_readability": "PASS",
+    "embry_visual_identity_within_return": "PASS",
+    "kai_visual_identity_within_return": "PASS",
+    "wardrobe_continuity": "PASS",
+    "surfboard_continuity": "PASS",
+    "environment_and_daylight_continuity": "PASS",
+    "sb_001_two_character_waterline_setup": "PASS",
+    "sb_002_embry_board_grip_and_fatigue_beat": "PARTIAL",
+    "sb_003_kai_nonverbal_hand_signal": "PASS",
+    "sb_004_embry_safe_channel_commit": "FAIL",
+    "sb_004_visible_lava_reef_boundary": "FAIL",
+    "audio_off_contract": "PASS"
+  },
+  "blocking_findings": [
+    {
+      "code": "MISSING_SB004_COMMIT_ACTION",
+      "time_range_seconds": [7.0, 10.041667],
+      "expected": "Embry commits through the safe channel while Kai remains outside the main action.",
+      "observed": "Embry and Kai remain together on their boards in the water; the sampled frames do not show Embry committing into the channel or wave."
+    },
+    {
+      "code": "LAVA_REEF_BOUNDARY_NOT_VISUALLY_READABLE",
+      "time_range_seconds": [7.0, 10.041667],
+      "expected": "A visible lava-reef boundary and safe-channel geometry anchor the final decision.",
+      "observed": "The sampled final frames show open water, shoreline, surfers, and boards, but no clearly readable lava-reef boundary or safe-channel geometry."
+    }
+  ],
+  "non_blocking_findings": [
+    "The same woman, man, navy and black tops, white surfboards, waterline setting, shoreline, and daylight remain visually coherent across the return.",
+    "Frames around 5.86 seconds show Kai raising one hand, matching the intended silent nonverbal signal.",
+    "The absent audio stream matches generate_audio=false and is not a continuity failure."
+  ],
+  "required_repair": {
+    "action": "compile a new request with a stronger final-action constraint and separately authorize one new paid attempt",
+    "must_preserve": [
+      "current accepted Embry and Kai media bindings",
+      "navy and black rashguard continuity",
+      "silent audio-off contract",
+      "submit-once request-scoped attempt ledger"
+    ],
+    "must_add": [
+      "an unmistakable Embry-only forward commit during the final beat",
+      "visibly readable lava-reef boundary and safe-channel geometry",
+      "Kai held outside the main action during the final beat"
+    ],
+    "authorization_required": true,
+    "automatic_resubmit_allowed": false
+  },
+  "mocked": false,
+  "live": true,
+  "claims": {
+    "proves": [
+      "the exact returned MP4 was inspected against the intended four-beat visual contract",
+      "identity, wardrobe, board, environment, and silent-shot continuity mostly hold",
+      "the final intended action and reef-boundary requirements are not visibly satisfied"
+    ],
+    "does_not_prove": [
+      "the current return is acceptable as the final dream video",
+      "a repaired request will succeed",
+      "authorization for another paid attempt"
+    ]
+  },
+  "observed_at": "2026-07-17T12:17:37Z"
+}

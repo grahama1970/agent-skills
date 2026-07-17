@@ -1,0 +1,90 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "all 42 steps passed",
+      "final acceptance",
+      "post-Kling continuity"
+    ],
+    "proves": [
+      "all 42 pipeline step states are durably present under exact run and revision filters"
+    ]
+  },
+  "collection": "persona_dream_pipeline_steps",
+  "exact_reread_count": 42,
+  "exact_reread_keys": [
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:01:request_idea_intake",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:02:dreaming_persona_selection",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:03:memory_recall",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:04:residue_grounding",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:05:dream_packet",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:06:story_video_plan",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:07:producer_selection",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:08:director_selection",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:09:script_writer_selection",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:10:creative_authority_receipts",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:11:look_lock",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:12:script_dna",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:13:storyboard_prompt_composition",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:14:storyboard_panel_receipts",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:15:panel_continuity_repair_ledger",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:16:panel_generation_loop",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:17:panel_visual_review_loop",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:18:surgical_panel_repair",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:19:panel_repair_gate",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:20:panel_source_receipt",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:21:provider_media_publication_work_order",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:22:local_provider_media_staging",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:23:publication_preflight",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:24:publication_authorization",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:25:public_url_probe",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:26:provider_media_handoff",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:27:provider_media_lock",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:28:kling_scene_packet",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:29:provider_final_gate",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:30:paid_call_authorization",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:31:kling_submit",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:32:kling_poll_callback",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:33:output_retrieval",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:34:ffprobe_technical_validation",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:35:frame_contact_sheet",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:36:post_kling_continuity_review",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:37:voice_audio_handoff",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:38:final_assembly_movie_lane",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:39:report_generation",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:40:gate_validation_loop",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:41:upstream_revision_invalidation",
+    "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:42:final_acceptance_boundary"
+  ],
+  "hash_refresh_upsert_response": {
+    "collection": "persona_dream_pipeline_steps",
+    "errors": [],
+    "inserted": 0,
+    "total": 42,
+    "updated": 42,
+    "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_persona_dream_pipeline_steps_20260717T122238656076Z_13_126445068224192.jsonl"
+  },
+  "observed_at": "2026-07-17T12:22:39.354313+00:00",
+  "qdrant_pointer_count": 42,
+  "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+  "revision_id": "rev_idea_f3f9c48d5cc2",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.pipeline_step_memory_write_receipt.v1",
+  "second_upsert_response": {
+    "collection": "persona_dream_pipeline_steps",
+    "errors": [],
+    "inserted": 0,
+    "total": 42,
+    "updated": 42,
+    "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_persona_dream_pipeline_steps_20260717T122237874993Z_13_126445068224192.jsonl"
+  },
+  "semantic_synced_count": 42,
+  "status": "PASS_EXACT_REREAD_42_OF_42",
+  "upsert_response": {
+    "collection": "persona_dream_pipeline_steps",
+    "errors": [],
+    "inserted": 0,
+    "total": 42,
+    "updated": 42,
+    "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_persona_dream_pipeline_steps_20260717T122237142883Z_13_126445068224192.jsonl"
+  }
+}

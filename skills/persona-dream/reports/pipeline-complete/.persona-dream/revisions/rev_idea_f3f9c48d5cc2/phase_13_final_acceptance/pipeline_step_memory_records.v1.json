@@ -1,0 +1,2604 @@
+{
+  "count": 42,
+  "documents": [
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:01:request_idea_intake",
+      "artifact_hashes": {
+        "phase_01_idea/dream_request.json": "sha256:91213856a3f0812064068bf31087435de9a36d258c5d2e2ff99c8080e459f7a8",
+        "phase_01_idea/human_idea.json": "sha256:db39ccc84d88cd9fa2baded45488f0f7ed46357fc68e72eae2362f1798608f2d"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "Downstream creative quality."
+        ],
+        "proves": [
+          "The exact Embry and Kai surfing idea is bound to this revision."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_01_idea/dream_request.json",
+        "phase_01_idea/human_idea.json"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "3b1f1827-b034-57db-88a5-d2f5cf99c28f",
+      "receipt_paths": [
+        "phase_01_idea/dream_request.json",
+        "phase_01_idea/human_idea.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 01 Request / Idea Intake status PASS",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS",
+      "step_name": "Request / Idea Intake",
+      "step_no": 1,
+      "step_slug": "request_idea_intake",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:01",
+        "status:pass"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:02:dreaming_persona_selection",
+      "artifact_hashes": {
+        "phase_01_idea/dream_request.json": "sha256:91213856a3f0812064068bf31087435de9a36d258c5d2e2ff99c8080e459f7a8",
+        "phase_01_idea/human_idea.json": "sha256:db39ccc84d88cd9fa2baded45488f0f7ed46357fc68e72eae2362f1798608f2d"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "A new persona-selection model call."
+        ],
+        "proves": [
+          "Embry is the dreaming persona and Kai is the secondary persona in the bound request."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_01_idea/dream_request.json",
+        "phase_01_idea/human_idea.json"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "7c8d392e-403d-5119-958a-d176d82ffb9d",
+      "receipt_paths": [
+        "phase_01_idea/dream_request.json",
+        "phase_01_idea/human_idea.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 02 Dreaming Persona Selection status PASS_BOUND_REQUEST",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS_BOUND_REQUEST",
+      "step_name": "Dreaming Persona Selection",
+      "step_no": 2,
+      "step_slug": "dreaming_persona_selection",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:02",
+        "status:pass_bound_request"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:03:memory_recall",
+      "artifact_hashes": {
+        "phase_01_idea/residue_links.json": "sha256:041002d64de215c6a5ba1c2bf93d02c0c1f885be0bc67b57ed0e3d1dbdc54cc1",
+        "revision_memory_verify_receipt.json": "sha256:4082622259849b9390a97858961eb77b1bd4744c2f98c152da06488da2539427"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "A new recall performed during this finalization."
+        ],
+        "proves": [
+          "Persona-scoped residue and exact Memory revision reread exist."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_01_idea/residue_links.json",
+        "revision_memory_verify_receipt.json"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "80d51062-584d-5bad-9ccf-e66c76b1accc",
+      "receipt_paths": [
+        "phase_01_idea/residue_links.json",
+        "revision_memory_verify_receipt.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 03 Memory Recall status PASS",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS",
+      "step_name": "Memory Recall",
+      "step_no": 3,
+      "step_slug": "memory_recall",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:03",
+        "status:pass"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:04:residue_grounding",
+      "artifact_hashes": {
+        "phase_01_idea/contradiction_report.json": "sha256:b9beb704a8cdc3a29d4881baab1a8590759aa42c60f9bcaefac59b8de4a091af",
+        "phase_01_idea/residue_links.json": "sha256:041002d64de215c6a5ba1c2bf93d02c0c1f885be0bc67b57ed0e3d1dbdc54cc1"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "Dream-packet completeness."
+        ],
+        "proves": [
+          "Residue links and contradiction findings are revision-bound."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_01_idea/residue_links.json",
+        "phase_01_idea/contradiction_report.json"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "9a684a5d-4cb7-50f7-8968-2e3130ea7226",
+      "receipt_paths": [
+        "phase_01_idea/residue_links.json",
+        "phase_01_idea/contradiction_report.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 04 Residue Grounding status PASS",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS",
+      "step_name": "Residue Grounding",
+      "step_no": 4,
+      "step_slug": "residue_grounding",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:04",
+        "status:pass"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:05:dream_packet",
+      "artifact_hashes": {},
+      "blocker": "missing dream_packet.json and dream_prompt.txt",
+      "claims": {
+        "does_not_prove": [
+          "dream_packet.json or dream_prompt.txt."
+        ],
+        "proves": [
+          "No positive dream-packet artifact exists in this immutable revision."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "24a346f8-0d75-542f-a0ca-26cb26dd1f8c",
+      "receipt_paths": [],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 05 Dream Packet status BLOCKED_MISSING_REQUIRED_ARTIFACT",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "BLOCKED_MISSING_REQUIRED_ARTIFACT",
+      "step_name": "Dream Packet",
+      "step_no": 5,
+      "step_slug": "dream_packet",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:05",
+        "status:blocked_missing_required_artifact"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:06:story_video_plan",
+      "artifact_hashes": {
+        "phase_02_story/story_contract.json": "sha256:84f4f8b9bf17778f41e2e062f856e2a36b4ca760abc5288b44329e90a87e786e"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "Look Lock or Script DNA."
+        ],
+        "proves": [
+          "The accepted ten-second story contract is revision-bound."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_02_story/story_contract.json"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "c4a04907-daf9-5a8e-8057-73c63f45dba2",
+      "receipt_paths": [
+        "phase_02_story/story_contract.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 06 Story / Video Plan status PASS",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS",
+      "step_name": "Story / Video Plan",
+      "step_no": 6,
+      "step_slug": "story_video_plan",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:06",
+        "status:pass"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:07:producer_selection",
+      "artifact_hashes": {
+        "phase_03_crew/crew_contract.json": "sha256:8b3fb7869c3925747ea62b38c1984dd497323f500cb54c81a797d7eb8a7d3626"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "A new producer selection run."
+        ],
+        "proves": [
+          "Karen Kehela Sherwood is selected as producer with rationale and source evidence."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_03_crew/crew_contract.json"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "3d521a9d-a7cf-5044-aeeb-5dddda59d439",
+      "receipt_paths": [
+        "phase_03_crew/crew_contract.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 07 Producer Persona Selection status PASS",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS",
+      "step_name": "Producer Persona Selection",
+      "step_no": 7,
+      "step_slug": "producer_selection",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:07",
+        "status:pass"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:08:director_selection",
+      "artifact_hashes": {
+        "phase_03_crew/crew_contract.json": "sha256:8b3fb7869c3925747ea62b38c1984dd497323f500cb54c81a797d7eb8a7d3626"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "A new director selection run."
+        ],
+        "proves": [
+          "Kathryn Bigelow is selected as director with rationale and source evidence."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_03_crew/crew_contract.json"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "9adce0dd-4503-560f-9f6b-97f7b6402242",
+      "receipt_paths": [
+        "phase_03_crew/crew_contract.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 08 Director Selection status PASS",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS",
+      "step_name": "Director Selection",
+      "step_no": 8,
+      "step_slug": "director_selection",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:08",
+        "status:pass"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:09:script_writer_selection",
+      "artifact_hashes": {
+        "phase_03_crew/crew_contract.json": "sha256:8b3fb7869c3925747ea62b38c1984dd497323f500cb54c81a797d7eb8a7d3626"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "A new writer selection run."
+        ],
+        "proves": [
+          "John Stockwell is selected as script writer with rationale and source evidence."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_03_crew/crew_contract.json"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "3330ecc6-04cb-5b9e-98b2-dc59545532a0",
+      "receipt_paths": [
+        "phase_03_crew/crew_contract.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 09 Script Writer Selection status PASS",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS",
+      "step_name": "Script Writer Selection",
+      "step_no": 9,
+      "step_slug": "script_writer_selection",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:09",
+        "status:pass"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:10:creative_authority_receipts",
+      "artifact_hashes": {
+        "phase_03_crew/crew_contract.json": "sha256:8b3fb7869c3925747ea62b38c1984dd497323f500cb54c81a797d7eb8a7d3626",
+        "phase_03_crew/crew_gate_receipt.json": "sha256:699616686a31bd999d92ee7ace9d4626fb48b16df50e43b8a1b70cfec20dca2d"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "Look Lock or Script DNA output."
+        ],
+        "proves": [
+          "Producer, director, and writer authority are recorded and gate-checked."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_03_crew/crew_contract.json",
+        "phase_03_crew/crew_gate_receipt.json"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "b5f88a09-7e2d-5656-ace7-b9c7a2502301",
+      "receipt_paths": [
+        "phase_03_crew/crew_contract.json",
+        "phase_03_crew/crew_gate_receipt.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 10 Creative Authority Receipts status PASS",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS",
+      "step_name": "Creative Authority Receipts",
+      "step_no": 10,
+      "step_slug": "creative_authority_receipts",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:10",
+        "status:pass"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:11:look_lock",
+      "artifact_hashes": {},
+      "blocker": "missing canonical Look Lock artifacts",
+      "claims": {
+        "does_not_prove": [
+          "technique_selection.json, look_lock.json, or shot_bible.json."
+        ],
+        "proves": [
+          "The storyboard contains camera and lighting language but no canonical Look Lock receipt exists."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "8a7e8f2d-a41f-517b-8713-fcb2eddef740",
+      "receipt_paths": [],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 11 Look Lock status BLOCKED_MISSING_REQUIRED_ARTIFACT",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "BLOCKED_MISSING_REQUIRED_ARTIFACT",
+      "step_name": "Look Lock",
+      "step_no": 11,
+      "step_slug": "look_lock",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:11",
+        "status:blocked_missing_required_artifact"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:12:script_dna",
+      "artifact_hashes": {},
+      "blocker": "missing script_dna_selection.json",
+      "claims": {
+        "does_not_prove": [
+          "script_dna_selection.json."
+        ],
+        "proves": [
+          "The script is reviewed, but no canonical Script DNA selector receipt exists."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "7ac4796d-d4eb-5395-acaa-6909f393de3b",
+      "receipt_paths": [],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 12 Script DNA status BLOCKED_MISSING_REQUIRED_ARTIFACT",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "BLOCKED_MISSING_REQUIRED_ARTIFACT",
+      "step_name": "Script DNA",
+      "step_no": 12,
+      "step_slug": "script_dna",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:12",
+        "status:blocked_missing_required_artifact"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:13:storyboard_prompt_composition",
+      "artifact_hashes": {
+        "phase_07_storyboard_live_tau/storyboard_packet.json": "sha256:a1c1031e697d67dca734a797bbfa438a1ab30358e8dea18eee7c157de8f2fc97",
+        "phase_07_storyboard_live_tau/storyboard_panel_contract.generated.json": "sha256:82c694f8d887f5d0ab2824b84be7abd36c61b81ec17c928cd21adf11830df366"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "Provider-return continuity."
+        ],
+        "proves": [
+          "Four timed storyboard prompts are bound to accepted references."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_07_storyboard_live_tau/storyboard_packet.json",
+        "phase_07_storyboard_live_tau/storyboard_panel_contract.generated.json"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "e074470e-8ef9-54ec-ac27-b7ff8bf8ce72",
+      "receipt_paths": [
+        "phase_07_storyboard_live_tau/storyboard_packet.json",
+        "phase_07_storyboard_live_tau/storyboard_panel_contract.generated.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 13 Storyboard Prompt Composition status PASS",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS",
+      "step_name": "Storyboard Prompt Composition",
+      "step_no": 13,
+      "step_slug": "storyboard_prompt_composition",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:13",
+        "status:pass"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:14:storyboard_panel_receipts",
+      "artifact_hashes": {
+        "phase_07_storyboard_live_tau/storyboard_packet.json": "sha256:a1c1031e697d67dca734a797bbfa438a1ab30358e8dea18eee7c157de8f2fc97",
+        "revision_artifact_index.json": "sha256:5e91ddaa96eb9bca56b866db95c83c71a3983d363bd9ca9c25c1b30b79e6288d"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "Post-Kling action continuity."
+        ],
+        "proves": [
+          "Eight accepted start/end frames and their receipt paths are indexed."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_07_storyboard_live_tau/storyboard_packet.json",
+        "revision_artifact_index.json"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "b2bbd05a-a9af-5438-88aa-b14eb48ba56f",
+      "receipt_paths": [
+        "phase_07_storyboard_live_tau/storyboard_packet.json",
+        "revision_artifact_index.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 14 Storyboard Panel Receipts status PASS",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS",
+      "step_name": "Storyboard Panel Receipts",
+      "step_no": 14,
+      "step_slug": "storyboard_panel_receipts",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:14",
+        "status:pass"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:15:panel_continuity_repair_ledger",
+      "artifact_hashes": {},
+      "blocker": "missing panel_continuity_and_repair_ledger.json",
+      "claims": {
+        "does_not_prove": [
+          "panel_continuity_and_repair_ledger.json."
+        ],
+        "proves": [
+          "Panel review receipts exist, but the required consolidated ledger file does not."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "3ee64caa-53d0-555d-ae31-24177af7f78f",
+      "receipt_paths": [],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 15 Panel Continuity And Repair Ledger status BLOCKED_MISSING_REQUIRED_ARTIFACT",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "BLOCKED_MISSING_REQUIRED_ARTIFACT",
+      "step_name": "Panel Continuity And Repair Ledger",
+      "step_no": 15,
+      "step_slug": "panel_continuity_repair_ledger",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:15",
+        "status:blocked_missing_required_artifact"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:16:panel_generation_loop",
+      "artifact_hashes": {
+        "phase_07_storyboard_live_tau/storyboard_packet.json": "sha256:a1c1031e697d67dca734a797bbfa438a1ab30358e8dea18eee7c157de8f2fc97",
+        "revision_artifact_index.json": "sha256:5e91ddaa96eb9bca56b866db95c83c71a3983d363bd9ca9c25c1b30b79e6288d"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "Returned-video continuity."
+        ],
+        "proves": [
+          "Generated storyboard frame paths, hashes, models, and provider receipts are indexed."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_07_storyboard_live_tau/storyboard_packet.json",
+        "revision_artifact_index.json"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "0bd86592-d163-5e6f-9063-eb10e1dd420f",
+      "receipt_paths": [
+        "phase_07_storyboard_live_tau/storyboard_packet.json",
+        "revision_artifact_index.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 16 Panel Generation Loop status PASS",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS",
+      "step_name": "Panel Generation Loop",
+      "step_no": 16,
+      "step_slug": "panel_generation_loop",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:16",
+        "status:pass"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:17:panel_visual_review_loop",
+      "artifact_hashes": {
+        "phase_07_storyboard_live_tau/receipts/panel_repair_gate_receipt.json": "sha256:1c0dee49b6ec3e8ec3e73a796a3c7df526a7a7b7e79275479a23f806044cfa8c",
+        "phase_07_storyboard_live_tau/storyboard_packet.json": "sha256:a1c1031e697d67dca734a797bbfa438a1ab30358e8dea18eee7c157de8f2fc97"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "Post-Kling continuity."
+        ],
+        "proves": [
+          "Identity reviews and visual acceptance feed the panel gate."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_07_storyboard_live_tau/storyboard_packet.json",
+        "phase_07_storyboard_live_tau/receipts/panel_repair_gate_receipt.json"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "a9df99f9-54c8-5081-ad20-36a45a7fab84",
+      "receipt_paths": [
+        "phase_07_storyboard_live_tau/storyboard_packet.json",
+        "phase_07_storyboard_live_tau/receipts/panel_repair_gate_receipt.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 17 Panel Visual Review Loop status PASS",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS",
+      "step_name": "Panel Visual Review Loop",
+      "step_no": 17,
+      "step_slug": "panel_visual_review_loop",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:17",
+        "status:pass"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:18:surgical_panel_repair",
+      "artifact_hashes": {
+        "phase_07_storyboard_live_tau/receipts/panel_repair_gate_receipt.json": "sha256:1c0dee49b6ec3e8ec3e73a796a3c7df526a7a7b7e79275479a23f806044cfa8c"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "That every historical candidate passed."
+        ],
+        "proves": [
+          "The terminal reviewed panel state required no additional final repair attempt."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_07_storyboard_live_tau/receipts/panel_repair_gate_receipt.json"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "d3da276c-74ec-5e10-bc91-6d66c900d487",
+      "receipt_paths": [
+        "phase_07_storyboard_live_tau/receipts/panel_repair_gate_receipt.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 18 Surgical Panel Repair status PASS_NO_REPAIR_REQUIRED",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS_NO_REPAIR_REQUIRED",
+      "step_name": "Surgical Panel Repair",
+      "step_no": 18,
+      "step_slug": "surgical_panel_repair",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:18",
+        "status:pass_no_repair_required"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:19:panel_repair_gate",
+      "artifact_hashes": {
+        "phase_07_storyboard_live_tau/receipts/panel_repair_gate_receipt.json": "sha256:1c0dee49b6ec3e8ec3e73a796a3c7df526a7a7b7e79275479a23f806044cfa8c"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "Returned-video continuity."
+        ],
+        "proves": [
+          "The canonical panel gate status is PASS_PANEL_REVIEWED."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_07_storyboard_live_tau/receipts/panel_repair_gate_receipt.json"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "1c26a5c9-d397-5cbe-a8a2-d15e612c0207",
+      "receipt_paths": [
+        "phase_07_storyboard_live_tau/receipts/panel_repair_gate_receipt.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 19 Panel Repair Gate status PASS",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS",
+      "step_name": "Panel Repair Gate",
+      "step_no": 19,
+      "step_slug": "panel_repair_gate",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:19",
+        "status:pass"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:20:panel_source_receipt",
+      "artifact_hashes": {
+        "phase_07_storyboard_live_tau/receipts/panel_source_receipt.json": "sha256:9fec8adf08499e39b09034c01b244af1948bed6b75ef26d46a3bb2e5852e6158"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "Public provider fetchability."
+        ],
+        "proves": [
+          "The canonical reviewed panel source receipt exists."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_07_storyboard_live_tau/receipts/panel_source_receipt.json"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "0be8c1c2-cdfc-5b17-9c90-2cff0439051c",
+      "receipt_paths": [
+        "phase_07_storyboard_live_tau/receipts/panel_source_receipt.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 20 Panel Source Receipt status PASS",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS",
+      "step_name": "Panel Source Receipt",
+      "step_no": 20,
+      "step_slug": "panel_source_receipt",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:20",
+        "status:pass"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:21:provider_media_publication_work_order",
+      "artifact_hashes": {
+        "phase_11_submit_return/preflight/provider_media_transition_manifest.json": "sha256:7c8f0b46a81cb25307b762560ffeceb3631a28bc711ee4d40888f0f49070be0c"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "A new upload operation."
+        ],
+        "proves": [
+          "Phase 11 records the transition from existing GitHub publication to provider use."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_11_submit_return/preflight/provider_media_transition_manifest.json"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "bfef326c-2975-5258-902f-aa1da708be0e",
+      "receipt_paths": [
+        "phase_11_submit_return/preflight/provider_media_transition_manifest.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 21 Provider Media Publication Work Order status PASS_EXISTING_PUBLICATION_REUSED",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS_EXISTING_PUBLICATION_REUSED",
+      "step_name": "Provider Media Publication Work Order",
+      "step_no": 21,
+      "step_slug": "provider_media_publication_work_order",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:21",
+        "status:pass_existing_publication_reused"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:22:local_provider_media_staging",
+      "artifact_hashes": {
+        "phase_11_submit_return/preflight/provider_media_transition_manifest.json": "sha256:7c8f0b46a81cb25307b762560ffeceb3631a28bc711ee4d40888f0f49070be0c"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "A new staging copy."
+        ],
+        "proves": [
+          "The accepted media already had immutable public GitHub URLs, so no new local staging was required."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_11_submit_return/preflight/provider_media_transition_manifest.json"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "ad69cee5-d0d2-5e5e-8602-f2bf3a8bffbd",
+      "receipt_paths": [
+        "phase_11_submit_return/preflight/provider_media_transition_manifest.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 22 Local Provider Media Staging status PASS_NOT_REQUIRED_ALREADY_PUBLISHED",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS_NOT_REQUIRED_ALREADY_PUBLISHED",
+      "step_name": "Local Provider Media Staging",
+      "step_no": 22,
+      "step_slug": "local_provider_media_staging",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:22",
+        "status:pass_not_required_already_published"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:23:publication_preflight",
+      "artifact_hashes": {
+        "phase_11_submit_return/preflight/phase11_adapter_preflight_receipt.v1.json": "sha256:672fd06aed73e71bceadf6bcfcf550aa3e141ebf5a4ae15db44a6fc98fc95d9d",
+        "phase_11_submit_return/preflight/provider_media_transition_manifest.json": "sha256:7c8f0b46a81cb25307b762560ffeceb3631a28bc711ee4d40888f0f49070be0c"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "Provider-return visual quality."
+        ],
+        "proves": [
+          "The request-scoped adapter and media preflight passed."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_11_submit_return/preflight/phase11_adapter_preflight_receipt.v1.json",
+        "phase_11_submit_return/preflight/provider_media_transition_manifest.json"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "a8ab41ec-790e-57c8-9cb4-c833a92bcac1",
+      "receipt_paths": [
+        "phase_11_submit_return/preflight/phase11_adapter_preflight_receipt.v1.json",
+        "phase_11_submit_return/preflight/provider_media_transition_manifest.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 23 Publication Preflight status PASS",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS",
+      "step_name": "Publication Preflight",
+      "step_no": 23,
+      "step_slug": "publication_preflight",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:23",
+        "status:pass"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:24:publication_authorization",
+      "artifact_hashes": {
+        "phase_11_submit_return/preflight/approvals/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/publication_authorization_receipt.json": "sha256:fd6790cabc11094ab624f8d8498a1a35f53a23b294b921f0db402793bc813b65"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "Continuity quality."
+        ],
+        "proves": [
+          "Publication authority is approved for the exact request hash."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_11_submit_return/preflight/approvals/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/publication_authorization_receipt.json"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "ad89a94c-70cc-55af-bd9d-253cbbc31762",
+      "receipt_paths": [
+        "phase_11_submit_return/preflight/approvals/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/publication_authorization_receipt.json"
+      ],
+      "request_hash": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 24 Publication Authorization status PASS_APPROVED",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS_APPROVED",
+      "step_name": "Publication Authorization",
+      "step_no": 24,
+      "step_slug": "publication_authorization",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:24",
+        "status:pass_approved"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:25:public_url_probe",
+      "artifact_hashes": {
+        "phase_11_submit_return/preflight/provider_media_transition_manifest.json": "sha256:7c8f0b46a81cb25307b762560ffeceb3631a28bc711ee4d40888f0f49070be0c"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "Provider generation quality."
+        ],
+        "proves": [
+          "Seven provider media URLs returned HTTP 200 with parity evidence."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_11_submit_return/preflight/provider_media_transition_manifest.json"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "ef0aaee1-311c-59a3-9f3f-0ef72cb4568a",
+      "receipt_paths": [
+        "phase_11_submit_return/preflight/provider_media_transition_manifest.json"
+      ],
+      "request_hash": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 25 Public URL Probe status PASS",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS",
+      "step_name": "Public URL Probe",
+      "step_no": 25,
+      "step_slug": "public_url_probe",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:25",
+        "status:pass"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:26:provider_media_handoff",
+      "artifact_hashes": {
+        "phase_11_submit_return/preflight/provider_media_transition_manifest.json": "sha256:7c8f0b46a81cb25307b762560ffeceb3631a28bc711ee4d40888f0f49070be0c"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "Returned-video continuity."
+        ],
+        "proves": [
+          "Provider-accessible media URLs and bindings passed the transition gate."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_11_submit_return/preflight/provider_media_transition_manifest.json"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "405e4c6c-417c-552e-be37-f58503f1b8e1",
+      "receipt_paths": [
+        "phase_11_submit_return/preflight/provider_media_transition_manifest.json"
+      ],
+      "request_hash": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 26 Provider Media Handoff status PASS",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS",
+      "step_name": "Provider Media Handoff",
+      "step_no": 26,
+      "step_slug": "provider_media_handoff",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:26",
+        "status:pass"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:27:provider_media_lock",
+      "artifact_hashes": {
+        "phase_11_submit_return/canonical/phase11_media_binding_manifest.v2.json": "sha256:a7aecf73843c8f4003ae543c9d02cebdbfdb1d0dc23e36bc47891d6a769ecd0d"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "Provider-return continuity."
+        ],
+        "proves": [
+          "The exact provider media bindings are hash-locked to this request."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_11_submit_return/canonical/phase11_media_binding_manifest.v2.json"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "7a9fa304-bb7c-5179-8758-af6f74e358d7",
+      "receipt_paths": [
+        "phase_11_submit_return/canonical/phase11_media_binding_manifest.v2.json"
+      ],
+      "request_hash": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 27 Provider Media Lock status PASS",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS",
+      "step_name": "Provider Media Lock",
+      "step_no": 27,
+      "step_slug": "provider_media_lock",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:27",
+        "status:pass"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:28:kling_scene_packet",
+      "artifact_hashes": {
+        "phase_11_submit_return/canonical/phase11_live_request.v1.json": "sha256:cfe35df89bddb6fde5d4f40d64c6a20e2f8addcf2a19af2900d47bfea9756fe2"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "Provider-return continuity."
+        ],
+        "proves": [
+          "The exact four-prompt audio-off request is canonical and was later submitted once."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_11_submit_return/canonical/phase11_live_request.v1.json"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "16dea6f7-1080-5232-96ad-fbc2f2151b04",
+      "receipt_paths": [
+        "phase_11_submit_return/canonical/phase11_live_request.v1.json"
+      ],
+      "request_hash": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 28 Kling Scene Packet status PASS_EXECUTED_REQUEST",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS_EXECUTED_REQUEST",
+      "step_name": "Kling Scene Packet",
+      "step_no": 28,
+      "step_slug": "kling_scene_packet",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:28",
+        "status:pass_executed_request"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:29:provider_final_gate",
+      "artifact_hashes": {
+        "phase_11_submit_return/attempts/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/attempt_ledger.v1.json": "sha256:4b20509bfc5f47107297adc0406af1ad649f9f32035e9fa64b158d78cb72981f",
+        "phase_11_submit_return/preflight/phase11_adapter_preflight_receipt.v1.json": "sha256:672fd06aed73e71bceadf6bcfcf550aa3e141ebf5a4ae15db44a6fc98fc95d9d"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "Post-return acceptance."
+        ],
+        "proves": [
+          "Technical preflight passed before the request-scoped submit-once transition."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_11_submit_return/preflight/phase11_adapter_preflight_receipt.v1.json",
+        "phase_11_submit_return/attempts/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/attempt_ledger.v1.json"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "9e414258-158f-56e5-9363-aabda74292cf",
+      "receipt_paths": [
+        "phase_11_submit_return/preflight/phase11_adapter_preflight_receipt.v1.json",
+        "phase_11_submit_return/attempts/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/attempt_ledger.v1.json"
+      ],
+      "request_hash": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 29 Provider Final Gate status PASS_EXECUTED_PREFLIGHT",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS_EXECUTED_PREFLIGHT",
+      "step_name": "Provider Final Gate",
+      "step_no": 29,
+      "step_slug": "provider_final_gate",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:29",
+        "status:pass_executed_preflight"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:30:paid_call_authorization",
+      "artifact_hashes": {
+        "phase_11_submit_return/attempts/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/attempt_ledger.v1.json": "sha256:4b20509bfc5f47107297adc0406af1ad649f9f32035e9fa64b158d78cb72981f",
+        "phase_11_submit_return/preflight/approvals/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/paid_call_authorization_receipt.json": "sha256:4b8019f264a6ab449e57c2f8bdfaf704a3df46f40a9f341c22f12f0904cc5215"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "Authorization for another attempt."
+        ],
+        "proves": [
+          "One exact paid attempt was authorized and consumed once."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_11_submit_return/preflight/approvals/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/paid_call_authorization_receipt.json",
+        "phase_11_submit_return/attempts/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/attempt_ledger.v1.json"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "780f3365-4f08-53ed-a434-4297c1233350",
+      "receipt_paths": [
+        "phase_11_submit_return/preflight/approvals/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/paid_call_authorization_receipt.json",
+        "phase_11_submit_return/attempts/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/attempt_ledger.v1.json"
+      ],
+      "request_hash": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 30 Paid Call Authorization status PASS_APPROVED_CONSUMED",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS_APPROVED_CONSUMED",
+      "step_name": "Paid Call Authorization",
+      "step_no": 30,
+      "step_slug": "paid_call_authorization",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:30",
+        "status:pass_approved_consumed"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:31:kling_submit",
+      "artifact_hashes": {
+        "phase_11_submit_return/attempts/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/attempt_ledger.v1.json": "sha256:4b20509bfc5f47107297adc0406af1ad649f9f32035e9fa64b158d78cb72981f",
+        "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/phase11_provider_return_envelope.v1.json": "sha256:2a8c72664191d900cbcab33bbdff7e56eaabcd117c7048c5388d3348537fb7d6"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "Visual acceptance."
+        ],
+        "proves": [
+          "One live provider submit produced request id 019f6bef-0c0f-7921-8a5e-a1f12890fb75."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_11_submit_return/attempts/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/attempt_ledger.v1.json",
+        "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/phase11_provider_return_envelope.v1.json"
+      ],
+      "provider_task_id": "019f6bef-0c0f-7921-8a5e-a1f12890fb75",
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "238ab886-2fc1-548a-a43d-faa16c76cbd7",
+      "receipt_paths": [
+        "phase_11_submit_return/attempts/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/attempt_ledger.v1.json",
+        "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/phase11_provider_return_envelope.v1.json"
+      ],
+      "request_hash": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 31 Kling Submit status PASS_LIVE",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS_LIVE",
+      "step_name": "Kling Submit",
+      "step_no": 31,
+      "step_slug": "kling_submit",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:31",
+        "status:pass_live"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:32:kling_poll_callback",
+      "artifact_hashes": {
+        "phase_11_submit_return/attempts/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/attempt_ledger.v1.json": "sha256:4b20509bfc5f47107297adc0406af1ad649f9f32035e9fa64b158d78cb72981f"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "Visual acceptance."
+        ],
+        "proves": [
+          "The attempt ledger records 43 polls and a completed terminal event."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_11_submit_return/attempts/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/attempt_ledger.v1.json"
+      ],
+      "provider_task_id": "019f6bef-0c0f-7921-8a5e-a1f12890fb75",
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "edc41d20-dcc6-5646-9268-d0887bc0cefa",
+      "receipt_paths": [
+        "phase_11_submit_return/attempts/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/attempt_ledger.v1.json"
+      ],
+      "request_hash": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 32 Kling Poll / Callback status PASS_LIVE",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS_LIVE",
+      "step_name": "Kling Poll / Callback",
+      "step_no": 32,
+      "step_slug": "kling_poll_callback",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:32",
+        "status:pass_live"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:33:output_retrieval",
+      "artifact_hashes": {
+        "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/phase11_provider_return_envelope.v1.json": "sha256:2a8c72664191d900cbcab33bbdff7e56eaabcd117c7048c5388d3348537fb7d6",
+        "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/provider_return.mp4": "sha256:2545394fb8e48694acb2751b25cbf6fc55a4dfdbde66e241deecfb5f2f1ecd33"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "Continuity acceptance."
+        ],
+        "proves": [
+          "The 18,520,578-byte provider MP4 was downloaded and hash-locked."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/provider_return.mp4",
+        "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/phase11_provider_return_envelope.v1.json"
+      ],
+      "provider_task_id": "019f6bef-0c0f-7921-8a5e-a1f12890fb75",
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "54804a08-f0ca-57f3-8bb8-3b973c241e7f",
+      "receipt_paths": [
+        "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/phase11_provider_return_envelope.v1.json"
+      ],
+      "request_hash": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 33 Output Retrieval status PASS_LIVE",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS_LIVE",
+      "step_name": "Output Retrieval",
+      "step_no": 33,
+      "step_slug": "output_retrieval",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:33",
+        "status:pass_live"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:34:ffprobe_technical_validation",
+      "artifact_hashes": {
+        "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/phase11_download_ffprobe_receipt.v1.json": "sha256:b2a261e352b35abe79aedf9d9b4ad8e736b82edd7f2573d71251641b1d707515",
+        "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/provider_return.mp4": "sha256:2545394fb8e48694acb2751b25cbf6fc55a4dfdbde66e241deecfb5f2f1ecd33"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "Story continuity."
+        ],
+        "proves": [
+          "FFprobe reports readable H.264, 1280x720, 24 fps, and 10.041667 seconds."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/phase11_download_ffprobe_receipt.v1.json",
+        "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/provider_return.mp4"
+      ],
+      "provider_task_id": "019f6bef-0c0f-7921-8a5e-a1f12890fb75",
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "696d6b15-06a4-51f0-9983-6bd00c09e9bd",
+      "receipt_paths": [
+        "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/phase11_download_ffprobe_receipt.v1.json"
+      ],
+      "request_hash": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 34 FFprobe / Technical Validation status PASS_LIVE",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS_LIVE",
+      "step_name": "FFprobe / Technical Validation",
+      "step_no": 34,
+      "step_slug": "ffprobe_technical_validation",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:34",
+        "status:pass_live"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:35:frame_contact_sheet",
+      "artifact_hashes": {
+        "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/frame_contact_sheet.png": "sha256:de37f319b3834ae37fe08217c4848d891adf234017c59a64295f01f96d660dfa",
+        "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/frame_contact_sheet_receipt.v1.json": "sha256:35fc6eb6d6805184c346cc9b9534d56a89f67a30c32785121388490561972831"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "Continuity acceptance."
+        ],
+        "proves": [
+          "A 4x3 PNG contains all twelve Watch frames from the exact MP4."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/frame_contact_sheet.png",
+        "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/frame_contact_sheet_receipt.v1.json"
+      ],
+      "provider_task_id": "019f6bef-0c0f-7921-8a5e-a1f12890fb75",
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "00e46dbb-1734-5dfa-a863-3108552b5a27",
+      "receipt_paths": [
+        "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/frame_contact_sheet_receipt.v1.json"
+      ],
+      "request_hash": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 35 Frame Contact Sheet status PASS",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS",
+      "step_name": "Frame Contact Sheet",
+      "step_no": 35,
+      "step_slug": "frame_contact_sheet",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:35",
+        "status:pass"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:36:post_kling_continuity_review",
+      "artifact_hashes": {
+        "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/frame_contact_sheet.png": "sha256:de37f319b3834ae37fe08217c4848d891adf234017c59a64295f01f96d660dfa",
+        "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/post_kling_continuity_review_receipt.v1.json": "sha256:1af1c98e883e6da8be3a6c1221d22a3fc601bb93ec47e76adfac1e5920799ec0"
+      },
+      "blocker": "SB_004 commit action and visible lava-reef boundary are missing",
+      "claims": {
+        "does_not_prove": [
+          "Final acceptance because SB_004 action and reef geometry fail."
+        ],
+        "proves": [
+          "The exact MP4 was inspected against all four intended beats."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/post_kling_continuity_review_receipt.v1.json",
+        "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/frame_contact_sheet.png"
+      ],
+      "provider_task_id": "019f6bef-0c0f-7921-8a5e-a1f12890fb75",
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "9beaf706-f1cf-5af6-84cc-adbd3a88220c",
+      "receipt_paths": [
+        "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/post_kling_continuity_review_receipt.v1.json"
+      ],
+      "request_hash": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 36 Post-Kling Continuity Review status FAIL",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "FAIL",
+      "step_name": "Post-Kling Continuity Review",
+      "step_no": 36,
+      "step_slug": "post_kling_continuity_review",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:36",
+        "status:fail"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:37:voice_audio_handoff",
+      "artifact_hashes": {
+        "phase_11_submit_return/canonical/phase11_live_request.v1.json": "sha256:cfe35df89bddb6fde5d4f40d64c6a20e2f8addcf2a19af2900d47bfea9756fe2",
+        "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/phase11_download_ffprobe_receipt.v1.json": "sha256:b2a261e352b35abe79aedf9d9b4ad8e736b82edd7f2573d71251641b1d707515"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "A voiced-video lane."
+        ],
+        "proves": [
+          "generate_audio=false agrees with the returned video having no audio stream."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_11_submit_return/canonical/phase11_live_request.v1.json",
+        "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/phase11_download_ffprobe_receipt.v1.json"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "470c7b3c-7933-5a1e-a01a-0b3de0ed9256",
+      "receipt_paths": [
+        "phase_11_submit_return/canonical/phase11_live_request.v1.json",
+        "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/phase11_download_ffprobe_receipt.v1.json"
+      ],
+      "request_hash": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 37 Voice / Audio Handoff Lane When Voiced status PASS_NOT_REQUIRED_AUDIO_OFF",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS_NOT_REQUIRED_AUDIO_OFF",
+      "step_name": "Voice / Audio Handoff Lane When Voiced",
+      "step_no": 37,
+      "step_slug": "voice_audio_handoff",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:37",
+        "status:pass_not_required_audio_off"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:38:final_assembly_movie_lane",
+      "artifact_hashes": {
+        "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/phase11_download_ffprobe_receipt.v1.json": "sha256:b2a261e352b35abe79aedf9d9b4ad8e736b82edd7f2573d71251641b1d707515",
+        "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/provider_return.mp4": "sha256:2545394fb8e48694acb2751b25cbf6fc55a4dfdbde66e241deecfb5f2f1ecd33"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "Continuity acceptance."
+        ],
+        "proves": [
+          "The bounded run has one provider-return clip and requires no stitch or mux operation."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/provider_return.mp4",
+        "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/phase11_download_ffprobe_receipt.v1.json"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "51358739-0e8f-5282-ba22-0f65bf547efe",
+      "receipt_paths": [
+        "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/phase11_download_ffprobe_receipt.v1.json"
+      ],
+      "request_hash": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 38 Final Assembly / Movie Lane status PASS_NOT_REQUIRED_SINGLE_PROVIDER_OUTPUT",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS_NOT_REQUIRED_SINGLE_PROVIDER_OUTPUT",
+      "step_name": "Final Assembly / Movie Lane",
+      "step_no": 38,
+      "step_slug": "final_assembly_movie_lane",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:38",
+        "status:pass_not_required_single_provider_output"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:39:report_generation",
+      "artifact_hashes": {
+        "phase_13_final_acceptance/final_report.md": "sha256:f2f202568fe36946a35aa5f255fb769929728c8a9fdbe2cb122d41f915f5ba60",
+        "phase_13_final_acceptance/final_report.v1.json": "sha256:2c6ed89841af85f1dc8a5f2f95cb2023cb08cdd9f53d4d0d5facc761049517bb"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "Final acceptance."
+        ],
+        "proves": [
+          "The final report is source-derived and explicitly blocked on continuity and missing upstream contracts."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_13_final_acceptance/final_report.v1.json",
+        "phase_13_final_acceptance/final_report.md"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "214d7bf2-ff31-5337-a1da-f38129ed08cc",
+      "receipt_paths": [
+        "phase_13_final_acceptance/final_report.v1.json"
+      ],
+      "request_hash": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 39 Report Generation status PASS_BLOCKED_REPORT",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS_BLOCKED_REPORT",
+      "step_name": "Report Generation",
+      "step_no": 39,
+      "step_slug": "report_generation",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:39",
+        "status:pass_blocked_report"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:40:gate_validation_loop",
+      "artifact_hashes": {
+        "phase_13_final_acceptance/final_gate_validation_summary.v1.json": "sha256:762af6e5faa2aa033d1c18a1eb409e84c0cba0b3b1ac9179e3c7c2e2771887c5"
+      },
+      "blocker": "seven non-passing or missing-contract step states remain",
+      "claims": {
+        "does_not_prove": [
+          "A passing final gate."
+        ],
+        "proves": [
+          "All 42 step states are enumerated with blockers and the next critical action."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_13_final_acceptance/final_gate_validation_summary.v1.json"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "79c6f46c-ddc9-5a3c-9413-e676c6e061b1",
+      "receipt_paths": [
+        "phase_13_final_acceptance/final_gate_validation_summary.v1.json"
+      ],
+      "request_hash": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 40 Gate Validation Loop status BLOCKED",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "BLOCKED",
+      "step_name": "Gate Validation Loop",
+      "step_no": 40,
+      "step_slug": "gate_validation_loop",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:40",
+        "status:blocked"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:41:upstream_revision_invalidation",
+      "artifact_hashes": {
+        "revision_activation_receipt.json": "sha256:22b0b1d035fd844863de6730e970f0362481bbc342f59e377cfe557ddcdb5b7d",
+        "revision_manifest.json": "sha256:65d207351de2e4b6b14cdb65c588ab08fdb741b0fd3b963ad073da3897de4e6a",
+        "semantic_mix_repair_receipt.json": "sha256:2872191417fd13644c4326948d8173b142c9115d7b78e2b96d7d311b24df1eaf"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "Post-Kling continuity."
+        ],
+        "proves": [
+          "The mixed predecessor was rejected and this immutable revision was activated with lineage evidence."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "revision_activation_receipt.json",
+        "semantic_mix_repair_receipt.json",
+        "revision_manifest.json"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "57a4db48-75dd-5a96-9131-33aad020606f",
+      "receipt_paths": [
+        "revision_activation_receipt.json",
+        "semantic_mix_repair_receipt.json",
+        "revision_manifest.json"
+      ],
+      "request_hash": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 41 Upstream Revision Invalidation status PASS",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "PASS",
+      "step_name": "Upstream Revision Invalidation",
+      "step_no": 41,
+      "step_slug": "upstream_revision_invalidation",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:41",
+        "status:pass"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_idea_f3f9c48d5cc2:42:final_acceptance_boundary",
+      "artifact_hashes": {
+        "phase_13_final_acceptance/final_acceptance_receipt.v1.json": "sha256:278069f8c5ccc835d3af1214be45e5b3c2cf1dab2ee4b1d0af0c521ed87697ed"
+      },
+      "blocker": "post-Kling continuity failed and required upstream contract artifacts are absent",
+      "claims": {
+        "does_not_prove": [
+          "Final acceptance."
+        ],
+        "proves": [
+          "The acceptance boundary records the exact successful live evidence and every remaining blocker."
+        ]
+      },
+      "exact_reread_receipt": {
+        "endpoint": "/list",
+        "expected_count": 42,
+        "filters": {
+          "revision_id": "rev_idea_f3f9c48d5cc2",
+          "run_id": "pipeline-complete"
+        },
+        "status": "PASS"
+      },
+      "inputs": {
+        "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+        "source_revision_id": "rev_idea_f3f9c48d5cc2"
+      },
+      "memory_write_method": "/upsert",
+      "memory_write_receipt": {
+        "batch_size": 42,
+        "collection": "persona_dream_pipeline_steps",
+        "status": "PASS"
+      },
+      "observed_at": "2026-07-17T12:22:37.024609+00:00",
+      "outputs": [
+        "phase_13_final_acceptance/final_acceptance_receipt.v1.json"
+      ],
+      "provider_task_id": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v5_omni_small_1024",
+      "qdrant_point_id": "00cdade6-b23a-5595-b7c7-86a4f7849439",
+      "receipt_paths": [
+        "phase_13_final_acceptance/final_acceptance_receipt.v1.json"
+      ],
+      "request_hash": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+      "retrieval_text": "Persona Dream pipeline-complete rev_idea_f3f9c48d5cc2 step 42 Final Acceptance Boundary status BLOCKED",
+      "revision_id": "rev_idea_f3f9c48d5cc2",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "semantic_sync_state": "synced",
+      "status": "BLOCKED",
+      "step_name": "Final Acceptance Boundary",
+      "step_no": 42,
+      "step_slug": "final_acceptance_boundary",
+      "tags": [
+        "persona-dream",
+        "run:pipeline-complete",
+        "revision:rev_idea_f3f9c48d5cc2",
+        "step:42",
+        "status:blocked"
+      ]
+    }
+  ],
+  "schema": "persona_dream.pipeline_step_memory_bundle.v1"
+}

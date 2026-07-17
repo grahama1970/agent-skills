@@ -1,0 +1,37 @@
+{
+  "schema": "persona_dream.frame_contact_sheet_receipt.v1",
+  "status": "PASS_FRAME_CONTACT_SHEET",
+  "run_id": "pipeline-complete",
+  "revision_id": "rev_idea_f3f9c48d5cc2",
+  "request_body_sha256": "sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41",
+  "source_video": "provider_return.mp4",
+  "source_video_sha256": "sha256:2545394fb8e48694acb2751b25cbf6fc55a4dfdbde66e241deecfb5f2f1ecd33",
+  "source_video_duration_seconds": 10.041667,
+  "source_frames_manifest": "watch-codex-vision/frames_manifest.json",
+  "source_frames_manifest_sha256": "sha256:34a78c577684ce9d2475db051b3fba2b831bd7a0db327b5c53d77894af7fd506",
+  "frame_count": 12,
+  "layout": {
+    "columns": 4,
+    "rows": 3,
+    "tile_geometry": "320x180+4+4"
+  },
+  "output_path": "frame_contact_sheet.png",
+  "output_sha256": "sha256:de37f319b3834ae37fe08217c4848d891adf234017c59a64295f01f96d660dfa",
+  "output_width": 1312,
+  "output_height": 564,
+  "command": "montage watch-codex-vision/frames/frame_*.jpg -tile 4x3 -geometry 320x180+4+4 -background #111111 frame_contact_sheet.png",
+  "mocked": false,
+  "live": true,
+  "claims": {
+    "proves": [
+      "one inspectable contact sheet was assembled from all twelve frames extracted from the exact provider-return MP4",
+      "the contact sheet has a valid PNG signature and deterministic dimensions and hash"
+    ],
+    "does_not_prove": [
+      "story or action continuity",
+      "persona identity match to upstream reference sheets",
+      "final acceptance"
+    ]
+  },
+  "observed_at": "2026-07-17T12:17:37Z"
+}
