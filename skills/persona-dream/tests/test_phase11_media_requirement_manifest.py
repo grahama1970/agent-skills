@@ -11,7 +11,7 @@ from phase11_fixture_helpers import make_compilation_inputs  # noqa: E402
 from write_phase11_media_requirement_manifest import build_manifest  # noqa: E402
 
 
-def test_media_manifest_v2_has_two_anchors_six_continuity_and_two_element_packs(tmp_path: Path):
+def test_media_manifest_v2_has_start_anchor_seven_continuity_and_two_element_packs(tmp_path: Path):
     inputs, _candidate_input, _urls = make_compilation_inputs(tmp_path)
     request_body, _blockers, _transformations = compile_request_body(inputs)
     manifest = build_manifest(inputs, request_body)
@@ -19,16 +19,17 @@ def test_media_manifest_v2_has_two_anchors_six_continuity_and_two_element_packs(
     assert manifest["schema"] == "persona_dream.phase11_media_binding_manifest.v2"
     assert manifest["role_counts"] == {
         "global_start_anchor": 1,
-        "global_end_anchor": 1,
-        "continuity_only": 6,
+        "global_end_anchor": 0,
+        "continuity_only": 7,
         "element_packs": 2,
     }
     frames = {item["artifact_id"]: item for item in manifest["storyboard_frames"]}
     assert frames["sb_001.start_frame"]["role"] == "global_start_anchor"
     assert frames["sb_001.start_frame"]["json_pointer"] == "/input/start_image_url"
-    assert frames["sb_004.end_frame"]["role"] == "global_end_anchor"
-    assert frames["sb_004.end_frame"]["json_pointer"] == "/input/end_image_url"
-    assert sum(item["role"] == "continuity_only" for item in frames.values()) == 6
+    assert frames["sb_004.end_frame"]["role"] == "continuity_only"
+    assert frames["sb_004.end_frame"]["json_pointer"] is None
+    assert "end_image_url" not in request_body
+    assert sum(item["role"] == "continuity_only" for item in frames.values()) == 7
 
     packs = manifest["element_packs"]
     assert [item["prompt_token"] for item in packs] == ["@Element1", "@Element2"]
