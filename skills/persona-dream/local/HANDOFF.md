@@ -1,219 +1,202 @@
-# Handoff Report: Persona Dream Founding Experiment
+# Handoff Report: Persona Dream
 
-**Timestamp**: 2026-07-16T19:40:00Z
+**Timestamp**: 2026-07-17T12:59:23Z
 **Active Agent**: Codex
-**Operational status**: `BLOCKED_FINAL_ACCEPTANCE: POST_KLING_CONTINUITY_FAILED`
+**Operational status**: `BLOCKED_FINAL_ACCEPTANCE`
 
-## 0. Immutable Goal Audit Update (2026-07-17)
+## 1. Immutable Goal
 
-- The corrected request returned a real 18,520,578-byte Kling MP4 after one
-  submission and 43 polls.
-- FFprobe: H.264, 1280x720, 24 fps, 10.041667 seconds.
-- Twelve existing Watch frames were assembled into
-  `frame_contact_sheet.png`; the sheet was visually inspected.
-- Post-Kling continuity failed because SB_004 does not visibly show Embry's
-  safe-channel commit or a readable lava-reef boundary.
-- `persona_dream_pipeline_steps` exact reread is 42/42; all 42 records have
-  semantic sync and Qdrant pointers.
-- Final acceptance is blocked on steps 05, 11, 12, 15, 36, 40, and 42.
-- Do not submit again without a new request hash and separate paid-call
-  authorization. The successful request's one-attempt authorization is consumed.
-- Canonical audit artifacts are under
-  `reports/pipeline-complete/.persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_13_final_acceptance/`.
+Produce a working Kling video from the `persona-dream` pipeline.
 
-## 1. Project Overview
+The goal is complete only when steps 31-36 positively prove a real Kling
+submit, poll/callback, returned video, technical validation, contact sheet, and
+post-Kling continuity; step 42 then cites those proofs; and all 42 pipeline step
+states have durable Memory write and exact-reread evidence.
 
-- **Ecosystem**: Python pipeline and validators, TypeScript API/UI, Memory/Arango/Qdrant persistence, Scillm/Watch analysis, and a fal.ai Kling provider adapter.
-- **Core purpose**: Determine whether Embry can construct a synthetic dream from grounded memory residue, watch the returned dream, form bounded self-interpretations and Theory-of-Mind candidates, persist the explicitly synthetic dream, recall it later, and exhibit useful bounded behavior without identity drift.
-- **Immutable run**: `pipeline-complete`.
-- **Immutable revision**: `rev_idea_f3f9c48d5cc2`.
-- **Dream ID**: `dream_ff2ce7f310fdda2d`.
+Canonical contract: `GOAL.md`.
 
-## 2. Current State (Doc-Code Alignment)
+Do not resume Phase 13-16 cognition research, UI, DAG harness, dashboard, or
+other adjacent work. Those are outside the current immutable-goal gate.
 
-### Implemented reality
+## 2. Current State
 
-- Phases 01-10 are `ACTIVE_CONSISTENT` for the canonical revision, with immutable artifact qualification and Memory semantic evidence.
-- Phase 11 has a submit-once adapter, hash-bound approval receipts, provider-return envelope, download receipt, and ffprobe receipt.
-- The corrected Phase 11 request produced a real Kling video.
-- Phase 12 binds the real provider return to a Watch observation packet and independently validates the video/frame lineage.
-- Phase 13-16 remain dry-run scaffolding. No accepted grounded interpretation, accepted ToM receipt, synthetic-dream Memory transaction, graph traversal, semantic recall, or bounded behavior receipt exists.
+- Run: `pipeline-complete`.
+- Active audited revision: `rev_idea_f3f9c48d5cc2`.
+- Request SHA-256:
+  `ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41`.
+- Provider request ID: `019f6bef-0c0f-7921-8a5e-a1f12890fb75`.
+- Corrected request provider calls: `1`; polls: `43`.
+- Returned MP4: 18,520,578 bytes, H.264, 1280x720, 24 fps,
+  10.041667 seconds.
+- Returned MP4 SHA-256:
+  `2545394fb8e48694acb2751b25cbf6fc55a4dfdbde66e241deecfb5f2f1ecd33`.
+- Contact sheet: 12 frames, 4x3, 1312x564.
+- Contact sheet SHA-256:
+  `de37f319b3834ae37fe08217c4848d891adf234017c59a64295f01f96d660dfa`.
+- Memory collection: `persona_dream_pipeline_steps`.
+- Memory exact reread: 42/42 unique step keys.
+- Semantic syncs: 42; Qdrant pointers: 42.
+- Final audit: 35 passing/not-required, 6 blocked, 1 failed.
+- Non-passing steps: 05, 11, 12, 15, 36, 40, 42.
+- `mocked: no`; `live: yes` for the provider return, technical checks,
+  continuity inspection, and Memory persistence.
 
-### Documentation drift
+The goal is not accepted. A technically readable MP4 and 42/42 persisted step
+states do not prove that those step states passed.
 
-- `README.md` still says no live provider return or Watch analysis has been proven. That is stale.
-- `PROJECT_KNOWLEDGE.md` records earlier Phase 11 failures and preflight state but does not yet record the successful corrected request, provider return, or Phase 12 Watch pass.
-- `SKILL.md` has not yet been updated with the real Phase 11-12 proof boundary.
-- Do not update those documents to claim Phase 13-16 until live artifacts exist.
+## 3. What Works
 
-### Git state
+- The exact corrected Kling request was submitted once and returned a real MP4.
+- Polling, download, ffprobe, frame extraction, and contact-sheet generation
+  produced deterministic receipts.
+- Post-Kling review positively preserved Embry/Kai identity within the return,
+  navy/black wardrobe, white surfboards, shoreline/daylight continuity,
+  SB_001 setup, SB_003 Kai hand signal, and the silent-audio contract.
+- Every pipeline step state, including blocked and failed states, is durably
+  present under exact run/revision filters in Memory.
+- Commit `0173356aab080fd2e59c6304bdc1d1cb45930551` contains the immutable-goal
+  audit and is present on `origin/main`.
 
-- Served/working checkout: `/home/graham/workspace/experiments/agent-skills-main`.
-- Working checkout HEAD: `590f0dd8c45623c3f038b1cd1cba2cb026bc05b1`.
-- Current `origin/main` observed during handoff: `f36e42c18e6479c9fcb578168c55fbcee8030d59`.
-- The live Phase 11-12 evidence is pushed on `origin/main` at `0854cd9b67b44b6a07b6abb04132d6cfe4eb79e7`.
-- The served checkout is intentionally dirty and diverged. Do not reset, pull, rebase, or overwrite it.
-- Use a clean worktree from current `origin/main` for proof and push; transplant only focused Persona Dream commits/patches.
+## 4. What Is Broken
 
-## 3. What Is Working
+### Step 36 continuity failure
 
-### Phases 01-10
+The final 7.0-10.041667-second beat fails two requirements:
 
-- Canonical revision: `rev_idea_f3f9c48d5cc2`.
-- Qualification is scoped to the intended Phase 01-10 production evidence.
-- Stable storyboard artifact IDs and revision-scoped asset hydration are implemented.
-- Memory qualification includes deterministic records and semantic synchronization for the qualified revision.
+- `MISSING_SB004_COMMIT_ACTION`: Embry does not visibly commit forward through
+  the safe channel while Kai remains outside the main action.
+- `LAVA_REEF_BOUNDARY_NOT_VISUALLY_READABLE`: no readable lava-reef boundary
+  or safe-channel geometry anchors the final decision.
 
-### Phase 11 provider result
+Automatic resubmission is forbidden. The consumed one-attempt authorization
+does not authorize another request.
 
-- Corrected request body SHA-256: `sha256:ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41`.
-- Successful provider request ID: `019f6bef-0c0f-7921-8a5e-a1f12890fb75`.
-- Successful-request ledger attempts: `1`.
-- Returned MP4 size: `18,520,578` bytes.
-- Returned MP4 SHA-256: `sha256:2545394fb8e48694acb2751b25cbf6fc55a4dfdbde66e241deecfb5f2f1ecd33`.
-- ffprobe: 10.041667 seconds, 1280x720, H.264.
-- Video path:
-  `reports/pipeline-complete/.persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/provider_return.mp4`
+### Missing upstream contracts
 
-Full disclosure: there were two provider submissions across two payload hashes. The earlier payload returned HTTP 422 because Kling rejected `end_image_url` with `multi_prompt`. It was terminally fenced and not retried. The corrected payload made one submission and succeeded. Do not report total experiment provider submissions as one.
+- Step 05: `dream_packet.json`, `dream_prompt.txt`.
+- Step 11: `technique_selection.json`, `look_lock.json`, `shot_bible.json`.
+- Step 12: `script_dna_selection.json`.
+- Step 15: `panel_continuity_and_repair_ledger.json`.
 
-### Phase 12 Watch result
+Steps 40 and 42 are blocked downstream by those missing contracts and the step
+36 failure.
 
-- Observation packet:
-  `reports/pipeline-complete/.persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_12_watch_observation/dream_observation_packet.v1.json`
-- Packet SHA-256: `sha256:835ae475ac26ae3a7e8fb79da2f570949285fd8aafbe39203ef5033adb2f95f7`.
-- Status: `PASS_DREAM_OBSERVATION_CONTRACT_PROVIDER_RETURN`.
-- `mocked: false`.
-- `live: true`.
-- `provider_returned: true`.
-- `persona_watched_provider_dream: true`.
-- Watch frames: 12.
-- Described frames: 12.
-- Requested visual model: `codex-vision`.
-- Served model: `gpt-5.5`.
-- Audio absence is expected because `generate_audio=false`.
-- Validator errors: `[]`.
+### Lineage rule
 
-Deterministic check:
+Do not backfill these files into `rev_idea_f3f9c48d5cc2`. That revision is
+frozen and hash-qualified. In-place additions would either change its bound
+manifest/index or leave new files outside the qualified artifact set, silently
+reusing downstream evidence created without the new upstream hashes.
 
-```bash
-skills/persona-dream/run.sh check-dream-observation-packet \
-  --packet skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_12_watch_observation/dream_observation_packet.v1.json \
-  --run-root skills/persona-dream/reports/pipeline-complete \
-  --json
-```
+## 5. External Review
 
-## 4. What Is Currently Broken
+The human-requested `$browser-oracle` binding is ready:
 
-### Current gate: Phase 13
+- Project name: `dream`.
+- Tab ID: `837359230`.
+- KDE desktop: `2`.
+- URL:
+  `https://chatgpt.com/g/g-p-6a2d6f0882fc8191b3d9c40b349dd193-dream/c/6a5a1f1c-8bcc-83ea-b3fc-5b1c3f706c04`.
+- Machine binding: `~/.pi/webgpt-projects/dream.json`.
+- Project registry: `.ask/browser-oracles.yaml`.
 
-`scripts/write_cognitive_loop_dry_run.py` is not an implementation of Phase 13-16. It emits:
+WebGPT assess artifacts are outside the repository:
 
-- a fixed dry-run interpretation proposal;
-- zero accepted interpretations;
-- always-blocked ToM;
-- zero Memory writes;
-- unexecuted recall probes;
-- unexecuted behavior probes.
+- Bundle: `/tmp/persona-dream-next-gate-20260717.md`.
+- Response: `/tmp/persona-dream-next-gate-20260717-assess-response.md`.
+- Metadata: `/tmp/persona-dream-next-gate-20260717-assess-response.meta.json`.
 
-There is no executable `check-phase13-grounded` command. The desired command currently fails:
-
-```bash
-skills/persona-dream/run.sh check-phase13-grounded \
-  --run-root skills/persona-dream/reports/pipeline-complete \
-  --revision-id rev_idea_f3f9c48d5cc2 \
-  --json
-```
-
-Required Phase 13 outputs do not exist:
+Routing proof:
 
 ```text
-phase_13_interpretation/dream_self_interpretation.v1.json
-phase_13_interpretation/tom_validation_receipt.v1.json
+requested_tab_id: 837359230
+controlled_tab_id: 837359230
+controlled_tab_id_mismatch: false
+tab_was_created: false
+response_proof_status: response_proven
 ```
 
-### WebGPT code-authoring state
+Transport metadata is degraded because focus changed despite `--no-activate`.
+The exact tab and URL still matched and the response was recovered. The first
+submission attempt was rejected because the bundle contained unreadable local
+paths; it auto-filed GitHub issue `#166`. The corrected self-contained bundle
+then returned successfully.
 
-- Exact project tab ID: `837358135`.
-- Exact URL:
-  `https://chatgpt.com/g/g-p-6a2d6f0882fc8191b3d9c40b349dd193/c/6a50d492-490c-83ea-a034-4760ea336861`
-- Browser Oracle project: `persona-dream`.
-- The duplicate stale binding named `dream` was removed; only `persona-dream` should point to this tab.
-- Phase 13 code request:
-  `review-bundles/phase13_code_bundle.md`
-- Immutable gate draft:
-  `review-bundles/phase13_code_gate.json`
-- Source provenance:
-  `review-bundles/phase13_code_bundle.source-provenance.json`
-- Submission receipt:
-  `review-bundles/phase13_code_bundle-response.receipt.json`
-- Heartbeat:
-  `review-bundles/phase13_code_bundle-response.meta.heartbeat.json`
+WebGPT diagnosis: gate-order inversion. The lineage repair must precede the
+SB_004 paid-request repair. Its `PASS_CURRENT_GATE` ruling applies only to the
+assessment deliverable; it does not mean the pipeline or immutable goal passed.
 
-The bounded code request was submitted to the exact tab from a clean branch tracking `origin/main`. The receipt says `submitted_to_chatgpt:true`. The 1200-second transport window ended with `phase:"failed"`, `page_state:"stalled"`, no response body, and no patch/ZIP. This is not a code deliverable and earns no progress credit.
+## 6. Next Gate
 
-The checked-in WebGPT CLI is behind its `SKILL.md`: the documented `--gate` option is not implemented. The bundle still contains the gate fields, but the anti-avoidance engine was not invoked by the CLI.
+Execute one local new-revision upstream-contract reconstruction and invalidation
+transaction rooted at `rev_idea_f3f9c48d5cc2`:
 
-### Brave research state
+1. Create a new immutable revision with
+   `sourceRevisionId=rev_idea_f3f9c48d5cc2`.
+2. Produce and validate the seven missing canonical files for steps 05, 11,
+   12, and 15.
+3. Emit step-41 invalidation evidence for affected downstream steps 06-42,
+   marking each stale or superseded and naming regeneration/revalidation needs.
+4. Recompute the new artifact index and manifest.
+5. Run revision Memory prepare, exact verify, semantic verification, active
+   pointer update, and activation.
+6. Write and exact-reread the new revision-bound pipeline step records.
+7. Stop before compiling or submitting another Kling request unless this
+   transaction passes completely.
 
-- A valid Brave key is configured.
-- `skills/brave-search/brave_search.py` hung without results.
-- A direct Brave API fallback was bounded to 15 seconds and failed with DNS resolution timeout.
-- No external research findings were obtained; do not claim otherwise.
+Minimum gate evidence:
 
-## 5. Next Steps
+- New `revision_manifest.json` and revision artifact index.
+- The seven canonical upstream files.
+- Step-41 invalidation ledger covering affected steps 06-42.
+- Revision Memory prepare, verify, and activation receipts.
+- Pipeline-step Memory write and exact-reread receipts for the new revision.
+- Gate summary showing steps 05, 11, 12, and 15 passing with no downstream
+  artifact silently claimed current.
 
-1. Recover the existing WebGPT turn, without submitting a duplicate:
+## 7. Later Gates
 
-   ```bash
-   python3 skills/webgpt/scripts/webgpt_cli.py listen \
-     -p persona-dream --timeout 300 \
-     -o skills/persona-dream/review-bundles/phase13_code_bundle-recovered-response.md
-   ```
+After the new revision gate passes:
 
-2. Accept the WebGPT result only if it contains a unified diff or non-empty finished-file ZIP and its metadata proves:
+1. Regenerate or hash-revalidate steps 06-29 in dependency order.
+2. Compile a repaired SB_004 request preserving accepted identity/media,
+   wardrobe, boards, daylight, and silent-audio constraints while adding an
+   unmistakable Embry-only forward commit and readable reef/channel geometry.
+3. Fix the new request SHA-256 and initialize an unused request-scoped attempt
+   ledger with zero provider calls.
+4. Stop at step 30 with `BLOCKED_AWAITING_HUMAN_APPROVAL` for that exact hash.
+5. Only a separate human hash-bound paid-call authorization may permit another
+   Kling submission.
 
-   ```text
-   requested_tab_id == controlled_tab_id == 837358135
-   controlled_tab_id_mismatch == false
-   tab_was_created == false
-   ```
+## 8. Stop Conditions
 
-3. Apply the patch only in a clean worktree based on current `origin/main`. Reconcile it against the real Phase 12 packet and Persona Dream/Memory/Scillm contracts.
+Do not submit another paid request while any affected record is stale, any step
+05-29 gate is non-passing, the repaired request hash is not fixed, its attempt
+ledger is not unused with zero calls, or step 30 lacks explicit authorization
+for that exact hash.
 
-4. Run focused wiring tests, explicitly labeled `mocked: yes` when fixtures are used.
+Do not claim completion until step 36 passes on a new live provider return and
+step 42 cites that positive evidence plus 42/42 Memory persistence.
 
-5. Run the real Phase 13 writer and the required `check-phase13-grounded` command. Pass requires real observation SHA binding, positive accepted interpretation count, accepted/rejected ToM counts, zero unsupported claims, persona scope `embry`, and unchanged provider ledgers.
+## 9. Key Evidence
 
-6. Commit and push the focused Phase 13 implementation and real artifacts.
+All paths below are relative to
+`reports/pipeline-complete/.persona-dream/revisions/rev_idea_f3f9c48d5cc2/`:
 
-7. Only after Phase 13 passes, create the next bounded gate for Phase 14 real Memory `/upsert`, exact reread, and synthetic-origin preservation. Do not combine Phase 14-16 into one WebGPT request.
+- `phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/phase11_provider_return_envelope.v1.json`
+- `phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/phase11_download_ffprobe_receipt.v1.json`
+- `phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/frame_contact_sheet.png`
+- `phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/post_kling_continuity_review_receipt.v1.json`
+- `phase_13_final_acceptance/final_gate_validation_summary.v1.json`
+- `phase_13_final_acceptance/pipeline_step_memory_write_receipt.v1.json`
+- `phase_13_final_acceptance/final_acceptance_receipt.v1.json`
+- `phase_13_final_acceptance/final_report.md`
 
-8. Subsequent gates are Phase 15 semantic plus explicit graph traversal recall, then Phase 16 bounded baseline/post-dream behavior with identity-drift rejection.
+## 10. Git Safety
 
-## 6. Project Context for Success
-
-### Key source files
-
-- `scripts/write_cognitive_loop_dry_run.py`: current non-executable Phase 13-16 scaffold.
-- `tests/test_cognitive_loop_dry_run.py`: fixture-only scaffold tests.
-- `scripts/write_dream_observation_packet.py`: Phase 12 live packet writer.
-- `scripts/check_dream_observation_packet.py`: Phase 12 independent checker.
-- `schemas/dream_observation_packet.v1.schema.json`: Phase 12 schema.
-- `run.sh`: command dispatcher.
-- `PROJECT_KNOWLEDGE.md`, `README.md`, `SKILL.md`: stale after the successful provider return and Watch pass.
-
-### Relevant commits
-
-- `0854cd9b` on `origin/main`: persists the real provider return, Watch evidence, Phase 12 packet, and provider-return lineage implementation.
-- `d249e364`: rejects unsupported multi-prompt `end_image_url` and compiles the corrected request.
-- Local equivalent commits in the dirty served checkout are `590f0dd8` and `04aabc4d`; do not push them directly over current main.
-
-### Non-claims
-
-- Phase 13 grounded self-interpretation is not implemented or proven.
-- ToM candidates are not accepted or persisted.
-- Synthetic dream Memory persistence is not implemented or proven.
-- Explicit Arango graph traversal is not proven.
-- Later semantic recall and bounded persona/Chatterbox behavior are not proven.
-- The founding research hypothesis remains unproven.
+- Clean task worktree:
+  `/tmp/agent-skills-main-persona-dream-uu5nMV`.
+- Branch: `persona-dream-phase11-main-20260717070508`, tracking `origin/main`.
+- Do not reset, stash, clean, rebase, or overwrite unrelated work in the main
+  checkout at `/home/graham/workspace/experiments/agent-skills`.
+- Stage and commit only relevant `skills/persona-dream` paths.
