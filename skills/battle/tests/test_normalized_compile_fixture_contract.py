@@ -100,7 +100,40 @@ def test_pr3d_compile_fixture_rejects_path_leakage() -> None:
         validate_normalized_compile_fixture(fixture)
 
 
-def _write_pr3d_source_run(tmp_path: Path, *, runtime_status: str = "NOT_RUN") -> Path:
+def test_pr3d_compile_fixture_normalizes_live_compile_pass_spelling(tmp_path: Path) -> None:
+    live_tau = _write_pr3d_source_run(
+        tmp_path,
+        compile_receipt_status="PASS",
+        compile_verdict="PASS",
+        compile_status="PASS",
+        compile_errors=[],
+        repaired_text="print('candidate only')\n",
+    )
+
+    fixture = normalize_pr3d_compile_fixture(
+        live_tau_canary=live_tau,
+        out_dir=tmp_path / "local" / "battle-004-pr3d-compile",
+        generated_at="2026-07-17T12:00:00Z",
+    )
+
+    assert fixture["node_status"]["compile-repair"] == "PASS"
+    assert fixture["compile"]["status"] == "PASSED"
+    assert fixture["compile"]["compile_passed"] is True
+    assert fixture["compile"]["compile_failed"] is False
+    assert fixture["specimen_versions"][1]["compile_status"] == "PASSED"
+    assert validate_normalized_compile_fixture(fixture)["status"] == "PASS"
+
+
+def _write_pr3d_source_run(
+    tmp_path: Path,
+    *,
+    runtime_status: str = "NOT_RUN",
+    compile_receipt_status: str = "BLOCKED",
+    compile_verdict: str = "COMPILE_FAILED",
+    compile_status: str = "FAILED",
+    compile_errors: list[str] | None = None,
+    repaired_text: str | None = None,
+) -> Path:
     live_tau = tmp_path / "live-tau"
     tau_run = live_tau / "tau-dag-run"
     command_root = tau_run / "command-loop" / "command-artifacts"
@@ -113,7 +146,7 @@ def _write_pr3d_source_run(tmp_path: Path, *, runtime_status: str = "NOT_RUN") -
     code_path = provider_root / "exploit_specimen.py"
     code_path.write_text(code, encoding="utf-8")
     code_sha = _sha256(code_path.read_bytes())
-    repaired = "content = b\"BATTLE-004 CHILD SPECIMEN — UNVERIFIED\"\n"
+    repaired = repaired_text if repaired_text is not None else "content = b\"BATTLE-004 CHILD SPECIMEN — UNVERIFIED\"\n"
     repaired_path = command_root / "command-loop-step-005" / "repaired_exploit_specimen.py"
     repaired_path.parent.mkdir(parents=True)
     repaired_path.write_text(repaired, encoding="utf-8")
@@ -168,10 +201,10 @@ def _write_pr3d_source_run(tmp_path: Path, *, runtime_status: str = "NOT_RUN") -
     }
     compile_receipt = {
         "schema": "battle.child_compile_receipt.v1",
-        "status": "BLOCKED",
-        "verdict": "COMPILE_FAILED",
+        "status": compile_receipt_status,
+        "verdict": compile_verdict,
         "compiler": "py_compile",
-        "compile_status": "FAILED",
+        "compile_status": compile_status,
         "mocked": False,
         "live": "local_py_compile",
         "fixture_fallback_used": False,
@@ -180,7 +213,7 @@ def _write_pr3d_source_run(tmp_path: Path, *, runtime_status: str = "NOT_RUN") -
         "runtime_status": runtime_status,
         "target_contact": "NOT_RUN",
         "judge_status": "NOT_RUN",
-        "errors": [
+        "errors": compile_errors if compile_errors is not None else [
             f"  File \"{repaired_path}\", line 1\n"
             "    content = b\"BATTLE-004 CHILD SPECIMEN — UNVERIFIED\"\n"
             "              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n"
@@ -214,8 +247,8 @@ def _write_pr3d_source_run(tmp_path: Path, *, runtime_status: str = "NOT_RUN") -
         {
             "schema": "battle.child_dag_node_receipt.v1",
             "node_id": "compile-repair",
-            "status": "BLOCKED",
-            "verdict": "COMPILE_FAILED",
+            "status": compile_receipt_status,
+            "verdict": compile_verdict,
             "evidence": [
                 {"kind": "exploit_specimen.py", "path": str(code_path)},
                 {"kind": "repaired_exploit_specimen.py", "path": str(repaired_path)},

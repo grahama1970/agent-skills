@@ -7,23 +7,23 @@
       "id": "live_tau_child_dag_canary",
       "label": "live-tau-child-dag-canary-receipt.json",
       "schema": "battle.live_tau_child_dag_canary_receipt.v1",
-      "sha256": "sha256:396ff188003fb0102b579fce7708d5ca9b9bf2c46224c5237367139e89240c70",
-      "status": "BLOCKED",
-      "verdict": "unexpected_edge"
+      "sha256": "sha256:604744ea04b76f6fec67a30b5b8830d5983f3ef4e76a36c0c72f3cd364bdc53f",
+      "status": "PASS",
+      "verdict": "pr3c_provider_authorship_boundary_reached"
     },
     {
       "id": "tau_dag_receipt",
       "label": "dag-receipt.json",
       "schema": "tau.dag_receipt.v1",
-      "sha256": "sha256:07775d21a83bd7eb7934f03565d34d9f5c064d3480b4ca7f08ee123440ae5b72",
+      "sha256": "sha256:0a1e7428fff49b5ad3746e63e75e9f938cc6febd23826bea639f800d2f8e672c",
       "status": "BLOCKED",
-      "verdict": "UNEXPECTED_EDGE"
+      "verdict": "COMMAND_FAILED"
     },
     {
       "id": "lineage-summarizer_node",
       "label": "lineage-summarizer-node-receipt.json",
       "schema": "battle.child_dag_node_receipt.v1",
-      "sha256": "sha256:d8c2519d86339fdcb41321e39610c68390312aa9c3a040cb860bfdbdae4038da",
+      "sha256": "sha256:1cfb747a0de21c09c9a500138bd375aed925b528e2d46288d7e1458fa4a79e6c",
       "status": "PASS",
       "verdict": "PASS"
     },
@@ -31,7 +31,7 @@
       "id": "research-scout_node",
       "label": "research-scout-node-receipt.json",
       "schema": "battle.child_dag_node_receipt.v1",
-      "sha256": "sha256:8a205da125f57302226f0e8b90e85d7a033e5afc999729934d0c9a341153774c",
+      "sha256": "sha256:05538e1271501d59b766e86739dead3c6346c40d6c090ba58efe32c6fa27f1b9",
       "status": "PASS",
       "verdict": "PASS"
     },
@@ -39,7 +39,7 @@
       "id": "method-combiner_node",
       "label": "method-combiner-node-receipt.json",
       "schema": "battle.child_dag_node_receipt.v1",
-      "sha256": "sha256:36093e35895955d15f7ba9bc97a98099c52d5d1b8dea9b4f15f1e5dd9bfa3be5",
+      "sha256": "sha256:c8ce10f8c5cceda12bc079fb5e9a88e4fa2e8a0a2939dfb13d9e2e56772420e5",
       "status": "PASS",
       "verdict": "PASS"
     },
@@ -47,7 +47,7 @@
       "id": "exploit-code-author_node",
       "label": "exploit-code-author-node-receipt.json",
       "schema": "battle.child_dag_node_receipt.v1",
-      "sha256": "sha256:ec5676f26d6b1da9de127fd7973fc2615db55774523a7fdc8636f2a25291a01f",
+      "sha256": "sha256:d475b7e7e714016ec6df717f2551b7f9b341f3d311343b5405ede3030d95456c",
       "status": "PASS",
       "verdict": "PASS"
     },
@@ -55,15 +55,15 @@
       "id": "compile-repair_node",
       "label": "compile-repair-node-receipt.json",
       "schema": "battle.child_dag_node_receipt.v1",
-      "sha256": "sha256:1bc527267cf1365514aa69efa9ca359b1a45614e9471afb97b013121c8e47b71",
-      "status": "BLOCKED",
-      "verdict": "COMPILE_FAILED"
+      "sha256": "sha256:e3df472b78241a90d441496476fa8fac7370d691800e234fb0a208197fee2a4d",
+      "status": "PASS",
+      "verdict": "PASS"
     },
     {
       "id": "provider_authorship",
       "label": "provider-authorship-receipt.json",
       "schema": "battle.provider_authorship_receipt.v1",
-      "sha256": "sha256:f5afdf8af0ddd3bf61c4a230ff6cc7f99e3f424bddeb179db76c9730c3c63f4d",
+      "sha256": "sha256:7b6f3e763d725875e16d1765eba9dfd1727a81174d44fd8580263c0c763aaaa3",
       "status": "PASS",
       "verdict": null
     },
@@ -71,7 +71,7 @@
       "id": "specimen",
       "label": "specimen.json",
       "schema": "battle.exploit_specimen.v2",
-      "sha256": "sha256:741b770e91f11d4418060a6abc996452adb4cbc3c50d591a3c663785c102f0d9",
+      "sha256": "sha256:7e52689f8f3224a441be3b53e680ac0425b0bde20edd41a060295f56cc353532",
       "status": null,
       "verdict": null
     },
@@ -79,9 +79,9 @@
       "id": "compile_receipt",
       "label": "compile_receipt.json",
       "schema": "battle.child_compile_receipt.v1",
-      "sha256": "sha256:bc1e4dbc102d7605f37ab493a4c6c4f2994e21561231a45f6ea0108774e69009",
-      "status": "BLOCKED",
-      "verdict": "COMPILE_FAILED"
+      "sha256": "sha256:99fc0f837bdc310218c9653687c03c8ae90ed16c21906edc691998ab2564aa35",
+      "status": "PASS",
+      "verdict": "PASS"
     }
   ],
   "schema": "battle.normalized_compile_source_receipt_index.v1",

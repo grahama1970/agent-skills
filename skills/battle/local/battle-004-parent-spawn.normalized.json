@@ -1,15 +1,15 @@
 {
   "battle_clock": {
     "allotted_seconds": 1200.0,
-    "current_seconds": 76.414883,
-    "elapsed_seconds": 76.414883,
+    "current_seconds": 72.404691,
+    "elapsed_seconds": 72.404691,
     "ended_at": null,
     "mode": "receipt_elapsed",
     "proof_mode": "receipt_backed_fixture",
-    "remaining_seconds": 1123.585117,
+    "remaining_seconds": 1127.595309,
     "schema": "battle.clock.legacy_receipt_elapsed.v1",
     "source_receipt_id": "scoreboard",
-    "started_at": "2026-07-07T22:06:06Z"
+    "started_at": "2026-07-17T11:53:00Z"
   },
   "battle_id": "battle-004",
   "battle_timeline_control": {
@@ -23,9 +23,9 @@
     },
     "playhead": {
       "can_animate": true,
-      "current_pct": 8.282718,
-      "current_seconds": 99.392622,
-      "legacy_clock_current_seconds": 76.414883,
+      "current_pct": 11.020751,
+      "current_seconds": 132.249017,
+      "legacy_clock_current_seconds": 72.404691,
       "proof_mode": "receipt_backed_fixture",
       "semantics": "receipt_elapsed_axis_playhead",
       "source": "timeline_elapsed_axis_model.playhead.current_elapsed_seconds"
@@ -65,8 +65,7 @@
       "state": "deployed",
       "summary": "Blue patch artifact present for Zip Slip path traversal.",
       "targetLaneIds": [
-        "payload-857-receipt",
-        "payload-857-red-1"
+        "payload-857-receipt"
       ],
       "xEnd": 82,
       "xStart": 56
@@ -80,8 +79,7 @@
       "state": "deployed",
       "summary": "Blue patch artifact present for Zip Slip path traversal.",
       "targetLaneIds": [
-        "payload-857-receipt",
-        "payload-857-red-1"
+        "payload-857-receipt"
       ],
       "xEnd": 82,
       "xStart": 56
@@ -105,12 +103,12 @@
   },
   "clock": {
     "allotted_seconds": 1200.0,
-    "current_seconds": 76.414883,
-    "elapsed_seconds": 76.414883,
+    "current_seconds": 72.404691,
+    "elapsed_seconds": 72.404691,
     "ended_at": null,
     "mode": "receipt_replay",
     "proof_mode": "receipt_backed_fixture",
-    "remaining_seconds": 1123.585117,
+    "remaining_seconds": 1127.595309,
     "round_config": {
       "canonical_allotted_seconds": 1200.0,
       "resolved_allotted_seconds": 1200.0,
@@ -120,7 +118,7 @@
     "server_now": null,
     "source": "receipt_timestamps",
     "source_receipt_id": "scoreboard",
-    "started_at": "2026-07-07T22:06:06Z"
+    "started_at": "2026-07-17T11:53:00Z"
   },
   "events": [
     {
@@ -146,7 +144,7 @@
       },
       "summary": "BATTLE-004 proof loaded.",
       "team": "system",
-      "ts": "2026-07-07T22:06:06Z",
+      "ts": "2026-07-17T11:53:00Z",
       "ui": {
         "importance": "visible",
         "notification": "BATTLE-004 receipt-backed proof loaded",
@@ -179,7 +177,7 @@
       },
       "summary": "Arena created arena-zip-slip-import-001 for POST /api/import-zip.",
       "team": "system",
-      "ts": "2026-07-07T22:06:06Z",
+      "ts": "2026-07-17T11:53:00Z",
       "turn": {
         "current_action": "Create Zip Slip path traversal scenario and Docker oracle.",
         "loop_index": 0,
@@ -202,16 +200,16 @@
       "elapsed_seconds": null,
       "event_type": "red.learned",
       "evidence": {
-        "artifact_ref": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/red/tau-subagent-receipt.json",
+        "artifact_ref": "/tmp/battle-004-parent-spawn-adaptive-lineage/tau-live/red/tau-subagent-receipt.json",
         "proof_mode": "receipt_backed_fixture",
         "receipt_id": "red-tau-subagent-receipt",
-        "receipt_path": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/red/tau-subagent-receipt.json"
+        "receipt_path": "/tmp/battle-004-parent-spawn-adaptive-lineage/tau-live/red/tau-subagent-receipt.json"
       },
       "id": "red-0-red-exploit",
       "order_index": 2,
       "output": {
         "stderr_excerpt": "not emitted",
-        "stdout_excerpt": "red-0=PASS:ok; red-1=PASS:ok"
+        "stdout_excerpt": "red-0=PASS:ok; red-1=BLOCKED:red_artifact_missing_local_app_import"
       },
       "payload_id": "payload-857",
       "proof_mode": "receipt_backed_fixture",
@@ -224,14 +222,14 @@
           "receipt_id": "red-tau-subagent-receipt",
           "status": "ok",
           "summary": "Red worker proof receipt.",
-          "timestamp": "2026-07-07T22:06:06Z"
+          "timestamp": "2026-07-17T11:53:00Z"
         }
       ],
       "summary": "Red worker red-0 materialized exploit artifact.",
-      "tau_run_id": "arena-parent-spawn-20260707T220426Z",
-      "tau_turn_id": "arena-parent-spawn-20260707T220426Z:red-0:red",
+      "tau_run_id": "arena-parent-spawn-20260717T115114Z",
+      "tau_turn_id": "arena-parent-spawn-20260717T115114Z:red-0:red",
       "team": "red",
-      "ts": "2026-07-07T22:06:06Z",
+      "ts": "2026-07-17T11:53:00Z",
       "turn": {
         "current_action": "Materialize Red exploit artifact.",
         "loop_index": 1,
@@ -252,18 +250,18 @@
       "actor_kind": "tau_exploit_subagent",
       "battle_id": "battle-004",
       "elapsed_seconds": null,
-      "event_type": "red.learned",
+      "event_type": "tau.artifact_blocked",
       "evidence": {
-        "artifact_ref": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/red/workers/red-1/tau-subagent-receipt.json",
+        "artifact_ref": "/tmp/battle-004-parent-spawn-adaptive-lineage/tau-live/red/workers/red-1/tau-subagent-receipt.json",
         "proof_mode": "receipt_backed_fixture",
         "receipt_id": "red-1-tau-subagent-receipt",
-        "receipt_path": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/red/workers/red-1/tau-subagent-receipt.json"
+        "receipt_path": "/tmp/battle-004-parent-spawn-adaptive-lineage/tau-live/red/workers/red-1/tau-subagent-receipt.json"
       },
-      "id": "red-1-red-exploit",
+      "id": "red-1-red-blocked",
       "order_index": 3,
       "output": {
         "stderr_excerpt": "not emitted",
-        "stdout_excerpt": "red-0=PASS:ok; red-1=PASS:ok"
+        "stdout_excerpt": "red-0=PASS:ok; red-1=BLOCKED:red_artifact_missing_local_app_import"
       },
       "payload_id": "payload-857-red-1",
       "proof_mode": "receipt_backed_fixture",
@@ -276,27 +274,27 @@
           "receipt_id": "red-1-tau-subagent-receipt",
           "status": "ok",
           "summary": "Red worker proof receipt.",
-          "timestamp": "2026-07-07T22:06:06Z"
+          "timestamp": "2026-07-17T11:53:00Z"
         }
       ],
-      "summary": "Red worker red-1 materialized exploit artifact.",
-      "tau_run_id": "arena-parent-spawn-20260707T220426Z",
-      "tau_turn_id": "arena-parent-spawn-20260707T220426Z:red-1:red",
+      "summary": "Red worker red-1 blocked: red_artifact_missing_local_app_import",
+      "tau_run_id": "arena-parent-spawn-20260717T115114Z",
+      "tau_turn_id": "arena-parent-spawn-20260717T115114Z:red-1:red",
       "team": "red",
-      "ts": "2026-07-07T22:06:06Z",
+      "ts": "2026-07-17T11:53:00Z",
       "turn": {
         "current_action": "Materialize Red exploit artifact.",
         "loop_index": 1,
         "phase": "red_exploit",
-        "status": "PASS"
+        "status": "BLOCKED"
       },
       "ui": {
         "importance": "hero",
-        "notification": "Red exploit materialized",
-        "runner_animation": "retry_charge",
-        "runner_state": "retry",
-        "sound_cue": "retry_tick",
-        "spectator_caption": "Red exploit artifact materialized."
+        "notification": "Red artifact blocked",
+        "runner_animation": "pause_terminal",
+        "runner_state": "research",
+        "sound_cue": "none",
+        "spectator_caption": "Red artifact blocked."
       }
     },
     {
@@ -348,10 +346,10 @@
         "payload-857-red-1"
       ],
       "summary": "Receipt-backed parent lane payload-857-receipt spawned child lane payload-857-red-1.",
-      "tau_run_id": "arena-parent-spawn-20260707T220426Z",
-      "tau_turn_id": "arena-parent-spawn-20260707T220426Z:payload-857-red-1:spawn",
+      "tau_run_id": "arena-parent-spawn-20260717T115114Z",
+      "tau_turn_id": "arena-parent-spawn-20260717T115114Z:payload-857-red-1:spawn",
       "team": "red",
-      "ts": "2026-07-07T22:06:06Z",
+      "ts": "2026-07-17T11:53:00Z",
       "turn": {
         "current_action": "Spawn child exploit lane from parent handoff receipt.",
         "loop_index": 2,
@@ -374,10 +372,10 @@
       "elapsed_seconds": null,
       "event_type": "blue.patch_deployed",
       "evidence": {
-        "artifact_ref": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/blue/tau-subagent-receipt.json",
+        "artifact_ref": "/tmp/battle-004-parent-spawn-adaptive-lineage/tau-live/blue/tau-subagent-receipt.json",
         "proof_mode": "receipt_backed_fixture",
         "receipt_id": "blue-tau-subagent-receipt",
-        "receipt_path": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/blue/tau-subagent-receipt.json"
+        "receipt_path": "/tmp/battle-004-parent-spawn-adaptive-lineage/tau-live/blue/tau-subagent-receipt.json"
       },
       "id": "blue-0-blue-patch",
       "order_index": 5,
@@ -395,18 +393,17 @@
           "receipt_id": "blue-tau-subagent-receipt",
           "status": "ok",
           "summary": "Blue worker proof receipt.",
-          "timestamp": "2026-07-07T22:06:06Z"
+          "timestamp": "2026-07-17T11:53:00Z"
         }
       ],
       "summary": "Blue worker blue-0 materialized patch artifact.",
       "target_actor_ids": [
-        "payload-857-receipt",
-        "payload-857-red-1"
+        "payload-857-receipt"
       ],
-      "tau_run_id": "arena-parent-spawn-20260707T220426Z",
-      "tau_turn_id": "arena-parent-spawn-20260707T220426Z:blue-0:blue",
+      "tau_run_id": "arena-parent-spawn-20260717T115114Z",
+      "tau_turn_id": "arena-parent-spawn-20260717T115114Z:blue-0:blue",
       "team": "blue",
-      "ts": "2026-07-07T22:06:06Z",
+      "ts": "2026-07-17T11:53:00Z",
       "turn": {
         "current_action": "Materialize Blue patch artifact.",
         "loop_index": 2,
@@ -428,10 +425,10 @@
       "elapsed_seconds": null,
       "event_type": "blue.patch_deployed",
       "evidence": {
-        "artifact_ref": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/blue/workers/blue-1/tau-subagent-receipt.json",
+        "artifact_ref": "/tmp/battle-004-parent-spawn-adaptive-lineage/tau-live/blue/workers/blue-1/tau-subagent-receipt.json",
         "proof_mode": "receipt_backed_fixture",
         "receipt_id": "blue-1-tau-subagent-receipt",
-        "receipt_path": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/blue/workers/blue-1/tau-subagent-receipt.json"
+        "receipt_path": "/tmp/battle-004-parent-spawn-adaptive-lineage/tau-live/blue/workers/blue-1/tau-subagent-receipt.json"
       },
       "id": "blue-1-blue-patch",
       "order_index": 6,
@@ -449,18 +446,17 @@
           "receipt_id": "blue-1-tau-subagent-receipt",
           "status": "ok",
           "summary": "Blue worker proof receipt.",
-          "timestamp": "2026-07-07T22:06:06Z"
+          "timestamp": "2026-07-17T11:53:00Z"
         }
       ],
       "summary": "Blue worker blue-1 materialized patch artifact.",
       "target_actor_ids": [
-        "payload-857-receipt",
-        "payload-857-red-1"
+        "payload-857-receipt"
       ],
-      "tau_run_id": "arena-parent-spawn-20260707T220426Z",
-      "tau_turn_id": "arena-parent-spawn-20260707T220426Z:blue-1:blue",
+      "tau_run_id": "arena-parent-spawn-20260717T115114Z",
+      "tau_turn_id": "arena-parent-spawn-20260717T115114Z:blue-1:blue",
       "team": "blue",
-      "ts": "2026-07-07T22:06:06Z",
+      "ts": "2026-07-17T11:53:00Z",
       "turn": {
         "current_action": "Materialize Blue patch artifact.",
         "loop_index": 2,
@@ -531,16 +527,16 @@
           "receipt_id": "judge-receipt",
           "status": "ok",
           "summary": "Judge replayed exploit after patch and verified functionality.",
-          "timestamp": "2026-07-07T22:06:06Z"
+          "timestamp": "2026-07-17T11:53:00Z"
         }
       ],
       "summary": "Judge verified blue-0 blocked red-0.",
       "target_actor_ids": [
         "payload-857-receipt"
       ],
-      "tau_run_id": "arena-parent-spawn-20260707T220426Z",
+      "tau_run_id": "arena-parent-spawn-20260717T115114Z",
       "team": "blue",
-      "ts": "2026-07-07T22:06:06Z",
+      "ts": "2026-07-17T11:53:00Z",
       "turn": {
         "current_action": "Run Red exploit after Blue patch and verify functionality.",
         "loop_index": 3,
@@ -614,182 +610,16 @@
           "receipt_id": "judge-receipt",
           "status": "ok",
           "summary": "Judge replayed exploit after patch and verified functionality.",
-          "timestamp": "2026-07-07T22:06:06Z"
+          "timestamp": "2026-07-17T11:53:00Z"
         }
       ],
       "summary": "Judge verified blue-1 blocked red-0.",
       "target_actor_ids": [
         "payload-857-receipt"
       ],
-      "tau_run_id": "arena-parent-spawn-20260707T220426Z",
+      "tau_run_id": "arena-parent-spawn-20260717T115114Z",
       "team": "blue",
-      "ts": "2026-07-07T22:06:06Z",
-      "turn": {
-        "current_action": "Run Red exploit after Blue patch and verify functionality.",
-        "loop_index": 3,
-        "phase": "judge_replay",
-        "status": "PASS"
-      },
-      "ui": {
-        "blue_animation": "blue_sonic_blast",
-        "impact_animation": "blue_sonic_blast",
-        "importance": "hero",
-        "notification": "Blue blocks Red exploit",
-        "runner_animation": "runner_hit_by_blast",
-        "runner_state": "blocked",
-        "sound_cue": "blue_blast",
-        "spectator_caption": "Blue blocked Red exploit in Judge replay."
-      }
-    },
-    {
-      "actor_id": "blue-blue-0-patch",
-      "actor_kind": "patch_agent",
-      "battle_id": "battle-004",
-      "blue_action_id": "blue-blue-0-patch",
-      "blue_worker_id": "blue-0",
-      "elapsed_seconds": null,
-      "event_type": "blue.blocked_red",
-      "evidence": {
-        "artifact_ref": "judge/judge-receipt.json",
-        "proof_mode": "receipt_backed_fixture",
-        "receipt_id": "judge-receipt",
-        "receipt_path": "judge/judge-receipt.json"
-      },
-      "id": "red-1__blue-0-blue-success",
-      "judge_attempt": {
-        "blue_action_id": "blue-blue-0-patch",
-        "blue_worker_id": "blue-0",
-        "pair_id": "red-1__blue-0",
-        "red_lane_id": "payload-857-red-1",
-        "red_worker_id": "red-1",
-        "status": "PASS",
-        "verdict": "BLUE_SUCCESS"
-      },
-      "order_index": 9,
-      "output": {
-        "stderr_excerpt": "not emitted",
-        "stdout_excerpt": "BLUE_SUCCESS"
-      },
-      "pair_id": "red-1__blue-0",
-      "proof_mode": "receipt_backed_fixture",
-      "receipts": [
-        {
-          "artifact_ref": "judge/judge-receipt.json",
-          "blue_action_id": "blue-blue-0-patch",
-          "blue_worker_id": "blue-0",
-          "pair_id": "red-1__blue-0",
-          "proof_mode": "receipt_backed_fixture",
-          "receipt_id": "judge-receipt",
-          "receipt_path": "judge/judge-receipt.json",
-          "receipt_type": "judge",
-          "red_lane_id": "payload-857-red-1",
-          "red_worker_id": "red-1",
-          "summary": "Judge receipt for Red/Blue worker pair."
-        }
-      ],
-      "red_lane_id": "payload-857-red-1",
-      "red_worker_id": "red-1",
-      "skills": [
-        {
-          "kind": "tool",
-          "name": "docker-replay",
-          "proof_mode": "receipt_backed_fixture",
-          "receipt_id": "judge-receipt",
-          "status": "ok",
-          "summary": "Judge replayed exploit after patch and verified functionality.",
-          "timestamp": "2026-07-07T22:06:06Z"
-        }
-      ],
-      "summary": "Judge verified blue-0 blocked red-1.",
-      "target_actor_ids": [
-        "payload-857-red-1"
-      ],
-      "tau_run_id": "arena-parent-spawn-20260707T220426Z",
-      "team": "blue",
-      "ts": "2026-07-07T22:06:06Z",
-      "turn": {
-        "current_action": "Run Red exploit after Blue patch and verify functionality.",
-        "loop_index": 3,
-        "phase": "judge_replay",
-        "status": "PASS"
-      },
-      "ui": {
-        "blue_animation": "blue_sonic_blast",
-        "impact_animation": "blue_sonic_blast",
-        "importance": "hero",
-        "notification": "Blue blocks Red exploit",
-        "runner_animation": "runner_hit_by_blast",
-        "runner_state": "blocked",
-        "sound_cue": "blue_blast",
-        "spectator_caption": "Blue blocked Red exploit in Judge replay."
-      }
-    },
-    {
-      "actor_id": "blue-blue-1-patch",
-      "actor_kind": "patch_agent",
-      "battle_id": "battle-004",
-      "blue_action_id": "blue-blue-1-patch",
-      "blue_worker_id": "blue-1",
-      "elapsed_seconds": null,
-      "event_type": "blue.blocked_red",
-      "evidence": {
-        "artifact_ref": "judge/judge-receipt.json",
-        "proof_mode": "receipt_backed_fixture",
-        "receipt_id": "judge-receipt",
-        "receipt_path": "judge/judge-receipt.json"
-      },
-      "id": "red-1__blue-1-blue-success",
-      "judge_attempt": {
-        "blue_action_id": "blue-blue-1-patch",
-        "blue_worker_id": "blue-1",
-        "pair_id": "red-1__blue-1",
-        "red_lane_id": "payload-857-red-1",
-        "red_worker_id": "red-1",
-        "status": "PASS",
-        "verdict": "BLUE_SUCCESS"
-      },
-      "order_index": 10,
-      "output": {
-        "stderr_excerpt": "not emitted",
-        "stdout_excerpt": "BLUE_SUCCESS"
-      },
-      "pair_id": "red-1__blue-1",
-      "proof_mode": "receipt_backed_fixture",
-      "receipts": [
-        {
-          "artifact_ref": "judge/judge-receipt.json",
-          "blue_action_id": "blue-blue-1-patch",
-          "blue_worker_id": "blue-1",
-          "pair_id": "red-1__blue-1",
-          "proof_mode": "receipt_backed_fixture",
-          "receipt_id": "judge-receipt",
-          "receipt_path": "judge/judge-receipt.json",
-          "receipt_type": "judge",
-          "red_lane_id": "payload-857-red-1",
-          "red_worker_id": "red-1",
-          "summary": "Judge receipt for Red/Blue worker pair."
-        }
-      ],
-      "red_lane_id": "payload-857-red-1",
-      "red_worker_id": "red-1",
-      "skills": [
-        {
-          "kind": "tool",
-          "name": "docker-replay",
-          "proof_mode": "receipt_backed_fixture",
-          "receipt_id": "judge-receipt",
-          "status": "ok",
-          "summary": "Judge replayed exploit after patch and verified functionality.",
-          "timestamp": "2026-07-07T22:06:06Z"
-        }
-      ],
-      "summary": "Judge verified blue-1 blocked red-1.",
-      "target_actor_ids": [
-        "payload-857-red-1"
-      ],
-      "tau_run_id": "arena-parent-spawn-20260707T220426Z",
-      "team": "blue",
-      "ts": "2026-07-07T22:06:06Z",
+      "ts": "2026-07-17T11:53:00Z",
       "turn": {
         "current_action": "Run Red exploit after Blue patch and verify functionality.",
         "loop_index": 3,
@@ -820,10 +650,10 @@
         "receipt_path": "scoreboard.json"
       },
       "id": "scoreboard-blue-success",
-      "order_index": 11,
+      "order_index": 9,
       "proof_mode": "receipt_backed_fixture",
       "receipts": [],
-      "summary": "Scoreboard verdict BLUE_SUCCESS: red_score 6.0, blue_score 14.4, TDSR 1.0.",
+      "summary": "Scoreboard verdict BLUE_SUCCESS: red_score 3.0, blue_score 7.2, TDSR 1.0.",
       "target_actor_ids": [
         "payload-857-receipt",
         "payload-857-red-1",
@@ -831,7 +661,7 @@
         "blue-blue-1-patch"
       ],
       "team": "judge",
-      "ts": "2026-07-07T22:06:06Z",
+      "ts": "2026-07-17T11:53:00Z",
       "turn": {
         "current_action": "Write scoreboard and terminal run receipt.",
         "loop_index": 4,
@@ -848,7 +678,7 @@
       }
     }
   ],
-  "generated_at": "2026-07-07T22:06:06Z",
+  "generated_at": "2026-07-17T11:53:00Z",
   "lane_activity_timeline_model": {
     "lane_count": 2,
     "lanes": [
@@ -860,9 +690,9 @@
         "segments": [
           {
             "elapsed_axis_source": "timeline_elapsed_axis_model",
-            "elapsed_end_x": 0.176644,
-            "elapsed_start_x": 0.176644,
-            "end_elapsed_seconds": 2.119725,
+            "elapsed_end_x": 0.125783,
+            "elapsed_start_x": 0.125783,
+            "end_elapsed_seconds": 1.509391,
             "end_x": 14,
             "label": "spawn / materialize",
             "phase": "materialize",
@@ -870,14 +700,14 @@
             "segment_id": "payload-857-receipt:segment:01",
             "segment_index": 0,
             "source_event_id": null,
-            "start_elapsed_seconds": 2.119725,
+            "start_elapsed_seconds": 1.509391,
             "start_x": 7
           },
           {
             "elapsed_axis_source": "timeline_elapsed_axis_model",
-            "elapsed_end_x": 6.791588,
-            "elapsed_start_x": 0.176644,
-            "end_elapsed_seconds": 81.499052,
+            "elapsed_end_x": 6.276679,
+            "elapsed_start_x": 0.125783,
+            "end_elapsed_seconds": 75.320149,
             "end_x": 33,
             "label": "research",
             "phase": "research",
@@ -885,14 +715,14 @@
             "segment_id": "payload-857-receipt:segment:02",
             "segment_index": 1,
             "source_event_id": "payload-857-receipt:arena",
-            "start_elapsed_seconds": 2.119725,
+            "start_elapsed_seconds": 1.509391,
             "start_x": 14
           },
           {
             "elapsed_axis_source": "timeline_elapsed_axis_model",
-            "elapsed_end_x": 6.791588,
-            "elapsed_start_x": 6.791588,
-            "end_elapsed_seconds": 81.499052,
+            "elapsed_end_x": 6.276679,
+            "elapsed_start_x": 6.276679,
+            "end_elapsed_seconds": 75.320149,
             "end_x": 50,
             "label": "payload",
             "phase": "payload",
@@ -900,14 +730,14 @@
             "segment_id": "payload-857-receipt:segment:03",
             "segment_index": 2,
             "source_event_id": "payload-857-receipt:red",
-            "start_elapsed_seconds": 81.499052,
+            "start_elapsed_seconds": 75.320149,
             "start_x": 33
           },
           {
             "elapsed_axis_source": "timeline_elapsed_axis_model",
-            "elapsed_end_x": 6.965459,
-            "elapsed_start_x": 6.791588,
-            "end_elapsed_seconds": 83.585509,
+            "elapsed_end_x": 6.428646,
+            "elapsed_start_x": 6.276679,
+            "end_elapsed_seconds": 77.143749,
             "end_x": 58,
             "label": "useful signal",
             "phase": "useful_signal",
@@ -915,14 +745,14 @@
             "segment_id": "payload-857-receipt:segment:04",
             "segment_index": 3,
             "source_event_id": "payload-857-receipt:useful",
-            "start_elapsed_seconds": 81.499052,
+            "start_elapsed_seconds": 75.320149,
             "start_x": 50
           },
           {
             "elapsed_axis_source": "timeline_elapsed_axis_model",
-            "elapsed_end_x": 8.024577,
-            "elapsed_start_x": 6.965459,
-            "end_elapsed_seconds": 96.294927,
+            "elapsed_end_x": 8.724757,
+            "elapsed_start_x": 6.428646,
+            "end_elapsed_seconds": 104.697079,
             "end_x": 67,
             "label": "handoff / child spawn",
             "phase": "handoff",
@@ -930,14 +760,14 @@
             "segment_id": "payload-857-receipt:segment:05",
             "segment_index": 4,
             "source_event_id": "payload-857-receipt:spawn:payload-857-red-1",
-            "start_elapsed_seconds": 83.585509,
+            "start_elapsed_seconds": 77.143749,
             "start_x": 58
           },
           {
             "elapsed_axis_source": "timeline_elapsed_axis_model",
-            "elapsed_end_x": 8.112844,
-            "elapsed_start_x": 8.024577,
-            "end_elapsed_seconds": 97.354126,
+            "elapsed_end_x": 8.798484,
+            "elapsed_start_x": 8.724757,
+            "end_elapsed_seconds": 105.581813,
             "end_x": 82,
             "label": "Blue patch gate",
             "phase": "patch_gate",
@@ -945,14 +775,14 @@
             "segment_id": "payload-857-receipt:segment:06",
             "segment_index": 5,
             "source_event_id": "payload-857-receipt:blue",
-            "start_elapsed_seconds": 96.294927,
+            "start_elapsed_seconds": 104.697079,
             "start_x": 67
           },
           {
             "elapsed_axis_source": "timeline_elapsed_axis_model",
-            "elapsed_end_x": 8.112844,
-            "elapsed_start_x": 8.112844,
-            "end_elapsed_seconds": 97.354126,
+            "elapsed_end_x": 8.798484,
+            "elapsed_start_x": 8.798484,
+            "end_elapsed_seconds": 105.581813,
             "end_x": 84,
             "label": "Judge replay",
             "phase": "judge_replay",
@@ -960,7 +790,7 @@
             "segment_id": "payload-857-receipt:segment:07",
             "segment_index": 6,
             "source_event_id": "payload-857-receipt:judge",
-            "start_elapsed_seconds": 97.354126,
+            "start_elapsed_seconds": 105.581813,
             "start_x": 82
           }
         ],
@@ -975,9 +805,9 @@
         "segments": [
           {
             "elapsed_axis_source": "timeline_elapsed_axis_model",
-            "elapsed_end_x": 6.965459,
-            "elapsed_start_x": 6.965459,
-            "end_elapsed_seconds": 83.585509,
+            "elapsed_end_x": 6.428646,
+            "elapsed_start_x": 6.428646,
+            "end_elapsed_seconds": 77.143749,
             "end_x": 66,
             "label": "handoff / child spawn",
             "phase": "handoff",
@@ -985,14 +815,14 @@
             "segment_id": "payload-857-red-1:segment:02",
             "segment_index": 0,
             "source_event_id": "payload-857-red-1:spawned-from:payload-857-receipt",
-            "start_elapsed_seconds": 83.585509,
+            "start_elapsed_seconds": 77.143749,
             "start_x": 62
           },
           {
             "elapsed_axis_source": "timeline_elapsed_axis_model",
-            "elapsed_end_x": 8.024528,
-            "elapsed_start_x": 6.965459,
-            "end_elapsed_seconds": 96.294338,
+            "elapsed_end_x": 8.724699,
+            "elapsed_start_x": 6.428646,
+            "end_elapsed_seconds": 104.696383,
             "end_x": 76,
             "label": "research",
             "phase": "research",
@@ -1000,14 +830,14 @@
             "segment_id": "payload-857-red-1:segment:03",
             "segment_index": 1,
             "source_event_id": "payload-857-red-1:arena",
-            "start_elapsed_seconds": 83.585509,
+            "start_elapsed_seconds": 77.143749,
             "start_x": 66
           },
           {
             "elapsed_axis_source": "timeline_elapsed_axis_model",
-            "elapsed_end_x": 8.024528,
-            "elapsed_start_x": 8.024528,
-            "end_elapsed_seconds": 96.294338,
+            "elapsed_end_x": 8.724699,
+            "elapsed_start_x": 8.724699,
+            "end_elapsed_seconds": 104.696383,
             "end_x": 86,
             "label": "payload",
             "phase": "payload",
@@ -1015,14 +845,14 @@
             "segment_id": "payload-857-red-1:segment:04",
             "segment_index": 2,
             "source_event_id": "payload-857-red-1:red",
-            "start_elapsed_seconds": 96.294338,
+            "start_elapsed_seconds": 104.696383,
             "start_x": 76
           },
           {
             "elapsed_axis_source": "timeline_elapsed_axis_model",
-            "elapsed_end_x": 8.199343,
-            "elapsed_start_x": 8.024528,
-            "end_elapsed_seconds": 98.39211,
+            "elapsed_end_x": 11.020751,
+            "elapsed_start_x": 8.724699,
+            "end_elapsed_seconds": 132.249017,
             "end_x": 96,
             "label": "useful signal",
             "phase": "useful_signal",
@@ -1030,14 +860,14 @@
             "segment_id": "payload-857-red-1:segment:05",
             "segment_index": 3,
             "source_event_id": "payload-857-red-1:useful",
-            "start_elapsed_seconds": 96.294338,
+            "start_elapsed_seconds": 104.696383,
             "start_x": 86
           },
           {
             "elapsed_axis_source": "timeline_elapsed_axis_model",
-            "elapsed_end_x": 8.282718,
-            "elapsed_start_x": 8.199343,
-            "end_elapsed_seconds": 99.392622,
+            "elapsed_end_x": 11.020751,
+            "elapsed_start_x": 11.020751,
+            "end_elapsed_seconds": 132.249017,
             "end_x": 98,
             "label": "Blue patch gate",
             "phase": "patch_gate",
@@ -1045,7 +875,7 @@
             "segment_id": "payload-857-red-1:segment:06",
             "segment_index": 4,
             "source_event_id": "payload-857-red-1:blue",
-            "start_elapsed_seconds": 98.39211,
+            "start_elapsed_seconds": 132.249017,
             "start_x": 96
           }
         ],
@@ -1163,80 +993,80 @@
     {
       "activitySegments": [
         {
-          "end_elapsed_seconds": 2.119725,
+          "end_elapsed_seconds": 1.509391,
           "end_x": 14,
           "id": "payload-857-receipt:segment:01",
           "label": "spawn / materialize",
           "phase": "materialize",
           "proof_mode": "receipt_backed_fixture",
           "source_event_id": null,
-          "start_elapsed_seconds": 2.119725,
+          "start_elapsed_seconds": 1.509391,
           "start_x": 7
         },
         {
-          "end_elapsed_seconds": 81.499052,
+          "end_elapsed_seconds": 75.320149,
           "end_x": 33,
           "id": "payload-857-receipt:segment:02",
           "label": "research",
           "phase": "research",
           "proof_mode": "receipt_backed_fixture",
           "source_event_id": "payload-857-receipt:arena",
-          "start_elapsed_seconds": 2.119725,
+          "start_elapsed_seconds": 1.509391,
           "start_x": 14
         },
         {
-          "end_elapsed_seconds": 81.499052,
+          "end_elapsed_seconds": 75.320149,
           "end_x": 50,
           "id": "payload-857-receipt:segment:03",
           "label": "payload",
           "phase": "payload",
           "proof_mode": "receipt_backed_fixture",
           "source_event_id": "payload-857-receipt:red",
-          "start_elapsed_seconds": 81.499052,
+          "start_elapsed_seconds": 75.320149,
           "start_x": 33
         },
         {
-          "end_elapsed_seconds": 83.585509,
+          "end_elapsed_seconds": 77.143749,
           "end_x": 58,
           "id": "payload-857-receipt:segment:04",
           "label": "useful signal",
           "phase": "useful_signal",
           "proof_mode": "receipt_backed_fixture",
           "source_event_id": "payload-857-receipt:useful",
-          "start_elapsed_seconds": 81.499052,
+          "start_elapsed_seconds": 75.320149,
           "start_x": 50
         },
         {
-          "end_elapsed_seconds": 96.294927,
+          "end_elapsed_seconds": 104.697079,
           "end_x": 67,
           "id": "payload-857-receipt:segment:05",
           "label": "handoff / child spawn",
           "phase": "handoff",
           "proof_mode": "receipt_backed_fixture",
           "source_event_id": "payload-857-receipt:spawn:payload-857-red-1",
-          "start_elapsed_seconds": 83.585509,
+          "start_elapsed_seconds": 77.143749,
           "start_x": 58
         },
         {
-          "end_elapsed_seconds": 97.354126,
+          "end_elapsed_seconds": 105.581813,
           "end_x": 82,
           "id": "payload-857-receipt:segment:06",
           "label": "Blue patch gate",
           "phase": "patch_gate",
           "proof_mode": "receipt_backed_fixture",
           "source_event_id": "payload-857-receipt:blue",
-          "start_elapsed_seconds": 96.294927,
+          "start_elapsed_seconds": 104.697079,
           "start_x": 67
         },
         {
-          "end_elapsed_seconds": 97.354126,
+          "end_elapsed_seconds": 105.581813,
           "end_x": 84,
           "id": "payload-857-receipt:segment:07",
           "label": "Judge replay",
           "phase": "judge_replay",
           "proof_mode": "receipt_backed_fixture",
           "source_event_id": "payload-857-receipt:judge",
-          "start_elapsed_seconds": 97.354126,
+          "start_elapsed_seconds": 105.581813,
           "start_x": 82
         }
       ],
@@ -1259,7 +1089,7 @@
         "state_source": "canonical_events",
         "state_timeline": [
           {
-            "at_seconds": 2.119725,
+            "at_seconds": 1.509391,
             "provisional": false,
             "segment_id": "payload-857-receipt:segment:02",
             "source_event_id": "payload-857-receipt:arena",
@@ -1267,7 +1097,7 @@
             "state": "research"
           },
           {
-            "at_seconds": 81.499052,
+            "at_seconds": 75.320149,
             "provisional": false,
             "segment_id": "payload-857-receipt:segment:03",
             "source_event_id": "payload-857-receipt:red",
@@ -1275,7 +1105,7 @@
             "state": "payload"
           },
           {
-            "at_seconds": 81.499052,
+            "at_seconds": 75.320149,
             "provisional": false,
             "segment_id": "payload-857-receipt:segment:04",
             "source_event_id": "payload-857-receipt:useful",
@@ -1283,7 +1113,7 @@
             "state": "payload"
           },
           {
-            "at_seconds": 83.585509,
+            "at_seconds": 77.143749,
             "provisional": false,
             "segment_id": "payload-857-receipt:segment:05",
             "source_event_id": "payload-857-receipt:spawn:payload-857-red-1",
@@ -1291,7 +1121,7 @@
             "state": "handoff"
           },
           {
-            "at_seconds": 96.294927,
+            "at_seconds": 104.697079,
             "provisional": false,
             "segment_id": "payload-857-receipt:segment:06",
             "source_event_id": "payload-857-receipt:blue",
@@ -1299,7 +1129,7 @@
             "state": "blocked"
           },
           {
-            "at_seconds": 97.354126,
+            "at_seconds": 105.581813,
             "provisional": false,
             "segment_id": "payload-857-receipt:segment:07",
             "source_event_id": "payload-857-receipt:judge",
@@ -1341,7 +1171,7 @@
             "not emitted"
           ],
           "stdout": [
-            "red-0=PASS:ok; red-1=PASS:ok",
+            "red-0=PASS:ok; red-1=BLOCKED:red_artifact_missing_local_app_import",
             "BLUE_SUCCESS"
           ]
         },
@@ -1393,8 +1223,10 @@
             "explicit_kill_scores_below_pre_spawn_block": true,
             "functionality_preservation_required_for_full_blue_credit": true,
             "pre_spawn_block_is_highest_blue_credit": true,
+            "preemptive_spawn_requires_suspected_pressure_not_confirmed_kill": true,
             "spawn_pressure_reduces_blue_credit": true,
             "sprite_choice_does_not_create_score_truth": true,
+            "suspected_pressure_does_not_count_as_blue_kill": true,
             "unblocked_spawned_exploit_scores_red_breakthrough": true
           },
           "schema": "battle.semantic_scoring.v1",
@@ -1412,9 +1244,9 @@
           "generation": 1,
           "missing_tau_id": false,
           "payload_id": "payload-857",
-          "tau_run_id": "arena-parent-spawn-20260707T220426Z",
+          "tau_run_id": "arena-parent-spawn-20260717T115114Z",
           "tau_subagent_id": "red-0",
-          "tau_turn_id": "arena-parent-spawn-20260707T220426Z:red-0:red",
+          "tau_turn_id": "arena-parent-spawn-20260717T115114Z:red-0:red",
           "worker_id": "red-0"
         },
         "skills_tools": [
@@ -1438,12 +1270,12 @@
       },
       "collapsible": true,
       "dominant_spawn_type": "post_block_handoff",
-      "duration_elapsed_seconds": 95.234401,
-      "end_elapsed_seconds": 97.354126,
+      "duration_elapsed_seconds": 104.072422,
+      "end_elapsed_seconds": 105.581813,
       "events": [
         {
           "collision_group": "x01",
-          "elapsed_seconds": 2.119725,
+          "elapsed_seconds": 1.509391,
           "id": "payload-857-receipt:arena",
           "kind": "research",
           "label": "ARENA SCENARIO",
@@ -1459,7 +1291,7 @@
         },
         {
           "collision_group": "x03",
-          "elapsed_seconds": 81.499052,
+          "elapsed_seconds": 75.320149,
           "id": "payload-857-receipt:red",
           "kind": "payload",
           "label": "RED EXPLOIT",
@@ -1476,7 +1308,7 @@
         {
           "animation": "pause_terminal",
           "collision_group": "x05",
-          "elapsed_seconds": 81.499052,
+          "elapsed_seconds": 75.320149,
           "id": "payload-857-receipt:useful",
           "kind": "useful",
           "label": "EXPLOIT_CONFIRMED",
@@ -1493,7 +1325,7 @@
         {
           "animation": "child_ignite",
           "collision_group": "x05",
-          "elapsed_seconds": 83.585509,
+          "elapsed_seconds": 77.143749,
           "id": "payload-857-receipt:spawn:payload-857-red-1",
           "kind": "handoff",
           "label": "SPAWN CHILD",
@@ -1511,7 +1343,7 @@
           "animation": "blue_sonic_blast",
           "blueSourceId": "blue-receipt-backed-patch",
           "collision_group": "x06",
-          "elapsed_seconds": 96.294927,
+          "elapsed_seconds": 104.697079,
           "id": "payload-857-receipt:blue",
           "kind": "blue_blast",
           "label": "PATCH",
@@ -1528,7 +1360,7 @@
         {
           "animation": "blue_sonic_blast",
           "collision_group": "x08",
-          "elapsed_seconds": 97.354126,
+          "elapsed_seconds": 105.581813,
           "id": "payload-857-receipt:judge",
           "kind": "blocked",
           "label": "BLUE_SUCCESS",
@@ -1638,7 +1470,7 @@
               "red": 3.483
             },
             "source_event_id": "payload-857-receipt:arena",
-            "source_time_seconds": 2.119725
+            "source_time_seconds": 1.509391
           },
           {
             "importance": "visible",
@@ -1651,7 +1483,7 @@
               "red": 3.483
             },
             "source_event_id": "payload-857-receipt:red",
-            "source_time_seconds": 81.499052
+            "source_time_seconds": 75.320149
           },
           {
             "importance": "visible",
@@ -1664,7 +1496,7 @@
               "red": 3.483
             },
             "source_event_id": "payload-857-receipt:useful",
-            "source_time_seconds": 81.499052
+            "source_time_seconds": 75.320149
           },
           {
             "importance": "major",
@@ -1677,7 +1509,7 @@
               "red": 3.483
             },
             "source_event_id": "payload-857-receipt:spawn:payload-857-red-1",
-            "source_time_seconds": 83.585509
+            "source_time_seconds": 77.143749
           },
           {
             "importance": "visible",
@@ -1690,7 +1522,7 @@
               "red": 3.483
             },
             "source_event_id": "payload-857-receipt:blue",
-            "source_time_seconds": 96.294927
+            "source_time_seconds": 104.697079
           },
           {
             "importance": "major",
@@ -1703,7 +1535,7 @@
               "red": 3.483
             },
             "source_event_id": "payload-857-receipt:judge",
-            "source_time_seconds": 97.354126
+            "source_time_seconds": 105.581813
           }
         ],
         "lane_id": "payload-857-receipt",
@@ -1734,8 +1566,10 @@
           "explicit_kill_scores_below_pre_spawn_block": true,
           "functionality_preservation_required_for_full_blue_credit": true,
           "pre_spawn_block_is_highest_blue_credit": true,
+          "preemptive_spawn_requires_suspected_pressure_not_confirmed_kill": true,
           "spawn_pressure_reduces_blue_credit": true,
           "sprite_choice_does_not_create_score_truth": true,
+          "suspected_pressure_does_not_count_as_blue_kill": true,
           "unblocked_spawned_exploit_scores_red_breakthrough": true
         },
         "schema": "battle.semantic_scoring.v1",
@@ -1748,13 +1582,13 @@
         "spawn_state": "spawned_child",
         "terminal_state": "blocked_handoff"
       },
-      "start_elapsed_seconds": 2.119725,
+      "start_elapsed_seconds": 1.509391,
       "stderr": [
         "not emitted",
         "not emitted"
       ],
       "stdout": [
-        "red-0=PASS:ok; red-1=PASS:ok",
+        "red-0=PASS:ok; red-1=BLOCKED:red_artifact_missing_local_app_import",
         "BLUE_SUCCESS"
       ],
       "summary": "1 child lane(s) receipt-backed",
@@ -1782,58 +1616,58 @@
     {
       "activitySegments": [
         {
-          "end_elapsed_seconds": 83.585509,
+          "end_elapsed_seconds": 77.143749,
           "end_x": 66,
           "id": "payload-857-red-1:segment:02",
           "label": "handoff / child spawn",
           "phase": "handoff",
           "proof_mode": "receipt_backed_fixture",
           "source_event_id": "payload-857-red-1:spawned-from:payload-857-receipt",
-          "start_elapsed_seconds": 83.585509,
+          "start_elapsed_seconds": 77.143749,
           "start_x": 62
         },
         {
-          "end_elapsed_seconds": 96.294338,
+          "end_elapsed_seconds": 104.696383,
           "end_x": 76,
           "id": "payload-857-red-1:segment:03",
           "label": "research",
           "phase": "research",
           "proof_mode": "receipt_backed_fixture",
           "source_event_id": "payload-857-red-1:arena",
-          "start_elapsed_seconds": 83.585509,
+          "start_elapsed_seconds": 77.143749,
           "start_x": 66
         },
         {
-          "end_elapsed_seconds": 96.294338,
+          "end_elapsed_seconds": 104.696383,
           "end_x": 86,
           "id": "payload-857-red-1:segment:04",
           "label": "payload",
           "phase": "payload",
           "proof_mode": "receipt_backed_fixture",
           "source_event_id": "payload-857-red-1:red",
-          "start_elapsed_seconds": 96.294338,
+          "start_elapsed_seconds": 104.696383,
           "start_x": 76
         },
         {
-          "end_elapsed_seconds": 98.39211,
+          "end_elapsed_seconds": 132.249017,
           "end_x": 96,
           "id": "payload-857-red-1:segment:05",
           "label": "useful signal",
           "phase": "useful_signal",
           "proof_mode": "receipt_backed_fixture",
           "source_event_id": "payload-857-red-1:useful",
-          "start_elapsed_seconds": 96.294338,
+          "start_elapsed_seconds": 104.696383,
           "start_x": 86
         },
         {
-          "end_elapsed_seconds": 99.392622,
+          "end_elapsed_seconds": 132.249017,
           "end_x": 98,
           "id": "payload-857-red-1:segment:06",
           "label": "Blue patch gate",
           "phase": "patch_gate",
           "proof_mode": "receipt_backed_fixture",
           "source_event_id": "payload-857-red-1:blue",
-          "start_elapsed_seconds": 98.39211,
+          "start_elapsed_seconds": 132.249017,
           "start_x": 96
         }
       ],
@@ -1856,7 +1690,7 @@
         "state_source": "canonical_events",
         "state_timeline": [
           {
-            "at_seconds": 83.585509,
+            "at_seconds": 77.143749,
             "provisional": false,
             "segment_id": "payload-857-red-1:segment:02",
             "source_event_id": "payload-857-red-1:spawned-from:payload-857-receipt",
@@ -1864,7 +1698,7 @@
             "state": "spawn"
           },
           {
-            "at_seconds": 83.585509,
+            "at_seconds": 77.143749,
             "provisional": false,
             "segment_id": "payload-857-red-1:segment:03",
             "source_event_id": "payload-857-red-1:arena",
@@ -1872,7 +1706,7 @@
             "state": "research"
           },
           {
-            "at_seconds": 96.294338,
+            "at_seconds": 104.696383,
             "provisional": false,
             "segment_id": "payload-857-red-1:segment:04",
             "source_event_id": "payload-857-red-1:red",
@@ -1880,7 +1714,7 @@
             "state": "payload"
           },
           {
-            "at_seconds": 96.294338,
+            "at_seconds": 104.696383,
             "provisional": false,
             "segment_id": "payload-857-red-1:segment:05",
             "source_event_id": "payload-857-red-1:useful",
@@ -1888,7 +1722,7 @@
             "state": "payload"
           },
           {
-            "at_seconds": 98.39211,
+            "at_seconds": 132.249017,
             "provisional": false,
             "segment_id": "payload-857-red-1:segment:06",
             "source_event_id": "payload-857-red-1:blue",
@@ -1896,7 +1730,7 @@
             "state": "blocked"
           },
           {
-            "at_seconds": 99.392622,
+            "at_seconds": 132.249017,
             "provisional": false,
             "source_event_id": "payload-857-red-1:judge",
             "source_receipt_id": "judge-receipt",
@@ -1910,13 +1744,13 @@
       },
       "cockpit": {
         "blue_outcome": {
-          "blocked": true,
+          "blocked": false,
           "detected": true,
           "forced_handoff": false,
           "killed": false,
           "proof_mode": "receipt_backed_fixture",
-          "receipt_id": "judge-receipt",
-          "status": "blocked"
+          "receipt_id": null,
+          "status": "proof_pending"
         },
         "current_turn": {
           "current_action": "Continue Red exploit from receipt-backed parent handoff.",
@@ -1925,7 +1759,7 @@
           "status": "PASS"
         },
         "latest_receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
-        "learned": "EXPLOIT_CONFIRMED",
+        "learned": "not emitted",
         "memory_project_knowledge_events": [],
         "next_move": "Judge this child lane only from its own Red/Blue pair receipts.",
         "output": {
@@ -1934,7 +1768,7 @@
             "not emitted"
           ],
           "stdout": [
-            "red-0=PASS:ok; red-1=PASS:ok",
+            "red-0=PASS:ok; red-1=BLOCKED:red_artifact_missing_local_app_import",
             "BLUE_SUCCESS"
           ]
         },
@@ -1943,13 +1777,13 @@
         "public_trace": {
           "action": "Continue exploit using inherited parent context from lineage receipt.",
           "hypothesis": "A materialized Red exploit can exercise the archive import path traversal before Blue patch replay.",
-          "learned": "EXPLOIT_CONFIRMED",
+          "learned": "not emitted",
           "next_move": "Judge this child lane only from its own Red/Blue pair receipts.",
           "observation": "Spawned from parent lane payload-857-receipt at x=62.",
-          "result": "BLUE_SUCCESS"
+          "result": "INSUFFICIENT_EVIDENCE"
         },
         "replay": {
-          "attempt_id": "red-1__blue-0",
+          "attempt_id": "red-0__blue-0",
           "blue_action_id": "blue-blue-0-patch",
           "blue_worker_id": "blue-0",
           "can_execute_now": false,
@@ -1964,41 +1798,45 @@
             "visible": true
           },
           "endpoint": null,
+          "inheritance_reason": "Child lane has no separate Judge replay receipt; show parent receipt-only Docker replay CTA.",
+          "inherited_from_parent_lane_id": "payload-857-receipt",
           "kind": "receipt_only",
           "label": "REPLAY IN DOCKER",
-          "pair_id": "red-1__blue-0",
+          "pair_id": "red-0__blue-0",
           "proof_mode": "receipt_backed_fixture",
           "receipt_id": "judge-receipt",
           "red_lane_id": "payload-857-red-1",
-          "red_worker_id": "red-1"
+          "red_worker_id": "red-0"
         },
         "schema": "battle.lane_cockpit.v1",
         "score_semantics": {
           "lane_id": "payload-857-red-1",
           "multipliers": {
-            "blue": 7.0,
-            "red": 3.5
+            "blue": 0.0,
+            "red": 9.0
           },
-          "outcome_class": "post_spawn_child_contained",
-          "outcome_tier": "POST_SPAWN_CONTAINMENT",
+          "outcome_class": "red_breakthrough",
+          "outcome_tier": "RED_BREAKTHROUGH",
           "proof_mode": "receipt_backed_fixture",
           "rules": {
             "explicit_kill_scores_below_pre_spawn_block": true,
             "functionality_preservation_required_for_full_blue_credit": true,
             "pre_spawn_block_is_highest_blue_credit": true,
+            "preemptive_spawn_requires_suspected_pressure_not_confirmed_kill": true,
             "spawn_pressure_reduces_blue_credit": true,
             "sprite_choice_does_not_create_score_truth": true,
+            "suspected_pressure_does_not_count_as_blue_kill": true,
             "unblocked_spawned_exploit_scores_red_breakthrough": true
           },
           "schema": "battle.semantic_scoring.v1",
           "score_basis": "judge_receipts_lineage_and_exploit_profile",
           "score_delta": {
-            "blue": 5.768,
-            "red": 2.884
+            "blue": 0.0,
+            "red": 7.191
           },
-          "score_weight": 0.824,
+          "score_weight": 0.799,
           "spawn_state": "post_spawn",
-          "terminal_state": "blocked"
+          "terminal_state": "none"
         },
         "selected_tau_exploit_subagent": {
           "actor_id": "payload-857-red-1",
@@ -2007,9 +1845,9 @@
           "parent_lane_id": "payload-857-receipt",
           "payload_id": "payload-857-red-1",
           "spawn_receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
-          "tau_run_id": "arena-parent-spawn-20260707T220426Z",
+          "tau_run_id": "arena-parent-spawn-20260717T115114Z",
           "tau_subagent_id": "red-1",
-          "tau_turn_id": "arena-parent-spawn-20260707T220426Z:red-1:red",
+          "tau_turn_id": "arena-parent-spawn-20260717T115114Z:red-1:red",
           "worker_id": "red-1"
         },
         "skills_tools": [
@@ -2019,7 +1857,7 @@
             "proof_label": "FIXTURE SKILL TRACE",
             "proof_mode": "receipt_backed_fixture",
             "receipt_id": "red-1-tau-subagent-receipt",
-            "status": "ok"
+            "status": "pending"
           },
           {
             "kind": "tool",
@@ -2027,18 +1865,18 @@
             "proof_label": "FIXTURE SKILL TRACE",
             "proof_mode": "receipt_backed_fixture",
             "receipt_id": "judge-receipt",
-            "status": "ok"
+            "status": "pending"
           }
         ]
       },
       "collapsible": false,
-      "duration_elapsed_seconds": 15.807113,
-      "end_elapsed_seconds": 99.392622,
+      "duration_elapsed_seconds": 55.105268,
+      "end_elapsed_seconds": 132.249017,
       "events": [
         {
           "animation": "child_ignite",
           "collision_group": "x06",
-          "elapsed_seconds": 83.585509,
+          "elapsed_seconds": 77.143749,
           "id": "payload-857-red-1:spawned-from:payload-857-receipt",
           "kind": "handoff",
           "label": "SPAWNED",
@@ -2054,7 +1892,7 @@
         },
         {
           "collision_group": "x06",
-          "elapsed_seconds": 83.585509,
+          "elapsed_seconds": 77.143749,
           "id": "payload-857-red-1:arena",
           "kind": "research",
           "label": "ARENA SCENARIO",
@@ -2070,7 +1908,7 @@
         },
         {
           "collision_group": "x07",
-          "elapsed_seconds": 96.294338,
+          "elapsed_seconds": 104.696383,
           "id": "payload-857-red-1:red",
           "kind": "payload",
           "label": "RED EXPLOIT",
@@ -2080,17 +1918,17 @@
           "proofMode": "receipt_backed_fixture",
           "proven": true,
           "receiptId": "red-1-tau-subagent-receipt",
-          "timeLabel": "materialized",
+          "timeLabel": "blocked",
           "timing_source": "lineage_spawn_receipt",
           "x": 76
         },
         {
           "animation": "pause_terminal",
           "collision_group": "x08",
-          "elapsed_seconds": 96.294338,
+          "elapsed_seconds": 104.696383,
           "id": "payload-857-red-1:useful",
           "kind": "useful",
-          "label": "EXPLOIT_CONFIRMED",
+          "label": "RED_ARTIFACT_BLOCKED",
           "label_band": "upper",
           "marker_priority": 90,
           "order_index": 86,
@@ -2105,7 +1943,7 @@
           "animation": "blue_sonic_blast",
           "blueSourceId": "blue-receipt-backed-patch",
           "collision_group": "x09",
-          "elapsed_seconds": 98.39211,
+          "elapsed_seconds": 132.249017,
           "id": "payload-857-red-1:blue",
           "kind": "blue_blast",
           "label": "PATCH",
@@ -2116,16 +1954,16 @@
           "proven": true,
           "receiptId": "blue-tau-subagent-receipt",
           "timeLabel": "blue",
-          "timing_source": "judge_attempt_receipt",
+          "timing_source": "lineage_spawn_receipt",
           "x": 96
         },
         {
           "animation": "blue_sonic_blast",
           "collision_group": "x09",
-          "elapsed_seconds": 99.392622,
+          "elapsed_seconds": 132.249017,
           "id": "payload-857-red-1:judge",
           "kind": "blocked",
-          "label": "BLUE_SUCCESS",
+          "label": "INSUFFICIENT_EVIDENCE",
           "label_band": "lower",
           "marker_priority": 70,
           "order_index": 98,
@@ -2133,14 +1971,14 @@
           "proven": true,
           "receiptId": "judge-receipt",
           "timeLabel": "judge",
-          "timing_source": "judge_attempt_receipt",
+          "timing_source": "lineage_spawn_receipt",
           "x": 98
         }
       ],
       "expandedByDefault": true,
       "exploit_profile": {
         "complexity": 0.865,
-        "durability": 0.78,
+        "durability": 0.68,
         "evidence_source": "receipt_events_and_lineage",
         "lane_id": "payload-857-red-1",
         "lineage_pressure": 0.65,
@@ -2154,12 +1992,12 @@
         },
         "reproducibility": 0.84,
         "schema": "battle.exploit_profile.v1",
-        "score_weight": 0.824,
+        "score_weight": 0.799,
         "stealth": 0.52,
         "strength": 0.82,
         "tier": "adaptive_lineage"
       },
-      "first_active_segment_elapsed_seconds": 96.294338,
+      "first_active_segment_elapsed_seconds": 104.696383,
       "generation": 2,
       "id": "payload-857-red-1",
       "inheritedContext": [
@@ -2168,11 +2006,11 @@
         "ZIP_SLIP_CONFIRMED",
         "CWE-22 Zip Slip path traversal",
         "Public entrypoint /api/import-zip",
-        "Red worker red-1 status PASS",
+        "Red worker red-1 status BLOCKED",
         "Blue worker blue-0 status PASS",
         "Judge verdict BLUE_SUCCESS"
       ],
-      "lineColor": "green",
+      "lineColor": "purple",
       "lineageGroupId": "lineage:payload-857-receipt",
       "mutationRationale": "Receipt-backed child lane spawned from payload-857-receipt. Subsequent state is limited to this child's own Red/Blue/Judge receipts.",
       "name": "Archive Escape red-1",
@@ -2208,7 +2046,7 @@
         "lineage-spawn-payload-857-receipt-to-payload-857-red-1"
       ],
       "replay": {
-        "attempt_id": "red-1__blue-0",
+        "attempt_id": "red-0__blue-0",
         "blue_action_id": "blue-blue-0-patch",
         "blue_worker_id": "blue-0",
         "can_execute_now": false,
@@ -2223,13 +2061,15 @@
           "visible": true
         },
         "endpoint": null,
+        "inheritance_reason": "Child lane has no separate Judge replay receipt; show parent receipt-only Docker replay CTA.",
+        "inherited_from_parent_lane_id": "payload-857-receipt",
         "kind": "receipt_only",
         "label": "REPLAY IN DOCKER",
-        "pair_id": "red-1__blue-0",
+        "pair_id": "red-0__blue-0",
         "proof_mode": "receipt_backed_fixture",
         "receipt_id": "judge-receipt",
         "red_lane_id": "payload-857-red-1",
-        "red_worker_id": "red-1"
+        "red_worker_id": "red-0"
       },
       "replay_semantics": {
         "backend_must_not_emit": [
@@ -2246,11 +2086,11 @@
             "proof_mode": "receipt_backed_fixture",
             "receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
             "score_delta": {
-              "blue": 5.768,
-              "red": 2.884
+              "blue": 0.0,
+              "red": 7.191
             },
             "source_event_id": "payload-857-red-1:spawned-from:payload-857-receipt",
-            "source_time_seconds": 83.585509
+            "source_time_seconds": 77.143749
           },
           {
             "importance": "background",
@@ -2259,11 +2099,11 @@
             "proof_mode": "receipt_backed_fixture",
             "receipt_id": "arena-receipt",
             "score_delta": {
-              "blue": 5.768,
-              "red": 2.884
+              "blue": 0.0,
+              "red": 7.191
             },
             "source_event_id": "payload-857-red-1:arena",
-            "source_time_seconds": 83.585509
+            "source_time_seconds": 77.143749
           },
           {
             "importance": "visible",
@@ -2272,11 +2112,11 @@
             "proof_mode": "receipt_backed_fixture",
             "receipt_id": "red-1-tau-subagent-receipt",
             "score_delta": {
-              "blue": 5.768,
-              "red": 2.884
+              "blue": 0.0,
+              "red": 7.191
             },
             "source_event_id": "payload-857-red-1:red",
-            "source_time_seconds": 96.294338
+            "source_time_seconds": 104.696383
           },
           {
             "importance": "visible",
@@ -2285,11 +2125,11 @@
             "proof_mode": "receipt_backed_fixture",
             "receipt_id": "red-1-tau-subagent-receipt",
             "score_delta": {
-              "blue": 5.768,
-              "red": 2.884
+              "blue": 0.0,
+              "red": 7.191
             },
             "source_event_id": "payload-857-red-1:useful",
-            "source_time_seconds": 96.294338
+            "source_time_seconds": 104.696383
           },
           {
             "importance": "visible",
@@ -2298,11 +2138,11 @@
             "proof_mode": "receipt_backed_fixture",
             "receipt_id": "blue-tau-subagent-receipt",
             "score_delta": {
-              "blue": 5.768,
-              "red": 2.884
+              "blue": 0.0,
+              "red": 7.191
             },
             "source_event_id": "payload-857-red-1:blue",
-            "source_time_seconds": 98.39211
+            "source_time_seconds": 132.249017
           },
           {
             "importance": "major",
@@ -2311,11 +2151,11 @@
             "proof_mode": "receipt_backed_fixture",
             "receipt_id": "judge-receipt",
             "score_delta": {
-              "blue": 5.768,
-              "red": 2.884
+              "blue": 0.0,
+              "red": 7.191
             },
             "source_event_id": "payload-857-red-1:judge",
-            "source_time_seconds": 99.392622
+            "source_time_seconds": 132.249017
           }
         ],
         "lane_id": "payload-857-red-1",
@@ -2324,8 +2164,8 @@
         "schema": "battle.replay_semantics.v1",
         "time_authority": "receipt_elapsed_seconds"
       },
-      "runnerState": "blocked",
-      "runnerVerb": "blocked by Blue",
+      "runnerState": "research",
+      "runnerVerb": "insufficient evidence",
       "runnerX": 98,
       "scenario": {
         "battle_id": "battle-004",
@@ -2336,43 +2176,45 @@
       "score_semantics": {
         "lane_id": "payload-857-red-1",
         "multipliers": {
-          "blue": 7.0,
-          "red": 3.5
+          "blue": 0.0,
+          "red": 9.0
         },
-        "outcome_class": "post_spawn_child_contained",
-        "outcome_tier": "POST_SPAWN_CONTAINMENT",
+        "outcome_class": "red_breakthrough",
+        "outcome_tier": "RED_BREAKTHROUGH",
         "proof_mode": "receipt_backed_fixture",
         "rules": {
           "explicit_kill_scores_below_pre_spawn_block": true,
           "functionality_preservation_required_for_full_blue_credit": true,
           "pre_spawn_block_is_highest_blue_credit": true,
+          "preemptive_spawn_requires_suspected_pressure_not_confirmed_kill": true,
           "spawn_pressure_reduces_blue_credit": true,
           "sprite_choice_does_not_create_score_truth": true,
+          "suspected_pressure_does_not_count_as_blue_kill": true,
           "unblocked_spawned_exploit_scores_red_breakthrough": true
         },
         "schema": "battle.semantic_scoring.v1",
         "score_basis": "judge_receipts_lineage_and_exploit_profile",
         "score_delta": {
-          "blue": 5.768,
-          "red": 2.884
+          "blue": 0.0,
+          "red": 7.191
         },
-        "score_weight": 0.824,
+        "score_weight": 0.799,
         "spawn_state": "post_spawn",
-        "terminal_state": "blocked"
+        "terminal_state": "none"
       },
       "spawn_type": "post_block_handoff",
-      "start_elapsed_seconds": 83.585509,
+      "start_elapsed_seconds": 77.143749,
       "stderr": [
         "not emitted",
         "not emitted"
       ],
       "stdout": [
-        "red-0=PASS:ok; red-1=PASS:ok",
+        "red-0=PASS:ok; red-1=BLOCKED:red_artifact_missing_local_app_import",
         "BLUE_SUCCESS"
       ],
       "team": "red",
-      "terminal": "blocked",
-      "visible_from_elapsed_seconds": 83.585509,
+      "terminal": "none",
+      "visible_from_elapsed_seconds": 77.143749,
       "xEnd": 98,
       "xStart": 62
     }
@@ -2393,7 +2235,7 @@
       "proofMode": "receipt_backed_fixture",
       "rank": 2,
       "status": "blocked",
-      "summary": "BLUE_SUCCESS: blocked by Blue.",
+      "summary": "BLUE_SUCCESS: insufficient evidence.",
       "time": "judge"
     }
   ],
@@ -2432,11 +2274,11 @@
       {
         "child_exploit_id": "payload-857-red-1",
         "child_lane_id": "payload-857-red-1",
-        "child_start_elapsed_seconds": 96.294338,
+        "child_start_elapsed_seconds": 104.696383,
         "child_tau_subagent_id": "red-1",
         "child_worker_id": "red-1",
         "child_x_start": 62,
-        "first_active_segment_elapsed_seconds": 96.294338,
+        "first_active_segment_elapsed_seconds": 104.696383,
         "generation": 2,
         "goal": "Spawn child Red lane from receipt-backed parent handoff.",
         "inherited_context": [
@@ -2471,8 +2313,8 @@
           "red-0-tau-subagent-receipt"
         ],
         "spawn_confidence": 0.72,
-        "spawn_duration_elapsed_seconds": 12.708829,
-        "spawn_elapsed_seconds": 83.585509,
+        "spawn_duration_elapsed_seconds": 27.552634,
+        "spawn_elapsed_seconds": 77.143749,
         "spawn_reason": "Parent exploit produced receipt-backed state for a child handoff.",
         "spawn_type": "post_block_handoff",
         "spawn_x": 58,
@@ -2494,7 +2336,7 @@
         },
         "time_label": "handoff",
         "timing_source": "battle_control_plane_perf_counter",
-        "visible_from_elapsed_seconds": 83.585509
+        "visible_from_elapsed_seconds": 77.143749
       }
     ]
   },
@@ -2563,11 +2405,10 @@
     "allowed": {
       "blue_blocks": {
         "allowed": true,
-        "blue_success_pair_count": 4,
-        "event_count": 4,
+        "blue_success_pair_count": 2,
+        "event_count": 2,
         "lane_ids": [
-          "payload-857-receipt",
-          "payload-857-red-1"
+          "payload-857-receipt"
         ],
         "render_policy": "render_blue_blocks_only_for_BLUE_SUCCESS_pairs",
         "source": "scoreboard.per_pair + events[blue.blocked_red]"
@@ -2678,34 +2519,34 @@
       "summary": "Judge receipt for Tau artifacts."
     },
     {
-      "artifact_ref": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/red/tau-subagent-receipt.json",
+      "artifact_ref": "/tmp/battle-004-parent-spawn-adaptive-lineage/tau-live/red/tau-subagent-receipt.json",
       "proof_mode": "receipt_backed_fixture",
       "receipt_id": "red-tau-subagent-receipt",
-      "receipt_path": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/red/tau-subagent-receipt.json",
+      "receipt_path": "/tmp/battle-004-parent-spawn-adaptive-lineage/tau-live/red/tau-subagent-receipt.json",
       "receipt_type": "tau_subagent",
       "summary": "Tau Red subagent receipt red-0."
     },
     {
-      "artifact_ref": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/red/workers/red-1/tau-subagent-receipt.json",
+      "artifact_ref": "/tmp/battle-004-parent-spawn-adaptive-lineage/tau-live/red/workers/red-1/tau-subagent-receipt.json",
       "proof_mode": "receipt_backed_fixture",
       "receipt_id": "red-1-tau-subagent-receipt",
-      "receipt_path": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/red/workers/red-1/tau-subagent-receipt.json",
+      "receipt_path": "/tmp/battle-004-parent-spawn-adaptive-lineage/tau-live/red/workers/red-1/tau-subagent-receipt.json",
       "receipt_type": "tau_subagent",
       "summary": "Tau Red subagent receipt red-1."
     },
     {
-      "artifact_ref": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/blue/tau-subagent-receipt.json",
+      "artifact_ref": "/tmp/battle-004-parent-spawn-adaptive-lineage/tau-live/blue/tau-subagent-receipt.json",
       "proof_mode": "receipt_backed_fixture",
       "receipt_id": "blue-tau-subagent-receipt",
-      "receipt_path": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/blue/tau-subagent-receipt.json",
+      "receipt_path": "/tmp/battle-004-parent-spawn-adaptive-lineage/tau-live/blue/tau-subagent-receipt.json",
       "receipt_type": "tau_subagent",
       "summary": "Tau Blue subagent receipt blue-0."
     },
     {
-      "artifact_ref": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/blue/workers/blue-1/tau-subagent-receipt.json",
+      "artifact_ref": "/tmp/battle-004-parent-spawn-adaptive-lineage/tau-live/blue/workers/blue-1/tau-subagent-receipt.json",
       "proof_mode": "receipt_backed_fixture",
       "receipt_id": "blue-1-tau-subagent-receipt",
-      "receipt_path": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z/tau-live/blue/workers/blue-1/tau-subagent-receipt.json",
+      "receipt_path": "/tmp/battle-004-parent-spawn-adaptive-lineage/tau-live/blue/workers/blue-1/tau-subagent-receipt.json",
       "receipt_type": "tau_subagent",
       "summary": "Tau Blue subagent receipt blue-1."
     },
@@ -2847,23 +2688,23 @@
     "asc": 1,
     "blue_action_count": 2,
     "blue_materialized_count": 2,
-    "blue_score": 14.4,
-    "blue_success_count": 4,
+    "blue_score": 7.2,
+    "blue_success_count": 2,
     "child_spawn_count": 1,
-    "judged_pair_count": 4,
+    "judged_pair_count": 2,
     "per_pair": [
       {
         "blue_action_id": "blue-blue-0-patch",
         "blue_worker_id": "blue-0",
-        "duration_elapsed_seconds": 1.059199,
-        "ended_elapsed_seconds": 97.354126,
+        "duration_elapsed_seconds": 0.884734,
+        "ended_elapsed_seconds": 105.581813,
         "exploit_blocked_after_patch": true,
         "exploit_confirmed_before_patch": true,
         "functionality_preserved": true,
         "pair_id": "red-0__blue-0",
         "red_lane_id": "payload-857-receipt",
         "red_worker_id": "red-0",
-        "started_elapsed_seconds": 96.294927,
+        "started_elapsed_seconds": 104.697079,
         "status": "PASS",
         "timing_source": "battle_control_plane_perf_counter",
         "verdict": "BLUE_SUCCESS"
@@ -2871,55 +2712,23 @@
       {
         "blue_action_id": "blue-blue-1-patch",
         "blue_worker_id": "blue-1",
-        "duration_elapsed_seconds": 1.037615,
-        "ended_elapsed_seconds": 98.391925,
+        "duration_elapsed_seconds": 0.864403,
+        "ended_elapsed_seconds": 106.446393,
         "exploit_blocked_after_patch": true,
         "exploit_confirmed_before_patch": true,
         "functionality_preserved": true,
         "pair_id": "red-0__blue-1",
         "red_lane_id": "payload-857-receipt",
         "red_worker_id": "red-0",
-        "started_elapsed_seconds": 97.35431,
-        "status": "PASS",
-        "timing_source": "battle_control_plane_perf_counter",
-        "verdict": "BLUE_SUCCESS"
-      },
-      {
-        "blue_action_id": "blue-blue-0-patch",
-        "blue_worker_id": "blue-0",
-        "duration_elapsed_seconds": 1.000512,
-        "ended_elapsed_seconds": 99.392622,
-        "exploit_blocked_after_patch": true,
-        "exploit_confirmed_before_patch": true,
-        "functionality_preserved": true,
-        "pair_id": "red-1__blue-0",
-        "red_lane_id": "payload-857-red-1",
-        "red_worker_id": "red-1",
-        "started_elapsed_seconds": 98.39211,
-        "status": "PASS",
-        "timing_source": "battle_control_plane_perf_counter",
-        "verdict": "BLUE_SUCCESS"
-      },
-      {
-        "blue_action_id": "blue-blue-1-patch",
-        "blue_worker_id": "blue-1",
-        "duration_elapsed_seconds": 1.093543,
-        "ended_elapsed_seconds": 100.486355,
-        "exploit_blocked_after_patch": true,
-        "exploit_confirmed_before_patch": true,
-        "functionality_preserved": true,
-        "pair_id": "red-1__blue-1",
-        "red_lane_id": "payload-857-red-1",
-        "red_worker_id": "red-1",
-        "started_elapsed_seconds": 99.392812,
+        "started_elapsed_seconds": 105.58199,
         "status": "PASS",
         "timing_source": "battle_control_plane_perf_counter",
         "verdict": "BLUE_SUCCESS"
       }
     ],
     "red_lane_count": 2,
-    "red_materialized_count": 2,
-    "red_score": 6.0,
+    "red_materialized_count": 1,
+    "red_score": 3.0,
     "requested_blue_workers": 2,
     "requested_red_workers": 2,
     "semantic_scoring": {
@@ -2938,8 +2747,10 @@
             "explicit_kill_scores_below_pre_spawn_block": true,
             "functionality_preservation_required_for_full_blue_credit": true,
             "pre_spawn_block_is_highest_blue_credit": true,
+            "preemptive_spawn_requires_suspected_pressure_not_confirmed_kill": true,
             "spawn_pressure_reduces_blue_credit": true,
             "sprite_choice_does_not_create_score_truth": true,
+            "suspected_pressure_does_not_count_as_blue_kill": true,
             "unblocked_spawned_exploit_scores_red_breakthrough": true
           },
           "schema": "battle.semantic_scoring.v1",
@@ -2955,33 +2766,35 @@
         {
           "lane_id": "payload-857-red-1",
           "multipliers": {
-            "blue": 7.0,
-            "red": 3.5
+            "blue": 0.0,
+            "red": 9.0
           },
-          "outcome_class": "post_spawn_child_contained",
-          "outcome_tier": "POST_SPAWN_CONTAINMENT",
+          "outcome_class": "red_breakthrough",
+          "outcome_tier": "RED_BREAKTHROUGH",
           "proof_mode": "receipt_backed_fixture",
           "rules": {
             "explicit_kill_scores_below_pre_spawn_block": true,
             "functionality_preservation_required_for_full_blue_credit": true,
             "pre_spawn_block_is_highest_blue_credit": true,
+            "preemptive_spawn_requires_suspected_pressure_not_confirmed_kill": true,
             "spawn_pressure_reduces_blue_credit": true,
             "sprite_choice_does_not_create_score_truth": true,
+            "suspected_pressure_does_not_count_as_blue_kill": true,
             "unblocked_spawned_exploit_scores_red_breakthrough": true
           },
           "schema": "battle.semantic_scoring.v1",
           "score_basis": "judge_receipts_lineage_and_exploit_profile",
           "score_delta": {
-            "blue": 5.768,
-            "red": 2.884
+            "blue": 0.0,
+            "red": 7.191
           },
-          "score_weight": 0.824,
+          "score_weight": 0.799,
           "spawn_state": "post_spawn",
-          "terminal_state": "blocked"
+          "terminal_state": "none"
         }
       ],
       "outcome_tiers": [
-        "POST_SPAWN_CONTAINMENT",
+        "RED_BREAKTHROUGH",
         "SPAWN_PRESSURE_CONCEDED"
       ],
       "proof_mode": "receipt_backed_fixture",
@@ -3003,8 +2816,8 @@
       "schema": "battle.semantic_scoring.v1",
       "score_owner": "scorekeeper",
       "semantic_totals": {
-        "blue": 8.864,
-        "red": 6.367
+        "blue": 3.096,
+        "red": 10.674
       },
       "status": "advisory_contract"
     },
@@ -3013,7 +2826,7 @@
   },
   "segments": [
     {
-      "end_seconds": 2.119725,
+      "end_seconds": 1.509391,
       "end_x": 14,
       "id": "payload-857-receipt:segment:01",
       "interpolation": "receipt_backed_segment",
@@ -3023,11 +2836,11 @@
       "proof_mode": "receipt_backed_fixture",
       "schema": "battle.segment.v1",
       "source_event_id": null,
-      "start_seconds": 2.119725,
+      "start_seconds": 1.509391,
       "start_x": 7
     },
     {
-      "end_seconds": 81.499052,
+      "end_seconds": 75.320149,
       "end_x": 33,
       "id": "payload-857-receipt:segment:02",
       "interpolation": "receipt_backed_segment",
@@ -3037,11 +2850,11 @@
       "proof_mode": "receipt_backed_fixture",
       "schema": "battle.segment.v1",
       "source_event_id": "payload-857-receipt:arena",
-      "start_seconds": 2.119725,
+      "start_seconds": 1.509391,
       "start_x": 14
     },
     {
-      "end_seconds": 81.499052,
+      "end_seconds": 75.320149,
       "end_x": 50,
       "id": "payload-857-receipt:segment:03",
       "interpolation": "receipt_backed_segment",
@@ -3051,11 +2864,11 @@
       "proof_mode": "receipt_backed_fixture",
       "schema": "battle.segment.v1",
       "source_event_id": "payload-857-receipt:red",
-      "start_seconds": 81.499052,
+      "start_seconds": 75.320149,
       "start_x": 33
     },
     {
-      "end_seconds": 83.585509,
+      "end_seconds": 77.143749,
       "end_x": 58,
       "id": "payload-857-receipt:segment:04",
       "interpolation": "receipt_backed_segment",
@@ -3065,11 +2878,11 @@
       "proof_mode": "receipt_backed_fixture",
       "schema": "battle.segment.v1",
       "source_event_id": "payload-857-receipt:useful",
-      "start_seconds": 81.499052,
+      "start_seconds": 75.320149,
       "start_x": 50
     },
     {
-      "end_seconds": 96.294927,
+      "end_seconds": 104.697079,
       "end_x": 67,
       "id": "payload-857-receipt:segment:05",
       "interpolation": "receipt_backed_segment",
@@ -3079,11 +2892,11 @@
       "proof_mode": "receipt_backed_fixture",
       "schema": "battle.segment.v1",
       "source_event_id": "payload-857-receipt:spawn:payload-857-red-1",
-      "start_seconds": 83.585509,
+      "start_seconds": 77.143749,
       "start_x": 58
     },
     {
-      "end_seconds": 97.354126,
+      "end_seconds": 105.581813,
       "end_x": 82,
       "id": "payload-857-receipt:segment:06",
       "interpolation": "receipt_backed_segment",
@@ -3093,11 +2906,11 @@
       "proof_mode": "receipt_backed_fixture",
       "schema": "battle.segment.v1",
       "source_event_id": "payload-857-receipt:blue",
-      "start_seconds": 96.294927,
+      "start_seconds": 104.697079,
       "start_x": 67
     },
     {
-      "end_seconds": 97.354126,
+      "end_seconds": 105.581813,
       "end_x": 84,
       "id": "payload-857-receipt:segment:07",
       "interpolation": "receipt_backed_segment",
@@ -3107,11 +2920,11 @@
       "proof_mode": "receipt_backed_fixture",
       "schema": "battle.segment.v1",
       "source_event_id": "payload-857-receipt:judge",
-      "start_seconds": 97.354126,
+      "start_seconds": 105.581813,
       "start_x": 82
     },
     {
-      "end_seconds": 83.585509,
+      "end_seconds": 77.143749,
       "end_x": 66,
       "id": "payload-857-red-1:segment:02",
       "interpolation": "receipt_backed_segment",
@@ -3121,11 +2934,11 @@
       "proof_mode": "receipt_backed_fixture",
       "schema": "battle.segment.v1",
       "source_event_id": "payload-857-red-1:spawned-from:payload-857-receipt",
-      "start_seconds": 83.585509,
+      "start_seconds": 77.143749,
       "start_x": 62
     },
     {
-      "end_seconds": 96.294338,
+      "end_seconds": 104.696383,
       "end_x": 76,
       "id": "payload-857-red-1:segment:03",
       "interpolation": "receipt_backed_segment",
@@ -3135,11 +2948,11 @@
       "proof_mode": "receipt_backed_fixture",
       "schema": "battle.segment.v1",
       "source_event_id": "payload-857-red-1:arena",
-      "start_seconds": 83.585509,
+      "start_seconds": 77.143749,
       "start_x": 66
     },
     {
-      "end_seconds": 96.294338,
+      "end_seconds": 104.696383,
       "end_x": 86,
       "id": "payload-857-red-1:segment:04",
       "interpolation": "receipt_backed_segment",
@@ -3149,11 +2962,11 @@
       "proof_mode": "receipt_backed_fixture",
       "schema": "battle.segment.v1",
       "source_event_id": "payload-857-red-1:red",
-      "start_seconds": 96.294338,
+      "start_seconds": 104.696383,
       "start_x": 76
     },
     {
-      "end_seconds": 98.39211,
+      "end_seconds": 132.249017,
       "end_x": 96,
       "id": "payload-857-red-1:segment:05",
       "interpolation": "receipt_backed_segment",
@@ -3163,11 +2976,11 @@
       "proof_mode": "receipt_backed_fixture",
       "schema": "battle.segment.v1",
       "source_event_id": "payload-857-red-1:useful",
-      "start_seconds": 96.294338,
+      "start_seconds": 104.696383,
       "start_x": 86
     },
     {
-      "end_seconds": 99.392622,
+      "end_seconds": 132.249017,
       "end_x": 98,
       "id": "payload-857-red-1:segment:06",
       "interpolation": "receipt_backed_segment",
@@ -3177,20 +2990,20 @@
       "proof_mode": "receipt_backed_fixture",
       "schema": "battle.segment.v1",
       "source_event_id": "payload-857-red-1:blue",
-      "start_seconds": 98.39211,
+      "start_seconds": 132.249017,
       "start_x": 96
     }
   ],
   "selected_lane_model": {
     "cockpit": {
       "blue_outcome": {
-        "blocked": true,
+        "blocked": false,
         "detected": true,
         "forced_handoff": false,
         "killed": false,
         "proof_mode": "receipt_backed_fixture",
-        "receipt_id": "judge-receipt",
-        "status": "blocked"
+        "receipt_id": null,
+        "status": "proof_pending"
       },
       "current_turn": {
         "current_action": "Continue Red exploit from receipt-backed parent handoff.",
@@ -3199,7 +3012,7 @@
         "status": "PASS"
       },
       "latest_receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
-      "learned": "EXPLOIT_CONFIRMED",
+      "learned": "not emitted",
       "memory_project_knowledge_events": [],
       "next_move": "Judge this child lane only from its own Red/Blue pair receipts.",
       "output": {
@@ -3208,7 +3021,7 @@
           "not emitted"
         ],
         "stdout": [
-          "red-0=PASS:ok; red-1=PASS:ok",
+          "red-0=PASS:ok; red-1=BLOCKED:red_artifact_missing_local_app_import",
           "BLUE_SUCCESS"
         ]
       },
@@ -3217,13 +3030,13 @@
       "public_trace": {
         "action": "Continue exploit using inherited parent context from lineage receipt.",
         "hypothesis": "A materialized Red exploit can exercise the archive import path traversal before Blue patch replay.",
-        "learned": "EXPLOIT_CONFIRMED",
+        "learned": "not emitted",
         "next_move": "Judge this child lane only from its own Red/Blue pair receipts.",
         "observation": "Spawned from parent lane payload-857-receipt at x=62.",
-        "result": "BLUE_SUCCESS"
+        "result": "INSUFFICIENT_EVIDENCE"
       },
       "replay": {
-        "attempt_id": "red-1__blue-0",
+        "attempt_id": "red-0__blue-0",
         "blue_action_id": "blue-blue-0-patch",
         "blue_worker_id": "blue-0",
         "can_execute_now": false,
@@ -3238,41 +3051,45 @@
           "visible": true
         },
         "endpoint": null,
+        "inheritance_reason": "Child lane has no separate Judge replay receipt; show parent receipt-only Docker replay CTA.",
+        "inherited_from_parent_lane_id": "payload-857-receipt",
         "kind": "receipt_only",
         "label": "REPLAY IN DOCKER",
-        "pair_id": "red-1__blue-0",
+        "pair_id": "red-0__blue-0",
         "proof_mode": "receipt_backed_fixture",
         "receipt_id": "judge-receipt",
         "red_lane_id": "payload-857-red-1",
-        "red_worker_id": "red-1"
+        "red_worker_id": "red-0"
       },
       "schema": "battle.lane_cockpit.v1",
       "score_semantics": {
         "lane_id": "payload-857-red-1",
         "multipliers": {
-          "blue": 7.0,
-          "red": 3.5
+          "blue": 0.0,
+          "red": 9.0
         },
-        "outcome_class": "post_spawn_child_contained",
-        "outcome_tier": "POST_SPAWN_CONTAINMENT",
+        "outcome_class": "red_breakthrough",
+        "outcome_tier": "RED_BREAKTHROUGH",
         "proof_mode": "receipt_backed_fixture",
         "rules": {
           "explicit_kill_scores_below_pre_spawn_block": true,
           "functionality_preservation_required_for_full_blue_credit": true,
           "pre_spawn_block_is_highest_blue_credit": true,
+          "preemptive_spawn_requires_suspected_pressure_not_confirmed_kill": true,
           "spawn_pressure_reduces_blue_credit": true,
           "sprite_choice_does_not_create_score_truth": true,
+          "suspected_pressure_does_not_count_as_blue_kill": true,
           "unblocked_spawned_exploit_scores_red_breakthrough": true
         },
         "schema": "battle.semantic_scoring.v1",
         "score_basis": "judge_receipts_lineage_and_exploit_profile",
         "score_delta": {
-          "blue": 5.768,
-          "red": 2.884
+          "blue": 0.0,
+          "red": 7.191
         },
-        "score_weight": 0.824,
+        "score_weight": 0.799,
         "spawn_state": "post_spawn",
-        "terminal_state": "blocked"
+        "terminal_state": "none"
       },
       "selected_tau_exploit_subagent": {
         "actor_id": "payload-857-red-1",
@@ -3281,9 +3098,9 @@
         "parent_lane_id": "payload-857-receipt",
         "payload_id": "payload-857-red-1",
         "spawn_receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
-        "tau_run_id": "arena-parent-spawn-20260707T220426Z",
+        "tau_run_id": "arena-parent-spawn-20260717T115114Z",
         "tau_subagent_id": "red-1",
-        "tau_turn_id": "arena-parent-spawn-20260707T220426Z:red-1:red",
+        "tau_turn_id": "arena-parent-spawn-20260717T115114Z:red-1:red",
         "worker_id": "red-1"
       },
       "skills_tools": [
@@ -3293,7 +3110,7 @@
           "proof_label": "FIXTURE SKILL TRACE",
           "proof_mode": "receipt_backed_fixture",
           "receipt_id": "red-1-tau-subagent-receipt",
-          "status": "ok"
+          "status": "pending"
         },
         {
           "kind": "tool",
@@ -3301,7 +3118,7 @@
           "proof_label": "FIXTURE SKILL TRACE",
           "proof_mode": "receipt_backed_fixture",
           "receipt_id": "judge-receipt",
-          "status": "ok"
+          "status": "pending"
         }
       ]
     },
@@ -3357,7 +3174,7 @@
           "red": 3.483
         },
         "source_event_id": "payload-857-receipt:arena",
-        "source_time_seconds": 2.119725
+        "source_time_seconds": 1.509391
       },
       {
         "importance": "visible",
@@ -3371,7 +3188,7 @@
           "red": 3.483
         },
         "source_event_id": "payload-857-receipt:red",
-        "source_time_seconds": 81.499052
+        "source_time_seconds": 75.320149
       },
       {
         "importance": "visible",
@@ -3385,7 +3202,7 @@
           "red": 3.483
         },
         "source_event_id": "payload-857-receipt:useful",
-        "source_time_seconds": 81.499052
+        "source_time_seconds": 75.320149
       },
       {
         "importance": "major",
@@ -3399,7 +3216,7 @@
           "red": 3.483
         },
         "source_event_id": "payload-857-receipt:spawn:payload-857-red-1",
-        "source_time_seconds": 83.585509
+        "source_time_seconds": 77.143749
       },
       {
         "importance": "background",
@@ -3409,11 +3226,11 @@
         "proof_mode": "receipt_backed_fixture",
         "receipt_id": "arena-receipt",
         "score_delta": {
-          "blue": 5.768,
-          "red": 2.884
+          "blue": 0.0,
+          "red": 7.191
         },
         "source_event_id": "payload-857-red-1:arena",
-        "source_time_seconds": 83.585509
+        "source_time_seconds": 77.143749
       },
       {
         "importance": "major",
@@ -3423,11 +3240,11 @@
         "proof_mode": "receipt_backed_fixture",
         "receipt_id": "lineage-spawn-payload-857-receipt-to-payload-857-red-1",
         "score_delta": {
-          "blue": 5.768,
-          "red": 2.884
+          "blue": 0.0,
+          "red": 7.191
         },
         "source_event_id": "payload-857-red-1:spawned-from:payload-857-receipt",
-        "source_time_seconds": 83.585509
+        "source_time_seconds": 77.143749
       },
       {
         "importance": "visible",
@@ -3437,11 +3254,11 @@
         "proof_mode": "receipt_backed_fixture",
         "receipt_id": "red-1-tau-subagent-receipt",
         "score_delta": {
-          "blue": 5.768,
-          "red": 2.884
+          "blue": 0.0,
+          "red": 7.191
         },
         "source_event_id": "payload-857-red-1:red",
-        "source_time_seconds": 96.294338
+        "source_time_seconds": 104.696383
       },
       {
         "importance": "visible",
@@ -3451,11 +3268,11 @@
         "proof_mode": "receipt_backed_fixture",
         "receipt_id": "red-1-tau-subagent-receipt",
         "score_delta": {
-          "blue": 5.768,
-          "red": 2.884
+          "blue": 0.0,
+          "red": 7.191
         },
         "source_event_id": "payload-857-red-1:useful",
-        "source_time_seconds": 96.294338
+        "source_time_seconds": 104.696383
       },
       {
         "importance": "visible",
@@ -3469,7 +3286,7 @@
           "red": 3.483
         },
         "source_event_id": "payload-857-receipt:blue",
-        "source_time_seconds": 96.294927
+        "source_time_seconds": 104.697079
       },
       {
         "importance": "major",
@@ -3483,7 +3300,7 @@
           "red": 3.483
         },
         "source_event_id": "payload-857-receipt:judge",
-        "source_time_seconds": 97.354126
+        "source_time_seconds": 105.581813
       },
       {
         "importance": "visible",
@@ -3493,11 +3310,11 @@
         "proof_mode": "receipt_backed_fixture",
         "receipt_id": "blue-tau-subagent-receipt",
         "score_delta": {
-          "blue": 5.768,
-          "red": 2.884
+          "blue": 0.0,
+          "red": 7.191
         },
         "source_event_id": "payload-857-red-1:blue",
-        "source_time_seconds": 98.39211
+        "source_time_seconds": 132.249017
       },
       {
         "importance": "major",
@@ -3507,11 +3324,11 @@
         "proof_mode": "receipt_backed_fixture",
         "receipt_id": "judge-receipt",
         "score_delta": {
-          "blue": 5.768,
-          "red": 2.884
+          "blue": 0.0,
+          "red": 7.191
         },
         "source_event_id": "payload-857-red-1:judge",
-        "source_time_seconds": 99.392622
+        "source_time_seconds": 132.249017
       }
     ],
     "presentation_owner": "ux",
@@ -3520,7 +3337,7 @@
     "schema": "battle.semantic_replay.v1",
     "time_authority": "receipt_elapsed_seconds"
   },
-  "source_proof_dir": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z",
+  "source_proof_dir": "/tmp/battle-004-parent-spawn-adaptive-lineage",
   "spawn_gate_model": {
     "gate_count": 1,
     "gates": [
@@ -3537,18 +3354,6 @@
             "pair_id": "red-0__blue-1",
             "receipt_id": "",
             "red_lane_id": "payload-857-receipt"
-          },
-          {
-            "blue_worker_id": "blue-0",
-            "pair_id": "red-1__blue-0",
-            "receipt_id": "",
-            "red_lane_id": "payload-857-red-1"
-          },
-          {
-            "blue_worker_id": "blue-1",
-            "pair_id": "red-1__blue-1",
-            "receipt_id": "",
-            "red_lane_id": "payload-857-red-1"
           }
         ],
         "child_event_id": "payload-857-red-1:spawned-from:payload-857-receipt",
@@ -3562,7 +3367,7 @@
         "render_policy": "render_child_lane_only_when_renderable_true",
         "renderable": true,
         "required_sources": {
-          "blue_success_pair_count": 4,
+          "blue_success_pair_count": 2,
           "child_lane_exists": true,
           "child_spawn_event_present": true,
           "lineage_receipt_present": true,
@@ -3586,7 +3391,7 @@
   "spectator_shell": {
     "battle_title": "BATTLE-004 \u00b7 POST /api/import-zip",
     "event_ticker": {
-      "count": 12,
+      "count": 10,
       "label": "Receipt events",
       "latest_text": "BLUE_SUCCESS \u00b7 Judge replay proof",
       "live": false,
@@ -3611,7 +3416,7 @@
       },
       {
         "label": "Round time",
-        "value": "01:16 / 20:00"
+        "value": "01:12 / 20:00"
       }
     ],
     "mode_badge": "RECEIPT-BACKED",
@@ -3626,12 +3431,12 @@
       "blue": {
         "label": "Blue Team",
         "sub": "Patch Agents",
-        "value": "14.4"
+        "value": "7.2"
       },
       "red": {
         "label": "Red Team",
         "sub": "Exploit Agents",
-        "value": "6"
+        "value": "3"
       },
       "verdict": "BLUE_SUCCESS"
     },
@@ -3739,7 +3544,7 @@
   },
   "status": "PASS",
   "timeline": {
-    "event_count": 12,
+    "event_count": 10,
     "lane_count": 2,
     "max_x": 100,
     "min_x": 0,
@@ -3748,10 +3553,10 @@
       "animation_semantics": "receipt_replay_only",
       "can_animate": true,
       "current_x": 98,
-      "elapsed_seconds": 76.414883,
+      "elapsed_seconds": 72.404691,
       "keyframes": [
         {
-          "elapsed_seconds": 2.119725,
+          "elapsed_seconds": 1.509391,
           "event_id": "payload-857-receipt:arena",
           "kind": "research",
           "label": "ARENA SCENARIO",
@@ -3761,7 +3566,7 @@
           "x": 14
         },
         {
-          "elapsed_seconds": 81.499052,
+          "elapsed_seconds": 75.320149,
           "event_id": "payload-857-receipt:red",
           "kind": "payload",
           "label": "RED EXPLOIT",
@@ -3771,7 +3576,7 @@
           "x": 33
         },
         {
-          "elapsed_seconds": 81.499052,
+          "elapsed_seconds": 75.320149,
           "event_id": "payload-857-receipt:useful",
           "kind": "useful",
           "label": "EXPLOIT_CONFIRMED",
@@ -3781,7 +3586,7 @@
           "x": 50
         },
         {
-          "elapsed_seconds": 83.585509,
+          "elapsed_seconds": 77.143749,
           "event_id": "payload-857-receipt:spawn:payload-857-red-1",
           "kind": "handoff",
           "label": "SPAWN CHILD",
@@ -3791,7 +3596,7 @@
           "x": 58
         },
         {
-          "elapsed_seconds": 83.585509,
+          "elapsed_seconds": 77.143749,
           "event_id": "payload-857-red-1:spawned-from:payload-857-receipt",
           "kind": "handoff",
           "label": "SPAWNED",
@@ -3801,7 +3606,7 @@
           "x": 62
         },
         {
-          "elapsed_seconds": 83.585509,
+          "elapsed_seconds": 77.143749,
           "event_id": "payload-857-red-1:arena",
           "kind": "research",
           "label": "ARENA SCENARIO",
@@ -3811,7 +3616,7 @@
           "x": 66
         },
         {
-          "elapsed_seconds": 96.294927,
+          "elapsed_seconds": 104.697079,
           "event_id": "payload-857-receipt:blue",
           "kind": "blue_blast",
           "label": "PATCH",
@@ -3821,7 +3626,7 @@
           "x": 67
         },
         {
-          "elapsed_seconds": 96.294338,
+          "elapsed_seconds": 104.696383,
           "event_id": "payload-857-red-1:red",
           "kind": "payload",
           "label": "RED EXPLOIT",
@@ -3831,7 +3636,7 @@
           "x": 76
         },
         {
-          "elapsed_seconds": 97.354126,
+          "elapsed_seconds": 105.581813,
           "event_id": "payload-857-receipt:judge",
           "kind": "blocked",
           "label": "BLUE_SUCCESS",
@@ -3841,33 +3646,33 @@
           "x": 82
         },
         {
-          "elapsed_seconds": 96.294338,
+          "elapsed_seconds": 104.696383,
           "event_id": "payload-857-red-1:useful",
           "kind": "useful",
-          "label": "EXPLOIT_CONFIRMED",
+          "label": "RED_ARTIFACT_BLOCKED",
           "lane_id": "payload-857-red-1",
           "proof_mode": "receipt_backed_fixture",
           "timing_source": "lineage_spawn_receipt",
           "x": 86
         },
         {
-          "elapsed_seconds": 98.39211,
+          "elapsed_seconds": 132.249017,
           "event_id": "payload-857-red-1:blue",
           "kind": "blue_blast",
           "label": "PATCH",
           "lane_id": "payload-857-red-1",
           "proof_mode": "receipt_backed_fixture",
-          "timing_source": "judge_attempt_receipt",
+          "timing_source": "lineage_spawn_receipt",
           "x": 96
         },
         {
-          "elapsed_seconds": 99.392622,
+          "elapsed_seconds": 132.249017,
           "event_id": "payload-857-red-1:judge",
           "kind": "blocked",
-          "label": "BLUE_SUCCESS",
+          "label": "INSUFFICIENT_EVIDENCE",
           "lane_id": "payload-857-red-1",
           "proof_mode": "receipt_backed_fixture",
-          "timing_source": "judge_attempt_receipt",
+          "timing_source": "lineage_spawn_receipt",
           "x": 98
         }
       ],
@@ -3893,7 +3698,7 @@
     "keyframe_count": 12,
     "keyframes": [
       {
-        "elapsed_seconds": 2.119725,
+        "elapsed_seconds": 1.509391,
         "event_id": "payload-857-receipt:arena",
         "kind": "research",
         "label": "ARENA SCENARIO",
@@ -3901,10 +3706,10 @@
         "proof_mode": "receipt_backed_fixture",
         "receipt_order_x": 14,
         "timing_source": "tau_manifest",
-        "x": 0.176644
+        "x": 0.125783
       },
       {
-        "elapsed_seconds": 81.499052,
+        "elapsed_seconds": 75.320149,
         "event_id": "payload-857-receipt:red",
         "kind": "payload",
         "label": "RED EXPLOIT",
@@ -3912,10 +3717,10 @@
         "proof_mode": "receipt_backed_fixture",
         "receipt_order_x": 33,
         "timing_source": "tau_manifest",
-        "x": 6.791588
+        "x": 6.276679
       },
       {
-        "elapsed_seconds": 81.499052,
+        "elapsed_seconds": 75.320149,
         "event_id": "payload-857-receipt:useful",
         "kind": "useful",
         "label": "EXPLOIT_CONFIRMED",
@@ -3923,10 +3728,10 @@
         "proof_mode": "receipt_backed_fixture",
         "receipt_order_x": 50,
         "timing_source": "tau_manifest",
-        "x": 6.791588
+        "x": 6.276679
       },
       {
-        "elapsed_seconds": 83.585509,
+        "elapsed_seconds": 77.143749,
         "event_id": "payload-857-receipt:spawn:payload-857-red-1",
         "kind": "handoff",
         "label": "SPAWN CHILD",
@@ -3934,10 +3739,10 @@
         "proof_mode": "receipt_backed_fixture",
         "receipt_order_x": 58,
         "timing_source": "lineage_spawn_receipt",
-        "x": 6.965459
+        "x": 6.428646
       },
       {
-        "elapsed_seconds": 83.585509,
+        "elapsed_seconds": 77.143749,
         "event_id": "payload-857-red-1:spawned-from:payload-857-receipt",
         "kind": "handoff",
         "label": "SPAWNED",
@@ -3945,10 +3750,10 @@
         "proof_mode": "receipt_backed_fixture",
         "receipt_order_x": 62,
         "timing_source": "lineage_spawn_receipt",
-        "x": 6.965459
+        "x": 6.428646
       },
       {
-        "elapsed_seconds": 83.585509,
+        "elapsed_seconds": 77.143749,
         "event_id": "payload-857-red-1:arena",
         "kind": "research",
         "label": "ARENA SCENARIO",
@@ -3956,10 +3761,10 @@
         "proof_mode": "receipt_backed_fixture",
         "receipt_order_x": 66,
         "timing_source": "lineage_spawn_receipt",
-        "x": 6.965459
+        "x": 6.428646
       },
       {
-        "elapsed_seconds": 96.294338,
+        "elapsed_seconds": 104.696383,
         "event_id": "payload-857-red-1:red",
         "kind": "payload",
         "label": "RED EXPLOIT",
@@ -3967,21 +3772,21 @@
         "proof_mode": "receipt_backed_fixture",
         "receipt_order_x": 76,
         "timing_source": "lineage_spawn_receipt",
-        "x": 8.024528
+        "x": 8.724699
       },
       {
-        "elapsed_seconds": 96.294338,
+        "elapsed_seconds": 104.696383,
         "event_id": "payload-857-red-1:useful",
         "kind": "useful",
-        "label": "EXPLOIT_CONFIRMED",
+        "label": "RED_ARTIFACT_BLOCKED",
         "lane_id": "payload-857-red-1",
         "proof_mode": "receipt_backed_fixture",
         "receipt_order_x": 86,
         "timing_source": "lineage_spawn_receipt",
-        "x": 8.024528
+        "x": 8.724699
       },
       {
-        "elapsed_seconds": 96.294927,
+        "elapsed_seconds": 104.697079,
         "event_id": "payload-857-receipt:blue",
         "kind": "blue_blast",
         "label": "PATCH",
@@ -3989,10 +3794,10 @@
         "proof_mode": "receipt_backed_fixture",
         "receipt_order_x": 67,
         "timing_source": "judge_attempt_receipt",
-        "x": 8.024577
+        "x": 8.724757
       },
       {
-        "elapsed_seconds": 97.354126,
+        "elapsed_seconds": 105.581813,
         "event_id": "payload-857-receipt:judge",
         "kind": "blocked",
         "label": "BLUE_SUCCESS",
@@ -4000,37 +3805,37 @@
         "proof_mode": "receipt_backed_fixture",
         "receipt_order_x": 82,
         "timing_source": "judge_attempt_receipt",
-        "x": 8.112844
+        "x": 8.798484
       },
       {
-        "elapsed_seconds": 98.39211,
+        "elapsed_seconds": 132.249017,
         "event_id": "payload-857-red-1:blue",
         "kind": "blue_blast",
         "label": "PATCH",
         "lane_id": "payload-857-red-1",
         "proof_mode": "receipt_backed_fixture",
         "receipt_order_x": 96,
-        "timing_source": "judge_attempt_receipt",
-        "x": 8.199343
+        "timing_source": "lineage_spawn_receipt",
+        "x": 11.020751
       },
       {
-        "elapsed_seconds": 99.392622,
+        "elapsed_seconds": 132.249017,
         "event_id": "payload-857-red-1:judge",
         "kind": "blocked",
-        "label": "BLUE_SUCCESS",
+        "label": "INSUFFICIENT_EVIDENCE",
         "lane_id": "payload-857-red-1",
         "proof_mode": "receipt_backed_fixture",
         "receipt_order_x": 98,
-        "timing_source": "judge_attempt_receipt",
-        "x": 8.282718
+        "timing_source": "lineage_spawn_receipt",
+        "x": 11.020751
       }
     ],
     "keyframes_are_monotonic": true,
     "mode": "receipt_elapsed_axis",
     "playhead": {
       "animation_semantics": "receipt_elapsed_replay",
-      "current_elapsed_seconds": 99.392622,
-      "current_x": 8.282718,
+      "current_elapsed_seconds": 132.249017,
+      "current_x": 11.020751,
       "source_event_id": "payload-857-red-1:judge"
     },
     "render_rules": [
@@ -4040,8 +3845,8 @@
       "Do not render elapsed-time x positions unless keyframes_are_monotonic is true."
     ],
     "round_clock_allotted_seconds": 1200.0,
-    "round_clock_elapsed_seconds": 76.414883,
-    "round_clock_remaining_seconds": 1123.585117,
+    "round_clock_elapsed_seconds": 72.404691,
+    "round_clock_remaining_seconds": 1127.595309,
     "schema": "battle.timeline_elapsed_axis_model.v1",
     "x_axis_mode": "elapsed_seconds",
     "x_position_is_elapsed_time": true
@@ -4334,7 +4139,7 @@
             "collision_group": "x08",
             "event_id": "payload-857-red-1:useful",
             "kind": "useful",
-            "label": "EXPLOIT_CONFIRMED",
+            "label": "RED_ARTIFACT_BLOCKED",
             "label_band": "upper",
             "marker_priority": 90,
             "order_index": 86,
@@ -4362,7 +4167,7 @@
             "collision_group": "x09",
             "event_id": "payload-857-red-1:judge",
             "kind": "blocked",
-            "label": "BLUE_SUCCESS",
+            "label": "INSUFFICIENT_EVIDENCE",
             "label_band": "lower",
             "marker_priority": 70,
             "order_index": 98,
@@ -4398,11 +4203,11 @@
     "starts": [
       {
         "elapsed_axis_source": "timeline_elapsed_axis_model",
-        "elapsed_end_seconds": 97.354126,
-        "elapsed_line_end_x": 8.112844,
-        "elapsed_line_must_start_at_x": 0.176644,
-        "elapsed_start_seconds": 2.119725,
-        "first_active_segment_elapsed_seconds": 2.119725,
+        "elapsed_end_seconds": 105.581813,
+        "elapsed_line_end_x": 8.798484,
+        "elapsed_line_must_start_at_x": 0.125783,
+        "elapsed_start_seconds": 1.509391,
+        "first_active_segment_elapsed_seconds": 1.509391,
         "generation": 1,
         "lane_id": "payload-857-receipt",
         "lane_index": 0,
@@ -4416,17 +4221,17 @@
         "source_receipt_path": null,
         "start_kind": "parent_lane_start",
         "start_source": "lane.xStart",
-        "visible_from_elapsed_seconds": 2.119725,
+        "visible_from_elapsed_seconds": 1.509391,
         "x_end": 84,
         "x_start": 7
       },
       {
         "elapsed_axis_source": "timeline_elapsed_axis_model",
-        "elapsed_end_seconds": 99.392622,
-        "elapsed_line_end_x": 8.282718,
-        "elapsed_line_must_start_at_x": 6.965459,
-        "elapsed_start_seconds": 83.585509,
-        "first_active_segment_elapsed_seconds": 96.294338,
+        "elapsed_end_seconds": 132.249017,
+        "elapsed_line_end_x": 11.020751,
+        "elapsed_line_must_start_at_x": 6.428646,
+        "elapsed_start_seconds": 77.143749,
+        "first_active_segment_elapsed_seconds": 104.696383,
         "generation": 2,
         "lane_id": "payload-857-red-1",
         "lane_index": 1,
@@ -4440,7 +4245,7 @@
         "source_receipt_path": "lineage/lineage-spawn-payload-857-receipt-to-payload-857-red-1.json",
         "start_kind": "child_spawn_start",
         "start_source": "lineage.spawns[].child_x_start",
-        "visible_from_elapsed_seconds": 83.585509,
+        "visible_from_elapsed_seconds": 77.143749,
         "x_end": 98,
         "x_start": 62
       }
@@ -4458,7 +4263,7 @@
     "playhead": {
       "animation_semantics": "receipt_replay_only",
       "current_x": 98,
-      "receipt_elapsed_seconds": 76.414883,
+      "receipt_elapsed_seconds": 72.404691,
       "source_receipt_id": "scoreboard"
     },
     "receipt_elapsed_keyframe_count": 12,
@@ -4470,9 +4275,9 @@
     ],
     "round_clock": {
       "allotted_seconds": 1200.0,
-      "elapsed_seconds": 76.414883,
+      "elapsed_seconds": 72.404691,
       "proof_mode": "receipt_backed_fixture",
-      "remaining_seconds": 1123.585117,
+      "remaining_seconds": 1127.595309,
       "source_receipt_id": "scoreboard"
     },
     "round_clock_source": "battle_clock",
@@ -4567,14 +4372,13 @@
     "proof_mode": "receipt_backed_fixture",
     "receipt_backed_values": {
       "blue_blocked_lane_ids": [
-        "payload-857-receipt",
-        "payload-857-red-1"
+        "payload-857-receipt"
       ],
       "child_spawn_count": 1,
       "child_spawn_request_status": "PASS",
       "child_spawn_requested": true,
-      "event_count": 12,
-      "judge_pair_count": 4,
+      "event_count": 10,
+      "judge_pair_count": 2,
       "lane_count": 2,
       "lineage_group_count": 1,
       "playhead_current_x": 98,

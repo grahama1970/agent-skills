@@ -488,7 +488,7 @@ def _validate_source_boundary(
 
 def _compile_status(compile_receipt: dict[str, Any]) -> str:
     value = compile_receipt.get("compile_status")
-    if value == "PASSED":
+    if value in {"PASS", "PASSED"}:
         return "PASSED"
     return "FAILED"
 

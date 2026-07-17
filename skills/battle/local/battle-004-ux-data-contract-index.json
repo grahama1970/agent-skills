@@ -2,11 +2,11 @@
   "artifact_digests": {
     "authoritative_normalized_fixture": {
       "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/battle-004-parent-spawn.normalized.json",
-      "sha256": "d8ad55f75e65a820755c57efbd0f5935d55800cd23b7d11a860b7b3c87ac4670"
+      "sha256": "a33e712dfb67ae4329827291443a8f720f5ef1dd46ffaac0b1ddfe289745efe2"
     },
     "authoritative_renderer_values": {
       "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/battle-004-ux-renderer-values.json",
-      "sha256": "2643a23e9747c7f034db86c50458f47b43d53b3bef774a1e504d5597b805a734"
+      "sha256": "bbcbbe1d80e5041ab09f5a1bf45d2bb2aa7b6c0a8ebdf27106a0305119f67b57"
     },
     "goal_source": {
       "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/GOAL.md",
@@ -14,7 +14,7 @@
     },
     "renderer_bundle": {
       "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/battle-004-renderer-bundle.json",
-      "sha256": "9844a0f1138b7b63e8dcc0fd55b84dfd6f404048952161118e0f42ce4b33852d"
+      "sha256": "c035e6d5068254d5caaf4546ca13f03c83b002dca031be8367220cbc6ad4c58e"
     },
     "renderer_fixture_resolution": {
       "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/battle-004-renderer-fixture-resolution.json",
@@ -55,8 +55,7 @@
   "receipt_backed_values": {
     "activity_segment_count_for_timing": 12,
     "blue_blocked_lane_ids": [
-      "payload-857-receipt",
-      "payload-857-red-1"
+      "payload-857-receipt"
     ],
     "child_lane_ids": [
       "payload-857-red-1"
@@ -65,14 +64,14 @@
     "child_spawn_request_status": "PASS",
     "child_spawn_requested": true,
     "complete_elapsed_activity_segment_count": 12,
-    "elapsed_axis_current_elapsed_seconds": 99.392622,
-    "elapsed_axis_current_x": 8.282718,
+    "elapsed_axis_current_elapsed_seconds": 132.249017,
+    "elapsed_axis_current_x": 11.020751,
     "elapsed_axis_keyframe_count": 12,
     "elapsed_axis_keyframes_are_monotonic": true,
     "elapsed_axis_x_axis_mode": "elapsed_seconds",
     "elapsed_axis_x_position_is_elapsed_time": true,
-    "event_count": 12,
-    "judge_pair_count": 4,
+    "event_count": 10,
+    "judge_pair_count": 2,
     "lane_activity_segment_count": 12,
     "lane_count": 2,
     "lane_event_count_for_timing": 12,
@@ -88,8 +87,8 @@
     "playhead_elapsed_monotonic_by_x": false,
     "proof_blocker_count": 0,
     "round_allotted_seconds": 1200.0,
-    "round_elapsed_seconds": 76.414883,
-    "round_remaining_seconds": 1123.585117,
+    "round_elapsed_seconds": 72.404691,
+    "round_remaining_seconds": 1127.595309,
     "spawn_receipt_ids": [
       "lineage-spawn-payload-857-receipt-to-payload-857-red-1"
     ],
@@ -176,8 +175,8 @@
   "timing_contract": {
     "activity_segment_count_for_timing": 12,
     "complete_elapsed_activity_segment_count": 12,
-    "elapsed_axis_current_elapsed_seconds": 99.392622,
-    "elapsed_axis_current_x": 8.282718,
+    "elapsed_axis_current_elapsed_seconds": 132.249017,
+    "elapsed_axis_current_x": 11.020751,
     "elapsed_axis_keyframe_count": 12,
     "elapsed_axis_keyframes_are_monotonic": true,
     "elapsed_axis_mode": "receipt_elapsed_axis",

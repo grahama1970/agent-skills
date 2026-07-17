@@ -26,15 +26,15 @@
     },
     "battle_clock": {
       "allotted_seconds": 1200.0,
-      "current_seconds": 76.414883,
-      "elapsed_seconds": 76.414883,
+      "current_seconds": 72.404691,
+      "elapsed_seconds": 72.404691,
       "ended_at": null,
       "mode": "receipt_elapsed",
       "proof_mode": "receipt_backed_fixture",
-      "remaining_seconds": 1123.585117,
+      "remaining_seconds": 1127.595309,
       "schema": "battle.clock.legacy_receipt_elapsed.v1",
       "source_receipt_id": "scoreboard",
-      "started_at": "2026-07-07T22:06:06Z"
+      "started_at": "2026-07-17T11:53:00Z"
     },
     "collapsible_lineage_groups": {
       "group_count": 1,
@@ -92,12 +92,12 @@
       "state": "receipt_only"
     },
     "scoreboard": {
-      "blue_success_count": 4,
+      "blue_success_count": 2,
       "child_spawn_count": 1,
-      "judged_pair_count": 4,
+      "judged_pair_count": 2,
       "verdict": "BLUE_SUCCESS"
     },
-    "source_proof_dir": "/tmp/battle-004-parent-spawn-fresh-20260707T220426Z",
+    "source_proof_dir": "/tmp/battle-004-parent-spawn-adaptive-lineage",
     "status": "PASS",
     "timeline": {
       "child_lane_timing": {
@@ -135,13 +135,13 @@
         "invariant": "Child lane events and activity segments must not occur before child lane xStart.",
         "xStart": 62
       },
-      "event_count": 12,
+      "event_count": 10,
       "lane_count": 2,
       "mode": "receipt_order",
       "playhead": {
         "animation_semantics": "receipt_replay_only",
         "current_x": 98,
-        "elapsed_seconds": 76.414883,
+        "elapsed_seconds": 72.404691,
         "keyframe_count": 12,
         "keyframe_x_values": [
           14,
