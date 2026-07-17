@@ -54,6 +54,18 @@ agent evidence acceptance: blocked
 not proven: human subjective voice quality, acceptable lip synchronization, or stable Embry identity
 ```
 
+Contact-sheet qualification update:
+
+```text
+replacement Embry contact sheet: PASS_CONTACT_SHEET_IDENTITY_QUALIFIED
+creator: GPT Image 2 through Tau/Scillm, live, no fallback
+reviewer: GPT-5.5 pixel review, 9/9 cells accepted, zero blockers
+image sha256: 3ce40b3b6839ebba0f468d75a1adbb7f82e0d95457aefd3627e222eb569de00c
+Memory exact retrieval: embry_contact_sheet_v3, confidence 1.0, semantic_sync_state synced
+current critical path: regenerate and review storyboard frames from the qualified identity source, then obtain a newly authorized Kling return and run visible-speaker lip sync
+not proven: repaired storyboard continuity, repaired Kling identity, or accepted lip synchronization
+```
+
 No agent may claim final, green, complete, fixed, or verified for this goal
 unless those concrete artifacts exist and are cited.
 

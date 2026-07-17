@@ -1,0 +1,68 @@
+{
+  "schema": "persona_dream.contact_sheet_identity_qualification.v1",
+  "status": "PASS_CONTACT_SHEET_IDENTITY_QUALIFIED",
+  "run_id": "pipeline-complete",
+  "revision_id": "rev_upstream_bf3b05d47fb8",
+  "asset_id": "embry_contact_sheet_v3",
+  "image": {
+    "path": "/mnt/storage12tb/media/personas/embry/assets/contact_sheets/embry-gpt-image-2-v3/images/embry_contact_sheet_v3.png",
+    "sha256": "sha256:3ce40b3b6839ebba0f468d75a1adbb7f82e0d95457aefd3627e222eb569de00c",
+    "width": 1254,
+    "height": 1254,
+    "cell_count": 9
+  },
+  "creator": {
+    "provider": "scillm",
+    "auth": "codex-oauth",
+    "model": "gpt-image-2",
+    "fallback_allowed": false,
+    "receipt": "/mnt/storage12tb/media/personas/embry/assets/contact_sheets/embry-gpt-image-2-v3/receipts/generation_receipt.json"
+  },
+  "reviewer": {
+    "model": "gpt-5.5",
+    "status": "PASS",
+    "review_prompt_sha256": "sha256:835569a0a7cdf10f04ab0c9afe259aa1e23259af151c814b2ced7077b5aa634a",
+    "blocking_findings": [],
+    "passed_cell_count": 9,
+    "receipt": "/mnt/storage12tb/media/personas/embry/assets/contact_sheets/embry-gpt-image-2-v3/receipts/visual_review_receipt.json"
+  },
+  "tau": {
+    "goal_hash": "sha256:24a16a87e4cff21551a6f33435954819e2e8244613e9f3c7ea75dde0571e92c7",
+    "creator_steps_completed": 1,
+    "reviewer_steps_completed": 1,
+    "terminal_agent": "panel-reviewer",
+    "outer_status": "BLOCKED_MAX_STEPS_EXHAUSTED_AFTER_REQUESTED_REVIEW_BOUNDARY",
+    "receipt": "/mnt/storage12tb/media/personas/embry/assets/contact_sheets/embry-gpt-image-2-v3/receipts/tau_command_loop_receipt.json"
+  },
+  "memory": {
+    "collection": "persona_dream_visual_assets",
+    "record_key": "b11474f2fd5b54f332223a253fd743d1",
+    "exact_query": "embry_contact_sheet_v3",
+    "found": true,
+    "confidence": 1.0,
+    "semantic_sync_state": "synced"
+  },
+  "qdrant": {
+    "collection": "persona_dream_visual_assets_v1",
+    "upserted": 1,
+    "operation_id": 10,
+    "status": "completed"
+  },
+  "mocked": false,
+  "live": true,
+  "provider_live": true,
+  "kling_calls": 0,
+  "claims": {
+    "proves": [
+      "GPT Image 2 generated the hash-locked nine-cell Embry contact sheet.",
+      "A live independent VLM inspected the actual pixels and accepted all nine cells as one stable identity.",
+      "The accepted asset was persisted to Memory and Qdrant and exactly retrieved."
+    ],
+    "does_not_prove": [
+      "The old Kling return has stable Embry identity.",
+      "Storyboard frames have been regenerated from this replacement reference.",
+      "Visible Kai dialogue is lip-synced.",
+      "The immutable final-video goal is complete."
+    ]
+  }
+}

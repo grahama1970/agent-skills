@@ -1,6 +1,6 @@
 {
   "actual_provider_call_attempts": 0,
-  "artifact_count": 340,
+  "artifact_count": 422,
   "artifacts": {
     "contact_sheet_gate_receipt": {
       "consumer_contract": null,
@@ -103,7 +103,7 @@
         "optional_evidence"
       ],
       "schema": null,
-      "sha256": "sha256:04c1376c71e7f6154cccb607879de176d9df51394637ad7899cb3f87143391e1",
+      "sha256": "sha256:6bfbdb7bb191e94c00861c76efef0edc109598e786622ba032e70a77257af71e",
       "size_bytes": 3632
     },
     "media_lock": {
@@ -196,6 +196,19 @@
       "schema": null,
       "sha256": "sha256:c90cf96eb0b7eea44cea8ecb7bafa93ce5dd68358e1d6a390c1874bfc0d7dc44",
       "size_bytes": 1112
+    },
+    "phase01.phase.01.idea.idea.lineage.repair.receipt.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "01",
+      "relative_path": "phase_01_idea/idea_lineage_repair_receipt.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:2db0fc7172cacafb02ecda503df46f926460838b34fe6a6dde33a6d12153aba9",
+      "size_bytes": 855
     },
     "phase02.phase.02.story.idea.lineage.binding.json": {
       "consumer_contract": null,
@@ -779,7 +792,7 @@
         "optional_evidence"
       ],
       "schema": null,
-      "sha256": "sha256:1793c24b5df3e69b85deebc4425a81aa2eacdd988561029c076cc017172febc8",
+      "sha256": "sha256:94409419cf3710fb6560949c631674adc56b88619ceb17fa26aeed9dd3c7064d",
       "size_bytes": 1131
     },
     "phase06.phase.06.script.phase.06.script.install.receipt.json": {
@@ -883,7 +896,7 @@
         "optional_evidence"
       ],
       "schema": null,
-      "sha256": "sha256:3590b98a0f2577541fad8936f7ed7a8eea95266e62cd8b3306c71e5db80d4de7",
+      "sha256": "sha256:5834e4fbb88a29d541b9af3e87cdfe5dd57b9c29025c1e65d3fe3b3909786672",
       "size_bytes": 1133
     },
     "phase07.phase.07.storyboard.live.tau.panel.001.live.scillm.png": {
@@ -3912,7 +3925,7 @@
         "optional_evidence"
       ],
       "schema": null,
-      "sha256": "sha256:e7bdb8b61dcafb872ece93a94cd613e753662c180ce123d4dc1decf0a72e5524",
+      "sha256": "sha256:1c8ec12f494c8a682088f87fa186ae2ca156f8831b8f438dfe1540fe81dcfd11",
       "size_bytes": 958
     },
     "phase09.phase.09.video.provider.idea.lineage.binding.json": {
@@ -3925,7 +3938,7 @@
         "optional_evidence"
       ],
       "schema": null,
-      "sha256": "sha256:c0dee9685ae749152050a8f1ec18fbe2262bafbc43511d6a80e98f4452df4e2a",
+      "sha256": "sha256:ad83e6a96fedb1f5974b79780bfb3e3ff45e2e6b9324664acec71c155bf10801",
       "size_bytes": 1140
     },
     "phase09.phase.09.video.provider.kling.scene.packet.json": {
@@ -4042,7 +4055,7 @@
         "optional_evidence"
       ],
       "schema": null,
-      "sha256": "sha256:043f993bf378078845024280c88beca81700fdee847a97682166ab1f70dcf6cc",
+      "sha256": "sha256:cac55ac5514d09bd131f5a135648ac3c23336111e49311c6e4ea3fd1237e2374",
       "size_bytes": 1215
     },
     "phase10.phase.10.provider.contract.manifest.json": {
@@ -4162,6 +4175,1020 @@
       "sha256": "sha256:af9aa54c1a3fbf9b558c81e3db7dd3fbc43e8c70a3f7b6c37faaec8c0ff6cc4c",
       "size_bytes": 4247
     },
+    "phase11.phase.11.submit.return.attempts.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.attempt.ledger.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/attempts/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/attempt_ledger.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:d3af470f4f3a6c4e99dc879cea706101c94433467bfd2ab6f97b99027455351b",
+      "size_bytes": 9849
+    },
+    "phase11.phase.11.submit.return.canonical.phase11.approval.requirements.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/canonical/phase11_approval_requirements.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:d1c8711cd3d3795c4540e33e691b5bf200c51363d02acfa443e40cbfcfeb73c1",
+      "size_bytes": 2934
+    },
+    "phase11.phase.11.submit.return.canonical.phase11.live.request.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/canonical/phase11_live_request.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:1941fa0e1d2c756358b1b3f1d4716f16fe59250f2a3387a98a520d63183517ad",
+      "size_bytes": 10227
+    },
+    "phase11.phase.11.submit.return.canonical.phase11.media.binding.manifest.v2.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/canonical/phase11_media_binding_manifest.v2.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:35b87e5290e4dfc92928500afe1ac11812cea9534a8403baf5e03d9f230bb473",
+      "size_bytes": 21907
+    },
+    "phase11.phase.11.submit.return.canonical.phase11.validation.receipt.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/canonical/phase11_validation_receipt.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:e7370b510a8a4dad6dfedb5d98398d8c81d81cd77ba028366e98cea65ca597d4",
+      "size_bytes": 7347
+    },
+    "phase11.phase.11.submit.return.preflight.approvals.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.cost.acceptance.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/approvals/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/cost_acceptance_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:20f3e1bb92d2de3e1a6e4b7d0ecd007df347487d5ab8e59117809b7768d364f9",
+      "size_bytes": 1915
+    },
+    "phase11.phase.11.submit.return.preflight.approvals.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.exact.request.acceptance.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/approvals/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/exact_request_acceptance_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:bc9f1d858009eb2454749fa24c4aa7f79bee5b4f8698c110ea31bbcf25f99ca9",
+      "size_bytes": 1924
+    },
+    "phase11.phase.11.submit.return.preflight.approvals.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.paid.call.authorization.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/approvals/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/paid_call_authorization_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:4a110a4796b8f021b8f8b3ab1ed11f4f3e11d0f3b9d7f62456384a9cacc7af4b",
+      "size_bytes": 1923
+    },
+    "phase11.phase.11.submit.return.preflight.approvals.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.publication.authorization.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/approvals/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/publication_authorization_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:f12c09afecc14e7785b8adc2202224a57390268baca5f2a7d2fb5fe98b3d9619",
+      "size_bytes": 1923
+    },
+    "phase11.phase.11.submit.return.preflight.approvals.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.visual.media.acceptance.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/approvals/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/visual_media_acceptance_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:beedd79875fbe7b4c7a835072de7d0b479bd9e5144924751665a6f57bea03c66",
+      "size_bytes": 1923
+    },
+    "phase11.phase.11.submit.return.preflight.phase11.adapter.preflight.receipt.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/phase11_adapter_preflight_receipt.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:f4b99848a4e001242e972c26e6d59a44f56529644cdf072246cd583cf71499e4",
+      "size_bytes": 5118
+    },
+    "phase11.phase.11.submit.return.preflight.phase11.authorization.packet.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/phase11_authorization_packet.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:4dcdfa9f689ad3ab082a82fd896fa8c295f9474e423a7d25f09962c017464590",
+      "size_bytes": 2012
+    },
+    "phase11.phase.11.submit.return.preflight.phase11.authorization.packet.v1.pending.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/phase11_authorization_packet.v1.pending.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:d38f30c4abb339fac78a1a89cf55ef5e02d0485c7f84f5931775a99f303310c4",
+      "size_bytes": 3528
+    },
+    "phase11.phase.11.submit.return.preflight.phase11.payload.binding.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/phase11_payload_binding.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:ae0f8b187892fb556dad11b49a01b886946d0a93431775a93d67711fbb941547",
+      "size_bytes": 16122
+    },
+    "phase11.phase.11.submit.return.preflight.provider.media.evidence.phase07.phase.07.storyboard.live.tau.references.01.embry.character.sheet.jpg.existing.publication.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.01.embry.character.sheet.jpg/existing_publication_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:35ab377de062cdfa9a73cd298dd2409460127910687d2a5b2167ffa9e8a74bc2",
+      "size_bytes": 839
+    },
+    "phase11.phase.11.submit.return.preflight.provider.media.evidence.phase07.phase.07.storyboard.live.tau.references.01.embry.character.sheet.jpg.public.probe.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.01.embry.character.sheet.jpg/public_probe_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:095e7397dc15a4bb68e9d364761f18bf904b6be951a73056809283226cbfcd78",
+      "size_bytes": 1049
+    },
+    "phase11.phase.11.submit.return.preflight.provider.media.evidence.phase07.phase.07.storyboard.live.tau.references.01.embry.character.sheet.jpg.teardown.policy.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.01.embry.character.sheet.jpg/teardown_policy_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:019454d062badb0e128573415b54347f726240da19d91515dd551140b1ad5a28",
+      "size_bytes": 713
+    },
+    "phase11.phase.11.submit.return.preflight.provider.media.evidence.phase07.phase.07.storyboard.live.tau.references.02.kai.character.sheet.png.existing.publication.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.02.kai.character.sheet.png/existing_publication_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:2832544696f0ef3206d53164ff238042be84cf25a9755c95b6fcd47820c0d00f",
+      "size_bytes": 835
+    },
+    "phase11.phase.11.submit.return.preflight.provider.media.evidence.phase07.phase.07.storyboard.live.tau.references.02.kai.character.sheet.png.public.probe.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.02.kai.character.sheet.png/public_probe_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:7959c543d10737722e48c5950dc835a8f3f5ca66544ac53eb34415edba033814",
+      "size_bytes": 1043
+    },
+    "phase11.phase.11.submit.return.preflight.provider.media.evidence.phase07.phase.07.storyboard.live.tau.references.02.kai.character.sheet.png.teardown.policy.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.02.kai.character.sheet.png/teardown_policy_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:4eda44c2203ae811d3532655c6de213ae495597831d0f73c36366a8b85ab2654",
+      "size_bytes": 709
+    },
+    "phase11.phase.11.submit.return.preflight.provider.media.evidence.sb.001.start.frame.existing.publication.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/provider_media_evidence/sb_001.start_frame/existing_publication_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:972f8a2c57d1a5f42f4780b8203de43e02a4141280341641dc62ef99f574090c",
+      "size_bytes": 792
+    },
+    "phase11.phase.11.submit.return.preflight.provider.media.evidence.sb.001.start.frame.public.probe.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/provider_media_evidence/sb_001.start_frame/public_probe_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:a70d62fcf42629e967993f86ed62a6248031c0248c5e0c01f3ed41883acc09fa",
+      "size_bytes": 1013
+    },
+    "phase11.phase.11.submit.return.preflight.provider.media.evidence.sb.001.start.frame.teardown.policy.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/provider_media_evidence/sb_001.start_frame/teardown_policy_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:f2871bc1aee7d04369289f4af574bc97f5d232291a574867d2a0d244cbbee858",
+      "size_bytes": 666
+    },
+    "phase11.phase.11.submit.return.preflight.provider.media.evidence.sb.002.start.frame.existing.publication.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/provider_media_evidence/sb_002.start_frame/existing_publication_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:4190ccbf1514c1bf2649a0b585fe3019bb689b325298f6487bad3fb53b666803",
+      "size_bytes": 792
+    },
+    "phase11.phase.11.submit.return.preflight.provider.media.evidence.sb.002.start.frame.public.probe.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/provider_media_evidence/sb_002.start_frame/public_probe_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:f7cedf68ad129430dfe275f225d8af91bdec7e7fb81022bf3a00b9bf28a65130",
+      "size_bytes": 1013
+    },
+    "phase11.phase.11.submit.return.preflight.provider.media.evidence.sb.002.start.frame.teardown.policy.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/provider_media_evidence/sb_002.start_frame/teardown_policy_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:22920696c2c677bbbfab8d9d7431186a9a2da1f66a41f0571fcb7858dea4615c",
+      "size_bytes": 666
+    },
+    "phase11.phase.11.submit.return.preflight.provider.media.evidence.sb.003.start.frame.existing.publication.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/provider_media_evidence/sb_003.start_frame/existing_publication_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:9b7314c9504e2803386201b77ec10cfc556c49fb72836be1f69ed01e3145c51c",
+      "size_bytes": 792
+    },
+    "phase11.phase.11.submit.return.preflight.provider.media.evidence.sb.003.start.frame.public.probe.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/provider_media_evidence/sb_003.start_frame/public_probe_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:97aa91090f9d70b2ce6dfab86f824ef3e1e2467a123ebaf590f64caf4453c493",
+      "size_bytes": 1013
+    },
+    "phase11.phase.11.submit.return.preflight.provider.media.evidence.sb.003.start.frame.teardown.policy.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/provider_media_evidence/sb_003.start_frame/teardown_policy_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:6a7c26a7c04615798808ec67905dc8a896df7112ba5c1047a61d1009f4727096",
+      "size_bytes": 666
+    },
+    "phase11.phase.11.submit.return.preflight.provider.media.evidence.sb.004.start.frame.existing.publication.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/provider_media_evidence/sb_004.start_frame/existing_publication_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:b98f70b4ae06ac15678abae72729e0662732b2099e1da780b3cb3908a95cebcd",
+      "size_bytes": 792
+    },
+    "phase11.phase.11.submit.return.preflight.provider.media.evidence.sb.004.start.frame.public.probe.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/provider_media_evidence/sb_004.start_frame/public_probe_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:6b3afa3ad3946e1243d94274a6dbf46ed1ce6b605e0adcca239f9cad56755ddb",
+      "size_bytes": 1013
+    },
+    "phase11.phase.11.submit.return.preflight.provider.media.evidence.sb.004.start.frame.teardown.policy.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/provider_media_evidence/sb_004.start_frame/teardown_policy_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:001f34d6d060059f8180a88abcdb57adaf939ecb55cc617dcf429e2daf134d2a",
+      "size_bytes": 666
+    },
+    "phase11.phase.11.submit.return.preflight.provider.media.transition.manifest.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/provider_media_transition_manifest.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:c4e1bc4add3a2f0366c532ade43125f0c9afadd95bf56fdab68e96321ae8b9b5",
+      "size_bytes": 10703
+    },
+    "phase11.phase.11.submit.return.preflight.provider.pricing.response.body": {
+      "consumer_contract": null,
+      "kind": "other",
+      "media_type": "application/octet-stream",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/provider_pricing_response.body",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:680bdc68cf04a129aa25d8e8d3225d60ef47b6ae717bd562bfaf28f142431425",
+      "size_bytes": 889547
+    },
+    "phase11.phase.11.submit.return.preflight.provider.schema.response.body": {
+      "consumer_contract": null,
+      "kind": "other",
+      "media_type": "application/octet-stream",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/provider_schema_response.body",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:f09f70855129e8039d1223804131e384b63a6c3054445fe71addbe985102506d",
+      "size_bytes": 1037784
+    },
+    "phase11.phase.11.submit.return.preflight.provider.source.snapshot.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/provider_source_snapshot.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:d1025615a534f5129457ca3190fa351b7d2cb540c85791e5e907206e63168f1a",
+      "size_bytes": 4261
+    },
+    "phase11.phase.11.submit.return.preflight.upstream.validation.migration.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/upstream_validation_migration_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:0be7cfd76fc54e6c21ca8c78cb2dc17c9fd55e394ed5ed56851f7d3c82e7ccfc",
+      "size_bytes": 1280
+    },
+    "phase11.phase.11.submit.return.preflight.voice.handoff.memory.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/voice_handoff_memory_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:03da319a36cfe599999dcd31b2dff0d3288ff433ce0a3457c5c969ebda13bd85",
+      "size_bytes": 1271
+    },
+    "phase11.phase.11.submit.return.preflight.voice.handoff.plan.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/voice_handoff_plan.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:ff12ba0f65e93e4deb16e208f60a130d71135d23f5ef3fa290f8f9dad4330f42",
+      "size_bytes": 4546
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.audible.output.review.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/audible_output_review_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:e1b0d46ddcfc36ac167d53196ed21b4efe356efc123745365ca3c1c2810cd971",
+      "size_bytes": 789
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.audio.mix.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/audio_mix_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:abc17449507c6aafb13f24844df7612fa1d6520b3e38870008ea8f0bc5159af4",
+      "size_bytes": 3650
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.audio.mix.wav": {
+      "consumer_contract": null,
+      "kind": "audio",
+      "media_type": "audio/x-wav",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/audio_mix.wav",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:33edae9a7569196f996014fc414d7079be36c13667bbaa7f72077d96b9a9bc74",
+      "size_bytes": 1928082
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.dialogue.forced.alignment.receipt.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/dialogue_forced_alignment_receipt.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:0386a2fea12db046fd522a5b335000e7929d82e414f5419f795dad2943546ed2",
+      "size_bytes": 2978
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.dialogue.sync.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/dialogue_sync_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:96af4b1c94fb9a63723a0c1691ac381cab4c53bd23a481b06eadb1fb2a96afdd",
+      "size_bytes": 1082
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.ffmpeg.mux.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/ffmpeg_mux_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:1f7a199c5322a16b9c519cfe2bd8dbcc2ef6bc0f736c4812d3b97f6507f2d1ff",
+      "size_bytes": 1700
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.frame.contact.sheet.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/frame_contact_sheet.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:9a97c5093d055f50a7b43eee9ad2ae48287f2416c2551e0becfe1442b70540a6",
+      "size_bytes": 3512481
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.frame.contact.sheet.receipt.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/frame_contact_sheet_receipt.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:23b1693756e94e616644175f84c09fe3debe67ba79ccf720f7c8247e981907c9",
+      "size_bytes": 5267
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.identity.temporal.continuity.review.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/identity_temporal_continuity_review.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:64ce5fa31d9f7dc53d8890156deca1a31172e631b24e632e423dba096a4e5f74",
+      "size_bytes": 2383
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.muxed.provider.return.ffprobe.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/muxed_provider_return_ffprobe_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:5013a83c74a23aa9a78664382fb31bd665d5f6f214105a55ceff98d2869a9e11",
+      "size_bytes": 4258
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.muxed.provider.return.mp4": {
+      "consumer_contract": null,
+      "kind": "video",
+      "media_type": "video/mp4",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/muxed_provider_return.mp4",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:991c311f365f84832b274aad7b8ff757372914f7c516e595a31b1bd05edf4c59",
+      "size_bytes": 17204936
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.phase11.download.ffprobe.receipt.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/phase11_download_ffprobe_receipt.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:5c016a0bcd51a57adf8100d5d07b2bf73c26bd8af0238026c3f8124f8d77a569",
+      "size_bytes": 1165
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.phase11.provider.return.envelope.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/phase11_provider_return_envelope.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:e55d189cc6619774b870313f0905ee3dbf96b31d13d3eda38919c6af54f7fc24",
+      "size_bytes": 1310
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.post.kling.continuity.review.receipt.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/post_kling_continuity_review_receipt.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:fbb4d69a2521308380f4589da55b9077f3c796ec59afe1fa5d1d65183f359fe3",
+      "size_bytes": 3325
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.post.kling.continuity.review.receipt.v2.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/post_kling_continuity_review_receipt.v2.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:dc3813b4d1cae0ee636bca88b34612478814061f6bffead71ac7f99b7ef44ce5",
+      "size_bytes": 2046
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.provider.return.mp4": {
+      "consumer_contract": null,
+      "kind": "video",
+      "media_type": "video/mp4",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/provider_return.mp4",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:08ee232878508fda8797fd697f6ef80d40b3cf7722f43914040759dfd6c7bb50",
+      "size_bytes": 16957429
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.visible.speaker.lipsync.review.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/visible_speaker_lipsync_review.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:912b468623c786962dcea5d254e03e768f74786234766c5c6ea28764ece52e30",
+      "size_bytes": 2153
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.voice.delivery.review.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/voice_delivery_review_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:a495f63ffde1cb9a1c77681e5c07c6841e4e5527be1dff30e8b8f8ad64dae4c4",
+      "size_bytes": 1644
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.watch.codex.vision.frames.frame.0001.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/watch-codex-vision/frames/frame_0001.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:0fcc3fab702a528d662b756d8f575122323a34b2a774576e48b61b240ff56e15",
+      "size_bytes": 67481
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.watch.codex.vision.frames.frame.0002.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/watch-codex-vision/frames/frame_0002.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:e983486615c5aa26e3efc853a42ba8329e57e9f53c18e69aa2860ff9b4d94427",
+      "size_bytes": 60328
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.watch.codex.vision.frames.frame.0003.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/watch-codex-vision/frames/frame_0003.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:2784c823cdfee7428ff6de6a4cb1d59d192e6397116699c5b2aece1da03e2e46",
+      "size_bytes": 59349
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.watch.codex.vision.frames.frame.0004.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/watch-codex-vision/frames/frame_0004.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:467fdc51c02874bf280b221c2001e360c967538ac1d68af9c673bb39e03f7148",
+      "size_bytes": 56768
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.watch.codex.vision.frames.frame.0005.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/watch-codex-vision/frames/frame_0005.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:78b3d1f4c8d625a9d2a7fe19592d3da0227240c09f6bf46799e3d9577f5bec7f",
+      "size_bytes": 57442
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.watch.codex.vision.frames.frame.0006.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/watch-codex-vision/frames/frame_0006.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:dc4fd84e55a1d2b96cb553fccf1809ec7ca8745ad74767dfa9e2ec7e4c76af30",
+      "size_bytes": 57796
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.watch.codex.vision.frames.frame.0007.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/watch-codex-vision/frames/frame_0007.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:ad244689210b9fc4f6ed45093427e73b41b75af923ac524c0a6c70e1cd96d4c7",
+      "size_bytes": 54273
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.watch.codex.vision.frames.frame.0008.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/watch-codex-vision/frames/frame_0008.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:f29b7b63df36b5bcb3441c2cc987dd77361204016c52d0fadce2c06def65e00a",
+      "size_bytes": 56076
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.watch.codex.vision.frames.frame.0009.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/watch-codex-vision/frames/frame_0009.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:94d5ca349153b8a78f592160551653217ec6ffd39dc3ab7f079437ffb13c8320",
+      "size_bytes": 49078
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.watch.codex.vision.frames.frame.0010.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/watch-codex-vision/frames/frame_0010.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:a32feb7987211833dc140fba6668b5af5ee0fe8e7e6471a046696322be4a06c7",
+      "size_bytes": 48871
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.watch.codex.vision.frames.frame.0011.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/watch-codex-vision/frames/frame_0011.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:ccbc61557e46b75dda7e219c48686f64dd6357bbbcb71117881c05ae1d5c6297",
+      "size_bytes": 45663
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.watch.codex.vision.frames.frame.0012.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/watch-codex-vision/frames/frame_0012.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:56216bcde34e172a93da283adda0ba9389f4db28b28608ad29e6d8fe0a23b43e",
+      "size_bytes": 35773
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.watch.codex.vision.frames.manifest.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/watch-codex-vision/frames_manifest.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:137c9a2d67cf0ea9b98908e303913474b6f2f77b08837ee3f744091967d21f01",
+      "size_bytes": 6158
+    },
+    "phase11.phase.11.submit.return.provider.return.ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f.whisper.alignment.2026.07.17t17.28.07.345z.kai.ab44cdc76abe.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/whisper_alignment/2026-07-17T17-28-07-345Z-kai-ab44cdc76abe.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:da366bb4981525703526520b9bbd3fee7be81f07a8130eacd5bc364ee71741f8",
+      "size_bytes": 1186
+    },
+    "phase13.phase.13.final.acceptance.final.acceptance.receipt.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "13",
+      "relative_path": "phase_13_final_acceptance/final_acceptance_receipt.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:7dedc6925bc03aa74d55eb948269458cdfc17ee01ae426482fdeeb37890f795d",
+      "size_bytes": 1213
+    },
+    "phase13.phase.13.final.acceptance.final.acceptance.reconciliation.receipt.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "13",
+      "relative_path": "phase_13_final_acceptance/final_acceptance_reconciliation_receipt.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:9d565b37f36249b011b6eb4f04c97bd7489ad7dc0a7afbe5b901ea5b782a4ac1",
+      "size_bytes": 2379
+    },
+    "phase13.phase.13.final.acceptance.final.gate.validation.summary.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "13",
+      "relative_path": "phase_13_final_acceptance/final_gate_validation_summary.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:ba3d1eeade24b08fe308545a60b214410438d3172f13675d64ec43704d4069ac",
+      "size_bytes": 2204
+    },
+    "phase13.phase.13.final.acceptance.final.report.md": {
+      "consumer_contract": null,
+      "kind": "text",
+      "media_type": "text/markdown",
+      "phase_id": "13",
+      "relative_path": "phase_13_final_acceptance/final_report.md",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:3a77726e9449e4f9ed6d469ede6f48ae74bc0f69b98024ebe18503a7897e510a",
+      "size_bytes": 802
+    },
+    "phase13.phase.13.final.acceptance.final.report.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "13",
+      "relative_path": "phase_13_final_acceptance/final_report.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:8baa85adb522ca7b2cfa5122f77100f40e08e9581876fb24e530e4d84c3269d2",
+      "size_bytes": 3037
+    },
+    "phase13.phase.13.final.acceptance.pipeline.step.memory.records.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "13",
+      "relative_path": "phase_13_final_acceptance/pipeline_step_memory_records.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:9a3f3e312a01e83bf695a5a236dfe00ea3a0b50a6c9ad58dff2f33c95fdca49e",
+      "size_bytes": 109761
+    },
+    "phase13.phase.13.final.acceptance.pipeline.step.memory.write.receipt.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "13",
+      "relative_path": "phase_13_final_acceptance/pipeline_step_memory_write_receipt.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:ad43d5b72e23ccd7b89dd2818329c8e3722f85a8cd427319d1a060b9e6c26003",
+      "size_bytes": 5436
+    },
     "provider_final_gate": {
       "consumer_contract": null,
       "kind": "json",
@@ -4214,6 +5241,19 @@
       "sha256": "sha256:da6425e47c172a1275bacf9a1f25e547fd38fd1c92f651888ecd7b969e4397d5",
       "size_bytes": 84713
     },
+    "revision.revision.activation.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "revision_activation_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:12d0b6d2dfd879c83b96a4c10bb99a9ff280610a4f8983007cde35c4df9b5ccb",
+      "size_bytes": 7902
+    },
     "revision.revision.manifest.json": {
       "consumer_contract": null,
       "kind": "json",
@@ -4226,6 +5266,32 @@
       "schema": null,
       "sha256": "sha256:31b1a11b7b6f4b910858833c1c061ca289dda7f71c038bcde413360c7e39bccb",
       "size_bytes": 1553
+    },
+    "revision.revision.memory.prepare.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "revision_memory_prepare_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:6e093bdac8bc518ffc201c1cf7f8f348fa8ce28d3ded01c63651bb28e92b5bdb",
+      "size_bytes": 9095
+    },
+    "revision.revision.memory.verify.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "revision_memory_verify_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:c34e61571bafb06b65648049e1f9ca2d350286fae1a2b8aa3083d9e5d62882e7",
+      "size_bytes": 12586
     },
     "revision.upstream.contract.invalidation.ledger.v1.json": {
       "consumer_contract": null,

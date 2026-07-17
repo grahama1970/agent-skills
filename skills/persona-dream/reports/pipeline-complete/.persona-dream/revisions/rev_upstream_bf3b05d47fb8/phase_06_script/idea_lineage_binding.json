@@ -1,6 +1,6 @@
 {
   "actual_provider_call_attempts": 0,
-  "binding_sha256": "sha256:de42c73eaf98f5048c55ac8960dc890af4ddf35b5739a116a8b76d757ba09963",
+  "binding_sha256": "sha256:b792ac201bfdac186a480536e441be2371b2ae3b4f30447e10d5ecd48fa30f3f",
   "idea_id": "pd_idea_45a9d20d629b4e08863a9618b5f83982",
   "idea_sha256": "sha256:45a9d20d629b4e08863a9618b5f83982a9eb55bbf52cbd1de5deac09015baf9b",
   "live_submit_ready": false,
@@ -9,7 +9,7 @@
   "provider_live": false,
   "provider_ready": false,
   "required_artifact_hashes": {
-    "script_contract": "sha256:645e15b899c8f69826a0c174ea0f72d4c4936cb4592d139c6643df837efe26d5"
+    "script_contract": "sha256:e3f1cddd606beeae564072107e993d2c420f8b6fd851e1d81422d9140c74ccaf"
   },
   "revision_id": "rev_upstream_bf3b05d47fb8",
   "run_id": "pipeline-complete",
