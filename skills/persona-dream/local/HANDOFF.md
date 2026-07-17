@@ -1,168 +1,223 @@
 # Handoff Report: Persona Dream
 
-**Timestamp**: 2026-07-17T14:05:00Z
-**Active Agent**: Cursor (Fable)
-**Operational status**: `BLOCKED_AWAITING_HUMAN_APPROVAL`
+**Timestamp:** 2026-07-17
+**Repository:** `/home/graham/workspace/experiments/agent-skills-main`
+**Skill root:** `skills/persona-dream`
+**Immutable goal status:** `BLOCKED_FINAL_ACCEPTANCE`
+**Active revision:** `rev_upstream_bf3b05d47fb8`
 
-## 1. Immutable Goal
+## 1. Project Overview
 
-Produce a working Kling video from the `persona-dream` pipeline.
+The immutable goal is to produce a working, human-accepted Kling video through
+the 42-step Persona Dream pipeline. Every step must have a durable Memory write
+and exact reread. A voiced run also requires an exact transcript render, forced
+alignment, audible muxed output, and accepted visible-speaker lip sync.
 
-The goal is complete only when steps 31-36 positively prove a real Kling
-submit, poll/callback, returned video, technical validation, contact sheet, and
-post-Kling continuity; step 42 then cites those proofs; and all 42 pipeline step
-states have durable Memory write and exact-reread evidence.
+The current run crossed the paid Kling boundary exactly once and returned a
+technically valid 10-second video. It is not acceptable final output:
 
-Canonical contract: `GOAL.md`. Do not resume Phase 13-16 cognition research,
-UI, DAG harness, dashboard, or other adjacent work.
+- Step 36 fails because Embry changes identity between the opening frames and
+  approximately 3 seconds.
+- Step 38 fails because Kai's visible mouth is not synchronized to the exact
+  post-muxed line.
+- Steps 39, 40, and 42 cannot close while those gates fail.
 
-## 2. What Changed This Session
+The old Embry character montage was subsequently proven internally
+inconsistent. A new GPT Image 2 contact sheet passed a live Tau creator/reviewer
+qualification and was persisted to Memory/Qdrant. That accepted reference does
+not repair storyboard frames or video generated from the rejected montage.
 
-The 2026-07-17 morning handoff's "Next Gate" (new-revision upstream-contract
-reconstruction) and "Later Gates" 1-4 are now complete. The only remaining
-action before a new Kling attempt is Graham's five hash-bound approvals.
+Canonical objective and step contract: `GOAL.md`.
 
-### Next Gate executed (upstream contract reconstruction)
+## 2. Documentation And Code Alignment
 
-- New immutable revision `rev_upstream_bf3b05d47fb8` was created with
-  `sourceRevisionId=rev_idea_f3f9c48d5cc2` by
-  `scripts/reconstruct_upstream_contract_revision.py` in one bounded local
-  transaction (no provider work).
-- The seven missing canonical upstream files now exist and validate:
-  - Step 05: `phase_01_idea/dream_packet.json` (passes
-    `validate_dream_packet.py`, 4 frame prompts bound one-to-one to the
-    storyboard beats, residue items preserved with exact source ids),
-    `phase_01_idea/dream_prompt.txt`.
-  - Step 11: `phase_03_crew/technique_selection.json` (validates against the
-    vendored selector schema), `phase_03_crew/look_lock.json`,
-    `phase_03_crew/shot_bible.json`.
-  - Step 12: `phase_03_crew/script_dna_selection.json` (validates against the
-    vendored Script DNA schema).
-  - Step 15: `phase_07_storyboard_live_tau/panel_continuity_and_repair_ledger.json`
-    (one record per panel; sb_004 carries the commit-action and reef-boundary
-    dynamic-behavior requirements plus the provider-return failure codes).
-  All seven are deterministic reconstructions derived from accepted revision
-  artifacts, with per-file provenance hashes and explicit
-  `does_not_prove: live selector call` claims.
-- Step-41 invalidation ledger
-  (`upstream_contract_invalidation_ledger.v1.json`) marks every downstream
-  step 06-42 stale, superseded, or blocked with named revalidation needs; the
-  gate summary (`upstream_reconstruction_gate_summary.v1.json`) proves no
-  downstream artifact was silently claimed current.
-- Revision Memory prepare (`PASS_MEMORY_REVISION_PREPARED`), verify
-  (`PASS_MEMORY_REVISION_VERIFIED`), pointer update, and activation
-  (`PASS_ACTIVE_CONSISTENT`, 339/339 hash matches, 10/10 idea-lineage
-  bindings) all passed. Activation transaction:
-  `activation-1662abf63c5270c9d7ca17b46ef34c76`.
-- All 42 revision-bound pipeline step records were written and exactly reread
-  (42/42, 42 semantic syncs, 42 Qdrant pointers) in
-  `persona_dream_pipeline_steps`.
+### Aligned
 
-### Later Gates 1-3 executed (revalidation and repaired request)
+- `SKILL.md` and `GOAL.md` require fail-closed contact-sheet, panel,
+  post-provider continuity, audio, and Memory gates.
+- The active run has real submit, poll, download, ffprobe, contact-sheet,
+  continuity, voice, mux, alignment, and Memory artifacts.
+- The current failure state in `GOAL.md` matches the returned media evidence:
+  identity continuity and visible-speaker lip sync are unresolved.
+- Upstream changes invalidate downstream artifacts. Replacing Embry's identity
+  source therefore requires a successor revision and regenerated storyboard
+  frames, provider packet, and provider return.
 
-- Steps 06-20 were hash-revalidated against the new upstream contracts
-  (`scripts/revalidate_downstream_steps.py`): byte-identity to the accepted
-  source set (or semantic identity for the revision-id-rewritten story
-  contract) plus 9/9 cross-artifact consistency checks; Memory records updated
-  to `PASS_REVALIDATED_CURRENT` with exact reread.
-- The SB_004 prompt was repaired in `scripts/phase11_payload_binding.py`
-  (`PANEL_CONCISE_ACTIONS["sb_004"]`): the final beat now demands an
-  unmistakable Embry-only forward commit (paddle, pop up, ride forward through
-  the safe channel) with Kai holding position outside, and a sharply readable
-  lava-reef boundary on both sides of Embry's line. 432 chars, passes all
-  deterministic prompt gates. Wardrobe, boards, identity bindings, media, and
-  the silent-audio contract are unchanged.
-- The full zero-call Phase 11 preflight chain then passed for the new
-  revision: payload binding bootstrap (publication commit
-  `8b12d4c8c5af3fff6f0de2aa1a545b502ca71ed2` on `origin/main`), upstream
-  validation reconciliation, live fal schema/pricing snapshot, live public
-  media probes (6 request assets, `PASS_PROVIDER_MEDIA_TRANSITIONS_TECHNICAL`),
-  canonical compile, and adapter preflight
-  (`PASS_PHASE11_ADAPTER_PREFLIGHT`, zero technical blockers).
-- Repaired request hash (fixed):
-  `sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f`.
-- Its request-scoped attempt ledger is initialized and unused:
-  `state=PREFLIGHT_READY`, `actual_provider_call_attempts=0`,
-  `submit_intent_count=0`.
-- Request-scoped step records 21-30 and 40 were updated in Memory with exact
-  reread (`PASS_EXACT_REREAD_REQUEST_SCOPED_STEPS`).
+### Drift Or Missing Behavior
 
-### Current 42-step state (revision `rev_upstream_bf3b05d47fb8`)
+- `README.md` is stale. It still says there is no live provider return and
+  describes `rev_idea_f3f9c48d5cc2`/pre-submit approval state. Do not use its
+  current proof-boundary table as operational status.
+- The old `local/HANDOFF.md` was stale. It stopped at five approvals before the
+  paid submit and omitted the returned video, audio mux, failed continuity, and
+  replacement contact-sheet work. This file replaces that status.
+- The frozen active revision was changed by later audio/lineage repairs. Running
+  `prepare_revision_qualification.py` against it now fails
+  `BLOCKED_MEMORY_PREPARE_RECEIPT_STALE`; activation qualification reports
+  `BLOCKED_ACTIVATION_REFERENCED_HASH_MISMATCH`. Do not mutate it again.
+- Historical Phase 07-11 artifacts still derive from the rejected Embry montage.
+  Existing PASS labels for those artifacts are not evidence against the newly
+  qualified identity source.
+- Tau's native contact-sheet roles historically checked contract/file presence,
+  not actual pixels. The narrow Tau patch permits a hash-recorded custom visual
+  review prompt, and the replacement sheet was reviewed from pixels. Do not
+  infer that every older contact-sheet receipt received equivalent pixel review.
+- The Tau contact-sheet command-loop receipt ends `BLOCKED` because `max_steps=2`
+  stopped before a panel-specific third node. The terminal GPT-5.5 reviewer
+  artifact is PASS for the intended contact-sheet rung. This is not a full
+  storyboard or video PASS.
 
-- 01-04 PASS (carried); 05, 11, 12, 15 PASS_RECONSTRUCTED.
-- 06-10, 13-14, 16-20 PASS_REVALIDATED_CURRENT.
-- 21-23, 25-28 PASS with new request-scoped evidence; 28 is the compiled
-  zero-call packet.
-- 24, 29, 30, 40 BLOCKED_AWAITING_HUMAN_APPROVAL for the exact repaired hash.
-- 31-36 SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION (the 2026-07-17 MP4 and
-  its receipts stay bound to `rev_idea_f3f9c48d5cc2` and the consumed request).
-- 37-39 stale until a new provider return exists; 41 PASS; 42 BLOCKED.
-- `mocked: no` for all live checks named above; `live: yes` for Memory
-  persistence, public media probes, and provider schema/pricing snapshots; no
-  paid provider call was made this session.
+## 3. What Is Working
 
-## 3. Next Gate: Human Approval Only
+### Live Kling Return
 
-Everything technical is staged. To authorize exactly one paid Kling attempt
-(max spend $0.84, Standard 720p, audio off):
+- Repaired request SHA-256:
+  `ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f`.
+- Provider request ID: `019f70ac-3864-7d81-9e86-5fae6a676e0d`.
+- Exactly one submit and 54 polls; no resubmit.
+- Downloaded source MP4: 16,957,429 bytes.
+- ffprobe: H.264, 1280x720, 24 fps, 10.041667 seconds.
+- Returned-video contact sheet: 12 sampled frames in a 4x3 image.
+- `mocked: no`; `live: yes` for the provider lifecycle and returned media.
 
-1. Review the compiled request:
-   `reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/canonical/phase11_live_request.v1.json`.
-2. Copy the prepared template
-   `.../preflight/phase11_authorization_packet.v1.pending.json` to
-   `.../preflight/phase11_authorization_packet.v1.json`, set
-   `decision: APPROVE`, `decision_source: EXPLICIT_HUMAN`, and fill
-   `approved_at` / `expires_at`.
-3. Write the five approval receipts:
-   `uv run --project skills/persona-dream python skills/persona-dream/scripts/write_phase11_approval_receipts.py --run-root skills/persona-dream/reports/pipeline-complete --revision-id rev_upstream_bf3b05d47fb8 --authorization-packet <packet path> --json`
-4. Execute the exactly-once submit and poll loop:
-   `uv run --project skills/persona-dream python skills/persona-dream/scripts/phase11_fal_canary_adapter.py --execute --run-root skills/persona-dream/reports/pipeline-complete --revision-id rev_upstream_bf3b05d47fb8 --json`
-5. After the return: ffprobe, contact sheet, post-Kling continuity review
-   against the four-beat contract (especially the SB_004 Embry-only commit and
-   readable reef boundary), then step 36/40/42 and Memory updates.
+### Audio Lane
 
-## 4. Stop Conditions (unchanged)
+- The canonical Kai line was rendered and post-muxed with ocean ambience.
+- Local Whisper large-v3-turbo forced alignment finds the exact line from
+  5.00-7.70 seconds.
+- Final muxed MP4 SHA-256:
+  `991c311f365f84832b274aad7b8ff757372914f7c516e595a31b1bd05edf4c59`.
+- Audio stream is present; measured mean is -35.5 dB and max is -16.8 dB.
+- This proves transcript timing and audible output, not acceptable delivery or
+  visible-speaker synchronization.
 
-- Do not submit while any approval for the exact hash is missing.
-- One attempt only; no automatic resubmission; an ambiguous submit requires
-  human reconciliation.
-- Do not claim completion until step 36 passes on a new live provider return
-  and step 42 cites that positive evidence plus 42/42 Memory persistence.
+### Replacement Embry Contact Sheet
 
-## 5. Key Evidence
+- Rejected source montage:
+  `/mnt/storage12tb/media/personas/embry/assets/character_sheet_montage.jpg`.
+- Rejection receipt:
+  `reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_07_storyboard_live_tau/receipts/identity_reference_qualification.v1.json`.
+- Rejection status: `FAIL_IDENTITY_REFERENCE_INCONSISTENT`.
+- Accepted replacement:
+  `/mnt/storage12tb/media/personas/embry/assets/contact_sheets/embry-gpt-image-2-v3/images/embry_contact_sheet_v3.png`.
+- Replacement dimensions: 1254x1254.
+- Replacement SHA-256:
+  `3ce40b3b6839ebba0f468d75a1adbb7f82e0d95457aefd3627e222eb569de00c`.
+- Live creator: GPT Image 2 through Tau/Scillm, no fallback.
+- Live reviewer: GPT-5.5 actual-pixel review, 9/9 cells accepted, zero blockers.
+- Qualification receipt:
+  `reports/embry-contact-sheet-qualification-20260717.json`.
+- Durable generation/review receipts:
+  `/mnt/storage12tb/media/personas/embry/assets/contact_sheets/embry-gpt-image-2-v3/receipts/`.
+- Memory exact lookup `embry_contact_sheet_v3`: found, confidence 1.0,
+  `semantic_sync_state=synced`; record key
+  `b11474f2fd5b54f332223a253fd743d1`.
+- `mocked: no`; `live: yes`; Kling calls for this qualification: zero.
 
-Revision-relative paths under
-`reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8/`:
+### Persistence And Idea Surface
 
-- `upstream_reconstruction_gate_summary.v1.json`
-- `upstream_contract_invalidation_ledger.v1.json`
-- `pipeline_step_records.v1.json`
-- `phase_01_idea/dream_packet.json`, `phase_01_idea/dream_prompt.txt`
-- `phase_03_crew/technique_selection.json`, `phase_03_crew/look_lock.json`,
-  `phase_03_crew/shot_bible.json`, `phase_03_crew/script_dna_selection.json`
-- `phase_07_storyboard_live_tau/panel_continuity_and_repair_ledger.json`
-- `phase_11_submit_return/canonical/phase11_live_request.v1.json`
-- `phase_11_submit_return/preflight/phase11_adapter_preflight_receipt.v1.json`
-- `phase_11_submit_return/preflight/phase11_authorization_packet.v1.pending.json`
-- `phase_11_submit_return/attempts/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/attempt_ledger.v1.json`
+- The current run previously wrote and exactly reread 42/42 pipeline-step
+  records with 42 semantic syncs and 42 Qdrant pointers. Failed steps are stored
+  as failures; that count is persistence proof, not final acceptance.
+- The Phase 06 lineage mismatch that emptied `#dream/idea` was repaired by
+  rebuilding ten phase bindings, the lineage manifest, and artifact index.
+- Idea lineage validates 10/10; artifact index validates 422 artifacts and 16
+  required artifacts.
+- Live API again returns the exact human idea, and fresh CDP screenshot
+  `/tmp/codex-ui-verification/agent-skills-main/persona-dream-idea-and-contact-sheet-final-20260717/20260717T190507Z.png`
+  visibly shows it.
+- Persona Dream server suite: 22 passed, 0 failed.
+- Tau panel-agent suite: 5 passed.
+- Mock-evidence mechanical check: 445 test files, no violations.
 
-Run-root state receipts (outside the frozen revision) under
-`reports/pipeline-complete/.persona-dream/state/`:
+## 4. What Is Broken Or Blocked
 
-- `upstream_contract_reconstruction_receipt_rev_upstream_bf3b05d47fb8.json`
-- `pipeline_step_memory_receipt_rev_upstream_bf3b05d47fb8.json`
-- `downstream_revalidation_receipt_rev_upstream_bf3b05d47fb8.json`
-- `downstream_revalidation_memory_receipt_rev_upstream_bf3b05d47fb8.json`
-- `request_scoped_step_memory_receipt_rev_upstream_bf3b05d47fb8.json`
+1. **Frozen revision cannot be safely refreshed in place.**
+   `prepare_revision_qualification.py` exits 2 with
+   `BLOCKED_MEMORY_PREPARE_RECEIPT_STALE`. A successor immutable revision is
+   required.
+2. **Storyboard identity evidence is stale.** The eight Phase 07 start/end
+   frames were generated from the rejected montage and must be regenerated from
+   `embry_contact_sheet_v3`.
+3. **Post-Kling Embry continuity fails.** Step 36 reports
+   `EMBRY_IDENTITY_DRIFT_00_03`.
+4. **Visible-speaker lip sync fails.** Step 38 reports
+   `FAIL_VISIBLE_SPEAKER_NOT_LIPSYNCED` despite passing forced alignment.
+5. **Final acceptance is blocked.** Steps 39, 40, and 42 need regenerated
+   evidence from an accepted successor run.
+6. **No authorization applies to a successor request.** The consumed approval
+   was bound to the historical request hash. Any new paid submit requires a new
+   compiled hash and explicit hash-bound authorization.
+7. **README operational status is stale.** Update it only after the successor
+   rung is proven; do not use documentation edits to imply pipeline progress.
 
-## 6. Git Safety
+There are zero `TODO`, `FIXME`, or `XXX` markers in Persona Dream Python/TS/TSX
+sources. The blockers are evidence and revision-state failures, not untracked
+TODO comments.
 
-- Task worktree: `/tmp/agent-skills-main-persona-dream-uu5nMV`, branch
-  `persona-dream-phase11-main-20260717070508`, pushed fast-forward to
-  `origin/main`.
-- The main checkout at `/home/graham/workspace/experiments/agent-skills` was
-  not touched; pull `origin/main` there before expecting the 3002 dream UI to
-  reflect the new revision.
-- The frozen source revision `rev_idea_f3f9c48d5cc2` was not modified; its
-  provider return, Watch observation, and final-acceptance evidence remain
-  intact and hash-bound.
+## 5. Exact Next Steps
+
+1. Create a successor immutable revision from
+   `rev_upstream_bf3b05d47fb8`; do not modify the frozen revision.
+2. Bind the successor to the accepted `embry_contact_sheet_v3` SHA-256 and its
+   live qualification/Memory receipts.
+3. Mark stale every Phase 07-11 artifact derived from the rejected montage.
+4. Regenerate all eight Phase 07 storyboard start/end frames with GPT Image 2.
+5. Run Tau creator/reviewer actual-pixel checks on every generated frame for
+   Embry identity, Kai identity, wardrobe/equipment, lighting, reef boundary,
+   dialogue intent, panel action, and inter-frame continuity.
+6. Fail closed if any frame drifts. Persist repair attempts and final frame
+   statuses to Memory and exact-reread them.
+7. Rebuild the successor artifact index, phase bindings, and active-revision
+   qualification. Require Memory verification before proceeding.
+8. **Stop before Kling.** The immediate acceptance rung is: successor revision
+   active/consistent, Memory exact reread succeeds, and 8/8 storyboard frames
+   pass actual-pixel continuity review.
+9. Only after that rung passes, compile a new provider request and obtain a new
+   hash-bound paid authorization.
+10. Submit at most one new Kling job, then poll, download, ffprobe, create a
+    frame sheet, and run post-Kling identity/action continuity review.
+11. Render/mux the exact Kai line and use the authorized lip-sync lane whenever
+    Kai's face is visible. Require both forced alignment and visual lip-sync
+    acceptance.
+12. Regenerate steps 39, 40, and 42; persist and exactly reread all 42 step
+    states. Final acceptance remains blocked until steps 36 and 38 pass.
+
+## 6. Key Files And Recent Changes
+
+### Operational Contracts
+
+- `GOAL.md` - immutable 42-step goal and current evidence boundary.
+- `SKILL.md` - Persona Dream runtime and ownership contract.
+- `PROJECT_KNOWLEDGE.md` - durable lessons and pipeline history.
+- `local/HANDOFF.md` - this operational continuation point.
+
+### Active Run
+
+- `reports/pipeline-complete/.persona-dream/state/active_revision.json`
+- `reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8/revision_artifact_index.json`
+- `reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_07_storyboard_live_tau/receipts/identity_reference_qualification.v1.json`
+- `reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/post_kling_continuity_review_receipt.v2.json`
+- `reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/dialogue_forced_alignment_receipt.v1.json`
+- `reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/visible_speaker_lipsync_review.v1.json`
+
+### Recent Relevant Commits
+
+- Agent Skills `10bc2065a85fdc47a3e5d439b4f45ea52a439dfe`:
+  `Qualify replacement Embry contact sheet`.
+- Agent Skills `c870698c70bfd166af5e594ca3592d0d237f5563`:
+  prior audio-alignment, continuity, and return-surface work.
+- Tau `416edc5a48f0faec049b2952eca60e5c343f0590` on
+  `issue-74-ready-queue-condition-block`: permits a custom hash-recorded visual
+  review prompt in the existing panel reviewer; targeted tests 5/5.
+
+## Resume Command And Stop Condition
+
+Start by inspecting the active pointer, contact-sheet qualification receipt,
+identity-reference failure receipt, and `GOAL.md`. Then create the successor
+revision and regenerate the eight frames. Do not run a paid provider command.
+
+The next handoff may advance only when deterministic receipts show an
+active/consistent successor revision, exact Memory reread, and 8/8 accepted
+actual-pixel storyboard frames. Otherwise report the exact failing frame and
+gate code.
