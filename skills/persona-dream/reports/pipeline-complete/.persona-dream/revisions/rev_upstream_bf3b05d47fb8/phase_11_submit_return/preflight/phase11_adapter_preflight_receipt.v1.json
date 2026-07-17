@@ -55,7 +55,7 @@
     "state": "PREFLIGHT_READY",
     "submit_intent_count": 0
   },
-  "created_at": "2026-07-17T15:12:20.661303+00:00",
+  "created_at": "2026-07-17T15:18:31.824440+00:00",
   "credential": {
     "present": true,
     "runtime_variable": "FAL_KEY",
@@ -68,7 +68,7 @@
     "writable": true
   },
   "endpoint": "fal-ai/kling-video/v3/standard/image-to-video",
-  "expires_at": "2026-07-17T16:12:20.661303+00:00",
+  "expires_at": "2026-07-17T16:18:31.824440+00:00",
   "fal_client": {
     "api_surface": {
       "SyncClient": true,

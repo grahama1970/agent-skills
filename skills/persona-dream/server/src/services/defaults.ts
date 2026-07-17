@@ -19,7 +19,7 @@ export function createDefaultVoiceAuditionPort(options: { outputRoots: readonly 
       agentUrl: env.CHATTERBOX_AGENT_URL ?? 'http://127.0.0.1:8018',
       outputRoot,
       allowedReferenceRoots: allowedRoots,
-      hostOutputRoot: env.CHATTERBOX_HOST_OUT_DIR ?? '/tmp/chatterbox-fork-agent-out',
+      hostOutputRoot: env.CHATTERBOX_HOST_OUT_DIR ?? '/home/graham/workspace/experiments/chatterbox/logs',
       hostReferenceRoot: env.CHATTERBOX_HOST_REF_DIR ?? '/home/graham/workspace/experiments/chatterbox/persona_dream_voice_refs',
       containerReferenceRoot: env.CHATTERBOX_CONTAINER_REF_DIR ?? '/work/persona_dream_voice_refs',
     })

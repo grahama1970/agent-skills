@@ -1,7 +1,7 @@
 {
   "claims": {
     "does_not_prove": [
-      "exact-line TTS rendering, provider return, audio mix, FFmpeg mux, or audible final output"
+      "provider return, audio mix, FFmpeg mux, or audible final output"
     ],
     "proves": [
       "audio pipeline steps 37 and 38 are persisted under exact active run/revision keys and reread with their handoff hash"
@@ -15,7 +15,7 @@
   ],
   "live": true,
   "mocked": false,
-  "observed_at": "2026-07-17T15:10:13.175582+00:00",
+  "observed_at": "2026-07-17T15:18:13.095669+00:00",
   "record_count_before": 42,
   "revision_id": "rev_upstream_bf3b05d47fb8",
   "run_id": "pipeline-complete",
@@ -29,5 +29,5 @@
     37,
     38
   ],
-  "voice_handoff_plan_sha256": "sha256:0b967f9092a514886e341cc1e70ea918df688938e065760bbda43c0538859458"
+  "voice_handoff_plan_sha256": "sha256:600c6188d0a98b5c881aab08ceb96ee16e16982f65459c5c0a0816136fe52cd8"
 }

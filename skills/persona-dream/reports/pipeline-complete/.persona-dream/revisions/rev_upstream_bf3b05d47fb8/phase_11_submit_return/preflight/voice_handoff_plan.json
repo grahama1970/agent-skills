@@ -9,13 +9,13 @@
   ],
   "claims": {
     "does_not_prove": [
-      "the canonical line has been rendered",
       "the active repaired Kling request has been submitted",
       "audio has been mixed or muxed",
       "the final video has audible output"
     ],
     "proves": [
-      "the post-mux strategy is explicit and bound to the active revision, exact transcript, provider request, voice reference, and ambient bed"
+      "the post-mux strategy is explicit and bound to the active revision, exact transcript, provider request, voice reference, and ambient bed",
+      "a live non-mocked Chatterbox render reproduces the canonical transcript line exactly and is bound by WAV and receipt hashes"
     ]
   },
   "delivery_mode": "post_mux",
@@ -35,8 +35,15 @@
   "lines": [
     {
       "end_s": 10.0,
-      "render_status": "PENDING_EXACT_LINE_RENDER",
-      "rendered_audio": null,
+      "render_status": "PASS_EXACT_LINE_RENDER",
+      "rendered_audio": {
+        "duration_seconds": 3.04,
+        "path": "/mnt/storage12tb/skills/persona-dream/outputs/dream-voice-auditions/2026-07-17T15-16-48-135Z-kai-dd83364bef45.wav",
+        "receipt_path": "/mnt/storage12tb/skills/persona-dream/outputs/dream-voice-auditions/2026-07-17T15-16-48-135Z-kai-dd83364bef45.json",
+        "receipt_sha256": "sha256:d8946d8938532fe557f2db8e518e94baa522fa607b551fe5a684676f10be426f",
+        "sha256": "sha256:44a49ccad6fc7779ece80e4dde5ec2f650300e359643afb6b116f5071bf7fa68",
+        "size_bytes": 145998
+      },
       "speaker": "Kai",
       "start_s": 0.0,
       "text": "If we paddle now, we're cutting across the lineup.",
@@ -68,7 +75,7 @@
   "revision_id": "rev_upstream_bf3b05d47fb8",
   "run_id": "pipeline-complete",
   "schema": "persona_dream.voice_handoff_plan.v1",
-  "status": "BLOCKED_AWAITING_EXACT_LINE_RENDER",
+  "status": "PASS_EXACT_LINE_RENDER_READY_FOR_MUX",
   "strategy": "post_mux",
   "timed_transcript": {
     "revision_relative_path": "phase_06_script/timed_transcript.json",
@@ -80,10 +87,10 @@
       "audition_text": "Kai [laugh], wait. If we paddle now, we are cutting across the lineup.",
       "canonical_line_match": false,
       "conditioning_reference": {
-        "path": "/mnt/storage12tb/skills/persona-dream/outputs/dream-voice-auditions/2026-07-03T15-49-53-184Z-kai-12af9cef1db6.wav",
+        "path": "/mnt/storage12tb/skills/persona-dream/outputs/kai-voice-kling-reference-20260703/kai_kling_chatterbox_reference_30s.wav",
         "role": "conditioning_reference_only",
-        "sha256": "sha256:cbbb730699dd9667aefce942fa09a245f75b3a7db8da00efbe6f555d0a1b20e4",
-        "size_bytes": 247758
+        "sha256": "sha256:d2773628179a936f16845b879320b91984fb5b9f4f4470f8d600a24fff642d65",
+        "size_bytes": 960078
       },
       "engine": "chatterbox_turbo",
       "reuse_audition_as_final_dialogue": false,

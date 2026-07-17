@@ -43,7 +43,11 @@ def atomic_write_json(path: Path, value: Mapping[str, Any]) -> None:
         Path(temporary_name).unlink(missing_ok=True)
 
 
-def build_plan(revision_root: Path, ambient_wav: Path = KAI_AMBIENT_WAV) -> dict[str, Any]:
+def build_plan(
+    revision_root: Path,
+    ambient_wav: Path = KAI_AMBIENT_WAV,
+    render_receipt_path: Path | None = None,
+) -> dict[str, Any]:
     transcript_path = revision_root / "phase_06_script/timed_transcript.json"
     audition_path = revision_root / "phase_05_voices/kai_voice_audition.json"
     request_path = revision_root / "phase_11_submit_return/canonical/phase11_live_request.v1.json"
@@ -55,22 +59,45 @@ def build_plan(revision_root: Path, ambient_wav: Path = KAI_AMBIENT_WAV) -> dict
     audition = read_json(audition_path)
     request = read_json(request_path)
     request_sha = str((request.get("approval_bindings") or {}).get("request_body_sha256") or "")
-    reference_path = Path(str(audition.get("output_wav") or ""))
+    reference_path = Path(str(audition.get("ref_audio") or ""))
     if not reference_path.is_file():
         raise SystemExit(f"Kai conditioning reference missing: {reference_path}")
+
+    render_receipt = read_json(render_receipt_path) if render_receipt_path else None
+    rendered_audio: dict[str, Any] | None = None
+    if isinstance(render_receipt, Mapping):
+        rendered_path = Path(str(render_receipt.get("output_wav") or ""))
+        if not rendered_path.is_file():
+            raise SystemExit(f"exact-line rendered WAV missing: {rendered_path}")
+        rendered_audio = {
+            "path": str(rendered_path),
+            "sha256": sha256_file(rendered_path),
+            "size_bytes": rendered_path.stat().st_size,
+            "receipt_path": str(render_receipt_path),
+            "receipt_sha256": sha256_file(render_receipt_path),
+            "duration_seconds": (render_receipt.get("chatterbox_receipt") or {}).get("duration_seconds"),
+        }
 
     lines = []
     for entry in transcript:
         if isinstance(entry, Mapping) and entry.get("speaker") and entry.get("text"):
+            canonical_text = str(entry["text"])
+            if isinstance(render_receipt, Mapping):
+                if render_receipt.get("mocked") is not False or render_receipt.get("live") is not True:
+                    raise SystemExit("exact-line receipt is not live non-mocked evidence")
+                if render_receipt.get("character") != str(entry["speaker"]).casefold():
+                    raise SystemExit("exact-line receipt speaker mismatch")
+                if render_receipt.get("answer_text") != canonical_text or render_receipt.get("tts_render_text") != canonical_text:
+                    raise SystemExit("exact-line receipt text does not match timed transcript")
             lines.append(
                 {
                     "speaker": str(entry["speaker"]),
-                    "text": str(entry["text"]),
+                    "text": canonical_text,
                     "start_s": float(entry["start_s"]),
                     "end_s": float(entry["end_s"]),
                     "voice_direction": str(entry.get("voice_direction") or ""),
-                    "render_status": "PENDING_EXACT_LINE_RENDER",
-                    "rendered_audio": None,
+                    "render_status": "PASS_EXACT_LINE_RENDER" if rendered_audio else "PENDING_EXACT_LINE_RENDER",
+                    "rendered_audio": rendered_audio,
                 }
             )
     if not lines:
@@ -80,7 +107,7 @@ def build_plan(revision_root: Path, ambient_wav: Path = KAI_AMBIENT_WAV) -> dict
     exact_match = len(lines) == 1 and audition_text == lines[0]["text"]
     plan = {
         "schema": VOICE_HANDOFF_SCHEMA,
-        "status": "BLOCKED_AWAITING_EXACT_LINE_RENDER",
+        "status": "PASS_EXACT_LINE_RENDER_READY_FOR_MUX" if rendered_audio else "BLOCKED_AWAITING_EXACT_LINE_RENDER",
         "run_id": "pipeline-complete",
         "revision_id": revision_root.name,
         "strategy": "post_mux",
@@ -152,10 +179,11 @@ def build_plan(revision_root: Path, ambient_wav: Path = KAI_AMBIENT_WAV) -> dict
         "live": True,
         "claims": {
             "proves": [
-                "the post-mux strategy is explicit and bound to the active revision, exact transcript, provider request, voice reference, and ambient bed"
+                "the post-mux strategy is explicit and bound to the active revision, exact transcript, provider request, voice reference, and ambient bed",
+                *(["a live non-mocked Chatterbox render reproduces the canonical transcript line exactly and is bound by WAV and receipt hashes"] if rendered_audio else []),
             ],
             "does_not_prove": [
-                "the canonical line has been rendered",
+                *([] if rendered_audio else ["the canonical line has been rendered"]),
                 "the active repaired Kling request has been submitted",
                 "audio has been mixed or muxed",
                 "the final video has audible output",
@@ -169,10 +197,12 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("revision_root", type=Path)
     parser.add_argument("--ambient-wav", type=Path, default=KAI_AMBIENT_WAV)
+    parser.add_argument("--render-receipt", type=Path)
     args = parser.parse_args()
     revision_root = args.revision_root.expanduser().resolve()
     output = revision_root / VOICE_HANDOFF_RELATIVE
-    atomic_write_json(output, build_plan(revision_root, args.ambient_wav.expanduser().resolve()))
+    render_receipt = args.render_receipt.expanduser().resolve() if args.render_receipt else None
+    atomic_write_json(output, build_plan(revision_root, args.ambient_wav.expanduser().resolve(), render_receipt))
     assessment = assess_revision_audio_strategy(revision_root)
     print(json.dumps({"path": str(output), "sha256": sha256_file(output), "assessment": assessment.to_dict()}, indent=2))
     return 0 if assessment.voice_handoff_valid else 2

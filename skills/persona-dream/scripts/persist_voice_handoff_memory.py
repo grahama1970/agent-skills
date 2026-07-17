@@ -51,10 +51,14 @@ def canonical_record(
     request_sha = str((plan.get("provider_request") or {}).get("request_body_sha256") or "")
     transcript_sha = str((plan.get("timed_transcript") or {}).get("sha256") or "")
     if step_no == 37:
-        status = "BLOCKED_AWAITING_EXACT_LINE_RENDER"
-        blocker = "render the exact Kai transcript line with the bound voice reference, then produce render and evaluation receipts"
-        proves = "the post-mux voice handoff is hash-bound to the active revision, exact transcript, voice reference, ambient bed, and provider request"
-        does_not_prove = "the exact line has been rendered, evaluated, mixed, muxed, or heard in a final video"
+        rendered = all(
+            isinstance(line, Mapping) and line.get("render_status") == "PASS_EXACT_LINE_RENDER"
+            for line in plan.get("lines", [])
+        )
+        status = "PASS_EXACT_LINE_RENDER_READY_FOR_MUX" if rendered else "BLOCKED_AWAITING_EXACT_LINE_RENDER"
+        blocker = None if rendered else "render the exact Kai transcript line with the bound voice reference, then produce render and evaluation receipts"
+        proves = "the post-mux voice handoff and exact live Kai line render are hash-bound to the active revision, transcript, voice reference, ambient bed, and provider request" if rendered else "the post-mux voice handoff is hash-bound to the active revision, exact transcript, voice reference, ambient bed, and provider request"
+        does_not_prove = "the rendered line has been mixed, muxed, or heard in a final video"
     else:
         status = "BLOCKED_AWAITING_ACTIVE_PROVIDER_RETURN_AND_AUDIO_MUX"
         blocker = "after the active repaired provider return exists, mix the exact line and ambient bed, FFmpeg mux them, and prove an audible audio stream"
@@ -161,7 +165,11 @@ def main() -> int:
         "observed_at": observed_at,
         "claims": {
             "proves": ["audio pipeline steps 37 and 38 are persisted under exact active run/revision keys and reread with their handoff hash"],
-            "does_not_prove": ["exact-line TTS rendering, provider return, audio mix, FFmpeg mux, or audible final output"],
+            "does_not_prove": [
+                "provider return, audio mix, FFmpeg mux, or audible final output"
+                if plan.get("status") == "PASS_EXACT_LINE_RENDER_READY_FOR_MUX"
+                else "exact-line TTS rendering, provider return, audio mix, FFmpeg mux, or audible final output"
+            ],
         },
     }
     receipt_path = revision_root / RECEIPT_RELATIVE

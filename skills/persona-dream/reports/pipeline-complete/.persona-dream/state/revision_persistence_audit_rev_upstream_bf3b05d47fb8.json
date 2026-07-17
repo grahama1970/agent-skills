@@ -105,7 +105,7 @@
   "live": true,
   "mocked": false,
   "mode": "gate",
-  "observed_at": "2026-07-17T15:12:33.899171+00:00",
+  "observed_at": "2026-07-17T15:18:32.753210+00:00",
   "revision_id": "rev_upstream_bf3b05d47fb8",
   "run_id": "pipeline-complete",
   "schema": "persona_dream.revision_persistence_audit.v1",

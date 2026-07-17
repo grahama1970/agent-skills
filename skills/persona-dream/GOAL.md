@@ -43,7 +43,7 @@ historical ffprobe: H.264 1280x720 24 fps, 10.041667 seconds
 historical frame contact sheet: 12 frames in a 4x3 PNG
 historical continuity review: failed on the SB_004 commit action and visible lava-reef boundary
 audio strategy: post_mux; Kling request intentionally has generate_audio=false
-step 37 voice handoff: blocked awaiting exact Kai line render
+step 37 voice handoff: exact live Kai line rendered and hash-bound; ready for mux
 step 38 final assembly: blocked awaiting active provider return, mix, mux, audio-stream, and audible-output receipts
 pipeline-step Memory exact reread: 42/42
 audio-step Memory exact reread: steps 37 and 38 synced to voice_handoff_plan SHA-256
