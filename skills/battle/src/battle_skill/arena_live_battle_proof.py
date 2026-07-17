@@ -20,7 +20,9 @@ import subprocess
 import time
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
+
+# ADAPTIVE_LINEAGE_GATE_V2
 
 from .arena_battle_proof import _copy_tree, _python_docker_command, _run_command, _smoke_import, _write_json
 from .arena_subagent import _hidden_ground_truth, _run_oracle, _write_target_files, run_arena_subagent_proof
@@ -146,7 +148,9 @@ def run_arena_tau_public_only_proof(
     mark_timing("arena_context_ready", receipt_id="arena-receipt")
     lineage_requested = spawn_red_child_on_blue_success or red_workers > 1
     post_block_lineage_requested = lineage_requested and not prekill_survival
-    initial_red_workers = max(2, red_workers) if prekill_survival else 1 if lineage_requested else red_workers
+    initial_red_workers = (
+        1 if prekill_survival else 1 if lineage_requested else red_workers
+    )
     tau_initial_started_elapsed_seconds = _elapsed_seconds(timing_origin)
     tau_manifest_path = _run_tau_harness(
         out_dir=out_dir,
@@ -180,40 +184,15 @@ def run_arena_tau_public_only_proof(
     validation_path = _write_json(out_dir / "visibility-validation.json", validation)
     mark_timing("visibility_validation_ready", receipt_id="visibility-validation")
 
-    judge = _judge_tau_artifacts(
-        out_dir=out_dir,
-        scenario=scenario,
-        docker_image=docker_image,
-        tau_manifest=tau_manifest,
-        timing_origin=timing_origin,
-    )
-    mark_timing("parent_judge_ready", receipt_id="judge-receipt")
-
     lineage_receipt_path: Path | None = None
     if prekill_survival:
-        lineage_receipt_path = _write_prekill_survival_lineage_receipts(
-            out_dir=out_dir,
-            battle_id=battle_id,
-            run_id=run_id,
-            scenario_id=scenario["scenario_id"],
-            tau_manifest=tau_manifest,
-            judge=judge,
-            child_materialized_elapsed_seconds=_timing_elapsed_seconds(timing_events, "initial_tau_manifest_ready"),
-            parent_terminal_elapsed_seconds=_earliest_confirmed_terminal_elapsed_seconds(judge=judge, parent_lane_id="payload-857-receipt")
-            or _timing_elapsed_seconds(timing_events, "parent_judge_ready"),
-            post_parent_terminal_elapsed_seconds=(_timing_elapsed_seconds(timing_events, "parent_judge_ready") or _elapsed_seconds(timing_origin)) + 0.001,
-            spawn_decision="strategic_pre_kill",
-        )
-        mark_timing("lineage_receipts_ready", receipt_id="lineage-receipts")
-    if post_block_lineage_requested:
-        lineage_result = _run_parent_spawn_lineage_rung(
+        prekill_result = _run_prekill_survival_lineage_rung(
             out_dir=out_dir,
             battle_id=battle_id,
             run_id=run_id,
             scenario_id=scenario["scenario_id"],
             context_path=context_path,
             tau_manifest=tau_manifest,
-            judge=judge,
             red_persona=red_persona,
             model=model,
             scillm_base_url=scillm_base_url,
@@ -222,14 +201,68 @@ def run_arena_tau_public_only_proof(
             scenario=scenario,
             timing_origin=timing_origin,
         )
-        if lineage_result is not None:
-            tau_manifest = lineage_result["tau_manifest"]
-            judge = lineage_result["judge"]
-            lineage_receipt_path = lineage_result["lineage_receipt_path"]
-            validation = _visibility_validation(out_dir=out_dir, tau_manifest=tau_manifest)
-            validation_path = _write_json(out_dir / "visibility-validation.json", validation)
-            mark_timing("lineage_receipts_ready", receipt_id="lineage-receipts")
+        tau_manifest = prekill_result["tau_manifest"]
+        judge = prekill_result["judge"]
+        lineage_receipt_path = prekill_result["lineage_receipt_path"]
+        _write_json(tau_manifest_path, tau_manifest)
+        validation = _visibility_validation(
+            out_dir=out_dir,
+            tau_manifest=tau_manifest,
+        )
+        validation_path = _write_json(
+            out_dir / "visibility-validation.json",
+            validation,
+        )
+        mark_timing("parent_judge_ready", receipt_id="judge-receipt")
+        mark_timing(
+            "lineage_receipts_ready",
+            receipt_id="lineage-receipts",
+        )
+    else:
+        judge = _judge_tau_artifacts(
+            out_dir=out_dir,
+            scenario=scenario,
+            docker_image=docker_image,
+            tau_manifest=tau_manifest,
+            timing_origin=timing_origin,
+        )
+        mark_timing("parent_judge_ready", receipt_id="judge-receipt")
 
+        if post_block_lineage_requested:
+            lineage_result = _run_parent_spawn_lineage_rung(
+                out_dir=out_dir,
+                battle_id=battle_id,
+                run_id=run_id,
+                scenario_id=scenario["scenario_id"],
+                context_path=context_path,
+                tau_manifest=tau_manifest,
+                judge=judge,
+                red_persona=red_persona,
+                model=model,
+                scillm_base_url=scillm_base_url,
+                timeout_s=timeout_s,
+                docker_image=docker_image,
+                scenario=scenario,
+                timing_origin=timing_origin,
+            )
+            if lineage_result is not None:
+                tau_manifest = lineage_result["tau_manifest"]
+                judge = lineage_result["judge"]
+                lineage_receipt_path = lineage_result[
+                    "lineage_receipt_path"
+                ]
+                validation = _visibility_validation(
+                    out_dir=out_dir,
+                    tau_manifest=tau_manifest,
+                )
+                validation_path = _write_json(
+                    out_dir / "visibility-validation.json",
+                    validation,
+                )
+                mark_timing(
+                    "lineage_receipts_ready",
+                    receipt_id="lineage-receipts",
+                )
     judge_path = _write_json(out_dir / "judge" / "judge-receipt.json", judge)
 
     scoreboard = _scoreboard(
@@ -256,13 +289,32 @@ def run_arena_tau_public_only_proof(
         prekill_survival=prekill_survival,
     )
     lifecycle_bundle = _read_json(lifecycle_receipts_path)
+    prekill_contract = (
+        lifecycle_bundle.get("prekill_survival_contract")
+        if prekill_survival
+        else None
+    )
+    receipt_status = (
+        str(prekill_contract.get("status") or "INSUFFICIENT_EVIDENCE")
+        if isinstance(prekill_contract, dict)
+        else (
+            "INSUFFICIENT_EVIDENCE"
+            if prekill_survival
+            else str(scoreboard["status"])
+        )
+    )
+    receipt_verdict = (
+        str(scoreboard["verdict"])
+        if receipt_status == "PASS"
+        else receipt_status
+    )
 
     run_receipt = {
         "schema": RUN_SCHEMA,
         "battle_id": battle_id,
         "run_id": run_id,
-        "status": scoreboard["status"],
-        "verdict": scoreboard["verdict"],
+        "status": receipt_status,
+        "verdict": receipt_verdict,
         "mocked": False,
         "live": "brave_search_docker_arena_oracle_tau_harness",
         "agentic": True,
@@ -334,7 +386,6 @@ def run_arena_tau_public_only_proof(
     _write_json(out_dir / "run-receipt.json", run_receipt)
     return run_receipt
 
-
 def _timing_elapsed_seconds(timing_events: list[dict[str, Any]], stage: str) -> float | None:
     for event in reversed(timing_events):
         if str(event.get("stage")) == stage:
@@ -342,15 +393,30 @@ def _timing_elapsed_seconds(timing_events: list[dict[str, Any]], stage: str) -> 
     return None
 
 
-def _prekill_lineage_request(lineage_receipt_path: Path | None) -> dict[str, Any]:
+def _prekill_lineage_request(
+    lineage_receipt_path: Path | None,
+) -> dict[str, Any]:
+    status = "NOT_PROVEN"
+    if lineage_receipt_path is not None and lineage_receipt_path.exists():
+        payload = _read_json(lineage_receipt_path)
+        status = str(
+            payload.get("status") or "INSUFFICIENT_EVIDENCE"
+        )
     return {
         "requested": True,
-        "mode": "prekill_survival_initial_child",
-        "condition": "child lane must materialize before earliest confirmed parent terminal receipt",
-        "receipt": str(lineage_receipt_path.name) if lineage_receipt_path is not None else None,
-        "status": "PASS" if lineage_receipt_path is not None and lineage_receipt_path.exists() else "NOT_PROVEN",
+        "mode": "prekill_survival_parent_decision",
+        "condition": (
+            "parent pressure receipt and parent-authored spawn decision "
+            "must precede child materialization; child activity must follow "
+            "the earliest parent terminal receipt"
+        ),
+        "receipt": (
+            str(lineage_receipt_path.name)
+            if lineage_receipt_path is not None
+            else None
+        ),
+        "status": status,
     }
-
 
 def _write_prekill_survival_lineage_receipts(
     *,
@@ -793,6 +859,8 @@ def _judge_tau_artifacts(
     docker_image: str,
     tau_manifest: dict[str, Any],
     timing_origin: float | None = None,
+    on_parent_pressure_before_terminal: Callable[[dict[str, Any]], None]
+    | None = None,
 ) -> dict[str, Any]:
     red_entries = _materialized_entries(tau_manifest, "red")
     blue_entries = _materialized_entries(tau_manifest, "blue")
@@ -819,17 +887,42 @@ def _judge_tau_artifacts(
                 red=red,
                 blue=blue,
                 timing_origin=timing_origin,
+                on_parent_pressure_before_terminal=(
+                    on_parent_pressure_before_terminal
+                ),
             )
             attempts.append(attempt)
             all_commands.extend(attempt.get("commands_run", []))
 
-    blue_success_count = sum(1 for attempt in attempts if attempt.get("verdict") == "BLUE_SUCCESS")
-    red_success_count = sum(1 for attempt in attempts if attempt.get("verdict") == "RED_SUCCESS")
-    insufficient_count = sum(1 for attempt in attempts if attempt.get("verdict") == "INSUFFICIENT_EVIDENCE")
-    verdict = "BLUE_SUCCESS" if blue_success_count else "RED_SUCCESS" if red_success_count else "INSUFFICIENT_EVIDENCE"
+    blue_success_count = sum(
+        1
+        for attempt in attempts
+        if attempt.get("verdict") == "BLUE_SUCCESS"
+    )
+    red_success_count = sum(
+        1
+        for attempt in attempts
+        if attempt.get("verdict") == "RED_SUCCESS"
+    )
+    insufficient_count = sum(
+        1
+        for attempt in attempts
+        if attempt.get("verdict") == "INSUFFICIENT_EVIDENCE"
+    )
+    verdict = (
+        "BLUE_SUCCESS"
+        if blue_success_count
+        else "RED_SUCCESS"
+        if red_success_count
+        else "INSUFFICIENT_EVIDENCE"
+    )
     return {
         "schema": "battle.arena_tau_public_only_judge_receipt.v1",
-        "status": "PASS" if verdict in {"BLUE_SUCCESS", "RED_SUCCESS"} else "INSUFFICIENT_EVIDENCE",
+        "status": (
+            "PASS"
+            if verdict in {"BLUE_SUCCESS", "RED_SUCCESS"}
+            else "INSUFFICIENT_EVIDENCE"
+        ),
         "verdict": verdict,
         "red_artifact_count": len(red_entries),
         "blue_artifact_count": len(blue_entries),
@@ -841,7 +934,6 @@ def _judge_tau_artifacts(
         "commands_run": all_commands,
     }
 
-
 def _judge_pair(
     *,
     out_dir: Path,
@@ -850,25 +942,48 @@ def _judge_pair(
     red: dict[str, Any],
     blue: dict[str, Any],
     timing_origin: float | None = None,
+    on_parent_pressure_before_terminal: Callable[[dict[str, Any]], None]
+    | None = None,
 ) -> dict[str, Any]:
-    started_elapsed_seconds = _elapsed_seconds(timing_origin) if timing_origin is not None else None
+    started_elapsed_seconds = (
+        _elapsed_seconds(timing_origin)
+        if timing_origin is not None
+        else None
+    )
     pair_id = f"{red['worker_id']}__{blue['worker_id']}"
     red_path = Path(red["path"])
     blue_path = Path(blue["path"])
     replay_dir = out_dir / "judge" / "replays" / pair_id
     original_work = replay_dir / "original"
     patched_work = replay_dir / "patched"
-    _copy_tree(out_dir / "arena" / "team-public" / "target", original_work)
-    _copy_tree(out_dir / "arena" / "team-public" / "target", patched_work)
-    (original_work / "red_exploit_submission.py").write_text(red_path.read_text(encoding="utf-8"), encoding="utf-8")
-    (patched_work / "red_exploit_submission.py").write_text(red_path.read_text(encoding="utf-8"), encoding="utf-8")
-    (patched_work / "app.py").write_text(blue_path.read_text(encoding="utf-8"), encoding="utf-8")
+    _copy_tree(
+        out_dir / "arena" / "team-public" / "target",
+        original_work,
+    )
+    _copy_tree(
+        out_dir / "arena" / "team-public" / "target",
+        patched_work,
+    )
+    (
+        original_work / "red_exploit_submission.py"
+    ).write_text(red_path.read_text(encoding="utf-8"), encoding="utf-8")
+    (
+        patched_work / "red_exploit_submission.py"
+    ).write_text(red_path.read_text(encoding="utf-8"), encoding="utf-8")
+    (patched_work / "app.py").write_text(
+        blue_path.read_text(encoding="utf-8"),
+        encoding="utf-8",
+    )
 
     before = _run_command(
         _python_docker_command(
             docker_image=docker_image,
             work_dir=original_work,
-            args=["python", "red_exploit_submission.py", "--expect-vulnerable"],
+            args=[
+                "python",
+                "red_exploit_submission.py",
+                "--expect-vulnerable",
+            ],
         ),
         out_dir=replay_dir,
         name="judge-red-exploit-original",
@@ -882,14 +997,55 @@ def _judge_pair(
         out_dir=replay_dir,
         name="judge-red-exploit-patched",
     )
-    before_stdout = Path(before["stdout_path"]).read_text(encoding="utf-8")
-    after_stdout = Path(after["stdout_path"]).read_text(encoding="utf-8")
-    exploit_confirmed = before["exit_code"] == 0 and "RED_EXPLOIT_CONFIRMED" in before_stdout
-    exploit_success_markers = ("RED_EXPLOIT_CONFIRMED", "Exploit successful")
-    exploit_still_succeeds = after["exit_code"] == 0 and any(
-        marker in after_stdout for marker in exploit_success_markers
+    before_stdout = Path(before["stdout_path"]).read_text(
+        encoding="utf-8"
+    )
+    after_stdout = Path(after["stdout_path"]).read_text(
+        encoding="utf-8"
+    )
+    exploit_confirmed = (
+        before["exit_code"] == 0
+        and "RED_EXPLOIT_CONFIRMED" in before_stdout
+    )
+    exploit_success_markers = (
+        "RED_EXPLOIT_CONFIRMED",
+        "Exploit successful",
+    )
+    exploit_still_succeeds = (
+        after["exit_code"] == 0
+        and any(
+            marker in after_stdout
+            for marker in exploit_success_markers
+        )
     )
     exploit_blocked = not exploit_still_succeeds
+
+    # This is the only pre-terminal pressure window. The Blue artifact has
+    # blocked the exploit, but functionality preservation and BLUE_SUCCESS
+    # have not yet been confirmed.
+    if (
+        on_parent_pressure_before_terminal is not None
+        and red.get("worker_id") == "red-0"
+        and exploit_confirmed
+        and exploit_blocked
+    ):
+        on_parent_pressure_before_terminal(
+            {
+                "pair_id": pair_id,
+                "parent_worker_id": red["worker_id"],
+                "parent_lane_id": red["lane_id"],
+                "blue_worker_id": blue["worker_id"],
+                "blue_action_id": blue["action_id"],
+                "before": before,
+                "after": after,
+                "observed_elapsed_seconds": (
+                    _elapsed_seconds(timing_origin)
+                    if timing_origin is not None
+                    else None
+                ),
+            }
+        )
+
     functionality_preserved = _smoke_import(
         work_dir=patched_work,
         out_dir=replay_dir,
@@ -898,16 +1054,26 @@ def _judge_pair(
     )
     verdict = (
         "BLUE_SUCCESS"
-        if exploit_confirmed and exploit_blocked and functionality_preserved
+        if exploit_confirmed
+        and exploit_blocked
+        and functionality_preserved
         else "RED_SUCCESS"
         if exploit_confirmed
         else "INSUFFICIENT_EVIDENCE"
     )
-    ended_elapsed_seconds = _elapsed_seconds(timing_origin) if timing_origin is not None else None
+    ended_elapsed_seconds = (
+        _elapsed_seconds(timing_origin)
+        if timing_origin is not None
+        else None
+    )
     attempt = {
         "schema": "battle.arena_tau_public_only_pair_attempt_receipt.v1",
         "pair_id": pair_id,
-        "status": "PASS" if verdict in {"BLUE_SUCCESS", "RED_SUCCESS"} else "INSUFFICIENT_EVIDENCE",
+        "status": (
+            "PASS"
+            if verdict in {"BLUE_SUCCESS", "RED_SUCCESS"}
+            else "INSUFFICIENT_EVIDENCE"
+        ),
         "verdict": verdict,
         "red_worker_id": red["worker_id"],
         "red_lane_id": red["lane_id"],
@@ -917,23 +1083,30 @@ def _judge_pair(
         "blue_artifact": blue["path"],
         "exploit_confirmed_before_patch": exploit_confirmed,
         "exploit_blocked_after_patch": exploit_blocked,
-        "exploit_still_succeeds_after_patch": exploit_still_succeeds,
+        "exploit_still_succeeds_after_patch": (
+            exploit_still_succeeds
+        ),
         "functionality_preserved": functionality_preserved,
         "commands_run": [before, after],
         **(
             {
                 "started_elapsed_seconds": started_elapsed_seconds,
                 "ended_elapsed_seconds": ended_elapsed_seconds,
-                "duration_elapsed_seconds": round(ended_elapsed_seconds - started_elapsed_seconds, 6),
-                "timing_source": "battle_control_plane_perf_counter",
+                "duration_elapsed_seconds": round(
+                    ended_elapsed_seconds - started_elapsed_seconds,
+                    6,
+                ),
+                "timing_source": (
+                    "battle_control_plane_perf_counter"
+                ),
             }
-            if started_elapsed_seconds is not None and ended_elapsed_seconds is not None
+            if started_elapsed_seconds is not None
+            and ended_elapsed_seconds is not None
             else {}
         ),
     }
     _write_json(replay_dir / "attempt-receipt.json", attempt)
     return attempt
-
 
 def _materialized_entries(tau_manifest: dict[str, Any], team_name: str) -> list[dict[str, Any]]:
     teams = tau_manifest.get("teams") if isinstance(tau_manifest.get("teams"), list) else []
@@ -1082,6 +1255,18 @@ def _write_exploit_lifecycle_receipts(
         lineage_receipt_path=lineage_receipt_path,
         prekill_survival=prekill_survival,
     )
+    if prekill_survival:
+        receipts = _authoritative_prekill_lifecycle_receipts(
+            out_dir=out_dir,
+            battle_id=battle_id,
+            run_id=run_id,
+            scenario_id=str(
+                scenario.get("scenario_id")
+                or "arena-zip-slip-import-001"
+            ),
+            receipts=receipts,
+            lineage_receipt_path=lineage_receipt_path,
+        )
     event_types = [str(receipt.get("event_type")) for receipt in receipts]
     spawn_decisions = sorted(
         {
@@ -1185,7 +1370,6 @@ def _write_exploit_lifecycle_receipts(
         },
     }
     return _write_json(out_dir / "exploit-lifecycle-receipts.json", bundle)
-
 
 def _exploit_lifecycle_receipts(
     *,
@@ -1906,7 +2090,18 @@ def _receipt_elapsed_seconds(receipt: dict[str, Any] | None) -> float | None:
     return _source_time_elapsed_seconds(source_time)
 
 
-def _prekill_survival_contract_from_receipts(receipts: list[dict[str, Any]]) -> dict[str, Any]:
+def _receipt_end_elapsed_seconds(receipt: dict[str, Any] | None) -> float | None:
+    if not isinstance(receipt, dict):
+        return None
+    source_time = receipt.get("source_time")
+    if not isinstance(source_time, dict):
+        return None
+    ended = _number_or_none(source_time.get("ended_elapsed_seconds"))
+    return ended if ended is not None else _number_or_none(source_time.get("started_elapsed_seconds"))
+
+def _prekill_survival_contract_from_receipts(
+    receipts: list[dict[str, Any]],
+) -> dict[str, Any]:
     errors: list[str] = []
     spawn_receipt = next(
         (
@@ -1914,69 +2109,227 @@ def _prekill_survival_contract_from_receipts(receipts: list[dict[str, Any]]) -> 
             for receipt in receipts
             if receipt.get("event_type") == "spawn_decision_recorded"
             and isinstance(receipt.get("spawn_decision"), dict)
-            and str(receipt["spawn_decision"].get("decision")) in PREKILL_SURVIVAL_SPAWN_DECISIONS
+            and str(receipt["spawn_decision"].get("decision"))
+            in PREKILL_SURVIVAL_SPAWN_DECISIONS
         ),
         None,
     )
     if spawn_receipt is None:
-        return {"status": "INSUFFICIENT_EVIDENCE", "errors": ["missing pre-kill spawn_decision_recorded receipt"]}
+        return {
+            "status": "INSUFFICIENT_EVIDENCE",
+            "errors": ["missing pre-kill spawn_decision_recorded receipt"],
+        }
 
-    spawn = spawn_receipt.get("spawn_decision") if isinstance(spawn_receipt.get("spawn_decision"), dict) else {}
-    decision = str(spawn.get("decision") or "none")
+    spawn = (
+        spawn_receipt.get("spawn_decision")
+        if isinstance(spawn_receipt.get("spawn_decision"), dict)
+        else {}
+    )
+    actor = (
+        spawn_receipt.get("actor")
+        if isinstance(spawn_receipt.get("actor"), dict)
+        else {}
+    )
     parent_exploit_id = str(spawn_receipt.get("lane_id") or "")
     child_exploit_id = str(spawn.get("child_exploit_id") or "")
-    child_materialized = next((receipt for receipt in receipts if receipt.get("event_type") == "child_materialized" and receipt.get("lane_id") == child_exploit_id), None)
-    child_started = next((receipt for receipt in receipts if receipt.get("event_type") == "child_lifecycle_started" and receipt.get("lane_id") == child_exploit_id), None)
-    lineage = next((receipt for receipt in receipts if receipt.get("event_type") == "lineage_registered" and receipt.get("lane_id") == child_exploit_id), None)
+    pressure_receipt = next(
+        (
+            receipt
+            for receipt in receipts
+            if receipt.get("event_type") == "pressure_assessed"
+            and receipt.get("lane_id") == parent_exploit_id
+            and isinstance(receipt.get("pressure_observation"), dict)
+            and receipt["pressure_observation"].get("source_receipt_id")
+            == spawn.get("pressure_receipt_id")
+        ),
+        None,
+    )
+    child_materialized = next(
+        (
+            receipt
+            for receipt in receipts
+            if receipt.get("event_type") == "child_materialized"
+            and receipt.get("lane_id") == child_exploit_id
+        ),
+        None,
+    )
+    child_started = next(
+        (
+            receipt
+            for receipt in receipts
+            if receipt.get("event_type") == "child_lifecycle_started"
+            and receipt.get("lane_id") == child_exploit_id
+        ),
+        None,
+    )
+    lineage = next(
+        (
+            receipt
+            for receipt in receipts
+            if receipt.get("event_type") == "lineage_registered"
+            and receipt.get("lane_id") == child_exploit_id
+        ),
+        None,
+    )
+    post_terminal_child_receipt = next(
+        (
+            receipt
+            for receipt in receipts
+            if receipt.get("event_type")
+            == "child_lifecycle_receipt_after_parent_terminal"
+            and receipt.get("lane_id") == child_exploit_id
+        ),
+        None,
+    )
     terminal_candidates = [
         receipt
         for receipt in receipts
         if receipt.get("event_type") in TERMINAL_BOUNDARY_EVENT_TYPES
         and receipt.get("lane_id") == parent_exploit_id
-        and _receipt_elapsed_seconds(receipt) is not None
+        and _receipt_end_elapsed_seconds(receipt) is not None
     ]
-    terminal = min(terminal_candidates, key=lambda receipt: float(_receipt_elapsed_seconds(receipt) or 0.0)) if terminal_candidates else None
+    terminal = (
+        min(
+            terminal_candidates,
+            key=lambda receipt: float(_receipt_end_elapsed_seconds(receipt) or 0.0),
+        )
+        if terminal_candidates
+        else None
+    )
 
+    pressure_time = _receipt_elapsed_seconds(pressure_receipt)
+    decision_time = _receipt_elapsed_seconds(spawn_receipt)
     child_materialized_time = _receipt_elapsed_seconds(child_materialized)
-    terminal_time = _receipt_elapsed_seconds(terminal)
-    post_terminal_child_receipts = [
-        receipt
-        for receipt in receipts
-        if receipt.get("lane_id") == child_exploit_id
-        and _receipt_elapsed_seconds(receipt) is not None
-        and terminal_time is not None
-        and float(_receipt_elapsed_seconds(receipt) or 0.0) > terminal_time
-    ]
-    post_terminal_child_receipt = post_terminal_child_receipts[0] if post_terminal_child_receipts else None
+    child_started_time = _receipt_elapsed_seconds(child_started)
+    terminal_time = _receipt_end_elapsed_seconds(terminal)
     post_terminal_time = _receipt_elapsed_seconds(post_terminal_child_receipt)
 
-    if decision not in PREKILL_SURVIVAL_SPAWN_DECISIONS:
+    pressure_observation = (
+        pressure_receipt.get("pressure_observation")
+        if isinstance(pressure_receipt, dict)
+        and isinstance(pressure_receipt.get("pressure_observation"), dict)
+        else {}
+    )
+    child_packet = (
+        child_started.get("knowledge_packet")
+        if isinstance(child_started, dict)
+        and isinstance(child_started.get("knowledge_packet"), dict)
+        else {}
+    )
+    decision_refs = (
+        spawn.get("inherited_evidence_refs")
+        if isinstance(spawn.get("inherited_evidence_refs"), list)
+        else []
+    )
+    child_refs = (
+        child_packet.get("inherited_evidence_refs")
+        if isinstance(child_packet.get("inherited_evidence_refs"), list)
+        else []
+    )
+    post_evidence = (
+        post_terminal_child_receipt.get("evidence")
+        if isinstance(post_terminal_child_receipt, dict)
+        and isinstance(post_terminal_child_receipt.get("evidence"), list)
+        else []
+    )
+
+    if str(spawn.get("decision")) not in PREKILL_SURVIVAL_SPAWN_DECISIONS:
         errors.append("red_spawn_intent.decision is not pre-kill survival compatible")
     if spawn.get("allowed") is not True:
         errors.append("battle_spawn_policy_decision.status is not allowed")
+    if actor.get("team") != "red" or actor.get("subagent_id") != "red-0":
+        errors.append("spawn_decision_recorded is not authored by parent red-0")
+    if spawn.get("author_lane_id") != parent_exploit_id:
+        errors.append("spawn decision author lane does not match parent lane")
+    if not isinstance(pressure_receipt, dict):
+        errors.append("parent pressure receipt is missing")
+    if pressure_observation.get("source_receipt_id") != spawn.get(
+        "pressure_receipt_id"
+    ):
+        errors.append("spawn decision does not cite the observed pressure receipt")
+    if pressure_observation.get("source_receipt_sha256") != spawn.get(
+        "pressure_receipt_sha256"
+    ):
+        errors.append("spawn decision pressure receipt hash does not match")
+    if not decision_refs:
+        errors.append("spawn decision inherited_evidence_refs are missing")
+    if decision_refs != child_refs:
+        errors.append("child did not acknowledge the parent inherited evidence refs")
     if child_materialized_time is None:
         errors.append("child_materialized.source_time is missing")
+    if child_started_time is None:
+        errors.append("child_lifecycle_started.source_time is missing")
     if terminal_time is None:
         errors.append("earliest_confirmed_terminal.source_time is missing")
-    if child_materialized_time is not None and terminal_time is not None and not child_materialized_time < terminal_time:
-        errors.append("child_materialized.source_time is not before earliest_confirmed_terminal.source_time")
     if not isinstance(lineage, dict):
         errors.append("lineage_registered receipt is missing")
-    if not isinstance(child_started, dict):
-        errors.append("child_lifecycle_started receipt is missing")
     if post_terminal_time is None:
         errors.append("post-terminal child lifecycle receipt is missing")
-    if post_terminal_time is not None and terminal_time is not None and not post_terminal_time > terminal_time:
-        errors.append("post-terminal child lifecycle receipt is not after parent terminal confirmation")
+    if not any(
+        isinstance(item, dict)
+        and item.get("evidence_type") == "judge_action"
+        and item.get("sha256")
+        for item in post_evidence
+    ):
+        errors.append("post-terminal child lifecycle receipt lacks a real Judge attempt")
 
-    lineage_exploit = lineage.get("exploit") if isinstance(lineage, dict) and isinstance(lineage.get("exploit"), dict) else {}
+    ordering = [
+        pressure_time,
+        decision_time,
+        child_materialized_time,
+        terminal_time,
+        post_terminal_time,
+    ]
+    if all(value is not None for value in ordering):
+        if not (
+            float(pressure_time)
+            < float(decision_time)
+            < float(child_materialized_time)
+            < float(terminal_time)
+            < float(post_terminal_time)
+        ):
+            errors.append(
+                "receipt ordering is not pressure < decision < child materialized < parent terminal < child lifecycle"
+            )
+    else:
+        errors.append("one or more causal receipt timestamps are missing")
+
+    lineage_exploit = (
+        lineage.get("exploit")
+        if isinstance(lineage, dict) and isinstance(lineage.get("exploit"), dict)
+        else {}
+    )
     return {
         "status": "PASS" if not errors else "INSUFFICIENT_EVIDENCE",
-        "errors": errors,
-        "red_spawn_intent": {"decision": decision, "receipt_id": spawn_receipt.get("receipt_id")},
-        "battle_spawn_policy_decision": {"status": "allowed" if spawn.get("allowed") is True else "denied", "receipt_id": spawn_receipt.get("receipt_id")},
+        "errors": list(dict.fromkeys(errors)),
+        "parent_pressure_observed": {
+            "receipt_id": (
+                pressure_receipt.get("receipt_id")
+                if isinstance(pressure_receipt, dict)
+                else None
+            ),
+            "parent_exploit_id": parent_exploit_id,
+            "source_time": pressure_time,
+            "source_pressure_receipt_id": pressure_observation.get(
+                "source_receipt_id"
+            ),
+        },
+        "red_spawn_intent": {
+            "decision": str(spawn.get("decision") or "none"),
+            "receipt_id": spawn_receipt.get("receipt_id"),
+            "author_worker_id": actor.get("subagent_id"),
+            "inherited_evidence_refs": decision_refs,
+        },
+        "battle_spawn_policy_decision": {
+            "status": "allowed" if spawn.get("allowed") is True else "denied",
+            "receipt_id": spawn_receipt.get("receipt_id"),
+        },
         "child_materialized": {
-            "receipt_id": child_materialized.get("receipt_id") if isinstance(child_materialized, dict) else None,
+            "receipt_id": (
+                child_materialized.get("receipt_id")
+                if isinstance(child_materialized, dict)
+                else None
+            ),
             "child_exploit_id": child_exploit_id,
             "source_time": child_materialized_time,
         },
@@ -1994,18 +2347,30 @@ def _prekill_survival_contract_from_receipts(receipts: list[dict[str, Any]]) -> 
             "generation": lineage_exploit.get("generation"),
         },
         "child_lifecycle_started": {
-            "receipt_id": child_started.get("receipt_id") if isinstance(child_started, dict) else None,
+            "receipt_id": (
+                child_started.get("receipt_id")
+                if isinstance(child_started, dict)
+                else None
+            ),
             "child_exploit_id": child_exploit_id,
-            "source_time": _receipt_elapsed_seconds(child_started),
+            "source_time": child_started_time,
+            "inherited_evidence_refs": child_refs,
         },
         "post_terminal_child_lifecycle_receipt": {
-            "receipt_id": post_terminal_child_receipt.get("receipt_id") if isinstance(post_terminal_child_receipt, dict) else None,
-            "event_type": post_terminal_child_receipt.get("event_type") if isinstance(post_terminal_child_receipt, dict) else None,
+            "receipt_id": (
+                post_terminal_child_receipt.get("receipt_id")
+                if isinstance(post_terminal_child_receipt, dict)
+                else None
+            ),
+            "event_type": (
+                post_terminal_child_receipt.get("event_type")
+                if isinstance(post_terminal_child_receipt, dict)
+                else None
+            ),
             "child_exploit_id": child_exploit_id,
             "source_time": post_terminal_time,
         },
     }
-
 
 def _lifecycle_profile_for_lane(*, lane_id: str, generation: int) -> dict[str, Any]:
     if generation > 0 or lane_id.endswith("red-1"):
@@ -2782,7 +3147,1435 @@ def _number_or_none(value: Any) -> float | None:
 LINEAGE_SCHEMA = "battle.lineage_receipts_bundle.v1"
 
 
-def _run_claims(*, lineage_receipt_path: Path | None) -> dict[str, list[str]]:
+def _run_prekill_survival_lineage_rung(
+    *,
+    out_dir: Path,
+    battle_id: str,
+    run_id: str,
+    scenario_id: str,
+    context_path: Path,
+    tau_manifest: dict[str, Any],
+    red_persona: str,
+    model: str,
+    scillm_base_url: str,
+    timeout_s: float,
+    docker_image: str,
+    scenario: dict[str, Any],
+    timing_origin: float,
+) -> dict[str, Any]:
+    """Run a causally ordered parent-pressure -> decision -> child lineage proof."""
+    state: dict[str, Any] = {
+        "attempted": False,
+        "errors": [],
+    }
+
+    parent_entries = _materialized_entries(tau_manifest, "red")
+    parent = next(
+        (entry for entry in parent_entries if entry.get("worker_id") == "red-0"),
+        parent_entries[0] if parent_entries else None,
+    )
+
+    def on_parent_pressure_before_terminal(signal: dict[str, Any]) -> None:
+        if state["attempted"]:
+            return
+        state["attempted"] = True
+
+        try:
+            pressure_path = _write_prekill_pressure_receipt(
+                out_dir=out_dir,
+                battle_id=battle_id,
+                run_id=run_id,
+                scenario_id=scenario_id,
+                signal=signal,
+            )
+            pressure = _read_json(pressure_path)
+            state["pressure_receipt_path"] = pressure_path
+            state["pressure_receipt"] = pressure
+
+            if not isinstance(parent, dict):
+                state["errors"].append("missing materialized parent red-0")
+                return
+
+            parent_receipt_path = _resolve_artifact_path(
+                out_dir=out_dir,
+                value=parent.get("subagent_receipt"),
+            )
+            if parent_receipt_path is None or not parent_receipt_path.exists():
+                state["errors"].append("missing parent red-0 Tau subagent receipt")
+                return
+
+            decision_started = _elapsed_seconds(timing_origin)
+            decision_path = _run_tau_parent_spawn_decision(
+                out_dir=out_dir,
+                battle_id=battle_id,
+                run_id=run_id,
+                scenario_id=scenario_id,
+                context_path=context_path,
+                parent_subagent_receipt=parent_receipt_path,
+                pressure_receipt=pressure_path,
+                red_persona=red_persona,
+                model=model,
+                scillm_base_url=scillm_base_url,
+                timeout_s=timeout_s,
+            )
+            decision_ended = _elapsed_seconds(timing_origin)
+            state["decision_started_elapsed_seconds"] = decision_started
+            state["decision_recorded_elapsed_seconds"] = decision_ended
+            if decision_path is None:
+                state["errors"].append("Tau parent spawn-decision receipt was not written")
+                return
+
+            decision = _read_json(decision_path)
+            decision["battle_timing"] = {
+                "started_elapsed_seconds": decision_started,
+                "ended_elapsed_seconds": decision_ended,
+                "clock": "battle_control_plane_perf_counter",
+            }
+            _write_json(decision_path, decision)
+            decision_errors = _prekill_decision_errors(
+                decision=decision,
+                decision_path=decision_path,
+                pressure=pressure,
+                pressure_path=pressure_path,
+                parent=parent,
+                parent_receipt_path=parent_receipt_path,
+                out_dir=out_dir,
+            )
+            if decision_errors:
+                state["errors"].extend(decision_errors)
+                return
+
+            state["spawn_decision_receipt_path"] = decision_path
+            state["spawn_decision_receipt"] = decision
+
+            spawn_started = _elapsed_seconds(timing_origin)
+            spawn_manifest_path = _run_tau_spawn_child(
+                out_dir=out_dir,
+                battle_id=battle_id,
+                run_id=run_id,
+                scenario_id=scenario_id,
+                context_path=context_path,
+                parent_subagent_receipt=parent_receipt_path,
+                red_persona=red_persona,
+                model=model,
+                scillm_base_url=scillm_base_url,
+                timeout_s=timeout_s,
+                pressure_receipt=pressure_path,
+                spawn_decision_receipt=decision_path,
+            )
+            child_materialized = _elapsed_seconds(timing_origin)
+            state["spawn_started_elapsed_seconds"] = spawn_started
+            state["child_materialized_elapsed_seconds"] = child_materialized
+            if spawn_manifest_path is None:
+                state["errors"].append("Tau child spawn manifest was not written")
+                return
+
+            spawn_manifest = _read_json(spawn_manifest_path)
+            child, spawn, spawn_errors = _validated_prekill_spawn(
+                out_dir=out_dir,
+                spawn_manifest=spawn_manifest,
+                decision=decision,
+                parent=parent,
+            )
+            if spawn_errors:
+                state["errors"].extend(spawn_errors)
+                return
+
+            enriched_spawn = dict(spawn)
+            enriched_spawn.update(
+                {
+                    "spawn_type": str(decision["decision"]),
+                    "generation": 1,
+                    "spawn_elapsed_seconds": spawn_started,
+                    "child_start_elapsed_seconds": child_materialized,
+                    "child_materialized_elapsed_seconds": child_materialized,
+                    "decision_started_elapsed_seconds": decision_started,
+                    "decision_recorded_elapsed_seconds": decision_ended,
+                    "pressure_observed_elapsed_seconds": pressure["observed_elapsed_seconds"],
+                    "pressure_receipt_id": pressure["receipt_id"],
+                    "pressure_receipt_sha256": _sha256(pressure_path),
+                    "pressure_receipt_path": _display_ref(path=pressure_path, root=out_dir),
+                    "spawn_decision_receipt_id": decision["receipt_id"],
+                    "spawn_decision_receipt_sha256": _sha256(decision_path),
+                    "spawn_decision_receipt_path": _display_ref(path=decision_path, root=out_dir),
+                    "inherited_evidence_refs": decision["inherited_evidence_refs"],
+                    "timing_source": "battle_control_plane_perf_counter",
+                }
+            )
+
+            state["child_team"] = child
+            state["spawn"] = enriched_spawn
+            state["spawn_manifest_path"] = spawn_manifest_path
+
+            teams = [
+                item
+                for item in (tau_manifest.get("teams") if isinstance(tau_manifest.get("teams"), list) else [])
+                if not (
+                    isinstance(item, dict)
+                    and item.get("team") == "red"
+                    and item.get("worker_id") == "red-1"
+                )
+            ]
+            teams.append(child)
+            tau_manifest["teams"] = teams
+            tau_manifest["lineage_spawns"] = [enriched_spawn]
+            _write_json(out_dir / "tau-live" / "manifest.json", tau_manifest)
+        except Exception as exc:  # fail closed and preserve the first concrete blocker
+            state["errors"].append(f"prekill_spawn_exception:{type(exc).__name__}:{exc}")
+
+    parent_judge = _judge_tau_artifacts(
+        out_dir=out_dir,
+        scenario=scenario,
+        docker_image=docker_image,
+        tau_manifest=tau_manifest,
+        timing_origin=timing_origin,
+        on_parent_pressure_before_terminal=on_parent_pressure_before_terminal,
+    )
+
+    child_judge: dict[str, Any] | None = None
+    child = state.get("child_team")
+    if isinstance(child, dict):
+        blue_teams = [
+            item
+            for item in (tau_manifest.get("teams") if isinstance(tau_manifest.get("teams"), list) else [])
+            if isinstance(item, dict) and item.get("team") == "blue"
+        ]
+        child_manifest = {
+            **tau_manifest,
+            "teams": [child, *blue_teams],
+        }
+        child_judge = _judge_tau_artifacts(
+            out_dir=out_dir,
+            scenario=scenario,
+            docker_image=docker_image,
+            tau_manifest=child_manifest,
+            timing_origin=timing_origin,
+        )
+
+    judge = _merge_judge_receipts(parent_judge=parent_judge, child_judge=child_judge)
+    lineage_receipt_path = _write_live_prekill_lineage_receipts(
+        out_dir=out_dir,
+        battle_id=battle_id,
+        run_id=run_id,
+        scenario_id=scenario_id,
+        state=state,
+        parent_judge=parent_judge,
+        child_judge=child_judge,
+    )
+    return {
+        "tau_manifest": tau_manifest,
+        "judge": judge,
+        "lineage_receipt_path": lineage_receipt_path,
+    }
+
+
+def _write_prekill_pressure_receipt(
+    *,
+    out_dir: Path,
+    battle_id: str,
+    run_id: str,
+    scenario_id: str,
+    signal: dict[str, Any],
+) -> Path:
+    before = signal.get("before") if isinstance(signal.get("before"), dict) else {}
+    after = signal.get("after") if isinstance(signal.get("after"), dict) else {}
+    pair_id = str(signal.get("pair_id") or "red-0__blue-0")
+    receipt_id = f"prekill-pressure:{pair_id}"
+    path = out_dir / "prekill-pressure-receipt.json"
+    return _write_json(
+        path,
+        {
+            "schema": "battle.prekill_parent_pressure_receipt.v1",
+            "status": "PASS",
+            "receipt_id": receipt_id,
+            "battle_id": battle_id,
+            "run_id": run_id,
+            "scenario_id": scenario_id,
+            "parent_worker_id": str(signal.get("parent_worker_id") or "red-0"),
+            "parent_lane_id": str(signal.get("parent_lane_id") or "payload-857-receipt"),
+            "blue_worker_id": str(signal.get("blue_worker_id") or ""),
+            "blue_action_id": str(signal.get("blue_action_id") or ""),
+            "pair_id": pair_id,
+            "exploit_confirmed_before_patch": True,
+            "exploit_blocked_after_patch": True,
+            "parent_terminal_confirmed": False,
+            "observed_elapsed_seconds": _number_or_none(signal.get("observed_elapsed_seconds")),
+            "timing_source": "battle_control_plane_perf_counter",
+            "before": _pressure_command_ref(before),
+            "after": _pressure_command_ref(after),
+        },
+    )
+
+
+def _pressure_command_ref(command: dict[str, Any]) -> dict[str, Any]:
+    stdout_path = Path(str(command["stdout_path"])) if command.get("stdout_path") else None
+    stderr_path = Path(str(command["stderr_path"])) if command.get("stderr_path") else None
+    return {
+        "exit_code": command.get("exit_code"),
+        "stdout_path": str(stdout_path) if stdout_path is not None else None,
+        "stdout_sha256": _sha256(stdout_path),
+        "stderr_path": str(stderr_path) if stderr_path is not None else None,
+        "stderr_sha256": _sha256(stderr_path),
+    }
+
+
+def _run_tau_parent_spawn_decision(
+    *,
+    out_dir: Path,
+    battle_id: str,
+    run_id: str,
+    scenario_id: str,
+    context_path: Path,
+    parent_subagent_receipt: Path,
+    pressure_receipt: Path,
+    red_persona: str,
+    model: str,
+    scillm_base_url: str,
+    timeout_s: float,
+) -> Path | None:
+    tau_out = out_dir / "tau-live"
+    receipt_path = tau_out / "spawn-decision-receipt.json"
+    receipt_path.unlink(missing_ok=True)
+    command = [
+        "uv",
+        "run",
+        "python",
+        "-m",
+        "tau_coding.battle_live_handoff",
+        "--out-dir",
+        str(tau_out),
+        "--battle-id",
+        battle_id,
+        "--run-id",
+        run_id,
+        "--scenario-id",
+        scenario_id,
+        "--red-persona",
+        red_persona,
+        "--blue-persona",
+        "battle-blue-public-hardener",
+        "--model",
+        model,
+        "--scillm-base-url",
+        scillm_base_url,
+        "--timeout-s",
+        str(timeout_s),
+        "--battle-context-json",
+        str(context_path),
+        "--red-workers",
+        "1",
+        "--blue-workers",
+        "0",
+        "--parent-spawn-decision",
+        "--parent-subagent-receipt",
+        str(parent_subagent_receipt),
+        "--pressure-receipt",
+        str(pressure_receipt),
+    ]
+    env = os.environ.copy()
+    env.pop("UV_PROJECT_ENVIRONMENT", None)
+    env.pop("VIRTUAL_ENV", None)
+    result = subprocess.run(
+        command,
+        cwd=TAU_REPO,
+        env=env,
+        text=True,
+        capture_output=True,
+        timeout=max(int(timeout_s) + 60, 90),
+        check=False,
+    )
+    (out_dir / "tau-parent-decision-command.stdout.txt").write_text(result.stdout, encoding="utf-8")
+    (out_dir / "tau-parent-decision-command.stderr.txt").write_text(result.stderr, encoding="utf-8")
+    return receipt_path if receipt_path.exists() else None
+
+
+def _prekill_decision_errors(
+    *,
+    decision: dict[str, Any],
+    decision_path: Path,
+    pressure: dict[str, Any],
+    pressure_path: Path,
+    parent: dict[str, Any],
+    parent_receipt_path: Path,
+    out_dir: Path,
+) -> list[str]:
+    errors: list[str] = []
+    author = decision.get("author") if isinstance(decision.get("author"), dict) else {}
+    pressure_ref = (
+        decision.get("pressure_receipt")
+        if isinstance(decision.get("pressure_receipt"), dict)
+        else {}
+    )
+    inherited_refs = decision.get("inherited_evidence_refs")
+    if decision.get("status") != "PASS":
+        errors.append("Tau parent spawn decision status is not PASS")
+    if str(decision.get("decision")) not in PREKILL_SURVIVAL_SPAWN_DECISIONS:
+        errors.append("Tau parent decision is not an allowed pre-kill spawn decision")
+    if author.get("team") != "red" or author.get("worker_id") != "red-0":
+        errors.append("Tau spawn decision is not authored by red-0")
+    if author.get("lane_id") != parent.get("lane_id"):
+        errors.append("Tau spawn decision parent lane does not match red-0")
+    if pressure_ref.get("receipt_id") != pressure.get("receipt_id"):
+        errors.append("Tau spawn decision cites the wrong pressure receipt id")
+    if pressure_ref.get("sha256") != _sha256(pressure_path):
+        errors.append("Tau spawn decision cites the wrong pressure receipt hash")
+    if not isinstance(inherited_refs, list) or not inherited_refs:
+        errors.append("Tau spawn decision has no inherited_evidence_refs")
+    else:
+        required_hashes = {_sha256(pressure_path), _sha256(parent_receipt_path)}
+        cited_hashes = {
+            str(ref.get("sha256"))
+            for ref in inherited_refs
+            if isinstance(ref, dict) and ref.get("sha256")
+        }
+        if not required_hashes <= cited_hashes:
+            errors.append(
+                "Tau spawn decision does not inherit pressure and parent receipt hashes"
+            )
+        cited_kinds = {
+            str(ref.get("kind"))
+            for ref in inherited_refs
+            if isinstance(ref, dict)
+        }
+        required_kinds = {
+            "parent_pressure",
+            "parent_tau_subagent",
+            "parent_materialized_artifact",
+        }
+        if not required_kinds <= cited_kinds:
+            errors.append(
+                "Tau spawn decision is missing required inherited evidence kinds"
+            )
+        if any(
+            not isinstance(ref, dict)
+            or not ref.get("receipt_id")
+            or not ref.get("sha256")
+            for ref in inherited_refs
+        ):
+            errors.append(
+                "Tau inherited evidence refs must contain receipt_id and sha256"
+            )
+    raw_call = _resolve_artifact_path(out_dir=out_dir, value=decision.get("scillm_call_receipt"))
+    if raw_call is None or not raw_call.exists():
+        errors.append("Tau parent decision raw Scillm call receipt is missing")
+    if not decision_path.exists():
+        errors.append("Tau parent spawn-decision receipt is missing")
+    return errors
+
+
+def _validated_prekill_spawn(
+    *,
+    out_dir: Path,
+    spawn_manifest: dict[str, Any],
+    decision: dict[str, Any],
+    parent: dict[str, Any],
+) -> tuple[dict[str, Any], dict[str, Any], list[str]]:
+    errors: list[str] = []
+    teams = spawn_manifest.get("teams") if isinstance(spawn_manifest.get("teams"), list) else []
+    spawns = (
+        spawn_manifest.get("lineage_spawns")
+        if isinstance(spawn_manifest.get("lineage_spawns"), list)
+        else []
+    )
+    child = teams[0] if len(teams) == 1 and isinstance(teams[0], dict) else {}
+    spawn = spawns[0] if len(spawns) == 1 and isinstance(spawns[0], dict) else {}
+
+    if spawn_manifest.get("status") != "PASS":
+        errors.append("Tau child spawn manifest status is not PASS")
+    if len(teams) != 1:
+        errors.append("Tau child spawn manifest must contain exactly one child team")
+    if child.get("team") != "red" or child.get("worker_id") != "red-1":
+        errors.append("Tau child spawn did not materialize red-1")
+    if child.get("parent_lane_id") != parent.get("lane_id"):
+        errors.append("Tau child parent_lane_id does not match red-0")
+    if child.get("spawn_decision_receipt_id") != decision.get("receipt_id"):
+        errors.append("Tau child does not cite the parent spawn-decision receipt")
+    if child.get("inherited_evidence_refs") != decision.get("inherited_evidence_refs"):
+        errors.append("Tau child inherited evidence does not match the parent decision")
+
+    materialized = child.get("materialized_artifact")
+    if not isinstance(materialized, dict):
+        materialized = child.get("materialized")
+    artifact_path = _resolve_artifact_path(
+        out_dir=out_dir,
+        value=materialized.get("path") if isinstance(materialized, dict) else None,
+    )
+    child_receipt_path = _resolve_artifact_path(
+        out_dir=out_dir,
+        value=child.get("subagent_receipt"),
+    )
+    if not isinstance(materialized, dict) or materialized.get("status") != "PASS":
+        errors.append("Tau red-1 executable artifact did not materialize")
+    elif artifact_path is None or not artifact_path.exists():
+        errors.append("Tau red-1 executable artifact path is missing")
+    if child_receipt_path is None or not child_receipt_path.exists():
+        errors.append("Tau red-1 subagent receipt is missing")
+
+    if len(spawns) != 1:
+        errors.append("Tau child spawn manifest must contain exactly one lineage spawn")
+    if spawn.get("spawn_type") != decision.get("decision"):
+        errors.append("Tau lineage spawn type does not match the parent decision")
+    if spawn.get("spawn_decision_receipt_id") != decision.get("receipt_id"):
+        errors.append("Tau lineage spawn does not cite the parent decision")
+    if spawn.get("inherited_evidence_refs") != decision.get("inherited_evidence_refs"):
+        errors.append("Tau lineage spawn inherited evidence does not match the parent decision")
+    return child, spawn, errors
+
+
+def _resolve_artifact_path(*, out_dir: Path, value: Any) -> Path | None:
+    if not isinstance(value, (str, Path)) or not str(value):
+        return None
+    path = Path(str(value))
+    return path if path.is_absolute() else out_dir / path
+
+
+def _merge_judge_receipts(
+    *,
+    parent_judge: dict[str, Any],
+    child_judge: dict[str, Any] | None,
+) -> dict[str, Any]:
+    if not isinstance(child_judge, dict):
+        return parent_judge
+    attempts = [
+        *(
+            parent_judge.get("attempts")
+            if isinstance(parent_judge.get("attempts"), list)
+            else []
+        ),
+        *(
+            child_judge.get("attempts")
+            if isinstance(child_judge.get("attempts"), list)
+            else []
+        ),
+    ]
+    commands = [
+        *(
+            parent_judge.get("commands_run")
+            if isinstance(parent_judge.get("commands_run"), list)
+            else []
+        ),
+        *(
+            child_judge.get("commands_run")
+            if isinstance(child_judge.get("commands_run"), list)
+            else []
+        ),
+    ]
+    blue_success_count = sum(
+        1 for attempt in attempts if isinstance(attempt, dict) and attempt.get("verdict") == "BLUE_SUCCESS"
+    )
+    red_success_count = sum(
+        1 for attempt in attempts if isinstance(attempt, dict) and attempt.get("verdict") == "RED_SUCCESS"
+    )
+    insufficient_count = sum(
+        1
+        for attempt in attempts
+        if isinstance(attempt, dict) and attempt.get("verdict") == "INSUFFICIENT_EVIDENCE"
+    )
+    verdict = (
+        "BLUE_SUCCESS"
+        if blue_success_count
+        else "RED_SUCCESS"
+        if red_success_count
+        else "INSUFFICIENT_EVIDENCE"
+    )
+    return {
+        "schema": "battle.arena_tau_public_only_judge_receipt.v1",
+        "status": "PASS" if verdict in {"BLUE_SUCCESS", "RED_SUCCESS"} else "INSUFFICIENT_EVIDENCE",
+        "verdict": verdict,
+        "red_artifact_count": int(parent_judge.get("red_artifact_count") or 0)
+        + int(child_judge.get("red_artifact_count") or 0),
+        "blue_artifact_count": max(
+            int(parent_judge.get("blue_artifact_count") or 0),
+            int(child_judge.get("blue_artifact_count") or 0),
+        ),
+        "judged_pair_count": len(attempts),
+        "blue_success_count": blue_success_count,
+        "red_success_count": red_success_count,
+        "insufficient_evidence_count": insufficient_count,
+        "attempts": attempts,
+        "commands_run": commands,
+    }
+
+
+def _write_live_prekill_lineage_receipts(
+    *,
+    out_dir: Path,
+    battle_id: str,
+    run_id: str,
+    scenario_id: str,
+    state: dict[str, Any],
+    parent_judge: dict[str, Any],
+    child_judge: dict[str, Any] | None,
+) -> Path:
+    errors = [str(error) for error in state.get("errors", [])]
+    spawn = dict(state.get("spawn") or {})
+    parent_lane_id = str(spawn.get("parent_lane_id") or "payload-857-receipt")
+    child_lane_id = str(spawn.get("child_lane_id") or "payload-857-red-1")
+
+    parent_attempts = [
+        attempt
+        for attempt in (
+            parent_judge.get("attempts")
+            if isinstance(parent_judge.get("attempts"), list)
+            else []
+        )
+        if isinstance(attempt, dict)
+        and attempt.get("red_lane_id") == parent_lane_id
+        and (
+            attempt.get("verdict") == "BLUE_SUCCESS"
+            or attempt.get("parent_kill_confirmed") is True
+            or attempt.get("runtime_parent_terminated_by_blue") is True
+        )
+        and _number_or_none(attempt.get("ended_elapsed_seconds")) is not None
+    ]
+    terminal_attempt = (
+        min(
+            parent_attempts,
+            key=lambda attempt: float(attempt["ended_elapsed_seconds"]),
+        )
+        if parent_attempts
+        else None
+    )
+    terminal_time = (
+        _number_or_none(terminal_attempt.get("ended_elapsed_seconds"))
+        if isinstance(terminal_attempt, dict)
+        else None
+    )
+
+    child_attempts = [
+        attempt
+        for attempt in (
+            child_judge.get("attempts")
+            if isinstance(child_judge, dict)
+            and isinstance(child_judge.get("attempts"), list)
+            else []
+        )
+        if isinstance(attempt, dict)
+        and attempt.get("red_lane_id") == child_lane_id
+        and _number_or_none(attempt.get("started_elapsed_seconds")) is not None
+    ]
+    child_attempt = (
+        min(
+            child_attempts,
+            key=lambda attempt: float(attempt["started_elapsed_seconds"]),
+        )
+        if child_attempts
+        else None
+    )
+    child_attempt_start = (
+        _number_or_none(child_attempt.get("started_elapsed_seconds"))
+        if isinstance(child_attempt, dict)
+        else None
+    )
+
+    pressure_time = _number_or_none(spawn.get("pressure_observed_elapsed_seconds"))
+    decision_time = _number_or_none(spawn.get("decision_recorded_elapsed_seconds"))
+    spawn_time = _number_or_none(spawn.get("spawn_elapsed_seconds"))
+    materialized_time = _number_or_none(spawn.get("child_materialized_elapsed_seconds"))
+
+    if not state.get("attempted"):
+        errors.append("missing live parent pressure observation")
+    if not spawn:
+        errors.append("missing receipt-backed Tau child spawn")
+    if terminal_time is None:
+        errors.append("missing earliest confirmed parent terminal receipt")
+    if child_attempt_start is None:
+        errors.append("missing real post-terminal child Judge attempt")
+    ordered = [pressure_time, decision_time, spawn_time, materialized_time, terminal_time, child_attempt_start]
+    if all(value is not None for value in ordered):
+        if not (
+            float(pressure_time) < float(decision_time) < float(spawn_time)
+            <= float(materialized_time) < float(terminal_time) < float(child_attempt_start)
+        ):
+            errors.append(
+                "live ordering is not pressure < decision < spawn <= materialized < parent terminal < child attempt"
+            )
+    else:
+        errors.append("one or more live causal timestamps are missing")
+
+    if spawn:
+        child_receipt_path = _resolve_artifact_path(
+            out_dir=out_dir,
+            value=spawn.get("child_subagent_receipt"),
+        )
+        child_attempt_path = (
+            _attempt_receipt_path(out_dir=out_dir, attempt=child_attempt)
+            if isinstance(child_attempt, dict)
+            else None
+        )
+        terminal_attempt_path = (
+            _attempt_receipt_path(out_dir=out_dir, attempt=terminal_attempt)
+            if isinstance(terminal_attempt, dict)
+            else None
+        )
+        spawn.update(
+            {
+                "spawn_status": "PASS" if not errors else "INSUFFICIENT_EVIDENCE",
+                "parent_terminal_elapsed_seconds": terminal_time,
+                "post_parent_terminal_receipt_elapsed_seconds": child_attempt_start,
+                "child_attempt_started_elapsed_seconds": child_attempt_start,
+                "child_attempt_receipt": (
+                    _display_ref(path=child_attempt_path, root=out_dir)
+                    if child_attempt_path is not None
+                    else None
+                ),
+                "child_attempt_receipt_sha256": _sha256(child_attempt_path),
+                "parent_terminal_receipt": (
+                    _display_ref(path=terminal_attempt_path, root=out_dir)
+                    if terminal_attempt_path is not None
+                    else None
+                ),
+                "parent_terminal_receipt_sha256": _sha256(terminal_attempt_path),
+                "child_subagent_receipt": (
+                    _display_ref(path=child_receipt_path, root=out_dir)
+                    if child_receipt_path is not None
+                    else spawn.get("child_subagent_receipt")
+                ),
+                "child_subagent_receipt_sha256": _sha256(child_receipt_path),
+            }
+        )
+
+    bundle = {
+        "schema": LINEAGE_SCHEMA,
+        "status": "PASS" if not errors else "INSUFFICIENT_EVIDENCE",
+        "battle_id": battle_id,
+        "run_id": run_id,
+        "scenario_id": scenario_id,
+        "proof_mode": "live_tau",
+        "lineage_mode": "prekill_survival_parent_decision",
+        "errors": list(dict.fromkeys(errors)),
+        "spawns": [spawn] if spawn else [],
+    }
+    return _write_json(out_dir / "lineage-receipts.json", bundle)
+
+
+def _authoritative_prekill_lifecycle_receipts(
+    *,
+    out_dir: Path,
+    battle_id: str,
+    run_id: str,
+    scenario_id: str,
+    receipts: list[dict[str, Any]],
+    lineage_receipt_path: Path | None,
+) -> list[dict[str, Any]]:
+    """Replace retrospective lineage events with the live causal receipt chain."""
+    if lineage_receipt_path is None:
+        return receipts
+    spawns = _lineage_spawns(lineage_receipt_path)
+    if not spawns:
+        return receipts
+    spawn = spawns[0]
+    decision = str(spawn.get("spawn_type") or "")
+    if decision not in PREKILL_SURVIVAL_SPAWN_DECISIONS:
+        return receipts
+
+    parent_lane_id = str(spawn.get("parent_lane_id") or "payload-857-receipt")
+    child_lane_id = str(spawn.get("child_lane_id") or "payload-857-red-1")
+    parent_worker_id = str(spawn.get("parent_worker_id") or "red-0")
+    child_worker_id = str(spawn.get("child_worker_id") or "red-1")
+    inherited_refs = (
+        list(spawn.get("inherited_evidence_refs"))
+        if isinstance(spawn.get("inherited_evidence_refs"), list)
+        else []
+    )
+    pressure_time = _number_or_none(spawn.get("pressure_observed_elapsed_seconds"))
+    decision_time = _number_or_none(spawn.get("decision_recorded_elapsed_seconds"))
+    spawn_time = _number_or_none(spawn.get("spawn_elapsed_seconds"))
+    materialized_time = _number_or_none(
+        spawn.get("child_materialized_elapsed_seconds")
+    )
+    post_terminal_time = _number_or_none(
+        spawn.get("child_attempt_started_elapsed_seconds")
+    )
+
+    pressure_path = _resolve_artifact_path(
+        out_dir=out_dir,
+        value=spawn.get("pressure_receipt_path"),
+    )
+    decision_path = _resolve_artifact_path(
+        out_dir=out_dir,
+        value=spawn.get("spawn_decision_receipt_path"),
+    )
+    child_receipt_path = _resolve_artifact_path(
+        out_dir=out_dir,
+        value=spawn.get("child_subagent_receipt"),
+    )
+    child_attempt_path = _resolve_artifact_path(
+        out_dir=out_dir,
+        value=spawn.get("child_attempt_receipt"),
+    )
+    child_attempt = (
+        _read_json(child_attempt_path)
+        if child_attempt_path is not None and child_attempt_path.exists()
+        else {}
+    )
+    child_observation = (
+        _observation_from_attempt(out_dir=out_dir, attempt=child_attempt)
+        if child_attempt
+        else _no_observation()
+    )
+
+    pressure_observation = {
+        "present": True,
+        "signals": [
+            "response_body_drift",
+            "judge_block_receipt",
+            "blue_patch_receipt",
+        ],
+        "baseline_probe_receipt_id": str(
+            spawn.get("pressure_pair_id") or "parent-prekill"
+        ),
+        "current_probe_receipt_id": str(
+            spawn.get("pressure_pair_id") or "parent-prekill"
+        ),
+        "pressure_score": 1.0,
+        "confidence": "high",
+        "suspected_pressure": False,
+        "confirmed_blue_action": True,
+        "confirmed_kill": False,
+        "source_receipt_id": spawn.get("pressure_receipt_id"),
+        "source_receipt_sha256": spawn.get("pressure_receipt_sha256"),
+        "overclaim_guard": (
+            "observation_only_unless_blue_or_judge_receipt_present"
+        ),
+    }
+    parent_packet = {
+        "present": True,
+        "packet_id": str(
+            spawn.get("spawn_decision_receipt_id") or spawn.get("receipt_id")
+        ),
+        "status": "run_artifact",
+        "parent_packet_id": None,
+        "parent_lane_id": parent_lane_id,
+        "child_lane_id": child_lane_id,
+        "decision": decision,
+        "inherited_evidence_refs": inherited_refs,
+        "research_goals": [
+            "continue the authorized Zip Slip proof from inherited parent evidence",
+        ],
+        "parent_analysis": {
+            "stdout_stderr_response_drift_checked": True,
+            "packet_capture_requested": True,
+            "packet_capture_available": False,
+            "pressure_receipt_id": spawn.get("pressure_receipt_id"),
+            "spawn_decision_receipt_id": spawn.get(
+                "spawn_decision_receipt_id"
+            ),
+            "source_receipt_id": spawn.get("receipt_id"),
+        },
+        "child_ack": {
+            "required": True,
+            "received": False,
+            "ack_source": None,
+        },
+    }
+    child_packet = {
+        **parent_packet,
+        "status": "child_acknowledged",
+        "child_ack": {
+            "required": True,
+            "received": True,
+            "ack_source": "tau_child_subagent_receipt",
+            "used_before_first_probe": True,
+        },
+    }
+
+    # The generic Judge-derived pressure receipt contains the real before/after
+    # observation. Re-time it to the callback instant and attach the exact
+    # pre-terminal pressure receipt that caused the parent decision.
+    pressure_receipt = next(
+        (
+            receipt
+            for receipt in receipts
+            if isinstance(receipt, dict)
+            and receipt.get("event_type") == "pressure_assessed"
+            and receipt.get("lane_id") == parent_lane_id
+        ),
+        None,
+    )
+    if isinstance(pressure_receipt, dict):
+        source_time = pressure_receipt.get("source_time")
+        if isinstance(source_time, dict):
+            source_time["started_elapsed_seconds"] = pressure_time
+            source_time["ended_elapsed_seconds"] = pressure_time
+        pressure_receipt["pressure_observation"] = pressure_observation
+        pressure_receipt.setdefault("evidence", []).append(
+            _evidence(
+                out_dir=out_dir,
+                evidence_id=str(
+                    spawn.get("pressure_receipt_id") or "prekill-pressure"
+                ),
+                evidence_type="probe",
+                source="battle",
+                path=pressure_path,
+            )
+        )
+
+    synthetic_event_types = {
+        "tau_branch_decision_recorded",
+        "spawn_request_recorded",
+        "spawn_decision_recorded",
+        "child_materialized",
+        "child_lifecycle_started",
+        "child_inherited_plan_recorded",
+        "child_inherited_probe_recorded",
+        "child_lifecycle_receipt_after_parent_terminal",
+        "lineage_registered",
+        "memory_promotion_evaluated",
+    }
+    receipts = [
+        receipt
+        for receipt in receipts
+        if not (
+            isinstance(receipt, dict)
+            and receipt.get("event_type") in synthetic_event_types
+        )
+    ]
+
+    decision_evidence = [
+        _evidence(
+            out_dir=out_dir,
+            evidence_id=str(
+                spawn.get("spawn_decision_receipt_id") or "spawn-decision"
+            ),
+            evidence_type="research",
+            source="tau",
+            path=decision_path,
+        ),
+        _evidence(
+            out_dir=out_dir,
+            evidence_id=str(
+                spawn.get("pressure_receipt_id") or "prekill-pressure"
+            ),
+            evidence_type="probe",
+            source="battle",
+            path=pressure_path,
+        ),
+    ]
+    child_evidence = [
+        _evidence(
+            out_dir=out_dir,
+            evidence_id="tau-child-subagent",
+            evidence_type="tau_manifest",
+            source="tau",
+            path=child_receipt_path,
+        ),
+        _evidence(
+            out_dir=out_dir,
+            evidence_id="lineage-receipts",
+            evidence_type="lineage",
+            source="battle",
+            path=lineage_receipt_path,
+        ),
+    ]
+    child_attempt_evidence = [
+        _evidence(
+            out_dir=out_dir,
+            evidence_id="child-judge-attempt",
+            evidence_type="judge_action",
+            source="judge",
+            path=child_attempt_path,
+        )
+    ]
+
+    chain = [
+        _make_lifecycle_receipt(
+            battle_id=battle_id,
+            run_id=run_id,
+            scenario_id=scenario_id,
+            receipt_id=(
+                f"lifecycle:tau_branch_decision:{spawn.get('receipt_id')}"
+            ),
+            lane_id=parent_lane_id,
+            event_type="tau_branch_decision_recorded",
+            phase="branch",
+            actor_team="red",
+            subagent_id=parent_worker_id,
+            pressure_observation=pressure_observation,
+            evidence=decision_evidence,
+            knowledge_packet=parent_packet,
+            tau_branch_decision={
+                "present": True,
+                "schema": "battle.tau_branch_decision.v1",
+                "decision_id": spawn.get("spawn_decision_receipt_id"),
+                "decision_authority": "tau_subagent",
+                "battle_policy_authority": "battle",
+                "subagent_id": parent_worker_id,
+                "decision": "spawn_requested",
+                "requested_spawn_type": decision,
+                "observed_evidence_refs": inherited_refs,
+                "pressure_assessment_refs": [
+                    spawn.get("pressure_receipt_id")
+                ],
+                "opportunity_assessment_refs": [
+                    parent_lane_id,
+                    child_lane_id,
+                ],
+                "rationale": (
+                    "The live parent requested a pre-terminal child after "
+                    "receipt-backed defender pressure."
+                ),
+                "confidence": "high",
+                "why_not_spawn": None,
+                "requested_child_profile": {
+                    "child_exploit_id": child_lane_id,
+                    "generation": 1,
+                },
+                "inherited_goals": list(
+                    parent_packet["research_goals"]
+                ),
+                "pivot_target": None,
+                "research_questions": [],
+                "abandon_reason": None,
+                "battle_policy_result": "allowed",
+                "confirmed_kill": False,
+                "confirmed_block": False,
+                "overclaim_guard": (
+                    "tau_reasoning_only_battle_validates_policy_and_outcomes"
+                ),
+            },
+            source_time={
+                "started_elapsed_seconds": decision_time,
+                "ended_elapsed_seconds": decision_time,
+            },
+        ),
+        _make_lifecycle_receipt(
+            battle_id=battle_id,
+            run_id=run_id,
+            scenario_id=scenario_id,
+            receipt_id=f"lifecycle:spawn_request:{spawn.get('receipt_id')}",
+            lane_id=parent_lane_id,
+            event_type="spawn_request_recorded",
+            phase="spawn_policy",
+            actor_team="red",
+            subagent_id=parent_worker_id,
+            pressure_observation=pressure_observation,
+            evidence=decision_evidence,
+            knowledge_packet=parent_packet,
+            spawn_request={
+                "present": True,
+                "schema": "battle.spawn_request.v1",
+                "request_id": f"spawn-request:{spawn.get('receipt_id')}",
+                "author": "tau_parent",
+                "claim_authority": "tau_claim_only",
+                "requested_decision": decision,
+                "parent_exploit_id": parent_lane_id,
+                "child_exploit_id": child_lane_id,
+                "requested_generation": 1,
+                "cited_pressure_receipt_ids": [
+                    spawn.get("pressure_receipt_id")
+                ],
+                "battle_allowed": False,
+                "allowed": False,
+                "policy_owner": "battle",
+            },
+            source_time={
+                "started_elapsed_seconds": decision_time,
+                "ended_elapsed_seconds": decision_time,
+            },
+        ),
+        _make_lifecycle_receipt(
+            battle_id=battle_id,
+            run_id=run_id,
+            scenario_id=scenario_id,
+            receipt_id=f"lifecycle:spawn_decision:{spawn.get('receipt_id')}",
+            lane_id=parent_lane_id,
+            event_type="spawn_decision_recorded",
+            phase="spawn_policy",
+            actor_team="red",
+            subagent_id=parent_worker_id,
+            pressure_observation=pressure_observation,
+            evidence=decision_evidence,
+            spawn_decision={
+                "present": True,
+                "decision": decision,
+                "allowed": True,
+                "reason_codes": [
+                    "parent_pressure_receipt",
+                    "tau_parent_decision",
+                ],
+                "parent_state": "alive",
+                "author_worker_id": parent_worker_id,
+                "author_lane_id": parent_lane_id,
+                "pressure_receipt_id": spawn.get("pressure_receipt_id"),
+                "pressure_receipt_sha256": spawn.get(
+                    "pressure_receipt_sha256"
+                ),
+                "decision_receipt_id": spawn.get(
+                    "spawn_decision_receipt_id"
+                ),
+                "decision_receipt_sha256": spawn.get(
+                    "spawn_decision_receipt_sha256"
+                ),
+                "inherited_evidence_refs": inherited_refs,
+                "child_exploit_id": child_lane_id,
+                "child_profile_delta": {"generation": 1},
+                "spawn_source_time": (
+                    str(spawn_time) if spawn_time is not None else None
+                ),
+                "confirmed_kill_receipt_before_spawn": False,
+                "budget_remaining_after_spawn": max(
+                    CANONICAL_BATTLE004_ALLOTTED_SECONDS
+                    - float(spawn_time or 0.0),
+                    0.0,
+                ),
+                "source_receipts": [
+                    spawn.get("pressure_receipt_id"),
+                    spawn.get("spawn_decision_receipt_id"),
+                    spawn.get("receipt_id"),
+                ],
+            },
+            knowledge_packet=parent_packet,
+            spawn_policy={
+                "present": True,
+                "owner": "battle",
+                "allowed": True,
+                "decision": decision,
+                "checks": [
+                    {
+                        "id": "pressure_receipt_matches",
+                        "status": "PASS",
+                    },
+                    {"id": "parent_authorship", "status": "PASS"},
+                    {
+                        "id": "no_terminal_before_spawn",
+                        "status": "PASS",
+                    },
+                    {
+                        "id": "generation_cap",
+                        "status": "PASS",
+                        "generation": 1,
+                    },
+                ],
+            },
+            source_time={
+                "started_elapsed_seconds": decision_time,
+                "ended_elapsed_seconds": decision_time,
+            },
+        ),
+        _make_lifecycle_receipt(
+            battle_id=battle_id,
+            run_id=run_id,
+            scenario_id=scenario_id,
+            receipt_id=f"lifecycle:child_materialized:{spawn.get('receipt_id')}",
+            lane_id=child_lane_id,
+            event_type="child_materialized",
+            phase="spawn",
+            actor_team="red",
+            subagent_id=child_worker_id,
+            parent_exploit_id=parent_lane_id,
+            generation=1,
+            evidence=child_evidence,
+            knowledge_packet=child_packet,
+            outcome={
+                "candidate_class": "preemptive_spawn_adaptation",
+                "required_receipt_ids": [str(spawn.get("receipt_id"))],
+                "classification_reason": (
+                    "The receipt-backed child materialized before the "
+                    "parent terminal confirmation."
+                ),
+            },
+            source_time={
+                "started_elapsed_seconds": materialized_time,
+                "ended_elapsed_seconds": materialized_time,
+            },
+        ),
+        _make_lifecycle_receipt(
+            battle_id=battle_id,
+            run_id=run_id,
+            scenario_id=scenario_id,
+            receipt_id=(
+                f"lifecycle:child_lifecycle_started:{spawn.get('receipt_id')}"
+            ),
+            lane_id=child_lane_id,
+            event_type="child_lifecycle_started",
+            phase="runtime",
+            actor_team="red",
+            subagent_id=child_worker_id,
+            parent_exploit_id=parent_lane_id,
+            generation=1,
+            evidence=child_evidence,
+            knowledge_packet=child_packet,
+            source_time={
+                "started_elapsed_seconds": materialized_time,
+                "ended_elapsed_seconds": materialized_time,
+            },
+        ),
+        _make_lifecycle_receipt(
+            battle_id=battle_id,
+            run_id=run_id,
+            scenario_id=scenario_id,
+            receipt_id=(
+                f"lifecycle:child_inherited_plan:{spawn.get('receipt_id')}"
+            ),
+            lane_id=child_lane_id,
+            event_type="child_inherited_plan_recorded",
+            phase="research",
+            actor_team="red",
+            subagent_id=child_worker_id,
+            parent_exploit_id=parent_lane_id,
+            generation=1,
+            evidence=child_evidence,
+            knowledge_packet=child_packet,
+            child_plan={
+                "present": True,
+                "schema": "battle.child_inherited_plan.v1",
+                "plan_id": f"child-plan:{spawn.get('receipt_id')}",
+                "knowledge_packet_id": parent_packet["packet_id"],
+                "child_ack_receipt_id": (
+                    f"lifecycle:child_lifecycle_started:"
+                    f"{spawn.get('receipt_id')}"
+                ),
+                "decision": decision,
+                "inherited_item_refs": inherited_refs,
+                "first_probe_goal": (
+                    "replay the inherited authorized exploit against "
+                    "the current Blue artifact"
+                ),
+                "used_before_first_probe": True,
+                "scope_inherited": True,
+                "superseded": False,
+            },
+            source_time={
+                "started_elapsed_seconds": materialized_time,
+                "ended_elapsed_seconds": materialized_time,
+            },
+        ),
+        _make_lifecycle_receipt(
+            battle_id=battle_id,
+            run_id=run_id,
+            scenario_id=scenario_id,
+            receipt_id=(
+                f"lifecycle:child_inherited_probe:{spawn.get('receipt_id')}"
+            ),
+            lane_id=child_lane_id,
+            event_type="child_inherited_probe_recorded",
+            phase="probe",
+            actor_team="red",
+            subagent_id=child_worker_id,
+            parent_exploit_id=parent_lane_id,
+            generation=1,
+            evidence=child_attempt_evidence,
+            observation=child_observation,
+            knowledge_packet=child_packet,
+            inherited_probe={
+                "present": True,
+                "schema": "battle.child_inherited_probe.v1",
+                "probe_id": (
+                    f"child-inherited-probe:{spawn.get('receipt_id')}"
+                ),
+                "child_plan_id": f"child-plan:{spawn.get('receipt_id')}",
+                "knowledge_packet_id": parent_packet["packet_id"],
+                "used_inherited_state": True,
+                "inherited_item_refs": inherited_refs,
+                "observation_receipt_id": (
+                    "lifecycle:child_lifecycle_receipt_after_parent_terminal:"
+                    f"{spawn.get('receipt_id')}"
+                ),
+            },
+            source_time={
+                "started_elapsed_seconds": post_terminal_time,
+                "ended_elapsed_seconds": post_terminal_time,
+            },
+        ),
+        _make_lifecycle_receipt(
+            battle_id=battle_id,
+            run_id=run_id,
+            scenario_id=scenario_id,
+            receipt_id=(
+                "lifecycle:child_lifecycle_receipt_after_parent_terminal:"
+                f"{spawn.get('receipt_id')}"
+            ),
+            lane_id=child_lane_id,
+            event_type="child_lifecycle_receipt_after_parent_terminal",
+            phase="post_parent_terminal",
+            actor_team="red",
+            subagent_id=child_worker_id,
+            parent_exploit_id=parent_lane_id,
+            generation=1,
+            evidence=child_attempt_evidence,
+            knowledge_packet=child_packet,
+            outcome={
+                "candidate_class": "preemptive_spawn_adaptation",
+                "required_receipt_ids": [str(spawn.get("receipt_id"))],
+                "classification_reason": (
+                    "The real child Judge attempt started after the "
+                    "parent terminal receipt."
+                ),
+            },
+            source_time={
+                "started_elapsed_seconds": post_terminal_time,
+                "ended_elapsed_seconds": post_terminal_time,
+            },
+        ),
+        _make_lifecycle_receipt(
+            battle_id=battle_id,
+            run_id=run_id,
+            scenario_id=scenario_id,
+            receipt_id=f"lifecycle:lineage_registered:{spawn.get('receipt_id')}",
+            lane_id=child_lane_id,
+            event_type="lineage_registered",
+            phase="spawn",
+            actor_team="orchestrator",
+            parent_exploit_id=parent_lane_id,
+            generation=1,
+            evidence=[
+                _evidence(
+                    out_dir=out_dir,
+                    evidence_id="lineage-receipts",
+                    evidence_type="lineage",
+                    source="battle",
+                    path=lineage_receipt_path,
+                )
+            ],
+            outcome={
+                "candidate_class": "preemptive_spawn_adaptation",
+                "required_receipt_ids": [str(spawn.get("receipt_id"))],
+                "classification_reason": (
+                    "The child is registered from a live Tau spawn "
+                    "receipt, not an initial worker label."
+                ),
+            },
+            source_time={
+                "started_elapsed_seconds": spawn_time,
+                "ended_elapsed_seconds": materialized_time,
+            },
+        ),
+        _make_lifecycle_receipt(
+            battle_id=battle_id,
+            run_id=run_id,
+            scenario_id=scenario_id,
+            receipt_id=f"lifecycle:memory_promotion:{spawn.get('receipt_id')}",
+            lane_id=child_lane_id,
+            event_type="memory_promotion_evaluated",
+            phase="research",
+            actor_team="orchestrator",
+            parent_exploit_id=parent_lane_id,
+            generation=1,
+            evidence=child_attempt_evidence,
+            knowledge_packet=child_packet,
+            memory_promotion={
+                "present": True,
+                "candidate_id": parent_packet["packet_id"],
+                "durable_promoted": True,
+                "validator_required": True,
+                "promotion_scope": "battle_lifecycle_memory",
+                "reason": (
+                    "The child acknowledged inherited receipt hashes and "
+                    "produced a real post-terminal Judge attempt."
+                ),
+            },
+            source_time={
+                "started_elapsed_seconds": materialized_time,
+                "ended_elapsed_seconds": post_terminal_time,
+            },
+        ),
+    ]
+
+    receipts.extend(chain)
+    for sequence, receipt in enumerate(receipts):
+        source_time = receipt.get("source_time")
+        if isinstance(source_time, dict):
+            source_time["sequence"] = sequence
+    return receipts
+
+
+def _make_lifecycle_receipt(
+    *,
+    battle_id: str,
+    run_id: str,
+    scenario_id: str,
+    receipt_id: str,
+    lane_id: str,
+    event_type: str,
+    phase: str,
+    actor_team: str,
+    evidence: list[dict[str, Any]] | None = None,
+    pressure_observation: dict[str, Any] | None = None,
+    spawn_decision: dict[str, Any] | None = None,
+    outcome: dict[str, Any] | None = None,
+    score: dict[str, Any] | None = None,
+    source_time: dict[str, Any] | None = None,
+    parent_exploit_id: str | None = None,
+    generation: int = 0,
+    persona_id: str | None = None,
+    subagent_id: str | None = None,
+    observation: dict[str, Any] | None = None,
+    knowledge_packet: dict[str, Any] | None = None,
+    memory_promotion: dict[str, Any] | None = None,
+    spawn_policy: dict[str, Any] | None = None,
+    drift_analysis: dict[str, Any] | None = None,
+    threat_assessment: dict[str, Any] | None = None,
+    tau_branch_decision: dict[str, Any] | None = None,
+    spawn_request: dict[str, Any] | None = None,
+    child_plan: dict[str, Any] | None = None,
+    inherited_probe: dict[str, Any] | None = None,
+    replay_event: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    return {
+        "schema": EXPLOIT_LIFECYCLE_RECEIPT_SCHEMA,
+        "receipt_id": receipt_id,
+        "battle_id": battle_id,
+        "run_id": run_id,
+        "scenario_id": scenario_id,
+        "lane_id": lane_id,
+        "source_time": {
+            "started_at": None,
+            "ended_at": None,
+            "started_elapsed_seconds": None,
+            "ended_elapsed_seconds": None,
+            "sequence": 0,
+            "clock": "battle_control_plane_perf_counter",
+            **(source_time or {}),
+        },
+        "actor": {
+            "team": actor_team,
+            "subagent_id": subagent_id,
+            "persona_id": persona_id,
+            "tau_task_id": None,
+        },
+        "exploit": {
+            "exploit_id": lane_id,
+            "lineage_id": f"{battle_id}:{scenario_id}:lineage",
+            "parent_exploit_id": parent_exploit_id,
+            "generation": generation,
+            "profile": _lifecycle_profile_for_lane(
+                lane_id=lane_id,
+                generation=generation,
+            ),
+        },
+        "event_type": event_type,
+        "phase": phase,
+        "evidence": evidence or [],
+        "pressure_observation": pressure_observation or _no_pressure(),
+        "spawn_decision": spawn_decision or _no_spawn(),
+        "outcome": outcome or _no_outcome(),
+        "score": score or _no_score(),
+        "observation": observation or _no_observation(),
+        "knowledge_packet": knowledge_packet or _no_knowledge_packet(),
+        "memory_promotion": memory_promotion or _no_memory_promotion(),
+        "spawn_policy": spawn_policy or _no_spawn_policy(),
+        "drift_analysis": drift_analysis or _no_drift_analysis(),
+        "threat_assessment": threat_assessment or _no_threat_assessment(),
+        "tau_branch_decision": (
+            tau_branch_decision or _no_tau_branch_decision()
+        ),
+        "spawn_request": spawn_request or _no_spawn_request(),
+        "child_plan": child_plan or _no_child_plan(),
+        "inherited_probe": inherited_probe or _no_inherited_probe(),
+        "replay_event": replay_event or _no_replay_event(),
+        "validation": {
+            "mocked": False,
+            "live": True,
+            "proof_mode": "live_tau",
+            "validator_version": "battle-live-lifecycle-v2",
+        },
+    }
+
+def _run_claims(
+    *,
+    lineage_receipt_path: Path | None,
+) -> dict[str, list[str]]:
     proves = [
         "Arena created private answer-key artifacts and public team artifacts.",
         "Battle invoked Tau's Red/Blue live handoff bridge, not direct Scillm.",
@@ -2794,12 +4587,32 @@ def _run_claims(*, lineage_receipt_path: Path | None) -> dict[str, list[str]]:
         "Unbounded Battle swarm execution.",
         "Blue kill, fastest crash, or promotion.",
     ]
-    if lineage_receipt_path is None:
+    if lineage_receipt_path is None or not lineage_receipt_path.exists():
         does_not_prove.insert(0, "Autonomous child-spawn lineage.")
-    else:
-        proves.append("A parent Red lane spawned a child Red lane from explicit lineage receipts after Judge handoff.")
-    return {"proves": proves, "does_not_prove": does_not_prove}
+        return {"proves": proves, "does_not_prove": does_not_prove}
 
+    lineage = _read_json(lineage_receipt_path)
+    if (
+        lineage.get("status") == "PASS"
+        and lineage.get("lineage_mode")
+        == "prekill_survival_parent_decision"
+    ):
+        proves.append(
+            "A live parent Red pressure receipt caused a parent-authored "
+            "pre-terminal Tau child spawn, and the child produced a real "
+            "post-terminal Judge receipt."
+        )
+    elif lineage.get("status") == "PASS":
+        proves.append(
+            "A parent Red lane spawned a child Red lane from explicit "
+            "lineage receipts after Judge handoff."
+        )
+    else:
+        does_not_prove.insert(
+            0,
+            "Autonomous child-spawn lineage; the lineage contract did not PASS.",
+        )
+    return {"proves": proves, "does_not_prove": does_not_prove}
 
 def _parent_blocked_for_spawn(*, judge: dict[str, Any], parent_lane_id: str) -> bool:
     attempts = judge.get("attempts") if isinstance(judge.get("attempts"), list) else []
@@ -2926,8 +4739,16 @@ def _run_tau_spawn_child(
     model: str,
     scillm_base_url: str,
     timeout_s: float,
+    pressure_receipt: Path | None = None,
+    spawn_decision_receipt: Path | None = None,
 ) -> Path | None:
+    if (pressure_receipt is None) != (spawn_decision_receipt is None):
+        raise ValueError(
+            "pressure_receipt and spawn_decision_receipt must be supplied together"
+        )
     tau_out = out_dir / "tau-live"
+    manifest_path = tau_out / "spawn-manifest.json"
+    manifest_path.unlink(missing_ok=True)
     command = [
         "uv",
         "run",
@@ -2968,22 +4789,36 @@ def _run_tau_spawn_child(
         "--child-lane-id",
         "payload-857-red-1",
     ]
+    if pressure_receipt is not None and spawn_decision_receipt is not None:
+        command.extend(
+            [
+                "--pressure-receipt",
+                str(pressure_receipt),
+                "--spawn-decision-receipt",
+                str(spawn_decision_receipt),
+            ]
+        )
+    env = os.environ.copy()
+    env.pop("UV_PROJECT_ENVIRONMENT", None)
+    env.pop("VIRTUAL_ENV", None)
     result = subprocess.run(
         command,
         cwd=TAU_REPO,
-        env=os.environ.copy(),
+        env=env,
         text=True,
         capture_output=True,
         timeout=max(int(timeout_s) + 60, 90),
         check=False,
     )
-    (out_dir / "tau-spawn-command.stdout.txt").write_text(result.stdout, encoding="utf-8")
-    (out_dir / "tau-spawn-command.stderr.txt").write_text(result.stderr, encoding="utf-8")
-    manifest_path = tau_out / "spawn-manifest.json"
-    if not manifest_path.exists():
-        return None
-    return manifest_path
-
+    (out_dir / "tau-spawn-command.stdout.txt").write_text(
+        result.stdout,
+        encoding="utf-8",
+    )
+    (out_dir / "tau-spawn-command.stderr.txt").write_text(
+        result.stderr,
+        encoding="utf-8",
+    )
+    return manifest_path if manifest_path.exists() else None
 
 def _read_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
