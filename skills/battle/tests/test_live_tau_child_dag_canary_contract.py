@@ -9,6 +9,7 @@ from battle_skill.live_tau_child_dag_canary import (
     LIVE_TAU_CANARY_SCHEMA,
     _find_artifact,
     _missing_required_tau_artifacts,
+    _pr3c_boundary_status,
     _top_receipt,
 )
 
@@ -78,4 +79,56 @@ def test_live_tau_canary_follows_node_receipt_external_artifact_refs(tmp_path: P
     assert _find_artifact(tau_run, "exploit_specimen.py") == code_path
     missing = _missing_required_tau_artifacts(tau_run)
     assert "exploit_specimen.py" not in missing
-    assert "compile_receipt.json" in missing
+    assert "specimen.json" in missing
+
+
+def test_pr3c_boundary_status_passes_with_provider_authorship_receipts(tmp_path: Path) -> None:
+    tau_run = tmp_path / "tau-dag-run"
+    step = tau_run / "command-loop" / "command-artifacts" / "command-loop-step-004"
+    step.mkdir(parents=True)
+    provider = tmp_path / "provider-workspace" / "exploit-code-author"
+    outputs = provider / "outputs"
+    receipts = provider / "receipts"
+    outputs.mkdir(parents=True)
+    receipts.mkdir(parents=True)
+    code_path = outputs / "exploit_specimen.py"
+    code_path.write_text("print('provider-authored candidate')\n", encoding="utf-8")
+    (tau_run / "command-loop-step-002").mkdir(parents=True)
+    (tau_run / "command-loop-step-002" / "research_receipts.json").write_text("{}", encoding="utf-8")
+    (tau_run / "command-loop-step-003").mkdir(parents=True)
+    (tau_run / "command-loop-step-003" / "exploit_genome.json").write_text("{}", encoding="utf-8")
+    (outputs / "specimen.json").write_text(
+        json.dumps({"provider_live": True, "agentic": True, "code_sha256": "sha256:" + "1" * 64}),
+        encoding="utf-8",
+    )
+    provider_fields = {
+        "status": "PASS",
+        "provider_live": True,
+        "agentic": True,
+        "fixture_fallback_used": False,
+        "compile_status": "NOT_RUN",
+        "runtime_status": "NOT_RUN",
+        "judge_verified_exploits": 0,
+    }
+    (receipts / "provider-authorship-receipt.json").write_text(json.dumps(provider_fields), encoding="utf-8")
+    (receipts / "provider-code-author-boundary-receipt.json").write_text(json.dumps(provider_fields), encoding="utf-8")
+    evidence = [
+        {"kind": "exploit_specimen.py", "path": str(code_path)},
+        {"kind": "specimen.json", "path": str(outputs / "specimen.json")},
+        {"kind": "provider-authorship-receipt.json", "path": str(receipts / "provider-authorship-receipt.json")},
+        {"kind": "provider-code-author-boundary-receipt.json", "path": str(receipts / "provider-code-author-boundary-receipt.json")},
+    ]
+    (step / "exploit-code-author-node-receipt.json").write_text(
+        json.dumps({"status": "PASS", "provider_live": True, "agentic": True, "fixture_fallback_used": False, "evidence": evidence}),
+        encoding="utf-8",
+    )
+
+    status = _pr3c_boundary_status(tau_run)
+
+    assert status["status"] == "PASS"
+    assert status["provider_live"] is True
+    assert status["agentic"] is True
+    assert status["fixture_fallback_used"] is False
+    assert status["compile_status"] == "NOT_RUN"
+    assert status["runtime_status"] == "NOT_RUN"
+    assert status["judge_verified_exploits"] == 0

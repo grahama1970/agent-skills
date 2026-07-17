@@ -59,7 +59,7 @@ def run_code_author(
 
     lineage = _read_json(lineage_summary_path)
     research = _read_json(research_receipts_path)
-    methods = _read_json(candidate_methods_path)
+    _read_json(candidate_methods_path)
     genome = _read_json(exploit_genome_path)
     child_packet = _read_json(child_knowledge_packet_path) if child_knowledge_packet_path and child_knowledge_packet_path.exists() else {}
     battle_id = str(genome.get("battle_id") or research.get("battle_id") or lineage.get("battle_id") or "battle-004")
@@ -335,7 +335,9 @@ def _worker_task_text(work_order: dict[str, Any]) -> str:
             "Use only the input JSON files referenced in the Battle work order.",
             "Write the source artifact to outputs/exploit_specimen.py.",
             "Write a tau.scillm_worker_result.v1 JSON artifact to outputs/provider-worker-result.json.",
-            "The worker result must list outputs/exploit_specimen.py in artifacts.",
+            "The worker result status must be exactly PASS, BLOCKED, or NEEDS_REVIEW; use PASS only if outputs/exploit_specimen.py was written.",
+            "The worker result must list outputs/exploit_specimen.py in artifacts when status is PASS.",
+            "Example successful worker result: {\"schema\":\"tau.scillm_worker_result.v1\",\"status\":\"PASS\",\"goal_hash\":\"<goal_hash>\",\"changed_files\":[\"outputs/exploit_specimen.py\"],\"artifacts\":[\"outputs/exploit_specimen.py\"],\"tests_run\":[],\"findings\":[]}.",
             "Do not compile, import, run, Docker-execute, or judge the code.",
             "Do not claim exploit success, target contact, Blue bypass, Blue detection, or Judge verification.",
             "Battle work order:",

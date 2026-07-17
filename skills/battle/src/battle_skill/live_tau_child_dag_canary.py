@@ -23,6 +23,12 @@ REQUIRED_TAU_ARTIFACTS = [
     "research_receipts.json",
     "exploit_genome.json",
     "exploit_specimen.py",
+    "specimen.json",
+    "provider-authorship-receipt.json",
+    "provider-code-author-boundary-receipt.json",
+    "exploit-code-author-node-receipt.json",
+]
+FULL_CHILD_RUN_ARTIFACTS = [
     "compile_receipt.json",
     "battle_exploit_runner_handoff.json",
 ]
@@ -169,10 +175,11 @@ def run_live_tau_child_dag_canary(
         return receipt
 
     missing_artifacts = _missing_required_tau_artifacts(tau_run_dir)
+    pr3c_boundary = _pr3c_boundary_status(tau_run_dir)
     handoff_path = _find_artifact(tau_run_dir, "battle_exploit_runner_handoff.json")
     code_path = _find_artifact(tau_run_dir, "exploit_specimen.py")
     specimen_run_receipt: dict[str, Any] | None = None
-    if handoff_path and code_path and not missing_artifacts:
+    if handoff_path and code_path and not _missing_full_child_run_artifacts(tau_run_dir):
         specimen_run_receipt = _run_tau_child_specimen(
             battle_id=battle_id,
             out_dir=out_dir,
@@ -183,9 +190,8 @@ def run_live_tau_child_dag_canary(
     else:
         events.append(_event("tau_child_artifacts_missing", artifact="tau-dag-run/dag-receipt.json", detail={"missing_artifacts": missing_artifacts}))
 
-    tau_status = str(tau_receipt.get("status") or "UNKNOWN")
-    status = "PASS" if tau_status == "PASS" and not missing_artifacts and specimen_run_receipt is not None else "BLOCKED"
-    reason = "live_tau_child_dag_completed" if status == "PASS" else _blocked_reason(tau_receipt=tau_receipt, missing_artifacts=missing_artifacts)
+    status = "PASS" if pr3c_boundary["status"] == "PASS" else "BLOCKED"
+    reason = "pr3c_provider_authorship_boundary_reached" if status == "PASS" else _blocked_reason(tau_receipt=tau_receipt, missing_artifacts=missing_artifacts)
     receipt = _top_receipt(
         battle_id=battle_id,
         status=status,
@@ -197,6 +203,7 @@ def run_live_tau_child_dag_canary(
         events=events,
         missing_artifacts=missing_artifacts,
         specimen_run_receipt=specimen_run_receipt,
+        pr3c_boundary=pr3c_boundary,
         tau_command=tau_command,
         tau_exit_code=tau_result.returncode,
         tau_elapsed_seconds=tau_elapsed,
@@ -325,6 +332,7 @@ def _top_receipt(
     events: list[dict[str, Any]],
     missing_artifacts: list[str],
     specimen_run_receipt: dict[str, Any] | None,
+    pr3c_boundary: dict[str, Any] | None = None,
     private_reference_findings: list[dict[str, Any]] | None = None,
     tau_command: list[str] | None = None,
     tau_exit_code: int | None = None,
@@ -338,6 +346,8 @@ def _top_receipt(
         "tau_receipt_present": tau_receipt is not None,
         "required_tau_artifacts_present": len(missing_artifacts) == 0,
         "child_specimen_run": specimen_run_receipt is not None,
+        "pr3c_provider_authorship_boundary": pr3c_boundary.get("status") == "PASS" if isinstance(pr3c_boundary, dict) else False,
+        "provider_live": pr3c_boundary.get("provider_live") if isinstance(pr3c_boundary, dict) else None,
         "judge_verified_exploits": 0,
         "verdict": status,
         "reason": reason,
@@ -369,11 +379,14 @@ def _top_receipt(
         "tau_receipt_status": tau_receipt.get("status") if isinstance(tau_receipt, dict) else None,
         "tau_receipt_verdict": tau_receipt.get("verdict") if isinstance(tau_receipt, dict) else None,
         "missing_tau_artifacts": missing_artifacts,
+        "pr3c_boundary": pr3c_boundary or {},
         "private_reference_findings": private_reference_findings or [],
         "scoreboard": scoreboard,
         "claims": {
-            "proves": _proves_for(status=status, specimen_run_receipt=specimen_run_receipt),
+            "proves": _proves_for(status=status, specimen_run_receipt=specimen_run_receipt, pr3c_boundary=pr3c_boundary),
             "does_not_prove": [
+                "The provider-authored code compiled.",
+                "The provider-authored code ran.",
                 "Any exploit succeeded.",
                 "Any specimen bypassed Blue.",
                 "Any Blue detection, kill, or block occurred.",
@@ -384,11 +397,13 @@ def _top_receipt(
     }
 
 
-def _proves_for(*, status: str, specimen_run_receipt: dict[str, Any] | None) -> list[str]:
+def _proves_for(*, status: str, specimen_run_receipt: dict[str, Any] | None, pr3c_boundary: dict[str, Any] | None = None) -> list[str]:
     proves = [
         "Battle attempted the real local Tau DAG runtime without fixture fallback.",
         "Battle recorded Tau preflight and DAG invocation stdout/stderr artifacts.",
     ]
+    if status == "PASS" and isinstance(pr3c_boundary, dict) and pr3c_boundary.get("status") == "PASS":
+        proves.append("Tau reached the PR3c provider-authorship boundary with provider_live:true, agentic:true, and fixture_fallback_used:false.")
     if status == "PASS" and specimen_run_receipt is not None:
         proves.extend(["Tau produced the required child DAG artifacts.", "Battle ran the Tau child specimen in Docker."])
     return proves
@@ -426,8 +441,88 @@ def _missing_required_tau_artifacts(tau_run_dir: Path) -> list[str]:
     return [name for name in REQUIRED_TAU_ARTIFACTS if _find_artifact(tau_run_dir, name) is None]
 
 
+def _missing_full_child_run_artifacts(tau_run_dir: Path) -> list[str]:
+    return [name for name in FULL_CHILD_RUN_ARTIFACTS if _find_artifact(tau_run_dir, name) is None]
+
+
 def _child_output_artifact_paths(tau_run_dir: Path) -> list[Path]:
     return [path for name in REQUIRED_TAU_ARTIFACTS if (path := _find_artifact(tau_run_dir, name)) is not None]
+
+
+def _pr3c_boundary_status(tau_run_dir: Path) -> dict[str, Any]:
+    paths = {name: _find_artifact(tau_run_dir, name) for name in REQUIRED_TAU_ARTIFACTS}
+    missing = [name for name, path in paths.items() if path is None]
+    errors = [f"missing required PR3c artifact: {name}" for name in missing]
+    code_author_receipt = _read_optional_json(paths.get("exploit-code-author-node-receipt.json"))
+    authorship = _read_optional_json(paths.get("provider-authorship-receipt.json"))
+    boundary = _read_optional_json(paths.get("provider-code-author-boundary-receipt.json"))
+    specimen = _read_optional_json(paths.get("specimen.json"))
+
+    provider_live = (
+        _truthy_receipt_field(code_author_receipt, "provider_live")
+        and _truthy_receipt_field(authorship, "provider_live")
+        and _truthy_receipt_field(boundary, "provider_live")
+        and _truthy_receipt_field(specimen, "provider_live")
+    )
+    agentic = (
+        _truthy_receipt_field(code_author_receipt, "agentic")
+        and _truthy_receipt_field(authorship, "agentic")
+        and _truthy_receipt_field(boundary, "agentic")
+        and _truthy_receipt_field(specimen, "agentic")
+    )
+    fixture_fallback_used = any(
+        _truthy_receipt_field(payload, "fixture_fallback_used")
+        for payload in (code_author_receipt, authorship, boundary)
+        if isinstance(payload, dict)
+    )
+    if code_author_receipt.get("status") != "PASS":
+        errors.append("exploit-code-author-node-receipt.json status is not PASS")
+    if authorship.get("status") != "PASS":
+        errors.append("provider-authorship-receipt.json status is not PASS")
+    if boundary.get("status") != "PASS":
+        errors.append("provider-code-author-boundary-receipt.json status is not PASS")
+    if not provider_live:
+        errors.append("provider_live true attestation missing across PR3c receipts")
+    if not agentic:
+        errors.append("agentic true attestation missing across PR3c receipts")
+    if fixture_fallback_used:
+        errors.append("fixture fallback was used in PR3c provider boundary")
+    if boundary.get("compile_status") != "NOT_RUN":
+        errors.append("provider-code-author-boundary-receipt.json compile_status is not NOT_RUN")
+    if boundary.get("runtime_status") != "NOT_RUN":
+        errors.append("provider-code-author-boundary-receipt.json runtime_status is not NOT_RUN")
+    if boundary.get("judge_verified_exploits") != 0:
+        errors.append("provider-code-author-boundary-receipt.json judge_verified_exploits is not 0")
+    code_sha = specimen.get("code_sha256")
+    if not (isinstance(code_sha, str) and code_sha.startswith("sha256:")):
+        errors.append("specimen.json missing sha256 code hash binding")
+
+    return {
+        "schema": "battle.pr3c_provider_authorship_boundary_status.v1",
+        "status": "PASS" if not errors else "BLOCKED",
+        "provider_live": bool(provider_live),
+        "agentic": bool(agentic),
+        "fixture_fallback_used": bool(fixture_fallback_used),
+        "compile_status": boundary.get("compile_status"),
+        "runtime_status": boundary.get("runtime_status"),
+        "judge_verified_exploits": boundary.get("judge_verified_exploits") if boundary else 0,
+        "code_sha256": code_sha,
+        "artifacts": {name: str(path) for name, path in paths.items() if path is not None},
+        "errors": errors,
+    }
+
+
+def _read_optional_json(path: Path | None) -> dict[str, Any]:
+    if path is None or not path.exists():
+        return {}
+    try:
+        return _read_json(path)
+    except (OSError, json.JSONDecodeError, RuntimeError):
+        return {}
+
+
+def _truthy_receipt_field(payload: dict[str, Any], field: str) -> bool:
+    return isinstance(payload, dict) and payload.get(field) is True
 
 
 def _find_artifact(root: Path, name: str) -> Path | None:
