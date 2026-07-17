@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/schemas/cinematic_script_dna.schema.json",
+  "title": "Script DNA Selection Output",
+  "type": "object",
+  "required": ["script_dna"],
+  "properties": {
+    "script_dna": {
+      "type": "object",
+      "required": [
+        "primary_mode",
+        "influences_as_techniques",
+        "scene_engine",
+        "dialogue_style",
+        "conflict_pattern",
+        "structure",
+        "theme",
+        "beat_rules",
+        "do_not_use"
+      ],
+      "properties": {
+        "primary_mode": {"type": "string"},
+        "influences_as_techniques": {
+          "type": "array",
+          "minItems": 1,
+          "items": {"type": "string"}
+        },
+        "scene_engine": {"type": "string"},
+        "dialogue_style": {"type": "string"},
+        "conflict_pattern": {"type": "string"},
+        "structure": {"type": "string"},
+        "theme": {"type": "string"},
+        "beat_rules": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "do_not_use": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "selected_catalog_ids": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "rationale": {"type": "string"}
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

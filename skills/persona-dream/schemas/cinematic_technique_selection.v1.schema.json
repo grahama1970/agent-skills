@@ -1,0 +1,265 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.local/schemas/cinematic_technique_selection.schema.json",
+  "title": "Cinematic Technique Selector Output",
+  "type": "object",
+  "required": [
+    "skill",
+    "version",
+    "mode",
+    "user_intent_summary",
+    "inferred_context",
+    "visual_strategy",
+    "look_lock",
+    "shot_plan",
+    "continuity_lock",
+    "negative_constraints",
+    "composer_notes"
+  ],
+  "properties": {
+    "skill": {
+      "const": "cinematic_technique_selector"
+    },
+    "version": {
+      "type": "string"
+    },
+    "mode": {
+      "enum": [
+        "technique_selection",
+        "technique_selection_with_prompt",
+        "script_dna_selection",
+        "technique_and_script_selection"
+      ]
+    },
+    "user_intent_summary": {
+      "type": "string"
+    },
+    "inferred_context": {
+      "type": "object",
+      "required": [
+        "genre",
+        "mood",
+        "location_type",
+        "time_of_day",
+        "realism_level",
+        "shot_count",
+        "duration_seconds",
+        "aspect_ratio"
+      ],
+      "properties": {
+        "genre": {
+          "type": "string"
+        },
+        "mood": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "location_type": {
+          "type": "string"
+        },
+        "time_of_day": {
+          "type": "string"
+        },
+        "realism_level": {
+          "type": "string"
+        },
+        "shot_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12
+        },
+        "duration_seconds": {
+          "type": "number",
+          "minimum": 1
+        },
+        "aspect_ratio": {
+          "type": "string"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "era": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "visual_strategy": {
+      "type": "object",
+      "required": [
+        "primary_visual_dna",
+        "trait_translation",
+        "rationale"
+      ],
+      "properties": {
+        "primary_visual_dna": {
+          "type": "string"
+        },
+        "trait_translation": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rationale": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "look_lock": {
+      "type": "object",
+      "required": [
+        "camera_format",
+        "lens",
+        "lighting",
+        "color_grade",
+        "atmosphere_texture",
+        "composition",
+        "motion_rules",
+        "continuity_rule"
+      ],
+      "properties": {
+        "camera_format": {
+          "type": "string"
+        },
+        "lens": {
+          "type": "string"
+        },
+        "lighting": {
+          "type": "string"
+        },
+        "color_grade": {
+          "type": "string"
+        },
+        "atmosphere_texture": {
+          "type": "string"
+        },
+        "composition": {
+          "type": "string"
+        },
+        "motion_rules": {
+          "type": "string"
+        },
+        "continuity_rule": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "script_dna": {
+      "type": "object",
+      "required": [
+        "primary_mode",
+        "influences_as_techniques",
+        "scene_engine",
+        "dialogue_style",
+        "conflict_pattern",
+        "structure",
+        "theme",
+        "beat_rules",
+        "do_not_use"
+      ],
+      "properties": {
+        "primary_mode": {
+          "type": "string"
+        },
+        "influences_as_techniques": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "scene_engine": {
+          "type": "string"
+        },
+        "dialogue_style": {
+          "type": "string"
+        },
+        "conflict_pattern": {
+          "type": "string"
+        },
+        "structure": {
+          "type": "string"
+        },
+        "theme": {
+          "type": "string"
+        },
+        "beat_rules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "do_not_use": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "shot_plan": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "shot_number",
+          "framing",
+          "camera_movement",
+          "action",
+          "focus_target",
+          "continuity_reminder"
+        ],
+        "properties": {
+          "shot_number": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "framing": {
+            "type": "string"
+          },
+          "camera_movement": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string"
+          },
+          "focus_target": {
+            "type": "string"
+          },
+          "continuity_reminder": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "continuity_lock": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "negative_constraints": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "composer_notes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "final_prompt": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": true
+}
