@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
-import { existsSync, readFileSync } from 'node:fs'
-import { basename, relative } from 'node:path'
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs'
+import { basename, relative, resolve } from 'node:path'
 import { PHASE_ARTIFACTS_CONTRACT } from '../../contracts/src/index'
 import type { DreamArtifactRef, DreamPhaseProjection, PhaseArtifactRequirement } from '../../contracts/src/index'
 
@@ -74,6 +74,164 @@ function semanticBlockers(requirement: PhaseArtifactRequirement, path: string): 
     ]
   }
   return [`unknown_semantic_validator:${requirement.semantic_validator}`]
+}
+
+type ProviderReturnCandidate = {
+  revisionId: string
+  requestKey: string
+  returnRoot: string
+  mp4Path: string
+  envelope: Record<string, unknown> | null
+  ffprobe: Record<string, unknown> | null
+  review: Record<string, unknown> | null
+  contactSheetPath?: string
+  mtimeMs: number
+}
+
+function listDirectories(path: string): string[] {
+  try {
+    return readdirSync(path, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name)
+  } catch {
+    return []
+  }
+}
+
+function collectProviderReturns(runRoot: string): ProviderReturnCandidate[] {
+  const revisionsRoot = resolve(runRoot, '.persona-dream', 'revisions')
+  const candidates: ProviderReturnCandidate[] = []
+  for (const revisionId of listDirectories(revisionsRoot)) {
+    const returnsRoot = resolve(revisionsRoot, revisionId, 'phase_11_submit_return', 'provider_return')
+    for (const requestKey of listDirectories(returnsRoot)) {
+      const returnRoot = resolve(returnsRoot, requestKey)
+      const mp4Path = resolve(returnRoot, 'provider_return.mp4')
+      if (!existsSync(mp4Path)) continue
+      const contactSheetPath = resolve(returnRoot, 'frame_contact_sheet.png')
+      candidates.push({
+        revisionId,
+        requestKey,
+        returnRoot,
+        mp4Path,
+        envelope: readJson(resolve(returnRoot, 'phase11_provider_return_envelope.v1.json')),
+        ffprobe: readJson(resolve(returnRoot, 'phase11_download_ffprobe_receipt.v1.json')),
+        review: readJson(resolve(returnRoot, 'post_kling_continuity_review_receipt.v1.json')),
+        contactSheetPath: existsSync(contactSheetPath) ? contactSheetPath : undefined,
+        mtimeMs: statSync(mp4Path).mtimeMs,
+      })
+    }
+  }
+  return candidates.sort((left, right) => right.mtimeMs - left.mtimeMs)
+}
+
+function pendingRequestGap(runRoot: string, activeRevisionId?: string): string | null {
+  if (!activeRevisionId) return null
+  const canonical = readJson(resolve(
+    runRoot, '.persona-dream', 'revisions', activeRevisionId,
+    'phase_11_submit_return', 'canonical', 'phase11_live_request.v1.json',
+  ))
+  if (!canonical) return null
+  const bindings = canonical.approval_bindings as Record<string, unknown> | undefined
+  const requestHash = typeof bindings?.request_body_sha256 === 'string' ? bindings.request_body_sha256 : ''
+  const missing = Array.isArray(canonical.missing_approval_types) ? canonical.missing_approval_types : []
+  if (!requestHash) return null
+  return missing.length > 0
+    ? `A repaired request ${requestHash} is compiled with zero provider calls and awaits ${missing.length} human hash-bound approvals before one paid submit.`
+    : `A compiled request ${requestHash} exists for this revision and has not returned provider media yet.`
+}
+
+/**
+ * Build the Provider Return stage from real returned provider media.
+ *
+ * The Phase 01-10 artifact contract never covers post-qualification provider
+ * returns, so without this projection the UI "Provider Return" page has no
+ * data source even when a returned MP4 exists on disk. Returns from a
+ * non-active revision are surfaced with an explicit superseded label instead
+ * of being hidden or silently claimed current.
+ */
+export function buildProviderReturnStage(runRoot: string, activeRevisionId?: string): DreamPhaseProjection | null {
+  const candidates = collectProviderReturns(runRoot)
+  const gap = pendingRequestGap(runRoot, activeRevisionId)
+  if (candidates.length === 0 && !gap) return null
+  const active = candidates.find((candidate) => candidate.revisionId === activeRevisionId)
+  const chosen = active ?? candidates[0]
+
+  const assetUrl = (path: string) => `/api/projects/dream/asset?path=${encodeURIComponent(path)}`
+  const artifacts: DreamArtifactRef[] = []
+  const images: DreamPhaseProjection['images'] = []
+  let status = 'NOT_EXECUTED'
+  let summary = 'No provider return has been received for the active revision.'
+  const gaps: string[] = []
+
+  if (chosen) {
+    const superseded = chosen.revisionId !== activeRevisionId
+    const reviewStatus = typeof chosen.review?.status === 'string' ? chosen.review.status : ''
+    const format = (chosen.ffprobe?.ffprobe as Record<string, unknown> | undefined)?.format as Record<string, unknown> | undefined
+    const duration = typeof format?.duration === 'string' ? `${format.duration}s` : ''
+    const sizeBytes = typeof chosen.ffprobe?.size_bytes === 'number' ? chosen.ffprobe.size_bytes : undefined
+    const mp4Sha = typeof chosen.ffprobe?.downloaded_sha256 === 'string' ? chosen.ffprobe.downloaded_sha256 : ''
+    status = superseded
+      ? 'RETURN_RECEIVED_SUPERSEDED_PRIOR_REVISION'
+      : reviewStatus.includes('FAIL')
+        ? 'RETURN_RECEIVED_CONTINUITY_FAILED'
+        : 'RETURN_RECEIVED'
+    summary = [
+      `Real provider MP4 returned for request ${chosen.requestKey.slice(0, 16)}… in revision ${chosen.revisionId}`,
+      duration && sizeBytes ? `(${duration}, ${sizeBytes.toLocaleString()} bytes${mp4Sha ? `, ${mp4Sha.slice(0, 23)}…` : ''})` : '',
+      superseded ? 'This return is bound to a superseded revision and is shown as historical evidence, not as the current deliverable.' : '',
+    ].filter(Boolean).join(' ')
+    if (reviewStatus.includes('FAIL')) {
+      const findings = Array.isArray(chosen.review?.blocking_findings) ? chosen.review.blocking_findings : []
+      const codes = findings
+        .map((finding) => (finding && typeof finding === 'object' ? String((finding as Record<string, unknown>).code ?? '') : ''))
+        .filter(Boolean)
+      gaps.push(`Post-provider continuity review failed${codes.length ? `: ${codes.join(', ')}` : ''}.`)
+    }
+    artifacts.push({ label: relative(runRoot, chosen.mp4Path), path: chosen.mp4Path, kind: 'media', url: assetUrl(chosen.mp4Path) })
+    for (const [name, value] of Object.entries({
+      'phase11_provider_return_envelope.v1.json': chosen.envelope,
+      'phase11_download_ffprobe_receipt.v1.json': chosen.ffprobe,
+      'post_kling_continuity_review_receipt.v1.json': chosen.review,
+    })) {
+      if (!value) continue
+      const path = resolve(chosen.returnRoot, name)
+      artifacts.push({ label: relative(runRoot, path), path, kind: 'json', url: assetUrl(path) })
+    }
+    if (chosen.contactSheetPath) {
+      images.push({ label: relative(runRoot, chosen.contactSheetPath), path: chosen.contactSheetPath, url: assetUrl(chosen.contactSheetPath) })
+    }
+  }
+  if (gap) gaps.push(gap)
+
+  return {
+    id: '11',
+    title: 'Provider Return',
+    status,
+    summary,
+    failureOrGap: gaps.length > 0 ? gaps.join(' ') : null,
+    artifacts,
+    requiredArtifacts: {},
+    images,
+    acceptance: { state: 'not_evaluated' },
+    evidence: {
+      state: chosen ? 'present' : 'missing',
+      required: [],
+      observed: artifacts,
+      missingIds: chosen ? [] : ['provider_return_mp4'],
+      malformedIds: [],
+      semanticInvalidIds: [],
+    },
+    lineage: {
+      state: chosen && chosen.revisionId === activeRevisionId ? 'current' : 'stale',
+      activeRevisionId,
+      sourceRevisionIds: chosen ? [chosen.revisionId] : [],
+      staleReasons: chosen && chosen.revisionId !== activeRevisionId
+        ? [{ code: 'PROVIDER_RETURN_BOUND_TO_SUPERSEDED_REVISION', observed: chosen.revisionId }]
+        : [],
+    },
+    effectiveState: chosen && chosen.revisionId === activeRevisionId ? 'accepted_current' : 'accepted_stale',
+    repair: { eligible: false, reason: 'provider_return_projection_is_read_only' },
+  }
 }
 
 export function projectStages(

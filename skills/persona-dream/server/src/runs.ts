@@ -6,7 +6,7 @@ import type { DreamRunDetailResponse, HumanIdeaProjection, StoryboardConsumerPro
 import { hydrateStoryboardConsumer } from './consumerContracts'
 import { validateIdeaLineage } from './ideaLineage'
 import { DreamPathPolicy } from './paths'
-import { projectStages } from './stages'
+import { buildProviderReturnStage, projectStages } from './stages'
 
 const ACTIVATION_RECEIPT_NAME = 'revision_activation_receipt.json'
 const REQUIRED_ACTIVATION_FILES = [
@@ -467,7 +467,10 @@ export async function buildRunDetail(policy: DreamPathPolicy, requestedRoot: str
       },
     }
   })
-  const earliest = stages.find((stage) => ['missing', 'malformed', 'semantic_invalid', 'accepted_stale', 'blocked_current', 'blocked_stale'].includes(stage.effectiveState))
+  const providerReturnStage = buildProviderReturnStage(runRoot, sourceRevisionId || undefined)
+  if (providerReturnStage) stages.push(providerReturnStage)
+  const earliest = stages.find((stage) => Number(stage.id) <= 10
+    && ['missing', 'malformed', 'semantic_invalid', 'accepted_stale', 'blocked_current', 'blocked_stale'].includes(stage.effectiveState))
   const repairEnabled = Boolean(revision?.repair_enabled === true || revision?.pipeline_complete === true)
   const phaseRange = earliest ? stages.filter((stage) => Number(stage.id) >= Number(earliest.id) && Number(stage.id) <= 10).map((stage) => stage.id) : []
   const candidate = earliest && sourceRevisionId

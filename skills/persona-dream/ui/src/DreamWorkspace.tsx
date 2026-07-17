@@ -1003,6 +1003,7 @@ function StageCard({
             <ProviderContractPanel stage={stage} />
           </PipelineErrorBoundary>
         )}
+        {stage.id === '11' && <ProviderReturnPanel stage={stage} />}
         {!['01', '02', '03', '04', '05', '06', '07', '08', '09', '10'].includes(stage.id) && (
           <>
             <p style={styles.stageSummary}>{stage.summary}</p>
@@ -1072,6 +1073,33 @@ function StageCardHeader({ stage }: { stage: DreamStage }) {
         </div>
       )}
     </div>
+  )
+}
+
+function ProviderReturnPanel({ stage }: { stage: DreamStage }) {
+  const video = stage.artifacts.find(
+    (artifact) => artifact.kind === 'media' && /\.mp4$/i.test(artifact.path)
+  )
+  const superseded = /SUPERSEDED/i.test(stage.status)
+  if (!video) return null
+  return (
+    <section data-qid="dream:provider-return-panel" style={{ display: 'grid', gap: 10, marginBottom: 12 }}>
+      {superseded && (
+        <div style={{ ...styles.gapBox, borderColor: 'rgba(250,204,21,0.45)', color: '#facc15' }}>
+          Historical provider return from a superseded revision. The active revision&apos;s repaired
+          request has not been submitted yet.
+        </div>
+      )}
+      <video
+        data-qid="dream:provider-return-video"
+        src={video.url ?? `/api/projects/dream/asset?path=${encodeURIComponent(video.path)}`}
+        controls
+        preload="metadata"
+        playsInline
+        style={{ width: '100%', maxHeight: 480, borderRadius: 12, background: '#000', border: '1px solid rgba(148,163,184,0.25)' }}
+      />
+      <p style={{ margin: 0, fontSize: 12, color: 'rgba(148,163,184,0.9)' }}>{video.label}</p>
+    </section>
   )
 }
 
