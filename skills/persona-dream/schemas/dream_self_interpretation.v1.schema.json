@@ -1,0 +1,206 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "persona_dream.dream_self_interpretation.v1",
+  "description": "Phase 13 output. Tentative persona self-interpretations of a Watch observation packet. Every accepted claim must cite at least one Watch observation id AND at least one source-memory id, carry confidence and uncertainty, and offer an alternative (renderer-defect) explanation. Interpretation is a proposal, not durable persona truth.",
+  "type": "object",
+  "required": [
+    "schema",
+    "status",
+    "dream_id",
+    "revision_id",
+    "run_id",
+    "persona_id",
+    "observation_packet_sha256",
+    "observation_index",
+    "source_memory_bindings",
+    "recall_receipts",
+    "candidates",
+    "accepted_interpretations",
+    "rejected_interpretations",
+    "mocked",
+    "live",
+    "provider_live"
+  ],
+  "properties": {
+    "schema": { "const": "persona_dream.dream_self_interpretation.v1" },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PASS_SELF_INTERPRETATION",
+        "PASS_SELF_INTERPRETATION_WITH_REJECTIONS",
+        "BLOCKED_SELF_INTERPRETATION"
+      ]
+    },
+    "dream_id": { "type": "string", "minLength": 1 },
+    "revision_id": { "type": "string", "minLength": 1 },
+    "run_id": { "type": "string", "minLength": 1 },
+    "persona_id": { "type": "string", "minLength": 1 },
+    "observation_packet_path": { "type": "string" },
+    "observation_packet_sha256": { "type": "string", "pattern": "^sha256:" },
+    "intended_dream": { "type": "object" },
+    "observation_index": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["observation_id", "observation_type", "summary"],
+        "properties": {
+          "observation_id": { "type": "string", "minLength": 1 },
+          "observation_type": { "type": "string" },
+          "summary": { "type": "string" },
+          "renderer_review": { "type": "boolean" },
+          "renderer_defect_verdict": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "source_memory_bindings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["source_id", "persona_id", "memory_text_sha256"],
+        "properties": {
+          "source_id": { "type": "string", "minLength": 1 },
+          "persona_id": { "type": "string" },
+          "collection": { "type": "string" },
+          "memory_text_sha256": { "type": "string", "pattern": "^sha256:" },
+          "recall_confirmed": { "type": "boolean" }
+        }
+      }
+    },
+    "recall_receipts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["question", "collections", "tags", "found", "returned_keys"],
+        "properties": {
+          "question": { "type": "string" },
+          "collections": { "type": "array", "items": { "type": "string" } },
+          "tags": { "type": "array", "items": { "type": "string" } },
+          "found": { "type": "boolean" },
+          "confidence": { "type": ["number", "null"] },
+          "returned_keys": { "type": "array", "items": { "type": "string" } },
+          "residue_source_ids_confirmed": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "llm": {
+      "type": "object",
+      "properties": {
+        "model": { "type": "string" },
+        "provider": { "type": "string" },
+        "auth": { "type": "string" },
+        "caller_skill": { "type": "string" },
+        "candidate_count": { "type": "integer" }
+      }
+    },
+    "candidates": {
+      "type": "array",
+      "description": "Raw LLM proposals before the deterministic gate; synthetic-origin stamping happens only on acceptance.",
+      "items": { "$ref": "#/$defs/proposed_candidate" }
+    },
+    "accepted_interpretations": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/candidate" }
+    },
+    "rejected_interpretations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["interpretation_id", "reasons"],
+        "properties": {
+          "interpretation_id": { "type": "string" },
+          "reasons": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    },
+    "honesty_rule": {
+      "type": "object",
+      "properties": {
+        "identity_drift_dual_explanation_present": { "type": "boolean" },
+        "renderer_defect_favored_on_drift": { "type": "boolean" }
+      }
+    },
+    "blockers": { "type": "array", "items": { "type": "string" } },
+    "mocked": { "const": false },
+    "live": { "type": "boolean" },
+    "provider_live": { "type": "boolean" },
+    "generated_at": { "type": "string" }
+  },
+  "$defs": {
+    "proposed_candidate": {
+      "type": "object",
+      "required": [
+        "interpretation_id",
+        "tom_state_type",
+        "subject",
+        "target",
+        "statement",
+        "observation_refs",
+        "source_memory_refs",
+        "confidence",
+        "alternative_explanation"
+      ],
+      "properties": {
+        "interpretation_id": { "type": "string", "minLength": 1 },
+        "tom_state_type": { "type": "string", "minLength": 1 },
+        "subject": { "type": "string", "minLength": 1 },
+        "target": { "type": "string", "minLength": 1 },
+        "statement": { "type": "string", "minLength": 1 },
+        "observation_refs": { "type": "array", "items": { "type": "string" } },
+        "source_memory_refs": { "type": "array", "items": { "type": "string" } },
+        "confidence": { "type": "number" },
+        "uncertainty": { "type": "string" },
+        "emotional_intensity": { "type": "number" },
+        "alternative_explanation": { "type": "string" },
+        "cites_renderer_review": { "type": "boolean" },
+        "favored_explanation": { "type": "string" },
+        "synthetic_origin": { "type": "boolean" },
+        "literal_historical_event": { "type": "boolean" }
+      }
+    },
+    "candidate": {
+      "type": "object",
+      "required": [
+        "interpretation_id",
+        "tom_state_type",
+        "subject",
+        "target",
+        "statement",
+        "observation_refs",
+        "source_memory_refs",
+        "confidence",
+        "uncertainty",
+        "alternative_explanation",
+        "synthetic_origin",
+        "literal_historical_event"
+      ],
+      "properties": {
+        "interpretation_id": { "type": "string", "minLength": 1 },
+        "tom_state_type": { "type": "string", "minLength": 1 },
+        "subject": { "type": "string", "minLength": 1 },
+        "target": { "type": "string", "minLength": 1 },
+        "statement": { "type": "string", "minLength": 1 },
+        "observation_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "source_memory_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" }
+        },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "uncertainty": { "type": "string" },
+        "emotional_intensity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "alternative_explanation": { "type": "string", "minLength": 1 },
+        "cites_renderer_review": { "type": "boolean" },
+        "favored_explanation": {
+          "type": "string",
+          "enum": ["renderer_defect", "psychological", "undetermined"]
+        },
+        "synthetic_origin": { "const": true },
+        "literal_historical_event": { "const": false }
+      }
+    }
+  }
+}
