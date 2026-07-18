@@ -18,7 +18,14 @@ def _schema(name: str) -> dict:
     return json.loads((SCHEMA_DIR / name).read_text(encoding="utf-8"))
 
 
-def test_pr3b_proof_card_fixture_normalizes_backend_artifacts_without_tau_paths(tmp_path: Path) -> None:
+def test_pr3b_proof_card_fixture_normalizes_backend_artifacts_without_tau_paths(
+    tmp_path: Path, monkeypatch
+) -> None:
+    # PR3B is the "blocked at exploit-code-author" proof: it must NOT author a child
+    # exploit (claim boundary: must_not_claim child_exploit_generated). Force the
+    # provider launch to an unreachable endpoint so exploit-code-author blocks
+    # deterministically, independent of whether a live SciLLM happens to be running.
+    monkeypatch.setenv("BATTLE_SCILLM_BASE_URL", "http://127.0.0.1:59999")
     combiner = tmp_path / "combiner"
     run_exploit_combiner_proof(
         battle_id="battle-004",
