@@ -22,8 +22,10 @@ from embry_voice_control.chat_projection import build_turn_chat_projection
 from embry_voice_control.event_journal import append_event, list_events, validate_event
 from embry_voice_control.journal_emitters import (
     emit_chatterbox_voice_render_completed,
+    emit_entities_extraction_completed,
     emit_speaker_verification_completed,
     emit_tau_turn_plan_completed,
+    _validate_entity_spans,
 )
 
 
@@ -208,3 +210,122 @@ def test_full_six_type_projection_resolves(tmp_path: Path) -> None:
     speaker_step = next(s for s in trace_types if s == "speaker.verification.completed")
     assert speaker_step  # resolved
     assert projection["hashes"]["audio_sha256"] == audio_hash
+
+
+def test_validate_entity_spans_fails_closed() -> None:
+    text = "The capital of France is Paris."
+    # Correct span resolves.
+    _validate_entity_spans(
+        [{"extracted": {"text": "Paris", "span": [25, 30]}}], text
+    )
+    # Wrong text at the span is rejected before any journal write.
+    for bad in (
+        [{"extracted": {"text": "Paris", "span": [0, 5]}}],       # mismatched mention
+        [{"extracted": {"text": "Paris", "span": [25, 99]}}],     # out of range
+        [{"extracted": {"text": "capital", "span": [4, 11]}},     # overlapping spans
+         {"extracted": {"text": "apital ", "span": [5, 12]}}],
+    ):
+        try:
+            _validate_entity_spans(bad, text)
+        except ValueError:
+            continue
+        raise AssertionError("expected entity span validation to fail closed")
+
+
+def test_entities_emitter_completes_projection(tmp_path: Path) -> None:
+    """The real entities emitter resolves the full projection end to end.
+
+    Mirrors the six-type projection test but produces both
+    ``entities.extraction.completed`` events through
+    ``emit_entities_extraction_completed`` (not synthetic ``_add`` rows), so the
+    producer wired into the live runner is exercised against the actual
+    projection consumer and ``chat_projection._annotations`` span validation.
+    """
+    db = tmp_path / "events.sqlite3"
+    audio = tmp_path / "answer.wav"
+    audio_hash = _write_wav(audio)
+    user_text = "Hey Embry, what is the capital of France?"
+    answer = "The capital of France is Paris."
+    answer_hash = hashlib.sha256(answer.encode()).hexdigest()
+    plan = {"session_id": "s", "turn_id": "t", "source_event_id": "source",
+            "display_text": answer, "display_text_sha256": answer_hash,
+            "tts_render_text_sha256": answer_hash}
+    plan_path = tmp_path / "plan.json"
+    plan_hash = _write_json(plan_path, plan)
+
+    source = _add(db, "source", "listener.final_transcript",
+                  {"text": user_text, "audio_sha256": "cafebabe", "audio_path": str(audio)},
+                  cause="recording")
+    emit_speaker_verification_completed(
+        db, source_event=source, decision={
+            "accepted": True, "speaker_id": "horus_lupercal", "profile_hash": "profabc",
+            "score": 0.9, "confidence": 0.9, "threshold": 0.75, "observed_margin": 0.2,
+            "min_margin": 0.08, "best_impostor_confidence": 0.7,
+            "candidates": [{"speaker_id": "horus_lupercal", "confidence": 0.9}],
+            "speaker_identity_proven": True, "allow_personal_memory": True,
+            "fresh_physical_human_speech": True, "source_identity": "physical_horus_identity",
+            "voice_persona": "horus_lupercal", "engine": "resemblyzer_voice_encoder",
+            "rejection_reason": None,
+        }, profile_receipt={"path": str(tmp_path / "enroll.json"), "sha256": "sha256:enroll"})
+    _add(db, "memory-speaker", "memory.speaker_resolved", {}, cause="source")
+    _add(db, "memory-intent", "memory.intent_resolved", {}, cause="memory-speaker")
+    memory_answer = _add(db, "memory-answer", "memory.answer_resolved", {}, cause="memory-intent")
+    tau_plan = emit_tau_turn_plan_completed(
+        db, source_event=source, causation_id=memory_answer["event_id"],
+        turn_plan_path=str(plan_path), turn_plan_sha256="sha256:" + plan_hash,
+        tts_render_text_sha256=answer_hash, source_contract="physical_horus_identity")
+    _add(db, "tau-tick", "tau.persistent_tick.completed", {}, cause=tau_plan["event_id"])
+
+    # Real extractor-shaped results (spans resolve inside each message text).
+    user_result = {"entity_nodes": [{"id": "domain:capital", "node_kind": "domain_term",
+        "status": "extracted",
+        "extracted": {"text": "capital", "span": [23, 30],
+                      "source": "extract_entities_domain_terms", "kind": "domain_term"},
+        "metadata": {"grounded": True}}]}
+    assistant_result = {"entity_nodes": [{"id": "domain:paris", "node_kind": "domain_term",
+        "status": "extracted",
+        "extracted": {"text": "Paris", "span": [25, 30],
+                      "source": "extract_entities_domain_terms", "kind": "domain_term"},
+        "metadata": {"grounded": True}}]}
+    user_event = emit_entities_extraction_completed(
+        db, source_event=source, target_role="user", target_event_id=source["event_id"],
+        text=user_text, extraction_result=user_result,
+        result_path=tmp_path / "entities" / "user-entities.json")
+    assistant_event = emit_entities_extraction_completed(
+        db, source_event=source, target_role="assistant",
+        target_event_id=tau_plan["event_id"], text=answer,
+        extraction_result=assistant_result,
+        result_path=tmp_path / "entities" / "assistant-entities.json")
+    assert user_event["type"] == "entities.extraction.completed"
+    assert user_event["causation_id"] == source["event_id"]
+    assert user_event["payload"]["target_role"] == "user"
+    assert assistant_event["causation_id"] == tau_plan["event_id"]
+    assert assistant_event["payload"]["span_count"] == 1
+
+    render = emit_chatterbox_voice_render_completed(
+        db, source_event=source, tau_plan_event=tau_plan,
+        render_receipt={"acceptance": {"a": True},
+                        "tau": {"turn_plan_path": str(plan_path),
+                                "turn_plan_sha256": "sha256:" + plan_hash,
+                                "tts_render_text_sha256": answer_hash},
+                        "chatterbox": {"audio_path": str(audio), "audio_sha256": audio_hash}},
+        render_receipt_sha256="sha256:receipt")
+
+    projection = build_turn_chat_projection(db, session_id="s", turn_id="t")
+    user_message, assistant_message = projection["messages"]
+    assert user_message["annotations"][0]["mention"] == "capital"
+    assert user_message["annotations"][0]["extraction_event_id"] == user_event["event_id"]
+    assert assistant_message["annotations"][0]["mention"] == "Paris"
+    assert assistant_message["annotations"][0]["extraction_event_id"] == assistant_event["event_id"]
+    assert user_event["event_id"] in projection["required_event_ids"]
+    assert assistant_event["event_id"] in projection["required_event_ids"]
+    assert projection["hashes"]["audio_sha256"] == audio_hash
+
+    # Event ids are stable content hashes (id seed = target event + text hash +
+    # result hash), so re-appending the exact stored event is idempotent in the
+    # journal and the runner reuses it on crash recovery instead of re-emitting.
+    assert user_event["event_id"].startswith("entities.extraction.completed.")
+    replay = append_event(db, {k: v for k, v in user_event.items() if k != "sequence"})
+    assert replay["event_id"] == user_event["event_id"]
+    assert replay["sequence"] == user_event["sequence"]
+    _revalidate_stored(db)

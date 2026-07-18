@@ -20,7 +20,9 @@ from typing import Any
 from embry_voice_control.event_journal import append_event, session_snapshot
 from embry_voice_control.journal_emitters import (
     emit_chatterbox_voice_render_completed,
+    emit_entities_extraction_completed,
     emit_speaker_verification_completed,
+    run_entity_extraction,
 )
 from embry_voice_control.speaker_gate import verify_turn_speaker
 from .case_executor import CaseExecutor, ManagedListenerProcess
@@ -1414,6 +1416,81 @@ def _voice_render_event(
     )
 
 
+def _entities_extraction_events(
+    journal_db: Path,
+    live_config: dict[str, Any],
+    case: dict[str, Any],
+    turn: dict[str, Any],
+    source: dict[str, Any],
+    turn_state: dict[str, Any],
+) -> dict[str, dict[str, Any]]:
+    """Journal the two ``entities.extraction.completed`` events for one turn.
+
+    ``chat_projection.build_turn_chat_projection`` fails closed with
+    ``entity_events_incomplete`` unless exactly one entities event exists for
+    role ``user`` (over the ``listener.final_transcript`` text) and one for role
+    ``assistant`` (over the Tau turn plan's ``display_text``).  Both texts are
+    extracted with the sanctioned deterministic ``extract-entities`` skill, so
+    every annotation traces to real computed data.  Causation parents match the
+    events that carry each message's text.  Idempotent: an existing event per
+    role is reused (and its causation re-checked) rather than re-emitted.
+    """
+    session_events = session_snapshot(journal_db, case["session_id"])["events"]
+    existing = {
+        event["payload"].get("target_role"): event
+        for event in session_events
+        if event.get("type") == "entities.extraction.completed"
+        and event.get("turn_id") == turn["turn_id"]
+    }
+
+    _, memory_tau = load_locator(
+        turn_state["receipts"]["memory_tau"], label="memory_tau_receipt"
+    )
+    tau_plan_event = (memory_tau.get("journal_events") or {}).get("tau_turn_plan")
+    if not isinstance(tau_plan_event, dict) or not tau_plan_event.get("event_id"):
+        raise ValueError("tau_turn_plan_event_missing")
+    plan_locator = tau_plan_event.get("payload") or {}
+    plan_path = Path(str(plan_locator.get("turn_plan_path") or ""))
+    if not plan_path.is_file():
+        raise FileNotFoundError(f"tau_turn_plan_missing:{plan_path}")
+    expected_plan_hash = str(plan_locator.get("turn_plan_sha256") or "").removeprefix(
+        "sha256:"
+    )
+    if hashlib.sha256(plan_path.read_bytes()).hexdigest() != expected_plan_hash:
+        raise ValueError("tau_turn_plan_hash_mismatch")
+    plan = read_json(plan_path)
+
+    user_text = str(source["payload"].get("text") or "")
+    assistant_text = str(plan.get("display_text") or "")
+    if not user_text or not assistant_text:
+        raise ValueError("entities_projection_text_missing")
+
+    output = _turn_dir(live_config, case["case_id"], turn["turn_id"]) / "entities"
+    targets = (
+        ("user", source["event_id"], user_text),
+        ("assistant", tau_plan_event["event_id"], assistant_text),
+    )
+    events: dict[str, dict[str, Any]] = {}
+    for role, target_event_id, text in targets:
+        if role in existing:
+            stored = existing[role]
+            if stored.get("causation_id") != target_event_id:
+                raise ValueError(f"entities_causation_mismatch:{role}")
+            events[role] = stored
+            continue
+        extraction_result = run_entity_extraction(text)
+        events[role] = emit_entities_extraction_completed(
+            journal_db,
+            source_event=source,
+            target_role=role,
+            target_event_id=target_event_id,
+            text=text,
+            extraction_result=extraction_result,
+            result_path=output / f"{role}-entities.json",
+        )
+    return events
+
+
 def _turn_completed_event(
     journal_db: Path,
     campaign_id: str,
@@ -2313,6 +2390,14 @@ def run_campaign(
                 )
                 _voice_render_event(
                     journal_db,
+                    case,
+                    turn,
+                    source,
+                    turn_state,
+                )
+                _entities_extraction_events(
+                    journal_db,
+                    live_config,
                     case,
                     turn,
                     source,

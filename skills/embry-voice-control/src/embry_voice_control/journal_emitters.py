@@ -48,12 +48,22 @@ from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
+import subprocess
 from typing import Any
 import wave
 
 from embry_voice_control.event_journal import append_event
 
 EVENT_SCHEMA = "embry.voice_event.v1"
+
+# The sanctioned deterministic extractor (Flashtext/RapidFuzz, zero LLM cost)
+# whose ``entity_nodes`` shape is exactly what ``chat_projection._annotations``
+# consumes.  This is the same ``$extract-entities`` capability the chat-ux
+# backfill (``journalize_projection_inputs.py``) journaled from, and the same
+# family the memory stage uses for intent resolution.
+ENTITY_EXTRACTOR_RUN = Path(
+    "/home/graham/workspace/experiments/agent-skills/skills/extract-entities/run.sh"
+)
 
 
 def canonical_json(value: Any) -> bytes:
@@ -306,6 +316,198 @@ def emit_chatterbox_voice_render_completed(
             "tau_turn_plan_sha256": turn_plan_sha256,
             "tts_render_text_sha256": tts_render_text_sha256,
             "audio_sha256": audio_sha256,
+        },
+        payload=payload,
+    )
+    return append_event(journal_db, event)
+
+
+def run_entity_extraction(text: str) -> dict[str, Any]:
+    """Run the sanctioned deterministic ``extract-entities`` skill over ``text``.
+
+    Returns the full ``EntityExtractionResult`` object.  No LLM is invoked
+    (Aho-Corasick + RapidFuzz), so the result is a pure function of the input
+    text and the extractor's grounded vocabulary -- re-running a turn yields the
+    same ``entity_nodes`` and therefore the same journaled event id.
+    """
+    completed = subprocess.run(
+        [str(ENTITY_EXTRACTOR_RUN), "extract", "--json", "--verbose", text],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    parsed = json.loads(completed.stdout)
+    if not isinstance(parsed, dict):
+        raise ValueError("entity_extraction_result_invalid")
+    return parsed
+
+
+def _validate_entity_spans(entity_nodes: list[dict[str, Any]], text: str) -> None:
+    """Fail CLOSED before journaling: every span must resolve inside ``text``.
+
+    Mirrors ``chat_projection._annotations`` exactly so this producer can never
+    emit an event the projection would later reject with ``entity_span_invalid``.
+    """
+    if not isinstance(entity_nodes, list):
+        raise ValueError("entity_nodes_invalid")
+    previous_end = -1
+    for node in sorted(
+        (n for n in entity_nodes if isinstance(n.get("extracted", {}).get("span"), list)),
+        key=lambda n: (int(n["extracted"]["span"][0]), int(n["extracted"]["span"][1])),
+    ):
+        extracted = node.get("extracted", {})
+        span = extracted.get("span")
+        if len(span) != 2:
+            continue
+        start, end = int(span[0]), int(span[1])
+        mention = str(extracted.get("text", ""))
+        if not (0 <= start < end <= len(text)) or text[start:end] != mention:
+            raise ValueError("entity_span_mismatch")
+        if start < previous_end:
+            raise ValueError("entity_spans_overlap")
+        previous_end = end
+
+
+def _select_non_overlapping_nodes(
+    entity_nodes: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Deterministically resolve overlapping real spans for the projection.
+
+    The sanctioned extractor legitimately returns nested spans (an outer noun
+    phrase and a grounded term inside it, e.g. ``certified evidence`` >
+    ``evidence``).  ``chat_projection._annotations`` fails closed on any span
+    overlap, so a chat annotation layer can carry only one mark per character.
+    This keeps the outermost (longest, earliest-starting) REAL span and drops
+    the nested ones -- inventing nothing, only selecting a maximal non-overlapping
+    subset of what the extractor actually found.  Nodes without a valid 2-int
+    span are retained untouched (the projection ignores them).  Returns
+    ``(entity_nodes_out, dropped)`` preserving the input order of kept nodes.
+    """
+    spanned: list[tuple[int, int, dict[str, Any]]] = []
+    for node in entity_nodes:
+        span = node.get("extracted", {}).get("span")
+        if isinstance(span, list) and len(span) == 2:
+            try:
+                start, end = int(span[0]), int(span[1])
+            except (TypeError, ValueError):
+                continue
+            if 0 <= start < end:
+                spanned.append((start, end, node))
+    kept_ids: set[int] = set()
+    last_end = -1
+    for start, end, node in sorted(spanned, key=lambda item: (item[0], -(item[1] - item[0]))):
+        if start >= last_end:
+            kept_ids.add(id(node))
+            last_end = end
+    dropped = [node for _, _, node in spanned if id(node) not in kept_ids]
+    dropped_ids = {id(node) for node in dropped}
+    entity_nodes_out = [node for node in entity_nodes if id(node) not in dropped_ids]
+    return entity_nodes_out, dropped
+
+
+def emit_entities_extraction_completed(
+    journal_db: Path,
+    *,
+    source_event: dict[str, Any],
+    target_role: str,
+    target_event_id: str,
+    text: str,
+    extraction_result: dict[str, Any],
+    result_path: Path,
+    correlation_id: str | None = None,
+    derivation: dict[str, Any] | None = None,
+    producer: str = "embry-voice-control.extract-entities",
+) -> dict[str, Any]:
+    """Emit one ``entities.extraction.completed`` event for a turn message.
+
+    ``chat_projection.build_turn_chat_projection`` requires exactly one such
+    event per role (``user`` over the final transcript, ``assistant`` over the
+    Tau turn plan's ``display_text``) and reads ``payload.target_role``,
+    ``payload.result_path`` and ``payload.result_sha256``; ``_annotations`` then
+    re-reads ``entity_nodes`` from that file and re-validates every span against
+    the message text.  ``causation_id`` is the event that carries the message
+    text: the ``listener.final_transcript`` event for ``user`` and the
+    ``tau.turn_plan.completed`` event for ``assistant``.
+
+    ``extraction_result`` MUST come from ``run_entity_extraction`` (or the memory
+    stage's already-journaled extractor output) -- never a hand-authored result.
+    The result is written canonically to ``result_path`` (stable bytes -> stable
+    hash -> idempotent replay) and every span is validated before append so this
+    producer fails closed rather than journaling an unresolvable annotation.
+
+    ``derivation`` records honest provenance when the event is computed post-hoc
+    over already-recorded data (backfill); omit it for the inline live turn flow.
+    """
+    if target_role not in {"user", "assistant"}:
+        raise ValueError("entity_target_role_invalid")
+    if not isinstance(target_event_id, str) or not target_event_id:
+        raise ValueError("entity_target_event_id_required")
+    raw_nodes = extraction_result.get("entity_nodes", [])
+    if not isinstance(raw_nodes, list):
+        raise ValueError("entity_nodes_invalid")
+    entity_nodes, dropped = _select_non_overlapping_nodes(raw_nodes)
+    # Fail closed: the retained real spans must all resolve inside the message
+    # text and be non-overlapping, exactly as chat_projection re-checks them.
+    _validate_entity_spans(entity_nodes, text)
+
+    # Only the entity_nodes list is replaced; the rest of the extractor result
+    # is preserved verbatim.  When nothing overlaps, the document is byte-for-byte
+    # identical to the raw extractor output (stable hash / idempotent replay).
+    result_document = dict(extraction_result)
+    result_document["entity_nodes"] = entity_nodes
+    result_path = Path(result_path)
+    result_path.parent.mkdir(parents=True, exist_ok=True)
+    serialized = json.dumps(result_document, indent=2, sort_keys=True) + "\n"
+    result_path.write_text(serialized)
+    result_sha256 = sha256_hex(serialized.encode())
+    text_sha256 = sha256_hex(text.encode())
+
+    payload = {
+        "schema": "embry.entity_annotation_event_payload.v1",
+        "target_role": target_role,
+        "target_event_id": target_event_id,
+        "target_text_sha256": "sha256:" + text_sha256,
+        "extractor": "$extract-entities",
+        "extractor_result_schema": "EntityExtractionResult",
+        "result_path": str(result_path),
+        "result_sha256": "sha256:" + result_sha256,
+        "span_count": len(entity_nodes),
+        "input_normalization": "none",
+    }
+    if dropped:
+        payload["overlap_resolution"] = {
+            "rule": "keep_outermost_earliest_start_non_overlapping",
+            "raw_span_count": len(
+                [n for n in raw_nodes if isinstance(n.get("extracted", {}).get("span"), list)]
+            ),
+            "kept_span_count": len(entity_nodes),
+            "dropped": [
+                {
+                    "id": str(node.get("id", "")),
+                    "span": node.get("extracted", {}).get("span"),
+                    "text": node.get("extracted", {}).get("text"),
+                    "reason": "nested_within_retained_span",
+                }
+                for node in dropped
+            ],
+        }
+    if derivation is not None:
+        payload["derivation"] = derivation
+    id_seed = {
+        "target_event_id": target_event_id,
+        "target_text_sha256": text_sha256,
+        "result_sha256": result_sha256,
+    }
+    event = _build_event(
+        event_type="entities.extraction.completed",
+        id_seed=id_seed,
+        source_event=source_event,
+        causation_id=target_event_id,
+        correlation_id=correlation_id or source_event["event_id"],
+        producer=producer,
+        artifact_hashes={
+            "entity_result_sha256": "sha256:" + result_sha256,
+            "target_text_sha256": "sha256:" + text_sha256,
         },
         payload=payload,
     )
