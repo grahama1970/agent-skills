@@ -104,6 +104,37 @@ def run_final_agent_pass(
         json.dumps(second_pass_prompt_cases, indent=2, ensure_ascii=False),
         encoding="utf-8",
     )
+    # Every suppressed (agent-resolved) defect becomes a fingerprinted
+    # engineering-backlog entry; status-report audits runs against this file.
+    from lib.discrepancy import write_second_pass_backlog
+
+    source_pdf = extraction.get("source_pdf")
+    source_pdf_sha256 = ""
+    if source_pdf:
+        source_pdf_path = Path(str(source_pdf)).expanduser()
+        if source_pdf_path.exists():
+            source_pdf_sha256 = "sha256:" + hashlib.sha256(
+                source_pdf_path.read_bytes()
+            ).hexdigest()
+    preset_hash = ""
+    if preset_path is not None and Path(preset_path).expanduser().exists():
+        preset_hash = "sha256:" + hashlib.sha256(
+            Path(preset_path).expanduser().read_bytes()
+        ).hexdigest()
+    comparison_receipt_hash = ""
+    if comparison:
+        comparison_receipt_hash = "sha256:" + hashlib.sha256(
+            json.dumps(comparison, sort_keys=True).encode("utf-8")
+        ).hexdigest()
+    write_second_pass_backlog(
+        output_dir,
+        agent_resolved_findings,
+        source_pdf_sha256=source_pdf_sha256,
+        extractor_commit=str(getattr(pdf_oxide, "__version__", "") or ""),
+        preset_hash=preset_hash,
+        comparison_receipt_hash=comparison_receipt_hash,
+        created_at=_now_utc(),
+    )
     return HumanTriageResult(
         extraction_path=extraction_path,
         triage_queue_path=triage_queue_path,
@@ -219,7 +250,24 @@ def _score_element_match(expected: dict[str, Any], actual: dict[str, Any], polic
     text_thresholds = policy.get("text_similarity_thresholds", {})
     min_text = float(text_thresholds.get(str(expected.get("type")), policy["text_similarity_threshold"]))
     score = (0.45 * iou) + (0.45 * text_similarity) + (0.10 if type_compatible else 0.0)
-    matched = type_compatible and iou >= min_iou and text_similarity >= min_text
+    # matcher_precedence step 1: text_hint. A row declaring a *_contains strategy
+    # matches when the actual text CONTAINS the hint, which is what the human
+    # labeller recorded. Similarity against the full block text penalises rows
+    # whose expected text carries text-layer artefacts (this document's running
+    # header extracts as "R EV . 5 S ECURITY" because the PDF sets it in small
+    # caps and the text layer splits every word) even when the extractor read it
+    # correctly. Containment on the hint is artefact-free.
+    strategy = str(expected.get("match_strategy") or "")
+    hint = str(expected.get("text_hint") or "").strip()
+    if "contains" in strategy and hint:
+        norm_actual = " ".join(str(actual.get("text") or "").lower().split())
+        norm_hint = " ".join(hint.lower().split())
+        if norm_hint and norm_hint in norm_actual:
+            text_similarity = max(text_similarity, 1.0)
+    if "_or_bbox_region" in strategy:
+        matched = type_compatible and (iou >= min_iou or text_similarity >= min_text)
+    else:
+        matched = type_compatible and iou >= min_iou and text_similarity >= min_text
     return _score_detail(score, iou, text_similarity, type_compatible, matched)
 
 

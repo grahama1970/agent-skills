@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import hashlib
 import json
 import html
 import math
@@ -21,6 +22,7 @@ import os
 import re
 import subprocess
 import time
+import urllib.parse
 import xml.etree.ElementTree as ET
 import zipfile
 from contextlib import contextmanager
@@ -267,6 +269,8 @@ class JsonComparisonResult:
     matched_count: int
     total_expected: int
     passed: bool
+    defect_vector: dict[str, int] | None = None
+    blockers: list[str] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -275,6 +279,8 @@ class JsonComparisonResult:
             "matched_count": self.matched_count,
             "total_expected": self.total_expected,
             "passed": self.passed,
+            "defect_vector": self.defect_vector,
+            "blockers": self.blockers,
         }
 
 
@@ -489,30 +495,59 @@ def compare_expected_actual(
     actual_elements = actual_payload.get("elements", [])
     policy = expected_payload.get("match_policy") or _default_match_policy()
 
+    waivers = expected_payload.get("waivers") or []
+    ambiguity_margin = float(policy.get("ambiguity_margin", 0.05))
+
     available_actual = list(actual_elements)
     matches: list[dict[str, Any]] = []
     misses: list[dict[str, Any]] = []
+    ambiguous: list[dict[str, Any]] = []
     for expected in expected_elements:
-        best_index = -1
-        best_score = -1.0
         best_detail: dict[str, Any] | None = None
+        best_score = -1.0
+        qualifying: list[tuple[int, dict[str, Any]]] = []
         for index, actual in enumerate(available_actual):
             detail = _score_element_match(expected, actual, policy)
             if detail["score"] > best_score:
-                best_index = index
                 best_score = detail["score"]
                 best_detail = detail
-        if best_detail and best_detail["matched"]:
-            actual = available_actual.pop(best_index)
+            if detail["matched"]:
+                qualifying.append((index, detail))
+        qualifying.sort(key=lambda item: -item[1]["score"])
+        if (
+            len(qualifying) >= 2
+            and qualifying[0][1]["score"] - qualifying[1][1]["score"] < ambiguity_margin
+        ):
+            # Two near-equal qualifying candidates: matching would be a guess.
+            # Ambiguous expected elements are NOT counted as matched and are a
+            # closure blocker (review-extraction R3 contract).
+            ambiguous.append(
+                {
+                    "expected_id": expected.get("id"),
+                    "page": expected.get("page"),
+                    "type": expected.get("type"),
+                    "candidates": [
+                        {
+                            "actual_id": available_actual[index].get("id"),
+                            **detail,
+                        }
+                        for index, detail in qualifying[:3]
+                    ],
+                    "ambiguity_margin": ambiguity_margin,
+                }
+            )
+        elif qualifying:
+            index, detail = qualifying[0]
+            actual = available_actual.pop(index)
             matches.append(
                 {
                     "expected_id": expected.get("id"),
                     "actual_id": actual.get("id"),
                     "page": expected.get("page"),
-                    "score": best_detail["score"],
-                    "iou": best_detail["iou"],
-                    "text_similarity": best_detail["text_similarity"],
-                    "type_compatible": best_detail["type_compatible"],
+                    "score": detail["score"],
+                    "iou": detail["iou"],
+                    "text_similarity": detail["text_similarity"],
+                    "type_compatible": detail["type_compatible"],
                 }
             )
         else:
@@ -528,24 +563,65 @@ def compare_expected_actual(
                 }
             )
 
+    waived_extras: list[dict[str, Any]] = []
+    unwaived_extras: list[dict[str, Any]] = []
+    for actual in available_actual:
+        waiver = _matching_waiver(actual, waivers)
+        if waiver is not None:
+            waived_extras.append({"actual": actual, "waiver": waiver})
+        else:
+            unwaived_extras.append(actual)
+
     total = len(expected_elements)
     matched = len(matches)
     accuracy = matched / total if total else 1.0
+    type_mismatches = sum(1 for item in matches if not item.get("type_compatible"))
+    defect_vector = {
+        "matched_expected": matched,
+        "missing_expected": len(misses),
+        "ambiguous_expected": len(ambiguous),
+        "unwaived_extras": len(unwaived_extras),
+        "waived_extras": len(waived_extras),
+        "type_mismatches": type_mismatches,
+    }
+    blockers: list[str] = []
+    if misses:
+        blockers.append(f"missing_expected:{len(misses)}")
+    if ambiguous:
+        blockers.append(f"ambiguous_expected:{len(ambiguous)}")
+    if unwaived_extras:
+        blockers.append(f"unwaived_extras:{len(unwaived_extras)}")
+    if type_mismatches:
+        blockers.append(f"type_mismatches:{type_mismatches}")
+    if accuracy < target:
+        blockers.append(f"accuracy_below_target:{accuracy:.4f}<{target}")
+    # Strict closure verdict: no single scalar may hide a blocker. An
+    # extraction passes only when every expected element is uniquely matched,
+    # nothing is ambiguous, and every emitted extra carries a signed waiver.
+    passed = not blockers
+
     comparison = {
-        "schema_version": "pdf-lab.comparison.v1",
+        "schema_version": "pdf-lab.comparison.v2",
         "created_at": _now_utc(),
         "target": target,
-        "passed": accuracy >= target,
+        "passed": passed,
+        "passed_recall_only": accuracy >= target,
         "accuracy": accuracy,
+        "defect_vector": defect_vector,
+        "blockers": blockers,
         "matched_expected_elements": matched,
         "total_expected_elements": total,
         "unmatched_expected_elements": len(misses),
+        "ambiguous_expected_elements": len(ambiguous),
         "unmatched_actual_elements": len(available_actual),
         "policy": policy,
+        "waivers": waivers,
         "subscores": _subscores(matches, expected_elements),
         "matches": matches,
         "misses": misses,
-        "unmatched_actual_sample": available_actual[:50],
+        "ambiguous": ambiguous,
+        "waived_extras": waived_extras,
+        "unmatched_actual_sample": unwaived_extras[:50],
     }
     output_dir = output_dir.expanduser().resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -557,8 +633,31 @@ def compare_expected_actual(
         accuracy=accuracy,
         matched_count=matched,
         total_expected=total,
-        passed=accuracy >= target,
+        passed=passed,
+        defect_vector=defect_vector,
+        blockers=blockers,
     )
+
+
+def _matching_waiver(actual: dict[str, Any], waivers: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """Return the first waiver matching this extra actual element, else None.
+
+    A waiver is a human decision recorded in the expected contract. It may
+    match by exact actual id, by element type, or by normalized substring.
+    Unwaived extras block closure.
+    """
+    text_norm = _normalize_text(str(actual.get("text", "")))
+    for waiver in waivers:
+        if not isinstance(waiver, dict):
+            continue
+        if waiver.get("actual_id") and waiver["actual_id"] == actual.get("id"):
+            return waiver
+        if waiver.get("type") and waiver["type"] == actual.get("type"):
+            return waiver
+        contains = waiver.get("text_contains")
+        if contains and _normalize_text(str(contains)) in text_norm:
+            return waiver
+    return None
 
 
 def run_agentic_extract(

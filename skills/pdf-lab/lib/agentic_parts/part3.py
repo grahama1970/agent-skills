@@ -3,6 +3,25 @@
 Loaded by lib/agentic.py to keep each Python source file below 800 lines.
 """
 
+# Table-candidate classification vocabulary. These constants were referenced
+# throughout this module (and by the final-pass table gate test) but their
+# definitions were lost when pdf-lab was snapshotted into agent-skills;
+# calling any classification path raised NameError. Values are compared by
+# identity only — no consumer pins the literal strings.
+TABLE_CLASS_REAL = "real_table"
+TABLE_CLASS_PAGE_FRAME_FALSE_POSITIVE = "page_frame_false_positive"
+TABLE_CLASS_PROSE_FALSE_POSITIVE = "prose_false_positive"
+TABLE_CLASS_ROW_FRAGMENT = "table_row_fragment"
+TABLE_CLASS_UNRESOLVED_BOUNDS = "table_bounds_unresolved"
+
+# Semantic candidate-type vocabulary carried in classification evidence
+# (same lost-definition restoration as the TABLE_CLASS_* constants above).
+TABLE_SEMANTIC_TABLE = "table"
+TABLE_SEMANTIC_ROW_FRAGMENT = "row_fragment"
+TABLE_SEMANTIC_PROSE = "prose"
+TABLE_SEMANTIC_CALLOUT_PROSE = "callout_prose"
+
+
 def _table_candidate_classification(element: dict[str, Any], page_elements: list[dict[str, Any]]) -> dict[str, Any]:
     raw = element.get("raw") if isinstance(element.get("raw"), dict) else {}
     row_count = _safe_int(raw.get("row_count"), default=0)

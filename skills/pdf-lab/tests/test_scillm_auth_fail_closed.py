@@ -1,0 +1,157 @@
+"""Fail-closed scillm auth for the second pass (agent-skills issue #70).
+
+The live second pass must never authenticate with a hard-coded development
+key. It sources a credential from the environment (SCILLM_API_KEY,
+SCILLM_MASTER_KEY, SCILLM_PROXY_KEY in that order) and runs an auth
+preflight that blocks every per-case model call when auth is missing or
+rejected. These tests are deterministic: no live scillm endpoint is used.
+"""
+
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+import pytest
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from lib.agentic import (  # noqa: E402
+    _SCILLM_AUTH_ENV_VARS,
+    ScillmAuthNotConfiguredError,
+    _scillm_auth_base_url,
+    _scillm_auth_credential,
+    _scillm_headers,
+    _second_pass_auth_blocker_response,
+    run_scillm_auth_preflight,
+)
+
+AGENTIC_PARTS_DIR = Path(__file__).resolve().parents[1] / "lib" / "agentic_parts"
+
+
+@pytest.fixture(autouse=True)
+def _clear_scillm_env(monkeypatch):
+    for name in _SCILLM_AUTH_ENV_VARS:
+        monkeypatch.delenv(name, raising=False)
+    monkeypatch.delenv("SCILLM_BASE_URL", raising=False)
+
+
+def test_no_hardcoded_dev_key_in_source():
+    for part in sorted(AGENTIC_PARTS_DIR.glob("part*.py")):
+        assert "sk-dev-proxy-123" not in part.read_text(encoding="utf-8"), (
+            f"hard-coded development key found in {part.name}"
+        )
+
+
+def test_missing_credential_raises():
+    with pytest.raises(ScillmAuthNotConfiguredError):
+        _scillm_auth_credential()
+    with pytest.raises(ScillmAuthNotConfiguredError):
+        _scillm_headers()
+
+
+def test_blank_credential_is_not_a_credential(monkeypatch):
+    monkeypatch.setenv("SCILLM_PROXY_KEY", "   ")
+    with pytest.raises(ScillmAuthNotConfiguredError):
+        _scillm_auth_credential()
+
+
+def test_credential_precedence(monkeypatch):
+    monkeypatch.setenv("SCILLM_PROXY_KEY", "proxy-key")
+    monkeypatch.setenv("SCILLM_MASTER_KEY", "master-key")
+    monkeypatch.setenv("SCILLM_API_KEY", "api-key")
+    source, key = _scillm_auth_credential()
+    assert (source, key) == ("SCILLM_API_KEY", "api-key")
+    headers = _scillm_headers()
+    assert headers["Authorization"] == "Bearer api-key"
+
+    monkeypatch.delenv("SCILLM_API_KEY")
+    assert _scillm_auth_credential() == ("SCILLM_MASTER_KEY", "master-key")
+    monkeypatch.delenv("SCILLM_MASTER_KEY")
+    assert _scillm_auth_credential() == ("SCILLM_PROXY_KEY", "proxy-key")
+
+
+def test_auth_base_url_derivation(monkeypatch):
+    assert (
+        _scillm_auth_base_url("http://example.internal:4001/v1/chat/completions")
+        == "http://example.internal:4001"
+    )
+    monkeypatch.setenv("SCILLM_BASE_URL", "http://configured:9999/")
+    assert _scillm_auth_base_url("http://ignored:1/v1/chat/completions") == (
+        "http://configured:9999"
+    )
+
+
+def test_preflight_not_configured_fails_closed(tmp_path):
+    report = run_scillm_auth_preflight(tmp_path, endpoint="http://localhost:4001/v1/chat/completions")
+    assert report["ok"] is False
+    assert report["classification"] == "auth_not_configured"
+    written = json.loads((tmp_path / "scillm_preflight.json").read_text(encoding="utf-8"))
+    assert written["schema_version"] == "pdf_lab.scillm_auth_preflight.v1"
+    assert written["ok"] is False
+
+
+def test_preflight_auth_rejected_fails_closed(tmp_path, monkeypatch):
+    monkeypatch.setenv("SCILLM_API_KEY", "some-live-key")
+
+    class FakeResponse:
+        status_code = 401
+        text = "Invalid API key"
+
+    def fake_get(url, **kwargs):
+        assert url.endswith("/v1/scillm/auth")
+        assert kwargs["headers"]["Authorization"] == "Bearer some-live-key"
+        return FakeResponse()
+
+    import lib.agentic as agentic
+
+    monkeypatch.setattr(agentic.httpx, "get", fake_get)
+    report = run_scillm_auth_preflight(tmp_path, endpoint="http://localhost:4001/v1/chat/completions")
+    assert report["ok"] is False
+    assert report["classification"] == "auth_rejected"
+    assert report["auth_http_status"] == 401
+    assert report["auth_env_source"] == "SCILLM_API_KEY"
+
+
+def test_preflight_auth_ok(tmp_path, monkeypatch):
+    monkeypatch.setenv("SCILLM_MASTER_KEY", "live-master")
+
+    class FakeResponse:
+        status_code = 200
+        text = "ok"
+
+    import lib.agentic as agentic
+
+    monkeypatch.setattr(agentic.httpx, "get", lambda url, **kwargs: FakeResponse())
+    report = run_scillm_auth_preflight(tmp_path, endpoint="http://localhost:4001/v1/chat/completions")
+    assert report["ok"] is True
+    assert report["auth_http_status"] == 200
+    assert report["auth_env_source"] == "SCILLM_MASTER_KEY"
+
+
+def test_preflight_endpoint_unreachable_fails_closed(tmp_path, monkeypatch):
+    monkeypatch.setenv("SCILLM_API_KEY", "some-live-key")
+
+    import lib.agentic as agentic
+
+    def fake_get(url, **kwargs):
+        raise ConnectionError("connection refused")
+
+    monkeypatch.setattr(agentic.httpx, "get", fake_get)
+    report = run_scillm_auth_preflight(tmp_path, endpoint="http://localhost:4001/v1/chat/completions")
+    assert report["ok"] is False
+    assert report["classification"] == "auth_endpoint_unreachable"
+
+
+def test_auth_blocker_response_shape():
+    preflight = {"ok": False, "classification": "auth_not_configured"}
+    response = _second_pass_auth_blocker_response(
+        model="oc-kimi",
+        endpoint="http://localhost:4001/v1/chat/completions",
+        auth_preflight=preflight,
+    )
+    assert response["schema_version"] == "pdf_lab.second_pass_model_response.v1"
+    assert "fail closed" in response["error"]
+    assert response["auth_preflight"] is preflight
+    assert response["parsed_json"] is None
