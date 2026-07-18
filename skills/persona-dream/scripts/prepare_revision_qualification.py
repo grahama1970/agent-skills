@@ -75,6 +75,26 @@ REQUIRED_ARTIFACT_IDS = tuple(
 EXPECTED_PHASE_IDS = tuple(sorted(REQUIRED_ARTIFACTS_BY_PHASE))
 EXPECTED_RECORD_COUNT = 1 + len(EXPECTED_PHASE_IDS) + len(REQUIRED_ARTIFACT_IDS)
 
+# Qualification records are identified by their record identity, NOT by raw
+# (run_id, revision_id) keyspace membership.  The same keyspace legitimately
+# holds governance/audit records (kind persona_dream_governance_audit and
+# similar).  A record is a qualification record only when its schema,
+# record_type, AND stable-key prefix all agree.  Selecting by these fields keeps
+# the exact-match gate provably strict for the 27 qualification records while
+# ignoring governance records the deletion-free Memory store cannot relocate.
+QUALIFICATION_SCHEMA_RECORD_TYPES: dict[str, str] = {
+    "persona_dream.pipeline_revision.v1": "revision",
+    "persona_dream.pipeline_phase.v1": "phase",
+    "persona_dream.pipeline_artifact_ref.v1": "required_artifact",
+}
+QUALIFICATION_RECORD_TYPES = frozenset(QUALIFICATION_SCHEMA_RECORD_TYPES.values())
+# stable_memory_key() emits these prefixes; map each back to its record_type.
+QUALIFICATION_KEY_PREFIXES: dict[str, str] = {
+    "pd_rev_": "revision",
+    "pd_phase_": "phase",
+    "pd_artifact_": "required_artifact",
+}
+
 SERVER_OWNED_FIELDS = {
     "_id",
     "_rev",
@@ -860,6 +880,92 @@ def assert_document_contract(
             )
 
 
+def _key_record_type(key: str) -> str | None:
+    for prefix, record_type in QUALIFICATION_KEY_PREFIXES.items():
+        if key.startswith(prefix):
+            return record_type
+    return None
+
+
+def scope_qualification_documents(
+    observed_documents: Sequence[Mapping[str, Any]],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Partition observed Memory documents into qualification vs governance.
+
+    The (run_id, revision_id) filter keyspace legitimately also holds
+    governance/audit records.  The exact-match gate must count and re-read ONLY
+    the qualification records, selected by their record identity (qualification
+    schema, record_type, and stable-key prefix) rather than by raw keyspace
+    membership.
+
+    A document makes a *qualification claim* if it matches the qualification
+    contract on ANY of the three axes (schema, record_type, key prefix).  A
+    qualification claim must be self-consistent: all three axes must be present
+    and agree on the same record_type.  An inconsistent or partial claim is a
+    malformed qualification record -> fail closed (never silently ignored, never
+    silently counted).  A document that makes NO qualification claim on any axis
+    is a governance/audit record: readable, never counted.  Fails closed on any
+    duplicate qualification _key.
+    """
+    qualification: list[dict[str, Any]] = []
+    governance: list[dict[str, Any]] = []
+    ambiguous: list[dict[str, Any]] = []
+    seen_keys: dict[str, int] = {}
+
+    for raw in observed_documents:
+        document = dict(raw)
+        key = str(document.get("_key") or "")
+        schema = document.get("schema")
+        record_type = document.get("record_type")
+        schema_type = QUALIFICATION_SCHEMA_RECORD_TYPES.get(str(schema))
+        type_claim = (
+            record_type if record_type in QUALIFICATION_RECORD_TYPES else None
+        )
+        key_type = _key_record_type(key)
+
+        if schema_type is None and type_claim is None and key_type is None:
+            governance.append(document)
+            continue
+
+        claimed_types = {schema_type, type_claim, key_type}
+        claimed_types.discard(None)
+        if (
+            schema_type is None
+            or type_claim is None
+            or key_type is None
+            or len(claimed_types) != 1
+        ):
+            ambiguous.append(
+                {
+                    "key": key,
+                    "schema": schema,
+                    "record_type": record_type,
+                    "schema_record_type": schema_type,
+                    "key_record_type": key_type,
+                }
+            )
+            continue
+
+        seen_keys[key] = seen_keys.get(key, 0) + 1
+        qualification.append(document)
+
+    if ambiguous:
+        raise GateBlocked(
+            "BLOCKED_MEMORY_QUALIFICATION_RECORD_MALFORMED",
+            details={
+                "ambiguous_count": len(ambiguous),
+                "records": ambiguous[:20],
+            },
+        )
+    duplicate_keys = sorted(key for key, count in seen_keys.items() if count > 1)
+    if duplicate_keys:
+        raise GateBlocked(
+            "BLOCKED_MEMORY_QUALIFICATION_RECORD_DUPLICATE",
+            details={"duplicate_keys": duplicate_keys},
+        )
+    return qualification, governance
+
+
 def classify_records(documents: Sequence[Mapping[str, Any]]) -> dict[str, int]:
     return {
         "revision": sum(item.get("record_type") == "revision" for item in documents),
@@ -875,8 +981,13 @@ def validate_exact_records(
     expected_documents: Sequence[Mapping[str, Any]],
     observed_documents: Sequence[Mapping[str, Any]],
 ) -> dict[str, Any]:
+    qualification_documents, governance_documents = scope_qualification_documents(
+        observed_documents
+    )
     expected_by_key = {str(item["_key"]): item for item in expected_documents}
-    observed_by_key = {str(item.get("_key") or ""): item for item in observed_documents}
+    observed_by_key = {
+        str(item.get("_key") or ""): item for item in qualification_documents
+    }
     expected_keys = sorted(expected_by_key)
     observed_keys = sorted(observed_by_key)
     if expected_keys != observed_keys:
@@ -885,11 +996,12 @@ def validate_exact_records(
             details={
                 "missing_keys": sorted(set(expected_keys) - set(observed_keys)),
                 "unexpected_keys": sorted(set(observed_keys) - set(expected_keys)),
+                "governance_ignored_count": len(governance_documents),
             },
         )
     for key in expected_keys:
         assert_document_contract(expected_by_key[key], observed_by_key[key])
-    counts = classify_records(observed_documents)
+    counts = classify_records(qualification_documents)
     if counts != {
         "revision": 1,
         "phase": 10,
@@ -900,15 +1012,20 @@ def validate_exact_records(
             "BLOCKED_MEMORY_RECORD_COUNT_MISMATCH",
             details={"counts": counts},
         )
-    return {"exact_keys": expected_keys, "counts": counts}
+    return {
+        "exact_keys": expected_keys,
+        "counts": counts,
+        "governance_ignored_count": len(governance_documents),
+    }
 
 
 def validate_semantic_pointers(
     documents: Sequence[Mapping[str, Any]],
 ) -> dict[str, Any]:
+    qualification_documents, _ = scope_qualification_documents(documents)
     missing: list[dict[str, Any]] = []
     states: dict[str, int] = {}
-    for document in documents:
+    for document in qualification_documents:
         absent = [
             field
             for field in SEMANTIC_REQUIRED_FIELDS
@@ -933,8 +1050,8 @@ def validate_semantic_pointers(
         )
     return {
         "required": True,
-        "expected_pointer_count": len(documents),
-        "pointer_count": len(documents),
+        "expected_pointer_count": len(qualification_documents),
+        "pointer_count": len(qualification_documents),
         "states": states,
     }
 
