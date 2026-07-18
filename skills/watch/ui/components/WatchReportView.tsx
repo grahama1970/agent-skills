@@ -209,6 +209,15 @@ interface WatchDetectorCandidatesPayload {
   error?: string
 }
 
+interface WatchLiveTrackerEvent {
+  track_id: string
+  media_time_seconds: number
+  bbox_xyxy: [number, number, number, number]
+  detected_class?: string
+  status?: string
+  candidate_entities?: Array<{ name?: string; actor_name?: string; confidence?: number; status?: string }>
+}
+
 type BboxResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w'
 
 const EMPTY_ANNOTATION_SESSION_ROW: SessionRow = {
@@ -740,6 +749,78 @@ function overlaysForClip(
       )
     )
   })
+}
+
+function liveTrackerOverlaysForTime(
+  events: WatchLiveTrackerEvent[],
+  timeSeconds: number,
+  sourceWidth: number,
+  sourceHeight: number,
+): WatchOverlayPayloadOverlay[] {
+  if (!Array.isArray(events) || events.length === 0) return []
+  if (!(sourceWidth > 0) || !(sourceHeight > 0)) return []
+  const boundedTime = Number.isFinite(timeSeconds) ? Math.max(0, timeSeconds) : 0
+  const nearestByTrack = new Map<string, { event: WatchLiveTrackerEvent; delta: number }>()
+
+  for (const event of events) {
+    if (!event.track_id || !Array.isArray(event.bbox_xyxy) || event.bbox_xyxy.length !== 4) continue
+    const eventTime = Number.isFinite(event.media_time_seconds) ? event.media_time_seconds : 0
+    const delta = Math.abs(eventTime - boundedTime)
+    if (delta > 0.45) continue
+    const current = nearestByTrack.get(event.track_id)
+    if (!current || delta < current.delta) {
+      nearestByTrack.set(event.track_id, { event, delta })
+    }
+  }
+
+  return Array.from(nearestByTrack.values())
+    .sort((a, b) => a.event.track_id.localeCompare(b.event.track_id, undefined, { numeric: true }))
+    .map(({ event }) => {
+      const [x1, y1, x2, y2] = event.bbox_xyxy
+      const eventTime = Number.isFinite(event.media_time_seconds) ? event.media_time_seconds : boundedTime
+      const rawCandidate = event.candidate_entities?.[0]
+      // Live labels stay provisional: they are never scene truth without a
+      // persisted, source-bound observation (Watch tracking contract).
+      const candidate = rawCandidate?.name
+        ? {
+            name: rawCandidate.name,
+            actor_name: rawCandidate.actor_name || undefined,
+            status: 'PROVISIONAL' as const,
+            confidence: typeof rawCandidate.confidence === 'number' ? rawCandidate.confidence : undefined,
+            basis: ['live_tracker_stream'],
+          }
+        : undefined
+      return {
+        overlay_id: `live:${event.track_id}@${eventTime.toFixed(2)}`,
+        segment_id: 'live-tracker',
+        track_id: event.track_id,
+        time_range: {
+          start_seconds: Math.max(0, eventTime - 0.22),
+          end_seconds: eventTime + 0.22,
+        },
+        anchor_media_time_seconds: eventTime,
+        valid_at_media_time_seconds: eventTime,
+        bbox_policy: 'live_tracker_event',
+        track_lifecycle_status: 'live_provisional',
+        stale_after_ms: 0,
+        detected_class: event.detected_class || 'person',
+        classification: 'live_tracker_provisional',
+        identity_status: 'LIVE_PROVISIONAL',
+        visibility_proof: false,
+        identity_candidate: candidate,
+        bbox_percent: {
+          left: Math.max(0, Math.min(100, (x1 / sourceWidth) * 100)),
+          top: Math.max(0, Math.min(100, (y1 / sourceHeight) * 100)),
+          width: Math.max(0, Math.min(100, ((x2 - x1) / sourceWidth) * 100)),
+          height: Math.max(0, Math.min(100, ((y2 - y1) / sourceHeight) * 100)),
+        },
+        render_policy: {
+          stroke: 'dashed',
+          stroke_color: '#ffb300',
+          fill_opacity: 0.08,
+        },
+      }
+    })
 }
 
 function detectorCandidateOverlaysForTime(
@@ -2270,6 +2351,11 @@ export function WatchReportView({
   const [clipModalDurationSeconds, setClipModalDurationSeconds] = useState(0)
   const [clipModalPaused, setClipModalPaused] = useState(false)
   const [clipModalSelectedOverlayId, setClipModalSelectedOverlayId] = useState<string | null>(null)
+  const [clipModalLiveTrackingEnabled, setClipModalLiveTrackingEnabled] = useState(false)
+  const [clipModalLiveTrackerEvents, setClipModalLiveTrackerEvents] = useState<WatchLiveTrackerEvent[]>([])
+  const [clipModalLiveTrackerStatus, setClipModalLiveTrackerStatus] = useState<'idle' | 'streaming' | 'done' | 'error'>('idle')
+  const [clipModalLiveTrackerNote, setClipModalLiveTrackerNote] = useState('')
+  const [clipModalLiveTrackerSourceSize, setClipModalLiveTrackerSourceSize] = useState<{ width: number; height: number } | null>(null)
   const [clipModalResizeState, setClipModalResizeState] = useState<{ overlayId: string; handle: BboxResizeHandle; startPoint: { x: number; y: number }; startBbox: NormalizedBbox } | null>(null)
   const [clipModalMoveState, setClipModalMoveState] = useState<{ overlayId: string; startPoint: { x: number; y: number }; startBbox: NormalizedBbox } | null>(null)
   const [annotationSession, annotationDispatch] = useReducer(
@@ -3517,6 +3603,58 @@ export function WatchReportView({
 	    ? `${expandedClipRow.index}:${expandedClipRow.timecode}:${expandedClipRow.movie_segment || ''}`
 	    : ''
 
+  useEffect(() => {
+    if (!clipModalLiveTrackingEnabled || !expandedClipRow?.video_clip_path) return
+    setClipModalLiveTrackerEvents([])
+    setClipModalLiveTrackerStatus('streaming')
+    setClipModalLiveTrackerNote('starting live tracker')
+    const params = new URLSearchParams({
+      mode: 'live',
+      video_path: expandedClipRow.video_clip_path,
+      start_seconds: '0',
+      segment_id: `live-row-${expandedClipRow.index}`,
+      asset_uid: 'watch_live_clip_modal',
+      stream_id: `watch_live_row_${expandedClipRow.index}`,
+      max_events: '400',
+    })
+    const source = new EventSource(`/api/projects/watch/tracker-events/stream?${params.toString()}`)
+    source.addEventListener('track_update', (event) => {
+      try {
+        const payload = JSON.parse((event as MessageEvent).data) as WatchLiveTrackerEvent
+        setClipModalLiveTrackerEvents((existing) => existing.length >= 2000 ? existing : [...existing, payload])
+      } catch {
+        // Malformed live events are dropped; the journal, not the UI, is evidence.
+      }
+    })
+    source.addEventListener('meta', (event) => {
+      try {
+        const meta = JSON.parse((event as MessageEvent).data) as { status?: string; source_width?: number | null; source_height?: number | null }
+        if (meta.status) setClipModalLiveTrackerNote(meta.status)
+        if (meta.source_width && meta.source_height) {
+          setClipModalLiveTrackerSourceSize({ width: meta.source_width, height: meta.source_height })
+        }
+      } catch { /* ignore */ }
+    })
+    source.addEventListener('done', (event) => {
+      try {
+        const done = JSON.parse((event as MessageEvent).data) as { status?: string; total_events?: number }
+        setClipModalLiveTrackerNote(`${done.status || 'DONE'} (${done.total_events ?? 0} events)`)
+        setClipModalLiveTrackerStatus(done.status === 'LIVE_STREAM_COMPLETE' ? 'done' : 'error')
+      } catch {
+        setClipModalLiveTrackerStatus('done')
+      }
+      source.close()
+    })
+    source.onerror = () => {
+      setClipModalLiveTrackerStatus((current) => (current === 'done' ? current : 'error'))
+      source.close()
+    }
+    return () => {
+      source.close()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clipModalLiveTrackingEnabled, expandedClipRowKey])
+
   const annotationSessionRow = useMemo((): SessionRow | null => {
     if (!expandedClipRow || !reportWithDiff) return null
     const duration = Math.max(
@@ -3587,6 +3725,11 @@ export function WatchReportView({
 	    setClipModalCharacterName(nextCharacterName)
 	    setClipModalActorName(nextActorName)
     setClipModalManualDrawEnabled(false)
+    setClipModalLiveTrackingEnabled(false)
+    setClipModalLiveTrackerEvents([])
+    setClipModalLiveTrackerStatus('idle')
+    setClipModalLiveTrackerNote('')
+    setClipModalLiveTrackerSourceSize(null)
     setClipModalSelectedYoloTrackId(null)
     setClipModalYoloStatus('')
     setClipModalMemorySuggestions({})
@@ -3814,14 +3957,26 @@ export function WatchReportView({
       return `${time == null ? '--' : time.toFixed(2)}s ${event.track_id} ${display}`
     })
     .join(' | ')
+  const liveTrackerModalOverlays = clipModalLiveTrackingEnabled
+    ? liveTrackerOverlaysForTime(
+        clipModalLiveTrackerEvents,
+        clipModalPlaybackSeconds,
+        clipModalVideoRef.current?.videoWidth || clipModalLiveTrackerSourceSize?.width || 0,
+        clipModalVideoRef.current?.videoHeight || clipModalLiveTrackerSourceSize?.height || 0,
+      )
+    : []
   const modalOverlays = [
     ...labeledEventModalOverlays,
     ...detectorCandidateModalOverlays,
+    ...liveTrackerModalOverlays,
     ...(clipModalManualDrawEnabled ? annotationModalOverlays : []),
   ]
   const modalOverlaySource = [
     (labeledEventModalOverlays.length + detectorCandidateModalOverlays.length) > 0
       ? `${labeledEventModalOverlays.length + detectorCandidateModalOverlays.length} YOLO person box${(labeledEventModalOverlays.length + detectorCandidateModalOverlays.length) === 1 ? '' : 'es'}`
+      : '',
+    clipModalLiveTrackingEnabled
+      ? `live tracker ${clipModalLiveTrackerStatus}: ${liveTrackerModalOverlays.length} provisional box${liveTrackerModalOverlays.length === 1 ? '' : 'es'} (${clipModalLiveTrackerEvents.length} events${clipModalLiveTrackerNote ? `, ${clipModalLiveTrackerNote}` : ''})`
       : '',
     clipModalManualDrawEnabled && annotationModalOverlays.length > 0 ? `${annotationModalOverlays.length} human keyframe annotation${annotationModalOverlays.length === 1 ? '' : 's'}` : '',
   ].filter(Boolean).join(' · ')
@@ -4778,7 +4933,7 @@ export function WatchReportView({
                 }}
                 style={{ width: '100%', maxHeight: 'calc(90vh - 72px)', display: 'block', objectFit: 'contain', background: '#000' }}
               />
-              {modalOverlays.length > 0 || overlayPayloadError ? (
+              {modalOverlays.length > 0 || clipModalLiveTrackingEnabled || overlayPayloadError ? (
                 <div
                   data-qid="watch:clip-modal:overlay-contract"
                   className="clip-modal-overlay-contract"
@@ -4802,7 +4957,7 @@ export function WatchReportView({
                     pointerEvents: 'none',
                   }}
                 >
-                  {modalOverlays.length > 0 ? modalOverlaySource : `Overlay service unavailable: ${overlayPayloadError}`}
+                  {modalOverlays.length > 0 || clipModalLiveTrackingEnabled ? modalOverlaySource : `Overlay service unavailable: ${overlayPayloadError}`}
                 </div>
               ) : null}
 	              <div
@@ -4951,6 +5106,30 @@ export function WatchReportView({
                     pointerEvents: 'auto',
                   }}
                 >
+                  <button
+                    type="button"
+                    data-qid="watch:clip-modal:live-tracking-toggle"
+                    aria-pressed={clipModalLiveTrackingEnabled}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      setClipModalLiveTrackingEnabled((enabled) => {
+                        const next = !enabled
+                        if (!next) {
+                          setClipModalLiveTrackerEvents([])
+                          setClipModalLiveTrackerStatus('idle')
+                          setClipModalLiveTrackerNote('')
+                        }
+                        setClipModalYoloStatus(next
+                          ? 'Live tracking started: provisional YOLO/ByteTrack boxes stream over this clip.'
+                          : 'Live tracking stopped.')
+                        return next
+                      })
+                    }}
+                    title="Stream live YOLO/ByteTrack tracker events over this clip (provisional overlays only)"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5, border: clipModalLiveTrackingEnabled ? '1px solid rgba(255,179,0,0.62)' : '1px solid rgba(148,163,184,0.28)', borderRadius: 6, background: clipModalLiveTrackingEnabled ? 'rgba(255,179,0,0.18)' : 'rgba(15,23,42,0.72)', color: clipModalLiveTrackingEnabled ? '#ffd37c' : '#dbe7f4', padding: '5px 8px', fontSize: 10, fontWeight: 900, letterSpacing: '0.08em', textTransform: 'uppercase', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                  >
+                    {clipModalLiveTrackingEnabled ? `Live ${clipModalLiveTrackerStatus}` : 'Live track'}
+                  </button>
                   <button
                     type="button"
                     data-qid="watch:clip-modal:manual-draw-toggle"

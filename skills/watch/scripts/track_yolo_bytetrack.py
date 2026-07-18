@@ -126,6 +126,10 @@ def main() -> int:
                 source_frame_index=source_frame_index,
                 media_time_seconds=float(event["media_time_seconds"]),
             )
+        if args.stdout_jsonl:
+            # Emit incrementally so SSE consumers see events as they happen;
+            # schema validation still runs over the full set afterwards.
+            print(json.dumps(event, sort_keys=True), flush=True)
         events.append(event)
     if journal_writer is not None:
         journal_writer.finalize()
@@ -134,8 +138,6 @@ def main() -> int:
     _validate_events(events, args.schema)
 
     if args.stdout_jsonl:
-        for event in events:
-            print(json.dumps(event, sort_keys=True), flush=True)
         return 0
 
     args.out_dir.mkdir(parents=True, exist_ok=True)

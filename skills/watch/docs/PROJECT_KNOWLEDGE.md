@@ -235,6 +235,19 @@ by deterministic IDs). Live proof on a fresh 168-192s clip: 80 events,
 3 tamper classes rejected pre-write, SIGKILL after 1/2 observations then
 restart converged to the identical canonical set in isolated Memory+Qdrant
 collections. Hermetic coverage in
-`tests/test_watch_source_session_replay.py`. **Current gate is now UI
-live-event consumption**; decoded-PTS mode and producer process-resume
-remain later continuity gates.
+`tests/test_watch_source_session_replay.py`. Decoded-PTS mode and producer
+process-resume remain later continuity gates.
+
+**UI live-event consumption LANDED 2026-07-18** (receipts:
+`generated/watch_ui_live_event_consumption_20260718/`): the clip modal's
+"Live track" toggle opens an EventSource to
+`/api/projects/watch/tracker-events/stream?mode=live`; the server spawns the
+tracker through the skill venv python with incremental stdout JSONL, and the
+SSE meta event carries ffprobe source dimensions so overlay geometry is
+independent of browser media decode (required for RTSP later). Browser proof:
+2 dashed LIVE_PROVISIONAL overlays with track labels + live status badge over
+row 7 of the fresh focused report. Caveat: machine-wide Chrome media decode
+was broken during the proof (any mp4 spins — likely the outdated NVIDIA
+driver), so video pixels render black; re-screenshot overlay-over-video after
+a driver update. **Remaining before first live source: tracker
+process-resume continuity and Memory/Qdrant outbox hardening.**

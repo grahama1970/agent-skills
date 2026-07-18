@@ -1,7 +1,7 @@
 import express from 'express'
 import { readFileSync, existsSync, statSync, realpathSync, mkdirSync, writeFileSync, readdirSync } from 'fs'
 import { createReadStream } from 'fs'
-import { spawn } from 'child_process'
+import { spawn, spawnSync } from 'child_process'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
@@ -20,6 +20,10 @@ const WATCH_TRACKER_EVENTS_PATH = process.env.WATCH_TRACKER_EVENTS_PATH || path.
   'docs/architecture/generated/bad_santa_marcus_0248_yolo_bytetrack/watch_tracker_event_log.bad_santa_marcus.yolo_bytetrack.jsonl',
 )
 const WATCH_TRACKER_SCRIPT = process.env.WATCH_TRACKER_SCRIPT || path.join(WATCH_SKILL_DIR, 'scripts/track_yolo_bytetrack.py')
+// The tracker needs ultralytics; prefer the skill venv over system python.
+const WATCH_SKILL_VENV_PYTHON = path.join(WATCH_SKILL_DIR, '.venv', 'bin', 'python')
+const WATCH_TRACKER_PYTHON = process.env.PYTHON
+  || (existsSync(WATCH_SKILL_VENV_PYTHON) ? WATCH_SKILL_VENV_PYTHON : 'python3')
 const WATCH_TRACKER_MODEL = process.env.WATCH_TRACKER_MODEL || path.join(WATCH_SKILL_DIR, 'yolo11n.pt')
 const WATCH_YOLO_LABEL_DIR = process.env.WATCH_YOLO_LABEL_DIR || path.join(
   WATCH_SKILL_DIR,
@@ -415,6 +419,25 @@ function streamLiveTrackerEvents({
   res.setHeader('Connection', 'keep-alive')
   res.flushHeaders?.()
 
+  // Source frame size lets the client place event bboxes without depending on
+  // decoded video metadata (media decode may be unavailable; RTSP sources may
+  // never be browser-playable at all).
+  let sourceWidth: number | null = null
+  let sourceHeight: number | null = null
+  try {
+    const probe = spawnSync('ffprobe', [
+      '-v', 'error', '-select_streams', 'v:0',
+      '-show_entries', 'stream=width,height', '-of', 'json', realSource,
+    ], { encoding: 'utf-8', timeout: 10_000 })
+    const stream = JSON.parse(probe.stdout || '{}')?.streams?.[0]
+    if (stream?.width > 0 && stream?.height > 0) {
+      sourceWidth = Number(stream.width)
+      sourceHeight = Number(stream.height)
+    }
+  } catch {
+    // Dimensions stay null; the client falls back to video element metadata.
+  }
+
   res.write(`event: meta\ndata: ${JSON.stringify({
     schema: 'watch.tracker_event_stream.v1',
     status: 'STARTING_LIVE_TRACKER',
@@ -423,9 +446,11 @@ function streamLiveTrackerEvents({
     asset_uid: assetUid || null,
     model: WATCH_TRACKER_MODEL,
     sample_fps: Number(process.env.WATCH_TRACKER_SAMPLE_FPS || 5),
+    source_width: sourceWidth,
+    source_height: sourceHeight,
   })}\n\n`)
 
-  const child = spawn(process.env.PYTHON || 'python3', args, {
+  const child = spawn(WATCH_TRACKER_PYTHON, args, {
     cwd: WATCH_SKILL_DIR,
     stdio: ['ignore', 'pipe', 'pipe'],
   })

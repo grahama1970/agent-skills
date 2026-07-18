@@ -1,0 +1,35 @@
+{
+  "browser_proof": {
+    "clip": "row 7 (02:08-02:10), clips/segment_0008.mp4 from the fresh 2026-07-18 focused run",
+    "observed": "2 LIVE_PROVISIONAL overlays (live:track_1@0.00, live:track_2@0.00) with dashed styling and YOLO TRACK_1/TRACK_2 labels; badge 'LIVE TRACKER DONE: 2 PROVISIONAL BOXES (10 EVENTS, LIVE_STREAM_COMPLETE)'",
+    "screenshots": [
+      "live_overlays_full.jpg",
+      "live_overlays_zoom.png"
+    ],
+    "url": "http://127.0.0.1:3042/#watch?clipRow=7 (skill-owned UI, vite :3042 -> api :3013)"
+  },
+  "claims": {
+    "does_not_prove": [
+      "overlay alignment over decoded video pixels (blocked by machine media decode)",
+      "identity promotion from live labels (by design, still forbidden)",
+      "RTSP/live-source operation (later gate)"
+    ],
+    "proves": [
+      "the Watch UI consumes live SSE track_update events from a spawned YOLO/ByteTrack run",
+      "provisional overlays render with live status and per-track labels, gated to PROVISIONAL only",
+      "overlay geometry works without decoded video metadata"
+    ]
+  },
+  "environment_caveat": "Browser media decode was broken machine-wide during this proof (Chrome's native player spins on any mp4, including a synthetic testsrc clip; likely the outdated NVIDIA driver). Video pixels therefore render black. The live overlay path was made decode-independent (SSE meta dimensions) \u2014 which is the correct design for RTSP sources that are never browser-playable. Overlay-over-decoded-video composition should be re-screenshotted once the driver is updated.",
+  "flow": [
+    "Watch clip modal 'Live track' toggle opens EventSource to /api/projects/watch/tracker-events/stream?mode=live",
+    "server spawns track_yolo_bytetrack.py --stdout-jsonl (now incremental per-event emission) via the skill venv python",
+    "SSE meta event carries ffprobe-derived source_width/source_height so overlay geometry does not depend on browser media decode",
+    "track_update events accumulate client-side; nearest event per track within 0.45s of the playhead renders as a dashed amber LIVE_PROVISIONAL overlay with track label",
+    "status badge reports live tracker state, provisional box count, event count, and completion status"
+  ],
+  "gate": "UI live-event consumption (next gate after P0A/P0B per streaming sequence)",
+  "proved_at": "2026-07-18T23:49:20.891645+00:00",
+  "schema_version": "watch.ui_live_event_consumption_proof.v1",
+  "status": "UI_LIVE_EVENT_CONSUMPTION_PROVEN"
+}
