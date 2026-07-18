@@ -364,18 +364,18 @@ class CaseExecutor:
             )
 
         wake_event = None
+        managed_lineage = {key: expected[key] for key in (
+            "campaign_id",
+            "case_id",
+            "attempt_id",
+            "session_id",
+            "turn_id",
+            "source_authority_id",
+        )}
         if wake_audio is not None:
             if not wake_audio.is_file():
                 raise FileNotFoundError(f"wake_audio_missing:{wake_audio}")
             time.sleep(self.config["source_playback_delay_seconds"])
-            managed_lineage = {key: expected[key] for key in (
-                "campaign_id",
-                "case_id",
-                "attempt_id",
-                "session_id",
-                "turn_id",
-                "source_authority_id",
-            )}
             for wake_attempt in range(1, 4):
                 print(
                     json.dumps({
@@ -420,6 +420,25 @@ class CaseExecutor:
                 except TimeoutError:
                     if wake_attempt == 3:
                         raise
+        elif source_audio is None:
+            # Physical human turn: the wake phrase is spoken live and alone;
+            # the listener emits the managed wake event before the request.
+            print(
+                json.dumps({
+                    "status": "AWAITING_HUMAN_WAKE",
+                    "case_id": case["case_id"],
+                    "turn_id": turn["turn_id"],
+                    "say_exactly": "Hey Embry",
+                }),
+                flush=True,
+            )
+            wake_event = wait_for_managed_wake(
+                Path(self.config["journal_db"]),
+                session_id=case["session_id"],
+                expected=managed_lineage,
+                after_sequence=journal_boundary,
+                timeout_seconds=self.config["turn_timeout_seconds"],
+            )
 
         source_process = None
         if source_audio is not None:
