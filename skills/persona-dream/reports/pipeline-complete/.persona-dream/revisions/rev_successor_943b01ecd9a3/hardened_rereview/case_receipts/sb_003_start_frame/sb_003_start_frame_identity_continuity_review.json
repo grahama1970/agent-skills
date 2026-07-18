@@ -1,0 +1,68 @@
+{
+  "blocking_findings": [],
+  "created_at": "2026-07-18T17:51:28.233317+00:00",
+  "frame_key": "start_frame",
+  "frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_003_start_frame.png",
+  "image_dimensions": {
+    "height": 941,
+    "width": 1672
+  },
+  "live": true,
+  "mocked": false,
+  "model": "gpt-5.5",
+  "model_policy": {
+    "auth": "codex-oauth",
+    "error": null,
+    "fallback_performed": false,
+    "model": "gpt-5.5",
+    "provider": "codex",
+    "schema": "persona_dream.identity_review_policy.v1",
+    "source": "dag_identity_review_model_policy",
+    "supported": true
+  },
+  "model_policy_enforced": true,
+  "panel_id": "sb_003",
+  "raw_response": {
+    "blocking_findings": [],
+    "identity_notes": "Both required identities are foreground-visible in a character-readable two-shot. Embry matches the specific reference face at feature level, including complexion/freckling, oval face shape, brows, and nose. Kai also matches the specific reference face, especially the tan complexion, curly wet hair, brow/nose structure, jawline, and mouth shape. No competing foreground person confuses the identities.",
+    "observed_divergences": {
+      "Embry": [
+        "wet/slicked hair changes hair volume compared with dry reference but does not alter facial structure",
+        "surf lighting creates stronger highlights on forehead and cheek, but complexion remains warm-olive and freckled"
+      ],
+      "Kai": [
+        "wet curls appear more separated and tousled than some reference views",
+        "strong outdoor side lighting increases facial contrast, but facial structure and complexion remain consistent"
+      ]
+    },
+    "verdict": "PASS",
+    "verified_facial_features": {
+      "Embry": [
+        "warm-olive complexion with visible light freckling across cheeks/nose matching reference",
+        "same fuller oval face shape with softly tapered jawline",
+        "same thick dark arched eyebrows and straight nose with rounded tip"
+      ],
+      "Kai": [
+        "same tan complexion and oval/athletic face structure with defined jawline",
+        "same dark thick eyebrows and straight nose bridge with rounded tip",
+        "same full lower lip and slightly downturned focused mouth shape in three-quarter view"
+      ]
+    },
+    "visible_entities": [
+      "Embry",
+      "Kai"
+    ]
+  },
+  "receipt_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/hardened_rereview/case_receipts/sb_003_start_frame/sb_003_start_frame_identity_continuity_review.json",
+  "required_entities": [
+    "Embry",
+    "Kai"
+  ],
+  "reviewer_source": "scillm:gpt-5.5:image_url",
+  "schema": "persona_dream.identity_continuity_review.v1",
+  "status": "PASS",
+  "visible_entities": [
+    "Embry",
+    "Kai"
+  ]
+}

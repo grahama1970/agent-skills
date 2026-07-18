@@ -1,0 +1,68 @@
+{
+  "blocking_findings": [],
+  "created_at": "2026-07-18T17:50:50.172717+00:00",
+  "frame_key": "start_frame",
+  "frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_002_start_frame.png",
+  "image_dimensions": {
+    "height": 941,
+    "width": 1672
+  },
+  "live": true,
+  "mocked": false,
+  "model": "gpt-5.5",
+  "model_policy": {
+    "auth": "codex-oauth",
+    "error": null,
+    "fallback_performed": false,
+    "model": "gpt-5.5",
+    "provider": "codex",
+    "schema": "persona_dream.identity_review_policy.v1",
+    "source": "dag_identity_review_model_policy",
+    "supported": true
+  },
+  "model_policy_enforced": true,
+  "panel_id": "sb_002",
+  "raw_response": {
+    "blocking_findings": [],
+    "identity_notes": "Both required foreground identities are visible in a character-readable two-shot. Embry and Kai each match the provided reference sheets at the specific facial-feature level, not merely by clothing or surfer category. No competing foreground person confuses the identities.",
+    "observed_divergences": {
+      "Embry": [
+        "head is angled downward and expression is more focused than the reference neutral poses",
+        "hair is wetter/looser from surf conditions, but facial proportions and complexion remain consistent"
+      ],
+      "Kai": [
+        "head is turned slightly toward Embry with a more intent expression than most reference poses",
+        "hair appears wetter and more tousled, but facial structure remains consistent"
+      ]
+    },
+    "verdict": "PASS",
+    "verified_facial_features": {
+      "Embry": [
+        "same warm-olive freckled complexion with visible cheek/nose speckling",
+        "same thick dark arched eyebrows and almond/greenish eyes",
+        "same fuller oval face with straight nose and soft medium lips"
+      ],
+      "Kai": [
+        "same tan complexion and dark curly wet hair framing the forehead",
+        "same strong dark eyebrows with almond eyes",
+        "same straight medium-width nose, defined cheekbones, and full lower lip"
+      ]
+    },
+    "visible_entities": [
+      "Embry",
+      "Kai"
+    ]
+  },
+  "receipt_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/hardened_rereview/case_receipts/sb_002_start_frame/sb_002_start_frame_identity_continuity_review.json",
+  "required_entities": [
+    "Embry",
+    "Kai"
+  ],
+  "reviewer_source": "scillm:gpt-5.5:image_url",
+  "schema": "persona_dream.identity_continuity_review.v1",
+  "status": "PASS",
+  "visible_entities": [
+    "Embry",
+    "Kai"
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "blocking_findings": [],
+  "created_at": "2026-07-18T17:52:02.309147+00:00",
+  "frame_key": "start_frame",
+  "frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_004_start_frame.png",
+  "image_dimensions": {
+    "height": 864,
+    "width": 1536
+  },
+  "live": true,
+  "mocked": false,
+  "model": "gpt-5.5",
+  "model_policy": {
+    "auth": "codex-oauth",
+    "error": null,
+    "fallback_performed": false,
+    "model": "gpt-5.5",
+    "provider": "codex",
+    "schema": "persona_dream.identity_review_policy.v1",
+    "source": "dag_identity_review_model_policy",
+    "supported": true
+  },
+  "model_policy_enforced": true,
+  "panel_id": "sb_004",
+  "raw_response": {
+    "blocking_findings": [],
+    "identity_notes": "Both required foreground identities are visible in a character-readable two-shot. Embry and Kai each match their reference sheets at the specific facial-feature level rather than only by clothing or demographic category. No competing foreground person confuses the identities.",
+    "observed_divergences": {
+      "Embry": [
+        "wet hair and ocean lighting alter surface appearance but do not change face structure",
+        "no identity-changing divergence in apparent age, complexion warmth, freckling, face proportion, eyebrows, or nose shape observed"
+      ],
+      "Kai": [
+        "wet hair and harsh sunlight create minor contrast differences from studio/reference images",
+        "no identity-changing divergence in apparent age, complexion, face shape, brow, nose, or jawline observed"
+      ]
+    },
+    "verdict": "PASS",
+    "verified_facial_features": {
+      "Embry": [
+        "warm olive complexion with visible light freckling across nose and cheeks matches reference",
+        "same fuller oval face shape with softly tapered jawline",
+        "same thick dark arched eyebrows and straight nose with rounded tip"
+      ],
+      "Kai": [
+        "same tan warm complexion with youthful smooth skin texture",
+        "same dark curly wet hair framing forehead and similar strong brow line",
+        "same straight nose bridge, defined cheekbones, and athletic young-adult jawline"
+      ]
+    },
+    "visible_entities": [
+      "Embry",
+      "Kai"
+    ]
+  },
+  "receipt_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/hardened_rereview/case_receipts/sb_004_start_frame/sb_004_start_frame_identity_continuity_review.json",
+  "required_entities": [
+    "Embry",
+    "Kai"
+  ],
+  "reviewer_source": "scillm:gpt-5.5:image_url",
+  "schema": "persona_dream.identity_continuity_review.v1",
+  "status": "PASS",
+  "visible_entities": [
+    "Embry",
+    "Kai"
+  ]
+}

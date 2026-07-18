@@ -1,0 +1,70 @@
+{
+  "blocking_findings": [],
+  "created_at": "2026-07-18T17:51:11.196236+00:00",
+  "frame_key": "end_frame",
+  "frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_002_end_frame.png",
+  "image_dimensions": {
+    "height": 941,
+    "width": 1672
+  },
+  "live": true,
+  "mocked": false,
+  "model": "gpt-5.5",
+  "model_policy": {
+    "auth": "codex-oauth",
+    "error": null,
+    "fallback_performed": false,
+    "model": "gpt-5.5",
+    "provider": "codex",
+    "schema": "persona_dream.identity_review_policy.v1",
+    "source": "dag_identity_review_model_policy",
+    "supported": true
+  },
+  "model_policy_enforced": true,
+  "panel_id": "sb_002",
+  "raw_response": {
+    "blocking_findings": [],
+    "identity_notes": "Both required identities are foreground-visible in a character-readable two-shot. Embry and Kai each match their respective reference sheets at the facial-feature level, not merely by clothing or demographic category. No competing foreground person confuses the identities.",
+    "observed_divergences": {
+      "Embry": [
+        "Hair is wetter and slicked back compared with the dry reference sheet",
+        "Mouth is slightly open and expression is more alert than the neutral reference poses",
+        "Harsh outdoor side lighting creates stronger highlights on forehead and cheeks"
+      ],
+      "Kai": [
+        "Hair appears wetter and more tousled than several reference views",
+        "Expression is slightly open-mouthed and focused off-frame rather than neutral",
+        "Outdoor surf lighting creates stronger facial shine and contrast"
+      ]
+    },
+    "verdict": "PASS",
+    "verified_facial_features": {
+      "Embry": [
+        "Same warm-olive complexion with visible light freckling across cheeks and nose",
+        "Same fuller oval face shape with softly defined jawline and cheekbones",
+        "Same thick arched eyebrows, green/light hazel eyes, and straight nose with rounded tip"
+      ],
+      "Kai": [
+        "Same tan complexion and youthful early-20s face proportions",
+        "Same dark curly wet hair framing the forehead and temples",
+        "Same strong brow line, straight nose bridge, and defined athletic jawline"
+      ]
+    },
+    "visible_entities": [
+      "Embry",
+      "Kai"
+    ]
+  },
+  "receipt_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/hardened_rereview/case_receipts/sb_002_end_frame/sb_002_end_frame_identity_continuity_review.json",
+  "required_entities": [
+    "Embry",
+    "Kai"
+  ],
+  "reviewer_source": "scillm:gpt-5.5:image_url",
+  "schema": "persona_dream.identity_continuity_review.v1",
+  "status": "PASS",
+  "visible_entities": [
+    "Embry",
+    "Kai"
+  ]
+}

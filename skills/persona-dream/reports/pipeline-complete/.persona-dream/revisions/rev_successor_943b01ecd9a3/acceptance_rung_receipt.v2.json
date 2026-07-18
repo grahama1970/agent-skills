@@ -1,0 +1,73 @@
+{
+  "actual_provider_call_attempts": 0,
+  "claims": {
+    "does_not_prove": [
+      "Kling readiness",
+      "media publication",
+      "paid authorization",
+      "a Kling video return",
+      "lip-sync-on-return",
+      "full specific-identity certification of the accepted frames (the reviewer retains a demonstrated blind spot on the subtlest montage-derived known-bad)",
+      "restoration of a certified acceptance rung (blocked on reviewer calibration)"
+    ],
+    "proves": [
+      "the identity reviewer prompt was hardened (specific-identity gate, age clause, complexion/feature grounding, fail-closed) contained to the review prompt contract",
+      "the hardening materially improved discrimination: the strongest leniency case known_bad_sb_002 (weathered ~40s-50s woman) is now correctly FAILED and known-bad FAILs went 1/3 -> 2/3 while positive controls and tamper are unchanged",
+      "all 8 accepted Phase C successor frames still PASS actual-pixel identity review under the stricter hardened reviewer"
+    ]
+  },
+  "hardened_rereview_8frames": {
+    "frames_fail_hardened": [],
+    "note": "All 8 accepted successor frames survive the stricter hardened reviewer; no identity repair was required for the accepted frames.",
+    "overall_status": "8/8_FRAMES_PASS_HARDENED_IDENTITY_REVIEW",
+    "receipt_relative_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/hardened_rereview/hardened_rereview_summary.v2.json",
+    "receipt_sha256": "sha256:eec9dc9db1cd5f602c5043d4a001c9d5261616c4832d337bab4f54a2a011c10d"
+  },
+  "live": true,
+  "mocked": false,
+  "observed_at": "2026-07-18T17:53:40.003960+00:00",
+  "paid_call_authorized": false,
+  "provider_live": false,
+  "reviewer_calibration_v2": {
+    "improved_from_v1": "1/3 known-bad failed under the pre-hardening reviewer",
+    "known_bad_failed_as_required": "2/3",
+    "overall_status": "REVIEWER_CALIBRATION_FAILED",
+    "positive_controls_pass": "2/2",
+    "prompt_revisions_used": 3,
+    "receipt_relative_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration_receipt.v2.json",
+    "receipt_sha256": "sha256:604dfaae8eeb70109671460707f9ce1e1c5d38c48408a56136225f9c26695b36",
+    "residual_blocker": "known_bad_sb_001 (subtlest montage-derived frame) still PASSes pixel-only review after 3 prompt revisions; reviewer reports only surface divergences (wet hair, harsh light, collar), not the structural complexion/face-width divergence the v1 analyst and this agent observed",
+    "tamper_fail": "1/1"
+  },
+  "reviewer_hardening": {
+    "applied_changes": [
+      "specific-identity gate (same individual at feature level, not demographic category)",
+      "enumerated + mandatory feature grounding",
+      "age-consistency clause",
+      "complexion/freckling identity signal + adversarial divergence hunt",
+      "fail-closed on uncertainty",
+      "failure codes IDENTITY_MISMATCH_DESPITE_GENERIC_MATCH / IDENTITY_AGE_MISMATCH / IDENTITY_FEATURES_NOT_GROUNDED"
+    ],
+    "containment": "review prompt contract only; nothing loosened",
+    "function": "phase07_storyboard_tau_node._identity_review_prompt",
+    "hardened_prompt_sha256": "sha256:ee09dd57d8d06953d2039b4085cab7e481a5f09c09984a290b97b41cb3f626d7",
+    "node_file_sha256": "sha256:061bb220be277fd8f4952eefcb65965fad7f0f168ee9d9f3ebb6f0436a23740e",
+    "prior_prompt_sha256_examples": [
+      "sha256:b09a504760266e0ee883fc740aa4893d0e1be4603a811cf1aec8bd41f54e3fd2",
+      "sha256:e9b6704a47b1de4f43be8fd98528cbecd86d424dd5a9ae763b6b5a5784908c24"
+    ]
+  },
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "rung": "pre_paid_call_boundary",
+  "sb_003_end_frame_lane_c_regen": {
+    "next_required_action": "Resolve the sb_001 calibration gap (e.g. face-crop-only comparison against per-pose reference crops, a second stricter reviewer, or human adjudication of known_bad_sb_001), re-run calibration to PASS, then execute lane C regen + supersession + activate to restore a certified rung v2.",
+    "reason": "Lane C SB_003 end-frame regeneration (step38_sb_003_composition_delta_proposal.v1.json) and the supersession/requalification/rung restoration chain are gated on a trustworthy identity reviewer. Full reviewer calibration PASS was not achieved, so restoring/certifying a rung on frames reviewed by a not-fully-calibrated reviewer is withheld to avoid a papered-over rung.",
+    "status": "DEFERRED"
+  },
+  "schema": "persona_dream.acceptance_rung_receipt.v2",
+  "status": "RUNG_NOT_RESTORED_BLOCKED_ON_REVIEWER_CALIBRATION",
+  "submitted": false,
+  "successor_revision_frozen_read_only": true,
+  "supersedes": "acceptance_rung_receipt.v1.json"
+}

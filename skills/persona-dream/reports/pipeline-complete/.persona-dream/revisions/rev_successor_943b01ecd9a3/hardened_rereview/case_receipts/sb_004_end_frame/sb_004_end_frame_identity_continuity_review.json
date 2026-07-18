@@ -1,0 +1,68 @@
+{
+  "blocking_findings": [],
+  "created_at": "2026-07-18T17:52:19.366459+00:00",
+  "frame_key": "end_frame",
+  "frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_004_end_frame.png",
+  "image_dimensions": {
+    "height": 864,
+    "width": 1536
+  },
+  "live": true,
+  "mocked": false,
+  "model": "gpt-5.5",
+  "model_policy": {
+    "auth": "codex-oauth",
+    "error": null,
+    "fallback_performed": false,
+    "model": "gpt-5.5",
+    "provider": "codex",
+    "schema": "persona_dream.identity_review_policy.v1",
+    "source": "dag_identity_review_model_policy",
+    "supported": true
+  },
+  "model_policy_enforced": true,
+  "panel_id": "sb_004",
+  "raw_response": {
+    "blocking_findings": [],
+    "identity_notes": "Both required identities are foreground-visible in a character-readable two-shot. Embry and Kai are not generic category matches; their faces are visible enough to compare specific features against the reference sheets, including complexion, face proportions, brows, nose, lips/jaw, and apparent age.",
+    "observed_divergences": {
+      "Embry": [
+        "wet hair is looser and darker from seawater than in the dry reference sheet",
+        "strong outdoor side lighting increases contrast and shadow on the face, but complexion warmth and freckling remain consistent"
+      ],
+      "Kai": [
+        "wet curls appear tighter and more clumped than some reference views",
+        "sun glare and water highlights create stronger facial shine, but face shape, nose, brows, and jaw remain consistent"
+      ]
+    },
+    "verdict": "PASS",
+    "verified_facial_features": {
+      "Embry": [
+        "warm olive complexion with visible freckling across cheeks and nose matching the reference",
+        "same fuller oval face proportion with softly tapered jaw",
+        "same thick arched eyebrows, straight narrow nose bridge, and muted full lip shape"
+      ],
+      "Kai": [
+        "same tan warm complexion and youthful early-20s appearance",
+        "same dark almond-shaped eyes under strong brows with a straight medium-width nose",
+        "same defined cheekbones, tapered jawline, and softly rounded chin visible in the reference"
+      ]
+    },
+    "visible_entities": [
+      "Embry",
+      "Kai"
+    ]
+  },
+  "receipt_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/hardened_rereview/case_receipts/sb_004_end_frame/sb_004_end_frame_identity_continuity_review.json",
+  "required_entities": [
+    "Embry",
+    "Kai"
+  ],
+  "reviewer_source": "scillm:gpt-5.5:image_url",
+  "schema": "persona_dream.identity_continuity_review.v1",
+  "status": "PASS",
+  "visible_entities": [
+    "Embry",
+    "Kai"
+  ]
+}

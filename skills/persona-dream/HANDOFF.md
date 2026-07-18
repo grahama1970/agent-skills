@@ -5,6 +5,14 @@
 
 This top-level file redirects to the detailed handoff. The current handoff covers UX Lab Dream/Kling preflight React surface implementation — 12-phase pipeline, Gemini design packet mostly implemented, blocked on image modal click not working through draggable parent.
 
+## 2026-07-18 Reviewer hardening (identity continuity) — action required
+
+- A negative-control probe proved the Phase C identity reviewer was too lenient (PASSed 2/3 known-bad montage frames), so the successor 8/8 first-attempt Phase C PASS was partly false confidence for specific-identity fidelity.
+- Hardened `phase07_storyboard_tau_node._identity_review_prompt` (contained to the review prompt contract). Hardened prompt `sha256:ee09dd57d8d06953d2039b4085cab7e481a5f09c09984a290b97b41cb3f626d7`.
+- Recalibration `reviewer_calibration_receipt.v2.json` = REVIEWER_CALIBRATION_FAILED but improved (known-bad FAILs 1/3 -> 2/3; positives 2/2, tamper 1/1). Residual: subtlest montage frame `known_bad_sb_001` still passes pixel-only review after the 3-revision cap.
+- Hardened re-review of the 8 accepted successor frames = 8/8 STILL PASS (`hardened_rereview/hardened_rereview_summary.v2.json`).
+- `acceptance_rung_receipt.v2.json` = RUNG_NOT_RESTORED_BLOCKED_ON_REVIEWER_CALIBRATION. Lane C SB_003 end-frame regen + supersession/requalification are DEFERRED until the sb_001 calibration gap is resolved (face-crop-only comparison, a second stricter reviewer, or human adjudication), then re-run calibration to PASS before restoring/certifying the rung. No paid call made or authorized.
+
 ## Current Truth
 
 - The active handoff is:

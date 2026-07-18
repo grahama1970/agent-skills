@@ -1,0 +1,70 @@
+{
+  "blocking_findings": [],
+  "created_at": "2026-07-18T17:50:12.653486+00:00",
+  "frame_key": "start_frame",
+  "frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_001_start_frame.png",
+  "image_dimensions": {
+    "height": 941,
+    "width": 1672
+  },
+  "live": true,
+  "mocked": false,
+  "model": "gpt-5.5",
+  "model_policy": {
+    "auth": "codex-oauth",
+    "error": null,
+    "fallback_performed": false,
+    "model": "gpt-5.5",
+    "provider": "codex",
+    "schema": "persona_dream.identity_review_policy.v1",
+    "source": "dag_identity_review_model_policy",
+    "supported": true
+  },
+  "model_policy_enforced": true,
+  "panel_id": "sb_001",
+  "raw_response": {
+    "blocking_findings": [],
+    "identity_notes": "Both required identities are foreground, face-readable, and match the specific reference sheets at the feature level. Embry is visible in a navy rashguard with matching warm olive freckled complexion and fuller oval facial structure. Kai is visible in a black rashguard with matching tan complexion, curly wet hair, youthful facial structure, and reference-consistent nose, brows, and jawline. No competing foreground person confuses the identities.",
+    "observed_divergences": {
+      "Embry": [
+        "Wet hair is slicked back more than in the studio reference, but does not alter facial structure",
+        "Outdoor side lighting creates stronger highlights on cheek and forehead; complexion still reads warm-olive and freckled",
+        "Three-quarter gaze limits full frontal comparison, but facial proportions remain consistent"
+      ],
+      "Kai": [
+        "Wet/ocean lighting adds shine and stronger contrast compared with some indoor reference images",
+        "Expression is slightly more intent/neutral than several smiling reference poses",
+        "No identity-changing divergence observed in face shape, age, complexion, eyebrows, or nose"
+      ]
+    },
+    "verdict": "PASS",
+    "verified_facial_features": {
+      "Embry": [
+        "Fuller oval face shape with softly rounded jaw matching the reference, not a narrow/long substitute",
+        "Same strong dark arched eyebrows and almond-shaped light green/hazel eyes visible in three-quarter view",
+        "Warm olive complexion with visible freckling across cheeks/nose consistent with the reference"
+      ],
+      "Kai": [
+        "Same tan complexion and curly dark wet hair framing the forehead as in the reference",
+        "Same straight nose bridge with rounded tip and defined cheekbones in three-quarter view",
+        "Same youthful jawline/chin shape and thick eyebrows matching the Kai reference"
+      ]
+    },
+    "visible_entities": [
+      "Embry",
+      "Kai"
+    ]
+  },
+  "receipt_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/hardened_rereview/case_receipts/sb_001_start_frame/sb_001_start_frame_identity_continuity_review.json",
+  "required_entities": [
+    "Embry",
+    "Kai"
+  ],
+  "reviewer_source": "scillm:gpt-5.5:image_url",
+  "schema": "persona_dream.identity_continuity_review.v1",
+  "status": "PASS",
+  "visible_entities": [
+    "Embry",
+    "Kai"
+  ]
+}
