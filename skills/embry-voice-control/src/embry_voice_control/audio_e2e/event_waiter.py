@@ -197,6 +197,60 @@ def wait_for_managed_turn(
     raise TimeoutError("managed_listener_timeout:" + ",".join(missing))
 
 
+def wait_for_query_capture_armed(
+    journal_db: Path,
+    *,
+    session_id: str,
+    expected: dict[str, str],
+    timeout_seconds: float,
+    poll_seconds: float = 0.1,
+    after_sequence: int = 0,
+) -> dict[str, Any]:
+    """Return the listener.query_capture_armed event after the matching wake.
+
+    This is the observable post-wake readiness signal that replaces the runner's
+    fixed post-wake sleep. The listener emits it only once it has re-entered
+    post-wake voice-activity listening, so playing the query after this event
+    (rather than after an elapsed interval) closes the
+    QUERY_PLAYED_BEFORE_POST_WAKE_CAPTURE_ARMED race.
+    """
+    deadline = time.monotonic() + timeout_seconds
+    while time.monotonic() < deadline:
+        events = [
+            event
+            for event in session_snapshot(journal_db, session_id)["events"]
+            if event["sequence"] > after_sequence
+        ]
+        wake = next(
+            (
+                event
+                for event in events
+                if event["type"] == "listener.wake_detected"
+                and managed_fields_match(event, expected)
+            ),
+            None,
+        )
+        armed = next(
+            (
+                event
+                for event in events
+                if wake is not None
+                and event["type"] == "listener.query_capture_armed"
+                and event["sequence"] > wake["sequence"]
+                and managed_fields_match(event, expected)
+            ),
+            None,
+        )
+        if armed is not None:
+            if armed.get("live") is not True or armed.get("mocked") is not False:
+                raise ValueError(
+                    f"query_capture_armed_not_live:{armed['event_id']}"
+                )
+            return armed
+        time.sleep(poll_seconds)
+    raise TimeoutError("managed_listener_timeout:listener.query_capture_armed")
+
+
 def wait_for_managed_wake(
     journal_db: Path,
     *,

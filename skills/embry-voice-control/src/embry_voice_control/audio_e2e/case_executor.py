@@ -17,6 +17,7 @@ from .event_waiter import (
     journal_sequence_boundary,
     wait_for_managed_turn,
     wait_for_managed_wake,
+    wait_for_query_capture_armed,
 )
 
 
@@ -61,6 +62,11 @@ class ManagedListenerProcess(AbstractContextManager["ManagedListenerProcess"]):
             str(repo / "proofs/embry_pipewire_ingress/run_physical_hot_mic_listener.py"),
             "--run-dir", str(self.run_dir),
             "--source-node", self.config["listener_source_node"],
+            "--input-transport", self.config.get("input_transport", "physical_air"),
+            "--playback-node", str(self.config.get("source_playback_target") or ""),
+            "--no-speech-peak-floor", str(self.config.get("no_speech_peak_floor", 900)),
+            "--no-speech-rms-floor", str(self.config.get("no_speech_rms_floor", 80.0)),
+            "--min-voiced-ms", str(self.config.get("min_voiced_ms", 250)),
             "--event-service-url", self.config["journal_url"].rstrip("/") + "/v1/listener/events",
             "--managed-socket", str(self.socket),
             "--target-cycles", str(self.target_turn_count),
@@ -518,15 +524,28 @@ class CaseExecutor:
         if source_audio is not None:
             if not source_audio.is_file():
                 raise FileNotFoundError(f"turn_audio_missing:{source_audio}")
-            time.sleep(
-                self.config["source_playback_delay_seconds"]
-                if wake_event is None
-                # After wake acceptance the listener still spends 1-2s
-                # transcribing the wake before it re-arms; playing the query
-                # into that gap loses its onset and Whisper hallucinates on
-                # the resulting near-empty capture.
-                else 2.5
-            )
+            if wake_event is None:
+                time.sleep(self.config["source_playback_delay_seconds"])
+            else:
+                # Event-driven wake->query handoff. After wake acceptance the
+                # listener re-arms its post-wake VAD window and emits
+                # listener.query_capture_armed. Wait for that observable signal
+                # instead of sleeping a fixed interval and racing the listener
+                # (root cause: QUERY_PLAYED_BEFORE_POST_WAKE_CAPTURE_ARMED).
+                wait_for_query_capture_armed(
+                    Path(self.config["journal_db"]),
+                    session_id=case["session_id"],
+                    expected=managed_lineage,
+                    after_sequence=journal_boundary,
+                    timeout_seconds=min(
+                        15.0, self.config["turn_timeout_seconds"]
+                    ),
+                )
+                # Small settle so the recorder's VAD is fully primed before the
+                # query onset arrives at the capture node.
+                time.sleep(
+                    self.config.get("post_query_arm_settle_seconds", 0.25)
+                )
             source_process = subprocess.Popen(
                 [
                     self.config["pw_play"],

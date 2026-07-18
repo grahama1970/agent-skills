@@ -147,6 +147,16 @@ def parser() -> argparse.ArgumentParser:
         run_parser.add_argument("--realtimestt-python", type=Path)
         run_parser.add_argument("--managed-listener-socket", type=Path)
         run_parser.add_argument("--listener-source-node")
+        run_parser.add_argument(
+            "--input-transport",
+            default="physical_air",
+            choices=["physical_air", "pipewire_loopback"],
+            help="Capture transport provenance stamped on listener events. Use "
+            "pipewire_loopback for the virtual-bus bulk tier.",
+        )
+        run_parser.add_argument("--no-speech-peak-floor", type=int, default=900)
+        run_parser.add_argument("--no-speech-rms-floor", type=float, default=80.0)
+        run_parser.add_argument("--min-voiced-ms", type=int, default=250)
         run_parser.add_argument("--listener-start-timeout-seconds", type=float, default=120)
         run_parser.add_argument("--turn-timeout-seconds", type=float, default=180)
         run_parser.add_argument("--max-request-wer", type=float, default=0.25)
@@ -299,6 +309,10 @@ def main() -> int:
                     else None
                 ),
                 "listener_source_node": args.listener_source_node,
+                "input_transport": args.input_transport,
+                "no_speech_peak_floor": args.no_speech_peak_floor,
+                "no_speech_rms_floor": args.no_speech_rms_floor,
+                "min_voiced_ms": args.min_voiced_ms,
                 "listener_start_timeout_seconds": args.listener_start_timeout_seconds,
                 "turn_timeout_seconds": args.turn_timeout_seconds,
                 "max_request_wer": args.max_request_wer,
