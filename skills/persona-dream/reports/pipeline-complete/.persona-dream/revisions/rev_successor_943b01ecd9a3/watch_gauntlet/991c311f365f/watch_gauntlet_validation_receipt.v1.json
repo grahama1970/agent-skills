@@ -1,0 +1,80 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "phase 12 is complete (no successor provider return exists)",
+      "acceptable lip synchronization or stable Embry identity on a repair"
+    ],
+    "proves": [
+      "the /watch perception lane, from scene-driven sampling, independently captures the identity-drift and visible-speaker evidence windows that the fixed 12-frame contact sheet was used to catch"
+    ]
+  },
+  "degraded_capabilities": [],
+  "expectations": [
+    {
+      "expectation": "perception samples >=1 frame inside [0.0, 3.5]s (Embry identity-drift window)",
+      "expected": "frame timestamp within [0.0, 3.5]",
+      "id": "frames_cover_identity_window_00_03",
+      "verdict": "VALIDATED",
+      "watch_found": "5 frame(s) at [0.0, 0.84, 1.67, 2.51, 3.35]"
+    },
+    {
+      "expectation": "perception samples >=1 frame inside [5.0, 7.7]s (visible-speaker window)",
+      "expected": "frame timestamp within [5.0, 7.7]",
+      "id": "frames_cover_speaker_window_05_077",
+      "verdict": "VALIDATED",
+      "watch_found": "4 frame(s) at [5.02, 5.86, 6.69, 7.53]"
+    },
+    {
+      "expectation": "Whisper transcript recovers the canonical Kai line consistent with the forced-alignment receipt",
+      "expected": "text\u2248\"If we paddle now, we're cutting across the lineup.\" overlapping forced-alignment [5.0, 7.7]s",
+      "id": "transcript_recovers_canonical_kai_line",
+      "verdict": "VALIDATED",
+      "watch_found": "\"If we paddle now, we're cutting across the lineup.\" at [4.72, 8.22]s"
+    },
+    {
+      "expectation": "the observation packet flags the visible-speaker window for step 38",
+      "expected": "step_38_visible_speaker_lipsync.speaker_visibility_flagged == true with frames + transcript line",
+      "id": "packet_flags_speaker_visibility_window",
+      "verdict": "VALIDATED",
+      "watch_found": "flagged=True, line_at_interval=\"If we paddle now, we're cutting across the lineup.\", 4 visibility frame(s)"
+    },
+    {
+      "expectation": "the codex/scillm vision layer independently corroborates DRIFT on the [0.0, 3.5]s Embry frames vs embry_contact_sheet_v3",
+      "expected": "independent vision VERDICT == DRIFT",
+      "id": "vision_corroborates_embry_identity_drift_00_03",
+      "verdict": "VALIDATED",
+      "watch_found": "vision status=performed, verdict=DRIFT, model=gpt-5.3-codex"
+    }
+  ],
+  "ground_truth_expectations": {
+    "canonical_line": "If we paddle now, we're cutting across the lineup.",
+    "expected_vision_verdict": "DRIFT",
+    "forced_alignment_interval": [
+      5.0,
+      7.7
+    ],
+    "identity_window": [
+      0.0,
+      3.5
+    ],
+    "speaker_window": [
+      5.0,
+      7.7
+    ]
+  },
+  "live": true,
+  "mocked": false,
+  "observation_packet": {
+    "path": "dream_observation_packet.v1.json",
+    "sha256": "sha256:b88e3cf91416bd214da45fb4316e654c4794fad9b5f7d356ae70ff921bc24c3b"
+  },
+  "observed_at": "2026-07-18T17:29:25.070280+00:00",
+  "overall_status": "PASS_WATCH_GAUNTLET_VALIDATED",
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.watch_gauntlet_validation_receipt.v1",
+  "source_revision_id": "rev_upstream_bf3b05d47fb8",
+  "source_video": "muxed_provider_return.mp4",
+  "source_video_sha256": "sha256:991c311f365f84832b274aad7b8ff757372914f7c516e595a31b1bd05edf4c59",
+  "status": "PASS_WATCH_GAUNTLET_VALIDATED"
+}

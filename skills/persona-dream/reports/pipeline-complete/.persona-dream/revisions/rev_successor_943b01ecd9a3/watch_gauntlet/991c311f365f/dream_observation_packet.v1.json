@@ -1,0 +1,312 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "acceptable lip synchronization",
+      "stable Embry identity on any successor return",
+      "deterministic face-embedding similarity"
+    ],
+    "proves": [
+      "the /watch skill extracts scene-driven frames and a Whisper transcript from a returned MP4 and localizes the identity and speaker-visibility evidence windows without the fixed 12-frame lane"
+    ]
+  },
+  "coverage_gaps": [
+    "per_frame_vlm_entities_unavailable: watch scillm vlm frame descriptions did not resolve; per-frame entity lists are empty"
+  ],
+  "duration_seconds": 10.041667,
+  "evidence_origin": "historical_provider_return",
+  "frame_evidence": [
+    {
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "index": 0,
+      "observed_entities": [],
+      "path": "watch/frames_bound/frame_0000.jpg",
+      "sha256": "sha256:bc7c4eb94de8d8e5a7943da16c3f53fdf78cc8a502af1f2bbd52e32f3b1e9cd8",
+      "size_bytes": 22268,
+      "timestamp_seconds": 0.0
+    },
+    {
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "index": 1,
+      "observed_entities": [],
+      "path": "watch/frames_bound/frame_0001.jpg",
+      "sha256": "sha256:f16ce892102f51720680fadb7d2a9dda83f980e079ebb790c1ccb475b13e9fdf",
+      "size_bytes": 21592,
+      "timestamp_seconds": 0.84
+    },
+    {
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "index": 2,
+      "observed_entities": [],
+      "path": "watch/frames_bound/frame_0002.jpg",
+      "sha256": "sha256:b08744440c46d3171ae0aa2c6ecca4addc46014fafa9fb91a80f6eef98ee3661",
+      "size_bytes": 19860,
+      "timestamp_seconds": 1.67
+    },
+    {
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "index": 3,
+      "observed_entities": [],
+      "path": "watch/frames_bound/frame_0003.jpg",
+      "sha256": "sha256:366db5b91ec5ff6ee14c801753023a9ba3786733b85333a9c4537e77a24b675d",
+      "size_bytes": 21227,
+      "timestamp_seconds": 2.51
+    },
+    {
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "index": 4,
+      "observed_entities": [],
+      "path": "watch/frames_bound/frame_0004.jpg",
+      "sha256": "sha256:f8700dc5ed75f9bb9da369e23c298dd1a7eb3be02c30b50ac581a8b5b83c4d19",
+      "size_bytes": 21311,
+      "timestamp_seconds": 3.35
+    },
+    {
+      "in_identity_window": false,
+      "in_speaker_window": false,
+      "index": 5,
+      "observed_entities": [],
+      "path": "watch/frames_bound/frame_0005.jpg",
+      "sha256": "sha256:c6e3892337d620341f8ec83176804cb016687659e9d364896e2ca4dd51674cf9",
+      "size_bytes": 20254,
+      "timestamp_seconds": 4.18
+    },
+    {
+      "in_identity_window": false,
+      "in_speaker_window": true,
+      "index": 6,
+      "observed_entities": [],
+      "path": "watch/frames_bound/frame_0006.jpg",
+      "sha256": "sha256:e9ec602fb25e7262943c9e4c284da2e2455800322cb1cc81b07f172c2e4fe6b3",
+      "size_bytes": 20548,
+      "timestamp_seconds": 5.02
+    },
+    {
+      "in_identity_window": false,
+      "in_speaker_window": true,
+      "index": 7,
+      "observed_entities": [],
+      "path": "watch/frames_bound/frame_0007.jpg",
+      "sha256": "sha256:25a893d4a9bc420c89a2054e3aafa4a57da24e371ff070b96b3be0d27506bb3f",
+      "size_bytes": 20084,
+      "timestamp_seconds": 5.86
+    },
+    {
+      "in_identity_window": false,
+      "in_speaker_window": true,
+      "index": 8,
+      "observed_entities": [],
+      "path": "watch/frames_bound/frame_0008.jpg",
+      "sha256": "sha256:b3baaa289d0197084b9d624e5367062c987bda778eba7c79bb5c952af8e665ce",
+      "size_bytes": 15692,
+      "timestamp_seconds": 6.69
+    },
+    {
+      "in_identity_window": false,
+      "in_speaker_window": true,
+      "index": 9,
+      "observed_entities": [],
+      "path": "watch/frames_bound/frame_0009.jpg",
+      "sha256": "sha256:7fc7ef610c5f3a3d4e9e59ab6e1019ffbbe76f9524577ba5d691c1ec68e3a525",
+      "size_bytes": 15453,
+      "timestamp_seconds": 7.53
+    },
+    {
+      "in_identity_window": false,
+      "in_speaker_window": false,
+      "index": 10,
+      "observed_entities": [],
+      "path": "watch/frames_bound/frame_0010.jpg",
+      "sha256": "sha256:f8a3b23f17390ad48a4168d824b2fb3359ceb00b43faf166122517f9ba8559f0",
+      "size_bytes": 13700,
+      "timestamp_seconds": 8.37
+    },
+    {
+      "in_identity_window": false,
+      "in_speaker_window": false,
+      "index": 11,
+      "observed_entities": [],
+      "path": "watch/frames_bound/frame_0011.jpg",
+      "sha256": "sha256:57794ea2aa9398f8c325f50776b2e4a58e57b8583eee2725f403b95f03008300",
+      "size_bytes": 11443,
+      "timestamp_seconds": 9.2
+    }
+  ],
+  "live": true,
+  "mocked": false,
+  "observed_at": "2026-07-18T17:29:25.070280+00:00",
+  "perception": {
+    "capabilities": {
+      "frames": "ok",
+      "transcript": "ok",
+      "vision_identity_review": "ok"
+    },
+    "frame_count": 12,
+    "requested_mode": "scene-change",
+    "sampling_mode": "uniform-fallback",
+    "skill": "watch",
+    "transcript_source": "whisper-local (cpu)"
+  },
+  "psychological_interpretation_performed": false,
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.watch_gauntlet_observation_packet.v1",
+  "source_revision_id": "rev_upstream_bf3b05d47fb8",
+  "source_video": "muxed_provider_return.mp4",
+  "source_video_sha256": "sha256:991c311f365f84832b274aad7b8ff757372914f7c516e595a31b1bd05edf4c59",
+  "source_video_size_bytes": 17204936,
+  "status": "DEGRADED_WATCH_GAUNTLET_OBSERVATION",
+  "step_hooks": {
+    "step_35_frame_contact_sheet": {
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "frame_timestamps": [
+        0.0,
+        0.84,
+        1.67,
+        2.51,
+        3.35,
+        4.18,
+        5.02,
+        5.86,
+        6.69,
+        7.53,
+        8.37,
+        9.2
+      ],
+      "montage_command_hint": "montage <frames> -tile 4x3 -geometry 320x180+4+4 frame_contact_sheet.png",
+      "sampling_mode": "uniform-fallback",
+      "source_frames_manifest": "watch/frames_manifest.json"
+    },
+    "step_36_identity_temporal_continuity": {
+      "identity_reference": {
+        "asset_id": "embry_contact_sheet_v3",
+        "path": "/mnt/storage12tb/media/personas/embry/assets/contact_sheets/embry-gpt-image-2-v3/images/embry_contact_sheet_v3.png",
+        "sha256": "sha256:3ce40b3b6839ebba0f468d75a1adbb7f82e0d95457aefd3627e222eb569de00c"
+      },
+      "identity_review_frames": [
+        {
+          "index": 0,
+          "path": "watch/frames_bound/frame_0000.jpg",
+          "timestamp_seconds": 0.0
+        },
+        {
+          "index": 1,
+          "path": "watch/frames_bound/frame_0001.jpg",
+          "timestamp_seconds": 0.84
+        },
+        {
+          "index": 2,
+          "path": "watch/frames_bound/frame_0002.jpg",
+          "timestamp_seconds": 1.67
+        },
+        {
+          "index": 3,
+          "path": "watch/frames_bound/frame_0003.jpg",
+          "timestamp_seconds": 2.51
+        },
+        {
+          "index": 4,
+          "path": "watch/frames_bound/frame_0004.jpg",
+          "timestamp_seconds": 3.35
+        }
+      ],
+      "identity_window_seconds": [
+        0.0,
+        3.5
+      ],
+      "vision_review": {
+        "auth": "codex-oauth",
+        "model": "gpt-5.3-codex",
+        "raw_output_tail": "VERDICT: DRIFT\nThe woman keeps the general brunette ponytail and navy top, but her facial structure and visible features soften and shift across the frames and do not reliably match Embry\u2019s sharper brows, eye shape, and reference-sheet face.",
+        "returncode": 0,
+        "reviewed_frame_count": 5,
+        "status": "performed",
+        "verdict": "DRIFT"
+      }
+    },
+    "step_38_visible_speaker_lipsync": {
+      "speaker": "Kai",
+      "speaker_visibility_flagged": true,
+      "speaker_visibility_frames": [
+        {
+          "index": 6,
+          "path": "watch/frames_bound/frame_0006.jpg",
+          "timestamp_seconds": 5.02
+        },
+        {
+          "index": 7,
+          "path": "watch/frames_bound/frame_0007.jpg",
+          "timestamp_seconds": 5.86
+        },
+        {
+          "index": 8,
+          "path": "watch/frames_bound/frame_0008.jpg",
+          "timestamp_seconds": 6.69
+        },
+        {
+          "index": 9,
+          "path": "watch/frames_bound/frame_0009.jpg",
+          "timestamp_seconds": 7.53
+        }
+      ],
+      "spoken_interval_seconds": [
+        5.0,
+        7.7
+      ],
+      "transcript_line_at_interval": "If we paddle now, we're cutting across the lineup."
+    }
+  },
+  "transcript_facts": [
+    {
+      "confidence": 0.9,
+      "evidence_refs": [
+        "watch/transcript.json"
+      ],
+      "fact_id": "transcript_seg_000",
+      "statement": "If we paddle now, we're cutting across the lineup.",
+      "time_range": [
+        4.72,
+        8.219999999999999
+      ]
+    }
+  ],
+  "watch_artifacts": {
+    "frames_manifest": {
+      "path": "watch/frames_manifest.json",
+      "sha256": "sha256:0820fd320c04a4d08af3f38cf09aa8303b9a2bf9e70b66e3ec0e57c84cae92ac",
+      "size_bytes": 3907
+    },
+    "report": {
+      "path": "watch/report.json",
+      "sha256": "sha256:ba2f8e86e1e5c2a392b3e5506b273a96d6c2abfbfef837eeac90b33b9b3b4648",
+      "size_bytes": 30239
+    },
+    "scenes": {
+      "path": "watch/scenes.json",
+      "sha256": "sha256:755d442cf44919879856407fe199e916c770d206e3f6b050d6eb286b7af73782",
+      "size_bytes": 20
+    },
+    "transcript": {
+      "path": "watch/transcript.json",
+      "sha256": "sha256:626ede49dadebe49d4b9a587af7bc2b061adf7be49da051d78cc05209ac841da",
+      "size_bytes": 270
+    }
+  }
+}

@@ -1,0 +1,188 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/persona-dream/watch_gauntlet_observation_packet.v1.schema.json",
+  "title": "Persona Dream watch-gauntlet observation packet",
+  "description": "Phase-12-compatible perception packet produced by the /watch skill over a returned MP4. Distinct from the fixed-lane dream_observation_packet.v1: scene-driven sampling, variable frame count, and transcript-present observations are allowed.",
+  "type": "object",
+  "required": [
+    "schema", "status", "evidence_origin", "run_id", "revision_id",
+    "source_revision_id", "source_video", "source_video_sha256",
+    "source_video_size_bytes", "duration_seconds", "perception",
+    "watch_artifacts", "frame_evidence", "transcript_facts", "coverage_gaps",
+    "step_hooks", "psychological_interpretation_performed", "mocked", "live",
+    "observed_at", "claims"
+  ],
+  "properties": {
+    "schema": {"const": "persona_dream.watch_gauntlet_observation_packet.v1"},
+    "status": {
+      "enum": [
+        "PASS_WATCH_GAUNTLET_OBSERVATION",
+        "DEGRADED_WATCH_GAUNTLET_OBSERVATION",
+        "BLOCKED_WATCH_GAUNTLET_OBSERVATION"
+      ]
+    },
+    "evidence_origin": {"enum": ["historical_provider_return", "provider_return", "fixture_video"]},
+    "run_id": {"type": "string", "minLength": 1},
+    "revision_id": {"type": "string", "minLength": 1},
+    "source_revision_id": {"type": "string", "minLength": 1},
+    "source_video": {"type": "string", "minLength": 1},
+    "source_video_sha256": {"$ref": "#/$defs/sha256"},
+    "source_video_size_bytes": {"type": "integer", "minimum": 1},
+    "duration_seconds": {"type": "number", "exclusiveMinimum": 0},
+    "perception": {
+      "type": "object",
+      "required": [
+        "skill", "requested_mode", "sampling_mode", "frame_count",
+        "transcript_source", "capabilities"
+      ],
+      "properties": {
+        "skill": {"const": "watch"},
+        "requested_mode": {"type": "string", "minLength": 1},
+        "sampling_mode": {"type": "string", "minLength": 1},
+        "frame_count": {"type": "integer", "minimum": 1},
+        "transcript_source": {"type": ["string", "null"]},
+        "capabilities": {
+          "type": "object",
+          "required": ["frames", "transcript", "vision_identity_review"],
+          "properties": {
+            "frames": {"type": "string", "minLength": 1},
+            "transcript": {"type": "string", "minLength": 1},
+            "vision_identity_review": {"type": "string", "minLength": 1}
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "watch_artifacts": {
+      "type": "object",
+      "required": ["frames_manifest", "transcript", "scenes", "report"],
+      "properties": {
+        "frames_manifest": {"$ref": "#/$defs/file_ref"},
+        "transcript": {"$ref": "#/$defs/file_ref"},
+        "scenes": {"$ref": "#/$defs/file_ref"},
+        "report": {"$ref": "#/$defs/file_ref"}
+      },
+      "additionalProperties": false
+    },
+    "frame_evidence": {
+      "type": "array", "minItems": 1,
+      "items": {"$ref": "#/$defs/frame_evidence"}
+    },
+    "transcript_facts": {"type": "array", "items": {"$ref": "#/$defs/fact"}},
+    "coverage_gaps": {"type": "array", "items": {"type": "string", "minLength": 1}},
+    "step_hooks": {
+      "type": "object",
+      "required": [
+        "step_35_frame_contact_sheet",
+        "step_36_identity_temporal_continuity",
+        "step_38_visible_speaker_lipsync"
+      ],
+      "properties": {
+        "step_35_frame_contact_sheet": {
+          "type": "object",
+          "required": ["frame_indices", "frame_timestamps", "sampling_mode", "source_frames_manifest"],
+          "properties": {
+            "frame_indices": {"type": "array", "items": {"type": "integer", "minimum": 0}},
+            "frame_timestamps": {"type": "array", "items": {"type": "number", "minimum": 0}},
+            "sampling_mode": {"type": "string", "minLength": 1},
+            "source_frames_manifest": {"type": "string", "minLength": 1},
+            "montage_command_hint": {"type": "string"}
+          },
+          "additionalProperties": true
+        },
+        "step_36_identity_temporal_continuity": {
+          "type": "object",
+          "required": ["identity_window_seconds", "identity_review_frames", "identity_reference", "vision_review"],
+          "properties": {
+            "identity_window_seconds": {"type": "array", "prefixItems": [{"type": "number"}, {"type": "number"}], "items": false},
+            "identity_review_frames": {"type": "array", "items": {"$ref": "#/$defs/window_frame"}},
+            "identity_reference": {"type": "object"},
+            "vision_review": {"type": "object"}
+          },
+          "additionalProperties": true
+        },
+        "step_38_visible_speaker_lipsync": {
+          "type": "object",
+          "required": [
+            "speaker", "spoken_interval_seconds", "speaker_visibility_frames",
+            "speaker_visibility_flagged"
+          ],
+          "properties": {
+            "speaker": {"type": "string", "minLength": 1},
+            "spoken_interval_seconds": {"type": "array", "prefixItems": [{"type": "number"}, {"type": "number"}], "items": false},
+            "speaker_visibility_frames": {"type": "array", "items": {"$ref": "#/$defs/window_frame"}},
+            "transcript_line_at_interval": {"type": ["string", "null"]},
+            "speaker_visibility_flagged": {"type": "boolean"}
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "psychological_interpretation_performed": {"const": false},
+    "mocked": {"type": "boolean"},
+    "live": {"type": "boolean"},
+    "observed_at": {"type": "string", "minLength": 1},
+    "claims": {
+      "type": "object",
+      "required": ["proves", "does_not_prove"],
+      "properties": {
+        "proves": {"type": "array", "items": {"type": "string"}},
+        "does_not_prove": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "file_ref": {
+      "type": "object",
+      "required": ["path", "sha256", "size_bytes"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1, "not": {"pattern": "(^/|^[A-Za-z]:[\\\\/]|(^|/)\\.\\.(/|$))"}},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "size_bytes": {"type": "integer", "minimum": 1}
+      },
+      "additionalProperties": false
+    },
+    "window_frame": {
+      "type": "object",
+      "required": ["index", "timestamp_seconds", "path"],
+      "properties": {
+        "index": {"type": "integer", "minimum": 0},
+        "timestamp_seconds": {"type": "number", "minimum": 0},
+        "path": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": true
+    },
+    "frame_evidence": {
+      "type": "object",
+      "required": ["index", "timestamp_seconds", "path", "sha256", "size_bytes", "observed_entities", "in_identity_window", "in_speaker_window"],
+      "properties": {
+        "index": {"type": "integer", "minimum": 0},
+        "timestamp_seconds": {"type": "number", "minimum": 0},
+        "path": {"type": "string", "minLength": 1, "not": {"pattern": "(^/|^[A-Za-z]:[\\\\/]|(^|/)\\.\\.(/|$))"}},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "size_bytes": {"type": "integer", "minimum": 1},
+        "observed_entities": {"type": "array", "items": {"type": "string"}},
+        "in_identity_window": {"type": "boolean"},
+        "in_speaker_window": {"type": "boolean"}
+      },
+      "additionalProperties": true
+    },
+    "fact": {
+      "type": "object",
+      "required": ["fact_id", "statement", "time_range", "evidence_refs", "confidence"],
+      "properties": {
+        "fact_id": {"type": "string", "minLength": 1},
+        "statement": {"type": "string", "minLength": 1},
+        "time_range": {"type": "array", "prefixItems": [{"type": "number"}, {"type": "number"}], "items": false},
+        "evidence_refs": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+      },
+      "additionalProperties": false
+    }
+  }
+}

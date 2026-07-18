@@ -1,0 +1,12 @@
+{
+  "source": "whisper-local (cpu)",
+  "segments": [
+    {
+      "text": "If we paddle now, we're cutting across the lineup.",
+      "start": 4.72,
+      "duration": 3.5
+    }
+  ],
+  "full_text": "If we paddle now, we're cutting across the lineup.",
+  "language": "en"
+}
