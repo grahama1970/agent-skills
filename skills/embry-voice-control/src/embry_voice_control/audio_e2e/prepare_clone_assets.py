@@ -632,11 +632,16 @@ class QualificationTranscriber:
 def request_for_prompt(
     prompt: str, generation_policy: dict[str, Any]
 ) -> dict[str, Any]:
+    # Scale the decode budget with prompt length: slow-prosody tags (<yawn>)
+    # stretch seconds-per-word, and the server's default budget truncated long
+    # sentences mid-utterance. Bounds follow the SynthesizeRequest schema.
+    max_new_tokens = min(1200, max(400, 40 * len(prompt.split())))
     return {
         "prompt": prompt,
         "speaker": generation_policy["speaker"],
         "load_in_4bit": generation_policy["load_in_4bit"],
         "min_duration_sec": generation_policy["min_duration_sec"],
+        "max_new_tokens": max_new_tokens,
         "temperature": generation_policy["temperature"],
         "top_p": generation_policy["top_p"],
         "repetition_penalty": generation_policy["repetition_penalty"],

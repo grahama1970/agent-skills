@@ -36,7 +36,12 @@ EMOTION_TAG_NORMALIZATION = {
 
 ASR_COMPARISON_POLICY = {
     "schema": "embry.audio_e2e.asr_comparison_policy.v1",
-    "policy_id": "expected_conditioned_exact_token_aliases_emotion_tag_stripped_v2",
+    "policy_id": "expected_conditioned_exact_token_aliases_emotion_tag_stripped_phonetic_v3",
+    "token_equivalence": {
+        "algorithms": ["exact", "soundex_v1", "levenshtein_similarity>=0.8"],
+        "min_token_length": 3,
+        "parity": "extract-entities rapidfuzz matcher",
+    },
     "emotion_tag_normalization": EMOTION_TAG_NORMALIZATION,
     "aliases": [
         {
@@ -102,7 +107,7 @@ ASR_COMPARISON_POLICY_SHA256 = (
 
 MANAGED_LISTENER_ASR_COMPARISON_POLICY = {
     "schema": "embry.audio_e2e.asr_comparison_policy.v1",
-    "policy_id": "managed_listener_expected_conditioned_aliases_emotion_tag_stripped_v2",
+    "policy_id": "managed_listener_expected_conditioned_aliases_emotion_tag_stripped_phonetic_v3",
     "base_policy_sha256": ASR_COMPARISON_POLICY_SHA256,
     "emotion_tag_normalization": EMOTION_TAG_NORMALIZATION,
     "aliases": [
@@ -130,7 +135,75 @@ def normalized_tokens(value: str) -> list[str]:
     return re.sub(r"[^a-z0-9]+", " ", without_tags.lower()).split()
 
 
-def word_error_rate(expected: list[str], actual: list[str]) -> float:
+_SOUNDEX_CODES = {
+    **{c: "1" for c in "bfpv"},
+    **{c: "2" for c in "cgjkqsxz"},
+    **{c: "3" for c in "dt"},
+    "l": "4",
+    **{c: "5" for c in "mn"},
+    "r": "6",
+}
+
+# Tokens shorter than this never match phonetically; short function words
+# ("to"/"the") share keys without being the same spoken word.
+_PHONETIC_MIN_TOKEN_LENGTH = 3
+
+
+def phonetic_key(token: str) -> str:
+    """Deterministic Soundex key so a term and its ASR respelling compare equal."""
+    letters = [c for c in token.lower() if c.isalpha()]
+    if not letters:
+        return token
+    key = letters[0]
+    previous = _SOUNDEX_CODES.get(letters[0], "")
+    for c in letters[1:]:
+        code = _SOUNDEX_CODES.get(c, "")
+        if code and code != previous:
+            key += code
+        if c not in "hw":
+            previous = code
+    return (key + "000")[:4]
+
+
+# Same measure the /extract-entities matcher uses (RapidFuzz normalized
+# Levenshtein), implemented in pure Python so results are identical in every
+# venv that computes a receipt.
+_LEVENSHTEIN_MIN_SIMILARITY = 0.8
+
+
+def _char_levenshtein(a: str, b: str) -> int:
+    previous = list(range(len(b) + 1))
+    for i, ca in enumerate(a, 1):
+        current = [i]
+        for j, cb in enumerate(b, 1):
+            current.append(min(
+                current[-1] + 1,
+                previous[j] + 1,
+                previous[j - 1] + (ca != cb),
+            ))
+        previous = current
+    return previous[-1]
+
+
+def _tokens_equivalent(expected_token: str, actual_token: str) -> bool:
+    if expected_token == actual_token:
+        return True
+    if (
+        len(expected_token) < _PHONETIC_MIN_TOKEN_LENGTH
+        or len(actual_token) < _PHONETIC_MIN_TOKEN_LENGTH
+    ):
+        return False
+    if phonetic_key(expected_token) == phonetic_key(actual_token):
+        return True
+    longest = max(len(expected_token), len(actual_token))
+    similarity = 1.0 - _char_levenshtein(expected_token, actual_token) / longest
+    return similarity >= _LEVENSHTEIN_MIN_SIMILARITY
+
+
+def word_error_rate(
+    expected: list[str], actual: list[str], *, phonetic: bool = False
+) -> float:
+    equal = _tokens_equivalent if phonetic else (lambda a, b: a == b)
     previous = list(range(len(actual) + 1))
     for expected_token in expected:
         current = [previous[0] + 1]
@@ -138,7 +211,7 @@ def word_error_rate(expected: list[str], actual: list[str]) -> float:
             current.append(min(
                 current[-1] + 1,
                 previous[index] + 1,
-                previous[index - 1] + (expected_token != actual_token),
+                previous[index - 1] + (not equal(expected_token, actual_token)),
             ))
         previous = current
     return previous[-1] / max(1, len(expected))
@@ -193,7 +266,7 @@ def _compare_with_policy(
             })
 
     raw_wer = word_error_rate(expected, actual)
-    comparison_wer = word_error_rate(expected, comparison_actual)
+    comparison_wer = word_error_rate(expected, comparison_actual, phonetic=True)
     return {
         "schema": "embry.audio_e2e.asr_comparison.v1",
         "policy_id": policy["policy_id"],
