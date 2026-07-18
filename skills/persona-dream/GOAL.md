@@ -24,7 +24,17 @@ Minimum final evidence:
 
 ## Current Boundary
 
-The active revision `rev_upstream_bf3b05d47fb8` crossed the live Kling boundary
+The active revision is now the identity-source successor
+`rev_successor_943b01ecd9a3` (durable repo-rooted pointer, bound to
+`embry_contact_sheet_v3`). It stands at its acceptance rung:
+`PASS_ACTIVE_CONSISTENT`, Memory `PASS_EXACT_REREAD_42_OF_42`, and all eight
+Phase 07 storyboard frames PASS actual-pixel identity review (8/8 first
+attempt; 7/7 continuity pairs). Receipt:
+`.persona-dream/revisions/rev_successor_943b01ecd9a3/acceptance_rung_receipt.v1.json`.
+No successor provider call has been made; the historical return below is
+superseded evidence from the frozen predecessor.
+
+The frozen revision `rev_upstream_bf3b05d47fb8` crossed the live Kling boundary
 once for repaired request
 `sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f`.
 Provider request `019f70ac-3864-7d81-9e86-5fae6a676e0d` completed after 54
@@ -62,8 +72,16 @@ creator: GPT Image 2 through Tau/Scillm, live, no fallback
 reviewer: GPT-5.5 pixel review, 9/9 cells accepted, zero blockers
 image sha256: 3ce40b3b6839ebba0f468d75a1adbb7f82e0d95457aefd3627e222eb569de00c
 Memory exact retrieval: embry_contact_sheet_v3, confidence 1.0, semantic_sync_state synced
-current critical path: regenerate and review storyboard frames from the qualified identity source, then obtain a newly authorized Kling return and run visible-speaker lip sync
-not proven: repaired storyboard continuity, repaired Kling identity, or accepted lip synchronization
+current critical path: resolve the step 38 visible-speaker lip-sync plan, prove the reviewer negative control, wire watch into the post-return gauntlet, then compile the successor provider request for a newly hash-bound authorized Kling return
+not proven: repaired Kling identity on a successor return, or accepted lip synchronization
+```
+
+Successor storyboard update (2026-07-18):
+
+```text
+successor revision: rev_successor_943b01ecd9a3, PASS_ACTIVE_CONSISTENT, acceptance rung reached
+storyboard frames: 8/8 actual-pixel identity PASS, first attempt; 7/7 continuity pairs PASS
+known unresolved risk: step 38 lip sync is unaddressed; SB_003 composition and the post-mux audio strategy are unchanged from the failed return
 ```
 
 No agent may claim final, green, complete, fixed, or verified for this goal
