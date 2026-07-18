@@ -1,0 +1,191 @@
+#!/usr/bin/env python3
+"""Unit tests for the scoped anchored-identity waiver (no live calls).
+
+Proves the waiver is fail-closed and scoped:
+  - denied without the contract flag (condition a),
+  - denied without the start-frame anchor pass (condition b),
+  - denied without the non-facial continuity pass (condition c),
+  - granted ONLY with all four conditions (a,b,c satisfied + receipt emitted, d),
+  - contract hash mismatch denies (machine-checkable binding),
+  - Embry is never covered by a Kai waiver (scope).
+"""
+from __future__ import annotations
+
+import copy
+import importlib.util
+from pathlib import Path
+
+SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
+
+
+def _load():
+    spec = importlib.util.spec_from_file_location(
+        "anchored_identity_waiver", SCRIPTS / "anchored_identity_waiver.py"
+    )
+    assert spec and spec.loader
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    return m
+
+
+W = _load()
+
+CONTRACT_SHA = "sha256:99ee85a6315249322f4f3f02ec4f17714b63dfb5f249b6607d798db3ff2605d3"
+
+DELTA = {
+    "targets": {
+        "sb_003_end_frame_contract": {"sha256": CONTRACT_SHA},
+    },
+    "sb_003_end_frame_delta": {
+        "identity_requirements.Kai.visibility": {
+            "before": {"face_required": True, "spatially_implied_allowed": False},
+            "after": {
+                "face_required": False,
+                "identity_anchored_by": "sb_003.start_frame",
+                "speaker_mouth_camera_readable_during_speech": False,
+            },
+        },
+    },
+}
+
+START_REVIEW_PASS = {
+    "status": "PASS",
+    "full_frame_status": "PASS",
+    "face_embedding_subgate": {
+        "status": "PASS",
+        "threshold": 0.421,
+        "entity_results": [
+            {"entity": "Kai", "status": "PASS", "best_cosine": 0.72},
+            {"entity": "Embry", "status": "PASS", "best_cosine": 0.68},
+        ],
+    },
+}
+
+CONTINUITY_PASS = {
+    "status": "PASS",
+    "non_facial_identity_continuity_for": ["Kai"],
+    "non_facial_checks": ["wardrobe", "build", "hair", "board", "position"],
+}
+
+
+def _kwargs(**over):
+    base = dict(
+        character="Kai",
+        frame_key="end_frame",
+        panel_id="sb_003",
+        delta=DELTA,
+        delta_block_key="sb_003_end_frame_delta",
+        contract_target_key="sb_003_end_frame_contract",
+        observed_contract_sha256=CONTRACT_SHA,
+        start_frame_review=START_REVIEW_PASS,
+        continuity_review=CONTINUITY_PASS,
+        anchor_frame_path="/x/sb_003_start_frame.png",
+        continuity_receipt_path="/x/continuity.json",
+    )
+    base.update(over)
+    return base
+
+
+def test_granted_with_all_four():
+    r = W.evaluate_anchored_identity_waiver(**_kwargs())
+    assert r["granted"] is True, r["denied_reasons"]
+    assert r["denied_reasons"] == []
+    # (d) receipt carries character, frame, contract hash, anchor cosine, continuity receipt
+    assert r["character"] == "Kai" and r["frame_key"] == "end_frame"
+    assert r["contract"]["sha256"] == CONTRACT_SHA
+    assert r["anchor_frame"]["embedding_cosine"] == 0.72
+    assert r["continuity_receipt"] == "/x/continuity.json"
+    assert r["receipt_sha256"].startswith("sha256:")
+    assert W.waiver_covers(r, "Kai", "end_frame") is True
+
+
+def test_denied_without_contract_flag():
+    delta = copy.deepcopy(DELTA)
+    delta["sb_003_end_frame_delta"]["identity_requirements.Kai.visibility"]["after"][
+        "face_required"
+    ] = True
+    r = W.evaluate_anchored_identity_waiver(**_kwargs(delta=delta))
+    assert r["granted"] is False
+    assert any("face_required" in x for x in r["denied_reasons"])
+
+
+def test_denied_without_mouth_flag():
+    delta = copy.deepcopy(DELTA)
+    delta["sb_003_end_frame_delta"]["identity_requirements.Kai.visibility"]["after"][
+        "speaker_mouth_camera_readable_during_speech"
+    ] = True
+    r = W.evaluate_anchored_identity_waiver(**_kwargs(delta=delta))
+    assert r["granted"] is False
+    assert any("camera_readable_during_speech" in x for x in r["denied_reasons"])
+
+
+def test_denied_on_contract_hash_mismatch():
+    r = W.evaluate_anchored_identity_waiver(**_kwargs(observed_contract_sha256="sha256:deadbeef"))
+    assert r["granted"] is False
+    assert any("sha256 mismatch" in x for x in r["denied_reasons"])
+
+
+def test_denied_without_anchor_pass_full_frame():
+    rev = copy.deepcopy(START_REVIEW_PASS)
+    rev["status"] = "FAIL"
+    rev["full_frame_status"] = "FAIL"
+    r = W.evaluate_anchored_identity_waiver(**_kwargs(start_frame_review=rev))
+    assert r["granted"] is False
+    assert any("full-frame VLM" in x or "review status" in x for x in r["denied_reasons"])
+
+
+def test_denied_without_anchor_embedding_pass():
+    rev = copy.deepcopy(START_REVIEW_PASS)
+    rev["face_embedding_subgate"]["status"] = "FAIL"
+    rev["face_embedding_subgate"]["entity_results"][0]["status"] = "FAIL"
+    r = W.evaluate_anchored_identity_waiver(**_kwargs(start_frame_review=rev))
+    assert r["granted"] is False
+    assert any("embedding subgate" in x for x in r["denied_reasons"])
+
+
+def test_denied_when_anchor_missing_character():
+    rev = copy.deepcopy(START_REVIEW_PASS)
+    rev["face_embedding_subgate"]["entity_results"] = [
+        {"entity": "Embry", "status": "PASS", "best_cosine": 0.68}
+    ]
+    r = W.evaluate_anchored_identity_waiver(**_kwargs(start_frame_review=rev))
+    assert r["granted"] is False
+    assert any("Kai" in x for x in r["denied_reasons"])
+
+
+def test_denied_without_continuity_pass():
+    cont = copy.deepcopy(CONTINUITY_PASS)
+    cont["status"] = "FAIL"
+    r = W.evaluate_anchored_identity_waiver(**_kwargs(continuity_review=cont))
+    assert r["granted"] is False
+    assert any("continuity status" in x for x in r["denied_reasons"])
+
+
+def test_denied_without_non_facial_mode():
+    cont = copy.deepcopy(CONTINUITY_PASS)
+    cont["non_facial_identity_continuity_for"] = []
+    r = W.evaluate_anchored_identity_waiver(**_kwargs(continuity_review=cont))
+    assert r["granted"] is False
+    assert any("non-facial identity continuity" in x for x in r["denied_reasons"])
+
+
+def test_denied_when_continuity_missing_axes():
+    cont = copy.deepcopy(CONTINUITY_PASS)
+    cont["non_facial_checks"] = ["wardrobe", "hair"]  # missing build/board/position
+    r = W.evaluate_anchored_identity_waiver(**_kwargs(continuity_review=cont))
+    assert r["granted"] is False
+    assert any("non-facial axes" in x for x in r["denied_reasons"])
+
+
+def test_scope_kai_waiver_does_not_cover_embry():
+    r = W.evaluate_anchored_identity_waiver(**_kwargs())
+    assert r["granted"] is True
+    assert W.waiver_covers(r, "Embry", "end_frame") is False
+    assert W.waiver_covers(r, "Kai", "start_frame") is False
+
+
+def test_default_fail_closed_empty_delta():
+    r = W.evaluate_anchored_identity_waiver(**_kwargs(delta={}))
+    assert r["granted"] is False
+    # with no contract block at all, condition (a) must be unsatisfied
+    assert r["conditions"]["a_contract_requires_face_nonreadable"]["satisfied"] is False
