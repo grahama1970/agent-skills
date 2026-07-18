@@ -105,6 +105,21 @@ describe("spriteIdForLane — adaptive-lineage four specimens", () => {
 			expect(ENABLED_RUNNER_SPRITE_IDS).toContain(spriteIdForLane(laneFromSpecimen(node)));
 		}
 	});
+
+	it("never enables an atlas the sprite-reviewer rejected/flagged for revision", () => {
+		// Locked in by the creator↔reviewer visual-acceptance loop.
+		expect(ENABLED_RUNNER_SPRITE_IDS).not.toContain("crimson_hornbreaker"); // REJECT: garbled
+		expect(ENABLED_RUNNER_SPRITE_IDS).not.toContain("skull_horn"); // REVISE: fragmented/redundant
+		// and no lane ever resolves to one of them
+		const teams = ["red", "blue"] as const;
+		for (const team of teams)
+			for (const generation of [0, 1, 2])
+				for (const role of [{}, { selected: true }, { runner_up: true }]) {
+					const id = spriteIdForLane(lane({ id: "probe", team, generation, ...role }));
+					expect(id).not.toBe("crimson_hornbreaker");
+					expect(id).not.toBe("skull_horn");
+				}
+	});
 });
 
 describe("spriteIdForLane — render fixture identity (team x generation)", () => {
