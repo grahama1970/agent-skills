@@ -1,6 +1,6 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-17 14:05 by agent
+**Last updated:** 2026-07-18 (Phase D acceptance rung) by agent
 **Status:** Active development
 
 ## Current Understanding
@@ -189,6 +189,8 @@
 | 2026-07-16 | Phase 11 Memory identity is exact-request scoped | Run/revision-only keys collide when a repaired payload is compiled. New Phase 11 writes include `request_body_sha256` in the deterministic key so failed and corrected requests coexist without merge residue. |
 | 2026-07-16 | `multi_prompt` and `end_image_url` are incompatible on the selected fal endpoint | Live request `9966f6b6...` returned HTTP 422: `End Image Url is not supported with Multi Prompt`. Keep the accepted end frame as continuity-only evidence, omit it from the request body, and reject this field combination before submission. |
 | 2026-07-17 | Do not cherry-pick obsolete Phase 11 restore commit to `main` | The active branch `battle-ux8-live-contract` is dirty and `ahead 80, behind 203` relative to `origin/main`, so direct push is unsafe. A clean main worktree proved `8ed796cb2` conflicts with newer Phase 11 files already on main; treat it as superseded and integrate only the knowledge correction after focused proof. |
+| 2026-07-18 | An identity-first qualified reference produces first-attempt storyboard passes | Regenerating the eight Phase 07 frames of `rev_successor_943b01ecd9a3` against the qualified `embry_contact_sheet_v3` identity source (not the rejected montage) yielded 8/8 frames PASS actual-pixel identity review on the first attempt each, with 7/7 inter-frame continuity pairs PASS and zero repair loops. Qualifying the identity reference before generation is what removed the repair-loop churn; the storyboard reviewer only needed to confirm, not correct. |
+| 2026-07-18 | DECISION (future phase, not implemented): two-wave concurrent frame generation | Once the pipeline is stable, switch storyboard frame generation to a two-wave concurrent scheme — 4 start frames generated in parallel, then 4 end frames in parallel, with reviews pipelined. Full parallelism is forbidden because the continuity chain (each end frame binds to its start, each next start to the prior end) requires ordering between waves. The multiscene live smoke already proved parallel Scillm generation with per-scene namespacing, so the concurrency primitive exists; this is a scheduling change to adopt in a later phase, not now. |
 
 ## Open Questions
 

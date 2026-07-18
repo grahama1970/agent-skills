@@ -25,14 +25,24 @@ cannot silently become literal history or rewrite the persona's identity.
 > closed loop. The implemented runtime remains narrower than the complete system
 > described here.
 
-**Current proof boundary:** code rejects revisions whose Phase 01 human idea
-does not match the idea consumed by Phases 02-10. The semantic-mix repair was
-executed live and activated `rev_idea_f3f9c48d5cc2`; 10/10 phase lineage
-bindings and 27 revision/phase/required-artifact Memory records were exact-read
-with synchronized semantic pointers. The superseded `rev_repair_a8b93ffeca8f`
-remains a rejected semantic-mix counterexample. No live provider return,
-Watch-based self-analysis, synthetic dream persistence, or changed later
-behavior is proven.
+**Current proof boundary (2026-07-18):** the active revision is the
+identity-source successor `rev_successor_943b01ecd9a3`, derived from the frozen
+`rev_upstream_bf3b05d47fb8` and bound to the qualified `embry_contact_sheet_v3`
+identity source. A live Kling return exists **historically** (on
+`rev_upstream_bf3b05d47fb8`, request
+`sha256:ca90ba9f…`) but is **superseded**: it failed post-provider Embry
+identity continuity and visible-speaker lip sync, and it was generated from the
+rejected character-sheet montage. The successor now stands at its **acceptance
+rung**: the revision is `PASS_ACTIVE_CONSISTENT`, Memory prepare/verify and the
+42-step bundle exactly reread (`PASS_EXACT_REREAD_42_OF_42`), and all eight Phase
+07 storyboard frames PASS actual-pixel identity review (8/8, first attempt each;
+7/7 continuity pairs). Evidence:
+`.persona-dream/revisions/rev_successor_943b01ecd9a3/acceptance_rung_receipt.v1.json`.
+The next step is a compiled successor provider request, provider media
+publication for the regenerated frames, and a new hash-bound paid authorization
+— all human-gated. This is **not** green or complete: no new provider return,
+lip sync, Watch-based self-analysis, synthetic dream persistence, or changed
+later behavior is proven.
 
 **Jump to:**
 [Quick Start](#quick-start) -
@@ -192,8 +202,8 @@ The README uses these proof terms consistently:
 |---|---|---|
 | Grounded dream packets | **Implemented** | Source links, contradiction reports, reflections, and receipts exist |
 | Image and storyboard production | **Live slices proven** | Live image generation, visual review, creator/reviewer repair, and accepted-frame evidence exist |
-| Phases 01-10 - Qualified revision | **Qualified revision** | `rev_idea_f3f9c48d5cc2` is `ACTIVE_CONSISTENT`; the explicit human idea has 10/10 phase lineage bindings, and 10 phase records plus 16 required-artifact references are persisted and semantically synchronized through Memory |
-| Phase 11 - Submit and Return | **Corrected preflight awaiting new approvals** | Requests `444a5a27...` and `9966f6b6...` each remain terminal with one attempt and no MP4. Current request `ff2ce7f3...` omits the unsupported multi-prompt end image, has zero technical blockers, live Memory/Qdrant proof, zero attempts, and five missing request-bound approvals |
+| Phases 01-10 - Qualified successor revision | **Qualified revision at acceptance rung** | `rev_successor_943b01ecd9a3` is `PASS_ACTIVE_CONSISTENT`; the explicit human idea has 10/10 phase lineage bindings, 10 phase + 16 required-artifact Memory records and the 42-step bundle exactly reread, and the rebuilt artifact index makes the eight Phase C storyboard frames (8/8 actual-pixel identity PASS, 7/7 continuity) the active Phase 07 evidence while the montage-derived frames stay stale |
+| Phase 11 - Submit and Return | **Historical live return superseded; awaiting new hash-bound authorization** | `rev_upstream_bf3b05d47fb8` crossed the paid boundary once (`sha256:ca90ba9f…`, one submit, 54 polls, a valid 10.04s MP4) but failed Embry identity continuity and visible-speaker lip sync and derives from the rejected montage. The successor needs a freshly compiled provider request, provider media publication for the regenerated frames, and a new hash-bound paid authorization — all human-gated. No successor provider call has been made |
 | Phases 12-15 - Watch through persistence | **Designed** | The evidence architecture exists, but one accepted closed run does not |
 | Phase 16 - Later persona behavior | **Not implemented as a closed proof** | No persisted dream has yet been shown to alter later behavior while preserving identity |
 
@@ -242,20 +252,24 @@ The complete Persona Dream pipeline has two connected parts:
 
 ### Current Qualified Runtime Boundary
 
-The production read model currently reports `ACTIVE_CONSISTENT` for run
-`pipeline-complete`, revision `rev_idea_f3f9c48d5cc2`. Memory contains one
-revision, ten phase records, sixteen required-artifact references, and one
-run-scoped active pointer. All twenty-eight documents report Qdrant semantic
-sync metadata. The immutable revision index contains 328 revision-scoped
-local artifacts. This qualifies Phases 01-10; it does not prove a provider call,
-returned dream, Watch analysis, interpretation, or later persona behavior.
+The active revision is `rev_successor_943b01ecd9a3` (run `pipeline-complete`),
+reported `PASS_ACTIVE_CONSISTENT`. Memory contains one revision, ten phase
+records, sixteen required-artifact references, one run-scoped active pointer, and
+the durably reread 42-step pipeline bundle, all with Qdrant semantic sync
+metadata. The rebuilt immutable artifact index contains 398 revision-scoped local
+artifacts and binds the eight regenerated Phase C storyboard frames as the active
+accepted Phase 07 evidence. This qualifies Phases 01-10 and reaches the
+acceptance rung; it does not prove a successor provider call, returned dream,
+lip sync, Watch analysis, interpretation, or later persona behavior. The earlier
+`rev_idea_f3f9c48d5cc2` qualification is historical and superseded.
 
 Primary receipts:
 
-- `.persona-dream/revisions/rev_idea_f3f9c48d5cc2/semantic_mix_repair_receipt.json`
-- `.persona-dream/revisions/rev_idea_f3f9c48d5cc2/revision_memory_prepare_receipt.json`
-- `.persona-dream/revisions/rev_idea_f3f9c48d5cc2/revision_memory_verify_receipt.json`
-- `.persona-dream/revisions/rev_idea_f3f9c48d5cc2/revision_activation_receipt.json`
+- `.persona-dream/revisions/rev_successor_943b01ecd9a3/acceptance_rung_receipt.v1.json`
+- `.persona-dream/revisions/rev_successor_943b01ecd9a3/revision_memory_prepare_receipt.json`
+- `.persona-dream/revisions/rev_successor_943b01ecd9a3/revision_memory_verify_receipt.json`
+- `.persona-dream/revisions/rev_successor_943b01ecd9a3/revision_activation_receipt.json`
+- `.persona-dream/state/pipeline_step_memory_receipt_rev_successor_943b01ecd9a3.json`
 - `.persona-dream/repair/queue-events/repair-454b255245a1a162/000001-completed.json`
 
 ### Remaining Work Beyond the Qualified Revision
