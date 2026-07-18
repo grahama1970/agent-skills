@@ -25,8 +25,11 @@ SPOKEN_TEXT_NORMALIZATION = {
     "unknown_token_policy": "reject",
     "expansions": {
         "ASR": "automatic speech recognition",
+        "DAG": "directed acyclic graph",
+        "HD": "high definition",
         "RealtimeSTT": "real-time speech-to-text",
         "SPARTA": "Space Attack Research and Tactic Analysis",
+        "UX": "user experience",
         "WebRTC": "web real-time communication",
         "feed_audio": "feed audio",
         "getUserMedia": "get user media",
