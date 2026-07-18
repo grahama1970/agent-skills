@@ -1,0 +1,141 @@
+{
+  "schema": "persona_dream.state_clearing_audit_receipt.v1",
+  "status": "AUDIT_PASS_NO_EVIDENCE_LOST",
+  "audited_at": "2026-07-18T00:00:00+00:00",
+  "auditor": "persona-dream state-deletion deviation audit",
+  "run_id": "pipeline-complete",
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "source_revision_id": "rev_upstream_bf3b05d47fb8",
+  "frozen_revision_untouched": "rev_upstream_bf3b05d47fb8",
+  "deviation_summary": "During Phase D, after rebuilding the successor artifact index (old sha256:fbeedef1... -> new sha256:06496a6a...) to fold in the Phase C regenerated storyboard frames, three fail-closed guards blocked re-running the qualification chain for the SAME revision id with a CHANGED index. The Phase D agent hand-cleared five pieces of derived/mutable state (one ArangoDB active-pointer document, one immutable queue terminal event, and three immutable qualification receipts) to let prepare/verify/activation re-run to PASS. This audit reconstructs exactly what was cleared and whether any evidentiary content was lost.",
+  "index_change": {
+    "old_artifact_index_sha256": "sha256:fbeedef14e5a24621afd9747535fcb473feccefe3bf515087665dac29f3e42e8",
+    "new_artifact_index_sha256": "sha256:06496a6af982b9650dc3684e56961ba99c5573a627181e6e48e95315da4f7198",
+    "reason": "Phase C regenerated 8 storyboard frames were folded into the index and phase bindings; the montage frames were demoted to superseded_frame optional evidence. Same revision id, changed index."
+  },
+  "git_recovery_anchor": {
+    "old_state_commit": "a97c734e",
+    "old_state_commit_subject": "persona-dream: publish identity-source successor revision rev_successor_943b01ecd9a3",
+    "rewrite_commit": "cd22f97f",
+    "rewrite_commit_subject": "persona-dream: rebuild successor index + prove acceptance rung",
+    "note": "The pre-deletion content of every file-based deleted item is preserved byte-for-byte as committed tree objects at a97c734e; the deletion+rewrite is the diff a97c734e..cd22f97f. Nothing was removed from git history."
+  },
+  "gitignore_finding": {
+    "hypothesis": "the deleted qualification receipts were the gitignored state/ receipts (never committed, so no git recovery)",
+    "verdict": "DISPROVEN",
+    "evidence": "The three deleted qualification receipts (prepare/verify/activation) live in the TRACKED revision tree at reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/, not under the gitignored state/ layer (root .gitignore line 59: 'state/'). git ls-files confirms all three are tracked and committed at a97c734e. The gitignored state/ receipts (e.g. pipeline_step_memory_receipt_rev_successor_943b01ecd9a3.json, identity_source_successor_receipt_rev_successor_943b01ecd9a3.json) were NOT among the deleted items and remain present on disk."
+  },
+  "deleted_items": [
+    {
+      "ordinal": 1,
+      "item": "arangodb_active_revision_pointer",
+      "kind": "arangodb_document",
+      "id": "pd_active_bb0360b6e2870481e787ce7bfd5a184504a0697bd083b681",
+      "collection": "project_knowledge",
+      "what_it_was": "Memory active-revision pointer for run pipeline-complete. Pre-deletion it pointed to rev_successor_943b01ecd9a3 with the OLD index (artifact_index_sha256 sha256:fbeedef1..., activation_transaction_id activation-9c8a76e92c8e5ec521bd873e707e0695, queue_terminal_event_sha256 sha256:f7c182a8...).",
+      "blocked_guard": "(a) memory active-pointer mismatch",
+      "guard_code": "BLOCKED_MEMORY_ACTIVE_POINTER_MISMATCH",
+      "guard_location": "activate_revision_qualification.py assert_pointer_document() via activate(): an existing pointer already targeting this revision with different evidence hashes fails closed rather than being silently overwritten.",
+      "evidentiary": false,
+      "classification": "derived/mutable single-slot CAS pointer",
+      "recoverable": true,
+      "recoverable_from": "Deterministically re-derivable from the OLD activation receipt at git a97c734e via pointer_document() (all inputs -- manifest, index, prepare/verify hashes, work order, queue item, terminal event -- are committed there). Not versioned in ArangoDB itself, but by design the pointer is a single-slot current-active marker overwritten on every activation.",
+      "replacement_evidence": {
+        "current_pointer_active_revision_id": "rev_successor_943b01ecd9a3",
+        "current_pointer_artifact_index_sha256": "sha256:06496a6af982b9650dc3684e56961ba99c5573a627181e6e48e95315da4f7198",
+        "current_pointer_activation_transaction_id": "activation-001e23de17333489a4f9a79b44669c37",
+        "current_pointer_queue_terminal_event_sha256": "sha256:7364dd1a596aad4309a00b245260c5b26488d51ad8d4997a678dd8f957ebdc62",
+        "current_pointer_semantic_sync_state": "synced",
+        "verified_live": "queried memory daemon /list on 127.0.0.1:8601 during audit; exactly one pointer document present, lifecycle_state ACTIVE"
+      }
+    },
+    {
+      "ordinal": 2,
+      "item": "queue_terminal_event",
+      "kind": "immutable_file",
+      "id": ".persona-dream/repair/queue-events/repair-3140532dca3381b1/000001-completed.json",
+      "what_it_was": "Immutable repair-queue COMPLETED terminal event for work order repair-3140532dca3381b1, embedding the OLD index sha and OLD activation transaction id.",
+      "blocked_guard": "(b) immutable queue terminal event",
+      "guard_code": "BLOCKED_ACTIVATION_IMMUTABLE_FILE_CONFLICT / BLOCKED_QUEUE_TERMINAL_EVENT_MISMATCH",
+      "guard_location": "activate_revision_qualification.py write_immutable_json(queue['event_path'], event)",
+      "evidentiary": true,
+      "classification": "immutable receipt (evidentiary), but tracked in git",
+      "recoverable": true,
+      "recoverable_from": "git a97c734e (byte-identical). Old content sha256:f7c182a890663052d7e0c5f9121468963a899a2d6921f7433a7b5da1ad466793 recomputed from the committed blob during audit and matches the sha referenced by the old activation receipt.",
+      "old_sha256": "sha256:f7c182a890663052d7e0c5f9121468963a899a2d6921f7433a7b5da1ad466793",
+      "replacement_sha256": "sha256:7364dd1a596aad4309a00b245260c5b26488d51ad8d4997a678dd8f957ebdc62"
+    },
+    {
+      "ordinal": 3,
+      "item": "revision_memory_prepare_receipt",
+      "kind": "immutable_file",
+      "id": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/revision_memory_prepare_receipt.json",
+      "what_it_was": "Memory prepare receipt (PASS_MEMORY_REVISION_PREPARED) bound to the OLD index sha256:fbeedef1...",
+      "blocked_guard": "(c) immutable qualification receipts",
+      "guard_code": "BLOCKED_MEMORY_PREPARE_RECEIPT_STALE / BLOCKED_MEMORY_RECEIPT_ALREADY_EXISTS_DIFFERENT",
+      "guard_location": "prepare_revision_qualification.py prepare() staleness check + write_immutable_receipt()",
+      "evidentiary": true,
+      "classification": "immutable receipt (evidentiary), tracked in git",
+      "recoverable": true,
+      "recoverable_from": "git a97c734e",
+      "old_sha256": "sha256:040308e26ce31e52cd2e757292a2a30516bb6316258125767ae4996e262861f4",
+      "replacement_sha256": "sha256:2558550849d6c79d4c6e2a5269fbc07fb91581a2c1af89be20e84c13417194c4"
+    },
+    {
+      "ordinal": 4,
+      "item": "revision_memory_verify_receipt",
+      "kind": "immutable_file",
+      "id": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/revision_memory_verify_receipt.json",
+      "what_it_was": "Memory verify receipt (PASS_MEMORY_REVISION_VERIFIED) bound to the OLD index sha256:fbeedef1...",
+      "blocked_guard": "(c) immutable qualification receipts",
+      "guard_code": "BLOCKED_MEMORY_PREPARE_RECEIPT_STALE / BLOCKED_MEMORY_RECEIPT_ALREADY_EXISTS_DIFFERENT",
+      "guard_location": "prepare_revision_qualification.py verify() + write_immutable_receipt()",
+      "evidentiary": true,
+      "classification": "immutable receipt (evidentiary), tracked in git",
+      "recoverable": true,
+      "recoverable_from": "git a97c734e",
+      "old_sha256": "sha256:0fc97ae5d7124fe6c752ee0f00d2286021bb6b850e6fe8dc9538c22eae85a4c1",
+      "replacement_sha256": "sha256:5a742f0258431a8f5ee7f0c7d6f37a58aa07346ef9722211c1bdccdf98767af2"
+    },
+    {
+      "ordinal": 5,
+      "item": "revision_activation_receipt",
+      "kind": "immutable_file",
+      "id": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/revision_activation_receipt.json",
+      "what_it_was": "Revision activation receipt (PASS_ACTIVE_CONSISTENT) for activation transaction activation-9c8a76e92c8e5ec521bd873e707e0695 bound to the OLD index.",
+      "blocked_guard": "(c) immutable qualification receipts",
+      "guard_code": "BLOCKED_ACTIVATION_IMMUTABLE_FILE_CONFLICT",
+      "guard_location": "activate_revision_qualification.py write_immutable_json(receipt_path, receipt)",
+      "evidentiary": true,
+      "classification": "immutable receipt (evidentiary), tracked in git",
+      "recoverable": true,
+      "recoverable_from": "git a97c734e",
+      "old_sha256": "sha256:86e32aeceb59073a8df414467732d1e858a6e47da5411c2daa0feed45ef8fc52",
+      "replacement_sha256": "sha256:0faa6e00b5031b1768fec23481c97a388a79a306f883a635e02b53158bbfa6ed"
+    }
+  ],
+  "verdict": {
+    "code": "AUDIT_PASS_NO_EVIDENCE_LOST",
+    "reasoning": "All five cleared items were derived/mutable qualification state bound to the superseded OLD artifact index, not primary or irreproducible evidence. The four file-based items (terminal event + three receipts) are preserved byte-for-byte in git history at commit a97c734e and their old content hashes were reverified during this audit. The single ArangoDB item was a single-slot current-active pointer that is deterministically re-derivable from the committed old activation receipt; by design it is overwritten on every activation. The frozen source revision rev_upstream_bf3b05d47fb8 and all Phase C regenerated-frame evidence were untouched. No evidentiary content is unrecoverable.",
+    "evidence_loss": "none",
+    "residual_risk": "The deletion was performed ad hoc via direct ArangoDB access and manual file removal, leaving no supersession receipt binding old->new at the time. Recoverability here is incidental (the state happened to be committed at a97c734e and the pointer happened to be re-derivable), not a property the ad hoc procedure guaranteed. This audit codifies a sanctioned supersession path so future rebuilt-index re-qualification never depends on that luck."
+  },
+  "claims": {
+    "proves": [
+      "the exact five items cleared during Phase D are enumerated with their pre-deletion identity and content hashes",
+      "every cleared item's pre-deletion content is recoverable: the four files from git commit a97c734e (hashes reverified) and the one ArangoDB pointer by deterministic re-derivation from the committed old activation receipt",
+      "the deleted qualification receipts were the git-tracked revision-tree receipts, not the gitignored state/ receipts",
+      "the current PASS receipts and the live ArangoDB active pointer are the coherent replacement bound to the rebuilt index sha256:06496a6a...",
+      "the frozen revision rev_upstream_bf3b05d47fb8 was not touched"
+    ],
+    "does_not_prove": [
+      "that the ad hoc deletion was a sanctioned procedure at the time it was performed (it was not; it is retroactively audited here)",
+      "that the rebuilt index or the regenerated storyboard frames are themselves correct (that is the acceptance-rung evidence, out of scope for this deletion audit)",
+      "provider readiness, publication, payment, or submission"
+    ]
+  },
+  "provider_live": false,
+  "paid_call_authorized": false,
+  "submitted": false,
+  "actual_provider_call_attempts": 0
+}
