@@ -521,7 +521,11 @@ class CaseExecutor:
             time.sleep(
                 self.config["source_playback_delay_seconds"]
                 if wake_event is None
-                else 0.5
+                # After wake acceptance the listener still spends 1-2s
+                # transcribing the wake before it re-arms; playing the query
+                # into that gap loses its onset and Whisper hallucinates on
+                # the resulting near-empty capture.
+                else 2.5
             )
             source_process = subprocess.Popen(
                 [
