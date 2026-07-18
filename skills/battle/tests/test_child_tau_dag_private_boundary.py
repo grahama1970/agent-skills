@@ -44,14 +44,18 @@ def test_child_tau_dag_validates_required_route_and_claim_boundary(tmp_path: Pat
     assert dag["dag_id"] == "battle-004-child-spawn-synthesis-0001"
     assert dag["goal"]["goal_hash"].startswith("sha256:")
     assert dag["entry_node"] == "lineage-summarizer"
-    assert "battle-handoff-writer" in dag["terminal_nodes"]
+    # battle-handoff-writer routes to the human terminal (child_dag_node_adapter maps
+    # "battle-handoff-writer" -> "human"); terminals are the human handoff + blocked.
+    assert dag["terminal_nodes"] == ["human", "blocked"]
+    assert any(node["id"] == "battle-handoff-writer" for node in dag["nodes"])
     assert summary["valid"] is True
     assert summary["private_boundary_passed"] is True
     assert summary["tau_execution"] == "deferred_to_pr3"
     assert "compile_failed_twice_requires_new_research" in {edge.get("condition") for edge in dag["edges"]}
     assert "exploit success" not in " ".join(dag["claims"]["proves"]).lower()
     for node in dag["nodes"]:
-        if node["id"] == "blocked":
+        # Terminal nodes (blocked, human) carry no command_spec by design.
+        if "command_spec" not in node:
             continue
         assert node["agent"] == node["id"]
         assert node["executor"] == "local"

@@ -27,6 +27,13 @@ dev-dependencies = [
 "pytest>=7.0.0",
 ]
 
+[tool.pytest.ini_options]
+# Only collect the project's own tests. `fixtures/` and `monitor/**/artifacts/`
+# contain target-app `test_app.py` files (the exploit targets' own suites) that
+# import a local `app` module and must NOT be collected by the skill's pytest run.
+testpaths = ["tests"]
+norecursedirs = ["fixtures", "monitor", "arena", "sanity", "runtime-matrix", "spectator", ".venv", "*.egg", "build", "dist"]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/battle_skill"]
 
