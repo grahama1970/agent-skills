@@ -40,6 +40,7 @@ from prepare_revision_qualification import (
     validate_receipt,
     validate_upsert_result,
 )
+from revision_supersession import ledger_authorizes, superseded_pointer_key
 
 ACTIVATION_RECEIPT_NAME = "revision_activation_receipt.json"
 ACTIVATION_SCHEMA_NAME = "revision_activation_receipt.v1.schema.json"
@@ -1124,6 +1125,58 @@ def activation_receipt(
 # ---------------------------------------------------------------------------
 
 
+def supersede_authorized(
+    client: MemoryClient,
+    args: argparse.Namespace,
+    *,
+    snapshot: Any,
+    existing_state: str | None,
+    existing: Mapping[str, Any] | None,
+    existing_receipt: Mapping[str, Any] | None,
+    active_key: str,
+) -> bool:
+    """Decide whether to accept overwriting a properly-superseded predecessor pointer.
+
+    Returns True only for a same-revision index rebuild whose predecessor pointer
+    has been retained as a SUPERSEDED snapshot in Memory and recorded old->new in
+    the revision's supersession ledger. Every other case returns False (so the
+    normal fail-closed pointer assertion runs) or fails closed explicitly.
+    """
+    if not getattr(args, "supersede", False):
+        return False
+    # An intact activation receipt means the idempotent path, never supersession.
+    if existing_receipt is not None:
+        return False
+    if existing_state != snapshot.revision_id or existing is None:
+        return False
+    old_index = str(existing.get("artifact_index_sha256") or "")
+    new_index = snapshot.index_sha256
+    if not old_index or old_index == new_index:
+        # Nothing to supersede for this pointer; let the normal path handle it.
+        return False
+    if not ledger_authorizes(
+        snapshot.revision_root,
+        old_index_sha256=old_index,
+        new_index_sha256=new_index,
+    ):
+        raise GateBlocked(
+            "BLOCKED_SUPERSEDE_NOT_AUTHORIZED",
+            details={
+                "reason": "no supersession ledger entry binds the predecessor index to the rebuilt index",
+                "old_artifact_index_sha256": old_index,
+                "new_artifact_index_sha256": new_index,
+            },
+        )
+    snapshot_key = superseded_pointer_key(active_key, old_index)
+    snapshot_docs, _ = list_active_pointer(client, args.collection, snapshot_key)
+    if not snapshot_docs:
+        raise GateBlocked(
+            "BLOCKED_SUPERSEDE_SNAPSHOT_MISSING",
+            details={"expected_superseded_pointer_key": snapshot_key},
+        )
+    return True
+
+
 def activate(args: argparse.Namespace) -> dict[str, Any]:
     snapshot = load_snapshot(args.run_root, args.revision_id, args.source_commit)
     chain = validate_prepare_verify_chain(snapshot, args)
@@ -1145,13 +1198,28 @@ def activate(args: argparse.Namespace) -> dict[str, Any]:
             existing_state = validate_existing_pointer_state(existing_documents, snapshot)
             existing = existing_documents[0] if existing_documents else None
             existing_receipt = read_object(receipt_path) if receipt_path.is_file() else None
+            supersede_active = supersede_authorized(
+                client,
+                args,
+                snapshot=snapshot,
+                existing_state=existing_state,
+                existing=existing,
+                existing_receipt=existing_receipt,
+                active_key=active_key,
+            )
             if existing_receipt is not None:
                 validate_receipt(existing_receipt, ACTIVATION_SCHEMA_NAME)
                 if existing_state != snapshot.revision_id or existing is None:
                     raise GateBlocked("BLOCKED_MEMORY_ACTIVE_POINTER_MISSING")
                 activated_at = str(existing_receipt.get("activated_at") or "")
             elif existing_state == snapshot.revision_id:
-                activated_at = str(existing.get("activated_at") or "") if existing else ""
+                # A properly-superseded predecessor gets a fresh activation stamp so
+                # the rebuilt-index transaction is distinct from the retired one.
+                activated_at = (
+                    utc_now()
+                    if supersede_active
+                    else (str(existing.get("activated_at") or "") if existing else "")
+                )
             else:
                 activated_at = utc_now()
             if not activated_at:
@@ -1182,10 +1250,12 @@ def activate(args: argparse.Namespace) -> dict[str, Any]:
                 queue_event_sha256=event_sha256,
                 activated_at=activated_at,
             )
-            if existing_state == snapshot.revision_id and existing:
+            if existing_state == snapshot.revision_id and existing and not supersede_active:
                 # An already-targeted Memory pointer is recoverable only when it
                 # is the exact same activation transaction. Never overwrite a
-                # target pointer whose evidence hashes changed.
+                # target pointer whose evidence hashes changed -- unless it has
+                # been properly superseded (retained snapshot + ledger entry) for
+                # a same-revision index rebuild.
                 assert_pointer_document(expected_pointer, existing)
 
             if receipt_path.is_file():
@@ -1287,6 +1357,17 @@ def parser() -> argparse.ArgumentParser:
     value.add_argument("--connect-timeout", type=float, default=5.0)
     value.add_argument("--read-timeout", type=float, default=60.0)
     value.add_argument("--test-fixture", action="store_true", help=argparse.SUPPRESS)
+    value.add_argument(
+        "--supersede",
+        action="store_true",
+        help=(
+            "Accept a properly-superseded predecessor pointer for a same-revision "
+            "index rebuild. Requires revision_supersession.supersede to have retained "
+            "the old pointer/terminal-event/receipts and recorded an old->new index "
+            "entry in the supersession ledger. Every other pointer mismatch still "
+            "fails closed."
+        ),
+    )
     return value
 
 

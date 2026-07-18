@@ -1,0 +1,274 @@
+"""Tests for the sanctioned rebuilt-index re-qualification supersession path.
+
+Covers the three required behaviours:
+  (a) re-qualifying a same-revision rebuilt index WITHOUT supersession still blocks;
+  (b) the supersession path re-qualifies and writes the supersession receipt/ledger;
+  (c) superseded records remain readable/marked and are never silently reused.
+"""
+
+from __future__ import annotations
+
+import importlib.util
+import json
+import subprocess
+import sys
+from pathlib import Path
+from types import ModuleType
+from typing import Any
+
+
+SKILL_ROOT = Path(__file__).parents[1]
+SUPERSEDE_SCRIPT = SKILL_ROOT / "scripts" / "revision_supersession.py"
+PREPARE_SCRIPT = SKILL_ROOT / "scripts" / "prepare_revision_qualification.py"
+ACT_TEST_PATH = SKILL_ROOT / "tests" / "test_revision_activation_qualification.py"
+
+
+def load_module(name: str, path: Path) -> ModuleType:
+    sys.path.insert(0, str(SKILL_ROOT / "scripts"))
+    spec = importlib.util.spec_from_file_location(name, path)
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+ACT = load_module("persona_dream_activation_test_helpers", ACT_TEST_PATH)
+MEMORY_FIXTURE = ACT.MEMORY_FIXTURE
+ACTIVATION = ACT.ACTIVATION
+REVISION_ID = ACT.REVISION_ID
+COLLECTION = ACT.COLLECTION
+SOURCE_COMMIT = ACT.SOURCE_COMMIT
+
+
+def rebuild_index(revision_root: Path) -> str:
+    """Mutate one optional artifact + its index entry so the index sha changes.
+
+    Mirrors folding regenerated evidence into the same immutable revision id: the
+    artifact hashes still validate, but the overall artifact_index_sha256 changes.
+    """
+    index_path = revision_root / "revision_artifact_index.json"
+    index = json.loads(index_path.read_text(encoding="utf-8"))
+    artifact_id = next(
+        key
+        for key, entry in index["artifacts"].items()
+        if "optional_evidence" in (entry.get("roles") or [])
+    )
+    entry = index["artifacts"][artifact_id]
+    fpath = revision_root / entry["relative_path"]
+    new_bytes = fpath.read_bytes() + b"rebuilt for requalification\n"
+    fpath.write_bytes(new_bytes)
+    entry["sha256"] = MEMORY_FIXTURE.sha256_bytes(new_bytes)
+    entry["size_bytes"] = len(new_bytes)
+    index_path.write_text(json.dumps(index, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return MEMORY_FIXTURE.sha256_bytes(index_path.read_bytes())
+
+
+def run_supersede(run_root: Path, memory_url: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [
+            sys.executable,
+            str(SUPERSEDE_SCRIPT),
+            "--run-root",
+            str(run_root),
+            "--revision-id",
+            REVISION_ID,
+            "--source-commit",
+            SOURCE_COMMIT,
+            "--memory-url",
+            memory_url,
+            "--collection",
+            COLLECTION,
+            "--connect-timeout",
+            "1",
+            "--read-timeout",
+            "5",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+
+def run_prepare(run_root: Path, memory_url: str, command: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [
+            sys.executable,
+            str(PREPARE_SCRIPT),
+            "--run-root",
+            str(run_root),
+            "--revision-id",
+            REVISION_ID,
+            "--source-commit",
+            SOURCE_COMMIT,
+            "--memory-url",
+            memory_url,
+            "--collection",
+            COLLECTION,
+            "--connect-timeout",
+            "1",
+            "--read-timeout",
+            "5",
+            "--test-fixture",
+            command,
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+
+def run_activation_supersede(run_root: Path, memory_url: str) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [
+            sys.executable,
+            str(ACT.ACTIVATION_SCRIPT),
+            "--run-root",
+            str(run_root),
+            "--revision-id",
+            REVISION_ID,
+            "--source-commit",
+            SOURCE_COMMIT,
+            "--memory-url",
+            memory_url,
+            "--collection",
+            COLLECTION,
+            "--connect-timeout",
+            "1",
+            "--read-timeout",
+            "5",
+            "--test-fixture",
+            "--supersede",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+
+def qualify_v1(run_root: Path, revision_root: Path, memory_url: str) -> None:
+    ACT.prepare_and_verify(run_root, memory_url)
+    first = ACT.run_activation(run_root, memory_url)
+    assert first.returncode == 0, first.stdout + first.stderr
+    assert (revision_root / "revision_activation_receipt.json").is_file()
+
+
+def test_requalification_without_supersede_blocks(tmp_path: Path) -> None:
+    run_root, revision_root, _, _, _ = ACT.fixture_tree(tmp_path)
+    with MEMORY_FIXTURE.fake_memory_server() as (memory_url, _state):
+        qualify_v1(run_root, revision_root, memory_url)
+        rebuild_index(revision_root)
+
+        # (a1) prepare refuses to overwrite the stale immutable prepare receipt.
+        stale_prepare = run_prepare(run_root, memory_url, "prepare")
+        assert stale_prepare.returncode != 0
+        assert json.loads(stale_prepare.stdout)["status"] == "BLOCKED_MEMORY_PREPARE_RECEIPT_STALE"
+
+
+def test_supersede_requalifies_and_writes_receipt(tmp_path: Path) -> None:
+    run_root, revision_root, _, _, _ = ACT.fixture_tree(tmp_path)
+    with MEMORY_FIXTURE.fake_memory_server() as (memory_url, state) :
+        qualify_v1(run_root, revision_root, memory_url)
+        old_pointer = next(
+            document
+            for document in state.collections[COLLECTION].values()
+            if document.get("record_type") == "active_revision_pointer"
+        )
+        old_index = old_pointer["artifact_index_sha256"]
+
+        new_index = rebuild_index(revision_root)
+        assert new_index != old_index
+
+        # Sanctioned supersession: retain + mark, never delete.
+        superseded = run_supersede(run_root, memory_url)
+        assert superseded.returncode == 0, superseded.stdout + superseded.stderr
+        receipt = json.loads(superseded.stdout)
+        assert receipt["status"] == "PASS_REQUALIFICATION_SUPERSEDED"
+        assert receipt["old_artifact_index_sha256"] == old_index
+        assert receipt["new_artifact_index_sha256"] == new_index
+
+        supersede_receipt = revision_root / "revision_requalification_supersession_receipt.v1.json"
+        ledger = revision_root / "revision_requalification_supersession_ledger.v1.json"
+        assert supersede_receipt.is_file()
+        assert ledger.is_file()
+        ledger_value = json.loads(ledger.read_text(encoding="utf-8"))
+        assert any(
+            entry["old_artifact_index_sha256"] == old_index
+            and entry["new_artifact_index_sha256"] == new_index
+            for entry in ledger_value["entries"]
+        )
+
+        # Canonical receipt/event slots are vacated so the standard chain can re-run.
+        assert not (revision_root / "revision_memory_prepare_receipt.json").exists()
+        assert not (revision_root / "revision_memory_verify_receipt.json").exists()
+        assert not (revision_root / "revision_activation_receipt.json").exists()
+
+        # Even with the ledger present, activation WITHOUT --supersede stays fail-closed
+        # on the stale canonical Memory pointer.
+        for command in ("prepare", "verify"):
+            done = run_prepare(run_root, memory_url, command)
+            assert done.returncode == 0, done.stdout + done.stderr
+        blocked = ACT.run_activation(run_root, memory_url)
+        assert blocked.returncode != 0
+        assert json.loads(blocked.stdout)["status"] == "BLOCKED_MEMORY_ACTIVE_POINTER_MISMATCH"
+
+        # With --supersede the properly-superseded predecessor is accepted.
+        activated = run_activation_supersede(run_root, memory_url)
+        assert activated.returncode == 0, activated.stdout + activated.stderr
+        activation_receipt = json.loads(
+            (revision_root / "revision_activation_receipt.json").read_text(encoding="utf-8")
+        )
+        assert activation_receipt["status"] == "PASS_ACTIVE_CONSISTENT"
+
+        pointers = [
+            document
+            for document in state.collections[COLLECTION].values()
+            if document.get("record_type") == "active_revision_pointer"
+        ]
+        assert len(pointers) == 1
+        assert pointers[0]["artifact_index_sha256"] == new_index
+
+
+def test_superseded_records_retained_and_marked(tmp_path: Path) -> None:
+    run_root, revision_root, _, _, _ = ACT.fixture_tree(tmp_path)
+    with MEMORY_FIXTURE.fake_memory_server() as (memory_url, state):
+        qualify_v1(run_root, revision_root, memory_url)
+        old_prepare = (revision_root / "revision_memory_prepare_receipt.json").read_bytes()
+        old_pointer = next(
+            document
+            for document in state.collections[COLLECTION].values()
+            if document.get("record_type") == "active_revision_pointer"
+        )
+        old_index = old_pointer["artifact_index_sha256"]
+
+        new_index = rebuild_index(revision_root)
+        assert run_supersede(run_root, memory_url).returncode == 0
+        for command in ("prepare", "verify"):
+            assert run_prepare(run_root, memory_url, command).returncode == 0
+        assert run_activation_supersede(run_root, memory_url).returncode == 0
+
+        # (c1) The old prepare receipt is retained byte-for-byte under superseded/.
+        archived = list(revision_root.glob("superseded/**/revision_memory_prepare_receipt.json"))
+        assert archived, "expected an archived predecessor prepare receipt"
+        assert archived[0].read_bytes() == old_prepare
+
+        # (c2) The old Memory pointer is retained as a SUPERSEDED snapshot, never dropped.
+        snapshots = [
+            document
+            for document in state.collections[COLLECTION].values()
+            if document.get("record_type") == "active_revision_pointer_superseded"
+        ]
+        assert len(snapshots) == 1
+        assert snapshots[0]["lifecycle_state"] == "SUPERSEDED"
+        assert snapshots[0]["artifact_index_sha256"] == old_index
+        assert snapshots[0]["superseded_by_artifact_index_sha256"] == new_index
+
+        # (c3) The live canonical pointer carries the NEW index, never the retired one.
+        canonical = [
+            document
+            for document in state.collections[COLLECTION].values()
+            if document.get("record_type") == "active_revision_pointer"
+        ]
+        assert len(canonical) == 1
+        assert canonical[0]["artifact_index_sha256"] == new_index
+        assert canonical[0]["artifact_index_sha256"] != old_index
