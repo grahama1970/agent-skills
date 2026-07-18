@@ -70,7 +70,51 @@ review receipts under `…/phase_c_successor_regen/receipts/storyboard_identity_
   `test_phase11_payload_binding_bootstrap`, `test_phase11_multi_prompt_end_image_contract`
   all green.
 
-## 3. Open Item / Documented Deviation — RESOLVED (2026-07-18)
+## 3. Open Item / Documented Deviation
+
+- **OPEN — CRITICAL: the Phase C identity reviewer is under-calibrated; the 8/8
+  first-attempt PASS is NOT trustworthy as specific-identity evidence (2026-07-18).**
+  A reviewer-calibration negative control ran the SAME reviewer used by Phase C
+  (`phase07_storyboard_tau_node._run_identity_continuity_review`, scillm gpt-5.5
+  `image_url`, schema `persona_dream.identity_continuity_review.v1` — reused, not
+  forked) against known-bad ground truth: the stale montage-derived Phase 07
+  frames marked `STALE_IDENTITY_SOURCE_SUPERSEDED` (derived from the montage that
+  FAILED identity qualification, `FAIL_IDENTITY_REFERENCE_INCONSISTENT`), reviewed
+  against the accepted `embry_contact_sheet_v3` under the exact Phase C conditions.
+  - **Result: `REVIEWER_CALIBRATION_FAILED`.** 2 of 3 known-bad frames
+    (`known_bad_sb_001_start`, `known_bad_sb_002_start`) **PASSED** identity
+    review; only 1 of 3 failed. Reproduced across two independent live runs.
+  - The reviewer is **not** a blanket rubber stamp — the third known-bad frame
+    FAILED ("reads more like a generic adult female surfer"), both accepted
+    positive controls PASSED, and a synthetic tamper case (accepted frame + wrong
+    Embry reference = the Kai sheet) **FAILED** with the reviewer explicitly noting
+    the reference "shows a young man matching Kai," proving the contract does read
+    reference pixels.
+  - Root cause: the identity threshold is too coarse — it accepts "adult woman,
+    brown hair, navy top … closely enough" without enforcing specific facial
+    identity/age to the reference. Side-by-side pixel review confirmed the two
+    passed frames depict a visibly older/different woman than v3 (sb_002 a
+    weathered ~40s-50s woman), so this is a genuine leniency defect, not a
+    ground-truth-granularity artifact.
+  - Hardening **proposed, not implemented** (contained to the reviewer prompt
+    contract): add a specific-identity gate (face shape/age/eyebrow/nose/distinctive
+    features, not demographic category), an age-consistency clause, and require the
+    reviewer to enumerate the concrete facial features it matched. Not applied here
+    because (a) the constraint forbids modifying the reviewer to make the
+    calibration pass, and (b) the Phase C receipts + prompt hashes are bound to the
+    current prompt — changing it requires a human-gated full Phase C re-review.
+  - Evidence: `reports/…/revisions/rev_successor_943b01ecd9a3/reviewer_calibration_receipt.v1.json`
+    (per-image verdicts, image/prompt hashes, `analyst_visual_verification`,
+    `proposed_hardening`); probe `scripts/reviewer_negative_control_probe.py`;
+    memory `PASS_EXACT_REREAD_REVIEWER_CALIBRATION`
+    (`reports/…/state/reviewer_calibration_memory_receipt_rev_successor_943b01ecd9a3.json`);
+    tests `tests/test_reviewer_negative_control_probe.py` (13/13).
+  - Consequence: any downstream trust in the regenerated frames' *specific* Embry
+    identity must be re-established after the reviewer is hardened and the negative
+    control re-passes (all known-bad + tamper FAIL, both positives still PASS),
+    then Phase C re-run. No paid/provider work may rely on the 8/8 claim until then.
+
+## 3b. Open Item / Documented Deviation — RESOLVED (2026-07-18)
 
 - **RESOLVED: `phase07_prompt_renderer` now exists as a real deterministic
   callable, the spine-chain preflight passes on genuinely rendered artifacts, and

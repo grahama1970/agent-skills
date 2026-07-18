@@ -1,0 +1,278 @@
+{
+  "analyst_visual_verification": {
+    "conclusion": "The reviewer discriminates (tamper + sb_003 FAIL) but its identity threshold is too coarse: it accepts 'adult woman, brown hair, navy top ... closely enough' as an identity match without enforcing specific facial correspondence (age, face shape, distinctive features) to the reference. Two montage-derived frames depicting a visibly different/older woman were accepted. The Phase C 8/8 first-attempt PASS is therefore NOT trustworthy as evidence of specific-identity fidelity.",
+    "detail": {
+      "known_bad_sb_001_start": "PASSED, but Embry reads as an older, squarer-faced woman in a navy polo \u2014 a different specific identity than v3 (v3 is a distinct late-20s woman). Coarse category match only.",
+      "known_bad_sb_002_start": "PASSED, but Embry is a visibly weathered woman ~40s-50s, clearly not the v3 identity. Strongest evidence of over-lenient facial matching.",
+      "known_bad_sb_003_start": "Correctly FAILED ('reads more like a generic adult female surfer'); shows the reviewer is not a blanket rubber stamp.",
+      "tamper_wrong_embry_ref": "Correctly FAILED and explicitly noted the Embry reference 'shows a young man matching Kai' \u2014 proves the contract does read reference pixels."
+    },
+    "finding": "CONFIRMED genuine leniency defect",
+    "method": "human/agent side-by-side pixel comparison of each PASSed known-bad frame against the embry_contact_sheet_v3 reference to confirm the CRITICAL finding is a genuine reviewer-leniency defect and not a ground-truth-granularity artifact"
+  },
+  "calibration_pass": false,
+  "cases": [
+    {
+      "blocking_findings": [],
+      "case_id": "known_bad_sb_001_start",
+      "critical_known_bad_passed": true,
+      "expectation": "FAIL",
+      "frame_key": "start_frame",
+      "has_concrete_failure_code": false,
+      "identity_notes": "Embry is clearly visible in the foreground as an adult woman with brown hair and a navy polo-style surf top; her face is large and readable and matches the Embry reference closely enough. Kai is clearly visible in the foreground as a young adult man with tan skin, dark curly wet hair, athletic surfer build, and a black rashguard; his face is large and readable and matches the Kai reference. Background surfers are small and do not compete with or confuse the required identities.",
+      "image_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_start_frame.png",
+      "image_sha256": "sha256:bbd7a63110b1c42af94e682ae93bf055bbe1c84e48468b3470a2032db70d09bb",
+      "kind": "known_bad",
+      "matched_expectation": false,
+      "model": "gpt-5.5",
+      "panel_id": "sb_001",
+      "reference_paths": {
+        "embry_character_sheet": "/mnt/storage12tb/media/personas/embry/assets/contact_sheets/embry-gpt-image-2-v3/images/embry_contact_sheet_v3.png",
+        "kai_character_sheet": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png"
+      },
+      "review_prompt_sha256": "sha256:b09a504760266e0ee883fc740aa4893d0e1be4603a811cf1aec8bd41f54e3fd2",
+      "review_receipt_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration/case_receipts/known_bad_sb_001_start/sb_001_start_frame_identity_continuity_review.json",
+      "reviewer_source": "scillm:gpt-5.5:image_url",
+      "reviewer_status": "PASS",
+      "satisfied": false,
+      "visible_entities": [
+        "Embry",
+        "Kai"
+      ]
+    },
+    {
+      "blocking_findings": [],
+      "case_id": "known_bad_sb_002_start",
+      "critical_known_bad_passed": true,
+      "expectation": "FAIL",
+      "frame_key": "start_frame",
+      "has_concrete_failure_code": false,
+      "identity_notes": "Foreground two-shot is character-readable. Embry is visible in the foreground as an adult woman with brown wet hair and a navy surf top, with her face clear enough to compare to the reference. Kai is visible in the foreground as a young adult tan-skinned man with dark curly wet hair, athletic surfer build, and black rashguard, with his face clear enough to verify. No other foreground person competes with the identities.",
+      "image_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_002_start_frame.png",
+      "image_sha256": "sha256:3f7a1d4e9def3f6f0e726ef9cd25b1f5dfeacbf0eabd4e43e871479f7a219b6a",
+      "kind": "known_bad",
+      "matched_expectation": false,
+      "model": "gpt-5.5",
+      "panel_id": "sb_002",
+      "reference_paths": {
+        "embry_character_sheet": "/mnt/storage12tb/media/personas/embry/assets/contact_sheets/embry-gpt-image-2-v3/images/embry_contact_sheet_v3.png",
+        "kai_character_sheet": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png"
+      },
+      "review_prompt_sha256": "sha256:e9b6704a47b1de4f43be8fd98528cbecd86d424dd5a9ae763b6b5a5784908c24",
+      "review_receipt_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration/case_receipts/known_bad_sb_002_start/sb_002_start_frame_identity_continuity_review.json",
+      "reviewer_source": "scillm:gpt-5.5:image_url",
+      "reviewer_status": "PASS",
+      "satisfied": false,
+      "visible_entities": [
+        "Embry",
+        "Kai"
+      ]
+    },
+    {
+      "blocking_findings": [
+        "Embry is visible in the foreground, but her facial identity does not clearly match the attached Embry reference sheet closely enough for continuity verification.",
+        "Embry reads more like a generic adult female surfer than the specific referenced Embry identity."
+      ],
+      "case_id": "known_bad_sb_003_start",
+      "critical_known_bad_passed": false,
+      "expectation": "FAIL",
+      "frame_key": "start_frame",
+      "has_concrete_failure_code": true,
+      "identity_notes": "Kai is visible in the foreground with a readable face, tan skin, dark curly wet hair, athletic surfer build, and black rashguard, and broadly matches the Kai reference. Embry has the correct general category of adult woman with brown hair and navy surf/polo-style top, but the face appears significantly different from the reference sheet and is not sufficiently reference-verifiable. Regeneration required.",
+      "image_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_003_start_frame.png",
+      "image_sha256": "sha256:471513b449fb6c39b576360064d831c357bfa0233bb7a96a84ee1d7ef3eaaa20",
+      "kind": "known_bad",
+      "matched_expectation": true,
+      "model": "gpt-5.5",
+      "panel_id": "sb_003",
+      "reference_paths": {
+        "embry_character_sheet": "/mnt/storage12tb/media/personas/embry/assets/contact_sheets/embry-gpt-image-2-v3/images/embry_contact_sheet_v3.png",
+        "kai_character_sheet": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png"
+      },
+      "review_prompt_sha256": "sha256:28d066f93d7a48fabe79fddc7a5a3ba89786802a1642820607ca903b13a3c63b",
+      "review_receipt_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration/case_receipts/known_bad_sb_003_start/sb_003_start_frame_identity_continuity_review.json",
+      "reviewer_source": "scillm:gpt-5.5:image_url",
+      "reviewer_status": "FAIL",
+      "satisfied": true,
+      "visible_entities": [
+        "Embry",
+        "Kai"
+      ]
+    },
+    {
+      "blocking_findings": [],
+      "case_id": "positive_control_sb_001_start",
+      "critical_known_bad_passed": false,
+      "expectation": "PASS",
+      "frame_key": "start_frame",
+      "has_concrete_failure_code": false,
+      "identity_notes": "Embry is foreground left with visible face, brown hair tied back, adult woman appearance, and navy rashguard matching the reference sheet. Kai is foreground right with visible face, tan skin, dark curly wet hair, athletic surfer build, and black rashguard matching the Kai reference sheet. No other foreground person competes with their identities.",
+      "image_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_001_start_frame.png",
+      "image_sha256": "sha256:135564cad9c40718322e9f13d347b6829ecbd9ab2197cbddc70262deb72e227d",
+      "kind": "positive_control",
+      "matched_expectation": true,
+      "model": "gpt-5.5",
+      "panel_id": "sb_001",
+      "reference_paths": {
+        "embry_character_sheet": "/mnt/storage12tb/media/personas/embry/assets/contact_sheets/embry-gpt-image-2-v3/images/embry_contact_sheet_v3.png",
+        "kai_character_sheet": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png"
+      },
+      "review_prompt_sha256": "sha256:b09a504760266e0ee883fc740aa4893d0e1be4603a811cf1aec8bd41f54e3fd2",
+      "review_receipt_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration/case_receipts/positive_control_sb_001_start/sb_001_start_frame_identity_continuity_review.json",
+      "reviewer_source": "scillm:gpt-5.5:image_url",
+      "reviewer_status": "PASS",
+      "satisfied": true,
+      "visible_entities": [
+        "Embry",
+        "Kai"
+      ]
+    },
+    {
+      "blocking_findings": [],
+      "case_id": "positive_control_sb_002_start",
+      "critical_known_bad_passed": false,
+      "expectation": "PASS",
+      "frame_key": "start_frame",
+      "has_concrete_failure_code": false,
+      "identity_notes": "Embry is visible in the foreground on the left with a clear face, brown wet hair, adult woman appearance, and navy rashguard matching the reference. Kai is visible in the foreground on the right with a clear face, tan skin, dark curly wet hair, athletic surfer build, and black rashguard matching the reference. Background surfers are distant and do not compete with or confuse the identities.",
+      "image_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_002_start_frame.png",
+      "image_sha256": "sha256:aebcbd907c999d64ba4e7effd4f9f95e75e8e094e6deee605f5fb6f5a2e4606b",
+      "kind": "positive_control",
+      "matched_expectation": true,
+      "model": "gpt-5.5",
+      "panel_id": "sb_002",
+      "reference_paths": {
+        "embry_character_sheet": "/mnt/storage12tb/media/personas/embry/assets/contact_sheets/embry-gpt-image-2-v3/images/embry_contact_sheet_v3.png",
+        "kai_character_sheet": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png"
+      },
+      "review_prompt_sha256": "sha256:e9b6704a47b1de4f43be8fd98528cbecd86d424dd5a9ae763b6b5a5784908c24",
+      "review_receipt_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration/case_receipts/positive_control_sb_002_start/sb_002_start_frame_identity_continuity_review.json",
+      "reviewer_source": "scillm:gpt-5.5:image_url",
+      "reviewer_status": "PASS",
+      "satisfied": true,
+      "visible_entities": [
+        "Embry",
+        "Kai"
+      ]
+    },
+    {
+      "blocking_findings": [
+        "Embry is visible as an adult woman in a navy surf top, but she does not clearly match the attached Embry reference sheet, which visually shows a young man matching Kai rather than an adult woman.",
+        "Because Embry is not reference-verifiable against the provided Embry reference asset, identity continuity cannot be accepted."
+      ],
+      "case_id": "tamper_wrong_embry_ref",
+      "critical_known_bad_passed": false,
+      "expectation": "FAIL",
+      "frame_key": "start_frame",
+      "has_concrete_failure_code": true,
+      "identity_notes": "Kai is visible in the foreground with tan skin, dark curly wet hair, athletic surfer build, black rashguard, and a face that matches the Kai reference. The left foreground woman fits the described Embry role visually, but the attached Embry reference does not support verifying her identity, so regeneration is required.",
+      "image_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_001_start_frame.png",
+      "image_sha256": "sha256:135564cad9c40718322e9f13d347b6829ecbd9ab2197cbddc70262deb72e227d",
+      "kind": "tamper",
+      "matched_expectation": true,
+      "model": "gpt-5.5",
+      "panel_id": "sb_001",
+      "reference_paths": {
+        "embry_character_sheet": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png",
+        "kai_character_sheet": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png"
+      },
+      "review_prompt_sha256": "sha256:b09a504760266e0ee883fc740aa4893d0e1be4603a811cf1aec8bd41f54e3fd2",
+      "review_receipt_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration/case_receipts/tamper_wrong_embry_ref/sb_001_start_frame_identity_continuity_review.json",
+      "reviewer_source": "scillm:gpt-5.5:image_url",
+      "reviewer_status": "FAIL",
+      "satisfied": true,
+      "visible_entities": [
+        "Embry",
+        "Kai"
+      ]
+    }
+  ],
+  "claims": {
+    "does_not_prove": [
+      "any provider readiness, publication, payment, or Kling submission",
+      "identity correctness of any frame beyond the reviewer's own verdict",
+      "that the accepted Phase C frames are provider-grade for post-provider continuity"
+    ],
+    "proves": [
+      "the reviewer calibration negative-control was executed live against known-bad ground truth and the reviewer did NOT behave as a correct discriminator"
+    ]
+  },
+  "created_at": "2026-07-18T17:27:43.921182+00:00",
+  "failure_reasons": [
+    "CRITICAL: at least one known-bad montage-derived frame PASSED identity review (known_bad_sb_001_start, known_bad_sb_002_start); the Phase C 8/8 result is not trustworthy and the reviewer prompt/contract needs hardening"
+  ],
+  "ground_truth": {
+    "invalidation_ledger": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/identity_successor_invalidation_ledger.v1.json",
+    "known_bad_source": "stale montage-derived Phase 07 frames",
+    "rejected_identity_source": {
+      "path": "/mnt/storage12tb/media/personas/embry/assets/character_sheet_montage.jpg",
+      "rejection_receipt": "phase_07_storyboard_live_tau/receipts/identity_reference_qualification.v1.json",
+      "rejection_status": "FAIL_IDENTITY_REFERENCE_INCONSISTENT"
+    },
+    "stale_disposition": "STALE_IDENTITY_SOURCE_SUPERSEDED"
+  },
+  "identity_references": {
+    "embry_accepted_source": {
+      "asset_id": "embry_contact_sheet_v3",
+      "path": "/mnt/storage12tb/media/personas/embry/assets/contact_sheets/embry-gpt-image-2-v3/images/embry_contact_sheet_v3.png",
+      "sha256": "sha256:3ce40b3b6839ebba0f468d75a1adbb7f82e0d95457aefd3627e222eb569de00c"
+    },
+    "kai_reference": {
+      "path": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png",
+      "sha256": "sha256:692cf37c5e7915f8b4ebceabd03b5d01ff69c9d428e94333bc1a01ac5e497700"
+    }
+  },
+  "live": true,
+  "mocked": false,
+  "overall_status": "REVIEWER_CALIBRATION_FAILED",
+  "paid_call_authorized": false,
+  "proposed_hardening": {
+    "containment": "review prompt contract only (phase07_storyboard_tau_node._identity_review_prompt)",
+    "recommended_changes": [
+      "Replace the coarse 'matches ... closely enough' / category-match language with an explicit specific-identity gate: FAIL unless the SAME individual is depicted \u2014 matching face shape, apparent age, eyebrow shape, nose, and distinctive features to the reference, not merely the same demographic category (adult woman, brown hair, navy top).",
+      "Add an explicit age-consistency clause: FAIL if the depicted person appears a clearly different age (e.g., a decade+ older/younger) than the reference identity.",
+      "Require the reviewer to enumerate 2-3 concrete matching facial features it verified, and to FAIL if it cannot name specific correspondences (forces feature-level grounding, not vibes).",
+      "Re-run the negative control after hardening: all known-bad + tamper must FAIL and both positive controls must still PASS before the reviewer is trusted; then re-run Phase C."
+    ],
+    "status": "PROPOSED_NOT_IMPLEMENTED",
+    "why_not_implemented_here": [
+      "Hard constraint: do not modify the reviewer to make this calibration pass.",
+      "The Phase C 8/8 receipts and prompt hashes are bound to the current reviewer prompt; silently changing it would leave those receipts referencing a prompt that no longer exists and would require re-running the full Phase C actual-pixel review to re-establish truth.",
+      "Re-review of Phase C frames is out of scope for this negative-control probe and is human-gated."
+    ]
+  },
+  "provider_live": false,
+  "reviewer": {
+    "function": "phase07_storyboard_tau_node._run_identity_continuity_review",
+    "identity_review_policy": {
+      "auth": "codex-oauth",
+      "error": null,
+      "fallback_performed": false,
+      "model": "gpt-5.5",
+      "provider": "codex",
+      "schema": "persona_dream.identity_review_policy.v1",
+      "source": "dag_identity_review_model_policy",
+      "supported": true
+    },
+    "image_path_mode": "base64 image_url (actual pixels)",
+    "model": "gpt-5.5",
+    "review_schema": "persona_dream.identity_continuity_review.v1",
+    "source_of_truth": "reused, not forked; identical to phase_c_regenerate_storyboard_frames.py"
+  },
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.reviewer_calibration_receipt.v1",
+  "summary": {
+    "cases_total": 6,
+    "critical_known_bad_passed": [
+      "known_bad_sb_001_start",
+      "known_bad_sb_002_start"
+    ],
+    "known_bad_failed_as_required": 1,
+    "known_bad_total": 3,
+    "positive_passed_as_required": 2,
+    "positive_total": 2,
+    "tamper_failed_as_required": 1,
+    "tamper_total": 1
+  }
+}

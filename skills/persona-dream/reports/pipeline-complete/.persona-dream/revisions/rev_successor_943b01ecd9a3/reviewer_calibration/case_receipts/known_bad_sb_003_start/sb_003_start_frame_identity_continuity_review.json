@@ -1,0 +1,52 @@
+{
+  "blocking_findings": [
+    "Embry is visible in the foreground, but her facial identity does not clearly match the attached Embry reference sheet closely enough for continuity verification.",
+    "Embry reads more like a generic adult female surfer than the specific referenced Embry identity."
+  ],
+  "created_at": "2026-07-18T17:27:07.867265+00:00",
+  "frame_key": "start_frame",
+  "frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_003_start_frame.png",
+  "image_dimensions": {
+    "height": 864,
+    "width": 1536
+  },
+  "live": true,
+  "mocked": false,
+  "model": "gpt-5.5",
+  "model_policy": {
+    "auth": "codex-oauth",
+    "error": null,
+    "fallback_performed": false,
+    "model": "gpt-5.5",
+    "provider": "codex",
+    "schema": "persona_dream.identity_review_policy.v1",
+    "source": "dag_identity_review_model_policy",
+    "supported": true
+  },
+  "model_policy_enforced": true,
+  "panel_id": "sb_003",
+  "raw_response": {
+    "blocking_findings": [
+      "Embry is visible in the foreground, but her facial identity does not clearly match the attached Embry reference sheet closely enough for continuity verification.",
+      "Embry reads more like a generic adult female surfer than the specific referenced Embry identity."
+    ],
+    "identity_notes": "Kai is visible in the foreground with a readable face, tan skin, dark curly wet hair, athletic surfer build, and black rashguard, and broadly matches the Kai reference. Embry has the correct general category of adult woman with brown hair and navy surf/polo-style top, but the face appears significantly different from the reference sheet and is not sufficiently reference-verifiable. Regeneration required.",
+    "verdict": "FAIL",
+    "visible_entities": [
+      "Embry",
+      "Kai"
+    ]
+  },
+  "receipt_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration/case_receipts/known_bad_sb_003_start/sb_003_start_frame_identity_continuity_review.json",
+  "required_entities": [
+    "Embry",
+    "Kai"
+  ],
+  "reviewer_source": "scillm:gpt-5.5:image_url",
+  "schema": "persona_dream.identity_continuity_review.v1",
+  "status": "FAIL",
+  "visible_entities": [
+    "Embry",
+    "Kai"
+  ]
+}

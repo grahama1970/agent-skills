@@ -1,0 +1,183 @@
+"""Unit tests for the reviewer calibration negative-control probe verdict logic.
+
+The LIVE probe run is the real evidence (it makes actual scillm gpt-5.5 vision
+calls). These tests pin the *verdict logic* — how reviewer response shapes map to
+per-case satisfied/critical flags and to the overall calibration verdict — using
+mocked reviewer responses, so a regression in the classification cannot silently
+turn a CRITICAL known-bad-passed result into a green calibration.
+"""
+from __future__ import annotations
+
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+
+import reviewer_negative_control_probe as probe  # noqa: E402
+
+
+class _FakeNode:
+    def __init__(self, review_return: dict):
+        self._review_return = review_return
+
+    def _identity_review_prompt(self, panel, *, frame_key, required_entities):
+        return f"PROMPT::{panel.get('panel_id')}::{frame_key}::{','.join(required_entities)}"
+
+    def _run_identity_continuity_review(self, accepted_frame, **kwargs):
+        return dict(self._review_return)
+
+
+class _FakePhaseC:
+    IDENTITY_REVIEW_POLICY = {"model": "gpt-5.5", "source": "dag_identity_review_model_policy"}
+
+    @staticmethod
+    def _sha256_text(text: str) -> str:
+        return "sha256:text"
+
+    @staticmethod
+    def _sha256_file(path) -> str:
+        return "sha256:file"
+
+
+class EvaluateCaseTests(unittest.TestCase):
+    def test_known_bad_pass_is_critical_and_unsatisfied(self):
+        v = probe.evaluate_case("known_bad", "FAIL", "PASS", [])
+        self.assertTrue(v["critical_known_bad_passed"])
+        self.assertFalse(v["satisfied"])
+        self.assertFalse(v["matched_expectation"])
+
+    def test_known_bad_fail_with_concrete_code_is_satisfied(self):
+        v = probe.evaluate_case("known_bad", "FAIL", "FAIL", ["Embry face does not match reference"])
+        self.assertTrue(v["satisfied"])
+        self.assertTrue(v["has_concrete_failure_code"])
+        self.assertFalse(v["critical_known_bad_passed"])
+
+    def test_known_bad_silent_fail_without_code_is_not_satisfied(self):
+        # A FAIL with no blocking finding is not a proper rejection.
+        v = probe.evaluate_case("known_bad", "FAIL", "FAIL", [])
+        self.assertFalse(v["satisfied"])
+        self.assertFalse(v["has_concrete_failure_code"])
+        self.assertFalse(v["critical_known_bad_passed"])
+
+    def test_positive_control_pass_is_satisfied(self):
+        v = probe.evaluate_case("positive_control", "PASS", "PASS", [])
+        self.assertTrue(v["satisfied"])
+
+    def test_positive_control_fail_is_not_satisfied(self):
+        v = probe.evaluate_case("positive_control", "PASS", "FAIL", ["over-strict"])
+        self.assertFalse(v["satisfied"])
+
+    def test_tamper_pass_is_not_satisfied_but_not_flagged_critical_known_bad(self):
+        v = probe.evaluate_case("tamper", "FAIL", "PASS", [])
+        self.assertFalse(v["satisfied"])
+        self.assertFalse(v["critical_known_bad_passed"])
+
+
+def _case(case_id, kind, satisfied, critical=False):
+    return {"case_id": case_id, "kind": kind, "satisfied": satisfied,
+            "critical_known_bad_passed": critical}
+
+
+class AggregateTests(unittest.TestCase):
+    def test_all_correct_is_calibration_pass(self):
+        results = [
+            _case("kb1", "known_bad", True),
+            _case("kb2", "known_bad", True),
+            _case("pos1", "positive_control", True),
+            _case("tam", "tamper", True),
+        ]
+        agg = probe.aggregate(results)
+        self.assertEqual(agg["overall_status"], "REVIEWER_CALIBRATION_PASS")
+        self.assertTrue(agg["calibration_pass"])
+        self.assertEqual(agg["failure_reasons"], [])
+
+    def test_known_bad_passed_forces_critical_failed(self):
+        results = [
+            _case("kb1", "known_bad", False, critical=True),
+            _case("kb2", "known_bad", True),
+            _case("pos1", "positive_control", True),
+            _case("tam", "tamper", True),
+        ]
+        agg = probe.aggregate(results)
+        self.assertEqual(agg["overall_status"], "REVIEWER_CALIBRATION_FAILED")
+        self.assertFalse(agg["calibration_pass"])
+        self.assertIn("kb1", agg["critical_known_bad_passed"])
+        self.assertTrue(any("CRITICAL" in r for r in agg["failure_reasons"]))
+
+    def test_positive_control_failure_is_calibration_failed(self):
+        results = [
+            _case("kb1", "known_bad", True),
+            _case("pos1", "positive_control", False),
+            _case("tam", "tamper", True),
+        ]
+        agg = probe.aggregate(results)
+        self.assertFalse(agg["calibration_pass"])
+        self.assertTrue(any("positive-control" in r for r in agg["failure_reasons"]))
+
+    def test_tamper_pass_is_not_reference_grounded_failure(self):
+        results = [
+            _case("kb1", "known_bad", True),
+            _case("pos1", "positive_control", True),
+            _case("tam", "tamper", False),
+        ]
+        agg = probe.aggregate(results)
+        self.assertFalse(agg["calibration_pass"])
+        self.assertTrue(any("reference-grounded" in r for r in agg["failure_reasons"]))
+
+    def test_empty_known_bad_or_positive_is_not_a_pass(self):
+        # Guard against a degenerate set (no known-bad / no positive) reading as PASS.
+        agg = probe.aggregate([_case("tam", "tamper", True)])
+        self.assertFalse(agg["calibration_pass"])
+
+
+class RunCaseTests(unittest.TestCase):
+    def test_run_case_maps_reviewer_pass_shape(self):
+        node = _FakeNode({
+            "status": "PASS",
+            "blocking_findings": [],
+            "visible_entities": ["Embry", "Kai"],
+            "reviewer_source": "scillm:gpt-5.5:image_url",
+            "model": "gpt-5.5",
+            "raw_response": {"identity_notes": "matches closely enough"},
+            "receipt_path": "/tmp/x.json",
+        })
+        with tempfile.TemporaryDirectory() as tmp:
+            result = probe._run_case(
+                case_id="known_bad_demo", kind="known_bad", expectation="FAIL",
+                image_path=Path("/nonexistent/frame.png"),
+                panel={"panel_id": "sb_001", "required_entities": ["Embry", "Kai"], "references": []},
+                node=node, phase_c=_FakePhaseC, receipts_root=Path(tmp),
+            )
+        self.assertEqual(result["reviewer_status"], "PASS")
+        self.assertTrue(result["critical_known_bad_passed"])
+        self.assertFalse(result["satisfied"])
+        self.assertEqual(result["review_prompt_sha256"], "sha256:text")
+
+    def test_run_case_maps_reviewer_fail_shape_with_code(self):
+        node = _FakeNode({
+            "status": "FAIL",
+            "blocking_findings": ["Embry face does not match reference"],
+            "visible_entities": ["Embry", "Kai"],
+            "reviewer_source": "scillm:gpt-5.5:image_url",
+            "model": "gpt-5.5",
+            "raw_response": {"identity_notes": "generic surfer"},
+            "receipt_path": "/tmp/y.json",
+        })
+        with tempfile.TemporaryDirectory() as tmp:
+            result = probe._run_case(
+                case_id="known_bad_demo2", kind="known_bad", expectation="FAIL",
+                image_path=Path("/nonexistent/frame.png"),
+                panel={"panel_id": "sb_003", "required_entities": ["Embry", "Kai"], "references": []},
+                node=node, phase_c=_FakePhaseC, receipts_root=Path(tmp),
+            )
+        self.assertEqual(result["reviewer_status"], "FAIL")
+        self.assertTrue(result["satisfied"])
+        self.assertTrue(result["has_concrete_failure_code"])
+        self.assertFalse(result["critical_known_bad_passed"])
+
+
+if __name__ == "__main__":
+    unittest.main()
