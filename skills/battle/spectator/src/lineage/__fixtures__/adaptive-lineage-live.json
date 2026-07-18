@@ -48,9 +48,9 @@
           "parent": "zipfile_writestr"
         },
         {
-          "child": "try[(OSError,TypeError):handle|Exception:return|FileNotFoundError:handle|ValueError:handle]",
+          "child": "try[Exception:return|Exception:return|OSError:handle]",
           "dimension": "exception_handling",
-          "parent": "try[Exception:return|ValueError:handle]"
+          "parent": "try[Exception:return]"
         }
       ],
       "delta_status": "PASS",
@@ -95,7 +95,7 @@
       "generation": 1,
       "id": "G1-A",
       "judge_outcome": {
-        "duration_seconds": 1.178943,
+        "duration_seconds": 1.246486,
         "patched_bypass": false,
         "vulnerable_original_confirmed": true
       },
@@ -105,7 +105,7 @@
       "role": "candidate",
       "runner_up": false,
       "selected": true,
-      "technique_delta": "Replaces direct from app import import_zip with dynamic importlib.import_module('app') and getattr while keeping archive construction, traversal path, call, and success oracle identical."
+      "technique_delta": "Changed app.py loading from direct from app import import_zip to importlib.import_module('app') with getattr; archive construction, traversal member, direct call, and oracle remain unchanged."
     },
     {
       "changed_dimensions": [
@@ -120,7 +120,7 @@
       "generation": 1,
       "id": "G1-B",
       "judge_outcome": {
-        "duration_seconds": 1.159753,
+        "duration_seconds": 1.2728,
         "patched_bypass": false,
         "vulnerable_original_confirmed": true
       },
@@ -130,7 +130,7 @@
       "role": "candidate",
       "runner_up": true,
       "selected": false,
-      "technique_delta": "Changed malicious archive entry construction from zf.writestr('../arena_escape.txt', payload) to zf.write(real_payload_file, arcname='../arena_escape.txt') while preserving the same direct import_zip invocation and outside-destination oracle."
+      "technique_delta": "Archive entry construction changed from in-memory writestr traversal member to a real file added with explicit traversal arcname."
     },
     {
       "changed_dimensions": [
@@ -145,9 +145,9 @@
           "parent": "zipfile_writestr"
         },
         {
-          "child": "try[(OSError,TypeError):handle|Exception:return|FileNotFoundError:handle|ValueError:handle]",
+          "child": "try[Exception:return|Exception:return|OSError:handle]",
           "dimension": "exception_handling",
-          "parent": "try[Exception:return|ValueError:handle]"
+          "parent": "try[Exception:return]"
         }
       ],
       "delta_status": "PASS",
@@ -155,7 +155,7 @@
       "generation": 2,
       "id": "G2",
       "judge_outcome": {
-        "duration_seconds": 1.174942,
+        "duration_seconds": 1.379526,
         "patched_bypass": false,
         "vulnerable_original_confirmed": true
       },
@@ -165,7 +165,7 @@
       "role": "descendant",
       "runner_up": false,
       "selected": false,
-      "technique_delta": "Changes parent dynamic importlib.import_module loading to spec_from_file_location, changes writestr archive creation to ZipInfo plus zf.open, calls import_zip with Path objects, and strengthens the oracle with returned-path correlation plus payload read-back."
+      "technique_delta": "Changed app loading to importlib.util.spec_from_file_location, changed archive construction to ZipInfo plus archive.open writes, and changed target call form to keyword arguments while retaining the outside-destination content oracle."
     }
   ],
   "qualification": {
@@ -173,7 +173,7 @@
     "status": "PASS",
     "stop_condition": null
   },
-  "run_id": "arena-adaptive-lineage-20260718T131624Z",
+  "run_id": "arena-adaptive-lineage-20260718T152350Z",
   "schema": "battle.adaptive_lineage_mechanics_fixture.v1",
   "selection": {
     "deciding_criterion": "novelty_distance",
