@@ -1,0 +1,144 @@
+"""Multidimensional comparator verdict.
+
+compare_expected_actual must not reduce closure to a single recall scalar:
+missing expected elements, ambiguous matches, and unwaived extras each
+block `passed` even at 100% expected-recall. Waivers are explicit human
+decisions recorded in the expected contract.
+"""
+
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from lib.agentic import compare_expected_actual  # noqa: E402
+
+
+def _element(eid, *, page=1, etype="paragraph", bbox=(0.1, 0.1, 0.9, 0.2), text="hello world"):
+    return {
+        "id": eid,
+        "page": page,
+        "type": etype,
+        "bbox": list(bbox),
+        "text": text,
+    }
+
+
+def _write(tmp_path, name, elements, **extra):
+    payload = {"schema_version": "test", "elements": elements, **extra}
+    path = tmp_path / name
+    path.write_text(json.dumps(payload), encoding="utf-8")
+    return path
+
+
+def _compare(tmp_path, expected, actual, *, waivers=None, target=0.95):
+    expected_kwargs = {"waivers": waivers} if waivers else {}
+    expected_path = _write(tmp_path, "expected.json", expected, **expected_kwargs)
+    actual_path = _write(tmp_path, "actual.json", actual)
+    return compare_expected_actual(
+        expected_path, actual_path, output_dir=tmp_path / "out", target=target
+    )
+
+
+def test_perfect_match_passes(tmp_path):
+    expected = [_element("expected:1")]
+    actual = [_element("actual:1")]
+    result = _compare(tmp_path, expected, actual)
+    assert result.passed is True
+    assert result.accuracy == 1.0
+    assert result.blockers == []
+    assert result.defect_vector["matched_expected"] == 1
+
+
+def test_unwaived_extra_blocks_despite_full_recall(tmp_path):
+    expected = [_element("expected:1")]
+    actual = [
+        _element("actual:1"),
+        _element("actual:extra", bbox=(0.1, 0.5, 0.9, 0.6), text="phantom emitted block"),
+    ]
+    result = _compare(tmp_path, expected, actual)
+    assert result.accuracy == 1.0, "recall is perfect"
+    assert result.passed is False, "but the unwaived extra must block closure"
+    assert any(blocker.startswith("unwaived_extras") for blocker in result.blockers)
+    comparison = json.loads(result.comparison_path.read_text(encoding="utf-8"))
+    assert comparison["schema_version"] == "pdf-lab.comparison.v2"
+    assert comparison["passed_recall_only"] is True
+    assert comparison["passed"] is False
+
+
+def test_waived_extra_passes(tmp_path):
+    expected = [_element("expected:1")]
+    actual = [
+        _element("actual:1"),
+        _element(
+            "actual:doi",
+            etype="header_footer_noise",
+            bbox=(0.9, 0.1, 0.98, 0.9),
+            text="This publication is available free of charge",
+        ),
+    ]
+    waivers = [
+        {
+            "type": "header_footer_noise",
+            "decision": "accepted_page_chrome_noise",
+            "signed_by": "human",
+        }
+    ]
+    result = _compare(tmp_path, expected, actual, waivers=waivers)
+    assert result.passed is True
+    assert result.defect_vector["waived_extras"] == 1
+    assert result.defect_vector["unwaived_extras"] == 0
+
+
+def test_missing_expected_blocks(tmp_path):
+    expected = [
+        _element("expected:1"),
+        _element("expected:2", bbox=(0.1, 0.4, 0.9, 0.5), text="second paragraph body"),
+    ]
+    actual = [_element("actual:1")]
+    result = _compare(tmp_path, expected, actual)
+    assert result.passed is False
+    assert result.defect_vector["missing_expected"] == 1
+    assert any(blocker.startswith("missing_expected") for blocker in result.blockers)
+
+
+def test_ambiguous_duplicate_candidates_block_and_do_not_count_as_matched(tmp_path):
+    expected = [_element("expected:1")]
+    actual = [
+        _element("actual:dup1"),
+        _element("actual:dup2"),
+    ]
+    result = _compare(tmp_path, expected, actual)
+    assert result.passed is False
+    assert result.defect_vector["ambiguous_expected"] == 1
+    assert result.defect_vector["matched_expected"] == 0
+    comparison = json.loads(result.comparison_path.read_text(encoding="utf-8"))
+    assert len(comparison["ambiguous"][0]["candidates"]) >= 2
+
+
+def test_clear_best_among_qualifying_candidates_is_not_ambiguous(tmp_path):
+    expected = [_element("expected:1", text="alpha beta gamma delta epsilon")]
+    actual = [
+        _element("actual:good", text="alpha beta gamma delta epsilon"),
+        _element(
+            "actual:worse",
+            bbox=(0.12, 0.1, 0.9, 0.21),
+            text="alpha beta gamma delta zeta eta unrelated tail",
+        ),
+    ]
+    result = _compare(tmp_path, expected, actual)
+    assert result.defect_vector["ambiguous_expected"] == 0
+    assert result.defect_vector["matched_expected"] == 1
+    # the losing candidate is now an unwaived extra and still blocks
+    assert result.defect_vector["unwaived_extras"] == 1
+    assert result.passed is False
+
+
+def test_empty_expected_and_actual_passes(tmp_path):
+    result = _compare(tmp_path, [], [])
+    assert result.passed is True
+    assert result.accuracy == 1.0
+    assert result.blockers == []

@@ -379,6 +379,8 @@ def _expand_bbox(bbox: BBox, amount: float) -> BBox:
 def _default_match_policy() -> dict[str, Any]:
     return {
         "accuracy_formula": "matched_expected_elements / total_expected_elements",
+        "verdict": "strict: missing/ambiguous/unwaived-extras/type-mismatch all block passed",
+        "ambiguity_margin": 0.05,
         "text_similarity_threshold": 0.80,
         "bbox_iou_thresholds": {
             "default": 0.50,
