@@ -1,7 +1,7 @@
 # Handoff Report: Persona Dream
 
-**Timestamp:** 2026-07-17
-**Repository:** `/home/graham/workspace/experiments/agent-skills-main`
+**Timestamp:** 2026-07-18
+**Repository:** `/home/graham/workspace/experiments/agent-skills-main` (branch `main`)
 **Skill root:** `skills/persona-dream`
 **Immutable goal status:** `BLOCKED_FINAL_ACCEPTANCE`
 **Active revision:** `rev_upstream_bf3b05d47fb8`
@@ -65,7 +65,20 @@ Canonical objective and step contract: `GOAL.md`.
 - The Tau contact-sheet command-loop receipt ends `BLOCKED` because `max_steps=2`
   stopped before a panel-specific third node. The terminal GPT-5.5 reviewer
   artifact is PASS for the intended contact-sheet rung. This is not a full
-  storyboard or video PASS.
+  storyboard or video PASS. The successor Tau run should raise `max_steps` so
+  the panel-specific node actually executes.
+- `state/active_revision.json` has `revisionRoot` pointing at a volatile temp
+  worktree (`/tmp/agent-skills-main-persona-dream-uu5nMV/...`). The directory
+  still exists (verified 2026-07-18) but a reboot or tmp cleanup silently
+  invalidates the active pointer even though the same revision tree lives in
+  the repo under `reports/pipeline-complete/.persona-dream/revisions/`. The
+  successor pointer must use the durable repo path, and activation should fail
+  closed if `revisionRoot` resolves outside the repository.
+- There is no dedicated "create successor revision from a new identity source"
+  script. `scripts/reconstruct_upstream_contract_revision.py` is the closest
+  precedent (it built `rev_upstream_bf3b05d47fb8` and wrote the upstream
+  invalidation ledger); the successor tooling should follow that pattern and
+  emit a stale-marking ledger for Phase 07-11 artifacts.
 
 ## 3. What Is Working
 
@@ -150,6 +163,16 @@ Canonical objective and step contract: `GOAL.md`.
    compiled hash and explicit hash-bound authorization.
 7. **README operational status is stale.** Update it only after the successor
    rung is proven; do not use documentation edits to imply pipeline progress.
+8. **Active pointer depends on a temp worktree.** `revisionRoot` in
+   `state/active_revision.json` targets `/tmp/agent-skills-main-persona-dream-uu5nMV`;
+   it currently resolves but is one reboot away from dangling. Fix in the
+   successor pointer, not by mutating the frozen revision's files.
+9. **Workspace is not clean.** Uncommitted Phase 13 webgpt review-bundle
+   artifacts sit in `review-bundles/` (a code-review request for a
+   `check-phase13-grounded` validator, dated 2026-07-15/16, plus heartbeat
+   churn), and the repo has ~33 dirty paths overall. Commit or archive them
+   before starting the successor revision so its receipts land on a clean
+   baseline.
 
 There are zero `TODO`, `FIXME`, or `XXX` markers in Persona Dream Python/TS/TSX
 sources. The blockers are evidence and revision-state failures, not untracked
@@ -157,15 +180,22 @@ TODO comments.
 
 ## 5. Exact Next Steps
 
+0. Commit or archive the uncommitted `review-bundles/` Phase 13 artifacts and
+   other dirty paths so the successor run starts from a clean git baseline.
 1. Create a successor immutable revision from
-   `rev_upstream_bf3b05d47fb8`; do not modify the frozen revision.
+   `rev_upstream_bf3b05d47fb8`; do not modify the frozen revision. Build a
+   dedicated script modeled on `reconstruct_upstream_contract_revision.py`
+   rather than assembling the revision by hand, and write the successor
+   `active_revision.json` with a durable repo-rooted `revisionRoot` (never a
+   `/tmp` worktree path).
 2. Bind the successor to the accepted `embry_contact_sheet_v3` SHA-256 and its
    live qualification/Memory receipts.
 3. Mark stale every Phase 07-11 artifact derived from the rejected montage.
 4. Regenerate all eight Phase 07 storyboard start/end frames with GPT Image 2.
 5. Run Tau creator/reviewer actual-pixel checks on every generated frame for
    Embry identity, Kai identity, wardrobe/equipment, lighting, reef boundary,
-   dialogue intent, panel action, and inter-frame continuity.
+   dialogue intent, panel action, and inter-frame continuity. Raise the Tau
+   command-loop `max_steps` above 2 so the panel-specific node executes.
 6. Fail closed if any frame drifts. Persist repair attempts and final frame
    statuses to Memory and exact-reread them.
 7. Rebuild the successor artifact index, phase bindings, and active-revision
@@ -203,10 +233,13 @@ TODO comments.
 
 ### Recent Relevant Commits
 
-- Agent Skills `10bc2065a85fdc47a3e5d439b4f45ea52a439dfe`:
-  `Qualify replacement Embry contact sheet`.
-- Agent Skills `c870698c70bfd166af5e594ca3592d0d237f5563`:
-  prior audio-alignment, continuity, and return-surface work.
+Current `main` history (verified 2026-07-18; earlier handoff hashes were from a
+pre-rebase worktree):
+
+- `fecff7aa`: `Update Persona Dream operational handoff`.
+- `655efa86`: `Qualify replacement Embry contact sheet`.
+- `a33b45d7`: `fix(persona-dream): gate voiced returns on alignment and lip sync`.
+- `1f041b87`: `persona-dream: complete live Kling return and audio mux`.
 - Tau `416edc5a48f0faec049b2952eca60e5c343f0590` on
   `issue-74-ready-queue-condition-block`: permits a custom hash-recorded visual
   review prompt in the existing panel reviewer; targeted tests 5/5.
@@ -214,8 +247,9 @@ TODO comments.
 ## Resume Command And Stop Condition
 
 Start by inspecting the active pointer, contact-sheet qualification receipt,
-identity-reference failure receipt, and `GOAL.md`. Then create the successor
-revision and regenerate the eight frames. Do not run a paid provider command.
+identity-reference failure receipt, and `GOAL.md`. Then clean the workspace,
+create the successor revision (durable `revisionRoot`, no `/tmp` paths), and
+regenerate the eight frames. Do not run a paid provider command.
 
 The next handoff may advance only when deterministic receipts show an
 active/consistent successor revision, exact Memory reread, and 8/8 accepted
