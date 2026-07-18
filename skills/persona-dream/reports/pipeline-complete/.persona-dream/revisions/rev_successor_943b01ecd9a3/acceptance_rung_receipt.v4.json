@@ -69,7 +69,14 @@
   "submitted": false,
   "successor_frames_identity": {
     "all_pass_embedding": true,
-    "note": "8/8 accepted successor frames PASS the deterministic embedding identity subgate; full-frame VLM PASS established in prior pipeline state and re-confirmed live for the decisive cases",
+    "live_augmented_rereview": {
+      "frames_pass": "8/8 (full-frame VLM PASS AND embedding subgate PASS)",
+      "overall_status": "SUCCESSOR_REREVIEW_PASS",
+      "receipt_relative_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration_v4/successor_rereview/successor_rereview_v4_receipt.json",
+      "receipt_sha256": "sha256:d9ba4762c048893ddc8400de7bf9ea926d8c888e371e9fa06c19763bc5eb4a37",
+      "repair_loop_triggered": false
+    },
+    "note": "8/8 accepted successor frames PASS the augmented reviewer live (hardened full-frame gpt-5.5 gate AND deterministic embedding identity subgate); fresh receipts under reviewer_calibration_v4/successor_rereview; no GPT Image 2 repair needed",
     "scores": {
       "sb_001_end_frame.png": {
         "Embry": 0.67233,
