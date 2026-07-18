@@ -1,11 +1,38 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-18 (face-crop identity subgate + calibration v3) by agent
+**Last updated:** 2026-07-18 (deterministic ArcFace embedding identity subgate + calibration v4 PASS) by agent
 **Status:** Active development
 
 ## Current Understanding
 
-- 2026-07-18 (face-crop identity subgate): A zoomed-in face-crop subgate DID close
+- 2026-07-18 (embedding identity subgate — DECISIVE LESSON): identity verification
+  was moved from VLM judgment to a deterministic ArcFace cosine distance, and it
+  resolved the v3 impasse cleanly. VLMs (gpt-5.5 vision) are NOT metric identity
+  verifiers: the run-to-run instability on known_bad_sb_001 was the model unable to
+  place a face that is genuinely a near-look-alike. The fix is the standard 1:1
+  verification method — InsightFace buffalo_l (w600k_r50, 512-d L2-normalized):
+  detect -> 5-pt align -> embed -> cosine similarity vs a calibrated threshold
+  (scripts/identity_face_embedding_subgate.py; deterministic; mockable Embedder
+  interface; 11 unit tests). Wired into
+  phase07_storyboard_tau_node._run_identity_continuity_review as the IDENTITY VERDICT
+  AUTHORITY (full-frame VLM keeps scene/wardrobe/composition + face visibility; VLM
+  face-crop demoted to advisory; code FAIL_FACE_EMBEDDING_IDENTITY_MISMATCH records
+  the score; fail-closed — no InsightFace means FAIL, never a silent VLM fallback).
+  Calibration v4 (reviewer_calibration_receipt.v4.json, live CPU onnxruntime) =
+  REVIEWER_CALIBRATION_PASS. Measured distributions: genuine same-person (reference-
+  cell pairwise) floor 0.4991; known-bad/tamper offending ceiling 0.3430; cross-person
+  (Embry-vs-Kai) 0.095..0.331. Threshold 0.421 (margin midpoint), margin 0.1561.
+  known_bad_sb_001 Embry cosine 0.323 -> metrically a DIFFERENT face (the adjudication
+  answer, by measurement: different identity; no reclassification). positive_control_
+  sb_002, over-rejected by v3's VLM crop, PASSes (Kai 0.526). All 8 accepted successor
+  frames PASS the embedding subgate (0.525..0.815). Live node integration confirmed
+  end-to-end: known_bad_sb_001 full-frame VLM still PASSes but the node FAILs via the
+  embedding subgate. Threshold recipe for the next agent: recompute genuine (positive +
+  reference-cell pairwise) and known-bad distributions and set the threshold in the
+  margin; re-derive if the reference sheet changes. Install pinned insightface==0.7.3
+  + onnxruntime==1.19.2 (pyproject [identity] extra; insightface_install_receipt.v1.json).
+
+- 2026-07-18 (face-crop identity subgate — SUPERSEDED by embedding subgate above): A zoomed-in face-crop subgate DID close
   the full-frame dilution blind spot — but only for non-marginal mismatches, and it
   did NOT fully calibrate. Mechanism (scripts/identity_face_crop_subgate.py, wired
   into phase07_storyboard_tau_node._run_identity_continuity_review, additive +
@@ -272,3 +299,37 @@
 ## Infrastructure State
 
 <!-- Auto-populated from /project-state --quick -->
+
+## Cognitive Loop 13-15 (appended 2026-07-18)
+
+- 2026-07-18 (cognitive loop 13-15 implemented + live-slice proven on the
+  historical return): persona-dream phases 13 (self-interpretation), 14 (ToM
+  validation), and 15 (dream persistence) moved from Designed to Implemented.
+  Interpretive drafting uses scillm gpt-5.5; grounding is enforced by
+  DETERMINISTIC code, not the LLM. Phase 13 rejects any claim that does not cite
+  at least one Watch observation id AND at least one source-memory id, and (the
+  honesty rule) rejects any claim that reads a proven renderer defect (identity
+  DRIFT) as psychological truth instead of favoring the renderer-defect
+  explanation. Phase 14 lets the LLM propose bounded ToM candidates but rejects
+  any whose citations are not a subset of their parent accepted interpretation.
+  Phase 15 defaults to dry-run: it emits an exact canonical would-write plan
+  (dream memory doc with `synthetic_origin:true, literal_historical_event:false`;
+  `derived_from` / `observed_in_scene` / `supports_interpretation` edges; a Qdrant
+  embedding note) with hashes and ZERO canonical writes.
+- DECISIVE BOUNDARY: a canonical dream-memory write requires
+  `--allow-canonical-write` AND a non-superseded return id, and HARD-FAILS
+  (exit 1) on the historical `991c311f365f` return because it is a historical
+  provider return, has a DEGRADED observation status, and carries an identity
+  DRIFT verdict. The write path was instead proven by 16 exact-reread-matched
+  documents in the non-canonical `persona_dream_loop_validation` collection.
+  Enforcement is covered by `tests/test_cognitive_loop_phases.py`
+  (`test_superseded_historical_return_is_blocked_even_with_allow_flag`).
+- Live loop receipt: `run_cognitive_loop.py` -> `PASS_COGNITIVE_LOOP`; artifacts
+  under `.persona-dream/revisions/rev_successor_943b01ecd9a3/cognitive_loop/991c311f365f/`.
+  Governance persisted (write + exact reread) to `persona_dream_governance`.
+  Note: `lessons` collection rejects writes without extractable taxonomy, so
+  scoped governance uses a dedicated collection.
+- NOT PROVEN: this is fixture-and-live-slice proof on a SUPERSEDED historical
+  return. The closed-loop research claim (Acceptance items 4-8: canonical
+  persistence, Qdrant recall, multi-hop traversal, later behavior) still requires
+  a freshly authorized, non-superseded successor return.

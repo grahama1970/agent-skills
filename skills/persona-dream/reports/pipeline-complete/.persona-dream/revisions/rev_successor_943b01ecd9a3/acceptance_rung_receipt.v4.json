@@ -1,0 +1,110 @@
+{
+  "actual_provider_call_attempts": 0,
+  "claims": {
+    "does_not_prove": [
+      "Kling readiness",
+      "media publication",
+      "paid authorization",
+      "a Kling video return",
+      "lip-sync-on-return",
+      "an activated/certified acceptance rung (pending lane C regen + --supersede requalification + activation)"
+    ],
+    "proves": [
+      "identity verification is now a deterministic ArcFace cosine distance (calibration v4 PASS, threshold 0.421, margin 0.156), not a VLM judgment",
+      "the near-look-alike known_bad_sb_001 is metrically separated from genuine matches (0.323 vs >=0.499); the v3 human-adjudication dispute is resolved by measurement",
+      "the embedding subgate is wired as the identity authority and proven end-to-end live at the node level; the v3 false-PASS and false-FAIL are both corrected",
+      "all 8 accepted successor frames pass the embedding identity subgate"
+    ]
+  },
+  "gated_and_deferred": {
+    "deferred_steps": [
+      "lane C sb_003_end_frame composition-delta regeneration (GPT Image 2) + affected continuity pairs (decided-and-deferred: step38_sb_003_composition_delta_proposal.v1.json)",
+      "artifact index/bindings rebuild + --supersede requalification (activate_revision_qualification.py) + prepare/verify/activate to PASS",
+      "certified/activated rung restoration citing the above"
+    ],
+    "reason": "the REVIEWER_CALIBRATION blocker is RESOLVED (v4 PASS); identity is now certified by deterministic embeddings. Full activated-rung restoration additionally requires the lane C regeneration and the supersession/requalification/activation pipeline. Those are not driven here; a factual pending status is recorded rather than forcing an activated PASS."
+  },
+  "identity_subgate": {
+    "authority": "embedding_cosine",
+    "fail_closed": true,
+    "failure_code": "FAIL_FACE_EMBEDDING_IDENTITY_MISMATCH",
+    "module": "scripts/identity_face_embedding_subgate.py",
+    "unit_tests": "tests/test_identity_face_embedding_subgate.py (11 pass, mock embedder)"
+  },
+  "install_receipt": {
+    "execution_provider": "CPUExecutionProvider",
+    "packages": "insightface==0.7.3, onnxruntime==1.19.2",
+    "receipt_relative_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/insightface_install_receipt.v1.json",
+    "receipt_sha256": "sha256:10acfa3faef62ae187a7186f51633184133c9d90fc478038996914b43551a397"
+  },
+  "live": true,
+  "mocked": false,
+  "node_integration_proof": {
+    "dir": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration_v4/node_integration",
+    "known_bad_sb_001": "full-frame VLM PASS but node FAIL via face_embedding_subgate (v3 blind spot closed)",
+    "positive_control_sb_002": "node PASS (v3 VLM-crop over-rejection corrected)"
+  },
+  "observed_at": "2026-07-18T20:12:57.849047+00:00",
+  "paid_call_authorized": false,
+  "provider_live": false,
+  "reviewer_augmentation": "identity verdict authority moved from gpt-5.5 VLM face-to-face judgment to deterministic InsightFace buffalo_l (ArcFace w600k_r50) cosine distance; full-frame VLM retained for scene/wardrobe/composition + face visibility; VLM face-crop demoted to advisory",
+  "reviewer_calibration_v4": {
+    "calibration_pass": true,
+    "genuine_edge": 0.499083,
+    "known_bad_edge": 0.343007,
+    "known_bad_result": "3/3 FAIL",
+    "margin": 0.156076,
+    "overall_status": "REVIEWER_CALIBRATION_PASS",
+    "positives_result": "2/2 PASS",
+    "receipt_relative_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration_receipt.v4.json",
+    "receipt_sha256": "sha256:0615ebf0d56ce2faa66acb1d7e3d5b0aa7f24bcda2c875c6b8f7da268fb24354",
+    "sb_001_resolution": "known_bad_sb_001 Embry cosine 0.323253 < genuine floor 0.4991 -> metrically a DIFFERENT face; adjudication dispute resolved by measurement (different identity, no reclassification)",
+    "tamper_result": "1/1 FAIL",
+    "threshold": 0.421
+  },
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.acceptance_rung_receipt.v4",
+  "status": "RUNG_CALIBRATION_RESOLVED_IDENTITY_CERTIFIED_PENDING_LANE_C_AND_REQUALIFICATION",
+  "submitted": false,
+  "successor_frames_identity": {
+    "all_pass_embedding": true,
+    "note": "8/8 accepted successor frames PASS the deterministic embedding identity subgate; full-frame VLM PASS established in prior pipeline state and re-confirmed live for the decisive cases",
+    "scores": {
+      "sb_001_end_frame.png": {
+        "Embry": 0.67233,
+        "Kai": 0.791697
+      },
+      "sb_001_start_frame.png": {
+        "Embry": 0.659345,
+        "Kai": 0.811801
+      },
+      "sb_002_end_frame.png": {
+        "Embry": 0.615187,
+        "Kai": 0.683047
+      },
+      "sb_002_start_frame.png": {
+        "Embry": 0.704022,
+        "Kai": 0.525576
+      },
+      "sb_003_end_frame.png": {
+        "Embry": 0.72205,
+        "Kai": 0.814769
+      },
+      "sb_003_start_frame.png": {
+        "Embry": 0.616658,
+        "Kai": 0.798839
+      },
+      "sb_004_end_frame.png": {
+        "Embry": 0.707729,
+        "Kai": 0.672216
+      },
+      "sb_004_start_frame.png": {
+        "Embry": 0.717992,
+        "Kai": 0.602701
+      }
+    }
+  },
+  "successor_revision_frozen_read_only": true,
+  "supersedes": "acceptance_rung_receipt.v3.json"
+}
