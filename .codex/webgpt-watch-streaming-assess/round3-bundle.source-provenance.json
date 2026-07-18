@@ -1,0 +1,13 @@
+{
+  "schema": "webgpt.source_provenance.v1",
+  "repository_url": "https://github.com/grahama1970/agent-skills.git",
+  "branch": "battle-adaptive-lineage-goal",
+  "upstream": "origin/battle-adaptive-lineage-goal",
+  "commit_sha": "f9ede98d95dd10f264053d1a00ead3e368f91a1f",
+  "source_paths": [
+    "skills/watch/docs/PROJECT_KNOWLEDGE.md",
+    "skills/watch/scripts/track_yolo_bytetrack.py",
+    "skills/watch/scripts/run_realtime_identity_memory_loop.py"
+  ],
+  "proof_cwd": "skills/webgpt"
+}

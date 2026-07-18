@@ -1,0 +1,19 @@
+{
+  "schema": "webgpt.source_provenance.v1",
+  "repository_url": "https://github.com/grahama1970/agent-skills.git",
+  "branch": "battle-adaptive-lineage-goal",
+  "upstream": "origin/battle-adaptive-lineage-goal",
+  "commit_sha": "f9ede98d95dd10f264053d1a00ead3e368f91a1f",
+  "source_paths": [
+    "skills/watch/docs/PROJECT_KNOWLEDGE.md",
+    "skills/watch/README.md",
+    "skills/watch/local/HANDOFF.md",
+    "skills/watch/docs/architecture/watch_realtime_character_tracking_contract.md",
+    "skills/watch/docs/architecture/watch_realtime_tracking_execution_plan.md",
+    "skills/watch/scripts/storage.py",
+    "skills/watch/scripts/run_realtime_identity_memory_loop.py",
+    "skills/watch/ui/scripts/watchYoloHandoffStopBroad.smoke.ts",
+    "skills/watch/docs/architecture/generated/bad_santa_marcus_0248_evidence_case_live/watch_evidence_case_live_filing_receipt.json"
+  ],
+  "proof_cwd": "skills/webgpt"
+}

@@ -187,3 +187,37 @@ Known hygiene debt: `watch_track_crop_embeddings_jina_v5_1024` contains smoke-te
 debris points with `codex-live-*` character labels written by UI test runs against
 the live Qdrant collection; tests should target an isolated collection, and the
 debris should be purged before similarity stats are computed over the collection.
+
+## Streaming Gate (WebGPT 3-round assessment, 2026-07-18)
+
+Bundles/responses: `.codex/webgpt-watch-streaming-assess/round{1,2,3}-bundle*`
+(tab 837359319, all routing proofs clean). Final ruling: PASS on the
+consolidated state; streaming lane stays BLOCKED until P0A lands.
+
+- **Current gate: `SOURCE_SESSION_JOURNAL_PREFLIGHT_P0A`** (recorded-file
+  canary, no live source): shared immutable journal module — tracker adapter
+  (`track_yolo_bytetrack.py`) is the only append writer, persistence loop
+  (`run_realtime_identity_memory_loop.py`) is a read-only consumer. Session
+  header binds source hash, model/tracker config, confidence/imgsz, sampling
+  stride, crop manifest; committed record framing + checksums + finalized
+  marker; truncated final record fails closed. Explicit `clock_mode`
+  (authoritative decoded PTS or declared frame-offset clock — never mixed;
+  today's `media_time_seconds` is synthesized index*stride/fps and must not be
+  called PTS). Deterministic `event_id` =
+  uuid5(schema|session|sequence); `observation_id` =
+  uuid5(schema|session|track|first_seq|last_seq|window PTS); mutable evidence
+  (bbox, crop bytes, labels, scores) lives in a separate canonical digest so
+  divergent evidence collides on the same ID instead of forking records. One
+  injected same-position PTS/window/content mismatch must be rejected before
+  probe_services/embedding/Qdrant/Memory.
+- **P0B `JOURNAL_CONSUMER_REPLAY`**: kill the consumer (not the tracker)
+  mid-run, restart against the unchanged journal, require identical canonical
+  observation IDs + digests in ISOLATED Qdrant/Memory collections (isolated
+  test collections are the one PREREQUISITE). Compare canonical sets, not
+  timestamped bytes.
+- **Then**: UI live-event consumption gate → tracker process-resume
+  continuity → first live source (webcam/RTSP). Outbox/retry hardening is
+  parallel to P0A/P0B but prerequisite before the first unbounded live
+  source. Row-7 re-anchoring and pre-fix row re-runs are parallel batch
+  remediation; ux-lab legacy import removal and live-browser handoff breadth
+  stay deferred.
