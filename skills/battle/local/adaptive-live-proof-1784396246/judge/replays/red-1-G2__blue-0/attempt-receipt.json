@@ -1,0 +1,73 @@
+{
+  "blue_action_id": "blue-blue-0-patch",
+  "blue_artifact": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/stage-G0/tau-live/blue/app.py",
+  "blue_worker_id": "blue-0",
+  "commands_run": [
+    {
+      "command": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cap-drop",
+        "ALL",
+        "--security-opt",
+        "no-new-privileges",
+        "--user",
+        "1000:1000",
+        "-v",
+        "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/judge/replays/red-1-G2__blue-0/original:/workspace:rw",
+        "-w",
+        "/workspace",
+        "python:3.12-slim",
+        "python",
+        "red_exploit_submission.py",
+        "--expect-vulnerable"
+      ],
+      "exit_code": 0,
+      "stderr_path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/judge/replays/red-1-G2__blue-0/judge-red-exploit-original.stderr.txt",
+      "stdout_path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/judge/replays/red-1-G2__blue-0/judge-red-exploit-original.stdout.txt"
+    },
+    {
+      "command": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cap-drop",
+        "ALL",
+        "--security-opt",
+        "no-new-privileges",
+        "--user",
+        "1000:1000",
+        "-v",
+        "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/judge/replays/red-1-G2__blue-0/patched:/workspace:rw",
+        "-w",
+        "/workspace",
+        "python:3.12-slim",
+        "python",
+        "red_exploit_submission.py"
+      ],
+      "exit_code": 0,
+      "stderr_path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/judge/replays/red-1-G2__blue-0/judge-red-exploit-patched.stderr.txt",
+      "stdout_path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/judge/replays/red-1-G2__blue-0/judge-red-exploit-patched.stdout.txt"
+    }
+  ],
+  "duration_elapsed_seconds": 1.14534,
+  "ended_elapsed_seconds": 115.093995,
+  "exploit_blocked_after_patch": true,
+  "exploit_confirmed_before_patch": true,
+  "exploit_still_succeeds_after_patch": false,
+  "functionality_preserved": true,
+  "pair_id": "red-1-G2__blue-0",
+  "red_artifact": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/stage-G2/tau-live/red/workers/red-1/red_exploit_submission.py",
+  "red_lane_id": "payload-857-red-1",
+  "red_worker_id": "red-1-G2",
+  "schema": "battle.arena_tau_public_only_pair_attempt_receipt.v1",
+  "started_elapsed_seconds": 113.948655,
+  "status": "PASS",
+  "timing_source": "battle_control_plane_perf_counter",
+  "verdict": "BLUE_SUCCESS"
+}

@@ -1,0 +1,21 @@
+{
+  "artifact_bytes": 2385,
+  "artifact_sha256": "9f9f7dc11b154c31ab99461bb53a4f8646a810e7f74a4e4716f2b89bcf64df65",
+  "artifact_type": "red_exploit",
+  "mutation_operator": "method_replace",
+  "parsed_keys": [
+    "artifact_type",
+    "exploit_py",
+    "mutation_operator",
+    "rationale",
+    "strategy_genome",
+    "technique_delta"
+  ],
+  "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/stage-G1-A/tau-live/red/workers/red-1/red_exploit_submission.py",
+  "rationale": "Demonstrates the public Zip Slip flaw by dynamically loading local app.py, creating a ZIP containing ../arena_escape.txt, invoking import_zip directly, and confirming the file is written outside the destination directory.",
+  "schema": "tau.battle_materialized_artifact_receipt.v1",
+  "scillm_call_receipt_sha256": "ae06769002986df6b19ec25dfe50ab6d5a22f7a342f8509da19168d30a1a3450",
+  "status": "PASS",
+  "strategy_genome_sha256": "b4f0c85c1ef29a1f678c6287e13a9fdcc34684c298d6cf102e8ba03ad0f8b6b9",
+  "technique_delta": "Replaces the parent direct `from app import import_zip` loading mode with `importlib.import_module('app')` plus `getattr`, while keeping the archive member, payload bytes, target call, and filesystem oracle unchanged."
+}

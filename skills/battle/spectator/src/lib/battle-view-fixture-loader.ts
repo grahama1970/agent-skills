@@ -8,7 +8,7 @@ import type { BattleNormalizedRuntimeJudgeFixtureV1 } from "./battle-runtime-typ
 import { validateRuntimeJudgeFixture } from "./battle-runtime-validator";
 import type { BattleNormalizedSynthesisFixtureV1 } from "./battle-synthesis-types";
 import { validateSynthesisFixture } from "./battle-synthesis-validator";
-import type { BattleNormalizedUxFixture } from "./battle-types";
+import type { BattleAdaptiveLineageMechanicsFixtureV1, BattleNormalizedUxFixture } from "./battle-types";
 import type { BattleNormalizedAdaptiveLineageFixtureV1 } from "./battle-adaptive-lineage-types";
 import { validateAdaptiveLineageFixture } from "./battle-adaptive-lineage-validator";
 import { adaptiveLineageToRaceFixture } from "./battle-adaptive-lineage-view-model";
@@ -271,15 +271,45 @@ export async function loadBattleViewFixture(
 export async function loadBattleRaceFixture(url: string): Promise<BattleFixtureLoadResult<BattleNormalizedUxFixture>> {
 	const result = await loadBattleViewFixture(url, "race");
 	if (!result.ok) return result;
-	const fixture = result.schema === BATTLE_VIEW_FIXTURE_SCHEMAS.ADAPTIVE_LINEAGE
+	const base = result.schema === BATTLE_VIEW_FIXTURE_SCHEMAS.ADAPTIVE_LINEAGE
 		? adaptiveLineageToRaceFixture(result.fixture as BattleNormalizedAdaptiveLineageFixtureV1)
 		: result.fixture as BattleNormalizedUxFixture;
+	// Receipt-authoritative adaptive-lineage mechanics: co-fetched from the loaded
+	// receipt's own directory and verified against it. Fail-closed if absent/mismatched.
+	const adaptiveLineage = await loadColocatedAdaptiveLineageMechanics(url, base.battle_id);
+	const fixture = adaptiveLineage ? { ...base, adaptive_lineage: adaptiveLineage } : base;
 	return {
 		ok: true,
 		fixture,
 		schema: BATTLE_VIEW_FIXTURE_SCHEMAS.RACE,
 		viewKind: "race",
 	};
+}
+
+/**
+ * Fetch the adaptive-lineage MECHANICS fixture that lives in the SAME directory as the
+ * loaded receipt and attach it ONLY when it is a valid mechanics fixture whose
+ * `battle_id` matches the loaded receipt and whose qualification is PASS. Any missing
+ * file, fetch error, schema/battle_id mismatch, or non-PASS qualification fails closed
+ * (returns null) so the comparison panel never renders unverified or static data.
+ */
+async function loadColocatedAdaptiveLineageMechanics(
+	raceUrl: string,
+	battleId: string,
+): Promise<BattleAdaptiveLineageMechanicsFixtureV1 | null> {
+	const mechanicsUrl = raceUrl.replace(/[^/]+$/, "adaptive-lineage-mechanics-fixture.json");
+	if (mechanicsUrl === raceUrl) return null;
+	try {
+		const response = await fetch(mechanicsUrl);
+		if (!response.ok) return null;
+		const data = (await response.json()) as Partial<BattleAdaptiveLineageMechanicsFixtureV1>;
+		if (data?.schema !== "battle.adaptive_lineage_mechanics_fixture.v1") return null;
+		if (data?.battle_id !== battleId) return null;
+		if (data?.qualification?.status !== "PASS") return null;
+		return data as BattleAdaptiveLineageMechanicsFixtureV1;
+	} catch {
+		return null;
+	}
 }
 
 export async function loadBattleProofCardViewFixture(

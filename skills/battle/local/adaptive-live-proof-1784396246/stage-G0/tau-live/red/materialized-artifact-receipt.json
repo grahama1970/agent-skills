@@ -1,0 +1,17 @@
+{
+  "artifact_bytes": 2166,
+  "artifact_sha256": "0bd3633f11cd17c419e19b5928538691e6b3605e4abab937ac1bd2b49cf2358d",
+  "artifact_type": "red_exploit",
+  "parsed_keys": [
+    "artifact_type",
+    "exploit_py",
+    "rationale",
+    "strategy_genome"
+  ],
+  "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/stage-G0/tau-live/red/red_exploit_submission.py",
+  "rationale": "The public app.py joins each zip member name directly to the destination and writes it without normalization or containment checks. A zip entry named ../arena_escape.txt therefore writes outside the destination directory. The exploit calls import_zip directly as required and verifies the escaped file content.",
+  "schema": "tau.battle_materialized_artifact_receipt.v1",
+  "scillm_call_receipt_sha256": "e48e19b842c9d88ddbaf94ae83f31ad3a6f87f5ccaabf26f4d05ca93cacab9dc",
+  "status": "PASS",
+  "strategy_genome_sha256": "ffde596ea9fa6a14fe2f7626b225a3d92d5e2a284d0c5dd95aff571e40404e3b"
+}

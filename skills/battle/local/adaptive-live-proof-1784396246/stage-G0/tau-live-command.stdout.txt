@@ -1,0 +1,141 @@
+{
+  "battle_id": "battle-004",
+  "claims": {
+    "does_not_prove": [
+      "Battle Docker scorekeeper PASS unless Battle consumes this manifest and Judge receipts.",
+      "Unbounded Battle swarm execution.",
+      "Child-spawn lineage; this rung uses bounded independent workers.",
+      "Blue kill, fastest crash, or promotion."
+    ],
+    "proves": [
+      "Tau consumed bounded Battle Red and Blue handoffs.",
+      "Tau attempted Scillm chat-completions calls for each requested worker.",
+      "Tau wrote tau.subagent_receipt.v1 artifacts for each requested worker.",
+      "Each worker has its own materialization receipt."
+    ]
+  },
+  "duration_seconds": 35.010797,
+  "handoff_topology": "bounded_worker_matrix",
+  "live": true,
+  "materialized_counts": {
+    "blue": 1,
+    "red": 1
+  },
+  "mocked": false,
+  "model": "gpt-5.5",
+  "requested_workers": {
+    "blue": 1,
+    "red": 1
+  },
+  "run_id": "arena-adaptive-lineage-20260718T173726Z",
+  "scenario_id": "arena-zip-slip-import-001",
+  "schema": "tau.battle_live_handoff_proof.v1",
+  "scillm_auth_preflight": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/stage-G0/tau-live/scillm-auth-preflight.json",
+  "scillm_base_url": "http://localhost:4001",
+  "status": "PASS",
+  "surface": "scillm.chat_completions",
+  "teams": [
+    {
+      "error": null,
+      "handoff": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/stage-G0/tau-live/red/handoff.json",
+      "http_status": 200,
+      "lane_id": "payload-857-receipt",
+      "materialized": {
+        "artifact_bytes": 2166,
+        "artifact_sha256": "0bd3633f11cd17c419e19b5928538691e6b3605e4abab937ac1bd2b49cf2358d",
+        "artifact_type": "red_exploit",
+        "parsed_keys": [
+          "artifact_type",
+          "exploit_py",
+          "rationale",
+          "strategy_genome"
+        ],
+        "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/stage-G0/tau-live/red/red_exploit_submission.py",
+        "rationale": "The public app.py joins each zip member name directly to the destination and writes it without normalization or containment checks. A zip entry named ../arena_escape.txt therefore writes outside the destination directory. The exploit calls import_zip directly as required and verifies the escaped file content.",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "scillm_call_receipt_sha256": "e48e19b842c9d88ddbaf94ae83f31ad3a6f87f5ccaabf26f4d05ca93cacab9dc",
+        "status": "PASS",
+        "strategy_genome_sha256": "ffde596ea9fa6a14fe2f7626b225a3d92d5e2a284d0c5dd95aff571e40404e3b"
+      },
+      "materialized_artifact": {
+        "artifact_bytes": 2166,
+        "artifact_sha256": "0bd3633f11cd17c419e19b5928538691e6b3605e4abab937ac1bd2b49cf2358d",
+        "artifact_type": "red_exploit",
+        "parsed_keys": [
+          "artifact_type",
+          "exploit_py",
+          "rationale",
+          "strategy_genome"
+        ],
+        "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/stage-G0/tau-live/red/red_exploit_submission.py",
+        "rationale": "The public app.py joins each zip member name directly to the destination and writes it without normalization or containment checks. A zip entry named ../arena_escape.txt therefore writes outside the destination directory. The exploit calls import_zip directly as required and verifies the escaped file content.",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "scillm_call_receipt_sha256": "e48e19b842c9d88ddbaf94ae83f31ad3a6f87f5ccaabf26f4d05ca93cacab9dc",
+        "status": "PASS",
+        "strategy_genome_sha256": "ffde596ea9fa6a14fe2f7626b225a3d92d5e2a284d0c5dd95aff571e40404e3b"
+      },
+      "model": "gpt-5.5",
+      "persona": "battle-red-public-auditor",
+      "scillm_call": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/stage-G0/tau-live/red/scillm-call-receipt.json",
+      "status": "PASS",
+      "subagent_receipt": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/stage-G0/tau-live/red/tau-subagent-receipt.json",
+      "surface": "scillm.chat_completions",
+      "team": "red",
+      "validation": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/stage-G0/tau-live/red/validation.json",
+      "validation_ok": true,
+      "worker_id": "red-0",
+      "worker_index": 0
+    },
+    {
+      "error": null,
+      "handoff": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/stage-G0/tau-live/blue/handoff.json",
+      "http_status": 200,
+      "lane_id": null,
+      "materialized": {
+        "artifact_bytes": 2529,
+        "artifact_sha256": "4c610401b00c1b713b836e38a6ebcaa708fad4bb7758aecedb230ecda89601b9",
+        "artifact_type": "blue_patch",
+        "parsed_keys": [
+          "app_py",
+          "artifact_type",
+          "rationale",
+          "strategy_genome"
+        ],
+        "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/stage-G0/tau-live/blue/app.py",
+        "rationale": "Hardens archive extraction against Zip Slip by rejecting absolute paths, parent-directory traversal, empty path components, and symlink entries, then verifies resolved targets remain inside the destination before writing.",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "scillm_call_receipt_sha256": "7b90daa336a92b3af48decf4095da5762f3f6866b23cd968e8eb20765387b891",
+        "status": "PASS",
+        "strategy_genome_sha256": "28e71e24d4d2626262d865c62a5604a33f8158de1d3959daddac81b905f7f8e2"
+      },
+      "materialized_artifact": {
+        "artifact_bytes": 2529,
+        "artifact_sha256": "4c610401b00c1b713b836e38a6ebcaa708fad4bb7758aecedb230ecda89601b9",
+        "artifact_type": "blue_patch",
+        "parsed_keys": [
+          "app_py",
+          "artifact_type",
+          "rationale",
+          "strategy_genome"
+        ],
+        "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/stage-G0/tau-live/blue/app.py",
+        "rationale": "Hardens archive extraction against Zip Slip by rejecting absolute paths, parent-directory traversal, empty path components, and symlink entries, then verifies resolved targets remain inside the destination before writing.",
+        "schema": "tau.battle_materialized_artifact_receipt.v1",
+        "scillm_call_receipt_sha256": "7b90daa336a92b3af48decf4095da5762f3f6866b23cd968e8eb20765387b891",
+        "status": "PASS",
+        "strategy_genome_sha256": "28e71e24d4d2626262d865c62a5604a33f8158de1d3959daddac81b905f7f8e2"
+      },
+      "model": "gpt-5.5",
+      "persona": "battle-blue-public-hardener",
+      "scillm_call": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/stage-G0/tau-live/blue/scillm-call-receipt.json",
+      "status": "PASS",
+      "subagent_receipt": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/stage-G0/tau-live/blue/tau-subagent-receipt.json",
+      "surface": "scillm.chat_completions",
+      "team": "blue",
+      "validation": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/stage-G0/tau-live/blue/validation.json",
+      "validation_ok": true,
+      "worker_id": "blue-0",
+      "worker_index": 0
+    }
+  ]
+}

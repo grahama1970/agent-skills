@@ -1,0 +1,103 @@
+{
+  "battle_id": "battle-004",
+  "delta_status": "PASS",
+  "delta_validation": {
+    "battle_id": "battle-004",
+    "changed_dimensions": [
+      "app_load_mode",
+      "target_call_form"
+    ],
+    "child_sha256": "9f9f7dc11b154c31ab99461bb53a4f8646a810e7f74a4e4716f2b89bcf64df65",
+    "claimed_mutation_operator": "method_replace",
+    "novelty_distance": 2,
+    "operator_consistent": true,
+    "operator_in_vocabulary": true,
+    "parent_sha256": "0bd3633f11cd17c419e19b5928538691e6b3605e4abab937ac1bd2b49cf2358d",
+    "per_dimension": [
+      {
+        "changed": true,
+        "child": "none",
+        "dimension": "app_load_mode",
+        "parent": "from_import_app"
+      },
+      {
+        "changed": false,
+        "child": "zipfile_writestr",
+        "dimension": "archive_entry_construction",
+        "parent": "zipfile_writestr"
+      },
+      {
+        "changed": false,
+        "child": "dotdot_relative",
+        "dimension": "traversal_representation",
+        "parent": "dotdot_relative"
+      },
+      {
+        "changed": true,
+        "child": "none",
+        "dimension": "target_call_form",
+        "parent": "function_call"
+      },
+      {
+        "changed": false,
+        "child": "file_existence+file_read_back",
+        "dimension": "success_oracle",
+        "parent": "file_existence+file_read_back"
+      },
+      {
+        "changed": false,
+        "child": "try[Exception:return|ValueError:handle]",
+        "dimension": "exception_handling",
+        "parent": "try[Exception:return|ValueError:handle]"
+      }
+    ],
+    "policy_id": "battle-technique-signature-ast-v1",
+    "reasons": [
+      "all changed dimensions are allowed for operator 'method_replace'"
+    ],
+    "run_id": "arena-adaptive-lineage-20260718T173726Z",
+    "schema": "battle.technique_delta_validation.v1",
+    "sha256_differ": true,
+    "status": "PASS",
+    "unchanged_dimensions": [
+      "archive_entry_construction",
+      "traversal_representation",
+      "success_oracle",
+      "exception_handling"
+    ]
+  },
+  "judge_outcome": {
+    "duration_seconds": 1.188234,
+    "patched_bypass": false,
+    "vulnerable_original_confirmed": true
+  },
+  "mutation_operator": "method_replace",
+  "novelty_distance": 2,
+  "parent_evidence_packet_ref": "arena-adaptive-lineage-20260718T173726Z:battle.parent_evidence_packet.v1:G0",
+  "parent_sha256": "0bd3633f11cd17c419e19b5928538691e6b3605e4abab937ac1bd2b49cf2358d",
+  "parent_specimen_id": "G0",
+  "policy_id": "battle-adaptive-lineage-qualification-v1",
+  "reasons": [],
+  "recorded_source_sha256": "9f9f7dc11b154c31ab99461bb53a4f8646a810e7f74a4e4716f2b89bcf64df65",
+  "run_id": "arena-adaptive-lineage-20260718T173726Z",
+  "schema": "battle.candidate_fitness_receipt.v1",
+  "source_sha256": "9f9f7dc11b154c31ab99461bb53a4f8646a810e7f74a4e4716f2b89bcf64df65",
+  "source_sha256_matches": true,
+  "specimen_id": "G1-A",
+  "status": "PASS",
+  "technique_delta": "Replaces the parent direct `from app import import_zip` loading mode with `importlib.import_module('app')` plus `getattr`, while keeping the archive member, payload bytes, target call, and filesystem oracle unchanged.",
+  "technique_signature": {
+    "dimensions": {
+      "app_load_mode": "none",
+      "archive_entry_construction": "zipfile_writestr",
+      "exception_handling": "try[Exception:return|ValueError:handle]",
+      "success_oracle": "file_existence+file_read_back",
+      "target_call_form": "none",
+      "traversal_representation": "dotdot_relative"
+    },
+    "parse_ok": true,
+    "policy_id": "battle-technique-signature-ast-v1",
+    "schema": "battle.technique_signature.v1",
+    "sha256": "9f9f7dc11b154c31ab99461bb53a4f8646a810e7f74a4e4716f2b89bcf64df65"
+  }
+}

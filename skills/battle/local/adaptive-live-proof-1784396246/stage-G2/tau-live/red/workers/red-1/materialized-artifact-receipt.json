@@ -1,0 +1,21 @@
+{
+  "artifact_bytes": 3605,
+  "artifact_sha256": "c882c312119c4765f7392126ad6632b0027ec8acd8dc258ea572260ab7e6802e",
+  "artifact_type": "red_exploit",
+  "mutation_operator": "failure_guided_crossover",
+  "parsed_keys": [
+    "artifact_type",
+    "exploit_py",
+    "mutation_operator",
+    "rationale",
+    "strategy_genome",
+    "technique_delta"
+  ],
+  "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/stage-G2/tau-live/red/workers/red-1/red_exploit_submission.py",
+  "rationale": "This directly exercises the public app.py import_zip implementation with a crafted ZIP member named ../arena_escape.txt and confirms the resulting file is written outside the destination directory.",
+  "schema": "tau.battle_materialized_artifact_receipt.v1",
+  "scillm_call_receipt_sha256": "01afe4d5320d2685248349f1ed47e6966e7297e04aa6295519bb27ce9f084973",
+  "status": "PASS",
+  "strategy_genome_sha256": "74c90ba9ee0cad1d3fe2df2b413f11d331b002bdf5647802ad9a97e827d1ef02",
+  "technique_delta": "Changes app loading from importlib.import_module to importlib.util.spec_from_file_location, changes archive creation from writestr to ZipInfo plus open/write, changes the call to pass Path objects, and strengthens the oracle with read-back plus returned-path resolution."
+}

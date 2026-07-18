@@ -1,0 +1,17 @@
+{
+  "artifact_bytes": 2529,
+  "artifact_sha256": "4c610401b00c1b713b836e38a6ebcaa708fad4bb7758aecedb230ecda89601b9",
+  "artifact_type": "blue_patch",
+  "parsed_keys": [
+    "app_py",
+    "artifact_type",
+    "rationale",
+    "strategy_genome"
+  ],
+  "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/stage-G0/tau-live/blue/app.py",
+  "rationale": "Hardens archive extraction against Zip Slip by rejecting absolute paths, parent-directory traversal, empty path components, and symlink entries, then verifies resolved targets remain inside the destination before writing.",
+  "schema": "tau.battle_materialized_artifact_receipt.v1",
+  "scillm_call_receipt_sha256": "7b90daa336a92b3af48decf4095da5762f3f6866b23cd968e8eb20765387b891",
+  "status": "PASS",
+  "strategy_genome_sha256": "28e71e24d4d2626262d865c62a5604a33f8158de1d3959daddac81b905f7f8e2"
+}

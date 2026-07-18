@@ -1,0 +1,21 @@
+{
+  "artifact_bytes": 2402,
+  "artifact_sha256": "0272636fd0491e81c11897d2c46a6a7917d64fcf87ae4c6450287c4c5266929c",
+  "artifact_type": "red_exploit",
+  "mutation_operator": "oracle_or_parameter_mutation",
+  "parsed_keys": [
+    "artifact_type",
+    "exploit_py",
+    "mutation_operator",
+    "rationale",
+    "strategy_genome",
+    "technique_delta"
+  ],
+  "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/stage-G1-B/tau-live/red/workers/red-1/red_exploit_submission.py",
+  "rationale": "Directly exercises the public import_zip function and demonstrates Zip Slip by creating a ZIP member whose arcname traverses outside the destination. This mutation changes archive entry construction from writestr to writing a real file with an explicit malicious arcname, while preserving the parent direct-call load mode and filesystem oracle.",
+  "schema": "tau.battle_materialized_artifact_receipt.v1",
+  "scillm_call_receipt_sha256": "fb1c42f60ae65bf5d21e028fd51d9e7530a0d44c67d8f31280734f4fa46e647f",
+  "status": "PASS",
+  "strategy_genome_sha256": "f4603fd438a3e72ec95367c1d6bffd6dd97ff188e06cc0264eac2d49444f2245",
+  "technique_delta": "Changed malicious archive construction from zf.writestr('../arena_escape.txt', bytes) to zf.write(real_payload_file, arcname='../arena_escape.txt')."
+}

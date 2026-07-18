@@ -1,0 +1,155 @@
+{
+  "artifacts": {
+    "team_public_brief": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/arena/team-public/scenario-brief.json",
+    "team_public_target": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/arena/team-public/target/app.py"
+  },
+  "battle.parent_evidence_packet.v1": {
+    "descendant_mutation_operator": "failure_guided_crossover",
+    "descendant_stage": "G2",
+    "g1a_outcome": {
+      "duration_seconds": 1.188234,
+      "patched_bypass": false,
+      "vulnerable_original_confirmed": true
+    },
+    "g1b_outcome": {
+      "duration_seconds": 1.180406,
+      "patched_bypass": false,
+      "vulnerable_original_confirmed": true
+    },
+    "operator_guidance": "MUTATION OPERATOR failure_guided_crossover: combine the parent lineage's signals and make STRUCTURAL changes to at least 2 of these dimensions: app_load_mode (dynamic importlib load), archive_entry_construction (ZipInfo / write+arcname), success_oracle (read-back vs existence vs printed marker), target_call_form. Use the concrete techniques from the method_replace and oracle_or_parameter_mutation operators. Cosmetic tweaks (renaming, deeper `../`, wrapper functions) do not count toward the 2 required dimensions.",
+    "packet_ref": "arena-adaptive-lineage-20260718T173726Z:battle.parent_evidence_packet.v1:G1-A",
+    "parent_judge_outcome": {
+      "duration_seconds": 1.188234,
+      "patched_bypass": false,
+      "vulnerable_original_confirmed": true
+    },
+    "parent_mutation_operator": "method_replace",
+    "parent_source_sha256": "9f9f7dc11b154c31ab99461bb53a4f8646a810e7f74a4e4716f2b89bcf64df65",
+    "parent_specimen_id": "G1-A",
+    "parent_technique_delta": "Replaces the parent direct `from app import import_zip` loading mode with `importlib.import_module('app')` plus `getattr`, while keeping the archive member, payload bytes, target call, and filesystem oracle unchanged.",
+    "schema": "battle.parent_evidence_packet.v1",
+    "selection_receipt": {
+      "battle_id": "battle-004",
+      "bound_g1_ids": [
+        "G1-A",
+        "G1-B"
+      ],
+      "candidate_ids": [
+        "G1-A",
+        "G1-B"
+      ],
+      "deciding_criterion": "novelty_distance",
+      "policy_id": "battle-adaptive-lineage-qualification-v1",
+      "requires_both_g1_fitness": true,
+      "run_id": "arena-adaptive-lineage-20260718T173726Z",
+      "runner_up_id": "G1-B",
+      "runner_up_metrics": {
+        "duration_seconds": 1.180406,
+        "novelty_distance": 1,
+        "patched_bypass": false,
+        "specimen_id": "G1-B",
+        "vulnerable_original_confirmed": true
+      },
+      "schema": "battle.lineage_selection_receipt.v1",
+      "selected_id": "G1-A",
+      "selected_metrics": {
+        "duration_seconds": 1.188234,
+        "novelty_distance": 2,
+        "patched_bypass": false,
+        "specimen_id": "G1-A",
+        "vulnerable_original_confirmed": true
+      },
+      "selection_trace": [
+        {
+          "a_id": "G1-A",
+          "a_value": 1,
+          "b_id": "G1-B",
+          "b_value": 1,
+          "criterion": "vulnerable_original_confirmed",
+          "decisive": false,
+          "direction": "higher",
+          "winner": null
+        },
+        {
+          "a_id": "G1-A",
+          "a_value": 0,
+          "b_id": "G1-B",
+          "b_value": 0,
+          "criterion": "patched_bypass",
+          "decisive": false,
+          "direction": "higher",
+          "winner": null
+        },
+        {
+          "a_id": "G1-A",
+          "a_value": 2,
+          "b_id": "G1-B",
+          "b_value": 1,
+          "criterion": "novelty_distance",
+          "decisive": true,
+          "direction": "higher",
+          "winner": "G1-A"
+        }
+      ]
+    }
+  },
+  "bundle_path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-live-proof-1784396246/context/tau-public-context.json",
+  "mutation_guidance": {
+    "allowed_dimensions": [
+      "app_load_mode",
+      "archive_entry_construction",
+      "exception_handling",
+      "success_oracle",
+      "target_call_form",
+      "traversal_representation"
+    ],
+    "min_changed_dimensions": 2,
+    "mutation_operator": "failure_guided_crossover",
+    "operator_guidance": "MUTATION OPERATOR failure_guided_crossover: combine the parent lineage's signals and make STRUCTURAL changes to at least 2 of these dimensions: app_load_mode (dynamic importlib load), archive_entry_construction (ZipInfo / write+arcname), success_oracle (read-back vs existence vs printed marker), target_call_form. Use the concrete techniques from the method_replace and oracle_or_parameter_mutation operators. Cosmetic tweaks (renaming, deeper `../`, wrapper functions) do not count toward the 2 required dimensions.",
+    "stage": "G2"
+  },
+  "schema": "tau.battle_context_bundle.v1",
+  "summary": {
+    "arena_private_artifact_count": 0,
+    "battle_id": "battle-004",
+    "mode": "bounded_worker_matrix",
+    "public_artifacts_inline": {
+      "app_py": "from pathlib import Path\nfrom zipfile import ZipFile\n\n\ndef import_zip(zip_path: str, destination: str) -> list[str]:\n    dest = Path(destination)\n    dest.mkdir(parents=True, exist_ok=True)\n    written: list[str] = []\n    with ZipFile(zip_path) as archive:\n        for name in archive.namelist():\n            target = dest / name\n            target.parent.mkdir(parents=True, exist_ok=True)\n            target.write_bytes(archive.read(name))\n            written.append(str(target))\n    return written\n",
+      "scenario_brief": {
+        "battle_id": "battle-004",
+        "public_contract": {
+          "input": "zip archive upload",
+          "method": "POST",
+          "visible_behavior": "Extract uploaded archive into an import workspace."
+        },
+        "public_entrypoint": "/api/import-zip",
+        "red_blue_visible": {
+          "entrypoint": "/api/import-zip",
+          "files": [
+            "app.py"
+          ],
+          "hint": "Archive import endpoint accepts zip files."
+        },
+        "scenario_id": "arena-zip-slip-import-001",
+        "title": "Archive import path traversal"
+      }
+    },
+    "public_entrypoint": "/api/import-zip",
+    "run_id": "arena-adaptive-lineage-20260718T173726Z",
+    "scenario_id": "arena-zip-slip-import-001",
+    "team_public_artifact_count": 2,
+    "teams": {
+      "blue": {
+        "objective": "Submit a hardening or patch strategy from public artifacts only. Include strategy_genome as a JSON object with selected_methods, rejected_methods, parameters, mutation_origin, and expected_observation."
+      },
+      "red": {
+        "objective": "Find and submit exploit evidence from public artifacts only. Include strategy_genome as a JSON object with selected_methods, rejected_methods, parameters, mutation_origin, and expected_observation."
+      }
+    },
+    "visibility_rule": "teams receive only the listed public artifacts",
+    "worker_counts": {
+      "blue": 1,
+      "red": 1
+    }
+  }
+}

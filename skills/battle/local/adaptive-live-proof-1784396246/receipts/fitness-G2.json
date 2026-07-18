@@ -1,0 +1,103 @@
+{
+  "battle_id": "battle-004",
+  "delta_status": "PASS",
+  "delta_validation": {
+    "battle_id": "battle-004",
+    "changed_dimensions": [
+      "app_load_mode",
+      "archive_entry_construction",
+      "exception_handling"
+    ],
+    "child_sha256": "c882c312119c4765f7392126ad6632b0027ec8acd8dc258ea572260ab7e6802e",
+    "claimed_mutation_operator": "failure_guided_crossover",
+    "novelty_distance": 3,
+    "operator_consistent": true,
+    "operator_in_vocabulary": true,
+    "parent_sha256": "9f9f7dc11b154c31ab99461bb53a4f8646a810e7f74a4e4716f2b89bcf64df65",
+    "per_dimension": [
+      {
+        "changed": true,
+        "child": "importlib_spec_from_file",
+        "dimension": "app_load_mode",
+        "parent": "none"
+      },
+      {
+        "changed": true,
+        "child": "zipinfo",
+        "dimension": "archive_entry_construction",
+        "parent": "zipfile_writestr"
+      },
+      {
+        "changed": false,
+        "child": "dotdot_relative",
+        "dimension": "traversal_representation",
+        "parent": "dotdot_relative"
+      },
+      {
+        "changed": false,
+        "child": "none",
+        "dimension": "target_call_form",
+        "parent": "none"
+      },
+      {
+        "changed": false,
+        "child": "file_existence+file_read_back",
+        "dimension": "success_oracle",
+        "parent": "file_existence+file_read_back"
+      },
+      {
+        "changed": true,
+        "child": "try[AttributeError:handle|Exception:return|Exception:return|ValueError:handle]",
+        "dimension": "exception_handling",
+        "parent": "try[Exception:return|ValueError:handle]"
+      }
+    ],
+    "policy_id": "battle-technique-signature-ast-v1",
+    "reasons": [
+      "crossover moved at least two dimensions"
+    ],
+    "run_id": "arena-adaptive-lineage-20260718T173726Z",
+    "schema": "battle.technique_delta_validation.v1",
+    "sha256_differ": true,
+    "status": "PASS",
+    "unchanged_dimensions": [
+      "traversal_representation",
+      "target_call_form",
+      "success_oracle"
+    ]
+  },
+  "judge_outcome": {
+    "duration_seconds": 1.14534,
+    "patched_bypass": false,
+    "vulnerable_original_confirmed": true
+  },
+  "mutation_operator": "failure_guided_crossover",
+  "novelty_distance": 3,
+  "parent_evidence_packet_ref": "arena-adaptive-lineage-20260718T173726Z:battle.parent_evidence_packet.v1:G1-A",
+  "parent_sha256": "9f9f7dc11b154c31ab99461bb53a4f8646a810e7f74a4e4716f2b89bcf64df65",
+  "parent_specimen_id": "G1-A",
+  "policy_id": "battle-adaptive-lineage-qualification-v1",
+  "reasons": [],
+  "recorded_source_sha256": "c882c312119c4765f7392126ad6632b0027ec8acd8dc258ea572260ab7e6802e",
+  "run_id": "arena-adaptive-lineage-20260718T173726Z",
+  "schema": "battle.candidate_fitness_receipt.v1",
+  "source_sha256": "c882c312119c4765f7392126ad6632b0027ec8acd8dc258ea572260ab7e6802e",
+  "source_sha256_matches": true,
+  "specimen_id": "G2",
+  "status": "PASS",
+  "technique_delta": "Changes app loading from importlib.import_module to importlib.util.spec_from_file_location, changes archive creation from writestr to ZipInfo plus open/write, changes the call to pass Path objects, and strengthens the oracle with read-back plus returned-path resolution.",
+  "technique_signature": {
+    "dimensions": {
+      "app_load_mode": "importlib_spec_from_file",
+      "archive_entry_construction": "zipinfo",
+      "exception_handling": "try[AttributeError:handle|Exception:return|Exception:return|ValueError:handle]",
+      "success_oracle": "file_existence+file_read_back",
+      "target_call_form": "none",
+      "traversal_representation": "dotdot_relative"
+    },
+    "parse_ok": true,
+    "policy_id": "battle-technique-signature-ast-v1",
+    "schema": "battle.technique_signature.v1",
+    "sha256": "c882c312119c4765f7392126ad6632b0027ec8acd8dc258ea572260ab7e6802e"
+  }
+}

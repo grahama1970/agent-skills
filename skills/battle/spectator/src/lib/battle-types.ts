@@ -996,6 +996,11 @@ export type BattleSpriteThemeV1 = {
 export type BattleNormalizedUxFixture = {
 	schema: "battle.normalized_ux_fixture.v1";
 	battle_id: string;
+	// Receipt-authoritative adaptive-lineage mechanics, co-fetched from the loaded
+	// receipt's own fixture directory and verified (battle_id + qualification PASS) by
+	// the loader. Absent when the loaded receipt has no adaptive-lineage qualification
+	// — the panel fails closed and never renders a static/global fixture.
+	adaptive_lineage?: BattleAdaptiveLineageMechanicsFixtureV1;
 	source_proof_dir?: string;
 	proof_mode: ProofMode;
 	generated_at: string;
