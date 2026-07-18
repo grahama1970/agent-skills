@@ -1,0 +1,323 @@
+{
+  "schema": "watch.memory_recall_canary_receipt.v1",
+  "ran_at": "2026-07-18T20:48:38.761921+00:00",
+  "queries": [
+    {
+      "label": "natural_question",
+      "request": {
+        "q": "find all movie segments with Marcus",
+        "collections": [
+          "watch_content",
+          "watch_keyframe_annotations",
+          "watch_evidence_cases"
+        ],
+        "k": 12
+      },
+      "found": true,
+      "confidence": 10.885,
+      "item_count": 12,
+      "items": [
+        {
+          "collection": "watch_content",
+          "key": "watch_segment_badsantaunrated2003brripxvidhd720p-npw_0019",
+          "character": null,
+          "segment": "07:36-08:00",
+          "timecode": "07:36",
+          "identity_status": null,
+          "verdict": null,
+          "score": null
+        },
+        {
+          "collection": "watch_keyframe_annotations",
+          "key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_18_56_ec34a5f399:234_56",
+          "character": "Marcus",
+          "segment": "03:36-04:00",
+          "timecode": "03:36",
+          "identity_status": null,
+          "verdict": null,
+          "score": null
+        },
+        {
+          "collection": "watch_keyframe_annotations",
+          "key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_2_18_98_95f4e27579:234_98",
+          "character": "Marcus",
+          "segment": "03:36-04:00",
+          "timecode": "03:36",
+          "identity_status": null,
+          "verdict": null,
+          "score": null
+        },
+        {
+          "collection": "watch_keyframe_annotations",
+          "key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row8:marcus:keyframe-mr2bzvyv-2400:216_00",
+          "character": "Marcus",
+          "segment": "03:12-03:36",
+          "timecode": "03:12",
+          "identity_status": null,
+          "verdict": null,
+          "score": null
+        },
+        {
+          "collection": "watch_keyframe_annotations",
+          "key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row8:marcus:keyframe-mr2bzsf1-2271:214_71",
+          "character": "Marcus",
+          "segment": "03:12-03:36",
+          "timecode": "03:12",
+          "identity_status": null,
+          "verdict": null,
+          "score": null
+        },
+        {
+          "collection": "watch_keyframe_annotations",
+          "key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:20260715192212744_row0009_marcus_ea025ee0d2012886e986:216_00",
+          "character": "Marcus",
+          "segment": "03:36-04:00",
+          "timecode": "03:36",
+          "identity_status": null,
+          "verdict": null,
+          "score": null
+        },
+        {
+          "collection": "watch_keyframe_annotations",
+          "key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:20260703131405275_row0009_marcus_bb68aa390ce18b9dc9bd:216_00",
+          "character": "Marcus",
+          "segment": "03:36-04:00",
+          "timecode": "03:36",
+          "identity_status": null,
+          "verdict": null,
+          "score": null
+        },
+        {
+          "collection": "watch_keyframe_annotations",
+          "key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:20260703131424297_row0009_marcus_8bc724abaf6fc95a3da9:229_81",
+          "character": "Marcus",
+          "segment": "03:36-04:00",
+          "timecode": "03:36",
+          "identity_status": null,
+          "verdict": null,
+          "score": null
+        },
+        {
+          "collection": "watch_keyframe_annotations",
+          "key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:detector_9_detector_9_track_6_17_31_4c328ddbbc:233_31",
+          "character": "Marcus",
+          "segment": "03:36-04:00",
+          "timecode": "03:36",
+          "identity_status": null,
+          "verdict": null,
+          "score": null
+        },
+        {
+          "collection": "watch_keyframe_annotations",
+          "key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:1783085717186_row0009_marcus_runtime_edit:232_92",
+          "character": "Marcus",
+          "segment": "03:36-04:00",
+          "timecode": "03:36",
+          "identity_status": null,
+          "verdict": null,
+          "score": null
+        },
+        {
+          "collection": "watch_keyframe_annotations",
+          "key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:1783085712066_row0009_marcus_runtime_edit:232_38",
+          "character": "Marcus",
+          "segment": "03:36-04:00",
+          "timecode": "03:36",
+          "identity_status": null,
+          "verdict": null,
+          "score": null
+        },
+        {
+          "collection": "watch_keyframe_annotations",
+          "key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row9:marcus:1783085708272_row0009_marcus_runtime_edit:232_13",
+          "character": "Marcus",
+          "segment": "03:36-04:00",
+          "timecode": "03:36",
+          "identity_status": null,
+          "verdict": null,
+          "score": null
+        }
+      ]
+    },
+    {
+      "label": "entity_alias_text",
+      "request": {
+        "q": "Marcus mall-store elf Tony Cox Bad Santa segment",
+        "collections": [
+          "watch_keyframe_annotations"
+        ],
+        "k": 12
+      },
+      "found": true,
+      "confidence": 30.275,
+      "item_count": 12,
+      "items": [
+        {
+          "collection": "watch_keyframe_annotations",
+          "key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row8:marcus:keyframe-mr2bzvyv-2400:216_00",
+          "character": "Marcus",
+          "segment": "03:12-03:36",
+          "timecode": "03:12",
+          "identity_status": null,
+          "verdict": null,
+          "score": null
+        },
+        {
+          "collection": "watch_keyframe_annotations",
+          "key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row8:marcus:keyframe-mr2bzsf1-2271:214_71",
+          "character": "Marcus",
+          "segment": "03:12-03:36",
+          "timecode": "03:12",
+          "identity_status": null,
+          "verdict": null,
+          "score": null
+        },
+        {
+          "collection": "watch_keyframe_annotations",
+          "key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row8:santa:keyframe-mr2bzgmf-2271:214_71",
+          "character": "Santa",
+          "segment": "03:12-03:36",
+          "timecode": "03:12",
+          "identity_status": null,
+          "verdict": null,
+          "score": null
+        },
+        {
+          "collection": "watch_keyframe_annotations",
+          "key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row7:marcus:keyframe-mr2byhc9-1540:183_40",
+          "character": "Marcus",
+          "segment": "02:48-03:12",
+          "timecode": "02:48",
+          "identity_status": null,
+          "verdict": null,
+          "score": null
+        },
+        {
+          "collection": "watch_keyframe_annotations",
+          "key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row7:marcus:keyframe-mr2bylup-1640:184_40",
+          "character": "Marcus",
+          "segment": "02:48-03:12",
+          "timecode": "02:48",
+          "identity_status": null,
+          "verdict": null,
+          "score": null
+        },
+        {
+          "collection": "watch_keyframe_annotations",
+          "key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row7:marcus:keyframe-mr2bydiw-1340:181_40",
+          "character": "Marcus",
+          "segment": "02:48-03:12",
+          "timecode": "02:48",
+          "identity_status": null,
+          "verdict": null,
+          "score": null
+        },
+        {
+          "collection": "watch_keyframe_annotations",
+          "key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row7:marcus:keyframe-mr2by12r-640:174_40",
+          "character": "Marcus",
+          "segment": "02:48-03:12",
+          "timecode": "02:48",
+          "identity_status": null,
+          "verdict": null,
+          "score": null
+        },
+        {
+          "collection": "watch_keyframe_annotations",
+          "key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row7:marcus:keyframe-mr2bxfrk-0:168_00",
+          "character": "Marcus",
+          "segment": "02:48-03:12",
+          "timecode": "02:48",
+          "identity_status": null,
+          "verdict": null,
+          "score": null
+        },
+        {
+          "collection": "watch_keyframe_annotations",
+          "key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row7:marcus:keyframe-mr2byp02-1840:186_40",
+          "character": "Marcus",
+          "segment": "02:48-03:12",
+          "timecode": "02:48",
+          "identity_status": null,
+          "verdict": null,
+          "score": null
+        },
+        {
+          "collection": "watch_keyframe_annotations",
+          "key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row7:marcus:keyframe-mr2by7w8-1140:179_40",
+          "character": "Marcus",
+          "segment": "02:48-03:12",
+          "timecode": "02:48",
+          "identity_status": null,
+          "verdict": null,
+          "score": null
+        },
+        {
+          "collection": "watch_keyframe_annotations",
+          "key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row7:marcus:keyframe-mr2by2vs-840:176_40",
+          "character": "Marcus",
+          "segment": "02:48-03:12",
+          "timecode": "02:48",
+          "identity_status": null,
+          "verdict": null,
+          "score": null
+        },
+        {
+          "collection": "watch_keyframe_annotations",
+          "key": "watch_keyframe:bad_santa_unrated_2003_brrip_xvidhd_720p_npw:row10:willie:20260706113306669_row0010_willie_9d437edd95dbe8d92541:240_00",
+          "character": "Willie",
+          "segment": "04:00-04:24",
+          "timecode": "04:00",
+          "identity_status": null,
+          "verdict": null,
+          "score": null
+        }
+      ]
+    },
+    {
+      "label": "case_lookup",
+      "request": {
+        "q": "Marcus 02:48 segment identity evidence case",
+        "collections": [
+          "watch_evidence_cases"
+        ],
+        "k": 3
+      },
+      "found": true,
+      "confidence": 16.291,
+      "item_count": 3,
+      "items": [
+        {
+          "collection": "watch_evidence_cases",
+          "key": "watch_case_bad_santa_marcus_0248_identity",
+          "character": null,
+          "segment": null,
+          "timecode": null,
+          "identity_status": null,
+          "verdict": null,
+          "score": null
+        },
+        {
+          "collection": "watch_evidence_cases",
+          "key": "watch_8a460788a6a1489cbfa05b28ac9fd948",
+          "character": null,
+          "segment": null,
+          "timecode": null,
+          "identity_status": null,
+          "verdict": null,
+          "score": null
+        },
+        {
+          "collection": "watch_evidence_cases",
+          "key": "watch_4590715540f81dcc9b98437eedf5dbf9",
+          "character": null,
+          "segment": null,
+          "timecode": null,
+          "identity_status": null,
+          "verdict": null,
+          "score": null
+        }
+      ]
+    }
+  ]
+}

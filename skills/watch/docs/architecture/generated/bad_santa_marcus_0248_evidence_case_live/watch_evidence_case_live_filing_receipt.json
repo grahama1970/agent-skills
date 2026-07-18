@@ -1,0 +1,55 @@
+{
+  "case_key": "watch_case_bad_santa_marcus_0248_identity",
+  "case_verdict": "REFUTED",
+  "claims": {
+    "does_not_prove": [
+      "Willie identity promotion (requires human approval)",
+      "corrected batch artifacts (requires pipeline re-run)"
+    ],
+    "proves": [
+      "Domain entity and evidence case were written through memory /upsert with receipts",
+      "The 02:48 canary claim is recorded as REFUTED with live evidence references",
+      "Observation projections now carry the refuted candidate status for recall"
+    ]
+  },
+  "filed_at": "2026-07-18T20:48:17.215327+00:00",
+  "proof_scope": [
+    "memory_upsert_receipt_domain_entities",
+    "memory_upsert_receipt_evidence_case",
+    "observation_projection_refutation_update",
+    "case_observation_edges"
+  ],
+  "schema": "watch.evidence_case_live_filing_receipt.v1",
+  "status": "CASE_FILED_LIVE",
+  "updated_observation_count": 10,
+  "upsert_receipts": [
+    {
+      "collection": "movie_domain_entities",
+      "document_count": 1,
+      "ok": true,
+      "response_preview": "{\"collection\":\"movie_domain_entities\",\"inserted\":1,\"updated\":0,\"errors\":[],\"total\":1,\"writeahead_path\":\"artifacts/memory_upsert_writeahead/upsert_movie_domain_entities_20260718T204817283726Z_40334_132518844040896.jsonl\"}",
+      "status_code": 200
+    },
+    {
+      "collection": "watch_evidence_cases",
+      "document_count": 1,
+      "ok": true,
+      "response_preview": "{\"collection\":\"watch_evidence_cases\",\"inserted\":1,\"updated\":0,\"errors\":[],\"total\":1,\"writeahead_path\":\"artifacts/memory_upsert_writeahead/upsert_watch_evidence_cases_20260718T204817436801Z_40334_132518844040896.jsonl\"}",
+      "status_code": 200
+    },
+    {
+      "collection": "watch_content",
+      "document_count": 10,
+      "ok": true,
+      "response_preview": "{\"collection\":\"watch_content\",\"inserted\":0,\"updated\":10,\"errors\":[],\"total\":10,\"writeahead_path\":\"artifacts/memory_upsert_writeahead/upsert_watch_content_20260718T204817731109Z_40334_132518844040896.jsonl\"}",
+      "status_code": 200
+    },
+    {
+      "collection": "watch_evidence_edges",
+      "document_count": 10,
+      "ok": true,
+      "response_preview": "{\"collection\":\"watch_evidence_edges\",\"inserted\":10,\"updated\":0,\"errors\":[],\"total\":10,\"writeahead_path\":\"artifacts/memory_upsert_writeahead/upsert_watch_evidence_edges_20260718T204818036435Z_40334_132518844040896.jsonl\"}",
+      "status_code": 200
+    }
+  ]
+}

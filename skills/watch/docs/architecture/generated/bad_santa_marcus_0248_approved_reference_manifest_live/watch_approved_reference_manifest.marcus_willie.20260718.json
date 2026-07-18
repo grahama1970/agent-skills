@@ -1,0 +1,206 @@
+{
+  "schema": "watch.approved_reference_manifest.v1",
+  "asset_id": "movie_bad_santa_2003_unrated",
+  "generated_at": "2026-07-18T00:00:00Z",
+  "approval_boundary": "Approved for local pipeline canary receipts only. Cross-entity references included deliberately: Willie references act as negative controls for the Marcus candidate label and vice versa.",
+  "supersedes": "docs/architecture/generated/bad_santa_marcus_0248_approved_reference_canary/watch_approved_reference_manifest.bad_santa_marcus.canary.json",
+  "supersedes_reason": "Prior canary manifest circularly approved Watch's own tracker crops as Marcus references; those crops are now known to show the 02:24-02:48 bar scene (Willie and patrons), not Marcus.",
+  "references": [
+    {
+      "reference_id": "watch_ref_candidate:10e6354d6e38ba3d28bd858d10d5797d",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "character_name": "Marcus",
+      "actor_name": "Tony Cox",
+      "approval_status": "APPROVED",
+      "approval_scope": "REFERENCE_RECALL_CANARY",
+      "approval_source": "agent_visual_review_canary_20260718",
+      "approval_note": "Approved for canary pipeline receipts only; not identity promotion. Marcus set visually reviewed 2026-07-18 (all six images show Tony Cox as Marcus). Willie set reviewed 2026-06-29.",
+      "local_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_reference_image_receipts/20260718T204306014788Z/reference_artifacts/watch_ref_candidate_10e6354d6e38ba3d28bd858d10d5797d.jpg",
+      "source_url": "https://www.paragonjackets.com/product/bad-santa-tony-cox-elf-costume/",
+      "rank": 1
+    },
+    {
+      "reference_id": "watch_ref_candidate:7bc7a54aef2a8f1b339eb84ed2ba6c6f",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "character_name": "Marcus",
+      "actor_name": "Tony Cox",
+      "approval_status": "APPROVED",
+      "approval_scope": "REFERENCE_RECALL_CANARY",
+      "approval_source": "agent_visual_review_canary_20260718",
+      "approval_note": "Approved for canary pipeline receipts only; not identity promotion. Marcus set visually reviewed 2026-07-18 (all six images show Tony Cox as Marcus). Willie set reviewed 2026-06-29.",
+      "local_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_reference_image_receipts/20260718T204306014788Z/reference_artifacts/watch_ref_candidate_7bc7a54aef2a8f1b339eb84ed2ba6c6f.jpg",
+      "source_url": "https://villains.fandom.com/wiki/Marcus_Skidmore",
+      "rank": 1
+    },
+    {
+      "reference_id": "watch_ref_candidate:a9484b1003c82f276aed40df310e811c",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "character_name": "Marcus",
+      "actor_name": "Tony Cox",
+      "approval_status": "APPROVED",
+      "approval_scope": "REFERENCE_RECALL_CANARY",
+      "approval_source": "agent_visual_review_canary_20260718",
+      "approval_note": "Approved for canary pipeline receipts only; not identity promotion. Marcus set visually reviewed 2026-07-18 (all six images show Tony Cox as Marcus). Willie set reviewed 2026-06-29.",
+      "local_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_reference_image_receipts/20260718T204306014788Z/reference_artifacts/watch_ref_candidate_a9484b1003c82f276aed40df310e811c.jpg",
+      "source_url": "https://villains.fandom.com/wiki/Marcus_Skidmore",
+      "rank": 1
+    },
+    {
+      "reference_id": "watch_ref_candidate:aad17d505309bbf0d7501614eb97f5c8",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "character_name": "Marcus",
+      "actor_name": "Tony Cox",
+      "approval_status": "APPROVED",
+      "approval_scope": "REFERENCE_RECALL_CANARY",
+      "approval_source": "agent_visual_review_canary_20260718",
+      "approval_note": "Approved for canary pipeline receipts only; not identity promotion. Marcus set visually reviewed 2026-07-18 (all six images show Tony Cox as Marcus). Willie set reviewed 2026-06-29.",
+      "local_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_reference_image_receipts/20260718T204306014788Z/reference_artifacts/watch_ref_candidate_aad17d505309bbf0d7501614eb97f5c8.jpg",
+      "source_url": "https://theknockturnal.com/exclusive-tony-cox-talks-reprising-his-role-in-bad-santa-2/",
+      "rank": 1
+    },
+    {
+      "reference_id": "watch_ref_candidate:f101dfa950933926cb4e33f470de521e",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "character_name": "Marcus",
+      "actor_name": "Tony Cox",
+      "approval_status": "APPROVED",
+      "approval_scope": "REFERENCE_RECALL_CANARY",
+      "approval_source": "agent_visual_review_canary_20260718",
+      "approval_note": "Approved for canary pipeline receipts only; not identity promotion. Marcus set visually reviewed 2026-07-18 (all six images show Tony Cox as Marcus). Willie set reviewed 2026-06-29.",
+      "local_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_reference_image_receipts/20260718T204306014788Z/reference_artifacts/watch_ref_candidate_f101dfa950933926cb4e33f470de521e.jpg",
+      "source_url": "https://www.amazon.com/Santa-Thornton-Willie-Marcus-child/dp/B01MYS51B5",
+      "rank": 1
+    },
+    {
+      "reference_id": "watch_ref_candidate:f2a37d45fbc65a4b3b52b03864580b1a",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "character_name": "Marcus",
+      "actor_name": "Tony Cox",
+      "approval_status": "APPROVED",
+      "approval_scope": "REFERENCE_RECALL_CANARY",
+      "approval_source": "agent_visual_review_canary_20260718",
+      "approval_note": "Approved for canary pipeline receipts only; not identity promotion. Marcus set visually reviewed 2026-07-18 (all six images show Tony Cox as Marcus). Willie set reviewed 2026-06-29.",
+      "local_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_reference_image_receipts/20260718T204306014788Z/reference_artifacts/watch_ref_candidate_f2a37d45fbc65a4b3b52b03864580b1a.jpg",
+      "source_url": "https://villains.fandom.com/wiki/Marcus_Skidmore",
+      "rank": 1
+    },
+    {
+      "reference_id": "watch_ref_candidate:24475f605f20ccff74441b267f39a6b3",
+      "entity_id": "movie_domain_entities/willie_bad_santa_2003",
+      "character_name": "Willie",
+      "actor_name": "Billy Bob Thornton",
+      "approval_scope": "REFERENCE_RECALL_CANARY",
+      "approval_source": "agent_visual_review_canary_20260718",
+      "local_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_reference_image_receipts/20260718T204518899099Z/reference_artifacts/watch_ref_candidate_24475f605f20ccff74441b267f39a6b3.jpg",
+      "source_url": "https://www.reddit.com/r/todayilearned/comments/1d4jguq/til_that_billy_bob_thornton_was_really_really/",
+      "rank": 1,
+      "approval_status": "APPROVED",
+      "approval_note": "Visually reviewed 2026-07-18: shows Billy Bob Thornton as Willie."
+    },
+    {
+      "reference_id": "watch_ref_candidate:61445f40d96388545a3fb7bc8a093d7f",
+      "entity_id": "movie_domain_entities/willie_bad_santa_2003",
+      "character_name": "Willie",
+      "actor_name": "Billy Bob Thornton",
+      "approval_scope": "REFERENCE_RECALL_CANARY",
+      "approval_source": "agent_visual_review_canary_20260718",
+      "local_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_reference_image_receipts/20260718T204518899099Z/reference_artifacts/watch_ref_candidate_61445f40d96388545a3fb7bc8a093d7f.jpg",
+      "source_url": "https://www.thrillist.com/entertainment/nation/bad-santa-2-movie-review",
+      "rank": 1,
+      "approval_status": "APPROVED",
+      "approval_note": "Visually reviewed 2026-07-18: shows Billy Bob Thornton as Willie."
+    },
+    {
+      "reference_id": "watch_ref_candidate:d2326f4564912913fc1f361e015df715",
+      "entity_id": "movie_domain_entities/willie_bad_santa_2003",
+      "character_name": "Willie",
+      "actor_name": "Billy Bob Thornton",
+      "approval_scope": "REFERENCE_RECALL_CANARY",
+      "approval_source": "agent_visual_review_canary_20260718",
+      "local_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_reference_image_receipts/20260718T204518899099Z/reference_artifacts/watch_ref_candidate_d2326f4564912913fc1f361e015df715.jpg",
+      "source_url": "https://www.reddit.com/r/moviecritic/comments/1hjjmcg/best_movie_santa_billy_bob_thornton_as_santa_in/",
+      "rank": 1,
+      "approval_status": "APPROVED",
+      "approval_note": "Visually reviewed 2026-07-18: shows Billy Bob Thornton as Willie."
+    },
+    {
+      "reference_id": "watch_ref_candidate:df34e455f4fae499588c8d5f60857b6f",
+      "entity_id": "movie_domain_entities/willie_bad_santa_2003",
+      "character_name": "Willie",
+      "actor_name": "Billy Bob Thornton",
+      "approval_scope": "REFERENCE_RECALL_CANARY",
+      "approval_source": "agent_visual_review_canary_20260718",
+      "local_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_reference_image_receipts/20260718T204518899099Z/reference_artifacts/watch_ref_candidate_df34e455f4fae499588c8d5f60857b6f.jpg",
+      "source_url": "https://www.slashfilm.com/1900596/billy-bob-thornton-bad-santa-line-landman/",
+      "rank": 1,
+      "approval_status": "APPROVED",
+      "approval_note": "Visually reviewed 2026-07-18: shows Billy Bob Thornton as Willie."
+    }
+  ],
+  "dropped_missing_artifacts": [
+    {
+      "reference_id": "watch_ref_candidate:0613a4b9885483453d20f428bdd000a7",
+      "character_name": "Willie",
+      "local_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_reference_image_receipts/20260629T215239018614Z/reference_artifacts/watch_ref_candidate_0613a4b9885483453d20f428bdd000a7.jpg",
+      "reason": "artifact file missing on disk"
+    },
+    {
+      "reference_id": "watch_ref_candidate:093dd57d29f3ecf66946a509dd16b444",
+      "character_name": "Willie",
+      "local_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_reference_image_receipts/20260629T215239018614Z/reference_artifacts/watch_ref_candidate_093dd57d29f3ecf66946a509dd16b444.jpg",
+      "reason": "artifact file missing on disk"
+    },
+    {
+      "reference_id": "watch_ref_candidate:34a6a2f6d1c6e63805e9f27449835327",
+      "character_name": "Willie",
+      "local_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_reference_image_receipts/20260629T215239018614Z/reference_artifacts/watch_ref_candidate_34a6a2f6d1c6e63805e9f27449835327.jpg",
+      "reason": "artifact file missing on disk"
+    },
+    {
+      "reference_id": "watch_ref_candidate:67767a74e009fdbcd7fdafd7af1f6dd5",
+      "character_name": "Willie",
+      "local_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_reference_image_receipts/20260629T215239018614Z/reference_artifacts/watch_ref_candidate_67767a74e009fdbcd7fdafd7af1f6dd5.jpg",
+      "reason": "artifact file missing on disk"
+    },
+    {
+      "reference_id": "watch_ref_candidate:9abccd76ee838f025d51b35fc55981b8",
+      "character_name": "Willie",
+      "local_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_reference_image_receipts/20260629T215239018614Z/reference_artifacts/watch_ref_candidate_9abccd76ee838f025d51b35fc55981b8.jpg",
+      "reason": "artifact file missing on disk"
+    },
+    {
+      "reference_id": "watch_ref_candidate:e80c494de974244e7d9217474dac4094",
+      "character_name": "Willie",
+      "local_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_reference_image_receipts/20260629T215239018614Z/reference_artifacts/watch_ref_candidate_e80c494de974244e7d9217474dac4094.jpg",
+      "reason": "artifact file missing on disk"
+    }
+  ],
+  "rejected_references": [
+    {
+      "reference_id": "watch_ref_candidate:ae49392106f0ba723ca99ecb37b0f9d2",
+      "entity_id": "movie_domain_entities/willie_bad_santa_2003",
+      "character_name": "Willie",
+      "actor_name": "Billy Bob Thornton",
+      "approval_scope": "REFERENCE_RECALL_CANARY",
+      "approval_source": "agent_visual_review_canary_20260718",
+      "local_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_reference_image_receipts/20260718T204518899099Z/reference_artifacts/watch_ref_candidate_ae49392106f0ba723ca99ecb37b0f9d2.jpg",
+      "source_url": "https://www.reddit.com/r/movies/comments/aj2fuv/billy_bob_thortons_comedic_timing_is_perfect_in/",
+      "rank": 1,
+      "approval_status": "REJECTED",
+      "approval_note": "Rejected in visual review: image shows the Kid (Thurman Merman), not Willie"
+    },
+    {
+      "reference_id": "watch_ref_candidate:f116b5f0080868c4539fabfdb54cc004",
+      "entity_id": "movie_domain_entities/willie_bad_santa_2003",
+      "character_name": "Willie",
+      "actor_name": "Billy Bob Thornton",
+      "approval_scope": "REFERENCE_RECALL_CANARY",
+      "approval_source": "agent_visual_review_canary_20260718",
+      "local_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_reference_image_receipts/20260718T204518899099Z/reference_artifacts/watch_ref_candidate_f116b5f0080868c4539fabfdb54cc004.jpg",
+      "source_url": "https://www.thrillist.com/entertainment/nation/bad-santa-2-movie-review",
+      "rank": 1,
+      "approval_status": "REJECTED",
+      "approval_note": "Rejected in visual review: image contains both Willie and Marcus; unusable as a clean single-entity control"
+    }
+  ]
+}

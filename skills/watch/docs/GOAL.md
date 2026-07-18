@@ -50,13 +50,17 @@ ux-lab (thin shell):
 
 ## Acceptance gates
 
-| # | Gate | Proof |
-|---|------|-------|
-| G1 | Watch skill has `ui/index.tsx` barrel that exports all components | `tsc --noEmit` on skill's ui/ |
-| G2 | ux-lab imports Watch UI from `../../agent-skills/skills/watch/ui/` instead of local copy | grep shows no `src/components/watch/` imports in ux-lab |
-| G3 | Vite dev server still serves Watch page without errors | `surf` check `:3002/#watch` — no console errors |
-| G4 | Scene search, Orpheus annotation, chat sidebar all render | Surf screenshot comparison |
-| G5 | SKILL.md documents UI entry point and mount instructions | File exists with section |
+| # | Gate | Status (2026-07-18) |
+|---|------|---------------------|
+| G1 | Watch skill has `ui/index.tsx` barrel that exports all components | **DONE** — `ui/index.tsx` exists; `tsc --noEmit` covers `index.tsx`, `components/`, `memory-turn/`, `scripts/` and passes |
+| G2 | ux-lab imports Watch UI from the skill instead of local copy | **SUPERSEDED / OPEN IN UX-LAB** — the skill now self-hosts its UI (`npm run dev:all`, `:3002/#watch`) so it no longer depends on ux-lab; ux-lab still lazy-imports its legacy `src/components/watch/` copy, which should be deleted or re-pointed at `skills/watch/ui/index.tsx` in a pi-mono change |
+| G3 | Dev server serves Watch page without errors | **DONE (self-hosted)** — the skill's own Vite+Express (`dev:all`) serves `:3002/#watch`; earlier browser proofs recorded under `docs/architecture/generated/` |
+| G4 | Scene search, annotation, chat sidebar render | **DONE (self-hosted)** — exercised by annotation/browser proofs; smoke tests cover session reducer, receipt replay, and broad handoff-stop projection |
+| G5 | SKILL.md documents UI entry point and mount instructions | **DONE** — "UI Entry Point (Skill-Owned)" section in SKILL.md |
+
+Import-path cleanup from the original delivery list is complete:
+`WatchAgentPaneConverged.tsx` no longer imports from ux-lab's `../shared-chat/`
+paths (fixed 2026-07-18).
 
 ## Non-goals
 

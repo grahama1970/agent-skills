@@ -1,0 +1,197 @@
+{
+  "schema": "watch.reference_download_review_approval_receipt.v1",
+  "status": "PROVISIONAL_APPROVAL_RECEIPTS_WRITTEN",
+  "created_at": "2026-07-18T20:43:06.015113+00:00",
+  "asset_uid": "movie_bad_santa_2003_unrated",
+  "character_name": "Marcus",
+  "actor_name": "Tony Cox",
+  "approval_scope": "REFERENCE_RECALL_CANARY",
+  "identity_promotion_allowed": false,
+  "reference_receipts": [
+    {
+      "reference_id": "watch_ref_candidate:10e6354d6e38ba3d28bd858d10d5797d",
+      "download_receipt": {
+        "status": "DOWNLOADED_LOCAL_ARTIFACT",
+        "artifact_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_reference_image_receipts/20260718T204306014788Z/reference_artifacts/watch_ref_candidate_10e6354d6e38ba3d28bd858d10d5797d.jpg",
+        "sha256": "f86af301ced7d37ecc70d8b58435ee4e2bb494b421b9ced157f9bd66fa71f0b6",
+        "media_type": "image/jpeg",
+        "dimensions": {
+          "width": 600,
+          "height": 800
+        }
+      },
+      "source_review_receipt": {
+        "status": "PROVISIONAL_AGENT_REVIEWED",
+        "review_basis": "Downloaded artifact is a non-tiny image candidate from Brave image search results for Willie/Billy Bob Thornton.",
+        "checks": [
+          "source_or_local_artifact_present",
+          "image_dimensions_recorded",
+          "character_or_actor_reference_label_recorded",
+          "not_scene_truth"
+        ]
+      },
+      "approval_receipt": {
+        "status": "APPROVED_FOR_REFERENCE_RECALL_CANARY",
+        "approved_by": "codex_agent_provisional_review",
+        "approval_time": "2026-07-18T20:43:06.015113+00:00",
+        "approval_scope": "REFERENCE_RECALL_CANARY",
+        "identity_promotion_allowed": false
+      }
+    },
+    {
+      "reference_id": "watch_ref_candidate:aad17d505309bbf0d7501614eb97f5c8",
+      "download_receipt": {
+        "status": "DOWNLOADED_LOCAL_ARTIFACT",
+        "artifact_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_reference_image_receipts/20260718T204306014788Z/reference_artifacts/watch_ref_candidate_aad17d505309bbf0d7501614eb97f5c8.jpg",
+        "sha256": "372817be7ab48c70b60aa5fb59bc9bf3040bf9d4973b9acfdda0d267b5dce724",
+        "media_type": "image/jpeg",
+        "dimensions": {
+          "width": 2400,
+          "height": 1613
+        }
+      },
+      "source_review_receipt": {
+        "status": "PROVISIONAL_AGENT_REVIEWED",
+        "review_basis": "Downloaded artifact is a non-tiny image candidate from Brave image search results for Willie/Billy Bob Thornton.",
+        "checks": [
+          "source_or_local_artifact_present",
+          "image_dimensions_recorded",
+          "character_or_actor_reference_label_recorded",
+          "not_scene_truth"
+        ]
+      },
+      "approval_receipt": {
+        "status": "APPROVED_FOR_REFERENCE_RECALL_CANARY",
+        "approved_by": "codex_agent_provisional_review",
+        "approval_time": "2026-07-18T20:43:06.015113+00:00",
+        "approval_scope": "REFERENCE_RECALL_CANARY",
+        "identity_promotion_allowed": false
+      }
+    },
+    {
+      "reference_id": "watch_ref_candidate:7bc7a54aef2a8f1b339eb84ed2ba6c6f",
+      "download_receipt": {
+        "status": "DOWNLOADED_LOCAL_ARTIFACT",
+        "artifact_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_reference_image_receipts/20260718T204306014788Z/reference_artifacts/watch_ref_candidate_7bc7a54aef2a8f1b339eb84ed2ba6c6f.jpg",
+        "sha256": "65a1a0a4d89c6dfb6067a5b4564a07c2ce65e33e1215d2944ce0ebca8bf3414d",
+        "media_type": "image/jpeg",
+        "dimensions": {
+          "width": 268,
+          "height": 375
+        }
+      },
+      "source_review_receipt": {
+        "status": "PROVISIONAL_AGENT_REVIEWED",
+        "review_basis": "Downloaded artifact is a non-tiny image candidate from Brave image search results for Willie/Billy Bob Thornton.",
+        "checks": [
+          "source_or_local_artifact_present",
+          "image_dimensions_recorded",
+          "character_or_actor_reference_label_recorded",
+          "not_scene_truth"
+        ]
+      },
+      "approval_receipt": {
+        "status": "APPROVED_FOR_REFERENCE_RECALL_CANARY",
+        "approved_by": "codex_agent_provisional_review",
+        "approval_time": "2026-07-18T20:43:06.015113+00:00",
+        "approval_scope": "REFERENCE_RECALL_CANARY",
+        "identity_promotion_allowed": false
+      }
+    },
+    {
+      "reference_id": "watch_ref_candidate:f2a37d45fbc65a4b3b52b03864580b1a",
+      "download_receipt": {
+        "status": "DOWNLOADED_LOCAL_ARTIFACT",
+        "artifact_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_reference_image_receipts/20260718T204306014788Z/reference_artifacts/watch_ref_candidate_f2a37d45fbc65a4b3b52b03864580b1a.jpg",
+        "sha256": "5432a0bb27d2f03c14a5ffffc96d8849fcbe66987e401321b0fedd1a8d13dfcf",
+        "media_type": "image/jpeg",
+        "dimensions": {
+          "width": 300,
+          "height": 219
+        }
+      },
+      "source_review_receipt": {
+        "status": "PROVISIONAL_AGENT_REVIEWED",
+        "review_basis": "Downloaded artifact is a non-tiny image candidate from Brave image search results for Willie/Billy Bob Thornton.",
+        "checks": [
+          "source_or_local_artifact_present",
+          "image_dimensions_recorded",
+          "character_or_actor_reference_label_recorded",
+          "not_scene_truth"
+        ]
+      },
+      "approval_receipt": {
+        "status": "APPROVED_FOR_REFERENCE_RECALL_CANARY",
+        "approved_by": "codex_agent_provisional_review",
+        "approval_time": "2026-07-18T20:43:06.015113+00:00",
+        "approval_scope": "REFERENCE_RECALL_CANARY",
+        "identity_promotion_allowed": false
+      }
+    },
+    {
+      "reference_id": "watch_ref_candidate:f101dfa950933926cb4e33f470de521e",
+      "download_receipt": {
+        "status": "DOWNLOADED_LOCAL_ARTIFACT",
+        "artifact_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_reference_image_receipts/20260718T204306014788Z/reference_artifacts/watch_ref_candidate_f101dfa950933926cb4e33f470de521e.jpg",
+        "sha256": "fb39f3f216d722c98639311ac2ccb5c1c4ca59d1115a93e959b683ef843e1932",
+        "media_type": "image/jpeg",
+        "dimensions": {
+          "width": 500,
+          "height": 500
+        }
+      },
+      "source_review_receipt": {
+        "status": "PROVISIONAL_AGENT_REVIEWED",
+        "review_basis": "Downloaded artifact is a non-tiny image candidate from Brave image search results for Willie/Billy Bob Thornton.",
+        "checks": [
+          "source_or_local_artifact_present",
+          "image_dimensions_recorded",
+          "character_or_actor_reference_label_recorded",
+          "not_scene_truth"
+        ]
+      },
+      "approval_receipt": {
+        "status": "APPROVED_FOR_REFERENCE_RECALL_CANARY",
+        "approved_by": "codex_agent_provisional_review",
+        "approval_time": "2026-07-18T20:43:06.015113+00:00",
+        "approval_scope": "REFERENCE_RECALL_CANARY",
+        "identity_promotion_allowed": false
+      }
+    },
+    {
+      "reference_id": "watch_ref_candidate:a9484b1003c82f276aed40df310e811c",
+      "download_receipt": {
+        "status": "DOWNLOADED_LOCAL_ARTIFACT",
+        "artifact_path": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/watch_reference_image_receipts/20260718T204306014788Z/reference_artifacts/watch_ref_candidate_a9484b1003c82f276aed40df310e811c.jpg",
+        "sha256": "2ac72c8840d23025ee0064d7f20b3a13d360f5ddb025c9087863c9d8e61d90e6",
+        "media_type": "image/jpeg",
+        "dimensions": {
+          "width": 300,
+          "height": 230
+        }
+      },
+      "source_review_receipt": {
+        "status": "PROVISIONAL_AGENT_REVIEWED",
+        "review_basis": "Downloaded artifact is a non-tiny image candidate from Brave image search results for Willie/Billy Bob Thornton.",
+        "checks": [
+          "source_or_local_artifact_present",
+          "image_dimensions_recorded",
+          "character_or_actor_reference_label_recorded",
+          "not_scene_truth"
+        ]
+      },
+      "approval_receipt": {
+        "status": "APPROVED_FOR_REFERENCE_RECALL_CANARY",
+        "approved_by": "codex_agent_provisional_review",
+        "approval_time": "2026-07-18T20:43:06.015113+00:00",
+        "approval_scope": "REFERENCE_RECALL_CANARY",
+        "identity_promotion_allowed": false
+      }
+    }
+  ],
+  "counts": {
+    "reference_count": 6,
+    "approved_for_reference_recall_canary": 6,
+    "approved_for_identity_promotion": 0
+  }
+}

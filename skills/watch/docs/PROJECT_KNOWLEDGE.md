@@ -171,3 +171,19 @@ Aliases: `grandma`→`Granny`, `kid`→`Thurman Merman`, `santa`→`Willie T. So
 | Date | Decision | Why |
 |------|----------|-----|
 | 2026-07-07 | Watch owns second-stage identity/world-model state over YOLOAnalytics detections | YOLOAnalytics does not know domain identity; Watch must persist keyframe/stop sequences, use Memory/Qdrant for recall, and invoke Tau only when sequence-level reasoning is needed. |
+| 2026-07-18 | The 02:48 Marcus canary chain was executed live end-to-end and the claim was REFUTED | Row text materialized 4/4 channels with zero Marcus mentions; live crop/reference similarity (10 crops x 10 approved external references) scored every track higher against Willie; true-window frame extraction shows Willie bar + alley title walk. Evidence case `WEC-BADSANTAMARCUS0248` filed live with `ARTIFACT_WINDOW_MISALIGNMENT`. A refuted canary is the intended fail-closed outcome, not a failure of the gate design. |
+| 2026-07-18 | Persisted clip/audio artifacts must be window-validated, not index-trusted | `storage.generate_playable_segments` reused stale clips by index across runs with different sampling (root cause of the misalignment). It now writes `segments_manifest.json` and force-regenerates on window mismatch. Pre-fix rows are suspect until re-run. |
+| 2026-07-18 | Reference images live in the reference lane with visual review receipts | 6 Marcus + 4 Willie external references approved (2 rejected: wrong character / mixed-entity image); the earlier circular canary manifest that approved Watch's own tracker crops as Marcus references is superseded. Reference artifacts stored under `generated/watch_reference_image_receipts/<run>/` rot if the run dir is deleted — the 2026-06-29 Willie artifacts were lost this way and were re-downloaded. |
+
+## Live Canary Receipts (2026-07-18)
+
+- Row text materialization + corroboration: `generated/bad_santa_marcus_0248_row_text_receipts/`
+- Approved reference manifest (Marcus+Willie, supersedes circular canary): `generated/bad_santa_marcus_0248_approved_reference_manifest_live/`
+- Live identity loop (crop embeddings, similarity, memory upserts, recall): `generated/watch_realtime_identity_memory_loop_live_20260718/`
+- Evidence case filing + true-window frame check: `generated/bad_santa_marcus_0248_evidence_case_live/`
+- Recall canary (natural question, alias, case lookup): `generated/bad_santa_marcus_recall_canary_20260718/`
+
+Known hygiene debt: `watch_track_crop_embeddings_jina_v5_1024` contains smoke-test
+debris points with `codex-live-*` character labels written by UI test runs against
+the live Qdrant collection; tests should target an isolated collection, and the
+debris should be purged before similarity stats are computed over the collection.

@@ -286,11 +286,36 @@ The current proof state is:
 | Tentative UI suggestion | Proven once with `Willie? 0.89` |
 | Reset/reject path | Proven for one live browser path |
 | Identity handoff stop | Proven for one live Qdrant conflict |
-| Broad handoff-stop coverage | Still pending |
+| Broad handoff-stop coverage | Proven at receipt/projection level by `ui/scripts/watchYoloHandoffStopBroad.smoke.ts` (multi-track, multi-cycle stop/reassign, rejection-before-accept, stale-label poisoning resistance); live-browser breadth still limited to the single Qdrant-conflict proof |
+| Reference-image lane (Marcus + Willie) | Live: 6 Marcus + 4 Willie approved external references embedded to Qdrant (2 rejected in visual review); receipts under `docs/architecture/generated/watch_reference_image_receipts/` |
+| 02:48 canary evidence case | `WEC-BADSANTAMARCUS0248` filed live with verdict `REFUTED` — tracker crops proved to be the earlier bar scene via an artifact off-by-one; see below |
 
 Use this feature for tentative auto-labeling, not silent auto-accept. The point
 is to reduce human labeling work while keeping a fast accept/reject/reset path
 for the wrong cases.
+
+### Artifact Alignment Hazard (Found And Fixed 2026-07-18)
+
+The Bad Santa 02:48 canary exposed a stale-clip cache defect: persisted
+`clips/segment_NNNN.mp4` and `audio_NNNN.*` artifacts were reused by index
+across runs with different frame sampling, so a later run silently paired rows
+with the previous run's media (one window earlier). Consequences that are now
+recorded as evidence, not silently corrected:
+
+- Evidence case `WEC-BADSANTAMARCUS0248` (verdict `REFUTED`) documents that
+  the seg_0007 tracker crops actually depict the 02:24-02:48 bar scene, and
+  crop/reference similarity scores every crop higher against Willie references
+  than Marcus references.
+- Row-7 human "Marcus" keyframes carry misaligned timestamps (pixels are
+  Marcus from a later mall scene frame; times inherited from the shifted row)
+  and are flagged in the case for re-anchoring before use as time evidence.
+- `scripts/storage.py` now writes a `segments_manifest.json` per asset and
+  regenerates any clip whose recorded time window no longer matches, so mixed
+  artifact generations cannot recur.
+
+Rows ingested before the fix should be treated as suspect until re-run: check
+`segments_manifest.json` exists for the asset before trusting clip/audio
+alignment.
 
 ## Orpheus Dataset Boundary
 

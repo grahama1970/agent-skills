@@ -93,6 +93,9 @@ def generate_playable_segments(
     audio_wav_dir.mkdir(parents=True, exist_ok=True)
 
     timestamps = [float(f.get("timestamp_seconds", 0.0)) for f in frames]
+    manifest_path = dest / "segments_manifest.json"
+    previous_windows = _load_segment_windows(manifest_path)
+    windows: dict[str, dict] = {}
     updated: list[dict] = []
     gaps: list[str] = []
     for idx, frame in enumerate(frames, start=1):
@@ -107,28 +110,70 @@ def generate_playable_segments(
         audio_wav_out = audio_wav_dir / f"audio_{idx:04d}.wav"
         row = dict(frame)
 
-        if _run_segment_ffmpeg(video_path, start, end, video_out, media="video"):
+        # A clip on disk is only reusable if it was cut for this exact time
+        # window. Sampling can change between runs, so an index match alone
+        # would silently pair rows with another run's media (off-by-one bug
+        # found on the Bad Santa canary).
+        previous = previous_windows.get(str(idx))
+        force = not (
+            previous
+            and abs(float(previous.get("start", -1)) - start) < 0.05
+            and abs(float(previous.get("end", -1)) - end) < 0.05
+        )
+        windows[str(idx)] = {"start": round(start, 3), "end": round(end, 3)}
+
+        if _run_segment_ffmpeg(video_path, start, end, video_out, media="video", force=force):
             row["video_clip_path"] = str(video_out)
         else:
             gaps.append(f"video_clip_failed:{idx}")
 
-        if _run_segment_ffmpeg(video_path, start, end, audio_out, media="audio"):
+        if _run_segment_ffmpeg(video_path, start, end, audio_out, media="audio", force=force):
             row["audio_clip_path"] = str(audio_out)
         else:
             gaps.append(f"audio_clip_failed:{idx}")
 
-        if _run_segment_ffmpeg(video_path, start, end, audio_wav_out, media="audio_wav"):
+        if _run_segment_ffmpeg(video_path, start, end, audio_wav_out, media="audio_wav", force=force):
             row["audio_wav_clip_path"] = str(audio_wav_out)
         else:
             gaps.append(f"audio_wav_clip_failed:{idx}")
 
         updated.append(row)
 
+    _save_segment_windows(manifest_path, video_path, windows)
     return updated, gaps
 
 
-def _run_segment_ffmpeg(video_path: str, start: float, end: float, out_path: Path, media: str) -> bool:
-    if out_path.exists() and out_path.stat().st_size > 0:
+def _load_segment_windows(manifest_path: Path) -> dict[str, dict]:
+    try:
+        data = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    windows = data.get("windows")
+    return windows if isinstance(windows, dict) else {}
+
+
+def _save_segment_windows(manifest_path: Path, video_path: str, windows: dict[str, dict]) -> None:
+    try:
+        manifest_path.write_text(
+            json.dumps(
+                {
+                    "schema": "watch.segments_manifest.v1",
+                    "video_path": str(Path(video_path).resolve()),
+                    "windows": windows,
+                },
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+    except OSError as exc:
+        logger.warning("could not write segments manifest {}: {}", manifest_path, exc)
+
+
+def _run_segment_ffmpeg(
+    video_path: str, start: float, end: float, out_path: Path, media: str, force: bool = False
+) -> bool:
+    if not force and out_path.exists() and out_path.stat().st_size > 0:
         return True
     duration = max(0.1, end - start)
     base = [

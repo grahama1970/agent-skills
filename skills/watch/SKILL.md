@@ -431,6 +431,32 @@ All environment variables are centralized in `scripts/config.py`:
 | `WATCH_MEDIA_ROOT` | `~/.local/share/agent-skills/watch-frames` | Persistent frame/audio storage |
 | `WATCH_REPORT_PATH` | `""` | Default report path for the UI |
 
+## UI Entry Point (Skill-Owned)
+
+The Watch UI lives in this skill at `ui/` and is self-hosted; it does not
+depend on an external shell to run.
+
+```bash
+cd skills/watch/ui
+npm install
+npm run dev:all        # Vite app + Express API on http://localhost:3002/#watch
+```
+
+Mountable exports come from the barrel `ui/index.tsx`:
+
+| Export | Purpose |
+|--------|---------|
+| `WatchReportView` | Scene search table + annotation modal + chat sidebar |
+| `WatchAgentPaneConverged` | Slim chat-only wrapper around `SharedChatShell` |
+| `SharedChatShell`, adapters from `memory-turn/` | Shared chat + surface/mode routing |
+| `yoloLabelForOverlay`, `latestYoloLabelEventForTrack` | Deterministic YOLO label projection helpers |
+
+External shells (e.g. ux-lab) should import from
+`skills/watch/ui/index.tsx` instead of keeping their own copies of these
+components. `npm run typecheck` covers `index.tsx`, `components/`,
+`memory-turn/`, and the smoke-test scripts; `npm test` runs the annotation
+session, YOLO label receipt replay, and broad handoff-stop smokes.
+
 ## PGS Subtitle OCR
 
 BluRay PGS (image-based) subtitles are OCR'd via a batch approach:

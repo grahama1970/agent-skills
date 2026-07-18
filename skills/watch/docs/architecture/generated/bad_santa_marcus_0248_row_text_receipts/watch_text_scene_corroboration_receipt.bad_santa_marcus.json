@@ -1,0 +1,182 @@
+{
+  "asset": {
+    "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+    "asset_kind": "cinema_movie",
+    "canonical_uri": "local://movies/Bad.Santa.Unrated.2003.BRRip.XvidHD",
+    "media_sha256": "fixture_bad_santa_media_sha256",
+    "notes": "P0 fixture only; does not prove identity.",
+    "release_year": 2003,
+    "schema": "watch.asset_metadata.v1",
+    "title": "Bad Santa"
+  },
+  "case_context": {
+    "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+    "case_anchor": {
+      "entity_ids": [
+        "movie_domain_entities/marcus_bad_santa_2003"
+      ],
+      "segment_ids": [
+        "seg_0007"
+      ],
+      "stream_id": "watch_stream_bad_santa_2003",
+      "time_range": {
+        "end": "03:12",
+        "end_seconds": 192,
+        "start": "02:48",
+        "start_seconds": 168
+      }
+    },
+    "case_id": "WEC-BADSANTAMARCUS0248",
+    "case_key": "watch_case_bad_santa_marcus_0248_identity",
+    "claim": "The 02:48-03:12 segment contains Marcus, the mall-store elf character played by Tony Cox.",
+    "claim_is_scene_truth": false,
+    "source_truth_policy": "domain refs corroborate entity identity only; Watch frame/clip/track evidence must support scene presence."
+  },
+  "claims": {
+    "does_not_prove": [
+      "row text materialization success",
+      "entity span extraction success",
+      "scene marker correctness",
+      "SRT or Whisper correctness",
+      "crop embedding success",
+      "reference image embedding success",
+      "crop/reference similarity score correctness",
+      "$memory recall success",
+      "supported character identity",
+      "real-time annotation tracking"
+    ],
+    "proves": [
+      "Watch identity support requires materialized row text, not only a case claim or refs",
+      "Text/scene corroboration is a separate gate after crop/reference similarity and before memory answer claims",
+      "Direct Qdrant or Arango answer paths remain forbidden"
+    ]
+  },
+  "counts": {
+    "case_entity_id_count": 1,
+    "entity_plan_count": 1,
+    "materialized_text_channel_count": 4,
+    "required_text_channel_count": 4,
+    "source_similarity_comparison_count": 60
+  },
+  "entity_corroboration_plans": [
+    {
+      "case_anchor": {
+        "entity_ids": [
+          "movie_domain_entities/marcus_bad_santa_2003"
+        ],
+        "segment_ids": [
+          "seg_0007"
+        ],
+        "stream_id": "watch_stream_bad_santa_2003",
+        "time_range": {
+          "end": "03:12",
+          "end_seconds": 192,
+          "start": "02:48",
+          "start_seconds": 168
+        }
+      },
+      "case_claim": "The 02:48-03:12 segment contains Marcus, the mall-store elf character played by Tony Cox.",
+      "case_entity_ids": [
+        "movie_domain_entities/marcus_bad_santa_2003"
+      ],
+      "case_id": "WEC-BADSANTAMARCUS0248",
+      "case_key": "watch_case_bad_santa_marcus_0248_identity",
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "entity_name": "Marcus",
+      "promotion_blockers": [
+        "CROP_REFERENCE_SIMILARITY_RECEIPTS_MISSING",
+        "MEMORY_RECALL_NOT_VERIFIED",
+        "TEXT_CHANNELS_DO_NOT_MENTION_CANDIDATE"
+      ],
+      "status": "TEXT_NOT_CORROBORATED",
+      "text_channels": [
+        {
+          "channel": "scene_marker_text",
+          "contains_actor_token": false,
+          "contains_entity_token": false,
+          "promotion_allowed": false,
+          "scene_truth_allowed": true,
+          "status": "MATERIALIZED",
+          "text_hash": "sha256:a130d9d2d0e84652542ed41d267144ff76544a9c7bc1e816ab024472bc869e96"
+        },
+        {
+          "channel": "srt_text",
+          "contains_actor_token": false,
+          "contains_entity_token": false,
+          "promotion_allowed": false,
+          "scene_truth_allowed": true,
+          "status": "MATERIALIZED",
+          "text_hash": "sha256:7249c00edc42dfeb7e26aac2b96e327534e876923bcb06157cc781856cd4c9eb"
+        },
+        {
+          "channel": "whisper_text",
+          "contains_actor_token": false,
+          "contains_entity_token": false,
+          "promotion_allowed": false,
+          "scene_truth_allowed": true,
+          "status": "MATERIALIZED",
+          "text_hash": "sha256:9e2a971aa345dfd797836cddadf5c30acc6c1771bc0a8894049a0ab3533cf972"
+        },
+        {
+          "channel": "vlm_description",
+          "contains_actor_token": false,
+          "contains_entity_token": false,
+          "promotion_allowed": false,
+          "scene_truth_allowed": true,
+          "status": "MATERIALIZED",
+          "text_hash": "sha256:a130d9d2d0e84652542ed41d267144ff76544a9c7bc1e816ab024472bc869e96"
+        }
+      ]
+    }
+  ],
+  "materialized_text_channels": [
+    "scene_marker_text",
+    "srt_text",
+    "whisper_text",
+    "vlm_description"
+  ],
+  "memory_requirements": {
+    "allowed_answer_path": "$memory recall",
+    "direct_qdrant_or_arango_answer_allowed": false,
+    "forbidden_results_key_dependency": true,
+    "requires_intent_before_recall": true,
+    "requires_items_key": true
+  },
+  "promotion_policy": {
+    "case_claim_without_materialized_text_can_promote_identity": false,
+    "domain_reference_seed_can_promote_identity": false,
+    "supported_identity_requires": [
+      "row_text_materialized",
+      "entity_span_extraction_receipt",
+      "scene_marker_or_vlm_corroboration",
+      "srt_or_whisper_corroboration_when_available",
+      "crop_reference_similarity_receipt_with_negative_controls",
+      "memory_recall_items_matching_asset_entity_time"
+    ],
+    "text_without_crop_reference_similarity_can_promote_identity": false,
+    "text_without_memory_recall_can_promote_identity": false
+  },
+  "proof_scope": [
+    "text_scene_corroboration_executed",
+    "identity_promotion_still_gated"
+  ],
+  "receipt_requirements": {
+    "entity_span_extraction_receipt_required": true,
+    "memory_recall_receipt_required": true,
+    "row_text_materialization_receipt_required": true,
+    "scene_marker_or_vlm_receipt_required": true,
+    "srt_or_whisper_receipt_required": true
+  },
+  "required_row_text_channels": [
+    "scene_marker_text",
+    "srt_text",
+    "whisper_text",
+    "vlm_description"
+  ],
+  "row_text_materialization_receipt": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/bad_santa_marcus_0248_row_text_receipts/watch_row_text_materialization_receipt.bad_santa_marcus.json",
+  "schema": "watch.text_scene_corroboration_receipt.v1",
+  "source_crop_reference_similarity_schema": "watch.crop_reference_similarity_receipt_plan.v1",
+  "source_evidence_case_schema": "watch.evidence_case.v1",
+  "source_plan": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/bad_santa_marcus_0248_text_scene_corroboration_receipt_plan/watch_text_scene_corroboration_receipt_plan.bad_santa_marcus.json",
+  "status": "TEXT_CORROBORATION_RUN"
+}

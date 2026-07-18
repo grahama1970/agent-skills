@@ -1,0 +1,185 @@
+{
+  "asset": {
+    "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+    "asset_kind": "cinema_movie",
+    "canonical_uri": "local://movies/Bad.Santa.Unrated.2003.BRRip.XvidHD",
+    "media_sha256": "fixture_bad_santa_media_sha256",
+    "notes": "P0 fixture only; does not prove identity.",
+    "release_year": 2003,
+    "schema": "watch.asset_metadata.v1",
+    "title": "Bad Santa"
+  },
+  "case_context": {
+    "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+    "case_anchor": {
+      "entity_ids": [
+        "movie_domain_entities/marcus_bad_santa_2003"
+      ],
+      "segment_ids": [
+        "seg_0007"
+      ],
+      "stream_id": "watch_stream_bad_santa_2003",
+      "time_range": {
+        "end": "03:12",
+        "end_seconds": 192,
+        "start": "02:48",
+        "start_seconds": 168
+      }
+    },
+    "case_id": "WEC-BADSANTAMARCUS0248",
+    "case_key": "watch_case_bad_santa_marcus_0248_identity",
+    "claim": "The 02:48-03:12 segment contains Marcus, the mall-store elf character played by Tony Cox.",
+    "claim_is_scene_truth": false,
+    "source_truth_policy": "domain refs corroborate entity identity only; Watch frame/clip/track evidence must support scene presence."
+  },
+  "channel_receipts": [
+    {
+      "actor_spans": [],
+      "channel": "scene_marker_text",
+      "entity_spans": [],
+      "field_used": "visual_description",
+      "materialized_text": "This frame shows a person viewed from behind walking down a dimly lit, shadowed indoor corridor with dark walls and a smooth, reflective floor. The individual wears a white Santa hat, a dark red long-sleeved top, a white apron-style lower garment, and shorts, with targeted lighting illuminating them",
+      "materialized_text_chars": 300,
+      "materialized_text_hash": "sha256:a130d9d2d0e84652542ed41d267144ff76544a9c7bc1e816ab024472bc869e96",
+      "materialized_text_present": true,
+      "read_at": "2026-07-18T20:35:14.747811+00:00",
+      "source_ref": "watch_content/watch_segment_badsantaunrated2003brripxvidhd720p-npw_0007",
+      "status": "MATERIALIZED"
+    },
+    {
+      "actor_spans": [],
+      "channel": "srt_text",
+      "entity_spans": [],
+      "field_used": "srt_text",
+      "materialized_text": "My dad never did shit with his life, so he took it out on me. You could say I'm no different, and I'd have to say you were right. But at this point, it's too late to start over. Funny how things work out. It's fucking h...",
+      "materialized_text_chars": 222,
+      "materialized_text_hash": "sha256:7249c00edc42dfeb7e26aac2b96e327534e876923bcb06157cc781856cd4c9eb",
+      "materialized_text_present": true,
+      "read_at": "2026-07-18T20:35:14.747811+00:00",
+      "source_ref": "watch_content/watch_segment_badsantaunrated2003brripxvidhd720p-npw_0007",
+      "source_ref_resolution": {
+        "field": "srt_text",
+        "note": "Plan had no source ref; field exists on the live row.",
+        "ref": "watch_content/watch_segment_badsantaunrated2003brripxvidhd720p-npw_0007",
+        "resolved_from": "live_watch_content_document_field"
+      },
+      "status": "MATERIALIZED"
+    },
+    {
+      "actor_spans": [],
+      "channel": "whisper_text",
+      "entity_spans": [],
+      "field_used": "whisper_text",
+      "materialized_text": "My dad never did shit with his life, so he took it out on me. You could say I'm no different and I'd have to say you were right, but at this point, it's too late to start over. Funny how things work out, it's fucking hi...",
+      "materialized_text_chars": 222,
+      "materialized_text_hash": "sha256:9e2a971aa345dfd797836cddadf5c30acc6c1771bc0a8894049a0ab3533cf972",
+      "materialized_text_present": true,
+      "read_at": "2026-07-18T20:35:14.747811+00:00",
+      "source_ref": "watch_content/watch_segment_badsantaunrated2003brripxvidhd720p-npw_0007",
+      "status": "MATERIALIZED"
+    },
+    {
+      "actor_spans": [],
+      "channel": "vlm_description",
+      "entity_spans": [],
+      "field_used": "visual_description",
+      "materialized_text": "This frame shows a person viewed from behind walking down a dimly lit, shadowed indoor corridor with dark walls and a smooth, reflective floor. The individual wears a white Santa hat, a dark red long-sleeved top, a white apron-style lower garment, and shorts, with targeted lighting illuminating them",
+      "materialized_text_chars": 300,
+      "materialized_text_hash": "sha256:a130d9d2d0e84652542ed41d267144ff76544a9c7bc1e816ab024472bc869e96",
+      "materialized_text_present": true,
+      "read_at": "2026-07-18T20:35:14.747811+00:00",
+      "source_ref": "watch_content/watch_segment_badsantaunrated2003brripxvidhd720p-npw_0007",
+      "status": "MATERIALIZED"
+    }
+  ],
+  "claims": {
+    "does_not_prove": [
+      "character identity",
+      "crop/reference similarity",
+      "$memory recall answer-path success",
+      "real-time annotation tracking"
+    ],
+    "proves": [
+      "Row text channels were read through the memory HTTP boundary and hashed",
+      "Entity/actor span extraction ran over every materialized channel",
+      "Text corroboration outcome is recorded honestly, including absence"
+    ]
+  },
+  "corroboration_result": {
+    "scene_marker_or_vlm_corroborates_entity": false,
+    "srt_or_whisper_corroborates_entity": false,
+    "text_corroborates_entity": false,
+    "verdict": "TEXT_DOES_NOT_CORROBORATE_CANDIDATE"
+  },
+  "counts": {
+    "materialized_channels": [
+      "scene_marker_text",
+      "srt_text",
+      "whisper_text",
+      "vlm_description"
+    ],
+    "materialized_text_channel_count": 4,
+    "required_channel_count": 4
+  },
+  "entity_span_extraction": {
+    "actor_span_total": 0,
+    "actor_tokens": [
+      "tony cox"
+    ],
+    "entity_span_total": 0,
+    "entity_tokens": [
+      "marcus",
+      "mall-store elf"
+    ],
+    "method": "case_insensitive_substring_scan_no_regex"
+  },
+  "observation_context": {
+    "asset_id": "watch_asset:45db802844fc54e8dc0cf1189cefc68d",
+    "asset_uid": "movie_bad_santa_2003_unrated",
+    "candidate_entity": {
+      "actor_name": "Tony Cox",
+      "basis": [
+        "brave_domain_seed",
+        "movie_domain_memory",
+        "person_reid_embedding",
+        "vlm_scene_text"
+      ],
+      "confidence": 0.82,
+      "entity_id": "movie_domain_entities/marcus_bad_santa_2003",
+      "kind": "CHARACTER",
+      "name": "Marcus",
+      "status": "CANDIDATE"
+    },
+    "segment_id": "seg_0007",
+    "stream_id": "watch_stream_bad_santa_2003",
+    "time_range": {
+      "end": "03:12",
+      "end_seconds": 192,
+      "start": "02:48",
+      "start_seconds": 168
+    },
+    "track_id": "track_07"
+  },
+  "proof_scope": [
+    "row_text_materialization_executed",
+    "entity_span_extraction_executed",
+    "srt_disk_cross_check"
+  ],
+  "read_boundary": {
+    "collection": "watch_content",
+    "document_key": "watch_segment_badsantaunrated2003brripxvidhd720p-npw_0007",
+    "memory_url": "http://127.0.0.1:8601",
+    "path": "memory_http_recall_by_keys",
+    "read_at": "2026-07-18T20:35:14.747811+00:00"
+  },
+  "schema": "watch.row_text_materialization_receipt.v1",
+  "source_plan": "/home/graham/workspace/experiments/agent-skills/skills/watch/docs/architecture/generated/bad_santa_marcus_0248_row_text_materialization_receipt_plan/watch_row_text_materialization_receipt_plan.bad_santa_marcus.json",
+  "srt_disk_cross_check": {
+    "consistent": false,
+    "disk_window_text_hash": "sha256:a2577de33141852cbde5715a5c099cb66a3983f6673f8ccf20fbc9de2c8aecd7",
+    "srt_path": "/mnt/storage12tb/media/movies/Bad Santa (2003)/Bad.Santa.Unrated.2003.BRRip.XvidHD.720p-NPW.en.srt",
+    "stored_vs_disk_word_overlap": 0.0345,
+    "window_cue_count": 5
+  },
+  "status": "MATERIALIZED"
+}

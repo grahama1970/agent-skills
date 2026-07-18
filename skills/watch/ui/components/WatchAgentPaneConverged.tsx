@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react'
-import SharedChatShell from '../shared-chat/SharedChatShell'
-import type { WatchChatAdapterOptions, WatchSceneRow } from '../shared-chat/memory-turn'
+import SharedChatShell from '../SharedChatShell'
+import type { WatchChatAdapterOptions, WatchSceneRow } from '../memory-turn'
 
 export interface WatchAgentPaneConvergedProps {
   reportPath: string
