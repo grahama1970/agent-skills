@@ -657,6 +657,23 @@ def _matching_waiver(actual: dict[str, Any], waivers: list[dict[str, Any]]) -> d
         contains = waiver.get("text_contains")
         if contains and _normalize_text(str(contains)) in text_norm:
             return waiver
+        # A waiver may name several fragments of one artifact. Rotated runs and
+        # separator rules are split across blocks by the extractor, so a single
+        # text_contains covers only the first fragment of what a human signed off
+        # as one piece of page furniture.
+        for candidate in waiver.get("text_matches_any") or []:
+            if candidate and _normalize_text(str(candidate)) in text_norm:
+                return waiver
+        # Content pattern, for artifacts with no stable words at all (rules made
+        # of underscores or dashes). Prefer this over keying a waiver to an
+        # extractor-assigned block id, which does not survive re-extraction.
+        pattern = waiver.get("text_pattern")
+        if pattern:
+            try:
+                if re.search(str(pattern), str(actual.get("text", "")).strip()):
+                    return waiver
+            except re.error:
+                pass
     return None
 
 
