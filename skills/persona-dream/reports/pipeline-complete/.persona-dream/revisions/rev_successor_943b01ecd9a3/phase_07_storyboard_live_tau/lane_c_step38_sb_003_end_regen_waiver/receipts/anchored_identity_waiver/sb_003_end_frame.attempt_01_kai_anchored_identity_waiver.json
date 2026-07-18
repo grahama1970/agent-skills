@@ -1,0 +1,65 @@
+{
+  "anchor_frame": {
+    "embedding_cosine": 0.798839,
+    "embedding_threshold": 0.421,
+    "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_003_start_frame.png"
+  },
+  "character": "Kai",
+  "conditions": {
+    "a_contract_requires_face_nonreadable": {
+      "condition": "a_contract_requires_face_nonreadable",
+      "contract_hash_match": true,
+      "contract_sha256_expected": "sha256:99ee85a6315249322f4f3f02ec4f17714b63dfb5f249b6607d798db3ff2605d3",
+      "contract_sha256_observed": "sha256:99ee85a6315249322f4f3f02ec4f17714b63dfb5f249b6607d798db3ff2605d3",
+      "face_required": false,
+      "identity_anchored_by": "sb_003.start_frame",
+      "reasons": [],
+      "satisfied": true,
+      "speaker_mouth_camera_readable_during_speech": false
+    },
+    "b_start_frame_full_augmented_identity_pass": {
+      "anchor_embedding_cosine": 0.798839,
+      "anchor_embedding_subgate_status": "PASS",
+      "anchor_embedding_threshold": 0.421,
+      "anchor_frame_review_status": "PASS",
+      "anchor_full_frame_status": "PASS",
+      "condition": "b_start_frame_full_augmented_identity_pass",
+      "reasons": [],
+      "satisfied": true
+    },
+    "c_start_end_continuity_non_facial_pass": {
+      "condition": "c_start_end_continuity_non_facial_pass",
+      "continuity_status": "PASS",
+      "non_facial_checks": [
+        "wardrobe",
+        "build",
+        "hair",
+        "board",
+        "position"
+      ],
+      "non_facial_identity_continuity_for": [
+        "Kai"
+      ],
+      "reasons": [],
+      "satisfied": true
+    }
+  },
+  "continuity_receipt": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/continuity_review/sb_003_end_frame.attempt_01.sb_003_start__to__sb_003_end_continuity.json",
+  "contract": {
+    "contract_target_key": "sb_003_end_frame_contract",
+    "delta_block_key": "sb_003_end_frame_delta",
+    "identity_anchored_by": "sb_003.start_frame",
+    "sha256": "sha256:99ee85a6315249322f4f3f02ec4f17714b63dfb5f249b6607d798db3ff2605d3"
+  },
+  "created_at": "2026-07-18T21:59:43.107271+00:00",
+  "default_policy": "fail_closed: no explicit contract requirement -> no waiver",
+  "denied_reasons": [],
+  "frame_key": "end_frame",
+  "granted": true,
+  "live": true,
+  "mocked": false,
+  "panel_id": "sb_003",
+  "receipt_sha256": "sha256:fc367469d2a00d588cc617fc834100598d967a2c178dbce452d7d2a141f375ed",
+  "schema": "persona_dream.anchored_identity_waiver.v1",
+  "scope_statement": "This waiver ONLY waives the end-frame identity check for the named character under the delta's accepted design; every other character on the frame keeps the full augmented identity check (full-frame VLM + embedding subgate), and outside these four conditions all gates stay strict."
+}

@@ -1,0 +1,29 @@
+{
+  "blocking_findings": [],
+  "created_at": "2026-07-18T21:58:34.283680+00:00",
+  "criteria": {
+    "note": "frontal face-recognizability for Kai is intentionally NOT required here; it is carried by the anchored-identity waiver (start-frame anchor + non-facial continuity).",
+    "pass_requires": "kai_mouth_camera_readable == false AND kai_present_matching_build == true AND embry_face_readable == true",
+    "source_delta": "step38_sb_003_composition_delta_proposal.v1.json"
+  },
+  "frame": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/generated_storyboard_frames/sb_003_end_frame.png",
+  "frame_sha256": "sha256:9f8fb8c93e5382667ab7be1ebf4001ff702500117baca2837b33f2bb228bf20a",
+  "live": true,
+  "mocked": false,
+  "question": "Is Kai's mouth camera-readable during the sb_003 dialogue window (5.0-7.7s)?",
+  "raw_response": {
+    "embry_face_readable": true,
+    "kai_mouth_camera_readable": false,
+    "kai_present_matching_build": true,
+    "reasons": [
+      "Kai is a large foreground figure on the right with wet dark curly hair, tan skin, athletic build, and black rashguard, matching the required non-facial cues.",
+      "Kai is turned away toward the lineup/reef; his mouth and lip shape are not clearly visible or lip-readable from the camera angle.",
+      "Embry is a large foreground figure on the left with her face clearly visible and camera-readable."
+    ],
+    "verdict": "PASS"
+  },
+  "review_prompt_sha256": "sha256:b74b9bea8ce2aeca9cb3679d93cb95625c053837135562d440e15fc6b4d55023",
+  "reviewer_source": "scillm:gpt-5.5:image_url",
+  "schema": "persona_dream.lane_c.composition_check.waiver.v1",
+  "status": "PASS"
+}

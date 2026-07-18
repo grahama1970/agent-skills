@@ -1,0 +1,44 @@
+{
+  "blocking_findings": [],
+  "created_at": "2026-07-18T21:59:43.104066+00:00",
+  "frame_a": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/generated_storyboard_frames/sb_003_end_frame.png",
+  "frame_a_sha256": "sha256:9f8fb8c93e5382667ab7be1ebf4001ff702500117baca2837b33f2bb228bf20a",
+  "frame_b": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_004_start_frame.png",
+  "frame_b_sha256": "sha256:2c3211f225eea31a8091569ec10f68a87d7f324e12f04653c5efb1084c97a26e",
+  "live": true,
+  "mocked": false,
+  "non_facial_axis_results": {
+    "board": true,
+    "build": true,
+    "hair": true,
+    "position": true,
+    "wardrobe": true
+  },
+  "non_facial_checks": [
+    "wardrobe",
+    "build",
+    "hair",
+    "board",
+    "position"
+  ],
+  "non_facial_identity_continuity_for": [
+    "Kai"
+  ],
+  "pair_id": "sb_003_end__to__sb_004_start",
+  "raw_response": {
+    "blocking_findings": [],
+    "embry_same_person": true,
+    "kai_board_consistent": true,
+    "kai_build_consistent": true,
+    "kai_hair_consistent": true,
+    "kai_position_logic_consistent": true,
+    "kai_wardrobe_consistent": true,
+    "notes": "Embry remains the same woman as the reference across both frames, with consistent facial structure, eye color, brows, hair, and navy rashguard. Kai maintains consistent non-facial identity cues: black rashguard, athletic surfer build, dark wet curly hair, and no visible contradictory board/equipment change. The partial/turned-away Kai face in Frame A is not treated as a failure. The action transition is plausible between adjacent panels, with both characters in the same shallow reef lineup under consistent daylight, ocean conditions, mountains/shoreline, and visible lava reef boundary.",
+    "verdict": "PASS"
+  },
+  "review_prompt_sha256": "sha256:7aece5c5e4bb170c268f1d8b17dcbff4fc9b7e2d425b751132905abf105e9f88",
+  "reviewer_source": "scillm:gpt-5.5:image_url",
+  "schema": "persona_dream.lane_c.non_facial_continuity_review.v1",
+  "status": "PASS",
+  "transition": "end->next-start across adjacent panels (sb_003 end -> sb_004 start)"
+}

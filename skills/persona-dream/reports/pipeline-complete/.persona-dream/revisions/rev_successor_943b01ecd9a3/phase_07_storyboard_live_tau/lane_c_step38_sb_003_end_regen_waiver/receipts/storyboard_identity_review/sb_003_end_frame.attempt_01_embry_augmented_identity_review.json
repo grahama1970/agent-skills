@@ -1,0 +1,82 @@
+{
+  "blocking_findings": [],
+  "created_at": "2026-07-18T21:58:48.115292+00:00",
+  "face_embedding_subgate": {
+    "authority": "embedding_cosine",
+    "blocking_findings": [],
+    "candidate_faces_detected": 1,
+    "entity_results": [
+      {
+        "best_cosine": 0.716584,
+        "candidate_bbox": [
+          462.9,
+          261.8,
+          631.3,
+          487.3
+        ],
+        "candidate_det_score": 0.9004,
+        "candidate_detected_sex": "F",
+        "entity": "Embry",
+        "expected_sex": "F",
+        "pairwise_cosine": [
+          0.684208,
+          0.668392,
+          0.674475,
+          0.695607,
+          0.642205,
+          0.697244,
+          0.716584,
+          0.487286,
+          0.55701
+        ],
+        "reference_face_count": 9,
+        "status": "PASS",
+        "threshold": 0.421,
+        "verdict": "SAME"
+      }
+    ],
+    "failure_code": "FAIL_FACE_EMBEDDING_IDENTITY_MISMATCH",
+    "frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/generated_storyboard_frames/sb_003_end_frame.png",
+    "frame_sha256": "sha256:9f8fb8c93e5382667ab7be1ebf4001ff702500117baca2837b33f2bb228bf20a",
+    "live": true,
+    "mocked": false,
+    "model": "insightface:buffalo_l:w600k_r50",
+    "reviewer_source": "insightface:buffalo_l:cosine",
+    "schema": "persona_dream.identity_face_embedding_subgate.v1",
+    "status": "PASS",
+    "threshold": 0.421
+  },
+  "frame": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/generated_storyboard_frames/sb_003_end_frame.png",
+  "frame_sha256": "sha256:9f8fb8c93e5382667ab7be1ebf4001ff702500117baca2837b33f2bb228bf20a",
+  "full_frame_status": "PASS",
+  "identity_authority": "face_embedding_subgate",
+  "live": true,
+  "mocked": false,
+  "raw_response": {
+    "blocking_findings": [],
+    "identity_notes": "Embry is foreground, near-frontal, and face-readable. The depicted woman matches the specific reference identity at the feature level, including complexion/freckling, face shape, brows, eyes, and nose, and reads as a late-20s adult woman in a navy surf top. Kai is not assessed.",
+    "observed_divergences": {
+      "Embry": [
+        "wet hair and outdoor surf lighting alter texture and contrast, but do not change the facial identity",
+        "expression is more serious than some reference views, but facial structure remains consistent"
+      ]
+    },
+    "verdict": "PASS",
+    "verified_facial_features": {
+      "Embry": [
+        "warm-olive complexion with visible freckles across the nose and cheeks",
+        "fuller oval face shape with a soft jawline matching the reference",
+        "thick dark arched eyebrows, green/hazel eyes, and a straight narrow nose matching the reference"
+      ]
+    },
+    "visible_entities": [
+      "Embry"
+    ]
+  },
+  "required_entity": "Embry",
+  "review_prompt_sha256": "sha256:4dde6371153d2f995c04468c1028a60c881fe047e9480bce6058f3ee3f70c21b",
+  "reviewer_source": "scillm:gpt-5.5:image_url",
+  "schema": "persona_dream.lane_c.embry_augmented_identity_review.v1",
+  "status": "PASS",
+  "waiver_context": "Kai is under the anchored-identity waiver on this frame; the reviewer disregards his turned-away face and judges only Embry."
+}

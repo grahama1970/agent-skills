@@ -1,0 +1,32 @@
+{
+  "attempts": [
+    {
+      "attempt": 1,
+      "composition_findings": [],
+      "composition_status": "PASS",
+      "continuity": [
+        {
+          "blocking_findings": [],
+          "pair": "sb_003_start__to__sb_003_end",
+          "receipt": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/continuity_review/sb_003_end_frame.attempt_01.sb_003_start__to__sb_003_end_continuity.json",
+          "status": "PASS"
+        },
+        {
+          "blocking_findings": [],
+          "pair": "sb_003_end__to__sb_004_start",
+          "receipt": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/continuity_review/sb_003_end_frame.attempt_01.sb_003_end__to__sb_004_start_continuity.json",
+          "status": "PASS"
+        }
+      ],
+      "embry_embedding_cosine": 0.716584,
+      "embry_identity_status": "PASS",
+      "failures": [],
+      "generation_ok": true,
+      "image_sha256": "sha256:9f8fb8c93e5382667ab7be1ebf4001ff702500117baca2837b33f2bb228bf20a",
+      "kai_anchor_cosine": 0.798839,
+      "kai_waiver_granted": true,
+      "prompt_sha256": "sha256:542295856aa78dee1c79bdfb2279e388837f15c14b445f5b4378280c7d37c9b9"
+    }
+  ],
+  "updated_at": "2026-07-18T21:59:43.107466+00:00"
+}

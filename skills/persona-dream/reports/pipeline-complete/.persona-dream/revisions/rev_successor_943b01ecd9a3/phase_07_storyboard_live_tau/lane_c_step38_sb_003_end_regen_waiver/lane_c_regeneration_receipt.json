@@ -1,0 +1,296 @@
+{
+  "acceptance": {
+    "composition": {
+      "blocking_findings": [],
+      "created_at": "2026-07-18T21:58:34.283680+00:00",
+      "criteria": {
+        "note": "frontal face-recognizability for Kai is intentionally NOT required here; it is carried by the anchored-identity waiver (start-frame anchor + non-facial continuity).",
+        "pass_requires": "kai_mouth_camera_readable == false AND kai_present_matching_build == true AND embry_face_readable == true",
+        "source_delta": "step38_sb_003_composition_delta_proposal.v1.json"
+      },
+      "frame": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/generated_storyboard_frames/sb_003_end_frame.png",
+      "frame_sha256": "sha256:9f8fb8c93e5382667ab7be1ebf4001ff702500117baca2837b33f2bb228bf20a",
+      "live": true,
+      "mocked": false,
+      "question": "Is Kai's mouth camera-readable during the sb_003 dialogue window (5.0-7.7s)?",
+      "raw_response": {
+        "embry_face_readable": true,
+        "kai_mouth_camera_readable": false,
+        "kai_present_matching_build": true,
+        "reasons": [
+          "Kai is a large foreground figure on the right with wet dark curly hair, tan skin, athletic build, and black rashguard, matching the required non-facial cues.",
+          "Kai is turned away toward the lineup/reef; his mouth and lip shape are not clearly visible or lip-readable from the camera angle.",
+          "Embry is a large foreground figure on the left with her face clearly visible and camera-readable."
+        ],
+        "verdict": "PASS"
+      },
+      "review_prompt_sha256": "sha256:b74b9bea8ce2aeca9cb3679d93cb95625c053837135562d440e15fc6b4d55023",
+      "reviewer_source": "scillm:gpt-5.5:image_url",
+      "schema": "persona_dream.lane_c.composition_check.waiver.v1",
+      "status": "PASS"
+    },
+    "continuity": [
+      {
+        "blocking_findings": [],
+        "pair": "sb_003_start__to__sb_003_end",
+        "receipt": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/continuity_review/sb_003_end_frame.attempt_01.sb_003_start__to__sb_003_end_continuity.json",
+        "status": "PASS"
+      },
+      {
+        "blocking_findings": [],
+        "pair": "sb_003_end__to__sb_004_start",
+        "receipt": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/continuity_review/sb_003_end_frame.attempt_01.sb_003_end__to__sb_004_start_continuity.json",
+        "status": "PASS"
+      }
+    ],
+    "embry_review": {
+      "blocking_findings": [],
+      "created_at": "2026-07-18T21:58:48.115292+00:00",
+      "face_embedding_subgate": {
+        "authority": "embedding_cosine",
+        "blocking_findings": [],
+        "candidate_faces_detected": 1,
+        "entity_results": [
+          {
+            "best_cosine": 0.716584,
+            "candidate_bbox": [
+              462.9,
+              261.8,
+              631.3,
+              487.3
+            ],
+            "candidate_det_score": 0.9004,
+            "candidate_detected_sex": "F",
+            "entity": "Embry",
+            "expected_sex": "F",
+            "pairwise_cosine": [
+              0.684208,
+              0.668392,
+              0.674475,
+              0.695607,
+              0.642205,
+              0.697244,
+              0.716584,
+              0.487286,
+              0.55701
+            ],
+            "reference_face_count": 9,
+            "status": "PASS",
+            "threshold": 0.421,
+            "verdict": "SAME"
+          }
+        ],
+        "failure_code": "FAIL_FACE_EMBEDDING_IDENTITY_MISMATCH",
+        "frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/generated_storyboard_frames/sb_003_end_frame.png",
+        "frame_sha256": "sha256:9f8fb8c93e5382667ab7be1ebf4001ff702500117baca2837b33f2bb228bf20a",
+        "live": true,
+        "mocked": false,
+        "model": "insightface:buffalo_l:w600k_r50",
+        "reviewer_source": "insightface:buffalo_l:cosine",
+        "schema": "persona_dream.identity_face_embedding_subgate.v1",
+        "status": "PASS",
+        "threshold": 0.421
+      },
+      "frame": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/generated_storyboard_frames/sb_003_end_frame.png",
+      "frame_sha256": "sha256:9f8fb8c93e5382667ab7be1ebf4001ff702500117baca2837b33f2bb228bf20a",
+      "full_frame_status": "PASS",
+      "identity_authority": "face_embedding_subgate",
+      "live": true,
+      "mocked": false,
+      "raw_response": {
+        "blocking_findings": [],
+        "identity_notes": "Embry is foreground, near-frontal, and face-readable. The depicted woman matches the specific reference identity at the feature level, including complexion/freckling, face shape, brows, eyes, and nose, and reads as a late-20s adult woman in a navy surf top. Kai is not assessed.",
+        "observed_divergences": {
+          "Embry": [
+            "wet hair and outdoor surf lighting alter texture and contrast, but do not change the facial identity",
+            "expression is more serious than some reference views, but facial structure remains consistent"
+          ]
+        },
+        "verdict": "PASS",
+        "verified_facial_features": {
+          "Embry": [
+            "warm-olive complexion with visible freckles across the nose and cheeks",
+            "fuller oval face shape with a soft jawline matching the reference",
+            "thick dark arched eyebrows, green/hazel eyes, and a straight narrow nose matching the reference"
+          ]
+        },
+        "visible_entities": [
+          "Embry"
+        ]
+      },
+      "required_entity": "Embry",
+      "review_prompt_sha256": "sha256:4dde6371153d2f995c04468c1028a60c881fe047e9480bce6058f3ee3f70c21b",
+      "reviewer_source": "scillm:gpt-5.5:image_url",
+      "schema": "persona_dream.lane_c.embry_augmented_identity_review.v1",
+      "status": "PASS",
+      "waiver_context": "Kai is under the anchored-identity waiver on this frame; the reviewer disregards his turned-away face and judges only Embry."
+    },
+    "waiver": {
+      "anchor_frame": {
+        "embedding_cosine": 0.798839,
+        "embedding_threshold": 0.421,
+        "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_003_start_frame.png"
+      },
+      "character": "Kai",
+      "conditions": {
+        "a_contract_requires_face_nonreadable": {
+          "condition": "a_contract_requires_face_nonreadable",
+          "contract_hash_match": true,
+          "contract_sha256_expected": "sha256:99ee85a6315249322f4f3f02ec4f17714b63dfb5f249b6607d798db3ff2605d3",
+          "contract_sha256_observed": "sha256:99ee85a6315249322f4f3f02ec4f17714b63dfb5f249b6607d798db3ff2605d3",
+          "face_required": false,
+          "identity_anchored_by": "sb_003.start_frame",
+          "reasons": [],
+          "satisfied": true,
+          "speaker_mouth_camera_readable_during_speech": false
+        },
+        "b_start_frame_full_augmented_identity_pass": {
+          "anchor_embedding_cosine": 0.798839,
+          "anchor_embedding_subgate_status": "PASS",
+          "anchor_embedding_threshold": 0.421,
+          "anchor_frame_review_status": "PASS",
+          "anchor_full_frame_status": "PASS",
+          "condition": "b_start_frame_full_augmented_identity_pass",
+          "reasons": [],
+          "satisfied": true
+        },
+        "c_start_end_continuity_non_facial_pass": {
+          "condition": "c_start_end_continuity_non_facial_pass",
+          "continuity_status": "PASS",
+          "non_facial_checks": [
+            "wardrobe",
+            "build",
+            "hair",
+            "board",
+            "position"
+          ],
+          "non_facial_identity_continuity_for": [
+            "Kai"
+          ],
+          "reasons": [],
+          "satisfied": true
+        }
+      },
+      "continuity_receipt": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/continuity_review/sb_003_end_frame.attempt_01.sb_003_start__to__sb_003_end_continuity.json",
+      "contract": {
+        "contract_target_key": "sb_003_end_frame_contract",
+        "delta_block_key": "sb_003_end_frame_delta",
+        "identity_anchored_by": "sb_003.start_frame",
+        "sha256": "sha256:99ee85a6315249322f4f3f02ec4f17714b63dfb5f249b6607d798db3ff2605d3"
+      },
+      "created_at": "2026-07-18T21:59:43.107271+00:00",
+      "default_policy": "fail_closed: no explicit contract requirement -> no waiver",
+      "denied_reasons": [],
+      "frame_key": "end_frame",
+      "granted": true,
+      "live": true,
+      "mocked": false,
+      "panel_id": "sb_003",
+      "receipt_sha256": "sha256:fc367469d2a00d588cc617fc834100598d967a2c178dbce452d7d2a141f375ed",
+      "schema": "persona_dream.anchored_identity_waiver.v1",
+      "scope_statement": "This waiver ONLY waives the end-frame identity check for the named character under the delta's accepted design; every other character on the frame keeps the full augmented identity check (full-frame VLM + embedding subgate), and outside these four conditions all gates stay strict."
+    },
+    "waiver_receipt": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/anchored_identity_waiver/sb_003_end_frame.attempt_01_kai_anchored_identity_waiver.json"
+  },
+  "acceptance_contract": {
+    "max_attempts": 5,
+    "per_attempt_requires_all_of": [
+      "(1) composition PASS: Kai mouth NOT camera-readable + Embry readable + Kai present matching build (non-facial)",
+      "(2) Embry end-frame augmented identity PASS (full-frame VLM + embedding subgate) -- never waived",
+      "(3) Kai anchored-identity waiver GRANTED (contract flag by hash + start-frame Kai full augmented PASS + non-facial start->end continuity PASS + waiver receipt)",
+      "(4) BOTH continuity pairs PASS (non-facial for Kai)"
+    ],
+    "waiver_is_scoped": "only Kai's END-frame face check is waived; Embry keeps the full check; default fail-closed elsewhere"
+  },
+  "accepted": true,
+  "attempts": [
+    {
+      "attempt": 1,
+      "composition_findings": [],
+      "composition_status": "PASS",
+      "continuity": [
+        {
+          "blocking_findings": [],
+          "pair": "sb_003_start__to__sb_003_end",
+          "receipt": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/continuity_review/sb_003_end_frame.attempt_01.sb_003_start__to__sb_003_end_continuity.json",
+          "status": "PASS"
+        },
+        {
+          "blocking_findings": [],
+          "pair": "sb_003_end__to__sb_004_start",
+          "receipt": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/continuity_review/sb_003_end_frame.attempt_01.sb_003_end__to__sb_004_start_continuity.json",
+          "status": "PASS"
+        }
+      ],
+      "embry_embedding_cosine": 0.716584,
+      "embry_identity_status": "PASS",
+      "failures": [],
+      "generation_ok": true,
+      "image_sha256": "sha256:9f8fb8c93e5382667ab7be1ebf4001ff702500117baca2837b33f2bb228bf20a",
+      "kai_anchor_cosine": 0.798839,
+      "kai_waiver_granted": true,
+      "prompt_sha256": "sha256:542295856aa78dee1c79bdfb2279e388837f15c14b445f5b4378280c7d37c9b9"
+    }
+  ],
+  "attempts_used": 1,
+  "claims": {
+    "does_not_prove": [
+      "Kling readiness",
+      "provider media publication",
+      "publication authorization",
+      "paid authorization",
+      "provider return",
+      "lip-sync-on-return"
+    ],
+    "proves": [
+      "sb_003_end_frame was regenerated via the Phase C GPT Image 2 lane under the scoped anchored-identity waiver and (only if accepted) passes: a composition check proving Kai's mouth is not camera-readable, Embry's full augmented identity review, the Kai anchored-identity waiver (start-frame anchor + non-facial continuity), and both continuity pairs -- the delta's own recorded design, not a gate weakening"
+    ]
+  },
+  "created_at": "2026-07-18T21:59:43.107591+00:00",
+  "frame_id": "sb_003.end_frame",
+  "full_check_character": "Embry",
+  "identity_anchor_start_frame": {
+    "augmented_review_status": "PASS",
+    "kai_embedding_cosine": 0.798839,
+    "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_003_start_frame.png",
+    "sha256": "sha256:9046059c87f35a6be56f166415979a25bfb72f9c51293a1434eb0f7ac8a1118c"
+  },
+  "identity_source": {
+    "asset_id": "embry_contact_sheet_v3",
+    "path": "/mnt/storage12tb/media/personas/embry/assets/contact_sheets/embry-gpt-image-2-v3/images/embry_contact_sheet_v3.png",
+    "sha256": "sha256:3ce40b3b6839ebba0f468d75a1adbb7f82e0d95457aefd3627e222eb569de00c"
+  },
+  "image_auth": "codex-oauth",
+  "image_model": "gpt-image-2",
+  "kai_reference": {
+    "path": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png",
+    "sha256": "sha256:692cf37c5e7915f8b4ebceabd03b5d01ff69c9d428e94333bc1a01ac5e497700"
+  },
+  "live": true,
+  "max_attempts": 5,
+  "mocked": false,
+  "new_frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/generated_storyboard_frames/sb_003_end_frame.png",
+  "new_frame_sha256": "sha256:9f8fb8c93e5382667ab7be1ebf4001ff702500117baca2837b33f2bb228bf20a",
+  "paid_call_authorized": false,
+  "provider_live": false,
+  "review_auth": "codex-oauth",
+  "review_model": "gpt-5.5",
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.lane_c.sb_003_end_regeneration_receipt.waiver.v1",
+  "standard": "anchored_identity_waiver",
+  "status": "PASS_LANE_C_SB_003_END_REGENERATED_WAIVER",
+  "step38_delta": {
+    "contract_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/prompt_contracts/sb_003.end_frame.attempt_001.json",
+    "contract_sha256": "sha256:99ee85a6315249322f4f3f02ec4f17714b63dfb5f249b6607d798db3ff2605d3",
+    "path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/step38_sb_003_composition_delta_proposal.v1.json"
+  },
+  "superseded_frame": {
+    "disposition": "retained_as_superseded_evidence",
+    "index_key": "sb_003.end_frame",
+    "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_003_end_frame.png",
+    "sha256": "sha256:1b03c8f9c9148874dc63a49a0f2658391c59fee1c89759c25bc034f30b9f7d56"
+  },
+  "waived_character": "Kai",
+  "waiver_module": "scripts/anchored_identity_waiver.py"
+}
