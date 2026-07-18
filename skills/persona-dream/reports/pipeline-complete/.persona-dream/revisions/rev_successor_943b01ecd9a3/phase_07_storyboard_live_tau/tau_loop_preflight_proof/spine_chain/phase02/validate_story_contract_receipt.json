@@ -1,0 +1,17 @@
+{
+  "blockers": [],
+  "checked_at": "2026-07-18T00:00:00+00:00",
+  "contract_path": "phase02/story_contract_prompt.json",
+  "contract_sha256": "sha256:c839563567c424d4c192679325bba756a95cdb387e14995139e54742a88d9abf",
+  "live": false,
+  "live_image_call_started": false,
+  "mocked": false,
+  "provider_live": false,
+  "renderer": {
+    "deterministic": true,
+    "name": "phase07_prompt_renderer",
+    "version": "v1"
+  },
+  "schema": "persona_dream.phase02.prompt_contract_validation_receipt.v1",
+  "status": "PASS_STORY_CONTRACT"
+}

@@ -1,0 +1,121 @@
+{
+  "attempt": 1,
+  "camera_contract": {
+    "identity_priority": "required faces readable above location detail",
+    "lens": "35mm",
+    "shot_type": "medium-wide waterline two-shot"
+  },
+  "compiled_from": "phase06/script_prompt_contract.json",
+  "environment_requirements": [
+    "Kahalu'u Bay waterline in hot humid daylight",
+    "clear shallow water revealing dark lava reef boundary below the surface",
+    "public surf lineup visible but secondary in the background"
+  ],
+  "frame_id": "sb_002.end_frame",
+  "generation_scope": {
+    "live_image_call_started": false,
+    "provider_live": false,
+    "purpose": "prompt contract validation only"
+  },
+  "identity_reference_assets": {
+    "Embry": {
+      "asset_id": "embry_contact_sheet_v3",
+      "attached_to_provider_request": true,
+      "path": "/mnt/storage12tb/media/personas/embry/assets/contact_sheets/embry-gpt-image-2-v3/images/embry_contact_sheet_v3.png",
+      "sha256": "sha256:3ce40b3b6839ebba0f468d75a1adbb7f82e0d95457aefd3627e222eb569de00c"
+    },
+    "Kai": {
+      "asset_id": "kai_akana_character_sheet",
+      "attached_to_provider_request": true,
+      "path": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png",
+      "sha256": "sha256:692cf37c5e7915f8b4ebceabd03b5d01ff69c9d428e94333bc1a01ac5e497700"
+    }
+  },
+  "identity_requirements": {
+    "Embry": {
+      "required": true,
+      "visibility": {
+        "face_required": true,
+        "spatially_implied_allowed": false
+      }
+    },
+    "Kai": {
+      "required": true,
+      "visibility": {
+        "face_required": true,
+        "spatially_implied_allowed": false
+      }
+    }
+  },
+  "input_contracts": {
+    "phase06_script_prompt_contract": {
+      "path": "phase06/script_prompt_contract.json",
+      "required_validator_status": "PASS_SCRIPT_CONTRACT",
+      "sha256": "sha256:25e55902da9cefb93f01a6c4b66c884106aff75d1d68b6eaff5220671c70abc2",
+      "validator_receipt_path": "phase06/validate_script_contract_receipt.json",
+      "validator_receipt_sha256": "sha256:31880f294d527d934a265192b256a14c963d369e1cc4f3bc81d7f5ed4e670bb3"
+    }
+  },
+  "model_policy": {
+    "provider": "gpt-image-2",
+    "reference_attachment_required": true,
+    "text_only_not_provider_eligible": true
+  },
+  "panel_id": "sb_002",
+  "prompt_sections": {
+    "CHARACTERS": "Embry (adult woman, brown hair pulled back, navy rashguard) and Kai (young adult man, tan skin, dark curly wet hair, black rashguard) are the two dominant foreground people; both faces readable and strongly matched to their attached reference images.",
+    "MUST_INCLUDE": "Both required identities reference-verifiable with readable three-quarter faces, foreground, matching wardrobe and equipment continuity.",
+    "MUST_NOT_INCLUDE": "Do not omit or substitute Embry or Kai; do not swap identities; no back-facing-only or distant tiny faces; no occluded faces; no contact sheet, collage, or character-sheet layout; no rendered dialogue text.",
+    "SCENE": "Low waterline two-shot at Kahalu'u Bay; wet sand, surf line, and the dark lava reef boundary stay spatially coherent; background surfers remain smaller and secondary.",
+    "SUBJECT": "sb_002 end frame from the interrupted stolen-sick-day surf story: Medium action panel on Embry's borrowed white shortboard, hands and rail grip visible."
+  },
+  "provider_request_shape": {
+    "image_reference_inputs": [
+      "embry_contact_sheet_v3",
+      "kai_akana_character_sheet"
+    ]
+  },
+  "required_identities": [
+    "Embry",
+    "Kai"
+  ],
+  "run_id": "phase_07_storyboard_live_tau",
+  "schema": "persona_dream.phase07.panel_prompt_contract.v2",
+  "serialized_json_as_prompt_text_allowed": false,
+  "source_consumption_policy": {
+    "raw_script_text_used_as_prompt_text": false,
+    "serialized_json_as_prompt_text_allowed": false,
+    "uses_typed_fields_from_phase06": [
+      "script.rows",
+      "timed_beats",
+      "entity_environment_script_table",
+      "asset_usage",
+      "interaction_matrix_coverage",
+      "storyboard_constraints"
+    ]
+  },
+  "state_contract": {
+    "creator_may_write": [
+      "candidate_frame",
+      "candidate_prompt"
+    ],
+    "creator_must_not_write": [
+      "accepted_frame",
+      "reviewer_verdict"
+    ],
+    "reviewer_may_write": [
+      "accepted_frame",
+      "reviewer_verdict"
+    ]
+  },
+  "story_action": "Embry's phone buzzes from the beach bag as sweat and salt mark her face. Her palm skids on sun-softened wax, forcing her to reset her rail grip before the wave reaches the reef line. (end frame of panel sb_002).",
+  "tau_run_id": "tau-successor-943b01ecd9a3-phase07",
+  "temporal_continuity_reference_assets": {
+    "previous_frame": {
+      "asset_id": "phase_c_accepted_sb_002_start_frame",
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_002_start_frame.png",
+      "sha256": "sha256:aebcbd907c999d64ba4e7effd4f9f95e75e8e094e6deee605f5fb6f5a2e4606b"
+    }
+  },
+  "time_range": "2.5-5.0s"
+}

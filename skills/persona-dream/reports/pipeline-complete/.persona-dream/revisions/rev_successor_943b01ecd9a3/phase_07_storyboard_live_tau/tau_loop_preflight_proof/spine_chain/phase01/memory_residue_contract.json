@@ -1,0 +1,23 @@
+{
+  "downstream_contract": {
+    "may_feed_phase02": true
+  },
+  "media_references": [],
+  "phase": "01_memory_residue",
+  "prompt_safe_text": [
+    "Synthetic dream for Embry, with Kai as the secondary persona."
+  ],
+  "run_id": "phase_07_storyboard_live_tau",
+  "schema": "persona_dream.phase01.memory_residue_contract.v1",
+  "serialized_json_as_prompt_text_allowed": false,
+  "source_residue": [
+    {
+      "source_hash": "sha256:b7c85fd1e873e97b73133be56684240c41f3fac4f22e8d9e7a2ff19a2946a308",
+      "source_id": "successor_dream_packet",
+      "source_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_01_idea/dream_packet.json"
+    }
+  ],
+  "typed_idea_fields": {
+    "premise": "Synthetic dream for Embry, with Kai as the secondary persona."
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "asset_usage": {
+    "Embry": {
+      "required": true,
+      "usage": "hard_identity_reference"
+    },
+    "Kai": {
+      "required": true,
+      "usage": "hard_identity_reference"
+    }
+  },
+  "downstream_contract": {
+    "may_feed_phase07": true
+  },
+  "entity_environment_script_table": [
+    {
+      "entity": "Embry",
+      "environment": "Kahalu'u Bay waterline",
+      "usage": "hard_identity_reference"
+    },
+    {
+      "entity": "Kai",
+      "environment": "Kahalu'u Bay waterline",
+      "usage": "hard_identity_reference"
+    }
+  ],
+  "input_contracts": {
+    "phase02_story_contract_prompt": {
+      "path": "phase02/story_contract_prompt.json",
+      "sha256": "sha256:c839563567c424d4c192679325bba756a95cdb387e14995139e54742a88d9abf",
+      "validator_receipt_path": "phase02/validate_story_contract_receipt.json",
+      "validator_receipt_sha256": "sha256:2defa13b33e69e46c3864ab19b19da0645459516c856a03e85cffffd460d8cb3"
+    },
+    "story_contract_path": "phase02/story_contract_prompt.json"
+  },
+  "interaction_matrix_coverage": {
+    "covered_edges": [
+      {
+        "from": "Embry",
+        "relation": "shared_surf_decision",
+        "to": "Kai"
+      }
+    ],
+    "uncovered_edges": []
+  },
+  "phase": "06_script",
+  "realism_contract": {
+    "no_text_overlays": true,
+    "style": "realistic cinematic storyboard"
+  },
+  "run_id": "phase_07_storyboard_live_tau",
+  "schema": "persona_dream.phase06.script_prompt_contract.v1",
+  "script": {
+    "rows": [
+      {
+        "action": "Embry and Kai wait outside the lineup instead of cutting across it. Heat, glare, and the public reef break establish that the stolen sick day still has rules.",
+        "required_entities": [
+          "Embry",
+          "Kai"
+        ],
+        "row_id": "sb_001"
+      },
+      {
+        "action": "Embry's phone buzzes from the beach bag as sweat and salt mark her face. Her palm skids on sun-softened wax, forcing her to reset her rail grip before the wave reaches the reef line.",
+        "required_entities": [
+          "Embry",
+          "Kai"
+        ],
+        "row_id": "sb_002"
+      },
+      {
+        "action": "Kai reads the local, the channel, the reef, and Embry's paddle cadence. He holds position instead of taking the easy wave, then gives one restrained cue.",
+        "required_entities": [
+          "Embry",
+          "Kai"
+        ],
+        "row_id": "sb_003"
+      },
+      {
+        "action": "Embry chooses the safe channel and commits only when the lineup opens. The wave, reef, softened wax, and phone obligation converge into one visible decision.",
+        "required_entities": [
+          "Embry",
+          "Kai"
+        ],
+        "row_id": "sb_004"
+      }
+    ]
+  },
+  "serialized_json_as_prompt_text_allowed": false,
+  "storyboard_constraints": {
+    "panel_count": 4
+  },
+  "timed_beats": [
+    {
+      "beat_id": "beat_01",
+      "story_function": "autonomy versus obligation pivot."
+    }
+  ],
+  "timed_transcript": [
+    {
+      "note": "no spoken dialogue rendered as text in storyboard frames",
+      "t": "0.0-10.0s"
+    }
+  ]
+}

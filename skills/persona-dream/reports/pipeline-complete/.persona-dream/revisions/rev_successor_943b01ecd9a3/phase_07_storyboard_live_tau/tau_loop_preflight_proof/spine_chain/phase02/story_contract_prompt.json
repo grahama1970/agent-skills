@@ -1,0 +1,46 @@
+{
+  "downstream_contract": {
+    "may_feed_phase06": true
+  },
+  "input_contracts": {
+    "memory_residue_contract_path": "phase01/memory_residue_contract.json",
+    "phase01_memory_residue_contract": {
+      "path": "phase01/memory_residue_contract.json",
+      "sha256": "sha256:9a40e3f11e4e81456afe39bdcd7fac41015162eb8cd62268fcc177259bf946f8",
+      "validator_receipt_path": "phase01/validate_memory_residue_receipt.json",
+      "validator_receipt_sha256": "sha256:6927f6f87c85cb9c8b39674f818b59bce66e12ffbda06c62e2f337b95730f22b"
+    }
+  },
+  "interaction_matrix": {
+    "edges": [
+      {
+        "from": "Embry",
+        "relation": "shared_surf_decision",
+        "to": "Kai"
+      }
+    ],
+    "entities": [
+      "Embry",
+      "Kai"
+    ]
+  },
+  "phase": "02_story",
+  "run_id": "phase_07_storyboard_live_tau",
+  "schema": "persona_dream.phase02.story_contract_prompt.v1",
+  "serialized_json_as_prompt_text_allowed": false,
+  "story_contract": {
+    "beats": [
+      "Synthetic dream for Embry, with Kai as the secondary persona."
+    ],
+    "logline": "Synthetic dream for Embry, with Kai as the secondary persona.",
+    "story": "Synthetic dream for Embry, with Kai as the secondary persona. The requested dream topic is: Embry and Kai both faked a sick day at their summer jobs to go surfing on the Big Island on a Wednesday in June of 2024 \u2014 Kona Coast, Kahalu\u02bbu Bay, summer swell patterns, lava rock reefs, local surf etiquette. Memory residue gathers around Kai's annotated surf map and its hazard/etiquette rules, the minor reef scrape where Embry chose shore on her own terms, and Kai's private surf-timing correction that let her continue without self-punishment. Core tension: autonomy versus obligation - a stolen sick day that still obeys the reef, the lineup, and her own careful judgment. Render as symbolic cinematic images, not factual claims. All imagery is synthetic dream content.",
+    "title": "Stolen Sick Day at Kahalu'u Bay"
+  },
+  "typed_source_context": {
+    "origin": "successor phase_02_story/story_contract.json (typed projection)"
+  },
+  "visual_continuity_seeds": {
+    "reef": "dark lava reef boundary",
+    "wardrobe": "Embry navy rashguard, Kai black rashguard"
+  }
+}

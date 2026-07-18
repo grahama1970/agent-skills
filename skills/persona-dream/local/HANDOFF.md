@@ -70,19 +70,46 @@ review receipts under `…/phase_c_successor_regen/receipts/storyboard_identity_
   `test_phase11_payload_binding_bootstrap`, `test_phase11_multi_prompt_end_image_contract`
   all green.
 
-## 3. Open Item / Documented Deviation
+## 3. Open Item / Documented Deviation — RESOLVED (2026-07-18)
 
-- **The full Tau DAG command-loop was NOT used for Phase C, and "raise
-  `max_steps` above 2" was made moot rather than fixed.** The spine-chain
-  preflight requires deterministic per-frame `prompt_contract` / compiled-prompt
-  integrity artifacts whose renderer (`phase07_prompt_renderer`) **does not exist
-  as a callable in the repo**. Rather than fabricate those integrity claims,
-  Phase C drove the panel node's identical creator+reviewer functions directly
-  via `scripts/phase_c_regenerate_storyboard_frames.py`. The actual-pixel review
-  used the node's real reviewer; node tests are 11/11 green. Building
-  `phase07_prompt_renderer` (or removing the spine-chain preflight's dependency
-  on it) is the way to run the storyboard frames through the true Tau DAG
-  command-loop with `max_steps > 2`.
+- **RESOLVED: `phase07_prompt_renderer` now exists as a real deterministic
+  callable, the spine-chain preflight passes on genuinely rendered artifacts, and
+  the Tau command-loop is proven to reach the panel-specific 3rd node (no
+  `max_steps=2` truncation).** Full diagnosis:
+  `local/PHASE07_RENDERER_DIAGNOSIS.md`.
+
+  Diagnosis (was the renderer ever real? **No**): `phase07_prompt_renderer`
+  existed only as a `renderer.name` string in manifest fixtures/design notes; git
+  history shows no such file was ever added in either repo. The one 12TB precedent
+  run satisfied the gate with **2-line hand-authored stub prompts** binding
+  fictional fixture assets, while its manifest asserted
+  `deterministic/not-hand-edited` — a fabricated claim; the gate never verified
+  the prompt was a function of the contract.
+
+  Fix (integrity strengthened, never weakened): `scripts/phase07_prompt_renderer.py`
+  renders each compiled prompt as a **pure, byte-stable function of the panel
+  prompt contract** (`compile_prompt(contract)`), builds the upstream spine
+  contracts as typed projections hash-bound to the successor's real phase
+  artifacts, binds the 8 `panel_prompt_contract.v2` files to the real
+  `embry_contact_sheet_v3` + Kai reference + accepted Phase C frames, and emits
+  reviewer acceptance claims bound to the **real Phase C actual-pixel reviews**.
+  `verify_render` re-derives every prompt and fails closed on tampering, so the
+  "not hand-edited" claim is now re-checkable. Tests:
+  `tests/test_phase07_prompt_renderer.py` (9/9 green); node tests still green.
+
+  Proof (no paid call, no image generation; Phase C frames reused):
+  - `scripts/prove_phase07_tau_loop_preflight.py` →
+    `phase_07_storyboard_live_tau/tau_loop_preflight_proof/tau_loop_preflight_proof_receipt.v1.json`
+    (`PASS_TAU_LOOP_PREFLIGHT_PROOF`): deterministic render, spine-chain gate PASS,
+    node creator+reviewer live preflight PASS (both full-storyboard and targeted
+    `require_target_scope=True`).
+  - `.../tau_loop_preflight_proof/tau_command_loop_evidence.v1.json`: the Tau
+    handoff loop (dry-run, `max_steps=4`) advances **panel-creator →
+    panel-reviewer → persona-dream-panel-repair-gate** and halts at
+    `next_agent_is_human`. **No tau code change was required** — there is no hard
+    `max_steps=2`; the loop default is 5. The historical stop-at-2 was a
+    DAG-contract config case (`limits.max_total_attempts` unset on a 2-node graph
+    → `_max_steps==2`), not a code defect.
 
 ### Phase D state-clearing deviation — AUDITED / RESOLVED (2026-07-18)
 

@@ -1,0 +1,17 @@
+{
+  "blockers": [],
+  "checked_at": "2026-07-18T00:00:00+00:00",
+  "contract_path": "phase01/memory_residue_contract.json",
+  "contract_sha256": "sha256:9a40e3f11e4e81456afe39bdcd7fac41015162eb8cd62268fcc177259bf946f8",
+  "live": false,
+  "live_image_call_started": false,
+  "mocked": false,
+  "provider_live": false,
+  "renderer": {
+    "deterministic": true,
+    "name": "phase07_prompt_renderer",
+    "version": "v1"
+  },
+  "schema": "persona_dream.phase01.prompt_contract_validation_receipt.v1",
+  "status": "PASS_MEMORY_RESIDUE_CONTRACT"
+}

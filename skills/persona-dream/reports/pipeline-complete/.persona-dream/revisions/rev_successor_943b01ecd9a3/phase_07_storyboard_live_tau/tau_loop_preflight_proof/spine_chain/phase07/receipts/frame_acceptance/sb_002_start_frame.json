@@ -1,0 +1,13 @@
+{
+  "accepted_frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_002_start_frame.png",
+  "checked_at": "2026-07-18T00:00:00+00:00",
+  "frame_id": "sb_002.start_frame",
+  "live": false,
+  "mocked": false,
+  "reviewer": "phase07 panel-node identity reviewer (Phase C actual-pixel review, scillm gpt-5.5)",
+  "schema": "persona_dream.phase07.frame_acceptance_receipt.v1",
+  "source_identity_review_receipt_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_002_start_frame_identity_continuity_review.json",
+  "source_identity_review_receipt_sha256": "sha256:4e4b365c47090210c235cc312139273ba5e37a3e94d1adeac5ae1e68c3827d09",
+  "status": "PASS_STORYBOARD_FRAME_ACCEPTED",
+  "validated_artifact_sha256": "sha256:aebcbd907c999d64ba4e7effd4f9f95e75e8e094e6deee605f5fb6f5a2e4606b"
+}

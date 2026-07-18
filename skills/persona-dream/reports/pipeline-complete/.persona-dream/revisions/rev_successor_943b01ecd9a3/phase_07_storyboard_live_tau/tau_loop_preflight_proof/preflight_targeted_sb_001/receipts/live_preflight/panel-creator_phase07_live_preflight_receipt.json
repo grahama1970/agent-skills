@@ -1,0 +1,68 @@
+{
+  "blockers": [],
+  "claims": {
+    "does_not_prove": [
+      "provider reference images were attached",
+      "image generation succeeded",
+      "visual identity review passed",
+      "storyboard was accepted",
+      "panel generation stayed under five minutes"
+    ],
+    "proves": [
+      "run-specific spine chain manifest passed",
+      "targeted panel/frame scope is represented in the chain manifest"
+    ]
+  },
+  "created_at": "2026-07-18T16:20:40.374371+00:00",
+  "live_image_call_started": false,
+  "mocked": false,
+  "provider_call_authorized": true,
+  "provider_live": false,
+  "reviewer_pass_preconditions": {
+    "required": false,
+    "satisfied": null
+  },
+  "role": "panel-creator",
+  "run_root": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/tau_loop_preflight_proof/preflight_targeted_sb_001",
+  "schema": "persona_dream.phase07.live_creator_reviewer_preflight_receipt.v1",
+  "spine_chain_manifest_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/spine_chain_manifest.v1.json",
+  "spine_chain_manifest_sha256": "sha256:635a6669029aac10eef91580a569a27085abc4af546dd95e09407514d6a019d0",
+  "spine_chain_validator": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/scripts/validate_persona_dream_spine_chain.py",
+  "spine_chain_validator_receipt_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/tau_loop_preflight_proof/preflight_targeted_sb_001/receipts/live_preflight/panel-creator_spine_chain_validator_receipt.json",
+  "spine_chain_validator_receipt_sha256": "sha256:d761f6bb21b4cbd8eaf036aa308768ffbb314c8624b39e6072cf1c1d671732fd",
+  "spine_chain_validator_status": "PASS_SPINE_CHAIN_CONTRACT_GATE",
+  "status": "PASS_LIVE_CREATOR_PREFLIGHT",
+  "storyboard_packet": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/tau_loop_preflight_proof/preflight_targeted_sb_001/targeted_storyboard_packet.json",
+  "storyboard_packet_sha256": "sha256:27b5a2b2eed5ffa4161868086d2430b7d1774110fc7f00ae9dac5db03a4021b7",
+  "target_manifest_entries": [
+    {
+      "compiled_prompt_path": "phase07/prompts/sb_001.start_frame.attempt_001.md",
+      "compiled_prompt_sha256": "sha256:50fad4c70f3c6b2a75804c408e52ad3bc98f758acb0f511e6f16c9ab5c3f46cd",
+      "contract_path": "phase07/prompt_contracts/sb_001.start_frame.attempt_001.json",
+      "contract_sha256": "sha256:e6410ebedf8def83b2a6364fea2f13ebf864ec254ceeabc4b69b79760d4704b6",
+      "frame_id": "sb_001.start_frame",
+      "panel_id": "sb_001",
+      "validator_receipt_status": "PASS_PROMPT_CONTRACT"
+    },
+    {
+      "compiled_prompt_path": "phase07/prompts/sb_001.end_frame.attempt_001.md",
+      "compiled_prompt_sha256": "sha256:d3311558e162780f72faf3452944519f7eab84530ff81bbe3c0236304855415c",
+      "contract_path": "phase07/prompt_contracts/sb_001.end_frame.attempt_001.json",
+      "contract_sha256": "sha256:c9389ccd8d1243890aa0f4d6e19b3fa65fa48e12706c6e83b92066b37db1f5b0",
+      "frame_id": "sb_001.end_frame",
+      "panel_id": "sb_001",
+      "validator_receipt_status": "PASS_PROMPT_CONTRACT"
+    }
+  ],
+  "target_scope": {
+    "target_frame_ids": [
+      "sb_001.start_frame",
+      "sb_001.end_frame"
+    ],
+    "target_panel_ids": [
+      "sb_001"
+    ]
+  },
+  "target_scope_represented_in_manifest": true,
+  "verdict": "PASS"
+}

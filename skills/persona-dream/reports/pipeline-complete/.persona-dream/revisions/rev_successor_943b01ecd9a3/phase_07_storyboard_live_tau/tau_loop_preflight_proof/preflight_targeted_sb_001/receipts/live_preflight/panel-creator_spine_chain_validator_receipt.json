@@ -1,0 +1,29 @@
+{
+  "blockers": [],
+  "checked_at": "2026-07-18T16:20:40.368790+00:00",
+  "claims": {
+    "does_not_prove": [
+      "provider reference attachment",
+      "image generation",
+      "visual identity pass",
+      "story/script creative quality",
+      "runtime performance"
+    ],
+    "proves": [
+      "inter-contract path/SHA binding",
+      "validator receipt binding",
+      "compiled prompt hash binding",
+      "raw-source-safe downstream consumption",
+      "reviewer PASS precondition policy where acceptance is claimed",
+      "local non-provider chain gate"
+    ]
+  },
+  "live_image_call_started": false,
+  "manifest_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/spine_chain_manifest.v1.json",
+  "manifest_sha256": "sha256:635a6669029aac10eef91580a569a27085abc4af546dd95e09407514d6a019d0",
+  "mocked": false,
+  "provider_live": false,
+  "schema": "persona_dream.spine.chain_contract_validator_receipt.v1",
+  "status": "PASS_SPINE_CHAIN_CONTRACT_GATE",
+  "verdict": "PASS"
+}

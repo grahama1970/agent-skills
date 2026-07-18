@@ -1,0 +1,17 @@
+{
+  "blockers": [],
+  "checked_at": "2026-07-18T00:00:00+00:00",
+  "contract_path": "phase07/prompt_contracts/sb_001.end_frame.attempt_001.json",
+  "contract_sha256": "sha256:c9389ccd8d1243890aa0f4d6e19b3fa65fa48e12706c6e83b92066b37db1f5b0",
+  "live": false,
+  "live_image_call_started": false,
+  "mocked": false,
+  "provider_live": false,
+  "renderer": {
+    "deterministic": true,
+    "name": "phase07_prompt_renderer",
+    "version": "v1"
+  },
+  "schema": "persona_dream.phase07.prompt_contract_validation_receipt.v1",
+  "status": "PASS_PROMPT_CONTRACT"
+}

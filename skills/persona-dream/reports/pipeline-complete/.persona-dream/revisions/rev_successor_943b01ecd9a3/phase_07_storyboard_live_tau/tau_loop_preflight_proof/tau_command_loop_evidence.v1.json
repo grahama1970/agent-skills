@@ -1,0 +1,22 @@
+{
+  "max_steps_evidence": "src/tau_coding/handoff_dispatch.py:662 (default 5), :686 (for step in range(1,max_steps+1)), :968 (max_steps_exhausted); src/tau_coding/persona_dream_panel_proof.py:75 (max_steps=4); src/tau_coding/project_dag.py:4228 (_max_steps from limits.max_total_attempts).",
+  "mode": "dry-run / no-generation (scillm_live_panel=False; one_scene_kling dry-run fixture; no paid or image call)",
+  "proves": "Tau command loop advances creator->reviewer->panel-specific repair-gate (3 steps) and halts at next_agent_is_human, not at a max_steps=2 truncation.",
+  "reached_panel_specific_third_node": true,
+  "scheduler": "handoff-loop (write_agent_handoff_command_loop_receipt, max_steps=4)",
+  "schema": "persona_dream.phase07.tau_command_loop_evidence.v1",
+  "selected_agents": [
+    "panel-creator",
+    "panel-reviewer",
+    "persona-dream-panel-repair-gate"
+  ],
+  "status": "WAITING",
+  "stop_reason": "next_agent_is_human",
+  "tau_branch": "issue-74-ready-queue-condition-block",
+  "tau_code_change_reason": "No hard max_steps=2 exists; handoff loop default max_steps=5, persona-dream panel proof runner uses max_steps=4. The loop reaches the 3rd node with the existing code. The historical stop-at-2 is a DAG-contract config case (limits.max_total_attempts unset on a 2-node graph derives _max_steps==2); not a code defect requiring a change.",
+  "tau_code_change_required": false,
+  "tau_commit": "416edc5a48f0faec049b2952eca60e5c343f0590",
+  "tau_repo": "/home/graham/workspace/experiments/tau",
+  "terminal_agent": "human",
+  "truncated_at_step_2": false
+}

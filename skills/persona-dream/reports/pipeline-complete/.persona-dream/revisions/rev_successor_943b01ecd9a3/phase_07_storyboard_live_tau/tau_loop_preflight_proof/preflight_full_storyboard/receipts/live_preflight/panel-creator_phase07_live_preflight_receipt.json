@@ -1,0 +1,117 @@
+{
+  "blockers": [],
+  "claims": {
+    "does_not_prove": [
+      "provider reference images were attached",
+      "image generation succeeded",
+      "visual identity review passed",
+      "storyboard was accepted",
+      "panel generation stayed under five minutes"
+    ],
+    "proves": [
+      "run-specific spine chain manifest passed",
+      "targeted panel/frame scope is represented in the chain manifest"
+    ]
+  },
+  "created_at": "2026-07-18T16:20:40.264412+00:00",
+  "live_image_call_started": false,
+  "mocked": false,
+  "provider_call_authorized": true,
+  "provider_live": false,
+  "reviewer_pass_preconditions": {
+    "required": false,
+    "satisfied": null
+  },
+  "role": "panel-creator",
+  "run_root": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/tau_loop_preflight_proof/preflight_full_storyboard",
+  "schema": "persona_dream.phase07.live_creator_reviewer_preflight_receipt.v1",
+  "spine_chain_manifest_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/spine_chain_manifest.v1.json",
+  "spine_chain_manifest_sha256": "sha256:635a6669029aac10eef91580a569a27085abc4af546dd95e09407514d6a019d0",
+  "spine_chain_validator": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/scripts/validate_persona_dream_spine_chain.py",
+  "spine_chain_validator_receipt_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/tau_loop_preflight_proof/preflight_full_storyboard/receipts/live_preflight/panel-creator_spine_chain_validator_receipt.json",
+  "spine_chain_validator_receipt_sha256": "sha256:d303c1a485f69ecc332be9de6ebc4301a374fb957c0765f22670827665b7258e",
+  "spine_chain_validator_status": "PASS_SPINE_CHAIN_CONTRACT_GATE",
+  "status": "PASS_LIVE_CREATOR_PREFLIGHT",
+  "storyboard_packet": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/storyboard_packet.json",
+  "storyboard_packet_sha256": "sha256:a1c1031e697d67dca734a797bbfa438a1ab30358e8dea18eee7c157de8f2fc97",
+  "target_manifest_entries": [
+    {
+      "compiled_prompt_path": "phase07/prompts/sb_001.start_frame.attempt_001.md",
+      "compiled_prompt_sha256": "sha256:50fad4c70f3c6b2a75804c408e52ad3bc98f758acb0f511e6f16c9ab5c3f46cd",
+      "contract_path": "phase07/prompt_contracts/sb_001.start_frame.attempt_001.json",
+      "contract_sha256": "sha256:e6410ebedf8def83b2a6364fea2f13ebf864ec254ceeabc4b69b79760d4704b6",
+      "frame_id": "sb_001.start_frame",
+      "panel_id": "sb_001",
+      "validator_receipt_status": "PASS_PROMPT_CONTRACT"
+    },
+    {
+      "compiled_prompt_path": "phase07/prompts/sb_001.end_frame.attempt_001.md",
+      "compiled_prompt_sha256": "sha256:d3311558e162780f72faf3452944519f7eab84530ff81bbe3c0236304855415c",
+      "contract_path": "phase07/prompt_contracts/sb_001.end_frame.attempt_001.json",
+      "contract_sha256": "sha256:c9389ccd8d1243890aa0f4d6e19b3fa65fa48e12706c6e83b92066b37db1f5b0",
+      "frame_id": "sb_001.end_frame",
+      "panel_id": "sb_001",
+      "validator_receipt_status": "PASS_PROMPT_CONTRACT"
+    },
+    {
+      "compiled_prompt_path": "phase07/prompts/sb_002.start_frame.attempt_001.md",
+      "compiled_prompt_sha256": "sha256:f023b25bc6c7f21913f56106adc5299b6e900d596e3237dd151ab9a40d153fc8",
+      "contract_path": "phase07/prompt_contracts/sb_002.start_frame.attempt_001.json",
+      "contract_sha256": "sha256:ac3dd6c79c3aeabc831a88077c12bc4d7d92495d5977465c85d955e38c17f82f",
+      "frame_id": "sb_002.start_frame",
+      "panel_id": "sb_002",
+      "validator_receipt_status": "PASS_PROMPT_CONTRACT"
+    },
+    {
+      "compiled_prompt_path": "phase07/prompts/sb_002.end_frame.attempt_001.md",
+      "compiled_prompt_sha256": "sha256:b59dd514167c76e04096bebb9c682215fb685311e05c6fcab67c2515ce4b82e2",
+      "contract_path": "phase07/prompt_contracts/sb_002.end_frame.attempt_001.json",
+      "contract_sha256": "sha256:698c40a49e2faa3b63cfd17a950da19160d750a29327af0d177bf7c67acfae92",
+      "frame_id": "sb_002.end_frame",
+      "panel_id": "sb_002",
+      "validator_receipt_status": "PASS_PROMPT_CONTRACT"
+    },
+    {
+      "compiled_prompt_path": "phase07/prompts/sb_003.start_frame.attempt_001.md",
+      "compiled_prompt_sha256": "sha256:062b2d6590684723e6801a715e8990121bc588f1ab02c11627ec67f202ddd5b8",
+      "contract_path": "phase07/prompt_contracts/sb_003.start_frame.attempt_001.json",
+      "contract_sha256": "sha256:600bcbea5cf0eee02a3f7861b97a1e8e05195d604b32424209c8660e7ed42ad5",
+      "frame_id": "sb_003.start_frame",
+      "panel_id": "sb_003",
+      "validator_receipt_status": "PASS_PROMPT_CONTRACT"
+    },
+    {
+      "compiled_prompt_path": "phase07/prompts/sb_003.end_frame.attempt_001.md",
+      "compiled_prompt_sha256": "sha256:cc70d3563beeb8c7afca2004333b2cc49501153429cad7960353f05b079f63ca",
+      "contract_path": "phase07/prompt_contracts/sb_003.end_frame.attempt_001.json",
+      "contract_sha256": "sha256:99ee85a6315249322f4f3f02ec4f17714b63dfb5f249b6607d798db3ff2605d3",
+      "frame_id": "sb_003.end_frame",
+      "panel_id": "sb_003",
+      "validator_receipt_status": "PASS_PROMPT_CONTRACT"
+    },
+    {
+      "compiled_prompt_path": "phase07/prompts/sb_004.start_frame.attempt_001.md",
+      "compiled_prompt_sha256": "sha256:0b83c938c5fe0f140f445779e3804ecd6d8ecdd2d2f5cc79fc6855089ccb3cbd",
+      "contract_path": "phase07/prompt_contracts/sb_004.start_frame.attempt_001.json",
+      "contract_sha256": "sha256:4d75e6db5086390d01d33b5114efa792dc864d479a71a5ffe22804067d2c00d7",
+      "frame_id": "sb_004.start_frame",
+      "panel_id": "sb_004",
+      "validator_receipt_status": "PASS_PROMPT_CONTRACT"
+    },
+    {
+      "compiled_prompt_path": "phase07/prompts/sb_004.end_frame.attempt_001.md",
+      "compiled_prompt_sha256": "sha256:f5d042a4c6e3103bc992d0bb3e8a85bf7ca992fe58af9ad54e48addac7a89889",
+      "contract_path": "phase07/prompt_contracts/sb_004.end_frame.attempt_001.json",
+      "contract_sha256": "sha256:e0aea9d6a195162146054362c3b3176afc92da20ae553d44fec9c9259b450cf2",
+      "frame_id": "sb_004.end_frame",
+      "panel_id": "sb_004",
+      "validator_receipt_status": "PASS_PROMPT_CONTRACT"
+    }
+  ],
+  "target_scope": {
+    "target_frame_ids": [],
+    "target_panel_ids": []
+  },
+  "target_scope_represented_in_manifest": true,
+  "verdict": "PASS"
+}
