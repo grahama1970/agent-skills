@@ -1,0 +1,84 @@
+{
+  "blocking_findings": [
+    "Kai face is partially occluded by his foreground arm, hiding the lower nose, mouth, chin, and jawline, so his specific identity cannot be affirmatively verified at feature level.",
+    "IDENTITY_FEATURES_NOT_GROUNDED"
+  ],
+  "created_at": "2026-07-18T20:54:18.490331+00:00",
+  "face_crop_subgate_advisory": {
+    "advisory": true,
+    "blocking_findings": [],
+    "reason": "full-frame review already FAILED; advisory face-crop not run",
+    "status": "SKIPPED"
+  },
+  "face_embedding_subgate": {
+    "blocking_findings": [],
+    "reason": "full-frame review already FAILED; embedding identity subgate not required",
+    "status": "SKIPPED"
+  },
+  "frame_key": "end_frame",
+  "frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/generated_storyboard_frames/sb_003_end_frame.png",
+  "full_frame_status": "FAIL",
+  "gate_fired": "full_frame",
+  "identity_authority": "face_embedding_subgate",
+  "image_dimensions": {
+    "height": 941,
+    "width": 1672
+  },
+  "live": true,
+  "mocked": false,
+  "model": "gpt-5.5",
+  "model_policy": {
+    "auth": "codex-oauth",
+    "error": null,
+    "fallback_performed": false,
+    "model": "gpt-5.5",
+    "provider": "codex",
+    "schema": "persona_dream.identity_review_policy.v1",
+    "source": "dag_identity_review_model_policy",
+    "supported": true
+  },
+  "model_policy_enforced": true,
+  "panel_id": "sb_003",
+  "raw_response": {
+    "blocking_findings": [
+      "Kai face is partially occluded by his foreground arm, hiding the lower nose, mouth, chin, and jawline, so his specific identity cannot be affirmatively verified at feature level.",
+      "IDENTITY_FEATURES_NOT_GROUNDED"
+    ],
+    "identity_notes": "Embry is foregrounded and appears specifically consistent with the reference. Kai is present in the foreground and category-matches, but his face is too occluded to verify the required specific identity features, so the panel fails and should be regenerated.",
+    "observed_divergences": {
+      "Embry": [
+        "No identity-changing divergence observed; face proportion, complexion warmth/freckling, apparent age, brows, nose, and lip shape read consistent with the Embry reference."
+      ],
+      "Kai": [
+        "Lower face is hidden by arm, preventing verification of mouth shape, chin, jawline, and full nose shape.",
+        "Only upper-face cues are visible; this is insufficient to prove same specific individual under the fail-closed standard."
+      ]
+    },
+    "verdict": "FAIL",
+    "verified_facial_features": {
+      "Embry": [
+        "warm-olive freckled complexion consistent with reference",
+        "similar arched dark eyebrows and light green eyes",
+        "similar straight nose bridge with rounded tip and full-oval face shape"
+      ],
+      "Kai": []
+    },
+    "visible_entities": [
+      "Embry",
+      "Kai"
+    ]
+  },
+  "receipt_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_identity_review/sb_003_end_frame_identity_continuity_review.json",
+  "required_entities": [
+    "Embry",
+    "Kai"
+  ],
+  "review_prompt_sha256": "sha256:962a9831260e7500cb72922aaca145ad8d2c8e4e9734180959bd54f394423868",
+  "reviewer_source": "scillm:gpt-5.5:image_url",
+  "schema": "persona_dream.identity_continuity_review.v1",
+  "status": "FAIL",
+  "visible_entities": [
+    "Embry",
+    "Kai"
+  ]
+}

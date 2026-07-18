@@ -1,0 +1,21 @@
+{
+  "blocking_findings": [],
+  "created_at": "2026-07-18T21:00:54.064894+00:00",
+  "frame_a": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_003_start_frame.png",
+  "frame_a_sha256": "sha256:9046059c87f35a6be56f166415979a25bfb72f9c51293a1434eb0f7ac8a1118c",
+  "frame_b": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/generated_storyboard_frames/sb_003_end_frame.png",
+  "frame_b_sha256": "sha256:54c04031d969fde95fc6f0559dca99985c3e48d9770822b2d90dd2c3d8ef98d8",
+  "live": true,
+  "mocked": false,
+  "pair_id": "sb_003_start__to__sb_003_end",
+  "raw_response": {
+    "blocking_findings": [],
+    "notes": "Embry and Kai remain visually consistent with their references across both frames. Wardrobe continuity holds: Embry wears a navy rashguard and Kai wears a black rashguard. Surfboards are not clearly visible in Frame A but appear plausibly off-frame/submerged; Frame B introduces white boards without a visible contradiction. Lighting remains bright daytime ocean light, and the black lava reef/shore boundary stays on the left side of the scene. The action plausibly progresses from both waiting in the water to paddling/positioning with boards within the same surf break.",
+    "verdict": "PASS"
+  },
+  "review_prompt_sha256": "sha256:b9e3cfeb45a49479447927f46bfb34bae7f3c69d9fd69f7f23f802d3ff1f4bc1",
+  "reviewer_source": "scillm:gpt-5.5:image_url",
+  "schema": "persona_dream.phase_c.continuity_review.v1",
+  "status": "PASS",
+  "transition": "start->end within the same panel (sb_003)"
+}

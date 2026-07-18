@@ -1,0 +1,33 @@
+{
+  "blocking_findings": [
+    "kai_mouth_camera_readable=true (mouth is readable; requirement violated)",
+    "Kai is recognizable as the young tan man with dark curly wet hair in a black rashguard.",
+    "Kai's head is turned toward the lineup, but his lower face is unobstructed and his mouth/lip shape is clearly visible in three-quarter view.",
+    "Embry remains camera-readable with her face clearly visible."
+  ],
+  "created_at": "2026-07-18T21:00:33.964063+00:00",
+  "criteria": {
+    "pass_requires": "kai_mouth_camera_readable == false AND kai_identity_recognizable == true AND embry_face_readable == true",
+    "source_delta": "step38_sb_003_composition_delta_proposal.v1.json"
+  },
+  "frame": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/generated_storyboard_frames/sb_003_end_frame.png",
+  "frame_sha256": "sha256:54c04031d969fde95fc6f0559dca99985c3e48d9770822b2d90dd2c3d8ef98d8",
+  "live": true,
+  "mocked": false,
+  "question": "Is Kai's mouth camera-readable during the sb_003 dialogue window (5.0-7.7s)?",
+  "raw_response": {
+    "embry_face_readable": true,
+    "kai_identity_recognizable": true,
+    "kai_mouth_camera_readable": true,
+    "reasons": [
+      "Kai is recognizable as the young tan man with dark curly wet hair in a black rashguard.",
+      "Kai's head is turned toward the lineup, but his lower face is unobstructed and his mouth/lip shape is clearly visible in three-quarter view.",
+      "Embry remains camera-readable with her face clearly visible."
+    ],
+    "verdict": "FAIL"
+  },
+  "review_prompt_sha256": "sha256:40277542106ebb568ce6232f87c14c8f6cf0bdd01c0194e082a9a5be158e4546",
+  "reviewer_source": "scillm:gpt-5.5:image_url",
+  "schema": "persona_dream.lane_c.composition_check.v1",
+  "status": "FAIL"
+}

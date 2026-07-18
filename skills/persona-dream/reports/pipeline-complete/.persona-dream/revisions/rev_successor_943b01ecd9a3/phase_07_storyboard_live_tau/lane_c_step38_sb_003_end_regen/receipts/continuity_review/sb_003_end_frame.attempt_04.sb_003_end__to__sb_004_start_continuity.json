@@ -1,0 +1,21 @@
+{
+  "blocking_findings": [],
+  "created_at": "2026-07-18T21:17:31.380821+00:00",
+  "frame_a": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/generated_storyboard_frames/sb_003_end_frame.png",
+  "frame_a_sha256": "sha256:826ab092e46c3c7e19589364645653fa1b6d1a089e1e9321fa698730b7ea04b4",
+  "frame_b": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_004_start_frame.png",
+  "frame_b_sha256": "sha256:2c3211f225eea31a8091569ec10f68a87d7f324e12f04653c5efb1084c97a26e",
+  "live": true,
+  "mocked": false,
+  "pair_id": "sb_003_end__to__sb_004_start",
+  "raw_response": {
+    "blocking_findings": [],
+    "notes": "Embry and Kai remain visually consistent with their references and with each other across both frames. Wardrobe continuity holds: Embry wears a navy rashguard and Kai wears a black rashguard. No clear main-character board contradiction is visible. Lighting remains bright daytime coastal sun, and the shallow reef / lava-reef surf setting remains consistent. The action plausibly progresses from Kai indicating the lineup/direction in Frame A to both characters positioned farther out with an incoming wave in Frame B.",
+    "verdict": "PASS"
+  },
+  "review_prompt_sha256": "sha256:023324b01e8e9cc4e2e3e9342cadaf42edb799f25796fbf966a4fab92e3b643d",
+  "reviewer_source": "scillm:gpt-5.5:image_url",
+  "schema": "persona_dream.phase_c.continuity_review.v1",
+  "status": "PASS",
+  "transition": "end->next-start across adjacent panels (sb_003 end -> sb_004 start)"
+}

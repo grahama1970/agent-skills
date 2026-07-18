@@ -1,0 +1,209 @@
+{
+  "attempts": [
+    {
+      "attempt": 1,
+      "composition_findings": [],
+      "composition_status": "PASS",
+      "continuity": [
+        {
+          "blocking_findings": [
+            "Visible reef/shore boundary continuity breaks: Frame A shows a black lava-rock shoreline with palms at left, while Frame B replaces that background with a distant mountain/sandy coastline and no comparable visible lava reef boundary in the same position.",
+            "Boards/equipment continuity cannot be verified for Embry and Kai because their own boards are not visible in either frame; only unrelated background surfers/boards appear."
+          ],
+          "pair": "sb_003_start__to__sb_003_end",
+          "status": "FAIL"
+        },
+        {
+          "blocking_findings": [],
+          "pair": "sb_003_end__to__sb_004_start",
+          "status": "PASS"
+        }
+      ],
+      "embedding_scores": {},
+      "embedding_status": "SKIPPED",
+      "embedding_threshold": null,
+      "failures": [
+        "Kai face is partially occluded by his foreground arm, hiding the lower nose, mouth, chin, and jawline, so his specific identity cannot be affirmatively verified at feature level.",
+        "IDENTITY_FEATURES_NOT_GROUNDED",
+        "continuity[sb_003_start__to__sb_003_end]: Visible reef/shore boundary continuity breaks: Frame A shows a black lava-rock shoreline with palms at left, while Frame B replaces that background with a distant mountain/sandy coastline and no comparable visible lava reef boundary in the same position.",
+        "continuity[sb_003_start__to__sb_003_end]: Boards/equipment continuity cannot be verified for Embry and Kai because their own boards are not visible in either frame; only unrelated background surfers/boards appear."
+      ],
+      "full_frame_status": "FAIL",
+      "generation_ok": true,
+      "image_sha256": "sha256:d3488afc2f49f6c826c7d2548e57362bc307c5757f3e2b9173404ba785e8576f",
+      "prompt_sha256": "sha256:ca562672800f1b308561ddc267e30b4e6402a612a410e58690551a80d5c53132",
+      "review_status": "FAIL"
+    },
+    {
+      "attempt": 2,
+      "composition_findings": [
+        "kai_mouth_camera_readable=true (mouth is readable; requirement violated)",
+        "Kai is recognizable as the young tan man with dark curly wet hair in a black rashguard.",
+        "Kai's head is turned toward the lineup, but his lower face is unobstructed and his mouth/lip shape is clearly visible in three-quarter view.",
+        "Embry remains camera-readable with her face clearly visible."
+      ],
+      "composition_status": "FAIL",
+      "continuity": [
+        {
+          "blocking_findings": [],
+          "pair": "sb_003_start__to__sb_003_end",
+          "status": "PASS"
+        },
+        {
+          "blocking_findings": [
+            "Visible lava reef boundary continuity breaks: Frame A has a close black lava-rock reef/shoreline boundary on the left, while Frame B lacks that same nearby boundary and instead shows open water with a distant green shoreline/wave backdrop.",
+            "Kai's surfboard continuity is weak: Frame A clearly shows Kai beside a white board at frame right, but Frame B does not show Kai's board in a comparable position or clearly maintain it."
+          ],
+          "pair": "sb_003_end__to__sb_004_start",
+          "status": "FAIL"
+        }
+      ],
+      "embedding_scores": {
+        "Embry": 0.699289,
+        "Kai": 0.710622
+      },
+      "embedding_status": "PASS",
+      "embedding_threshold": 0.421,
+      "failures": [
+        "kai_mouth_camera_readable=true (mouth is readable; requirement violated)",
+        "Kai is recognizable as the young tan man with dark curly wet hair in a black rashguard.",
+        "Kai's head is turned toward the lineup, but his lower face is unobstructed and his mouth/lip shape is clearly visible in three-quarter view.",
+        "Embry remains camera-readable with her face clearly visible.",
+        "continuity[sb_003_end__to__sb_004_start]: Visible lava reef boundary continuity breaks: Frame A has a close black lava-rock reef/shoreline boundary on the left, while Frame B lacks that same nearby boundary and instead shows open water with a distant green shoreline/wave backdrop.",
+        "continuity[sb_003_end__to__sb_004_start]: Kai's surfboard continuity is weak: Frame A clearly shows Kai beside a white board at frame right, but Frame B does not show Kai's board in a comparable position or clearly maintain it."
+      ],
+      "full_frame_status": "PASS",
+      "generation_ok": true,
+      "image_sha256": "sha256:54c04031d969fde95fc6f0559dca99985c3e48d9770822b2d90dd2c3d8ef98d8",
+      "prompt_sha256": "sha256:b23e5acfbaf80627d60c1b9d683cbb408fc2be8c65045bb20acf6e66b6ab986e",
+      "review_status": "PASS"
+    },
+    {
+      "attempt": 3,
+      "composition_findings": [
+        "kai_mouth_camera_readable=true (mouth is readable; requirement violated)",
+        "Kai is in a clear three-quarter view with his lower face unobstructed.",
+        "His lips and mouth shape are visible enough to be camera-readable.",
+        "Kai remains recognizable as the referenced young tan man with dark curly wet hair and black rashguard.",
+        "Embry's face is clearly visible and readable."
+      ],
+      "composition_status": "FAIL",
+      "continuity": [
+        {
+          "blocking_findings": [],
+          "pair": "sb_003_start__to__sb_003_end",
+          "status": "PASS"
+        },
+        {
+          "blocking_findings": [
+            "The visible lava reef boundary does not stay consistent: Frame A has a prominent dark lava rock/reef edge immediately on the left beside the characters, while Frame B shows open water/wave lineup with no comparable visible lava rock boundary in the same relationship to them."
+          ],
+          "pair": "sb_003_end__to__sb_004_start",
+          "status": "FAIL"
+        }
+      ],
+      "embedding_scores": {
+        "Embry": 0.73168,
+        "Kai": 0.801154
+      },
+      "embedding_status": "PASS",
+      "embedding_threshold": 0.421,
+      "failures": [
+        "kai_mouth_camera_readable=true (mouth is readable; requirement violated)",
+        "Kai is in a clear three-quarter view with his lower face unobstructed.",
+        "His lips and mouth shape are visible enough to be camera-readable.",
+        "Kai remains recognizable as the referenced young tan man with dark curly wet hair and black rashguard.",
+        "Embry's face is clearly visible and readable.",
+        "continuity[sb_003_end__to__sb_004_start]: The visible lava reef boundary does not stay consistent: Frame A has a prominent dark lava rock/reef edge immediately on the left beside the characters, while Frame B shows open water/wave lineup with no comparable visible lava rock boundary in the same relationship to them."
+      ],
+      "full_frame_status": "PASS",
+      "generation_ok": true,
+      "image_sha256": "sha256:60283ac8e1d28639f353ec2118f3b91f5d788f1e07421a401798534eb1041fad",
+      "prompt_sha256": "sha256:c21830df4a4e09425d0c22e94b0b9aea983e5e92be28dda1d15c238b1c855555",
+      "review_status": "PASS"
+    },
+    {
+      "attempt": 4,
+      "composition_findings": [
+        "kai_mouth_camera_readable=true (mouth is readable; requirement violated)",
+        "Kai is shown in a clear three-quarter/profile view with his lower face unobstructed.",
+        "Kai's lips and mouth shape are visible and could be read by a viewer.",
+        "Kai remains recognizable as the referenced young tan man with dark curly wet hair and black rashguard.",
+        "Embry is front-facing and her face is clearly readable."
+      ],
+      "composition_status": "FAIL",
+      "continuity": [
+        {
+          "blocking_findings": [],
+          "pair": "sb_003_start__to__sb_003_end",
+          "status": "PASS"
+        },
+        {
+          "blocking_findings": [],
+          "pair": "sb_003_end__to__sb_004_start",
+          "status": "PASS"
+        }
+      ],
+      "embedding_scores": {
+        "Embry": 0.81122,
+        "Kai": 0.640235
+      },
+      "embedding_status": "PASS",
+      "embedding_threshold": 0.421,
+      "failures": [
+        "kai_mouth_camera_readable=true (mouth is readable; requirement violated)",
+        "Kai is shown in a clear three-quarter/profile view with his lower face unobstructed.",
+        "Kai's lips and mouth shape are visible and could be read by a viewer.",
+        "Kai remains recognizable as the referenced young tan man with dark curly wet hair and black rashguard.",
+        "Embry is front-facing and her face is clearly readable."
+      ],
+      "full_frame_status": "PASS",
+      "generation_ok": true,
+      "image_sha256": "sha256:826ab092e46c3c7e19589364645653fa1b6d1a089e1e9321fa698730b7ea04b4",
+      "prompt_sha256": "sha256:53fc9cffb9fa8f94c04e8351143d596e996bf463e36fb8e1ebb1c6cbf77602b5",
+      "review_status": "PASS"
+    },
+    {
+      "attempt": 5,
+      "composition_findings": [
+        "kai_mouth_camera_readable=true (mouth is readable; requirement violated)",
+        "Kai is visible in a clear three-quarter view with his lower face unobstructed.",
+        "Kai's lips and mouth shape are clearly visible and potentially lip-readable.",
+        "Kai's identity is recognizable from the reference: tan skin, dark curly wet hair, black rashguard.",
+        "Embry's face is camera-readable with eyes, nose, and mouth clearly visible."
+      ],
+      "composition_status": "FAIL",
+      "continuity": [
+        {
+          "blocking_findings": [],
+          "pair": "sb_003_start__to__sb_003_end",
+          "status": "PASS"
+        },
+        {
+          "blocking_findings": [],
+          "pair": "sb_003_end__to__sb_004_start",
+          "status": "PASS"
+        }
+      ],
+      "embedding_scores": {
+        "Embry": 0.669362,
+        "Kai": 0.716316
+      },
+      "embedding_status": "PASS",
+      "embedding_threshold": 0.421,
+      "failures": [
+        "kai_mouth_camera_readable=true (mouth is readable; requirement violated)",
+        "Kai is visible in a clear three-quarter view with his lower face unobstructed.",
+        "Kai's lips and mouth shape are clearly visible and potentially lip-readable.",
+        "Kai's identity is recognizable from the reference: tan skin, dark curly wet hair, black rashguard.",
+        "Embry's face is camera-readable with eyes, nose, and mouth clearly visible."
+      ],
+      "full_frame_status": "PASS",
+      "generation_ok": true,
+      "image_sha256": "sha256:7b5dde17824690f7bfbfc94516794cac2d9040a9f242bbeba15cdbb380eb72e6",
+      "prompt_sha256": "sha256:43c60ca33832ccae725806bb2ee554a7877f684e4674330ab3cb4212c4ff1ce3",
+      "review_status": "PASS"
+    }
+  ],
+  "updated_at": "2026-07-18T21:23:22.404277+00:00"
+}

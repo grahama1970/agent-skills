@@ -1,0 +1,27 @@
+{
+  "blocking_findings": [
+    "Visible lava reef boundary continuity breaks: Frame A has a close black lava-rock reef/shoreline boundary on the left, while Frame B lacks that same nearby boundary and instead shows open water with a distant green shoreline/wave backdrop.",
+    "Kai's surfboard continuity is weak: Frame A clearly shows Kai beside a white board at frame right, but Frame B does not show Kai's board in a comparable position or clearly maintain it."
+  ],
+  "created_at": "2026-07-18T21:01:16.529247+00:00",
+  "frame_a": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/generated_storyboard_frames/sb_003_end_frame.png",
+  "frame_a_sha256": "sha256:54c04031d969fde95fc6f0559dca99985c3e48d9770822b2d90dd2c3d8ef98d8",
+  "frame_b": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_004_start_frame.png",
+  "frame_b_sha256": "sha256:2c3211f225eea31a8091569ec10f68a87d7f324e12f04653c5efb1084c97a26e",
+  "live": true,
+  "mocked": false,
+  "pair_id": "sb_003_end__to__sb_004_start",
+  "raw_response": {
+    "blocking_findings": [
+      "Visible lava reef boundary continuity breaks: Frame A has a close black lava-rock reef/shoreline boundary on the left, while Frame B lacks that same nearby boundary and instead shows open water with a distant green shoreline/wave backdrop.",
+      "Kai's surfboard continuity is weak: Frame A clearly shows Kai beside a white board at frame right, but Frame B does not show Kai's board in a comparable position or clearly maintain it."
+    ],
+    "notes": "Embry appears to remain the same person and matches the Embry reference, with navy rashguard continuity. Kai appears to remain the same person and matches the Kai reference, with black rashguard continuity. Lighting is broadly consistent as sunny daytime, and the action progression from paddling/positioning to sitting up in the lineup is plausible, but the reef-boundary and board visibility continuity issues are blocking.",
+    "verdict": "FAIL"
+  },
+  "review_prompt_sha256": "sha256:023324b01e8e9cc4e2e3e9342cadaf42edb799f25796fbf966a4fab92e3b643d",
+  "reviewer_source": "scillm:gpt-5.5:image_url",
+  "schema": "persona_dream.phase_c.continuity_review.v1",
+  "status": "FAIL",
+  "transition": "end->next-start across adjacent panels (sb_003 end -> sb_004 start)"
+}

@@ -1,0 +1,21 @@
+{
+  "blocking_findings": [],
+  "created_at": "2026-07-18T21:23:22.401458+00:00",
+  "frame_a": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/generated_storyboard_frames/sb_003_end_frame.png",
+  "frame_a_sha256": "sha256:7b5dde17824690f7bfbfc94516794cac2d9040a9f242bbeba15cdbb380eb72e6",
+  "frame_b": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_004_start_frame.png",
+  "frame_b_sha256": "sha256:2c3211f225eea31a8091569ec10f68a87d7f324e12f04653c5efb1084c97a26e",
+  "live": true,
+  "mocked": false,
+  "pair_id": "sb_003_end__to__sb_004_start",
+  "raw_response": {
+    "blocking_findings": [],
+    "notes": "Embry remains visually consistent with the reference across both frames: same facial structure, wet brown hair tied back, light eyes, and navy short-sleeve rashguard. Kai remains visually consistent with the reference: tan complexion, curly dark wet hair, similar facial features, and black rashguard with chest logo. Wardrobe continuity holds. Surfboards remain white with similar blue/graphic markings where visible, with no clear contradiction. Lighting, water conditions, reef shallows, and tropical shoreline setting remain consistent. The action plausibly progresses from both sitting/paused in shallow reef water in Frame A to a nearby moment in Frame B with a wave rising behind them and both still oriented attentively in the water.",
+    "verdict": "PASS"
+  },
+  "review_prompt_sha256": "sha256:023324b01e8e9cc4e2e3e9342cadaf42edb799f25796fbf966a4fab92e3b643d",
+  "reviewer_source": "scillm:gpt-5.5:image_url",
+  "schema": "persona_dream.phase_c.continuity_review.v1",
+  "status": "PASS",
+  "transition": "end->next-start across adjacent panels (sb_003 end -> sb_004 start)"
+}

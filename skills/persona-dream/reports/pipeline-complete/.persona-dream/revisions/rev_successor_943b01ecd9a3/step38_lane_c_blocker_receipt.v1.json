@@ -1,0 +1,66 @@
+{
+  "schema": "persona_dream.step38_lane_c_blocker_receipt.v1",
+  "status": "BLOCKED_LANE_C_GATE_CONFLICT_ATTEMPTS_EXHAUSTED",
+  "run_id": "pipeline-complete",
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "observed_at": "2026-07-18",
+  "live": true,
+  "mocked": false,
+  "provider_live": false,
+  "paid_call_authorized": false,
+  "submitted": false,
+  "actual_provider_call_attempts": 0,
+
+  "summary": "LANE C (step 38 fix) executed live: sb_003_end_frame was regenerated via the Phase C GPT Image 2 lane (codex-oauth; embry_contact_sheet_v3 + Kai character sheet reference inputs) applying step38_sb_003_composition_delta_proposal.v1.json across a bounded 5-attempt loop with a failure-aware repair. NO attempt satisfied all three acceptance checks simultaneously. Fail-closed: the frame is left FAILED, the frozen successor revision and its accepted phase_c sb_003_end_frame are UNTOUCHED, and requalification + rung restoration are NOT attempted. The acceptance rung remains at v4 (RUNG_CALIBRATION_RESOLVED_IDENTITY_CERTIFIED_PENDING_LANE_C_AND_REQUALIFICATION).",
+
+  "acceptance_contract": {
+    "per_attempt_requires_all_of": [
+      "(a) augmented identity review PASS: hardened full-frame gpt-5.5 VLM (scene/wardrobe/composition + face visibility, fail-closed) AND deterministic ArcFace embedding subgate for BOTH Embry and Kai (threshold 0.421); embedding cosine recorded",
+      "(b) composition check PASS: gpt-5.5 VLM answering the specific question 'is Kai's mouth camera-readable during 5.0-7.7s?' with the delta's criteria; PASS iff kai_mouth_camera_readable==false AND kai_identity_recognizable==true AND embry_face_readable==true",
+      "(c) continuity re-review PASS for both affected pairs: sb_003_start -> sb_003_end(new) and sb_003_end(new) -> sb_004_start"
+    ],
+    "max_attempts": 5,
+    "no_weakened_gate": true
+  },
+
+  "attempt_table": [
+    {"attempt": 1, "identity": "FAIL", "embedding_scores": {}, "composition": "PASS", "continuity": ["FAIL", "PASS"], "failure_mode": "Kai's lower face (nose/mouth/chin/jaw) occluded by his foreground arm -> mouth hidden (composition PASS) but the fail-closed full-frame identity VLM cannot ground 2-3 specific features -> IDENTITY_FEATURES_NOT_GROUNDED"},
+    {"attempt": 2, "identity": "PASS", "embedding_scores": {"Embry": 0.699289, "Kai": 0.710622}, "composition": "FAIL", "continuity": ["PASS", "FAIL"], "failure_mode": "clean three-quarter face -> identity PASS but Kai's mouth is camera-readable -> composition FAIL"},
+    {"attempt": 3, "identity": "PASS", "embedding_scores": {"Embry": 0.73168, "Kai": 0.801154}, "composition": "FAIL", "continuity": ["PASS", "FAIL"], "failure_mode": "clean face -> identity PASS (strong), mouth still camera-readable -> composition FAIL"},
+    {"attempt": 4, "identity": "PASS", "embedding_scores": {"Embry": 0.81122, "Kai": 0.640235}, "composition": "FAIL", "continuity": ["PASS", "PASS"], "failure_mode": "NEAR MISS: identity PASS and BOTH continuity pairs PASS; only composition FAIL (mouth still camera-readable)"},
+    {"attempt": 5, "identity": "PASS", "embedding_scores": {"Embry": 0.669362, "Kai": 0.716316}, "composition": "FAIL", "continuity": ["PASS", "PASS"], "failure_mode": "identity PASS and both continuity pairs PASS; composition FAIL (mouth still camera-readable)"}
+  ],
+
+  "root_cause": {
+    "gate_conflict": "The two unweakened gates have a very narrow overlap that GPT Image 2 could not hit in 5 bounded attempts. Gate (a)'s hardened full-frame VLM is FAIL-CLOSED: it requires Kai's face -- including the lower third (nose/mouth/chin/jaw) -- visible enough to affirmatively ground 2-3 specific-identity features, and FAILs on occlusion or a far turn. Gate (b) requires Kai's mouth to be NOT camera-readable. Any pose that hid the mouth enough for (b) (arm occlusion in attempt 1, or a strong turn) hid enough face to trip the fail-closed identity gate (a); any pose verifiable enough for (a) (attempts 2-5) left the mouth camera-readable and failed (b).",
+    "not_a_logical_impossibility": "Attempts 4 and 5 passed identity AND both continuity pairs with only composition failing, so the target region is reachable in principle (a moderate three-quarter with the lips just foreshortened enough); it is a generation-controllability gap, not a strict contradiction, but it was not achieved within the 5-attempt budget.",
+    "design_tension_with_delta": "step38_sb_003_composition_delta_proposal.v1.json specifies for the END frame identity_requirements.Kai.visibility.face_required=false with identity_anchored_by=sb_003.start_frame ('Full frontal face is no longer required for the end frame because identity is proven by the start frame'). Acceptance criterion (a), however, requires the augmented identity review -- which verifies the face on the frame under review -- to PASS for BOTH visible characters on the END frame. These are in tension. Resolving that tension is a GATE-DESIGN decision and must be made by a human; it was NOT resolved here by weakening the identity gate."
+  },
+
+  "disposition": {
+    "frame_accepted": false,
+    "frozen_revision_touched": false,
+    "canonical_phase_c_sb_003_end_frame": "unchanged and still canonical (index key sb_003.end_frame)",
+    "requalification_attempted": false,
+    "rung_restored": false,
+    "current_rung": "acceptance_rung_receipt.v4.json (RUNG_CALIBRATION_RESOLVED_IDENTITY_CERTIFIED_PENDING_LANE_C_AND_REQUALIFICATION)",
+    "lane_c_evidence": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/ (5 attempt frames + generation/identity/composition/continuity receipts, retained as evidence)"
+  },
+
+  "next_required_action_human_decision": [
+    "OPTION 1 (regeneration, non-paid): run a further bounded Lane C loop specifically engineered for the near-miss region -- a moderate three-quarter turn where Kai's near-side face (eye/brow/nose/cheek/jaw) stays reference-verifiable while the lips foreshorten just past camera-readable. Attempts 4-5 show this is close; more targeted prompting or a larger attempt budget MAY convert it. No gate is weakened.",
+    "OPTION 2 (gate-design decision, human): formally adopt the delta's own end-frame provision (face_required=false, identity_anchored_by=sb_003.start_frame) as the acceptance standard for THIS end frame, i.e. accept an occluded-mouth end frame whose identity is carried by the unchanged start frame plus wardrobe/hair/build continuity, with the embedding subgate run on whatever face is visible. This is a deliberate change to acceptance criterion (a) for the end frame and MUST be authorized by a human -- an agent must not make it silently.",
+    "OPTION 3 (fallback lane A, paid, post-return): defer the mouth-not-readable requirement to a paid Kling lip-sync API on the return, per step38_lipsync_decision_packet.v1.json lane A. Requires paid authorization (not granted)."
+  ],
+
+  "claims": {
+    "proves": [
+      "Lane C was executed live end-to-end against the real, unweakened augmented identity reviewer, a faithful composition check, and the existing continuity lane; the bounded 5-attempt loop exhausted without a frame satisfying all three checks",
+      "the specific, reproducible gate conflict (fail-closed full-frame identity verifiability vs. mouth-not-camera-readable) is documented with the full attempt table and embedding scores"
+    ],
+    "does_not_prove": [
+      "that no frame can ever satisfy both gates (attempts 4-5 were near misses)",
+      "Kling readiness, provider media publication, publication authorization, paid authorization, provider return, or lip-sync-on-return"
+    ]
+  }
+}
