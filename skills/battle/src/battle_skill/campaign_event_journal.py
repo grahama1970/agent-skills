@@ -74,7 +74,9 @@ class CampaignEventJournal:
                     (observed_ns - self.started_ns) / 1_000_000_000, 6
                 ),
                 "committed_at": _now(),
-                "source_created_at": source.get("created_at"),
+                # Schema requires a date-time string; some source receipts omit
+                # created_at, so fall back to the commit timestamp (best available).
+                "source_created_at": source.get("created_at") or _now(),
             },
             "source_receipt": {
                 "receipt_id": source.get("receipt_id")
