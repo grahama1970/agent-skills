@@ -18,6 +18,11 @@ import sys
 from typing import Any
 
 from embry_voice_control.event_journal import append_event, session_snapshot
+from embry_voice_control.journal_emitters import (
+    emit_chatterbox_voice_render_completed,
+    emit_speaker_verification_completed,
+)
+from embry_voice_control.speaker_gate import verify_turn_speaker
 from .case_executor import CaseExecutor, ManagedListenerProcess
 
 
@@ -916,6 +921,75 @@ def _resolve_final_event(
     return source, snapshot
 
 
+def _ensure_speaker_verification(
+    journal_db: Path,
+    case: dict[str, Any],
+    source: dict[str, Any],
+    contract_locator: dict[str, str],
+    contract: dict[str, Any],
+) -> dict[str, Any] | None:
+    """Run the fail-closed Horus speaker gate and journal its verdict.
+
+    Physical turns only (clone turns carry ``audio_source.qualification.completed``
+    evidence instead).  Idempotent: an existing event for the same turn and
+    captured-audio hash is returned unchanged.  Fails CLOSED -- a rejected
+    verdict is journaled to record the rejection and then raises so that no
+    downstream memory/Tau/render stage runs and personal memory is never
+    unlocked for an unproven or ambiguous speaker.
+    """
+    if case["source_mode"] not in PHYSICAL_SOURCE_MODES:
+        return None
+    audio_sha256 = (source.get("payload") or {}).get("audio_sha256")
+    existing = [
+        event
+        for event in session_snapshot(journal_db, case["session_id"])["events"]
+        if event.get("type") == "speaker.verification.completed"
+        and event.get("turn_id") == source["turn_id"]
+        and (event.get("payload") or {}).get("audio_sha256") == audio_sha256
+    ]
+    if len(existing) > 1:
+        raise ValueError("multiple_speaker_verification_events")
+    if existing:
+        event = existing[0]
+        if (event.get("payload") or {}).get("speaker_identity_proven") is not True:
+            raise RuntimeError(
+                "speaker_verification_failed_closed:"
+                + str((event.get("payload") or {}).get("rejection_reason"))
+            )
+        return event
+    audio_path = (source.get("payload") or {}).get("audio_path")
+    if not audio_path:
+        raise ValueError("listener_final_audio_path_missing")
+    if not contract.get("enrollment_samples"):
+        raise ValueError("speaker_enrollment_samples_required_for_live_gate")
+    decision = verify_turn_speaker(
+        candidate_wav=Path(str(audio_path)),
+        enrollment_receipt=contract,
+        threshold=float(contract["threshold"]),
+        min_margin=float(
+            contract.get("ambiguity_margin")
+            or contract.get("min_ambiguity_margin")
+            or 0.08
+        ),
+    )
+    contract_profile = str(contract["profile_sha256"]).removeprefix("sha256:")
+    if str(decision["profile_hash"]).removeprefix("sha256:") != contract_profile:
+        raise ValueError("speaker_gate_profile_hash_mismatch")
+    # Journal the exact contract profile hash the source-evidence gate asserts.
+    decision = {**decision, "profile_hash": contract["profile_sha256"]}
+    event = emit_speaker_verification_completed(
+        journal_db,
+        source_event=source,
+        decision=decision,
+        profile_receipt=contract_locator,
+    )
+    if not decision["accepted"]:
+        raise RuntimeError(
+            "speaker_verification_failed_closed:" + str(decision["rejection_reason"])
+        )
+    return event
+
+
 def _source_evidence_event(
     journal_db: Path,
     campaign_id: str,
@@ -1324,6 +1398,53 @@ def _render_stage(
     turn_state["stage"] = "render_complete"
     turn_state["updated_at"] = utc_now()
     return receipt
+
+
+def _voice_render_event(
+    journal_db: Path,
+    case: dict[str, Any],
+    turn: dict[str, Any],
+    source: dict[str, Any],
+    turn_state: dict[str, Any],
+) -> dict[str, Any]:
+    """Journal ``chatterbox.voice_render.completed`` from the accepted render.
+
+    Causation parent is the ``tau.turn_plan.completed`` event emitted by the
+    memory/Tau stage.  Idempotent by rendered-audio hash.  This event is the
+    one the playback controller (``pipewire_playback.run_playback``) claims
+    before it may emit any ``playback.*`` event, so emitting it here closes the
+    render -> playback gap in the live spine.
+    """
+    existing = [
+        event
+        for event in session_snapshot(journal_db, case["session_id"])["events"]
+        if event.get("type") == "chatterbox.voice_render.completed"
+        and event.get("turn_id") == turn["turn_id"]
+    ]
+    if len(existing) > 1:
+        raise ValueError("multiple_voice_render_events")
+    render_locator = turn_state["receipts"].get("render")
+    if not render_locator:
+        raise ValueError("render_receipt_locator_missing")
+    render_path, render_receipt = load_locator(render_locator, label="render_receipt")
+    _, memory_tau = load_locator(
+        turn_state["receipts"]["memory_tau"], label="memory_tau_receipt"
+    )
+    tau_plan_event = (memory_tau.get("journal_events") or {}).get("tau_turn_plan")
+    if not isinstance(tau_plan_event, dict) or not tau_plan_event.get("event_id"):
+        raise ValueError("tau_turn_plan_event_missing")
+    if existing:
+        if existing[0].get("causation_id") != tau_plan_event["event_id"]:
+            raise ValueError("voice_render_causation_mismatch")
+        return existing[0]
+    return emit_chatterbox_voice_render_completed(
+        journal_db,
+        source_event=source,
+        tau_plan_event=tau_plan_event,
+        render_receipt=render_receipt,
+        render_receipt_sha256=render_locator["sha256"],
+        render_receipt_path=str(render_path),
+    )
 
 
 def _turn_completed_event(
@@ -2113,6 +2234,13 @@ def run_campaign(
                     turn,
                     listener_receipt,
                 )
+                _ensure_speaker_verification(
+                    journal_db,
+                    case,
+                    source,
+                    contract_locator,
+                    contract,
+                )
                 existing_source_locator = turn_state["receipts"].get(
                     "source_evidence"
                 )
@@ -2217,6 +2345,13 @@ def run_campaign(
                 write_json(state_path, state)
                 _render_stage(
                     live_config,
+                    case,
+                    turn,
+                    source,
+                    turn_state,
+                )
+                _voice_render_event(
+                    journal_db,
                     case,
                     turn,
                     source,
