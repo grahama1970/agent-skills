@@ -29,7 +29,7 @@ describe("UX9 Genesis round intro (legacy reference)", () => {
 
 	it("parses the bundled original round-intro MIDI", () => {
 		const bytes = readFileSync(midiPath);
-		const song = parseMidiBytes(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength), midiPath);
+		const song = parseMidiBytes(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer, midiPath);
 		expect(song.ticksPerQuarter).toBe(480);
 		expect(song.tempoBpm).toBe(148);
 		expect(song.events.some((event) => event.type === "on")).toBe(true);
