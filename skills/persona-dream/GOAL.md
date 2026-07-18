@@ -81,7 +81,7 @@ Successor storyboard update (2026-07-18):
 ```text
 successor revision: rev_successor_943b01ecd9a3, PASS_ACTIVE_CONSISTENT, acceptance rung reached
 storyboard frames: 8/8 actual-pixel identity PASS, first attempt; 7/7 continuity pairs PASS
-known unresolved risk: step 38 lip sync is unaddressed; SB_003 composition and the post-mux audio strategy are unchanged from the failed return
+known unresolved risk: step 38 lip sync has a recorded resolution plan but is not yet executed; the accepted SB_003 frames and post-mux audio are still unchanged. Decision packet `.persona-dream/revisions/rev_successor_943b01ecd9a3/step38_lipsync_decision_packet.v1.json` (+ .md twin) recommends PRIMARY lane C (non-paid SB_003 composition change so Kai's mouth is not camera-readable during 5.0-7.7s — regenerate the SB_003 end frame only, keep the start frame as identity anchor; delta proposal `step38_sb_003_composition_delta_proposal.v1.json`), FALLBACK lane A (paid Kling lip-sync API, post-return, unsent request template), REJECT lane B (generate_audio=true breaks the exact-transcript/consented-voice requirement). Human must pick before the next paid Kling call; no paid call authorized. Memory: `persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:38:step38_lipsync_decision` (exact reread PASS)
 ```
 
 No agent may claim final, green, complete, fixed, or verified for this goal

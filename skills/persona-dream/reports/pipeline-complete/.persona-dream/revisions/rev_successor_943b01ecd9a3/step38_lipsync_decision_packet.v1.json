@@ -1,0 +1,232 @@
+{
+  "schema": "persona_dream.step38_lipsync_decision_packet.v1",
+  "status": "DECISION_RECORDED_NO_PAID_CALL",
+  "run_id": "pipeline-complete",
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "step_no": 38,
+  "step_slug": "final-assembly-movie-lane",
+  "step_name": "Final Assembly / Movie Lane (visible-speaker lip sync)",
+  "prepared_by": "step38 lip-sync resolution agent",
+  "observed_at": "2026-07-18",
+  "mocked": false,
+  "live": true,
+  "provider_live": false,
+  "paid_call_authorized": false,
+  "submitted": false,
+  "actual_provider_call_attempts": 0,
+
+  "problem_statement": {
+    "failure_code": "FAIL_VISIBLE_SPEAKER_NOT_LIPSYNCED",
+    "beat": "sb_003",
+    "speaker": "Kai",
+    "canonical_line": "If we paddle now, we're cutting across the lineup.",
+    "spoken_interval_seconds": { "start": 5.0, "end": 7.7 },
+    "audio_strategy": "post_mux",
+    "kling_generate_audio": false,
+    "summary": "The frozen predecessor return (rev_upstream_bf3b05d47fb8, request sha256:ca90ba9f...) post-muxed the exact Kai line at 5.00-7.70s. Forced alignment PASSED (canonical text exact, onset/end in tolerance). But SB_003 is a medium-wide waterline two-shot in which Kai's face and mouth are camera-readable while his measured dialogue is audible, and no lip-sync transform was applied, so step 38 fails. The successor rev_successor_943b01ecd9a3 regenerated 8 identity frames but did NOT change SB_003 composition or the post-mux audio strategy, so a next paid Kling call compiled from the current SB_003 contract would return a video that fails step 38 identically.",
+    "goal_rule_cited": "GOAL.md Completion Rule: 'When the speaker's mouth is visible, post-mux audio without an accepted lip-sync transform cannot satisfy the immutable goal.'"
+  },
+
+  "source_evidence": {
+    "visible_speaker_lipsync_review": {
+      "path": "reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/visible_speaker_lipsync_review.v1.json",
+      "sha256": "sha256:912b468623c786962dcea5d254e03e768f74786234766c5c6ea28764ece52e30",
+      "status": "FAIL_VISIBLE_SPEAKER_NOT_LIPSYNCED"
+    },
+    "dialogue_forced_alignment_receipt": {
+      "path": "reports/pipeline-complete/.persona-dream/revisions/rev_upstream_bf3b05d47fb8/phase_11_submit_return/provider_return/ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f/dialogue_forced_alignment_receipt.v1.json",
+      "sha256": "sha256:0386a2fea12db046fd522a5b335000e7929d82e414f5419f795dad2943546ed2",
+      "status": "PASS_FORCED_DIALOGUE_ALIGNMENT"
+    },
+    "muxed_provider_return_mp4": {
+      "sha256": "sha256:991c311f365f84832b274aad7b8ff757372914f7c516e595a31b1bd05edf4c59",
+      "duration_seconds": 10.041667,
+      "note": "10.041667s exceeds the fal Kling lipsync audio-to-video 2-10s video cap by 0.041667s; segment isolation or a 60s-cap lane is required for a whole-return lip-sync."
+    },
+    "sb_003_start_frame_contract": {
+      "path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/prompt_contracts/sb_003.start_frame.attempt_001.json",
+      "sha256": "sha256:600bcbea5cf0eee02a3f7861b97a1e8e05195d604b32424209c8660e7ed42ad5"
+    },
+    "sb_003_end_frame_contract": {
+      "path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/prompt_contracts/sb_003.end_frame.attempt_001.json",
+      "sha256": "sha256:99ee85a6315249322f4f3f02ec4f17714b63dfb5f249b6607d798db3ff2605d3"
+    }
+  },
+
+  "candidate_lanes": [
+    {
+      "id": "A",
+      "name": "Kling lip-sync API lane (post-return video+audio -> lip-synced video)",
+      "category": "PAID",
+      "verdict": "FALLBACK",
+      "operates_on": "A returned video (Kling-generated OR any external MP4/MOV with a clear, steady, mostly-in-frame frontal face). It is a post-return repair, not a pre-call fix.",
+      "endpoints": {
+        "kling_direct_classic": {
+          "url": "POST https://api-singapore.klingai.com/v1/videos/lip-sync",
+          "auth": "JWT HS256, iss=$KLING_ACCESS_KEY, exp=now+7200, nbf=now, signed with $KLING_SECRET_KEY (same pattern documented in SKILL.md for custom-voices; the direct provider is the api-singapore.klingai.com base URL).",
+          "video_source": "input.video_id / origin_task_id (a prior Kling-generated task in the same account) OR external video_url",
+          "modes": ["text2video (Kling TTS: tts_text + tts_timbre/voice + tts_speed)", "audio2video (audio_type=url|file, audio_url or base64 audio_file)"],
+          "source_url": "https://kling.ai/document-api/api/video/lip-sync"
+        },
+        "kling_direct_advanced": {
+          "url": "POST https://api-singapore.klingai.com/v1/videos/advanced-lip-sync",
+          "audio": "Base64-encoded audio OR accessible audio URL; .mp3/.wav/.m4a/.aac; max 5MB; 2-60s",
+          "constraints": ["one person lip-sync only", "audio before the starting point is cropped; the cropped sound must be >= 2s"],
+          "source_url": "https://kling.ai/document-api/api/video/lip-sync"
+        },
+        "fal_wrapper": {
+          "url": "fal-ai/kling-video/lipsync/audio-to-video",
+          "inputs": ["video_url", "audio_url"],
+          "video_constraints": ["MP4/MOV", "<=100MB", "2-10 seconds", "720p or 1080p", "width/height 720-1920px"],
+          "audio_constraints": ["2-60s", "<=5MB", "MP3/WAV/M4A"],
+          "source_url": "https://fal.ai/models/fal-ai/kling-video/lipsync/audio-to-video/api"
+        },
+        "useapi_wrapper": {
+          "url": "POST https://api.useapi.net/v1/kling/videos/lipsync",
+          "note": "video up to 60s; audio shorter than video mutes the excess, longer is discarded; supports replyUrl callback",
+          "source_url": "https://useapi.net/docs/api-kling-v1/post-kling-videos-lipsync"
+        }
+      },
+      "cost_estimate": {
+        "fal": "~$0.084/clip (~$0.0140/sec of output)",
+        "piapi": "$0.1 per 5 seconds",
+        "kling_consumer_credits": "~1 inspiration credit/sec (5s=5 credits, 10s=10 credits)",
+        "for_this_repair": "Lip-syncing only the SB_003 sub-segment (~2.7-3s of the 5.0-7.7s spoken interval) is on the order of $0.08-0.10 plus one additional paid provider call beyond the Kling video generation call."
+      },
+      "constraints_and_risks": [
+        "PAID: adds a second paid provider call on top of the successor Kling video generation call.",
+        "POST-RETURN ONLY: cannot run or be validated before the next paid Kling call; it only repairs a video that has already been returned. It does not change what the next paid Kling call receives, so the next return would still be visible-speaker-unsynced and require this repair afterward.",
+        "10.041667s return exceeds the fal 2-10s video cap; the whole-return path needs the direct provider/useapi (60s) lane, OR segment isolation of just the SB_003 window followed by re-splice.",
+        "ONE PERSON only: SB_003 is a two-shot (Kai + Embry). The model must lock onto Kai's face; a two-face frame risks the wrong face being driven or Embry's mouth being disturbed. Requires a clear, steady Kai face over most frames of the fed segment.",
+        "Audio placement: 'audio before the starting point is cropped'; the driving audio must be the ISOLATED Kai line (~2.7s), not the full 10s mix (which contains ocean ambience during Kai's silence and would drive spurious mouth motion). This forces a segment-level lip-sync + recomposite back into the 10s timeline, then a re-mux and re-review.",
+        "CONTINGENT: if the successor Kling return still fails Embry identity (step 36, EMBRY_IDENTITY_DRIFT), lip-sync repair is moot; identity must pass first.",
+        "Adds a new provider request hash, a new hash-bound paid authorization, and a fresh forced-alignment + visible-speaker re-review cycle on the recomposited output."
+      ],
+      "receipts_gates_required_for_step38": [
+        "New hash-bound paid-call authorization for the lip-sync request (step 30 analog).",
+        "Kling lip-sync submit + poll/callback receipts (external task id, provider task id).",
+        "Downloaded lip-synced segment + ffprobe receipt (readability, duration).",
+        "Re-splice/re-mux FFmpeg receipt placing the lip-synced Kai segment back at 5.0-7.7s in the 10s timeline.",
+        "Re-run dialogue_forced_alignment_receipt.v1 on the recomposited MP4 (canonical text still exact, onset/end in tolerance).",
+        "New visible_speaker_lipsync_review.v1 with observations.lip_sync_transform_applied=true AND lip_sync_visually_accepted=true.",
+        "Audio-stream + audible-output review on the final MP4."
+      ]
+    },
+    {
+      "id": "B",
+      "name": "generate_audio=true (provider-generated audio carries the line)",
+      "category": "PROVIDER_AUDIO",
+      "verdict": "REJECT",
+      "finding": "Kling/fal video generation audio is ambient/generic sound, not scripted dialogue rendered from an exact transcript in a specific consented voice. It cannot be made to speak the canonical Kai line verbatim, and even if it emitted speech it would be a non-consented synthetic voice with non-verbatim words.",
+      "why_it_breaks_the_goal": [
+        "GOAL.md Completion Rule for a voiced run requires 'an exact transcript render' plus a forced-alignment receipt on the canonical line. Provider-generated audio is not verbatim, so canonical_text_exact_after_normalization would fail.",
+        "Step 37 requires the consented/provenance-bound Kai voice ('The output voice must be a curated authorized reference / consented voice'); a provider TTS voice is neither consented nor identity-bound to Kai.",
+        "It would replace, not satisfy, the post-mux exact-line lane; the exact-transcript requirement is immutable and cannot be traded away for provider audio."
+      ],
+      "cost_estimate": { "note": "N/A - rejected; would still incur the same Kling video cost but produce a non-compliant audio track." },
+      "receipts_gates_required_for_step38": [
+        "Not applicable: this lane cannot produce a PASS forced-alignment on the canonical line nor a consented-voice receipt."
+      ]
+    },
+    {
+      "id": "C",
+      "name": "SB_003 composition change (make the visible-speaker rule inapplicable)",
+      "category": "NON_PAID_COMPOSITION",
+      "verdict": "PRIMARY_RECOMMENDED",
+      "principle": "GOAL.md makes lip-sync mandatory ONLY when the speaker's mouth is visible during the measured speech. If Kai's mouth is NOT camera-readable during 5.0-7.7s, the post-mux exact-line strategy (which already PASSES forced alignment) satisfies step 38 by construction, with no additional paid call.",
+      "minimal_change": {
+        "keep_start_frame": "sb_003.start_frame is UNCHANGED. Kai's face stays readable at the top of the beat so his identity is reference-verifiable (satisfies identity_requirements.Kai.face_required and preserves the accepted-frame identity anchor).",
+        "change_end_frame_and_motion": "During the spoken interval (5.0-7.7s) and in sb_003.end_frame, Kai delivers his one restrained cue while looking OUT toward the lineup/reef he is reading (three-quarter-away / over-the-shoulder from camera) and/or mid-paddle stroke with forearm and spray across the lower face, so his lips are NOT camera-readable during the measured speech. This is story-true: the beat is Kai reading the lineup and giving a restrained cue while facing the water he references.",
+        "identity_preserved": "Identity is proven by the readable start frame and by Kai's build/wardrobe/hair continuity; only the lips-camera-readability during the ~2.7s spoken window is removed.",
+        "story_intent_preserved": "Kai conserves energy, reads local/channel/reef/Embry's cadence, holds position, gives one restrained cue; Embry keeps agency. All acting beats survive."
+      },
+      "contract_delta_proposal_file": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/step38_sb_003_composition_delta_proposal.v1.json",
+      "regeneration_triggered": [
+        "Regenerate SB_003 END frame only (GPT Image 2 via scillm, the established Phase C lane; no new provider, no video/paid call).",
+        "SB_003 START frame is retained as-is (identity anchor).",
+        "Continuity re-review of 2 pairs: sb_003_start -> sb_003_end (new end frame) and sb_003_end -> sb_004_start (neighbor).",
+        "Update the Kling per-segment motion prompt for the sb_003 window so Kai turns toward the lineup / paddle-obscures his mouth while delivering the cue.",
+        "No change to sb_001, sb_002, sb_004+ frames; no change to the post-mux audio, the rendered Kai WAV, or the forced-alignment lane."
+      ],
+      "cost_estimate": {
+        "paid_provider_calls": 0,
+        "note": "One GPT-Image-2 frame regeneration on the existing image lane (no incremental provider cost tracked as a paid Kling/video call). No lip-sync provider call. This is the cheapest lane and the only one that fixes the failure BEFORE the paid Kling call."
+      },
+      "receipts_gates_required_for_step38": [
+        "Regenerated sb_003.end_frame with an actual-pixel identity review PASS (Kai + Embry identity still reference-verifiable) matching the Phase C reviewer bar.",
+        "Continuity review PASS for sb_003_start->end and sb_003_end->sb_004_start.",
+        "Updated SB_003 panel_prompt_contract.v2 encoding: during the spoken interval Kai's mouth is not camera-readable (a new visibility field, e.g. speaker_mouth_camera_readable_during_speech=false), rehashed and re-bound in the artifact index.",
+        "On the eventual Kling return: dialogue_forced_alignment_receipt.v1 PASS (unchanged post-mux lane) AND visible_speaker_lipsync_review.v1 recording observations.speaker_mouth_visible=false during 5.0-7.7s -> status PASS_VISIBLE_SPEAKER_RULE_INAPPLICABLE (post-mux sufficient because the mouth is not readable during measured speech)."
+      ]
+    }
+  ],
+
+  "decision": {
+    "primary_lane": "C",
+    "primary_lane_name": "SB_003 composition change (speaker mouth not camera-readable during the spoken interval)",
+    "fallback_lane": "A",
+    "fallback_lane_name": "Kling lip-sync API lane (post-return segment lip-sync + recomposite)",
+    "rejected_lane": "B",
+    "rationale": [
+      "The task boundary is BEFORE the next paid Kling call. Only lane C changes what that call receives, so the next return can PASS step 38 by construction; lanes A and B do not change the next call's inputs.",
+      "Lane C is non-paid, deterministic, and uses the already-proven GPT-Image-2 storyboard lane; it removes only the ~2.7s of camera-readable lips while preserving identity (start frame) and full story intent.",
+      "Lane C keeps the post-mux exact-line strategy, which already PASSES forced alignment with the consented Kai voice - it does not disturb step 37.",
+      "Lane A is retained as the fallback because it directly repairs a returned video's visible-speaker sync, but it is post-return, paid, single-face-in-a-two-shot risky, blocked by the 10.041667s > 10s fal cap (needs segment isolation or the 60s direct/useapi lane), and contingent on Embry identity (step 36) passing first.",
+      "Lane B is rejected: provider-generated audio cannot carry the exact canonical line verbatim in the consented Kai voice and would break the immutable exact-transcript and consented-voice requirements."
+    ],
+    "human_decision_required": true,
+    "what_this_authorizes": "Nothing paid. If the human selects lane C, the follow-up is a single SB_003 end-frame regeneration + continuity re-review (still non-paid on the image lane) and a per-segment Kling motion-prompt update, THEN the successor provider request is compiled. If the human selects lane A, a new hash-bound paid authorization is required for the lip-sync call."
+  },
+
+  "fallback_lane_A_request_template_unsent": {
+    "warning": "TEMPLATE ONLY - NOT SENT. No paid call has been or may be made from this packet. Requires a fresh hash-bound human paid authorization before any submission.",
+    "provider": "kling_direct_advanced_lip_sync",
+    "endpoint": "POST https://api-singapore.klingai.com/v1/videos/advanced-lip-sync",
+    "auth_header": "Authorization: Bearer <KLING_JWT_HS256>",
+    "jwt_construction": "jwt.encode({'iss': $KLING_ACCESS_KEY, 'exp': now+7200, 'nbf': now}, $KLING_SECRET_KEY, algorithm='HS256')  (header {'alg':'HS256','typ':'JWT'})",
+    "content_type": "application/json",
+    "body": {
+      "video_url": "<<<PUBLIC_URL_OF_ISOLATED_SB_003_SEGMENT_MP4>>>",
+      "video_source_sha256": "<<<SHA256_OF_ISOLATED_SB_003_SEGMENT_MP4>>>",
+      "audio_url": "<<<PUBLIC_URL_OF_ISOLATED_KAI_LINE_WAV>>>",
+      "audio_source_sha256": "<<<SHA256_OF_ISOLATED_KAI_LINE_WAV>>>",
+      "mode": "audio2video",
+      "external_task_id": "<<<PERSONA_DREAM_TASK_ID>>>"
+    },
+    "authorization_binding": {
+      "request_body_sha256": "<<<SHA256_OF_THIS_EXACT_REQUEST_BODY_ONCE_URLS_FILLED>>>",
+      "paid_authorization_hash": "<<<HUMAN_PAID_AUTHORIZATION_HASH_BOUND_TO_request_body_sha256>>>",
+      "max_spend_usd": "<<<HUMAN_SET_MAX_SPEND>>>"
+    },
+    "preconditions": [
+      "Successor Kling video already returned AND Embry identity (step 36) PASS.",
+      "SB_003 window isolated to <=10s (2-60s allowed by advanced-lip-sync) with a clear, steady, single Kai face.",
+      "Driving audio is the isolated 2.7s Kai canonical line (NOT the full 10s mix); >=2s after any leading crop.",
+      "Public URLs hosted (Kling rejects localhost/file://); exact hashes recorded before submit."
+    ],
+    "post_call_recomposite": "Splice the returned lip-synced SB_003 segment back at 5.0-7.7s in the 10s timeline, re-mux, then re-run forced alignment + visible-speaker review."
+  },
+
+  "claims": {
+    "proves": [
+      "The step 38 visible-speaker failure has a documented root cause (SB_003 two-shot with Kai's mouth camera-readable during the measured 5.0-7.7s post-mux line) and three evaluated resolutions with costs, constraints, and gates.",
+      "A non-paid primary resolution (SB_003 composition change) exists that would let the next paid Kling call pass step 38 by construction while preserving identity and story intent.",
+      "The Kling lip-sync API facts (endpoints, auth, formats, duration/one-person constraints, cost) are researched and cited, and a fully-specified but UNSENT fallback request template is recorded."
+    ],
+    "does_not_prove": [
+      "That the regenerated SB_003 end frame will pass actual-pixel identity + continuity review (must be verified when regenerated).",
+      "That a Kling lip-sync call would produce a visually accepted result on a two-shot segment.",
+      "That the successor Kling return will pass Embry identity (step 36), which remains a separate open blocker.",
+      "Any human paid authorization - none is granted by this packet."
+    ]
+  },
+
+  "web_sources": [
+    "https://kling.ai/document-api/api/video/lip-sync",
+    "https://fal.ai/models/fal-ai/kling-video/lipsync/audio-to-video/api",
+    "https://useapi.net/docs/api-kling-v1/post-kling-videos-lipsync",
+    "https://piapi.ai/docs/kling-api/lipsync-examples",
+    "https://fairstack.ai/models/kling-lipsync-a2v",
+    "https://klingai.com/global/dev/pricing"
+  ]
+}

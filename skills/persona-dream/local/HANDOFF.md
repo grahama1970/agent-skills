@@ -153,9 +153,27 @@ does not authorize any of them.
 3. **New hash-bound paid authorization** for the freshly compiled request hash.
 4. Submit at most one Kling job; poll; download; ffprobe; frame sheet;
    post-Kling identity/action continuity review.
-5. Render/mux the exact Kai line and apply the authorized lip-sync lane while
-   Kai's face is visible; require both forced alignment and visual lip-sync
-   acceptance.
+5. Resolve step 38 visible-speaker lip sync **before** compiling the next paid
+   Kling call. The decision is recorded in
+   `reports/…/revisions/rev_successor_943b01ecd9a3/step38_lipsync_decision_packet.v1.json`
+   (+ `.md` twin; Memory key
+   `persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:38:step38_lipsync_decision`,
+   exact reread PASS). **Primary (non-paid, recommended): lane C** — change SB_003
+   so Kai's mouth is not camera-readable during the 5.0–7.7s spoken interval
+   (keep the start frame as identity anchor, regenerate the **SB_003 end frame
+   only**, update the per-segment Kling motion prompt), which makes the
+   visible-speaker rule inapplicable so the existing post-mux exact Kai line
+   suffices. Delta proposal (frames NOT yet regenerated):
+   `step38_sb_003_composition_delta_proposal.v1.json` — a human must approve the
+   single-frame regeneration + continuity re-review before it runs. **Fallback
+   (paid): lane A** — post-return Kling lip-sync API (`/v1/videos/lip-sync` or
+   `/advanced-lip-sync`, JWT HS256; note the 10.041667s return exceeds fal's 10s
+   cap and the one-person constraint on a two-shot); an unsent, placeholdered
+   request template is in the packet and needs a fresh hash-bound paid
+   authorization. **Rejected: lane B** (`generate_audio=true`) — provider audio
+   cannot carry the exact canonical line in the consented Kai voice. Whichever
+   lane runs, require both forced alignment and the visible-speaker review to
+   pass (or record `PASS_VISIBLE_SPEAKER_RULE_INAPPLICABLE` for lane C).
 6. Regenerate steps 39, 40, 42; persist and exactly reread all 42 states. Final
    acceptance stays blocked until steps 36 and 38 pass.
 
