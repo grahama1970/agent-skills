@@ -1,0 +1,182 @@
+from __future__ import annotations
+
+import json
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+
+import phase07_prompt_renderer as renderer  # noqa: E402
+from validate_persona_dream_spine_chain import validate_manifest  # noqa: E402
+from spine_prompt_contract_validation import sha256_path, validate_phase07  # noqa: E402
+
+
+def _fixture_inputs(base: Path) -> dict[str, Path]:
+    """Build a self-contained set of inputs (no 12TB / network dependency)."""
+    embry = base / "assets" / "embry_contact_sheet_v3.png"
+    kai = base / "assets" / "kai_akana_character_sheet.png"
+    embry.parent.mkdir(parents=True, exist_ok=True)
+    embry.write_bytes(b"FAKE-EMBRY-CONTACT-SHEET-V3-PNG-BYTES")
+    kai.write_bytes(b"FAKE-KAI-CHARACTER-SHEET-PNG-BYTES")
+
+    # Phase C accepted frames + real-shaped identity review receipts.
+    frames_dir = base / "phase_c" / "generated_storyboard_frames"
+    review_dir = base / "phase_c" / "receipts" / "storyboard_identity_review"
+    frames_dir.mkdir(parents=True, exist_ok=True)
+    review_dir.mkdir(parents=True, exist_ok=True)
+    panels = ["sb_001", "sb_002", "sb_003", "sb_004"]
+    for panel_id in panels:
+        for key in ("start_frame", "end_frame"):
+            stub = f"{panel_id}_{key}"
+            (frames_dir / f"{stub}.png").write_bytes(f"FAKE-ACCEPTED-FRAME-{stub}".encode())
+            (review_dir / f"{stub}_identity_continuity_review.json").write_text(
+                json.dumps({"status": "PASS", "frame_id": f"{panel_id}.{key}", "blocking_findings": []}),
+                encoding="utf-8",
+            )
+
+    packet = {
+        "schema": "persona_dream.storyboard_packet.v1",
+        "run_id": "phase_07_storyboard_live_tau",
+        "required_identities": ["Embry", "Kai"],
+        "story_contract": {"beats": ["Embry chooses restraint.", "Kai reads the reef."]},
+        "timed_beats": [{"beat_id": "beat_01", "action": "autonomy versus obligation pivot"}],
+        "panels": [
+            {
+                "panel_id": panel_id,
+                "time_range": {"start_s": i * 2.5, "end_s": i * 2.5 + 2.5},
+                "shot": f"Waterline panel {panel_id} at Kahalu'u Bay.",
+                "action": f"Embry and Kai hold the lineup, panel {panel_id}.",
+            }
+            for i, panel_id in enumerate(panels)
+        ],
+    }
+    packet_path = base / "storyboard_packet.json"
+    packet_path.write_text(json.dumps(packet), encoding="utf-8")
+    idea = base / "dream_prompt.txt"
+    idea.write_text("Embry steals a sick day to surf a public reef break with Kai.", encoding="utf-8")
+    return {"packet": packet_path, "embry": embry, "kai": kai, "frames": frames_dir, "idea": idea}
+
+
+def _render(base: Path, out: Path):
+    inp = _fixture_inputs(base)
+    return renderer.render_spine_chain(
+        packet_path=inp["packet"],
+        out_dir=out,
+        idea_text_path=inp["idea"],
+        embry_sheet=inp["embry"],
+        kai_sheet=inp["kai"],
+        phase_c_frames_dir=inp["frames"],
+    ), inp
+
+
+class TestPhase07PromptRenderer(unittest.TestCase):
+    def test_all_contracts_and_stages_pass(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            base = Path(td)
+            receipt, _ = _render(base, base / "out")
+            self.assertTrue(receipt["all_contracts_pass"])
+            self.assertEqual(receipt["stage_statuses"]["phase01"], "PASS_MEMORY_RESIDUE_CONTRACT")
+            self.assertEqual(receipt["stage_statuses"]["phase06"], "PASS_SCRIPT_CONTRACT")
+            self.assertEqual(len(receipt["frames"]), 8)
+
+    def test_determinism_byte_identical_across_out_dirs(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            base = Path(td)
+            _render(base, base / "out_a")
+            _render(base, base / "out_b")
+            files_a = sorted(p.relative_to(base / "out_a") for p in (base / "out_a").rglob("*") if p.is_file())
+            files_b = sorted(p.relative_to(base / "out_b") for p in (base / "out_b").rglob("*") if p.is_file())
+            self.assertEqual(files_a, files_b)
+            self.assertTrue(files_a)
+            for rel in files_a:
+                self.assertEqual(
+                    (base / "out_a" / rel).read_bytes(),
+                    (base / "out_b" / rel).read_bytes(),
+                    msg=f"non-deterministic file: {rel}",
+                )
+
+    def test_compiled_prompt_is_pure_function_of_contract(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            base = Path(td)
+            _render(base, base / "out")
+            out = base / "out"
+            for contract_path in (out / "phase07" / "prompt_contracts").glob("*.json"):
+                contract = json.loads(contract_path.read_text(encoding="utf-8"))
+                prompt_path = out / "phase07" / "prompts" / (contract_path.stem + ".md")
+                self.assertEqual(prompt_path.read_text(encoding="utf-8"), renderer.compile_prompt(contract))
+                # And validate_phase07 accepts the contract.
+                self.assertEqual(validate_phase07(contract), [])
+
+    def test_hash_binding_manifest_matches_files(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            base = Path(td)
+            _render(base, base / "out")
+            out = base / "out"
+            manifest = json.loads((out / "spine_chain_manifest.v1.json").read_text(encoding="utf-8"))
+            for entry in manifest["stages"]["phase07"]["panel_prompt_contracts"]:
+                self.assertEqual(sha256_path(out / entry["contract_path"]), entry["contract_sha256"])
+                cp = entry["compiled_prompt"]
+                self.assertEqual(sha256_path(out / cp["path"]), cp["sha256"])
+                self.assertEqual(cp["derived_from_contract_sha256"], entry["contract_sha256"])
+                self.assertIs(cp["may_be_hand_edited"], False)
+                self.assertIs(cp["renderer"]["deterministic"], True)
+
+    def test_spine_chain_gate_passes(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            base = Path(td)
+            _render(base, base / "out")
+            result = validate_manifest(base / "out" / "spine_chain_manifest.v1.json")
+            self.assertEqual(result["status"], "PASS_SPINE_CHAIN_CONTRACT_GATE", msg=json.dumps(result["blockers"]))
+
+    def test_acceptance_claims_bound_to_real_phase_c_reviews(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            base = Path(td)
+            _render(base, base / "out")
+            manifest = json.loads((base / "out" / "spine_chain_manifest.v1.json").read_text(encoding="utf-8"))
+            claims = manifest["reviewer_preconditions"]["acceptance_claims"]
+            self.assertEqual(len(claims), 8)
+            for claim in claims:
+                self.assertTrue(claim["acceptance_claimed"])
+                self.assertTrue(claim["reviewer_status"].startswith("PASS_"))
+                self.assertTrue(claim["validated_artifact_sha256"].startswith("sha256:"))
+
+    def test_verify_detects_tampered_prompt(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            base = Path(td)
+            _render(base, base / "out")
+            manifest_path = base / "out" / "spine_chain_manifest.v1.json"
+            self.assertEqual(renderer.verify_render(manifest_path)["status"], "PASS_DETERMINISTIC_RENDER")
+            victim = next((base / "out" / "phase07" / "prompts").glob("*.md"))
+            victim.write_text(victim.read_text(encoding="utf-8") + "\nHAND EDIT INJECTED\n", encoding="utf-8")
+            verdict = renderer.verify_render(manifest_path)
+            self.assertEqual(verdict["status"], "BLOCKED_TAMPERED_RENDER")
+            self.assertTrue(verdict["mismatches"])
+
+    def test_tampered_prompt_rejected_by_spine_validator(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            base = Path(td)
+            _render(base, base / "out")
+            victim = next((base / "out" / "phase07" / "prompts").glob("*.md"))
+            victim.write_text(victim.read_text(encoding="utf-8") + "\ntampered\n", encoding="utf-8")
+            result = validate_manifest(base / "out" / "spine_chain_manifest.v1.json")
+            self.assertEqual(result["status"], "BLOCKED_SPINE_CHAIN_CONTRACT")
+            statuses = {b.get("status") for b in result["blockers"]}
+            self.assertIn("BLOCKED_COMPILED_PROMPT_HASH_MISMATCH", statuses)
+
+    def test_tampered_contract_rejected_by_spine_validator(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            base = Path(td)
+            _render(base, base / "out")
+            victim = next((base / "out" / "phase07" / "prompt_contracts").glob("*.json"))
+            data = json.loads(victim.read_text(encoding="utf-8"))
+            data["story_action"] = data["story_action"] + " TAMPERED"
+            victim.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+            result = validate_manifest(base / "out" / "spine_chain_manifest.v1.json")
+            self.assertEqual(result["status"], "BLOCKED_SPINE_CHAIN_CONTRACT")
+
+
+if __name__ == "__main__":
+    unittest.main()
