@@ -401,6 +401,39 @@ asserting `may_be_hand_edited: false` without renderer provenance is a
 fabricated integrity claim and fails the gate. Hand-authored compiled prompts
 are forbidden, including for proof or precedent runs.
 
+### Anchored-identity waiver (scoped, fail-closed)
+
+Identity gates are checked pairwise for satisfiability on the same artifact. When
+a panel's composition contract deliberately makes a character's face non-readable
+on one frame (e.g. a visible-speaker lip-sync-avoidance requirement), that same
+frame cannot also be required to pass a full frontal face-identity check — the two
+gates have no overlap and no generation can satisfy both. The resolution is the
+scoped **anchored-identity waiver** (`scripts/anchored_identity_waiver.py`,
+unit-tested in `tests/test_anchored_identity_waiver.py`), which implements the
+recorded design decision from the step-38 composition delta, not a new policy.
+
+A character's end-frame identity check may be waived **only** when ALL of:
+
+1. the panel's composition contract explicitly requires that character's face to
+   be non-readable on that frame (`face_required=false` and
+   `speaker_mouth_camera_readable_during_speech=false`), machine-checked and bound
+   to the contract by SHA-256;
+2. the SAME panel's start frame passes the full augmented identity review
+   (full-frame VLM + deterministic ArcFace embedding subgate) for that character,
+   and the anchor cosine is recorded;
+3. the start→end continuity review passes with explicit **non-facial** identity
+   continuity checks for that character (wardrobe, build, hair, board, position);
+4. a waiver receipt is emitted naming the character, frame, contract hash, anchor
+   frame + its embedding cosine, and the continuity receipt.
+
+The default is **fail-closed**: with no explicit contract requirement, no waiver
+is granted and the full augmented identity check stands. Every other character on
+the frame always gets the full augmented check including the embedding subgate;
+the waiver never touches them. Outside these four conditions every identity gate
+remains exactly as strict. The waiver waives only the end-frame *face* check for
+the named character — it does not relax composition, continuity, the embedding
+authority, or any other gate.
+
 ## Provider Final Gate
 
 ### Immutable Runtime And Revision Qualification
