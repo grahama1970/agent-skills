@@ -20,7 +20,7 @@ from typing import Any
 import httpx
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
-COLLECTION = "project_knowledge"
+COLLECTION = "persona_dream_governance"  # governance/audit records; historical copies remain in project_knowledge (harmless to the scoped qualification gate)
 RUN_ID = "pipeline-complete"
 REVISION_ID = "rev_successor_943b01ecd9a3"
 REV_REL = f"reports/pipeline-complete/.persona-dream/revisions/{REVISION_ID}"
