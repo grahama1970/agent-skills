@@ -30,6 +30,9 @@ import { isBattleMusicView } from "./lib/battle-music-registry";
 import { BattleMusicRoute } from "./music/BattleMusicRoute";
 import { BattleGeneticLifecycleBanner } from "./BattleGeneticLifecycleBanner";
 import { geneticLifecycleViewModel } from "./lib/battle-genetic-lifecycle";
+import { BattleLineageComparisonPanel } from "./lineage/BattleLineageComparisonPanel";
+import adaptiveLineageLiveFixtureJson from "./lineage/__fixtures__/adaptive-lineage-live.json";
+import type { BattleAdaptiveLineageMechanicsFixtureV1 } from "./lib/battle-types";
 import { BattleCampaignStoryPanel } from "./BattleCampaignStoryPanel";
 import { buildCampaignStory, campaignChapterAtPlayhead, soundCaptionForCue } from "./lib/battle-campaign-story";
 import { battleCampaignPresentationFromUrl, isBattleCampaignView } from "./lib/battle-campaign-registry";
@@ -323,6 +326,13 @@ export function BattleSpectatorArena() {
       {geneticModel ? (
         <div className="mx-auto mb-2 max-w-[1672px]">
           <BattleGeneticLifecycleBanner model={geneticModel} fixture={typedReceiptFixture} />
+        </div>
+      ) : null}
+      {receiptReplay ? (
+        <div className="mx-auto mb-2 w-full max-w-[1672px] shrink-0 overflow-y-auto" style={{ maxHeight: "32vh" }} data-qid="battle:adaptive-lineage:panel">
+          <BattleLineageComparisonPanel
+            adaptiveLineage={adaptiveLineageLiveFixtureJson as unknown as BattleAdaptiveLineageMechanicsFixtureV1}
+          />
         </div>
       ) : null}
       {roundIntro && roundIntroOpen ? (

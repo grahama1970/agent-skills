@@ -899,6 +899,8 @@ export type Lane = {
 	parent_id?: string;
 	expanded?: boolean;
 	selected?: boolean;
+	/** Runner-up in the deterministic selection decision (receipt-backed). */
+	runner_up?: boolean;
 	summary?: string;
 	xStart: number;
 	xEnd: number;
