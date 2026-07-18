@@ -24,7 +24,13 @@ const proof = await page.evaluate(() => ({
   highlightReel: !!document.querySelector('[data-qid="battle:control:highlight-reel"]'),
   mockupPatchLabel: Array.from(document.querySelectorAll('.battle-blue-patch span, .bluePatch span')).some((el) => /CanonGuard v1|PathSanity Patch/i.test(el.textContent ?? '')),
   blueStripText: document.querySelector('.battle-blue-strip-stat, .blueStat')?.textContent ?? '',
-  lifecycle: document.querySelector('[data-qid="battle:agent-pane:lifecycle-evidence"]')?.textContent?.includes('not emitted') ?? false,
+  lifecycle: (() => {
+    const el = document.querySelector('[data-qid="battle:agent-pane:lifecycle-evidence"]');
+    if (!el) return false;
+    // Fail-closed is proven by the explicit data-material="0" marker or the
+    // fail-closed copy ("nothing invented" / "not emitted") — no fabricated data.
+    return el.getAttribute('data-material') === '0' || /not emitted|nothing invented|fail-closed/i.test(el.textContent ?? '');
+  })(),
 }))
 
 record('1-receipt-footer-present', proof.receiptFooter, JSON.stringify({ receiptFooter: proof.receiptFooter }))
