@@ -1,9 +1,34 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-18 (deterministic ArcFace embedding identity subgate + calibration v4 PASS) by agent
+**Last updated:** 2026-07-18 (Lane C step 38 fix executed live — BLOCKED by identity/mouth-occlusion gate conflict; rung stays at v4) by agent
 **Status:** Active development
 
 ## Current Understanding
+
+- 2026-07-18 (Lane C step 38 fix — EXECUTED LIVE, BLOCKED by a gate conflict): the
+  primary lane C plan (regenerate ONLY sb_003_end_frame so Kai's mouth is not
+  camera-readable during 5.0-7.7s, keeping sb_003_start as the identity anchor) was
+  run live through a new bounded driver (scripts/lane_c_regenerate_sb_003_end_frame.py)
+  on the same Phase C GPT Image 2 lane (codex-oauth; embry_contact_sheet_v3 + Kai
+  character sheet as reference inputs), max 5 attempts, failure-aware repair. It did
+  NOT converge: FAILED_LANE_C_ATTEMPTS_EXHAUSTED. The DECISIVE LESSON is a real,
+  documented tension between two unweakened gates — the hardened full-frame identity
+  reviewer is FAIL-CLOSED and needs Kai's lower face (nose/mouth/chin/jaw) visible to
+  ground specific-identity features, which directly conflicts with the composition
+  requirement that his mouth NOT be camera-readable. Attempt 1 hid the mouth by arm
+  occlusion → composition PASS but identity FAIL; attempts 2-5 kept a verifiable face
+  → identity PASS (embeddings 0.64-0.81; att4-att5 also both continuity pairs PASS)
+  but the mouth stayed readable → composition FAIL. GPT Image 2 could not hit the
+  narrow overlap in 5 tries (att4/att5 near misses), so this is a generation-
+  controllability gap, not a strict impossibility. It also exposes a design tension:
+  the delta says the end-frame face is NOT required (identity anchored by the start
+  frame), but acceptance criterion (a) verifies the face on the end frame for both
+  characters — reconciling that is a gate-design decision reserved for a human. Per
+  the fail-closed contract, the frozen revision and its canonical sb_003_end_frame are
+  untouched, requalification + rung restoration were NOT attempted, and the acceptance
+  rung REMAINS at v4 (not restored). Blocker + full attempt table:
+  step38_lane_c_blocker_receipt.v1.json. Memory (exact reread PASS): keys
+  ...:38:lane_c_sb_003_end_regen and ...:38:lane_c_blocker. No paid call.
 
 - 2026-07-18 (embedding identity subgate — DECISIVE LESSON): identity verification
   was moved from VLM judgment to a deterministic ArcFace cosine distance, and it
