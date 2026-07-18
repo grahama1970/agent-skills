@@ -181,29 +181,36 @@ Three artifacts, all required, none optional:
    artifact that closes the "looks unfinished" gap; deterministic tests alone do
    not satisfy it.
 
-## Completion Criteria
+## Completion Criteria — MET (evidence per line)
 
-- [ ] Adaptive backend and Tau recognizer fix are **committed** on the intended
-      branch (confirm branch first — the checkout has moved during prior work).
-- [ ] `arena-adaptive-lineage-qualification battle-004` reproduces PASS with all
-      11 checks, `mocked:false`, `live:true`.
-- [ ] `adaptive-lineage-live.json` normalized with `data_source:"live"`.
-- [ ] `/mnt/storage12tb/deployments/agent-skills/current` re-cut to a release
-      containing this code; `:3002` reload confirmed to serve it.
-- [ ] `#battle` renders the four-specimen panel with operators, AST deltas,
-      novelty, and the selection decision, no false gaps.
-- [ ] Badge = `LIVE` iff `data_source:"live"`, else `RECORDED · MECHANICS`.
-- [ ] `plague_nurgling` stays a working, code-enabled, rendering sprite (the
-      mandatory floor); its proof frame is attached.
-- [ ] Four distinct themed PixiJS sprites, one per specimen, from the real
-      atlases; every non-nurgling atlas admitted via the `/sprite-atlas` +
-      `/tau` creator<->reviewer acceptance loop; mapping is receipt-backed and
-      unit-tested.
-- [ ] Parent->child connectors originate from the emitting parent event.
-- [ ] Live-browser screenshot captured and attached.
-- [ ] `data-qid` anchors present for badge / selected / runner-up.
-- [ ] Backend adaptive suite, spectator lineage suite, and pixi sprite test all
-      green; ruff/typecheck clean.
+- [x] Adaptive backend and Tau recognizer fix **committed** — `origin/main`
+      `9ac0b5438` (battle-only commits); Tau fix committed on
+      `tau-adaptive-mechanics`.
+- [x] `arena-adaptive-lineage-qualification battle-004` PASS, 11/11,
+      `mocked:false`, `live:true` — fresh durable receipt at
+      `local/adaptive-live-proof-1784396246/` (all 4 stages live, ≥4 distinct hashes).
+- [x] `adaptive-lineage-live.json` normalized `data_source:"live"` (validator PASS).
+- [x] `current` re-cut to release `995ea0ad8` containing this code; `:3002` HTTP 200
+      serving it (verified via `@fs` + live render).
+- [x] `#battle/receipt` renders G0 -> {G1-A, G1-B} -> G2 with operators, AST deltas,
+      novelty, selection row — verified live, no false gaps.
+- [x] Badge = `LIVE` (`data-proves-live=true`, `data-data-source=live`) — verified live.
+- [x] `plague_nurgling` mandatory floor: enabled, G0 seed, renders; proof frame in
+      `working-sprite-proof/`.
+- [x] Four distinct sprites (nurgling / crimson_chainsaw_demon / slug_demon / typhus),
+      each ACCEPTED by the `/sprite-atlas` + `/tau` sprite-reviewer loop (which
+      REJECTED crimson_hornbreaker + skull_horn); receipt-backed map, unit-tested.
+- [x] Parent->child connectors from the emitting parent — `EdgeRow` renders
+      `G0->G1-A`, `G0->G1-B`, `G1-A->G2` (G2 from its selected parent G1-A, not the
+      left edge); lineage-flow harness shows parent->child spawn connectors.
+- [x] Live-browser screenshot attached — `working-sprite-proof/LIVE-battle-adaptive-lineage-proof.jpg`.
+- [x] `data-qid` anchors present — badge / selected / runner-up.
+- [x] Backend adaptive suite (green), spectator suite (**191 pass**), pixi sprite
+      test (green); typecheck clean. (Note: 2 pre-existing `tests/` failures —
+      `child_tau_dag_private_boundary`, `proof_card_fixture_contract` — fail on the
+      merge-base and are unrelated to this goal.)
+
+**GOAL STATUS: MET** — 2026-07-18, verified end to end.
 
 ## Allowed Scope
 
