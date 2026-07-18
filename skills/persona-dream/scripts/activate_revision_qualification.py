@@ -481,6 +481,40 @@ def validate_local_pointer(snapshot: Any) -> dict[str, Any]:
             "BLOCKED_LOCAL_ACTIVE_POINTER_SCHEMA",
             details={"observed": pointer.get("schemaVersion")},
         )
+    # Fail closed on a volatile or out-of-repository revisionRoot. A pointer that
+    # resolves to a temp worktree (e.g. /tmp/...) is one reboot away from
+    # dangling even though the immutable revision tree lives in the repository.
+    revision_root_value = str(pointer.get("revisionRoot") or "")
+    if not revision_root_value:
+        raise GateBlocked(
+            "BLOCKED_LOCAL_ACTIVE_POINTER_REVISION_ROOT_MISSING",
+            details={"path": str(pointer_path)},
+        )
+    try:
+        resolved_revision_root = Path(revision_root_value).resolve(strict=True)
+    except (OSError, RuntimeError) as exc:
+        raise GateBlocked(
+            "BLOCKED_ACTIVATION_REVISION_ROOT_UNRESOLVABLE",
+            details={"revisionRoot": revision_root_value},
+        ) from exc
+    try:
+        resolved_revision_root.relative_to(snapshot.run_root)
+    except ValueError as exc:
+        raise GateBlocked(
+            "BLOCKED_ACTIVATION_REVISION_ROOT_OUTSIDE_REPOSITORY",
+            details={
+                "revisionRoot": str(resolved_revision_root),
+                "run_root": str(snapshot.run_root),
+            },
+        ) from exc
+    if resolved_revision_root != snapshot.revision_root:
+        raise GateBlocked(
+            "BLOCKED_ACTIVATION_REVISION_ROOT_MISMATCH",
+            details={
+                "revisionRoot": str(resolved_revision_root),
+                "expected": str(snapshot.revision_root),
+            },
+        )
     expected = {
         "runId": snapshot.run_id,
         "revisionId": snapshot.revision_id,
