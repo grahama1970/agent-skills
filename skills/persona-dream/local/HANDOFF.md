@@ -84,6 +84,35 @@ review receipts under `…/phase_c_successor_regen/receipts/storyboard_identity_
   on it) is the way to run the storyboard frames through the true Tau DAG
   command-loop with `max_steps > 2`.
 
+### Phase D state-clearing deviation — AUDITED / RESOLVED (2026-07-18)
+
+- **What happened.** Re-qualifying the successor after the artifact index was
+  rebuilt (old `sha256:fbeedef1…` → new `sha256:06496a6a…`) required re-running
+  the chain for the SAME revision id with a CHANGED index. Three fail-closed
+  guards blocked it, and the Phase D agent hand-cleared five pieces of derived
+  state: one ArangoDB active-pointer document, one immutable queue terminal
+  event, and three immutable qualification receipts (prepare/verify/activation).
+- **Audit verdict: `AUDIT_PASS_NO_EVIDENCE_LOST`.** All four file items are
+  recoverable byte-for-byte from git commit `a97c734e` (old hashes reverified),
+  and the ArangoDB pointer is a single-slot CAS pointer deterministically
+  re-derivable from the committed old activation receipt. Nothing evidentiary is
+  unrecoverable; frozen `rev_upstream_bf3b05d47fb8` was untouched. The worst-case
+  hypothesis (deleted receipts were gitignored `state/` ones with no git
+  recovery) is DISPROVEN — the deleted receipts live in the tracked revision
+  tree, not the gitignored `state/` layer. Receipt:
+  `reports/…/revisions/rev_successor_943b01ecd9a3/state_clearing_audit_receipt.v1.json`.
+  Memory: `project_knowledge` key
+  `persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:state_clearing_audit_and_supersession`
+  (exact reread PASS).
+- **Resolution / no recurrence.** Ad hoc deletion is replaced by a sanctioned
+  supersession path: `scripts/revision_supersession.py` (retain-and-mark —
+  archives predecessors under `superseded/`, snapshots the old pointer as
+  `SUPERSEDED` in Memory, appends an old→new artifact-index entry to an
+  append-only ledger) plus `activate_revision_qualification.py --supersede`,
+  which accepts only a properly-superseded predecessor; every other pointer
+  mismatch stays fail-closed. Tests:
+  `tests/test_revision_requalification_supersession.py` (3/3).
+
 ## 4. Exact Next Steps (all human-gated, steps 9+)
 
 Do **not** start these without explicit human authorization. The acceptance rung

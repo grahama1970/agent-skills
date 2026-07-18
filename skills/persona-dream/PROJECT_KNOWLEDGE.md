@@ -1,10 +1,31 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-18 (Phase D acceptance rung) by agent
+**Last updated:** 2026-07-18 (Phase D state-clearing audit + supersession) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-18 (state-clearing audit + supersession): Re-qualifying an immutable
+  revision after its artifact index is rebuilt (same revision id, changed index)
+  needed a sanctioned path; in Phase D it was done ad hoc by hand-deleting the
+  Memory active-pointer document, the immutable queue terminal event, and the
+  three qualification receipts. That deletion is now audited with verdict
+  `AUDIT_PASS_NO_EVIDENCE_LOST`: every cleared item's pre-deletion content is
+  recoverable — the four files byte-for-byte from git commit `a97c734e` (old
+  hashes reverified: prepare `040308e2`, verify `0fc97ae5`, activation
+  `86e32aec`, terminal event `f7c182a8`), and the single-slot CAS pointer by
+  deterministic re-derivation from the committed old activation receipt.
+  Contrary to the worst-case hypothesis, the deleted receipts were the
+  git-tracked revision-tree receipts, not the gitignored `state/` ones, so git
+  recovery exists. Lesson: immutable-revision re-qualification of a rebuilt index
+  must never depend on that luck. Codified fix: `scripts/revision_supersession.py`
+  + `activate_revision_qualification.py --supersede` replace deletion with
+  retain-and-mark supersession (archive predecessors under `superseded/`,
+  snapshot the old pointer as `SUPERSEDED` in Memory, append an old→new
+  artifact-index entry to an append-only ledger); every other pointer mismatch
+  stays fail-closed. Audit receipt
+  `.../revisions/rev_successor_943b01ecd9a3/state_clearing_audit_receipt.v1.json`;
+  tests `tests/test_revision_requalification_supersession.py` (3/3).
 - 2026-07-17 (afternoon, persistence audit): An external agent audit of
   `rev_idea_f3f9c48d5cc2` was reconciled with receipts
   (`scripts/audit_revision_persistence.py`, receipts under
