@@ -57,6 +57,15 @@ def main() -> int:
     parser.add_argument("--candidate-name", help="Optional provisional character/entity name to attach to emitted events.")
     parser.add_argument("--candidate-actor-name", help="Optional actor name for the provisional candidate.")
     parser.add_argument("--candidate-entity-id", help="Optional entity id for the provisional candidate.")
+    parser.add_argument(
+        "--journal",
+        type=Path,
+        help=(
+            "Write an immutable source-session journal (P0A) to this path. "
+            "Each event is appended and fsynced as it is emitted; the tracker "
+            "is the only append writer."
+        ),
+    )
     args = parser.parse_args()
 
     manifest = _read_json(args.manifest)
@@ -76,7 +85,30 @@ def main() -> int:
     fps = _source_fps(source)
     frame_stride = _frame_stride(fps=fps, sample_fps=args.sample_fps)
 
-    events = _track_source(
+    journal_writer = None
+    if args.journal:
+        from watch_source_session_journal import JournalWriter, source_sha256
+
+        is_stream = _looks_like_stream(source)
+        journal_writer = JournalWriter(
+            args.journal,
+            source_uri=str(source),
+            source_sha256_value="" if is_stream else source_sha256(source),
+            source_hash_mode="uri_only" if is_stream else "sha256_full",
+            clock_mode="declared_frame_offset",
+            declared_fps=fps,
+            clock_start_seconds=float(observation["time_range"]["start_seconds"]),
+            frame_stride=frame_stride,
+            sample_fps=args.sample_fps,
+            model=str(args.model),
+            tracker_config=args.tracker,
+            conf=args.conf,
+            imgsz=args.imgsz,
+            producer="track_yolo_bytetrack.py",
+        )
+
+    events: list[dict[str, Any]] = []
+    for event, source_frame_index in _track_source(
         source=source,
         observation=observation,
         model_name=args.model,
@@ -87,7 +119,16 @@ def main() -> int:
         frame_stride=frame_stride,
         max_events=args.max_events,
         attach_domain_candidate=args.attach_domain_candidate,
-    )
+    ):
+        if journal_writer is not None:
+            journal_writer.append_event(
+                event,
+                source_frame_index=source_frame_index,
+                media_time_seconds=float(event["media_time_seconds"]),
+            )
+        events.append(event)
+    if journal_writer is not None:
+        journal_writer.finalize()
     if not events:
         raise RuntimeError("YOLO/ByteTrack produced no track events")
     _validate_events(events, args.schema)
@@ -190,7 +231,7 @@ def _track_source(
     frame_stride: int,
     max_events: int,
     attach_domain_candidate: bool,
-) -> list[dict[str, Any]]:
+) -> Iterable[tuple[dict[str, Any], int]]:
     try:
         from ultralytics import YOLO
     except ImportError as exc:
@@ -210,15 +251,13 @@ def _track_source(
         vid_stride=frame_stride,
         verbose=False,
     )
-    return list(
-        _events_from_results(
-            results,
-            observation=observation,
-            fps=fps,
-            frame_stride=frame_stride,
-            max_events=max_events,
-            attach_domain_candidate=attach_domain_candidate,
-        )
+    return _events_from_results(
+        results,
+        observation=observation,
+        fps=fps,
+        frame_stride=frame_stride,
+        max_events=max_events,
+        attach_domain_candidate=attach_domain_candidate,
     )
 
 
@@ -230,11 +269,11 @@ def _events_from_results(
     frame_stride: int,
     max_events: int,
     attach_domain_candidate: bool,
-) -> Iterable[dict[str, Any]]:
+) -> Iterable[tuple[dict[str, Any], int]]:
     start_seconds = float(observation["time_range"]["start_seconds"])
     emitted_base = _utc_now()
     event_count = 0
-    last_event_for_track: dict[str, dict[str, Any]] = {}
+    last_event_for_track: dict[str, tuple[dict[str, Any], int]] = {}
     for emitted_frame_index, result in enumerate(results):
         source_frame_index = emitted_frame_index * max(1, frame_stride)
         boxes = getattr(result, "boxes", None)
@@ -270,15 +309,15 @@ def _events_from_results(
                 "status": "PROVISIONAL",
                 "emitted_at": (emitted_base + timedelta(seconds=(source_frame_index / fps if fps > 0 else 0.0))).isoformat().replace("+00:00", "Z"),
             }
-            last_event_for_track[track_id] = event
-            yield event
+            last_event_for_track[track_id] = (event, source_frame_index)
+            yield event, source_frame_index
             if event_count >= max_events:
                 return
-    for event in last_event_for_track.values():
+    for event, frame_index in last_event_for_track.values():
         boundary = dict(event)
         boundary["status"] = "BOUNDARY_CANDIDATE"
         boundary["emitted_at"] = _utc_now().isoformat().replace("+00:00", "Z")
-        yield boundary
+        yield boundary, frame_index
 
 
 def _candidate_entities(

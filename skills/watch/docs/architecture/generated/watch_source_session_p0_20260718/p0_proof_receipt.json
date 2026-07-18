@@ -1,0 +1,52 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "decoded-PTS clock mode against a live source",
+      "tracker producer process-resume continuity",
+      "UI live-event consumption (next gate)",
+      "unbounded live source operation (needs outbox/retry hardening first)"
+    ],
+    "proves": [
+      "immutable incremental journal with header/config binding, checksums, chain hash, finalize marker",
+      "deterministic event/observation IDs separate from canonical evidence digest",
+      "fail-closed mismatch rejection before any embedding/Qdrant/Memory call",
+      "idempotent consumer kill/restart replay converging to the identical canonical set in isolated sinks"
+    ]
+  },
+  "gate_p0a": {
+    "clock_mode": "declared_frame_offset (explicit; decoded_pts reserved, never mixed)",
+    "journal": "bad_santa_168_192.journal.jsonl",
+    "live_run": "80 events, tracks [track_1, track_2], yolo11n + bytetrack.yaml, cpu",
+    "mismatch_rejections_pre_write": {
+      "checksum_tamper": "JOURNAL_REJECTED: record checksum mismatch at line 6",
+      "consistent_clock_tamper": "JOURNAL_REJECTED: clock inconsistency at sequence 10: media_time 171.67 != declared offset 169.668",
+      "truncated_final_record": "JOURNAL_REJECTED: journal ends with a truncated record"
+    },
+    "no_receipt_written_on_rejection": true,
+    "producer": "track_yolo_bytetrack.py --journal (sole append writer, per-record fsync)",
+    "source": "fresh ffmpeg-extracted clip 168-192s of Bad Santa AVI (no row-7 evidence)",
+    "validation": "JOURNAL_OK, 2 deterministic observations, canonical 6cf153921be192da..."
+  },
+  "gate_p0b": {
+    "clean_run": "2/2 observations, canonical matches plan",
+    "consumer": "replay_source_session_journal.py (read-only, fail-closed before any client call)",
+    "isolated_collections": [
+      "watch_p0b_replay_clean_test",
+      "watch_p0b_replay_killed_test"
+    ],
+    "kill_restart_run": "SIGKILL after 1/2 observations persisted; restart against unchanged journal completed 2/2",
+    "live_state_comparison": {
+      "clean_memory": true,
+      "clean_qdrant": true,
+      "compare_basis": "canonical [observation_id, evidence_digest] set from live sinks; no timestamped bytes",
+      "killed_memory": true,
+      "killed_qdrant": true,
+      "plan_canonical": "6cf153921be192da7a948816d5a2d350ca2a4b616a8234d027f7ed51db22ef6e"
+    },
+    "production_collection_refusal": "exit 3 REFUSED_PRODUCTION_COLLECTION (tested)"
+  },
+  "proved_at": "2026-07-18T23:23:57.400163+00:00",
+  "schema_version": "watch.source_session_p0_proof_receipt.v1",
+  "status": "P0A_P0B_PROVEN_LIVE",
+  "tests": "tests/test_watch_source_session_replay.py \u2014 10 passed (integrity, determinism, digest-divergence collision, pre-write rejection, production-collection refusal)"
+}

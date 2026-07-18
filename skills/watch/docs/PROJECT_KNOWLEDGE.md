@@ -221,3 +221,20 @@ consolidated state; streaming lane stays BLOCKED until P0A lands.
   source. Row-7 re-anchoring and pre-fix row re-runs are parallel batch
   remediation; ux-lab legacy import removal and live-browser handoff breadth
   stay deferred.
+
+**P0A and P0B LANDED 2026-07-18** (receipts:
+`generated/watch_source_session_p0_20260718/`):
+`scripts/watch_source_session_journal.py` (immutable journal: header binds
+source sha256/model/tracker/conf/imgsz/stride, explicit clock_mode,
+per-record checksums + chain hash + finalize marker, fail-closed reader,
+deterministic event/observation IDs separate from canonical evidence
+digest); `track_yolo_bytetrack.py --journal` (sole append writer, per-event
+fsync); `scripts/replay_source_session_journal.py` (read-only consumer,
+validates before any client call, refuses production collections, idempotent
+by deterministic IDs). Live proof on a fresh 168-192s clip: 80 events,
+3 tamper classes rejected pre-write, SIGKILL after 1/2 observations then
+restart converged to the identical canonical set in isolated Memory+Qdrant
+collections. Hermetic coverage in
+`tests/test_watch_source_session_replay.py`. **Current gate is now UI
+live-event consumption**; decoded-PTS mode and producer process-resume
+remain later continuity gates.

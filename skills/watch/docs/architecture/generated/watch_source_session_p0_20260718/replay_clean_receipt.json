@@ -1,0 +1,14 @@
+{
+  "canonical_set_sha256": "6cf153921be192da7a948816d5a2d350ca2a4b616a8234d027f7ed51db22ef6e",
+  "journal": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/41d98273-dc29-4a8f-9fb1-57148343efff/scratchpad/p0/bad_santa_168_192.journal.jsonl",
+  "memory_collection": "watch_p0b_replay_clean_test",
+  "observation_count": 2,
+  "observation_ids": [
+    "278f7c7b-15c2-50cf-9cd0-efcd4b953865",
+    "33556f53-3e32-53d7-9365-ed384ad1a201"
+  ],
+  "qdrant_collection": "watch_p0b_replay_clean_test",
+  "schema_version": "watch.source_session_replay_receipt.v1",
+  "source_session_id": "3f02cf93-54af-5911-af34-abfa403785df",
+  "status": "REPLAY_COMPLETE"
+}
