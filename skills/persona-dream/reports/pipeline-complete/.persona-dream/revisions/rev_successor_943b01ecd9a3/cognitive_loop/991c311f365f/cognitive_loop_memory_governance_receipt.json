@@ -1,0 +1,21 @@
+{
+  "schema": "persona_dream.cognitive_loop_memory_governance.v1",
+  "all_exact_reread_match": true,
+  "proofs": [
+    {
+      "collection": "persona_dream_governance",
+      "key": "persona_dream_cognitive_loop_build_20260718",
+      "written_sha256": "sha256:1c5724c7109d7233171e20a18904fc76c5814231ea2c8d703464168531e2e5a4",
+      "reread_sha256": "sha256:1c5724c7109d7233171e20a18904fc76c5814231ea2c8d703464168531e2e5a4",
+      "exact_reread_match": true
+    },
+    {
+      "collection": "persona_dream_governance",
+      "key": "persona_dream_cognitive_loop_run_991c311f365f_20260718",
+      "written_sha256": "sha256:f334da7907bb5492afd1d9b28f862a6960c7daced3f940b4d6cd8962b3c8bf2d",
+      "reread_sha256": "sha256:f334da7907bb5492afd1d9b28f862a6960c7daced3f940b4d6cd8962b3c8bf2d",
+      "exact_reread_match": true
+    }
+  ],
+  "generated_at": "2026-07-18T20:11:47.109584+00:00"
+}

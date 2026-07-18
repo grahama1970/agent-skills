@@ -1,0 +1,132 @@
+{
+  "accepted_count": 4,
+  "accepted_tom_candidates": [
+    {
+      "candidate_id": "tom-001",
+      "confidence": 0.72,
+      "emotional_intensity": 0.46,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-001",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age15_19_b03_memory_014",
+        "embry_age15_19_b03_memory_016"
+      ],
+      "statement": "Embry trusts Kai\u2019s warning about not cutting across the lineup as a safety-oriented correction rather than criticism.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "kai",
+      "tom_state_type": "trust",
+      "watch_observation_refs": [
+        "transcript_seg_000",
+        "visible_speaker_lipsync_window"
+      ]
+    },
+    {
+      "candidate_id": "tom-002",
+      "confidence": 0.6,
+      "emotional_intensity": 0.52,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-002",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age15_19_b02_memory_019",
+        "embry_age15_19_b03_memory_014"
+      ],
+      "statement": "Embry takes a stance of collaborative restraint toward Kai, becoming willing to pause or adjust when he identifies a concrete surf risk.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "kai",
+      "tom_state_type": "stance",
+      "watch_observation_refs": [
+        "transcript_seg_000",
+        "visible_speaker_lipsync_window"
+      ]
+    },
+    {
+      "candidate_id": "tom-003",
+      "confidence": 0.18,
+      "emotional_intensity": 0.35,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-003",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age15_19_b03_memory_014",
+        "embry_age15_19_b03_memory_016"
+      ],
+      "statement": "Embry may feel uncertain about how to balance her autonomy with obligation while under Kai\u2019s practical surf guidance.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "kai",
+      "tom_state_type": "uncertainty",
+      "watch_observation_refs": [
+        "identity_temporal_continuity_review",
+        "frame_0000",
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004"
+      ]
+    },
+    {
+      "candidate_id": "tom-004",
+      "confidence": 0.68,
+      "emotional_intensity": 0.42,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-004",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age15_19_b03_memory_014",
+        "embry_age15_19_b03_memory_016"
+      ],
+      "statement": "Embry believes Kai\u2019s surf judgments come from practical local knowledge rather than a desire to control her.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "kai",
+      "tom_state_type": "belief",
+      "watch_observation_refs": [
+        "transcript_seg_000",
+        "visible_speaker_lipsync_window"
+      ]
+    }
+  ],
+  "candidate_receipts": [
+    {
+      "candidate_id": "tom-001",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-001",
+      "reasons": []
+    },
+    {
+      "candidate_id": "tom-002",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-002",
+      "reasons": []
+    },
+    {
+      "candidate_id": "tom-003",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-003",
+      "reasons": []
+    },
+    {
+      "candidate_id": "tom-004",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-004",
+      "reasons": []
+    }
+  ],
+  "candidate_source": "llm",
+  "canonical_memory_write_allowed": false,
+  "dream_id": "pd_dream_991c311f365f",
+  "generated_at": "2026-07-18T20:08:54.684032+00:00",
+  "interpretation_sha256": "sha256:1400551eb9e8f17f66129c7983d6d94082ec8e07091fb67d74406a39b91a61ed",
+  "live": true,
+  "mocked": false,
+  "proposed_candidate_count": 4,
+  "rejected_count": 0,
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.tom_validation_receipt.v1",
+  "status": "PASS_TOM_VALIDATION"
+}

@@ -1,0 +1,435 @@
+{
+  "canonical_plan": {
+    "dream_memory_document": {
+      "collection": "persona_memory",
+      "document": {
+        "_key": "dream_pd_dream_991c311f365f",
+        "accepted_interpretation_ids": [
+          "interpretation-001",
+          "interpretation-002",
+          "interpretation-003",
+          "interpretation-004"
+        ],
+        "accepted_tom_candidate_ids": [
+          "tom-001",
+          "tom-002",
+          "tom-003",
+          "tom-004"
+        ],
+        "created_at": "2026-07-18T20:08:54.685027+00:00",
+        "dream_id": "pd_dream_991c311f365f",
+        "kind": "synthetic_dream_memory",
+        "literal_historical_event": false,
+        "observation_packet_sha256": "sha256:b88e3cf91416bd214da45fb4316e654c4794fad9b5f7d356ae70ff921bc24c3b",
+        "persona_id": "embry",
+        "provenance": {
+          "evidence_origin": "historical_provider_return",
+          "observation_status": "DEGRADED_WATCH_GAUNTLET_OBSERVATION",
+          "source_revision_id": "rev_upstream_bf3b05d47fb8"
+        },
+        "retrieval_text": "Embry may experience Kai\u2019s warning about not cutting across the lineup as a trusted, safety-oriented correction rather than as criticism, consistent with prior moments where Kai taught surf etiquette and timing without shaming her. Embry\u2019s position toward Kai may be one of collaborative restraint: she is willing to pause or adjust her autonomy when Kai names a concrete surf risk, echoing past situations where Kai helped her assess hazards and Embry could choose a boundary without defensiveness. The visual drift in Embry\u2019s identity could be read psychologically as a fragile or unstable self-presentation while she tries to balance autonomy against obligation under Kai\u2019s practical guidance, especially around surf competence and not causing harm in the lineup. Embry may believe Kai\u2019s surf judgments are grounded in practical local knowledge rather than control, since Kai\u2019s rendered line names a specific etiquette problem and her memories associate him with maps, hazards, entry paths, and private correction.",
+        "revision_id": "rev_successor_943b01ecd9a3",
+        "run_id": "pipeline-complete",
+        "source_memory_ids": [
+          "embry_age15_19_b02_memory_019",
+          "embry_age15_19_b03_memory_014",
+          "embry_age15_19_b03_memory_016"
+        ],
+        "source_video_sha256": "sha256:991c311f365f84832b274aad7b8ff757372914f7c516e595a31b1bd05edf4c59",
+        "synthetic_origin": true,
+        "tags": [
+          "persona:embry",
+          "synthetic_dream",
+          "persona_dream",
+          "dream_loop_validation"
+        ],
+        "tom_state_types": [
+          "belief",
+          "stance",
+          "trust",
+          "uncertainty"
+        ]
+      },
+      "payload_sha256": "sha256:8038319cde2aaad1e0cf8a64887e1fc9cf31bc64a52dfe41394de9a32779c2a4"
+    },
+    "graph_edges": [
+      {
+        "collection": "persona_memory_edges",
+        "document": {
+          "_from": "persona_memory/dream_pd_dream_991c311f365f",
+          "_key": "dream_pd_dream_991c311f365f__derived_from__embry_age15_19_b02_memory_019",
+          "_to": "persona_memory/embry_age15_19_b02_memory_019",
+          "literal_historical_event": false,
+          "relationship_type": "derived_from",
+          "synthetic_origin": true
+        },
+        "payload_sha256": "sha256:0a8af509619760b76f85a208972675a33d5cb5f99183ceb23e8721584bc976e3"
+      },
+      {
+        "collection": "persona_memory_edges",
+        "document": {
+          "_from": "persona_memory/dream_pd_dream_991c311f365f",
+          "_key": "dream_pd_dream_991c311f365f__derived_from__embry_age15_19_b03_memory_014",
+          "_to": "persona_memory/embry_age15_19_b03_memory_014",
+          "literal_historical_event": false,
+          "relationship_type": "derived_from",
+          "synthetic_origin": true
+        },
+        "payload_sha256": "sha256:418841888eecaa016685b804619d5d7af1f329a64d29ac28341bb4ab2943568b"
+      },
+      {
+        "collection": "persona_memory_edges",
+        "document": {
+          "_from": "persona_memory/dream_pd_dream_991c311f365f",
+          "_key": "dream_pd_dream_991c311f365f__derived_from__embry_age15_19_b03_memory_016",
+          "_to": "persona_memory/embry_age15_19_b03_memory_016",
+          "literal_historical_event": false,
+          "relationship_type": "derived_from",
+          "synthetic_origin": true
+        },
+        "payload_sha256": "sha256:1af32ac080e50841af3fbfcaeae19fda2d57c04dba7cf082ffd5c9bf83b78c95"
+      },
+      {
+        "collection": "persona_memory_edges",
+        "document": {
+          "_from": "persona_memory/dream_pd_dream_991c311f365f",
+          "_key": "dream_pd_dream_991c311f365f__observed_in_scene__frame_0000",
+          "_to": "persona_dream_watch_evidence/frame_0000",
+          "relationship_type": "observed_in_scene",
+          "synthetic_origin": true,
+          "watch_observation_id": "frame_0000"
+        },
+        "payload_sha256": "sha256:4d90c6edd487834d21dfdb3be9ba03af9610b316af37e5988fcfcbca62d0f588"
+      },
+      {
+        "collection": "persona_memory_edges",
+        "document": {
+          "_from": "persona_memory/dream_pd_dream_991c311f365f",
+          "_key": "dream_pd_dream_991c311f365f__observed_in_scene__frame_0001",
+          "_to": "persona_dream_watch_evidence/frame_0001",
+          "relationship_type": "observed_in_scene",
+          "synthetic_origin": true,
+          "watch_observation_id": "frame_0001"
+        },
+        "payload_sha256": "sha256:45ca603e2f1f95e47f0365d1b48530cc9c659b2def9ba033c483b7c279ab1bc8"
+      },
+      {
+        "collection": "persona_memory_edges",
+        "document": {
+          "_from": "persona_memory/dream_pd_dream_991c311f365f",
+          "_key": "dream_pd_dream_991c311f365f__observed_in_scene__frame_0002",
+          "_to": "persona_dream_watch_evidence/frame_0002",
+          "relationship_type": "observed_in_scene",
+          "synthetic_origin": true,
+          "watch_observation_id": "frame_0002"
+        },
+        "payload_sha256": "sha256:4815eebdab041218b7de7d1727a36155e6ad48713a3b1ffbc1185262268be478"
+      },
+      {
+        "collection": "persona_memory_edges",
+        "document": {
+          "_from": "persona_memory/dream_pd_dream_991c311f365f",
+          "_key": "dream_pd_dream_991c311f365f__observed_in_scene__frame_0003",
+          "_to": "persona_dream_watch_evidence/frame_0003",
+          "relationship_type": "observed_in_scene",
+          "synthetic_origin": true,
+          "watch_observation_id": "frame_0003"
+        },
+        "payload_sha256": "sha256:613fdac91cd52965a15436c424b32d2f3bcedcd9b9a7de5358f98be34d600ac0"
+      },
+      {
+        "collection": "persona_memory_edges",
+        "document": {
+          "_from": "persona_memory/dream_pd_dream_991c311f365f",
+          "_key": "dream_pd_dream_991c311f365f__observed_in_scene__frame_0004",
+          "_to": "persona_dream_watch_evidence/frame_0004",
+          "relationship_type": "observed_in_scene",
+          "synthetic_origin": true,
+          "watch_observation_id": "frame_0004"
+        },
+        "payload_sha256": "sha256:a100f21f98a535b554c97cd59c7df1b888cbc8a2c8fd8b360fc5803164a92552"
+      },
+      {
+        "collection": "persona_memory_edges",
+        "document": {
+          "_from": "persona_memory/dream_pd_dream_991c311f365f",
+          "_key": "dream_pd_dream_991c311f365f__observed_in_scene__identity_temporal_continuity_review",
+          "_to": "persona_dream_watch_evidence/identity_temporal_continuity_review",
+          "relationship_type": "observed_in_scene",
+          "synthetic_origin": true,
+          "watch_observation_id": "identity_temporal_continuity_review"
+        },
+        "payload_sha256": "sha256:24c997903f361ece3fea42bdc23535508538b6d468ba12aac7b499e6ee3b49cd"
+      },
+      {
+        "collection": "persona_memory_edges",
+        "document": {
+          "_from": "persona_memory/dream_pd_dream_991c311f365f",
+          "_key": "dream_pd_dream_991c311f365f__observed_in_scene__transcript_seg_000",
+          "_to": "persona_dream_watch_evidence/transcript_seg_000",
+          "relationship_type": "observed_in_scene",
+          "synthetic_origin": true,
+          "watch_observation_id": "transcript_seg_000"
+        },
+        "payload_sha256": "sha256:8e2f8e2f538041b8c2c045197e503e2d1f53725b62f1f004c91d37cd3ae1c73b"
+      },
+      {
+        "collection": "persona_memory_edges",
+        "document": {
+          "_from": "persona_memory/dream_pd_dream_991c311f365f",
+          "_key": "dream_pd_dream_991c311f365f__observed_in_scene__visible_speaker_lipsync_window",
+          "_to": "persona_dream_watch_evidence/visible_speaker_lipsync_window",
+          "relationship_type": "observed_in_scene",
+          "synthetic_origin": true,
+          "watch_observation_id": "visible_speaker_lipsync_window"
+        },
+        "payload_sha256": "sha256:dbf4b4e435cc307147361392c6f864afcb1c2bd93d3dca52185bcdb6b0cb2039"
+      },
+      {
+        "collection": "tom_edges",
+        "document": {
+          "_from": "persona_memory/dream_pd_dream_991c311f365f",
+          "_key": "dream_pd_dream_991c311f365f__supports_interpretation__tom-001",
+          "_to": "tom_candidates/tom-001",
+          "confidence": 0.72,
+          "emotional_intensity": 0.46,
+          "literal_historical_event": false,
+          "relationship_type": "supports_interpretation",
+          "synthetic_origin": true,
+          "tom_state_type": "trust"
+        },
+        "payload_sha256": "sha256:164f003bf548ccaa3657ebeb0080425a4b9162dd112c60c02f06132fc7818ace"
+      },
+      {
+        "collection": "tom_edges",
+        "document": {
+          "_from": "persona_memory/dream_pd_dream_991c311f365f",
+          "_key": "dream_pd_dream_991c311f365f__supports_interpretation__tom-002",
+          "_to": "tom_candidates/tom-002",
+          "confidence": 0.6,
+          "emotional_intensity": 0.52,
+          "literal_historical_event": false,
+          "relationship_type": "supports_interpretation",
+          "synthetic_origin": true,
+          "tom_state_type": "stance"
+        },
+        "payload_sha256": "sha256:919672dcb6306b3de047b2f7d801505c5696e4b1faba0b9199db5ae6dc204148"
+      },
+      {
+        "collection": "tom_edges",
+        "document": {
+          "_from": "persona_memory/dream_pd_dream_991c311f365f",
+          "_key": "dream_pd_dream_991c311f365f__supports_interpretation__tom-003",
+          "_to": "tom_candidates/tom-003",
+          "confidence": 0.18,
+          "emotional_intensity": 0.35,
+          "literal_historical_event": false,
+          "relationship_type": "supports_interpretation",
+          "synthetic_origin": true,
+          "tom_state_type": "uncertainty"
+        },
+        "payload_sha256": "sha256:333225ebd78291dd2f13e6ea84e63ec382c917f022a84e390b03a200fbc2a77e"
+      },
+      {
+        "collection": "tom_edges",
+        "document": {
+          "_from": "persona_memory/dream_pd_dream_991c311f365f",
+          "_key": "dream_pd_dream_991c311f365f__supports_interpretation__tom-004",
+          "_to": "tom_candidates/tom-004",
+          "confidence": 0.68,
+          "emotional_intensity": 0.42,
+          "literal_historical_event": false,
+          "relationship_type": "supports_interpretation",
+          "synthetic_origin": true,
+          "tom_state_type": "belief"
+        },
+        "payload_sha256": "sha256:9ce33a209a2647a7b6217397efa5e4ca84733af2a73727570dcf8c20c5d7866a"
+      }
+    ],
+    "qdrant_embedding": {
+      "note": "Memory semantic-sync embeds retrieval_text on /store; do not write vector arrays into Arango.",
+      "target_qdrant_collection_hint": "persona_memory",
+      "text_hash": "sha256:801136276a4e65a5e2e259d4e0c48fe0b8ad097b25c3c9edead29b48383221f2"
+    }
+  },
+  "canonical_write_allowed": false,
+  "canonical_write_blockers": [
+    "CANONICAL_WRITE_FLAG_NOT_SET",
+    "RETURN_ID_MISSING",
+    "RETURN_IS_HISTORICAL_PROVIDER_RETURN",
+    "OBSERVATION_STATUS_DEGRADED",
+    "IDENTITY_CONTINUITY_DEFECT:DRIFT"
+  ],
+  "canonical_write_requested": false,
+  "canonical_writes_performed": 0,
+  "direct_arango_writes_allowed": false,
+  "direct_qdrant_writes_allowed": false,
+  "dream_id": "pd_dream_991c311f365f",
+  "generated_at": "2026-07-18T20:08:55.749576+00:00",
+  "mocked": false,
+  "owner": "memory",
+  "persona_id": "embry",
+  "relationship_vocabulary": [
+    "derived_from",
+    "observed_in_scene",
+    "supports_interpretation"
+  ],
+  "return_id": null,
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.dream_persistence_receipt.v1",
+  "status": "DRY_RUN_PERSISTENCE_PLAN_WITH_VALIDATION_WRITE",
+  "transport": "memory_http_api",
+  "validation_write_proof": {
+    "all_exact_reread_match": true,
+    "canonical": false,
+    "collection": "persona_dream_loop_validation",
+    "documents_written": 16,
+    "receipts": [
+      {
+        "collection": "persona_dream_loop_validation",
+        "exact_reread_match": true,
+        "key": "validation_dream_pd_dream_991c311f365f",
+        "reread_content_sha256": "sha256:aef38abbdc9d23085d000be231c8d3336ec2f23cc1274876971452b902825c07",
+        "reread_found": true,
+        "store_ok": true,
+        "written_content_sha256": "sha256:aef38abbdc9d23085d000be231c8d3336ec2f23cc1274876971452b902825c07"
+      },
+      {
+        "collection": "persona_dream_loop_validation",
+        "exact_reread_match": true,
+        "key": "validation_dream_pd_dream_991c311f365f__derived_from__embry_age15_19_b02_memory_019",
+        "reread_content_sha256": "sha256:7edbc88e0107c1653156069707ed4d174388706bac4559764ff2a459c95bcd86",
+        "reread_found": true,
+        "store_ok": true,
+        "written_content_sha256": "sha256:7edbc88e0107c1653156069707ed4d174388706bac4559764ff2a459c95bcd86"
+      },
+      {
+        "collection": "persona_dream_loop_validation",
+        "exact_reread_match": true,
+        "key": "validation_dream_pd_dream_991c311f365f__derived_from__embry_age15_19_b03_memory_014",
+        "reread_content_sha256": "sha256:d47368017ee064da6044076178f323353295746f67b005d3a7581a25ee26a35a",
+        "reread_found": true,
+        "store_ok": true,
+        "written_content_sha256": "sha256:d47368017ee064da6044076178f323353295746f67b005d3a7581a25ee26a35a"
+      },
+      {
+        "collection": "persona_dream_loop_validation",
+        "exact_reread_match": true,
+        "key": "validation_dream_pd_dream_991c311f365f__derived_from__embry_age15_19_b03_memory_016",
+        "reread_content_sha256": "sha256:93dd9bf6e85744974828bc4d8dea9164316245743a4d68b5d224e5e689eb4cb3",
+        "reread_found": true,
+        "store_ok": true,
+        "written_content_sha256": "sha256:93dd9bf6e85744974828bc4d8dea9164316245743a4d68b5d224e5e689eb4cb3"
+      },
+      {
+        "collection": "persona_dream_loop_validation",
+        "exact_reread_match": true,
+        "key": "validation_dream_pd_dream_991c311f365f__observed_in_scene__frame_0000",
+        "reread_content_sha256": "sha256:7c2c20fd78cb4ca82457928b947aa9f88d710b344d09f75b512c774e1b6e97b5",
+        "reread_found": true,
+        "store_ok": true,
+        "written_content_sha256": "sha256:7c2c20fd78cb4ca82457928b947aa9f88d710b344d09f75b512c774e1b6e97b5"
+      },
+      {
+        "collection": "persona_dream_loop_validation",
+        "exact_reread_match": true,
+        "key": "validation_dream_pd_dream_991c311f365f__observed_in_scene__frame_0001",
+        "reread_content_sha256": "sha256:8ddd5370a79da7b332a4983f90c013ee992430565b0e4dde1e1264e6200b454f",
+        "reread_found": true,
+        "store_ok": true,
+        "written_content_sha256": "sha256:8ddd5370a79da7b332a4983f90c013ee992430565b0e4dde1e1264e6200b454f"
+      },
+      {
+        "collection": "persona_dream_loop_validation",
+        "exact_reread_match": true,
+        "key": "validation_dream_pd_dream_991c311f365f__observed_in_scene__frame_0002",
+        "reread_content_sha256": "sha256:1be8af2952d9e063eb44d1d351a98735ab59105e4aed2b4857bf85a86d480ad5",
+        "reread_found": true,
+        "store_ok": true,
+        "written_content_sha256": "sha256:1be8af2952d9e063eb44d1d351a98735ab59105e4aed2b4857bf85a86d480ad5"
+      },
+      {
+        "collection": "persona_dream_loop_validation",
+        "exact_reread_match": true,
+        "key": "validation_dream_pd_dream_991c311f365f__observed_in_scene__frame_0003",
+        "reread_content_sha256": "sha256:d05c2c47c6b66c12d37e4b931cc1748721a5ab52ac94ce146d2d6dcced61e62e",
+        "reread_found": true,
+        "store_ok": true,
+        "written_content_sha256": "sha256:d05c2c47c6b66c12d37e4b931cc1748721a5ab52ac94ce146d2d6dcced61e62e"
+      },
+      {
+        "collection": "persona_dream_loop_validation",
+        "exact_reread_match": true,
+        "key": "validation_dream_pd_dream_991c311f365f__observed_in_scene__frame_0004",
+        "reread_content_sha256": "sha256:1dd573920cbf7c1918252a1d20f5a1fea1146be5311f1f5a601ea515b6e43032",
+        "reread_found": true,
+        "store_ok": true,
+        "written_content_sha256": "sha256:1dd573920cbf7c1918252a1d20f5a1fea1146be5311f1f5a601ea515b6e43032"
+      },
+      {
+        "collection": "persona_dream_loop_validation",
+        "exact_reread_match": true,
+        "key": "validation_dream_pd_dream_991c311f365f__observed_in_scene__identity_temporal_continuity_review",
+        "reread_content_sha256": "sha256:2ef2aad3cf25385cc2b1b5bfda8b132a0518edf9b58f368104387cf4c0030337",
+        "reread_found": true,
+        "store_ok": true,
+        "written_content_sha256": "sha256:2ef2aad3cf25385cc2b1b5bfda8b132a0518edf9b58f368104387cf4c0030337"
+      },
+      {
+        "collection": "persona_dream_loop_validation",
+        "exact_reread_match": true,
+        "key": "validation_dream_pd_dream_991c311f365f__observed_in_scene__transcript_seg_000",
+        "reread_content_sha256": "sha256:9375e8c1a39716a3059fb6f6485f8e552eacd13f6ab92de083beee0d38f87ab5",
+        "reread_found": true,
+        "store_ok": true,
+        "written_content_sha256": "sha256:9375e8c1a39716a3059fb6f6485f8e552eacd13f6ab92de083beee0d38f87ab5"
+      },
+      {
+        "collection": "persona_dream_loop_validation",
+        "exact_reread_match": true,
+        "key": "validation_dream_pd_dream_991c311f365f__observed_in_scene__visible_speaker_lipsync_window",
+        "reread_content_sha256": "sha256:55959cf9e12eba6b0ae73731aecf64203d59603800ea0cfa2653f64662ef9cf5",
+        "reread_found": true,
+        "store_ok": true,
+        "written_content_sha256": "sha256:55959cf9e12eba6b0ae73731aecf64203d59603800ea0cfa2653f64662ef9cf5"
+      },
+      {
+        "collection": "persona_dream_loop_validation",
+        "exact_reread_match": true,
+        "key": "validation_dream_pd_dream_991c311f365f__supports_interpretation__tom-001",
+        "reread_content_sha256": "sha256:ff24dfa833a5ba123495ec58f11c1b4d224679e8bcccb9b5518184d02afe8150",
+        "reread_found": true,
+        "store_ok": true,
+        "written_content_sha256": "sha256:ff24dfa833a5ba123495ec58f11c1b4d224679e8bcccb9b5518184d02afe8150"
+      },
+      {
+        "collection": "persona_dream_loop_validation",
+        "exact_reread_match": true,
+        "key": "validation_dream_pd_dream_991c311f365f__supports_interpretation__tom-002",
+        "reread_content_sha256": "sha256:6dbddd545a5bbd895eadf57a5ff4462edc0192a06c14d60135d267153b4c900f",
+        "reread_found": true,
+        "store_ok": true,
+        "written_content_sha256": "sha256:6dbddd545a5bbd895eadf57a5ff4462edc0192a06c14d60135d267153b4c900f"
+      },
+      {
+        "collection": "persona_dream_loop_validation",
+        "exact_reread_match": true,
+        "key": "validation_dream_pd_dream_991c311f365f__supports_interpretation__tom-003",
+        "reread_content_sha256": "sha256:3137e7cb091db029f851b90da9f5f805a2fee821d8f630796c1eaf0a2180618a",
+        "reread_found": true,
+        "store_ok": true,
+        "written_content_sha256": "sha256:3137e7cb091db029f851b90da9f5f805a2fee821d8f630796c1eaf0a2180618a"
+      },
+      {
+        "collection": "persona_dream_loop_validation",
+        "exact_reread_match": true,
+        "key": "validation_dream_pd_dream_991c311f365f__supports_interpretation__tom-004",
+        "reread_content_sha256": "sha256:70e4c01434c6ddca6babfd1d25193b4ceddfc9b1888048a2c4afc6e37b33eeb7",
+        "reread_found": true,
+        "store_ok": true,
+        "written_content_sha256": "sha256:70e4c01434c6ddca6babfd1d25193b4ceddfc9b1888048a2c4afc6e37b33eeb7"
+      }
+    ]
+  }
+}

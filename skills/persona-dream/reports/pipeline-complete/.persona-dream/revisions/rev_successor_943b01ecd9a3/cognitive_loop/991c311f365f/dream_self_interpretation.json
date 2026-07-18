@@ -1,0 +1,456 @@
+{
+  "accepted_interpretations": [
+    {
+      "alternative_explanation": "The scene may simply reproduce the intended dialogue about surf etiquette without revealing anything deeper about Embry\u2019s trust in Kai.",
+      "cites_renderer_review": false,
+      "confidence": 0.72,
+      "emotional_intensity": 0.46,
+      "favored_explanation": "psychological",
+      "interpretation_id": "interpretation-001",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "transcript_seg_000",
+        "visible_speaker_lipsync_window"
+      ],
+      "source_memory_refs": [
+        "embry_age15_19_b03_memory_014",
+        "embry_age15_19_b03_memory_016"
+      ],
+      "statement": "Embry may experience Kai\u2019s warning about not cutting across the lineup as a trusted, safety-oriented correction rather than as criticism, consistent with prior moments where Kai taught surf etiquette and timing without shaming her.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "kai",
+      "tom_state_type": "trust",
+      "uncertainty": "The rendered observations confirm Kai\u2019s line and visibility, but they do not show Embry\u2019s facial reaction or decision clearly because entity descriptions are unavailable."
+    },
+    {
+      "alternative_explanation": "The renderer may have focused on Kai\u2019s spoken safety line while omitting or failing to resolve Embry\u2019s action, so the apparent collaborative restraint could be an artifact of incomplete scene coverage.",
+      "cites_renderer_review": false,
+      "confidence": 0.6,
+      "emotional_intensity": 0.52,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-002",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "transcript_seg_000",
+        "visible_speaker_lipsync_window"
+      ],
+      "source_memory_refs": [
+        "embry_age15_19_b02_memory_019",
+        "embry_age15_19_b03_memory_014"
+      ],
+      "statement": "Embry\u2019s position toward Kai may be one of collaborative restraint: she is willing to pause or adjust her autonomy when Kai names a concrete surf risk, echoing past situations where Kai helped her assess hazards and Embry could choose a boundary without defensiveness.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "kai",
+      "tom_state_type": "stance",
+      "uncertainty": "The intended dream centers Embry ignoring a phone and making a competent surf decision, but the observations only verify Kai\u2019s warning; Embry\u2019s actual choice is not directly observed."
+    },
+    {
+      "alternative_explanation": "Renderer defect: the model failed to preserve Embry\u2019s reference identity across the early frames, causing facial structure and features to shift independently of any intended psychological meaning.",
+      "cites_renderer_review": true,
+      "confidence": 0.18,
+      "emotional_intensity": 0.35,
+      "favored_explanation": "renderer_defect",
+      "interpretation_id": "interpretation-003",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "identity_temporal_continuity_review",
+        "frame_0000",
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004"
+      ],
+      "source_memory_refs": [
+        "embry_age15_19_b03_memory_014",
+        "embry_age15_19_b03_memory_016"
+      ],
+      "statement": "The visual drift in Embry\u2019s identity could be read psychologically as a fragile or unstable self-presentation while she tries to balance autonomy against obligation under Kai\u2019s practical guidance, especially around surf competence and not causing harm in the lineup.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "kai",
+      "tom_state_type": "uncertainty",
+      "uncertainty": "The continuity review explicitly reports facial drift, but this is a renderer defect verdict rather than reliable evidence of Embry\u2019s inner state."
+    },
+    {
+      "alternative_explanation": "Kai\u2019s line may function only as exposition to establish the surfing context and local etiquette, not as evidence of Embry\u2019s belief about him.",
+      "cites_renderer_review": false,
+      "confidence": 0.68,
+      "emotional_intensity": 0.42,
+      "favored_explanation": "psychological",
+      "interpretation_id": "interpretation-004",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "transcript_seg_000",
+        "visible_speaker_lipsync_window"
+      ],
+      "source_memory_refs": [
+        "embry_age15_19_b03_memory_014",
+        "embry_age15_19_b03_memory_016"
+      ],
+      "statement": "Embry may believe Kai\u2019s surf judgments are grounded in practical local knowledge rather than control, since Kai\u2019s rendered line names a specific etiquette problem and her memories associate him with maps, hazards, entry paths, and private correction.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "kai",
+      "tom_state_type": "belief",
+      "uncertainty": "The observations preserve Kai\u2019s warning but do not show Embry explicitly accepting or rejecting it, so Embry\u2019s belief must remain tentative."
+    }
+  ],
+  "blockers": [],
+  "candidates": [
+    {
+      "alternative_explanation": "The scene may simply reproduce the intended dialogue about surf etiquette without revealing anything deeper about Embry\u2019s trust in Kai.",
+      "cites_renderer_review": false,
+      "confidence": 0.72,
+      "emotional_intensity": 0.46,
+      "favored_explanation": "psychological",
+      "interpretation_id": "interpretation-001",
+      "observation_refs": [
+        "transcript_seg_000",
+        "visible_speaker_lipsync_window"
+      ],
+      "source_memory_refs": [
+        "embry_age15_19_b03_memory_014",
+        "embry_age15_19_b03_memory_016"
+      ],
+      "statement": "Embry may experience Kai\u2019s warning about not cutting across the lineup as a trusted, safety-oriented correction rather than as criticism, consistent with prior moments where Kai taught surf etiquette and timing without shaming her.",
+      "subject": "embry",
+      "target": "kai",
+      "tom_state_type": "trust",
+      "uncertainty": "The rendered observations confirm Kai\u2019s line and visibility, but they do not show Embry\u2019s facial reaction or decision clearly because entity descriptions are unavailable."
+    },
+    {
+      "alternative_explanation": "The renderer may have focused on Kai\u2019s spoken safety line while omitting or failing to resolve Embry\u2019s action, so the apparent collaborative restraint could be an artifact of incomplete scene coverage.",
+      "cites_renderer_review": false,
+      "confidence": 0.6,
+      "emotional_intensity": 0.52,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-002",
+      "observation_refs": [
+        "transcript_seg_000",
+        "visible_speaker_lipsync_window"
+      ],
+      "source_memory_refs": [
+        "embry_age15_19_b02_memory_019",
+        "embry_age15_19_b03_memory_014"
+      ],
+      "statement": "Embry\u2019s position toward Kai may be one of collaborative restraint: she is willing to pause or adjust her autonomy when Kai names a concrete surf risk, echoing past situations where Kai helped her assess hazards and Embry could choose a boundary without defensiveness.",
+      "subject": "embry",
+      "target": "kai",
+      "tom_state_type": "stance",
+      "uncertainty": "The intended dream centers Embry ignoring a phone and making a competent surf decision, but the observations only verify Kai\u2019s warning; Embry\u2019s actual choice is not directly observed."
+    },
+    {
+      "alternative_explanation": "Renderer defect: the model failed to preserve Embry\u2019s reference identity across the early frames, causing facial structure and features to shift independently of any intended psychological meaning.",
+      "cites_renderer_review": true,
+      "confidence": 0.18,
+      "emotional_intensity": 0.35,
+      "favored_explanation": "renderer_defect",
+      "interpretation_id": "interpretation-003",
+      "observation_refs": [
+        "identity_temporal_continuity_review",
+        "frame_0000",
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004"
+      ],
+      "source_memory_refs": [
+        "embry_age15_19_b03_memory_014",
+        "embry_age15_19_b03_memory_016"
+      ],
+      "statement": "The visual drift in Embry\u2019s identity could be read psychologically as a fragile or unstable self-presentation while she tries to balance autonomy against obligation under Kai\u2019s practical guidance, especially around surf competence and not causing harm in the lineup.",
+      "subject": "embry",
+      "target": "kai",
+      "tom_state_type": "uncertainty",
+      "uncertainty": "The continuity review explicitly reports facial drift, but this is a renderer defect verdict rather than reliable evidence of Embry\u2019s inner state."
+    },
+    {
+      "alternative_explanation": "Kai\u2019s line may function only as exposition to establish the surfing context and local etiquette, not as evidence of Embry\u2019s belief about him.",
+      "cites_renderer_review": false,
+      "confidence": 0.68,
+      "emotional_intensity": 0.42,
+      "favored_explanation": "psychological",
+      "interpretation_id": "interpretation-004",
+      "observation_refs": [
+        "transcript_seg_000",
+        "visible_speaker_lipsync_window"
+      ],
+      "source_memory_refs": [
+        "embry_age15_19_b03_memory_014",
+        "embry_age15_19_b03_memory_016"
+      ],
+      "statement": "Embry may believe Kai\u2019s surf judgments are grounded in practical local knowledge rather than control, since Kai\u2019s rendered line names a specific etiquette problem and her memories associate him with maps, hazards, entry paths, and private correction.",
+      "subject": "embry",
+      "target": "kai",
+      "tom_state_type": "belief",
+      "uncertainty": "The observations preserve Kai\u2019s warning but do not show Embry explicitly accepting or rejecting it, so Embry\u2019s belief must remain tentative."
+    }
+  ],
+  "dream_id": "pd_dream_991c311f365f",
+  "generated_at": "2026-07-18T20:08:42.519595+00:00",
+  "honesty_rule": {
+    "identity_drift_dual_explanation_present": true,
+    "renderer_defect_favored_on_drift": true
+  },
+  "intended_dream": {
+    "action_blocks": [
+      {
+        "action": "Embry carries the autonomy-versus-obligation pivot by ignoring the buzzing phone long enough to make a careful, competent surf decision.",
+        "beat_id": "beat-01",
+        "end_s": 10.0,
+        "start_s": 0.0
+      }
+    ],
+    "dialogue_blocks": [
+      {
+        "end_s": 8.08,
+        "speaker": "Kai",
+        "start_s": 5.0,
+        "storyboard_beat_id": "sb_003",
+        "text": "If we paddle now, we're cutting across the lineup.",
+        "voice_direction": "quiet, practical restraint; conversational warning"
+      }
+    ],
+    "story": "Embry and Kai both faked a sick day at their summer jobs to go surfing on the Big Island on a Wednesday in June of 2024 \u2014 Kona Coast, Kahalu\u02bbu Bay, summer swell patterns, lava rock reefs, local surf etiquette.",
+    "target_duration_s": 10
+  },
+  "live": true,
+  "llm": {
+    "auth": "codex-oauth",
+    "caller_skill": "persona-dream",
+    "candidate_count": 4,
+    "model": "gpt-5.5",
+    "provider": "scillm"
+  },
+  "mocked": false,
+  "observation_index": [
+    {
+      "observation_id": "frame_0000",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 0 at t=0.0s; windows=identity; entities=unavailable",
+      "timestamp_seconds": 0.0
+    },
+    {
+      "observation_id": "frame_0001",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 1 at t=0.84s; windows=identity; entities=unavailable",
+      "timestamp_seconds": 0.84
+    },
+    {
+      "observation_id": "frame_0002",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 2 at t=1.67s; windows=identity; entities=unavailable",
+      "timestamp_seconds": 1.67
+    },
+    {
+      "observation_id": "frame_0003",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 3 at t=2.51s; windows=identity; entities=unavailable",
+      "timestamp_seconds": 2.51
+    },
+    {
+      "observation_id": "frame_0004",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 4 at t=3.35s; windows=identity; entities=unavailable",
+      "timestamp_seconds": 3.35
+    },
+    {
+      "observation_id": "frame_0005",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 5 at t=4.18s; entities=unavailable",
+      "timestamp_seconds": 4.18
+    },
+    {
+      "observation_id": "frame_0006",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 6 at t=5.02s; windows=speaker; entities=unavailable",
+      "timestamp_seconds": 5.02
+    },
+    {
+      "observation_id": "frame_0007",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 7 at t=5.86s; windows=speaker; entities=unavailable",
+      "timestamp_seconds": 5.86
+    },
+    {
+      "observation_id": "frame_0008",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 8 at t=6.69s; windows=speaker; entities=unavailable",
+      "timestamp_seconds": 6.69
+    },
+    {
+      "observation_id": "frame_0009",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 9 at t=7.53s; windows=speaker; entities=unavailable",
+      "timestamp_seconds": 7.53
+    },
+    {
+      "observation_id": "frame_0010",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 10 at t=8.37s; entities=unavailable",
+      "timestamp_seconds": 8.37
+    },
+    {
+      "observation_id": "frame_0011",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 11 at t=9.2s; entities=unavailable",
+      "timestamp_seconds": 9.2
+    },
+    {
+      "observation_id": "transcript_seg_000",
+      "observation_type": "transcript_fact",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Transcript [4.72, 8.219999999999999]: If we paddle now, we're cutting across the lineup."
+    },
+    {
+      "observation_id": "identity_temporal_continuity_review",
+      "observation_type": "renderer_continuity_review",
+      "renderer_defect_verdict": "DRIFT",
+      "renderer_review": true,
+      "summary": "Identity continuity review over window [0.0, 3.5] (model=gpt-5.3-codex, verdict=DRIFT): VERDICT: DRIFT The woman keeps the general brunette ponytail and navy top, but her facial structure and visible features soften and shift across the frames and do not reliably match Embry\u2019s sharper brows, eye shape, and reference-sheet face."
+    },
+    {
+      "observation_id": "visible_speaker_lipsync_window",
+      "observation_type": "speaker_visibility",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Speaker Kai flagged visible over [5.0, 7.7]s saying: If we paddle now, we're cutting across the lineup."
+    },
+    {
+      "observation_id": "coverage_gap_00",
+      "observation_type": "coverage_gap",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "per_frame_vlm_entities_unavailable: watch scillm vlm frame descriptions did not resolve; per-frame entity lists are empty"
+    }
+  ],
+  "observation_packet_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/991c311f365f/dream_observation_packet.v1.json",
+  "observation_packet_sha256": "sha256:b88e3cf91416bd214da45fb4316e654c4794fad9b5f7d356ae70ff921bc24c3b",
+  "persona_id": "embry",
+  "provider_live": true,
+  "recall_receipts": [
+    {
+      "collections": [
+        "persona_memory"
+      ],
+      "confidence": 0.904,
+      "found": true,
+      "question": "What memories explain why Embry trusts Kai about surf safety boundaries and hazards at the lineup?",
+      "residue_source_ids_confirmed": [],
+      "returned_keys": [
+        "persona_dream_phase_03_crew_contract_embry_kai_kahaluu_2024",
+        "persona_dream_phase_06_script_contract_embry_kai_kahaluu_2024",
+        "embry_age15_19_b03_memory_019",
+        "embry_age15_19_b03_memory_044",
+        "embry-kai-sick-day_02_story_story_contract_843592d16ce27a53",
+        "embry_age19_23_b01_memory_048",
+        "embry_age19_23_b01_memory_010",
+        "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698"
+      ],
+      "tags": [
+        "persona:embry"
+      ]
+    },
+    {
+      "collections": [
+        "persona_memory"
+      ],
+      "confidence": 0.91,
+      "found": true,
+      "question": "What memory shows Kai giving Embry operational surf knowledge while respecting her decisions?",
+      "residue_source_ids_confirmed": [
+        "embry_age15_19_b03_memory_014"
+      ],
+      "returned_keys": [
+        "persona_dream_phase_06_script_contract_embry_kai_kahaluu_2024",
+        "persona_dream_phase_03_crew_contract_embry_kai_kahaluu_2024",
+        "embry_age19_23_b01_memory_007",
+        "embry-kai-sick-day_02_story_story_contract_843592d16ce27a53",
+        "embry_age19_23_b01_memory_012",
+        "embry_age15_19_b01_memory_012",
+        "embry_age15_19_b03_memory_014",
+        "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024"
+      ],
+      "tags": [
+        "persona:embry"
+      ]
+    },
+    {
+      "collections": [
+        "persona_memory"
+      ],
+      "confidence": 0.939,
+      "found": true,
+      "question": "Why does Embry pause before crossing into surf traffic near Kai?",
+      "residue_source_ids_confirmed": [],
+      "returned_keys": [
+        "embry_age15_19_b01_memory_008",
+        "persona_dream_phase_06_script_contract_embry_kai_kahaluu_2024",
+        "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024",
+        "persona_dream_phase_03_crew_contract_embry_kai_kahaluu_2024",
+        "embry_age15_19_b01_memory_009",
+        "embry-kai-sick-day_02_story_story_contract_843592d16ce27a53",
+        "embry_age19_23_b01_memory_014",
+        "embry_age19_23_b01_memory_012"
+      ],
+      "tags": [
+        "persona:embry"
+      ]
+    }
+  ],
+  "rejected_interpretations": [],
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.dream_self_interpretation.v1",
+  "source_memory_bindings": [
+    {
+      "collection": "persona_memory",
+      "memory_text_sha256": "sha256:8a9d76dc918b4b0b2acce980e5c6b39d8be01a231921b27dd111a602fcd921a0",
+      "persona_id": "embry",
+      "recall_confirmed": true,
+      "source_id": "embry_age15_19_b03_memory_014"
+    },
+    {
+      "collection": "persona_memory",
+      "memory_text_sha256": "sha256:0b322862626e748732a79bb91f158cc14c3e04ce3f19ac21b4134d3d58d8663a",
+      "persona_id": "embry",
+      "recall_confirmed": false,
+      "source_id": "embry_age15_19_b02_memory_019"
+    },
+    {
+      "collection": "persona_memory",
+      "memory_text_sha256": "sha256:4efd7ac758368a609b7da960b0da64ae0f02fe11592eb576ca0ea4489f17be49",
+      "persona_id": "embry",
+      "recall_confirmed": false,
+      "source_id": "embry_age15_19_b03_memory_016"
+    }
+  ],
+  "status": "PASS_SELF_INTERPRETATION"
+}
