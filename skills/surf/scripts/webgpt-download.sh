@@ -70,7 +70,7 @@ if [[ -n "$tab_id" ]]; then
 fi
 
 expected_basename=""
-if [[ -n "$match" ]]; then
+if [[ -n "$match" && "$match" != .* && "$match" != *"*"* && "$match" != *"?"* ]]; then
   expected_basename="$(basename -- "$match")"
 fi
 
@@ -210,8 +210,13 @@ while (( SECONDS - start_time < timeout_s )); do
 
   if [[ -n "$new_files" ]]; then
     while IFS= read -r f; do
-      if [[ -n "$expected_basename" && "$f" != "$expected_basename" ]]; then
-        echo "Ignoring unrelated download candidate: $f (expected: $expected_basename)" >&2
+      if [[ -n "$expected_basename" ]]; then
+        if [[ "$f" != "$expected_basename" ]]; then
+          echo "Ignoring unrelated download candidate: $f (expected: $expected_basename)" >&2
+          continue
+        fi
+      elif [[ -n "$match" && "$f" != *"$match"* ]]; then
+        echo "Ignoring unrelated download candidate: $f (pattern: $match)" >&2
         continue
       fi
       candidate="$downloads_dir/$f"

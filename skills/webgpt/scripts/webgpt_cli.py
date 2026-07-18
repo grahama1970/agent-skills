@@ -10,7 +10,9 @@ import shlex
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
+import zipfile
 from pathlib import Path
 from urllib.parse import urlsplit, urlunsplit
 
@@ -20,10 +22,150 @@ app = typer.Typer()
 BINDING_DIR = Path.home() / ".pi" / "webgpt-projects"
 SURF = Path(os.path.expandvars("${HOME}/workspace/experiments/agent-skills/skills/surf/run.sh"))
 BROWSER_ORACLE = Path(__file__).resolve().parents[2] / "browser-oracle" / "run.sh"
+DEFAULT_WEBGPT_TIMEOUT_SECONDS = 2400
+
+EXECUTION_LOCK_HEADINGS = (
+    "current phase",
+    "critical path",
+    "deferred work",
+    "failure policy",
+    "stop condition",
+)
+EXECUTION_LOCK_DIRECTIVES = (
+    "max_identical_failures_per_family: 3",
+    "systemic_failure_action: stop_family_mark_remaining_blocked_continue_independent_families",
+    "reviewer_scope_authority: none",
+)
+
+CODE_GATE_FIELDS = (
+    "current_gate",
+    "blocking_defect",
+    "allowed_files",
+    "required_live_proof",
+    "stop_condition",
+    "forbidden_adjacent_scope",
+)
 
 
 GITHUB_REPO = "agent-skills"
 GITHUB_ORG = "grahama1970"
+
+
+def validate_execution_lock(text: str) -> list[str]:
+    lowered = text.lower()
+    missing = [
+        heading
+        for heading in EXECUTION_LOCK_HEADINGS
+        if f"## {heading}" not in lowered
+    ]
+    missing.extend(
+        directive for directive in EXECUTION_LOCK_DIRECTIVES if directive not in text
+    )
+    return missing
+
+
+def validate_code_gate(text: str) -> list[str]:
+    counts = {field: 0 for field in CODE_GATE_FIELDS}
+    for raw_line in text.splitlines():
+        key, sep, _value = raw_line.partition(":")
+        if sep and key.strip() in counts:
+            counts[key.strip()] += 1
+    errors = [f"duplicate_{field}" for field, count in counts.items() if count > 1]
+    errors.extend(f"missing_{field}" for field, count in counts.items() if count == 0)
+    return errors
+
+
+def _allowed_code_gate_files(gate_text: str) -> set[str]:
+    for raw_line in gate_text.splitlines():
+        key, sep, value = raw_line.partition(":")
+        if sep and key.strip() == "allowed_files":
+            return {
+                part.strip()
+                for part in re.split(r"[, ]+", value.strip())
+                if part.strip()
+            }
+    return set()
+
+
+def read_code_gate_text(path: Path) -> str:
+    if path.suffix == ".zip":
+        with zipfile.ZipFile(path) as archive:
+            try:
+                return archive.read("execution-gate.md").decode("utf-8")
+            except KeyError as exc:
+                raise ValueError("execution-gate.md missing from zip bundle") from exc
+    return path.read_text(errors="replace")
+
+
+def _diff_paths(response_text: str) -> list[str]:
+    paths: list[str] = []
+    for match in re.finditer(r"^diff --git a/(.*?) b/(.*?)$", response_text, re.MULTILINE):
+        paths.append(match.group(2))
+    return paths
+
+
+def code_deliverable_errors(
+    response_text: str,
+    solution_zip: Path,
+    gate_text: str,
+    repo: Path | None = None,
+) -> list[str]:
+    if solution_zip.exists() and solution_zip.stat().st_size > 0:
+        return []
+    has_diff = (
+        "diff --git " in response_text
+        or "*** Begin Patch" in response_text
+        or ("--- a/" in response_text and "+++ b/" in response_text)
+    )
+    if not has_diff:
+        return ["code_deliverable_missing"]
+
+    allowed = _allowed_code_gate_files(gate_text)
+    for path in _diff_paths(response_text):
+        if allowed and path not in allowed:
+            return [f"path_outside_allowed_files:{path}"]
+
+    if repo is not None and "diff --git " in response_text:
+        check = subprocess.run(
+            ["git", "apply", "--check", "-"],
+            input=response_text,
+            cwd=repo,
+            text=True,
+            capture_output=True,
+        )
+        if check.returncode != 0:
+            detail = (check.stderr or check.stdout or "git apply --check failed").strip()
+            return [f"unapplicable_unified_diff:{detail}"]
+    return []
+
+
+def validate_explicit_tab(tab_id: str, expect_url: str, tabs: list[dict]) -> list[str]:
+    if not expect_url:
+        return ["explicit_tab_requires_expect_url"]
+    matches = [tab for tab in tabs if str(tab.get("id", "")) == str(tab_id)]
+    if len(matches) != 1:
+        return ["explicit_tab_missing"]
+    if not _same_url(str(matches[0].get("url", "")), expect_url):
+        return ["explicit_tab_url_mismatch"]
+    return []
+
+
+def submission_target_args(tab_id: str, expect_url: str, _binding: dict) -> list[str]:
+    return ["--tab-id", tab_id, "--expect-url", expect_url, "--no-remember"]
+
+
+def webgpt_download_args(tab_id: str, match: str, output: Path, timeout: int) -> list[str]:
+    return [
+        "webgpt.download",
+        "--match",
+        match,
+        "--tab-id",
+        tab_id,
+        "--output",
+        str(output),
+        "--timeout",
+        str(timeout),
+    ]
 
 
 def _now() -> str:
@@ -570,16 +712,9 @@ def _routing_meta_is_exact(meta: dict, tab_id: str) -> bool:
 
 def _has_code_deliverable(response_path: Path, solution_path: Path) -> bool:
     """A code request must yield a patch or a non-empty finished-file zip."""
-    if solution_path.exists() and solution_path.stat().st_size > 0:
-        return True
     if not response_path.exists():
-        return False
-    response = response_path.read_text(errors="replace")
-    return (
-        "diff --git " in response
-        or "*** Begin Patch" in response
-        or ("--- a/" in response and "+++ b/" in response)
-    )
+        return solution_path.exists() and solution_path.stat().st_size > 0
+    return not code_deliverable_errors(response_path.read_text(errors="replace"), solution_path, "")
 
 
 WEBGPT_MODES = {"assess", "plan", "code", "all", "none"}
@@ -695,16 +830,24 @@ def _deliverable_ok(mode: str, response_path: Path, solution_path: Path) -> bool
 
 
 def _click_and_wait_download(tab_id: str, pattern: str, timeout: int = 60, background: bool = False) -> Path | None:
-    """Click a download button by text match, poll ~/Downloads."""
-    before = set((Path.home() / "Downloads").iterdir()) if (Path.home() / "Downloads").exists() else set()
-    _surf("click", pattern, *(["--no-activate"] if background else []), "--tab-id", tab_id, capture=False)
-    deadline = time.time() + timeout
-    while time.time() < deadline:
-        time.sleep(2)
-        after = set((Path.home() / "Downloads").iterdir())
-        new = [f for f in (after - before) if pattern in f.name and f.stat().st_size > 0]
-        if new:
-            return new[0]
+    """Download a generated artifact through Surf's tab-aware WebGPT helper."""
+    suffix = pattern if pattern.startswith(".") and "/" not in pattern else ""
+    fd, tmp_name = tempfile.mkstemp(prefix="webgpt-download-", suffix=suffix)
+    os.close(fd)
+    output = Path(tmp_name)
+    output.unlink(missing_ok=True)
+    result = _surf(*webgpt_download_args(tab_id, pattern, output, timeout))
+    if result.returncode == 0 and output.exists() and output.stat().st_size > 0:
+        return output
+    manual = (
+        f"Manual resume: {SURF} webgpt.download --match {shlex.quote(pattern)} "
+        f"--tab-id {shlex.quote(str(tab_id))} --output /tmp/webgpt-download{suffix or '.artifact'} "
+        f"--timeout {timeout}"
+    )
+    detail = (result.stderr or result.stdout or "").strip()
+    if detail:
+        typer.echo(detail, err=True)
+    typer.echo(manual, err=True)
     return None
 
 
@@ -712,7 +855,7 @@ def _click_and_wait_download(tab_id: str, pattern: str, timeout: int = 60, backg
 def submit(
     bundle: str | None = typer.Argument(None, help="Path to creation bundle (auto-finds latest)"),
     project: str = typer.Option("sparta", "-p"),
-    timeout: int = typer.Option(900, "--timeout", "-t", help="WebGPT timeout (seconds)"),
+    timeout: int = typer.Option(DEFAULT_WEBGPT_TIMEOUT_SECONDS, "--timeout", "-t", help="WebGPT timeout (seconds)"),
     background: bool = typer.Option(True, "--background", help="Background: no KDE switch, no window focus"),
     output_contract: str = typer.Option("code", "--output-contract", help="Required response: assess, plan, code, all, or none"),
     architecture_authorized: bool = typer.Option(
@@ -939,10 +1082,8 @@ def download(
     background: bool = typer.Option(True, "--background"),
 ):
     """Click the download button in the ChatGPT tab, wait for the file in ~/Downloads."""
-    _verify_desktop(_binding(project), background, "download")
-    tab_id = _active_chatgpt_tab()
-    if not tab_id:
-        tab_id = _binding(project).get("tab_id", "")
+    binding = _verify_desktop(_binding(project), background, "download")
+    tab_id = str(binding.get("tab_id", "")).strip() or _active_chatgpt_tab()
     if not tab_id:
         _report_failure("download", subprocess.CompletedProcess(args=[], returncode=1, stdout="", stderr="no tab id"), binding=_binding(project), project=project)
         typer.echo("No active ChatGPT tab found", err=True)
@@ -961,7 +1102,7 @@ def download(
 @app.command()
 def listen(
     project: str = typer.Option("sparta", "-p"),
-    timeout: int = typer.Option(900, "--timeout", "-t"),
+    timeout: int = typer.Option(DEFAULT_WEBGPT_TIMEOUT_SECONDS, "--timeout", "-t"),
     output: str = typer.Option("response.md", "-o"),
     background: bool = typer.Option(True, "--background"),
 ):
