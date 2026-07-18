@@ -1,0 +1,73 @@
+{
+  "blocking_findings": [
+    "IDENTITY_MISMATCH_DESPITE_GENERIC_MATCH: Embry appears to be a different specific individual despite matching broad category/clothing.",
+    "IDENTITY_AGE_MISMATCH: Embry appears clearly older/weathered than the late-20s reference identity.",
+    "IDENTITY_FEATURES_NOT_GROUNDED: Embry cannot be affirmatively verified as the same specific face from the reference."
+  ],
+  "created_at": "2026-07-18T17:46:44.017758+00:00",
+  "frame_key": "start_frame",
+  "frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_003_start_frame.png",
+  "image_dimensions": {
+    "height": 864,
+    "width": 1536
+  },
+  "live": true,
+  "mocked": false,
+  "model": "gpt-5.5",
+  "model_policy": {
+    "auth": "codex-oauth",
+    "error": null,
+    "fallback_performed": false,
+    "model": "gpt-5.5",
+    "provider": "codex",
+    "schema": "persona_dream.identity_review_policy.v1",
+    "source": "dag_identity_review_model_policy",
+    "supported": true
+  },
+  "model_policy_enforced": true,
+  "panel_id": "sb_003",
+  "raw_response": {
+    "blocking_findings": [
+      "IDENTITY_MISMATCH_DESPITE_GENERIC_MATCH: Embry appears to be a different specific individual despite matching broad category/clothing.",
+      "IDENTITY_AGE_MISMATCH: Embry appears clearly older/weathered than the late-20s reference identity.",
+      "IDENTITY_FEATURES_NOT_GROUNDED: Embry cannot be affirmatively verified as the same specific face from the reference."
+    ],
+    "identity_notes": "The panel is a readable two-shot with both required entities visible in the foreground, but Embry fails the specific-identity standard. She matches the broad surfer category and navy top, yet her apparent age, facial structure, complexion/freckling, and eye/brow area diverge from the Embry reference. Regeneration required.",
+    "observed_divergences": {
+      "Embry": [
+        "Frame Embry appears substantially older than the reference, with more weathered facial texture and mature lines.",
+        "Frame Embry's face reads broader/heavier through the lower face and jaw than the reference's softer late-20s oval face.",
+        "Complexion/freckling pattern is not a clear match to the reference's warm-olive, lightly freckled face.",
+        "Eyebrow and eye-area structure do not closely match the reference; the frame face reads as a different woman."
+      ],
+      "Kai": [
+        "No identity-changing divergence observed; face is visible enough and generally aligns with the reference."
+      ]
+    },
+    "verdict": "FAIL",
+    "verified_facial_features": {
+      "Embry": [],
+      "Kai": [
+        "Same tan warm complexion as the Kai reference.",
+        "Similar dark, thick eyebrows over deep-set eyes.",
+        "Similar medium straight nose and rounded chin/jaw proportions."
+      ]
+    },
+    "visible_entities": [
+      "Embry",
+      "Kai"
+    ]
+  },
+  "receipt_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration_v2/case_receipts/known_bad_sb_003_start/sb_003_start_frame_identity_continuity_review.json",
+  "required_entities": [
+    "Embry",
+    "Kai"
+  ],
+  "reviewer_source": "scillm:gpt-5.5:image_url",
+  "schema": "persona_dream.identity_continuity_review.v1",
+  "status": "FAIL",
+  "visible_entities": [
+    "Embry",
+    "Kai"
+  ]
+}

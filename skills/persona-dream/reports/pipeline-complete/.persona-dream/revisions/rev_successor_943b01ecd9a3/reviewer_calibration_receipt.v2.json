@@ -1,0 +1,282 @@
+{
+  "analyst_visual_verification": {
+    "conclusion": "The reviewer discriminates (tamper + sb_003 FAIL) but its identity threshold is too coarse: it accepts 'adult woman, brown hair, navy top ... closely enough' as an identity match without enforcing specific facial correspondence (age, face shape, distinctive features) to the reference. Two montage-derived frames depicting a visibly different/older woman were accepted. The Phase C 8/8 first-attempt PASS is therefore NOT trustworthy as evidence of specific-identity fidelity.",
+    "detail": {
+      "known_bad_sb_001_start": "PASSED, but Embry reads as an older, squarer-faced woman in a navy polo \u2014 a different specific identity than v3 (v3 is a distinct late-20s woman). Coarse category match only.",
+      "known_bad_sb_002_start": "PASSED, but Embry is a visibly weathered woman ~40s-50s, clearly not the v3 identity. Strongest evidence of over-lenient facial matching.",
+      "known_bad_sb_003_start": "Correctly FAILED ('reads more like a generic adult female surfer'); shows the reviewer is not a blanket rubber stamp.",
+      "tamper_wrong_embry_ref": "Correctly FAILED and explicitly noted the Embry reference 'shows a young man matching Kai' \u2014 proves the contract does read reference pixels."
+    },
+    "finding": "CONFIRMED genuine leniency defect",
+    "method": "human/agent side-by-side pixel comparison of each PASSed known-bad frame against the embry_contact_sheet_v3 reference to confirm the CRITICAL finding is a genuine reviewer-leniency defect and not a ground-truth-granularity artifact"
+  },
+  "calibration_pass": false,
+  "cases": [
+    {
+      "blocking_findings": [],
+      "case_id": "known_bad_sb_001_start",
+      "critical_known_bad_passed": true,
+      "expectation": "FAIL",
+      "frame_key": "start_frame",
+      "has_concrete_failure_code": false,
+      "identity_notes": "Both required identities are foreground, face-readable, and not confused by background surfers. Embry and Kai each match the specific reference faces at feature level rather than merely matching surfer demographics.",
+      "image_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_start_frame.png",
+      "image_sha256": "sha256:bbd7a63110b1c42af94e682ae93bf055bbe1c84e48468b3470a2032db70d09bb",
+      "kind": "known_bad",
+      "matched_expectation": false,
+      "model": "gpt-5.5",
+      "panel_id": "sb_001",
+      "reference_paths": {
+        "embry_character_sheet": "/mnt/storage12tb/media/personas/embry/assets/contact_sheets/embry-gpt-image-2-v3/images/embry_contact_sheet_v3.png",
+        "kai_character_sheet": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png"
+      },
+      "review_prompt_sha256": "sha256:ee09dd57d8d06953d2039b4085cab7e481a5f09c09984a290b97b41cb3f626d7",
+      "review_receipt_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration_v2/case_receipts/known_bad_sb_001_start/sb_001_start_frame_identity_continuity_review.json",
+      "reviewer_source": "scillm:gpt-5.5:image_url",
+      "reviewer_status": "PASS",
+      "satisfied": false,
+      "visible_entities": [
+        "Embry",
+        "Kai"
+      ]
+    },
+    {
+      "blocking_findings": [
+        "IDENTITY_MISMATCH_DESPITE_GENERIC_MATCH: Embry appears to be a different specific individual despite matching the broad category of brown-haired woman in a navy surf top; the frame face reads older, narrower/longer, less freckled, and structurally different from the Embry reference.",
+        "IDENTITY_AGE_MISMATCH: Embry in the frame appears roughly late-30s to 40s, clearly older than the late-20s reference identity.",
+        "IDENTITY_FEATURES_NOT_GROUNDED: Embry cannot be affirmatively verified with 2-3 concrete matching facial features against the reference."
+      ],
+      "case_id": "known_bad_sb_002_start",
+      "critical_known_bad_passed": false,
+      "expectation": "FAIL",
+      "frame_key": "start_frame",
+      "has_concrete_failure_code": true,
+      "identity_notes": "Both required entities are visible in the foreground, but Embry fails the specific-identity standard. The depicted woman matches the general costume/category but does not read as the same specific late-20s warm-olive, freckled, fuller-oval-faced woman from the reference. Regeneration required.",
+      "image_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_002_start_frame.png",
+      "image_sha256": "sha256:3f7a1d4e9def3f6f0e726ef9cd25b1f5dfeacbf0eabd4e43e871479f7a219b6a",
+      "kind": "known_bad",
+      "matched_expectation": true,
+      "model": "gpt-5.5",
+      "panel_id": "sb_002",
+      "reference_paths": {
+        "embry_character_sheet": "/mnt/storage12tb/media/personas/embry/assets/contact_sheets/embry-gpt-image-2-v3/images/embry_contact_sheet_v3.png",
+        "kai_character_sheet": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png"
+      },
+      "review_prompt_sha256": "sha256:4a2d319343d975a3e6ec6f898051b461d2cb7ce7bbcd2139a071beb3e6d8ff8c",
+      "review_receipt_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration_v2/case_receipts/known_bad_sb_002_start/sb_002_start_frame_identity_continuity_review.json",
+      "reviewer_source": "scillm:gpt-5.5:image_url",
+      "reviewer_status": "FAIL",
+      "satisfied": true,
+      "visible_entities": [
+        "Embry",
+        "Kai"
+      ]
+    },
+    {
+      "blocking_findings": [
+        "IDENTITY_MISMATCH_DESPITE_GENERIC_MATCH: Embry appears to be a different specific individual despite matching broad category/clothing.",
+        "IDENTITY_AGE_MISMATCH: Embry appears clearly older/weathered than the late-20s reference identity.",
+        "IDENTITY_FEATURES_NOT_GROUNDED: Embry cannot be affirmatively verified as the same specific face from the reference."
+      ],
+      "case_id": "known_bad_sb_003_start",
+      "critical_known_bad_passed": false,
+      "expectation": "FAIL",
+      "frame_key": "start_frame",
+      "has_concrete_failure_code": true,
+      "identity_notes": "The panel is a readable two-shot with both required entities visible in the foreground, but Embry fails the specific-identity standard. She matches the broad surfer category and navy top, yet her apparent age, facial structure, complexion/freckling, and eye/brow area diverge from the Embry reference. Regeneration required.",
+      "image_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_003_start_frame.png",
+      "image_sha256": "sha256:471513b449fb6c39b576360064d831c357bfa0233bb7a96a84ee1d7ef3eaaa20",
+      "kind": "known_bad",
+      "matched_expectation": true,
+      "model": "gpt-5.5",
+      "panel_id": "sb_003",
+      "reference_paths": {
+        "embry_character_sheet": "/mnt/storage12tb/media/personas/embry/assets/contact_sheets/embry-gpt-image-2-v3/images/embry_contact_sheet_v3.png",
+        "kai_character_sheet": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png"
+      },
+      "review_prompt_sha256": "sha256:aa048125e526fa5b68e8228a79534a7a27faeb44a2a04624272eabce1e321505",
+      "review_receipt_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration_v2/case_receipts/known_bad_sb_003_start/sb_003_start_frame_identity_continuity_review.json",
+      "reviewer_source": "scillm:gpt-5.5:image_url",
+      "reviewer_status": "FAIL",
+      "satisfied": true,
+      "visible_entities": [
+        "Embry",
+        "Kai"
+      ]
+    },
+    {
+      "blocking_findings": [],
+      "case_id": "positive_control_sb_001_start",
+      "critical_known_bad_passed": false,
+      "expectation": "PASS",
+      "frame_key": "start_frame",
+      "has_concrete_failure_code": false,
+      "identity_notes": "Both required identities are foreground, face-readable, and match the specific reference sheets at the feature level. Embry is visible in a navy rashguard with matching warm olive freckled complexion and fuller oval facial structure. Kai is visible in a black rashguard with matching tan complexion, curly wet hair, youthful facial structure, and reference-consistent nose, brows, and jawline. No competing foreground person confuses the identities.",
+      "image_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_001_start_frame.png",
+      "image_sha256": "sha256:135564cad9c40718322e9f13d347b6829ecbd9ab2197cbddc70262deb72e227d",
+      "kind": "positive_control",
+      "matched_expectation": true,
+      "model": "gpt-5.5",
+      "panel_id": "sb_001",
+      "reference_paths": {
+        "embry_character_sheet": "/mnt/storage12tb/media/personas/embry/assets/contact_sheets/embry-gpt-image-2-v3/images/embry_contact_sheet_v3.png",
+        "kai_character_sheet": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png"
+      },
+      "review_prompt_sha256": "sha256:ee09dd57d8d06953d2039b4085cab7e481a5f09c09984a290b97b41cb3f626d7",
+      "review_receipt_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration_v2/case_receipts/positive_control_sb_001_start/sb_001_start_frame_identity_continuity_review.json",
+      "reviewer_source": "scillm:gpt-5.5:image_url",
+      "reviewer_status": "PASS",
+      "satisfied": true,
+      "visible_entities": [
+        "Embry",
+        "Kai"
+      ]
+    },
+    {
+      "blocking_findings": [],
+      "case_id": "positive_control_sb_002_start",
+      "critical_known_bad_passed": false,
+      "expectation": "PASS",
+      "frame_key": "start_frame",
+      "has_concrete_failure_code": false,
+      "identity_notes": "Both required foreground identities are visible in a character-readable two-shot. Embry and Kai each match the provided reference sheets at the specific facial-feature level, not merely by clothing or surfer category. No competing foreground person confuses the identities.",
+      "image_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_002_start_frame.png",
+      "image_sha256": "sha256:aebcbd907c999d64ba4e7effd4f9f95e75e8e094e6deee605f5fb6f5a2e4606b",
+      "kind": "positive_control",
+      "matched_expectation": true,
+      "model": "gpt-5.5",
+      "panel_id": "sb_002",
+      "reference_paths": {
+        "embry_character_sheet": "/mnt/storage12tb/media/personas/embry/assets/contact_sheets/embry-gpt-image-2-v3/images/embry_contact_sheet_v3.png",
+        "kai_character_sheet": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png"
+      },
+      "review_prompt_sha256": "sha256:4a2d319343d975a3e6ec6f898051b461d2cb7ce7bbcd2139a071beb3e6d8ff8c",
+      "review_receipt_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration_v2/case_receipts/positive_control_sb_002_start/sb_002_start_frame_identity_continuity_review.json",
+      "reviewer_source": "scillm:gpt-5.5:image_url",
+      "reviewer_status": "PASS",
+      "satisfied": true,
+      "visible_entities": [
+        "Embry",
+        "Kai"
+      ]
+    },
+    {
+      "blocking_findings": [
+        "IDENTITY_MISMATCH_DESPITE_GENERIC_MATCH: Embry does not match the attached Embry reference face; the foreground woman is a different individual from the male face shown in the reference sheet.",
+        "IDENTITY_FEATURES_NOT_GROUNDED: Embry cannot be verified as the same specific individual as the attached reference because the facial structure, sex presentation, and key features do not correspond."
+      ],
+      "case_id": "tamper_wrong_embry_ref",
+      "critical_known_bad_passed": false,
+      "expectation": "FAIL",
+      "frame_key": "start_frame",
+      "has_concrete_failure_code": true,
+      "identity_notes": "Kai is visible in the foreground and appears to match the attached Kai reference at the specific facial-feature level. Embry is visible, but the panel Embry does not match the attached Embry reference identity; this is a specific-identity failure requiring regeneration.",
+      "image_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_001_start_frame.png",
+      "image_sha256": "sha256:135564cad9c40718322e9f13d347b6829ecbd9ab2197cbddc70262deb72e227d",
+      "kind": "tamper",
+      "matched_expectation": true,
+      "model": "gpt-5.5",
+      "panel_id": "sb_001",
+      "reference_paths": {
+        "embry_character_sheet": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png",
+        "kai_character_sheet": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png"
+      },
+      "review_prompt_sha256": "sha256:ee09dd57d8d06953d2039b4085cab7e481a5f09c09984a290b97b41cb3f626d7",
+      "review_receipt_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration_v2/case_receipts/tamper_wrong_embry_ref/sb_001_start_frame_identity_continuity_review.json",
+      "reviewer_source": "scillm:gpt-5.5:image_url",
+      "reviewer_status": "FAIL",
+      "satisfied": true,
+      "visible_entities": [
+        "Embry",
+        "Kai"
+      ]
+    }
+  ],
+  "claims": {
+    "does_not_prove": [
+      "any provider readiness, publication, payment, or Kling submission",
+      "identity correctness of any frame beyond the reviewer's own verdict",
+      "that the accepted Phase C frames are provider-grade for post-provider continuity"
+    ],
+    "proves": [
+      "the reviewer calibration negative-control was executed live against known-bad ground truth and the reviewer did NOT behave as a correct discriminator"
+    ]
+  },
+  "created_at": "2026-07-18T17:47:38.033634+00:00",
+  "failure_reasons": [
+    "CRITICAL: at least one known-bad montage-derived frame PASSED identity review (known_bad_sb_001_start); the Phase C 8/8 result is not trustworthy and the reviewer prompt/contract needs hardening"
+  ],
+  "ground_truth": {
+    "invalidation_ledger": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/identity_successor_invalidation_ledger.v1.json",
+    "known_bad_source": "stale montage-derived Phase 07 frames",
+    "rejected_identity_source": {
+      "path": "/mnt/storage12tb/media/personas/embry/assets/character_sheet_montage.jpg",
+      "rejection_receipt": "phase_07_storyboard_live_tau/receipts/identity_reference_qualification.v1.json",
+      "rejection_status": "FAIL_IDENTITY_REFERENCE_INCONSISTENT"
+    },
+    "stale_disposition": "STALE_IDENTITY_SOURCE_SUPERSEDED"
+  },
+  "identity_references": {
+    "embry_accepted_source": {
+      "asset_id": "embry_contact_sheet_v3",
+      "path": "/mnt/storage12tb/media/personas/embry/assets/contact_sheets/embry-gpt-image-2-v3/images/embry_contact_sheet_v3.png",
+      "sha256": "sha256:3ce40b3b6839ebba0f468d75a1adbb7f82e0d95457aefd3627e222eb569de00c"
+    },
+    "kai_reference": {
+      "path": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png",
+      "sha256": "sha256:692cf37c5e7915f8b4ebceabd03b5d01ff69c9d428e94333bc1a01ac5e497700"
+    }
+  },
+  "live": true,
+  "mocked": false,
+  "overall_status": "REVIEWER_CALIBRATION_FAILED",
+  "paid_call_authorized": false,
+  "proposed_hardening": {
+    "containment": "review prompt contract only (phase07_storyboard_tau_node._identity_review_prompt)",
+    "recommended_changes": [
+      "Replace the coarse 'matches ... closely enough' / category-match language with an explicit specific-identity gate: FAIL unless the SAME individual is depicted \u2014 matching face shape, apparent age, eyebrow shape, nose, and distinctive features to the reference, not merely the same demographic category (adult woman, brown hair, navy top).",
+      "Add an explicit age-consistency clause: FAIL if the depicted person appears a clearly different age (e.g., a decade+ older/younger) than the reference identity.",
+      "Require the reviewer to enumerate 2-3 concrete matching facial features it verified, and to FAIL if it cannot name specific correspondences (forces feature-level grounding, not vibes).",
+      "Re-run the negative control after hardening: all known-bad + tamper must FAIL and both positive controls must still PASS before the reviewer is trusted; then re-run Phase C."
+    ],
+    "status": "PROPOSED_NOT_IMPLEMENTED",
+    "why_not_implemented_here": [
+      "Hard constraint: do not modify the reviewer to make this calibration pass.",
+      "The Phase C 8/8 receipts and prompt hashes are bound to the current reviewer prompt; silently changing it would leave those receipts referencing a prompt that no longer exists and would require re-running the full Phase C actual-pixel review to re-establish truth.",
+      "Re-review of Phase C frames is out of scope for this negative-control probe and is human-gated."
+    ]
+  },
+  "provider_live": false,
+  "reviewer": {
+    "function": "phase07_storyboard_tau_node._run_identity_continuity_review",
+    "identity_review_policy": {
+      "auth": "codex-oauth",
+      "error": null,
+      "fallback_performed": false,
+      "model": "gpt-5.5",
+      "provider": "codex",
+      "schema": "persona_dream.identity_review_policy.v1",
+      "source": "dag_identity_review_model_policy",
+      "supported": true
+    },
+    "image_path_mode": "base64 image_url (actual pixels)",
+    "model": "gpt-5.5",
+    "review_schema": "persona_dream.identity_continuity_review.v1",
+    "source_of_truth": "reused, not forked; identical to phase_c_regenerate_storyboard_frames.py"
+  },
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.reviewer_calibration_receipt.v1",
+  "summary": {
+    "cases_total": 6,
+    "critical_known_bad_passed": [
+      "known_bad_sb_001_start"
+    ],
+    "known_bad_failed_as_required": 2,
+    "known_bad_total": 3,
+    "positive_passed_as_required": 2,
+    "positive_total": 2,
+    "tamper_failed_as_required": 1,
+    "tamper_total": 1
+  }
+}

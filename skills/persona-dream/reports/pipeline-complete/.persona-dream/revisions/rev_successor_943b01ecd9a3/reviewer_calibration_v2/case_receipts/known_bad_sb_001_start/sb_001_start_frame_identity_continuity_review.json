@@ -1,0 +1,70 @@
+{
+  "blocking_findings": [],
+  "created_at": "2026-07-18T17:45:57.457392+00:00",
+  "frame_key": "start_frame",
+  "frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_start_frame.png",
+  "image_dimensions": {
+    "height": 864,
+    "width": 1536
+  },
+  "live": true,
+  "mocked": false,
+  "model": "gpt-5.5",
+  "model_policy": {
+    "auth": "codex-oauth",
+    "error": null,
+    "fallback_performed": false,
+    "model": "gpt-5.5",
+    "provider": "codex",
+    "schema": "persona_dream.identity_review_policy.v1",
+    "source": "dag_identity_review_model_policy",
+    "supported": true
+  },
+  "model_policy_enforced": true,
+  "panel_id": "sb_001",
+  "raw_response": {
+    "blocking_findings": [],
+    "identity_notes": "Both required identities are foreground, face-readable, and not confused by background surfers. Embry and Kai each match the specific reference faces at feature level rather than merely matching surfer demographics.",
+    "observed_divergences": {
+      "Embry": [
+        "hair is wetter/flatter and pulled back by surf conditions compared with studio reference",
+        "lighting is harsher side sunlight, creating stronger cheek and nose shadows",
+        "polo-style collar differs from the crew-neck rashguard in reference but face remains verifiable"
+      ],
+      "Kai": [
+        "hair is wetter and more tightly clumped than several reference views",
+        "expression is more serious/looking off-frame rather than neutral or smiling",
+        "strong ocean sunlight creates brighter highlights on forehead and cheek"
+      ]
+    },
+    "verdict": "PASS",
+    "verified_facial_features": {
+      "Embry": [
+        "warm olive complexion with visible light freckling across cheeks/nose matching reference",
+        "same fuller oval face with softly tapered jaw and rounded chin",
+        "same strong dark arched eyebrows, straight nose bridge with rounded tip, and full but restrained lip shape"
+      ],
+      "Kai": [
+        "same tan warm complexion and youthful young-adult face shape with defined athletic jaw",
+        "same thick dark eyebrows and almond-shaped eyes under wet curly hair",
+        "same straight medium-width nose, rounded nose tip, and fuller lower lip matching reference"
+      ]
+    },
+    "visible_entities": [
+      "Embry",
+      "Kai"
+    ]
+  },
+  "receipt_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration_v2/case_receipts/known_bad_sb_001_start/sb_001_start_frame_identity_continuity_review.json",
+  "required_entities": [
+    "Embry",
+    "Kai"
+  ],
+  "reviewer_source": "scillm:gpt-5.5:image_url",
+  "schema": "persona_dream.identity_continuity_review.v1",
+  "status": "PASS",
+  "visible_entities": [
+    "Embry",
+    "Kai"
+  ]
+}
