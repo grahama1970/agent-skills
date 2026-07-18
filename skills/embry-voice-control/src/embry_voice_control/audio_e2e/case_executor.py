@@ -335,7 +335,7 @@ class CaseExecutor:
         # Room acoustics make occasional captures fail the runtime WER gate
         # (onset clipping, ambient noise). Re-capture with a fresh authority id
         # instead of failing the case on one bad take.
-        last_error: RuntimeError | None = None
+        last_error: Exception | None = None
         for capture_attempt in range(1, MAX_CAPTURE_ATTEMPTS + 1):
             try:
                 return self._execute_listener_turn_once(
@@ -348,10 +348,12 @@ class CaseExecutor:
                     source_asset=source_asset,
                     capture_attempt=capture_attempt,
                 )
-            except RuntimeError as error:
-                if not str(error).startswith(
-                    "managed_listener_request_wer_exceeded"
-                ):
+            except (RuntimeError, TimeoutError) as error:
+                retryable = str(error).startswith(
+                    ("managed_listener_request_wer_exceeded",
+                     "managed_listener_timeout")
+                )
+                if not retryable:
                     raise
                 last_error = error
                 print(
