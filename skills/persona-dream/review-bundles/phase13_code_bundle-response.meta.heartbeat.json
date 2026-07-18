@@ -1,0 +1,13 @@
+{
+  "schema": "surf.webgpt_heartbeat.v1",
+  "updated_at": "2026-07-16T19:35:46Z",
+  "submitted_at": "2026-07-16T19:14:46Z",
+  "last_browser_observation_at": "2026-07-16T19:35:46Z",
+  "phase": "failed",
+  "page_state": "stalled",
+  "last_artifact_written": "/tmp/surf-webgpt-submit-stderr.6b66Li.log",
+  "next_expected_artifact": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/review-bundles/phase13_code_bundle-response.meta.json",
+  "timeout_remaining_seconds": 0,
+  "sentinel": "<<<WEBGPT_DONE:20260716T191443Z:71f4a01b>>>",
+  "prepared_prompt_is_transport_proof": false
+}

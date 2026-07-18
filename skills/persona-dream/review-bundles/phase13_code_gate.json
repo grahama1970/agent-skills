@@ -1,0 +1,29 @@
+{
+  "goal_id": "persona-dream-founding-experiment",
+  "goal_lock": "Complete the Persona Dream founding experiment from the real Kling return through Watch, synthetic-dream Memory persistence, recall, and bounded behavior without identity drift.",
+  "current_milestone": "Generate and validate grounded Phase 13 self-interpretation and Theory-of-Mind artifacts from the real Phase 12 provider-return observation.",
+  "top_blocker": "Persona Dream has only a fixed dry-run cognitive scaffold and no executable Phase 13 grounded interpretation and Theory-of-Mind validator.",
+  "blocker_evidence": {
+    "command": "skills/persona-dream/run.sh check-phase13-grounded --run-root skills/persona-dream/reports/pipeline-complete --revision-id rev_idea_f3f9c48d5cc2 --json",
+    "cwd": "/home/graham/workspace/experiments/agent-skills-main"
+  },
+  "required_live_proof": "The check-phase13-grounded command passes against the real provider-return observation and emits accepted evidence-grounded interpretation and ToM receipts with no unsupported identity claim.",
+  "allowed_paths": [
+    "skills/persona-dream/run.sh",
+    "skills/persona-dream/scripts/*phase13*",
+    "skills/persona-dream/schemas/*interpretation*",
+    "skills/persona-dream/schemas/*tom*",
+    "skills/persona-dream/tests/*phase13*"
+  ],
+  "forbidden_scope": [
+    "skills/persona-dream/README.md",
+    "skills/persona-dream/PROJECT_KNOWLEDGE.md",
+    "skills/persona-dream/SKILL.md",
+    "skills/persona-dream/server/**",
+    "skills/persona-dream/ui/**",
+    "skills/persona-dream/scripts/*phase14*",
+    "skills/persona-dream/scripts/*phase15*",
+    "skills/persona-dream/scripts/*phase16*"
+  ],
+  "attempt_budget": 2
+}

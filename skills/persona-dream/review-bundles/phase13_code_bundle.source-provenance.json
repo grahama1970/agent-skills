@@ -1,0 +1,14 @@
+{
+  "schema": "webgpt.source_provenance.v1",
+  "repository_url": "https://github.com/grahama1970/agent-skills.git",
+  "branch": "phase13-webgpt-base",
+  "upstream": "origin/main",
+  "commit_sha": "f36e42c18e6479c9fcb578168c55fbcee8030d59",
+  "source_paths": [
+    "skills/persona-dream/scripts/write_cognitive_loop_dry_run.py",
+    "skills/persona-dream/tests/test_cognitive_loop_dry_run.py",
+    "skills/persona-dream/run.sh",
+    "skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_idea_f3f9c48d5cc2/phase_12_watch_observation/dream_observation_packet.v1.json"
+  ],
+  "proof_cwd": "."
+}
