@@ -91,10 +91,10 @@ SPINE_CHAIN_VALIDATOR = Path(__file__).resolve().parent / "validate_persona_drea
 IDENTITY_REFERENCE_ASSETS = {
     "Embry": {
         "id": "embry_character_sheet",
-        "title": "Embry character sheet montage",
+        "title": "Embry accepted contact sheet v3",
         "role": "identity_reference",
         "media_type": "image",
-        "path": "/mnt/storage12tb/media/personas/embry/assets/character_sheet_montage.jpg",
+        "path": "/mnt/storage12tb/media/personas/embry/assets/contact_sheets/embry-gpt-image-2-v3/images/embry_contact_sheet_v3.png",
     },
     "Kai": {
         "id": "kai_character_sheet",
