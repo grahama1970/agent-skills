@@ -1,12 +1,180 @@
-import type { BattleNormalizedUxFixture } from "../lib/battle-types";
+import type { BattleAdaptiveLineageMechanicsFixtureV1, BattleNormalizedUxFixture } from "../lib/battle-types";
 import { buildLineageComparisonViewModel } from "../lib/battle-lineage-comparison";
+import {
+	buildAdaptiveLineageViewModel,
+	type AdaptiveLineageEdgeView,
+	type AdaptiveLineageNodeView,
+	type AdaptiveLineageViewModel,
+} from "../lib/battle-adaptive-lineage";
 
 type Props = {
-	fixture: BattleNormalizedUxFixture;
-	composite: boolean;
+	/** Normalized UX fixture (legacy composite parent/child preview path). */
+	fixture?: BattleNormalizedUxFixture;
+	composite?: boolean;
+	/** Adaptive-lineage MECHANICS fixture — renders the genuine G0→{G1}→G2 comparison. */
+	adaptiveLineage?: BattleAdaptiveLineageMechanicsFixtureV1;
 };
 
-export function BattleLineageComparisonPanel({ fixture, composite }: Props) {
+export function BattleLineageComparisonPanel({ fixture, composite = false, adaptiveLineage }: Props) {
+	if (adaptiveLineage) {
+		const model = buildAdaptiveLineageViewModel(adaptiveLineage);
+		if (model) return <AdaptiveLineageComparison model={model} />;
+	}
+	if (!fixture) return null;
+	return <CompositeLineagePreview fixture={fixture} composite={composite} />;
+}
+
+function DataSourceBadge({ model }: { model: AdaptiveLineageViewModel }) {
+	const amber = model.badge.tone === "amber";
+	const cls = amber
+		? "border-amber-400/40 bg-amber-500/15 text-amber-100"
+		: "border-emerald-400/40 bg-emerald-500/15 text-emerald-100";
+	return (
+		<span
+			className={`rounded border px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.12em] ${cls}`}
+			data-qid="battle:adaptive-lineage:badge"
+			data-data-source={model.dataSource}
+			data-proves-live={model.badge.provesLive ? "true" : "false"}
+			title={model.badge.caption}
+		>
+			{model.badge.label}
+		</span>
+	);
+}
+
+function NodeCard({ node, accent }: { node: AdaptiveLineageNodeView; accent: string }) {
+	const outcome = node.judgeOutcome;
+	return (
+		<div
+			className="rounded border border-white/10 bg-white/[0.03] p-2"
+			data-qid={`battle:adaptive-lineage:node:${node.id}`}
+			data-node-id={node.id}
+			data-selected={node.selected ? "true" : "false"}
+			data-runner-up={node.runnerUp ? "true" : "false"}
+		>
+			<div className="flex items-center justify-between gap-2">
+				<span className={`text-[11px] font-black uppercase tracking-[0.08em] ${accent}`}>{node.id}</span>
+				<span className="text-[9px] uppercase tracking-[0.1em] text-slate-500">gen {node.generation} · {node.role}</span>
+			</div>
+			{node.mutationOperator ? (
+				<div className="mt-1 text-[10px] text-slate-300">
+					<span className="font-mono text-cyan-200">{node.mutationOperator}</span>
+					{typeof node.noveltyDistance === "number" ? (
+						<span className="text-slate-500"> · novelty {node.noveltyDistance}</span>
+					) : null}
+				</div>
+			) : (
+				<div className="mt-1 text-[10px] text-slate-500">seed exploit · no mutation</div>
+			)}
+			{node.techniqueDelta ? <div className="mt-1 text-[10px] text-slate-400">{node.techniqueDelta}</div> : null}
+			{node.changedDimensionNames.length ? (
+				<div className="mt-1 flex flex-wrap gap-1" data-qid={`battle:adaptive-lineage:node:${node.id}:dimensions`}>
+					{node.changedDimensionNames.map((dim) => (
+						<span key={dim} className="rounded bg-violet-500/15 px-1 py-0.5 text-[9px] font-mono text-violet-100">
+							{dim}
+						</span>
+					))}
+				</div>
+			) : null}
+			{outcome ? (
+				<div className="mt-1 text-[9px] text-slate-500">
+					vuln-original {outcome.vulnerable_original_confirmed ? "yes" : "no"} · bypass {outcome.patched_bypass ? "yes" : "no"} · {outcome.duration_seconds}s
+					{node.fitnessStatus ? <span className="text-slate-400"> · fitness {node.fitnessStatus}</span> : null}
+				</div>
+			) : null}
+		</div>
+	);
+}
+
+function EdgeRow({ edge }: { edge: AdaptiveLineageEdgeView }) {
+	return (
+		<li className="text-[10px] text-slate-300" data-qid={`battle:adaptive-lineage:edge:${edge.id}`} data-edge={edge.id}>
+			<span className="font-mono text-slate-400">{edge.from}→{edge.to}</span>
+			<span className="text-slate-500"> · {edge.label}</span>
+		</li>
+	);
+}
+
+function AdaptiveLineageComparison({ model }: { model: AdaptiveLineageViewModel }) {
+	const passed = model.qualification.passed;
+	return (
+		<section
+			className="rounded-lg border border-white/10 bg-black/25 p-3"
+			data-qid="battle:lineage-comparison"
+			data-mode="adaptive"
+			aria-label="Adaptive lineage mechanics comparison"
+		>
+			<div className="flex flex-wrap items-center gap-2">
+				<span className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-400">Adaptive lineage · mechanics</span>
+				<DataSourceBadge model={model} />
+				<span
+					className={`rounded border px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.1em] ${
+						passed ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-100" : "border-rose-400/30 bg-rose-500/10 text-rose-100"
+					}`}
+					data-qid="battle:adaptive-lineage:qualification"
+					data-status={model.qualification.status}
+				>
+					QUALIFICATION {model.qualification.status}
+					{model.qualification.stopCondition ? ` · ${model.qualification.stopCondition}` : ""}
+				</span>
+			</div>
+
+			{/* G0 seed → {G1-A, G1-B} candidates → G2 descendant */}
+			<div className="mt-2 space-y-2">
+				{model.seed ? <NodeCard node={model.seed} accent="text-slate-200" /> : null}
+				<div className="grid gap-2 md:grid-cols-2">
+					{model.candidates.map((node) => (
+						<div
+							key={node.id}
+							data-qid={
+								node.selected
+									? "battle:adaptive-lineage:selected"
+									: node.runnerUp
+										? "battle:adaptive-lineage:runner-up"
+										: `battle:adaptive-lineage:candidate:${node.id}`
+							}
+						>
+							<NodeCard node={node} accent={node.selected ? "text-emerald-200" : "text-amber-200"} />
+							<div className="mt-0.5 text-[9px] uppercase tracking-[0.1em] text-slate-500">
+								{node.selected ? "SELECTED G1" : node.runnerUp ? "RUNNER-UP G1" : "candidate"}
+							</div>
+						</div>
+					))}
+				</div>
+				{model.descendant ? <NodeCard node={model.descendant} accent="text-violet-200" /> : null}
+			</div>
+
+			<div
+				className="mt-2 rounded border border-white/10 bg-white/[0.02] p-2 text-[10px] text-slate-300"
+				data-qid="battle:adaptive-lineage:deciding-criterion"
+				data-selected-id={model.selection.selectedId ?? ""}
+				data-runner-up-id={model.selection.runnerUpId ?? ""}
+				data-deciding-criterion={model.selection.decidingCriterion ?? ""}
+			>
+				Selection: <span className="font-mono text-emerald-200">{model.selection.selectedId ?? "—"}</span> over{" "}
+				<span className="font-mono text-amber-200">{model.selection.runnerUpId ?? "—"}</span> · deciding criterion{" "}
+				<span className="font-mono text-cyan-200">{model.selection.decidingCriterion ?? "—"}</span>
+			</div>
+
+			<div className="mt-2" data-qid="battle:adaptive-lineage:edges">
+				<div className="text-[10px] font-black uppercase tracking-[0.08em] text-slate-400">Mutation edges</div>
+				<ul className="mt-1 space-y-0.5">
+					{model.edges.map((edge) => (
+						<EdgeRow key={edge.id} edge={edge} />
+					))}
+				</ul>
+			</div>
+
+			{!model.badge.provesLive ? (
+				<div className="mt-2 text-[10px] text-amber-200/80" data-qid="battle:adaptive-lineage:honesty">
+					Recorded mechanics only — does not prove a live adaptive canary.
+				</div>
+			) : null}
+		</section>
+	);
+}
+
+function CompositeLineagePreview({ fixture, composite }: { fixture: BattleNormalizedUxFixture; composite: boolean }) {
 	const model = buildLineageComparisonViewModel(fixture, composite);
 	if (!model) return null;
 	return (

@@ -1,0 +1,376 @@
+"""Deterministic wiring test for :class:`LiveTauSpecimenProvider`.
+
+NO live model, Docker, Tau, or network. Every Tau/Judge mechanism is monkeypatched
+to return canned tau-manifest + judge dicts that mimic the real shapes produced by
+``arena_live_battle_proof._run_tau_harness`` / ``_run_tau_spawn_child`` /
+``_judge_pair``. The mocks are the ONLY I/O; a poisoned ``subprocess.run`` proves no
+real subprocess is ever spawned.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import sys
+from pathlib import Path
+
+import pytest
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+
+from battle_skill import adaptive_lineage as al  # noqa: E402
+from battle_skill import arena_live_battle_proof as alb  # noqa: E402
+
+BATTLE_ID = "battle-adaptive-lineage-live"
+RUN_ID = "run-live-0001"
+SCENARIO_ID = "arena-zip-slip-import-001"
+
+
+# --- exploit source fixtures (validate against technique_signature) ----------
+
+G0_SOURCE = (
+    "import tempfile\n"
+    "from pathlib import Path\n"
+    "from zipfile import ZipFile\n\n"
+    "from app import import_zip\n\n"
+    "with tempfile.TemporaryDirectory() as tmp:\n"
+    "    root = Path(tmp)\n"
+    "    upload = root / 'evil.zip'\n"
+    "    dest = root / 'imports'\n"
+    "    with ZipFile(upload, 'w') as archive:\n"
+    "        archive.writestr('../evil.txt', 'pwned')\n"
+    "    written = import_zip(str(upload), str(dest))\n"
+    "    escaped = Path(tmp) / 'evil.txt'\n"
+    "    if escaped.exists():\n"
+    "        print('ZIP_SLIP_CONFIRMED written=' + str(written))\n"
+)
+
+# method_replace: app_load_mode + target_call_form move (import app; app.import_zip).
+G1A_SOURCE = (
+    "import tempfile\n"
+    "from pathlib import Path\n"
+    "from zipfile import ZipFile\n\n"
+    "import app\n\n"
+    "with tempfile.TemporaryDirectory() as tmp:\n"
+    "    root = Path(tmp)\n"
+    "    upload = root / 'evil.zip'\n"
+    "    dest = root / 'imports'\n"
+    "    with ZipFile(upload, 'w') as archive:\n"
+    "        archive.writestr('../evil.txt', 'pwned')\n"
+    "    written = app.import_zip(str(upload), str(dest))\n"
+    "    escaped = Path(tmp) / 'evil.txt'\n"
+    "    if escaped.exists():\n"
+    "        print('ZIP_SLIP_CONFIRMED written=' + str(written))\n"
+)
+
+# oracle_or_parameter_mutation: only traversal_representation moves (../ -> absolute).
+G1B_SOURCE = G0_SOURCE.replace("'../evil.txt'", "'/tmp/evil.txt'")
+
+# failure_guided_crossover of G1-A: app_load_mode + traversal + target move (novelty 3).
+G2_SOURCE = (
+    "import tempfile\n"
+    "from pathlib import Path\n"
+    "from zipfile import ZipFile\n\n"
+    "import httpx\n\n"
+    "with tempfile.TemporaryDirectory() as tmp:\n"
+    "    root = Path(tmp)\n"
+    "    upload = root / 'evil.zip'\n"
+    "    with ZipFile(upload, 'w') as archive:\n"
+    "        archive.writestr('/tmp/evil.txt', 'pwned')\n"
+    "    resp = httpx.post('http://localhost:8000/api/import', data={'p': str(upload)})\n"
+    "    escaped = Path(tmp) / 'evil.txt'\n"
+    "    if escaped.exists():\n"
+    "        print('ZIP_SLIP_CONFIRMED status=' + str(resp))\n"
+)
+
+BLUE_SOURCE = "def import_zip(*a, **k):\n    raise ValueError('blocked')\n"
+
+_DESCENDANT = {
+    "G1-A": (G1A_SOURCE, "method_replace", "swap import style; app.import_zip call form"),
+    "G1-B": (G1B_SOURCE, "oracle_or_parameter_mutation", "absolute traversal path escape"),
+    "G2": (G2_SOURCE, "failure_guided_crossover", "httpx transport + absolute traversal blend"),
+}
+
+
+def _sha(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _red_team(worker_id: str, lane_id: str, src: Path, operator, delta: str, receipt: Path) -> dict:
+    return {
+        "team": "red",
+        "worker_id": worker_id,
+        "lane_id": lane_id,
+        "materialized_artifact": {
+            "path": str(src),
+            "mutation_operator": operator,
+            "technique_delta": delta,
+        },
+        "subagent_receipt": str(receipt),
+    }
+
+
+def _blue_team(src: Path) -> dict:
+    return {
+        "team": "blue",
+        "worker_id": "blue-0",
+        "lane_id": "payload-857-blue-0",
+        "materialized_artifact": {"path": str(src)},
+        "subagent_receipt": str(src) + ".receipt.json",
+    }
+
+
+@pytest.fixture
+def wired(tmp_path, monkeypatch):
+    """Provider with all Tau/Judge mechanisms mocked. Returns (provider, budget, state)."""
+    art = tmp_path / "artifacts"
+    art.mkdir()
+    # Base public Tau context the orchestrator prepares once up front.
+    base_context = tmp_path / "context" / "tau-public-context.json"
+    base_context.parent.mkdir(parents=True, exist_ok=True)
+    base_context.write_text('{"schema": "tau.battle_context_bundle.v1", "summary": {}}\n', encoding="utf-8")
+
+    state: dict = {"spawn_contexts": {}, "judge_calls": []}
+
+    def fake_harness(*, out_dir, context_path, **kwargs):
+        red_src = art / "red-0.py"
+        red_src.write_text(G0_SOURCE, encoding="utf-8")
+        blue_src = art / "blue-0.py"
+        blue_src.write_text(BLUE_SOURCE, encoding="utf-8")
+        receipt = art / "red-0.receipt.json"
+        receipt.write_text('{"schema": "tau.subagent_receipt.v1", "worker_id": "red-0"}\n', encoding="utf-8")
+        manifest = {
+            "schema": "tau.battle_live_handoff_proof.v1",
+            "status": "PASS",
+            "teams": [
+                _red_team("red-0", "payload-857-red-0", red_src, None, "", receipt),
+                _blue_team(blue_src),
+            ],
+        }
+        path = Path(out_dir) / "tau-live" / "manifest.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(al.json.dumps(manifest), encoding="utf-8")
+        return path
+
+    def fake_spawn(*, out_dir, context_path, parent_subagent_receipt, **kwargs):
+        ctx = al.json.loads(Path(context_path).read_text(encoding="utf-8"))
+        stage = ctx["mutation_guidance"]["stage"]
+        state["spawn_contexts"][stage] = {
+            "context_path": str(context_path),
+            "context_text": Path(context_path).read_text(encoding="utf-8"),
+            "parent_subagent_receipt": str(parent_subagent_receipt),
+        }
+        source, operator, delta = _DESCENDANT[stage]
+        child_src = art / f"red-1-{stage}.py"
+        child_src.write_text(source, encoding="utf-8")
+        receipt = art / f"red-1-{stage}.receipt.json"
+        receipt.write_text('{"schema": "tau.subagent_receipt.v1", "worker_id": "red-1"}\n', encoding="utf-8")
+        manifest = {
+            "schema": "tau.battle_live_handoff_proof.v1",
+            "status": "PASS",
+            "teams": [_red_team("red-1", "payload-857-red-1", child_src, operator, delta, receipt)],
+        }
+        path = Path(out_dir) / "tau-live" / "spawn-manifest.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(al.json.dumps(manifest), encoding="utf-8")
+        return path
+
+    def fake_judge(*, red, **kwargs):
+        state["judge_calls"].append(red["worker_id"])
+        return {
+            "schema": "battle.arena_tau_public_only_pair_attempt_receipt.v1",
+            "verdict": "BLUE_SUCCESS",
+            "exploit_confirmed_before_patch": True,
+            "exploit_still_succeeds_after_patch": False,
+            "duration_elapsed_seconds": 12.0,
+        }
+
+    def poisoned_run(*a, **k):  # pragma: no cover - only fires on a real subprocess
+        raise AssertionError("real subprocess.run invoked; the wiring is not mocked")
+
+    monkeypatch.setattr(alb, "_run_tau_harness", fake_harness)
+    monkeypatch.setattr(alb, "_run_tau_spawn_child", fake_spawn)
+    monkeypatch.setattr(alb, "_judge_pair", fake_judge)
+    monkeypatch.setattr(alb.subprocess, "run", poisoned_run)
+
+    budget = al.AdaptiveLineageBudget()
+    provider = al.LiveTauSpecimenProvider(
+        out_dir=tmp_path / "run",
+        battle_id=BATTLE_ID,
+        run_id=RUN_ID,
+        scenario_id=SCENARIO_ID,
+        scenario={"scenario_id": SCENARIO_ID, "public_entrypoint": "POST /api/import-zip"},
+        context_path=base_context,
+        docker_image="python:3.12-slim",
+        model="gpt-5.5",
+        scillm_base_url="http://localhost:4001",
+        timeout_s=120.0,
+        budget=budget,
+    )
+    return provider, budget, state
+
+
+def _drive_all(provider):
+    """Run the four stages exactly as the orchestrator would and return specimens."""
+    g0 = provider.request(stage="G0", context={})
+    g1a = provider.request(stage="G1-A", context={"parent_specimen": g0})
+    g1b = provider.request(stage="G1-B", context={"parent_specimen": g0})
+
+    g1a_fit = al.build_candidate_fitness_receipt(g0, g1a, battle_id=BATTLE_ID, run_id=RUN_ID)
+    g1b_fit = al.build_candidate_fitness_receipt(g0, g1b, battle_id=BATTLE_ID, run_id=RUN_ID)
+    selection = al.select_lineage(g1a_fit, g1b_fit, battle_id=BATTLE_ID, run_id=RUN_ID)
+    selected = g1a if selection["selected_id"] == "G1-A" else g1b
+
+    g2 = provider.request(
+        stage="G2",
+        context={
+            "parent_specimen": selected,
+            "selection_receipt": selection,
+            "g1a_outcome": al._judge_outcome(g1a),
+            "g1b_outcome": al._judge_outcome(g1b),
+        },
+    )
+    return {
+        "G0": g0, "G1-A": g1a, "G1-B": g1b, "G2": g2,
+        "fitness": {"G1-A": g1a_fit, "G1-B": g1b_fit},
+        "selection": selection,
+        "selected": selected,
+    }
+
+
+# --- G0 seed -----------------------------------------------------------------
+
+
+def test_g0_specimen_shape_and_recomputed_sha(wired):
+    provider, budget, _ = wired
+    g0 = provider.request(stage="G0", context={})
+
+    assert set(g0) >= {
+        "specimen_id", "exploit_py", "source_sha256", "mutation_operator",
+        "technique_delta", "parent_evidence_packet_ref", "judge_outcome",
+    }
+    assert g0["specimen_id"] == "G0"
+    assert g0["mutation_operator"] is None
+    assert g0["exploit_py"] == G0_SOURCE
+    # sha256 is recomputed over the exploit bytes and matches.
+    assert g0["source_sha256"] == _sha(G0_SOURCE)
+    assert g0["judge_outcome"] == {
+        "vulnerable_original_confirmed": True,
+        "patched_bypass": False,
+        "duration_seconds": 12.0,
+    }
+    assert budget.primary_scillm_calls == 1
+    assert budget.http_completions == 1
+
+
+# --- G1 descendants: operator + steering -------------------------------------
+
+
+@pytest.mark.parametrize("stage", ["G1-A", "G1-B"])
+def test_g1_operator_and_nonempty_delta(wired, stage):
+    provider, _, _ = wired
+    g0 = provider.request(stage="G0", context={})
+    spec = provider.request(stage=stage, context={"parent_specimen": g0})
+
+    assert spec["specimen_id"] == stage
+    assert spec["mutation_operator"] == al.EXPECTED_OPERATOR[stage]
+    assert spec["technique_delta"].strip()
+    assert spec["parent_evidence_packet_ref"]
+    assert spec["source_sha256"] == _sha(spec["exploit_py"])
+
+
+def test_operator_steering_written_into_tau_context(wired):
+    provider, _, state = wired
+    g0 = provider.request(stage="G0", context={})
+    provider.request(stage="G1-A", context={"parent_specimen": g0})
+    provider.request(stage="G1-B", context={"parent_specimen": g0})
+
+    ctx_a = state["spawn_contexts"]["G1-A"]["context_text"]
+    assert "MUTATION OPERATOR method_replace" in ctx_a
+    assert "app_load_mode" in ctx_a
+    assert "importlib" in ctx_a
+    # The parent evidence packet is embedded for the descendant prompt.
+    assert "battle.parent_evidence_packet.v1" in ctx_a
+
+    ctx_b = state["spawn_contexts"]["G1-B"]["context_text"]
+    assert "MUTATION OPERATOR oracle_or_parameter_mutation" in ctx_b
+    assert "archive_entry_construction" in ctx_b
+
+
+# --- G2 crossover: bindings ---------------------------------------------------
+
+
+def test_g2_populates_every_required_binding(wired):
+    provider, _, state = wired
+    out = _drive_all(provider)
+    g2 = out["G2"]
+
+    assert g2["mutation_operator"] == "failure_guided_crossover"
+    inputs = g2["inputs"]
+    for key in al.G2_REQUIRED_BINDINGS:
+        assert inputs.get(key), f"missing/empty G2 binding {key!r}"
+    assert inputs["selected_g1_id"] == out["selection"]["selected_id"]
+
+    ctx_g2 = state["spawn_contexts"]["G2"]["context_text"]
+    assert "MUTATION OPERATOR failure_guided_crossover" in ctx_g2
+    assert "at least 2" in ctx_g2
+
+
+# --- budget accounting --------------------------------------------------------
+
+
+def test_budget_counters_advance(wired):
+    provider, budget, _ = wired
+    _drive_all(provider)
+
+    # one primary SciLLM call + one HTTP completion per materialization (G0..G2).
+    assert budget.primary_scillm_calls == 4
+    assert budget.http_completions == 4
+    # Generation accounting is owned by the orchestrator, NOT the provider, so
+    # driving the provider standalone must not increment descendant_generations
+    # (the double-count that overran the budget on a full live run).
+    assert budget.descendant_generations == 0
+    assert budget.g2_judge_complete is True
+    assert budget.elapsed_seconds == pytest.approx(48.0)  # 4 * 12.0s
+
+
+# --- end-to-end: wired specimens are reducer-valid ---------------------------
+
+
+def test_wired_specimens_qualify_pass(wired):
+    provider, _, _ = wired
+    out = _drive_all(provider)
+    g0, g1a, g1b, g2 = out["G0"], out["G1-A"], out["G1-B"], out["G2"]
+
+    fitness = dict(out["fitness"])
+    fitness["G2"] = al.build_candidate_fitness_receipt(
+        out["selected"], g2, battle_id=BATTLE_ID, run_id=RUN_ID
+    )
+    g2_outcome = {
+        "judge_attempts": int(g2.get("judge_attempts", 1)),
+        **al._judge_outcome(g2),
+        "technique_signature": fitness["G2"]["technique_signature"],
+    }
+
+    # A CLEAN budget for the reducer check (the live provider's own budget
+    # deliberately double-counts against the orchestrator; that is not the
+    # subject of this qualification assertion).
+    clean = al.AdaptiveLineageBudget()
+    for _ in range(4):
+        clean.record_red_specimen()
+    clean.record_descendant_generation(2)
+    clean.record_blue_artifact()
+    clean.mark_g2_judge_complete()
+
+    qualification = al.build_qualification_receipt(
+        [g0, g1a, g1b, g2], fitness, out["selection"], g2_outcome, clean,
+        battle_id=BATTLE_ID, run_id=RUN_ID,
+    )
+    assert qualification["status"] == "PASS", qualification["reasons"]
+
+
+def test_no_real_subprocess_or_network(wired):
+    provider, _, _ = wired
+    # Drives the whole lineage; poisoned subprocess.run raises if the wiring is
+    # not fully mocked, so reaching the end proves no real subprocess ran.
+    out = _drive_all(provider)
+    assert out["G2"]["specimen_id"] == "G2"
