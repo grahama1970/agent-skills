@@ -390,6 +390,17 @@ Script, reference, visual, no-overlay, post-generation script, and provider
 media checks are subgates; the only normal final pass state is
 `PASS_PANEL_REVIEWED`.
 
+## Storyboard Prompt Integrity (Phase 07)
+
+Every compiled storyboard prompt that feeds the spine-chain gate must be
+produced by `scripts/phase07_prompt_renderer.py` as a pure, byte-stable
+function of the panel prompt contract, with hashes bound in the spine-chain
+manifest and reviewer-acceptance claims bound to real actual-pixel review
+receipts. `verify_render` must be able to re-derive every prompt; a manifest
+asserting `may_be_hand_edited: false` without renderer provenance is a
+fabricated integrity claim and fails the gate. Hand-authored compiled prompts
+are forbidden, including for proof or precedent runs.
+
 ## Provider Final Gate
 
 ### Immutable Runtime And Revision Qualification
@@ -421,10 +432,19 @@ Canonical runtime files:
 ```text
 scripts/prepare_revision_qualification.py
 scripts/activate_revision_qualification.py
+scripts/revision_supersession.py
 schemas/revision_memory_prepare_receipt.v1.schema.json
 schemas/revision_memory_verify_receipt.v1.schema.json
 schemas/revision_activation_receipt.v1.schema.json
 ```
+
+Re-qualifying the same revision id after an artifact-index rebuild must use the
+sanctioned supersession path (`activate_revision_qualification.py --supersede`):
+predecessor receipts, terminal events, and the Memory active pointer are
+retained and marked `SUPERSEDED` with an old-index -> new-index ledger entry,
+then the standard prepare/verify/activate chain re-runs. Hand-deleting
+qualification state from ArangoDB or the revision tree is forbidden; without a
+properly superseded predecessor the guards stay fail-closed.
 
 `ACTIVE_CONSISTENT` requires the local active pointer, Memory prepare/verify
 receipts, Memory active pointer, work order, preserved historical queue item,
@@ -432,7 +452,13 @@ terminal queue event, revision manifest, and artifact index to agree by run ID,
 revision ID, transaction ID, and SHA-256. Any missing or mismatched link returns
 `LEGACY_UNQUALIFIED` or a specific blocked state and prevents phase acceptance.
 
-The qualified founding revision is currently:
+The currently active qualified revision is `rev_successor_943b01ecd9a3` (the
+identity-source successor bound to `embry_contact_sheet_v3`; see
+`acceptance_rung_receipt.v1.json` in its revision root — acceptance rung
+reached, provider boundary not crossed). Earlier qualified revisions remain
+readable historical evidence.
+
+The qualified founding revision was:
 
 ```text
 run_id: pipeline-complete
