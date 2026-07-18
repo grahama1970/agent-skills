@@ -298,21 +298,28 @@ class CaseExecutor:
         if chain is None:
             return None
         armed = chain["listener.turn_armed"]
-        return cls._listener_receipt_from_chain(
-            config=config,
-            case=case,
-            turn=turn,
-            source_authority_id=source_authority_id,
-            expected=expected,
-            chain=chain,
-            journal_boundary=max(0, int(armed["sequence"]) - 1),
-            wake_event=chain["listener.wake_detected"],
-            wake_audio=wake_audio,
-            source_audio=source_audio,
-            wake_asset=wake_asset,
-            source_asset=source_asset,
-            recovered=True,
-        )
+        try:
+            return cls._listener_receipt_from_chain(
+                config=config,
+                case=case,
+                turn=turn,
+                source_authority_id=source_authority_id,
+                expected=expected,
+                chain=chain,
+                journal_boundary=max(0, int(armed["sequence"]) - 1),
+                wake_event=chain["listener.wake_detected"],
+                wake_audio=wake_audio,
+                source_audio=source_audio,
+                wake_asset=wake_asset,
+                source_asset=source_asset,
+                recovered=True,
+            )
+        except RuntimeError as error:
+            if str(error).startswith("managed_listener_request_wer_exceeded"):
+                # A committed chain that failed the runtime WER gate is not a
+                # usable receipt; capture the turn fresh instead.
+                return None
+            raise
 
     def execute_listener_turn(
         self,
