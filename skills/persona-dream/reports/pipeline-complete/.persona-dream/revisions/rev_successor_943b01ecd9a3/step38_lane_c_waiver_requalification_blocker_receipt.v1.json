@@ -1,0 +1,83 @@
+{
+  "schema": "persona_dream.step38_lane_c_waiver_requalification_blocker_receipt.v1",
+  "status": "LANE_C_PASS_BUT_REQUALIFICATION_BLOCKED_ON_MEMORY_RECORD_SPACE_COLLISION",
+  "run_id": "pipeline-complete",
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "observed_at": "2026-07-18",
+  "live": true,
+  "mocked": false,
+  "provider_live": false,
+  "paid_call_authorized": false,
+  "submitted": false,
+  "actual_provider_call_attempts": 0,
+
+  "summary": "The step-38 gate-design contradiction was RESOLVED and lane C PASSED under the scoped anchored-identity waiver (see lane_c_step38_sb_003_end_regen_waiver/lane_c_regeneration_receipt.json = PASS_LANE_C_SB_003_END_REGENERATED_WAIVER, attempt 1). The artifact-index rebuild + supersession promoting the new frame ran cleanly (index verify PASS, bindings PASS, supersession PASS_REQUALIFICATION_SUPERSEDED). However, the prepare/verify/activate requalification could NOT reach PASS_ACTIVE_CONSISTENT: it is BLOCKED, fail-closed, by a pre-existing memory-record-space collision that is independent of the lane C design correction. Per the hard constraint 'factual blocked outcome beats forced pass', requalification was NOT forced, the revision was restored to its prior ACTIVE_CONSISTENT baseline (artifact index 06496a6a, memory active pointer 06496a6a, activation receipt PASS_ACTIVE_CONSISTENT), and the acceptance rung REMAINS at v4. The accepted lane C waiver frame is retained as proven-but-not-promoted evidence.",
+
+  "lane_c_result": {
+    "status": "PASS_LANE_C_SB_003_END_REGENERATED_WAIVER",
+    "accepted": true,
+    "attempts_used": 1,
+    "new_frame_relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/generated_storyboard_frames/sb_003_end_frame.png",
+    "new_frame_sha256": "sha256:9f8fb8c93e5382667ab7be1ebf4001ff702500117baca2837b33f2bb228bf20a",
+    "acceptance": {
+      "composition": "PASS (Kai's mouth not camera-readable; Embry readable; Kai present matching build)",
+      "embry_end_frame_augmented_identity": "PASS (full-frame VLM + ArcFace embedding subgate, cosine 0.716584)",
+      "kai_anchored_identity_waiver": "GRANTED (contract flag by sha256:99ee85a6... + start-frame Kai full augmented PASS, anchor cosine 0.798839 + non-facial start->end continuity PASS + waiver receipt emitted)",
+      "continuity_pairs": ["sb_003_start->sb_003_end PASS", "sb_003_end->sb_004_start PASS"]
+    },
+    "waiver_receipt": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/anchored_identity_waiver/sb_003_end_frame.attempt_01_kai_anchored_identity_waiver.json"
+  },
+
+  "requalification_blocker": {
+    "gate": "prepare_revision_qualification (memory-revision-prepare-verify)",
+    "failure_code": "BLOCKED_MEMORY_RECORD_KEYS_MISMATCH",
+    "root_cause": "The prepare gate lists the qualification collection (project_knowledge) filtered by (run_id, revision_id) and requires the space to contain EXACTLY the 27 qualification records (1 revision + 10 phase + 16 required_artifact). That same (run_id, revision_id) space also contains 14 governance/audit records written by the sanctioned persist_* memory path (reviewer_calibration_v2/v3/v4, negative_control, hardened_rereview, successor_rereview_v4, step38_lipsync_decision, lane_c_sb_003_end_regen, lane_c_blocker, acceptance_rung_v2/v3/v4, state_clearing_audit, anchored_identity_standard). 13 of these predate this session. The gate therefore reports them as unexpected_keys and blocks.",
+    "why_not_resolvable_here": "Resolving it requires removing the 14 governance records from the qualification filter space, but the Memory daemon exposes NO deletion primitive: there is no /delete endpoint, and /query rejects destructive AQL ('Destructive AQL forbidden: REMOVE'). The governance records cannot be relocated without deletion. Editing the prepare gate to exclude governance record_types would be a gate change (not authorized here). Deleting durable audit records to slip past the gate would be forcing a pass.",
+    "verified": {
+      "records_in_space": 41,
+      "expected_qualification_records": 27,
+      "colliding_governance_records": 14,
+      "delete_endpoint": "absent",
+      "destructive_aql": "forbidden by daemon (400 Destructive AQL forbidden: REMOVE)"
+    },
+    "classification": "PRE-EXISTING architectural collision between the sanctioned governance memory-persistence path and the qualification prepare gate's exclusive-ownership requirement; NOT introduced by the lane C fix. This is the same reason the rung has been PENDING_REQUALIFICATION since v2."
+  },
+
+  "disposition": {
+    "gate_design_contradiction_resolved": true,
+    "lane_c_frame_accepted": true,
+    "frame_promoted_to_canonical": false,
+    "requalification_attempted": true,
+    "requalification_reached_active_consistent": false,
+    "requalification_forced": false,
+    "baseline_restored": true,
+    "active_artifact_index_sha256": "sha256:06496a6af982b9650dc3684e56961ba99c5573a627181e6e48e95315da4f7198",
+    "active_pointer_index_sha256": "sha256:06496a6af982b9650dc3684e56961ba99c5573a627181e6e48e95315da4f7198",
+    "activation_status": "PASS_ACTIVE_CONSISTENT (predecessor baseline retained)",
+    "current_rung": "acceptance_rung_receipt.v4.json (RUNG_CALIBRATION_RESOLVED_IDENTITY_CERTIFIED_PENDING_LANE_C_AND_REQUALIFICATION)",
+    "rung_restored_to_v5": false,
+    "lane_c_evidence_retained": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/ (accepted frame + generation/identity/composition/continuity/waiver receipts, retained as proven evidence)"
+  },
+
+  "next_required_action": [
+    "Resolve the qualification-vs-governance memory-record-space collision so prepare/verify/activate can run for the rebuilt index. Options (a human/design decision, out of scope for the lane C correction): (1) persist governance/audit records to a distinct collection or under a governance-scoped run/revision namespace so they leave the qualification (run_id, revision_id) filter space; (2) add a sanctioned governance-record-clearing step (records are re-derivable from retained on-disk receipts; mirrors the existing state_clearing_audit AUDIT_PASS_NO_EVIDENCE_LOST pattern) gated by a deletion primitive the daemon does not currently expose; or (3) have the prepare gate scope its exact-match to record_type in {revision, phase, required_artifact}.",
+    "Once the collision is resolved: re-run the artifact-index rebuild + supersession (promoting sha256:9f8fb8c9... and retaining the phase_c frame as superseded), prepare/verify/activate --supersede to PASS_ACTIVE_CONSISTENT, then emit acceptance_rung_receipt.v5 = PASS_ACCEPTANCE_RUNG citing calibration v4, the 8-frame re-review, the lane C waiver receipts, the supersession ledger, and activation."
+  ],
+
+  "claims": {
+    "proves": [
+      "the documented step-38 gate-design contradiction is resolved by the scoped anchored-identity waiver, and lane C PASSED live end-to-end under it (composition + Embry full augmented identity + Kai waiver + both continuity pairs), on the first attempt",
+      "the artifact-index rebuild, bindings rebuild, and supersession all ran cleanly for the new frame",
+      "requalification to PASS_ACTIVE_CONSISTENT is blocked, fail-closed, by a pre-existing memory-record-space collision with no available deletion primitive, and was NOT forced; the revision was restored to its prior consistent baseline"
+    ],
+    "does_not_prove": [
+      "Kling readiness",
+      "provider media publication",
+      "publication authorization",
+      "paid authorization",
+      "provider return",
+      "lip-sync-on-return",
+      "an activated/certified acceptance rung v5 (blocked on the memory-record-space collision)"
+    ]
+  }
+}
