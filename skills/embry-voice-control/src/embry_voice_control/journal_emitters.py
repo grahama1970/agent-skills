@@ -361,6 +361,16 @@ def _validate_entity_spans(entity_nodes: list[dict[str, Any]], text: str) -> Non
             continue
         start, end = int(span[0]), int(span[1])
         mention = str(extracted.get("text", ""))
+        # A degenerate span (start >= end, e.g. the [0, 0] sentinel the sanctioned
+        # extractor emits for a noun phrase it could not locate in the raw text --
+        # typically because the mention was normalized, e.g. "first-class" ->
+        # "first class") is not a positioned annotation: a chat layer cannot carry
+        # a zero-width mark, so it is ignored here exactly as
+        # _select_non_overlapping_nodes ignores it (only 0 <= start < end spans
+        # participate in overlap resolution).  Only real, positioned spans are
+        # validated and checked for overlap.
+        if start >= end:
+            continue
         if not (0 <= start < end <= len(text)) or text[start:end] != mention:
             raise ValueError("entity_span_mismatch")
         if start < previous_end:

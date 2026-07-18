@@ -68,6 +68,13 @@ def _annotations(event: dict[str, Any], content: str) -> list[dict[str, Any]]:
             continue
         start, end = int(span[0]), int(span[1])
         mention = str(extracted.get("text", ""))
+        # Degenerate sentinel span (start >= end, e.g. [0, 0] for a noun phrase the
+        # extractor could not locate in the raw text): not a positioned annotation,
+        # so ignore it -- mirrors journal_emitters._validate_entity_spans /
+        # _select_non_overlapping_nodes so the projection never rejects an event
+        # the producer legitimately journaled.
+        if start >= end:
+            continue
         if not (0 <= start < end <= len(content)) or content[start:end] != mention:
             raise RuntimeError("entity_span_invalid")
         annotations.append({

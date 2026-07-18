@@ -232,6 +232,74 @@ def test_validate_entity_spans_fails_closed() -> None:
         raise AssertionError("expected entity span validation to fail closed")
 
 
+def test_unlocatable_noun_phrase_sentinel_span_is_ignored(tmp_path: Path) -> None:
+    """Regression: the sanctioned extractor emits ``span=[0, 0]`` for a noun
+
+    phrase it could not locate in the raw text (typically because the mention
+    was normalized, e.g. the raw text "first-class conversational events" is
+    reported by nltk as the mention "first class conversational events").  This
+    is the exact ``entity_span_mismatch`` that blocked interruption-simple-01,
+    skill_analytics-simple-01 and speaker_identity-simple-01 at the render stage.
+    Such a degenerate sentinel span is not a positioned annotation and MUST be
+    ignored (not raised on) by both the emitter validator and the chat
+    projection, while real positioned spans in the same result still resolve.
+    """
+    from embry_voice_control.chat_projection import _annotations
+
+    # Real display_text from interruption-simple-01 (note the hyphen in
+    # "first-class") plus a genuine locatable span that must survive.
+    text = (
+        "Interruptions are treated as first-class conversational events by the "
+        "system."
+    )
+    real_start = text.index("system")
+    nodes = [
+        # Unlocatable noun phrase: hyphen-normalized mention, sentinel [0, 0].
+        {
+            "id": "unsupported:first_class_conversational_events",
+            "node_kind": "unsupported_term",
+            "status": "unsupported",
+            "extracted": {
+                "text": "first class conversational events",
+                "span": [0, 0],
+                "source": "nltk_wordnet",
+                "kind": "noun_phrase",
+            },
+            "metadata": {"grounded": False},
+        },
+        {
+            "id": "domain:system",
+            "node_kind": "domain_term",
+            "status": "extracted",
+            "extracted": {
+                "text": "system",
+                "span": [real_start, real_start + len("system")],
+                "source": "extract_entities_domain_terms",
+                "kind": "domain_term",
+            },
+            "metadata": {"grounded": True},
+        },
+    ]
+
+    # Emitter validator: no raise despite the sentinel span.
+    _validate_entity_spans(nodes, text)
+
+    # Chat projection consumer: the sentinel is dropped, the real span survives.
+    result_path = tmp_path / "assistant-entities.json"
+    result_sha = _write_json(result_path, {"entity_nodes": nodes})
+    event = {
+        "event_id": "entities.extraction.completed.deadbeef",
+        "type": "entities.extraction.completed",
+        "payload": {
+            "target_role": "assistant",
+            "result_path": str(result_path),
+            "result_sha256": "sha256:" + result_sha,
+        },
+    }
+    annotations = _annotations(event, text)
+    assert [a["mention"] for a in annotations] == ["system"]
+
+
 def test_entities_emitter_completes_projection(tmp_path: Path) -> None:
     """The real entities emitter resolves the full projection end to end.
 
