@@ -67,6 +67,27 @@ ASR_COMPARISON_POLICY = {
             "comparison_actual_tokens": ["pyannote"],
             "max_applications": 1,
         },
+        {
+            "alias_id": "horus_horace_v1",
+            "canonical_expected_tokens": ["horus"],
+            "observed_actual_tokens": ["horace"],
+            "comparison_actual_tokens": ["horus"],
+            "max_applications": 1,
+        },
+        {
+            "alias_id": "embry_embree_v1",
+            "canonical_expected_tokens": ["embry"],
+            "observed_actual_tokens": ["embree"],
+            "comparison_actual_tokens": ["embry"],
+            "max_applications": 1,
+        },
+        {
+            "alias_id": "embry_henry_v1",
+            "canonical_expected_tokens": ["embry"],
+            "observed_actual_tokens": ["henry"],
+            "comparison_actual_tokens": ["embry"],
+            "max_applications": 1,
+        },
     ],
 }
 
