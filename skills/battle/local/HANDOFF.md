@@ -47,22 +47,33 @@ UX (LIVE comparison panel + four distinct validated PixiJS sprites), all on bran
 - `034617cad` finish UX — distinct sprites + live comparison panel + layout + tests
 - Tau recognizer fix: committed on `tau-adaptive-mechanics` worktree branch.
 
-## Honest caveats / follow-ups
-1. **Deploy mechanism**: `:3002` (pi-mono ux-lab) resolves the spectator from
-   `/mnt/storage12tb/deployments/agent-skills/current` (was a frozen July-15
-   release `2a3c82e12`). This session made it serve current code by **rsyncing the
-   updated spectator + repaired atlases into that release** (no vite restart — HMR
-   picks it up). For durable production hygiene, cut a NEW git-sha-named release
-   from this branch and repoint `current`, rather than keeping the in-place overlay.
-2. **PixiJS sprites need a real page load, not HMR**: during dev, rapid HMR swaps
-   poison the module-level `ensureBattlePixiAssets` promise, so runner sprites stop
-   painting until a full reload. On a genuine navigation they load correctly (this
-   is a dev-only artifact, not a product bug). If desired, harden
-   `ensureBattlePixiAssets` to reset its cached promise on failure.
-3. **Music**: proven by tests (`prove:music-m1`, `prove:score-package`) + 20 audio
-   assets; live playback requires a user gesture (browser autoplay policy) so it
-   was not screenshot-verified.
-4. Branch not yet merged to `main` or pushed — awaiting review.
+## Resolved this session (were caveats, now closed)
+1. **Deploy — done properly.** A clean git-sha release is cut per commit
+   (`git archive main | tar -x` into `releases/<sha>`), `current` repointed, and
+   vite restarted (kill the :3002 tree → the dev supervisor respawns it reading the
+   new `current`). Current live release: `995ea0ad8`. The frozen `2a3c82e12` release
+   was restored to pristine (the earlier in-place overlay was fully reverted).
+2. **PixiJS HMR init — fixed.** `ensureBattlePixiAssets` now catches pixi's
+   "Assets already initialized" (its global singleton survives HMR while this
+   module's state resets) and treats it as success, so runner sprites paint
+   reliably without a hard reload.
+3. **Sprite acceptance — reviewer loop actually run.** An independent
+   sprite-reviewer gave per-atlas visual verdicts (not my eyeball): REJECTED
+   `crimson_hornbreaker` (garbled) and flagged `skull_horn` (REVISE), and caught
+   that the two crimson G1 specimens weren't distinguishable. Fixed: dropped both
+   from the enabled set, re-mapped G1-B → `slug_demon`; the four live specimens are
+   now distinct silhouettes (verified live). Rejections locked in by unit test.
+
+## Remaining honest note
+- **Music**: system is wired (AudioContext score runtime, functional sound-arm
+  control, cue bindings) and covered by passing tests (`music-m1`, `score-package`,
+  `hg-death-notification`, `hg-kill-cue-replay`). Live *audible* playback could not
+  be captured via browser automation even on the `hgDeathDemo=1` cue route with
+  sound armed — Web Audio does not fully unlock without a trusted human gesture.
+  This is a headless-verification limit, not evidence of a defect. Not a
+  `GOAL_ADAPTIVE_LINEAGE` requirement.
+- Branch `battle-adaptive-lineage-goal` is redundant (its battle commits are on
+  `origin/main`) and can be deleted.
 
 ## Reproduce
 ```bash
