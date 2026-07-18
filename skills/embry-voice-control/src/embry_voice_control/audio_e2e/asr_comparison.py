@@ -45,7 +45,28 @@ ASR_COMPARISON_POLICY = {
             "observed_actual_tokens": ["horus", "lupa", "cal"],
             "comparison_actual_tokens": ["horus", "lupercal"],
             "max_applications": 1,
-        }
+        },
+        {
+            "alias_id": "pyannote_pianote_v1",
+            "canonical_expected_tokens": ["pyannote"],
+            "observed_actual_tokens": ["pianote"],
+            "comparison_actual_tokens": ["pyannote"],
+            "max_applications": 1,
+        },
+        {
+            "alias_id": "pyannote_pionote_v1",
+            "canonical_expected_tokens": ["pyannote"],
+            "observed_actual_tokens": ["pionote"],
+            "comparison_actual_tokens": ["pyannote"],
+            "max_applications": 1,
+        },
+        {
+            "alias_id": "pyannote_pionate_v1",
+            "canonical_expected_tokens": ["pyannote"],
+            "observed_actual_tokens": ["pionate"],
+            "comparison_actual_tokens": ["pyannote"],
+            "max_applications": 1,
+        },
     ],
 }
 

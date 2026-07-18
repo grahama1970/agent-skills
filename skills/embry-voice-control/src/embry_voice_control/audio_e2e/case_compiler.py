@@ -35,6 +35,7 @@ SPOKEN_TEXT_NORMALIZATION = {
         "getUserMedia": "get user media",
         "QRA": "Question Reasoning Answer pair",
         "QRAs": "Question Reasoning Answer pairs",
+        "pyannote.audio": "pyannote audio",
     },
 }
 
