@@ -155,9 +155,12 @@ def build_turn_script(case: dict[str, Any]) -> list[dict[str, Any]]:
 def compile_campaign(
     *, matrix_path: Path, source_policy_path: Path, case_id: str | None = None,
     stratified_count: int | None = None, select_all: bool = False, source_mode: str = "physical_live_horus",
+    attempt: int = 1,
 ) -> dict[str, Any]:
     if source_mode not in {"physical_live_horus", "recorded_physical_horus", "qualified_horus_clone"}:
         raise ValueError("source_mode_not_countable")
+    if attempt < 1 or attempt > 99:
+        raise ValueError("attempt_out_of_range")
     matrix = json.loads(matrix_path.read_text(encoding="utf-8"))
     policy = json.loads(source_policy_path.read_text(encoding="utf-8"))
     if matrix.get("schema") != "embry.stress_session_matrix.v1":
@@ -175,8 +178,8 @@ def compile_campaign(
     campaign_id = "campaign_" + sha256_value(seed).removeprefix("sha256:")[:24]
     cases = []
     for case in selected:
-        attempt_id = "attempt-01"
-        session_id = f"embry-e2e-{campaign_id.removeprefix('campaign_')}-{case['id']}-a01"
+        attempt_id = f"attempt-{attempt:02d}"
+        session_id = f"embry-e2e-{campaign_id.removeprefix('campaign_')}-{case['id']}-a{attempt:02d}"
         case_contract = {
             "schema": "embry.audio_e2e_case_manifest.v1",
             "campaign_id": campaign_id,

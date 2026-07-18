@@ -22,6 +22,7 @@ def parser() -> argparse.ArgumentParser:
     selection.add_argument("--stratified-count", type=int)
     selection.add_argument("--all", action="store_true", dest="select_all")
     compile_parser.add_argument("--source-mode", default="physical_live_horus")
+    compile_parser.add_argument("--attempt", type=int, default=1)
     compile_parser.add_argument("--output", type=Path, required=True)
 
     prepare_parser = commands.add_parser("prepare-clone-assets")
@@ -187,6 +188,7 @@ def main() -> int:
             stratified_count=args.stratified_count,
             select_all=args.select_all,
             source_mode=args.source_mode,
+            attempt=args.attempt,
         )
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(
