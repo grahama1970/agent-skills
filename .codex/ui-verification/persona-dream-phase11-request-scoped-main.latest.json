@@ -1,0 +1,10 @@
+{
+  "verified_at": "2026-07-16T15:18:29.026575+00:00",
+  "cwd": "/home/graham/workspace/experiments/agent-skills-main",
+  "root": "/home/graham/workspace/experiments/agent-skills-main",
+  "output_root": "/tmp/codex-ui-verification/agent-skills-main",
+  "url": "http://localhost:3002/#dream/storyboard",
+  "name": "persona-dream-phase11-request-scoped-main",
+  "screenshot": "/tmp/codex-ui-verification/agent-skills-main/persona-dream-phase11-request-scoped-main/20260716T151821Z.png",
+  "read_json": "/tmp/codex-ui-verification/agent-skills-main/persona-dream-phase11-request-scoped-main/20260716T151821Z.read.json"
+}

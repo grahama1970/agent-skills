@@ -1,0 +1,10 @@
+{
+  "verified_at": "2026-07-11T13:10:19.203201+00:00",
+  "cwd": "/tmp/agent-skills-main-funnel",
+  "root": "/tmp/agent-skills-main-funnel",
+  "output_root": "/tmp/codex-ui-verification/agent-skills-main-funnel",
+  "url": "http://localhost:3002/#dream/distillation",
+  "name": "dream-provider-distillation-live-main",
+  "screenshot": "/tmp/codex-ui-verification/agent-skills-main-funnel/dream-provider-distillation-live-main/20260711T131013Z.png",
+  "read_json": "/tmp/codex-ui-verification/agent-skills-main-funnel/dream-provider-distillation-live-main/20260711T131013Z.read.json"
+}

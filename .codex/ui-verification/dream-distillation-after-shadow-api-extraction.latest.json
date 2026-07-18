@@ -1,0 +1,10 @@
+{
+  "verified_at": "2026-07-11T14:56:57.340023+00:00",
+  "cwd": "/home/graham/workspace/experiments/agent-skills-main",
+  "root": "/home/graham/workspace/experiments/agent-skills-main",
+  "output_root": "/tmp/codex-ui-verification/agent-skills-main",
+  "url": "http://localhost:3002/#dream/distillation",
+  "name": "dream-distillation-after-shadow-api-extraction",
+  "screenshot": "/tmp/codex-ui-verification/agent-skills-main/dream-distillation-after-shadow-api-extraction/20260711T145622Z.png",
+  "read_json": "/tmp/codex-ui-verification/agent-skills-main/dream-distillation-after-shadow-api-extraction/20260711T145622Z.read.json"
+}

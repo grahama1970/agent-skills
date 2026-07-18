@@ -1,0 +1,12 @@
+{
+  "verified_at": "2026-07-17T15:51:52.206533+00:00",
+  "cwd": "/home/graham/workspace/experiments/agent-skills-main",
+  "root": "/home/graham/workspace/experiments/agent-skills-main",
+  "output_root": "/tmp/codex-ui-verification/agent-skills-main",
+  "url": "http://localhost:3002/#dream/return",
+  "name": "persona-dream-active-voiced-return",
+  "tab_id": null,
+  "transport": "isolated_cdp",
+  "screenshot": "/tmp/codex-ui-verification/agent-skills-main/persona-dream-active-voiced-return/20260717T155145Z.png",
+  "read_json": "/tmp/codex-ui-verification/agent-skills-main/persona-dream-active-voiced-return/20260717T155145Z.read.json"
+}

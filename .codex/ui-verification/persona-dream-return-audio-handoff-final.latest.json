@@ -1,0 +1,12 @@
+{
+  "verified_at": "2026-07-17T15:06:58.506589+00:00",
+  "cwd": "/home/graham/workspace/experiments/agent-skills-main",
+  "root": "/home/graham/workspace/experiments/agent-skills-main",
+  "output_root": "/tmp/codex-ui-verification/agent-skills-main",
+  "url": "http://localhost:3002/#dream/return",
+  "name": "persona-dream-return-audio-handoff-final",
+  "tab_id": null,
+  "transport": "isolated_cdp",
+  "screenshot": "/tmp/codex-ui-verification/agent-skills-main/persona-dream-return-audio-handoff-final/20260717T150648Z.png",
+  "read_json": "/tmp/codex-ui-verification/agent-skills-main/persona-dream-return-audio-handoff-final/20260717T150648Z.read.json"
+}
