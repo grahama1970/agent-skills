@@ -1,0 +1,21 @@
+{
+  "blocking_findings": [],
+  "created_at": "2026-07-18T15:19:18.080622+00:00",
+  "frame_a": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_004_start_frame.png",
+  "frame_a_sha256": "sha256:2c3211f225eea31a8091569ec10f68a87d7f324e12f04653c5efb1084c97a26e",
+  "frame_b": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_004_end_frame.png",
+  "frame_b_sha256": "sha256:ceaf5c255f81d2267d32c92aec09e6614b5d18945e2a7f5824f38f6cf66dd2cf",
+  "live": true,
+  "mocked": false,
+  "pair_id": "sb_004_start_frame__to__sb_004_end_frame",
+  "raw_response": {
+    "blocking_findings": [],
+    "notes": "Embry remains the same woman across both frames and matches the reference: wet brown hair tied back, light eyes, facial structure, navy rashguard. Kai remains the same man across both frames and matches the reference: tan complexion, curly dark wet hair, facial structure, black rashguard. Wardrobe continuity holds; boards are mostly submerged/obscured with no visible contradiction. Lighting, midday surf conditions, shoreline/lava reef boundary, and shallow reef water remain consistent. The wave and body positions progress plausibly from Frame A to Frame B within the same surf moment.",
+    "verdict": "PASS"
+  },
+  "review_prompt_sha256": "sha256:6bf2ef6398c575aad70be0bbe1cc8a7e89603b574bde26312d7ebb611b73ead6",
+  "reviewer_source": "scillm:gpt-5.5:image_url",
+  "schema": "persona_dream.phase_c.continuity_review.v1",
+  "status": "PASS",
+  "transition": "start->end within the same panel"
+}

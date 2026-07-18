@@ -593,347 +593,429 @@
     {
       "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:13:storyboard_prompt_composition",
       "artifact_hashes": {
-        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67",
-        "phase_07_storyboard_live_tau/identity_source_binding.v1.json": "sha256:caa21313e7f90417002344863f272de22b7132cf4a977d84fb21cb0e12b9b816"
+        "phase_c_regeneration_receipt.json": "sha256:a03aa9fa6226453c24f14afe1769dceebce387c3e56c2eb1e66c50f8e6eab602"
       },
-      "blocker": "regenerate against the accepted embry_contact_sheet_v3 identity source in dependency order",
+      "blocker": null,
       "claims": {
         "does_not_prove": [
-          "downstream regeneration, provider readiness, or final acceptance"
+          "provider readiness or final acceptance"
         ],
         "proves": [
-          "step 13 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+          "8 identity-first storyboard prompts were composed and bound to embry_contact_sheet_v3 + Kai reference as actual image inputs"
         ]
       },
-      "disposition": "stale",
+      "disposition": "active",
       "inputs": {
+        "frames_total": 8,
+        "identity_source": "embry_contact_sheet_v3",
+        "identity_source_sha256": "sha256:3ce40b3b6839ebba0f468d75a1adbb7f82e0d95457aefd3627e222eb569de00c",
+        "panels": [
+          "sb_001",
+          "sb_002",
+          "sb_003",
+          "sb_004"
+        ],
         "repair_kind": "identity_source_successor",
         "source_revision_id": "rev_upstream_bf3b05d47fb8"
       },
       "memory_write_method": "/upsert",
-      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "observed_at": "2026-07-18T15:19:56.694073+00:00",
       "outputs": [
-        "phase_07_storyboard_live_tau/identity_source_binding.v1.json",
-        "identity_successor_invalidation_ledger.v1.json"
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_frame_generation/*.prompt.md"
       ],
       "previous_status_in_source_revision": "PASS",
       "provider_task_id": null,
       "receipt_paths": [
-        "phase_07_storyboard_live_tau/identity_source_binding.v1.json",
-        "identity_successor_invalidation_ledger.v1.json"
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/phase_c_regeneration_receipt.json"
       ],
       "request_hash": null,
-      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 13 Storyboard Prompt Composition status STALE_IDENTITY_SOURCE_SUPERSEDED disposition stale",
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 13 Storyboard Prompt Composition status PASS_STORYBOARD_PROMPTS_COMPOSED disposition active phase C regeneration from embry_contact_sheet_v3",
       "revision_id": "rev_successor_943b01ecd9a3",
       "run_id": "pipeline-complete",
       "schema": "persona_dream.pipeline_step_memory.v1",
       "source_revision_id": "rev_upstream_bf3b05d47fb8",
-      "status": "STALE_IDENTITY_SOURCE_SUPERSEDED",
+      "status": "PASS_STORYBOARD_PROMPTS_COMPOSED",
       "step_name": "Storyboard Prompt Composition",
       "step_no": 13,
       "step_slug": "storyboard_prompt_composition",
       "tags": [
         "persona-dream",
-        "identity-source-successor",
+        "phase-c-regeneration",
         "run:pipeline-complete",
         "revision:rev_successor_943b01ecd9a3",
         "step:13",
-        "status:stale_identity_source_superseded",
-        "disposition:stale"
+        "status:pass_storyboard_prompts_composed",
+        "disposition:active"
       ]
     },
     {
       "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:14:storyboard_panel_receipts",
       "artifact_hashes": {
-        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+        "phase_c_regeneration_receipt.json": "sha256:a03aa9fa6226453c24f14afe1769dceebce387c3e56c2eb1e66c50f8e6eab602"
       },
-      "blocker": "regenerate against the accepted embry_contact_sheet_v3 identity source in dependency order",
+      "blocker": null,
       "claims": {
         "does_not_prove": [
-          "downstream regeneration, provider readiness, or final acceptance"
+          "final acceptance"
         ],
         "proves": [
-          "step 14 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+          "per-frame generation and review receipts exist for all 8 frames with image hashes"
         ]
       },
-      "disposition": "stale",
+      "disposition": "active",
       "inputs": {
+        "identity_source": "embry_contact_sheet_v3",
+        "identity_source_sha256": "sha256:3ce40b3b6839ebba0f468d75a1adbb7f82e0d95457aefd3627e222eb569de00c",
         "repair_kind": "identity_source_successor",
+        "required_identities": [
+          "Embry",
+          "Kai"
+        ],
         "source_revision_id": "rev_upstream_bf3b05d47fb8"
       },
       "memory_write_method": "/upsert",
-      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "observed_at": "2026-07-18T15:19:56.694073+00:00",
       "outputs": [
-        "identity_successor_invalidation_ledger.v1.json"
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_frame_generation/"
       ],
       "previous_status_in_source_revision": "PASS",
       "provider_task_id": null,
       "receipt_paths": [
-        "identity_successor_invalidation_ledger.v1.json"
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_001_start_frame_identity_continuity_review.json",
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_001_end_frame_identity_continuity_review.json",
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_002_start_frame_identity_continuity_review.json",
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_002_end_frame_identity_continuity_review.json",
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_003_start_frame_identity_continuity_review.json",
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_003_end_frame_identity_continuity_review.json",
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_004_start_frame_identity_continuity_review.json",
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_004_end_frame_identity_continuity_review.json"
       ],
       "request_hash": null,
-      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 14 Storyboard Panel Receipts status STALE_IDENTITY_SOURCE_SUPERSEDED disposition stale",
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 14 Storyboard Panel Receipts status PASS_STORYBOARD_PANEL_RECEIPTS disposition active phase C regeneration from embry_contact_sheet_v3",
       "revision_id": "rev_successor_943b01ecd9a3",
       "run_id": "pipeline-complete",
       "schema": "persona_dream.pipeline_step_memory.v1",
       "source_revision_id": "rev_upstream_bf3b05d47fb8",
-      "status": "STALE_IDENTITY_SOURCE_SUPERSEDED",
+      "status": "PASS_STORYBOARD_PANEL_RECEIPTS",
       "step_name": "Storyboard Panel Receipts",
       "step_no": 14,
       "step_slug": "storyboard_panel_receipts",
       "tags": [
         "persona-dream",
-        "identity-source-successor",
+        "phase-c-regeneration",
         "run:pipeline-complete",
         "revision:rev_successor_943b01ecd9a3",
         "step:14",
-        "status:stale_identity_source_superseded",
-        "disposition:stale"
+        "status:pass_storyboard_panel_receipts",
+        "disposition:active"
       ]
     },
     {
       "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:15:panel_continuity_repair_ledger",
       "artifact_hashes": {
-        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+        "phase_c_regeneration_receipt.json": "sha256:a03aa9fa6226453c24f14afe1769dceebce387c3e56c2eb1e66c50f8e6eab602"
       },
-      "blocker": "regenerate against the accepted embry_contact_sheet_v3 identity source in dependency order",
+      "blocker": null,
       "claims": {
         "does_not_prove": [
-          "downstream regeneration, provider readiness, or final acceptance"
+          "final acceptance"
         ],
         "proves": [
-          "step 15 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+          "inter-frame continuity (start->end, end->next-start) reviewed on actual pixels for identity-passing frames"
         ]
       },
-      "disposition": "stale",
+      "disposition": "active",
       "inputs": {
+        "continuity_pairs": 7,
+        "continuity_pass": 7,
+        "identity_source": "embry_contact_sheet_v3",
+        "identity_source_sha256": "sha256:3ce40b3b6839ebba0f468d75a1adbb7f82e0d95457aefd3627e222eb569de00c",
         "repair_kind": "identity_source_successor",
         "source_revision_id": "rev_upstream_bf3b05d47fb8"
       },
       "memory_write_method": "/upsert",
-      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "observed_at": "2026-07-18T15:19:56.694073+00:00",
       "outputs": [
-        "identity_successor_invalidation_ledger.v1.json"
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/continuity_review/"
       ],
       "previous_status_in_source_revision": "BLOCKED_MISSING_REQUIRED_ARTIFACT",
       "provider_task_id": null,
       "receipt_paths": [
-        "identity_successor_invalidation_ledger.v1.json"
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/continuity_review/"
       ],
       "request_hash": null,
-      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 15 Panel Continuity And Repair Ledger status STALE_IDENTITY_SOURCE_SUPERSEDED disposition stale",
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 15 Panel Continuity And Repair Ledger status PASS_PANEL_CONTINUITY disposition active phase C regeneration from embry_contact_sheet_v3",
       "revision_id": "rev_successor_943b01ecd9a3",
       "run_id": "pipeline-complete",
       "schema": "persona_dream.pipeline_step_memory.v1",
       "source_revision_id": "rev_upstream_bf3b05d47fb8",
-      "status": "STALE_IDENTITY_SOURCE_SUPERSEDED",
+      "status": "PASS_PANEL_CONTINUITY",
       "step_name": "Panel Continuity And Repair Ledger",
       "step_no": 15,
       "step_slug": "panel_continuity_repair_ledger",
       "tags": [
         "persona-dream",
-        "identity-source-successor",
+        "phase-c-regeneration",
         "run:pipeline-complete",
         "revision:rev_successor_943b01ecd9a3",
         "step:15",
-        "status:stale_identity_source_superseded",
-        "disposition:stale"
+        "status:pass_panel_continuity",
+        "disposition:active"
       ]
     },
     {
       "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:16:panel_generation_loop",
       "artifact_hashes": {
-        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+        "phase_c_regeneration_receipt.json": "sha256:a03aa9fa6226453c24f14afe1769dceebce387c3e56c2eb1e66c50f8e6eab602"
       },
-      "blocker": "regenerate against the accepted embry_contact_sheet_v3 identity source in dependency order",
+      "blocker": null,
       "claims": {
         "does_not_prove": [
-          "downstream regeneration, provider readiness, or final acceptance"
+          "identity acceptance by itself"
         ],
         "proves": [
-          "step 16 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+          "8/8 storyboard frames generated live via GPT Image 2 through the Scillm codex-oauth wrapper"
         ]
       },
-      "disposition": "stale",
+      "disposition": "active",
       "inputs": {
+        "frame_hashes": {
+          "sb_001_end_frame": "sha256:2b379eacb90166faa051aafe1c576687cb9e8b4fb5f757c9c649a8cc9c7fc842",
+          "sb_001_start_frame": "sha256:135564cad9c40718322e9f13d347b6829ecbd9ab2197cbddc70262deb72e227d",
+          "sb_002_end_frame": "sha256:b25f61dc7bb32ce35d018e3b7214310880795516914e53bc86cd6d0812b97bd6",
+          "sb_002_start_frame": "sha256:aebcbd907c999d64ba4e7effd4f9f95e75e8e094e6deee605f5fb6f5a2e4606b",
+          "sb_003_end_frame": "sha256:1b03c8f9c9148874dc63a49a0f2658391c59fee1c89759c25bc034f30b9f7d56",
+          "sb_003_start_frame": "sha256:9046059c87f35a6be56f166415979a25bfb72f9c51293a1434eb0f7ac8a1118c",
+          "sb_004_end_frame": "sha256:ceaf5c255f81d2267d32c92aec09e6614b5d18945e2a7f5824f38f6cf66dd2cf",
+          "sb_004_start_frame": "sha256:2c3211f225eea31a8091569ec10f68a87d7f324e12f04653c5efb1084c97a26e"
+        },
+        "identity_source": "embry_contact_sheet_v3",
+        "identity_source_sha256": "sha256:3ce40b3b6839ebba0f468d75a1adbb7f82e0d95457aefd3627e222eb569de00c",
+        "image_auth": "codex-oauth",
+        "image_model": "gpt-image-2",
         "repair_kind": "identity_source_successor",
         "source_revision_id": "rev_upstream_bf3b05d47fb8"
       },
       "memory_write_method": "/upsert",
-      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "observed_at": "2026-07-18T15:19:56.694073+00:00",
       "outputs": [
-        "identity_successor_invalidation_ledger.v1.json"
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_001_start_frame.png",
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_001_end_frame.png",
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_002_start_frame.png",
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_002_end_frame.png",
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_003_start_frame.png",
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_003_end_frame.png",
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_004_start_frame.png",
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_004_end_frame.png"
       ],
       "previous_status_in_source_revision": "PASS",
       "provider_task_id": null,
       "receipt_paths": [
-        "identity_successor_invalidation_ledger.v1.json"
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/phase_c_regeneration_receipt.json"
       ],
       "request_hash": null,
-      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 16 Panel Generation Loop status STALE_IDENTITY_SOURCE_SUPERSEDED disposition stale",
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 16 Panel Generation Loop status PASS_PANEL_GENERATION_8_OF_8 disposition active phase C regeneration from embry_contact_sheet_v3",
       "revision_id": "rev_successor_943b01ecd9a3",
       "run_id": "pipeline-complete",
       "schema": "persona_dream.pipeline_step_memory.v1",
       "source_revision_id": "rev_upstream_bf3b05d47fb8",
-      "status": "STALE_IDENTITY_SOURCE_SUPERSEDED",
+      "status": "PASS_PANEL_GENERATION_8_OF_8",
       "step_name": "Panel Generation Loop",
       "step_no": 16,
       "step_slug": "panel_generation_loop",
       "tags": [
         "persona-dream",
-        "identity-source-successor",
+        "phase-c-regeneration",
         "run:pipeline-complete",
         "revision:rev_successor_943b01ecd9a3",
         "step:16",
-        "status:stale_identity_source_superseded",
-        "disposition:stale"
+        "status:pass_panel_generation_8_of_8",
+        "disposition:active"
       ]
     },
     {
       "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:17:panel_visual_review_loop",
       "artifact_hashes": {
-        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+        "phase_c_regeneration_receipt.json": "sha256:a03aa9fa6226453c24f14afe1769dceebce387c3e56c2eb1e66c50f8e6eab602"
       },
-      "blocker": "regenerate against the accepted embry_contact_sheet_v3 identity source in dependency order",
+      "blocker": null,
       "claims": {
         "does_not_prove": [
-          "downstream regeneration, provider readiness, or final acceptance"
+          "provider readiness or final acceptance"
         ],
         "proves": [
-          "step 17 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+          "8/8 frames PASS actual-pixel identity review (Embry vs embry_contact_sheet_v3, Kai vs reference)"
         ]
       },
-      "disposition": "stale",
+      "disposition": "active",
       "inputs": {
+        "frame_review_status": {
+          "sb_001_end_frame": "PASS",
+          "sb_001_start_frame": "PASS",
+          "sb_002_end_frame": "PASS",
+          "sb_002_start_frame": "PASS",
+          "sb_003_end_frame": "PASS",
+          "sb_003_start_frame": "PASS",
+          "sb_004_end_frame": "PASS",
+          "sb_004_start_frame": "PASS"
+        },
+        "identity_source": "embry_contact_sheet_v3",
+        "identity_source_sha256": "sha256:3ce40b3b6839ebba0f468d75a1adbb7f82e0d95457aefd3627e222eb569de00c",
         "repair_kind": "identity_source_successor",
+        "review_auth": "codex-oauth",
+        "review_model": "gpt-5.5",
+        "reviewer_source": "scillm:gpt-5.5:image_url",
         "source_revision_id": "rev_upstream_bf3b05d47fb8"
       },
       "memory_write_method": "/upsert",
-      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "observed_at": "2026-07-18T15:19:56.694073+00:00",
       "outputs": [
-        "identity_successor_invalidation_ledger.v1.json"
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_001_start_frame_identity_continuity_review.json",
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_001_end_frame_identity_continuity_review.json",
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_002_start_frame_identity_continuity_review.json",
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_002_end_frame_identity_continuity_review.json",
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_003_start_frame_identity_continuity_review.json",
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_003_end_frame_identity_continuity_review.json",
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_004_start_frame_identity_continuity_review.json",
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_004_end_frame_identity_continuity_review.json"
       ],
       "previous_status_in_source_revision": "PASS",
       "provider_task_id": null,
       "receipt_paths": [
-        "identity_successor_invalidation_ledger.v1.json"
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_001_start_frame_identity_continuity_review.json",
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_001_end_frame_identity_continuity_review.json",
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_002_start_frame_identity_continuity_review.json",
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_002_end_frame_identity_continuity_review.json",
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_003_start_frame_identity_continuity_review.json",
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_003_end_frame_identity_continuity_review.json",
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_004_start_frame_identity_continuity_review.json",
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_004_end_frame_identity_continuity_review.json"
       ],
       "request_hash": null,
-      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 17 Panel Visual Review Loop status STALE_IDENTITY_SOURCE_SUPERSEDED disposition stale",
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 17 Panel Visual Review Loop status PASS_PANEL_VISUAL_REVIEW_8_OF_8 disposition active phase C regeneration from embry_contact_sheet_v3",
       "revision_id": "rev_successor_943b01ecd9a3",
       "run_id": "pipeline-complete",
       "schema": "persona_dream.pipeline_step_memory.v1",
       "source_revision_id": "rev_upstream_bf3b05d47fb8",
-      "status": "STALE_IDENTITY_SOURCE_SUPERSEDED",
+      "status": "PASS_PANEL_VISUAL_REVIEW_8_OF_8",
       "step_name": "Panel Visual Review Loop",
       "step_no": 17,
       "step_slug": "panel_visual_review_loop",
       "tags": [
         "persona-dream",
-        "identity-source-successor",
+        "phase-c-regeneration",
         "run:pipeline-complete",
         "revision:rev_successor_943b01ecd9a3",
         "step:17",
-        "status:stale_identity_source_superseded",
-        "disposition:stale"
+        "status:pass_panel_visual_review_8_of_8",
+        "disposition:active"
       ]
     },
     {
       "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:18:surgical_panel_repair",
       "artifact_hashes": {
-        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+        "phase_c_regeneration_receipt.json": "sha256:a03aa9fa6226453c24f14afe1769dceebce387c3e56c2eb1e66c50f8e6eab602"
       },
-      "blocker": "regenerate against the accepted embry_contact_sheet_v3 identity source in dependency order",
+      "blocker": null,
       "claims": {
         "does_not_prove": [
-          "downstream regeneration, provider readiness, or final acceptance"
+          "final acceptance"
         ],
         "proves": [
-          "step 18 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+          "identity failures triggered bounded surgical repair (MUST INCLUDE / MUST NOT INCLUDE deltas); attempts recorded per frame"
         ]
       },
-      "disposition": "stale",
+      "disposition": "active",
       "inputs": {
+        "identity_source": "embry_contact_sheet_v3",
+        "identity_source_sha256": "sha256:3ce40b3b6839ebba0f468d75a1adbb7f82e0d95457aefd3627e222eb569de00c",
+        "max_attempts": 5,
         "repair_kind": "identity_source_successor",
+        "repairs": [],
         "source_revision_id": "rev_upstream_bf3b05d47fb8"
       },
       "memory_write_method": "/upsert",
-      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "observed_at": "2026-07-18T15:19:56.694073+00:00",
       "outputs": [
-        "identity_successor_invalidation_ledger.v1.json"
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_frame_generation/"
       ],
       "previous_status_in_source_revision": "PASS_NO_REPAIR_REQUIRED",
       "provider_task_id": null,
       "receipt_paths": [
-        "identity_successor_invalidation_ledger.v1.json"
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/phase_c_regeneration_receipt.json"
       ],
       "request_hash": null,
-      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 18 Surgical Panel Repair status STALE_IDENTITY_SOURCE_SUPERSEDED disposition stale",
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 18 Surgical Panel Repair status PASS_SURGICAL_REPAIR disposition active phase C regeneration from embry_contact_sheet_v3",
       "revision_id": "rev_successor_943b01ecd9a3",
       "run_id": "pipeline-complete",
       "schema": "persona_dream.pipeline_step_memory.v1",
       "source_revision_id": "rev_upstream_bf3b05d47fb8",
-      "status": "STALE_IDENTITY_SOURCE_SUPERSEDED",
+      "status": "PASS_SURGICAL_REPAIR",
       "step_name": "Surgical Panel Repair",
       "step_no": 18,
       "step_slug": "surgical_panel_repair",
       "tags": [
         "persona-dream",
-        "identity-source-successor",
+        "phase-c-regeneration",
         "run:pipeline-complete",
         "revision:rev_successor_943b01ecd9a3",
         "step:18",
-        "status:stale_identity_source_superseded",
-        "disposition:stale"
+        "status:pass_surgical_repair",
+        "disposition:active"
       ]
     },
     {
       "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:19:panel_repair_gate",
       "artifact_hashes": {
-        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+        "phase_c_regeneration_receipt.json": "sha256:a03aa9fa6226453c24f14afe1769dceebce387c3e56c2eb1e66c50f8e6eab602"
       },
-      "blocker": "regenerate against the accepted embry_contact_sheet_v3 identity source in dependency order",
+      "blocker": null,
       "claims": {
         "does_not_prove": [
-          "downstream regeneration, provider readiness, or final acceptance"
+          "provider readiness beyond this gate"
         ],
         "proves": [
-          "step 19 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+          "final panel gate: 8/8 identity PASS; continuity_all_pass=True"
         ]
       },
-      "disposition": "stale",
+      "disposition": "active",
       "inputs": {
+        "continuity_all_pass": true,
+        "frames_pass": 8,
+        "frames_total": 8,
+        "identity_source": "embry_contact_sheet_v3",
+        "identity_source_sha256": "sha256:3ce40b3b6839ebba0f468d75a1adbb7f82e0d95457aefd3627e222eb569de00c",
         "repair_kind": "identity_source_successor",
         "source_revision_id": "rev_upstream_bf3b05d47fb8"
       },
       "memory_write_method": "/upsert",
-      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "observed_at": "2026-07-18T15:19:56.694073+00:00",
       "outputs": [
-        "identity_successor_invalidation_ledger.v1.json"
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/phase_c_regeneration_receipt.json"
       ],
       "previous_status_in_source_revision": "PASS",
       "provider_task_id": null,
       "receipt_paths": [
-        "identity_successor_invalidation_ledger.v1.json"
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/phase_c_regeneration_receipt.json"
       ],
       "request_hash": null,
-      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 19 Panel Repair Gate status STALE_IDENTITY_SOURCE_SUPERSEDED disposition stale",
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 19 Panel Repair Gate status PASS_PANEL_REVIEWED disposition active phase C regeneration from embry_contact_sheet_v3",
       "revision_id": "rev_successor_943b01ecd9a3",
       "run_id": "pipeline-complete",
       "schema": "persona_dream.pipeline_step_memory.v1",
       "source_revision_id": "rev_upstream_bf3b05d47fb8",
-      "status": "STALE_IDENTITY_SOURCE_SUPERSEDED",
+      "status": "PASS_PANEL_REVIEWED",
       "step_name": "Panel Repair Gate",
       "step_no": 19,
       "step_slug": "panel_repair_gate",
       "tags": [
         "persona-dream",
-        "identity-source-successor",
+        "phase-c-regeneration",
         "run:pipeline-complete",
         "revision:rev_successor_943b01ecd9a3",
         "step:19",
-        "status:stale_identity_source_superseded",
-        "disposition:stale"
+        "status:pass_panel_reviewed",
+        "disposition:active"
       ]
     },
     {

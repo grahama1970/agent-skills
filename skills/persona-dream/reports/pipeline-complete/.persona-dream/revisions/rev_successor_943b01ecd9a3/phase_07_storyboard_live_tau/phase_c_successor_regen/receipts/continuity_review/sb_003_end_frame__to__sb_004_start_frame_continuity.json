@@ -1,0 +1,21 @@
+{
+  "blocking_findings": [],
+  "created_at": "2026-07-18T15:19:02.936834+00:00",
+  "frame_a": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_003_end_frame.png",
+  "frame_a_sha256": "sha256:1b03c8f9c9148874dc63a49a0f2658391c59fee1c89759c25bc034f30b9f7d56",
+  "frame_b": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_004_start_frame.png",
+  "frame_b_sha256": "sha256:2c3211f225eea31a8091569ec10f68a87d7f324e12f04653c5efb1084c97a26e",
+  "live": true,
+  "mocked": false,
+  "pair_id": "sb_003_end_frame__to__sb_004_start_frame",
+  "raw_response": {
+    "blocking_findings": [],
+    "notes": "Embry and Kai remain visually consistent with their reference sheets and with each other across both frames. Embry wears the same navy short-sleeve rashguard; Kai wears the same black rashguard with a small chest logo. Lighting remains bright midday coastal sun, and the surf/lava reef setting reads as the same location. The action progression is plausible: Frame A shows them alert and looking toward the break while Kai gestures; Frame B follows with both repositioned in the water as a wave rises behind them. Boards are mostly submerged/partially obscured, but no clear continuity break is visible.",
+    "verdict": "PASS"
+  },
+  "review_prompt_sha256": "sha256:73a4f3cdcb5b136469e053957a0167e4bc94f6d16d83589ea06cf40122eaf6b1",
+  "reviewer_source": "scillm:gpt-5.5:image_url",
+  "schema": "persona_dream.phase_c.continuity_review.v1",
+  "status": "PASS",
+  "transition": "end->next-start across adjacent panels"
+}

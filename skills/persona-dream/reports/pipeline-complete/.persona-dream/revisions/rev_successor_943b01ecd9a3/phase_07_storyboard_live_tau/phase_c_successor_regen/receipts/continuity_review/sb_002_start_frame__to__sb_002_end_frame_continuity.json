@@ -1,0 +1,21 @@
+{
+  "blocking_findings": [],
+  "created_at": "2026-07-18T15:18:01.284012+00:00",
+  "frame_a": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_002_start_frame.png",
+  "frame_a_sha256": "sha256:aebcbd907c999d64ba4e7effd4f9f95e75e8e094e6deee605f5fb6f5a2e4606b",
+  "frame_b": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_002_end_frame.png",
+  "frame_b_sha256": "sha256:b25f61dc7bb32ce35d018e3b7214310880795516914e53bc86cd6d0812b97bd6",
+  "live": true,
+  "mocked": false,
+  "pair_id": "sb_002_start_frame__to__sb_002_end_frame",
+  "raw_response": {
+    "blocking_findings": [],
+    "notes": "Embry and Kai remain visually consistent with their references and with each other across both frames. Embry keeps the navy rashguard and white board; Kai keeps the black rashguard. Lighting, shallow water, tropical shoreline, and black lava reef boundary remain consistent. The action plausibly progresses from Embry focusing on/handling the board while Kai watches her to both looking off in the same direction while staying in position in the water.",
+    "verdict": "PASS"
+  },
+  "review_prompt_sha256": "sha256:6bf2ef6398c575aad70be0bbe1cc8a7e89603b574bde26312d7ebb611b73ead6",
+  "reviewer_source": "scillm:gpt-5.5:image_url",
+  "schema": "persona_dream.phase_c.continuity_review.v1",
+  "status": "PASS",
+  "transition": "start->end within the same panel"
+}

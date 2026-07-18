@@ -1,0 +1,21 @@
+{
+  "blocking_findings": [],
+  "created_at": "2026-07-18T15:17:41.272471+00:00",
+  "frame_a": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_001_end_frame.png",
+  "frame_a_sha256": "sha256:2b379eacb90166faa051aafe1c576687cb9e8b4fb5f757c9c649a8cc9c7fc842",
+  "frame_b": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_002_start_frame.png",
+  "frame_b_sha256": "sha256:aebcbd907c999d64ba4e7effd4f9f95e75e8e094e6deee605f5fb6f5a2e4606b",
+  "live": true,
+  "mocked": false,
+  "pair_id": "sb_001_end_frame__to__sb_002_start_frame",
+  "raw_response": {
+    "blocking_findings": [],
+    "notes": "Embry and Kai remain visually consistent with their references and with each other across both frames. Wardrobe continuity holds: Embry wears a navy rashguard and Kai wears a black rashguard. The shallow water, bright daytime lighting, tropical shoreline, and black lava reef boundary remain consistent. Frame B plausibly follows Frame A as they shift attention toward handling a white surfboard in the same surf zone.",
+    "verdict": "PASS"
+  },
+  "review_prompt_sha256": "sha256:73a4f3cdcb5b136469e053957a0167e4bc94f6d16d83589ea06cf40122eaf6b1",
+  "reviewer_source": "scillm:gpt-5.5:image_url",
+  "schema": "persona_dream.phase_c.continuity_review.v1",
+  "status": "PASS",
+  "transition": "end->next-start across adjacent panels"
+}

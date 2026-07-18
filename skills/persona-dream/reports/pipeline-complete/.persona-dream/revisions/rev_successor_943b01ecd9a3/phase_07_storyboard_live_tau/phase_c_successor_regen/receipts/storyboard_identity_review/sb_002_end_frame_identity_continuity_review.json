@@ -1,0 +1,47 @@
+{
+  "blocking_findings": [],
+  "created_at": "2026-07-18T14:50:03.440377+00:00",
+  "frame_key": "end_frame",
+  "frame_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_002_end_frame.png",
+  "image_dimensions": {
+    "height": 941,
+    "width": 1672
+  },
+  "live": true,
+  "mocked": false,
+  "model": "gpt-5.5",
+  "model_policy": {
+    "auth": "codex-oauth",
+    "error": null,
+    "fallback_performed": false,
+    "model": "gpt-5.5",
+    "provider": "codex",
+    "schema": "persona_dream.identity_review_policy.v1",
+    "source": "dag_identity_review_model_policy",
+    "supported": true
+  },
+  "model_policy_enforced": true,
+  "panel_id": "sb_002",
+  "raw_response": {
+    "blocking_findings": [],
+    "identity_notes": "Embry is foreground left with visible face, brown wet hair pulled back, adult woman appearance, and navy rashguard matching the reference. Kai is foreground right with visible face, tan skin, dark curly wet hair, athletic surfer build, and black rashguard matching the reference. No competing foreground person confuses the identities.",
+    "verdict": "PASS",
+    "visible_entities": [
+      "Embry",
+      "Kai"
+    ]
+  },
+  "receipt_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_002_end_frame_identity_continuity_review.json",
+  "required_entities": [
+    "Embry",
+    "Kai"
+  ],
+  "review_prompt_sha256": "sha256:f9631cbb0daefff5a9a5debee124aac14d308f4cf0b47bf68a7eca88a762a8fe",
+  "reviewer_source": "scillm:gpt-5.5:image_url",
+  "schema": "persona_dream.identity_continuity_review.v1",
+  "status": "PASS",
+  "visible_entities": [
+    "Embry",
+    "Kai"
+  ]
+}
