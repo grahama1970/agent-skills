@@ -110,6 +110,7 @@ const LOOP_RUN_ARTIFACTS: Record<string, string> = {
   human_triage_queue: 'human_triage_queue.json',
   ticket_projection: 'gs001-ticket-projection.json',
   closure_report: 'gs001-closure-report.json',
+  regression_verdict: 'regression_verdict.json',
   run_summary: 'run_summary.json',
 }
 

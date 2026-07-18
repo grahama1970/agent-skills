@@ -1,0 +1,141 @@
+.tau-loop-root {
+  display: flex;
+  height: 100vh;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  background: #0d1117;
+  color: #e6edf3;
+}
+
+.tau-loop-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  border-right: 1px solid #30363d;
+  padding: 12px;
+  overflow-y: auto;
+}
+
+.tau-loop-sidebar h2 {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #8b949e;
+}
+
+.tau-loop-run {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 1px solid transparent;
+  color: #e6edf3;
+  padding: 6px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.tau-loop-run:hover {
+  background: #161b22;
+}
+
+.tau-loop-run-active {
+  border-color: #388bfd;
+  background: #161b22;
+}
+
+.tau-loop-stages {
+  display: flex;
+  flex: 1;
+  gap: 12px;
+  padding: 12px;
+  overflow-x: auto;
+}
+
+.tau-loop-stage {
+  flex: 1 1 0;
+  min-width: 260px;
+  background: #161b22;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 12px;
+  overflow-y: auto;
+}
+
+.tau-loop-stage h3 {
+  margin-top: 0;
+  font-size: 13px;
+  color: #8b949e;
+}
+
+.tau-loop-card {
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 8px;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.tau-loop-card-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.tau-loop-fingerprint {
+  margin-left: 6px;
+  font-family: ui-monospace, monospace;
+  font-size: 10px;
+  color: #8b949e;
+}
+
+.tau-loop-fix {
+  color: #d29922;
+  margin-top: 4px;
+}
+
+.tau-loop-meta {
+  color: #8b949e;
+  font-size: 11px;
+  margin-top: 2px;
+}
+
+.tau-loop-empty {
+  color: #484f58;
+  font-style: italic;
+  font-size: 12px;
+}
+
+.tau-loop-pass {
+  color: #3fb950;
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+.tau-loop-fail {
+  color: #f85149;
+  font-weight: 600;
+  margin-top: 6px;
+}
+
+.tau-loop-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.tau-loop-table td {
+  border-bottom: 1px solid #21262d;
+  padding: 3px 4px;
+}
+
+.tau-loop-bad td {
+  color: #f85149;
+}
+
+.tau-loop-pre {
+  white-space: pre-wrap;
+  font-size: 11px;
+  color: #8b949e;
+  max-height: 240px;
+  overflow-y: auto;
+}
