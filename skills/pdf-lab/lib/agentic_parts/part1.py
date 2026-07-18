@@ -21,6 +21,7 @@ import os
 import re
 import subprocess
 import time
+import urllib.parse
 import xml.etree.ElementTree as ET
 import zipfile
 from contextlib import contextmanager

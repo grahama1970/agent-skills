@@ -291,7 +291,22 @@ def _write_second_pass_prompt_artifacts(
 
     model_responses: dict[str, dict[str, Any]] = {}
     capability_report: dict[str, Any] | None = None
+    auth_preflight: dict[str, Any] | None = None
     if second_pass_model:
+        auth_preflight = run_scillm_auth_preflight(output_dir, endpoint=second_pass_endpoint)
+        if not auth_preflight.get("ok"):
+            model_responses = {
+                str(prepared["payload"]["case_id"]): _second_pass_auth_blocker_response(
+                    model=second_pass_model,
+                    endpoint=second_pass_endpoint,
+                    auth_preflight=auth_preflight,
+                )
+                for prepared in prepared_cases
+            }
+            second_pass_model_blocked = True
+        else:
+            second_pass_model_blocked = False
+    if second_pass_model and not second_pass_model_blocked:
         capability_report = _second_pass_model_capability_report(second_pass_model)
         if capability_report.get("image_input") is False:
             model_responses = {
@@ -662,6 +677,26 @@ def _opencode_go_model_capability_report(model: str) -> dict[str, Any]:
     except Exception as exc:
         report["error"] = str(exc)
     return report
+
+
+def _second_pass_auth_blocker_response(
+    *,
+    model: str,
+    endpoint: str,
+    auth_preflight: dict[str, Any],
+) -> dict[str, Any]:
+    return {
+        "schema_version": "pdf_lab.second_pass_model_response.v1",
+        "transport": "scillm_chat_completions",
+        "model": model,
+        "endpoint": endpoint,
+        "error": (
+            "scillm auth preflight failed (fail closed); "
+            "no per-case second-pass model calls were attempted"
+        ),
+        "auth_preflight": auth_preflight,
+        "parsed_json": None,
+    }
 
 
 def _second_pass_capability_blocker_response(

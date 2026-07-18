@@ -18,12 +18,107 @@ def _second_pass_concurrency(model: str) -> int:
     return 4
 
 
+class ScillmAuthNotConfiguredError(RuntimeError):
+    """Raised when no scillm credential is configured. The second pass must
+    fail closed instead of spending per-case reviewer attempts against a
+    hard-coded development key (agent-skills issue #70)."""
+
+
+_SCILLM_AUTH_ENV_VARS = ("SCILLM_API_KEY", "SCILLM_MASTER_KEY", "SCILLM_PROXY_KEY")
+
+
+def _scillm_auth_credential() -> tuple[str, str]:
+    for name in _SCILLM_AUTH_ENV_VARS:
+        value = (os.environ.get(name) or "").strip()
+        if value:
+            return name, value
+    raise ScillmAuthNotConfiguredError(
+        "scillm auth is not configured: set one of "
+        + ", ".join(_SCILLM_AUTH_ENV_VARS)
+        + " (no hard-coded fallback key; failing closed)"
+    )
+
+
 def _scillm_headers() -> dict[str, str]:
+    _, key = _scillm_auth_credential()
     return {
-        "Authorization": f"Bearer {os.environ.get('SCILLM_PROXY_KEY', 'sk-dev-proxy-123')}",
+        "Authorization": f"Bearer {key}",
         "X-Caller-Skill": "pdf-lab",
         "Content-Type": "application/json",
     }
+
+
+def _scillm_auth_base_url(endpoint: str | None = None) -> str:
+    configured = os.environ.get("SCILLM_BASE_URL")
+    if configured:
+        return configured.rstrip("/")
+    if endpoint:
+        parsed = urllib.parse.urlsplit(endpoint)
+        if parsed.scheme and parsed.netloc:
+            return f"{parsed.scheme}://{parsed.netloc}"
+    return "http://localhost:4001"
+
+
+def run_scillm_auth_preflight(
+    output_dir: Path,
+    *,
+    endpoint: str | None = None,
+    timeout_s: float = 10.0,
+) -> dict[str, Any]:
+    """Fail-closed auth probe run BEFORE any per-case second-pass model call.
+
+    Writes scillm_preflight.json into output_dir. ok=True requires a
+    configured credential AND HTTP 200 from {base}/v1/scillm/auth.
+    """
+    report: dict[str, Any] = {
+        "schema_version": "pdf_lab.scillm_auth_preflight.v1",
+        "checked_at": _now_utc(),
+        "auth_env_source": None,
+        "auth_url": None,
+        "auth_http_status": None,
+        "ok": False,
+        "classification": None,
+        "error": None,
+    }
+    try:
+        source, _ = _scillm_auth_credential()
+        report["auth_env_source"] = source
+    except ScillmAuthNotConfiguredError as exc:
+        report["classification"] = "auth_not_configured"
+        report["error"] = str(exc)
+        _write_scillm_preflight(output_dir, report)
+        return report
+
+    base_url = _scillm_auth_base_url(endpoint)
+    auth_url = f"{base_url}/v1/scillm/auth"
+    report["auth_url"] = auth_url
+    try:
+        response = httpx.get(
+            auth_url,
+            headers=_scillm_headers(),
+            timeout=httpx.Timeout(timeout_s, connect=3.0),
+        )
+        report["auth_http_status"] = response.status_code
+        if response.status_code == 200:
+            report["ok"] = True
+        else:
+            report["classification"] = "auth_rejected"
+            report["error"] = f"HTTP {response.status_code}: {response.text[:500]}"
+    except Exception as exc:
+        report["classification"] = "auth_endpoint_unreachable"
+        report["error"] = str(exc)
+    _write_scillm_preflight(output_dir, report)
+    return report
+
+
+def _write_scillm_preflight(output_dir: Path, report: dict[str, Any]) -> None:
+    try:
+        output_dir.mkdir(parents=True, exist_ok=True)
+        (output_dir / "scillm_preflight.json").write_text(
+            json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
+    except OSError:
+        pass
 
 
 def _second_pass_model_request_payload(
