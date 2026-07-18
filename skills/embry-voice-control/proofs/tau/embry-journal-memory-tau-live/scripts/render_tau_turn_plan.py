@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -172,7 +173,10 @@ def main() -> int:
     audio_value = response.get("finished_response_audio")
     audio_path = Path(str(audio_value)) if audio_value else Path()
     if str(audio_value).startswith("/out/"):
-        audio_path = Path("/tmp/chatterbox-fork-agent-out") / str(audio_value).removeprefix("/out/")
+        host_out_dir = Path(
+            os.environ.get("CHATTERBOX_HOST_OUT_DIR", "/tmp/chatterbox-fork-agent-out")
+        )
+        audio_path = host_out_dir / str(audio_value).removeprefix("/out/")
     failed = []
     if not response.get("ok") or response.get("live") is not True or response.get("mocked") is not False:
         failed.append("chatterbox_response_not_live")
