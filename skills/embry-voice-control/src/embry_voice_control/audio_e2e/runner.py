@@ -2128,10 +2128,10 @@ def run_campaign(
                     stage="listener",
                     error=exc,
                 )
-                state["status"] = "blocked_live_failure"
+                case_state["stage"] = "blocked"
                 state["updated_at"] = utc_now()
                 write_json(state_path, state)
-                return state
+                continue
         listener_pending = unrecovered
 
     if listener_pending:
@@ -2231,10 +2231,10 @@ def run_campaign(
                             stage="listener",
                             error=exc,
                         )
-                        state["status"] = "blocked_live_failure"
+                        case_state["stage"] = "blocked"
                         state["updated_at"] = utc_now()
                         write_json(state_path, state)
-                        return state
+                        continue
         except Exception as exc:
             if not listener_pending:
                 raise
@@ -2436,10 +2436,12 @@ def run_campaign(
                     stage=failed_stage,
                     error=exc,
                 )
-                state["status"] = "blocked_live_failure"
+                case_state["stage"] = "blocked"
                 state["updated_at"] = utc_now()
                 write_json(state_path, state)
-                return state
+                break
+        if case_state.get("stage") == "blocked":
+            continue
         try:
             _complete_case(
                 journal_db,
@@ -2458,17 +2460,19 @@ def run_campaign(
                 stage="case_completion",
                 error=exc,
             )
-            state["status"] = "blocked_live_failure"
+            case_state["stage"] = "blocked"
             state["updated_at"] = utc_now()
             write_json(state_path, state)
-            return state
+            continue
 
+    stages = [
+        case_state.get("stage") for case_state in state["cases"].values()
+    ]
     state["status"] = (
         "completed"
-        if all(
-            case_state.get("stage") == "completed"
-            for case_state in state["cases"].values()
-        )
+        if all(stage == "completed" for stage in stages)
+        else "blocked_live_failure"
+        if any(stage == "blocked" for stage in stages)
         else "running"
     )
     state["suite_ready"] = False
