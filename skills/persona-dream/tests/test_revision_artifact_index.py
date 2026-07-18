@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 from pathlib import Path
 import sys
 
@@ -32,3 +33,82 @@ def test_non_storyboard_artifacts_keep_optional_ids() -> None:
         "07",
         "phase_07/notes.json",
     ) == "phase07.phase.07.notes.json"
+
+
+MONTAGE = "phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_start_frame.png"
+REGEN = (
+    "phase_07_storyboard_live_tau/phase_c_successor_regen/"
+    "generated_storyboard_frames/sb_001_start_frame.png"
+)
+
+
+def _write_ledger(revision_root: Path, stale_relatives: list[str]) -> None:
+    revision_root.mkdir(parents=True, exist_ok=True)
+    (revision_root / "identity_successor_invalidation_ledger.v1.json").write_text(
+        json.dumps(
+            {
+                "schema": "persona_dream.upstream_invalidation_ledger.v1",
+                "stale_artifacts": [
+                    {
+                        "relative_path": relative,
+                        "disposition": "STALE_IDENTITY_SOURCE_SUPERSEDED",
+                    }
+                    for relative in stale_relatives
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
+def test_superseded_frame_yields_canonical_slot_to_live_replacement(tmp_path: Path) -> None:
+    revision_root = tmp_path / "rev"
+    _write_ledger(revision_root, [MONTAGE])
+    files = [revision_root / MONTAGE, revision_root / REGEN]
+    for path in files:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(b"x")
+
+    superseded = module.load_superseded_frame_paths(revision_root)
+    assert superseded == {MONTAGE}
+
+    decisions = module.resolve_frame_decisions(revision_root, files, set(), superseded)
+    # The regenerated frame owns the canonical accepted-frame slot; the montage
+    # frame is demoted, so no id collision is raised.
+    assert decisions[REGEN] == "canonical"
+    assert decisions[MONTAGE] == "superseded"
+
+
+def test_lone_superseded_frame_keeps_canonical_slot(tmp_path: Path) -> None:
+    # Pre-regeneration parity: a superseded frame with no live competitor keeps
+    # the canonical id so revisions created before regeneration are unaffected.
+    revision_root = tmp_path / "rev"
+    _write_ledger(revision_root, [MONTAGE])
+    file = revision_root / MONTAGE
+    file.parent.mkdir(parents=True, exist_ok=True)
+    file.write_bytes(b"x")
+
+    decisions = module.resolve_frame_decisions(
+        revision_root, [file], set(), {MONTAGE}
+    )
+    assert decisions[MONTAGE] == "canonical"
+
+
+def test_two_live_frames_for_one_id_fail_closed(tmp_path: Path) -> None:
+    revision_root = tmp_path / "rev"
+    files = [revision_root / MONTAGE, revision_root / REGEN]
+    for path in files:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(b"x")
+    # No ledger => neither frame is superseded => genuine collision.
+    try:
+        module.resolve_frame_decisions(revision_root, files, set(), set())
+    except ValueError as exc:
+        assert "BLOCKED_PHASE_ARTIFACT_ID_COLLISION" in str(exc)
+    else:  # pragma: no cover - must raise
+        raise AssertionError("expected a fail-closed collision")
+
+
+def test_volatile_qualification_receipts_are_skip_listed() -> None:
+    assert "revision_activation_receipt.json" in module.VOLATILE_QUALIFICATION_RECEIPTS
+    assert "acceptance_rung_receipt.v1.json" in module.VOLATILE_QUALIFICATION_RECEIPTS

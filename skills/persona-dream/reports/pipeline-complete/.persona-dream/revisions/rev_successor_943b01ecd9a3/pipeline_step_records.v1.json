@@ -2001,15 +2001,22 @@
     {
       "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:40:gate_validation_loop",
       "artifact_hashes": {
-        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+        "identity_successor_gate_summary.v1.json": "sha256:fabfc92ba482ebb508512bc2f87d944acb6aec1149a63e2983bb72af9b5c2e92",
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67",
+        "phase_07_storyboard_live_tau/phase_c_successor_regen/phase_c_regeneration_receipt.json": "sha256:a03aa9fa6226453c24f14afe1769dceebce387c3e56c2eb1e66c50f8e6eab602"
       },
-      "blocker": "regenerate downstream evidence from the accepted identity source before this gate can close",
+      "blocker": "Acceptance rung reached (successor revision active/consistent, Memory exact reread PASS, 8/8 Phase 07 storyboard frames PASS actual-pixel identity review, rebuilt artifact index). The pipeline gate stays blocked pending a compiled successor provider request, provider media publication for the regenerated frames, a new hash-bound paid authorization, a fresh Kling return, post-Kling continuity review, and visible-speaker lip sync (all human-gated).",
       "claims": {
         "does_not_prove": [
-          "downstream regeneration, provider readiness, or final acceptance"
+          "provider readiness or submission",
+          "provider media publication for the regenerated frames",
+          "hash-bound paid authorization",
+          "Kling video return",
+          "visible-speaker lip sync",
+          "final acceptance"
         ],
         "proves": [
-          "step 40 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+          "local qualification rung reached for successor rev_successor_943b01ecd9a3: active/consistent revision, Memory exact reread PASS, and 8/8 Phase 07 frames PASS actual-pixel identity review over the rebuilt artifact index"
         ]
       },
       "disposition": "blocked",
@@ -2018,22 +2025,28 @@
         "source_revision_id": "rev_upstream_bf3b05d47fb8"
       },
       "memory_write_method": "/upsert",
-      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "observed_at": "2026-07-18T15:48:22.532165+00:00",
       "outputs": [
-        "identity_successor_invalidation_ledger.v1.json"
+        "identity_successor_invalidation_ledger.v1.json",
+        "identity_successor_gate_summary.v1.json",
+        "phase_07_storyboard_live_tau/phase_c_successor_regen/phase_c_regeneration_receipt.json",
+        "acceptance_rung_receipt.v1.json"
       ],
       "previous_status_in_source_revision": "BLOCKED",
       "provider_task_id": null,
       "receipt_paths": [
-        "identity_successor_invalidation_ledger.v1.json"
+        "identity_successor_invalidation_ledger.v1.json",
+        "identity_successor_gate_summary.v1.json",
+        "phase_07_storyboard_live_tau/phase_c_successor_regen/phase_c_regeneration_receipt.json",
+        "acceptance_rung_receipt.v1.json"
       ],
       "request_hash": null,
-      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 40 Gate Validation Loop status BLOCKED disposition blocked",
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 40 Gate Validation Loop status BLOCKED_PROVIDER_EVIDENCE_PENDING: acceptance rung reached (active/consistent, Memory exact reread, 8/8 frames) but provider evidence and paid authorization remain human-gated",
       "revision_id": "rev_successor_943b01ecd9a3",
       "run_id": "pipeline-complete",
       "schema": "persona_dream.pipeline_step_memory.v1",
       "source_revision_id": "rev_upstream_bf3b05d47fb8",
-      "status": "BLOCKED",
+      "status": "BLOCKED_PROVIDER_EVIDENCE_PENDING",
       "step_name": "Gate Validation Loop",
       "step_no": 40,
       "step_slug": "gate_validation_loop",
@@ -2043,8 +2056,9 @@
         "run:pipeline-complete",
         "revision:rev_successor_943b01ecd9a3",
         "step:40",
-        "status:blocked",
-        "disposition:blocked"
+        "disposition:blocked",
+        "status:blocked_provider_evidence_pending",
+        "phase-d-acceptance-rung"
       ]
     },
     {
@@ -2099,15 +2113,21 @@
     {
       "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:42:final_acceptance_boundary",
       "artifact_hashes": {
-        "identity_successor_gate_summary.v1.json": "sha256:fabfc92ba482ebb508512bc2f87d944acb6aec1149a63e2983bb72af9b5c2e92"
+        "identity_successor_gate_summary.v1.json": "sha256:fabfc92ba482ebb508512bc2f87d944acb6aec1149a63e2983bb72af9b5c2e92",
+        "phase_07_storyboard_live_tau/phase_c_successor_regen/phase_c_regeneration_receipt.json": "sha256:a03aa9fa6226453c24f14afe1769dceebce387c3e56c2eb1e66c50f8e6eab602"
       },
-      "blocker": "final acceptance requires eight regenerated Phase 07 frames, a repaired provider request, new authorization, and a passing post-provider continuity review",
+      "blocker": "The eight Phase 07 storyboard frames are regenerated and PASS 8/8 actual-pixel identity review, and the successor revision is active/consistent with Memory exact reread. Final acceptance still requires a compiled successor provider request, provider media publication for the regenerated frames, a new hash-bound paid authorization, one Kling return, a passing post-Kling continuity review, and accepted visible-speaker lip sync. All remaining steps are human-gated.",
       "claims": {
         "does_not_prove": [
-          "downstream regeneration, provider readiness, or final acceptance"
+          "provider readiness or submission",
+          "provider media publication for the regenerated frames",
+          "hash-bound paid authorization",
+          "Kling video return",
+          "visible-speaker lip sync",
+          "final acceptance"
         ],
         "proves": [
-          "step 42 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+          "final acceptance boundary state is durably recorded at the post-Phase-D acceptance rung"
         ]
       },
       "disposition": "blocked",
@@ -2116,22 +2136,24 @@
         "source_revision_id": "rev_upstream_bf3b05d47fb8"
       },
       "memory_write_method": "/upsert",
-      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "observed_at": "2026-07-18T15:48:22.532165+00:00",
       "outputs": [
-        "identity_successor_gate_summary.v1.json"
+        "identity_successor_gate_summary.v1.json",
+        "acceptance_rung_receipt.v1.json"
       ],
       "previous_status_in_source_revision": "BLOCKED",
       "provider_task_id": null,
       "receipt_paths": [
-        "identity_successor_gate_summary.v1.json"
+        "identity_successor_gate_summary.v1.json",
+        "acceptance_rung_receipt.v1.json"
       ],
       "request_hash": null,
-      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 42 Final Acceptance Boundary status BLOCKED_AWAITING_STORYBOARD_REGENERATION disposition blocked",
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 42 Final Acceptance Boundary status BLOCKED_AWAITING_PROVIDER_RETURN: storyboard regeneration complete (8/8), successor active/consistent, provider return and lip sync remain human-gated",
       "revision_id": "rev_successor_943b01ecd9a3",
       "run_id": "pipeline-complete",
       "schema": "persona_dream.pipeline_step_memory.v1",
       "source_revision_id": "rev_upstream_bf3b05d47fb8",
-      "status": "BLOCKED_AWAITING_STORYBOARD_REGENERATION",
+      "status": "BLOCKED_AWAITING_PROVIDER_RETURN",
       "step_name": "Final Acceptance Boundary",
       "step_no": 42,
       "step_slug": "final_acceptance_boundary",
@@ -2141,8 +2163,9 @@
         "run:pipeline-complete",
         "revision:rev_successor_943b01ecd9a3",
         "step:42",
-        "status:blocked_awaiting_storyboard_regeneration",
-        "disposition:blocked"
+        "disposition:blocked",
+        "status:blocked_awaiting_provider_return",
+        "phase-d-acceptance-rung"
       ]
     }
   ],

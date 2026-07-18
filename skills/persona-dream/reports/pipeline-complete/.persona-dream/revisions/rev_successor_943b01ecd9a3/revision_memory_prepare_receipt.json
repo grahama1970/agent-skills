@@ -1,7 +1,7 @@
 {
   "actual_provider_call_attempts": 0,
   "artifact_index_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/revision_artifact_index.json",
-  "artifact_index_sha256": "sha256:fbeedef14e5a24621afd9747535fcb473feccefe3bf515087665dac29f3e42e8",
+  "artifact_index_sha256": "sha256:06496a6af982b9650dc3684e56961ba99c5573a627181e6e48e95315da4f7198",
   "claims": {
     "does_not_prove": [
       "Memory revision verification or active-revision promotion",
@@ -17,12 +17,14 @@
   "collection": "project_knowledge",
   "command": {
     "argv": [
-      "scripts/create_successor_revision.py",
+      "scripts/prepare_revision_qualification.py",
       "--run-root",
-      "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete",
+      "reports/pipeline-complete",
+      "--revision-id",
+      "rev_successor_943b01ecd9a3",
       "--source-commit",
       "bb767ed7ebd511eae2d74c7c3440e0ca56356a8d",
-      "--json"
+      "prepare"
     ],
     "cwd": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream",
     "platform": "Linux-6.8.0-57-generic-x86_64-with-glibc2.39",
@@ -32,12 +34,12 @@
     "source_commit": "bb767ed7ebd511eae2d74c7c3440e0ca56356a8d"
   },
   "hash_validation": {
-    "artifact_count": 344,
-    "artifact_hash_manifest_sha256": "sha256:d48e7bad82a88916d1827a984966e8187099cdcc7af48e7a564c392fb511d2b3",
+    "artifact_count": 398,
+    "artifact_hash_manifest_sha256": "sha256:e7749afba41bb2a0851c866a5d4ef2a86616396da2bd820a939d27ad6b3d1594",
     "escape_count": 0,
-    "matched_count": 344,
+    "matched_count": 398,
     "mismatch_count": 0,
-    "recomputed_count": 344,
+    "recomputed_count": 398,
     "symlink_count": 0
   },
   "lifecycle_state": "PREPARED",
@@ -45,7 +47,7 @@
   "memory_url": "http://127.0.0.1:8601",
   "mocked": false,
   "paid_call_authorized": false,
-  "prepared_at": "2026-07-18T14:12:31.035316+00:00",
+  "prepared_at": "2026-07-18T15:48:47.586546+00:00",
   "provider_live": false,
   "records": {
     "exact_keys": [
@@ -124,22 +126,22 @@
   "requests": {
     "control_upsert": {
       "endpoint": "/upsert",
-      "request_payload_sha256": "sha256:9fb5592eb042fd132c0742cd05cc658d651c097b7f2444ed6b55f0ac2f4f4ea0",
-      "response_sha256": "sha256:85a7882625515adcb53503680c7d37a7ce9bd8f3bc025426ddb232b6c3da12d3",
+      "request_payload_sha256": "sha256:1c96c90862196ace5c37de1e49c36c98e8f86ab97d394881ff4d4b16db5c33a4",
+      "response_sha256": "sha256:4787348054a8bb6e57ca3b0297170fd1fc5316305d6dc6105de261424ff667af",
       "returned_counts": {
         "collection": "project_knowledge",
         "errors": [],
-        "inserted": 1,
+        "inserted": 0,
         "total": 1,
-        "updated": 0,
-        "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_project_knowledge_20260718T141230174364Z_10100_133299022333632.jsonl"
+        "updated": 1,
+        "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_project_knowledge_20260718T154846727970Z_10100_133298726635200.jsonl"
       },
       "status_code": 200
     },
     "list_after_prepare": {
       "endpoint": "/list",
       "request_payload_sha256": "sha256:a446fbd5cc9e4bce864366094f6073d3b8f3854f2327aacf28dc09f7b60c6bbc",
-      "response_sha256": "sha256:9aa273353b56efa958fa9576f4c8f134b91acb1d045917bd2545ebfadce86860",
+      "response_sha256": "sha256:68ad7553dcb2c2d7bf4e9eb2cb4092de5b588530ae1e5771020dc8d67f30bdfa",
       "returned_counts": {
         "collection": "project_knowledge",
         "count": 27,
@@ -149,15 +151,15 @@
     },
     "semantic_upsert": {
       "endpoint": "/upsert",
-      "request_payload_sha256": "sha256:bed5c0ce63dc64e9042fe532fd57f74b93079d7bb4c11b65917e47331eb81090",
-      "response_sha256": "sha256:4a0815f3671573e8d85c8d7cd800d17fadd393980a0c70c2706e937abb9f326f",
+      "request_payload_sha256": "sha256:fc53c5605e25dc42cea50fe6c315fff8edf342763e284179d124444db196f67f",
+      "response_sha256": "sha256:f320877ea7111d1ccbb330b6bc82a8e35cb296dfdb2179ba178dff2855f1f1ae",
       "returned_counts": {
         "collection": "project_knowledge",
         "errors": [],
-        "inserted": 26,
+        "inserted": 0,
         "total": 27,
-        "updated": 1,
-        "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_project_knowledge_20260718T141230189049Z_10100_133299022333632.jsonl"
+        "updated": 27,
+        "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_project_knowledge_20260718T154846742610Z_10100_133298726635200.jsonl"
       },
       "status_code": 200
     }

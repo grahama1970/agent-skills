@@ -1,6 +1,6 @@
 {
-  "activated_at": "2026-07-18T14:12:33.810028+00:00",
-  "activation_transaction_id": "activation-9c8a76e92c8e5ec521bd873e707e0695",
+  "activated_at": "2026-07-18T15:48:50.708321+00:00",
+  "activation_transaction_id": "activation-001e23de17333489a4f9a79b44669c37",
   "actual_provider_call_attempts": 0,
   "claims": {
     "does_not_prove": [
@@ -17,12 +17,13 @@
   "collection": "project_knowledge",
   "command": {
     "argv": [
-      "scripts/create_successor_revision.py",
+      "scripts/activate_revision_qualification.py",
       "--run-root",
-      "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete",
+      "reports/pipeline-complete",
+      "--revision-id",
+      "rev_successor_943b01ecd9a3",
       "--source-commit",
-      "bb767ed7ebd511eae2d74c7c3440e0ca56356a8d",
-      "--json"
+      "bb767ed7ebd511eae2d74c7c3440e0ca56356a8d"
     ],
     "cwd": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream",
     "platform": "Linux-6.8.0-57-generic-x86_64-with-glibc2.39",
@@ -33,12 +34,12 @@
   },
   "gate": "revision-activation-and-repair-queue-convergence",
   "hash_validation": {
-    "artifact_count": 344,
-    "artifact_hash_manifest_sha256": "sha256:d48e7bad82a88916d1827a984966e8187099cdcc7af48e7a564c392fb511d2b3",
+    "artifact_count": 398,
+    "artifact_hash_manifest_sha256": "sha256:e7749afba41bb2a0851c866a5d4ef2a86616396da2bd820a939d27ad6b3d1594",
     "escape_count": 0,
-    "matched_count": 344,
+    "matched_count": 398,
     "mismatch_count": 0,
-    "recomputed_count": 344,
+    "recomputed_count": 398,
     "symlink_count": 0
   },
   "live": true,
@@ -46,7 +47,7 @@
   "local_files": {
     "artifact_index": {
       "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/revision_artifact_index.json",
-      "sha256": "sha256:fbeedef14e5a24621afd9747535fcb473feccefe3bf515087665dac29f3e42e8"
+      "sha256": "sha256:06496a6af982b9650dc3684e56961ba99c5573a627181e6e48e95315da4f7198"
     },
     "local_active_pointer": {
       "relative_path": ".persona-dream/state/active_revision.json",
@@ -54,7 +55,7 @@
     },
     "prepare_receipt": {
       "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/revision_memory_prepare_receipt.json",
-      "sha256": "sha256:040308e26ce31e52cd2e757292a2a30516bb6316258125767ae4996e262861f4"
+      "sha256": "sha256:2558550849d6c79d4c6e2a5269fbc07fb91581a2c1af89be20e84c13417194c4"
     },
     "queue_item": {
       "relative_path": ".persona-dream/repair/tau-queue/repair-3140532dca3381b1.json",
@@ -62,7 +63,7 @@
     },
     "queue_terminal_event": {
       "relative_path": ".persona-dream/repair/queue-events/repair-3140532dca3381b1/000001-completed.json",
-      "sha256": "sha256:f7c182a890663052d7e0c5f9121468963a899a2d6921f7433a7b5da1ad466793"
+      "sha256": "sha256:7364dd1a596aad4309a00b245260c5b26488d51ad8d4997a678dd8f957ebdc62"
     },
     "revision_manifest": {
       "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/revision_manifest.json",
@@ -70,7 +71,7 @@
     },
     "verify_receipt": {
       "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/revision_memory_verify_receipt.json",
-      "sha256": "sha256:0fc97ae5d7124fe6c752ee0f00d2286021bb6b850e6fe8dc9538c22eae85a4c1"
+      "sha256": "sha256:5a742f0258431a8f5ee7f0c7d6f37a58aa07346ef9722211c1bdccdf98767af2"
     },
     "work_order": {
       "relative_path": ".persona-dream/repair/work-orders/repair-3140532dca3381b1.json",
@@ -88,7 +89,7 @@
   "memory": {
     "active_pointer_key": "pd_active_bb0360b6e2870481e787ce7bfd5a184504a0697bd083b681",
     "active_revision_id": "rev_successor_943b01ecd9a3",
-    "document_contract_sha256": "sha256:b44ecfa9aac6aa11c79993394c2d7974e608c6286690365ec6a6e9269f80fdfe",
+    "document_contract_sha256": "sha256:c6a9abea108ece1fa6b244c0463de39a8526bc2c6d041c294591c362532a5dd0",
     "embedding_model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
     "embedding_version": "v5-omni-small",
     "exact_reread_count": 1,
@@ -101,7 +102,7 @@
       "list_after": {
         "endpoint": "/list",
         "request_payload_sha256": "sha256:cfc1612dd6ca98bac9559c36e9ae121378173f148fa0b85c21d201187d2d7ad2",
-        "response_sha256": "sha256:2cd7c135f47ccce0f042d91173d0e5981acdaa3a2d8db16b5ea5776bee0f98e2",
+        "response_sha256": "sha256:e943d4460ec53bbbdedfff601a97e43b636c938ba5d55df3805c6f6bd0a55744",
         "returned_counts": {
           "collection": "project_knowledge",
           "count": 1,
@@ -112,25 +113,25 @@
       "list_before": {
         "endpoint": "/list",
         "request_payload_sha256": "sha256:cfc1612dd6ca98bac9559c36e9ae121378173f148fa0b85c21d201187d2d7ad2",
-        "response_sha256": "sha256:f7d257669753df6ab6de1ebda0231f8d6d455da1c56c1fe2da14129680bb0228",
+        "response_sha256": "sha256:a661bfd01d561e75fa663b32e57b515cc04818e10b0e05ef9882d62428a10a21",
         "returned_counts": {
           "collection": "project_knowledge",
-          "count": 1,
-          "total": 1
+          "count": 0,
+          "total": 0
         },
         "status_code": 200
       },
       "upsert": {
         "endpoint": "/upsert",
-        "request_payload_sha256": "sha256:3ea933b37100cbb956f07b4dcd0999aae71a0a275fea2cbe5e1e0e00c9aa8865",
-        "response_sha256": "sha256:75569013890a7e36edc7418de47dbcf79acb0ae887c3c95dfe43d81ce79d8c4a",
+        "request_payload_sha256": "sha256:7bc98dd2480e9f2ca24c9fc3296d8119a3644c1d7b453a350902a571bbf9ae2e",
+        "response_sha256": "sha256:f60a2a740a4dc83a8ad517aec4d99915b725ca7f2f10c162950772f10002660e",
         "returned_counts": {
           "collection": "project_knowledge",
           "errors": [],
-          "inserted": 0,
+          "inserted": 1,
           "total": 1,
-          "updated": 1,
-          "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_project_knowledge_20260718T141233815135Z_10100_133299022333632.jsonl"
+          "updated": 0,
+          "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_project_knowledge_20260718T154850712015Z_10100_133298726635200.jsonl"
         },
         "status_code": 200
       }
@@ -155,7 +156,7 @@
   "receipt_chain": {
     "dense_matching_count": 11,
     "exact_record_count": 27,
-    "max_dense": 0.91309464,
+    "max_dense": 0.9138711,
     "phase_record_count": 10,
     "prepare_schema": "persona_dream.revision_memory_prepare_receipt.v1",
     "prepare_status": "PASS_MEMORY_REVISION_PREPARED",
