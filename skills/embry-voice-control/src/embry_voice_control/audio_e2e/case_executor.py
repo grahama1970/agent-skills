@@ -20,6 +20,10 @@ from .event_waiter import (
 )
 
 
+# Bounded re-captures per listener turn when the runtime WER gate fails.
+MAX_CAPTURE_ATTEMPTS = 3
+
+
 def _canonical(value: Any) -> bytes:
     return json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
 
@@ -114,6 +118,7 @@ class CaseExecutor:
         case: dict[str, Any],
         turn: dict[str, Any],
         source_asset: dict[str, Any] | None,
+        capture_attempt: int = 1,
     ) -> tuple[str, dict[str, Any]]:
         source_mode = str(case.get("source_mode") or "")
         fresh_physical = source_mode == "physical_live_horus"
@@ -147,6 +152,10 @@ class CaseExecutor:
                 ((source_asset or {}).get("audio") or {}).get("sha256")
             ),
         }
+        if capture_attempt > 1:
+            # Distinct authority per re-capture keeps journal chains
+            # distinguishable; attempt 1 keeps the legacy seed shape.
+            authority_seed["capture_attempt"] = capture_attempt
         source_authority_id = (
             prefix + ":" + hashlib.sha256(_canonical(authority_seed)).hexdigest()[:24]
         )
@@ -316,11 +325,59 @@ class CaseExecutor:
         wake_asset: dict[str, Any] | None = None,
         source_asset: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
+        # Room acoustics make occasional captures fail the runtime WER gate
+        # (onset clipping, ambient noise). Re-capture with a fresh authority id
+        # instead of failing the case on one bad take.
+        last_error: RuntimeError | None = None
+        for capture_attempt in range(1, MAX_CAPTURE_ATTEMPTS + 1):
+            try:
+                return self._execute_listener_turn_once(
+                    campaign_id,
+                    case,
+                    turn,
+                    wake_audio=wake_audio,
+                    source_audio=source_audio,
+                    wake_asset=wake_asset,
+                    source_asset=source_asset,
+                    capture_attempt=capture_attempt,
+                )
+            except RuntimeError as error:
+                if not str(error).startswith(
+                    "managed_listener_request_wer_exceeded"
+                ):
+                    raise
+                last_error = error
+                print(
+                    json.dumps({
+                        "status": "RETRYING_LISTENER_TURN",
+                        "case_id": case["case_id"],
+                        "turn_id": turn["turn_id"],
+                        "capture_attempt": capture_attempt,
+                        "error": str(error)[:200],
+                    }),
+                    flush=True,
+                )
+        assert last_error is not None
+        raise last_error
+
+    def _execute_listener_turn_once(
+        self,
+        campaign_id: str,
+        case: dict[str, Any],
+        turn: dict[str, Any],
+        *,
+        wake_audio: Path | None,
+        source_audio: Path | None,
+        wake_asset: dict[str, Any] | None = None,
+        source_asset: dict[str, Any] | None = None,
+        capture_attempt: int = 1,
+    ) -> dict[str, Any]:
         source_authority_id, expected = self._source_authority(
             campaign_id,
             case,
             turn,
             source_asset,
+            capture_attempt,
         )
         journal_boundary = journal_sequence_boundary(
             Path(self.config["journal_db"]),
