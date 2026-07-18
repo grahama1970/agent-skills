@@ -1,9 +1,38 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-18 (Lane C step 38 fix executed live — BLOCKED by identity/mouth-occlusion gate conflict; rung stays at v4) by agent
+**Last updated:** 2026-07-18 (qualification gate scoped by record identity — requalification unblocked, acceptance rung v5 activated) by agent
 **Status:** Active development
 
 ## Current Understanding
+
+- 2026-07-18 (qualification gate scoping — DECISIVE LESSON: exact-match gates must
+  select by record TYPE, not keyspace): the step-38 requalification blocker was NOT
+  record pollution — it was gate OVER-MATCH. `prepare_revision_qualification` listed
+  `project_knowledge` by `(run_id, revision_id)` and required the space to hold
+  EXACTLY the 27 qualification records, so 15 governance/audit records that
+  legitimately share that keyspace were counted as `unexpected_keys` and blocked the
+  gate. The governance records were never qualification records; the gate's intent
+  was "exactly the 27 qualification records exist and reread exactly." Fix
+  (`scope_qualification_documents()`, commit 1d454819): select the exact-match set by
+  record IDENTITY — qualification schema AND `record_type` AND stable-key prefix must
+  all agree; governance records (matching none) are readable but never counted; a
+  malformed qualification claim or duplicate key fails closed; the gate is provably as
+  strict as before for the 27 records (tests/test_qualification_gate_scoping.py, 8
+  pass; full suite 21 pass). LESSON: an exact-match/exclusive-ownership gate that
+  selects rows by keyspace membership is permanently brittle on a DELETION-FREE store
+  — any other sanctioned writer that shares the keyspace makes it over-match forever,
+  and you cannot "clean up" past the mismatch because nothing can be deleted. Select
+  by the record's own type/schema, and route unrelated writers to their own
+  collection (future governance writes now go to `persona_dream_governance`; the ten
+  governance persisters were repointed; historical records stay untouched in
+  `project_knowledge`). With the gate scoped, the full chain completed live: rebuild
+  index (promote the accepted lane C waiver frame `sha256:9f8fb8c9`, retain phase_c as
+  superseded via an invalidation ledger) → `revision_supersession`
+  PASS_REQUALIFICATION_SUPERSEDED → prepare/verify/activate `--supersede`
+  PASS_ACTIVE_CONSISTENT → `acceptance_rung_receipt.v5.json` = PASS_ACCEPTANCE_RUNG
+  (supersedes v4). `does_not_prove` keeps Kling readiness, provider media publication,
+  publication authorization, paid authorization, provider return, lip-sync-on-return.
+  No paid call made or authorized.
 
 - 2026-07-18 (Lane C step 38 fix — EXECUTED LIVE, BLOCKED by a gate conflict): the
   primary lane C plan (regenerate ONLY sb_003_end_frame so Kai's mouth is not
