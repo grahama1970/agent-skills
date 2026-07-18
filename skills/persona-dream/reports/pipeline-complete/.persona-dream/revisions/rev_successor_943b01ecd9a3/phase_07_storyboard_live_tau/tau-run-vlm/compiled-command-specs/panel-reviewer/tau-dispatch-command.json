@@ -1,0 +1,13 @@
+{
+  "command": [
+    "uv",
+    "run",
+    "python",
+    "-m",
+    "tau_coding.persona_dream_panel_agent",
+    "--role",
+    "panel-reviewer"
+  ],
+  "cwd": ".",
+  "timeout_s": 240
+}

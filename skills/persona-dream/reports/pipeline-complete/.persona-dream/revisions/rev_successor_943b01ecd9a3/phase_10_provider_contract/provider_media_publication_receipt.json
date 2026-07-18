@@ -1,0 +1,23 @@
+{
+  "assets_published": 0,
+  "assets_required": 8,
+  "blockers": [
+    "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING"
+  ],
+  "claims": {
+    "does_not_prove": [
+      "public URL creation",
+      "provider fetchability"
+    ],
+    "proves": [
+      "publication gap is explicitly receipted"
+    ]
+  },
+  "expected_method": "tailscale_funnel_or_fal_storage_upload_or_other_public_url_staging",
+  "generated_at": "2026-07-11T01:22:52.620661Z",
+  "live": false,
+  "mocked": false,
+  "publication_method": "not_run",
+  "schema_version": "persona-dream.provider-media-publication-receipt.v1",
+  "status": "BLOCKED_PROVIDER_MEDIA_PUBLICATION_NOT_RUN"
+}

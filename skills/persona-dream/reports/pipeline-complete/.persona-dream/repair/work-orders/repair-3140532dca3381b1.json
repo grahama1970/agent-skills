@@ -1,0 +1,44 @@
+{
+  "createdAt": "2026-07-18T14:12:29.184915+00:00",
+  "dedupKey": "3140532dca3381b116754f246bd35e5beb4daf2bb591908bde98d7fdf654d94f",
+  "detection": {
+    "earliestStalePhase": "01",
+    "phaseRange": [
+      "01",
+      "02",
+      "03",
+      "04",
+      "05",
+      "06",
+      "07",
+      "08",
+      "09",
+      "10"
+    ],
+    "reasons": [
+      {
+        "code": "BLOCKED_UPSTREAM_CONTRACT_ARTIFACTS_MISSING",
+        "phaseId": "01"
+      }
+    ],
+    "selectedThroughPhase": "10"
+  },
+  "policy": {
+    "forbiddenSideEffects": [
+      "external_network",
+      "public_media_publication",
+      "paid_provider_call",
+      "provider_submission",
+      "human_acceptance_fabrication"
+    ],
+    "maxAttemptsPerPhase": 1,
+    "stopBeforePhase": "11"
+  },
+  "runId": "pipeline-complete",
+  "runRoot": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete",
+  "schemaVersion": "persona_dream.repair_work_order.v1",
+  "sourceRevisionId": "rev_upstream_bf3b05d47fb8",
+  "status": "REQUESTED",
+  "targetRevisionId": "rev_successor_943b01ecd9a3",
+  "workOrderId": "repair-3140532dca3381b1"
+}

@@ -1,0 +1,40 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "a new live cinematic-technique-selector model call was executed",
+      "downstream storyboard or provider artifacts were regenerated against this selection"
+    ],
+    "proves": [
+      "a canonical Look Lock and Script DNA exist for this revision, derived from the accepted story, crew, script, and storyboard artifacts"
+    ]
+  },
+  "created_at": "2026-07-17T13:36:17.618810+00:00",
+  "look_lock": {
+    "atmosphere_texture": "salt spray, heat shimmer, sweat sheen on skin, sun-softened surfboard wax",
+    "camera_format": "digital cinema camera in surf water housing, waterline operation, 1280x720 target delivery",
+    "color_grade": "warm natural daylight grade with golden highlights, clean turquoise water, true-to-skin tones",
+    "composition": "Embry and Kai are the two dominant foreground/midforeground people; both faces or three-quarter faces readable; reef visible in lower foreground but not at the cost of faces; background surfers, if any, are smaller and clearly subordinate",
+    "continuity_rule": "Embry in navy rashguard and Kai in black rashguard on two white shortboards at Kahalu'u Bay; lava reef readable in the lower foreground; safe channel geometry visible in the final beat; each required face at least 80px and never back-only; continuous daylight; no unrelated foreground people",
+    "lens": "waterline surf photography, approximately 28-35mm equivalent; not ultra-wide",
+    "lighting": "natural hard June mid-day Hawaiian sunlight, silver glare on the wave face, no artificial fill",
+    "motion_rules": "slow observational drift with the swell; small handheld corrections at the board rail; gentle lateral drift keeping Kai outside the decision point; one brief forward glide with the wave shoulder in the final beat; no dramatic push-ins"
+  },
+  "provenance": {
+    "derivation": "deterministic_reconstruction_from_accepted_revision_artifacts",
+    "live_selector_call": false,
+    "reconstruction": true,
+    "source_artifact_hashes": {
+      "phase_02_story/story_contract.json": "sha256:84f4f8b9bf17778f41e2e062f856e2a36b4ca760abc5288b44329e90a87e786e",
+      "phase_03_crew/crew_contract.json": "sha256:8b3fb7869c3925747ea62b38c1984dd497323f500cb54c81a797d7eb8a7d3626",
+      "phase_06_script/entity_environment_script_table.json": "sha256:01655698db24e61bc47fc5ebccf7e8c9a50264f2c75ad7a4058a8425c69ebf54",
+      "phase_06_script/script_contract.json": "sha256:645e15b899c8f69826a0c174ea0f72d4c4936cb4592d139c6643df837efe26d5",
+      "phase_06_script/timed_transcript.json": "sha256:281261d628a6d4fa6f26b11e4350a90e7bbb00cdb5d7ba1dbd690deb5cf5bc4b",
+      "phase_07_storyboard_live_tau/storyboard_packet.json": "sha256:a1c1031e697d67dca734a797bbfa438a1ab30358e8dea18eee7c157de8f2fc97"
+    },
+    "source_revision_id": "rev_idea_f3f9c48d5cc2"
+  },
+  "revision_id": "rev_upstream_bf3b05d47fb8",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.look_lock.v1",
+  "source_technique_selection": "phase_03_crew/technique_selection.json"
+}

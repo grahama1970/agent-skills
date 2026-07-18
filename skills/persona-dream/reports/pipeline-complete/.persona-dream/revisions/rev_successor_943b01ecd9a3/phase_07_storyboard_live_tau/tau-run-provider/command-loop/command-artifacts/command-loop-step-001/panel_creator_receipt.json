@@ -1,0 +1,26 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "no public upload or Kling call occurred",
+      "no provider-ready panel is claimed"
+    ],
+    "proves": [
+      "panel-creator command consumed a Tau handoff",
+      "panel-creator command wrote a concrete receipt with a local image artifact path and hash",
+      "panel-creator initiated the Scillm image wrapper inside Tau"
+    ]
+  },
+  "created_at": "2026-07-05T01:04:46Z",
+  "generated_image_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/panel_001_live_scillm.png",
+  "image_generation_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/tau-run-vlm/command-loop/command-artifacts/command-loop-step-001/scillm_image_generation_receipt.json",
+  "kling_api_call_performed": false,
+  "live_call_performed": true,
+  "paid_call_performed": null,
+  "panel_id": "panel_001",
+  "public_upload_performed": false,
+  "role": "panel-creator",
+  "schema": "tau.persona_dream.panel_creator_receipt.v1",
+  "sha256": "sha256:e9003d060c03bba469d362ff810d5369eb5164cc0906b8ebfd59ba9ee6155811",
+  "source": "scillm image generation receipt",
+  "status": "SCILLM_IMAGE_GENERATED"
+}

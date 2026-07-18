@@ -1,0 +1,360 @@
+{
+  "affected_steps": [
+    {
+      "disposition": "stale",
+      "previous_status": "PASS",
+      "required_action": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Story / Video Plan",
+      "step_no": 6,
+      "step_slug": "story_video_plan"
+    },
+    {
+      "disposition": "stale",
+      "previous_status": "PASS",
+      "required_action": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Producer Persona Selection",
+      "step_no": 7,
+      "step_slug": "producer_selection"
+    },
+    {
+      "disposition": "stale",
+      "previous_status": "PASS",
+      "required_action": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Director Selection",
+      "step_no": 8,
+      "step_slug": "director_selection"
+    },
+    {
+      "disposition": "stale",
+      "previous_status": "PASS",
+      "required_action": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Script Writer Selection",
+      "step_no": 9,
+      "step_slug": "script_writer_selection"
+    },
+    {
+      "disposition": "stale",
+      "previous_status": "PASS",
+      "required_action": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Creative Authority Receipts",
+      "step_no": 10,
+      "step_slug": "creative_authority_receipts"
+    },
+    {
+      "disposition": "reconstructed_current",
+      "previous_status": "BLOCKED_MISSING_REQUIRED_ARTIFACT",
+      "required_action": "none; canonical artifact produced and validated in this revision",
+      "status": "PASS_RECONSTRUCTED",
+      "step_name": "Look Lock",
+      "step_no": 11,
+      "step_slug": "look_lock"
+    },
+    {
+      "disposition": "reconstructed_current",
+      "previous_status": "BLOCKED_MISSING_REQUIRED_ARTIFACT",
+      "required_action": "none; canonical artifact produced and validated in this revision",
+      "status": "PASS_RECONSTRUCTED",
+      "step_name": "Script DNA",
+      "step_no": 12,
+      "step_slug": "script_dna"
+    },
+    {
+      "disposition": "stale",
+      "previous_status": "PASS",
+      "required_action": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Storyboard Prompt Composition",
+      "step_no": 13,
+      "step_slug": "storyboard_prompt_composition"
+    },
+    {
+      "disposition": "stale",
+      "previous_status": "PASS",
+      "required_action": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Storyboard Panel Receipts",
+      "step_no": 14,
+      "step_slug": "storyboard_panel_receipts"
+    },
+    {
+      "disposition": "reconstructed_current",
+      "previous_status": "BLOCKED_MISSING_REQUIRED_ARTIFACT",
+      "required_action": "none; canonical artifact produced and validated in this revision",
+      "status": "PASS_RECONSTRUCTED",
+      "step_name": "Panel Continuity And Repair Ledger",
+      "step_no": 15,
+      "step_slug": "panel_continuity_repair_ledger"
+    },
+    {
+      "disposition": "stale",
+      "previous_status": "PASS",
+      "required_action": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Panel Generation Loop",
+      "step_no": 16,
+      "step_slug": "panel_generation_loop"
+    },
+    {
+      "disposition": "stale",
+      "previous_status": "PASS",
+      "required_action": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Panel Visual Review Loop",
+      "step_no": 17,
+      "step_slug": "panel_visual_review_loop"
+    },
+    {
+      "disposition": "stale",
+      "previous_status": "PASS_NO_REPAIR_REQUIRED",
+      "required_action": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Surgical Panel Repair",
+      "step_no": 18,
+      "step_slug": "surgical_panel_repair"
+    },
+    {
+      "disposition": "stale",
+      "previous_status": "PASS",
+      "required_action": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Panel Repair Gate",
+      "step_no": 19,
+      "step_slug": "panel_repair_gate"
+    },
+    {
+      "disposition": "stale",
+      "previous_status": "PASS",
+      "required_action": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Panel Source Receipt",
+      "step_no": 20,
+      "step_slug": "panel_source_receipt"
+    },
+    {
+      "disposition": "stale",
+      "previous_status": "PASS_EXISTING_PUBLICATION_REUSED",
+      "required_action": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Provider Media Publication Work Order",
+      "step_no": 21,
+      "step_slug": "provider_media_publication_work_order"
+    },
+    {
+      "disposition": "stale",
+      "previous_status": "PASS_NOT_REQUIRED_ALREADY_PUBLISHED",
+      "required_action": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Local Provider Media Staging",
+      "step_no": 22,
+      "step_slug": "local_provider_media_staging"
+    },
+    {
+      "disposition": "stale",
+      "previous_status": "PASS",
+      "required_action": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Publication Preflight",
+      "step_no": 23,
+      "step_slug": "publication_preflight"
+    },
+    {
+      "disposition": "stale",
+      "previous_status": "PASS_APPROVED",
+      "required_action": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Publication Authorization",
+      "step_no": 24,
+      "step_slug": "publication_authorization"
+    },
+    {
+      "disposition": "stale",
+      "previous_status": "PASS",
+      "required_action": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Public URL Probe",
+      "step_no": 25,
+      "step_slug": "public_url_probe"
+    },
+    {
+      "disposition": "stale",
+      "previous_status": "PASS",
+      "required_action": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Provider Media Handoff",
+      "step_no": 26,
+      "step_slug": "provider_media_handoff"
+    },
+    {
+      "disposition": "stale",
+      "previous_status": "PASS",
+      "required_action": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Provider Media Lock",
+      "step_no": 27,
+      "step_slug": "provider_media_lock"
+    },
+    {
+      "disposition": "stale",
+      "previous_status": "PASS_EXECUTED_REQUEST",
+      "required_action": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Kling Scene Packet",
+      "step_no": 28,
+      "step_slug": "kling_scene_packet"
+    },
+    {
+      "disposition": "stale",
+      "previous_status": "PASS_EXECUTED_PREFLIGHT",
+      "required_action": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Provider Final Gate",
+      "step_no": 29,
+      "step_slug": "provider_final_gate"
+    },
+    {
+      "disposition": "superseded",
+      "previous_status": "PASS_APPROVED_CONSUMED",
+      "required_action": "provider evidence remains bound to the prior revision and consumed request hash; a repaired request, new hash-bound approvals, and a new paid-call authorization are required",
+      "status": "SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION",
+      "step_name": "Paid Call Authorization",
+      "step_no": 30,
+      "step_slug": "paid_call_authorization"
+    },
+    {
+      "disposition": "superseded",
+      "previous_status": "PASS_LIVE",
+      "required_action": "provider evidence remains bound to the prior revision and consumed request hash; a repaired request, new hash-bound approvals, and a new paid-call authorization are required",
+      "status": "SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION",
+      "step_name": "Kling Submit",
+      "step_no": 31,
+      "step_slug": "kling_submit"
+    },
+    {
+      "disposition": "superseded",
+      "previous_status": "PASS_LIVE",
+      "required_action": "provider evidence remains bound to the prior revision and consumed request hash; a repaired request, new hash-bound approvals, and a new paid-call authorization are required",
+      "status": "SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION",
+      "step_name": "Kling Poll / Callback",
+      "step_no": 32,
+      "step_slug": "kling_poll_callback"
+    },
+    {
+      "disposition": "superseded",
+      "previous_status": "PASS_LIVE",
+      "required_action": "provider evidence remains bound to the prior revision and consumed request hash; a repaired request, new hash-bound approvals, and a new paid-call authorization are required",
+      "status": "SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION",
+      "step_name": "Output Retrieval",
+      "step_no": 33,
+      "step_slug": "output_retrieval"
+    },
+    {
+      "disposition": "superseded",
+      "previous_status": "PASS_LIVE",
+      "required_action": "provider evidence remains bound to the prior revision and consumed request hash; a repaired request, new hash-bound approvals, and a new paid-call authorization are required",
+      "status": "SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION",
+      "step_name": "FFprobe / Technical Validation",
+      "step_no": 34,
+      "step_slug": "ffprobe_technical_validation"
+    },
+    {
+      "disposition": "superseded",
+      "previous_status": "PASS",
+      "required_action": "provider evidence remains bound to the prior revision and consumed request hash; a repaired request, new hash-bound approvals, and a new paid-call authorization are required",
+      "status": "SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION",
+      "step_name": "Frame Contact Sheet",
+      "step_no": 35,
+      "step_slug": "frame_contact_sheet"
+    },
+    {
+      "disposition": "superseded",
+      "previous_status": "FAIL",
+      "required_action": "provider evidence remains bound to the prior revision and consumed request hash; a repaired request, new hash-bound approvals, and a new paid-call authorization are required",
+      "status": "SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION",
+      "step_name": "Post-Kling Continuity Review",
+      "step_no": 36,
+      "step_slug": "post_kling_continuity_review"
+    },
+    {
+      "disposition": "stale",
+      "previous_status": "PASS_NOT_REQUIRED_AUDIO_OFF",
+      "required_action": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Voice / Audio Handoff Lane When Voiced",
+      "step_no": 37,
+      "step_slug": "voice_audio_handoff"
+    },
+    {
+      "disposition": "stale",
+      "previous_status": "PASS_NOT_REQUIRED_SINGLE_PROVIDER_OUTPUT",
+      "required_action": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Final Assembly / Movie Lane",
+      "step_no": 38,
+      "step_slug": "final_assembly_movie_lane"
+    },
+    {
+      "disposition": "stale",
+      "previous_status": "PASS_BLOCKED_REPORT",
+      "required_action": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Report Generation",
+      "step_no": 39,
+      "step_slug": "report_generation"
+    },
+    {
+      "disposition": "stale",
+      "previous_status": "BLOCKED",
+      "required_action": "hash-revalidate or regenerate against the new upstream contract artifacts in dependency order before reuse",
+      "status": "STALE_UPSTREAM_CONTRACT_SUPERSEDED",
+      "step_name": "Gate Validation Loop",
+      "step_no": 40,
+      "step_slug": "gate_validation_loop"
+    },
+    {
+      "disposition": "current",
+      "previous_status": "PASS",
+      "required_action": "none; this revision's invalidation ledger is the step artifact",
+      "status": "PASS",
+      "step_name": "Upstream Revision Invalidation",
+      "step_no": 41,
+      "step_slug": "upstream_revision_invalidation"
+    },
+    {
+      "disposition": "blocked",
+      "previous_status": "BLOCKED",
+      "required_action": "final acceptance requires steps 06-29 revalidation, a repaired SB_004 request, new authorization, and a passing post-Kling continuity review",
+      "status": "BLOCKED_AWAITING_DOWNSTREAM_REVALIDATION",
+      "step_name": "Final Acceptance Boundary",
+      "step_no": 42,
+      "step_slug": "final_acceptance_boundary"
+    }
+  ],
+  "changed_upstream_artifacts": {
+    "phase_01_idea/dream_packet.json": "sha256:b7c85fd1e873e97b73133be56684240c41f3fac4f22e8d9e7a2ff19a2946a308",
+    "phase_01_idea/dream_prompt.txt": "sha256:d3b37f098be2fe924c1402b3898fb826eda82ef3ca240ebb4c1ffd7b94dc9142",
+    "phase_03_crew/look_lock.json": "sha256:a848430991c1fb1a0734caa886b832f200763ca2041d4db44f9a65a7c16cdf77",
+    "phase_03_crew/script_dna_selection.json": "sha256:fb4ec8a68954a072e37896255bd63893a868dbab5bf7f60f0a46a4518e7ceb3c",
+    "phase_03_crew/shot_bible.json": "sha256:d6925039e3fc352e11e36998fef530c63818a2fa667c1a44fb5cefcd34b3c3ab",
+    "phase_03_crew/technique_selection.json": "sha256:e9d2fc53e1a47d50b18e1436a5d42bdbe23c05451d9d9243928d36fecae4e673",
+    "phase_07_storyboard_live_tau/panel_continuity_and_repair_ledger.json": "sha256:8e7e31d4bfe6dd4723cea248467b118e2f8627198b5cbee00037b0808b7d9831"
+  },
+  "claims": {
+    "does_not_prove": [
+      "any downstream artifact has been revalidated yet"
+    ],
+    "proves": [
+      "every affected downstream step 06-42 has an explicit stale, superseded, blocked, or revalidated disposition"
+    ]
+  },
+  "created_at": "2026-07-17T13:36:17.618810+00:00",
+  "revision_id": "rev_upstream_bf3b05d47fb8",
+  "rule": "no downstream artifact in this revision may be claimed current until it is hash-revalidated or regenerated against the changed upstream artifacts; provider evidence from the prior revision is superseded, not reusable",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.upstream_invalidation_ledger.v1",
+  "source_revision_id": "rev_idea_f3f9c48d5cc2"
+}

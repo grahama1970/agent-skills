@@ -1,0 +1,225 @@
+{
+  "actual_provider_call_attempts": 0,
+  "claims": {
+    "does_not_prove": [
+      "a new panel visual review was executed during reconstruction",
+      "the repaired SB_004 provider request exists or is authorized"
+    ],
+    "proves": [
+      "a consolidated panel continuity and repair ledger exists for this revision, bound to the accepted panel reviews and the exact provider-return findings"
+    ]
+  },
+  "created_at": "2026-07-17T13:36:17.618810+00:00",
+  "live": false,
+  "mocked": false,
+  "panel_count": 4,
+  "panels": [
+    {
+      "acting_beats": [
+        "Embry scans the lineup and chooses not to rush.",
+        "Kai watches the reef and the locals before giving any cue.",
+        "Both characters show autonomy through restraint rather than speech."
+      ],
+      "failed_requirements": [],
+      "panel": "sb_001",
+      "repair_action": null,
+      "repair_attempt": 0,
+      "required_dynamic_behaviors": [
+        "Heat and humidity put sweat and salt on her skin, glare narrows her sightline to the wave face, fatigue limits her paddle strokes, and the reef makes her rail grip and timing matter.",
+        "Kai reads the glare, swell angle, reef line, and lineup pressure without wasting motion; heat and fatigue make his restraint more useful than a lecture.",
+        "The summer set rhythm creates a brief decision window: quiet water becomes a silver-glared wave face, forcing Embry to decide before fatigue costs her the takeoff.",
+        "Dark lava shapes under clear saltwater mark a shallow hard boundary; Embry and Kai adjust line, paddle timing, and channel choice around it."
+      ],
+      "required_environment": [
+        "kahaluu_bay_waterline",
+        "lava_reef_lower_foreground",
+        "june_swell",
+        "continuous_daylight"
+      ],
+      "required_props": [
+        "embry_white_shortboard",
+        "kai_white_shortboard",
+        "navy_rashguard",
+        "black_rashguard"
+      ],
+      "required_visible_entities": [
+        "Embry",
+        "Kai"
+      ],
+      "time_range_s": {
+        "end_s": 2.5,
+        "start_s": 0
+      },
+      "visible_entities": [
+        "Embry",
+        "Kai",
+        "Lava Reef",
+        "Kona Coast"
+      ],
+      "visual_review_receipt": "/mnt/storage12tb/persona-dream/phase07_tau_runs/run-20260707T192042Z-sb001-optimum-contract/work/receipts/storyboard_identity_review/sb_001_end_frame_identity_continuity_review.json",
+      "visual_review_status": "PASS"
+    },
+    {
+      "acting_beats": [
+        "Embry notices the palm skid without melodrama.",
+        "She resets her grip deliberately instead of pretending she is fine.",
+        "The physical correction is the autonomy beat."
+      ],
+      "failed_requirements": [],
+      "panel": "sb_002",
+      "repair_action": null,
+      "repair_attempt": 0,
+      "required_dynamic_behaviors": [
+        "Heat and humidity put sweat and salt on her skin, glare narrows her sightline to the wave face, fatigue limits her paddle strokes, and the reef makes her rail grip and timing matter.",
+        "Kai reads the glare, swell angle, reef line, and lineup pressure without wasting motion; heat and fatigue make his restraint more useful than a lecture.",
+        "The summer set rhythm creates a brief decision window: quiet water becomes a silver-glared wave face, forcing Embry to decide before fatigue costs her the takeoff.",
+        "Dark lava shapes under clear saltwater mark a shallow hard boundary; Embry and Kai adjust line, paddle timing, and channel choice around it."
+      ],
+      "required_environment": [
+        "kahaluu_bay_waterline",
+        "lava_reef_lower_foreground",
+        "june_swell",
+        "continuous_daylight"
+      ],
+      "required_props": [
+        "embry_white_shortboard",
+        "sun_softened_wax",
+        "navy_rashguard",
+        "phone_in_beach_bag"
+      ],
+      "required_visible_entities": [
+        "Embry",
+        "Kai"
+      ],
+      "time_range_s": {
+        "end_s": 5,
+        "start_s": 2.5
+      },
+      "visible_entities": [
+        "Embry",
+        "Kai",
+        "Embry surfboard",
+        "June Swell",
+        "Lava Reef"
+      ],
+      "visual_review_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_identity_review/sb_002_end_frame_identity_continuity_review.json",
+      "visual_review_status": "PASS"
+    },
+    {
+      "acting_beats": [
+        "Kai conserves energy and waits.",
+        "He notices the lineup first, then the channel, then Embry's cadence.",
+        "His cue is restrained; Embry keeps agency."
+      ],
+      "failed_requirements": [],
+      "panel": "sb_003",
+      "repair_action": null,
+      "repair_attempt": 0,
+      "required_dynamic_behaviors": [
+        "Heat and humidity put sweat and salt on her skin, glare narrows her sightline to the wave face, fatigue limits her paddle strokes, and the reef makes her rail grip and timing matter.",
+        "Kai reads the glare, swell angle, reef line, and lineup pressure without wasting motion; heat and fatigue make his restraint more useful than a lecture.",
+        "The summer set rhythm creates a brief decision window: quiet water becomes a silver-glared wave face, forcing Embry to decide before fatigue costs her the takeoff.",
+        "Dark lava shapes under clear saltwater mark a shallow hard boundary; Embry and Kai adjust line, paddle timing, and channel choice around it."
+      ],
+      "required_environment": [
+        "kahaluu_bay_waterline",
+        "lava_reef_lower_foreground",
+        "june_swell",
+        "continuous_daylight"
+      ],
+      "required_props": [
+        "kai_white_shortboard",
+        "black_rashguard",
+        "embry_white_shortboard"
+      ],
+      "required_visible_entities": [
+        "Embry",
+        "Kai"
+      ],
+      "time_range_s": {
+        "end_s": 7.5,
+        "start_s": 5
+      },
+      "visible_entities": [
+        "Embry",
+        "Kai",
+        "Kai surfboard",
+        "Kona Coast"
+      ],
+      "visual_review_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_identity_review/sb_003_end_frame_identity_continuity_review.json",
+      "visual_review_status": "PASS"
+    },
+    {
+      "acting_beats": [
+        "Embry lets the wrong moment pass.",
+        "She commits only when the water and lineup give permission.",
+        "Kai's reaction is understated and does not steal the beat."
+      ],
+      "downstream_provider_findings": {
+        "codes": [
+          "MISSING_SB004_COMMIT_ACTION",
+          "LAVA_REEF_BOUNDARY_NOT_VISUALLY_READABLE"
+        ],
+        "note": "the accepted panel passed storyboard visual review, but the provider return failed the final-beat commit action and reef readability; the repaired SB_004 provider request must encode these dynamic-behavior requirements explicitly",
+        "receipt_sha256": "sha256:1af1c98e883e6da8be3a6c1221d22a3fc601bb93ec47e76adfac1e5920799ec0",
+        "source": "rev_idea_f3f9c48d5cc2:phase_11_submit_return post-Kling continuity review"
+      },
+      "failed_requirements": [],
+      "panel": "sb_004",
+      "repair_action": "compile_repaired_sb_004_provider_request_with_stronger_final_action_constraint",
+      "repair_attempt": 0,
+      "required_dynamic_behaviors": [
+        "Heat and humidity put sweat and salt on her skin, glare narrows her sightline to the wave face, fatigue limits her paddle strokes, and the reef makes her rail grip and timing matter.",
+        "Kai reads the glare, swell angle, reef line, and lineup pressure without wasting motion; heat and fatigue make his restraint more useful than a lecture.",
+        "The summer set rhythm creates a brief decision window: quiet water becomes a silver-glared wave face, forcing Embry to decide before fatigue costs her the takeoff.",
+        "Dark lava shapes under clear saltwater mark a shallow hard boundary; Embry and Kai adjust line, paddle timing, and channel choice around it.",
+        "Embry alone commits forward through the safe channel while Kai remains outside the main action",
+        "the lava-reef boundary and safe-channel geometry stay visually readable through the final beat"
+      ],
+      "required_environment": [
+        "kahaluu_bay_waterline",
+        "lava_reef_lower_foreground",
+        "june_swell",
+        "continuous_daylight"
+      ],
+      "required_props": [
+        "embry_white_shortboard",
+        "navy_rashguard",
+        "wave_shoulder"
+      ],
+      "required_visible_entities": [
+        "Embry",
+        "Kai"
+      ],
+      "time_range_s": {
+        "end_s": 10,
+        "start_s": 7.5
+      },
+      "visible_entities": [
+        "Embry",
+        "Kai",
+        "Embry surfboard",
+        "June Swell",
+        "Lava Reef",
+        "Kona Coast"
+      ],
+      "visual_review_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_identity_review/sb_004_end_frame_identity_continuity_review.json",
+      "visual_review_status": "PASS"
+    }
+  ],
+  "provenance": {
+    "derivation": "deterministic_reconstruction_from_accepted_revision_artifacts",
+    "live_selector_call": false,
+    "reconstruction": true,
+    "source_artifact_hashes": {
+      "phase_06_script/entity_environment_script_table.json": "sha256:01655698db24e61bc47fc5ebccf7e8c9a50264f2c75ad7a4058a8425c69ebf54",
+      "phase_07_storyboard_live_tau/storyboard_packet.json": "sha256:a1c1031e697d67dca734a797bbfa438a1ab30358e8dea18eee7c157de8f2fc97",
+      "phase_11_submit_return/provider_return/ff2ce7f310fdda2d4900bcec5767ddaef46d592e55ef3900d9384813be0a6f41/post_kling_continuity_review_receipt.v1.json": "sha256:1af1c98e883e6da8be3a6c1221d22a3fc601bb93ec47e76adfac1e5920799ec0"
+    },
+    "source_revision_id": "rev_idea_f3f9c48d5cc2"
+  },
+  "review_status_source": "phase_07_storyboard_live_tau/storyboard_packet.json accepted-frame identity reviews",
+  "revision_id": "rev_upstream_bf3b05d47fb8",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.panel_continuity_and_repair_ledger.v1"
+}

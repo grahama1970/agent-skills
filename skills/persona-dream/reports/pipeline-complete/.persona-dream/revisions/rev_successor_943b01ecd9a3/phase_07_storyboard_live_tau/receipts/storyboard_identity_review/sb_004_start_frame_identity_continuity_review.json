@@ -1,0 +1,52 @@
+{
+  "blocking_findings": [],
+  "created_at": "2026-07-07T21:23:27.871094+00:00",
+  "frame_key": "start_frame",
+  "frame_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_004_start_frame.png",
+  "image_dimensions": {
+    "height": 864,
+    "width": 1536
+  },
+  "live": true,
+  "mocked": false,
+  "model": "gpt-5.5",
+  "model_policy": {
+    "auth": "codex-oauth",
+    "error": null,
+    "fallback_performed": false,
+    "model": "gpt-5.5",
+    "provider": "codex",
+    "schema": "persona_dream.identity_review_policy.v1",
+    "source": "dag_identity_review_model_policy",
+    "supported": true
+  },
+  "model_policy_enforced": true,
+  "panel_id": "sb_004",
+  "raw_response": {
+    "blocking_findings": [],
+    "identity_notes": "Embry is foreground left with visible face, brown hair tied back, adult woman appearance, and navy surf top consistent with the reference sheet. Kai is foreground right with visible face, tan skin, dark curly wet hair, athletic surfer build, and black rashguard consistent with the reference sheet. Background surfers are distant and do not compete with or confuse the identities.",
+    "verdict": "PASS",
+    "visible_entities": [
+      "Embry",
+      "Kai",
+      "Embry surfboard",
+      "Lava Reef",
+      "Kona Coast"
+    ]
+  },
+  "receipt_path": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_identity_review/sb_004_start_frame_identity_continuity_review.json",
+  "required_entities": [
+    "Embry",
+    "Kai"
+  ],
+  "reviewer_source": "scillm:gpt-5.5:image_url",
+  "schema": "persona_dream.identity_continuity_review.v1",
+  "status": "PASS",
+  "visible_entities": [
+    "Embry",
+    "Kai",
+    "Embry surfboard",
+    "Lava Reef",
+    "Kona Coast"
+  ]
+}

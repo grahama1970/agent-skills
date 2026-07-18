@@ -1,0 +1,51 @@
+{
+  "actual_provider_call_attempts": 0,
+  "artifact_hashes": {
+    "skills/persona-dream/reports/pipeline-complete/phase_10_provider_contract/final_provider_payload_by_panel.json": "sha256:6fc7763911a57e3cc003f4d5df457cb63bc254a6399155cb545184b80ceaaa22",
+    "skills/persona-dream/reports/pipeline-complete/phase_10_provider_contract/panel_distillation_contract.json": "sha256:a9f96f524f6939ba56f187949ed0e9099fa5f5019aa9c64415505db71d0b78b5",
+    "skills/persona-dream/reports/pipeline-complete/phase_10_provider_contract/panel_distillation_review_receipt.json": "sha256:75ad0e61750b2fb25dae97a2d4bb3e047d980f51a495b99820123769b16532bb",
+    "skills/persona-dream/reports/pipeline-complete/phase_10_provider_contract/phase10_provider_contract_receipt.json": "sha256:9faa98c2db858520966dcb68247dd908fc6ae4098bde107921cf8754b45bcf94",
+    "skills/persona-dream/reports/pipeline-complete/phase_10_provider_contract/provider_media_probe_receipt.json": "sha256:8fe8166996c61983bd28f02185b3421172dcb384df242258e7f3d501b3d68e00",
+    "skills/persona-dream/reports/pipeline-complete/phase_10_provider_contract/provider_media_publication_receipt.json": "sha256:e61a198b8e498f98b39d215138171343a2a185c88885cf55cbeaac936e690304",
+    "skills/persona-dream/reports/pipeline-complete/phase_10_provider_contract/provider_payload_field_mapping.json": "sha256:e1579093f33b534cccf92821bfe4b5ff876c37b210b3c032504a44bf488ceb73",
+    "skills/persona-dream/reports/pipeline-complete/phase_10_provider_contract/provider_payload_omitted_context.json": "sha256:af9aa54c1a3fbf9b558c81e3db7dd3fbc43e8c70a3f7b6c37faaec8c0ff6cc4c",
+    "skills/persona-dream/reports/pipeline-complete/phase_10_provider_contract/provider_schema_receipt.json": "sha256:cfedfb798cef5bfe7817956b2f2e9188385928300ba716c552cda750066657dc"
+  },
+  "blockers": [
+    "BLOCKED_CHARACTER_ELEMENT_PACK_NOT_SPLIT_INTO_2_TO_4_IMAGES",
+    "BLOCKED_EXTERNAL_PROBE_NOT_RUN",
+    "BLOCKED_MANUAL_VISUAL_ACCEPTANCE_MISSING",
+    "BLOCKED_PAID_CALL_AUTHORIZATION_MISSING",
+    "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+    "BLOCKED_PROVIDER_SCHEMA_REQUIRES_LIVE_CANARY_CONFIRMATION",
+    "BLOCKED_PROVIDER_VOICE_IDS_MISSING"
+  ],
+  "claims": {
+    "does_not_prove": [
+      "live fal schema acceptance",
+      "public media URLs",
+      "paid authorization",
+      "provider submit",
+      "provider return"
+    ],
+    "proves": [
+      "Phase 10 run-root contains source-derived dry-run provider distillation artifacts"
+    ]
+  },
+  "generated_at": "2026-07-11T01:22:52.620661Z",
+  "live_provider_call": false,
+  "live_submit_ready": false,
+  "mocked": false,
+  "provider_ready": false,
+  "schema_version": "persona-dream.phase10-provider-contract-receipt.v1",
+  "source_hashes": {
+    "phase_06_script/script_contract.json": "sha256:645e15b899c8f69826a0c174ea0f72d4c4936cb4592d139c6643df837efe26d5",
+    "phase_06_script/timed_transcript.json": "sha256:281261d628a6d4fa6f26b11e4350a90e7bbb00cdb5d7ba1dbd690deb5cf5bc4b",
+    "phase_07_storyboard_live_tau/storyboard_panel_contract.generated.json": "sha256:82c694f8d887f5d0ab2824b84be7abd36c61b81ec17c928cd21adf11830df366",
+    "phase_09_video_provider/storyboard_media_lock_manifest.json": "sha256:ca2251f04a35402676ff20dca14009d614b8b7b7cb3ac4d2c036c7f4b6825efd",
+    "phase_09_video_provider/video_provider_packet/video_provider_packet.json": "sha256:7544a6cccd61e3e1da20572e23340120bfe4fccd896e00577b2ba371be218fb7",
+    "phase_09_video_provider/video_provider_scorecard.v1.json": "sha256:d25eecc3be9f9dc198c9f99c941249bd737e1ac6750cfb3f2110c53158d095f3"
+  },
+  "status": "PASS_PHASE10_PROVIDER_CONTRACT_DRY_RUN_WITH_LIVE_BLOCKERS",
+  "submitted": false
+}

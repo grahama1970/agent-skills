@@ -1,0 +1,30 @@
+{
+  "actual_provider_call_attempts": 0,
+  "binding_sha256": "sha256:256246115f23923e8113805a11a23942c34ac9820b439a5f3ef6d704e916e96a",
+  "idea_id": "pd_idea_45a9d20d629b4e08863a9618b5f83982",
+  "idea_sha256": "sha256:45a9d20d629b4e08863a9618b5f83982a9eb55bbf52cbd1de5deac09015baf9b",
+  "live_submit_ready": false,
+  "phase_id": "05",
+  "previous_phase_binding_sha256": "sha256:6fd9cbda385ee249ed9308ad435e3e893ec47543c3480912800f193b57dde0b1",
+  "provider_live": false,
+  "provider_ready": false,
+  "required_artifact_hashes": {
+    "voice_evidence": "sha256:c31a5c560035a35a108029408445d64b2a0224dc62003e9782fba03637cc166a"
+  },
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.phase_idea_binding.v1",
+  "semantic_evidence": {
+    "domain_hits": [
+      "surf"
+    ],
+    "mode": "semantic_anchor_and_hash",
+    "person_hits": [
+      "embry",
+      "kai"
+    ]
+  },
+  "source": "explicit_human",
+  "status": "PASS_PHASE_IDEA_BOUND",
+  "submitted": false
+}

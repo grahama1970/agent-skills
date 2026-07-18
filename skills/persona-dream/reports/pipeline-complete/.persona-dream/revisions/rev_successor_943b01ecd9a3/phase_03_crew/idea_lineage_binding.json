@@ -1,0 +1,38 @@
+{
+  "actual_provider_call_attempts": 0,
+  "binding_sha256": "sha256:36eca1637f8af1fd16d40b0050d33e842e739b88a7bff04316d760e83e8cc810",
+  "idea_id": "pd_idea_45a9d20d629b4e08863a9618b5f83982",
+  "idea_sha256": "sha256:45a9d20d629b4e08863a9618b5f83982a9eb55bbf52cbd1de5deac09015baf9b",
+  "live_submit_ready": false,
+  "phase_id": "03",
+  "previous_phase_binding_sha256": "sha256:438d478ff4fe1fab2d2f06206f83907ce9670bb2849872119cb7cae5bc74baf7",
+  "provider_live": false,
+  "provider_ready": false,
+  "required_artifact_hashes": {
+    "crew_contract": "sha256:8b3fb7869c3925747ea62b38c1984dd497323f500cb54c81a797d7eb8a7d3626",
+    "crew_gate_receipt": "sha256:699616686a31bd999d92ee7ace9d4626fb48b16df50e43b8a1b70cfec20dca2d"
+  },
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.phase_idea_binding.v1",
+  "semantic_evidence": {
+    "domain_hits": [
+      "big island",
+      "kahalu",
+      "kona",
+      "lineup",
+      "reef",
+      "shortboard",
+      "surf",
+      "swell"
+    ],
+    "mode": "exact_core_idea",
+    "person_hits": [
+      "embry",
+      "kai"
+    ]
+  },
+  "source": "explicit_human",
+  "status": "PASS_PHASE_IDEA_BOUND",
+  "submitted": false
+}

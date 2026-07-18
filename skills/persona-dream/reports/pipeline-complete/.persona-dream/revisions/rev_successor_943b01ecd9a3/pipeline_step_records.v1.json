@@ -1,0 +1,2070 @@
+{
+  "collection": "persona_dream_pipeline_steps",
+  "count": 42,
+  "documents": [
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:01:request_idea_intake",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 01 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "carried_current",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 01 Request / Idea Intake status PASS disposition carried_current",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "PASS",
+      "step_name": "Request / Idea Intake",
+      "step_no": 1,
+      "step_slug": "request_idea_intake",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:01",
+        "status:pass",
+        "disposition:carried_current"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:02:dreaming_persona_selection",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 02 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "carried_current",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS_BOUND_REQUEST",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 02 Dreaming Persona Selection status PASS_BOUND_REQUEST disposition carried_current",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "PASS_BOUND_REQUEST",
+      "step_name": "Dreaming Persona Selection",
+      "step_no": 2,
+      "step_slug": "dreaming_persona_selection",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:02",
+        "status:pass_bound_request",
+        "disposition:carried_current"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:03:memory_recall",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 03 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "carried_current",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 03 Memory Recall status PASS disposition carried_current",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "PASS",
+      "step_name": "Memory Recall",
+      "step_no": 3,
+      "step_slug": "memory_recall",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:03",
+        "status:pass",
+        "disposition:carried_current"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:04:residue_grounding",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 04 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "carried_current",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 04 Residue Grounding status PASS disposition carried_current",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "PASS",
+      "step_name": "Residue Grounding",
+      "step_no": 4,
+      "step_slug": "residue_grounding",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:04",
+        "status:pass",
+        "disposition:carried_current"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:05:dream_packet",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": "none; upstream of the identity reference and not montage-derived",
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 05 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "carried_current",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "BLOCKED_MISSING_REQUIRED_ARTIFACT",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 05 Dream Packet status BLOCKED_MISSING_REQUIRED_ARTIFACT disposition carried_current",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "BLOCKED_MISSING_REQUIRED_ARTIFACT",
+      "step_name": "Dream Packet",
+      "step_no": 5,
+      "step_slug": "dream_packet",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:05",
+        "status:blocked_missing_required_artifact",
+        "disposition:carried_current"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:06:story_video_plan",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 06 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "carried_current",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 06 Story / Video Plan status PASS disposition carried_current",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "PASS",
+      "step_name": "Story / Video Plan",
+      "step_no": 6,
+      "step_slug": "story_video_plan",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:06",
+        "status:pass",
+        "disposition:carried_current"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:07:producer_selection",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 07 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "carried_current",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 07 Producer Persona Selection status PASS disposition carried_current",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "PASS",
+      "step_name": "Producer Persona Selection",
+      "step_no": 7,
+      "step_slug": "producer_selection",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:07",
+        "status:pass",
+        "disposition:carried_current"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:08:director_selection",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 08 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "carried_current",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 08 Director Selection status PASS disposition carried_current",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "PASS",
+      "step_name": "Director Selection",
+      "step_no": 8,
+      "step_slug": "director_selection",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:08",
+        "status:pass",
+        "disposition:carried_current"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:09:script_writer_selection",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 09 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "carried_current",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 09 Script Writer Selection status PASS disposition carried_current",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "PASS",
+      "step_name": "Script Writer Selection",
+      "step_no": 9,
+      "step_slug": "script_writer_selection",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:09",
+        "status:pass",
+        "disposition:carried_current"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:10:creative_authority_receipts",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 10 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "carried_current",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 10 Creative Authority Receipts status PASS disposition carried_current",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "PASS",
+      "step_name": "Creative Authority Receipts",
+      "step_no": 10,
+      "step_slug": "creative_authority_receipts",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:10",
+        "status:pass",
+        "disposition:carried_current"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:11:look_lock",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": "none; upstream of the identity reference and not montage-derived",
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 11 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "carried_current",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "BLOCKED_MISSING_REQUIRED_ARTIFACT",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 11 Look Lock status BLOCKED_MISSING_REQUIRED_ARTIFACT disposition carried_current",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "BLOCKED_MISSING_REQUIRED_ARTIFACT",
+      "step_name": "Look Lock",
+      "step_no": 11,
+      "step_slug": "look_lock",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:11",
+        "status:blocked_missing_required_artifact",
+        "disposition:carried_current"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:12:script_dna",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": "none; upstream of the identity reference and not montage-derived",
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 12 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "carried_current",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "BLOCKED_MISSING_REQUIRED_ARTIFACT",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 12 Script DNA status BLOCKED_MISSING_REQUIRED_ARTIFACT disposition carried_current",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "BLOCKED_MISSING_REQUIRED_ARTIFACT",
+      "step_name": "Script DNA",
+      "step_no": 12,
+      "step_slug": "script_dna",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:12",
+        "status:blocked_missing_required_artifact",
+        "disposition:carried_current"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:13:storyboard_prompt_composition",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67",
+        "phase_07_storyboard_live_tau/identity_source_binding.v1.json": "sha256:caa21313e7f90417002344863f272de22b7132cf4a977d84fb21cb0e12b9b816"
+      },
+      "blocker": "regenerate against the accepted embry_contact_sheet_v3 identity source in dependency order",
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 13 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "phase_07_storyboard_live_tau/identity_source_binding.v1.json",
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "phase_07_storyboard_live_tau/identity_source_binding.v1.json",
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 13 Storyboard Prompt Composition status STALE_IDENTITY_SOURCE_SUPERSEDED disposition stale",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "STALE_IDENTITY_SOURCE_SUPERSEDED",
+      "step_name": "Storyboard Prompt Composition",
+      "step_no": 13,
+      "step_slug": "storyboard_prompt_composition",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:13",
+        "status:stale_identity_source_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:14:storyboard_panel_receipts",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": "regenerate against the accepted embry_contact_sheet_v3 identity source in dependency order",
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 14 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 14 Storyboard Panel Receipts status STALE_IDENTITY_SOURCE_SUPERSEDED disposition stale",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "STALE_IDENTITY_SOURCE_SUPERSEDED",
+      "step_name": "Storyboard Panel Receipts",
+      "step_no": 14,
+      "step_slug": "storyboard_panel_receipts",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:14",
+        "status:stale_identity_source_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:15:panel_continuity_repair_ledger",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": "regenerate against the accepted embry_contact_sheet_v3 identity source in dependency order",
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 15 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "BLOCKED_MISSING_REQUIRED_ARTIFACT",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 15 Panel Continuity And Repair Ledger status STALE_IDENTITY_SOURCE_SUPERSEDED disposition stale",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "STALE_IDENTITY_SOURCE_SUPERSEDED",
+      "step_name": "Panel Continuity And Repair Ledger",
+      "step_no": 15,
+      "step_slug": "panel_continuity_repair_ledger",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:15",
+        "status:stale_identity_source_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:16:panel_generation_loop",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": "regenerate against the accepted embry_contact_sheet_v3 identity source in dependency order",
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 16 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 16 Panel Generation Loop status STALE_IDENTITY_SOURCE_SUPERSEDED disposition stale",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "STALE_IDENTITY_SOURCE_SUPERSEDED",
+      "step_name": "Panel Generation Loop",
+      "step_no": 16,
+      "step_slug": "panel_generation_loop",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:16",
+        "status:stale_identity_source_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:17:panel_visual_review_loop",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": "regenerate against the accepted embry_contact_sheet_v3 identity source in dependency order",
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 17 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 17 Panel Visual Review Loop status STALE_IDENTITY_SOURCE_SUPERSEDED disposition stale",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "STALE_IDENTITY_SOURCE_SUPERSEDED",
+      "step_name": "Panel Visual Review Loop",
+      "step_no": 17,
+      "step_slug": "panel_visual_review_loop",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:17",
+        "status:stale_identity_source_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:18:surgical_panel_repair",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": "regenerate against the accepted embry_contact_sheet_v3 identity source in dependency order",
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 18 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS_NO_REPAIR_REQUIRED",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 18 Surgical Panel Repair status STALE_IDENTITY_SOURCE_SUPERSEDED disposition stale",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "STALE_IDENTITY_SOURCE_SUPERSEDED",
+      "step_name": "Surgical Panel Repair",
+      "step_no": 18,
+      "step_slug": "surgical_panel_repair",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:18",
+        "status:stale_identity_source_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:19:panel_repair_gate",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": "regenerate against the accepted embry_contact_sheet_v3 identity source in dependency order",
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 19 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 19 Panel Repair Gate status STALE_IDENTITY_SOURCE_SUPERSEDED disposition stale",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "STALE_IDENTITY_SOURCE_SUPERSEDED",
+      "step_name": "Panel Repair Gate",
+      "step_no": 19,
+      "step_slug": "panel_repair_gate",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:19",
+        "status:stale_identity_source_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:20:panel_source_receipt",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": "regenerate against the accepted embry_contact_sheet_v3 identity source in dependency order",
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 20 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 20 Panel Source Receipt status STALE_IDENTITY_SOURCE_SUPERSEDED disposition stale",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "STALE_IDENTITY_SOURCE_SUPERSEDED",
+      "step_name": "Panel Source Receipt",
+      "step_no": 20,
+      "step_slug": "panel_source_receipt",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:20",
+        "status:stale_identity_source_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:21:provider_media_publication_work_order",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": "regenerate against the accepted embry_contact_sheet_v3 identity source in dependency order",
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 21 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS_EXISTING_PUBLICATION_REUSED",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 21 Provider Media Publication Work Order status STALE_IDENTITY_SOURCE_SUPERSEDED disposition stale",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "STALE_IDENTITY_SOURCE_SUPERSEDED",
+      "step_name": "Provider Media Publication Work Order",
+      "step_no": 21,
+      "step_slug": "provider_media_publication_work_order",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:21",
+        "status:stale_identity_source_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:22:local_provider_media_staging",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": "regenerate against the accepted embry_contact_sheet_v3 identity source in dependency order",
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 22 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS_NOT_REQUIRED_ALREADY_PUBLISHED",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 22 Local Provider Media Staging status STALE_IDENTITY_SOURCE_SUPERSEDED disposition stale",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "STALE_IDENTITY_SOURCE_SUPERSEDED",
+      "step_name": "Local Provider Media Staging",
+      "step_no": 22,
+      "step_slug": "local_provider_media_staging",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:22",
+        "status:stale_identity_source_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:23:publication_preflight",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": "regenerate against the accepted embry_contact_sheet_v3 identity source in dependency order",
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 23 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 23 Publication Preflight status STALE_IDENTITY_SOURCE_SUPERSEDED disposition stale",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "STALE_IDENTITY_SOURCE_SUPERSEDED",
+      "step_name": "Publication Preflight",
+      "step_no": 23,
+      "step_slug": "publication_preflight",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:23",
+        "status:stale_identity_source_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:24:publication_authorization",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": "regenerate against the accepted embry_contact_sheet_v3 identity source in dependency order",
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 24 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS_APPROVED",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 24 Publication Authorization status STALE_IDENTITY_SOURCE_SUPERSEDED disposition stale",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "STALE_IDENTITY_SOURCE_SUPERSEDED",
+      "step_name": "Publication Authorization",
+      "step_no": 24,
+      "step_slug": "publication_authorization",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:24",
+        "status:stale_identity_source_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:25:public_url_probe",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": "regenerate against the accepted embry_contact_sheet_v3 identity source in dependency order",
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 25 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 25 Public URL Probe status STALE_IDENTITY_SOURCE_SUPERSEDED disposition stale",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "STALE_IDENTITY_SOURCE_SUPERSEDED",
+      "step_name": "Public URL Probe",
+      "step_no": 25,
+      "step_slug": "public_url_probe",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:25",
+        "status:stale_identity_source_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:26:provider_media_handoff",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": "regenerate against the accepted embry_contact_sheet_v3 identity source in dependency order",
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 26 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 26 Provider Media Handoff status STALE_IDENTITY_SOURCE_SUPERSEDED disposition stale",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "STALE_IDENTITY_SOURCE_SUPERSEDED",
+      "step_name": "Provider Media Handoff",
+      "step_no": 26,
+      "step_slug": "provider_media_handoff",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:26",
+        "status:stale_identity_source_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:27:provider_media_lock",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": "regenerate against the accepted embry_contact_sheet_v3 identity source in dependency order",
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 27 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 27 Provider Media Lock status STALE_IDENTITY_SOURCE_SUPERSEDED disposition stale",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "STALE_IDENTITY_SOURCE_SUPERSEDED",
+      "step_name": "Provider Media Lock",
+      "step_no": 27,
+      "step_slug": "provider_media_lock",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:27",
+        "status:stale_identity_source_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:28:kling_scene_packet",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": "regenerate against the accepted embry_contact_sheet_v3 identity source in dependency order",
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 28 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS_EXECUTED_REQUEST",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 28 Kling Scene Packet status STALE_IDENTITY_SOURCE_SUPERSEDED disposition stale",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "STALE_IDENTITY_SOURCE_SUPERSEDED",
+      "step_name": "Kling Scene Packet",
+      "step_no": 28,
+      "step_slug": "kling_scene_packet",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:28",
+        "status:stale_identity_source_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:29:provider_final_gate",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": "regenerate against the accepted embry_contact_sheet_v3 identity source in dependency order",
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 29 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "stale",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS_EXECUTED_PREFLIGHT",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 29 Provider Final Gate status STALE_IDENTITY_SOURCE_SUPERSEDED disposition stale",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "STALE_IDENTITY_SOURCE_SUPERSEDED",
+      "step_name": "Provider Final Gate",
+      "step_no": 29,
+      "step_slug": "provider_final_gate",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:29",
+        "status:stale_identity_source_superseded",
+        "disposition:stale"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:30:paid_call_authorization",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": "provider evidence stays bound to the prior revision and consumed request hash; a repaired request and new hash-bound authorization are required",
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 30 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "superseded",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS_APPROVED_CONSUMED",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 30 Paid Call Authorization status SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION disposition superseded",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION",
+      "step_name": "Paid Call Authorization",
+      "step_no": 30,
+      "step_slug": "paid_call_authorization",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:30",
+        "status:superseded_provider_evidence_prior_revision",
+        "disposition:superseded"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:31:kling_submit",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": "provider evidence stays bound to the prior revision and consumed request hash; a repaired request and new hash-bound authorization are required",
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 31 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "superseded",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS_LIVE",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 31 Kling Submit status SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION disposition superseded",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION",
+      "step_name": "Kling Submit",
+      "step_no": 31,
+      "step_slug": "kling_submit",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:31",
+        "status:superseded_provider_evidence_prior_revision",
+        "disposition:superseded"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:32:kling_poll_callback",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": "provider evidence stays bound to the prior revision and consumed request hash; a repaired request and new hash-bound authorization are required",
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 32 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "superseded",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS_LIVE",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 32 Kling Poll / Callback status SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION disposition superseded",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION",
+      "step_name": "Kling Poll / Callback",
+      "step_no": 32,
+      "step_slug": "kling_poll_callback",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:32",
+        "status:superseded_provider_evidence_prior_revision",
+        "disposition:superseded"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:33:output_retrieval",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": "provider evidence stays bound to the prior revision and consumed request hash; a repaired request and new hash-bound authorization are required",
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 33 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "superseded",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS_LIVE",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 33 Output Retrieval status SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION disposition superseded",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION",
+      "step_name": "Output Retrieval",
+      "step_no": 33,
+      "step_slug": "output_retrieval",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:33",
+        "status:superseded_provider_evidence_prior_revision",
+        "disposition:superseded"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:34:ffprobe_technical_validation",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": "provider evidence stays bound to the prior revision and consumed request hash; a repaired request and new hash-bound authorization are required",
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 34 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "superseded",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS_LIVE",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 34 FFprobe / Technical Validation status SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION disposition superseded",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION",
+      "step_name": "FFprobe / Technical Validation",
+      "step_no": 34,
+      "step_slug": "ffprobe_technical_validation",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:34",
+        "status:superseded_provider_evidence_prior_revision",
+        "disposition:superseded"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:35:frame_contact_sheet",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": "provider evidence stays bound to the prior revision and consumed request hash; a repaired request and new hash-bound authorization are required",
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 35 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "superseded",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 35 Frame Contact Sheet status SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION disposition superseded",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION",
+      "step_name": "Frame Contact Sheet",
+      "step_no": 35,
+      "step_slug": "frame_contact_sheet",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:35",
+        "status:superseded_provider_evidence_prior_revision",
+        "disposition:superseded"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:36:post_kling_continuity_review",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": "provider evidence stays bound to the prior revision and consumed request hash; a repaired request and new hash-bound authorization are required",
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 36 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "superseded",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "FAIL",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 36 Post-Kling Continuity Review status SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION disposition superseded",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION",
+      "step_name": "Post-Kling Continuity Review",
+      "step_no": 36,
+      "step_slug": "post_kling_continuity_review",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:36",
+        "status:superseded_provider_evidence_prior_revision",
+        "disposition:superseded"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:37:voice_audio_handoff",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 37 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "carried_current",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS_NOT_REQUIRED_AUDIO_OFF",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 37 Voice / Audio Handoff Lane When Voiced status PASS_CARRIED_AUDIO_LANE disposition carried_current",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "PASS_CARRIED_AUDIO_LANE",
+      "step_name": "Voice / Audio Handoff Lane When Voiced",
+      "step_no": 37,
+      "step_slug": "voice_audio_handoff",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:37",
+        "status:pass_carried_audio_lane",
+        "disposition:carried_current"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:38:final_assembly_movie_lane",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": "provider evidence stays bound to the prior revision and consumed request hash; a repaired request and new hash-bound authorization are required",
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 38 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "superseded",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS_NOT_REQUIRED_SINGLE_PROVIDER_OUTPUT",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 38 Final Assembly / Movie Lane status SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION disposition superseded",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "SUPERSEDED_PROVIDER_EVIDENCE_PRIOR_REVISION",
+      "step_name": "Final Assembly / Movie Lane",
+      "step_no": 38,
+      "step_slug": "final_assembly_movie_lane",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:38",
+        "status:superseded_provider_evidence_prior_revision",
+        "disposition:superseded"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:39:report_generation",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": "regenerate downstream evidence from the accepted identity source before this gate can close",
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 39 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "blocked",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS_BLOCKED_REPORT",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 39 Report Generation status BLOCKED disposition blocked",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "BLOCKED",
+      "step_name": "Report Generation",
+      "step_no": 39,
+      "step_slug": "report_generation",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:39",
+        "status:blocked",
+        "disposition:blocked"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:40:gate_validation_loop",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": "regenerate downstream evidence from the accepted identity source before this gate can close",
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 40 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "blocked",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "BLOCKED",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 40 Gate Validation Loop status BLOCKED disposition blocked",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "BLOCKED",
+      "step_name": "Gate Validation Loop",
+      "step_no": 40,
+      "step_slug": "gate_validation_loop",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:40",
+        "status:blocked",
+        "disposition:blocked"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:41:upstream_revision_invalidation",
+      "artifact_hashes": {
+        "identity_successor_invalidation_ledger.v1.json": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67"
+      },
+      "blocker": null,
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 41 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "current",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "previous_status_in_source_revision": "PASS",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_invalidation_ledger.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 41 Upstream Revision Invalidation status PASS disposition current",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "PASS",
+      "step_name": "Upstream Revision Invalidation",
+      "step_no": 41,
+      "step_slug": "upstream_revision_invalidation",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:41",
+        "status:pass",
+        "disposition:current"
+      ]
+    },
+    {
+      "_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:42:final_acceptance_boundary",
+      "artifact_hashes": {
+        "identity_successor_gate_summary.v1.json": "sha256:fabfc92ba482ebb508512bc2f87d944acb6aec1149a63e2983bb72af9b5c2e92"
+      },
+      "blocker": "final acceptance requires eight regenerated Phase 07 frames, a repaired provider request, new authorization, and a passing post-provider continuity review",
+      "claims": {
+        "does_not_prove": [
+          "downstream regeneration, provider readiness, or final acceptance"
+        ],
+        "proves": [
+          "step 42 state for successor revision rev_successor_943b01ecd9a3 is durably recorded"
+        ]
+      },
+      "disposition": "blocked",
+      "inputs": {
+        "repair_kind": "identity_source_successor",
+        "source_revision_id": "rev_upstream_bf3b05d47fb8"
+      },
+      "memory_write_method": "/upsert",
+      "observed_at": "2026-07-18T14:12:29.184915+00:00",
+      "outputs": [
+        "identity_successor_gate_summary.v1.json"
+      ],
+      "previous_status_in_source_revision": "BLOCKED",
+      "provider_task_id": null,
+      "receipt_paths": [
+        "identity_successor_gate_summary.v1.json"
+      ],
+      "request_hash": null,
+      "retrieval_text": "Persona Dream pipeline-complete rev_successor_943b01ecd9a3 step 42 Final Acceptance Boundary status BLOCKED_AWAITING_STORYBOARD_REGENERATION disposition blocked",
+      "revision_id": "rev_successor_943b01ecd9a3",
+      "run_id": "pipeline-complete",
+      "schema": "persona_dream.pipeline_step_memory.v1",
+      "source_revision_id": "rev_upstream_bf3b05d47fb8",
+      "status": "BLOCKED_AWAITING_STORYBOARD_REGENERATION",
+      "step_name": "Final Acceptance Boundary",
+      "step_no": 42,
+      "step_slug": "final_acceptance_boundary",
+      "tags": [
+        "persona-dream",
+        "identity-source-successor",
+        "run:pipeline-complete",
+        "revision:rev_successor_943b01ecd9a3",
+        "step:42",
+        "status:blocked_awaiting_storyboard_regeneration",
+        "disposition:blocked"
+      ]
+    }
+  ],
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.pipeline_step_memory_bundle.v1"
+}

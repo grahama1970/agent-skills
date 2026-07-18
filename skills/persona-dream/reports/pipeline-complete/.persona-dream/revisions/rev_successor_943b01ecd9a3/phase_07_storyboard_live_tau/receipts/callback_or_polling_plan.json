@@ -1,0 +1,7 @@
+{
+  "callback_url": null,
+  "panel_id": "panel_001",
+  "polling_plan": "No live provider task exists; do not poll.",
+  "schema": "persona_dream.callback_or_polling_plan.v1",
+  "status": "DRY_RUN_ONLY"
+}

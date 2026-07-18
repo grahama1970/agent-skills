@@ -1,0 +1,7 @@
+{
+  "panel_id": "panel_001",
+  "schema": "persona_dream.generation_receipt.v1",
+  "source_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/tau-run-vlm/command-loop/command-artifacts/command-loop-step-001/scillm_image_generation_receipt.json",
+  "source_receipt_status": "SCILLM_IMAGE_GENERATED",
+  "status": "PASS"
+}

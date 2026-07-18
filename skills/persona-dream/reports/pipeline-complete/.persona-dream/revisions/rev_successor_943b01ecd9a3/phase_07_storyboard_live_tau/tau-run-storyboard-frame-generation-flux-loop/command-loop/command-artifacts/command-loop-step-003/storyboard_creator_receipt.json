@@ -1,0 +1,20 @@
+{
+  "blockers": [],
+  "created_at": "2026-07-05T20:30:14.791762+00:00",
+  "duration_seconds": 10,
+  "frame_generation_receipt": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_frame_generation_receipt.json",
+  "live": true,
+  "manifest": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/receipts/storyboard_panel_manifest.json",
+  "mocked": false,
+  "panel_count": 4,
+  "provider_calls": {
+    "image": false,
+    "kling": false,
+    "paid": false
+  },
+  "role": "panel-creator",
+  "schema": "persona_dream.storyboard_creator_receipt.v1",
+  "status": "PASS_STORYBOARD_PACKET_CREATED",
+  "storyboard_packet": "/home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/storyboard_packet.json",
+  "storyboard_packet_sha256": "sha256:f79dbc931a1c2aaff417e3d6395c868346cc973153343c66d42b5595119e2312"
+}

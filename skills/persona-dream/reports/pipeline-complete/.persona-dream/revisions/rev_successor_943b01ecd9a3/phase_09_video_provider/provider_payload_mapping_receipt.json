@@ -1,0 +1,26 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "current Kling provider schema compatibility",
+      "provider-accessible media URLs",
+      "live Kling generation"
+    ],
+    "proves": [
+      "provider-facing request body was mapped from kling.scene_packet.v1",
+      "submitted is false",
+      "paid_call_authorized is false"
+    ]
+  },
+  "external_task_id": null,
+  "live_blockers": [
+    "BLOCKED_PROVIDER_SCHEMA_UNVERIFIED",
+    "BLOCKED_PROVIDER_ACCESSIBLE_URLS_MISSING",
+    "BLOCKED_PAID_CALL_NOT_AUTHORIZED"
+  ],
+  "paid_call_authorized": false,
+  "provider_schema_verified": false,
+  "request_body_path": "provider_payload_mapping/kling_request_body.dry_run.json",
+  "schema": "persona_dream.kling.provider_payload_mapping_receipt.v1",
+  "status": "DRY_RUN_NOT_LIVE_SUBMITTABLE",
+  "submitted": false
+}

@@ -1,0 +1,176 @@
+{
+  "actual_provider_call_attempts": 0,
+  "claims": {
+    "does_not_prove": [
+      "a new live cinematic-technique-selector model call was executed",
+      "downstream storyboard or provider artifacts were regenerated against this selection"
+    ],
+    "proves": [
+      "a canonical Look Lock and Script DNA exist for this revision, derived from the accepted story, crew, script, and storyboard artifacts"
+    ]
+  },
+  "composer_notes": [
+    "map look_lock into the Kling cinematography control matrix before composing provider prompts",
+    "the SB_004 repair prompt must add an unmistakable Embry-only forward commit and a readable lava-reef boundary without changing wardrobe, boards, identity bindings, or the silent-audio contract",
+    "keep every provider prompt at or under 512 characters per multi_prompt entry"
+  ],
+  "continuity_lock": [
+    "Embry: young woman, navy rashguard, white performance shortboard with sun-softened wax",
+    "Kai: young man, black rashguard, well-used white shortboard",
+    "environment: Kahalu'u Bay waterline, lava reef lower foreground, safe channel, June swell, continuous daylight",
+    "identity: each required face at least 80px, never back-only, no unrelated foreground people",
+    "audio: silent contract, generate_audio=false, nonverbal cues only"
+  ],
+  "created_at": "2026-07-17T13:36:17.618810+00:00",
+  "inferred_context": {
+    "aspect_ratio": "16:9",
+    "duration_seconds": 10,
+    "era": "June 2024",
+    "genre": "grounded slice-of-life surf drama",
+    "location_type": "public reef break, Kahalu'u Bay, Kona Coast, Big Island",
+    "mood": [
+      "restrained",
+      "sun-drenched",
+      "quietly rebellious",
+      "competent"
+    ],
+    "realism_level": "photoreal naturalism, no stylization",
+    "shot_count": 4,
+    "subject": "Embry and Kai surfing on a faked sick day",
+    "time_of_day": "June mid-day with hard glare"
+  },
+  "live": false,
+  "look_lock": {
+    "atmosphere_texture": "salt spray, heat shimmer, sweat sheen on skin, sun-softened surfboard wax",
+    "camera_format": "digital cinema camera in surf water housing, waterline operation, 1280x720 target delivery",
+    "color_grade": "warm natural daylight grade with golden highlights, clean turquoise water, true-to-skin tones",
+    "composition": "Embry and Kai are the two dominant foreground/midforeground people; both faces or three-quarter faces readable; reef visible in lower foreground but not at the cost of faces; background surfers, if any, are smaller and clearly subordinate",
+    "continuity_rule": "Embry in navy rashguard and Kai in black rashguard on two white shortboards at Kahalu'u Bay; lava reef readable in the lower foreground; safe channel geometry visible in the final beat; each required face at least 80px and never back-only; continuous daylight; no unrelated foreground people",
+    "lens": "waterline surf photography, approximately 28-35mm equivalent; not ultra-wide",
+    "lighting": "natural hard June mid-day Hawaiian sunlight, silver glare on the wave face, no artificial fill",
+    "motion_rules": "slow observational drift with the swell; small handheld corrections at the board rail; gentle lateral drift keeping Kai outside the decision point; one brief forward glide with the wave shoulder in the final beat; no dramatic push-ins"
+  },
+  "mocked": false,
+  "mode": "technique_and_script_selection",
+  "negative_constraints": [
+    "wide establishing shot",
+    "crowd lineup shot",
+    "distant silhouettes",
+    "back-facing two-shot",
+    "night or golden-hour relighting",
+    "artificial studio lighting",
+    "added crowds or extra foreground surfers"
+  ],
+  "provenance": {
+    "derivation": "deterministic_reconstruction_from_accepted_revision_artifacts",
+    "live_selector_call": false,
+    "reconstruction": true,
+    "source_artifact_hashes": {
+      "phase_02_story/story_contract.json": "sha256:84f4f8b9bf17778f41e2e062f856e2a36b4ca760abc5288b44329e90a87e786e",
+      "phase_03_crew/crew_contract.json": "sha256:8b3fb7869c3925747ea62b38c1984dd497323f500cb54c81a797d7eb8a7d3626",
+      "phase_06_script/entity_environment_script_table.json": "sha256:01655698db24e61bc47fc5ebccf7e8c9a50264f2c75ad7a4058a8425c69ebf54",
+      "phase_06_script/script_contract.json": "sha256:645e15b899c8f69826a0c174ea0f72d4c4936cb4592d139c6643df837efe26d5",
+      "phase_06_script/timed_transcript.json": "sha256:281261d628a6d4fa6f26b11e4350a90e7bbb00cdb5d7ba1dbd690deb5cf5bc4b",
+      "phase_07_storyboard_live_tau/storyboard_packet.json": "sha256:a1c1031e697d67dca734a797bbfa438a1ab30358e8dea18eee7c157de8f2fc97"
+    },
+    "source_revision_id": "rev_idea_f3f9c48d5cc2"
+  },
+  "revision_id": "rev_upstream_bf3b05d47fb8",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.technique_selection.v1",
+  "script_dna": {
+    "beat_rules": [
+      "each beat contains one visible physical micro-correction",
+      "Kai never takes over Embry's decision",
+      "the final beat must show an unmistakable Embry-only forward commit through the safe channel",
+      "the lava-reef boundary and safe-channel geometry must remain visually readable in the final beat"
+    ],
+    "conflict_pattern": "autonomy versus obligation, mediated by surf etiquette and the lava-reef hazard",
+    "dialogue_style": "near-silent; at most one quiet practical line from Kai (canonical line: \"If we paddle now, we're cutting across the lineup.\"); no banter, no exposition",
+    "do_not_use": [
+      "spoken exposition",
+      "melodrama",
+      "wide establishing shot",
+      "crowd lineup shot",
+      "distant silhouettes",
+      "back-facing two-shot"
+    ],
+    "influences_as_techniques": [
+      "restraint-first blocking instead of dialogue exposition",
+      "competence shown through physical micro-corrections",
+      "environmental clock pressure from set waves instead of verbal deadlines",
+      "nonverbal cue-and-consent beats between equals"
+    ],
+    "primary_mode": "quiet procedural naturalism",
+    "scene_engine": "a stolen sick day still obeys local rules: wait, read the water, then commit",
+    "structure": "four-beat ten-second arc: shared restraint, physical strain, read-and-cue, Embry-only commit",
+    "theme": "earned autonomy: choosing carefully is the rebellion"
+  },
+  "shot_plan": [
+    {
+      "action": "Embry and Kai wait outside the lineup instead of cutting across it. Heat, glare, and the public reef break establish that the stolen sick day still has rules.",
+      "camera_movement": "slow observational drift with the swell, no dramatic push",
+      "continuity_reminder": "navy/black rashguards, two white shortboards, waterline height, lava reef in lower foreground, continuous daylight",
+      "focus_target": "Embry and Kai identity readability first, reef and channel geometry second",
+      "framing": "WS - Embry and Kai are framed as part of a shared lineup; reef shapes occupy the lower foreground.",
+      "panel_id": "sb_001",
+      "shot_number": 1,
+      "time_range_s": {
+        "end_s": 2.5,
+        "start_s": 0
+      }
+    },
+    {
+      "action": "Embry's phone buzzes from the beach bag as sweat and salt mark her face. Her palm skids on sun-softened wax, forcing her to reset her rail grip before the wave reaches the reef line.",
+      "camera_movement": "small handheld/swell movement tracking Embry's grip reset",
+      "continuity_reminder": "navy/black rashguards, two white shortboards, waterline height, lava reef in lower foreground, continuous daylight",
+      "focus_target": "Embry and Kai identity readability first, reef and channel geometry second",
+      "framing": "MS - Hands, rail, wax, Embry's face, and reef line all remain legible.",
+      "panel_id": "sb_002",
+      "shot_number": 2,
+      "time_range_s": {
+        "end_s": 5,
+        "start_s": 2.5
+      }
+    },
+    {
+      "action": "Kai reads the local, the channel, the reef, and Embry's paddle cadence. He holds position instead of taking the easy wave, then gives one restrained cue.",
+      "camera_movement": "gentle lateral drift that keeps Kai outside and Embry nearer the decision point",
+      "continuity_reminder": "navy/black rashguards, two white shortboards, waterline height, lava reef in lower foreground, continuous daylight",
+      "focus_target": "Embry and Kai identity readability first, reef and channel geometry second",
+      "framing": "MWS - Kai, Embry, channel, and shared lineup geometry are all visible.",
+      "panel_id": "sb_003",
+      "shot_number": 3,
+      "time_range_s": {
+        "end_s": 7.5,
+        "start_s": 5
+      }
+    },
+    {
+      "action": "Embry chooses the safe channel and commits only when the lineup opens. The wave, reef, softened wax, and phone obligation converge into one visible decision.",
+      "camera_movement": "brief forward glide with the shoulder as Embry chooses the safe line",
+      "continuity_reminder": "navy/black rashguards, two white shortboards, waterline height, lava reef in lower foreground, continuous daylight",
+      "focus_target": "Embry and Kai identity readability first, reef and channel geometry second",
+      "framing": "POV - Embry, wave shoulder, reef boundary, and safe channel form one readable decision geometry.",
+      "panel_id": "sb_004",
+      "shot_number": 4,
+      "time_range_s": {
+        "end_s": 10,
+        "start_s": 7.5
+      }
+    }
+  ],
+  "skill": "cinematic_technique_selector",
+  "user_intent_summary": "Embry and Kai both faked a sick day at their summer jobs to go surfing on the Big Island on a Wednesday in June of 2024 — Kona Coast, Kahaluʻu Bay, summer swell patterns, lava rock reefs, local surf etiquette.",
+  "version": "1.0.0",
+  "visual_strategy": {
+    "primary_visual_dna": "waterline surf-documentary realism with identity-readable faces",
+    "rationale": "The accepted storyboard, camera contract, and script contract already encode a waterline surf-documentary look with strict identity readability targets; this selection locks that language so a repaired SB_004 request and any regenerated downstream artifact inherit one stable visual grammar.",
+    "trait_translation": [
+      "restraint reads as slow observational drift, never a push-in",
+      "hazard reads as lava reef shapes in the lower foreground",
+      "autonomy reads as Embry alone entering the safe channel in the final beat",
+      "heat reads as glare, sweat sheen, and softened wax texture"
+    ]
+  }
+}

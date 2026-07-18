@@ -1,0 +1,25 @@
+{
+  "actual_provider_call_attempts": 0,
+  "binding_sha256": "sha256:dfd26d84729ebc77e625f61bcefd7d87f60c3cadcc09162683636fa69fb10f6f",
+  "idea_id": "pd_idea_45a9d20d629b4e08863a9618b5f83982",
+  "idea_sha256": "sha256:45a9d20d629b4e08863a9618b5f83982a9eb55bbf52cbd1de5deac09015baf9b",
+  "live_submit_ready": false,
+  "phase_id": "08",
+  "previous_phase_binding_sha256": "sha256:ad80428f2b231adc4520fce51ef1fea5a3bb3e24003bb8543a11e172b1c1a770",
+  "provider_live": false,
+  "provider_ready": false,
+  "required_artifact_hashes": {
+    "media_lock": "sha256:ca2251f04a35402676ff20dca14009d614b8b7b7cb3ac4d2c036c7f4b6825efd"
+  },
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.phase_idea_binding.v1",
+  "semantic_evidence": {
+    "domain_hits": [],
+    "mode": "structural_hash_chain",
+    "person_hits": []
+  },
+  "source": "explicit_human",
+  "status": "PASS_PHASE_IDEA_BOUND",
+  "submitted": false
+}

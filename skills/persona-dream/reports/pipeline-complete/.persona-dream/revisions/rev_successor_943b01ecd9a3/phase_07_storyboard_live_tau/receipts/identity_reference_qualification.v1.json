@@ -1,0 +1,39 @@
+{
+  "schema": "persona_dream.identity_reference_qualification.v1",
+  "status": "FAIL_IDENTITY_REFERENCE_INCONSISTENT",
+  "run_id": "pipeline-complete",
+  "revision_id": "rev_upstream_bf3b05d47fb8",
+  "review_method": "human visual inspection of original-resolution locked character sheets",
+  "characters": {
+    "Embry": {
+      "path": "phase_07_storyboard_live_tau/references/01-embry_character_sheet.jpg",
+      "sha256": "sha256:b93c3fed77959d783cdc5788189117d8a8fed6b92fc689eba1154d080d323840",
+      "status": "FAIL_REFERENCE_IDENTITY_INCONSISTENT",
+      "blocking_findings": [
+        "The nine-cell sheet contains materially inconsistent facial geometry across A1/A2/A3 and B4/B6 rather than one stable identity under pose and lighting changes."
+      ]
+    },
+    "Kai": {
+      "path": "phase_07_storyboard_live_tau/references/02-kai_character_sheet.png",
+      "sha256": "sha256:692cf37c5e7915f8b4ebceabd03b5d01ff69c9d428e94333bc1a01ac5e497700",
+      "status": "NOT_REVIEWED_IN_THIS_FAILURE_RECEIPT",
+      "blocking_findings": []
+    }
+  },
+  "blocking_findings": [
+    "EMBRY_REFERENCE_SET_NOT_SINGLE_IDENTITY",
+    "REFERENCE_QUALIFICATION_REQUIRED_BEFORE_STORYBOARD_OR_PROVIDER_USE"
+  ],
+  "mocked": false,
+  "live": true,
+  "claims": {
+    "proves": [
+      "the exact locked Embry reference sheet was visually inspected and rejected as internally inconsistent"
+    ],
+    "does_not_prove": [
+      "deterministic face-embedding similarity",
+      "Kai reference qualification"
+    ]
+  },
+  "observed_at": "2026-07-17T16:45:00Z"
+}
