@@ -2044,7 +2044,9 @@ def run_campaign(
     listener_pending: list[tuple[dict[str, Any], dict[str, Any], dict[str, Any]]] = []
     for case in manifest["cases"]:
         case_state = state["cases"][case["case_id"]]
-        if case_state.get("stage") == "completed":
+        # Blocked cases stay parked until explicitly retried so one failing
+        # case can never starve or slow the rest of the campaign.
+        if case_state.get("stage") in ("completed", "blocked"):
             continue
         for turn in case["turn_script"]:
             turn_state = case_state["turns"][turn["turn_id"]]
