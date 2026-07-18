@@ -722,7 +722,11 @@ def _turn_audio_assets(
             turn["utterance_sha256"],
         ),
         expected_generated_prompt=_post_wake_query(
-            str(turn.get("spoken_text") or turn["utterance"])
+            str(
+                turn.get("synthesis_spoken_text")
+                or turn.get("spoken_text")
+                or turn["utterance"]
+            )
         ),
     )
     wake_value = case_assets.get("wake_audio") or assets.get("wake_audio")
