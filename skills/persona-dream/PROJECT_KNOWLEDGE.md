@@ -1,10 +1,37 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-18 (Phase D state-clearing audit + supersession) by agent
+**Last updated:** 2026-07-18 (face-crop identity subgate + calibration v3) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-18 (face-crop identity subgate): A zoomed-in face-crop subgate DID close
+  the full-frame dilution blind spot — but only for non-marginal mismatches, and it
+  did NOT fully calibrate. Mechanism (scripts/identity_face_crop_subgate.py, wired
+  into phase07_storyboard_tau_node._run_identity_continuity_review, additive +
+  fail-closed + provenance-free): ask gpt-5.5 for face bboxes, PIL-crop the candidate
+  face plus up to 3 pose-matched reference views (frontal/3-4/profile), upscale, and
+  run a feature-level face-to-face comparison; full-frame AND subgate must both PASS
+  (code FAIL_FACE_CROP_IDENTITY_MISMATCH). Under a strict first prompt the subgate
+  correctly FAILED the residual known_bad_sb_001 that full-frame review missed —
+  proving the zoom surfaces the divergence. But calibration v3 (3 subgate-prompt
+  revisions, the cap) = REVIEWER_CALIBRATION_FAILED: known-bad 2/3 FAIL, tamper 1/1,
+  positives 1/2 (unstable). Hard lesson: known_bad_sb_001 is a genuine NEAR-LOOK-ALIKE
+  — at face-crop scale gpt-5.5 cannot separably discriminate it from the genuine
+  positives, and its verdicts on borderline crops are UNSTABLE run-to-run (the same
+  two crops returned SAME, then DIFFERENT, then an empty verdict across runs). Any
+  prompt strict enough to fail it also over-rejected real matches on surface
+  warmth/pose; any prompt lenient enough to pass real matches also passed it. This is
+  a discrimination-boundary case that belongs to human adjudication, not more prompt
+  fiddling. Actionable for the next agent: (1) borderline face-crop comparisons need
+  best-of-N agreement or a second independent reviewer before a FAIL/PASS is trusted —
+  a single call is too noisy; (2) higher-resolution crops or a dedicated face-embedding
+  distance metric may separate near-look-alikes better than a VLM prose comparison;
+  (3) a packaged bundle (reviewer_calibration_v3/human_adjudication_bundle) with
+  side-by-side candidate vs pose-matched reference crops + one-page questions is the
+  right artifact when the model sits at its discrimination limit. Restoration stayed
+  WITHHELD (acceptance_rung_receipt.v3 = RUNG_NOT_RESTORED_BLOCKED_ON_REVIEWER_CALIBRATION);
+  a factual blocked outcome with an adjudication bundle beats a forced pass.
 - 2026-07-18 (state-clearing audit + supersession): Re-qualifying an immutable
   revision after its artifact index is rebuilt (same revision id, changed index)
   needed a sanctioned path; in Phase D it was done ad hoc by hand-deleting the

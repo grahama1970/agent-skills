@@ -5,7 +5,15 @@
 
 This top-level file redirects to the detailed handoff. The current handoff covers UX Lab Dream/Kling preflight React surface implementation — 12-phase pipeline, Gemini design packet mostly implemented, blocked on image modal click not working through draggable parent.
 
-## 2026-07-18 Reviewer hardening (identity continuity) — action required
+## 2026-07-18 Face-crop identity subgate + calibration v3 — HUMAN ADJUDICATION required
+
+- Augmented the identity reviewer with a MANDATORY face-crop identity subgate: new helper `scripts/identity_face_crop_subgate.py`, wired into `phase07_storyboard_tau_node._run_identity_continuity_review`. It gets face bboxes from gpt-5.5, crops the candidate face + up to 3 pose-matched reference views (PIL, upscaled), and runs a feature-level face-to-face comparison. Full-frame review AND the subgate must both PASS; failure code `FAIL_FACE_CROP_IDENTITY_MISMATCH`. Additive (full-frame never relaxed), fail-closed, no provenance in prompts. Unit-tested: `tests/test_identity_face_crop_subgate.py` (26 cases, no live calls).
+- Calibration v3 (`reviewer_calibration_receipt.v3.json`, 3 subgate-prompt revisions = the cap) = REVIEWER_CALIBRATION_FAILED: known-bad **2/3** FAIL, tamper 1/1 FAIL, positives **1/2** (unstable). CRITICAL residual: `known_bad_sb_001` (subtlest near-look-alike) still PASSes — not separably discriminable from the genuine positives at gpt-5.5 face-crop scale, with run-to-run instability (SAME/DIFFERENT/empty verdict on identical inputs).
+- The subgate mechanism works (under the strict first prompt it FAILED sb_001 via the crop subgate) and closes the full-frame dilution blind spot for non-marginal mismatches; but a clean PASS was not achievable within the revision budget without over-rejecting genuine frames.
+- Packaged a human adjudication bundle: `reviewer_calibration_v3/human_adjudication_bundle/` (montages `dispute_01_embry_...png`, `dispute_02_kai_...png` — disputed candidate vs pose-matched v3 reference crops — plus `ADJUDICATION.md` with the exact per-frame question). **Action: a human answers Q1/Q2 (is known_bad_sb_001 a different identity or an acceptable match?) and Q3 (require best-of-N agreement / second reviewer for borderline crops?), then route per ADJUDICATION.md.**
+- `acceptance_rung_receipt.v3.json` = RUNG_NOT_RESTORED_BLOCKED_ON_REVIEWER_CALIBRATION. The 8-frame augmented re-review, lane C SB_003 regen, and supersession/requalification/rung restoration remain gated on calibration PASS. Memory (exact reread PASS): `...:reviewer_calibration_v3_face_crop_subgate`, `...:acceptance_rung_v3`. No paid call made or authorized.
+
+## 2026-07-18 Reviewer hardening (identity continuity) — superseded by v3 above
 
 - A negative-control probe proved the Phase C identity reviewer was too lenient (PASSed 2/3 known-bad montage frames), so the successor 8/8 first-attempt Phase C PASS was partly false confidence for specific-identity fidelity.
 - Hardened `phase07_storyboard_tau_node._identity_review_prompt` (contained to the review prompt contract). Hardened prompt `sha256:ee09dd57d8d06953d2039b4085cab7e481a5f09c09984a290b97b41cb3f626d7`.
