@@ -69,11 +69,17 @@ class ManagedListenerProcess(AbstractContextManager["ManagedListenerProcess"]):
             "--min-voiced-ms", str(self.config.get("min_voiced_ms", 250)),
             "--event-service-url", self.config["journal_url"].rstrip("/") + "/v1/listener/events",
             "--managed-socket", str(self.socket),
-            "--target-cycles", str(self.target_turn_count),
-            "--cycles-this-run", str(self.turns_this_run),
-            "--max-attempts-this-run", str(max(8, self.turns_this_run * 4)),
+            # Each turn may be re-captured up to MAX_CAPTURE_ATTEMPTS times (one
+            # WER-rejected turn triggers a bounded re-capture that the listener
+            # counts as a completed cycle). Size the listener's cycle budget with
+            # that headroom so a retried turn can never exhaust the budget and
+            # starve later turns (root cause of listener_receipt_missing).
+            "--target-cycles", str(self.target_turn_count * MAX_CAPTURE_ATTEMPTS),
+            "--cycles-this-run", str(self.turns_this_run * MAX_CAPTURE_ATTEMPTS),
+            "--max-attempts-this-run",
+            str(max(8, self.turns_this_run * MAX_CAPTURE_ATTEMPTS * 4)),
             "--restart-capture-after-cycle", "0",
-            "--model", "small.en",
+            "--model", self.config.get("listener_model", "small.en"),
             "--realtime-model", "tiny.en",
             "--device", self.config["listener_device"],
             "--compute-type", self.config["listener_compute_type"],
