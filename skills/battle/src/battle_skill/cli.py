@@ -459,6 +459,63 @@ def arena_parent_spawn_proof(
         raise typer.Exit(1)
 
 
+@app.command("arena-adaptive-lineage-qualification")
+def arena_adaptive_lineage_qualification(
+    battle_id: str = typer.Argument(
+        "battle-004", help="Canonical Battle ID for the adaptive-lineage qualification."
+    ),
+    out: Path = typer.Option(..., help="Artifact output directory."),
+    query: str = typer.Option(
+        "OWASP file upload zip slip path traversal vulnerability",
+        help="Brave Search query for canonical BATTLE-004 scenario selection.",
+    ),
+    docker_image: str = typer.Option(
+        "python:3.12-slim",
+        help="Docker image used for Arena hidden oracle and Judge replay.",
+    ),
+    model: str = typer.Option(
+        "gpt-5.5",
+        help="Model Tau should request through its Scillm handoff bridge.",
+    ),
+    scillm_base_url: str = typer.Option(
+        "http://localhost:4001",
+        help="Scillm base URL used by Tau, not directly by Battle.",
+    ),
+    timeout_s: float = typer.Option(
+        1200.0,
+        help="Total round budget in seconds (adaptive-lineage stop condition is 1200s).",
+    ),
+):
+    """Run one live four-specimen adaptive-lineage qualification (G0 -> G1-A/G1-B -> G2).
+
+    The deterministic reducer + RecordedSpecimenProvider are proven by
+    tests/test_adaptive_lineage_reducer.py; this drives the same reducer with the
+    LIVE Tau specimen provider. The emitted battle.adaptive_lineage_qualification.v1
+    receipt controls the exit code (0 only on PASS). Runs the specimen loop once.
+    """
+    import datetime as _dt
+    import json as _json
+
+    from .arena_live_battle_proof import run_live_adaptive_lineage_qualification
+
+    run_id = (
+        f"arena-adaptive-lineage-{_dt.datetime.now(_dt.UTC).strftime('%Y%m%dT%H%M%SZ')}"
+    )
+    result = run_live_adaptive_lineage_qualification(
+        out_dir=out,
+        battle_id=battle_id,
+        run_id=run_id,
+        query=query,
+        docker_image=docker_image,
+        model=model,
+        scillm_base_url=scillm_base_url,
+        timeout_s=timeout_s,
+    )
+    print(_json.dumps(result, indent=2, sort_keys=True))
+    if result.get("status") != "PASS":
+        raise typer.Exit(1)
+
+
 @app.command("arena-prekill-survival-proof")
 def arena_prekill_survival_proof(
     battle_id: str = typer.Argument(
@@ -1519,6 +1576,82 @@ def validate_runtime_judge_fixture(
 
     report = validate_normalized_runtime_judge_fixture_path(fixture)
     console.print_json(data=report)
+
+
+@app.command("normalize-adaptive-lineage-fixture")
+def normalize_adaptive_lineage_fixture(
+    bundle_dir: Path = typer.Argument(
+        ...,
+        exists=True,
+        readable=True,
+        help="Adaptive-lineage qualification bundle (holds adaptive-lineage-qualification.json + receipts/).",
+    ),
+    out: Path = typer.Option(
+        ...,
+        "--out",
+        help="Output path for the normalized battle.adaptive_lineage_mechanics_fixture.v1 JSON.",
+    ),
+    data_source: Optional[str] = typer.Option(
+        None,
+        "--data-source",
+        help="Override data_source (recorded | live). Defaults to the bundle provenance.json — never hardcoded.",
+    ),
+    generated_at: Optional[str] = typer.Option(
+        None, "--generated-at", help="Optional deterministic generated_at timestamp."
+    ),
+):
+    """Normalize a battle.adaptive_lineage_qualification.v1 bundle into a MECHANICS-FIRST spectator fixture."""
+    import json as _json
+
+    from .adaptive_lineage_mechanics_fixture import (
+        normalize_adaptive_lineage_bundle,
+        validate_normalized_adaptive_lineage_fixture,
+    )
+
+    fixture = normalize_adaptive_lineage_bundle(
+        bundle_dir, data_source=data_source, generated_at=generated_at
+    )
+    report = validate_normalized_adaptive_lineage_fixture(fixture)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(
+        _json.dumps(fixture, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    console.print_json(
+        data={
+            "status": report["status"],
+            "schema": fixture["schema"],
+            "battle_id": fixture["battle_id"],
+            "data_source": fixture["data_source"],
+            "qualification_status": fixture["qualification"]["status"],
+            "selected_id": fixture["selection"]["selected_id"],
+            "deciding_criterion": fixture["selection"]["deciding_criterion"],
+            "node_count": report["node_count"],
+            "edge_count": report["edge_count"],
+            "problems": report["problems"],
+            "out": str(out),
+        }
+    )
+    if report["status"] != "PASS":
+        raise typer.Exit(1)
+
+
+@app.command("validate-adaptive-lineage-fixture")
+def validate_adaptive_lineage_fixture(
+    fixture: Path = typer.Argument(
+        ...,
+        exists=True,
+        file_okay=True,
+        dir_okay=False,
+        readable=True,
+        help="battle.adaptive_lineage_mechanics_fixture.v1 JSON fixture.",
+    ),
+):
+    """Validate a normalized adaptive-lineage mechanics fixture."""
+    from .adaptive_lineage_mechanics_fixture import (
+        validate_normalized_adaptive_lineage_fixture_path,
+    )
+
+    console.print_json(data=validate_normalized_adaptive_lineage_fixture_path(fixture))
 
 
 @app.command("normalize-population-fixture")

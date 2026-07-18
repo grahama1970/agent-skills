@@ -1,0 +1,183 @@
+{
+  "battle_id": "battle-adaptive-lineage",
+  "data_source": "recorded",
+  "edges": [
+    {
+      "changed_dimensions": [
+        {
+          "child": "plain_import_app",
+          "dimension": "app_load_mode",
+          "parent": "from_import_app"
+        },
+        {
+          "child": "none",
+          "dimension": "target_call_form",
+          "parent": "function_call"
+        }
+      ],
+      "delta_status": "PASS",
+      "from": "G0",
+      "mutation_operator": "method_replace",
+      "novelty_distance": 2,
+      "to": "G1-A"
+    },
+    {
+      "changed_dimensions": [
+        {
+          "child": "absolute_path",
+          "dimension": "traversal_representation",
+          "parent": "dotdot_relative"
+        }
+      ],
+      "delta_status": "PASS",
+      "from": "G0",
+      "mutation_operator": "oracle_or_parameter_mutation",
+      "novelty_distance": 1,
+      "to": "G1-B"
+    },
+    {
+      "changed_dimensions": [
+        {
+          "child": "none",
+          "dimension": "app_load_mode",
+          "parent": "plain_import_app"
+        },
+        {
+          "child": "absolute_path",
+          "dimension": "traversal_representation",
+          "parent": "dotdot_relative"
+        },
+        {
+          "child": "http_post",
+          "dimension": "target_call_form",
+          "parent": "none"
+        }
+      ],
+      "delta_status": "PASS",
+      "from": "G1-A",
+      "mutation_operator": "failure_guided_crossover",
+      "novelty_distance": 3,
+      "to": "G2"
+    }
+  ],
+  "generated_at": "2026-07-18T00:00:00Z",
+  "nodes": [
+    {
+      "changed_dimensions": [],
+      "delta_status": null,
+      "fitness_status": null,
+      "generation": 0,
+      "id": "G0",
+      "judge_outcome": null,
+      "mutation_operator": null,
+      "novelty_distance": null,
+      "parentId": null,
+      "role": "seed",
+      "runner_up": false,
+      "selected": false,
+      "technique_delta": "seed zip-slip exploit (no mutation)"
+    },
+    {
+      "changed_dimensions": [
+        {
+          "child": "plain_import_app",
+          "dimension": "app_load_mode",
+          "parent": "from_import_app"
+        },
+        {
+          "child": "none",
+          "dimension": "target_call_form",
+          "parent": "function_call"
+        }
+      ],
+      "delta_status": "PASS",
+      "fitness_status": "PASS",
+      "generation": 1,
+      "id": "G1-A",
+      "judge_outcome": {
+        "duration_seconds": 20.0,
+        "patched_bypass": false,
+        "vulnerable_original_confirmed": true
+      },
+      "mutation_operator": "method_replace",
+      "novelty_distance": 2,
+      "parentId": "G0",
+      "role": "candidate",
+      "runner_up": false,
+      "selected": true,
+      "technique_delta": "load app via plain import; call app.import_zip"
+    },
+    {
+      "changed_dimensions": [
+        {
+          "child": "absolute_path",
+          "dimension": "traversal_representation",
+          "parent": "dotdot_relative"
+        }
+      ],
+      "delta_status": "PASS",
+      "fitness_status": "PASS",
+      "generation": 1,
+      "id": "G1-B",
+      "judge_outcome": {
+        "duration_seconds": 10.0,
+        "patched_bypass": false,
+        "vulnerable_original_confirmed": true
+      },
+      "mutation_operator": "oracle_or_parameter_mutation",
+      "novelty_distance": 1,
+      "parentId": "G0",
+      "role": "candidate",
+      "runner_up": true,
+      "selected": false,
+      "technique_delta": "mutate traversal payload from ../ to absolute path"
+    },
+    {
+      "changed_dimensions": [
+        {
+          "child": "none",
+          "dimension": "app_load_mode",
+          "parent": "plain_import_app"
+        },
+        {
+          "child": "absolute_path",
+          "dimension": "traversal_representation",
+          "parent": "dotdot_relative"
+        },
+        {
+          "child": "http_post",
+          "dimension": "target_call_form",
+          "parent": "none"
+        }
+      ],
+      "delta_status": "PASS",
+      "fitness_status": "PASS",
+      "generation": 2,
+      "id": "G2",
+      "judge_outcome": {
+        "duration_seconds": 15.0,
+        "patched_bypass": false,
+        "vulnerable_original_confirmed": true
+      },
+      "mutation_operator": "failure_guided_crossover",
+      "novelty_distance": 3,
+      "parentId": "G1-A",
+      "role": "descendant",
+      "runner_up": false,
+      "selected": false,
+      "technique_delta": "cross the selected G1 with an HTTP delivery + absolute traversal"
+    }
+  ],
+  "qualification": {
+    "reasons": [],
+    "status": "PASS",
+    "stop_condition": null
+  },
+  "run_id": "run-adaptive-lineage-recorded-0001",
+  "schema": "battle.adaptive_lineage_mechanics_fixture.v1",
+  "selection": {
+    "deciding_criterion": "novelty_distance",
+    "runner_up_id": "G1-B",
+    "selected_id": "G1-A"
+  }
+}

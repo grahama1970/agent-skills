@@ -78,6 +78,91 @@ def run_arena_prekill_survival_proof(
     )
 
 
+def run_live_adaptive_lineage_qualification(
+    *,
+    out_dir: Path,
+    battle_id: str,
+    run_id: str,
+    query: str = "OWASP file upload zip slip path traversal vulnerability",
+    docker_image: str = "python:3.12-slim",
+    model: str = "gpt-5.5",
+    scillm_base_url: str = "http://localhost:4001",
+    timeout_s: float = CANONICAL_BATTLE004_ALLOTTED_SECONDS,
+) -> dict[str, Any]:
+    """Run one live four-specimen adaptive-lineage qualification for BATTLE-004.
+
+    Performs the same public-only Arena scenario + context setup that
+    :func:`run_arena_tau_public_only_proof` uses, then drives the deterministic
+    reducer through :class:`~battle_skill.adaptive_lineage.LiveTauSpecimenProvider`.
+    The returned ``battle.adaptive_lineage_qualification.v1`` receipt's ``status``
+    is authoritative. Runs the specimen loop exactly once (no re-rolling): a
+    fail-closed FAIL is an honest outcome, not a reason to retry.
+    """
+    from .adaptive_lineage import (
+        AdaptiveLineageBudget,
+        LiveTauSpecimenProvider,
+        run_adaptive_lineage_qualification,
+    )
+
+    out_dir = out_dir.resolve()
+    out_dir.mkdir(parents=True, exist_ok=True)
+    arena_out = out_dir / "arena"
+
+    run_arena_subagent_proof(
+        out_dir=arena_out,
+        battle_id=battle_id,
+        run_id=f"{run_id}-arena",
+        query=query,
+        docker_image=docker_image,
+    )
+    oracle_path = _write_canonical_zip_slip_scenario(
+        arena_out=arena_out,
+        battle_id=battle_id,
+        run_id=f"{run_id}-arena",
+        docker_image=docker_image,
+    )
+    scenario = json.loads((arena_out / "scenario.json").read_text(encoding="utf-8"))
+    _write_multi_vuln_ledger(
+        arena_out=arena_out,
+        battle_id=battle_id,
+        scenario=scenario,
+        oracle_receipt=oracle_path,
+    )
+    context_path = _write_tau_public_context(
+        out_dir=out_dir,
+        battle_id=battle_id,
+        run_id=run_id,
+        scenario=scenario,
+        red_workers=1,
+        blue_workers=1,
+    )
+
+    budget = AdaptiveLineageBudget()
+    provider = LiveTauSpecimenProvider(
+        out_dir=str(out_dir),
+        battle_id=battle_id,
+        run_id=run_id,
+        scenario=scenario,
+        scenario_id=scenario["scenario_id"],
+        context_path=str(context_path),
+        docker_image=docker_image,
+        model=model,
+        scillm_base_url=scillm_base_url,
+        timeout_s=timeout_s,
+        red_workers=1,
+        blue_workers=1,
+        budget=budget,
+        timing_origin=time.perf_counter(),
+    )
+    return run_adaptive_lineage_qualification(
+        provider,
+        battle_id=battle_id,
+        run_id=run_id,
+        out_dir=out_dir,
+        budget=budget,
+    )
+
+
 def run_arena_tau_public_only_proof(
     *,
     out_dir: Path,

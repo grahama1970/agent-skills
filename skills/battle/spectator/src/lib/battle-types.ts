@@ -1,5 +1,74 @@
 export type Team = "red" | "blue" | "judge" | "system";
 
+// ---------------------------------------------------------------------------
+// Adaptive-lineage MECHANICS fixture — schema battle.adaptive_lineage_mechanics_fixture.v1
+// Produced by src/battle_skill/adaptive_lineage_mechanics_fixture.py from a
+// battle.adaptive_lineage_qualification.v1 bundle. Every value is receipt-sourced.
+// ---------------------------------------------------------------------------
+
+export type AdaptiveLineageDataSource = "recorded" | "live";
+
+export type AdaptiveLineageChangedDimension = {
+	dimension: string;
+	parent: string | null;
+	child: string | null;
+};
+
+export type AdaptiveLineageJudgeOutcome = {
+	vulnerable_original_confirmed: boolean;
+	patched_bypass: boolean;
+	duration_seconds: number;
+};
+
+export type AdaptiveLineageNode = {
+	id: string;
+	role: "seed" | "candidate" | "descendant" | string;
+	generation: number;
+	parentId: string | null;
+	mutation_operator: string | null;
+	technique_delta: string | null;
+	novelty_distance: number | null;
+	delta_status: string | null;
+	fitness_status: string | null;
+	changed_dimensions: AdaptiveLineageChangedDimension[];
+	judge_outcome: AdaptiveLineageJudgeOutcome | null;
+	selected: boolean;
+	runner_up: boolean;
+};
+
+export type AdaptiveLineageEdge = {
+	from: string;
+	to: string;
+	mutation_operator: string | null;
+	novelty_distance: number | null;
+	delta_status: string | null;
+	changed_dimensions: AdaptiveLineageChangedDimension[];
+};
+
+export type AdaptiveLineageSelection = {
+	selected_id: string | null;
+	runner_up_id: string | null;
+	deciding_criterion: string | null;
+};
+
+export type AdaptiveLineageQualification = {
+	status: "PASS" | "FAIL" | string;
+	stop_condition: string | null;
+	reasons: string[];
+};
+
+export type BattleAdaptiveLineageMechanicsFixtureV1 = {
+	schema: "battle.adaptive_lineage_mechanics_fixture.v1";
+	battle_id: string;
+	run_id: string;
+	data_source: AdaptiveLineageDataSource;
+	generated_at?: string | null;
+	qualification: AdaptiveLineageQualification;
+	selection: AdaptiveLineageSelection;
+	nodes: AdaptiveLineageNode[];
+	edges: AdaptiveLineageEdge[];
+};
+
 export type ProofMode = "fixture" | "receipt_backed_fixture" | "mocked" | "live" | "pending" | "missing";
 
 export type ActorKind =
