@@ -2,6 +2,7 @@
 
 import inspect
 from pathlib import Path
+import subprocess
 import zipfile
 
 from test_execution_lock import MODULE
@@ -112,6 +113,36 @@ def test_download_uses_tab_aware_webgpt_command(tmp_path: Path) -> None:
         str(output),
         "--timeout",
         "120",
+    ]
+
+
+def test_click_and_wait_download_invokes_tab_aware_surf_helper(monkeypatch, tmp_path: Path) -> None:
+    calls = []
+
+    def fake_surf(*args, **_kwargs):
+        calls.append(list(args))
+        output = Path(args[args.index("--output") + 1])
+        output.write_bytes(b"zip-bytes")
+        return subprocess.CompletedProcess(args=args, returncode=0, stdout="", stderr="")
+
+    monkeypatch.setattr(MODULE, "_surf", fake_surf)
+
+    downloaded = MODULE._click_and_wait_download("837358116", ".zip", timeout=120, background=True)
+
+    assert downloaded is not None
+    assert downloaded.read_bytes() == b"zip-bytes"
+    assert calls == [
+        [
+            "webgpt.download",
+            "--match",
+            ".zip",
+            "--tab-id",
+            "837358116",
+            "--output",
+            str(downloaded),
+            "--timeout",
+            "120",
+        ]
     ]
 
 
