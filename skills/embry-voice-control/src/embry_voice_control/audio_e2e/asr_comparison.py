@@ -8,9 +8,36 @@ import re
 from typing import Any
 
 
+# Inline emotion tags trained into the Orpheus
+# ``horus_orpheus_lora_v2_identity_plus_emotions`` checkpoint. The synthesized
+# case-audio path injects these into the spoken query so each tone family renders
+# with its intended prosody; the checkpoint renders them as non-verbal sounds,
+# never as spoken words. They are therefore stripped from BOTH expected and
+# actual text before tokenization so they can never inflate the word error rate.
+ORPHEUS_EMOTION_TAGS = (
+    "laugh",
+    "chuckle",
+    "sigh",
+    "cough",
+    "sniffle",
+    "groan",
+    "yawn",
+    "gasp",
+)
+EMOTION_TAG_RE = re.compile(
+    r"<(?:" + "|".join(ORPHEUS_EMOTION_TAGS) + r")>", re.IGNORECASE
+)
+EMOTION_TAG_NORMALIZATION = {
+    "policy": "strip_orpheus_inline_emotion_tags_before_tokenization_v1",
+    "checkpoint": "horus_orpheus_lora_v2_identity_plus_emotions",
+    "stripped_tags": [f"<{tag}>" for tag in ORPHEUS_EMOTION_TAGS],
+}
+
+
 ASR_COMPARISON_POLICY = {
     "schema": "embry.audio_e2e.asr_comparison_policy.v1",
-    "policy_id": "expected_conditioned_exact_token_aliases_v1",
+    "policy_id": "expected_conditioned_exact_token_aliases_emotion_tag_stripped_v2",
+    "emotion_tag_normalization": EMOTION_TAG_NORMALIZATION,
     "aliases": [
         {
             "alias_id": "horus_lupercal_lupa_cal_v1",
@@ -33,8 +60,9 @@ ASR_COMPARISON_POLICY_SHA256 = (
 
 MANAGED_LISTENER_ASR_COMPARISON_POLICY = {
     "schema": "embry.audio_e2e.asr_comparison_policy.v1",
-    "policy_id": "managed_listener_expected_conditioned_aliases_v1",
+    "policy_id": "managed_listener_expected_conditioned_aliases_emotion_tag_stripped_v2",
     "base_policy_sha256": ASR_COMPARISON_POLICY_SHA256,
+    "emotion_tag_normalization": EMOTION_TAG_NORMALIZATION,
     "aliases": [
         *ASR_COMPARISON_POLICY["aliases"],
         {
@@ -53,7 +81,11 @@ MANAGED_LISTENER_ASR_COMPARISON_POLICY_SHA256 = (
 
 
 def normalized_tokens(value: str) -> list[str]:
-    return re.sub(r"[^a-z0-9]+", " ", str(value).lower()).split()
+    # Strip Orpheus inline emotion tags (e.g. ``<sigh>``) before tokenizing so
+    # the tag's inner word never becomes a comparison token. Plain text without
+    # tags is unaffected, so existing WER numbers are unchanged.
+    without_tags = EMOTION_TAG_RE.sub(" ", str(value))
+    return re.sub(r"[^a-z0-9]+", " ", without_tags.lower()).split()
 
 
 def word_error_rate(expected: list[str], actual: list[str]) -> float:

@@ -51,6 +51,148 @@ def sha256_path(path: Path) -> str:
 SPOKEN_TEXT_NORMALIZATION_SHA256 = sha256_value(SPOKEN_TEXT_NORMALIZATION)
 
 
+# --- Per-tone emotional prosody injection -----------------------------------
+#
+# The synthesized case-audio path renders the operator's spoken turns through
+# the Orpheus ``horus_orpheus_lora_v2_identity_plus_emotions`` checkpoint. That
+# LoRA was trained with a fixed inline emotion-tag vocabulary (8 paralinguistic
+# tags); no other tags are honored by the checkpoint. Anything outside this set
+# would be spoken literally instead of rendered as prosody, so the mapping below
+# is confined to that trained vocabulary rather than the matrix's descriptive
+# ``suggested_inline_emotion_tags`` (e.g. ``[measured]``), which Orpheus does
+# not understand. The descriptive suggestions are retained per family only as an
+# audit cross-reference.
+#
+# Each of the 9 matrix tone families is mapped to a deterministic (tag,
+# placement) delivery so every family renders with a DISTINCT emotional prosody
+# instead of tonally-neutral speech. With 8 tags for 9 families the single
+# unavoidable tag reuse (``<sigh>``) is disambiguated by placement.
+ORPHEUS_EMOTION_TAG_VOCABULARY = (
+    "laugh",
+    "chuckle",
+    "sigh",
+    "cough",
+    "sniffle",
+    "groan",
+    "yawn",
+    "gasp",
+)
+
+TONE_PROSODY_MAP = {
+    "schema": "embry.audio_e2e.tone_prosody_map.v1",
+    "render_backend": "orpheus_tts",
+    "checkpoint": "horus_orpheus_lora_v2_identity_plus_emotions",
+    "orpheus_emotion_tag_vocabulary": [
+        f"<{tag}>" for tag in ORPHEUS_EMOTION_TAG_VOCABULARY
+    ],
+    "tag_injection": "inline_within_query_after_wake_phrase",
+    "families": {
+        "calm_precise": {
+            "orpheus_tags": ["<sigh>"],
+            "placement": "leading",
+            "delivery": "measured_calm_exhale",
+            "matrix_suggested_tags": ["[measured]", "[short pause]"],
+        },
+        "curious_searching": {
+            "orpheus_tags": ["<gasp>"],
+            "placement": "leading",
+            "delivery": "bright_inquisitive_intake",
+            "matrix_suggested_tags": ["[thinking]", "[brief pause]"],
+        },
+        "firm_boundary": {
+            "orpheus_tags": ["<cough>"],
+            "placement": "leading",
+            "delivery": "assertive_throat_clear_boundary",
+            "matrix_suggested_tags": ["[firm]", "[brief pause]"],
+        },
+        "memory_confident": {
+            "orpheus_tags": ["<chuckle>"],
+            "placement": "leading",
+            "delivery": "warm_confident_recall",
+            "matrix_suggested_tags": ["[warmly]", "[soft pause]"],
+        },
+        "careful_concerned": {
+            "orpheus_tags": ["<sniffle>"],
+            "placement": "leading",
+            "delivery": "concerned_careful_breath",
+            "matrix_suggested_tags": ["[listening]", "[steady pause]"],
+        },
+        "memory_uncertain": {
+            "orpheus_tags": ["<groan>"],
+            "placement": "leading",
+            "delivery": "effortful_uncertain_recall",
+            "matrix_suggested_tags": ["[careful]", "[small pause]"],
+        },
+        "serious_low_energy": {
+            "orpheus_tags": ["<yawn>"],
+            "placement": "leading",
+            "delivery": "low_energy_serious_weight",
+            "matrix_suggested_tags": ["[focused]", "[measured pause]"],
+        },
+        "dynamic_intent_selected": {
+            "orpheus_tags": ["<laugh>"],
+            "placement": "leading",
+            "delivery": "expressive_dynamic_shift",
+            "matrix_suggested_tags": ["[breath]", "[tone shift]"],
+        },
+        "identity_clarification": {
+            "orpheus_tags": ["<sigh>"],
+            "placement": "trailing",
+            "delivery": "gentle_patient_clarifying_exhale",
+            "matrix_suggested_tags": ["[gently]", "[questioning pause]"],
+        },
+    },
+}
+TONE_PROSODY_MAP_SHA256 = sha256_value(TONE_PROSODY_MAP)
+
+_WAKE_PREFIX = re.compile(r"^\s*hey[\s,;:!?.\-]+embry\b[\s,;:!?.\-]+", re.IGNORECASE)
+
+
+def tone_family_for_case(case: dict[str, Any]) -> str:
+    """Return the required tone family for a matrix case, validated against the map."""
+    requirements = case.get("conversation_requirements") or {}
+    family = requirements.get("required_tone_family")
+    if family not in TONE_PROSODY_MAP["families"]:
+        raise ValueError(f"tone_family_unsupported:{family!r}")
+    return str(family)
+
+
+def apply_tone_tags(
+    spoken_text_value: str, tone_family: str, *, minimum_tag_count: int = 1
+) -> str:
+    """Inject the family's Orpheus emotion tag(s) into the query, after the wake phrase.
+
+    The wake phrase ("Hey Embry, ...") is preserved verbatim so wakeword
+    detection is unaffected; tags are placed only inside the spoken query. The
+    plain input text is never mutated for WER purposes -- this returns a
+    synthesis-only variant. Tags are stripped again by the ASR WER normalizer.
+    """
+    family = TONE_PROSODY_MAP["families"].get(tone_family)
+    if family is None:
+        raise ValueError(f"tone_family_unsupported:{tone_family!r}")
+    tags = list(family["orpheus_tags"])
+    minimum_tag_count = int(minimum_tag_count)
+    if len(tags) < minimum_tag_count:
+        raise ValueError(
+            "tone_family_tag_count_below_minimum:"
+            f"{tone_family}:{len(tags)}:{minimum_tag_count}"
+        )
+    match = _WAKE_PREFIX.match(spoken_text_value)
+    if match is None:
+        raise ValueError("tone_injection_requires_leading_wake_phrase")
+    prefix = spoken_text_value[: match.end()]
+    query = spoken_text_value[match.end() :].strip()
+    if not query:
+        raise ValueError("tone_injection_query_empty")
+    tag_str = " ".join(tags)
+    placement = family["placement"]
+    if placement == "leading":
+        return f"{prefix}{tag_str} {query}"
+    if placement == "trailing":
+        return f"{prefix}{query} {tag_str}"
+    raise ValueError(f"tone_placement_invalid:{placement}")
+
+
 def _machine_tokens(value: str) -> set[str]:
     candidates = re.findall(r"\b[A-Za-z][A-Za-z0-9_]*\b", value)
     return {
@@ -123,6 +265,10 @@ def select_cases(
 
 def build_turn_script(case: dict[str, Any]) -> list[dict[str, Any]]:
     count = DIFFICULTY_TURNS[case["difficulty"]]
+    tone_family = tone_family_for_case(case)
+    family_map = TONE_PROSODY_MAP["families"][tone_family]
+    requirements = case.get("conversation_requirements") or {}
+    minimum_tag_count = int(requirements.get("minimum_inline_emotion_tag_count", 1) or 1)
     prompts = [case["question"], FOLLOWUPS["steering_followup"]]
     if count >= 3:
         prompts.append(FOLLOWUPS["specificity_followup"])
@@ -135,6 +281,9 @@ def build_turn_script(case: dict[str, Any]) -> list[dict[str, Any]]:
     for index, prompt in enumerate(prompts, 1):
         display = f"Hey Embry, {prompt[0].lower() + prompt[1:]}"
         spoken = spoken_text(display)
+        synthesis_spoken = apply_tone_tags(
+            spoken, tone_family, minimum_tag_count=minimum_tag_count
+        )
         turns.append({
             "turn_id": f"{case['id']}:turn-{index:03d}",
             "turn_index": index,
@@ -146,6 +295,13 @@ def build_turn_script(case: dict[str, Any]) -> list[dict[str, Any]]:
             "spoken_text": spoken,
             "spoken_text_sha256": sha256_value(spoken),
             "spoken_text_normalization_sha256": SPOKEN_TEXT_NORMALIZATION_SHA256,
+            "tone_family": tone_family,
+            "tone_prosody_map_sha256": TONE_PROSODY_MAP_SHA256,
+            "inline_emotion_tags": list(family_map["orpheus_tags"]),
+            "inline_emotion_tag_count": len(family_map["orpheus_tags"]),
+            "minimum_inline_emotion_tag_count": minimum_tag_count,
+            "synthesis_spoken_text": synthesis_spoken,
+            "synthesis_spoken_text_sha256": sha256_value(synthesis_spoken),
             "purpose": "matrix_question" if index == 1 else "conversation_followup",
             "speech_expectation": "speech_required",
         })
@@ -174,6 +330,7 @@ def compile_campaign(
         "selection_sha256": selection["sha256"],
         "source_mode": source_mode,
         "spoken_text_normalization_sha256": SPOKEN_TEXT_NORMALIZATION_SHA256,
+        "tone_prosody_map_sha256": TONE_PROSODY_MAP_SHA256,
     }
     campaign_id = "campaign_" + sha256_value(seed).removeprefix("sha256:")[:24]
     cases = []
@@ -206,6 +363,10 @@ def compile_campaign(
         "spoken_text_normalization": {
             **SPOKEN_TEXT_NORMALIZATION,
             "sha256": SPOKEN_TEXT_NORMALIZATION_SHA256,
+        },
+        "tone_prosody_map": {
+            **TONE_PROSODY_MAP,
+            "sha256": TONE_PROSODY_MAP_SHA256,
         },
         "selection": {**selection, "requested_count": len(selected)},
         "execution": {"concurrency": 1, "fixture_substitution_allowed": False, "typed_transcript_allowed": False, "browser_microphone_allowed": False},

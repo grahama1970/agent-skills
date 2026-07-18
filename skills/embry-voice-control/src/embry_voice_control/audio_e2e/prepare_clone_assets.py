@@ -32,6 +32,9 @@ from .asr_comparison import (
 from .case_compiler import (
     SPOKEN_TEXT_NORMALIZATION,
     SPOKEN_TEXT_NORMALIZATION_SHA256,
+    TONE_PROSODY_MAP,
+    TONE_PROSODY_MAP_SHA256,
+    apply_tone_tags,
     sha256_value,
     spoken_text as derive_spoken_text,
 )
@@ -550,7 +553,7 @@ def build_qualification_policy(
         "vad_filter": True,
         "max_request_wer": max_request_wer,
         "max_candidates": max_candidates,
-        "normalization": "lowercase_ascii_alnum_tokens_v1",
+        "normalization": "lowercase_ascii_alnum_emotion_tag_stripped_tokens_v2",
         "wer_algorithm": "token_levenshtein_v1",
         "initial_prompt_used": False,
         "utterance_boundary": _utterance_boundary_policy(
@@ -749,13 +752,63 @@ def validate_campaign_manifest(value: dict[str, Any]) -> list[dict[str, Any]]:
             derived_spoken_text = derive_spoken_text(display_text)
             if spoken_text != derived_spoken_text:
                 raise ValueError(f"campaign_turn_spoken_text_derivation_mismatch:{turn_id}")
+            tone_family = str(turn.get("tone_family") or "")
+            if tone_family not in TONE_PROSODY_MAP["families"]:
+                raise ValueError(
+                    f"campaign_turn_tone_family_invalid:{turn_id}:{tone_family}"
+                )
+            if turn.get("tone_prosody_map_sha256") != TONE_PROSODY_MAP_SHA256:
+                raise ValueError(
+                    f"campaign_turn_tone_prosody_map_mismatch:{turn_id}"
+                )
+            minimum_tag_count = int(
+                turn.get("minimum_inline_emotion_tag_count", 1) or 1
+            )
+            family_tags = list(
+                TONE_PROSODY_MAP["families"][tone_family]["orpheus_tags"]
+            )
+            declared_tags = turn.get("inline_emotion_tags")
+            if not isinstance(declared_tags, list) or declared_tags != family_tags:
+                raise ValueError(
+                    f"campaign_turn_inline_emotion_tags_mismatch:{turn_id}"
+                )
+            if len(declared_tags) < minimum_tag_count:
+                raise ValueError(
+                    f"campaign_turn_inline_emotion_tag_count_below_minimum:{turn_id}"
+                )
+            synthesis_spoken_text = str(turn.get("synthesis_spoken_text") or "")
+            if not synthesis_spoken_text:
+                raise ValueError(
+                    f"campaign_turn_synthesis_spoken_text_missing:{turn_id}"
+                )
+            derived_synthesis_spoken_text = apply_tone_tags(
+                derived_spoken_text,
+                tone_family,
+                minimum_tag_count=minimum_tag_count,
+            )
+            if synthesis_spoken_text != derived_synthesis_spoken_text:
+                raise ValueError(
+                    f"campaign_turn_synthesis_spoken_text_derivation_mismatch:{turn_id}"
+                )
+            if turn.get("synthesis_spoken_text_sha256") != sha256_value(
+                synthesis_spoken_text
+            ):
+                raise ValueError(
+                    f"campaign_turn_synthesis_spoken_text_hash_mismatch:{turn_id}"
+                )
             spoken_hash = declared_spoken_hash(turn, spoken_text)
-            query = strip_leading_wake_phrase(spoken_text)
+            # The synthesized (and therefore ASR-compared) query carries the
+            # tone tags; the WER normalizer strips them so comparison remains
+            # against the plain words only.
+            query = strip_leading_wake_phrase(synthesis_spoken_text)
             normalized_turns.append(
                 {
                     "case_id": case_id,
                     "turn_id": turn_id,
                     "spoken_text": spoken_text,
+                    "synthesis_spoken_text": synthesis_spoken_text,
+                    "tone_family": tone_family,
+                    "inline_emotion_tags": list(declared_tags),
                     "planned_spoken_text_sha256": spoken_hash,
                     "query": query,
                 }
