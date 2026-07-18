@@ -2292,18 +2292,41 @@ def _run_identity_continuity_review(
         blocking_findings.append(f"reviewer verdict was {parsed.get('verdict') or 'missing'}")
     full_frame_status = "PASS" if not blocking_findings and parsed.get("verdict") == "PASS" else "FAIL"
 
-    # MANDATORY face-crop identity subgate. Full-frame review AND the face-crop
-    # subgate must both PASS for an identity PASS; the subgate is purely additive
-    # (it can only downgrade a full-frame PASS to FAIL, never relax the gate). It
-    # is only worth the extra live calls when the full-frame gate already passed;
-    # if the frame already FAILed at full frame, the full-frame gate fired.
-    subgate: dict[str, Any] = {
+    # IDENTITY VERDICT AUTHORITY = deterministic ArcFace embedding subgate.
+    # The full-frame VLM review above still gates scene / wardrobe / composition
+    # and face-visibility (its blocking_findings remain in effect), but whether
+    # the depicted person IS the referenced person is decided by cosine distance
+    # vs a calibrated threshold (reviewer_calibration_receipt.v4.json), NOT by the
+    # VLM. gpt-5.5 vision cannot reliably discriminate a near-look-alike; the
+    # embedding subgate can. The VLM face-crop comparison is kept as ADVISORY
+    # context only and never gates. Fail-closed: if InsightFace cannot run, the
+    # identity verdict is FAIL — never a silent VLM-only fallback.
+    embedding_subgate: dict[str, Any] = {
         "status": "SKIPPED",
-        "reason": "full-frame review already FAILED; face-crop subgate not required",
+        "reason": "full-frame review already FAILED; embedding identity subgate not required",
+        "blocking_findings": [],
+    }
+    crop_advisory: dict[str, Any] = {
+        "status": "SKIPPED",
+        "reason": "full-frame review already FAILED; advisory face-crop not run",
+        "advisory": True,
         "blocking_findings": [],
     }
     if full_frame_status == "PASS":
-        subgate = _run_face_crop_subgate(
+        embedding_subgate = _run_face_embedding_subgate(
+            frame_path=frame_path,
+            references=references,
+            required_entities=required_entities,
+            receipts_dir=receipts_dir,
+            panel_id=panel_id,
+            frame_key=frame_key,
+        )
+        if embedding_subgate.get("status") != "PASS":
+            blocking_findings.extend(
+                b for b in (embedding_subgate.get("blocking_findings") or []) if isinstance(b, str)
+            )
+        # Advisory-only VLM face-crop comparison (never gates identity).
+        crop_advisory = _run_face_crop_subgate(
             frame_path=frame_path,
             references=references,
             required_entities=required_entities,
@@ -2312,10 +2335,7 @@ def _run_identity_continuity_review(
             panel_id=panel_id,
             frame_key=frame_key,
         )
-        if subgate.get("status") != "PASS":
-            blocking_findings.extend(
-                b for b in (subgate.get("blocking_findings") or []) if isinstance(b, str)
-            )
+        crop_advisory["advisory"] = True
 
     status = "PASS" if not blocking_findings and full_frame_status == "PASS" else "FAIL"
     gate_fired = (
@@ -2323,7 +2343,7 @@ def _run_identity_continuity_review(
         if status == "PASS"
         else "full_frame"
         if full_frame_status == "FAIL"
-        else "face_crop_subgate"
+        else "face_embedding_subgate"
     )
     receipt = _identity_review_receipt(
         panel=panel,
@@ -2338,7 +2358,9 @@ def _run_identity_continuity_review(
         model_policy=identity_review_policy,
     )
     receipt["full_frame_status"] = full_frame_status
-    receipt["face_crop_subgate"] = subgate
+    receipt["identity_authority"] = "face_embedding_subgate"
+    receipt["face_embedding_subgate"] = embedding_subgate
+    receipt["face_crop_subgate_advisory"] = crop_advisory
     receipt["gate_fired"] = gate_fired
     receipt["receipt_path"] = str(receipt_path)
     _write_json(receipt_path, receipt)
@@ -2355,6 +2377,68 @@ def _load_face_crop_subgate_module():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+def _load_face_embedding_subgate_module():
+    """Load the deterministic embedding subgate helper by path."""
+    import importlib.util
+    import sys as _sys
+
+    name = "identity_face_embedding_subgate"
+    path = Path(__file__).resolve().parent / f"{name}.py"
+    spec = importlib.util.spec_from_file_location(name, path)
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    _sys.modules[name] = module  # dataclass processing needs the module registered
+    spec.loader.exec_module(module)
+    return module
+
+
+# Process-wide singleton so the InsightFace model is prepared once and reused.
+_FACE_EMBEDDER: Any = None
+
+
+def _run_face_embedding_subgate(
+    *,
+    frame_path: Path,
+    references: Mapping[str, Path],
+    required_entities: list[str],
+    receipts_dir: Path,
+    panel_id: str,
+    frame_key: str,
+) -> dict[str, Any]:
+    """Run the mandatory deterministic embedding identity subgate (IDENTITY
+    AUTHORITY). Fail closed on any error: an InsightFace install/hardware failure
+    yields a FAIL identity verdict, never a silent VLM-only fallback."""
+    global _FACE_EMBEDDER
+    work_dir = receipts_dir / f"{panel_id}_{frame_key}_face_embeddings"
+    try:
+        mod = _load_face_embedding_subgate_module()
+        if _FACE_EMBEDDER is None:
+            _FACE_EMBEDDER = mod.InsightFaceEmbedder()
+        result = mod.run_face_embedding_subgate(
+            frame_path=frame_path,
+            references=dict(references),
+            required_entities=list(required_entities),
+            embedder=_FACE_EMBEDDER,
+            work_dir=work_dir,
+        )
+        return result
+    except Exception as exc:  # fail closed — never let an embedder error become a silent PASS
+        return {
+            "schema": "persona_dream.identity_face_embedding_subgate.v1",
+            "status": "FAIL",
+            "authority": "embedding_cosine",
+            "failure_code": "FAIL_FACE_EMBEDDING_IDENTITY_MISMATCH",
+            "blocking_findings": [
+                f"FAIL_FACE_EMBEDDING_IDENTITY_MISMATCH: embedding subgate execution error: {exc}"
+            ],
+            "reviewer_source": "insightface:buffalo_l:cosine",
+            "frame_path": str(frame_path),
+            "entity_results": [],
+            "mocked": False,
+            "live": True,
+        }
 
 
 def _run_face_crop_subgate(

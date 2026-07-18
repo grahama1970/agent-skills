@@ -1,0 +1,717 @@
+{
+  "calibration_pass": true,
+  "cases": [
+    {
+      "blocking_findings": [
+        "FAIL_FACE_EMBEDDING_IDENTITY_MISMATCH: Embry: best cosine 0.3233 < threshold 0.4210"
+      ],
+      "case_id": "known_bad_sb_001_start",
+      "embedding_status": "FAIL",
+      "entity_results": [
+        {
+          "best_cosine": 0.323253,
+          "candidate_bbox": [
+            364.9,
+            65.9,
+            510.5,
+            255.1
+          ],
+          "candidate_det_score": 0.8928,
+          "candidate_detected_sex": "M",
+          "entity": "Embry",
+          "expected_sex": "F",
+          "pairwise_cosine": [
+            0.284685,
+            0.278457,
+            0.323253,
+            0.285149,
+            0.279896,
+            0.268869,
+            0.244857,
+            0.260655,
+            0.259085
+          ],
+          "reference_face_count": 9,
+          "status": "FAIL",
+          "threshold": 0.421,
+          "verdict": "DIFFERENT"
+        },
+        {
+          "best_cosine": 0.593791,
+          "candidate_bbox": [
+            1178.6,
+            93.9,
+            1309.2,
+            265.3
+          ],
+          "candidate_det_score": 0.8824,
+          "candidate_detected_sex": "M",
+          "entity": "Kai",
+          "expected_sex": "M",
+          "pairwise_cosine": [
+            0.468407,
+            0.497666,
+            0.42606,
+            0.387492,
+            0.593791,
+            0.535554,
+            0.50392,
+            0.529589,
+            0.525034
+          ],
+          "reference_face_count": 9,
+          "status": "PASS",
+          "threshold": 0.421,
+          "verdict": "SAME"
+        }
+      ],
+      "entity_scores": {
+        "Embry": 0.323253,
+        "Kai": 0.593791
+      },
+      "expectation": "FAIL",
+      "image_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_start_frame.png",
+      "kind": "known_bad",
+      "satisfied": true,
+      "threshold": 0.421,
+      "vlm_face_crop_status_v3": "PASS",
+      "vlm_full_frame_status_v3": "PASS"
+    },
+    {
+      "blocking_findings": [
+        "FAIL_FACE_EMBEDDING_IDENTITY_MISMATCH: Kai: best cosine 0.3430 < threshold 0.4210"
+      ],
+      "case_id": "known_bad_sb_002_start",
+      "embedding_status": "FAIL",
+      "entity_results": [
+        {
+          "best_cosine": 0.430725,
+          "candidate_bbox": [
+            395.1,
+            45.3,
+            609.9,
+            333.2
+          ],
+          "candidate_det_score": 0.817,
+          "candidate_detected_sex": "F",
+          "entity": "Embry",
+          "expected_sex": "F",
+          "pairwise_cosine": [
+            0.430725,
+            0.346494,
+            0.404645,
+            0.398336,
+            0.379645,
+            0.366427,
+            0.40834,
+            0.30737,
+            0.365181
+          ],
+          "reference_face_count": 9,
+          "status": "PASS",
+          "threshold": 0.421,
+          "verdict": "SAME"
+        },
+        {
+          "best_cosine": 0.343007,
+          "candidate_bbox": [
+            1117.4,
+            123.7,
+            1277.3,
+            336.0
+          ],
+          "candidate_det_score": 0.9087,
+          "candidate_detected_sex": "M",
+          "entity": "Kai",
+          "expected_sex": "M",
+          "pairwise_cosine": [
+            0.276048,
+            0.303124,
+            0.273792,
+            0.328101,
+            0.340881,
+            0.343007,
+            0.272456,
+            0.31008,
+            0.183912
+          ],
+          "reference_face_count": 9,
+          "status": "FAIL",
+          "threshold": 0.421,
+          "verdict": "DIFFERENT"
+        }
+      ],
+      "entity_scores": {
+        "Embry": 0.430725,
+        "Kai": 0.343007
+      },
+      "expectation": "FAIL",
+      "image_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_002_start_frame.png",
+      "kind": "known_bad",
+      "satisfied": true,
+      "threshold": 0.421,
+      "vlm_face_crop_status_v3": "SKIPPED",
+      "vlm_full_frame_status_v3": "FAIL"
+    },
+    {
+      "blocking_findings": [
+        "FAIL_FACE_EMBEDDING_IDENTITY_MISMATCH: Embry: best cosine 0.3283 < threshold 0.4210",
+        "FAIL_FACE_EMBEDDING_IDENTITY_MISMATCH: Kai: best cosine 0.3886 < threshold 0.4210"
+      ],
+      "case_id": "known_bad_sb_003_start",
+      "embedding_status": "FAIL",
+      "entity_results": [
+        {
+          "best_cosine": 0.328281,
+          "candidate_bbox": [
+            390.1,
+            165.6,
+            522.0,
+            346.6
+          ],
+          "candidate_det_score": 0.9271,
+          "candidate_detected_sex": "F",
+          "entity": "Embry",
+          "expected_sex": "F",
+          "pairwise_cosine": [
+            0.317335,
+            0.273545,
+            0.305366,
+            0.29136,
+            0.306571,
+            0.328281,
+            0.278722,
+            0.251499,
+            0.276765
+          ],
+          "reference_face_count": 9,
+          "status": "FAIL",
+          "threshold": 0.421,
+          "verdict": "DIFFERENT"
+        },
+        {
+          "best_cosine": 0.388583,
+          "candidate_bbox": [
+            1086.6,
+            151.7,
+            1206.9,
+            310.9
+          ],
+          "candidate_det_score": 0.9081,
+          "candidate_detected_sex": "M",
+          "entity": "Kai",
+          "expected_sex": "M",
+          "pairwise_cosine": [
+            0.252184,
+            0.355277,
+            0.28622,
+            0.318665,
+            0.301314,
+            0.388583,
+            0.303601,
+            0.326585,
+            0.242301
+          ],
+          "reference_face_count": 9,
+          "status": "FAIL",
+          "threshold": 0.421,
+          "verdict": "DIFFERENT"
+        }
+      ],
+      "entity_scores": {
+        "Embry": 0.328281,
+        "Kai": 0.388583
+      },
+      "expectation": "FAIL",
+      "image_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_003_start_frame.png",
+      "kind": "known_bad",
+      "satisfied": true,
+      "threshold": 0.421,
+      "vlm_face_crop_status_v3": "SKIPPED",
+      "vlm_full_frame_status_v3": "FAIL"
+    },
+    {
+      "blocking_findings": [],
+      "case_id": "positive_control_sb_001_start",
+      "embedding_status": "PASS",
+      "entity_results": [
+        {
+          "best_cosine": 0.659345,
+          "candidate_bbox": [
+            410.6,
+            164.7,
+            542.6,
+            363.1
+          ],
+          "candidate_det_score": 0.8699,
+          "candidate_detected_sex": "M",
+          "entity": "Embry",
+          "expected_sex": "F",
+          "pairwise_cosine": [
+            0.648009,
+            0.574728,
+            0.659345,
+            0.599944,
+            0.619844,
+            0.55016,
+            0.553601,
+            0.506123,
+            0.563238
+          ],
+          "reference_face_count": 9,
+          "status": "PASS",
+          "threshold": 0.421,
+          "verdict": "SAME"
+        },
+        {
+          "best_cosine": 0.811801,
+          "candidate_bbox": [
+            1091.0,
+            178.4,
+            1218.1,
+            351.0
+          ],
+          "candidate_det_score": 0.8927,
+          "candidate_detected_sex": "M",
+          "entity": "Kai",
+          "expected_sex": "M",
+          "pairwise_cosine": [
+            0.609832,
+            0.610685,
+            0.620944,
+            0.611686,
+            0.811801,
+            0.614608,
+            0.62981,
+            0.653636,
+            0.62759
+          ],
+          "reference_face_count": 9,
+          "status": "PASS",
+          "threshold": 0.421,
+          "verdict": "SAME"
+        }
+      ],
+      "entity_scores": {
+        "Embry": 0.659345,
+        "Kai": 0.811801
+      },
+      "expectation": "PASS",
+      "image_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_001_start_frame.png",
+      "kind": "positive_control",
+      "satisfied": true,
+      "threshold": 0.421,
+      "vlm_face_crop_status_v3": "PASS",
+      "vlm_full_frame_status_v3": "PASS"
+    },
+    {
+      "blocking_findings": [],
+      "case_id": "positive_control_sb_002_start",
+      "embedding_status": "PASS",
+      "entity_results": [
+        {
+          "best_cosine": 0.704022,
+          "candidate_bbox": [
+            493.4,
+            132.3,
+            687.1,
+            376.7
+          ],
+          "candidate_det_score": 0.8848,
+          "candidate_detected_sex": "F",
+          "entity": "Embry",
+          "expected_sex": "F",
+          "pairwise_cosine": [
+            0.609246,
+            0.617834,
+            0.704022,
+            0.667457,
+            0.673237,
+            0.618289,
+            0.675568,
+            0.466493,
+            0.579092
+          ],
+          "reference_face_count": 9,
+          "status": "PASS",
+          "threshold": 0.421,
+          "verdict": "SAME"
+        },
+        {
+          "best_cosine": 0.525576,
+          "candidate_bbox": [
+            1175.7,
+            165.3,
+            1368.4,
+            406.6
+          ],
+          "candidate_det_score": 0.9035,
+          "candidate_detected_sex": "M",
+          "entity": "Kai",
+          "expected_sex": "M",
+          "pairwise_cosine": [
+            0.480644,
+            0.438825,
+            0.474273,
+            0.511096,
+            0.525576,
+            0.515653,
+            0.47182,
+            0.437306,
+            0.445228
+          ],
+          "reference_face_count": 9,
+          "status": "PASS",
+          "threshold": 0.421,
+          "verdict": "SAME"
+        }
+      ],
+      "entity_scores": {
+        "Embry": 0.704022,
+        "Kai": 0.525576
+      },
+      "expectation": "PASS",
+      "image_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_002_start_frame.png",
+      "kind": "positive_control",
+      "satisfied": true,
+      "threshold": 0.421,
+      "vlm_face_crop_status_v3": "FAIL",
+      "vlm_full_frame_status_v3": "PASS"
+    },
+    {
+      "blocking_findings": [
+        "FAIL_FACE_EMBEDDING_IDENTITY_MISMATCH: Embry: best cosine 0.3138 < threshold 0.4210"
+      ],
+      "case_id": "tamper_wrong_embry_ref",
+      "embedding_status": "FAIL",
+      "entity_results": [
+        {
+          "best_cosine": 0.313799,
+          "candidate_bbox": [
+            410.6,
+            164.7,
+            542.6,
+            363.1
+          ],
+          "candidate_det_score": 0.8699,
+          "candidate_detected_sex": "M",
+          "entity": "Embry",
+          "expected_sex": "F",
+          "pairwise_cosine": [
+            0.264444,
+            0.241258,
+            0.313799,
+            0.289037,
+            0.275437,
+            0.241703,
+            0.236067,
+            0.24867,
+            0.166051
+          ],
+          "reference_face_count": 9,
+          "status": "FAIL",
+          "threshold": 0.421,
+          "verdict": "DIFFERENT"
+        },
+        {
+          "best_cosine": 0.811801,
+          "candidate_bbox": [
+            1091.0,
+            178.4,
+            1218.1,
+            351.0
+          ],
+          "candidate_det_score": 0.8927,
+          "candidate_detected_sex": "M",
+          "entity": "Kai",
+          "expected_sex": "M",
+          "pairwise_cosine": [
+            0.609832,
+            0.610685,
+            0.620944,
+            0.611686,
+            0.811801,
+            0.614608,
+            0.62981,
+            0.653636,
+            0.62759
+          ],
+          "reference_face_count": 9,
+          "status": "PASS",
+          "threshold": 0.421,
+          "verdict": "SAME"
+        }
+      ],
+      "entity_scores": {
+        "Embry": 0.313799,
+        "Kai": 0.811801
+      },
+      "expectation": "FAIL",
+      "image_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_001_start_frame.png",
+      "kind": "tamper",
+      "satisfied": true,
+      "threshold": 0.421,
+      "vlm_face_crop_status_v3": "SKIPPED",
+      "vlm_full_frame_status_v3": "FAIL"
+    }
+  ],
+  "claims": {
+    "does_not_prove": [
+      "Kling readiness or provider-grade continuity",
+      "media publication or paid authorization",
+      "return or lip-sync-on-return behavior"
+    ],
+    "proves": [
+      "identity verdict is now a deterministic ArcFace cosine distance, not a VLM judgment",
+      "the near-look-alike known_bad_sb_001 is metrically separated from genuine matches",
+      "chosen threshold cleanly separates known-bad from genuine with a positive margin"
+    ]
+  },
+  "created_at": "2026-07-18T19:57:03.284889+00:00",
+  "distributions": {
+    "cross_person_embry_vs_kai": {
+      "max": 0.331408,
+      "mean": 0.211847,
+      "min": 0.094796,
+      "n": 81
+    },
+    "genuine_combined": {
+      "max": 0.833431,
+      "mean": 0.686101,
+      "min": 0.499083,
+      "n": 72
+    },
+    "genuine_same_person": {
+      "Embry": {
+        "pairwise": {
+          "max": 0.833431,
+          "mean": 0.685807,
+          "min": 0.499083,
+          "n": 36
+        },
+        "reference_faces": 9,
+        "scores": [
+          0.782282,
+          0.737741,
+          0.78798,
+          0.697575,
+          0.729919,
+          0.826239,
+          0.567666,
+          0.586106,
+          0.738864,
+          0.794204,
+          0.705574,
+          0.794406,
+          0.833431,
+          0.510959,
+          0.540505,
+          0.809603,
+          0.827365,
+          0.700603,
+          0.760029,
+          0.589732,
+          0.68856,
+          0.793122,
+          0.791102,
+          0.821171,
+          0.525907,
+          0.594594,
+          0.676875,
+          0.695388,
+          0.561474,
+          0.568876,
+          0.795492,
+          0.499083,
+          0.517774,
+          0.552613,
+          0.600178,
+          0.686052
+        ]
+      },
+      "Kai": {
+        "pairwise": {
+          "max": 0.776094,
+          "mean": 0.686395,
+          "min": 0.592986,
+          "n": 36
+        },
+        "reference_faces": 9,
+        "scores": [
+          0.776094,
+          0.752557,
+          0.679135,
+          0.706994,
+          0.673574,
+          0.679051,
+          0.699587,
+          0.619327,
+          0.768677,
+          0.722037,
+          0.659133,
+          0.743286,
+          0.675084,
+          0.678552,
+          0.648072,
+          0.738835,
+          0.665809,
+          0.686241,
+          0.679162,
+          0.665718,
+          0.608186,
+          0.700873,
+          0.733276,
+          0.672189,
+          0.667002,
+          0.596266,
+          0.730331,
+          0.751174,
+          0.759506,
+          0.595453,
+          0.771041,
+          0.692442,
+          0.592986,
+          0.699643,
+          0.601604,
+          0.621309
+        ]
+      }
+    },
+    "known_bad_and_tamper_offending_best": {
+      "max": 0.343007,
+      "mean": 0.327085,
+      "min": 0.313799,
+      "n": 4
+    },
+    "positive_control_candidate_best": {
+      "max": 0.811801,
+      "mean": 0.675186,
+      "min": 0.525576,
+      "n": 4
+    }
+  },
+  "identity_references": {
+    "embry_accepted_source": {
+      "asset_id": "embry_contact_sheet_v3",
+      "path": "/mnt/storage12tb/media/personas/embry/assets/contact_sheets/embry-gpt-image-2-v3/images/embry_contact_sheet_v3.png",
+      "sha256": "sha256:3ce40b3b6839ebba0f468d75a1adbb7f82e0d95457aefd3627e222eb569de00c"
+    },
+    "kai_reference": {
+      "path": "/mnt/storage12tb/media/personas/kai_akana/assets/contact_sheets/kai_akana_character_sheet.png",
+      "sha256": "sha256:692cf37c5e7915f8b4ebceabd03b5d01ff69c9d428e94333bc1a01ac5e497700"
+    }
+  },
+  "live": true,
+  "method": {
+    "detector": "insightface det_10g (5-pt align)",
+    "guide": "https://www.insightface.ai/guides/choose-face-recognition-model-and-evaluate",
+    "identity_authority": "insightface_buffalo_l_cosine",
+    "metric": "cosine similarity vs calibrated threshold",
+    "providers": [
+      "CPUExecutionProvider"
+    ],
+    "recognition_model": "w600k_r50 (ArcFace, L2-normalized 512-d)",
+    "supersedes": "VLM gpt-5.5 face-to-face identity verdict (v1..v3, unstable)",
+    "vlm_role_retained": "full-frame scene/wardrobe/composition + face visibility; VLM face-crop kept advisory"
+  },
+  "mocked": false,
+  "overall_status": "REVIEWER_CALIBRATION_PASS",
+  "paid_call_authorized": false,
+  "provider_live": false,
+  "reclassified_known_bads": [],
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.reviewer_calibration_receipt.v4",
+  "successor_all_pass_embedding": true,
+  "successor_frames_embedding": [
+    {
+      "blocking_findings": [],
+      "embedding_status": "PASS",
+      "entity_scores": {
+        "Embry": 0.67233,
+        "Kai": 0.791697
+      },
+      "frame": "sb_001_end_frame.png"
+    },
+    {
+      "blocking_findings": [],
+      "embedding_status": "PASS",
+      "entity_scores": {
+        "Embry": 0.659345,
+        "Kai": 0.811801
+      },
+      "frame": "sb_001_start_frame.png"
+    },
+    {
+      "blocking_findings": [],
+      "embedding_status": "PASS",
+      "entity_scores": {
+        "Embry": 0.615187,
+        "Kai": 0.683047
+      },
+      "frame": "sb_002_end_frame.png"
+    },
+    {
+      "blocking_findings": [],
+      "embedding_status": "PASS",
+      "entity_scores": {
+        "Embry": 0.704022,
+        "Kai": 0.525576
+      },
+      "frame": "sb_002_start_frame.png"
+    },
+    {
+      "blocking_findings": [],
+      "embedding_status": "PASS",
+      "entity_scores": {
+        "Embry": 0.72205,
+        "Kai": 0.814769
+      },
+      "frame": "sb_003_end_frame.png"
+    },
+    {
+      "blocking_findings": [],
+      "embedding_status": "PASS",
+      "entity_scores": {
+        "Embry": 0.616658,
+        "Kai": 0.798839
+      },
+      "frame": "sb_003_start_frame.png"
+    },
+    {
+      "blocking_findings": [],
+      "embedding_status": "PASS",
+      "entity_scores": {
+        "Embry": 0.707729,
+        "Kai": 0.672216
+      },
+      "frame": "sb_004_end_frame.png"
+    },
+    {
+      "blocking_findings": [],
+      "embedding_status": "PASS",
+      "entity_scores": {
+        "Embry": 0.717992,
+        "Kai": 0.602701
+      },
+      "frame": "sb_004_start_frame.png"
+    }
+  ],
+  "summary": {
+    "all_cases_satisfied": true,
+    "known_bad_failed_or_reclassified": 3,
+    "known_bad_total": 3,
+    "positives_passed": 2,
+    "positives_total": 2,
+    "tamper_failed": 1,
+    "tamper_total": 1
+  },
+  "threshold": {
+    "genuine_edge": 0.499083,
+    "known_bad_edge": 0.343007,
+    "margin": 0.156076,
+    "rule": "midpoint of [known_bad_edge, genuine_edge]",
+    "value": 0.421,
+    "wired_default_matches": true
+  }
+}

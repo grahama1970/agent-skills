@@ -1,0 +1,294 @@
+{
+  "blocking_findings": [
+    "FAIL_FACE_EMBEDDING_IDENTITY_MISMATCH: Embry: best cosine 0.3233 < threshold 0.4210 (metric identity mismatch)"
+  ],
+  "created_at": "2026-07-18T20:04:26.286747+00:00",
+  "face_crop_subgate_advisory": {
+    "advisory": true,
+    "blocking_findings": [],
+    "entity_results": [
+      {
+        "candidate_bbox_norm": [
+          0.208,
+          0.049,
+          0.33,
+          0.322
+        ],
+        "candidate_crop": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration_v4/node_integration/known_bad_sb_001_start/sb_001_start_frame_face_crops/Embry_candidate_face.png",
+        "candidate_face_descriptor": {
+          "apparent_age": "mid 20s",
+          "apparent_sex": "female",
+          "position": "left",
+          "prominence": "foreground"
+        },
+        "confidence": "high",
+        "divergences": [
+          "surface: candidate has warmer outdoor tan and stronger sun highlights",
+          "surface: candidate hair appears wetter/slicked with loose strands",
+          "surface: candidate has slight squint and side gaze from bright outdoor lighting"
+        ],
+        "entity": "Embry",
+        "matching_features": [
+          "three-quarter view matches target reference view 2 in fuller oval face shape and balanced width-to-length proportion",
+          "similar straight medium-length nose with defined bridge and rounded tip",
+          "matching strong dark brows with similar arch and set over light eyes",
+          "similar cheek fullness, soft jawline, and small rounded chin"
+        ],
+        "notes": "Structural proportions align with the pose-matched target view; visible differences are lighting, wet hair, and expression only.",
+        "reason": "",
+        "reference_crops": [
+          "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration_v4/node_integration/known_bad_sb_001_start/sb_001_start_frame_face_crops/Embry_reference_face_1.png",
+          "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration_v4/node_integration/known_bad_sb_001_start/sb_001_start_frame_face_crops/Embry_reference_face_2.png",
+          "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration_v4/node_integration/known_bad_sb_001_start/sb_001_start_frame_face_crops/Embry_reference_face_3.png"
+        ],
+        "reference_views": [
+          {
+            "bbox_norm": [
+              0.089,
+              0.036,
+              0.228,
+              0.242
+            ],
+            "pose": "frontal"
+          },
+          {
+            "bbox_norm": [
+              0.432,
+              0.033,
+              0.576,
+              0.242
+            ],
+            "pose": "three-quarter"
+          },
+          {
+            "bbox_norm": [
+              0.124,
+              0.361,
+              0.26,
+              0.524
+            ],
+            "pose": "profile"
+          }
+        ],
+        "status": "PASS",
+        "verdict": "SAME"
+      },
+      {
+        "candidate_bbox_norm": [
+          0.741,
+          0.063,
+          0.86,
+          0.317
+        ],
+        "candidate_crop": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration_v4/node_integration/known_bad_sb_001_start/sb_001_start_frame_face_crops/Kai_candidate_face.png",
+        "candidate_face_descriptor": {
+          "apparent_age": "mid 20s",
+          "apparent_sex": "male",
+          "position": "right",
+          "prominence": "foreground"
+        },
+        "confidence": "high",
+        "divergences": [
+          "surface: candidate has wetter, messier hair from outdoor water/sweat",
+          "surface: candidate complexion is warmer and more sunlit with glare and squint"
+        ],
+        "entity": "Kai",
+        "matching_features": [
+          "Three-quarter pose matches target view 2 with similar fuller oval face proportions and cheek/jaw fullness",
+          "Similar straight medium-length nose with defined bridge and rounded tip",
+          "Similar thick dark brows, almond eye shape, and comparable inter-eye spacing",
+          "Similar chin shape and softly squared jawline"
+        ],
+        "notes": "Matched against the three-quarter reference, structural proportions align; differences are lighting, wet hair, and outdoor expression.",
+        "reason": "",
+        "reference_crops": [
+          "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration_v4/node_integration/known_bad_sb_001_start/sb_001_start_frame_face_crops/Kai_reference_face_1.png",
+          "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration_v4/node_integration/known_bad_sb_001_start/sb_001_start_frame_face_crops/Kai_reference_face_2.png",
+          "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration_v4/node_integration/known_bad_sb_001_start/sb_001_start_frame_face_crops/Kai_reference_face_3.png"
+        ],
+        "reference_views": [
+          {
+            "bbox_norm": [
+              0.106,
+              0.077,
+              0.218,
+              0.212
+            ],
+            "pose": "frontal"
+          },
+          {
+            "bbox_norm": [
+              0.424,
+              0.075,
+              0.546,
+              0.204
+            ],
+            "pose": "three-quarter"
+          },
+          {
+            "bbox_norm": [
+              0.102,
+              0.682,
+              0.219,
+              0.823
+            ],
+            "pose": "profile"
+          }
+        ],
+        "status": "PASS",
+        "verdict": "SAME"
+      }
+    ],
+    "frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_start_frame.png",
+    "live": true,
+    "mocked": false,
+    "model": "gpt-5.5",
+    "reviewer_source": "scillm:gpt-5.5:face_crop",
+    "schema": "persona_dream.identity_face_crop_subgate.v1",
+    "status": "PASS"
+  },
+  "face_embedding_subgate": {
+    "authority": "embedding_cosine",
+    "blocking_findings": [
+      "FAIL_FACE_EMBEDDING_IDENTITY_MISMATCH: Embry: best cosine 0.3233 < threshold 0.4210 (metric identity mismatch)"
+    ],
+    "candidate_faces_detected": 2,
+    "entity_results": [
+      {
+        "best_cosine": 0.323253,
+        "candidate_bbox": [
+          364.9,
+          65.9,
+          510.5,
+          255.1
+        ],
+        "candidate_det_score": 0.8928,
+        "candidate_detected_sex": "M",
+        "entity": "Embry",
+        "expected_sex": "F",
+        "pairwise_cosine": [
+          0.284685,
+          0.278457,
+          0.323253,
+          0.285149,
+          0.279896,
+          0.268869,
+          0.244857,
+          0.260655,
+          0.259085
+        ],
+        "reference_face_count": 9,
+        "status": "FAIL",
+        "threshold": 0.421,
+        "verdict": "DIFFERENT"
+      },
+      {
+        "best_cosine": 0.593791,
+        "candidate_bbox": [
+          1178.6,
+          93.9,
+          1309.2,
+          265.3
+        ],
+        "candidate_det_score": 0.8824,
+        "candidate_detected_sex": "M",
+        "entity": "Kai",
+        "expected_sex": "M",
+        "pairwise_cosine": [
+          0.468407,
+          0.497666,
+          0.42606,
+          0.387492,
+          0.593791,
+          0.535554,
+          0.50392,
+          0.529589,
+          0.525034
+        ],
+        "reference_face_count": 9,
+        "status": "PASS",
+        "threshold": 0.421,
+        "verdict": "SAME"
+      }
+    ],
+    "failure_code": "FAIL_FACE_EMBEDDING_IDENTITY_MISMATCH",
+    "frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_start_frame.png",
+    "frame_sha256": "sha256:bbd7a63110b1c42af94e682ae93bf055bbe1c84e48468b3470a2032db70d09bb",
+    "live": true,
+    "mocked": false,
+    "model": "insightface:buffalo_l:w600k_r50",
+    "reviewer_source": "insightface:buffalo_l:cosine",
+    "schema": "persona_dream.identity_face_embedding_subgate.v1",
+    "status": "FAIL",
+    "threshold": 0.421
+  },
+  "frame_key": "start_frame",
+  "frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_start_frame.png",
+  "full_frame_status": "PASS",
+  "gate_fired": "face_embedding_subgate",
+  "identity_authority": "face_embedding_subgate",
+  "image_dimensions": {
+    "height": 864,
+    "width": 1536
+  },
+  "live": true,
+  "mocked": false,
+  "model": "gpt-5.5",
+  "model_policy": {
+    "auth": "codex-oauth",
+    "error": null,
+    "fallback_performed": false,
+    "model": "gpt-5.5",
+    "provider": "codex",
+    "schema": "persona_dream.identity_review_policy.v1",
+    "source": "dag_identity_review_model_policy",
+    "supported": true
+  },
+  "model_policy_enforced": true,
+  "panel_id": "sb_001",
+  "raw_response": {
+    "blocking_findings": [],
+    "identity_notes": "Both required identities are foreground-visible with readable faces. The depicted Embry and Kai match the specific reference faces at feature level rather than only demographic category; no competing foreground person creates identity confusion.",
+    "observed_divergences": {
+      "Embry": [
+        "Wet hair is slicked back and the panel is at a three-quarter angle rather than a clean studio pose",
+        "Collared navy surf top differs slightly from the crew-neck reference rashguard but remains within required navy polo-style surf top",
+        "Lighting is outdoor side-lit with water highlights, but face proportions and complexion remain consistent"
+      ],
+      "Kai": [
+        "Hair is wetter and more tousled than some reference views",
+        "Outdoor glare and side lighting create stronger highlights on cheek and forehead",
+        "Black rashguard matches required scene styling but differs from some navy-shirt reference views"
+      ]
+    },
+    "verdict": "PASS",
+    "verified_facial_features": {
+      "Embry": [
+        "Warm olive complexion with visible light freckling across cheeks/nose consistent with reference",
+        "Same fuller oval face shape with softly tapered jaw and rounded chin",
+        "Same straight-to-slightly rounded nose profile and defined dark arched eyebrows"
+      ],
+      "Kai": [
+        "Same tan warm complexion and youthful young-adult face structure",
+        "Same dark curly hair framing the forehead with similar curl pattern",
+        "Same strong brow ridge, straight nose bridge, and defined athletic jawline seen in the reference"
+      ]
+    },
+    "visible_entities": [
+      "Embry",
+      "Kai"
+    ]
+  },
+  "receipt_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration_v4/node_integration/known_bad_sb_001_start/sb_001_start_frame_identity_continuity_review.json",
+  "required_entities": [
+    "Embry",
+    "Kai"
+  ],
+  "reviewer_source": "scillm:gpt-5.5:image_url",
+  "schema": "persona_dream.identity_continuity_review.v1",
+  "status": "FAIL",
+  "visible_entities": [
+    "Embry",
+    "Kai"
+  ]
+}
