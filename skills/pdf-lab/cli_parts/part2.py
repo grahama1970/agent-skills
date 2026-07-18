@@ -366,10 +366,29 @@ def rollback(
 
 @app.command(name="regression-check")
 def regression_check(
-    sha: str = typer.Option(..., help="Commit SHA to check"),
+    baseline: Path = typer.Option(..., help="Baseline comparison.json (pre-fix)"),
+    candidate: Path = typer.Option(..., help="Candidate comparison.json (post-fix)"),
+    target_class: Optional[str] = typer.Option(
+        None,
+        help="Defect-vector dimension the fix targets; must strictly decrease",
+    ),
+    output: Optional[Path] = typer.Option(
+        None, help="Write pdf_lab.regression_verdict.v1 JSON here"
+    ),
 ):
-    """Re-run regression test for a specific fix."""
-    raise NotImplementedError(f"Regression check for {sha} not yet implemented")
+    """Deterministic defect-vector regression referee for a repair.
+
+    Exits 0 only when no blocking dimension worsened, matched_expected did
+    not decrease, and (when given) --target-class strictly decreased.
+    """
+    from lib.regression import run_regression_check
+
+    verdict = run_regression_check(
+        baseline, candidate, target_class=target_class, output_path=output
+    )
+    typer.echo(json.dumps(verdict, indent=2, ensure_ascii=False))
+    if verdict["verdict"] != "PASS":
+        raise typer.Exit(1)
 
 
 @app.command()

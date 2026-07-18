@@ -104,6 +104,37 @@ def run_final_agent_pass(
         json.dumps(second_pass_prompt_cases, indent=2, ensure_ascii=False),
         encoding="utf-8",
     )
+    # Every suppressed (agent-resolved) defect becomes a fingerprinted
+    # engineering-backlog entry; status-report audits runs against this file.
+    from lib.discrepancy import write_second_pass_backlog
+
+    source_pdf = extraction.get("source_pdf")
+    source_pdf_sha256 = ""
+    if source_pdf:
+        source_pdf_path = Path(str(source_pdf)).expanduser()
+        if source_pdf_path.exists():
+            source_pdf_sha256 = "sha256:" + hashlib.sha256(
+                source_pdf_path.read_bytes()
+            ).hexdigest()
+    preset_hash = ""
+    if preset_path is not None and Path(preset_path).expanduser().exists():
+        preset_hash = "sha256:" + hashlib.sha256(
+            Path(preset_path).expanduser().read_bytes()
+        ).hexdigest()
+    comparison_receipt_hash = ""
+    if comparison:
+        comparison_receipt_hash = "sha256:" + hashlib.sha256(
+            json.dumps(comparison, sort_keys=True).encode("utf-8")
+        ).hexdigest()
+    write_second_pass_backlog(
+        output_dir,
+        agent_resolved_findings,
+        source_pdf_sha256=source_pdf_sha256,
+        extractor_commit=str(getattr(pdf_oxide, "__version__", "") or ""),
+        preset_hash=preset_hash,
+        comparison_receipt_hash=comparison_receipt_hash,
+        created_at=_now_utc(),
+    )
     return HumanTriageResult(
         extraction_path=extraction_path,
         triage_queue_path=triage_queue_path,
