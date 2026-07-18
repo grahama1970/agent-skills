@@ -1,0 +1,78 @@
+{
+  "actual_provider_call_attempts": 0,
+  "claims": {
+    "does_not_prove": [
+      "Kling readiness",
+      "media publication",
+      "paid authorization",
+      "a Kling video return",
+      "lip-sync-on-return",
+      "restoration of a certified acceptance rung (blocked on reviewer calibration)",
+      "full specific-identity certification of the accepted frames"
+    ],
+    "proves": [
+      "the identity reviewer was augmented with a mandatory, unit-tested face-crop identity subgate contained to the reviewer path; it closes the full-frame dilution blind spot for non-marginal mismatches (additive, fail-closed, provenance-free)",
+      "the subgate mechanism can surface the sb_001 divergence: under the strict first prompt it FAILED known_bad_sb_001 via the face-crop subgate",
+      "calibration v3 was executed live against known-bad ground truth; after the max 3 subgate-prompt revisions the reviewer still does not cleanly discriminate the subtlest near-look-alike known-bad (sb_001) from genuine positives, and exhibits run-to-run instability on borderline crops",
+      "the reference-grounding property holds (tamper FAILs)"
+    ]
+  },
+  "gated_and_deferred": {
+    "deferred_steps": [
+      "8 successor frames augmented re-review + bounded repair loop",
+      "lane C sb_003_end_frame composition-delta regeneration + continuity pairs",
+      "artifact index/bindings rebuild, --supersede requalification, prepare/verify/activate, rung restoration"
+    ],
+    "reason": "steps gated on REVIEWER_CALIBRATION_PASS; not achieved -> withheld to avoid papering over an uncalibrated rung"
+  },
+  "human_adjudication_bundle": {
+    "dir_relative_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration_v3/human_adjudication_bundle",
+    "montages": [
+      {
+        "path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration_v3/human_adjudication_bundle/dispute_01_embry_sb001_known_bad_vs_positive.png",
+        "sha256": "sha256:bff486f9b439c1a2a46d9008e8fcb3756db0a183db3b7b84f4333b9a18cc190d"
+      },
+      {
+        "path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration_v3/human_adjudication_bundle/dispute_02_kai_sb001_known_bad_vs_positive.png",
+        "sha256": "sha256:c259c9494714fc66cfedd3dc39729f61aec2f8b8dab3834d41f1ff13af2bb7b3"
+      }
+    ],
+    "next_action": "human adjudicates known_bad_sb_001 (Q1/Q2) and reviewer-stability (Q3); route per ADJUDICATION.md",
+    "question_doc": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration_v3/human_adjudication_bundle/ADJUDICATION.md",
+    "question_doc_sha256": "sha256:2467f05b8ef8966508301f71cd04c3870b95aa79b45c48ae8211f278e8a281c5",
+    "status": "PACKAGED"
+  },
+  "live": true,
+  "mocked": false,
+  "observed_at": "2026-07-18T18:35:15.727885+00:00",
+  "paid_call_authorized": false,
+  "provider_live": false,
+  "reviewer_augmentation": {
+    "change": "added mandatory face-crop identity subgate to phase07_storyboard_tau_node._run_identity_continuity_review",
+    "containment": "reviewer path only; purely additive (full-frame gate never relaxed); fails closed; no provenance in prompts",
+    "helper_module": "scripts/identity_face_crop_subgate.py",
+    "mechanism": "gpt-5.5 face-bbox extraction -> PIL crop+upscale of candidate and up to 3 pose-matched reference views -> feature-level face-to-face comparison (face shape/width, complexion warmth/undertone, freckling, age)",
+    "node_file_sha256": "sha256:4de200cd3dd734f377054a24cdbf0773a110cf19f70f0752f843393c5979c38d",
+    "subgate_failure_code": "FAIL_FACE_CROP_IDENTITY_MISMATCH",
+    "subgate_module_sha256": "sha256:14da670037b8973ff60c9731b3db1512676ca8529cc5b9a64b947cb0a3856396",
+    "unit_tested": "tests/test_identity_face_crop_subgate.py (26 cases, no live calls)"
+  },
+  "reviewer_calibration_v3": {
+    "critical_residual_blocker": "known_bad_sb_001 (subtlest near-look-alike) PASSes: not separable from genuine positives by gpt-5.5 at face-crop scale, and borderline crop verdicts are unstable run-to-run",
+    "known_bad_failed_as_required": "2/3",
+    "overall_status": "REVIEWER_CALIBRATION_FAILED",
+    "positive_controls_pass": "1/2 (unstable; sb_002 Kai returned an empty verdict)",
+    "receipt_relative_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration_receipt.v3.json",
+    "receipt_sha256": "sha256:b888c567dfe2b5b0a163d0594e45b8d13875c3e40425413fb5e3b3183622f692",
+    "subgate_prompt_revisions_used": 3,
+    "tamper_fail": "1/1"
+  },
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "rung": "pre_paid_call_boundary",
+  "schema": "persona_dream.acceptance_rung_receipt.v3",
+  "status": "RUNG_NOT_RESTORED_BLOCKED_ON_REVIEWER_CALIBRATION",
+  "submitted": false,
+  "successor_revision_frozen_read_only": true,
+  "supersedes": "acceptance_rung_receipt.v2.json"
+}

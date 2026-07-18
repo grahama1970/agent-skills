@@ -194,11 +194,15 @@ _FRAME_BBOX_PROMPT = "\n".join(
 _REFERENCE_BBOX_PROMPT = "\n".join(
     [
         "You are a face-detection utility. The attached image is a character reference",
-        "sheet that may contain several head/face photos of the SAME person.",
-        "Pick the SINGLE clearest, most front-facing, well-lit face photo.",
-        "Return strict JSON only: {\"bbox\":[x0,y0,x1,y1]} as NORMALIZED coordinates in",
-        "0..1 (fractions of image width/height), tight around that one face (forehead to",
-        "chin, ear to ear). No prose. If no usable face, return {\"bbox\":null}.",
+        "sheet containing several head/face photos of the SAME person in different poses.",
+        "Select UP TO THREE clear, well-lit face photos that span DIFFERENT poses — ideally",
+        "one FRONTAL, one THREE-QUARTER, and one PROFILE view (pick the clearest available;",
+        "if only some poses exist, return what is available, best first).",
+        "For EACH selected face return a strict-JSON object with:",
+        '  "bbox": [x0,y0,x1,y1] as NORMALIZED coordinates in 0..1 (fractions of image',
+        "          width/height), tight around that one face (forehead to chin, ear to ear),",
+        '  "pose": "frontal" | "three-quarter" | "profile".',
+        "Return ONLY: {\"faces\":[ ... ]}. No prose. If no usable face, return {\"faces\":[]}.",
     ]
 )
 
@@ -223,87 +227,130 @@ def request_face_boxes(
     raw = post_fn(payload)
     text = raw["choices"][0]["message"]["content"]
     parsed = json.loads(text)
-    if kind == "frame":
-        faces = parsed.get("faces") or []
-        return [f for f in faces if isinstance(f, Mapping) and f.get("bbox")]
-    bbox = parsed.get("bbox")
-    return [{"bbox": bbox}] if bbox else []
+    # Both frame and (multi-pose) reference detection now return a "faces" list.
+    faces = parsed.get("faces")
+    if faces is None and parsed.get("bbox"):  # tolerate legacy single-bbox shape
+        faces = [{"bbox": parsed.get("bbox")}]
+    faces = faces or []
+    valid = [dict(f) for f in faces if isinstance(f, Mapping) and f.get("bbox")]
+    return valid[:3] if kind == "reference" else valid
 
 
 _COMPARE_PROMPT = "\n".join(
     [
-        "You are a strict face-identity examiner. You are shown TWO tightly-cropped,",
-        "zoomed-in face images:",
-        "  IMAGE 1 = a face cropped from a generated storyboard frame (the candidate).",
-        "  IMAGE 2 = a face cropped from the authoritative identity reference.",
-        "Decide whether IMAGE 1 depicts the SAME SPECIFIC INDIVIDUAL as IMAGE 2 — not",
-        "merely the same demographic category (same sex / hair colour / age band).",
+        "You are a careful face-identity examiner. IMAGE 1 is a face cropped from a",
+        "generated storyboard frame (the CANDIDATE). The remaining images (IMAGE 2, and",
+        "IMAGE 3 / IMAGE 4 if present) are multiple views of ONE authoritative TARGET",
+        "individual — the SAME reference person shown from different angles (frontal, three-",
+        "quarter, profile). Use ALL of them together as your model of the target's face.",
+        "Decide whether IMAGE 1 depicts that SAME SPECIFIC INDIVIDUAL — not merely the same",
+        "demographic category (same sex / hair colour / age band).",
         "",
-        "Because these are zoomed-in crops, judge FEATURE-LEVEL correspondence:",
-        "  - face SHAPE and WIDTH-to-LENGTH ratio (round/oval vs narrow/long),",
-        "  - COMPLEXION warmth and UNDERTONE (warm-olive vs cool-pale) and tan,",
-        "  - FRECKLING / skin texture pattern,",
-        "  - APPARENT AGE markers (skin, eye area) — a decade+ gap is a different person,",
-        "  - eyebrow shape, nose shape, jawline, cheekbones, lip shape.",
+        "USE THE POSE-MATCHED REFERENCE. The candidate is often in a 3/4 or profile pose.",
+        "Compare its bone proportions against the reference view whose POSE is CLOSEST to",
+        "the candidate's (compare a 3/4 candidate to the 3/4 reference view, a profile to",
+        "the profile view). This removes pose as an excuse: at a MATCHED pose you can judge",
+        "true face width-to-length and jaw/cheek fullness.",
         "",
-        "Surface conditions (wet hair, spray, harsh light, expression) change appearance",
-        "but NEVER change bone structure, face width-to-length ratio, base undertone, or",
-        "the freckling map. Do not excuse a structural divergence as lighting or wetness.",
+        "TREAT AS SURFACE / NON-IDENTITY (do NOT fail on these alone):",
+        "  - a WARMER, darker, more SUN-TANNED, or more evenly-lit complexion in IMAGE 1",
+        "    (expected outdoors; the target is warm-olive-skinned, so warmer is CONSISTENT),",
+        "  - wet/slicked hair, sweat, spray, glare, harsh shadow, squint or expression.",
         "",
-        "First HUNT for divergences and list every one you see. Then decide.",
+        "WEIGH HEAVILY AS IDENTITY (judge these at a MATCHED pose):",
+        "  - FACE BONE GEOMETRY: width-to-length ratio and overall shape. If, compared at",
+        "    the closest-matching pose, the candidate face is clearly NARROWER / LONGER than",
+        "    the target's fuller oval face, that is a DIFFERENT person — do NOT excuse a",
+        "    narrowness that persists even against the target's OWN 3/4 or profile view.",
+        "  - jaw and cheek fullness, cheekbone position, chin shape,",
+        "  - nose LENGTH and bridge, brow shape and set, inter-eye spacing,",
+        "  - a COOLER or PALER undertone than the warm-olive target (paleness, not tan),",
+        "  - a clearly different apparent AGE (a decade or more).",
+        "",
+        "Method: (1) note the candidate's pose and pick the closest reference view; (2) at",
+        "that matched pose, compare width-to-length, jaw/cheek fullness, nose length; (3)",
+        "list divergences, labelling each 'surface' (lighting/pose/wetness) or 'structural'",
+        "(bone geometry/proportion/age/cool-pale undertone); (4) decide on STRUCTURAL only.",
         "Return strict JSON only with exactly these keys:",
-        '{"verdict":"SAME|DIFFERENT","matching_features":["..."],',
-        '"divergences":["..."],"confidence":"high|medium|low","notes":"<=40 words"}',
-        "Rule: return SAME only if, after honestly hunting for divergences, none are",
-        "identity-changing AND you can name >=2 concrete matching features. If undertone,",
-        "freckling, face width, or apparent age diverge, or you are not highly confident,",
-        "return DIFFERENT.",
+        '{"verdict":"SAME|DIFFERENT","candidate_pose":"frontal|three-quarter|profile",',
+        '"matching_features":["..."],"divergences":["..."],',
+        '"confidence":"high|medium|low","notes":"<=40 words"}',
+        "Decision rule:",
+        "  - Return DIFFERENT if there is ANY clear STRUCTURAL divergence at a matched pose",
+        "    (face too narrow/long vs the fuller oval target, wrong nose length, cool-pale",
+        "    undertone, decade+ age gap).",
+        "  - Otherwise, if bone geometry and proportions correspond against the pose-matched",
+        "    reference and you can name >=2 concrete matching STRUCTURAL features, return",
+        "    SAME. Medium confidence is acceptable for a genuine match across different",
+        "    capture conditions; do NOT downgrade a real match to DIFFERENT merely because",
+        "    it is not a pixel-identical studio shot.",
+        "",
+        "DO NOT HEDGE. The faces are clearly visible — you must COMMIT to SAME or DIFFERENT",
+        "and cite concrete features. Never answer 'cannot verify' or return DIFFERENT with",
+        "an empty divergences list. Reserve 'low' confidence strictly for a genuinely",
+        "occluded, tiny, or blurred candidate face (treated as FAIL, fail-closed).",
     ]
 )
 
 
+def _is_noncommittal(parsed: Mapping[str, Any]) -> bool:
+    """A response that names neither a matching feature nor a divergence is a hedge."""
+    matching = [m for m in (parsed.get("matching_features") or []) if isinstance(m, str)]
+    divergences = [d for d in (parsed.get("divergences") or []) if isinstance(d, str)]
+    return not matching and not divergences
+
+
 def compare_face_crops(
     candidate_crop: Path,
-    reference_crop: Path,
+    reference_crop: Path | Sequence[Path],
     *,
     entity: str,
     model: str,
     post_fn: Callable[[Mapping[str, Any]], Mapping[str, Any]],
 ) -> dict[str, Any]:
+    reference_crops = [reference_crop] if isinstance(reference_crop, (str, Path)) else list(reference_crop)
+    content: list[dict[str, Any]] = [
+        {"type": "text", "text": _COMPARE_PROMPT},
+        {"type": "text", "text": "IMAGE 1 (CANDIDATE face crop):"},
+        _image_url_part(Path(candidate_crop), label="candidate_face"),
+    ]
+    for i, ref in enumerate(reference_crops, start=2):
+        content.append({"type": "text", "text": f"IMAGE {i} (TARGET reference view {i - 1}, same person):"})
+        content.append(_image_url_part(Path(ref), label=f"reference_face_{i - 1}"))
     payload = {
         "model": model,
         "messages": [
-            {"role": "system", "content": "You return strict JSON only. No prose. Fail closed on uncertainty."},
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": _COMPARE_PROMPT},
-                    {"type": "text", "text": "IMAGE 1 (candidate face crop):"},
-                    _image_url_part(candidate_crop, label="candidate_face"),
-                    {"type": "text", "text": "IMAGE 2 (reference face crop):"},
-                    _image_url_part(reference_crop, label="reference_face"),
-                ],
-            },
+            {"role": "system", "content": "You return strict JSON only. No prose. Judge clearly-visible faces; do not hedge."},
+            {"role": "user", "content": content},
         ],
         "response_format": {"type": "json_object"},
     }
     raw = post_fn(payload)
-    text = raw["choices"][0]["message"]["content"]
-    parsed = json.loads(text)
+    parsed = json.loads(raw["choices"][0]["message"]["content"])
+    # One retry against model variance if the first answer is a non-committal hedge
+    # (names neither a matching feature nor a divergence for two clearly-visible faces).
+    if _is_noncommittal(parsed):
+        raw = post_fn(payload)
+        retry = json.loads(raw["choices"][0]["message"]["content"])
+        if not _is_noncommittal(retry):
+            parsed = retry
     verdict = str(parsed.get("verdict") or "").upper()
     confidence = str(parsed.get("confidence") or "").lower()
     divergences = [str(d) for d in (parsed.get("divergences") or []) if isinstance(d, str)]
     matching = [str(m) for m in (parsed.get("matching_features") or []) if isinstance(m, str)]
-    # Fail-closed: SAME only counts with high confidence and >=2 matching features.
-    is_pass = verdict == "SAME" and confidence == "high" and len(matching) >= 2
+    # Fail-closed: SAME counts only with sufficient confidence (high OR medium — a
+    # genuine match across different capture conditions, render vs studio photo,
+    # rarely reads as "high") and >=2 concrete matching features. "low" confidence
+    # means the face was too occluded/blurred to judge structure -> FAIL.
+    is_pass = verdict == "SAME" and confidence in ("high", "medium") and len(matching) >= 2
     reason = ""
     if not is_pass:
         if verdict != "SAME":
             reason = "reviewer judged a DIFFERENT specific individual"
-        elif confidence != "high":
-            reason = f"match confidence only '{confidence or 'unknown'}' (fail-closed)"
+        elif confidence not in ("high", "medium"):
+            reason = f"match confidence only '{confidence or 'unknown'}' (face not structurally judgeable; fail-closed)"
         else:
-            reason = "fewer than 2 concrete matching features named (fail-closed)"
+            reason = "fewer than 2 concrete matching structural features named (fail-closed)"
         if divergences:
             reason += " | divergences: " + "; ".join(divergences[:4])
     return {
@@ -421,14 +468,19 @@ def run_face_crop_subgate(
                 entity_results.append(detail)
                 continue
             ref_w, ref_h = _size(Path(ref_path))
-            ref_bbox = normalize_bbox(ref_faces[0]["bbox"], ref_w, ref_h)
             cand_crop = crop_fn(frame_path, face["bbox_norm"], work_dir / f"{entity}_candidate_face.png")
-            ref_crop = crop_fn(Path(ref_path), ref_bbox, work_dir / f"{entity}_reference_face.png")
-            cmp = compare_face_crops(cand_crop, ref_crop, entity=entity, model=model, post_fn=post_fn)
+            ref_crops: list[Path] = []
+            ref_bboxes: list[dict[str, Any]] = []
+            for ri, rf in enumerate(ref_faces):
+                rbbox = normalize_bbox(rf["bbox"], ref_w, ref_h)
+                rc = crop_fn(Path(ref_path), rbbox, work_dir / f"{entity}_reference_face_{ri + 1}.png")
+                ref_crops.append(rc)
+                ref_bboxes.append({"bbox_norm": rbbox, "pose": rf.get("pose")})
+            cmp = compare_face_crops(cand_crop, ref_crops, entity=entity, model=model, post_fn=post_fn)
             cmp["candidate_bbox_norm"] = face["bbox_norm"]
-            cmp["reference_bbox_norm"] = ref_bbox
+            cmp["reference_views"] = ref_bboxes
             cmp["candidate_crop"] = str(cand_crop)
-            cmp["reference_crop"] = str(ref_crop)
+            cmp["reference_crops"] = [str(p) for p in ref_crops]
             cmp["candidate_face_descriptor"] = {
                 k: face.get(k) for k in ("apparent_sex", "apparent_age", "position", "prominence")
             }

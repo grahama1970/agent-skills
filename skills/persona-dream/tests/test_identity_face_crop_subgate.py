@@ -160,6 +160,21 @@ def test_compare_different_fails(tmp_path):
     assert "cooler paler undertone" in out["reason"]
 
 
+def test_compare_same_medium_confidence_passes(tmp_path):
+    # A genuine match across different capture conditions (render vs studio photo)
+    # commonly reads as medium confidence and must still PASS.
+    p = tmp_path / "x.png"
+    p.write_bytes(b"\x89PNG\r\n")
+    post = _fake_post({
+        "verdict": "SAME",
+        "confidence": "medium",
+        "matching_features": ["same fuller oval face proportion", "same nose length and bridge"],
+        "divergences": ["warmer sun-tanned complexion (surface)"],
+    })
+    out = sg.compare_face_crops(p, p, entity="Embry", model="gpt-5.5", post_fn=post)
+    assert out["status"] == "PASS"
+
+
 def test_compare_same_low_confidence_fails_closed(tmp_path):
     p = tmp_path / "x.png"
     p.write_bytes(b"\x89PNG\r\n")
@@ -171,6 +186,73 @@ def test_compare_same_low_confidence_fails_closed(tmp_path):
     })
     out = sg.compare_face_crops(p, p, entity="Kai", model="gpt-5.5", post_fn=post)
     assert out["status"] == "FAIL" and "confidence" in out["reason"]
+
+
+def test_request_face_boxes_reference_multi_pose(tmp_path):
+    p = tmp_path / "sheet.png"
+    p.write_bytes(b"\x89PNG\r\n")
+    body = {"faces": [
+        {"bbox": [0.0, 0.0, 0.3, 0.3], "pose": "frontal"},
+        {"bbox": [0.3, 0.0, 0.6, 0.3], "pose": "three-quarter"},
+        {"bbox": [0.6, 0.0, 0.9, 0.3], "pose": "profile"},
+        {"bbox": [0.0, 0.3, 0.3, 0.6], "pose": "frontal"},
+    ]}
+    faces = sg.request_face_boxes(p, model="gpt-5.5", post_fn=_fake_post(body), kind="reference")
+    assert len(faces) == 3  # capped at 3 distinct-pose reference views
+    assert faces[1]["pose"] == "three-quarter"
+
+
+def test_request_face_boxes_reference_legacy_single_bbox(tmp_path):
+    p = tmp_path / "sheet.png"
+    p.write_bytes(b"\x89PNG\r\n")
+    faces = sg.request_face_boxes(p, model="gpt-5.5", post_fn=_fake_post({"bbox": [0.1, 0.1, 0.3, 0.3]}), kind="reference")
+    assert len(faces) == 1 and faces[0]["bbox"] == [0.1, 0.1, 0.3, 0.3]
+
+
+def test_compare_accepts_multiple_reference_crops(tmp_path):
+    cand = tmp_path / "c.png"
+    cand.write_bytes(b"\x89PNG\r\n")
+    r1 = tmp_path / "r1.png"
+    r1.write_bytes(b"\x89PNG\r\n")
+    r2 = tmp_path / "r2.png"
+    r2.write_bytes(b"\x89PNG\r\n")
+    captured = {}
+
+    def post(payload):
+        captured["n_images"] = sum(
+            1 for part in payload["messages"][1]["content"] if part.get("type") == "image_url"
+        )
+        return {"choices": [{"message": {"content": json.dumps(
+            {"verdict": "SAME", "confidence": "high", "matching_features": ["a", "b"], "divergences": []})}}]}
+
+    out = sg.compare_face_crops(cand, [r1, r2], entity="Embry", model="gpt-5.5", post_fn=post)
+    assert out["status"] == "PASS"
+    assert captured["n_images"] == 3  # candidate + 2 reference views
+
+
+def test_is_noncommittal():
+    assert sg._is_noncommittal({"verdict": "DIFFERENT", "matching_features": [], "divergences": []})
+    assert not sg._is_noncommittal({"verdict": "SAME", "matching_features": ["a"], "divergences": []})
+    assert not sg._is_noncommittal({"verdict": "DIFFERENT", "matching_features": [], "divergences": ["narrower face"]})
+
+
+def test_compare_retries_on_noncommittal(tmp_path):
+    # First response is a hedge (no features, no divergences); retry commits to SAME.
+    p = tmp_path / "x.png"
+    p.write_bytes(b"\x89PNG\r\n")
+    responses = [
+        {"verdict": "DIFFERENT", "confidence": "low", "matching_features": [], "divergences": [],
+         "notes": "cannot verify"},
+        {"verdict": "SAME", "confidence": "medium",
+         "matching_features": ["same oval face", "same nose bridge"], "divergences": []},
+    ]
+    seq = iter(responses)
+
+    def post(payload):
+        return {"choices": [{"message": {"content": json.dumps(next(seq))}}]}
+
+    out = sg.compare_face_crops(p, p, entity="Kai", model="gpt-5.5", post_fn=post)
+    assert out["status"] == "PASS" and out["verdict"] == "SAME"
 
 
 # --------------------------------------------------------------------------- #

@@ -1,0 +1,81 @@
+{
+  "blocking_findings": [
+    "IDENTITY_MISMATCH_DESPITE_GENERIC_MATCH: Embry appears to be a different specific individual despite matching the broad category of brown-haired woman in a navy surf top; the frame face reads older, narrower/longer, less freckled, and structurally different from the Embry reference.",
+    "IDENTITY_AGE_MISMATCH: Embry in the frame appears roughly late-30s to 40s, clearly older than the late-20s reference identity.",
+    "IDENTITY_FEATURES_NOT_GROUNDED: Embry cannot be affirmatively verified with 2-3 concrete matching facial features against the reference."
+  ],
+  "created_at": "2026-07-18T18:29:43.663990+00:00",
+  "face_crop_subgate": {
+    "blocking_findings": [],
+    "reason": "full-frame review already FAILED; face-crop subgate not required",
+    "status": "SKIPPED"
+  },
+  "frame_key": "start_frame",
+  "frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_002_start_frame.png",
+  "full_frame_status": "FAIL",
+  "gate_fired": "full_frame",
+  "image_dimensions": {
+    "height": 864,
+    "width": 1536
+  },
+  "live": true,
+  "mocked": false,
+  "model": "gpt-5.5",
+  "model_policy": {
+    "auth": "codex-oauth",
+    "error": null,
+    "fallback_performed": false,
+    "model": "gpt-5.5",
+    "provider": "codex",
+    "schema": "persona_dream.identity_review_policy.v1",
+    "source": "dag_identity_review_model_policy",
+    "supported": true
+  },
+  "model_policy_enforced": true,
+  "panel_id": "sb_002",
+  "raw_response": {
+    "blocking_findings": [
+      "IDENTITY_MISMATCH_DESPITE_GENERIC_MATCH: Embry appears to be a different specific individual despite matching the broad category of brown-haired woman in a navy surf top; the frame face reads older, narrower/longer, less freckled, and structurally different from the Embry reference.",
+      "IDENTITY_AGE_MISMATCH: Embry in the frame appears roughly late-30s to 40s, clearly older than the late-20s reference identity.",
+      "IDENTITY_FEATURES_NOT_GROUNDED: Embry cannot be affirmatively verified with 2-3 concrete matching facial features against the reference."
+    ],
+    "identity_notes": "Both required entities are visible in the foreground, but Embry fails the specific-identity standard. The depicted woman matches the general costume/category but does not read as the same specific late-20s warm-olive, freckled, fuller-oval-faced woman from the reference. Regeneration required.",
+    "observed_divergences": {
+      "Embry": [
+        "Frame Embry appears noticeably older and more weathered than the late-20s reference.",
+        "Frame Embry's face reads narrower/longer and more angular than the reference's fuller oval face.",
+        "Frame Embry lacks the clearly visible warm-olive freckling pattern seen across the cheeks and nose in the reference.",
+        "Frame Embry's eye/eyebrow area and overall facial proportions do not closely match the reference face."
+      ],
+      "Kai": [
+        "Wet hair is curlier/more plastered than some reference views, but consistent with surf conditions.",
+        "Expression is more concerned/side-looking than neutral reference poses; no identity-changing structural divergence observed."
+      ]
+    },
+    "verdict": "FAIL",
+    "verified_facial_features": {
+      "Embry": [],
+      "Kai": [
+        "Thick dark eyebrows with a similar low, straight-to-slightly arched shape as the Kai reference.",
+        "Similar tan complexion and cheek structure visible in the three-quarter surf view.",
+        "Similar medium straight nose with rounded tip and full lower lip shape."
+      ]
+    },
+    "visible_entities": [
+      "Embry",
+      "Kai"
+    ]
+  },
+  "receipt_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration_v3/case_receipts/known_bad_sb_002_start/sb_002_start_frame_identity_continuity_review.json",
+  "required_entities": [
+    "Embry",
+    "Kai"
+  ],
+  "reviewer_source": "scillm:gpt-5.5:image_url",
+  "schema": "persona_dream.identity_continuity_review.v1",
+  "status": "FAIL",
+  "visible_entities": [
+    "Embry",
+    "Kai"
+  ]
+}
