@@ -1,0 +1,65 @@
+{
+  "schema": "persona_dream.qualification_gate_scoping_fix_receipt.v1",
+  "status": "PASS_QUALIFICATION_GATE_SCOPED_BY_RECORD_IDENTITY",
+  "run_id": "pipeline-complete",
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "observed_at": "2026-07-18",
+  "problem": "prepare_revision_qualification listed the qualification collection (project_knowledge) by (run_id, revision_id) and required EXACTLY the 27 qualification records (1 revision + 10 phase + 16 required-artifact). Governance/audit records that legitimately share that keyspace (the deletion-free Memory daemon cannot relocate them) were reported as unexpected_keys, blocking requalification with BLOCKED_MEMORY_RECORD_KEYS_MISMATCH. This was gate over-matching (selecting by raw keyspace), not record pollution.",
+  "fix": "scope_qualification_documents() selects qualification records by record identity: a record is a qualification record only when its schema (persona_dream.pipeline_revision/phase/artifact_ref.v1), its record_type (revision/phase/required_artifact), AND its stable-key prefix (pd_rev_/pd_phase_/pd_artifact_) all agree. Governance records (matching none of the three axes) are readable but never counted. A record that claims a qualification schema/type/key but is inconsistent is malformed -> fail closed (BLOCKED_MEMORY_QUALIFICATION_RECORD_MALFORMED). Duplicate qualification keys fail closed (BLOCKED_MEMORY_QUALIFICATION_RECORD_DUPLICATE). validate_exact_records and validate_semantic_pointers both operate on the scoped qualification subset only.",
+  "strictness_preserved": [
+    "requires exactly 27 qualification records (1 revision + 10 phase + 16 required-artifact)",
+    "exact-rereads each qualification record by _key",
+    "fails closed on any missing, extra, duplicate, or content-tampered qualification record",
+    "fails closed if a record claiming a qualification schema/type/key is malformed",
+    "governance/audit records are ignored by the count but remain readable"
+  ],
+  "module": "scripts/prepare_revision_qualification.py",
+  "module_sha256": "sha256:874dfea00d0da0886dbeda0be020725dc7f9186162ef4e507d1ed77512491805",
+  "commit": "1d454819",
+  "tests": {
+    "file": "tests/test_qualification_gate_scoping.py",
+    "cases": [
+      "gate passes with 27 qualification + N governance records",
+      "governance records are never counted regardless of count",
+      "gate fails on 26 qualification records (missing key)",
+      "gate fails on a duplicate qualification record",
+      "gate fails on a tampered content hash",
+      "gate fails on a malformed qualification claim",
+      "semantic-pointer validation is scoped to qualification records",
+      "end-to-end prepare/verify with governance records in the keyspace"
+    ],
+    "result": "8 passed; full qualification suite 21 passed (test_revision_memory_qualification, test_revision_activation_qualification, test_revision_requalification_supersession, test_qualification_gate_scoping)"
+  },
+  "live_effect": {
+    "keyspace_records_observed": 42,
+    "qualification_records": 27,
+    "governance_records_ignored": 15,
+    "ambiguous_records": 0,
+    "prepare_status": "PASS_MEMORY_REVISION_PREPARED",
+    "verify_status": "PASS_MEMORY_REVISION_VERIFIED",
+    "activation_status": "PASS_ACTIVE_CONSISTENT"
+  },
+  "governance_routing": "future governance writes routed to persona_dream_governance (ten persisters + the existing cognitive-loop persister); historical governance records left untouched in project_knowledge, now harmless to the scoped gate",
+  "ambiguous_records": [],
+  "claims": {
+    "proves": [
+      "the qualification exact-match gate now selects the 27 qualification records by record identity, not by raw (run_id, revision_id) keyspace membership",
+      "the gate is provably as strict as before for qualification records (unit tests) while ignoring governance records the deletion-free store cannot relocate",
+      "with the fix, live prepare/verify/activate reached PASS_ACTIVE_CONSISTENT for the rebuilt index with 15 governance records co-resident in the keyspace"
+    ],
+    "does_not_prove": [
+      "Kling readiness",
+      "provider media publication",
+      "publication authorization",
+      "paid authorization",
+      "provider return",
+      "lip-sync-on-return"
+    ]
+  },
+  "mocked": false,
+  "live": true,
+  "provider_live": false,
+  "paid_call_authorized": false,
+  "submitted": false,
+  "actual_provider_call_attempts": 0
+}

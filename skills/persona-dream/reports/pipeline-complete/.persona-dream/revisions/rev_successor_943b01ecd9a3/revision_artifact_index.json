@@ -1,6 +1,6 @@
 {
   "actual_provider_call_attempts": 0,
-  "artifact_count": 398,
+  "artifact_count": 728,
   "artifacts": {
     "contact_sheet_gate_receipt": {
       "consumer_contract": null,
@@ -1024,6 +1024,956 @@
       "sha256": "sha256:caa21313e7f90417002344863f272de22b7132cf4a977d84fb21cb0e12b9b816",
       "size_bytes": 3093
     },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.generated.storyboard.frames.sb.003.end.frame.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/generated_storyboard_frames/sb_003_end_frame.png",
+      "roles": [
+        "optional_evidence",
+        "superseded_frame"
+      ],
+      "schema": null,
+      "sha256": "sha256:7b5dde17824690f7bfbfc94516794cac2d9040a9f242bbeba15cdbb380eb72e6",
+      "size_bytes": 1922455
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.lane.c.regeneration.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/lane_c_regeneration_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:21f21b861827de4cc8663bc47aac4c848877938764652596b4f7db7d43671a06",
+      "size_bytes": 13998
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.lane.c.regeneration.receipt.partial.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/lane_c_regeneration_receipt.partial.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:a8ab2b30b352d072b0f51ab4d8b223cb2e16d770803076e1c820f395dac41ce4",
+      "size_bytes": 10717
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.composition.check.sb.003.end.frame.attempt.01.composition.check.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/composition_check/sb_003_end_frame.attempt_01_composition_check.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:ab3b257544d5e6605c8a9f69040bc7998404fcaf29791ccdd77ad8f39f01c95f",
+      "size_bytes": 1539
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.composition.check.sb.003.end.frame.attempt.02.composition.check.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/composition_check/sb_003_end_frame.attempt_02_composition_check.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:eaf3f37ceb15e3e1de991bf6bb2c516c43c653cfc077be18ae6eabc4f19d1c49",
+      "size_bytes": 1918
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.composition.check.sb.003.end.frame.attempt.03.composition.check.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/composition_check/sb_003_end_frame.attempt_03_composition_check.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:b2abcd298180911d9ca7ccbef9d0e7f0eb0b310727a4c0ffd5fee74a84e26fd0",
+      "size_bytes": 1928
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.composition.check.sb.003.end.frame.attempt.04.composition.check.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/composition_check/sb_003_end_frame.attempt_04_composition_check.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:4f27d476897446092b71a4fc44c26c100df01bf1ed9f31ca74502252707622db",
+      "size_bytes": 1982
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.composition.check.sb.003.end.frame.attempt.05.composition.check.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/composition_check/sb_003_end_frame.attempt_05_composition_check.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:bc3be20f707a440be372e9d01de4f76cb71e1b2cdd56efb9546818b02f41bf04",
+      "size_bytes": 2016
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.continuity.review.sb.003.end.frame.attempt.01.sb.003.end.to.sb.004.start.continuity.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/continuity_review/sb_003_end_frame.attempt_01.sb_003_end__to__sb_004_start_continuity.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:20c69bb15c0cf13617e5303d7561c984d6aac107fa6cd1ac6af9ba9f23593d28",
+      "size_bytes": 1784
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.continuity.review.sb.003.end.frame.attempt.01.sb.003.start.to.sb.003.end.continuity.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/continuity_review/sb_003_end_frame.attempt_01.sb_003_start__to__sb_003_end_continuity.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:0da6505c41ca064dd83d2391e568a83bf575bcae45d3396d8b5c726f26592541",
+      "size_bytes": 2608
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.continuity.review.sb.003.end.frame.attempt.02.sb.003.end.to.sb.004.start.continuity.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/continuity_review/sb_003_end_frame.attempt_02.sb_003_end__to__sb_004_start_continuity.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:a6e59fe537e4228ee4a94e9f8f87f4e7c43493d0716dc1beb91389ca79ec471b",
+      "size_bytes": 2624
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.continuity.review.sb.003.end.frame.attempt.02.sb.003.start.to.sb.003.end.continuity.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/continuity_review/sb_003_end_frame.attempt_02.sb_003_start__to__sb_003_end_continuity.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:54021be6e95b4340b1445e09e1c62730885c4b3e2d73ef9e3186c24b72ff6e26",
+      "size_bytes": 1855
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.continuity.review.sb.003.end.frame.attempt.03.sb.003.end.to.sb.004.start.continuity.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/continuity_review/sb_003_end_frame.attempt_03.sb_003_end__to__sb_004_start_continuity.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:30d966bf3a1ddf32f1e37e1fb4eb030109fd435a62487942eb7d589d6e486600",
+      "size_bytes": 2230
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.continuity.review.sb.003.end.frame.attempt.03.sb.003.start.to.sb.003.end.continuity.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/continuity_review/sb_003_end_frame.attempt_03.sb_003_start__to__sb_003_end_continuity.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:44b9b73fcb0e874e726183cda22ec1dbe3739d0bd5fa6608634a9d4c0b164e02",
+      "size_bytes": 1701
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.continuity.review.sb.003.end.frame.attempt.04.sb.003.end.to.sb.004.start.continuity.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/continuity_review/sb_003_end_frame.attempt_04.sb_003_end__to__sb_004_start_continuity.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:60cf98c57724d727bd09a3044e0dfacabdd53c40c34e0a90cf3edf1110d50b4d",
+      "size_bytes": 1827
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.continuity.review.sb.003.end.frame.attempt.04.sb.003.start.to.sb.003.end.continuity.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/continuity_review/sb_003_end_frame.attempt_04.sb_003_start__to__sb_003_end_continuity.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:82d507ac08282603e24664de78e85ffee86598161d0fb79d27a3405acf522644",
+      "size_bytes": 1771
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.continuity.review.sb.003.end.frame.attempt.05.sb.003.end.to.sb.004.start.continuity.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/continuity_review/sb_003_end_frame.attempt_05.sb_003_end__to__sb_004_start_continuity.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:f1e2c6c28b4bff6cc1407afd16e2397412dd9d4d67d2d0cb850b1438f6b7265e",
+      "size_bytes": 2050
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.continuity.review.sb.003.end.frame.attempt.05.sb.003.start.to.sb.003.end.continuity.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/continuity_review/sb_003_end_frame.attempt_05.sb_003_start__to__sb_003_end_continuity.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:6b2e12686c7feaef445a9d4b92a7b2fc48f75cfd8cb376ff6e629d4d5043e98d",
+      "size_bytes": 1832
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.frame.generation.sb.003.end.frame.attempt.01.generation.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_frame_generation/sb_003_end_frame.attempt_01_generation_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:a9794d3587003f200ef81536f65f092b64082be72cefeeed24a6431eb2e99e73",
+      "size_bytes": 5085
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.frame.generation.sb.003.end.frame.attempt.01.prompt.md": {
+      "consumer_contract": null,
+      "kind": "text",
+      "media_type": "text/markdown",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_frame_generation/sb_003_end_frame.attempt_01.prompt.md",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:ca562672800f1b308561ddc267e30b4e6402a612a410e58690551a80d5c53132",
+      "size_bytes": 7205
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.frame.generation.sb.003.end.frame.attempt.01.scillm.image.generation.events.jsonl": {
+      "consumer_contract": null,
+      "kind": "other",
+      "media_type": "application/octet-stream",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_frame_generation/sb_003_end_frame.attempt_01_scillm_image_generation_events.jsonl",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:4877cd50f4997bd985254ba2522bef22620aec35b3ba91d4772bfecfb19cb577",
+      "size_bytes": 54858
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.frame.generation.sb.003.end.frame.attempt.01.scillm.image.generation.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_frame_generation/sb_003_end_frame.attempt_01_scillm_image_generation_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:796b96353d0e0cf4cd3f3cac07872673ff7d83367df9e7dbe6b917ccb1ad6cc8",
+      "size_bytes": 461
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.frame.generation.sb.003.end.frame.attempt.02.generation.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_frame_generation/sb_003_end_frame.attempt_02_generation_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:d7e1de0948576a8430b7d7252f2e4bfbeb04a5fb3efc848debdebe208e7e6670",
+      "size_bytes": 5089
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.frame.generation.sb.003.end.frame.attempt.02.prompt.md": {
+      "consumer_contract": null,
+      "kind": "text",
+      "media_type": "text/markdown",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_frame_generation/sb_003_end_frame.attempt_02.prompt.md",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:b23e5acfbaf80627d60c1b9d683cbb408fc2be8c65045bb20acf6e66b6ab986e",
+      "size_bytes": 8775
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.frame.generation.sb.003.end.frame.attempt.02.scillm.image.generation.events.jsonl": {
+      "consumer_contract": null,
+      "kind": "other",
+      "media_type": "application/octet-stream",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_frame_generation/sb_003_end_frame.attempt_02_scillm_image_generation_events.jsonl",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:092757cef15ab8050eea5818875f77b3191346d6b2076c03175a206380bf48a2",
+      "size_bytes": 71126
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.frame.generation.sb.003.end.frame.attempt.02.scillm.image.generation.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_frame_generation/sb_003_end_frame.attempt_02_scillm_image_generation_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:a5e332c6e576c522b2c8f9d5f8bfc59696a200b35e4f0b8048dfd90abd8cb0f8",
+      "size_bytes": 461
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.frame.generation.sb.003.end.frame.attempt.03.generation.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_frame_generation/sb_003_end_frame.attempt_03_generation_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:f65fa98731c78c68e9125d43201a1981364eea4098e44b6a16386fcd299d4a83",
+      "size_bytes": 5089
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.frame.generation.sb.003.end.frame.attempt.03.prompt.md": {
+      "consumer_contract": null,
+      "kind": "text",
+      "media_type": "text/markdown",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_frame_generation/sb_003_end_frame.attempt_03.prompt.md",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:c21830df4a4e09425d0c22e94b0b9aea983e5e92be28dda1d15c238b1c855555",
+      "size_bytes": 8764
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.frame.generation.sb.003.end.frame.attempt.03.scillm.image.generation.events.jsonl": {
+      "consumer_contract": null,
+      "kind": "other",
+      "media_type": "application/octet-stream",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_frame_generation/sb_003_end_frame.attempt_03_scillm_image_generation_events.jsonl",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:69c519548757f03c7de50f729f743fbd80aa274f3a13466d3b1e9ece576930a5",
+      "size_bytes": 51248
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.frame.generation.sb.003.end.frame.attempt.03.scillm.image.generation.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_frame_generation/sb_003_end_frame.attempt_03_scillm_image_generation_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:d9890c2139f286396103be8cb4a9367c2240263a776e7d7079185c95acda75a7",
+      "size_bytes": 461
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.frame.generation.sb.003.end.frame.attempt.04.generation.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_frame_generation/sb_003_end_frame.attempt_04_generation_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:d9d758b0b38fd6604e0c8e115650ce45447e9a65fd196518e7a6810edc08ab37",
+      "size_bytes": 5089
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.frame.generation.sb.003.end.frame.attempt.04.prompt.md": {
+      "consumer_contract": null,
+      "kind": "text",
+      "media_type": "text/markdown",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_frame_generation/sb_003_end_frame.attempt_04.prompt.md",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:53fc9cffb9fa8f94c04e8351143d596e996bf463e36fb8e1ebb1c6cbf77602b5",
+      "size_bytes": 8569
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.frame.generation.sb.003.end.frame.attempt.04.scillm.image.generation.events.jsonl": {
+      "consumer_contract": null,
+      "kind": "other",
+      "media_type": "application/octet-stream",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_frame_generation/sb_003_end_frame.attempt_04_scillm_image_generation_events.jsonl",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:b4cd5493cb5bf89856cc6acd0c4169e22bd3e2299b3cfd8da6ba83e0f2a3e5ab",
+      "size_bytes": 29004
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.frame.generation.sb.003.end.frame.attempt.04.scillm.image.generation.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_frame_generation/sb_003_end_frame.attempt_04_scillm_image_generation_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:03c3c00f8fa14c3b394ac975cee899c4e5149f195be1ed30663e3b8f9dcb5a13",
+      "size_bytes": 448
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.frame.generation.sb.003.end.frame.attempt.05.generation.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_frame_generation/sb_003_end_frame.attempt_05_generation_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:573d6600ea0b40e0e83b3a69238fd306267d7b661095f049da0eb9b0bcc6add8",
+      "size_bytes": 5089
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.frame.generation.sb.003.end.frame.attempt.05.prompt.md": {
+      "consumer_contract": null,
+      "kind": "text",
+      "media_type": "text/markdown",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_frame_generation/sb_003_end_frame.attempt_05.prompt.md",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:43c60ca33832ccae725806bb2ee554a7877f684e4674330ab3cb4212c4ff1ce3",
+      "size_bytes": 8270
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.frame.generation.sb.003.end.frame.attempt.05.scillm.image.generation.events.jsonl": {
+      "consumer_contract": null,
+      "kind": "other",
+      "media_type": "application/octet-stream",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_frame_generation/sb_003_end_frame.attempt_05_scillm_image_generation_events.jsonl",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:4544df3e7b05a28fcd2395156b0b962526475262cfeb7caf8a0f678ba3c955ba",
+      "size_bytes": 27208
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.frame.generation.sb.003.end.frame.attempt.05.scillm.image.generation.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_frame_generation/sb_003_end_frame.attempt_05_scillm_image_generation_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:5033d8bd54a802e9a5868ee6803c263df1ea165c76a59b3d9b267f3e283a6018",
+      "size_bytes": 461
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.identity.review.sb.003.end.frame.attempt.01.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_identity_review/sb_003_end_frame.attempt_01_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:adce9e1baf926b022b3a4187c8c902224b96320187581484ddf7a0b8149c0eba",
+      "size_bytes": 3671
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.identity.review.sb.003.end.frame.attempt.02.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_identity_review/sb_003_end_frame.attempt_02_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:cddc6368fce62ab8c3e0519dc2f2e821ec8973807bd05f609dfea57ee46b5471",
+      "size_bytes": 12470
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.identity.review.sb.003.end.frame.attempt.03.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_identity_review/sb_003_end_frame.attempt_03_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:8ac73f23a8a079f300bb944c149dcf617e1ef7571b66c57ffb577ab27fc72b29",
+      "size_bytes": 12520
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.identity.review.sb.003.end.frame.attempt.04.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_identity_review/sb_003_end_frame.attempt_04_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:c5a3ca2c739604190d71b7ad79e550c6a040b8e301c717a7727175d290fc73c4",
+      "size_bytes": 12365
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.identity.review.sb.003.end.frame.attempt.05.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_identity_review/sb_003_end_frame.attempt_05_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:78208131083a696f79547b42ea7ce35d4820c496d965e18374df941b861f630e",
+      "size_bytes": 12138
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.identity.review.sb.003.end.frame.face.crops.embry.candidate.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_identity_review/sb_003_end_frame_face_crops/Embry_candidate_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:2c71ceda069ce8eb421b8550f2efa9d67885015218d75b2d632811e8b5074617",
+      "size_bytes": 546486
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.identity.review.sb.003.end.frame.face.crops.embry.reference.face.1.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_identity_review/sb_003_end_frame_face_crops/Embry_reference_face_1.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:4f1983ab839756f67abb965a14e6d1620f70b5ca43e269916af6022acebfc6ec",
+      "size_bytes": 467082
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.identity.review.sb.003.end.frame.face.crops.embry.reference.face.2.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_identity_review/sb_003_end_frame_face_crops/Embry_reference_face_2.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:af740c75c63d79b6804d1fc9c6ac885942021eb44c08eedd55a2c57502567ec9",
+      "size_bytes": 461156
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.identity.review.sb.003.end.frame.face.crops.embry.reference.face.3.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_identity_review/sb_003_end_frame_face_crops/Embry_reference_face_3.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:80b46fd0d52ddd4133147d52a3b39715cf48ac09ad917433f23ba32de8d623ad",
+      "size_bytes": 451450
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.identity.review.sb.003.end.frame.face.crops.kai.candidate.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_identity_review/sb_003_end_frame_face_crops/Kai_candidate_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:f94ae8a312f23dff8864ddca0c0f543d31074686c09c879da5ea811115332549",
+      "size_bytes": 657846
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.identity.review.sb.003.end.frame.face.crops.kai.reference.face.1.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_identity_review/sb_003_end_frame_face_crops/Kai_reference_face_1.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:458143b692592693e8a8a997ede588b4d2ca38a497a15cf32f1fc8d6fc46f986",
+      "size_bytes": 288963
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.identity.review.sb.003.end.frame.face.crops.kai.reference.face.2.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_identity_review/sb_003_end_frame_face_crops/Kai_reference_face_2.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:b3e17dc714ed306f39771191745889d276f12879dc13f391cf9178857df13354",
+      "size_bytes": 422456
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.identity.review.sb.003.end.frame.face.crops.kai.reference.face.3.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_identity_review/sb_003_end_frame_face_crops/Kai_reference_face_3.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:452c2e4aa16f390fbfa31e5475edf890cf2e4d2127465cfbdc1a539d23730cc2",
+      "size_bytes": 391968
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.receipts.storyboard.identity.review.sb.003.end.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen/receipts/storyboard_identity_review/sb_003_end_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:3b79e059ecaa3866d199d737b37818ea46d7401bc5c86c0dc716670bd0bb41e2",
+      "size_bytes": 12037
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.waiver.lane.c.regeneration.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/lane_c_regeneration_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:3b5f7ae37e9d647a23b3853b053f66d2534e11984bd1c8b5a58e86578d0ba178",
+      "size_bytes": 16409
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.waiver.lane.c.regeneration.receipt.partial.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/lane_c_regeneration_receipt.partial.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:a43d42b5f40eac23120e4e7564bd73feec08139f206e9ae7f8ca66aaadef43db",
+      "size_bytes": 1557
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.waiver.receipts.anchored.identity.waiver.sb.003.end.frame.attempt.01.kai.anchored.identity.waiver.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/anchored_identity_waiver/sb_003_end_frame.attempt_01_kai_anchored_identity_waiver.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:e51c8971e616feee1a2e22321381e0f8152101527a25d7b549f28f61487e41d3",
+      "size_bytes": 3076
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.waiver.receipts.composition.check.sb.003.end.frame.attempt.01.composition.check.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/composition_check/sb_003_end_frame.attempt_01_composition_check.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:99eb15c823701dcc20f066c4a66153d3c59d5b1d88d1dbe6e2dbbaa07e669f6f",
+      "size_bytes": 1818
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.waiver.receipts.continuity.review.sb.003.end.frame.attempt.01.sb.003.end.to.sb.004.start.continuity.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/continuity_review/sb_003_end_frame.attempt_01.sb_003_end__to__sb_004_start_continuity.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:bae5965ab04f3ca77ce96d8abb86aaae5cb6cfb7b989d15e0da3a7c82ea6e020",
+      "size_bytes": 2421
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.waiver.receipts.continuity.review.sb.003.end.frame.attempt.01.sb.003.start.to.sb.003.end.continuity.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/continuity_review/sb_003_end_frame.attempt_01.sb_003_start__to__sb_003_end_continuity.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:7e3d5ab5106047cfa7a211108d2f8d74fe7b8f7ecba4cab8745a3a21b74a7646",
+      "size_bytes": 2294
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.waiver.receipts.storyboard.frame.generation.sb.003.end.frame.attempt.01.generation.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/storyboard_frame_generation/sb_003_end_frame.attempt_01_generation_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:6b2b103ecaed7e2e8e95449aeaa1551c9d75335e9c277cfdc1c3944f3e53fb5b",
+      "size_bytes": 5144
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.waiver.receipts.storyboard.frame.generation.sb.003.end.frame.attempt.01.prompt.md": {
+      "consumer_contract": null,
+      "kind": "text",
+      "media_type": "text/markdown",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/storyboard_frame_generation/sb_003_end_frame.attempt_01.prompt.md",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:542295856aa78dee1c79bdfb2279e388837f15c14b445f5b4378280c7d37c9b9",
+      "size_bytes": 6910
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.waiver.receipts.storyboard.frame.generation.sb.003.end.frame.attempt.01.scillm.image.generation.events.jsonl": {
+      "consumer_contract": null,
+      "kind": "other",
+      "media_type": "application/octet-stream",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/storyboard_frame_generation/sb_003_end_frame.attempt_01_scillm_image_generation_events.jsonl",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:ba7506250543b9813b470903f62ef95e9270581870c1208edc0cb55fa3894a8a",
+      "size_bytes": 26270
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.waiver.receipts.storyboard.frame.generation.sb.003.end.frame.attempt.01.scillm.image.generation.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/storyboard_frame_generation/sb_003_end_frame.attempt_01_scillm_image_generation_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:0df6cc6062467eda558d805145ca48fc372493cac739e556f768db661e934534",
+      "size_bytes": 455
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.waiver.receipts.storyboard.identity.review.sb.003.end.frame.attempt.01.embry.augmented.identity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/storyboard_identity_review/sb_003_end_frame.attempt_01_embry_augmented_identity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:a749f1e1a56ef5df668098033fc6431d340cf593a7b8f561d0a474ce867c83b2",
+      "size_bytes": 3515
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.waiver.receipts.storyboard.identity.review.sb.003.start.frame.anchor.augmented.identity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/storyboard_identity_review/sb_003_start_frame.anchor_augmented_identity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:51ebda62885d3030c37b7c9841b7bf34bc2eb4815c9feb59a7788de3ae708aed",
+      "size_bytes": 11352
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.waiver.receipts.storyboard.identity.review.sb.003.start.frame.face.crops.embry.candidate.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/storyboard_identity_review/sb_003_start_frame_face_crops/Embry_candidate_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:d0a4b0ae99c331dc1eecaf5388b66a05f46afddd6660cad0ac93c51a3bf471e7",
+      "size_bytes": 652730
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.waiver.receipts.storyboard.identity.review.sb.003.start.frame.face.crops.embry.reference.face.1.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/storyboard_identity_review/sb_003_start_frame_face_crops/Embry_reference_face_1.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:4f1983ab839756f67abb965a14e6d1620f70b5ca43e269916af6022acebfc6ec",
+      "size_bytes": 467082
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.waiver.receipts.storyboard.identity.review.sb.003.start.frame.face.crops.embry.reference.face.2.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/storyboard_identity_review/sb_003_start_frame_face_crops/Embry_reference_face_2.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:af740c75c63d79b6804d1fc9c6ac885942021eb44c08eedd55a2c57502567ec9",
+      "size_bytes": 461156
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.waiver.receipts.storyboard.identity.review.sb.003.start.frame.face.crops.embry.reference.face.3.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/storyboard_identity_review/sb_003_start_frame_face_crops/Embry_reference_face_3.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:80b46fd0d52ddd4133147d52a3b39715cf48ac09ad917433f23ba32de8d623ad",
+      "size_bytes": 451450
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.waiver.receipts.storyboard.identity.review.sb.003.start.frame.face.crops.kai.candidate.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/storyboard_identity_review/sb_003_start_frame_face_crops/Kai_candidate_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:9707ff4d5bd16c2328bf70aa174862c697ac48becc207f1576077e9d7b42b8a9",
+      "size_bytes": 546610
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.waiver.receipts.storyboard.identity.review.sb.003.start.frame.face.crops.kai.reference.face.1.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/storyboard_identity_review/sb_003_start_frame_face_crops/Kai_reference_face_1.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:458143b692592693e8a8a997ede588b4d2ca38a497a15cf32f1fc8d6fc46f986",
+      "size_bytes": 288963
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.waiver.receipts.storyboard.identity.review.sb.003.start.frame.face.crops.kai.reference.face.2.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/storyboard_identity_review/sb_003_start_frame_face_crops/Kai_reference_face_2.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:b3e17dc714ed306f39771191745889d276f12879dc13f391cf9178857df13354",
+      "size_bytes": 422456
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.waiver.receipts.storyboard.identity.review.sb.003.start.frame.face.crops.kai.reference.face.3.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/storyboard_identity_review/sb_003_start_frame_face_crops/Kai_reference_face_3.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:452c2e4aa16f390fbfa31e5475edf890cf2e4d2127465cfbdc1a539d23730cc2",
+      "size_bytes": 391968
+    },
+    "phase07.phase.07.storyboard.live.tau.lane.c.step38.sb.003.end.regen.waiver.receipts.storyboard.identity.review.sb.003.start.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/storyboard_identity_review/sb_003_start_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:51ebda62885d3030c37b7c9841b7bf34bc2eb4815c9feb59a7788de3ae708aed",
+      "size_bytes": 11352
+    },
     "phase07.phase.07.storyboard.live.tau.panel.001.live.scillm.png": {
       "consumer_contract": null,
       "kind": "image",
@@ -1075,6 +2025,20 @@
       "schema": null,
       "sha256": "sha256:7314062e74ed9f09977055629bde17d8efa375470263205a450fc1dd03c72d83",
       "size_bytes": 7356
+    },
+    "phase07.phase.07.storyboard.live.tau.phase.c.successor.regen.generated.storyboard.frames.sb.003.end.frame.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_003_end_frame.png",
+      "roles": [
+        "optional_evidence",
+        "superseded_frame"
+      ],
+      "schema": null,
+      "sha256": "sha256:1b03c8f9c9148874dc63a49a0f2658391c59fee1c89759c25bc034f30b9f7d56",
+      "size_bytes": 1677703
     },
     "phase07.phase.07.storyboard.live.tau.phase.c.successor.regen.phase.c.regeneration.receipt.json": {
       "consumer_contract": null,
@@ -2544,6 +3508,656 @@
       "schema": null,
       "sha256": "sha256:9524fad2ad48ed5b006f4f9fead8a57edd462788e32e297d6c34e51b9eda76ea",
       "size_bytes": 10074
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.preflight.full.storyboard.receipts.live.preflight.panel.creator.phase07.live.preflight.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/preflight_full_storyboard/receipts/live_preflight/panel-creator_phase07_live_preflight_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:212c3df8ab056df71ae5640ef77edc75770531e6df2d0ec6315c60334a49dd62",
+      "size_bytes": 6763
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.preflight.full.storyboard.receipts.live.preflight.panel.creator.spine.chain.validator.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/preflight_full_storyboard/receipts/live_preflight/panel-creator_spine_chain_validator_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:d303c1a485f69ecc332be9de6ebc4301a374fb957c0765f22670827665b7258e",
+      "size_bytes": 1162
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.preflight.full.storyboard.receipts.live.preflight.panel.reviewer.phase07.live.preflight.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/preflight_full_storyboard/receipts/live_preflight/panel-reviewer_phase07_live_preflight_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:6c51d0be841c8c06fdcd0bab473a1314d025bdc482c27e7b722a6d1b5a7d04fa",
+      "size_bytes": 6766
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.preflight.full.storyboard.receipts.live.preflight.panel.reviewer.spine.chain.validator.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/preflight_full_storyboard/receipts/live_preflight/panel-reviewer_spine_chain_validator_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:e65f4e0d251cc565ac84344f77a656ee026a0b5c6d8b339fdcd8f71321976b5d",
+      "size_bytes": 1162
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.preflight.targeted.sb.001.receipts.live.preflight.panel.creator.phase07.live.preflight.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/preflight_targeted_sb_001/receipts/live_preflight/panel-creator_phase07_live_preflight_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:d5d5e530e2221a4270014ca45b352c3284b9142564b2f6c976dab20ed4a978f8",
+      "size_bytes": 3829
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.preflight.targeted.sb.001.receipts.live.preflight.panel.creator.spine.chain.validator.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/preflight_targeted_sb_001/receipts/live_preflight/panel-creator_spine_chain_validator_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:d761f6bb21b4cbd8eaf036aa308768ffbb314c8624b39e6072cf1c1d671732fd",
+      "size_bytes": 1162
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.preflight.targeted.sb.001.receipts.live.preflight.panel.reviewer.phase07.live.preflight.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/preflight_targeted_sb_001/receipts/live_preflight/panel-reviewer_phase07_live_preflight_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:fa68a7415efe7476aeae7bbb3e4c6d74434fb24398ff3b8d8f956d2286f2bd14",
+      "size_bytes": 3832
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.preflight.targeted.sb.001.receipts.live.preflight.panel.reviewer.spine.chain.validator.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/preflight_targeted_sb_001/receipts/live_preflight/panel-reviewer_spine_chain_validator_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:29216b259b1e0e7cbc24bdcd60f031a1ed9e7783c70379ace4613d41ba4a8c0c",
+      "size_bytes": 1162
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.preflight.targeted.sb.001.targeted.storyboard.packet.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/preflight_targeted_sb_001/targeted_storyboard_packet.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:27b5a2b2eed5ffa4161868086d2430b7d1774110fc7f00ae9dac5db03a4021b7",
+      "size_bytes": 151794
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase01.memory.residue.contract.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase01/memory_residue_contract.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:9a40e3f11e4e81456afe39bdcd7fac41015162eb8cd62268fcc177259bf946f8",
+      "size_bytes": 874
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase01.validate.memory.residue.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase01/validate_memory_residue_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:6927f6f87c85cb9c8b39674f818b59bce66e12ffbda06c62e2f337b95730f22b",
+      "size_bytes": 545
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase02.story.contract.prompt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase02/story_contract_prompt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:c839563567c424d4c192679325bba756a95cdb387e14995139e54742a88d9abf",
+      "size_bytes": 2225
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase02.validate.story.contract.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase02/validate_story_contract_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:2defa13b33e69e46c3864ab19b19da0645459516c856a03e85cffffd460d8cb3",
+      "size_bytes": 534
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase06.script.prompt.contract.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase06/script_prompt_contract.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:25e55902da9cefb93f01a6c4b66c884106aff75d1d68b6eaff5220671c70abc2",
+      "size_bytes": 3087
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase06.validate.script.contract.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase06/validate_script_contract_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:31880f294d527d934a265192b256a14c963d369e1cc4f3bc81d7f5ed4e670bb3",
+      "size_bytes": 536
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.prompt.contracts.sb.001.end.frame.attempt.001.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/prompt_contracts/sb_001.end_frame.attempt_001.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:c9389ccd8d1243890aa0f4d6e19b3fa65fa48e12706c6e83b92066b37db1f5b0",
+      "size_bytes": 5147
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.prompt.contracts.sb.001.start.frame.attempt.001.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/prompt_contracts/sb_001.start_frame.attempt_001.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:e6410ebedf8def83b2a6364fea2f13ebf864ec254ceeabc4b69b79760d4704b6",
+      "size_bytes": 4700
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.prompt.contracts.sb.002.end.frame.attempt.001.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/prompt_contracts/sb_002.end_frame.attempt_001.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:698c40a49e2faa3b63cfd17a950da19160d750a29327af0d177bf7c67acfae92",
+      "size_bytes": 5158
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.prompt.contracts.sb.002.start.frame.attempt.001.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/prompt_contracts/sb_002.start_frame.attempt_001.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:ac3dd6c79c3aeabc831a88077c12bc4d7d92495d5977465c85d955e38c17f82f",
+      "size_bytes": 5160
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.prompt.contracts.sb.003.end.frame.attempt.001.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/prompt_contracts/sb_003.end_frame.attempt_001.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:99ee85a6315249322f4f3f02ec4f17714b63dfb5f249b6607d798db3ff2605d3",
+      "size_bytes": 5135
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.prompt.contracts.sb.003.start.frame.attempt.001.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/prompt_contracts/sb_003.start_frame.attempt_001.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:600bcbea5cf0eee02a3f7861b97a1e8e05195d604b32424209c8660e7ed42ad5",
+      "size_bytes": 5137
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.prompt.contracts.sb.004.end.frame.attempt.001.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/prompt_contracts/sb_004.end_frame.attempt_001.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:e0aea9d6a195162146054362c3b3176afc92da20ae553d44fec9c9259b450cf2",
+      "size_bytes": 5136
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.prompt.contracts.sb.004.start.frame.attempt.001.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/prompt_contracts/sb_004.start_frame.attempt_001.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:4d75e6db5086390d01d33b5114efa792dc864d479a71a5ffe22804067d2c00d7",
+      "size_bytes": 5138
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.prompts.sb.001.end.frame.attempt.001.md": {
+      "consumer_contract": null,
+      "kind": "text",
+      "media_type": "text/markdown",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/prompts/sb_001.end_frame.attempt_001.md",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:d3311558e162780f72faf3452944519f7eab84530ff81bbe3c0236304855415c",
+      "size_bytes": 2655
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.prompts.sb.001.start.frame.attempt.001.md": {
+      "consumer_contract": null,
+      "kind": "text",
+      "media_type": "text/markdown",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/prompts/sb_001.start_frame.attempt_001.md",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:50fad4c70f3c6b2a75804c408e52ad3bc98f758acb0f511e6f16c9ab5c3f46cd",
+      "size_bytes": 2347
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.prompts.sb.002.end.frame.attempt.001.md": {
+      "consumer_contract": null,
+      "kind": "text",
+      "media_type": "text/markdown",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/prompts/sb_002.end_frame.attempt_001.md",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:b59dd514167c76e04096bebb9c682215fb685311e05c6fcab67c2515ce4b82e2",
+      "size_bytes": 2666
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.prompts.sb.002.start.frame.attempt.001.md": {
+      "consumer_contract": null,
+      "kind": "text",
+      "media_type": "text/markdown",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/prompts/sb_002.start_frame.attempt_001.md",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:f023b25bc6c7f21913f56106adc5299b6e900d596e3237dd151ab9a40d153fc8",
+      "size_bytes": 2668
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.prompts.sb.003.end.frame.attempt.001.md": {
+      "consumer_contract": null,
+      "kind": "text",
+      "media_type": "text/markdown",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/prompts/sb_003.end_frame.attempt_001.md",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:cc70d3563beeb8c7afca2004333b2cc49501153429cad7960353f05b079f63ca",
+      "size_bytes": 2643
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.prompts.sb.003.start.frame.attempt.001.md": {
+      "consumer_contract": null,
+      "kind": "text",
+      "media_type": "text/markdown",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/prompts/sb_003.start_frame.attempt_001.md",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:062b2d6590684723e6801a715e8990121bc588f1ab02c11627ec67f202ddd5b8",
+      "size_bytes": 2645
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.prompts.sb.004.end.frame.attempt.001.md": {
+      "consumer_contract": null,
+      "kind": "text",
+      "media_type": "text/markdown",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/prompts/sb_004.end_frame.attempt_001.md",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:f5d042a4c6e3103bc992d0bb3e8a85bf7ca992fe58af9ad54e48addac7a89889",
+      "size_bytes": 2644
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.prompts.sb.004.start.frame.attempt.001.md": {
+      "consumer_contract": null,
+      "kind": "text",
+      "media_type": "text/markdown",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/prompts/sb_004.start_frame.attempt_001.md",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:0b83c938c5fe0f140f445779e3804ecd6d8ecdd2d2f5cc79fc6855089ccb3cbd",
+      "size_bytes": 2646
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.receipts.frame.acceptance.sb.001.end.frame.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/receipts/frame_acceptance/sb_001_end_frame.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:4d1f374d065d7573b4cd90a5b258208b701dabbdc9ba6250dc356e858a084a29",
+      "size_bytes": 1169
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.receipts.frame.acceptance.sb.001.start.frame.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/receipts/frame_acceptance/sb_001_start_frame.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:d2740db77db182007c03f6cdbb929bee7fdb1860088b3309171edf3b17b0e933",
+      "size_bytes": 1175
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.receipts.frame.acceptance.sb.002.end.frame.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/receipts/frame_acceptance/sb_002_end_frame.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:4fca1f4bb0b03127b3b6a95d0df783660683b9fa264a4305280c556457c656a9",
+      "size_bytes": 1169
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.receipts.frame.acceptance.sb.002.start.frame.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/receipts/frame_acceptance/sb_002_start_frame.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:39c636c0c2e2f1f982269f3e4f13d89d07672c61c373e21077d581f456e3d0a2",
+      "size_bytes": 1175
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.receipts.frame.acceptance.sb.003.end.frame.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/receipts/frame_acceptance/sb_003_end_frame.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:d374ef6be3ebdba9a0fd529d1cb67e76f3ce87c676698f8334ebedf2879d5ee8",
+      "size_bytes": 1169
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.receipts.frame.acceptance.sb.003.start.frame.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/receipts/frame_acceptance/sb_003_start_frame.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:b1d09495f4bb0af08a1a45253296641a778a67b324e7d59fd9e5c294bb73516f",
+      "size_bytes": 1175
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.receipts.frame.acceptance.sb.004.end.frame.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/receipts/frame_acceptance/sb_004_end_frame.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:348d5403de90433954808d9cf73197d63e835258c00197490117a0f14581fecf",
+      "size_bytes": 1169
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.receipts.frame.acceptance.sb.004.start.frame.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/receipts/frame_acceptance/sb_004_start_frame.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:620d6669263b5d06f209cf8157cb1de60b8c944289ff980720155b1071326723",
+      "size_bytes": 1175
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.receipts.prompt.validation.sb.001.end.frame.attempt.001.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/receipts/prompt_validation/sb_001.end_frame.attempt_001.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:7f5e78dfbd0cb3e6575a56382e533dc06c65082a998fa162e21b2f1da6b060f3",
+      "size_bytes": 559
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.receipts.prompt.validation.sb.001.start.frame.attempt.001.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/receipts/prompt_validation/sb_001.start_frame.attempt_001.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:c5d5e1d274f12127c4f41cd693955408ab9833847ded161cd78f1bc1370a5b70",
+      "size_bytes": 561
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.receipts.prompt.validation.sb.002.end.frame.attempt.001.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/receipts/prompt_validation/sb_002.end_frame.attempt_001.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:ba734bb6504d8dde64ec5d0281eacbe2a128de2cf7237d658f5f9d67f98d53b3",
+      "size_bytes": 559
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.receipts.prompt.validation.sb.002.start.frame.attempt.001.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/receipts/prompt_validation/sb_002.start_frame.attempt_001.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:eccbe7323cde477b730f7a9e0542def06f57e33e244772422abe013414426d69",
+      "size_bytes": 561
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.receipts.prompt.validation.sb.003.end.frame.attempt.001.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/receipts/prompt_validation/sb_003.end_frame.attempt_001.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:c0bb3734e807a691f91fa0d2c8e9e27e2856f3e87ad706755d35cb7020691cc7",
+      "size_bytes": 559
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.receipts.prompt.validation.sb.003.start.frame.attempt.001.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/receipts/prompt_validation/sb_003.start_frame.attempt_001.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:818f0b0f274cb00bc709f447621fedbe21a37780137e058cf2433ddd7f98a731",
+      "size_bytes": 561
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.receipts.prompt.validation.sb.004.end.frame.attempt.001.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/receipts/prompt_validation/sb_004.end_frame.attempt_001.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:9befc3cf63a21b49cf6d2eed146f11250c1d824399cfa95f9f476ec13fa2d2ce",
+      "size_bytes": 559
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.phase07.receipts.prompt.validation.sb.004.start.frame.attempt.001.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/phase07/receipts/prompt_validation/sb_004.start_frame.attempt_001.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:517bacd63724c29babf863438791ecfe93bcf0ea5716a7be48be973baf4d3cc2",
+      "size_bytes": 561
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.spine.chain.spine.chain.manifest.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/spine_chain/spine_chain_manifest.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:635a6669029aac10eef91580a569a27085abc4af546dd95e09407514d6a019d0",
+      "size_bytes": 19063
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.tau.command.loop.evidence.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/tau_command_loop_evidence.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:63a8345ce58f698695d2710508b50f43556b16e425e694fe7b566def93b63e73",
+      "size_bytes": 1582
+    },
+    "phase07.phase.07.storyboard.live.tau.tau.loop.preflight.proof.tau.loop.preflight.proof.receipt.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "07",
+      "relative_path": "phase_07_storyboard_live_tau/tau_loop_preflight_proof/tau_loop_preflight_proof_receipt.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:00001fe7091e118196561081aefae49e7fed9233084f0c88936ff11cdbd78d21",
+      "size_bytes": 4831
     },
     "phase07.phase.07.storyboard.live.tau.tau.run.provider.command.loop.command.artifacts.command.loop.step.001.panel.creator.receipt.json": {
       "consumer_contract": null,
@@ -4937,6 +6551,227 @@
       "sha256": "sha256:af05bf622828eb642201d95f3c7bfcd0e764a1a480d1ebc88660147dc28aa6de",
       "size_bytes": 3165
     },
+    "revision.acceptance.rung.receipt.v2.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "acceptance_rung_receipt.v2.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:8b62d001b47f50f7db5f4496eaf0caee909a10d4d7e25e5972721de2d8271452",
+      "size_bytes": 4712
+    },
+    "revision.acceptance.rung.receipt.v3.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "acceptance_rung_receipt.v3.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:53f72d88eb66aa814bd811edecb38ebf4b1d0599b0d23561adfb82eb11dda324",
+      "size_bytes": 5022
+    },
+    "revision.acceptance.rung.receipt.v4.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "acceptance_rung_receipt.v4.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:336487c33aaf0a458b9cc644b21cb37b36f1984caf6d1bb0cebb1237177f65ee",
+      "size_bytes": 5928
+    },
+    "revision.cognitive.loop.991c311f365f.cognitive.loop.memory.governance.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "cognitive_loop/991c311f365f/cognitive_loop_memory_governance_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:e76bc08530e0acfbd4b6b2340d263df3d59f080e42402ad4f78118269d612794",
+      "size_bytes": 887
+    },
+    "revision.cognitive.loop.991c311f365f.cognitive.loop.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "cognitive_loop/991c311f365f/cognitive_loop_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:03ae4b4c01bf496fb947359ca026f6cda166742f7c2fb30501617711176c046e",
+      "size_bytes": 3059
+    },
+    "revision.cognitive.loop.991c311f365f.dream.persistence.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "cognitive_loop/991c311f365f/dream_persistence_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:1685c1aa3ceadfc88ead87e26eced144b198164eceb458817b89d31fedb84d9f",
+      "size_bytes": 20484
+    },
+    "revision.cognitive.loop.991c311f365f.dream.self.interpretation.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "cognitive_loop/991c311f365f/dream_self_interpretation.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:d571aa6f20229e6814f5534d04a14bc392772b29b9a52b315a7185c31cd62866",
+      "size_bytes": 20009
+    },
+    "revision.cognitive.loop.991c311f365f.tom.validation.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "cognitive_loop/991c311f365f/tom_validation_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:7895665750f1fa81ff35c59f692d2e81b6d534a58cda4436f14db385345def51",
+      "size_bytes": 4300
+    },
+    "revision.hardened.rereview.case.receipts.sb.001.end.frame.sb.001.end.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "hardened_rereview/case_receipts/sb_001_end_frame/sb_001_end_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:e7bedb9cde992277a6bfd8099a03e6095880b2f9f8dcdd6cbfa6034628e02ed7",
+      "size_bytes": 3485
+    },
+    "revision.hardened.rereview.case.receipts.sb.001.start.frame.sb.001.start.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "hardened_rereview/case_receipts/sb_001_start_frame/sb_001_start_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:8d8013eb6b10761f44666330637bf1259215f4e9a92de62808e8792c121cfa05",
+      "size_bytes": 3396
+    },
+    "revision.hardened.rereview.case.receipts.sb.002.end.frame.sb.002.end.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "hardened_rereview/case_receipts/sb_002_end_frame/sb_002_end_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:4f8a8fed626ce3c9c81373dac3ed84b29d7a9ad7492c11b9d83a90978a5abec8",
+      "size_bytes": 2960
+    },
+    "revision.hardened.rereview.case.receipts.sb.002.start.frame.sb.002.start.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "hardened_rereview/case_receipts/sb_002_start_frame/sb_002_start_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:7dda4624358ed5764fe1a2c588044058e099f0edb86e561e48d2f289d277ee49",
+      "size_bytes": 2802
+    },
+    "revision.hardened.rereview.case.receipts.sb.003.end.frame.sb.003.end.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "hardened_rereview/case_receipts/sb_003_end_frame/sb_003_end_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:4d3fc9336501dafe293d5c21b21c692ff62299479c0fc65ab9df271e55a237fd",
+      "size_bytes": 3146
+    },
+    "revision.hardened.rereview.case.receipts.sb.003.start.frame.sb.003.start.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "hardened_rereview/case_receipts/sb_003_start_frame/sb_003_start_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:d7727a3449e7958cbea068af250a0c57e8d3b6274f1e0360bdfb5f5ec4079b99",
+      "size_bytes": 3036
+    },
+    "revision.hardened.rereview.case.receipts.sb.004.end.frame.sb.004.end.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "hardened_rereview/case_receipts/sb_004_end_frame/sb_004_end_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:da3dee2a6372d16a4cc5b13e1a3c11e2f79fbc80934caeb699d3b58471b77e0f",
+      "size_bytes": 2941
+    },
+    "revision.hardened.rereview.case.receipts.sb.004.start.frame.sb.004.start.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "hardened_rereview/case_receipts/sb_004_start_frame/sb_004_start_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:511039cc41d9d877fa1efe164265938d0f10dafecf0d94a9aef2c8f61a3d77c6",
+      "size_bytes": 2913
+    },
+    "revision.hardened.rereview.hardened.rereview.summary.v2.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "hardened_rereview/hardened_rereview_summary.v2.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:eec9dc9db1cd5f602c5043d4a001c9d5261616c4832d337bab4f54a2a011c10d",
+      "size_bytes": 18943
+    },
     "revision.identity.successor.gate.summary.v1.json": {
       "consumer_contract": null,
       "kind": "json",
@@ -4963,6 +6798,19 @@
       "sha256": "sha256:8fdbcd2d3bfdd7c02c2a22462f95814f34ffc28161a934c29ed48161006f0e67",
       "size_bytes": 22346
     },
+    "revision.insightface.install.receipt.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "insightface_install_receipt.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:10acfa3faef62ae187a7186f51633184133c9d90fc478038996914b43551a397",
+      "size_bytes": 2393
+    },
     "revision.pipeline.step.records.v1.json": {
       "consumer_contract": null,
       "kind": "json",
@@ -4976,6 +6824,1904 @@
       "sha256": "sha256:17c973e6d3d9f12b449b66b3f5ef3ef909c1c334402fd4d9412ecf08ece23424",
       "size_bytes": 97320
     },
+    "revision.reviewer.calibration.case.receipts.known.bad.sb.001.start.sb.001.start.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration/case_receipts/known_bad_sb_001_start/sb_001_start_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:17b12ee69a122e8eeb48df4fe28402b8ccf22d3b7edcc2df0bd915c8f487a2cc",
+      "size_bytes": 1984
+    },
+    "revision.reviewer.calibration.case.receipts.known.bad.sb.002.start.sb.002.start.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration/case_receipts/known_bad_sb_002_start/sb_002_start_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:961375164a1bff8625958a1aa2672350beb0a57c32e8ea9ac05e8b4670908720",
+      "size_bytes": 1925
+    },
+    "revision.reviewer.calibration.case.receipts.known.bad.sb.003.start.sb.003.start.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration/case_receipts/known_bad_sb_003_start/sb_003_start_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:5155b8953d0986611730aa1c54f7b4074baf5bc5eac8d62c543470860f6595a9",
+      "size_bytes": 2465
+    },
+    "revision.reviewer.calibration.case.receipts.positive.control.sb.001.start.sb.001.start.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration/case_receipts/positive_control_sb_001_start/sb_001_start_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:94af91800a4220cb3805ba4c0c134bc217c11486ea92377679c7c61bbbecc880",
+      "size_bytes": 1881
+    },
+    "revision.reviewer.calibration.case.receipts.positive.control.sb.002.start.sb.002.start.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration/case_receipts/positive_control_sb_002_start/sb_002_start_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:cb49745c951a5d946c824fdb46944c8ab8266b76b70fa27167d3a988d1520c22",
+      "size_bytes": 1926
+    },
+    "revision.reviewer.calibration.case.receipts.tamper.wrong.embry.ref.sb.001.start.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration/case_receipts/tamper_wrong_embry_ref/sb_001_start_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:d8462d71f4c02267fc33d4d59be3546a17cdb3e400fcd5ff3f6256e43b8dfd61",
+      "size_bytes": 2528
+    },
+    "revision.reviewer.calibration.receipt.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_receipt.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:62d07a7ba6ad2428b2d3a4c291cc2918b2de8729fd4456273bfc4cd3da31d210",
+      "size_bytes": 19296
+    },
+    "revision.reviewer.calibration.receipt.v2.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_receipt.v2.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:604dfaae8eeb70109671460707f9ce1e1c5d38c48408a56136225f9c26695b36",
+      "size_bytes": 19024
+    },
+    "revision.reviewer.calibration.receipt.v3.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_receipt.v3.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:b888c567dfe2b5b0a163d0594e45b8d13875c3e40425413fb5e3b3183622f692",
+      "size_bytes": 22404
+    },
+    "revision.reviewer.calibration.receipt.v4.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_receipt.v4.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:0615ebf0d56ce2faa66acb1d7e3d5b0aa7f24bcda2c875c6b8f7da268fb24354",
+      "size_bytes": 19521
+    },
+    "revision.reviewer.calibration.v2.case.receipts.known.bad.sb.001.start.sb.001.start.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v2/case_receipts/known_bad_sb_001_start/sb_001_start_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:0b15f3be92bb1e662fe29dfdf4df671749dce55ed49a07225eca209c4ed87a90",
+      "size_bytes": 2934
+    },
+    "revision.reviewer.calibration.v2.case.receipts.known.bad.sb.002.start.sb.002.start.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v2/case_receipts/known_bad_sb_002_start/sb_002_start_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:f5342fdc2f070f7a55613040d410b01b91de3695fae065ecb4ab5a97e4864ec6",
+      "size_bytes": 4017
+    },
+    "revision.reviewer.calibration.v2.case.receipts.known.bad.sb.003.start.sb.003.start.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v2/case_receipts/known_bad_sb_003_start/sb_003_start_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:7f992e3b11f78ba7b7e61f168a8c17bdbfe5b42698e711e1c8bf576db69f35dd",
+      "size_bytes": 3477
+    },
+    "revision.reviewer.calibration.v2.case.receipts.positive.control.sb.001.start.sb.001.start.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v2/case_receipts/positive_control_sb_001_start/sb_001_start_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:bac364caa7b0a3db0e571c22dfbcf52d003930ba14ee20b9cc936f8b6dbb0ce1",
+      "size_bytes": 3339
+    },
+    "revision.reviewer.calibration.v2.case.receipts.positive.control.sb.002.start.sb.002.start.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v2/case_receipts/positive_control_sb_002_start/sb_002_start_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:403edbb6ea082f2e117b97962176687ba60f122a54356c260c2858fc3021e88e",
+      "size_bytes": 2745
+    },
+    "revision.reviewer.calibration.v2.case.receipts.tamper.wrong.embry.ref.sb.001.start.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v2/case_receipts/tamper_wrong_embry_ref/sb_001_start_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:f7be142bae4ae2e40ce7dfb4282866ac9acb2b3927abe73fa9d30cd10b985a71",
+      "size_bytes": 3410
+    },
+    "revision.reviewer.calibration.v3.case.receipts.known.bad.sb.001.start.sb.001.start.frame.face.crops.embry.candidate.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/known_bad_sb_001_start/sb_001_start_frame_face_crops/Embry_candidate_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:b27a8f95391854253cfc76d3e56f6dbbfff2677550b477ce882d6bf7098ce393",
+      "size_bytes": 596847
+    },
+    "revision.reviewer.calibration.v3.case.receipts.known.bad.sb.001.start.sb.001.start.frame.face.crops.embry.reference.face.1.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/known_bad_sb_001_start/sb_001_start_frame_face_crops/Embry_reference_face_1.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:b023408d2f96a70c1fe8ed151ba6b0cf5de0a528a2f091f2210ae0bbcf687f02",
+      "size_bytes": 451654
+    },
+    "revision.reviewer.calibration.v3.case.receipts.known.bad.sb.001.start.sb.001.start.frame.face.crops.embry.reference.face.2.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/known_bad_sb_001_start/sb_001_start_frame_face_crops/Embry_reference_face_2.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:39fefd8b2e3982f21a51ccfd792f0722be3a4c4e1f3e01bcde2c8796dbc9f591",
+      "size_bytes": 440736
+    },
+    "revision.reviewer.calibration.v3.case.receipts.known.bad.sb.001.start.sb.001.start.frame.face.crops.embry.reference.face.3.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/known_bad_sb_001_start/sb_001_start_frame_face_crops/Embry_reference_face_3.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:711974a6e25c09ea738d02cc5b6b92df50c7e7cea12fbc21c15b64a0bf494904",
+      "size_bytes": 457828
+    },
+    "revision.reviewer.calibration.v3.case.receipts.known.bad.sb.001.start.sb.001.start.frame.face.crops.embry.reference.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/known_bad_sb_001_start/sb_001_start_frame_face_crops/Embry_reference_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:861d88614363076bb882f5b88ed2f4b970c4e193bbee1ae6f57b38fd5909dd76",
+      "size_bytes": 475489
+    },
+    "revision.reviewer.calibration.v3.case.receipts.known.bad.sb.001.start.sb.001.start.frame.face.crops.kai.candidate.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/known_bad_sb_001_start/sb_001_start_frame_face_crops/Kai_candidate_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:a4045a2f48ec9ba65c17e5e01c732e6e7ad7f3ea7760e04836a2c4b91e96c75f",
+      "size_bytes": 593822
+    },
+    "revision.reviewer.calibration.v3.case.receipts.known.bad.sb.001.start.sb.001.start.frame.face.crops.kai.reference.face.1.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/known_bad_sb_001_start/sb_001_start_frame_face_crops/Kai_reference_face_1.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:3fe5c0bac55b801c913a2ba78cd65cce5803277032743af1d4452eb907c83e92",
+      "size_bytes": 322252
+    },
+    "revision.reviewer.calibration.v3.case.receipts.known.bad.sb.001.start.sb.001.start.frame.face.crops.kai.reference.face.2.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/known_bad_sb_001_start/sb_001_start_frame_face_crops/Kai_reference_face_2.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:ac7b87a0f45c7f7a8038377942392173d1b134e8cdb5391c80106aa0d6e82391",
+      "size_bytes": 398899
+    },
+    "revision.reviewer.calibration.v3.case.receipts.known.bad.sb.001.start.sb.001.start.frame.face.crops.kai.reference.face.3.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/known_bad_sb_001_start/sb_001_start_frame_face_crops/Kai_reference_face_3.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:71eb8aabb25e1d05e41c37a90f7d2256672277c0467acc2e808824541c911c45",
+      "size_bytes": 372109
+    },
+    "revision.reviewer.calibration.v3.case.receipts.known.bad.sb.001.start.sb.001.start.frame.face.crops.kai.reference.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/known_bad_sb_001_start/sb_001_start_frame_face_crops/Kai_reference_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:624b5268dcfb93371bff1ff344c50c6e56d16908d616aa1b1317105dc2c97cdc",
+      "size_bytes": 311444
+    },
+    "revision.reviewer.calibration.v3.case.receipts.known.bad.sb.001.start.sb.001.start.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/known_bad_sb_001_start/sb_001_start_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:ee320ee4d249f296ed5b272e277ab940fbed3b89c1a4a95554a3a61c770354a9",
+      "size_bytes": 9683
+    },
+    "revision.reviewer.calibration.v3.case.receipts.known.bad.sb.002.start.sb.002.start.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/known_bad_sb_002_start/sb_002_start_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:8772a0425518c7c88e4305baf16627438def6edbc410b4ba0f05f8cd6382c13b",
+      "size_bytes": 4317
+    },
+    "revision.reviewer.calibration.v3.case.receipts.known.bad.sb.003.start.sb.003.start.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/known_bad_sb_003_start/sb_003_start_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:0255608cbfdd38e821b095d7acd2cd1130c6d92f50752f24a03fce2371cd4454",
+      "size_bytes": 3777
+    },
+    "revision.reviewer.calibration.v3.case.receipts.positive.control.sb.001.start.sb.001.start.frame.face.crops.embry.candidate.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/positive_control_sb_001_start/sb_001_start_frame_face_crops/Embry_candidate_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:9caeffb2d4dcb14a9fb5f4cb8add1a448ab82429c080bca1cd63a48d3cb83522",
+      "size_bytes": 583148
+    },
+    "revision.reviewer.calibration.v3.case.receipts.positive.control.sb.001.start.sb.001.start.frame.face.crops.embry.reference.face.1.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/positive_control_sb_001_start/sb_001_start_frame_face_crops/Embry_reference_face_1.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:b023408d2f96a70c1fe8ed151ba6b0cf5de0a528a2f091f2210ae0bbcf687f02",
+      "size_bytes": 451654
+    },
+    "revision.reviewer.calibration.v3.case.receipts.positive.control.sb.001.start.sb.001.start.frame.face.crops.embry.reference.face.2.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/positive_control_sb_001_start/sb_001_start_frame_face_crops/Embry_reference_face_2.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:39fefd8b2e3982f21a51ccfd792f0722be3a4c4e1f3e01bcde2c8796dbc9f591",
+      "size_bytes": 440736
+    },
+    "revision.reviewer.calibration.v3.case.receipts.positive.control.sb.001.start.sb.001.start.frame.face.crops.embry.reference.face.3.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/positive_control_sb_001_start/sb_001_start_frame_face_crops/Embry_reference_face_3.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:711974a6e25c09ea738d02cc5b6b92df50c7e7cea12fbc21c15b64a0bf494904",
+      "size_bytes": 457828
+    },
+    "revision.reviewer.calibration.v3.case.receipts.positive.control.sb.001.start.sb.001.start.frame.face.crops.embry.reference.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/positive_control_sb_001_start/sb_001_start_frame_face_crops/Embry_reference_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:861d88614363076bb882f5b88ed2f4b970c4e193bbee1ae6f57b38fd5909dd76",
+      "size_bytes": 475489
+    },
+    "revision.reviewer.calibration.v3.case.receipts.positive.control.sb.001.start.sb.001.start.frame.face.crops.kai.candidate.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/positive_control_sb_001_start/sb_001_start_frame_face_crops/Kai_candidate_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:50fe68d297af7052290013c2ef6aba0e1b2f92278de7786e60dd7e2e6d00ee5c",
+      "size_bytes": 483388
+    },
+    "revision.reviewer.calibration.v3.case.receipts.positive.control.sb.001.start.sb.001.start.frame.face.crops.kai.reference.face.1.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/positive_control_sb_001_start/sb_001_start_frame_face_crops/Kai_reference_face_1.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:3fe5c0bac55b801c913a2ba78cd65cce5803277032743af1d4452eb907c83e92",
+      "size_bytes": 322252
+    },
+    "revision.reviewer.calibration.v3.case.receipts.positive.control.sb.001.start.sb.001.start.frame.face.crops.kai.reference.face.2.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/positive_control_sb_001_start/sb_001_start_frame_face_crops/Kai_reference_face_2.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:ac7b87a0f45c7f7a8038377942392173d1b134e8cdb5391c80106aa0d6e82391",
+      "size_bytes": 398899
+    },
+    "revision.reviewer.calibration.v3.case.receipts.positive.control.sb.001.start.sb.001.start.frame.face.crops.kai.reference.face.3.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/positive_control_sb_001_start/sb_001_start_frame_face_crops/Kai_reference_face_3.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:71eb8aabb25e1d05e41c37a90f7d2256672277c0467acc2e808824541c911c45",
+      "size_bytes": 372109
+    },
+    "revision.reviewer.calibration.v3.case.receipts.positive.control.sb.001.start.sb.001.start.frame.face.crops.kai.reference.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/positive_control_sb_001_start/sb_001_start_frame_face_crops/Kai_reference_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:624b5268dcfb93371bff1ff344c50c6e56d16908d616aa1b1317105dc2c97cdc",
+      "size_bytes": 311444
+    },
+    "revision.reviewer.calibration.v3.case.receipts.positive.control.sb.001.start.sb.001.start.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/positive_control_sb_001_start/sb_001_start_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:ad5436da2735ae1a80846883081cb639ebe64f683cd321450855f414f7c01a2a",
+      "size_bytes": 9882
+    },
+    "revision.reviewer.calibration.v3.case.receipts.positive.control.sb.002.start.sb.002.start.frame.face.crops.embry.candidate.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/positive_control_sb_002_start/sb_002_start_frame_face_crops/Embry_candidate_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:4530d39007bdebcf743f06730e6c0113a4ad72a26b9abea39d5f799015f6e172",
+      "size_bytes": 629315
+    },
+    "revision.reviewer.calibration.v3.case.receipts.positive.control.sb.002.start.sb.002.start.frame.face.crops.embry.reference.face.1.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/positive_control_sb_002_start/sb_002_start_frame_face_crops/Embry_reference_face_1.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:b023408d2f96a70c1fe8ed151ba6b0cf5de0a528a2f091f2210ae0bbcf687f02",
+      "size_bytes": 451654
+    },
+    "revision.reviewer.calibration.v3.case.receipts.positive.control.sb.002.start.sb.002.start.frame.face.crops.embry.reference.face.2.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/positive_control_sb_002_start/sb_002_start_frame_face_crops/Embry_reference_face_2.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:39fefd8b2e3982f21a51ccfd792f0722be3a4c4e1f3e01bcde2c8796dbc9f591",
+      "size_bytes": 440736
+    },
+    "revision.reviewer.calibration.v3.case.receipts.positive.control.sb.002.start.sb.002.start.frame.face.crops.embry.reference.face.3.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/positive_control_sb_002_start/sb_002_start_frame_face_crops/Embry_reference_face_3.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:711974a6e25c09ea738d02cc5b6b92df50c7e7cea12fbc21c15b64a0bf494904",
+      "size_bytes": 457828
+    },
+    "revision.reviewer.calibration.v3.case.receipts.positive.control.sb.002.start.sb.002.start.frame.face.crops.embry.reference.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/positive_control_sb_002_start/sb_002_start_frame_face_crops/Embry_reference_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:861d88614363076bb882f5b88ed2f4b970c4e193bbee1ae6f57b38fd5909dd76",
+      "size_bytes": 475489
+    },
+    "revision.reviewer.calibration.v3.case.receipts.positive.control.sb.002.start.sb.002.start.frame.face.crops.kai.candidate.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/positive_control_sb_002_start/sb_002_start_frame_face_crops/Kai_candidate_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:1b33a1024c6b4ad6ecd4e7759d3be35ded3bc5e0c667860f3a4acae5e7d22327",
+      "size_bytes": 717499
+    },
+    "revision.reviewer.calibration.v3.case.receipts.positive.control.sb.002.start.sb.002.start.frame.face.crops.kai.reference.face.1.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/positive_control_sb_002_start/sb_002_start_frame_face_crops/Kai_reference_face_1.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:3fe5c0bac55b801c913a2ba78cd65cce5803277032743af1d4452eb907c83e92",
+      "size_bytes": 322252
+    },
+    "revision.reviewer.calibration.v3.case.receipts.positive.control.sb.002.start.sb.002.start.frame.face.crops.kai.reference.face.2.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/positive_control_sb_002_start/sb_002_start_frame_face_crops/Kai_reference_face_2.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:ac7b87a0f45c7f7a8038377942392173d1b134e8cdb5391c80106aa0d6e82391",
+      "size_bytes": 398899
+    },
+    "revision.reviewer.calibration.v3.case.receipts.positive.control.sb.002.start.sb.002.start.frame.face.crops.kai.reference.face.3.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/positive_control_sb_002_start/sb_002_start_frame_face_crops/Kai_reference_face_3.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:71eb8aabb25e1d05e41c37a90f7d2256672277c0467acc2e808824541c911c45",
+      "size_bytes": 372109
+    },
+    "revision.reviewer.calibration.v3.case.receipts.positive.control.sb.002.start.sb.002.start.frame.face.crops.kai.reference.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/positive_control_sb_002_start/sb_002_start_frame_face_crops/Kai_reference_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:624b5268dcfb93371bff1ff344c50c6e56d16908d616aa1b1317105dc2c97cdc",
+      "size_bytes": 311444
+    },
+    "revision.reviewer.calibration.v3.case.receipts.positive.control.sb.002.start.sb.002.start.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/positive_control_sb_002_start/sb_002_start_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:25807bbb5ba4b267d4a5c0a5aec40592fcf8902d7805d83441374d7f3adbcdbc",
+      "size_bytes": 9245
+    },
+    "revision.reviewer.calibration.v3.case.receipts.tamper.wrong.embry.ref.sb.001.start.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/case_receipts/tamper_wrong_embry_ref/sb_001_start_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:03e01670ca29c7fe2d8582e61754c4b1a71569a3e4a1e7efab2c669733f666f8",
+      "size_bytes": 3710
+    },
+    "revision.reviewer.calibration.v3.human.adjudication.bundle.adjudication.md": {
+      "consumer_contract": null,
+      "kind": "text",
+      "media_type": "text/markdown",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/human_adjudication_bundle/ADJUDICATION.md",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:2467f05b8ef8966508301f71cd04c3870b95aa79b45c48ae8211f278e8a281c5",
+      "size_bytes": 4111
+    },
+    "revision.reviewer.calibration.v3.human.adjudication.bundle.dispute.01.embry.sb001.known.bad.vs.positive.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/human_adjudication_bundle/dispute_01_embry_sb001_known_bad_vs_positive.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:bff486f9b439c1a2a46d9008e8fcb3756db0a183db3b7b84f4333b9a18cc190d",
+      "size_bytes": 1122472
+    },
+    "revision.reviewer.calibration.v3.human.adjudication.bundle.dispute.02.kai.sb001.known.bad.vs.positive.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v3/human_adjudication_bundle/dispute_02_kai_sb001_known_bad_vs_positive.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:c259c9494714fc66cfedd3dc39729f61aec2f8b8dab3834d41f1ff13af2bb7b3",
+      "size_bytes": 1020579
+    },
+    "revision.reviewer.calibration.v4.node.integration.known.bad.sb.001.start.sb.001.start.frame.face.crops.embry.candidate.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/node_integration/known_bad_sb_001_start/sb_001_start_frame_face_crops/Embry_candidate_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:45656ecb1229eb81059b2c281295fd4d99479d4dc12444fe0fe594be4fab9ce4",
+      "size_bytes": 582026
+    },
+    "revision.reviewer.calibration.v4.node.integration.known.bad.sb.001.start.sb.001.start.frame.face.crops.embry.reference.face.1.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/node_integration/known_bad_sb_001_start/sb_001_start_frame_face_crops/Embry_reference_face_1.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:65c3942adacd1d3be1a6c4ebaa17a72a16158e610ff721f5c4d6a730018be348",
+      "size_bytes": 449297
+    },
+    "revision.reviewer.calibration.v4.node.integration.known.bad.sb.001.start.sb.001.start.frame.face.crops.embry.reference.face.2.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/node_integration/known_bad_sb_001_start/sb_001_start_frame_face_crops/Embry_reference_face_2.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:730ac5d3c9ca938f4f89f382958603216c102eaeaf0193122cc6a54c8295f6fa",
+      "size_bytes": 465293
+    },
+    "revision.reviewer.calibration.v4.node.integration.known.bad.sb.001.start.sb.001.start.frame.face.crops.embry.reference.face.3.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/node_integration/known_bad_sb_001_start/sb_001_start_frame_face_crops/Embry_reference_face_3.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:6c236c9a3e3c2c04e29dc78bf3a9705ce1fbcc067b3eb103014125d7c0117f40",
+      "size_bytes": 479073
+    },
+    "revision.reviewer.calibration.v4.node.integration.known.bad.sb.001.start.sb.001.start.frame.face.crops.kai.candidate.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/node_integration/known_bad_sb_001_start/sb_001_start_frame_face_crops/Kai_candidate_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:591b69cf37ae872e97df6e0676ff5f56ea22fab7da4bc9c848d351eb5a78dfc3",
+      "size_bytes": 560388
+    },
+    "revision.reviewer.calibration.v4.node.integration.known.bad.sb.001.start.sb.001.start.frame.face.crops.kai.reference.face.1.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/node_integration/known_bad_sb_001_start/sb_001_start_frame_face_crops/Kai_reference_face_1.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:47dbfc3ab0ea38d9bfdd7c180c1c33a442d97577d597ee8fab33e73284cdaea2",
+      "size_bytes": 309802
+    },
+    "revision.reviewer.calibration.v4.node.integration.known.bad.sb.001.start.sb.001.start.frame.face.crops.kai.reference.face.2.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/node_integration/known_bad_sb_001_start/sb_001_start_frame_face_crops/Kai_reference_face_2.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:18d0c03bc6c192f33d064c778fde56437d62876612c684f2e481426f12ebccf4",
+      "size_bytes": 413844
+    },
+    "revision.reviewer.calibration.v4.node.integration.known.bad.sb.001.start.sb.001.start.frame.face.crops.kai.reference.face.3.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/node_integration/known_bad_sb_001_start/sb_001_start_frame_face_crops/Kai_reference_face_3.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:44db0f83da41b2bf43572c1c2d5c6360f4477001ecc508abbf22de8097d5a9af",
+      "size_bytes": 378220
+    },
+    "revision.reviewer.calibration.v4.node.integration.known.bad.sb.001.start.sb.001.start.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/node_integration/known_bad_sb_001_start/sb_001_start_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:ab443e324c4cf8fd4db2448faf1ecb6b5713843de84f1c1a3889910b6dc877cb",
+      "size_bytes": 12173
+    },
+    "revision.reviewer.calibration.v4.node.integration.positive.control.sb.002.start.sb.002.start.frame.face.crops.embry.candidate.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/node_integration/positive_control_sb_002_start/sb_002_start_frame_face_crops/Embry_candidate_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:36051ef8202b867d97a90e7e942acbcb4ab65c63ba6f9a88c996d4b2a1d36836",
+      "size_bytes": 703749
+    },
+    "revision.reviewer.calibration.v4.node.integration.positive.control.sb.002.start.sb.002.start.frame.face.crops.embry.reference.face.1.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/node_integration/positive_control_sb_002_start/sb_002_start_frame_face_crops/Embry_reference_face_1.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:65c3942adacd1d3be1a6c4ebaa17a72a16158e610ff721f5c4d6a730018be348",
+      "size_bytes": 449297
+    },
+    "revision.reviewer.calibration.v4.node.integration.positive.control.sb.002.start.sb.002.start.frame.face.crops.embry.reference.face.2.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/node_integration/positive_control_sb_002_start/sb_002_start_frame_face_crops/Embry_reference_face_2.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:730ac5d3c9ca938f4f89f382958603216c102eaeaf0193122cc6a54c8295f6fa",
+      "size_bytes": 465293
+    },
+    "revision.reviewer.calibration.v4.node.integration.positive.control.sb.002.start.sb.002.start.frame.face.crops.embry.reference.face.3.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/node_integration/positive_control_sb_002_start/sb_002_start_frame_face_crops/Embry_reference_face_3.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:6c236c9a3e3c2c04e29dc78bf3a9705ce1fbcc067b3eb103014125d7c0117f40",
+      "size_bytes": 479073
+    },
+    "revision.reviewer.calibration.v4.node.integration.positive.control.sb.002.start.sb.002.start.frame.face.crops.kai.candidate.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/node_integration/positive_control_sb_002_start/sb_002_start_frame_face_crops/Kai_candidate_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:af07ec1ddbf7a79823054d928c2a7a303f081c57cede9a4e1390be3f64c2576a",
+      "size_bytes": 695720
+    },
+    "revision.reviewer.calibration.v4.node.integration.positive.control.sb.002.start.sb.002.start.frame.face.crops.kai.reference.face.1.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/node_integration/positive_control_sb_002_start/sb_002_start_frame_face_crops/Kai_reference_face_1.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:47dbfc3ab0ea38d9bfdd7c180c1c33a442d97577d597ee8fab33e73284cdaea2",
+      "size_bytes": 309802
+    },
+    "revision.reviewer.calibration.v4.node.integration.positive.control.sb.002.start.sb.002.start.frame.face.crops.kai.reference.face.2.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/node_integration/positive_control_sb_002_start/sb_002_start_frame_face_crops/Kai_reference_face_2.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:18d0c03bc6c192f33d064c778fde56437d62876612c684f2e481426f12ebccf4",
+      "size_bytes": 413844
+    },
+    "revision.reviewer.calibration.v4.node.integration.positive.control.sb.002.start.sb.002.start.frame.face.crops.kai.reference.face.3.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/node_integration/positive_control_sb_002_start/sb_002_start_frame_face_crops/Kai_reference_face_3.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:44db0f83da41b2bf43572c1c2d5c6360f4477001ecc508abbf22de8097d5a9af",
+      "size_bytes": 378220
+    },
+    "revision.reviewer.calibration.v4.node.integration.positive.control.sb.002.start.sb.002.start.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/node_integration/positive_control_sb_002_start/sb_002_start_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:02f90a8314630b3819dbd01f634ca683b63365610ab2be7559d428a60a6a1bbc",
+      "size_bytes": 12188
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.001.end.frame.face.crops.embry.candidate.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_001_end_frame_face_crops/Embry_candidate_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:046f825e1e992ae529ceef0f50eae9792bbff74dca3ff493e844b8951f758316",
+      "size_bytes": 647746
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.001.end.frame.face.crops.embry.reference.face.1.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_001_end_frame_face_crops/Embry_reference_face_1.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:65c3942adacd1d3be1a6c4ebaa17a72a16158e610ff721f5c4d6a730018be348",
+      "size_bytes": 449297
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.001.end.frame.face.crops.embry.reference.face.2.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_001_end_frame_face_crops/Embry_reference_face_2.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:730ac5d3c9ca938f4f89f382958603216c102eaeaf0193122cc6a54c8295f6fa",
+      "size_bytes": 465293
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.001.end.frame.face.crops.embry.reference.face.3.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_001_end_frame_face_crops/Embry_reference_face_3.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:6c236c9a3e3c2c04e29dc78bf3a9705ce1fbcc067b3eb103014125d7c0117f40",
+      "size_bytes": 479073
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.001.end.frame.face.crops.kai.candidate.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_001_end_frame_face_crops/Kai_candidate_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:b6f84b0beab3eb52239e13122cf85f69c8982592a43d1aa7eb63d251bbc15d4d",
+      "size_bytes": 591477
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.001.end.frame.face.crops.kai.reference.face.1.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_001_end_frame_face_crops/Kai_reference_face_1.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:47dbfc3ab0ea38d9bfdd7c180c1c33a442d97577d597ee8fab33e73284cdaea2",
+      "size_bytes": 309802
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.001.end.frame.face.crops.kai.reference.face.2.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_001_end_frame_face_crops/Kai_reference_face_2.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:18d0c03bc6c192f33d064c778fde56437d62876612c684f2e481426f12ebccf4",
+      "size_bytes": 413844
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.001.end.frame.face.crops.kai.reference.face.3.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_001_end_frame_face_crops/Kai_reference_face_3.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:44db0f83da41b2bf43572c1c2d5c6360f4477001ecc508abbf22de8097d5a9af",
+      "size_bytes": 378220
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.001.end.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_001_end_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:75fba8d262ff7707fcf72604123f642ffbc5fdc0b47b7d89b64d7d8da72b410e",
+      "size_bytes": 11635
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.001.start.frame.face.crops.embry.candidate.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_001_start_frame_face_crops/Embry_candidate_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:efa982dabe97b6795e37872a7da1e50ea548dfd839cc180ff568d70ee3865745",
+      "size_bytes": 576330
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.001.start.frame.face.crops.embry.reference.face.1.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_001_start_frame_face_crops/Embry_reference_face_1.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:65c3942adacd1d3be1a6c4ebaa17a72a16158e610ff721f5c4d6a730018be348",
+      "size_bytes": 449297
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.001.start.frame.face.crops.embry.reference.face.2.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_001_start_frame_face_crops/Embry_reference_face_2.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:730ac5d3c9ca938f4f89f382958603216c102eaeaf0193122cc6a54c8295f6fa",
+      "size_bytes": 465293
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.001.start.frame.face.crops.embry.reference.face.3.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_001_start_frame_face_crops/Embry_reference_face_3.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:6c236c9a3e3c2c04e29dc78bf3a9705ce1fbcc067b3eb103014125d7c0117f40",
+      "size_bytes": 479073
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.001.start.frame.face.crops.kai.candidate.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_001_start_frame_face_crops/Kai_candidate_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:5e03a13ea5f175dceecb330e3acf95de35b3441c2668e13644ab42c417314ea5",
+      "size_bytes": 490544
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.001.start.frame.face.crops.kai.reference.face.1.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_001_start_frame_face_crops/Kai_reference_face_1.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:47dbfc3ab0ea38d9bfdd7c180c1c33a442d97577d597ee8fab33e73284cdaea2",
+      "size_bytes": 309802
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.001.start.frame.face.crops.kai.reference.face.2.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_001_start_frame_face_crops/Kai_reference_face_2.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:18d0c03bc6c192f33d064c778fde56437d62876612c684f2e481426f12ebccf4",
+      "size_bytes": 413844
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.001.start.frame.face.crops.kai.reference.face.3.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_001_start_frame_face_crops/Kai_reference_face_3.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:44db0f83da41b2bf43572c1c2d5c6360f4477001ecc508abbf22de8097d5a9af",
+      "size_bytes": 378220
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.001.start.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_001_start_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:7104bac1f063381db2587b97a0549c9f52656978e124adbaef57f0502988ebc8",
+      "size_bytes": 11428
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.002.end.frame.face.crops.embry.candidate.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_002_end_frame_face_crops/Embry_candidate_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:005e190d9b828e74884b7abb4ddffd34ffc0dec4b0dd3fa3aad24f23895d29bb",
+      "size_bytes": 721160
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.002.end.frame.face.crops.embry.reference.face.1.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_002_end_frame_face_crops/Embry_reference_face_1.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:65c3942adacd1d3be1a6c4ebaa17a72a16158e610ff721f5c4d6a730018be348",
+      "size_bytes": 449297
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.002.end.frame.face.crops.embry.reference.face.2.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_002_end_frame_face_crops/Embry_reference_face_2.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:730ac5d3c9ca938f4f89f382958603216c102eaeaf0193122cc6a54c8295f6fa",
+      "size_bytes": 465293
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.002.end.frame.face.crops.embry.reference.face.3.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_002_end_frame_face_crops/Embry_reference_face_3.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:6c236c9a3e3c2c04e29dc78bf3a9705ce1fbcc067b3eb103014125d7c0117f40",
+      "size_bytes": 479073
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.002.end.frame.face.crops.kai.candidate.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_002_end_frame_face_crops/Kai_candidate_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:3aafd09aa88a64f45b2b2ca9faa3094cd54aa16de234a1bbddc9e3034eb0356d",
+      "size_bytes": 607025
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.002.end.frame.face.crops.kai.reference.face.1.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_002_end_frame_face_crops/Kai_reference_face_1.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:47dbfc3ab0ea38d9bfdd7c180c1c33a442d97577d597ee8fab33e73284cdaea2",
+      "size_bytes": 309802
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.002.end.frame.face.crops.kai.reference.face.2.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_002_end_frame_face_crops/Kai_reference_face_2.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:18d0c03bc6c192f33d064c778fde56437d62876612c684f2e481426f12ebccf4",
+      "size_bytes": 413844
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.002.end.frame.face.crops.kai.reference.face.3.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_002_end_frame_face_crops/Kai_reference_face_3.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:44db0f83da41b2bf43572c1c2d5c6360f4477001ecc508abbf22de8097d5a9af",
+      "size_bytes": 378220
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.002.end.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_002_end_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:1292761c5f63dd040d43819095242c7411ca22aedd3fee26181d59745bfecdbd",
+      "size_bytes": 11726
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.002.start.frame.face.crops.embry.candidate.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_002_start_frame_face_crops/Embry_candidate_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:36051ef8202b867d97a90e7e942acbcb4ab65c63ba6f9a88c996d4b2a1d36836",
+      "size_bytes": 703749
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.002.start.frame.face.crops.embry.reference.face.1.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_002_start_frame_face_crops/Embry_reference_face_1.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:65c3942adacd1d3be1a6c4ebaa17a72a16158e610ff721f5c4d6a730018be348",
+      "size_bytes": 449297
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.002.start.frame.face.crops.embry.reference.face.2.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_002_start_frame_face_crops/Embry_reference_face_2.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:730ac5d3c9ca938f4f89f382958603216c102eaeaf0193122cc6a54c8295f6fa",
+      "size_bytes": 465293
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.002.start.frame.face.crops.embry.reference.face.3.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_002_start_frame_face_crops/Embry_reference_face_3.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:6c236c9a3e3c2c04e29dc78bf3a9705ce1fbcc067b3eb103014125d7c0117f40",
+      "size_bytes": 479073
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.002.start.frame.face.crops.kai.candidate.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_002_start_frame_face_crops/Kai_candidate_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:af07ec1ddbf7a79823054d928c2a7a303f081c57cede9a4e1390be3f64c2576a",
+      "size_bytes": 695720
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.002.start.frame.face.crops.kai.reference.face.1.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_002_start_frame_face_crops/Kai_reference_face_1.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:47dbfc3ab0ea38d9bfdd7c180c1c33a442d97577d597ee8fab33e73284cdaea2",
+      "size_bytes": 309802
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.002.start.frame.face.crops.kai.reference.face.2.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_002_start_frame_face_crops/Kai_reference_face_2.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:18d0c03bc6c192f33d064c778fde56437d62876612c684f2e481426f12ebccf4",
+      "size_bytes": 413844
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.002.start.frame.face.crops.kai.reference.face.3.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_002_start_frame_face_crops/Kai_reference_face_3.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:44db0f83da41b2bf43572c1c2d5c6360f4477001ecc508abbf22de8097d5a9af",
+      "size_bytes": 378220
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.002.start.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_002_start_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:9525ab48962641c53db7d6c92d29c9b19d0e456ea2daae54296ba25e549eecec",
+      "size_bytes": 11936
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.003.end.frame.face.crops.embry.candidate.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_003_end_frame_face_crops/Embry_candidate_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:c2c730d9ad5c51de26dc5ea68570639ace6d52384fe7b0ce2f33eda7cbddcbc2",
+      "size_bytes": 444158
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.003.end.frame.face.crops.embry.reference.face.1.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_003_end_frame_face_crops/Embry_reference_face_1.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:65c3942adacd1d3be1a6c4ebaa17a72a16158e610ff721f5c4d6a730018be348",
+      "size_bytes": 449297
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.003.end.frame.face.crops.embry.reference.face.2.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_003_end_frame_face_crops/Embry_reference_face_2.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:730ac5d3c9ca938f4f89f382958603216c102eaeaf0193122cc6a54c8295f6fa",
+      "size_bytes": 465293
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.003.end.frame.face.crops.embry.reference.face.3.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_003_end_frame_face_crops/Embry_reference_face_3.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:6c236c9a3e3c2c04e29dc78bf3a9705ce1fbcc067b3eb103014125d7c0117f40",
+      "size_bytes": 479073
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.003.end.frame.face.crops.kai.candidate.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_003_end_frame_face_crops/Kai_candidate_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:5557682993a8a6e9917fd842d2236ff8390761fa558b53c504316131a6d135b6",
+      "size_bytes": 462849
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.003.end.frame.face.crops.kai.reference.face.1.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_003_end_frame_face_crops/Kai_reference_face_1.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:47dbfc3ab0ea38d9bfdd7c180c1c33a442d97577d597ee8fab33e73284cdaea2",
+      "size_bytes": 309802
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.003.end.frame.face.crops.kai.reference.face.2.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_003_end_frame_face_crops/Kai_reference_face_2.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:18d0c03bc6c192f33d064c778fde56437d62876612c684f2e481426f12ebccf4",
+      "size_bytes": 413844
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.003.end.frame.face.crops.kai.reference.face.3.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_003_end_frame_face_crops/Kai_reference_face_3.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:44db0f83da41b2bf43572c1c2d5c6360f4477001ecc508abbf22de8097d5a9af",
+      "size_bytes": 378220
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.003.end.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_003_end_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:81b930fbe6fda76f73abecf7fc31dad883a8110df11b2cd7c07ada468a506c7b",
+      "size_bytes": 11165
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.003.start.frame.face.crops.embry.candidate.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_003_start_frame_face_crops/Embry_candidate_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:dcdd46054032c8c969a6deb144b8ac12613777c85adb445c1cff580509c864bc",
+      "size_bytes": 650352
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.003.start.frame.face.crops.embry.reference.face.1.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_003_start_frame_face_crops/Embry_reference_face_1.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:65c3942adacd1d3be1a6c4ebaa17a72a16158e610ff721f5c4d6a730018be348",
+      "size_bytes": 449297
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.003.start.frame.face.crops.embry.reference.face.2.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_003_start_frame_face_crops/Embry_reference_face_2.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:730ac5d3c9ca938f4f89f382958603216c102eaeaf0193122cc6a54c8295f6fa",
+      "size_bytes": 465293
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.003.start.frame.face.crops.embry.reference.face.3.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_003_start_frame_face_crops/Embry_reference_face_3.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:6c236c9a3e3c2c04e29dc78bf3a9705ce1fbcc067b3eb103014125d7c0117f40",
+      "size_bytes": 479073
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.003.start.frame.face.crops.kai.candidate.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_003_start_frame_face_crops/Kai_candidate_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:a2928862043b20ae6775949ab10f932ba9c2425cf7953f2f0b9c37359e0eafa6",
+      "size_bytes": 576851
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.003.start.frame.face.crops.kai.reference.face.1.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_003_start_frame_face_crops/Kai_reference_face_1.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:47dbfc3ab0ea38d9bfdd7c180c1c33a442d97577d597ee8fab33e73284cdaea2",
+      "size_bytes": 309802
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.003.start.frame.face.crops.kai.reference.face.2.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_003_start_frame_face_crops/Kai_reference_face_2.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:18d0c03bc6c192f33d064c778fde56437d62876612c684f2e481426f12ebccf4",
+      "size_bytes": 413844
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.003.start.frame.face.crops.kai.reference.face.3.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_003_start_frame_face_crops/Kai_reference_face_3.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:44db0f83da41b2bf43572c1c2d5c6360f4477001ecc508abbf22de8097d5a9af",
+      "size_bytes": 378220
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.003.start.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_003_start_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:8f4cc56e4923d8e41ff07dd1fc0389a8c3b59fa8188814e58c132a585b73614f",
+      "size_bytes": 11751
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.004.end.frame.face.crops.embry.candidate.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_004_end_frame_face_crops/Embry_candidate_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:be45c8e88a07416ce14a7d91c6560e6a3e5cfecdfe25378e95666f99a004a22a",
+      "size_bytes": 673172
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.004.end.frame.face.crops.embry.reference.face.1.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_004_end_frame_face_crops/Embry_reference_face_1.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:65c3942adacd1d3be1a6c4ebaa17a72a16158e610ff721f5c4d6a730018be348",
+      "size_bytes": 449297
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.004.end.frame.face.crops.embry.reference.face.2.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_004_end_frame_face_crops/Embry_reference_face_2.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:730ac5d3c9ca938f4f89f382958603216c102eaeaf0193122cc6a54c8295f6fa",
+      "size_bytes": 465293
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.004.end.frame.face.crops.embry.reference.face.3.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_004_end_frame_face_crops/Embry_reference_face_3.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:6c236c9a3e3c2c04e29dc78bf3a9705ce1fbcc067b3eb103014125d7c0117f40",
+      "size_bytes": 479073
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.004.end.frame.face.crops.kai.candidate.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_004_end_frame_face_crops/Kai_candidate_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:786c2650451c690b4885ea4aad6f4c7e0dcf9f8a08a8daa03cce76778971d102",
+      "size_bytes": 614598
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.004.end.frame.face.crops.kai.reference.face.1.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_004_end_frame_face_crops/Kai_reference_face_1.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:47dbfc3ab0ea38d9bfdd7c180c1c33a442d97577d597ee8fab33e73284cdaea2",
+      "size_bytes": 309802
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.004.end.frame.face.crops.kai.reference.face.2.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_004_end_frame_face_crops/Kai_reference_face_2.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:18d0c03bc6c192f33d064c778fde56437d62876612c684f2e481426f12ebccf4",
+      "size_bytes": 413844
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.004.end.frame.face.crops.kai.reference.face.3.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_004_end_frame_face_crops/Kai_reference_face_3.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:44db0f83da41b2bf43572c1c2d5c6360f4477001ecc508abbf22de8097d5a9af",
+      "size_bytes": 378220
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.004.end.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_004_end_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:bf55ab48a3241511225d910afc566dbadf9d6e6d7aec307f4a6470fca7c0d866",
+      "size_bytes": 11650
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.004.start.frame.face.crops.embry.candidate.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_004_start_frame_face_crops/Embry_candidate_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:de9d32974c0e9037677dfd9dfc016384a16b0f2ac0eaf372096e3bc1172386c5",
+      "size_bytes": 564167
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.004.start.frame.face.crops.embry.reference.face.1.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_004_start_frame_face_crops/Embry_reference_face_1.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:65c3942adacd1d3be1a6c4ebaa17a72a16158e610ff721f5c4d6a730018be348",
+      "size_bytes": 449297
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.004.start.frame.face.crops.embry.reference.face.2.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_004_start_frame_face_crops/Embry_reference_face_2.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:730ac5d3c9ca938f4f89f382958603216c102eaeaf0193122cc6a54c8295f6fa",
+      "size_bytes": 465293
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.004.start.frame.face.crops.embry.reference.face.3.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_004_start_frame_face_crops/Embry_reference_face_3.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:6c236c9a3e3c2c04e29dc78bf3a9705ce1fbcc067b3eb103014125d7c0117f40",
+      "size_bytes": 479073
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.004.start.frame.face.crops.kai.candidate.face.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_004_start_frame_face_crops/Kai_candidate_face.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:2cb20e46951c26b951de86eb347d7a18d427984df69b17a4618de92597a81c29",
+      "size_bytes": 502172
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.004.start.frame.face.crops.kai.reference.face.1.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_004_start_frame_face_crops/Kai_reference_face_1.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:47dbfc3ab0ea38d9bfdd7c180c1c33a442d97577d597ee8fab33e73284cdaea2",
+      "size_bytes": 309802
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.004.start.frame.face.crops.kai.reference.face.2.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_004_start_frame_face_crops/Kai_reference_face_2.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:18d0c03bc6c192f33d064c778fde56437d62876612c684f2e481426f12ebccf4",
+      "size_bytes": 413844
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.004.start.frame.face.crops.kai.reference.face.3.png": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/png",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_004_start_frame_face_crops/Kai_reference_face_3.png",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:44db0f83da41b2bf43572c1c2d5c6360f4477001ecc508abbf22de8097d5a9af",
+      "size_bytes": 378220
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.sb.004.start.frame.identity.continuity.review.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/sb_004_start_frame_identity_continuity_review.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:f79307ee6ac30f630fe16b8869e866dcab8c035be62e3cc318a4cb098d94b8e3",
+      "size_bytes": 11643
+    },
+    "revision.reviewer.calibration.v4.successor.rereview.successor.rereview.v4.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "reviewer_calibration_v4/successor_rereview/successor_rereview_v4_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:d9ba4762c048893ddc8400de7bf9ea926d8c888e371e9fa06c19763bc5eb4a37",
+      "size_bytes": 6158
+    },
     "revision.revision.manifest.json": {
       "consumer_contract": null,
       "kind": "json",
@@ -4988,6 +8734,110 @@
       "schema": null,
       "sha256": "sha256:3195b4ba4a878953a010a02cad073710c1f5d6f3e746656bd610c1dcbd4ff317",
       "size_bytes": 1387
+    },
+    "revision.state.clearing.audit.receipt.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "state_clearing_audit_receipt.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:bdfd0a6c3c803704ac229608b774601aee6926911783d571fce18ada5dabad26",
+      "size_bytes": 11706
+    },
+    "revision.step38.lane.c.accepted.waiver.frame.invalidation.ledger.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "step38_lane_c_accepted_waiver_frame_invalidation_ledger.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:37cf1bf356ddbc4eb944bea7431e5e49198b429831262cab71b15d8fee1f987d",
+      "size_bytes": 2463
+    },
+    "revision.step38.lane.c.blocker.receipt.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "step38_lane_c_blocker_receipt.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:81c323c4057d5b82847ab0c42eeafd4c31bc65b9c10c7cd0f33a7ba30c698f8f",
+      "size_bytes": 7659
+    },
+    "revision.step38.lane.c.rejected.frame.invalidation.ledger.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "step38_lane_c_rejected_frame_invalidation_ledger.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:21e81907f88e9702cbbce73bc2bcd56b64cb5cf29686873b4ded290db6cade89",
+      "size_bytes": 2096
+    },
+    "revision.step38.lane.c.waiver.requalification.blocker.receipt.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "step38_lane_c_waiver_requalification_blocker_receipt.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:abd8042e734e302e8ac1b92eacce9375e62017e615e004898ee5df851f026c44",
+      "size_bytes": 7712
+    },
+    "revision.step38.lipsync.decision.packet.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "step38_lipsync_decision_packet.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:35f91f4dc6bb4398c6afa8465902ec394b503c423e4370328ec812a639deb196",
+      "size_bytes": 19403
+    },
+    "revision.step38.lipsync.decision.packet.v1.md": {
+      "consumer_contract": null,
+      "kind": "text",
+      "media_type": "text/markdown",
+      "phase_id": null,
+      "relative_path": "step38_lipsync_decision_packet.v1.md",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:8ab3b4e5f21ddd8de1c66d5d89284d48e36d00be68905b3f8b1cfa01afeecb21",
+      "size_bytes": 6818
+    },
+    "revision.step38.sb.003.composition.delta.proposal.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "step38_sb_003_composition_delta_proposal.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:07d0eaf3d3bb304a9d4347a9de7ffbccae927c08d21143be5ea405b68f8c6b90",
+      "size_bytes": 6957
     },
     "revision.upstream.contract.invalidation.ledger.v1.json": {
       "consumer_contract": null,
@@ -5014,6 +8864,448 @@
       "schema": null,
       "sha256": "sha256:336250c31a07d2053ab95351baa7f98227a1fbea3b4acf24734c5c376a012f5d",
       "size_bytes": 2636
+    },
+    "revision.watch.gauntlet.991c311f365f.dream.observation.packet.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/dream_observation_packet.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:b88e3cf91416bd214da45fb4316e654c4794fad9b5f7d356ae70ff921bc24c3b",
+      "size_bytes": 9736
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.audio.wav": {
+      "consumer_contract": null,
+      "kind": "audio",
+      "media_type": "audio/x-wav",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/audio.wav",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:43a93045a44037f505a5f8b646ba1ac551620c40778ad6d2a0d371c83321c446",
+      "size_bytes": 321614
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.frames.bound.frame.0000.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/frames_bound/frame_0000.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:bc7c4eb94de8d8e5a7943da16c3f53fdf78cc8a502af1f2bbd52e32f3b1e9cd8",
+      "size_bytes": 22268
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.frames.bound.frame.0001.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/frames_bound/frame_0001.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:f16ce892102f51720680fadb7d2a9dda83f980e079ebb790c1ccb475b13e9fdf",
+      "size_bytes": 21592
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.frames.bound.frame.0002.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/frames_bound/frame_0002.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:b08744440c46d3171ae0aa2c6ecca4addc46014fafa9fb91a80f6eef98ee3661",
+      "size_bytes": 19860
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.frames.bound.frame.0003.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/frames_bound/frame_0003.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:366db5b91ec5ff6ee14c801753023a9ba3786733b85333a9c4537e77a24b675d",
+      "size_bytes": 21227
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.frames.bound.frame.0004.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/frames_bound/frame_0004.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:f8700dc5ed75f9bb9da369e23c298dd1a7eb3be02c30b50ac581a8b5b83c4d19",
+      "size_bytes": 21311
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.frames.bound.frame.0005.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/frames_bound/frame_0005.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:c6e3892337d620341f8ec83176804cb016687659e9d364896e2ca4dd51674cf9",
+      "size_bytes": 20254
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.frames.bound.frame.0006.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/frames_bound/frame_0006.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:e9ec602fb25e7262943c9e4c284da2e2455800322cb1cc81b07f172c2e4fe6b3",
+      "size_bytes": 20548
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.frames.bound.frame.0007.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/frames_bound/frame_0007.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:25a893d4a9bc420c89a2054e3aafa4a57da24e371ff070b96b3be0d27506bb3f",
+      "size_bytes": 20084
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.frames.bound.frame.0008.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/frames_bound/frame_0008.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:b3baaa289d0197084b9d624e5367062c987bda778eba7c79bb5c952af8e665ce",
+      "size_bytes": 15692
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.frames.bound.frame.0009.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/frames_bound/frame_0009.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:7fc7ef610c5f3a3d4e9e59ab6e1019ffbbe76f9524577ba5d691c1ec68e3a525",
+      "size_bytes": 15453
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.frames.bound.frame.0010.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/frames_bound/frame_0010.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:f8a3b23f17390ad48a4168d824b2fb3359ceb00b43faf166122517f9ba8559f0",
+      "size_bytes": 13700
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.frames.bound.frame.0011.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/frames_bound/frame_0011.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:57794ea2aa9398f8c325f50776b2e4a58e57b8583eee2725f403b95f03008300",
+      "size_bytes": 11443
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.frames.frame.0001.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/frames/frame_0001.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:bc7c4eb94de8d8e5a7943da16c3f53fdf78cc8a502af1f2bbd52e32f3b1e9cd8",
+      "size_bytes": 22268
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.frames.frame.0002.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/frames/frame_0002.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:f16ce892102f51720680fadb7d2a9dda83f980e079ebb790c1ccb475b13e9fdf",
+      "size_bytes": 21592
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.frames.frame.0003.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/frames/frame_0003.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:b08744440c46d3171ae0aa2c6ecca4addc46014fafa9fb91a80f6eef98ee3661",
+      "size_bytes": 19860
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.frames.frame.0004.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/frames/frame_0004.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:366db5b91ec5ff6ee14c801753023a9ba3786733b85333a9c4537e77a24b675d",
+      "size_bytes": 21227
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.frames.frame.0005.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/frames/frame_0005.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:f8700dc5ed75f9bb9da369e23c298dd1a7eb3be02c30b50ac581a8b5b83c4d19",
+      "size_bytes": 21311
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.frames.frame.0006.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/frames/frame_0006.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:c6e3892337d620341f8ec83176804cb016687659e9d364896e2ca4dd51674cf9",
+      "size_bytes": 20254
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.frames.frame.0007.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/frames/frame_0007.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:e9ec602fb25e7262943c9e4c284da2e2455800322cb1cc81b07f172c2e4fe6b3",
+      "size_bytes": 20548
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.frames.frame.0008.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/frames/frame_0008.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:25a893d4a9bc420c89a2054e3aafa4a57da24e371ff070b96b3be0d27506bb3f",
+      "size_bytes": 20084
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.frames.frame.0009.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/frames/frame_0009.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:b3baaa289d0197084b9d624e5367062c987bda778eba7c79bb5c952af8e665ce",
+      "size_bytes": 15692
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.frames.frame.0010.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/frames/frame_0010.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:7fc7ef610c5f3a3d4e9e59ab6e1019ffbbe76f9524577ba5d691c1ec68e3a525",
+      "size_bytes": 15453
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.frames.frame.0011.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/frames/frame_0011.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:f8a3b23f17390ad48a4168d824b2fb3359ceb00b43faf166122517f9ba8559f0",
+      "size_bytes": 13700
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.frames.frame.0012.jpg": {
+      "consumer_contract": null,
+      "kind": "image",
+      "media_type": "image/jpeg",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/frames/frame_0012.jpg",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:57794ea2aa9398f8c325f50776b2e4a58e57b8583eee2725f403b95f03008300",
+      "size_bytes": 11443
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.frames.manifest.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/frames_manifest.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:0820fd320c04a4d08af3f38cf09aa8303b9a2bf9e70b66e3ec0e57c84cae92ac",
+      "size_bytes": 3907
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.gauntlet.validation.receipt.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch_gauntlet_validation_receipt.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:fa5732426d4e8bb9a28c5092b929a6b99115e42580e1ce17bfcaa33acfb00ff2",
+      "size_bytes": 3385
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.report.html": {
+      "consumer_contract": null,
+      "kind": "text",
+      "media_type": "text/html",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/report.html",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:9ce7b734a26b06594e6be3a12146a4aa8a0726ab767b45922a62efbd7934c714",
+      "size_bytes": 25580
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.report.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/report.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:ba2f8e86e1e5c2a392b3e5506b273a96d6c2abfbfef837eeac90b33b9b3b4648",
+      "size_bytes": 30239
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.report.md": {
+      "consumer_contract": null,
+      "kind": "text",
+      "media_type": "text/markdown",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/report.md",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:9c14c6872a12fb7532c40fe0f57afdd0f234a249b2756806ae2d4216827525f2",
+      "size_bytes": 4973
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.scenes.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/scenes.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:755d442cf44919879856407fe199e916c770d206e3f6b050d6eb286b7af73782",
+      "size_bytes": 20
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.transcript.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/transcript.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:626ede49dadebe49d4b9a587af7bc2b061adf7be49da051d78cc05209ac841da",
+      "size_bytes": 270
+    },
+    "revision.watch.gauntlet.991c311f365f.watch.visual.description.receipt.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "watch_gauntlet/991c311f365f/watch/visual_description_receipt.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:501d8855e4c08a5720d85d80b305485e1f7495c5b412c9687e1d6e38049d42fd",
+      "size_bytes": 9047
     },
     "sb_001.end_frame": {
       "consumer_contract": null,
@@ -5080,15 +9372,15 @@
       "kind": "image",
       "media_type": "image/png",
       "phase_id": "07",
-      "relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_003_end_frame.png",
+      "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/generated_storyboard_frames/sb_003_end_frame.png",
       "roles": [
         "optional_evidence",
         "accepted_frame",
         "sb_003_end_frame"
       ],
       "schema": null,
-      "sha256": "sha256:1b03c8f9c9148874dc63a49a0f2658391c59fee1c89759c25bc034f30b9f7d56",
-      "size_bytes": 1677703
+      "sha256": "sha256:9f8fb8c93e5382667ab7be1ebf4001ff702500117baca2837b33f2bb228bf20a",
+      "size_bytes": 2119705
     },
     "sb_003.start_frame": {
       "consumer_contract": null,

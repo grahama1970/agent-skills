@@ -1,6 +1,6 @@
 {
-  "activated_at": "2026-07-18T22:34:58.085656+00:00",
-  "activation_transaction_id": "activation-6af927d42079c11827d27b1b998f247d",
+  "activated_at": "2026-07-18T15:48:50.708321+00:00",
+  "activation_transaction_id": "activation-001e23de17333489a4f9a79b44669c37",
   "actual_provider_call_attempts": 0,
   "claims": {
     "does_not_prove": [
@@ -23,24 +23,23 @@
       "--revision-id",
       "rev_successor_943b01ecd9a3",
       "--source-commit",
-      "bb767ed7ebd511eae2d74c7c3440e0ca56356a8d",
-      "--supersede"
+      "bb767ed7ebd511eae2d74c7c3440e0ca56356a8d"
     ],
     "cwd": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream",
     "platform": "Linux-6.8.0-57-generic-x86_64-with-glibc2.39",
     "python_version": "3.12.3",
     "script_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/scripts/activate_revision_qualification.py",
-    "script_sha256": "sha256:b67c349d8829ad36365f35ad0a61d4c2d6e03353372ee5e0639a2625ea92d4da",
+    "script_sha256": "sha256:c424539963d51ab7e6cb5a46ea07d207693a9a36f485212a7a4c1b7717f71fa7",
     "source_commit": "bb767ed7ebd511eae2d74c7c3440e0ca56356a8d"
   },
   "gate": "revision-activation-and-repair-queue-convergence",
   "hash_validation": {
-    "artifact_count": 728,
-    "artifact_hash_manifest_sha256": "sha256:b0e2ddd68178497721a33a5eb9e297e10d75cd58d7ea7146ee30857eb584cb7b",
+    "artifact_count": 398,
+    "artifact_hash_manifest_sha256": "sha256:e7749afba41bb2a0851c866a5d4ef2a86616396da2bd820a939d27ad6b3d1594",
     "escape_count": 0,
-    "matched_count": 728,
+    "matched_count": 398,
     "mismatch_count": 0,
-    "recomputed_count": 728,
+    "recomputed_count": 398,
     "symlink_count": 0
   },
   "live": true,
@@ -48,7 +47,7 @@
   "local_files": {
     "artifact_index": {
       "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/revision_artifact_index.json",
-      "sha256": "sha256:85c92446f1c9e138b58b96d0e02de8c88657907a3fc7bf2d2f6774cdf6b42720"
+      "sha256": "sha256:06496a6af982b9650dc3684e56961ba99c5573a627181e6e48e95315da4f7198"
     },
     "local_active_pointer": {
       "relative_path": ".persona-dream/state/active_revision.json",
@@ -56,7 +55,7 @@
     },
     "prepare_receipt": {
       "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/revision_memory_prepare_receipt.json",
-      "sha256": "sha256:0d536c73db29c9c4409fa9b39deb26ecc7ebd6bd3dcd01dba78b6e5419a303c8"
+      "sha256": "sha256:2558550849d6c79d4c6e2a5269fbc07fb91581a2c1af89be20e84c13417194c4"
     },
     "queue_item": {
       "relative_path": ".persona-dream/repair/tau-queue/repair-3140532dca3381b1.json",
@@ -64,7 +63,7 @@
     },
     "queue_terminal_event": {
       "relative_path": ".persona-dream/repair/queue-events/repair-3140532dca3381b1/000001-completed.json",
-      "sha256": "sha256:89a6a4fb6361d698d82935c1ce04459c290f624fabb32a059c21b1304a88be5e"
+      "sha256": "sha256:7364dd1a596aad4309a00b245260c5b26488d51ad8d4997a678dd8f957ebdc62"
     },
     "revision_manifest": {
       "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/revision_manifest.json",
@@ -72,7 +71,7 @@
     },
     "verify_receipt": {
       "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/revision_memory_verify_receipt.json",
-      "sha256": "sha256:6b3075a10078d4cf46eaf12a5e0acb9dc8368426b509d13e54cad15522fcdbd5"
+      "sha256": "sha256:5a742f0258431a8f5ee7f0c7d6f37a58aa07346ef9722211c1bdccdf98767af2"
     },
     "work_order": {
       "relative_path": ".persona-dream/repair/work-orders/repair-3140532dca3381b1.json",
@@ -90,7 +89,7 @@
   "memory": {
     "active_pointer_key": "pd_active_bb0360b6e2870481e787ce7bfd5a184504a0697bd083b681",
     "active_revision_id": "rev_successor_943b01ecd9a3",
-    "document_contract_sha256": "sha256:5966b6026428dbb102649d556f5cb56eb00f8d34da8989e9c69484dc08d09cb1",
+    "document_contract_sha256": "sha256:c6a9abea108ece1fa6b244c0463de39a8526bc2c6d041c294591c362532a5dd0",
     "embedding_model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
     "embedding_version": "v5-omni-small",
     "exact_reread_count": 1,
@@ -103,7 +102,7 @@
       "list_after": {
         "endpoint": "/list",
         "request_payload_sha256": "sha256:cfc1612dd6ca98bac9559c36e9ae121378173f148fa0b85c21d201187d2d7ad2",
-        "response_sha256": "sha256:d48dcb5337685cc47f70870917dbb7761b1287ec99e2f4786d76b360ee76d2cd",
+        "response_sha256": "sha256:e943d4460ec53bbbdedfff601a97e43b636c938ba5d55df3805c6f6bd0a55744",
         "returned_counts": {
           "collection": "project_knowledge",
           "count": 1,
@@ -114,25 +113,25 @@
       "list_before": {
         "endpoint": "/list",
         "request_payload_sha256": "sha256:cfc1612dd6ca98bac9559c36e9ae121378173f148fa0b85c21d201187d2d7ad2",
-        "response_sha256": "sha256:e943d4460ec53bbbdedfff601a97e43b636c938ba5d55df3805c6f6bd0a55744",
+        "response_sha256": "sha256:a661bfd01d561e75fa663b32e57b515cc04818e10b0e05ef9882d62428a10a21",
         "returned_counts": {
           "collection": "project_knowledge",
-          "count": 1,
-          "total": 1
+          "count": 0,
+          "total": 0
         },
         "status_code": 200
       },
       "upsert": {
         "endpoint": "/upsert",
-        "request_payload_sha256": "sha256:73a243cb639330f65a06dadcdfd8f698267bf946c624a2340a9ce188a3e74f67",
-        "response_sha256": "sha256:4f206c74c76239d474119effb862b0972d3842c34a39c6ff5ae21a94709946a9",
+        "request_payload_sha256": "sha256:7bc98dd2480e9f2ca24c9fc3296d8119a3644c1d7b453a350902a571bbf9ae2e",
+        "response_sha256": "sha256:f60a2a740a4dc83a8ad517aec4d99915b725ca7f2f10c162950772f10002660e",
         "returned_counts": {
           "collection": "project_knowledge",
           "errors": [],
-          "inserted": 0,
+          "inserted": 1,
           "total": 1,
-          "updated": 1,
-          "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_project_knowledge_20260718T223458091483Z_40334_132518611257024.jsonl"
+          "updated": 0,
+          "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_project_knowledge_20260718T154850712015Z_10100_133298726635200.jsonl"
         },
         "status_code": 200
       }
@@ -157,7 +156,7 @@
   "receipt_chain": {
     "dense_matching_count": 11,
     "exact_record_count": 27,
-    "max_dense": 0.9132476,
+    "max_dense": 0.9138711,
     "phase_record_count": 10,
     "prepare_schema": "persona_dream.revision_memory_prepare_receipt.v1",
     "prepare_status": "PASS_MEMORY_REVISION_PREPARED",

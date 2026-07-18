@@ -1,0 +1,121 @@
+{
+  "actual_provider_call_attempts": 0,
+  "claims": {
+    "does_not_prove": [
+      "Kling readiness",
+      "provider media publication",
+      "publication authorization",
+      "paid authorization",
+      "provider return",
+      "lip-sync-on-return"
+    ],
+    "proves": [
+      "the acceptance rung is ACTIVATED and CERTIFIED: the rebuilt revision index (sha256:85c92446...) that binds the accepted Lane C waiver sb_003_end_frame reached PASS_ACTIVE_CONSISTENT through prepare/verify/activate --supersede",
+      "identity is certified by the deterministic ArcFace embedding subgate (calibration v4 PASS, threshold 0.421, margin 0.156)",
+      "all 8 augmented successor frames pass the live 8-frame re-review (full-frame gpt-5.5 VLM AND embedding subgate)",
+      "Lane C regenerated sb_003_end_frame so Kai's mouth is not camera-readable during the 5.0-7.7s dialogue window while Embry stays fully readable and Kai stays anchor-recognizable (Embry augmented identity PASS cosine 0.716584, Kai anchored-identity waiver GRANTED anchor cosine 0.798839, composition PASS, both continuity pairs PASS)",
+      "the prior canonical phase_c sb_003_end_frame is retained as superseded evidence via the sanctioned invalidation ledger + supersession ledger; no evidence was deleted",
+      "the qualification exact-match gate was corrected to select the 27 qualification records by record identity (schema/record_type/key), so requalification is no longer blocked by governance/audit records that legitimately share the (run_id, revision_id) keyspace"
+    ]
+  },
+  "gate_scoping_fix": {
+    "status": "PASS_QUALIFICATION_GATE_SCOPED_BY_RECORD_IDENTITY",
+    "module": "scripts/prepare_revision_qualification.py",
+    "commit": "1d454819",
+    "receipt_relative_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/qualification_gate_scoping_fix_receipt.v1.json",
+    "receipt_sha256": "sha256:a57b2a60c12794176a3d2099eae5f94754fd5c77592533dd27180416f32fe417",
+    "note": "exact-match gate now selects qualification records by schema/record_type/stable-key prefix, not by raw (run_id, revision_id) keyspace; 15 governance records co-resident in the keyspace are ignored by the count while remaining readable; provably as strict as before (unit tests)"
+  },
+  "identity_subgate": {
+    "authority": "embedding_cosine",
+    "fail_closed": true,
+    "failure_code": "FAIL_FACE_EMBEDDING_IDENTITY_MISMATCH",
+    "module": "scripts/identity_face_embedding_subgate.py",
+    "threshold": 0.421
+  },
+  "lane_c": {
+    "status": "PASS_LANE_C_SB_003_END_REGENERATED_WAIVER",
+    "accepted": true,
+    "attempts_used": 1,
+    "new_frame_sha256": "sha256:9f8fb8c93e5382667ab7be1ebf4001ff702500117baca2837b33f2bb228bf20a",
+    "embry_augmented_identity": "PASS (full-frame VLM + ArcFace subgate, cosine 0.716584)",
+    "kai_anchored_identity_waiver": "GRANTED (start-frame anchor augmented PASS, anchor cosine 0.798839 + non-facial start->end continuity PASS)",
+    "composition": "PASS (Kai's mouth not camera-readable; Embry readable; Kai present matching build)",
+    "continuity_pairs": [
+      "sb_003_start->sb_003_end PASS",
+      "sb_003_end->sb_004_start PASS"
+    ],
+    "regeneration_receipt_relative_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/lane_c_regeneration_receipt.json",
+    "regeneration_receipt_sha256": "sha256:3b5f7ae37e9d647a23b3853b053f66d2534e11984bd1c8b5a58e86578d0ba178",
+    "waiver_receipt_relative_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/receipts/anchored_identity_waiver/sb_003_end_frame.attempt_01_kai_anchored_identity_waiver.json",
+    "waiver_receipt_sha256": "sha256:e51c8971e616feee1a2e22321381e0f8152101527a25d7b549f28f61487e41d3"
+  },
+  "requalification": {
+    "artifact_index_rebuild": {
+      "status": "PASS_REVISION_ARTIFACT_REBUILT",
+      "old_artifact_index_sha256": "sha256:06496a6af982b9650dc3684e56961ba99c5573a627181e6e48e95315da4f7198",
+      "new_artifact_index_sha256": "sha256:85c92446f1c9e138b58b96d0e02de8c88657907a3fc7bf2d2f6774cdf6b42720",
+      "accepted_frame_count": 8,
+      "superseded_frame_count": 10,
+      "waiver_frame_promoted_to": "sb_003.end_frame",
+      "phase_c_frame_disposition": "superseded_frame (retained)",
+      "supersession_ledger_relative_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/step38_lane_c_accepted_waiver_frame_invalidation_ledger.v1.json"
+    },
+    "supersession": {
+      "status": "PASS_REQUALIFICATION_SUPERSEDED",
+      "archived": ["prepare_receipt", "verify_receipt", "activation_receipt", "queue_terminal_event"],
+      "superseded_active_pointer_key": "pd_active_bb0360b6e2870481e787ce7bfd5a184504a0697bd083b681__superseded__06496a6af982b965",
+      "receipt_relative_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/revision_requalification_supersession_receipt.v1.json",
+      "receipt_sha256": "sha256:6e3817b1acd79eef840c438a195a5bec93f5aa713e49793fbec70195ba6ef724",
+      "ledger_relative_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/revision_requalification_supersession_ledger.v1.json",
+      "ledger_sha256": "sha256:3f5d949b490ec68baf37d419716dedce11383aaf86e313080521124e245c4367"
+    },
+    "prepare": {
+      "status": "PASS_MEMORY_REVISION_PREPARED",
+      "receipt_sha256": "sha256:0d536c73db29c9c4409fa9b39deb26ecc7ebd6bd3dcd01dba78b6e5419a303c8",
+      "returned_counts": {"revision": 1, "phase": 10, "required_artifact": 16, "total": 27}
+    },
+    "verify": {
+      "status": "PASS_MEMORY_REVISION_VERIFIED",
+      "receipt_sha256": "sha256:6b3075a10078d4cf46eaf12a5e0acb9dc8368426b509d13e54cad15522fcdbd5"
+    },
+    "activation": {
+      "status": "PASS_ACTIVE_CONSISTENT",
+      "artifact_index_sha256": "sha256:85c92446f1c9e138b58b96d0e02de8c88657907a3fc7bf2d2f6774cdf6b42720",
+      "activation_transaction_id": "activation-6af927d42079c11827d27b1b998f247d",
+      "receipt_relative_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/revision_activation_receipt.json",
+      "receipt_sha256": "sha256:a4c84e7e46103e3ac1bb243c78038e6a8624a5a226a69feaa8f1b5eb88c41c7e"
+    }
+  },
+  "reviewer_augmentation": "identity verdict authority is deterministic InsightFace buffalo_l (ArcFace w600k_r50) cosine distance; full-frame gpt-5.5 VLM retained for scene/wardrobe/composition + face visibility; VLM face-crop demoted to advisory",
+  "reviewer_calibration_v4": {
+    "calibration_pass": true,
+    "margin": 0.156076,
+    "overall_status": "REVIEWER_CALIBRATION_PASS",
+    "receipt_relative_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration_receipt.v4.json",
+    "receipt_sha256": "sha256:0615ebf0d56ce2faa66acb1d7e3d5b0aa7f24bcda2c875c6b8f7da268fb24354",
+    "threshold": 0.421
+  },
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.acceptance_rung_receipt.v5",
+  "status": "PASS_ACCEPTANCE_RUNG",
+  "successor_frames_identity": {
+    "all_pass_embedding": true,
+    "live_augmented_rereview": {
+      "frames_pass": "8/8 (full-frame VLM PASS AND embedding subgate PASS)",
+      "overall_status": "SUCCESSOR_REREVIEW_PASS",
+      "receipt_relative_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/reviewer_calibration_v4/successor_rereview/successor_rereview_v4_receipt.json",
+      "receipt_sha256": "sha256:d9ba4762c048893ddc8400de7bf9ea926d8c888e371e9fa06c19763bc5eb4a37"
+    },
+    "note": "8/8 augmented successor frames PASS live; Lane C then replaced sb_003_end_frame with the accepted anchored-identity-waiver frame now bound as canonical sb_003.end_frame in the activated index"
+  },
+  "successor_revision_frozen_read_only": true,
+  "supersedes": "acceptance_rung_receipt.v4.json",
+  "observed_at": "2026-07-18",
+  "live": true,
+  "mocked": false,
+  "provider_live": false,
+  "paid_call_authorized": false,
+  "submitted": false
+}

@@ -1,0 +1,35 @@
+{
+  "schema": "persona_dream.upstream_invalidation_ledger.v1",
+  "ledger_kind": "lane_c_accepted_waiver_supersession",
+  "run_id": "pipeline-complete",
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "source_revision_id": "rev_upstream_bf3b05d47fb8",
+  "created_at": "2026-07-18",
+  "rule": "The Lane C (step 38) anchored-identity-waiver sb_003_end_frame was ACCEPTED (lane_c_step38_sb_003_end_regen_waiver/lane_c_regeneration_receipt.json = PASS_LANE_C_SB_003_END_REGENERATED_WAIVER, attempt 1: Embry augmented identity PASS cosine 0.716584, Kai anchored-identity waiver GRANTED anchor cosine 0.798839, composition PASS with Kai's mouth not camera-readable, both continuity pairs PASS). Per that accepted receipt's superseded_frame declaration, the prior canonical phase_c_successor_regen sb_003_end_frame is retained as SUPERSEDED evidence so the accepted waiver frame becomes the sole live canonical sb_003.end_frame slot for the artifact-index rebuild. No evidence is deleted (GOAL.md: mark stale/retain, never delete).",
+  "changed_upstream_artifact": "phase_07 sb_003.end_frame (promoted to the accepted Lane C anchored-identity-waiver regeneration)",
+  "affected_steps": [
+    "38"
+  ],
+  "stale_artifact_count": 1,
+  "stale_artifacts": [
+    {
+      "artifact": "phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_003_end_frame.png",
+      "relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_003_end_frame.png",
+      "sha256": "sha256:1b03c8f9c9148874dc63a49a0f2658391c59fee1c89759c25bc034f30b9f7d56",
+      "disposition": "SUPERSEDED_BY_ACCEPTED_LANE_C_WAIVER",
+      "location": "successor_revision",
+      "phase_id": "07",
+      "reason": "Superseded by the accepted Lane C anchored-identity-waiver sb_003_end_frame (sha256:9f8fb8c93e5382667ab7be1ebf4001ff702500117baca2837b33f2bb228bf20a). The prior phase_c_successor_regen frame is retained in-tree as superseded evidence and is never reused as the canonical sb_003.end_frame.",
+      "superseded_by": {
+        "relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/generated_storyboard_frames/sb_003_end_frame.png",
+        "sha256": "sha256:9f8fb8c93e5382667ab7be1ebf4001ff702500117baca2837b33f2bb228bf20a"
+      }
+    }
+  ],
+  "mocked": false,
+  "live": true,
+  "provider_live": false,
+  "paid_call_authorized": false,
+  "submitted": false,
+  "actual_provider_call_attempts": 0
+}

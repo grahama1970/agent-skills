@@ -1,0 +1,63 @@
+{
+  "actual_provider_call_attempts": 0,
+  "archived_files": [
+    {
+      "archived_relative_path": "superseded/06496a6af982b965/revision_memory_prepare_receipt.json",
+      "artifact": "prepare_receipt",
+      "bound_artifact_index_sha256": "sha256:06496a6af982b9650dc3684e56961ba99c5573a627181e6e48e95315da4f7198",
+      "canonical_relative_path": "revision_memory_prepare_receipt.json",
+      "old_sha256": "sha256:2558550849d6c79d4c6e2a5269fbc07fb91581a2c1af89be20e84c13417194c4"
+    },
+    {
+      "archived_relative_path": "superseded/06496a6af982b965/revision_memory_verify_receipt.json",
+      "artifact": "verify_receipt",
+      "bound_artifact_index_sha256": "sha256:06496a6af982b9650dc3684e56961ba99c5573a627181e6e48e95315da4f7198",
+      "canonical_relative_path": "revision_memory_verify_receipt.json",
+      "old_sha256": "sha256:5a742f0258431a8f5ee7f0c7d6f37a58aa07346ef9722211c1bdccdf98767af2"
+    },
+    {
+      "archived_relative_path": "superseded/06496a6af982b965/revision_activation_receipt.json",
+      "artifact": "activation_receipt",
+      "bound_artifact_index_sha256": "sha256:06496a6af982b9650dc3684e56961ba99c5573a627181e6e48e95315da4f7198",
+      "canonical_relative_path": "revision_activation_receipt.json",
+      "old_sha256": "sha256:0faa6e00b5031b1768fec23481c97a388a79a306f883a635e02b53158bbfa6ed"
+    },
+    {
+      "archived_relative_path": "superseded/06496a6af982b965/run_root/.persona-dream/repair/queue-events/repair-3140532dca3381b1/000001-completed.json",
+      "artifact": "queue_terminal_event",
+      "bound_artifact_index_sha256": "sha256:06496a6af982b9650dc3684e56961ba99c5573a627181e6e48e95315da4f7198",
+      "canonical_relative_path": ".persona-dream/repair/queue-events/repair-3140532dca3381b1/000001-completed.json",
+      "old_sha256": "sha256:7364dd1a596aad4309a00b245260c5b26488d51ad8d4997a678dd8f957ebdc62"
+    }
+  ],
+  "claims": {
+    "does_not_prove": [
+      "the fresh prepare/verify/activation receipts (written by the standard chain after supersession)",
+      "provider readiness, publication, payment, or submission"
+    ],
+    "proves": [
+      "every stale predecessor receipt and terminal event was retained under superseded/ and referenced by hash before its canonical slot was vacated",
+      "the old Memory active pointer was retained as a SUPERSEDED snapshot, not dropped",
+      "an old->new artifact-index supersession entry was appended to the append-only ledger"
+    ]
+  },
+  "new_artifact_index_sha256": "sha256:85c92446f1c9e138b58b96d0e02de8c88657907a3fc7bf2d2f6774cdf6b42720",
+  "old_artifact_index_sha256": "sha256:06496a6af982b9650dc3684e56961ba99c5573a627181e6e48e95315da4f7198",
+  "paid_call_authorized": false,
+  "provider_live": false,
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.revision_requalification_supersession_receipt.v1",
+  "source_commit": "bb767ed7ebd511eae2d74c7c3440e0ca56356a8d",
+  "source_revision_id": "rev_upstream_bf3b05d47fb8",
+  "status": "PASS_REQUALIFICATION_SUPERSEDED",
+  "submitted": false,
+  "superseded_active_pointer": {
+    "old_activation_transaction_id": "activation-001e23de17333489a4f9a79b44669c37",
+    "old_artifact_index_sha256": "sha256:06496a6af982b9650dc3684e56961ba99c5573a627181e6e48e95315da4f7198",
+    "superseded_pointer_key": "pd_active_bb0360b6e2870481e787ce7bfd5a184504a0697bd083b681__superseded__06496a6af982b965"
+  },
+  "superseded_at": "2026-07-18T22:34:32.401258+00:00",
+  "supersession_ledger": "revision_requalification_supersession_ledger.v1.json",
+  "supersession_ledger_sha256": "sha256:3f5d949b490ec68baf37d419716dedce11383aaf86e313080521124e245c4367"
+}
