@@ -292,70 +292,37 @@ def _persist_listener_receipt(
     return artifact_locator(path)
 
 
-def _managed_listener_state(
-    run_dir: Path,
-    *,
-    expected_source_node: str,
-) -> tuple[int, int] | None:
-    state_path = run_dir / "state.json"
-    if not state_path.exists():
-        if run_dir.exists() and any(run_dir.iterdir()):
-            raise ValueError(f"managed_listener_run_state_missing:{run_dir}")
-        return None
-    if not state_path.is_file():
-        raise ValueError(f"managed_listener_run_state_not_file:{state_path}")
-    state = read_json(state_path)
-    if state.get("schema") != "realtimestt.physical_hot_mic_listener_state.v1":
-        raise ValueError(f"managed_listener_run_state_schema_invalid:{state_path}")
-    if state.get("source_node") != expected_source_node:
-        raise ValueError(f"managed_listener_run_source_node_mismatch:{run_dir}")
-    try:
-        target_cycles = int(state["target_cycles"])
-    except (KeyError, TypeError, ValueError) as exc:
-        raise ValueError(f"managed_listener_run_target_invalid:{state_path}") from exc
-    completed_cycles = state.get("completed_cycles")
-    if target_cycles < 1 or not isinstance(completed_cycles, list):
-        raise ValueError(f"managed_listener_run_cycles_invalid:{state_path}")
-    completed_count = len(completed_cycles)
-    if completed_count > target_cycles:
-        raise ValueError(
-            "managed_listener_run_completed_exceeds_target:"
-            f"{state_path}:{completed_count}:{target_cycles}"
-        )
-    return target_cycles, completed_count
+def _managed_listener_run_dir_is_fresh(run_dir: Path) -> bool:
+    """A run dir is safe to use only when it holds no prior listener state."""
+    return not run_dir.exists() or not any(run_dir.iterdir())
 
 
 def _select_managed_listener_run(
     *,
     campaign_dir: Path,
-    source_node: str,
-    campaign_turn_count: int,
     pending_turn_count: int,
 ) -> tuple[Path, int]:
-    base_run_dir = campaign_dir / "managed-listener"
-    base_state = _managed_listener_state(
-        base_run_dir,
-        expected_source_node=source_node,
-    )
-    if base_state is None:
-        return base_run_dir, campaign_turn_count
-    base_target, base_completed = base_state
-    if base_completed < base_target:
-        return base_run_dir, base_target
+    """Allocate a never-before-used managed-listener run dir for this invocation.
 
-    rollover_index = 1
+    Every runner invocation gets its own fresh run dir so the listener always
+    starts from an empty cycle ledger.  A stale ledger left behind by a
+    previous or failed run therefore can never pre-consume this invocation's
+    target cycles (the live "cycle 2/2 then shut down" failure).  Existing run
+    dirs are never resumed, moved, or deleted: segment WAVs referenced by
+    already-stored receipts keep their recorded absolute paths, and
+    journal-based crash recovery (which reads the journal, not the run dir) is
+    unaffected.  The target cycle count is exactly the turns this invocation
+    must complete.
+    """
+    base_run_dir = campaign_dir / "managed-listener"
+    if _managed_listener_run_dir_is_fresh(base_run_dir):
+        return base_run_dir, pending_turn_count
+    run_index = 1
     while True:
-        rollover_dir = campaign_dir / f"managed-listener-rollover-{rollover_index:03d}"
-        rollover_state = _managed_listener_state(
-            rollover_dir,
-            expected_source_node=source_node,
-        )
-        if rollover_state is None:
-            return rollover_dir, pending_turn_count
-        rollover_target, rollover_completed = rollover_state
-        if rollover_completed < rollover_target:
-            return rollover_dir, rollover_target
-        rollover_index += 1
+        run_dir = campaign_dir / f"managed-listener-run-{run_index:03d}"
+        if _managed_listener_run_dir_is_fresh(run_dir):
+            return run_dir, pending_turn_count
+        run_index += 1
 
 
 def _migrate_inline_listener_receipts(
@@ -2118,14 +2085,8 @@ def run_campaign(
             raise ValueError("source_playback_target_required")
 
         total_turn_count = len(listener_pending)
-        campaign_turn_count = sum(
-            len(case["turn_script"])
-            for case in manifest["cases"]
-        )
         listener_run_dir, listener_target_turn_count = _select_managed_listener_run(
             campaign_dir=Path(live_config["campaign_dir"]),
-            source_node=live_config["listener_source_node"],
-            campaign_turn_count=campaign_turn_count,
             pending_turn_count=total_turn_count,
         )
         try:
