@@ -9,6 +9,7 @@ import { ContextMenu, type ContextMenuItem } from '../common/ContextMenu'
 import { SharedRightPane } from '../common/SharedRightPane'
 import { EMBRY } from '../common/EmbryStyle'
 import { ReviewBundleButton } from '../common/ReviewBundleButton'
+import { TauLoopView } from './TauLoopView'
 import { SurgicalTriageFixture } from './SurgicalTriageFixture'
 import { SurgicalTriageCleanRoom } from './SurgicalTriageCleanRoom'
 import { SurgicalTriageStaticProof } from './SurgicalTriageStaticProof'
@@ -1783,6 +1784,11 @@ export function PdfLabView({ pdfUrl: propPdfUrl, extractionUrl: propExtractionUr
     </div>
   ) : null
 
+  if (initialSubpath === 'loop' || initialSubpath === 'tau-loop') {
+
+    return <TauLoopView />
+
+  }
   if (initialSubpath === 'surgical-fixture') {
     return <SurgicalTriageFixture />
   }
