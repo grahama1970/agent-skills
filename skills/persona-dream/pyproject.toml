@@ -12,6 +12,18 @@ dependencies = [
     "typer>=0.9.0",
 ]
 
+[project.optional-dependencies]
+# Deterministic ArcFace face-embedding identity subgate (InsightFace buffalo_l).
+# Replaces the unstable VLM face-to-face identity verdict; see
+# scripts/identity_face_embedding_subgate.py and
+# reviewer_calibration_receipt.v4.json. CPU onnxruntime is the deterministic
+# default; swap for onnxruntime-gpu on a free GPU. Install with:
+#   uv pip install -e '.[identity]'
+identity = [
+    "insightface==0.7.3",
+    "onnxruntime==1.19.2",
+]
+
 [tool.uv]
 package = false
 

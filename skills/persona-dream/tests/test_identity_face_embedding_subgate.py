@@ -1,0 +1,219 @@
+#!/usr/bin/env python3
+"""Unit tests for the deterministic face-embedding identity subgate.
+
+No model download and no live calls: a :class:`MockEmbedder` returns canned
+:class:`FaceDet` objects keyed by image path, so the mapping / cosine / verdict
+logic and the fail-closed paths are all exercised deterministically. The live
+InsightFace calibration in reviewer_calibration_receipt.v4.json is the real proof
+of separation; these tests pin the surrounding contract.
+"""
+from __future__ import annotations
+
+import importlib.util
+import math
+import sys
+from pathlib import Path
+
+import pytest
+
+SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
+
+
+def _load():
+    name = "identity_face_embedding_subgate"
+    spec = importlib.util.spec_from_file_location(name, SCRIPTS / f"{name}.py")
+    assert spec and spec.loader
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[name] = mod  # dataclass processing needs the module registered
+    spec.loader.exec_module(mod)
+    return mod
+
+
+sg = _load()
+
+
+def _unit(vec):
+    n = math.sqrt(sum(v * v for v in vec)) or 1.0
+    return [v / n for v in vec]
+
+
+class MockEmbedder:
+    """Returns canned faces per path. ``mocked=True`` so receipts mark it non-live."""
+
+    mocked = True
+
+    def __init__(self, table):
+        self.table = table
+
+    def detect(self, image_path):
+        return self.table[str(image_path)]
+
+
+# --------------------------------------------------------------------------- #
+# cosine
+# --------------------------------------------------------------------------- #
+def test_cosine_identical():
+    assert sg.cosine([1, 0, 0], [1, 0, 0]) == pytest.approx(1.0)
+
+
+def test_cosine_orthogonal():
+    assert sg.cosine([1, 0], [0, 1]) == pytest.approx(0.0)
+
+
+def test_cosine_normalizes():
+    # magnitude should not matter
+    assert sg.cosine([2, 0], [5, 0]) == pytest.approx(1.0)
+
+
+# --------------------------------------------------------------------------- #
+# foreground selection + entity assignment
+# --------------------------------------------------------------------------- #
+def test_select_foreground_drops_small_background_faces():
+    big_left = sg.FaceDet(bbox=[10, 10, 110, 210], embedding=[1, 0])
+    big_right = sg.FaceDet(bbox=[400, 10, 520, 210], embedding=[0, 1])
+    tiny = sg.FaceDet(bbox=[250, 5, 260, 15], embedding=[1, 1])  # background surfer
+    picked = sg.select_foreground_faces([tiny, big_right, big_left], 2)
+    assert [p.bbox[0] for p in picked] == [10, 400]  # ordered left-to-right, tiny dropped
+
+
+def test_assign_by_position():
+    left = sg.FaceDet(bbox=[10, 10, 110, 210], embedding=[1, 0])
+    right = sg.FaceDet(bbox=[400, 10, 520, 210], embedding=[0, 1])
+    m = sg.assign_candidate_faces([right, left], ["Embry", "Kai"])
+    assert m["Embry"] is left  # Embry = leftmost
+    assert m["Kai"] is right
+
+
+def test_assign_missing_entity_is_none():
+    only = sg.FaceDet(bbox=[10, 10, 110, 210], embedding=[1, 0])
+    m = sg.assign_candidate_faces([only], ["Embry", "Kai"])
+    assert m["Embry"] is only
+    assert m["Kai"] is None
+
+
+def test_best_and_pairwise():
+    cand = sg.FaceDet(bbox=[0, 0, 1, 1], embedding=_unit([1, 0]))
+    refs = [
+        sg.FaceDet(bbox=[0, 0, 1, 1], embedding=_unit([0.9, 0.1])),
+        sg.FaceDet(bbox=[0, 0, 1, 1], embedding=_unit([0.2, 1.0])),
+    ]
+    best, scores = sg.best_and_pairwise(cand, refs)
+    assert best == max(scores)
+    assert scores[0] > scores[1]
+
+
+# --------------------------------------------------------------------------- #
+# full subgate orchestration
+# --------------------------------------------------------------------------- #
+def _frame(tmp_path, name):
+    p = tmp_path / name
+    p.write_bytes(b"\x89PNG\r\n")  # existence only; MockEmbedder ignores pixels
+    return p
+
+
+def test_subgate_pass_when_both_match(tmp_path):
+    frame = _frame(tmp_path, "frame.png")
+    eref = _frame(tmp_path, "embry.png")
+    kref = _frame(tmp_path, "kai.png")
+    embry_vec = _unit([1.0, 0.0, 0.0])
+    kai_vec = _unit([0.0, 1.0, 0.0])
+    table = {
+        str(frame): [
+            sg.FaceDet(bbox=[10, 10, 110, 210], embedding=embry_vec, sex="F"),
+            sg.FaceDet(bbox=[400, 10, 520, 210], embedding=kai_vec, sex="M"),
+        ],
+        str(eref): [sg.FaceDet(bbox=[0, 0, 50, 50], embedding=embry_vec)],
+        str(kref): [sg.FaceDet(bbox=[0, 0, 50, 50], embedding=kai_vec)],
+    }
+    res = sg.run_face_embedding_subgate(
+        frame_path=frame,
+        references={"Embry": eref, "Kai": kref},
+        required_entities=["Embry", "Kai"],
+        embedder=MockEmbedder(table),
+        threshold=0.421,
+    )
+    assert res["status"] == "PASS"
+    assert res["mocked"] is True
+    assert all(er["status"] == "PASS" for er in res["entity_results"])
+
+
+def test_subgate_fail_records_score_and_code(tmp_path):
+    frame = _frame(tmp_path, "frame.png")
+    eref = _frame(tmp_path, "embry.png")
+    kref = _frame(tmp_path, "kai.png")
+    embry_vec = _unit([1.0, 0.0, 0.0])
+    kai_vec = _unit([0.0, 1.0, 0.0])
+    # candidate "Embry" is actually a different face (near-orthogonal) -> low cosine
+    lookalike = _unit([0.3, 0.0, 1.0])
+    table = {
+        str(frame): [
+            sg.FaceDet(bbox=[10, 10, 110, 210], embedding=lookalike, sex="F"),
+            sg.FaceDet(bbox=[400, 10, 520, 210], embedding=kai_vec, sex="M"),
+        ],
+        str(eref): [sg.FaceDet(bbox=[0, 0, 50, 50], embedding=embry_vec)],
+        str(kref): [sg.FaceDet(bbox=[0, 0, 50, 50], embedding=kai_vec)],
+    }
+    res = sg.run_face_embedding_subgate(
+        frame_path=frame,
+        references={"Embry": eref, "Kai": kref},
+        required_entities=["Embry", "Kai"],
+        embedder=MockEmbedder(table),
+        threshold=0.421,
+    )
+    assert res["status"] == "FAIL"
+    embry = next(er for er in res["entity_results"] if er["entity"] == "Embry")
+    assert embry["status"] == "FAIL"
+    assert embry["best_cosine"] < 0.421
+    assert any(sg.FAILURE_CODE in f and "Embry" in f for f in res["blocking_findings"])
+    # the offending score is present in the finding text
+    assert any(f"{embry['best_cosine']:.4f}" in f for f in res["blocking_findings"])
+
+
+def test_subgate_fails_closed_on_missing_candidate_face(tmp_path):
+    frame = _frame(tmp_path, "frame.png")
+    eref = _frame(tmp_path, "embry.png")
+    kref = _frame(tmp_path, "kai.png")
+    vec = _unit([1.0, 0.0])
+    table = {
+        str(frame): [sg.FaceDet(bbox=[10, 10, 110, 210], embedding=vec)],  # only one face
+        str(eref): [sg.FaceDet(bbox=[0, 0, 50, 50], embedding=vec)],
+        str(kref): [sg.FaceDet(bbox=[0, 0, 50, 50], embedding=vec)],
+    }
+    res = sg.run_face_embedding_subgate(
+        frame_path=frame,
+        references={"Embry": eref, "Kai": kref},
+        required_entities=["Embry", "Kai"],
+        embedder=MockEmbedder(table),
+        threshold=0.421,
+    )
+    assert res["status"] == "FAIL"  # fails closed: Kai face not located
+    assert any("Kai" in f and "no foreground face" in f for f in res["blocking_findings"])
+
+
+def test_subgate_deterministic(tmp_path):
+    frame = _frame(tmp_path, "frame.png")
+    eref = _frame(tmp_path, "embry.png")
+    kref = _frame(tmp_path, "kai.png")
+    ev, kv = _unit([1.0, 0.1]), _unit([0.1, 1.0])
+    table = {
+        str(frame): [
+            sg.FaceDet(bbox=[10, 10, 110, 210], embedding=ev),
+            sg.FaceDet(bbox=[400, 10, 520, 210], embedding=kv),
+        ],
+        str(eref): [sg.FaceDet(bbox=[0, 0, 50, 50], embedding=ev)],
+        str(kref): [sg.FaceDet(bbox=[0, 0, 50, 50], embedding=kv)],
+    }
+    emb = MockEmbedder(table)
+    a = sg.run_face_embedding_subgate(
+        frame_path=frame, references={"Embry": eref, "Kai": kref},
+        required_entities=["Embry", "Kai"], embedder=emb, threshold=0.421,
+    )
+    b = sg.run_face_embedding_subgate(
+        frame_path=frame, references={"Embry": eref, "Kai": kref},
+        required_entities=["Embry", "Kai"], embedder=emb, threshold=0.421,
+    )
+    assert a["entity_results"] == b["entity_results"]
+
+
+if __name__ == "__main__":
+    raise SystemExit(pytest.main([__file__, "-q"]))

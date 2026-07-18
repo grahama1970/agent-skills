@@ -1,0 +1,59 @@
+{
+  "created_at": "2026-07-18T20:03:20.257730+00:00",
+  "detector": "det_10g (SCRFD, 5-pt landmarks for alignment)",
+  "determinism": "same input pixels -> identical embeddings/scores (verified: byte-identical cosine on repeat runs)",
+  "execution_provider_used": "CPUExecutionProvider",
+  "gpu_present": "NVIDIA RTX A5000 (24GB; ~1GB free at install time -> CPU chosen as deterministic acceptable fallback)",
+  "install_command": "uv pip install insightface==0.7.3 onnxruntime==1.19.2 (+ pytest for tests)",
+  "license": "InsightFace MIT",
+  "live": true,
+  "mocked": false,
+  "model_dir": "/home/graham/.insightface/models/buffalo_l",
+  "model_files": {
+    "1k3d68.onnx": {
+      "bytes": 143607619,
+      "sha256": "sha256:df5c06b8a0c12e422b2ed8947b8869faa4105387f199c477af038aa01f9a45cc"
+    },
+    "2d106det.onnx": {
+      "bytes": 5030888,
+      "sha256": "sha256:f001b856447c413801ef5c42091ed0cd516fcd21f2d6b79635b1e733a7109dbf"
+    },
+    "det_10g.onnx": {
+      "bytes": 16923827,
+      "sha256": "sha256:5838f7fe053675b1c7a08b633df49e7af5495cee0493c7dcf6697200b85b5b91"
+    },
+    "genderage.onnx": {
+      "bytes": 1322532,
+      "sha256": "sha256:4fde69b1c810857b88c64a335084f1c3fe8f01246c9a191b48c7bb756d6652fb"
+    },
+    "w600k_r50.onnx": {
+      "bytes": 174383860,
+      "sha256": "sha256:4c06341c33c2ca1f86781dab0e829f88ad5b64be9fba56e56bc9ebdefc619e43"
+    }
+  },
+  "model_package": "buffalo_l",
+  "model_source": "https://github.com/deepinsight/insightface/releases/download/v0.7/buffalo_l.zip (auto-fetched by insightface, HTTP 200 verified reachable)",
+  "onnxruntime_providers": [
+    "AzureExecutionProvider",
+    "CPUExecutionProvider"
+  ],
+  "packages_pinned": {
+    "albumentations": "2.0.8",
+    "insightface": "0.7.3",
+    "numpy": "2.5.1",
+    "onnx": "1.22.0",
+    "onnxruntime": "1.19.2",
+    "opencv-python": null,
+    "opencv-python-headless": "5.0.0.93",
+    "pillow": "12.2.0",
+    "pytest": "9.1.1",
+    "scikit-image": "0.26.0",
+    "scikit-learn": "1.9.0",
+    "scipy": "1.18.0"
+  },
+  "purpose": "Deterministic ArcFace face-embedding identity subgate replacing the unstable VLM face-to-face identity verdict",
+  "python": "3.12.10",
+  "recognition_head": "w600k_r50 (ArcFace, 512-d L2-normalized)",
+  "schema": "persona_dream.insightface_install_receipt.v1",
+  "venv": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/.venv"
+}
