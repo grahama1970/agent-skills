@@ -297,11 +297,10 @@ class CaseExecutor:
                 expected=managed_lineage,
             )
         except ValueError as error:
-            if str(error).startswith(
-                "managed_listener_recovery_partial_chain"
-            ):
-                # An armed-but-unfinished chain is an abandoned capture
-                # (timeout/crash mid-turn), not a recoverable receipt.
+            if str(error).startswith("managed_listener_recovery_"):
+                # Recovery only runs for turns without a stored receipt, so
+                # any anomaly here (partial chain, conflicting abandoned
+                # arms) is capture debris, not a recoverable receipt.
                 return None
             raise
         if chain is None:
