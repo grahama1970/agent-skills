@@ -2290,7 +2290,41 @@ def _run_identity_continuity_review(
         blocking_findings.append("required identity not visibly verified: " + ",".join(missing_visible))
     if parsed.get("verdict") != "PASS" and not blocking_findings:
         blocking_findings.append(f"reviewer verdict was {parsed.get('verdict') or 'missing'}")
-    status = "PASS" if not blocking_findings and parsed.get("verdict") == "PASS" else "FAIL"
+    full_frame_status = "PASS" if not blocking_findings and parsed.get("verdict") == "PASS" else "FAIL"
+
+    # MANDATORY face-crop identity subgate. Full-frame review AND the face-crop
+    # subgate must both PASS for an identity PASS; the subgate is purely additive
+    # (it can only downgrade a full-frame PASS to FAIL, never relax the gate). It
+    # is only worth the extra live calls when the full-frame gate already passed;
+    # if the frame already FAILed at full frame, the full-frame gate fired.
+    subgate: dict[str, Any] = {
+        "status": "SKIPPED",
+        "reason": "full-frame review already FAILED; face-crop subgate not required",
+        "blocking_findings": [],
+    }
+    if full_frame_status == "PASS":
+        subgate = _run_face_crop_subgate(
+            frame_path=frame_path,
+            references=references,
+            required_entities=required_entities,
+            model=str(identity_review_policy.get("model")),
+            receipts_dir=receipts_dir,
+            panel_id=panel_id,
+            frame_key=frame_key,
+        )
+        if subgate.get("status") != "PASS":
+            blocking_findings.extend(
+                b for b in (subgate.get("blocking_findings") or []) if isinstance(b, str)
+            )
+
+    status = "PASS" if not blocking_findings and full_frame_status == "PASS" else "FAIL"
+    gate_fired = (
+        "none"
+        if status == "PASS"
+        else "full_frame"
+        if full_frame_status == "FAIL"
+        else "face_crop_subgate"
+    )
     receipt = _identity_review_receipt(
         panel=panel,
         frame_key=frame_key,
@@ -2303,9 +2337,61 @@ def _run_identity_continuity_review(
         model=str(identity_review_policy.get("model")),
         model_policy=identity_review_policy,
     )
+    receipt["full_frame_status"] = full_frame_status
+    receipt["face_crop_subgate"] = subgate
+    receipt["gate_fired"] = gate_fired
     receipt["receipt_path"] = str(receipt_path)
     _write_json(receipt_path, receipt)
     return receipt
+
+
+def _load_face_crop_subgate_module():
+    """Load the face-crop subgate helper by path (scripts dir may be off sys.path)."""
+    import importlib.util
+
+    path = Path(__file__).resolve().parent / "identity_face_crop_subgate.py"
+    spec = importlib.util.spec_from_file_location("identity_face_crop_subgate", path)
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def _run_face_crop_subgate(
+    *,
+    frame_path: Path,
+    references: Mapping[str, Path],
+    required_entities: list[str],
+    model: str,
+    receipts_dir: Path,
+    panel_id: str,
+    frame_key: str,
+) -> dict[str, Any]:
+    """Run the mandatory face-crop identity subgate; fail closed on any error."""
+    work_dir = receipts_dir / f"{panel_id}_{frame_key}_face_crops"
+    try:
+        subgate_mod = _load_face_crop_subgate_module()
+        result = subgate_mod.run_face_crop_subgate(
+            frame_path=frame_path,
+            references=dict(references),
+            required_entities=list(required_entities),
+            model=model,
+            post_fn=_post_scillm_json,
+            work_dir=work_dir,
+        )
+        return result
+    except Exception as exc:  # fail closed — never let a subgate error become a silent PASS
+        return {
+            "schema": "persona_dream.identity_face_crop_subgate.v1",
+            "status": "FAIL",
+            "blocking_findings": [f"FAIL_FACE_CROP_IDENTITY_MISMATCH: subgate execution error: {exc}"],
+            "model": model,
+            "reviewer_source": f"scillm:{model}:face_crop",
+            "frame_path": str(frame_path),
+            "entity_results": [],
+            "mocked": False,
+            "live": True,
+        }
 
 
 def _identity_reference_paths(panel: Mapping[str, Any], required_entities: list[str]) -> dict[str, Path]:
