@@ -10,19 +10,25 @@ export const BATTLE_ACTIVE_RUNNER_SPRITE_ID: BattleRunnerSpriteId = "plague_nurg
 export const BATTLE_RUNNER_FLOOR_SPRITE_ID: BattleRunnerSpriteId = BATTLE_ACTIVE_RUNNER_SPRITE_ID;
 
 /**
- * Enabled runner atlases. Every id here passes deterministic `/sprite-atlas`
- * validation against profile `battle-pixijs-runtime-64-v1` (png dimensions, RGBA
- * transparency, corner alpha, all 14 animation rows fully occupied, no unused-cell
- * bleed, no grid scars, no clipped required frames, manifest animation arrays +
- * frame rectangles). Do NOT add an id here until its atlas PASSES that gate.
+ * Enabled runner atlases. An id may appear here ONLY after passing BOTH acceptance
+ * gates of the sprite creator↔reviewer loop:
+ *   1. deterministic `/sprite-atlas` validation (png dimensions, RGBA transparency,
+ *      corner alpha, all 14 animation rows occupied, no bleed/scars/clipped frames);
+ *   2. the independent sprite-reviewer VISUAL acceptance (on-theme, coherent identity
+ *      across states, readable silhouette, mutually distinguishable at lane scale).
+ *
+ * Reviewer verdicts (creator↔reviewer loop, this branch):
+ *   ACCEPT: plague_nurgling, crimson_chainsaw_demon, typhus, slug_demon.
+ *   REJECT: crimson_hornbreaker — garbled (off-character mutate frame, stray-orb death,
+ *           detached fragments); not shipped.
+ *   REVISE: skull_horn — fragmented mutate/blocked states + concept-redundant; not shipped.
+ * Do NOT re-add a rejected/revise id without a fresh reviewer ACCEPT.
  */
 export const ENABLED_RUNNER_SPRITE_IDS: BattleRunnerSpriteId[] = [
 	"plague_nurgling",
 	"crimson_chainsaw_demon",
-	"crimson_hornbreaker",
 	"typhus",
 	"slug_demon",
-	"skull_horn",
 ];
 
 /** Resolve fixture theme metadata without granting it runtime character selection. */
@@ -53,15 +59,19 @@ function selectionRole(lane: Lane): SelectionRole {
  * runner-up, G2=failure_guided_crossover), so the four specimens resolve to four
  * distinct, `/sprite-atlas`-validated atlases:
  *
- *   red  gen0 none      -> plague_nurgling        (G0 seed — mandatory floor sprite)
+ *   red  gen0 *         -> plague_nurgling        (G0 seed — mandatory floor sprite)
  *   red  gen1 selected  -> crimson_chainsaw_demon (selected G1)
- *   red  gen1 runner-up -> crimson_hornbreaker    (runner-up G1 — distinct from selected)
+ *   red  gen1 runner-up -> slug_demon             (runner-up G1 — distinct silhouette)
  *   red  gen2 *         -> typhus                 (G2 descendant)
  *   blue gen1 *         -> slug_demon             (blue lineage gen1)
- *   blue gen2 *         -> skull_horn             (blue lineage gen2)
+ *   blue gen2 *         -> plague_nurgling        (blue lineage gen2)
  *
- * The render fixture encodes the four specimens as team(red/blue) x generation(1/2)
- * with no selection flag; the table above keeps those four distinct too.
+ * All six assignments draw only from the reviewer-ACCEPTED set. The runner-up G1 was
+ * re-mapped off the rejected crimson_hornbreaker onto slug_demon, which also resolves
+ * the reviewer's distinguishability block: the four live specimens are now green-blob
+ * (nurgling) / crimson-humanoid (chainsaw_demon) / low-reptilian (slug_demon) /
+ * green-hulk (typhus) — four distinct silhouettes at lane scale. The render fixture
+ * (team x generation, no selection flag) likewise resolves to four distinct sprites.
  */
 const LANE_SPRITE_TABLE: Record<string, BattleRunnerSpriteId> = {
 	"red:0:none": "plague_nurgling",
@@ -69,16 +79,16 @@ const LANE_SPRITE_TABLE: Record<string, BattleRunnerSpriteId> = {
 	"red:0:runner_up": "plague_nurgling",
 	"red:1:selected": "crimson_chainsaw_demon",
 	"red:1:none": "crimson_chainsaw_demon",
-	"red:1:runner_up": "crimson_hornbreaker",
+	"red:1:runner_up": "slug_demon",
 	"red:2:none": "typhus",
 	"red:2:selected": "typhus",
 	"red:2:runner_up": "typhus",
 	"blue:1:none": "slug_demon",
 	"blue:1:selected": "slug_demon",
 	"blue:1:runner_up": "slug_demon",
-	"blue:2:none": "skull_horn",
-	"blue:2:selected": "skull_horn",
-	"blue:2:runner_up": "skull_horn",
+	"blue:2:none": "plague_nurgling",
+	"blue:2:selected": "plague_nurgling",
+	"blue:2:runner_up": "plague_nurgling",
 };
 
 /**

@@ -108,10 +108,19 @@ export async function ensureBattlePixiAssets(): Promise<void> {
 			const response = await fetch(BATTLE_RUNNER_SPRITE_MANIFEST_URL);
 			if (!response.ok) throw new Error(`Failed to load battle runner sprite manifest: ${response.status}`);
 			manifest = (await response.json()) as BattleRunnerSpriteManifest;
-			await Assets.init({
-				basePath: BATTLE_RUNNER_SPRITE_BASE_URL,
-				manifest: battlePixiAssetsManifest(manifest),
-			});
+			try {
+				await Assets.init({
+					basePath: BATTLE_RUNNER_SPRITE_BASE_URL,
+					manifest: battlePixiAssetsManifest(manifest),
+				});
+			} catch (error) {
+				// PixiJS `Assets` is a global singleton that may only be init'd once.
+				// Under Vite HMR this module's state resets while pixi's global does not,
+				// so a re-entry throws "already initialized"; the bundles/aliases from the
+				// first init still resolve, so treat that case as success.
+				const message = error instanceof Error ? error.message : String(error);
+				if (!/already\s+(been\s+)?initialized/i.test(message)) throw error;
+			}
 		})().catch((error) => {
 			assetsInit = null;
 			throw error;
