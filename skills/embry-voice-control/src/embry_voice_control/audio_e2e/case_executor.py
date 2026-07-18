@@ -290,11 +290,20 @@ class CaseExecutor:
                 "source_authority_id",
             )
         }
-        chain = find_existing_managed_turn(
-            journal_db,
-            session_id=case["session_id"],
-            expected=managed_lineage,
-        )
+        try:
+            chain = find_existing_managed_turn(
+                journal_db,
+                session_id=case["session_id"],
+                expected=managed_lineage,
+            )
+        except ValueError as error:
+            if str(error).startswith(
+                "managed_listener_recovery_partial_chain"
+            ):
+                # An armed-but-unfinished chain is an abandoned capture
+                # (timeout/crash mid-turn), not a recoverable receipt.
+                return None
+            raise
         if chain is None:
             return None
         armed = chain["listener.turn_armed"]
