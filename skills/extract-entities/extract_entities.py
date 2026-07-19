@@ -31,8 +31,8 @@ app = typer.Typer(
 )
 console = Console()
 
-_DEFAULT_SPARTA_SOURCE_WORKBOOK = Path(
-    "${HOME}/workspace/experiments/sparta/data/source/SPARTA-Data.xlsx"
+_DEFAULT_SPARTA_SOURCE_WORKBOOK = (
+    Path.home() / "workspace/experiments/sparta/data/source/SPARTA-Data.xlsx"
 )
 
 _SPARTA_CONTROL_RETURN_FIELDS = [
@@ -90,11 +90,11 @@ def _make_memory_client():
 
     memory_base_url = os.getenv("MEMORY_API_BASE", "").strip()
     if memory_base_url:
-        return httpx.Client(base_url=memory_base_url, timeout=15)
+        return httpx.Client(base_url=memory_base_url, timeout=httpx.Timeout(60.0, connect=10.0))
 
     socket_path = os.getenv("MEMORY_SOCKET", "/run/user/1000/embry/memory.sock")
     transport = httpx.HTTPTransport(uds=socket_path)
-    return httpx.Client(transport=transport, base_url="http://localhost", timeout=15)
+    return httpx.Client(transport=transport, base_url="http://localhost", timeout=httpx.Timeout(60.0, connect=10.0))
 
 
 def _split_tokens(text: str, delimiter: str) -> list[str]:
