@@ -1,0 +1,330 @@
+{
+  "accepted_interpretations": [
+    {
+      "alternative_explanation": "The rendered material may simply summarize an explicit planning note about what Embry could say to Brandon, without implying a deeper intimacy motive.",
+      "cites_renderer_review": false,
+      "confidence": 0.67,
+      "emotional_intensity": 0.62,
+      "favored_explanation": "psychological",
+      "interpretation_id": "interpretation-001",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "reflection_fact_embry_age23_current_b01_memory_045",
+        "reflection_fact_embry_age23_current_b01_memory_048"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_045",
+        "embry_age23_current_b01_memory_048"
+      ],
+      "statement": "Embry may want increased intimacy with Brandon, but only through a carefully bounded truth that communicates her moral conflict without exposing James's private information.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "brandon",
+      "tom_state_type": "desire",
+      "uncertainty": "It is unresolved whether Embry will actually tell Brandon the bounded truth or continue postponing disclosure."
+    },
+    {
+      "alternative_explanation": "The scene may only reflect a continuity constraint that James's secret cannot be exposed, rather than Embry experiencing fear about disclosure.",
+      "cites_renderer_review": false,
+      "confidence": 0.71,
+      "emotional_intensity": 0.74,
+      "favored_explanation": "psychological",
+      "interpretation_id": "interpretation-002",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "reflection_fact_embry_age23_current_b01_memory_045",
+        "reflection_fact_embry_age23_current_b01_memory_048"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_045",
+        "embry_age23_current_b01_memory_048"
+      ],
+      "statement": "Embry may fear that honesty about the Yale fallout could harm James or violate his privacy, which makes her frame disclosure as moral conflict rather than factual revelation.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "james",
+      "tom_state_type": "fear",
+      "uncertainty": "The exact nature of James's secret and the specific harm Embry anticipates remain unspecified."
+    },
+    {
+      "alternative_explanation": "The unsent Kai draft and blank decision branch may simply indicate an unfinished plot state or deferred authorial choice rather than Embry's internal uncertainty.",
+      "cites_renderer_review": false,
+      "confidence": 0.58,
+      "emotional_intensity": 0.49,
+      "favored_explanation": "psychological",
+      "interpretation_id": "interpretation-003",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "reflection_fact_embry_age23_current_b01_memory_048"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_048"
+      ],
+      "statement": "Embry may remain uncertain about whether contact with Kai belongs in her recovery path, since the draft to Kai exists but remains unsent while her final decision-tree branch is left blank.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "kai",
+      "tom_state_type": "uncertainty",
+      "uncertainty": "The observations do not show whether Kai is a desired contact, a risk, or merely one unresolved option among several."
+    },
+    {
+      "alternative_explanation": "The emphasis on dual confirmation and handoffs may simply be standard SPARTA procedure in high-consequence contexts, not a sign of emotional self-protection.",
+      "cites_renderer_review": false,
+      "confidence": 0.64,
+      "emotional_intensity": 0.56,
+      "favored_explanation": "psychological",
+      "interpretation_id": "interpretation-004",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "reflection_fact_embry_age23_current_b01_memory_020",
+        "reflection_fact_embry_age23_current_b01_memory_048"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_020",
+        "embry_age23_current_b01_memory_048"
+      ],
+      "statement": "Embry appears to treat verification, written handoffs, and reversible decisions as emotional safety structures as well as operational safeguards, especially when belonging feels safer when translated into mission need.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "sparta",
+      "tom_state_type": "stance",
+      "uncertainty": "It is unclear where ordinary SPARTA risk control ends and Embry's personal ritualized need for control begins."
+    }
+  ],
+  "blockers": [],
+  "candidates": [
+    {
+      "alternative_explanation": "The rendered material may simply summarize an explicit planning note about what Embry could say to Brandon, without implying a deeper intimacy motive.",
+      "cites_renderer_review": false,
+      "confidence": 0.67,
+      "emotional_intensity": 0.62,
+      "favored_explanation": "psychological",
+      "interpretation_id": "interpretation-001",
+      "observation_refs": [
+        "reflection_fact_embry_age23_current_b01_memory_045",
+        "reflection_fact_embry_age23_current_b01_memory_048"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_045",
+        "embry_age23_current_b01_memory_048"
+      ],
+      "statement": "Embry may want increased intimacy with Brandon, but only through a carefully bounded truth that communicates her moral conflict without exposing James's private information.",
+      "subject": "embry",
+      "target": "brandon",
+      "tom_state_type": "desire",
+      "uncertainty": "It is unresolved whether Embry will actually tell Brandon the bounded truth or continue postponing disclosure."
+    },
+    {
+      "alternative_explanation": "The scene may only reflect a continuity constraint that James's secret cannot be exposed, rather than Embry experiencing fear about disclosure.",
+      "cites_renderer_review": false,
+      "confidence": 0.71,
+      "emotional_intensity": 0.74,
+      "favored_explanation": "psychological",
+      "interpretation_id": "interpretation-002",
+      "observation_refs": [
+        "reflection_fact_embry_age23_current_b01_memory_045",
+        "reflection_fact_embry_age23_current_b01_memory_048"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_045",
+        "embry_age23_current_b01_memory_048"
+      ],
+      "statement": "Embry may fear that honesty about the Yale fallout could harm James or violate his privacy, which makes her frame disclosure as moral conflict rather than factual revelation.",
+      "subject": "embry",
+      "target": "james",
+      "tom_state_type": "fear",
+      "uncertainty": "The exact nature of James's secret and the specific harm Embry anticipates remain unspecified."
+    },
+    {
+      "alternative_explanation": "The unsent Kai draft and blank decision branch may simply indicate an unfinished plot state or deferred authorial choice rather than Embry's internal uncertainty.",
+      "cites_renderer_review": false,
+      "confidence": 0.58,
+      "emotional_intensity": 0.49,
+      "favored_explanation": "psychological",
+      "interpretation_id": "interpretation-003",
+      "observation_refs": [
+        "reflection_fact_embry_age23_current_b01_memory_048"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_048"
+      ],
+      "statement": "Embry may remain uncertain about whether contact with Kai belongs in her recovery path, since the draft to Kai exists but remains unsent while her final decision-tree branch is left blank.",
+      "subject": "embry",
+      "target": "kai",
+      "tom_state_type": "uncertainty",
+      "uncertainty": "The observations do not show whether Kai is a desired contact, a risk, or merely one unresolved option among several."
+    },
+    {
+      "alternative_explanation": "The emphasis on dual confirmation and handoffs may simply be standard SPARTA procedure in high-consequence contexts, not a sign of emotional self-protection.",
+      "cites_renderer_review": false,
+      "confidence": 0.64,
+      "emotional_intensity": 0.56,
+      "favored_explanation": "psychological",
+      "interpretation_id": "interpretation-004",
+      "observation_refs": [
+        "reflection_fact_embry_age23_current_b01_memory_020",
+        "reflection_fact_embry_age23_current_b01_memory_048"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_020",
+        "embry_age23_current_b01_memory_048"
+      ],
+      "statement": "Embry appears to treat verification, written handoffs, and reversible decisions as emotional safety structures as well as operational safeguards, especially when belonging feels safer when translated into mission need.",
+      "subject": "embry",
+      "target": "sparta",
+      "tom_state_type": "stance",
+      "uncertainty": "It is unclear where ordinary SPARTA risk control ends and Embry's personal ritualized need for control begins."
+    }
+  ],
+  "dream_id": "pilot_r1_c",
+  "generated_at": "2026-07-19T21:11:37.586342+00:00",
+  "honesty_rule": {
+    "identity_drift_dual_explanation_present": false,
+    "renderer_defect_favored_on_drift": false
+  },
+  "intended_dream": {},
+  "live": true,
+  "llm": {
+    "caller_skill": "persona-dream",
+    "candidate_count": 4,
+    "direct_scillm_call": false,
+    "model": "gpt-5.5",
+    "provider": "scillm",
+    "route": "tau:persona-dream-text-reasoning",
+    "tau_routing": {
+      "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+      "http_status": 200,
+      "live_call_performed": true,
+      "model": "gpt-5.5",
+      "output_contract_sha256": "sha256:97bbf92bb8eb1d13cb7a43a0975b2c62885880a6818689f7ec5dedd6e532c140",
+      "prompt_sha256": "sha256:63af29b7e598be057bb673acb1281a05f385d493919e6b7a49b884aff2aa2ec9",
+      "route": "tau:persona-dream-text-reasoning",
+      "status": "PASS",
+      "tau_receipt_schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1"
+    }
+  },
+  "mocked": false,
+  "observation_index": [
+    {
+      "observation_id": "reflection_fact_embry_age23_current_b01_memory_045",
+      "observation_type": "transcript_fact",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Transcript None: Embry sets a goal of telling Brandon one bounded truth that is personally meaningful but does not expose James's secret.\nShe considers saying that the Yale fallout involved a promise she still does not know how to keep without harming someone. The statement would reveal moral conflict rather than factual content.\npeople: Brandon, Embry Lawson, James, Kai; places: Yale; objects: POINT/PATH/PEOPLE checklist; organizations: Yale; concepts: privacy\nSetting: Yale. Situation: Embry sets a goal of telling Brandon one bounded truth that is personally meaningful but does not expose James's secret. Trig"
+    },
+    {
+      "observation_id": "reflection_fact_embry_age23_current_b01_memory_048",
+      "observation_type": "transcript_fact",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Transcript None: At the current edge of the timeline, Embry keeps the SPARTA succession file, the muted SN15 still, and the unsent James and Kai drafts, then leaves the final branch of her personal decision tree blank.\nShe has learned to state boundaries, correct errors, and design recovery paths, but she has not decided what honesty requires now. A bounded truth to Brandon is prepared but not guaranteed; contact with James or Kai remains possible but unsent; belonging still feels safest when translated into mission need.\npeople: Brandon, Embry Lawson, James, Kai; objects: POINT/PATH/PEOPLE checklist; organiza"
+    },
+    {
+      "observation_id": "reflection_fact_embry_age23_current_b01_memory_020",
+      "observation_type": "transcript_fact",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Transcript None: Embry favors dual confirmation, written handoffs, and reversible decisions whenever SPARTA permits them.\nShe explains the preference as ordinary risk control, but her threshold for 'ordinary' is stricter than most teammates'. Brandon supports the rule in high-consequence moments and challenges it when it becomes ritual.\npeople: Brandon, Embry Lawson; organizations: SPARTA; concepts: Fragility, Precision, trust, verification\nSetting: age band 23-current. Situation: Embry favors dual confirmation, written handoffs, and reversible decisions whenever SPARTA permits them. Trigger: Conflicting recol"
+    }
+  ],
+  "observation_packet_path": "reports/pilot_c_vs_f/inputs/r1/reflection_packet.json",
+  "observation_packet_sha256": "sha256:57e43daaa0ccb4619316194972fadb31bfe5598901422019cf77523fe5248cf9",
+  "persona_id": "embry",
+  "provider_live": true,
+  "recall_receipts": [
+    {
+      "collections": [
+        "persona_memory"
+      ],
+      "confidence": 0.924,
+      "found": true,
+      "question": "What memories explain why Embry trusts Kai about surf safety boundaries and hazards at the lineup?",
+      "residue_source_ids_confirmed": [],
+      "returned_keys": [
+        "persona_dream_phase_03_crew_contract_embry_kai_kahaluu_2024",
+        "persona_dream_phase_06_script_contract_embry_kai_kahaluu_2024",
+        "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024",
+        "embry-kai-sick-day_02_story_story_contract_843592d16ce27a53",
+        "embry_age19_23_b01_memory_010",
+        "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698",
+        "dream_dream_successor_943b01ecd9a3",
+        "embry_age19_23_b01_memory_014"
+      ],
+      "tags": [
+        "persona:embry"
+      ]
+    },
+    {
+      "collections": [
+        "persona_memory"
+      ],
+      "confidence": 0.91,
+      "found": true,
+      "question": "What memory shows Kai giving Embry operational surf knowledge while respecting her decisions?",
+      "residue_source_ids_confirmed": [],
+      "returned_keys": [
+        "persona_dream_phase_06_script_contract_embry_kai_kahaluu_2024",
+        "persona_dream_phase_03_crew_contract_embry_kai_kahaluu_2024",
+        "embry_age19_23_b01_memory_007",
+        "embry-kai-sick-day_02_story_story_contract_843592d16ce27a53",
+        "embry_age19_23_b01_memory_012",
+        "embry_age15_19_b01_memory_012",
+        "embry_age15_19_b03_memory_014",
+        "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024"
+      ],
+      "tags": [
+        "persona:embry"
+      ]
+    },
+    {
+      "collections": [
+        "persona_memory"
+      ],
+      "confidence": 0.898,
+      "found": true,
+      "question": "Why does Embry pause before crossing into surf traffic near Kai?",
+      "residue_source_ids_confirmed": [],
+      "returned_keys": [
+        "embry_age15_19_b01_memory_008",
+        "embry_age19_23_b01_memory_012",
+        "embry_age19_23_b01_memory_014",
+        "embry_age15_19_b01_memory_012",
+        "embry_age15_19_b03_memory_041",
+        "persona_dream_phase_06_script_contract_embry_kai_kahaluu_2024",
+        "embry_age15_19_b03_memory_044",
+        "embry_age15_19_b03_memory_040"
+      ],
+      "tags": [
+        "persona:embry"
+      ]
+    }
+  ],
+  "rejected_interpretations": [],
+  "revision_id": "pilot_c_vs_f",
+  "run_id": "pilot-c-vs-f",
+  "schema": "persona_dream.dream_self_interpretation.v1",
+  "source_memory_bindings": [
+    {
+      "collection": "persona_memory",
+      "memory_text_sha256": "sha256:797c81a6ac29cef733af75ec0d0e9aafa480d2fda762672aa86faf422e730c0b",
+      "persona_id": "embry",
+      "recall_confirmed": false,
+      "source_id": "embry_age23_current_b01_memory_045"
+    },
+    {
+      "collection": "persona_memory",
+      "memory_text_sha256": "sha256:b144673c51ecfd836f91fdc3effa99920336cbbf54e1bf9dec2771f1547ebe6f",
+      "persona_id": "embry",
+      "recall_confirmed": false,
+      "source_id": "embry_age23_current_b01_memory_048"
+    },
+    {
+      "collection": "persona_memory",
+      "memory_text_sha256": "sha256:625da9fd346a9f2cfa6816ff3e0ec9b8e843454ef9ab164dac573a4f7a663b92",
+      "persona_id": "embry",
+      "recall_confirmed": false,
+      "source_id": "embry_age23_current_b01_memory_020"
+    }
+  ],
+  "status": "PASS_SELF_INTERPRETATION"
+}

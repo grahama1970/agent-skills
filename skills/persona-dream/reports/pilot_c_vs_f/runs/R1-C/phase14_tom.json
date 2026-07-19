@@ -1,0 +1,140 @@
+{
+  "accepted_count": 4,
+  "accepted_tom_candidates": [
+    {
+      "candidate_id": "tom-001",
+      "confidence": 0.67,
+      "emotional_intensity": 0.62,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-001",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_045",
+        "embry_age23_current_b01_memory_048"
+      ],
+      "statement": "Embry may want increased intimacy with Brandon through a carefully bounded truth that conveys her moral conflict without exposing James's private information.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "brandon",
+      "tom_state_type": "desire",
+      "watch_observation_refs": [
+        "reflection_fact_embry_age23_current_b01_memory_045",
+        "reflection_fact_embry_age23_current_b01_memory_048"
+      ]
+    },
+    {
+      "candidate_id": "tom-002",
+      "confidence": 0.71,
+      "emotional_intensity": 0.74,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-002",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_045",
+        "embry_age23_current_b01_memory_048"
+      ],
+      "statement": "Embry may fear that being honest about the Yale fallout could harm James or violate his privacy, leading her to frame disclosure as moral conflict rather than factual revelation.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "james",
+      "tom_state_type": "fear",
+      "watch_observation_refs": [
+        "reflection_fact_embry_age23_current_b01_memory_045",
+        "reflection_fact_embry_age23_current_b01_memory_048"
+      ]
+    },
+    {
+      "candidate_id": "tom-003",
+      "confidence": 0.58,
+      "emotional_intensity": 0.49,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-003",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_048"
+      ],
+      "statement": "Embry may remain uncertain about whether contact with Kai belongs in her recovery path, given that the draft to Kai remains unsent and her final decision-tree branch is left blank.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "kai",
+      "tom_state_type": "uncertainty",
+      "watch_observation_refs": [
+        "reflection_fact_embry_age23_current_b01_memory_048"
+      ]
+    },
+    {
+      "candidate_id": "tom-004",
+      "confidence": 0.64,
+      "emotional_intensity": 0.56,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-004",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_020",
+        "embry_age23_current_b01_memory_048"
+      ],
+      "statement": "Embry appears to treat verification, written handoffs, and reversible decisions within Sparta as emotional safety structures as well as operational safeguards.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "sparta",
+      "tom_state_type": "stance",
+      "watch_observation_refs": [
+        "reflection_fact_embry_age23_current_b01_memory_020",
+        "reflection_fact_embry_age23_current_b01_memory_048"
+      ]
+    }
+  ],
+  "candidate_receipts": [
+    {
+      "candidate_id": "tom-001",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-001",
+      "reasons": []
+    },
+    {
+      "candidate_id": "tom-002",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-002",
+      "reasons": []
+    },
+    {
+      "candidate_id": "tom-003",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-003",
+      "reasons": []
+    },
+    {
+      "candidate_id": "tom-004",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-004",
+      "reasons": []
+    }
+  ],
+  "candidate_source": "llm_via_tau",
+  "canonical_memory_write_allowed": false,
+  "dream_id": "pilot_r1_c",
+  "generated_at": "2026-07-19T21:11:50.637713+00:00",
+  "had_rejections": false,
+  "interpretation_sha256": "sha256:73dac6f305964bb5aa37c2bf910aee469fa6ed7054d92f529c9be7a5f84e5d9d",
+  "live": true,
+  "live_route_attempted": true,
+  "live_route_failed": false,
+  "mocked": false,
+  "proposed_candidate_count": 4,
+  "rejected_count": 0,
+  "revision_id": "pilot_c_vs_f",
+  "run_id": "pilot-c-vs-f",
+  "schema": "persona_dream.tom_validation_receipt.v1",
+  "status": "PASS_TOM_VALIDATION_LIVE",
+  "tau_routing": {
+    "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+    "http_status": 200,
+    "live_call_performed": true,
+    "model": "gpt-5.5",
+    "output_contract_sha256": "sha256:cdca7d6845ba5905353704db083e49ec40ce00451e5a60e2004b434b0a3fc5f6",
+    "prompt_sha256": "sha256:6ab00a0c9e832450b41a68fc864efac16af033d320bd4e67a2cda3328fc12604",
+    "route": "tau:persona-dream-text-reasoning",
+    "status": "PASS",
+    "tau_receipt_schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1"
+  }
+}

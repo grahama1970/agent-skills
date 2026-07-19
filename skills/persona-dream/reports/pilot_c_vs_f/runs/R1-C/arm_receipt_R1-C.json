@@ -1,0 +1,32 @@
+{
+  "accepted_interpretations": 4,
+  "accepted_tom_candidates": 4,
+  "activation": {
+    "commit_id": "commit_f9abad6448336c255765d43bcc1e1413fdf837e0baf5cc3f8705851165531598",
+    "member_count": 22,
+    "outcome": "activated",
+    "post_activation_default_list_visible": true,
+    "reread_verified": true
+  },
+  "arm": "C",
+  "blinding_receipt": "reports/pilot_c_vs_f/runs/R1-C/blinding_R1-C.json",
+  "commit_manifest_key": "commit_f9abad6448336c255765d43bcc1e1413fdf837e0baf5cc3f8705851165531598",
+  "created_at": "2026-07-19T21:11:55Z",
+  "dream_id": "pilot_r1_c",
+  "evidence_class": "synthetic_reflection",
+  "model_call_note": {
+    "approx_tau_calls": 5,
+    "detail": "per-call tau receipts embedded in phase13/14 artifacts"
+  },
+  "phase13_status": "PASS_SELF_INTERPRETATION",
+  "phase14_status": "PASS_TOM_VALIDATION_LIVE",
+  "produced_record_key": "dream_pilot_r1_c",
+  "root_ids": [
+    "embry_age23_current_b01_memory_020",
+    "embry_age23_current_b01_memory_045",
+    "embry_age23_current_b01_memory_048"
+  ],
+  "run": "R1-C",
+  "schema": "persona_dream.pilot_arm_receipt.v1",
+  "set": "r1"
+}
