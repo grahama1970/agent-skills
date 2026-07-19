@@ -4,7 +4,7 @@
   "panel_id": "panel_001",
   "status": "BLOCKED",
   "image_path": "artifacts/panel_001_reference.png",
-  "sha256": "sha256:4e7dfb8fcb858fd282b927980324fe7bcfd32aa35254dd9af0530889b5317c31",
+  "sha256": "sha256:4b1b29e6540f6cb654569f71f4a6206125a0d62258021be3cc3f0fff0ae4ddb6",
   "producer": {
     "kind": "subagent",
     "name": "panel-creator",

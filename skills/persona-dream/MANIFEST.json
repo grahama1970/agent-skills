@@ -123,9 +123,9 @@
       "sha256": "3604e5f6deb969fe83280ed5f460147159e7e02bb0a94005c645b2d1e5710d76"
     },
     {
-      "bytes": 4704,
+      "bytes": 4108,
       "path": "schemas/kling_scene_packet.schema.json",
-      "sha256": "61a5b6fdb5bfc6a400d68f8dfcffeba66dc19d1caabae59c219d54f81f752802"
+      "sha256": "bc4a9654e5797007dd3a349d90df929cb4bf33273c0a3a690ca404434773ac98"
     },
     {
       "bytes": 2900,

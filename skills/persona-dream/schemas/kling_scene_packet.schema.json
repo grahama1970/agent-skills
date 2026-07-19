@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://persona-dream/schemas/kling_scene_packet.schema.json",
+  "title": "Kling one-scene dry-run scene packet",
+  "description": "Structural contract for a generated-unreviewed one-scene Kling scene packet (kling.scene_packet.v1). This is the dry-run review-packet lane; live-submission value gates (schema id, paid_call_authorized=false, live_call_block_reason presence) are enforced in the Python validators (validate_run_root_pipeline._validate_kling_scene_packet, validate_pipeline_spine) and are intentionally not const-pinned here so the BLOCKED branches remain reachable.",
+  "type": "object",
+  "required": [
+    "schema",
+    "run_id",
+    "status",
+    "provider",
+    "model",
+    "mode",
+    "aspect_ratio",
+    "duration_s",
+    "paid_call_authorized",
+    "cost_estimate",
+    "storage_plan",
+    "image_list",
+    "multi_prompt",
+    "negative_prompt",
+    "provider_dry_run_fields",
+    "live_call_block_reason",
+    "work_backwards_chain"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "description": "Contract id; the Python validators require the exact value kling.scene_packet.v1."
+    },
+    "run_id": { "type": "string", "minLength": 1 },
+    "status": { "type": "string", "minLength": 1 },
+    "provider": { "type": "string", "minLength": 1 },
+    "model": { "type": "string", "minLength": 1 },
+    "mode": { "type": "string", "minLength": 1 },
+    "aspect_ratio": { "type": "string", "minLength": 1 },
+    "duration_s": { "type": "number", "exclusiveMinimum": 0 },
+    "paid_call_authorized": {
+      "type": "boolean",
+      "description": "Dry-run packets must keep this false; the Python validator blocks when it is not false."
+    },
+    "cost_estimate": { "type": "object" },
+    "callback_url": { "type": ["string", "null"] },
+    "polling_plan": { "type": "string" },
+    "storage_plan": { "type": "object" },
+    "retry_policy": { "type": "string" },
+    "audio_strategy": { "type": "string" },
+    "image_list": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["token", "path", "role", "status", "hash"],
+        "properties": {
+          "token": { "type": "string", "minLength": 1 },
+          "path": { "type": "string", "minLength": 1 },
+          "role": { "type": "string", "minLength": 1 },
+          "status": { "type": "string", "minLength": 1 },
+          "hash": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" }
+        }
+      }
+    },
+    "voice_list": { "type": "array" },
+    "voice_examples": { "type": "array" },
+    "multi_prompt": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["index", "duration_s", "prompt", "provider_text"],
+        "properties": {
+          "index": { "type": "integer", "minimum": 0 },
+          "duration_s": { "type": "number", "exclusiveMinimum": 0 },
+          "prompt": { "type": "string", "minLength": 1 },
+          "provider_text": { "type": "string", "minLength": 1 },
+          "dialogue": { "type": "array" },
+          "cinematography": { "type": "object" }
+        }
+      }
+    },
+    "negative_prompt": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "provider_dry_run_fields": {
+      "type": "object",
+      "required": ["model", "mode", "aspect_ratio", "multi_prompt"],
+      "properties": {
+        "model": { "type": "string", "minLength": 1 },
+        "mode": { "type": "string", "minLength": 1 },
+        "aspect_ratio": { "type": "string", "minLength": 1 },
+        "image_list": { "type": "array" },
+        "multi_prompt": { "type": "array", "minItems": 1 },
+        "callback_url": { "type": ["string", "null"] }
+      }
+    },
+    "live_call_block_reason": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Human-readable reason the packet is not live-submittable; the Python validator blocks when this is missing or empty."
+    },
+    "work_backwards_chain": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" }
+    }
+  }
+}
