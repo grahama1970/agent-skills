@@ -49,18 +49,15 @@ def _run(*, output_root: Path, ask_id: str) -> int:
                 "id": "broken_step",
                 "type": "skill.run",
                 "input": {
-                    "skill": "create-report",
+                    "skill": "code-runner",
                     "args": ["--definitely-not-a-real-flag"],
                 },
             },
             {
                 "id": "final_report",
-                "type": "skill.run",
+                "type": "ask.report",
                 "depends_on": ["broken_step"],
-                "input": {
-                    "skill": "create-report",
-                    "args": ["--help"],
-                },
+                "input": {"title": "Negative Sanity Report"},
             },
         ],
     }

@@ -135,7 +135,29 @@ def missing_dag_fields(input: TauDagCompileInput) -> list[dict[str, Any]]:
                 expects="list[str]",
             )
         )
+    unsupported_routes = unsupported_model_routes(input)
+    if unsupported_routes:
+        missing.append(
+            _question(
+                "model_routes",
+                (
+                    "The current $ask tau-dag front door emits SciLLM-backed local adapter nodes only. "
+                    f"These requested model route(s) need native Tau skill nodes instead: {', '.join(unsupported_routes)}. "
+                    "Should $ask rewrite this as a native Tau skill DAG or should different SciLLM model names be used?"
+                ),
+                expects="route_decision",
+            )
+        )
     return missing
+
+
+def unsupported_model_routes(input: TauDagCompileInput) -> list[str]:
+    unsupported: list[str] = []
+    for model in [*input.solver_models, input.reviewer_model]:
+        lower = model.lower().strip()
+        if lower.startswith(("webgpt", "$webgpt", "chatgpt", "$chatgpt")):
+            unsupported.append(model)
+    return sorted(set(unsupported))
 
 
 def build_interview_packet(
@@ -417,7 +439,6 @@ def probe_scillm_provider_gate(
                             "content": "Reply with the single word ok for an ask Tau DAG provider gate.",
                         }
                     ],
-                    "max_tokens": 8,
                 }
                 model_calls.append(
                     _http_check(
@@ -644,9 +665,6 @@ def _model_policy(model: str, *, base_url: str = DEFAULT_SCILLM_BASE_URL) -> dic
     if lower.startswith("claude"):
         provider = "anthropic"
         auth = "scillm_claude_code_credentials"
-    elif lower.startswith("webgpt"):
-        provider = "webgpt"
-        auth = "surf_webgpt_submit"
     else:
         provider = "openai"
         auth = "scillm_proxy_bearer"
@@ -914,7 +932,6 @@ def _provider_receipt(args: argparse.Namespace, start: dict[str, Any]) -> dict[s
     payload = {
         "model": args.model,
         "messages": [{"role": "user", "content": prompt}],
-        "max_tokens": 512,
     }
     request = urllib.request.Request(
         args.scillm_base_url.rstrip("/") + "/v1/chat/completions",

@@ -265,9 +265,32 @@ else
     FAIL=1
 fi
 
-# Test 11: live /scillm parallel-review E2E (opt-in, non-mocked downstream)
+# Test 11: Tau DAG front-door stress sanity (non-mocked local Tau route, no provider spend)
 echo ""
-echo "11. Live /scillm parallel-review E2E..."
+echo "11. Tau DAG front-door stress sanity..."
+if PYTHONPATH="$SCRIPT_DIR/src" "${PYTHON[@]}" scripts/tau_dag_stress_sanity.py --json >/tmp/ask-tau-dag-stress-sanity.json; then
+    if "${PYTHON[@]}" -c "
+import json
+data = json.load(open('/tmp/ask-tau-dag-stress-sanity.json', encoding='utf-8'))
+assert data.get('ok') is True
+assert data.get('mocked') is False
+assert data.get('live') is True
+assert data.get('provider_live') is False
+print(f'   cases: {len(data.get(\"cases\", []))}')
+"; then
+        echo "   PASS"
+    else
+        echo "   FAIL: Tau DAG stress output malformed"
+        FAIL=1
+    fi
+else
+    echo "   FAIL: Tau DAG stress sanity broken"
+    FAIL=1
+fi
+
+# Test 12: live /scillm parallel-review E2E (opt-in, non-mocked downstream)
+echo ""
+echo "12. Live /scillm parallel-review E2E..."
 if [[ "${ASK_LIVE_SCILLM_E2E:-0}" == "1" ]]; then
     if PYTHONPATH="$SCRIPT_DIR/src" uv run --project "$SCRIPT_DIR" --group dev pytest -q \
         tests/test_parallel_review_live_e2e.py::test_live_parallel_review_scillm_composition \

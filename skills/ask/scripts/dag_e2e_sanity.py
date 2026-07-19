@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Live DAG sanity for /ask with memory fanout and create-report join."""
+"""Live DAG sanity for /ask with memory fanout and deterministic report join."""
 
 from __future__ import annotations
 
@@ -90,27 +90,15 @@ def _run(*, output_root: Path, ask_id: str, include_oracle: bool) -> int:
             "title": "Create evidence-first DAG report",
             "depends_on": report_depends_on,
             "execution": {
-                "call_type": "skill.run",
-                "skill": "create-report",
-                "args": [
-                    "--title",
-                    "Ask DAG E2E Sanity Report",
-                    "--input",
-                    "${dag_context_json}",
-                    "--output",
-                    "${dag_node_output}",
-                    "--persona",
-                    "project agent",
-                    "--primary-object",
-                    "ask DAG JSON execution",
-                ],
+                "call_type": "ask.report",
+                "title": "Ask DAG E2E Sanity Report",
             },
         }
     )
     dag = {
         "exec_graph_version": "scillm.exec.graph.v1",
         "graph_id": "ask-dag-e2e-sanity",
-        "graph_goal": "Prove /ask can run concurrent memory nodes and a sequential create-report join.",
+        "graph_goal": "Prove /ask can run concurrent memory nodes and a sequential deterministic report join.",
         "max_concurrency": 2,
         "nodes": nodes,
     }

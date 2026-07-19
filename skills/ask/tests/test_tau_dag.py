@@ -101,3 +101,23 @@ def test_command_spec_blocks_provider_execution_without_opt_in(tmp_path: Path) -
     assert "scillm" in command_spec["command"]
     assert command_spec["requires_network"] is True
     assert command_spec["timeout_s"] == 900
+    worker_source = Path(bundle["worker_path"]).read_text(encoding="utf-8")
+    assert "max_tokens" not in worker_source
+
+
+def test_webgpt_model_routes_to_interview_until_native_tau_skill_node_exists(tmp_path: Path) -> None:
+    request = infer_compile_input(
+        "ask webgpt to review X after a solver finishes",
+        repo="local/tau",
+        target="issue-ask-tau-dag",
+        solver_models=["gpt-5.6-xhigh"],
+        reviewer_model="webgpt",
+        criteria=["correctness"],
+        output_root=tmp_path,
+    )
+
+    bundle = compile_tau_dag_bundle(request)
+
+    assert bundle["status"] == "NEEDS_INTERVIEW"
+    assert "model_routes" in bundle["missing_fields"]
+    assert "native Tau skill nodes" in bundle["questions"][-1]["question"]
