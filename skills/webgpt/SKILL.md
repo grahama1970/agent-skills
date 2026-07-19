@@ -2,9 +2,9 @@
 name: webgpt
 description: >
   Browser commands for WebGPT. Agent runs one-liners. All complexity (KDE
-  desktop, CDP stale connections, composer drafts, duplicate tabs, download
-  button clicking) is hidden. Background mode by default — never hijacks
-  the user's mouse or window.
+  desktop, CDP stale connections, composer drafts, duplicate tabs, and
+  requested download-button clicking) is hidden. Background mode by default —
+  never hijacks the user's mouse or window.
 triggers:
   - submit to webgpt
   - activate webgpt tab
@@ -122,6 +122,43 @@ python scripts/webgpt_cli.py submit review.md -p <project> \
 
 `--output-contract none` is the explicit browser-only exemption from source
 provenance. It still requires Browser Oracle readiness and exact-tab identity.
+It does not imply any file-download path. If the submitted prompt asks for
+inline JSON, Markdown, or prose, diagnose failures as submit, capture, parser,
+or content-contract failures unless a separate `download`, `--auto-download`,
+or `--require-attachment` path was actually used.
+
+## Routing, content, and download proof boundaries
+
+Do not collapse WebGPT proof layers. Exact-tab routing, sentinel capture,
+content parsing, deliverable validation, and Chrome file saving are separate
+claims.
+
+1. **Routing proof only.** Metadata showing
+   `requested_tab_id == controlled_tab_id`, `controlled_tab_id_mismatch ==
+   false`, and `tab_was_created == false` proves the intended browser tab was
+   controlled. It does not prove that ChatGPT produced the requested JSON,
+   diff, zip, image, or other artifact.
+2. **Transport proof only.** A sentinel-bearing raw response proves WebGPT
+   captured an assistant response from the controlled tab. It does not prove the
+   response satisfies the selected output contract or the caller's schema.
+3. **Content proof.** The caller must inspect the response file, raw file, meta
+   JSON, and any validator output. Sentinel-only output, empty clean output,
+   helper code, prose where JSON was requested, or text after a terminal marker
+   is a content/parser failure even when routing proof is clean.
+4. **Download proof.** A downloadable-artifact claim is proven only by a local
+   downloaded file plus a format-specific sanity check such as checksum,
+   `unzip -l`, JSON parse, image dimensions, or the requested verifier. Text
+   saying that a file was created is not download proof.
+5. **Inline-output proof.** For `--output-contract none` prompts that request
+   inline JSON or prose, there is no Chrome download step. Do not blame
+   `~/Downloads`, Chrome save settings, or `webgpt.download` unless a download
+   command was actually executed and expected to return a local file.
+
+When a project agent reports success or failure, it must name which layer was
+proved and which layer failed. Example: "routing and sentinel capture passed;
+JSON extraction failed because the clean response was one byte" is acceptable.
+"The skills are working" is incomplete unless the requested content/artifact
+contract was also verified.
 
 ## Execution-gate and deliverable contract
 
@@ -206,7 +243,7 @@ gate. Do not credit fixture results, committed source, or WebGPT output as live
 deployment proof.
 
 ```bash
-# One command: submit + wait + download (default --output-contract code)
+# One command: submit + wait + deliverable contract (default --output-contract code)
 python scripts/webgpt_cli.py submit bundle.md \
   --repo-root /path/to/project --source-path src/relative/path.py
 
@@ -294,6 +331,7 @@ machine-checkable:
 | 2 | `BLOCKED_WEBGPT_EXACT_TAB_REQUIRED` | no exact tab id + conversation URL |
 | 2 | `REJECTED_SCOPE_EXPANSION` | `plan`/`all` without `--architecture-authorized` |
 | 3 | `BLOCKED_WEBGPT_ROUTING_PROOF_MISSING` / `…_MISMATCH` | routing proof absent or wrong tab |
+| nonzero | `busy_stop_button_visible` / `ChatGPT page is busy before submit` | ChatGPT is already generating or stuck; do not keep submitting. Wait, extract the existing sentinel-bearing response, activate/clean the reviewer tab, or use a fresh bound tab. |
 | nonzero | `BLOCKED_WEBGPT_TAB_IDENTITY_PREFLIGHT` | tab/URL preflight failed |
 | 4 | `BLOCKED_WEBGPT_<MODE>_DELIVERABLE_MISSING` | the contract was not met |
 
@@ -306,14 +344,25 @@ controlled_tab_id_mismatch == false
 tab_was_created == false
 ```
 
+Then verify the requested content separately. For structured inline output,
+parse and validate the response body; do not treat `status: completed`,
+`proof_status: response_proven`, or sentinel presence as schema proof. If the
+raw response is only the sentinel, the clean response is empty/one byte, or the
+response contains helper code instead of the requested payload, report
+`NEEDS_ATTENTION: webgpt_content_contract_failed` and preserve raw, clean, meta,
+and validator artifacts.
+
 **Research (both sides).** Before calling webgpt, the project agent runs
 `/brave-search` and embeds the distilled findings under a `## Research context`
 heading in the bundle. webgpt separately injects a directive telling ChatGPT to
 run its own web search and cite source URLs. webgpt never calls `/brave-search`.
 
 **What webgpt does NOT do.** No goal memory, no multi-round loop, no retry
-policy, no stall/mutation detection, no receipts ledger. Route all of that
-through a Tau `tau.dag_contract.v1` with a webgpt skill node.
+policy, no stall/mutation detection, no receipts ledger, no semantic validation
+of `--output-contract none` payloads, and no Chrome download completion unless
+`download`, `--auto-download`, or `--require-attachment` is used. Route
+iteration and recovery policy through a Tau `tau.dag_contract.v1` with a webgpt
+skill node.
 
 ## Failure reporting
 
@@ -334,12 +383,17 @@ This ensures every failure is tracked and can be debugged. No silent failures.
 
 | Command | Hidden complexity |
 |---------|------------------|
-| `submit` | auto-file issue on failure, close duplicate tabs, activate/release CDP (unless --background), clear localStorage drafts, submit, find+click download button, poll ~/Downloads |
+| `submit` | auto-file issue on failure, close duplicate tabs, activate/release CDP (unless --background), clear localStorage drafts, submit, wait for sentinel, write raw/clean/meta artifacts, enforce the selected deliverable contract |
 | `activate` | close duplicate tabs, KDE switch (unless --background), tab.activate (CDP release), draft clear |
 | `navigate` | KDE switch (unless --background), tab.activate, surf go |
-| `download` | auto-file issue on failure, activate tab, find button by text match, click it, poll ~/Downloads |
+| `download` | auto-file issue on failure, activate tab, find button by text match, click it, poll `~/Downloads`, and return a local file path |
 | `listen` | auto-file issue on failure, surf webgpt.extract with sentinel polling |
 | `close` | surf tab.close |
+
+`submit` touches `~/Downloads` only for an explicit downloadable-artifact path
+such as `--auto-download` or a contract mode that requires a finished-file zip.
+Plain inline responses, including `--output-contract none`, must be assessed
+from the response artifacts and caller-side validators.
 
 ## Browser Oracle binding
 
