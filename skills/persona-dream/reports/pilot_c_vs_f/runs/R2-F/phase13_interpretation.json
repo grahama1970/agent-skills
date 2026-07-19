@@ -1,0 +1,355 @@
+{
+  "accepted_interpretations": [
+    {
+      "alternative_explanation": "The renderer may have simply combined salient source-memory props: blanket, Yale context, mug, papers, and caregiving poses, without encoding a deeper trust state.",
+      "cites_renderer_review": false,
+      "confidence": 0.66,
+      "emotional_intensity": 0.62,
+      "favored_explanation": "psychological",
+      "interpretation_id": "interpretation-001",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "frame_0001",
+        "frame_0002",
+        "frame_0004"
+      ],
+      "source_memory_refs": [
+        "embry_age19_23_b01_memory_018",
+        "embry_age19_23_b01_memory_004"
+      ],
+      "statement": "The rendered blanket, mug, papers, and domestic table scenes tentatively suggest that Embry experiences Marketa-like caregiving as a trusted structure: practical food, written instructions, and warmth can restore order without requiring Embry to explain herself verbally.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "marketa",
+      "tom_state_type": "trust",
+      "uncertainty": "The older woman is visually suggestive of a caregiver but Marketa's identity is not certified in the render, and the intended dream is empty."
+    },
+    {
+      "alternative_explanation": "The phone and distant figures may be generic visual devices for a college-life storyboard, not symbols of Kai or communication hierarchy.",
+      "cites_renderer_review": false,
+      "confidence": 0.43,
+      "emotional_intensity": 0.48,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-002",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "frame_0003",
+        "frame_0004"
+      ],
+      "source_memory_refs": [
+        "embry_age19_23_b01_memory_039"
+      ],
+      "statement": "The smartphone, reflected figures, and a person receding in the hallway tentatively point to Embry's uncertainty about who receives access to her inner life first, especially around messages that remain delayed or unanswered.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "kai",
+      "tom_state_type": "uncertainty",
+      "uncertainty": "The render does not explicitly identify Kai, the hallway figure, or the phone content; the interpretation depends on associating phone imagery with the remembered delayed message to Kai."
+    },
+    {
+      "alternative_explanation": "The stable identity may simply reflect successful face-reference rendering across storyboard panels rather than a meaningful self-continuity theme.",
+      "cites_renderer_review": true,
+      "confidence": 0.5,
+      "emotional_intensity": 0.4,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-003",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "identity_temporal_continuity_review",
+        "frame_0001",
+        "frame_0003",
+        "frame_0004"
+      ],
+      "source_memory_refs": [
+        "embry_age19_23_b01_memory_004",
+        "embry_age19_23_b01_memory_039"
+      ],
+      "statement": "Because the identity continuity review passed across all four frames, the dream may tentatively preserve Embry as a stable self across otherwise discontinuous scenes of receiving care, communicating by image, and navigating belonging.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "self",
+      "tom_state_type": "belief",
+      "uncertainty": "The continuity review only certifies visual identity against the contact sheet; it does not prove psychological continuity or intentional symbolic structure."
+    },
+    {
+      "alternative_explanation": "The renderer may have included common props from the memories\u2014phone, photograph, mug, and papers\u2014without distinguishing communication style from ordinary scene dressing.",
+      "cites_renderer_review": false,
+      "confidence": 0.58,
+      "emotional_intensity": 0.55,
+      "favored_explanation": "psychological",
+      "interpretation_id": "interpretation-004",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "frame_0002",
+        "frame_0003",
+        "frame_0004"
+      ],
+      "source_memory_refs": [
+        "embry_age19_23_b01_memory_018",
+        "embry_age19_23_b01_memory_039"
+      ],
+      "statement": "The repeated image-based communication cues\u2014the smartphone, photograph, mug, and papers\u2014tentatively suggest Embry's stance of offering proof or small artifacts instead of full verbal disclosure when emotionally burdened.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "marketa",
+      "tom_state_type": "stance",
+      "uncertainty": "The rendered photograph and smartphone contents are not visible, so the connection to texting photographs rather than explanations remains inferential."
+    }
+  ],
+  "blockers": [],
+  "candidates": [
+    {
+      "alternative_explanation": "The renderer may have simply combined salient source-memory props: blanket, Yale context, mug, papers, and caregiving poses, without encoding a deeper trust state.",
+      "cites_renderer_review": false,
+      "confidence": 0.66,
+      "emotional_intensity": 0.62,
+      "favored_explanation": "psychological",
+      "interpretation_id": "interpretation-001",
+      "observation_refs": [
+        "frame_0001",
+        "frame_0002",
+        "frame_0004"
+      ],
+      "source_memory_refs": [
+        "embry_age19_23_b01_memory_018",
+        "embry_age19_23_b01_memory_004"
+      ],
+      "statement": "The rendered blanket, mug, papers, and domestic table scenes tentatively suggest that Embry experiences Marketa-like caregiving as a trusted structure: practical food, written instructions, and warmth can restore order without requiring Embry to explain herself verbally.",
+      "subject": "embry",
+      "target": "marketa",
+      "tom_state_type": "trust",
+      "uncertainty": "The older woman is visually suggestive of a caregiver but Marketa's identity is not certified in the render, and the intended dream is empty."
+    },
+    {
+      "alternative_explanation": "The phone and distant figures may be generic visual devices for a college-life storyboard, not symbols of Kai or communication hierarchy.",
+      "cites_renderer_review": false,
+      "confidence": 0.43,
+      "emotional_intensity": 0.48,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-002",
+      "observation_refs": [
+        "frame_0003",
+        "frame_0004"
+      ],
+      "source_memory_refs": [
+        "embry_age19_23_b01_memory_039"
+      ],
+      "statement": "The smartphone, reflected figures, and a person receding in the hallway tentatively point to Embry's uncertainty about who receives access to her inner life first, especially around messages that remain delayed or unanswered.",
+      "subject": "embry",
+      "target": "kai",
+      "tom_state_type": "uncertainty",
+      "uncertainty": "The render does not explicitly identify Kai, the hallway figure, or the phone content; the interpretation depends on associating phone imagery with the remembered delayed message to Kai."
+    },
+    {
+      "alternative_explanation": "The stable identity may simply reflect successful face-reference rendering across storyboard panels rather than a meaningful self-continuity theme.",
+      "cites_renderer_review": true,
+      "confidence": 0.5,
+      "emotional_intensity": 0.4,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-003",
+      "observation_refs": [
+        "identity_temporal_continuity_review",
+        "frame_0001",
+        "frame_0003",
+        "frame_0004"
+      ],
+      "source_memory_refs": [
+        "embry_age19_23_b01_memory_004",
+        "embry_age19_23_b01_memory_039"
+      ],
+      "statement": "Because the identity continuity review passed across all four frames, the dream may tentatively preserve Embry as a stable self across otherwise discontinuous scenes of receiving care, communicating by image, and navigating belonging.",
+      "subject": "embry",
+      "target": "self",
+      "tom_state_type": "belief",
+      "uncertainty": "The continuity review only certifies visual identity against the contact sheet; it does not prove psychological continuity or intentional symbolic structure."
+    },
+    {
+      "alternative_explanation": "The renderer may have included common props from the memories\u2014phone, photograph, mug, and papers\u2014without distinguishing communication style from ordinary scene dressing.",
+      "cites_renderer_review": false,
+      "confidence": 0.58,
+      "emotional_intensity": 0.55,
+      "favored_explanation": "psychological",
+      "interpretation_id": "interpretation-004",
+      "observation_refs": [
+        "frame_0002",
+        "frame_0003",
+        "frame_0004"
+      ],
+      "source_memory_refs": [
+        "embry_age19_23_b01_memory_018",
+        "embry_age19_23_b01_memory_039"
+      ],
+      "statement": "The repeated image-based communication cues\u2014the smartphone, photograph, mug, and papers\u2014tentatively suggest Embry's stance of offering proof or small artifacts instead of full verbal disclosure when emotionally burdened.",
+      "subject": "embry",
+      "target": "marketa",
+      "tom_state_type": "stance",
+      "uncertainty": "The rendered photograph and smartphone contents are not visible, so the connection to texting photographs rather than explanations remains inferential."
+    }
+  ],
+  "dream_id": "pilot_r2_f",
+  "generated_at": "2026-07-19T22:50:27.979202+00:00",
+  "honesty_rule": {
+    "identity_drift_dual_explanation_present": false,
+    "renderer_defect_favored_on_drift": false
+  },
+  "intended_dream": {},
+  "live": true,
+  "llm": {
+    "caller_skill": "persona-dream",
+    "candidate_count": 4,
+    "direct_scillm_call": false,
+    "model": "gpt-5.5",
+    "provider": "scillm",
+    "route": "tau:persona-dream-text-reasoning",
+    "tau_routing": {
+      "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+      "http_status": 200,
+      "live_call_performed": true,
+      "model": "gpt-5.5",
+      "output_contract_sha256": "sha256:97bbf92bb8eb1d13cb7a43a0975b2c62885880a6818689f7ec5dedd6e532c140",
+      "prompt_sha256": "sha256:34b99c2fa45e94fd9a5f31a740ff184160dd9fcd3231bfe8ba51e2e2839a7475",
+      "route": "tau:persona-dream-text-reasoning",
+      "status": "PASS",
+      "tau_receipt_schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1"
+    }
+  },
+  "mocked": false,
+  "observation_index": [
+    {
+      "observation_id": "frame_0001",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 1 at t=0.0s; windows=identity; entities=['young woman seated at left with a blanket around her shoulders', 'woman standing behind the box wearing a YALE sweatshirt']",
+      "timestamp_seconds": 0.0
+    },
+    {
+      "observation_id": "frame_0002",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 2 at t=2.5s; windows=identity; entities=['young woman seated at a table stirring a mug or cup', 'older woman seated beside her writing on paper']",
+      "timestamp_seconds": 2.5
+    },
+    {
+      "observation_id": "frame_0003",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 3 at t=5.0s; windows=identity; entities=['young woman in foreground holding a smartphone', 'two people visible in a dark reflective surface', 'distant silhouetted person in a hallway']",
+      "timestamp_seconds": 5.0
+    },
+    {
+      "observation_id": "frame_0004",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 4 at t=7.5s; windows=identity; entities=['young woman wrapped in a blanket holding a mug and a photograph', 'older woman behind her holding papers', 'person walking away in the background']",
+      "timestamp_seconds": 7.5
+    },
+    {
+      "observation_id": "identity_temporal_continuity_review",
+      "observation_type": "renderer_continuity_review",
+      "renderer_defect_verdict": "PASS",
+      "renderer_review": true,
+      "summary": "Identity continuity review over window [0.0, 10.0] (model=insightface:buffalo_l (authority) + gpt-5.5 montage (advisory), verdict=PASS): all 4 frames passed the ArcFace subgate vs embry_contact_sheet_v3"
+    },
+    {
+      "observation_id": "coverage_gap_00",
+      "observation_type": "coverage_gap",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "no audio track: visual artifact is storyboard frames (render boundary scope note)"
+    },
+    {
+      "observation_id": "coverage_gap_01",
+      "observation_type": "coverage_gap",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "no inter-frame motion: temporal continuity is panel-to-panel only"
+    },
+    {
+      "observation_id": "coverage_gap_02",
+      "observation_type": "coverage_gap",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Marketa Lawson has no identity reference sheet: presence advisory, uncertified"
+    }
+  ],
+  "observation_packet_path": "reports/pilot_c_vs_f/runs/R2-F/observation_packet.json",
+  "observation_packet_sha256": "sha256:9a0c2c04d15e4da2c5e112e1f539c673df44d5effb8e31b661db17ac74aa7307",
+  "persona_id": "embry",
+  "provider_live": true,
+  "recall_receipts": [
+    {
+      "collections": [
+        "persona_memory"
+      ],
+      "confidence": null,
+      "error": "timed out",
+      "found": false,
+      "question": "What memories explain why Embry trusts Kai about surf safety boundaries and hazards at the lineup?",
+      "residue_source_ids_confirmed": [],
+      "returned_keys": [],
+      "tags": [
+        "persona:embry"
+      ]
+    },
+    {
+      "collections": [
+        "persona_memory"
+      ],
+      "confidence": null,
+      "error": "timed out",
+      "found": false,
+      "question": "What memory shows Kai giving Embry operational surf knowledge while respecting her decisions?",
+      "residue_source_ids_confirmed": [],
+      "returned_keys": [],
+      "tags": [
+        "persona:embry"
+      ]
+    },
+    {
+      "collections": [
+        "persona_memory"
+      ],
+      "confidence": null,
+      "error": "timed out",
+      "found": false,
+      "question": "Why does Embry pause before crossing into surf traffic near Kai?",
+      "residue_source_ids_confirmed": [],
+      "returned_keys": [],
+      "tags": [
+        "persona:embry"
+      ]
+    }
+  ],
+  "rejected_interpretations": [],
+  "revision_id": "pilot_c_vs_f",
+  "run_id": "pilot-c-vs-f",
+  "schema": "persona_dream.dream_self_interpretation.v1",
+  "source_memory_bindings": [
+    {
+      "collection": "persona_memory",
+      "memory_text_sha256": "sha256:1336836028b72f6bde0be980c2115b0b5e912f16b8899adffa9101785a078f44",
+      "persona_id": "embry",
+      "recall_confirmed": false,
+      "source_id": "embry_age19_23_b01_memory_018"
+    },
+    {
+      "collection": "persona_memory",
+      "memory_text_sha256": "sha256:e7e4cd530288c205a83fb5bdbb1fafd78325d0dc3d69a6f0dbfcb27e03a6fc90",
+      "persona_id": "embry",
+      "recall_confirmed": false,
+      "source_id": "embry_age19_23_b01_memory_004"
+    },
+    {
+      "collection": "persona_memory",
+      "memory_text_sha256": "sha256:925980f17977806103d5ccd2ea37641a5798243910e6052b9709a9b8fe4e4136",
+      "persona_id": "embry",
+      "recall_confirmed": false,
+      "source_id": "embry_age19_23_b01_memory_039"
+    }
+  ],
+  "status": "PASS_SELF_INTERPRETATION"
+}

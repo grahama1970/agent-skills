@@ -1,0 +1,47 @@
+{
+  "raw": "{\"frames\":[{\"index\":1,\"people\":[\"young woman seated at left with a blanket around her shoulders\",\"woman standing behind the box wearing a YALE sweatshirt\"],\"activity\":\"The seated woman looks ahead while holding the edge of a large cardboard box labeled \\\"OPEN FIRST\\\"; the standing woman holds out a small note or envelope.\",\"setting\":\"Indoor room filled with cardboard boxes, papers, and a window in the background.\",\"tone\":\"serious and expectant\"},{\"index\":2,\"people\":[\"young woman seated at a table stirring a mug or cup\",\"older woman seated beside her writing on paper\"],\"activity\":\"One woman stirs a drink while the other writes notes at a cluttered table with food, jars, and papers nearby.\",\"setting\":\"Dim indoor kitchen or worktable area with notes posted on the wall and cooking items on the table.\",\"tone\":\"quiet and focused\"},{\"index\":3,\"people\":[\"young woman in foreground holding a smartphone\",\"two people visible in a dark reflective surface\",\"distant silhouetted person in a hallway\"],\"activity\":\"The foreground woman holds up a phone and looks at it; other figures are visible only as reflections or silhouettes.\",\"setting\":\"Dark indoor room or corridor lined with boxes and papers, with a reflective panel or screen at right.\",\"tone\":\"tense and watchful\"},{\"index\":4,\"people\":[\"young woman wrapped in a blanket holding a mug and a photograph\",\"older woman behind her holding papers\",\"person walking away in the background\"],\"activity\":\"The young woman holds a mug and looks forward while holding a photograph; the older woman stands behind her with papers; a distant figure walks away.\",\"setting\":\"Warmly lit room covered with photos, notes, papers, and boxes.\",\"tone\":\"reflective and somber\"}]}",
+  "frames": [
+    {
+      "index": 1,
+      "people": [
+        "young woman seated at left with a blanket around her shoulders",
+        "woman standing behind the box wearing a YALE sweatshirt"
+      ],
+      "activity": "The seated woman looks ahead while holding the edge of a large cardboard box labeled \"OPEN FIRST\"; the standing woman holds out a small note or envelope.",
+      "setting": "Indoor room filled with cardboard boxes, papers, and a window in the background.",
+      "tone": "serious and expectant"
+    },
+    {
+      "index": 2,
+      "people": [
+        "young woman seated at a table stirring a mug or cup",
+        "older woman seated beside her writing on paper"
+      ],
+      "activity": "One woman stirs a drink while the other writes notes at a cluttered table with food, jars, and papers nearby.",
+      "setting": "Dim indoor kitchen or worktable area with notes posted on the wall and cooking items on the table.",
+      "tone": "quiet and focused"
+    },
+    {
+      "index": 3,
+      "people": [
+        "young woman in foreground holding a smartphone",
+        "two people visible in a dark reflective surface",
+        "distant silhouetted person in a hallway"
+      ],
+      "activity": "The foreground woman holds up a phone and looks at it; other figures are visible only as reflections or silhouettes.",
+      "setting": "Dark indoor room or corridor lined with boxes and papers, with a reflective panel or screen at right.",
+      "tone": "tense and watchful"
+    },
+    {
+      "index": 4,
+      "people": [
+        "young woman wrapped in a blanket holding a mug and a photograph",
+        "older woman behind her holding papers",
+        "person walking away in the background"
+      ],
+      "activity": "The young woman holds a mug and looks forward while holding a photograph; the older woman stands behind her with papers; a distant figure walks away.",
+      "setting": "Warmly lit room covered with photos, notes, papers, and boxes.",
+      "tone": "reflective and somber"
+    }
+  ]
+}

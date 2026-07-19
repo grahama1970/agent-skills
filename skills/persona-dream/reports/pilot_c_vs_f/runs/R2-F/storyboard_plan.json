@@ -1,0 +1,49 @@
+{
+  "plan": {
+    "dream_synopsis": "Embry dreams that every box from home opens into another decision she is not ready to explain: food, warmth, and acceptance notices fold together into one portable room. Marketa\u2019s instructions keep appearing in larger handwriting, offering sequence instead of questions, while Kai\u2019s unanswered message drifts at the edge of the dream like a door she cannot make herself open.",
+    "panels": [
+      {
+        "action": "Embry opens the OPEN FIRST box; the afghan rises around her shoulders by itself while Marketa slides a fresh index card toward her that reads, 'Eat before revising anything.'",
+        "mood": "homesick, contained, gently surreal",
+        "panel_id": "sb_001",
+        "setting": "A dreamlike Yale dorm room whose walls are made of taped cardboard flaps and recipe cards.",
+        "shot": "Close foreground shot of Embry facing camera, wrapped in the family afghan; Marketa Lawson is visible behind an oversized OPEN FIRST box, her face calm and intent.",
+        "start_frame_description": "Embry\u2019s face is fully visible in the foreground, eyes tired and wary; Marketa stands behind the box with block-letter labels glowing across the cardboard.",
+        "time_range": "0.0-2.5s"
+      },
+      {
+        "action": "Embry stirs chess-pie filling directly in a mug while numbered freezing instructions spiral around her like a safety manual; Marketa adds a final line in large handwriting: 'No decisions hungry.'",
+        "mood": "guilty, steadied, protected without interrogation",
+        "panel_id": "sb_002",
+        "setting": "The dorm room has shifted into a floating kitchen counter surrounded by Yale-blue darkness.",
+        "shot": "Medium foreground shot of Embry at a small table, face visible as she looks down into a mug; Marketa Lawson appears beside her, partially lit by warm kitchen-like light.",
+        "start_frame_description": "Embry holds the mug close under her chin, her face visible and conflicted; Marketa\u2019s hand rests near the family recipe note, not reaching for an explanation.",
+        "time_range": "2.5-5.0s"
+      },
+      {
+        "action": "Embry photographs the acceptance screen, and the image splits into ordered paths: one toward Marketa\u2019s packing list, one toward Tommy\u2019s safety manual, one toward James in person, and one dim path where Kai\u2019s message blinks unanswered.",
+        "mood": "proud, uncertain, exposed by sequence",
+        "panel_id": "sb_003",
+        "setting": "A corridor made of stacked OPEN FIRST boxes, recipe notes, and a glowing SPARTA acceptance notification.",
+        "shot": "Tight foreground shot of Embry\u2019s face reflected in a bright acceptance screen; Marketa and Tommy are suggested as small reflected figures at one edge, while James\u2019s silhouette waits in a doorway.",
+        "start_frame_description": "Embry\u2019s face is visible in the screen reflection, pride caught with grief; behind the glow, Marketa\u2019s block letters begin an OPEN FIRST packing list.",
+        "time_range": "5.0-7.5s"
+      },
+      {
+        "action": "Embry lifts the mug in one hand and the acceptance photograph in the other; she turns toward the warm path marked family and James while Kai\u2019s unopened message floats farther back, unanswered but still visible.",
+        "mood": "tender, grief-tinged, emotionally contained",
+        "panel_id": "sb_004",
+        "setting": "A suspended room made of afghan squares, cardboard flaps, numbered instructions, and phone-message bubbles.",
+        "shot": "Wide but foreground-weighted shot with Embry closest to camera, face visible beneath the afghan; Marketa Lawson stands behind her holding the recipe note and packing list together.",
+        "start_frame_description": "Embry faces forward in the foreground, visibly relieved and sad at once; Marketa is clearly present behind her, offering the papers without demanding speech.",
+        "time_range": "7.5-10.0s"
+      }
+    ]
+  },
+  "tau_receipt": {
+    "route": null,
+    "model": "gpt-5.5",
+    "live": true,
+    "http_status": 200
+  }
+}

@@ -1,0 +1,193 @@
+{
+  "accepted_interpretations": 4,
+  "accepted_tom_candidates": 4,
+  "activation": {
+    "commit_id": "commit_8eacb5dd6a7d84c12d4443aeb7d91cafad59a7207cbbd5521638c223be047877",
+    "member_count": 29,
+    "outcome": "activated",
+    "post_activation_default_list_visible": true,
+    "reread_verified": true
+  },
+  "arm": "F",
+  "blinding_receipt": "reports/pilot_c_vs_f/runs/R2-F/blinding_R2-F.json",
+  "commit_manifest_key": "commit_8eacb5dd6a7d84c12d4443aeb7d91cafad59a7207cbbd5521638c223be047877",
+  "created_at": "2026-07-19T23:02:05Z",
+  "dream_id": "pilot_r2_f",
+  "evidence_class": "synthetic_dream",
+  "frames": [
+    {
+      "arcface": {
+        "entity_results": [
+          {
+            "best_cosine": 0.819344,
+            "candidate_bbox": [
+              490.5,
+              127.3,
+              673.0,
+              385.7
+            ],
+            "candidate_det_score": 0.7816,
+            "candidate_detected_sex": "F",
+            "entity": "Embry",
+            "expected_sex": "F",
+            "pairwise_cosine": [
+              0.67121,
+              0.682651,
+              0.748986,
+              0.715694,
+              0.819344,
+              0.691489,
+              0.705954,
+              0.52459,
+              0.507459
+            ],
+            "reference_face_count": 9,
+            "status": "PASS",
+            "threshold": 0.421,
+            "verdict": "SAME"
+          }
+        ],
+        "status": "PASS"
+      },
+      "attempt": 1,
+      "frame": "reports/pilot_c_vs_f/runs/R2-F/frames/sb_001.attempt_01.png",
+      "frame_sha256": "5c9794228423925dca42bd357ad6f90836b2af3ba86b642acd04af4f7a1c64de",
+      "panel_id": "sb_001"
+    },
+    {
+      "arcface": {
+        "entity_results": [
+          {
+            "best_cosine": 0.690403,
+            "candidate_bbox": [
+              602.3,
+              69.2,
+              801.3,
+              324.3
+            ],
+            "candidate_det_score": 0.7841,
+            "candidate_detected_sex": "F",
+            "entity": "Embry",
+            "expected_sex": "F",
+            "pairwise_cosine": [
+              0.590119,
+              0.58061,
+              0.671632,
+              0.634226,
+              0.690403,
+              0.578769,
+              0.620847,
+              0.50544,
+              0.525082
+            ],
+            "reference_face_count": 9,
+            "status": "PASS",
+            "threshold": 0.421,
+            "verdict": "SAME"
+          }
+        ],
+        "status": "PASS"
+      },
+      "attempt": 1,
+      "frame": "reports/pilot_c_vs_f/runs/R2-F/frames/sb_002.attempt_01.png",
+      "frame_sha256": "b07a9d5d440442ca4dfe149463e85e4203a4f4968c20d8ff75b4e1dad9e04f11",
+      "panel_id": "sb_002"
+    },
+    {
+      "arcface": {
+        "entity_results": [
+          {
+            "best_cosine": 0.775113,
+            "candidate_bbox": [
+              460.5,
+              134.8,
+              654.4,
+              392.0
+            ],
+            "candidate_det_score": 0.7895,
+            "candidate_detected_sex": "F",
+            "entity": "Embry",
+            "expected_sex": "F",
+            "pairwise_cosine": [
+              0.691257,
+              0.775113,
+              0.705014,
+              0.7286,
+              0.722145,
+              0.644343,
+              0.684782,
+              0.460356,
+              0.488216
+            ],
+            "reference_face_count": 9,
+            "status": "PASS",
+            "threshold": 0.421,
+            "verdict": "SAME"
+          }
+        ],
+        "status": "PASS"
+      },
+      "attempt": 1,
+      "frame": "reports/pilot_c_vs_f/runs/R2-F/frames/sb_003.attempt_01.png",
+      "frame_sha256": "abc5ce9f806c83e4957968e87eab5d859ca73f4a4cdfba0d74311c946d933869",
+      "panel_id": "sb_003"
+    },
+    {
+      "arcface": {
+        "entity_results": [
+          {
+            "best_cosine": 0.677961,
+            "candidate_bbox": [
+              594.5,
+              85.3,
+              788.7,
+              348.1
+            ],
+            "candidate_det_score": 0.8362,
+            "candidate_detected_sex": "F",
+            "entity": "Embry",
+            "expected_sex": "F",
+            "pairwise_cosine": [
+              0.637787,
+              0.640709,
+              0.673196,
+              0.677961,
+              0.676029,
+              0.637954,
+              0.639805,
+              0.473171,
+              0.513899
+            ],
+            "reference_face_count": 9,
+            "status": "PASS",
+            "threshold": 0.421,
+            "verdict": "SAME"
+          }
+        ],
+        "status": "PASS"
+      },
+      "attempt": 1,
+      "frame": "reports/pilot_c_vs_f/runs/R2-F/frames/sb_004.attempt_01.png",
+      "frame_sha256": "d8a3f7b049e3409d0940873d865e15f03675a71ff0240e1c106cf457b81c5240",
+      "panel_id": "sb_004"
+    }
+  ],
+  "image_generation_calls": 8,
+  "media_sha256": "15c353228764cca5d73004841b2f0bfff1c2f4027daca6d3d8b050a468fe3857",
+  "persist_resumed": "crash was pre-write (read timeout in existing_commit_manifest during unrelated DB load); tail re-driven from saved artifacts",
+  "phase13_status": "PASS_SELF_INTERPRETATION",
+  "phase14_status": "PASS_TOM_VALIDATION_LIVE",
+  "produced_record_key": "dream_pilot_r2_f",
+  "root_ids": [
+    "embry_age19_23_b01_memory_004",
+    "embry_age19_23_b01_memory_018",
+    "embry_age19_23_b01_memory_039"
+  ],
+  "run": "R2-F",
+  "schema": "persona_dream.pilot_arm_receipt.v1",
+  "scope_notes": [
+    "render boundary: no non-paid video renderer exists at run time; the storyboard frames are the visual artifact (protocol v3 F clause)",
+    "Marketa Lawson presence is advisory (no identity reference sheet); ArcFace certifies Embry only"
+  ],
+  "set": "r2"
+}

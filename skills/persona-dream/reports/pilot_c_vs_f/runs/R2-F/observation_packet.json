@@ -1,0 +1,71 @@
+{
+  "schema": "persona_dream.pilot_storyboard_observation_packet.v1",
+  "status": "ACCEPTED_STORYBOARD_OBSERVATION",
+  "evidence_origin": "storyboard_frames",
+  "evidence_class": "synthetic_dream",
+  "source_video_sha256": "sha256:15c353228764cca5d73004841b2f0bfff1c2f4027daca6d3d8b050a468fe3857",
+  "source_revision_id": "pilot_c_vs_f",
+  "frame_evidence": [
+    {
+      "index": 1,
+      "timestamp_seconds": 0.0,
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "observed_entities": [
+        "young woman seated at left with a blanket around her shoulders",
+        "woman standing behind the box wearing a YALE sweatshirt"
+      ]
+    },
+    {
+      "index": 2,
+      "timestamp_seconds": 2.5,
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "observed_entities": [
+        "young woman seated at a table stirring a mug or cup",
+        "older woman seated beside her writing on paper"
+      ]
+    },
+    {
+      "index": 3,
+      "timestamp_seconds": 5.0,
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "observed_entities": [
+        "young woman in foreground holding a smartphone",
+        "two people visible in a dark reflective surface",
+        "distant silhouetted person in a hallway"
+      ]
+    },
+    {
+      "index": 4,
+      "timestamp_seconds": 7.5,
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "observed_entities": [
+        "young woman wrapped in a blanket holding a mug and a photograph",
+        "older woman behind her holding papers",
+        "person walking away in the background"
+      ]
+    }
+  ],
+  "transcript_facts": [],
+  "step_hooks": {
+    "step_36_identity_temporal_continuity": {
+      "identity_window_seconds": [
+        0.0,
+        10.0
+      ],
+      "vision_review": {
+        "model": "insightface:buffalo_l (authority) + gpt-5.5 montage (advisory)",
+        "verdict": "PASS",
+        "raw_output_tail": "all 4 frames passed the ArcFace subgate vs embry_contact_sheet_v3"
+      }
+    }
+  },
+  "coverage_gaps": [
+    "no audio track: visual artifact is storyboard frames (render boundary scope note)",
+    "no inter-frame motion: temporal continuity is panel-to-panel only",
+    "Marketa Lawson has no identity reference sheet: presence advisory, uncertified"
+  ]
+}
