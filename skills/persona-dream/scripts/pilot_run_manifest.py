@@ -26,6 +26,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 FROZEN_FILES = [
+    "contracts/pilot_post_run_measurement_amendment.v1.md",
     "contracts/pilot_c_vs_f_frozen_protocol.v3.md",
     "contracts/pilot_c_vs_f_frozen_protocol.v2.md",
     "contracts/pilot_r1_r2_selection_addendum.v1.json",
@@ -81,7 +82,7 @@ def build() -> tuple[dict, list[str]]:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--out", type=Path,
-                        default=ROOT / "contracts/pilot_run_manifest.v1.json")
+                        default=ROOT / "contracts/pilot_run_manifest.v2.json")
     parser.add_argument("--verify", action="store_true",
                         help="recompute and compare against the written manifest")
     args = parser.parse_args()

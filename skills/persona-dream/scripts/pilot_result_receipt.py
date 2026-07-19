@@ -75,7 +75,7 @@ def main() -> int:
     parser.add_argument("--blinding-dir", type=Path, required=True,
                         help="dir holding blinding_<RUN>.json receipts")
     parser.add_argument("--manifest", type=Path,
-                        default=ROOT / "contracts/pilot_run_manifest.v1.json")
+                        default=ROOT / "contracts/pilot_run_manifest.v2.json")
     parser.add_argument("--scope-notes", type=Path, default=None,
                         help="optional JSON with declared scope notes (e.g. F render boundary)")
     parser.add_argument("--out", type=Path,
@@ -138,6 +138,7 @@ def main() -> int:
         "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "published_under": "pilot_c_vs_f_frozen_protocol.v3",
         "protocol_v3_final_sha256": live_v3_sha,
+        "post_run_measurement_amendment": "contracts/pilot_post_run_measurement_amendment.v1.md",
         "supersession_lineage": {
             "v1": "superseded pre-run by v2 (tau-dag creator-reviewer review)",
             "v2": "superseded pre-run by v3 (webgpt assess ruling, "

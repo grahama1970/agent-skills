@@ -1,13 +1,13 @@
 {
   "schema": "surf.webgpt_heartbeat.v1",
-  "updated_at": "2026-07-19T21:07:57Z",
-  "submitted_at": "2026-07-19T21:02:43Z",
-  "last_browser_observation_at": "2026-07-19T21:07:57Z",
-  "phase": "completed",
-  "page_state": "response_detected",
-  "last_artifact_written": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-selection-review-r2-assess-response.raw.md",
-  "next_expected_artifact": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-selection-review-r2-assess-response.meta.json",
-  "timeout_remaining_seconds": 0,
-  "sentinel": "<<<WEBGPT_DONE:20260719T210241Z:7d0e2e52>>>",
+  "updated_at": "2026-07-19T23:12:31Z",
+  "submitted_at": "2026-07-19T23:12:27Z",
+  "last_browser_observation_at": "2026-07-19T23:12:31Z",
+  "phase": "submitted",
+  "page_state": "generating",
+  "last_artifact_written": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-metrics-adjudication-assess-response.receipt.json",
+  "next_expected_artifact": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-metrics-adjudication-assess-response.raw.md",
+  "timeout_remaining_seconds": 2400,
+  "sentinel": "<<<WEBGPT_DONE:20260719T231226Z:f90ba274>>>",
   "prepared_prompt_is_transport_proof": false
 }

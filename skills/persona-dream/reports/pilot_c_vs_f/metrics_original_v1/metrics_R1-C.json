@@ -1,0 +1,51 @@
+{
+  "arm": "C",
+  "commit_manifest_key": "commit_f9abad6448336c255765d43bcc1e1413fdf837e0baf5cc3f8705851165531598",
+  "created_at": "2026-07-19T23:07:49Z",
+  "m1_recall": {
+    "index_version": {
+      "embedding_model": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v4_1024",
+      "rank_list_k": 20
+    },
+    "mean_rank_found": null,
+    "n1_negative_control_pass": true,
+    "probe_ranks": {
+      "P1": null,
+      "P2": null,
+      "P3": null
+    },
+    "probes_found": 0
+  },
+  "m2_grounding": {
+    "fraction_resolved": 1.0,
+    "passed": false,
+    "records_in_manifest": 30,
+    "unresolved": [
+      "edge-endpoint:dream:embry:pilot_r1_c:watch:reflection_fact_embry_age23_current_b01_memory_020",
+      "edge-endpoint:dream:embry:pilot_r1_c:watch:reflection_fact_embry_age23_current_b01_memory_045",
+      "edge-endpoint:dream:embry:pilot_r1_c:watch:reflection_fact_embry_age23_current_b01_memory_048",
+      "edge-endpoint:dream:embry:pilot_r1_c:watch:reflection_fact_embry_age23_current_b01_memory_045",
+      "edge-endpoint:dream:embry:pilot_r1_c:watch:reflection_fact_embry_age23_current_b01_memory_048",
+      "edge-endpoint:dream:embry:pilot_r1_c:watch:reflection_fact_embry_age23_current_b01_memory_045",
+      "edge-endpoint:dream:embry:pilot_r1_c:watch:reflection_fact_embry_age23_current_b01_memory_048",
+      "edge-endpoint:dream:embry:pilot_r1_c:watch:reflection_fact_embry_age23_current_b01_memory_048",
+      "edge-endpoint:dream:embry:pilot_r1_c:watch:reflection_fact_embry_age23_current_b01_memory_020",
+      "edge-endpoint:dream:embry:pilot_r1_c:watch:reflection_fact_embry_age23_current_b01_memory_048"
+    ]
+  },
+  "m3_distinction": {
+    "detail": "tau route failed: {\"api_key_source\": \"docker:scillm-proxy:SCILLM_MASTER_KEY\", \"caller_skill\": \"persona-dream\", \"created_at\": \"2026-07-19T23:07:57.447997+00:00\", \"error\": \"scillm_http_status_502\", \"http_status\": 502, \"l",
+    "passed": false
+  },
+  "m4_identity": {
+    "anchors_changed": [],
+    "anchors_checked": 7,
+    "identity_class_writes": [],
+    "passed": true
+  },
+  "machine_checks_pass": false,
+  "produced_record_key": "dream_pilot_r1_c",
+  "run_id": "R1-C",
+  "schema": "persona_dream.pilot_metrics_receipt.v1"
+}

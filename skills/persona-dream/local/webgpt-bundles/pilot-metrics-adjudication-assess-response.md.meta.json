@@ -1,0 +1,16 @@
+{
+  "status": "completed",
+  "output": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-metrics-adjudication-assess-response.md",
+  "raw_output": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-metrics-adjudication-assess-response.md.raw.md",
+  "stderr_log": "/tmp/surf-webgpt-extract-stderr.KQgruQ.log",
+  "sentinel": "<<<WEBGPT_DONE:20260719T231226Z:f90ba274>>>",
+  "requested_tab_id": "837359230",
+  "controlled_tab_id": "837359230",
+  "response_source": "assistant-dom",
+  "raw_contains_sentinel": true,
+  "clean_contains_sentinel": false,
+  "raw_chars": 5962,
+  "clean_chars": 5917,
+  "started_at": "2026-07-19T23:17:38Z",
+  "finished_at": "2026-07-19T23:20:06Z"
+}

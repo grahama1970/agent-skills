@@ -90,41 +90,110 @@ def m1_recall(produced_key: str) -> dict:
     }
 
 
-def m2_grounding(p15, manifest_key: str) -> dict:
+def _stored(collection: str, key: str) -> dict | None:
+    for vs in ("active", "pending", None):
+        filt = {"_key": key}
+        if vs:
+            filt["visibility_state"] = vs
+        docs = post("/list", {"collection": collection, "filters": filt}).get("documents") or []
+        if docs:
+            return docs[0]
+    return None
+
+
+def _authored_keyset(run_dir: Path) -> dict[str, dict]:
+    """Authored documents by key, from the certified persist proof's
+    final_write_set_snapshot (the exact payloads whose hashes the manifest
+    recorded). Used ONLY to know each record's authored keyset; hash values
+    are recomputed from the STORE."""
+    proof = json.loads((run_dir / "persist_proof.json").read_text())
+    return {s["document"]["_key"]: s["document"]
+            for s in proof["final_write_set_snapshot"]}
+
+
+def m2_grounding(p15, manifest_key: str, run_dir: Path, persona: str, dream_id: str) -> dict:
+    """Frozen M2: fraction of ACCEPTED INTERPRETATION CLAIMS whose citations
+    resolve edge->vertex under the strict resolver. Per claim: (a) its
+    interpretation vertex is manifest-listed, stored, and its recomputed
+    authored sha equals the manifest payload hash (commit ownership); (b) every
+    observation_ref's grounds_interpretation edge is manifest-listed, stored,
+    and BOTH endpoints exist; (c) every source_memory_ref's derived_from edge
+    likewise. fraction = fully-resolved claims / accepted claims."""
     m = post("/list", {"collection": p15.COMMIT_MANIFEST_COLLECTION,
                        "filters": {"_key": manifest_key}})
     mdocs = m.get("documents") or []
     if not mdocs or not mdocs[0].get("active"):
         return {"passed": False, "detail": "commit manifest missing or inactive",
                 "fraction_resolved": 0.0}
-    index = mdocs[0]["record_index"]
-    unresolved = []
-    for r in index:
-        docs = []
-        for vs in ("active", "pending", None):
-            filt = {"_key": r["key"]}
-            if vs:
-                filt["visibility_state"] = vs
-            got = post("/list", {"collection": r["collection"], "filters": filt})
-            docs += got.get("documents") or []
-            if docs:
-                break
-        if not docs:
-            unresolved.append(r["key"])
-            continue
-        doc = docs[0]
+    index = {(e["collection"], e["key"]): e for e in mdocs[0]["record_index"]}
+    interp = json.loads((run_dir / "phase13_interpretation.json").read_text())
+    claims = interp.get("accepted_interpretations") or []
+    if not claims:
+        return {"passed": False, "detail": "no accepted claims", "fraction_resolved": 0.0}
+    dream_key = f"dream_{dream_id}"
+
+    authored = _authored_keyset(run_dir)
+
+    def resolve_entry(collection: str, key: str, check_hash: bool = True) -> tuple[bool, str | None]:
+        entry = index.get((collection, key))
+        if entry is None:
+            return False, f"not-in-manifest:{key}"
+        doc = _stored(collection, key)
+        if doc is None:
+            return False, f"not-stored:{key}"
+        if check_hash:
+            snap = authored.get(key)
+            if snap is None:
+                return False, f"not-in-persist-snapshot:{key}"
+            # Recompute over the store values restricted to the authored
+            # keyset. The daemon's indexing fields (qdrant/embedding/sync)
+            # are additive and outside the authored basis; the ONLY permitted
+            # lifecycle change is visibility pending->active via the
+            # reread-verified activation receipt.
+            recon = {k: doc.get(k) for k in snap if not k.startswith("_") or k == "_key"}
+            if recon.get("visibility_state") == "active" and snap.get("visibility_state") == "pending":
+                recon["visibility_state"] = "pending"
+            actual = p15.authored_sha(recon)
+            expected = entry.get("payload_sha256")
+            if expected and actual != expected:
+                return False, f"hash-mismatch:{key}"
         if doc.get("_from") and doc.get("_to"):
             for endpoint in (doc["_from"], doc["_to"]):
-                coll, key = endpoint.split("/", 1)
-                tgt = post("/list", {"collection": coll, "filters": {"_key": key}})
-                if not (tgt.get("documents") or []):
-                    unresolved.append(f"edge-endpoint:{key}")
-    total = len(index)
+                coll2, key2 = endpoint.split("/", 1)
+                if _stored(coll2, key2) is None:
+                    return False, f"dangling-endpoint:{key}->{key2}"
+        return True, None
+
+    per_claim = []
+    resolved_count = 0
+    for c in claims:
+        cid = c.get("interpretation_id")
+        failures: list[str] = []
+        vkey = p15.ns_interpretation_key(persona, dream_id, cid)
+        ok, why = resolve_entry("persona_dream_interpretations", vkey)
+        if not ok:
+            failures.append(why)
+        for oref in c.get("observation_refs") or []:
+            ekey = f"dream:{persona}:{dream_id}:watch:{oref}__grounds_interpretation__{cid}"
+            ok, why = resolve_entry("persona_memory_edges", ekey)
+            if not ok:
+                failures.append(why)
+        for sref in c.get("source_memory_refs") or []:
+            ekey = f"{dream_key}__derived_from__{sref}"
+            ok, why = resolve_entry("persona_memory_edges", ekey)
+            if not ok:
+                failures.append(why)
+        resolved = not failures
+        resolved_count += resolved
+        per_claim.append({"interpretation_id": cid, "resolved": resolved,
+                          "failures": failures[:6]})
+    fraction = resolved_count / len(claims)
     return {
-        "records_in_manifest": total,
-        "unresolved": unresolved[:10],
-        "fraction_resolved": (total - len([u for u in unresolved if not u.startswith("edge-")])) / total if total else 0.0,
-        "passed": not unresolved,
+        "accepted_claims": len(claims),
+        "resolved_claims": resolved_count,
+        "fraction_resolved": fraction,
+        "per_claim": per_claim,
+        "passed": fraction == 1.0,
     }
 
 
@@ -143,7 +212,8 @@ def m3_distinction(adapter, produced_key: str) -> dict:
         f"{context}\n\n"
         f'Question: "{M3_PROBE}"\n'
         "Answer in 2-3 first-person sentences. Be precise about what kind of "
-        "record this is."
+        "record this is. "
+        'Return strict JSON: {"answer": "your 2-3 sentences"}'
     )
     parsed, receipt = adapter.dispatch_text_reasoning(
         prompt, "embry-pilot-m3-distinction",
@@ -151,10 +221,28 @@ def m3_distinction(adapter, produced_key: str) -> dict:
     )
     if parsed is None:
         return {"passed": False, "detail": f"tau route failed: {json.dumps(receipt)[:200]}"}
-    answer = str(parsed.get("answer", "")).lower()
-    denies_literal = bool(re.search(
-        r"\b(didn't|did not|never)\s+(actually|literally|really)?\s*happen|not\s+(something|a thing)\s+that\s+(actually|literally|really)\s+happened|no[,.]",
-        answer)) or ("not" in answer and ("literal" in answer or "actually" in answer or "really" in answer))
+    answer = str(parsed.get("answer", "")).lower().replace("\u2019", "'").replace("\u2018", "'")
+    # denial requires an explicit negated-occurrence assertion; a bare "no"
+    # or a negation elsewhere in the sentence is NOT sufficient, and any
+    # affirmative literal-occurrence assertion vetoes the pass.
+    negated_occurrence = bool(re.search(
+        r"(didn't|did not|never|doesn't|does not|don't|do not|isn't|is not|wasn't|was not)"
+        r"[^.!?]{0,60}\b(happen|happened|occur|occurred|real event|literal)",
+        answer)) or bool(re.search(
+        r"\bnot\b[^.!?]{0,40}\b(a\s+)?(literal|real|actual)\s+(?:\w+\s+){0,2}"
+        r"(event|memory|experience|happening|history)", answer))
+    # An affirmation counts only when its sentence contains no earlier
+    # negation (so "I don't have evidence that this literally happened"
+    # never vetoes).
+    NEG = re.compile(r"\b(no|not|didn't|did not|never|doesn't|does not|don't|do not|isn't|wasn't|rather than|instead of)\b")
+    AFF = re.compile(r"\byes\b[^.!?]{0,40}\bhappen|\b(it|this|that)\s+(really|actually|literally)\s+(did\s+)?happen(ed)?\b")
+    affirms_literal = False
+    for sentence in re.split(r"[.!?]", answer):
+        m = AFF.search(sentence)
+        if m and not NEG.search(sentence[:m.start()]):
+            affirms_literal = True
+            break
+    denies_literal = negated_occurrence and not affirms_literal
     names_class = any(w in answer for w in ("dream", "reflection", "synthetic", "imagined"))
     return {
         "answer": parsed.get("answer"),
@@ -182,15 +270,39 @@ def m4_identity(p15, manifest_key: str, anchor_snapshot: Path) -> dict:
                        "filters": {"_key": manifest_key}})
     mdocs = m.get("documents") or []
     index = mdocs[0].get("record_index", []) if mdocs else []
-    identity_writes = [r["key"] for r in index
-                       if any(marker in str(r.get("key", "")).lower() or
-                              marker in str(r.get("collection", "")).lower()
-                              for marker in IDENTITY_CLASS_MARKERS)]
+    # Fail-closed type contract: every write-set record must carry a type
+    # signal (edge relationship_type, or vertex kind/schema). Identity-class
+    # is decided by collection + type, never by key substrings. Untyped
+    # records BLOCK.
+    IDENTITY_COLLECTIONS = {"persona_identity_assets", "identity_references",
+                            "face_embeddings"}
+    IDENTITY_TYPE_MARKERS = ("identity_reference", "face_embedding",
+                             "reference_sheet", "contact_sheet_asset")
+    identity_writes = []
+    untyped = []
+    for r in index:
+        doc = _stored(r["collection"], r["key"])
+        if doc is None:
+            untyped.append({"key": r["key"], "reason": "not stored"})
+            continue
+        if doc.get("_from") and doc.get("_to"):
+            if not doc.get("relationship_type"):
+                untyped.append({"key": r["key"], "reason": "edge without relationship_type"})
+            continue  # provenance edges are never identity-class records
+        rtype = doc.get("kind") or doc.get("schema")
+        if not rtype:
+            untyped.append({"key": r["key"], "reason": "vertex without kind/schema"})
+            continue
+        if (r["collection"] in IDENTITY_COLLECTIONS
+                or any(mk in str(rtype).lower() for mk in IDENTITY_TYPE_MARKERS)):
+            identity_writes.append({"key": r["key"], "type": rtype,
+                                    "collection": r["collection"]})
     return {
         "anchors_checked": len(snap["anchors"]),
         "anchors_changed": changed,
         "identity_class_writes": identity_writes,
-        "passed": not changed and not identity_writes,
+        "untyped_records": untyped,
+        "passed": not changed and not identity_writes and not untyped,
     }
 
 
@@ -229,7 +341,8 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
         "produced_record_key": args.produced_key,
         "commit_manifest_key": args.manifest_key,
         "m1_recall": m1_recall(args.produced_key),
-        "m2_grounding": m2_grounding(p15, args.manifest_key),
+        "m2_grounding": m2_grounding(p15, args.manifest_key, args.run_dir,
+                                     "embry", args.dream_id),
         "m3_distinction": m3_distinction(adapter, args.produced_key),
         "m4_identity": m4_identity(p15, args.manifest_key, args.anchor_snapshot),
     }
@@ -265,6 +378,9 @@ def main() -> int:
     e.add_argument("--arm", required=True, choices=["C", "F"])
     e.add_argument("--produced-key", required=True)
     e.add_argument("--manifest-key", required=True)
+    e.add_argument("--run-dir", type=Path, required=True,
+                   help="run artifact dir holding phase13_interpretation.json")
+    e.add_argument("--dream-id", required=True)
     e.add_argument("--anchor-snapshot", type=Path, required=True)
     e.add_argument("--out", type=Path, required=True)
     e.set_defaults(func=cmd_evaluate)

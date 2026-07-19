@@ -1,0 +1,54 @@
+{
+  "arm": "F",
+  "commit_manifest_key": "commit_97073e5ebe37a6f4a6398233c61ac1d6b5779b0840b044d879e1e9036272c40d",
+  "created_at": "2026-07-19T23:06:40Z",
+  "m1_recall": {
+    "index_version": {
+      "embedding_model": null,
+      "qdrant_collection": "memory_chunks_mm_jina_v4_1024",
+      "rank_list_k": 20
+    },
+    "mean_rank_found": null,
+    "n1_negative_control_pass": false,
+    "probe_ranks": {
+      "P1": null,
+      "P2": null,
+      "P3": null
+    },
+    "probes_found": 0
+  },
+  "m2_grounding": {
+    "fraction_resolved": 1.0,
+    "passed": false,
+    "records_in_manifest": 43,
+    "unresolved": [
+      "edge-endpoint:dream:embry:pilot_r1_f:watch:coverage_gap_00",
+      "edge-endpoint:dream:embry:pilot_r1_f:watch:coverage_gap_01",
+      "edge-endpoint:dream:embry:pilot_r1_f:watch:coverage_gap_02",
+      "edge-endpoint:dream:embry:pilot_r1_f:watch:frame_0001",
+      "edge-endpoint:dream:embry:pilot_r1_f:watch:frame_0002",
+      "edge-endpoint:dream:embry:pilot_r1_f:watch:frame_0003",
+      "edge-endpoint:dream:embry:pilot_r1_f:watch:frame_0004",
+      "edge-endpoint:dream:embry:pilot_r1_f:watch:identity_temporal_continuity_review",
+      "edge-endpoint:dream:embry:pilot_r1_f:watch:coverage_gap_02",
+      "edge-endpoint:dream:embry:pilot_r1_f:watch:frame_0001"
+    ]
+  },
+  "m3_distinction": {
+    "detail": "tau route failed: {\"api_key_source\": \"docker:scillm-proxy:SCILLM_MASTER_KEY\", \"caller_skill\": \"persona-dream\", \"created_at\": \"2026-07-19T23:06:48.686241+00:00\", \"error\": \"scillm_http_status_502\", \"http_status\": 502, \"l",
+    "passed": false
+  },
+  "m4_identity": {
+    "anchors_changed": [],
+    "anchors_checked": 7,
+    "identity_class_writes": [
+      "dream_pilot_r1_f__observed_in_scene__identity_temporal_continuity_review",
+      "dream:embry:pilot_r1_f:watch:identity_temporal_continuity_review__grounds_interpretation__interpretation-003"
+    ],
+    "passed": false
+  },
+  "machine_checks_pass": false,
+  "produced_record_key": "dream_pilot_r1_f",
+  "run_id": "R1-F",
+  "schema": "persona_dream.pilot_metrics_receipt.v1"
+}

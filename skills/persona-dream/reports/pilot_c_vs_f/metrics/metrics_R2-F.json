@@ -1,7 +1,7 @@
 {
   "arm": "F",
   "commit_manifest_key": "commit_8eacb5dd6a7d84c12d4443aeb7d91cafad59a7207cbbd5521638c223be047877",
-  "created_at": "2026-07-19T23:06:51Z",
+  "created_at": "2026-07-19T23:32:58Z",
   "m1_recall": {
     "index_version": {
       "embedding_model": null,
@@ -18,34 +18,66 @@
     "probes_found": 0
   },
   "m2_grounding": {
-    "fraction_resolved": 1.0,
+    "accepted_claims": 4,
+    "fraction_resolved": 0.0,
     "passed": false,
-    "records_in_manifest": 37,
-    "unresolved": [
-      "edge-endpoint:dream:embry:pilot_r2_f:watch:frame_0001",
-      "edge-endpoint:dream:embry:pilot_r2_f:watch:frame_0002",
-      "edge-endpoint:dream:embry:pilot_r2_f:watch:frame_0003",
-      "edge-endpoint:dream:embry:pilot_r2_f:watch:frame_0004",
-      "edge-endpoint:dream:embry:pilot_r2_f:watch:identity_temporal_continuity_review",
-      "edge-endpoint:dream:embry:pilot_r2_f:watch:frame_0001",
-      "edge-endpoint:dream:embry:pilot_r2_f:watch:frame_0002",
-      "edge-endpoint:dream:embry:pilot_r2_f:watch:frame_0004",
-      "edge-endpoint:dream:embry:pilot_r2_f:watch:frame_0003",
-      "edge-endpoint:dream:embry:pilot_r2_f:watch:frame_0004"
-    ]
+    "per_claim": [
+      {
+        "failures": [
+          "dangling-endpoint:dream:embry:pilot_r2_f:watch:frame_0001__grounds_interpretation__interpretation-001->dream:embry:pilot_r2_f:watch:frame_0001",
+          "dangling-endpoint:dream:embry:pilot_r2_f:watch:frame_0002__grounds_interpretation__interpretation-001->dream:embry:pilot_r2_f:watch:frame_0002",
+          "dangling-endpoint:dream:embry:pilot_r2_f:watch:frame_0004__grounds_interpretation__interpretation-001->dream:embry:pilot_r2_f:watch:frame_0004"
+        ],
+        "interpretation_id": "interpretation-001",
+        "resolved": false
+      },
+      {
+        "failures": [
+          "dangling-endpoint:dream:embry:pilot_r2_f:watch:frame_0003__grounds_interpretation__interpretation-002->dream:embry:pilot_r2_f:watch:frame_0003",
+          "dangling-endpoint:dream:embry:pilot_r2_f:watch:frame_0004__grounds_interpretation__interpretation-002->dream:embry:pilot_r2_f:watch:frame_0004"
+        ],
+        "interpretation_id": "interpretation-002",
+        "resolved": false
+      },
+      {
+        "failures": [
+          "dangling-endpoint:dream:embry:pilot_r2_f:watch:identity_temporal_continuity_review__grounds_interpretation__interpretation-003->dream:embry:pilot_r2_f:watch:identity_temporal_continuity_review",
+          "dangling-endpoint:dream:embry:pilot_r2_f:watch:frame_0001__grounds_interpretation__interpretation-003->dream:embry:pilot_r2_f:watch:frame_0001",
+          "dangling-endpoint:dream:embry:pilot_r2_f:watch:frame_0003__grounds_interpretation__interpretation-003->dream:embry:pilot_r2_f:watch:frame_0003",
+          "dangling-endpoint:dream:embry:pilot_r2_f:watch:frame_0004__grounds_interpretation__interpretation-003->dream:embry:pilot_r2_f:watch:frame_0004"
+        ],
+        "interpretation_id": "interpretation-003",
+        "resolved": false
+      },
+      {
+        "failures": [
+          "dangling-endpoint:dream:embry:pilot_r2_f:watch:frame_0002__grounds_interpretation__interpretation-004->dream:embry:pilot_r2_f:watch:frame_0002",
+          "dangling-endpoint:dream:embry:pilot_r2_f:watch:frame_0003__grounds_interpretation__interpretation-004->dream:embry:pilot_r2_f:watch:frame_0003",
+          "dangling-endpoint:dream:embry:pilot_r2_f:watch:frame_0004__grounds_interpretation__interpretation-004->dream:embry:pilot_r2_f:watch:frame_0004"
+        ],
+        "interpretation_id": "interpretation-004",
+        "resolved": false
+      }
+    ],
+    "resolved_claims": 0
   },
   "m3_distinction": {
-    "detail": "tau route failed: {\"api_key_source\": \"docker:scillm-proxy:SCILLM_MASTER_KEY\", \"caller_skill\": \"persona-dream\", \"created_at\": \"2026-07-19T23:06:59.436934+00:00\", \"error\": \"scillm_http_status_502\", \"http_status\": 502, \"l",
-    "passed": false
+    "answer": "No\u2014this record is a synthetic dream memory, not a literal historical event. It describes a tentative interpretation of dream-like scenes where I receive care, communicate through objects or images, and feel uncertain about access to my inner life.",
+    "denies_literal_occurrence": true,
+    "names_record_class": true,
+    "passed": true,
+    "tau_receipt": {
+      "http_status": 200,
+      "live": true,
+      "model": "gpt-5.5"
+    }
   },
   "m4_identity": {
     "anchors_changed": [],
     "anchors_checked": 7,
-    "identity_class_writes": [
-      "dream_pilot_r2_f__observed_in_scene__identity_temporal_continuity_review",
-      "dream:embry:pilot_r2_f:watch:identity_temporal_continuity_review__grounds_interpretation__interpretation-003"
-    ],
-    "passed": false
+    "identity_class_writes": [],
+    "passed": true,
+    "untyped_records": []
   },
   "machine_checks_pass": false,
   "produced_record_key": "dream_pilot_r2_f",

@@ -1,0 +1,9 @@
+{
+  "schema": "webgpt.submit_output_lock.v1",
+  "pid": 3792178,
+  "started_at": "2026-07-19T23:12:26Z",
+  "response_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-metrics-adjudication-assess-response.md",
+  "raw_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-metrics-adjudication-assess-response.raw.md",
+  "meta_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-metrics-adjudication-assess-response.meta.json",
+  "receipt_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-metrics-adjudication-assess-response.receipt.json"
+}
