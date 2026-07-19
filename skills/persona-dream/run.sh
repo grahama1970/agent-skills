@@ -16,7 +16,6 @@ Commands:
   research-bakeoff     Run opt-in story/contact-sheet/A-V research bakeoff modes
   contact-sheet        Build/amend/retrieve visual reference sheets, memory records, and Qdrant index
   pipeline-phase02-recall  Re-run Phase 2 live recall and refresh Phase 1+2 sections of the 8892 report
-  dreamer-sequential       Deterministic Dreamer section runner: status or one active step
   phase-05-sync-contact-sheet-sidecars  Write prompt links + probed-dimension sidecars (no PNG duplication)
   phase-05-contact-sheet-gate  Validate/write Phase 5 contact-sheet gate (accepted 4:3 sizes + sidecars)
   regenerate                 Regenerate contact sheets or panels from recreate bundles
@@ -168,7 +167,6 @@ Examples:
   ./run.sh validate-local-media-lock /mnt/storage12tb/skills/persona-dream/outputs/<run-id> --serve --json
   ./run.sh validate-gate --gate voice-clone
   ./run.sh validate-gate --gate phase-05,phase-06
-  ./run.sh dreamer-sequential status --run-root /mnt/storage12tb/skills/persona-dream/outputs/<run-id>
 EOF
 }
 
@@ -195,9 +193,6 @@ case "$COMMAND" in
     ;;
   pipeline-phase02-recall)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/run_phase_02_memory_recall.py" "$@"
-    ;;
-  dreamer-sequential)
-    exec python3 "${SCRIPT_DIR}/scripts/dreamer_sequential_runner.py" "$@"
     ;;
   phase-05-sync-contact-sheet-sidecars)
     exec python3 "${SCRIPT_DIR}/scripts/sync_contact_sheet_sidecars.py" "$@"

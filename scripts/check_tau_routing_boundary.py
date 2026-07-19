@@ -68,6 +68,25 @@ _INLINE_ALLOW = re.compile(r"#\s*tau-routing:allow")
 
 # ---------------------------------------------------------------------------
 # ALLOWLIST — sanctioned files. These name scillm legitimately and never fail.
+#
+# The Tau-only rule governs MODEL ROUTING: persona-dream/watch must not use the
+# scillm proxy to obtain model inference for pipeline output. Two categories of
+# file legitimately name the scillm transport WITHOUT being model-routing callers
+# and are permanently allowlisted:
+#
+#   1. The sanctioned Tau adapters + this checker (they route THROUGH Tau, or
+#      only reference scillm tokens as detection patterns).
+#   2. DIAGNOSTICS that probe the scillm *service* rather than route pipeline
+#      inference through it:
+#        * a service-health / model-inventory probe hitting /v1/scillm/health and
+#          /v1/scillm/models is an ops liveness check, not model routing;
+#        * a loopback-only transport-contract proof whose PURPOSE is to verify the
+#          scillm proxy's own transport/concurrency behavior (exactly N loopback
+#          calls, is_loopback-enforced) is testing the transport itself — routing
+#          it through Tau would defeat the proof;
+#        * a boundary-guard sanity that asserts SCILLM_BASE_URL is local does not
+#          itself perform inference.
+#      None of these are imported or invoked by a live pipeline lane.
 # ---------------------------------------------------------------------------
 ALLOWLIST: dict[str, str] = {
     "scripts/check_tau_routing_boundary.py":
@@ -78,6 +97,16 @@ ALLOWLIST: dict[str, str] = {
         "boundary-guard sanity: asserts SCILLM_BASE_URL is local; does not itself bypass Tau for inference",
     "skills/persona-dream/scripts/sanity_scillm_loop_negative_tests.py":
         "negative-test harness for the scillm loop guard (uses example.invalid); no live inference",
+    # --- DIAGNOSTICS (category 2 above): probe the service, not model routing ---
+    "skills/persona-dream/scripts/persona_dream.py":
+        "DIAGNOSTIC: CLI backend-readiness probe hits /v1/scillm/health + /v1/scillm/models for an ops "
+        "liveness/model-inventory report only; it does NOT obtain pipeline model inference from scillm. "
+        "Probing a service's health endpoint is not model routing. Not a live-lane inference caller.",
+    "skills/persona-dream/scripts/medium_loop_dag_smoke.py":
+        "DIAGNOSTIC: loopback-only transport-contract proof ladder. Makes exactly 1-2 is_loopback-enforced "
+        "calls purely to verify the scillm proxy's own transport/concurrency (as_completed) semantics, not "
+        "to produce pipeline artifacts. Routing this through Tau would defeat the transport proof. "
+        "Not imported or wired into any live lane / run.sh / sanity path.",
 }
 
 # ---------------------------------------------------------------------------
@@ -113,35 +142,10 @@ TEMPORARY_DEBT: dict[str, str] = {
         "TEMPORARY_DEBT: standalone urllib VLM panel review to scillm; route via Tau panel-reviewer. P1.",
     "skills/persona-dream/scripts/phase07_storyboard_tau_node.py":
         "TEMPORARY_DEBT: named 'tau_node' but urllib-POSTs identity-review VLM to scillm directly; route via Tau VLM node. P1.",
-    # --- persona-dream diagnostics / smoke ---
-    "skills/persona-dream/scripts/persona_dream.py":
-        "TEMPORARY_DEBT: CLI health/model-inventory probes hit /v1/scillm/health + /v1/scillm/models directly; "
-        "route diagnostics via Tau or an explicit ops surface. P1.",
-    "skills/persona-dream/scripts/medium_loop_dag_smoke.py":
-        "TEMPORARY_DEBT: scillm probe smoke posts /v1/chat/completions directly; move behind Tau. P1.",
-    # --- experimental 'rung' ladder scripts (scillm transport experiments) ---
-    "skills/persona-dream/scripts/rung0_httpx.py":
-        "TEMPORARY_DEBT: rung ladder experiment posts to scillm chat completions directly. P1.",
-    "skills/persona-dream/scripts/rung1_while_loop.py":
-        "TEMPORARY_DEBT: rung ladder experiment posts to scillm chat completions directly. P1.",
-    "skills/persona-dream/scripts/rung2_chutes_as_completed.py":
-        "TEMPORARY_DEBT: rung ladder experiment hits /v1/scillm/chutes/completions directly. P1.",
-    "skills/persona-dream/scripts/rung4_scillm_batch.py":
-        "TEMPORARY_DEBT: rung ladder experiment hits /v1/scillm/chutes/batch directly. P1.",
-    "skills/persona-dream/scripts/rung5_tool_harness.py":
-        "TEMPORARY_DEBT: rung ladder experiment hits /v1/scillm/opencode/runs directly. P1.",
-    "skills/persona-dream/scripts/rung8_panel_reviewer_readonly.py":
-        "TEMPORARY_DEBT: rung ladder experiment references /v1/scillm/opencode/runs endpoint directly. P1.",
-    "skills/persona-dream/scripts/rung17_dreamer_scillm_readonly_decision.py":
-        "TEMPORARY_DEBT: rung ladder experiment posts to /v1/scillm/opencode/runs directly. P1.",
-    "skills/persona-dream/scripts/rung18_dreamer_branch_decision.py":
-        "TEMPORARY_DEBT: rung ladder experiment posts to /v1/scillm/opencode/runs directly. P1.",
-    "skills/persona-dream/scripts/rung21_story_executor_real_dry_run.py":
-        "TEMPORARY_DEBT: rung ladder experiment sets SCILLM_URL to the local proxy directly. P1.",
-    "skills/persona-dream/scripts/rung22_dreamer_closed_cycle_decision.py":
-        "TEMPORARY_DEBT: rung ladder experiment posts to /v1/scillm/opencode/runs directly. P1.",
-    "skills/persona-dream/scripts/dreamer_sequential_runner.py":
-        "TEMPORARY_DEBT: dreamer runner posts to /v1/scillm/opencode/runs directly. P1.",
+    # NOTE: the experimental 'rung' ladder (rung0/1/2/4/5/8/17/18/21/22) and
+    # dreamer_sequential_runner.py were RETIRED (git rm) on 2026-07-19 as
+    # superseded one-off scillm transport experiments with no live imports.
+    # See reports/pipeline-complete/.persona-dream/rung_ladder_retirement_receipt.v1.json.
 }
 
 
