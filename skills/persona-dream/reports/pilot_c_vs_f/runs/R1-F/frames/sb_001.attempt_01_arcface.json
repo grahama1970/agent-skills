@@ -1,0 +1,45 @@
+{
+  "schema": "persona_dream.identity_face_embedding_subgate.v1",
+  "status": "PASS",
+  "authority": "embedding_cosine",
+  "model": "insightface:buffalo_l:w600k_r50",
+  "reviewer_source": "insightface:buffalo_l:cosine",
+  "threshold": 0.421,
+  "failure_code": "FAIL_FACE_EMBEDDING_IDENTITY_MISMATCH",
+  "frame_path": "reports/pilot_c_vs_f/runs/R1-F/frames/sb_001.attempt_01.png",
+  "frame_sha256": "sha256:1b402ceb715e4bbfde5ef0e6a7c5f4be03ca854655851d199abddbc67a38b026",
+  "entity_results": [
+    {
+      "entity": "Embry",
+      "status": "PASS",
+      "verdict": "SAME",
+      "best_cosine": 0.764103,
+      "threshold": 0.421,
+      "candidate_bbox": [
+        572.4,
+        79.2,
+        809.5,
+        413.7
+      ],
+      "candidate_det_score": 0.836,
+      "candidate_detected_sex": "M",
+      "expected_sex": "F",
+      "reference_face_count": 9,
+      "pairwise_cosine": [
+        0.55957,
+        0.605934,
+        0.741462,
+        0.671867,
+        0.764103,
+        0.622439,
+        0.624726,
+        0.471451,
+        0.527551
+      ]
+    }
+  ],
+  "blocking_findings": [],
+  "candidate_faces_detected": 2,
+  "mocked": false,
+  "live": true
+}

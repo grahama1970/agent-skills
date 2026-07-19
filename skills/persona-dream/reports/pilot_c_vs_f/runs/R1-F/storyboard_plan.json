@@ -1,0 +1,49 @@
+{
+  "plan": {
+    "dream_synopsis": "Embry dreams of Yale corridors folding into a SPARTA control room, where every door requires both a confession and a checksum before it will open. She tries to offer Brandon one bounded truth while protecting the blank branch of a decision tree that keeps rewriting itself around James, Kai, and the promise she still cannot name.",
+    "panels": [
+      {
+        "action": "Embry holds a glowing POINT/PATH/PEOPLE checklist against her chest while a door ahead asks for DUAL CONFIRMATION in flickering text.",
+        "mood": "controlled uncertainty, intimate but guarded",
+        "panel_id": "sb_001",
+        "setting": "A hybrid Yale hallway and SPARTA review room, with stone arches turning into glass mission displays.",
+        "shot": "Foreground close-up on Embry\u2019s face, eyes open and tense; Brandon is visible over her shoulder in soft focus.",
+        "start_frame_description": "Embry\u2019s face fills the lower foreground, lit by checklist-blue light; behind her, Brandon waits beside two unsigned handoff forms floating like warning signs.",
+        "time_range": "0.0-2.5s"
+      },
+      {
+        "action": "Embry slides Brandon a sealed envelope labeled BOUNDED TRUTH, but the table stretches longer each time it nears his hands.",
+        "mood": "longing restrained by privacy",
+        "panel_id": "sb_002",
+        "setting": "A dreamlike archive table suspended between Yale stacks and a SPARTA operations console.",
+        "shot": "Medium frontal shot of Embry in the foreground, face clearly visible; Brandon stands across from her at a narrow table.",
+        "start_frame_description": "Embry\u2019s expression is steady but strained; the envelope glows with no factual contents visible, while muted screens behind her show an indistinct still frame and unopened draft windows.",
+        "time_range": "2.5-5.0s"
+      },
+      {
+        "action": "Embry writes reversible beside one branch, handoff beside another, then hesitates before the final blank branch as the names James and Kai appear only as sealed silhouettes.",
+        "mood": "trust under pressure, precision losing certainty",
+        "panel_id": "sb_003",
+        "setting": "A black decision-tree space where white branches grow like chalk lines across the floor and ceiling.",
+        "shot": "Tight three-quarter shot with Embry foreground, face visible in profile; Brandon appears beside her, both looking at the same branching diagram.",
+        "start_frame_description": "Embry\u2019s face is illuminated by the blank branch, her pen hovering; Brandon\u2019s hand is near but not touching hers, offering support without forcing disclosure.",
+        "time_range": "5.0-7.5s"
+      },
+      {
+        "action": "Embry places the checklist, the sealed drafts, and the blank final branch on the floor like coordinates, then leaves one path unmarked instead of choosing it.",
+        "mood": "active tension, fragile hope, unresolved belonging",
+        "panel_id": "sb_004",
+        "setting": "An open threshold where the Yale arch, SPARTA console, and private archive dissolve into a pale unfinished map.",
+        "shot": "Foreground close-up of Embry facing camera, face fully visible; Brandon is not visible, only his shadow falls near the edge of frame.",
+        "start_frame_description": "Embry breathes in, composed but unresolved; the objects form a precise triangle at her feet while the path beyond remains softly blank.",
+        "time_range": "7.5-10.0s"
+      }
+    ]
+  },
+  "tau_receipt": {
+    "route": null,
+    "model": "gpt-5.5",
+    "live": true,
+    "http_status": 200
+  }
+}

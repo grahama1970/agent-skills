@@ -1,0 +1,87 @@
+{
+  "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+  "blocking_findings": [],
+  "created_at": "2026-07-19T22:34:23Z",
+  "duration_seconds": 0.044943,
+  "events_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pilot_c_vs_f/runs/R1-F/vlm_observation/panel_reviewer_events.jsonl",
+  "http_status": 200,
+  "image_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pilot_c_vs_f/runs/R1-F/vlm_observation/tau_vlm_composite.png",
+  "live": true,
+  "live_call_performed": true,
+  "mocked": false,
+  "model": "gpt-5.5",
+  "parsed_response": {
+    "frames": [
+      {
+        "activity": "The woman faces forward while holding the lit tablet; papers or screens with checklist-like markings appear near them. The man stands in the background.",
+        "index": 1,
+        "people": [
+          "A woman in a dark blue shirt holding a glowing transparent tablet",
+          "A man in a dark shirt standing behind her"
+        ],
+        "setting": "A large stone interior hallway or library-like space with arches, shelves, and glass panels.",
+        "tone": "Serious and focused"
+      },
+      {
+        "activity": "The woman extends her arm toward a glowing envelope on the table; the man sits with hands together watching from the far side.",
+        "index": 2,
+        "people": [
+          "A woman in a dark blue shirt seated at a long table",
+          "A man in a dark long-sleeve shirt seated across the table"
+        ],
+        "setting": "A dim room with a long wooden table, bookshelves, and multiple blue monitor screens in the background.",
+        "tone": "Tense and investigative"
+      },
+      {
+        "activity": "The woman holds up the small object while looking ahead; the bearded man looks toward her or the object. Two silhouettes stand far behind them.",
+        "index": 3,
+        "people": [
+          "A woman in a dark blue shirt holding a small white cylindrical object",
+          "A bearded man in a dark shirt standing beside or behind her",
+          "Two distant human silhouettes in the background"
+        ],
+        "setting": "A dark floor or chamber marked with bright branching white lines and circular markings.",
+        "tone": "Alert and mysterious"
+      },
+      {
+        "activity": "The woman stands facing forward near a line on the floor leading to small rectangular objects or books.",
+        "index": 4,
+        "people": [
+          "A woman in a dark blue shirt standing near an open doorway"
+        ],
+        "setting": "A stone interior room opening onto a bright pale cracked outdoor ground; a table, globe, and framed picture are visible inside.",
+        "tone": "Quiet and contemplative"
+      }
+    ]
+  },
+  "passed_entities": [],
+  "receipt_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pilot_c_vs_f/runs/R1-F/vlm_observation/visual_review_receipt.json",
+  "request": {
+    "messages": "<redacted-image-url-request>",
+    "model": "gpt-5.5",
+    "response_format": {
+      "type": "json_object"
+    },
+    "scillm_metadata": {
+      "caller": "tau",
+      "proof": "persona-dream-panel-review",
+      "role": "panel-reviewer"
+    },
+    "stream": true,
+    "stream_heartbeat_s": 15.0,
+    "stream_progress_events": true,
+    "temperature": 0
+  },
+  "response_content": "{\"frames\":[{\"index\":1,\"people\":[\"A woman in a dark blue shirt holding a glowing transparent tablet\",\"A man in a dark shirt standing behind her\"],\"activity\":\"The woman faces forward while holding the lit tablet; papers or screens with checklist-like markings appear near them. The man stands in the background.\",\"setting\":\"A large stone interior hallway or library-like space with arches, shelves, and glass panels.\",\"tone\":\"Serious and focused\"},{\"index\":2,\"people\":[\"A woman in a dark blue shirt seated at a long table\",\"A man in a dark long-sleeve shirt seated across the table\"],\"activity\":\"The woman extends her arm toward a glowing envelope on the table; the man sits with hands together watching from the far side.\",\"setting\":\"A dim room with a long wooden table, bookshelves, and multiple blue monitor screens in the background.\",\"tone\":\"Tense and investigative\"},{\"index\":3,\"people\":[\"A woman in a dark blue shirt holding a small white cylindrical object\",\"A bearded man in a dark shirt standing beside or behind her\",\"Two distant human silhouettes in the background\"],\"activity\":\"The woman holds up the small object while looking ahead; the bearded man looks toward her or the object. Two silhouettes stand far behind them.\",\"setting\":\"A dark floor or chamber marked with bright branching white lines and circular markings.\",\"tone\":\"Alert and mysterious\"},{\"index\":4,\"people\":[\"A woman in a dark blue shirt standing near an open doorway\"],\"activity\":\"The woman stands facing forward near a line on the floor leading to small rectangular objects or books.\",\"setting\":\"A stone interior room opening onto a bright pale cracked outdoor ground; a table, globe, and framed picture are visible inside.\",\"tone\":\"Quiet and contemplative\"}]}",
+  "review_prompt_sha256": "sha256:79b2725e15b91dc5079c4eecaf8b0e5d1e2726c2c230992dbd12e9fd3b3b093d",
+  "role": "panel-reviewer",
+  "schema": "tau.persona_dream.scillm_vlm_review_receipt.v1",
+  "status": "NEEDS_CHANGES",
+  "stream": true,
+  "stream_done_seen": true,
+  "stream_event_count": 359,
+  "stream_heartbeat_count": 0,
+  "stream_last_event_type": "done",
+  "summary": "Scillm VLM review completed.",
+  "surface": "scillm.chat_completions.image_url"
+}

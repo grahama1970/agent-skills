@@ -1,0 +1,8 @@
+{
+  "ok": true,
+  "auth": "codex_oauth_subscription_builtin_image_gen",
+  "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pilot_c_vs_f/runs/R1-F/frames/sb_004.attempt_01.png",
+  "width": 1536,
+  "height": 864,
+  "sha256": "10cbc6a555b1e5ef8538663669114c512b3be3d24ed34a05e4fffa41ad0c77ac"
+}

@@ -1,0 +1,69 @@
+{
+  "schema": "persona_dream.pilot_storyboard_observation_packet.v1",
+  "status": "ACCEPTED_STORYBOARD_OBSERVATION",
+  "evidence_origin": "storyboard_frames",
+  "evidence_class": "synthetic_dream",
+  "source_video_sha256": "sha256:5502900504d94d5f4b1d0b070e5c7c2580093bd0164a2123a85ea28042b2ccc9",
+  "source_revision_id": "pilot_c_vs_f",
+  "frame_evidence": [
+    {
+      "index": 1,
+      "timestamp_seconds": 0.0,
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "observed_entities": [
+        "A woman in a dark blue shirt holding a glowing transparent tablet",
+        "A man in a dark shirt standing behind her"
+      ]
+    },
+    {
+      "index": 2,
+      "timestamp_seconds": 2.5,
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "observed_entities": [
+        "A woman in a dark blue shirt seated at a long table",
+        "A man in a dark long-sleeve shirt seated across the table"
+      ]
+    },
+    {
+      "index": 3,
+      "timestamp_seconds": 5.0,
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "observed_entities": [
+        "A woman in a dark blue shirt holding a small white cylindrical object",
+        "A bearded man in a dark shirt standing beside or behind her",
+        "Two distant human silhouettes in the background"
+      ]
+    },
+    {
+      "index": 4,
+      "timestamp_seconds": 7.5,
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "observed_entities": [
+        "A woman in a dark blue shirt standing near an open doorway"
+      ]
+    }
+  ],
+  "transcript_facts": [],
+  "step_hooks": {
+    "step_36_identity_temporal_continuity": {
+      "identity_window_seconds": [
+        0.0,
+        10.0
+      ],
+      "vision_review": {
+        "model": "insightface:buffalo_l (authority) + gpt-5.5 montage (advisory)",
+        "verdict": "PASS",
+        "raw_output_tail": "all 4 frames passed the ArcFace subgate vs embry_contact_sheet_v3"
+      }
+    }
+  },
+  "coverage_gaps": [
+    "no audio track: visual artifact is storyboard frames (render boundary scope note)",
+    "no inter-frame motion: temporal continuity is panel-to-panel only",
+    "Brandon has no identity reference sheet: presence advisory, uncertified"
+  ]
+}

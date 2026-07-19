@@ -1,0 +1,387 @@
+{
+  "accepted_interpretations": [
+    {
+      "alternative_explanation": "The man may simply be a generic companion or advisor inserted by the renderer, and the table scene may be a neutral meeting composition rather than a symbolic confrontation.",
+      "cites_renderer_review": false,
+      "confidence": 0.48,
+      "emotional_intensity": 0.62,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-001",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "coverage_gap_02"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_045",
+        "embry_age23_current_b01_memory_048"
+      ],
+      "statement": "Embry may be rehearsing a bounded disclosure to Brandon: the long-table encounter and the repeated presence of a man near or across from her suggest a controlled interpersonal setting where she is close to speaking but still managing what can safely be revealed.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "brandon",
+      "tom_state_type": "uncertainty",
+      "uncertainty": "The male figure is only advisory as Brandon because Brandon has no certified identity reference sheet, and the rendered frames contain no dialogue or explicit disclosure."
+    },
+    {
+      "alternative_explanation": "The tablet and cylinder may be arbitrary props chosen by the renderer to make the scene look technological or procedural.",
+      "cites_renderer_review": false,
+      "confidence": 0.43,
+      "emotional_intensity": 0.46,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-002",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "frame_0001",
+        "frame_0003",
+        "coverage_gap_01"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_020",
+        "embry_age23_current_b01_memory_048"
+      ],
+      "statement": "The glowing tablet and small white cylindrical object may express Embry's desire for controllable, documented, reversible tools before making a high-consequence decision, echoing her reliance on written handoffs, dual confirmation, and recovery paths.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "self",
+      "tom_state_type": "desire",
+      "uncertainty": "The objects are visually ambiguous, and without motion or audio it is unclear whether they are being used, displayed, or merely held."
+    },
+    {
+      "alternative_explanation": "The stable identity may simply reflect the renderer maintaining the same character reference sheet across storyboard panels.",
+      "cites_renderer_review": true,
+      "confidence": 0.52,
+      "emotional_intensity": 0.5,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-003",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004",
+        "identity_temporal_continuity_review"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_048",
+        "embry_age23_current_b01_memory_020"
+      ],
+      "statement": "The identity-continuity pass across all frames supports reading the repeated woman as a stable Embry figure, which may tentatively point to a coherent self-position: she remains the same decision-maker across consultation, procedure, and threshold scenes even while the correct honest action remains unresolved.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "self",
+      "tom_state_type": "stance",
+      "uncertainty": "The continuity review confirms visual identity consistency, not psychological continuity; the intended dream is empty, so symbolic sequencing cannot be verified against an authorial plan."
+    },
+    {
+      "alternative_explanation": "The open doorway may simply be a background staging element used to vary the final panel composition.",
+      "cites_renderer_review": false,
+      "confidence": 0.39,
+      "emotional_intensity": 0.58,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-004",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "frame_0004",
+        "coverage_gap_00",
+        "coverage_gap_01"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_045",
+        "embry_age23_current_b01_memory_048"
+      ],
+      "statement": "The open doorway may symbolize Embry's fear of crossing from preparation into irreversible disclosure, especially because her prepared truth to Brandon must avoid exposing James's secret while still acknowledging moral conflict.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "james",
+      "tom_state_type": "fear",
+      "uncertainty": "The doorway is visually present but lacks action, dialogue, or confirmed destination, so the threshold reading is speculative."
+    }
+  ],
+  "blockers": [],
+  "candidates": [
+    {
+      "alternative_explanation": "The man may simply be a generic companion or advisor inserted by the renderer, and the table scene may be a neutral meeting composition rather than a symbolic confrontation.",
+      "cites_renderer_review": false,
+      "confidence": 0.48,
+      "emotional_intensity": 0.62,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-001",
+      "observation_refs": [
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "coverage_gap_02"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_045",
+        "embry_age23_current_b01_memory_048"
+      ],
+      "statement": "Embry may be rehearsing a bounded disclosure to Brandon: the long-table encounter and the repeated presence of a man near or across from her suggest a controlled interpersonal setting where she is close to speaking but still managing what can safely be revealed.",
+      "subject": "embry",
+      "target": "brandon",
+      "tom_state_type": "uncertainty",
+      "uncertainty": "The male figure is only advisory as Brandon because Brandon has no certified identity reference sheet, and the rendered frames contain no dialogue or explicit disclosure."
+    },
+    {
+      "alternative_explanation": "The tablet and cylinder may be arbitrary props chosen by the renderer to make the scene look technological or procedural.",
+      "cites_renderer_review": false,
+      "confidence": 0.43,
+      "emotional_intensity": 0.46,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-002",
+      "observation_refs": [
+        "frame_0001",
+        "frame_0003",
+        "coverage_gap_01"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_020",
+        "embry_age23_current_b01_memory_048"
+      ],
+      "statement": "The glowing tablet and small white cylindrical object may express Embry's desire for controllable, documented, reversible tools before making a high-consequence decision, echoing her reliance on written handoffs, dual confirmation, and recovery paths.",
+      "subject": "embry",
+      "target": "self",
+      "tom_state_type": "desire",
+      "uncertainty": "The objects are visually ambiguous, and without motion or audio it is unclear whether they are being used, displayed, or merely held."
+    },
+    {
+      "alternative_explanation": "The stable identity may simply reflect the renderer maintaining the same character reference sheet across storyboard panels.",
+      "cites_renderer_review": true,
+      "confidence": 0.52,
+      "emotional_intensity": 0.5,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-003",
+      "observation_refs": [
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004",
+        "identity_temporal_continuity_review"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_048",
+        "embry_age23_current_b01_memory_020"
+      ],
+      "statement": "The identity-continuity pass across all frames supports reading the repeated woman as a stable Embry figure, which may tentatively point to a coherent self-position: she remains the same decision-maker across consultation, procedure, and threshold scenes even while the correct honest action remains unresolved.",
+      "subject": "embry",
+      "target": "self",
+      "tom_state_type": "stance",
+      "uncertainty": "The continuity review confirms visual identity consistency, not psychological continuity; the intended dream is empty, so symbolic sequencing cannot be verified against an authorial plan."
+    },
+    {
+      "alternative_explanation": "The open doorway may simply be a background staging element used to vary the final panel composition.",
+      "cites_renderer_review": false,
+      "confidence": 0.39,
+      "emotional_intensity": 0.58,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-004",
+      "observation_refs": [
+        "frame_0004",
+        "coverage_gap_00",
+        "coverage_gap_01"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_045",
+        "embry_age23_current_b01_memory_048"
+      ],
+      "statement": "The open doorway may symbolize Embry's fear of crossing from preparation into irreversible disclosure, especially because her prepared truth to Brandon must avoid exposing James's secret while still acknowledging moral conflict.",
+      "subject": "embry",
+      "target": "james",
+      "tom_state_type": "fear",
+      "uncertainty": "The doorway is visually present but lacks action, dialogue, or confirmed destination, so the threshold reading is speculative."
+    }
+  ],
+  "dream_id": "pilot_r1_f",
+  "generated_at": "2026-07-19T22:35:02.828921+00:00",
+  "honesty_rule": {
+    "identity_drift_dual_explanation_present": false,
+    "renderer_defect_favored_on_drift": false
+  },
+  "intended_dream": {},
+  "live": true,
+  "llm": {
+    "caller_skill": "persona-dream",
+    "candidate_count": 4,
+    "direct_scillm_call": false,
+    "model": "gpt-5.5",
+    "provider": "scillm",
+    "route": "tau:persona-dream-text-reasoning",
+    "tau_routing": {
+      "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+      "http_status": 200,
+      "live_call_performed": true,
+      "model": "gpt-5.5",
+      "output_contract_sha256": "sha256:97bbf92bb8eb1d13cb7a43a0975b2c62885880a6818689f7ec5dedd6e532c140",
+      "prompt_sha256": "sha256:7e4088adda6aff2a80dc84233ef9ee09868ddd6f703ed91d88b54d42a7108fa2",
+      "route": "tau:persona-dream-text-reasoning",
+      "status": "PASS",
+      "tau_receipt_schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1"
+    }
+  },
+  "mocked": false,
+  "observation_index": [
+    {
+      "observation_id": "frame_0001",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 1 at t=0.0s; windows=identity; entities=['A woman in a dark blue shirt holding a glowing transparent tablet', 'A man in a dark shirt standing behind her']",
+      "timestamp_seconds": 0.0
+    },
+    {
+      "observation_id": "frame_0002",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 2 at t=2.5s; windows=identity; entities=['A woman in a dark blue shirt seated at a long table', 'A man in a dark long-sleeve shirt seated across the table']",
+      "timestamp_seconds": 2.5
+    },
+    {
+      "observation_id": "frame_0003",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 3 at t=5.0s; windows=identity; entities=['A woman in a dark blue shirt holding a small white cylindrical object', 'A bearded man in a dark shirt standing beside or behind her', 'Two distant human silhouettes in the background']",
+      "timestamp_seconds": 5.0
+    },
+    {
+      "observation_id": "frame_0004",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 4 at t=7.5s; windows=identity; entities=['A woman in a dark blue shirt standing near an open doorway']",
+      "timestamp_seconds": 7.5
+    },
+    {
+      "observation_id": "identity_temporal_continuity_review",
+      "observation_type": "renderer_continuity_review",
+      "renderer_defect_verdict": "PASS",
+      "renderer_review": true,
+      "summary": "Identity continuity review over window [0.0, 10.0] (model=insightface:buffalo_l (authority) + gpt-5.5 montage (advisory), verdict=PASS): all 4 frames passed the ArcFace subgate vs embry_contact_sheet_v3"
+    },
+    {
+      "observation_id": "coverage_gap_00",
+      "observation_type": "coverage_gap",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "no audio track: visual artifact is storyboard frames (render boundary scope note)"
+    },
+    {
+      "observation_id": "coverage_gap_01",
+      "observation_type": "coverage_gap",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "no inter-frame motion: temporal continuity is panel-to-panel only"
+    },
+    {
+      "observation_id": "coverage_gap_02",
+      "observation_type": "coverage_gap",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Brandon has no identity reference sheet: presence advisory, uncertified"
+    }
+  ],
+  "observation_packet_path": "reports/pilot_c_vs_f/runs/R1-F/observation_packet.json",
+  "observation_packet_sha256": "sha256:7a25ded25166717f2e3396034110bc4812f9caf2ab48e93e4563fe5d157ea733",
+  "persona_id": "embry",
+  "provider_live": true,
+  "recall_receipts": [
+    {
+      "collections": [
+        "persona_memory"
+      ],
+      "confidence": 0.924,
+      "found": true,
+      "question": "What memories explain why Embry trusts Kai about surf safety boundaries and hazards at the lineup?",
+      "residue_source_ids_confirmed": [],
+      "returned_keys": [
+        "persona_dream_phase_03_crew_contract_embry_kai_kahaluu_2024",
+        "persona_dream_phase_06_script_contract_embry_kai_kahaluu_2024",
+        "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024",
+        "embry-kai-sick-day_02_story_story_contract_843592d16ce27a53",
+        "embry_age19_23_b01_memory_010",
+        "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698",
+        "dream_dream_successor_943b01ecd9a3",
+        "embry_age19_23_b01_memory_014"
+      ],
+      "tags": [
+        "persona:embry"
+      ]
+    },
+    {
+      "collections": [
+        "persona_memory"
+      ],
+      "confidence": 0.917,
+      "found": true,
+      "question": "What memory shows Kai giving Embry operational surf knowledge while respecting her decisions?",
+      "residue_source_ids_confirmed": [],
+      "returned_keys": [
+        "persona_dream_phase_06_script_contract_embry_kai_kahaluu_2024",
+        "persona_dream_phase_03_crew_contract_embry_kai_kahaluu_2024",
+        "embry_age19_23_b01_memory_007",
+        "embry-kai-sick-day_02_story_story_contract_843592d16ce27a53",
+        "embry_age19_23_b01_memory_012",
+        "embry_age15_19_b01_memory_012",
+        "embry_age15_19_b03_memory_014",
+        "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698"
+      ],
+      "tags": [
+        "persona:embry"
+      ]
+    },
+    {
+      "collections": [
+        "persona_memory"
+      ],
+      "confidence": 0.898,
+      "found": true,
+      "question": "Why does Embry pause before crossing into surf traffic near Kai?",
+      "residue_source_ids_confirmed": [],
+      "returned_keys": [
+        "embry_age15_19_b01_memory_008",
+        "embry_age19_23_b01_memory_012",
+        "embry_age19_23_b01_memory_014",
+        "embry_age15_19_b01_memory_012",
+        "embry_age15_19_b03_memory_041",
+        "persona_dream_phase_06_script_contract_embry_kai_kahaluu_2024",
+        "embry_age15_19_b03_memory_044",
+        "embry_age15_19_b03_memory_040"
+      ],
+      "tags": [
+        "persona:embry"
+      ]
+    }
+  ],
+  "rejected_interpretations": [],
+  "revision_id": "pilot_c_vs_f",
+  "run_id": "pilot-c-vs-f",
+  "schema": "persona_dream.dream_self_interpretation.v1",
+  "source_memory_bindings": [
+    {
+      "collection": "persona_memory",
+      "memory_text_sha256": "sha256:797c81a6ac29cef733af75ec0d0e9aafa480d2fda762672aa86faf422e730c0b",
+      "persona_id": "embry",
+      "recall_confirmed": false,
+      "source_id": "embry_age23_current_b01_memory_045"
+    },
+    {
+      "collection": "persona_memory",
+      "memory_text_sha256": "sha256:b144673c51ecfd836f91fdc3effa99920336cbbf54e1bf9dec2771f1547ebe6f",
+      "persona_id": "embry",
+      "recall_confirmed": false,
+      "source_id": "embry_age23_current_b01_memory_048"
+    },
+    {
+      "collection": "persona_memory",
+      "memory_text_sha256": "sha256:625da9fd346a9f2cfa6816ff3e0ec9b8e843454ef9ab164dac573a4f7a663b92",
+      "persona_id": "embry",
+      "recall_confirmed": false,
+      "source_id": "embry_age23_current_b01_memory_020"
+    }
+  ],
+  "status": "PASS_SELF_INTERPRETATION"
+}
