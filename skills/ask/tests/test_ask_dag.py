@@ -36,9 +36,9 @@ def test_validate_ask_dag_accepts_parallel_persona_oracle_nodes():
                 },
                 {
                     "id": "final_report",
-                    "type": "skill.run",
+                    "type": "ask.report",
                     "depends_on": ["brandon", "margaret"],
-                    "input": {"skill": "create-report", "args": ["--help"]},
+                    "input": {"title": "Persona Review Report"},
                 },
             ],
         }
@@ -94,7 +94,7 @@ def test_validate_ask_dag_accepts_scillm_exec_graph_shape(tmp_path):
                     "id": "final_report",
                     "title": "Final report",
                     "depends_on": ["brandon", "margaret"],
-                    "execution": {"call_type": "skill.run", "skill": "create-report", "args": ["--help"]},
+                    "execution": {"call_type": "ask.report", "title": "Final report"},
                 },
             ],
         },
@@ -108,7 +108,23 @@ def test_validate_ask_dag_accepts_scillm_exec_graph_shape(tmp_path):
     assert dag["nodes"][0]["input"]["model"] == "gpt-5.5"
     assert dag["nodes"][0]["input"]["reasoning_effort"] == "high"
     assert dag["nodes"][0]["input"]["prompt"] == "Brandon: read the report and comment."
-    assert dag["nodes"][2]["input"]["skill"] == "create-report"
+    assert dag["nodes"][2]["type"] == "ask.report"
+
+
+def test_validate_ask_dag_rejects_non_runnable_skill_run():
+    with pytest.raises(ask_dag.AskDagError, match="runnable sibling skill contract"):
+        ask_dag.validate_ask_dag(
+            {
+                "schema_version": "ask.dag.v1",
+                "nodes": [
+                    {
+                        "id": "final_report",
+                        "type": "skill.run",
+                        "input": {"skill": "create-report", "args": ["--help"]},
+                    }
+                ],
+            }
+        )
 
 
 def test_validate_ask_dag_accepts_any_runnable_sibling_skill():
@@ -142,7 +158,7 @@ def test_draft_ask_dag_from_question_hides_scillm_pooling_details():
     assert "queue" not in analysis["input"]
     assert "transport" not in analysis["input"]
     final_report = dag["nodes"][2]
-    assert final_report["input"]["skill"] == "create-report"
+    assert final_report["type"] == "ask.report"
 
 
 def test_draft_ask_dag_from_question_fails_closed_for_ambiguity():
@@ -197,7 +213,7 @@ def test_execute_ask_dag_runs_independent_oracle_nodes_concurrently(monkeypatch,
     assert subgraph["node_ids"] == ["brandon", "margaret"]
 
 
-def test_execute_ask_dag_passes_dependency_context_to_skill_run(monkeypatch, tmp_path):
+def test_execute_ask_dag_passes_dependency_context_to_report_node(monkeypatch, tmp_path):
     def fake_memory_recall(_query, _scope, **_kwargs):
         return {
             "returncode": 0,
@@ -205,19 +221,7 @@ def test_execute_ask_dag_passes_dependency_context_to_skill_run(monkeypatch, tmp
             "stderr": "",
         }
 
-    def fake_run_skill(skill, args, timeout):
-        assert skill == "create-report"
-        assert timeout == 60
-        context_path = args[args.index("--input") + 1]
-        output_path = args[args.index("--output") + 1]
-        context = json.loads(open(context_path, encoding="utf-8").read())
-        assert list(context["dependencies"]) == ["memory_first"]
-        with open(output_path, "w", encoding="utf-8") as handle:
-            handle.write("# Generated Report\n\n## Report Summary\n")
-        return {"returncode": 0, "stdout": json.dumps({"ok": True, "report_path": output_path}), "stderr": ""}
-
     monkeypatch.setattr(ask_dag, "run_memory_recall", fake_memory_recall)
-    monkeypatch.setattr(ask_dag, "run_skill", fake_run_skill)
     run = AskRunState("skill-context-dag", output_root=tmp_path)
     run.write_request({"command": "ask", "question": "review report", "scope": "ask"})
     dag = ask_dag.validate_ask_dag(
@@ -227,12 +231,9 @@ def test_execute_ask_dag_passes_dependency_context_to_skill_run(monkeypatch, tmp
                 {"id": "memory_first", "type": "memory.recall", "input": {"query": "lessons"}},
                 {
                     "id": "final_report",
-                    "type": "skill.run",
+                    "type": "ask.report",
                     "depends_on": ["memory_first"],
-                    "input": {
-                        "skill": "create-report",
-                        "args": ["--input", "${dag_context_json}", "--output", "${dag_node_output}"],
-                    },
+                    "input": {"title": "Generated Report"},
                 },
             ],
         }
@@ -244,6 +245,8 @@ def test_execute_ask_dag_passes_dependency_context_to_skill_run(monkeypatch, tmp
     assert report_node["ok"] is True
     assert report_node["output_path"].endswith("final_report.out.md")
     assert result["context_items"][-1]["solution"].startswith("# Generated Report")
+    context = json.loads((tmp_path / "skill-context-dag" / "dag" / "final_report.context.json").read_text())
+    assert list(context["dependencies"]) == ["memory_first"]
 
 
 def test_execute_ask_dag_auto_repairs_dogpile_timeout(monkeypatch, tmp_path):
@@ -299,9 +302,9 @@ def test_execute_ask_dag_stops_after_failed_required_node(monkeypatch, tmp_path)
                 {"id": "fresh_context", "type": "dogpile.search", "input": {"query": "LLM DAG orchestration"}},
                 {
                     "id": "final_report",
-                    "type": "skill.run",
+                    "type": "ask.report",
                     "depends_on": ["fresh_context"],
-                    "input": {"skill": "create-report", "args": ["--help"]},
+                    "input": {"title": "Final Report"},
                 },
             ],
         }
@@ -333,13 +336,12 @@ def test_validate_ask_dag_rejects_non_boolean_allow_failure():
 
 
 def test_execute_ask_dag_continues_when_failed_node_allows_failure(monkeypatch, tmp_path):
-    calls = {"dogpile": 0, "report": 0}
+    calls = {"dogpile": 0}
 
     def fake_run_skill(skill, args, timeout):
         if skill == "dogpile":
             calls["dogpile"] += 1
             return {"returncode": 1, "stdout": "", "stderr": "provider failure"}
-        calls["report"] += 1
         return {"returncode": 0, "stdout": "{}", "stderr": ""}
 
     monkeypatch.setattr(ask_dag, "run_skill", fake_run_skill)
@@ -357,9 +359,9 @@ def test_execute_ask_dag_continues_when_failed_node_allows_failure(monkeypatch, 
                 },
                 {
                     "id": "final_report",
-                    "type": "skill.run",
+                    "type": "ask.report",
                     "depends_on": ["fresh_context"],
-                    "input": {"skill": "create-report", "args": ["--help"]},
+                    "input": {"title": "Final Report"},
                 },
             ],
         }
@@ -367,7 +369,6 @@ def test_execute_ask_dag_continues_when_failed_node_allows_failure(monkeypatch, 
 
     result = ask_dag.execute_ask_dag(dag, question="research", scope="ask", run_state=run)
     assert calls["dogpile"] == 1
-    assert calls["report"] == 1
     assert (tmp_path / "allow-failure-dag" / "dag" / "final_report.json").exists()
     assert result["manifest_path"]
     status = read_status("allow-failure-dag", tail_events=20, output_root=tmp_path)
@@ -489,9 +490,9 @@ def test_dag_dry_run_summary_includes_layers_and_ascii_chart():
                 },
                 {
                     "id": "final_report",
-                    "type": "skill.run",
+                    "type": "ask.report",
                     "depends_on": ["memory_a", "memory_b"],
-                    "input": {"skill": "create-report", "args": ["--help"]},
+                    "input": {"title": "Final Report"},
                 },
             ],
         }

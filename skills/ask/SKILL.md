@@ -203,6 +203,7 @@ uv run python scripts/live_sanity_report.py --allow-live --profile smoke
 uv run python scripts/dag_negative_sanity.py
 uv run python scripts/dag_e2e_sanity.py
 uv run python scripts/tau_dag_e2e_sanity.py --json
+uv run python scripts/tau_dag_stress_sanity.py --json
 uv run python scripts/tau_dag_e2e_sanity.py --no-local-fixture --allow-provider-calls --require-provider-calls --json
 uv run python scripts/persona_delegate_e2e_sanity.py --skip-ask --skip-scillm
 ```

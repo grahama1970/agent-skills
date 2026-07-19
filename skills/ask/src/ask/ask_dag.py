@@ -48,12 +48,12 @@ ALLOWED_NODE_TYPES = {
     "memory.recall",
     "dogpile.search",
     "ask.oracle",
+    "ask.report",
     "skill.run",
     "scillm.agent_turn",
 }
-ALLOWED_SKILL_RUN_SKILLS = {
+COMMON_SKILL_RUN_SKILLS = {
     "code-runner",
-    "create-report",
     "memory",
     "dogpile",
     "fetcher",
@@ -87,7 +87,7 @@ def available_skill_run_skills() -> set[str]:
     It only enforces that a skill name is safe and has a sibling runtime entrypoint.
     Individual skills still own their arguments and internal behavior.
     """
-    skills: set[str] = set(ALLOWED_SKILL_RUN_SKILLS)
+    skills: set[str] = set()
     for root in (SKILLS_DIR, AGENT_SKILLS_DIR):
         try:
             children = list(root.iterdir())
@@ -98,7 +98,7 @@ def available_skill_run_skills() -> set[str]:
                 continue
             if not NODE_ID_RE.fullmatch(child.name):
                 continue
-            if (child / "run.sh").exists() and (child / "SKILL.md").exists():
+            if (child / "run.sh").is_file() and (child / "SKILL.md").is_file():
                 skills.add(child.name)
     return skills
 
@@ -147,7 +147,7 @@ def draft_ask_dag_from_question(
     unknown = sorted(
         skill
         for skill in mentions
-        if skill not in INTERNAL_SKILL_MENTION_TYPES and skill not in available
+        if skill not in INTERNAL_SKILL_MENTION_TYPES and skill != "create-report" and skill not in available
     )
     if unknown:
         raise AskDagError(
@@ -270,11 +270,10 @@ def draft_ask_dag_from_question(
         nodes.append(
             {
                 "id": "final_report",
-                "type": "skill.run",
+                "type": "ask.report",
                 "depends_on": dependency_tail,
                 "input": {
-                    "skill": "create-report",
-                    "args": ["--input", "${dag_context_json}", "--output", "${dag_node_output}"],
+                    "title": "Ask DAG Report",
                     "timeout": 120,
                 },
             }
@@ -512,6 +511,8 @@ def _normalize_scillm_exec_graph(dag: dict[str, Any], *, base_dir: Path | None =
                 node_type = "memory.recall"
             elif call_type in {"dogpile.search", "dogpile", "research"}:
                 node_type = "dogpile.search"
+            elif call_type in {"report", "ask.report", "create-report"}:
+                node_type = "ask.report"
             elif call_type in {"skill.run", "skill", "subagent", "subagent-runner"}:
                 node_type = "skill.run"
             elif call_type in {"scillm.agent_turn", "agent_turn", "agent-turn", "implementation", "implement"}:
@@ -545,6 +546,11 @@ def _normalize_scillm_exec_graph(dag: dict[str, Any], *, base_dir: Path | None =
                 "operation": str(node_input.get("operation") or execution.get("operation") or "launch"),
                 "sandbox": str(node_input.get("sandbox") or execution.get("sandbox") or "workspace-write"),
                 "phase_id": str(node_input.get("phase_id") or execution.get("phase_id") or "ask-dag-implement"),
+            }
+        elif node_type == "ask.report":
+            node_input = {
+                **node_input,
+                "title": str(node_input.get("title") or execution.get("title") or raw_node.get("title") or "Ask DAG Report"),
             }
         elif node_type in {"memory.recall", "dogpile.search"}:
             query = raw_node.get("query", execution.get("query", node_input.get("query", node_input.get("q", ""))))
@@ -689,7 +695,7 @@ def validate_ask_dag(dag: dict[str, Any], *, base_dir: Path | None = None) -> di
             skill = str(node_input.get("skill") or "").strip()
             allowed_skills = available_skill_run_skills()
             if skill not in allowed_skills:
-                allowed = ", ".join(sorted(ALLOWED_SKILL_RUN_SKILLS))
+                allowed = ", ".join(sorted(COMMON_SKILL_RUN_SKILLS & allowed_skills))
                 raise AskDagError(
                     f"DAG node {node_id!r} skill.run skill {skill!r} does not have a runnable sibling skill contract. "
                     f"Common allowed skills include: {allowed}."
@@ -718,6 +724,10 @@ def validate_ask_dag(dag: dict[str, Any], *, base_dir: Path | None = None) -> di
             timeout = node_input.get("timeout", node_input.get("result_timeout_seconds", 900))
             if not isinstance(timeout, (int, float)) or timeout <= 0 or timeout > 7200:
                 raise AskDagError(f"DAG node {node_id!r} scillm.agent_turn timeout must be between 1 and 7200 seconds.")
+        elif node_type == "ask.report":
+            title = str(node_input.get("title") or "Ask DAG Report").strip()
+            if not title:
+                raise AskDagError(f"DAG node {node_id!r} ask.report title must be non-empty.")
         normalized_nodes.append({
             **raw_node,
             "id": node_id,
@@ -1252,6 +1262,8 @@ def _execute_node(
         return _execute_dogpile_search(node, question=question, context=context)
     if node_type == "skill.run":
         return _execute_skill_run(node, dag_dir=dag_dir, context=context)
+    if node_type == "ask.report":
+        return _execute_report(node, dag_dir=dag_dir, context=context)
     if node_type == "scillm.agent_turn":
         return _execute_scillm_agent_turn(
             node,
@@ -1468,6 +1480,80 @@ def _execute_dogpile_search(node: dict[str, Any], *, question: str, context: dic
             "dag_node_id": node["id"],
             "dag_node_type": node["type"],
         }] if context_text.strip() else [],
+    }
+
+
+def _execute_report(node: dict[str, Any], *, dag_dir: Path, context: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    node_input = node["input"]
+    title = str(node_input.get("title") or "Ask DAG Report").strip() or "Ask DAG Report"
+    context_path = dag_dir / f"{node['id']}.context.json"
+    output_path = dag_dir / f"{node['id']}.out.md"
+    dependency_context = {
+        "node_id": node["id"],
+        "depends_on": node.get("depends_on", []),
+        "dependencies": {
+            dependency: context.get(dependency, {})
+            for dependency in node.get("depends_on", [])
+        },
+    }
+    context_path.write_text(json.dumps(dependency_context, indent=2, sort_keys=True, default=str) + "\n", encoding="utf-8")
+    dependency_lines: list[str] = []
+    for dependency in node.get("depends_on", []):
+        result = context.get(dependency, {})
+        dependency_lines.append(
+            f"- `{dependency}`: type `{result.get('type', 'unknown')}`, ok `{result.get('ok')}`"
+        )
+    if not dependency_lines:
+        dependency_lines.append("- No dependency nodes were declared.")
+
+    markdown = "\n".join(
+        [
+            f"# {title}",
+            "",
+            "## Report Summary",
+            "",
+            "This report was generated by the internal `$ask` DAG report node from completed dependency receipts.",
+            "",
+            "## Source-of-Truth Inventory",
+            "",
+            *dependency_lines,
+            "",
+            "## Evidence Artifacts",
+            "",
+            f"- Dependency context JSON: `{context_path}`",
+            "",
+            "## Non-Claims",
+            "",
+            "- This report does not prove provider/model semantic correctness.",
+            "- This report does not prove downstream skill behavior beyond the dependency receipts it cites.",
+            "",
+        ]
+    )
+    output_path.write_text(markdown, encoding="utf-8")
+    return {
+        "id": node["id"],
+        "type": node["type"],
+        "ok": True,
+        "returncode": 0,
+        "payload": {
+            "ok": True,
+            "report_path": str(output_path),
+            "dependency_context_path": str(context_path),
+        },
+        "stdout_excerpt": json.dumps({"ok": True, "report_path": str(output_path)}, sort_keys=True),
+        "stderr": "",
+        "dependency_context_path": str(context_path),
+        "output_path": str(output_path),
+        "context_items": [
+            {
+                "problem": f"Generate {title}",
+                "solution": markdown[:12000],
+                "via": "ask_dag",
+                "source": "ask.report",
+                "dag_node_id": node["id"],
+                "dag_node_type": node["type"],
+            }
+        ],
     }
 
 
