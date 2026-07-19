@@ -57,10 +57,10 @@ def test_complete_tau_dag_bundle_emits_strict_tau_contract(tmp_path: Path) -> No
     assert all("prompt_contract" in node for node in dag["nodes"])
     solver_policy = dag["nodes"][0]["model_policy"]
     assert solver_policy["requested_model"] == "gpt-5.6-xhigh"
-    assert solver_policy["model"] == "gpt-5.5"
-    assert solver_policy["reasoning_effort"] == "high"
+    assert solver_policy["model"] == "gpt-5.6"
+    assert solver_policy["reasoning_effort"] == "xhigh"
     assert solver_policy["requested_reasoning_effort"] == "xhigh"
-    assert "xhigh is preserved" in solver_policy["reasoning_downgrade_reason"]
+    assert solver_policy.get("reasoning_downgrade_reason") is None
     reviewer_policy = dag["nodes"][-1]["model_policy"]
     assert reviewer_policy["requested_model"] == "claude-fable"
     assert reviewer_policy["model"] == "claude-fable-5"
@@ -113,9 +113,9 @@ def test_command_spec_blocks_provider_execution_without_opt_in(tmp_path: Path) -
 
     assert "--mode" in command_spec["command"]
     assert "scillm" in command_spec["command"]
-    assert command_spec["command"][command_spec["command"].index("--model") + 1] == "gpt-5.5"
+    assert command_spec["command"][command_spec["command"].index("--model") + 1] == "gpt-5.6"
     assert command_spec["command"][command_spec["command"].index("--requested-model") + 1] == "gpt-5.6-xhigh"
-    assert command_spec["command"][command_spec["command"].index("--reasoning-effort") + 1] == "high"
+    assert command_spec["command"][command_spec["command"].index("--reasoning-effort") + 1] == "xhigh"
     assert command_spec["command"][command_spec["command"].index("--requested-reasoning-effort") + 1] == "xhigh"
     assert "--scillm-api-key" not in command_spec["command"]
     assert request.scillm_api_key not in json.dumps(command_spec)
@@ -131,11 +131,11 @@ def test_scillm_route_preserves_requested_gpt_56_xhigh_selector() -> None:
     route = resolve_scillm_model_route("gpt-5.6-xhigh")
 
     assert route.requested_model == "gpt-5.6-xhigh"
-    assert route.model == "gpt-5.5"
+    assert route.model == "gpt-5.6"
     assert route.provider == "openai"
-    assert route.reasoning_effort == "high"
+    assert route.reasoning_effort == "xhigh"
     assert route.requested_reasoning_effort == "xhigh"
-    assert route.reasoning_downgrade_reason is not None
+    assert route.reasoning_downgrade_reason is None
 
 
 def test_scillm_route_maps_claude_fable_alias_to_live_catalog_name() -> None:

@@ -766,16 +766,11 @@ def resolve_scillm_model_route(model: str) -> ScillmModelRoute:
         requested_effort = "xhigh" if "xhigh" in lower else None
         return ScillmModelRoute(
             requested_model=requested,
-            model="gpt-5.5",
+            model="gpt-5.6",
             provider="openai",
             auth="scillm_proxy_bearer",
-            reasoning_effort="high" if requested_effort == "xhigh" else requested_effort,
+            reasoning_effort=requested_effort,
             requested_reasoning_effort=requested_effort,
-            reasoning_downgrade_reason=(
-                "SciLLM currently accepts none/low/medium/high reasoning effort; xhigh is preserved as the requested selector and dispatched as high."
-                if requested_effort == "xhigh"
-                else None
-            ),
         )
     if lower.startswith("claude"):
         return ScillmModelRoute(
