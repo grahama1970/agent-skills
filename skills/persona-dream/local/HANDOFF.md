@@ -249,3 +249,13 @@ This is the paid-call boundary. The next agent may cross it only with an
 explicit, hash-bound human paid authorization for a freshly compiled successor
 provider request. Otherwise, advance only the human-gated preparation in section
 4 and report the exact blocker.
+
+## Transaction gate closed (2026-07-19, appended)
+
+ACTIVE_MANIFEST_REPLAY_VALIDATION ruled PASS_CURRENT_GATE by the webgpt
+reviewer after a five-round fix/fault-proof loop (see PROJECT_KNOWLEDGE
+2026-07-19 entry; commits 2e3d2837..7c517c8e; 12 fault proofs in
+tests/test_phase15_transactional.py). The transaction-correctness repair loop
+is terminated per the ruling. Next actions unchanged: pilot preconditions
+(R1/R2 selection addendum + producer-blinding receipts), then the C-vs-F
+pilot; routing-semantics debt tracked in issues/428.

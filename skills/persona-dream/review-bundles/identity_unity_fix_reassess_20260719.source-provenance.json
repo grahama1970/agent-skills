@@ -1,0 +1,13 @@
+{
+  "schema": "webgpt.source_provenance.v1",
+  "repository_url": "https://github.com/grahama1970/agent-skills.git",
+  "branch": "main",
+  "upstream": "origin/main",
+  "commit_sha": "e5573e9bf487e71b9fd88e26acc39bd149a98bde",
+  "source_paths": [
+    "skills/persona-dream/review-bundles/identity_unity_fix_reassess_20260719.md",
+    "skills/persona-dream/scripts/phase15_dream_persistence.py",
+    "skills/persona-dream/tests/test_phase15_transactional.py"
+  ],
+  "proof_cwd": "."
+}

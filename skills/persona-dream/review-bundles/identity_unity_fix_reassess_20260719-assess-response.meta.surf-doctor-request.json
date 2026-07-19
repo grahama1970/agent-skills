@@ -1,0 +1,91 @@
+{
+  "active_submission_state": "terminal_finalization",
+  "agent_id": "surf-doctor",
+  "allowed_actions": [
+    "preserve_incident",
+    "classify_failure",
+    "read_only_reproduction",
+    "prepare_repair_packet"
+  ],
+  "browser_mutation_authorized": false,
+  "captured_at": "2026-07-19T17:01:45.862950+00:00",
+  "controlled_tab_id": "837359230",
+  "conversation_url": null,
+  "dag_spec": {
+    "max_attempts": 3,
+    "mode": "bounded_dag",
+    "nodes": [
+      "preserve_incident",
+      "classify_failure",
+      "reproduce_or_bound",
+      "prepare_repair"
+    ],
+    "schema": "subagent_dag.v1",
+    "stop_conditions": [
+      "diagnosis_and_repair_packet_written",
+      "same_failure_repeated_twice",
+      "architectural_change_required",
+      "browser_mutation_required"
+    ]
+  },
+  "failure_class": "focus_stolen_despite_no_activate",
+  "forbidden_actions": [
+    "webgpt_resubmit",
+    "tab_activate",
+    "tab_close",
+    "tab_navigate",
+    "page_refresh",
+    "extension_reload"
+  ],
+  "proof_status": "degraded_focus",
+  "requested_tab_id": "837359230",
+  "requested_url": null,
+  "schema": "surf_doctor.incident_request.v1",
+  "sentinel": "<<<WEBGPT_DONE:20260719T165523Z:2ae96674>>>",
+  "source_artifacts": [
+    {
+      "bytes": 3988,
+      "kind": "response_meta",
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/review-bundles/identity_unity_fix_reassess_20260719-assess-response.meta.json",
+      "sha256": "b68eae951e05197e3f62fb9daf4e7713b716a0bb3b15ac36b7ab61cae1ae1a84"
+    },
+    {
+      "bytes": 1226,
+      "kind": "submit_receipt",
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/review-bundles/identity_unity_fix_reassess_20260719-assess-response.receipt.json",
+      "sha256": "71475bc53e572d494d0fe403c11e60bbd80cb85106dba7b0ee89befb74460a35"
+    },
+    {
+      "bytes": 5709,
+      "kind": "submitted_prompt",
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/review-bundles/identity_unity_fix_reassess_20260719-assess-response.md.submitted.md",
+      "sha256": "3d36ea60284de487c1faeca7fc5c2d5cd3a6197ee6e180995e44b23a8bbd1b40"
+    },
+    {
+      "bytes": 5525,
+      "kind": "raw_response",
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/review-bundles/identity_unity_fix_reassess_20260719-assess-response.raw.md",
+      "sha256": "3e9f0bc4f4be3b290e3fa71cd945430045cd9189225d6d7c98a3a1c750fe7512"
+    },
+    {
+      "bytes": 5480,
+      "kind": "clean_response",
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/review-bundles/identity_unity_fix_reassess_20260719-assess-response.md",
+      "sha256": "c8e34ed34082df91f70f3fa1a986e96fa29cfca27ae981df5ac3c6aa0fe169fd"
+    },
+    {
+      "bytes": 747,
+      "kind": "heartbeat",
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/review-bundles/webgpt_heartbeat.json",
+      "sha256": "af35c0a85566b4515c8c1885f86a6b3ce2d0ddc3df18ad2a6fc8acc021c6cde8"
+    },
+    {
+      "bytes": 310,
+      "kind": "stderr",
+      "path": "/tmp/surf-webgpt-submit-stderr.MnU5eZ.log",
+      "sha256": "d7b8740f7104db6325212c30c23a3821cf016cb8643112ff519188b37bd759bc"
+    }
+  ],
+  "status": "PENDING_DIAGNOSIS",
+  "submitted_to_chatgpt": true
+}

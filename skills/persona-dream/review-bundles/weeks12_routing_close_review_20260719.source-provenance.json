@@ -1,0 +1,18 @@
+{
+  "schema": "webgpt.source_provenance.v1",
+  "repository_url": "https://github.com/grahama1970/agent-skills.git",
+  "branch": "main",
+  "upstream": "origin/main",
+  "commit_sha": "457b9c863767c995d027121b82badd1f3696d9a1",
+  "source_paths": [
+    "skills/persona-dream/review-bundles/weeks12_routing_close_review_20260719.md",
+    "skills/persona-dream/scripts/cognitive_loop_transitions.py",
+    "skills/persona-dream/scripts/phase15_dream_persistence.py",
+    "skills/persona-dream/scripts/run_cognitive_loop.py",
+    "skills/persona-dream/scripts/phase14_tom_validation.py",
+    "skills/persona-dream/scripts/tau_vlm_composite_review.py",
+    "skills/watch/scripts/qra.py",
+    "skills/persona-dream/contracts/pilot_c_vs_f_frozen_protocol.v2.md"
+  ],
+  "proof_cwd": "."
+}

@@ -633,3 +633,23 @@
   return. The closed-loop research claim (Acceptance items 4-8: canonical
   persistence, Qdrant recall, multi-hop traversal, later behavior) still requires
   a freshly authorized, non-superseded successor return.
+
+- 2026-07-19 (transaction-correctness repair loop — CLOSED PASS after 5 webgpt
+  rounds): the phase-15 canonical persistence layer survived five adversarial
+  review rounds, each narrowing the gate: (1) volatile created_at made every
+  identical replay quarantine the valid prior commit, and the manifest wrote
+  active:true unconditionally; (2) fixing (1) introduced a K0/K1 identity
+  split (records stamped pre-derivation, manifest keyed post-derivation);
+  (3) the returned plan hashed pre-stamp payloads that were then mutated by
+  reference; (4) resume trusted the prior manifest without validating its
+  record index and phase bindings; (5) PASS. LESSONS: every fix to a
+  transaction layer must re-derive ALL representations (records, plan, proof,
+  manifest) from ONE immutable post-stamp snapshot; compensating and
+  quarantining writes must themselves be reread-verified; publication must be
+  conditional on commit ownership; and an external adversarial reviewer with
+  fault-injection demands found four real defect classes that 400+ green
+  self-authored tests did not. Receipts: commits 2e3d2837, 4511b4a0,
+  c8a71b9c, 7c517c8e; ruling PASS in
+  review-bundles/manifest_replay_validation_reassess_20260719-assess-response.md;
+  governance record persona_dream_transaction_gate_closed_20260719 (exact
+  reread PASS).
