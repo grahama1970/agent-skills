@@ -124,13 +124,6 @@ TEMPORARY_DEBT: dict[str, str] = {
     "skills/watch/scripts/config.py":
         "TEMPORARY_DEBT: defines WATCH_SCILLM_API_BASE / proxy-key that authorize qra.py's direct call. "
         "Retire when qra.py routes through Tau. P1 routing boundary.",
-    # --- persona-dream image / VLM review ---
-    "skills/persona-dream/scripts/phase_c_regenerate_storyboard_frames.py":
-        "TEMPORARY_DEBT: _post_scillm() image-review VLM call (used by lane_c waiver); needs frame-shaped Tau VLM node. P1.",
-    "skills/persona-dream/scripts/panel_review_check.py":
-        "TEMPORARY_DEBT: standalone urllib VLM panel review to scillm; route via Tau panel-reviewer. P1.",
-    "skills/persona-dream/scripts/phase07_storyboard_tau_node.py":
-        "TEMPORARY_DEBT: named 'tau_node' but urllib-POSTs identity-review VLM to scillm directly; route via Tau VLM node. P1.",
     # NOTE: the experimental 'rung' ladder (rung0/1/2/4/5/8/17/18/21/22) and
     # dreamer_sequential_runner.py were RETIRED (git rm) on 2026-07-19 as
     # superseded one-off scillm transport experiments with no live imports.

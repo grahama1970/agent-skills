@@ -11,16 +11,27 @@ from __future__ import annotations
 import argparse
 import base64
 import hashlib
+import importlib.util as _ilu
 import json
 import os
 import shutil
 import subprocess
 import sys
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 from urllib import request as urllib_request
 from urllib.error import HTTPError, URLError
+
+# Identity/continuity VLM reviews route through the sanctioned Tau panel-reviewer
+# node (only /tau may reach /scillm) via a persona-dream-side composite adapter
+# that packs the accepted frame + identity reference sheets into one montage.
+_COMPOSITE_PATH = Path(__file__).resolve().parent / "tau_vlm_composite_review.py"
+_cspec = _ilu.spec_from_file_location("tau_vlm_composite_review", _COMPOSITE_PATH)
+assert _cspec and _cspec.loader
+_tau_composite = _ilu.module_from_spec(_cspec)
+_cspec.loader.exec_module(_tau_composite)
 
 
 REQUIRED_PANEL_FIELDS = (
@@ -85,8 +96,6 @@ STORYBOARD_FRAME_ASPECT = STORYBOARD_FRAME_SIZE[0] / STORYBOARD_FRAME_SIZE[1]
 STORYBOARD_FRAME_ASPECT_TOLERANCE = 0.02
 SCILLM_SKILL_RUN = Path("/home/graham/workspace/experiments/agent-skills/skills/scillm/run.sh")
 IMAGEMAGICK_BIN = Path("/usr/local/bin/magick")
-SCILLM_CHAT_COMPLETIONS_URL = os.environ.get("SCILLM_CHAT_COMPLETIONS_URL", "http://localhost:4001/v1/chat/completions")
-SCILLM_ENV_PATH = Path(os.environ.get("SCILLM_ENV_PATH", "/home/graham/workspace/experiments/scillm/.env"))
 SPINE_CHAIN_VALIDATOR = Path(__file__).resolve().parent / "validate_persona_dream_spine_chain.py"
 IDENTITY_REFERENCE_ASSETS = {
     "Embry": {
@@ -2163,7 +2172,7 @@ def _identity_review_receipt_matches_policy(
     receipt_path: Path,
 ) -> bool:
     model = str(identity_review_policy.get("model") or "")
-    expected_source = f"scillm:{model}:image_url"
+    expected_source = f"tau-panel-reviewer:{model}:composite"
     if (
         existing_review.get("model") != model
         or existing_review.get("reviewer_source") != expected_source
@@ -2629,7 +2638,7 @@ def _identity_review_receipt(
         "required_entities": required_entities,
         "visible_entities": visible_entities,
         "blocking_findings": blocking_findings,
-        "reviewer_source": f"scillm:{model}:image_url",
+        "reviewer_source": f"tau-panel-reviewer:{model}:composite",
         "model": model,
         "model_policy": dict(model_policy),
         "model_policy_enforced": model_policy.get("source") == "dag_identity_review_model_policy",
@@ -2654,68 +2663,24 @@ def _image_url_part(path: Path, *, label: str) -> dict[str, Any]:
     }
 
 
-def _scillm_proxy_key_candidates() -> list[tuple[str, str]]:
-    candidates: list[tuple[str, str]] = []
-    seen: set[str] = set()
-
-    def add(source: str, value: object) -> None:
-        if not isinstance(value, str):
-            return
-        key = value.strip().strip("\"'")
-        if not key or key in seen:
-            return
-        seen.add(key)
-        candidates.append((source, key))
-
-    for name in ("SCILLM_PROXY_KEY", "SCILLM_MASTER_KEY", "LITELLM_MASTER_KEY"):
-        add(f"env:{name}", os.environ.get(name))
-
-    if SCILLM_ENV_PATH.exists():
-        for line in SCILLM_ENV_PATH.read_text(encoding="utf-8", errors="ignore").splitlines():
-            if not line or line.lstrip().startswith("#") or "=" not in line:
-                continue
-            name, value = line.split("=", 1)
-            name = name.strip()
-            if name in {"SCILLM_PROXY_KEY", "SCILLM_MASTER_KEY", "LITELLM_MASTER_KEY"}:
-                add(f"{SCILLM_ENV_PATH.name}:{name}", value)
-
-    add("default:dev-proxy", "sk-dev-proxy-123")
-    return candidates
-
-
 def _post_scillm_json(payload: Mapping[str, Any]) -> dict[str, Any]:
-    key_candidates = _scillm_proxy_key_candidates()
-    if not key_candidates:
-        raise ValueError("missing Scillm proxy key candidates for identity review")
-    data = json.dumps(payload).encode("utf-8")
-    auth_failures: list[str] = []
-    body: str | None = None
-    for source, proxy_key in key_candidates:
-        req = urllib_request.Request(
-            SCILLM_CHAT_COMPLETIONS_URL,
-            data=data,
-            headers={
-                "Authorization": f"Bearer {proxy_key}",
-                "X-Caller-Skill": "persona-dream-phase07-panel-reviewer",
-                "Content-Type": "application/json",
-            },
-            method="POST",
-        )
+    """Route a multi-image identity/continuity VLM review through Tau.
+
+    Only /tau may reach /scillm. The accepted-frame + identity-reference images in
+    ``payload`` are composited into one montage and sent through the sanctioned
+    Tau panel-reviewer node; the OpenAI-shaped response is returned unchanged so
+    the identity-review and advisory face-crop callers are unaffected. Raises
+    ``ValueError`` on a non-200 route so existing error handling fails closed.
+    """
+    with tempfile.TemporaryDirectory(prefix="phase07_tau_vlm_") as tmp:
         try:
-            with urllib_request.urlopen(req) as response:
-                body = response.read().decode("utf-8")
-            break
-        except HTTPError as exc:
-            if exc.code in {401, 403}:
-                auth_failures.append(f"{source}:HTTP {exc.code}")
-                continue
-            raise
-    if body is None:
-        raise ValueError("Scillm proxy auth failed for identity review: " + "; ".join(auth_failures))
-    parsed = json.loads(body)
-    if not isinstance(parsed, dict):
-        raise ValueError("scillm response root is not an object")
-    return parsed
+            return _tau_composite.post_openai_vlm_via_tau(
+                payload,
+                artifact_dir=tmp,
+                caller_skill="persona-dream-phase07-panel-reviewer",
+            )
+        except _tau_composite.CompositeVlmError as exc:
+            raise ValueError(str(exc)) from exc
 
 
 def _panel_manifest(packet: Mapping[str, Any], packet_path: Path) -> dict[str, Any]:

@@ -1,13 +1,25 @@
 #!/usr/bin/env python3
-"""Check script for $loop panel repair — calls scillm GPT-5.5 vision to review.
+"""Check script for $loop panel repair — reviews a panel via the sanctioned Tau VLM node.
+
 Used as: --check 'python scripts/panel_review_check.py --panel 03 --run-root .'
 Exit 0 = PASS, Exit 1 = NEEDS_CHANGES. Outputs structured JSON to stderr for $loop.
-"""
-import sys, os, json, base64, urllib.request, argparse
 
-SCILLM_URL = "http://127.0.0.1:4001/v1/chat/completions"
-SCILLM_KEY = "sk-dev-proxy-123"
+Model routing rule: only /tau may reach /scillm. This script routes the single
+panel image + review prompt through tau_vlm_review_adapter (the Tau
+panel-reviewer VLM node); it never POSTs to scillm directly.
+"""
+import sys, os, json, argparse
+import importlib.util as _ilu
+from pathlib import Path
+
 CALLER = "persona-dream"
+
+# Load the sanctioned persona-dream -> Tau VLM review adapter by file path.
+_ADAPTER_PATH = Path(__file__).resolve().parent / "tau_vlm_review_adapter.py"
+_aspec = _ilu.spec_from_file_location("tau_vlm_review_adapter", _ADAPTER_PATH)
+assert _aspec and _aspec.loader
+tau_vlm = _ilu.module_from_spec(_aspec)
+_aspec.loader.exec_module(tau_vlm)
 
 ENTITY_PROMPTS = {
     "01": "Panel 01 (wide establishing). Check: 1) Embry Lawson visible (young woman, dark ponytail, gray fieldwear, human scale, NOT Space Marine)? 2) Horus at 11.5ft Primarch scale (bald, pale, black-gold armor)? 3) Tyranids with chitin/scything talons? 4) Tzeentch sky-eye (blue-violet)? 5) Tea steam rising? 6) Umbrella fabric in wind?",
@@ -25,23 +37,22 @@ ENTITY_PROMPTS = {
 def review_panel(panel_num, img_path):
     if not os.path.exists(img_path):
         return "MISSING", []
-    with open(img_path, 'rb') as f:
-        img_b64 = base64.b64encode(f.read()).decode()
-    body = json.dumps({
-        "model": "gpt-5.5",
-        "messages": [{
-            "role": "user",
-            "content": [
-                {"type": "text", "text": ENTITY_PROMPTS.get(panel_num, "Review this panel image. Check if required entities are visible per the interaction contract.") + "\nReturn ONLY one line: PASS if every listed check is satisfied, otherwise NEEDS_CHANGES: <specific failing checks with details>."},
-                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{img_b64}"}}
-            ]
-        }]
-    }).encode()
-    req = urllib.request.Request(SCILLM_URL, data=body,
-        headers={"Content-Type": "application/json", "Authorization": f"Bearer {SCILLM_KEY}", "X-Caller-Skill": CALLER})
-    resp = urllib.request.urlopen(req, timeout=60)
-    result = json.loads(resp.read())
-    verdict = result['choices'][0]['message']['content'].strip()
+    prompt = (
+        ENTITY_PROMPTS.get(
+            panel_num,
+            "Review this panel image. Check if required entities are visible per the interaction contract.",
+        )
+        + "\nReturn ONLY one line: PASS if every listed check is satisfied, otherwise "
+        "NEEDS_CHANGES: <specific failing checks with details>."
+    )
+    # Route the single image + prompt through Tau (only /tau may reach /scillm).
+    artifact_dir = Path(img_path).resolve().parent / "tau_vlm_receipts"
+    receipt = tau_vlm.dispatch_vlm_review(img_path, prompt, artifact_dir=artifact_dir)
+    if receipt.get("http_status") != 200 or not receipt.get("live_call_performed"):
+        return f"NEEDS_CHANGES: Tau VLM route did not return HTTP 200 (http={receipt.get('http_status')})", [
+            "tau_vlm_route_not_ok"
+        ]
+    verdict = (receipt.get("response_content") or "").strip()
     failures = []
     if verdict.startswith("NEEDS_CHANGES:"):
         failures = [f.strip() for f in verdict.replace("NEEDS_CHANGES:", "").split(";") if f.strip()]

@@ -22,7 +22,7 @@ import importlib.util
 import json
 import subprocess
 import sys
-import urllib.request as urllib_request
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -30,7 +30,14 @@ from typing import Any
 REPO_SKILL = Path(__file__).resolve().parent.parent  # .../skills/persona-dream
 NODE_PATH = REPO_SKILL / "scripts" / "phase07_storyboard_tau_node.py"
 SCILLM_RUN = Path("/home/graham/workspace/experiments/agent-skills-main/skills/scillm/run.sh")
-SCILLM_CHAT_URL = "http://localhost:4001/v1/chat/completions"
+
+# Continuity VLM reviews route through the sanctioned Tau panel-reviewer node
+# (only /tau may reach /scillm) via the persona-dream-side composite adapter.
+_COMPOSITE_PATH = REPO_SKILL / "scripts" / "tau_vlm_composite_review.py"
+_cspec = importlib.util.spec_from_file_location("tau_vlm_composite_review", _COMPOSITE_PATH)
+assert _cspec and _cspec.loader
+_tau_composite = importlib.util.module_from_spec(_cspec)
+_cspec.loader.exec_module(_tau_composite)
 
 EMBRY_SHEET = Path(
     "/mnt/storage12tb/media/personas/embry/assets/contact_sheets/"
@@ -220,20 +227,6 @@ def _generate(prompt: str, out_png: Path, gen_dir: Path, frame_id: str, attempt:
 # --------------------------------------------------------------------------- #
 # Continuity review (two-frame pixel comparison via gpt-5.5)
 # --------------------------------------------------------------------------- #
-def _scillm_keys() -> list[str]:
-    keys = ["sk-dev-proxy-123"]
-    env = Path("/home/graham/workspace/experiments/scillm/.env")
-    if env.exists():
-        for line in env.read_text(errors="ignore").splitlines():
-            if "=" in line and not line.lstrip().startswith("#"):
-                n, v = line.split("=", 1)
-                if n.strip() in {"SCILLM_PROXY_KEY", "SCILLM_MASTER_KEY", "LITELLM_MASTER_KEY"}:
-                    v = v.strip().strip("\"'")
-                    if v:
-                        keys.insert(0, v)
-    return keys
-
-
 def _image_part(path: Path, label: str) -> dict:
     mt = "image/png" if path.suffix.lower() == ".png" else "image/jpeg"
     enc = base64.b64encode(path.read_bytes()).decode("ascii")
@@ -241,22 +234,21 @@ def _image_part(path: Path, label: str) -> dict:
 
 
 def _post_scillm(payload: dict) -> dict:
-    data = json.dumps(payload).encode("utf-8")
-    last = None
-    for key in _scillm_keys():
-        req = urllib_request.Request(
-            SCILLM_CHAT_URL, data=data,
-            headers={"Authorization": f"Bearer {key}",
-                     "X-Caller-Skill": "persona-dream-phase07-continuity-reviewer",
-                     "Content-Type": "application/json"},
-            method="POST",
-        )
+    """Route the multi-image continuity review through Tau (only /tau may reach /scillm).
+
+    The Frame A / Frame B / identity-reference images in ``payload`` are
+    composited into one montage and routed through the sanctioned Tau
+    panel-reviewer VLM node; the OpenAI-shaped response is returned unchanged.
+    """
+    with tempfile.TemporaryDirectory(prefix="phase_c_tau_vlm_") as tmp:
         try:
-            with urllib_request.urlopen(req, timeout=240) as resp:
-                return json.loads(resp.read().decode("utf-8"))
-        except Exception as exc:  # noqa: BLE001
-            last = str(exc)
-    raise RuntimeError(f"scillm continuity call failed: {last}")
+            return _tau_composite.post_openai_vlm_via_tau(
+                payload,
+                artifact_dir=tmp,
+                caller_skill="persona-dream-phase07-continuity-reviewer",
+            )
+        except _tau_composite.CompositeVlmError as exc:
+            raise RuntimeError(f"tau continuity review failed: {exc}") from exc
 
 
 CONTINUITY_PROMPT = """You are a strict visual storyboard CONTINUITY reviewer. You are given two generated storyboard frames (Frame A first, then Frame B) plus the Embry and Kai identity reference sheets. Judge the actual pixels only.
@@ -310,7 +302,7 @@ def _continuity_review(frame_a: Path, frame_b: Path, transition: str, out_path: 
         "transition": transition,
         "frame_a": str(frame_a), "frame_a_sha256": _sha256_file(frame_a) if frame_a.exists() else None,
         "frame_b": str(frame_b), "frame_b_sha256": _sha256_file(frame_b) if frame_b.exists() else None,
-        "reviewer_source": "scillm:gpt-5.5:image_url",
+        "reviewer_source": "tau-panel-reviewer:gpt-5.5:composite",
         "review_prompt_sha256": _sha256_text(prompt),
         "status": status,
         "blocking_findings": blocking,

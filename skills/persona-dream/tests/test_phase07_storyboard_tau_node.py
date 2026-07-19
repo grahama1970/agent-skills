@@ -15,55 +15,32 @@ import phase07_storyboard_tau_node as tau_node  # noqa: E402
 
 
 class TestPhase07StoryboardTauNode(unittest.TestCase):
-    def test_scillm_proxy_key_candidates_include_scillm_env_file(self) -> None:
-        with tempfile.TemporaryDirectory() as tmp:
-            env_path = Path(tmp) / ".env"
-            env_path.write_text("SCILLM_MASTER_KEY=file-master\n", encoding="utf-8")
+    def test_post_scillm_json_routes_through_tau_composite(self) -> None:
+        # Tau-only routing: _post_scillm_json must delegate to the composite Tau
+        # VLM adapter (never POST to scillm directly) and return its OpenAI-shaped
+        # response unchanged.
+        seen: dict[str, object] = {}
 
-            with mock.patch.object(tau_node, "SCILLM_ENV_PATH", env_path), mock.patch.dict(
-                "os.environ",
-                {"SCILLM_PROXY_KEY": "process-proxy"},
-                clear=True,
-            ):
-                candidates = tau_node._scillm_proxy_key_candidates()
+        def fake_post(payload, *, artifact_dir, caller_skill):
+            seen["payload"] = payload
+            seen["caller_skill"] = caller_skill
+            return {"choices": [{"message": {"content": "{}"}}], "_tau_route": "composite"}
 
-        self.assertEqual(candidates[0], ("env:SCILLM_PROXY_KEY", "process-proxy"))
-        self.assertIn((".env:SCILLM_MASTER_KEY", "file-master"), candidates)
-
-    def test_post_scillm_json_retries_scillm_auth_candidates(self) -> None:
-        class FakeResponse:
-            def __enter__(self):
-                return self
-
-            def __exit__(self, *_args):
-                return False
-
-            def read(self) -> bytes:
-                return b'{"choices":[{"message":{"content":"{}"}}]}'
-
-        calls = []
-
-        def fake_urlopen(req):
-            calls.append(req.get_header("Authorization"))
-            if len(calls) == 1:
-                raise HTTPError(
-                    req.full_url,
-                    401,
-                    "Unauthorized",
-                    hdrs=None,
-                    fp=None,
-                )
-            return FakeResponse()
-
-        with mock.patch.object(
-            tau_node,
-            "_scillm_proxy_key_candidates",
-            return_value=[("bad", "bad-key"), ("good", "good-key")],
-        ), mock.patch.object(tau_node.urllib_request, "urlopen", side_effect=fake_urlopen):
-            parsed = tau_node._post_scillm_json({"model": "gpt-2", "messages": []})
+        payload = {"model": "gpt-2", "messages": [{"role": "user", "content": []}]}
+        with mock.patch.object(tau_node._tau_composite, "post_openai_vlm_via_tau", side_effect=fake_post):
+            parsed = tau_node._post_scillm_json(payload)
 
         self.assertEqual(parsed["choices"][0]["message"]["content"], "{}")
-        self.assertEqual(calls, ["Bearer bad-key", "Bearer good-key"])
+        self.assertIs(seen["payload"], payload)
+        self.assertEqual(seen["caller_skill"], "persona-dream-phase07-panel-reviewer")
+
+    def test_post_scillm_json_fails_closed_on_route_error(self) -> None:
+        def fake_post(payload, *, artifact_dir, caller_skill):
+            raise tau_node._tau_composite.CompositeVlmError("tau route down")
+
+        with mock.patch.object(tau_node._tau_composite, "post_openai_vlm_via_tau", side_effect=fake_post):
+            with self.assertRaises(ValueError):
+                tau_node._post_scillm_json({"model": "gpt-2", "messages": []})
 
     def test_purge_invalid_accepted_frames_removes_non_reviewer_acceptance(self) -> None:
         panel = {
@@ -250,7 +227,7 @@ class TestPhase07StoryboardTauNode(unittest.TestCase):
                     {
                         "status": "PASS",
                         "model": "gpt-2",
-                        "reviewer_source": "scillm:gpt-2:image_url",
+                        "reviewer_source": "tau-panel-reviewer:gpt-2:composite",
                         "model_policy_enforced": True,
                     }
                 ),
@@ -259,7 +236,7 @@ class TestPhase07StoryboardTauNode(unittest.TestCase):
             existing_review = {
                 "status": "PASS",
                 "model": "gpt-2",
-                "reviewer_source": "scillm:gpt-2:image_url",
+                "reviewer_source": "tau-panel-reviewer:gpt-2:composite",
                 "model_policy_enforced": True,
             }
 
