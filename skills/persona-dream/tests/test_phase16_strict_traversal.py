@@ -1,0 +1,85 @@
+"""Strict phase-16 traversal resolver test (Defect 3).
+
+Proves the strict resolver: an observed_in_scene edge whose Watch-evidence
+target vertex does not exist FAILS traversal. The old resolver treated such
+targets as 'vertex_class_not_materialized_as_document' and passed - that proved
+edges, not vertices. No live memory: get_one is faked.
+"""
+import importlib.util
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def _load(name: str):
+    spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / f"{name}.py")
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+p16 = _load("phase16_behavior_evaluation")
+
+
+def _build_store(include_watch=True):
+    store: dict[tuple[str, str], dict] = {}
+    # dream vertex + anchor
+    store[("persona_memory", p16.DREAM_KEY)] = {
+        "_key": p16.DREAM_KEY, "persona_id": p16.PERSONA_ID,
+        "tags": [f"persona:{p16.PERSONA_ID}"], "retrieval_text": "x",
+    }
+    # source memories
+    for m in p16.SOURCE_MEMORY_IDS:
+        store[("persona_memory", m)] = {"_key": m, "retrieval_text": "src"}
+    # tom candidates
+    for t in p16.TOM_KEYS:
+        store[("tom_candidates", t)] = {"_key": t, "statement": "tom"}
+    # edges
+    for ek, ec, _tf, _tk in p16.DERIVED_FROM_EDGES:
+        store[(ec, ek)] = {"_key": ek, "_to": f"persona_memory/{_tk}"}
+    for ek, ec, _tf, w in p16.OBSERVED_IN_SCENE_EDGES:
+        store[(ec, ek)] = {"_key": ek, "_to": f"persona_dream_watch_evidence/{w}"}
+    for ek, ec, _tf, t in p16.SUPPORTS_INTERP_EDGES:
+        store[(ec, ek)] = {"_key": ek, "_to": f"tom_candidates/{t}"}
+    # watch evidence vertices
+    if include_watch:
+        for w in p16.WATCH_OBSERVATION_KEYS:
+            store[("persona_dream_watch_evidence", w)] = {
+                "_key": w, "statement": "watch", "synthetic_origin": True,
+                "psychological_interpretation_performed": False,
+            }
+    return store
+
+
+def _patch(monkeypatch, store):
+    monkeypatch.setattr(p16, "get_one", lambda coll, key: store.get((coll, key)))
+    p16._DREAM_CACHE.clear()
+
+
+def test_traversal_passes_when_watch_vertices_materialized(monkeypatch):
+    _patch(monkeypatch, _build_store(include_watch=True))
+    res = p16.probe_b_traversal()
+    assert res["passed"] is True, res
+    assert res["all_target_vertices_resolve"] is True
+    assert len(res["reached_watch_observations"]) == len(p16.WATCH_OBSERVATION_KEYS)
+
+
+def test_traversal_fails_on_missing_watch_vertex(monkeypatch):
+    store = _build_store(include_watch=True)
+    # Remove one materialized Watch vertex: the edge still resolves, the vertex does not.
+    del store[("persona_dream_watch_evidence", "frame_0006")]
+    _patch(monkeypatch, store)
+    res = p16.probe_b_traversal()
+    assert res["passed"] is False
+    assert res["all_target_vertices_resolve"] is False
+    missing = [p for p in res["paths"] if p["target_vertex_id"].endswith("frame_0006")]
+    assert missing and missing[0]["edge_resolves_live"] is True
+    assert missing[0]["target_vertex_resolves_live"] is False
+
+
+def test_traversal_fails_when_no_watch_vertices(monkeypatch):
+    _patch(monkeypatch, _build_store(include_watch=False))
+    res = p16.probe_b_traversal()
+    assert res["passed"] is False
+    assert len(res["reached_watch_observations"]) == 0

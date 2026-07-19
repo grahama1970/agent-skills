@@ -1,0 +1,122 @@
+"""Transactional persistence tests for phase 15 (Defect 2 + Defect 3).
+
+Uses an in-memory fake of the $memory HTTP contract (no live daemon) to prove:
+  * a fully-verified staged->publish->commit cycle sets
+    canonical_dream_memory_written=True with a commit manifest and Watch vertices;
+  * a single reread mismatch anywhere forces canonical_dream_memory_written=False
+    and status BLOCKED_CANONICAL_PERSISTENCE_INCOMPLETE (presence of a proof
+    object is NOT proof);
+  * the write-set materializes persona_dream_watch_evidence vertices.
+"""
+import importlib.util
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def _load(name: str):
+    spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / f"{name}.py")
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+p13 = _load("phase13_self_interpretation")
+p15 = _load("phase15_dream_persistence")
+
+_REV = ROOT / "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3"
+ACCEPTED_PACKET = _REV / "watch_gauntlet/59b9ff3155d6/dream_observation_packet.v1.json"
+ACCEPTANCE_RECEIPT_V2 = (
+    _REV / "phase_11_submit_return/provider_return"
+    / "97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4"
+    / "post_return_acceptance_receipt.v2.json"
+)
+ACCEPTED_RETURN_ID = "97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4"
+CL = _REV / "watch_gauntlet/59b9ff3155d6/cognitive_loop"
+INTERP = CL / "dream_self_interpretation.json"
+TOM = CL / "tom_validation_receipt.json"
+
+
+class FakeMemory:
+    """Minimal in-memory /store + /list emulation, with an optional corruptor
+    that mutates a document on store to force a reread mismatch."""
+
+    def __init__(self, corrupt_key=None):
+        self.store: dict[tuple[str, str], dict] = {}
+        self.corrupt_key = corrupt_key
+
+    def post(self, url, payload, timeout=15.0):
+        if url.endswith("/store"):
+            doc = dict(payload["document"])
+            coll = payload.get("collection", "lessons")
+            if self.corrupt_key and doc.get("_key") == self.corrupt_key and coll != p15.STAGING_COLLECTION:
+                # Simulate silent corruption of a published record.
+                doc = {**doc, "statement": "CORRUPTED"}
+            self.store[(coll, doc["_key"])] = doc
+            return {"ok": True}
+        if url.endswith("/list"):
+            coll = payload["collection"]
+            key = (payload.get("filters") or {}).get("_key")
+            docs = [v for (c, k), v in self.store.items() if c == coll and (key is None or k == key)]
+            return {"documents": docs}
+        return {}
+
+
+def _run(monkeypatch, fake):
+    monkeypatch.setattr(p15, "_http_post", fake.post)
+    return p15.run_phase15(
+        ACCEPTED_PACKET, INTERP, TOM,
+        "dream_successor_943b01ecd9a3", "rev_successor_943b01ecd9a3", "pipeline-complete", "embry",
+        allow_canonical_write=True, return_id=ACCEPTED_RETURN_ID,
+        acceptance_receipt_path=ACCEPTANCE_RECEIPT_V2,
+    )
+
+
+def test_full_commit_writes_watch_vertices_and_manifest(monkeypatch):
+    fake = FakeMemory()
+    result = _run(monkeypatch, fake)
+    assert result["canonical_write_allowed"] is True
+    assert result["canonical_dream_memory_written"] is True
+    assert result["status"] == "LIVE_CANONICAL_PERSISTENCE"
+    proof = result["canonical_write_proof"]
+    assert proof["all_exact_reread_match"] is True
+    # Watch-evidence vertices materialized (Defect 3).
+    assert set(proof["watch_vertex_keys"]) == {
+        "coverage_gap_00", "frame_0006", "frame_0007", "frame_0008", "frame_0009",
+        "identity_temporal_continuity_review", "visible_speaker_lipsync_window",
+    }
+    for vkey in proof["watch_vertex_keys"]:
+        assert (p15.WATCH_EVIDENCE_COLLECTION, vkey) in fake.store
+        v = fake.store[(p15.WATCH_EVIDENCE_COLLECTION, vkey)]
+        assert v["synthetic_origin"] is True
+        assert v["psychological_interpretation_performed"] is False
+    # Commit manifest is the single source of canonical visibility.
+    manifest = proof["commit_manifest"]
+    assert manifest["active"] is True
+    assert manifest["exact_reread_match"] is True
+    assert (p15.COMMIT_MANIFEST_COLLECTION, manifest["key"]) in fake.store
+    # Manifest binds the exact phase13 + phase14 artifacts.
+    mdoc = fake.store[(p15.COMMIT_MANIFEST_COLLECTION, manifest["key"])]
+    assert mdoc["phase13_sha256"] == p15.canonical_sha(p13.read_json(INTERP))
+    assert mdoc["phase14_sha256"] == p15.canonical_sha(p13.read_json(TOM))
+
+
+def test_reread_mismatch_forces_not_written(monkeypatch):
+    # Corrupt one published Watch vertex on store -> its reread hash won't match.
+    fake = FakeMemory(corrupt_key="frame_0007")
+    result = _run(monkeypatch, fake)
+    assert result["canonical_write_allowed"] is True
+    # Presence of a proof object is NOT proof.
+    assert result["canonical_write_proof"] is not None
+    assert result["canonical_dream_memory_written"] is False
+    assert result["status"] == "BLOCKED_CANONICAL_PERSISTENCE_INCOMPLETE"
+
+
+def test_watch_vertices_cover_observed_edges(monkeypatch):
+    interp = p13.read_json(INTERP)
+    observed = set(p15.accepted_observed_ids(interp))
+    vertices = p15.build_watch_evidence_vertices(
+        p13.read_json(ACCEPTED_PACKET), interp, "d", ACCEPTED_RETURN_ID, "sha256:adj"
+    )
+    assert {v["_key"] for v in vertices} == observed

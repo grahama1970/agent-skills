@@ -1,0 +1,317 @@
+"""Unit tests for the cognitive-loop transition state machine (P0 guards).
+
+Pure, deterministic guard-logic tests - no live LLM or memory calls. They prove
+each transition fails closed: a blocked phase-13 stops the loop, a zero-accepted
+phase-14 stops it, hash/id mismatches stop it, partial staging quarantines, the
+canonical commit is refused unless the manifest binds the exact phase13+14 and
+every record rereads, and the strict phase-16 resolver fails on a missing vertex.
+"""
+import importlib.util
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def _load(name: str):
+    spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / f"{name}.py")
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+T = _load("cognitive_loop_transitions")
+p13 = _load("phase13_self_interpretation")
+p15 = _load("phase15_dream_persistence")
+
+_REV = ROOT / "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3"
+ACCEPTED_PACKET = _REV / "watch_gauntlet/59b9ff3155d6/dream_observation_packet.v1.json"
+HISTORICAL_PACKET = _REV / "watch_gauntlet/991c311f365f/dream_observation_packet.v1.json"
+ACCEPTANCE_RECEIPT_V2 = (
+    _REV / "phase_11_submit_return/provider_return"
+    / "97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4"
+    / "post_return_acceptance_receipt.v2.json"
+)
+ACCEPTED_RETURN_ID = "97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4"
+
+
+# --------------------------------------------------------------------------- #
+# Guard 1 - observation accepted                                              #
+# --------------------------------------------------------------------------- #
+def test_observation_ok_status_accepted():
+    packet = {"schema": T.OBSERVATION_SCHEMA, "status": "OK_WATCH_GAUNTLET_OBSERVATION"}
+    t = T.guard_observation_accepted(
+        packet, return_id="r-1", acceptance_certifies=False,
+        canonical_write_hard_blocks=[], allow_canonical_write=True,
+    )
+    assert t.ok, t.as_dict()
+
+
+def test_observation_degraded_needs_certifying_receipt():
+    packet = {"schema": T.OBSERVATION_SCHEMA, "status": "DEGRADED_WATCH_GAUNTLET_OBSERVATION"}
+    # No certification -> eligibility blocker (fine for dry-run, fatal for commit).
+    t = T.guard_observation_accepted(
+        packet, return_id="r-1", acceptance_certifies=False,
+        canonical_write_hard_blocks=[], allow_canonical_write=False,
+    )
+    assert not t.ok
+    assert "OBSERVATION_DEGRADED_UNWAIVED" in t.eligibility_blockers
+    assert not t.has_structural
+    # With certification -> accepted.
+    t2 = T.guard_observation_accepted(
+        packet, return_id="r-1", acceptance_certifies=True,
+        canonical_write_hard_blocks=[], allow_canonical_write=True,
+    )
+    assert t2.ok
+
+
+def test_observation_unknown_status_is_structural_block():
+    packet = {"schema": T.OBSERVATION_SCHEMA, "status": "DEGRADED_SOMETHING_ELSE"}
+    t = T.guard_observation_accepted(
+        packet, return_id="r-1", acceptance_certifies=True,
+        canonical_write_hard_blocks=[], allow_canonical_write=False,
+    )
+    assert t.has_structural
+    assert any(b.startswith("OBSERVATION_STATUS_UNKNOWN") for b in t.structural_blockers)
+
+
+def test_observation_hard_blocks_are_structural():
+    packet = {"schema": T.OBSERVATION_SCHEMA, "status": "OK_WATCH_GAUNTLET_OBSERVATION"}
+    t = T.guard_observation_accepted(
+        packet, return_id="r-1", acceptance_certifies=True,
+        canonical_write_hard_blocks=["RETURN_IS_HISTORICAL_PROVIDER_RETURN", "IDENTITY_CONTINUITY_DEFECT:DRIFT"],
+        allow_canonical_write=True,
+    )
+    assert t.has_structural
+    assert "RETURN_IS_HISTORICAL_PROVIDER_RETURN" in t.structural_blockers
+
+
+def test_live_accepted_packet_transitions_with_receipt():
+    packet = p13.read_json(ACCEPTED_PACKET)
+    receipt = p13.read_json(ACCEPTANCE_RECEIPT_V2)
+    certifies, _ = p15.acceptance_receipt_certifies(receipt, packet, ACCEPTED_RETURN_ID)
+    assert certifies
+    t = T.guard_observation_accepted(
+        packet, return_id=ACCEPTED_RETURN_ID, acceptance_certifies=certifies,
+        canonical_write_hard_blocks=[], allow_canonical_write=True,
+    )
+    assert t.ok, t.as_dict()
+
+
+# --------------------------------------------------------------------------- #
+# Guard 2 - interpretation                                                    #
+# --------------------------------------------------------------------------- #
+def _good_interp(n=1):
+    return {
+        "schema": T.INTERPRETATION_SCHEMA,
+        "status": "PASS_SELF_INTERPRETATION",
+        "dream_id": "d", "revision_id": "rev", "run_id": "run",
+        "observation_packet_sha256": "sha256:obs",
+        "accepted_interpretations": [{"interpretation_id": f"i-{i}"} for i in range(n)],
+    }
+
+
+def test_blocked_interpretation_stops_loop():
+    interp = _good_interp()
+    interp["status"] = "BLOCKED_SELF_INTERPRETATION"
+    t = T.guard_interpretation(
+        interp, expected_dream_id="d", expected_revision_id="rev", expected_run_id="run",
+        expected_observation_sha256="sha256:obs",
+    )
+    assert t.has_structural
+    assert any(b.startswith("INTERPRETATION_STATUS_NOT_PASS") for b in t.structural_blockers)
+
+
+def test_zero_accepted_interpretation_stops_loop():
+    interp = _good_interp(n=0)
+    t = T.guard_interpretation(
+        interp, expected_dream_id="d", expected_revision_id="rev", expected_run_id="run",
+        expected_observation_sha256="sha256:obs",
+    )
+    assert any(b.startswith("INTERPRETATION_ACCEPTED_BELOW_MIN") for b in t.structural_blockers)
+
+
+def test_interpretation_id_mismatch_stops_loop():
+    interp = _good_interp()
+    t = T.guard_interpretation(
+        interp, expected_dream_id="OTHER", expected_revision_id="rev", expected_run_id="run",
+        expected_observation_sha256="sha256:obs",
+    )
+    assert "INTERPRETATION_ID_MISMATCH:dream_id" in t.structural_blockers
+
+
+def test_interpretation_observation_sha_mismatch_stops_loop():
+    interp = _good_interp()
+    t = T.guard_interpretation(
+        interp, expected_dream_id="d", expected_revision_id="rev", expected_run_id="run",
+        expected_observation_sha256="sha256:DIFFERENT",
+    )
+    assert "INTERPRETATION_OBSERVATION_SHA_MISMATCH" in t.structural_blockers
+
+
+def test_good_interpretation_passes():
+    interp = _good_interp()
+    t = T.guard_interpretation(
+        interp, expected_dream_id="d", expected_revision_id="rev", expected_run_id="run",
+        expected_observation_sha256="sha256:obs",
+    )
+    assert t.ok, t.as_dict()
+
+
+# --------------------------------------------------------------------------- #
+# Guard 3 - ToM validation (hash binding)                                     #
+# --------------------------------------------------------------------------- #
+def test_tom_hash_mismatch_stops_loop():
+    interp = _good_interp()
+    tom = {
+        "schema": T.TOM_SCHEMA, "status": "PASS_TOM_VALIDATION",
+        "dream_id": "d", "revision_id": "rev", "run_id": "run",
+        "interpretation_sha256": "sha256:WRONG",
+        "accepted_tom_candidates": [{"candidate_id": "tom-1"}], "accepted_count": 1,
+    }
+    t = T.guard_tom_validation(
+        tom, interp, expected_dream_id="d", expected_revision_id="rev", expected_run_id="run",
+    )
+    assert "TOM_INTERPRETATION_SHA_MISMATCH" in t.structural_blockers
+
+
+def test_zero_accepted_tom_stops_loop():
+    interp = _good_interp()
+    tom = {
+        "schema": T.TOM_SCHEMA, "status": "PASS_TOM_VALIDATION",
+        "dream_id": "d", "revision_id": "rev", "run_id": "run",
+        "interpretation_sha256": T.canonical_sha(interp),
+        "accepted_tom_candidates": [], "accepted_count": 0,
+    }
+    t = T.guard_tom_validation(
+        tom, interp, expected_dream_id="d", expected_revision_id="rev", expected_run_id="run",
+    )
+    assert any(b.startswith("TOM_ACCEPTED_BELOW_MIN") for b in t.structural_blockers)
+
+
+def test_good_tom_passes_with_exact_hash_binding():
+    interp = _good_interp()
+    tom = {
+        "schema": T.TOM_SCHEMA, "status": "PASS_TOM_VALIDATION",
+        "dream_id": "d", "revision_id": "rev", "run_id": "run",
+        "interpretation_sha256": T.canonical_sha(interp),
+        "accepted_tom_candidates": [{"candidate_id": "tom-1"}], "accepted_count": 1,
+    }
+    t = T.guard_tom_validation(
+        tom, interp, expected_dream_id="d", expected_revision_id="rev", expected_run_id="run",
+    )
+    assert t.ok, t.as_dict()
+
+
+# --------------------------------------------------------------------------- #
+# Guard 4 - staged persistence                                               #
+# --------------------------------------------------------------------------- #
+def test_staging_missing_is_structural():
+    t = T.guard_staged_persistence({"canonical_write_proof": {}})
+    assert "STAGING_PROOF_MISSING" in t.structural_blockers
+
+
+def test_partial_staging_quarantine_blocks():
+    persist = {"canonical_write_proof": {"idempotency_key": "k", "staging_proof": {
+        "all_exact_reread_match": False, "quarantined": True,
+        "staged_count": 2, "expected_count": 5,
+    }}}
+    t = T.guard_staged_persistence(persist)
+    assert "STAGED_RECORD_REREAD_MISMATCH" in t.structural_blockers
+    assert "STAGING_QUARANTINED" in t.structural_blockers
+
+
+def test_staged_count_mismatch_blocks():
+    persist = {"canonical_write_proof": {"staging_proof": {
+        "all_exact_reread_match": True, "quarantined": False,
+        "staged_count": 4, "expected_count": 5,
+    }}}
+    t = T.guard_staged_persistence(persist)
+    assert any(b.startswith("STAGED_COUNT_MISMATCH") for b in t.structural_blockers)
+
+
+def test_full_staging_passes():
+    persist = {"canonical_write_proof": {"idempotency_key": "k", "staging_proof": {
+        "all_exact_reread_match": True, "quarantined": False,
+        "staged_count": 5, "expected_count": 5,
+    }}}
+    t = T.guard_staged_persistence(persist)
+    assert t.ok, t.as_dict()
+
+
+# --------------------------------------------------------------------------- #
+# Guard 5 - canonical commit                                                 #
+# --------------------------------------------------------------------------- #
+def _committed_persist(p13sha="sha256:13", p14sha="sha256:14", written=True, manifest_match=True):
+    return {
+        "canonical_dream_memory_written": written,
+        "canonical_write_proof": {
+            "idempotency_key": "idem",
+            "all_exact_reread_match": True,
+            "records_written": 26,
+            "commit_manifest": {
+                "key": "commit_idem", "active": True, "exact_reread_match": manifest_match,
+                "phase13_sha256": p13sha, "phase14_sha256": p14sha,
+            },
+        },
+    }
+
+
+def test_commit_manifest_missing_blocks():
+    t = T.guard_canonical_commit(
+        {"canonical_write_proof": {}}, expected_phase13_sha256="a", expected_phase14_sha256="b",
+    )
+    assert "COMMIT_MANIFEST_MISSING" in t.structural_blockers
+
+
+def test_commit_phase13_sha_mismatch_blocks():
+    persist = _committed_persist(p13sha="sha256:WRONG")
+    t = T.guard_canonical_commit(
+        persist, expected_phase13_sha256="sha256:13", expected_phase14_sha256="sha256:14",
+    )
+    assert "COMMIT_PHASE13_SHA_MISMATCH" in t.structural_blockers
+
+
+def test_canonical_written_false_on_manifest_reread_mismatch():
+    persist = _committed_persist(manifest_match=False, written=False)
+    t = T.guard_canonical_commit(
+        persist, expected_phase13_sha256="sha256:13", expected_phase14_sha256="sha256:14",
+    )
+    assert "COMMIT_MANIFEST_REREAD_MISMATCH" in t.structural_blockers
+    assert "CANONICAL_DREAM_MEMORY_NOT_WRITTEN" in t.structural_blockers
+
+
+def test_good_commit_passes():
+    persist = _committed_persist()
+    t = T.guard_canonical_commit(
+        persist, expected_phase13_sha256="sha256:13", expected_phase14_sha256="sha256:14",
+    )
+    assert t.ok, t.as_dict()
+
+
+# --------------------------------------------------------------------------- #
+# Aggregate pass predicate - the DEGRADED* shortcut is gone                    #
+# --------------------------------------------------------------------------- #
+def test_bare_degraded_is_not_pass_like():
+    assert not T.observation_status_is_pass_like(
+        "DEGRADED_WATCH_GAUNTLET_OBSERVATION", acceptance_certifies=False
+    )
+    assert T.observation_status_is_pass_like(
+        "DEGRADED_WATCH_GAUNTLET_OBSERVATION", acceptance_certifies=True
+    )
+    # An unknown DEGRADED code never passes, even if "certified".
+    assert not T.observation_status_is_pass_like(
+        "DEGRADED_MADE_UP", acceptance_certifies=True
+    )
+
+
+def test_phase_status_pass_predicate():
+    # Non-observation phases must be explicit PASS/DRY_RUN/LIVE.
+    assert T.phase_status_is_pass_like("15_persistence", "LIVE_CANONICAL_PERSISTENCE")
+    assert not T.phase_status_is_pass_like("15_persistence", "DEGRADED_ANYTHING")
+    assert not T.phase_status_is_pass_like("13_self_interpretation", "BLOCKED_SELF_INTERPRETATION")
+    # The input observation phase, degraded + certified, passes.
+    assert T.phase_status_is_pass_like(
+        "12_watch_observation", "DEGRADED_WATCH_GAUNTLET_OBSERVATION",
+        observation_acceptance_certifies=True,
+    )
