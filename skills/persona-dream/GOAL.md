@@ -118,6 +118,46 @@ direct scillm from Stage B drivers. Outcomes on THIS successor return:
   renderer-defect alternatives). Route verification:
   `…/97688ec5…/tau_vlm_route_verification_receipt.v1.json`.
 
+Stage B addendum 3 (2026-07-19, phases 13-15 routed through Tau; FIRST canonical
+dream-memory write): SUPERSEDES the "Canonical cognitive loop: DRY-RUN ONLY" line
+above. The DEFERRED text-reasoning blocker is RESOLVED. A minimal Tau
+text-reasoning node was added (tau repo commit `09e64a44`,
+`tau_coding.persona_dream_text_reasoning_agent`) — text-only, schema-agnostic,
+carrying a caller hash-recorded prompt + caller-defined JSON output contract,
+reusing panel-reviewer's scillm-key resolution (`api_key_source
+docker:scillm-proxy`) and emitting a
+`tau.persona_dream.scillm_text_reasoning_receipt.v1` receipt. Persona-dream side:
+`scripts/tau_text_reasoning_adapter.py` dispatches phase 13/14 prompts to that
+node (subprocess into the Tau repo; NO direct scillm from persona-dream). The
+deterministic citation/grounding gates are UNCHANGED — the LLM only drafts, code
+decides. Live run on the ACCEPTED return (`watch_gauntlet/59b9ff3155d6/cognitive_loop/`):
+- Phase 13 self-interpretation PASS: 4 interpretations, 0 rejected; every claim
+  cites Watch observation ids AND source-memory ids; live `$memory` recall of the
+  Embry/Kai surf residue (confidence 0.90-0.94, residue id
+  `embry_age15_19_b03_memory_014` confirmed). Routed through Tau (http 200,
+  `direct_scillm_call: false`).
+- Phase 14 ToM validation PASS: 4 candidates proposed via Tau, 4 accepted, 0
+  rejected (each grounded as a subset of its parent interpretation).
+- Phase 15 canonical persistence LIVE_CANONICAL_PERSISTENCE: the first legitimate
+  canonical write. `canonical_write_decision` now accepts a binding agent-level
+  acceptance receipt that OVERRIDES the DEGRADED observation status ONLY (never a
+  historical origin, a renderer DEFECT verdict, or a superseded id — those remain
+  hard, fail-closed blocks, with tests). 19 records written THROUGH the `$memory`
+  API, all exact reread-by-key match: the synthetic dream node
+  `persona_memory/dream_dream_successor_943b01ecd9a3`
+  (`synthetic_origin:true, literal_historical_event:false`), 4 ToM candidate nodes
+  (`tom_candidates/tom-001..004`), 3 `derived_from` + 7 `observed_in_scene` + 4
+  `supports_interpretation` edges. Governance record
+  `persona_dream_governance/persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:cognitive_loop_canonical_write`
+  and phase 13/14/15 step records (`persona_dream_pipeline_steps`) updated to
+  `Live-Proven-On-Accepted-Return`, all exact reread. Loop receipt
+  `.../cognitive_loop/cognitive_loop_receipt.json` = `PASS_COGNITIVE_LOOP`,
+  `canonical_dream_memory_written: true`. The superseded historical Kling return
+  remains BLOCKED even with `--allow-canonical-write` (verified live).
+- Current Boundary: canonical dream memory WRITTEN for the accepted successor
+  return; Phase 16 (behavior evaluation via Qdrant semantic recall + downstream
+  persona behavior change, and human subjective acceptance) REMAINS.
+
 The frozen revision `rev_upstream_bf3b05d47fb8` crossed the live Kling boundary
 once for repaired request
 `sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f`.

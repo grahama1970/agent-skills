@@ -1,9 +1,38 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-19 (Stage B gauntlet RE-RUN with VLM routed through Tau — ACCEPTED agent-level; canonical loop still dry-run, fail-closed) by agent
+**Last updated:** 2026-07-19 (phases 13-15 routed through Tau — FIRST canonical dream memory written on the accepted return) by agent
 **Status:** Active development
 
 ## Current Understanding
+
+- 2026-07-19 (phases 13-15 routed through Tau; FIRST canonical dream-memory write):
+  the DEFERRED phase-13/14 text-reasoning blocker is resolved. At Tau commit `416edc5a`
+  no general text-completion node existed (panel-reviewer is image-bound; `scillm_subagent_gate`
+  is a validator; `dream_packet_agent` does no in-Tau LLM; the script-writer/reviewer command
+  specs are dead pointers to unsupported roles — verified by reading their contracts). A minimal
+  text-only node was added to the Tau repo (commit `09e64a44`,
+  `tau_coding.persona_dream_text_reasoning_agent`, branch `issue-74-ready-queue-condition-block`):
+  it carries a caller **hash-recorded prompt** + **caller-defined JSON output contract**, reuses
+  panel-reviewer's scillm-key resolution (`api_key_source docker:scillm-proxy`), and emits a
+  `tau.persona_dream.scillm_text_reasoning_receipt.v1` receipt (prompt/contract shas, model,
+  http_status, raw output). Persona-dream's `scripts/tau_text_reasoning_adapter.py` dispatches
+  phase 13/14 prompts to it by subprocess into the Tau repo — **NO direct scillm from
+  persona-dream**; the deterministic citation/grounding gates are UNCHANGED (the LLM only drafts,
+  code decides). **Live on the ACCEPTED successor return** (`watch_gauntlet/59b9ff3155d6/cognitive_loop/`):
+  phase 13 PASS (4 interpretations, all citing Watch observation ids + source-memory ids; live
+  `$memory` recall confirmed, one residue id matched), phase 14 PASS (4 ToM candidates accepted,
+  subset-grounded), phase 15 `LIVE_CANONICAL_PERSISTENCE`. Phase 15 now permits a canonical write
+  only when a **binding agent-level acceptance receipt** (`ACCEPTED_AGENT_LEVEL`, matching return
+  video sha256 + return id, step_36 & step_38 PASS) overrides the DEGRADED observation status —
+  and NEVER a historical origin, renderer DEFECT verdict, or superseded id (hard blocks, 8
+  fail-closed tests). **19 canonical records** written through the `$memory` API with **exact
+  reread-by-key**: the synthetic dream node `persona_memory/dream_dream_successor_943b01ecd9a3`
+  (`synthetic_origin:true, literal_historical_event:false`), 4 `tom_candidates` nodes, and 3
+  `derived_from` + 7 `observed_in_scene` + 4 `supports_interpretation` edges. Governance record
+  (`persona_dream_governance/...:cognitive_loop_canonical_write`) + phase 13/14/15 step records
+  (`persona_dream_pipeline_steps`, now `Live-Proven-On-Accepted-Return`) all exact reread. Loop
+  receipt `PASS_COGNITIVE_LOOP`, `canonical_dream_memory_written: true`. Boundary: Phase 16
+  (Qdrant semantic recall + downstream behavior change + human subjective acceptance) remains.
 
 - 2026-07-19 (Stage B post-return gauntlet RE-RUN — VLM routed through Tau, ACCEPTED
   at agent level; canonical loop still DRY-RUN, fail-closed): the three v1 blockers were

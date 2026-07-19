@@ -87,6 +87,27 @@ boundary:** the identity PASS is a no-drift/no-substitution + composition verdic
 NOT an embedding-certified whole-clip identity; the audio deliverable is muxed +
 forced-aligned, NOT frame-accurate lip-sync; no canonical dream memory was written.
 
+**Stage B update 3 (2026-07-19, supersedes the deferral above): phases 13-15 now
+route through Tau and the FIRST canonical dream memory was written.** A minimal
+text-only Tau node was added (tau commit `09e64a44`,
+`tau_coding.persona_dream_text_reasoning_agent`) that carries a caller
+hash-recorded prompt + caller-defined JSON contract and emits a receipt
+(`api_key_source docker:scillm-proxy`). Persona-dream's
+`scripts/tau_text_reasoning_adapter.py` dispatches phase 13/14 prompts to it (no
+direct scillm); the deterministic citation gates are unchanged. Live on the
+accepted return: Phase 13 **PASS** (4 interpretations, all citing Watch
+observation ids + source-memory ids, live `$memory` recall confirmed), Phase 14
+**PASS** (4 ToM candidates accepted, subset-grounded), Phase 15
+**LIVE_CANONICAL_PERSISTENCE** — 19 records written through the `$memory` API with
+exact reread-by-key (synthetic dream node
+`dream_dream_successor_943b01ecd9a3`, 4 ToM nodes, 14 edges), plus governance +
+step records. Loop receipt `PASS_COGNITIVE_LOOP`,
+`canonical_dream_memory_written: true`. Canonical write is permitted only by a
+binding agent-level acceptance receipt overriding the DEGRADED status; the
+superseded historical return stays BLOCKED (verified live). **Phase 16 (Qdrant
+semantic recall + downstream behavior change + human subjective acceptance) is
+next.**
+
 **Jump to:**
 [Quick Start](#quick-start) -
 [Research](#research) -
@@ -248,8 +269,8 @@ The README uses these proof terms consistently:
 | Phases 01-10 - Qualified successor revision | **Qualified revision at acceptance rung** | `rev_successor_943b01ecd9a3` is `PASS_ACTIVE_CONSISTENT`; the explicit human idea has 10/10 phase lineage bindings, 10 phase + 16 required-artifact Memory records and the 42-step bundle exactly reread, and the rebuilt artifact index makes the eight Phase C storyboard frames (8/8 actual-pixel identity PASS, 7/7 continuity) the active Phase 07 evidence while the montage-derived frames stay stale |
 | Phase 11 - Submit and Return | **Historical live return superseded; awaiting new hash-bound authorization** | `rev_upstream_bf3b05d47fb8` crossed the paid boundary once (`sha256:ca90ba9f…`, one submit, 54 polls, a valid 10.04s MP4) but failed Embry identity continuity and visible-speaker lip sync and derives from the rejected montage. The successor needs a freshly compiled provider request, provider media publication for the regenerated frames, and a new hash-bound paid authorization — all human-gated. No successor provider call has been made |
 | Phase 12 - Watch Observation | **Live slice proven for perception-on-historical-return** | The `watch` post-return gauntlet (`scripts/watch_post_return_gauntlet.py`) runs the `watch` skill over the frozen historical Kling return, extracts scene-driven frames + Whisper transcript, and independently localizes the identity-drift and visible-speaker windows. Validated against ground truth: `watch_gauntlet/991c311f365f/watch_gauntlet_validation_receipt.v1.json` (`PASS_WATCH_GAUNTLET_VALIDATED`, 5/5 expectations). Phase 12 is **not complete** — no successor provider return exists to observe |
-| Phases 13-15 - Interpretation through persistence | **Designed** | The evidence architecture exists, but one accepted closed run does not |
-| Phase 16 - Later persona behavior | **Not implemented as a closed proof** | No persisted dream has yet been shown to alter later behavior while preserving identity |
+| Phases 13-15 - Interpretation through persistence | **Live slice proven on accepted return** | On the ACCEPTED successor return, phase 13/14 text reasoning routes through the Tau node (tau `09e64a44`; no direct scillm), 4 interpretations + 4 ToM candidates pass the deterministic gates, and phase 15 wrote the FIRST canonical dream memory (19 records, exact reread-by-key) permitted only by a binding agent-level acceptance receipt; superseded/historical returns stay fail-closed |
+| Phase 16 - Later persona behavior | **Not implemented as a closed proof** | No persisted dream has yet been shown to alter later behavior while preserving identity; Qdrant semantic recall + downstream behavior change + human subjective acceptance remain |
 
 The screenshots below come from an archived Embry/Kai run. That run has not been
 regenerated with every newer provider artifact. A blocked screenshot describes
