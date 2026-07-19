@@ -303,22 +303,32 @@ def probe_b_traversal() -> dict[str, Any]:
         + [(e, "observed_in_scene", "watch_observation") for e in OBSERVED_IN_SCENE_EDGES]
         + [(e, "supports_interpretation", "tom_node") for e in SUPPORTS_INTERP_EDGES]
     )
+    # STRICT resolver (Defect 3 fix): EVERY edge target must resolve to a real
+    # stored vertex - including Watch-observation targets in
+    # persona_dream_watch_evidence. An edge whose target vertex does not exist
+    # FAILS traversal. The prior "vertex_class_not_materialized_as_document"
+    # allowance proved edges, not vertices, and is removed.
+    RESOLVABLE_COLLECTIONS = ("persona_memory", "tom_candidates", "persona_dream_watch_evidence")
     for (edge_key, edge_coll, target_full, target_key), rel, klass in all_edges:
         edge_doc = get_one(edge_coll, edge_key)
         edge_resolves = edge_doc is not None
         target_vertex = None
         target_resolves = None
         target_coll = None
+        target_vertex_sha = None
         if edge_doc is not None:
             to_full = edge_doc.get("_to", "")
             target_coll = to_full.split("/")[0] if "/" in to_full else None
             tkey = to_full.split("/")[-1]
-            # only source memories and ToM nodes are guaranteed persona_memory/tom_candidates
-            if target_coll in ("persona_memory", "tom_candidates"):
+            if target_coll in RESOLVABLE_COLLECTIONS:
                 target_vertex = get_one(target_coll, tkey)
                 target_resolves = target_vertex is not None
+                if target_vertex is not None:
+                    authored = {k: v for k, v in target_vertex.items() if not k.startswith("_") or k == "_key"}
+                    target_vertex_sha = canonical_sha(authored)
             else:
-                target_resolves = "vertex_class_not_materialized_as_document"
+                # Unknown target collection: fail closed, do not assume reachable.
+                target_resolves = False
         path = {
             "hop1_persona_anchor": f"persona_id={PERSONA_ID} (tag persona:{PERSONA_ID})",
             "hop2_dream_vertex": DREAM_ID_FULL,
@@ -327,16 +337,21 @@ def probe_b_traversal() -> dict[str, Any]:
             "relationship_type": rel,
             "edge_resolves_live": edge_resolves,
             "target_vertex_id": edge_doc.get("_to") if edge_doc else target_full,
+            "target_collection": target_coll,
             "target_class": klass,
             "target_vertex_resolves_live": target_resolves,
+            "target_vertex_sha256": target_vertex_sha,
         }
         paths.append(path)
-        if edge_resolves and (target_resolves is True or target_resolves == "vertex_class_not_materialized_as_document"):
+        # A hop counts as reachable ONLY when both the edge AND its target vertex
+        # resolve to real stored documents.
+        if edge_resolves and target_resolves is True:
             reachable[klass].append(edge_doc.get("_to") if edge_doc else target_full)
 
     b03_014_reached = any(
         "embry_age15_19_b03_memory_014" in (t or "") for t in reachable["source_memory"]
     )
+    all_targets_resolve = all(p["target_vertex_resolves_live"] is True for p in paths)
     passed = (
         anchor_ok
         and len(reachable["source_memory"]) >= 1
@@ -344,6 +359,7 @@ def probe_b_traversal() -> dict[str, Any]:
         and len(reachable["watch_observation"]) >= 1
         and len(reachable["tom_node"]) >= 1
         and all(p["edge_resolves_live"] for p in paths)
+        and all_targets_resolve
     )
     return {
         "probe": "b_multihop_traversal",
@@ -352,17 +368,22 @@ def probe_b_traversal() -> dict[str, Any]:
         "persona_anchor_ok": anchor_ok,
         "edges_total": len(paths),
         "edges_resolved_live": sum(1 for p in paths if p["edge_resolves_live"]),
+        "target_vertices_resolved_live": sum(1 for p in paths if p["target_vertex_resolves_live"] is True),
+        "all_target_vertices_resolve": all_targets_resolve,
         "reached_source_memories": reachable["source_memory"],
         "reached_watch_observations": reachable["watch_observation"],
         "reached_tom_nodes": reachable["tom_node"],
         "b03_memory_014_lineage_reached": b03_014_reached,
         "paths": paths,
         "note": (
-            "Traversal reconstructed from canonical stored edges via the sanctioned Memory "
-            "HTTP API (/list by _key). Each edge and each persona_memory/tom_candidates target "
-            "vertex is re-fetched live to prove the path resolves. Watch-observation targets "
-            "(frames / coverage gaps / continuity reviews) are edge endpoints not materialized "
-            "as standalone documents; the edge itself is proven live."
+            "STRICT traversal: reconstructed from canonical stored edges via the sanctioned "
+            "Memory HTTP API (/list by _key). Each edge AND its target vertex is re-fetched "
+            "and hash-recorded live. Every target - source memories (persona_memory), ToM "
+            "nodes (tom_candidates), AND Watch-observation vertices "
+            "(persona_dream_watch_evidence) - must resolve to a real stored document; an edge "
+            "with a missing target vertex FAILS traversal. This supersedes the earlier "
+            "edges-only traversal that treated Watch-observation endpoints as "
+            "'vertex_class_not_materialized_as_document'."
         ),
     }
 
