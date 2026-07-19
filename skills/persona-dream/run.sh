@@ -10,6 +10,7 @@ Usage: ./run.sh <command> [options]
 
 Commands:
   read                 Print PROJECT_KNOWLEDGE.md before running pipeline phases
+  test-suite           Run the deterministic pytest contract suite (CI guard; no paid/live calls)
   generate             Create a persona dream packet
   research-bakeoff     Run opt-in story/contact-sheet/A-V research bakeoff modes
   contact-sheet        Build/amend/retrieve visual reference sheets, memory records, and Qdrant index
@@ -445,6 +446,11 @@ case "$COMMAND" in
     ;;
   lore-canary)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/run_lore_extraction_canary.py" "$@"
+    ;;
+  test-suite)
+    # Deterministic contract suite. Runs offline (no paid/live provider calls);
+    # any test that needs a live route must sit behind an opt-in marker, not here.
+    exec "${PYTHON[@]}" -m pytest "${SCRIPT_DIR}/tests" -q "$@"
     ;;
   help|--help|-h)
     usage

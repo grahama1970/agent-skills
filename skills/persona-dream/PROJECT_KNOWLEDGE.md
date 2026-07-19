@@ -1,9 +1,33 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-18 (Phase 16 recall + behavior evaluation LIVE-PROVEN — founding experiment's machine-decidable boundary closed) by agent
+**Last updated:** 2026-07-19 (GREEN_CANONICAL_LANE gate closed — default pytest suite fully green) by agent
 **Status:** Active development
 
 ## Current Understanding
+
+- 2026-07-19 (GREEN_CANONICAL_LANE — CI contract reconciliation): the default test
+  suite went from 29 failed / 313 passed to **0 failed / 342 passed / 0 skipped**,
+  stable across two runs, reproducible via the new `./run.sh test-suite` (also wired
+  into `sanity.sh` as a CI guard). The root cause was **incomplete vendoring** of the
+  b68bf3d1 (2026-07-11) one-scene dry-run pipeline harness into `skills/persona-dream/`
+  — not obsolete-lane bit-rot — so the decision was **RESTORE, not retire** (no
+  retirement receipt). Three restores + one expectation fix: (1) authored the
+  never-committed `schemas/kling_scene_packet.schema.json` (Draft 2020-12, faithful to
+  the one-scene fixture; value gates stay in the Python validators, not const-pinned);
+  (2) recreated the omitted fixture PNG `fixtures/one_scene_kling_dry_run/artifacts/panel_001_reference.png`
+  and re-locked its sha256 in two receipts; (3) fixed the work-order writers' relocated
+  agent-contract path (`REPO = ROOT.parents[1]` → skill-owned `agents/`) and created
+  five real subagent contracts (dreamer, memory, panel-repair-gate, panel-creator,
+  panel-reviewer); (4) updated `test_run_sh_read` to the current PROJECT_KNOWLEDGE
+  header. `MANIFEST.json` is a SHA-256 patch-bundle manifest (34 files, 8 schemas)
+  verified by `scripts/verify_manifest.py` — resynced deterministically (only the kling
+  schema entry drifted, 4704→4108 bytes; now passes). `kling.scene_packet.v1` has no
+  phase-11 successor (`phase11_live_request.v1` never references `scene_packet`), and
+  the affected test files are partially-live, so retirement would have suppressed green
+  coverage. No revision/rung/qualification gate weakened; no assertion deleted. Receipt:
+  `reports/pipeline-complete/.persona-dream/state/green_canonical_lane_reconciliation_receipt.v1.json`;
+  memory `persona_dream:pipeline-complete:green_canonical_lane_ci_contract_reconciliation`
+  (`persona_dream_governance`, exact reread PASS).
 
 - 2026-07-18 (Phase 16 — Recall and Behavior Evaluation, the completion boundary):
   the founding experiment's machine-decidable acceptance boundary is now CLOSED.

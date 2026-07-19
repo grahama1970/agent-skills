@@ -219,3 +219,9 @@ fi
 if [[ -n "${PERSONA_DREAM_CONTACT_GATE_RUN_ROOT:-}" ]]; then
   "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_phase_05_contact_sheet_gate.py"     --run-root "${PERSONA_DREAM_CONTACT_GATE_RUN_ROOT}"     --write-gate     --json
 fi
+
+# CI guard: deterministic contract suite must stay green. This is the offline
+# regression net that catches contract/schema/fixture rot (e.g. omitted vendored
+# schemas or relocated agent-contract paths). No paid or live provider calls.
+echo "== running deterministic contract suite (run.sh test-suite) =="
+"${SCRIPT_DIR}/run.sh" test-suite
