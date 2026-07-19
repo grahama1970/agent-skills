@@ -223,12 +223,12 @@ def main() -> int:
             )
             (frames_dir / f"{panel_id}.attempt_{attempt:02d}_arcface.json").write_text(
                 json.dumps(verdict, indent=2, default=str) + "\n")
-            if verdict.get("verdict") == "PASS":
+            if verdict.get("status") == "PASS":
                 accepted = {"panel_id": panel_id, "frame": str(frame_png),
                             "frame_sha256": sha256_file(frame_png),
                             "attempt": attempt,
-                            "arcface": {"verdict": "PASS",
-                                        "entities": verdict.get("entities")}}
+                            "arcface": {"status": "PASS",
+                                        "entity_results": verdict.get("entity_results")}}
                 break
             findings = [str(f) for f in (verdict.get("blocking_findings") or
                                          ["Embry not reference-verifiable"])]
