@@ -304,3 +304,29 @@ def test_compensation_write_is_reread_verified(monkeypatch):
     manifest = result["canonical_write_proof"]["commit_manifest"]
     assert manifest["active"] is False
     assert manifest["compensation_reread_match"] is True
+
+
+def test_corrupted_prior_manifest_index_quarantines_on_retry(monkeypatch):
+    """webgpt round-4 gate: a prior ACTIVE manifest whose record index was
+    corrupted after a clean commit must quarantine on retry — verified inactive
+    write, never canonical_dream_memory_written=True."""
+    fake = FakeMemory()
+    first = _run(monkeypatch, fake)
+    assert first["canonical_dream_memory_written"] is True
+    manifest_key = first["canonical_write_proof"]["commit_manifest"]["key"]
+    stored = fake.store[(p15.COMMIT_MANIFEST_COLLECTION, manifest_key)]
+    # Corrupt ONLY the manifest's record index (records stay intact).
+    corrupted = {**stored}
+    corrupted["record_index"] = [
+        {**r, "payload_sha256": "sha256:TAMPERED"} for r in stored["record_index"]
+    ]
+    fake.store[(p15.COMMIT_MANIFEST_COLLECTION, manifest_key)] = corrupted
+    second = _run(monkeypatch, fake)
+    assert second["canonical_dream_memory_written"] is False
+    proof = second["canonical_write_proof"]
+    assert proof["resumed_from_prior_commit"] is False
+    assert proof["quarantine"]["reason"] == "PRIOR_MANIFEST_BINDING_MISMATCH"
+    assert proof["quarantine"]["quarantine_reread_match"] is True
+    stored_after = fake.store[(p15.COMMIT_MANIFEST_COLLECTION, manifest_key)]
+    assert stored_after["active"] is False
+    assert stored_after["quarantined"] is True

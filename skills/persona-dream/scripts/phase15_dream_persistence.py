@@ -983,7 +983,32 @@ def persist_canonical(
         for entry in write_set:
             r = store_and_reread_check_only(entry["document"], entry["collection"], base_url)
             reverify.append(r)
-        if all(r["exact_reread_match"] for r in reverify) and len(reverify) == expected_count:
+        # ACTIVE_MANIFEST_REPLAY_VALIDATION (webgpt round-4): resume only when
+        # the prior manifest's complete binding matches the final stamped
+        # snapshot — identity, phase hashes, state, count, and full
+        # (collection, key, payload_sha256) index.
+        expected_index = {
+            (s["collection"], s["key"]): s["payload_sha256"]
+            for s in final_write_set_snapshot
+        }
+        prior_index = {
+            (r.get("collection"), r.get("key")): r.get("payload_sha256")
+            for r in (prior.get("record_index") or [])
+        }
+        manifest_binding_valid = (
+            prior.get("idempotency_key") == idempotency_key
+            and prior.get("phase13_sha256") == phase13_sha
+            and prior.get("phase14_sha256") == phase14_sha
+            and prior.get("active") is True
+            and not prior.get("quarantined")
+            and prior.get("record_count") == expected_count
+            and prior_index == expected_index
+        )
+        if (
+            manifest_binding_valid
+            and all(r["exact_reread_match"] for r in reverify)
+            and len(reverify) == expected_count
+        ):
             # Identical retry: the committed write set is intact. Return the
             # existing commit untouched (webgpt review 2026-07-19: replay must
             # resolve to the existing active commit, never quarantine it, and
@@ -1020,23 +1045,26 @@ def persist_canonical(
             missing = [r["key"] for r in reverify if not r["exact_reread_match"]]
             quarantine = {
                 "idempotency_key": idempotency_key,
-                "reason": "PRIOR_MANIFEST_WITH_INCOMPLETE_OR_DRIFTED_RECORDS",
+                "reason": (
+                    "PRIOR_MANIFEST_BINDING_MISMATCH"
+                    if not manifest_binding_valid
+                    else "PRIOR_MANIFEST_WITH_INCOMPLETE_OR_DRIFTED_RECORDS"
+                ),
+                "manifest_binding_valid": manifest_binding_valid,
                 "unverified_keys": missing,
             }
-            _http_post(
-                f"{base_url.rstrip('/')}/store",
-                {
-                    "collection": COMMIT_MANIFEST_COLLECTION,
-                    "document": {
-                        "_key": f"commit_{idempotency_key}",
-                        **prior,
-                        "active": False,
-                        "quarantined": True,
-                        "quarantine": quarantine,
-                        "quarantined_at": utc_now(),
-                    },
-                },
-            )
+            # Verified inactive quarantine (webgpt round-4): the quarantining
+            # write is itself exactly reread.
+            quarantine_doc = {
+                "_key": f"commit_{idempotency_key}",
+                **prior,
+                "active": False,
+                "quarantined": True,
+                "quarantine": quarantine,
+                "quarantined_at": utc_now(),
+            }
+            q_receipt = store_and_reread(quarantine_doc, COMMIT_MANIFEST_COLLECTION, base_url)
+            quarantine["quarantine_reread_match"] = bool(q_receipt["exact_reread_match"])
 
     # --- Stage -------------------------------------------------------------
     staging_receipts = [stage_and_verify(entry, idempotency_key, base_url) for entry in write_set]
