@@ -1,0 +1,26 @@
+{
+  "accepted_interpretations": 3,
+  "accepted_tom_candidates": 3,
+  "bundle_rev": "v2r1",
+  "canonical_written": true,
+  "commit_manifest_key": "commit_1915207a78bc6d232e1c0e57756b04859f7a93f3ae7f2b321505d2a1985193d9",
+  "dream_node_sha_after": "sha256:fe06d836a2c2b3c97d4d27e1f1d41c35e818c976fcaaa4b5e9f1933c431220fa",
+  "dream_node_sha_before": "sha256:fe06d836a2c2b3c97d4d27e1f1d41c35e818c976fcaaa4b5e9f1933c431220fa",
+  "dream_node_untouched": true,
+  "observation_packet": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/dream_observation_packet.v2.json",
+  "observation_packet_sha256": "sha256:8033c384b71b23eb4bda597ba568ce485781b4669ffbdab78513e984032d18bd",
+  "phase14_status": "PASS_TOM_VALIDATION_LIVE",
+  "predecessor_artifacts": {
+    "superseded_tom_keys": [
+      "tom-001",
+      "tom-002",
+      "tom-003",
+      "tom-004"
+    ],
+    "v1_interpretation_sha256": "sha256:e1fdcf338123c3f296568c1e0641b81637a3e64399c021ffe5a7d01b28810b06",
+    "v1_tom_sha256": "sha256:f3c397032a2d403e127d26eea0ae0042f97a839d9d144170e42d53383728fcf5"
+  },
+  "schema": "persona_dream.v2_lineage_receipt.v1",
+  "status": "PASS_V2_LINEAGE",
+  "supersedes_edges": 4
+}

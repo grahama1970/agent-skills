@@ -713,6 +713,8 @@ def build_write_set(
     watch_vertices: list[dict[str, Any]],
     interpretation_vertices: list[dict[str, Any]] | None = None,
     causal_fields: dict[str, Any] | None = None,
+    include_dream_node: bool = True,
+    extra_edges: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     """Ordered, deterministic canonical write-set: dream node, ToM nodes, Watch
     evidence vertices, interpretation vertices (Defect 4), then every graph edge
@@ -722,9 +724,12 @@ def build_write_set(
     persona_id = dream_doc.get("persona_id", "")
     dream_id = dream_doc.get("dream_id", "")
     interpretation_vertices = interpretation_vertices or []
-    ws: list[dict[str, Any]] = [
-        {"collection": CANONICAL_DREAM_COLLECTION, "document": dream_doc, "kind": "dream_node"},
-    ]
+    ws: list[dict[str, Any]] = []
+    if include_dream_node:
+        # Revision bundles (GOAL_V2 P0.2) reference the existing dream-event
+        # node without rewriting it: one dream event per media hash, versioned
+        # derived evidence (PROV wasRevisionOf design).
+        ws.append({"collection": CANONICAL_DREAM_COLLECTION, "document": dream_doc, "kind": "dream_node"})
     for cand in tom.get("accepted_tom_candidates", []):
         cid = cand.get("candidate_id")
         if not cid:
@@ -743,14 +748,20 @@ def build_write_set(
         ws.append({"collection": INTERPRETATION_COLLECTION, "document": v, "kind": "interpretation_vertex"})
     for v in watch_vertices:
         ws.append({"collection": WATCH_EVIDENCE_COLLECTION, "document": v, "kind": "watch_vertex"})
-    for e in build_graph_edges(
-        dream_doc, interpretation, tom,
-        CANONICAL_DREAM_COLLECTION, CANONICAL_EDGE_COLLECTION, CANONICAL_TOM_EDGE_COLLECTION,
-        causal_fields=causal_fields,
-    ):
-        ws.append({"collection": e["collection"], "document": e["document"], "kind": "edge"})
+    if include_dream_node:
+        # Dream-level fact edges belong to the founding lineage; a revision
+        # bundle (include_dream_node=False) carries only versioned cognition
+        # (ladder + supersedes edges) and must not rewrite v1 fact edges.
+        for e in build_graph_edges(
+            dream_doc, interpretation, tom,
+            CANONICAL_DREAM_COLLECTION, CANONICAL_EDGE_COLLECTION, CANONICAL_TOM_EDGE_COLLECTION,
+            causal_fields=causal_fields,
+        ):
+            ws.append({"collection": e["collection"], "document": e["document"], "kind": "edge"})
     for e in build_ladder_edges(interpretation, tom, persona_id, dream_id, causal_fields=causal_fields):
         ws.append({"collection": e["collection"], "document": e["document"], "kind": "edge"})
+    for e in (extra_edges or []):
+        ws.append({"collection": e["collection"], "document": e["document"], "kind": e.get("kind", "edge")})
     return ws
 
 
@@ -916,6 +927,8 @@ def persist_canonical(
     causal_fields: dict[str, Any] | None = None,
     retroactive: bool = False,
     justification: str | None = None,
+    include_dream_node: bool = True,
+    extra_edges: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Transactional canonical write:
 
@@ -934,6 +947,7 @@ def persist_canonical(
     write_set = build_write_set(
         dream_doc, interpretation, tom, watch_vertices,
         interpretation_vertices=interpretation_vertices, causal_fields=causal_fields,
+        include_dream_node=include_dream_node, extra_edges=extra_edges,
     )
     # Deep-copy every document so stamping NEVER mutates caller-held dicts
     # (webgpt round-3: the returned plan embedded live references that were

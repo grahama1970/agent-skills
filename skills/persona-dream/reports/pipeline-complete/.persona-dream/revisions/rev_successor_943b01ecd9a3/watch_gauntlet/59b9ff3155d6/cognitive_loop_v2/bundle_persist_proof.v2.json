@@ -1,0 +1,933 @@
+{
+  "all_exact_reread_match": true,
+  "canonical_plan_sha256": "sha256:c2583760509e54fcd4e5aff5b1599642047164da598db13cdec6387890a97e56",
+  "commit_manifest": {
+    "active": true,
+    "compensation_reread_match": null,
+    "exact_reread_match": true,
+    "key": "commit_1915207a78bc6d232e1c0e57756b04859f7a93f3ae7f2b321505d2a1985193d9",
+    "manifest_sha256": "sha256:6a85c6d22bc2f6e0d26361cd4cf69f574401e689c805ab34284cd564bcfd5652",
+    "published_all_exact_reread_match": true,
+    "receipt": {
+      "collection": "persona_dream_commit_manifests",
+      "exact_reread_match": true,
+      "key": "commit_1915207a78bc6d232e1c0e57756b04859f7a93f3ae7f2b321505d2a1985193d9",
+      "reread_content_sha256": "sha256:6a85c6d22bc2f6e0d26361cd4cf69f574401e689c805ab34284cd564bcfd5652",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:6a85c6d22bc2f6e0d26361cd4cf69f574401e689c805ab34284cd564bcfd5652"
+    },
+    "record_count": 17,
+    "retroactive_commit": false
+  },
+  "edge_keys": [
+    "dream:embry:dream_successor_943b01ecd9a3:watch:coverage_gap_00__grounds_interpretation__v2r1-interpretation-001",
+    "dream:embry:dream_successor_943b01ecd9a3:watch:coverage_gap_01__grounds_interpretation__v2r1-interpretation-002",
+    "dream:embry:dream_successor_943b01ecd9a3:watch:coverage_gap_00__grounds_interpretation__v2r1-interpretation-003",
+    "dream:embry:dream_successor_943b01ecd9a3:watch:coverage_gap_01__grounds_interpretation__v2r1-interpretation-003",
+    "dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-001__supports_interpretation__v2r1-tom-001",
+    "dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-002__supports_interpretation__v2r1-tom-002",
+    "dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-003__supports_interpretation__v2r1-tom-003",
+    "dream:embry:dream_successor_943b01ecd9a3:supersedes:v2r1:tom-001",
+    "dream:embry:dream_successor_943b01ecd9a3:supersedes:v2r1:tom-002",
+    "dream:embry:dream_successor_943b01ecd9a3:supersedes:v2r1:tom-003",
+    "dream:embry:dream_successor_943b01ecd9a3:supersedes:v2r1:tom-004"
+  ],
+  "edge_receipts": [
+    {
+      "collection": "persona_memory_edges",
+      "exact_reread_match": true,
+      "key": "dream:embry:dream_successor_943b01ecd9a3:watch:coverage_gap_00__grounds_interpretation__v2r1-interpretation-001",
+      "reread_content_sha256": "sha256:fd344102c6cab794eb8a261e7022698b04804c0a8e2e9f7d3c92b6300be9aeb5",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:fd344102c6cab794eb8a261e7022698b04804c0a8e2e9f7d3c92b6300be9aeb5"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "exact_reread_match": true,
+      "key": "dream:embry:dream_successor_943b01ecd9a3:watch:coverage_gap_01__grounds_interpretation__v2r1-interpretation-002",
+      "reread_content_sha256": "sha256:d798fae044284f115f87d51a199a5e4924732fbb2aa6cc0f8675f915b327c3e0",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:d798fae044284f115f87d51a199a5e4924732fbb2aa6cc0f8675f915b327c3e0"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "exact_reread_match": true,
+      "key": "dream:embry:dream_successor_943b01ecd9a3:watch:coverage_gap_00__grounds_interpretation__v2r1-interpretation-003",
+      "reread_content_sha256": "sha256:7f59785459439a4fff2a30f1a5287932da7526189af588a3240558865708bc23",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:7f59785459439a4fff2a30f1a5287932da7526189af588a3240558865708bc23"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "exact_reread_match": true,
+      "key": "dream:embry:dream_successor_943b01ecd9a3:watch:coverage_gap_01__grounds_interpretation__v2r1-interpretation-003",
+      "reread_content_sha256": "sha256:3d4a130d41867490c1306c41af9e8f35b9fb1ca8b9e7005adf003b6d19e920e2",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:3d4a130d41867490c1306c41af9e8f35b9fb1ca8b9e7005adf003b6d19e920e2"
+    },
+    {
+      "collection": "tom_edges",
+      "exact_reread_match": true,
+      "key": "dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-001__supports_interpretation__v2r1-tom-001",
+      "reread_content_sha256": "sha256:6f7349de295b67999c5ccd4e73a3ff027b5aee421c2550272872a5b9e960fd24",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:6f7349de295b67999c5ccd4e73a3ff027b5aee421c2550272872a5b9e960fd24"
+    },
+    {
+      "collection": "tom_edges",
+      "exact_reread_match": true,
+      "key": "dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-002__supports_interpretation__v2r1-tom-002",
+      "reread_content_sha256": "sha256:416be3fe5b902494c505020297ba163f4b9cb4c29e1255fce7e41ecc60b7f02f",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:416be3fe5b902494c505020297ba163f4b9cb4c29e1255fce7e41ecc60b7f02f"
+    },
+    {
+      "collection": "tom_edges",
+      "exact_reread_match": true,
+      "key": "dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-003__supports_interpretation__v2r1-tom-003",
+      "reread_content_sha256": "sha256:a772e06fc4744c27e7cc9952ae72022b72eb344bf85f38421fb45ec2e382f1d6",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:a772e06fc4744c27e7cc9952ae72022b72eb344bf85f38421fb45ec2e382f1d6"
+    },
+    {
+      "collection": "tom_edges",
+      "exact_reread_match": true,
+      "key": "dream:embry:dream_successor_943b01ecd9a3:supersedes:v2r1:tom-001",
+      "reread_content_sha256": "sha256:5d4e562fac940ca0c92e5b1f9c479c101e3629b9f952e2415fd9bfc9c8ef3482",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:5d4e562fac940ca0c92e5b1f9c479c101e3629b9f952e2415fd9bfc9c8ef3482"
+    },
+    {
+      "collection": "tom_edges",
+      "exact_reread_match": true,
+      "key": "dream:embry:dream_successor_943b01ecd9a3:supersedes:v2r1:tom-002",
+      "reread_content_sha256": "sha256:47a0cb7b60be8881a92f0d2cc01ede38eea77a31ae87cbdc9484acc9a522c67f",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:47a0cb7b60be8881a92f0d2cc01ede38eea77a31ae87cbdc9484acc9a522c67f"
+    },
+    {
+      "collection": "tom_edges",
+      "exact_reread_match": true,
+      "key": "dream:embry:dream_successor_943b01ecd9a3:supersedes:v2r1:tom-003",
+      "reread_content_sha256": "sha256:1f9ab3fe94fb9ddeaca74eecbb0eae4a3dbf981396eda941189888599aa303a6",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:1f9ab3fe94fb9ddeaca74eecbb0eae4a3dbf981396eda941189888599aa303a6"
+    },
+    {
+      "collection": "tom_edges",
+      "exact_reread_match": true,
+      "key": "dream:embry:dream_successor_943b01ecd9a3:supersedes:v2r1:tom-004",
+      "reread_content_sha256": "sha256:0c7b5add6e134e2034c1e9d818e6fbdf43c9813a43e72d50bd418b8ef9e7856c",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:0c7b5add6e134e2034c1e9d818e6fbdf43c9813a43e72d50bd418b8ef9e7856c"
+    }
+  ],
+  "expected_record_count": 17,
+  "final_commit_id": "commit_1915207a78bc6d232e1c0e57756b04859f7a93f3ae7f2b321505d2a1985193d9",
+  "final_write_set_snapshot": [
+    {
+      "collection": "tom_candidates",
+      "document": {
+        "_key": "dream:embry:dream_successor_943b01ecd9a3:tom:v2r1-tom-001",
+        "bundle_rev": "v2r1",
+        "candidate_id": "v2r1-tom-001",
+        "causal_family_id": "cf_4fb717804e9ac83d",
+        "commit_id": "commit_1915207a78bc6d232e1c0e57756b04859f7a93f3ae7f2b321505d2a1985193d9",
+        "confidence": 0.28,
+        "derivation_depth": 1,
+        "emotional_intensity": 0.42,
+        "independent_evidence_count": 3,
+        "literal_historical_event": false,
+        "parent_interpretation_id": "v2r1-interpretation-001",
+        "root_event_ids": [
+          "embry_age15_19_b02_memory_019",
+          "embry_age15_19_b03_memory_014",
+          "embry_age15_19_b03_memory_016"
+        ],
+        "schema": "persona_dream.tom_candidate.v1",
+        "source_memory_refs": [
+          "embry_age15_19_b03_memory_014",
+          "embry_age15_19_b03_memory_016"
+        ],
+        "statement": "Embry may be uncertain about whether Kai recognizes her as securely belonging within his orbit, especially when his guidance is experienced as bounded by rules and correction.",
+        "subject": "embry",
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "target": "kai",
+        "tom_state_type": "uncertainty",
+        "visibility_state": "pending",
+        "watch_observation_refs": [
+          "coverage_gap_00"
+        ]
+      },
+      "key": "dream:embry:dream_successor_943b01ecd9a3:tom:v2r1-tom-001",
+      "kind": "tom_node",
+      "payload_sha256": "sha256:fed37cbf04b445ef3a09e94daf3a4bbf7710df4ddf4672afebec691b5206b8d8"
+    },
+    {
+      "collection": "tom_candidates",
+      "document": {
+        "_key": "dream:embry:dream_successor_943b01ecd9a3:tom:v2r1-tom-002",
+        "bundle_rev": "v2r1",
+        "candidate_id": "v2r1-tom-002",
+        "causal_family_id": "cf_4fb717804e9ac83d",
+        "commit_id": "commit_1915207a78bc6d232e1c0e57756b04859f7a93f3ae7f2b321505d2a1985193d9",
+        "confidence": 0.36,
+        "derivation_depth": 1,
+        "emotional_intensity": 0.48,
+        "independent_evidence_count": 3,
+        "literal_historical_event": false,
+        "parent_interpretation_id": "v2r1-interpretation-002",
+        "root_event_ids": [
+          "embry_age15_19_b02_memory_019",
+          "embry_age15_19_b03_memory_014",
+          "embry_age15_19_b03_memory_016"
+        ],
+        "schema": "persona_dream.tom_candidate.v1",
+        "source_memory_refs": [
+          "embry_age15_19_b02_memory_019",
+          "embry_age15_19_b03_memory_014"
+        ],
+        "statement": "Embry may trust Kai in a practical, non-sentimental way, expecting him to offer guidance, identify risks, and leave her room to decide whether to continue.",
+        "subject": "embry",
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "target": "kai",
+        "tom_state_type": "trust",
+        "visibility_state": "pending",
+        "watch_observation_refs": [
+          "coverage_gap_01"
+        ]
+      },
+      "key": "dream:embry:dream_successor_943b01ecd9a3:tom:v2r1-tom-002",
+      "kind": "tom_node",
+      "payload_sha256": "sha256:30f15878edd881395675257f010335528fc361cac91c0e471bf53a13c0b66233"
+    },
+    {
+      "collection": "tom_candidates",
+      "document": {
+        "_key": "dream:embry:dream_successor_943b01ecd9a3:tom:v2r1-tom-003",
+        "bundle_rev": "v2r1",
+        "candidate_id": "v2r1-tom-003",
+        "causal_family_id": "cf_4fb717804e9ac83d",
+        "commit_id": "commit_1915207a78bc6d232e1c0e57756b04859f7a93f3ae7f2b321505d2a1985193d9",
+        "confidence": 0.31,
+        "derivation_depth": 1,
+        "emotional_intensity": 0.46,
+        "independent_evidence_count": 3,
+        "literal_historical_event": false,
+        "parent_interpretation_id": "v2r1-interpretation-003",
+        "root_event_ids": [
+          "embry_age15_19_b02_memory_019",
+          "embry_age15_19_b03_memory_014",
+          "embry_age15_19_b03_memory_016"
+        ],
+        "schema": "persona_dream.tom_candidate.v1",
+        "source_memory_refs": [
+          "embry_age15_19_b03_memory_016",
+          "embry_age15_19_b02_memory_019"
+        ],
+        "statement": "Embry may fear making mistakes in front of Kai, though that fear is moderated by an expectation that Kai will correct privately and treat errors as manageable.",
+        "subject": "embry",
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "target": "kai",
+        "tom_state_type": "fear",
+        "visibility_state": "pending",
+        "watch_observation_refs": [
+          "coverage_gap_00",
+          "coverage_gap_01"
+        ]
+      },
+      "key": "dream:embry:dream_successor_943b01ecd9a3:tom:v2r1-tom-003",
+      "kind": "tom_node",
+      "payload_sha256": "sha256:fd0779e196ea3ee8b99e1da9bb7bd51790f551f424e0e351859d4997a55e6f2c"
+    },
+    {
+      "collection": "persona_dream_interpretations",
+      "document": {
+        "_key": "dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-001",
+        "bundle_rev": "v2r1",
+        "causal_family_id": "cf_4fb717804e9ac83d",
+        "cites_renderer_review": true,
+        "commit_id": "commit_1915207a78bc6d232e1c0e57756b04859f7a93f3ae7f2b321505d2a1985193d9",
+        "confidence": 0.28,
+        "derivation_depth": 1,
+        "dream_id": "dream_successor_943b01ecd9a3",
+        "emotional_intensity": 0.42,
+        "favored_explanation": "undetermined",
+        "independent_evidence_count": 3,
+        "interpretation_id": "v2r1-interpretation-001",
+        "kind": "persona_dream_interpretation",
+        "literal_historical_event": false,
+        "observation_refs": [
+          "coverage_gap_00"
+        ],
+        "persona_id": "embry",
+        "renderer_alternative": "The simpler reading is that the render or identity embedding failed to certify Embry consistently across the clip, especially under pose or occlusion conditions.",
+        "root_event_ids": [
+          "embry_age15_19_b02_memory_019",
+          "embry_age15_19_b03_memory_014",
+          "embry_age15_19_b03_memory_016"
+        ],
+        "source_memory_refs": [
+          "embry_age15_19_b03_memory_014",
+          "embry_age15_19_b03_memory_016"
+        ],
+        "statement": "Embry may be uncertain about how securely she is recognized or held in Kai\u2019s orbit, echoing memories where Kai offers rules, boundaries, and correction without fully granting her local belonging.",
+        "subject": "embry",
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "target": "kai",
+        "tom_state_type": "uncertainty",
+        "uncertainty": "The identity continuity evidence is explicitly indeterminate, so the apparent instability may not reflect Embry\u2019s psychology at all.",
+        "visibility_state": "pending"
+      },
+      "key": "dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-001",
+      "kind": "interpretation_vertex",
+      "payload_sha256": "sha256:fffa9a819ddfcefe3ebd8859bbd29b04a1d74fb4d5f9ec4255c798365b5979a6"
+    },
+    {
+      "collection": "persona_dream_interpretations",
+      "document": {
+        "_key": "dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-002",
+        "bundle_rev": "v2r1",
+        "causal_family_id": "cf_4fb717804e9ac83d",
+        "cites_renderer_review": false,
+        "commit_id": "commit_1915207a78bc6d232e1c0e57756b04859f7a93f3ae7f2b321505d2a1985193d9",
+        "confidence": 0.36,
+        "derivation_depth": 1,
+        "dream_id": "dream_successor_943b01ecd9a3",
+        "emotional_intensity": 0.48,
+        "favored_explanation": "undetermined",
+        "independent_evidence_count": 3,
+        "interpretation_id": "v2r1-interpretation-002",
+        "kind": "persona_dream_interpretation",
+        "literal_historical_event": false,
+        "observation_refs": [
+          "coverage_gap_01"
+        ],
+        "persona_id": "embry",
+        "renderer_alternative": "The simpler reading is that the wide two-character composition made speech unreadable, so any inferred trust dynamic comes from source context rather than the rendered action.",
+        "root_event_ids": [
+          "embry_age15_19_b02_memory_019",
+          "embry_age15_19_b03_memory_014",
+          "embry_age15_19_b03_memory_016"
+        ],
+        "source_memory_refs": [
+          "embry_age15_19_b02_memory_019",
+          "embry_age15_19_b03_memory_014"
+        ],
+        "statement": "Embry may associate Kai with a form of trust that is practical rather than sentimental: Kai gives guidance, names risks, and lets Embry choose whether to continue or stop.",
+        "subject": "embry",
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "target": "kai",
+        "tom_state_type": "trust",
+        "uncertainty": "Because no readable speaking mouth is visible, there is no direct lip-sync or dialogue evidence to confirm an interpersonal exchange in the rendered scene.",
+        "visibility_state": "pending"
+      },
+      "key": "dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-002",
+      "kind": "interpretation_vertex",
+      "payload_sha256": "sha256:afc48a58566a2e34e68d5605ee94949bb434645438a81c47c5759764c821e101"
+    },
+    {
+      "collection": "persona_dream_interpretations",
+      "document": {
+        "_key": "dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-003",
+        "bundle_rev": "v2r1",
+        "causal_family_id": "cf_4fb717804e9ac83d",
+        "cites_renderer_review": true,
+        "commit_id": "commit_1915207a78bc6d232e1c0e57756b04859f7a93f3ae7f2b321505d2a1985193d9",
+        "confidence": 0.31,
+        "derivation_depth": 1,
+        "dream_id": "dream_successor_943b01ecd9a3",
+        "emotional_intensity": 0.46,
+        "favored_explanation": "undetermined",
+        "independent_evidence_count": 3,
+        "interpretation_id": "v2r1-interpretation-003",
+        "kind": "persona_dream_interpretation",
+        "literal_historical_event": false,
+        "observation_refs": [
+          "coverage_gap_00",
+          "coverage_gap_01"
+        ],
+        "persona_id": "embry",
+        "renderer_alternative": "The simpler reading is that the available render lacks enough identity certainty and mouth/action readability to support a specific emotional interpretation.",
+        "root_event_ids": [
+          "embry_age15_19_b02_memory_019",
+          "embry_age15_19_b03_memory_014",
+          "embry_age15_19_b03_memory_016"
+        ],
+        "source_memory_refs": [
+          "embry_age15_19_b03_memory_016",
+          "embry_age15_19_b02_memory_019"
+        ],
+        "statement": "Embry may fear making mistakes in front of Kai, but the memories suggest this fear is softened because Kai corrects privately and treats errors or minor injury as manageable rather than shameful.",
+        "subject": "embry",
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "target": "kai",
+        "tom_state_type": "fear",
+        "uncertainty": "The observations provide coverage limitations rather than clear behavioral evidence, so the fear of mistakes is inferred mainly from memory themes, not from the actual render.",
+        "visibility_state": "pending"
+      },
+      "key": "dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-003",
+      "kind": "interpretation_vertex",
+      "payload_sha256": "sha256:1564dd4516f2badd078d6fe2c978d71f788f5d9eceede3a09424539d788c7405"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "document": {
+        "_from": "persona_dream_watch_evidence/dream:embry:dream_successor_943b01ecd9a3:watch:coverage_gap_00",
+        "_key": "dream:embry:dream_successor_943b01ecd9a3:watch:coverage_gap_00__grounds_interpretation__v2r1-interpretation-001",
+        "_to": "persona_dream_interpretations/dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-001",
+        "bundle_rev": "v2r1",
+        "causal_family_id": "cf_4fb717804e9ac83d",
+        "commit_id": "commit_1915207a78bc6d232e1c0e57756b04859f7a93f3ae7f2b321505d2a1985193d9",
+        "derivation_depth": 1,
+        "independent_evidence_count": 3,
+        "interpretation_id": "v2r1-interpretation-001",
+        "relationship_type": "grounds_interpretation",
+        "root_event_ids": [
+          "embry_age15_19_b02_memory_019",
+          "embry_age15_19_b03_memory_014",
+          "embry_age15_19_b03_memory_016"
+        ],
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "visibility_state": "pending",
+        "watch_observation_id": "coverage_gap_00"
+      },
+      "key": "dream:embry:dream_successor_943b01ecd9a3:watch:coverage_gap_00__grounds_interpretation__v2r1-interpretation-001",
+      "kind": "edge",
+      "payload_sha256": "sha256:fd344102c6cab794eb8a261e7022698b04804c0a8e2e9f7d3c92b6300be9aeb5"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "document": {
+        "_from": "persona_dream_watch_evidence/dream:embry:dream_successor_943b01ecd9a3:watch:coverage_gap_01",
+        "_key": "dream:embry:dream_successor_943b01ecd9a3:watch:coverage_gap_01__grounds_interpretation__v2r1-interpretation-002",
+        "_to": "persona_dream_interpretations/dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-002",
+        "bundle_rev": "v2r1",
+        "causal_family_id": "cf_4fb717804e9ac83d",
+        "commit_id": "commit_1915207a78bc6d232e1c0e57756b04859f7a93f3ae7f2b321505d2a1985193d9",
+        "derivation_depth": 1,
+        "independent_evidence_count": 3,
+        "interpretation_id": "v2r1-interpretation-002",
+        "relationship_type": "grounds_interpretation",
+        "root_event_ids": [
+          "embry_age15_19_b02_memory_019",
+          "embry_age15_19_b03_memory_014",
+          "embry_age15_19_b03_memory_016"
+        ],
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "visibility_state": "pending",
+        "watch_observation_id": "coverage_gap_01"
+      },
+      "key": "dream:embry:dream_successor_943b01ecd9a3:watch:coverage_gap_01__grounds_interpretation__v2r1-interpretation-002",
+      "kind": "edge",
+      "payload_sha256": "sha256:d798fae044284f115f87d51a199a5e4924732fbb2aa6cc0f8675f915b327c3e0"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "document": {
+        "_from": "persona_dream_watch_evidence/dream:embry:dream_successor_943b01ecd9a3:watch:coverage_gap_00",
+        "_key": "dream:embry:dream_successor_943b01ecd9a3:watch:coverage_gap_00__grounds_interpretation__v2r1-interpretation-003",
+        "_to": "persona_dream_interpretations/dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-003",
+        "bundle_rev": "v2r1",
+        "causal_family_id": "cf_4fb717804e9ac83d",
+        "commit_id": "commit_1915207a78bc6d232e1c0e57756b04859f7a93f3ae7f2b321505d2a1985193d9",
+        "derivation_depth": 1,
+        "independent_evidence_count": 3,
+        "interpretation_id": "v2r1-interpretation-003",
+        "relationship_type": "grounds_interpretation",
+        "root_event_ids": [
+          "embry_age15_19_b02_memory_019",
+          "embry_age15_19_b03_memory_014",
+          "embry_age15_19_b03_memory_016"
+        ],
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "visibility_state": "pending",
+        "watch_observation_id": "coverage_gap_00"
+      },
+      "key": "dream:embry:dream_successor_943b01ecd9a3:watch:coverage_gap_00__grounds_interpretation__v2r1-interpretation-003",
+      "kind": "edge",
+      "payload_sha256": "sha256:7f59785459439a4fff2a30f1a5287932da7526189af588a3240558865708bc23"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "document": {
+        "_from": "persona_dream_watch_evidence/dream:embry:dream_successor_943b01ecd9a3:watch:coverage_gap_01",
+        "_key": "dream:embry:dream_successor_943b01ecd9a3:watch:coverage_gap_01__grounds_interpretation__v2r1-interpretation-003",
+        "_to": "persona_dream_interpretations/dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-003",
+        "bundle_rev": "v2r1",
+        "causal_family_id": "cf_4fb717804e9ac83d",
+        "commit_id": "commit_1915207a78bc6d232e1c0e57756b04859f7a93f3ae7f2b321505d2a1985193d9",
+        "derivation_depth": 1,
+        "independent_evidence_count": 3,
+        "interpretation_id": "v2r1-interpretation-003",
+        "relationship_type": "grounds_interpretation",
+        "root_event_ids": [
+          "embry_age15_19_b02_memory_019",
+          "embry_age15_19_b03_memory_014",
+          "embry_age15_19_b03_memory_016"
+        ],
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "visibility_state": "pending",
+        "watch_observation_id": "coverage_gap_01"
+      },
+      "key": "dream:embry:dream_successor_943b01ecd9a3:watch:coverage_gap_01__grounds_interpretation__v2r1-interpretation-003",
+      "kind": "edge",
+      "payload_sha256": "sha256:3d4a130d41867490c1306c41af9e8f35b9fb1ca8b9e7005adf003b6d19e920e2"
+    },
+    {
+      "collection": "tom_edges",
+      "document": {
+        "_from": "persona_dream_interpretations/dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-001",
+        "_key": "dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-001__supports_interpretation__v2r1-tom-001",
+        "_to": "tom_candidates/dream:embry:dream_successor_943b01ecd9a3:tom:v2r1-tom-001",
+        "bundle_rev": "v2r1",
+        "causal_family_id": "cf_4fb717804e9ac83d",
+        "commit_id": "commit_1915207a78bc6d232e1c0e57756b04859f7a93f3ae7f2b321505d2a1985193d9",
+        "confidence": 0.28,
+        "derivation_depth": 1,
+        "independent_evidence_count": 3,
+        "interpretation_id": "v2r1-interpretation-001",
+        "literal_historical_event": false,
+        "relationship_type": "supports_interpretation",
+        "root_event_ids": [
+          "embry_age15_19_b02_memory_019",
+          "embry_age15_19_b03_memory_014",
+          "embry_age15_19_b03_memory_016"
+        ],
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "tom_candidate_id": "v2r1-tom-001",
+        "tom_state_type": "uncertainty",
+        "visibility_state": "pending"
+      },
+      "key": "dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-001__supports_interpretation__v2r1-tom-001",
+      "kind": "edge",
+      "payload_sha256": "sha256:6f7349de295b67999c5ccd4e73a3ff027b5aee421c2550272872a5b9e960fd24"
+    },
+    {
+      "collection": "tom_edges",
+      "document": {
+        "_from": "persona_dream_interpretations/dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-002",
+        "_key": "dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-002__supports_interpretation__v2r1-tom-002",
+        "_to": "tom_candidates/dream:embry:dream_successor_943b01ecd9a3:tom:v2r1-tom-002",
+        "bundle_rev": "v2r1",
+        "causal_family_id": "cf_4fb717804e9ac83d",
+        "commit_id": "commit_1915207a78bc6d232e1c0e57756b04859f7a93f3ae7f2b321505d2a1985193d9",
+        "confidence": 0.36,
+        "derivation_depth": 1,
+        "independent_evidence_count": 3,
+        "interpretation_id": "v2r1-interpretation-002",
+        "literal_historical_event": false,
+        "relationship_type": "supports_interpretation",
+        "root_event_ids": [
+          "embry_age15_19_b02_memory_019",
+          "embry_age15_19_b03_memory_014",
+          "embry_age15_19_b03_memory_016"
+        ],
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "tom_candidate_id": "v2r1-tom-002",
+        "tom_state_type": "trust",
+        "visibility_state": "pending"
+      },
+      "key": "dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-002__supports_interpretation__v2r1-tom-002",
+      "kind": "edge",
+      "payload_sha256": "sha256:416be3fe5b902494c505020297ba163f4b9cb4c29e1255fce7e41ecc60b7f02f"
+    },
+    {
+      "collection": "tom_edges",
+      "document": {
+        "_from": "persona_dream_interpretations/dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-003",
+        "_key": "dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-003__supports_interpretation__v2r1-tom-003",
+        "_to": "tom_candidates/dream:embry:dream_successor_943b01ecd9a3:tom:v2r1-tom-003",
+        "bundle_rev": "v2r1",
+        "causal_family_id": "cf_4fb717804e9ac83d",
+        "commit_id": "commit_1915207a78bc6d232e1c0e57756b04859f7a93f3ae7f2b321505d2a1985193d9",
+        "confidence": 0.31,
+        "derivation_depth": 1,
+        "independent_evidence_count": 3,
+        "interpretation_id": "v2r1-interpretation-003",
+        "literal_historical_event": false,
+        "relationship_type": "supports_interpretation",
+        "root_event_ids": [
+          "embry_age15_19_b02_memory_019",
+          "embry_age15_19_b03_memory_014",
+          "embry_age15_19_b03_memory_016"
+        ],
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "tom_candidate_id": "v2r1-tom-003",
+        "tom_state_type": "fear",
+        "visibility_state": "pending"
+      },
+      "key": "dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-003__supports_interpretation__v2r1-tom-003",
+      "kind": "edge",
+      "payload_sha256": "sha256:a772e06fc4744c27e7cc9952ae72022b72eb344bf85f38421fb45ec2e382f1d6"
+    },
+    {
+      "collection": "tom_edges",
+      "document": {
+        "_from": "tom_candidates/dream:embry:dream_successor_943b01ecd9a3:tom:v2r1-tom-001",
+        "_key": "dream:embry:dream_successor_943b01ecd9a3:supersedes:v2r1:tom-001",
+        "_to": "tom_candidates/tom-001",
+        "bundle_rev": "v2r1",
+        "causal_family_id": "cf_4fb717804e9ac83d",
+        "commit_id": "commit_1915207a78bc6d232e1c0e57756b04859f7a93f3ae7f2b321505d2a1985193d9",
+        "derivation_depth": 1,
+        "independent_evidence_count": 3,
+        "prov": "wasRevisionOf",
+        "relationship_type": "supersedes",
+        "root_event_ids": [
+          "embry_age15_19_b02_memory_019",
+          "embry_age15_19_b03_memory_014",
+          "embry_age15_19_b03_memory_016"
+        ],
+        "synthetic_depth": 1,
+        "visibility_state": "pending"
+      },
+      "key": "dream:embry:dream_successor_943b01ecd9a3:supersedes:v2r1:tom-001",
+      "kind": "edge",
+      "payload_sha256": "sha256:5d4e562fac940ca0c92e5b1f9c479c101e3629b9f952e2415fd9bfc9c8ef3482"
+    },
+    {
+      "collection": "tom_edges",
+      "document": {
+        "_from": "tom_candidates/dream:embry:dream_successor_943b01ecd9a3:tom:v2r1-tom-002",
+        "_key": "dream:embry:dream_successor_943b01ecd9a3:supersedes:v2r1:tom-002",
+        "_to": "tom_candidates/tom-002",
+        "bundle_rev": "v2r1",
+        "causal_family_id": "cf_4fb717804e9ac83d",
+        "commit_id": "commit_1915207a78bc6d232e1c0e57756b04859f7a93f3ae7f2b321505d2a1985193d9",
+        "derivation_depth": 1,
+        "independent_evidence_count": 3,
+        "prov": "wasRevisionOf",
+        "relationship_type": "supersedes",
+        "root_event_ids": [
+          "embry_age15_19_b02_memory_019",
+          "embry_age15_19_b03_memory_014",
+          "embry_age15_19_b03_memory_016"
+        ],
+        "synthetic_depth": 1,
+        "visibility_state": "pending"
+      },
+      "key": "dream:embry:dream_successor_943b01ecd9a3:supersedes:v2r1:tom-002",
+      "kind": "edge",
+      "payload_sha256": "sha256:47a0cb7b60be8881a92f0d2cc01ede38eea77a31ae87cbdc9484acc9a522c67f"
+    },
+    {
+      "collection": "tom_edges",
+      "document": {
+        "_from": "tom_candidates/dream:embry:dream_successor_943b01ecd9a3:tom:v2r1-tom-003",
+        "_key": "dream:embry:dream_successor_943b01ecd9a3:supersedes:v2r1:tom-003",
+        "_to": "tom_candidates/tom-003",
+        "bundle_rev": "v2r1",
+        "causal_family_id": "cf_4fb717804e9ac83d",
+        "commit_id": "commit_1915207a78bc6d232e1c0e57756b04859f7a93f3ae7f2b321505d2a1985193d9",
+        "derivation_depth": 1,
+        "independent_evidence_count": 3,
+        "prov": "wasRevisionOf",
+        "relationship_type": "supersedes",
+        "root_event_ids": [
+          "embry_age15_19_b02_memory_019",
+          "embry_age15_19_b03_memory_014",
+          "embry_age15_19_b03_memory_016"
+        ],
+        "synthetic_depth": 1,
+        "visibility_state": "pending"
+      },
+      "key": "dream:embry:dream_successor_943b01ecd9a3:supersedes:v2r1:tom-003",
+      "kind": "edge",
+      "payload_sha256": "sha256:1f9ab3fe94fb9ddeaca74eecbb0eae4a3dbf981396eda941189888599aa303a6"
+    },
+    {
+      "collection": "tom_edges",
+      "document": {
+        "_from": "tom_candidates/dream:embry:dream_successor_943b01ecd9a3:tom:v2r1-tom-004",
+        "_key": "dream:embry:dream_successor_943b01ecd9a3:supersedes:v2r1:tom-004",
+        "_to": "tom_candidates/tom-004",
+        "bundle_rev": "v2r1",
+        "causal_family_id": "cf_4fb717804e9ac83d",
+        "commit_id": "commit_1915207a78bc6d232e1c0e57756b04859f7a93f3ae7f2b321505d2a1985193d9",
+        "derivation_depth": 1,
+        "independent_evidence_count": 3,
+        "prov": "wasRevisionOf",
+        "relationship_type": "supersedes",
+        "root_event_ids": [
+          "embry_age15_19_b02_memory_019",
+          "embry_age15_19_b03_memory_014",
+          "embry_age15_19_b03_memory_016"
+        ],
+        "synthetic_depth": 1,
+        "visibility_state": "pending"
+      },
+      "key": "dream:embry:dream_successor_943b01ecd9a3:supersedes:v2r1:tom-004",
+      "kind": "edge",
+      "payload_sha256": "sha256:0c7b5add6e134e2034c1e9d818e6fbdf43c9813a43e72d50bd418b8ef9e7856c"
+    }
+  ],
+  "idempotency_key": "1915207a78bc6d232e1c0e57756b04859f7a93f3ae7f2b321505d2a1985193d9",
+  "interpretation_vertex_keys": [
+    "dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-001",
+    "dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-002",
+    "dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-003"
+  ],
+  "interpretation_vertex_receipts": [
+    {
+      "collection": "persona_dream_interpretations",
+      "exact_reread_match": true,
+      "key": "dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-001",
+      "reread_content_sha256": "sha256:fffa9a819ddfcefe3ebd8859bbd29b04a1d74fb4d5f9ec4255c798365b5979a6",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:fffa9a819ddfcefe3ebd8859bbd29b04a1d74fb4d5f9ec4255c798365b5979a6"
+    },
+    {
+      "collection": "persona_dream_interpretations",
+      "exact_reread_match": true,
+      "key": "dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-002",
+      "reread_content_sha256": "sha256:afc48a58566a2e34e68d5605ee94949bb434645438a81c47c5759764c821e101",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:afc48a58566a2e34e68d5605ee94949bb434645438a81c47c5759764c821e101"
+    },
+    {
+      "collection": "persona_dream_interpretations",
+      "exact_reread_match": true,
+      "key": "dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-003",
+      "reread_content_sha256": "sha256:1564dd4516f2badd078d6fe2c978d71f788f5d9eceede3a09424539d788c7405",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:1564dd4516f2badd078d6fe2c978d71f788f5d9eceede3a09424539d788c7405"
+    }
+  ],
+  "node_keys": [
+    "dream:embry:dream_successor_943b01ecd9a3:tom:v2r1-tom-001",
+    "dream:embry:dream_successor_943b01ecd9a3:tom:v2r1-tom-002",
+    "dream:embry:dream_successor_943b01ecd9a3:tom:v2r1-tom-003"
+  ],
+  "node_receipts": [
+    {
+      "collection": "tom_candidates",
+      "exact_reread_match": true,
+      "key": "dream:embry:dream_successor_943b01ecd9a3:tom:v2r1-tom-001",
+      "reread_content_sha256": "sha256:fed37cbf04b445ef3a09e94daf3a4bbf7710df4ddf4672afebec691b5206b8d8",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:fed37cbf04b445ef3a09e94daf3a4bbf7710df4ddf4672afebec691b5206b8d8"
+    },
+    {
+      "collection": "tom_candidates",
+      "exact_reread_match": true,
+      "key": "dream:embry:dream_successor_943b01ecd9a3:tom:v2r1-tom-002",
+      "reread_content_sha256": "sha256:30f15878edd881395675257f010335528fc361cac91c0e471bf53a13c0b66233",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:30f15878edd881395675257f010335528fc361cac91c0e471bf53a13c0b66233"
+    },
+    {
+      "collection": "tom_candidates",
+      "exact_reread_match": true,
+      "key": "dream:embry:dream_successor_943b01ecd9a3:tom:v2r1-tom-003",
+      "reread_content_sha256": "sha256:fd0779e196ea3ee8b99e1da9bb7bd51790f551f424e0e351859d4997a55e6f2c",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:fd0779e196ea3ee8b99e1da9bb7bd51790f551f424e0e351859d4997a55e6f2c"
+    }
+  ],
+  "publish_all_exact_reread_match": true,
+  "quarantine": null,
+  "records_written": 17,
+  "resumed_from_prior_commit": false,
+  "staging_all_exact_reread_match": true,
+  "staging_proof": {
+    "all_exact_reread_match": true,
+    "collection": "persona_dream_canonical_staging",
+    "expected_count": 17,
+    "quarantined": false,
+    "receipts": [
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:fed37cbf04b445ef3a09e94daf3a4bbf7710df4ddf4672afebec691b5206b8d8",
+        "record_kind": "tom_node",
+        "reread_payload_sha256": "sha256:fed37cbf04b445ef3a09e94daf3a4bbf7710df4ddf4672afebec691b5206b8d8",
+        "staging_key": "stg_1915207a78bc6d23_272d4ef7bb99faf843572de1",
+        "target_collection": "tom_candidates",
+        "target_key": "dream:embry:dream_successor_943b01ecd9a3:tom:v2r1-tom-001"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:30f15878edd881395675257f010335528fc361cac91c0e471bf53a13c0b66233",
+        "record_kind": "tom_node",
+        "reread_payload_sha256": "sha256:30f15878edd881395675257f010335528fc361cac91c0e471bf53a13c0b66233",
+        "staging_key": "stg_1915207a78bc6d23_718eb9e1796775bd5b1e0447",
+        "target_collection": "tom_candidates",
+        "target_key": "dream:embry:dream_successor_943b01ecd9a3:tom:v2r1-tom-002"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:fd0779e196ea3ee8b99e1da9bb7bd51790f551f424e0e351859d4997a55e6f2c",
+        "record_kind": "tom_node",
+        "reread_payload_sha256": "sha256:fd0779e196ea3ee8b99e1da9bb7bd51790f551f424e0e351859d4997a55e6f2c",
+        "staging_key": "stg_1915207a78bc6d23_484659d37726f6168a712a9c",
+        "target_collection": "tom_candidates",
+        "target_key": "dream:embry:dream_successor_943b01ecd9a3:tom:v2r1-tom-003"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:fffa9a819ddfcefe3ebd8859bbd29b04a1d74fb4d5f9ec4255c798365b5979a6",
+        "record_kind": "interpretation_vertex",
+        "reread_payload_sha256": "sha256:fffa9a819ddfcefe3ebd8859bbd29b04a1d74fb4d5f9ec4255c798365b5979a6",
+        "staging_key": "stg_1915207a78bc6d23_4abdbf3abed222dc01c9bbb9",
+        "target_collection": "persona_dream_interpretations",
+        "target_key": "dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-001"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:afc48a58566a2e34e68d5605ee94949bb434645438a81c47c5759764c821e101",
+        "record_kind": "interpretation_vertex",
+        "reread_payload_sha256": "sha256:afc48a58566a2e34e68d5605ee94949bb434645438a81c47c5759764c821e101",
+        "staging_key": "stg_1915207a78bc6d23_66a39401e2337b1cbf09ce39",
+        "target_collection": "persona_dream_interpretations",
+        "target_key": "dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-002"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:1564dd4516f2badd078d6fe2c978d71f788f5d9eceede3a09424539d788c7405",
+        "record_kind": "interpretation_vertex",
+        "reread_payload_sha256": "sha256:1564dd4516f2badd078d6fe2c978d71f788f5d9eceede3a09424539d788c7405",
+        "staging_key": "stg_1915207a78bc6d23_03924784456ab13728ed78a0",
+        "target_collection": "persona_dream_interpretations",
+        "target_key": "dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-003"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:fd344102c6cab794eb8a261e7022698b04804c0a8e2e9f7d3c92b6300be9aeb5",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:fd344102c6cab794eb8a261e7022698b04804c0a8e2e9f7d3c92b6300be9aeb5",
+        "staging_key": "stg_1915207a78bc6d23_e1d1a846d298559ef86f0d7c",
+        "target_collection": "persona_memory_edges",
+        "target_key": "dream:embry:dream_successor_943b01ecd9a3:watch:coverage_gap_00__grounds_interpretation__v2r1-interpretation-001"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:d798fae044284f115f87d51a199a5e4924732fbb2aa6cc0f8675f915b327c3e0",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:d798fae044284f115f87d51a199a5e4924732fbb2aa6cc0f8675f915b327c3e0",
+        "staging_key": "stg_1915207a78bc6d23_48c3c092ddebfcd70d5e2e1a",
+        "target_collection": "persona_memory_edges",
+        "target_key": "dream:embry:dream_successor_943b01ecd9a3:watch:coverage_gap_01__grounds_interpretation__v2r1-interpretation-002"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:7f59785459439a4fff2a30f1a5287932da7526189af588a3240558865708bc23",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:7f59785459439a4fff2a30f1a5287932da7526189af588a3240558865708bc23",
+        "staging_key": "stg_1915207a78bc6d23_a66967da352262dc2c3141ae",
+        "target_collection": "persona_memory_edges",
+        "target_key": "dream:embry:dream_successor_943b01ecd9a3:watch:coverage_gap_00__grounds_interpretation__v2r1-interpretation-003"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:3d4a130d41867490c1306c41af9e8f35b9fb1ca8b9e7005adf003b6d19e920e2",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:3d4a130d41867490c1306c41af9e8f35b9fb1ca8b9e7005adf003b6d19e920e2",
+        "staging_key": "stg_1915207a78bc6d23_0d9d229412ee33777732b248",
+        "target_collection": "persona_memory_edges",
+        "target_key": "dream:embry:dream_successor_943b01ecd9a3:watch:coverage_gap_01__grounds_interpretation__v2r1-interpretation-003"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:6f7349de295b67999c5ccd4e73a3ff027b5aee421c2550272872a5b9e960fd24",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:6f7349de295b67999c5ccd4e73a3ff027b5aee421c2550272872a5b9e960fd24",
+        "staging_key": "stg_1915207a78bc6d23_30a20895b348c24fb6069fc0",
+        "target_collection": "tom_edges",
+        "target_key": "dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-001__supports_interpretation__v2r1-tom-001"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:416be3fe5b902494c505020297ba163f4b9cb4c29e1255fce7e41ecc60b7f02f",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:416be3fe5b902494c505020297ba163f4b9cb4c29e1255fce7e41ecc60b7f02f",
+        "staging_key": "stg_1915207a78bc6d23_ac214545ff0a5476b26e684d",
+        "target_collection": "tom_edges",
+        "target_key": "dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-002__supports_interpretation__v2r1-tom-002"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:a772e06fc4744c27e7cc9952ae72022b72eb344bf85f38421fb45ec2e382f1d6",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:a772e06fc4744c27e7cc9952ae72022b72eb344bf85f38421fb45ec2e382f1d6",
+        "staging_key": "stg_1915207a78bc6d23_c5f7b044832079da1e10fb87",
+        "target_collection": "tom_edges",
+        "target_key": "dream:embry:dream_successor_943b01ecd9a3:interpretation:v2r1-interpretation-003__supports_interpretation__v2r1-tom-003"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:5d4e562fac940ca0c92e5b1f9c479c101e3629b9f952e2415fd9bfc9c8ef3482",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:5d4e562fac940ca0c92e5b1f9c479c101e3629b9f952e2415fd9bfc9c8ef3482",
+        "staging_key": "stg_1915207a78bc6d23_8eb3b866ab6dfd9d63edf262",
+        "target_collection": "tom_edges",
+        "target_key": "dream:embry:dream_successor_943b01ecd9a3:supersedes:v2r1:tom-001"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:47a0cb7b60be8881a92f0d2cc01ede38eea77a31ae87cbdc9484acc9a522c67f",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:47a0cb7b60be8881a92f0d2cc01ede38eea77a31ae87cbdc9484acc9a522c67f",
+        "staging_key": "stg_1915207a78bc6d23_0a740bcd361e0f0db8538130",
+        "target_collection": "tom_edges",
+        "target_key": "dream:embry:dream_successor_943b01ecd9a3:supersedes:v2r1:tom-002"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:1f9ab3fe94fb9ddeaca74eecbb0eae4a3dbf981396eda941189888599aa303a6",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:1f9ab3fe94fb9ddeaca74eecbb0eae4a3dbf981396eda941189888599aa303a6",
+        "staging_key": "stg_1915207a78bc6d23_03b67d3d569e6d19446177a4",
+        "target_collection": "tom_edges",
+        "target_key": "dream:embry:dream_successor_943b01ecd9a3:supersedes:v2r1:tom-003"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:0c7b5add6e134e2034c1e9d818e6fbdf43c9813a43e72d50bd418b8ef9e7856c",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:0c7b5add6e134e2034c1e9d818e6fbdf43c9813a43e72d50bd418b8ef9e7856c",
+        "staging_key": "stg_1915207a78bc6d23_46120dab3620b642feaade26",
+        "target_collection": "tom_edges",
+        "target_key": "dream:embry:dream_successor_943b01ecd9a3:supersedes:v2r1:tom-004"
+      }
+    ],
+    "staged_count": 17
+  },
+  "tom_node_keys": [
+    "dream:embry:dream_successor_943b01ecd9a3:tom:v2r1-tom-001",
+    "dream:embry:dream_successor_943b01ecd9a3:tom:v2r1-tom-002",
+    "dream:embry:dream_successor_943b01ecd9a3:tom:v2r1-tom-003"
+  ],
+  "watch_vertex_keys": [],
+  "watch_vertex_receipts": []
+}

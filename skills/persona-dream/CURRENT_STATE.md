@@ -11,7 +11,7 @@ runs in the test suite and fails on drift.
 | Acceptance rung | `PASS_ACCEPTANCE_RUNG` | `reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/acceptance_rung_receipt.v6.json` (sha:0efc5671da43f5d0) |
 | Provider return | `PASS_PHASE11_PROVIDER_RETURN_DOWNLOADED (10.041667s, 16843175B, sha256:59b9ff3155d6ba9d)` | `reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/provider_return/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/phase11_download_ffprobe_receipt.v1.json` (sha:447a00d054c3cacb) |
 | Observation packet | `ACCEPTED` | `reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/dream_observation_packet.v2.json` (sha:8033c384b71b23eb) |
-| Cognitive loop | `PASS_COGNITIVE_LOOP canonical_written=True` | `reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/cognitive_loop/cognitive_loop_receipt.json` (sha:0c40436b54e2951f) |
+| Cognitive lineage | `PASS_V2_LINEAGE bundle=v2r1 canonical_written=True dream_node_untouched=True` | `reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/cognitive_loop_v2/lineage_receipt.v1.json` (sha:e14120a5f46c9d3c) |
 | Phase 16 evaluation | `PASS` | `reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_16_behavior_evaluation/phase16_behavior_evaluation_receipt.v1.json` (sha:297854aea32cbca4) |
 | Pilot protocol | `frozen sha:4cbab4a80369431a` | `contracts/pilot_c_vs_f_frozen_protocol.v2.md` (sha:4cbab4a80369431a) |
 

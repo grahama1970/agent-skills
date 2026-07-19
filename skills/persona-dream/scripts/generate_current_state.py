@@ -25,7 +25,7 @@ RECEIPTS = {
     "provider_return": RR
     / "phase_11_submit_return/provider_return/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/phase11_download_ffprobe_receipt.v1.json",
     "observation_packet": RR / "watch_gauntlet/59b9ff3155d6/dream_observation_packet.v2.json",
-    "cognitive_loop": RR / "watch_gauntlet/59b9ff3155d6/cognitive_loop/cognitive_loop_receipt.json",
+    "cognitive_loop": RR / "watch_gauntlet/59b9ff3155d6/cognitive_loop_v2/lineage_receipt.v1.json",
     "phase16": RR / "phase_16_behavior_evaluation/phase16_behavior_evaluation_receipt.v1.json",
     "pilot_protocol": SKILL / "contracts/pilot_c_vs_f_frozen_protocol.v2.md",
 }
@@ -63,8 +63,8 @@ def render() -> str:
         ),
         ("Observation packet", packet.get("packet_status"), "observation_packet"),
         (
-            "Cognitive loop",
-            f"{loop.get('status')} canonical_written={loop.get('canonical_dream_memory_written')}",
+            "Cognitive lineage",
+            f"{loop.get('status')} bundle={loop.get('bundle_rev')} canonical_written={loop.get('canonical_written')} dream_node_untouched={loop.get('dream_node_untouched')}",
             "cognitive_loop",
         ),
         ("Phase 16 evaluation", p16.get("overall_status"), "phase16"),
