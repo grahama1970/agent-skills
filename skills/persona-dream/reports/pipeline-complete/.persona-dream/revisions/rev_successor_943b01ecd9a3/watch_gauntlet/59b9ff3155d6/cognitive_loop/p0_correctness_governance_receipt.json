@@ -1,0 +1,12 @@
+{
+  "governance_write": {
+    "collection": "persona_dream_governance",
+    "key": "persona_dream_p0_correctness_governance_20260719",
+    "written_content_sha256": "sha256:29e8edd5ac3aa8b57bd5e1b3cc2c580dbe1f7be47660f34697f77ed9e87051c0",
+    "reread_content_sha256": "sha256:29e8edd5ac3aa8b57bd5e1b3cc2c580dbe1f7be47660f34697f77ed9e87051c0",
+    "exact_reread_match": true,
+    "store_ok": true,
+    "reread_found": true
+  },
+  "key": "persona_dream_p0_correctness_governance_20260719"
+}

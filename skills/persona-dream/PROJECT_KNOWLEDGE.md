@@ -1,9 +1,38 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-19 (GREEN_CANONICAL_LANE gate closed — default pytest suite fully green) by agent
+**Last updated:** 2026-07-19 (P0 correctness bundle closed — Sol Pro review) by agent
 **Status:** Active development
 
 ## Current Understanding
+
+- 2026-07-19 (P0 CORRECTNESS BUNDLE — Sol Pro review, closed): three verified
+  cognitive-loop defects fixed. **Lessons (durable):** (1) *presence of a proof
+  object is not proof* — `canonical_dream_memory_written = bool(canonical_write_proof)`
+  certified nothing; it now requires staging AND publish AND commit-manifest to all
+  reread-match, else `BLOCKED_CANONICAL_PERSISTENCE_INCOMPLETE` + nonzero exit.
+  (2) *edges are not vertices* — the committed "14/14 traversal" proved 14 EDGES
+  resolved, not that the 7 Watch-observation VERTICES existed (they didn't); phase16
+  traversal is now STRICT (every edge target, including `persona_dream_watch_evidence`
+  vertices, must resolve or traversal FAILS) and the old claim is corrected via
+  `corrected_traversal_receipt.v1.json` (old kept, marked superseded). (3) *loops
+  need typed transitions* — `scripts/cognitive_loop_transitions.py` is a 5-state
+  machine (`ACCEPTED_OBSERVATION→PASS_INTERPRETATION→PASS_TOM_VALIDATION→
+  STAGED_PERSISTENCE_VERIFIED→CANONICAL_COMMIT`) that hash-binds each predecessor
+  (phase14 binds exact phase13; commit binds exact 13+14) and hard-stops the loop on
+  any structural blocker before the next side effect; the aggregate no longer accepts
+  a bare `DEGRADED*` status. phase15 is now transactional (idempotency key → stage →
+  verify → publish → verify → commit manifest as the single source of canonical
+  visibility; retain-and-mark since the `$memory` API has no delete primitive;
+  detect-and-quarantine on rerun). Watch-evidence vertices are materialized
+  (`synthetic_origin=true`, `psychological_interpretation_performed=false`). The live
+  dream `dream_dream_successor_943b01ecd9a3` (19 records) was reconciled ADDITIVELY —
+  7/7 Watch vertices materialized, retroactive commit manifest written, strict
+  traversal re-run PASS — with the 19 pre-existing records re-read live but NEVER
+  rewritten. A 4th lesson: a lossless daemon numeric round-trip (`0.0→0`) is not
+  corruption — normalize numbers in the reread-fidelity hash only, never in the
+  artifact-binding hash. Governance:
+  `persona_dream_governance/persona_dream_p0_correctness_governance_20260719`
+  (exact reread PASS). 54/54 lane tests green.
 
 - 2026-07-19 (GREEN_CANONICAL_LANE — CI contract reconciliation): the default test
   suite went from 29 failed / 313 passed to **0 failed / 342 passed / 0 skipped**,
