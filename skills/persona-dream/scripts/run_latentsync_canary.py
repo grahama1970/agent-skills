@@ -90,6 +90,10 @@ def main() -> int:
     parser.add_argument("--out-dir", type=Path, required=True)
     parser.add_argument("--latentsync-root", type=Path, default=Path("/home/graham/workspace/experiments/LatentSync"))
     parser.add_argument("--python", type=Path, required=True)
+    parser.add_argument("--unet-config", type=Path, default=None,
+                        help="override U-Net config (default: <root>/configs/unet/stage2_512.yaml)")
+    parser.add_argument("--ckpt", type=Path, default=None,
+                        help="override checkpoint (default: <root>/checkpoints/latentsync_unet.pt)")
     parser.add_argument("--steps", type=int, default=20)
     parser.add_argument("--guidance-scale", type=float, default=1.5)
     parser.add_argument("--min-free-vram-mib", type=int, default=18000)
@@ -103,8 +107,8 @@ def main() -> int:
     receipts.mkdir(parents=True, exist_ok=True)
     started_at = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
-    config = args.latentsync_root / "configs/unet/stage2_512.yaml"
-    ckpt = args.latentsync_root / "checkpoints/latentsync_unet.pt"
+    config = args.unet_config or (args.latentsync_root / "configs/unet/stage2_512.yaml")
+    ckpt = args.ckpt or (args.latentsync_root / "checkpoints/latentsync_unet.pt")
     whisper = args.latentsync_root / "checkpoints/whisper/tiny.pt"
     prereq_errors: list[str] = []
     for label, path in {

@@ -1,0 +1,14 @@
+{
+  "chunks": [
+    "In the dream, that stolen day still had guilt clinging to it, like salt I couldn\u2019t rinse off. I could feel how badly I wanted it to be harmless.",
+    "Kai\u2019s warning in the lineup wasn\u2019t cruel, and I don\u2019t resent him for it. He was just naming the water as he saw it.",
+    "But waiting was my choice. I stayed back until the wave was mine, not because he told me to, but because I knew it.",
+    "That synthetic dream showed me something quiet: I don\u2019t have to steal the moment to belong in it. I can wait, and still rise when it comes."
+  ],
+  "tau_receipt": {
+    "model": "gpt-5.5",
+    "live": true,
+    "http_status": 200,
+    "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY"
+  }
+}
