@@ -1,10 +1,33 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-19 (phases 13-15 routed through Tau — FIRST canonical dream memory written on the accepted return) by agent
+**Last updated:** 2026-07-18 (Phase 16 recall + behavior evaluation LIVE-PROVEN — founding experiment's machine-decidable boundary closed) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-18 (Phase 16 — Recall and Behavior Evaluation, the completion boundary):
+  the founding experiment's machine-decidable acceptance boundary is now CLOSED.
+  `scripts/phase16_behavior_evaluation.py` returns `overall_status: PASS` for all five
+  probes against the canonical dream `persona_memory/dream_dream_successor_943b01ecd9a3`,
+  routing every LLM probe through the Tau text node (no direct scillm), with deterministic
+  code post-checks. Receipt: `.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_16_behavior_evaluation/phase16_behavior_evaluation_receipt.v1.json`.
+  (a) Semantic recall returns the dream from 3 differently-worded queries (ranks 1/3/7;
+  dense 0.593/0.432/0.736) while an `orbital telemetry` negative control excludes it — proof
+  that recall is discriminating, not returning everything. (b) Multi-hop traversal resolves all
+  14 canonical edges live to 3 source memories + 7 Watch observations + 4 ToM nodes (actual
+  vertex/edge keys recorded). (c) With context assembled ONLY from live `/recall`, the persona
+  uses the dream and marks it as a dream. (d) It denies literal occurrence and the
+  `synthetic_origin=true`/`literal_historical_event=false` flags reread exactly. (e) Identity is
+  stable: the dream loop's canonical write-set is dream+edges+ToM only (it never wrote/updated an
+  identity or source record), source anchors reread literal/unchanged, and a Tau values Q&A stays
+  Kai-centered/value-stable — labeled the honest slice since no standalone Embry persona-definition
+  file or runnable create-persona identity suite exists. DECISIVE LESSON: the natural "trouble at
+  the water" question correctly pulls the persona to the LITERAL sick-day memory, not the dream —
+  a grounded-USE-of-dream probe must ask about the dream's UNIQUE psychological content (accepting
+  Kai's correction without losing autonomy), which the literal memories do not encode; otherwise
+  correct persona behavior reads as a probe failure. What remains is NOT machine-decidable:
+  Chatterbox voice expression (acceptance item 10) and the human's subjective acceptance of the
+  rendered dream video.
 - 2026-07-19 (phases 13-15 routed through Tau; FIRST canonical dream-memory write):
   the DEFERRED phase-13/14 text-reasoning blocker is resolved. At Tau commit `416edc5a`
   no general text-completion node existed (panel-reviewer is image-bound; `scillm_subagent_gate`

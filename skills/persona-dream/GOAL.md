@@ -24,6 +24,18 @@ Minimum final evidence:
 
 ## Current Boundary
 
+**Phase 16 addendum (2026-07-18) — SUPERSEDES the completion status below.**
+The founding experiment's machine-decidable acceptance boundary is now CLOSED:
+`scripts/phase16_behavior_evaluation.py` returns `overall_status: PASS` for all
+five probes (semantic recall, multi-hop traversal, grounded dream use,
+synthetic-vs-literal distinction, identity stability) against the canonical dream
+`dream_dream_successor_943b01ecd9a3`, with every probe receipted under
+`.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_16_behavior_evaluation/`
+and Memory step/governance records written with exact reread. All LLM probes
+route through the Tau text node (no direct scillm). The immutable goal now LACKS
+only what a machine cannot decide: Chatterbox voice expression (item 10) and the
+human's subjective acceptance of the rendered dream video.
+
 The active revision is now the identity-source successor
 `rev_successor_943b01ecd9a3` (durable repo-rooted pointer, bound to
 `embry_contact_sheet_v3`). It stands at its acceptance rung:
@@ -155,8 +167,18 @@ decides. Live run on the ACCEPTED return (`watch_gauntlet/59b9ff3155d6/cognitive
   `canonical_dream_memory_written: true`. The superseded historical Kling return
   remains BLOCKED even with `--allow-canonical-write` (verified live).
 - Current Boundary: canonical dream memory WRITTEN for the accepted successor
-  return; Phase 16 (behavior evaluation via Qdrant semantic recall + downstream
-  persona behavior change, and human subjective acceptance) REMAINS.
+  return, AND Phase 16 (recall + behavior evaluation) is now LIVE-PROVEN for its
+  machine-decidable slice (`scripts/phase16_behavior_evaluation.py`,
+  `phase_16_behavior_evaluation/phase16_behavior_evaluation_receipt.v1.json`,
+  `overall_status: PASS`): semantic recall of the dream from 3 differently-worded
+  queries + negative control, multi-hop traversal persona→dream→source/Watch/ToM
+  across all 14 edges, grounded persona use of the dream, synthetic-vs-literal
+  distinction with exact flag reread, and identity stability — all LLM probes
+  routed through the Tau node. What the immutable goal now LACKS vs HAS:
+  HAS all machine-decidable acceptance items (1–9); LACKS only (item 10)
+  Chatterbox voice expression of the resulting state and the human's own
+  subjective acceptance of the dream video — both explicitly out of scope for a
+  machine run.
 
 The frozen revision `rev_upstream_bf3b05d47fb8` crossed the live Kling boundary
 once for repaired request

@@ -104,9 +104,16 @@ exact reread-by-key (synthetic dream node
 step records. Loop receipt `PASS_COGNITIVE_LOOP`,
 `canonical_dream_memory_written: true`. Canonical write is permitted only by a
 binding agent-level acceptance receipt overriding the DEGRADED status; the
-superseded historical return stays BLOCKED (verified live). **Phase 16 (Qdrant
-semantic recall + downstream behavior change + human subjective acceptance) is
-next.**
+superseded historical return stays BLOCKED (verified live). **Phase 16
+(recall + behavior evaluation) is LIVE-PROVEN for its machine-decidable slice**
+(`scripts/phase16_behavior_evaluation.py`, `overall_status: PASS`): semantic
+recall of the dream from 3 differently-worded queries + a negative control,
+multi-hop traversal persona→dream→source/Watch/ToM across all 14 canonical
+edges, grounded persona use of the dream, synthetic-vs-literal distinction with
+exact flag reread, and identity stability. All LLM probes route through the Tau
+text node (no direct scillm). **What remains is the human's: watching the dream
+video and giving subjective acceptance, plus Chatterbox voice expression
+(item 10, out of scope this slice).**
 
 **Jump to:**
 [Quick Start](#quick-start) -
@@ -270,7 +277,7 @@ The README uses these proof terms consistently:
 | Phase 11 - Submit and Return | **Historical live return superseded; awaiting new hash-bound authorization** | `rev_upstream_bf3b05d47fb8` crossed the paid boundary once (`sha256:ca90ba9f…`, one submit, 54 polls, a valid 10.04s MP4) but failed Embry identity continuity and visible-speaker lip sync and derives from the rejected montage. The successor needs a freshly compiled provider request, provider media publication for the regenerated frames, and a new hash-bound paid authorization — all human-gated. No successor provider call has been made |
 | Phase 12 - Watch Observation | **Live slice proven for perception-on-historical-return** | The `watch` post-return gauntlet (`scripts/watch_post_return_gauntlet.py`) runs the `watch` skill over the frozen historical Kling return, extracts scene-driven frames + Whisper transcript, and independently localizes the identity-drift and visible-speaker windows. Validated against ground truth: `watch_gauntlet/991c311f365f/watch_gauntlet_validation_receipt.v1.json` (`PASS_WATCH_GAUNTLET_VALIDATED`, 5/5 expectations). Phase 12 is **not complete** — no successor provider return exists to observe |
 | Phases 13-15 - Interpretation through persistence | **Live slice proven on accepted return** | On the ACCEPTED successor return, phase 13/14 text reasoning routes through the Tau node (tau `09e64a44`; no direct scillm), 4 interpretations + 4 ToM candidates pass the deterministic gates, and phase 15 wrote the FIRST canonical dream memory (19 records, exact reread-by-key) permitted only by a binding agent-level acceptance receipt; superseded/historical returns stay fail-closed |
-| Phase 16 - Later persona behavior | **Not implemented as a closed proof** | No persisted dream has yet been shown to alter later behavior while preserving identity; Qdrant semantic recall + downstream behavior change + human subjective acceptance remain |
+| Phase 16 - Recall and later persona behavior | **Machine-decidable slice LIVE-PROVEN (`PASS`)** | `scripts/phase16_behavior_evaluation.py` → `phase_16_behavior_evaluation/phase16_behavior_evaluation_receipt.v1.json` (`overall_status: PASS`): (a) semantic recall returns the dream from 3 differently-worded queries (ranks 1/3/7, dense 0.59/0.43/0.74) while a `orbital telemetry` negative control does NOT; (b) multi-hop traversal resolves all 14 canonical edges live to 3 source memories + 7 Watch observations + 4 ToM nodes; (c) the persona uses the dream and marks it as a dream, with context assembled ONLY from live recall; (d) it denies literal occurrence and the `synthetic_origin=true`/`literal_historical_event=false` flags reread exactly; (e) identity is stable (loop write-set is dream+edges+ToM only, source anchors literal/unchanged, Tau values Q&A stable). All LLM probes route through the Tau node (no direct scillm). **Out of scope this slice: Chatterbox voice expression (item 10) and human subjective acceptance of the video** |
 
 The screenshots below come from an archived Embry/Kai run. That run has not been
 regenerated with every newer provider artifact. A blocked screenshot describes
@@ -839,25 +846,44 @@ artifact is currently implemented.
 ### Research Acceptance Boundary
 
 The founding experiment is complete only when one non-mocked run proves all of
-the following:
+the following. Per-item state as of 2026-07-18 (Phase 16 completion):
 
 1. A persona autonomously selects grounded multimodal residue and current events.
+   — **PROVEN** (phase 01 idea/residue selection, live).
 2. It creates a synthetic dream with complete source provenance.
+   — **PROVEN** (canonical `dream_dream_successor_943b01ecd9a3`,
+   `synthetic_origin: true`, 3 source memories + Watch/ToM provenance).
 3. When media is rendered, the returned artifact is technically valid and
    independently analyzed by `watch`.
+   — **PROVEN for the frozen historical return** (watch post-return gauntlet,
+   5/5). The accepted successor return is validated; the observation packet is
+   `DEGRADED` (authoritative verdicts carried by the step-36 v2 receipt).
 4. Self-interpretation claims cite Watch observations and source memories.
+   — **PROVEN** (phase 13, 4 interpretations, deterministic citation gate).
 5. Accepted ToM records and graph edges are written through Memory and Graph
-   Memory.
+   Memory. — **PROVEN** (phase 15, 19 canonical records, exact reread-by-key).
 6. Qdrant retrieves the dream from a semantically related, differently worded
-   query.
+   query. — **PROVEN** (phase 16 probe a: dream returned by 3 differently-worded
+   queries, ranks 1/3/7; negative control excludes it).
 7. ArangoDB traverses from the persona through the dream to source memories,
-   observations, people, events, and ToM state.
+   observations, people, events, and ToM state. — **PROVEN** (phase 16 probe b:
+   14/14 canonical edges resolve live to 3 sources + 7 Watch observations + 4
+   ToM nodes; actual vertex/edge keys recorded).
 8. A later persona response uses the dream appropriately while preserving the
-   synthetic-versus-literal distinction.
+   synthetic-versus-literal distinction. — **PROVEN** (phase 16 probes c and d:
+   grounded dream use marked as a dream; literal occurrence denied; DB flags
+   reread exactly). LLM routed through the Tau node; checks deterministic.
 9. Identity-consistency probes show bounded evolution without destructive
-   identity drift.
+   identity drift. — **PROVEN for the honest slice** (phase 16 probe e: the dream
+   loop's canonical write-set is dream+edges+ToM only — it never wrote/updated an
+   identity or source record; source anchors reread as literal/unchanged;
+   create-persona working tree clean; Tau values/relationship Q&A stable). No
+   standalone Embry persona-definition file or runnable create-persona identity
+   suite exists; labeled as the honest slice.
 10. Chatterbox audibly expresses the resulting persona state without becoming
-    the authority that invented it.
+    the authority that invented it. — **NOT PROVEN / OUT OF SCOPE this slice**
+    (no Chatterbox/voice runtime exercised; factually out of scope). Human
+    subjective acceptance of the dream video also remains the human's.
 
 ### Proof Discipline
 
