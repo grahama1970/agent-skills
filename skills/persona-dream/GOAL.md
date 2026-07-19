@@ -74,6 +74,50 @@ Post-return gauntlet outcomes on THIS successor return:
   `canonical_dream_memory_written: false`. No failed/unaccepted dream was
   written to canonical memory.
 
+Stage B addendum 2 (2026-07-19, gauntlet re-run with VLM routed through Tau):
+SUPERSEDES the step-36 / step-38 / acceptance outcomes above. The v1 blockers
+were all rooted in the missing VLM layer. Per the standing architecture
+directive ("only /tau has access to /scillm"), all VLM calls were routed through
+the Tau panel-reviewer node (`persona_dream_panel_agent`, commit 416edc5a, custom
+hash-recorded `visual_review_prompt`; `api_key_source docker:scillm-proxy`) — NOT
+direct scillm from Stage B drivers. Outcomes on THIS successor return:
+- Step 36 post-Kling continuity: PASS (v2,
+  `…/97688ec5…/post_kling_continuity_review_receipt.v2.json`). The ArcFace
+  whole-clip metric still fails (5/12 sub-threshold), but VLM adjudication (via
+  Tau) classifies ALL 5 sub-threshold frames as POSE_OCCLUSION consistent with
+  their storyboard beat intent (sb_003 Kai-focused, sb_004 wave/decision with
+  Embry distant), with NO different-looking woman substituted in any frame;
+  scene/wardrobe/action/environment continuity PASS; Kai (reference
+  `02-kai_character_sheet.png`) not contradicted. Whole-clip embedding identity
+  is NOT certified — final-third certainty rests on VLM pose/occlusion +
+  wardrobe/composition, not embedding proof.
+- Steps 37-38 audio + final assembly: PASS (v2,
+  `…/97688ec5…/step37_38_audio_final_assembly_receipt.v2.json`). The successor's
+  authoritative line/speaker/timing (Kai, "If we paddle now, we're cutting across
+  the lineup.", 5.0-8.08s, sb_003) is IDENTICAL to the frozen predecessor's
+  rendered line (predecessor whisper recognized_text==canonical_text). Re-mixing
+  the hash-bound isolated line WAV (`sha256:c240e201…`) + the same ocean bed
+  (`sha256:8d5e0d3e…`) with the proven ffmpeg filter reproduced a bit-identical
+  mix (`sha256:33edae9a…`) and was muxed onto the silent return
+  (`provider_return_muxed.mp4`). Whisper large-v3-turbo forced alignment
+  recognizes the exact line in-window; the visible-speaker/lip-sync rule is
+  INAPPLICABLE_BY_COMPOSITION (wide two-character lineup, no readable speaking
+  mouth) per a Tau visible-speaker review. No paid call, no new voice engine.
+- Acceptance: ACCEPTED_AGENT_LEVEL
+  (`…/97688ec5…/post_return_acceptance_receipt.v2.json`); the fail-closed gates
+  (step 36, step 38) both PASS. Human subjective acceptance still NOT claimed
+  (remains the human's).
+- Canonical cognitive loop: DRY-RUN ONLY, still NO canonical write
+  (`stageb_cognitive_loop_outcome.v1.json`,
+  `watch_gauntlet/59b9ff3155d6/cognitive_loop_dryrun_stageb/`). Phases 13/14 are
+  TEXT reasoning; at commit 416edc5a Tau exposes no general text-completion node
+  (panel-reviewer is image-bound; `scillm_subagent_gate` is a validator), and
+  direct scillm is forbidden. Fail-closed: `canonical_dream_memory_written:
+  false`. Canonical persistence is DEFERRED pending a Tau text-reasoning node for
+  genuine phase-13 self-interpretation (mandatory Watch citations +
+  renderer-defect alternatives). Route verification:
+  `…/97688ec5…/tau_vlm_route_verification_receipt.v1.json`.
+
 The frozen revision `rev_upstream_bf3b05d47fb8` crossed the live Kling boundary
 once for repaired request
 `sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f`.

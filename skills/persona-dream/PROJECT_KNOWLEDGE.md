@@ -1,9 +1,37 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-18 (Stage B post-return gauntlet on the live successor return — acceptance BLOCKED fail-closed, canonical cognitive loop NOT run) by agent
+**Last updated:** 2026-07-19 (Stage B gauntlet RE-RUN with VLM routed through Tau — ACCEPTED agent-level; canonical loop still dry-run, fail-closed) by agent
 **Status:** Active development
 
 ## Current Understanding
+
+- 2026-07-19 (Stage B post-return gauntlet RE-RUN — VLM routed through Tau, ACCEPTED
+  at agent level; canonical loop still DRY-RUN, fail-closed): the three v1 blockers were
+  all downstream of the missing VLM layer. Per the standing directive "only /tau has access
+  to /scillm", every VLM call was routed through the Tau panel-reviewer node
+  (`tau_coding.persona_dream_panel_agent --role panel-reviewer`, Tau commit `416edc5a`,
+  custom hash-recorded `visual_review_prompt`, `api_key_source docker:scillm-proxy`) — NOT
+  direct scillm from Stage B drivers. **Step 36 PASS (v2):** ArcFace whole-clip metric still
+  fails (5/12 sub-threshold) but VLM adjudication classifies all 5 low-cosine frames
+  `POSE_OCCLUSION` consistent with beat intent, zero substituted persons; scene/wardrobe/
+  action continuity PASS; Kai scored via the recovered face-bearing reference
+  `02-kai_character_sheet.png` (not contradicted). **Steps 37-38 PASS (v2):** the successor's
+  authoritative line equals the frozen predecessor's rendered line (whisper
+  `recognized==canonical`); re-mixing the hash-bound isolated line WAV (`c240e201`) + same bed
+  (`8d5e0d3e`) reproduced a bit-identical mix (`33edae9a`), muxed onto the silent return;
+  whisper `large-v3-turbo` forced alignment in-window; lip-sync `INAPPLICABLE_BY_COMPOSITION`.
+  **Acceptance ACCEPTED_AGENT_LEVEL** (both fail-closed gates pass); human subjective acceptance
+  still the human's. **Canonical loop still dry-run, `canonical_dream_memory_written: false`** —
+  phases 13/14 text reasoning has no Tau node at 416edc5a (panel-reviewer is image-bound) and
+  direct scillm is forbidden; `run_cognitive_loop.py` also hardcodes `allow_canonical_write=False`.
+  Fail-closed: canonical persistence DEFERRED. Receipts under `…/rev_successor_943b01ecd9a3/…/97688ec5…/`:
+  `post_kling_continuity_review_receipt.v2.json`, `step37_38_audio_final_assembly_receipt.v2.json`,
+  `post_return_acceptance_receipt.v2.json`, `tau_vlm_route_verification_receipt.v1.json`,
+  `tau_step36_adjudication/`, `step37_38_successor_mux/`; loop outcome
+  `stageb_cognitive_loop_outcome.v1.json`. Memory: `persona_dream_pipeline_steps` +
+  `persona_dream_governance` written with exact reread match=true. LESSON: the VLM was never a
+  scillm-auth problem to "chase" in the drivers — it was a ROUTING problem; Tau's panel-reviewer
+  already holds sanctioned scillm access and takes one composite image + a hash-recorded prompt.
 
 - 2026-07-18 (Stage B post-return gauntlet on the LIVE successor return — ACCEPTANCE
   BLOCKED, fail-closed; canonical cognitive loop NOT run): the successor Kling return

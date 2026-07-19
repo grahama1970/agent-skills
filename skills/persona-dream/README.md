@@ -65,6 +65,28 @@ is BLOCKED**; the canonical cognitive loop was **NOT run** — dry-run only,
 to canonical memory. Human subjective acceptance remains the human's and is not
 claimed.
 
+**Stage B update 2 (2026-07-19, supersedes the paragraph above):** the missing
+VLM layer was restored by routing every VLM call through the **Tau** panel-reviewer
+node (Tau owns scillm access; commit `416edc5a`) — no direct scillm from Stage B
+drivers. On re-run: Step 36 post-Kling continuity **PASS** — the ArcFace whole-clip
+metric still fails, but VLM adjudication (via Tau) explains all 5 sub-threshold
+frames as `POSE_OCCLUSION` consistent with storyboard beat intent, with no
+different-looking person substituted in any frame; scene/wardrobe/action continuity
+PASS; Kai (recovered face-bearing reference `02-kai_character_sheet.png`) not
+contradicted. Steps 37-38 audio + final assembly **PASS** — the exact canonical
+Kai line + ocean bed were hash-bound-reused from the frozen predecessor (re-mixed
+bit-identically, `sha256:33edae9a…`) and muxed onto the silent return; whisper
+`large-v3-turbo` forced alignment recognizes the line in-window; lip-sync is
+`INAPPLICABLE_BY_COMPOSITION` (wide lineup, no readable mouth); no paid call, no new
+voice engine. **Acceptance is ACCEPTED at agent level** (both fail-closed gates
+pass); human subjective acceptance still remains the human's. The canonical
+cognitive loop is still **dry-run only** with **no canonical write** (fail-closed):
+phases 13/14 text reasoning cannot route through an existing Tau node at 416edc5a,
+and direct scillm is forbidden, so canonical persistence is deferred. **Proof
+boundary:** the identity PASS is a no-drift/no-substitution + composition verdict,
+NOT an embedding-certified whole-clip identity; the audio deliverable is muxed +
+forced-aligned, NOT frame-accurate lip-sync; no canonical dream memory was written.
+
 **Jump to:**
 [Quick Start](#quick-start) -
 [Research](#research) -
