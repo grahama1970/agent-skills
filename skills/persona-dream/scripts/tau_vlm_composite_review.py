@@ -61,10 +61,20 @@ def _extract_parts(payload: Mapping[str, Any]) -> tuple[list[str], list[tuple[st
     texts: list[str] = []
     images: list[tuple[str, bytes]] = []
     for message in payload.get("messages", []):
+        role = str(message.get("role", "user")).upper()
+        # Preserve the OpenAI message-role hierarchy through the single-prompt
+        # Tau node (GOAL_V2 P0.3 / issues-428): system/developer instructions
+        # stay distinguishable from user content instead of flattening to
+        # peer paragraphs.
+        marker = (
+            f"[{role} INSTRUCTIONS - highest authority]"
+            if role in ("SYSTEM", "DEVELOPER")
+            else f"[{role}]"
+        )
         content = message.get("content")
         if isinstance(content, str):
             if content.strip():
-                texts.append(content.strip())
+                texts.append(f"{marker}\n{content.strip()}")
             continue
         if not isinstance(content, list):
             continue
@@ -75,7 +85,7 @@ def _extract_parts(payload: Mapping[str, Any]) -> tuple[list[str], list[tuple[st
             if ptype == "text":
                 txt = str(part.get("text", "")).strip()
                 if txt:
-                    texts.append(txt)
+                    texts.append(f"{marker}\n{txt}")
             elif ptype == "image_url":
                 url = str((part.get("image_url") or {}).get("url", ""))
                 label = str(part.get("label") or f"image {len(images) + 1}")
@@ -113,11 +123,27 @@ def _composite(images: list[tuple[str, bytes]], out_path: Path) -> list[str]:
     return labels
 
 
+IDENTITY_AUTHORITY = "face_embedding_subgate"
+
+
+def assert_not_identity_decision(purpose: str | None) -> None:
+    """GOAL_V2 P0.3 enforcement: this VLM adapter may inform but never DECIDE
+    identity. Identity decisions belong to the deterministic ArcFace embedding
+    subgate (identity_authority=face_embedding_subgate on every phase-07
+    receipt). Callers wanting identity input pass purpose="identity_advisory"."""
+    if purpose == "identity_decision":
+        raise RuntimeError(
+            "identity decisions are reserved for the ArcFace embedding subgate; "
+            "this VLM adapter is advisory-only (pass purpose='identity_advisory')"
+        )
+
+
 def post_openai_vlm_via_tau(
     payload: Mapping[str, Any],
     *,
     artifact_dir: str | Path,
     caller_skill: str = "persona-dream",
+    purpose: str | None = None,
 ) -> dict[str, Any]:
     """Drop-in for a direct multi-image chat-completions VLM POST.
 
@@ -127,6 +153,7 @@ def post_openai_vlm_via_tau(
     ``CompositeVlmError`` when the Tau route does not return HTTP 200 so existing
     callers' error handling fails closed exactly as before.
     """
+    assert_not_identity_decision(purpose)
     artifact_dir = Path(artifact_dir)
     texts, images = _extract_parts(payload)
     if not images:

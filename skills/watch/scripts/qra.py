@@ -62,16 +62,22 @@ def _messages_have_image(messages: list) -> bool:
 def _messages_text(messages: list) -> str:
     parts: list[str] = []
     for message in messages:
+        role = str(message.get("role", "user")).upper()
+        marker = (
+            f"[{role} INSTRUCTIONS - highest authority]"
+            if role in ("SYSTEM", "DEVELOPER")
+            else f"[{role}]"
+        )
         content = message.get("content")
         if isinstance(content, str):
             if content.strip():
-                parts.append(content.strip())
+                parts.append(f"{marker}\n{content.strip()}")
         elif isinstance(content, list):
             for part in content:
                 if isinstance(part, dict) and part.get("type") == "text":
                     txt = str(part.get("text", "")).strip()
                     if txt:
-                        parts.append(txt)
+                        parts.append(f"{marker}\n{txt}")
     return "\n\n".join(parts)
 
 

@@ -1,0 +1,64 @@
+{
+  "schema": "persona_dream.routing_semantics_calibration_receipt.v1",
+  "status": "PASS_ROUTING_SEMANTICS",
+  "montage_equivalence": "PASS",
+  "montage_cases": [
+    {
+      "case_id": "known_bad_sb_001_start",
+      "archived_direct_vlm": "PASS",
+      "montage_vlm": "PASS",
+      "equivalent": true,
+      "stricter_direction": false,
+      "embedding_authority_verdict": "FAIL"
+    },
+    {
+      "case_id": "known_bad_sb_002_start",
+      "archived_direct_vlm": "FAIL",
+      "montage_vlm": "FAIL",
+      "equivalent": true,
+      "stricter_direction": false,
+      "embedding_authority_verdict": "FAIL"
+    },
+    {
+      "case_id": "known_bad_sb_003_start",
+      "archived_direct_vlm": "FAIL",
+      "montage_vlm": "FAIL",
+      "equivalent": true,
+      "stricter_direction": false,
+      "embedding_authority_verdict": "FAIL"
+    },
+    {
+      "case_id": "positive_control_sb_001_start",
+      "archived_direct_vlm": "PASS",
+      "montage_vlm": "PASS",
+      "equivalent": true,
+      "stricter_direction": false,
+      "embedding_authority_verdict": "PASS"
+    },
+    {
+      "case_id": "positive_control_sb_002_start",
+      "archived_direct_vlm": "PASS",
+      "montage_vlm": "PASS",
+      "equivalent": true,
+      "stricter_direction": false,
+      "embedding_authority_verdict": "PASS"
+    },
+    {
+      "case_id": "tamper_wrong_embry_ref",
+      "archived_direct_vlm": "FAIL",
+      "montage_vlm": "FAIL",
+      "equivalent": true,
+      "stricter_direction": false,
+      "embedding_authority_verdict": "FAIL"
+    }
+  ],
+  "equivalence_rule": "montage verdict must equal the archived direct-route verdict, or deviate only in the stricter direction (archived PASS -> montage FAIL), since ArcFace is the identity authority in both routes",
+  "role_hierarchy_preserved": true,
+  "arcface_enforced": true,
+  "arcface_enforcement": {
+    "adapter_identity_decision_guard_fires": true,
+    "phase07_identity_authority_structural": true
+  },
+  "live": true,
+  "mocked": false
+}
