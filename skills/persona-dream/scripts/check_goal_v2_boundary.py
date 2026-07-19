@@ -16,6 +16,11 @@ SKILL = Path(__file__).resolve().parents[1]
 RR = SKILL / "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3"
 VIDEO_SHA = "59b9ff3155d6ba9d0b90d795bafe7b84cc4e10849db08299217b65d61e211fff"
 
+def _sha256_file(path):
+    import hashlib
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
 CRITERIA = {
     "p0_1_human_acceptance": {
         "path": RR / "human_acceptance_receipt.v1.json",
@@ -47,9 +52,23 @@ CRITERIA = {
         "check": lambda d: d.get("text_route") == "PASS" and d.get("audio_route") == "PASS"
         and bool(d.get("lipsync_canary_receipt")),
     },
+    # Pre-run authority correction (2026-07-19, BEFORE any pilot condition ran):
+    # protocol v2's selection rules were superseded by v3 per the mandated
+    # webgpt review (local/webgpt-bundles/pilot-selection-review-assess-response.md
+    # BLOCKED ruling; round-2 PASS at ...-r2-assess-response.md, which
+    # explicitly accepted this checker change). v3 preserves v2, changes only
+    # the selection subsection, and is hash-frozen with its addendum. This is
+    # a STRICTER check than the original literal-v2 requirement: exact v3
+    # authority + final protocol hash + supersession lineage are all required.
     "p0_7_pilot_result": {
         "path": SKILL / "contracts/pilot_c_vs_f_result_receipt.v1.json",
-        "check": lambda d: d.get("published_under") == "pilot_c_vs_f_frozen_protocol.v2"
+        "check": lambda d: d.get("published_under") == "pilot_c_vs_f_frozen_protocol.v3"
+        and d.get("protocol_v3_final_sha256")
+        == "483fb1706141c738aca1d57daa65a107df943eb5219a6bd7d0f0fb1d7d0ee0a6"
+        and d.get("protocol_v3_final_sha256") == _sha256_file(
+            SKILL / "contracts/pilot_c_vs_f_frozen_protocol.v3.md")
+        and isinstance(d.get("supersession_lineage"), dict)
+        and "v2" in d["supersession_lineage"]
         and d.get("result") in ("POSITIVE", "NULL", "INVALID")
         and d.get("m5_read_author") == "human",
     },

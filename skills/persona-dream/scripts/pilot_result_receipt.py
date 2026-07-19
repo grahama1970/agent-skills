@@ -28,6 +28,9 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+PROTOCOL_V3 = ROOT / "contracts/pilot_c_vs_f_frozen_protocol.v3.md"
+# final v3-with-addendum hash, frozen at the pre-run freeze commit
+PROTOCOL_V3_FINAL_SHA256 = "483fb1706141c738aca1d57daa65a107df943eb5219a6bd7d0f0fb1d7d0ee0a6"
 RUNS = ["R1-C", "R1-F", "R2-F", "R2-C"]
 PRIMARY_M5 = "states_central_conflict_more_precisely"
 
@@ -80,6 +83,10 @@ def main() -> int:
     args = parser.parse_args()
 
     manifest = load(args.manifest, "RUN_MANIFEST")
+    live_v3_sha = sha256_file(PROTOCOL_V3)
+    if live_v3_sha != PROTOCOL_V3_FINAL_SHA256:
+        print("BLOCKED_PILOT_RESULT_PROTOCOL_V3_DRIFT", file=sys.stderr)
+        return 2
 
     metrics = {}
     invalid = []
@@ -130,6 +137,7 @@ def main() -> int:
         "schema": "persona_dream.pilot_c_vs_f_result_receipt.v1",
         "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "published_under": "pilot_c_vs_f_frozen_protocol.v3",
+        "protocol_v3_final_sha256": live_v3_sha,
         "supersession_lineage": {
             "v1": "superseded pre-run by v2 (tau-dag creator-reviewer review)",
             "v2": "superseded pre-run by v3 (webgpt assess ruling, "

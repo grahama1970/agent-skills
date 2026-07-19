@@ -1,0 +1,13 @@
+{
+  "schema": "surf.webgpt_heartbeat.v1",
+  "updated_at": "2026-07-19T21:07:57Z",
+  "submitted_at": "2026-07-19T21:02:43Z",
+  "last_browser_observation_at": "2026-07-19T21:07:57Z",
+  "phase": "completed",
+  "page_state": "response_detected",
+  "last_artifact_written": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-selection-review-r2-assess-response.raw.md",
+  "next_expected_artifact": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-selection-review-r2-assess-response.meta.json",
+  "timeout_remaining_seconds": 0,
+  "sentinel": "<<<WEBGPT_DONE:20260719T210241Z:7d0e2e52>>>",
+  "prepared_prompt_is_transport_proof": false
+}

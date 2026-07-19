@@ -1,0 +1,380 @@
+{
+  "candidate_clusters": [
+    {
+      "cluster_id": "age23_current:person:brandon",
+      "eligible": true,
+      "member_count": 20,
+      "order_hash": "89a9c9e571c95b603ef0a8bfb63ca9fe54c08d90df12d3ce7cf69ed3648a9657"
+    },
+    {
+      "cluster_id": "age23_current:person:james",
+      "eligible": true,
+      "member_count": 19,
+      "order_hash": "b5c9df60ca6e679631c44375fa9139f7d23cb89e4fadbc5a163951480c6c701c"
+    },
+    {
+      "cluster_id": "age23_current:person:kai",
+      "eligible": true,
+      "member_count": 11,
+      "order_hash": "d8062a5872407877a295fc563ed2af884dd5d42f0d6bada0ce5f10b1a635f2f0"
+    },
+    {
+      "cluster_id": "age19_23:person:brandon",
+      "eligible": false,
+      "member_count": 2,
+      "order_hash": "1432134159144abea3b62aa847219e607775d200cc663f51020b27a430c7eb0a"
+    },
+    {
+      "cluster_id": "age19_23:person:maya_chen",
+      "eligible": false,
+      "member_count": 1,
+      "order_hash": "2411f0d69244248f7cec7ba6b69b30a116e0d8c8b0a735cbd74788a43dbb6f21"
+    },
+    {
+      "cluster_id": "age19_23:person:nana",
+      "eligible": false,
+      "member_count": 1,
+      "order_hash": "660321829cdd4c974b509716eb2bdb36aaaf87e6fc43e7fc82064dc5b663ec7b"
+    },
+    {
+      "cluster_id": "age19_23:person:marketa_lawson",
+      "eligible": true,
+      "member_count": 4,
+      "order_hash": "7823f467ea22b5cc70b0beaad8b739f0dd54b5aef617ecaae551df4d5aba6bcb"
+    },
+    {
+      "cluster_id": "age19_23:person:grammy",
+      "eligible": false,
+      "member_count": 1,
+      "order_hash": "92724e568df94459b19603dca974824ff810722ef9e1991e455b0a8662f7a3c2"
+    },
+    {
+      "cluster_id": "age19_23:person:tommy_lawson",
+      "eligible": true,
+      "member_count": 6,
+      "order_hash": "a0f4ac232d894e74c23b7899ad04a4690c49eb282cf380cb300e3050bd2b5c6a"
+    },
+    {
+      "cluster_id": "age19_23:person:kai",
+      "eligible": true,
+      "member_count": 28,
+      "order_hash": "ab58885af1183cb90e305dc7024584e73ba438ed3bb75420fca61f355ce4a647"
+    },
+    {
+      "cluster_id": "age19_23:person:james",
+      "eligible": true,
+      "member_count": 27,
+      "order_hash": "bfdb3a2a7c0b81f7cfa130fbb79632a21b50bed6d0a031019cc0e46de2c1946e"
+    },
+    {
+      "cluster_id": "age19_23:person:grandmother",
+      "eligible": false,
+      "member_count": 1,
+      "order_hash": "e30e4966e33fbf9e37c6cf790eaaad0bc4b8aae808d969b85b6e89bd37a80740"
+    },
+    {
+      "cluster_id": "age15_19:person:james",
+      "eligible": true,
+      "member_count": 15,
+      "order_hash": "0b95b397a44d5a6c26a52cc7691ac93138db1d6d08f2aeafa683568f5f3c6408"
+    },
+    {
+      "cluster_id": "age15_19:person:grandmother",
+      "eligible": true,
+      "member_count": 8,
+      "order_hash": "0c66eb0dfad5a1c4a5d3a4fd99cde385193974b5d8c8ff53c49cfd59c9914b2e"
+    },
+    {
+      "cluster_id": "age15_19:person:younger_military_child_candidate",
+      "eligible": false,
+      "member_count": 1,
+      "order_hash": "4a00dd36c25fea0f5879b8a42bb21b88d9def28737c60b47d6f620f6cfff5c0d"
+    },
+    {
+      "cluster_id": "age15_19:person:grandmother_unresolved_nana_or_grammy",
+      "eligible": true,
+      "member_count": 4,
+      "order_hash": "59bea5c6172c020eb5e02f69678b813a46b936fcc62ad5e93511f138f1b0def1"
+    },
+    {
+      "cluster_id": "age15_19:person:maya_chen",
+      "eligible": true,
+      "member_count": 9,
+      "order_hash": "713a31bdb0399a6056a47af9cd4b30723a7679b6f8d7f978483685e3293be347"
+    },
+    {
+      "cluster_id": "age15_19:person:marketa_lawson",
+      "eligible": true,
+      "member_count": 10,
+      "order_hash": "9396481d809bcf21d437876e6dc170004231fac3cecd1ecafa4d0bcaad5dd8c2"
+    },
+    {
+      "cluster_id": "age15_19:person:tommy_lawson",
+      "eligible": true,
+      "member_count": 13,
+      "order_hash": "ba55fbfed38484a6ce8631dad12ce2a8a5b65dfad8a7659cd14f665b29342c0f"
+    },
+    {
+      "cluster_id": "age15_19:person:kai",
+      "eligible": false,
+      "member_count": 68,
+      "order_hash": "f690be97604fbe1cebcfa396245524a42d7a5ff7adc6776e116611914fa34dd5"
+    },
+    {
+      "cluster_id": "age10_15:person:grandmother",
+      "eligible": false,
+      "member_count": 1,
+      "order_hash": "0840237f88aea499e38efd635b4e26d29d772aeb80b53824acca4aae0abb8a81"
+    },
+    {
+      "cluster_id": "age10_15:person:marketa_lawson",
+      "eligible": false,
+      "member_count": 2,
+      "order_hash": "15c713588303a50fdfb6dc818f869179456db70dff4c15a15eeb0e7db1cd0207"
+    },
+    {
+      "cluster_id": "age10_15:person:grandmother_unresolved_nana_or_grammy",
+      "eligible": false,
+      "member_count": 1,
+      "order_hash": "5e15d64cad8e43fa1fb560a8a55df4ab5c7c7e11904cfe2bbc6310b49f4469bf"
+    },
+    {
+      "cluster_id": "age10_15:person:maya_chen",
+      "eligible": true,
+      "member_count": 12,
+      "order_hash": "72136e23e433df15420694e078c448bc48be93e31f33e88886fea4a7ff70e3ab"
+    },
+    {
+      "cluster_id": "age10_15:person:tommy_lawson",
+      "eligible": true,
+      "member_count": 14,
+      "order_hash": "971184cb0ad57f3d1bb4ee3d9ddaf916be3397d55d6c2bebf588d495a18695e9"
+    },
+    {
+      "cluster_id": "age10_15:person:kai",
+      "eligible": false,
+      "member_count": 2,
+      "order_hash": "9a031258b2951637d1b163440f640123bf6866eaab82e99bc3ce449c5a0cf5b0"
+    },
+    {
+      "cluster_id": "age04_10:person:grammy",
+      "eligible": true,
+      "member_count": 3,
+      "order_hash": "1ebf2a53ae26ff272c1e99ec577b451730ee49550d677c2ea1ce2301cb0f855a"
+    },
+    {
+      "cluster_id": "age04_10:person:maya_chen",
+      "eligible": true,
+      "member_count": 4,
+      "order_hash": "268c9bdb935d3f0f6dbcdff20384cd732d5e0463c93687cc720f46ddfbb6f62b"
+    },
+    {
+      "cluster_id": "age04_10:person:grandmother",
+      "eligible": true,
+      "member_count": 6,
+      "order_hash": "6951b6c3af80aa8eddc15789f3c5256f1fa0930d2967744a1bb04a5ceb017b9a"
+    },
+    {
+      "cluster_id": "age04_10:person:marketa_lawson",
+      "eligible": true,
+      "member_count": 10,
+      "order_hash": "744ece7eacb42db212db450843f97902d8d9ad6759853786376b77b7939aa638"
+    },
+    {
+      "cluster_id": "age04_10:person:tommy_lawson",
+      "eligible": true,
+      "member_count": 13,
+      "order_hash": "b68db7948f970aba716ea3f4da812c28df8ec76cbec7d6fb691261f7dd1d7d20"
+    },
+    {
+      "cluster_id": "age04_10:person:nana",
+      "eligible": true,
+      "member_count": 3,
+      "order_hash": "c1c880733726e1255493111ec7be25526d353c7868fa84426dad83de49f87827"
+    }
+  ],
+  "created_at": "2026-07-19T21:08:29Z",
+  "dream_004_excluded_sources": [
+    "embry_age15_19_b02_memory_019",
+    "embry_age15_19_b03_memory_014",
+    "embry_age15_19_b03_memory_016"
+  ],
+  "frozen_rules_reference": "pilot_c_vs_f_frozen_protocol.v3.md#root-sets-order-and-blinding",
+  "full_sets_disjoint": true,
+  "ingest_cutoff": "2026-07-01T00:00:00Z",
+  "member_cap": 3,
+  "protocol_path": "contracts/pilot_c_vs_f_frozen_protocol.v3.md",
+  "protocol_seed_sha256_pre_addendum": "db548e8572a33267fba6036cad5b00e4e3321a3e9f501cc7cf5610ad1de0104d",
+  "r1": {
+    "member_scores": [
+      {
+        "member": "embry_age23_current_b01_memory_045",
+        "record_sha256": "b6c59c85667e0a1249d6a9dd1437b1d6644d6fd6c1058cd8be80b59e030cfa85",
+        "score": "0c494f68357b59d87fe7b37771c8843987ee663033a03014877766fbcf0f062e"
+      },
+      {
+        "member": "embry_age23_current_b01_memory_048",
+        "record_sha256": "91e208561ca5490e85d2fb213b8688d535aae02e042443daa219297593947dad",
+        "score": "20363bb76993d1ee0c6d7bf16a5c571b419979c4ebb003960968a08a81641a28"
+      },
+      {
+        "member": "embry_age23_current_b01_memory_020",
+        "record_sha256": "e915ff0f8a5c191d0660c0306291c96a55e7da2693a159389abdcd318fcd7c64",
+        "score": "27cc5be22b3164ea0a72fa92a34c63fbd19cdc5df6b4e526ad15d80d011a4dd2"
+      },
+      {
+        "member": "embry_age23_current_b01_memory_043",
+        "record_sha256": "720a9a8bfc4e5ed1fe1f607366e77807bcfb78e4193dc23107ff079a07e1923d",
+        "score": "36473f6208c086ceefadffd4ebf211620a8c7f4c5d6d9c85684708ef826582c0"
+      },
+      {
+        "member": "embry_age23_current_b01_memory_013",
+        "record_sha256": "9391c1d6b31ae4913a1e1ae68277509881ef65e2389a4d27602135d95434835c",
+        "score": "416aae90eb7414d5f6ebb998be3a2bf30b9a670acc738b185ebf14c2f2b6bf43"
+      },
+      {
+        "member": "embry_age23_current_b01_memory_012",
+        "record_sha256": "9089fba87523b47b1b375dbe318fecec031ca844cdeeee508a86197682eccbc1",
+        "score": "59bcfed4b0d72a1f73592059cabaf915490f3fb682617eb64b0f69f793fcf92a"
+      },
+      {
+        "member": "embry_age23_current_b01_memory_023",
+        "record_sha256": "15645990a45ffcbcd43b8b8164c7af3c4e482ab5638c468a04ea49a9096e0190",
+        "score": "69a48e48c649e214fd0c4f2e6c834ecf939c529c90e8ba9be86b9ce9b8b0f67c"
+      },
+      {
+        "member": "embry_age23_current_b01_memory_017",
+        "record_sha256": "9b4e959c53ecf6cccc224b46c7f2f610dc97749d40de6b3735d7b08dc60711f8",
+        "score": "6ff27353f3ffd60042e4fba6b38825cea56ffd57606cab07a5733c3f85b4464c"
+      },
+      {
+        "member": "embry_age23_current_b01_memory_044",
+        "record_sha256": "7c58505fe83e45a95525609ea875f1afdedf492042e4e686e2b5954839fa7b1a",
+        "score": "731689cc5f385b5924107117dea7ae00a52f82702ed2706d7d316ca06bc13a2a"
+      },
+      {
+        "member": "embry_age23_current_b01_memory_027",
+        "record_sha256": "5e7a65b12c55de557e9a91b39dbc8676406554859805619d5bcb17313bd50afa",
+        "score": "76202ae1ba03488ffb2413d8444b97aca3501697f5bca2db1570b128977e3ac2"
+      },
+      {
+        "member": "embry_age23_current_b01_memory_039",
+        "record_sha256": "db1d41045b812d537fa6b770b995ccc5dc4ddf5efbf578d0507092516d30324d",
+        "score": "8e9b767f184cb1b8e465e4f9a4b4c4f63d839e892e6ce0c8196bded96ed33331"
+      },
+      {
+        "member": "embry_age23_current_b01_memory_038",
+        "record_sha256": "4bd6033703b8bf207bf500118885d7c61e78bd6fe04382d385d25e895b78ec6d",
+        "score": "9373ac2c9a99d6738433c96eb4fedbf6c162b490bcc4f1644da5592ec36ac8fb"
+      },
+      {
+        "member": "embry_age23_current_b01_memory_046",
+        "record_sha256": "8653939dd08a88fcffd597b3f4af3cffa25a3c9273e47df6e85ea4a0195d9c04",
+        "score": "969caba93a4b53539f266f1bd56c996934b2d90e0433cf64ed864e9a1289eebb"
+      },
+      {
+        "member": "embry_age23_current_b01_memory_034",
+        "record_sha256": "ed63a8a3d39f262581fb2628fa95b0ded1a04e2715ecdb9fd6363c028df5ac49",
+        "score": "ac2b911862e7753ca5653f405e719ed693ce84cf3352c2bea5ac88cca0d1c8c2"
+      },
+      {
+        "member": "embry_age23_current_b01_memory_042",
+        "record_sha256": "aaeee5f26b4e83bb4fc309d25bb0de13673cf80e6597d49515a8618eecb11818",
+        "score": "c090ebebed1ec681dc33367213ebaf261f81f1d0059656b9114c11bc6f1126c4"
+      },
+      {
+        "member": "embry_age23_current_b01_memory_035",
+        "record_sha256": "c291b7be2ced9dab81a668dd1d1a13137feff37a5c737449d35a77806cdaad8a",
+        "score": "c19a4572cc2bb466c7fd6df40548f4db140f8cdee07b1d9d1dd00805c4ea1836"
+      },
+      {
+        "member": "embry_age23_current_b01_memory_036",
+        "record_sha256": "2c0a9dd605e8db57f5179ed8fa6113fb04f0a4265ac79d9dede9bbcc897f18d6",
+        "score": "c224917654b0d7ed3d2e68f646ff4b7d149a2363816efc624d026e52fbb55ba8"
+      },
+      {
+        "member": "embry_age23_current_b01_memory_014",
+        "record_sha256": "beb8c65604939028822e449dd9910cd4508e42d2a5ea8cca55f9b4df6e562bb4",
+        "score": "d30ed18dce931c5e7dc6e32bf74c699eb7691c80b0d4fbd7103f59a0506fc6a3"
+      },
+      {
+        "member": "embry_age23_current_b01_memory_022",
+        "record_sha256": "e03c2d54fd5f5c7c4934f07b7e765b441860ba8442a45af84c6796b6c556329f",
+        "score": "e2e7ed191389506ee52213b83f72c2b65dc9b92063936a29b60c3b74a5f3d905"
+      },
+      {
+        "member": "embry_age23_current_b01_memory_021",
+        "record_sha256": "0eae4ae0e14fafcbcc5864c298befc1a25393edeea5b242a844d2322b195be74",
+        "score": "e9360436a7869c2b081812bed0e7af62edcee296d4de9ee0549998d8ae749e7e"
+      }
+    ],
+    "members_full": [
+      "embry_age23_current_b01_memory_012",
+      "embry_age23_current_b01_memory_013",
+      "embry_age23_current_b01_memory_014",
+      "embry_age23_current_b01_memory_017",
+      "embry_age23_current_b01_memory_020",
+      "embry_age23_current_b01_memory_021",
+      "embry_age23_current_b01_memory_022",
+      "embry_age23_current_b01_memory_023",
+      "embry_age23_current_b01_memory_027",
+      "embry_age23_current_b01_memory_034",
+      "embry_age23_current_b01_memory_035",
+      "embry_age23_current_b01_memory_036",
+      "embry_age23_current_b01_memory_038",
+      "embry_age23_current_b01_memory_039",
+      "embry_age23_current_b01_memory_042",
+      "embry_age23_current_b01_memory_043",
+      "embry_age23_current_b01_memory_044",
+      "embry_age23_current_b01_memory_045",
+      "embry_age23_current_b01_memory_046",
+      "embry_age23_current_b01_memory_048"
+    ],
+    "members_selected": [
+      "embry_age23_current_b01_memory_045",
+      "embry_age23_current_b01_memory_048",
+      "embry_age23_current_b01_memory_020"
+    ],
+    "members_selected_sha256": "84dbd11ca373c6f7624b3292bc57863411a683a09f8e079fd4df99207f4d81c7",
+    "set_id": "age23_current:person:brandon"
+  },
+  "r2": {
+    "member_scores": [
+      {
+        "member": "embry_age19_23_b01_memory_018",
+        "record_sha256": "76838329538544d7bdad30b644377b59a01bbbb95ac77f58a302812d3a7ef566",
+        "score": "0de6d8b2885ddc591d82b11e1f697c35f5501bd95fc633694cd414502f50ac7e"
+      },
+      {
+        "member": "embry_age19_23_b01_memory_004",
+        "record_sha256": "6d165369fc2c31b65964f620cf3132ec5c355d9449742318115aee6f4e9f1389",
+        "score": "b8c11784a49a93c7356ea36e4d3b5896edff59c21e4a954ddcaef98112b76818"
+      },
+      {
+        "member": "embry_age19_23_b01_memory_039",
+        "record_sha256": "ec90c1cf5c6c30c03e0a5a37528841402e2f150d4016bec86a196cd5e4d38373",
+        "score": "e1fa62ad279be0a3d845792dc7a41d99e1515b59a05cf1af1910be585e9f92c5"
+      },
+      {
+        "member": "embry_age19_23_b01_memory_046",
+        "record_sha256": "7dd8f313e0ed1e2c0033955a54fb23284a61369ced0de4f76927b60b50e65827",
+        "score": "e922980b215ee3dafa5f735b69cfc4698236d1d4fde9b4c01394848282ff2f92"
+      }
+    ],
+    "members_full": [
+      "embry_age19_23_b01_memory_004",
+      "embry_age19_23_b01_memory_018",
+      "embry_age19_23_b01_memory_039",
+      "embry_age19_23_b01_memory_046"
+    ],
+    "members_selected": [
+      "embry_age19_23_b01_memory_018",
+      "embry_age19_23_b01_memory_004",
+      "embry_age19_23_b01_memory_039"
+    ],
+    "members_selected_sha256": "0920dbbfad515d8adf5fb8bd36f0d68013eaeb3c0dc600eda28d6fb18a42562d",
+    "set_id": "age19_23:person:marketa_lawson"
+  },
+  "schema": "persona_dream.pilot_r1_r2_selection_addendum.v1",
+  "selection_script_sha256": "e0c514db369d8a0ca3aa10dc92435e678eeb442ad6c56c273f70801267dff801"
+}

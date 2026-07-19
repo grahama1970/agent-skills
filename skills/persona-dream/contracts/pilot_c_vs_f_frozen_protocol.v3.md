@@ -132,3 +132,11 @@ the full ablation.
 Tasks #28/#29/#30 closed with receipts; producer-blinding receipt mechanism
 implemented; R1/R2 selection addendum appended to THIS file; run manifest
 hash-records the full phase policy before execution.
+
+## Addendum: R1/R2 selection receipt (appended before first run)
+
+- Receipt: `contracts/pilot_r1_r2_selection_addendum.v1.json` (sha256:d85e88ab39adc1672f863d7d8e89415e29f56d79f891fd599d10a6192b7e5c05)
+- Protocol seed (pre-addendum sha256): db548e8572a33267fba6036cad5b00e4e3321a3e9f501cc7cf5610ad1de0104d
+- Selection script sha256: e0c514db369d8a0ca3aa10dc92435e678eeb442ad6c56c273f70801267dff801
+- R1: `age23_current:person:brandon` — members embry_age23_current_b01_memory_045, embry_age23_current_b01_memory_048, embry_age23_current_b01_memory_020 (sha256 84dbd11ca373c6f7624b3292bc57863411a683a09f8e079fd4df99207f4d81c7)
+- R2: `age19_23:person:marketa_lawson` — members embry_age19_23_b01_memory_018, embry_age19_23_b01_memory_004, embry_age19_23_b01_memory_039 (sha256 0920dbbfad515d8adf5fb8bd36f0d68013eaeb3c0dc600eda28d6fb18a42562d)

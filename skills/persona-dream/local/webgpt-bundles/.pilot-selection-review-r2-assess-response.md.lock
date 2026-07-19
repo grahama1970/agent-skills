@@ -1,0 +1,9 @@
+{
+  "schema": "webgpt.submit_output_lock.v1",
+  "pid": 1672727,
+  "started_at": "2026-07-19T21:02:41Z",
+  "response_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-selection-review-r2-assess-response.md",
+  "raw_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-selection-review-r2-assess-response.raw.md",
+  "meta_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-selection-review-r2-assess-response.meta.json",
+  "receipt_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-selection-review-r2-assess-response.receipt.json"
+}

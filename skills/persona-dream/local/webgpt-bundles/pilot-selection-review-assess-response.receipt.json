@@ -1,0 +1,17 @@
+{
+  "schema": "surf.webgpt_submit_receipt.v1",
+  "status": "submitted_to_chatgpt",
+  "submitted_to_chatgpt": true,
+  "prepared_prompt_is_transport_proof": false,
+  "input": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-selection-review.submitted-assess.md",
+  "submitted_output": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-selection-review-assess-response.md.submitted.md",
+  "output": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-selection-review-assess-response.md",
+  "raw_output": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-selection-review-assess-response.raw.md",
+  "meta_output": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-selection-review-assess-response.meta.json",
+  "sentinel": "<<<WEBGPT_DONE:20260719T205246Z:6a92a171>>>",
+  "requested_tab_id": "837359230",
+  "requested_url": null,
+  "requested_model": null,
+  "requested_reasoning": "Pro",
+  "receipt_at": "2026-07-19T20:52:51Z"
+}

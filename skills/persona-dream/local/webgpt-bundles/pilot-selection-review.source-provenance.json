@@ -1,0 +1,12 @@
+{
+  "schema": "webgpt.source_provenance.v1",
+  "repository_url": "https://github.com/grahama1970/agent-skills.git",
+  "branch": "main",
+  "upstream": "origin/main",
+  "commit_sha": "6e8c7bcd9eefcbde33062ca9ad1ae057abb16ccb",
+  "source_paths": [
+    "skills/persona-dream/contracts/pilot_c_vs_f_frozen_protocol.v2.md",
+    "skills/persona-dream/scripts/pilot_select_root_sets.py"
+  ],
+  "proof_cwd": "."
+}

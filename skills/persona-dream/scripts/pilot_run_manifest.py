@@ -35,6 +35,8 @@ FROZEN_FILES = [
     "scripts/pilot_producer_blinding.py",
     "scripts/pilot_metrics.py",
     "scripts/pilot_m5_presentation.py",
+    "scripts/pilot_build_producer_inputs.py",
+    "scripts/pilot_result_receipt.py",
     "scripts/pilot_run_manifest.py",
     "scripts/phase13_self_interpretation.py",
     "scripts/phase14_tom_validation.py",
