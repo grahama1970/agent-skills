@@ -1,13 +1,13 @@
 {
   "schema": "surf.webgpt_heartbeat.v1",
-  "updated_at": "2026-07-17T16:41:17Z",
-  "submitted_at": "2026-07-17T16:26:14Z",
-  "last_browser_observation_at": "2026-07-17T16:41:17Z",
+  "updated_at": "2026-07-19T13:49:18Z",
+  "submitted_at": "2026-07-19T13:41:48Z",
+  "last_browser_observation_at": "2026-07-19T13:49:18Z",
   "phase": "completed",
   "page_state": "response_detected",
-  "last_artifact_written": "skills/persona-dream/review-bundles/identity-continuity-gate-repair-response.md.raw.md",
-  "next_expected_artifact": "skills/persona-dream/review-bundles/identity-continuity-gate-repair-response.md.meta.json",
+  "last_artifact_written": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/review-bundles/project_state_review_20260719-assess-response.raw.md",
+  "next_expected_artifact": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/review-bundles/project_state_review_20260719-assess-response.meta.json",
   "timeout_remaining_seconds": 0,
-  "sentinel": "<<<WEBGPT_DONE:20260717T162613Z:affa6203>>>",
+  "sentinel": "<<<WEBGPT_DONE:20260719T134147Z:d0349c97>>>",
   "prepared_prompt_is_transport_proof": false
 }
