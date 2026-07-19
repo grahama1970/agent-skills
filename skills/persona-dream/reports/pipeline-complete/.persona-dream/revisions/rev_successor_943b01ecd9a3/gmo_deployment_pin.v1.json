@@ -1,0 +1,13 @@
+{
+  "schema": "persona_dream.gmo_deployment_pin.v1",
+  "gmo_commit": "2a589e97dec535fa6526d054e29ef4e8d1899cdd",
+  "gmo_dirty_paths_at_pin": 450,
+  "deployed_via": "bind-mounted /home/graham/workspace/experiments/memory src/ into docker embry-memory, restarted 2026-07-19",
+  "pushed_branches": [
+    "persona-dream-gmo-integration@5d3866c",
+    "persona-dream-gmo-integration-livefix@2a589e9"
+  ],
+  "mainline_merge_owner": "human (GMO main diverged ahead/behind origin)",
+  "pinned_at": "2026-07-19",
+  "note": "All new canonical writes run against this deployed state until the human merges GMO mainline (ROADMAP P0.4)."
+}
