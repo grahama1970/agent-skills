@@ -21,12 +21,56 @@ TRACE_TYPES = (
 )
 TRACE_LABELS = {
     "speaker.verification.completed": "Horus verified",
+    "audio_source.qualification.completed": (
+        "Synthetic source qualified (identity not claimed)"
+    ),
     "memory.speaker_resolved": "Memory speaker resolved",
+    "memory.synthetic_source_restricted": (
+        "Memory restricted to non-personal scope"
+    ),
     "memory.intent_resolved": "Memory intent resolved",
     "memory.answer_resolved": "Memory answer resolved",
     "tau.persistent_tick.completed": "One bounded Tau tick completed",
     "tau.turn_plan.completed": "Tau turn plan completed",
 }
+
+
+def _speaker_evidence(
+    events: list[dict[str, Any]],
+    source_event_id: str,
+) -> tuple[dict[str, Any], str]:
+    """Exactly one speaker-evidence event: physical verification OR clone
+    source qualification. Clone evidence must explicitly disclaim identity.
+    When re-runs left several candidates, only the one caused by the accepted
+    final transcript counts."""
+    physical = [
+        e for e in events if e["type"] == "speaker.verification.completed"
+    ]
+    clone = [
+        e for e in events
+        if e["type"] == "audio_source.qualification.completed"
+    ]
+    if len(physical) > 1:
+        physical = [
+            e for e in physical if e.get("causation_id") == source_event_id
+        ]
+    if len(clone) > 1:
+        clone = [
+            e for e in clone if e.get("causation_id") == source_event_id
+        ]
+    if len(physical) == 1 and not clone:
+        return physical[0], "speaker.verification.completed"
+    if len(clone) == 1 and not physical:
+        payload = clone[0]["payload"]
+        if (
+            payload.get("speaker_identity_proven") is not False
+            or payload.get("allow_personal_memory") is not False
+        ):
+            raise RuntimeError("clone_source_evidence_identity_claimed")
+        return clone[0], "audio_source.qualification.completed"
+    raise RuntimeError(
+        f"speaker_evidence_invalid:physical={len(physical)}:clone={len(clone)}"
+    )
 
 
 def _canonical(value: Any) -> bytes:
@@ -108,8 +152,27 @@ def build_turn_chat_projection(
     events = [event for event in snapshot["events"] if event["turn_id"] == turn_id]
     if not events:
         raise LookupError("turn_not_found")
-    source = _one(events, "listener.final_transcript")
-    speaker = _one(events, "speaker.verification.completed")
+    # A retried capture leaves one journal chain per attempt; the campaign's
+    # turn-completed event names the accepted final transcript. Anchor on it
+    # when present; otherwise exactly one final transcript must exist.
+    campaign_turns = [
+        e for e in events if e["type"] == "audio_e2e.turn_completed"
+    ]
+    if len(campaign_turns) == 1:
+        accepted_id = campaign_turns[0]["payload"].get("source_event_id")
+        finals = [
+            e for e in events
+            if e["type"] == "listener.final_transcript"
+            and e["event_id"] == accepted_id
+        ]
+        if len(finals) != 1:
+            raise RuntimeError("accepted_final_transcript_missing")
+        source = finals[0]
+    else:
+        source = _one(events, "listener.final_transcript")
+    speaker, speaker_event_type = _speaker_evidence(
+        events, source["event_id"]
+    )
     tau_plan_event = _one(events, "tau.turn_plan.completed")
     tau_tick = _one(events, "tau.persistent_tick.completed")
     render = _one(events, "chatterbox.voice_render.completed")
@@ -126,8 +189,16 @@ def build_turn_chat_projection(
         memory_speaker = events_by_id[memory_intent["causation_id"]]
     except KeyError as exc:
         raise RuntimeError("tau_memory_causation_chain_incomplete") from exc
+    # The third ancestor is coupled to the speaker-evidence type: physical
+    # verification resolves a personal speaker; clone qualification restricts
+    # memory to non-personal scope instead. Any cross-pairing fails closed.
+    expected_speaker_link = (
+        "memory.speaker_resolved"
+        if speaker_event_type == "speaker.verification.completed"
+        else "memory.synthetic_source_restricted"
+    )
     expected_chain_types = (
-        (memory_speaker, "memory.speaker_resolved"),
+        (memory_speaker, expected_speaker_link),
         (memory_intent, "memory.intent_resolved"),
         (memory_answer, "memory.answer_resolved"),
     )
@@ -151,18 +222,21 @@ def build_turn_chat_projection(
 
     required_trace = []
     trace_events = {
-        "speaker.verification.completed": speaker,
-        "memory.speaker_resolved": memory_speaker,
+        speaker_event_type: speaker,
+        expected_speaker_link: memory_speaker,
         "memory.intent_resolved": memory_intent,
         "memory.answer_resolved": memory_answer,
         "tau.persistent_tick.completed": tau_tick,
         "tau.turn_plan.completed": tau_plan_event,
     }
-    for event_type in TRACE_TYPES:
+    trace_order = (speaker_event_type, expected_speaker_link) + TRACE_TYPES[2:]
+    for event_type in trace_order:
         event = trace_events[event_type]
         detail = event["receipt_hash"]
         if event_type == "speaker.verification.completed":
             detail = f"score {event['payload'].get('score', event['payload'].get('confidence', 'unknown'))}"
+        elif event_type == "audio_source.qualification.completed":
+            detail = "identity_not_claimed"
         required_trace.append({
             "id": event["event_id"],
             "event_id": event["event_id"],
