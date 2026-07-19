@@ -1,0 +1,9 @@
+{
+  "run": "R1-F",
+  "invalid": true,
+  "panel": "sb_001",
+  "findings": [
+    "FAIL_FACE_EMBEDDING_IDENTITY_MISMATCH: Embry: best cosine 0.2226 < threshold 0.4210 (metric identity mismatch)"
+  ],
+  "image_calls": 5
+}

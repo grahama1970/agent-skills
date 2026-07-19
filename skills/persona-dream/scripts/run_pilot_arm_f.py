@@ -96,8 +96,14 @@ def compose_prompt(panel: dict, other_person: str) -> str:
         "distant faces, no occluded faces, no contact sheet, no collage, no "
         "character-sheet layout, no text overlays.\n"
     )
+    reference_line = (
+        "Reference asset attached as a MANDATORY identity input (ACTUAL IMAGE "
+        "INPUT — view this file before generating and match Embry's face to "
+        f"it): Embry accepted contact sheet v3 (identity_reference): {EMBRY_SHEET}"
+    )
     lines = [
         header,
+        reference_line,
         f"PANEL {panel['panel_id']} ({panel.get('time_range', '')}): {panel.get('shot', '')}",
         f"SETTING: {panel.get('setting', '')}",
         f"ACTION: {panel.get('action', '')}",
@@ -114,8 +120,9 @@ def repair_delta(base: str, findings: list[str], attempt: int) -> str:
         f"\nSURGICAL REPAIR DELTA (attempt {attempt}) — previous render FAILED "
         "the face-embedding identity gate.\nBlocking findings:\n"
         + "\n".join(f"  - {f}" for f in findings)
-        + "\nMUST: Embry's face large, sharp, three-quarter view, foreground, "
-        "unoccluded, matching her established identity.\n"
+        + "\nMUST: view the attached Embry contact sheet v3 image file again "
+        "and match her face to it exactly — same woman, same features. Her "
+        "face large, sharp, three-quarter view, foreground, unoccluded.\n"
     )
 
 
