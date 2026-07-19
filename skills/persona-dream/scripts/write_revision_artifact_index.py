@@ -32,6 +32,18 @@ VOLATILE_QUALIFICATION_RECEIPTS = frozenset(
         # artifact index; indexing it would be circular, so it is treated the same
         # way as the qualification receipts above.
         "acceptance_rung_receipt.v1.json",
+        # The requalification supersession ledger/receipt are written by
+        # revision_supersession AFTER the index is (re)built and record the
+        # old->new index transition (their new_artifact_index_sha256 is the index
+        # itself, so indexing them is circular). On a REPEAT same-revision index
+        # rebuild they already exist on disk, so a naive re-index would fold in
+        # their pre-supersession hashes and then supersession's rewrite would make
+        # the index stale (BLOCKED_REVISION_HASH_MISMATCH at prepare). Excluding
+        # them — exactly like the qualification receipts above — keeps build_index
+        # idempotent across the second and later requalifications. They remain on
+        # disk and in the append-only ledger; only their hashes are omitted here.
+        "revision_requalification_supersession_ledger.v1.json",
+        "revision_requalification_supersession_receipt.v1.json",
     }
 )
 FRAME_NAME = re.compile(
