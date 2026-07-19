@@ -120,10 +120,12 @@ ask artifacts.
 - Use readiness language when proof is incomplete: `NOT_READY`,
   `NOT_ESTABLISHED`, `NEEDS_ATTENTION`, or `BLOCKED`, with the missing proof
   named explicitly.
-- Provider/model execution must route through the SciLLM container service
-  (`http://127.0.0.1:4001` by default) and requires explicit
-  `--allow-provider-calls`. Use `--local-fixture` only for Tau scheduler
-  sanity proof; report that it does not prove provider/model behavior.
+- Provider/model execution in generated Tau DAGs is Tau-owned: `$ask` emits
+  local adapter nodes and Tau dispatches their command specs; those adapters
+  call the `$scillm` container service (`http://127.0.0.1:4001` by default).
+  Real provider calls require explicit `--allow-provider-calls`. Use
+  `--local-fixture` only for Tau scheduler sanity proof; report that it does
+  not prove provider/model behavior.
 
 ## Mode Router
 

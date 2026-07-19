@@ -297,6 +297,8 @@ def run_tau_dag_bundle(
         "mocked": False,
         "live": True,
         "provider_live": bool(isinstance(receipt, dict) and receipt.get("provider_live") is True),
+        "execution_owner": "$tau",
+        "provider_transport": "$scillm",
         "command": command,
         "dag_run_returncode": dag_run["returncode"],
         "dag_run_stdout": dag_run["stdout"],
@@ -399,7 +401,7 @@ def probe_scillm_provider_gate(
     """Probe the SciLLM container and optionally make real model calls."""
 
     base = base_url.rstrip("/")
-    headers = {"Authorization": f"Bearer {api_key}", "X-Caller-Skill": "ask-tau-dag"}
+    headers = {"Authorization": f"Bearer {api_key}", "X-Caller-Skill": "ask-tau-dag-preflight"}
     checks: list[dict[str, Any]] = []
     with httpx.Client(timeout=timeout_seconds) as client:
         for path in ("/health/liveliness", "/v1/scillm/auth", "/v1/scillm/providers"):
@@ -451,6 +453,9 @@ def probe_scillm_provider_gate(
         "live": service_contacted,
         "provider_live": calls_ok,
         "scillm_base_url": base,
+        "gate_owner": "$ask",
+        "execution_owner": "$tau",
+        "provider_transport": "$scillm",
         "service_checks": checks,
         "model_calls": model_calls,
         "proof_scope": {
@@ -489,7 +494,7 @@ def _build_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> dict[str, Any
                     "model_policy",
                     "node_receipt",
                 ],
-                "model_policy": _model_policy(model),
+                "model_policy": _model_policy(model, base_url=input.scillm_base_url),
                 "prompt_contract": _solver_prompt_contract(input, model=model, index=index),
                 "context": {
                     "role": "concurrent_solver",
@@ -518,7 +523,7 @@ def _build_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> dict[str, Any
             "criteria": list(input.criteria),
             "requires_rationale": True,
         },
-        "model_policy": _model_policy(input.reviewer_model),
+        "model_policy": _model_policy(input.reviewer_model, base_url=input.scillm_base_url),
         "prompt_contract": _reviewer_prompt_contract(input),
         "context": {
             "role": "comparative_reviewer",
@@ -541,6 +546,7 @@ def _build_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> dict[str, Any
             "max_total_attempts": len(nodes),
             "max_parallel_nodes": min(4, max(1, len(solver_nodes))),
             "provider_command_timeout_seconds": 900,
+            "scillm_base_url": input.scillm_base_url,
         },
         "context": {
             "compiled_by": "$ask",
@@ -549,7 +555,9 @@ def _build_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> dict[str, Any
             "best_practices": "$best-practices-tau-dag",
             "request": input.request,
             "run_dir": str(run_dir),
-            "provider_route": "scillm_container_service",
+            "execution_owner": "$tau",
+            "provider_transport": "$scillm",
+            "provider_route": "tau_local_scillm_adapter",
             "execution_mode": "fixture" if input.local_fixture else "scillm",
         },
         "provider_sensitive": True,
@@ -631,7 +639,7 @@ def _write_worker(run_dir: Path) -> Path:
     return worker_path
 
 
-def _model_policy(model: str) -> dict[str, str]:
+def _model_policy(model: str, *, base_url: str = DEFAULT_SCILLM_BASE_URL) -> dict[str, str]:
     lower = model.lower()
     if lower.startswith("claude"):
         provider = "anthropic"
@@ -647,7 +655,9 @@ def _model_policy(model: str) -> dict[str, str]:
         "model": model,
         "auth": auth,
         "service": "scillm_container_service",
-        "base_url": DEFAULT_SCILLM_BASE_URL,
+        "base_url": base_url,
+        "execution_owner": "$tau",
+        "provider_transport": "$scillm",
     }
 
 
@@ -896,7 +906,9 @@ def _provider_receipt(args: argparse.Namespace, start: dict[str, Any]) -> dict[s
             "live": False,
             "provider_live": False,
             "model": args.model,
-            "route": "local-fixture-worker",
+            "route": "tau_local_fixture_adapter",
+            "execution_owner": "$tau",
+            "provider_transport": "$scillm",
         }
     prompt = _prompt(start)
     payload = {
@@ -909,7 +921,7 @@ def _provider_receipt(args: argparse.Namespace, start: dict[str, Any]) -> dict[s
         data=json.dumps(payload).encode("utf-8"),
         headers={
             "Authorization": f"Bearer {args.scillm_api_key}",
-            "X-Caller-Skill": "ask-tau-dag-worker",
+            "X-Caller-Skill": "tau",
             "Content-Type": "application/json",
         },
         method="POST",
@@ -925,7 +937,9 @@ def _provider_receipt(args: argparse.Namespace, start: dict[str, Any]) -> dict[s
             "live": True,
             "provider_live": True,
             "model": args.model,
-            "route": "scillm_container_service",
+            "route": "tau_local_scillm_adapter",
+            "execution_owner": "$tau",
+            "provider_transport": "$scillm",
             "response": json.loads(body),
         }
     except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, json.JSONDecodeError) as exc:
@@ -937,7 +951,9 @@ def _provider_receipt(args: argparse.Namespace, start: dict[str, Any]) -> dict[s
             "live": False,
             "provider_live": False,
             "model": args.model,
-            "route": "scillm_container_service",
+            "route": "tau_local_scillm_adapter",
+            "execution_owner": "$tau",
+            "provider_transport": "$scillm",
             "error": str(exc),
         }
 

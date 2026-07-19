@@ -43,8 +43,12 @@ def test_complete_tau_dag_bundle_emits_strict_tau_contract(tmp_path: Path) -> No
     assert dag["schema"] == "tau.dag_contract.v1"
     assert dag["provider_sensitive"] is True
     assert dag["requires_provider_route"] is True
+    assert dag["context"]["execution_owner"] == "$tau"
+    assert dag["context"]["provider_transport"] == "$scillm"
+    assert dag["context"]["provider_route"] == "tau_local_scillm_adapter"
     assert [node["id"] for node in dag["nodes"]] == ["solver-1", "solver-2", "reviewer"]
-    assert all("model_policy" in node for node in dag["nodes"])
+    assert all(node["model_policy"]["execution_owner"] == "$tau" for node in dag["nodes"])
+    assert all(node["model_policy"]["provider_transport"] == "$scillm" for node in dag["nodes"])
     assert all("prompt_contract" in node for node in dag["nodes"])
     assert Path(bundle["dag_path"]).is_file()
     assert Path(bundle["command_spec_root"], "solver-1", "tau-dispatch-command.json").is_file()
