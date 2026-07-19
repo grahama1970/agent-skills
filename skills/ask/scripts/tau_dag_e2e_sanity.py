@@ -73,7 +73,12 @@ def main() -> int:
         check=False,
     )
     payload = _json_or_error(completed.stdout)
-    summary = _summarize(completed, payload, output_root=output_root)
+    summary = _summarize(
+        completed,
+        payload,
+        output_root=output_root,
+        tau_project_root=args.tau_project_root,
+    )
     if args.json:
         print(json.dumps(summary, indent=2, sort_keys=True))
     else:
@@ -92,6 +97,7 @@ def _summarize(
     payload: dict[str, Any],
     *,
     output_root: Path,
+    tau_project_root: Path,
 ) -> dict[str, Any]:
     bundle = payload.get("bundle") if isinstance(payload.get("bundle"), dict) else {}
     execution = payload.get("execution") if isinstance(payload.get("execution"), dict) else {}
@@ -152,6 +158,15 @@ def _summarize(
             "viewer_link_available",
             _viewer_available(execution.get("viewer")),
             {"viewer": execution.get("viewer")},
+        ),
+        _check(
+            "source_checkouts_clean",
+            _git_source(ASK_DIR)["dirty"] is False
+            and _git_source(tau_project_root)["dirty"] is False,
+            {
+                "ask": _git_source(ASK_DIR),
+                "tau": _git_source(tau_project_root),
+            },
         ),
     ]
     if provider_gate.get("provider_live") is True:
@@ -241,6 +256,10 @@ def _summarize(
         "receipt_path": str(receipt_path) if receipt_path else None,
         "checks": checks,
         "provider_gate": provider_gate,
+        "source_refs": {
+            "ask": _git_source(ASK_DIR),
+            "tau": _git_source(tau_project_root),
+        },
         "stdout_tail": completed.stdout[-4000:],
         "stderr_tail": completed.stderr[-4000:],
     }
@@ -248,6 +267,27 @@ def _summarize(
 
 def _check(name: str, ok: bool, evidence: dict[str, Any]) -> dict[str, Any]:
     return {"name": name, "ok": ok, "evidence": evidence}
+
+
+def _git_source(path: Path) -> dict[str, Any]:
+    sha = subprocess.run(
+        ["git", "-C", str(path), "rev-parse", "HEAD"],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    status = subprocess.run(
+        ["git", "-C", str(path), "status", "--porcelain"],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    return {
+        "git_sha": sha.stdout.strip() if sha.returncode == 0 else None,
+        "dirty": status.returncode != 0 or bool(status.stdout.strip()),
+    }
 
 
 def _viewer_available(value: Any) -> bool:
