@@ -34,6 +34,46 @@ attempt; 7/7 continuity pairs). Receipt:
 No successor provider call has been made; the historical return below is
 superseded evidence from the frozen predecessor.
 
+Stage B addendum (2026-07-18, post-return gauntlet): SUPERSEDES the line above —
+the successor provider call HAS since been made and its return received (commit
+a47fc595). The live successor Kling return is
+`.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/provider_return/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/provider_return.mp4`
+(`sha256:59b9ff3155…`, 10.041667s, H.264 1280x720, 16,843,175 bytes, one submit,
+request_id 019f77f0-a75b-7012-8cc1-fbc24f58f388, request body
+`sha256:97688ec5…`, `generate_audio=false` so the source is silent).
+Post-return gauntlet outcomes on THIS successor return:
+- Step 35 frame contact sheet: PASS — 12 uniform-fallback frames (0.0-9.2s), 4x3
+  sheet `watch_gauntlet/59b9ff3155d6/frame_contact_sheet.png`; receipt
+  `watch_gauntlet/59b9ff3155d6/step35_frame_contact_sheet_receipt.v1.json`.
+- Watch gauntlet: DEGRADED — scene detection found no cuts (single-shot);
+  per-frame VLM entities unavailable (scillm gpt-5.5 chat auth rotated); the
+  silent pre-mux video has no transcript to recover the Kai line. Observation
+  packet `DEGRADED_WATCH_GAUNTLET_OBSERVATION`, validation
+  `FAIL_WATCH_GAUNTLET_VALIDATION`. Memory persisted with exact reread.
+- Step 36 post-Kling continuity: FAIL (fail-closed) — deterministic ArcFace
+  (InsightFace buffalo_l, CPU, threshold 0.421) computed LIVE vs
+  embry_contact_sheet_v3. The v3 identity-source fix matches strongly in the
+  opening identity window (t=0.0s cos 0.603, t=0.84s cos 0.612) and mid-clip
+  (t=2.5-5.9s cos 0.45-0.58) — an improvement over the prior
+  EMBRY_IDENTITY_DRIFT_00_03 baseline — but only 7/12 frames contain an
+  Embry-matching face at threshold (mean cosine 0.378); frames at t~6.7-9.2s
+  fall to 0.02-0.15. ArcFace alone cannot separate genuine drift from
+  pose/occlusion and the VLM adjudication layer is unavailable, so identity is
+  NOT certifiable. Kai reference sheet has no detectable face (unscoreable).
+  Receipt `…/provider_return/…97688ec5…/post_kling_continuity_review_receipt.v1.json`.
+- Steps 37-38 audio + final assembly: BLOCKED — the exact canonical Kai line
+  "If we paddle now, we're cutting across the lineup." (window 5.0-8.08s, beat
+  sb_003) was NEVER rendered (voice_handoff_plan render_status
+  PENDING_EXACT_LINE_RENDER); no chatterbox_turbo engine is installed and no
+  paid call is authorized; VLM lip-sync review unavailable. No mux produced.
+- Acceptance: BLOCKED (`post_return_acceptance_receipt.v1.json`). Human
+  subjective acceptance NOT claimed (remains the human's).
+- Canonical cognitive loop: NOT run — dry-run only
+  (`watch_gauntlet/59b9ff3155d6/cognitive_loop_dryrun/`): phase 12 DEGRADED,
+  phases 13/14 BLOCKED (no live gpt-5.5), phase 15 DRY_RUN_PERSISTENCE_PLAN,
+  `canonical_dream_memory_written: false`. No failed/unaccepted dream was
+  written to canonical memory.
+
 The frozen revision `rev_upstream_bf3b05d47fb8` crossed the live Kling boundary
 once for repaired request
 `sha256:ca90ba9fd76a1e2d682b326e65b18f5e8168d81bf829cb9e8c6a3db6779c840f`.

@@ -1,9 +1,38 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-18 (qualification gate scoped by record identity — requalification unblocked, acceptance rung v5 activated) by agent
+**Last updated:** 2026-07-18 (Stage B post-return gauntlet on the live successor return — acceptance BLOCKED fail-closed, canonical cognitive loop NOT run) by agent
 **Status:** Active development
 
 ## Current Understanding
+
+- 2026-07-18 (Stage B post-return gauntlet on the LIVE successor return — ACCEPTANCE
+  BLOCKED, fail-closed; canonical cognitive loop NOT run): the successor Kling return
+  (`sha256:59b9ff31…`, 10.041667s, one submit, request `sha256:97688ec5…`, silent) was
+  received (commit `a47fc595`) and put through the post-return gauntlet on THIS return.
+  Results: Step 35 frame contact sheet PASS (12 uniform frames, single-shot clip);
+  Watch gauntlet DEGRADED (per-frame VLM + transcript unavailable — scillm gpt-5.5 chat
+  auth ROTATED; silent pre-mux video); Step 36 post-Kling continuity FAIL — the live
+  deterministic ArcFace read (buffalo_l, CPU, threshold 0.421) vs `embry_contact_sheet_v3`
+  shows the identity-source fix matching STRONGLY in the opening identity window (cos
+  0.60-0.61, an improvement over the prior `EMBRY_IDENTITY_DRIFT_00_03`) but clearing only
+  7/12 frames overall (mean 0.378), with the final third at cos 0.02-0.15; ArcFace alone
+  cannot separate drift from pose and the VLM adjudication layer is down, so identity is
+  NOT certifiable; Kai reference sheet has no detectable face (unscoreable). Steps 37-38
+  audio+assembly BLOCKED (the exact Kai line was never rendered; no chatterbox engine; no
+  paid authorization; VLM lip-sync unavailable). Acceptance BLOCKED; canonical cognitive
+  loop NOT run — dry-run only, `canonical_dream_memory_written: false`. LESSON: two
+  independent hard dependencies gate this stage in the current environment — a live VLM
+  (scillm gpt-5.5 chat, auth rotated) for continuity adjudication + phases 13/14, and a
+  voice render engine (chatterbox_turbo, absent) for the never-rendered exact line — and
+  the fail-closed contract correctly refused to fake acceptance or write a canonical dream.
+  The deterministic ArcFace identity lane DID run live and gave a genuine, mixed verdict:
+  the v3 identity source helps materially where Embry is clearly the foreground subject but
+  does not clear the whole-clip metric gate. Receipts under
+  `.../rev_successor_943b01ecd9a3/` (`post_return_acceptance_receipt.v1.json`,
+  `watch_gauntlet/59b9ff3155d6/step35_frame_contact_sheet_receipt.v1.json` +
+  `step36_arcface_identity_summary.json` + `step36_embry_presence_refine.json` +
+  `cognitive_loop_dryrun/`, and `phase_11_submit_return/provider_return/…97688ec5…/`
+  `post_kling_continuity_review_receipt.v1.json` + `step37_38_audio_final_assembly_receipt.v1.json`).
 
 - 2026-07-18 (qualification gate scoping — DECISIVE LESSON: exact-match gates must
   select by record TYPE, not keyspace): the step-38 requalification blocker was NOT

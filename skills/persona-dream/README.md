@@ -44,6 +44,27 @@ publication for the regenerated frames, and a new hash-bound paid authorization
 lip sync, Watch-based self-analysis, synthetic dream persistence, or changed
 later behavior is proven.
 
+**Stage B update (2026-07-18, supersedes the paragraph above):** the successor
+provider call has since been made and its return received (commit a47fc595) —
+the live successor Kling return `provider_return.mp4` (`sha256:59b9ff31…`,
+10.041667s, one submit, request `sha256:97688ec5…`, silent/`generate_audio=false`).
+The post-return gauntlet was run on THIS return with results **fail-closed and
+blocked**, not accepted: Step 35 frame contact sheet **PASS** (12 frames);
+Watch gauntlet **DEGRADED** (single-shot, no scene cuts; per-frame VLM entities
+and transcript unavailable — scillm gpt-5.5 chat auth rotated); Step 36
+post-Kling continuity **FAIL** — a live deterministic ArcFace read
+(InsightFace buffalo_l, CPU, threshold 0.421) vs `embry_contact_sheet_v3` shows
+the identity-source fix matching strongly in the opening identity window (cos
+0.60-0.61) but clearing only 7/12 frames overall (mean 0.378), with the final
+third at cos 0.02-0.15; ArcFace alone cannot separate drift from pose and the
+VLM adjudication layer is down, so identity is **not certifiable**; Steps 37-38
+audio + final assembly **BLOCKED** (the exact Kai line was never rendered, no
+chatterbox engine, no paid authorization, VLM lip-sync unavailable). **Acceptance
+is BLOCKED**; the canonical cognitive loop was **NOT run** — dry-run only,
+`canonical_dream_memory_written: false`; no failed/unaccepted dream was written
+to canonical memory. Human subjective acceptance remains the human's and is not
+claimed.
+
 **Jump to:**
 [Quick Start](#quick-start) -
 [Research](#research) -
