@@ -16,9 +16,8 @@ from validate_dream_packet import validate_dream_packet
 
 
 ROOT = Path(__file__).resolve().parents[1]
-REPO = ROOT.parents[1]
-DREAMER_AGENT = REPO / "agents/dreamer/AGENTS.md"
-MEMORY_AGENT = REPO / "agents/memory/AGENTS.md"
+DREAMER_AGENT = ROOT / "agents/dreamer/AGENTS.md"
+MEMORY_AGENT = ROOT / "agents/memory/AGENTS.md"
 
 
 def _now_iso() -> str:

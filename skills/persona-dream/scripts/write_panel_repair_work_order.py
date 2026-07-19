@@ -18,10 +18,9 @@ from validate_storyboard_panel_receipt import validate_storyboard_panel_receipt
 
 
 ROOT = Path(__file__).resolve().parents[1]
-REPO = ROOT.parents[1]
-PANEL_REPAIR_AGENT = REPO / "agents/persona-dream-panel-repair-gate/AGENTS.md"
-PANEL_CREATOR_AGENT = REPO / "agents/panel-creator/AGENTS.md"
-PANEL_REVIEWER_AGENT = REPO / "agents/panel-reviewer/AGENTS.md"
+PANEL_REPAIR_AGENT = ROOT / "agents/persona-dream-panel-repair-gate/AGENTS.md"
+PANEL_CREATOR_AGENT = ROOT / "agents/panel-creator/AGENTS.md"
+PANEL_REVIEWER_AGENT = ROOT / "agents/panel-reviewer/AGENTS.md"
 
 
 def _read_json(path: Path) -> Any:

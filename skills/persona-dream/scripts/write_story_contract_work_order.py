@@ -16,8 +16,7 @@ from validate_story_contract import validate_story_contract
 
 
 ROOT = Path(__file__).resolve().parents[1]
-REPO = ROOT.parents[1]
-DREAMER_AGENT = REPO / "agents/dreamer/AGENTS.md"
+DREAMER_AGENT = ROOT / "agents/dreamer/AGENTS.md"
 
 
 def _now_iso() -> str:
