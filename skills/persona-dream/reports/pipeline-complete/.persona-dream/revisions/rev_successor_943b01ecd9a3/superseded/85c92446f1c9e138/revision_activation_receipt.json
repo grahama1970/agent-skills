@@ -1,6 +1,6 @@
 {
-  "activated_at": "2026-07-19T00:42:34.623663+00:00",
-  "activation_transaction_id": "activation-a55f900137069fa9945ee3d66ab0aa5a",
+  "activated_at": "2026-07-18T22:34:58.085656+00:00",
+  "activation_transaction_id": "activation-6af927d42079c11827d27b1b998f247d",
   "actual_provider_call_attempts": 0,
   "claims": {
     "does_not_prove": [
@@ -19,15 +19,11 @@
     "argv": [
       "scripts/activate_revision_qualification.py",
       "--run-root",
-      "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete",
+      "reports/pipeline-complete",
       "--revision-id",
       "rev_successor_943b01ecd9a3",
       "--source-commit",
       "bb767ed7ebd511eae2d74c7c3440e0ca56356a8d",
-      "--memory-url",
-      "http://127.0.0.1:8601",
-      "--collection",
-      "project_knowledge",
       "--supersede"
     ],
     "cwd": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream",
@@ -39,12 +35,12 @@
   },
   "gate": "revision-activation-and-repair-queue-convergence",
   "hash_validation": {
-    "artifact_count": 735,
-    "artifact_hash_manifest_sha256": "sha256:9494619fc6824bd50256b04275c3239f80da9ea7bdc384ccae62c8c0957cf7cf",
+    "artifact_count": 728,
+    "artifact_hash_manifest_sha256": "sha256:b0e2ddd68178497721a33a5eb9e297e10d75cd58d7ea7146ee30857eb584cb7b",
     "escape_count": 0,
-    "matched_count": 735,
+    "matched_count": 728,
     "mismatch_count": 0,
-    "recomputed_count": 735,
+    "recomputed_count": 728,
     "symlink_count": 0
   },
   "live": true,
@@ -52,7 +48,7 @@
   "local_files": {
     "artifact_index": {
       "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/revision_artifact_index.json",
-      "sha256": "sha256:b46556350d22eb5cbeebd3504d84db19054effe2c6af6c767b35e7e99bc8bfdd"
+      "sha256": "sha256:85c92446f1c9e138b58b96d0e02de8c88657907a3fc7bf2d2f6774cdf6b42720"
     },
     "local_active_pointer": {
       "relative_path": ".persona-dream/state/active_revision.json",
@@ -60,7 +56,7 @@
     },
     "prepare_receipt": {
       "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/revision_memory_prepare_receipt.json",
-      "sha256": "sha256:0419ebc036e94fa7e6c56abe509900c9a7e9ac3acb8b7779884b52584fade1f6"
+      "sha256": "sha256:0d536c73db29c9c4409fa9b39deb26ecc7ebd6bd3dcd01dba78b6e5419a303c8"
     },
     "queue_item": {
       "relative_path": ".persona-dream/repair/tau-queue/repair-3140532dca3381b1.json",
@@ -68,7 +64,7 @@
     },
     "queue_terminal_event": {
       "relative_path": ".persona-dream/repair/queue-events/repair-3140532dca3381b1/000001-completed.json",
-      "sha256": "sha256:c1f1a656545da7980e1a6709913d9036a0225be7f3ad3070aa171829ace7156c"
+      "sha256": "sha256:89a6a4fb6361d698d82935c1ce04459c290f624fabb32a059c21b1304a88be5e"
     },
     "revision_manifest": {
       "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/revision_manifest.json",
@@ -76,7 +72,7 @@
     },
     "verify_receipt": {
       "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/revision_memory_verify_receipt.json",
-      "sha256": "sha256:c74674d2b5b4d158817bc909d97cbeb2e2fe1d015b41040502c4173e20e38f56"
+      "sha256": "sha256:6b3075a10078d4cf46eaf12a5e0acb9dc8368426b509d13e54cad15522fcdbd5"
     },
     "work_order": {
       "relative_path": ".persona-dream/repair/work-orders/repair-3140532dca3381b1.json",
@@ -94,7 +90,7 @@
   "memory": {
     "active_pointer_key": "pd_active_bb0360b6e2870481e787ce7bfd5a184504a0697bd083b681",
     "active_revision_id": "rev_successor_943b01ecd9a3",
-    "document_contract_sha256": "sha256:fabe005ec595364abcdb8d937ffee8b6d4414fcc87715257ad06711b1f39b0a2",
+    "document_contract_sha256": "sha256:5966b6026428dbb102649d556f5cb56eb00f8d34da8989e9c69484dc08d09cb1",
     "embedding_model": "jinaai/jina-embeddings-v5-omni-small-retrieval",
     "embedding_version": "v5-omni-small",
     "exact_reread_count": 1,
@@ -107,7 +103,7 @@
       "list_after": {
         "endpoint": "/list",
         "request_payload_sha256": "sha256:cfc1612dd6ca98bac9559c36e9ae121378173f148fa0b85c21d201187d2d7ad2",
-        "response_sha256": "sha256:0c9333f7b119fa1ee1a5c6eb5bb21d0418b97986a59d3012f1855abceaee34ab",
+        "response_sha256": "sha256:d48dcb5337685cc47f70870917dbb7761b1287ec99e2f4786d76b360ee76d2cd",
         "returned_counts": {
           "collection": "project_knowledge",
           "count": 1,
@@ -118,7 +114,7 @@
       "list_before": {
         "endpoint": "/list",
         "request_payload_sha256": "sha256:cfc1612dd6ca98bac9559c36e9ae121378173f148fa0b85c21d201187d2d7ad2",
-        "response_sha256": "sha256:d48dcb5337685cc47f70870917dbb7761b1287ec99e2f4786d76b360ee76d2cd",
+        "response_sha256": "sha256:e943d4460ec53bbbdedfff601a97e43b636c938ba5d55df3805c6f6bd0a55744",
         "returned_counts": {
           "collection": "project_knowledge",
           "count": 1,
@@ -128,15 +124,15 @@
       },
       "upsert": {
         "endpoint": "/upsert",
-        "request_payload_sha256": "sha256:10e8e856431ea9283546b8897c115f459f464c83d53932ef3f9860dfc2002931",
-        "response_sha256": "sha256:7f3dceb4c3ff891218925c912dc45abe7ece53eff9f351d751dbf9456dc9af7e",
+        "request_payload_sha256": "sha256:73a243cb639330f65a06dadcdfd8f698267bf946c624a2340a9ce188a3e74f67",
+        "response_sha256": "sha256:4f206c74c76239d474119effb862b0972d3842c34a39c6ff5ae21a94709946a9",
         "returned_counts": {
           "collection": "project_knowledge",
           "errors": [],
           "inserted": 0,
           "total": 1,
           "updated": 1,
-          "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_project_knowledge_20260719T004234628691Z_40334_132518844040896.jsonl"
+          "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_project_knowledge_20260718T223458091483Z_40334_132518611257024.jsonl"
         },
         "status_code": 200
       }
@@ -161,7 +157,7 @@
   "receipt_chain": {
     "dense_matching_count": 11,
     "exact_record_count": 27,
-    "max_dense": 0.9140074,
+    "max_dense": 0.9132476,
     "phase_record_count": 10,
     "prepare_schema": "persona_dream.revision_memory_prepare_receipt.v1",
     "prepare_status": "PASS_MEMORY_REVISION_PREPARED",

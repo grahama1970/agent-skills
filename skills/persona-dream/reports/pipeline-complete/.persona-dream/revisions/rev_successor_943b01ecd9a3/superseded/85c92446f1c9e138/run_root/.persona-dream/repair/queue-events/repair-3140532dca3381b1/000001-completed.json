@@ -1,7 +1,7 @@
 {
-  "activation_transaction_id": "activation-a55f900137069fa9945ee3d66ab0aa5a",
+  "activation_transaction_id": "activation-6af927d42079c11827d27b1b998f247d",
   "actual_provider_call_attempts": 0,
-  "artifact_index_sha256": "sha256:b46556350d22eb5cbeebd3504d84db19054effe2c6af6c767b35e7e99bc8bfdd",
+  "artifact_index_sha256": "sha256:85c92446f1c9e138b58b96d0e02de8c88657907a3fc7bf2d2f6774cdf6b42720",
   "event_type": "REPAIR_COMPLETED",
   "historical_queue_status": "QUEUED",
   "idea_id": "pd_idea_45a9d20d629b4e08863a9618b5f83982",
@@ -11,9 +11,9 @@
   "local_active_pointer_sha256": "sha256:cbb9b787caa0c925650809a45b4385852e1de308247f2d720eabfbc019bc88b5",
   "memory_active_pointer_key": "pd_active_bb0360b6e2870481e787ce7bfd5a184504a0697bd083b681",
   "mocked": false,
-  "occurred_at": "2026-07-19T00:42:34.623663+00:00",
+  "occurred_at": "2026-07-18T22:34:58.085656+00:00",
   "paid_call_authorized": false,
-  "prepare_receipt_sha256": "sha256:0419ebc036e94fa7e6c56abe509900c9a7e9ac3acb8b7779884b52584fade1f6",
+  "prepare_receipt_sha256": "sha256:0d536c73db29c9c4409fa9b39deb26ecc7ebd6bd3dcd01dba78b6e5419a303c8",
   "provider_live": false,
   "provider_ready": false,
   "queue_item_sha256": "sha256:1e71232331dda497e99afd1aee4e3b38a0ffe26d054e322fe1ba7695a5bc34f6",
@@ -25,7 +25,7 @@
   "status": "COMPLETED",
   "submitted": false,
   "target_revision_id": "rev_successor_943b01ecd9a3",
-  "verify_receipt_sha256": "sha256:c74674d2b5b4d158817bc909d97cbeb2e2fe1d015b41040502c4173e20e38f56",
+  "verify_receipt_sha256": "sha256:6b3075a10078d4cf46eaf12a5e0acb9dc8368426b509d13e54cad15522fcdbd5",
   "work_order_id": "repair-3140532dca3381b1",
   "work_order_sha256": "sha256:3658fb7a49616826b748641231fa460fb3d144af9885792d8d0b083bf993bab9"
 }

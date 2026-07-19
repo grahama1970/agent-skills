@@ -1,0 +1,109 @@
+{
+  "schema": "persona_dream.phase11_audio_strategy_cycle_blocker_receipt.v1",
+  "status": "BLOCKED_PHASE11_VOICED_RUN_AUDIO_STRATEGY_CYCLE",
+  "gate_code": "BLOCKED_VOICED_RUN_AUDIO_STRATEGY_NOT_DECLARED",
+  "run_id": "pipeline-complete",
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "activation_transaction_id": "activation-a55f900137069fa9945ee3d66ab0aa5a",
+  "observed_at_note": "Deterministic, clock-free; see memory record observed_at.",
+
+  "summary": "The prior blocker (BLOCKED_PHASE11_MEDIA_LOCK_HASH) is RESOLVED. The phase_08 media lock was regenerated to lock the accepted, identity-certified successor frames; the revision was requalified to PASS_ACTIVE_CONSISTENT and acceptance_rung_receipt.v6.json = PASS_ACCEPTANCE_RUNG was emitted. run.sh bootstrap-phase11-payload-binding NO LONGER fails on the media-lock hash: it now advances past that gate and fails closed at the NEXT gate, BLOCKED_VOICED_RUN_AUDIO_STRATEGY_NOT_DECLARED. This voiced-run audio-strategy gate is a genuinely NEW blocker that the prior media-binding blocker receipt did not map. Reaching the single paid submit is blocked by a circular dependency in the voiced-run phase-11 machinery. NO provider request was compiled and NO paid call was made (actual_provider_call_attempts=0).",
+
+  "resolved_prior_blocker": {
+    "prior_receipt": "phase11_provider_media_binding_blocker_receipt.v1.json",
+    "prior_gate_code": "BLOCKED_PHASE11_MEDIA_LOCK_HASH",
+    "resolution": "phase_08_media_lock/storyboard_media_lock_manifest.json regenerated to lock the 8 index-bound accepted frames; index == media lock; requalified; rung v6 emitted.",
+    "proof": "run.sh bootstrap-phase11-payload-binding --publication-commit 571ff2bb... now returns BLOCKED_VOICED_RUN_AUDIO_STRATEGY_NOT_DECLARED (audio gate), NOT BLOCKED_PHASE11_MEDIA_LOCK_HASH. The media-lock hash gate is crossed."
+  },
+
+  "completed_work": {
+    "media_lock_regeneration": {
+      "new_media_lock_manifest_sha256": "sha256:8f3df1ec5e05245fff2ca0bb9c97806236a9ee81e7e3621c7467534f108e4814",
+      "superseded_old_media_lock_sha256": "sha256:ca2251f04a35402676ff20dca14009d614b8b7b7cb3ac4d2c036c7f4b6825efd",
+      "superseded_retained_at": "phase_08_media_lock/superseded/ca2251f04a354026/storyboard_media_lock_manifest.json",
+      "method": "Derived directly from revision_artifact_index.json's 8 accepted-frame bindings (asset_id -> relative_path + sha256), hashing each frame on disk to confirm observed == declared == index. Follows the convert_accepted_storyboard_to_kling.py build_media_lock schema and helpers; the ONLY departure from convert is the frame-dimension check (see frame_dimension_finding).",
+      "status": "PASS_MEDIA_LOCK",
+      "index_media_lock_consistency": "index.artifacts.media_lock.sha256 == 8f3df1ec (the new manifest); all 8 frame assets sha256 == index accepted-frame sha256."
+    },
+    "frame_dimension_finding": {
+      "note": "The accepted, identity-certified successor frames (rung-v5 authority) are NOT the predecessor-canonical 1536x864 and are NOT uniform: gpt-image-2 returned sb_001/002/003 start+end at 1672x941 and sb_004 start+end at 1536x864 (all 16:9). This heterogeneity was not surfaced by the prior blocker.",
+      "in_scope_decision": "PROCEEDED (locked the accepted frames at their true dimensions). Rationale: (1) the frames are the certified accepted authority (identity 8/8 PASS, rung v5); (2) fal-ai/kling-video image-to-video accepts arbitrary input image resolution and outputs 720p regardless; (3) NO gate on the authorized path checks dimensions -- the 1536x864 invariant lives ONLY in the phase-07/08 dry-run machinery (convert_accepted_storyboard_to_kling.py and validate_kling_scene_packet.py), NEITHER of which is on the requalification or phase-11 canonical-live-request path (both were confirmed to have zero dimension/width/height references). Dimensions recorded truthfully in the media lock; convert's shared 1536x864 invariant was NOT weakened.",
+      "accepted_frame_dimensions": {
+        "sb_001.start_frame": "1672x941", "sb_001.end_frame": "1672x941",
+        "sb_002.start_frame": "1672x941", "sb_002.end_frame": "1672x941",
+        "sb_003.start_frame": "1672x941", "sb_003.end_frame": "1672x941 (lane C waiver frame 9f8fb8c9)",
+        "sb_004.start_frame": "1536x864", "sb_004.end_frame": "1536x864"
+      }
+    },
+    "requalification": {
+      "machinery_fix": "write_revision_artifact_index.py: added revision_requalification_supersession_ledger.v1.json and revision_requalification_supersession_receipt.v1.json to VOLATILE_QUALIFICATION_RECEIPTS. These are written by revision_supersession AFTER the index is built and record the old->new index transition (their new_artifact_index_sha256 is the index itself). The prior (first) requalification only succeeded because they did not pre-exist at rebuild time. On this SECOND requalification they already existed, so a naive re-index folded in their pre-supersession hashes and supersession's rewrite then made the index stale (BLOCKED_REVISION_HASH_MISMATCH at prepare). Excluding them -- exactly like the prepare/verify/activation receipts already excluded -- makes build_index idempotent across repeat requalifications. They remain on disk and in the append-only ledger; only their hashes are omitted from the index.",
+      "sequence": "rebuild_revision_artifact_bindings (85c92446 -> b4655635) -> revision_supersession (PASS_REQUALIFICATION_SUPERSEDED, old 85c92446 -> new b4655635) -> prepare (PASS_MEMORY_REVISION_PREPARED) -> verify (PASS_MEMORY_REVISION_VERIFIED) -> activate --supersede (PASS_ACTIVE_CONSISTENT).",
+      "new_artifact_index_sha256": "sha256:b46556350d22eb5cbeebd3504d84db19054effe2c6af6c767b35e7e99bc8bfdd",
+      "old_artifact_index_sha256": "sha256:85c92446f1c9e138b58b96d0e02de8c88657907a3fc7bf2d2f6774cdf6b42720",
+      "activation_status": "PASS_ACTIVE_CONSISTENT",
+      "activation_transaction_id": "activation-a55f900137069fa9945ee3d66ab0aa5a",
+      "memory_url": "http://127.0.0.1:8601",
+      "collection": "project_knowledge",
+      "gpu_note": "The Memory embedding sidecar (jina-embeddings-v5 at 127.0.0.1:8603, Docker) intermittently returned CUDA OutOfMemory (GPU 0 saturated to ~90-130 MiB free of 24 GiB by unrelated active services: LLM inference ~6.4 GiB, Chatterbox TTS ~5.9 GiB, RealtimeSTT, an API server). prepare/verify/activate were retried until a transient GPU window opened (prepare succeeded at ~754 MiB free); no gate was weakened."
+    },
+    "acceptance_rung_v6": {
+      "path": "acceptance_rung_receipt.v6.json",
+      "status": "PASS_ACCEPTANCE_RUNG",
+      "sha256": "sha256:0efc5671da43f5d03c2d987b629946c2727ae50fe0fa5f414323b0f9f5d7695e",
+      "supersedes": "acceptance_rung_receipt.v5.json",
+      "cited_artifact_index_sha256": "sha256:b46556350d22eb5cbeebd3504d84db19054effe2c6af6c767b35e7e99bc8bfdd",
+      "coherent_media_lock_citation": "The cited index b4655635 binds the coherent media lock 8f3df1ec (index.artifacts.media_lock.sha256), so the coherent media lock is transitively cited by the rung.",
+      "note": "Emitter hardcodes writing acceptance_rung_receipt.v1.json (no auto-versioning); the fresh PASS content was snapshotted to v6.json and the historical v1.json was restored from git."
+    }
+  },
+
+  "current_blocker": {
+    "gate_code": "BLOCKED_VOICED_RUN_AUDIO_STRATEGY_NOT_DECLARED",
+    "classification": "NEAR_SILENT_VOICED",
+    "requires_audible_delivery": true,
+    "spoken_line": {"speaker": "Kai", "start_s": 5.0, "end_s": 8.08, "text": "If we paddle now, we're cutting across the lineup.", "storyboard_beat": "sb_003"},
+    "root_cause": "The run is voiced (one spoken Kai line in sb_003), so audio_strategy_gate.assess_and_block_kling_request requires a valid phase_11_submit_return/preflight/voice_handoff_plan.json BEFORE build_payload_binding will produce the payload binding. This audio-strategy gate was ADDED after the frozen predecessor's original phase-11 compile (gate introduced in commit c870698c 2026-07-17 14:15; predecessor phase11_live_request.v1.json compiled at 09:56 in commit d6d869c3, before the gate existed), so the predecessor never faced it and the prior media-binding blocker receipt did not map it.",
+    "circular_dependency": [
+      "run.sh bootstrap-phase11-payload-binding -> build_payload_binding -> _audio_strategy_gate REQUIRES a present+valid voice_handoff_plan.json (voice_handoff_present must be true).",
+      "scripts/write_voice_handoff_plan.py REQUIRES phase_11_submit_return/canonical/phase11_live_request.v1.json to exist (it reads approval_bindings.request_body_sha256 from it). Confirmed: the ONLY missing input is that compiled canonical; transcript, kai_voice_audition.json, shot_bible.json, and the ambient WAV are all present, and NO live voice render is needed (the voice binding reuses the existing kai_voice_audition.json).",
+      "scripts/compile_phase11_canonical_live_request.py REQUIRES the payload binding (--candidate-binding, the bootstrap output) to compile the canonical request.",
+      "capture_phase11_provider_source_snapshot.py and every other downstream phase-11 step also require the payload binding first (confirmed: returns BLOCKED_PHASE11_PAYLOAD_BINDING_MISSING).",
+      "=> voice_handoff_plan needs the compiled request; the compiled request needs the payload binding; the payload binding needs the voice_handoff_plan. No sanctioned linear order can start for a voiced run."
+    ],
+    "no_gpu_render_required": "Breaking the cycle needs only the DETERMINISTIC request_body_sha256 (the request body is deterministic given the media binding URLs + prompts + generate_audio=false). No Chatterbox voice render is required; the voice binding reuses phase_05_voices/kai_voice_audition.json."
+  },
+
+  "why_not_forced": "The only ways to break the cycle are (a) a phase-11 ordering machinery change (e.g., let write_voice_handoff_plan accept a deterministically-precomputed request_body_sha256, or let the payload binding be seeded before the compiled canonical for voiced runs), or (b) fabricating a transient stub phase11_live_request.v1.json to seed a fixpoint (compute the deterministic request_body_sha256 -> stub canonical -> write_voice_handoff_plan -> bootstrap binding -> real compile overwrites the stub -> regenerate the plan/binding -> validate). Option (b) fabricates a provider-request artifact to satisfy a gate on the IRREVERSIBLE paid-submit path. Per 'factual blocked outcome beats forced pass', neither the machinery change nor the fabricated-stub fixpoint was performed unilaterally on the paid boundary. The certified state (index b4655635, rung v6, activation) is untouched by this decision; phase-11 request-scoped artifacts are not in the hash-bound index.",
+
+  "next_required_action": "Human/upstream decision on the voiced-run phase-11 ordering. Recommended: a small machinery fix so voiced runs can seed the payload binding for a NEAR_SILENT_VOICED/post_mux strategy without a pre-existing compiled canonical -- e.g., add a --request-body-sha256 option to write_voice_handoff_plan (bound later by validate against the compiled canonical), or a compile pre-pass that emits the deterministic request_body_sha256 for the voice plan. Then the linear chain proceeds: write_voice_handoff_plan -> bootstrap-phase11-payload-binding (audio gate passes) -> capture-provider-source-snapshot -> capture-public-media-evidence -> compile-phase11-canonical-live-request -> validate -> phase11-fal-canary-preflight -> write-phase11-approval-receipts (verbatim operator text + request_body_sha256 + max spend $10 + attempt budget 1) -> phase11-fal-canary-execute (the single paid submit).",
+
+  "operator_authorization_recorded_verbatim": {
+    "note": "Recorded per instruction. The media-lock-regen + requalification + publication-readiness portions are CONSUMED (media lock regenerated, requalified to PASS_ACTIVE_CONSISTENT, rung v6 emitted, frames confirmed public at commit 571ff2bb). The PAID-CALL portion remains UNCONSUMED: no publication authorization receipt, no paid-call authorization receipt, and no submit were produced because the request could not be compiled (voiced-run audio-strategy cycle).",
+    "approver": "Graham",
+    "date": "2026-07-18",
+    "verbatim": "proceed with the remaining chain: [followed by explicit confirmation of the four-step plan including] 2. Publication authorization (yours): provider-accessible public URLs for the accepted frames. 3. Paid-call authorization (yours): hash-bound, one submit. 4. Submit -> poll -> download -> then the return goes straight through the validated /watch gauntlet... and please don't stop on obvious next steps"
+  },
+
+  "publication_readiness": {
+    "mechanism": "GitHub raw URLs: https://raw.githubusercontent.com/grahama1970/agent-skills/<commit>/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/<revision-relative-path> (replicating the predecessor's ca90ba9f media-hosting).",
+    "frames_public": "The 8 accepted frames + character references are committed and present in the pushed public commit 571ff2bb (== origin/main at session start); they resolve as raw URLs. Publication of the accepted frames is effectively already done; only the paid-call-path artifacts remain blocked."
+  },
+
+  "budget_guard": {"max_spend_usd_guard": 10, "predecessor_single_call_estimated_cost_usd": 0.84, "estimated_cost_note": "Not reached; blocked before compile.", "attempt_budget": 1, "attempts_consumed": 0},
+
+  "claims": {
+    "proves": [
+      "The stale phase_08 media lock was regenerated to lock the accepted, identity-certified successor frames; index == media lock for all 8 frames.",
+      "The revision was requalified to PASS_ACTIVE_CONSISTENT (index b4655635) and acceptance_rung_receipt.v6.json = PASS_ACCEPTANCE_RUNG.",
+      "The prior BLOCKED_PHASE11_MEDIA_LOCK_HASH blocker is resolved (bootstrap advances past it).",
+      "No provider request was compiled and no paid fal/Kling call was made under this authorization (0 attempts)."
+    ],
+    "does_not_prove": [
+      "Kling readiness for the successor revision",
+      "A voice_handoff_plan for the successor",
+      "A compiled phase-11 live request or provider approval receipts",
+      "A successor provider submit, return, ffprobe, or frame sheet"
+    ]
+  },
+  "mocked": false, "live": true, "provider_live": false, "paid_call_authorized": false, "submitted": false, "actual_provider_call_attempts": 0, "live_submit_ready": false
+}

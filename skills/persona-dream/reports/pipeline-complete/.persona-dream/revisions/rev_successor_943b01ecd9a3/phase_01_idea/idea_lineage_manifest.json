@@ -6,7 +6,7 @@
   },
   "idea_id": "pd_idea_45a9d20d629b4e08863a9618b5f83982",
   "idea_sha256": "sha256:45a9d20d629b4e08863a9618b5f83982a9eb55bbf52cbd1de5deac09015baf9b",
-  "lineage_chain_sha256": "sha256:f436b6e9824b43d9896e9c7c3d7757b923587414c90c3dcab0e0a3510e7b9e67",
+  "lineage_chain_sha256": "sha256:437cb7c6bc96f80549e4a002a388d2144d143e85263260f2bccb763aa29d6326",
   "live_submit_ready": false,
   "phase_binding_count": 10,
   "phase_bindings": {
@@ -46,19 +46,19 @@
       "sha256": "sha256:fa75458abaec6d38bb769236a07fdd1a67c73663761821a942b25bc21b1cf8af"
     },
     "08": {
-      "binding_sha256": "sha256:dfd26d84729ebc77e625f61bcefd7d87f60c3cadcc09162683636fa69fb10f6f",
+      "binding_sha256": "sha256:6724cf8190b202dd49c16b8795c52389fe409b0adb167059147c14f5d076b0a2",
       "relative_path": "phase_08_media_lock/idea_lineage_binding.json",
-      "sha256": "sha256:db0febad6e8d8b32a87fc2d0a7780480018d276596aa9ed6121480d601b85277"
+      "sha256": "sha256:5cb3398d24cab382913a60ecf04f74869c39394b2d1792654de6282640fbf50c"
     },
     "09": {
-      "binding_sha256": "sha256:562e9e7c616398bc859aa8b39a5d8ba83355b016a4787fa2565de3a362a2a0c5",
+      "binding_sha256": "sha256:66ccf198b74dfba3c75c1df7da3728d5bb9fe95765f01dac6f80524768e4ca79",
       "relative_path": "phase_09_video_provider/idea_lineage_binding.json",
-      "sha256": "sha256:845712824595c280ab2c2c93cff1501b42c315e8c454c1a52e97d7bfba1fdf42"
+      "sha256": "sha256:dd552af9cf077a3ac92329b9403caa79d1cb73851d3cd12f8a0f74b6311af9a3"
     },
     "10": {
-      "binding_sha256": "sha256:97e47d4daf7a342373130d7da863099b334b320abdb8756c4716b7ff0ffba352",
+      "binding_sha256": "sha256:bd03e61c0717fbb1e37eacb87d21e51e3f2259ec515433932d77a1ed9b46df34",
       "relative_path": "phase_10_provider_contract/idea_lineage_binding.json",
-      "sha256": "sha256:52e2342c0fe2eba95f81e0f355a9025291fdc84ee20659f9194bcf6ee51216c1"
+      "sha256": "sha256:b604617673ee5476c94cd116ab49f4f1a8cb36d4a8d0c7a63237fddbdef6fe57"
     }
   },
   "provider_live": false,

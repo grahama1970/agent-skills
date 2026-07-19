@@ -1,6 +1,6 @@
 {
   "actual_provider_call_attempts": 0,
-  "artifact_count": 728,
+  "artifact_count": 735,
   "artifacts": {
     "contact_sheet_gate_receipt": {
       "consumer_contract": null,
@@ -103,7 +103,7 @@
         "optional_evidence"
       ],
       "schema": null,
-      "sha256": "sha256:44221d84377e1aed5c809107b89451414583de7bf53c5ad7ac7e24e5a0c40210",
+      "sha256": "sha256:110f63da1f9a18061e2c7135b3d5349247e87fe940859ae9544efabaee5b5823",
       "size_bytes": 3633
     },
     "media_lock": {
@@ -116,8 +116,8 @@
         "required_evidence"
       ],
       "schema": null,
-      "sha256": "sha256:ca2251f04a35402676ff20dca14009d614b8b7b7cb3ac4d2c036c7f4b6825efd",
-      "size_bytes": 6906
+      "sha256": "sha256:8f3df1ec5e05245fff2ca0bb9c97806236a9ee81e7e3621c7467534f108e4814",
+      "size_bytes": 8772
     },
     "panel_distillation_contract": {
       "consumer_contract": null,
@@ -6262,8 +6262,34 @@
         "optional_evidence"
       ],
       "schema": null,
-      "sha256": "sha256:db0febad6e8d8b32a87fc2d0a7780480018d276596aa9ed6121480d601b85277",
+      "sha256": "sha256:5cb3398d24cab382913a60ecf04f74869c39394b2d1792654de6282640fbf50c",
       "size_bytes": 959
+    },
+    "phase08.phase.08.media.lock.superseded.ca2251f04a354026.storyboard.media.lock.manifest.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "08",
+      "relative_path": "phase_08_media_lock/superseded/ca2251f04a354026/storyboard_media_lock_manifest.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:ca2251f04a35402676ff20dca14009d614b8b7b7cb3ac4d2c036c7f4b6825efd",
+      "size_bytes": 6906
+    },
+    "phase08.phase.08.media.lock.superseded.ca2251f04a354026.superseded.marker.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "08",
+      "relative_path": "phase_08_media_lock/superseded/ca2251f04a354026/SUPERSEDED.marker.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:6f0b2b5a8c7e499ad36d10a0693298577dd6dccdc355ddf97608b144c730d02b",
+      "size_bytes": 539
     },
     "phase09.phase.09.video.provider.idea.lineage.binding.json": {
       "consumer_contract": null,
@@ -6275,7 +6301,7 @@
         "optional_evidence"
       ],
       "schema": null,
-      "sha256": "sha256:845712824595c280ab2c2c93cff1501b42c315e8c454c1a52e97d7bfba1fdf42",
+      "sha256": "sha256:dd552af9cf077a3ac92329b9403caa79d1cb73851d3cd12f8a0f74b6311af9a3",
       "size_bytes": 1141
     },
     "phase09.phase.09.video.provider.kling.scene.packet.json": {
@@ -6392,7 +6418,7 @@
         "optional_evidence"
       ],
       "schema": null,
-      "sha256": "sha256:52e2342c0fe2eba95f81e0f355a9025291fdc84ee20659f9194bcf6ee51216c1",
+      "sha256": "sha256:b604617673ee5476c94cd116ab49f4f1a8cb36d4a8d0c7a63237fddbdef6fe57",
       "size_bytes": 1216
     },
     "phase10.phase.10.provider.contract.manifest.json": {
@@ -6512,6 +6538,32 @@
       "sha256": "sha256:af9aa54c1a3fbf9b558c81e3db7dd3fbc43e8c70a3f7b6c37faaec8c0ff6cc4c",
       "size_bytes": 4247
     },
+    "phase11.phase.11.submit.return.preflight.phase11.payload.binding.bootstrap.blocker.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/phase11_payload_binding_bootstrap_blocker.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:22cf086d7103cb3ffbc96931c1573a6f44375f63ed0264842dd3a4d88e043f32",
+      "size_bytes": 581
+    },
+    "phase11.phase.11.submit.return.preflight.phase11.provider.media.binding.blocker.receipt.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": "11",
+      "relative_path": "phase_11_submit_return/preflight/phase11_provider_media_binding_blocker_receipt.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:14f61a0084ec73f64343206cc8b3d9bbf54ff82275072dad9189264708d0a680",
+      "size_bytes": 8206
+    },
     "provider_final_gate": {
       "consumer_contract": null,
       "kind": "json",
@@ -6589,6 +6641,19 @@
       "schema": null,
       "sha256": "sha256:336487c33aaf0a458b9cc644b21cb37b36f1984caf6d1bb0cebb1237177f65ee",
       "size_bytes": 5928
+    },
+    "revision.acceptance.rung.receipt.v5.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "acceptance_rung_receipt.v5.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:65b08ab056be4f7c124fbcfb60c8d9fc42436df908d25054fd1ea9b0580ad474",
+      "size_bytes": 8207
     },
     "revision.cognitive.loop.991c311f365f.cognitive.loop.memory.governance.receipt.json": {
       "consumer_contract": null,
@@ -6823,6 +6888,19 @@
       "schema": null,
       "sha256": "sha256:17c973e6d3d9f12b449b66b3f5ef3ef909c1c334402fd4d9412ecf08ece23424",
       "size_bytes": 97320
+    },
+    "revision.qualification.gate.scoping.fix.receipt.v1.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "qualification_gate_scoping_fix_receipt.v1.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:a57b2a60c12794176a3d2099eae5f94754fd5c77592533dd27180416f32fe417",
+      "size_bytes": 4433
     },
     "revision.reviewer.calibration.case.receipts.known.bad.sb.001.start.sb.001.start.frame.identity.continuity.review.json": {
       "consumer_contract": null,
@@ -8838,6 +8916,19 @@
       "schema": null,
       "sha256": "sha256:07d0eaf3d3bb304a9d4347a9de7ffbccae927c08d21143be5ea405b68f8c6b90",
       "size_bytes": 6957
+    },
+    "revision.superseded.06496a6af982b965.run.root.persona.dream.repair.queue.events.repair.3140532dca3381b1.000001.completed.json": {
+      "consumer_contract": null,
+      "kind": "json",
+      "media_type": "application/json",
+      "phase_id": null,
+      "relative_path": "superseded/06496a6af982b965/run_root/.persona-dream/repair/queue-events/repair-3140532dca3381b1/000001-completed.json",
+      "roles": [
+        "optional_evidence"
+      ],
+      "schema": null,
+      "sha256": "sha256:7364dd1a596aad4309a00b245260c5b26488d51ad8d4997a678dd8f957ebdc62",
+      "size_bytes": 1666
     },
     "revision.upstream.contract.invalidation.ledger.v1.json": {
       "consumer_contract": null,

@@ -41,6 +41,48 @@
         "superseded_pointer_key": "pd_active_bb0360b6e2870481e787ce7bfd5a184504a0697bd083b681__superseded__06496a6af982b965"
       },
       "superseded_at": "2026-07-18T22:34:32.401258+00:00"
+    },
+    {
+      "archived_files": [
+        {
+          "archived_relative_path": "superseded/85c92446f1c9e138/revision_memory_prepare_receipt.json",
+          "artifact": "prepare_receipt",
+          "bound_artifact_index_sha256": "sha256:85c92446f1c9e138b58b96d0e02de8c88657907a3fc7bf2d2f6774cdf6b42720",
+          "canonical_relative_path": "revision_memory_prepare_receipt.json",
+          "old_sha256": "sha256:0d536c73db29c9c4409fa9b39deb26ecc7ebd6bd3dcd01dba78b6e5419a303c8"
+        },
+        {
+          "archived_relative_path": "superseded/85c92446f1c9e138/revision_memory_verify_receipt.json",
+          "artifact": "verify_receipt",
+          "bound_artifact_index_sha256": "sha256:85c92446f1c9e138b58b96d0e02de8c88657907a3fc7bf2d2f6774cdf6b42720",
+          "canonical_relative_path": "revision_memory_verify_receipt.json",
+          "old_sha256": "sha256:6b3075a10078d4cf46eaf12a5e0acb9dc8368426b509d13e54cad15522fcdbd5"
+        },
+        {
+          "archived_relative_path": "superseded/85c92446f1c9e138/revision_activation_receipt.json",
+          "artifact": "activation_receipt",
+          "bound_artifact_index_sha256": "sha256:85c92446f1c9e138b58b96d0e02de8c88657907a3fc7bf2d2f6774cdf6b42720",
+          "canonical_relative_path": "revision_activation_receipt.json",
+          "old_sha256": "sha256:a4c84e7e46103e3ac1bb243c78038e6a8624a5a226a69feaa8f1b5eb88c41c7e"
+        },
+        {
+          "archived_relative_path": "superseded/85c92446f1c9e138/run_root/.persona-dream/repair/queue-events/repair-3140532dca3381b1/000001-completed.json",
+          "artifact": "queue_terminal_event",
+          "bound_artifact_index_sha256": "sha256:85c92446f1c9e138b58b96d0e02de8c88657907a3fc7bf2d2f6774cdf6b42720",
+          "canonical_relative_path": ".persona-dream/repair/queue-events/repair-3140532dca3381b1/000001-completed.json",
+          "old_sha256": "sha256:89a6a4fb6361d698d82935c1ce04459c290f624fabb32a059c21b1304a88be5e"
+        }
+      ],
+      "new_artifact_index_sha256": "sha256:b46556350d22eb5cbeebd3504d84db19054effe2c6af6c767b35e7e99bc8bfdd",
+      "old_artifact_index_sha256": "sha256:85c92446f1c9e138b58b96d0e02de8c88657907a3fc7bf2d2f6774cdf6b42720",
+      "rule": "old records retained under superseded/ and as a SUPERSEDED Memory snapshot; never reused, never deleted",
+      "source_commit": "bb767ed7ebd511eae2d74c7c3440e0ca56356a8d",
+      "superseded_active_pointer": {
+        "old_activation_transaction_id": "activation-6af927d42079c11827d27b1b998f247d",
+        "old_artifact_index_sha256": "sha256:85c92446f1c9e138b58b96d0e02de8c88657907a3fc7bf2d2f6774cdf6b42720",
+        "superseded_pointer_key": "pd_active_bb0360b6e2870481e787ce7bfd5a184504a0697bd083b681__superseded__85c92446f1c9e138"
+      },
+      "superseded_at": "2026-07-19T00:33:14.827939+00:00"
     }
   ],
   "revision_id": "rev_successor_943b01ecd9a3",

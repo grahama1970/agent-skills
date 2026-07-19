@@ -1,0 +1,7 @@
+{
+  "old_manifest_sha256": "sha256:ca2251f04a35402676ff20dca14009d614b8b7b7cb3ac4d2c036c7f4b6825efd",
+  "reason": "Stale predecessor-identical media lock locked predecessor frames (bbd7a631...) at wrong-worktree agent-skills paths; superseded by the accepted successor-frame lock derived from revision_artifact_index.json.",
+  "retained_relative_path": "phase_08_media_lock/superseded/ca2251f04a354026/storyboard_media_lock_manifest.json",
+  "schema": "persona_dream.media_lock_supersession_marker.v1",
+  "status": "SUPERSEDED_RETAINED"
+}

@@ -2,32 +2,32 @@
   "actual_provider_call_attempts": 0,
   "archived_files": [
     {
-      "archived_relative_path": "superseded/06496a6af982b965/revision_memory_prepare_receipt.json",
+      "archived_relative_path": "superseded/85c92446f1c9e138/revision_memory_prepare_receipt.json",
       "artifact": "prepare_receipt",
-      "bound_artifact_index_sha256": "sha256:06496a6af982b9650dc3684e56961ba99c5573a627181e6e48e95315da4f7198",
+      "bound_artifact_index_sha256": "sha256:85c92446f1c9e138b58b96d0e02de8c88657907a3fc7bf2d2f6774cdf6b42720",
       "canonical_relative_path": "revision_memory_prepare_receipt.json",
-      "old_sha256": "sha256:2558550849d6c79d4c6e2a5269fbc07fb91581a2c1af89be20e84c13417194c4"
+      "old_sha256": "sha256:0d536c73db29c9c4409fa9b39deb26ecc7ebd6bd3dcd01dba78b6e5419a303c8"
     },
     {
-      "archived_relative_path": "superseded/06496a6af982b965/revision_memory_verify_receipt.json",
+      "archived_relative_path": "superseded/85c92446f1c9e138/revision_memory_verify_receipt.json",
       "artifact": "verify_receipt",
-      "bound_artifact_index_sha256": "sha256:06496a6af982b9650dc3684e56961ba99c5573a627181e6e48e95315da4f7198",
+      "bound_artifact_index_sha256": "sha256:85c92446f1c9e138b58b96d0e02de8c88657907a3fc7bf2d2f6774cdf6b42720",
       "canonical_relative_path": "revision_memory_verify_receipt.json",
-      "old_sha256": "sha256:5a742f0258431a8f5ee7f0c7d6f37a58aa07346ef9722211c1bdccdf98767af2"
+      "old_sha256": "sha256:6b3075a10078d4cf46eaf12a5e0acb9dc8368426b509d13e54cad15522fcdbd5"
     },
     {
-      "archived_relative_path": "superseded/06496a6af982b965/revision_activation_receipt.json",
+      "archived_relative_path": "superseded/85c92446f1c9e138/revision_activation_receipt.json",
       "artifact": "activation_receipt",
-      "bound_artifact_index_sha256": "sha256:06496a6af982b9650dc3684e56961ba99c5573a627181e6e48e95315da4f7198",
+      "bound_artifact_index_sha256": "sha256:85c92446f1c9e138b58b96d0e02de8c88657907a3fc7bf2d2f6774cdf6b42720",
       "canonical_relative_path": "revision_activation_receipt.json",
-      "old_sha256": "sha256:0faa6e00b5031b1768fec23481c97a388a79a306f883a635e02b53158bbfa6ed"
+      "old_sha256": "sha256:a4c84e7e46103e3ac1bb243c78038e6a8624a5a226a69feaa8f1b5eb88c41c7e"
     },
     {
-      "archived_relative_path": "superseded/06496a6af982b965/run_root/.persona-dream/repair/queue-events/repair-3140532dca3381b1/000001-completed.json",
+      "archived_relative_path": "superseded/85c92446f1c9e138/run_root/.persona-dream/repair/queue-events/repair-3140532dca3381b1/000001-completed.json",
       "artifact": "queue_terminal_event",
-      "bound_artifact_index_sha256": "sha256:06496a6af982b9650dc3684e56961ba99c5573a627181e6e48e95315da4f7198",
+      "bound_artifact_index_sha256": "sha256:85c92446f1c9e138b58b96d0e02de8c88657907a3fc7bf2d2f6774cdf6b42720",
       "canonical_relative_path": ".persona-dream/repair/queue-events/repair-3140532dca3381b1/000001-completed.json",
-      "old_sha256": "sha256:7364dd1a596aad4309a00b245260c5b26488d51ad8d4997a678dd8f957ebdc62"
+      "old_sha256": "sha256:89a6a4fb6361d698d82935c1ce04459c290f624fabb32a059c21b1304a88be5e"
     }
   ],
   "claims": {
@@ -41,8 +41,8 @@
       "an old->new artifact-index supersession entry was appended to the append-only ledger"
     ]
   },
-  "new_artifact_index_sha256": "sha256:85c92446f1c9e138b58b96d0e02de8c88657907a3fc7bf2d2f6774cdf6b42720",
-  "old_artifact_index_sha256": "sha256:06496a6af982b9650dc3684e56961ba99c5573a627181e6e48e95315da4f7198",
+  "new_artifact_index_sha256": "sha256:b46556350d22eb5cbeebd3504d84db19054effe2c6af6c767b35e7e99bc8bfdd",
+  "old_artifact_index_sha256": "sha256:85c92446f1c9e138b58b96d0e02de8c88657907a3fc7bf2d2f6774cdf6b42720",
   "paid_call_authorized": false,
   "provider_live": false,
   "revision_id": "rev_successor_943b01ecd9a3",
@@ -53,11 +53,11 @@
   "status": "PASS_REQUALIFICATION_SUPERSEDED",
   "submitted": false,
   "superseded_active_pointer": {
-    "old_activation_transaction_id": "activation-001e23de17333489a4f9a79b44669c37",
-    "old_artifact_index_sha256": "sha256:06496a6af982b9650dc3684e56961ba99c5573a627181e6e48e95315da4f7198",
-    "superseded_pointer_key": "pd_active_bb0360b6e2870481e787ce7bfd5a184504a0697bd083b681__superseded__06496a6af982b965"
+    "old_activation_transaction_id": "activation-6af927d42079c11827d27b1b998f247d",
+    "old_artifact_index_sha256": "sha256:85c92446f1c9e138b58b96d0e02de8c88657907a3fc7bf2d2f6774cdf6b42720",
+    "superseded_pointer_key": "pd_active_bb0360b6e2870481e787ce7bfd5a184504a0697bd083b681__superseded__85c92446f1c9e138"
   },
-  "superseded_at": "2026-07-18T22:34:32.401258+00:00",
+  "superseded_at": "2026-07-19T00:33:14.827939+00:00",
   "supersession_ledger": "revision_requalification_supersession_ledger.v1.json",
-  "supersession_ledger_sha256": "sha256:3f5d949b490ec68baf37d419716dedce11383aaf86e313080521124e245c4367"
+  "supersession_ledger_sha256": "sha256:ad32017de8c84fabe865407fbf56e9e076baf8ab8aac35407802d784986cd11a"
 }

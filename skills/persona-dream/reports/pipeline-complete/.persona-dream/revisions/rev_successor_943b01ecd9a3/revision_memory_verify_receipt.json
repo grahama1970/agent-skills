@@ -1,7 +1,7 @@
 {
   "actual_provider_call_attempts": 0,
   "artifact_index_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/revision_artifact_index.json",
-  "artifact_index_sha256": "sha256:85c92446f1c9e138b58b96d0e02de8c88657907a3fc7bf2d2f6774cdf6b42720",
+  "artifact_index_sha256": "sha256:b46556350d22eb5cbeebd3504d84db19054effe2c6af6c767b35e7e99bc8bfdd",
   "claims": {
     "does_not_prove": [
       "Memory active-revision compare-and-swap",
@@ -21,11 +21,15 @@
     "argv": [
       "scripts/prepare_revision_qualification.py",
       "--run-root",
-      "reports/pipeline-complete",
+      "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete",
       "--revision-id",
       "rev_successor_943b01ecd9a3",
       "--source-commit",
       "bb767ed7ebd511eae2d74c7c3440e0ca56356a8d",
+      "--memory-url",
+      "http://127.0.0.1:8601",
+      "--collection",
+      "project_knowledge",
       "verify"
     ],
     "cwd": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream",
@@ -36,12 +40,12 @@
     "source_commit": "bb767ed7ebd511eae2d74c7c3440e0ca56356a8d"
   },
   "hash_validation": {
-    "artifact_count": 728,
-    "artifact_hash_manifest_sha256": "sha256:b0e2ddd68178497721a33a5eb9e297e10d75cd58d7ea7146ee30857eb584cb7b",
+    "artifact_count": 735,
+    "artifact_hash_manifest_sha256": "sha256:9494619fc6824bd50256b04275c3239f80da9ea7bdc384ccae62c8c0957cf7cf",
     "escape_count": 0,
-    "matched_count": 728,
+    "matched_count": 735,
     "mismatch_count": 0,
-    "recomputed_count": 728,
+    "recomputed_count": 735,
     "symlink_count": 0
   },
   "lifecycle_state": "VERIFIED",
@@ -49,7 +53,7 @@
   "memory_url": "http://127.0.0.1:8601",
   "mocked": false,
   "paid_call_authorized": false,
-  "prepare_receipt_sha256": "sha256:0d536c73db29c9c4409fa9b39deb26ecc7ebd6bd3dcd01dba78b6e5419a303c8",
+  "prepare_receipt_sha256": "sha256:0419ebc036e94fa7e6c56abe509900c9a7e9ac3acb8b7779884b52584fade1f6",
   "provider_live": false,
   "records": {
     "after_counts": {
@@ -134,22 +138,22 @@
   "requests": {
     "finalize_revision": {
       "endpoint": "/upsert",
-      "request_payload_sha256": "sha256:14aaadf62d146e1d4dd72367ee49c05c3e4641b153236a8e6d3466e0c034d117",
-      "response_sha256": "sha256:24a65d1f3ef471215831c28bbad4fe1841990925f1d2d166c27e28771eaefa2d",
+      "request_payload_sha256": "sha256:482d19b52e72166ebcbde58847bb4134392f098a9c2deef966cf538715c3d0fd",
+      "response_sha256": "sha256:82eedd27cf6a7455b5bad71cda72f55ce7d773d4c50157b6879a29e178635b8b",
       "returned_counts": {
         "collection": "project_knowledge",
         "errors": [],
         "inserted": 0,
         "total": 1,
         "updated": 1,
-        "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_project_knowledge_20260718T223451877471Z_40334_132518611257024.jsonl"
+        "writeahead_path": "artifacts/memory_upsert_writeahead/upsert_project_knowledge_20260719T004222571572Z_40334_132518844040896.jsonl"
       },
       "status_code": 200
     },
     "list_after_verify": {
       "endpoint": "/list",
       "request_payload_sha256": "sha256:a446fbd5cc9e4bce864366094f6073d3b8f3854f2327aacf28dc09f7b60c6bbc",
-      "response_sha256": "sha256:da82b2d840f3066ad82a01a4f0497a596383d17ace7a70b7721963d106aac399",
+      "response_sha256": "sha256:c60313be86c2e33ccd7e448fa4d4b3e65b43f91427b3d3d3aaa9756642a311f6",
       "returned_counts": {
         "collection": "project_knowledge",
         "count": 42,
@@ -160,7 +164,7 @@
     "list_before_verify": {
       "endpoint": "/list",
       "request_payload_sha256": "sha256:a446fbd5cc9e4bce864366094f6073d3b8f3854f2327aacf28dc09f7b60c6bbc",
-      "response_sha256": "sha256:d14adbd7c75ec05b204e77fe65cf2b7aadd7325e82dddfef754328d60b37d232",
+      "response_sha256": "sha256:fa3b3f476967e07f19919916f6e9373a379c408d9daa3b4f260de34b30c9671a",
       "returned_counts": {
         "collection": "project_knowledge",
         "count": 42,
@@ -171,7 +175,7 @@
     "recall": {
       "endpoint": "/recall",
       "request_payload_sha256": "sha256:68cf23b66e4edd3e7677ec725b180cae591c3a6850e751a9716622e39e9ee686",
-      "response_sha256": "sha256:98c8645e17d83e816f16dc565bc7076582411580c4aa3f36b572f87c5122e685",
+      "response_sha256": "sha256:7c216fb724fea1cbe4b2625c6b4799c8eb2020eef9da3c14ff20068bd1464215",
       "returned_counts": {
         "errors": []
       },
@@ -205,7 +209,7 @@
       "dense_matching_count": 11,
       "evidence": [
         {
-          "dense": 0.9132476,
+          "dense": 0.9140074,
           "key": "pd_rev_7237cc02fe2461796c8688a0e393ec60dbe06f0f78d94f97",
           "phase_id": null,
           "record_type": "revision"
@@ -274,7 +278,7 @@
       "human_idea_revision_dense_count": 1,
       "item_count": 42,
       "matching_identity_count": 11,
-      "max_dense": 0.9132476,
+      "max_dense": 0.9140074,
       "question": "Which immutable Persona Dream revision stores the explicit human idea 'Embry and Kai both faked a sick day at their summer jobs to go surfing on the Big Island on a Wednesday in June of 2024 \u2014 Kona Coast, Kahalu\u02bbu Bay, summer swell patterns, lava rock reefs, local surf etiquette.' for run pipeline-complete revision rev_successor_943b01ecd9a3, and which Phase 01 through Phase 10 records are bound to that exact idea?"
     }
   },
@@ -282,5 +286,5 @@
   "source_revision_id": "rev_upstream_bf3b05d47fb8",
   "status": "PASS_MEMORY_REVISION_VERIFIED",
   "submitted": false,
-  "verified_at": "2026-07-18T22:34:52.081946+00:00"
+  "verified_at": "2026-07-19T00:42:22.773634+00:00"
 }

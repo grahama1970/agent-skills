@@ -1,0 +1,164 @@
+{
+  "actual_provider_call_attempts": 0,
+  "claims": {
+    "does_not_prove": [
+      "Kling readiness",
+      "provider media publication for the regenerated frames",
+      "paid authorization",
+      "a Kling video return",
+      "visible-speaker lip sync",
+      "final acceptance of the immutable goal"
+    ],
+    "proves": [
+      "the successor revision rev_successor_943b01ecd9a3 is active and consistent",
+      "Memory prepare/verify and the 42-step pipeline bundle exactly reread",
+      "all eight Phase 07 storyboard frames PASS actual-pixel identity review, 7/7 continuity pairs PASS",
+      "the rebuilt artifact index makes the Phase C frames the active accepted Phase 07 evidence"
+    ]
+  },
+  "live": true,
+  "memory_exact_reread": {
+    "pipeline_step_collection": "persona_dream_pipeline_steps",
+    "pipeline_step_exact_reread_count": 42,
+    "pipeline_step_memory_receipt": {
+      "relative_path": ".persona-dream/state/pipeline_step_memory_receipt_rev_successor_943b01ecd9a3.json",
+      "sha256": "sha256:e2c563ac67a9436686e6cb83d0ccb2f06a5ed3bcb4444a71da7ed8d6db20cc34"
+    },
+    "pipeline_step_memory_status": "PASS_EXACT_REREAD_42_OF_42",
+    "prepare_receipt": {
+      "relative_path": "revision_memory_prepare_receipt.json",
+      "sha256": "sha256:0419ebc036e94fa7e6c56abe509900c9a7e9ac3acb8b7779884b52584fade1f6"
+    },
+    "prepare_status": "PASS_MEMORY_REVISION_PREPARED",
+    "verify_receipt": {
+      "relative_path": "revision_memory_verify_receipt.json",
+      "sha256": "sha256:c74674d2b5b4d158817bc909d97cbeb2e2fe1d015b41040502c4173e20e38f56"
+    },
+    "verify_status": "PASS_MEMORY_REVISION_VERIFIED"
+  },
+  "mocked": false,
+  "observed_at": "2026-07-19T00:44:05.296058+00:00",
+  "paid_call_authorized": false,
+  "provider_live": false,
+  "provider_ready": false,
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "rung": "pre_paid_call_boundary",
+  "schema": "persona_dream.acceptance_rung_receipt.v1",
+  "source_revision_id": "rev_upstream_bf3b05d47fb8",
+  "status": "PASS_ACCEPTANCE_RUNG",
+  "storyboard_frames_actual_pixel_review": {
+    "accepted_frame_artifact_ids": [
+      "sb_001.end_frame",
+      "sb_001.start_frame",
+      "sb_002.end_frame",
+      "sb_002.start_frame",
+      "sb_003.end_frame",
+      "sb_003.start_frame",
+      "sb_004.end_frame",
+      "sb_004.start_frame"
+    ],
+    "continuity_pairs_pass": 7,
+    "continuity_pairs_total": 7,
+    "frames": [
+      {
+        "frame_id": "sb_001_start_frame",
+        "image_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_001_start_frame.png",
+        "image_sha256": "sha256:135564cad9c40718322e9f13d347b6829ecbd9ab2197cbddc70262deb72e227d",
+        "panel_id": "sb_001",
+        "review_receipt_relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_001_start_frame_identity_continuity_review.json",
+        "review_receipt_sha256": "sha256:73d3bc7ebc880a92a834958213b6ef582d9ac5d66ad5eaaa83730bb30c6f8051",
+        "review_status": "PASS"
+      },
+      {
+        "frame_id": "sb_001_end_frame",
+        "image_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_001_end_frame.png",
+        "image_sha256": "sha256:2b379eacb90166faa051aafe1c576687cb9e8b4fb5f757c9c649a8cc9c7fc842",
+        "panel_id": "sb_001",
+        "review_receipt_relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_001_end_frame_identity_continuity_review.json",
+        "review_receipt_sha256": "sha256:3d963e2f446157840f5ed130b709dafb58648dd2f2c47fb114f6ecbc48beac4d",
+        "review_status": "PASS"
+      },
+      {
+        "frame_id": "sb_002_start_frame",
+        "image_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_002_start_frame.png",
+        "image_sha256": "sha256:aebcbd907c999d64ba4e7effd4f9f95e75e8e094e6deee605f5fb6f5a2e4606b",
+        "panel_id": "sb_002",
+        "review_receipt_relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_002_start_frame_identity_continuity_review.json",
+        "review_receipt_sha256": "sha256:4e4b365c47090210c235cc312139273ba5e37a3e94d1adeac5ae1e68c3827d09",
+        "review_status": "PASS"
+      },
+      {
+        "frame_id": "sb_002_end_frame",
+        "image_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_002_end_frame.png",
+        "image_sha256": "sha256:b25f61dc7bb32ce35d018e3b7214310880795516914e53bc86cd6d0812b97bd6",
+        "panel_id": "sb_002",
+        "review_receipt_relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_002_end_frame_identity_continuity_review.json",
+        "review_receipt_sha256": "sha256:ddeb627477b0bd7c98eb403eac8e21350c0b81bc63e45016daebbe5b05cd6ea6",
+        "review_status": "PASS"
+      },
+      {
+        "frame_id": "sb_003_start_frame",
+        "image_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_003_start_frame.png",
+        "image_sha256": "sha256:9046059c87f35a6be56f166415979a25bfb72f9c51293a1434eb0f7ac8a1118c",
+        "panel_id": "sb_003",
+        "review_receipt_relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_003_start_frame_identity_continuity_review.json",
+        "review_receipt_sha256": "sha256:3aa89426d3a2583a307c212d4d8aa68d4593f86c2169e86655394b2f6f24f23c",
+        "review_status": "PASS"
+      },
+      {
+        "frame_id": "sb_003_end_frame",
+        "image_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_003_end_frame.png",
+        "image_sha256": "sha256:1b03c8f9c9148874dc63a49a0f2658391c59fee1c89759c25bc034f30b9f7d56",
+        "panel_id": "sb_003",
+        "review_receipt_relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_003_end_frame_identity_continuity_review.json",
+        "review_receipt_sha256": "sha256:a64f108d9799f4396db70000aa324e8f7dc9853d18a487cf7cefa92b3da05973",
+        "review_status": "PASS"
+      },
+      {
+        "frame_id": "sb_004_start_frame",
+        "image_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_004_start_frame.png",
+        "image_sha256": "sha256:2c3211f225eea31a8091569ec10f68a87d7f324e12f04653c5efb1084c97a26e",
+        "panel_id": "sb_004",
+        "review_receipt_relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_004_start_frame_identity_continuity_review.json",
+        "review_receipt_sha256": "sha256:be3ff1aa7478d3d994fb1289d984b1f269d2e9970efb9308d485fbcb1361123c",
+        "review_status": "PASS"
+      },
+      {
+        "frame_id": "sb_004_end_frame",
+        "image_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_004_end_frame.png",
+        "image_sha256": "sha256:ceaf5c255f81d2267d32c92aec09e6614b5d18945e2a7f5824f38f6cf66dd2cf",
+        "panel_id": "sb_004",
+        "review_receipt_relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/receipts/storyboard_identity_review/sb_004_end_frame_identity_continuity_review.json",
+        "review_receipt_sha256": "sha256:4bbfc972ef134160fd2f3c2358d39b59e6390dcc0902bdd0eae4d4eca82468a0",
+        "review_status": "PASS"
+      }
+    ],
+    "frames_pass": 8,
+    "frames_total": 8,
+    "identity_source": {
+      "asset_id": "embry_contact_sheet_v3",
+      "path": "/mnt/storage12tb/media/personas/embry/assets/contact_sheets/embry-gpt-image-2-v3/images/embry_contact_sheet_v3.png",
+      "sha256": "sha256:3ce40b3b6839ebba0f468d75a1adbb7f82e0d95457aefd3627e222eb569de00c"
+    },
+    "image_model": "gpt-image-2",
+    "overall_status": "8/8_FRAMES_PASS_ACTUAL_PIXEL_IDENTITY_REVIEW",
+    "phase_c_regeneration_receipt": {
+      "relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/phase_c_regeneration_receipt.json",
+      "sha256": "sha256:a03aa9fa6226453c24f14afe1769dceebce387c3e56c2eb1e66c50f8e6eab602"
+    },
+    "review_model": "gpt-5.5"
+  },
+  "submitted": false,
+  "successor_active_consistent": {
+    "activation_receipt": {
+      "relative_path": "revision_activation_receipt.json",
+      "sha256": "sha256:349757efcf9ad9c5286f31659abb364ca6be07ee5c3ae62cc7bd07a1f6881308"
+    },
+    "activation_status": "PASS_ACTIVE_CONSISTENT",
+    "active_pointer_key": "pd_active_bb0360b6e2870481e787ce7bfd5a184504a0697bd083b681",
+    "active_revision_id": "rev_successor_943b01ecd9a3",
+    "artifact_index_sha256": "sha256:b46556350d22eb5cbeebd3504d84db19054effe2c6af6c767b35e7e99bc8bfdd",
+    "revision_manifest_sha256": "sha256:3195b4ba4a878953a010a02cad073710c1f5d6f3e746656bd610c1dcbd4ff317"
+  }
+}
