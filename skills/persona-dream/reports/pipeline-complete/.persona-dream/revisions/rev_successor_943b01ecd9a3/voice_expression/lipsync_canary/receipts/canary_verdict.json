@@ -1,0 +1,9 @@
+{
+  "case_id": "p06_voice_lipsync_canary",
+  "created_at": "2026-07-19T20:47:35Z",
+  "output_sha256": "977a8a4701c292c63facc26f6da0a6331ebe2fc6aa2e075acd78f06ac54f1235",
+  "output_video": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/voice_expression/lipsync_canary/output/p06_voice_lipsync_canary_latentsync.mp4",
+  "returncode": 0,
+  "schema": "persona_dream.latentsync_canary_verdict.v1",
+  "status": "output_ready"
+}

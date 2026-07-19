@@ -170,9 +170,17 @@
   },
   "audio_route": "PASS",
   "audio_rule": "per-chunk Whisper word accuracy >= 0.85 and non-trivial audio",
-  "lipsync_canary_receipt": null,
+  "lipsync_canary_receipt": {
+    "verdict_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/voice_expression/lipsync_canary/receipts/canary_verdict.json",
+    "status": "output_ready",
+    "case_id": "p06_voice_lipsync_canary",
+    "output_video": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/voice_expression/lipsync_canary/output/p06_voice_lipsync_canary_latentsync.mp4",
+    "output_sha256": "977a8a4701c292c63facc26f6da0a6331ebe2fc6aa2e075acd78f06ac54f1235",
+    "engine": "latentsync_1.5_local_stage2_256",
+    "paid_calls": 0
+  },
   "does_not_prove": [
     "perceived emotional fidelity (needs human/classifier listening)",
-    "lip sync (separate latentsync canary receipt)"
+    "lip-sync quality judgment (canary proves the local non-paid route produces a muxed output, not sync accuracy)"
   ]
 }

@@ -1,0 +1,182 @@
+{
+  "audio_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/voice_expression/lipsync_canary/input/embry_p06_settled_3s.wav",
+  "case_id": "p06_voice_lipsync_canary",
+  "command": [
+    "/home/graham/workspace/experiments/LatentSync/.venv-latentsync/bin/python",
+    "-m",
+    "scripts.inference",
+    "--unet_config_path",
+    "/home/graham/workspace/experiments/LatentSync/configs/unet/stage2.yaml",
+    "--inference_ckpt_path",
+    "/home/graham/workspace/experiments/LatentSync/checkpoints-v1.5/latentsync_unet.pt",
+    "--inference_steps",
+    "20",
+    "--guidance_scale",
+    "1.5",
+    "--enable_deepcache",
+    "--video_path",
+    "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/voice_expression/lipsync_canary/input/embry_visible_0000_0015.mp4",
+    "--audio_path",
+    "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/voice_expression/lipsync_canary/input/embry_p06_settled_3s.wav",
+    "--video_out_path",
+    "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/voice_expression/lipsync_canary/output/p06_voice_lipsync_canary_latentsync.mp4"
+  ],
+  "created_at": "2026-07-19T20:46:49Z",
+  "dry_run": false,
+  "gpu_memory": {
+    "free_mib": 11903,
+    "status": "ok",
+    "total_mib": 24564,
+    "used_mib": 12219
+  },
+  "inputs": {
+    "audio_ffprobe": {
+      "format": {
+        "bit_rate": "256208",
+        "duration": "3.000000",
+        "filename": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/voice_expression/lipsync_canary/input/embry_p06_settled_3s.wav",
+        "format_long_name": "WAV / WAVE (Waveform Audio)",
+        "format_name": "wav",
+        "nb_programs": 0,
+        "nb_streams": 1,
+        "probe_score": 99,
+        "size": "96078",
+        "tags": {
+          "encoder": "Lavf60.16.100"
+        }
+      },
+      "streams": [
+        {
+          "avg_frame_rate": "0/0",
+          "bit_rate": "256000",
+          "bits_per_sample": 16,
+          "channels": 1,
+          "codec_long_name": "PCM signed 16-bit little-endian",
+          "codec_name": "pcm_s16le",
+          "codec_tag": "0x0001",
+          "codec_tag_string": "[1][0][0][0]",
+          "codec_type": "audio",
+          "disposition": {
+            "attached_pic": 0,
+            "captions": 0,
+            "clean_effects": 0,
+            "comment": 0,
+            "default": 0,
+            "dependent": 0,
+            "descriptions": 0,
+            "dub": 0,
+            "forced": 0,
+            "hearing_impaired": 0,
+            "karaoke": 0,
+            "lyrics": 0,
+            "metadata": 0,
+            "non_diegetic": 0,
+            "original": 0,
+            "still_image": 0,
+            "timed_thumbnails": 0,
+            "visual_impaired": 0
+          },
+          "duration": "3.000000",
+          "duration_ts": 48000,
+          "index": 0,
+          "initial_padding": 0,
+          "r_frame_rate": "0/0",
+          "sample_fmt": "s16",
+          "sample_rate": "16000",
+          "time_base": "1/16000"
+        }
+      ]
+    },
+    "audio_sha256": "e0355390fbb76d4ba81f6aa09865d09146c25b3843f7b401d74fb81626107bac",
+    "video_ffprobe": {
+      "format": {
+        "bit_rate": "6616656",
+        "duration": "1.500000",
+        "filename": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/voice_expression/lipsync_canary/input/embry_visible_0000_0015.mp4",
+        "format_long_name": "QuickTime / MOV",
+        "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+        "nb_programs": 0,
+        "nb_streams": 1,
+        "probe_score": 100,
+        "size": "1240623",
+        "start_time": "0.000000",
+        "tags": {
+          "compatible_brands": "isomiso2avc1mp41",
+          "encoder": "Lavf60.16.100",
+          "major_brand": "isom",
+          "minor_version": "512"
+        }
+      },
+      "streams": [
+        {
+          "avg_frame_rate": "24/1",
+          "bit_rate": "6609728",
+          "bits_per_raw_sample": "8",
+          "chroma_location": "left",
+          "closed_captions": 0,
+          "codec_long_name": "H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10",
+          "codec_name": "h264",
+          "codec_tag": "0x31637661",
+          "codec_tag_string": "avc1",
+          "codec_type": "video",
+          "coded_height": 720,
+          "coded_width": 1280,
+          "disposition": {
+            "attached_pic": 0,
+            "captions": 0,
+            "clean_effects": 0,
+            "comment": 0,
+            "default": 1,
+            "dependent": 0,
+            "descriptions": 0,
+            "dub": 0,
+            "forced": 0,
+            "hearing_impaired": 0,
+            "karaoke": 0,
+            "lyrics": 0,
+            "metadata": 0,
+            "non_diegetic": 0,
+            "original": 0,
+            "still_image": 0,
+            "timed_thumbnails": 0,
+            "visual_impaired": 0
+          },
+          "duration": "1.500000",
+          "duration_ts": 18432,
+          "extradata_size": 46,
+          "field_order": "progressive",
+          "film_grain": 0,
+          "has_b_frames": 2,
+          "height": 720,
+          "id": "0x1",
+          "index": 0,
+          "is_avc": "true",
+          "level": 31,
+          "nal_length_size": "4",
+          "nb_frames": "36",
+          "pix_fmt": "yuv420p",
+          "profile": "High",
+          "r_frame_rate": "24/1",
+          "refs": 1,
+          "start_pts": 0,
+          "start_time": "0.000000",
+          "tags": {
+            "encoder": "Lavc60.31.102 libx264",
+            "handler_name": "VideoHandler",
+            "language": "und",
+            "vendor_id": "[0][0][0][0]"
+          },
+          "time_base": "1/12288",
+          "width": 1280
+        }
+      ]
+    },
+    "video_sha256": "ae227bea197e255fc8992b477c94e348efc8cb2ed35a0d2823cf23050e0b435e"
+  },
+  "latentsync_root": "/home/graham/workspace/experiments/LatentSync",
+  "min_free_vram_mib": 8000,
+  "output_video": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/voice_expression/lipsync_canary/output/p06_voice_lipsync_canary_latentsync.mp4",
+  "python": "/home/graham/workspace/experiments/LatentSync/.venv-latentsync/bin/python",
+  "schema": "persona_dream.latentsync_canary_request.v1",
+  "video_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/voice_expression/lipsync_canary/input/embry_visible_0000_0015.mp4"
+}
