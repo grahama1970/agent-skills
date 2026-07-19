@@ -247,6 +247,107 @@ def _composition_check(phase_c, frame: Path, out_path: Path) -> dict:
 
 
 # --------------------------------------------------------------------------- #
+# Embry FULL augmented identity review, waiver-aware. The shared node reviewer
+# prompt hard-requires BOTH Embry AND Kai faces be verifiable, so on this frame it
+# would re-fail over Kai -- the very character whose end-frame face is waived. This
+# scoped review keeps EMBRY's specific-identity standard exactly as strict (same
+# adversarial / complexion / age / feature-grounding rules) AND runs the same
+# deterministic ArcFace embedding subgate for Embry, but explicitly disregards the
+# waived turned-away character. Embry is never waived; only the reviewer's scope is
+# narrowed to Embry so Kai's intentional turn-away does not spuriously fail her.
+# --------------------------------------------------------------------------- #
+EMBRY_IDENTITY_PROMPT = """You are a strict visual storyboard identity reviewer, judging ACTUAL PIXELS only, for ONE required identity: EMBRY. Return JSON only.
+
+WAIVER CONTEXT: this is the sb_003 END frame. The other surfer in the frame (Kai) is under an anchored-identity waiver -- he is intentionally turned three-quarter-away and/or has his lower face occluded so his mouth is not camera-readable, and his identity is verified on a separate start frame. DO NOT fail this frame because Kai's face is turned away, occluded, or not reference-verifiable here. Judge ONLY Embry's specific identity. You are given ONLY the Embry reference sheet.
+
+SPECIFIC-IDENTITY STANDARD (read carefully): this is a SPECIFIC-IDENTITY check, not a demographic-category check. Embry passes ONLY if the depicted woman is recognizably the SAME INDIVIDUAL as the attached Embry reference sheet -- same face shape, apparent age, eyebrow shape, nose shape, jawline, distinctive features. It is NOT enough that the category matches ('an adult woman with brown hair in a navy top').
+AGE CONSISTENCY: the Embry reference is a specific late-20s woman; a clearly older/weathered ~40s-50s woman is a DIFFERENT identity even if hair and clothing match -> FAIL with IDENTITY_AGE_MISMATCH.
+COMPLEXION IS AN IDENTITY SIGNAL: the Embry reference is a warm-olive, freckled, fuller-oval-faced woman; a cooler/paler, un-freckled, or narrower/longer face is a structural divergence you may NOT excuse as wet hair / spray / side light -> FAIL with IDENTITY_MISMATCH_DESPITE_GENERIC_MATCH.
+ADVERSARIAL STANCE (do FIRST): actively hunt for at least one divergence (face width/length, complexion/freckling, apparent age, eyebrow/nose shape) before deciding PASS. Only PASS if, after honestly hunting, no identity-changing divergence remains.
+FEATURE GROUNDING (mandatory): to PASS Embry you must name 2-3 concrete matching facial features actually traced to the reference; if you cannot, FAIL with IDENTITY_FEATURES_NOT_GROUNDED.
+FAIL-CLOSED ON UNCERTAINTY: if your confidence that this is the SAME specific individual is anything short of high, FAIL.
+
+Pass ONLY if ALL are true:
+1. Embry is visible in the foreground, near-frontal, face readable.
+2. Embry is the SAME SPECIFIC INDIVIDUAL as the reference at the feature level.
+3. Embry reads as an adult woman with brown hair and a navy rashguard/polo-style surf top.
+4. You can name 2-3 concrete matching facial features.
+Fail automatically if: Embry is missing; Embry appears male/generic; Embry's face is too small, hidden, blurred, or not reference-verifiable; Embry matches the category but is a visibly DIFFERENT individual (IDENTITY_MISMATCH_DESPITE_GENERIC_MATCH); or Embry appears a clearly different age (IDENTITY_AGE_MISMATCH). Do NOT fail over Kai.
+
+Return strict JSON with exactly these keys:
+{"verdict":"PASS|FAIL","visible_entities":["Embry"],"blocking_findings":["..."],"verified_facial_features":{"Embry":["..."]},"observed_divergences":{"Embry":["..."]},"identity_notes":"..."}
+Judge the image pixels, not captions, filenames, or metadata. When uncertain, FAIL."""
+
+
+def _embry_augmented_review(phase_c, node, frame: Path, receipts_dir: Path, attempt: int) -> dict:
+    """FULL augmented identity check for Embry: strict full-frame VLM (Embry-scoped)
+    AND the deterministic ArcFace embedding subgate (Embry). Never waived."""
+    content = [
+        {"type": "text", "text": EMBRY_IDENTITY_PROMPT},
+        {"type": "text", "text": "sb_003 END frame under review:"},
+        phase_c._image_part(frame, "end_frame"),
+        {"type": "text", "text": "Embry reference:"},
+        phase_c._image_part(phase_c.EMBRY_SHEET, "embry_ref"),
+    ]
+    payload = {
+        "model": "gpt-5.5",
+        "messages": [
+            {"role": "system", "content": "You are a strict visual storyboard identity reviewer. Return JSON only. Judge pixels, not metadata. Reject generic or wrong people."},
+            {"role": "user", "content": content},
+        ],
+        "response_format": {"type": "json_object"},
+    }
+    full_frame_status = "FAIL"
+    parsed: Any = None
+    blocking: list[str] = []
+    try:
+        raw = phase_c._post_scillm(payload)
+        parsed = json.loads(raw["choices"][0]["message"]["content"])
+        blocking = [str(b) for b in parsed.get("blocking_findings", []) if isinstance(b, str)]
+        if "Embry" not in [str(e) for e in parsed.get("visible_entities", [])]:
+            blocking.append("required identity not visibly verified: Embry")
+        if parsed.get("verdict") == "PASS" and not blocking:
+            full_frame_status = "PASS"
+        elif parsed.get("verdict") != "PASS" and not blocking:
+            blocking = [f"reviewer verdict was {parsed.get('verdict') or 'missing'}"]
+    except Exception as exc:  # noqa: BLE001 -- fail closed
+        blocking = [f"embry identity review call failed: {exc}"]
+
+    # Deterministic embedding subgate (Embry) -- identity authority, only if full-frame passed.
+    embedding_subgate: dict[str, Any] = {"status": "SKIPPED",
+                                         "reason": "full-frame review FAILED; embedding subgate not required",
+                                         "entity_results": []}
+    if full_frame_status == "PASS":
+        embedding_subgate = node._run_face_embedding_subgate(
+            frame_path=frame, references={"Embry": phase_c.EMBRY_SHEET},
+            required_entities=["Embry"], receipts_dir=receipts_dir,
+            panel_id="sb_003", frame_key="end_frame",
+        )
+        if embedding_subgate.get("status") != "PASS":
+            blocking.extend(b for b in (embedding_subgate.get("blocking_findings") or []) if isinstance(b, str))
+
+    status = "PASS" if full_frame_status == "PASS" and embedding_subgate.get("status") == "PASS" and not blocking else "FAIL"
+    receipt = {
+        "schema": "persona_dream.lane_c.embry_augmented_identity_review.v1",
+        "created_at": _now(),
+        "frame": str(frame), "frame_sha256": _sha256_file(frame) if frame.exists() else None,
+        "required_entity": "Embry",
+        "waiver_context": "Kai is under the anchored-identity waiver on this frame; the reviewer disregards his turned-away face and judges only Embry.",
+        "status": status,
+        "full_frame_status": full_frame_status,
+        "identity_authority": "face_embedding_subgate",
+        "face_embedding_subgate": embedding_subgate,
+        "reviewer_source": "scillm:gpt-5.5:image_url",
+        "review_prompt_sha256": _sha256_text(EMBRY_IDENTITY_PROMPT),
+        "blocking_findings": blocking,
+        "raw_response": parsed,
+        "mocked": False, "live": True,
+    }
+    _write_json(receipts_dir / f"sb_003_end_frame.attempt_{attempt:02d}_embry_augmented_identity_review.json", receipt)
+    return receipt
+
+
+# --------------------------------------------------------------------------- #
 # NON-FACIAL continuity review for the waived character (condition c). Embry gets
 # full identity continuity; Kai gets wardrobe/build/hair/board/position continuity
 # WITHOUT requiring a frontal facial match (his head may be turned/occluded).
@@ -444,15 +545,9 @@ def main() -> int:
         if comp.get("status") != "PASS":
             failures.extend(str(b) for b in (comp.get("blocking_findings") or []))
 
-        # (2) Embry end-frame FULL augmented identity (never waived).
-        embry_panel = dict(panel)
-        embry_panel["required_entities"] = [FULL_CHECK_CHARACTER]
-        embry_review = node._run_identity_continuity_review(
-            {"path": str(out_png)}, panel=embry_panel, frame_key="end_frame",
-            required_entities=[FULL_CHECK_CHARACTER],
-            identity_review_policy=phase_c.IDENTITY_REVIEW_POLICY, receipts_dir=review_dir,
-        )
-        _write_json(review_dir / f"{frame_id}.attempt_{attempt:02d}_embry_identity_review.json", embry_review)
+        # (2) Embry end-frame FULL augmented identity (never waived), waiver-aware
+        # scope so Kai's intentional turn-away does not spuriously fail Embry.
+        embry_review = _embry_augmented_review(phase_c, node, out_png, review_dir, attempt)
         embry_emb = embry_review.get("face_embedding_subgate", {})
         embry_cos = next((er.get("best_cosine") for er in embry_emb.get("entity_results", [])
                           if er.get("entity") == FULL_CHECK_CHARACTER), None)
