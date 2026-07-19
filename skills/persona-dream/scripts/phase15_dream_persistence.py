@@ -73,15 +73,56 @@ def _http_post(url: str, payload: dict[str, Any], timeout: float = 15.0) -> dict
 # --------------------------------------------------------------------------- #
 # Deterministic supersession / canonical-write decision                       #
 # --------------------------------------------------------------------------- #
+def acceptance_receipt_certifies(
+    acceptance_receipt: dict[str, Any] | None,
+    packet: dict[str, Any],
+    return_id: str | None,
+) -> tuple[bool, list[str]]:
+    """Return (certifies, reasons). An agent-level acceptance receipt certifies a
+    return for canonical write only when it is ACCEPTED_AGENT_LEVEL, binds to THIS
+    exact return (video sha256 AND return id), and its fail-closed gauntlet gates
+    (step 36 continuity, step 38 audio/dialogue) both PASS. Fail-closed: any
+    mismatch or missing field means it does NOT certify."""
+    if not isinstance(acceptance_receipt, dict):
+        return False, ["NO_ACCEPTANCE_RECEIPT"]
+    reasons: list[str] = []
+    schema = str(acceptance_receipt.get("schema") or "")
+    if not schema.startswith("persona_dream.post_return_acceptance_receipt.v"):
+        reasons.append(f"ACCEPTANCE_RECEIPT_WRONG_SCHEMA:{schema or 'missing'}")
+    if acceptance_receipt.get("status") != "ACCEPTED_AGENT_LEVEL":
+        reasons.append(f"ACCEPTANCE_NOT_AGENT_LEVEL:{acceptance_receipt.get('status')}")
+    receipt_sha = str(acceptance_receipt.get("return_video_sha256") or "")
+    packet_sha = str(packet.get("source_video_sha256") or "")
+    if not receipt_sha or receipt_sha != packet_sha:
+        reasons.append("ACCEPTANCE_RECEIPT_VIDEO_SHA_MISMATCH")
+    if return_id and str(acceptance_receipt.get("return_id") or "") != str(return_id):
+        reasons.append("ACCEPTANCE_RECEIPT_RETURN_ID_MISMATCH")
+    gate = acceptance_receipt.get("gate_summary") or {}
+    if gate.get("step_36") is not True:
+        reasons.append("ACCEPTANCE_STEP_36_NOT_PASS")
+    if gate.get("step_38") is not True:
+        reasons.append("ACCEPTANCE_STEP_38_NOT_PASS")
+    if gate.get("agent_level_gauntlet") not in (None, "ACCEPTED"):
+        reasons.append(f"ACCEPTANCE_GAUNTLET_NOT_ACCEPTED:{gate.get('agent_level_gauntlet')}")
+    return (len(reasons) == 0), reasons
+
+
 def canonical_write_decision(
     packet: dict[str, Any],
     allow_canonical_write: bool,
     return_id: str | None,
     superseded_return_ids: set[str] | None = None,
+    acceptance_receipt: dict[str, Any] | None = None,
 ) -> tuple[bool, list[str]]:
-    """Pure decision. Returns (allowed, blockers). The historical return is
-    superseded (historical origin + degraded status + identity DRIFT) and can
-    NEVER be written to canonical dream memory."""
+    """Pure decision. Returns (allowed, blockers).
+
+    HARD blocks (never overridable): a historical-origin return, a renderer
+    identity-continuity DEFECT verdict, or a superseded return id can NEVER be
+    written to canonical dream memory. The DEGRADED observation status is
+    OVERRIDABLE only by a valid agent-level acceptance receipt that binds to this
+    exact return and certifies the fail-closed gauntlet gates - this is what
+    permits the first legitimate canonical write of an accepted successor return
+    whose raw pre-mux packet was labelled DEGRADED before Tau-routed adjudication."""
     blockers: list[str] = []
     if not allow_canonical_write:
         blockers.append("CANONICAL_WRITE_FLAG_NOT_SET")
@@ -95,14 +136,18 @@ def canonical_write_decision(
          .get("vision_review") or {}).get("verdict") or ""
     ).upper()
 
+    # Hard, non-overridable blocks.
     if origin == "historical_provider_return":
         blockers.append("RETURN_IS_HISTORICAL_PROVIDER_RETURN")
-    if status.startswith("DEGRADED"):
-        blockers.append("OBSERVATION_STATUS_DEGRADED")
     if verdict in RENDERER_DEFECT_VERDICTS:
         blockers.append(f"IDENTITY_CONTINUITY_DEFECT:{verdict}")
     if return_id and superseded_return_ids and return_id in superseded_return_ids:
         blockers.append("RETURN_ID_SUPERSEDED")
+
+    # DEGRADED status is overridable ONLY by a certifying agent-level acceptance receipt.
+    certifies, _reasons = acceptance_receipt_certifies(acceptance_receipt, packet, return_id)
+    if status.startswith("DEGRADED") and not certifies:
+        blockers.append("OBSERVATION_STATUS_DEGRADED")
 
     return (len(blockers) == 0), blockers
 
@@ -247,6 +292,53 @@ def store_and_reread(document: dict[str, Any], collection: str, base_url: str) -
     }
 
 
+TOM_CANDIDATE_COLLECTION = "tom_candidates"
+
+
+def persist_canonical(
+    dream_doc: dict[str, Any],
+    interpretation: dict[str, Any],
+    tom: dict[str, Any],
+    base_url: str,
+) -> dict[str, Any]:
+    """Write the ACCEPTED canonical records THROUGH the $memory /store contract,
+    each with an exact reread-by-_key proof. Records: the synthetic dream memory
+    document, the accepted ToM candidate nodes (so supports_interpretation edges
+    resolve), and derived_from / observed_in_scene / supports_interpretation
+    edges. Returns a persistence proof with per-record receipts and keys."""
+    node_receipts: list[dict[str, Any]] = []
+    edge_receipts: list[dict[str, Any]] = []
+
+    # 1) Synthetic dream memory node.
+    node_receipts.append(store_and_reread(dream_doc, CANONICAL_DREAM_COLLECTION, base_url))
+
+    # 2) Accepted ToM candidate nodes (referenced by supports_interpretation edges).
+    for cand in tom.get("accepted_tom_candidates", []):
+        cid = cand.get("candidate_id")
+        if not cid:
+            continue
+        cand_doc = {**cand, "_key": str(cid), "synthetic_origin": True, "literal_historical_event": False}
+        node_receipts.append(store_and_reread(cand_doc, TOM_CANDIDATE_COLLECTION, base_url))
+
+    # 3) Graph edges into the canonical edge collections.
+    edges = build_graph_edges(
+        dream_doc, interpretation, tom,
+        CANONICAL_DREAM_COLLECTION, CANONICAL_EDGE_COLLECTION, CANONICAL_TOM_EDGE_COLLECTION,
+    )
+    for e in edges:
+        edge_receipts.append(store_and_reread(e["document"], e["collection"], base_url))
+
+    all_receipts = node_receipts + edge_receipts
+    return {
+        "records_written": len(all_receipts),
+        "all_exact_reread_match": all(r["exact_reread_match"] for r in all_receipts),
+        "node_keys": [r["key"] for r in node_receipts],
+        "edge_keys": [r["key"] for r in edge_receipts],
+        "node_receipts": node_receipts,
+        "edge_receipts": edge_receipts,
+    }
+
+
 # --------------------------------------------------------------------------- #
 # Orchestration                                                               #
 # --------------------------------------------------------------------------- #
@@ -262,12 +354,22 @@ def run_phase15(
     return_id: str | None = None,
     validation_collection: str | None = None,
     base_url: str = MEMORY_BASE_URL,
+    acceptance_receipt_path: Path | None = None,
+    superseded_return_ids: set[str] | None = None,
 ) -> dict[str, Any]:
     packet = read_json(observation_path)
     interpretation = read_json(interpretation_path)
     tom = read_json(tom_path)
+    acceptance_receipt = read_json(acceptance_receipt_path) if acceptance_receipt_path else None
 
-    allowed, blockers = canonical_write_decision(packet, allow_canonical_write, return_id)
+    allowed, blockers = canonical_write_decision(
+        packet, allow_canonical_write, return_id,
+        superseded_return_ids=superseded_return_ids,
+        acceptance_receipt=acceptance_receipt,
+    )
+    acceptance_certifies, acceptance_reasons = acceptance_receipt_certifies(
+        acceptance_receipt, packet, return_id
+    )
 
     # Canonical plan (dry-run) - exact would-write payloads + hashes, zero writes.
     canonical_doc = build_dream_memory_document(
@@ -294,10 +396,13 @@ def run_phase15(
         },
     }
 
+    canonical_write_proof: dict[str, Any] | None = None
     if allowed:
-        # Guarded canonical live-write path. For the superseded historical return
-        # this branch is unreachable (decision blocks it), so canonical writes stay 0.
-        canonical_writes_performed = "UNREACHABLE_FOR_SUPERSEDED_RETURN"
+        # Guarded canonical live-write path. Only reachable for a non-superseded,
+        # non-historical, non-defect return whose DEGRADED status (if any) is
+        # certified by a binding agent-level acceptance receipt.
+        canonical_write_proof = persist_canonical(canonical_doc, interpretation, tom, base_url)
+        canonical_writes_performed = canonical_write_proof["records_written"]
     else:
         canonical_writes_performed = 0
 
@@ -348,7 +453,15 @@ def run_phase15(
         "canonical_write_allowed": allowed,
         "canonical_write_blockers": blockers,
         "canonical_writes_performed": canonical_writes_performed,
+        "canonical_dream_memory_written": bool(canonical_write_proof),
+        "acceptance_basis": {
+            "acceptance_receipt_path": str(acceptance_receipt_path) if acceptance_receipt_path else None,
+            "acceptance_receipt_sha256": canonical_sha(acceptance_receipt) if acceptance_receipt else None,
+            "certifies_return_for_canonical_write": acceptance_certifies,
+            "acceptance_reasons": acceptance_reasons,
+        },
         "canonical_plan": canonical_plan,
+        "canonical_write_proof": canonical_write_proof,
         "validation_write_proof": validation_proof,
         "relationship_vocabulary": ["derived_from", "observed_in_scene", "supports_interpretation"],
         "mocked": False,
@@ -370,16 +483,26 @@ def main() -> int:
     p.add_argument("--allow-canonical-write", action="store_true",
                    help="Required for a canonical write; still hard-fails on a superseded return.")
     p.add_argument("--return-id", default=None, help="Non-superseded return id required for a canonical write.")
+    p.add_argument("--acceptance-receipt", type=Path, default=None,
+                   help="Agent-level acceptance receipt (ACCEPTED_AGENT_LEVEL) that certifies this "
+                        "return and permits overriding a DEGRADED observation status, fail-closed.")
+    p.add_argument("--superseded-return-ids", default=None,
+                   help="Comma-separated return ids that are superseded and must never be written.")
     p.add_argument("--validation-collection", default=None,
                    help=f"Real write proof into a non-canonical collection (e.g. {VALIDATION_COLLECTION}).")
     p.add_argument("--output", type=Path, required=True)
     p.add_argument("--json", action="store_true")
     args = p.parse_args()
 
+    superseded = (
+        {s.strip() for s in args.superseded_return_ids.split(",") if s.strip()}
+        if args.superseded_return_ids else None
+    )
     result = run_phase15(
         args.observation, args.interpretation, args.tom, args.dream_id, args.revision_id,
         args.run_id, args.persona_id, allow_canonical_write=args.allow_canonical_write,
         return_id=args.return_id, validation_collection=args.validation_collection,
+        acceptance_receipt_path=args.acceptance_receipt, superseded_return_ids=superseded,
     )
 
     # Hard-fail if a canonical write was requested but blocked by supersession.
@@ -397,9 +520,14 @@ def main() -> int:
             "status": result["status"],
             "canonical_write_allowed": result["canonical_write_allowed"],
             "canonical_writes_performed": result["canonical_writes_performed"],
+            "canonical_dream_memory_written": result["canonical_dream_memory_written"],
             "validation_write": bool(result["validation_write_proof"]),
             "output": str(args.output),
         }
+        if result["canonical_write_proof"]:
+            summary["canonical_all_match"] = result["canonical_write_proof"]["all_exact_reread_match"]
+            summary["canonical_node_keys"] = result["canonical_write_proof"]["node_keys"]
+            summary["canonical_edge_keys"] = result["canonical_write_proof"]["edge_keys"]
         if result["validation_write_proof"]:
             summary["validation_all_match"] = result["validation_write_proof"]["all_exact_reread_match"]
         print(json.dumps(summary, indent=2))

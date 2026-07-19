@@ -51,6 +51,10 @@ def run_loop(
     persona_id: str,
     live: bool,
     validation_collection: str | None,
+    allow_canonical_write: bool = False,
+    return_id: str | None = None,
+    acceptance_receipt_path: Path | None = None,
+    superseded_return_ids: set[str] | None = None,
 ) -> dict[str, Any]:
     output_root.mkdir(parents=True, exist_ok=True)
     phases: list[dict[str, Any]] = []
@@ -99,9 +103,14 @@ def run_loop(
     persist_out = output_root / "dream_persistence_receipt.json"
     persist = p15.run_phase15(
         observation_path, interp_out, tom_out, dream_id, revision_id, run_id, persona_id,
-        allow_canonical_write=False, return_id=None, validation_collection=validation_collection,
+        allow_canonical_write=allow_canonical_write, return_id=return_id,
+        validation_collection=validation_collection,
+        acceptance_receipt_path=acceptance_receipt_path,
+        superseded_return_ids=superseded_return_ids,
     )
     p15.write_json(persist_out, persist)
+    canonical_written = bool(persist.get("canonical_dream_memory_written"))
+    canonical_proof = persist.get("canonical_write_proof") or {}
     phases.append({
         "phase": "15_persistence",
         "status": persist["status"],
@@ -109,6 +118,10 @@ def run_loop(
         "canonical_write_allowed": persist["canonical_write_allowed"],
         "canonical_writes_performed": persist["canonical_writes_performed"],
         "canonical_write_blockers": persist["canonical_write_blockers"],
+        "canonical_dream_memory_written": canonical_written,
+        "canonical_node_keys": canonical_proof.get("node_keys", []),
+        "canonical_edge_keys": canonical_proof.get("edge_keys", []),
+        "canonical_all_exact_reread_match": canonical_proof.get("all_exact_reread_match"),
         "validation_write": bool(persist["validation_write_proof"]),
         "validation_all_match": (persist["validation_write_proof"] or {}).get("all_exact_reread_match"),
     })
@@ -126,19 +139,28 @@ def run_loop(
         "persona_id": persona_id,
         "live": live,
         "phases": phases,
-        "canonical_dream_memory_written": False,
+        "canonical_dream_memory_written": canonical_written,
+        "canonical_record_keys": {
+            "nodes": canonical_proof.get("node_keys", []),
+            "edges": canonical_proof.get("edge_keys", []),
+        },
         "claims": {
             "proves": [
                 "the persona-dream cognitive loop runs 12->13->14->15 on a real Watch observation packet",
+                "self-interpretation and ToM proposal text reasoning route through the sanctioned Tau node (no direct scillm)",
                 "self-interpretation claims cite Watch observation ids and source-memory ids (deterministic gate)",
                 "accepted ToM candidates are grounded in their parent interpretation (deterministic gate)",
+            ] + ([
+                "canonical dream memory was written through the $memory API for this ACCEPTED, non-superseded successor return, with exact reread-by-key proof",
+            ] if canonical_written else [
                 "persistence emits an exact canonical would-write plan and proves the write path against a non-canonical validation collection",
-            ],
+            ]),
             "does_not_prove": [
-                "the closed-loop research claim (that needs a NON-superseded successor return)",
-                "canonical dream memory persistence of this superseded historical return",
                 "Qdrant semantic recall and downstream behavior change (Phase 16)",
-            ],
+                "human subjective acceptance (remains the human's)",
+            ] + ([] if canonical_written else [
+                "canonical dream memory persistence (deferred: needs an accepted, non-superseded return + acceptance receipt)",
+            ]),
         },
         "generated_at": utc_now(),
     }
@@ -159,13 +181,24 @@ def main() -> int:
     p.add_argument("--persona-id", default="embry")
     p.add_argument("--no-live", action="store_true")
     p.add_argument("--validation-collection", default=None)
+    p.add_argument("--allow-canonical-write", action="store_true",
+                   help="Permit phase 15 to write canonical dream memory (still fail-closed).")
+    p.add_argument("--return-id", default=None)
+    p.add_argument("--acceptance-receipt", type=Path, default=None)
+    p.add_argument("--superseded-return-ids", default=None)
     p.add_argument("--json", action="store_true")
     args = p.parse_args()
 
+    superseded = (
+        {s.strip() for s in args.superseded_return_ids.split(",") if s.strip()}
+        if args.superseded_return_ids else None
+    )
     receipt = run_loop(
         args.observation, args.residue_links, args.story_contract, args.script_contract,
         args.output_root, args.dream_id, args.revision_id, args.run_id, args.persona_id,
         live=not args.no_live, validation_collection=args.validation_collection,
+        allow_canonical_write=args.allow_canonical_write, return_id=args.return_id,
+        acceptance_receipt_path=args.acceptance_receipt, superseded_return_ids=superseded,
     )
     if args.json:
         print(json.dumps({

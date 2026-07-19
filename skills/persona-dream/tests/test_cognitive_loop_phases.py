@@ -26,6 +26,17 @@ HISTORICAL_PACKET = (
     / "watch_gauntlet/991c311f365f/dream_observation_packet.v1.json"
 )
 
+_REV = (
+    ROOT / "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3"
+)
+ACCEPTED_PACKET = _REV / "watch_gauntlet/59b9ff3155d6/dream_observation_packet.v1.json"
+ACCEPTANCE_RECEIPT_V2 = (
+    _REV / "phase_11_submit_return/provider_return"
+    / "97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4"
+    / "post_return_acceptance_receipt.v2.json"
+)
+ACCEPTED_RETURN_ID = "97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4"
+
 
 # --------------------------------------------------------------------------- #
 # Phase 13 - observation index + citation gate                                #
@@ -296,3 +307,96 @@ def test_dry_run_persistence_performs_zero_canonical_writes(tmp_path):
     assert "derived_from" in rels
     assert "observed_in_scene" in rels
     assert "supports_interpretation" in rels
+
+
+# --------------------------------------------------------------------------- #
+# Phase 15 - acceptance-receipt gating for the ACCEPTED successor return       #
+# The accepted return's raw pre-mux packet is DEGRADED; only a binding          #
+# agent-level acceptance receipt may override that, and never a hard block.     #
+# --------------------------------------------------------------------------- #
+def test_accepted_return_permitted_with_binding_acceptance_receipt():
+    packet = p13.read_json(ACCEPTED_PACKET)
+    receipt = p13.read_json(ACCEPTANCE_RECEIPT_V2)
+    assert packet["status"].startswith("DEGRADED")  # the raw packet is degraded
+    assert receipt["status"] == "ACCEPTED_AGENT_LEVEL"
+    allowed, blockers = p15.canonical_write_decision(
+        packet, allow_canonical_write=True, return_id=ACCEPTED_RETURN_ID,
+        acceptance_receipt=receipt,
+    )
+    assert allowed is True, blockers
+    assert blockers == []
+
+
+def test_degraded_accepted_return_blocked_without_acceptance_receipt():
+    packet = p13.read_json(ACCEPTED_PACKET)
+    allowed, blockers = p15.canonical_write_decision(
+        packet, allow_canonical_write=True, return_id=ACCEPTED_RETURN_ID,
+        acceptance_receipt=None,
+    )
+    assert allowed is False
+    assert "OBSERVATION_STATUS_DEGRADED" in blockers
+
+
+def test_degraded_return_blocked_with_mismatched_return_id():
+    packet = p13.read_json(ACCEPTED_PACKET)
+    receipt = p13.read_json(ACCEPTANCE_RECEIPT_V2)
+    allowed, blockers = p15.canonical_write_decision(
+        packet, allow_canonical_write=True, return_id="some-other-return",
+        acceptance_receipt=receipt,
+    )
+    assert allowed is False
+    assert "OBSERVATION_STATUS_DEGRADED" in blockers
+
+
+def test_degraded_return_blocked_with_wrong_video_sha_receipt():
+    packet = p13.read_json(ACCEPTED_PACKET)
+    receipt = dict(p13.read_json(ACCEPTANCE_RECEIPT_V2))
+    receipt["return_video_sha256"] = "sha256:deadbeef"
+    allowed, blockers = p15.canonical_write_decision(
+        packet, allow_canonical_write=True, return_id=ACCEPTED_RETURN_ID,
+        acceptance_receipt=receipt,
+    )
+    assert allowed is False
+    assert "OBSERVATION_STATUS_DEGRADED" in blockers
+
+
+def test_acceptance_receipt_never_overrides_hard_blocks():
+    """A forged/valid acceptance receipt can override DEGRADED status but NEVER a
+    historical origin, a renderer DEFECT verdict, or a superseded id."""
+    packet = p13.read_json(HISTORICAL_PACKET)
+    forged = {
+        "schema": "persona_dream.post_return_acceptance_receipt.v2",
+        "status": "ACCEPTED_AGENT_LEVEL",
+        "return_video_sha256": packet.get("source_video_sha256"),
+        "return_id": "rev_successor_943b01ecd9a3",
+        "gate_summary": {"step_36": True, "step_38": True, "agent_level_gauntlet": "ACCEPTED"},
+    }
+    allowed, blockers = p15.canonical_write_decision(
+        packet, allow_canonical_write=True, return_id="rev_successor_943b01ecd9a3",
+        acceptance_receipt=forged,
+    )
+    assert allowed is False
+    assert "RETURN_IS_HISTORICAL_PROVIDER_RETURN" in blockers
+    assert any(b.startswith("IDENTITY_CONTINUITY_DEFECT") for b in blockers)
+    # DEGRADED IS overridden by the receipt (it binds), proving overrides are scoped.
+    assert "OBSERVATION_STATUS_DEGRADED" not in blockers
+
+
+def test_accepted_return_blocked_when_in_superseded_set():
+    packet = p13.read_json(ACCEPTED_PACKET)
+    receipt = p13.read_json(ACCEPTANCE_RECEIPT_V2)
+    allowed, blockers = p15.canonical_write_decision(
+        packet, allow_canonical_write=True, return_id=ACCEPTED_RETURN_ID,
+        acceptance_receipt=receipt, superseded_return_ids={ACCEPTED_RETURN_ID},
+    )
+    assert allowed is False
+    assert "RETURN_ID_SUPERSEDED" in blockers
+
+
+def test_acceptance_receipt_certifies_requires_both_gates():
+    packet = p13.read_json(ACCEPTED_PACKET)
+    receipt = dict(p13.read_json(ACCEPTANCE_RECEIPT_V2))
+    receipt["gate_summary"] = {**receipt["gate_summary"], "step_38": False}
+    certifies, reasons = p15.acceptance_receipt_certifies(receipt, packet, ACCEPTED_RETURN_ID)
+    assert certifies is False
+    assert "ACCEPTANCE_STEP_38_NOT_PASS" in reasons

@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import importlib.util as _ilu
 import json
 import os
 import urllib.request
@@ -29,9 +30,28 @@ from pathlib import Path
 from typing import Any
 
 MEMORY_BASE_URL = os.environ.get("MEMORY_BASE_URL", "http://127.0.0.1:8601")
-SCILLM_URL = os.environ.get("SCILLM_API_BASE", "http://localhost:4001").rstrip("/") + "/v1/chat/completions"
 SCILLM_MODEL = os.environ.get("PERSONA_DREAM_SCILLM_MODEL", "gpt-5.5")
 CALLER_SKILL = "persona-dream"
+
+# Text reasoning is routed through the sanctioned Tau node - persona-dream never
+# calls scillm directly. Load the adapter by file path so this works whether
+# phase13 is run as a script or imported via importlib (phase14 / loop runner).
+_ADAPTER_PATH = Path(__file__).resolve().parent / "tau_text_reasoning_adapter.py"
+_aspec = _ilu.spec_from_file_location("tau_text_reasoning_adapter", _ADAPTER_PATH)
+assert _aspec and _aspec.loader
+tau_adapter = _ilu.module_from_spec(_aspec)
+_aspec.loader.exec_module(tau_adapter)
+
+# Caller-defined JSON output contract handed to (and hash-recorded by) the Tau node.
+INTERPRETATION_OUTPUT_CONTRACT = {
+    "type": "object",
+    "required": ["candidates"],
+    "candidate_required": [
+        "interpretation_id", "tom_state_type", "subject", "target", "statement",
+        "observation_refs", "source_memory_refs", "confidence", "uncertainty",
+        "emotional_intensity", "alternative_explanation", "favored_explanation",
+    ],
+}
 
 # Defect verdicts on a renderer continuity review that make the renderer-defect
 # explanation the FAVORED one under the honesty rule.
@@ -56,21 +76,6 @@ def canonical_sha(value: Any) -> str:
 
 def file_sha(path: Path) -> str:
     return f"sha256:{hashlib.sha256(Path(path).read_bytes()).hexdigest()}"
-
-
-def scillm_api_key() -> str:
-    """Resolve the local scillm proxy key from env, then the scillm project .env."""
-    for env_name in ("SCILLM_API_KEY", "SCILLM_MASTER_KEY", "SCILLM_PROXY_KEY"):
-        val = os.environ.get(env_name)
-        if val:
-            return val
-    env_path = Path(os.path.expanduser("~/workspace/experiments/scillm/.env"))
-    if env_path.exists():
-        for line in env_path.read_text(encoding="utf-8").splitlines():
-            line = line.strip()
-            if line.startswith("SCILLM_MASTER_KEY="):
-                return line.split("=", 1)[1].strip().strip('"').strip("'")
-    return "sk-dev-proxy-123"
 
 
 # --------------------------------------------------------------------------- #
@@ -356,20 +361,23 @@ Produce 2 to 4 candidates. At least one MUST address the identity continuity
 review (renderer defect) if one is present. No prose outside the JSON object."""
 
 
-def draft_interpretations(prompt: str, timeout: float = 180.0) -> tuple[list[dict[str, Any]], str]:
-    payload = {
-        "model": SCILLM_MODEL,
-        "messages": [{"role": "user", "content": prompt}],
-    }
-    headers = {
-        "Authorization": f"Bearer {scillm_api_key()}",
-        "X-Caller-Skill": CALLER_SKILL,
-    }
-    data = _http_post(SCILLM_URL, payload, headers, timeout)
-    content = data["choices"][0]["message"]["content"]
-    parsed = _extract_json(content)
+def draft_interpretations(prompt: str, timeout: float = 240.0) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Draft interpretations through the sanctioned Tau text-reasoning node.
+
+    No direct scillm call: only Tau may reach scillm. Returns the drafted
+    candidates (the LLM only proposes; the deterministic gate below decides
+    admissibility) and the Tau receipt (prompt hash, api_key_source, raw output).
+    """
+    parsed, receipt = tau_adapter.dispatch_text_reasoning(
+        prompt,
+        role="persona-self-interpretation",
+        output_contract=INTERPRETATION_OUTPUT_CONTRACT,
+        caller_skill=CALLER_SKILL,
+        model=SCILLM_MODEL,
+        timeout_s=timeout,
+    )
     candidates = parsed.get("candidates", []) if isinstance(parsed, dict) else []
-    return candidates, content
+    return candidates, receipt
 
 
 def _extract_json(text: str) -> dict[str, Any]:
@@ -464,11 +472,18 @@ def run_phase13(
     intended_dream = load_intended_dream(story_contract, script_contract)
 
     candidates: list[dict[str, Any]] = []
-    llm_meta: dict[str, Any] = {"model": SCILLM_MODEL, "provider": "scillm", "auth": "codex-oauth", "caller_skill": CALLER_SKILL}
+    llm_meta: dict[str, Any] = {
+        "model": SCILLM_MODEL,
+        "provider": "scillm",
+        "route": "tau:persona-dream-text-reasoning",
+        "direct_scillm_call": False,
+        "caller_skill": CALLER_SKILL,
+    }
     if live and source_bindings and observation_index:
         prompt = build_prompt(intended_dream, observation_index, source_bindings, persona_id)
-        candidates, _raw = draft_interpretations(prompt)
+        candidates, tau_receipt = draft_interpretations(prompt)
         llm_meta["candidate_count"] = len(candidates)
+        llm_meta["tau_routing"] = tau_adapter.receipt_provenance(tau_receipt)
 
     accepted, rejected = validate_interpretations(candidates, observation_index, source_ids)
 

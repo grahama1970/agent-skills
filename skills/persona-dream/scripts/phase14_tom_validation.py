@@ -29,9 +29,20 @@ assert _spec and _spec.loader
 p13 = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(p13)
 
-SCILLM_URL = p13.SCILLM_URL
 SCILLM_MODEL = p13.SCILLM_MODEL
 CALLER_SKILL = p13.CALLER_SKILL
+tau_adapter = p13.tau_adapter
+
+# Caller-defined JSON output contract handed to (and hash-recorded by) the Tau node.
+TOM_OUTPUT_CONTRACT = {
+    "type": "object",
+    "required": ["candidates"],
+    "candidate_required": [
+        "candidate_id", "parent_interpretation_id", "tom_state_type", "subject",
+        "target", "statement", "source_memory_refs", "watch_observation_refs",
+        "confidence", "emotional_intensity", "synthetic_origin", "literal_historical_event",
+    ],
+}
 
 ALLOWED_TOM_STATES = {
     "belief", "fear", "desire", "trust", "distrust", "stance",
@@ -176,13 +187,25 @@ Return ONLY JSON:
 No prose outside the JSON object."""
 
 
-def propose_candidates(accepted_interpretations: list[dict[str, Any]], timeout: float = 180.0) -> list[dict[str, Any]]:
-    payload = {"model": SCILLM_MODEL, "messages": [{"role": "user", "content": build_prompt(accepted_interpretations)}]}
-    headers = {"Authorization": f"Bearer {p13.scillm_api_key()}", "X-Caller-Skill": CALLER_SKILL}
-    data = p13._http_post(SCILLM_URL, payload, headers, timeout)
-    content = data["choices"][0]["message"]["content"]
-    parsed = p13._extract_json(content)
-    return parsed.get("candidates", []) if isinstance(parsed, dict) else []
+def propose_candidates(
+    accepted_interpretations: list[dict[str, Any]], timeout: float = 240.0
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Propose ToM candidates through the sanctioned Tau text-reasoning node.
+
+    No direct scillm call: only Tau may reach scillm. The LLM only proposes;
+    the deterministic subset gate below decides admissibility. Returns the
+    proposed candidates and the Tau receipt.
+    """
+    parsed, receipt = tau_adapter.dispatch_text_reasoning(
+        build_prompt(accepted_interpretations),
+        role="tom-candidate-proposal",
+        output_contract=TOM_OUTPUT_CONTRACT,
+        caller_skill=CALLER_SKILL,
+        model=SCILLM_MODEL,
+        timeout_s=timeout,
+    )
+    candidates = parsed.get("candidates", []) if isinstance(parsed, dict) else []
+    return candidates, receipt
 
 
 def derive_candidates_deterministic(accepted_interpretations: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -219,11 +242,13 @@ def run_phase14(
     accepted_interps = interpretation.get("accepted_interpretations", [])
     candidate_source = "none"
     candidates: list[dict[str, Any]] = []
+    tau_routing: dict[str, Any] | None = None
     if accepted_interps:
         if live:
             try:
-                candidates = propose_candidates(accepted_interps)
-                candidate_source = "llm"
+                candidates, tau_receipt = propose_candidates(accepted_interps)
+                tau_routing = tau_adapter.receipt_provenance(tau_receipt)
+                candidate_source = "llm_via_tau"
             except Exception:  # noqa: BLE001
                 candidates = []
         if not candidates:
@@ -249,6 +274,7 @@ def run_phase14(
         "run_id": run_id,
         "interpretation_sha256": p13.canonical_sha(interpretation),
         "candidate_source": candidate_source,
+        "tau_routing": tau_routing,
         "proposed_candidate_count": len(candidates),
         "accepted_tom_candidates": accepted,
         "candidate_receipts": receipts,
