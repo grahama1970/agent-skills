@@ -844,6 +844,22 @@ def write_commit_manifest(
         "committed_at": utc_now(),
     }
     receipt = store_and_reread(manifest_doc, COMMIT_MANIFEST_COLLECTION, base_url)
+    if manifest_active and not receipt["exact_reread_match"]:
+        # The manifest's own reread failed: it must not remain stored active
+        # (webgpt re-assess 2026-07-19). Compensating inactive write, then
+        # report inactive regardless of the compensation outcome.
+        manifest_active = False
+        compensator = {
+            **manifest_doc,
+            "active": False,
+            "quarantined": True,
+            "quarantine_reason": "MANIFEST_REREAD_MISMATCH",
+            "quarantined_at": utc_now(),
+        }
+        _http_post(
+            f"{base_url.rstrip('/')}/store",
+            {"collection": COMMIT_MANIFEST_COLLECTION, "document": compensator},
+        )
     return {
         "key": manifest_doc["_key"],
         "active": manifest_active,
@@ -904,26 +920,37 @@ def persist_canonical(
         interpretation_vertices=interpretation_vertices, causal_fields=causal_fields,
     )
     expected_count = len(write_set)
-    # Pre-stage contract assertion (webgpt review 2026-07-19): every canonical
-    # record must carry the visibility contract or it would surface as
-    # legacy-null and bypass pending-hiding server-side.
-    if not retroactive:
-        naked = [
-            e["document"].get("_key")
-            for e in write_set
-            if not (e["document"].get("commit_id") and e["document"].get("visibility_state"))
-        ]
-        if naked:
-            raise ValueError(
-                f"canonical write-set records missing commit_id/visibility_state: {naked[:5]}"
-            )
+    # SINGLE TRANSACTION IDENTITY (webgpt re-assess 2026-07-19): derive the
+    # plan-bound key over the commit-id-less write set, THEN stamp the derived
+    # commit id into every record, so records' commit_id == manifest _key ==
+    # proof key. The plan hash excludes the commit_id field itself (it is a
+    # function of the plan, not part of it).
     canonical_plan_sha256 = canonical_sha(
-        [_normalize_numbers({k: v for k, v in e["document"].items()}) for e in write_set]
+        [
+            _normalize_numbers({k: v for k, v in e["document"].items() if k != "commit_id"})
+            for e in write_set
+        ]
     )
     idempotency_key = compute_idempotency_key(
         dream_id, return_id, packet, phase13_sha, phase14_sha,
         canonical_plan_sha256=canonical_plan_sha256,
     )
+    final_commit_id = f"commit_{idempotency_key}"
+    for e in write_set:
+        e["document"]["commit_id"] = final_commit_id
+    # Post-stamp contract assertion: every canonical record carries the final
+    # bound identity + visibility contract (legacy-null bypass hardening).
+    if not retroactive:
+        naked = [
+            e["document"].get("_key")
+            for e in write_set
+            if e["document"].get("commit_id") != final_commit_id
+            or not e["document"].get("visibility_state")
+        ]
+        if naked:
+            raise ValueError(
+                f"canonical write-set records missing bound commit_id/visibility_state: {naked[:5]}"
+            )
 
     # --- Detect on rerun: resume WITHOUT re-staging/re-publishing ----------
     prior = existing_commit_manifest(idempotency_key, base_url)
@@ -1118,16 +1145,16 @@ def run_phase15(
     phase13_sha = canonical_sha(interpretation)
     phase14_sha = canonical_sha(tom)
 
-    # Deterministic write-set identity + commit id (Defect 6 commit_id).
-    idempotency_key = compute_idempotency_key(dream_id, return_id, packet, phase13_sha, phase14_sha)
-    commit_id = f"commit_{idempotency_key}"
-
     # Causal-family / lineage fields (Defect 6): root events are the residue
-    # source-memory ids the dream derives from.
+    # source-memory ids the dream derives from. commit_id is NOT stamped here —
+    # persist_canonical is the sole transaction-identity authority and stamps
+    # the final plan-bound commit id into every record (webgpt re-assess
+    # 2026-07-19: a K0 stamped pre-derivation while the manifest publishes
+    # under plan-bound K1 breaks key propagation).
     root_event_ids = sorted({
         str(b.get("source_id")) for b in interpretation.get("source_memory_bindings", []) if b.get("source_id")
     })
-    causal_fields = build_causal_family_fields(persona_id, dream_id, root_event_ids, commit_id)
+    causal_fields = build_causal_family_fields(persona_id, dream_id, root_event_ids, None)
 
     # tau step-36 adjudication receipt hash for Watch-evidence provenance.
     adjudication_receipt_sha256 = None
@@ -1180,8 +1207,7 @@ def run_phase15(
             "legacy_raw_keys_frozen": True,
         },
         "causal_family_fields": causal_fields,
-        "idempotency_key": idempotency_key,
-        "commit_id": commit_id,
+        "transaction_identity": "BOUND_AT_PERSIST",
         "phase13_sha256": phase13_sha,
         "phase14_sha256": phase14_sha,
         "qdrant_embedding": {

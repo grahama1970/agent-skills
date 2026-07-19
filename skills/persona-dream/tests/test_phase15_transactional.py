@@ -201,3 +201,52 @@ def test_canonical_payload_is_deterministic_and_wall_clock_refused():
         raise AssertionError("expected ValueError for missing source timestamps")
     except ValueError:
         pass
+
+
+class ManifestCorruptingMemory(FakeMemory):
+    """Corrupts the ACTIVE commit manifest on store to force a manifest-reread
+    mismatch (webgpt re-assess 2026-07-19 fault proof)."""
+
+    def post(self, url, payload, timeout=15.0):
+        if url.endswith("/store"):
+            doc = payload["document"]
+            if (
+                payload.get("collection") == p15.COMMIT_MANIFEST_COLLECTION
+                and doc.get("active") is True
+            ):
+                mutated = {**doc, "record_count": 999999}
+                self.store[(p15.COMMIT_MANIFEST_COLLECTION, doc["_key"])] = mutated
+                return {"ok": True}
+        return super().post(url, payload, timeout)
+
+
+def test_transaction_identity_unity(monkeypatch):
+    """webgpt re-assess 2026-07-19: every stored canonical record's commit_id
+    must equal the stored manifest _key and the proof's plan-bound key."""
+    fake = FakeMemory()
+    result = _run(monkeypatch, fake)
+    proof = result["canonical_write_proof"]
+    manifest_key = proof["commit_manifest"]["key"]
+    assert manifest_key == f"commit_{proof['idempotency_key']}"
+    assert (p15.COMMIT_MANIFEST_COLLECTION, manifest_key) in fake.store
+    stamped = [
+        doc for (coll, _k), doc in fake.store.items()
+        if coll not in (p15.COMMIT_MANIFEST_COLLECTION, p15.STAGING_COLLECTION)
+        and doc.get("commit_id")
+    ]
+    assert stamped, "no canonical records carried commit_id"
+    assert all(doc["commit_id"] == manifest_key for doc in stamped)
+
+
+def test_manifest_reread_corruption_leaves_stored_manifest_inactive(monkeypatch):
+    """webgpt re-assess 2026-07-19: a manifest whose own reread fails must not
+    remain stored active — a compensating inactive write must land."""
+    fake = ManifestCorruptingMemory()
+    result = _run(monkeypatch, fake)
+    assert result["canonical_dream_memory_written"] is False
+    manifest = result["canonical_write_proof"]["commit_manifest"]
+    assert manifest["active"] is False
+    stored = fake.store[(p15.COMMIT_MANIFEST_COLLECTION, manifest["key"])]
+    assert stored["active"] is False
+    assert stored["quarantined"] is True
+    assert stored["quarantine_reason"] == "MANIFEST_REREAD_MISMATCH"
