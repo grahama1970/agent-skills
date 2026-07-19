@@ -1,0 +1,8 @@
+{
+  "created_at": "2026-07-19T15:21:33.968751+00:00",
+  "route": "pipeline-text -> tau_text_reasoning_adapter",
+  "result": {
+    "selected_candidate_id": "idea_2",
+    "reason": "The storm swallowing the harbor has stronger emotional intensity, vivid dream imagery, and symbolic weight, making it more likely to occupy embry\u2019s dreaming mind than the quieter tea image."
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "created_at": "2026-07-19T15:21:45.375065+00:00",
+  "route": "watch vlm -> tau_vlm_composite_review -> tau panel node",
+  "result": {
+    "provider": "tau",
+    "requested_model": "gpt-5.5",
+    "served_model": "gpt-5.5",
+    "status": "described",
+    "content": "The image shows a dark blue background with a thick white outlined square centered slightly to the right, plus a black header bar at the top. White text reads \"image 1\" in the header and \"FRAME\" inside the square.",
+    "http_status": 200,
+    "error_type": null,
+    "error": null
+  }
+}
