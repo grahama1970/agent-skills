@@ -10,7 +10,6 @@ from __future__ import annotations
 import argparse
 import json
 import subprocess
-import sys
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -22,6 +21,11 @@ ASK_DIR = Path(__file__).resolve().parents[1]
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--output-root", type=Path, default=None)
+    parser.add_argument(
+        "--tau-project-root",
+        type=Path,
+        default=Path("/home/graham/workspace/experiments/tau"),
+    )
     parser.add_argument("--allow-provider-calls", action="store_true")
     parser.add_argument("--require-provider-calls", action="store_true")
     parser.add_argument("--local-fixture", action=argparse.BooleanOptionalAction, default=True)
@@ -32,7 +36,11 @@ def main() -> int:
     cmd = [
         str(ASK_DIR / "run.sh"),
         "tau-dag",
-        "ask 2 gpt 5.6 xhigh subagents to solve X concurrently, then claude fable reviews both solutions",
+        (
+            "ask 2 gpt 5.6 xhigh subagents concurrently to explain why provider "
+            "transport success is not semantic proof and propose an evidence gate, "
+            "then claude fable reviews both solutions"
+        ),
         "--repo",
         "local/tau",
         "--target",
@@ -44,6 +52,8 @@ def main() -> int:
         "--run-output-root",
         str(output_root),
         "--execute",
+        "--tau-project-root",
+        str(args.tau_project_root),
         "--viewer-link",
         "--json",
     ]
@@ -192,6 +202,16 @@ def _summarize(
                     ),
                     {"node_provider_receipts": execution.get("node_provider_receipts")},
                 ),
+                _check(
+                    "solver_evidence_contains_provider_output",
+                    _solver_outputs_are_provider_derived(output_root),
+                    {"solver_outputs": _solver_outputs(output_root)},
+                ),
+                _check(
+                    "reviewer_decision_uses_solver_evidence",
+                    _reviewer_decision_is_provider_derived(output_root),
+                    {"reviewer_decision": _reviewer_decision(output_root)},
+                ),
             ]
         )
     ok = all(item["ok"] for item in checks)
@@ -289,6 +309,57 @@ def _has_execution_node_provider_receipt(execution: dict[str, Any], **expected: 
         ):
             return True
     return False
+
+
+def _node_artifact_receipt(output_root: Path, node_id: str) -> dict[str, Any]:
+    matches = sorted(output_root.glob(f"*/node-artifacts/{node_id}/node-receipt.json"))
+    return _read_json(matches[0]) if len(matches) == 1 else {}
+
+
+def _solver_outputs(output_root: Path) -> list[dict[str, Any]]:
+    return [
+        {
+            "node_id": node_id,
+            "output_text": provider.get("output_text"),
+            "provider_live": node_receipt.get("provider_live"),
+        }
+        for node_id in ("solver-1", "solver-2")
+        for node_receipt in [_node_artifact_receipt(output_root, node_id)]
+        for provider in [
+            node_receipt.get("provider_receipt")
+            if isinstance(node_receipt.get("provider_receipt"), dict)
+            else {}
+        ]
+    ]
+
+
+def _solver_outputs_are_provider_derived(output_root: Path) -> bool:
+    outputs = _solver_outputs(output_root)
+    return len(outputs) == 2 and all(
+        item.get("provider_live") is True
+        and isinstance(item.get("output_text"), str)
+        and len(str(item["output_text"]).strip()) >= 20
+        and "candidate solution for the requested problem" not in str(item["output_text"])
+        for item in outputs
+    )
+
+
+def _reviewer_decision(output_root: Path) -> dict[str, Any] | None:
+    node_receipt = _node_artifact_receipt(output_root, "reviewer")
+    provider = node_receipt.get("provider_receipt")
+    decision = provider.get("reviewer_decision") if isinstance(provider, dict) else None
+    return decision if isinstance(decision, dict) else None
+
+
+def _reviewer_decision_is_provider_derived(output_root: Path) -> bool:
+    decision = _reviewer_decision(output_root)
+    return bool(
+        isinstance(decision, dict)
+        and decision.get("winner") in {"solver-1", "solver-2"}
+        and isinstance(decision.get("rationale"), str)
+        and len(str(decision["rationale"]).strip()) >= 20
+        and "Fixture" not in str(decision["rationale"])
+    )
 
 
 def _remaining_unverified(*, provider_live: bool) -> list[str]:

@@ -4,7 +4,12 @@ import json
 import subprocess
 from pathlib import Path
 
-from ask.tau_dag import compile_tau_dag_bundle, infer_compile_input, resolve_scillm_model_route
+from ask.tau_dag import (
+    DEFAULT_SCILLM_API_KEY,
+    compile_tau_dag_bundle,
+    infer_compile_input,
+    resolve_scillm_model_route,
+)
 
 
 TAU_ROOT = Path("/home/graham/workspace/experiments/tau")
@@ -112,10 +117,13 @@ def test_command_spec_blocks_provider_execution_without_opt_in(tmp_path: Path) -
     assert command_spec["command"][command_spec["command"].index("--requested-model") + 1] == "gpt-5.6-xhigh"
     assert command_spec["command"][command_spec["command"].index("--reasoning-effort") + 1] == "high"
     assert command_spec["command"][command_spec["command"].index("--requested-reasoning-effort") + 1] == "xhigh"
+    assert "--scillm-api-key" not in command_spec["command"]
+    assert request.scillm_api_key not in json.dumps(command_spec)
     assert command_spec["requires_network"] is True
     assert command_spec["timeout_s"] == 900
     worker_source = Path(bundle["worker_path"]).read_text(encoding="utf-8")
     assert "max_tokens" not in worker_source
+    assert 'os.environ.get("SCILLM_API_KEY", "")' in worker_source
     compile(worker_source, str(bundle["worker_path"]), "exec")
 
 
@@ -137,6 +145,61 @@ def test_scillm_route_maps_claude_fable_alias_to_live_catalog_name() -> None:
     assert route.model == "claude-fable-5"
     assert route.provider == "anthropic"
     assert route.auth == "scillm_claude_code_credentials"
+
+
+def test_scillm_default_uses_documented_local_proxy_key() -> None:
+    assert DEFAULT_SCILLM_API_KEY == "sk-dev-proxy-123"
+
+
+def test_run_wrapper_resolves_rotated_local_scillm_key() -> None:
+    run_script = (Path(__file__).parents[1] / "run.sh").read_text(encoding="utf-8")
+
+    assert 'SCILLM_ENV_FILE="${SCILLM_ENV_FILE:-${SCILLM_ROOT:-' in run_script
+    assert 'if [[ -z "${SCILLM_API_KEY:-}" ]]; then' in run_script
+    assert "sed -n 's/^SCILLM_MASTER_KEY=//p'" in run_script
+    assert 'export SCILLM_API_KEY="$SCILLM_LOCAL_KEY"' in run_script
+
+
+def test_generated_worker_uses_provider_outputs_for_solver_and_reviewer(tmp_path: Path) -> None:
+    request = infer_compile_input(
+        "solve X",
+        repo="local/tau",
+        target="issue-ask-tau-dag",
+        solver_models=["gpt-5.6-xhigh", "gpt-5.6-xhigh"],
+        reviewer_model="claude-fable",
+        criteria=["correctness"],
+        output_root=tmp_path,
+    )
+    bundle = compile_tau_dag_bundle(request)
+    worker_path = Path(bundle["worker_path"])
+    namespace = {"__name__": "ask_tau_dag_worker_test"}
+    exec(compile(worker_path.read_text(encoding="utf-8"), str(worker_path), "exec"), namespace)
+    start = {
+        "context": {
+            "tau_dag_node": {
+                "node_id": "reviewer",
+                "context": {"request": "solve X", "criteria": ["correctness"]},
+            }
+        },
+        "result": {
+            "evidence": [
+                {"kind": "solution", "node_id": "solver-1", "summary": "first"},
+                {"kind": "solution", "node_id": "solver-2", "summary": "second"},
+            ]
+        },
+    }
+
+    assert namespace["_assistant_text"](
+        {"choices": [{"message": {"content": "actual provider solution"}}]}
+    ) == "actual provider solution"
+    assert namespace["_reviewer_decision"](
+        '{"winner":"solver-2","rationale":"Second is more correct."}', start
+    ) == {"winner": "solver-2", "rationale": "Second is more correct."}
+    assert namespace["_reviewer_decision"](
+        '{"winner":"solver-9","rationale":"Invalid candidate."}', start
+    ) is None
+    prompt = json.loads(namespace["_prompt"](start))
+    assert [item["node_id"] for item in prompt["solver_outputs"]] == ["solver-1", "solver-2"]
 
 
 def test_webgpt_model_routes_to_interview_until_native_tau_skill_node_exists(tmp_path: Path) -> None:

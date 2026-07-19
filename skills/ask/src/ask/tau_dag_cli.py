@@ -11,7 +11,6 @@ import typer
 
 from .tau_dag import (
     DEFAULT_OUTPUT_ROOT,
-    DEFAULT_SCILLM_API_KEY,
     DEFAULT_SCILLM_BASE_URL,
     DEFAULT_TAU_PROJECT_ROOT,
     compile_tau_dag_bundle,

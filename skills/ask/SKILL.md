@@ -195,6 +195,15 @@ When a reference file is selected, read it completely before running that mode.
 ./run.sh status --run <ask_id> --json
 ```
 
+For real provider execution, add `--allow-provider-calls --require-provider-calls`
+and omit `--local-fixture`. `run.sh` preserves an explicit `SCILLM_API_KEY`;
+otherwise it reads only `SCILLM_MASTER_KEY` from
+`${SCILLM_ENV_FILE}` or `${SCILLM_ROOT}/.env` (default:
+`~/workspace/experiments/scillm/.env`). `--scillm-api-key` is the final explicit
+CLI override. Legacy `SCILLM_PROXY_KEY` remains the fallback when no local stack
+environment file exists. A provider-required run stops before Tau execution
+when this credential cannot authenticate.
+
 Opt-in live sanity checks are intentionally outside the default test suite:
 
 ```bash

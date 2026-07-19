@@ -22,7 +22,7 @@ TAU_DAG_SCHEMA = "tau.dag_contract.v1"
 ASK_TAU_DAG_BUNDLE_SCHEMA = "ask.tau_dag_bundle.v1"
 ASK_TAU_DAG_INTERVIEW_SCHEMA = "ask.tau_dag_interview.v1"
 DEFAULT_SCILLM_BASE_URL = "http://127.0.0.1:4001"
-DEFAULT_SCILLM_API_KEY = ""
+DEFAULT_SCILLM_API_KEY = "sk-dev-proxy-123"
 DEFAULT_TAU_PROJECT_ROOT = Path("/home/graham/workspace/experiments/tau")
 DEFAULT_OUTPUT_ROOT = Path(".ask_artifacts/tau-dag-runs")
 TERMINAL_STATUSES = {"PASS", "BLOCKED", "FAILED", "ERROR"}
@@ -686,8 +686,6 @@ def _write_command_spec(
         str(model_policy.get("model") or ""),
         "--scillm-base-url",
         input.scillm_base_url,
-        "--scillm-api-key",
-        input.scillm_api_key,
         "--artifact-dir",
         str(run_dir / "node-artifacts" / node_id),
     ]
@@ -988,6 +986,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import urllib.error
 import urllib.request
@@ -1005,7 +1004,7 @@ def main() -> int:
     parser.add_argument("--reasoning-effort", default="")
     parser.add_argument("--requested-reasoning-effort", default="")
     parser.add_argument("--scillm-base-url", required=True)
-    parser.add_argument("--scillm-api-key", required=True)
+    parser.add_argument("--scillm-api-key", default=os.environ.get("SCILLM_API_KEY", ""))
     parser.add_argument("--artifact-dir", required=True)
     parser.add_argument("--evidence", action="append", default=[])
     args = parser.parse_args()
@@ -1076,6 +1075,21 @@ def _provider_receipt(args: argparse.Namespace, start: dict[str, Any]) -> dict[s
             "provider_transport": "$scillm",
         }
     prompt = _prompt(start)
+    if not args.scillm_api_key:
+        return {
+            "schema": "ask.tau_dag_provider_route_receipt.v1",
+            "status": "ERROR",
+            "ok": False,
+            "mocked": False,
+            "live": False,
+            "provider_live": False,
+            "model": args.model,
+            "requested_model": args.requested_model or args.model,
+            "route": "tau_local_scillm_adapter",
+            "execution_owner": "$tau",
+            "provider_transport": "$scillm",
+            "error": "SCILLM_API_KEY is required for provider execution",
+        }
     payload = {
         "model": args.model,
         "messages": [{"role": "user", "content": prompt}],
@@ -1095,6 +1109,15 @@ def _provider_receipt(args: argparse.Namespace, start: dict[str, Any]) -> dict[s
     try:
         with urllib.request.urlopen(request, timeout=900) as response:
             body = response.read().decode("utf-8", errors="replace")
+        parsed = json.loads(body)
+        output_text = _assistant_text(parsed)
+        if not output_text:
+            raise ValueError("provider response did not contain assistant output")
+        reviewer_decision = None
+        if args.node_id == "reviewer":
+            reviewer_decision = _reviewer_decision(output_text, start)
+            if reviewer_decision is None:
+                raise ValueError("reviewer response did not contain a valid winner and rationale")
         return {
             "schema": "ask.tau_dag_provider_route_receipt.v1",
             "status": "PASS",
@@ -1109,9 +1132,17 @@ def _provider_receipt(args: argparse.Namespace, start: dict[str, Any]) -> dict[s
             "route": "tau_local_scillm_adapter",
             "execution_owner": "$tau",
             "provider_transport": "$scillm",
-            "response": json.loads(body),
+            "response": parsed,
+            "output_text": output_text,
+            "reviewer_decision": reviewer_decision,
         }
-    except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, json.JSONDecodeError) as exc:
+    except (
+        urllib.error.URLError,
+        urllib.error.HTTPError,
+        TimeoutError,
+        json.JSONDecodeError,
+        ValueError,
+    ) as exc:
         return {
             "schema": "ask.tau_dag_provider_route_receipt.v1",
             "status": "ERROR",
@@ -1157,11 +1188,16 @@ def _evidence(
         },
     ]
     if args.node_id.startswith("solver-"):
+        solution = (
+            f"{args.node_id} candidate solution for the requested problem."
+            if args.mode == "fixture"
+            else str(receipt["provider_receipt"].get("output_text") or "")
+        )
         evidence.append(
             {
                 "kind": "solution",
                 "node_id": args.node_id,
-                "summary": f"{args.node_id} candidate solution for the requested problem.",
+                "summary": solution,
                 "model": args.model,
                 "requested_model": args.requested_model or args.model,
                 "reasoning_effort": args.reasoning_effort or None,
@@ -1169,31 +1205,108 @@ def _evidence(
             }
         )
     if args.node_id == "reviewer":
+        decision = receipt["provider_receipt"].get("reviewer_decision")
+        if not isinstance(decision, dict):
+            decision = {
+                "winner": "solver-1",
+                "rationale": "Fixture reviewer selected solver-1 after applying the stated criteria.",
+            }
         evidence.append(
             {
                 "kind": "reviewer_verdict",
                 "goal_hash": start.get("goal", {}).get("goal_hash"),
-                "winner": "solver-1",
-                "rationale": "Fixture/default reviewer selected solver-1 after applying the stated criteria.",
+                "winner": decision["winner"],
+                "rationale": decision["rationale"],
                 "criteria": start.get("context", {}).get("criteria", []),
             }
         )
-        evidence.append({"kind": "winner", "winner": "solver-1"})
-        evidence.append({"kind": "rationale", "text": "Winner chosen with an explicit rationale."})
+        evidence.append({"kind": "winner", "winner": decision["winner"]})
+        evidence.append({"kind": "rationale", "text": decision["rationale"]})
     return evidence
 
 
 def _prompt(start: dict[str, Any]) -> str:
     context = start.get("context") if isinstance(start.get("context"), dict) else {}
+    dag_node = context.get("tau_dag_node") if isinstance(context.get("tau_dag_node"), dict) else {}
+    node_context = dag_node.get("context") if isinstance(dag_node.get("context"), dict) else {}
+    base = {
+        "request": node_context.get("request"),
+        "criteria": node_context.get("criteria", []),
+        "dag_node": dag_node,
+    }
+    if dag_node.get("node_id") == "reviewer":
+        evidence = start.get("result", {}).get("evidence", [])
+        solutions = [
+            item
+            for item in evidence
+            if isinstance(item, dict) and item.get("kind") == "solution"
+        ]
+        return json.dumps(
+            {
+                **base,
+                "task": "Compare the complete solver outputs using every criterion.",
+                "solver_outputs": solutions,
+                "response_contract": {
+                    "format": "Return only a JSON object with no markdown.",
+                    "schema": {"winner": "solver-N", "rationale": "non-empty comparison"},
+                },
+            },
+            sort_keys=True,
+        )
     return json.dumps(
         {
-            "task": "Produce concise Tau DAG node evidence.",
-            "summary": context.get("summary"),
-            "dag_node": context.get("tau_dag_node"),
-            "required_evidence": start.get("required_evidence", []),
+            **base,
+            "task": "Solve the human request and return the concrete proposed solution.",
+            "response_contract": "Return a self-contained solution as plain text.",
         },
         sort_keys=True,
     )
+
+
+def _assistant_text(payload: dict[str, Any]) -> str:
+    choices = payload.get("choices")
+    if not isinstance(choices, list) or not choices or not isinstance(choices[0], dict):
+        return ""
+    message = choices[0].get("message")
+    if not isinstance(message, dict):
+        return ""
+    content = message.get("content")
+    if isinstance(content, str):
+        return content.strip()
+    if isinstance(content, list):
+        parts = [
+            str(item.get("text")).strip()
+            for item in content
+            if isinstance(item, dict) and isinstance(item.get("text"), str)
+        ]
+        return "\n".join(part for part in parts if part)
+    return ""
+
+
+def _reviewer_decision(output_text: str, start: dict[str, Any]) -> dict[str, str] | None:
+    text = output_text.strip()
+    if text.startswith("```") and text.endswith("```"):
+        lines = text.splitlines()
+        text = "\n".join(lines[1:-1]).strip()
+    try:
+        payload = json.loads(text)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(payload, dict):
+        return None
+    winner = payload.get("winner")
+    rationale = payload.get("rationale")
+    evidence = start.get("result", {}).get("evidence", [])
+    candidates = {
+        str(item.get("node_id"))
+        for item in evidence
+        if isinstance(item, dict)
+        and item.get("kind") == "solution"
+        and isinstance(item.get("node_id"), str)
+    }
+    if winner not in candidates or not isinstance(rationale, str) or not rationale.strip():
+        return None
+    return {"winner": str(winner), "rationale": rationale.strip()}
 
 
 if __name__ == "__main__":
