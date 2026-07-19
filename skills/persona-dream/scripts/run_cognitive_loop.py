@@ -65,6 +65,7 @@ def run_loop(
     return_id: str | None = None,
     acceptance_receipt_path: Path | None = None,
     superseded_return_ids: set[str] | None = None,
+    allow_tom_fallback: bool = False,
 ) -> dict[str, Any]:
     output_root.mkdir(parents=True, exist_ok=True)
     phases: list[dict[str, Any]] = []
@@ -91,6 +92,12 @@ def run_loop(
     # Phase 12 - already-produced Watch observation packet.
     packet = p13.read_json(observation_path)
     observation_sha = p13.canonical_sha(packet)
+    # Defect 1 fix: the runner computes the observation-packet file hash
+    # INDEPENDENTLY (the same file_sha phase13 records) so guard 2 verifies
+    # phase13 bound the exact packet file this runner consumed. Passing
+    # interp.get("observation_packet_sha256") into its own guard was a
+    # tautology (self-comparison that can never catch a tampered field).
+    observation_file_sha = p13.file_sha(observation_path)
     acceptance_receipt = (
         p13.read_json(acceptance_receipt_path) if acceptance_receipt_path else None
     )
@@ -113,7 +120,7 @@ def run_loop(
         "status": packet.get("status", "UNKNOWN"),
         "role": "input",
         "artifacts": [str(observation_path)],
-        "observation_packet_sha256": p13.file_sha(observation_path),
+        "observation_packet_sha256": observation_file_sha,
         "observation_packet_content_sha256": observation_sha,
         "evidence_origin": packet.get("evidence_origin"),
     })
@@ -147,7 +154,7 @@ def run_loop(
     # GUARD 2: ACCEPTED_OBSERVATION -> PASS_INTERPRETATION (before the phase14 LLM side effect).
     t_interp = guards.guard_interpretation(
         interp, expected_dream_id=dream_id, expected_revision_id=revision_id,
-        expected_run_id=run_id, expected_observation_sha256=interp.get("observation_packet_sha256"),
+        expected_run_id=run_id, expected_observation_sha256=observation_file_sha,
         min_accepted=1,
     )
     transitions.append(t_interp.as_dict())
@@ -170,7 +177,7 @@ def run_loop(
     # GUARD 3: PASS_INTERPRETATION -> PASS_TOM_VALIDATION (before the phase15 write side effect).
     t_tom = guards.guard_tom_validation(
         tom, interp, expected_dream_id=dream_id, expected_revision_id=revision_id,
-        expected_run_id=run_id, min_accepted=1,
+        expected_run_id=run_id, min_accepted=1, allow_tom_fallback=allow_tom_fallback,
     )
     transitions.append(t_tom.as_dict())
     if t_tom.has_structural:
@@ -289,6 +296,9 @@ def main() -> int:
     p.add_argument("--return-id", default=None)
     p.add_argument("--acceptance-receipt", type=Path, default=None)
     p.add_argument("--superseded-return-ids", default=None)
+    p.add_argument("--allow-tom-fallback", action="store_true",
+                   help="Waiver: permit the loop to proceed on a DEGRADED_TOM_LIVE_ROUTE_FALLBACK "
+                        "(live ToM route attempted then failed -> deterministic projection).")
     p.add_argument("--json", action="store_true")
     args = p.parse_args()
 
@@ -302,6 +312,7 @@ def main() -> int:
         live=not args.no_live, validation_collection=args.validation_collection,
         allow_canonical_write=args.allow_canonical_write, return_id=args.return_id,
         acceptance_receipt_path=args.acceptance_receipt, superseded_return_ids=superseded,
+        allow_tom_fallback=args.allow_tom_fallback,
     )
     if args.json:
         print(json.dumps({

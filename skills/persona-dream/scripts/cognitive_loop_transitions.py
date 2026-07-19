@@ -77,9 +77,20 @@ PASS_INTERPRETATION_STATUSES = {
     "PASS_SELF_INTERPRETATION",
     "PASS_SELF_INTERPRETATION_WITH_REJECTIONS",
 }
+# ToM statuses the guard accepts unconditionally. The two provenance-specific
+# PASS codes (live, deterministic-projection) both pass; the legacy generic
+# codes are retained for backward compatibility.
 PASS_TOM_STATUSES = {
     "PASS_TOM_VALIDATION",
     "PASS_TOM_VALIDATION_WITH_REJECTIONS",
+    "PASS_TOM_VALIDATION_LIVE",
+    "PASS_TOM_VALIDATION_DETERMINISTIC_PROJECTION",
+}
+# A degraded live-route fallback (live attempted then failed -> deterministic
+# projection) is NOT a clean pass. The loop may proceed on it only with an
+# explicit waiver (Defect 3).
+WAIVER_BACKED_TOM_STATUSES = {
+    "DEGRADED_TOM_LIVE_ROUTE_FALLBACK",
 }
 
 SEVERITY_STRUCTURAL = "STRUCTURAL"
@@ -262,6 +273,7 @@ def guard_tom_validation(
     expected_revision_id: str,
     expected_run_id: str,
     min_accepted: int = 1,
+    allow_tom_fallback: bool = False,
 ) -> Transition:
     t = Transition(STATE_PASS_INTERPRETATION, STATE_PASS_TOM_VALIDATION)
     schema = _s(tom.get("schema"))
@@ -269,7 +281,13 @@ def guard_tom_validation(
         t.blockers.append(Blocker(f"TOM_WRONG_SCHEMA:{schema or 'missing'}", SEVERITY_STRUCTURAL))
 
     status = _s(tom.get("status"))
-    if status not in PASS_TOM_STATUSES:
+    if status in PASS_TOM_STATUSES:
+        pass  # clean pass (live or deterministic projection)
+    elif status in WAIVER_BACKED_TOM_STATUSES:
+        # Degraded live-route fallback: proceed ONLY with an explicit waiver.
+        if not allow_tom_fallback:
+            t.blockers.append(Blocker("TOM_LIVE_ROUTE_FALLBACK_UNWAIVED", SEVERITY_STRUCTURAL))
+    else:
         t.blockers.append(Blocker(f"TOM_STATUS_NOT_PASS:{status or 'missing'}", SEVERITY_STRUCTURAL))
 
     for field_name, expected in (
@@ -296,6 +314,9 @@ def guard_tom_validation(
     t.evidence = {
         "schema": schema,
         "status": status,
+        "candidate_source": _s(tom.get("candidate_source")),
+        "is_live_route_fallback": status in WAIVER_BACKED_TOM_STATUSES,
+        "fallback_waived": bool(allow_tom_fallback) if status in WAIVER_BACKED_TOM_STATUSES else None,
         "accepted_count": n_accepted,
         "interpretation_sha256_bound": got_interp_sha,
         "interpretation_sha256_expected": expected_interp_sha,

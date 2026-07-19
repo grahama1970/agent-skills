@@ -29,9 +29,25 @@ assert _spec and _spec.loader
 p13 = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(p13)
 
+_cspec = importlib.util.spec_from_file_location(
+    "persona_dream_cognition_contract", _HERE / "persona_dream_cognition_contract.py"
+)
+assert _cspec and _cspec.loader
+cognition_contract = importlib.util.module_from_spec(_cspec)
+_cspec.loader.exec_module(cognition_contract)
+
 SCILLM_MODEL = p13.SCILLM_MODEL
 CALLER_SKILL = p13.CALLER_SKILL
 tau_adapter = p13.tau_adapter
+
+# Distinct ToM validation statuses (Defect 3). The final status names the
+# candidate provenance so a live pass, a deliberate deterministic projection
+# (no-live), and a live-route fallback (live attempted then failed) are never
+# collapsed into one indistinguishable PASS.
+STATUS_PASS_LIVE = "PASS_TOM_VALIDATION_LIVE"
+STATUS_PASS_DETERMINISTIC_PROJECTION = "PASS_TOM_VALIDATION_DETERMINISTIC_PROJECTION"
+STATUS_DEGRADED_LIVE_FALLBACK = "DEGRADED_TOM_LIVE_ROUTE_FALLBACK"
+STATUS_BLOCKED = "BLOCKED_TOM_VALIDATION"
 
 # Caller-defined JSON output contract handed to (and hash-recorded by) the Tau node.
 TOM_OUTPUT_CONTRACT = {
@@ -136,7 +152,12 @@ def validate_candidates(
 # --------------------------------------------------------------------------- #
 # LLM proposal (may propose; code decides)                                    #
 # --------------------------------------------------------------------------- #
-def build_prompt(accepted_interpretations: list[dict[str, Any]]) -> str:
+def build_prompt(
+    accepted_interpretations: list[dict[str, Any]],
+    *,
+    example_subject: str,
+    example_target: str,
+) -> str:
     compact = [
         {
             "interpretation_id": i.get("interpretation_id"),
@@ -173,8 +194,8 @@ Return ONLY JSON:
     "candidate_id": "tom-001",
     "parent_interpretation_id": "<interpretation_id>",
     "tom_state_type": "trust",
-    "subject": "embry",
-    "target": "kai",
+    "subject": "{example_subject}",
+    "target": "{example_target}",
     "statement": "<bounded ToM claim>",
     "source_memory_refs": ["<source_id from parent>"],
     "watch_observation_refs": ["<observation_id from parent>"],
@@ -188,7 +209,11 @@ No prose outside the JSON object."""
 
 
 def propose_candidates(
-    accepted_interpretations: list[dict[str, Any]], timeout: float = 240.0
+    accepted_interpretations: list[dict[str, Any]],
+    timeout: float = 240.0,
+    *,
+    example_subject: str,
+    example_target: str,
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Propose ToM candidates through the sanctioned Tau text-reasoning node.
 
@@ -197,7 +222,7 @@ def propose_candidates(
     proposed candidates and the Tau receipt.
     """
     parsed, receipt = tau_adapter.dispatch_text_reasoning(
-        build_prompt(accepted_interpretations),
+        build_prompt(accepted_interpretations, example_subject=example_subject, example_target=example_target),
         role="tom-candidate-proposal",
         output_contract=TOM_OUTPUT_CONTRACT,
         caller_skill=CALLER_SKILL,
@@ -238,33 +263,53 @@ def run_phase14(
     revision_id: str,
     run_id: str,
     live: bool = True,
+    contract: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    if contract is None:
+        contract = cognition_contract.load_contract()
+    example_subject = contract["default_subject"]
+    example_target = contract["default_target"]
+
     accepted_interps = interpretation.get("accepted_interpretations", [])
     candidate_source = "none"
+    live_route_attempted = False
+    live_route_failed = False
     candidates: list[dict[str, Any]] = []
     tau_routing: dict[str, Any] | None = None
     if accepted_interps:
         if live:
+            live_route_attempted = True
             try:
-                candidates, tau_receipt = propose_candidates(accepted_interps)
+                candidates, tau_receipt = propose_candidates(
+                    accepted_interps, example_subject=example_subject, example_target=example_target,
+                )
                 tau_routing = tau_adapter.receipt_provenance(tau_receipt)
                 candidate_source = "llm_via_tau"
             except Exception:  # noqa: BLE001
                 candidates = []
+                live_route_failed = True
         if not candidates:
             candidates = derive_candidates_deterministic(accepted_interps)
             candidate_source = "deterministic_fallback" if live else "deterministic"
 
     accepted, receipts = validate_candidates(candidates, accepted_interps)
+    had_rejections = any(r["decision"] == "REJECT" for r in receipts)
 
-    if not accepted_interps:
-        status = "BLOCKED_TOM_VALIDATION"
-    elif not accepted:
-        status = "BLOCKED_TOM_VALIDATION"
-    elif any(r["decision"] == "REJECT" for r in receipts):
-        status = "PASS_TOM_VALIDATION_WITH_REJECTIONS"
-    else:
-        status = "PASS_TOM_VALIDATION"
+    # Distinct statuses (Defect 3): the live pass, the deliberate deterministic
+    # projection (no-live), and the degraded live-route fallback (live attempted
+    # then failed -> deterministic) are separately named. The fallback status is
+    # DEGRADED and the downstream transition guard requires an explicit waiver to
+    # proceed on it.
+    if not accepted_interps or not accepted:
+        status = STATUS_BLOCKED
+    elif candidate_source == "llm_via_tau":
+        status = STATUS_PASS_LIVE
+    elif candidate_source == "deterministic":
+        status = STATUS_PASS_DETERMINISTIC_PROJECTION
+    elif candidate_source == "deterministic_fallback":
+        status = STATUS_DEGRADED_LIVE_FALLBACK
+    else:  # pragma: no cover - defensive; accepted implies a known source
+        status = STATUS_BLOCKED
 
     return {
         "schema": "persona_dream.tom_validation_receipt.v1",
@@ -274,6 +319,9 @@ def run_phase14(
         "run_id": run_id,
         "interpretation_sha256": p13.canonical_sha(interpretation),
         "candidate_source": candidate_source,
+        "live_route_attempted": live_route_attempted,
+        "live_route_failed": live_route_failed,
+        "had_rejections": had_rejections,
         "tau_routing": tau_routing,
         "proposed_candidate_count": len(candidates),
         "accepted_tom_candidates": accepted,
