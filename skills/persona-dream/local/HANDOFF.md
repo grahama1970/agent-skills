@@ -259,3 +259,15 @@ tests/test_phase15_transactional.py). The transaction-correctness repair loop
 is terminated per the ruling. Next actions unchanged: pilot preconditions
 (R1/R2 selection addendum + producer-blinding receipts), then the C-vs-F
 pilot; routing-semantics debt tracked in issues/428.
+
+## Live fault proof closed (2026-07-19, appended)
+
+Both LIVE_PROOF_REQUIRED preconditions from the webgpt clarification are
+closed: PASS_LIVE_TRANSACTION_FAULT_PROOF against the deployed daemon (receipt
+in state/; governance record persona_dream_live_fault_proof_20260719, exact
+reread PASS). En route the live path exposed and fixed: GMO semantic-sync
+empty-points Qdrant 400 (GMO branch persona-dream-gmo-integration-livefix) and
+phase15 rereads blinded by the /list visibility gate (client-side assert-state
+filters). The transaction layer is now closed at BOTH code level (5-round
+webgpt PASS) and live level. No preconditions remain before the next canonical
+dream write beyond the pilot's own setup items.
