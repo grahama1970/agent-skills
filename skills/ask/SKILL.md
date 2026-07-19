@@ -17,10 +17,12 @@ triggers:
   - CAE gap review
   - browser oracle
   - ask DAG
+  - Tau DAG
 provides:
   - >
     Executable ask runtime for memory-backed answers, oracle calls, reviews,
-    supported browser-backed review, persona workflows, image generation, and DAG runs.
+    supported browser-backed review, persona workflows, image generation,
+    legacy ask DAG runs, and strict Tau DAG runs.
   - >
     Evidence artifacts for each run: request, status, events, and mode-specific
     review outputs.
@@ -31,6 +33,11 @@ composes:
   - subagent-runner
   - browser-oracle
   - create-report
+  - tau
+  - interview
+complies:
+  - best-practices-skills
+  - best-practices-tau-dag
 taxonomy:
   - orchestration
   - retrieval
@@ -92,6 +99,11 @@ ask artifacts.
 - Build a concrete bundle before review or oracle escalation: objective, target
   files/artifacts, commands already run, uncertainty, exact question, and
   acceptance gates.
+- For human requests that ask multiple subagents/models to solve or review work,
+  prefer `./run.sh tau-dag ...` as the front door. `$ask` compiles the request
+  into a strict `tau.dag_contract.v1` bundle, emits `dag.json` before execution,
+  uses `$interview` when required DAG fields are missing, and delegates execution
+  and live status/viewer polling to `$tau`.
 - Pass the bundle to the documented ask mode. Do not compress a review target
   into an informal prompt when the mode has a target option.
 - Report artifact paths as evidence. Browser reviewers or model
@@ -108,6 +120,10 @@ ask artifacts.
 - Use readiness language when proof is incomplete: `NOT_READY`,
   `NOT_ESTABLISHED`, `NEEDS_ATTENTION`, or `BLOCKED`, with the missing proof
   named explicitly.
+- Provider/model execution must route through the SciLLM container service
+  (`http://127.0.0.1:4001` by default) and requires explicit
+  `--allow-provider-calls`. Use `--local-fixture` only for Tau scheduler
+  sanity proof; report that it does not prove provider/model behavior.
 
 ## Mode Router
 
@@ -122,7 +138,8 @@ Use the narrowest mode that matches the user request.
 | Parallel review | `./run.sh ask "<question>" --parallel-review ... --json` | State reviewer count/focus and preserve per-reviewer outputs. |
 | Roundtable/argue | `./run.sh ask "<question>" --roundtable ... --json` or argue mode | Name personas and rounds; do not invent missing personas silently. |
 | CAE gap review | documented CAE gap mode | Include current claim, evidence, gaps, and acceptance gate. |
-| Ask DAG | `./run.sh ask "<question>" --dag-file <graph.json> ... --json` | Preserve DAG manifest, node outputs, and fail-closed events. |
+| Tau DAG front door | `./run.sh tau-dag "<request>" --repo <repo> --target <target> --solver-model <model> --reviewer-model <model> --criterion <c> --json` | Emits strict `tau.dag_contract.v1` first; uses `$interview` packet when incomplete; add `--execute` to delegate to Tau. |
+| Legacy ask DAG | `./run.sh ask "<question>" --dag-file <graph.json> ... --json` | Preserve DAG manifest, node outputs, and fail-closed events. |
 | Image generation | documented image mode | Preserve prompt, provider response, output path, and review artifact. |
 | OS/project health | `./run.sh os ... --json`, `./run.sh doctor ... --json` | Report degraded dependencies, not green-by-absence. |
 | Status/config | `./run.sh status ... --json`, `./run.sh config doctor ... --json` | Use for artifact inspection and readiness preflight. |
@@ -171,6 +188,8 @@ When a reference file is selected, read it completely before running that mode.
 ./run.sh doctor --json
 ./run.sh ask "What do we know about this project?" --scope ask --json
 ./run.sh ask "Review this target" --deep-review --deep-review-target path/to/file --json
+./run.sh tau-dag "Solve X with two GPT 5.6 xhigh solvers, then Claude Fable reviews" --repo local/tau --target issue-123 --solver-model gpt-5.6-xhigh --solver-model gpt-5.6-xhigh --reviewer-model claude-fable --criterion correctness --criterion maintainability --json
+./run.sh tau-dag "Solve X" --repo local/tau --target issue-123 --solver-model gpt-5.6-xhigh --solver-model gpt-5.6-xhigh --reviewer-model claude-fable --criterion correctness --criterion maintainability --execute --local-fixture --viewer-link --json
 ./run.sh status --run <ask_id> --json
 ```
 
@@ -181,6 +200,8 @@ uv run python scripts/live_sanity_report.py --plan-only --profile smoke
 uv run python scripts/live_sanity_report.py --allow-live --profile smoke
 uv run python scripts/dag_negative_sanity.py
 uv run python scripts/dag_e2e_sanity.py
+uv run python scripts/tau_dag_e2e_sanity.py --json
+uv run python scripts/tau_dag_e2e_sanity.py --no-local-fixture --allow-provider-calls --require-provider-calls --json
 uv run python scripts/persona_delegate_e2e_sanity.py --skip-ask --skip-scillm
 ```
 
