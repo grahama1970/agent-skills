@@ -1,0 +1,34 @@
+{
+  "schema": "persona_dream.residue_links.v1",
+  "created_at": "2026-07-19T21:09:24Z",
+  "idea_id": "pilot_r1",
+  "items": [
+    {
+      "collection": "persona_memory",
+      "persona_id": "embry",
+      "source_id": "embry_age23_current_b01_memory_045",
+      "source_path": "gmo:persona_memory/embry_age23_current_b01_memory_045",
+      "text": "Embry sets a goal of telling Brandon one bounded truth that is personally meaningful but does not expose James's secret.\nShe considers saying that the Yale fallout involved a promise she still does not know how to keep without harming someone. The statement would reveal moral conflict rather than factual content.\npeople: Brandon, Embry Lawson, James, Kai; places: Yale; objects: POINT/PATH/PEOPLE checklist; organizations: Yale; concepts: privacy\nSetting: Yale. Situation: Embry sets a goal of telling Brandon one bounded truth that is personally meaningful but does not expose James's secret. Trigger: Kai's reappearance and the strain around the private archive. Stakes: The goal creates a possible path toward adult honesty while preserving the central unresolved secret.\nEmotions: uncertainty. Intensity: 3/5. Regulation: compartmentalization and concealment control. Conflict: \nTheory of mind: goal: She wants to test whether intimacy can grow through honest limits instead of total disclosure or total silence. Trigger: Kai's reappearance and the strain around the private archive. Consequence: The goal creates a possible path toward adult honesty while preserving the central unresolved secret."
+    },
+    {
+      "collection": "persona_memory",
+      "persona_id": "embry",
+      "source_id": "embry_age23_current_b01_memory_048",
+      "source_path": "gmo:persona_memory/embry_age23_current_b01_memory_048",
+      "text": "At the current edge of the timeline, Embry keeps the SPARTA succession file, the muted SN15 still, and the unsent James and Kai drafts, then leaves the final branch of her personal decision tree blank.\nShe has learned to state boundaries, correct errors, and design recovery paths, but she has not decided what honesty requires now. A bounded truth to Brandon is prepared but not guaranteed; contact with James or Kai remains possible but unsent; belonging still feels safest when translated into mission need.\npeople: Brandon, Embry Lawson, James, Kai; objects: POINT/PATH/PEOPLE checklist; organizations: SpaceX, SPARTA; concepts: belonging, Precision\nSetting: age band 23-current. Situation: At the current edge of the timeline, Embry keeps the SPARTA succession file, the muted SN15 still, and the unsent James and Kai drafts, then leaves the final branch of her personal decision tree blank. Trigger: The convergence of the SPARTA milestone, Brandon tension, Kai's indirect reentry, and the enduring James secret. Stakes: The arc ends in active tension: precision is still protective but no longer sufficient, and Embry must eventually choose under uncertainty.\nEmotions: longing, trust, uncertainty. Intensity: 4/5. Regulation: compartmentalization and concealment control. Conflict: Her current adult state holds several live choices without collapsing them into confession, reconciliation, or permanent withdrawal.\nTheory of mind: unresolved_thread: Her current adult state holds several live choices without collapsing them into confession, reconciliation, or permanent withdrawal. Trigger: The convergence of the SPARTA milestone, Brandon tension, Kai's indirect reentry, and the enduring James secret. Consequence: The arc ends in active tension: precision is still protective but no longer sufficient, and Embry must eventually choose under uncertainty."
+    },
+    {
+      "collection": "persona_memory",
+      "persona_id": "embry",
+      "source_id": "embry_age23_current_b01_memory_020",
+      "source_path": "gmo:persona_memory/embry_age23_current_b01_memory_020",
+      "text": "Embry favors dual confirmation, written handoffs, and reversible decisions whenever SPARTA permits them.\nShe explains the preference as ordinary risk control, but her threshold for 'ordinary' is stricter than most teammates'. Brandon supports the rule in high-consequence moments and challenges it when it becomes ritual.\npeople: Brandon, Embry Lawson; organizations: SPARTA; concepts: Fragility, Precision, trust, verification\nSetting: age band 23-current. Situation: Embry favors dual confirmation, written handoffs, and reversible decisions whenever SPARTA permits them. Trigger: Conflicting recollections during project handoffs. Stakes: The practices improve auditability but create friction when speed or trust would otherwise be sufficient.\nEmotions: trust. Intensity: 2/5. Regulation: procedural verification. Conflict: \nTheory of mind: preference: She prefers verification practices that prevent any single person's memory or confidence from becoming decisive. Trigger: Conflicting recollections during project handoffs. Consequence: The practices improve auditability but create friction when speed or trust would otherwise be sufficient."
+    }
+  ],
+  "pilot_binding": {
+    "set": "r1",
+    "set_id": "age23_current:person:brandon",
+    "members_selected_sha256": "84dbd11ca373c6f7624b3292bc57863411a683a09f8e079fd4df99207f4d81c7",
+    "addendum_sha256": "d85e88ab39adc1672f863d7d8e89415e29f56d79f891fd599d10a6192b7e5c05"
+  }
+}

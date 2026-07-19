@@ -1,0 +1,31 @@
+{
+  "schema": "persona_dream.pilot_reflection_packet.v1",
+  "packet_status": "ACCEPTED",
+  "evidence_class": "synthetic_reflection",
+  "frame_evidence": [],
+  "step_hooks": {},
+  "coverage_gaps": [],
+  "transcript_facts": [
+    {
+      "fact_id": "reflection_fact_embry_age19_23_b01_memory_018",
+      "time_range": null,
+      "statement": "Marketa follows the difficult call with food instructions that restore sequence without demanding disclosure.\nA small package arrives with pecans, the chess-pie note copied in larger handwriting, and numbered instructions for what can be frozen. Marketa has added, 'No decisions hungry.' Embry makes only the filling, eats it from a mug, and texts a photograph instead of an explanation.\npeople: Embry Lawson, Kai, Marketa Lawson; objects: family recipe note\nSetting: age band 19-23. Situation: Marketa follows the difficult call with food instructions that restore sequence without demanding disclos"
+    },
+    {
+      "fact_id": "reflection_fact_embry_age19_23_b01_memory_004",
+      "time_range": null,
+      "statement": "An OPEN FIRST parcel from home gives Embry a portable version of belonging during a difficult Yale week.\nThe box is marked OPEN FIRST in Marketa's block letters. The afghan fills the top; beneath it are the worn chess-pie phone note and a fresh index card that says, 'Eat before revising anything.' Embry wraps the afghan around her shoulders and calls home to discuss oven temperatures instead of saying she is lonely.\npeople: Embry Lawson, Marketa Lawson; places: Yale; objects: family afghan, OPEN FIRST box, family recipe note, phone note; organizations: Yale; concepts: belonging, portable home,"
+    },
+    {
+      "fact_id": "reflection_fact_embry_age19_23_b01_memory_039",
+      "time_range": null,
+      "statement": "Embry is selected for a SPARTA internship and notices that the order in which she tells people exposes her private hierarchy of belonging.\nShe photographs the acceptance screen for Tommy and Marketa; Tommy asks about the safety manual, and Marketa starts an OPEN FIRST packing list. Embry tells James in person that afternoon. Kai's message remains unanswered until the next morning, although she had once imagined he would be the first to know.\npeople: Embry Lawson, James, Kai, Marketa Lawson, Tommy Lawson; objects: OPEN FIRST box, POINT/PATH/PEOPLE checklist; organizations: SPARTA; concepts: bel"
+    }
+  ],
+  "pilot_binding": {
+    "set": "r2",
+    "set_id": "age19_23:person:marketa_lawson",
+    "members_selected_sha256": "0920dbbfad515d8adf5fb8bd36f0d68013eaeb3c0dc600eda28d6fb18a42562d",
+    "addendum_sha256": "d85e88ab39adc1672f863d7d8e89415e29f56d79f891fd599d10a6192b7e5c05"
+  }
+}

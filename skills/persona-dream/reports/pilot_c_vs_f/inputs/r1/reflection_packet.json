@@ -1,0 +1,31 @@
+{
+  "schema": "persona_dream.pilot_reflection_packet.v1",
+  "packet_status": "ACCEPTED",
+  "evidence_class": "synthetic_reflection",
+  "frame_evidence": [],
+  "step_hooks": {},
+  "coverage_gaps": [],
+  "transcript_facts": [
+    {
+      "fact_id": "reflection_fact_embry_age23_current_b01_memory_045",
+      "time_range": null,
+      "statement": "Embry sets a goal of telling Brandon one bounded truth that is personally meaningful but does not expose James's secret.\nShe considers saying that the Yale fallout involved a promise she still does not know how to keep without harming someone. The statement would reveal moral conflict rather than factual content.\npeople: Brandon, Embry Lawson, James, Kai; places: Yale; objects: POINT/PATH/PEOPLE checklist; organizations: Yale; concepts: privacy\nSetting: Yale. Situation: Embry sets a goal of telling Brandon one bounded truth that is personally meaningful but does not expose James's secret. Trig"
+    },
+    {
+      "fact_id": "reflection_fact_embry_age23_current_b01_memory_048",
+      "time_range": null,
+      "statement": "At the current edge of the timeline, Embry keeps the SPARTA succession file, the muted SN15 still, and the unsent James and Kai drafts, then leaves the final branch of her personal decision tree blank.\nShe has learned to state boundaries, correct errors, and design recovery paths, but she has not decided what honesty requires now. A bounded truth to Brandon is prepared but not guaranteed; contact with James or Kai remains possible but unsent; belonging still feels safest when translated into mission need.\npeople: Brandon, Embry Lawson, James, Kai; objects: POINT/PATH/PEOPLE checklist; organiza"
+    },
+    {
+      "fact_id": "reflection_fact_embry_age23_current_b01_memory_020",
+      "time_range": null,
+      "statement": "Embry favors dual confirmation, written handoffs, and reversible decisions whenever SPARTA permits them.\nShe explains the preference as ordinary risk control, but her threshold for 'ordinary' is stricter than most teammates'. Brandon supports the rule in high-consequence moments and challenges it when it becomes ritual.\npeople: Brandon, Embry Lawson; organizations: SPARTA; concepts: Fragility, Precision, trust, verification\nSetting: age band 23-current. Situation: Embry favors dual confirmation, written handoffs, and reversible decisions whenever SPARTA permits them. Trigger: Conflicting recol"
+    }
+  ],
+  "pilot_binding": {
+    "set": "r1",
+    "set_id": "age23_current:person:brandon",
+    "members_selected_sha256": "84dbd11ca373c6f7624b3292bc57863411a683a09f8e079fd4df99207f4d81c7",
+    "addendum_sha256": "d85e88ab39adc1672f863d7d8e89415e29f56d79f891fd599d10a6192b7e5c05"
+  }
+}
