@@ -222,10 +222,12 @@ fi
 
 # Boundary guard: enforce the operator rule "only /tau may reach /scillm".
 # Deterministic static scan (no network); fails on any un-sanctioned direct
-# scillm proxy call in skills/persona-dream or skills/watch. Pre-existing callers
-# are enrolled as TEMPORARY_DEBT so this stays green while live migrations land.
-echo "== enforcing Tau-only model-routing boundary (check-tau-routing-boundary) =="
-"${SCRIPT_DIR}/run.sh" check-tau-routing-boundary
+# scillm proxy call in skills/persona-dream or skills/watch. The TEMPORARY_DEBT
+# registry is now empty (all callers migrated to Tau, allowlisted as diagnostics,
+# or retired), so the ratchet runs in --strict mode: ANY remaining direct-scillm
+# line (a new caller, or a reverted migration) fails the gate.
+echo "== enforcing Tau-only model-routing boundary (check-tau-routing-boundary --strict) =="
+"${SCRIPT_DIR}/run.sh" check-tau-routing-boundary --strict
 
 # CI guard: deterministic contract suite must stay green. This is the offline
 # regression net that catches contract/schema/fixture rot (e.g. omitted vendored

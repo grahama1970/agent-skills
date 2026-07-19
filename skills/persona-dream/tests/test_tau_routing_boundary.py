@@ -37,6 +37,21 @@ def test_current_tree_has_no_hard_violations():
     assert result["counts"]["stale_debt_entries"] == 0, result["stale_debt_entries"]
 
 
+def test_strict_mode_is_green_with_empty_debt_registry():
+    """The debt paydown is complete: --strict must PASS and the registry is empty.
+
+    This locks the ratchet: any newly enrolled TEMPORARY_DEBT entry (or a reverted
+    migration that re-adds a direct scillm call) fails --strict, which sanity.sh runs.
+    """
+    check = _load_check()
+    assert check.TEMPORARY_DEBT == {}, check.TEMPORARY_DEBT
+    hits = check.scan(_REPO_ROOT)
+    result = check.evaluate(hits, strict=True)
+    assert result["status"] == "PASS", result
+    assert result["counts"]["temporary_debt"] == 0
+    assert result["counts"]["hard_violations"] == 0
+
+
 def test_migrated_phases_are_not_direct_callers():
     """phase13/phase14 route through Tau and must never be direct scillm callers."""
     check = _load_check()
