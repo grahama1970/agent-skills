@@ -1,0 +1,97 @@
+{
+  "cosine_max": 0.612056,
+  "cosine_mean": 0.377941,
+  "cosine_min": 0.02481,
+  "frame_count": 12,
+  "frames_with_embry_present": 7,
+  "method": "max cosine over all detected faces vs all embry_v3 reference faces",
+  "per_frame": [
+    {
+      "best_face_sex": "F",
+      "faces": 2,
+      "frame": "frame_0001.jpg",
+      "max_embry_cosine": 0.602908,
+      "present": true
+    },
+    {
+      "best_face_sex": "F",
+      "faces": 2,
+      "frame": "frame_0002.jpg",
+      "max_embry_cosine": 0.612056,
+      "present": true
+    },
+    {
+      "best_face_sex": "M",
+      "faces": 1,
+      "frame": "frame_0003.jpg",
+      "max_embry_cosine": 0.327414,
+      "present": false
+    },
+    {
+      "best_face_sex": "M",
+      "faces": 1,
+      "frame": "frame_0004.jpg",
+      "max_embry_cosine": 0.453282,
+      "present": true
+    },
+    {
+      "best_face_sex": "M",
+      "faces": 1,
+      "frame": "frame_0005.jpg",
+      "max_embry_cosine": 0.577128,
+      "present": true
+    },
+    {
+      "best_face_sex": "F",
+      "faces": 1,
+      "frame": "frame_0006.jpg",
+      "max_embry_cosine": 0.568767,
+      "present": true
+    },
+    {
+      "best_face_sex": "M",
+      "faces": 2,
+      "frame": "frame_0007.jpg",
+      "max_embry_cosine": 0.543971,
+      "present": true
+    },
+    {
+      "best_face_sex": "M",
+      "faces": 2,
+      "frame": "frame_0008.jpg",
+      "max_embry_cosine": 0.496666,
+      "present": true
+    },
+    {
+      "best_face_sex": "M",
+      "faces": 2,
+      "frame": "frame_0009.jpg",
+      "max_embry_cosine": 0.02481,
+      "present": false
+    },
+    {
+      "best_face_sex": "M",
+      "faces": 2,
+      "frame": "frame_0010.jpg",
+      "max_embry_cosine": 0.091898,
+      "present": false
+    },
+    {
+      "best_face_sex": "M",
+      "faces": 2,
+      "frame": "frame_0011.jpg",
+      "max_embry_cosine": 0.085413,
+      "present": false
+    },
+    {
+      "best_face_sex": "F",
+      "faces": 2,
+      "frame": "frame_0012.jpg",
+      "max_embry_cosine": 0.150974,
+      "present": false
+    }
+  ],
+  "reference_faces_in_sheet": 9,
+  "schema": "persona_dream.step36_embry_presence_refine.v1",
+  "threshold": 0.421
+}

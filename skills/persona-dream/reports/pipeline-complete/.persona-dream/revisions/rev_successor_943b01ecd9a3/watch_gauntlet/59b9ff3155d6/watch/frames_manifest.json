@@ -1,0 +1,70 @@
+{
+  "source": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/provider_return/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/provider_return.mp4",
+  "sampling_mode": "uniform-fallback",
+  "frame_count": 12,
+  "max_frames": 100,
+  "resolution": 512,
+  "duration_seconds": 10.041667,
+  "frames": [
+    {
+      "index": 0,
+      "timestamp_seconds": 0.0,
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/watch/frames/frame_0001.jpg"
+    },
+    {
+      "index": 1,
+      "timestamp_seconds": 0.84,
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/watch/frames/frame_0002.jpg"
+    },
+    {
+      "index": 2,
+      "timestamp_seconds": 1.67,
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/watch/frames/frame_0003.jpg"
+    },
+    {
+      "index": 3,
+      "timestamp_seconds": 2.51,
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/watch/frames/frame_0004.jpg"
+    },
+    {
+      "index": 4,
+      "timestamp_seconds": 3.35,
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/watch/frames/frame_0005.jpg"
+    },
+    {
+      "index": 5,
+      "timestamp_seconds": 4.18,
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/watch/frames/frame_0006.jpg"
+    },
+    {
+      "index": 6,
+      "timestamp_seconds": 5.02,
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/watch/frames/frame_0007.jpg"
+    },
+    {
+      "index": 7,
+      "timestamp_seconds": 5.86,
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/watch/frames/frame_0008.jpg"
+    },
+    {
+      "index": 8,
+      "timestamp_seconds": 6.69,
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/watch/frames/frame_0009.jpg"
+    },
+    {
+      "index": 9,
+      "timestamp_seconds": 7.53,
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/watch/frames/frame_0010.jpg"
+    },
+    {
+      "index": 10,
+      "timestamp_seconds": 8.37,
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/watch/frames/frame_0011.jpg"
+    },
+    {
+      "index": 11,
+      "timestamp_seconds": 9.2,
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/watch/frames/frame_0012.jpg"
+    }
+  ]
+}

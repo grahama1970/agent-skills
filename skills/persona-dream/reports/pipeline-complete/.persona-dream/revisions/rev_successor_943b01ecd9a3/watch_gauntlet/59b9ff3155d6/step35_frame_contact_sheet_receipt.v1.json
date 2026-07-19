@@ -1,0 +1,118 @@
+{
+  "contact_sheet_relpath": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/frame_contact_sheet.png",
+  "contact_sheet_sha256": "sha256:07d1ffa8ae773a5eede3652c063c13e7ae8a9cc678f1b450a3e94bba7813ccab",
+  "created_at": "2026-07-19T01:33:33.360407+00:00",
+  "duration_seconds": 10.041667,
+  "frame_count": 12,
+  "frames": [
+    {
+      "in_speaker_window": false,
+      "index": 0,
+      "path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/watch/frames_bound/frame_0000.jpg",
+      "sha256": "sha256:467b8b1904964079183b4a3da2a7af94da40d837a8e2aff0fbf72646d2d98182",
+      "timestamp_s": 0.0
+    },
+    {
+      "in_speaker_window": false,
+      "index": 1,
+      "path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/watch/frames_bound/frame_0001.jpg",
+      "sha256": "sha256:89e8bccb2042a1c9a9a45203adbc179e5adb710ee48d304ebd177706e1edc0f0",
+      "timestamp_s": 0.84
+    },
+    {
+      "in_speaker_window": false,
+      "index": 2,
+      "path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/watch/frames_bound/frame_0002.jpg",
+      "sha256": "sha256:a6d08220c9684b6c9681c0a5f6586d9929c3987997169f7f859e048ba0aebb95",
+      "timestamp_s": 1.67
+    },
+    {
+      "in_speaker_window": false,
+      "index": 3,
+      "path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/watch/frames_bound/frame_0003.jpg",
+      "sha256": "sha256:d4d6a84bc2744aebc6a46e960250b99c609f51c7c54ed8880bab47bedfa38c24",
+      "timestamp_s": 2.51
+    },
+    {
+      "in_speaker_window": false,
+      "index": 4,
+      "path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/watch/frames_bound/frame_0004.jpg",
+      "sha256": "sha256:b27d444f144b2750ecc37e88d6e446b9ea0ae2ce06cde3e59e168ddd0eb143c4",
+      "timestamp_s": 3.35
+    },
+    {
+      "in_speaker_window": false,
+      "index": 5,
+      "path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/watch/frames_bound/frame_0005.jpg",
+      "sha256": "sha256:16a5e63e9f1e058d1445580027a509faa1bec0a45ed66d18e3971b60253562e9",
+      "timestamp_s": 4.18
+    },
+    {
+      "in_speaker_window": true,
+      "index": 6,
+      "path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/watch/frames_bound/frame_0006.jpg",
+      "sha256": "sha256:f382cd19ee9799bc0dd2ec9e1d50448354eb9b4b2651aecd6d54066eb227f4fe",
+      "timestamp_s": 5.02
+    },
+    {
+      "in_speaker_window": true,
+      "index": 7,
+      "path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/watch/frames_bound/frame_0007.jpg",
+      "sha256": "sha256:ca012e8820dde68bf6b9d661d8d4aad1017305c2dfbd4a283b36bad83b3839c4",
+      "timestamp_s": 5.86
+    },
+    {
+      "in_speaker_window": true,
+      "index": 8,
+      "path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/watch/frames_bound/frame_0008.jpg",
+      "sha256": "sha256:4993d9fe1b64a51144fe82f2d2273b4d6ed4fa3d80ab974d1f00e4a1402f3533",
+      "timestamp_s": 6.69
+    },
+    {
+      "in_speaker_window": true,
+      "index": 9,
+      "path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/watch/frames_bound/frame_0009.jpg",
+      "sha256": "sha256:cdfc4cb9a67b4045f359cca78f4576890d9e0450df075abead591336fcbde7d8",
+      "timestamp_s": 7.53
+    },
+    {
+      "in_speaker_window": false,
+      "index": 10,
+      "path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/watch/frames_bound/frame_0010.jpg",
+      "sha256": "sha256:3ea24dff0896625ef95ba0381f5437a037f0b69890b3e3edba1fc2de64046b07",
+      "timestamp_s": 8.37
+    },
+    {
+      "in_speaker_window": false,
+      "index": 11,
+      "path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/watch/frames_bound/frame_0011.jpg",
+      "sha256": "sha256:04a05a0643490927703873d7643fde82b6a19f419a925d9b555acb6db5466b3e",
+      "timestamp_s": 9.2
+    }
+  ],
+  "live": true,
+  "mocked": false,
+  "note": "Scene detection found no cuts on the 10s single-shot return; uniform-fallback 12-frame sampling per watch gauntlet.",
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "sampled_timestamps_s": [
+    0.0,
+    0.84,
+    1.67,
+    2.51,
+    3.35,
+    4.18,
+    5.02,
+    5.86,
+    6.69,
+    7.53,
+    8.37,
+    9.2
+  ],
+  "sampling_mode": "uniform-fallback",
+  "schema": "persona_dream.step35_frame_contact_sheet_receipt.v1",
+  "source_video": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/provider_return/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/provider_return.mp4",
+  "source_video_sha256": "sha256:59b9ff3155d6ba9d0b90d795bafe7b84cc4e10849db08299217b65d61e211fff",
+  "status": "PASS_STEP35_FRAME_CONTACT_SHEET",
+  "step": 35
+}

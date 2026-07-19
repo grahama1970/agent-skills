@@ -1,0 +1,83 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "phase 12 is complete (no successor provider return exists)",
+      "acceptable lip synchronization or stable Embry identity on a repair"
+    ],
+    "proves": [
+      "the /watch perception lane, from scene-driven sampling, independently captures the identity-drift and visible-speaker evidence windows that the fixed 12-frame contact sheet was used to catch"
+    ]
+  },
+  "degraded_capabilities": [
+    "transcript",
+    "vision_identity_review"
+  ],
+  "expectations": [
+    {
+      "expectation": "perception samples >=1 frame inside [0.0, 10.041667]s (Embry identity-drift window)",
+      "expected": "frame timestamp within [0.0, 10.041667]",
+      "id": "frames_cover_identity_window_00_03",
+      "verdict": "VALIDATED",
+      "watch_found": "12 frame(s) at [0.0, 0.84, 1.67, 2.51, 3.35, 4.18, 5.02, 5.86, 6.69, 7.53, 8.37, 9.2]"
+    },
+    {
+      "expectation": "perception samples >=1 frame inside [5.0, 8.08]s (visible-speaker window)",
+      "expected": "frame timestamp within [5.0, 8.08]",
+      "id": "frames_cover_speaker_window_05_077",
+      "verdict": "VALIDATED",
+      "watch_found": "4 frame(s) at [5.02, 5.86, 6.69, 7.53]"
+    },
+    {
+      "expectation": "Whisper transcript recovers the canonical Kai line consistent with the forced-alignment receipt",
+      "expected": "text\u2248\"If we paddle now, we're cutting across the lineup.\" overlapping forced-alignment [5.0, 7.7]s",
+      "id": "transcript_recovers_canonical_kai_line",
+      "verdict": "NOT_VALIDATED",
+      "watch_found": "canonical line not found in transcript"
+    },
+    {
+      "expectation": "the observation packet flags the visible-speaker window for step 38",
+      "expected": "step_38_visible_speaker_lipsync.speaker_visibility_flagged == true with frames + transcript line",
+      "id": "packet_flags_speaker_visibility_window",
+      "verdict": "NOT_VALIDATED",
+      "watch_found": "flagged=True, line_at_interval=None, 4 visibility frame(s)"
+    },
+    {
+      "expectation": "the codex/scillm vision layer independently corroborates DRIFT on the [0.0, 10.041667]s Embry frames vs embry_contact_sheet_v3",
+      "expected": "independent vision VERDICT == DRIFT",
+      "id": "vision_corroborates_embry_identity_drift_00_03",
+      "verdict": "NOT_VALIDATED_DEGRADED",
+      "watch_found": "vision status=not_performed, verdict=INDETERMINATE, model=None"
+    }
+  ],
+  "ground_truth_expectations": {
+    "canonical_line": "If we paddle now, we're cutting across the lineup.",
+    "expected_vision_verdict": "DRIFT",
+    "forced_alignment_interval": [
+      5.0,
+      7.7
+    ],
+    "identity_window": [
+      0.0,
+      10.041667
+    ],
+    "speaker_window": [
+      5.0,
+      8.08
+    ]
+  },
+  "live": true,
+  "mocked": false,
+  "observation_packet": {
+    "path": "dream_observation_packet.v1.json",
+    "sha256": "sha256:5229c664ceb1c630b3644bd554a5c9c67cbac3d11c2a5e00beb3cc522d386032"
+  },
+  "observed_at": "2026-07-19T01:26:21.768828+00:00",
+  "overall_status": "FAIL_WATCH_GAUNTLET_VALIDATION",
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.watch_gauntlet_validation_receipt.v1",
+  "source_revision_id": "rev_upstream_bf3b05d47fb8",
+  "source_video": "provider_return.mp4",
+  "source_video_sha256": "sha256:59b9ff3155d6ba9d0b90d795bafe7b84cc4e10849db08299217b65d61e211fff",
+  "status": "FAIL_WATCH_GAUNTLET_VALIDATION"
+}

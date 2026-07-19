@@ -1,0 +1,36 @@
+{
+  "acceptance_blockers": [
+    "STEP_36_IDENTITY_NOT_CERTIFIABLE",
+    "STEP_38_CANNOT_COMPLETE",
+    "SCILLM_GPT55_UNAVAILABLE_FOR_VLM_AND_COGNITIVE_PHASES"
+  ],
+  "canonical_cognitive_loop": "SKIPPED_RUN_DRY_RUN_ONLY_NO_CANONICAL_WRITE",
+  "claims": {
+    "does_not_prove": [
+      "Agent-level acceptance of the successor return (it is BLOCKED, fail-closed).",
+      "Human subjective acceptance (that remains the human's and is not claimed here).",
+      "A completed audio/mux/lip-sync deliverable."
+    ],
+    "proves": [
+      "The live successor return (sha 59b9ff31, 10.041667s, one submit, request 97688ec5) was received and inspected.",
+      "A deterministic ArcFace identity read was computed live; the v3 identity-source fix improves the opening identity window but does not clear the whole-clip metric gate."
+    ]
+  },
+  "created_at": "2026-07-19T01:33:33.360407+00:00",
+  "human_subjective_acceptance": "NOT_CLAIMED_REMAINS_HUMAN",
+  "live": true,
+  "mocked": false,
+  "per_step": {
+    "step_35_frame_contact_sheet": "PASS",
+    "step_36_post_kling_continuity": "FAIL (ArcFace identity not certifiable: 7/12 frames Embry-present; VLM continuity unavailable)",
+    "step_37_38_audio_final_assembly": "BLOCKED (no voice engine; exact line never rendered; VLM lip-sync unavailable)",
+    "watch_gauntlet": "DEGRADED (VLM per-frame entities unavailable; silent pre-mux video has no transcript)"
+  },
+  "return_duration_s": 10.041667,
+  "return_id": "97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4",
+  "return_video_sha256": "sha256:59b9ff3155d6ba9d0b90d795bafe7b84cc4e10849db08299217b65d61e211fff",
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.post_return_acceptance_receipt.v1",
+  "status": "ACCEPTANCE_BLOCKED"
+}

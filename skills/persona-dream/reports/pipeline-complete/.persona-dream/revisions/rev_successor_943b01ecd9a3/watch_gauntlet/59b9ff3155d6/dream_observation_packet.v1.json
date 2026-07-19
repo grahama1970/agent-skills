@@ -1,0 +1,330 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "acceptable lip synchronization",
+      "stable Embry identity on any successor return",
+      "deterministic face-embedding similarity"
+    ],
+    "proves": [
+      "the /watch skill extracts scene-driven frames and a Whisper transcript from a returned MP4 and localizes the identity and speaker-visibility evidence windows without the fixed 12-frame lane"
+    ]
+  },
+  "coverage_gaps": [
+    "per_frame_vlm_entities_unavailable: watch scillm vlm frame descriptions did not resolve; per-frame entity lists are empty"
+  ],
+  "duration_seconds": 10.041667,
+  "evidence_origin": "provider_return",
+  "frame_evidence": [
+    {
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "index": 0,
+      "observed_entities": [],
+      "path": "watch/frames_bound/frame_0000.jpg",
+      "sha256": "sha256:467b8b1904964079183b4a3da2a7af94da40d837a8e2aff0fbf72646d2d98182",
+      "size_bytes": 20666,
+      "timestamp_seconds": 0.0
+    },
+    {
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "index": 1,
+      "observed_entities": [],
+      "path": "watch/frames_bound/frame_0001.jpg",
+      "sha256": "sha256:89e8bccb2042a1c9a9a45203adbc179e5adb710ee48d304ebd177706e1edc0f0",
+      "size_bytes": 20131,
+      "timestamp_seconds": 0.84
+    },
+    {
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "index": 2,
+      "observed_entities": [],
+      "path": "watch/frames_bound/frame_0002.jpg",
+      "sha256": "sha256:a6d08220c9684b6c9681c0a5f6586d9929c3987997169f7f859e048ba0aebb95",
+      "size_bytes": 17176,
+      "timestamp_seconds": 1.67
+    },
+    {
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "index": 3,
+      "observed_entities": [],
+      "path": "watch/frames_bound/frame_0003.jpg",
+      "sha256": "sha256:d4d6a84bc2744aebc6a46e960250b99c609f51c7c54ed8880bab47bedfa38c24",
+      "size_bytes": 17665,
+      "timestamp_seconds": 2.51
+    },
+    {
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "index": 4,
+      "observed_entities": [],
+      "path": "watch/frames_bound/frame_0004.jpg",
+      "sha256": "sha256:b27d444f144b2750ecc37e88d6e446b9ea0ae2ce06cde3e59e168ddd0eb143c4",
+      "size_bytes": 17417,
+      "timestamp_seconds": 3.35
+    },
+    {
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "index": 5,
+      "observed_entities": [],
+      "path": "watch/frames_bound/frame_0005.jpg",
+      "sha256": "sha256:16a5e63e9f1e058d1445580027a509faa1bec0a45ed66d18e3971b60253562e9",
+      "size_bytes": 17842,
+      "timestamp_seconds": 4.18
+    },
+    {
+      "in_identity_window": true,
+      "in_speaker_window": true,
+      "index": 6,
+      "observed_entities": [],
+      "path": "watch/frames_bound/frame_0006.jpg",
+      "sha256": "sha256:f382cd19ee9799bc0dd2ec9e1d50448354eb9b4b2651aecd6d54066eb227f4fe",
+      "size_bytes": 19577,
+      "timestamp_seconds": 5.02
+    },
+    {
+      "in_identity_window": true,
+      "in_speaker_window": true,
+      "index": 7,
+      "observed_entities": [],
+      "path": "watch/frames_bound/frame_0007.jpg",
+      "sha256": "sha256:ca012e8820dde68bf6b9d661d8d4aad1017305c2dfbd4a283b36bad83b3839c4",
+      "size_bytes": 19390,
+      "timestamp_seconds": 5.86
+    },
+    {
+      "in_identity_window": true,
+      "in_speaker_window": true,
+      "index": 8,
+      "observed_entities": [],
+      "path": "watch/frames_bound/frame_0008.jpg",
+      "sha256": "sha256:4993d9fe1b64a51144fe82f2d2273b4d6ed4fa3d80ab974d1f00e4a1402f3533",
+      "size_bytes": 18749,
+      "timestamp_seconds": 6.69
+    },
+    {
+      "in_identity_window": true,
+      "in_speaker_window": true,
+      "index": 9,
+      "observed_entities": [],
+      "path": "watch/frames_bound/frame_0009.jpg",
+      "sha256": "sha256:cdfc4cb9a67b4045f359cca78f4576890d9e0450df075abead591336fcbde7d8",
+      "size_bytes": 18349,
+      "timestamp_seconds": 7.53
+    },
+    {
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "index": 10,
+      "observed_entities": [],
+      "path": "watch/frames_bound/frame_0010.jpg",
+      "sha256": "sha256:3ea24dff0896625ef95ba0381f5437a037f0b69890b3e3edba1fc2de64046b07",
+      "size_bytes": 18060,
+      "timestamp_seconds": 8.37
+    },
+    {
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "index": 11,
+      "observed_entities": [],
+      "path": "watch/frames_bound/frame_0011.jpg",
+      "sha256": "sha256:04a05a0643490927703873d7643fde82b6a19f419a925d9b555acb6db5466b3e",
+      "size_bytes": 15067,
+      "timestamp_seconds": 9.2
+    }
+  ],
+  "live": true,
+  "mocked": false,
+  "observed_at": "2026-07-19T01:26:21.768828+00:00",
+  "perception": {
+    "capabilities": {
+      "frames": "ok",
+      "transcript": "degraded:no_transcript_source",
+      "vision_identity_review": "degraded:vision disabled"
+    },
+    "frame_count": 12,
+    "requested_mode": "scene-change",
+    "sampling_mode": "uniform-fallback",
+    "skill": "watch",
+    "transcript_source": null
+  },
+  "psychological_interpretation_performed": false,
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.watch_gauntlet_observation_packet.v1",
+  "source_revision_id": "rev_upstream_bf3b05d47fb8",
+  "source_video": "provider_return.mp4",
+  "source_video_sha256": "sha256:59b9ff3155d6ba9d0b90d795bafe7b84cc4e10849db08299217b65d61e211fff",
+  "source_video_size_bytes": 16843175,
+  "status": "DEGRADED_WATCH_GAUNTLET_OBSERVATION",
+  "step_hooks": {
+    "step_35_frame_contact_sheet": {
+      "frame_indices": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "frame_timestamps": [
+        0.0,
+        0.84,
+        1.67,
+        2.51,
+        3.35,
+        4.18,
+        5.02,
+        5.86,
+        6.69,
+        7.53,
+        8.37,
+        9.2
+      ],
+      "montage_command_hint": "montage <frames> -tile 4x3 -geometry 320x180+4+4 frame_contact_sheet.png",
+      "sampling_mode": "uniform-fallback",
+      "source_frames_manifest": "watch/frames_manifest.json"
+    },
+    "step_36_identity_temporal_continuity": {
+      "identity_reference": {
+        "asset_id": "embry_contact_sheet_v3",
+        "path": "/mnt/storage12tb/media/personas/embry/assets/contact_sheets/embry-gpt-image-2-v3/images/embry_contact_sheet_v3.png",
+        "sha256": "sha256:3ce40b3b6839ebba0f468d75a1adbb7f82e0d95457aefd3627e222eb569de00c"
+      },
+      "identity_review_frames": [
+        {
+          "index": 0,
+          "path": "watch/frames_bound/frame_0000.jpg",
+          "timestamp_seconds": 0.0
+        },
+        {
+          "index": 1,
+          "path": "watch/frames_bound/frame_0001.jpg",
+          "timestamp_seconds": 0.84
+        },
+        {
+          "index": 2,
+          "path": "watch/frames_bound/frame_0002.jpg",
+          "timestamp_seconds": 1.67
+        },
+        {
+          "index": 3,
+          "path": "watch/frames_bound/frame_0003.jpg",
+          "timestamp_seconds": 2.51
+        },
+        {
+          "index": 4,
+          "path": "watch/frames_bound/frame_0004.jpg",
+          "timestamp_seconds": 3.35
+        },
+        {
+          "index": 5,
+          "path": "watch/frames_bound/frame_0005.jpg",
+          "timestamp_seconds": 4.18
+        },
+        {
+          "index": 6,
+          "path": "watch/frames_bound/frame_0006.jpg",
+          "timestamp_seconds": 5.02
+        },
+        {
+          "index": 7,
+          "path": "watch/frames_bound/frame_0007.jpg",
+          "timestamp_seconds": 5.86
+        },
+        {
+          "index": 8,
+          "path": "watch/frames_bound/frame_0008.jpg",
+          "timestamp_seconds": 6.69
+        },
+        {
+          "index": 9,
+          "path": "watch/frames_bound/frame_0009.jpg",
+          "timestamp_seconds": 7.53
+        },
+        {
+          "index": 10,
+          "path": "watch/frames_bound/frame_0010.jpg",
+          "timestamp_seconds": 8.37
+        },
+        {
+          "index": 11,
+          "path": "watch/frames_bound/frame_0011.jpg",
+          "timestamp_seconds": 9.2
+        }
+      ],
+      "identity_window_seconds": [
+        0.0,
+        10.041667
+      ],
+      "vision_review": {
+        "reason": "vision disabled",
+        "status": "not_performed",
+        "verdict": "INDETERMINATE"
+      }
+    },
+    "step_38_visible_speaker_lipsync": {
+      "speaker": "Kai",
+      "speaker_visibility_flagged": true,
+      "speaker_visibility_frames": [
+        {
+          "index": 6,
+          "path": "watch/frames_bound/frame_0006.jpg",
+          "timestamp_seconds": 5.02
+        },
+        {
+          "index": 7,
+          "path": "watch/frames_bound/frame_0007.jpg",
+          "timestamp_seconds": 5.86
+        },
+        {
+          "index": 8,
+          "path": "watch/frames_bound/frame_0008.jpg",
+          "timestamp_seconds": 6.69
+        },
+        {
+          "index": 9,
+          "path": "watch/frames_bound/frame_0009.jpg",
+          "timestamp_seconds": 7.53
+        }
+      ],
+      "spoken_interval_seconds": [
+        5.0,
+        8.08
+      ],
+      "transcript_line_at_interval": null
+    }
+  },
+  "transcript_facts": [],
+  "watch_artifacts": {
+    "frames_manifest": {
+      "path": "watch/frames_manifest.json",
+      "sha256": "sha256:3280d93a8bca1708c36deb258d967b741808083683b28fd636ad8501d47b52c1",
+      "size_bytes": 3902
+    },
+    "report": {
+      "path": "watch/report.json",
+      "sha256": "sha256:99791236ade221e63a04af155248a927411640c612295613c7223b6a322965b8",
+      "size_bytes": 24944
+    },
+    "scenes": {
+      "path": "watch/scenes.json",
+      "sha256": "sha256:755d442cf44919879856407fe199e916c770d206e3f6b050d6eb286b7af73782",
+      "size_bytes": 20
+    },
+    "transcript": {
+      "path": "watch/transcript.json",
+      "sha256": "sha256:152452afc7e62bfb053264d45b33d59a17ddc9f5bc07903c029ef41c3eec4b85",
+      "size_bytes": 58
+    }
+  }
+}

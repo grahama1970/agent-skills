@@ -1,0 +1,161 @@
+{
+  "blocking_findings": [
+    "FAIL_FACE_EMBEDDING_IDENTITY_MISMATCH: only 7/12 frames contain an Embry-matching face at/above cosine 0.421 (mean 0.377941); frames at t~6.7-9.2s show max Embry cosine 0.02-0.15.",
+    "KAI_REFERENCE_NO_FACE: contact_sheet_kai_surfboard.png has no InsightFace-detectable face; Kai identity cannot be scored.",
+    "VLM_CONTINUITY_UNAVAILABLE: scillm gpt-5.5 chat auth rotated; scene/wardrobe/pose-vs-drift adjudication could not run to disambiguate the low-cosine frames."
+  ],
+  "claims": {
+    "does_not_prove": [
+      "That Embry identity is continuous across the whole clip (5/12 frames fall below the metric threshold).",
+      "Whether the low-cosine final-third frames are genuine identity drift or pose/occlusion/motion (VLM adjudication unavailable).",
+      "Kai identity continuity (reference sheet unscoreable).",
+      "Scene/wardrobe/action continuity (VLM unavailable)."
+    ],
+    "proves": [
+      "The exact active successor MP4 (sha 59b9ff31) was inspected via 12 hash-bound uniform-sampled frames.",
+      "A deterministic ArcFace identity read was computed live on CPU vs the accepted embry_contact_sheet_v3 source."
+    ]
+  },
+  "contact_sheet_relpath": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/frame_contact_sheet.png",
+  "contact_sheet_sha256": "sha256:07d1ffa8ae773a5eede3652c063c13e7ae8a9cc678f1b450a3e94bba7813ccab",
+  "frame_count_reviewed": 12,
+  "frames_bound_correspondence_verified": true,
+  "identity_subgate": {
+    "artifact_arcface_summary": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/step36_arcface_identity_summary.json",
+    "artifact_presence_refine": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/step36_embry_presence_refine.json",
+    "authority": "embedding_cosine",
+    "embry_cosine_max": 0.612056,
+    "embry_cosine_mean": 0.377941,
+    "embry_cosine_min": 0.02481,
+    "embry_frames_present_at_threshold": 7,
+    "embry_per_frame_max_cosine": [
+      {
+        "best_face_sex": "F",
+        "faces_detected": 2,
+        "frame": "frame_0001.jpg",
+        "max_embry_cosine": 0.602908,
+        "present_at_threshold": true,
+        "timestamp_s": 0.0
+      },
+      {
+        "best_face_sex": "F",
+        "faces_detected": 2,
+        "frame": "frame_0002.jpg",
+        "max_embry_cosine": 0.612056,
+        "present_at_threshold": true,
+        "timestamp_s": 0.84
+      },
+      {
+        "best_face_sex": "M",
+        "faces_detected": 1,
+        "frame": "frame_0003.jpg",
+        "max_embry_cosine": 0.327414,
+        "present_at_threshold": false,
+        "timestamp_s": 1.67
+      },
+      {
+        "best_face_sex": "M",
+        "faces_detected": 1,
+        "frame": "frame_0004.jpg",
+        "max_embry_cosine": 0.453282,
+        "present_at_threshold": true,
+        "timestamp_s": 2.51
+      },
+      {
+        "best_face_sex": "M",
+        "faces_detected": 1,
+        "frame": "frame_0005.jpg",
+        "max_embry_cosine": 0.577128,
+        "present_at_threshold": true,
+        "timestamp_s": 3.35
+      },
+      {
+        "best_face_sex": "F",
+        "faces_detected": 1,
+        "frame": "frame_0006.jpg",
+        "max_embry_cosine": 0.568767,
+        "present_at_threshold": true,
+        "timestamp_s": 4.18
+      },
+      {
+        "best_face_sex": "M",
+        "faces_detected": 2,
+        "frame": "frame_0007.jpg",
+        "max_embry_cosine": 0.543971,
+        "present_at_threshold": true,
+        "timestamp_s": 5.02
+      },
+      {
+        "best_face_sex": "M",
+        "faces_detected": 2,
+        "frame": "frame_0008.jpg",
+        "max_embry_cosine": 0.496666,
+        "present_at_threshold": true,
+        "timestamp_s": 5.86
+      },
+      {
+        "best_face_sex": "M",
+        "faces_detected": 2,
+        "frame": "frame_0009.jpg",
+        "max_embry_cosine": 0.02481,
+        "present_at_threshold": false,
+        "timestamp_s": 6.69
+      },
+      {
+        "best_face_sex": "M",
+        "faces_detected": 2,
+        "frame": "frame_0010.jpg",
+        "max_embry_cosine": 0.091898,
+        "present_at_threshold": false,
+        "timestamp_s": 7.53
+      },
+      {
+        "best_face_sex": "M",
+        "faces_detected": 2,
+        "frame": "frame_0011.jpg",
+        "max_embry_cosine": 0.085413,
+        "present_at_threshold": false,
+        "timestamp_s": 8.37
+      },
+      {
+        "best_face_sex": "F",
+        "faces_detected": 2,
+        "frame": "frame_0012.jpg",
+        "max_embry_cosine": 0.150974,
+        "present_at_threshold": false,
+        "timestamp_s": 9.2
+      }
+    ],
+    "embry_reference": "embry_contact_sheet_v3",
+    "embry_reference_sha256": "sha256:3ce40b3b6839ebba0f468d75a1adbb7f82e0d95457aefd3627e222eb569de00c",
+    "embry_verdict": "FAIL_NOT_CERTIFIABLE",
+    "kai_reference": "contact_sheet_kai_surfboard.png",
+    "kai_verdict": "UNSCOREABLE_REFERENCE_NO_FACE",
+    "model": "insightface:buffalo_l:w600k_r50",
+    "threshold": 0.421
+  },
+  "live": true,
+  "mocked": false,
+  "observed_at": "2026-07-19T01:33:33.360407+00:00",
+  "positive_evidence": [
+    "The embry_contact_sheet_v3 identity-source fix yields strong matches in the opening identity window (t=0.0s cos 0.603, t=0.84s cos 0.612) and mid-clip (t=2.5-5.9s cos 0.45-0.58), an improvement over the prior EMBRY_IDENTITY_DRIFT baseline."
+  ],
+  "request_body_sha256": "sha256:97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4",
+  "review_method": "Deterministic ArcFace (InsightFace buffalo_l w600k_r50, CPU) identity authority over 12 hash-bound gauntlet frames vs embry_contact_sheet_v3; VLM scene/wardrobe/action layer UNAVAILABLE (scillm gpt-5.5 chat auth rotated).",
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.post_kling_continuity_review_receipt.v1",
+  "source_revision_id": "rev_upstream_bf3b05d47fb8",
+  "source_video": "provider_return.mp4",
+  "source_video_sha256": "sha256:59b9ff3155d6ba9d0b90d795bafe7b84cc4e10849db08299217b65d61e211fff",
+  "status": "FAIL_POST_KLING_CONTINUITY_REVIEW",
+  "step": 36,
+  "subgates": {
+    "embry_visual_identity_within_return": "FAIL",
+    "environment_continuity": "DEGRADED_VLM_UNAVAILABLE",
+    "kai_visual_identity_within_return": "UNSCOREABLE",
+    "scene_action_continuity": "DEGRADED_VLM_UNAVAILABLE",
+    "technical_readability": "DEGRADED_VLM_UNAVAILABLE",
+    "wardrobe_continuity": "DEGRADED_VLM_UNAVAILABLE"
+  }
+}

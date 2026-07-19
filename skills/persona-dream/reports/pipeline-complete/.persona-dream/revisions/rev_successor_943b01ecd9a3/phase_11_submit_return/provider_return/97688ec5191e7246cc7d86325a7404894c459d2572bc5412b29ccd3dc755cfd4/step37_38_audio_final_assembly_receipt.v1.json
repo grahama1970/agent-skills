@@ -1,0 +1,42 @@
+{
+  "blocking_findings": [
+    "EXACT_LINE_NEVER_RENDERED: voice_handoff_plan render_status=PENDING_EXACT_LINE_RENDER, canonical_line_match=false; the Kai audition WAV is a different line and cannot be reused as final dialogue.",
+    "NO_VOICE_ENGINE_AVAILABLE: chatterbox_turbo (required render engine) is not installed in this environment; no paid provider calls are authorized.",
+    "VLM_LIPSYNC_REVIEW_UNAVAILABLE: scillm gpt-5.5 chat auth rotated; visible-speaker lip-sync review over the muxed video cannot run."
+  ],
+  "canonical_line": "If we paddle now, we're cutting across the lineup.",
+  "claims": {
+    "does_not_prove": [
+      "Any audio render, mux, forced alignment, or lip-sync outcome \u2014 none could be produced fail-closed."
+    ],
+    "proves": [
+      "The authoritative canonical line, speaker, and dialogue window were read from the successor voice_handoff_plan and bound to the return."
+    ]
+  },
+  "created_at": "2026-07-19T01:33:33.360407+00:00",
+  "dialogue_window_s": [
+    5.0,
+    8.08
+  ],
+  "live": true,
+  "mocked": false,
+  "not_performed": [
+    "exact_line_render.wav",
+    "audio_mix.wav",
+    "muxed_provider_return.mp4",
+    "ffmpeg_mux_receipt.json",
+    "whisper_forced_alignment",
+    "visible_speaker_lipsync_review"
+  ],
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.step37_38_audio_final_assembly_receipt.v1",
+  "speaker": "Kai",
+  "status": "BLOCKED_STEP37_38_AUDIO_FINAL_ASSEMBLY",
+  "steps": [
+    37,
+    38
+  ],
+  "storyboard_beat_id": "sb_003",
+  "voice_handoff_plan": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/voice_handoff_plan.json"
+}

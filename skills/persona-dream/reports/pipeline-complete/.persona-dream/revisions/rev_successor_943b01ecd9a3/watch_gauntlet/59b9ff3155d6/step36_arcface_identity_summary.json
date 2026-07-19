@@ -1,0 +1,213 @@
+{
+  "authority": "embedding_cosine",
+  "embry_cosine_max": 0.612056,
+  "embry_cosine_mean": 0.317642,
+  "embry_cosine_min": 0.021304,
+  "embry_frames_pass": 5,
+  "embry_frames_total_with_face": 12,
+  "embry_identity_verdict": "DRIFT_OR_FAIL",
+  "embry_per_frame": [
+    {
+      "best_cosine": 0.602908,
+      "det_score": 0.8886,
+      "detected_sex": "F",
+      "faces_detected": 2,
+      "frame": "frame_0001.jpg",
+      "status": "PASS",
+      "verdict": "SAME"
+    },
+    {
+      "best_cosine": 0.612056,
+      "det_score": 0.8841,
+      "detected_sex": "F",
+      "faces_detected": 2,
+      "frame": "frame_0002.jpg",
+      "status": "PASS",
+      "verdict": "SAME"
+    },
+    {
+      "best_cosine": 0.327414,
+      "det_score": 0.8907,
+      "detected_sex": "M",
+      "faces_detected": 1,
+      "frame": "frame_0003.jpg",
+      "status": "FAIL",
+      "verdict": "DIFFERENT"
+    },
+    {
+      "best_cosine": 0.453282,
+      "det_score": 0.8535,
+      "detected_sex": "M",
+      "faces_detected": 1,
+      "frame": "frame_0004.jpg",
+      "status": "PASS",
+      "verdict": "SAME"
+    },
+    {
+      "best_cosine": 0.577128,
+      "det_score": 0.878,
+      "detected_sex": "M",
+      "faces_detected": 1,
+      "frame": "frame_0005.jpg",
+      "status": "PASS",
+      "verdict": "SAME"
+    },
+    {
+      "best_cosine": 0.568767,
+      "det_score": 0.8755,
+      "detected_sex": "F",
+      "faces_detected": 1,
+      "frame": "frame_0006.jpg",
+      "status": "PASS",
+      "verdict": "SAME"
+    },
+    {
+      "best_cosine": 0.16998,
+      "det_score": 0.8786,
+      "detected_sex": "M",
+      "faces_detected": 2,
+      "frame": "frame_0007.jpg",
+      "status": "FAIL",
+      "verdict": "DIFFERENT"
+    },
+    {
+      "best_cosine": 0.150575,
+      "det_score": 0.8724,
+      "detected_sex": "M",
+      "faces_detected": 2,
+      "frame": "frame_0008.jpg",
+      "status": "FAIL",
+      "verdict": "DIFFERENT"
+    },
+    {
+      "best_cosine": 0.021304,
+      "det_score": 0.788,
+      "detected_sex": "M",
+      "faces_detected": 2,
+      "frame": "frame_0009.jpg",
+      "status": "FAIL",
+      "verdict": "DIFFERENT"
+    },
+    {
+      "best_cosine": 0.091898,
+      "det_score": 0.7152,
+      "detected_sex": "M",
+      "faces_detected": 2,
+      "frame": "frame_0010.jpg",
+      "status": "FAIL",
+      "verdict": "DIFFERENT"
+    },
+    {
+      "best_cosine": 0.085413,
+      "det_score": 0.7627,
+      "detected_sex": "M",
+      "faces_detected": 2,
+      "frame": "frame_0011.jpg",
+      "status": "FAIL",
+      "verdict": "DIFFERENT"
+    },
+    {
+      "best_cosine": 0.150974,
+      "det_score": 0.7544,
+      "detected_sex": "F",
+      "faces_detected": 2,
+      "frame": "frame_0012.jpg",
+      "status": "FAIL",
+      "verdict": "DIFFERENT"
+    }
+  ],
+  "embry_reference": "/mnt/storage12tb/media/personas/embry/assets/contact_sheets/embry-gpt-image-2-v3/images/embry_contact_sheet_v3.png",
+  "embry_reference_sha256": "sha256:sha256:3ce40b3b6839ebba0f468d75a1adbb7f82e0d95457aefd3627e222eb569de00c",
+  "frame_count": 12,
+  "frames_dir": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/watch/frames",
+  "kai_per_frame": [
+    {
+      "best_cosine": null,
+      "detected_sex": null,
+      "frame": "frame_0001.jpg",
+      "status": "FAIL",
+      "verdict": "REFERENCE_NO_FACE"
+    },
+    {
+      "best_cosine": null,
+      "detected_sex": null,
+      "frame": "frame_0002.jpg",
+      "status": "FAIL",
+      "verdict": "REFERENCE_NO_FACE"
+    },
+    {
+      "best_cosine": null,
+      "detected_sex": null,
+      "frame": "frame_0003.jpg",
+      "status": "FAIL",
+      "verdict": "REFERENCE_NO_FACE"
+    },
+    {
+      "best_cosine": null,
+      "detected_sex": null,
+      "frame": "frame_0004.jpg",
+      "status": "FAIL",
+      "verdict": "REFERENCE_NO_FACE"
+    },
+    {
+      "best_cosine": null,
+      "detected_sex": null,
+      "frame": "frame_0005.jpg",
+      "status": "FAIL",
+      "verdict": "REFERENCE_NO_FACE"
+    },
+    {
+      "best_cosine": null,
+      "detected_sex": null,
+      "frame": "frame_0006.jpg",
+      "status": "FAIL",
+      "verdict": "REFERENCE_NO_FACE"
+    },
+    {
+      "best_cosine": null,
+      "detected_sex": null,
+      "frame": "frame_0007.jpg",
+      "status": "FAIL",
+      "verdict": "REFERENCE_NO_FACE"
+    },
+    {
+      "best_cosine": null,
+      "detected_sex": null,
+      "frame": "frame_0008.jpg",
+      "status": "FAIL",
+      "verdict": "REFERENCE_NO_FACE"
+    },
+    {
+      "best_cosine": null,
+      "detected_sex": null,
+      "frame": "frame_0009.jpg",
+      "status": "FAIL",
+      "verdict": "REFERENCE_NO_FACE"
+    },
+    {
+      "best_cosine": null,
+      "detected_sex": null,
+      "frame": "frame_0010.jpg",
+      "status": "FAIL",
+      "verdict": "REFERENCE_NO_FACE"
+    },
+    {
+      "best_cosine": null,
+      "detected_sex": null,
+      "frame": "frame_0011.jpg",
+      "status": "FAIL",
+      "verdict": "REFERENCE_NO_FACE"
+    },
+    {
+      "best_cosine": null,
+      "detected_sex": null,
+      "frame": "frame_0012.jpg",
+      "status": "FAIL",
+      "verdict": "REFERENCE_NO_FACE"
+    }
+  ],
+  "kai_reference": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_04_contact_sheets/source_artifacts/images/contact_sheet_kai_surfboard.png",
+  "model": "insightface:buffalo_l:w600k_r50",
+  "schema": "persona_dream.step36_arcface_identity_summary.v1",
+  "threshold": 0.421
+}

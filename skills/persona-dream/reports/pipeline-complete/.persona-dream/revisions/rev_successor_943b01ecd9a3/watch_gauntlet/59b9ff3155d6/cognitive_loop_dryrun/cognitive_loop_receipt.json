@@ -1,0 +1,75 @@
+{
+  "canonical_dream_memory_written": false,
+  "claims": {
+    "does_not_prove": [
+      "the closed-loop research claim (that needs a NON-superseded successor return)",
+      "canonical dream memory persistence of this superseded historical return",
+      "Qdrant semantic recall and downstream behavior change (Phase 16)"
+    ],
+    "proves": [
+      "the persona-dream cognitive loop runs 12->13->14->15 on a real Watch observation packet",
+      "self-interpretation claims cite Watch observation ids and source-memory ids (deterministic gate)",
+      "accepted ToM candidates are grounded in their parent interpretation (deterministic gate)",
+      "persistence emits an exact canonical would-write plan and proves the write path against a non-canonical validation collection"
+    ]
+  },
+  "dream_id": "successor_943b01ecd9a3",
+  "generated_at": "2026-07-19T01:34:02.023995+00:00",
+  "live": false,
+  "persona_id": "embry",
+  "phases": [
+    {
+      "artifacts": [
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/dream_observation_packet.v1.json"
+      ],
+      "evidence_origin": "provider_return",
+      "observation_packet_sha256": "sha256:5229c664ceb1c630b3644bd554a5c9c67cbac3d11c2a5e00beb3cc522d386032",
+      "phase": "12_watch_observation",
+      "role": "input",
+      "status": "DEGRADED_WATCH_GAUNTLET_OBSERVATION"
+    },
+    {
+      "accepted": 0,
+      "artifacts": [
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/cognitive_loop_dryrun/dream_self_interpretation.json"
+      ],
+      "honesty_rule": {
+        "identity_drift_dual_explanation_present": false,
+        "renderer_defect_favored_on_drift": false
+      },
+      "phase": "13_self_interpretation",
+      "rejected": 0,
+      "status": "BLOCKED_SELF_INTERPRETATION"
+    },
+    {
+      "accepted": 0,
+      "artifacts": [
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/cognitive_loop_dryrun/tom_validation_receipt.json"
+      ],
+      "candidate_source": "none",
+      "phase": "14_tom_validation",
+      "rejected": 0,
+      "status": "BLOCKED_TOM_VALIDATION"
+    },
+    {
+      "artifacts": [
+        "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/cognitive_loop_dryrun/dream_persistence_receipt.json"
+      ],
+      "canonical_write_allowed": false,
+      "canonical_write_blockers": [
+        "CANONICAL_WRITE_FLAG_NOT_SET",
+        "RETURN_ID_MISSING",
+        "OBSERVATION_STATUS_DEGRADED"
+      ],
+      "canonical_writes_performed": 0,
+      "phase": "15_persistence",
+      "status": "DRY_RUN_PERSISTENCE_PLAN",
+      "validation_all_match": null,
+      "validation_write": false
+    }
+  ],
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.cognitive_loop_receipt.v1",
+  "status": "PARTIAL_COGNITIVE_LOOP"
+}
