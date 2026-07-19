@@ -140,10 +140,9 @@ class EvidenceCaseStore2:
             grader={"type": "agent_driven", "model_id": "", "modified_in_session": False},
         )
 
-        # Persist to /memory — single batch upsert, background thread.
-        # Record-keeping does not block the pipeline return.
-        import threading
-        from storage import _upsert_evidence_case, _get_memory_http
+        # Persist to /memory before returning. A one-shot CLI process cannot
+        # safely delegate its durability contract to a daemon thread.
+        from storage import _upsert_evidence_case
 
         # Build consolidated case document for single upsert
         case_doc = {
@@ -173,13 +172,8 @@ class EvidenceCaseStore2:
             "sacm_ref": sacm_ref,            # null = not exported (valid)
         }
 
-        def _persist_background():
-            try:
-                _upsert_evidence_case(case_doc)
-            except Exception as exc:
-                logger.warning("Background persist failed: {}", exc)
-
-        threading.Thread(target=_persist_background, daemon=True).start()
+        if not _upsert_evidence_case(case_doc):
+            raise RuntimeError("evidence case persistence failed")
 
         return {
             "claim": claim.to_dict(),
@@ -194,7 +188,8 @@ class EvidenceCaseStore2:
             "recall_count": len(evidence_items),
             "technique_groups": technique_groups or {},
             "sub_claims": sub_claims or [],
-            "decomposition": decomposition_node,
+            "decomposition": decomposition,
+            "persisted": True,
             # v4.3 self-contained QRA metadata
             "source_framework": source_framework,
             "source_control_id": source_control_id,

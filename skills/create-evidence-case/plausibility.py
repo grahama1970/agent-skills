@@ -36,8 +36,7 @@ from loguru import logger
 load_dotenv(find_dotenv(usecwd=True), override=False)
 
 SCILLM_BASE = os.getenv("SCILLM_API_BASE", "http://localhost:4001")
-SCILLM_KEY = os.getenv("SCILLM_PROXY_KEY", "sk-dev-proxy-123")
-SCILLM_PLAUSIBILITY_MODEL = os.getenv("SCILLM_PLAUSIBILITY_MODEL", "gemini/gemini-2.5-flash")
+SCILLM_PLAUSIBILITY_MODEL = os.getenv("SCILLM_PLAUSIBILITY_MODEL", "gemini-flash")
 
 
 def _check_deterministic(
@@ -160,12 +159,15 @@ def _call_scillm(prompt: str, model: str | None = None) -> str:
         "response_format": {"type": "json_object"},
         "temperature": 0,
     }).encode()
+    from runner import resolve_scillm_api_key
+
     req = urllib.request.Request(
         f"{SCILLM_BASE}/v1/chat/completions",
         data=body,
         headers={
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {SCILLM_KEY}",
+            "Authorization": f"Bearer {resolve_scillm_api_key()}",
+            "X-Caller-Skill": "create-evidence-case",
         },
     )
     with urllib.request.urlopen(req, timeout=60) as resp:
@@ -199,10 +201,10 @@ def _check_llm_headless(
     except Exception as exc:
         logger.debug("scillm {} failed: {}", SCILLM_PLAUSIBILITY_MODEL, exc)
 
-    # Fallback: scillm text cascade
+    # Fallback: the configured free Gemini deployment.
     try:
-        text = _call_scillm(prompt, model="text")
-        return _parse_llm_response(text, "scillm:text", unmatched, resolved)
+        text = _call_scillm(prompt, model="gemini-flash-free2")
+        return _parse_llm_response(text, "scillm:gemini-flash-free2", unmatched, resolved)
     except Exception as exc:
         logger.debug("scillm text cascade failed: {}", exc)
 

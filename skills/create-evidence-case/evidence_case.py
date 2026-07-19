@@ -29,7 +29,7 @@ if "models" in sys.modules and "create-evidence-case" not in (getattr(sys.module
     del sys.modules["models"]
 from models import grade_from_score
 from plausibility import check_plausibility
-from runner import EvidenceCaseRunner
+from runner import EvidenceCaseRunner, ScillmRenderError
 from storage import EvidenceCaseStore
 
 
@@ -121,6 +121,8 @@ def create(
         return test(claim=claim, quiet=quiet, json_output=json_output)
 
     runner = EvidenceCaseRunner()
+    run_failed = False
+    infrastructure_error = False
     try:
         result = runner.run(
             claim_text=claim,
@@ -133,6 +135,8 @@ def create(
         result = _apply_plausibility_gate(result, claim, show_progress=not quiet)
     except Exception as exc:
         logger.error("Evidence case runner failed: {}", exc)
+        run_failed = True
+        infrastructure_error = isinstance(exc, ScillmRenderError)
         # Re-ensure skill dir is first on path (PYTHONPATH pollution from pi-mono)
         # Force reimport from skill dir (PYTHONPATH pollution may have cached wrong models)
         if "models" in sys.modules and "create-evidence-case" not in getattr(sys.modules["models"], "__file__", ""):
@@ -140,13 +144,14 @@ def create(
         sys.path.insert(0, _SKILL_DIR)
         from models import VerdictNode as _VN
         result = {
-            "claim": {"text": claim, "category": category, "id": "error", "verdict": "NOT_SATISFIED"},
+            "claim": {"text": claim, "category": category, "id": "error", "verdict": "ERROR"},
             "strategies": [],
             "evidence": [],
-            "verdict": {"state": "not_satisfied", "grade": "F", "score": 0.0,
+            "verdict": {"state": "error", "grade": "F", "score": 0.0,
                         "strategy_id": "", "evidence_ids": [],
                         "reasoning": f"Runner error: {exc}"},
             "answer": f"Unable to process: {exc}",
+            "infrastructure_error": infrastructure_error,
             "needs_clarification": True,
             "clarify_questions": ["Could you rephrase the question?"],
         }
@@ -157,7 +162,13 @@ def create(
         raw = json.dumps(result, indent=2, default=str)
         clean = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', ' ', raw)
         print(clean)
+        if run_failed:
+            raise typer.Exit(1)
         return
+
+    if run_failed:
+        console.print(f"[red]Run failed:[/] {result['answer']}")
+        raise typer.Exit(1)
 
     # Pretty print — transparent output so humans can course-correct
     verdict = result.get("verdict", {})

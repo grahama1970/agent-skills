@@ -14,6 +14,7 @@ import json
 import os
 import time
 from enum import Enum
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -36,8 +37,49 @@ from scoring import (
 )
 
 
-SCILLM_URL = os.environ.get("SCILLM_URL", "http://localhost:4001")
-SCILLM_KEY = os.environ.get("SCILLM_API_KEY", "sk-dev-proxy-123")
+SCILLM_URL = os.environ.get(
+    "SCILLM_URL",
+    os.environ.get("SCILLM_API_BASE", "http://localhost:4001"),
+)
+SCILLM_MODEL = os.environ.get("SCILLM_EVIDENCE_CASE_MODEL", "gemini-flash")
+
+
+class ScillmRenderError(RuntimeError):
+    """Raised when infrastructure prevents an authoritative LLM render."""
+
+
+def resolve_scillm_api_key() -> str:
+    """Resolve the credential used by the deployed local SciLLM proxy."""
+    for name in ("SCILLM_API_KEY", "SCILLM_MASTER_KEY", "LITELLM_MASTER_KEY"):
+        value = os.environ.get(name, "").strip()
+        if value:
+            return value
+
+    env_path = Path(
+        os.environ.get(
+            "SCILLM_ENV_FILE",
+            str(Path(os.environ.get("SCILLM_ROOT", "~/workspace/experiments/scillm")).expanduser() / ".env"),
+        )
+    ).expanduser()
+    if env_path.is_file():
+        values: dict[str, str] = {}
+        for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            name, value = line.split("=", 1)
+            values[name.strip()] = value.strip().strip("\"'")
+        for name in ("SCILLM_MASTER_KEY", "LITELLM_MASTER_KEY"):
+            if values.get(name):
+                return values[name]
+
+    proxy_key = os.environ.get("SCILLM_PROXY_KEY", "").strip()
+    if proxy_key:
+        return proxy_key
+    raise ScillmRenderError(
+        "SciLLM credential is unavailable; set SCILLM_API_KEY or configure "
+        "SCILLM_MASTER_KEY in the local SciLLM .env file"
+    )
 
 
 class AgentAction(str, Enum):
@@ -238,7 +280,9 @@ class EvidenceCaseRunner:
             "detail": technique_detail,
         })
 
-        if not technique_ok and len(resolved) > 0:
+        if action == AgentAction.ASK_CLARIFY:
+            verdict_state = "inconclusive"
+        elif not technique_ok and len(resolved) > 0:
             verdict_state = "inconclusive"
         elif grounding_ok and len(resolved) > 0 and len(qra_items) > 0:
             verdict_state = "satisfied"
@@ -479,21 +523,30 @@ EVIDENCE_CASE:
         result: dict = {}
         llm_citations: list = []
         content = ""
+        api_key = resolve_scillm_api_key()
 
         for attempt in range(1, self.MAX_RENDER_RETRIES + 1):
             try:
                 resp = httpx.post(
                     f"{SCILLM_URL}/v1/chat/completions",
-                    headers={"Authorization": f"Bearer {SCILLM_KEY}"},
+                    headers={
+                        "Authorization": f"Bearer {api_key}",
+                        "X-Caller-Skill": "create-evidence-case",
+                    },
                     json={
-                        "model": "text",
+                        "model": SCILLM_MODEL,
                         "messages": messages,
+                        "response_format": {"type": "json_object"},
                         "temperature": 0.2,
-                        "max_tokens": 600,
                     },
                     timeout=30,
                 )
-                resp.raise_for_status()
+                try:
+                    resp.raise_for_status()
+                except httpx.HTTPStatusError as exc:
+                    raise ScillmRenderError(
+                        f"SciLLM HTTP {resp.status_code}: {resp.text[:500]}"
+                    ) from exc
                 content = resp.json()["choices"][0]["message"]["content"].strip()
                 if content.startswith("```"):
                     content = content.split("\n", 1)[1].rsplit("```", 1)[0].strip()
@@ -501,17 +554,20 @@ EVIDENCE_CASE:
 
                 # Citation validation via /extract-entities on the answer text
                 answer_text = result.get("answer", "")
+                if not answer_text and result.get("decision") == "clarify":
+                    answer_text = result.get("clarifying_question", "")
                 llm_citations = result.get("citations", [])
                 extracted_ids: set[str] = set()
-                try:
-                    answer_entities = collect_entities(answer_text)
-                    extracted_ids = {
-                        e.get("canonical_id", "")
-                        for e in answer_entities.get("resolved_entities", [])
-                    } - {""}
-                except Exception as exc:
-                    logger.warning("Citation extraction failed: {}", exc)
-                    extracted_ids = set(llm_citations)  # fall back to declared citations
+                if answer_text and result.get("decision") != "clarify":
+                    try:
+                        answer_entities = collect_entities(answer_text)
+                        extracted_ids = {
+                            e.get("canonical_id", "")
+                            for e in answer_entities.get("resolved_entities", [])
+                        } - {""}
+                    except Exception as exc:
+                        logger.warning("Citation extraction failed: {}", exc)
+                        extracted_ids = set(llm_citations)  # fall back to declared citations
 
                 # Combine declared + extracted for full coverage check
                 all_cited = extracted_ids | set(llm_citations)
@@ -564,15 +620,13 @@ EVIDENCE_CASE:
             except Exception as exc:
                 logger.warning("scillm render attempt {} failed: {}", attempt, exc)
                 if attempt == self.MAX_RENDER_RETRIES:
-                    return f"LLM render failed: {exc}"
+                    raise ScillmRenderError(
+                        f"SciLLM render failed after {attempt} attempts: {exc}"
+                    ) from exc
 
-        # Exhausted retries — return last result with invalid citations stripped
-        logger.warning("Render retries exhausted, stripping invalid citations")
-        clean_citations = [c for c in llm_citations if c in valid_ids]
-        answer = result.get("answer", "")
-        if not answer:
-            return content
-        return answer
+        raise ScillmRenderError(
+            f"SciLLM render failed validation after {self.MAX_RENDER_RETRIES} attempts"
+        )
 
     def _build_evidence_case(
         self,
@@ -711,29 +765,18 @@ EVIDENCE_CASE:
         entities: dict | None = None,
         qra_quality: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Build result dict and persist. Store failure is non-fatal."""
-        try:
-            result = self.store.persist_case(
-                question=claim_text,
-                category=category,
-                verdict_state=verdict_state,
-                grade=grade,
-                score=score,
-                gates=steps,
-                evidence_items=qra_items or [],
-                answer=answer,
-                control_ids=control_ids,
-            )
-        except Exception as exc:
-            logger.error("persist_case failed (non-fatal): {}", exc)
-            result = {
-                "claim": {"text": claim_text, "category": category},
-                "verdict": {"state": verdict_state, "grade": grade, "score": score},
-                "answer": answer,
-                "gate_trace": steps,
-                "gates_passed": sum(1 for s in steps if s.get("passed")),
-                "gates_total": len(steps),
-            }
+        """Build and durably persist the result before returning it."""
+        result = self.store.persist_case(
+            question=claim_text,
+            category=category,
+            verdict_state=verdict_state,
+            grade=grade,
+            score=score,
+            gates=steps,
+            evidence_items=qra_items or [],
+            answer=answer,
+            control_ids=control_ids,
+        )
         result["entities"] = entities
         if qra_quality is not None:
             result["qra_quality"] = qra_quality
