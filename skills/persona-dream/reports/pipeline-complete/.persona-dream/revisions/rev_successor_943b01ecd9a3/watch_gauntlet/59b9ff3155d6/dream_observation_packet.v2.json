@@ -1,0 +1,1202 @@
+{
+  "absences": {
+    "items": [
+      {
+        "evidence_refs": [
+          "frame_0000"
+        ],
+        "scope": "per_frame",
+        "statement": "no visible text"
+      },
+      {
+        "evidence_refs": [
+          "frame_0000"
+        ],
+        "scope": "per_frame",
+        "statement": "no visible vehicles"
+      },
+      {
+        "evidence_refs": [
+          "frame_0000"
+        ],
+        "scope": "per_frame",
+        "statement": "no visible animals"
+      },
+      {
+        "evidence_refs": [
+          "frame_0000"
+        ],
+        "scope": "per_frame",
+        "statement": "no visible buildings"
+      },
+      {
+        "evidence_refs": [
+          "frame_0001"
+        ],
+        "scope": "per_frame",
+        "statement": "no text visible"
+      },
+      {
+        "evidence_refs": [
+          "frame_0001"
+        ],
+        "scope": "per_frame",
+        "statement": "no buildings visible"
+      },
+      {
+        "evidence_refs": [
+          "frame_0001"
+        ],
+        "scope": "per_frame",
+        "statement": "no boats visible"
+      },
+      {
+        "evidence_refs": [
+          "frame_0001"
+        ],
+        "scope": "per_frame",
+        "statement": "no animals visible"
+      },
+      {
+        "evidence_refs": [
+          "frame_0002"
+        ],
+        "scope": "per_frame",
+        "statement": "no visible footwear"
+      },
+      {
+        "evidence_refs": [
+          "frame_0003"
+        ],
+        "scope": "per_frame",
+        "statement": "no visible eyewear on the woman"
+      },
+      {
+        "evidence_refs": [
+          "frame_0003"
+        ],
+        "scope": "per_frame",
+        "statement": "no visible boat"
+      },
+      {
+        "evidence_refs": [
+          "frame_0004"
+        ],
+        "scope": "per_frame",
+        "statement": "no boat visible"
+      },
+      {
+        "evidence_refs": [
+          "frame_0004"
+        ],
+        "scope": "per_frame",
+        "statement": "no footwear visible"
+      },
+      {
+        "evidence_refs": [
+          "frame_0005"
+        ],
+        "scope": "per_frame",
+        "statement": "no other people clearly visible"
+      },
+      {
+        "evidence_refs": [
+          "frame_0006"
+        ],
+        "scope": "per_frame",
+        "statement": "no visible boats"
+      },
+      {
+        "evidence_refs": [
+          "frame_0008"
+        ],
+        "scope": "per_frame",
+        "statement": "no vehicles visible"
+      }
+    ],
+    "module_status": "PRESENT"
+  },
+  "acceptance_context": {
+    "gate_summary": {
+      "agent_level_gauntlet": "ACCEPTED",
+      "fail_closed_gates": [
+        "step_36",
+        "step_38"
+      ],
+      "step_36": true,
+      "step_38": true
+    },
+    "human_subjective_acceptance": "NOT_CLAIMED_REMAINS_HUMAN",
+    "module_status": "PRESENT",
+    "receipt_refs": [
+      {
+        "path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/provider_return/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/post_return_acceptance_receipt.v2.json",
+        "schema": "persona_dream.post_return_acceptance_receipt.v2",
+        "sha256": "sha256:7bb2c722ee47b594ed564b97fad874d3585a4663096a3ba5a459c94e2bd40dcd",
+        "status": "ACCEPTED_AGENT_LEVEL"
+      },
+      {
+        "path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/provider_return/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/step37_38_audio_final_assembly_receipt.v2.json",
+        "schema": "persona_dream.step37_38_audio_final_assembly_receipt.v2",
+        "sha256": "sha256:0e127a7c2c77d3dd2dcc599bf022ee5288dc9940ba6ab355d16726688559fb11",
+        "status": "PASS_AUDIO_FINAL_ASSEMBLY"
+      }
+    ]
+  },
+  "claims": {
+    "does_not_prove": [
+      "Human subjective acceptance of the successor return (remains the human's).",
+      "Embedding-certified whole-clip Embry identity (rests on VLM pose/occlusion adjudication).",
+      "Frame-accurate lip synchronization (inapplicable-by-composition)."
+    ],
+    "proves": [
+      "One accepted successor observation packet (v2) supersedes the DEGRADED v1 packet by hash, carrying live per-frame visible entities (Tau VLM route), a muxed-clip Whisper transcript, and the authoritative identity/speaker/continuity adjudications folded by reference+hash.",
+      "The packet is evidence-only: a deterministic psychology filter guards every enriched text field; psychological_interpretation_performed is false.",
+      "Every one of the 7 materialized persona_dream_watch_evidence vertices is representable in the v2 modules; enrichment beyond the vertices is recorded as additive delta, not a rewrite."
+    ]
+  },
+  "continuity_adjudications": {
+    "module_status": "PRESENT",
+    "receipt_refs": [
+      {
+        "path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/provider_return/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/post_kling_continuity_review_receipt.v2.json",
+        "schema": "persona_dream.post_kling_continuity_review_receipt.v2",
+        "sha256": "sha256:a6f5f5a352cac4911396860b735d0daca649d61796914a340c3a5bd8e9e0187b",
+        "status": "PASS_POST_KLING_CONTINUITY_REVIEW"
+      }
+    ],
+    "subgates": {
+      "embry_visual_identity_within_return": "PASS_VLM_ADJUDICATED",
+      "environment_continuity": "PASS",
+      "kai_visual_identity_within_return": "PASS_VLM_NOT_CONTRADICTED",
+      "scene_action_continuity": "PASS",
+      "technical_readability": "PASS",
+      "wardrobe_continuity": "PASS"
+    },
+    "verdict": "PASS_POST_KLING_CONTINUITY_REVIEW"
+  },
+  "coverage_gaps": [
+    {
+      "code": "embry_identity_embedding_indeterminate",
+      "statement": "ArcFace embedding Embry identity is not certified whole-clip (verdict DRIFT_OR_FAIL, 5/12 frames pass); final-third certainty rests on VLM pose/occlusion adjudication, not embedding proof."
+    },
+    {
+      "code": "lipsync_inapplicable_by_composition",
+      "statement": "No readable speaking mouth in the wide two-character lineup; frame-accurate lip-sync is inapplicable-by-composition."
+    }
+  ],
+  "generated_at": "2026-07-19T14:42:23.985098+00:00",
+  "identity_evidence": {
+    "adjudications": [
+      {
+        "http_status": 200,
+        "panel_id": "step36_embry_frame_0003",
+        "prompt_sha256": "sha256:d1f706fb90d3b9487bbad5f0c1c95690f6831576d62965d478dabaad2a6c50b3",
+        "receipt_content_sha256": "sha256:3785e69178f1bef87dab010930cddfd3ed28ce5ba914ae322d17548003bd2c83",
+        "summary": "A brown-haired adult woman in a navy rashguard is close to camera in the water beside a surfboard, with a few distant swimmers/surfers in the background; she plausibly matches Embry and does not appear to be a different-looking substituted woman, while Kai in a black rashguard is not clearly visible.",
+        "verdict": "PASS"
+      },
+      {
+        "http_status": 200,
+        "panel_id": "step36_embry_frame_0009",
+        "prompt_sha256": "sha256:352fb60c268699a2566646cb1630fc143a88b1fc63e978b384ea7dd295084989",
+        "receipt_content_sha256": "sha256:482554afb2ba071c082a509451ee08caf3f8c81b1337b9cb35f9134a64ec8803",
+        "summary": "A small, blurry woman in a navy rashguard lies on a surfboard near a male in a black rashguard, with several distant swimmers in the background; Embry may be present but her face is too small/unreadable to identify, so there is no clear different-looking woman substitution.",
+        "verdict": "PASS"
+      },
+      {
+        "http_status": 200,
+        "panel_id": "step36_embry_frame_0010",
+        "prompt_sha256": "sha256:402bd3b07ee355b17bbdfc370d40f6bca295b601d49bf3cf29f8e15d06c15ee1",
+        "receipt_content_sha256": "sha256:c07bb06025cc774bbc944d62876cd47abca6deb1bed444773ff62d2d5430b031",
+        "summary": "A small, distant woman in a navy rashguard is crouched on a surfboard at the waterline with a man in a black rashguard nearby and several tiny distant surfers/swimmers in the background; her face is too small/blurred to read clearly, so nothing contradicts Embry being present.",
+        "verdict": "PASS"
+      },
+      {
+        "http_status": 200,
+        "panel_id": "step36_embry_frame_0011",
+        "prompt_sha256": "sha256:402bd3b07ee355b17bbdfc370d40f6bca295b601d49bf3cf29f8e15d06c15ee1",
+        "receipt_content_sha256": "sha256:b6c8a39ce4b4fb2828be8db5b6c1776b922893af463fd264010a6ec03eb65dcb",
+        "summary": "A small/distant woman in a navy rashguard is surfing at the waterline while a man in a black rashguard and a few distant surfers are visible; her face is turned/profiled and too small/blurry to read, so nothing contradicts her being Embry.",
+        "verdict": "PASS"
+      },
+      {
+        "http_status": 200,
+        "panel_id": "step36_embry_frame_0012",
+        "prompt_sha256": "sha256:402bd3b07ee355b17bbdfc370d40f6bca295b601d49bf3cf29f8e15d06c15ee1",
+        "receipt_content_sha256": "sha256:7dcfa94bc0b0421656352e26608872f42f2345616fa9e2a64de77936be7619e0",
+        "summary": "A distant woman in a dark/navy surf outfit stands on a board at the waterline while a man in a black rashguard and another distant person are in the water; the woman's face is small and blurry/unreadable, so nothing contradicts Embry being present.",
+        "verdict": "PASS"
+      },
+      {
+        "http_status": 200,
+        "panel_id": "step36_kai_frame_0009",
+        "prompt_sha256": "sha256:eb0a8de7ac065c4cdb6a66c06092e915988c025957976359b4e0bd5820720e0c",
+        "receipt_content_sha256": "sha256:2a3cfbbd6ebef87025da16c9145e0e76c60b2c64f1a57878330ffdd26ac1d929",
+        "summary": "Two foreground surfers are in the water with several tiny distant people near the shore; the black-rashguard male figure could be Kai but his face is too small/blurred and partly obscured, so identity drift cannot be assessed.",
+        "verdict": "PASS"
+      },
+      {
+        "http_status": 200,
+        "panel_id": "step36_kai_frame_0011",
+        "prompt_sha256": "sha256:eb0a8de7ac065c4cdb6a66c06092e915988c025957976359b4e0bd5820720e0c",
+        "receipt_content_sha256": "sha256:188c6e0f3c17c02d6d6b6fcc620da78a2c1ae62b607aa61c90f72cb671c300cc",
+        "summary": "A surfer stands on a board in the foreground while a dark-haired man in a black rashguard is partly submerged in the water with other distant swimmers; the man's face is too small/occluded to judge identity, so Kai continuity is not contradicted.",
+        "verdict": "PASS"
+      }
+    ],
+    "authority": "embedding_cosine",
+    "model": "insightface:buffalo_l:w600k_r50",
+    "module_status": "PRESENT",
+    "per_frame": [
+      {
+        "best_cosine": 0.602908,
+        "entity": "Embry",
+        "frame": "frame_0001.jpg",
+        "status": "PASS",
+        "verdict": "SAME"
+      },
+      {
+        "best_cosine": 0.612056,
+        "entity": "Embry",
+        "frame": "frame_0002.jpg",
+        "status": "PASS",
+        "verdict": "SAME"
+      },
+      {
+        "best_cosine": 0.327414,
+        "entity": "Embry",
+        "frame": "frame_0003.jpg",
+        "status": "FAIL",
+        "verdict": "DIFFERENT"
+      },
+      {
+        "best_cosine": 0.453282,
+        "entity": "Embry",
+        "frame": "frame_0004.jpg",
+        "status": "PASS",
+        "verdict": "SAME"
+      },
+      {
+        "best_cosine": 0.577128,
+        "entity": "Embry",
+        "frame": "frame_0005.jpg",
+        "status": "PASS",
+        "verdict": "SAME"
+      },
+      {
+        "best_cosine": 0.568767,
+        "entity": "Embry",
+        "frame": "frame_0006.jpg",
+        "status": "PASS",
+        "verdict": "SAME"
+      },
+      {
+        "best_cosine": 0.16998,
+        "entity": "Embry",
+        "frame": "frame_0007.jpg",
+        "status": "FAIL",
+        "verdict": "DIFFERENT"
+      },
+      {
+        "best_cosine": 0.150575,
+        "entity": "Embry",
+        "frame": "frame_0008.jpg",
+        "status": "FAIL",
+        "verdict": "DIFFERENT"
+      },
+      {
+        "best_cosine": 0.021304,
+        "entity": "Embry",
+        "frame": "frame_0009.jpg",
+        "status": "FAIL",
+        "verdict": "DIFFERENT"
+      },
+      {
+        "best_cosine": 0.091898,
+        "entity": "Embry",
+        "frame": "frame_0010.jpg",
+        "status": "FAIL",
+        "verdict": "DIFFERENT"
+      },
+      {
+        "best_cosine": 0.085413,
+        "entity": "Embry",
+        "frame": "frame_0011.jpg",
+        "status": "FAIL",
+        "verdict": "DIFFERENT"
+      },
+      {
+        "best_cosine": 0.150974,
+        "entity": "Embry",
+        "frame": "frame_0012.jpg",
+        "status": "FAIL",
+        "verdict": "DIFFERENT"
+      }
+    ],
+    "references": [
+      {
+        "name": "Embry",
+        "path": "/mnt/storage12tb/media/personas/embry/assets/contact_sheets/embry-gpt-image-2-v3/images/embry_contact_sheet_v3.png",
+        "sha256": "sha256:3ce40b3b6839ebba0f468d75a1adbb7f82e0d95457aefd3627e222eb569de00c"
+      }
+    ],
+    "summary": {
+      "embry_cosine_max": 0.612056,
+      "embry_cosine_mean": 0.317642,
+      "embry_cosine_min": 0.021304,
+      "embry_frames_pass": 5,
+      "embry_frames_total_with_face": 12,
+      "embry_identity_verdict": "DRIFT_OR_FAIL"
+    },
+    "threshold": 0.421
+  },
+  "live": true,
+  "mocked": false,
+  "nonverbal_audio": {
+    "events": [
+      {
+        "end_seconds": 10.041667,
+        "label": "ocean ambience bed",
+        "source_asset_sha256": "sha256:8d5e0d3e14bf9bd7415b232c4deeccb18149bfb7434814db650a07a4e6d55d75",
+        "start_seconds": 0.0
+      }
+    ],
+    "module_status": "PRESENT"
+  },
+  "packet_status": "ACCEPTED",
+  "provider_lineage": {
+    "download_receipt": null,
+    "downloaded_mp4_sha256": "sha256:59b9ff3155d6ba9d0b90d795bafe7b84cc4e10849db08299217b65d61e211fff",
+    "endpoint": null,
+    "module_status": "PRESENT",
+    "provider_return_envelope": {
+      "path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/provider_return/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/phase11_provider_return_envelope.v1.json",
+      "sha256": "sha256:b26d7b3f2de91c7d36a693d1e6915828468336d87e3e2133ad573a8cfe6a7eee"
+    },
+    "request_hash": null
+  },
+  "psychological_interpretation_performed": false,
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "sampled_frames": {
+    "frame_count": 12,
+    "frames": [
+      {
+        "in_identity_window": true,
+        "in_speaker_window": false,
+        "index": 0,
+        "path": "watch/frames_bound/frame_0000.jpg",
+        "sha256": "sha256:467b8b1904964079183b4a3da2a7af94da40d837a8e2aff0fbf72646d2d98182",
+        "size_bytes": 20666,
+        "timestamp_seconds": 0.0
+      },
+      {
+        "in_identity_window": true,
+        "in_speaker_window": false,
+        "index": 1,
+        "path": "watch/frames_bound/frame_0001.jpg",
+        "sha256": "sha256:89e8bccb2042a1c9a9a45203adbc179e5adb710ee48d304ebd177706e1edc0f0",
+        "size_bytes": 20131,
+        "timestamp_seconds": 0.84
+      },
+      {
+        "in_identity_window": true,
+        "in_speaker_window": false,
+        "index": 2,
+        "path": "watch/frames_bound/frame_0002.jpg",
+        "sha256": "sha256:a6d08220c9684b6c9681c0a5f6586d9929c3987997169f7f859e048ba0aebb95",
+        "size_bytes": 17176,
+        "timestamp_seconds": 1.67
+      },
+      {
+        "in_identity_window": true,
+        "in_speaker_window": false,
+        "index": 3,
+        "path": "watch/frames_bound/frame_0003.jpg",
+        "sha256": "sha256:d4d6a84bc2744aebc6a46e960250b99c609f51c7c54ed8880bab47bedfa38c24",
+        "size_bytes": 17665,
+        "timestamp_seconds": 2.51
+      },
+      {
+        "in_identity_window": true,
+        "in_speaker_window": false,
+        "index": 4,
+        "path": "watch/frames_bound/frame_0004.jpg",
+        "sha256": "sha256:b27d444f144b2750ecc37e88d6e446b9ea0ae2ce06cde3e59e168ddd0eb143c4",
+        "size_bytes": 17417,
+        "timestamp_seconds": 3.35
+      },
+      {
+        "in_identity_window": true,
+        "in_speaker_window": false,
+        "index": 5,
+        "path": "watch/frames_bound/frame_0005.jpg",
+        "sha256": "sha256:16a5e63e9f1e058d1445580027a509faa1bec0a45ed66d18e3971b60253562e9",
+        "size_bytes": 17842,
+        "timestamp_seconds": 4.18
+      },
+      {
+        "in_identity_window": true,
+        "in_speaker_window": true,
+        "index": 6,
+        "path": "watch/frames_bound/frame_0006.jpg",
+        "sha256": "sha256:f382cd19ee9799bc0dd2ec9e1d50448354eb9b4b2651aecd6d54066eb227f4fe",
+        "size_bytes": 19577,
+        "timestamp_seconds": 5.02
+      },
+      {
+        "in_identity_window": true,
+        "in_speaker_window": true,
+        "index": 7,
+        "path": "watch/frames_bound/frame_0007.jpg",
+        "sha256": "sha256:ca012e8820dde68bf6b9d661d8d4aad1017305c2dfbd4a283b36bad83b3839c4",
+        "size_bytes": 19390,
+        "timestamp_seconds": 5.86
+      },
+      {
+        "in_identity_window": true,
+        "in_speaker_window": true,
+        "index": 8,
+        "path": "watch/frames_bound/frame_0008.jpg",
+        "sha256": "sha256:4993d9fe1b64a51144fe82f2d2273b4d6ed4fa3d80ab974d1f00e4a1402f3533",
+        "size_bytes": 18749,
+        "timestamp_seconds": 6.69
+      },
+      {
+        "in_identity_window": true,
+        "in_speaker_window": true,
+        "index": 9,
+        "path": "watch/frames_bound/frame_0009.jpg",
+        "sha256": "sha256:cdfc4cb9a67b4045f359cca78f4576890d9e0450df075abead591336fcbde7d8",
+        "size_bytes": 18349,
+        "timestamp_seconds": 7.53
+      },
+      {
+        "in_identity_window": true,
+        "in_speaker_window": false,
+        "index": 10,
+        "path": "watch/frames_bound/frame_0010.jpg",
+        "sha256": "sha256:3ea24dff0896625ef95ba0381f5437a037f0b69890b3e3edba1fc2de64046b07",
+        "size_bytes": 18060,
+        "timestamp_seconds": 8.37
+      },
+      {
+        "in_identity_window": true,
+        "in_speaker_window": false,
+        "index": 11,
+        "path": "watch/frames_bound/frame_0011.jpg",
+        "sha256": "sha256:04a05a0643490927703873d7643fde82b6a19f419a925d9b555acb6db5466b3e",
+        "size_bytes": 15067,
+        "timestamp_seconds": 9.2
+      }
+    ],
+    "frames_root": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/watch/frames_bound",
+    "module_status": "PRESENT",
+    "requested_mode": "scene-change",
+    "sampling_method": "uniform-fallback"
+  },
+  "scene_cuts": {
+    "cuts": [],
+    "method": "watch_scene_detection",
+    "module_status": "NOT_APPLICABLE"
+  },
+  "schema": "persona_dream.dream_observation_packet.v2",
+  "source_identity": {
+    "duration_seconds": 10.041667,
+    "muxed_video": "step37_38_successor_mux/provider_return_muxed.mp4",
+    "muxed_video_sha256": "sha256:e31788caba34c51aa8ed9b7e16332cce91cfcec35a9d42ed036975164530fa97",
+    "muxed_video_size_bytes": 17090228,
+    "request_body_sha256": null,
+    "request_id": null,
+    "return_id": "97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4",
+    "silent_video": "provider_return.mp4",
+    "silent_video_sha256": "sha256:59b9ff3155d6ba9d0b90d795bafe7b84cc4e10849db08299217b65d61e211fff",
+    "silent_video_size_bytes": 16843175
+  },
+  "source_revision_id": "rev_upstream_bf3b05d47fb8",
+  "speaker_visibility": {
+    "adjudication": {
+      "http_status": 200,
+      "panel_id": "step37_38_visible_speaker",
+      "prompt_sha256": "sha256:8ae433f31e1db7135904433e88fa16051d5009e6c656ab212e11535b6567c1d3",
+      "receipt_content_sha256": "sha256:59a2640aac12bca8c2b3855bc6f473ab12e642300a074dcbfb2cf6c22b237b03",
+      "summary": "Kai appears at a distance in a wide surf lineup composition, with his face and mouth too small to judge precise speech articulation. No frame shows a close or clear speaking mouth suitable for lip-sync evaluation.",
+      "verdict": "PASS_LIPSYNC_INAPPLICABLE_BY_COMPOSITION"
+    },
+    "lipsync_rule_applicability": "INAPPLICABLE_BY_COMPOSITION",
+    "module_status": "PRESENT",
+    "readable_speaking_mouth_present": false,
+    "speaker": "Kai",
+    "speaker_visibility_frames": [
+      {
+        "index": 6,
+        "path": "watch/frames_bound/frame_0006.jpg",
+        "timestamp_seconds": 5.02
+      },
+      {
+        "index": 7,
+        "path": "watch/frames_bound/frame_0007.jpg",
+        "timestamp_seconds": 5.86
+      },
+      {
+        "index": 8,
+        "path": "watch/frames_bound/frame_0008.jpg",
+        "timestamp_seconds": 6.69
+      },
+      {
+        "index": 9,
+        "path": "watch/frames_bound/frame_0009.jpg",
+        "timestamp_seconds": 7.53
+      }
+    ],
+    "spoken_interval_seconds": [
+      5.0,
+      8.08
+    ],
+    "transcript_line_at_interval": "If we paddle now, we're cutting across the line up."
+  },
+  "superseded_by": null,
+  "supersedes": {
+    "prior_packet_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/dream_observation_packet.v1.json",
+    "prior_packet_schema": "persona_dream.watch_gauntlet_observation_packet.v1",
+    "prior_packet_sha256": "sha256:5229c664ceb1c630b3644bd554a5c9c67cbac3d11c2a5e00beb3cc522d386032",
+    "prior_packet_status": "DEGRADED_WATCH_GAUNTLET_OBSERVATION"
+  },
+  "tau_receipts": [
+    {
+      "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+      "content_sha256": "sha256:10f3df220c4399b459e5ad8435ce4e00b2dabeae3a538dd9adf569aade34e3b9",
+      "frame_index": 0,
+      "http_status": 200,
+      "live_call_performed": true,
+      "model": "gpt-5.5",
+      "prompt_sha256": "sha256:2553278b0ae80356b476653b312703a309515c34af5524bf895abc041d321bdc",
+      "purpose": "per-frame-visible-entities",
+      "route": "tau:persona-dream-panel-reviewer"
+    },
+    {
+      "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+      "content_sha256": "sha256:a07b83d7c67ea506d9e448209640e4ae4194a2c9f307983a4fa06bdc7316737c",
+      "frame_index": 1,
+      "http_status": 200,
+      "live_call_performed": true,
+      "model": "gpt-5.5",
+      "prompt_sha256": "sha256:2553278b0ae80356b476653b312703a309515c34af5524bf895abc041d321bdc",
+      "purpose": "per-frame-visible-entities",
+      "route": "tau:persona-dream-panel-reviewer"
+    },
+    {
+      "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+      "content_sha256": "sha256:6c2cd418a0c040f0ac7159633dcc6df48c9942be5e5ed72abca376598c044bef",
+      "frame_index": 2,
+      "http_status": 200,
+      "live_call_performed": true,
+      "model": "gpt-5.5",
+      "prompt_sha256": "sha256:2553278b0ae80356b476653b312703a309515c34af5524bf895abc041d321bdc",
+      "purpose": "per-frame-visible-entities",
+      "route": "tau:persona-dream-panel-reviewer"
+    },
+    {
+      "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+      "content_sha256": "sha256:cf5f973c933639649d7a821b16edeba4a82309aebbe926313ac3aa7239c62f0d",
+      "frame_index": 3,
+      "http_status": 200,
+      "live_call_performed": true,
+      "model": "gpt-5.5",
+      "prompt_sha256": "sha256:2553278b0ae80356b476653b312703a309515c34af5524bf895abc041d321bdc",
+      "purpose": "per-frame-visible-entities",
+      "route": "tau:persona-dream-panel-reviewer"
+    },
+    {
+      "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+      "content_sha256": "sha256:4cfb24e3c38ea275e64effe009f99213bb18d8eaa50a3678c307ccfe78687c57",
+      "frame_index": 4,
+      "http_status": 200,
+      "live_call_performed": true,
+      "model": "gpt-5.5",
+      "prompt_sha256": "sha256:2553278b0ae80356b476653b312703a309515c34af5524bf895abc041d321bdc",
+      "purpose": "per-frame-visible-entities",
+      "route": "tau:persona-dream-panel-reviewer"
+    },
+    {
+      "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+      "content_sha256": "sha256:142fa192ac6799b54ea2e9f4001305364ae037f4fd28c0503a46b5a023e9920d",
+      "frame_index": 5,
+      "http_status": 200,
+      "live_call_performed": true,
+      "model": "gpt-5.5",
+      "prompt_sha256": "sha256:2553278b0ae80356b476653b312703a309515c34af5524bf895abc041d321bdc",
+      "purpose": "per-frame-visible-entities",
+      "route": "tau:persona-dream-panel-reviewer"
+    },
+    {
+      "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+      "content_sha256": "sha256:93dd445fbe19230ff1bc253476a042ec039f3bf70e4deeb32ef6acfb6d6132be",
+      "frame_index": 6,
+      "http_status": 200,
+      "live_call_performed": true,
+      "model": "gpt-5.5",
+      "prompt_sha256": "sha256:2553278b0ae80356b476653b312703a309515c34af5524bf895abc041d321bdc",
+      "purpose": "per-frame-visible-entities",
+      "route": "tau:persona-dream-panel-reviewer"
+    },
+    {
+      "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+      "content_sha256": "sha256:8e9e1f37139ac618696038459c44edbe6e6c531fa15cb64112b18f1cb569be16",
+      "frame_index": 7,
+      "http_status": 200,
+      "live_call_performed": true,
+      "model": "gpt-5.5",
+      "prompt_sha256": "sha256:2553278b0ae80356b476653b312703a309515c34af5524bf895abc041d321bdc",
+      "purpose": "per-frame-visible-entities",
+      "route": "tau:persona-dream-panel-reviewer"
+    },
+    {
+      "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+      "content_sha256": "sha256:8742e251611abcb3e38a8a242433742914c3fb9df61107bf7af04b6f31ae2460",
+      "frame_index": 8,
+      "http_status": 200,
+      "live_call_performed": true,
+      "model": "gpt-5.5",
+      "prompt_sha256": "sha256:2553278b0ae80356b476653b312703a309515c34af5524bf895abc041d321bdc",
+      "purpose": "per-frame-visible-entities",
+      "route": "tau:persona-dream-panel-reviewer"
+    },
+    {
+      "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+      "content_sha256": "sha256:10179250c40daf3e664e0812f13208f4c25e4f2d21d6c0bf3e23ae7cee4099f3",
+      "frame_index": 9,
+      "http_status": 200,
+      "live_call_performed": true,
+      "model": "gpt-5.5",
+      "prompt_sha256": "sha256:2553278b0ae80356b476653b312703a309515c34af5524bf895abc041d321bdc",
+      "purpose": "per-frame-visible-entities",
+      "route": "tau:persona-dream-panel-reviewer"
+    },
+    {
+      "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+      "content_sha256": "sha256:e2ae49c41ab56ee9315dd6069563b0c11e05d5a9786c60639366a7450bb12370",
+      "frame_index": 10,
+      "http_status": 200,
+      "live_call_performed": true,
+      "model": "gpt-5.5",
+      "prompt_sha256": "sha256:2553278b0ae80356b476653b312703a309515c34af5524bf895abc041d321bdc",
+      "purpose": "per-frame-visible-entities",
+      "route": "tau:persona-dream-panel-reviewer"
+    },
+    {
+      "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+      "content_sha256": "sha256:3e8ade71a4fc9bd26af6cde5b8d4fa1516acb6680298da703ef0a55cf11f32cf",
+      "frame_index": 11,
+      "http_status": 200,
+      "live_call_performed": true,
+      "model": "gpt-5.5",
+      "prompt_sha256": "sha256:2553278b0ae80356b476653b312703a309515c34af5524bf895abc041d321bdc",
+      "purpose": "per-frame-visible-entities",
+      "route": "tau:persona-dream-panel-reviewer"
+    }
+  ],
+  "transcript": {
+    "authoritative_forced_alignment": {
+      "path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/provider_return/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/step37_38_audio_final_assembly_receipt.v2.json",
+      "schema": "persona_dream.step37_38_audio_final_assembly_receipt.v2",
+      "sha256": "sha256:0e127a7c2c77d3dd2dcc599bf022ee5288dc9940ba6ab355d16726688559fb11",
+      "status": "PASS_FORCED_DIALOGUE_ALIGNMENT"
+    },
+    "engine": "whisper:large-v3-turbo",
+    "module_status": "PRESENT",
+    "segments": [
+      {
+        "end_seconds": 7.86,
+        "source": "local_whisper_large-v3-turbo_full_clip",
+        "speaker": null,
+        "start_seconds": 4.74,
+        "text": "If we paddle now, we're cutting across the line up."
+      }
+    ],
+    "source_video": "step37_38_successor_mux/provider_return_muxed.mp4",
+    "source_video_sha256": "sha256:e31788caba34c51aa8ed9b7e16332cce91cfcec35a9d42ed036975164530fa97"
+  },
+  "vertex_consistency": {
+    "collection": "persona_dream_watch_evidence",
+    "module_status": "PRESENT",
+    "vertices": [
+      {
+        "delta_note": "Vertex records the v1 degraded state (per-frame VLM entities unavailable). v2 additionally supplies per-frame visible_entities via the Tau VLM route; the vertex's factual claim about the v1 observation is unchanged and retained.",
+        "outcome": "CONSISTENT_WITH_ADDITIVE_ENRICHMENT",
+        "represented_in_modules": [
+          "coverage_gaps"
+        ],
+        "vertex_id": "coverage_gap_00",
+        "vertex_statement": "per_frame_vlm_entities_unavailable: watch scillm vlm frame descriptions did not resolve; per-frame entity lists are empty"
+      },
+      {
+        "delta_note": "Vertex statement says entities=unavailable for this frame; v2 now carries the frame's visible_entities/actions/absences. Additive enrichment, not contradiction.",
+        "outcome": "CONSISTENT_WITH_ADDITIVE_ENRICHMENT",
+        "represented_in_modules": [
+          "sampled_frames",
+          "visible_entities_per_frame",
+          "identity_evidence"
+        ],
+        "vertex_id": "frame_0006",
+        "vertex_statement": "Frame 6 at t=5.02s; windows=identity,speaker; entities=unavailable"
+      },
+      {
+        "delta_note": "Vertex statement says entities=unavailable for this frame; v2 now carries the frame's visible_entities/actions/absences. Additive enrichment, not contradiction.",
+        "outcome": "CONSISTENT_WITH_ADDITIVE_ENRICHMENT",
+        "represented_in_modules": [
+          "sampled_frames",
+          "visible_entities_per_frame",
+          "identity_evidence"
+        ],
+        "vertex_id": "frame_0007",
+        "vertex_statement": "Frame 7 at t=5.86s; windows=identity,speaker; entities=unavailable"
+      },
+      {
+        "delta_note": "Vertex statement says entities=unavailable for this frame; v2 now carries the frame's visible_entities/actions/absences. Additive enrichment, not contradiction.",
+        "outcome": "CONSISTENT_WITH_ADDITIVE_ENRICHMENT",
+        "represented_in_modules": [
+          "sampled_frames",
+          "visible_entities_per_frame",
+          "identity_evidence"
+        ],
+        "vertex_id": "frame_0008",
+        "vertex_statement": "Frame 8 at t=6.69s; windows=identity,speaker; entities=unavailable"
+      },
+      {
+        "delta_note": "Vertex statement says entities=unavailable for this frame; v2 now carries the frame's visible_entities/actions/absences. Additive enrichment, not contradiction.",
+        "outcome": "CONSISTENT_WITH_ADDITIVE_ENRICHMENT",
+        "represented_in_modules": [
+          "sampled_frames",
+          "visible_entities_per_frame",
+          "identity_evidence"
+        ],
+        "vertex_id": "frame_0009",
+        "vertex_statement": "Frame 9 at t=7.53s; windows=identity,speaker; entities=unavailable"
+      },
+      {
+        "delta_note": "Vertex records verdict INDETERMINATE (model=None) from v1. v2 folds the authoritative ArcFace cosine table + Tau step-36 pose/occlusion adjudications + continuity receipt. The INDETERMINATE embedding-only verdict is not contradicted (final-third certainty rests on VLM pose/occlusion, not embedding proof); the vertex is retained unchanged.",
+        "outcome": "CONSISTENT_WITH_ADDITIVE_ENRICHMENT",
+        "represented_in_modules": [
+          "identity_evidence",
+          "continuity_adjudications"
+        ],
+        "vertex_id": "identity_temporal_continuity_review",
+        "vertex_statement": "Identity continuity review over window [0.0, 10.041667] (model=None, verdict=INDETERMINATE): "
+      },
+      {
+        "delta_note": "Vertex says speaker Kai flagged visible over [5.0, 8.08]s saying: None. v2 supplies the authoritative spoken line ('If we paddle now, we're cutting across the lineup.') from the forced-alignment receipt and the muxed-clip transcript. Additive; the 'saying: None' reflected the silent v1 return and is retained as the v1 record.",
+        "outcome": "CONSISTENT_WITH_ADDITIVE_ENRICHMENT",
+        "represented_in_modules": [
+          "speaker_visibility",
+          "transcript"
+        ],
+        "vertex_id": "visible_speaker_lipsync_window",
+        "vertex_statement": "Speaker Kai flagged visible over [5.0, 8.08]s saying: None"
+      }
+    ]
+  },
+  "visible_entities_per_frame": {
+    "frames": [
+      {
+        "absences": [
+          "no visible text",
+          "no visible vehicles",
+          "no visible animals",
+          "no visible buildings"
+        ],
+        "actions": [
+          "foreground woman resting arms on a surfboard",
+          "foreground woman looking left",
+          "foreground man resting arms on a surfboard",
+          "foreground man facing toward the woman",
+          "background people standing or floating in the water"
+        ],
+        "http_status": 200,
+        "index": 0,
+        "people_count": 8,
+        "summary": "Two foreground people are in ocean water with surfboards, with several distant people, mountains, shoreline, sky, and clouds visible behind them.",
+        "tau_receipt_sha256": "sha256:10f3df220c4399b459e5ad8435ce4e00b2dabeae3a538dd9adf569aade34e3b9",
+        "timestamp_seconds": 0.0,
+        "visible_entities": [
+          "two foreground people",
+          "white surfboards",
+          "ocean water",
+          "distant people in water",
+          "green mountains",
+          "blue sky",
+          "small clouds",
+          "distant shoreline"
+        ]
+      },
+      {
+        "absences": [
+          "no text visible",
+          "no buildings visible",
+          "no boats visible",
+          "no animals visible"
+        ],
+        "actions": [
+          "two adults are standing or floating chest-deep in water",
+          "left adult has forearms resting on a surfboard",
+          "right adult has arms near a surfboard",
+          "two main adults are facing each other",
+          "distant people are in the water"
+        ],
+        "http_status": 200,
+        "index": 1,
+        "people_count": 7,
+        "summary": "Two adults are chest-deep in seawater with surfboards, with distant swimmers, coastline, mountains, and sky visible behind them.",
+        "tau_receipt_sha256": "sha256:a07b83d7c67ea506d9e448209640e4ae4194a2c9f307983a4fa06bdc7316737c",
+        "timestamp_seconds": 0.84,
+        "visible_entities": [
+          "adult with long dark hair",
+          "adult with short dark hair",
+          "white surfboard in foreground",
+          "white surfboard near right adult",
+          "seawater",
+          "distant swimmers",
+          "rocky coastline",
+          "green mountains",
+          "blue sky",
+          "small clouds"
+        ]
+      },
+      {
+        "absences": [
+          "no visible text",
+          "no visible buildings",
+          "no visible vehicles",
+          "no visible animals",
+          "no visible footwear"
+        ],
+        "actions": [
+          "woman is in the water",
+          "woman has both hands on the surfboard",
+          "surfboard is floating on the water surface",
+          "distant swimmers have heads above the water",
+          "water surrounds the foreground person"
+        ],
+        "http_status": 200,
+        "index": 2,
+        "people_count": 4,
+        "summary": "A woman in a dark wetsuit is in ocean water with her hands on a floating white surfboard, with distant swimmers, beach, trees, rocks, and sky visible behind her.",
+        "tau_receipt_sha256": "sha256:6c2cd418a0c040f0ac7159633dcc6df48c9942be5e5ed72abca376598c044bef",
+        "timestamp_seconds": 1.67,
+        "visible_entities": [
+          "woman in dark short-sleeve wetsuit",
+          "white surfboard in foreground",
+          "distant swimmers in water",
+          "blue-green ocean water",
+          "sandy beach",
+          "green trees",
+          "dark rocky shoreline",
+          "blue sky",
+          "clouds",
+          "partial white board edge at right"
+        ]
+      },
+      {
+        "absences": [
+          "no visible text",
+          "no visible eyewear on the woman",
+          "no visible footwear",
+          "no visible boat",
+          "no visible buildings"
+        ],
+        "actions": [
+          "woman standing or kneeling in shallow water",
+          "woman holding or leaning on a board",
+          "woman looking downward toward the board",
+          "distant person positioned in the water",
+          "water surrounding the woman and board"
+        ],
+        "http_status": 200,
+        "index": 3,
+        "people_count": 2,
+        "summary": "A woman in a blue top is in ocean water beside a board near a beach with trees, with one distant person visible in the water.",
+        "tau_receipt_sha256": "sha256:cf5f973c933639649d7a821b16edeba4a82309aebbe926313ac3aa7239c62f0d",
+        "timestamp_seconds": 2.51,
+        "visible_entities": [
+          "woman in blue short-sleeve top",
+          "surfboard or paddleboard",
+          "ocean water",
+          "white foam on water",
+          "sandy beach",
+          "trees",
+          "distant person in water",
+          "blue sky",
+          "clouds"
+        ]
+      },
+      {
+        "absences": [
+          "no boat visible",
+          "no footwear visible",
+          "no text visible",
+          "no buildings visible"
+        ],
+        "actions": [
+          "woman standing in shallow water",
+          "woman holding a white surfboard",
+          "surfboard partly submerged in water",
+          "distant people partially visible in the water"
+        ],
+        "http_status": 200,
+        "index": 4,
+        "people_count": 3,
+        "summary": "A woman in a blue swim top stands in shallow ocean water while holding a white surfboard, with shoreline, trees, sky, and distant people visible behind her.",
+        "tau_receipt_sha256": "sha256:4cfb24e3c38ea275e64effe009f99213bb18d8eaa50a3678c307ccfe78687c57",
+        "timestamp_seconds": 3.35,
+        "visible_entities": [
+          "woman in blue short-sleeve swim top",
+          "white surfboard",
+          "ocean water",
+          "distant people in water",
+          "sandy shoreline",
+          "green trees",
+          "blue sky",
+          "clouds"
+        ]
+      },
+      {
+        "absences": [
+          "no other people clearly visible",
+          "no boats visible",
+          "no buildings visible",
+          "no text visible"
+        ],
+        "actions": [
+          "woman is in the water",
+          "woman is holding a white surfboard",
+          "woman is facing to the right",
+          "surfboard is partly submerged",
+          "water is surrounding the woman and surfboard"
+        ],
+        "http_status": 200,
+        "index": 5,
+        "people_count": 1,
+        "summary": "A woman in ocean water holds a white surfboard near a shoreline with trees and beach in the background.",
+        "tau_receipt_sha256": "sha256:142fa192ac6799b54ea2e9f4001305364ae037f4fd28c0503a46b5a023e9920d",
+        "timestamp_seconds": 4.18,
+        "visible_entities": [
+          "one woman",
+          "white surfboard",
+          "ocean water",
+          "shoreline",
+          "trees",
+          "sandy beach",
+          "blue sky",
+          "clouds",
+          "partial white board edge"
+        ]
+      },
+      {
+        "absences": [
+          "no visible text",
+          "no visible boats",
+          "no visible animals",
+          "no visible buildings",
+          "no visible vehicles"
+        ],
+        "actions": [
+          "foreground adults are partially submerged in ocean water",
+          "foreground adults are positioned on or beside surfboards",
+          "left foreground adult is facing right",
+          "right foreground adult is facing left",
+          "right foreground adult has one hand raised above the water",
+          "distant people are in the water"
+        ],
+        "http_status": 200,
+        "index": 6,
+        "people_count": 7,
+        "summary": "Two foreground adults are in shallow ocean water with surfboards, with several distant people, waves, shoreline, mountains, and sky visible.",
+        "tau_receipt_sha256": "sha256:93dd445fbe19230ff1bc253476a042ec039f3bf70e4deeb32ef6acfb6d6132be",
+        "timestamp_seconds": 5.02,
+        "visible_entities": [
+          "two foreground adults",
+          "several distant people in the ocean",
+          "two surfboards in the foreground",
+          "ocean water",
+          "waves",
+          "sandy shoreline",
+          "green mountains",
+          "blue sky",
+          "small clouds"
+        ]
+      },
+      {
+        "absences": [
+          "no visible boats",
+          "no visible buildings",
+          "no visible animals",
+          "no visible text",
+          "no visible footwear"
+        ],
+        "actions": [
+          "foreground people are in shallow ocean water",
+          "foreground people are lying or leaning on surfboards",
+          "left foreground person has arms on a surfboard and head turned right",
+          "right foreground person has arms on a surfboard and faces left",
+          "distant people are partially visible in the water",
+          "waves are breaking near the shoreline"
+        ],
+        "http_status": 200,
+        "index": 7,
+        "people_count": 8,
+        "summary": "Two foreground people are leaning on surfboards in ocean water near a beach with distant people, waves, mountains, and sky visible.",
+        "tau_receipt_sha256": "sha256:8e9e1f37139ac618696038459c44edbe6e6c531fa15cb64112b18f1cb569be16",
+        "timestamp_seconds": 5.86,
+        "visible_entities": [
+          "two foreground people",
+          "surfboards",
+          "ocean water",
+          "distant people in water",
+          "breaking waves",
+          "sandy shoreline",
+          "green mountains",
+          "blue sky",
+          "small clouds"
+        ]
+      },
+      {
+        "absences": [
+          "no boats visible",
+          "no vehicles visible",
+          "no buildings visible",
+          "no text visible"
+        ],
+        "actions": [
+          "one foreground person is lying on or holding a white surfboard",
+          "one foreground person is partially submerged beside the surfboard",
+          "distant people are partially visible in the water",
+          "ocean water covers the lower half of the frame"
+        ],
+        "http_status": 200,
+        "index": 8,
+        "people_count": 5,
+        "summary": "A water-level view shows people in the ocean near a surfboard with a tropical beach, palm trees, hills, and sky in the background.",
+        "tau_receipt_sha256": "sha256:8742e251611abcb3e38a8a242433742914c3fb9df61107bf7af04b6f31ae2460",
+        "timestamp_seconds": 6.69,
+        "visible_entities": [
+          "two foreground people in ocean water",
+          "white surfboard",
+          "several distant swimmers' heads",
+          "clear shallow water",
+          "sandy beach",
+          "palm trees",
+          "rocky shoreline",
+          "green hillside",
+          "clouds",
+          "blue sky"
+        ]
+      },
+      {
+        "absences": [
+          "no visible text",
+          "no visible boats",
+          "no visible vehicles",
+          "no visible animals"
+        ],
+        "actions": [
+          "person crouching on surfboard with hands on board",
+          "person partially submerged in water facing surfboard",
+          "distant human figures standing or floating in water",
+          "water surface rippling"
+        ],
+        "http_status": 200,
+        "index": 9,
+        "people_count": 4,
+        "summary": "A person crouches on a white surfboard in shallow ocean water while another person is partly submerged nearby, with a beach, palm trees, mountains, and clouds in the background.",
+        "tau_receipt_sha256": "sha256:10179250c40daf3e664e0812f13208f4c25e4f2d21d6c0bf3e23ae7cee4099f3",
+        "timestamp_seconds": 7.53,
+        "visible_entities": [
+          "person on white surfboard",
+          "person in water behind surfboard",
+          "two distant human figures in water",
+          "clear ocean water",
+          "small waves",
+          "rocky shoreline",
+          "sandy beach",
+          "palm trees",
+          "green vegetation",
+          "mountains",
+          "clouds",
+          "blue sky"
+        ]
+      },
+      {
+        "absences": [
+          "no boats visible",
+          "no buildings visible",
+          "no animals visible",
+          "no text visible"
+        ],
+        "actions": [
+          "foreground person crouches on a surfboard",
+          "foreground person extends one arm downward toward the water",
+          "person behind the surfboard has head and shoulders above water",
+          "distant person is partially visible at the water surface",
+          "water surface crosses the frame horizontally"
+        ],
+        "http_status": 200,
+        "index": 10,
+        "people_count": 3,
+        "summary": "A person crouches on a surfboard in shallow ocean water near a tropical shoreline while two other people are visible in the water.",
+        "tau_receipt_sha256": "sha256:e2ae49c41ab56ee9315dd6069563b0c11e05d5a9786c60639366a7450bb12370",
+        "timestamp_seconds": 8.37,
+        "visible_entities": [
+          "person on a surfboard",
+          "person in the water behind the surfboard",
+          "distant person in the water near the right side",
+          "surfboard",
+          "ocean water",
+          "underwater rocks",
+          "sandy beach",
+          "palm trees",
+          "green shoreline vegetation",
+          "blue sky",
+          "white clouds",
+          "distant hills"
+        ]
+      },
+      {
+        "absences": [
+          "no text visible",
+          "no boats visible",
+          "no buildings visible",
+          "no animals visible"
+        ],
+        "actions": [
+          "woman standing upright above the water surface",
+          "woman holding both arms forward",
+          "second person partly submerged with head and shoulders visible",
+          "water surface cutting across the middle of the frame"
+        ],
+        "http_status": 200,
+        "index": 11,
+        "people_count": 2,
+        "summary": "Two people are in ocean water near a tropical shoreline, with one standing above the surface and another partly submerged nearby.",
+        "tau_receipt_sha256": "sha256:3e8ade71a4fc9bd26af6cde5b8d4fa1516acb6680298da703ef0a55cf11f32cf",
+        "timestamp_seconds": 9.2,
+        "visible_entities": [
+          "woman in a dark swimsuit",
+          "person partly visible in the water",
+          "ocean water",
+          "underwater rocks",
+          "shoreline",
+          "palm trees",
+          "dark rocks along shore",
+          "blue sky",
+          "small clouds",
+          "white surfboard-like object near the water surface"
+        ]
+      }
+    ],
+    "module_status": "PRESENT",
+    "rejected_by_psychology_filter": [],
+    "review_prompt_sha256": "sha256:2553278b0ae80356b476653b312703a309515c34af5524bf895abc041d321bdc",
+    "route": "tau:persona-dream-panel-reviewer"
+  }
+}

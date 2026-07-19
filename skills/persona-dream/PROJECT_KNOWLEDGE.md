@@ -1,9 +1,37 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-19 (P1 Tau-only model-routing boundary enforced) by agent
+**Last updated:** 2026-07-19 (P0 observation packet v2 — one accepted successor packet) by agent
 **Status:** Active development
 
 ## Current Understanding
+
+- 2026-07-19 (P0 OBSERVATION PACKET v2 — ONE PACKET, ONE AUTHORITY): the two
+  incompatible phase-12 observation notions (scene-driven
+  `watch_gauntlet_observation_packet.v1` vs fixed-lane
+  `dream_observation_packet.v1`) are unified by an evidence-only successor schema
+  `schemas/dream_observation_packet.v2.schema.json`: typed independently-optional
+  modules, **no silent-video assumption, no fixed frame count, psychological
+  interpretation FORBIDDEN** (const-false flag + a deterministic psychology
+  filter that strips inferred emotion/mood/intent from VLM text and records what
+  it removed). `scripts/build_observation_packet_v2.py` assembled the single
+  **ACCEPTED** successor packet
+  (`watch_gauntlet/59b9ff3155d6/dream_observation_packet.v2.json`, supersedes the
+  DEGRADED v1 by hash `sha256:5229c664…`, v1 retained + marked superseded by a
+  sidecar): **live** per-frame visible entities over 12/12 frames via the
+  sanctioned Tau **panel-reviewer VLM** route (`tau_vlm_review_adapter.py`, 12
+  receipts all HTTP 200, no direct scillm), a **full-clip local Whisper
+  large-v3-turbo** transcript (exact Kai line recognized), and the authoritative
+  ArcFace + step-36/37/38 adjudications folded by reference+hash. **Durable
+  lessons:** (1) *the sanctioned Tau panel-reviewer VLM function already carries a
+  per-frame image + free-text prompt* — the "frame-shaped Tau VLM node still to be
+  added" was not needed for evidence-only per-frame description. (2) *enrichment is
+  not a rewrite* — all 7 read-only `persona_dream_watch_evidence` vertices remain
+  representable (`CONSISTENT_WITH_ADDITIVE_ENRICHMENT`); the delta where v2 now
+  carries evidence a vertex marked "unavailable" is recorded additively, never by
+  editing the canonical vertex. Governance:
+  `persona_dream_governance/persona_dream_observation_packet_v2_20260719` (exact
+  reread PASS). 12 deterministic tests + the live run (fixture-only is not
+  acceptance).
 
 - 2026-07-19 (P1 TAU-ONLY MODEL-ROUTING BOUNDARY — enforced): the operator rule
   *only /tau may reach /scillm* is now a **deterministic static gate**

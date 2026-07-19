@@ -1,0 +1,19 @@
+{
+  "live": true,
+  "marked_at": "2026-07-19T14:45:39.255036+00:00",
+  "mocked": false,
+  "reason": "v1 was DEGRADED (no per-frame VLM entities: vlm-chutes 401; no transcript: pre-mux silent video). v2 is the single ACCEPTED successor observation packet: live per-frame Tau VLM entities, full-clip Whisper transcript, and authoritative identity/speaker/continuity adjudications folded by reference+hash. v1 is RETAINED unchanged; this marker records the supersession by hash. ONE PACKET, ONE AUTHORITY.",
+  "schema": "persona_dream.observation_packet_supersession_marker.v1",
+  "superseded_by": {
+    "path": "dream_observation_packet.v2.json",
+    "schema": "persona_dream.dream_observation_packet.v2",
+    "sha256": "sha256:8033c384b71b23eb4bda597ba568ce485781b4669ffbdab78513e984032d18bd",
+    "status": "ACCEPTED"
+  },
+  "superseded_packet": {
+    "path": "dream_observation_packet.v1.json",
+    "schema": "persona_dream.watch_gauntlet_observation_packet.v1",
+    "sha256": "sha256:5229c664ceb1c630b3644bd554a5c9c67cbac3d11c2a5e00beb3cc522d386032",
+    "status": "DEGRADED_WATCH_GAUNTLET_OBSERVATION"
+  }
+}
