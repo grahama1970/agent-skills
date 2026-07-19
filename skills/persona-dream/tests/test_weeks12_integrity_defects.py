@@ -49,6 +49,7 @@ def _interp(sha: str) -> dict:
         "schema": T.INTERPRETATION_SCHEMA,
         "status": "PASS_SELF_INTERPRETATION",
         "dream_id": DREAM, "revision_id": "rev_x", "run_id": "run_x",
+        "generated_at": "2026-07-19T00:00:00Z",
         "observation_packet_sha256": sha,
         "accepted_interpretations": [{
             "interpretation_id": "interpretation-001", "tom_state_type": "trust",
@@ -196,6 +197,7 @@ def test_defect3_deterministic_projection_passes_guard():
 # --------------------------------------------------------------------------- #
 def _full_interp() -> dict:
     return {
+        "generated_at": "2026-07-19T00:00:00Z",
         "observation_packet_sha256": "sha256:obs",
         "accepted_interpretations": [{
             "interpretation_id": "interpretation-001", "tom_state_type": "trust",

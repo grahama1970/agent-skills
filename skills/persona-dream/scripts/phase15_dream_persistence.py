@@ -287,11 +287,32 @@ def build_dream_memory_document(
             "observation_status": packet.get("status"),
             "source_revision_id": packet.get("source_revision_id"),
         },
-        "created_at": utc_now(),
+        "created_at": deterministic_created_at(interpretation, packet),
     }
     if causal_fields:
         doc.update(causal_fields)
     return doc
+
+
+def deterministic_created_at(interpretation: dict[str, Any], packet: dict[str, Any]) -> str:
+    """Canonical payloads must be a pure function of immutable inputs so an
+    identical retry authors a byte-identical document (webgpt review 2026-07-19:
+    utc_now() here made every replay read as drift and quarantined the valid
+    prior commit). Derive from the phase-13 artifact's own timestamp, else the
+    observation packet's; fail closed rather than fall back to wall clock."""
+    for source in (
+        interpretation.get("created_at"),
+        interpretation.get("generated_at"),
+        packet.get("created_at"),
+        packet.get("generated_at"),
+        packet.get("observed_at"),
+    ):
+        if source:
+            return str(source)
+    raise ValueError(
+        "deterministic_created_at: neither interpretation nor packet carries a "
+        "created_at/generated_at; refusing volatile wall-clock in canonical payload"
+    )
 
 
 def build_graph_edges(
@@ -651,9 +672,14 @@ def compute_idempotency_key(
     packet: dict[str, Any],
     phase13_sha: str,
     phase14_sha: str,
+    canonical_plan_sha256: str | None = None,
 ) -> str:
     """Deterministic write-set identity: same dream + return + phase13 + phase14
-    always yields the same key, so a rerun is detectable and resumable."""
+    always yields the same key, so a rerun is detectable and resumable.
+    canonical_plan_sha256 binds the key to the COMPLETE deterministic write-set
+    payload (webgpt review 2026-07-19: a key over a subset of inputs is
+    semantically collision-prone). Optional only for legacy callers whose
+    manifests predate the binding; persist_canonical always passes it."""
     material = {
         "dream_id": dream_id,
         "return_id": return_id,
@@ -661,6 +687,8 @@ def compute_idempotency_key(
         "phase13_sha256": phase13_sha,
         "phase14_sha256": phase14_sha,
     }
+    if canonical_plan_sha256:
+        material["canonical_plan_sha256"] = canonical_plan_sha256
     return hashlib.sha256(
         json.dumps(material, sort_keys=True, separators=(",", ":")).encode()
     ).hexdigest()
@@ -790,6 +818,11 @@ def write_commit_manifest(
         for r in publish_receipts
     ]
     all_published = all(r["exact_reread_match"] for r in publish_receipts)
+    # active ONLY when every publication reread matched (webgpt review
+    # 2026-07-19: an unconditional active flag lets a partial write set become
+    # visible through the sole visibility authority). A failed set writes a
+    # quarantined, inactive manifest — a terminal readable state, never active.
+    manifest_active = bool(all_published and staging_all_match and record_index)
     manifest_doc = {
         "_key": f"commit_{idempotency_key}",
         "kind": "persona_dream_commit_manifest",
@@ -799,7 +832,9 @@ def write_commit_manifest(
         "return_id": return_id,
         "phase13_sha256": phase13_sha,
         "phase14_sha256": phase14_sha,
-        "active": True,
+        "active": manifest_active,
+        "quarantined": not manifest_active,
+        "quarantine_reason": None if manifest_active else "PUBLICATION_REREAD_MISMATCH",
         "retroactive_commit": bool(retroactive),
         "justification": justification,
         "staging_all_exact_reread_match": staging_all_match,
@@ -811,7 +846,7 @@ def write_commit_manifest(
     receipt = store_and_reread(manifest_doc, COMMIT_MANIFEST_COLLECTION, base_url)
     return {
         "key": manifest_doc["_key"],
-        "active": True,
+        "active": manifest_active,
         "retroactive_commit": bool(retroactive),
         "record_count": len(record_index),
         "published_all_exact_reread_match": all_published,
@@ -864,14 +899,33 @@ def persist_canonical(
     publish AND commit-manifest to all reread-match. A mid-set failure leaves the
     commit manifest absent/inactive, so nothing is treated as canonically
     visible."""
-    idempotency_key = compute_idempotency_key(dream_id, return_id, packet, phase13_sha, phase14_sha)
     write_set = build_write_set(
         dream_doc, interpretation, tom, watch_vertices,
         interpretation_vertices=interpretation_vertices, causal_fields=causal_fields,
     )
     expected_count = len(write_set)
+    # Pre-stage contract assertion (webgpt review 2026-07-19): every canonical
+    # record must carry the visibility contract or it would surface as
+    # legacy-null and bypass pending-hiding server-side.
+    if not retroactive:
+        naked = [
+            e["document"].get("_key")
+            for e in write_set
+            if not (e["document"].get("commit_id") and e["document"].get("visibility_state"))
+        ]
+        if naked:
+            raise ValueError(
+                f"canonical write-set records missing commit_id/visibility_state: {naked[:5]}"
+            )
+    canonical_plan_sha256 = canonical_sha(
+        [_normalize_numbers({k: v for k, v in e["document"].items()}) for e in write_set]
+    )
+    idempotency_key = compute_idempotency_key(
+        dream_id, return_id, packet, phase13_sha, phase14_sha,
+        canonical_plan_sha256=canonical_plan_sha256,
+    )
 
-    # --- Detect-and-quarantine on rerun -----------------------------------
+    # --- Detect on rerun: resume WITHOUT re-staging/re-publishing ----------
     prior = existing_commit_manifest(idempotency_key, base_url)
     resumed = False
     quarantine: dict[str, Any] | None = None
@@ -882,7 +936,36 @@ def persist_canonical(
             r = store_and_reread_check_only(entry["document"], entry["collection"], base_url)
             reverify.append(r)
         if all(r["exact_reread_match"] for r in reverify) and len(reverify) == expected_count:
-            resumed = True
+            # Identical retry: the committed write set is intact. Return the
+            # existing commit untouched (webgpt review 2026-07-19: replay must
+            # resolve to the existing active commit, never quarantine it, and
+            # must not rewrite records).
+            return {
+                "idempotency_key": idempotency_key,
+                "canonical_plan_sha256": canonical_plan_sha256,
+                "records_written": 0,
+                "expected_record_count": expected_count,
+                "all_exact_reread_match": True,
+                "staging_all_exact_reread_match": True,
+                "publish_all_exact_reread_match": True,
+                "resumed_from_prior_commit": True,
+                "quarantine": None,
+                "node_keys": [], "edge_keys": [], "watch_vertex_keys": [],
+                "interpretation_vertex_keys": [], "tom_node_keys": [],
+                "node_receipts": [], "edge_receipts": [],
+                "watch_vertex_receipts": [], "interpretation_vertex_receipts": [],
+                "staging_proof": {"resumed": True, "reverified_count": len(reverify)},
+                "commit_manifest": {
+                    "key": f"commit_{idempotency_key}",
+                    "active": bool(prior.get("active")),
+                    "resumed": True,
+                    "published_all_exact_reread_match": bool(
+                        prior.get("published_all_exact_reread_match")
+                    ),
+                    "exact_reread_match": True,
+                    "prior_manifest": prior,
+                },
+            }
         else:
             missing = [r["key"] for r in reverify if not r["exact_reread_match"]]
             quarantine = {

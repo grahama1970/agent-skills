@@ -144,3 +144,60 @@ def test_watch_vertices_cover_observed_edges(monkeypatch):
     assert {v["observation_id"] for v in vertices} == observed
     # ...while the stored _key is namespaced (Defect 2).
     assert {v["_key"] for v in vertices} == {p15.ns_watch_key("embry", "d", o) for o in observed}
+
+
+def test_identical_retry_resumes_prior_active_commit(monkeypatch):
+    """webgpt review 2026-07-19 fault-injection (a): an identical delayed retry
+    must resolve to the existing active commit — no quarantine, no rewrite."""
+    fake = FakeMemory()
+    first = _run(monkeypatch, fake)
+    assert first["canonical_dream_memory_written"] is True
+    manifest_key = first["canonical_write_proof"]["commit_manifest"]["key"]
+    stored_before = dict(fake.store)
+    second = _run(monkeypatch, fake)
+    proof = second["canonical_write_proof"]
+    assert proof["resumed_from_prior_commit"] is True
+    assert proof["quarantine"] is None
+    assert proof["records_written"] == 0
+    assert proof["commit_manifest"]["active"] is True
+    assert proof["commit_manifest"]["key"] == manifest_key
+    # No stored record was rewritten by the retry.
+    assert fake.store == stored_before
+    manifest = fake.store[(p15.COMMIT_MANIFEST_COLLECTION, manifest_key)]
+    assert manifest["active"] is True
+    assert manifest.get("quarantined") in (False, None)
+
+
+def test_forced_publication_mismatch_leaves_no_active_manifest(monkeypatch):
+    """webgpt review 2026-07-19 fault-injection (b): a publication reread
+    mismatch must never yield an active manifest."""
+    fake = FakeMemory()
+    clean = _run(monkeypatch, fake)
+    victim = clean["canonical_write_proof"]["watch_vertex_keys"][0]
+    fake2 = FakeMemory(corrupt_key=victim)
+    result = _run(monkeypatch, fake2)
+    assert result["canonical_dream_memory_written"] is False
+    manifest = result["canonical_write_proof"]["commit_manifest"]
+    assert manifest["active"] is False
+    stored = fake2.store[(p15.COMMIT_MANIFEST_COLLECTION, manifest["key"])]
+    assert stored["active"] is False
+    assert stored["quarantined"] is True
+    assert stored["quarantine_reason"] == "PUBLICATION_REREAD_MISMATCH"
+
+
+def test_canonical_payload_is_deterministic_and_wall_clock_refused():
+    """webgpt review 2026-07-19: canonical payloads are a pure function of
+    immutable inputs; absent source timestamps must fail closed, not fall back
+    to utc_now()."""
+    import json as _json
+    interp = _json.loads(INTERP.read_text())
+    packet = _json.loads(ACCEPTED_PACKET.read_text())
+    tom = _json.loads(TOM.read_text())
+    doc1 = p15.build_dream_memory_document("d", "r", "run", "embry", packet, interp, tom)
+    doc2 = p15.build_dream_memory_document("d", "r", "run", "embry", packet, interp, tom)
+    assert doc1 == doc2
+    try:
+        p15.deterministic_created_at({}, {})
+        raise AssertionError("expected ValueError for missing source timestamps")
+    except ValueError:
+        pass
