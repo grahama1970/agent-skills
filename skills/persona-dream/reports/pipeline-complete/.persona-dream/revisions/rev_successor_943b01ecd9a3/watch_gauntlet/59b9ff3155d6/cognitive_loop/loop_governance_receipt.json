@@ -1,0 +1,53 @@
+{
+  "all_exact_reread_match": true,
+  "generated_at": "2026-07-19T02:38:23.387714+00:00",
+  "governance_key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:cognitive_loop_canonical_write",
+  "receipts": [
+    {
+      "collection": "persona_dream_governance",
+      "exact_reread_match": true,
+      "key": "persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:cognitive_loop_canonical_write",
+      "reread_content_sha256": "sha256:502be1fce4e2752b168d2f04c105d6895fe479446dca4f53f9d9b38139fdb70f",
+      "reread_found": true,
+      "role": "governance",
+      "store_ok": true,
+      "written_content_sha256": "sha256:502be1fce4e2752b168d2f04c105d6895fe479446dca4f53f9d9b38139fdb70f"
+    },
+    {
+      "collection": "persona_dream_pipeline_steps",
+      "exact_reread_match": true,
+      "key": "persona-dream:pipeline:phase:13",
+      "reread_content_sha256": "sha256:eeb41ae9a9cfc4cd661cea2306ed0a2e72c8d3a461f715e64b2afe58d6630a3a",
+      "reread_found": true,
+      "role": "step_phase_13",
+      "store_ok": true,
+      "written_content_sha256": "sha256:eeb41ae9a9cfc4cd661cea2306ed0a2e72c8d3a461f715e64b2afe58d6630a3a"
+    },
+    {
+      "collection": "persona_dream_pipeline_steps",
+      "exact_reread_match": true,
+      "key": "persona-dream:pipeline:phase:14",
+      "reread_content_sha256": "sha256:e0a0939e1aa2b7a7cfc910297e903e7be8717d1ed26c899be1d1eacfa50d2848",
+      "reread_found": true,
+      "role": "step_phase_14",
+      "store_ok": true,
+      "written_content_sha256": "sha256:e0a0939e1aa2b7a7cfc910297e903e7be8717d1ed26c899be1d1eacfa50d2848"
+    },
+    {
+      "collection": "persona_dream_pipeline_steps",
+      "exact_reread_match": true,
+      "key": "persona-dream:pipeline:phase:15",
+      "reread_content_sha256": "sha256:714f56a5dcfb9f1764bf2c8990dbe3e78141c22575a1a07b329108eea8301fd9",
+      "reread_found": true,
+      "role": "step_phase_15",
+      "store_ok": true,
+      "written_content_sha256": "sha256:714f56a5dcfb9f1764bf2c8990dbe3e78141c22575a1a07b329108eea8301fd9"
+    }
+  ],
+  "records_written": 4,
+  "return_id": "97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4",
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.loop_governance_receipt.v1",
+  "status": "PASS_LOOP_GOVERNANCE"
+}
