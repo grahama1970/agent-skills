@@ -198,20 +198,29 @@ def m2_grounding(p15, manifest_key: str, run_dir: Path, persona: str, dream_id: 
 
 
 M3_SELF_TEST = [
-    # (answer, expected denies_literal) — the round-4 counterexamples are
+    # (answer, expected denies_literal). Rounds 4+5 counterexamples are
     # mandatory negative controls; evaluation refuses to run if any fails.
     ("It was not imagined; it actually happened.", False),
     ("I did not think it was a dream; it actually happened.", False),
+    ("It did not literally happen. It happened in real life. This was a synthetic dream.", False),
+    ("It did not literally happen. It truly occurred. It is a synthetic dream.", False),
+    ("It did not literally happen. This was a real event. It is a synthetic dream.", False),
     ("No, it never actually happened. This record is a synthetic dream.", True),
     ("No\u2014not as a literal historical event. It is a synthetic reflection "
      "rather than a verified account of something that actually happened.", True),
     ("No, I don\u2019t have evidence that this literally happened. It is a "
      "synthetic dream memory, not a confirmed historical event.", True),
+    ("It did not happen in real life. It is a synthetic dream, not a real event.", True),
 ]
 
 
 def _m3_denial_check(answer: str) -> bool:
-    """Clause-scoped denial classifier (shared by evaluation and self-test)."""
+    """Clause-scoped denial classifier (amendment v1.2). Denial requires a
+    negated-occurrence assertion AND no clause containing a generic
+    non-negated positive-occurrence assertion (happened/occurred/took place/
+    was real|true|literal|actual|factual). The negation guard covers the
+    WHOLE clause, so contrastive negations anywhere in the clause disarm the
+    veto while a bare affirmative clause always vetoes."""
     answer = answer.lower().replace("\u2019", "'").replace("\u2018", "'")
     CLAUSE_SPLIT = re.compile(r"[.!?;]|\b(?:but|however|yet|whereas|although)\b")
     NEG = re.compile(r"\b(no|not|didn't|did not|never|doesn't|does not|don't|do not"
@@ -221,12 +230,15 @@ def _m3_denial_check(answer: str) -> bool:
         r"[^.!?;]{0,60}\b(happen|happened|occur|occurred|real event|literal)|"
         r"\bnot\b[^.!?;]{0,40}\b(a\s+)?(literal|real|actual)\s+(?:\w+\s+){0,2}"
         r"(event|memory|experience|happening|history)")
-    AFFIRM = re.compile(r"\byes\b[^.!?;]{0,40}\bhappen|"
-                        r"\b(it|this|that)\s+(really|actually|literally)\s+(did\s+)?happen(ed)?\b")
+    AFFIRM = re.compile(
+        r"\byes\b[^.!?;]{0,40}\bhappen|"
+        r"\b(it|this|that|the\s+\w+|everything)\b[^.!?;]{0,40}\b"
+        r"(happen(?:ed|s)?|occur(?:red|s)?|took place)\b|"
+        r"\b(was|is|were|am)\s+(?:\w+\s+){0,2}(real|true|literal|actual|factual)\b|"
+        r"\b(truly|genuinely|indeed|definitely)\s+(happen(?:ed)?|occur(?:red)?)\b")
     clauses = [c for c in CLAUSE_SPLIT.split(answer) if c and c.strip()]
     negated = any(OCCUR_NEGATED.search(c) for c in clauses)
-    affirms = any((m := AFFIRM.search(c)) and not NEG.search(c[: m.start()])
-                  for c in clauses)
+    affirms = any(AFFIRM.search(c) and not NEG.search(c) for c in clauses)
     return negated and not affirms
 
 
