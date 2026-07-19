@@ -1,0 +1,14 @@
+{
+  "schema": "webgpt.source_provenance.v1",
+  "repository_url": "https://github.com/grahama1970/agent-skills.git",
+  "branch": "main",
+  "upstream": "origin/main",
+  "commit_sha": "fbdab265b86b562e27a439a8c8a0130d2b877397",
+  "source_paths": [
+    "skills/persona-dream/review-bundles/project_state_review_20260719.md",
+    "skills/persona-dream/README.md",
+    "skills/persona-dream/GOAL.md",
+    "skills/persona-dream/PROJECT_KNOWLEDGE.md"
+  ],
+  "proof_cwd": "."
+}
