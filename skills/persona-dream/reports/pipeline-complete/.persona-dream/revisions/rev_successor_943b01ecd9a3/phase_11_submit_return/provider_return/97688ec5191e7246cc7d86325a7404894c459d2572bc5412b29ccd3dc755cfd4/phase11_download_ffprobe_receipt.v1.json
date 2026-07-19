@@ -1,0 +1,24 @@
+{
+  "activation_transaction_id": "activation-a55f900137069fa9945ee3d66ab0aa5a",
+  "actual_provider_call_attempts": 1,
+  "content_type": "video/mp4",
+  "download_relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/provider_return/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/provider_return.mp4",
+  "downloaded_sha256": "sha256:59b9ff3155d6ba9d0b90d795bafe7b84cc4e10849db08299217b65d61e211fff",
+  "endpoint": "fal-ai/kling-video/v3/standard/image-to-video",
+  "ffprobe": {
+    "format": {
+      "bit_rate": "13418628",
+      "duration": "10.041667",
+      "format_name": "mov,mp4,m4a,3gp,3g2,mj2",
+      "size": "16843175"
+    }
+  },
+  "request_body_sha256": "sha256:97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4",
+  "request_id": "019f77f0-a75b-7012-8cc1-fbc24f58f388",
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.phase11_download_ffprobe_receipt.v1",
+  "size_bytes": 16843175,
+  "source_url": "https://v3b.fal.media/files/b/0aa2d098/C_4N0-_e8d2jrJrcfYP52_output.mp4",
+  "status": "PASS_PHASE11_PROVIDER_RETURN_DOWNLOADED"
+}

@@ -1,0 +1,185 @@
+{
+  "activation_receipt_sha256": "sha256:349757efcf9ad9c5286f31659abb364ca6be07ee5c3ae62cc7bd07a1f6881308",
+  "activation_transaction_id": "activation-a55f900137069fa9945ee3d66ab0aa5a",
+  "actual_provider_call_attempts": 0,
+  "approval_bindings": {
+    "activation_transaction_id": "activation-a55f900137069fa9945ee3d66ab0aa5a",
+    "actual_provider_call_attempts": 0,
+    "endpoint": "fal-ai/kling-video/v3/standard/image-to-video",
+    "media_binding_manifest_sha256": "sha256:27566e08a96d98c6df2c2441d63033914274f6fc3d836ac912ac27bfe1f08361",
+    "media_input_contract_sha256": "sha256:d692df676807a44776739bfcda35e140944690f69c9719fb6934a0422dbe327a",
+    "pricing_snapshot_sha256": "sha256:c0051322d4080e9d9d7eec5ae04bd037caedf735d32314369f7938ef895be411",
+    "provider_id": "kling",
+    "provider_source_snapshot_sha256": "sha256:700a7e5052390fc719ac5c4230678c023d1e6ba521c69ee747ba1bd2571dbd19",
+    "request_body_sha256": "sha256:97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4",
+    "revision_id": "rev_successor_943b01ecd9a3",
+    "run_id": "pipeline-complete"
+  },
+  "claims": {
+    "does_not_prove": [
+      "provider readiness",
+      "provider submission",
+      "provider acceptance",
+      "returned video"
+    ],
+    "proves": [
+      "one canonical zero-call Phase 11 request body is bound to the ACTIVE_CONSISTENT revision"
+    ]
+  },
+  "cost": {
+    "body_relative_path": "provider_pricing_response.body",
+    "content_type": "text/html; charset=utf-8",
+    "currency": "USD",
+    "duration_seconds": 10,
+    "final_url": "https://fal.ai/models/fal-ai/kling-video/v3/standard/image-to-video",
+    "http_status": 200,
+    "maximum_expected_cost_usd": 0.84,
+    "remote_content_sha256": "sha256:02867fbdbc199195beb5b6e0595d3b2be0a72acb4491784f979c1f5d7f3bcd59",
+    "requested_url": "https://fal.ai/models/fal-ai/kling-video/v3/standard/image-to-video",
+    "usd_per_second_audio_off": 0.084,
+    "usd_per_second_audio_on": 0.126,
+    "usd_per_second_voice_control": 0.154
+  },
+  "endpoint": "fal-ai/kling-video/v3/standard/image-to-video",
+  "generation_call_started": false,
+  "live": false,
+  "live_submit_ready": false,
+  "missing_approval_types": [
+    "cost_acceptance",
+    "exact_request_acceptance",
+    "paid_call_authorization",
+    "publication_authorization",
+    "visual_media_acceptance"
+  ],
+  "mocked": false,
+  "mode": "standard",
+  "paid_call_authorized": false,
+  "prompt_transformations": [
+    {
+      "changes": [
+        "provider_prompt_compacted_to_512",
+        "provider_tier_normalized",
+        "time_range_normalized"
+      ],
+      "panel_id": "sb_001"
+    },
+    {
+      "changes": [
+        "provider_prompt_compacted_to_512",
+        "provider_tier_normalized",
+        "time_range_normalized"
+      ],
+      "panel_id": "sb_002"
+    },
+    {
+      "changes": [
+        "provider_prompt_compacted_to_512",
+        "provider_tier_normalized",
+        "sb003_dialogue_removed",
+        "time_range_normalized"
+      ],
+      "panel_id": "sb_003"
+    },
+    {
+      "changes": [
+        "provider_prompt_compacted_to_512",
+        "provider_tier_normalized",
+        "time_range_normalized"
+      ],
+      "panel_id": "sb_004"
+    }
+  ],
+  "provider_id": "kling",
+  "provider_live": false,
+  "provider_ready": false,
+  "provider_request_body": {
+    "cfg_scale": 0.5,
+    "duration": "10",
+    "elements": [
+      {
+        "frontal_image_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/references/01-embry_character_sheet.jpg",
+        "reference_image_urls": [
+          "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_002_start_frame.png",
+          "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_004_start_frame.png"
+        ]
+      },
+      {
+        "frontal_image_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/references/02-kai_character_sheet.png",
+        "reference_image_urls": [
+          "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_001_start_frame.png",
+          "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_003_start_frame.png"
+        ]
+      }
+    ],
+    "generate_audio": false,
+    "multi_prompt": [
+      {
+        "duration": "2",
+        "prompt": "SB_001. Kling v3 Standard I2V. time range 0s-2s. Waterline wide at Kahaluʻu Bay: @Element1 Embry and @Element2 Kai hold outside the lineup over visible lava reef, respecting surf etiquette. Preserve Embry and Kai identity and rashguard continuity."
+      },
+      {
+        "duration": "3",
+        "prompt": "SB_002. Kling v3 Standard I2V. time range 2s-5s. Medium waterline action: @Element1 Embry resets her grip as sun-softened wax slips before the lava reef; heat and fatigue show while @Element2 Kai stays outside. Preserve Embry and Kai identity and rashguard continuity."
+      },
+      {
+        "duration": "2",
+        "prompt": "SB_003. Kling v3 Standard I2V. time range 5s-7s. Medium-wide lineup: @Element2 Kai reads the safe channel, reef, and surf etiquette, then signals @Element1 Embry to wait; Embry remains the decision-maker. Preserve Embry and Kai identity and rashguard continuity. Silent shot: No spoken dialogue. No lip movement; use gaze, posture, and one nonverbal hand signal."
+      },
+      {
+        "duration": "3",
+        "prompt": "SB_004. Kling v3 Standard I2V. time range 7s-10s. Waterline finish: @Element1 Embry alone commits, paddling hard, popping up, and riding forward through the safe channel away from @Element2 Kai, who holds position outside the main action; the dark lava reef boundary stays sharply readable under clear water on both sides of Embry's line, preserving her decision and agency. Preserve Embry and Kai identity and rashguard continuity."
+      }
+    ],
+    "negative_prompt": "blur, distort, and low quality; do not change Embry identity, gender, hair color, or navy rashguard continuity; do not change Kai identity or black rashguard continuity; do not remove Embry or Kai from required two-character panels; do not introduce unrelated foreground surfers as main characters; do not hide faces, crop required identities, or turn the frame into a distant establishing shot; do not cover the lava reef or lineup geometry with pasted overlays or UI artifacts; do not treat contact-sheet grids, labels, or borders as scene content; no audible speech, no lip-sync, no mouth articulating words, no subtitles, no captions, no dialogue text, no speech bubbles",
+    "shot_type": "customize",
+    "start_image_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_001_start_frame.png"
+  },
+  "request_body_canonicalization": {
+    "encoding": "UTF-8",
+    "ensure_ascii": false,
+    "json": "RFC8259",
+    "separators": [
+      ",",
+      ":"
+    ],
+    "sort_keys": true
+  },
+  "request_body_sha256": "sha256:97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4",
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "runtime_release_id": "agent-skills@bb767ed7ebd511eae2d74c7c3440e0ca56356a8d",
+  "schema": "persona_dream.phase11_live_request.v1",
+  "source_commit": "bb767ed7ebd511eae2d74c7c3440e0ca56356a8d",
+  "source_files": {
+    "adapter_preflight": {
+      "path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/phase11_adapter_preflight_receipt.v1.json",
+      "sha256": null
+    },
+    "attempt_ledger": {
+      "actual_provider_call_attempts": 0,
+      "ledger_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/attempts/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/attempt_ledger.v1.json",
+      "ledger_sha256": null,
+      "request_id": null,
+      "state": "NOT_CREATED"
+    },
+    "candidate_binding": {
+      "path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/phase11_payload_binding.json",
+      "sha256": "sha256:375979871236d9a1c629ea62be440f59bdc70203d06b17d40fde26671468eb7a"
+    },
+    "media_binding_manifest_sha256": "sha256:27566e08a96d98c6df2c2441d63033914274f6fc3d836ac912ac27bfe1f08361",
+    "phase10_payload": {
+      "path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_10_provider_contract/final_provider_payload_by_panel.json",
+      "sha256": "sha256:6fc7763911a57e3cc003f4d5df457cb63bc254a6399155cb545184b80ceaaa22"
+    },
+    "provider_source_snapshot": {
+      "path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/provider_source_snapshot.json",
+      "sha256": "sha256:700a7e5052390fc719ac5c4230678c023d1e6ba521c69ee747ba1bd2571dbd19"
+    }
+  },
+  "source_revision_id": "rev_upstream_bf3b05d47fb8",
+  "status": "BLOCKED_PROVIDER_GATE",
+  "submitted": false,
+  "technical_blockers": [
+    "BLOCKED_PHASE11_ADAPTER_PREFLIGHT_REQUIRED"
+  ]
+}

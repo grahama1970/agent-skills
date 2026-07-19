@@ -1,0 +1,316 @@
+{
+  "activation_transaction_id": "activation-a55f900137069fa9945ee3d66ab0aa5a",
+  "actual_provider_call_attempts": 1,
+  "ambiguous_submit": false,
+  "automatic_resubmit_allowed": false,
+  "created_at": "2026-07-19T01:12:29.478554+00:00",
+  "download_receipt_sha256": "sha256:447a00d054c3cacb68d07811ae2c4c4a77120d74e51b29acd652920ea8a95120",
+  "downloaded_mp4_sha256": "sha256:59b9ff3155d6ba9d0b90d795bafe7b84cc4e10849db08299217b65d61e211fff",
+  "endpoint": "fal-ai/kling-video/v3/standard/image-to-video",
+  "history": [
+    {
+      "actual_provider_call_attempts": 0,
+      "at": "2026-07-19T01:12:29.478554+00:00",
+      "event": "PREFLIGHT_READY"
+    },
+    {
+      "actual_provider_call_attempts": 0,
+      "at": "2026-07-19T01:14:47.253928+00:00",
+      "event": "SUBMIT_INTENT_WRITTEN"
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:14:47.253928+00:00",
+      "event": "SUBMITTED",
+      "request_id": "019f77f0-a75b-7012-8cc1-fbc24f58f388"
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:14:48.126169+00:00",
+      "event": "POLLING",
+      "poll_count": 1
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:14:54.192625+00:00",
+      "event": "POLLING",
+      "poll_count": 2
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:14:59.392261+00:00",
+      "event": "POLLING",
+      "poll_count": 3
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:15:04.592378+00:00",
+      "event": "POLLING",
+      "poll_count": 4
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:15:09.790328+00:00",
+      "event": "POLLING",
+      "poll_count": 5
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:15:14.973895+00:00",
+      "event": "POLLING",
+      "poll_count": 6
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:15:20.153112+00:00",
+      "event": "POLLING",
+      "poll_count": 7
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:15:25.418325+00:00",
+      "event": "POLLING",
+      "poll_count": 8
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:15:30.611000+00:00",
+      "event": "POLLING",
+      "poll_count": 9
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:15:35.811773+00:00",
+      "event": "POLLING",
+      "poll_count": 10
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:15:41.008184+00:00",
+      "event": "POLLING",
+      "poll_count": 11
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:15:46.193785+00:00",
+      "event": "POLLING",
+      "poll_count": 12
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:15:51.382458+00:00",
+      "event": "POLLING",
+      "poll_count": 13
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:15:56.558474+00:00",
+      "event": "POLLING",
+      "poll_count": 14
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:16:01.765187+00:00",
+      "event": "POLLING",
+      "poll_count": 15
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:16:06.969327+00:00",
+      "event": "POLLING",
+      "poll_count": 16
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:16:12.232572+00:00",
+      "event": "POLLING",
+      "poll_count": 17
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:16:17.432225+00:00",
+      "event": "POLLING",
+      "poll_count": 18
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:16:22.677571+00:00",
+      "event": "POLLING",
+      "poll_count": 19
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:16:27.876155+00:00",
+      "event": "POLLING",
+      "poll_count": 20
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:16:34.234846+00:00",
+      "event": "POLLING",
+      "poll_count": 21
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:16:39.412855+00:00",
+      "event": "POLLING",
+      "poll_count": 22
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:16:44.611821+00:00",
+      "event": "POLLING",
+      "poll_count": 23
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:16:49.872657+00:00",
+      "event": "POLLING",
+      "poll_count": 24
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:16:55.071468+00:00",
+      "event": "POLLING",
+      "poll_count": 25
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:17:00.327570+00:00",
+      "event": "POLLING",
+      "poll_count": 26
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:17:05.531890+00:00",
+      "event": "POLLING",
+      "poll_count": 27
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:17:10.730538+00:00",
+      "event": "POLLING",
+      "poll_count": 28
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:17:15.924957+00:00",
+      "event": "POLLING",
+      "poll_count": 29
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:17:21.097400+00:00",
+      "event": "POLLING",
+      "poll_count": 30
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:17:26.283702+00:00",
+      "event": "POLLING",
+      "poll_count": 31
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:17:31.476452+00:00",
+      "event": "POLLING",
+      "poll_count": 32
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:17:36.716321+00:00",
+      "event": "POLLING",
+      "poll_count": 33
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:17:41.884827+00:00",
+      "event": "POLLING",
+      "poll_count": 34
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:17:47.077856+00:00",
+      "event": "POLLING",
+      "poll_count": 35
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:17:52.321459+00:00",
+      "event": "POLLING",
+      "poll_count": 36
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:17:57.502718+00:00",
+      "event": "POLLING",
+      "poll_count": 37
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:18:02.679323+00:00",
+      "event": "POLLING",
+      "poll_count": 38
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:18:07.872794+00:00",
+      "event": "POLLING",
+      "poll_count": 39
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:18:14.162325+00:00",
+      "event": "POLLING",
+      "poll_count": 40
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:18:19.361220+00:00",
+      "event": "POLLING",
+      "poll_count": 41
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:18:24.553524+00:00",
+      "event": "POLLING",
+      "poll_count": 42
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:18:29.748269+00:00",
+      "event": "POLLING",
+      "poll_count": 43
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:18:34.922311+00:00",
+      "event": "POLLING",
+      "poll_count": 44
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:18:40.099197+00:00",
+      "event": "POLLING",
+      "poll_count": 45
+    },
+    {
+      "actual_provider_call_attempts": 1,
+      "at": "2026-07-19T01:18:46.118871+00:00",
+      "event": "COMPLETED",
+      "poll_count": 46
+    }
+  ],
+  "poll_count": 46,
+  "provider_return_envelope_sha256": "sha256:b26d7b3f2de91c7d36a693d1e6915828468336d87e3e2133ad573a8cfe6a7eee",
+  "provider_terminal_state": "COMPLETED",
+  "request_body_sha256": "sha256:97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4",
+  "request_id": "019f77f0-a75b-7012-8cc1-fbc24f58f388",
+  "request_key": "97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4",
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.phase11_attempt_ledger.v1",
+  "state": "COMPLETED",
+  "submit_intent_count": 1,
+  "updated_at": "2026-07-19T01:18:46.118871+00:00"
+}

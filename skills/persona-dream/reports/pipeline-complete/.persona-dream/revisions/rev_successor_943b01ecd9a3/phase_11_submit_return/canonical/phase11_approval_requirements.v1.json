@@ -1,0 +1,62 @@
+{
+  "actual_provider_call_attempts": 0,
+  "bindings": {
+    "activation_transaction_id": "activation-a55f900137069fa9945ee3d66ab0aa5a",
+    "actual_provider_call_attempts": 0,
+    "endpoint": "fal-ai/kling-video/v3/standard/image-to-video",
+    "media_binding_manifest_sha256": "sha256:27566e08a96d98c6df2c2441d63033914274f6fc3d836ac912ac27bfe1f08361",
+    "media_input_contract_sha256": "sha256:d692df676807a44776739bfcda35e140944690f69c9719fb6934a0422dbe327a",
+    "pricing_snapshot_sha256": "sha256:c0051322d4080e9d9d7eec5ae04bd037caedf735d32314369f7938ef895be411",
+    "provider_id": "kling",
+    "provider_source_snapshot_sha256": "sha256:700a7e5052390fc719ac5c4230678c023d1e6ba521c69ee747ba1bd2571dbd19",
+    "request_body_sha256": "sha256:97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4",
+    "revision_id": "rev_successor_943b01ecd9a3",
+    "run_id": "pipeline-complete"
+  },
+  "blockers": [],
+  "missing_approval_types": [
+    "cost_acceptance",
+    "exact_request_acceptance",
+    "paid_call_authorization",
+    "publication_authorization",
+    "visual_media_acceptance"
+  ],
+  "provider_live": false,
+  "receipts": {
+    "cost_acceptance": {
+      "path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/approvals/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/cost_acceptance_receipt.json",
+      "sha256": null,
+      "state": "MISSING"
+    },
+    "exact_request_acceptance": {
+      "path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/approvals/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/exact_request_acceptance_receipt.json",
+      "sha256": null,
+      "state": "MISSING"
+    },
+    "paid_call_authorization": {
+      "path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/approvals/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/paid_call_authorization_receipt.json",
+      "sha256": null,
+      "state": "MISSING"
+    },
+    "publication_authorization": {
+      "path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/approvals/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/publication_authorization_receipt.json",
+      "sha256": null,
+      "state": "MISSING"
+    },
+    "visual_media_acceptance": {
+      "path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/approvals/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/visual_media_acceptance_receipt.json",
+      "sha256": null,
+      "state": "MISSING"
+    }
+  },
+  "required_approval_types": [
+    "publication_authorization",
+    "visual_media_acceptance",
+    "exact_request_acceptance",
+    "cost_acceptance",
+    "paid_call_authorization"
+  ],
+  "schema": "persona_dream.phase11_approval_requirements.v1",
+  "status": "INCOMPLETE",
+  "submitted": false
+}

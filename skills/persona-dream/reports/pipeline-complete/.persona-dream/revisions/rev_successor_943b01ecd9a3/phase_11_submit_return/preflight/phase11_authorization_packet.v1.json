@@ -1,0 +1,47 @@
+{
+  "schema": "persona_dream.phase11_authorization_packet.v1",
+  "decision": "APPROVE",
+  "decision_source": "EXPLICIT_HUMAN",
+  "run_id": "pipeline-complete",
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "activation_transaction_id": "activation-a55f900137069fa9945ee3d66ab0aa5a",
+  "approver": {
+    "id": "graham",
+    "display_name": "Graham",
+    "authority_basis": "Project owner explicit authorization, given directly in the operator session 2026-07-18: 'proceed with the remaining chain:' confirming '3. Paid-call authorization (yours): hash-bound, one submit. 4. Submit -> poll -> download...' and 'please don't stop on obvious next steps'"
+  },
+  "approved_at": "2026-07-19T01:13:34Z",
+  "expires_at": "2026-07-19T03:13:34Z",
+  "purpose": "PERSONA_DREAM_PHASE11_SINGLE_KLING_CANARY",
+  "authorization_scope": "ONE_PAID_PROVIDER_GENERATION_NO_AUTOMATIC_RESUBMIT",
+  "currency": "USD",
+  "maximum_spend_usd": 2.0,
+  "revoked": false,
+  "revocation_state": "NOT_REVOKED",
+  "approval_types": [
+    "publication_authorization",
+    "visual_media_acceptance",
+    "exact_request_acceptance",
+    "cost_acceptance",
+    "paid_call_authorization"
+  ],
+  "bindings": {
+    "run_id": "pipeline-complete",
+    "revision_id": "rev_successor_943b01ecd9a3",
+    "activation_transaction_id": "activation-a55f900137069fa9945ee3d66ab0aa5a",
+    "provider_id": "kling",
+    "endpoint": "fal-ai/kling-video/v3/standard/image-to-video",
+    "request_body_sha256": "sha256:97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4",
+    "media_binding_manifest_sha256": "sha256:27566e08a96d98c6df2c2441d63033914274f6fc3d836ac912ac27bfe1f08361",
+    "media_input_contract_sha256": "sha256:d692df676807a44776739bfcda35e140944690f69c9719fb6934a0422dbe327a",
+    "provider_source_snapshot_sha256": "sha256:700a7e5052390fc719ac5c4230678c023d1e6ba521c69ee747ba1bd2571dbd19",
+    "pricing_snapshot_sha256": "sha256:c0051322d4080e9d9d7eec5ae04bd037caedf735d32314369f7938ef895be411",
+    "actual_provider_call_attempts": 0
+  },
+  "acknowledgements": {
+    "authorize_one_paid_generation": true,
+    "no_automatic_resubmit": true,
+    "ambiguous_submit_requires_human_reconciliation": true,
+    "provider_return_does_not_authorize_watch_or_cognition": true
+  }
+}

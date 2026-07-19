@@ -1,0 +1,364 @@
+{
+  "activation_transaction_id": "activation-a55f900137069fa9945ee3d66ab0aa5a",
+  "actual_provider_call_attempts": 0,
+  "blockers": [],
+  "element_packs": [
+    {
+      "element_index": 0,
+      "identity": "embry",
+      "images": [
+        {
+          "artifact_id": "phase07.phase.07.storyboard.live.tau.references.01.embry.character.sheet.jpg",
+          "json_pointer": "/input/elements/0/frontal_image_url",
+          "public_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/references/01-embry_character_sheet.jpg",
+          "revision_relative_path": "phase_07_storyboard_live_tau/references/01-embry_character_sheet.jpg",
+          "role": "frontal",
+          "sha256": "sha256:b93c3fed77959d783cdc5788189117d8a8fed6b92fc689eba1154d080d323840",
+          "transition_evidence": {
+            "entry_found": true,
+            "json_pointers": [
+              "/input/elements/0/frontal_image_url"
+            ],
+            "manifest_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/provider_media_transition_manifest.json",
+            "public_probe": {
+              "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.01.embry.character.sheet.jpg/public_probe_receipt.json",
+              "sha256": "sha256:455223f76a841889076f9ebb0d738d87f12faee8db8f75b2537e374e00737c4a",
+              "status": "PASS_PROVIDER_MEDIA_PUBLIC_FETCH"
+            },
+            "publication_authorization": {
+              "approval_type": "publication_authorization",
+              "state": "MISSING_HUMAN_APPROVAL"
+            },
+            "publication_receipt": {
+              "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.01.embry.character.sheet.jpg/existing_publication_receipt.json",
+              "sha256": "sha256:5522acd20897c1406a983dc45d29ac86cd6a1c58040202101d9b0fbb9d24c1e4",
+              "status": "OBSERVED_EXISTING_PUBLIC_COMMIT_PINNED"
+            },
+            "teardown_policy": {
+              "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.01.embry.character.sheet.jpg/teardown_policy_receipt.json",
+              "sha256": "sha256:5ce31b780850ef42f05a6ae811333211134b367cfe9f4ca02da59f0e8ff544dc",
+              "status": "NOT_REQUIRED_PERSISTENT_COMMIT_PINNED"
+            }
+          }
+        },
+        {
+          "artifact_id": "sb_002.start_frame",
+          "json_pointer": "/input/elements/0/reference_image_urls/0",
+          "public_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_002_start_frame.png",
+          "revision_relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_002_start_frame.png",
+          "role": "reference",
+          "sha256": "sha256:aebcbd907c999d64ba4e7effd4f9f95e75e8e094e6deee605f5fb6f5a2e4606b",
+          "transition_evidence": {
+            "entry_found": true,
+            "json_pointers": [
+              "/input/elements/0/reference_image_urls/0"
+            ],
+            "manifest_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/provider_media_transition_manifest.json",
+            "public_probe": {
+              "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/provider_media_evidence/sb_002.start_frame/public_probe_receipt.json",
+              "sha256": "sha256:af24aab062e9a6e6ffccf8599f88071aa9acf02cb62365393471bc3988ccab0c",
+              "status": "PASS_PROVIDER_MEDIA_PUBLIC_FETCH"
+            },
+            "publication_authorization": {
+              "approval_type": "publication_authorization",
+              "state": "MISSING_HUMAN_APPROVAL"
+            },
+            "publication_receipt": {
+              "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/provider_media_evidence/sb_002.start_frame/existing_publication_receipt.json",
+              "sha256": "sha256:38bb723805abf63326572789d37a7899603e3075148a247960b26e5a89946dc2",
+              "status": "OBSERVED_EXISTING_PUBLIC_COMMIT_PINNED"
+            },
+            "teardown_policy": {
+              "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/provider_media_evidence/sb_002.start_frame/teardown_policy_receipt.json",
+              "sha256": "sha256:43c54e0934cedee03482ad4e45785db97ddded30416cd6e5307f67a2ad82ef82",
+              "status": "NOT_REQUIRED_PERSISTENT_COMMIT_PINNED"
+            }
+          }
+        },
+        {
+          "artifact_id": "sb_004.start_frame",
+          "json_pointer": "/input/elements/0/reference_image_urls/1",
+          "public_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_004_start_frame.png",
+          "revision_relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_004_start_frame.png",
+          "role": "reference",
+          "sha256": "sha256:2c3211f225eea31a8091569ec10f68a87d7f324e12f04653c5efb1084c97a26e",
+          "transition_evidence": {
+            "entry_found": true,
+            "json_pointers": [
+              "/input/elements/0/reference_image_urls/1"
+            ],
+            "manifest_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/provider_media_transition_manifest.json",
+            "public_probe": {
+              "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/provider_media_evidence/sb_004.start_frame/public_probe_receipt.json",
+              "sha256": "sha256:22507db9d786a81cd8f5c9af70555534ac8e90066a7dca2774e13c7db40e2b81",
+              "status": "PASS_PROVIDER_MEDIA_PUBLIC_FETCH"
+            },
+            "publication_authorization": {
+              "approval_type": "publication_authorization",
+              "state": "MISSING_HUMAN_APPROVAL"
+            },
+            "publication_receipt": {
+              "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/provider_media_evidence/sb_004.start_frame/existing_publication_receipt.json",
+              "sha256": "sha256:f8ed6aeb45aff7aca44c541cb9ecfe0eaed69d0f8546af42c5f14cdf814bf3d9",
+              "status": "OBSERVED_EXISTING_PUBLIC_COMMIT_PINNED"
+            },
+            "teardown_policy": {
+              "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/provider_media_evidence/sb_004.start_frame/teardown_policy_receipt.json",
+              "sha256": "sha256:93cfdee9d581d4526ee6753416a9eb162a821ea543888fc07128ad126068fe67",
+              "status": "NOT_REQUIRED_PERSISTENT_COMMIT_PINNED"
+            }
+          }
+        }
+      ],
+      "prompt_token": "@Element1"
+    },
+    {
+      "element_index": 1,
+      "identity": "kai",
+      "images": [
+        {
+          "artifact_id": "phase07.phase.07.storyboard.live.tau.references.02.kai.character.sheet.png",
+          "json_pointer": "/input/elements/1/frontal_image_url",
+          "public_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/references/02-kai_character_sheet.png",
+          "revision_relative_path": "phase_07_storyboard_live_tau/references/02-kai_character_sheet.png",
+          "role": "frontal",
+          "sha256": "sha256:692cf37c5e7915f8b4ebceabd03b5d01ff69c9d428e94333bc1a01ac5e497700",
+          "transition_evidence": {
+            "entry_found": true,
+            "json_pointers": [
+              "/input/elements/1/frontal_image_url"
+            ],
+            "manifest_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/provider_media_transition_manifest.json",
+            "public_probe": {
+              "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.02.kai.character.sheet.png/public_probe_receipt.json",
+              "sha256": "sha256:504b639c8f1e0f9dbcff51b368d18a75ebc25783e3396d9f5a2cf513ea0a4558",
+              "status": "PASS_PROVIDER_MEDIA_PUBLIC_FETCH"
+            },
+            "publication_authorization": {
+              "approval_type": "publication_authorization",
+              "state": "MISSING_HUMAN_APPROVAL"
+            },
+            "publication_receipt": {
+              "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.02.kai.character.sheet.png/existing_publication_receipt.json",
+              "sha256": "sha256:3f23ea35717cc26ddcc6bdbecbeb25892ba4770e22b66519c2fddce389d4c148",
+              "status": "OBSERVED_EXISTING_PUBLIC_COMMIT_PINNED"
+            },
+            "teardown_policy": {
+              "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/provider_media_evidence/phase07.phase.07.storyboard.live.tau.references.02.kai.character.sheet.png/teardown_policy_receipt.json",
+              "sha256": "sha256:473dd8f90c153ee9b8e5ddd30905a33521f64460f98a6ee0b8321d43931dd52b",
+              "status": "NOT_REQUIRED_PERSISTENT_COMMIT_PINNED"
+            }
+          }
+        },
+        {
+          "artifact_id": "sb_001.start_frame",
+          "json_pointer": "/input/elements/1/reference_image_urls/0",
+          "public_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_001_start_frame.png",
+          "revision_relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_001_start_frame.png",
+          "role": "reference",
+          "sha256": "sha256:135564cad9c40718322e9f13d347b6829ecbd9ab2197cbddc70262deb72e227d",
+          "transition_evidence": {
+            "entry_found": true,
+            "json_pointers": [
+              "/input/elements/1/reference_image_urls/0",
+              "/input/start_image_url"
+            ],
+            "manifest_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/provider_media_transition_manifest.json",
+            "public_probe": {
+              "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/provider_media_evidence/sb_001.start_frame/public_probe_receipt.json",
+              "sha256": "sha256:a49d6e60c690af20eb984003a9576ca3b547819b5f3424097058733a115ab91b",
+              "status": "PASS_PROVIDER_MEDIA_PUBLIC_FETCH"
+            },
+            "publication_authorization": {
+              "approval_type": "publication_authorization",
+              "state": "MISSING_HUMAN_APPROVAL"
+            },
+            "publication_receipt": {
+              "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/provider_media_evidence/sb_001.start_frame/existing_publication_receipt.json",
+              "sha256": "sha256:0ac1cc592830b005639dcaacc8aee404a4d8bf384c1918ee73e6533b6e73f1ac",
+              "status": "OBSERVED_EXISTING_PUBLIC_COMMIT_PINNED"
+            },
+            "teardown_policy": {
+              "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/provider_media_evidence/sb_001.start_frame/teardown_policy_receipt.json",
+              "sha256": "sha256:3f0fac82dbdfd232745516f2e14ae73daac1141b72a8686a6bb50c3a904c649e",
+              "status": "NOT_REQUIRED_PERSISTENT_COMMIT_PINNED"
+            }
+          }
+        },
+        {
+          "artifact_id": "sb_003.start_frame",
+          "json_pointer": "/input/elements/1/reference_image_urls/1",
+          "public_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_003_start_frame.png",
+          "revision_relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_003_start_frame.png",
+          "role": "reference",
+          "sha256": "sha256:9046059c87f35a6be56f166415979a25bfb72f9c51293a1434eb0f7ac8a1118c",
+          "transition_evidence": {
+            "entry_found": true,
+            "json_pointers": [
+              "/input/elements/1/reference_image_urls/1"
+            ],
+            "manifest_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/provider_media_transition_manifest.json",
+            "public_probe": {
+              "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/provider_media_evidence/sb_003.start_frame/public_probe_receipt.json",
+              "sha256": "sha256:c0f8e1b91ee6734a41e87eca9bce874ffcb3063b1490ef429d71e38898d6b247",
+              "status": "PASS_PROVIDER_MEDIA_PUBLIC_FETCH"
+            },
+            "publication_authorization": {
+              "approval_type": "publication_authorization",
+              "state": "MISSING_HUMAN_APPROVAL"
+            },
+            "publication_receipt": {
+              "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/provider_media_evidence/sb_003.start_frame/existing_publication_receipt.json",
+              "sha256": "sha256:6ba7a47dcdd9793a92352124d9f3f818ce673234f510854e680fd5be11f67a2d",
+              "status": "OBSERVED_EXISTING_PUBLIC_COMMIT_PINNED"
+            },
+            "teardown_policy": {
+              "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/provider_media_evidence/sb_003.start_frame/teardown_policy_receipt.json",
+              "sha256": "sha256:ec1cff3c898c19959d01a3c77f349bed615e48a25b1092554047a1a3cf2c0b10",
+              "status": "NOT_REQUIRED_PERSISTENT_COMMIT_PINNED"
+            }
+          }
+        }
+      ],
+      "prompt_token": "@Element2"
+    }
+  ],
+  "media_input_contract_sha256": "sha256:d692df676807a44776739bfcda35e140944690f69c9719fb6934a0422dbe327a",
+  "provider_live": false,
+  "publication_policy": {
+    "authorization_required": true,
+    "existing_url_without_transition_evidence_blocks": true,
+    "public_probe_required": true,
+    "publication_receipt_required": true,
+    "teardown_policy_required": true
+  },
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "role_counts": {
+    "continuity_only": 7,
+    "element_packs": 2,
+    "global_end_anchor": 0,
+    "global_start_anchor": 1
+  },
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.phase11_media_binding_manifest.v2",
+  "source_files": {
+    "artifact_index": {
+      "path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/revision_artifact_index.json",
+      "sha256": "sha256:b46556350d22eb5cbeebd3504d84db19054effe2c6af6c767b35e7e99bc8bfdd"
+    },
+    "candidate_binding": {
+      "path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/phase11_payload_binding.json",
+      "sha256": "sha256:375979871236d9a1c629ea62be440f59bdc70203d06b17d40fde26671468eb7a"
+    },
+    "media_lock": {
+      "path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_08_media_lock/storyboard_media_lock_manifest.json",
+      "sha256": "sha256:8f3df1ec5e05245fff2ca0bb9c97806236a9ee81e7e3621c7467534f108e4814"
+    },
+    "transition_manifest": {
+      "path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/provider_media_transition_manifest.json",
+      "sha256": "sha256:4576c6ac3b957c98c3847af475189a02c62118e3d961342f9bd6b58acb6aee19"
+    }
+  },
+  "status": "PASS_PHASE11_MEDIA_BINDING_TECHNICAL",
+  "storyboard_frames": [
+    {
+      "artifact_id": "sb_001.start_frame",
+      "json_pointer": "/input/start_image_url",
+      "public_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_001_start_frame.png",
+      "revision_relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_001_start_frame.png",
+      "role": "global_start_anchor",
+      "sha256": "sha256:135564cad9c40718322e9f13d347b6829ecbd9ab2197cbddc70262deb72e227d",
+      "transition_evidence": {
+        "entry_found": true,
+        "json_pointers": [
+          "/input/elements/1/reference_image_urls/0",
+          "/input/start_image_url"
+        ],
+        "manifest_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/provider_media_transition_manifest.json",
+        "public_probe": {
+          "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/provider_media_evidence/sb_001.start_frame/public_probe_receipt.json",
+          "sha256": "sha256:a49d6e60c690af20eb984003a9576ca3b547819b5f3424097058733a115ab91b",
+          "status": "PASS_PROVIDER_MEDIA_PUBLIC_FETCH"
+        },
+        "publication_authorization": {
+          "approval_type": "publication_authorization",
+          "state": "MISSING_HUMAN_APPROVAL"
+        },
+        "publication_receipt": {
+          "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/provider_media_evidence/sb_001.start_frame/existing_publication_receipt.json",
+          "sha256": "sha256:0ac1cc592830b005639dcaacc8aee404a4d8bf384c1918ee73e6533b6e73f1ac",
+          "status": "OBSERVED_EXISTING_PUBLIC_COMMIT_PINNED"
+        },
+        "teardown_policy": {
+          "relative_path": ".persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/provider_media_evidence/sb_001.start_frame/teardown_policy_receipt.json",
+          "sha256": "sha256:3f0fac82dbdfd232745516f2e14ae73daac1141b72a8686a6bb50c3a904c649e",
+          "status": "NOT_REQUIRED_PERSISTENT_COMMIT_PINNED"
+        }
+      }
+    },
+    {
+      "artifact_id": "sb_001.end_frame",
+      "json_pointer": null,
+      "public_url": null,
+      "revision_relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_001_end_frame.png",
+      "role": "continuity_only",
+      "sha256": "sha256:2b379eacb90166faa051aafe1c576687cb9e8b4fb5f757c9c649a8cc9c7fc842",
+      "transition_evidence": null
+    },
+    {
+      "artifact_id": "sb_002.start_frame",
+      "json_pointer": null,
+      "public_url": null,
+      "revision_relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_002_start_frame.png",
+      "role": "continuity_only",
+      "sha256": "sha256:aebcbd907c999d64ba4e7effd4f9f95e75e8e094e6deee605f5fb6f5a2e4606b",
+      "transition_evidence": null
+    },
+    {
+      "artifact_id": "sb_002.end_frame",
+      "json_pointer": null,
+      "public_url": null,
+      "revision_relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_002_end_frame.png",
+      "role": "continuity_only",
+      "sha256": "sha256:b25f61dc7bb32ce35d018e3b7214310880795516914e53bc86cd6d0812b97bd6",
+      "transition_evidence": null
+    },
+    {
+      "artifact_id": "sb_003.start_frame",
+      "json_pointer": null,
+      "public_url": null,
+      "revision_relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_003_start_frame.png",
+      "role": "continuity_only",
+      "sha256": "sha256:9046059c87f35a6be56f166415979a25bfb72f9c51293a1434eb0f7ac8a1118c",
+      "transition_evidence": null
+    },
+    {
+      "artifact_id": "sb_003.end_frame",
+      "json_pointer": null,
+      "public_url": null,
+      "revision_relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/generated_storyboard_frames/sb_003_end_frame.png",
+      "role": "continuity_only",
+      "sha256": "sha256:9f8fb8c93e5382667ab7be1ebf4001ff702500117baca2837b33f2bb228bf20a",
+      "transition_evidence": null
+    },
+    {
+      "artifact_id": "sb_004.start_frame",
+      "json_pointer": null,
+      "public_url": null,
+      "revision_relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_004_start_frame.png",
+      "role": "continuity_only",
+      "sha256": "sha256:2c3211f225eea31a8091569ec10f68a87d7f324e12f04653c5efb1084c97a26e",
+      "transition_evidence": null
+    },
+    {
+      "artifact_id": "sb_004.end_frame",
+      "json_pointer": null,
+      "public_url": null,
+      "revision_relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_004_end_frame.png",
+      "role": "continuity_only",
+      "sha256": "sha256:ceaf5c255f81d2267d32c92aec09e6614b5d18945e2a7f5824f38f6cf66dd2cf",
+      "transition_evidence": null
+    }
+  ],
+  "submitted": false
+}

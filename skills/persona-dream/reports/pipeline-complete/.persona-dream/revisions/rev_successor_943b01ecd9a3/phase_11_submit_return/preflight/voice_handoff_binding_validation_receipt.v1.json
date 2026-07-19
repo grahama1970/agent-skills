@@ -1,0 +1,34 @@
+{
+  "audio_strategy_assessment": {
+    "blockers": [],
+    "classification": "NEAR_SILENT_VOICED",
+    "delivery_mode": "post_mux",
+    "dialogue_style": "near-silent; at most one quiet practical line from Kai (canonical line: \"If we paddle now, we're cutting across the lineup.\"); no banter, no exposition",
+    "requires_audible_delivery": true,
+    "spoken_lines": [
+      {
+        "end_s": 8.08,
+        "speaker": "Kai",
+        "start_s": 5.0,
+        "text": "If we paddle now, we're cutting across the lineup."
+      }
+    ],
+    "validation_errors": [],
+    "voice_handoff_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/voice_handoff_plan.json",
+    "voice_handoff_present": true,
+    "voice_handoff_valid": true
+  },
+  "canonical_relative_path": "phase_11_submit_return/canonical/phase11_live_request.v1.json",
+  "canonical_request_body_sha256": "sha256:97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4",
+  "fail_closed": true,
+  "hashes_equal": true,
+  "live": true,
+  "mocked": false,
+  "plan_request_body_sha256": "sha256:97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4",
+  "rebound_from_status": "PENDING_COMPILE",
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "schema": "persona_dream.voice_handoff_binding_validation_receipt.v1",
+  "status": "PASS_VOICE_HANDOFF_BINDING",
+  "voice_handoff_plan_relative_path": "phase_11_submit_return/preflight/voice_handoff_plan.json",
+  "voice_handoff_plan_sha256": "sha256:e1a83598b5ee0566b87c07dd36d95962abab3e607a685a7c35c69e0793f5c98c"
+}

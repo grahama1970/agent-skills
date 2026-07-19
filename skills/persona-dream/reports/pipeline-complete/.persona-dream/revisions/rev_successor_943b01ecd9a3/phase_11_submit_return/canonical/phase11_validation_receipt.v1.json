@@ -1,0 +1,84 @@
+{
+  "activation_transaction_id": "activation-a55f900137069fa9945ee3d66ab0aa5a",
+  "actual_provider_call_attempts": 0,
+  "claims": {
+    "does_not_prove": [
+      "provider readiness",
+      "provider submission",
+      "provider acceptance",
+      "returned video"
+    ],
+    "proves": [
+      "the canonical Phase 11 request and every recorded hash were independently recomputed",
+      "the ACTIVE_CONSISTENT activation chain was revalidated"
+    ]
+  },
+  "command": {
+    "argv": [
+      "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/scripts/validate_phase11_canonical_live_request.py",
+      "--run-root",
+      "reports/pipeline-complete",
+      "--json"
+    ],
+    "cwd": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream",
+    "platform": "Linux-6.8.0-57-generic-x86_64-with-glibc2.39",
+    "python_version": "3.12.10",
+    "script_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/scripts/validate_phase11_canonical_live_request.py",
+    "script_sha256": "sha256:cdf4adb8b1fe3607d8a0a6ad25f5429637f4d0e039eb24484af13d75df490867"
+  },
+  "files": {
+    "activation_receipt": {
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/revision_activation_receipt.json",
+      "sha256": "sha256:349757efcf9ad9c5286f31659abb364ca6be07ee5c3ae62cc7bd07a1f6881308"
+    },
+    "approval_requirements": {
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/canonical/phase11_approval_requirements.v1.json",
+      "sha256": "sha256:f20b64cfb91bdb72f51a740a612fc86439ec987d57bddcf98c3db3b7ed216171"
+    },
+    "live_request": {
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/canonical/phase11_live_request.v1.json",
+      "sha256": "sha256:5eac233547be3431752e3b462240cfdbffc9d2d2ab8515a8940fa50364394893"
+    },
+    "media_binding_manifest": {
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/canonical/phase11_media_binding_manifest.v2.json",
+      "sha256": "sha256:27566e08a96d98c6df2c2441d63033914274f6fc3d836ac912ac27bfe1f08361"
+    },
+    "provider_source_snapshot": {
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/provider_source_snapshot.json",
+      "sha256": "sha256:700a7e5052390fc719ac5c4230678c023d1e6ba521c69ee747ba1bd2571dbd19"
+    }
+  },
+  "gate_status": "BLOCKED_PROVIDER_GATE",
+  "live": false,
+  "live_submit_ready": false,
+  "memory": {
+    "persisted": false,
+    "status": "BLOCKED_PHASE11_MEMORY_PERSISTENCE_REQUIRED"
+  },
+  "missing_approval_types": [
+    "cost_acceptance",
+    "exact_request_acceptance",
+    "paid_call_authorization",
+    "publication_authorization",
+    "visual_media_acceptance"
+  ],
+  "mocked": false,
+  "paid_call_authorized": false,
+  "provider_live": false,
+  "provider_ready": false,
+  "request_body_sha256": "sha256:97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4",
+  "request_output_file_sha256": "sha256:5eac233547be3431752e3b462240cfdbffc9d2d2ab8515a8940fa50364394893",
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "runtime_release_id": "agent-skills@bb767ed7ebd511eae2d74c7c3440e0ca56356a8d",
+  "schema": "persona_dream.phase11_validation_receipt.v1",
+  "source_commit": "bb767ed7ebd511eae2d74c7c3440e0ca56356a8d",
+  "source_revision_id": "rev_upstream_bf3b05d47fb8",
+  "submitted": false,
+  "technical_blockers": [
+    "BLOCKED_PHASE11_ADAPTER_PREFLIGHT_REQUIRED",
+    "BLOCKED_PHASE11_MEMORY_PERSISTENCE_REQUIRED"
+  ],
+  "validated_at": "2026-07-19T01:12:18.930351+00:00",
+  "validator_status": "PASS_PHASE11_CANONICAL_BOUNDARY_VALIDATED"
+}

@@ -1,0 +1,242 @@
+{
+  "activation_transaction_id": "activation-a55f900137069fa9945ee3d66ab0aa5a",
+  "actual_provider_call_attempts": 0,
+  "artifact_index_sha256": "sha256:b46556350d22eb5cbeebd3504d84db19054effe2c6af6c767b35e7e99bc8bfdd",
+  "claims": {
+    "does_not_prove": [
+      "the URLs were fetched by fal or any provider",
+      "public URL probes passed",
+      "human approval or paid-call authorization",
+      "provider submission or generation"
+    ],
+    "proves": [
+      "the request binding was derived from the active revision artifact index, Phase 10 payload, and media lock",
+      "the request contains one provider start anchor and two character element packs; all seven remaining storyboard frames are continuity-only review evidence"
+    ]
+  },
+  "gate_status": "BLOCKED_PROVIDER_GATE",
+  "input": {
+    "cfg_scale": 0.5,
+    "duration": "10",
+    "elements": [
+      {
+        "frontal_image_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/references/01-embry_character_sheet.jpg",
+        "reference_image_urls": [
+          "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_002_start_frame.png",
+          "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_004_start_frame.png"
+        ]
+      },
+      {
+        "frontal_image_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/references/02-kai_character_sheet.png",
+        "reference_image_urls": [
+          "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_001_start_frame.png",
+          "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_003_start_frame.png"
+        ]
+      }
+    ],
+    "generate_audio": false,
+    "multi_prompt": [
+      {
+        "duration": "2",
+        "prompt": "SB_001. Kling v3 Standard I2V. time range 0s-2s. Waterline wide at Kahaluʻu Bay: @Element1 Embry and @Element2 Kai hold outside the lineup over visible lava reef, respecting surf etiquette. Preserve Embry and Kai identity and rashguard continuity."
+      },
+      {
+        "duration": "3",
+        "prompt": "SB_002. Kling v3 Standard I2V. time range 2s-5s. Medium waterline action: @Element1 Embry resets her grip as sun-softened wax slips before the lava reef; heat and fatigue show while @Element2 Kai stays outside. Preserve Embry and Kai identity and rashguard continuity."
+      },
+      {
+        "duration": "2",
+        "prompt": "SB_003. Kling v3 Standard I2V. time range 5s-7s. Medium-wide lineup: @Element2 Kai reads the safe channel, reef, and surf etiquette, then signals @Element1 Embry to wait; Embry remains the decision-maker. Preserve Embry and Kai identity and rashguard continuity. Silent shot: No spoken dialogue. No lip movement; use gaze, posture, and one nonverbal hand signal."
+      },
+      {
+        "duration": "3",
+        "prompt": "SB_004. Kling v3 Standard I2V. time range 7s-10s. Waterline finish: @Element1 Embry alone commits, paddling hard, popping up, and riding forward through the safe channel away from @Element2 Kai, who holds position outside the main action; the dark lava reef boundary stays sharply readable under clear water on both sides of Embry's line, preserving her decision and agency. Preserve Embry and Kai identity and rashguard continuity."
+      }
+    ],
+    "negative_prompt": "blur, distort, and low quality; do not change Embry identity, gender, hair color, or navy rashguard continuity; do not change Kai identity or black rashguard continuity; do not remove Embry or Kai from required two-character panels; do not introduce unrelated foreground surfers as main characters; do not hide faces, crop required identities, or turn the frame into a distant establishing shot; do not cover the lava reef or lineup geometry with pasted overlays or UI artifacts; do not treat contact-sheet grids, labels, or borders as scene content; no audible speech, no lip-sync, no mouth articulating words, no subtitles, no captions, no dialogue text, no speech bubbles",
+    "shot_type": "customize",
+    "start_image_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_001_start_frame.png"
+  },
+  "live_submit_ready": false,
+  "media_lock_sha256": "sha256:8f3df1ec5e05245fff2ca0bb9c97806236a9ee81e7e3621c7467534f108e4814",
+  "media_roles": {
+    "character_element_packs": [
+      {
+        "element_index": 0,
+        "frontal": {
+          "artifact_id": "phase07.phase.07.storyboard.live.tau.references.01.embry.character.sheet.jpg",
+          "public_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/references/01-embry_character_sheet.jpg",
+          "revision_relative_path": "phase_07_storyboard_live_tau/references/01-embry_character_sheet.jpg",
+          "role": "character_frontal",
+          "sha256": "sha256:b93c3fed77959d783cdc5788189117d8a8fed6b92fc689eba1154d080d323840"
+        },
+        "identity": "embry",
+        "prompt_token": "@Element1",
+        "references": [
+          {
+            "artifact_id": "sb_002.start_frame",
+            "public_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_002_start_frame.png",
+            "revision_relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_002_start_frame.png",
+            "role": "continuity_only",
+            "sha256": "sha256:aebcbd907c999d64ba4e7effd4f9f95e75e8e094e6deee605f5fb6f5a2e4606b"
+          },
+          {
+            "artifact_id": "sb_004.start_frame",
+            "public_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_004_start_frame.png",
+            "revision_relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_004_start_frame.png",
+            "role": "continuity_only",
+            "sha256": "sha256:2c3211f225eea31a8091569ec10f68a87d7f324e12f04653c5efb1084c97a26e"
+          }
+        ]
+      },
+      {
+        "element_index": 1,
+        "frontal": {
+          "artifact_id": "phase07.phase.07.storyboard.live.tau.references.02.kai.character.sheet.png",
+          "public_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/references/02-kai_character_sheet.png",
+          "revision_relative_path": "phase_07_storyboard_live_tau/references/02-kai_character_sheet.png",
+          "role": "character_frontal",
+          "sha256": "sha256:692cf37c5e7915f8b4ebceabd03b5d01ff69c9d428e94333bc1a01ac5e497700"
+        },
+        "identity": "kai",
+        "prompt_token": "@Element2",
+        "references": [
+          {
+            "artifact_id": "sb_001.start_frame",
+            "public_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_001_start_frame.png",
+            "revision_relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_001_start_frame.png",
+            "role": "global_start_anchor",
+            "sha256": "sha256:135564cad9c40718322e9f13d347b6829ecbd9ab2197cbddc70262deb72e227d"
+          },
+          {
+            "artifact_id": "sb_003.start_frame",
+            "public_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_003_start_frame.png",
+            "revision_relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_003_start_frame.png",
+            "role": "continuity_only",
+            "sha256": "sha256:9046059c87f35a6be56f166415979a25bfb72f9c51293a1434eb0f7ac8a1118c"
+          }
+        ]
+      }
+    ],
+    "continuity_only": [
+      {
+        "artifact_id": "sb_001.end_frame",
+        "public_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_001_end_frame.png",
+        "revision_relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_001_end_frame.png",
+        "role": "continuity_only",
+        "sha256": "sha256:2b379eacb90166faa051aafe1c576687cb9e8b4fb5f757c9c649a8cc9c7fc842"
+      },
+      {
+        "artifact_id": "sb_002.start_frame",
+        "public_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_002_start_frame.png",
+        "revision_relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_002_start_frame.png",
+        "role": "continuity_only",
+        "sha256": "sha256:aebcbd907c999d64ba4e7effd4f9f95e75e8e094e6deee605f5fb6f5a2e4606b"
+      },
+      {
+        "artifact_id": "sb_002.end_frame",
+        "public_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_002_end_frame.png",
+        "revision_relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_002_end_frame.png",
+        "role": "continuity_only",
+        "sha256": "sha256:b25f61dc7bb32ce35d018e3b7214310880795516914e53bc86cd6d0812b97bd6"
+      },
+      {
+        "artifact_id": "sb_003.start_frame",
+        "public_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_003_start_frame.png",
+        "revision_relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_003_start_frame.png",
+        "role": "continuity_only",
+        "sha256": "sha256:9046059c87f35a6be56f166415979a25bfb72f9c51293a1434eb0f7ac8a1118c"
+      },
+      {
+        "artifact_id": "sb_003.end_frame",
+        "public_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/generated_storyboard_frames/sb_003_end_frame.png",
+        "revision_relative_path": "phase_07_storyboard_live_tau/lane_c_step38_sb_003_end_regen_waiver/generated_storyboard_frames/sb_003_end_frame.png",
+        "role": "continuity_only",
+        "sha256": "sha256:9f8fb8c93e5382667ab7be1ebf4001ff702500117baca2837b33f2bb228bf20a"
+      },
+      {
+        "artifact_id": "sb_004.start_frame",
+        "public_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_004_start_frame.png",
+        "revision_relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_004_start_frame.png",
+        "role": "continuity_only",
+        "sha256": "sha256:2c3211f225eea31a8091569ec10f68a87d7f324e12f04653c5efb1084c97a26e"
+      },
+      {
+        "artifact_id": "sb_004.end_frame",
+        "public_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_004_end_frame.png",
+        "revision_relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_004_end_frame.png",
+        "role": "continuity_only",
+        "sha256": "sha256:ceaf5c255f81d2267d32c92aec09e6614b5d18945e2a7f5824f38f6cf66dd2cf"
+      }
+    ],
+    "global_start_anchor": {
+      "artifact_id": "sb_001.start_frame",
+      "public_url": "https://raw.githubusercontent.com/grahama1970/agent-skills/6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_001_start_frame.png",
+      "revision_relative_path": "phase_07_storyboard_live_tau/phase_c_successor_regen/generated_storyboard_frames/sb_001_start_frame.png",
+      "role": "global_start_anchor",
+      "sha256": "sha256:135564cad9c40718322e9f13d347b6829ecbd9ab2197cbddc70262deb72e227d"
+    },
+    "role_counts": {
+      "continuity_only": 7,
+      "element_packs": 2,
+      "global_end_anchor": 0,
+      "global_start_anchor": 1
+    }
+  },
+  "mode": "standard",
+  "model": "fal-ai/kling-video/v3/standard/image-to-video",
+  "paid_call_authorized": false,
+  "phase10_payload_sha256": "sha256:6fc7763911a57e3cc003f4d5df457cb63bc254a6399155cb545184b80ceaaa22",
+  "provider": "fal.ai",
+  "provider_live": false,
+  "provider_ready": false,
+  "publication": {
+    "commit": "6a9fa0a84f5a34a69237b9af8aaa59cabd57cce7",
+    "next_command": [
+      "skills/persona-dream/run.sh",
+      "capture-phase11-public-media-evidence",
+      "--run-root",
+      "<RUN_ROOT>",
+      "--revision-id",
+      "rev_successor_943b01ecd9a3",
+      "--json"
+    ],
+    "provider_accessible_urls_proven": false,
+    "publication_performed_by_this_command": false,
+    "repository": "grahama1970/agent-skills",
+    "state": "UNPROBED_COMMIT_PINNED_URLS"
+  },
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.phase11_payload_binding.v1",
+  "source_commit": "bb767ed7ebd511eae2d74c7c3440e0ca56356a8d",
+  "status": "BLOCKED_PUBLIC_MEDIA_PROBE_REQUIRED",
+  "submitted": false,
+  "technical_gate": {
+    "audio_strategy": {
+      "blockers": [],
+      "classification": "NEAR_SILENT_VOICED",
+      "delivery_mode": "post_mux",
+      "dialogue_style": "near-silent; at most one quiet practical line from Kai (canonical line: \"If we paddle now, we're cutting across the lineup.\"); no banter, no exposition",
+      "requires_audible_delivery": true,
+      "spoken_lines": [
+        {
+          "end_s": 8.08,
+          "speaker": "Kai",
+          "start_s": 5.0,
+          "text": "If we paddle now, we're cutting across the lineup."
+        }
+      ],
+      "validation_errors": [],
+      "voice_handoff_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/preflight/voice_handoff_plan.json",
+      "voice_handoff_present": true,
+      "voice_handoff_valid": true
+    },
+    "binding_built_from_active_revision": true,
+    "end_frame_review_only": true,
+    "generate_audio": false,
+    "provider_media_probes_passed": 0,
+    "provider_media_probes_required": 6,
+    "request_asset_count": 6
+  }
+}

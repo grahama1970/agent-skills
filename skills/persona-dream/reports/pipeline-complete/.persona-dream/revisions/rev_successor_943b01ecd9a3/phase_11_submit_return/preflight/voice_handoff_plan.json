@@ -1,0 +1,111 @@
+{
+  "ambient_beds": [
+    {
+      "path": "/mnt/storage12tb/media/personas/shared/embry_kai/assets/youtube/ocean_raw_surfing_audio_2min.wav",
+      "role": "ocean_surf_wind_reference_and_mix_bed",
+      "sha256": "sha256:8d5e0d3e14bf9bd7415b232c4deeccb18149bfb7434814db650a07a4e6d55d75",
+      "size_bytes": 21168206
+    }
+  ],
+  "claims": {
+    "does_not_prove": [
+      "the canonical line has been rendered",
+      "the active repaired Kling request has been submitted",
+      "audio has been mixed or muxed",
+      "the final video has audible output"
+    ],
+    "proves": [
+      "the post-mux strategy is explicit and bound to the active revision, exact transcript, provider request, voice reference, and ambient bed"
+    ]
+  },
+  "delivery_mode": "post_mux",
+  "gates": {
+    "post_return": [
+      "exact rendered line equals timed transcript text",
+      "final MP4 contains an audio stream",
+      "final MP4 has audible output",
+      "mux and ffprobe receipts bind final MP4 hash",
+      "dialogue sync receipt binds the rendered duration and storyboard onset"
+    ],
+    "pre_submit": [
+      "provider request generate_audio=false",
+      "timed transcript path and hash verify",
+      "every voice and ambient reference path and hash verify",
+      "every spoken-line onset is inside its bound storyboard beat"
+    ]
+  },
+  "lines": [
+    {
+      "end_s": 8.08,
+      "render_status": "PENDING_EXACT_LINE_RENDER",
+      "rendered_audio": null,
+      "speaker": "Kai",
+      "start_s": 5.0,
+      "storyboard_beat_end_s": 7.5,
+      "storyboard_beat_id": "sb_003",
+      "storyboard_beat_start_s": 5.0,
+      "text": "If we paddle now, we're cutting across the lineup.",
+      "voice_direction": "quiet, practical restraint; conversational warning"
+    }
+  ],
+  "live": true,
+  "mocked": false,
+  "optional_lipsync": {
+    "enabled": false,
+    "endpoint": "fal-ai/kling-video/lipsync/audio-to-video",
+    "requires_separate_paid_authorization": true
+  },
+  "provider_request": {
+    "dialogue_in_provider_prompts": false,
+    "generate_audio": false,
+    "request_body_sha256": "sha256:97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4"
+  },
+  "request_binding": {
+    "canonical_relative_path": "phase_11_submit_return/canonical/phase11_live_request.v1.json",
+    "note": "Rebound post-compile to the compiled canonical request_body_sha256.",
+    "rebound_from_status": "PENDING_COMPILE",
+    "request_body_sha256": "sha256:97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4",
+    "status": "BOUND"
+  },
+  "required_outputs": [
+    "exact_line_render.wav",
+    "exact_line_render_ffprobe_receipt.json",
+    "audio_mix.wav",
+    "audio_mix_receipt.json",
+    "muxed_provider_return.mp4",
+    "ffmpeg_mux_receipt.json",
+    "muxed_provider_return_ffprobe_receipt.json",
+    "audible_output_review_receipt.json",
+    "dialogue_sync_receipt.json"
+  ],
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.voice_handoff_plan.v1",
+  "status": "BLOCKED_AWAITING_EXACT_LINE_RENDER",
+  "storyboard_timing": {
+    "revision_relative_path": "phase_03_crew/shot_bible.json",
+    "sha256": "sha256:d6925039e3fc352e11e36998fef530c63818a2fa667c1a44fb5cefcd34b3c3ab"
+  },
+  "strategy": "post_mux",
+  "timed_transcript": {
+    "revision_relative_path": "phase_06_script/timed_transcript.json",
+    "sha256": "sha256:595aec7caa41cd83e98774ba530aeccc0ccbe48ffd6f2e9c91f0a2e1db30e606",
+    "source_of_truth": true
+  },
+  "voice_bindings": {
+    "Kai": {
+      "audition_text": "Kai [laugh], wait. If we paddle now, we are cutting across the lineup.",
+      "canonical_line_match": false,
+      "conditioning_reference": {
+        "path": "/mnt/storage12tb/skills/persona-dream/outputs/kai-voice-kling-reference-20260703/kai_kling_chatterbox_reference_30s.wav",
+        "role": "conditioning_reference_only",
+        "sha256": "sha256:d2773628179a936f16845b879320b91984fb5b9f4f4470f8d600a24fff642d65",
+        "size_bytes": 960078
+      },
+      "engine": "chatterbox_turbo",
+      "reuse_audition_as_final_dialogue": false,
+      "source_receipt_relative_path": "phase_05_voices/kai_voice_audition.json",
+      "source_receipt_sha256": "sha256:f960eae052941ccc0dadea1b054e9dc3c51e500ea32527a6e51d019f4b877a19"
+    }
+  }
+}
