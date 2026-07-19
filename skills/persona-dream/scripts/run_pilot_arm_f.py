@@ -50,7 +50,7 @@ EMBRY_SHEET = Path(
     "/mnt/storage12tb/media/personas/embry/assets/contact_sheets/"
     "embry-gpt-image-2-v3/images/embry_contact_sheet_v3.png"
 )
-MAX_ATTEMPTS = 2
+MAX_ATTEMPTS = 5  # standard phase_c lane default
 PANEL_COUNT = 4
 
 
@@ -75,11 +75,15 @@ def compose_prompt(panel: dict, other_person: str) -> str:
         "Create a single cinematic storyboard frame. Real storyboard frame — "
         "not a contact sheet, not a collage, not a UI mockup, no rendered text.\n"
         "MANDATORY CHARACTER IDENTITY REQUIREMENT (HIGHEST PRIORITY):\n"
-        "Embry must be clearly visible in the foreground with her face readable "
-        "in three-quarter view, strongly matched to her reference identity: "
-        "adult woman, brown hair (tied back or loose), recognizable consistent "
-        "face. Do not depict her as male, teenage, blond, generic, back-facing, "
-        "or too distant to identify.\n"
+        "Embry must be clearly visible, large in the foreground, her face "
+        "readable in three-quarter view and strongly matched to her reference "
+        "identity from her accepted contact sheet: adult woman around 30, "
+        "warm light-tan complexion, brown hair tied back or pulled behind her "
+        "ears, expressive brown eyes, softly rounded jaw, natural unglamorized "
+        "features, navy blue top. Her face must be sharp, well-lit, unoccluded "
+        "(no hair, shadow, glare, or object across the face), chest-up or "
+        "waist-up. Do not depict her as male, teenage, blond, generic, "
+        "back-facing, distant, or stylized.\n"
         f"{other_person} appears as described in the panel action; no identity "
         "reference exists for this person — render consistently with the "
         "description, secondary to Embry in prominence.\n"

@@ -1,0 +1,49 @@
+{
+  "plan": {
+    "dream_synopsis": "Embry dreams of a Yale corridor that folds into a SPARTA review room, where every door is labeled POINT, PATH, or PEOPLE and every choice requires two signatures. She tries to offer Brandon one bounded truth, but the sentence keeps turning into a blank branch on a decision tree, while unsent drafts and a muted launch still hover like quiet witnesses.",
+    "panels": [
+      {
+        "action": "Embry looks down at the checklist, then up toward Brandon, silently rehearsing a bounded truth while the words 'promise,' 'privacy,' and 'do not expose' flicker across the page.",
+        "mood": "tense, restrained, intimate",
+        "panel_id": "sb_001",
+        "setting": "A dreamlike Yale hallway whose stone arches contain SPARTA-style glass status boards.",
+        "shot": "Close foreground shot of Embry, face fully visible, holding a POINT/PATH/PEOPLE checklist at chest height; Brandon stands just behind her shoulder, slightly out of focus.",
+        "start_frame_description": "Embry's face fills the foreground, uncertain but controlled; behind her, Brandon waits beside three branching doors labeled POINT, PATH, and PEOPLE.",
+        "time_range": "0.0-2.5s"
+      },
+      {
+        "action": "Embry slides a file halfway toward Brandon, then stops; the file splits into two written handoff forms, each demanding dual confirmation before it can move farther.",
+        "mood": "careful, procedural, conflicted",
+        "panel_id": "sb_002",
+        "setting": "A hybrid archive-review room with Yale shelves on one side and SPARTA succession folders on the other.",
+        "shot": "Medium foreground shot of Embry facing camera, face visible in the reflection of a transparent SPARTA file; Brandon sits across from her at a narrow review table.",
+        "start_frame_description": "Embry's visible reflection overlays the words 'SPARTA succession file' while Brandon watches her with patient concern across the table.",
+        "time_range": "2.5-5.0s"
+      },
+      {
+        "action": "Unsent drafts addressed to James and Kai drift past Embry's cheeks; she keeps her eyes on Brandon but cannot decide whether the blank branch means speak, wait, or preserve the boundary.",
+        "mood": "longing, suspended, uncertain",
+        "panel_id": "sb_003",
+        "setting": "A darkened mission-planning space where a muted SN15 still glows like a moon on the wall.",
+        "shot": "Tight foreground shot of Embry's face framed by floating unsent message windows; Brandon is visible at the edge of frame, reaching toward a blank decision-tree branch without touching it.",
+        "start_frame_description": "Embry stands in sharp foreground with her face lit by the muted SN15 still; the names James and Kai appear only as draft headers suspended in the air.",
+        "time_range": "5.0-7.5s"
+      },
+      {
+        "action": "Embry writes a single sentence on the blank branch: 'There was a promise I still do not know how to keep without harming someone.' The branch does not resolve, but it stops flickering.",
+        "mood": "fragile, honest, unresolved",
+        "panel_id": "sb_004",
+        "setting": "An impossible threshold where the Yale corridor, SPARTA review table, and mission checklist converge into one open doorway.",
+        "shot": "Centered close-up of Embry in the foreground, face fully visible, with Brandon beside her now in clearer focus; both look toward a branching path that remains partly blank.",
+        "start_frame_description": "Embry holds the pen in the foreground, her expression vulnerable but composed; Brandon stands close enough to witness without demanding the rest.",
+        "time_range": "7.5-10.0s"
+      }
+    ]
+  },
+  "tau_receipt": {
+    "route": null,
+    "model": "gpt-5.5",
+    "live": true,
+    "http_status": 200
+  }
+}
