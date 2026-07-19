@@ -81,16 +81,36 @@ def test_full_commit_writes_watch_vertices_and_manifest(monkeypatch):
     assert result["status"] == "LIVE_CANONICAL_PERSISTENCE"
     proof = result["canonical_write_proof"]
     assert proof["all_exact_reread_match"] is True
-    # Watch-evidence vertices materialized (Defect 3).
+    # Watch-evidence vertices materialized (Defect 3) with NAMESPACED keys (Defect 2).
+    _ns = lambda obs: p15.ns_watch_key("embry", "dream_successor_943b01ecd9a3", obs)
     assert set(proof["watch_vertex_keys"]) == {
-        "coverage_gap_00", "frame_0006", "frame_0007", "frame_0008", "frame_0009",
-        "identity_temporal_continuity_review", "visible_speaker_lipsync_window",
+        _ns(o) for o in (
+            "coverage_gap_00", "frame_0006", "frame_0007", "frame_0008", "frame_0009",
+            "identity_temporal_continuity_review", "visible_speaker_lipsync_window",
+        )
     }
     for vkey in proof["watch_vertex_keys"]:
+        assert vkey.startswith("dream:embry:dream_successor_943b01ecd9a3:watch:")
         assert (p15.WATCH_EVIDENCE_COLLECTION, vkey) in fake.store
         v = fake.store[(p15.WATCH_EVIDENCE_COLLECTION, vkey)]
         assert v["synthetic_origin"] is True
         assert v["psychological_interpretation_performed"] is False
+        # Causal-family lineage fields present (Defect 6).
+        assert v["visibility_state"] == "pending"
+        assert v["causal_family_id"].startswith("cf_")
+        assert v["commit_id"].startswith("commit_")
+    # Interpretation vertices materialized as the epistemic ladder middle rung (Defect 4).
+    assert proof["interpretation_vertex_keys"]
+    for ikey in proof["interpretation_vertex_keys"]:
+        assert ":interpretation:" in ikey
+        idoc = fake.store[(p15.INTERPRETATION_COLLECTION, ikey)]
+        assert idoc["statement"]
+        assert idoc["observation_refs"]
+        assert idoc["source_memory_refs"]
+    # Epistemic-ladder edges present: observation -> interpretation -> tom.
+    rels = {v.get("relationship_type") for (c, k), v in fake.store.items() if v.get("relationship_type")}
+    assert "grounds_interpretation" in rels
+    assert "supports_interpretation" in rels
     # Commit manifest is the single source of canonical visibility.
     manifest = proof["commit_manifest"]
     assert manifest["active"] is True
@@ -104,7 +124,7 @@ def test_full_commit_writes_watch_vertices_and_manifest(monkeypatch):
 
 def test_reread_mismatch_forces_not_written(monkeypatch):
     # Corrupt one published Watch vertex on store -> its reread hash won't match.
-    fake = FakeMemory(corrupt_key="frame_0007")
+    fake = FakeMemory(corrupt_key=p15.ns_watch_key("embry", "dream_successor_943b01ecd9a3", "frame_0007"))
     result = _run(monkeypatch, fake)
     assert result["canonical_write_allowed"] is True
     # Presence of a proof object is NOT proof.
@@ -117,6 +137,10 @@ def test_watch_vertices_cover_observed_edges(monkeypatch):
     interp = p13.read_json(INTERP)
     observed = set(p15.accepted_observed_ids(interp))
     vertices = p15.build_watch_evidence_vertices(
-        p13.read_json(ACCEPTED_PACKET), interp, "d", ACCEPTED_RETURN_ID, "sha256:adj"
+        p13.read_json(ACCEPTED_PACKET), interp, "d", ACCEPTED_RETURN_ID, "sha256:adj",
+        persona_id="embry",
     )
-    assert {v["_key"] for v in vertices} == observed
+    # The raw observation_id field covers exactly the observed edge targets...
+    assert {v["observation_id"] for v in vertices} == observed
+    # ...while the stored _key is namespaced (Defect 2).
+    assert {v["_key"] for v in vertices} == {p15.ns_watch_key("embry", "d", o) for o in observed}

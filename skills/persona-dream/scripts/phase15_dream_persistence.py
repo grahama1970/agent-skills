@@ -43,6 +43,39 @@ TOM_CANDIDATE_COLLECTION = "tom_candidates"
 # Immutable Watch-evidence vertices materialized so observed_in_scene edges
 # resolve to real documents (not dangling endpoints). Defect 3 fix.
 WATCH_EVIDENCE_COLLECTION = "persona_dream_watch_evidence"
+# Accepted phase-13 interpretation vertices (the epistemic ladder middle rung).
+# Defect 4 fix: materialize interpretations as first-class vertices so the
+# observation -> interpretation -> tom ladder resolves to real documents.
+INTERPRETATION_COLLECTION = "persona_dream_interpretations"
+
+# --------------------------------------------------------------------------- #
+# Key namespacing (Defect 2: freeze-old / namespace-new).                      #
+# dream-004's existing raw-key records are FROZEN; every NEW canonical write    #
+# uses a namespaced key so the two schemes never collide and lineage is legible #
+# in the key itself. Colons are valid ArangoDB _key characters.                 #
+#   dream node : dream:<persona_id>:<dream_id>                                   #
+#   watch      : dream:<persona_id>:<dream_id>:watch:<observation_id>           #
+#   interp     : dream:<persona_id>:<dream_id>:interpretation:<interpretation_id>#
+#   tom        : dream:<persona_id>:<dream_id>:tom:<candidate_id>               #
+# --------------------------------------------------------------------------- #
+def ns_prefix(persona_id: str, dream_id: str) -> str:
+    return f"dream:{persona_id}:{dream_id}"
+
+
+def ns_dream_key(persona_id: str, dream_id: str) -> str:
+    return ns_prefix(persona_id, dream_id)
+
+
+def ns_watch_key(persona_id: str, dream_id: str, observation_id: str) -> str:
+    return f"{ns_prefix(persona_id, dream_id)}:watch:{observation_id}"
+
+
+def ns_interpretation_key(persona_id: str, dream_id: str, interpretation_id: str) -> str:
+    return f"{ns_prefix(persona_id, dream_id)}:interpretation:{interpretation_id}"
+
+
+def ns_tom_key(persona_id: str, dream_id: str, candidate_id: str) -> str:
+    return f"{ns_prefix(persona_id, dream_id)}:tom:{candidate_id}"
 # Transactional staging + commit namespaces (retain-and-mark; no delete
 # primitive exists on the $memory API). Defect 2 fix.
 STAGING_COLLECTION = "persona_dream_canonical_staging"
@@ -171,6 +204,48 @@ def canonical_write_decision(
 
 
 # --------------------------------------------------------------------------- #
+# Causal-family / lineage fields (Defect 6, schema-shaping).                   #
+# Every NEW write-set record carries these fields, derived from the residue    #
+# source ids in the dream lineage. The GMO agent consumes this field contract; #
+# persona-dream only WRITES the fields (no GMO-side filtering here).           #
+# visibility_state stays "pending"; activation flips the commit manifest only. #
+# --------------------------------------------------------------------------- #
+def causal_family_id(persona_id: str, dream_id: str, root_event_ids: list[str]) -> str:
+    material = json.dumps(
+        {"persona_id": persona_id, "dream_id": dream_id, "root_event_ids": sorted(root_event_ids)},
+        sort_keys=True, separators=(",", ":"),
+    ).encode()
+    return f"cf_{hashlib.sha256(material).hexdigest()[:16]}"
+
+
+def build_causal_family_fields(
+    persona_id: str,
+    dream_id: str,
+    root_event_ids: list[str],
+    commit_id: str,
+    *,
+    derivation_depth: int = 1,
+    synthetic_depth: int = 1,
+) -> dict[str, Any]:
+    """Lineage fields shared with the Graph Memory Operator. root_event_ids are
+    the residue source-memory ids the dream derives from; a synthetic dream sits
+    one derivation hop above those real events (derivation_depth=1) and is one
+    synthetic layer deep (synthetic_depth=1). independent_evidence_count is the
+    count of distinct root events. visibility_state is 'pending' until the commit
+    manifest activates."""
+    roots = sorted({str(r) for r in root_event_ids if r})
+    return {
+        "root_event_ids": roots,
+        "causal_family_id": causal_family_id(persona_id, dream_id, roots),
+        "synthetic_depth": synthetic_depth,
+        "derivation_depth": derivation_depth,
+        "independent_evidence_count": len(roots),
+        "commit_id": commit_id,
+        "visibility_state": "pending",
+    }
+
+
+# --------------------------------------------------------------------------- #
 # Payload builders                                                            #
 # --------------------------------------------------------------------------- #
 def build_dream_memory_document(
@@ -182,14 +257,16 @@ def build_dream_memory_document(
     interpretation: dict[str, Any],
     tom: dict[str, Any],
     key_prefix: str = "",
+    dream_key: str | None = None,
+    causal_fields: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     accepted = interpretation.get("accepted_interpretations", [])
     tom_candidates = tom.get("accepted_tom_candidates", [])
     retrieval_text = " ".join(c.get("statement", "") for c in accepted).strip() or (
-        f"Synthetic dream of {persona_id} derived from the Kahalu'u surf memory residue."
+        f"Synthetic dream of {persona_id} derived from the grounded source-memory residue."
     )
-    return {
-        "_key": f"{key_prefix}dream_{dream_id}",
+    doc = {
+        "_key": dream_key or f"{key_prefix}dream_{dream_id}",
         "kind": "synthetic_dream_memory",
         "persona_id": persona_id,
         "synthetic_origin": True,
@@ -212,6 +289,9 @@ def build_dream_memory_document(
         },
         "created_at": utc_now(),
     }
+    if causal_fields:
+        doc.update(causal_fields)
+    return doc
 
 
 def build_graph_edges(
@@ -221,11 +301,28 @@ def build_graph_edges(
     dream_collection: str,
     edge_collection: str,
     tom_edge_collection: str,
+    causal_fields: dict[str, Any] | None = None,
+    namespaced_targets: bool = True,
 ) -> list[dict[str, Any]]:
+    """Dream-level relationship edges (README vocabulary). Targets point at
+    NAMESPACED vertices (Defect 2) except the frozen persona_memory source
+    anchors, which keep their raw keys. The epistemic-ladder edges
+    (observation -> interpretation -> tom) are added by build_ladder_edges."""
+    persona_id = dream_doc.get("persona_id", "")
+    dream_id = dream_doc.get("dream_id", "")
     dream_ref = f"{dream_collection}/{dream_doc['_key']}"
+    cf = causal_fields or {}
     edges: list[dict[str, Any]] = []
 
-    # dream --derived_from--> source memory
+    def _watch_target(obs_id: str) -> str:
+        key = ns_watch_key(persona_id, dream_id, obs_id) if namespaced_targets else obs_id
+        return f"{WATCH_EVIDENCE_COLLECTION}/{key}"
+
+    def _tom_target(cid: str) -> str:
+        key = ns_tom_key(persona_id, dream_id, cid) if namespaced_targets else str(cid)
+        return f"{TOM_CANDIDATE_COLLECTION}/{key}"
+
+    # dream --derived_from--> source memory (FROZEN raw anchor keys)
     for src in dream_doc.get("source_memory_ids", []):
         edges.append({
             "collection": edge_collection,
@@ -236,6 +333,7 @@ def build_graph_edges(
                 "relationship_type": "derived_from",
                 "synthetic_origin": True,
                 "literal_historical_event": False,
+                **cf,
             },
         })
 
@@ -249,10 +347,11 @@ def build_graph_edges(
             "document": {
                 "_key": f"{dream_doc['_key']}__observed_in_scene__{obs_id}",
                 "_from": dream_ref,
-                "_to": f"persona_dream_watch_evidence/{obs_id}",
+                "_to": _watch_target(obs_id),
                 "relationship_type": "observed_in_scene",
                 "watch_observation_id": obs_id,
                 "synthetic_origin": True,
+                **cf,
             },
         })
 
@@ -264,13 +363,123 @@ def build_graph_edges(
             "document": {
                 "_key": f"{dream_doc['_key']}__supports_interpretation__{cid}",
                 "_from": dream_ref,
-                "_to": f"tom_candidates/{cid}",
+                "_to": _tom_target(cid),
                 "relationship_type": "supports_interpretation",
                 "tom_state_type": c.get("tom_state_type"),
                 "confidence": c.get("confidence"),
                 "emotional_intensity": c.get("emotional_intensity"),
                 "synthetic_origin": True,
                 "literal_historical_event": False,
+                **cf,
+            },
+        })
+    return edges
+
+
+# --------------------------------------------------------------------------- #
+# Interpretation vertices + epistemic-ladder edges (Defect 4).                 #
+# --------------------------------------------------------------------------- #
+def build_interpretation_vertices(
+    interpretation: dict[str, Any],
+    persona_id: str,
+    dream_id: str,
+    causal_fields: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    """Materialize each accepted phase-13 interpretation as a first-class vertex
+    (namespaced key). Carries the full statement, confidence, uncertainty, the
+    renderer (alternative) explanation, and the observation + source-memory
+    citation ids - the middle rung of the observation -> interpretation -> tom
+    epistemic ladder."""
+    cf = causal_fields or {}
+    vertices: list[dict[str, Any]] = []
+    for c in interpretation.get("accepted_interpretations", []):
+        interp_id = c.get("interpretation_id")
+        if not interp_id:
+            continue
+        doc = {
+            "_key": ns_interpretation_key(persona_id, dream_id, interp_id),
+            "kind": "persona_dream_interpretation",
+            "persona_id": persona_id,
+            "dream_id": dream_id,
+            "interpretation_id": interp_id,
+            "tom_state_type": c.get("tom_state_type"),
+            "subject": c.get("subject"),
+            "target": c.get("target"),
+            "statement": c.get("statement"),
+            "confidence": c.get("confidence"),
+            "uncertainty": c.get("uncertainty"),
+            "emotional_intensity": c.get("emotional_intensity"),
+            "renderer_alternative": c.get("alternative_explanation"),
+            "favored_explanation": c.get("favored_explanation"),
+            "cites_renderer_review": c.get("cites_renderer_review"),
+            "observation_refs": list(c.get("observation_refs", [])),
+            "source_memory_refs": list(c.get("source_memory_refs", [])),
+            "synthetic_origin": True,
+            "literal_historical_event": False,
+            **cf,
+        }
+        vertices.append(doc)
+    return vertices
+
+
+def build_ladder_edges(
+    interpretation: dict[str, Any],
+    tom: dict[str, Any],
+    persona_id: str,
+    dream_id: str,
+    causal_fields: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    """The epistemic ladder (Defect 4): observation --grounds_interpretation-->
+    interpretation --supports_interpretation--> tom. Preserves (does not replace)
+    the dream-level edges built by build_graph_edges. Every endpoint is a
+    namespaced vertex."""
+    cf = causal_fields or {}
+    edges: list[dict[str, Any]] = []
+    interp_by_id = {c.get("interpretation_id"): c for c in interpretation.get("accepted_interpretations", [])}
+
+    # observation --grounds_interpretation--> interpretation
+    for interp_id, c in interp_by_id.items():
+        if not interp_id:
+            continue
+        interp_ref = f"{INTERPRETATION_COLLECTION}/{ns_interpretation_key(persona_id, dream_id, interp_id)}"
+        for obs_id in sorted(set(c.get("observation_refs", []))):
+            watch_ref = f"{WATCH_EVIDENCE_COLLECTION}/{ns_watch_key(persona_id, dream_id, obs_id)}"
+            edges.append({
+                "collection": CANONICAL_EDGE_COLLECTION,
+                "document": {
+                    "_key": f"{ns_watch_key(persona_id, dream_id, obs_id)}__grounds_interpretation__{interp_id}",
+                    "_from": watch_ref,
+                    "_to": interp_ref,
+                    "relationship_type": "grounds_interpretation",
+                    "watch_observation_id": obs_id,
+                    "interpretation_id": interp_id,
+                    "synthetic_origin": True,
+                    **cf,
+                },
+            })
+
+    # interpretation --supports_interpretation--> tom candidate
+    for cand in tom.get("accepted_tom_candidates", []):
+        cid = cand.get("candidate_id")
+        parent = cand.get("parent_interpretation_id")
+        if not cid or not parent or parent not in interp_by_id:
+            continue
+        interp_ref = f"{INTERPRETATION_COLLECTION}/{ns_interpretation_key(persona_id, dream_id, parent)}"
+        tom_ref = f"{TOM_CANDIDATE_COLLECTION}/{ns_tom_key(persona_id, dream_id, cid)}"
+        edges.append({
+            "collection": CANONICAL_TOM_EDGE_COLLECTION,
+            "document": {
+                "_key": f"{ns_interpretation_key(persona_id, dream_id, parent)}__supports_interpretation__{cid}",
+                "_from": interp_ref,
+                "_to": tom_ref,
+                "relationship_type": "supports_interpretation",
+                "interpretation_id": parent,
+                "tom_candidate_id": cid,
+                "tom_state_type": cand.get("tom_state_type"),
+                "confidence": cand.get("confidence"),
+                "synthetic_origin": True,
+                "literal_historical_event": False,
+                **cf,
             },
         })
     return edges
@@ -294,6 +503,8 @@ def build_watch_evidence_vertices(
     dream_id: str,
     return_id: str | None,
     adjudication_receipt_sha256: str | None,
+    persona_id: str = "",
+    causal_fields: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     """Materialize immutable persona_dream_watch_evidence vertices for every
     observed_in_scene target, sourced from the observation packet + the phase13
@@ -346,10 +557,12 @@ def build_watch_evidence_vertices(
                     evidence_artifacts.append({"path": f["path"], "sha256": f.get("sha256")})
         # coverage_gap and any other type: statement-only evidence.
 
-        vertices.append({
-            "_key": obs_id,
+        vertex = {
+            "_key": ns_watch_key(persona_id, dream_id, obs_id),
             "kind": "persona_dream_watch_evidence",
+            "persona_id": persona_id,
             "dream_id": dream_id,
+            "observation_id": obs_id,
             "return_id": return_id,
             "source_video_sha256": source_video_sha256,
             "observation_type": obs_type,
@@ -360,7 +573,10 @@ def build_watch_evidence_vertices(
             "adjudication_receipt_sha256": adjudication_receipt_sha256,
             "synthetic_origin": True,
             "psychological_interpretation_performed": False,
-        })
+        }
+        if causal_fields:
+            vertex.update(causal_fields)
+        vertices.append(vertex)
     return vertices
 
 
@@ -455,10 +671,17 @@ def build_write_set(
     interpretation: dict[str, Any],
     tom: dict[str, Any],
     watch_vertices: list[dict[str, Any]],
+    interpretation_vertices: list[dict[str, Any]] | None = None,
+    causal_fields: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     """Ordered, deterministic canonical write-set: dream node, ToM nodes, Watch
-    evidence vertices, then every graph edge. Each entry is
-    {collection, document, kind}."""
+    evidence vertices, interpretation vertices (Defect 4), then every graph edge
+    (dream-level edges + the observation->interpretation->tom ladder). Each entry
+    is {collection, document, kind}. All NEW records use namespaced keys and
+    carry the causal-family fields (Defect 2 + Defect 6)."""
+    persona_id = dream_doc.get("persona_id", "")
+    dream_id = dream_doc.get("dream_id", "")
+    interpretation_vertices = interpretation_vertices or []
     ws: list[dict[str, Any]] = [
         {"collection": CANONICAL_DREAM_COLLECTION, "document": dream_doc, "kind": "dream_node"},
     ]
@@ -466,14 +689,27 @@ def build_write_set(
         cid = cand.get("candidate_id")
         if not cid:
             continue
-        cand_doc = {**cand, "_key": str(cid), "synthetic_origin": True, "literal_historical_event": False}
+        cand_doc = {
+            **cand,
+            "_key": ns_tom_key(persona_id, dream_id, cid),
+            "candidate_id": cid,
+            "synthetic_origin": True,
+            "literal_historical_event": False,
+        }
+        if causal_fields:
+            cand_doc.update(causal_fields)
         ws.append({"collection": TOM_CANDIDATE_COLLECTION, "document": cand_doc, "kind": "tom_node"})
+    for v in interpretation_vertices:
+        ws.append({"collection": INTERPRETATION_COLLECTION, "document": v, "kind": "interpretation_vertex"})
     for v in watch_vertices:
         ws.append({"collection": WATCH_EVIDENCE_COLLECTION, "document": v, "kind": "watch_vertex"})
     for e in build_graph_edges(
         dream_doc, interpretation, tom,
         CANONICAL_DREAM_COLLECTION, CANONICAL_EDGE_COLLECTION, CANONICAL_TOM_EDGE_COLLECTION,
+        causal_fields=causal_fields,
     ):
+        ws.append({"collection": e["collection"], "document": e["document"], "kind": "edge"})
+    for e in build_ladder_edges(interpretation, tom, persona_id, dream_id, causal_fields=causal_fields):
         ws.append({"collection": e["collection"], "document": e["document"], "kind": "edge"})
     return ws
 
@@ -609,6 +845,8 @@ def persist_canonical(
     packet: dict[str, Any],
     phase13_sha: str,
     phase14_sha: str,
+    interpretation_vertices: list[dict[str, Any]] | None = None,
+    causal_fields: dict[str, Any] | None = None,
     retroactive: bool = False,
     justification: str | None = None,
 ) -> dict[str, Any]:
@@ -627,7 +865,10 @@ def persist_canonical(
     commit manifest absent/inactive, so nothing is treated as canonically
     visible."""
     idempotency_key = compute_idempotency_key(dream_id, return_id, packet, phase13_sha, phase14_sha)
-    write_set = build_write_set(dream_doc, interpretation, tom, watch_vertices)
+    write_set = build_write_set(
+        dream_doc, interpretation, tom, watch_vertices,
+        interpretation_vertices=interpretation_vertices, causal_fields=causal_fields,
+    )
     expected_count = len(write_set)
 
     # --- Detect-and-quarantine on rerun -----------------------------------
@@ -679,6 +920,7 @@ def persist_canonical(
     node_receipts: list[dict[str, Any]] = []
     edge_receipts: list[dict[str, Any]] = []
     watch_receipts: list[dict[str, Any]] = []
+    interpretation_receipts: list[dict[str, Any]] = []
     commit_manifest: dict[str, Any] | None = None
     all_publish_receipts: list[dict[str, Any]] = []
 
@@ -691,6 +933,8 @@ def persist_canonical(
                 edge_receipts.append(r)
             elif entry["kind"] == "watch_vertex":
                 watch_receipts.append(r)
+            elif entry["kind"] == "interpretation_vertex":
+                interpretation_receipts.append(r)
             else:
                 node_receipts.append(r)
 
@@ -715,10 +959,15 @@ def persist_canonical(
         "node_keys": [r["key"] for r in node_receipts],
         "edge_keys": [r["key"] for r in edge_receipts],
         "watch_vertex_keys": [r["key"] for r in watch_receipts],
-        "tom_node_keys": [str(c.get("candidate_id")) for c in tom.get("accepted_tom_candidates", []) if c.get("candidate_id")],
+        "interpretation_vertex_keys": [r["key"] for r in interpretation_receipts],
+        "tom_node_keys": [
+            ns_tom_key(dream_doc.get("persona_id", ""), dream_id, c.get("candidate_id"))
+            for c in tom.get("accepted_tom_candidates", []) if c.get("candidate_id")
+        ],
         "node_receipts": node_receipts,
         "edge_receipts": edge_receipts,
         "watch_vertex_receipts": watch_receipts,
+        "interpretation_vertex_receipts": interpretation_receipts,
         "staging_proof": staging_proof,
         "commit_manifest": commit_manifest,
     }
@@ -786,21 +1035,42 @@ def run_phase15(
     phase13_sha = canonical_sha(interpretation)
     phase14_sha = canonical_sha(tom)
 
+    # Deterministic write-set identity + commit id (Defect 6 commit_id).
+    idempotency_key = compute_idempotency_key(dream_id, return_id, packet, phase13_sha, phase14_sha)
+    commit_id = f"commit_{idempotency_key}"
+
+    # Causal-family / lineage fields (Defect 6): root events are the residue
+    # source-memory ids the dream derives from.
+    root_event_ids = sorted({
+        str(b.get("source_id")) for b in interpretation.get("source_memory_bindings", []) if b.get("source_id")
+    })
+    causal_fields = build_causal_family_fields(persona_id, dream_id, root_event_ids, commit_id)
+
     # tau step-36 adjudication receipt hash for Watch-evidence provenance.
     adjudication_receipt_sha256 = None
     if acceptance_receipt is not None:
         adjudication_receipt_sha256 = canonical_sha(acceptance_receipt)
 
     # Canonical plan (dry-run) - exact would-write payloads + hashes, zero writes.
+    # NEW records use namespaced keys (Defect 2) and carry causal_fields (Defect 6).
     canonical_doc = build_dream_memory_document(
-        dream_id, revision_id, run_id, persona_id, packet, interpretation, tom
+        dream_id, revision_id, run_id, persona_id, packet, interpretation, tom,
+        dream_key=ns_dream_key(persona_id, dream_id), causal_fields=causal_fields,
+    )
+    interpretation_vertices = build_interpretation_vertices(
+        interpretation, persona_id, dream_id, causal_fields=causal_fields
     )
     canonical_edges = build_graph_edges(
         canonical_doc, interpretation, tom,
         CANONICAL_DREAM_COLLECTION, CANONICAL_EDGE_COLLECTION, CANONICAL_TOM_EDGE_COLLECTION,
+        causal_fields=causal_fields,
+    )
+    ladder_edges = build_ladder_edges(
+        interpretation, tom, persona_id, dream_id, causal_fields=causal_fields
     )
     watch_vertices = build_watch_evidence_vertices(
-        packet, interpretation, dream_id, return_id, adjudication_receipt_sha256
+        packet, interpretation, dream_id, return_id, adjudication_receipt_sha256,
+        persona_id=persona_id, causal_fields=causal_fields,
     )
     canonical_plan = {
         "dream_memory_document": {
@@ -808,15 +1078,27 @@ def run_phase15(
             "document": canonical_doc,
             "payload_sha256": canonical_sha(canonical_doc),
         },
+        "interpretation_vertices": [
+            {"collection": INTERPRETATION_COLLECTION, "document": v, "payload_sha256": canonical_sha(v)}
+            for v in interpretation_vertices
+        ],
         "watch_evidence_vertices": [
             {"collection": WATCH_EVIDENCE_COLLECTION, "document": v, "payload_sha256": canonical_sha(v)}
             for v in watch_vertices
         ],
         "graph_edges": [
             {"collection": e["collection"], "document": e["document"], "payload_sha256": canonical_sha(e["document"])}
-            for e in canonical_edges
+            for e in (canonical_edges + ladder_edges)
         ],
-        "idempotency_key": compute_idempotency_key(dream_id, return_id, packet, phase13_sha, phase14_sha),
+        "key_namespace_policy": {
+            "policy": "freeze-old/namespace-new",
+            "dream_key": canonical_doc["_key"],
+            "namespace_prefix": ns_prefix(persona_id, dream_id),
+            "legacy_raw_keys_frozen": True,
+        },
+        "causal_family_fields": causal_fields,
+        "idempotency_key": idempotency_key,
+        "commit_id": commit_id,
         "phase13_sha256": phase13_sha,
         "phase14_sha256": phase14_sha,
         "qdrant_embedding": {
@@ -836,6 +1118,7 @@ def run_phase15(
             canonical_doc, interpretation, tom, watch_vertices, base_url,
             dream_id=dream_id, return_id=return_id, packet=packet,
             phase13_sha=phase13_sha, phase14_sha=phase14_sha,
+            interpretation_vertices=interpretation_vertices, causal_fields=causal_fields,
         )
         canonical_writes_performed = canonical_write_proof["records_written"]
         # CORRECTNESS gate (Defect 2): presence of a proof object is NOT proof.
