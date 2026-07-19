@@ -10,20 +10,25 @@ into a narrative with identified speaking characters and target duration.
 from __future__ import annotations
 
 import argparse
+import importlib.util as _ilu
 import json
-import os
 import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-import httpx
+# Route model inference through the sanctioned Tau text-reasoning node
+# (only /tau may reach /scillm); no direct scillm POST here.
+_ADAPTER_PATH = Path(__file__).resolve().parents[2] / "scripts" / "tau_text_reasoning_adapter.py"
+_aspec = _ilu.spec_from_file_location("tau_text_reasoning_adapter", _ADAPTER_PATH)
+assert _aspec and _aspec.loader
+tau_adapter = _ilu.module_from_spec(_aspec)
+_aspec.loader.exec_module(tau_adapter)
 
 
 SCHEMA = "persona_dream.story_contract.v1"
-SCILLM_URL = os.environ.get("SCILLM_URL", "http://127.0.0.1:4001")
-SCILLM_KEY = os.environ.get("SCILLM_KEY", "sk-dev-proxy-123")
+_STORY_OUTPUT_CONTRACT = {"story": "str"}
 
 
 def now_iso() -> str:
@@ -114,26 +119,24 @@ def synthesize_story(
 ) -> str:
     """Call scillm to synthesize a story from the idea and memory residue."""
     prompt = _build_story_prompt(idea, residue_texts, persona_ids)
+    prompt = (
+        prompt
+        + '\n\nReturn ONLY a JSON object of the form {"story": "<the full story text>"} and nothing else.'
+    )
     try:
-        response = httpx.post(
-            f"{SCILLM_URL.rstrip('/')}/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {SCILLM_KEY}",
-                "X-Caller-Skill": "persona-dream-s03-story",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model": model,
-                "messages": [{"role": "user", "content": prompt}],
-                "temperature": 0.8,
-            },
-            timeout=timeout,
+        # Route through Tau (only /tau may reach /scillm). The node DRAFTS the
+        # story as a JSON object; code below extracts the story text.
+        parsed, _receipt = tau_adapter.dispatch_text_reasoning(
+            prompt,
+            role="persona-dream-s03-story",
+            output_contract=_STORY_OUTPUT_CONTRACT,
+            caller_skill="persona-dream-s03-story",
+            model=model,
+            timeout_s=timeout,
         )
-        response.raise_for_status()
-        body = response.json()
-        content = body["choices"][0]["message"]["content"].strip()
-        if content.startswith("```"):
-            content = content.split("\n", 1)[1].rsplit("\n```", 1)[0]
+        content = (parsed or {}).get("story", "").strip() if isinstance(parsed, dict) else ""
+        if not content:
+            raise ValueError("Tau text node returned no story text")
         return content
     except Exception as exc:
         print(f"scillm call failed: {exc}", file=sys.stderr)

@@ -18,12 +18,25 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+import importlib.util as _ilu
+
 import httpx
 
-SCILLM_URL = os.environ.get("SCILLM_URL", "http://127.0.0.1:4001")
-SCILLM_KEY = os.environ.get("SCILLM_KEY", "sk-dev-proxy-123")
+# Model inference is routed through the sanctioned Tau text-reasoning node
+# (only /tau may reach /scillm). httpx is retained only for the local /memory
+# recall service below, not for scillm.
+_ADAPTER_PATH = Path(__file__).resolve().parents[1] / "scripts" / "tau_text_reasoning_adapter.py"
+_aspec = _ilu.spec_from_file_location("tau_text_reasoning_adapter", _ADAPTER_PATH)
+assert _aspec and _aspec.loader
+tau_adapter = _ilu.module_from_spec(_aspec)
+_aspec.loader.exec_module(tau_adapter)
+
 MEMORY_URL = os.environ.get("MEMORY_URL", "http://127.0.0.1:8601")
 TEACHER_MODEL = "opencode-go/deepseek-v4-flash"
+_ANNOTATION_OUTPUT_CONTRACT = {
+    "tom_kind": "str", "affect": "str", "intensity": "str",
+    "source_quote": "str", "confidence": "float", "abstain": "bool",
+}
 
 TOM_KIND_VALUES = {"emotion", "belief", "goal", "preference", "boundary", "relationship", "knowledge_gap", "unresolved_thread"}
 AFFECT_VALUES = {"angry", "sad", "anxious", "confused", "happy", "neutral"}
@@ -105,27 +118,17 @@ def annotate_one(item: dict[str, Any], *, timeout: float = 60.0) -> dict[str, An
     prompt = build_annotation_prompt(item)
 
     try:
-        with httpx.Client(base_url=SCILLM_URL.rstrip("/"), timeout=timeout) as client:
-            resp = client.post("/v1/chat/completions", headers={
-                "Authorization": f"Bearer {SCILLM_KEY}",
-                "X-Caller-Skill": "model-trainer-tom-lite",
-                "Content-Type": "application/json",
-            }, json={
-                "model": TEACHER_MODEL,
-                "messages": [{"role": "user", "content": prompt}],
-                "temperature": 0.1,
-            })
-            resp.raise_for_status()
-            body = resp.json()
-            content = body["choices"][0]["message"]["content"].strip()
-
-        # Extract JSON
-        if "```json" in content:
-            content = content.split("```json")[1].split("```")[0]
-        elif "```" in content:
-            content = content.split("```")[1].split("```")[0]
-
-        parsed = json.loads(content.strip())
+        # Route through Tau (only /tau may reach /scillm); returns parsed JSON.
+        parsed, _receipt = tau_adapter.dispatch_text_reasoning(
+            prompt,
+            role="model-trainer-tom-lite",
+            output_contract=_ANNOTATION_OUTPUT_CONTRACT,
+            caller_skill="model-trainer-tom-lite",
+            model=TEACHER_MODEL,
+            timeout_s=timeout,
+        )
+        if not isinstance(parsed, dict):
+            raise ValueError("Tau text node returned no annotation JSON")
         return parsed
     except Exception as exc:
         return {"error": str(exc), "record_key": item.get("_key", "")}

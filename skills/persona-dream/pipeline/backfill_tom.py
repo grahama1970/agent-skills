@@ -13,19 +13,32 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import importlib.util as _ilu
 import json
 import os
 import sys
 import time
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 import httpx
 
+# Scillm inference is routed through the sanctioned Tau text-reasoning node
+# (only /tau may reach /scillm). httpx below is used for the external Chutes
+# provider (allowed) and the local ArangoDB service, never for scillm.
+_ADAPTER_PATH = Path(__file__).resolve().parents[1] / "scripts" / "tau_text_reasoning_adapter.py"
+_aspec = _ilu.spec_from_file_location("tau_text_reasoning_adapter", _ADAPTER_PATH)
+assert _aspec and _aspec.loader
+tau_adapter = _ilu.module_from_spec(_aspec)
+_aspec.loader.exec_module(tau_adapter)
+
+_BACKFILL_OUTPUT_CONTRACT = {
+    "annotations": "list[{tom_kind,affect,intensity,source_quote,confidence,abstain}]"
+}
+
 
 # --- Config ---
-SCILLM_URL = os.environ.get("SCILLM_URL", "http://127.0.0.1:4001")
-SCILLM_KEY = os.environ.get("SCILLM_KEY", "sk-dev-proxy-123")
 CHUTES_URL = os.environ.get("CHUTES_URL", "https://llm.chutes.ai/v1/chat/completions")
 CHUTES_KEY = os.environ.get("CHUTES_API_KEY") or os.environ.get("CHUTES_API_TOKEN", "")
 ARANGO_URL = os.environ.get("ARANGO_URL", "http://127.0.0.1:8529")
@@ -131,57 +144,76 @@ async def annotate_batch(
     keys = [r.get("_key", "") for r in batch]
     prompt = _build_batch_prompt(batch)
 
-    api_url = CHUTES_URL if use_chutes else f"{SCILLM_URL.rstrip('/')}/v1/chat/completions"
-    api_key = CHUTES_KEY if use_chutes else SCILLM_KEY
-    api_skill = "persona-memory-tom-backfill" if not use_chutes else None
+    def _error_out(reason: str) -> list[dict[str, Any]]:
+        print(f"  ERROR: {reason}", flush=True)
+        return [{"_key": key, "error": reason, "abstain": True} for key in keys]
 
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-    }
-    if api_skill:
-        headers["X-Caller-Skill"] = api_skill
+    if use_chutes:
+        # External Chutes provider (allowed; not scillm). Unchanged transport.
+        headers = {
+            "Authorization": f"Bearer {CHUTES_KEY}",
+            "Content-Type": "application/json",
+        }
+        async with sem:
+            try:
+                resp = await client.post(
+                    CHUTES_URL,
+                    headers=headers,
+                    json={
+                        "model": BATCH_MODEL,
+                        "messages": [{"role": "user", "content": prompt}],
+                        "temperature": 0.1,
+                        "max_tokens": 4000,
+                    },
+                    timeout=180.0,
+                )
+                resp.raise_for_status()
+                body = resp.json()
+                content = body["choices"][0]["message"]["content"].strip()
+            except Exception as exc:
+                return _error_out(str(exc))
 
-    async with sem:
+        # Parse JSON array from the Chutes response.
+        if "```json" in content:
+            content = content.split("```json")[1].split("```")[0]
+        elif "```" in content:
+            content = content.split("```")[1].split("```")[0]
+        content = content.strip()
         try:
-            resp = await client.post(
-                api_url,
-                headers=headers,
-                json={
-                    "model": BATCH_MODEL,
-                    "messages": [{"role": "user", "content": prompt}],
-                    "temperature": 0.1,
-                    "max_tokens": 4000,
-                },
-                timeout=180.0,
-            )
-            resp.raise_for_status()
-            body = resp.json()
-            content = body["choices"][0]["message"]["content"].strip()
-        except Exception as exc:
-            print(f"  ERROR: {exc}", flush=True)
-            out: list[dict[str, Any]] = []
-            for key in keys:
-                out.append({"_key": key, "error": str(exc), "abstain": True})
-            return out
-
-    # Parse JSON from response
-    if "```json" in content:
-        content = content.split("```json")[1].split("```")[0]
-    elif "```" in content:
-        content = content.split("```")[1].split("```")[0]
-    content = content.strip()
-
-    try:
-        annotations = json.loads(content)
+            annotations = json.loads(content)
+            if not isinstance(annotations, list):
+                annotations = [annotations]
+        except json.JSONDecodeError as exc:
+            return _error_out(f"json_parse:{exc}")
+    else:
+        # Route scillm inference through Tau (only /tau may reach /scillm). The
+        # Tau text node returns a single JSON OBJECT, so wrap the batch as
+        # {"annotations": [...]} and unwrap it here. The adapter is synchronous
+        # (subprocesses Tau) so run it off the event loop.
+        tau_prompt = (
+            prompt
+            + '\n\nReturn ONLY a JSON object of the form {"annotations": [ ... ]} where the '
+            '"annotations" array holds exactly one annotation object per record, in the same '
+            "order as the records above. Emit no text outside the JSON object."
+        )
+        async with sem:
+            try:
+                parsed, _receipt = await asyncio.to_thread(
+                    tau_adapter.dispatch_text_reasoning,
+                    tau_prompt,
+                    "persona-memory-tom-backfill",
+                    output_contract=_BACKFILL_OUTPUT_CONTRACT,
+                    caller_skill="persona-memory-tom-backfill",
+                    model=BATCH_MODEL,
+                    timeout_s=180.0,
+                )
+            except Exception as exc:
+                return _error_out(str(exc))
+        if not isinstance(parsed, dict):
+            return _error_out("tau_no_json_object")
+        annotations = parsed.get("annotations", [])
         if not isinstance(annotations, list):
             annotations = [annotations]
-    except json.JSONDecodeError as exc:
-        print(f"  JSON parse error: {exc}", flush=True)
-        out = []
-        for key in keys:
-            out.append({"_key": key, "error": f"json_parse:{exc}", "abstain": True})
-        return out
 
     # Pair annotations with keys — handle mismatched lengths
     results: list[dict[str, Any]] = []

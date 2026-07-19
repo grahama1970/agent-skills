@@ -1,14 +1,24 @@
-"""Synthesize dream narratives from jumbled memory/code/event chunks via scillm."""
+"""Synthesize dream narratives from jumbled memory/code/event chunks.
+
+Model inference is routed through the sanctioned Tau text-reasoning node
+(``tau_text_reasoning_adapter``); this module never POSTs to scillm directly
+(operator rule: only /tau may reach /scillm).
+"""
 from __future__ import annotations
 
-import json
-import os
-from typing import Any
+import importlib.util as _ilu
+from pathlib import Path
 
-import httpx
+# Load the sanctioned persona-dream -> Tau text-reasoning adapter by file path so
+# this works whether the module is imported as a package or run standalone.
+_ADAPTER_PATH = Path(__file__).resolve().parents[2] / "scripts" / "tau_text_reasoning_adapter.py"
+_aspec = _ilu.spec_from_file_location("tau_text_reasoning_adapter", _ADAPTER_PATH)
+assert _aspec and _aspec.loader
+tau_adapter = _ilu.module_from_spec(_aspec)
+_aspec.loader.exec_module(tau_adapter)
 
-SCILLM_URL = os.environ.get("SCILLM_URL", "http://127.0.0.1:4001")
-SCILLM_KEY = os.environ.get("SCILLM_KEY", "sk-dev-proxy-123")
+# Caller-defined JSON output contract (hash-recorded by the Tau node).
+_DREAM_OUTPUT_CONTRACT = {"dream": "str"}
 
 
 def _build_synthesis_prompt(
@@ -25,6 +35,7 @@ def _build_synthesis_prompt(
         "- Weave ALL the following material into one dream scene. Do not summarize or list them — blend them.",
         "- The tone should be dreamlike: visual, sensory, slightly disorienting, mixing the significant with the mundane.",
         "- Keep it under 200 words. Do not use bullet points. Do not say 'this dream is about'. Just describe the dream.",
+        '- Return ONLY a JSON object of the form {"dream": "<the dream paragraph>"} and nothing else.',
     ]
 
     if about:
@@ -58,26 +69,18 @@ def synthesize_dream(
     prompt = _build_synthesis_prompt(persona_id, dominant_text, supporting_texts, about)
 
     try:
-        response = httpx.post(
-            f"{SCILLM_URL.rstrip('/')}/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {SCILLM_KEY}",
-                "X-Caller-Skill": "persona-dream-s01-idea",
-                "Content-Type": "application/json",
-            },
-            json={
-                "model": "gpt-5.5",
-                "messages": [{"role": "user", "content": prompt}],
-                "temperature": 0.8,  # Higher temp for creative dream generation
-            },
-            timeout=timeout,
+        # Route through Tau (only /tau may reach /scillm). The node DRAFTS the
+        # dream text as a JSON object; code below extracts the paragraph.
+        parsed, _receipt = tau_adapter.dispatch_text_reasoning(
+            prompt,
+            role="persona-dream-s01-dream-synthesis",
+            output_contract=_DREAM_OUTPUT_CONTRACT,
+            caller_skill="persona-dream-s01-idea",
+            timeout_s=timeout,
         )
-        response.raise_for_status()
-        body = response.json()
-        content = body["choices"][0]["message"]["content"].strip()
-        # Strip any markdown formatting
-        if content.startswith("```"):
-            content = content.split("\n", 1)[1].rsplit("\n```", 1)[0]
+        content = (parsed or {}).get("dream", "").strip() if isinstance(parsed, dict) else ""
+        if not content:
+            raise ValueError("Tau text node returned no dream text")
         return content
     except Exception as exc:
         # Fail closed: return a raw jumble so the pipeline can continue

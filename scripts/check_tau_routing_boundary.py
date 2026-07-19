@@ -124,17 +124,6 @@ TEMPORARY_DEBT: dict[str, str] = {
     "skills/watch/scripts/config.py":
         "TEMPORARY_DEBT: defines WATCH_SCILLM_API_BASE / proxy-key that authorize qra.py's direct call. "
         "Retire when qra.py routes through Tau. P1 routing boundary.",
-    # --- persona-dream ToM / idea / story text pipeline ---
-    "skills/persona-dream/pipeline/s01a_tom_annotation.py":
-        "TEMPORARY_DEBT: ToM annotation POSTs /v1/chat/completions to scillm; migrate to tau_text_reasoning_adapter. P1.",
-    "skills/persona-dream/pipeline/s01_idea/dream_synthesis.py":
-        "TEMPORARY_DEBT: dream synthesis POSTs to scillm; migrate to tau_text_reasoning_adapter. P1.",
-    "skills/persona-dream/pipeline/s01_idea/selector.py":
-        "TEMPORARY_DEBT: idea selector POSTs to scillm; migrate to tau_text_reasoning_adapter. P1.",
-    "skills/persona-dream/pipeline/s03_story/story.py":
-        "TEMPORARY_DEBT: story generation POSTs to scillm; migrate to tau_text_reasoning_adapter. P1.",
-    "skills/persona-dream/pipeline/backfill_tom.py":
-        "TEMPORARY_DEBT: backfill posts to scillm (or Chutes); migrate scillm branch to tau_text_reasoning_adapter. P1.",
     # --- persona-dream image / VLM review ---
     "skills/persona-dream/scripts/phase_c_regenerate_storyboard_frames.py":
         "TEMPORARY_DEBT: _post_scillm() image-review VLM call (used by lane_c waiver); needs frame-shaped Tau VLM node. P1.",
