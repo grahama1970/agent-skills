@@ -1,0 +1,16 @@
+{
+  "actual_provider_call_attempts": 0,
+  "details": {
+    "artifact_id": "sb_001.start_frame",
+    "indexed": "sha256:135564cad9c40718322e9f13d347b6829ecbd9ab2197cbddc70262deb72e227d",
+    "locked": "sha256:bbd7a63110b1c42af94e682ae93bf055bbe1c84e48468b3470a2032db70d09bb"
+  },
+  "gate_status": "BLOCKED_PROVIDER_GATE",
+  "live_submit_ready": false,
+  "paid_call_authorized": false,
+  "provider_live": false,
+  "provider_ready": false,
+  "schema": "persona_dream.phase11_payload_binding_bootstrap_receipt.v1",
+  "status": "BLOCKED_PHASE11_MEDIA_LOCK_HASH",
+  "submitted": false
+}

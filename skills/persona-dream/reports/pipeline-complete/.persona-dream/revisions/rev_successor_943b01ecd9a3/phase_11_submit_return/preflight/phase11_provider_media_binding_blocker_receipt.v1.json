@@ -1,0 +1,81 @@
+{
+  "schema": "persona_dream.phase11_provider_media_binding_blocker_receipt.v1",
+  "status": "BLOCKED_PHASE11_PROVIDER_MEDIA_BINDING_STALE_MEDIA_LOCK",
+  "gate_code": "BLOCKED_PHASE11_MEDIA_LOCK_HASH",
+  "run_id": "pipeline-complete",
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "activation_transaction_id": "activation-6af927d42079c11827d27b1b998f247d",
+  "observed_at_note": "See memory record observed_at; this receipt is deterministic and clock-free.",
+  "goal_steps_blocked": [21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35],
+  "summary": "The Phase 11 provider-media binding cannot be built for the ACTIVE successor revision because the phase_08 media lock is STALE relative to the accepted, identity-certified successor frames. The pipeline's own zero-call payload-binding bootstrap fails closed with BLOCKED_PHASE11_MEDIA_LOCK_HASH: the revision artifact index binds the accepted phase_c_successor_regen frame for each start panel, but phase_08_media_lock/storyboard_media_lock_manifest.json still locks the predecessor-identical frames (and points at wrong-worktree, non-revision-scoped paths). Compile -> provider final gate -> paid authorization -> submit are therefore unreachable. No provider request was compiled and NO paid call was made.",
+  "machinery_evidence": {
+    "command": "skills/persona-dream/run.sh bootstrap-phase11-payload-binding --run-root <run_root> --publication-commit a3d8f655e4330f1d9ef9351886609bebc0a62f2d --json",
+    "zero_call": true,
+    "captured_output_relative_path": "phase11_payload_binding_bootstrap_blocker.json",
+    "captured_output_sha256": "sha256:22cf086d7103cb3ffbc96931c1573a6f44375f63ed0264842dd3a4d88e043f32",
+    "returned_status": "BLOCKED_PHASE11_MEDIA_LOCK_HASH",
+    "first_offending_asset": "sb_001.start_frame",
+    "first_offending_indexed_sha256": "sha256:135564cad9c40718322e9f13d347b6829ecbd9ab2197cbddc70262deb72e227d",
+    "first_offending_locked_sha256": "sha256:bbd7a63110b1c42af94e682ae93bf055bbe1c84e48468b3470a2032db70d09bb"
+  },
+  "accepted_frame_authority": {
+    "acceptance_rung_receipt": "acceptance_rung_receipt.v5.json",
+    "acceptance_rung_status": "PASS_ACCEPTANCE_RUNG",
+    "identity_certification": "reviewer_calibration_v4/successor_rereview/successor_rereview_v4_receipt.json (ArcFace embedding subgate PASS, 8/8; per-frame frame_path resolves to phase_c_successor_regen/generated_storyboard_frames)",
+    "accepted_start_frames": {
+      "sb_001.start_frame": "sha256:135564cad9c40718322e9f13d347b6829ecbd9ab2197cbddc70262deb72e227d",
+      "sb_002.start_frame": "sha256:aebcbd907c999d64ba4e7effd4f9f95e75e8e094e6deee605f5fb6f5a2e4606b",
+      "sb_003.start_frame": "sha256:9046059c87f35a6be56f166415979a25bfb72f9c51293a1434eb0f7ac8a1118c",
+      "sb_004.start_frame": "sha256:2c3211f225eea31a8091569ec10f68a87d7f324e12f04653c5efb1084c97a26e"
+    },
+    "accepted_canonical_sb_003_end_frame_waiver": "sha256:9f8fb8c93e5382667ab7be1ebf4001ff702500117baca2837b33f2bb228bf20a"
+  },
+  "stale_media_lock": {
+    "path": "phase_08_media_lock/storyboard_media_lock_manifest.json",
+    "manifest_status": "PASS_MEDIA_LOCK",
+    "stale_evidence": "Locks predecessor-identical start frames and records asset paths under /home/graham/workspace/experiments/agent-skills/skills/persona-dream/reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/ (wrong worktree 'agent-skills' not 'agent-skills-main'; non-revision-scoped path), pre-dating the phase_c_successor_regen acceptance and the lane C waiver supersession.",
+    "locked_start_frames": {
+      "sb_001.start_frame": "sha256:bbd7a63110b1c42af94e682ae93bf055bbe1c84e48468b3470a2032db70d09bb",
+      "sb_002.start_frame": "sha256:3f7a1d4e9def3f6f0e726ef9cd25b1f5dfeacbf0eabd4e43e871479f7a219b6a",
+      "sb_003.start_frame": "sha256:471513b449fb6c39b576360064d831c357bfa0233bb7a96a84ee1d7ef3eaaa20",
+      "sb_004.start_frame": "sha256:8fcd2045314c7c464c920bd6e7bf370a4cf90bcfd529bcf8e22f7100e5994a29"
+    },
+    "note": "These locked hashes are byte-identical to the FROZEN predecessor rev_upstream_bf3b05d47fb8 start frames; submitting them would reproduce the predecessor's EMBRY_IDENTITY_DRIFT and would NOT contain the accepted successor identity frames."
+  },
+  "internal_inconsistency": "acceptance_rung_receipt.v5.json asserts the accepted successor frames and the waiver sb_003.end_frame are canonical in the activated index (85c92446). The waiver end-frame supersession did propagate to the index, but the phase_08 media lock was never regenerated to lock the accepted phase_c_successor_regen START frames. The index (accepted) and the media lock (stale) therefore disagree, which the phase 11 binding gate correctly refuses to cross.",
+  "operator_authorization_recorded_verbatim": {
+    "note": "Recorded per instruction. UNCONSUMED: no publication authorization receipt, no paid-call authorization receipt, and no submit were produced because the request could not be compiled.",
+    "approver": "Graham",
+    "date": "2026-07-18",
+    "verbatim": "proceed with the remaining chain: [followed by explicit confirmation of the four-step plan including] 2. Publication authorization (yours): provider-accessible public URLs for the accepted frames. 3. Paid-call authorization (yours): hash-bound, one submit. 4. Submit -> poll -> download -> then the return goes straight through the validated /watch gauntlet... and please don't stop on obvious next steps",
+    "scope_note": "The authorization is explicitly scoped to 'the accepted frames' / 'the accepted successor frames'. The current provider-media binding authority resolves to the STALE predecessor-identical frames, which are OUTSIDE this scope. Fail-closed: the single irreversible paid submit was NOT spent on out-of-scope media."
+  },
+  "budget_guard": {
+    "max_spend_usd_guard": 10,
+    "predecessor_single_call_estimated_cost_usd": 0.84,
+    "estimated_cost_note": "Not reached; blocked before compile. No cost incurred.",
+    "attempt_budget": 1,
+    "attempts_consumed": 0
+  },
+  "next_required_action": "Regenerate the phase_08 media lock so it locks the accepted successor frames (phase_c_successor_regen start frames 135564ca / aebcbd90 / 9046059c / 2c3211f2 + the lane C waiver canonical sb_003.end_frame 9f8fb8c9) at revision-scoped agent-skills-main paths, using the accepted-storyboard->media-lock machinery (scripts/convert_accepted_storyboard_to_kling.py). Because changing phase_08 invalidates the downstream artifact index / manifest / activation, this requires re-running the supersession -> prepare/verify/activate --supersede requalification to restore PASS_ACTIVE_CONSISTENT with the accepted frames as the canonical provider-media authority. This is a certified-qualification-state change and is reserved for a human/upstream decision (the rung-v5 revision is currently certified; forcing a media-lock regen + requalification to reach a paid call would be a gate-touching over-reach against 'factual blocked outcome beats forced pass'). Only after index == media lock does the phase 11 chain proceed: bootstrap-phase11-payload-binding -> capture-phase11-provider-source-snapshot -> capture-phase11-public-media-evidence -> compile-phase11-canonical-live-request -> validate -> phase11-fal-canary-preflight -> write-phase11-approval-receipts -> phase11-fal-canary-execute (the single paid submit).",
+  "claims": {
+    "proves": [
+      "The successor phase_08 media lock is stale relative to the accepted, identity-certified successor frames.",
+      "The phase 11 provider-media binding gate fails closed (BLOCKED_PHASE11_MEDIA_LOCK_HASH) and cannot produce provider URLs.",
+      "No provider request was compiled and no paid Kling/fal call was made under this authorization."
+    ],
+    "does_not_prove": [
+      "Kling readiness for the successor revision",
+      "Provider media publication of the accepted frames",
+      "A successor provider return, ffprobe, or frame sheet",
+      "Repaired Embry identity on a successor return"
+    ]
+  },
+  "mocked": false,
+  "live": true,
+  "provider_live": false,
+  "paid_call_authorized": false,
+  "submitted": false,
+  "actual_provider_call_attempts": 0,
+  "live_submit_ready": false
+}
