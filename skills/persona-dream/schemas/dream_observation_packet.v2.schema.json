@@ -1,0 +1,471 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/persona-dream/dream_observation_packet.v2.schema.json",
+  "title": "Persona Dream observation packet v2 (evidence-only successor)",
+  "description": "One accepted successor observation packet for a persona-dream provider return. EVIDENCE-ONLY and composed of typed, independently-optional modules. This schema makes NO silent-video assumption and NO fixed frame count: transcript, nonverbal audio, scene cuts, and per-frame visible entities are all first-class optional modules that are either PRESENT (with evidence) or DEGRADED (with a typed degradation code and the exact blocker). PSYCHOLOGICAL INTERPRETATION IS FORBIDDEN: no field of this packet may carry inferred emotion, mood, intention, belief, desire, or mental state. Only what is literally present in the pixels/audio, plus deterministic scores and adjudication verdicts referenced by hash, may appear. A deterministic psychology filter strips any such language from enriched module text and records what it rejected in visible_entities_per_frame.rejected_by_psychology_filter. psychological_interpretation_performed is const false.",
+  "type": "object",
+  "required": [
+    "schema",
+    "packet_status",
+    "generated_at",
+    "live",
+    "mocked",
+    "supersedes",
+    "source_identity",
+    "provider_lineage",
+    "sampled_frames",
+    "coverage_gaps",
+    "tau_receipts",
+    "psychological_interpretation_performed",
+    "claims"
+  ],
+  "properties": {
+    "schema": {"const": "persona_dream.dream_observation_packet.v2"},
+    "packet_status": {
+      "description": "Lifecycle status of THIS packet. ACCEPTED: the single accepted successor observation. DEGRADED: assembled but one or more required-for-acceptance modules could not be evidenced (see degradations). SUPERSEDED: a later packet replaces this one (superseded_by is then required).",
+      "enum": ["ACCEPTED", "DEGRADED", "SUPERSEDED"]
+    },
+    "degradations": {
+      "type": "array",
+      "description": "Typed degradation records. Present and non-empty iff any module is DEGRADED.",
+      "items": {"$ref": "#/$defs/degradation"}
+    },
+    "superseded_by": {
+      "description": "sha256 of the packet that supersedes this one; required when packet_status is SUPERSEDED, otherwise null.",
+      "type": ["string", "null"],
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "supersedes": {
+      "description": "Provenance link to the prior packet this one replaces: the prior packet's file sha256 and its schema/status. null only for an original (non-successor) packet.",
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "required": ["prior_packet_path", "prior_packet_sha256", "prior_packet_schema", "prior_packet_status"],
+          "properties": {
+            "prior_packet_path": {"type": "string", "minLength": 1},
+            "prior_packet_sha256": {"$ref": "#/$defs/sha256"},
+            "prior_packet_schema": {"type": "string", "minLength": 1},
+            "prior_packet_status": {"type": "string", "minLength": 1}
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "generated_at": {"type": "string", "minLength": 1},
+    "run_id": {"type": ["string", "null"]},
+    "revision_id": {"type": "string", "minLength": 1},
+    "source_revision_id": {"type": ["string", "null"]},
+    "live": {"type": "boolean"},
+    "mocked": {"type": "boolean"},
+    "psychological_interpretation_performed": {"const": false},
+
+    "source_identity": {
+      "type": "object",
+      "description": "Provider-return identity: what video this packet observes. Records both the silent provider return and (optionally) the post-mux deliverable, each by sha256. No assumption is made about whether audio is present.",
+      "required": ["return_id", "silent_video", "silent_video_sha256", "silent_video_size_bytes", "duration_seconds"],
+      "properties": {
+        "return_id": {"type": "string", "minLength": 1},
+        "silent_video": {"type": "string", "minLength": 1},
+        "silent_video_sha256": {"$ref": "#/$defs/sha256"},
+        "silent_video_size_bytes": {"type": "integer", "minimum": 1},
+        "muxed_video": {"type": ["string", "null"]},
+        "muxed_video_sha256": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/sha256"}]},
+        "muxed_video_size_bytes": {"type": ["integer", "null"], "minimum": 1},
+        "request_id": {"type": ["string", "null"]},
+        "request_body_sha256": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/sha256"}]},
+        "duration_seconds": {"type": "number", "exclusiveMinimum": 0}
+      },
+      "additionalProperties": false
+    },
+
+    "provider_lineage": {
+      "type": "object",
+      "description": "Lineage of the return: request hash and any download/envelope receipts. Flexible: only present fields are asserted.",
+      "required": ["module_status"],
+      "properties": {
+        "module_status": {"$ref": "#/$defs/module_status"},
+        "endpoint": {"type": ["string", "null"]},
+        "request_hash": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/sha256"}]},
+        "downloaded_mp4_sha256": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/sha256"}]},
+        "provider_return_envelope": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/receipt_ref"}]},
+        "download_receipt": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/receipt_ref"}]}
+      },
+      "additionalProperties": false
+    },
+
+    "sampled_frames": {
+      "type": "object",
+      "description": "Frames extracted from the return. Variable count: the sampling method is recorded, not assumed. No fixed 12-frame lane.",
+      "required": ["module_status", "sampling_method", "frame_count", "frames"],
+      "properties": {
+        "module_status": {"$ref": "#/$defs/module_status"},
+        "sampling_method": {"type": "string", "minLength": 1},
+        "requested_mode": {"type": ["string", "null"]},
+        "frame_count": {"type": "integer", "minimum": 0},
+        "frames_root": {"type": ["string", "null"]},
+        "frames": {"type": "array", "items": {"$ref": "#/$defs/frame"}}
+      },
+      "additionalProperties": false
+    },
+
+    "scene_cuts": {
+      "type": "object",
+      "description": "Optional scene-cut evidence. DEGRADED or NOT_APPLICABLE when scene detection was not run or found none.",
+      "required": ["module_status"],
+      "properties": {
+        "module_status": {"$ref": "#/$defs/module_status"},
+        "method": {"type": ["string", "null"]},
+        "cuts": {"type": "array", "items": {
+          "type": "object",
+          "required": ["timestamp_seconds"],
+          "properties": {
+            "timestamp_seconds": {"type": "number", "minimum": 0},
+            "kind": {"type": "string"}
+          },
+          "additionalProperties": true
+        }}
+      },
+      "additionalProperties": false
+    },
+
+    "transcript": {
+      "type": "object",
+      "description": "Speech transcript with timed segments and the recognizing engine. PRESENT when speech is recognized (from a muxed/audible clip or a reused authoritative forced-alignment receipt); DEGRADED with code no_audio_stream or transcript_engine_unavailable otherwise. NO silent-video assumption is baked in.",
+      "required": ["module_status", "segments"],
+      "properties": {
+        "module_status": {"$ref": "#/$defs/module_status"},
+        "engine": {"type": ["string", "null"]},
+        "source_video": {"type": ["string", "null"]},
+        "source_video_sha256": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/sha256"}]},
+        "authoritative_forced_alignment": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/receipt_ref"}]},
+        "segments": {"type": "array", "items": {
+          "type": "object",
+          "required": ["start_seconds", "end_seconds", "text"],
+          "properties": {
+            "start_seconds": {"type": "number", "minimum": 0},
+            "end_seconds": {"type": "number", "minimum": 0},
+            "text": {"type": "string"},
+            "speaker": {"type": ["string", "null"]},
+            "source": {"type": "string"}
+          },
+          "additionalProperties": true
+        }}
+      },
+      "additionalProperties": false
+    },
+
+    "nonverbal_audio": {
+      "type": "object",
+      "description": "Non-speech audio evidence (ambience, effects) by reference/label. Optional.",
+      "required": ["module_status"],
+      "properties": {
+        "module_status": {"$ref": "#/$defs/module_status"},
+        "events": {"type": "array", "items": {
+          "type": "object",
+          "required": ["label"],
+          "properties": {
+            "label": {"type": "string", "minLength": 1},
+            "start_seconds": {"type": ["number", "null"], "minimum": 0},
+            "end_seconds": {"type": ["number", "null"], "minimum": 0},
+            "source_asset_sha256": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/sha256"}]}
+          },
+          "additionalProperties": true
+        }}
+      },
+      "additionalProperties": false
+    },
+
+    "visible_entities_per_frame": {
+      "type": "object",
+      "description": "Per-frame visible-entity descriptions produced by the Tau VLM route with a hash-recorded evidence-only prompt (who/what visible, observed actions, absences). Any psychological language is stripped by a deterministic filter; what was stripped is recorded in rejected_by_psychology_filter.",
+      "required": ["module_status", "review_prompt_sha256", "route", "frames", "rejected_by_psychology_filter"],
+      "properties": {
+        "module_status": {"$ref": "#/$defs/module_status"},
+        "route": {"type": "string", "minLength": 1},
+        "review_prompt_sha256": {"$ref": "#/$defs/sha256"},
+        "frames": {"type": "array", "items": {
+          "type": "object",
+          "required": ["index", "timestamp_seconds", "visible_entities", "actions", "absences"],
+          "properties": {
+            "index": {"type": "integer", "minimum": 0},
+            "timestamp_seconds": {"type": "number", "minimum": 0},
+            "people_count": {"type": ["integer", "null"], "minimum": 0},
+            "visible_entities": {"type": "array", "items": {"type": "string"}},
+            "actions": {"type": "array", "items": {"type": "string"}},
+            "absences": {"type": "array", "items": {"type": "string"}},
+            "summary": {"type": "string"},
+            "tau_receipt_sha256": {"$ref": "#/$defs/sha256"},
+            "http_status": {"type": ["integer", "null"]}
+          },
+          "additionalProperties": false
+        }},
+        "rejected_by_psychology_filter": {"type": "array", "items": {
+          "type": "object",
+          "required": ["frame_index", "field", "term", "removed_phrase"],
+          "properties": {
+            "frame_index": {"type": "integer", "minimum": 0},
+            "field": {"type": "string"},
+            "term": {"type": "string"},
+            "removed_phrase": {"type": "string"}
+          },
+          "additionalProperties": false
+        }}
+      },
+      "additionalProperties": false
+    },
+
+    "absences": {
+      "type": "object",
+      "description": "Notable things NOT visible/audible across the return, aggregated as factual absence statements.",
+      "required": ["module_status", "items"],
+      "properties": {
+        "module_status": {"$ref": "#/$defs/module_status"},
+        "items": {"type": "array", "items": {
+          "type": "object",
+          "required": ["statement", "evidence_refs"],
+          "properties": {
+            "statement": {"type": "string", "minLength": 1},
+            "scope": {"type": "string"},
+            "evidence_refs": {"type": "array", "items": {"type": "string"}}
+          },
+          "additionalProperties": false
+        }}
+      },
+      "additionalProperties": false
+    },
+
+    "identity_evidence": {
+      "type": "object",
+      "description": "Per-frame identity evidence: deterministic embedding cosine scores (authority) plus VLM pose/occlusion adjudications, referenced by hash. References (contact sheets etc.) are recorded by path+sha256, never inlined as images.",
+      "required": ["module_status", "authority", "per_frame"],
+      "properties": {
+        "module_status": {"$ref": "#/$defs/module_status"},
+        "authority": {"type": "string", "minLength": 1},
+        "model": {"type": ["string", "null"]},
+        "threshold": {"type": ["number", "null"]},
+        "references": {"type": "array", "items": {"$ref": "#/$defs/reference_asset"}},
+        "summary": {"type": "object"},
+        "per_frame": {"type": "array", "items": {
+          "type": "object",
+          "required": ["frame", "entity"],
+          "properties": {
+            "frame": {"type": "string"},
+            "entity": {"type": "string"},
+            "best_cosine": {"type": ["number", "null"]},
+            "verdict": {"type": ["string", "null"]},
+            "status": {"type": ["string", "null"]}
+          },
+          "additionalProperties": true
+        }},
+        "adjudications": {"type": "array", "items": {"$ref": "#/$defs/adjudication_ref"}}
+      },
+      "additionalProperties": false
+    },
+
+    "speaker_visibility": {
+      "type": "object",
+      "description": "Whether the speaking character is visibly articulating in the spoken interval, and the lip-sync rule applicability, from the Tau panel-reviewer adjudication (referenced by hash).",
+      "required": ["module_status", "speaker", "spoken_interval_seconds"],
+      "properties": {
+        "module_status": {"$ref": "#/$defs/module_status"},
+        "speaker": {"type": "string", "minLength": 1},
+        "spoken_interval_seconds": {"type": "array", "prefixItems": [{"type": "number"}, {"type": "number"}], "items": false},
+        "transcript_line_at_interval": {"type": ["string", "null"]},
+        "readable_speaking_mouth_present": {"type": ["boolean", "null"]},
+        "lipsync_rule_applicability": {"type": ["string", "null"]},
+        "speaker_visibility_frames": {"type": "array", "items": {"$ref": "#/$defs/window_frame"}},
+        "adjudication": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/adjudication_ref"}]}
+      },
+      "additionalProperties": false
+    },
+
+    "continuity_adjudications": {
+      "type": "object",
+      "description": "Scene / identity continuity verdicts folded from the post-return continuity receipts (referenced by hash + inlined verdicts).",
+      "required": ["module_status"],
+      "properties": {
+        "module_status": {"$ref": "#/$defs/module_status"},
+        "verdict": {"type": ["string", "null"]},
+        "subgates": {"type": "object"},
+        "receipt_refs": {"type": "array", "items": {"$ref": "#/$defs/receipt_ref"}}
+      },
+      "additionalProperties": false
+    },
+
+    "coverage_gaps": {
+      "type": "array",
+      "description": "Factual gaps in coverage, each with a typed code.",
+      "items": {
+        "type": "object",
+        "required": ["code", "statement"],
+        "properties": {
+          "code": {"type": "string", "minLength": 1},
+          "statement": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    },
+
+    "acceptance_context": {
+      "type": "object",
+      "description": "Why this packet is accepted: gate summary + acceptance receipts referenced by hash. Human subjective acceptance is never claimed here.",
+      "required": ["module_status"],
+      "properties": {
+        "module_status": {"$ref": "#/$defs/module_status"},
+        "gate_summary": {"type": "object"},
+        "human_subjective_acceptance": {"type": ["string", "null"]},
+        "receipt_refs": {"type": "array", "items": {"$ref": "#/$defs/receipt_ref"}}
+      },
+      "additionalProperties": false
+    },
+
+    "vertex_consistency": {
+      "type": "object",
+      "description": "Mapping from each materialized persona_dream_watch_evidence vertex (read-only canonical record) to the v2 module(s) that represent its statement, plus any enrichment delta. Enrichment that adds evidence a vertex marked unavailable is recorded as an additive delta, NOT a contradiction; genuine contradictions are recorded factually and never rewrite the vertex.",
+      "required": ["module_status", "vertices"],
+      "properties": {
+        "module_status": {"$ref": "#/$defs/module_status"},
+        "collection": {"type": "string"},
+        "vertices": {"type": "array", "items": {
+          "type": "object",
+          "required": ["vertex_id", "vertex_statement", "represented_in_modules", "outcome"],
+          "properties": {
+            "vertex_id": {"type": "string", "minLength": 1},
+            "vertex_statement": {"type": "string"},
+            "represented_in_modules": {"type": "array", "items": {"type": "string"}},
+            "outcome": {"enum": ["CONSISTENT", "CONSISTENT_WITH_ADDITIVE_ENRICHMENT", "CONTRADICTION"]},
+            "delta_note": {"type": ["string", "null"]}
+          },
+          "additionalProperties": false
+        }}
+      },
+      "additionalProperties": false
+    },
+
+    "tau_receipts": {
+      "type": "array",
+      "description": "Every Tau routing receipt used to build this packet (VLM per-frame reviews, any text reasoning). Recorded by route + prompt hash + content hash + http status; direct scillm access is never used.",
+      "items": {"$ref": "#/$defs/tau_receipt"}
+    },
+
+    "claims": {
+      "type": "object",
+      "required": ["proves", "does_not_prove"],
+      "properties": {
+        "proves": {"type": "array", "items": {"type": "string"}},
+        "does_not_prove": {"type": "array", "items": {"type": "string"}}
+      },
+      "additionalProperties": false
+    }
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"packet_status": {"const": "SUPERSEDED"}}},
+      "then": {"required": ["superseded_by"], "properties": {"superseded_by": {"type": "string"}}}
+    },
+    {
+      "if": {"properties": {"packet_status": {"const": "DEGRADED"}}},
+      "then": {"required": ["degradations"], "properties": {"degradations": {"minItems": 1}}}
+    }
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"},
+    "module_status": {"enum": ["PRESENT", "DEGRADED", "NOT_APPLICABLE"]},
+    "degradation": {
+      "type": "object",
+      "required": ["module", "code", "blocker"],
+      "properties": {
+        "module": {"type": "string", "minLength": 1},
+        "code": {
+          "enum": [
+            "vlm_route_unavailable",
+            "no_audio_stream",
+            "transcript_engine_unavailable",
+            "scene_detection_unavailable",
+            "identity_reference_missing",
+            "adjudication_receipt_missing",
+            "other"
+          ]
+        },
+        "blocker": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "frame": {
+      "type": "object",
+      "required": ["index", "timestamp_seconds", "path", "sha256", "size_bytes"],
+      "properties": {
+        "index": {"type": "integer", "minimum": 0},
+        "timestamp_seconds": {"type": "number", "minimum": 0},
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "size_bytes": {"type": "integer", "minimum": 1},
+        "in_identity_window": {"type": "boolean"},
+        "in_speaker_window": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "window_frame": {
+      "type": "object",
+      "required": ["index", "timestamp_seconds", "path"],
+      "properties": {
+        "index": {"type": "integer", "minimum": 0},
+        "timestamp_seconds": {"type": "number", "minimum": 0},
+        "path": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": true
+    },
+    "receipt_ref": {
+      "type": "object",
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "sha256": {"$ref": "#/$defs/sha256"},
+        "schema": {"type": "string"},
+        "status": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "reference_asset": {
+      "type": "object",
+      "required": ["name", "sha256"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "path": {"type": ["string", "null"]},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      },
+      "additionalProperties": false
+    },
+    "adjudication_ref": {
+      "type": "object",
+      "required": ["panel_id", "verdict"],
+      "properties": {
+        "panel_id": {"type": "string", "minLength": 1},
+        "verdict": {"type": ["string", "null"]},
+        "summary": {"type": "string"},
+        "prompt_sha256": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/sha256"}]},
+        "receipt_content_sha256": {"oneOf": [{"type": "null"}, {"$ref": "#/$defs/sha256"}]},
+        "http_status": {"type": ["integer", "null"]}
+      },
+      "additionalProperties": true
+    },
+    "tau_receipt": {
+      "type": "object",
+      "required": ["route", "purpose", "prompt_sha256", "content_sha256"],
+      "properties": {
+        "route": {"type": "string", "minLength": 1},
+        "purpose": {"type": "string", "minLength": 1},
+        "model": {"type": ["string", "null"]},
+        "api_key_source": {"type": ["string", "null"]},
+        "prompt_sha256": {"$ref": "#/$defs/sha256"},
+        "content_sha256": {"$ref": "#/$defs/sha256"},
+        "http_status": {"type": ["integer", "null"]},
+        "live_call_performed": {"type": ["boolean", "null"]},
+        "frame_index": {"type": ["integer", "null"]}
+      },
+      "additionalProperties": false
+    }
+  }
+}
