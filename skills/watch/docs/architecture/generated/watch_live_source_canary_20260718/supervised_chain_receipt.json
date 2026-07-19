@@ -1,0 +1,34 @@
+{
+  "chain_valid": true,
+  "completed_at": "2026-07-19T00:33:56.942201+00:00",
+  "identity_policy": "Each session is a distinct source session; observation ids are session-scoped and track ids never carry identity across the chain.",
+  "schema_version": "watch.supervised_tracker_chain_receipt.v1",
+  "session_count": 2,
+  "sessions": [
+    {
+      "exit_code": -9,
+      "finalized": false,
+      "journal": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/41d98273-dc29-4a8f-9fb1-57148343efff/scratchpad/live-canary/sessions/session_0001.journal.jsonl",
+      "previous_session_id": null,
+      "salvaged_event_count": 122,
+      "session_index": 1,
+      "signalled": true,
+      "source_session_id": "db7742dd-659c-563d-964d-26636e27bcb9",
+      "started_at": "2026-07-19T00:32:10.467793+00:00",
+      "stderr_tail": "ld (found version 12080). Please update your GPU driver by downloading and installing a new version from the URL: http://www.nvidia.com/Download/index.aspx Alternatively, go to: https://pytorch.org to install a PyTorch version that has been compiled with your version of the CUDA driver. (Triggered internally at /pytorch/c10/cuda/CUDAFunctions.cpp:119.)\n  return torch._C._cuda_getDeviceCount() > 0\n"
+    },
+    {
+      "exit_code": 0,
+      "finalized": true,
+      "journal": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/41d98273-dc29-4a8f-9fb1-57148343efff/scratchpad/live-canary/sessions/session_0002.journal.jsonl",
+      "previous_session_id": "db7742dd-659c-563d-964d-26636e27bcb9",
+      "salvaged_event_count": 400,
+      "session_index": 2,
+      "signalled": false,
+      "source_session_id": "c2b886c3-a7ff-5097-b794-6bdd2cc9a45b",
+      "started_at": "2026-07-19T00:32:36.639378+00:00",
+      "stderr_tail": "ld (found version 12080). Please update your GPU driver by downloading and installing a new version from the URL: http://www.nvidia.com/Download/index.aspx Alternatively, go to: https://pytorch.org to install a PyTorch version that has been compiled with your version of the CUDA driver. (Triggered internally at /pytorch/c10/cuda/CUDAFunctions.cpp:119.)\n  return torch._C._cuda_getDeviceCount() > 0\n"
+    }
+  ],
+  "source": "http://127.0.0.1:5005"
+}

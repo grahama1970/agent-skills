@@ -66,6 +66,20 @@ def main() -> int:
             "is the only append writer."
         ),
     )
+    parser.add_argument(
+        "--previous-journal",
+        type=Path,
+        help=(
+            "Chain this session to a prior (possibly crashed/unfinalized) "
+            "session journal. Starts a NEW session; track ids never carry "
+            "identity across the chain boundary."
+        ),
+    )
+    parser.add_argument(
+        "--chain-reason",
+        default="producer_restart",
+        help="Recorded chain reason when --previous-journal is set.",
+    )
     args = parser.parse_args()
 
     manifest = _read_json(args.manifest)
@@ -87,7 +101,18 @@ def main() -> int:
 
     journal_writer = None
     if args.journal:
-        from watch_source_session_journal import JournalWriter, source_sha256
+        from watch_source_session_journal import JournalWriter, read_journal_lenient, source_sha256
+
+        previous_session_id = None
+        chain_reason = None
+        if args.previous_journal:
+            previous_header, _events, salvage = read_journal_lenient(args.previous_journal)
+            previous_session_id = previous_header["source_session_id"]
+            chain_reason = (
+                f"{args.chain_reason}"
+                f" (previous finalized={salvage['finalized']},"
+                f" salvaged_events={salvage['salvaged_event_count']})"
+            )
 
         is_stream = _looks_like_stream(source)
         journal_writer = JournalWriter(
@@ -105,6 +130,8 @@ def main() -> int:
             conf=args.conf,
             imgsz=args.imgsz,
             producer="track_yolo_bytetrack.py",
+            previous_session_id=previous_session_id,
+            chain_reason=chain_reason,
         )
 
     events: list[dict[str, Any]] = []

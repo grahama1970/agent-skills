@@ -33,6 +33,7 @@ from watch_source_session_journal import (  # noqa: E402
     build_observation_plan,
     canonical_json,
     read_journal,
+    read_journal_lenient,
     sha256_hex,
 )
 
@@ -97,6 +98,23 @@ def main() -> int:
         action="store_true",
         help="Validate + plan, no side effects (P0A preflight behavior)",
     )
+    parser.add_argument(
+        "--allow-unfinalized",
+        action="store_true",
+        help=(
+            "Salvage mode: replay the valid prefix of a crashed (unfinalized) "
+            "journal. Every persisted observation is flagged with its salvage "
+            "provenance."
+        ),
+    )
+    parser.add_argument("--max-attempts", type=int, default=3,
+                        help="Sink write attempts per observation before it is left in the outbox")
+    parser.add_argument("--retry-delay-seconds", type=float, default=0.5)
+    parser.add_argument(
+        "--drain",
+        action="store_true",
+        help="Retry only observations the outbox does not record as WRITTEN",
+    )
     args = parser.parse_args()
 
     for name in ("watch_content", "watch_track_crop_embeddings_jina_v5_1024",
@@ -107,15 +125,34 @@ def main() -> int:
 
     # Fail-closed boundary: everything below must succeed before any client
     # is constructed or any network call is made.
+    salvage_provenance = None
     try:
-        header, events, _finalize = read_journal(args.journal)
+        if args.allow_unfinalized:
+            header, events, salvage = read_journal_lenient(args.journal)
+            if not events:
+                print("JOURNAL_REJECTED: no salvageable events")
+                return 2
+            if not salvage["finalized"]:
+                salvage_provenance = {
+                    "from_unfinalized_session": True,
+                    "salvaged_event_count": salvage["salvaged_event_count"],
+                    "salvage_dropped": salvage["dropped"],
+                }
+        else:
+            header, events, _finalize = read_journal(args.journal)
     except JournalValidationError as exc:
         print(f"JOURNAL_REJECTED: {exc}")
         return 2
     plan = build_observation_plan(header, events)
-    documents = [
-        observation_document(plan, obs, str(args.journal)) for obs in plan["observations"]
-    ]
+    documents = []
+    for obs in plan["observations"]:
+        document = observation_document(plan, obs, str(args.journal))
+        if salvage_provenance:
+            document["salvage_provenance"] = salvage_provenance
+            document["promotion_blockers"] = list(document["promotion_blockers"]) + [
+                "FROM_UNFINALIZED_SESSION_JOURNAL"
+            ]
+        documents.append(document)
     planned_canonical = canonical_set_from_documents(documents)
     if planned_canonical != sha256_hex(
         canonical_json(
@@ -134,50 +171,103 @@ def main() -> int:
 
     import httpx
 
-    with httpx.Client(timeout=httpx.Timeout(120.0, connect=5.0), headers={"X-Caller-Skill": "watch"}) as client:
-        collections = client.get(f"{args.qdrant_url}/collections").json()
-        names = {c["name"] for c in collections.get("result", {}).get("collections", [])}
-        if args.qdrant_collection not in names:
-            client.put(
-                f"{args.qdrant_url}/collections/{args.qdrant_collection}",
-                json={"vectors": {"size": args.dimensions, "distance": "Cosine"}},
-            ).raise_for_status()
+    # Durable outbox: one sidecar entry per observation, atomically rewritten
+    # after every state change. A sink outage leaves FAILED_RETRYABLE entries
+    # instead of crashing the consumer; a later run (or --drain) retries only
+    # what is not yet WRITTEN.
+    outbox_path = Path(str(args.journal) + ".outbox.json")
+    outbox: dict[str, Any] = {}
+    if outbox_path.exists():
+        try:
+            outbox = json.loads(outbox_path.read_text(encoding="utf-8"))
+        except ValueError:
+            outbox = {}
 
-        written = 0
+    def save_outbox() -> None:
+        tmp_path = outbox_path.with_suffix(".json.tmp")
+        tmp_path.write_text(json.dumps(outbox, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        tmp_path.replace(outbox_path)
+
+    def write_observation(client: httpx.Client, document: dict[str, Any]) -> None:
+        embedding = client.post(
+            f"{args.embedding_url}/embed/batch",
+            json={"texts": [document["retrieval_text"]], "task": "retrieval", "dimensions": args.dimensions},
+        )
+        embedding.raise_for_status()
+        vector = (embedding.json().get("embeddings") or [[]])[0]
+        client.put(
+            f"{args.qdrant_url}/collections/{args.qdrant_collection}/points",
+            params={"wait": "true"},
+            json={
+                "points": [
+                    {
+                        "id": document["_key"],
+                        "vector": vector,
+                        "payload": {
+                            "source_session_id": document["source_session_id"],
+                            "track_id": document["track_id"],
+                            "evidence_digest": document["evidence_digest"],
+                            "window_start_seconds": document["window_start_seconds"],
+                            "window_end_seconds": document["window_end_seconds"],
+                        },
+                    }
+                ]
+            },
+        ).raise_for_status()
+        client.post(
+            f"{args.memory_url}/upsert",
+            json={"collection": args.memory_collection, "documents": [document]},
+        ).raise_for_status()
+
+    written = 0
+    failed = 0
+    with httpx.Client(timeout=httpx.Timeout(120.0, connect=5.0), headers={"X-Caller-Skill": "watch"}) as client:
+        collection_ready = False
         for document in documents:
-            embedding = client.post(
-                f"{args.embedding_url}/embed/batch",
-                json={"texts": [document["retrieval_text"]], "task": "retrieval", "dimensions": args.dimensions},
-            )
-            embedding.raise_for_status()
-            vector = (embedding.json().get("embeddings") or [[]])[0]
-            client.put(
-                f"{args.qdrant_url}/collections/{args.qdrant_collection}/points",
-                params={"wait": "true"},
-                json={
-                    "points": [
-                        {
-                            "id": document["_key"],
-                            "vector": vector,
-                            "payload": {
-                                "source_session_id": document["source_session_id"],
-                                "track_id": document["track_id"],
-                                "evidence_digest": document["evidence_digest"],
-                                "window_start_seconds": document["window_start_seconds"],
-                                "window_end_seconds": document["window_end_seconds"],
-                            },
-                        }
-                    ]
-                },
-            ).raise_for_status()
-            client.post(
-                f"{args.memory_url}/upsert",
-                json={"collection": args.memory_collection, "documents": [document]},
-            ).raise_for_status()
-            written += 1
-            print(f"observation_written {written}/{len(documents)} {document['_key']}", flush=True)
+            key = document["_key"]
+            entry = outbox.get(key) or {"status": "PENDING", "attempts": 0}
+            if entry.get("status") == "WRITTEN":
+                written += 1
+                continue
+            success = False
+            for attempt in range(1, args.max_attempts + 1):
+                entry["attempts"] = int(entry.get("attempts", 0)) + 1
+                try:
+                    if not collection_ready:
+                        collections = client.get(f"{args.qdrant_url}/collections").json()
+                        names = {c["name"] for c in collections.get("result", {}).get("collections", [])}
+                        if args.qdrant_collection not in names:
+                            client.put(
+                                f"{args.qdrant_url}/collections/{args.qdrant_collection}",
+                                json={"vectors": {"size": args.dimensions, "distance": "Cosine"}},
+                            ).raise_for_status()
+                        collection_ready = True
+                    write_observation(client, document)
+                    success = True
+                    break
+                except Exception as exc:
+                    entry["status"] = "FAILED_RETRYABLE"
+                    entry["last_error"] = str(exc)[:300]
+                    outbox[key] = entry
+                    save_outbox()
+                    if attempt < args.max_attempts:
+                        time.sleep(args.retry_delay_seconds * attempt)
+            if success:
+                entry["status"] = "WRITTEN"
+                entry.pop("last_error", None)
+                outbox[key] = entry
+                save_outbox()
+                written += 1
+                print(f"observation_written {written}/{len(documents)} {key}", flush=True)
+            else:
+                failed += 1
+                print(f"observation_outboxed {key} status=FAILED_RETRYABLE", flush=True)
             if args.per_observation_delay > 0:
                 time.sleep(args.per_observation_delay)
+
+    if failed:
+        print(f"OUTBOX_PENDING failed={failed} written={written} outbox={outbox_path}")
+        return 5
 
     receipt = {
         "schema_version": "watch.source_session_replay_receipt.v1",
@@ -189,6 +279,9 @@ def main() -> int:
         "observation_count": len(documents),
         "canonical_set_sha256": planned_canonical,
         "observation_ids": [d["_key"] for d in documents],
+        "outbox_path": str(outbox_path),
+        "salvage_provenance": salvage_provenance,
+        "drain_mode": bool(args.drain),
     }
     if args.receipt_out:
         args.receipt_out.parent.mkdir(parents=True, exist_ok=True)

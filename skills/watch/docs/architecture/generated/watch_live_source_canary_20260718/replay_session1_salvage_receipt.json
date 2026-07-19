@@ -1,0 +1,27 @@
+{
+  "canonical_set_sha256": "8d56644ab519df1f09c33031d20060a8b76201bab58552254760604816c19ac1",
+  "drain_mode": false,
+  "journal": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/41d98273-dc29-4a8f-9fb1-57148343efff/scratchpad/live-canary/sessions/session_0001.journal.jsonl",
+  "memory_collection": "watch_live_canary_test",
+  "observation_count": 8,
+  "observation_ids": [
+    "a25d511e-3a32-574a-acc7-83677d3279e4",
+    "e73d394c-add8-52c6-a33e-4cd0f1fc55a7",
+    "d58f4232-2c6d-579f-8d86-a84e90e94e9d",
+    "7e2c466f-ecfe-5c71-9803-3efe4b38c7e1",
+    "c67b74f6-6d1f-528d-ade9-7c2f8e790a44",
+    "e5f891b9-2336-59e0-9484-a288a5ce73dc",
+    "433611e2-a2a9-5566-a716-829b6bed741a",
+    "78f0ad5b-edee-5f0f-ab06-5cab23a91167"
+  ],
+  "outbox_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/41d98273-dc29-4a8f-9fb1-57148343efff/scratchpad/live-canary/sessions/session_0001.journal.jsonl.outbox.json",
+  "qdrant_collection": "watch_live_canary_test",
+  "salvage_provenance": {
+    "from_unfinalized_session": true,
+    "salvage_dropped": [],
+    "salvaged_event_count": 122
+  },
+  "schema_version": "watch.source_session_replay_receipt.v1",
+  "source_session_id": "db7742dd-659c-563d-964d-26636e27bcb9",
+  "status": "REPLAY_COMPLETE"
+}

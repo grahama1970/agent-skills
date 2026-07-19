@@ -1,0 +1,40 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "decoded-PTS clock binding for live sources",
+      "unbounded multi-hour stream operation",
+      "public-internet HLS/RTSP reliability (same code path, unproven endpoints)",
+      "character identity on live tracks (still forbidden without the full evidence chain)"
+    ],
+    "proves": [
+      "tracker producer crash recovery via chained source sessions on a genuine live stream",
+      "no track-id identity carryover across the chain boundary",
+      "crashed-journal salvage with explicit provenance on every persisted observation",
+      "sink-outage resilience with durable outbox and idempotent drain"
+    ]
+  },
+  "gate_p0c_process_resume": {
+    "identity_policy": "sessions are distinct source sessions; observation ids are session-scoped; zero id overlap verified across sessions (8 vs 20 observations)",
+    "proof": "session 1 SIGKILLED mid-run (exit -9, 122 events salvaged, unfinalized); supervisor chained session 2 with previous_session_id == session 1 id; session 2 reconnected to the live stream and finalized 400 events; chain_valid true",
+    "salvage": "read_journal_lenient recovered the killed journal's valid prefix; salvage replay flags every observation FROM_UNFINALIZED_SESSION_JOURNAL",
+    "supervisor": "run_watch_tracker_supervised.py"
+  },
+  "gate_p0d_outbox": {
+    "outbox": "per-observation sidecar, atomic rewrite per state change",
+    "proof": "replay of session 2 with a dead memory sink absorbed all 20 observations as FAILED_RETRYABLE (no crash, exit 5); --drain against the live daemon converged to 20/20 WRITTEN (attempts=3 each); canonical set matches plan"
+  },
+  "live_sink_verification": {
+    "memory_collection": "watch_live_canary_test (isolated)",
+    "qdrant_collection": "watch_live_canary_test (isolated, 28 points = 8 salvaged + 20 finalized)",
+    "session_scoping": "verified live: salvaged docs carry provenance + blocker; finalized docs clean"
+  },
+  "live_source": {
+    "clock_mode": "declared_frame_offset from stream connect; decoded_pts remains a later gate",
+    "source_hash_mode": "uri_only (no file hash for live sources by design)",
+    "uri": "http://127.0.0.1:5005 (ffmpeg -re MPEG-TS live loop of Bad Santa from 120s; real-time paced, unseekable, relistens per client)",
+    "why_local": "deterministic, contains people, reconnectable; public HLS/RTSP URIs plug into the same supervisor unchanged"
+  },
+  "proved_at": "2026-07-19T00:35:40.913219+00:00",
+  "schema_version": "watch.live_source_canary_proof_receipt.v1",
+  "status": "P0C_P0D_AND_FIRST_LIVE_SOURCE_PROVEN"
+}

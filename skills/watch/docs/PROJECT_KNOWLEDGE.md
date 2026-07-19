@@ -249,5 +249,31 @@ independent of browser media decode (required for RTSP later). Browser proof:
 row 7 of the fresh focused report. Caveat: machine-wide Chrome media decode
 was broken during the proof (any mp4 spins — likely the outdated NVIDIA
 driver), so video pixels render black; re-screenshot overlay-over-video after
-a driver update. **Remaining before first live source: tracker
-process-resume continuity and Memory/Qdrant outbox hardening.**
+a driver update.
+
+**P0C process-resume, P0D outbox, and the FIRST LIVE SOURCE LANDED
+2026-07-18** (receipts: `generated/watch_live_source_canary_20260718/`):
+- P0C: `run_watch_tracker_supervised.py` chains a NEW source session on
+  producer death (`previous_session_id` in the journal header;
+  `read_journal_lenient` salvages a crashed journal's valid prefix; track ids
+  never carry identity across the chain). Live proof: tracker SIGKILLED
+  mid-run on a live stream (122 events salvaged, unfinalized) → chained
+  session reconnected and finalized 400 events; zero observation-id overlap
+  across sessions; salvaged observations carry
+  `FROM_UNFINALIZED_SESSION_JOURNAL` blockers.
+- P0D: the replay consumer has a durable per-observation outbox (atomic
+  sidecar, retry with backoff, `--drain`). Live proof: dead memory sink
+  absorbed 20/20 observations as FAILED_RETRYABLE without crashing; drain
+  against the live daemon converged to 20/20 WRITTEN with the plan-matching
+  canonical set.
+- First live source: ffmpeg `-re` MPEG-TS over HTTP (real-time paced,
+  unseekable, relistening) — ultralytics consumes it directly; the same
+  supervisor takes any public HLS/RTSP URI. Note: ultralytics rejects
+  `udp://` URIs; use http/rtsp/rtmp/tcp.
+- Guard added: supervised sessions isolate the tracker `--out-dir` per
+  session after a live run clobbered the committed 80-event fixture log
+  (restored from git).
+
+**Still gated**: decoded-PTS clock binding, unbounded multi-hour operation,
+public-internet endpoint reliability, and any identity promotion on live
+tracks (requires the full evidence chain, as ever).

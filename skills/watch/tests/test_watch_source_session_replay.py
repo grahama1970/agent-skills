@@ -256,3 +256,104 @@ def test_plan_only_mode_has_no_side_effects(tmp_path: Path) -> None:
     )
     assert result.returncode == 0, result.stdout + result.stderr
     assert "PLAN_OK" in result.stdout
+
+
+def test_lenient_reader_salvages_crashed_journal(tmp_path: Path) -> None:
+    from watch_source_session_journal import read_journal_lenient
+
+    journal = tmp_path / "session.journal.jsonl"
+    write_journal(journal)
+    lines = journal.read_text().splitlines()
+    # Simulate a producer killed mid-append: drop finalize, truncate last event.
+    crashed = "\n".join(lines[:-2]) + "\n" + lines[-2][:30]
+    journal.write_text(crashed)
+
+    with pytest.raises(JournalValidationError):
+        read_journal(journal)
+    header, events, salvage = read_journal_lenient(journal)
+    assert salvage["finalized"] is False
+    assert salvage["salvaged_event_count"] == 5
+    assert len(events) == 5
+    assert salvage["dropped"], "truncated tail must be reported"
+    assert header["source_session_id"]
+
+
+def test_chained_session_header_records_predecessor(tmp_path: Path) -> None:
+    first = tmp_path / "s1.journal.jsonl"
+    write_journal(first)
+    first_header = read_journal(first)[0]
+
+    writer = JournalWriter(
+        tmp_path / "s2.journal.jsonl",
+        source_uri="file:///tmp/p0-test.mp4",
+        source_sha256_value="a" * 64,
+        source_hash_mode="sha256_full",
+        clock_mode="declared_frame_offset",
+        declared_fps=10.0,
+        clock_start_seconds=0.0,
+        frame_stride=2,
+        sample_fps=5.0,
+        model="yolo11n.pt",
+        tracker_config="bytetrack.yaml",
+        conf=0.25,
+        imgsz=640,
+        producer="test",
+        previous_session_id=first_header["source_session_id"],
+        chain_reason="producer_death_supervised_restart",
+    )
+    writer.append_event(make_event("track_1", 0.0), source_frame_index=0, media_time_seconds=0.0)
+    writer.finalize()
+
+    second_header = read_journal(tmp_path / "s2.journal.jsonl")[0]
+    assert second_header["previous_session_id"] == first_header["source_session_id"]
+    assert second_header["source_session_id"] != first_header["source_session_id"]
+    assert "producer_death" in second_header["chain_reason"]
+
+
+def test_outbox_records_failures_and_drains_idempotently(tmp_path: Path) -> None:
+    journal = tmp_path / "session.journal.jsonl"
+    write_journal(journal)
+    outbox_path = Path(str(journal) + ".outbox.json")
+
+    dead = [
+        sys.executable, str(REPLAY),
+        "--journal", str(journal),
+        "--max-attempts", "1",
+        "--retry-delay-seconds", "0",
+        "--embedding-url", "http://127.0.0.1:1",
+        "--qdrant-url", "http://127.0.0.1:1",
+        "--memory-url", "http://127.0.0.1:1",
+    ]
+    result = subprocess.run(dead, capture_output=True, text=True)
+    assert result.returncode == 5, result.stdout + result.stderr
+    assert "OUTBOX_PENDING" in result.stdout
+    outbox = json.loads(outbox_path.read_text())
+    assert outbox and all(v["status"] == "FAILED_RETRYABLE" for v in outbox.values())
+
+    # A later drain against still-dead sinks keeps entries retryable and
+    # increments attempts without corrupting the outbox.
+    result = subprocess.run(dead + ["--drain"], capture_output=True, text=True)
+    assert result.returncode == 5
+    drained = json.loads(outbox_path.read_text())
+    assert all(v["attempts"] >= 2 for v in drained.values())
+
+
+def test_salvage_replay_flags_provenance_in_plan_only(tmp_path: Path) -> None:
+    journal = tmp_path / "session.journal.jsonl"
+    write_journal(journal)
+    lines = journal.read_text().splitlines()
+    journal.write_text("\n".join(lines[:-1]) + "\n")  # drop finalize
+
+    strict = subprocess.run(
+        [sys.executable, str(REPLAY), "--journal", str(journal), "--plan-only"],
+        capture_output=True, text=True,
+    )
+    assert strict.returncode == 2
+    assert "JOURNAL_REJECTED" in strict.stdout
+
+    salvage = subprocess.run(
+        [sys.executable, str(REPLAY), "--journal", str(journal), "--plan-only", "--allow-unfinalized"],
+        capture_output=True, text=True,
+    )
+    assert salvage.returncode == 0, salvage.stdout + salvage.stderr
+    assert "PLAN_OK" in salvage.stdout

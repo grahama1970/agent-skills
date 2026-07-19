@@ -106,6 +106,8 @@ class JournalWriter:
         imgsz: int,
         producer: str,
         crop_manifest_path: str | None = None,
+        previous_session_id: str | None = None,
+        chain_reason: str | None = None,
     ) -> None:
         if clock_mode not in CLOCK_MODES:
             raise ValueError(f"clock_mode must be one of {CLOCK_MODES}")
@@ -146,6 +148,12 @@ class JournalWriter:
             "imgsz": imgsz,
             "producer": producer,
             "crop_manifest_path": crop_manifest_path,
+            # Tracker state is only valid for consecutive frames of one
+            # stream; a producer restart is therefore a NEW session that
+            # references its predecessor. Track ids never carry identity
+            # across the chain boundary.
+            "previous_session_id": previous_session_id,
+            "chain_reason": chain_reason,
             "started_at": started_at,
         }
         self._header = header
@@ -297,6 +305,81 @@ def read_journal(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]], dict
     if finalize.get("chain_sha256") != chain.hexdigest():
         raise JournalValidationError("finalize chain hash mismatch — journal was altered")
     return header, events, finalize
+
+
+def read_journal_lenient(
+    path: Path,
+) -> tuple[dict[str, Any], list[dict[str, Any]], dict[str, Any]]:
+    """Salvage the valid prefix of a possibly-crashed (unfinalized) journal.
+
+    Used for crash recovery and session chaining, never as a substitute for
+    strict validation: the returned ``salvage`` dict states exactly what was
+    dropped and whether the journal was finalized. Consumers that persist from
+    a salvaged journal must record that provenance on every observation.
+    """
+    raw = Path(path).read_text(encoding="utf-8")
+    if not raw:
+        raise JournalValidationError("journal is empty")
+    lines = raw.split("\n")
+    trailing_partial = lines[-1] != ""
+    if not trailing_partial:
+        lines = lines[:-1]
+
+    records: list[dict[str, Any]] = []
+    dropped: list[str] = []
+    for line_number, line in enumerate(lines, start=1):
+        if trailing_partial and line_number == len(lines):
+            dropped.append(f"line {line_number}: truncated final record")
+            break
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError:
+            dropped.append(f"line {line_number}: unparseable record")
+            break
+        if record_checksum(record) != record.get("record_sha256"):
+            dropped.append(f"line {line_number}: checksum mismatch")
+            break
+        records.append(record)
+
+    if not records or records[0].get("record_type") != "session_header":
+        raise JournalValidationError("no valid session header to salvage")
+    header = records[0]
+    if header.get("schema_version") != JOURNAL_SCHEMA:
+        raise JournalValidationError(f"unsupported journal schema: {header.get('schema_version')}")
+
+    finalized = records[-1].get("record_type") == "finalize"
+    events = records[1:-1] if finalized else records[1:]
+    valid_events: list[dict[str, Any]] = []
+    session_id = header["source_session_id"]
+    declared_fps = float(header["declared_fps"])
+    clock_start = float(header["clock_start_seconds"])
+    for index, record in enumerate(events, start=1):
+        if (
+            record.get("record_type") != "event"
+            or record.get("sequence") != index
+            or record.get("event_id") != event_id(session_id, index)
+        ):
+            dropped.append(f"event position {index}: structural mismatch; salvage stops")
+            break
+        clock = record.get("clock") or {}
+        if clock.get("mode") != header["clock_mode"]:
+            dropped.append(f"event position {index}: clock mode mismatch; salvage stops")
+            break
+        if header["clock_mode"] == "declared_frame_offset":
+            expected = clock_start + (
+                float(clock["source_frame_index"]) / declared_fps if declared_fps > 0 else 0.0
+            )
+            if abs(float(clock["media_time_seconds"]) - expected) > CLOCK_EPSILON_SECONDS:
+                dropped.append(f"event position {index}: clock inconsistency; salvage stops")
+                break
+        valid_events.append(record)
+
+    salvage = {
+        "finalized": finalized,
+        "salvaged_event_count": len(valid_events),
+        "dropped": dropped,
+    }
+    return header, valid_events, salvage
 
 
 def build_observation_plan(
