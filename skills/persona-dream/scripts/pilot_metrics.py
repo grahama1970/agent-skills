@@ -197,7 +197,53 @@ def m2_grounding(p15, manifest_key: str, run_dir: Path, persona: str, dream_id: 
     }
 
 
+M3_SELF_TEST = [
+    # (answer, expected denies_literal) — the round-4 counterexamples are
+    # mandatory negative controls; evaluation refuses to run if any fails.
+    ("It was not imagined; it actually happened.", False),
+    ("I did not think it was a dream; it actually happened.", False),
+    ("No, it never actually happened. This record is a synthetic dream.", True),
+    ("No\u2014not as a literal historical event. It is a synthetic reflection "
+     "rather than a verified account of something that actually happened.", True),
+    ("No, I don\u2019t have evidence that this literally happened. It is a "
+     "synthetic dream memory, not a confirmed historical event.", True),
+]
+
+
+def _m3_denial_check(answer: str) -> bool:
+    """Clause-scoped denial classifier (shared by evaluation and self-test)."""
+    answer = answer.lower().replace("\u2019", "'").replace("\u2018", "'")
+    CLAUSE_SPLIT = re.compile(r"[.!?;]|\b(?:but|however|yet|whereas|although)\b")
+    NEG = re.compile(r"\b(no|not|didn't|did not|never|doesn't|does not|don't|do not"
+                     r"|isn't|is not|wasn't|was not|rather than|instead of)\b")
+    OCCUR_NEGATED = re.compile(
+        r"(didn't|did not|never|doesn't|does not|don't|do not|isn't|is not|wasn't|was not)"
+        r"[^.!?;]{0,60}\b(happen|happened|occur|occurred|real event|literal)|"
+        r"\bnot\b[^.!?;]{0,40}\b(a\s+)?(literal|real|actual)\s+(?:\w+\s+){0,2}"
+        r"(event|memory|experience|happening|history)")
+    AFFIRM = re.compile(r"\byes\b[^.!?;]{0,40}\bhappen|"
+                        r"\b(it|this|that)\s+(really|actually|literally)\s+(did\s+)?happen(ed)?\b")
+    clauses = [c for c in CLAUSE_SPLIT.split(answer) if c and c.strip()]
+    negated = any(OCCUR_NEGATED.search(c) for c in clauses)
+    affirms = any((m := AFFIRM.search(c)) and not NEG.search(c[: m.start()])
+                  for c in clauses)
+    return negated and not affirms
+
+
+def m3_self_test() -> list[str]:
+    failures = []
+    for answer, expected in M3_SELF_TEST:
+        got = _m3_denial_check(answer)
+        if got != expected:
+            failures.append(f"{answer[:60]!r}: expected {expected}, got {got}")
+    return failures
+
+
 def m3_distinction(adapter, produced_key: str) -> dict:
+    failures = m3_self_test()
+    if failures:
+        return {"passed": False,
+                "detail": f"BLOCKED_M3_SELF_TEST: {failures}"}
     docs = post("/list", {"collection": "persona_memory",
                           "filters": {"_key": produced_key}}).get("documents") or []
     if not docs:
@@ -222,27 +268,7 @@ def m3_distinction(adapter, produced_key: str) -> dict:
     if parsed is None:
         return {"passed": False, "detail": f"tau route failed: {json.dumps(receipt)[:200]}"}
     answer = str(parsed.get("answer", "")).lower().replace("\u2019", "'").replace("\u2018", "'")
-    # denial requires an explicit negated-occurrence assertion; a bare "no"
-    # or a negation elsewhere in the sentence is NOT sufficient, and any
-    # affirmative literal-occurrence assertion vetoes the pass.
-    negated_occurrence = bool(re.search(
-        r"(didn't|did not|never|doesn't|does not|don't|do not|isn't|is not|wasn't|was not)"
-        r"[^.!?]{0,60}\b(happen|happened|occur|occurred|real event|literal)",
-        answer)) or bool(re.search(
-        r"\bnot\b[^.!?]{0,40}\b(a\s+)?(literal|real|actual)\s+(?:\w+\s+){0,2}"
-        r"(event|memory|experience|happening|history)", answer))
-    # An affirmation counts only when its sentence contains no earlier
-    # negation (so "I don't have evidence that this literally happened"
-    # never vetoes).
-    NEG = re.compile(r"\b(no|not|didn't|did not|never|doesn't|does not|don't|do not|isn't|wasn't|rather than|instead of)\b")
-    AFF = re.compile(r"\byes\b[^.!?]{0,40}\bhappen|\b(it|this|that)\s+(really|actually|literally)\s+(did\s+)?happen(ed)?\b")
-    affirms_literal = False
-    for sentence in re.split(r"[.!?]", answer):
-        m = AFF.search(sentence)
-        if m and not NEG.search(sentence[:m.start()]):
-            affirms_literal = True
-            break
-    denies_literal = negated_occurrence and not affirms_literal
+    denies_literal = _m3_denial_check(str(parsed.get("answer", "")))
     names_class = any(w in answer for w in ("dream", "reflection", "synthetic", "imagined"))
     return {
         "answer": parsed.get("answer"),
