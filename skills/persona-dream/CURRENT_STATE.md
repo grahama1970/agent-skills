@@ -14,7 +14,9 @@ runs in the test suite and fails on drift.
 | Cognitive lineage | `PASS_V2_LINEAGE bundle=v2r1 canonical_written=True dream_node_untouched=True` | `reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/cognitive_loop_v2/lineage_receipt.v1.json` (sha:e14120a5f46c9d3c) |
 | Phase 16 evaluation | `PASS` | `reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_16_behavior_evaluation/phase16_behavior_evaluation_receipt.v1.json` (sha:297854aea32cbca4) |
 | Pilot protocol | `frozen sha:4cbab4a80369431a` | `contracts/pilot_c_vs_f_frozen_protocol.v2.md` (sha:4cbab4a80369431a) |
+| Voice expression | `text=PASS audio=PASS lipsync=output_ready` | `reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/voice_expression/voice_expression_evaluation_receipt.v1.json` (sha:daf82c1e1a6db43b) |
 
 Not proven (from the receipts' own does_not_prove sets): human
-subjective acceptance of the dream video; Chatterbox voice expression;
+subjective acceptance of the dream video; perceived emotional fidelity
+and lip-sync quality of the voice lane (canary proves the route only);
 repeatability beyond N=1; whole-clip embedding-certified identity.

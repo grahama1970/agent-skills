@@ -28,6 +28,7 @@ RECEIPTS = {
     "cognitive_loop": RR / "watch_gauntlet/59b9ff3155d6/cognitive_loop_v2/lineage_receipt.v1.json",
     "phase16": RR / "phase_16_behavior_evaluation/phase16_behavior_evaluation_receipt.v1.json",
     "pilot_protocol": SKILL / "contracts/pilot_c_vs_f_frozen_protocol.v2.md",
+    "voice_expression": RR / "voice_expression/voice_expression_evaluation_receipt.v1.json",
 }
 
 
@@ -50,6 +51,7 @@ def render() -> str:
     packet = _load(RECEIPTS["observation_packet"])
     loop = _load(RECEIPTS["cognitive_loop"])
     p16 = _load(RECEIPTS["phase16"])
+    voice = _load(RECEIPTS["voice_expression"])
 
     dur = ret.get("ffprobe", {}).get("format", {}).get("duration", "?")
     rows = [
@@ -69,6 +71,12 @@ def render() -> str:
         ),
         ("Phase 16 evaluation", p16.get("overall_status"), "phase16"),
         ("Pilot protocol", f"frozen sha:{_sha(RECEIPTS['pilot_protocol'])}", "pilot_protocol"),
+        (
+            "Voice expression",
+            f"text={voice.get('text_route')} audio={voice.get('audio_route')} "
+            f"lipsync={(voice.get('lipsync_canary_receipt') or {}).get('status')}",
+            "voice_expression",
+        ),
     ]
 
     lines = [
@@ -88,7 +96,8 @@ def render() -> str:
     lines += [
         "",
         "Not proven (from the receipts' own does_not_prove sets): human",
-        "subjective acceptance of the dream video; Chatterbox voice expression;",
+        "subjective acceptance of the dream video; perceived emotional fidelity",
+        "and lip-sync quality of the voice lane (canary proves the route only);",
         "repeatability beyond N=1; whole-clip embedding-certified identity.",
         "",
     ]
