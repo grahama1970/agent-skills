@@ -633,7 +633,7 @@ def store_and_reread(document: dict[str, Any], collection: str, base_url: str) -
     store_resp = _http_post(f"{base_url.rstrip('/')}/store", {"document": document, "collection": collection})
     reread = _http_post(
         f"{base_url.rstrip('/')}/list",
-        {"collection": collection, "limit": 5, "filters": {"_key": document["_key"]}},
+        {"collection": collection, "limit": 5, "filters": _reread_filters(document)},
     )
     docs = reread.get("documents") or reread.get("items") or []
     match = None
@@ -665,6 +665,17 @@ def authored_sha(document: dict[str, Any]) -> str:
     numeric round-trip does not read as corruption. See _normalize_numbers."""
     authored = {k: v for k, v in document.items() if not k.startswith("_") or k == "_key"}
     return canonical_sha(_normalize_numbers(authored))
+
+
+def _reread_filters(document: dict[str, Any]) -> dict[str, Any]:
+    """Reread filter for a just-written record. Including visibility_state
+    engages GMO's documented admin bypass of the dream-class listing gate AND
+    asserts the expected state (live fault proof 2026-07-19: without this the
+    writer's own reread cannot see its pending records)."""
+    f: dict[str, Any] = {"_key": document["_key"]}
+    if document.get("visibility_state") is not None:
+        f["visibility_state"] = document["visibility_state"]
+    return f
 
 
 def compute_idempotency_key(
@@ -773,7 +784,7 @@ def stage_and_verify(
     _http_post(f"{base_url.rstrip('/')}/store", {"document": staged_doc, "collection": STAGING_COLLECTION})
     reread = _http_post(
         f"{base_url.rstrip('/')}/list",
-        {"collection": STAGING_COLLECTION, "limit": 3, "filters": {"_key": staged_doc["_key"]}},
+        {"collection": STAGING_COLLECTION, "limit": 3, "filters": _reread_filters(staged_doc)},
     )
     docs = reread.get("documents") or reread.get("items") or []
     match = False
@@ -1092,11 +1103,23 @@ def persist_canonical(
         foreign: list[dict[str, Any]] = []
         for entry in write_set:
             key = entry["document"].get("_key")
+            docs = []
+            for vs in ("pending", "active", "quarantined"):
+                existing = _http_post(
+                    f"{base_url.rstrip('/')}/list",
+                    {"collection": entry["collection"], "limit": 2,
+                     "filters": {"_key": key, "visibility_state": vs}},
+                )
+                docs += existing.get("documents") or existing.get("items") or []
+            # Legacy-null records are visible without the bypass:
             existing = _http_post(
                 f"{base_url.rstrip('/')}/list",
                 {"collection": entry["collection"], "limit": 2, "filters": {"_key": key}},
             )
-            docs = existing.get("documents") or existing.get("items") or []
+            docs += [
+                d for d in (existing.get("documents") or existing.get("items") or [])
+                if d.get("_key") not in {x.get("_key") for x in docs}
+            ]
             for d in docs:
                 if d.get("commit_id") != final_commit_id:
                     foreign.append(
@@ -1165,7 +1188,7 @@ def store_and_reread_check_only(document: dict[str, Any], collection: str, base_
     written_sha = authored_sha(document)
     reread = _http_post(
         f"{base_url.rstrip('/')}/list",
-        {"collection": collection, "limit": 5, "filters": {"_key": document["_key"]}},
+        {"collection": collection, "limit": 5, "filters": _reread_filters(document)},
     )
     docs = reread.get("documents") or reread.get("items") or []
     match = False
