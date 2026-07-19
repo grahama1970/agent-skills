@@ -22,7 +22,7 @@ TAU_DAG_SCHEMA = "tau.dag_contract.v1"
 ASK_TAU_DAG_BUNDLE_SCHEMA = "ask.tau_dag_bundle.v1"
 ASK_TAU_DAG_INTERVIEW_SCHEMA = "ask.tau_dag_interview.v1"
 DEFAULT_SCILLM_BASE_URL = "http://127.0.0.1:4001"
-DEFAULT_SCILLM_API_KEY = "sk-dev-proxy-123"
+DEFAULT_SCILLM_API_KEY = ""
 DEFAULT_TAU_PROJECT_ROOT = Path("/home/graham/workspace/experiments/tau")
 DEFAULT_OUTPUT_ROOT = Path(".ask_artifacts/tau-dag-runs")
 TERMINAL_STATUSES = {"PASS", "BLOCKED", "FAILED", "ERROR"}
@@ -40,10 +40,24 @@ FAIL_CLOSED_ON = [
     "invalid_provider_receipt",
     "provider_auth_required",
 ]
+_CLAUDE_SCILLM_ALIASES = {
+    "claude-fable": "claude-fable-5",
+}
 
 
 class TauDagError(RuntimeError):
     """Raised when a Tau DAG bundle cannot be compiled or executed."""
+
+
+@dataclass(frozen=True)
+class ScillmModelRoute:
+    requested_model: str
+    model: str
+    provider: str
+    auth: str
+    reasoning_effort: str | None = None
+    requested_reasoning_effort: str | None = None
+    reasoning_downgrade_reason: str | None = None
 
 
 @dataclass(frozen=True)
@@ -104,7 +118,7 @@ def infer_compile_input(
         output_root=output_root,
         local_fixture=local_fixture,
         scillm_base_url=scillm_base_url.rstrip("/"),
-        scillm_api_key=scillm_api_key,
+        scillm_api_key=scillm_api_key or default_scillm_api_key(),
         tau_project_root=tau_project_root,
     )
 
@@ -158,6 +172,17 @@ def unsupported_model_routes(input: TauDagCompileInput) -> list[str]:
         if lower.startswith(("webgpt", "$webgpt", "chatgpt", "$chatgpt")):
             unsupported.append(model)
     return sorted(set(unsupported))
+
+
+def default_scillm_api_key() -> str:
+    return (
+        os.environ.get("SCILLM_API_KEY")
+        or os.environ.get("SCILLM_PROXY_API_KEY")
+        or os.environ.get("SCILLM_PROXY_KEY")
+        or os.environ.get("SCILLM_MASTER_KEY")
+        or os.environ.get("LITELLM_MASTER_KEY")
+        or DEFAULT_SCILLM_API_KEY
+    )
 
 
 def build_interview_packet(
@@ -312,13 +337,17 @@ def run_tau_dag_bundle(
     receipt_path = receipt_dir / "dag-receipt.json"
     receipt = _read_json(receipt_path) if receipt_path.exists() else None
     status = str(receipt.get("status") if isinstance(receipt, dict) else "UNKNOWN")
+    node_provider_receipts = _collect_node_provider_receipts(run_dir / "node-artifacts")
+    provider_live = bool(
+        isinstance(receipt, dict) and receipt.get("provider_live") is True
+    ) or any(item.get("provider_live") is True for item in node_provider_receipts)
     result = {
         "schema": "ask.tau_dag_execution.v1",
         "status": status,
         "ok": isinstance(receipt, dict) and receipt.get("ok") is True,
         "mocked": False,
         "live": True,
-        "provider_live": bool(isinstance(receipt, dict) and receipt.get("provider_live") is True),
+        "provider_live": provider_live,
         "execution_owner": "$tau",
         "provider_transport": "$scillm",
         "command": command,
@@ -328,6 +357,7 @@ def run_tau_dag_bundle(
         "receipt_dir": str(receipt_dir),
         "receipt_path": str(receipt_path),
         "receipt": receipt,
+        "node_provider_receipts": node_provider_receipts,
         "polls": polls,
         "viewer": viewer,
         "proof_scope": {
@@ -412,6 +442,43 @@ def tau_viewer_link(
     }
 
 
+def _collect_node_provider_receipts(artifacts_root: Path) -> list[dict[str, Any]]:
+    receipts: list[dict[str, Any]] = []
+    if not artifacts_root.is_dir():
+        return receipts
+    for path in sorted(artifacts_root.glob("*/node-receipt.json")):
+        try:
+            node_receipt = _read_json(path)
+        except (OSError, json.JSONDecodeError, TauDagError):
+            continue
+        provider_receipt = node_receipt.get("provider_receipt")
+        if not isinstance(provider_receipt, dict):
+            continue
+        receipts.append(
+            {
+                "path": str(path),
+                "node_id": node_receipt.get("node_id"),
+                "mode": node_receipt.get("mode"),
+                "requested_model": provider_receipt.get("requested_model")
+                or node_receipt.get("requested_model"),
+                "model": provider_receipt.get("model") or node_receipt.get("model"),
+                "reasoning_effort": provider_receipt.get("reasoning_effort")
+                or node_receipt.get("reasoning_effort"),
+                "requested_reasoning_effort": provider_receipt.get("requested_reasoning_effort")
+                or node_receipt.get("requested_reasoning_effort"),
+                "status": provider_receipt.get("status"),
+                "ok": provider_receipt.get("ok") is True,
+                "mocked": provider_receipt.get("mocked") is True,
+                "live": provider_receipt.get("live") is True,
+                "provider_live": provider_receipt.get("provider_live") is True,
+                "route": provider_receipt.get("route"),
+                "execution_owner": provider_receipt.get("execution_owner"),
+                "provider_transport": provider_receipt.get("provider_transport"),
+            }
+        )
+    return receipts
+
+
 def probe_scillm_provider_gate(
     *,
     models: list[str],
@@ -423,16 +490,18 @@ def probe_scillm_provider_gate(
     """Probe the SciLLM container and optionally make real model calls."""
 
     base = base_url.rstrip("/")
-    headers = {"Authorization": f"Bearer {api_key}", "X-Caller-Skill": "ask-tau-dag-preflight"}
+    resolved_key = api_key or default_scillm_api_key()
+    headers = {"Authorization": f"Bearer {resolved_key}", "X-Caller-Skill": "ask-tau-dag-preflight"}
     checks: list[dict[str, Any]] = []
     with httpx.Client(timeout=timeout_seconds) as client:
         for path in ("/health/liveliness", "/v1/scillm/auth", "/v1/scillm/providers"):
             checks.append(_http_check(client, "GET", f"{base}{path}", headers=headers))
         model_calls: list[dict[str, Any]] = []
         if allow_provider_calls:
-            for model in sorted({item for item in models if item}):
+            for requested_model in sorted({item for item in models if item}):
+                route = resolve_scillm_model_route(requested_model)
                 payload = {
-                    "model": model,
+                    "model": route.model,
                     "messages": [
                         {
                             "role": "user",
@@ -440,6 +509,8 @@ def probe_scillm_provider_gate(
                         }
                     ],
                 }
+                if route.reasoning_effort:
+                    payload["reasoning_effort"] = route.reasoning_effort
                 model_calls.append(
                     _http_check(
                         client,
@@ -447,6 +518,7 @@ def probe_scillm_provider_gate(
                         f"{base}/v1/chat/completions",
                         headers=headers,
                         json_payload=payload,
+                        metadata=_route_metadata(route),
                     )
                 )
         else:
@@ -454,7 +526,8 @@ def probe_scillm_provider_gate(
                 {
                     "status": "BLOCKED",
                     "blocked_reason": "provider_calls_not_allowed",
-                    "model": model,
+                    "requested_model": model,
+                    **_route_metadata(resolve_scillm_model_route(model)),
                     "mocked": False,
                     "live": False,
                 }
@@ -483,6 +556,7 @@ def probe_scillm_provider_gate(
             "proves": [
                 "The SciLLM container endpoints were queried live when live is true.",
                 "Provider model calls were attempted only when provider_live is true or model_calls contain receipts.",
+                "User-facing model selectors are resolved into explicit SciLLM dispatch model/effort metadata.",
             ],
             "does_not_prove": [
                 "Tau DAG execution succeeded.",
@@ -617,6 +691,12 @@ def _write_command_spec(
         "--artifact-dir",
         str(run_dir / "node-artifacts" / node_id),
     ]
+    if model_policy.get("reasoning_effort"):
+        command.extend(["--reasoning-effort", str(model_policy["reasoning_effort"])])
+    if model_policy.get("requested_model"):
+        command.extend(["--requested-model", str(model_policy["requested_model"])])
+    if model_policy.get("requested_reasoning_effort"):
+        command.extend(["--requested-reasoning-effort", str(model_policy["requested_reasoning_effort"])])
     for evidence in node.get("required_evidence", []):
         command.extend(["--evidence", str(evidence)])
     payload = {
@@ -661,22 +741,73 @@ def _write_worker(run_dir: Path) -> Path:
 
 
 def _model_policy(model: str, *, base_url: str = DEFAULT_SCILLM_BASE_URL) -> dict[str, str]:
-    lower = model.lower()
-    if lower.startswith("claude"):
-        provider = "anthropic"
-        auth = "scillm_claude_code_credentials"
-    else:
-        provider = "openai"
-        auth = "scillm_proxy_bearer"
-    return {
-        "provider": provider,
-        "model": model,
-        "auth": auth,
+    route = resolve_scillm_model_route(model)
+    payload: dict[str, str] = {
+        "provider": route.provider,
+        "requested_model": route.requested_model,
+        "model": route.model,
+        "auth": route.auth,
         "service": "scillm_container_service",
         "base_url": base_url,
         "execution_owner": "$tau",
         "provider_transport": "$scillm",
     }
+    if route.reasoning_effort:
+        payload["reasoning_effort"] = route.reasoning_effort
+    if route.requested_reasoning_effort:
+        payload["requested_reasoning_effort"] = route.requested_reasoning_effort
+    if route.reasoning_downgrade_reason:
+        payload["reasoning_downgrade_reason"] = route.reasoning_downgrade_reason
+    return payload
+
+
+def resolve_scillm_model_route(model: str) -> ScillmModelRoute:
+    requested = model.strip()
+    lower = requested.lower()
+    if lower.startswith(("gpt-5.6", "gpt-5-6")):
+        requested_effort = "xhigh" if "xhigh" in lower else None
+        return ScillmModelRoute(
+            requested_model=requested,
+            model="gpt-5.5",
+            provider="openai",
+            auth="scillm_proxy_bearer",
+            reasoning_effort="high" if requested_effort == "xhigh" else requested_effort,
+            requested_reasoning_effort=requested_effort,
+            reasoning_downgrade_reason=(
+                "SciLLM currently accepts none/low/medium/high reasoning effort; xhigh is preserved as the requested selector and dispatched as high."
+                if requested_effort == "xhigh"
+                else None
+            ),
+        )
+    if lower.startswith("claude"):
+        return ScillmModelRoute(
+            requested_model=requested,
+            model=_CLAUDE_SCILLM_ALIASES.get(lower, requested),
+            provider="anthropic",
+            auth="scillm_claude_code_credentials",
+        )
+    return ScillmModelRoute(
+        requested_model=requested,
+        model=requested,
+        provider="openai",
+        auth="scillm_proxy_bearer",
+    )
+
+
+def _route_metadata(route: ScillmModelRoute) -> dict[str, Any]:
+    payload: dict[str, Any] = {
+        "requested_model": route.requested_model,
+        "model": route.model,
+        "provider": route.provider,
+        "auth": route.auth,
+    }
+    if route.reasoning_effort:
+        payload["reasoning_effort"] = route.reasoning_effort
+    if route.requested_reasoning_effort:
+        payload["requested_reasoning_effort"] = route.requested_reasoning_effort
+    if route.reasoning_downgrade_reason:
+        payload["reasoning_downgrade_reason"] = route.reasoning_downgrade_reason
+    return payload
 
 
 def _solver_prompt_contract(input: TauDagCompileInput, *, model: str, index: int) -> dict[str, str]:
@@ -711,11 +842,12 @@ def _http_check(
     *,
     headers: dict[str, str],
     json_payload: dict[str, Any] | None = None,
+    metadata: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     try:
         response = client.request(method, url, headers=headers, json=json_payload)
         parsed = _json_or_none(response.text)
-        return {
+        result = {
             "ok": 200 <= response.status_code < 300,
             "method": method,
             "url": url,
@@ -724,8 +856,11 @@ def _http_check(
             "live": True,
             "response": parsed if parsed is not None else response.text[:1000],
         }
+        if metadata:
+            result.update(metadata)
+        return result
     except Exception as exc:
-        return {
+        result = {
             "ok": False,
             "method": method,
             "url": url,
@@ -733,6 +868,9 @@ def _http_check(
             "live": False,
             "error": str(exc),
         }
+        if metadata:
+            result.update(metadata)
+        return result
 
 
 def _run_command(command: list[str], *, cwd: Path) -> dict[str, Any]:
@@ -863,6 +1001,9 @@ def main() -> int:
     parser.add_argument("--node-id", required=True)
     parser.add_argument("--mode", choices=["fixture", "scillm"], required=True)
     parser.add_argument("--model", required=True)
+    parser.add_argument("--requested-model", default="")
+    parser.add_argument("--reasoning-effort", default="")
+    parser.add_argument("--requested-reasoning-effort", default="")
     parser.add_argument("--scillm-base-url", required=True)
     parser.add_argument("--scillm-api-key", required=True)
     parser.add_argument("--artifact-dir", required=True)
@@ -879,6 +1020,9 @@ def main() -> int:
         "node_id": args.node_id,
         "mode": args.mode,
         "model": args.model,
+        "requested_model": args.requested_model or args.model,
+        "reasoning_effort": args.reasoning_effort or None,
+        "requested_reasoning_effort": args.requested_reasoning_effort or None,
         "provider_receipt": provider_receipt,
         "mocked": False,
         "live": args.mode == "scillm",
@@ -924,6 +1068,9 @@ def _provider_receipt(args: argparse.Namespace, start: dict[str, Any]) -> dict[s
             "live": False,
             "provider_live": False,
             "model": args.model,
+            "requested_model": args.requested_model or args.model,
+            "reasoning_effort": args.reasoning_effort or None,
+            "requested_reasoning_effort": args.requested_reasoning_effort or None,
             "route": "tau_local_fixture_adapter",
             "execution_owner": "$tau",
             "provider_transport": "$scillm",
@@ -933,6 +1080,8 @@ def _provider_receipt(args: argparse.Namespace, start: dict[str, Any]) -> dict[s
         "model": args.model,
         "messages": [{"role": "user", "content": prompt}],
     }
+    if args.reasoning_effort:
+        payload["reasoning_effort"] = args.reasoning_effort
     request = urllib.request.Request(
         args.scillm_base_url.rstrip("/") + "/v1/chat/completions",
         data=json.dumps(payload).encode("utf-8"),
@@ -954,6 +1103,9 @@ def _provider_receipt(args: argparse.Namespace, start: dict[str, Any]) -> dict[s
             "live": True,
             "provider_live": True,
             "model": args.model,
+            "requested_model": args.requested_model or args.model,
+            "reasoning_effort": args.reasoning_effort or None,
+            "requested_reasoning_effort": args.requested_reasoning_effort or None,
             "route": "tau_local_scillm_adapter",
             "execution_owner": "$tau",
             "provider_transport": "$scillm",
@@ -968,6 +1120,9 @@ def _provider_receipt(args: argparse.Namespace, start: dict[str, Any]) -> dict[s
             "live": False,
             "provider_live": False,
             "model": args.model,
+            "requested_model": args.requested_model or args.model,
+            "reasoning_effort": args.reasoning_effort or None,
+            "requested_reasoning_effort": args.requested_reasoning_effort or None,
             "route": "tau_local_scillm_adapter",
             "execution_owner": "$tau",
             "provider_transport": "$scillm",
@@ -1008,6 +1163,9 @@ def _evidence(
                 "node_id": args.node_id,
                 "summary": f"{args.node_id} candidate solution for the requested problem.",
                 "model": args.model,
+                "requested_model": args.requested_model or args.model,
+                "reasoning_effort": args.reasoning_effort or None,
+                "requested_reasoning_effort": args.requested_reasoning_effort or None,
             }
         )
     if args.node_id == "reviewer":

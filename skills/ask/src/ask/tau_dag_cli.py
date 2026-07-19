@@ -15,6 +15,7 @@ from .tau_dag import (
     DEFAULT_SCILLM_BASE_URL,
     DEFAULT_TAU_PROJECT_ROOT,
     compile_tau_dag_bundle,
+    default_scillm_api_key,
     infer_compile_input,
     probe_scillm_provider_gate,
     run_tau_dag_bundle,
@@ -74,7 +75,7 @@ def run(
     scillm_api_key: Annotated[
         str,
         typer.Option("--scillm-api-key", help="SciLLM bearer token."),
-    ] = os.environ.get("SCILLM_PROXY_API_KEY", DEFAULT_SCILLM_API_KEY),
+    ] = default_scillm_api_key(),
     tau_project_root: Annotated[
         Path,
         typer.Option("--tau-project-root", help="Tau project root used for uv run tau."),
@@ -184,7 +185,7 @@ def probe_scillm(
     scillm_api_key: Annotated[
         str,
         typer.Option("--scillm-api-key", help="SciLLM bearer token."),
-    ] = os.environ.get("SCILLM_PROXY_API_KEY", DEFAULT_SCILLM_API_KEY),
+    ] = default_scillm_api_key(),
     json_output: Annotated[bool, typer.Option("--json", help="Emit JSON output.")] = False,
 ) -> None:
     result = probe_scillm_provider_gate(

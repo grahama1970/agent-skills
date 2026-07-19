@@ -99,6 +99,30 @@ def _case_compile_ready(output_root: Path) -> dict[str, Any]:
         checks=[
             ("status_ready", lambda payload: (payload.get("bundle") or {}).get("status") == "READY"),
             ("dag_exists", lambda payload: Path(str((payload.get("bundle") or {}).get("dag_path"))).is_file()),
+            (
+                "final_dag_before_execution",
+                lambda payload: (payload.get("bundle") or {}).get("final_dag_emitted_before_execution")
+                is True,
+            ),
+            (
+                "gpt_56_xhigh_route_metadata",
+                lambda payload: _has_model_policy(
+                    payload,
+                    requested_model="gpt-5.6-xhigh",
+                    model="gpt-5.5",
+                    reasoning_effort="high",
+                    requested_reasoning_effort="xhigh",
+                ),
+            ),
+            (
+                "claude_fable_route_metadata",
+                lambda payload: _has_model_policy(
+                    payload,
+                    requested_model="claude-fable",
+                    model="claude-fable-5",
+                    auth="scillm_claude_code_credentials",
+                ),
+            ),
         ],
     )
 
@@ -264,6 +288,24 @@ def _json_or_error(text: str) -> dict[str, Any]:
     except json.JSONDecodeError as exc:
         return {"parse_error": str(exc), "raw_stdout": text[-4000:]}
     return payload if isinstance(payload, dict) else {"parse_error": "stdout JSON root was not an object"}
+
+
+def _has_model_policy(payload: dict[str, Any], **expected: Any) -> bool:
+    dag = (payload.get("bundle") or {}).get("dag")
+    if not isinstance(dag, dict):
+        return False
+    nodes = dag.get("nodes")
+    if not isinstance(nodes, list):
+        return False
+    for node in nodes:
+        if not isinstance(node, dict):
+            continue
+        policy = node.get("model_policy")
+        if isinstance(policy, dict) and all(
+            policy.get(key) == value for key, value in expected.items()
+        ):
+            return True
+    return False
 
 
 if __name__ == "__main__":
