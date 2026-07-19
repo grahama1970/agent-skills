@@ -13,7 +13,7 @@ runs in the test suite and fails on drift.
 | Observation packet | `ACCEPTED` | `reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/dream_observation_packet.v2.json` (sha:8033c384b71b23eb) |
 | Cognitive loop | `PASS_COGNITIVE_LOOP canonical_written=True` | `reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/cognitive_loop/cognitive_loop_receipt.json` (sha:0c40436b54e2951f) |
 | Phase 16 evaluation | `PASS` | `reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_16_behavior_evaluation/phase16_behavior_evaluation_receipt.v1.json` (sha:297854aea32cbca4) |
-| Pilot protocol | `frozen sha:e597c581357c8bac` | `contracts/pilot_c_vs_f_frozen_protocol.v1.md` (sha:e597c581357c8bac) |
+| Pilot protocol | `frozen sha:4cbab4a80369431a` | `contracts/pilot_c_vs_f_frozen_protocol.v2.md` (sha:4cbab4a80369431a) |
 
 Not proven (from the receipts' own does_not_prove sets): human
 subjective acceptance of the dream video; Chatterbox voice expression;

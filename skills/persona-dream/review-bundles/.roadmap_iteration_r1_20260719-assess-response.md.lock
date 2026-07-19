@@ -1,0 +1,9 @@
+{
+  "schema": "webgpt.submit_output_lock.v1",
+  "pid": 586045,
+  "started_at": "2026-07-19T19:51:36Z",
+  "response_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/review-bundles/roadmap_iteration_r1_20260719-assess-response.md",
+  "raw_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/review-bundles/roadmap_iteration_r1_20260719-assess-response.raw.md",
+  "meta_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/review-bundles/roadmap_iteration_r1_20260719-assess-response.meta.json",
+  "receipt_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/review-bundles/roadmap_iteration_r1_20260719-assess-response.receipt.json"
+}
