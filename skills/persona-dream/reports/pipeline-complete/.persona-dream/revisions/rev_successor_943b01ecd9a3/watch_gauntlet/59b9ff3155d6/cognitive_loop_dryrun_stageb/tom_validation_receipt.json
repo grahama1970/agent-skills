@@ -1,0 +1,18 @@
+{
+  "accepted_count": 0,
+  "accepted_tom_candidates": [],
+  "candidate_receipts": [],
+  "candidate_source": "none",
+  "canonical_memory_write_allowed": false,
+  "dream_id": "dream_successor_943b01ecd9a3",
+  "generated_at": "2026-07-19T02:07:14.330492+00:00",
+  "interpretation_sha256": "sha256:3071026b523f592880c12af4b47a34173608c7ac487bbdd03c2a137403424e7f",
+  "live": false,
+  "mocked": false,
+  "proposed_candidate_count": 0,
+  "rejected_count": 0,
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.tom_validation_receipt.v1",
+  "status": "BLOCKED_TOM_VALIDATION"
+}

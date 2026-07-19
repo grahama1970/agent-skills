@@ -1,0 +1,34 @@
+{
+ "agent_level_acceptance": "ACCEPTED_AGENT_LEVEL",
+ "canonical_cognitive_loop": "DRY_RUN_ONLY_NO_CANONICAL_WRITE",
+ "canonical_write_blocker": "PHASE_13_14_TEXT_REASONING_NOT_ROUTABLE_THROUGH_TAU_AT_416edc5a. The sanctioned Tau nodes at this commit are image-bound (panel-reviewer) or gate-validators (scillm_subagent_gate); no general text-completion Tau node exists. Genuine phase-13 self-interpretation (with mandatory Watch citations + renderer-defect alternatives) requires an LLM call that must route through Tau, and direct scillm is forbidden by standing directive. Fail-closed: canonical dream memory is NOT persisted.",
+ "claims": {
+  "does_not_prove": [
+   "Canonical dream-memory persistence of this return (deferred, fail-closed, pending a Tau text-reasoning node for phases 13/14).",
+   "The closed-loop research claim (needs genuine phase 13/14 reasoning + a non-superseded canonical write)."
+  ],
+  "proves": [
+   "The Stage B post-return gauntlet passed its fail-closed gates (step 36, step 38) with VLM adjudication routed through the sanctioned Tau panel-reviewer node.",
+   "The cognitive loop was exercised in dry-run with zero canonical writes."
+  ]
+ },
+ "created_at": "2026-07-19T02:08:45Z",
+ "fail_closed": true,
+ "live": true,
+ "loop_dry_run": {
+  "canonical_dream_memory_written": false,
+  "command": "run_cognitive_loop.py --no-live",
+  "output_root": "watch_gauntlet/59b9ff3155d6/cognitive_loop_dryrun_stageb",
+  "phase_13_self_interpretation": "BLOCKED_SELF_INTERPRETATION (no LLM interpretations drafted; text reasoning not routed through Tau)",
+  "phase_14_tom_validation": "BLOCKED_TOM_VALIDATION",
+  "phase_15_persistence": "DRY_RUN_PERSISTENCE_PLAN"
+ },
+ "mocked": false,
+ "revision_id": "rev_successor_943b01ecd9a3",
+ "schema": "persona_dream.stageb_cognitive_loop_outcome.v1",
+ "watch_gauntlet_vision_upgrade": {
+  "note": "The image-based VLM layer was successfully routed through Tau for the step-36 adjudication (5 low-cosine frames + Kai + whole-scene continuity). The observation packet remains labelled DEGRADED because a full 12-frame per-entity re-embedding into the packet schema was not performed; the step-36 v2 receipt carries the authoritative VLM verdicts.",
+  "route": "tau:persona-dream-panel-reviewer:gpt-5.5",
+  "status": "VLM_LAYER_AVAILABLE_AND_EXERCISED_FOR_STEP36"
+ }
+}

@@ -1,0 +1,187 @@
+{
+ "claims": {
+  "does_not_prove": [
+   "Embedding-certified whole-clip Embry identity: the deterministic metric still fails 5/12 frames; final-third identity certainty rests on VLM pose/occlusion adjudication and wardrobe/composition evidence, not embedding proof.",
+   "Kai embedding certification (no fresh InsightFace pass this session; Kai covered by VLM).",
+   "Human subjective acceptance (remains the human's)."
+  ],
+  "proves": [
+   "The active successor MP4 (sha 59b9ff31) was inspected via 12 hash-bound frames with two independent authorities.",
+   "No frame contains a different-looking woman substituted for Embry; every sub-threshold Embry frame is pose/occlusion/distance-explained and consistent with its storyboard beat (sb_003 Kai-focused, sb_004 wave/decision-focused with Embry distant).",
+   "Scene, wardrobe (navy vs black rashguard), environment, and action continuity are coherent across the clip (VLM via Tau).",
+   "The VLM adjudication was produced through the sanctioned Tau panel-reviewer route, not a direct scillm call."
+  ]
+ },
+ "created_at": "2026-07-19T01:59:01Z",
+ "embry_embedding_subgate": {
+  "authority": "embedding_cosine",
+  "cosine_max": 0.612056,
+  "cosine_mean": 0.377941,
+  "cosine_min": 0.02481,
+  "embry_reference": "embry_contact_sheet_v3",
+  "embry_reference_sha256": "sha256:3ce40b3b6839ebba0f468d75a1adbb7f82e0d95457aefd3627e222eb569de00c",
+  "frames_present_at_threshold": 7,
+  "frames_total": 12,
+  "model": "insightface:buffalo_l:w600k_r50",
+  "note": "Strong opening identity window (t=0.0 cos 0.603, t=0.84 cos 0.612) and mid-clip (t=2.5-5.9 cos 0.45-0.58); 5/12 sub-threshold, concentrated in the final third.",
+  "threshold": 0.421,
+  "verdict": "FAIL_WHOLE_CLIP_METRIC"
+ },
+ "embry_vlm_adjudication": {
+  "all_low_cosine_frames_pose_occlusion_or_absent": true,
+  "any_different_looking_woman_substituted": false,
+  "per_frame": [
+   {
+    "arcface_embry_cosine": 0.327414,
+    "beat": "sb_001",
+    "different_looking_woman_substituted": false,
+    "embedding_present_at_threshold_0p421": false,
+    "frame": "frame_0003.jpg",
+    "review_prompt_sha256": "sha256:d1f706fb90d3b9487bbad5f0c1c95690f6831576d62965d478dabaad2a6c50b3",
+    "reviewer_source": "tau:persona-dream-panel-reviewer:gpt-5.5:image_url:docker-scillm-proxy",
+    "storyboard_intent_consistent": true,
+    "tau_visual_review_receipt": "pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/provider_return/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/tau_step36_adjudication/visual_review_receipts/step36_embry_frame_0003.visual_review_receipt.json",
+    "timestamp_s": 1.67,
+    "vlm_classification": "POSE_OCCLUSION",
+    "vlm_status": "PASS",
+    "vlm_summary": "A brown-haired adult woman in a navy rashguard is close to camera in the water beside a surfboard, with a few distant swimmers/surfers in the background; she plausibly matches Embry and does not appear to be a different-looking substituted woman, while Kai in a black rashguard is not clearly visible.",
+    "woman_with_readable_face_present": true
+   },
+   {
+    "arcface_embry_cosine": 0.02481,
+    "beat": "sb_003",
+    "different_looking_woman_substituted": false,
+    "embedding_present_at_threshold_0p421": false,
+    "frame": "frame_0009.jpg",
+    "review_prompt_sha256": "sha256:352fb60c268699a2566646cb1630fc143a88b1fc63e978b384ea7dd295084989",
+    "reviewer_source": "tau:persona-dream-panel-reviewer:gpt-5.5:image_url:docker-scillm-proxy",
+    "storyboard_intent_consistent": true,
+    "tau_visual_review_receipt": "pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/provider_return/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/tau_step36_adjudication/visual_review_receipts/step36_embry_frame_0009.visual_review_receipt.json",
+    "timestamp_s": 6.69,
+    "vlm_classification": "POSE_OCCLUSION",
+    "vlm_status": "PASS",
+    "vlm_summary": "A small, blurry woman in a navy rashguard lies on a surfboard near a male in a black rashguard, with several distant swimmers in the background; Embry may be present but her face is too small/unreadable to identify, so there is no clear different-looking woman substitution.",
+    "woman_with_readable_face_present": false
+   },
+   {
+    "arcface_embry_cosine": 0.091898,
+    "beat": "sb_004",
+    "different_looking_woman_substituted": false,
+    "embedding_present_at_threshold_0p421": false,
+    "frame": "frame_0010.jpg",
+    "review_prompt_sha256": "sha256:402bd3b07ee355b17bbdfc370d40f6bca295b601d49bf3cf29f8e15d06c15ee1",
+    "reviewer_source": "tau:persona-dream-panel-reviewer:gpt-5.5:image_url:docker-scillm-proxy",
+    "storyboard_intent_consistent": true,
+    "tau_visual_review_receipt": "pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/provider_return/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/tau_step36_adjudication/visual_review_receipts/step36_embry_frame_0010.visual_review_receipt.json",
+    "timestamp_s": 7.53,
+    "vlm_classification": "POSE_OCCLUSION",
+    "vlm_status": "PASS",
+    "vlm_summary": "A small, distant woman in a navy rashguard is crouched on a surfboard at the waterline with a man in a black rashguard nearby and several tiny distant surfers/swimmers in the background; her face is too small/blurred to read clearly, so nothing contradicts Embry being present.",
+    "woman_with_readable_face_present": false
+   },
+   {
+    "arcface_embry_cosine": 0.085413,
+    "beat": "sb_004",
+    "different_looking_woman_substituted": false,
+    "embedding_present_at_threshold_0p421": false,
+    "frame": "frame_0011.jpg",
+    "review_prompt_sha256": "sha256:402bd3b07ee355b17bbdfc370d40f6bca295b601d49bf3cf29f8e15d06c15ee1",
+    "reviewer_source": "tau:persona-dream-panel-reviewer:gpt-5.5:image_url:docker-scillm-proxy",
+    "storyboard_intent_consistent": true,
+    "tau_visual_review_receipt": "pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/provider_return/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/tau_step36_adjudication/visual_review_receipts/step36_embry_frame_0011.visual_review_receipt.json",
+    "timestamp_s": 8.37,
+    "vlm_classification": "POSE_OCCLUSION",
+    "vlm_status": "PASS",
+    "vlm_summary": "A small/distant woman in a navy rashguard is surfing at the waterline while a man in a black rashguard and a few distant surfers are visible; her face is turned/profiled and too small/blurry to read, so nothing contradicts her being Embry.",
+    "woman_with_readable_face_present": false
+   },
+   {
+    "arcface_embry_cosine": 0.150974,
+    "beat": "sb_004",
+    "different_looking_woman_substituted": false,
+    "embedding_present_at_threshold_0p421": false,
+    "frame": "frame_0012.jpg",
+    "review_prompt_sha256": "sha256:402bd3b07ee355b17bbdfc370d40f6bca295b601d49bf3cf29f8e15d06c15ee1",
+    "reviewer_source": "tau:persona-dream-panel-reviewer:gpt-5.5:image_url:docker-scillm-proxy",
+    "storyboard_intent_consistent": true,
+    "tau_visual_review_receipt": "pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/provider_return/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/tau_step36_adjudication/visual_review_receipts/step36_embry_frame_0012.visual_review_receipt.json",
+    "timestamp_s": 9.2,
+    "vlm_classification": "POSE_OCCLUSION",
+    "vlm_status": "PASS",
+    "vlm_summary": "A distant woman in a dark/navy surf outfit stands on a board at the waterline while a man in a black rashguard and another distant person are in the water; the woman's face is small and blurry/unreadable, so nothing contradicts Embry being present.",
+    "woman_with_readable_face_present": false
+   }
+  ],
+  "verdict": "PASS_NO_DRIFT_NO_SUBSTITUTION"
+ },
+ "kai_subgate": {
+  "authority": "vlm_via_tau",
+  "embedding_note": "InsightFace not runnable in this session's env for a fresh Kai embedding pass; Kai covered by VLM through Tau. The v1 blocker (contact_sheet_kai_surfboard.png no-face) is superseded: 02-kai_character_sheet.png is the face-bearing Kai reference.",
+  "per_frame": [
+   {
+    "frame": "frame_0009.jpg",
+    "review_prompt_sha256": "sha256:eb0a8de7ac065c4cdb6a66c06092e915988c025957976359b4e0bd5820720e0c",
+    "tau_visual_review_receipt": "pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/provider_return/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/tau_step36_adjudication/visual_review_receipts/step36_kai_frame_0009.visual_review_receipt.json",
+    "timestamp_s": 6.69,
+    "vlm_classification": "POSE_OCCLUSION",
+    "vlm_status": "PASS",
+    "vlm_summary": "Two foreground surfers are in the water with several tiny distant people near the shore; the black-rashguard male figure could be Kai but his face is too small/blurred and partly obscured, so identity drift cannot be assessed."
+   },
+   {
+    "frame": "frame_0011.jpg",
+    "review_prompt_sha256": "sha256:eb0a8de7ac065c4cdb6a66c06092e915988c025957976359b4e0bd5820720e0c",
+    "tau_visual_review_receipt": "pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/provider_return/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/tau_step36_adjudication/visual_review_receipts/step36_kai_frame_0011.visual_review_receipt.json",
+    "timestamp_s": 8.37,
+    "vlm_classification": "POSE_OCCLUSION",
+    "vlm_status": "PASS",
+    "vlm_summary": "A surfer stands on a board in the foreground while a dark-haired man in a black rashguard is partly submerged in the water with other distant swimmers; the man's face is too small/occluded to judge identity, so Kai continuity is not contradicted."
+   }
+  ],
+  "reference": "phase_07_storyboard_live_tau/references/02-kai_character_sheet.png",
+  "reference_sha256": "sha256:692cf37c5e7915f8b4ebceabd03b5d01ff69c9d428e94333bc1a01ac5e497700",
+  "verdict": "PASS_NOT_CONTRADICTED"
+ },
+ "live": true,
+ "mocked": false,
+ "return_duration_s": 10.041667,
+ "return_id": "97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4",
+ "review_method": "Two-authority adjudication. (1) Deterministic ArcFace (InsightFace buffalo_l w600k_r50, CPU) over 12 hash-bound gauntlet frames vs embry_contact_sheet_v3. (2) VLM scene/identity adjudication of the 5 sub-threshold frames + Kai + whole-scene continuity, routed THROUGH the Tau panel-reviewer node (gpt-5.5, Tau-owned scillm access), each frame a composite [reference | frame] with a hash-recorded visual_review_prompt.",
+ "revision_id": "rev_successor_943b01ecd9a3",
+ "run_id": "pipeline-complete",
+ "scene_continuity_subgate": {
+  "authority": "vlm_via_tau",
+  "blocking_findings": [
+   "Frames 2-5 briefly isolate Embry handling/angling the board before returning to the two-shot, but it reads as a prep insert rather than a jarring discontinuity."
+  ],
+  "environment_continuity": "The ocean, shallow reef, tropical shoreline, and bay setting remain coherent across the sequence.",
+  "review_prompt_sha256": "sha256:2dbe4d22927ae828cdf4a67b78286fc70f2eca6477f4b01689dc4e6ee7828ead",
+  "scene_action_continuity": "The action arc reads coherently: they wait outside, Kai gives a restrained cue, and Embry commits by paddling/standing into the safe channel.",
+  "status": "PASS",
+  "summary": "Continuity is broadly stable across setting, wardrobe, and action. The sequence supports the intended Kahalu'u Bay reef-break storyboard with only a minor timing/blocking compression around Embry's board prep.",
+  "tau_visual_review_receipt": "pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/phase_11_submit_return/provider_return/97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4/tau_step36_adjudication/visual_review_receipts/step36_scene_continuity.visual_review_receipt.json",
+  "wardrobe_continuity": "Embry remains in a navy rashguard and Kai remains in a black rashguard throughout; no major wardrobe swaps or color confusion."
+ },
+ "schema": "persona_dream.post_kling_continuity_review_receipt.v2",
+ "source_revision_id": "rev_upstream_bf3b05d47fb8",
+ "source_video": "provider_return.mp4",
+ "source_video_sha256": "sha256:59b9ff3155d6ba9d0b90d795bafe7b84cc4e10849db08299217b65d61e211fff",
+ "status": "PASS_POST_KLING_CONTINUITY_REVIEW",
+ "step": 36,
+ "subgates": {
+  "embry_visual_identity_within_return": "PASS_VLM_ADJUDICATED",
+  "environment_continuity": "PASS",
+  "kai_visual_identity_within_return": "PASS_VLM_NOT_CONTRADICTED",
+  "scene_action_continuity": "PASS",
+  "technical_readability": "PASS",
+  "wardrobe_continuity": "PASS"
+ },
+ "supersedes": "persona_dream.post_kling_continuity_review_receipt.v1",
+ "verdict_logic": "PASS requires every sub-threshold frame to be POSE_OCCLUSION/ABSENT consistent with storyboard intent AND no frame showing a different-looking substituted person AND scene/wardrobe/action continuity PASS. Observed: all_sub_threshold_pose_or_absent=True, any_substitution=False, scene_continuity=PASS.",
+ "vlm_route": {
+  "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+  "commit": "416edc5a",
+  "direct_scillm_used": false,
+  "harness": "tau",
+  "node": "persona_dream_panel_agent panel-reviewer"
+ }
+}

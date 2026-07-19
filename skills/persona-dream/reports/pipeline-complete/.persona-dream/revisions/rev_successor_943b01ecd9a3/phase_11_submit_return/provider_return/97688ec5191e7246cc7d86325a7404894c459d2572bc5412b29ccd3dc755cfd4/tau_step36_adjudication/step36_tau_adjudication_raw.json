@@ -1,0 +1,541 @@
+{
+ "embry_frames": [
+  {
+   "panel_id": "step36_embry_frame_0003",
+   "returncode": 0,
+   "prompt_sha256": "sha256:d1f706fb90d3b9487bbad5f0c1c95690f6831576d62965d478dabaad2a6c50b3",
+   "artifact_dir": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/tau_artifacts/step36_embry_frame_0003",
+   "stderr_tail": "",
+   "visual_review_receipt": {
+    "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+    "blocking_findings": [],
+    "created_at": "2026-07-19T01:55:23Z",
+    "duration_seconds": 0.059505,
+    "events_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/tau_artifacts/step36_embry_frame_0003/panel_reviewer_events.jsonl",
+    "http_status": 200,
+    "image_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/comp_embry_frame_0003.jpg.png",
+    "live": true,
+    "live_call_performed": true,
+    "mocked": false,
+    "model": "gpt-5.5",
+    "parsed_response": {
+     "different_looking_woman_substituted": false,
+     "embry_classification": "POSE_OCCLUSION",
+     "kai_black_rashguard_male_visible": false,
+     "people_visible": 4,
+     "status": "PASS",
+     "summary": "A brown-haired adult woman in a navy rashguard is close to camera in the water beside a surfboard, with a few distant swimmers/surfers in the background; she plausibly matches Embry and does not appear to be a different-looking substituted woman, while Kai in a black rashguard is not clearly visible.",
+     "woman_with_readable_face_present": true
+    },
+    "passed_entities": [],
+    "receipt_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/tau_artifacts/step36_embry_frame_0003/visual_review_receipt.json",
+    "request": {
+     "messages": "<redacted-image-url-request>",
+     "model": "gpt-5.5",
+     "response_format": {
+      "type": "json_object"
+     },
+     "scillm_metadata": {
+      "caller": "tau",
+      "proof": "persona-dream-panel-review",
+      "role": "panel-reviewer"
+     },
+     "stream": true,
+     "stream_heartbeat_s": 15.0,
+     "stream_progress_events": true,
+     "temperature": 0
+    },
+    "response_content": "{\"status\":\"PASS\",\"embry_classification\":\"POSE_OCCLUSION\",\"different_looking_woman_substituted\":false,\"woman_with_readable_face_present\":true,\"kai_black_rashguard_male_visible\":false,\"people_visible\":4,\"summary\":\"A brown-haired adult woman in a navy rashguard is close to camera in the water beside a surfboard, with a few distant swimmers/surfers in the background; she plausibly matches Embry and does not appear to be a different-looking substituted woman, while Kai in a black rashguard is not clearly visible.\"}",
+    "review_prompt_sha256": "sha256:d1f706fb90d3b9487bbad5f0c1c95690f6831576d62965d478dabaad2a6c50b3",
+    "role": "panel-reviewer",
+    "schema": "tau.persona_dream.scillm_vlm_review_receipt.v1",
+    "status": "PASS",
+    "stream": true,
+    "stream_done_seen": true,
+    "stream_event_count": 122,
+    "stream_heartbeat_count": 0,
+    "stream_last_event_type": "done",
+    "summary": "A brown-haired adult woman in a navy rashguard is close to camera in the water beside a surfboard, with a few distant swimmers/surfers in the background; she plausibly matches Embry and does not appear to be a different-looking substituted woman, while Kai in a black rashguard is not clearly visible.",
+    "surface": "scillm.chat_completions.image_url"
+   },
+   "_summary": {
+    "frame": "frame_0003.jpg",
+    "ts": 1.67,
+    "cosine": 0.327,
+    "beat": "sb_001",
+    "status": "PASS",
+    "classification": "POSE_OCCLUSION",
+    "substituted": false,
+    "prompt_sha256": "sha256:d1f706fb90d3b9487bbad5f0c1c95690f6831576d62965d478dabaad2a6c50b3"
+   }
+  },
+  {
+   "panel_id": "step36_embry_frame_0009",
+   "returncode": 0,
+   "prompt_sha256": "sha256:352fb60c268699a2566646cb1630fc143a88b1fc63e978b384ea7dd295084989",
+   "artifact_dir": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/tau_artifacts/step36_embry_frame_0009",
+   "stderr_tail": "",
+   "visual_review_receipt": {
+    "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+    "blocking_findings": [],
+    "created_at": "2026-07-19T01:55:36Z",
+    "duration_seconds": 0.055283,
+    "events_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/tau_artifacts/step36_embry_frame_0009/panel_reviewer_events.jsonl",
+    "http_status": 200,
+    "image_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/comp_embry_frame_0009.jpg.png",
+    "live": true,
+    "live_call_performed": true,
+    "mocked": false,
+    "model": "gpt-5.5",
+    "parsed_response": {
+     "different_looking_woman_substituted": false,
+     "embry_classification": "POSE_OCCLUSION",
+     "kai_black_rashguard_male_visible": true,
+     "people_visible": 6,
+     "status": "PASS",
+     "summary": "A small, blurry woman in a navy rashguard lies on a surfboard near a male in a black rashguard, with several distant swimmers in the background; Embry may be present but her face is too small/unreadable to identify, so there is no clear different-looking woman substitution.",
+     "woman_with_readable_face_present": false
+    },
+    "passed_entities": [],
+    "receipt_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/tau_artifacts/step36_embry_frame_0009/visual_review_receipt.json",
+    "request": {
+     "messages": "<redacted-image-url-request>",
+     "model": "gpt-5.5",
+     "response_format": {
+      "type": "json_object"
+     },
+     "scillm_metadata": {
+      "caller": "tau",
+      "proof": "persona-dream-panel-review",
+      "role": "panel-reviewer"
+     },
+     "stream": true,
+     "stream_heartbeat_s": 15.0,
+     "stream_progress_events": true,
+     "temperature": 0
+    },
+    "response_content": "{\"status\":\"PASS\",\"embry_classification\":\"POSE_OCCLUSION\",\"different_looking_woman_substituted\":false,\"woman_with_readable_face_present\":false,\"kai_black_rashguard_male_visible\":true,\"people_visible\":6,\"summary\":\"A small, blurry woman in a navy rashguard lies on a surfboard near a male in a black rashguard, with several distant swimmers in the background; Embry may be present but her face is too small/unreadable to identify, so there is no clear different-looking woman substitution.\"}",
+    "review_prompt_sha256": "sha256:352fb60c268699a2566646cb1630fc143a88b1fc63e978b384ea7dd295084989",
+    "role": "panel-reviewer",
+    "schema": "tau.persona_dream.scillm_vlm_review_receipt.v1",
+    "status": "PASS",
+    "stream": true,
+    "stream_done_seen": true,
+    "stream_event_count": 117,
+    "stream_heartbeat_count": 0,
+    "stream_last_event_type": "done",
+    "summary": "A small, blurry woman in a navy rashguard lies on a surfboard near a male in a black rashguard, with several distant swimmers in the background; Embry may be present but her face is too small/unreadable to identify, so there is no clear different-looking woman substitution.",
+    "surface": "scillm.chat_completions.image_url"
+   },
+   "_summary": {
+    "frame": "frame_0009.jpg",
+    "ts": 6.69,
+    "cosine": 0.025,
+    "beat": "sb_003",
+    "status": "PASS",
+    "classification": "POSE_OCCLUSION",
+    "substituted": false,
+    "prompt_sha256": "sha256:352fb60c268699a2566646cb1630fc143a88b1fc63e978b384ea7dd295084989"
+   }
+  },
+  {
+   "panel_id": "step36_embry_frame_0010",
+   "returncode": 0,
+   "prompt_sha256": "sha256:402bd3b07ee355b17bbdfc370d40f6bca295b601d49bf3cf29f8e15d06c15ee1",
+   "artifact_dir": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/tau_artifacts/step36_embry_frame_0010",
+   "stderr_tail": "",
+   "visual_review_receipt": {
+    "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+    "blocking_findings": [],
+    "created_at": "2026-07-19T01:55:49Z",
+    "duration_seconds": 0.054485,
+    "events_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/tau_artifacts/step36_embry_frame_0010/panel_reviewer_events.jsonl",
+    "http_status": 200,
+    "image_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/comp_embry_frame_0010.jpg.png",
+    "live": true,
+    "live_call_performed": true,
+    "mocked": false,
+    "model": "gpt-5.5",
+    "parsed_response": {
+     "different_looking_woman_substituted": false,
+     "embry_classification": "POSE_OCCLUSION",
+     "kai_black_rashguard_male_visible": true,
+     "people_visible": 5,
+     "status": "PASS",
+     "summary": "A small, distant woman in a navy rashguard is crouched on a surfboard at the waterline with a man in a black rashguard nearby and several tiny distant surfers/swimmers in the background; her face is too small/blurred to read clearly, so nothing contradicts Embry being present.",
+     "woman_with_readable_face_present": false
+    },
+    "passed_entities": [],
+    "receipt_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/tau_artifacts/step36_embry_frame_0010/visual_review_receipt.json",
+    "request": {
+     "messages": "<redacted-image-url-request>",
+     "model": "gpt-5.5",
+     "response_format": {
+      "type": "json_object"
+     },
+     "scillm_metadata": {
+      "caller": "tau",
+      "proof": "persona-dream-panel-review",
+      "role": "panel-reviewer"
+     },
+     "stream": true,
+     "stream_heartbeat_s": 15.0,
+     "stream_progress_events": true,
+     "temperature": 0
+    },
+    "response_content": "{\"status\":\"PASS\",\"embry_classification\":\"POSE_OCCLUSION\",\"different_looking_woman_substituted\":false,\"woman_with_readable_face_present\":false,\"kai_black_rashguard_male_visible\":true,\"people_visible\":5,\"summary\":\"A small, distant woman in a navy rashguard is crouched on a surfboard at the waterline with a man in a black rashguard nearby and several tiny distant surfers/swimmers in the background; her face is too small/blurred to read clearly, so nothing contradicts Embry being present.\"}",
+    "review_prompt_sha256": "sha256:402bd3b07ee355b17bbdfc370d40f6bca295b601d49bf3cf29f8e15d06c15ee1",
+    "role": "panel-reviewer",
+    "schema": "tau.persona_dream.scillm_vlm_review_receipt.v1",
+    "status": "PASS",
+    "stream": true,
+    "stream_done_seen": true,
+    "stream_event_count": 120,
+    "stream_heartbeat_count": 0,
+    "stream_last_event_type": "done",
+    "summary": "A small, distant woman in a navy rashguard is crouched on a surfboard at the waterline with a man in a black rashguard nearby and several tiny distant surfers/swimmers in the background; her face is too small/blurred to read clearly, so nothing contradicts Embry being present.",
+    "surface": "scillm.chat_completions.image_url"
+   },
+   "_summary": {
+    "frame": "frame_0010.jpg",
+    "ts": 7.53,
+    "cosine": 0.092,
+    "beat": "sb_004",
+    "status": "PASS",
+    "classification": "POSE_OCCLUSION",
+    "substituted": false,
+    "prompt_sha256": "sha256:402bd3b07ee355b17bbdfc370d40f6bca295b601d49bf3cf29f8e15d06c15ee1"
+   }
+  },
+  {
+   "panel_id": "step36_embry_frame_0011",
+   "returncode": 0,
+   "prompt_sha256": "sha256:402bd3b07ee355b17bbdfc370d40f6bca295b601d49bf3cf29f8e15d06c15ee1",
+   "artifact_dir": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/tau_artifacts/step36_embry_frame_0011",
+   "stderr_tail": "",
+   "visual_review_receipt": {
+    "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+    "blocking_findings": [],
+    "created_at": "2026-07-19T01:55:59Z",
+    "duration_seconds": 0.055152,
+    "events_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/tau_artifacts/step36_embry_frame_0011/panel_reviewer_events.jsonl",
+    "http_status": 200,
+    "image_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/comp_embry_frame_0011.jpg.png",
+    "live": true,
+    "live_call_performed": true,
+    "mocked": false,
+    "model": "gpt-5.5",
+    "parsed_response": {
+     "different_looking_woman_substituted": false,
+     "embry_classification": "POSE_OCCLUSION",
+     "kai_black_rashguard_male_visible": true,
+     "people_visible": 5,
+     "status": "PASS",
+     "summary": "A small/distant woman in a navy rashguard is surfing at the waterline while a man in a black rashguard and a few distant surfers are visible; her face is turned/profiled and too small/blurry to read, so nothing contradicts her being Embry.",
+     "woman_with_readable_face_present": false
+    },
+    "passed_entities": [],
+    "receipt_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/tau_artifacts/step36_embry_frame_0011/visual_review_receipt.json",
+    "request": {
+     "messages": "<redacted-image-url-request>",
+     "model": "gpt-5.5",
+     "response_format": {
+      "type": "json_object"
+     },
+     "scillm_metadata": {
+      "caller": "tau",
+      "proof": "persona-dream-panel-review",
+      "role": "panel-reviewer"
+     },
+     "stream": true,
+     "stream_heartbeat_s": 15.0,
+     "stream_progress_events": true,
+     "temperature": 0
+    },
+    "response_content": "{\"status\":\"PASS\",\"embry_classification\":\"POSE_OCCLUSION\",\"different_looking_woman_substituted\":false,\"woman_with_readable_face_present\":false,\"kai_black_rashguard_male_visible\":true,\"people_visible\":5,\"summary\":\"A small/distant woman in a navy rashguard is surfing at the waterline while a man in a black rashguard and a few distant surfers are visible; her face is turned/profiled and too small/blurry to read, so nothing contradicts her being Embry.\"}",
+    "review_prompt_sha256": "sha256:402bd3b07ee355b17bbdfc370d40f6bca295b601d49bf3cf29f8e15d06c15ee1",
+    "role": "panel-reviewer",
+    "schema": "tau.persona_dream.scillm_vlm_review_receipt.v1",
+    "status": "PASS",
+    "stream": true,
+    "stream_done_seen": true,
+    "stream_event_count": 113,
+    "stream_heartbeat_count": 0,
+    "stream_last_event_type": "done",
+    "summary": "A small/distant woman in a navy rashguard is surfing at the waterline while a man in a black rashguard and a few distant surfers are visible; her face is turned/profiled and too small/blurry to read, so nothing contradicts her being Embry.",
+    "surface": "scillm.chat_completions.image_url"
+   },
+   "_summary": {
+    "frame": "frame_0011.jpg",
+    "ts": 8.37,
+    "cosine": 0.085,
+    "beat": "sb_004",
+    "status": "PASS",
+    "classification": "POSE_OCCLUSION",
+    "substituted": false,
+    "prompt_sha256": "sha256:402bd3b07ee355b17bbdfc370d40f6bca295b601d49bf3cf29f8e15d06c15ee1"
+   }
+  },
+  {
+   "panel_id": "step36_embry_frame_0012",
+   "returncode": 0,
+   "prompt_sha256": "sha256:402bd3b07ee355b17bbdfc370d40f6bca295b601d49bf3cf29f8e15d06c15ee1",
+   "artifact_dir": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/tau_artifacts/step36_embry_frame_0012",
+   "stderr_tail": "",
+   "visual_review_receipt": {
+    "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+    "blocking_findings": [],
+    "created_at": "2026-07-19T01:56:09Z",
+    "duration_seconds": 0.04878,
+    "events_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/tau_artifacts/step36_embry_frame_0012/panel_reviewer_events.jsonl",
+    "http_status": 200,
+    "image_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/comp_embry_frame_0012.jpg.png",
+    "live": true,
+    "live_call_performed": true,
+    "mocked": false,
+    "model": "gpt-5.5",
+    "parsed_response": {
+     "different_looking_woman_substituted": false,
+     "embry_classification": "POSE_OCCLUSION",
+     "kai_black_rashguard_male_visible": true,
+     "people_visible": 3,
+     "status": "PASS",
+     "summary": "A distant woman in a dark/navy surf outfit stands on a board at the waterline while a man in a black rashguard and another distant person are in the water; the woman's face is small and blurry/unreadable, so nothing contradicts Embry being present.",
+     "woman_with_readable_face_present": false
+    },
+    "passed_entities": [],
+    "receipt_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/tau_artifacts/step36_embry_frame_0012/visual_review_receipt.json",
+    "request": {
+     "messages": "<redacted-image-url-request>",
+     "model": "gpt-5.5",
+     "response_format": {
+      "type": "json_object"
+     },
+     "scillm_metadata": {
+      "caller": "tau",
+      "proof": "persona-dream-panel-review",
+      "role": "panel-reviewer"
+     },
+     "stream": true,
+     "stream_heartbeat_s": 15.0,
+     "stream_progress_events": true,
+     "temperature": 0
+    },
+    "response_content": "{\"status\":\"PASS\",\"embry_classification\":\"POSE_OCCLUSION\",\"different_looking_woman_substituted\":false,\"woman_with_readable_face_present\":false,\"kai_black_rashguard_male_visible\":true,\"people_visible\":3,\"summary\":\"A distant woman in a dark/navy surf outfit stands on a board at the waterline while a man in a black rashguard and another distant person are in the water; the woman's face is small and blurry/unreadable, so nothing contradicts Embry being present.\"}",
+    "review_prompt_sha256": "sha256:402bd3b07ee355b17bbdfc370d40f6bca295b601d49bf3cf29f8e15d06c15ee1",
+    "role": "panel-reviewer",
+    "schema": "tau.persona_dream.scillm_vlm_review_receipt.v1",
+    "status": "PASS",
+    "stream": true,
+    "stream_done_seen": true,
+    "stream_event_count": 113,
+    "stream_heartbeat_count": 0,
+    "stream_last_event_type": "done",
+    "summary": "A distant woman in a dark/navy surf outfit stands on a board at the waterline while a man in a black rashguard and another distant person are in the water; the woman's face is small and blurry/unreadable, so nothing contradicts Embry being present.",
+    "surface": "scillm.chat_completions.image_url"
+   },
+   "_summary": {
+    "frame": "frame_0012.jpg",
+    "ts": 9.2,
+    "cosine": 0.151,
+    "beat": "sb_004",
+    "status": "PASS",
+    "classification": "POSE_OCCLUSION",
+    "substituted": false,
+    "prompt_sha256": "sha256:402bd3b07ee355b17bbdfc370d40f6bca295b601d49bf3cf29f8e15d06c15ee1"
+   }
+  }
+ ],
+ "kai_frames": [
+  {
+   "panel_id": "step36_kai_frame_0009",
+   "returncode": 0,
+   "prompt_sha256": "sha256:eb0a8de7ac065c4cdb6a66c06092e915988c025957976359b4e0bd5820720e0c",
+   "artifact_dir": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/tau_artifacts/step36_kai_frame_0009",
+   "stderr_tail": "",
+   "visual_review_receipt": {
+    "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+    "blocking_findings": [],
+    "created_at": "2026-07-19T01:56:16Z",
+    "duration_seconds": 0.046046,
+    "events_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/tau_artifacts/step36_kai_frame_0009/panel_reviewer_events.jsonl",
+    "http_status": 200,
+    "image_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/comp_kai_frame_0009.jpg.png",
+    "live": true,
+    "live_call_performed": true,
+    "mocked": false,
+    "model": "gpt-5.5",
+    "parsed_response": {
+     "kai_classification": "POSE_OCCLUSION",
+     "man_with_readable_face_present": false,
+     "people_visible": 6,
+     "status": "PASS",
+     "summary": "Two foreground surfers are in the water with several tiny distant people near the shore; the black-rashguard male figure could be Kai but his face is too small/blurred and partly obscured, so identity drift cannot be assessed."
+    },
+    "passed_entities": [],
+    "receipt_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/tau_artifacts/step36_kai_frame_0009/visual_review_receipt.json",
+    "request": {
+     "messages": "<redacted-image-url-request>",
+     "model": "gpt-5.5",
+     "response_format": {
+      "type": "json_object"
+     },
+     "scillm_metadata": {
+      "caller": "tau",
+      "proof": "persona-dream-panel-review",
+      "role": "panel-reviewer"
+     },
+     "stream": true,
+     "stream_heartbeat_s": 15.0,
+     "stream_progress_events": true,
+     "temperature": 0
+    },
+    "response_content": "{\"status\":\"PASS\",\"kai_classification\":\"POSE_OCCLUSION\",\"man_with_readable_face_present\":false,\"people_visible\":6,\"summary\":\"Two foreground surfers are in the water with several tiny distant people near the shore; the black-rashguard male figure could be Kai but his face is too small/blurred and partly obscured, so identity drift cannot be assessed.\"}",
+    "review_prompt_sha256": "sha256:eb0a8de7ac065c4cdb6a66c06092e915988c025957976359b4e0bd5820720e0c",
+    "role": "panel-reviewer",
+    "schema": "tau.persona_dream.scillm_vlm_review_receipt.v1",
+    "status": "PASS",
+    "stream": true,
+    "stream_done_seen": true,
+    "stream_event_count": 82,
+    "stream_heartbeat_count": 0,
+    "stream_last_event_type": "done",
+    "summary": "Two foreground surfers are in the water with several tiny distant people near the shore; the black-rashguard male figure could be Kai but his face is too small/blurred and partly obscured, so identity drift cannot be assessed.",
+    "surface": "scillm.chat_completions.image_url"
+   },
+   "_summary": {
+    "frame": "frame_0009.jpg",
+    "ts": 6.69,
+    "status": "PASS",
+    "classification": "POSE_OCCLUSION",
+    "prompt_sha256": "sha256:eb0a8de7ac065c4cdb6a66c06092e915988c025957976359b4e0bd5820720e0c"
+   }
+  },
+  {
+   "panel_id": "step36_kai_frame_0011",
+   "returncode": 0,
+   "prompt_sha256": "sha256:eb0a8de7ac065c4cdb6a66c06092e915988c025957976359b4e0bd5820720e0c",
+   "artifact_dir": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/tau_artifacts/step36_kai_frame_0011",
+   "stderr_tail": "",
+   "visual_review_receipt": {
+    "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+    "blocking_findings": [],
+    "created_at": "2026-07-19T01:56:26Z",
+    "duration_seconds": 0.050051,
+    "events_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/tau_artifacts/step36_kai_frame_0011/panel_reviewer_events.jsonl",
+    "http_status": 200,
+    "image_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/comp_kai_frame_0011.jpg.png",
+    "live": true,
+    "live_call_performed": true,
+    "mocked": false,
+    "model": "gpt-5.5",
+    "parsed_response": {
+     "kai_classification": "POSE_OCCLUSION",
+     "man_with_readable_face_present": false,
+     "people_visible": 4,
+     "status": "PASS",
+     "summary": "A surfer stands on a board in the foreground while a dark-haired man in a black rashguard is partly submerged in the water with other distant swimmers; the man's face is too small/occluded to judge identity, so Kai continuity is not contradicted."
+    },
+    "passed_entities": [],
+    "receipt_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/tau_artifacts/step36_kai_frame_0011/visual_review_receipt.json",
+    "request": {
+     "messages": "<redacted-image-url-request>",
+     "model": "gpt-5.5",
+     "response_format": {
+      "type": "json_object"
+     },
+     "scillm_metadata": {
+      "caller": "tau",
+      "proof": "persona-dream-panel-review",
+      "role": "panel-reviewer"
+     },
+     "stream": true,
+     "stream_heartbeat_s": 15.0,
+     "stream_progress_events": true,
+     "temperature": 0
+    },
+    "response_content": "{\"status\":\"PASS\",\"kai_classification\":\"POSE_OCCLUSION\",\"man_with_readable_face_present\":false,\"people_visible\":4,\"summary\":\"A surfer stands on a board in the foreground while a dark-haired man in a black rashguard is partly submerged in the water with other distant swimmers; the man's face is too small/occluded to judge identity, so Kai continuity is not contradicted.\"}",
+    "review_prompt_sha256": "sha256:eb0a8de7ac065c4cdb6a66c06092e915988c025957976359b4e0bd5820720e0c",
+    "role": "panel-reviewer",
+    "schema": "tau.persona_dream.scillm_vlm_review_receipt.v1",
+    "status": "PASS",
+    "stream": true,
+    "stream_done_seen": true,
+    "stream_event_count": 86,
+    "stream_heartbeat_count": 0,
+    "stream_last_event_type": "done",
+    "summary": "A surfer stands on a board in the foreground while a dark-haired man in a black rashguard is partly submerged in the water with other distant swimmers; the man's face is too small/occluded to judge identity, so Kai continuity is not contradicted.",
+    "surface": "scillm.chat_completions.image_url"
+   },
+   "_summary": {
+    "frame": "frame_0011.jpg",
+    "ts": 8.37,
+    "status": "PASS",
+    "classification": "POSE_OCCLUSION",
+    "prompt_sha256": "sha256:eb0a8de7ac065c4cdb6a66c06092e915988c025957976359b4e0bd5820720e0c"
+   }
+  }
+ ],
+ "continuity": {
+  "panel_id": "step36_scene_continuity",
+  "returncode": 0,
+  "prompt_sha256": "sha256:2dbe4d22927ae828cdf4a67b78286fc70f2eca6477f4b01689dc4e6ee7828ead",
+  "artifact_dir": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/tau_artifacts/step36_scene_continuity",
+  "stderr_tail": "",
+  "visual_review_receipt": {
+   "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+   "blocking_findings": [
+    "Frames 2-5 briefly isolate Embry handling/angling the board before returning to the two-shot, but it reads as a prep insert rather than a jarring discontinuity."
+   ],
+   "created_at": "2026-07-19T01:56:36Z",
+   "duration_seconds": 0.0473,
+   "events_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/tau_artifacts/step36_scene_continuity/panel_reviewer_events.jsonl",
+   "http_status": 200,
+   "image_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/frame_contact_sheet.png",
+   "live": true,
+   "live_call_performed": true,
+   "mocked": false,
+   "model": "gpt-5.5",
+   "parsed_response": {
+    "blocking_findings": [
+     "Frames 2-5 briefly isolate Embry handling/angling the board before returning to the two-shot, but it reads as a prep insert rather than a jarring discontinuity."
+    ],
+    "environment_continuity": "The ocean, shallow reef, tropical shoreline, and bay setting remain coherent across the sequence.",
+    "scene_action_continuity": "The action arc reads coherently: they wait outside, Kai gives a restrained cue, and Embry commits by paddling/standing into the safe channel.",
+    "status": "PASS",
+    "summary": "Continuity is broadly stable across setting, wardrobe, and action. The sequence supports the intended Kahalu'u Bay reef-break storyboard with only a minor timing/blocking compression around Embry's board prep.",
+    "wardrobe_continuity": "Embry remains in a navy rashguard and Kai remains in a black rashguard throughout; no major wardrobe swaps or color confusion."
+   },
+   "passed_entities": [],
+   "receipt_path": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/tau_artifacts/step36_scene_continuity/visual_review_receipt.json",
+   "request": {
+    "messages": "<redacted-image-url-request>",
+    "model": "gpt-5.5",
+    "response_format": {
+     "type": "json_object"
+    },
+    "scillm_metadata": {
+     "caller": "tau",
+     "proof": "persona-dream-panel-review",
+     "role": "panel-reviewer"
+    },
+    "stream": true,
+    "stream_heartbeat_s": 15.0,
+    "stream_progress_events": true,
+    "temperature": 0
+   },
+   "response_content": "{\n  \"status\": \"PASS\",\n  \"wardrobe_continuity\": \"Embry remains in a navy rashguard and Kai remains in a black rashguard throughout; no major wardrobe swaps or color confusion.\",\n  \"environment_continuity\": \"The ocean, shallow reef, tropical shoreline, and bay setting remain coherent across the sequence.\",\n  \"scene_action_continuity\": \"The action arc reads coherently: they wait outside, Kai gives a restrained cue, and Embry commits by paddling/standing into the safe channel.\",\n  \"blocking_findings\": [\n    \"Frames 2-5 briefly isolate Embry handling/angling the board before returning to the two-shot, but it reads as a prep insert rather than a jarring discontinuity.\"\n  ],\n  \"summary\": \"Continuity is broadly stable across setting, wardrobe, and action. The sequence supports the intended Kahalu'u Bay reef-break storyboard with only a minor timing/blocking compression around Embry's board prep.\"\n}",
+   "review_prompt_sha256": "sha256:2dbe4d22927ae828cdf4a67b78286fc70f2eca6477f4b01689dc4e6ee7828ead",
+   "role": "panel-reviewer",
+   "schema": "tau.persona_dream.scillm_vlm_review_receipt.v1",
+   "status": "PASS",
+   "stream": true,
+   "stream_done_seen": true,
+   "stream_event_count": 206,
+   "stream_heartbeat_count": 0,
+   "stream_last_event_type": "done",
+   "summary": "Continuity is broadly stable across setting, wardrobe, and action. The sequence supports the intended Kahalu'u Bay reef-break storyboard with only a minor timing/blocking compression around Embry's board prep.",
+   "surface": "scillm.chat_completions.image_url"
+  }
+ }
+}

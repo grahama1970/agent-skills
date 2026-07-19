@@ -1,0 +1,111 @@
+{
+  "canonical_plan": {
+    "dream_memory_document": {
+      "collection": "persona_memory",
+      "document": {
+        "_key": "dream_dream_successor_943b01ecd9a3",
+        "accepted_interpretation_ids": [],
+        "accepted_tom_candidate_ids": [],
+        "created_at": "2026-07-19T02:07:14.330777+00:00",
+        "dream_id": "dream_successor_943b01ecd9a3",
+        "kind": "synthetic_dream_memory",
+        "literal_historical_event": false,
+        "observation_packet_sha256": "sha256:5229c664ceb1c630b3644bd554a5c9c67cbac3d11c2a5e00beb3cc522d386032",
+        "persona_id": "embry",
+        "provenance": {
+          "evidence_origin": "provider_return",
+          "observation_status": "DEGRADED_WATCH_GAUNTLET_OBSERVATION",
+          "source_revision_id": "rev_upstream_bf3b05d47fb8"
+        },
+        "retrieval_text": "Synthetic dream of embry derived from the Kahalu'u surf memory residue.",
+        "revision_id": "rev_successor_943b01ecd9a3",
+        "run_id": "pipeline-complete",
+        "source_memory_ids": [
+          "embry_age15_19_b02_memory_019",
+          "embry_age15_19_b03_memory_014",
+          "embry_age15_19_b03_memory_016"
+        ],
+        "source_video_sha256": "sha256:59b9ff3155d6ba9d0b90d795bafe7b84cc4e10849db08299217b65d61e211fff",
+        "synthetic_origin": true,
+        "tags": [
+          "persona:embry",
+          "synthetic_dream",
+          "persona_dream",
+          "dream_loop_validation"
+        ],
+        "tom_state_types": []
+      },
+      "payload_sha256": "sha256:ebf6ad80a9d26ec70fb784bb6073be1e7d30d062ca69d76830d1303db9d8993e"
+    },
+    "graph_edges": [
+      {
+        "collection": "persona_memory_edges",
+        "document": {
+          "_from": "persona_memory/dream_dream_successor_943b01ecd9a3",
+          "_key": "dream_dream_successor_943b01ecd9a3__derived_from__embry_age15_19_b02_memory_019",
+          "_to": "persona_memory/embry_age15_19_b02_memory_019",
+          "literal_historical_event": false,
+          "relationship_type": "derived_from",
+          "synthetic_origin": true
+        },
+        "payload_sha256": "sha256:dabafdab2dbbf8767df519d87482b05f7c206e2ae8ddf54cbf529099985d6b2f"
+      },
+      {
+        "collection": "persona_memory_edges",
+        "document": {
+          "_from": "persona_memory/dream_dream_successor_943b01ecd9a3",
+          "_key": "dream_dream_successor_943b01ecd9a3__derived_from__embry_age15_19_b03_memory_014",
+          "_to": "persona_memory/embry_age15_19_b03_memory_014",
+          "literal_historical_event": false,
+          "relationship_type": "derived_from",
+          "synthetic_origin": true
+        },
+        "payload_sha256": "sha256:1e2affcaf6b18e75f2ca3f89f01b3c5a5d971f8e1e17fb043482b671cd6acf95"
+      },
+      {
+        "collection": "persona_memory_edges",
+        "document": {
+          "_from": "persona_memory/dream_dream_successor_943b01ecd9a3",
+          "_key": "dream_dream_successor_943b01ecd9a3__derived_from__embry_age15_19_b03_memory_016",
+          "_to": "persona_memory/embry_age15_19_b03_memory_016",
+          "literal_historical_event": false,
+          "relationship_type": "derived_from",
+          "synthetic_origin": true
+        },
+        "payload_sha256": "sha256:f97786fe3705c1c5539a8229094ee3892dc68a37dffbf5ed5ee3dd6c6b566ac4"
+      }
+    ],
+    "qdrant_embedding": {
+      "note": "Memory semantic-sync embeds retrieval_text on /store; do not write vector arrays into Arango.",
+      "target_qdrant_collection_hint": "persona_memory",
+      "text_hash": "sha256:40cafb3d6afe99e9746516895eb982816de0e864cde3d4d3aed268c1c784bac8"
+    }
+  },
+  "canonical_write_allowed": false,
+  "canonical_write_blockers": [
+    "CANONICAL_WRITE_FLAG_NOT_SET",
+    "RETURN_ID_MISSING",
+    "OBSERVATION_STATUS_DEGRADED"
+  ],
+  "canonical_write_requested": false,
+  "canonical_writes_performed": 0,
+  "direct_arango_writes_allowed": false,
+  "direct_qdrant_writes_allowed": false,
+  "dream_id": "dream_successor_943b01ecd9a3",
+  "generated_at": "2026-07-19T02:07:14.330833+00:00",
+  "mocked": false,
+  "owner": "memory",
+  "persona_id": "embry",
+  "relationship_vocabulary": [
+    "derived_from",
+    "observed_in_scene",
+    "supports_interpretation"
+  ],
+  "return_id": null,
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.dream_persistence_receipt.v1",
+  "status": "DRY_RUN_PERSISTENCE_PLAN",
+  "transport": "memory_http_api",
+  "validation_write_proof": null
+}

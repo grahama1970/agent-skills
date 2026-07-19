@@ -1,0 +1,38 @@
+{
+ "architecture_compliance": {
+  "direct_scillm_from_stage_b_drivers": "NOT_USED",
+  "note": "The generic_dag_spec.v1 skill adapter at 416edc5a exposes only architecture_review/webgpt and architecture_render/create-architecture; VLM identity review is served by Tau's persona_dream_panel_agent panel-reviewer, which holds sanctioned scillm access (X-Caller-Skill=tau-persona-dream-panel-reviewer, key from docker scillm-proxy). Each frame review is a single composite image with a hash-recorded visual_review_prompt.",
+  "stage_b_driver_key_patches_applied": false
+ },
+ "claims": {
+  "does_not_prove": [
+   "Any acceptance verdict; that follows from the adjudication content, not the route."
+  ],
+  "proves": [
+   "gpt-5.5 VLM answers with grounded, image-specific content through the Tau panel-reviewer node (live, http 200)."
+  ]
+ },
+ "created_at": "2026-07-19T01:59:01Z",
+ "live": true,
+ "mocked": false,
+ "probe": {
+  "grounded_answer_tail": "A small, blurry woman in a navy rashguard lies on a surfboard near a male in a black rashguard, with several distant swimmers in the background; Embry may be present but her face is too small/unreadable to identify, so there is no clear different-looking woman substitution.",
+  "http_status": 200,
+  "live_call_performed": true,
+  "review_prompt_sha256": "sha256:352fb60c268699a2566646cb1630fc143a88b1fc63e978b384ea7dd295084989",
+  "status": "PASS"
+ },
+ "purpose": "Verify the sanctioned VLM route: all LLM/VLM calls dispatched through the Tau panel-reviewer node (Tau owns scillm access); no direct scillm calls from Stage B drivers.",
+ "route": {
+  "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+  "caller_identity": "tau-persona-dream-panel-reviewer",
+  "harness": "tau",
+  "harness_branch": "issue-74-ready-queue-condition-block",
+  "harness_commit": "416edc5a",
+  "harness_repo": "/home/graham/workspace/experiments/tau",
+  "model": "gpt-5.5",
+  "node": "persona-dream panel-reviewer (tau_coding.persona_dream_panel_agent --role panel-reviewer)",
+  "provider_surface": "scillm.chat_completions.image_url"
+ },
+ "schema": "persona_dream.tau_vlm_route_verification_receipt.v1"
+}

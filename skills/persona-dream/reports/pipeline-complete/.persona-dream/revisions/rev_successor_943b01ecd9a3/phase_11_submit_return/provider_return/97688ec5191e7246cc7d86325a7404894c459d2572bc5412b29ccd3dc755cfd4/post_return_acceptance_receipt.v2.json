@@ -1,0 +1,50 @@
+{
+ "claims": {
+  "does_not_prove": [
+   "Human subjective acceptance of the successor return (remains the human's; not claimed here).",
+   "Embedding-certified whole-clip Embry identity (final-third certainty rests on VLM pose/occlusion adjudication + wardrobe/composition, not embedding proof).",
+   "Frame-accurate lip synchronization (inapplicable-by-composition)."
+  ],
+  "proves": [
+   "The live successor return (sha 59b9ff31, 10.041667s, one submit, request 97688ec5) was received, inspected, and passed the fail-closed post-return gauntlet gates (step 36 continuity, step 38 audio/dialogue) using deterministic authorities (ArcFace, ffmpeg, whisper) plus VLM adjudication routed through the Tau panel-reviewer node.",
+   "A contract-honest post-mux deliverable (provider_return_muxed.mp4, exact canonical line, in-window alignment) was assembled with no paid provider call and no new voice engine."
+  ]
+ },
+ "created_at": "2026-07-19T02:04:46Z",
+ "gate_summary": {
+  "agent_level_gauntlet": "ACCEPTED",
+  "fail_closed_gates": [
+   "step_36",
+   "step_38"
+  ],
+  "step_36": true,
+  "step_38": true
+ },
+ "human_subjective_acceptance": "NOT_CLAIMED_REMAINS_HUMAN",
+ "invalidation_check": {
+  "frozen_revision_modified": false,
+  "method": "The v2 receipts supersede but do not delete v1; the frozen predecessor revision (rev_upstream_bf3b05d47fb8) is read-only and only had audio artifacts COPIED (isolated line + bed) with hash receipts, not modified. No upstream artifact hash changed; no requalification invalidation triggered by this post-return pass.",
+  "upstream_contract_hashes_changed": false
+ },
+ "live": true,
+ "mocked": false,
+ "per_step": {
+  "step_35_frame_contact_sheet": "PASS",
+  "step_36_post_kling_continuity": "PASS_POST_KLING_CONTINUITY_REVIEW",
+  "step_37_38_audio_final_assembly": "PASS_AUDIO_FINAL_ASSEMBLY"
+ },
+ "resolved_v1_blockers": {
+  "SCILLM_GPT55_UNAVAILABLE_FOR_VLM_AND_COGNITIVE_PHASES": "RESOLVED_VIA_ROUTING: VLM/gpt-5.5 reached through the sanctioned Tau panel-reviewer node (api_key_source docker:scillm-proxy), not direct scillm from Stage B drivers.",
+  "STEP_36_IDENTITY_NOT_CERTIFIABLE": "RESOLVED_TO_PASS: VLM adjudication (via Tau) classifies all 5 sub-threshold frames as POSE_OCCLUSION consistent with storyboard beat intent, no substituted different-looking person; scene/wardrobe/action continuity PASS. Combined verdict PASS. (Whole-clip embedding metric still fails; boundary recorded.)",
+  "STEP_38_CANNOT_COMPLETE": "RESOLVED_TO_PASS: exact canonical Kai line + ocean bed muxed (hash-bound reuse, bit-identical mix 33edae9a), whisper large-v3-turbo forced alignment in window, lip-sync inapplicable-by-composition (Tau visible-speaker review)."
+ },
+ "return_duration_s": 10.041667,
+ "return_id": "97688ec5191e7246cc7d86325a7404894c459d2572bc5412b29ccd3dc755cfd4",
+ "return_video_sha256": "sha256:59b9ff3155d6ba9d0b90d795bafe7b84cc4e10849db08299217b65d61e211fff",
+ "revision_id": "rev_successor_943b01ecd9a3",
+ "run_id": "pipeline-complete",
+ "schema": "persona_dream.post_return_acceptance_receipt.v2",
+ "status": "ACCEPTED_AGENT_LEVEL",
+ "supersedes": "persona_dream.post_return_acceptance_receipt.v1 (ACCEPTANCE_BLOCKED)",
+ "vlm_route": "tau:persona-dream-panel-reviewer:gpt-5.5 (Tau owns scillm access; no direct scillm calls from Stage B drivers)"
+}

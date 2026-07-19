@@ -1,0 +1,84 @@
+{
+ "claims": {
+  "does_not_prove": [
+   "Frame-accurate lip synchronization (no readable mouth; not asserted).",
+   "Subjective audio/timing acceptance (remains the human's).",
+   "That the muxed MP4 replaces the canonical provider_return.mp4 (it is a post-mux deliverable artifact alongside the silent return)."
+  ],
+  "proves": [
+   "The successor final MP4 contains an audio stream with the exact canonical Kai line + ocean ambience bed, muxed post-return with no paid provider call and no new voice engine.",
+   "The reused line is hash-bound (isolated line c240e201, bed 8d5e0d3e) and the re-derived mix is bit-identical (33edae9a) to the frozen predecessor's proven mix.",
+   "Whisper large-v3-turbo forced alignment recognizes the exact canonical line aligned in the sb_003 dialogue window.",
+   "The lip-sync rule is inapplicable-by-composition (wide two-character lineup; no readable speaking mouth), verified via the Tau panel-reviewer route with frame evidence."
+  ]
+ },
+ "created_at": "2026-07-19T02:03:42Z",
+ "delivery_mode": "post_mux",
+ "live": true,
+ "mocked": false,
+ "reuse_provenance": {
+  "ambient_bed": "/mnt/storage12tb/media/personas/shared/embry_kai/assets/youtube/ocean_raw_surfing_audio_2min.wav",
+  "ambient_bed_sha256": "sha256:8d5e0d3e14bf9bd7415b232c4deeccb18149bfb7434814db650a07a4e6d55d75",
+  "contract_honesty": "CONTRACT_HONEST: successor authoritative line/speaker/timing (voice_handoff_plan.json + timed_transcript.json: Kai, 'If we paddle now, we're cutting across the lineup.', 5.0-8.08s, beat sb_003) is IDENTICAL to the predecessor rendered line (predecessor whisper recognized_text==canonical_text, forced-alignment PASS). The 'Kai, wait.' prefix in the handoff brief does NOT exist in the actual rendered audio. Re-mixing the isolated line + same bed with the proven filter reproduced sha256:33edae9a (bit-identical to the predecessor audio_mix.wav), so the reuse is deterministic and hash-verified.",
+  "frozen_source_revision": "rev_upstream_bf3b05d47fb8",
+  "isolated_line_sha256": "sha256:c240e201c5177693e049a3a4cfc63e7e969cce562a2081e0725bc66d24be3ee2",
+  "isolated_line_text": "If we paddle now, we're cutting across the lineup.",
+  "isolated_line_wav": "/mnt/storage12tb/skills/persona-dream/outputs/dream-voice-auditions/2026-07-17T17-28-07-345Z-kai-ab44cdc76abe.wav",
+  "strategy": "HASH_BOUND_REUSE_OF_FROZEN_PREDECESSOR_LINE_AND_BED_NO_NEW_VOICE_ENGINE"
+ },
+ "revision_id": "rev_successor_943b01ecd9a3",
+ "run_id": "pipeline-complete",
+ "schema": "persona_dream.step37_38_audio_final_assembly_receipt.v2",
+ "status": "PASS_AUDIO_FINAL_ASSEMBLY",
+ "step_37_mux": {
+  "audio_mix_bit_identical_to_predecessor_proven_mix": true,
+  "ffprobe_muxed": {
+   "audio_codec": "aac",
+   "duration_s": 10.041667,
+   "has_audio_stream": true,
+   "video_codec": "h264"
+  },
+  "muxed_video": "step37_38_successor_mux/provider_return_muxed.mp4",
+  "muxed_video_sha256": "sha256:e31788caba34c51aa8ed9b7e16332cce91cfcec35a9d42ed036975164530fa97",
+  "status": "PASS_MUX",
+  "successor_audio_mix": "step37_38_successor_mux/successor_audio_mix.wav",
+  "successor_audio_mix_sha256": "sha256:33edae9a7569196f996014fc414d7079be36c13667bbaa7f72077d96b9a9bc74",
+  "successor_silent_video": "provider_return.mp4",
+  "successor_silent_video_sha256": "sha256:59b9ff3155d6ba9d0b90d795bafe7b84cc4e10849db08299217b65d61e211fff"
+ },
+ "step_38_dialogue_and_speaker": {
+  "forced_alignment": {
+   "canonical_text": "If we paddle now, we're cutting across the lineup.",
+   "declared_dialogue_window_s": [
+    5.0,
+    8.08
+   ],
+   "device": "cpu",
+   "model": "whisper:large-v3-turbo",
+   "note": "adelay=5000ms places the rendered line onset at exactly 5.0s; whisper VAD boundary at 4.74s is within alignment tolerance and the recognized text equals the canonical line ('line up' is a whisper token split of 'lineup').",
+   "onset_in_window": true,
+   "recognized_end_s": 7.86,
+   "recognized_start_s": 4.74,
+   "recognized_text": "If we paddle now, we're cutting across the line up.",
+   "status": "PASS_FORCED_DIALOGUE_ALIGNMENT",
+   "storyboard_beat_id": "sb_003"
+  },
+  "status": "PASS",
+  "visible_speaker_review": {
+   "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+   "composition": "wide two-character lineup in the water",
+   "lipsync_rule_applicability": "INAPPLICABLE_BY_COMPOSITION",
+   "readable_speaking_mouth_present": false,
+   "review_prompt_sha256": "sha256:8ae433f31e1db7135904433e88fa16051d5009e6c656ab212e11535b6567c1d3",
+   "route": "tau:persona-dream-panel-reviewer:gpt-5.5",
+   "status": "PASS_LIPSYNC_INAPPLICABLE_BY_COMPOSITION",
+   "summary": "Kai appears at a distance in a wide surf lineup composition, with his face and mouth too small to judge precise speech articulation. No frame shows a close or clear speaking mouth suitable for lip-sync evaluation.",
+   "tau_receipt": "step37_38_successor_mux/visible_speaker_tau_review_receipt.json"
+  }
+ },
+ "steps": [
+  37,
+  38
+ ],
+ "supersedes": "persona_dream.step37_38_audio_final_assembly_receipt.v1 (BLOCKED)"
+}

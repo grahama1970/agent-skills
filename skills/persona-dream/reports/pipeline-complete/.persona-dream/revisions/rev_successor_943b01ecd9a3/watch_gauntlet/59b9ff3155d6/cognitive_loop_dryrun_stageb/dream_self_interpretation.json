@@ -1,0 +1,169 @@
+{
+  "accepted_interpretations": [],
+  "blockers": [],
+  "candidates": [],
+  "dream_id": "dream_successor_943b01ecd9a3",
+  "generated_at": "2026-07-19T02:07:14.330197+00:00",
+  "honesty_rule": {
+    "identity_drift_dual_explanation_present": false,
+    "renderer_defect_favored_on_drift": false
+  },
+  "intended_dream": {},
+  "live": false,
+  "llm": {
+    "auth": "codex-oauth",
+    "caller_skill": "persona-dream",
+    "model": "gpt-5.5",
+    "provider": "scillm"
+  },
+  "mocked": false,
+  "observation_index": [
+    {
+      "observation_id": "frame_0000",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 0 at t=0.0s; windows=identity; entities=unavailable",
+      "timestamp_seconds": 0.0
+    },
+    {
+      "observation_id": "frame_0001",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 1 at t=0.84s; windows=identity; entities=unavailable",
+      "timestamp_seconds": 0.84
+    },
+    {
+      "observation_id": "frame_0002",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 2 at t=1.67s; windows=identity; entities=unavailable",
+      "timestamp_seconds": 1.67
+    },
+    {
+      "observation_id": "frame_0003",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 3 at t=2.51s; windows=identity; entities=unavailable",
+      "timestamp_seconds": 2.51
+    },
+    {
+      "observation_id": "frame_0004",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 4 at t=3.35s; windows=identity; entities=unavailable",
+      "timestamp_seconds": 3.35
+    },
+    {
+      "observation_id": "frame_0005",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 5 at t=4.18s; windows=identity; entities=unavailable",
+      "timestamp_seconds": 4.18
+    },
+    {
+      "observation_id": "frame_0006",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 6 at t=5.02s; windows=identity,speaker; entities=unavailable",
+      "timestamp_seconds": 5.02
+    },
+    {
+      "observation_id": "frame_0007",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 7 at t=5.86s; windows=identity,speaker; entities=unavailable",
+      "timestamp_seconds": 5.86
+    },
+    {
+      "observation_id": "frame_0008",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 8 at t=6.69s; windows=identity,speaker; entities=unavailable",
+      "timestamp_seconds": 6.69
+    },
+    {
+      "observation_id": "frame_0009",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 9 at t=7.53s; windows=identity,speaker; entities=unavailable",
+      "timestamp_seconds": 7.53
+    },
+    {
+      "observation_id": "frame_0010",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 10 at t=8.37s; windows=identity; entities=unavailable",
+      "timestamp_seconds": 8.37
+    },
+    {
+      "observation_id": "frame_0011",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 11 at t=9.2s; windows=identity; entities=unavailable",
+      "timestamp_seconds": 9.2
+    },
+    {
+      "observation_id": "identity_temporal_continuity_review",
+      "observation_type": "renderer_continuity_review",
+      "renderer_defect_verdict": "INDETERMINATE",
+      "renderer_review": true,
+      "summary": "Identity continuity review over window [0.0, 10.041667] (model=None, verdict=INDETERMINATE): "
+    },
+    {
+      "observation_id": "visible_speaker_lipsync_window",
+      "observation_type": "speaker_visibility",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Speaker Kai flagged visible over [5.0, 8.08]s saying: None"
+    },
+    {
+      "observation_id": "coverage_gap_00",
+      "observation_type": "coverage_gap",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "per_frame_vlm_entities_unavailable: watch scillm vlm frame descriptions did not resolve; per-frame entity lists are empty"
+    }
+  ],
+  "observation_packet_path": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/dream_observation_packet.v1.json",
+  "observation_packet_sha256": "sha256:5229c664ceb1c630b3644bd554a5c9c67cbac3d11c2a5e00beb3cc522d386032",
+  "persona_id": "embry",
+  "provider_live": false,
+  "recall_receipts": [],
+  "rejected_interpretations": [],
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.dream_self_interpretation.v1",
+  "source_memory_bindings": [
+    {
+      "collection": "persona_memory",
+      "memory_text_sha256": "sha256:8a9d76dc918b4b0b2acce980e5c6b39d8be01a231921b27dd111a602fcd921a0",
+      "persona_id": "embry",
+      "source_id": "embry_age15_19_b03_memory_014"
+    },
+    {
+      "collection": "persona_memory",
+      "memory_text_sha256": "sha256:0b322862626e748732a79bb91f158cc14c3e04ce3f19ac21b4134d3d58d8663a",
+      "persona_id": "embry",
+      "source_id": "embry_age15_19_b02_memory_019"
+    },
+    {
+      "collection": "persona_memory",
+      "memory_text_sha256": "sha256:4efd7ac758368a609b7da960b0da64ae0f02fe11592eb576ca0ea4489f17be49",
+      "persona_id": "embry",
+      "source_id": "embry_age15_19_b03_memory_016"
+    }
+  ],
+  "status": "BLOCKED_SELF_INTERPRETATION"
+}
