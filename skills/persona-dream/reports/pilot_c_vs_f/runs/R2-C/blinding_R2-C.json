@@ -1,0 +1,22 @@
+{
+  "blinding_tool_sha256": "9a4c38e7e1c897b41ebf0edf195d9ef64d0e86c41527bdc6e3d0015f6fdac751",
+  "created_at": "2026-07-19T23:02:34Z",
+  "denylist_entries": 21,
+  "denylist_sha256": "346861ec8ca8c447e2e3e193a4935e7c49d3682e0aca48ffdb970e3e198a17eb",
+  "producer_role": "R2-C",
+  "schema": "persona_dream.pilot_producer_blinding_receipt.v1",
+  "shown_concat_sha256": "171e66a1035b53cf2ae87294672facf2c346b23ae54b7def9b4f72d67087186c",
+  "shown_files": [
+    {
+      "bytes": 1698,
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/contracts/pilot_producer_contract_C.v1.md",
+      "sha256": "9221a065ac650d8010255b5d5d59fff6d91ab754c8f28353b7a62ce04ae64df3"
+    },
+    {
+      "bytes": 6328,
+      "path": "reports/pilot_c_vs_f/inputs/r2/root_set_reading.md",
+      "sha256": "c850fc16addf2ee8f450c271138ef468d70cff3af08cc658336ea5ae7c470934"
+    }
+  ],
+  "verdict": "BLINDED"
+}

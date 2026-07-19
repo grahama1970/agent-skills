@@ -1,0 +1,115 @@
+{
+  "accepted_count": 3,
+  "accepted_tom_candidates": [
+    {
+      "candidate_id": "tom-001",
+      "confidence": 0.62,
+      "emotional_intensity": 0.55,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-001",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age19_23_b01_memory_018",
+        "embry_age19_23_b01_memory_004",
+        "embry_age19_23_b01_memory_039"
+      ],
+      "statement": "Embry may not currently experience Kai as her primary person for immediate emotional regulation during stress, tending instead to orient first toward practical care from Marketa rather than disclosure to Kai.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "kai",
+      "tom_state_type": "relationship_state",
+      "watch_observation_refs": [
+        "reflection_fact_embry_age19_23_b01_memory_018",
+        "reflection_fact_embry_age19_23_b01_memory_004",
+        "reflection_fact_embry_age19_23_b01_memory_039"
+      ]
+    },
+    {
+      "candidate_id": "tom-002",
+      "confidence": 0.68,
+      "emotional_intensity": 0.6,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-002",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age19_23_b01_memory_039"
+      ],
+      "statement": "Embry may feel uncertain about whether Kai occupies the intimate position she once expected him to hold, given the gap between imagining him as first to know important news and delaying her response to him.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "kai",
+      "tom_state_type": "uncertainty",
+      "watch_observation_refs": [
+        "reflection_fact_embry_age19_23_b01_memory_039"
+      ]
+    },
+    {
+      "candidate_id": "tom-003",
+      "confidence": 0.5,
+      "emotional_intensity": 0.48,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-003",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age19_23_b01_memory_018",
+        "embry_age19_23_b01_memory_039"
+      ],
+      "statement": "Embry may want to preserve connection with Kai while keeping contact low-disclosure when stressed, favoring indirect gestures over fuller explanation.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "kai",
+      "tom_state_type": "desire",
+      "watch_observation_refs": [
+        "reflection_fact_embry_age19_23_b01_memory_018",
+        "reflection_fact_embry_age19_23_b01_memory_039"
+      ]
+    }
+  ],
+  "candidate_receipts": [
+    {
+      "candidate_id": "tom-001",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-001",
+      "reasons": []
+    },
+    {
+      "candidate_id": "tom-002",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-002",
+      "reasons": []
+    },
+    {
+      "candidate_id": "tom-003",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-003",
+      "reasons": []
+    }
+  ],
+  "candidate_source": "llm_via_tau",
+  "canonical_memory_write_allowed": false,
+  "dream_id": "pilot_r2_c",
+  "generated_at": "2026-07-19T23:03:07.039668+00:00",
+  "had_rejections": false,
+  "interpretation_sha256": "sha256:2737b14c12d5b7c82f36e445400b33515cb2ca5e97de27673555efe4eb874c83",
+  "live": true,
+  "live_route_attempted": true,
+  "live_route_failed": false,
+  "mocked": false,
+  "proposed_candidate_count": 3,
+  "rejected_count": 0,
+  "revision_id": "pilot_c_vs_f",
+  "run_id": "pilot-c-vs-f",
+  "schema": "persona_dream.tom_validation_receipt.v1",
+  "status": "PASS_TOM_VALIDATION_LIVE",
+  "tau_routing": {
+    "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+    "http_status": 200,
+    "live_call_performed": true,
+    "model": "gpt-5.5",
+    "output_contract_sha256": "sha256:cdca7d6845ba5905353704db083e49ec40ce00451e5a60e2004b434b0a3fc5f6",
+    "prompt_sha256": "sha256:28308b24c39690e1b505af3711ea10c3bbf91418482fd15366215db2eac1d937",
+    "route": "tau:persona-dream-text-reasoning",
+    "status": "PASS",
+    "tau_receipt_schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1"
+  }
+}
