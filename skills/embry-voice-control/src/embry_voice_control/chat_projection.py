@@ -155,8 +155,14 @@ def _annotations(event: dict[str, Any], content: str) -> list[dict[str, Any]]:
         # the producer legitimately journaled.
         if start >= end:
             continue
-        if not (0 <= start < end <= len(content)) or content[start:end] != mention:
+        # Case-insensitive text match: the extractor case-normalizes mentions
+        # ("persona") while the span addresses the original text ("Persona").
+        if (
+            not (0 <= start < end <= len(content))
+            or content[start:end].casefold() != mention.casefold()
+        ):
             raise RuntimeError("entity_span_invalid")
+        mention = content[start:end]
         annotations.append({
             "id": str(node.get("id", f"entity-{start}-{end}")),
             "mention": mention,

@@ -371,7 +371,10 @@ def _validate_entity_spans(entity_nodes: list[dict[str, Any]], text: str) -> Non
         # validated and checked for overlap.
         if start >= end:
             continue
-        if not (0 <= start < end <= len(text)) or text[start:end] != mention:
+        if (
+            not (0 <= start < end <= len(text))
+            or text[start:end].casefold() != mention.casefold()
+        ):
             raise ValueError("entity_span_mismatch")
         if start < previous_end:
             raise ValueError("entity_spans_overlap")
