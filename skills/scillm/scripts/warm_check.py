@@ -19,7 +19,7 @@ from pathlib import Path
 
 OPS_CHUTES_DIR = Path.home() / ".pi" / "skills" / "ops-chutes"
 PROXY_CONFIG = Path.home() / "workspace" / "experiments" / "scillm" / "local" / "proxy_server_config.yaml"
-DEFAULT_TEXT_MODEL_NAMES = ("chutes-deepseek", "text")
+DEFAULT_TEXT_MODEL_NAMES = ("deepseek-direct", "chutes-deepseek", "text")
 
 
 def _line_indent(line: str) -> int:
