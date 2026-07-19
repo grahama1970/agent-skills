@@ -1,0 +1,21 @@
+{
+  "anchors": {
+    "dream_dream_successor_943b01ecd9a3": "70950daadeb2160ed3c54a2aeabf407171e7be6299d5efa397b63657c9a47429",
+    "embry_age19_23_b01_memory_004": "6d165369fc2c31b65964f620cf3132ec5c355d9449742318115aee6f4e9f1389",
+    "embry_age19_23_b01_memory_018": "76838329538544d7bdad30b644377b59a01bbbb95ac77f58a302812d3a7ef566",
+    "embry_age19_23_b01_memory_039": "ec90c1cf5c6c30c03e0a5a37528841402e2f150d4016bec86a196cd5e4d38373",
+    "embry_age23_current_b01_memory_020": "e915ff0f8a5c191d0660c0306291c96a55e7da2693a159389abdcd318fcd7c64",
+    "embry_age23_current_b01_memory_045": "b6c59c85667e0a1249d6a9dd1437b1d6644d6fd6c1058cd8be80b59e030cfa85",
+    "embry_age23_current_b01_memory_048": "91e208561ca5490e85d2fb213b8688d535aae02e042443daa219297593947dad"
+  },
+  "collection": "persona_memory",
+  "created_at": "2026-07-19T21:15:32Z",
+  "schema": "persona_dream.pilot_m4_anchor_snapshot.v1",
+  "timing_disclosure": {
+    "pre_R1C_dream_node_snapshot": {
+      "dream_dream_successor_943b01ecd9a3": "70950daadeb2160ed3c54a2aeabf407171e7be6299d5efa397b63657c9a47429"
+    },
+    "pre_R1C_matches_current": true,
+    "taken": "after R1-C, before R1-F/R2-F/R2-C"
+  }
+}
