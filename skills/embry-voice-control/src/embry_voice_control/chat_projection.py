@@ -94,6 +94,42 @@ def _file_json(path_value: str, expected_hash: str) -> dict[str, Any]:
     return parsed
 
 
+def _descendants(
+    events: list[dict[str, Any]], roots: set[str]
+) -> set[str]:
+    """Event ids reachable from roots via causation within this turn."""
+    children: dict[str | None, list[str]] = {}
+    for event in events:
+        children.setdefault(event.get("causation_id"), []).append(
+            event["event_id"]
+        )
+    seen = set(roots)
+    stack = list(roots)
+    while stack:
+        for child in children.get(stack.pop(), []):
+            if child not in seen:
+                seen.add(child)
+                stack.append(child)
+    return seen
+
+
+def _one_accepted(
+    events: list[dict[str, Any]],
+    event_type: str,
+    accepted: set[str],
+) -> dict[str, Any]:
+    """Exactly one event of the type; re-runs disambiguate to the accepted
+    causation chain."""
+    matches = [e for e in events if e["type"] == event_type]
+    if len(matches) > 1:
+        matches = [e for e in matches if e["event_id"] in accepted]
+    if len(matches) != 1:
+        raise RuntimeError(
+            f"required_event_count_invalid:{event_type}:{len(matches)}"
+        )
+    return matches[0]
+
+
 def _one(events: list[dict[str, Any]], event_type: str) -> dict[str, Any]:
     matches = [event for event in events if event["type"] == event_type]
     if len(matches) != 1:
@@ -173,9 +209,18 @@ def build_turn_chat_projection(
     speaker, speaker_event_type = _speaker_evidence(
         events, source["event_id"]
     )
-    tau_plan_event = _one(events, "tau.turn_plan.completed")
-    tau_tick = _one(events, "tau.persistent_tick.completed")
-    render = _one(events, "chatterbox.voice_render.completed")
+    accepted = _descendants(
+        events, {source["event_id"], speaker["event_id"]}
+    )
+    tau_plan_event = _one_accepted(
+        events, "tau.turn_plan.completed", accepted
+    )
+    tau_tick = _one_accepted(
+        events, "tau.persistent_tick.completed", accepted
+    )
+    render = _one_accepted(
+        events, "chatterbox.voice_render.completed", accepted
+    )
     playback_events = [event for event in events if event["type"] in {"playback.requested", "playback.started", "playback.ended"}]
     entity_events = [event for event in events if event["type"] == "entities.extraction.completed"]
     entities_by_role = {event["payload"].get("target_role"): event for event in entity_events}
