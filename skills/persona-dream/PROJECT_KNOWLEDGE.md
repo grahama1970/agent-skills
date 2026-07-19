@@ -1,10 +1,27 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-19 (P0 observation packet v2 — one accepted successor packet) by agent
+**Last updated:** 2026-07-19 (P1 Tau-routing debt paid — strict ratchet is the gate) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-19 (P1 TAU-ROUTING TEMPORARY_DEBT PAID, 23 → 0): the "only /tau may
+  reach /scillm" boundary is fully clean. `check_tau_routing_boundary.py --strict`
+  exits 0 and `sanity.sh` now runs it in `--strict` mode (the ratchet is the gate).
+  8 callers migrated to the sanctioned Tau adapters (text →
+  `tau_text_reasoning_adapter`, which is JSON-object-only so free-text callers wrap
+  as `{"...": "..."}`; image/VLM → `tau_vlm_review_adapter`, and multi-image
+  identity/continuity reviews via the new persona-dream-side glue
+  `scripts/tau_vlm_composite_review.py` that composites frame + reference sheets
+  into ONE labeled montage for the single-image Tau panel node — NOT a new Tau node,
+  since work is scoped to agent-skills-main). watch's `qra._scillm_chat_completion`
+  routes text+image through Tau; its Whisper transcription is already local (no
+  scillm audio). 2 diagnostics permanently allowlisted (health probe, loopback
+  transport-contract proof); 11 rung-ladder transport experiments retired (receipt
+  `reports/pipeline-complete/.persona-dream/rung_ladder_retirement_receipt.v1.json`).
+  Live-proven: 4 Tau routes at HTTP-200 (no paid provider),
+  `reports/pipeline-complete/.persona-dream/tau_live_receipts/`. Suites: persona-dream
+  388 passed, watch 45 passed. Governance: `persona_dream_governance/tau_routing_debt_paydown_20260719`.
 - 2026-07-19 (P0 OBSERVATION PACKET v2 — ONE PACKET, ONE AUTHORITY): the two
   incompatible phase-12 observation notions (scene-driven
   `watch_gauntlet_observation_packet.v1` vs fixed-lane
