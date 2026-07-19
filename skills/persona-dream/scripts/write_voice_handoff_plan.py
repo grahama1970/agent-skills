@@ -81,20 +81,30 @@ def build_plan(
     revision_root: Path,
     ambient_wav: Path = KAI_AMBIENT_WAV,
     render_receipt_path: Path | None = None,
+    request_body_sha256_pending: bool = False,
 ) -> dict[str, Any]:
     transcript_path = revision_root / "phase_06_script/timed_transcript.json"
     shot_bible_path = revision_root / "phase_03_crew/shot_bible.json"
     audition_path = revision_root / "phase_05_voices/kai_voice_audition.json"
     request_path = revision_root / "phase_11_submit_return/canonical/phase11_live_request.v1.json"
-    for required in (transcript_path, shot_bible_path, audition_path, request_path, ambient_wav):
+    required_sources = [transcript_path, shot_bible_path, audition_path, ambient_wav]
+    # In deferred-binding mode the compiled canonical request does not exist yet
+    # (it is produced downstream of this plan); its request_body_sha256 is rebound
+    # after compile by rebind_voice_handoff_binding.py. Do not require it here.
+    if not request_body_sha256_pending:
+        required_sources.append(request_path)
+    for required in required_sources:
         if not required.is_file():
             raise SystemExit(f"required handoff source missing: {required}")
 
     transcript = read_json(transcript_path)
     shot_bible = read_json(shot_bible_path)
     audition = read_json(audition_path)
-    request = read_json(request_path)
-    request_sha = str((request.get("approval_bindings") or {}).get("request_body_sha256") or "")
+    if request_body_sha256_pending:
+        request_sha = ""
+    else:
+        request = read_json(request_path)
+        request_sha = str((request.get("approval_bindings") or {}).get("request_body_sha256") or "")
     reference_path = Path(str(audition.get("ref_audio") or ""))
     if not reference_path.is_file():
         raise SystemExit(f"Kai conditioning reference missing: {reference_path}")
@@ -156,6 +166,18 @@ def build_plan(
             "request_body_sha256": request_sha,
             "generate_audio": False,
             "dialogue_in_provider_prompts": False,
+        },
+        "request_binding": {
+            "status": "PENDING_COMPILE" if request_body_sha256_pending else "BOUND",
+            "request_body_sha256": request_sha or None,
+            "canonical_relative_path": "phase_11_submit_return/canonical/phase11_live_request.v1.json",
+            "note": (
+                "Deferred: request_body_sha256 is bound after compile by "
+                "rebind_voice_handoff_binding.py; the audio-strategy gate rejects a "
+                "PENDING_COMPILE plan once the canonical exists (fail closed)."
+                if request_body_sha256_pending
+                else "Bound at write time to the compiled canonical request_body_sha256."
+            ),
         },
         "timed_transcript": {
             "revision_relative_path": "phase_06_script/timed_transcript.json",
@@ -245,11 +267,28 @@ def main() -> int:
     parser.add_argument("revision_root", type=Path)
     parser.add_argument("--ambient-wav", type=Path, default=KAI_AMBIENT_WAV)
     parser.add_argument("--render-receipt", type=Path)
+    parser.add_argument(
+        "--request-body-sha256-pending",
+        action="store_true",
+        help=(
+            "Defer the compiled-canonical request_body_sha256 binding (breaks the "
+            "voiced-run phase-11 ordering cycle). Writes request_binding.status="
+            "PENDING_COMPILE; rebind after compile with rebind_voice_handoff_binding.py."
+        ),
+    )
     args = parser.parse_args()
     revision_root = args.revision_root.expanduser().resolve()
     output = revision_root / VOICE_HANDOFF_RELATIVE
     render_receipt = args.render_receipt.expanduser().resolve() if args.render_receipt else None
-    atomic_write_json(output, build_plan(revision_root, args.ambient_wav.expanduser().resolve(), render_receipt))
+    atomic_write_json(
+        output,
+        build_plan(
+            revision_root,
+            args.ambient_wav.expanduser().resolve(),
+            render_receipt,
+            request_body_sha256_pending=args.request_body_sha256_pending,
+        ),
+    )
     assessment = assess_revision_audio_strategy(revision_root)
     print(json.dumps({"path": str(output), "sha256": sha256_file(output), "assessment": assessment.to_dict()}, indent=2))
     return 0 if assessment.voice_handoff_valid else 2

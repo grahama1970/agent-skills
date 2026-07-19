@@ -1,0 +1,178 @@
+"""Tests for the deferred voice-handoff request-body-hash binding that breaks the
+voiced-run phase-11 ordering cycle. Covers: pending-mode plans accepted before the
+canonical exists and rejected once it does; the gate rejecting a bound plan whose
+hash mismatches the canonical and accepting it when equal; the rebind step failing
+closed on mismatch and passing (with a both-hashes-equal receipt) on a match; and
+legacy immediate-mode plans behaving exactly as before.
+"""
+from __future__ import annotations
+
+import hashlib
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "scripts"))
+
+import audio_strategy_gate as gate  # noqa: E402
+import rebind_voice_handoff_binding as rebind  # noqa: E402
+from phase11_fixture_helpers import write_json  # noqa: E402
+
+LINE = "If we paddle now, we're cutting across the lineup."
+SHA_A = f"sha256:{'a' * 64}"
+SHA_B = f"sha256:{'b' * 64}"
+CANONICAL_REL = "phase_11_submit_return/canonical/phase11_live_request.v1.json"
+
+
+def file_sha(path: Path) -> str:
+    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def make_revision(
+    tmp_path: Path,
+    *,
+    binding_status: str | None,
+    plan_request_sha: str,
+    canonical_sha: str | None,
+) -> Path:
+    """Build a NEAR_SILENT_VOICED revision with a post_mux handoff plan.
+
+    binding_status=None omits the request_binding block entirely (legacy immediate
+    mode, which must default to BOUND). canonical_sha=None omits the compiled
+    canonical request file.
+    """
+    revision_root = tmp_path / "rev_test"
+    transcript_path = revision_root / "phase_06_script/timed_transcript.json"
+    dna_path = revision_root / "phase_03_crew/script_dna_selection.json"
+    receipt_path = revision_root / "phase_05_voices/kai_voice_audition.json"
+    write_json(transcript_path, [{"start_s": 0.0, "end_s": 10.0, "speaker": "Kai", "text": LINE}])
+    write_json(dna_path, {"dialogue_style": "near-silent; at most one quiet practical line from Kai"})
+    write_json(receipt_path, {"schema": "persona_dream.voice_audition_receipt.v1"})
+    reference = tmp_path / "kai-reference.wav"
+    ambience = tmp_path / "ocean.wav"
+    reference.write_bytes(b"RIFF-reference")
+    ambience.write_bytes(b"RIFF-ambience")
+
+    plan = {
+        "schema": gate.VOICE_HANDOFF_SCHEMA,
+        "revision_id": "rev_test",
+        "strategy": "post_mux",
+        "provider_request": {"request_body_sha256": plan_request_sha, "generate_audio": False},
+        "timed_transcript": {
+            "revision_relative_path": "phase_06_script/timed_transcript.json",
+            "sha256": file_sha(transcript_path),
+        },
+        "lines": [{"speaker": "Kai", "text": LINE, "start_s": 0.0, "end_s": 10.0}],
+        "voice_bindings": {
+            "Kai": {
+                "source_receipt_relative_path": "phase_05_voices/kai_voice_audition.json",
+                "source_receipt_sha256": file_sha(receipt_path),
+                "conditioning_reference": {"path": str(reference), "sha256": file_sha(reference)},
+            }
+        },
+        "ambient_beds": [{"path": str(ambience), "sha256": file_sha(ambience)}],
+    }
+    if binding_status is not None:
+        plan["request_binding"] = {"status": binding_status, "request_body_sha256": plan_request_sha or None}
+    write_json(revision_root / gate.VOICE_HANDOFF_RELATIVE, plan)
+
+    if canonical_sha is not None:
+        write_json(revision_root / CANONICAL_REL, {"approval_bindings": {"request_body_sha256": canonical_sha}})
+    return revision_root
+
+
+# --- deferred (PENDING_COMPILE) mode ---------------------------------------
+
+
+def test_pending_plan_accepted_before_canonical_exists(tmp_path: Path):
+    revision_root = make_revision(tmp_path, binding_status="PENDING_COMPILE", plan_request_sha="", canonical_sha=None)
+    assessment = gate.assess_and_block_kling_request(revision_root, generate_audio=False)
+    assert assessment.voice_handoff_valid is True
+    assert assessment.validation_errors == ()
+    assert assessment.blockers == ()
+
+
+def test_pending_plan_fails_closed_once_canonical_is_compiled(tmp_path: Path):
+    revision_root = make_revision(
+        tmp_path, binding_status="PENDING_COMPILE", plan_request_sha="", canonical_sha=SHA_B
+    )
+    assessment = gate.assess_and_block_kling_request(revision_root, generate_audio=False)
+    assert assessment.voice_handoff_valid is False
+    assert "VOICE_HANDOFF_PENDING_BINDING_STALE_CANONICAL_PRESENT" in assessment.validation_errors
+    assert "BLOCKED_VOICED_RUN_HANDOFF_INVALID" in assessment.blockers
+
+
+# --- bound mode hash agreement ---------------------------------------------
+
+
+def test_bound_plan_rejected_when_hash_mismatches_canonical(tmp_path: Path):
+    revision_root = make_revision(tmp_path, binding_status="BOUND", plan_request_sha=SHA_A, canonical_sha=SHA_B)
+    assessment = gate.assess_and_block_kling_request(revision_root, generate_audio=False)
+    assert assessment.voice_handoff_valid is False
+    assert "VOICE_HANDOFF_PROVIDER_REQUEST_HASH_MISMATCH" in assessment.validation_errors
+
+
+def test_bound_plan_accepted_when_hash_matches_canonical(tmp_path: Path):
+    revision_root = make_revision(tmp_path, binding_status="BOUND", plan_request_sha=SHA_B, canonical_sha=SHA_B)
+    assessment = gate.assess_and_block_kling_request(revision_root, generate_audio=False)
+    assert assessment.voice_handoff_valid is True
+    assert assessment.validation_errors == ()
+
+
+def test_invalid_binding_status_fails_closed(tmp_path: Path):
+    revision_root = make_revision(tmp_path, binding_status="WHATEVER", plan_request_sha=SHA_B, canonical_sha=SHA_B)
+    assessment = gate.assess_revision_audio_strategy(revision_root)
+    assert "VOICE_HANDOFF_REQUEST_BINDING_STATUS_INVALID" in assessment.validation_errors
+
+
+# --- legacy immediate mode unchanged ---------------------------------------
+
+
+def test_legacy_plan_without_request_binding_still_valid(tmp_path: Path):
+    # No request_binding block, fake sha, no canonical -> legacy behaviour: valid.
+    revision_root = make_revision(tmp_path, binding_status=None, plan_request_sha=SHA_A, canonical_sha=None)
+    assessment = gate.assess_and_block_kling_request(revision_root, generate_audio=False)
+    assert assessment.voice_handoff_valid is True
+    assert assessment.validation_errors == ()
+
+
+def test_legacy_plan_with_bad_hash_format_still_rejected(tmp_path: Path):
+    revision_root = make_revision(tmp_path, binding_status=None, plan_request_sha="not-a-hash", canonical_sha=None)
+    assessment = gate.assess_revision_audio_strategy(revision_root)
+    assert "VOICE_HANDOFF_PROVIDER_REQUEST_HASH_INVALID" in assessment.validation_errors
+
+
+# --- rebind step (post-compile) --------------------------------------------
+
+
+def test_rebind_binds_pending_plan_and_writes_pass_receipt(tmp_path: Path):
+    revision_root = make_revision(
+        tmp_path, binding_status="PENDING_COMPILE", plan_request_sha="", canonical_sha=SHA_B
+    )
+    receipt = rebind.rebind(revision_root)
+    assert receipt["status"] == "PASS_VOICE_HANDOFF_BINDING"
+    assert receipt["hashes_equal"] is True
+    assert receipt["plan_request_body_sha256"] == SHA_B == receipt["canonical_request_body_sha256"]
+    assert receipt["_exit_code"] == 0
+    # Plan on disk is now BOUND and passes the gate against the canonical.
+    assessment = gate.assess_and_block_kling_request(revision_root, generate_audio=False)
+    assert assessment.voice_handoff_valid is True
+    assert assessment.blockers == ()
+
+
+def test_rebind_fails_closed_when_canonical_missing(tmp_path: Path):
+    revision_root = make_revision(
+        tmp_path, binding_status="PENDING_COMPILE", plan_request_sha="", canonical_sha=None
+    )
+    receipt = rebind.rebind(revision_root)
+    assert receipt["status"] == "BLOCKED_CANONICAL_REQUEST_MISSING"
+    assert receipt["_exit_code"] == 2
+
+
+def test_rebind_fails_closed_when_bound_plan_disagrees(tmp_path: Path):
+    # A plan already BOUND to SHA_A must NOT be silently rewritten to the canonical
+    # SHA_B; a genuine disagreement fails closed.
+    revision_root = make_revision(tmp_path, binding_status="BOUND", plan_request_sha=SHA_A, canonical_sha=SHA_B)
+    receipt = rebind.rebind(revision_root)
+    assert receipt["status"] == "BLOCKED_BOUND_PLAN_HASH_DISAGREES_WITH_CANONICAL"
+    assert receipt["_exit_code"] == 2
