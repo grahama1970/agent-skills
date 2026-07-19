@@ -1,9 +1,24 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-19 (P0 correctness bundle closed — Sol Pro review) by agent
+**Last updated:** 2026-07-19 (P1 Tau-only model-routing boundary enforced) by agent
 **Status:** Active development
 
 ## Current Understanding
+
+- 2026-07-19 (P1 TAU-ONLY MODEL-ROUTING BOUNDARY — enforced): the operator rule
+  *only /tau may reach /scillm* is now a **deterministic static gate**
+  (`scripts/check_tau_routing_boundary.py`), not a convention. It scans
+  `skills/persona-dream` + `skills/watch` for direct scillm proxy calls and fails
+  on any un-sanctioned one; it is wired into `run.sh check-tau-routing-boundary`,
+  `sanity.sh`, and `run.sh test-suite` (via `tests/test_tau_routing_boundary.py`).
+  **Durable lesson:** *a routing rule that isn't statically checked is not enforced*
+  — 23 pre-existing direct-scillm callers existed despite the standing rule; they
+  are now enrolled as `TEMPORARY_DEBT` (the authoritative migration backlog) so no
+  NEW violation can land silently. Sanctioned routes: text/QRA →
+  `tau_text_reasoning_adapter.py` (verified live, HTTP 200, no paid call); image/VLM
+  → `persona_dream_panel_agent` panel-reviewer or a frame-shaped Tau VLM node still
+  to be added (the text node cannot carry images or free-text). Migrating watch
+  VLM/QRA + lane_c image review is deferred pending that VLM node.
 
 - 2026-07-19 (P0 CORRECTNESS BUNDLE — Sol Pro review, closed): three verified
   cognitive-loop defects fixed. **Lessons (durable):** (1) *presence of a proof

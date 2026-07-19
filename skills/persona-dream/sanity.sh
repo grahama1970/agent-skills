@@ -220,6 +220,13 @@ if [[ -n "${PERSONA_DREAM_CONTACT_GATE_RUN_ROOT:-}" ]]; then
   "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/validate_phase_05_contact_sheet_gate.py"     --run-root "${PERSONA_DREAM_CONTACT_GATE_RUN_ROOT}"     --write-gate     --json
 fi
 
+# Boundary guard: enforce the operator rule "only /tau may reach /scillm".
+# Deterministic static scan (no network); fails on any un-sanctioned direct
+# scillm proxy call in skills/persona-dream or skills/watch. Pre-existing callers
+# are enrolled as TEMPORARY_DEBT so this stays green while live migrations land.
+echo "== enforcing Tau-only model-routing boundary (check-tau-routing-boundary) =="
+"${SCRIPT_DIR}/run.sh" check-tau-routing-boundary
+
 # CI guard: deterministic contract suite must stay green. This is the offline
 # regression net that catches contract/schema/fixture rot (e.g. omitted vendored
 # schemas or relocated agent-contract paths). No paid or live provider calls.

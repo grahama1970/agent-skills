@@ -1,0 +1,339 @@
+{
+  "counts": {
+    "hard_violations": 0,
+    "sanctioned_allowlisted": 1,
+    "stale_allow_entries": 2,
+    "stale_debt_entries": 0,
+    "temporary_debt": 23
+  },
+  "created_at": "2026-07-19T14:38:17.938099+00:00",
+  "hard_violations": {},
+  "rule": "only /tau may reach /scillm",
+  "sanctioned_allowlisted": {
+    "skills/persona-dream/scripts/sanity_scillm_subagent_loop.py": {
+      "hits": [
+        {
+          "kind": "scillm_proxy_path",
+          "line": 11,
+          "snippet": "explorer      -> /v1/scillm/exec"
+        },
+        {
+          "kind": "scillm_proxy_path",
+          "line": 12,
+          "snippet": "coder         -> /v1/scillm/opencode/runs"
+        },
+        {
+          "kind": "scillm_proxy_path",
+          "line": 13,
+          "snippet": "code-reviewer -> /v1/scillm/exec"
+        },
+        {
+          "kind": "scillm_proxy_hostport",
+          "line": 37,
+          "snippet": "LOCAL_SCILLM_BASE_URLS = {\"http://localhost:4001\", \"http://127.0.0.1:4001\"}"
+        },
+        {
+          "kind": "scillm_proxy_hostport",
+          "line": 79,
+          "snippet": "return os.environ.get(\"SCILLM_BASE_URL\", \"http://localhost:4001\").rstrip(\"/\")"
+        }
+      ],
+      "reason": "boundary-guard sanity: asserts SCILLM_BASE_URL is local; does not itself bypass Tau for inference"
+    }
+  },
+  "schema": "persona_dream.tau_routing_boundary_check.v1",
+  "stale_allow_entries": [
+    "skills/persona-dream/scripts/sanity_scillm_loop_negative_tests.py",
+    "skills/persona-dream/scripts/tau_text_reasoning_adapter.py"
+  ],
+  "stale_debt_entries": [],
+  "status": "PASS",
+  "strict": false,
+  "temporary_debt": {
+    "skills/persona-dream/pipeline/backfill_tom.py": {
+      "hits": [
+        {
+          "kind": "scillm_proxy_hostport",
+          "line": 27,
+          "snippet": "SCILLM_URL = os.environ.get(\"SCILLM_URL\", \"http://127.0.0.1:4001\")"
+        },
+        {
+          "kind": "scillm_chat_completions",
+          "line": 134,
+          "snippet": "api_url = CHUTES_URL if use_chutes else f\"{SCILLM_URL.rstrip('/')}/v1/chat/completions\""
+        }
+      ],
+      "reason": "TEMPORARY_DEBT: backfill posts to scillm (or Chutes); migrate scillm branch to tau_text_reasoning_adapter. P1."
+    },
+    "skills/persona-dream/pipeline/s01_idea/dream_synthesis.py": {
+      "hits": [
+        {
+          "kind": "scillm_proxy_hostport",
+          "line": 10,
+          "snippet": "SCILLM_URL = os.environ.get(\"SCILLM_URL\", \"http://127.0.0.1:4001\")"
+        },
+        {
+          "kind": "scillm_chat_completions",
+          "line": 62,
+          "snippet": "f\"{SCILLM_URL.rstrip('/')}/v1/chat/completions\","
+        }
+      ],
+      "reason": "TEMPORARY_DEBT: dream synthesis POSTs to scillm; migrate to tau_text_reasoning_adapter. P1."
+    },
+    "skills/persona-dream/pipeline/s01_idea/selector.py": {
+      "hits": [
+        {
+          "kind": "scillm_proxy_hostport",
+          "line": 16,
+          "snippet": "SCILLM_URL = os.environ.get(\"SCILLM_URL\", \"http://127.0.0.1:4001\")"
+        },
+        {
+          "kind": "scillm_chat_completions",
+          "line": 75,
+          "snippet": "f\"{SCILLM_URL.rstrip('/')}/v1/chat/completions\","
+        }
+      ],
+      "reason": "TEMPORARY_DEBT: idea selector POSTs to scillm; migrate to tau_text_reasoning_adapter. P1."
+    },
+    "skills/persona-dream/pipeline/s01a_tom_annotation.py": {
+      "hits": [
+        {
+          "kind": "scillm_proxy_hostport",
+          "line": 23,
+          "snippet": "SCILLM_URL = os.environ.get(\"SCILLM_URL\", \"http://127.0.0.1:4001\")"
+        },
+        {
+          "kind": "scillm_chat_completions",
+          "line": 109,
+          "snippet": "resp = client.post(\"/v1/chat/completions\", headers={"
+        }
+      ],
+      "reason": "TEMPORARY_DEBT: ToM annotation POSTs /v1/chat/completions to scillm; migrate to tau_text_reasoning_adapter. P1."
+    },
+    "skills/persona-dream/pipeline/s03_story/story.py": {
+      "hits": [
+        {
+          "kind": "scillm_proxy_hostport",
+          "line": 25,
+          "snippet": "SCILLM_URL = os.environ.get(\"SCILLM_URL\", \"http://127.0.0.1:4001\")"
+        },
+        {
+          "kind": "scillm_chat_completions",
+          "line": 119,
+          "snippet": "f\"{SCILLM_URL.rstrip('/')}/v1/chat/completions\","
+        }
+      ],
+      "reason": "TEMPORARY_DEBT: story generation POSTs to scillm; migrate to tau_text_reasoning_adapter. P1."
+    },
+    "skills/persona-dream/scripts/dreamer_sequential_runner.py": {
+      "hits": [
+        {
+          "kind": "scillm_proxy_hostport",
+          "line": 30,
+          "snippet": "SCILLM_DEFAULT_BASE_URL = \"http://localhost:4001\""
+        },
+        {
+          "kind": "scillm_proxy_path",
+          "line": 373,
+          "snippet": "f\"{base_url.rstrip('/')}/v1/scillm/opencode/runs\","
+        }
+      ],
+      "reason": "TEMPORARY_DEBT: dreamer runner posts to /v1/scillm/opencode/runs directly. P1."
+    },
+    "skills/persona-dream/scripts/medium_loop_dag_smoke.py": {
+      "hits": [
+        {
+          "kind": "scillm_proxy_hostport",
+          "line": 97,
+          "snippet": "DEFAULT_SCILLM_BASE_URL = \"http://localhost:4001\""
+        },
+        {
+          "kind": "scillm_chat_completions",
+          "line": 671,
+          "snippet": "endpoint = f\"{local_base_url}/v1/chat/completions\""
+        }
+      ],
+      "reason": "TEMPORARY_DEBT: scillm probe smoke posts /v1/chat/completions directly; move behind Tau. P1."
+    },
+    "skills/persona-dream/scripts/panel_review_check.py": {
+      "hits": [
+        {
+          "kind": "scillm_proxy_hostport",
+          "line": 8,
+          "snippet": "SCILLM_URL = \"http://127.0.0.1:4001/v1/chat/completions\""
+        }
+      ],
+      "reason": "TEMPORARY_DEBT: standalone urllib VLM panel review to scillm; route via Tau panel-reviewer. P1."
+    },
+    "skills/persona-dream/scripts/persona_dream.py": {
+      "hits": [
+        {
+          "kind": "scillm_proxy_hostport",
+          "line": 42,
+          "snippet": "DEFAULT_SCILLM_BASE_URL = \"http://localhost:4001\""
+        },
+        {
+          "kind": "scillm_proxy_path",
+          "line": 1512,
+          "snippet": "\"missing_generation_routes\": [\"/v1/scillm/images\", \"/v1/scillm/videos\", \"/v1/images/generations\", \"/v1/videos/generation"
+        },
+        {
+          "kind": "scillm_proxy_path",
+          "line": 1539,
+          "snippet": "scillm_health = _http_json(f\"{scillm_base_url.rstrip('/')}/v1/scillm/health\", headers=scillm_headers)"
+        },
+        {
+          "kind": "scillm_proxy_path",
+          "line": 1540,
+          "snippet": "scillm_models = _http_json(f\"{scillm_base_url.rstrip('/')}/v1/scillm/models?include_models_dev=true\", headers=scillm_hea"
+        },
+        {
+          "kind": "scillm_proxy_path",
+          "line": 1632,
+          "snippet": "path for path in (\"/v1/images/generations\", \"/v1/videos/generations\", \"/v1/scillm/images\", \"/v1/scillm/videos\")"
+        }
+      ],
+      "reason": "TEMPORARY_DEBT: CLI health/model-inventory probes hit /v1/scillm/health + /v1/scillm/models directly; route diagnostics via Tau or an explicit ops surface. P1."
+    },
+    "skills/persona-dream/scripts/phase07_storyboard_tau_node.py": {
+      "hits": [
+        {
+          "kind": "scillm_proxy_hostport",
+          "line": 88,
+          "snippet": "SCILLM_CHAT_COMPLETIONS_URL = os.environ.get(\"SCILLM_CHAT_COMPLETIONS_URL\", \"http://localhost:4001/v1/chat/completions\")"
+        }
+      ],
+      "reason": "TEMPORARY_DEBT: named 'tau_node' but urllib-POSTs identity-review VLM to scillm directly; route via Tau VLM node. P1."
+    },
+    "skills/persona-dream/scripts/phase_c_regenerate_storyboard_frames.py": {
+      "hits": [
+        {
+          "kind": "scillm_proxy_hostport",
+          "line": 33,
+          "snippet": "SCILLM_CHAT_URL = \"http://localhost:4001/v1/chat/completions\""
+        }
+      ],
+      "reason": "TEMPORARY_DEBT: _post_scillm() image-review VLM call (used by lane_c waiver); needs frame-shaped Tau VLM node. P1."
+    },
+    "skills/persona-dream/scripts/rung0_httpx.py": {
+      "hits": [
+        {
+          "kind": "scillm_proxy_hostport",
+          "line": 8,
+          "snippet": "\"http://localhost:4001/v1/chat/completions\","
+        }
+      ],
+      "reason": "TEMPORARY_DEBT: rung ladder experiment posts to scillm chat completions directly. P1."
+    },
+    "skills/persona-dream/scripts/rung17_dreamer_scillm_readonly_decision.py": {
+      "hits": [
+        {
+          "kind": "scillm_proxy_hostport",
+          "line": 129,
+          "snippet": "endpoint = \"http://localhost:4001/v1/scillm/opencode/runs\""
+        }
+      ],
+      "reason": "TEMPORARY_DEBT: rung ladder experiment posts to /v1/scillm/opencode/runs directly. P1."
+    },
+    "skills/persona-dream/scripts/rung18_dreamer_branch_decision.py": {
+      "hits": [
+        {
+          "kind": "scillm_proxy_hostport",
+          "line": 296,
+          "snippet": "endpoint = \"http://localhost:4001/v1/scillm/opencode/runs\""
+        }
+      ],
+      "reason": "TEMPORARY_DEBT: rung ladder experiment posts to /v1/scillm/opencode/runs directly. P1."
+    },
+    "skills/persona-dream/scripts/rung1_while_loop.py": {
+      "hits": [
+        {
+          "kind": "scillm_proxy_hostport",
+          "line": 10,
+          "snippet": "\"http://localhost:4001/v1/chat/completions\","
+        }
+      ],
+      "reason": "TEMPORARY_DEBT: rung ladder experiment posts to scillm chat completions directly. P1."
+    },
+    "skills/persona-dream/scripts/rung21_story_executor_real_dry_run.py": {
+      "hits": [
+        {
+          "kind": "scillm_proxy_hostport",
+          "line": 118,
+          "snippet": "env.setdefault(\"SCILLM_URL\", \"http://127.0.0.1:4001\")"
+        }
+      ],
+      "reason": "TEMPORARY_DEBT: rung ladder experiment sets SCILLM_URL to the local proxy directly. P1."
+    },
+    "skills/persona-dream/scripts/rung22_dreamer_closed_cycle_decision.py": {
+      "hits": [
+        {
+          "kind": "scillm_proxy_hostport",
+          "line": 241,
+          "snippet": "endpoint = \"http://localhost:4001/v1/scillm/opencode/runs\""
+        }
+      ],
+      "reason": "TEMPORARY_DEBT: rung ladder experiment posts to /v1/scillm/opencode/runs directly. P1."
+    },
+    "skills/persona-dream/scripts/rung2_chutes_as_completed.py": {
+      "hits": [
+        {
+          "kind": "scillm_proxy_hostport",
+          "line": 9,
+          "snippet": "URL = \"http://localhost:4001/v1/scillm/chutes/completions\""
+        }
+      ],
+      "reason": "TEMPORARY_DEBT: rung ladder experiment hits /v1/scillm/chutes/completions directly. P1."
+    },
+    "skills/persona-dream/scripts/rung4_scillm_batch.py": {
+      "hits": [
+        {
+          "kind": "scillm_proxy_hostport",
+          "line": 8,
+          "snippet": "\"http://localhost:4001/v1/scillm/chutes/batch\","
+        }
+      ],
+      "reason": "TEMPORARY_DEBT: rung ladder experiment hits /v1/scillm/chutes/batch directly. P1."
+    },
+    "skills/persona-dream/scripts/rung5_tool_harness.py": {
+      "hits": [
+        {
+          "kind": "scillm_proxy_hostport",
+          "line": 65,
+          "snippet": "\"http://localhost:4001/v1/scillm/opencode/runs\","
+        }
+      ],
+      "reason": "TEMPORARY_DEBT: rung ladder experiment hits /v1/scillm/opencode/runs directly. P1."
+    },
+    "skills/persona-dream/scripts/rung8_panel_reviewer_readonly.py": {
+      "hits": [
+        {
+          "kind": "scillm_proxy_hostport",
+          "line": 120,
+          "snippet": "\"scillm_endpoint\": \"http://localhost:4001/v1/scillm/opencode/runs\","
+        }
+      ],
+      "reason": "TEMPORARY_DEBT: rung ladder experiment references /v1/scillm/opencode/runs endpoint directly. P1."
+    },
+    "skills/watch/scripts/config.py": {
+      "hits": [
+        {
+          "kind": "scillm_proxy_hostport",
+          "line": 21,
+          "snippet": "WATCH_SCILLM_API_BASE: str = os.getenv(\"WATCH_SCILLM_API_BASE\", os.getenv(\"SCILLM_API_BASE\", \"http://localhost:4001\"))"
+        }
+      ],
+      "reason": "TEMPORARY_DEBT: defines WATCH_SCILLM_API_BASE / proxy-key that authorize qra.py's direct call. Retire when qra.py routes through Tau. P1 routing boundary."
+    },
+    "skills/watch/scripts/qra.py": {
+      "hits": [
+        {
+          "kind": "scillm_chat_completions",
+          "line": 55,
+          "snippet": "f\"{api_base}/v1/chat/completions\","
+        }
+      ],
+      "reason": "TEMPORARY_DEBT: watch posts VLM frame descriptions + QRA + audio to scillm directly; needs Tau text node (text/QRA) + frame-shaped Tau VLM node (image). P1 routing boundary."
+    }
+  }
+}

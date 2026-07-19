@@ -5,6 +5,16 @@
 
 This top-level file redirects to the detailed handoff. The current handoff covers UX Lab Dream/Kling preflight React surface implementation — 12-phase pipeline, Gemini design packet mostly implemented, blocked on image modal click not working through draggable parent.
 
+## 2026-07-19 P1 TAU-ONLY MODEL-ROUTING BOUNDARY — ENFORCED (static check; not conventional)
+
+Operator architecture rule "**only /tau may reach /scillm**" is now enforced by a deterministic static check, not left to convention.
+
+- **Enforcement:** `scripts/check_tau_routing_boundary.py` (repo root) scans `skills/persona-dream` + `skills/watch` for direct scillm proxy calls (`localhost:4001`/`127.0.0.1:4001`, `/v1/scillm/...`, and non-Chutes `/v1/chat/completions` POSTs). Wired into `run.sh` (`check-tau-routing-boundary` subcommand), `sanity.sh` (runs before the contract suite), and `tests/test_tau_routing_boundary.py` (so `run.sh test-suite` covers it). Proven both directions: PASS on the current tree (exit 0); FAIL (exit 1, exact file:line) the instant a migrated phase (e.g. phase13) is reverted to a direct `httpx.post(...4001/v1/chat/completions...)`.
+- **Baseline:** 0 hard violations, **23 pre-existing direct-scillm callers enrolled as `TEMPORARY_DEBT`** (each with a justification comment + P1 owner) so the gate is green today while live migrations land, 1 sanctioned allowlisted boundary-guard. The debt registry is the authoritative migration backlog; a NEW un-enrolled direct call is a hard failure.
+- **Sanctioned target routes (verified live):** text/QRA → `scripts/tau_text_reasoning_adapter.py` → `tau_coding.persona_dream_text_reasoning_agent` (live probe this session: HTTP 200, `api_key_source=docker:scillm-proxy:SCILLM_MASTER_KEY`, `route=tau:persona-dream-text-reasoning`, no paid call). Image/VLM → `tau_coding.persona_dream_panel_agent` panel-reviewer, or a **frame-shaped Tau VLM node still to be added** (the existing text node hard-codes string content + `response_format=json_object`, so it cannot carry frame images or free-text descriptions).
+- **NOT yet migrated (scoped debt, not done this session):** watch `qra.py` (VLM/QRA/audio), lane_c `phase_c._post_scillm` image review, the ToM/idea/story text pipeline, and the rung ladder scripts. Live migration of the watch VLM + lane_c image paths is blocked on the frame-shaped Tau VLM node (separate Tau commit, not committed into agent-skills). No watch/persona-dream runtime code was changed, so watch's public contract is intact (watch visual-descriptions test + 376-test persona-dream suite green).
+- **Memory:** governance `persona_dream_governance/tau_routing_boundary_enforced_20260719` (exact reread PASS, semantic_sync_state=synced). Receipt: `reports/tau-routing-boundary/boundary_check_receipt.json`.
+
 ## 2026-07-19 P0 CORRECTNESS BUNDLE (Sol Pro review) — CLOSED
 
 Three verified defects in the cognitive-loop lane, all fixed, with the earlier traversal claim explicitly corrected.

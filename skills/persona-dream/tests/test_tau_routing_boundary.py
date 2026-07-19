@@ -1,0 +1,83 @@
+"""Contract test for the Tau-only model-routing boundary static check.
+
+Enforces the operator rule "only /tau may reach /scillm": the checker must pass
+on the current (baseline-enrolled) tree and must fail the instant a new
+un-sanctioned direct-scillm call appears.
+"""
+from __future__ import annotations
+
+import importlib.util
+from pathlib import Path
+
+# Repo layout: <repo>/skills/persona-dream/tests/this_file
+#              <repo>/scripts/check_tau_routing_boundary.py
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+_CHECK = _REPO_ROOT / "scripts" / "check_tau_routing_boundary.py"
+
+
+def _load_check():
+    spec = importlib.util.spec_from_file_location("check_tau_routing_boundary", _CHECK)
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_checker_exists():
+    assert _CHECK.is_file(), f"boundary checker missing: {_CHECK}"
+
+
+def test_current_tree_has_no_hard_violations():
+    check = _load_check()
+    hits = check.scan(_REPO_ROOT)
+    result = check.evaluate(hits, strict=False)
+    assert result["status"] == "PASS", result["hard_violations"]
+    assert result["counts"]["hard_violations"] == 0
+    # No stale registry entries: every debt/allow file still actually calls scillm.
+    assert result["counts"]["stale_debt_entries"] == 0, result["stale_debt_entries"]
+
+
+def test_migrated_phases_are_not_direct_callers():
+    """phase13/phase14 route through Tau and must never be direct scillm callers."""
+    check = _load_check()
+    hits = check.scan(_REPO_ROOT)
+    for migrated in (
+        "skills/persona-dream/scripts/phase13_self_interpretation.py",
+        "skills/persona-dream/scripts/phase14_tom_validation.py",
+        "skills/persona-dream/scripts/tau_text_reasoning_adapter.py",
+    ):
+        assert migrated not in check.TEMPORARY_DEBT
+        # tau_text_reasoning_adapter is allowlisted; phases have no scillm hits at all
+        if migrated in hits:
+            assert migrated in check.ALLOWLIST
+
+
+def test_new_direct_scillm_call_is_a_hard_violation(tmp_path):
+    """A fresh, un-enrolled direct-scillm POST must fail the check."""
+    check = _load_check()
+    fake_repo = tmp_path
+    offender = fake_repo / "skills" / "watch" / "scripts" / "brand_new_caller.py"
+    offender.parent.mkdir(parents=True, exist_ok=True)
+    offender.write_text(  # tau-routing:allow=test-fixture (synthetic offender for the checker)
+        'import httpx\n'
+        'httpx.post("http://localhost:4001/v1/chat/completions", json={})\n',  # tau-routing:allow=test-fixture
+        encoding="utf-8",
+    )
+    hits = check.scan(fake_repo)
+    result = check.evaluate(hits, strict=False)
+    assert result["status"] == "FAIL"
+    assert "skills/watch/scripts/brand_new_caller.py" in result["hard_violations"]
+
+
+def test_inline_allow_suppresses_a_line(tmp_path):
+    check = _load_check()
+    offender = tmp_path / "skills" / "watch" / "scripts" / "suppressed.py"
+    offender.parent.mkdir(parents=True, exist_ok=True)
+    offender.write_text(
+        'URL = "http://localhost:4001/v1/chat/completions"  # tau-routing:allow=doc-only\n',
+        encoding="utf-8",
+    )
+    hits = check.scan(tmp_path)
+    result = check.evaluate(hits, strict=False)
+    assert result["status"] == "PASS"
+    assert result["counts"]["hard_violations"] == 0

@@ -11,6 +11,7 @@ Usage: ./run.sh <command> [options]
 Commands:
   read                 Print PROJECT_KNOWLEDGE.md before running pipeline phases
   test-suite           Run the deterministic pytest contract suite (CI guard; no paid/live calls)
+  check-tau-routing-boundary  Static check: only /tau may reach /scillm (fails on un-sanctioned direct scillm calls)
   generate             Create a persona dream packet
   research-bakeoff     Run opt-in story/contact-sheet/A-V research bakeoff modes
   contact-sheet        Build/amend/retrieve visual reference sheets, memory records, and Qdrant index
@@ -392,6 +393,11 @@ case "$COMMAND" in
     ;;
   check-dream-observation-packet)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_dream_observation_packet.py" "$@"
+    ;;
+  check-tau-routing-boundary)
+    # Enforce operator rule "only /tau may reach /scillm": deterministic static
+    # scan of skills/persona-dream + skills/watch for direct scillm proxy calls.
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/../../scripts/check_tau_routing_boundary.py" "$@"
     ;;
   write-phase11-media-requirement-manifest)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/write_phase11_media_requirement_manifest.py" "$@"
