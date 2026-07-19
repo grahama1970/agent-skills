@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import datetime
+import contextlib
+import fcntl
 import json
 import os
 import re
@@ -373,6 +375,52 @@ class TargetResolutionError(RuntimeError):
     def __init__(self, code: str, detail: str):
         super().__init__(detail)
         self.code = code
+
+
+class SubmitOutputLockError(RuntimeError):
+    """Another submit process is already writing the same response artifacts."""
+
+
+@contextlib.contextmanager
+def _submit_output_lock(
+    response_path: Path,
+    raw_path: Path,
+    meta_path: Path,
+    receipt_path: Path,
+):
+    """Fail closed when concurrent submits target the same artifact paths."""
+    lock_path = response_path.with_name(f".{response_path.name}.lock")
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    handle = lock_path.open("a+")
+    try:
+        try:
+            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as exc:
+            raise SubmitOutputLockError(str(response_path)) from exc
+        handle.seek(0)
+        handle.truncate()
+        handle.write(
+            json.dumps(
+                {
+                    "schema": "webgpt.submit_output_lock.v1",
+                    "pid": os.getpid(),
+                    "started_at": _now(),
+                    "response_path": str(response_path),
+                    "raw_path": str(raw_path),
+                    "meta_path": str(meta_path),
+                    "receipt_path": str(receipt_path),
+                },
+                indent=2,
+            )
+            + "\n"
+        )
+        handle.flush()
+        yield lock_path
+    finally:
+        try:
+            fcntl.flock(handle, fcntl.LOCK_UN)
+        finally:
+            handle.close()
 
 
 def _git(repo: Path, *args: str, timeout: int = 60) -> subprocess.CompletedProcess:
@@ -956,6 +1004,51 @@ def _submit_stage(
     Hard-fails closed (typer.Exit) on preflight or routing-proof errors. Returns
     (deliverable_satisfied, response_path).
     """
+    tag = "" if mode in {"code", "none"} else f"-{mode}"
+    resp_path = bp.with_name(f"{bp.stem}{tag}-response.md")
+    zip_path = bp.with_name(f"{bp.stem}{tag}-solution.zip")
+    raw_path = bp.with_name(f"{bp.stem}{tag}-response.raw.md")
+    meta_path = bp.with_name(f"{bp.stem}{tag}-response.meta.json")
+    receipt_path = bp.with_name(f"{bp.stem}{tag}-response.receipt.json")
+
+    try:
+        output_lock = _submit_output_lock(resp_path, raw_path, meta_path, receipt_path)
+        with output_lock:
+            return _submit_stage_locked(
+                bp,
+                mode,
+                transport,
+                tab_id,
+                conversation_url,
+                b,
+                timeout,
+                provenance,
+                resp_path,
+                zip_path,
+                raw_path,
+                meta_path,
+                receipt_path,
+            )
+    except SubmitOutputLockError as exc:
+        typer.echo(f"BLOCKED_WEBGPT_OUTPUT_IN_USE: {exc}", err=True)
+        raise typer.Exit(5)
+
+
+def _submit_stage_locked(
+    bp: Path,
+    mode: str,
+    transport: str,
+    tab_id: str,
+    conversation_url: str,
+    b: dict,
+    timeout: int,
+    provenance: dict | None,
+    resp_path: Path,
+    zip_path: Path,
+    raw_path: Path,
+    meta_path: Path,
+    receipt_path: Path,
+) -> tuple[bool, Path]:
     aug = _augment_bundle(bp, mode, provenance)
     if transport == "webgpt":
         preflight = _surf(
@@ -981,13 +1074,6 @@ def _submit_stage(
     else:
         typer.echo(f"BLOCKED_WEBGPT_PROVIDER_UNSUPPORTED: {transport}", err=True)
         raise typer.Exit(2)
-
-    tag = "" if mode in {"code", "none"} else f"-{mode}"
-    resp_path = bp.with_name(f"{bp.stem}{tag}-response.md")
-    zip_path = bp.with_name(f"{bp.stem}{tag}-solution.zip")
-    raw_path = bp.with_name(f"{bp.stem}{tag}-response.raw.md")
-    meta_path = bp.with_name(f"{bp.stem}{tag}-response.meta.json")
-    receipt_path = bp.with_name(f"{bp.stem}{tag}-response.receipt.json")
 
     typer.echo(f"Submitting {bp.name} [{mode}]...", err=True)
     if transport == "webgpt":
@@ -1080,10 +1166,15 @@ def download(
     timeout: int = typer.Option(60, "--timeout", "-t"),
     output: str | None = typer.Option(None, "-o"),
     background: bool = typer.Option(True, "--background"),
+    tab_id_option: str | None = typer.Option(None, "--tab-id", help="Exact tab id; bypasses project-binding resolution (same rule as submit)"),
 ):
     """Click the download button in the ChatGPT tab, wait for the file in ~/Downloads."""
-    binding = _verify_desktop(_binding(project), background, "download")
-    tab_id = str(binding.get("tab_id", "")).strip() or _active_chatgpt_tab()
+    if tab_id_option:
+        binding = {"tab_id": tab_id_option}
+        tab_id = tab_id_option.strip()
+    else:
+        binding = _verify_desktop(_binding(project), background, "download")
+        tab_id = str(binding.get("tab_id", "")).strip() or _active_chatgpt_tab()
     if not tab_id:
         _report_failure("download", subprocess.CompletedProcess(args=[], returncode=1, stdout="", stderr="no tab id"), binding=_binding(project), project=project)
         typer.echo("No active ChatGPT tab found", err=True)

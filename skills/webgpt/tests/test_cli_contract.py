@@ -167,6 +167,26 @@ def test_submit_runs_browser_oracle_before_provenance_and_surf() -> None:
     assert '"kimi.submit"' in submit_stage
 
 
+def test_submit_output_lock_rejects_same_artifact_path(tmp_path: Path) -> None:
+    resp = tmp_path / "REQUEST-response.md"
+    raw = tmp_path / "REQUEST-response.raw.md"
+    meta = tmp_path / "REQUEST-response.meta.json"
+    receipt = tmp_path / "REQUEST-response.receipt.json"
+    other = tmp_path / "OTHER-response.md"
+
+    with webgpt_cli._submit_output_lock(resp, raw, meta, receipt):
+        with pytest.raises(webgpt_cli.SubmitOutputLockError):
+            with webgpt_cli._submit_output_lock(resp, raw, meta, receipt):
+                pass
+        with webgpt_cli._submit_output_lock(
+            other,
+            tmp_path / "OTHER-response.raw.md",
+            tmp_path / "OTHER-response.meta.json",
+            tmp_path / "OTHER-response.receipt.json",
+        ):
+            pass
+
+
 def test_provider_is_inferred_from_authoritative_url() -> None:
     assert webgpt_cli._provider_for_url("https://chatgpt.com/c/example") == (
         "webgpt",
