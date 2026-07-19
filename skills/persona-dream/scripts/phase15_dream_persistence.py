@@ -25,6 +25,7 @@ canonical dream memory.
 from __future__ import annotations
 
 import argparse
+import copy
 import hashlib
 import importlib.util as _ilu
 import json
@@ -856,13 +857,17 @@ def write_commit_manifest(
             "quarantine_reason": "MANIFEST_REREAD_MISMATCH",
             "quarantined_at": utc_now(),
         }
-        _http_post(
-            f"{base_url.rstrip('/')}/store",
-            {"collection": COMMIT_MANIFEST_COLLECTION, "document": compensator},
-        )
+        # The compensating inactive write must itself be exactly reread before
+        # the operation terminates (webgpt round-3); its outcome is reported,
+        # and active stays False regardless.
+        compensation = store_and_reread(compensator, COMMIT_MANIFEST_COLLECTION, base_url)
+        compensation_reread_match = bool(compensation["exact_reread_match"])
+    else:
+        compensation_reread_match = None
     return {
         "key": manifest_doc["_key"],
         "active": manifest_active,
+        "compensation_reread_match": compensation_reread_match,
         "retroactive_commit": bool(retroactive),
         "record_count": len(record_index),
         "published_all_exact_reread_match": all_published,
@@ -919,6 +924,10 @@ def persist_canonical(
         dream_doc, interpretation, tom, watch_vertices,
         interpretation_vertices=interpretation_vertices, causal_fields=causal_fields,
     )
+    # Deep-copy every document so stamping NEVER mutates caller-held dicts
+    # (webgpt round-3: the returned plan embedded live references that were
+    # mutated after their hashes were recorded).
+    write_set = [{**e, "document": copy.deepcopy(e["document"])} for e in write_set]
     expected_count = len(write_set)
     # SINGLE TRANSACTION IDENTITY (webgpt re-assess 2026-07-19): derive the
     # plan-bound key over the commit-id-less write set, THEN stamp the derived
@@ -951,6 +960,18 @@ def persist_canonical(
             raise ValueError(
                 f"canonical write-set records missing bound commit_id/visibility_state: {naked[:5]}"
             )
+    # THE immutable final-stamped snapshot: sole source for the returned plan,
+    # staging, publication, proof, and manifest (webgpt round-3 gate).
+    final_write_set_snapshot = [
+        {
+            "collection": e["collection"],
+            "kind": e["kind"],
+            "key": e["document"].get("_key"),
+            "document": copy.deepcopy(e["document"]),
+            "payload_sha256": authored_sha(e["document"]),
+        }
+        for e in write_set
+    ]
 
     # --- Detect on rerun: resume WITHOUT re-staging/re-publishing ----------
     prior = existing_commit_manifest(idempotency_key, base_url)
@@ -969,7 +990,9 @@ def persist_canonical(
             # must not rewrite records).
             return {
                 "idempotency_key": idempotency_key,
+                "final_commit_id": final_commit_id,
                 "canonical_plan_sha256": canonical_plan_sha256,
+                "final_write_set_snapshot": final_write_set_snapshot,
                 "records_written": 0,
                 "expected_record_count": expected_count,
                 "all_exact_reread_match": True,
@@ -1036,6 +1059,29 @@ def persist_canonical(
 
     # --- Publish (only if staging fully verified and not quarantined) ------
     if staging_all_match and quarantine is None:
+        # Conditional publication (webgpt round-3): never overwrite a record
+        # owned by a DIFFERENT commit. Absent or same-commit records only.
+        foreign: list[dict[str, Any]] = []
+        for entry in write_set:
+            key = entry["document"].get("_key")
+            existing = _http_post(
+                f"{base_url.rstrip('/')}/list",
+                {"collection": entry["collection"], "limit": 2, "filters": {"_key": key}},
+            )
+            docs = existing.get("documents") or existing.get("items") or []
+            for d in docs:
+                if d.get("commit_id") != final_commit_id:
+                    foreign.append(
+                        {"collection": entry["collection"], "key": key,
+                         "owner_commit_id": d.get("commit_id")}
+                    )
+        if foreign:
+            quarantine = {
+                "idempotency_key": idempotency_key,
+                "reason": "FOREIGN_COMMIT_OWNERSHIP",
+                "foreign_records": foreign[:10],
+            }
+    if staging_all_match and quarantine is None:
         for entry in write_set:
             r = store_and_reread(entry["document"], entry["collection"], base_url)
             all_publish_receipts.append({**r, "record_kind": entry["kind"]})
@@ -1059,6 +1105,9 @@ def persist_canonical(
     )
     return {
         "idempotency_key": idempotency_key,
+        "final_commit_id": final_commit_id,
+        "canonical_plan_sha256": canonical_plan_sha256,
+        "final_write_set_snapshot": final_write_set_snapshot,
         "records_written": len(all_publish_receipts),
         "expected_record_count": expected_count,
         "all_exact_reread_match": staging_all_match and publish_all_match,
@@ -1238,6 +1287,33 @@ def run_phase15(
             and manifest.get("exact_reread_match")
             and manifest.get("active")
         )
+        # FINAL_TRANSACTION_SNAPSHOT_INTEGRITY (webgpt round-3): the returned
+        # plan is derived from the ONE final-stamped snapshot that was staged,
+        # published, and indexed by the manifest — never from pre-stamp dicts.
+        snapshot = canonical_write_proof.get("final_write_set_snapshot") or []
+        if snapshot:
+            canonical_plan = {
+                "schema": "persona_dream.canonical_persistence_plan.v2",
+                "transaction_identity": canonical_write_proof.get("final_commit_id"),
+                "idempotency_key": canonical_write_proof.get("idempotency_key"),
+                "canonical_plan_sha256": canonical_write_proof.get("canonical_plan_sha256"),
+                "records": [
+                    {
+                        "collection": s["collection"],
+                        "kind": s["kind"],
+                        "key": s["key"],
+                        "document": s["document"],
+                        "payload_sha256": s["payload_sha256"],
+                    }
+                    for s in snapshot
+                ],
+                "causal_family_fields": {
+                    **causal_fields,
+                    "commit_id": canonical_write_proof.get("final_commit_id"),
+                },
+                "phase13_sha256": phase13_sha,
+                "phase14_sha256": phase14_sha,
+            }
     else:
         canonical_writes_performed = 0
 

@@ -250,3 +250,57 @@ def test_manifest_reread_corruption_leaves_stored_manifest_inactive(monkeypatch)
     assert stored["active"] is False
     assert stored["quarantined"] is True
     assert stored["quarantine_reason"] == "MANIFEST_REREAD_MISMATCH"
+
+
+def test_final_snapshot_plan_integrity(monkeypatch):
+    """webgpt round-3 gate: the returned plan derives from the ONE final-stamped
+    snapshot — every plan record hash recomputes exactly, matches the manifest
+    record_index, and shares the manifest's transaction identity."""
+    fake = FakeMemory()
+    result = _run(monkeypatch, fake)
+    proof = result["canonical_write_proof"]
+    plan = result["canonical_plan"]
+    manifest_key = proof["commit_manifest"]["key"]
+    assert plan["transaction_identity"] == manifest_key
+    assert plan["causal_family_fields"]["commit_id"] == manifest_key
+    mdoc = fake.store[(p15.COMMIT_MANIFEST_COLLECTION, manifest_key)]
+    index = {(r["collection"], r["key"]): r["payload_sha256"] for r in mdoc["record_index"]}
+    assert plan["records"]
+    for rec in plan["records"]:
+        # Hash recomputes over the embedded document (no post-hash mutation)...
+        assert p15.authored_sha(rec["document"]) == rec["payload_sha256"]
+        # ...the document carries the shared identity...
+        assert rec["document"]["commit_id"] == manifest_key
+        # ...and the manifest indexed the exact same payload hash.
+        assert index[(rec["collection"], rec["key"])] == rec["payload_sha256"]
+
+
+def test_publication_refuses_foreign_commit_ownership(monkeypatch):
+    """webgpt round-3: publication must not overwrite records owned by another
+    commit. Pre-seed one canonical key under a different commit_id."""
+    fake = FakeMemory()
+    clean = _run(monkeypatch, fake)
+    victim_key = clean["canonical_write_proof"]["watch_vertex_keys"][0]
+    fake2 = FakeMemory()
+    foreign_doc = {"_key": victim_key, "commit_id": "commit_FOREIGN", "visibility_state": "active"}
+    fake2.store[(p15.WATCH_EVIDENCE_COLLECTION, victim_key)] = foreign_doc
+    result = _run(monkeypatch, fake2)
+    assert result["canonical_dream_memory_written"] is False
+    proof = result["canonical_write_proof"]
+    assert proof["quarantine"]["reason"] == "FOREIGN_COMMIT_OWNERSHIP"
+    assert proof["records_written"] == 0
+    # The foreign record was not overwritten.
+    assert fake2.store[(p15.WATCH_EVIDENCE_COLLECTION, victim_key)] == foreign_doc
+    # No active manifest landed for the new transaction.
+    manifests = [v for (c, _k), v in fake2.store.items() if c == p15.COMMIT_MANIFEST_COLLECTION]
+    assert all(not m.get("active") for m in manifests)
+
+
+def test_compensation_write_is_reread_verified(monkeypatch):
+    """webgpt round-3: the compensating inactive manifest is exactly reread and
+    its outcome reported."""
+    fake = ManifestCorruptingMemory()
+    result = _run(monkeypatch, fake)
+    manifest = result["canonical_write_proof"]["commit_manifest"]
+    assert manifest["active"] is False
+    assert manifest["compensation_reread_match"] is True
