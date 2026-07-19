@@ -89,10 +89,48 @@ def _summarize(
     receipt = execution.get("receipt") if isinstance(execution.get("receipt"), dict) else {}
     dag_path = Path(str(bundle.get("dag_path"))) if bundle.get("dag_path") else None
     receipt_path = Path(str(execution.get("receipt_path"))) if execution.get("receipt_path") else None
+    dag = _read_json(dag_path) if dag_path is not None and dag_path.is_file() else {}
     checks = [
         _check("cli_returncode", completed.returncode == 0, {"returncode": completed.returncode}),
         _check("json_result", bool(payload), {}),
+        _check(
+            "final_dag_emitted_before_execution",
+            bundle.get("final_dag_emitted_before_execution") is True,
+            {"value": bundle.get("final_dag_emitted_before_execution")},
+        ),
         _check("dag_path_exists", dag_path is not None and dag_path.is_file(), {"path": str(dag_path) if dag_path else None}),
+        _check(
+            "strict_tau_dag_contract",
+            dag.get("schema") == "tau.dag_contract.v1",
+            {"schema": dag.get("schema")},
+        ),
+        _check(
+            "gpt_56_xhigh_requested_and_dispatched_via_scillm_route",
+            _has_model_policy(
+                dag,
+                requested_model="gpt-5.6-xhigh",
+                model="gpt-5.5",
+                reasoning_effort="high",
+                requested_reasoning_effort="xhigh",
+            ),
+            {"policies": _model_policies(dag)},
+        ),
+        _check(
+            "claude_fable_routes_to_scillm_claude_alias",
+            _has_model_policy(
+                dag,
+                requested_model="claude-fable",
+                model="claude-fable-5",
+                auth="scillm_claude_code_credentials",
+            ),
+            {"policies": _model_policies(dag)},
+        ),
+        _check(
+            "native_tau_runtime_owner",
+            dag.get("context", {}).get("execution_owner") == "$tau"
+            and dag.get("context", {}).get("provider_transport") == "$scillm",
+            {"context": dag.get("context")},
+        ),
         _check("tau_receipt_exists", receipt_path is not None and receipt_path.is_file(), {"path": str(receipt_path) if receipt_path else None}),
         _check("tau_receipt_pass", receipt.get("status") == "PASS", {"status": receipt.get("status"), "verdict": receipt.get("verdict")}),
         _check(
@@ -106,14 +144,69 @@ def _summarize(
             {"viewer": execution.get("viewer")},
         ),
     ]
+    if provider_gate.get("provider_live") is True:
+        checks.extend(
+            [
+                _check(
+                    "live_gpt_dispatch_receipt_has_requested_selector",
+                    _has_provider_call(
+                        provider_gate,
+                        requested_model="gpt-5.6-xhigh",
+                        model="gpt-5.5",
+                        reasoning_effort="high",
+                        requested_reasoning_effort="xhigh",
+                    ),
+                    {"model_calls": provider_gate.get("model_calls")},
+                ),
+                _check(
+                    "live_claude_fable_dispatch_receipt",
+                    _has_provider_call(
+                        provider_gate,
+                        requested_model="claude-fable",
+                        model="claude-fable-5",
+                    ),
+                    {"model_calls": provider_gate.get("model_calls")},
+                ),
+            ]
+        )
+    if execution.get("provider_live") is True:
+        checks.extend(
+            [
+                _check(
+                    "tau_execution_recorded_live_gpt_node_receipt",
+                    _has_execution_node_provider_receipt(
+                        execution,
+                        requested_model="gpt-5.6-xhigh",
+                        model="gpt-5.5",
+                        provider_live=True,
+                    ),
+                    {"node_provider_receipts": execution.get("node_provider_receipts")},
+                ),
+                _check(
+                    "tau_execution_recorded_live_claude_node_receipt",
+                    _has_execution_node_provider_receipt(
+                        execution,
+                        requested_model="claude-fable",
+                        model="claude-fable-5",
+                        provider_live=True,
+                    ),
+                    {"node_provider_receipts": execution.get("node_provider_receipts")},
+                ),
+            ]
+        )
     ok = all(item["ok"] for item in checks)
+    provider_live = bool(
+        provider_gate.get("provider_live") is True
+        or execution.get("provider_live") is True
+        or receipt.get("provider_live") is True
+    )
     return {
         "schema": "ask.tau_dag_e2e_sanity.v1",
         "status": "PASS" if ok else "FAIL",
         "ok": ok,
         "mocked": False,
         "live": True,
-        "provider_live": bool(provider_gate.get("provider_live") is True or receipt.get("provider_live") is True),
+        "provider_live": provider_live,
         "what_was_exercised": [
             "/ask run.sh tau-dag CLI",
             "strict tau.dag_contract.v1 artifact emission",
@@ -122,11 +215,7 @@ def _summarize(
             "Tau DAG viewer-link command",
             "local command-spec worker subprocesses" if not provider_gate.get("provider_live") else "SciLLM provider route",
         ],
-        "what_remains_unverified": [
-            "Provider/model calls, unless provider_live is true.",
-            "Semantic quality of solver/reviewer responses.",
-            "Browser screenshot of the React Flow interface.",
-        ],
+        "what_remains_unverified": _remaining_unverified(provider_live=provider_live),
         "output_root": str(output_root),
         "dag_path": str(dag_path) if dag_path else None,
         "receipt_path": str(receipt_path) if receipt_path else None,
@@ -146,6 +235,70 @@ def _viewer_available(value: Any) -> bool:
         return False
     parsed = value.get("parsed")
     return isinstance(parsed, dict) and parsed.get("status") == "PASS" and parsed.get("ok") is True
+
+
+def _read_json(path: Path | None) -> dict[str, Any]:
+    if path is None:
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def _model_policies(dag: dict[str, Any]) -> list[dict[str, Any]]:
+    nodes = dag.get("nodes")
+    if not isinstance(nodes, list):
+        return []
+    return [
+        node.get("model_policy")
+        for node in nodes
+        if isinstance(node, dict) and isinstance(node.get("model_policy"), dict)
+    ]
+
+
+def _has_model_policy(dag: dict[str, Any], **expected: Any) -> bool:
+    for policy in _model_policies(dag):
+        if all(policy.get(key) == value for key, value in expected.items()):
+            return True
+    return False
+
+
+def _has_provider_call(provider_gate: dict[str, Any], **expected: Any) -> bool:
+    calls = provider_gate.get("model_calls")
+    if not isinstance(calls, list):
+        return False
+    for call in calls:
+        if (
+            isinstance(call, dict)
+            and call.get("ok") is True
+            and all(call.get(key) == value for key, value in expected.items())
+        ):
+            return True
+    return False
+
+
+def _has_execution_node_provider_receipt(execution: dict[str, Any], **expected: Any) -> bool:
+    receipts = execution.get("node_provider_receipts")
+    if not isinstance(receipts, list):
+        return False
+    for receipt in receipts:
+        if isinstance(receipt, dict) and all(
+            receipt.get(key) == value for key, value in expected.items()
+        ):
+            return True
+    return False
+
+
+def _remaining_unverified(*, provider_live: bool) -> list[str]:
+    remaining = [
+        "Semantic quality of solver/reviewer responses.",
+        "Browser screenshot of the React Flow interface.",
+    ]
+    if not provider_live:
+        remaining.insert(0, "Provider/model calls because provider_live is false.")
+    return remaining
 
 
 def _json_or_error(text: str) -> dict[str, Any]:

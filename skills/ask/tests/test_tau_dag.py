@@ -4,7 +4,7 @@ import json
 import subprocess
 from pathlib import Path
 
-from ask.tau_dag import compile_tau_dag_bundle, infer_compile_input
+from ask.tau_dag import compile_tau_dag_bundle, infer_compile_input, resolve_scillm_model_route
 
 
 TAU_ROOT = Path("/home/graham/workspace/experiments/tau")
@@ -50,6 +50,15 @@ def test_complete_tau_dag_bundle_emits_strict_tau_contract(tmp_path: Path) -> No
     assert all(node["model_policy"]["execution_owner"] == "$tau" for node in dag["nodes"])
     assert all(node["model_policy"]["provider_transport"] == "$scillm" for node in dag["nodes"])
     assert all("prompt_contract" in node for node in dag["nodes"])
+    solver_policy = dag["nodes"][0]["model_policy"]
+    assert solver_policy["requested_model"] == "gpt-5.6-xhigh"
+    assert solver_policy["model"] == "gpt-5.5"
+    assert solver_policy["reasoning_effort"] == "high"
+    assert solver_policy["requested_reasoning_effort"] == "xhigh"
+    assert "xhigh is preserved" in solver_policy["reasoning_downgrade_reason"]
+    reviewer_policy = dag["nodes"][-1]["model_policy"]
+    assert reviewer_policy["requested_model"] == "claude-fable"
+    assert reviewer_policy["model"] == "claude-fable-5"
     assert Path(bundle["dag_path"]).is_file()
     assert Path(bundle["command_spec_root"], "solver-1", "tau-dispatch-command.json").is_file()
 
@@ -99,10 +108,35 @@ def test_command_spec_blocks_provider_execution_without_opt_in(tmp_path: Path) -
 
     assert "--mode" in command_spec["command"]
     assert "scillm" in command_spec["command"]
+    assert command_spec["command"][command_spec["command"].index("--model") + 1] == "gpt-5.5"
+    assert command_spec["command"][command_spec["command"].index("--requested-model") + 1] == "gpt-5.6-xhigh"
+    assert command_spec["command"][command_spec["command"].index("--reasoning-effort") + 1] == "high"
+    assert command_spec["command"][command_spec["command"].index("--requested-reasoning-effort") + 1] == "xhigh"
     assert command_spec["requires_network"] is True
     assert command_spec["timeout_s"] == 900
     worker_source = Path(bundle["worker_path"]).read_text(encoding="utf-8")
     assert "max_tokens" not in worker_source
+    compile(worker_source, str(bundle["worker_path"]), "exec")
+
+
+def test_scillm_route_preserves_requested_gpt_56_xhigh_selector() -> None:
+    route = resolve_scillm_model_route("gpt-5.6-xhigh")
+
+    assert route.requested_model == "gpt-5.6-xhigh"
+    assert route.model == "gpt-5.5"
+    assert route.provider == "openai"
+    assert route.reasoning_effort == "high"
+    assert route.requested_reasoning_effort == "xhigh"
+    assert route.reasoning_downgrade_reason is not None
+
+
+def test_scillm_route_maps_claude_fable_alias_to_live_catalog_name() -> None:
+    route = resolve_scillm_model_route("claude-fable")
+
+    assert route.requested_model == "claude-fable"
+    assert route.model == "claude-fable-5"
+    assert route.provider == "anthropic"
+    assert route.auth == "scillm_claude_code_credentials"
 
 
 def test_webgpt_model_routes_to_interview_until_native_tau_skill_node_exists(tmp_path: Path) -> None:
