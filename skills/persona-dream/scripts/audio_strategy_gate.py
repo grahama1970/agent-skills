@@ -156,18 +156,39 @@ def _validate_voice_handoff_plan(
         errors.append("VOICE_HANDOFF_PROVIDER_REQUEST_BINDING_MISSING")
     else:
         request_sha = provider_request.get("request_body_sha256")
-        if not isinstance(request_sha, str) or not request_sha.startswith("sha256:") or len(request_sha) != 71:
-            errors.append("VOICE_HANDOFF_PROVIDER_REQUEST_HASH_INVALID")
         expected_audio = plan.get("strategy") != "post_mux"
         if provider_request.get("generate_audio") is not expected_audio:
             errors.append("VOICE_HANDOFF_PROVIDER_AUDIO_MODE_MISMATCH")
         canonical_path = revision_root / "phase_11_submit_return/canonical/phase11_live_request.v1.json"
         canonical = _read_json(canonical_path)
-        if isinstance(canonical, Mapping):
-            bindings = canonical.get("approval_bindings")
-            canonical_sha = bindings.get("request_body_sha256") if isinstance(bindings, Mapping) else None
-            if canonical_sha != request_sha:
-                errors.append("VOICE_HANDOFF_PROVIDER_REQUEST_HASH_MISMATCH")
+        # A voiced-run voice handoff plan must be bound to the compiled canonical
+        # request body hash. That hash is only available AFTER compile, but the
+        # audio-strategy gate blocks compile until a plan exists (ordering cycle).
+        # The deferred binding mode lets the plan declare request_binding.status =
+        # "PENDING_COMPILE" so bootstrap+compile can run; it is accepted ONLY while
+        # the canonical does not yet exist. Once the canonical is compiled the plan
+        # MUST be rebound to the real hash (rebind_voice_handoff_binding.py) or it is
+        # stale and this gate fails closed. Legacy plans omit request_binding and are
+        # validated as fully BOUND, exactly as before.
+        request_binding = plan.get("request_binding")
+        binding_status = (
+            str(request_binding.get("status"))
+            if isinstance(request_binding, Mapping) and request_binding.get("status")
+            else "BOUND"
+        )
+        if binding_status == "PENDING_COMPILE":
+            if isinstance(canonical, Mapping):
+                errors.append("VOICE_HANDOFF_PENDING_BINDING_STALE_CANONICAL_PRESENT")
+        elif binding_status == "BOUND":
+            if not isinstance(request_sha, str) or not request_sha.startswith("sha256:") or len(request_sha) != 71:
+                errors.append("VOICE_HANDOFF_PROVIDER_REQUEST_HASH_INVALID")
+            if isinstance(canonical, Mapping):
+                bindings = canonical.get("approval_bindings")
+                canonical_sha = bindings.get("request_body_sha256") if isinstance(bindings, Mapping) else None
+                if canonical_sha != request_sha:
+                    errors.append("VOICE_HANDOFF_PROVIDER_REQUEST_HASH_MISMATCH")
+        else:
+            errors.append("VOICE_HANDOFF_REQUEST_BINDING_STATUS_INVALID")
 
     transcript = plan.get("timed_transcript")
     if not isinstance(transcript, Mapping):
