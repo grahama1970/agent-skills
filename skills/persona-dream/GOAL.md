@@ -1,5 +1,10 @@
 # Persona Dream Immutable Goal
 
+> SUPERSEDED FOR CURRENT WORK: the v1 media-spine goal below is
+> fulfilled at agent level (one accepted Kling return + canonical dream
+> memory). The controlling goal is now GOAL_V2.md (P0 founding-boundary
+> closure, webgpt-converged ROADMAP r2). v1 stays as immutable history.
+
 Last updated: 2026-07-17
 
 ## Immutable Goal
