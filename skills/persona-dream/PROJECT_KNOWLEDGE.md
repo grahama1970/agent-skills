@@ -5,6 +5,29 @@
 
 ## Current Understanding
 
+- 2026-07-19 (WEEKS-1-2 INTEGRITY FIXES, accepted external re-review — 6 defects
+  closed): cognitive-loop correctness + lineage hardening. (1) The interpretation
+  guard no longer self-compares — `run_cognitive_loop` binds the INDEPENDENTLY
+  computed observation-packet file hash (`p13.file_sha`), so a tampered
+  `observation_packet_sha256` field fails and the genuine chain passes. (2)
+  freeze-old/namespace-new: dream-004's 26 raw-key canonical records are FROZEN
+  (`reports/pipeline-complete/.persona-dream/legacy_key_format_receipt.v1.json`
+  names them all); NEW canonical writes use `dream:<persona_id>:<dream_id>[:watch|
+  :interpretation|:tom]:<id>`. (3) phase14 emits distinct ToM statuses
+  (LIVE / DETERMINISTIC_PROJECTION / DEGRADED_TOM_LIVE_ROUTE_FALLBACK); the guard
+  accepts the PASS forms and needs an explicit waiver for the degraded fallback.
+  (4) phase15 materializes `persona_dream_interpretations` vertices + the
+  observation→interpretation→tom ladder, preserving dream-level edges. (5) all
+  embry/kai/surf strings live in one cognition contract fixture
+  (`fixtures/persona_dream_cognition_contract.embry_kai_surf.v1.json`, schema
+  `contracts/persona_dream_cognition_contract.v1.schema.json`); phase 13/14/16 are
+  grep-clean. (6) every NEW write-set record carries the causal-family lineage
+  fields (`root_event_ids`/`causal_family_id`/`synthetic_depth`/`derivation_depth`/
+  `independent_evidence_count`/`commit_id`/`visibility_state=pending`) shared with
+  the GMO agent. Proof: `./run.sh test-suite` 403 passed (x2); live dry-run
+  reached PASS_SELF_INTERPRETATION + PASS_TOM_VALIDATION_LIVE + DRY_RUN plan with
+  namespaced keys; governance `persona_dream_governance_weeks12_integrity_20260719`
+  reread-exact.
 - 2026-07-19 (P1 TAU-ROUTING TEMPORARY_DEBT PAID, 23 → 0): the "only /tau may
   reach /scillm" boundary is fully clean. `check_tau_routing_boundary.py --strict`
   exits 0 and `sanity.sh` now runs it in `--strict` mode (the ratchet is the gate).

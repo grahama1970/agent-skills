@@ -1,0 +1,23 @@
+{
+  "status": "PARTIAL_COGNITIVE_LOOP",
+  "phases": [
+    {
+      "phase": "12_watch_observation",
+      "status": "DEGRADED_WATCH_GAUNTLET_OBSERVATION"
+    },
+    {
+      "phase": "13_self_interpretation",
+      "status": "PASS_SELF_INTERPRETATION"
+    },
+    {
+      "phase": "14_tom_validation",
+      "status": "PASS_TOM_VALIDATION_LIVE"
+    },
+    {
+      "phase": "15_persistence",
+      "status": "DRY_RUN_PERSISTENCE_PLAN"
+    }
+  ],
+  "canonical_dream_memory_written": false,
+  "output_root": "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/watch_gauntlet/59b9ff3155d6/cognitive_loop/weeks12_live_dryrun"
+}

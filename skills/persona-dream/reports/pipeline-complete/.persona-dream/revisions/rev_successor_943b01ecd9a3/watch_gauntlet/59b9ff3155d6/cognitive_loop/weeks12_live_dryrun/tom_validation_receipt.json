@@ -1,0 +1,153 @@
+{
+  "accepted_count": 4,
+  "accepted_tom_candidates": [
+    {
+      "candidate_id": "tom-001",
+      "confidence": 0.42,
+      "emotional_intensity": 0.48,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-001",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age15_19_b03_memory_014",
+        "embry_age15_19_b03_memory_016"
+      ],
+      "statement": "Embry may view Kai as a trusted practical guide whose restrained advice helps her choose safer surf etiquette without feeling shamed.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "kai",
+      "tom_state_type": "trust",
+      "watch_observation_refs": [
+        "visible_speaker_lipsync_window",
+        "frame_0006",
+        "frame_0007",
+        "frame_0008",
+        "frame_0009"
+      ]
+    },
+    {
+      "candidate_id": "tom-002",
+      "confidence": 0.36,
+      "emotional_intensity": 0.44,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-002",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age15_19_b02_memory_019",
+        "embry_age15_19_b03_memory_016"
+      ],
+      "statement": "Embry may want autonomy while still accepting Kai's guidance as a boundary cue for making her own decision.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "kai",
+      "tom_state_type": "desire",
+      "watch_observation_refs": [
+        "visible_speaker_lipsync_window",
+        "frame_0006",
+        "frame_0007",
+        "frame_0008",
+        "frame_0009"
+      ]
+    },
+    {
+      "candidate_id": "tom-003",
+      "confidence": 0.28,
+      "emotional_intensity": 0.32,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-003",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age15_19_b03_memory_014",
+        "embry_age15_19_b02_memory_019"
+      ],
+      "statement": "Embry's dream relation to Kai may feel familiar, but the available rendered evidence leaves the continuity of Kai's identity unresolved.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "kai",
+      "tom_state_type": "uncertainty",
+      "watch_observation_refs": [
+        "identity_temporal_continuity_review",
+        "frame_0000",
+        "frame_0011",
+        "coverage_gap_00"
+      ]
+    },
+    {
+      "candidate_id": "tom-004",
+      "confidence": 0.4,
+      "emotional_intensity": 0.46,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-004",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age15_19_b03_memory_014",
+        "embry_age15_19_b02_memory_019"
+      ],
+      "statement": "Embry may be taking a stance of respectful caution toward Kai's warning about surf risk and lineup etiquette.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "kai",
+      "tom_state_type": "stance",
+      "watch_observation_refs": [
+        "visible_speaker_lipsync_window",
+        "frame_0006",
+        "frame_0007",
+        "frame_0008",
+        "frame_0009"
+      ]
+    }
+  ],
+  "candidate_receipts": [
+    {
+      "candidate_id": "tom-001",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-001",
+      "reasons": []
+    },
+    {
+      "candidate_id": "tom-002",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-002",
+      "reasons": []
+    },
+    {
+      "candidate_id": "tom-003",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-003",
+      "reasons": []
+    },
+    {
+      "candidate_id": "tom-004",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-004",
+      "reasons": []
+    }
+  ],
+  "candidate_source": "llm_via_tau",
+  "canonical_memory_write_allowed": false,
+  "dream_id": "dream_successor_943b01ecd9a3",
+  "generated_at": "2026-07-19T15:33:06.542990+00:00",
+  "had_rejections": false,
+  "interpretation_sha256": "sha256:2441de73b994e412fec1f313d5028b4649887f833b78bc82d930ccba08e0d841",
+  "live": true,
+  "live_route_attempted": true,
+  "live_route_failed": false,
+  "mocked": false,
+  "proposed_candidate_count": 4,
+  "rejected_count": 0,
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.tom_validation_receipt.v1",
+  "status": "PASS_TOM_VALIDATION_LIVE",
+  "tau_routing": {
+    "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+    "http_status": 200,
+    "live_call_performed": true,
+    "model": "gpt-5.5",
+    "output_contract_sha256": "sha256:cdca7d6845ba5905353704db083e49ec40ce00451e5a60e2004b434b0a3fc5f6",
+    "prompt_sha256": "sha256:c7a11adc8b592623274986f8dcc1cfa9bf7b87f8239680eb331e1be639d48f0d",
+    "route": "tau:persona-dream-text-reasoning",
+    "status": "PASS",
+    "tau_receipt_schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1"
+  }
+}

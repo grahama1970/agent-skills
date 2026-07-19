@@ -5,6 +5,19 @@
 
 This top-level file redirects to the detailed handoff. The current handoff covers UX Lab Dream/Kling preflight React surface implementation — 12-phase pipeline, Gemini design packet mostly implemented, blocked on image modal click not working through draggable parent.
 
+## 2026-07-19 WEEKS-1-2 INTEGRITY FIXES (accepted external re-review) — 6 defects closed
+
+Cognitive-loop correctness/lineage hardening in `scripts/{run_cognitive_loop,cognitive_loop_transitions,phase13_self_interpretation,phase14_tom_validation,phase15_dream_persistence,phase16_behavior_evaluation}.py` + new contract/fixture + tests. Full `./run.sh test-suite` green (403 passed) twice; grep-gate clean; live dry-run proven.
+
+- **D1 tautology guard:** `run_cognitive_loop` was passing `interp.get("observation_packet_sha256")` into its own interpretation guard (self-comparison). Now the runner computes the observation-packet file hash INDEPENDENTLY (`p13.file_sha`) and binds THAT. Live dry-run proof: genuine chain file-sha `sha256:5229c664…` == interp field → interpretation transition ok; a tampered field FAILS (`INTERPRETATION_OBSERVATION_SHA_MISMATCH`). Tests: `test_defect1_*`.
+- **D2 key namespacing (freeze-old/namespace-new, operator-decided):** dream-004's 26 raw-key canonical records are FROZEN (no migration). Receipt `reports/pipeline-complete/.persona-dream/legacy_key_format_receipt.v1.json` names every raw-key record (verified all 26 present live) + the policy. Every NEW canonical write uses `dream:<persona_id>:<dream_id>[:watch|:interpretation|:tom]:<id>`; edges point at namespaced vertices.
+- **D3 ToM fallback status:** phase14 now emits distinct `PASS_TOM_VALIDATION_LIVE` / `PASS_TOM_VALIDATION_DETERMINISTIC_PROJECTION` / `DEGRADED_TOM_LIVE_ROUTE_FALLBACK`. The transition guard accepts the two PASS forms; the DEGRADED fallback requires an explicit `--allow-tom-fallback` waiver. Live dry-run hit `PASS_TOM_VALIDATION_LIVE`. Tests: `test_defect3_*`.
+- **D4 interpretation vertices:** phase15 materializes `persona_dream_interpretations` vertices (full statement/confidence/uncertainty/renderer_alternative/citations) and the observation→interpretation→tom epistemic ladder edges (`grounds_interpretation`, `supports_interpretation`), preserving the dream-level edges. Live dry-run plan carried 4 interpretation vertices. Tests: `test_defect4_*`.
+- **D5 parameterize 13/14/16:** new `contracts/persona_dream_cognition_contract.v1.schema.json` + `fixtures/persona_dream_cognition_contract.embry_kai_surf.v1.json` + loader `scripts/persona_dream_cognition_contract.py`. All embry/kai/surf strings moved into the fixture; phase 13/14/16 sources are grep-clean (case-insensitive, zero matches). Tests: `test_defect5_*`.
+- **D6 causal-family fields:** every NEW write-set record carries `root_event_ids`, `causal_family_id`, `synthetic_depth`, `derivation_depth`, `independent_evidence_count`, `commit_id`, `visibility_state:"pending"` (derived from residue source ids). Field contract shared with the GMO agent; persona-dream only WRITES the fields. Tests: `test_defect6_*`.
+
+Governance: `persona_dream_governance/persona_dream_governance_weeks12_integrity_20260719` written with exact reread match. Live dry-run receipt: `watch_gauntlet/59b9ff3155d6/cognitive_loop/weeks12_live_dryrun/`.
+
 ## 2026-07-19 P0 OBSERVATION PACKET v2 — ONE ACCEPTED SUCCESSOR PACKET (live enrichment)
 
 The DEGRADED successor packet is superseded by a single ACCEPTED evidence-only v2 packet. **ONE PACKET, ONE AUTHORITY.**

@@ -1,0 +1,312 @@
+"""Weeks 1-2 integrity fixes (accepted external re-review) - deterministic proofs.
+
+Covers, with no live LLM/memory calls:
+  Defect 1  tautology guard: the runner binds the INDEPENDENTLY-computed
+            observation-packet file hash; a tampered interp field FAILS, a
+            matching field PASSES.
+  Defect 2  freeze-old/namespace-new key policy: every NEW canonical record key
+            is namespaced; frozen raw keys are never re-derived.
+  Defect 3  distinct ToM statuses (live / deterministic-projection /
+            degraded-live-fallback) and the fallback waiver.
+  Defect 4  interpretation vertices + the observation->interpretation->tom
+            epistemic ladder.
+  Defect 5  no hardcoded persona strings in phases 13/14/16 (grep-gate).
+  Defect 6  causal-family / lineage fields on every NEW write-set record.
+"""
+import importlib.util
+import re
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def _load(name: str):
+    spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / f"{name}.py")
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+p13 = _load("phase13_self_interpretation")
+p14 = _load("phase14_tom_validation")
+p15 = _load("phase15_dream_persistence")
+T = _load("cognitive_loop_transitions")
+rcl = _load("run_cognitive_loop")
+
+_REV = ROOT / "reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3"
+ACCEPTED_PACKET = _REV / "watch_gauntlet/59b9ff3155d6/dream_observation_packet.v1.json"
+
+PERSONA = "embry"
+DREAM = "dream_x"
+
+
+# --------------------------------------------------------------------------- #
+# Defect 1 - tautology guard (independently-computed observation file hash)     #
+# --------------------------------------------------------------------------- #
+def _interp(sha: str) -> dict:
+    return {
+        "schema": T.INTERPRETATION_SCHEMA,
+        "status": "PASS_SELF_INTERPRETATION",
+        "dream_id": DREAM, "revision_id": "rev_x", "run_id": "run_x",
+        "observation_packet_sha256": sha,
+        "accepted_interpretations": [{
+            "interpretation_id": "interpretation-001", "tom_state_type": "trust",
+            "subject": PERSONA, "target": "counterpart", "statement": "grounded claim",
+            "observation_refs": ["frame_0006"], "source_memory_refs": ["mem-1"],
+            "confidence": 0.4, "uncertainty": "u", "emotional_intensity": 0.5,
+            "alternative_explanation": "renderer", "favored_explanation": "psychological",
+        }],
+        "rejected_interpretations": [],
+        "honesty_rule": {},
+        "source_memory_bindings": [{"source_id": "mem-1"}],
+    }
+
+
+def _tom_for(interp: dict) -> dict:
+    return {
+        "schema": T.TOM_SCHEMA,
+        "status": "PASS_TOM_VALIDATION_DETERMINISTIC_PROJECTION",
+        "dream_id": DREAM, "revision_id": "rev_x", "run_id": "run_x",
+        "interpretation_sha256": p13.canonical_sha(interp),
+        "candidate_source": "deterministic",
+        "accepted_tom_candidates": [{"candidate_id": "tom-001", "tom_state_type": "trust"}],
+        "accepted_count": 1, "rejected_count": 0,
+    }
+
+
+def _dry_persist() -> dict:
+    return {
+        "status": "DRY_RUN_PERSISTENCE_PLAN",
+        "canonical_write_allowed": False, "canonical_writes_performed": 0,
+        "canonical_write_blockers": ["CANONICAL_WRITE_FLAG_NOT_SET"],
+        "canonical_dream_memory_written": False,
+        "canonical_write_proof": None, "validation_write_proof": None,
+    }
+
+
+def _patch_phases(monkeypatch, interp: dict):
+    monkeypatch.setattr(rcl.p13, "run_phase13", lambda *a, **k: interp)
+    monkeypatch.setattr(rcl.p14, "run_phase14", lambda *a, **k: _tom_for(interp))
+    monkeypatch.setattr(rcl.p15, "run_phase15", lambda *a, **k: _dry_persist())
+
+
+def _run(tmp_path, monkeypatch, interp):
+    _patch_phases(monkeypatch, interp)
+    return rcl.run_loop(
+        ACCEPTED_PACKET, ROOT / "fixtures/rung21_residue_links.json", None, None,
+        tmp_path, DREAM, "rev_x", "run_x", PERSONA,
+        live=False, validation_collection=None, allow_canonical_write=False,
+    )
+
+
+def test_defect1_matching_observation_hash_passes_interpretation(tmp_path, monkeypatch):
+    real_sha = p13.file_sha(ACCEPTED_PACKET)
+    receipt = _run(tmp_path, monkeypatch, _interp(real_sha))
+    interp_trans = [t for t in receipt["transitions"] if t["to_state"] == T.STATE_PASS_INTERPRETATION]
+    assert interp_trans and not interp_trans[0]["structural_blockers"], receipt["transitions"]
+    assert receipt["status"] != "BLOCKED_COGNITIVE_LOOP_INTERPRETATION"
+
+
+def test_defect1_tampered_observation_hash_blocks_interpretation(tmp_path, monkeypatch):
+    # The interp claims a wrong packet hash; the runner binds the REAL file hash
+    # it computed independently, so the tautology is gone and this must FAIL.
+    receipt = _run(tmp_path, monkeypatch, _interp("sha256:TAMPERED"))
+    assert receipt["status"] == "BLOCKED_COGNITIVE_LOOP_INTERPRETATION"
+    interp_trans = [t for t in receipt["transitions"] if t["to_state"] == T.STATE_PASS_INTERPRETATION]
+    assert "INTERPRETATION_OBSERVATION_SHA_MISMATCH" in interp_trans[0]["structural_blockers"]
+
+
+# --------------------------------------------------------------------------- #
+# Defect 3 - distinct ToM statuses + fallback waiver                            #
+# --------------------------------------------------------------------------- #
+def _accepted_interps() -> dict:
+    return {"accepted_interpretations": [{
+        "interpretation_id": "interpretation-001", "tom_state_type": "trust",
+        "subject": PERSONA, "target": "counterpart", "statement": "s",
+        "observation_refs": ["frame_0006"], "source_memory_refs": ["mem-1"],
+        "confidence": 0.4, "emotional_intensity": 0.5,
+    }]}
+
+
+def test_defect3_deterministic_projection_status_when_not_live():
+    res = p14.run_phase14(_accepted_interps(), DREAM, "rev", "run", live=False)
+    assert res["status"] == p14.STATUS_PASS_DETERMINISTIC_PROJECTION
+    assert res["candidate_source"] == "deterministic"
+
+
+def test_defect3_live_pass_status(monkeypatch):
+    def _fake_propose(interps, *a, **k):
+        i = interps[0]
+        return ([{
+            "candidate_id": "tom-001", "parent_interpretation_id": i["interpretation_id"],
+            "tom_state_type": "trust", "subject": i["subject"], "target": i["target"],
+            "statement": "s", "source_memory_refs": ["mem-1"], "watch_observation_refs": ["frame_0006"],
+            "confidence": 0.4, "emotional_intensity": 0.5,
+            "synthetic_origin": True, "literal_historical_event": False,
+        }], {"schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1"})
+    monkeypatch.setattr(p14, "propose_candidates", _fake_propose)
+    monkeypatch.setattr(p14.tau_adapter, "receipt_provenance", lambda r: {"route": "tau"})
+    res = p14.run_phase14(_accepted_interps(), DREAM, "rev", "run", live=True)
+    assert res["status"] == p14.STATUS_PASS_LIVE
+    assert res["candidate_source"] == "llm_via_tau"
+
+
+def test_defect3_degraded_live_route_fallback(monkeypatch):
+    def _boom(*a, **k):
+        raise RuntimeError("tau unreachable")
+    monkeypatch.setattr(p14, "propose_candidates", _boom)
+    res = p14.run_phase14(_accepted_interps(), DREAM, "rev", "run", live=True)
+    assert res["status"] == p14.STATUS_DEGRADED_LIVE_FALLBACK
+    assert res["candidate_source"] == "deterministic_fallback"
+    assert res["live_route_attempted"] is True and res["live_route_failed"] is True
+
+
+def test_defect3_guard_blocks_fallback_without_waiver_and_passes_with():
+    interp = _interp("sha256:x")
+    tom = {
+        "schema": T.TOM_SCHEMA, "status": p14.STATUS_DEGRADED_LIVE_FALLBACK,
+        "dream_id": DREAM, "revision_id": "rev_x", "run_id": "run_x",
+        "interpretation_sha256": T.canonical_sha(interp),
+        "candidate_source": "deterministic_fallback",
+        "accepted_tom_candidates": [{"candidate_id": "tom-001"}], "accepted_count": 1,
+    }
+    blocked = T.guard_tom_validation(
+        tom, interp, expected_dream_id=DREAM, expected_revision_id="rev_x", expected_run_id="run_x",
+    )
+    assert "TOM_LIVE_ROUTE_FALLBACK_UNWAIVED" in blocked.structural_blockers
+    waived = T.guard_tom_validation(
+        tom, interp, expected_dream_id=DREAM, expected_revision_id="rev_x", expected_run_id="run_x",
+        allow_tom_fallback=True,
+    )
+    assert waived.ok, waived.as_dict()
+
+
+def test_defect3_deterministic_projection_passes_guard():
+    interp = _interp("sha256:x")
+    tom = _tom_for(interp)
+    t = T.guard_tom_validation(
+        tom, interp, expected_dream_id=DREAM, expected_revision_id="rev_x", expected_run_id="run_x",
+    )
+    assert t.ok, t.as_dict()
+
+
+# --------------------------------------------------------------------------- #
+# Defect 2 + 4 + 6 - namespacing, interpretation ladder, causal fields         #
+# --------------------------------------------------------------------------- #
+def _full_interp() -> dict:
+    return {
+        "observation_packet_sha256": "sha256:obs",
+        "accepted_interpretations": [{
+            "interpretation_id": "interpretation-001", "tom_state_type": "trust",
+            "subject": PERSONA, "target": "counterpart",
+            "statement": "grounded psychological reading",
+            "observation_refs": ["frame_0006", "frame_0007"], "source_memory_refs": ["mem-1"],
+            "confidence": 0.4, "uncertainty": "unresolved",
+            "alternative_explanation": "renderer dropped context", "favored_explanation": "psychological",
+            "emotional_intensity": 0.5,
+        }],
+        "source_memory_bindings": [{"source_id": "mem-1"}, {"source_id": "mem-2"}],
+    }
+
+
+def _tom_full() -> dict:
+    return {"accepted_tom_candidates": [{
+        "candidate_id": "tom-001", "parent_interpretation_id": "interpretation-001",
+        "tom_state_type": "trust", "confidence": 0.4, "emotional_intensity": 0.5,
+    }]}
+
+
+def test_defect2_namespaced_keys():
+    assert p15.ns_dream_key(PERSONA, DREAM) == f"dream:{PERSONA}:{DREAM}"
+    assert p15.ns_watch_key(PERSONA, DREAM, "frame_0006") == f"dream:{PERSONA}:{DREAM}:watch:frame_0006"
+    assert p15.ns_tom_key(PERSONA, DREAM, "tom-001") == f"dream:{PERSONA}:{DREAM}:tom:tom-001"
+    assert p15.ns_interpretation_key(PERSONA, DREAM, "interpretation-001") == \
+        f"dream:{PERSONA}:{DREAM}:interpretation:interpretation-001"
+
+
+def test_defect4_interpretation_vertices_carry_full_record():
+    interp = _full_interp()
+    verts = p15.build_interpretation_vertices(interp, PERSONA, DREAM)
+    assert len(verts) == 1
+    v = verts[0]
+    assert v["_key"] == p15.ns_interpretation_key(PERSONA, DREAM, "interpretation-001")
+    assert v["statement"] == "grounded psychological reading"
+    assert v["confidence"] == 0.4
+    assert v["uncertainty"] == "unresolved"
+    assert v["renderer_alternative"] == "renderer dropped context"
+    assert v["observation_refs"] == ["frame_0006", "frame_0007"]
+    assert v["source_memory_refs"] == ["mem-1"]
+
+
+def test_defect4_epistemic_ladder_edges():
+    interp = _full_interp()
+    tom = _tom_full()
+    edges = p15.build_ladder_edges(interp, tom, PERSONA, DREAM)
+    rels = {e["document"]["relationship_type"] for e in edges}
+    assert "grounds_interpretation" in rels  # observation -> interpretation
+    assert "supports_interpretation" in rels  # interpretation -> tom
+    # observation -> interpretation endpoints are both namespaced vertices
+    grounds = [e["document"] for e in edges if e["document"]["relationship_type"] == "grounds_interpretation"]
+    assert any(g["_from"].endswith(":watch:frame_0006") for g in grounds)
+    assert all(":interpretation:" in g["_to"] for g in grounds)
+    # interpretation -> tom endpoints
+    supports = [e["document"] for e in edges if e["document"]["relationship_type"] == "supports_interpretation"]
+    assert supports and ":interpretation:" in supports[0]["_from"] and ":tom:" in supports[0]["_to"]
+
+
+def test_defect6_causal_family_fields_shape():
+    cf = p15.build_causal_family_fields(PERSONA, DREAM, ["mem-2", "mem-1", "mem-1"], "commit_abc")
+    assert cf["root_event_ids"] == ["mem-1", "mem-2"]
+    assert cf["causal_family_id"].startswith("cf_")
+    assert cf["synthetic_depth"] == 1 and cf["derivation_depth"] == 1
+    assert cf["independent_evidence_count"] == 2
+    assert cf["commit_id"] == "commit_abc"
+    assert cf["visibility_state"] == "pending"
+
+
+def test_defect6_every_writeset_record_carries_causal_fields():
+    interp = _full_interp()
+    tom = _tom_full()
+    cf = p15.build_causal_family_fields(PERSONA, DREAM, ["mem-1", "mem-2"], "commit_abc")
+    dream_doc = p15.build_dream_memory_document(
+        DREAM, "rev", "run", PERSONA, {"source_video_sha256": "sha256:v"}, interp, tom,
+        dream_key=p15.ns_dream_key(PERSONA, DREAM), causal_fields=cf,
+    )
+    watch = p15.build_watch_evidence_vertices(
+        {"frame_evidence": [{"index": 6, "timestamp_seconds": 1.0}, {"index": 7, "timestamp_seconds": 2.0}]},
+        interp, DREAM, "ret-1", None, persona_id=PERSONA, causal_fields=cf,
+    )
+    iverts = p15.build_interpretation_vertices(interp, PERSONA, DREAM, causal_fields=cf)
+    ws = p15.build_write_set(dream_doc, interp, tom, watch, interpretation_vertices=iverts, causal_fields=cf)
+    assert ws, "write set must not be empty"
+    required = {"root_event_ids", "causal_family_id", "synthetic_depth", "derivation_depth",
+                "independent_evidence_count", "commit_id", "visibility_state"}
+    for entry in ws:
+        doc = entry["document"]
+        missing = required - set(doc)
+        assert not missing, f"{entry['kind']} {doc.get('_key')} missing {missing}"
+        assert doc["visibility_state"] == "pending"
+    # NEW record keys are all namespaced (dream:...), never a frozen raw key.
+    for entry in ws:
+        assert entry["document"]["_key"].startswith("dream:"), entry["document"]["_key"]
+
+
+# --------------------------------------------------------------------------- #
+# Defect 5 - grep-gate: no hardcoded persona strings in phases 13/14/16        #
+# --------------------------------------------------------------------------- #
+def test_defect5_no_hardcoded_persona_strings_in_phase_sources():
+    banned = re.compile(r"embry|kai|surf", re.IGNORECASE)
+    for name in ("phase13_self_interpretation", "phase14_tom_validation", "phase16_behavior_evaluation"):
+        text = (ROOT / "scripts" / f"{name}.py").read_text(encoding="utf-8")
+        hits = [ln for ln in text.splitlines() if banned.search(ln)]
+        assert not hits, f"{name}.py has hardcoded persona strings: {hits}"
+
+
+def test_defect5_cognition_contract_parameterizes_recall_questions():
+    cc = _load("persona_dream_cognition_contract")
+    contract = cc.load_contract()
+    qs = cc.recall_questions(contract)
+    assert len(qs) == len(contract["recall_question_templates"])
+    # Templates are filled from the contract's persona/counterpart, not phase code.
+    assert all(contract["persona_title"] in q for q in qs)

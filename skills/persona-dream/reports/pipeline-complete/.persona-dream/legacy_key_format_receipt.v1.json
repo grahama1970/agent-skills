@@ -1,0 +1,186 @@
+{
+  "all_records_verified_present": true,
+  "defect": "weeks-1-2 re-review Defect 2 (key namespacing)",
+  "dream_id": "dream_successor_943b01ecd9a3",
+  "dream_label": "dream-004",
+  "dream_node_key": "dream_dream_successor_943b01ecd9a3",
+  "generated_at": "2026-07-19T15:32:48.234410+00:00",
+  "missing_records": [],
+  "owner": "persona-dream",
+  "persona_id": "embry",
+  "policy": {
+    "decision": "operator-decided",
+    "description": "dream-004's existing raw-key canonical records are FROZEN as-is (immutable history). No migration, no key rewrite, no touching existing records. Every NEW canonical write uses namespaced keys of the form dream:<persona_id>:<dream_id>:watch:<observation_id>, ...:interpretation:<id>, ...:tom:<id>, with the dream node keyed dream:<persona_id>:<dream_id>; edges point at the namespaced vertices.",
+    "frozen_records_read_only": true,
+    "name": "freeze-old/namespace-new",
+    "namespaced_key_forms": {
+      "dream_node": "dream:<persona_id>:<dream_id>",
+      "interpretation": "dream:<persona_id>:<dream_id>:interpretation:<interpretation_id>",
+      "tom_candidate": "dream:<persona_id>:<dream_id>:tom:<candidate_id>",
+      "watch_evidence": "dream:<persona_id>:<dream_id>:watch:<observation_id>"
+    },
+    "no_migration": true
+  },
+  "raw_key_record_count": 26,
+  "raw_key_records": [
+    {
+      "collection": "persona_memory",
+      "exists_live": true,
+      "key": "dream_dream_successor_943b01ecd9a3",
+      "record_class": "dream_node"
+    },
+    {
+      "collection": "tom_candidates",
+      "exists_live": true,
+      "key": "tom-001",
+      "record_class": "tom_candidate"
+    },
+    {
+      "collection": "tom_candidates",
+      "exists_live": true,
+      "key": "tom-002",
+      "record_class": "tom_candidate"
+    },
+    {
+      "collection": "tom_candidates",
+      "exists_live": true,
+      "key": "tom-003",
+      "record_class": "tom_candidate"
+    },
+    {
+      "collection": "tom_candidates",
+      "exists_live": true,
+      "key": "tom-004",
+      "record_class": "tom_candidate"
+    },
+    {
+      "collection": "persona_dream_watch_evidence",
+      "exists_live": true,
+      "key": "coverage_gap_00",
+      "record_class": "watch_evidence_vertex"
+    },
+    {
+      "collection": "persona_dream_watch_evidence",
+      "exists_live": true,
+      "key": "frame_0006",
+      "record_class": "watch_evidence_vertex"
+    },
+    {
+      "collection": "persona_dream_watch_evidence",
+      "exists_live": true,
+      "key": "frame_0007",
+      "record_class": "watch_evidence_vertex"
+    },
+    {
+      "collection": "persona_dream_watch_evidence",
+      "exists_live": true,
+      "key": "frame_0008",
+      "record_class": "watch_evidence_vertex"
+    },
+    {
+      "collection": "persona_dream_watch_evidence",
+      "exists_live": true,
+      "key": "frame_0009",
+      "record_class": "watch_evidence_vertex"
+    },
+    {
+      "collection": "persona_dream_watch_evidence",
+      "exists_live": true,
+      "key": "identity_temporal_continuity_review",
+      "record_class": "watch_evidence_vertex"
+    },
+    {
+      "collection": "persona_dream_watch_evidence",
+      "exists_live": true,
+      "key": "visible_speaker_lipsync_window",
+      "record_class": "watch_evidence_vertex"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "exists_live": true,
+      "key": "dream_dream_successor_943b01ecd9a3__derived_from__embry_age15_19_b02_memory_019",
+      "record_class": "derived_from_edge"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "exists_live": true,
+      "key": "dream_dream_successor_943b01ecd9a3__derived_from__embry_age15_19_b03_memory_014",
+      "record_class": "derived_from_edge"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "exists_live": true,
+      "key": "dream_dream_successor_943b01ecd9a3__derived_from__embry_age15_19_b03_memory_016",
+      "record_class": "derived_from_edge"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "exists_live": true,
+      "key": "dream_dream_successor_943b01ecd9a3__observed_in_scene__coverage_gap_00",
+      "record_class": "observed_in_scene_edge"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "exists_live": true,
+      "key": "dream_dream_successor_943b01ecd9a3__observed_in_scene__frame_0006",
+      "record_class": "observed_in_scene_edge"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "exists_live": true,
+      "key": "dream_dream_successor_943b01ecd9a3__observed_in_scene__frame_0007",
+      "record_class": "observed_in_scene_edge"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "exists_live": true,
+      "key": "dream_dream_successor_943b01ecd9a3__observed_in_scene__frame_0008",
+      "record_class": "observed_in_scene_edge"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "exists_live": true,
+      "key": "dream_dream_successor_943b01ecd9a3__observed_in_scene__frame_0009",
+      "record_class": "observed_in_scene_edge"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "exists_live": true,
+      "key": "dream_dream_successor_943b01ecd9a3__observed_in_scene__identity_temporal_continuity_review",
+      "record_class": "observed_in_scene_edge"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "exists_live": true,
+      "key": "dream_dream_successor_943b01ecd9a3__observed_in_scene__visible_speaker_lipsync_window",
+      "record_class": "observed_in_scene_edge"
+    },
+    {
+      "collection": "tom_edges",
+      "exists_live": true,
+      "key": "dream_dream_successor_943b01ecd9a3__supports_interpretation__tom-001",
+      "record_class": "supports_interpretation_edge"
+    },
+    {
+      "collection": "tom_edges",
+      "exists_live": true,
+      "key": "dream_dream_successor_943b01ecd9a3__supports_interpretation__tom-002",
+      "record_class": "supports_interpretation_edge"
+    },
+    {
+      "collection": "tom_edges",
+      "exists_live": true,
+      "key": "dream_dream_successor_943b01ecd9a3__supports_interpretation__tom-003",
+      "record_class": "supports_interpretation_edge"
+    },
+    {
+      "collection": "tom_edges",
+      "exists_live": true,
+      "key": "dream_dream_successor_943b01ecd9a3__supports_interpretation__tom-004",
+      "record_class": "supports_interpretation_edge"
+    }
+  ],
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.legacy_key_format_receipt.v1"
+}
