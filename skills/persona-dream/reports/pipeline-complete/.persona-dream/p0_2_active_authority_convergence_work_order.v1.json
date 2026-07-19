@@ -1,0 +1,15 @@
+{
+  "schema": "persona_dream.work_order.v1",
+  "work_order": "P0.2_ACTIVE_AUTHORITY_CONVERGENCE",
+  "issued": "2026-07-19",
+  "issued_per": "webgpt roadmap round-2 NEXT_STEP (PLAN_STABLE ruling)",
+  "objective": "One non-superseded evidence lineage: versioned phases 13-16 rerun from accepted observation packet v2 (revision bundles, single dream-event node, superseded derived evidence marked), CURRENT_STATE regenerated from that lineage; protocol v2 authority already pinned.",
+  "boundary": "No paid calls; LLM via Tau routes only; transactional path (webgpt-certified + live-proven) is the only write path; prior lineage retained as superseded history.",
+  "done_when": [
+    "phase 13/14 revision bundles derived from packet v2 with supersedes edges",
+    "phase 15 versioned canonical write through the certified transactional path",
+    "phase 16 re-evaluated against the new lineage",
+    "CURRENT_STATE regenerated, drift-check green, no cross-version evidence mixing"
+  ],
+  "parallel_human_action": "P0.1 — operator watches provider_return.mp4 (sha256:59b9ff31...) and authors the hash-bound acceptance receipt"
+}

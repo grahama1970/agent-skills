@@ -1,4 +1,8 @@
-# Persona Dream roadmap (r2, 2026-07-19 — reordered per webgpt round-1 PLAN_REVISED)
+# Persona Dream roadmap (r2 — CONTROLLING, webgpt-converged PLAN_STABLE 2026-07-19)
+
+Convergence: 2-round webgpt iteration (round 1 PLAN_REVISED applied in full;
+round 2 PLAN_STABLE, gate ROADMAP_R2_VALIDITY_FIRST_ORDERING closed).
+Receipts: review-bundles/roadmap_iteration_r{1,2}_20260719-assess-response.md.
 
 Validity-first ordering: evidence-authority coherence, measurement validity,
 v2-derived cognition, and the last unproven acceptance item come BEFORE the

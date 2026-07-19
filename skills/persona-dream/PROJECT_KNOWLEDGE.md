@@ -653,3 +653,13 @@
   review-bundles/manifest_replay_validation_reassess_20260719-assess-response.md;
   governance record persona_dream_transaction_gate_closed_20260719 (exact
   reread PASS).
+
+- 2026-07-19 (roadmap converged): 2-round webgpt iteration produced the
+  controlling ROADMAP r2 (round 1 PLAN_REVISED: validity-first reordering,
+  voice lane and authority convergence ahead of the pilot, clean-room
+  envelope + intervention ledger ahead of repeatability, concurrency struck
+  from first replication; round 2 PLAN_STABLE). Round 1 also caught a live
+  authority contradiction: CURRENT_STATE pinned pilot protocol v1 while the
+  pilot runs under v2 — fixed pre-run. LESSON: iterate plans, not just code,
+  through the external reviewer; a plan draft carries defects the same way a
+  transaction layer does.
