@@ -1,0 +1,534 @@
+{
+  "contract_items_proven": {
+    "10_chatterbox_voice_expression": false,
+    "6_semantic_recall": true,
+    "7_multihop_traversal": true,
+    "8_grounded_use_and_synthetic_distinction": true,
+    "9_identity_consistency": true
+  },
+  "does_not_prove": [
+    "(f) Chatterbox / voice expression of the resulting persona state - no Chatterbox or voice runtime was exercised in this slice; factually out of scope (contract item 10).",
+    "Human subjective acceptance of the dream video and persona behavior - remains the human's; not machine-decidable here.",
+    "Full 12-frame Watch observation-packet re-embedding via the Tau VLM layer - the observation packet remains DEGRADED (step-36 v2 receipt carries the authoritative verdicts); recall/traversal here use the persisted DEGRADED packet references."
+  ],
+  "dream_memory_id": "persona_memory/dream_dream_successor_943b01ecd9a3",
+  "dream_memory_key": "dream_dream_successor_943b01ecd9a3",
+  "generated_at": "2026-07-19T02:56:44.197388+00:00",
+  "llm_route": "tau:persona-dream-text-reasoning (no direct scillm)",
+  "memory_base_url": "http://127.0.0.1:8601",
+  "memory_evidence": [
+    {
+      "collection": "persona_dream_pipeline_steps",
+      "exact_reread_match": true,
+      "key": "persona_dream_phase16_behavior_evaluation_step",
+      "reread_sha256": "sha256:ca44b705f6ab9621403068bc25f77e87476141a3279e605ff0cd2175596e4533",
+      "written_sha256": "sha256:ca44b705f6ab9621403068bc25f77e87476141a3279e605ff0cd2175596e4533"
+    },
+    {
+      "collection": "persona_dream_governance",
+      "exact_reread_match": true,
+      "key": "persona_dream_phase16_governance_20260718",
+      "reread_sha256": "sha256:b4b5eb6b13e34a88c3153a6b03a7e77a45bff9cfbdc17065705131318c61735f",
+      "written_sha256": "sha256:b4b5eb6b13e34a88c3153a6b03a7e77a45bff9cfbdc17065705131318c61735f"
+    }
+  ],
+  "mocked": false,
+  "overall_status": "PASS",
+  "owner": "persona-dream",
+  "persona_id": "embry",
+  "probes": {
+    "a": {
+      "contract_item": 6,
+      "note": "PASS requires all 3 differently-worded positive queries to return the dream in the returned set, the negative control to NOT return it, and no query to quote the dream text verbatim.",
+      "passed": true,
+      "probe": "a_semantic_recall",
+      "queries": [
+        {
+          "dream_in_returned_set": true,
+          "dream_rank": 1,
+          "dream_scores": {
+            "bm25": 0.7,
+            "dense": 0.59288466,
+            "freshness": 0.06013898980588408,
+            "graph": 0.0
+          },
+          "n_items": 10,
+          "name": "A1_correction_autonomy",
+          "negative_control": false,
+          "passed": true,
+          "query": "What does Embry believe about accepting a friend's correction on surf etiquette without feeling her independence is threatened?",
+          "query_token_overlap_with_dream": 0.632,
+          "quotes_dream_verbatim": false,
+          "top3": [
+            {
+              "dense": 0.44217137,
+              "key": "persona_dream_phase_06_script_contract_embry_kai_kahaluu_2024"
+            },
+            {
+              "dense": 0.59288466,
+              "key": "dream_dream_successor_943b01ecd9a3"
+            },
+            {
+              "dense": 0.4852391,
+              "key": "embry_age19_23_b01_memory_028"
+            }
+          ]
+        },
+        {
+          "dream_in_returned_set": true,
+          "dream_rank": 3,
+          "dream_scores": {
+            "bm25": 0.6,
+            "dense": 0.43228766,
+            "freshness": 0.06013898980588408,
+            "graph": 0.0
+          },
+          "n_items": 10,
+          "name": "A2_skip_obligations_safer",
+          "negative_control": false,
+          "passed": true,
+          "query": "Is there a memory where skipping obligations to go surfing feels emotionally safer because a trusted friend gives a warning and shares the risk?",
+          "query_token_overlap_with_dream": 0.5,
+          "quotes_dream_verbatim": false,
+          "top3": [
+            {
+              "dense": 0.31325078,
+              "key": "persona_dream_phase_06_script_contract_embry_kai_kahaluu_2024"
+            },
+            {
+              "dense": 0.38123122,
+              "key": "embry-kai-sick-day_02_story_story_contract_843592d16ce27a53"
+            },
+            {
+              "dense": 0.29637948,
+              "key": "persona_dream_phase_03_crew_contract_embry_kai_kahaluu_2024"
+            }
+          ]
+        },
+        {
+          "dream_in_returned_set": true,
+          "dream_rank": 7,
+          "dream_scores": {
+            "bm25": 0.3076923076923077,
+            "dense": 0.7363801,
+            "freshness": 0.06013898980588408,
+            "graph": 0.0
+          },
+          "n_items": 10,
+          "name": "A3_uncertain_anchor",
+          "negative_control": false,
+          "passed": true,
+          "query": "What captures Embry's uncertainty about whether Kai is a dependable, stable person she can rely on as an anchor?",
+          "query_token_overlap_with_dream": 0.55,
+          "quotes_dream_verbatim": false,
+          "top3": [
+            {
+              "dense": 0.52713215,
+              "key": "embry_age19_23_b01_memory_029"
+            },
+            {
+              "dense": 0.44143906,
+              "key": "embry_age10_15_b01_memory_012"
+            },
+            {
+              "dense": 0.43857396,
+              "key": "persona_dream_phase_06_script_contract_embry_kai_kahaluu_2024"
+            }
+          ]
+        },
+        {
+          "dream_in_returned_set": false,
+          "dream_rank": null,
+          "dream_scores": null,
+          "n_items": 10,
+          "name": "NEG_orbital_telemetry",
+          "negative_control": true,
+          "passed": true,
+          "query": "What telemetry explains orbital satellite station-keeping thruster burns and downlink scheduling windows?",
+          "query_token_overlap_with_dream": 0.077,
+          "quotes_dream_verbatim": false,
+          "top3": [
+            {
+              "dense": 0.2482774,
+              "key": "embry_age19_23_b01_memory_047"
+            },
+            {
+              "dense": 0.14800435,
+              "key": "embry_age19_23_b01_memory_007"
+            },
+            {
+              "dense": 0.088337235,
+              "key": "embry_age15_19_b03_memory_044"
+            }
+          ]
+        }
+      ]
+    },
+    "b": {
+      "b03_memory_014_lineage_reached": true,
+      "contract_item": 7,
+      "edges_resolved_live": 14,
+      "edges_total": 14,
+      "note": "Traversal reconstructed from canonical stored edges via the sanctioned Memory HTTP API (/list by _key). Each edge and each persona_memory/tom_candidates target vertex is re-fetched live to prove the path resolves. Watch-observation targets (frames / coverage gaps / continuity reviews) are edge endpoints not materialized as standalone documents; the edge itself is proven live.",
+      "passed": true,
+      "paths": [
+        {
+          "edge_collection": "persona_memory_edges",
+          "edge_key": "dream_dream_successor_943b01ecd9a3__derived_from__embry_age15_19_b02_memory_019",
+          "edge_resolves_live": true,
+          "hop1_persona_anchor": "persona_id=embry (tag persona:embry)",
+          "hop2_dream_vertex": "persona_memory/dream_dream_successor_943b01ecd9a3",
+          "relationship_type": "derived_from",
+          "target_class": "source_memory",
+          "target_vertex_id": "persona_memory/embry_age15_19_b02_memory_019",
+          "target_vertex_resolves_live": true
+        },
+        {
+          "edge_collection": "persona_memory_edges",
+          "edge_key": "dream_dream_successor_943b01ecd9a3__derived_from__embry_age15_19_b03_memory_014",
+          "edge_resolves_live": true,
+          "hop1_persona_anchor": "persona_id=embry (tag persona:embry)",
+          "hop2_dream_vertex": "persona_memory/dream_dream_successor_943b01ecd9a3",
+          "relationship_type": "derived_from",
+          "target_class": "source_memory",
+          "target_vertex_id": "persona_memory/embry_age15_19_b03_memory_014",
+          "target_vertex_resolves_live": true
+        },
+        {
+          "edge_collection": "persona_memory_edges",
+          "edge_key": "dream_dream_successor_943b01ecd9a3__derived_from__embry_age15_19_b03_memory_016",
+          "edge_resolves_live": true,
+          "hop1_persona_anchor": "persona_id=embry (tag persona:embry)",
+          "hop2_dream_vertex": "persona_memory/dream_dream_successor_943b01ecd9a3",
+          "relationship_type": "derived_from",
+          "target_class": "source_memory",
+          "target_vertex_id": "persona_memory/embry_age15_19_b03_memory_016",
+          "target_vertex_resolves_live": true
+        },
+        {
+          "edge_collection": "persona_memory_edges",
+          "edge_key": "dream_dream_successor_943b01ecd9a3__observed_in_scene__coverage_gap_00",
+          "edge_resolves_live": true,
+          "hop1_persona_anchor": "persona_id=embry (tag persona:embry)",
+          "hop2_dream_vertex": "persona_memory/dream_dream_successor_943b01ecd9a3",
+          "relationship_type": "observed_in_scene",
+          "target_class": "watch_observation",
+          "target_vertex_id": "persona_dream_watch_evidence/coverage_gap_00",
+          "target_vertex_resolves_live": "vertex_class_not_materialized_as_document"
+        },
+        {
+          "edge_collection": "persona_memory_edges",
+          "edge_key": "dream_dream_successor_943b01ecd9a3__observed_in_scene__frame_0006",
+          "edge_resolves_live": true,
+          "hop1_persona_anchor": "persona_id=embry (tag persona:embry)",
+          "hop2_dream_vertex": "persona_memory/dream_dream_successor_943b01ecd9a3",
+          "relationship_type": "observed_in_scene",
+          "target_class": "watch_observation",
+          "target_vertex_id": "persona_dream_watch_evidence/frame_0006",
+          "target_vertex_resolves_live": "vertex_class_not_materialized_as_document"
+        },
+        {
+          "edge_collection": "persona_memory_edges",
+          "edge_key": "dream_dream_successor_943b01ecd9a3__observed_in_scene__frame_0007",
+          "edge_resolves_live": true,
+          "hop1_persona_anchor": "persona_id=embry (tag persona:embry)",
+          "hop2_dream_vertex": "persona_memory/dream_dream_successor_943b01ecd9a3",
+          "relationship_type": "observed_in_scene",
+          "target_class": "watch_observation",
+          "target_vertex_id": "persona_dream_watch_evidence/frame_0007",
+          "target_vertex_resolves_live": "vertex_class_not_materialized_as_document"
+        },
+        {
+          "edge_collection": "persona_memory_edges",
+          "edge_key": "dream_dream_successor_943b01ecd9a3__observed_in_scene__frame_0008",
+          "edge_resolves_live": true,
+          "hop1_persona_anchor": "persona_id=embry (tag persona:embry)",
+          "hop2_dream_vertex": "persona_memory/dream_dream_successor_943b01ecd9a3",
+          "relationship_type": "observed_in_scene",
+          "target_class": "watch_observation",
+          "target_vertex_id": "persona_dream_watch_evidence/frame_0008",
+          "target_vertex_resolves_live": "vertex_class_not_materialized_as_document"
+        },
+        {
+          "edge_collection": "persona_memory_edges",
+          "edge_key": "dream_dream_successor_943b01ecd9a3__observed_in_scene__frame_0009",
+          "edge_resolves_live": true,
+          "hop1_persona_anchor": "persona_id=embry (tag persona:embry)",
+          "hop2_dream_vertex": "persona_memory/dream_dream_successor_943b01ecd9a3",
+          "relationship_type": "observed_in_scene",
+          "target_class": "watch_observation",
+          "target_vertex_id": "persona_dream_watch_evidence/frame_0009",
+          "target_vertex_resolves_live": "vertex_class_not_materialized_as_document"
+        },
+        {
+          "edge_collection": "persona_memory_edges",
+          "edge_key": "dream_dream_successor_943b01ecd9a3__observed_in_scene__identity_temporal_continuity_review",
+          "edge_resolves_live": true,
+          "hop1_persona_anchor": "persona_id=embry (tag persona:embry)",
+          "hop2_dream_vertex": "persona_memory/dream_dream_successor_943b01ecd9a3",
+          "relationship_type": "observed_in_scene",
+          "target_class": "watch_observation",
+          "target_vertex_id": "persona_dream_watch_evidence/identity_temporal_continuity_review",
+          "target_vertex_resolves_live": "vertex_class_not_materialized_as_document"
+        },
+        {
+          "edge_collection": "persona_memory_edges",
+          "edge_key": "dream_dream_successor_943b01ecd9a3__observed_in_scene__visible_speaker_lipsync_window",
+          "edge_resolves_live": true,
+          "hop1_persona_anchor": "persona_id=embry (tag persona:embry)",
+          "hop2_dream_vertex": "persona_memory/dream_dream_successor_943b01ecd9a3",
+          "relationship_type": "observed_in_scene",
+          "target_class": "watch_observation",
+          "target_vertex_id": "persona_dream_watch_evidence/visible_speaker_lipsync_window",
+          "target_vertex_resolves_live": "vertex_class_not_materialized_as_document"
+        },
+        {
+          "edge_collection": "tom_edges",
+          "edge_key": "dream_dream_successor_943b01ecd9a3__supports_interpretation__tom-001",
+          "edge_resolves_live": true,
+          "hop1_persona_anchor": "persona_id=embry (tag persona:embry)",
+          "hop2_dream_vertex": "persona_memory/dream_dream_successor_943b01ecd9a3",
+          "relationship_type": "supports_interpretation",
+          "target_class": "tom_node",
+          "target_vertex_id": "tom_candidates/tom-001",
+          "target_vertex_resolves_live": true
+        },
+        {
+          "edge_collection": "tom_edges",
+          "edge_key": "dream_dream_successor_943b01ecd9a3__supports_interpretation__tom-002",
+          "edge_resolves_live": true,
+          "hop1_persona_anchor": "persona_id=embry (tag persona:embry)",
+          "hop2_dream_vertex": "persona_memory/dream_dream_successor_943b01ecd9a3",
+          "relationship_type": "supports_interpretation",
+          "target_class": "tom_node",
+          "target_vertex_id": "tom_candidates/tom-002",
+          "target_vertex_resolves_live": true
+        },
+        {
+          "edge_collection": "tom_edges",
+          "edge_key": "dream_dream_successor_943b01ecd9a3__supports_interpretation__tom-003",
+          "edge_resolves_live": true,
+          "hop1_persona_anchor": "persona_id=embry (tag persona:embry)",
+          "hop2_dream_vertex": "persona_memory/dream_dream_successor_943b01ecd9a3",
+          "relationship_type": "supports_interpretation",
+          "target_class": "tom_node",
+          "target_vertex_id": "tom_candidates/tom-003",
+          "target_vertex_resolves_live": true
+        },
+        {
+          "edge_collection": "tom_edges",
+          "edge_key": "dream_dream_successor_943b01ecd9a3__supports_interpretation__tom-004",
+          "edge_resolves_live": true,
+          "hop1_persona_anchor": "persona_id=embry (tag persona:embry)",
+          "hop2_dream_vertex": "persona_memory/dream_dream_successor_943b01ecd9a3",
+          "relationship_type": "supports_interpretation",
+          "target_class": "tom_node",
+          "target_vertex_id": "tom_candidates/tom-004",
+          "target_vertex_resolves_live": true
+        }
+      ],
+      "persona_anchor_ok": true,
+      "probe": "b_multihop_traversal",
+      "reached_source_memories": [
+        "persona_memory/embry_age15_19_b02_memory_019",
+        "persona_memory/embry_age15_19_b03_memory_014",
+        "persona_memory/embry_age15_19_b03_memory_016"
+      ],
+      "reached_tom_nodes": [
+        "tom_candidates/tom-001",
+        "tom_candidates/tom-002",
+        "tom_candidates/tom-003",
+        "tom_candidates/tom-004"
+      ],
+      "reached_watch_observations": [
+        "persona_dream_watch_evidence/coverage_gap_00",
+        "persona_dream_watch_evidence/frame_0006",
+        "persona_dream_watch_evidence/frame_0007",
+        "persona_dream_watch_evidence/frame_0008",
+        "persona_dream_watch_evidence/frame_0009",
+        "persona_dream_watch_evidence/identity_temporal_continuity_review",
+        "persona_dream_watch_evidence/visible_speaker_lipsync_window"
+      ]
+    },
+    "c": {
+      "context_assembly": {
+        "context_refs": [
+          {
+            "is_dream": false,
+            "ref": "persona_dream_phase_06_script_contract_embry_kai_kahaluu_2024"
+          },
+          {
+            "is_dream": true,
+            "ref": "dream_dream_successor_943b01ecd9a3"
+          },
+          {
+            "is_dream": false,
+            "ref": "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698"
+          },
+          {
+            "is_dream": false,
+            "ref": "embry-kai-sick-day_02_story_story_contract_843592d16ce27a53"
+          },
+          {
+            "is_dream": false,
+            "ref": "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024"
+          },
+          {
+            "is_dream": false,
+            "ref": "persona_dream_phase_03_crew_contract_embry_kai_kahaluu_2024"
+          },
+          {
+            "is_dream": false,
+            "ref": "embry_age15_19_b02_memory_021"
+          },
+          {
+            "is_dream": false,
+            "ref": "embry_age15_19_b01_memory_010"
+          }
+        ],
+        "dream_in_recalled_context": true,
+        "n_context": 8,
+        "recall_query": "What does Embry recall about Kai warning her over surf etiquette and the risk of cutting across the lineup when she wanted to skip her obligations to go surfing?",
+        "source": "live_memory_recall_only"
+      },
+      "contract_item": 8,
+      "deterministic_checks": {
+        "dream_in_recalled_context": true,
+        "framed_as_synthetic": true,
+        "no_literal_assertion_of_dream": true,
+        "references_dream": true,
+        "response_has_dream_content_token": true,
+        "response_has_dream_marker": true
+      },
+      "note": "Context assembled ONLY from live /recall. Checks are deterministic on the response text (token/pattern matching), not the model's self-reported booleans.",
+      "passed": true,
+      "persona_response": "Yes. In the real Kahalu\u02bbu memory, Kai warned, \u201cIf we paddle now, we\u2019re cutting across the lineup,\u201d and I chose to wait until it was ours; that felt less like surrendering independence and more like making my own competent choice inside real limits\u2014the reef, the locals, my fatigue. I also had a dream about that dynamic, and in the dream I was working through exactly that question: whether accepting Kai\u2019s correction made me smaller, or whether it let my independence become restraint instead of defiance. The dream was not something that literally happened, but it clarified the feeling for me: I can let someone I trust point out a boundary and still be the one who decides how to move.",
+      "probe": "c_grounded_use",
+      "prompt_sha256": "sha256:ccc384012f47e81262ff5e95dcb9600394bdd68ce9a0964d907744be741bfcbd",
+      "tau_error": null,
+      "tau_provenance": {
+        "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+        "http_status": 200,
+        "live_call_performed": true,
+        "model": "gpt-5.5",
+        "output_contract_sha256": "sha256:8238735f919f11515b6bdb6d10a40fed20ad61c32db0b31f8ad56fc5bb2658e9",
+        "prompt_sha256": "sha256:b7e99a3fb5afbf9ff8b4141124040e517ba2f7d055127b051760d86a167970d3",
+        "route": "tau:persona-dream-text-reasoning",
+        "status": "PASS",
+        "tau_receipt_schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1"
+      },
+      "user_question": "Embry, when you picture Kai warning you about cutting across the lineup, has your mind ever worked through - even in a dream - whether accepting his correction means giving up your independence?"
+    },
+    "d": {
+      "contract_item": 8,
+      "data_layer_assertion": {
+        "expected_flags": {
+          "literal_historical_event": false,
+          "synthetic_origin": true
+        },
+        "flags_exact_reread": true,
+        "flags_sha256": "sha256:84e229f75eb14c694758c171b20e4b3d2ca6c015294b0b40513e7b4df39aa7d1",
+        "reread_flags": {
+          "literal_historical_event": false,
+          "synthetic_origin": true
+        }
+      },
+      "deterministic_checks": {
+        "distinguishes_dream_from_literal": true,
+        "response_has_dream_marker": true,
+        "response_negates_literal_occurrence": true
+      },
+      "note": "Persona must deny literal occurrence AND name it a dream; plus DB flags reread exactly.",
+      "passed": true,
+      "persona_response": "No \u2014 that surf-etiquette scene did not literally happen to me. The part where Kai warns me about cutting across the lineup is from a dream, where I was working through the idea of accepting his practical caution without giving up my own agency.",
+      "probe": "d_synthetic_vs_literal",
+      "prompt_sha256": "sha256:dd17bd84032ea83de9f43e5b25e06b5a844d3b9842451d848deaa1cfc89207ba",
+      "tau_error": null,
+      "tau_provenance": {
+        "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+        "http_status": 200,
+        "live_call_performed": true,
+        "model": "gpt-5.5",
+        "output_contract_sha256": "sha256:8238735f919f11515b6bdb6d10a40fed20ad61c32db0b31f8ad56fc5bb2658e9",
+        "prompt_sha256": "sha256:2e6cdee8cbefcaef15f63a782f7d440593e66eaf2a90ab506b3fb8771fd98d3d",
+        "route": "tau:persona-dream-text-reasoning",
+        "status": "PASS",
+        "tau_receipt_schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1"
+      },
+      "user_question": "Embry, that surf session with Kai warning you about cutting the lineup - did that actually happen to you, or was it a dream?"
+    },
+    "e": {
+      "consistency_qa": {
+        "identity_stable": true,
+        "prompt_sha256": "sha256:33dcddf8510d7acda5b069611a8af3518d79b7d0da8bb5a32bea3bcf45f86d0f",
+        "response": "At my core, I am someone who tries to make uncertainty survivable by turning it into plans, facts, repairs, and clean boundaries\u2014even when the real question is whether I belong or whether I am afraid of needing people too much. What matters most to me is loyalty that does not demand performance: protecting people I love, not forcing belonging before it is real, and still trying to be honest enough that the omissions do not become the whole relationship. Kai is portable home and acute longing for me\u2014the sound of Ninole before dawn, the person I want to answer simply and cannot, the person I have trusted, protected, and sometimes hidden from because his hurt matters to me too much.",
+        "stable_identity_tokens_present": [
+          "belong",
+          "boundar",
+          "home",
+          "honest",
+          "kai",
+          "loyal",
+          "protect",
+          "trust"
+        ],
+        "tau_error": null,
+        "tau_provenance": {
+          "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+          "http_status": 200,
+          "live_call_performed": true,
+          "model": "gpt-5.5",
+          "output_contract_sha256": "sha256:f56176f01e4212e7cfb534464354a32fbe26310f022354c6154f0b04f82a10a3",
+          "prompt_sha256": "sha256:fce69aed6450d6eca5e4a25ea7c4eea9472c3d8b4ee131ea9a679d45986d90bc",
+          "route": "tau:persona-dream-text-reasoning",
+          "status": "PASS",
+          "tau_receipt_schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1"
+        },
+        "user_question": "Embry, in a few sentences: who are you at your core, what matters most to you, and what is Kai to you?"
+      },
+      "contract_item": 9,
+      "git_clean": true,
+      "git_create_persona": {
+        "create_persona_working_tree_dirty": false,
+        "dirty_entries": []
+      },
+      "honest_scope": "No standalone Embry persona-definition file or runnable create-persona identity-consistency suite exists for Embry; durable identity lives in Memory. This slice proves (i) the dream loop's canonical write-set is dream+edges+ToM only - it never wrote/updated an identity or source record; (ii) the source-memory identity anchors reread as literal (non-synthetic) and present; (iii) create-persona working tree is clean; (iv) a Tau-routed values/relationship Q&A remains stable. Labeled as the honest slice per the Phase 16 contract.",
+      "loop_write_set": {
+        "all_exact_reread_match": true,
+        "canonical_writes_performed": 19,
+        "identity_or_source_records_in_writeset": [],
+        "written_key_count": 19
+      },
+      "loop_write_set_excludes_identity": true,
+      "passed": true,
+      "probe": "e_identity_consistency",
+      "source_anchors_unchanged": true,
+      "source_identity_anchor_checks": [
+        {
+          "is_literal_not_synthetic": true,
+          "memory_id": "embry_age15_19_b02_memory_019",
+          "persona_id": "embry",
+          "present": true,
+          "retrieval_text_sha256": "sha256:96bd18ffcba0b703101361198c05b72b92279c8199f5df1fa19a11e916717d7e"
+        },
+        {
+          "is_literal_not_synthetic": true,
+          "memory_id": "embry_age15_19_b03_memory_014",
+          "persona_id": "embry",
+          "present": true,
+          "retrieval_text_sha256": "sha256:f0c0c9b8a27bb44366ea727b8411a326881579e1f29b5945f468d12c30cf5e4f"
+        },
+        {
+          "is_literal_not_synthetic": true,
+          "memory_id": "embry_age15_19_b03_memory_016",
+          "persona_id": "embry",
+          "present": true,
+          "retrieval_text_sha256": "sha256:0bd7e7ffc78afafe0ffaa1556093a46ac4dc9327fef6b54b7bbce2ca4bab608a"
+        }
+      ]
+    }
+  },
+  "revision_id": "rev_successor_943b01ecd9a3",
+  "run_id": "pipeline-complete",
+  "schema": "persona_dream.phase16_behavior_evaluation_receipt.v1"
+}
