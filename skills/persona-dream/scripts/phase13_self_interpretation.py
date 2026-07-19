@@ -42,6 +42,15 @@ assert _aspec and _aspec.loader
 tau_adapter = _ilu.module_from_spec(_aspec)
 _aspec.loader.exec_module(tau_adapter)
 
+# Persona/relationship cognition contract loader (Defect 5): recall questions,
+# subject/target, and persona ids come from ONE fixture contract - never
+# hardcoded here.
+_CONTRACT_PATH = Path(__file__).resolve().parent / "persona_dream_cognition_contract.py"
+_cspec = _ilu.spec_from_file_location("persona_dream_cognition_contract", _CONTRACT_PATH)
+assert _cspec and _cspec.loader
+cognition_contract = _ilu.module_from_spec(_cspec)
+_cspec.loader.exec_module(cognition_contract)
+
 # Caller-defined JSON output contract handed to (and hash-recorded by) the Tau node.
 INTERPRETATION_OUTPUT_CONTRACT = {
     "type": "object",
@@ -309,6 +318,7 @@ def build_prompt(
     observation_index: list[dict[str, Any]],
     source_bindings: list[dict[str, Any]],
     persona_id: str,
+    example_target: str,
 ) -> str:
     obs_lines = "\n".join(f"  - {o['observation_id']} [{o['observation_type']}]: {o['summary']}" for o in observation_index)
     src_lines = "\n".join(f"  - {b['source_id']}: {b.get('text','')[:400]}" for b in source_bindings)
@@ -345,7 +355,7 @@ Return ONLY a JSON object of the form:
     "interpretation_id": "interpretation-001",
     "tom_state_type": "trust|belief|fear|desire|uncertainty|stance|relationship_state",
     "subject": "{persona_id}",
-    "target": "kai",
+    "target": "{example_target}",
     "statement": "<tentative psychological interpretation>",
     "observation_refs": ["<observation_id>", ...],
     "source_memory_refs": ["<source_id>", ...],
@@ -448,7 +458,12 @@ def run_phase13(
     run_id: str,
     persona_id: str,
     live: bool = True,
+    contract: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
+    if contract is None:
+        contract = cognition_contract.load_contract()
+    example_target = contract["default_target"]
+
     packet = read_json(observation_path)
     residue = read_json(residue_path)
     observation_index = build_observation_index(packet)
@@ -457,11 +472,7 @@ def run_phase13(
 
     recall_receipts: list[dict[str, Any]] = []
     if live and source_bindings:
-        questions = [
-            f"What memories explain why {persona_id.title()} trusts Kai about surf safety boundaries and hazards at the lineup?",
-            f"What memory shows Kai giving {persona_id.title()} operational surf knowledge while respecting her decisions?",
-            f"Why does {persona_id.title()} pause before crossing into surf traffic near Kai?",
-        ]
+        questions = cognition_contract.recall_questions(contract)
         recall_receipts = recall_source_memories(questions, sorted(source_ids), persona_id)
         confirmed = set()
         for r in recall_receipts:
@@ -480,7 +491,7 @@ def run_phase13(
         "caller_skill": CALLER_SKILL,
     }
     if live and source_bindings and observation_index:
-        prompt = build_prompt(intended_dream, observation_index, source_bindings, persona_id)
+        prompt = build_prompt(intended_dream, observation_index, source_bindings, persona_id, example_target)
         candidates, tau_receipt = draft_interpretations(prompt)
         llm_meta["candidate_count"] = len(candidates)
         llm_meta["tau_routing"] = tau_adapter.receipt_provenance(tau_receipt)
@@ -551,15 +562,21 @@ def main() -> int:
     p.add_argument("--dream-id", required=True)
     p.add_argument("--revision-id", required=True)
     p.add_argument("--run-id", required=True)
-    p.add_argument("--persona-id", default="embry")
+    p.add_argument("--persona-id", default=None,
+                   help="Persona id. Defaults to the cognition contract's persona_id.")
+    p.add_argument("--contract", type=Path, default=None,
+                   help="Persona/relationship cognition contract path (defaults to the fixture lane).")
     p.add_argument("--output", type=Path, required=True)
     p.add_argument("--no-live", action="store_true", help="Skip recall + LLM (deterministic contract only)")
     p.add_argument("--json", action="store_true")
     args = p.parse_args()
 
+    contract = cognition_contract.load_contract(args.contract)
+    persona_id = args.persona_id or contract["persona_id"]
     result = run_phase13(
         args.observation, args.residue_links, args.story_contract, args.script_contract,
-        args.dream_id, args.revision_id, args.run_id, args.persona_id, live=not args.no_live,
+        args.dream_id, args.revision_id, args.run_id, persona_id, live=not args.no_live,
+        contract=contract,
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     write_json(args.output, result)

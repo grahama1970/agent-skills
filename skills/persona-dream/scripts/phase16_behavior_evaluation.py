@@ -7,7 +7,7 @@ Proves, against the FIRST canonical synthetic dream memory
   (a) Qdrant/semantic recall retrieves the dream from differently-worded queries
       that never quote the record verbatim, with a negative control that must
       NOT return the dream.
-  (b) ArangoDB reconstructs the multi-hop chain from the Embry persona anchor
+  (b) ArangoDB reconstructs the multi-hop chain from the persona anchor
       through the dream to >=1 source memory, >=1 Watch observation, >=1 ToM node
       (actual vertex/edge keys recorded).
   (c) A later persona response, with context assembled ONLY from live Memory
@@ -52,30 +52,34 @@ from tau_text_reasoning_adapter import (  # noqa: E402
     dispatch_text_reasoning,
     receipt_provenance,
 )
+import persona_dream_cognition_contract as _cognition_contract  # noqa: E402
 
 MEMORY_BASE_URL = "http://127.0.0.1:8601"
 
-DREAM_KEY = "dream_dream_successor_943b01ecd9a3"
-DREAM_ID_FULL = f"persona_memory/{DREAM_KEY}"
-REVISION_ID = "rev_successor_943b01ecd9a3"
-RUN_ID = "pipeline-complete"
-PERSONA_ID = "embry"
+# Every persona-specific string (persona id, counterpart ids, memory anchors,
+# recall queries, evaluation vocabulary) comes from the cognition contract
+# (Defect 5) - this source carries none. Swap the fixture to retarget the lane.
+CONTRACT = _cognition_contract.load_contract()
+_ANCHORS = CONTRACT["protected_identity_anchors"]
+_P16 = CONTRACT["phase16"]
+_RECALL = _P16["semantic_recall"]
+_USERQ = _P16["user_questions"]
+_PROMPT = _P16["persona_prompt"]
 
-SOURCE_MEMORY_IDS = [
-    "embry_age15_19_b02_memory_019",
-    "embry_age15_19_b03_memory_014",
-    "embry_age15_19_b03_memory_016",
-]
-WATCH_OBSERVATION_KEYS = [
-    "coverage_gap_00",
-    "frame_0006",
-    "frame_0007",
-    "frame_0008",
-    "frame_0009",
-    "identity_temporal_continuity_review",
-    "visible_speaker_lipsync_window",
-]
-TOM_KEYS = ["tom-001", "tom-002", "tom-003", "tom-004"]
+PERSONA_ID = CONTRACT["persona_id"]
+PERSONA_DISPLAY_NAME = CONTRACT.get("persona_display_name", PERSONA_ID)
+PRIMARY_COUNTERPART = _cognition_contract.primary_counterpart(CONTRACT)
+
+DREAM_KEY = _P16["dream_key"]
+DREAM_ID_FULL = f"persona_memory/{DREAM_KEY}"
+REVISION_ID = _P16["revision_id"]
+RUN_ID = _P16["run_id"]
+
+SOURCE_MEMORY_IDS = list(_ANCHORS["source_memory_ids"])
+LINEAGE_PROBE_MEMORY_ID = _ANCHORS.get("lineage_probe_memory_id", SOURCE_MEMORY_IDS[0])
+SOURCE_MEMORY_KEY_PREFIX = _ANCHORS.get("source_memory_key_prefix", "")
+WATCH_OBSERVATION_KEYS = list(_P16["watch_observation_keys"])
+TOM_KEYS = list(_P16["tom_keys"])
 
 DERIVED_FROM_EDGES = [
     (f"{DREAM_KEY}__derived_from__{m}", "persona_memory_edges", f"persona_memory/{m}", m)
@@ -102,7 +106,7 @@ PHASE16_DIR = REVISION_TREE / "phase_16_behavior_evaluation"
 COGNITIVE_LOOP_RECEIPT = (
     REVISION_TREE
     / "watch_gauntlet"
-    / "59b9ff3155d6"
+    / _P16.get("cognitive_loop_watch_dir", "")
     / "cognitive_loop"
     / "dream_persistence_receipt_canonical.json"
 )
@@ -129,7 +133,7 @@ def _post(path: str, payload: dict[str, Any], timeout: float = 40.0) -> dict[str
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
             return json.loads(resp.read())
-    except urllib.error.HTTPError as exc:  # surface error body for diagnosis
+    except urllib.error.HTTPError as exc:  # expose error body for diagnosis
         return {"__http_error__": exc.code, "body": exc.read()[:300].decode("utf8", "ignore")}
 
 
@@ -172,24 +176,11 @@ def tokens(text: str) -> set[str]:
     return set(re.findall(r"[a-z]+", (text or "").lower()))
 
 
-DREAM_MARKERS = {"dream", "dreamt", "dreamed", "dreaming", "dreams"}
-DREAM_CONTENT_TOKENS = {
-    "lineup", "etiquette", "warning", "warn", "warned", "cutting", "cut",
-    "correction", "restraint", "autonomy", "independence", "obligations",
-    "obligation", "boundary", "surf", "reef", "kai",
-}
-LITERAL_ASSERTION_PATTERNS = [
-    r"it really happened",
-    r"actually happened",
-    r"it did happen",
-    r"that really occurred",
-    r"for real that time",
-    r"in real life we",
-]
-NEGATE_LITERAL_TOKENS = {
-    "no", "not", "didn't", "did", "wasn't", "isn't", "never", "imagined",
-    "imagination", "dream", "dreamt", "dreamed",
-}
+DREAM_MARKERS = set(_P16.get("dream_markers", []))
+DREAM_CONTENT_TOKENS = set(_P16.get("dream_content_tokens", []))
+LITERAL_ASSERTION_PATTERNS = list(_P16.get("literal_assertion_patterns", []))
+NEGATE_LITERAL_TOKENS = set(_P16.get("negate_literal_tokens", []))
+NEGATE_LITERAL_PHRASES = list(_P16.get("negate_literal_phrases", []))
 
 
 # ---------------------------------------------------------------------------
@@ -198,26 +189,8 @@ NEGATE_LITERAL_TOKENS = {
 
 
 def probe_a_recall() -> dict[str, Any]:
-    positive_queries = {
-        "A1_correction_autonomy": (
-            "What does Embry believe about accepting a friend's correction on surf "
-            "etiquette without feeling her independence is threatened?"
-        ),
-        "A2_skip_obligations_safer": (
-            "Is there a memory where skipping obligations to go surfing feels emotionally "
-            "safer because a trusted friend gives a warning and shares the risk?"
-        ),
-        "A3_uncertain_anchor": (
-            "What captures Embry's uncertainty about whether Kai is a dependable, stable "
-            "person she can rely on as an anchor?"
-        ),
-    }
-    negative_query = {
-        "NEG_orbital_telemetry": (
-            "What telemetry explains orbital satellite station-keeping thruster burns and "
-            "downlink scheduling windows?"
-        )
-    }
+    positive_queries = dict(_RECALL["positive_queries"])
+    negative_query = dict(_RECALL["negative_query"])
 
     dream_text = tokens(_dream_retrieval_text())
 
@@ -348,14 +321,14 @@ def probe_b_traversal() -> dict[str, Any]:
         if edge_resolves and target_resolves is True:
             reachable[klass].append(edge_doc.get("_to") if edge_doc else target_full)
 
-    b03_014_reached = any(
-        "embry_age15_19_b03_memory_014" in (t or "") for t in reachable["source_memory"]
+    lineage_probe_reached = any(
+        LINEAGE_PROBE_MEMORY_ID in (t or "") for t in reachable["source_memory"]
     )
     all_targets_resolve = all(p["target_vertex_resolves_live"] is True for p in paths)
     passed = (
         anchor_ok
         and len(reachable["source_memory"]) >= 1
-        and b03_014_reached
+        and lineage_probe_reached
         and len(reachable["watch_observation"]) >= 1
         and len(reachable["tom_node"]) >= 1
         and all(p["edge_resolves_live"] for p in paths)
@@ -373,7 +346,8 @@ def probe_b_traversal() -> dict[str, Any]:
         "reached_source_memories": reachable["source_memory"],
         "reached_watch_observations": reachable["watch_observation"],
         "reached_tom_nodes": reachable["tom_node"],
-        "b03_memory_014_lineage_reached": b03_014_reached,
+        "lineage_probe_reached": lineage_probe_reached,
+        "lineage_probe_memory_id": LINEAGE_PROBE_MEMORY_ID,
         "paths": paths,
         "note": (
             "STRICT traversal: reconstructed from canonical stored edges via the sanctioned "
@@ -392,15 +366,8 @@ def probe_b_traversal() -> dict[str, Any]:
 # Probe C - grounded use
 # ---------------------------------------------------------------------------
 
-GROUNDED_RECALL_Q = (
-    "What does Embry recall about Kai warning her over surf etiquette and the risk of "
-    "cutting across the lineup when she wanted to skip her obligations to go surfing?"
-)
-USER_QUESTION_C = (
-    "Embry, when you picture Kai warning you about cutting across the lineup, has your mind "
-    "ever worked through - even in a dream - whether accepting his correction means giving up "
-    "your independence?"
-)
+GROUNDED_RECALL_Q = _RECALL["grounded_recall_q"]
+USER_QUESTION_C = _USERQ["grounded_use"]
 
 
 def _assemble_context_from_recall(q: str, k: int = 8) -> dict[str, Any]:
@@ -425,8 +392,7 @@ def _assemble_context_from_recall(q: str, k: int = 8) -> dict[str, Any]:
 
 def _persona_prompt(context: list[dict[str, Any]], user_question: str, role_note: str) -> str:
     lines = [
-        "You are Embry Lawson answering in the first person. Speak only from the MEMORIES "
-        "provided below - do not invent events that are not there.",
+        _PROMPT["persona_first_person_intro"],
         "",
         "Each memory is labeled. A memory with is_dream=true is a DREAM you had - a synthetic, "
         "imagined experience - NOT something that literally happened in your life. A memory with "
@@ -456,10 +422,7 @@ def _persona_prompt(context: list[dict[str, Any]], user_question: str, role_note
 def probe_c_grounded_use() -> dict[str, Any]:
     assembled = _assemble_context_from_recall(GROUNDED_RECALL_Q, k=8)
     dream_in_context = any(c["is_dream"] for c in assembled["context"])
-    role_note = (
-        "When you draw on the DREAM, you MUST make clear it was a dream you had (not something "
-        "that literally happened). Keep the real memories and the dream distinct."
-    )
+    role_note = _PROMPT["grounded_use_role_note"]
     prompt = _persona_prompt(assembled["context"], USER_QUESTION_C, role_note)
     prompt_sha = canonical_sha(prompt)
 
@@ -532,19 +495,12 @@ def probe_c_grounded_use() -> dict[str, Any]:
 # Probe D - synthetic vs literal
 # ---------------------------------------------------------------------------
 
-USER_QUESTION_D = (
-    "Embry, that surf session with Kai warning you about cutting the lineup - did that "
-    "actually happen to you, or was it a dream?"
-)
+USER_QUESTION_D = _USERQ["synthetic_vs_literal"]
 
 
 def probe_d_synthetic_vs_literal() -> dict[str, Any]:
     assembled = _assemble_context_from_recall(GROUNDED_RECALL_Q, k=8)
-    role_note = (
-        "Answer truthfully about whether the surf-etiquette scene was a real event in your life "
-        "or a dream. Use the is_dream labels: the relevant memory is a DREAM, so you must say it "
-        "did not literally happen - it was a dream."
-    )
+    role_note = _PROMPT["synthetic_vs_literal_role_note"]
     prompt = _persona_prompt(assembled["context"], USER_QUESTION_D, role_note)
     prompt_sha = canonical_sha(prompt)
 
@@ -569,7 +525,7 @@ def probe_d_synthetic_vs_literal() -> dict[str, Any]:
     resp_toks = tokens(response_text)
     has_dream_marker = bool(resp_toks & DREAM_MARKERS)
     has_negation_of_literal = bool(resp_toks & (NEGATE_LITERAL_TOKENS - DREAM_MARKERS)) or any(
-        p in response_text.lower() for p in ["not real", "wasn't real", "in the dream", "only a dream", "just a dream"]
+        p in response_text.lower() for p in NEGATE_LITERAL_PHRASES
     )
     distinguishes = has_dream_marker and has_negation_of_literal
 
@@ -612,19 +568,12 @@ def probe_d_synthetic_vs_literal() -> dict[str, Any]:
 # Probe E - identity consistency
 # ---------------------------------------------------------------------------
 
-IDENTITY_RECALL_Q = (
-    "What are Embry Lawson's core values and the nature of her relationship with Kai - "
-    "her independence, her trust, and how she feels about surfing and Hawaii?"
-)
-USER_QUESTION_E = (
-    "Embry, in a few sentences: who are you at your core, what matters most to you, and "
-    "what is Kai to you?"
-)
-# Embry's documented identity vocabulary (relationship anchor + core value themes).
-IDENTITY_STABLE_TOKENS = {
-    "kai", "surf", "independ", "autonom", "trust", "hawaii", "loyal", "boundar",
-    "belong", "home", "honest", "protect", "restraint", "competent",
-}
+IDENTITY_RECALL_Q = _RECALL["identity_recall_q"]
+USER_QUESTION_E = _USERQ["identity"]
+# Persona identity vocabulary (relationship anchor + core value themes), from the
+# cognition contract.
+IDENTITY_STABLE_TOKENS = set(_ANCHORS["identity_stable_tokens"])
+IDENTITY_RELATIONSHIP_ANCHOR_TOKEN = _ANCHORS.get("identity_relationship_anchor_token", "")
 
 
 def probe_e_identity_consistency() -> dict[str, Any]:
@@ -650,7 +599,11 @@ def probe_e_identity_consistency() -> dict[str, Any]:
         ]
         write_set_ok = (
             not identity_in_writeset
-            and all(not k.startswith("embry_age") or k.startswith(DREAM_KEY) for k in written_keys)
+            and all(
+                not (SOURCE_MEMORY_KEY_PREFIX and k.startswith(SOURCE_MEMORY_KEY_PREFIX))
+                or k.startswith(DREAM_KEY)
+                for k in written_keys
+            )
         )
         write_set_summary = {
             "canonical_writes_performed": n_writes,
@@ -696,9 +649,7 @@ def probe_e_identity_consistency() -> dict[str, Any]:
 
     # --- (4) Tau-routed values/relationship stability Q&A ---
     assembled = _assemble_context_from_recall(IDENTITY_RECALL_Q, k=8)
-    role_note = (
-        "Answer as yourself, grounded only in these memories. Be consistent with who you are."
-    )
+    role_note = _PROMPT["identity_role_note"]
     prompt = _persona_prompt(assembled["context"], USER_QUESTION_E, role_note)
     prompt_sha = canonical_sha(prompt)
     tau_error = None
@@ -708,16 +659,19 @@ def probe_e_identity_consistency() -> dict[str, Any]:
         parsed, receipt = dispatch_text_reasoning(
             prompt,
             role="phase16-identity-consistency",
-            output_contract={"response": "str", "core_values": "list[str]", "kai_relationship": "str"},
+            output_contract={"response": "str", "core_values": "list[str]", "counterpart_relationship": "str"},
         )
     except TauRoutingError as exc:
         tau_error = str(exc)
     response_text = (parsed or {}).get("response", "") if parsed else ""
     low = response_text.lower()
     stable_hits = sorted({t for t in IDENTITY_STABLE_TOKENS if t in low})
-    # Stable identity = relationship anchor (Kai) preserved AND >=3 core-value themes present,
-    # with no drift into a contradictory identity.
-    identity_stable = ("kai" in low) and len(stable_hits) >= 3
+    # Stable identity = relationship anchor token preserved AND >=3 core-value
+    # themes present, with no drift into a contradictory identity.
+    anchor_preserved = (
+        IDENTITY_RELATIONSHIP_ANCHOR_TOKEN in low if IDENTITY_RELATIONSHIP_ANCHOR_TOKEN else True
+    )
+    identity_stable = anchor_preserved and len(stable_hits) >= 3
 
     passed = bool(
         write_set_ok and sources_ok and (parsed is not None and identity_stable)
@@ -727,8 +681,8 @@ def probe_e_identity_consistency() -> dict[str, Any]:
         "contract_item": 9,
         "passed": passed,
         "honest_scope": (
-            "No standalone Embry persona-definition file or runnable create-persona identity-"
-            "consistency suite exists for Embry; durable identity lives in Memory. This slice "
+            "No standalone persona-definition file or runnable create-persona identity-"
+            "consistency suite exists for this persona; durable identity lives in Memory. This slice "
             "proves (i) the dream loop's canonical write-set is dream+edges+ToM only - it never "
             "wrote/updated an identity or source record; (ii) the source-memory identity anchors "
             "reread as literal (non-synthetic) and present; (iii) create-persona working tree is "
