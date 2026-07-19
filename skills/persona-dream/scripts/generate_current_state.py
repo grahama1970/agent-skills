@@ -27,7 +27,7 @@ RECEIPTS = {
     "observation_packet": RR / "watch_gauntlet/59b9ff3155d6/dream_observation_packet.v2.json",
     "cognitive_loop": RR / "watch_gauntlet/59b9ff3155d6/cognitive_loop_v2/lineage_receipt.v1.json",
     "phase16": RR / "phase_16_behavior_evaluation/phase16_behavior_evaluation_receipt.v1.json",
-    "pilot_protocol": SKILL / "contracts/pilot_c_vs_f_frozen_protocol.v2.md",
+    "pilot_protocol": SKILL / "contracts/pilot_c_vs_f_frozen_protocol.v3.md",
     "voice_expression": RR / "voice_expression/voice_expression_evaluation_receipt.v1.json",
 }
 
