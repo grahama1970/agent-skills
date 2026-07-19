@@ -52,6 +52,7 @@ Commands:
   doctor            Check runtime prerequisites and artifact writability
   chains            Inspect saved review workflows
   nightly           Run scheduled persona update (incremental learning)
+  tau-dag <request> Compile a human request into a strict Tau DAG
   os learn          Crawl and index embry-os internals (skills, packages, config)
   os ask <question> Query OS knowledge from memory (scope=os)
   os health <question> Query runtime health of an OS subsystem
@@ -73,6 +74,20 @@ Learn Options:
   --overwrite           Replace an existing run directory for --ask-id
   --resume              Resume a non-terminal existing run directory for --ask-id
   --debug               Enable debug logging
+
+Tau DAG Options:
+  --repo <repo>         Repository/project binding for tau.dag_contract.v1
+  --target <target>     Issue, task, path, or work target binding
+  --solver-model <m>    Solver model to run; repeat for concurrent solvers
+  --reviewer-model <m>  Reviewer model used to compare solver outputs
+  --criterion <c>       Reviewer criterion; repeat for multiple criteria
+  --execute             Send the emitted DAG to $tau after writing dag.json
+  --local-fixture       Use local command workers for deterministic scheduler proof
+  --allow-provider-calls Permit real provider calls through the SciLLM container
+  --require-provider-calls Fail if SciLLM/provider calls are unavailable
+  --viewer-link         Ask Tau for the React Flow DAG viewer link
+  --run-output-root <dir> Directory for request/DAG/Tau receipt artifacts
+  --json                JSON output
 
 Ask Options:
   --scope <scope>       Memory scope to query (default: ask)
@@ -227,6 +242,12 @@ Examples:
   # Independent parallel adversarial reviewers
   ./run.sh ask "Review this architecture" --parallel-review --parallel-reviewers 3 --parallel-review-focus correctness,tests,maintainability
 
+  # Compile a strict Tau DAG and stop before execution if fields are incomplete
+  ./run.sh tau-dag "Ask 2 GPT 5.6 xhigh subagents to solve X, then Claude Fable reviews by criteria Y and Z" --repo local/tau --target issue-123 --criterion Y --criterion Z --json
+
+  # Execute the emitted DAG through Tau using local command workers
+  ./run.sh tau-dag "Solve X" --repo local/tau --target issue-123 --solver-model gpt-5.6-xhigh --solver-model gpt-5.6-xhigh --reviewer-model claude-fable --criterion correctness --criterion maintainability --execute --local-fixture --viewer-link --json
+
   # First-class deep review artifacts
   ./run.sh ask "deep review this implementation" --deep-review --deep-review-target src/ask/ask.py
 
@@ -279,6 +300,17 @@ case "${1:-help}" in
     nightly)
         shift
         exec uv run --project "$SCRIPT_DIR" python -m ask.nightly "$@"
+        ;;
+    tau-dag)
+        shift
+        case "${1:-run}" in
+            probe-scillm|--help|-h|help)
+                exec uv run --project "$SCRIPT_DIR" python -m ask.tau_dag_cli "$@"
+                ;;
+            *)
+                exec uv run --project "$SCRIPT_DIR" python -m ask.tau_dag_cli run "$@"
+                ;;
+        esac
         ;;
     webgpt-project)
         shift
