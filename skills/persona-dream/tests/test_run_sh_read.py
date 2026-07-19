@@ -17,7 +17,7 @@ def test_run_sh_read_prints_project_knowledge() -> None:
         stderr=subprocess.PIPE,
     )
 
-    assert "# Project Knowledge: agent-skills" in result.stdout
+    assert "# Project Knowledge: persona-dream" in result.stdout
     assert "Current Understanding" in result.stdout
     assert "Unknown command" not in result.stderr
 
