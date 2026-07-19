@@ -18,11 +18,9 @@ MEMORY_DAEMON_URL: str = os.getenv("MEMORY_DAEMON_URL", "http://127.0.0.1:8601")
 # Visual descriptions
 WATCH_VISUAL_DESCRIPTION_MODEL: str = os.getenv("WATCH_VISUAL_DESCRIPTION_MODEL", "vlm-chutes")
 WATCH_VISUAL_DESCRIPTION_FALLBACK_MODELS: str = os.getenv("WATCH_VISUAL_DESCRIPTION_FALLBACK_MODELS", "")
-WATCH_SCILLM_API_BASE: str = os.getenv("WATCH_SCILLM_API_BASE", os.getenv("SCILLM_API_BASE", "http://localhost:4001"))
-WATCH_SCILLM_PROXY_KEY: str = os.getenv(
-    "WATCH_SCILLM_PROXY_KEY",
-    os.getenv("SCILLM_PROXY_KEY", os.getenv("SCILLM_MASTER_KEY", "sk-dev-proxy-123")),
-)
+# NOTE: watch model inference routes through Tau (only /tau may reach /scillm); the
+# former WATCH_SCILLM_API_BASE / WATCH_SCILLM_PROXY_KEY direct-proxy settings were
+# removed when qra.py migrated to the Tau adapters.
 
 # Persistent media storage
 _WATCH_MEDIA_ROOT = os.getenv("WATCH_MEDIA_ROOT", "")

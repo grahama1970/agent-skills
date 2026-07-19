@@ -7,9 +7,11 @@ Failure: visual description failures are returned as structured receipts
 from __future__ import annotations
 
 import base64
+import importlib.util as _ilu
 import json
 import os
 import re
+import tempfile
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
@@ -17,11 +19,85 @@ import httpx
 from loguru import logger
 
 from config import (
-    WATCH_SCILLM_API_BASE,
-    WATCH_SCILLM_PROXY_KEY,
     WATCH_VISUAL_DESCRIPTION_FALLBACK_MODELS,
     WATCH_VISUAL_DESCRIPTION_MODEL,
 )
+
+# Operator rule: only /tau may reach /scillm. Watch routes its model inference
+# through the sanctioned persona-dream Tau adapters (text-reasoning node for text,
+# panel-reviewer VLM node for image frames). The Tau nodes emit a JSON object, so
+# watch wraps its free-text asks as {"content": "..."} and unwraps here. httpx is
+# still used for the external opencode.ai/zen provider and the local Whisper server.
+_PD_SCRIPTS = Path(__file__).resolve().parents[2] / "persona-dream" / "scripts"
+
+
+def _load_pd_module(mod_name: str):
+    spec = _ilu.spec_from_file_location(mod_name, _PD_SCRIPTS / f"{mod_name}.py")
+    assert spec and spec.loader
+    module = _ilu.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+_tau_text = _load_pd_module("tau_text_reasoning_adapter")
+_tau_vlm_composite = _load_pd_module("tau_vlm_composite_review")
+
+_WATCH_CONTENT_CONTRACT = {"content": "str"}
+_WATCH_JSON_WRAP = (
+    '\n\nReturn ONLY a JSON object of the form {"content": "<your full answer as a '
+    'single string>"} and nothing else.'
+)
+
+
+def _messages_have_image(messages: list) -> bool:
+    for message in messages:
+        content = message.get("content")
+        if isinstance(content, list):
+            for part in content:
+                if isinstance(part, dict) and part.get("type") == "image_url":
+                    return True
+    return False
+
+
+def _messages_text(messages: list) -> str:
+    parts: list[str] = []
+    for message in messages:
+        content = message.get("content")
+        if isinstance(content, str):
+            if content.strip():
+                parts.append(content.strip())
+        elif isinstance(content, list):
+            for part in content:
+                if isinstance(part, dict) and part.get("type") == "text":
+                    txt = str(part.get("text", "")).strip()
+                    if txt:
+                        parts.append(txt)
+    return "\n\n".join(parts)
+
+
+def _unwrap_content(raw: str) -> str:
+    """Extract the wrapped {"content": ...} string from a Tau node JSON response."""
+    if not raw:
+        return ""
+    text = raw.strip()
+    if text.startswith("```"):
+        text = text.split("```", 2)[1]
+        if text.startswith("json"):
+            text = text[4:]
+        text = text.rsplit("```", 1)[0]
+    start, end = text.find("{"), text.rfind("}")
+    if start != -1 and end != -1 and end > start:
+        try:
+            obj = json.loads(text[start : end + 1])
+            if isinstance(obj, dict) and isinstance(obj.get("content"), str):
+                return obj["content"]
+            if isinstance(obj, dict):
+                for key in ("summary", "description", "text", "answer"):
+                    if isinstance(obj.get(key), str):
+                        return obj[key]
+        except json.JSONDecodeError:
+            pass
+    return raw.strip()
 
 
 def _zen_api_key() -> str:
@@ -38,9 +114,16 @@ def _zen_api_key() -> str:
 
 
 def _scillm_chat_completion(messages: list, model: str = "gpt-5.5", timeout: int = 60) -> dict:
+    """Route a watch chat/VLM completion through Tau (only /tau may reach /scillm).
+
+    Text-only messages go through the Tau text-reasoning node; messages carrying an
+    image_url go through the Tau panel-reviewer VLM node (via the composite adapter).
+    The result dict shape (provider/status/content/http_status/...) is preserved so
+    callers are unchanged; provider is now "tau".
+    """
     requested_model = model
     result = {
-        "provider": "scillm",
+        "provider": "tau",
         "requested_model": requested_model,
         "served_model": None,
         "status": "failed",
@@ -50,30 +133,45 @@ def _scillm_chat_completion(messages: list, model: str = "gpt-5.5", timeout: int
         "error": None,
     }
     try:
-        api_base = WATCH_SCILLM_API_BASE.rstrip("/")
-        resp = httpx.post(
-            f"{api_base}/v1/chat/completions",
-            json={"model": model, "messages": messages, "temperature": 0.3, "stream": False},
-            headers={"Authorization": f"Bearer {WATCH_SCILLM_PROXY_KEY}", "X-Caller-Skill": "watch"},
-            timeout=timeout,
-        )
-        result["http_status"] = resp.status_code
-        if resp.status_code == 200:
-            payload = resp.json()
-            msg = payload["choices"][0]["message"]
-            content = msg.get("content") or msg.get("reasoning_content") or ""
-            result.update({
-                "status": "described" if content else "empty_response",
-                "served_model": payload.get("model") or requested_model,
-                "content": content,
-            })
-            return result
-        result["error_type"] = "http_error"
-        result["error"] = resp.text[:500]
+        if _messages_have_image(messages):
+            payload = {
+                "model": model,
+                "messages": [
+                    *messages,
+                    {"role": "user", "content": [{"type": "text", "text": _WATCH_JSON_WRAP}]},
+                ],
+            }
+            with tempfile.TemporaryDirectory(prefix="watch_tau_vlm_") as tmp:
+                resp = _tau_vlm_composite.post_openai_vlm_via_tau(
+                    payload, artifact_dir=tmp, caller_skill="watch"
+                )
+            receipt = resp.get("_tau_vlm_receipt", {})
+            raw = resp["choices"][0]["message"]["content"]
+            content = _unwrap_content(raw)
+            result["http_status"] = receipt.get("http_status", 200)
+            result["served_model"] = receipt.get("model") or requested_model
+        else:
+            prompt = _messages_text(messages) + _WATCH_JSON_WRAP
+            parsed, receipt = _tau_text.dispatch_text_reasoning(
+                prompt,
+                role="watch",
+                output_contract=_WATCH_CONTENT_CONTRACT,
+                caller_skill="watch",
+                model=model,
+                timeout_s=timeout,
+            )
+            content = ""
+            if isinstance(parsed, dict) and isinstance(parsed.get("content"), str):
+                content = parsed["content"]
+            result["http_status"] = receipt.get("http_status")
+            result["served_model"] = receipt.get("model") or requested_model
+        result["status"] = "described" if content else "empty_response"
+        result["content"] = content
+        return result
     except Exception as exc:
         result["error_type"] = exc.__class__.__name__
         result["error"] = str(exc)
-        logger.error("scillm call failed: {}", exc)
+        logger.error("tau route failed: {}", exc)
     return result
 
 

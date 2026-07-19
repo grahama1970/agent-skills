@@ -15,50 +15,66 @@ def _frame(tmp_path: Path) -> list[dict]:
     return [{"index": 0, "timestamp_seconds": 1.25, "path": str(image)}]
 
 
-def test_scillm_completion_uses_configured_base_and_key(monkeypatch):
+def test_text_completion_routes_through_tau_text_node(monkeypatch):
+    # Only /tau may reach /scillm: text-only completions must go through the Tau
+    # text-reasoning adapter (never a direct scillm POST) and preserve the result
+    # dict shape.
     calls: list[dict] = []
 
-    class FakeResponse:
-        status_code = 200
+    def fake_dispatch(prompt, role, *, output_contract, caller_skill, model, timeout_s):
+        calls.append({"prompt": prompt, "role": role, "caller_skill": caller_skill, "model": model})
+        return {"content": "A Tau-routed response."}, {"model": "served-text", "http_status": 200}
 
-        def json(self):
-            return {
-                "model": "served-vlm",
-                "choices": [{"message": {"content": "A configured proxy response."}}],
-            }
-
-    def fake_post(url, *, json, headers, timeout):
-        calls.append({"url": url, "json": json, "headers": headers, "timeout": timeout})
-        return FakeResponse()
-
-    monkeypatch.setattr(qra, "WATCH_SCILLM_API_BASE", "http://watch-scillm.test/")
-    monkeypatch.setattr(qra, "WATCH_SCILLM_PROXY_KEY", "watch-test-key")
-    monkeypatch.setattr(qra.httpx, "post", fake_post)
+    monkeypatch.setattr(qra._tau_text, "dispatch_text_reasoning", fake_dispatch)
 
     result = qra._scillm_chat_completion(
         [{"role": "user", "content": "describe"}],
-        model="configured-vlm",
+        model="configured-text",
         timeout=7,
     )
 
+    assert result["provider"] == "tau"
     assert result["status"] == "described"
-    assert result["served_model"] == "served-vlm"
-    assert calls == [
+    assert result["content"] == "A Tau-routed response."
+    assert result["served_model"] == "served-text"
+    assert len(calls) == 1
+    assert calls[0]["caller_skill"] == "watch"
+    assert calls[0]["model"] == "configured-text"
+    assert "describe" in calls[0]["prompt"]
+
+
+def test_image_completion_routes_through_tau_vlm_node(monkeypatch):
+    # Messages carrying an image_url must route through the Tau panel-reviewer VLM
+    # composite adapter, never a direct scillm POST.
+    seen: dict = {}
+
+    def fake_vlm(payload, *, artifact_dir, caller_skill):
+        seen["caller_skill"] = caller_skill
+        seen["model"] = payload.get("model")
+        return {
+            "choices": [{"message": {"content": '{"content": "A framed description."}'}}],
+            "_tau_vlm_receipt": {"model": "served-vlm", "http_status": 200},
+        }
+
+    monkeypatch.setattr(qra._tau_vlm_composite, "post_openai_vlm_via_tau", fake_vlm)
+
+    messages = [
         {
-            "url": "http://watch-scillm.test/v1/chat/completions",
-            "json": {
-                "model": "configured-vlm",
-                "messages": [{"role": "user", "content": "describe"}],
-                "temperature": 0.3,
-                "stream": False,
-            },
-            "headers": {
-                "Authorization": "Bearer watch-test-key",
-                "X-Caller-Skill": "watch",
-            },
-            "timeout": 7,
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "Describe this frame."},
+                {"type": "image_url", "image_url": {"url": "data:image/jpeg;base64,AAAA"}},
+            ],
         }
     ]
+    result = qra._scillm_chat_completion(messages, model="configured-vlm", timeout=7)
+
+    assert result["provider"] == "tau"
+    assert result["status"] == "described"
+    assert result["content"] == "A framed description."
+    assert result["served_model"] == "served-vlm"
+    assert seen["caller_skill"] == "watch"
+    assert seen["model"] == "configured-vlm"
 
 
 def test_visual_description_explicit_model_override(monkeypatch, tmp_path):

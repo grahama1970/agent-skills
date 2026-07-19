@@ -117,13 +117,9 @@ ALLOWLIST: dict[str, str] = {
 # file) that still POSTs to scillm turns it back into a HARD FAILURE.
 # ---------------------------------------------------------------------------
 TEMPORARY_DEBT: dict[str, str] = {
-    # --- watch VLM/QRA/audio (the review's named violation) ---
-    "skills/watch/scripts/qra.py":
-        "TEMPORARY_DEBT: watch posts VLM frame descriptions + QRA + audio to scillm directly; "
-        "needs Tau text node (text/QRA) + frame-shaped Tau VLM node (image). P1 routing boundary.",
-    "skills/watch/scripts/config.py":
-        "TEMPORARY_DEBT: defines WATCH_SCILLM_API_BASE / proxy-key that authorize qra.py's direct call. "
-        "Retire when qra.py routes through Tau. P1 routing boundary.",
+    # All pre-existing direct-scillm callers have been migrated to the sanctioned
+    # Tau adapters, allowlisted as diagnostics, or retired. The registry is empty
+    # and --strict now enforces a zero-direct-scillm tree.
     # NOTE: the experimental 'rung' ladder (rung0/1/2/4/5/8/17/18/21/22) and
     # dreamer_sequential_runner.py were RETIRED (git rm) on 2026-07-19 as
     # superseded one-off scillm transport experiments with no live imports.
