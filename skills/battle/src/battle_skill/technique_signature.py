@@ -108,6 +108,8 @@ def _derive_app_load_mode(tree: ast.AST) -> str:
             chain = _attr_chain(node.func)
             if chain.endswith("spec_from_file_location"):
                 return "importlib_spec_from_file"
+            if chain.endswith("import_module"):
+                return "importlib_import_module"
         if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
             if node.func.id == "__import__":
                 return "dunder_import"

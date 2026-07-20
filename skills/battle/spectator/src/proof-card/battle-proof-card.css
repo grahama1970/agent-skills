@@ -24,30 +24,45 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 20px;
 }
 
+/* Slim primary-link nav (DAW top-nav spec): text links, no pills. */
 .battle-proof-nav a {
+  position: relative;
   display: inline-flex;
   align-items: center;
   flex: 0 0 auto;
   white-space: nowrap;
-  border-radius: 999px;
-  border: 1px solid rgba(90, 173, 255, 0.18);
-  background: rgba(4, 10, 18, 0.65);
-  color: #9eb6d0;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+  border: none;
+  background: transparent;
+  color: #8b949e;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   text-decoration: none;
-  padding: 8px 12px;
+  padding: 4px 0;
+  transition: color 0.2s ease;
+}
+
+.battle-proof-nav a:hover {
+  color: #fff;
 }
 
 .battle-proof-nav a[aria-current="page"] {
-  border-color: rgba(167, 139, 250, 0.45);
-  background: rgba(167, 139, 250, 0.12);
-  color: #ddd6fe;
+  color: #58a6ff;
+}
+
+.battle-proof-nav a[aria-current="page"]::after {
+  content: "";
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #58a6ff;
+  border-radius: 2px 2px 0 0;
 }
 
 .battle-proof-node {
@@ -163,21 +178,22 @@
 .battle-proof-nav-more > summary {
   list-style: none;
   cursor: pointer;
-  border-radius: 999px;
-  border: 1px solid rgba(90, 173, 255, 0.18);
-  background: rgba(4, 10, 18, 0.65);
-  color: #9eb6d0;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
+  border: none;
+  background: transparent;
+  color: #8b949e;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  padding: 8px 12px;
+  padding: 4px 0;
+  transition: color 0.2s ease;
 }
+.battle-proof-nav-more > summary:hover { color: #fff; }
+.battle-proof-nav-more > summary::after { content: " \25BE"; opacity: 0.6; }
 .battle-proof-nav-more > summary::-webkit-details-marker { display: none; }
 .battle-proof-nav-more > summary.is-active,
 .battle-proof-nav-more[open] > summary {
-  border-color: rgba(90, 173, 255, 0.45);
-  color: #d7e8ff;
+  color: #58a6ff;
 }
 .battle-proof-nav-more-links {
   position: absolute;

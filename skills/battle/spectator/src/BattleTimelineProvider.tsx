@@ -34,15 +34,24 @@ export function useBattleTimelineScale() {
 
 type Props = {
   allottedSeconds: number;
+  /** Exact world content width used by the PixiJS scene. When provided, the DOM
+      overlay scale is driven from it (single source of truth) so DOM labels and
+      the playhead cursor never drift from the WebGL sprites/lines — instead of a
+      separately-measured DOM element width, which can disagree with the canvas. */
+  contentWidth?: number;
   children: ReactNode;
 };
 
-export function BattleTimelineProvider({ allottedSeconds, children }: Props) {
+export function BattleTimelineProvider({ allottedSeconds, contentWidth, children }: Props) {
   const [trackNode, setTrackNode] = useState<HTMLDivElement | null>(null);
   const [trackWidth, setTrackWidth] = useState(0);
   const allottedMs = Math.max(1, allottedSeconds) * 1000;
   const designView = isBattleDesignView();
-  const laneTrackWidth = designView ? Math.max(0, trackWidth - BATTLE_LANE_LABEL_PX) : trackWidth;
+  const measuredTrackWidth = designView ? Math.max(0, trackWidth - BATTLE_LANE_LABEL_PX) : trackWidth;
+  // Unify with the Pixi canvas: prefer the exact contentWidth (matches
+  // secondsToWorldX in battle-pixi-scene.ts, no padding); fall back to the
+  // measured element width only when the caller can't supply it.
+  const laneTrackWidth = contentWidth != null && contentWidth > 0 ? contentWidth : measuredTrackWidth;
 
   const setTrackRef = useCallback((node: HTMLDivElement | null) => {
     setTrackNode(node);

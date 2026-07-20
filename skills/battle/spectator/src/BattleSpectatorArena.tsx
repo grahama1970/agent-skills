@@ -106,6 +106,26 @@ export function BattleSpectatorArena() {
   const [deathAnnouncement, setDeathAnnouncement] = useState<HungerGamesDeathCard | null>(null);
   const [highlightReel, setHighlightReel] = useState(false);
   const [highlightJumpToken, setHighlightJumpToken] = useState(0);
+  const [leftPaneCollapsed, setLeftPaneCollapsed] = useState(false);
+  const [rightPaneCollapsed, setRightPaneCollapsed] = useState(false);
+  const toggleLeftPane = useCallback(() => setLeftPaneCollapsed((v) => !v), []);
+  const toggleRightPane = useCallback(() => setRightPaneCollapsed((v) => !v), []);
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if ((e.metaKey || e.ctrlKey) && e.key === "[") {
+        e.preventDefault();
+        toggleLeftPane();
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === "]") {
+        e.preventDefault();
+        toggleRightPane();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [toggleLeftPane, toggleRightPane]);
   const deathBeatRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -327,7 +347,7 @@ export function BattleSpectatorArena() {
         </div>
       ) : null}
       {receiptReplay && typedReceiptFixture?.adaptive_lineage ? (
-        <div className="mx-auto mb-2 w-full max-w-[1672px] shrink-0 overflow-y-auto" style={{ maxHeight: "32vh" }} data-qid="battle:adaptive-lineage:panel">
+        <div className="mx-auto w-full max-w-[1672px] shrink-0 overflow-y-auto" style={{ maxHeight: "32vh" }} data-qid="battle:adaptive-lineage:panel">
           {/* Receipt-authoritative: the mechanics fixture is co-fetched from the loaded
               receipt's own directory and battle_id/qualification-verified by the loader.
               No static/global fixture supplies LIVE/selection/operator/novelty here. */}
@@ -404,7 +424,7 @@ export function BattleSpectatorArena() {
           mockupShell
             ? {
                 ["--battle-shell-legend-height" as string]: `${BATTLE_MOCKUP_LEGEND_PX}px`,
-                ["--battle-shell-footer-height" as string]: `${receiptChrome ? 104 : BATTLE_MOCKUP_FOOTER_PX}px`,
+                ["--battle-shell-footer-height" as string]: `${receiptChrome ? 48 : BATTLE_MOCKUP_FOOTER_PX}px`,
               }
             : { gridTemplateRows: "142px minmax(0, 1fr) 34px 104px" }
         }
@@ -421,21 +441,27 @@ export function BattleSpectatorArena() {
           style={
             mockupShell
               ? {
-                  ["--battle-left-rail" as string]: `${BATTLE_MOCKUP_LEFT_RAIL_PX}px`,
-                  ["--battle-agent-pane" as string]: `${BATTLE_MOCKUP_AGENT_PANE_PX}px`,
+                  ["--battle-left-rail" as string]: leftPaneCollapsed ? "30px" : `${BATTLE_MOCKUP_LEFT_RAIL_PX}px`,
+                  ["--battle-agent-pane" as string]: rightPaneCollapsed ? "30px" : `${BATTLE_MOCKUP_AGENT_PANE_PX}px`,
                 }
               : undefined
           }
         >
-          <div className="battle-spectator-rail-slot h-full min-h-0 min-w-0 overflow-hidden">
-            <SpectatorRail receiptFixture={typedReceiptFixture} leaderboard={leaderboard} selectedId={selectedLane?.id} onSelect={selectActor} />
+          <div className={cn("battle-spectator-rail-slot left-pane relative h-full min-h-0 min-w-0", leftPaneCollapsed && "collapsed")} style={{ overflow: "visible" }}>
+            <button type="button" onClick={toggleLeftPane} title="Toggle Left Pane (Cmd/Ctrl + [)" data-qid="battle:pane:left-toggle" className="pane-toggle-btn left-toggle">{leftPaneCollapsed ? "»" : "«"}</button>
+            <div className="h-full min-h-0 min-w-0 overflow-y-auto overflow-x-hidden">
+              {leftPaneCollapsed ? null : <SpectatorRail receiptFixture={typedReceiptFixture} leaderboard={leaderboard} selectedId={selectedLane?.id} onSelect={selectActor} />}
+            </div>
           </div>
           <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
             <RaceViewport lanes={initialLanes} receiptFixture={typedReceiptFixture} selectedId={selectedLane?.id ?? ""} activeFinisher={null} onSelect={selectActor} query="" filter={filter} speed={speed} playing={playing} battleEvents={battleEvents} soundEnabled={enabled} onReplayCue={handleReplayCue} onReceiptBeat={handleReceiptBeat} onPlayheadSeconds={handlePlayheadSeconds} onUserScrubSeconds={handleUserScrubSeconds} highlightReel={highlightReel} onHighlightReelChange={setHighlightReel} highlightJumpToken={highlightJumpToken} onPlayingChange={setPlaying} />
           </div>
           {selectedLane ? (
-            <div className="battle-agent-pane-slot h-full min-h-0 min-w-0 overflow-hidden">
-              <AgentDetailPane lane={selectedLane} lanes={initialLanes} events={battleEvents} activeFinisher={null} onSound={playCue} />
+            <div className={cn("battle-agent-pane-slot right-pane relative h-full min-h-0 min-w-0", rightPaneCollapsed && "collapsed")} style={{ overflow: "visible" }}>
+              <button type="button" onClick={toggleRightPane} title="Toggle Right Pane (Cmd/Ctrl + ])" data-qid="battle:pane:right-toggle" className="pane-toggle-btn right-toggle">{rightPaneCollapsed ? "«" : "»"}</button>
+              <div className="h-full min-h-0 min-w-0 overflow-y-auto overflow-x-hidden">
+                {rightPaneCollapsed ? null : <AgentDetailPane lane={selectedLane} lanes={initialLanes} events={battleEvents} activeFinisher={null} onSound={playCue} />}
+              </div>
             </div>
           ) : null}
         </div>
@@ -447,6 +473,10 @@ export function BattleSpectatorArena() {
           </>
         ) : receiptChrome ? (
           <>
+            {/* Legend belongs in the receipt view per the accepted mockup (bottom row).
+                It is static reference content, so it renders regardless of fixture data.
+                Rendering it here also fills the shell grid's legend row so the footer lands
+                in its own row instead of overflowing the collapsed (0px) legend track. */}
             <BattleMockupLegend />
             <BattleReceiptFooter
               playing={playing}

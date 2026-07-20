@@ -434,14 +434,20 @@ fixture source:
   --fixture spectator/public/battle-fixtures/battle-004-pr6-genetic-pixi/battle.normalized_ux_fixture.json \
   --battle-id battle-004 \
   --host 127.0.0.1 \
-  --port 8765
+  --port 18765
 ```
+
+Port 18765 is the default for both `serve-live-transport` and the spectator
+runtime (`DEFAULT_BATTLE_LIVE_TRANSPORT_BASE` in
+`spectator/src/lib/battle-live-sse-runtime.ts`), so the `#battle/live` route
+discovers the adapter with no `?liveBase=` override. The frontend still probes
+`8765` as a fallback candidate for older handoffs.
 
 Runtime endpoints:
 
 ```text
-GET http://127.0.0.1:8765/battle/live/battle-004/snapshot
-GET http://127.0.0.1:8765/battle/live/battle-004/events
+GET http://127.0.0.1:18765/battle/live/battle-004/snapshot
+GET http://127.0.0.1:18765/battle/live/battle-004/events
 ```
 
 The proof command starts the adapter on an ephemeral local port and verifies

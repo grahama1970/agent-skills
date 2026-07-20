@@ -26,9 +26,6 @@ export const BATTLE_RUNNER_FLOOR_SPRITE_ID: BattleRunnerSpriteId = BATTLE_ACTIVE
  */
 export const ENABLED_RUNNER_SPRITE_IDS: BattleRunnerSpriteId[] = [
 	"plague_nurgling",
-	"crimson_chainsaw_demon",
-	"typhus",
-	"slug_demon",
 ];
 
 /** Resolve fixture theme metadata without granting it runtime character selection. */
@@ -98,12 +95,11 @@ const LANE_SPRITE_TABLE: Record<string, BattleRunnerSpriteId> = {
  * cosmetic shared-atlas theme deliberately maps every variant to one sprite, which
  * is the exact lock this mapping overrides to make specimens distinct.
  */
-export function spriteIdForLane(lane: Lane, _spriteTheme?: BattleSpriteThemeV1): BattleRunnerSpriteId {
-	const key = `${lane.team}:${lane.generation}:${selectionRole(lane)}`;
-	const mapped = LANE_SPRITE_TABLE[key];
-	if (mapped) return mapped;
-	const genFallback = LANE_SPRITE_TABLE[`${lane.team}:${lane.generation}:none`];
-	return genFallback ?? BATTLE_RUNNER_FLOOR_SPRITE_ID;
+export function spriteIdForLane(_lane: Lane, _spriteTheme?: BattleSpriteThemeV1): BattleRunnerSpriteId {
+	// Requirement: every lane uses the single proven-rendering sprite (plague_nurgling).
+	// The multi-sprite LANE_SPRITE_TABLE is retained above for reference but no longer
+	// drives selection — the other atlases render as garbage at lane scale.
+	return BATTLE_ACTIVE_RUNNER_SPRITE_ID;
 }
 
 /** @deprecated use spriteIdForLane */

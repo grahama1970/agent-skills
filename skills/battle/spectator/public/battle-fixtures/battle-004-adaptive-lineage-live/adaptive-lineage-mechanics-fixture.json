@@ -1,183 +1,183 @@
 {
+  "schema": "battle.adaptive_lineage_mechanics_fixture.v1",
   "battle_id": "battle-004",
+  "run_id": "arena-adaptive-lineage-20260719T141223Z",
   "data_source": "live",
-  "edges": [
-    {
-      "changed_dimensions": [
-        {
-          "child": "none",
-          "dimension": "app_load_mode",
-          "parent": "from_import_app"
-        },
-        {
-          "child": "none",
-          "dimension": "target_call_form",
-          "parent": "function_call"
-        }
-      ],
-      "delta_status": "PASS",
-      "from": "G0",
-      "mutation_operator": "method_replace",
-      "novelty_distance": 2,
-      "to": "G1-A"
-    },
-    {
-      "changed_dimensions": [
-        {
-          "child": "zipfile_write_arcname",
-          "dimension": "archive_entry_construction",
-          "parent": "zipfile_writestr"
-        }
-      ],
-      "delta_status": "PASS",
-      "from": "G0",
-      "mutation_operator": "oracle_or_parameter_mutation",
-      "novelty_distance": 1,
-      "to": "G1-B"
-    },
-    {
-      "changed_dimensions": [
-        {
-          "child": "importlib_spec_from_file",
-          "dimension": "app_load_mode",
-          "parent": "none"
-        },
-        {
-          "child": "zipinfo",
-          "dimension": "archive_entry_construction",
-          "parent": "zipfile_writestr"
-        },
-        {
-          "child": "try[Exception:return|Exception:return|OSError:handle]",
-          "dimension": "exception_handling",
-          "parent": "try[Exception:return]"
-        }
-      ],
-      "delta_status": "PASS",
-      "from": "G1-A",
-      "mutation_operator": "failure_guided_crossover",
-      "novelty_distance": 3,
-      "to": "G2"
-    }
-  ],
-  "generated_at": null,
+  "generated_at": "2026-07-19T14:13:49Z",
+  "qualification": {
+    "status": "PASS",
+    "stop_condition": null,
+    "reasons": []
+  },
+  "selection": {
+    "selected_id": "G1-A",
+    "runner_up_id": "G1-B",
+    "deciding_criterion": "novelty_distance"
+  },
   "nodes": [
     {
-      "changed_dimensions": [],
+      "id": "G0",
+      "role": "seed",
+      "generation": 0,
+      "parentId": null,
+      "mutation_operator": null,
+      "technique_delta": "seed exploit (no mutation operator)",
+      "selected": false,
+      "runner_up": false,
+      "novelty_distance": null,
       "delta_status": null,
       "fitness_status": null,
-      "generation": 0,
-      "id": "G0",
-      "judge_outcome": null,
-      "mutation_operator": null,
-      "novelty_distance": null,
-      "parentId": null,
-      "role": "seed",
-      "runner_up": false,
-      "selected": false,
-      "technique_delta": "seed exploit (no mutation operator)"
+      "changed_dimensions": [],
+      "judge_outcome": null
     },
     {
-      "changed_dimensions": [
-        {
-          "child": "none",
-          "dimension": "app_load_mode",
-          "parent": "from_import_app"
-        },
-        {
-          "child": "none",
-          "dimension": "target_call_form",
-          "parent": "function_call"
-        }
-      ],
-      "delta_status": "PASS",
-      "fitness_status": "PASS",
-      "generation": 1,
       "id": "G1-A",
-      "judge_outcome": {
-        "duration_seconds": 1.246486,
-        "patched_bypass": false,
-        "vulnerable_original_confirmed": true
-      },
-      "mutation_operator": "method_replace",
-      "novelty_distance": 2,
-      "parentId": "G0",
       "role": "candidate",
-      "runner_up": false,
-      "selected": true,
-      "technique_delta": "Changed app.py loading from direct from app import import_zip to importlib.import_module('app') with getattr; archive construction, traversal member, direct call, and oracle remain unchanged."
-    },
-    {
-      "changed_dimensions": [
-        {
-          "child": "zipfile_write_arcname",
-          "dimension": "archive_entry_construction",
-          "parent": "zipfile_writestr"
-        }
-      ],
-      "delta_status": "PASS",
-      "fitness_status": "PASS",
       "generation": 1,
-      "id": "G1-B",
-      "judge_outcome": {
-        "duration_seconds": 1.2728,
-        "patched_bypass": false,
-        "vulnerable_original_confirmed": true
-      },
-      "mutation_operator": "oracle_or_parameter_mutation",
-      "novelty_distance": 1,
       "parentId": "G0",
-      "role": "candidate",
-      "runner_up": true,
-      "selected": false,
-      "technique_delta": "Archive entry construction changed from in-memory writestr traversal member to a real file added with explicit traversal arcname."
-    },
-    {
-      "changed_dimensions": [
-        {
-          "child": "importlib_spec_from_file",
-          "dimension": "app_load_mode",
-          "parent": "none"
-        },
-        {
-          "child": "zipinfo",
-          "dimension": "archive_entry_construction",
-          "parent": "zipfile_writestr"
-        },
-        {
-          "child": "try[Exception:return|Exception:return|OSError:handle]",
-          "dimension": "exception_handling",
-          "parent": "try[Exception:return]"
-        }
-      ],
+      "mutation_operator": "method_replace",
+      "technique_delta": "method_replace mutation of G0",
+      "selected": true,
+      "runner_up": false,
+      "novelty_distance": 2,
       "delta_status": "PASS",
       "fitness_status": "PASS",
-      "generation": 2,
-      "id": "G2",
+      "changed_dimensions": [
+        {
+          "dimension": "app_load_mode",
+          "parent": "from_import_app",
+          "child": "importlib_import_module"
+        },
+        {
+          "dimension": "target_call_form",
+          "parent": "function_call",
+          "child": "none"
+        }
+      ],
       "judge_outcome": {
-        "duration_seconds": 1.379526,
+        "vulnerable_original_confirmed": true,
         "patched_bypass": false,
-        "vulnerable_original_confirmed": true
-      },
-      "mutation_operator": "failure_guided_crossover",
-      "novelty_distance": 3,
-      "parentId": "G1-A",
-      "role": "descendant",
-      "runner_up": false,
+        "duration_seconds": 1.038976
+      }
+    },
+    {
+      "id": "G1-B",
+      "role": "candidate",
+      "generation": 1,
+      "parentId": "G0",
+      "mutation_operator": "oracle_or_parameter_mutation",
+      "technique_delta": "oracle_or_parameter_mutation mutation of G0",
       "selected": false,
-      "technique_delta": "Changed app loading to importlib.util.spec_from_file_location, changed archive construction to ZipInfo plus archive.open writes, and changed target call form to keyword arguments while retaining the outside-destination content oracle."
+      "runner_up": true,
+      "novelty_distance": 1,
+      "delta_status": "PASS",
+      "fitness_status": "PASS",
+      "changed_dimensions": [
+        {
+          "dimension": "archive_entry_construction",
+          "parent": "zipfile_writestr",
+          "child": "zipfile_write_arcname"
+        }
+      ],
+      "judge_outcome": {
+        "vulnerable_original_confirmed": true,
+        "patched_bypass": false,
+        "duration_seconds": 1.188236
+      }
+    },
+    {
+      "id": "G2",
+      "role": "descendant",
+      "generation": 2,
+      "parentId": "G1-A",
+      "mutation_operator": "failure_guided_crossover",
+      "technique_delta": "failure_guided_crossover mutation of G1-A",
+      "selected": false,
+      "runner_up": false,
+      "novelty_distance": 3,
+      "delta_status": "PASS",
+      "fitness_status": "PASS",
+      "changed_dimensions": [
+        {
+          "dimension": "app_load_mode",
+          "parent": "importlib_import_module",
+          "child": "importlib_spec_from_file"
+        },
+        {
+          "dimension": "archive_entry_construction",
+          "parent": "zipfile_writestr",
+          "child": "zipfile_writestr+zipinfo"
+        },
+        {
+          "dimension": "exception_handling",
+          "parent": "none",
+          "child": "try[Exception:return|ValueError:return]"
+        }
+      ],
+      "judge_outcome": {
+        "vulnerable_original_confirmed": true,
+        "patched_bypass": false,
+        "duration_seconds": 1.190854
+      }
     }
   ],
-  "qualification": {
-    "reasons": [],
-    "status": "PASS",
-    "stop_condition": null
-  },
-  "run_id": "arena-adaptive-lineage-20260718T152350Z",
-  "schema": "battle.adaptive_lineage_mechanics_fixture.v1",
-  "selection": {
-    "deciding_criterion": "novelty_distance",
-    "runner_up_id": "G1-B",
-    "selected_id": "G1-A"
-  }
+  "edges": [
+    {
+      "from": "G0",
+      "to": "G1-A",
+      "mutation_operator": "method_replace",
+      "novelty_distance": 2,
+      "delta_status": "PASS",
+      "changed_dimensions": [
+        {
+          "dimension": "app_load_mode",
+          "parent": "from_import_app",
+          "child": "importlib_import_module"
+        },
+        {
+          "dimension": "target_call_form",
+          "parent": "function_call",
+          "child": "none"
+        }
+      ]
+    },
+    {
+      "from": "G0",
+      "to": "G1-B",
+      "mutation_operator": "oracle_or_parameter_mutation",
+      "novelty_distance": 1,
+      "delta_status": "PASS",
+      "changed_dimensions": [
+        {
+          "dimension": "archive_entry_construction",
+          "parent": "zipfile_writestr",
+          "child": "zipfile_write_arcname"
+        }
+      ]
+    },
+    {
+      "from": "G1-A",
+      "to": "G2",
+      "mutation_operator": "failure_guided_crossover",
+      "novelty_distance": 3,
+      "delta_status": "PASS",
+      "changed_dimensions": [
+        {
+          "dimension": "app_load_mode",
+          "parent": "importlib_import_module",
+          "child": "importlib_spec_from_file"
+        },
+        {
+          "dimension": "archive_entry_construction",
+          "parent": "zipfile_writestr",
+          "child": "zipfile_writestr+zipinfo"
+        },
+        {
+          "dimension": "exception_handling",
+          "parent": "none",
+          "child": "try[Exception:return|ValueError:return]"
+        }
+      ]
+    }
+  ]
 }

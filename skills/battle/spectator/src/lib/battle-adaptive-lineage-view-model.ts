@@ -12,10 +12,29 @@ function receiptId(event: AdaptiveLineageEvent): string {
 function laneEventKind(event: AdaptiveLineageEvent): LaneEvent["kind"] {
 	if (event.event_type === "child_research_materialized" || event.event_type === "memory_use_acknowledged") return "handoff";
 	if (event.event_type === "genome_mutated") return "genome_selected";
+	// Pair-level Judge verdict. BLUE_SUCCESS = Blue intervention blocked Red (claim boundary
+	// forbids rendering Red exploit success unless the verdict is RED_SUCCESS), so a Blue-blast
+	// marker is the strongest honest cue; any non-BLUE_SUCCESS verdict stays a neutral marker.
+	if (event.event_type === "judge_verdict") {
+		return String((event.payload as Record<string, unknown>).verdict) === "BLUE_SUCCESS" ? "blue_blast" : "useful";
+	}
 	return "useful";
 }
 
 function laneEventLabel(event: AdaptiveLineageEvent): string {
+	const payload = event.payload as Record<string, unknown>;
+	if (event.event_type === "judge_verdict") {
+		return payload.verdict != null ? `JUDGE VERDICT · ${String(payload.verdict)}` : "JUDGE VERDICT";
+	}
+	if (event.event_type === "selection_decision") {
+		return payload.red_selected_generation != null && payload.blue_selected_generation != null
+			? `SELECTION · RED G${String(payload.red_selected_generation)} / BLUE G${String(payload.blue_selected_generation)}`
+			: "SELECTION DECIDED";
+	}
+	if (event.event_type === "memory_evaluation") {
+		const decisions = Array.isArray(payload.decisions) ? payload.decisions.map(String) : [];
+		return decisions.length ? `MEMORY EVAL · ${decisions.join(" / ")}` : "MEMORY EVALUATION";
+	}
 	const labels: Record<string, string> = {
 		parent_observation_materialized: "OBSERVATION RECEIPT",
 		generation_observation_materialized: "GENERATION OBSERVATION",
@@ -216,10 +235,15 @@ function adaptiveLifecycleFields(
 
 function toLane(source: AdaptiveLineageLane, fixture: BattleNormalizedAdaptiveLineageFixtureV1): Lane {
 	const duration = fixture.campaign.elapsed_seconds;
-	const events = fixture.events.filter((event) => event.lane_id === source.lane_id);
+	// Lifecycle/segment derivation stays keyed on this lane's own `lane_id` events (parent-authored
+	// observation/fitness/spawn semantics). Visible timeline markers additionally include every event
+	// whose `affected_lane_ids` names this lane — this is what surfaces the pair-level Judge verdict,
+	// the campaign selection_decision, and memory_evaluation (all carry `lane_id: null`) onto the lanes.
+	const laneScopedEvents = fixture.events.filter((event) => event.lane_id === source.lane_id);
+	const laneMarkerEvents = fixture.events.filter((event) => event.affected_lane_ids.includes(source.lane_id));
 	const childLane = fixture.lanes.find((lane) => lane.parent_lane_id === source.lane_id);
 	const isMemory = fixture.live_source === "adaptive_memory_v14";
-	const lifecycle = adaptiveLifecycleFields(source, fixture, events);
+	const lifecycle = adaptiveLifecycleFields(source, fixture, laneScopedEvents);
 	return {
 		id: source.lane_id,
 		name: source.display_name,
@@ -241,7 +265,7 @@ function toLane(source: AdaptiveLineageLane, fixture: BattleNormalizedAdaptiveLi
 		runnerVerb: source.role === "child" ? "inherit" : "observe",
 		lineColor: source.team === "red" ? (source.role === "parent" ? "red" : "green") : "purple",
 		terminal: "none",
-		events: events.map((event) => toLaneEvent(event, duration)),
+		events: laneMarkerEvents.map((event) => toLaneEvent(event, duration)),
 		activitySegments: activitySegments(source, fixture.events, duration, isMemory),
 		...lifecycle,
 		memory_promotion: memoryPromotionForLane(source, fixture),

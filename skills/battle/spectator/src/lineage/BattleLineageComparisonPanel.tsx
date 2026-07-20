@@ -98,29 +98,57 @@ function EdgeRow({ edge }: { edge: AdaptiveLineageEdgeView }) {
 function AdaptiveLineageComparison({ model }: { model: AdaptiveLineageViewModel }) {
 	const passed = model.qualification.passed;
 	return (
-		<section
-			className="rounded-lg border border-white/10 bg-black/25 p-3"
+		<details
+			className="group border-b border-white/10 bg-[#0d1117]"
 			data-qid="battle:lineage-comparison"
 			data-mode="adaptive"
 			aria-label="Adaptive lineage mechanics comparison"
 		>
-			<div className="flex flex-wrap items-center gap-2">
-				<span className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-400">Adaptive lineage · mechanics</span>
-				<DataSourceBadge model={model} />
-				<span
-					className={`rounded border px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.1em] ${
-						passed ? "border-emerald-400/30 bg-emerald-500/10 text-emerald-100" : "border-rose-400/30 bg-rose-500/10 text-rose-100"
-					}`}
-					data-qid="battle:adaptive-lineage:qualification"
-					data-status={model.qualification.status}
-				>
-					QUALIFICATION {model.qualification.status}
-					{model.qualification.stopCondition ? ` · ${model.qualification.stopCondition}` : ""}
-				</span>
-			</div>
+			{/* Collapsed by default: a single scannable summary row so the panel does not
+			    crowd the race shell. Expand to see the full G0→{G1}→G2 comparison. */}
+			<summary className="battle-lineage-subnav sub-nav-wrapper flex cursor-pointer list-none items-center px-4 text-[10px]">
+				<div className="top-nav-left-cluster">
+					{/* MODULE 1 — view mode */}
+					<div className="nav-module mode-indicator">
+						<svg className="mode-icon" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" fill="none" aria-hidden="true">
+							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 3v12a3 3 0 003 3h9m0 0l-3-3m3 3l-3 3M6 6a3 3 0 100-.01" />
+						</svg>
+						<span className="module-title">Adaptive Lineage</span>
+					</div>
+					{/* MODULE 2 — consolidated data-source + qualification status LED */}
+					<div
+						className="nav-module system-status"
+						data-qid="battle:adaptive-lineage:qualification"
+						data-status={model.qualification.status}
+						data-data-source={model.dataSource}
+						data-proves-live={model.badge.provesLive ? "true" : "false"}
+						title={model.badge.caption}
+					>
+						<span className={`status-led ${passed && model.badge.tone !== "amber" ? "led-live" : "led-idle"}`} data-qid="battle:adaptive-lineage:badge" />
+						<span className="status-text">{model.badge.label}: Qual {model.qualification.status}</span>
+					</div>
+					{/* MODULE 3 — muted lineage breadcrumb */}
+					<div className="nav-module context-breadcrumb">
+						<span className="node">{model.selection.selectedId ?? "—"}</span>
+						<span className="divider">/</span>
+						<span className="node runner">{model.selection.runnerUpId ?? "—"}</span>
+						<span className="metadata">· {model.selection.decidingCriterion ?? "—"}</span>
+					</div>
+				</div>
+				<div className="top-nav-right-cluster">
+					<div className="nav-module view-toggle">
+						<span className="minimal-toggle-btn">
+							<span className="toggle-icon transition-transform group-open:rotate-90">▸</span>
+							<span className="toggle-label group-open:hidden">show</span>
+							<span className="toggle-label hidden group-open:inline">hide</span>
+						</span>
+					</div>
+				</div>
+			</summary>
 
+			<div className="border-t border-white/10 px-3 pb-3 pt-2">
 			{/* G0 seed → {G1-A, G1-B} candidates → G2 descendant */}
-			<div className="mt-2 space-y-2">
+			<div className="space-y-2">
 				{model.seed ? <NodeCard node={model.seed} accent="text-slate-200" /> : null}
 				<div className="grid gap-2 md:grid-cols-2">
 					{model.candidates.map((node) => (
@@ -170,7 +198,8 @@ function AdaptiveLineageComparison({ model }: { model: AdaptiveLineageViewModel 
 					Recorded mechanics only — does not prove a live adaptive canary.
 				</div>
 			) : null}
-		</section>
+			</div>
+		</details>
 	);
 }
 

@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import type { LeaderboardEntry } from "./lib/battle-types";
 import { activeBattleFixture, battleLanesForView } from "./lib/battle-data";
 import { isBattleDesignView } from "./lib/battle-mockup-lanes";
@@ -34,39 +35,101 @@ export function SpectatorRail({ receiptFixture, leaderboard, selectedId, onSelec
 
   const scoreboard = activeBattleFixture(receiptFixture).scoreboard;
 
+  const [agentSearchQuery, setAgentSearchQuery] = useState("");
+  const rosterAgents = useMemo(() => {
+    const base = activeLanes.map((lane) => {
+      const status =
+        lane.terminal === "killed"
+          ? "killed"
+          : lane.terminal === "blocked" || lane.terminal === "blocked_handoff"
+            ? "blocked"
+            : lane.terminal === "promoted" || lane.terminal === "survivor"
+              ? "promoted"
+              : lane.terminal === "fastest_crash"
+                ? "fastest_crash"
+                : "running";
+      const role = lane.selected ? "selected" : lane.runner_up ? "runner-up" : null;
+      return {
+        laneId: lane.id,
+        name: lane.name,
+        status,
+        summary: lane.summary ?? lane.mutationRationale ?? `${lane.team} · gen ${lane.generation}`,
+        metric: `G${lane.generation}${role ? ` · ${role}` : ""}`,
+      };
+    });
+    const q = agentSearchQuery.trim().toLowerCase();
+    if (!q) return base;
+    return base.filter(
+      (agent) =>
+        agent.name.toLowerCase().includes(q) ||
+        agent.summary.toLowerCase().includes(q) ||
+        agent.laneId.toLowerCase().includes(q),
+    );
+  }, [activeLanes, agentSearchQuery]);
+
   return (
     <aside className={cn("min-h-0 overflow-hidden", designView ? "leftRail battle-mockup-left-rail battle-mockup-panel" : "grid grid-rows-[auto_auto_minmax(0,1fr)] gap-3")}>
-      <Panel title="Race Leaders" designView={designView}>
-        {entries.slice(0, 4).map((entry) => (
-          <button
-            key={entry.laneId}
-            data-qid={`battle:leaderboard:item:${entry.laneId}`}
-            data-qs-action="BATTLE_LEADERBOARD_SELECT"
-            title={`Select ${entry.name}`}
-            type="button"
-            onClick={() => onSelect(entry.laneId)}
-            className={
-              designView
-                ? cn("leaderItem", selectedId === entry.laneId && "selected")
-                : "grid min-h-11 w-full grid-cols-[24px_1fr_auto] items-center gap-2 rounded-lg border border-white/10 bg-white/[.03] px-3 py-2 text-left text-sm transition-colors hover:bg-white/[.07] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-battle-cyan/40"
-            }
-          >
-            <span className={designView ? cn("rank", entry.rank === 1 ? "r1" : entry.rank === 2 ? "r2" : entry.rank === 3 ? "r3" : "") : "font-mono text-xs font-black text-battle-red"}>{entry.rank}</span>
-            <span className="min-w-0">
-              <span className={designView ? "liName" : "block truncate font-bold text-slate-100"}>{entry.name}</span>
-              <span className={designView ? "liGen" : "block truncate text-[10px] text-slate-500"}>{entry.summary ?? "receipt-backed Battle proof"}</span>
-            </span>
-            {designView ? (
+      {designView ? (
+        <Panel title="Race Leaders" designView={designView}>
+          {entries.slice(0, 4).map((entry) => (
+            <button
+              key={entry.laneId}
+              data-qid={`battle:leaderboard:item:${entry.laneId}`}
+              data-qs-action="BATTLE_LEADERBOARD_SELECT"
+              title={`Select ${entry.name}`}
+              type="button"
+              onClick={() => onSelect(entry.laneId)}
+              className={cn("leaderItem", selectedId === entry.laneId && "selected")}
+            >
+              <span className={cn("rank", entry.rank === 1 ? "r1" : entry.rank === 2 ? "r2" : entry.rank === 3 ? "r3" : "")}>{entry.rank}</span>
+              <span className="min-w-0">
+                <span className="liName">{entry.name}</span>
+                <span className="liGen">{entry.summary ?? "receipt-backed Battle proof"}</span>
+              </span>
               <span className={cn("liRight", entry.status === "blocked" ? "text-battle-blue" : "text-battle-green")}>
                 <StatusIcon status={entry.status} />
                 {entry.time}
               </span>
+            </button>
+          ))}
+        </Panel>
+      ) : (
+        <Panel title="Agents" designView={false} count={activeLanes.length}>
+          <input
+            type="text"
+            value={agentSearchQuery}
+            onChange={(event) => setAgentSearchQuery(event.target.value)}
+            placeholder="Filter agents…"
+            aria-label="Filter agents"
+            className="roster-search-input"
+            data-qid="battle:roster:search"
+          />
+          <div className="agent-roster-list">
+            {rosterAgents.length === 0 ? (
+              <div className="agent-roster-empty">no agents match “{agentSearchQuery}”</div>
             ) : (
-              <StatusIcon status={entry.status} />
+              rosterAgents.map((agent) => (
+                <button
+                  key={agent.laneId}
+                  data-qid={`battle:leaderboard:item:${agent.laneId}`}
+                  data-qs-action="BATTLE_LEADERBOARD_SELECT"
+                  title={`Select ${agent.name}`}
+                  type="button"
+                  onClick={() => onSelect(agent.laneId)}
+                  className={cn("agent-row", selectedId === agent.laneId && "selected")}
+                >
+                  <span className={cn("status-dot", agent.status)} aria-hidden="true" />
+                  <span className="agent-name">
+                    <span className="an-title">{agent.name}</span>
+                    <span className="an-sub">{agent.summary}</span>
+                  </span>
+                  <span className="agent-metric">{agent.metric}</span>
+                </button>
+              ))
             )}
-          </button>
-        ))}
-      </Panel>
+          </div>
+        </Panel>
+      )}
 
       <Panel title="Team Standings" designView={designView}>
         {designView ? (
@@ -113,10 +176,17 @@ export function SpectatorRail({ receiptFixture, leaderboard, selectedId, onSelec
   );
 }
 
-function Panel({ title, children, designView = false, className }: { title: string; children: React.ReactNode; designView?: boolean; className?: string }) {
+function Panel({ title, children, designView = false, className, count }: { title: string; children: React.ReactNode; designView?: boolean; className?: string; count?: number }) {
   return (
     <section className={cn(designView ? cn("railBlock", className) : "overflow-hidden rounded-2xl border border-white/10 bg-battle-panel/70 p-3 shadow-acrylic backdrop-blur-xl", className)}>
-      <div className={cn(designView ? "railHead" : "battle-label mb-3")}>{title}</div>
+      {designView ? (
+        <div className="railHead">{title}</div>
+      ) : (
+        <div className="left-pane-section-header">
+          {title}
+          {typeof count === "number" ? <span className="section-count">{count}</span> : null}
+        </div>
+      )}
       {children}
     </section>
   );

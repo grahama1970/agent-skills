@@ -55,6 +55,7 @@ from typing import Any, Callable
 
 from .technique_signature import (
     CROSSOVER_MIN_NOVELTY,
+    DIMENSIONS,
     MUTATION_OPERATORS,
     OPERATOR_DIMENSIONS,
     technique_signature,
@@ -84,6 +85,10 @@ EXPECTED_OPERATOR: dict[str, str] = {
 # Stages requested from the specimen provider, in order. G2 is requested only
 # after selection, and nothing is requested after G2 (stop-after-G2).
 PROVIDER_STAGES: tuple[str, ...] = ("G0", "G1-A", "G1-B", "G2")
+
+# Generation index per specimen stage, used to key spectator capture events to
+# the right lineage generation (G0 seed = 0, the G1 pair = 1, G2 crossover = 2).
+_STAGE_GENERATION: dict[str, int] = {"G0": 0, "G1-A": 1, "G1-B": 1, "G2": 2}
 
 
 def _sha256_text(text: str) -> str:
@@ -133,6 +138,12 @@ class AdaptiveLineageBudget:
     max_descendant_generations: int = 2
     fixed_blue_artifacts: int = 1
     max_seconds: float = 1200.0
+    # A delta-invalid G1 (the generator over-mutated past its declared operator)
+    # may be regenerated in-place up to this many times TOTAL across both G1
+    # slots, so a single unlucky draw does not fail the whole run. Regenerations
+    # replace a G1 in the same slot; they never add a third descendant (red-3),
+    # so they are NOT counted against ``red_specimens``/``descendant_generations``.
+    max_g1_regen_attempts: int = 2
 
     primary_scillm_calls: int = 0
     http_completions: int = 0
@@ -141,6 +152,7 @@ class AdaptiveLineageBudget:
     blue_artifacts: int = 0
     elapsed_seconds: float = 0.0
     g2_judge_complete: bool = False
+    g1_regen_attempts: int = 0
 
     def record_primary_scillm_call(self, n: int = 1) -> None:
         self.primary_scillm_calls += n
@@ -153,6 +165,12 @@ class AdaptiveLineageBudget:
 
     def record_descendant_generation(self, n: int = 1) -> None:
         self.descendant_generations += n
+
+    def record_g1_regen(self, n: int = 1) -> None:
+        self.g1_regen_attempts += n
+
+    def g1_regen_budget_remaining(self) -> int:
+        return max(0, self.max_g1_regen_attempts - self.g1_regen_attempts)
 
     def record_blue_artifact(self, n: int = 1) -> None:
         self.blue_artifacts += n
@@ -191,6 +209,11 @@ class AdaptiveLineageBudget:
         if self.elapsed_seconds > self.max_seconds:
             reasons.append(
                 f"elapsed seconds {self.elapsed_seconds} > {self.max_seconds}"
+            )
+        if self.g1_regen_attempts > self.max_g1_regen_attempts:
+            reasons.append(
+                f"G1 regeneration attempts {self.g1_regen_attempts} > "
+                f"{self.max_g1_regen_attempts}"
             )
         return (bool(reasons), reasons)
 
@@ -336,6 +359,7 @@ def select_lineage(
     *,
     battle_id: str,
     run_id: str,
+    created_at: str | None = None,
 ) -> dict[str, Any]:
     """Build a ``battle.lineage_selection_receipt.v1`` (fail-closed on inputs).
 
@@ -402,6 +426,7 @@ def select_lineage(
         "policy_id": POLICY_ID,
         "battle_id": battle_id,
         "run_id": run_id,
+        "created_at": created_at,
         "candidate_ids": [a["specimen_id"], b["specimen_id"]],
         "bound_g1_ids": sorted([a["specimen_id"], b["specimen_id"]]),
         "selected_id": winner_metrics["specimen_id"],
@@ -707,6 +732,155 @@ class RecordedSpecimenProvider:
         return dict(specimen)
 
 
+# Plain-language meaning of each atomic technique-signature sub-token, so a
+# regeneration correction can tell the model what "keep this dimension
+# byte-identical" requires in CONCRETE code terms. The signature deriver in
+# technique_signature.py emits these tokens; a compound value is "+"-joined (a
+# SET of sub-signals) and exception_handling is a "try[...]" envelope. This is
+# purely explanatory prompt text — it never changes what the validator computes.
+_SIGNATURE_TOKEN_MEANINGS: dict[str, str] = {
+    # app_load_mode
+    "from_import_app": "load the target with `from app import <name>`",
+    "plain_import_app": "load the target with `import app`",
+    "importlib_import_module": "load the module via `importlib.import_module('app')`",
+    "importlib_spec_from_file": "load via `importlib.util.spec_from_file_location(...)`",
+    "dunder_import": "load via `__import__('app')`",
+    # archive_entry_construction
+    "zipfile_writestr": "build the malicious entry with `zf.writestr(name, data)`",
+    "zipfile_write_arcname": "build the entry with `zf.write(path, arcname=name)`",
+    "zipfile_write": "build the entry with `zf.write(path)`",
+    "zipinfo": "build the entry via a `zipfile.ZipInfo(name)` object",
+    "tarfile_add": "build the entry via tarfile `add`/`addfile`",
+    # traversal_representation
+    "dotdot_relative": "use a `../`-style relative traversal string",
+    "dotdot_windows": "use a `..\\`-style Windows traversal string",
+    "absolute_path": "use an absolute-path (`/...`) entry",
+    "symlink": "use a symlink entry",
+    "ospath_join": "compose the path via `os.path.join(...)`",
+    # target_call_form
+    "cli_subprocess": "invoke the target through `subprocess` (run/Popen/check_output)",
+    "function_call": "call the imported target function directly",
+    # success_oracle
+    "file_existence": "check the extracted file exists (`os.path.exists`/`.is_file()`)",
+    "file_read_back": "read the extracted file's bytes/text back (`.read_text()`/`.read_bytes()`)",
+    "assertion": "confirm success with an `assert` statement",
+    "printed_marker": "print an UPPERCASE marker word of >=4 chars, e.g. `print('PWNED')`",
+}
+
+
+def _explain_signature_value(dimension: str, value: Any) -> str:
+    """Decode a technique-signature value into a concrete 'must still do X' clause.
+
+    Compound (``a+b+c``) values are a SET of independent sub-signals — the model
+    must reproduce EVERY one to keep the dimension identical. ``exception_handling``
+    is a ``try[Type:body|...]`` envelope reproduced verbatim. Unknown tokens fall
+    back to the literal value so the instruction is never silently empty.
+    """
+    if not isinstance(value, str) or value in {"none", "", "unparsable"}:
+        return f"{dimension} must stay `{value}` (do not introduce this behavior)"
+    if dimension == "exception_handling" and value.startswith("try["):
+        return (
+            f"{dimension}: keep the SAME try/except structure `{value}` — same number "
+            "of handlers, each catching the same exception type with the same body kind "
+            "(suppress/reraise/return/handle)"
+        )
+    parts = value.split("+")
+    clauses = [_SIGNATURE_TOKEN_MEANINGS.get(p, f"keep `{p}`") for p in parts]
+    joiner = "; AND ".join(clauses)
+    plural = "ALL of" if len(clauses) > 1 else ""
+    return f"{dimension} (=`{value}`) — your exploit must still {plural + ' ' if plural else ''}{joiner}"
+
+
+def _delta_correction(
+    operator: str,
+    delta_validation: dict[str, Any] | None,
+    parent_source: str,
+) -> dict[str, Any] | None:
+    """Build a sharp, per-attempt correction from a FAILED delta validation.
+
+    Turns a blind re-roll into a correct-by-construction regeneration: it tells the
+    generator EXACTLY which dimensions its previous attempt over-moved (dimensions
+    the declared ``operator`` may not touch), and the parent's byte-identical target
+    VALUES for every must-keep dimension (derived from the parent G0 technique
+    signature via :func:`technique_signature`). Returns ``None`` when there is no
+    usable feedback (no prior failure yet), so the first attempt stays unchanged.
+
+    This does NOT weaken :func:`validate_technique_delta` or the
+    :data:`OPERATOR_DIMENSIONS` contract — it only improves the generation prompt.
+    """
+    if not isinstance(delta_validation, dict):
+        return None
+
+    allowed = OPERATOR_DIMENSIONS.get(operator, frozenset())
+    changed = list(delta_validation.get("changed_dimensions") or [])
+    parent_dims = _signature_dims(parent_source) if parent_source else {}
+
+    if operator == "failure_guided_crossover":
+        # Crossover is validated by novelty distance, not a dimension whitelist.
+        over_moved: list[str] = []
+        must_keep: list[str] = []
+    else:
+        over_moved = sorted(set(changed) - set(allowed))
+        must_keep = sorted(set(DIMENSIONS) - set(allowed))
+
+    must_keep_signatures = {name: parent_dims.get(name) for name in must_keep}
+    validator_reasons = list(delta_validation.get("reasons") or [])
+    validator_message = "; ".join(str(r) for r in validator_reasons) or (
+        f"prior attempt was delta-invalid for operator '{operator}'"
+    )
+
+    if operator == "failure_guided_crossover":
+        text = (
+            "CORRECTION — REGENERATION REQUIRED. Your previous attempt (operator "
+            f"'{operator}') did NOT move enough technique dimensions to count as a "
+            f"genuine crossover; the AST validator REJECTED it: {validator_message}. "
+            f"You MUST make STRUCTURAL changes to at least {CROSSOVER_MIN_NOVELTY} "
+            "distinct dimensions (cosmetic tweaks — renaming, deeper `../`, wrapper "
+            "functions — do not count)."
+        )
+    else:
+        keep_pairs = ", ".join(
+            f"{name}={must_keep_signatures[name]!r}" for name in must_keep
+        )
+        over_moved_clause = (
+            f"CHANGED these dimensions it may NOT touch: {over_moved}. "
+            if over_moved
+            else "over-mutated past its allowed dimensions. "
+        )
+        # Decode EVERY must-keep dimension's required parent value into concrete
+        # code behavior, so "keep byte-identical" is actionable for ALL of them —
+        # not just the one over-moved last time. A live model that is corrected on
+        # only the last-violated dimension complies there but DRIFTS onto a
+        # different must-keep dimension on the next attempt (whack-a-mole); listing
+        # the full concrete checklist every regen closes that gap. The over-moved
+        # dimension(s) are called out first as the priority.
+        ordered_keep = over_moved + [d for d in must_keep if d not in over_moved]
+        checklist = "; ".join(
+            _explain_signature_value(name, must_keep_signatures.get(name))
+            for name in ordered_keep
+        )
+        text = (
+            "CORRECTION — REGENERATION REQUIRED. Your previous attempt declared "
+            f"operator '{operator}' but {over_moved_clause}"
+            f"The AST validator REJECTED it: {validator_message}. On THIS attempt, "
+            "keep the following technique dimensions BYTE-IDENTICAL to the parent — "
+            f"they must have these EXACT signature values: {keep_pairs}. Change ONLY "
+            f"these dimensions: {sorted(allowed)}. To keep the over-moved dimension(s) "
+            f"identical, your regenerated exploit MUST: {checklist}."
+        )
+
+    return {
+        "schema": "battle.delta_correction.v1",
+        "operator": operator,
+        "over_moved_dimensions": over_moved,
+        "allowed_dimensions": sorted(allowed),
+        "must_keep_signatures": must_keep_signatures,
+        "validator_message": validator_message,
+        "prior_changed_dimensions": changed,
+        "correction_text": text,
+    }
+
+
 def _operator_guidance(operator: str) -> str:
     """Plain-language mutation guidance for one operator, derived from the AST
     dimensions the validator (:data:`OPERATOR_DIMENSIONS`) requires that operator
@@ -717,6 +891,14 @@ def _operator_guidance(operator: str) -> str:
     by :func:`validate_technique_delta`.
     """
     allowed = ", ".join(sorted(OPERATOR_DIMENSIONS.get(operator, frozenset())))
+    must_keep = sorted(set(DIMENSIONS) - set(OPERATOR_DIMENSIONS.get(operator, frozenset())))
+    keep_clause = (
+        " Keep EVERY OTHER technique dimension BYTE-IDENTICAL to the parent — "
+        "changing any one of these makes the declared operator inconsistent and the "
+        f"specimen is REJECTED by the validator: {', '.join(must_keep)}."
+        if must_keep
+        else ""
+    )
     if operator == "method_replace":
         return (
             "MUTATION OPERATOR method_replace: make a STRUCTURAL change to HOW app.py "
@@ -729,7 +911,7 @@ def _operator_guidance(operator: str) -> str:
             "Keep the archive construction, traversal path, and success oracle "
             "IDENTICAL to the parent. Do NOT merely wrap the call in a helper "
             "function or rename variables — that is NOT a method replacement and will "
-            f"be rejected. Allowed dimensions: {allowed}."
+            f"be rejected. Allowed dimensions: {allowed}." + keep_clause
         )
     if operator == "oracle_or_parameter_mutation":
         return (
@@ -742,7 +924,7 @@ def _operator_guidance(operator: str) -> str:
             "the traversal KIND (e.g. an absolute-path entry or a symlink entry) — "
             "but do NOT merely deepen the traversal (`../` to `../../`), which is a "
             "cosmetic parameter tweak and will be rejected. Keep the app load mode "
-            f"IDENTICAL to the parent. Allowed dimensions: {allowed}."
+            f"IDENTICAL to the parent. Allowed dimensions: {allowed}." + keep_clause
         )
     if operator == "failure_guided_crossover":
         return (
@@ -800,6 +982,10 @@ class LiveTauSpecimenProvider:
         self._materialized: dict[str, dict[str, Any]] = {}
         # The single fixed Blue artifact, materialized once during G0 and reused.
         self._blue_entry: dict[str, Any] | None = None
+        # Spectator capture state: the last Judge exec capture and a monotonic
+        # sequence counter for the ordered per-lane capture event stream.
+        self._last_capture: dict[str, Any] = {}
+        self._capture_seq: int = 0
 
     # -- config helpers ---------------------------------------------------
     def _cfg(self, key: str, default: Any = None) -> Any:
@@ -881,6 +1067,7 @@ class LiveTauSpecimenProvider:
             "judge_outcome": judge,
             "judge_attempts": 1,
         }
+        self._attach_capture(specimen)
         self._materialized["G0"] = {
             "entry": red,
             "subagent_receipt": red.get("subagent_receipt"),
@@ -970,6 +1157,7 @@ class LiveTauSpecimenProvider:
         }
         if stage == "G2":
             specimen["inputs"] = self._g2_bindings(context=context)
+        self._attach_capture(specimen)
 
         self._materialized[stage] = {
             "entry": child,
@@ -1029,6 +1217,12 @@ class LiveTauSpecimenProvider:
         )
         if budget is not None:
             budget.record_seconds(duration)
+        # Stash the real console + network capture and emit ordered, per-lane
+        # capture events so a spectator can later stream the runtime evidence.
+        self._last_capture = attempt.get("capture") or {}
+        self._emit_capture_events(
+            stage=stage, out_dir=out_dir, capture=self._last_capture, verdict=attempt.get("verdict")
+        )
         return {
             "vulnerable_original_confirmed": bool(
                 attempt.get("exploit_confirmed_before_patch", False)
@@ -1036,6 +1230,98 @@ class LiveTauSpecimenProvider:
             "patched_bypass": bool(attempt.get("exploit_still_succeeds_after_patch", False)),
             "duration_seconds": duration,
         }
+
+    # -- spectator capture events -----------------------------------------
+    def _emit_capture_events(
+        self,
+        *,
+        stage: str,
+        out_dir: Path,
+        capture: dict[str, Any],
+        verdict: Any,
+    ) -> None:
+        """Append ordered per-lane capture events for one materialized specimen.
+
+        Writes to ``<out_dir>/capture/capture-events.jsonl`` in the same field
+        shape the normalizer/live-transport consume (event_id, event_type,
+        elapsed_seconds, affected_lane_ids, lane_id, payload, generation, seq).
+        Emits one event per captured console stream plus one network event,
+        keyed to the correct lane via ``affected_lane_ids``.
+        """
+        if not capture:
+            return
+        run_id = str(self._require("run_id"))
+        generation = _STAGE_GENERATION.get(stage, 0)
+        red_lane = capture.get("red_lane_id")
+        blue_lane = capture.get("blue_lane_id")
+        affected = [lane for lane in (red_lane, blue_lane) if lane]
+        elapsed = capture.get("ended_elapsed_seconds")
+        journal = out_dir / "capture" / "capture-events.jsonl"
+        journal.parent.mkdir(parents=True, exist_ok=True)
+
+        def _excerpt(stream: dict[str, Any] | None) -> dict[str, Any]:
+            stream = stream if isinstance(stream, dict) else {}
+            before = stream.get("before") if isinstance(stream.get("before"), dict) else {}
+            after = stream.get("after") if isinstance(stream.get("after"), dict) else {}
+            cap = 2000
+            return {
+                "available": bool(stream.get("available")),
+                "before_excerpt": (before.get("text") or "")[:cap],
+                "after_excerpt": (after.get("text") or "")[:cap],
+                "before_sha256": before.get("sha256"),
+                "after_sha256": after.get("sha256"),
+                "before_artifact_uri": before.get("artifact_uri"),
+                "after_artifact_uri": after.get("artifact_uri"),
+            }
+
+        events: list[tuple[str, dict[str, Any]]] = [
+            ("stdout_captured", _excerpt(capture.get("stdout"))),
+            ("stderr_captured", _excerpt(capture.get("stderr"))),
+            (
+                "packet_captured",
+                {
+                    "network_summary": capture.get("network_summary") or {},
+                    "verdict": verdict,
+                },
+            ),
+        ]
+        lines: list[str] = []
+        for event_type, payload in events:
+            self._capture_seq += 1
+            lines.append(
+                json.dumps(
+                    {
+                        "schema": "battle.capture_event.v1",
+                        "seq": self._capture_seq,
+                        "event_id": f"{run_id}-capture-{self._capture_seq:04d}",
+                        "event_type": event_type,
+                        "generation": generation,
+                        "specimen_id": stage,
+                        "team": "red",
+                        "lane_id": red_lane,
+                        "affected_lane_ids": affected,
+                        "elapsed_seconds": elapsed,
+                        "payload": payload,
+                    },
+                    sort_keys=True,
+                )
+            )
+        with journal.open("a", encoding="utf-8") as handle:
+            handle.write("\n".join(lines) + "\n")
+
+    def _attach_capture(self, specimen: dict[str, Any]) -> None:
+        """Populate the specimen's spectator-facing stdout/stderr/network fields.
+
+        Reads the real Judge exec capture stashed by ``_judge`` for this stage
+        and copies it verbatim onto the specimen receipt. Never fabricates: if a
+        stream produced no output the ``available`` flag stays ``False``.
+        """
+        capture = self._last_capture or {}
+        if not capture:
+            return
+        specimen["stdout"] = capture.get("stdout")
+        specimen["stderr"] = capture.get("stderr")
+        specimen["network_summary"] = capture.get("network_summary")
 
     # -- context assembly -------------------------------------------------
     def _write_descendant_context(
@@ -1072,6 +1358,21 @@ class LiveTauSpecimenProvider:
             packet["g1a_outcome"] = context.get("g1a_outcome")
             packet["g1b_outcome"] = context.get("g1b_outcome")
 
+        # On a regeneration request the context carries the prior attempt's FAILED
+        # delta validation. Turn it into a sharp correction block appended to the
+        # steering text so the model is told exactly which dimensions it over-moved
+        # and the parent's byte-identical must-keep values — a correct-by-construction
+        # regeneration rather than re-asking the identical prompt.
+        correction = _delta_correction(
+            operator,
+            context.get("delta_feedback"),
+            parent_specimen.get("exploit_py", ""),
+        )
+        if correction is not None:
+            guidance = f"{guidance}\n\n{correction['correction_text']}"
+            packet["delta_correction"] = correction
+            packet["operator_guidance"] = guidance
+
         augmented = dict(base_context)
         augmented["battle.parent_evidence_packet.v1"] = packet
         augmented["mutation_guidance"] = {
@@ -1083,6 +1384,8 @@ class LiveTauSpecimenProvider:
                 CROSSOVER_MIN_NOVELTY if operator == "failure_guided_crossover" else 1
             ),
         }
+        if correction is not None:
+            augmented["mutation_guidance"]["delta_correction"] = correction
 
         path = stage_dir / f"battle-context-{stage}.json"
         path.write_text(json.dumps(augmented, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -1103,6 +1406,57 @@ class LiveTauSpecimenProvider:
         }
 
 
+def _generate_g1_with_delta_retry(
+    specimen_provider: Any,
+    *,
+    stage: str,
+    g0: dict[str, Any],
+    battle_id: str,
+    run_id: str,
+    budget: AdaptiveLineageBudget,
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Request one G1 descendant; if its delta validation fails (the generator
+    over-mutated past its declared operator), regenerate it IN PLACE up to the
+    budget's shared G1-regeneration allowance.
+
+    Returns the accepted ``(specimen, fitness)`` once ``delta_status == "PASS"``,
+    or — if the allowance is exhausted while still delta-invalid — the last
+    attempt, so the pre-G2 gate still fails closed on ``g1_delta_validation_failed``.
+
+    Records exactly ONE red specimen for this slot regardless of regenerations
+    (a regeneration replaces the slot, it never adds a red-3 sibling); each
+    regeneration consumes one shared ``g1_regen`` unit (a real SciLLM call).
+    """
+    specimen = _request_specimen(
+        specimen_provider, stage=stage, context={"parent_specimen": g0}
+    )
+    budget.record_red_specimen()
+    fitness = build_candidate_fitness_receipt(
+        g0, specimen, battle_id=battle_id, run_id=run_id
+    )
+    while fitness.get("delta_status") != "PASS" and budget.g1_regen_budget_remaining() > 0:
+        budget.record_g1_regen()
+        # Feedback-guided regeneration (correct-by-construction, NOT a blind
+        # re-roll): pass the SPECIFIC delta violation from the prior attempt so
+        # the generator is told exactly which dimensions it over-moved and the
+        # parent's byte-identical must-keep signature values (see
+        # _write_descendant_context / _delta_correction). Still bounded by the
+        # shared g1_regen budget; the validator gate is unchanged.
+        specimen = _request_specimen(
+            specimen_provider,
+            stage=stage,
+            context={
+                "parent_specimen": g0,
+                "delta_feedback": fitness.get("delta_validation"),
+                "prior_specimen": specimen,
+            },
+        )
+        fitness = build_candidate_fitness_receipt(
+            g0, specimen, battle_id=battle_id, run_id=run_id
+        )
+    return specimen, fitness
+
+
 def run_adaptive_lineage_qualification(
     specimen_provider: Any,
     *,
@@ -1110,8 +1464,14 @@ def run_adaptive_lineage_qualification(
     run_id: str,
     out_dir: Path,
     budget: AdaptiveLineageBudget | None = None,
+    clock: Callable[[], str] | None = None,
 ) -> dict[str, Any]:
     """Orchestration seam for one adaptive-lineage qualification.
+
+    ``clock`` is an injectable wall-clock (returns an ISO-8601 UTC string). When
+    provided, receipts are stamped with a monotonic ``created_at`` so the
+    ordering (selection written -> G2 requested) is provable from the artifacts;
+    when ``None`` the run stays fully deterministic (``created_at`` is ``None``).
 
     Requests specimens IN ORDER from ``specimen_provider`` (G0, then G1-A, G1-B,
     then — given the deterministic selection — G2), runs the pure reducers, writes
@@ -1133,26 +1493,25 @@ def run_adaptive_lineage_qualification(
     budget.record_blue_artifact()  # the single fixed Blue artifact for the run
     _write_json(receipts_dir / "specimen-G0.json", g0)
 
-    # --- G1 descendant generation ---------------------------------------
-    g1a = _request_specimen(
-        specimen_provider, stage="G1-A", context={"parent_specimen": g0}
+    # --- G1 descendant generation (delta-invalid draws are regenerated) --
+    g1a, g1a_fitness = _generate_g1_with_delta_retry(
+        specimen_provider, stage="G1-A", g0=g0, battle_id=battle_id, run_id=run_id, budget=budget
     )
-    budget.record_red_specimen()
-    g1b = _request_specimen(
-        specimen_provider, stage="G1-B", context={"parent_specimen": g0}
+    g1b, g1b_fitness = _generate_g1_with_delta_retry(
+        specimen_provider, stage="G1-B", g0=g0, battle_id=battle_id, run_id=run_id, budget=budget
     )
-    budget.record_red_specimen()
     budget.record_descendant_generation()  # generation 1 (G1-A + G1-B)
     _write_json(receipts_dir / "specimen-G1-A.json", g1a)
     _write_json(receipts_dir / "specimen-G1-B.json", g1b)
-
-    g1a_fitness = build_candidate_fitness_receipt(g0, g1a, battle_id=battle_id, run_id=run_id)
-    g1b_fitness = build_candidate_fitness_receipt(g0, g1b, battle_id=battle_id, run_id=run_id)
     _write_json(receipts_dir / "fitness-G1-A.json", g1a_fitness)
     _write_json(receipts_dir / "fitness-G1-B.json", g1b_fitness)
 
     selection_receipt = select_lineage(
-        g1a_fitness, g1b_fitness, battle_id=battle_id, run_id=run_id
+        g1a_fitness,
+        g1b_fitness,
+        battle_id=battle_id,
+        run_id=run_id,
+        created_at=clock() if clock is not None else None,
     )
     _write_json(receipts_dir / "lineage-selection.json", selection_receipt)
 

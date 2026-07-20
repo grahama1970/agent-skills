@@ -144,7 +144,10 @@ function drawStaticTracks(
 	for (const lane of lanes) {
 		const row = rowLayout.find((item) => item.laneId === lane.id);
 		if (!row) continue;
-		const y = row.topPx + row.heightPx / 2;
+		// Single rounded source of truth for the row's vertical center — must match
+		// the marker sprite y (placePooledMarker rounds too) so the line and the
+		// intervention icons snap to the same whole pixel (no anti-aliased step).
+		const y = Math.round(row.topPx + row.heightPx / 2);
 		const { start, end } = laneElapsedRange(lane, allottedSeconds, useElapsed);
 		const x0 = secondsToWorldX(start, allottedSeconds, contentWidth);
 		const x1 = secondsToWorldX(end, allottedSeconds, contentWidth);
@@ -181,7 +184,7 @@ function drawPlayheadTracks(
 	for (const lane of lanes) {
 		const row = rowLayout.find((item) => item.laneId === lane.id);
 		if (!row) continue;
-		const y = row.topPx + row.heightPx / 2;
+		const y = Math.round(row.topPx + row.heightPx / 2);
 		const { start, end } = laneElapsedRange(lane, allottedSeconds, useElapsed);
 		const x0 = secondsToWorldX(start, allottedSeconds, contentWidth);
 		const x1 = secondsToWorldX(end, allottedSeconds, contentWidth);
@@ -196,7 +199,9 @@ function drawPlayheadTracks(
 
 	const playheadX = secondsToWorldX(currentSeconds, allottedSeconds, contentWidth);
 	const maxY = rowLayout.reduce((max, row) => Math.max(max, row.topPx + row.heightPx), 0);
-	graphics.setStrokeStyle({ width: 2, color: 0x22d3ee, alpha: 0.95 });
+	// Ghost playhead: faint neutral line so it provides the global time axis without
+	// visually competing with the sprites/lineage lines (DAW-style muted playhead).
+	graphics.setStrokeStyle({ width: 1, color: 0xc9d1d9, alpha: 0.15 });
 	graphics.moveTo(playheadX, 0);
 	graphics.lineTo(playheadX, maxY);
 	graphics.stroke();
@@ -241,6 +246,17 @@ export function runnerDisplayScale(rowHeightPx: number): number {
 	const framePx = 64;
 	const raw = (Math.max(24, rowHeightPx) * 0.78) / framePx;
 	return Math.max(0.65, Math.min(1.15, raw));
+}
+
+/**
+ * Lane-event marker icons (skull / shield / lightbulb / rocket, per the legend) render
+ * from ~36–40px atlas frames. At scale 1 they read far smaller than the ~72px runners in
+ * a 92px row and look like faint dots. Scale them up to a readable band (target ~44–52px)
+ * so they match the mockup's prominent per-event icons. Marker textures average ~40px.
+ */
+export function markerDisplayScale(rowHeightPx: number): number {
+	const targetPx = Math.max(44, Math.min(52, Math.max(24, rowHeightPx) * 0.55));
+	return targetPx / 40;
 }
 
 function clampRunnerX(
@@ -472,7 +488,7 @@ function syncEntities(
 	for (const lane of lanes) {
 		const row = rowLayout.find((item) => item.laneId === lane.id);
 		if (!row) continue;
-		let y = row.topPx + row.heightPx / 2;
+		let y = Math.round(row.topPx + row.heightPx / 2);
 		let runnerX = runnerXAtPlayhead(lane, currentSeconds, allottedSeconds, contentWidth, useElapsed);
 		const lineageMotion = childLineageMotion({ lane, lanes, rowLayout, currentSeconds, allottedSeconds, contentWidth, useElapsed });
 		if (lineageMotion) {
@@ -494,6 +510,7 @@ function syncEntities(
 				mx,
 				y,
 				marker.opacity ?? 1,
+				markerDisplayScale(row.heightPx),
 			);
 
 			if (event.kind === "blue_blast") continue;

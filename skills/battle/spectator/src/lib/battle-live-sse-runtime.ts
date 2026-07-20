@@ -394,3 +394,76 @@ export function openBattleLiveSseStreamWithFetch(args: {
 export function contractAllowsLiveAdapterExecution(contract: BattleLiveTransportContractV1): boolean {
 	return contract.transport.kind === "sse" && Boolean(contract.transport.endpoint) && Boolean(contract.initial_snapshot.endpoint);
 }
+
+/**
+ * Live lane-event bus.
+ *
+ * `useBattleLiveTransport` owns the single EventSource for the `#battle/live`
+ * route. Panes that also want the live frames (e.g. AgentDetailPane's streaming
+ * stdout/stderr console + packet panel) subscribe here instead of opening a
+ * second EventSource. Append-only, seq-deduped, cleared on stream (re)start.
+ */
+export type BattleLiveBusMeta = {
+	/** Mirror of BattleLiveSseClientState.status (kept as a string to avoid a type cycle). */
+	status: string;
+	appliedSeq: number;
+	lastSeq: number;
+};
+
+export type BattleLiveBusSnapshot = {
+	events: BattleLiveEventV1[];
+	meta: BattleLiveBusMeta;
+};
+
+const IDLE_LIVE_BUS_META: BattleLiveBusMeta = { status: "idle", appliedSeq: 0, lastSeq: 0 };
+
+const liveBusEvents: BattleLiveEventV1[] = [];
+let liveBusMeta: BattleLiveBusMeta = { ...IDLE_LIVE_BUS_META };
+const liveBusListeners = new Set<(snapshot: BattleLiveBusSnapshot) => void>();
+
+function liveBusSnapshot(): BattleLiveBusSnapshot {
+	return { events: liveBusEvents.slice(), meta: liveBusMeta };
+}
+
+function emitLiveBus(): void {
+	const snapshot = liveBusSnapshot();
+	for (const listener of liveBusListeners) listener(snapshot);
+}
+
+/** Clear the bus when a fresh live stream starts (route change / reconnect / resume from 0). */
+export function resetBattleLiveBus(): void {
+	if (liveBusEvents.length === 0 && liveBusMeta.status === "idle") return;
+	liveBusEvents.length = 0;
+	liveBusMeta = { ...IDLE_LIVE_BUS_META };
+	emitLiveBus();
+}
+
+/** Publish one validated live frame. Duplicates (by seq) are ignored; order kept ascending. */
+export function publishBattleLiveEvent(event: BattleLiveEventV1): void {
+	if (liveBusEvents.some((existing) => existing.seq === event.seq)) return;
+	liveBusEvents.push(event);
+	liveBusEvents.sort((a, b) => a.seq - b.seq);
+	emitLiveBus();
+}
+
+/** Publish the current stream status so subscribers can render connecting/open/ended chrome. */
+export function publishBattleLiveMeta(meta: BattleLiveBusMeta): void {
+	if (liveBusMeta.status === meta.status && liveBusMeta.appliedSeq === meta.appliedSeq && liveBusMeta.lastSeq === meta.lastSeq) {
+		return;
+	}
+	liveBusMeta = meta;
+	emitLiveBus();
+}
+
+/** Subscribe to live frames + status. The listener is invoked immediately with the current snapshot. */
+export function subscribeBattleLiveBus(listener: (snapshot: BattleLiveBusSnapshot) => void): () => void {
+	liveBusListeners.add(listener);
+	listener(liveBusSnapshot());
+	return () => {
+		liveBusListeners.delete(listener);
+	};
+}
+
+export function currentBattleLiveBusSnapshot(): BattleLiveBusSnapshot {
+	return liveBusSnapshot();
+}

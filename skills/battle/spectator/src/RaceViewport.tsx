@@ -21,6 +21,8 @@ import {
   overviewMarksFromLanes,
   stepTimelineZoom,
   TIMELINE_ZOOM_DEFAULT,
+  TIMELINE_ZOOM_MIN,
+  TIMELINE_ZOOM_MAX,
   timelineContentWidth,
   overviewViewportStyle,
   playheadLeftPx,
@@ -371,10 +373,8 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
     return () => window.cancelAnimationFrame(id);
   }, [visibleLanes, zoom, collapsed]);
 
-  const scoreboard = fixture.scoreboard;
-  const blockCount = useMemo(() => lanes.filter((lane) => lane.events.some((event) => event.kind === "blocked" || event.kind === "blue_blast")).length, [lanes]);
-
   const mockupBlue = mockupBlueStripStats();
+  const blueActions = useMemo(() => battleBluePatchActionsForView(fixture), [fixture]);
 
   const pixiRowLayout = useMemo(() => buildRaceEngineRowLayout(visibleLanes), [visibleLanes]);
   const pixiEngineInput = useMemo(
@@ -410,7 +410,9 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
     <>
       <BattleTimelineAxis ticks={ticks} allottedSeconds={allotted} />
       <div ref={lanesContainerRef} className={designView ? cn("rows", pixiEngine && "pixiRowsHost") : cn("relative", receiptReplay ? (pixiEngine ? "battle-receipt-pixi-rows" : "min-h-0") : "min-h-[calc(100%-2.25rem)]")} style={receiptReplay && pixiEngine ? { ["--battle-label-w" as string]: `${BATTLE_LANE_LABEL_PX}px` } : undefined}>
-        {!designView ? <BattlePlayheadCursor playheadSeconds={playheadSeconds} /> : null}
+        {/* Under engine=pixi the content-aligned Pixi playhead (drawPlayheadTracks) is the
+            single source of truth; the DOM cursor would be a redundant second head. */}
+        {(!designView && !pixiEngine) ? <BattlePlayheadCursor playheadSeconds={playheadSeconds} /> : null}
         {visibleLanes.map((lane, index) => (
           <LaneRow
             ref={getRowRef(lane.id)}
@@ -483,7 +485,12 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
             aria-valuenow={playheadSeconds}
             aria-label="Battle timeline playhead scrub"
           >
-            <BattlePlayheadCursor playheadSeconds={playheadSeconds} />
+            {/* Under engine=pixi the faint content-aligned Pixi playhead (drawPlayheadTracks,
+                alpha 0.15) is the single source of truth. The bright cyan DOM cursor
+                (.battle-playhead / .battle-playhead-line) would render a second, glowing
+                head over the canvas — suppress it so only the ghost line shows. The scrub
+                track itself is retained for pointer/keyboard scrubbing. */}
+            {!pixiEngine ? <BattlePlayheadCursor playheadSeconds={playheadSeconds} /> : null}
           </div>
         </div>
       ) : null}
@@ -495,10 +502,21 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
       {(designView || receiptReplay) ? (
         <div className="graphTitleBar">
           Evolution &amp; Progress Graph
-          <span className="zoomHint">· Zoom <span id="zoomState">{Math.round(zoom * 100)}%</span></span>
-          <div className="zoomBtns">
-            <button type="button" className="zoomBtn min-h-11 min-w-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-battle-cyan/40" data-qid="battle:timeline:zoom:out" data-qs-action="BATTLE_TIMELINE_ZOOM" title="Zoom Battle timeline out (Ctrl + scroll also works)" onClick={() => setZoom((value) => stepTimelineZoom(value, -1))}>−</button>
-            <button type="button" className="zoomBtn min-h-11 min-w-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-battle-cyan/40" data-qid="battle:timeline:zoom:in" data-qs-action="BATTLE_TIMELINE_ZOOM" title="Zoom Battle timeline in (Ctrl + scroll also works)" onClick={() => setZoom((value) => stepTimelineZoom(value, 1))}>+</button>
+          <div className="zoom-control" title="Zoom Battle timeline (Ctrl + scroll also works)">
+            <input
+              type="range"
+              className="zoom-slider"
+              min={Math.round(TIMELINE_ZOOM_MIN * 100)}
+              max={Math.round(TIMELINE_ZOOM_MAX * 100)}
+              step={5}
+              value={Math.round(zoom * 100)}
+              aria-label="Zoom timeline"
+              data-qid="battle:timeline:zoom"
+              data-qs-action="BATTLE_TIMELINE_ZOOM"
+              onChange={(event) => setZoom(clampTimelineZoom(Number(event.target.value) / 100))}
+              onDoubleClick={() => setZoom(TIMELINE_ZOOM_DEFAULT)}
+            />
+            <span className="zoom-readout" id="zoomState">{Math.round(zoom * 100)}%</span>
           </div>
                     <span className="playheadLabel">PLAYHEAD {receiptReplay ? formatSeconds(playheadSeconds) : `${mockupClockFromTrackPct((playheadSeconds / Math.max(1, allotted)) * 100)}:32`}</span>
           {receiptReplay && pixiEngine && !director.cameraFollow ? (
@@ -530,7 +548,12 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
         </div>
       )}
 
-      <TimelineOverview marks={overviewMarks} viewportStyle={overviewViewport} showScrollHint={showScrollHint} designView={designView} onScrub={receiptReplay || designView ? onTimelineScrubPointer : undefined} />
+      {/* OVERVIEW mini-map removed from the live receipt view — the inline zoom
+          slider + the timeline's own scrollbar replace it (DAW model). Kept for
+          the mockup reference (designView). */}
+      {receiptReplay ? null : (
+        <TimelineOverview marks={overviewMarks} viewportStyle={overviewViewport} showScrollHint={showScrollHint} designView={designView} onScrub={designView ? onTimelineScrubPointer : undefined} />
+      )}
 
       {designView ? (
         <div className="graphWrapHost">
@@ -570,13 +593,21 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
   );
 
   const providerBody = (
-    <BattleTimelineProvider allottedSeconds={allotted}>
-      <BlueControlStrip
-        actions={battleBluePatchActionsForView(fixture)}
-        allottedSeconds={allotted}
-        interventionCount={designView ? mockupBlue.interventions : scoreboard?.blue_success_count}
-        blockCount={designView ? mockupBlue.blocks : blockCount > 0 ? blockCount : undefined}
-      />
+    <BattleTimelineProvider allottedSeconds={allotted} contentWidth={contentWidth}>
+      {/* Blue Team Control Strip — present in the accepted mockup (top band, patch markers).
+          In the mockup reference (designView) it always shows. In the live receipt view it
+          shows only once real blue patch actions are emitted, so an empty "not emitted" band
+          never wastes vertical space when the fixture has no Blue interventions yet. */}
+      {designView ? (
+        <BlueControlStrip
+          actions={blueActions}
+          allottedSeconds={allotted}
+          interventionCount={mockupBlue.interventions}
+          blockCount={mockupBlue.blocks}
+        />
+      ) : receiptReplay && blueActions.length > 0 ? (
+        <BlueControlStrip actions={blueActions} allottedSeconds={allotted} />
+      ) : null}
       {timelineChrome}
     </BattleTimelineProvider>
   );

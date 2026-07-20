@@ -20,6 +20,9 @@ import {
 	discoverBattleLiveTransportAdapter,
 	fetchBattleLiveSnapshot,
 	openBattleLiveSseStream,
+	publishBattleLiveEvent,
+	publishBattleLiveMeta,
+	resetBattleLiveBus,
 	resolveBattleLiveTransportBaseUrl,
 } from "../lib/battle-live-sse-runtime";
 import { battleLiveTransportContractCompanionUrl } from "../lib/battle-live-transport-contract-registry";
@@ -78,6 +81,8 @@ export function useBattleLiveTransport() {
 			lastEventId?: number;
 		}) => {
 			stopStream();
+			// Fresh connect (not a Last-Event-ID resume) clears the shared lane-event bus.
+			if ((args.lastEventId ?? 0) === 0) resetBattleLiveBus();
 			const snapshotResult = await fetchBattleLiveSnapshot({
 				baseUrl: args.baseUrl,
 				snapshotEndpoint: args.contract.initial_snapshot.endpoint,
@@ -132,6 +137,8 @@ export function useBattleLiveTransport() {
 					}));
 				},
 				onEvent: (event) => {
+					// Fan out to panes (AgentDetailPane streaming console/packet panel) via the shared bus.
+					publishBattleLiveEvent(event);
 					setState((current) => {
 						const next = applySseLiveEvent(current, event);
 						const lastSeq = next.pack?.manifest.last_seq ?? 0;
@@ -186,6 +193,7 @@ export function useBattleLiveTransport() {
 	useEffect(() => {
 		if (!isLiveRoute) {
 			stopStream();
+			resetBattleLiveBus();
 			setLoading(false);
 			setError(null);
 			setCompanion(null);
@@ -316,6 +324,16 @@ export function useBattleLiveTransport() {
 	}, [state.error, state.status]);
 
 	const model: BattleTransportViewModel | null = useMemo(() => transportViewModel(state), [state]);
+
+	// Mirror live stream status onto the shared bus so subscribed panes render connecting/open/ended.
+	useEffect(() => {
+		if (!isLiveRoute) return;
+		publishBattleLiveMeta({
+			status: sseClient.status,
+			appliedSeq: model?.appliedSeq ?? 0,
+			lastSeq: model?.lastSeq ?? 0,
+		});
+	}, [isLiveRoute, sseClient.status, model?.appliedSeq, model?.lastSeq]);
 
 	const returnToLive = useCallback(() => {
 		setState((current) => setTransportFollowLive(current, true));

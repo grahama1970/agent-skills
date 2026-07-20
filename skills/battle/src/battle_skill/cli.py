@@ -1892,7 +1892,12 @@ def serve_live_transport(
         "battle-004", "--battle-id", help="Battle id for the live endpoints."
     ),
     host: str = typer.Option("127.0.0.1", "--host", help="HTTP bind host."),
-    port: int = typer.Option(8765, "--port", help="HTTP bind port."),
+    port: int = typer.Option(
+        18765,
+        "--port",
+        help="HTTP bind port. Default 18765 matches the spectator runtime default "
+        "(DEFAULT_BATTLE_LIVE_TRANSPORT_BASE) so no ?liveBase= override is needed.",
+    ),
 ):
     """Serve executable UX8 snapshot/SSE endpoints from a normalized fixture."""
     from .live_transport_server import (
