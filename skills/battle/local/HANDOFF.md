@@ -1,6 +1,6 @@
 # Handoff Report: battle adaptive-lineage receipt
 
-**Timestamp**: 2026-07-20T17:48:56Z
+**Timestamp**: 2026-07-20T17:58:00Z
 **Active Agent**: Codex
 **Branch**: `battle-adaptive-lineage-goal`
 **Current objective**: finish `GOAL_ADAPTIVE_LINEAGE.md` recovery from the
@@ -8,7 +8,7 @@ agent-skills worktree, not the pi-mono shell.
 
 > Evidence rule for the next agent: trust receipts and command artifacts, not
 > stale prose. Current recovery evidence is the 2026-07-20 live backend receipt,
-> the agent-skills `:3003` browser proof, and the WebGPT accepted review in
+> the agent-skills `:3003` Pixi browser proof, and the WebGPT accepted review in
 > `skills/battle/local/webgpt-design-review-20260720T1742Z/`.
 
 ## 1. Project Overview
@@ -55,6 +55,15 @@ agent-skills worktree, not the pi-mono shell.
   `G2 ZipInfo Path`, with no Sparta Explorer content. Caveat:
   `current-assertions.json` has `hasCanvas:false`, so this proof should be used
   as receipt-view evidence, not as final Pixi canvas/sprite proof.
+- **Final Pixi browser proof exists**:
+  `skills/battle/local/agent-skills-host-verify-20260720T1755Z/` contains
+  `playwright-render-proof.json` and `playwright-receipt-pixi-canvas.png`.
+  The proof targets `http://127.0.0.1:3003/#battle/receipt?engine=pixi`,
+  has `mocked:false`, `live:true`, `hasCanvas:true`, canvas `1030x277`,
+  live badge attrs `data-data-source:"live"` and `data-proves-live:"true"`,
+  no failed fixture/sprite/atlas requests, no boot errors, and no Sparta or
+  render-blocked markers. Visual inspection confirms four distinct Pixi sprites
+  for the four named lineage specimens.
 - **WebGPT acceptance for this new host exists**:
   `skills/battle/local/webgpt-design-review-20260720T1742Z/response.md` starts
   with `ACCEPTED`, and `response.raw.md` contains the terminal sentinel. The
@@ -73,14 +82,19 @@ agent-skills worktree, not the pi-mono shell.
   - `node scripts/build-static.mjs`
   - Curl of `:3003/__host.json`
   - Surf screenshot/assertion readback of the receipt route
+- Current final deterministic checks:
+  - `node node_modules/vitest/vitest.mjs run src/lineage/ src/lib/battle-adaptive-lineage.test.ts src/engine/battle-lane-variant-map.test.ts`
+    passed 3 files / 31 tests.
+  - `node node_modules/typescript/bin/tsc --noEmit -p tsconfig.json` passed.
+  - `node scripts/build-static.mjs` passed.
+  - `curl -I /battle-sprites/pixijs/battle-sprite-assets.manifest.json` and
+    `curl -I /battle-sprites/pixijs/plague_nurgling.png` returned HTTP 200.
 - Current evidence posture:
   - `mocked: no`
   - `live: yes`
   - exercised: real adaptive-lineage qualification receipt, normalized fixture,
-    standalone agent-skills static host, live browser render
+    standalone agent-skills static host, live browser render, Pixi sprite canvas
   - WebGPT design acceptance: accepted with degraded-focus Surf transport
-  - unverified for full immutable-goal closure: distinct Pixi sprite/canvas
-    proof from the newest browser capture
 
 ## 4. What is Currently Broken Or Pending
 
@@ -96,25 +110,21 @@ agent-skills worktree, not the pi-mono shell.
   child from an earlier attempt. Use `3003` until reboot or kernel release.
 - **Do not trust `#battle/live` claims**. That route was verified false earlier;
   valid served hashes are `#battle`, `#battle/isolation`, and `#battle/receipt`.
-- **Do not treat the current handoff as full immutable-goal closure**. The
-  recovery evidence is strong enough to put the project back on the
-  agent-skills-hosted receipt path, but the broader goal text still names Pixi
-  sprite acceptance and deterministic renderer tests as primary proof.
+- **No Battle-path blocker remains in the current recovery evidence**. Closure
+  still requires the final Battle evidence commit to be pushed and remote-ref
+  verified before any agent claims completion.
 - **Repo is dirty from unrelated agents**. Stage Battle handoff/artifact paths
   explicitly only. Never `git add -A`.
 
 ## 5. Next Steps
 
-1. Commit and push this handoff plus the accepted WebGPT and fresh browser proof
-   artifacts by explicit path.
-2. Re-run or restore the deterministic renderer proof if the next agent is
-   closing the full immutable goal: spectator lineage suite, Pixi sprite-mapping
-   test, and a browser proof that actually demonstrates the expected sprite
-   surface.
-3. Audit the immutable goal checklist. Do not use closure language unless the
+1. Commit and push the final server fix, badge-hook fix, renderer test, goal
+   update, handoff update, and `1755Z` Playwright proof artifacts by explicit
+   path.
+2. Audit the immutable goal checklist. Do not use closure language unless the
    final report cites backend receipt, browser screenshot/assertions, WebGPT
-   response, deterministic renderer proof, sprite/canvas proof if applicable,
-   and remote commit proof.
+   response, deterministic renderer proof, Pixi sprite/canvas proof, and remote
+   commit proof.
 
 ## 6. Project Context for Success
 

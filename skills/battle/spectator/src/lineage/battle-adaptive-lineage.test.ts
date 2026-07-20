@@ -84,6 +84,9 @@ describe("BattleLineageComparisonPanel (adaptive)", () => {
 	const markup = renderToStaticMarkup(
 		createElement(BattleLineageComparisonPanel, { adaptiveLineage: recordedFixture }),
 	);
+	const liveMarkup = renderToStaticMarkup(
+		createElement(BattleLineageComparisonPanel, { adaptiveLineage: liveRunFixture }),
+	);
 
 	it("renders the panel with a stable data-qid and adaptive mode", () => {
 		expect(markup).toContain('data-qid="battle:lineage-comparison"');
@@ -95,6 +98,13 @@ describe("BattleLineageComparisonPanel (adaptive)", () => {
 		expect(markup).toContain('data-data-source="recorded"');
 		expect(markup).toContain('data-proves-live="false"');
 		expect(markup).toContain("RECORDED · MECHANICS");
+	});
+
+	it("puts live proof attributes on the badge anchor", () => {
+		expect(liveMarkup).toContain(
+			'data-qid="battle:adaptive-lineage:badge" data-data-source="live" data-proves-live="true"',
+		);
+		expect(liveMarkup).toContain("LIVE: Qual PASS");
 	});
 
 	it("renders the selected G1, runner-up, deciding criterion, and G2 operator", () => {

@@ -126,7 +126,12 @@ function AdaptiveLineageComparison({ model }: { model: AdaptiveLineageViewModel 
 						data-proves-live={model.badge.provesLive ? "true" : "false"}
 						title={model.badge.caption}
 					>
-						<span className={`status-led ${passed && model.badge.tone !== "amber" ? "led-live" : "led-idle"}`} data-qid="battle:adaptive-lineage:badge" />
+						<span
+							className={`status-led ${passed && model.badge.tone !== "amber" ? "led-live" : "led-idle"}`}
+							data-qid="battle:adaptive-lineage:badge"
+							data-data-source={model.dataSource}
+							data-proves-live={model.badge.provesLive ? "true" : "false"}
+						/>
 						<span className="status-text">{model.badge.label}: Qual {model.qualification.status}</span>
 					</div>
 					{/* MODULE 3 — muted lineage breadcrumb */}

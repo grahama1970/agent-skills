@@ -1,0 +1,72 @@
+{
+  "mocked": false,
+  "live": true,
+  "url": "http://127.0.0.1:3003/#battle/receipt?engine=pixi",
+  "screenshotPath": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/agent-skills-host-verify-20260720T1755Z/playwright-receipt-pixi-canvas.png",
+  "info": {
+    "url": "http://127.0.0.1:3003/#battle/receipt?engine=pixi",
+    "title": "Battle Spectator",
+    "bodyTextLength": 2637,
+    "hasCanvas": true,
+    "canvasClass": "pixiRaceCanvas",
+    "canvasDataset": {
+      "battlePixiMountId": "1"
+    },
+    "canvasPixelSample": {
+      "width": 1030,
+      "height": 277,
+      "cssWidth": 1030,
+      "cssHeight": 277
+    },
+    "pixiStageDataset": {
+      "battlePixiEngine": "animated-sprites",
+      "battleViewportSeconds": "134.457076",
+      "qid": "battle:pixi:stage",
+      "battleLineagePhases": "{\"G1-A\":\"active\",\"G1-B\":\"active\",\"G2\":\"active\"}",
+      "battleRunnerAnimations": "{\"G0\":\"run\",\"G1-A\":\"mutate\",\"G1-B\":\"mutate\",\"G2\":\"mutate\"}",
+      "battleReceiptBeatId": "G2:genome_selected:102.187",
+      "battleReceiptBeatKind": "genome_selected",
+      "battleReceiptBeatEmphasis": "genome_selected",
+      "battleReceiptBeatVfx": "none"
+    },
+    "badgeText": "",
+    "badgeDataSource": "live",
+    "badgeProvesLive": "true",
+    "selected": "G1-A Module Slipgen 1 · candidatemethod_replace · novelty 2Replaced direct from-import loading of import_zip with importlib.import_module plus getattr while preserving archive construction, traversal entry, call semantics, exception handling, and filesystem oracle.app_load_modetarget_call_formvuln-original yes · bypass no · 1.195406s · fitness PASSSELECTED G1",
+    "runnerUp": "G1-B Arc Couriergen 1 · candidateoracle_or_parameter_mutation · novelty 1Changed malicious archive entry construction from ZipFile.writestr('../arena_escape.txt', payload) to writing a real temporary file with ZipFile.write(..., arcname='../arena_escape.txt'); app import mode, target call form, and oracle remain otherwise the same.archive_entry_constructionvuln-original yes · bypass no · 1.260919s · fitness PASSRUNNER-UP G1",
+    "contains": {
+      "adaptiveLineage": true,
+      "liveQualPass": true,
+      "g0": true,
+      "g1a": true,
+      "g1b": true,
+      "g2": true,
+      "sparta": false,
+      "renderBlocked": false
+    },
+    "bootErrors": []
+  },
+  "consoleEvents": [
+    {
+      "type": "warning",
+      "text": "PixiJS Warning:  [Assets] Asset id battle-race-atlas was not found in the Cache"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x348400158200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x348400158200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x348400158200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x348400158200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)"
+    }
+  ],
+  "failedRequests": []
+}

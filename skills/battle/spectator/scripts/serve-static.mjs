@@ -42,6 +42,7 @@ function resolveRequest(pathname) {
   if (
     decoded.startsWith("/battle-fixtures/") ||
     decoded.startsWith("/battle-audio/") ||
+    decoded.startsWith("/battle-sprites/") ||
     decoded.startsWith("/battle-race-atlas")
   ) {
     return { filePath: resolve(publicRoot, decoded.slice(1)), root: publicRoot };

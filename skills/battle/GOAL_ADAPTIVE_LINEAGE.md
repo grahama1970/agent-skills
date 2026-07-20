@@ -212,10 +212,29 @@ Three artifacts, all required, none optional:
       contamination markers. Caveat: Surf reports `proof_status: degraded_focus`
       because focus changed after submission; this is degraded transport evidence,
       not clean background-mode proof.
+- [x] Deterministic renderer proof:
+      `cd skills/battle/spectator && node node_modules/vitest/vitest.mjs run src/lineage/ src/lib/battle-adaptive-lineage.test.ts src/engine/battle-lane-variant-map.test.ts`
+      passed 3 files / 31 tests. The suite covers the adaptive lineage panel,
+      live badge attributes, and receipt-backed distinct sprite mapping.
+- [x] Agent-skills Pixi asset host proof:
+      `curl -I http://127.0.0.1:3003/battle-sprites/pixijs/battle-sprite-assets.manifest.json`
+      and `curl -I http://127.0.0.1:3003/battle-sprites/pixijs/plague_nurgling.png`
+      returned HTTP 200. `scripts/serve-static.mjs` now serves the committed
+      `public/battle-sprites/` symlink to `skills/battle/assets/sprites/pixijs`.
+- [x] Live-browser Pixi proof:
+      `skills/battle/local/agent-skills-host-verify-20260720T1755Z/playwright-render-proof.json`
+      targets `http://127.0.0.1:3003/#battle/receipt?engine=pixi`, has
+      `mocked:false`, `live:true`, `hasCanvas:true`, canvas `1030x277`,
+      `data-data-source:"live"`, `data-proves-live:"true"`, no failed
+      fixture/sprite/atlas requests, no boot errors, and no Sparta/render-blocked
+      markers. The screenshot
+      `skills/battle/local/agent-skills-host-verify-20260720T1755Z/playwright-receipt-pixi-canvas.png`
+      visually shows the four named lineage specimens with four distinct Pixi
+      sprites.
 
-**GOAL STATUS: CURRENT RECOVERY EVIDENCE ASSEMBLED** — 2026-07-20. Final closure
-still requires the relevant artifacts to be committed, pushed, and remote-ref
-verified.
+**GOAL STATUS: MET BY CURRENT RECOVERY EVIDENCE** — 2026-07-20. Closure requires
+the final Battle evidence commit to be pushed and remote-ref verified in the
+agent final report.
 
 ## Allowed Scope
 
