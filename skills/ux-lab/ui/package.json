@@ -17,6 +17,10 @@
     "./memory-turn/SpartaComplianceAdapter": {
       "types": "./memory-turn/SpartaComplianceAdapter.ts",
       "default": "./memory-turn/SpartaComplianceAdapter.ts"
+    },
+    "./LeftPane": {
+      "types": "./LeftPane.tsx",
+      "default": "./LeftPane.tsx"
     }
   },
   "files": [
