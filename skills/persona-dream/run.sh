@@ -76,6 +76,7 @@ Commands:
   check-fal-api-preflight  Check FAL auth and non-generation API/docs access without submitting jobs
   check-fal-api-preflight-fixtures  Prove FAL auth discovery preflight stays fail-closed
   check-pipeline-robustness  Aggregate offline autonomous, lineage, fail-closed, and provider-boundary checks
+  check-live-memory-recall  Exercise live Memory /recall through static dream generation and write a fail-closed receipt
   check-pipeline-contract  Validate the canonical Phase 01-16 pipeline contract
   write-phase10-reproducibility-receipt  Prove Phase 10 committed artifacts are canonically reproducible
   repair-semantic-mix-revision Create, Memory-verify, and activate a new explicit-human-idea revision
@@ -375,6 +376,9 @@ case "$COMMAND" in
     ;;
   check-pipeline-robustness)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_pipeline_robustness.py" "$@"
+    ;;
+  check-live-memory-recall)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_live_memory_recall.py" "$@"
     ;;
   check-pipeline-contract)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_persona_dream_pipeline_contract.py" "$@"
