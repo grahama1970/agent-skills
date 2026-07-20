@@ -4,13 +4,16 @@ export {
   LeftPaneDockToggle,
   LeftPaneSection,
   ContextMenu,
+  CollapsiblePaneFrame,
+  PaneCollapseButton,
   leftPaneGridTemplateColumns,
   paneItemStyle,
+  useCollapsiblePane,
   useContextMenu,
   useLeftPaneSearch,
   useLeftPaneSort,
 } from './LeftPane'
-export type { ContextMenuAction, LeftPaneDockToggleProps, LeftPaneProps, SortMode } from './LeftPane'
+export type { CollapsiblePaneFrameProps, ContextMenuAction, LeftPaneDockToggleProps, LeftPaneProps, PaneCollapseButtonProps, PaneSide, SortMode } from './LeftPane'
 export { default as SharedChatShell, SharedChatShell as SharedChatShellComponent } from './SharedChatShell'
 export type { SharedChatShellProps, PersonaPlexChatMode, SharedChatAdapterOptions } from './SharedChatShell'
 export { default as ComplianceChatWell, ComplianceChatWell as ComplianceChatWellComponent } from './ComplianceChatWell'
