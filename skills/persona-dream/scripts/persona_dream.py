@@ -91,6 +91,11 @@ def _write_json(path: Path, data: Any) -> None:
     path.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
 
 
+def _stable_json_sha256(value: Any) -> str:
+    payload = json.dumps(value, ensure_ascii=False, separators=(",", ":"), sort_keys=True).encode("utf-8")
+    return "sha256:" + hashlib.sha256(payload).hexdigest()
+
+
 def _http_json(url: str, timeout: float = 4.0, headers: dict[str, str] | None = None) -> dict[str, Any]:
     request = urllib.request.Request(url, headers=headers or {})
     try:
@@ -428,6 +433,13 @@ def _fetch_residue_for_persona(persona: Persona, limit: int, about: str | None =
                 raw for raw in raw_items
                 if not require_persona_match or _matches_persona(raw, accepted_persona_ids)
             ]
+            accepted_items: list[dict[str, Any]] = []
+            accepted_source_ids: list[str] = []
+            for idx, raw in enumerate(filtered_items):
+                item = _normalize_item(raw, scope, idx, "memory")
+                if item["text"]:
+                    accepted_items.append(item)
+                    accepted_source_ids.append(item["source_id"])
             receipts.append({
                 "persona_id": persona.id,
                 "accepted_persona_ids": sorted(accepted_persona_ids),
@@ -440,13 +452,14 @@ def _fetch_residue_for_persona(persona: Persona, limit: int, about: str | None =
                 "confidence": data.get("confidence"),
                 "count": len(raw_items),
                 "accepted_count": len(filtered_items),
+                "accepted_normalized_count": len(accepted_items),
+                "accepted_source_ids": accepted_source_ids,
+                "accepted_source_ids_sha256": _stable_json_sha256(accepted_source_ids),
+                "dropped_empty_text_count": len(filtered_items) - len(accepted_items),
                 "discarded_persona_mismatch_count": len(raw_items) - len(filtered_items),
                 "should_scan": data.get("should_scan"),
             })
-            for idx, raw in enumerate(filtered_items):
-                item = _normalize_item(raw, scope, idx, "memory")
-                if item["text"]:
-                    items.append(item)
+            items.extend(accepted_items)
         except Exception as exc:
             receipts.append({
                 "persona_id": persona.id,
@@ -457,6 +470,10 @@ def _fetch_residue_for_persona(persona: Persona, limit: int, about: str | None =
                 "error": str(exc),
                 "count": 0,
                 "accepted_count": 0,
+                "accepted_normalized_count": 0,
+                "accepted_source_ids": [],
+                "accepted_source_ids_sha256": _stable_json_sha256([]),
+                "dropped_empty_text_count": 0,
             })
     return items[:limit], receipts
 

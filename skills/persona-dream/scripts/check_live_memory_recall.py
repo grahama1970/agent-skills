@@ -37,6 +37,11 @@ def _write_json(path: Path, data: Any) -> None:
     path.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def _stable_json_sha256(value: Any) -> str:
+    payload = json.dumps(value, ensure_ascii=False, separators=(",", ":"), sort_keys=True).encode("utf-8")
+    return "sha256:" + hashlib.sha256(payload).hexdigest()
+
+
 def _read_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -105,12 +110,16 @@ def _recall_stats(residue_links: dict[str, Any], response: dict[str, Any]) -> tu
     failed = [r for r in receipts if isinstance(r, dict) and r.get("status") == "error"]
     total_returned = sum(int(r.get("count") or 0) for r in receipts if isinstance(r, dict))
     total_accepted = sum(int(r.get("accepted_count") or 0) for r in receipts if isinstance(r, dict))
+    total_accepted_normalized = sum(int(r.get("accepted_normalized_count") or 0) for r in receipts if isinstance(r, dict))
+    total_accepted_source_ids = sum(len(r.get("accepted_source_ids") or []) for r in receipts if isinstance(r, dict))
     return receipts, {
         "observed_query_count": len(receipts),
         "successful_query_count": len(successful),
         "failed_query_count": len(failed),
         "total_returned_count": total_returned,
         "total_accepted_count": total_accepted,
+        "total_accepted_normalized_count": total_accepted_normalized,
+        "total_accepted_source_id_count": total_accepted_source_ids,
     }
 
 
@@ -120,7 +129,16 @@ def _receipt_errors(receipts: list[dict[str, Any]]) -> list[str]:
         errors.append(f"query_count:{len(receipts)}:expected:{EXPECTED_QUERY_COUNT}")
     for idx, receipt in enumerate(receipts):
         prefix = f"query_{idx}"
-        for key in ("scope", "query", "status", "count", "accepted_count"):
+        for key in (
+            "scope",
+            "query",
+            "status",
+            "count",
+            "accepted_count",
+            "accepted_normalized_count",
+            "accepted_source_ids",
+            "accepted_source_ids_sha256",
+        ):
             if key not in receipt:
                 errors.append(f"{prefix}_missing:{key}")
         status = receipt.get("status")
@@ -128,16 +146,38 @@ def _receipt_errors(receipts: list[dict[str, Any]]) -> list[str]:
             errors.append(f"{prefix}_status:{status}")
         count = receipt.get("count")
         accepted = receipt.get("accepted_count")
+        accepted_normalized = receipt.get("accepted_normalized_count")
+        accepted_source_ids = receipt.get("accepted_source_ids")
         if not isinstance(count, int) or count < 0:
             errors.append(f"{prefix}_invalid_count:{count}")
         if not isinstance(accepted, int) or accepted < 0:
             errors.append(f"{prefix}_invalid_accepted_count:{accepted}")
+        if not isinstance(accepted_normalized, int) or accepted_normalized < 0:
+            errors.append(f"{prefix}_invalid_accepted_normalized_count:{accepted_normalized}")
         if isinstance(count, int) and isinstance(accepted, int) and count < accepted:
             errors.append(f"{prefix}_count_lt_accepted:{count}:{accepted}")
+        if isinstance(accepted, int) and isinstance(accepted_normalized, int) and accepted < accepted_normalized:
+            errors.append(f"{prefix}_accepted_lt_normalized:{accepted}:{accepted_normalized}")
+        if not isinstance(accepted_source_ids, list):
+            errors.append(f"{prefix}_invalid_accepted_source_ids:{type(accepted_source_ids).__name__}")
+            accepted_source_ids = []
+        else:
+            invalid_ids = [value for value in accepted_source_ids if not isinstance(value, str) or not value]
+            if invalid_ids:
+                errors.append(f"{prefix}_invalid_accepted_source_id_values:{len(invalid_ids)}")
+            if isinstance(accepted_normalized, int) and len(accepted_source_ids) != accepted_normalized:
+                errors.append(f"{prefix}_accepted_source_id_count:{len(accepted_source_ids)}:expected:{accepted_normalized}")
+        expected_hash = _stable_json_sha256(accepted_source_ids)
+        if receipt.get("accepted_source_ids_sha256") != expected_hash:
+            errors.append(f"{prefix}_accepted_source_ids_sha256_mismatch")
         discarded = receipt.get("discarded_persona_mismatch_count")
         if discarded is not None and isinstance(count, int) and isinstance(accepted, int):
             if discarded != count - accepted:
                 errors.append(f"{prefix}_discarded_mismatch:{discarded}:expected:{count - accepted}")
+        dropped = receipt.get("dropped_empty_text_count")
+        if dropped is not None and isinstance(accepted, int) and isinstance(accepted_normalized, int):
+            if dropped != accepted - accepted_normalized:
+                errors.append(f"{prefix}_dropped_empty_text_mismatch:{dropped}:expected:{accepted - accepted_normalized}")
     return errors
 
 
@@ -180,15 +220,48 @@ def _validate_artifacts(
 
     items = residue_links.get("items") if isinstance(residue_links.get("items"), list) else []
     packet_items = dream_packet.get("residue_items") if isinstance(dream_packet.get("residue_items"), list) else []
+    recall_receipts = [
+        receipt
+        for receipt in residue_links.get("recall_receipts", [])
+        if isinstance(receipt, dict)
+    ]
+    receipt_pairs: list[tuple[str, str]] = []
+    accepted_source_ids_by_query: list[dict[str, Any]] = []
+    receipt_link_index: dict[tuple[str, str], dict[str, Any]] = {}
+    for query_index, receipt in enumerate(recall_receipts):
+        receipt_scope = str(receipt.get("scope") or "")
+        accepted_source_ids = receipt.get("accepted_source_ids") if isinstance(receipt.get("accepted_source_ids"), list) else []
+        accepted_source_ids_by_query.append({
+            "query_index": query_index,
+            "scope": receipt_scope,
+            "query": receipt.get("query"),
+            "accepted_source_ids": accepted_source_ids,
+            "accepted_source_ids_sha256": receipt.get("accepted_source_ids_sha256"),
+        })
+        for accepted_order, source_id in enumerate(accepted_source_ids):
+            if not isinstance(source_id, str) or not source_id:
+                continue
+            pair = (receipt_scope, source_id)
+            receipt_pairs.append(pair)
+            receipt_link_index.setdefault(pair, {
+                "query_index": query_index,
+                "accepted_order": accepted_order,
+                "scope": receipt_scope,
+                "source_id": source_id,
+                "query": receipt.get("query"),
+                "accepted_source_ids_sha256": receipt.get("accepted_source_ids_sha256"),
+            })
     lineage_checks["packet_items_equal_residue_items"] = packet_items == items
     residue_count = len(items)
     source_ids: list[str] = []
+    residue_pairs: list[tuple[str, str]] = []
+    residue_to_query_receipt_links: list[dict[str, Any]] = []
     scopes: set[str] = set()
     fixture_markers: list[str] = []
     persona_mismatches: list[str] = []
     duplicate_source_ids: list[str] = []
     source_pairs: set[tuple[str, str]] = set()
-    recall_scopes = {str(r.get("scope")) for r in residue_links.get("recall_receipts", []) if isinstance(r, dict)}
+    recall_scopes = {str(r.get("scope")) for r in recall_receipts}
 
     for idx, item in enumerate(items):
         source_id = str(item.get("source_id") or "")
@@ -213,6 +286,11 @@ def _validate_artifacts(
         source_pairs.add(pair)
         if source_id:
             source_ids.append(source_id)
+        if scope and source_id:
+            residue_pairs.append(pair)
+            link = receipt_link_index.get(pair)
+            if link:
+                residue_to_query_receipt_links.append({"residue_index": idx, **link})
         if scope:
             scopes.add(scope)
         explicit_ids: set[str] = set()
@@ -239,8 +317,15 @@ def _validate_artifacts(
         if ref
     ]
     unresolved_contradiction_refs = sorted({str(ref) for ref in contradiction_refs if str(ref) not in set(source_ids)})
+    missing_receipt_pairs = [
+        f"{scope}:{source_id}"
+        for scope, source_id in residue_pairs
+        if (scope, source_id) not in receipt_link_index
+    ]
     lineage_checks["frame_sources_resolve"] = not unresolved_frame_refs
     lineage_checks["contradiction_sources_resolve"] = not unresolved_contradiction_refs
+    lineage_checks["residue_source_ids_in_query_receipts"] = not missing_receipt_pairs
+    lineage_checks["residue_pairs_match_receipt_prefix"] = residue_pairs == receipt_pairs[:len(residue_pairs)]
     lineage_checks["stage02_recall_receipts_agree"] = False
     for stage in stage_report.get("stages") or []:
         if isinstance(stage, dict) and stage.get("stage_id") == "stage_02_memory_recall":
@@ -276,6 +361,8 @@ def _validate_artifacts(
         errors.append(f"duplicate_source_ids:{','.join(sorted(duplicate_source_ids))}")
     if persona_mismatches:
         errors.append(f"persona_mismatches:{','.join(sorted(persona_mismatches))}")
+    if missing_receipt_pairs:
+        errors.append(f"residue_source_ids_missing_from_query_receipts:{','.join(sorted(missing_receipt_pairs))}")
     if unresolved_frame_refs:
         errors.append(f"unresolved_frame_refs:{','.join(unresolved_frame_refs)}")
     if unresolved_contradiction_refs:
@@ -298,6 +385,11 @@ def _validate_artifacts(
         "persona_mismatches": sorted(persona_mismatches),
         "memory_write_status": memory_write.get("status"),
         "manifest_artifact_count": len(manifest_artifacts),
+        "accepted_source_ids_by_query": accepted_source_ids_by_query,
+        "accepted_source_id_pair_count": len(receipt_pairs),
+        "residue_pairs": [f"{scope}:{source_id}" for scope, source_id in residue_pairs],
+        "residue_to_query_receipt_links": residue_to_query_receipt_links,
+        "missing_receipt_pairs": sorted(missing_receipt_pairs),
         "stats": stats,
     }
 
@@ -433,6 +525,11 @@ def build_receipt(
         "persona_mismatches": [],
         "memory_write_status": None,
         "manifest_artifact_count": 0,
+        "accepted_source_ids_by_query": [],
+        "accepted_source_id_pair_count": 0,
+        "residue_pairs": [],
+        "residue_to_query_receipt_links": [],
+        "missing_receipt_pairs": [],
         "stats": stats,
     }
     if child_exit_code == 0:
@@ -539,6 +636,11 @@ def build_receipt(
         "duplicate_source_ids": derived["duplicate_source_ids"],
         "fixture_markers_found": derived["fixture_markers_found"],
         "persona_mismatches": derived["persona_mismatches"],
+        "accepted_source_ids_by_query": derived["accepted_source_ids_by_query"],
+        "accepted_source_id_pair_count": derived["accepted_source_id_pair_count"],
+        "residue_pairs": derived["residue_pairs"],
+        "residue_to_query_receipt_links": derived["residue_to_query_receipt_links"],
+        "missing_receipt_pairs": derived["missing_receipt_pairs"],
         "lineage_checks": lineage_checks,
         "writeback_checks": derived["writeback_checks"],
         "memory_write_status": derived["memory_write_status"],
@@ -547,6 +649,8 @@ def build_receipt(
         "claims": {
             "proves": [
                 "the Persona Dream generator exercised the live Memory /recall client path without fixtures",
+                "each live recall query receipt included accepted normalized source ids and a canonical source-id digest",
+                "each emitted residue item mapped back to an accepted source id in its live query receipt",
                 "live recalled residue was normalized into residue_links and preserved into dream_packet lineage",
                 "frame prompts and contradiction references resolved to recalled residue source ids",
                 "the generator's writeback contract remained skipped under --no-write-memory",
@@ -566,7 +670,7 @@ def build_receipt(
                 "complete live Phase 01-16 execution",
                 "repeatability against an unchanged Memory index",
                 "independence from backend mocks not visible to this client",
-                "exact raw /recall response-to-item provenance",
+                "full raw /recall payload byte provenance beyond accepted source ids",
             ],
         },
     }

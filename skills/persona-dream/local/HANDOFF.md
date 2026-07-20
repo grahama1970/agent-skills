@@ -167,6 +167,10 @@ The receipt checks:
 - no fixture is used;
 - five expected one-persona recall query receipts exist;
 - query counts and accepted counts are internally consistent;
+- each query receipt records `accepted_source_ids`,
+  `accepted_source_ids_sha256`, and `accepted_normalized_count`;
+- emitted residue `(scope, source_id)` pairs map back to accepted source ids in
+  the live query receipts;
 - no partial recall error is allowed for PASS;
 - normalized residue has nonempty `source_id`, `scope`, and `text`;
 - residue is non-synthetic and not fixture-marked;
@@ -251,9 +255,9 @@ Next agent should repair/rebind Browser Oracle before further WebGPT use.
 - `check-live-memory-recall` is live-state dependent. Memory ranking and
   contents are mutable, so do not compare semantic content to a golden fixture.
   Use source ids, scopes, hashes, query receipts, and lineage checks instead.
-- The new checker can prove generator-to-artifact lineage, but not exact raw
-  `/recall` response-to-normalized-item provenance. Adding accepted source ids
-  to each generator query receipt would harden this.
+- The new checker proves accepted source-id attribution from live recall
+  receipts into emitted residue, but not full raw `/recall` payload byte
+  provenance.
 - The checker currently treats duplicate `(scope, source_id)` pairs as a hard
   invariant failure. This is intentional; if the live fan-out returns duplicate
   records in the future, the generator should deduplicate or receipts should
@@ -279,7 +283,7 @@ Next agent should repair/rebind Browser Oracle before further WebGPT use.
 - Complete live Phase 01-16 runtime execution.
 - Repeatability against an unchanged Memory index.
 - Independence from backend mocks not visible to this client.
-- Exact raw `/recall` response-to-item provenance.
+- Full raw `/recall` payload byte provenance beyond accepted source ids.
 
 ## 7. Recommended Next Steps
 
@@ -288,18 +292,14 @@ Next agent should repair/rebind Browser Oracle before further WebGPT use.
    sentinel and the binding is now stale. Do this before asking WebGPT for more
    project review.
 
-2. **Add accepted source ids to recall receipts.**
-   Patch `persona_dream.py` so each live recall query receipt records the
-   accepted normalized source ids. Then extend `check-live-memory-recall` to
-   prove endpoint-query-to-residue attribution, not only artifact lineage.
-
-3. **Add deterministic negative fixtures for the new checker.**
+2. **Add deterministic negative fixtures for the Gate 0 checker.**
    The live stale-output negative exists. Add fixture or monkeypatch-level tests
-   for partial query failure, duplicate residue, fixture marker leakage,
-   persona mismatch, frame-source mismatch, and writeback mismatch. Keep them
-   labeled as deterministic checker tests, not live proof.
+   for missing accepted source ids, bad source-id hash, partial query failure,
+   duplicate residue, fixture marker leakage, persona mismatch,
+   frame-source mismatch, and writeback mismatch. Keep them labeled as
+   deterministic checker tests, not live proof.
 
-4. **Reconcile README/current-state documentation.**
+3. **Reconcile README/current-state documentation.**
    Add a short 2026-07-20 proof-boundary note that distinguishes:
    offline fixture robustness, live Memory recall, historical Phase 13-16
    evidence, and unproven provider/audio/video lanes.
