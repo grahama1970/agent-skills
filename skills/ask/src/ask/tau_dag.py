@@ -182,15 +182,6 @@ def missing_dag_fields(input: TauDagCompileInput) -> list[dict[str, Any]]:
     if not input.target:
         missing.append(_question("target", "Which issue, task, file, or work target should the DAG bind to?"))
     if input.handlers:
-        unknown_handlers = [item for item in input.handlers if item not in ROUNDTABLE_HANDLERS]
-        if unknown_handlers:
-            missing.append(
-                _question(
-                    "handlers",
-                    f"Unknown Tau roundtable handler(s): {', '.join(unknown_handlers)}.",
-                    expects="list[str]",
-                )
-            )
         if input.topology not in ROUNDTABLE_TOPOLOGIES:
             missing.append(
                 _question(
@@ -765,7 +756,15 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
     }
     handler_nodes: list[dict[str, Any]] = []
     for handler in input.handlers:
-        node_id = f"handler-{handler}"
+        node_id = _handler_node_id(handler)
+        prior_nodes = _roundtable_prior_nodes(input, node_id)
+        required_evidence = [
+            "handler_response_receipt",
+            "normalized_handler_receipt",
+            "transport_metadata",
+        ]
+        if prior_nodes:
+            required_evidence.append("prior_handler_receipts")
         handler_nodes.append(
             {
                 "id": node_id,
@@ -773,19 +772,23 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
                 "executor": "local",
                 "max_attempts": 1,
                 "command_spec": f"command-specs/{node_id}/tau-dispatch-command.json",
-                "required_evidence": [
-                    "handler_response_receipt",
-                    "normalized_handler_receipt",
-                    "transport_metadata",
-                ],
+                "required_evidence": required_evidence,
+                "depends_on": prior_nodes,
                 "context": {
                     "role": "roundtable_handler",
                     "handler": handler,
                     "handler_policy": _handler_policy(handler),
-                    "prompt_contract": _roundtable_handler_prompt_contract(input, handler=handler),
+                    "prompt_contract": _roundtable_handler_prompt_contract(
+                        input,
+                        handler=handler,
+                        prior_nodes=prior_nodes,
+                    ),
                     "browser_oracle_project": _handler_project(input, handler),
                     "request": input.request,
                     "topology": input.topology,
+                    "prior_nodes": prior_nodes,
+                    "requires_prior_receipts": bool(prior_nodes),
+                    "requires_verdict": bool(prior_nodes) and _roundtable_requires_verdict(input.request),
                 },
             }
         )
@@ -852,6 +855,7 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
             "handler_projects": {
                 handler: _handler_project(input, handler)
                 for handler in input.handlers
+                if handler in ROUNDTABLE_HANDLERS
             },
         },
         "provider_sensitive": False,
@@ -948,12 +952,21 @@ def _write_roundtable_command_spec(
         str(ASK_SKILL_ROOT.parent / "surf" / "run.sh"),
         "--browser-oracle-run",
         str(ASK_SKILL_ROOT.parent / "browser-oracle" / "run.sh"),
+        "--scillm-base-url",
+        input.scillm_base_url,
+        "--scillm-api-key",
+        input.scillm_api_key,
         "--timeout",
         "900" if handler == "webgpt" else "300",
         "--stable-polls",
         "2",
         "--no-activate",
     ]
+    prior_nodes = _roundtable_prior_nodes(input, node_id)
+    if node_id == "join":
+        prior_nodes = [_handler_node_id(handler) for handler in input.handlers]
+    for prior_node in prior_nodes:
+        command.extend(["--prior-node", prior_node])
     if handler in ROUNDTABLE_HANDLERS:
         command.extend(["--browser-oracle-project", _handler_project(input, handler)])
     for evidence in node.get("required_evidence", []):
@@ -1033,11 +1046,22 @@ def _model_policy(model: str, *, base_url: str = DEFAULT_SCILLM_BASE_URL) -> dic
 
 
 def _handler_policy(handler: str) -> dict[str, Any]:
-    policy = dict(ROUNDTABLE_HANDLERS[handler])
-    policy["id"] = handler
-    policy["execution_owner"] = "$tau"
-    policy["receipt_schema"] = "ask.tau_dag_handler_receipt.v1"
-    return policy
+    if handler in ROUNDTABLE_HANDLERS:
+        policy = dict(ROUNDTABLE_HANDLERS[handler])
+        policy["id"] = handler
+        policy["execution_owner"] = "$tau"
+        policy["receipt_schema"] = "ask.tau_dag_handler_receipt.v1"
+        return policy
+    return {
+        "id": handler,
+        "transport_owner": "$tau",
+        "transport": "scillm.chat",
+        "runtime": "api",
+        "model": handler,
+        "proof_required": "scillm_provider_receipt",
+        "execution_owner": "$tau",
+        "receipt_schema": "ask.tau_dag_handler_receipt.v1",
+    }
 
 
 def _handler_project(input: TauDagCompileInput, handler: str) -> str:
@@ -1054,28 +1078,67 @@ def _roundtable_next_agent(input: TauDagCompileInput, node_id: str) -> str:
         return "human"
     if not node_id.startswith("handler-"):
         return "human"
-    handler = node_id.removeprefix("handler-")
     if input.topology == "sequential":
-        handlers = list(input.handlers)
+        node_ids = [_handler_node_id(handler) for handler in input.handlers]
         try:
-            index = handlers.index(handler)
+            index = node_ids.index(node_id)
         except ValueError:
             return "join"
-        if index + 1 < len(handlers):
-            return f"handler-{handlers[index + 1]}"
+        if index + 1 < len(node_ids):
+            return node_ids[index + 1]
     return "join"
 
 
-def _roundtable_handler_prompt_contract(input: TauDagCompileInput, *, handler: str) -> dict[str, Any]:
+def _roundtable_prior_nodes(input: TauDagCompileInput, node_id: str) -> list[str]:
+    if input.topology != "sequential" or not node_id.startswith("handler-"):
+        return []
+    handlers = list(input.handlers)
+    node_ids = [_handler_node_id(handler) for handler in handlers]
+    try:
+        index = node_ids.index(node_id)
+    except ValueError:
+        return []
+    return node_ids[:index]
+
+
+def _roundtable_requires_verdict(request: str) -> bool:
+    lower = request.lower()
+    return any(
+        marker in lower
+        for marker in (
+            "pass/fail",
+            "pass or fail",
+            "pass fail",
+            "pass-fail",
+            "review for pass",
+            "review it for pass",
+            "review the work for pass",
+        )
+    )
+
+
+def _roundtable_handler_prompt_contract(
+    input: TauDagCompileInput,
+    *,
+    handler: str,
+    prior_nodes: list[str] | None = None,
+) -> dict[str, Any]:
+    prior_nodes = prior_nodes or []
+    requires_verdict = bool(prior_nodes) and _roundtable_requires_verdict(input.request)
     return {
         "schema": "ask.tau_dag_prompt_contract.v1",
         "system": "You are a Tau-managed roundtable handler. Return receipt-backed findings only.",
         "user_template": (
             f"Roundtable request: {input.request}\n"
             f"Handler: {handler}\n"
-            "Return a concise position, evidence, uncertainties, and blockers."
+            "Use prior handler receipts when present. Return a concise position, evidence, "
+            "uncertainties, and blockers."
         ),
         "handler": handler,
+        "prior_nodes": prior_nodes,
+        "requires_prior_receipts": bool(prior_nodes),
+        "requires_verdict": requires_verdict,
+        "verdict_schema": "PASS|FAIL|NEEDS_ATTENTION" if requires_verdict else None,
     }
 
 
@@ -1284,8 +1347,15 @@ def _normalize_model(value: str) -> str:
 
 
 def _normalize_handler(value: str) -> str:
-    normalized = re.sub(r"[^a-z0-9]+", "", value.strip().lower().removeprefix("$"))
-    return _HANDLER_ALIASES.get(normalized, normalized)
+    raw = value.strip().lower().removeprefix("$")
+    compact = re.sub(r"[^a-z0-9]+", "", raw)
+    if compact in _HANDLER_ALIASES:
+        return _HANDLER_ALIASES[compact]
+    return re.sub(r"\s+", "-", raw)
+
+
+def _handler_node_id(handler: str) -> str:
+    return f"handler-{_slug(handler)}"
 
 
 def _normalize_topology(value: str) -> str:

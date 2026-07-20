@@ -192,6 +192,73 @@ def test_roundtable_handlers_can_be_explicit_and_sequential(tmp_path: Path) -> N
     assert "--browser-oracle-project" not in join_spec["command"]
 
 
+def test_sequential_webgpt_webclaude_review_receives_prior_receipt_contract(tmp_path: Path) -> None:
+    request = infer_compile_input(
+        "Ask webgpt to do the work, then ask webclaude to review the work for pass/fail.",
+        repo="local/agent-skills",
+        target="webgpt-webclaude-review",
+        handlers=["webgpt", "webclaude"],
+        handler_projects=["webgpt=tau"],
+        topology="sequential",
+        output_root=tmp_path,
+    )
+
+    bundle = compile_tau_dag_bundle(request)
+
+    dag = bundle["dag"]
+    assert dag["edges"] == [
+        {"from": "handler-webgpt", "to": "handler-webclaude"},
+        {"from": "handler-webclaude", "to": "join"},
+        {"from": "join", "to": "human"},
+    ]
+    claude = next(node for node in dag["nodes"] if node["id"] == "handler-webclaude")
+    assert claude["depends_on"] == ["handler-webgpt"]
+    assert claude["context"]["prior_nodes"] == ["handler-webgpt"]
+    assert claude["context"]["requires_prior_receipts"] is True
+    assert claude["context"]["requires_verdict"] is True
+    assert claude["context"]["prompt_contract"]["requires_verdict"] is True
+    assert claude["context"]["prompt_contract"]["verdict_schema"] == "PASS|FAIL|NEEDS_ATTENTION"
+    command_spec = json.loads(
+        Path(bundle["command_spec_root"], "handler-webclaude", "tau-dispatch-command.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    command = command_spec["command"]
+    assert command[command.index("--prior-node") + 1] == "handler-webgpt"
+
+
+def test_roundtable_api_model_handler_routes_to_scillm_adapter(tmp_path: Path) -> None:
+    request = infer_compile_input(
+        "Ask a local API model and webclaude to review this sequentially.",
+        repo="local/agent-skills",
+        target="api-web-review",
+        handlers=["gpt-5.5", "webclaude"],
+        topology="sequential",
+        output_root=tmp_path,
+    )
+
+    bundle = compile_tau_dag_bundle(request)
+
+    assert bundle["status"] == "READY"
+    dag = bundle["dag"]
+    assert dag["context"]["handlers"] == ["gpt-5.5", "webclaude"]
+    assert dag["entry_node"] == "handler-gpt-5-5"
+    api_node = next(node for node in dag["nodes"] if node["id"] == "handler-gpt-5-5")
+    assert api_node["context"]["handler"] == "gpt-5.5"
+    assert api_node["context"]["handler_policy"]["transport_owner"] == "$tau"
+    assert api_node["context"]["handler_policy"]["transport"] == "scillm.chat"
+    command_spec = json.loads(
+        Path(bundle["command_spec_root"], "handler-gpt-5-5", "tau-dispatch-command.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    command = command_spec["command"]
+    assert command[command.index("--handler") + 1] == "gpt-5.5"
+    assert command[command.index("--next-agent") + 1] == "handler-webclaude"
+    assert "--browser-oracle-project" not in command
+    assert "--scillm-base-url" in command
+
+
 def test_roundtable_handler_project_overrides_are_written_to_command_specs(tmp_path: Path) -> None:
     request = infer_compile_input(
         "Roundtable webgpt and webkimi.",

@@ -15,6 +15,13 @@ tau_roundtable_sanity_eval = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = tau_roundtable_sanity_eval
 SPEC.loader.exec_module(tau_roundtable_sanity_eval)
 
+WORKER_PATH = Path(__file__).resolve().parents[1] / "scripts" / "tau_roundtable_worker.py"
+WORKER_SPEC = importlib.util.spec_from_file_location("tau_roundtable_worker", WORKER_PATH)
+assert WORKER_SPEC and WORKER_SPEC.loader
+tau_roundtable_worker = importlib.util.module_from_spec(WORKER_SPEC)
+sys.modules[WORKER_SPEC.name] = tau_roundtable_worker
+WORKER_SPEC.loader.exec_module(tau_roundtable_worker)
+
 
 def test_plan_lists_roundtable_eval_cases(tmp_path: Path) -> None:
     result = tau_roundtable_sanity_eval.build_plan(output_root=tmp_path, webgpt_project="tau")
@@ -75,3 +82,52 @@ def test_node_receipts_collects_statuses(tmp_path: Path) -> None:
     assert tau_roundtable_sanity_eval._receipt_statuses(receipts) == {
         "handler-webkimi": {"status": "PASS", "ok": True, "provider_live": True}
     }
+
+
+def test_worker_prompt_includes_prior_receipts_and_verdict_contract(tmp_path: Path) -> None:
+    prior_dir = tmp_path / "handler-webgpt"
+    prior_dir.mkdir(parents=True)
+    response_path = prior_dir / "response.md"
+    response_path.write_text("WebGPT produced the implementation.", encoding="utf-8")
+    receipt_path = prior_dir / "node-receipt.json"
+    receipt_path.write_text(
+        json.dumps(
+            {
+                "schema": "ask.tau_dag_handler_receipt.v1",
+                "node_id": "handler-webgpt",
+                "handler": "webgpt",
+                "status": "PASS",
+                "ok": True,
+                "response_path": str(response_path),
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    receipts = tau_roundtable_worker._load_prior_receipts(tmp_path, ["handler-webgpt"])
+    prompt = tau_roundtable_worker._handler_prompt(
+        "Ask webgpt to do the work, then ask webclaude to review it for pass/fail.",
+        "webclaude",
+        prior_receipts=receipts,
+        requires_verdict=True,
+    )
+
+    assert "Prior handler receipts" in prompt
+    assert "WebGPT produced the implementation." in prompt
+    assert "VERDICT: PASS" in prompt
+    assert tau_roundtable_worker._extract_verdict("VERDICT: FAIL\nReason") == "FAIL"
+    assert tau_roundtable_worker._has_verdict("No clear verdict") is False
+
+
+def test_worker_prior_receipts_marks_missing_upstream_not_ready(tmp_path: Path) -> None:
+    receipts = tau_roundtable_worker._load_prior_receipts(tmp_path, ["handler-webgpt"])
+
+    assert receipts == [
+        {
+            "node_id": "handler-webgpt",
+            "status": "MISSING",
+            "ok": False,
+            "failure": f"missing prior receipt: {tmp_path / 'handler-webgpt' / 'node-receipt.json'}",
+            "path": str(tmp_path / "handler-webgpt" / "node-receipt.json"),
+        }
+    ]

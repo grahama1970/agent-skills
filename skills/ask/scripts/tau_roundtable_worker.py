@@ -8,6 +8,8 @@ import json
 import subprocess
 import sys
 import time
+import urllib.error
+import urllib.request
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -38,6 +40,9 @@ def main() -> int:
     parser.add_argument("--artifact-dir", required=True)
     parser.add_argument("--surf-run", required=True)
     parser.add_argument("--browser-oracle-run", required=True)
+    parser.add_argument("--scillm-base-url", default="http://127.0.0.1:4001")
+    parser.add_argument("--scillm-api-key", default="")
+    parser.add_argument("--prior-node", action="append", default=[])
     parser.add_argument("--timeout", type=int, default=300)
     parser.add_argument("--stable-polls", type=int, default=2)
     parser.add_argument("--no-activate", action="store_true")
@@ -65,7 +70,16 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
     prompt_path = artifact_dir / "prompt.md"
     receipt_path = artifact_dir / "node-receipt.json"
     commands: list[dict[str, Any]] = []
-    prompt_path.write_text(_handler_prompt(request_text, handler), encoding="utf-8")
+    prior_receipts = _load_prior_receipts(artifact_dir.parent, args.prior_node)
+    prompt_path.write_text(
+        _handler_prompt(
+            request_text,
+            handler,
+            prior_receipts=prior_receipts,
+            requires_verdict=_requires_verdict(request_text, prior_receipts),
+        ),
+        encoding="utf-8",
+    )
 
     status = "ERROR"
     ok = False
@@ -76,62 +90,92 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
     failure = ""
     started = _now()
     try:
-        project = args.browser_oracle_project or handler
-        resolve = _run_cmd(
-            [
-                str(args.browser_oracle_run),
-                "resolve",
-                "--backend",
-                HANDLER_BACKENDS[handler],
-                "--project",
-                project,
-                "--json",
-            ],
-            cwd=Path(args.browser_oracle_run).parent,
-            timeout=60,
-        )
-        commands.append(resolve.summary())
-        if resolve.returncode != 0:
-            raise RuntimeError(resolve.stderr or resolve.stdout)
-        resolve_payload = _parse_json_object(resolve.stdout)
-        tab_id = str(resolve_payload.get("tab_id") or "")
-        url = str(resolve_payload.get("conversation_url") or "")
-        if not tab_id:
-            raise RuntimeError(f"browser-oracle project {project!r} resolved without tab_id")
-
-        submit_cmd = [
-            str(args.surf_run),
-            HANDLER_SUBMIT_COMMANDS[handler],
-            "--input",
-            str(prompt_path),
-            "--output",
-            str(response_path),
-            "--raw-output",
-            str(raw_path),
-            "--meta-output",
-            str(meta_path),
-            "--tab-id",
-            tab_id,
-            "--timeout",
-            str(args.timeout),
-            "--stable-polls",
-            str(args.stable_polls),
+        prior_failures = [
+            f"{item.get('node_id')}: {item.get('failure') or item.get('status')}"
+            for item in prior_receipts
+            if item.get("ok") is not True
         ]
-        if url:
-            if handler == "webgpt":
-                submit_cmd.extend(["--expect-url", url])
-            else:
-                submit_cmd.extend(["--url", url])
-        if args.no_activate:
-            submit_cmd.append("--no-activate")
-        submit = _run_cmd(submit_cmd, cwd=Path(args.surf_run).parent, timeout=max(args.timeout + 90, 180))
-        commands.append(submit.summary())
-        if meta_path.is_file():
-            submit_meta = _read_json(meta_path)
-        if submit.returncode != 0:
-            raise RuntimeError(submit.stderr or submit.stdout or f"{HANDLER_SUBMIT_COMMANDS[handler]} failed")
-        response_text = response_path.read_text(encoding="utf-8")
+        if prior_failures:
+            raise RuntimeError("prior_handler_receipts_not_ready: " + "; ".join(prior_failures))
+        if handler in HANDLER_SUBMIT_COMMANDS:
+            project = args.browser_oracle_project or handler
+            resolve = _run_cmd(
+                [
+                    str(args.browser_oracle_run),
+                    "resolve",
+                    "--backend",
+                    HANDLER_BACKENDS[handler],
+                    "--project",
+                    project,
+                    "--json",
+                ],
+                cwd=Path(args.browser_oracle_run).parent,
+                timeout=60,
+            )
+            commands.append(resolve.summary())
+            if resolve.returncode != 0:
+                raise RuntimeError(resolve.stderr or resolve.stdout)
+            resolve_payload = _parse_json_object(resolve.stdout)
+            tab_id = str(resolve_payload.get("tab_id") or "")
+            url = str(resolve_payload.get("conversation_url") or "")
+            if not tab_id:
+                raise RuntimeError(f"browser-oracle project {project!r} resolved without tab_id")
+
+            submit_cmd = [
+                str(args.surf_run),
+                HANDLER_SUBMIT_COMMANDS[handler],
+                "--input",
+                str(prompt_path),
+                "--output",
+                str(response_path),
+                "--raw-output",
+                str(raw_path),
+                "--meta-output",
+                str(meta_path),
+                "--tab-id",
+                tab_id,
+                "--timeout",
+                str(args.timeout),
+                "--stable-polls",
+                str(args.stable_polls),
+            ]
+            if url:
+                if handler == "webgpt":
+                    submit_cmd.extend(["--expect-url", url])
+                else:
+                    submit_cmd.extend(["--url", url])
+            if args.no_activate:
+                submit_cmd.append("--no-activate")
+            submit = _run_cmd(submit_cmd, cwd=Path(args.surf_run).parent, timeout=max(args.timeout + 90, 180))
+            commands.append(submit.summary())
+            if meta_path.is_file():
+                submit_meta = _read_json(meta_path)
+            if submit.returncode != 0:
+                raise RuntimeError(submit.stderr or submit.stdout or f"{HANDLER_SUBMIT_COMMANDS[handler]} failed")
+            response_text = response_path.read_text(encoding="utf-8")
+        else:
+            response_text, submit_meta = _run_scillm_handler(
+                args,
+                handler=handler,
+                prompt_path=prompt_path,
+                response_path=response_path,
+                raw_path=raw_path,
+                meta_path=meta_path,
+            )
+            commands.append(
+                {
+                    "command": ["scillm.chat", handler],
+                    "returncode": 0,
+                    "duration_seconds": submit_meta.get("duration_seconds"),
+                    "stdout_excerpt": response_text[:1000],
+                    "stderr_excerpt": "",
+                }
+            )
         ok = bool(response_text.strip())
+        if ok and _requires_verdict(request_text, prior_receipts):
+            ok = _has_verdict(response_text)
+            if not ok:
+                failure = "review_verdict_missing: expected PASS, FAIL, or NEEDS_ATTENTION"
         status = "PASS" if ok else "ERROR"
         provider_live = ok
     except Exception as exc:
@@ -162,6 +206,10 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
         "browser_oracle": resolve_payload,
         "submit_meta": submit_meta,
         "commands": commands,
+        "prior_nodes": list(args.prior_node),
+        "prior_handler_receipts": prior_receipts,
+        "requires_verdict": _requires_verdict(request_text, prior_receipts),
+        "verdict": _extract_verdict(response_text),
         "failure": failure or None,
         "provider_receipt": {
             "schema": "ask.tau_dag_provider_route_receipt.v1",
@@ -290,15 +338,47 @@ def _run_join(args: argparse.Namespace, start: dict[str, Any], artifact_dir: Pat
     return {"exit_code": 0 if ok else 1, "handoff": handoff}
 
 
-def _handler_prompt(request_text: str, handler: str) -> str:
-    return "\n".join(
+def _handler_prompt(
+    request_text: str,
+    handler: str,
+    *,
+    prior_receipts: list[dict[str, Any]] | None = None,
+    requires_verdict: bool = False,
+) -> str:
+    prior_receipts = prior_receipts or []
+    lines = [
+        "You are one participant in a Tau-managed roundtable.",
+        f"Handler: {handler}",
+        "",
+        "Request:",
+        request_text,
+        "",
+    ]
+    if prior_receipts:
+        lines.extend(["Prior handler receipts to use as input:", ""])
+        for receipt in prior_receipts:
+            lines.extend(
+                [
+                    f"### {receipt.get('node_id')} / {receipt.get('handler')}",
+                    f"- status: {receipt.get('status')}",
+                    f"- response_path: {receipt.get('response_path')}",
+                    "",
+                    str(receipt.get("response_excerpt") or "").strip(),
+                    "",
+                ]
+            )
+    if requires_verdict:
+        lines.extend(
+            [
+                "Return a review verdict using exactly one of:",
+                "VERDICT: PASS",
+                "VERDICT: FAIL",
+                "VERDICT: NEEDS_ATTENTION",
+                "",
+            ]
+        )
+    lines.extend(
         [
-            "You are one participant in a Tau-managed roundtable.",
-            f"Handler: {handler}",
-            "",
-            "Request:",
-            request_text,
-            "",
             "Return a concise position with these Markdown headings:",
             "## Position",
             "## Evidence",
@@ -306,6 +386,7 @@ def _handler_prompt(request_text: str, handler: str) -> str:
             "## Blockers",
         ]
     )
+    return "\n".join(lines)
 
 
 def _handoff(
@@ -364,6 +445,118 @@ def _run_cmd(command: list[str], *, cwd: Path, timeout: int) -> CmdResult:
     started = time.time()
     proc = subprocess.run(command, cwd=cwd, capture_output=True, text=True, timeout=timeout)
     return CmdResult(command, proc.returncode, proc.stdout, proc.stderr, time.time() - started)
+
+
+def _run_scillm_handler(
+    args: argparse.Namespace,
+    *,
+    handler: str,
+    prompt_path: Path,
+    response_path: Path,
+    raw_path: Path,
+    meta_path: Path,
+) -> tuple[str, dict[str, Any]]:
+    prompt = prompt_path.read_text(encoding="utf-8")
+    base_url = str(args.scillm_base_url).rstrip("/")
+    payload = {
+        "model": handler,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0,
+    }
+    body = json.dumps(payload).encode("utf-8")
+    request = urllib.request.Request(
+        f"{base_url}/v1/chat/completions",
+        data=body,
+        headers={
+            "Authorization": f"Bearer {args.scillm_api_key}",
+            "Content-Type": "application/json",
+            "X-Caller-Skill": "ask-tau-roundtable",
+        },
+        method="POST",
+    )
+    started = time.time()
+    try:
+        with urllib.request.urlopen(request, timeout=args.timeout) as response:
+            raw = response.read().decode("utf-8", errors="replace")
+            status_code = response.status
+    except urllib.error.HTTPError as exc:
+        raw = exc.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"scillm.chat failed HTTP {exc.code}: {raw[:1000]}") from exc
+    except urllib.error.URLError as exc:
+        raise RuntimeError(f"scillm.chat failed: {exc}") from exc
+    raw_path.write_text(raw, encoding="utf-8")
+    payload = _parse_json_object(raw)
+    choices = payload.get("choices") if isinstance(payload.get("choices"), list) else []
+    message = choices[0].get("message") if choices and isinstance(choices[0], dict) else {}
+    content = message.get("content") if isinstance(message, dict) else ""
+    if isinstance(content, list):
+        text = "\n".join(str(item.get("text") or item) for item in content)
+    else:
+        text = str(content or "")
+    response_path.write_text(text, encoding="utf-8")
+    meta = {
+        "schema": "ask.tau_dag_scillm_submit_meta.v1",
+        "status_code": status_code,
+        "model": handler,
+        "duration_seconds": round(time.time() - started, 3),
+        "usage": payload.get("usage"),
+    }
+    meta_path.write_text(json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return text, meta
+
+
+def _load_prior_receipts(node_artifacts_root: Path, prior_nodes: list[str]) -> list[dict[str, Any]]:
+    receipts: list[dict[str, Any]] = []
+    for node_id in prior_nodes:
+        path = node_artifacts_root / node_id / "node-receipt.json"
+        if not path.is_file():
+            receipts.append(
+                {
+                    "node_id": node_id,
+                    "status": "MISSING",
+                    "ok": False,
+                    "failure": f"missing prior receipt: {path}",
+                    "path": str(path),
+                }
+            )
+            continue
+        receipt = _read_json(path)
+        response_path = Path(str(receipt.get("response_path") or ""))
+        response_excerpt = ""
+        if response_path.is_file():
+            response_excerpt = response_path.read_text(encoding="utf-8").strip()[:4000]
+        receipts.append({"path": str(path), "response_excerpt": response_excerpt, **receipt})
+    return receipts
+
+
+def _requires_verdict(request_text: str, prior_receipts: list[dict[str, Any]]) -> bool:
+    if not prior_receipts:
+        return False
+    lower = request_text.lower()
+    return any(
+        marker in lower
+        for marker in (
+            "pass/fail",
+            "pass or fail",
+            "pass fail",
+            "pass-fail",
+            "review for pass",
+            "review it for pass",
+            "review the work for pass",
+        )
+    )
+
+
+def _extract_verdict(text: str) -> str | None:
+    upper = text.upper()
+    for verdict in ("NEEDS_ATTENTION", "PASS", "FAIL"):
+        if f"VERDICT: {verdict}" in upper or f"VERDICT {verdict}" in upper:
+            return verdict
+    return None
+
+
+def _has_verdict(text: str) -> bool:
+    return _extract_verdict(text) is not None
 
 
 def _read_stdin_handoff() -> dict[str, Any]:

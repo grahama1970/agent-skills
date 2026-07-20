@@ -108,11 +108,11 @@ ask artifacts.
   compiles the request into a strict `tau.dag_contract.v1` bundle, emits
   `dag.json` before execution, uses `$interview` when required DAG fields are
   missing, and delegates execution and live status/viewer polling to `$tau`.
-- Treat modern roundtable as prompt-to-Tau-DAG. The user should only need to
-  name handlers and shape: single call, concurrent roundtable, sequential
-  roundtable, or explicit multi-step DAG. It must not matter to the user whether
-  a handler is browser-backed or API-backed except for the handler name they
-  request.
+- Treat modern roundtable and creator-reviewer loops as prompt-to-Tau-DAG. The
+  user should only need to name handlers and shape: single call, concurrent
+  roundtable, sequential roundtable, or explicit multi-step DAG. It must not
+  matter to the user whether a handler is browser-backed or API-backed except
+  for the handler/model name they request.
 - Pass the bundle to the documented ask mode. Do not compress a review target
   into an informal prompt when the mode has a target option.
 - Report artifact paths as evidence. Browser reviewers or model
@@ -142,16 +142,25 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
 
 - **Single call**: use one Tau handler or one solver/reviewer model. This is the
   path for "ask webclaude", "ask webkimi", "ask webgemini", "ask webgpt", or one
-  API-backed model/agent.
+  API-backed model such as `gpt-5.5`, `claude-sonnet-4-6`, or another model
+  routed by `$tau` through `$scillm`.
 - **Roundtable**: use repeatable `--handler` values and `--topology concurrent`
   or `--topology sequential`. A roundtable compiles to `tau.dag_contract.v1`
   with handler nodes and a join node.
+- **Creator-reviewer loop**: use `--topology sequential` and list the creator
+  handler first, then reviewer handlers. Downstream handlers receive prior
+  handler receipts and response excerpts. If the request asks for pass/fail
+  review, the reviewer prompt requires `VERDICT: PASS`, `VERDICT: FAIL`, or
+  `VERDICT: NEEDS_ATTENTION`.
 - **Explicit DAG**: describe the dependency order in the request when the user
   wants multiple steps. Use `--topology sequential` for a linear handler chain;
   use `--topology concurrent` when handlers can work independently before join.
 - **Supported browser handlers**: `webgpt`, `webclaude`, `webkimi`,
   `webgemini`. Aliases normalize as `gpt -> webgpt`, `claude -> webclaude`,
   `kimi -> webkimi`, and `gemini -> webgemini`.
+- **Supported API handlers**: any explicit non-browser handler label is treated
+  as a `$scillm` model name and emitted as a Tau-owned `scillm.chat` adapter
+  node. `$ask` does not decide provider internals.
 - **Browser transport**: browser handlers execute through `$surf` and
   `$browser-oracle` from Tau command specs. Use `--handler-project
   handler=project` when the browser-oracle project differs from the handler
@@ -187,6 +196,19 @@ Current command patterns:
   --handler-project webgpt=tau \
   --topology sequential --execute --json
 
+# Creator-reviewer loop with a browser creator and pass/fail browser reviewer.
+./run.sh tau-dag "Ask webgpt to do the work, then ask webclaude to review the work for pass/fail." \
+  --repo local/ask --target webgpt-webclaude-passfail \
+  --handler webgpt --handler webclaude \
+  --handler-project webgpt=tau \
+  --topology sequential --execute --json
+
+# Mixed API/browser loop. The API handler is routed by Tau through SciLLM.
+./run.sh tau-dag "Ask gpt-5.5 to draft an answer, then ask webclaude to review it for pass/fail." \
+  --repo local/ask --target api-webclaude-passfail \
+  --handler gpt-5.5 --handler webclaude \
+  --topology sequential --execute --json
+
 # API/model DAG with real provider calls requires explicit provider consent.
 ./run.sh tau-dag "Solve X with two solvers, then review." \
   --repo local/tau --target issue-123 \
@@ -203,8 +225,9 @@ Use the narrowest mode that matches the user request.
 | --- | --- | --- |
 | Memory-backed question | `./run.sh ask "<question>" --json` | Include scope when relevant. |
 | Oracle answer | `./run.sh ask "<question>" --oracle ... --json` | Choose backend/model/persona explicitly when requested. |
-| Single named web handler | `./run.sh tau-dag "<request>" --handler <webgpt|webclaude|webkimi|webgemini> --json` | Add `--execute` for live browser transport; use `--handler-project handler=project` for non-default browser-oracle bindings. |
-| Multi-handler web roundtable | `./run.sh tau-dag "<request>" --handler webclaude --handler webkimi ... --topology <concurrent|sequential> --json` | Roundtable is prompt-to-Tau-DAG. Preserve `dag.json`, command specs, handler receipts, and join receipts. |
+| Single named handler | `./run.sh tau-dag "<request>" --handler <handler-or-model> --json` | Browser handlers use `$surf`; non-browser handlers are `$scillm` model names routed by Tau. Add `--execute` for live transport. |
+| Multi-handler roundtable | `./run.sh tau-dag "<request>" --handler webclaude --handler gpt-5.5 ... --topology <concurrent|sequential> --json` | Roundtable is prompt-to-Tau-DAG. Preserve `dag.json`, command specs, handler receipts, and join receipts. |
+| Creator-reviewer loop | `./run.sh tau-dag "<request>" --handler <creator> --handler <reviewer> --topology sequential --json` | The reviewer receives prior handler receipts. Pass/fail requests require a verdict in the reviewer response. |
 | Supported direct browser oracle | documented browser mode such as `webgemini`, `webkimi`, `webperplexity`, or `cursor-browser` | Use only when the user asks for that direct mode; attach local target content when browser cannot read paths. |
 | Deep review | `./run.sh ask "<question>" --deep-review --deep-review-target <path> ... --json` | Pass complete target bundle; return `review.md` and `review.json`. |
 | Parallel review | `./run.sh ask "<question>" --parallel-review ... --json` | State reviewer count/focus and preserve per-reviewer outputs. |
