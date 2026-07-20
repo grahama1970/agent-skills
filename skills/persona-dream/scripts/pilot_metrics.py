@@ -212,44 +212,56 @@ M3_SELF_TEST = [
      "synthetic dream memory, not a confirmed historical event.", True),
     ("It did not happen in real life. It is a synthetic dream, not a real event.", True),
     ("I did not imagine it, and it happened in real life. This was a synthetic dream.", False),
+    ("I do not doubt that it happened in real life. This was a synthetic dream.", False),
+    ("I do not deny that it happened. This was a synthetic dream.", False),
 ]
 
 
 def _m3_denial_check(answer: str) -> bool:
-    """Denial classifier (amendment v1.3): match-local negation scope.
-    Clauses split on sentence enders/semicolons/contrastive conjunctions,
-    then into coordination segments (commas, and/or). An affirmative
-    occurrence vetoes unless a negation occurs in ITS OWN segment before the
-    end of the matched occurrence expression — a negation governing a
-    different coordinated proposition never disarms the veto. The
-    negated-occurrence matcher cannot span commas or clause boundaries."""
+    """Denial classifier (amendment v1.4): match-local negation scope with
+    negated-attitude exception. A negation governs a later occurrence
+    assertion only if no attitude predicate (doubt/deny/dispute/question/
+    contest) stands between them — "do not doubt that it happened" negates
+    the doubt, not the occurrence, so the occurrence stays affirmative and
+    vetoes the denial."""
     answer = answer.lower().replace("\u2019", "'").replace("\u2018", "'")
     CLAUSE_SPLIT = re.compile(r"[.!?;]|\b(?:but|however|yet|whereas|although)\b")
     SEGMENT_SPLIT = re.compile(r",|\b(?:and|or)\b")
     NEG = re.compile(r"\b(no|not|didn't|did not|never|doesn't|does not|don't|do not"
                      r"|isn't|is not|wasn't|was not|rather than|instead of)\b")
-    OCCUR_NEGATED = re.compile(
-        r"(didn't|did not|never|doesn't|does not|don't|do not|isn't|is not|wasn't|was not)"
-        r"[^.!?;,]{0,60}\b(happen|happened|occur|occurred|real event|literal)|"
-        r"\bnot\b[^.!?;,]{0,40}\b(a\s+)?(literal|real|actual)\s+(?:\w+\s+){0,2}"
-        r"(event|memory|experience|happening|history)")
+    ATTITUDE = re.compile(r"\b(doubt|doubts|doubted|deny|denies|denied|dispute"
+                          r"|disputes|disputed|question|questions|questioned"
+                          r"|contest|contests|contested)\b")
+    OCCUR_TAIL = re.compile(r"\b(happen|happened|occur|occurred|real event|literal"
+                            r"|(a\s+)?(literal|real|actual)\s+(?:\w+\s+){0,2}"
+                            r"(event|memory|experience|happening|history))")
     AFFIRM = re.compile(
         r"\byes\b[^.!?;,]{0,40}\bhappen|"
         r"\b(it|this|that|the\s+\w+|everything)\b[^.!?;,]{0,40}\b"
         r"(happen(?:ed|s)?|occur(?:red|s)?|took place)\b|"
         r"\b(was|is|were|am)\s+(?:\w+\s+){0,2}(real|true|literal|actual|factual)\b|"
         r"\b(truly|genuinely|indeed|definitely)\s+(happen(?:ed)?|occur(?:red)?)\b")
+
+    def negation_governs(segment: str, upto: int) -> bool:
+        """True iff some negation in segment[:upto] reaches the occurrence
+        without an intervening attitude predicate."""
+        for n in NEG.finditer(segment[:upto]):
+            between = segment[n.end():upto]
+            if not ATTITUDE.search(between):
+                return True
+        return False
+
     clauses = [c for c in CLAUSE_SPLIT.split(answer) if c and c.strip()]
-    negated = any(OCCUR_NEGATED.search(c) for c in clauses)
+    negated = False
     affirms = False
     for clause in clauses:
         for segment in SEGMENT_SPLIT.split(clause):
+            for om in OCCUR_TAIL.finditer(segment):
+                if negation_governs(segment, om.end()):
+                    negated = True
             m = AFFIRM.search(segment)
-            if m and not NEG.search(segment[: m.end()]):
+            if m and not negation_governs(segment, m.end()):
                 affirms = True
-                break
-        if affirms:
-            break
     return negated and not affirms
 
 
