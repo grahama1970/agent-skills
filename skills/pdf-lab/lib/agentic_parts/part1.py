@@ -59,6 +59,16 @@ _UNKNOWN_REGION_SIDEBAR_NOISE = (
 _UNKNOWN_REGION_TABLE_CELL_TEXTS = {"date", "type", "assurance", "implemented", "organization-defined"}
 _UNKNOWN_REGION_CONTROL_ID_RE = re.compile(r"\b[A-Z]{2,3}-\d+(?:\(\d+\))?\b")
 
+TABLE_CLASS_REAL = "real_table_candidate"
+TABLE_CLASS_ROW_FRAGMENT = "table_row_fragment"
+TABLE_CLASS_PAGE_FRAME_FALSE_POSITIVE = "page_frame_false_positive"
+TABLE_CLASS_PROSE_FALSE_POSITIVE = "prose_false_positive"
+TABLE_CLASS_UNRESOLVED_BOUNDS = "unresolved_bounds"
+TABLE_SEMANTIC_TABLE = "table"
+TABLE_SEMANTIC_ROW_FRAGMENT = "row_fragment"
+TABLE_SEMANTIC_PROSE = "prose"
+TABLE_SEMANTIC_CALLOUT_PROSE = "callout_prose"
+
 
 def _unknown_region_norm(value: Any) -> str:
     return " ".join(str(value or "").lower().split())

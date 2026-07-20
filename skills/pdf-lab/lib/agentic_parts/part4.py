@@ -343,10 +343,18 @@ def _write_second_pass_prompt_artifacts(
         else:
             model_response = deterministic_decision
             decision = deterministic_decision
+        validation_status = (
+            "blocked"
+            if decision["decision"] == "blocker"
+            or any(check.get("status") == "blocked" for check in decision["validators"])
+            else "pass"
+            if decision["decision"] in {"agent_resolved", "human_triage", "fixture_candidate"}
+            else "fail"
+        )
         validation = {
             "schema_version": "pdf_lab.second_pass_validation.v1",
             "case_id": payload["case_id"],
-            "status": "pass" if decision["decision"] in {"agent_resolved", "human_triage", "fixture_candidate", "blocker"} else "fail",
+            "status": validation_status,
             "checks": decision["validators"],
             "runtime": "live_llm_multimodal_batch_with_deterministic_validation" if second_pass_model else "offline_deterministic_guardrail_with_prompt_contract",
             "model_call": model_call,
