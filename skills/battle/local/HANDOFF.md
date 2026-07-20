@@ -94,8 +94,35 @@ uv run --project "$PWD" python -m battle_skill.cli serve-live-transport \
 - `skills/battle/skills/` is a mis-rooted run-artifact tree (untracked). Many
   `local/*-verify*` and `local/battle-004-*` dirs are run scratch.
 
-## 8. Suggested next step
-Unify `#battle/receipt` with the live streaming console + real codenames so the
-mockup-matched race view and the live data are one screen (was the prior agent's top
-next-step; still open). Re-verify `#battle/live` streaming FIRST — it is only a
-PRIOR-CLAIM.
+## 8. /webgpt review loop (binding VERIFIED 2026-07-20)
+- `skills/battle/.ask/browser-oracles.yaml` → `webgpt.default: battle`. This project's
+  design/UX reviews and BLOCK-fix loops run through **/webgpt** (a native skill node via
+  /browser-oracle — NOT behind scillm). `~/.pi/webgpt-projects/` + `~/.pi/webgpt-rate-limit.json`
+  exist. Tab liveness/auth is NOT established this session — establish it at use time before
+  asserting a review ran.
+- Use /webgpt to review the `#battle/receipt` spectator against `GOAL_ADAPTIVE_LINEAGE.md`
+  and the accepted mockups BEFORE claiming the UX is done (the prior "receipt-authoritative /
+  WebGPT BLOCK fix" commit `cfb9f7cf7` is part of this loop).
+
+## 9. Back-on-track plan (priority order)
+1. **Resolve the live-streaming story (the crux).** Decide if "live streaming on a route" is
+   a real GOAL requirement. If yes: define/fix a real battle route (there is NO `#battle/live`;
+   valid routes are `#battle`, `#battle/isolation`, `#battle/receipt`) and wire the AgentDetail
+   `stdout/stderr` panel to the SSE bus, then VERIFY one live frame end-to-end in a FRESH tab.
+   If no: delete the stale `#battle/live` claims and treat the derived fixture as the source.
+2. **Re-verify the backend LIVE four-specimen qualification** with a fresh SciLLM+Docker run
+   (immutable-goal closure). Only deterministic tests (32 pass) + a `2026-07-19` PRIOR-CLAIM
+   run exist today. Command: `TAU_REPO=… ./run.sh arena-adaptive-lineage-qualification battle-004 --out …`
+   (needs the Tau recognizer fix — see §5 / issue #116 — to reach G2 on method_replace).
+3. **Unify `#battle/receipt`** with real codenames (and live streaming if step 1 pans out) per
+   `GOAL_ADAPTIVE_LINEAGE.md`.
+4. **/webgpt design review** of the receipt view (§8) before claiming UX done.
+5. Merge the Tau recognizer fix (`grahama1970/tau#116`); prune leftover worktrees
+   (`agent-skills-adaptive-mechanics`, `tau-adaptive-mechanics`).
+
+## 10. Verification discipline for the next agent
+- Load the spectator in a FRESH browser tab — a tab navigated many times / after a CDP session
+  reset renders blank (`#root` empty); that is a poisoned tab, NOT an app failure (cost this
+  session ~1 hr of false diagnosis).
+- Deterministic tests over self-authored code are NOT proof of the live problem. Sprites,
+  streaming, and qualification each need a live read-back from the produced artifact.
