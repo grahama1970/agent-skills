@@ -75,6 +75,7 @@ Commands:
   check-video-provider-packet-routing  Prove provider packet routing stays dry-run and fail-closed
   check-fal-api-preflight  Check FAL auth and non-generation API/docs access without submitting jobs
   check-fal-api-preflight-fixtures  Prove FAL auth discovery preflight stays fail-closed
+  check-pipeline-robustness  Aggregate offline autonomous, lineage, fail-closed, and provider-boundary checks
   check-pipeline-contract  Validate the canonical Phase 01-16 pipeline contract
   write-phase10-reproducibility-receipt  Prove Phase 10 committed artifacts are canonically reproducible
   repair-semantic-mix-revision Create, Memory-verify, and activate a new explicit-human-idea revision
@@ -161,6 +162,7 @@ Examples:
   ./run.sh check-video-provider-packet-routing --fixtures-root tests/fixtures/video-provider-packet-routing --receipt-out /tmp/persona-dream-video-provider-packet-routing/check_receipt.json --json
   ./run.sh check-fal-api-preflight --live --receipt-out /tmp/persona-dream-fal-api-preflight/live_receipt.json --json
   ./run.sh check-fal-api-preflight-fixtures --fixtures-root tests/fixtures/fal-api-preflight --receipt-out /tmp/persona-dream-fal-api-preflight/check_receipt.json --json
+  ./run.sh check-pipeline-robustness --output-root /tmp/persona-dream-robustness --json
   ./run.sh check-pipeline-contract --json
   ./run.sh write-phase10-reproducibility-receipt --json
   ./run.sh tailscale-funnel-publication-canary --asset reports/pipeline-complete/phase_07_storyboard_live_tau/generated_storyboard_frames/sb_001_start_frame.png --output-root /tmp/persona-dream-funnel-canary --json
@@ -370,6 +372,9 @@ case "$COMMAND" in
     ;;
   check-fal-api-preflight-fixtures)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_fal_api_preflight_fixtures.py" "$@"
+    ;;
+  check-pipeline-robustness)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_pipeline_robustness.py" "$@"
     ;;
   check-pipeline-contract)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_persona_dream_pipeline_contract.py" "$@"
