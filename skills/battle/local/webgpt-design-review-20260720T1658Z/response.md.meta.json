@@ -1,0 +1,75 @@
+{
+  "agent_action": "Do not use output as proof. If ChatGPT visibly completed, run webgpt.extract with the exact sentinel; otherwise resubmit to a clean verified tab.",
+  "agent_diagnosis": "Surf captured response text, but it did not contain the current completion sentinel in assistant output.",
+  "clean_chars": 0,
+  "clean_contains_sentinel": false,
+  "controlled_tab_id": null,
+  "conversation_url": null,
+  "extract_fallback_meta": null,
+  "extract_fallback_raw": null,
+  "extract_fallback_reason": "missing_sentinel",
+  "extract_fallback_used": false,
+  "failure": "missing_sentinel",
+  "finished_at": "2026-07-20T17:00:00Z",
+  "input": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/webgpt-design-review-20260720T1658Z/request.md",
+  "output": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/webgpt-design-review-20260720T1658Z/response.md",
+  "proof_status": "submitted_no_response_proof",
+  "raw_chars": 0,
+  "raw_contains_sentinel": false,
+  "raw_output": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/webgpt-design-review-20260720T1658Z/response.md.raw.md",
+  "raw_response_advisory": false,
+  "requested_model": null,
+  "requested_reasoning": "Pro",
+  "requested_tab_id": "837359249",
+  "requested_url": null,
+  "response_source": null,
+  "response_timed_out": null,
+  "roundtrip_preflight": null,
+  "roundtrip_preflight_exit_code": 0,
+  "roundtrip_preflight_output_dir": null,
+  "roundtrip_preflight_required": false,
+  "sentinel": "<<<WEBGPT_DONE:20260720T165807Z:ed9fdcb0>>>",
+  "started_at": "2026-07-20T16:58:08Z",
+  "status": "missing_sentinel",
+  "stderr_log": "/tmp/surf-webgpt-submit-stderr.Kl60C7.log",
+  "submitted_output": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/webgpt-design-review-20260720T1658Z/response.md.submitted.md",
+  "submitted_to_chatgpt": true,
+  "surf_doctor_request_path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/webgpt-design-review-20260720T1658Z/response.md.meta.surf-doctor-request.json",
+  "tab_identity_preflight": {
+    "chatgpt_tabs_count": 19,
+    "checks": [
+      {
+        "detail": "837359249",
+        "name": "tab_id_valid",
+        "ok": true
+      },
+      {
+        "detail": "ok",
+        "name": "tab_open_chatgpt",
+        "ok": true
+      },
+      {
+        "detail": "expected_url matched tab 837359249",
+        "name": "expected_url_matches_tab",
+        "ok": true
+      },
+      {
+        "detail": "verified",
+        "name": "tab_identity_verified_or_allowed",
+        "ok": true
+      }
+    ],
+    "error": null,
+    "expected_title": null,
+    "expected_url": "https://chatgpt.com/g/g-p-6a408ce3c7a081918022e0eb6673aae3-battle/c/6a5a1f2b-0ac0-83ea-84a7-126c8acc0818",
+    "ok": true,
+    "source": "tab-id",
+    "tab": {
+      "id": "837359249",
+      "title": "ChatGPT - Battle",
+      "url": "https://chatgpt.com/g/g-p-6a408ce3c7a081918022e0eb6673aae3-battle/c/6a5a1f2b-0ac0-83ea-84a7-126c8acc0818"
+    },
+    "tab_id": "837359249"
+  },
+  "timeout_error": null
+}

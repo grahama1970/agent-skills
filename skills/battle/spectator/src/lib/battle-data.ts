@@ -24,7 +24,8 @@ type GeneratedBattleFixture = BattleNormalizedUxFixture & {
 };
 
 function withDevLineagePreview(source: Lane[]): Lane[] {
-	if (typeof window === "undefined" || !import.meta.env.DEV) return source;
+	const isDev = Boolean((import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV);
+	if (typeof window === "undefined" || !isDev) return source;
 	if (!new URLSearchParams(window.location.search).has("lineage")) return source;
 	if (source.some((lane) => lane.parentId || lane.children?.length)) return source;
 	const [first, second] = source;

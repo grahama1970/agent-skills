@@ -1,0 +1,43 @@
+{
+  "checkedAt": "2026-07-20T16:57:06.523Z",
+  "host": {
+    "host": "agent-skills battle spectator",
+    "packageRoot": "/home/graham/workspace/experiments/agent-skills/skills/battle/spectator",
+    "entry": "skills/battle/spectator/src/main.tsx"
+  },
+  "fixture": {
+    "battle_id": "battle-004",
+    "status": "PASS",
+    "proof_mode": "receipt_backed_fixture",
+    "live_source": "adaptive_red_blue_lineage_v2",
+    "run_id": "arena-adaptive-lineage-20260720T144034Z",
+    "qualificationStatus": null,
+    "criterion": null,
+    "selected": null,
+    "runnerUp": null,
+    "laneNames": [
+      {
+        "id": "G0",
+        "name": "G0 Seed Slip",
+        "exploit_short_name": null
+      },
+      {
+        "id": "G1-A",
+        "name": "G1-A Module Slip",
+        "exploit_short_name": null
+      },
+      {
+        "id": "G1-B",
+        "name": "G1-B Arc Courier",
+        "exploit_short_name": null
+      },
+      {
+        "id": "G2",
+        "name": "G2 ZipInfo Path",
+        "exploit_short_name": null
+      }
+    ]
+  },
+  "mocked": false,
+  "live": true
+}

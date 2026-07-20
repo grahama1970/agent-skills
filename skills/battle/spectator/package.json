@@ -10,6 +10,9 @@
     "./*": "./src/*"
   },
   "scripts": {
+    "dev": "node scripts/build-static.mjs && node scripts/serve-static.mjs --host 127.0.0.1 --port 3003",
+    "build": "tsc --noEmit -p tsconfig.json && node scripts/build-static.mjs",
+    "preview": "node scripts/serve-static.mjs --host 127.0.0.1 --port 3003",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
     "prove:pixi": "node scripts/sanity-battle-pixi.mjs",
