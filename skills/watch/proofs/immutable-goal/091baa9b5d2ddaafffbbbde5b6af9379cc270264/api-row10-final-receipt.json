@@ -1,0 +1,106 @@
+{
+  "schema": "watch.yolo_track_labels.v1",
+  "receipt_format_version": 2,
+  "revision": 6,
+  "asset_uid": "watch_immutable_proof_asset",
+  "row_index": 10,
+  "timecode": "00:00:00",
+  "movie_segment": "00:00:00-00:00:08",
+  "labels": {
+    "track_15": {
+      "trackId": "track_15",
+      "characterName": "Willie",
+      "actorName": "Billy Bob Thornton",
+      "status": "accepted",
+      "source": "human",
+      "confidence": 1,
+      "updatedAt": "2026-07-20T20:58:40.302Z"
+    }
+  },
+  "box_rejections": {
+    "track_15@179": {
+      "boxKey": "track_15@179",
+      "trackId": "track_15",
+      "timeSeconds": 1.79,
+      "status": "rejected",
+      "source": "human",
+      "updatedAt": "2026-07-20T20:58:39.007Z"
+    }
+  },
+  "events": [
+    {
+      "id": "yolo_label_ea5b25859442d42aff9c9854dd9eab44b081f94c41583c8b4d8e99bc09fab6fd",
+      "sequence": 1,
+      "idempotency_key": "5160a033-a16f-4741-b374-3fa7514e59e0",
+      "request_fingerprint": "f211e6bf3ef6440eafd893ae4a9290a2730c448abf0f19baf7436249473ebb1c",
+      "action": "accept",
+      "asset_uid": "watch_immutable_proof_asset",
+      "row_index": 10,
+      "track_id": "track_15",
+      "box_key": "track_15@100",
+      "time_seconds": 1,
+      "timecode": "00:00:00",
+      "movie_segment": "00:00:00-00:00:08",
+      "created_at": "2026-07-20T20:58:38.154Z",
+      "status": "accepted",
+      "character_name": "Marcus",
+      "actor_name": "Tony Cox",
+      "confidence": 1,
+      "memory_sync": {
+        "state": "stored",
+        "attempts": 1,
+        "last_error": null,
+        "updated_at": "2026-07-20T20:58:38.490Z"
+      }
+    },
+    {
+      "id": "yolo_label_bc919f6bee21ba89c825bce32abb8218dac948ba5d6576466621b11da3464675",
+      "sequence": 2,
+      "idempotency_key": "c4608f0f-ed5e-4035-b687-a7d92d98af33",
+      "request_fingerprint": "0d9e78b843b5ad8cea1d845db7ff7fa680216482d463b7772249e064101a1d96",
+      "action": "reject_box",
+      "asset_uid": "watch_immutable_proof_asset",
+      "row_index": 10,
+      "track_id": "track_15",
+      "box_key": "track_15@179",
+      "time_seconds": 1.79,
+      "timecode": "00:00:00",
+      "movie_segment": "00:00:00-00:00:08",
+      "created_at": "2026-07-20T20:58:39.007Z",
+      "status": "rejected_box",
+      "memory_sync": {
+        "state": "stored",
+        "attempts": 1,
+        "last_error": null,
+        "updated_at": "2026-07-20T20:58:39.237Z"
+      }
+    },
+    {
+      "id": "yolo_label_5b2f58df96573cf88462cf70e002371712cebd4db8f85ecf7d4188f3a5ab7c36",
+      "sequence": 3,
+      "idempotency_key": "576c5306-24c4-4f78-89d5-eb8c6d3ce148",
+      "request_fingerprint": "d0bdab90e230f012efb13557436145ea2afb0dedc61ba2d2c8f9beb5da0ac189",
+      "action": "accept",
+      "asset_uid": "watch_immutable_proof_asset",
+      "row_index": 10,
+      "track_id": "track_15",
+      "box_key": "track_15@454",
+      "time_seconds": 4.54,
+      "timecode": "00:00:00",
+      "movie_segment": "00:00:00-00:00:08",
+      "created_at": "2026-07-20T20:58:40.302Z",
+      "status": "accepted",
+      "character_name": "Willie",
+      "actor_name": "Billy Bob Thornton",
+      "confidence": 1,
+      "memory_sync": {
+        "state": "stored",
+        "attempts": 1,
+        "last_error": null,
+        "updated_at": "2026-07-20T20:58:40.585Z"
+      }
+    }
+  ],
+  "receipt_path": "watch_immutable_proof_asset_8ca4fa6d610e044a_row0010.json",
+  "updated_at": "2026-07-20T20:58:40.585Z"
+}

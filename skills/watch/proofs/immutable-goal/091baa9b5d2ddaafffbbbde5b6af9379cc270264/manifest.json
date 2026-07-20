@@ -1,0 +1,93 @@
+{
+  "schema": "watch.immutable_goal_proof.v1",
+  "goal_id": "watch-yolo-memory-identity",
+  "status": "PASS",
+  "mocked": false,
+  "live": true,
+  "commit_sha": "091baa9b5d2ddaafffbbbde5b6af9379cc270264",
+  "created_at": "2026-07-20T20:58:44.461Z",
+  "memory_daemon_url": "http://127.0.0.1:8601/",
+  "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+  "proof_only_row10_asset_uid": "watch_immutable_proof_asset",
+  "rows": [
+    9,
+    10
+  ],
+  "tracks": [
+    "track_2",
+    "track_15"
+  ],
+  "assertions": {
+    "live_qdrant_suggestion": true,
+    "suggestion_tentative": true,
+    "human_accept_persisted": true,
+    "stop_persisted": true,
+    "identity_absent_after_stop": true,
+    "explicit_reassignment_persisted": true,
+    "reload_hydration_passed": true,
+    "memory_sync_stored": true,
+    "suggestion_query_did_not_mutate_receipt": true
+  },
+  "artifacts": [
+    {
+      "path": "skills/watch/proofs/immutable-goal/091baa9b5d2ddaafffbbbde5b6af9379cc270264/01-row9-tentative-marcus.png",
+      "sha256": "5077d6395f3675604fa63989dec7f1d38f626326313dd30a77e79d6f56ff4bfb",
+      "bytes": 262007
+    },
+    {
+      "path": "skills/watch/proofs/immutable-goal/091baa9b5d2ddaafffbbbde5b6af9379cc270264/02-row10-marcus-accepted.png",
+      "sha256": "20e7cb18801262b51b679c7dc7b1d6237a01bf3cca20f46be1917c6c8b188a85",
+      "bytes": 855272
+    },
+    {
+      "path": "skills/watch/proofs/immutable-goal/091baa9b5d2ddaafffbbbde5b6af9379cc270264/03-row10-after-stop-unassigned.png",
+      "sha256": "1d4f288fd3a76805468183a371150d48094cac2489b5b514e2b54b26e8efd06d",
+      "bytes": 594026
+    },
+    {
+      "path": "skills/watch/proofs/immutable-goal/091baa9b5d2ddaafffbbbde5b6af9379cc270264/04-row10-willie-reassigned.png",
+      "sha256": "834afa974122ec8848a498ec5946d3a9d60b093df2b1cd89d40a436c5c50da83",
+      "bytes": 660566
+    },
+    {
+      "path": "skills/watch/proofs/immutable-goal/091baa9b5d2ddaafffbbbde5b6af9379cc270264/05-row10-reloaded.png",
+      "sha256": "3c5e97874e1c0ce99cafdcc3cf3c65387ea208da0761663767f08630c0c663d8",
+      "bytes": 674724
+    },
+    {
+      "path": "skills/watch/proofs/immutable-goal/091baa9b5d2ddaafffbbbde5b6af9379cc270264/api-row10-final-receipt.json",
+      "sha256": "1ba6ee89a498d6daff281e72724a670d0b1acdf49db0139cb20bd7c44271f392",
+      "bytes": 3423
+    },
+    {
+      "path": "skills/watch/proofs/immutable-goal/091baa9b5d2ddaafffbbbde5b6af9379cc270264/api-row10-projection-after-marcus.json",
+      "sha256": "5ab9f929abd65f5a2083e18ea753015805a6f0be18df4fe677bb197b5061a05f",
+      "bytes": 261
+    },
+    {
+      "path": "skills/watch/proofs/immutable-goal/091baa9b5d2ddaafffbbbde5b6af9379cc270264/api-row10-projection-after-stop.json",
+      "sha256": "30a77ce64975de240c1db9609f31b89123f496cb5bc462c666350ec0070a2d93",
+      "bytes": 181
+    },
+    {
+      "path": "skills/watch/proofs/immutable-goal/091baa9b5d2ddaafffbbbde5b6af9379cc270264/api-row10-projection-after-willie.json",
+      "sha256": "3444f79f700debf081d06b6bded72950d2d02f903e420825a0c4f1da6e208c7b",
+      "bytes": 269
+    },
+    {
+      "path": "skills/watch/proofs/immutable-goal/091baa9b5d2ddaafffbbbde5b6af9379cc270264/api-row10-projection-before-accept.json",
+      "sha256": "2f1900a7e46beaf34bace02f5dad6fac1a91a12980110bcb6fae39a6a6f362ea",
+      "bytes": 180
+    },
+    {
+      "path": "skills/watch/proofs/immutable-goal/091baa9b5d2ddaafffbbbde5b6af9379cc270264/api-row9-memory-suggestion.json",
+      "sha256": "09933ffa7d9a7ea628525321960632532567f38e2b7b33d9494d09dad0dead3c",
+      "bytes": 8467
+    },
+    {
+      "path": "skills/watch/proofs/immutable-goal/091baa9b5d2ddaafffbbbde5b6af9379cc270264/command-results.json",
+      "sha256": "0ca0bd8d2ba4d3101786b3a8632f2a92485f424828189b377470f9f9512885ad",
+      "bytes": 2551
+    }
+  ]
+}
