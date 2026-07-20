@@ -1,13 +1,13 @@
 {
   "schema": "surf.webgpt_heartbeat.v1",
-  "updated_at": "2026-07-19T23:45:49Z",
-  "submitted_at": "2026-07-19T23:45:46Z",
-  "last_browser_observation_at": "2026-07-19T23:45:49Z",
+  "updated_at": "2026-07-19T23:53:13Z",
+  "submitted_at": "2026-07-19T23:53:10Z",
+  "last_browser_observation_at": "2026-07-19T23:53:13Z",
   "phase": "submitted",
   "page_state": "generating",
-  "last_artifact_written": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-m3-v11-confirmation-assess-response.receipt.json",
-  "next_expected_artifact": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-m3-v11-confirmation-assess-response.raw.md",
+  "last_artifact_written": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-m3-v12-confirmation-assess-response.receipt.json",
+  "next_expected_artifact": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-m3-v12-confirmation-assess-response.raw.md",
   "timeout_remaining_seconds": 2400,
-  "sentinel": "<<<WEBGPT_DONE:20260719T234545Z:8f322cf0>>>",
+  "sentinel": "<<<WEBGPT_DONE:20260719T235308Z:edbfb33c>>>",
   "prepared_prompt_is_transport_proof": false
 }
