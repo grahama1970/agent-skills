@@ -462,12 +462,42 @@ def _table_fragment_guard_for_payload(payload: dict[str, Any]) -> dict[str, Any]
 
 
 def _elements_by_id(extraction: dict[str, Any]) -> dict[str, dict[str, Any]]:
-    elements = extraction.get("elements") or []
     return {
         str(element.get("id")): element
-        for element in elements
+        for element in _iter_extraction_elements(extraction)
         if isinstance(element, dict) and element.get("id") is not None
     }
+
+
+def _iter_extraction_elements(extraction: dict[str, Any]) -> list[dict[str, Any]]:
+    elements: list[dict[str, Any]] = []
+    for collection in ("elements", "blocks", "tables", "figures", "requirements"):
+        for item in extraction.get(collection) or []:
+            if not isinstance(item, dict):
+                continue
+            element = dict(item)
+            element.setdefault("source_collection", collection)
+            if collection == "tables" and not element.get("text"):
+                element["text"] = element.get("csv_data") or element.get("html_data") or ""
+            elif collection == "figures" and not element.get("text"):
+                element["text"] = element.get("caption") or ""
+            elements.append(element)
+    return elements
+
+
+def _fallback_actual_json_for_record(
+    record: dict[str, Any],
+    *,
+    extraction: dict[str, Any],
+    page: int,
+) -> dict[str, Any] | None:
+    candidates = _actual_candidates_for_record(record, extraction=extraction, page=page)
+    if not candidates:
+        return None
+    candidate = dict(candidates[0])
+    candidate["source"] = candidate.get("source") or "pdf_lab.candidate_text_match"
+    candidate["selection_reason"] = "best_text_match_for_second_pass_case"
+    return candidate
 
 
 def _second_pass_payload_for_record(
@@ -535,18 +565,30 @@ def _expected_json_for_record(record: dict[str, Any], *, page: int) -> dict[str,
 
 def _actual_candidates_for_record(record: dict[str, Any], *, extraction: dict[str, Any], page: int) -> list[dict[str, Any]]:
     evidence = record.get("evidence") if isinstance(record.get("evidence"), dict) else {}
-    needle = str(evidence.get("overlapping_actual_text") or evidence.get("text") or record.get("text") or "").strip()
+    preview = record.get("preview") if isinstance(record.get("preview"), dict) else {}
+    needle = str(
+        evidence.get("overlapping_actual_text")
+        or evidence.get("text")
+        or record.get("text")
+        or preview.get("text")
+        or ""
+    ).strip()
     if not needle:
         return []
     candidates: list[dict[str, Any]] = []
-    for element in extraction.get("elements") or []:
+    for element in _iter_extraction_elements(extraction):
         if not isinstance(element, dict) or _safe_int(element.get("page"), default=0) != page:
             continue
         text = str(element.get("text") or "")
         if not text:
             continue
         similarity = _text_similarity(needle, text)
-        if similarity < 0.35 and needle not in text and text not in needle:
+        if (
+            similarity < 0.35
+            and needle not in text
+            and text not in needle
+            and not _truncated_preview_matches(needle, text)
+        ):
             continue
         candidates.append({
             "id": element.get("id"),
@@ -560,6 +602,31 @@ def _actual_candidates_for_record(record: dict[str, Any], *, extraction: dict[st
         })
     candidates.sort(key=lambda item: float(item.get("similarity_to_comparison_text") or 0), reverse=True)
     return candidates[:3]
+
+
+def _truncated_preview_matches(needle: str, text: str) -> bool:
+    normalized_needle = _normalize_text(
+        needle.replace("[…", " ").replace("…", " ").replace("...", " ")
+    )
+    normalized_text = _normalize_text(text)
+    return len(normalized_needle) >= 40 and normalized_needle in normalized_text
+
+
+def _normalize_bbox_for_page_image(bbox: Any, width: int, height: int) -> list[float] | None:
+    if _is_normalized_bbox(bbox):
+        return [float(item) for item in bbox]
+    if not isinstance(bbox, list) or len(bbox) != 4 or width <= 0 or height <= 0:
+        return None
+    try:
+        x0, y0, x1, y1 = [float(item) for item in bbox]
+    except (TypeError, ValueError):
+        return None
+    if not (0 <= x0 < x1 <= width and 0 <= y0 < y1 <= height):
+        return None
+
+    # pdf_oxide emits PDF user-space coordinates; page images use a top-left origin.
+    normalized = [x0 / width, (height - y1) / height, x1 / width, (height - y0) / height]
+    return normalized if _is_normalized_bbox(normalized) else None
 
 
 def _table_merge_review_for_record(

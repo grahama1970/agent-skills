@@ -178,6 +178,13 @@ def _write_second_pass_prompt_artifacts(
     for source_kind, record in records:
         target_id = str(record.get("target_id") or "")
         actual_json = by_id.get(target_id)
+        if actual_json is None and source_kind == "human_triage":
+            page = _safe_int(record.get("page"), default=0)
+            actual_json = _fallback_actual_json_for_record(
+                record,
+                extraction=extraction,
+                page=page,
+            )
         preset_id = _case_preset_id(record, actual_json)
         preset = _load_element_preset(preset_id)
         payload = _second_pass_payload_for_record(
@@ -436,18 +443,19 @@ def _materialize_case_page_artifacts(case_dir: Path, *, extraction: dict[str, An
     annotated_path = case_dir / f"page_{page}_annotated.png"
     if not original_path.exists():
         original_path.write_bytes(document.render_page(page - 1))
+    image = Image.open(original_path)
+    width, height = image.size
 
     bbox = None
     actual = payload.get("actual_json") if isinstance(payload.get("actual_json"), dict) else None
     expected = payload.get("expected_json") if isinstance(payload.get("expected_json"), dict) else None
-    if actual and _is_normalized_bbox(actual.get("bbox")):
-        bbox = actual.get("bbox")
-    elif expected and _is_normalized_bbox(expected.get("bbox")):
-        bbox = expected.get("bbox")
+    if actual:
+        bbox = _normalize_bbox_for_page_image(actual.get("bbox"), width, height)
+    if bbox is None and expected:
+        bbox = _normalize_bbox_for_page_image(expected.get("bbox"), width, height)
 
-    if bbox and not annotated_path.exists():
-        image = Image.open(original_path).convert("RGBA")
-        width, height = image.size
+    if bbox:
+        image = image.convert("RGBA")
         x0, y0, x1, y1 = [float(item) for item in bbox]
         draw = ImageDraw.Draw(image, "RGBA")
         rect = [x0 * width, y0 * height, x1 * width, y1 * height]
@@ -476,8 +484,11 @@ def _materialize_case_page_artifacts(case_dir: Path, *, extraction: dict[str, An
         if not candidate_original.exists():
             candidate_original.write_bytes(document.render_page(candidate_page - 1))
         candidate_bbox = table.get("bbox")
-        if _is_normalized_bbox(candidate_bbox):
-            _write_annotated_page_image(candidate_original, candidate_annotated, candidate_bbox)
+        with Image.open(candidate_original) as candidate_image:
+            candidate_width, candidate_height = candidate_image.size
+        normalized_candidate_bbox = _normalize_bbox_for_page_image(candidate_bbox, candidate_width, candidate_height)
+        if normalized_candidate_bbox:
+            _write_annotated_page_image(candidate_original, candidate_annotated, normalized_candidate_bbox)
         elif not candidate_annotated.exists():
             candidate_annotated.write_bytes(candidate_original.read_bytes())
         visual = candidate.get("visual_evidence") if isinstance(candidate.get("visual_evidence"), dict) else {}
@@ -506,8 +517,6 @@ def _write_case_prompt_bundle_zip(case_dir: Path) -> Path:
 
 
 def _write_annotated_page_image(source_path: Path, target_path: Path, bbox: Any) -> None:
-    if target_path.exists():
-        return
     image = Image.open(source_path).convert("RGBA")
     width, height = image.size
     x0, y0, x1, y1 = [float(item) for item in bbox]

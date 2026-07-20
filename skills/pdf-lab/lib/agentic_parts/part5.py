@@ -119,7 +119,18 @@ def _parse_second_pass_model_http_response(
             "parsed_json": None,
         }
     response_json = response.json()
-    content = response_json["choices"][0]["message"]["content"]
+    try:
+        content = response_json["choices"][0]["message"]["content"]
+    except (KeyError, IndexError, TypeError) as exc:
+        return {
+            "schema_version": "pdf_lab.second_pass_model_response.v1",
+            "transport": "scillm_chat_completions",
+            "model": model,
+            "endpoint": endpoint,
+            "error": f"unexpected_response_shape:{exc.__class__.__name__}",
+            "raw_response": response_json,
+            "parsed_json": None,
+        }
     parsed = _parse_json_object_from_text(str(content))
     return {
         "schema_version": "pdf_lab.second_pass_model_response.v1",
@@ -164,7 +175,7 @@ def _call_second_pass_model(
             "transport": "scillm_chat_completions",
             "model": model,
             "endpoint": endpoint,
-            "error": str(exc),
+            "error": str(exc) or exc.__class__.__name__,
             "parsed_json": None,
         }
 
@@ -299,8 +310,15 @@ def _write_second_pass_candidate_report(
         merge_candidates = merge_review.get("adjacent_table_candidates") if isinstance(merge_review.get("adjacent_table_candidates"), list) else []
         page = _safe_int(payload.get("page"), default=0)
         bbox = actual.get("bbox") if isinstance(actual, dict) else None
-        annotation_bbox = bbox or expected.get("bbox")
+        raw_annotation_bbox = bbox or expected.get("bbox")
         page_image = rendered_pages.get(page)
+        annotation_bbox = None
+        if page_image:
+            page_image_path = prompt_dir / page_image
+            if page_image_path.exists():
+                with Image.open(page_image_path) as image:
+                    width, height = image.size
+                annotation_bbox = _normalize_bbox_for_page_image(raw_annotation_bbox, width, height)
         artifact_dir = Path(case["artifact_dir"])
         prompt_files = [
             "system_prompt.txt",
@@ -324,7 +342,7 @@ def _write_second_pass_candidate_report(
             "actual_json_present": bool(actual),
             "actual_candidate_count": len(actual_candidates),
             "actual_element_id": actual.get("id") or actual.get("element_id") if actual else None,
-            "bbox_present": bool(annotation_bbox),
+            "bbox_present": bool(raw_annotation_bbox),
             "bbox_normalized": _is_normalized_bbox(annotation_bbox),
             "page_image_rendered": bool(page_image),
             "annotated_in_report": bool(page_image and _is_normalized_bbox(annotation_bbox)),
@@ -334,7 +352,7 @@ def _write_second_pass_candidate_report(
             "table_merge_candidate_count": len(merge_candidates),
         }
         audit_cases.append(audit)
-        rows.append(_render_candidate_report_case(case, payload, decision, validation, page_image))
+        rows.append(_render_candidate_report_case(case, payload, decision, validation, page_image, annotation_bbox=annotation_bbox))
 
     summary = {
         "case_count": len(audit_cases),
@@ -425,6 +443,8 @@ def _render_candidate_report_case(
     decision: dict[str, Any],
     validation: dict[str, Any],
     page_image: str | None,
+    *,
+    annotation_bbox: list[float] | None = None,
 ) -> str:
     actual = payload.get("actual_json") if isinstance(payload.get("actual_json"), dict) else {}
     expected = payload.get("expected_json") if isinstance(payload.get("expected_json"), dict) else {}
@@ -441,8 +461,6 @@ def _render_candidate_report_case(
     else:
         title_prefix = "Extractor table candidate"
         conclusion = "Table preset evaluation result; inspect metrics and visual evidence."
-    bbox = actual.get("bbox") if actual else None
-    annotation_bbox = bbox or expected.get("bbox")
     overlay = f'<span class="bbox" style="{_bbox_style(annotation_bbox)}"></span>' if page_image and _is_normalized_bbox(annotation_bbox) else ""
     image = (
         f'<div class="page-proof"><img src="{html.escape(page_image)}" alt="Rendered page {payload.get("page")}">{overlay}</div>'

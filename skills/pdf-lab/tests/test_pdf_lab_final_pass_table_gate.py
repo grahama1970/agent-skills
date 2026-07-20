@@ -9,6 +9,8 @@ import json
 import sys
 from pathlib import Path
 
+import httpx
+
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from lib.agentic import (  # noqa: E402
@@ -18,6 +20,8 @@ from lib.agentic import (  # noqa: E402
     TABLE_CLASS_REAL,
     _build_agent_resolved_findings,
     _build_human_triage_tasks,
+    _normalize_bbox_for_page_image,
+    _parse_second_pass_model_http_response,
     _table_candidate_classification,
     run_final_agent_pass,
 )
@@ -323,3 +327,104 @@ def test_final_pass_resolves_unknown_region_canonicalization_without_prompt_case
     assert deterministic["resolutions"][0]["original_preset_id"] == "pdf.unknown_region.v1"
     assert deterministic["resolutions"][0]["subtype"] == "sidebar_watermark_bleed"
     assert deterministic["resolutions"][0]["resolution_layer"] == "comparison_canonicalization"
+
+
+def test_final_pass_uses_blocks_as_actual_json_for_comparison_miss(tmp_path):
+    extraction_path = tmp_path / "block_extraction.json"
+    comparison_path = tmp_path / "comparison.json"
+    extraction_path.write_text(
+        json.dumps(
+            {
+                "schema_version": "pdf-lab.full-extraction.v1",
+                "source_pdf": None,
+                "source_extraction": None,
+                "page_count": 1,
+                "blocks": [
+                    {
+                        "id": "actual:p27:block:footnote",
+                        "page": 27,
+                        "type": "Body",
+                        "bbox": [89.99, 74.4, 426.37, 156.0],
+                        "text": (
+                            "1 An information system is a discrete set of information "
+                            "resources organized for the collection, processing, "
+                            "maintenance, use, sharing, dissemination, or disposition "
+                            "of information."
+                        ),
+                        "source": "pdf_oxide.blocks",
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+    comparison_path.write_text(
+        json.dumps(
+            {
+                "schema_version": "pdf-lab.json-comparison.v1",
+                "misses": [
+                    {
+                        "expected_id": "gs001:row:10",
+                        "page": 27,
+                        "type": "footnote",
+                        "bbox": [89.99, 575.53, 514.3, 720.41],
+                        "text": "An information system is a discrete set of information resources organized",
+                        "reason": "type_mismatch",
+                        "best_candidate": {
+                            "type_compatible": False,
+                            "text_similarity": 1.0,
+                            "iou": 0.8903,
+                        },
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = run_final_agent_pass(
+        extraction_path,
+        output_dir=tmp_path / "out",
+        comparison_path=comparison_path,
+        max_second_pass_cases=1,
+    )
+
+    assert result.task_count == 2
+    index = json.loads((tmp_path / "out" / "second_pass_cases" / "index.json").read_text(encoding="utf-8"))
+    case = index["cases"][0]
+    payload = json.loads(Path(case["input_payload"]).read_text(encoding="utf-8"))
+    audit = json.loads((tmp_path / "out" / "second_pass_cases" / "candidate_evidence_audit.json").read_text(encoding="utf-8"))
+
+    assert payload["element_id"] == "gs001:row:10"
+    assert payload["actual_json"]["id"] == "actual:p27:block:footnote"
+    assert payload["actual_json"]["selection_reason"] == "best_text_match_for_second_pass_case"
+    assert payload["actual_candidates"][0]["id"] == "actual:p27:block:footnote"
+    assert audit["summary"]["actual_json_present"] == 1
+    assert audit["summary"]["actual_candidate_present"] == 1
+
+
+def test_absolute_pdf_bbox_normalizes_to_page_image_overlay():
+    normalized = _normalize_bbox_for_page_image([89.99, 74.4, 426.37, 156.0], 612, 792)
+
+    assert normalized == [
+        89.99 / 612,
+        (792 - 156.0) / 792,
+        426.37 / 612,
+        (792 - 74.4) / 792,
+    ]
+    assert _normalize_bbox_for_page_image([0.1, 0.2, 0.3, 0.4], 612, 792) == [0.1, 0.2, 0.3, 0.4]
+    assert _normalize_bbox_for_page_image([89.99, 74.4, 900.0, 156.0], 612, 792) is None
+
+
+def test_second_pass_model_response_records_unexpected_success_shape():
+    response = httpx.Response(200, json={"status": "completed", "artifacts": []})
+
+    parsed = _parse_second_pass_model_http_response(
+        response,
+        model="claude-haiku",
+        endpoint="http://localhost:4001/v1/chat/completions",
+    )
+
+    assert parsed["parsed_json"] is None
+    assert parsed["error"] == "unexpected_response_shape:KeyError"
+    assert parsed["raw_response"]["status"] == "completed"
