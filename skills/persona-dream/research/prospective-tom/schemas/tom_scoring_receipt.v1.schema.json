@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.research.prospective_tom.tom_scoring_receipt.v1",
+  "type": "object",
+  "required": [
+    "scoring_id",
+    "episode_id",
+    "prediction_id",
+    "outcome_id",
+    "brier_score",
+    "log_loss",
+    "calibration_bucket",
+    "scored_at"
+  ],
+  "properties": {
+    "scoring_id": {"type": "string", "minLength": 1},
+    "episode_id": {"type": "string", "minLength": 1},
+    "prediction_id": {"type": "string", "minLength": 1},
+    "outcome_id": {"type": "string", "minLength": 1},
+    "brier_score": {"type": "number", "minimum": 0},
+    "log_loss": {"type": "number", "minimum": 0},
+    "calibration_bucket": {"type": "string", "minLength": 1},
+    "scored_at": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

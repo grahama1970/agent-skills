@@ -1,0 +1,15 @@
+[
+  {
+    "branch_id": "branch-factual-0001",
+    "episode_id": "episode-0001",
+    "branch_type": "factual",
+    "counterfactual": false,
+    "source_residue_refs": [
+      {
+        "scope": "persona-dream",
+        "source_id": "memory_42"
+      }
+    ],
+    "predicted_observation": "Invalid branch relies on unaccepted residue."
+  }
+]

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.research.prospective_tom.tom_outcome_reveal.v1",
+  "type": "object",
+  "required": [
+    "outcome_id",
+    "episode_id",
+    "prediction_id",
+    "revealed_at",
+    "actual_next_action",
+    "hidden_state_labels"
+  ],
+  "properties": {
+    "outcome_id": {"type": "string", "minLength": 1},
+    "episode_id": {"type": "string", "minLength": 1},
+    "prediction_id": {"type": "string", "minLength": 1},
+    "revealed_at": {"type": "string", "minLength": 1},
+    "actual_next_action": {"type": "string", "minLength": 1},
+    "hidden_state_labels": {"type": "object"}
+  },
+  "additionalProperties": false
+}

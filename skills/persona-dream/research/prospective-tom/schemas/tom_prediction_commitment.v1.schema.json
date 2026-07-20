@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.research.prospective_tom.tom_prediction_commitment.v1",
+  "type": "object",
+  "required": [
+    "prediction_id",
+    "episode_id",
+    "condition",
+    "sealed_at",
+    "outcome_visible",
+    "prediction_payload_sha256",
+    "prediction_payload"
+  ],
+  "properties": {
+    "prediction_id": {"type": "string", "minLength": 1},
+    "episode_id": {"type": "string", "minLength": 1},
+    "condition": {"type": "string", "enum": ["M", "R", "D", "CD", "ORACLE_DIAGNOSTIC"]},
+    "sealed_at": {"type": "string", "minLength": 1},
+    "outcome_visible": {"type": "boolean", "const": false},
+    "prediction_payload_sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "prediction_payload": {"type": "object"}
+  },
+  "additionalProperties": false
+}

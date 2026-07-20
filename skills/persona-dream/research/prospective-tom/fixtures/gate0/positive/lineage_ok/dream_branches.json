@@ -1,0 +1,33 @@
+[
+  {
+    "branch_id": "branch-factual-0001",
+    "episode_id": "episode-0001",
+    "branch_type": "factual",
+    "counterfactual": false,
+    "source_residue_refs": [
+      {
+        "scope": "persona-dream",
+        "source_id": "memory_17"
+      },
+      {
+        "scope": "persona-dream",
+        "source_id": "memory_42"
+      }
+    ],
+    "predicted_observation": "Kai will expect Embry to ask before acting."
+  },
+  {
+    "branch_id": "branch-cf-ask-0001",
+    "episode_id": "episode-0001",
+    "branch_type": "counterfactual",
+    "counterfactual": true,
+    "intervention_id": "do-embry-asks-clarifying-question",
+    "source_residue_refs": [
+      {
+        "scope": "persona-dream",
+        "source_id": "memory_17"
+      }
+    ],
+    "predicted_observation": "Kai updates toward cooperation when Embry asks for the hidden constraint."
+  }
+]

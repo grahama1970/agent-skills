@@ -1,0 +1,51 @@
+{
+  "prediction_id": "prediction-0001",
+  "episode_id": "episode-0001",
+  "condition": "CD",
+  "sealed_at": "2026-07-20T00:00:00Z",
+  "outcome_visible": false,
+  "prediction_payload_sha256": "sha256:dda315aab1ee0843425e33bb72eeb22372e14e3e62d997a8166e50ed63f0f786",
+  "prediction_payload": {
+    "action_distribution": [
+      {
+        "action": "ASK_CLARIFYING_QUESTION",
+        "probability": 1.0
+      }
+    ],
+    "belief_distributions": [
+      {
+        "abstain": false,
+        "counterfactual": false,
+        "distribution": [
+          {
+            "probability": 1.0,
+            "value": "UNKNOWN"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "scope": "persona-dream",
+            "source_id": "memory_17"
+          }
+        ],
+        "mental_state_type": "belief",
+        "perspective_order": 1,
+        "prediction_horizon": "next_utterance",
+        "proposition": "Kai may expect clarification.",
+        "subject": "kai",
+        "target": "embry"
+      }
+    ],
+    "condition": "CD",
+    "dream_branch_refs": [
+      "missing-branch"
+    ],
+    "episode_id": "episode-0001",
+    "evidence_residue_refs": [
+      {
+        "scope": "persona-dream",
+        "source_id": "memory_17"
+      }
+    ]
+  }
+}

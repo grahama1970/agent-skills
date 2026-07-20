@@ -77,6 +77,7 @@ Commands:
   check-fal-api-preflight-fixtures  Prove FAL auth discovery preflight stays fail-closed
   check-pipeline-robustness  Aggregate offline autonomous, lineage, fail-closed, and provider-boundary checks
   check-live-memory-recall  Exercise live Memory /recall through static dream generation and write a fail-closed receipt
+  check-prospective-tom-protocol  Validate PCTOM-R Gate 0 fixture lineage through a sealed prediction
   check-pipeline-contract  Validate the canonical Phase 01-16 pipeline contract
   write-phase10-reproducibility-receipt  Prove Phase 10 committed artifacts are canonically reproducible
   repair-semantic-mix-revision Create, Memory-verify, and activate a new explicit-human-idea revision
@@ -379,6 +380,9 @@ case "$COMMAND" in
     ;;
   check-live-memory-recall)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_live_memory_recall.py" "$@"
+    ;;
+  check-prospective-tom-protocol)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_prospective_tom_protocol.py" "$@"
     ;;
   check-pipeline-contract)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_persona_dream_pipeline_contract.py" "$@"

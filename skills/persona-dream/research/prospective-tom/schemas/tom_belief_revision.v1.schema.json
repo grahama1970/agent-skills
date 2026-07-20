@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.research.prospective_tom.tom_belief_revision.v1",
+  "type": "object",
+  "required": [
+    "revision_id",
+    "prior_hypothesis_id",
+    "prior_distribution",
+    "observed_outcome_id",
+    "surprise",
+    "posterior_distribution",
+    "update_reason",
+    "supersedes_for_current_use",
+    "prior_remains_auditable"
+  ],
+  "properties": {
+    "revision_id": {"type": "string", "minLength": 1},
+    "prior_hypothesis_id": {"type": "string", "minLength": 1},
+    "prior_distribution": {"type": "object"},
+    "observed_outcome_id": {"type": "string", "minLength": 1},
+    "surprise": {"type": "number", "minimum": 0},
+    "posterior_distribution": {"type": "object"},
+    "update_reason": {"type": "string", "minLength": 1},
+    "supersedes_for_current_use": {"type": "boolean"},
+    "prior_remains_auditable": {"type": "boolean", "const": true}
+  },
+  "additionalProperties": false
+}

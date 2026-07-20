@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.research.prospective_tom.reliability_trial.v1",
+  "type": "object",
+  "required": [
+    "trial_id",
+    "episode_id",
+    "condition",
+    "k",
+    "epsilon",
+    "lambda",
+    "faults",
+    "accepted_outcome"
+  ],
+  "properties": {
+    "trial_id": {"type": "string", "minLength": 1},
+    "episode_id": {"type": "string", "minLength": 1},
+    "condition": {"type": "string", "enum": ["M", "R", "D", "CD"]},
+    "k": {"type": "integer", "minimum": 1},
+    "epsilon": {"type": "number", "minimum": 0},
+    "lambda": {"type": "number", "minimum": 0},
+    "faults": {"type": "array", "items": {"type": "string"}},
+    "accepted_outcome": {
+      "type": "string",
+      "enum": [
+        "RECOVERED_WITH_EQUIVALENT_END_STATE",
+        "BLOCKED_BEFORE_SIDE_EFFECT",
+        "QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

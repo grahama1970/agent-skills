@@ -1,0 +1,76 @@
+{
+  "prediction_id": "prediction-0001",
+  "episode_id": "episode-0001",
+  "condition": "CD",
+  "sealed_at": "2026-07-20T00:00:00Z",
+  "outcome_visible": false,
+  "prediction_payload_sha256": "sha256:474ccb3e4a6992e6a02627e04d85fc969afcde06a8d50f510752c3031251a638",
+  "prediction_payload": {
+    "action_distribution": [
+      {
+        "action": "ASK_CLARIFYING_QUESTION",
+        "probability": 0.7
+      },
+      {
+        "action": "WAIT",
+        "probability": 0.2
+      },
+      {
+        "action": "ABSTAIN",
+        "probability": 0.1
+      }
+    ],
+    "belief_distributions": [
+      {
+        "abstain": false,
+        "counterfactual": false,
+        "distribution": [
+          {
+            "probability": 0.2,
+            "value": "TRUE"
+          },
+          {
+            "probability": 0.65,
+            "value": "FALSE"
+          },
+          {
+            "probability": 0.15,
+            "value": "UNKNOWN"
+          }
+        ],
+        "evidence_refs": [
+          {
+            "scope": "persona-dream",
+            "source_id": "memory_17"
+          },
+          {
+            "scope": "persona-dream",
+            "source_id": "memory_42"
+          }
+        ],
+        "mental_state_type": "belief",
+        "perspective_order": 2,
+        "prediction_horizon": "next_utterance",
+        "proposition": "Embry believes Kai thinks Embry intends to ignore the warning.",
+        "subject": "embry",
+        "target": "kai"
+      }
+    ],
+    "condition": "CD",
+    "dream_branch_refs": [
+      "branch-factual-0001",
+      "branch-cf-ask-0001"
+    ],
+    "episode_id": "episode-0001",
+    "evidence_residue_refs": [
+      {
+        "scope": "persona-dream",
+        "source_id": "memory_17"
+      },
+      {
+        "scope": "persona-dream",
+        "source_id": "memory_42"
+      }
+    ]
+  }
+}

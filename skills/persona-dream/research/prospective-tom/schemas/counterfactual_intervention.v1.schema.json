@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.research.prospective_tom.counterfactual_intervention.v1",
+  "type": "object",
+  "required": [
+    "intervention_id",
+    "episode_id",
+    "intervened_variable",
+    "intervened_value",
+    "held_fixed",
+    "expected_observation"
+  ],
+  "properties": {
+    "intervention_id": {"type": "string", "minLength": 1},
+    "episode_id": {"type": "string", "minLength": 1},
+    "intervened_variable": {"type": "string", "minLength": 1},
+    "intervened_value": {},
+    "held_fixed": {"type": "array", "items": {"type": "string"}},
+    "expected_observation": {"type": "string", "minLength": 1}
+  },
+  "additionalProperties": false
+}

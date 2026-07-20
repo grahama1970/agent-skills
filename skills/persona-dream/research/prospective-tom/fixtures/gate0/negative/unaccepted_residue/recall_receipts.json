@@ -1,0 +1,11 @@
+[
+  {
+    "query": "embry kai warning trust source-grounded memory",
+    "scope": "persona-dream",
+    "status": "ok",
+    "accepted_source_ids": [
+      "memory_17"
+    ],
+    "accepted_source_ids_sha256": "sha256:970474f330f9f3f959464e87198d81e55f9cbb4f2e6c4f275f38cd7d0ab805d9"
+  }
+]
