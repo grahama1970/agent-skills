@@ -879,6 +879,40 @@ maintainer roundtable this risk" do not silently invent missing personas; `/ask`
 should clarify and offer persona creation through `/interview` or
 `/create-persona`.
 
+### WebClaude sanity eval
+
+`scripts/webclaude_sanity_eval.py` is a focused opt-in eval for the current
+WebClaude browser path. It lives in `/ask` so Ask maintainers can test browser
+reviewer readiness, but it uses `$browser-oracle` and `$surf` directly because
+there is not yet a reusable `surf claude.submit` / `webclaude.submit` wrapper.
+
+The live eval checks:
+
+- `webclaude` browser-oracle binding resolves or verifies.
+- Surf sees the expected Claude tab id and URL.
+- Claude answers a text sentinel prompt.
+- Claude accepts a zip attachment containing one Markdown file and one PNG.
+- Claude reports both filenames, the Markdown sentinel, and the exact text
+  visible in the PNG.
+- A same-tab screenshot and machine-readable `result.json` are written.
+
+```bash
+# Preview without touching Claude.
+uv run python scripts/webclaude_sanity_eval.py --plan-only
+
+# Run against the configured browser-oracle project.
+uv run python scripts/webclaude_sanity_eval.py --allow-live --project webclaude
+
+# Or pin an explicit tab and URL.
+uv run python scripts/webclaude_sanity_eval.py --allow-live \
+  --tab-id 837359291 \
+  --expect-url 'https://claude.ai/chat/3cdf38d5-2c6c-4727-b5b9-eb7fd95f5146'
+```
+
+Reports are written under `.ask_artifacts/webclaude-sanity/<run_id>/`.
+This eval is live browser evidence, not default regression coverage; failures
+are reported as missing readiness proof rather than softened into skips.
+
 ## Interop with Companion Skills
 
 `ask` is a routing and verification layer. It composes with companion skills
@@ -970,6 +1004,7 @@ current-state projection, not a replacement for inspected code or test output.
 | `sanity.sh` | Deterministic smoke checks |
 | `sanity-e2e.sh` | Opt-in live bug-hunting sanity checks with HTML report |
 | `scripts/live_sanity_report.py` | Real-world composed-path E2E reporter |
+| `scripts/webclaude_sanity_eval.py` | Opt-in WebClaude text and zip-upload browser eval |
 
 ## Development
 

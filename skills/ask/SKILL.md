@@ -200,6 +200,8 @@ Opt-in live sanity checks are intentionally outside the default test suite:
 ```bash
 uv run python scripts/live_sanity_report.py --plan-only --profile smoke
 uv run python scripts/live_sanity_report.py --allow-live --profile smoke
+uv run python scripts/webclaude_sanity_eval.py --plan-only
+uv run python scripts/webclaude_sanity_eval.py --allow-live --project webclaude
 uv run python scripts/dag_negative_sanity.py
 uv run python scripts/dag_e2e_sanity.py
 uv run python scripts/tau_dag_e2e_sanity.py --json
