@@ -1,128 +1,96 @@
 # Handoff Report: battle (adaptive-lineage spectator)
 
-**Timestamp**: 2026-07-20
-**Branch**: `battle-adaptive-lineage-goal` — a SHARED integration branch, ~64 commits
-ahead of `origin/main` (1b4d564cb). Battle work is interleaved with unrelated
-`watch:`, `embry-voice:`, `ask tau-dag`, `audio_e2e:`, memory, and PixiJS-skill
-commits from other agents. Decision (operator, 2026-07-20): **keep the shared
-branch** — do NOT attempt battle-only history extraction (would be ~12 interleaved
-commits cherry-picked onto main with near-certain conflicts). Battle ships when this
-branch merges.
+**Timestamp**: 2026-07-20T14:19Z
+**Active Agent**: Claude (Fable)
+**Branch**: `battle-adaptive-lineage-goal` @ `6915e1875` — a SHARED integration branch,
+~64 commits ahead of `origin/main` (`1b4d564cb`), battle work interleaved with unrelated
+`watch:` / `embry-voice:` / `ask` / `audio_e2e:` / memory commits. Operator decision
+(2026-07-20): keep the shared branch; do NOT extract battle-only history.
 
-Every claim below is labeled VERIFIED (a command in the 2026-07-20 session proved it)
-or PRIOR-CLAIM (asserted by an earlier agent, NOT re-verified this session).
+> Every claim is labeled **VERIFIED** (a command this session proved it — the command is
+> given), **PRIOR-CLAIM** (asserted by an earlier agent, NOT re-proven), or **ASPIRATIONAL**
+> (goal, not built). Trust the receipts, not the prose.
 
-## 1. Overview
-- Python (`src/battle_skill`) backend + TypeScript/React/PixiJS v8 spectator (`spectator/`).
-- Adaptive lineage: G0 seed → G1-A/G1-B candidates → deterministic selection → G2
-  descendant, surfaced in the arena/DAW spectator with a live SSE transport.
+## 1. Project Overview
+- **Ecosystem**: Python backend (`skills/battle/src/battle_skill`) + TypeScript/React/PixiJS
+  v8 spectator (`skills/battle/spectator`). Served at `:3002` by a vite dev server rooted in
+  `pi-mono/packages/ux-lab`, which imports this spectator via the vite alias
+  `@agent-skills/battle-spectator` → `skills/battle/spectator/src` (working tree).
+- **Core Purpose** (`GOAL_ADAPTIVE_LINEAGE.md`): a live, non-mocked four-specimen
+  adaptive-lineage qualification (G0 seed → G1-A/G1-B → deterministic selection → G2), and a
+  finished spectator that renders that exact receipt with proper PixiJS sprites + an honest
+  live/recorded badge.
 
-## 2. VERIFIED working (2026-07-20)
-- **App renders.** Fresh browser tab on `#battle/receipt?engine=pixi&fixture=battle-004-adaptive-lineage-live`
-  loads full: `#root` populated, `<canvas>` present, 120 `[data-qid]` nodes. (A blank
-  page earlier was a POISONED automation tab — navigated 10×, session reset — NOT the app.)
-- **Four distinct lineage sprites render.** The four lanes show four different sprites
-  (crimson demon / typhus / slug / green nurgling), not the old single-atlas lock and not
-  garbage. Screenshot: `/tmp/claude-chrome-screenshots-HOEApt/screenshot-1784548415439-5.png`.
-- **Backend adaptive tests**: `pytest tests/test_g1_delta_retry.py test_selection_receipt_ordering_timestamp.py test_adaptive_lineage_reducer.py` → 32 passed.
-- **Spectator**: `tsc` typecheck 0 errors; `vitest run` → 42 files / 191 tests pass
-  (incl. `battle-lane-variant-map.test.ts` 11/11).
-- **SSE server** up: `curl :18765/healthz` → PASS, 54 events (ephemeral — dies on reboot).
-- NOTE: the spectator has **no `build` script** — it is vite-dev-served (`:3002`, root
-  `pi-mono/packages/ux-lab`, which imports this spectator via the `@agent-skills/battle-spectator`
-  vite alias → the working tree). "Production build" gates do not apply; typecheck is the gate.
+## 2. Current State (doc–code alignment)
+- **Routes**: valid battle hashes are `#battle`, `#battle/isolation`, `#battle/receipt`
+  (VERIFIED: `battle-mockup-lanes.ts` / `battle-receipt-replay.ts`). The prior handoff's
+  `#battle/live` route **does not exist** — see §4.
+- **Data**: served live fixture `spectator/public/battle-fixtures/battle-004-adaptive-live/
+  battle.normalized_ux_fixture.json` is real-derived (VERIFIED: contains `RED_EXPLOIT_CONFIRMED`,
+  no `/workspace` path leak) from an 18-event capture via `local/derive_adaptive_live_fixture.py`.
 
-## 3. Fixed this session (committed `4a8337857`)
-- **Broken import resolved.** `spectator/src/battle-scorecard.html` was untracked but
-  imported (`?raw`) by the already-committed `BattleHeader.tsx` — a clean checkout of
-  `e0cb1d9f4` would not build. Now tracked.
-- **Distinct sprites.** Removed the single-atlas lock in `spectator/src/engine/battle-lane-variant-map.ts`:
-  enabled the four reviewer-ACCEPTED atlases (`plague_nurgling, crimson_chainsaw_demon,
-  slug_demon, typhus`) and made `spriteIdForLane` map team+generation+role → distinct
-  sprite via `LANE_SPRITE_TABLE` (per `GOAL_ADAPTIVE_LINEAGE.md`).
+## 3. What is Working Well (VERIFIED 2026-07-20)
+- **Backend adaptive-lineage logic** — `pytest tests/test_adaptive_lineage_reducer.py
+  tests/test_g1_delta_retry.py tests/test_selection_receipt_ordering_timestamp.py` → **32 passed**.
+- **Spectator gates** — `npm run typecheck` → 0 errors; `npx vitest run` → **42 files / 191 pass**.
+- **`#battle/receipt` renders** — fresh browser tab on
+  `#battle/receipt?engine=pixi&fixture=battle-004-adaptive-lineage-live` → `#root` populated,
+  `<canvas>`, 120 `data-qid`s, RED-TEAM scorecard header, and **four distinct lineage sprites**
+  (crimson demon / typhus / slug / green nurgling). Single-atlas lock removed.
+- **SSE transport server** — `curl :18765/healthz` → PASS, 54 events (ephemeral; dies on reboot).
+- NOTE: spectator has **no `build` script** — vite-dev-served; `tsc` is the gate.
 
-## 4. Battle commits ahead of origin/main (the deliverable, newest → oldest)
-```
-4a8337857  track scorecard html + four distinct lineage sprites   (this session)
-e0cb1d9f4  stream real adaptive-lineage capture into Live view
-cfb9f7cf7  adaptive-lineage panel receipt-authoritative (WebGPT BLOCK fix)
-2f3ab21e8  fix campaign event journal source_created_at
-4919c1641  proof_card PR3B test deterministic
-ebf05ef11  fix pytest collection + stale child_tau_dag assertions
-1a29893d0  mark adaptive-lineage immutable goal MET
-36aa85060  update handoff — deploy/pixi/sprite caveats resolved
-71df4d498  sprite creator↔reviewer loop; fix mapping + pixi HMR init
-66f6c2872  record adaptive-lineage UX-live completion handoff
-034617cad  finish adaptive-lineage UX — distinct sprites + live comparison panel
-9282ed14a  land adaptive-lineage migration + adaptive immutable goal
-```
+## 4. What is Currently Broken (VERIFIED 2026-07-20)
+- **`#battle/live` is not a route.** Loading `#battle/live?engine=pixi&battle=battle-004`
+  renders the **Sparta Explorer** dashboard (0 `battle:*` qids). The prior handoff's reproduce
+  command is stale.
+- **No standalone live-streaming view.** The "Live" the prior agent described is an
+  `AgentDetailPane` `stdout latest` / `stderr latest` panel + a "LIVE PROOF" badge (summary
+  tab), not a scrolling stream on its own route. Whether that panel consumes the live SSE bus
+  (vs the static derived fixture) is UNVERIFIED.
+- **`#battle/receipt` not unified with live** — generic lane names (`RED G1 PARENT`) + static
+  Docker-replay/lifecycle evidence; no codenames, no live bus.
+- **Repo hygiene** — 27 modified + 42 untracked files (concurrent agents). Do NOT `git add -A`;
+  commit battle files by explicit path only.
 
-## 5. Open / not done
-- **`#battle/live` is NOT a route (VERIFIED 2026-07-20).** Loading
-  `#battle/live?engine=pixi&battle=battle-004` renders the **Sparta Explorer** dashboard,
-  not battle (0 `battle:*` qids). The router only matches `#battle`, `#battle/isolation`,
-  `#battle/receipt` (`battle-mockup-lanes.ts` / `battle-receipt-replay.ts`). The prior
-  handoff's `#battle/live` reproduce command is stale. The "Live" streaming the prior agent
-  described is an `AgentDetailPane` `stdout latest`/`stderr latest` panel + a "LIVE PROOF"
-  badge (summary tab), NOT a separate streaming route. Whether that panel consumes the live
-  SSE bus (vs the static derived fixture) is UNVERIFIED.
-- **`#battle/receipt` shows generic lane names + static evidence.** Race view uses
-  "RED G1 PARENT" etc. and a static Docker-replay/lifecycle evidence pane; not unified with
-  live streaming or fun codenames. (VERIFIED 2026-07-20 render.)
-- **Ephemeral SSE server** — background process, dies on reboot; restart via §6.
-- **Tau recognizer fix** (importlib/spec_from_file_location robustness for method_replace
-  mutations) lives only on worktree branch `tau-adaptive-mechanics` + GitHub issue
-  `grahama1970/tau#116`; NOT merged into the tau repo.
-- **Leftover worktrees** from earlier sessions: `/home/graham/workspace/experiments/agent-skills-adaptive-mechanics`,
-  `/home/graham/workspace/experiments/tau-adaptive-mechanics`. Prune when done.
+## 5. Unverified / prior-claims (prove before trusting)
+- **Live four-specimen qualification PASS** — deterministic tests pass (VERIFIED); a fresh
+  SciLLM+Docker run PASS is PRIOR-CLAIM (`2026-07-19` run `arena-adaptive-lineage-20260719T141223Z`).
+- **stdout/stderr panel fed by the live SSE bus** — UNVERIFIED (blocked by the broken `/live` route).
+- **Sprite visual quality** — distinct (VERIFIED); "coherent, not garbage at lane scale" is
+  reviewer-ACCEPTED per the GOAL doc (PRIOR-CLAIM).
 
-## 6. Run / reproduce
-```bash
-cd skills/battle
-python3 local/derive_adaptive_live_fixture.py   # regenerate served live fixture
-uv run --project "$PWD" python -m battle_skill.cli serve-live-transport \
-  --fixture spectator/public/battle-fixtures/battle-004-adaptive-live/battle.normalized_ux_fixture.json \
-  --battle-id battle-004 --host 127.0.0.1 --port 18765
-# open in a FRESH tab (avoid a poisoned automation tab):
-#   http://localhost:3002/#battle/receipt?engine=pixi&fixture=battle-004-adaptive-lineage-live
-#   http://localhost:3002/#battle/live?engine=pixi&battle=battle-004
-```
+## 6. Next Steps (priority order)
+1. **Resolve the live-streaming story (the crux).** Decide if streaming-on-a-route is a real
+   GOAL requirement. If yes: pick a real route (`#battle`/`#battle/receipt`), wire the
+   AgentDetail panel to the SSE bus, and VERIFY one live frame end-to-end in a FRESH tab. If no:
+   delete the stale `#battle/live` claims.
+2. **Re-run the live backend qualification** (immutable-goal closure):
+   `TAU_REPO=/home/graham/workspace/experiments/tau-adaptive-mechanics ./run.sh
+   arena-adaptive-lineage-qualification battle-004 --out /tmp/relive` (needs the Tau recognizer
+   fix — issue `grahama1970/tau#116`, currently only on worktree branch `tau-adaptive-mechanics`).
+3. **Unify `#battle/receipt`** with real codenames (+ live if step 1 pans out).
+4. **/webgpt design review** of the receipt view before claiming UX done. Binding VERIFIED:
+   `skills/battle/.ask/browser-oracles.yaml` → `webgpt.default: battle`. Drive via /webgpt +
+   /browser-oracle (native skill node, NOT behind scillm). Tab liveness/auth NOT established
+   this session — establish at use time.
+5. Merge Tau fix (#116); prune worktrees `agent-skills-adaptive-mechanics`, `tau-adaptive-mechanics`.
 
-## 7. Housekeeping
-- Working tree carries heavy unrelated churn from concurrent agents (24 modified, 44
-  untracked at handoff time). Do NOT `git add -A` — commit battle files by explicit path only.
-- `skills/battle/skills/` is a mis-rooted run-artifact tree (untracked). Many
-  `local/*-verify*` and `local/battle-004-*` dirs are run scratch.
-
-## 8. /webgpt review loop (binding VERIFIED 2026-07-20)
-- `skills/battle/.ask/browser-oracles.yaml` → `webgpt.default: battle`. This project's
-  design/UX reviews and BLOCK-fix loops run through **/webgpt** (a native skill node via
-  /browser-oracle — NOT behind scillm). `~/.pi/webgpt-projects/` + `~/.pi/webgpt-rate-limit.json`
-  exist. Tab liveness/auth is NOT established this session — establish it at use time before
-  asserting a review ran.
-- Use /webgpt to review the `#battle/receipt` spectator against `GOAL_ADAPTIVE_LINEAGE.md`
-  and the accepted mockups BEFORE claiming the UX is done (the prior "receipt-authoritative /
-  WebGPT BLOCK fix" commit `cfb9f7cf7` is part of this loop).
-
-## 9. Back-on-track plan (priority order)
-1. **Resolve the live-streaming story (the crux).** Decide if "live streaming on a route" is
-   a real GOAL requirement. If yes: define/fix a real battle route (there is NO `#battle/live`;
-   valid routes are `#battle`, `#battle/isolation`, `#battle/receipt`) and wire the AgentDetail
-   `stdout/stderr` panel to the SSE bus, then VERIFY one live frame end-to-end in a FRESH tab.
-   If no: delete the stale `#battle/live` claims and treat the derived fixture as the source.
-2. **Re-verify the backend LIVE four-specimen qualification** with a fresh SciLLM+Docker run
-   (immutable-goal closure). Only deterministic tests (32 pass) + a `2026-07-19` PRIOR-CLAIM
-   run exist today. Command: `TAU_REPO=… ./run.sh arena-adaptive-lineage-qualification battle-004 --out …`
-   (needs the Tau recognizer fix — see §5 / issue #116 — to reach G2 on method_replace).
-3. **Unify `#battle/receipt`** with real codenames (and live streaming if step 1 pans out) per
-   `GOAL_ADAPTIVE_LINEAGE.md`.
-4. **/webgpt design review** of the receipt view (§8) before claiming UX done.
-5. Merge the Tau recognizer fix (`grahama1970/tau#116`); prune leftover worktrees
-   (`agent-skills-adaptive-mechanics`, `tau-adaptive-mechanics`).
-
-## 10. Verification discipline for the next agent
-- Load the spectator in a FRESH browser tab — a tab navigated many times / after a CDP session
-  reset renders blank (`#root` empty); that is a poisoned tab, NOT an app failure (cost this
-  session ~1 hr of false diagnosis).
-- Deterministic tests over self-authored code are NOT proof of the live problem. Sprites,
-  streaming, and qualification each need a live read-back from the produced artifact.
+## 7. Project Context for Success
+- **Key files**:
+  - `src/battle_skill/adaptive_lineage.py` (reducer, G1 retry, selection), `arena_live_battle_proof.py` (Docker/Judge), `cli.py`.
+  - `spectator/src/engine/battle-lane-variant-map.ts` (sprite mapping — 4 distinct), `spectator/src/BattleHeader.tsx` (scorecard iframe), `spectator/src/battle-scorecard.html` (embedded scorecard).
+  - `spectator/src/lineage/__fixtures__/adaptive-lineage-live.json`, served fixture under `spectator/public/battle-fixtures/battle-004-adaptive-live/`.
+  - Routing/consumers live in `pi-mono/packages/ux-lab/src/components/battle/` (the served app).
+- **Recent battle commits** (this session, newest first):
+  - `6915e1875` handoff — back-on-track plan + /webgpt binding
+  - `7faa14eda` handoff — verified `#battle/live` is not a route
+  - `0cdeb82f6` handoff — accurate evidence-backed state
+  - `4a8337857` track `battle-scorecard.html` + four distinct lineage sprites (fixes broken import + sprite lock)
+  - `e0cb1d9f4` stream real adaptive-lineage capture into Live view (prior agent)
+- **Verification discipline (learned the hard way this session):**
+  - Load the spectator in a FRESH tab. A tab navigated many times / after a CDP reset renders
+    blank (`#root` empty) — that is a poisoned automation tab, NOT an app failure (~1 hr lost
+    to that false diagnosis).
+  - Deterministic tests over self-authored code are NOT proof of the live problem. Sprites,
+    streaming, and qualification each need a live read-back from the produced artifact.
