@@ -138,11 +138,11 @@ export const LaneRow = forwardRef<HTMLDivElement, Props>(function LaneRow(
   const rowHeightPx = hideTrack && sharedRowHeightPx != null
     ? sharedRowHeightPx
     : isChild ? BATTLE_MOCKUP_LANE_ROW_CHILD_PX : BATTLE_MOCKUP_LANE_ROW_ROOT_PX;
-  const terminalVariant = lane.terminal === "blocked" ? "blue" : lane.terminal === "none" ? "yellow" : "green";
+  const terminalLabel = statusLabel ?? (lane.terminal === "none" ? "ACTIVE" : lane.terminal.replace(/_/g, " ").toUpperCase());
+  const terminalVariant = lane.terminal === "blocked" ? "blue" : terminalLabel === "QUALIFIED" ? "green" : lane.terminal === "none" ? "yellow" : "green";
   const workerSuffix = lane.name === displayName ? null : lane.name.slice(displayName.length).trim();
 
   if (hideTrack) {
-    const terminalLabel = statusLabel ?? (lane.terminal === "none" ? "ACTIVE" : lane.terminal.replace(/_/g, " ").toUpperCase());
     return (
       <motion.div
         ref={ref}
@@ -238,7 +238,7 @@ export const LaneRow = forwardRef<HTMLDivElement, Props>(function LaneRow(
           <div className="min-w-0">
             <div className="flex min-w-0 items-center gap-2">
               <div className="truncate text-sm font-black text-white">{displayName}</div>
-              <Badge variant={terminalVariant} className="shrink-0">{lane.terminal === "none" ? "ACTIVE" : lane.terminal}</Badge>
+              <Badge variant={terminalVariant} className="shrink-0">{terminalLabel}</Badge>
             </div>
             <div className="mt-0.5 truncate text-[11px] font-medium text-slate-500">{workerSuffix ? `${workerSuffix} · ${lane.payloadId}` : lane.payloadId}</div>
             <div className="mt-1 flex min-w-0 flex-wrap gap-1.5">

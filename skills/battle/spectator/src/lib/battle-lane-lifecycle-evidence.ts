@@ -203,11 +203,18 @@ export function laneLifecycleEvidenceView(lane: Lane): LaneLifecycleEvidenceView
 }
 
 export function receiptBackedTerminalStatus(lane: Lane): LeaderboardEntry["status"] | null {
+	const semantics = scoreSemanticsForLane(lane);
+	if (
+		lane.terminal === "none" &&
+		semantics?.proof_mode === "receipt_backed_fixture" &&
+		semantics.terminal_state === "qualification_pass"
+	) {
+		return "survivor";
+	}
 	if (lane.terminal === "none") return null;
 	const provenTerminalEvent = lane.events.some(
 		(event) => event.proven && (event.kind === lane.terminal || (lane.terminal === "blocked_handoff" && event.kind === "blocked")),
 	);
-	const semantics = scoreSemanticsForLane(lane);
 	const receiptBacked =
 		lane.proofMode === "receipt_backed_fixture" ||
 		semantics?.proof_mode === "receipt_backed_fixture" ||

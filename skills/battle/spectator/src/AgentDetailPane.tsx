@@ -20,6 +20,14 @@ type Props = { lane: Lane; lanes: Lane[]; events: BattleEvent[]; activeFinisher:
 type TraceField = "observation" | "hypothesis" | "action" | "result" | "learned" | "next_move";
 const TRACE_FIELDS: Array<[TraceField, string]> = [["observation", "Observation"], ["hypothesis", "Hypothesis"], ["action", "Action"], ["result", "Result"], ["learned", "Learned"], ["next_move", "Next move"]];
 
+function hasReceiptText(value: string | null | undefined): value is string {
+  return Boolean(value && value.trim() && value !== "not emitted");
+}
+
+function receiptText(value: string | null | undefined, fallback: string): string {
+  return hasReceiptText(value) ? value.trim() : fallback;
+}
+
 export function AgentDetailPane({ lane, lanes, events, activeFinisher, onSound }: Props) {
   void lanes;
   if (isBattleDesignView()) return <MockupAgentDetailPane lane={lane} />;
@@ -78,7 +86,7 @@ export function AgentDetailPane({ lane, lanes, events, activeFinisher, onSound }
             <TabsTrigger data-qid="battle:agent-pane:tab:receipts" data-qs-action="BATTLE_AGENT_PANE_TAB_RECEIPTS" value="receipts" title="Show Receipts tab" className="min-h-11 px-1 text-[11px]">Receipts</TabsTrigger>
           </TabsList>
           <div className="min-h-0 flex-1 overflow-auto p-2.5">
-            <TabsContent value="summary" className="mt-0 space-y-2"><CurrentTurn model={model} /><TraceCard trace={model.trace} /><OutputCard stdout={liveStdout || model.stdout} stderr={liveStderr || model.stderr} live={Boolean(liveStdout || liveStderr)} /><SkillsCard skills={model.skills} /></TabsContent>
+            <TabsContent value="summary" className="mt-0 space-y-2"><CurrentTurn model={model} /><TraceCard trace={model.trace} /><OutputCard stdout={liveStdout || model.stdout} stderr={liveStderr || model.stderr} live={Boolean(liveStdout || liveStderr)} />{model.skills.length ? <SkillsCard skills={model.skills} /> : null}</TabsContent>
             <TabsContent value="live" className="mt-0 space-y-2"><LiveStreamPanel meta={liveBus.meta} console={liveConsole} packets={livePackets} isLiveRoute={liveBus.meta.status !== "idle"} /></TabsContent>
             <TabsContent value="turns" className="mt-0 space-y-2">{model.turnEvents.length ? model.turnEvents.map((event) => <TurnEvent key={event.id} event={event} />) : <EmptyState label="No Battle turns emitted." />}</TabsContent>
             <TabsContent value="logs" className="mt-0 space-y-3">{model.relatedEvents.map((event) => <EventRow key={event.id} event={event} />)}<RawJson events={model.relatedEvents} /></TabsContent>
@@ -99,7 +107,7 @@ function ReplayPanel({ replay }: { replay: BattleReplayRef }) {
         <div className="min-w-0"><div className="battle-label text-battle-blue">Docker replay</div><div className="mt-1 text-lg font-black text-white">REPLAY IN DOCKER</div><div className="mt-1 truncate text-xs text-slate-400">{replay.can_execute_now ? "Executable replay endpoint available" : "Opens Judge replay receipt · not live execution"}</div></div>
         <ProofBadge mode={replay.proof_mode} />
       </div>
-      <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-slate-400"><InfoLine label="red" value={replay.red_worker_id ?? "not emitted"} /><InfoLine label="blue" value={replay.blue_worker_id ?? "not emitted"} /></div>
+      <div className="mt-2 grid grid-cols-2 gap-2 text-[11px] text-slate-400"><InfoLine label="red" value={receiptText(replay.red_worker_id, "No red worker id in receipt")} /><InfoLine label="blue" value={receiptText(replay.blue_worker_id, "No blue worker id in receipt")} /></div>
       <Button data-qid={qid} data-qs-action="BATTLE_AGENT_PANE_DOCKER_REPLAY" title={replay.can_execute_now ? "Run Docker replay endpoint" : "Open receipt-backed Judge replay proof; this does not start live execution"} variant="green" className="mt-3 w-full min-h-11 justify-start text-left"><Play className="h-4 w-4" /> {replay.can_execute_now ? "RUN REPLAY IN DOCKER" : "OPEN REPLAY RECEIPT"}</Button>
     </section>
   );
@@ -110,10 +118,6 @@ function LifecycleEvidencePanel({ lifecycle }: { lifecycle: ReturnType<typeof la
   const promotion = lifecycle.memoryPromotion;
   const network = lifecycle.networkSummary;
   const calibration = lifecycle.scoreCalibration;
-  const parentAnalysis =
-    packet.present && packet.parent_analysis && Object.keys(packet.parent_analysis).length
-      ? "inherited parent analysis attached"
-      : "inherited parent analysis: not emitted";
   const material =
     packet.present ||
     promotion.present ||
@@ -124,6 +128,23 @@ function LifecycleEvidencePanel({ lifecycle }: { lifecycle: ReturnType<typeof la
     lifecycle.childPlanLabel !== "not emitted" ||
     lifecycle.inheritedProbeLabel !== "not emitted";
   const [expanded, setExpanded] = useState(material);
+  const lines = [
+    packet.present ? ["knowledge_packet", `${packet.status}${packet.packet_id ? ` · ${packet.packet_id}` : ""}`] : null,
+    packet.present && packet.parent_analysis && Object.keys(packet.parent_analysis).length
+      ? ["inherited_parent_analysis", "inherited parent analysis attached"]
+      : null,
+    hasReceiptText(lifecycle.childAckLabel) ? ["child_ack", lifecycle.childAckLabel] : null,
+    hasReceiptText(lifecycle.tauBranchDecisionLabel) ? ["tau_branch_decision", lifecycle.tauBranchDecisionLabel] : null,
+    hasReceiptText(lifecycle.spawnRequestLabel) ? ["spawn_request", lifecycle.spawnRequestLabel] : null,
+    hasReceiptText(lifecycle.childPlanLabel) ? ["child_inherited_plan", lifecycle.childPlanLabel] : null,
+    hasReceiptText(lifecycle.inheritedProbeLabel) ? ["child_inherited_probe", lifecycle.inheritedProbeLabel] : null,
+    promotion.present ? ["memory_promotion", `${promotion.durable_promoted ? "durable promoted" : "not promoted"} · ${promotion.reason ?? "receipt evaluated"}`] : null,
+    network.available ? ["network_summary.available", "true"] : null,
+    network.available ? ["network_summary.full_packet_capture_proven", network.full_packet_capture_proven ? "true" : "false"] : null,
+    network.available && hasReceiptText(network.reason) ? ["network_summary.reason", network.reason] : null,
+    hasReceiptText(lifecycle.packetCaptureLabel) ? ["packet capture", lifecycle.packetCaptureLabel] : null,
+    calibration ? ["score_calibration", calibration.outcome_class ?? "receipt-backed calibration attached"] : null,
+  ].filter((line): line is [string, string] => Boolean(line));
 
   return (
     <section className="m-3 rounded-xl border border-white/10 bg-white/[.025] p-3" data-qid="battle:agent-pane:lifecycle-evidence" data-material={material ? "1" : "0"}>
@@ -145,19 +166,7 @@ function LifecycleEvidencePanel({ lifecycle }: { lifecycle: ReturnType<typeof la
       ) : null}
       {expanded ? (
         <div className="mt-2 grid gap-2 text-xs">
-          <LifecycleLine field="knowledge_packet" value={packet.present ? `${packet.status}${packet.packet_id ? ` · ${packet.packet_id}` : ""}` : "not emitted"} />
-          <LifecycleLine field="child_ack" value={lifecycle.childAckLabel} />
-          <LifecycleLine field="inherited_parent_analysis" value={parentAnalysis} />
-          <LifecycleLine field="tau_branch_decision" value={lifecycle.tauBranchDecisionLabel} />
-          <LifecycleLine field="spawn_request" value={lifecycle.spawnRequestLabel} />
-          <LifecycleLine field="child_inherited_plan" value={lifecycle.childPlanLabel} />
-          <LifecycleLine field="child_inherited_probe" value={lifecycle.inheritedProbeLabel} />
-          <LifecycleLine field="memory_promotion" value={promotion.present ? `${promotion.durable_promoted ? "durable promoted" : "not promoted"} · ${promotion.reason ?? "receipt evaluated"}` : "not emitted"} />
-          <LifecycleLine field="network_summary.available" value={network.available ? "true" : "false"} />
-          <LifecycleLine field="network_summary.full_packet_capture_proven" value={network.full_packet_capture_proven ? "true" : "false"} />
-          <LifecycleLine field="network_summary.reason" value={network.reason ?? "not emitted"} />
-          <LifecycleLine field="packet capture" value={lifecycle.packetCaptureLabel} />
-          <LifecycleLine field="score_calibration" value={calibration ? (calibration.outcome_class ?? "receipt-backed calibration attached") : "not emitted"} />
+          {lines.map(([field, value]) => <LifecycleLine key={field} field={field} value={value} />)}
         </div>
       ) : null}
     </section>
@@ -213,23 +222,29 @@ function CurrentTurn({ model }: { model: AgentPaneModel }) {
 }
 
 function TraceCard({ trace }: { trace: Record<TraceField, string | undefined> }) {
-  return <section className="rounded-lg border border-white/10 bg-white/[.025] p-2.5"><div className="battle-label">Public trace</div><div className="mt-2 grid gap-1.5">{TRACE_FIELDS.map(([key, label]) => <div key={key} className="grid grid-cols-[86px_1fr] gap-2 text-xs leading-5"><span className="battle-label">{label}</span><span className={trace[key] ? "text-slate-300" : "text-slate-600"}>{trace[key] || "not emitted"}</span></div>)}</div></section>;
+  const rows = TRACE_FIELDS.filter(([key]) => hasReceiptText(trace[key]));
+  return <section className="rounded-lg border border-white/10 bg-white/[.025] p-2.5"><div className="battle-label">Public trace</div>{rows.length ? <div className="mt-2 grid gap-1.5">{rows.map(([key, label]) => <div key={key} className="grid grid-cols-[86px_1fr] gap-2 text-xs leading-5"><span className="battle-label">{label}</span><span className="text-slate-300">{trace[key]}</span></div>)}</div> : <div className="mt-2 text-xs text-slate-500">No public trace fields attached to this receipt event.</div>}</section>;
 }
 
 function OutputCard({ stdout, stderr, live }: { stdout: string; stderr: string; live?: boolean }) {
-  return <section className="grid grid-cols-2 gap-2"><InfoPanel label={live ? "stdout latest · live" : "stdout latest"} value={stdout} tone="text-slate-300" /><InfoPanel label={live ? "stderr latest · live" : "stderr latest"} value={stderr} tone="text-battle-red" /></section>;
+  const panels = [
+    hasReceiptText(stdout) ? <InfoPanel key="stdout" label={live ? "stdout latest · live" : "stdout latest"} value={stdout} tone="text-slate-300" /> : null,
+    hasReceiptText(stderr) ? <InfoPanel key="stderr" label={live ? "stderr latest · live" : "stderr latest"} value={stderr} tone="text-battle-red" /> : null,
+  ].filter((panel): panel is JSX.Element => Boolean(panel));
+  if (!panels.length) return null;
+  return <section className={panels.length > 1 ? "grid grid-cols-2 gap-2" : "grid gap-2"}>{panels}</section>;
 }
 
 function SkillsCard({ skills }: { skills: AgentPaneSkill[] }) {
-  return <section className="rounded-lg border border-white/10 bg-white/[.025] p-2.5"><div className="mb-2 battle-label">Skills / tools used</div><div className="flex flex-wrap gap-2">{skills.length ? skills.map((skill) => <SkillChip key={`${skill.name}-${skill.receipt_id ?? "no-receipt"}`} skill={skill} />) : <span className="text-xs text-slate-600">not emitted</span>}</div></section>;
+  return <section className="rounded-lg border border-white/10 bg-white/[.025] p-2.5"><div className="mb-2 battle-label">Skills / tools used</div><div className="flex flex-wrap gap-2">{skills.length ? skills.map((skill) => <SkillChip key={`${skill.name}-${skill.receipt_id ?? "no-receipt"}`} skill={skill} />) : <span className="text-xs text-slate-500">No skills/tools recorded in this receipt.</span>}</div></section>;
 }
 
 function ReceiptsCard({ receipts }: { receipts: BattleReceiptRef[] }) {
-  return <section className="rounded-lg border border-white/10 bg-white/[.025] p-2.5"><div className="mb-2 battle-label">Receipts / proof</div><div className="space-y-2">{receipts.length ? receipts.map((receipt) => <ReceiptRow key={`${receipt.receipt_id}-${receipt.receipt_type}-${receipt.pair_id ?? "lane"}`} receipt={receipt} />) : <div className="text-xs text-slate-600">not emitted</div>}</div></section>;
+  return <section className="rounded-lg border border-white/10 bg-white/[.025] p-2.5"><div className="mb-2 battle-label">Receipts / proof</div><div className="space-y-2">{receipts.length ? receipts.map((receipt) => <ReceiptRow key={`${receipt.receipt_id}-${receipt.receipt_type}-${receipt.pair_id ?? "lane"}`} receipt={receipt} />) : <div className="text-xs text-slate-500">No receipt references attached to this lane.</div>}</div></section>;
 }
 
 function TurnEvent({ event }: { event: BattleEvent }) {
-  return <div className="rounded-xl border border-white/10 bg-white/[.025] p-3"><div className="flex items-start gap-3"><div className="mt-0.5 text-battle-blue"><Terminal className="h-4 w-4" /></div><div className="min-w-0 flex-1"><div className="flex items-center justify-between gap-2"><div className="truncate font-black text-slate-100">{event.turn?.phase ?? event.event_type}</div><ProofBadge mode={event.proof_mode ?? "missing"} /></div><div className="mt-1 text-sm leading-5 text-slate-300">{event.turn?.current_action ?? event.summary}</div><div className="mt-2 text-xs text-battle-green">{event.public_trace?.learned || "not emitted"}</div></div></div></div>;
+  return <div className="rounded-xl border border-white/10 bg-white/[.025] p-3"><div className="flex items-start gap-3"><div className="mt-0.5 text-battle-blue"><Terminal className="h-4 w-4" /></div><div className="min-w-0 flex-1"><div className="flex items-center justify-between gap-2"><div className="truncate font-black text-slate-100">{event.turn?.phase ?? event.event_type}</div><ProofBadge mode={event.proof_mode ?? "missing"} /></div><div className="mt-1 text-sm leading-5 text-slate-300">{event.turn?.current_action ?? event.summary}</div>{hasReceiptText(event.public_trace?.learned) ? <div className="mt-2 text-xs text-battle-green">{event.public_trace?.learned}</div> : null}</div></div></div>;
 }
 
 function EventRow({ event }: { event: BattleEvent }) {
@@ -242,7 +257,7 @@ function RawJson({ events }: { events: BattleEvent[] }) {
 }
 
 function SkillRow({ skill }: { skill: AgentPaneSkill }) {
-  return <div className="grid grid-cols-[1fr_74px_120px] items-center gap-2 rounded-xl border border-white/10 bg-white/[.025] px-3 py-2 text-sm"><div className="min-w-0"><div className="flex items-center gap-2 truncate font-bold text-slate-100"><SkillIcon name={skill.name} />{skill.name}</div><div className="truncate text-xs text-slate-500">{skill.summary || "not emitted"}</div></div><Badge variant={skill.kind === "tool" ? "blue" : "green"}>{skill.kind}</Badge><ProofBadge mode={skill.proof_mode} /></div>;
+  return <div className="grid grid-cols-[1fr_74px_120px] items-center gap-2 rounded-xl border border-white/10 bg-white/[.025] px-3 py-2 text-sm"><div className="min-w-0"><div className="flex items-center gap-2 truncate font-bold text-slate-100"><SkillIcon name={skill.name} />{skill.name}</div>{hasReceiptText(skill.summary) ? <div className="truncate text-xs text-slate-500">{skill.summary}</div> : null}</div><Badge variant={skill.kind === "tool" ? "blue" : "green"}>{skill.kind}</Badge><ProofBadge mode={skill.proof_mode} /></div>;
 }
 
 function SkillChip({ skill }: { skill: AgentPaneSkill }) {
@@ -343,12 +358,12 @@ function buildModel(lane: Lane, events: BattleEvent[]): AgentPaneModel {
     agentId: primary?.tau_subagent_id || primary?.actor_id || "receipt-backed-worker",
     turnId: latestTurn?.tau_turn_id || replay?.pair_id || "judge replay",
     loopIndex: latestTurn?.turn?.loop_index ?? 0,
-    phase: latestTurn?.turn?.phase || primary?.event_type || "not emitted",
+    phase: latestTurn?.turn?.phase || primary?.event_type || "receipt evidence",
     status: terminalStatusLabel(lane),
-    currentAction: latestTurn?.turn?.current_action || primary?.summary || "not emitted",
+    currentAction: latestTurn?.turn?.current_action || primary?.summary || "Receipt-backed qualification evidence.",
     trace: { observation: traceSource?.observation, hypothesis: traceSource?.hypothesis, action: traceSource?.action, result: traceSource?.result, learned: traceSource?.learned, next_move: traceSource?.next_move },
-    stdout: latestNonEmpty([primary?.output?.stdout_excerpt, ...(lane.stdout ?? [])]) || "not emitted",
-    stderr: latestNonEmpty([primary?.output?.stderr_excerpt, ...(lane.stderr ?? [])]) || "not emitted",
+    stdout: latestNonEmpty([primary?.output?.stdout_excerpt, ...(lane.stdout ?? [])]) || "",
+    stderr: latestNonEmpty([primary?.output?.stderr_excerpt, ...(lane.stderr ?? [])]) || "",
     skills,
     receipts,
     relatedEvents,

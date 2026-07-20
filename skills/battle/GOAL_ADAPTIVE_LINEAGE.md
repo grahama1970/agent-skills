@@ -246,6 +246,17 @@ Three artifacts, all required, none optional:
       `G1-B Writestr Detour`, `G2 ZipInfo Switchback`, contains none of the old
       ambiguous names, and reports no lane/roster name overflow. Screenshot:
       `skills/battle/local/battle-ux-integration-20260720T2022Z/battle-route-adaptive-lineage.png`.
+- [x] Obvious-error cleanup proof:
+      `skills/battle/local/battle-ux-obvious-errors-20260720T2047Z/battle-route-no-obvious-errors-proof.json`
+      targets `http://127.0.0.1:3003/#battle`, has `mocked:false`,
+      `live:true`, `hasCanvas:true`, `data-data-source:"live"`,
+      `data-proves-live:"true"`, contains all four descriptive names, contains
+      `QUALIFIED 4` and per-generation `QUALIFIED` lane labels, has
+      `forbiddenHits:[]` for `not emitted`, Sparta/render-blocked markers, old
+      ambiguous names, empty stderr/skills summary cards, `RUNNING 4`, `ACTIVE`
+      lane labels, and Red/Blue dash score rows, and reports no failed requests,
+      no console errors, and no lane/roster name overflow. Screenshot:
+      `skills/battle/local/battle-ux-obvious-errors-20260720T2047Z/battle-route-no-obvious-errors.png`.
 
 **GOAL STATUS: CURRENT RECOVERY EVIDENCE READY FOR COMMIT** — 2026-07-20.
 Closure requires the final Battle evidence commit to be pushed and remote-ref

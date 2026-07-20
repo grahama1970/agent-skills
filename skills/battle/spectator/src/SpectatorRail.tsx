@@ -5,7 +5,7 @@ import { isBattleDesignView } from "./lib/battle-mockup-lanes";
 import { mockupAgentStatus, mockupRaceLeaders, mockupScoreboard } from "./lib/mockup-design-fixture";
 import { Icons } from "./battle-icons";
 import { useRegisterAction } from "./hooks/useRegisterAction";
-import { leaderboardEntryForLane, terminalStatusCounts } from "./lib/battle-lane-lifecycle-evidence";
+import { leaderboardEntryForLane, receiptBackedTerminalStatus, terminalStatusCounts } from "./lib/battle-lane-lifecycle-evidence";
 import { cn } from "./lib/utils";
 import { formatReceiptScore } from "./lib/format-receipt-score";
 
@@ -38,16 +38,8 @@ export function SpectatorRail({ receiptFixture, leaderboard, selectedId, onSelec
   const [agentSearchQuery, setAgentSearchQuery] = useState("");
   const rosterAgents = useMemo(() => {
     const base = activeLanes.map((lane) => {
-      const status =
-        lane.terminal === "killed"
-          ? "killed"
-          : lane.terminal === "blocked" || lane.terminal === "blocked_handoff"
-            ? "blocked"
-            : lane.terminal === "promoted" || lane.terminal === "survivor"
-              ? "promoted"
-              : lane.terminal === "fastest_crash"
-                ? "fastest_crash"
-                : "running";
+      const receiptStatus = receiptBackedTerminalStatus(lane);
+      const status = receiptStatus === "survivor" ? "survivor" : receiptStatus ?? "running";
       const role = lane.selected ? "selected" : lane.runner_up ? "runner-up" : null;
       return {
         laneId: lane.id,
@@ -66,6 +58,7 @@ export function SpectatorRail({ receiptFixture, leaderboard, selectedId, onSelec
         agent.laneId.toLowerCase().includes(q),
     );
   }, [activeLanes, agentSearchQuery]);
+  const hasReceiptScores = typeof scoreboard?.red_score === "number" || typeof scoreboard?.blue_score === "number";
 
   return (
     <aside className={cn("min-h-0 overflow-hidden", designView ? "leftRail battle-mockup-left-rail battle-mockup-panel" : "grid grid-rows-[auto_auto_minmax(0,1fr)] gap-3")}>
@@ -131,19 +124,21 @@ export function SpectatorRail({ receiptFixture, leaderboard, selectedId, onSelec
         </Panel>
       )}
 
-      <Panel title="Team Standings" designView={designView}>
-        {designView ? (
+      {designView || hasReceiptScores ? (
+        <Panel title="Team Standings" designView={designView}>
+          {designView ? (
           <>
             <StandRow tone="red" icon={<Icons.Bug className="h-4 w-4" />} label="Red Team" sub="Exploit Agents" score={mockupScoreboard().red} />
             <StandRow tone="blue" icon={<Icons.Shield className="h-4 w-4" />} label="Blue Team" sub="Patch Agents" score={mockupScoreboard().blue} />
           </>
-        ) : (
-          <div className="space-y-2">
-            <ReceiptStanding icon={<Icons.Bug className="h-5 w-5" />} label="Red Team" sub="Exploit agents" value={formatReceiptScore(scoreboard?.red_score)} tone="text-battle-red" />
-            <ReceiptStanding icon={<Icons.Shield className="h-5 w-5" />} label="Blue Team" sub="Patch agents" value={formatReceiptScore(scoreboard?.blue_score)} tone="text-battle-blue" />
-          </div>
-        )}
-      </Panel>
+          ) : (
+            <div className="space-y-2">
+              <ReceiptStanding icon={<Icons.Bug className="h-5 w-5" />} label="Red Team" sub="Exploit agents" value={formatReceiptScore(scoreboard?.red_score)} tone="text-battle-red" />
+              <ReceiptStanding icon={<Icons.Shield className="h-5 w-5" />} label="Blue Team" sub="Patch agents" value={formatReceiptScore(scoreboard?.blue_score)} tone="text-battle-blue" />
+            </div>
+          )}
+        </Panel>
+      ) : null}
 
       <Panel title="Agent Status" designView={designView} className={designView ? "min-h-0 flex-1" : undefined}>
         {designView
@@ -160,7 +155,8 @@ export function SpectatorRail({ receiptFixture, leaderboard, selectedId, onSelec
                 const usefulCount = activeLanes.reduce((n, lane) => n + lane.events.filter((event) => event.proven && event.kind === "useful").length, 0);
                 return (
                   <>
-                    <ReceiptStatusLine icon={<Icons.Activity className="h-4 w-4" />} label="Running" value={String(counts.running)} tone="text-battle-cyan" />
+                    {counts.running ? <ReceiptStatusLine icon={<Icons.Activity className="h-4 w-4" />} label="Running" value={String(counts.running)} tone="text-battle-cyan" /> : null}
+                    <ReceiptStatusLine icon={<Icons.ShieldCheck className="h-4 w-4" />} label="Qualified" value={String(counts.survivor)} tone="text-battle-green" />
                     <ReceiptStatusLine icon={<Icons.ShieldX className="h-4 w-4" />} label="Blocked" value={String(counts.blocked)} tone="text-battle-blue" />
                     <ReceiptStatusLine icon={<Icons.Skull className="h-4 w-4" />} label="Killed" value={String(counts.killed)} tone="text-battle-red" />
                     <ReceiptStatusLine icon={<Icons.Lightbulb className="h-4 w-4" />} label="Useful" value={String(usefulCount)} tone="text-battle-yellow" />
@@ -251,8 +247,7 @@ function ReceiptStatusLine({ icon, label, value, tone }: { icon: React.ReactNode
 
 function StatusIcon({ status }: { status: LeaderboardEntry["status"] }) {
   if (status === "fastest_crash") return <Icons.Rocket className="h-4 w-4 text-battle-green" />;
-  if (status === "promoted") return <Icons.ShieldCheck className="h-4 w-4 text-battle-green" />;
+  if (status === "promoted" || status === "survivor") return <Icons.ShieldCheck className="h-4 w-4 text-battle-green" />;
   if (status === "killed") return <Icons.Skull className="h-4 w-4 text-battle-red" />;
   return <Icons.ShieldX className="h-4 w-4 text-battle-blue" />;
 }
-

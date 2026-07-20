@@ -435,6 +435,8 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
             statusLabel={
               lane.parentId && effectivePlayheadSeconds < (lane.first_active_segment_elapsed_seconds ?? Number.POSITIVE_INFINITY)
                 ? "AUTHORIZED PENDING"
+                : lane.score_semantics?.proof_mode === "receipt_backed_fixture" && lane.score_semantics.terminal_state === "qualification_pass"
+                  ? "QUALIFIED"
                 : undefined
             }
             onSelect={onSelect}

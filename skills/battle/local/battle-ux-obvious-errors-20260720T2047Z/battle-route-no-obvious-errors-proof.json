@@ -1,0 +1,140 @@
+{
+  "url": "http://127.0.0.1:3003/#battle",
+  "hash": "#battle",
+  "hasAdaptivePanel": true,
+  "hasAdaptiveBadge": true,
+  "badgeAttrs": {
+    "dataSource": "live",
+    "provesLive": "true"
+  },
+  "navRace": {
+    "href": "#battle",
+    "current": "page",
+    "text": "Adaptive Replay"
+  },
+  "navDesign": {
+    "href": "#battle/isolation",
+    "current": null,
+    "text": "Design"
+  },
+  "hasLiveTransportNav": false,
+  "hasTeamStandingsPanel": false,
+  "hasCanvas": true,
+  "canvasRect": {
+    "width": 1030,
+    "height": 277,
+    "left": 8,
+    "top": 315
+  },
+  "expectedNames": [
+    "G0 Zip Slip Spark",
+    "G1-A Importlib Slipstream",
+    "G1-B Writestr Detour",
+    "G2 ZipInfo Switchback"
+  ],
+  "containsExpectedNames": true,
+  "expectedText": [
+    "QUALIFIED\n4",
+    "GEN 0\nQUALIFIED",
+    "GEN 1\nQUALIFIED",
+    "GEN 2\nQUALIFIED"
+  ],
+  "containsExpectedText": true,
+  "forbidden": [
+    "not emitted",
+    "Sparta Explorer",
+    "render-blocked",
+    "Renderer blocked",
+    "G0 Seed Slip",
+    "G1-A Module Slip",
+    "G1-B Arc Courier",
+    "G2 ZipInfo Path",
+    "No stderr output in receipt",
+    "No skills/tools recorded in this receipt",
+    "RUNNING\n4",
+    "GEN 0\nACTIVE",
+    "GEN 1\nACTIVE",
+    "GEN 2\nACTIVE",
+    "Red Team\nExploit agents\n—",
+    "Blue Team\nPatch agents\n—"
+  ],
+  "forbiddenHits": [],
+  "hasStderrSummaryCard": false,
+  "hasSkillsSummaryCard": false,
+  "laneNameMetrics": [
+    {
+      "text": "G0 Zip Slip Spark",
+      "clientWidth": 227,
+      "scrollWidth": 227,
+      "clientHeight": 15,
+      "scrollHeight": 16,
+      "overflowing": false
+    },
+    {
+      "text": "G1-A Importlib Slipstream",
+      "clientWidth": 211,
+      "scrollWidth": 211,
+      "clientHeight": 15,
+      "scrollHeight": 16,
+      "overflowing": false
+    },
+    {
+      "text": "G1-B Writestr Detour",
+      "clientWidth": 211,
+      "scrollWidth": 211,
+      "clientHeight": 15,
+      "scrollHeight": 16,
+      "overflowing": false
+    },
+    {
+      "text": "G2 ZipInfo Switchback",
+      "clientWidth": 211,
+      "scrollWidth": 211,
+      "clientHeight": 15,
+      "scrollHeight": 16,
+      "overflowing": false
+    }
+  ],
+  "laneNamesOverflowing": false,
+  "rosterNameMetrics": [
+    {
+      "text": "G0 Zip Slip Spark",
+      "clientWidth": 177,
+      "scrollWidth": 177,
+      "clientHeight": 14,
+      "scrollHeight": 15,
+      "overflowing": false
+    },
+    {
+      "text": "G1-A Importlib Slipstream",
+      "clientWidth": 105,
+      "scrollWidth": 105,
+      "clientHeight": 28,
+      "scrollHeight": 29,
+      "overflowing": false
+    },
+    {
+      "text": "G1-B Writestr Detour",
+      "clientWidth": 98,
+      "scrollWidth": 98,
+      "clientHeight": 28,
+      "scrollHeight": 29,
+      "overflowing": false
+    },
+    {
+      "text": "G2 ZipInfo Switchback",
+      "clientWidth": 177,
+      "scrollWidth": 177,
+      "clientHeight": 14,
+      "scrollHeight": 15,
+      "overflowing": false
+    }
+  ],
+  "rosterNamesOverflowing": false,
+  "textExcerpt": "ADAPTIVE REPLAY\nDESIGN\nPROOFS & STAGES\nADAPTIVE LINEAGE\nLIVE: Qual PASS\nG1-A\n/\nG1-B\n· novelty_distance\n▸\nSHOW\nBATTLE-004\n/\nPOST /api/import-zip\nCWE-22\n/\nZip Slip path traversal\n/\nTARGET: Fastest Proven Crash\nLIVE EVENTS\n07:00:00 PM\nAdaptive lineage — G1-A IMPORTLIB SLIPSTREAM: GENOME SELECTED\n07:00:00 PM\nAdaptive lineage — G1-B WRITESTR DETOUR: GENOME SELECTED\n07:00:00 PM\nAdaptive lineage — G2 ZIPINFO SWITCHBACK: GENOME SELECTED\n«\nAGENTS\n4\nG0 Zip Slip Spark\nZip Slip Spark · seed\nG0\nG1-A Importlib Slipstream\nImportlib Slipstream · selected G1 · method_replace\nG1 · selected\nG1-B Writestr Detour\nWritestr Detour · runner-up G1 · oracle_or_parameter_mutation\nG1 · runner-up\nG2 ZipInfo Switchback\nZipInfo Switchback · descendant · failure_guided_crossover\nG2\nAGENT STATUS\nQUALIFIED\n4\nBLOCKED\n0\nKILLED\n0\nUSEFUL\n3\nPROMOTED\n0\nFASTEST CRASH\n0\nEVOLUTION & PROGRESS GRAPH\n100%\nPLAYHEAD 02:14\nRESUME FOLLOW\n00:00\n00:26\n00:53\n01:20\n01:47\n02:14\nG0 Zip Slip Spark\nG0\nGEN 0\nQUALIFIED\nG1-A Importlib Slipstream\nG1-A\nGEN 1\nQUALIFIED\nG1-B Writestr Detour\nG1-B\nGEN 1\nQUALIFIED\nG2 ZipInfo Switchback\nG2\nGEN 2\nQUALIFIED\n»\nAGENT DETAIL\nSelected agent cockpit\nRECEIPT-BACKED FIXTURE\nG1-A Importlib Slipstream\nGen 1 · G1-A\nG1-A\nADAPTIVE QUALIFICATION\nPASS\nG1-A Importlib Slipstream · selected G1\nRECEIPT-BACKED FIXTURE\nJUDGEvulnerable original confirmed · no patched bypass\nBASISReplaced direct from-import loading of import_zip with importlib.import_module plus getattr while preserving archive construction, traversal entry, call semantics, exception handling, and filesystem oracle.\nLIFECYCLE EVIDENCE\nSHOW\nSummary\nLive\nTurns\nLogs\nSkills\nReceipts\nCURRENT LOOP · #0\nG1-A Importlib Slipstream fitness PASS · vulnerable original confirmed\njudge replay\nJUDGE.VERDICT\nPUBLIC TRACE\nOBSERVATION\nG2 ZipInfo Switchback derived from G1-A\nACTION\nChanged app loading from importlib/getattr to direct from-import, changed archive construction from writestr to ZipInfo plus zf.open member write, changed target call to pass Path objects, and strengthened the oracle with escaped file content plus returned-path resolution.\nRESULT\nPASS\nLEARNED\napp_load_mode, archive_entry_construction, target_call_form, exception_handling\nSTDOUT LATEST\nG1-A Importlib Slipstream: fitness PASS; run=arena-adaptive-lineage-20260720T144034Z; novelty=2; judge_duration=1.195406s; vulnerable_original_confirmed=true; patched_bypass=false\nLEGEND:\n— Exploit Progress\nBlue Intervention\nBlocked (Handoff)\nKilled\nUseful Signal\nPromoted / Survivor\nFastest Crash\nNext\nHighlights\nArm\n1x\n2x\n4x\n8x\nAll\nRed\nBlue\nUseful\nReceipts\nBlue patch proof\nBlue block proof\nReceipt stream",
+  "failedRequests": [],
+  "consoleErrors": [],
+  "mocked": false,
+  "live": true,
+  "exercised": "fresh browser render of top-level #battle after obvious-placeholder/status cleanup"
+}

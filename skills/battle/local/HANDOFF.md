@@ -81,6 +81,17 @@ agent-skills worktree, not the pi-mono shell.
   current descriptive names, contains no old ambiguous names, no Sparta text,
   no render-blocked text, no failed requests, no console errors, no standalone
   `battle:nav:live`, and reports no lane/roster name overflow.
+- **Obvious-error cleanup proof exists**:
+  `skills/battle/local/battle-ux-obvious-errors-20260720T2047Z/` contains
+  `battle-route-no-obvious-errors-proof.json` and
+  `battle-route-no-obvious-errors.png`. It targets
+  `http://127.0.0.1:3003/#battle`, has `mocked:false`, `live:true`,
+  `hasCanvas:true`, live badge attrs `data-data-source:"live"` and
+  `data-proves-live:"true"`, contains all four descriptive names, and reports
+  `forbiddenHits:[]` for `not emitted`, Sparta/render-blocked markers, old
+  ambiguous names, empty stderr/skills summary cards, `RUNNING 4`, `ACTIVE`
+  lane labels, and Red/Blue dash score rows. It also reports no failed requests,
+  no console errors, and no lane/roster name overflow.
 - **WebGPT acceptance for this new host exists**:
   `skills/battle/local/webgpt-design-review-20260720T1742Z/response.md` starts
   with `ACCEPTED`, and `response.raw.md` contains the terminal sentinel. The
@@ -102,6 +113,8 @@ agent-skills worktree, not the pi-mono shell.
 - Current final deterministic checks:
   - `node node_modules/vitest/vitest.mjs run src/lineage/ src/lib/battle-adaptive-lineage.test.ts src/engine/battle-lane-variant-map.test.ts`
     passed 3 files / 31 tests.
+  - `node node_modules/vitest/vitest.mjs run src/lib/battle-receipt-lineage.test.ts src/lib/is-battle-pixi-engine.test.ts src/lib/battle-adaptive-lineage.test.ts src/lineage/battle-adaptive-lineage.test.ts src/lib/battle-lane-lifecycle-evidence.test.ts`
+    passed 5 files / 34 tests after the obvious-error cleanup.
   - `node node_modules/typescript/bin/tsc --noEmit -p tsconfig.json` passed.
   - `node scripts/build-static.mjs` passed.
   - `curl -I /battle-sprites/pixijs/battle-sprite-assets.manifest.json` and
@@ -136,8 +149,8 @@ agent-skills worktree, not the pi-mono shell.
 
 ## 5. Next Steps
 
-1. Commit and push this top-level `#battle` UX integration, descriptive-name
-   JSON/generator update, proof artifacts, and handoff update by explicit path.
+1. Commit and push the obvious-error cleanup, proof artifacts, and handoff
+   update by explicit path.
 2. Audit the immutable goal checklist. Do not use closure language unless the
    final report cites backend receipt, browser screenshot/assertions, WebGPT
    response, deterministic renderer proof, Pixi sprite/canvas proof, and remote
