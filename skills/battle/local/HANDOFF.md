@@ -72,10 +72,13 @@ agent-skills worktree, not the pi-mono shell.
 
 ## 4. What is Currently Broken Or Pending
 
-- **WebGPT transport is the active blocker**. The fresh bundle at
-  `skills/battle/local/webgpt-design-review-20260720T1706Z/` contains the
-  request and zip bundle, but Surf failed before main submission:
-  `roundtrip_preflight_failed` / `submitted_to_chatgpt:false`.
+- **WebGPT transport / ChatGPT response health is the active blocker**. The
+  blocker summary is
+  `skills/battle/local/webgpt-agent-skills-host-blocker-20260720T1721Z.md`.
+  Attachment-backed review attempts either stayed at `prepared_prompt` or left
+  the prompt in the composer; a focused text-only sanity reached
+  `submitted_to_chatgpt:true` but then stalled with `Stop answering` and no
+  sentinel.
 - **Existing Battle WebGPT tab is busy**. Tab `837359249` contains the prior
   `:3003` review prompt and still showed `Thinking` / `Stop answering` when
   inspected. Do not submit a new prompt into that tab while it is busy.
@@ -95,8 +98,20 @@ agent-skills worktree, not the pi-mono shell.
    ```
    If it is still thinking, do not reuse it.
 
-2. Submit the existing `1706Z` evidence bundle through Surf using a fresh,
-   identity-proven tab. The bundle already exists:
+2. Do not rerun the broad Battle WebGPT review first. Run a tiny text-only Surf
+   WebGPT sanity after ChatGPT response health recovers:
+   ```bash
+   cd skills/surf
+   ./run.sh webgpt.submit --input <text-only-request.md> --output <response.md> \
+     --raw-output <response.raw.md> --meta-output <response.meta.json> \
+     --receipt-output <response.receipt.json> --submitted-output <response.submitted.md> \
+     --create-tab --timeout 180
+   ```
+   Only retry the Battle review once the text-only sanity reaches
+   `proof_status: response_proven`.
+
+3. Then submit the existing evidence bundle through Surf using a fresh,
+   identity-proven tab. The bundle exists at:
    ```bash
    skills/battle/local/webgpt-design-review-20260720T1706Z/request.md
    skills/battle/local/webgpt-design-review-20260720T1706Z/battle-agent-skills-host-review-bundle.zip
@@ -106,10 +121,12 @@ agent-skills worktree, not the pi-mono shell.
    cd skills/surf
    ./run.sh webgpt.preflight --create-tab --no-activate --json
    ```
-   The previous main submit without roundtrip was interrupted and produced only
-   `prepared_prompt`; rerun only after checking stale Surf tab locks.
+   If zip attachments still leave `Send prompt` disabled, use the screenshot
+   request path:
+   `skills/battle/local/webgpt-design-review-20260720T1721Z/request.md` plus
+   `skills/battle/local/agent-skills-host-verify-20260720T1646Z/surf-receipt-agent-skills-3003.png`.
 
-3. When WebGPT returns `ACCEPTED` with a Surf sentinel-backed response, commit
+4. When WebGPT returns `ACCEPTED` with a Surf sentinel-backed response, commit
    the relevant handoff/review artifacts by explicit path and push:
    ```bash
    git add skills/battle/local/HANDOFF.md \
@@ -126,7 +143,7 @@ agent-skills worktree, not the pi-mono shell.
    git ls-remote origin refs/heads/battle-adaptive-lineage-goal
    ```
 
-4. Only after the accepted review is committed and remote-verified, audit the
+5. Only after the accepted review is committed and remote-verified, audit the
    immutable goal checklist. Do not use closure language unless the final report
    cites the backend receipt, browser screenshot/assertions, WebGPT response, and
    remote commit proof.
