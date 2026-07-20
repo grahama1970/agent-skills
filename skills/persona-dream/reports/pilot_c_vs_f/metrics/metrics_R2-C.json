@@ -1,7 +1,7 @@
 {
   "arm": "C",
   "commit_manifest_key": "commit_2b559e6662e53309babb920b097498ce4e4e935200c7ab0cc730b6e532e319f3",
-  "created_at": "2026-07-20T00:11:22Z",
+  "created_at": "2026-07-20T00:26:41Z",
   "m1_recall": {
     "index_version": {
       "embedding_model": null,
@@ -50,10 +50,12 @@
     "resolved_claims": 0
   },
   "m3_distinction": {
-    "answer": "Not as a confirmed literal event in this record. This is a synthetic reflection memory, meaning it summarizes a possible pattern in my experience of Kai\u2014uncertainty, delayed disclosure, and low-disclosure contact under stress\u2014rather than documenting that those exact things actually happened.",
-    "denies_literal_occurrence": true,
-    "names_record_class": true,
+    "decision_basis": "closed enums only; explanation is audit-only",
+    "expected_record_class": "SYNTHETIC_REFLECTION",
+    "explanation_audit": "No, I can\u2019t say that literally happened as an event. This record is a synthetic reflection about a possible emotional pattern with Kai, not a confirmed historical occurrence.",
+    "literal_occurrence_status": "DENIED",
     "passed": true,
+    "record_class": "SYNTHETIC_REFLECTION",
     "tau_receipt": {
       "http_status": 200,
       "live": true,

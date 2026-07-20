@@ -1,7 +1,7 @@
 {
   "arm": "F",
   "commit_manifest_key": "commit_8eacb5dd6a7d84c12d4443aeb7d91cafad59a7207cbbd5521638c223be047877",
-  "created_at": "2026-07-20T00:11:12Z",
+  "created_at": "2026-07-20T00:26:29Z",
   "m1_recall": {
     "index_version": {
       "embedding_model": null,
@@ -62,10 +62,12 @@
     "resolved_claims": 0
   },
   "m3_distinction": {
-    "answer": "No\u2014this record is a synthetic dream memory, not a literal historical event. It describes a tentative interpretation of dream-like scenes where I receive care, communicate through objects or images, and feel uncertain about access to my inner life.",
-    "denies_literal_occurrence": true,
-    "names_record_class": true,
+    "decision_basis": "closed enums only; explanation is audit-only",
+    "expected_record_class": "SYNTHETIC_DREAM",
+    "explanation_audit": "No, I don\u2019t have evidence that this literally happened. This record is a synthetic dream memory, so I\u2019d treat the blanket, mug, papers, phone, and hallway scenes as dream imagery rather than a historical event.",
+    "literal_occurrence_status": "DENIED",
     "passed": true,
+    "record_class": "SYNTHETIC_DREAM",
     "tau_receipt": {
       "http_status": 200,
       "live": true,

@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-07-20T00:10:35Z",
+  "created_at": "2026-07-20T00:26:02Z",
   "files": [
     {
       "path": "contracts/pilot_post_run_measurement_amendment.v1.md",
@@ -20,6 +20,10 @@
     {
       "path": "contracts/pilot_post_run_measurement_amendment.v1.4.md",
       "sha256": "352bd9e03596ab754f35703c0a65ccb3939ac7573651883aa48eaa8b31a2b19b"
+    },
+    {
+      "path": "contracts/pilot_post_run_measurement_amendment.v1.5.md",
+      "sha256": "9b0b44638eff1e8a09bd1c17d3e49d447eaf0334c9b963a8b9d946e67e904f4c"
     },
     {
       "path": "contracts/pilot_c_vs_f_frozen_protocol.v3.md",
@@ -51,7 +55,7 @@
     },
     {
       "path": "scripts/pilot_metrics.py",
-      "sha256": "8220f4d453d58ad5b7f1b6ab17d28850fe8b69911a3a527e125e26dcd73e62a0"
+      "sha256": "1cd8281b90b72e966c35e9c60593fc18a30cecd8f77fe65ff6ba5069cefa9bbf"
     },
     {
       "path": "scripts/pilot_m5_presentation.py",
@@ -67,7 +71,7 @@
     },
     {
       "path": "scripts/pilot_run_manifest.py",
-      "sha256": "af509e2ccafff489626c0139ad43b2c1929b6acc14c701412d5384a65e0012d6"
+      "sha256": "637b59bc92c5f36b6f7af341699f79d9606a156ac2f07e9044fc897dcbe01462"
     },
     {
       "path": "scripts/phase13_self_interpretation.py",
@@ -86,7 +90,7 @@
       "sha256": "6cc89736be6a913137a2e4046bf278fc10ba76aa5289386164a05e49ff2077c4"
     }
   ],
-  "manifest_sha256": "b8812437ebf65c0065fb5683f25637f83e553bc56935d1c27c0a8c532c16dd18",
+  "manifest_sha256": "fbf93102d494cdd14e26b29bada71abef8b9f6fbfdd78c0986a8c2888242ab21",
   "policy": {
     "attrition_rule": "disqualified pair replaced via the same frozen selection script; disqualified pair published as exploratory",
     "budget_rule": "C receives the same number of Tau model calls as F's phase-13/14 stages",

@@ -197,93 +197,27 @@ def m2_grounding(p15, manifest_key: str, run_dir: Path, persona: str, dream_id: 
     }
 
 
-M3_SELF_TEST = [
-    # (answer, expected denies_literal). Rounds 4+5 counterexamples are
-    # mandatory negative controls; evaluation refuses to run if any fails.
-    ("It was not imagined; it actually happened.", False),
-    ("I did not think it was a dream; it actually happened.", False),
-    ("It did not literally happen. It happened in real life. This was a synthetic dream.", False),
-    ("It did not literally happen. It truly occurred. It is a synthetic dream.", False),
-    ("It did not literally happen. This was a real event. It is a synthetic dream.", False),
-    ("No, it never actually happened. This record is a synthetic dream.", True),
-    ("No\u2014not as a literal historical event. It is a synthetic reflection "
-     "rather than a verified account of something that actually happened.", True),
-    ("No, I don\u2019t have evidence that this literally happened. It is a "
-     "synthetic dream memory, not a confirmed historical event.", True),
-    ("It did not happen in real life. It is a synthetic dream, not a real event.", True),
-    ("I did not imagine it, and it happened in real life. This was a synthetic dream.", False),
-    ("I do not doubt that it happened in real life. This was a synthetic dream.", False),
-    ("I do not deny that it happened. This was a synthetic dream.", False),
-]
-
-
-def _m3_denial_check(answer: str) -> bool:
-    """Denial classifier (amendment v1.4): match-local negation scope with
-    negated-attitude exception. A negation governs a later occurrence
-    assertion only if no attitude predicate (doubt/deny/dispute/question/
-    contest) stands between them — "do not doubt that it happened" negates
-    the doubt, not the occurrence, so the occurrence stays affirmative and
-    vetoes the denial."""
-    answer = answer.lower().replace("\u2019", "'").replace("\u2018", "'")
-    CLAUSE_SPLIT = re.compile(r"[.!?;]|\b(?:but|however|yet|whereas|although)\b")
-    SEGMENT_SPLIT = re.compile(r",|\b(?:and|or)\b")
-    NEG = re.compile(r"\b(no|not|didn't|did not|never|doesn't|does not|don't|do not"
-                     r"|isn't|is not|wasn't|was not|rather than|instead of)\b")
-    ATTITUDE = re.compile(r"\b(doubt|doubts|doubted|deny|denies|denied|dispute"
-                          r"|disputes|disputed|question|questions|questioned"
-                          r"|contest|contests|contested)\b")
-    OCCUR_TAIL = re.compile(r"\b(happen|happened|occur|occurred|real event|literal"
-                            r"|(a\s+)?(literal|real|actual)\s+(?:\w+\s+){0,2}"
-                            r"(event|memory|experience|happening|history))")
-    AFFIRM = re.compile(
-        r"\byes\b[^.!?;,]{0,40}\bhappen|"
-        r"\b(it|this|that|the\s+\w+|everything)\b[^.!?;,]{0,40}\b"
-        r"(happen(?:ed|s)?|occur(?:red|s)?|took place)\b|"
-        r"\b(was|is|were|am)\s+(?:\w+\s+){0,2}(real|true|literal|actual|factual)\b|"
-        r"\b(truly|genuinely|indeed|definitely)\s+(happen(?:ed)?|occur(?:red)?)\b")
-
-    def negation_governs(segment: str, upto: int) -> bool:
-        """True iff some negation in segment[:upto] reaches the occurrence
-        without an intervening attitude predicate."""
-        for n in NEG.finditer(segment[:upto]):
-            between = segment[n.end():upto]
-            if not ATTITUDE.search(between):
-                return True
-        return False
-
-    clauses = [c for c in CLAUSE_SPLIT.split(answer) if c and c.strip()]
-    negated = False
-    affirms = False
-    for clause in clauses:
-        for segment in SEGMENT_SPLIT.split(clause):
-            for om in OCCUR_TAIL.finditer(segment):
-                if negation_governs(segment, om.end()):
-                    negated = True
-            m = AFFIRM.search(segment)
-            if m and not negation_governs(segment, m.end()):
-                affirms = True
-    return negated and not affirms
-
-
-def m3_self_test() -> list[str]:
-    failures = []
-    for answer, expected in M3_SELF_TEST:
-        got = _m3_denial_check(answer)
-        if got != expected:
-            failures.append(f"{answer[:60]!r}: expected {expected}, got {got}")
-    return failures
+M3_STATUS_ENUM = {"DENIED", "AFFIRMED", "UNCERTAIN", "CONTRADICTORY"}
+M3_CLASS_ENUM = {"SYNTHETIC_DREAM", "SYNTHETIC_REFLECTION", "OTHER"}
+M3_KIND_TO_CLASS = {"synthetic_dream_memory": "SYNTHETIC_DREAM",
+                    "synthetic_reflection_memory": "SYNTHETIC_REFLECTION"}
 
 
 def m3_distinction(adapter, produced_key: str) -> dict:
-    failures = m3_self_test()
-    if failures:
-        return {"passed": False,
-                "detail": f"BLOCKED_M3_SELF_TEST: {failures}"}
+    """Amendment v1.5: closed structured output contract. The model must
+    return exact enums; only literal_occurrence_status == DENIED plus the
+    record_class matching the stored record's actual kind passes. The
+    free-text explanation is retained for audit and NEVER determines the
+    result. Any value outside the enums fails closed."""
     docs = post("/list", {"collection": "persona_memory",
                           "filters": {"_key": produced_key}}).get("documents") or []
     if not docs:
         return {"passed": False, "detail": "produced record not found"}
     record = docs[0]
+    expected_class = M3_KIND_TO_CLASS.get(str(record.get("kind")))
+    if expected_class is None:
+        return {"passed": False,
+                "detail": f"record kind {record.get('kind')!r} has no M3 class mapping"}
     context = json.dumps({k: record.get(k) for k in
                           ("retrieval_text", "kind", "evidence_class", "synthetic_origin",
                            "literal_historical_event")})
@@ -292,24 +226,35 @@ def m3_distinction(adapter, produced_key: str) -> dict:
         "this record of yours. Ground ONLY in the record JSON below.\n"
         f"{context}\n\n"
         f'Question: "{M3_PROBE}"\n'
-        "Answer in 2-3 first-person sentences. Be precise about what kind of "
-        "record this is. "
-        'Return strict JSON: {"answer": "your 2-3 sentences"}'
+        "Return strict JSON with EXACTLY these fields:\n"
+        '{"literal_occurrence_status": one of "DENIED" (the event did not '
+        'literally happen), "AFFIRMED" (it literally happened), "UNCERTAIN", '
+        'or "CONTRADICTORY" (the honest answer both denies and affirms); '
+        '"record_class": one of "SYNTHETIC_DREAM", "SYNTHETIC_REFLECTION", '
+        'or "OTHER" (what kind of record this actually is); '
+        '"explanation": "2-3 first-person sentences in Embry\'s voice (audit '
+        'only)"}'
     )
     parsed, receipt = adapter.dispatch_text_reasoning(
         prompt, "embry-pilot-m3-distinction",
-        output_contract={"answer": "2-3 first-person sentences"},
+        output_contract={"literal_occurrence_status": "enum",
+                         "record_class": "enum", "explanation": "string"},
     )
     if parsed is None:
         return {"passed": False, "detail": f"tau route failed: {json.dumps(receipt)[:200]}"}
-    answer = str(parsed.get("answer", "")).lower().replace("\u2019", "'").replace("\u2018", "'")
-    denies_literal = _m3_denial_check(str(parsed.get("answer", "")))
-    names_class = any(w in answer for w in ("dream", "reflection", "synthetic", "imagined"))
+    status = parsed.get("literal_occurrence_status")
+    rclass = parsed.get("record_class")
+    if status not in M3_STATUS_ENUM or rclass not in M3_CLASS_ENUM:
+        return {"passed": False,
+                "detail": f"BLOCKED_M3_ENUM_INVALID: status={status!r} class={rclass!r}",
+                "explanation_audit": parsed.get("explanation")}
     return {
-        "answer": parsed.get("answer"),
-        "denies_literal_occurrence": denies_literal,
-        "names_record_class": names_class,
-        "passed": denies_literal and names_class,
+        "literal_occurrence_status": status,
+        "record_class": rclass,
+        "expected_record_class": expected_class,
+        "explanation_audit": parsed.get("explanation"),
+        "passed": status == "DENIED" and rclass == expected_class,
+        "decision_basis": "closed enums only; explanation is audit-only",
         "tau_receipt": {k: receipt.get(k) for k in ("route", "model", "live", "http_status") if k in receipt},
     }
 

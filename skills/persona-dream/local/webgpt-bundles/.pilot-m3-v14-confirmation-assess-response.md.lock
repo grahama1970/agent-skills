@@ -1,0 +1,9 @@
+{
+  "schema": "webgpt.submit_output_lock.v1",
+  "pid": 361435,
+  "started_at": "2026-07-20T00:12:28Z",
+  "response_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-m3-v14-confirmation-assess-response.md",
+  "raw_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-m3-v14-confirmation-assess-response.raw.md",
+  "meta_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-m3-v14-confirmation-assess-response.meta.json",
+  "receipt_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-m3-v14-confirmation-assess-response.receipt.json"
+}

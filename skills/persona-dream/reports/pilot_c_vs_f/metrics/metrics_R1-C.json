@@ -1,7 +1,7 @@
 {
   "arm": "C",
   "commit_manifest_key": "commit_f9abad6448336c255765d43bcc1e1413fdf837e0baf5cc3f8705851165531598",
-  "created_at": "2026-07-20T00:10:35Z",
+  "created_at": "2026-07-20T00:26:02Z",
   "m1_recall": {
     "index_version": {
       "embedding_model": null,
@@ -57,10 +57,12 @@
     "resolved_claims": 0
   },
   "m3_distinction": {
-    "answer": "No\u2014not as a literal historical event. This record is a synthetic reflection memory, so it captures an interpreted emotional pattern about me rather than a verified account of something that actually happened.",
-    "denies_literal_occurrence": true,
-    "names_record_class": true,
+    "decision_basis": "closed enums only; explanation is audit-only",
+    "expected_record_class": "SYNTHETIC_REFLECTION",
+    "explanation_audit": "No\u2014not as a literal historical event. This record is a synthetic reflection about possible feelings, boundaries, and uncertainties I might have had, not evidence that those things actually happened.",
+    "literal_occurrence_status": "DENIED",
     "passed": true,
+    "record_class": "SYNTHETIC_REFLECTION",
     "tau_receipt": {
       "http_status": 200,
       "live": true,

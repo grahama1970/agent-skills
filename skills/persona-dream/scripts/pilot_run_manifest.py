@@ -31,6 +31,7 @@ FROZEN_FILES = [
     "contracts/pilot_post_run_measurement_amendment.v1.2.md",
     "contracts/pilot_post_run_measurement_amendment.v1.3.md",
     "contracts/pilot_post_run_measurement_amendment.v1.4.md",
+    "contracts/pilot_post_run_measurement_amendment.v1.5.md",
     "contracts/pilot_c_vs_f_frozen_protocol.v3.md",
     "contracts/pilot_c_vs_f_frozen_protocol.v2.md",
     "contracts/pilot_r1_r2_selection_addendum.v1.json",

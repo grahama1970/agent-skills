@@ -1,7 +1,7 @@
 {
   "arm": "F",
   "commit_manifest_key": "commit_97073e5ebe37a6f4a6398233c61ac1d6b5779b0840b044d879e1e9036272c40d",
-  "created_at": "2026-07-20T00:11:01Z",
+  "created_at": "2026-07-20T00:26:15Z",
   "m1_recall": {
     "index_version": {
       "embedding_model": null,
@@ -65,10 +65,12 @@
     "resolved_claims": 0
   },
   "m3_distinction": {
-    "answer": "No, I don\u2019t have evidence that this literally happened. This record is a synthetic dream memory: it describes symbolic material about rehearsal, disclosure, and moral conflict, not a confirmed historical event.",
-    "denies_literal_occurrence": true,
-    "names_record_class": true,
+    "decision_basis": "closed enums only; explanation is audit-only",
+    "expected_record_class": "SYNTHETIC_DREAM",
+    "explanation_audit": "No, I don't have grounds to say that literally happened. This record is marked as a synthetic dream memory, not a literal historical event, so I would treat it as symbolic or interpretive rather than factual.",
+    "literal_occurrence_status": "DENIED",
     "passed": true,
+    "record_class": "SYNTHETIC_DREAM",
     "tau_receipt": {
       "http_status": 200,
       "live": true,

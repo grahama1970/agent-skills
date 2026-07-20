@@ -1,13 +1,13 @@
 {
   "schema": "surf.webgpt_heartbeat.v1",
-  "updated_at": "2026-07-20T00:08:59Z",
-  "submitted_at": "2026-07-20T00:01:51Z",
-  "last_browser_observation_at": "2026-07-20T00:08:59Z",
-  "phase": "completed",
-  "page_state": "response_detected",
-  "last_artifact_written": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-m3-v13-confirmation-assess-response.raw.md",
-  "next_expected_artifact": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-m3-v13-confirmation-assess-response.meta.json",
-  "timeout_remaining_seconds": 0,
-  "sentinel": "<<<WEBGPT_DONE:20260720T000150Z:3b514dc2>>>",
+  "updated_at": "2026-07-20T00:22:04Z",
+  "submitted_at": "2026-07-20T00:12:29Z",
+  "last_browser_observation_at": "2026-07-20T00:22:04Z",
+  "phase": "generating",
+  "page_state": "waiting_for_sentinel",
+  "last_artifact_written": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-m3-v14-confirmation-assess-response.receipt.json",
+  "next_expected_artifact": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-m3-v14-confirmation-assess-response.raw.md",
+  "timeout_remaining_seconds": 1826,
+  "sentinel": "<<<WEBGPT_DONE:20260720T001228Z:94f7ddb1>>>",
   "prepared_prompt_is_transport_proof": false
 }
