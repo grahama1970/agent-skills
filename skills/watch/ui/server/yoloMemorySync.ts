@@ -87,8 +87,10 @@ export async function deliverYoloEventToMemory(input: {
       }),
     })
     if (!response.ok) return { ok: false, error: `memory_store_http_${response.status}` }
-    const data = await response.json().catch(() => null) as { ok?: boolean } | null
-    if (data?.ok !== true) return { ok: false, error: 'memory_store_not_ok' }
+    const data = await response.json().catch(() => null) as { ok?: boolean; stored?: boolean; status?: string } | null
+    if (data?.ok !== true && data?.stored !== true && data?.status !== 'stored') {
+      return { ok: false, error: 'memory_store_not_ok' }
+    }
     return { ok: true, error: null }
   } catch (error) {
     return { ok: false, error: String(error) }

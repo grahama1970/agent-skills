@@ -15,6 +15,10 @@
     "test:receipt-concurrency": "tsx scripts/watchYoloReceiptConcurrency.smoke.ts",
     "test:detector-isolation": "tsx scripts/watchDetectorCandidateIsolation.smoke.ts",
     "test:backend-immutable": "npm run test:yolo-label-receipt && npm run test:receipt-concurrency && npm run test:detector-isolation",
+    "playwright:install": "playwright install chromium",
+    "test:immutable-browser-live": "tsx scripts/watchImmutableGoalBrowserLive.smoke.ts",
+    "test:immutable-goal-live": "tsx scripts/watchImmutableGoalLive.smoke.ts",
+    "prove:immutable-goal": "tsx scripts/watchImmutableGoalLive.smoke.ts --persist-proof",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -34,6 +38,7 @@
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
     "concurrently": "^8.2.2",
+    "playwright": "^1.61.1",
     "tsx": "^4.16.2",
     "typescript": "^5.5.3",
     "vite": "^5.3.4"
