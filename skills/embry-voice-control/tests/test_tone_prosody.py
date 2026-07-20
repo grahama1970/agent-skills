@@ -20,13 +20,16 @@ from embry_voice_control.audio_e2e.asr_comparison import (
     normalized_tokens,
 )
 from embry_voice_control.audio_e2e.case_compiler import (
+    PROSODY_FEATURE_FAMILIES,
     TONE_PROSODY_MAP,
     TONE_PROSODY_MAP_SHA256,
     apply_tone_tags,
     build_turn_script,
+    case_family_uses_prosody_feature,
     compile_campaign,
     sha256_value,
     spoken_text,
+    synthesis_text_for_family,
     tone_family_for_case,
 )
 from embry_voice_control.audio_e2e.prepare_clone_assets import (
@@ -51,11 +54,17 @@ EXPECTED_FAMILIES = {
 }
 
 
-def _case(tone_family: str, *, minimum_tags: int = 1, difficulty: str = "simple") -> dict:
+def _case(
+    tone_family: str,
+    *,
+    minimum_tags: int = 1,
+    difficulty: str = "simple",
+    folder_id: str = "tone_emotion",
+) -> dict:
     return {
-        "id": f"synthetic-{tone_family}-01",
+        "id": f"{folder_id}-{tone_family}-01",
         "difficulty": difficulty,
-        "folder_id": "synthetic",
+        "folder_id": folder_id,
         "question": "What evidence supports that answer?",
         "oracle": {"kind": "synthetic"},
         "expected_route": "answer",
@@ -206,6 +215,48 @@ def test_turn_script_carries_tone_and_synthesis_text(family):
         ]
 
 
+@pytest.mark.parametrize("family", sorted(EXPECTED_FAMILIES))
+def test_turn_script_drops_decorative_tags_for_non_feature_family(family):
+    # Any family other than tone_emotion: prosody is decorative, so the synthesis
+    # prompt is the plain lexical sentence with NO tags, but the tone metadata is
+    # still recorded for provenance.
+    turns = build_turn_script(_case(family, folder_id="persona_memory_miss"))
+    assert turns
+    for turn in turns:
+        assert turn["tone_family"] == family
+        assert turn["inline_emotion_tags"] == list(
+            TONE_PROSODY_MAP["families"][family]["orpheus_tags"]
+        )
+        assert not EMOTION_TAG_RE.search(turn["synthesis_spoken_text"])
+        assert turn["synthesis_spoken_text"] == turn["spoken_text"]
+        assert turn["synthesis_spoken_text_sha256"] == sha256_value(
+            turn["synthesis_spoken_text"]
+        )
+
+
+def test_prosody_feature_families_membership():
+    assert "tone_emotion" in PROSODY_FEATURE_FAMILIES
+    assert case_family_uses_prosody_feature("tone_emotion")
+    assert not case_family_uses_prosody_feature("persona_memory_miss")
+
+
+def test_synthesis_text_for_family_rule():
+    plain = "Hey Embry, why did the review fail?"
+    # feature family injects the tag
+    feature = synthesis_text_for_family(plain, "calm_precise", "tone_emotion")
+    assert feature == apply_tone_tags(plain, "calm_precise")
+    assert EMOTION_TAG_RE.search(feature)
+    # decorative family returns the plain sentence unchanged
+    decorative = synthesis_text_for_family(plain, "calm_precise", "skill_analytics")
+    assert decorative == plain
+    assert not EMOTION_TAG_RE.search(decorative)
+    # the tag-count invariant is still enforced for decorative families
+    with pytest.raises(ValueError, match="tag_count_below_minimum"):
+        synthesis_text_for_family(
+            plain, "calm_precise", "skill_analytics", minimum_tag_count=2
+        )
+
+
 def test_unknown_tone_family_in_case_rejected():
     with pytest.raises(ValueError, match="tone_family_unsupported"):
         build_turn_script(_case("no_such_family"))
@@ -218,18 +269,22 @@ def test_tone_family_for_case():
 # --- compile -> validate round trip and provenance --------------------------
 
 
-def _first_compilable_case_id() -> str:
+def _first_compilable_case_id(folder_id: str | None = None) -> str:
     matrix = json.loads(MATRIX_PATH.read_text())
     for case in matrix["sessions"]:
+        if folder_id is not None and case.get("folder_id") != folder_id:
+            continue
         try:
             spoken_text("Hey Embry, " + case["question"][0].lower() + case["question"][1:])
         except ValueError:
             continue
         return case["id"]
-    raise AssertionError("no compilable matrix case found")
+    raise AssertionError(f"no compilable matrix case found for folder_id={folder_id}")
 
 
-def test_compile_validate_round_trip_carries_tags(tmp_path):
+def test_compile_validate_round_trip_carries_tags_for_prosody_feature(tmp_path):
+    # tone_emotion cases exercise prosody AS the feature: tags are retained in the
+    # synthesized/ASR-compared query.
     source_policy = tmp_path / "source_policy.json"
     source_policy.write_text(
         json.dumps({"schema": "embry.audio_e2e.clone_source_contract.v1"})
@@ -237,7 +292,7 @@ def test_compile_validate_round_trip_carries_tags(tmp_path):
     manifest = compile_campaign(
         matrix_path=MATRIX_PATH,
         source_policy_path=source_policy,
-        case_id=_first_compilable_case_id(),
+        case_id=_first_compilable_case_id("tone_emotion"),
         source_mode="qualified_horus_clone",
     )
     # manifest carries the tone map for auditability
@@ -246,6 +301,37 @@ def test_compile_validate_round_trip_carries_tags(tmp_path):
     query = normalized[0]["turns"][0]["query"]
     # the synthesized/ASR-compared query carries the emotion tag
     assert EMOTION_TAG_RE.search(query)
+
+
+def test_compile_validate_round_trip_drops_decorative_tags(tmp_path):
+    # A non-tone_emotion family: the emotion tags are decorative and must NOT
+    # appear in the synthesized prompt, while the tone metadata is retained for
+    # provenance and the manifest still validates.
+    source_policy = tmp_path / "source_policy.json"
+    source_policy.write_text(
+        json.dumps({"schema": "embry.audio_e2e.clone_source_contract.v1"})
+    )
+    case_id = _first_compilable_case_id("skill_create_evidence_case")
+    manifest = compile_campaign(
+        matrix_path=MATRIX_PATH,
+        source_policy_path=source_policy,
+        case_id=case_id,
+        source_mode="qualified_horus_clone",
+    )
+    case = manifest["cases"][0]
+    assert case["folder_id"] != "tone_emotion"
+    for turn in case["turn_script"]:
+        # decorative tags stripped from synthesis prompt...
+        assert not EMOTION_TAG_RE.search(turn["synthesis_spoken_text"])
+        assert turn["synthesis_spoken_text"] == turn["spoken_text"]
+        # ...but tone metadata retained in the manifest for provenance
+        assert turn["tone_family"]
+        assert turn["inline_emotion_tags"]
+        assert turn["tone_prosody_map_sha256"] == TONE_PROSODY_MAP_SHA256
+    # round-trips through the strict validator
+    normalized = validate_campaign_manifest(manifest)
+    query = normalized[0]["turns"][0]["query"]
+    assert not EMOTION_TAG_RE.search(query)
 
 
 def test_tone_metadata_never_flips_synthetic_provenance(tmp_path):

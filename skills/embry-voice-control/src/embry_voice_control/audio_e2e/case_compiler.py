@@ -149,6 +149,62 @@ TONE_PROSODY_MAP = {
 }
 TONE_PROSODY_MAP_SHA256 = sha256_value(TONE_PROSODY_MAP)
 
+# --- Decorative-vs-feature tag rule ------------------------------------------
+#
+# Orpheus paralinguistic tags (<sigh>, <laugh>, ...) are audible behaviours: the
+# decoder renders them as breaths, laughter, groans, etc. For most matrix case
+# families the requested prosody is DECORATIVE -- it is not the property under
+# test, and any nonverbal sound the tag produces is pure WER poison against the
+# locked lexical gate (Whisper transcribes "<laugh>" as "ha ha", "<groan>" as
+# "ugh", and so on). Only the ``tone_emotion`` family exercises prosody AS the
+# feature; for those cases the tag must remain in the synthesis prompt.
+#
+# The rule therefore is: inject tags into the SYNTHESIS prompt only for
+# prosody-feature families; every other family synthesizes the plain lexical
+# sentence. Tone metadata (family, tag vocabulary, placement) is still recorded
+# in the manifest for provenance regardless. The WER comparison text is
+# unaffected either way -- tags were always stripped before WER.
+PROSODY_FEATURE_FAMILIES = frozenset({"tone_emotion"})
+
+
+def case_family_uses_prosody_feature(case_family: str) -> bool:
+    """True when the case family exercises prosody AS the tested feature."""
+    return str(case_family) in PROSODY_FEATURE_FAMILIES
+
+
+def synthesis_text_for_family(
+    spoken_text_value: str,
+    tone_family: str,
+    case_family: str,
+    *,
+    minimum_tag_count: int = 1,
+) -> str:
+    """Return the synthesis-time prompt honouring the decorative-vs-feature rule.
+
+    For prosody-feature families the family's Orpheus emotion tag(s) are injected
+    (delegating to :func:`apply_tone_tags`). For every other family the tags are
+    decorative and are omitted so the plain lexical sentence is synthesized; the
+    family/tag metadata is still validated here (and retained in the manifest) so
+    the provenance invariants -- family exists, minimum tag count satisfiable --
+    hold for decorative cases too.
+    """
+    family = TONE_PROSODY_MAP["families"].get(tone_family)
+    if family is None:
+        raise ValueError(f"tone_family_unsupported:{tone_family!r}")
+    tags = list(family["orpheus_tags"])
+    minimum_tag_count = int(minimum_tag_count)
+    if len(tags) < minimum_tag_count:
+        raise ValueError(
+            "tone_family_tag_count_below_minimum:"
+            f"{tone_family}:{len(tags)}:{minimum_tag_count}"
+        )
+    if case_family_uses_prosody_feature(case_family):
+        return apply_tone_tags(
+            spoken_text_value, tone_family, minimum_tag_count=minimum_tag_count
+        )
+    return spoken_text_value
+
+
 _WAKE_PREFIX = re.compile(r"^\s*hey[\s,;:!?.\-]+embry\b[\s,;:!?.\-]+", re.IGNORECASE)
 
 
@@ -285,8 +341,11 @@ def build_turn_script(case: dict[str, Any]) -> list[dict[str, Any]]:
     for index, prompt in enumerate(prompts, 1):
         display = f"Hey Embry, {prompt[0].lower() + prompt[1:]}"
         spoken = spoken_text(display)
-        synthesis_spoken = apply_tone_tags(
-            spoken, tone_family, minimum_tag_count=minimum_tag_count
+        synthesis_spoken = synthesis_text_for_family(
+            spoken,
+            tone_family,
+            case["folder_id"],
+            minimum_tag_count=minimum_tag_count,
         )
         turns.append({
             "turn_id": f"{case['id']}:turn-{index:03d}",

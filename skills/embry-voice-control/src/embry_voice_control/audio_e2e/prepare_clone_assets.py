@@ -8,7 +8,9 @@ managed listener campaign.
 
 from __future__ import annotations
 
+from array import array
 import hashlib
+import io
 import json
 import math
 import os
@@ -37,6 +39,7 @@ from .case_compiler import (
     apply_tone_tags,
     sha256_value,
     spoken_text as derive_spoken_text,
+    synthesis_text_for_family,
 )
 
 
@@ -505,13 +508,153 @@ def analyze_internal_silence(
     }
 
 
+def detect_generation_truncation(boundary: dict[str, Any]) -> dict[str, Any]:
+    """Audio-side detection of a generation cut off mid-utterance.
+
+    The deployed Orpheus inference server (``/app/inference_server.py``, baked
+    into the ``orpheus-infer`` image -- not a mounted, patchable local source)
+    hard-caps ``max_new_tokens`` at 1200 and its synthesis receipt does NOT
+    surface ``finish_reason``/``stop_reason``/generated-token counts. Per the
+    oracle's stated fallback, truncation is therefore detected from the audio
+    itself rather than inferred after Whisper.
+
+    A stop-token-terminated Orpheus utterance decays into >= the boundary
+    policy's ``minimum_silence_duration_seconds`` of trailing near-silence. A
+    generation cut off at the token budget instead ends WHILE still voiced: its
+    final speech segment is force-closed at the end of the file, leaving little
+    or no trailing silence. That is the signature we reject as infrastructure
+    failure (``tts_generation_truncated``) BEFORE spending a quality candidate
+    slot on it -- an incomplete generation is not an unsuccessful pronunciation
+    sample.
+    """
+    policy = boundary.get("policy") or {}
+    min_trailing = float(policy.get("minimum_silence_duration_seconds", 0.20))
+    wav = boundary.get("wav") or {}
+    duration_seconds = float(wav.get("duration_seconds") or 0.0)
+    segments = boundary.get("speech_segments") or []
+    last_speech_end = (
+        max(float(seg["end_seconds"]) for seg in segments) if segments else 0.0
+    )
+    trailing_silence_seconds = round(max(0.0, duration_seconds - last_speech_end), 6)
+    ends_voiced = bool(segments) and trailing_silence_seconds < min_trailing
+    return {
+        "schema": "embry.audio_e2e.generation_truncation.v1",
+        "detector": "audio_trailing_silence_v1",
+        "server_finish_reason_available": False,
+        "server_token_counts_available": False,
+        "audio_duration_seconds": round(duration_seconds, 6),
+        "speech_segment_count": len(segments),
+        "last_speech_end_seconds": round(last_speech_end, 6),
+        "trailing_silence_seconds": trailing_silence_seconds,
+        "minimum_trailing_silence_seconds": min_trailing,
+        "maximum_internal_silence_seconds": float(
+            boundary.get("longest_internal_silence_seconds") or 0.0
+        ),
+        "ends_voiced": ends_voiced,
+        "truncated": ends_voiced,
+    }
+
+
+_CLAUSE_BOUNDARY_RE = re.compile(r"[^.!?;,]*[.!?;,]+|\S[^.!?;,]*$")
+
+
+def split_into_clauses(text: str) -> list[str]:
+    """Split a sentence into clauses on punctuation WITHOUT changing any words.
+
+    Used by the clause-concatenation fallback: when a full sentence keeps
+    truncating at the generation budget, each clause is synthesized separately
+    and the audio is rejoined. The lexical content is identical to the original
+    sentence (only whitespace at the split points differs), so the WER
+    comparison text is unchanged and provenance records
+    ``source_text_unchanged: true``.
+    """
+    parts = [part.strip() for part in _CLAUSE_BOUNDARY_RE.findall(text)]
+    clauses = [part for part in parts if part]
+    return clauses or ([text.strip()] if text.strip() else [])
+
+
+def _decode_pcm16_mono_wav(wav_bytes: bytes) -> tuple[int, "array[int]"]:
+    with wave.open(io.BytesIO(wav_bytes), "rb") as stream:
+        if stream.getcomptype() != "NONE":
+            raise ValueError("clause_concat_requires_pcm_wav")
+        if stream.getnchannels() != 1 or stream.getsampwidth() != 2:
+            raise ValueError("clause_concat_requires_mono_pcm16")
+        sample_rate = int(stream.getframerate())
+        frames = stream.readframes(stream.getnframes())
+    samples = array("h")
+    samples.frombytes(frames)
+    return sample_rate, samples
+
+
+def _encode_pcm16_mono_wav(sample_rate: int, samples: "array[int]") -> bytes:
+    buffer = io.BytesIO()
+    with wave.open(buffer, "wb") as stream:
+        stream.setnchannels(1)
+        stream.setsampwidth(2)
+        stream.setframerate(sample_rate)
+        stream.writeframes(samples.tobytes())
+    return buffer.getvalue()
+
+
+def crossfade_join_pcm16(
+    clause_wavs: list[bytes], *, crossfade_ms: float
+) -> bytes:
+    """Linear-crossfade concatenate mono PCM16 clause WAVs into one WAV.
+
+    A short (150-250 ms) crossfade at each join removes the click of a hard cut
+    while staying comfortably below the locked 2.0 s internal-silence ceiling.
+    """
+    if not 150.0 <= float(crossfade_ms) <= 250.0:
+        raise ValueError(f"clause_concat_crossfade_out_of_range:{crossfade_ms}")
+    if not clause_wavs:
+        raise ValueError("clause_concat_no_clauses")
+    sample_rate, out = _decode_pcm16_mono_wav(clause_wavs[0])
+    fade = max(1, int(round(sample_rate * float(crossfade_ms) / 1000.0)))
+    for wav_bytes in clause_wavs[1:]:
+        rate, nxt = _decode_pcm16_mono_wav(wav_bytes)
+        if rate != sample_rate:
+            raise ValueError("clause_concat_sample_rate_mismatch")
+        overlap = min(fade, len(out), len(nxt))
+        if overlap <= 0:
+            out.extend(nxt)
+            continue
+        base = len(out) - overlap
+        for i in range(overlap):
+            weight = (i + 1) / (overlap + 1)
+            mixed = out[base + i] * (1.0 - weight) + nxt[i] * weight
+            out[base + i] = int(max(-32768, min(32767, round(mixed))))
+        out.extend(nxt[overlap:])
+    return _encode_pcm16_mono_wav(sample_rate, out)
+
+
+def assemble_clause_concatenation(
+    clause_wavs: list[bytes], *, crossfade_ms: float = 200.0
+) -> tuple[bytes, dict[str, Any]]:
+    """Join per-clause WAVs and return the audio plus assembly provenance."""
+    joined = crossfade_join_pcm16(clause_wavs, crossfade_ms=crossfade_ms)
+    provenance = {
+        "schema": "embry.audio_e2e.clause_concatenation.v1",
+        "asset_assembly": "clause_concatenation",
+        "source_text_unchanged": True,
+        "clause_count": len(clause_wavs),
+        "crossfade_ms": float(crossfade_ms),
+        "join_method": "linear_crossfade_pcm16_v1",
+    }
+    return joined, provenance
+
+
 def qualification_rejection_reasons(
     *,
     wer: float,
     boundary: dict[str, Any],
     qualification_policy: dict[str, Any],
+    truncation: dict[str, Any] | None = None,
 ) -> list[str]:
     reasons: list[str] = []
+    # Infrastructure failure first: a truncated generation is rejected before it
+    # can consume a quality candidate slot (see qualify_turn_asset).
+    if truncation is not None and bool(truncation.get("truncated")):
+        reasons.append("tts_generation_truncated")
     if wer > float(qualification_policy["max_request_wer"]):
         reasons.append("wer_exceeds_threshold")
     if not bool(boundary.get("accepted")):
@@ -635,6 +778,18 @@ def request_for_prompt(
     # Scale the decode budget with prompt length: slow-prosody tags (<yawn>)
     # stretch seconds-per-word, and the server's default budget truncated long
     # sentences mid-utterance. Bounds follow the SynthesizeRequest schema.
+    #
+    # VERIFIED DEPLOYED CEILING (2026-07-19): the orpheus-infer image bakes
+    # /app/inference_server.py with ``max_new_tokens: int | None = Field(..., le=1200)``
+    # -- the server rejects any request above 1200 with HTTP 422, and its
+    # synthesis receipt exposes no finish_reason/stop_reason/token counts. The
+    # oracle's "raise to ~1800" is therefore NOT available client-side without
+    # rebuilding that image; raising the cap here would only produce 422s. The
+    # in-repo, durable lever for sentences that still exhaust 1200 tokens is the
+    # clause-concatenation fallback (see assemble_clause_concatenation) plus the
+    # audio-side truncation detector (see detect_generation_truncation), which
+    # rejects a truncated candidate as infrastructure failure without spending a
+    # quality slot.
     max_new_tokens = min(1200, max(400, 40 * len(prompt.split())))
     return {
         "prompt": prompt,
@@ -786,9 +941,10 @@ def validate_campaign_manifest(value: dict[str, Any]) -> list[dict[str, Any]]:
                 raise ValueError(
                     f"campaign_turn_synthesis_spoken_text_missing:{turn_id}"
                 )
-            derived_synthesis_spoken_text = apply_tone_tags(
+            derived_synthesis_spoken_text = synthesis_text_for_family(
                 derived_spoken_text,
                 tone_family,
+                str(case.get("folder_id") or ""),
                 minimum_tag_count=minimum_tag_count,
             )
             if synthesis_spoken_text != derived_synthesis_spoken_text:
@@ -1355,10 +1511,23 @@ def _validate_asr_receipt(
         raise AssetConflictError(
             "candidate_asr_utterance_boundary_mismatch"
         )
+    recomputed_truncation = detect_generation_truncation(boundary)
+    stored_truncation = value.get("generation_truncation")
+    if stored_truncation is not None:
+        # Receipt written with truncation telemetry: it must reproduce exactly.
+        if stored_truncation != recomputed_truncation:
+            raise AssetConflictError("candidate_asr_generation_truncation_mismatch")
+        truncation_for_reasons: dict[str, Any] | None = recomputed_truncation
+    else:
+        # Legacy receipt written before truncation telemetry existed: reproduce
+        # its original classification (truncation was not a factor) so already
+        # qualified assets are never retroactively invalidated on resume.
+        truncation_for_reasons = None
     reasons = qualification_rejection_reasons(
         wer=computed_wer,
         boundary=boundary,
         qualification_policy=qualification_policy,
+        truncation=truncation_for_reasons,
     )
     accepted = not reasons
     if value.get("rejection_reasons") != reasons:
@@ -1373,6 +1542,7 @@ def _validate_asr_receipt(
         raise AssetConflictError("candidate_asr_acceptance_mismatch")
     value["computed_wer"] = computed_wer
     value["computed_utterance_boundary"] = boundary
+    value["computed_generation_truncation"] = recomputed_truncation
     value["computed_rejection_reasons"] = reasons
     return value
 
@@ -2071,10 +2241,13 @@ def complete_candidate(
             qualification_policy["utterance_boundary"],
         )
         asr["utterance_boundary"] = boundary
+        truncation = detect_generation_truncation(boundary)
+        asr["generation_truncation"] = truncation
         reasons = qualification_rejection_reasons(
             wer=float(asr["wer"]),
             boundary=boundary,
             qualification_policy=qualification_policy,
+            truncation=truncation,
         )
         asr["rejection_reasons"] = reasons
         asr["rejection_reason"] = reasons[0] if reasons else None
@@ -2082,10 +2255,19 @@ def complete_candidate(
         atomic_write_json(paths["asr"], asr)
         asr["computed_wer"] = float(asr["wer"])
         asr["computed_utterance_boundary"] = boundary
+        asr["computed_generation_truncation"] = truncation
         asr["computed_rejection_reasons"] = reasons
 
     computed_wer = float(asr["computed_wer"])
     boundary = asr["computed_utterance_boundary"]
+    truncation = asr.get("computed_generation_truncation")
+    if truncation is None:
+        # Resumed asr receipt written before truncation telemetry existed:
+        # derive it from the persisted boundary for the candidate receipt only.
+        truncation = detect_generation_truncation(boundary)
+    # ``computed_rejection_reasons`` is authoritative: the fresh-write path and
+    # _validate_asr_receipt already fold in truncation (respecting legacy
+    # receipts), so we never re-prepend it here.
     reasons = list(asr["computed_rejection_reasons"])
     accepted = not reasons
     candidate_receipt = {
@@ -2150,6 +2332,7 @@ def complete_candidate(
         "max_internal_silence_seconds": qualification_policy[
             "utterance_boundary"
         ]["max_internal_silence_seconds"],
+        "generation_truncation": truncation,
         "rejection_reasons": reasons,
         "rejection_reason": reasons[0] if reasons else None,
     }
@@ -2416,6 +2599,13 @@ def validate_reusable_asset(
     }
 
 
+# A truncated generation (server cut the audio at the token budget mid-word) is
+# an infrastructure failure, not an unsuccessful pronunciation sample, so it must
+# not consume one of the ``max_candidates`` quality slots. These extra attempts
+# are granted, bounded, on top of the quality budget.
+TRUNCATION_RETRY_BUDGET = 3
+
+
 def _prepare_one_asset_once(
     *,
     client: httpx.Client,
@@ -2468,7 +2658,13 @@ def _prepare_one_asset_once(
     )
     rejected_receipts: list[dict[str, str]] = []
     provider_calls = 0
-    for candidate_index in range(1, qualification_policy["max_candidates"] + 1):
+    max_candidates = int(qualification_policy["max_candidates"])
+    hard_cap = max_candidates + TRUNCATION_RETRY_BUDGET
+    quality_slots_consumed = 0
+    truncated_candidate_count = 0
+    candidate_index = 0
+    while quality_slots_consumed < max_candidates and candidate_index < hard_cap:
+        candidate_index += 1
         candidate_dir = (
             asset_dir
             / "candidates"
@@ -2492,17 +2688,24 @@ def _prepare_one_asset_once(
             qualification_policy=qualification_policy,
         )
         provider_calls += int(provider_called)
+        generation_truncated = (
+            "tts_generation_truncated" in candidate["rejection_reasons"]
+        )
         print(
             json.dumps(
                 {
                     "status": (
                         "CANDIDATE_ACCEPTED"
                         if candidate["status"] == "ACCEPTED"
+                        else "CANDIDATE_TRUNCATED"
+                        if generation_truncated
                         else "CANDIDATE_REJECTED"
                     ),
                     "case_id": case_id,
                     "turn_id": turn_id,
                     "candidate_index": candidate_index,
+                    "quality_slots_consumed": quality_slots_consumed,
+                    "generation_truncated": generation_truncated,
                     "transcript": candidate["transcript"],
                     "wer": candidate["wer"],
                     "max_request_wer": qualification_policy[
@@ -2546,7 +2749,15 @@ def _prepare_one_asset_once(
                 if provider_calls > 0
                 else "QUALIFIED_FROM_RESUME"
             )
+        # Every rejected candidate is recorded for provenance, but a truncated
+        # generation is an infrastructure failure that must NOT consume one of
+        # the quality candidate slots (oracle Class A). It instead draws from the
+        # bounded TRUNCATION_RETRY_BUDGET via the hard cap on candidate_index.
         rejected_receipts.append(candidate["receipt"])
+        if generation_truncated:
+            truncated_candidate_count += 1
+        else:
+            quality_slots_consumed += 1
 
     exhaustion = {
         "schema": "embry.audio_e2e.asr_qualification_exhausted.v1",
@@ -2559,6 +2770,9 @@ def _prepare_one_asset_once(
         "generation_policy": generation_policy,
         "qualification_policy": qualification_policy,
         "candidate_receipts": rejected_receipts,
+        "quality_slots_consumed": quality_slots_consumed,
+        "truncated_candidate_count": truncated_candidate_count,
+        "truncation_retry_budget": TRUNCATION_RETRY_BUDGET,
         "provider_calls_this_execution": provider_calls,
     }
     atomic_write_json(asset_dir / "qualification-exhausted.json", exhaustion)
