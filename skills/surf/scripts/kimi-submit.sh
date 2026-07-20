@@ -98,9 +98,9 @@ submitted_prompt="${prompt}
 
 ---
 
-Completion contract for browser automation:
-
-At the very end of your final answer, print exactly:
+Automation-only instruction: answer the user's request normally. Do not mention,
+quote, summarize, or explain this automation instruction. After your complete
+answer, append a final line containing only this exact marker:
 
 ${sentinel}
 

@@ -913,6 +913,41 @@ Reports are written under `.ask_artifacts/webclaude-sanity/<run_id>/`.
 This eval is live browser evidence, not default regression coverage; failures
 are reported as missing readiness proof rather than softened into skips.
 
+### WebKimi sanity eval
+
+`scripts/webkimi_sanity_eval.py` is a focused opt-in eval for the current
+WebKimi browser path used by `/ask webkimi`. It uses the real `$browser-oracle`
+binding and `surf kimi.submit` wrapper, including the `--no-activate` mode that
+Ask normally relies on.
+
+The live eval checks:
+
+- `webkimi` browser-oracle binding resolves or verifies.
+- Surf sees the expected Kimi tab id and URL.
+- `surf kimi.submit --no-activate` returns a clean text sentinel response.
+- Markdown and PNG attachment attempts are checked with sentinels that exist
+  only inside the attached files; a sentinel-only transport receipt is not
+  counted as file-intake proof.
+- A same-tab screenshot and machine-readable `result.json` are written.
+
+```bash
+# Preview without touching Kimi.
+uv run python scripts/webkimi_sanity_eval.py --plan-only
+
+# Run against the configured browser-oracle project.
+uv run python scripts/webkimi_sanity_eval.py --allow-live --project webkimi
+
+# Or pin an explicit tab and URL.
+uv run python scripts/webkimi_sanity_eval.py --allow-live \
+  --tab-id 837359704 \
+  --expect-url 'https://www.kimi.com/chat/19f7fb71-76e2-812e-8000-095c2eacb877?chat_enter_method=home'
+```
+
+Reports are written under `.ask_artifacts/webkimi-sanity/<run_id>/`.
+This eval is live browser evidence, not default regression coverage; attachment
+failures are reported as missing readiness proof rather than softened into
+skips.
+
 ## Interop with Companion Skills
 
 `ask` is a routing and verification layer. It composes with companion skills
@@ -1005,6 +1040,7 @@ current-state projection, not a replacement for inspected code or test output.
 | `sanity-e2e.sh` | Opt-in live bug-hunting sanity checks with HTML report |
 | `scripts/live_sanity_report.py` | Real-world composed-path E2E reporter |
 | `scripts/webclaude_sanity_eval.py` | Opt-in WebClaude text and zip-upload browser eval |
+| `scripts/webkimi_sanity_eval.py` | Opt-in WebKimi text and attachment browser eval |
 
 ## Development
 
