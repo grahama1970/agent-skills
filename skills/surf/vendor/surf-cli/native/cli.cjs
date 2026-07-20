@@ -2585,6 +2585,9 @@ async function handleResponse(response) {
     if (data.noActivate !== undefined) {
       console.error(`NoActivate: ${data.noActivate}`);
     }
+    if (data.attachment !== undefined) {
+      console.error(`Attachment: ${JSON.stringify(data.attachment)}`);
+    }
     if (data.requestedModel) console.error(`RequestedModel: ${data.requestedModel}`);
     if (data.selectedModel) console.error(`SelectedModel: ${data.selectedModel}`);
     if (data.modelSelectionStatus) console.error(`ModelSelectionStatus: ${data.modelSelectionStatus}`);

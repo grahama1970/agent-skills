@@ -25,9 +25,8 @@ Options:
   --no-activate             Background controlled-tab mode. Do not foreground
                             the tab or its window. Requires --tab-id or --url
                             so an authenticated Kimi tab is already open.
-  --attach-file PATH        Attach a file to the Kimi message (uses CDP
-                            DOM.setFileInputFiles via the surf chatgpt --file
-                            flag). The prompt body is sent normally; Kimi
+  --attach-file PATH        Attach a file to the Kimi message (uses the
+                            Kimi tab CDP upload path). The prompt body is sent normally; Kimi
                             reads the attached file alongside it. Use this
                             instead of inlining large bundles in the prompt
                             to stay under the OS argv limit.
@@ -47,6 +46,7 @@ tab_id=""
 target_url=""
 no_activate=0
 attach_file=""
+attach_file_abs=""
 tab_state_file="${SURF_KIMI_TAB_STATE:-/tmp/surf-kimi-controlled-tab-id}"
 
 while [[ $# -gt 0 ]]; do
@@ -246,15 +246,16 @@ clean = text[:idx].rstrip() + "\n"
 pathlib.Path(out_path).write_text(clean)
 PY
 
-python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$stable_polls" "$timeout_s" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$no_activate" "$focus_before_json" "$focus_after_json" <<'PY'
+python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$stable_polls" "$timeout_s" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$no_activate" "$focus_before_json" "$focus_after_json" "$attach_file_abs" <<'PY'
 import json, pathlib, sys
-meta, inp, submitted, out, raw, err, sentinel, stable, timeout_s, started, finished, requested_tab_id, target_url, no_activate_s, focus_before_s, focus_after_s = sys.argv[1:]
+meta, inp, submitted, out, raw, err, sentinel, stable, timeout_s, started, finished, requested_tab_id, target_url, no_activate_s, focus_before_s, focus_after_s, attach_file = sys.argv[1:]
 raw_text = pathlib.Path(raw).read_text()
 out_text = pathlib.Path(out).read_text()
 stderr_text = pathlib.Path(err).read_text() if pathlib.Path(err).exists() else ""
 tab_id = None
 activated = None
 tab_was_created = None
+attachment = None
 for line in reversed(stderr_text.splitlines()):
     if line.startswith("Tab ID:") and tab_id is None:
         tab_id = line.split(":", 1)[1].strip()
@@ -262,7 +263,13 @@ for line in reversed(stderr_text.splitlines()):
         activated = line.split(":", 1)[1].strip() == "true"
     elif line.startswith("TabWasCreated:") and tab_was_created is None:
         tab_was_created = line.split(":", 1)[1].strip() == "true"
-    if tab_id is not None and activated is not None and tab_was_created is not None:
+    elif line.startswith("Attachment:") and attachment is None:
+        payload = line.split(":", 1)[1].strip()
+        try:
+            attachment = json.loads(payload)
+        except Exception:
+            attachment = {"parse_error": True, "raw": payload}
+    if tab_id is not None and activated is not None and tab_was_created is not None and (not attach_file or attachment is not None):
         break
 contamination = []
 for needle in [
@@ -302,6 +309,8 @@ no_activate = no_activate_s == "1"
 
 tab_mismatch = bool(requested_tab_id and tab_id and requested_tab_id != tab_id)
 activation_violation = no_activate and activated is True
+attachment_missing = bool(attach_file) and not attachment
+attachment_preview_missing = bool(attach_file) and bool(attachment) and attachment.get("previewVisible") is False
 status = "completed" if (
     tab_id
     and not tab_mismatch
@@ -309,6 +318,8 @@ status = "completed" if (
     and sentinel in raw_text
     and sentinel not in out_text
     and not activation_violation
+    and not attachment_missing
+    and not attachment_preview_missing
 ) else "failed"
 if status == "completed":
     failure = None
@@ -316,6 +327,10 @@ elif activation_violation:
     failure = "focus_stolen_despite_no_activate"
 elif tab_mismatch:
     failure = "controlled_tab_id_mismatch"
+elif attachment_missing:
+    failure = "attachment_metadata_missing"
+elif attachment_preview_missing:
+    failure = "attachment_preview_missing"
 else:
     failure = "missing_controlled_tab_id_or_contaminated_clean_output"
 pathlib.Path(meta).write_text(json.dumps({
@@ -329,6 +344,10 @@ pathlib.Path(meta).write_text(json.dumps({
     "sentinel": sentinel,
     "requested_tab_id": requested_tab_id or None,
     "requested_url": target_url or None,
+    "attach_file": attach_file or None,
+    "attachment": attachment,
+    "attachment_missing": attachment_missing,
+    "attachment_preview_missing": attachment_preview_missing,
     "stable_polls": int(stable),
     "timeout_s": int(timeout_s),
     "raw_contains_sentinel": sentinel in raw_text,

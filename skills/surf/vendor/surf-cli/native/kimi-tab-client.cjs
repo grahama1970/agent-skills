@@ -2,7 +2,7 @@ const KIMI_TAB_URL = "https://www.kimi.com/";
 
 const SELECTORS = {
   promptTextarea: 'textarea[placeholder*="Ask anything"], textarea[placeholder*="follow-up"], textarea[placeholder*="Add a follow-up"], div[class*="editorContentEditable"], [contenteditable="true"][role="textbox"], [contenteditable="true"]',
-  sendButton: '#send-button, button[id="send-button"], [class*="send-btn"], button[aria-label*="Send"], button[aria-label*="send"], button[type="submit"]:not([disabled])',
+  sendButton: '#send-button, button[id="send-button"], [class*="send-btn"], [class*="send-button"], button[aria-label*="Send"], button[aria-label*="send"], button[type="submit"]:not([disabled])',
   stopButton: 'button[aria-label*="Stop"], button[aria-label*="Cancel"], button[aria-label*="stop"], button[aria-label*="Stop generation"]',
   assistantMessage: '[class*="markdown"], [class*="Markdown"], .markdown-body, .prose, [data-role="assistant"], article, [class*="assistant"]',
   conversationTurn: '[class*="message"], [class*="Message"], article',
@@ -338,9 +338,40 @@ async function attachFile(cdp, inputCdp, filePath, log = () => {}) {
     throw new Error(`File not found: ${absolutePath}`);
   }
 
-  // Wait for a file input to appear. ChatGPT lazily mounts the hidden
-  // <input type="file"> when the composer attach button is interactable;
-  // recent revs mount it unconditionally, but we poll defensively.
+  const openedToolkit = await evaluate(
+    cdp,
+    `(() => {
+      ${buildClickDispatcher()}
+      if (document.querySelector(${JSON.stringify(SELECTORS.fileInput)})) {
+        return { inputPresent: true, clicked: false };
+      }
+      const selectors = [
+        '.toolkit-trigger-btn',
+        '[class*="toolkit-trigger"]',
+        '[aria-label*="Attach"]',
+        '[aria-label*="Upload"]',
+        '[aria-label*="Add file"]',
+        '[title*="Attach"]',
+        '[title*="Upload"]',
+        '[title*="Add file"]',
+      ];
+      for (const selector of selectors) {
+        const node = document.querySelector(selector);
+        if (node && dispatchClickSequence(node)) {
+          return { inputPresent: false, clicked: true, selector };
+        }
+      }
+      return { inputPresent: false, clicked: false };
+    })()`,
+  );
+  if (openedToolkit?.clicked) {
+    log(`Opened Kimi attachment toolkit with ${openedToolkit.selector}`);
+    await delay(500);
+  }
+
+  // Wait for Kimi's file input to appear. Kimi usually mounts it with the
+  // composer toolkit popover; if it is absent, the caller must not send a
+  // prompt that claims an attachment exists.
   const selectorJson = JSON.stringify(SELECTORS.fileInput);
   const deadline = Date.now() + 5000;
   let found = false;
@@ -357,7 +388,7 @@ async function attachFile(cdp, inputCdp, filePath, log = () => {}) {
   }
   if (!found) {
     throw new Error(
-      "ChatGPT file input (input[type=\"file\"]) not present in the DOM; ChatGPT may have moved or hidden the attach control.",
+      "Kimi file input (input[type=\"file\"]) not present in the DOM; Kimi may require opening the attachment menu first.",
     );
   }
 
@@ -374,14 +405,14 @@ async function attachFile(cdp, inputCdp, filePath, log = () => {}) {
     selector: SELECTORS.fileInput,
   });
   if (!node || !node.nodeId) {
-    throw new Error("DOM.querySelector returned no nodeId for the ChatGPT file input");
+    throw new Error("DOM.querySelector returned no nodeId for the Kimi file input");
   }
   await inputCdp("DOM.setFileInputFiles", {
     files: [absolutePath],
     nodeId: node.nodeId,
   });
 
-  // Give ChatGPT a moment to process the file (it reads, hashes, sometimes
+  // Give Kimi a moment to process the file (it reads, hashes, sometimes
   // uploads). If the attachment is not yet visible after a brief wait we
   // surface the failure so the caller can decide to retry rather than send
   // a prompt that references a missing attachment.
@@ -391,6 +422,13 @@ async function attachFile(cdp, inputCdp, filePath, log = () => {}) {
       cdp,
       `(() => {
         const previewSelectors = [
+          '[class*="attachment"]',
+          '[class*="file"]',
+          '[class*="upload"]',
+          '[class*="image"]',
+          '[class*="preview"]',
+          '[class*="chat-input-prepend"] *',
+          '[class*="chat-input-inline-prepend"] *',
           '[data-testid*="attachment"]',
           'div[role="img"][aria-label]',
           'div[data-testid="composer-attachments"] div',
@@ -408,9 +446,9 @@ async function attachFile(cdp, inputCdp, filePath, log = () => {}) {
     }
     await delay(250);
   }
-  // No preview shown, but the input file was set. Proceed; ChatGPT often
-  // accepts files without a visible thumbnail (especially text/markdown).
-  log(`File attachment set (no preview detected within 20s; proceeding)`);
+  // No preview shown, but the input file was set. Return this explicitly so
+  // wrappers can treat attachment support as unproven or failed.
+  log(`File attachment set (no Kimi preview detected within 20s)`);
   return { attached: true, previewVisible: false };
 }
 
@@ -462,16 +500,20 @@ async function typePrompt(cdp, inputCdp, prompt) {
   await delay(300);
 }
 
-async function clickSend(cdp, inputCdp) {
+async function clickSend(cdp, inputCdp, prompt = "") {
+  const promptNeedle = JSON.stringify((prompt || "").trim().slice(0, 120));
   const promptSelectors = JSON.stringify(SELECTORS.promptTextarea.split(", ").map((s) => s.trim()));
   const sendSelectors = JSON.stringify(
-    SELECTORS.sendButton.split(", ").map((s) => s.trim()).concat([
+    [
+      '.chat-input .send-button-container',
+      '.chat-input [class*="send-button"]',
+      ...SELECTORS.sendButton.split(", ").map((s) => s.trim()),
       'button[aria-label*="Send"]',
       'button[aria-label*="send"]',
       'button[data-test-id="send-button"]',
-    ]),
+    ],
   );
-  const deadline = Date.now() + 8000;
+  const deadline = Date.now() + 20000;
   while (Date.now() < deadline) {
     const result = await evaluate(
       cdp,
@@ -479,13 +521,27 @@ async function clickSend(cdp, inputCdp) {
         ${buildClickDispatcher()}
         const promptSelectors = ${promptSelectors};
         const sendSelectors = ${sendSelectors};
+        const promptNeedle = ${promptNeedle};
         let prompt = null;
         for (const selector of promptSelectors) {
           prompt = document.querySelector(selector);
           if (prompt) break;
         }
+        const composerText = () => {
+          const composer = document.querySelector('.chat-input') || prompt;
+          return (composer?.innerText || composer?.textContent || composer?.value || '').trim();
+        };
+        const submitted = () => {
+          if (document.querySelector('${SELECTORS.stopButton}')) return true;
+          if (!promptNeedle) return false;
+          return !composerText().includes(promptNeedle);
+        };
         const tryButton = (button) => {
           if (!button) return null;
+          const rect = button.getBoundingClientRect();
+          const visible = rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.right > 0
+            && rect.top < window.innerHeight && rect.left < window.innerWidth;
+          if (!visible) return null;
           const disabled = button.hasAttribute('disabled')
             || button.getAttribute('aria-disabled') === 'true'
             || button.getAttribute('data-disabled') === 'true';
@@ -496,7 +552,7 @@ async function clickSend(cdp, inputCdp) {
         for (const selector of sendSelectors) {
           const button = document.querySelector(selector);
           const status = tryButton(button);
-          if (status === 'clicked') return 'clicked-global';
+          if (status === 'clicked') return submitted() ? 'submitted-global' : 'clicked-global';
           if (status === 'disabled') return 'disabled';
         }
         if (prompt) {
@@ -508,7 +564,7 @@ async function clickSend(cdp, inputCdp) {
               const label = (button.textContent || '').trim().toLowerCase();
               if (aria.includes('send') || label === 'send') {
                 const status = tryButton(button);
-                if (status === 'clicked') return 'clicked-near';
+                if (status === 'clicked') return submitted() ? 'submitted-near' : 'clicked-near';
                 if (status === 'disabled') return 'disabled';
               }
             }
@@ -518,7 +574,24 @@ async function clickSend(cdp, inputCdp) {
         return 'missing';
       })()`
     );
-    if (result === "clicked-global" || result === "clicked-near") return true;
+    if (result === "submitted-global" || result === "submitted-near") return true;
+    if (result === "clicked-global" || result === "clicked-near") {
+      await delay(500);
+      const submitted = await evaluate(
+        cdp,
+        `(() => {
+          const needle = ${promptNeedle};
+          if (document.querySelector('${SELECTORS.stopButton}')) return true;
+          if (!needle) return false;
+          const composer = document.querySelector('.chat-input')
+            || document.querySelector(${JSON.stringify(SELECTORS.promptTextarea)});
+          const text = (composer?.innerText || composer?.textContent || composer?.value || '').trim();
+          return !text.includes(needle);
+        })()`,
+      ).catch(() => false);
+      if (submitted) return true;
+      continue;
+    }
     if (result === "disabled") {
       await delay(150);
       continue;
@@ -694,6 +767,7 @@ async function query(options) {
   
   const cdp = (expr) => cdpEvaluate(tabId, expr);
   const inputCdp = (method, params) => cdpCommand(tabId, method, params);
+  let attachment = null;
   
   try {
     await waitForPageLoad(cdp);
@@ -704,9 +778,13 @@ async function query(options) {
     }
     log("Prompt ready");
     const baseline = await assistantSnapshot(cdp, null).catch(() => ({ text: "" }));
+    if (file) {
+      attachment = await attachFile(cdp, inputCdp, file, log);
+      log(`File attached: ${file}`);
+    }
     await typePrompt(cdp, inputCdp, prompt);
     log("Prompt typed");
-    await clickSend(cdp, inputCdp);
+    await clickSend(cdp, inputCdp, prompt);
     log("Prompt sent, waiting for response...");
     const genDeadline = Date.now() + 20000;
     while (Date.now() < genDeadline) {
@@ -731,6 +809,7 @@ async function query(options) {
       activated: tabInfo.activated === true,
       tabWasCreated: tabInfo.tabWasCreated === true,
       noActivate: noActivate === true,
+      attachment,
     };
   } finally {
     if (!keepTab) {

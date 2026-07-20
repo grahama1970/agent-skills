@@ -791,7 +791,7 @@ function handleToolRequest(msg, socket) {
 
 
   if (extensionMsg.type === "KIMI_TAB_QUERY") {
-    const { query, timeout, sentinel, stablePolls, keepTab, targetTabId, noActivate } = extensionMsg;
+    const { query, file, timeout, sentinel, stablePolls, keepTab, targetTabId, noActivate } = extensionMsg;
 
     queueAiRequest(async () => {
       const result = await kimiTabClient.query({
@@ -799,6 +799,7 @@ function handleToolRequest(msg, socket) {
         timeout,
         sentinel,
         stablePolls,
+        file,
         keepTab,
         noActivate,
         createTab: () => new Promise((resolve) => {
@@ -897,7 +898,8 @@ function handleToolRequest(msg, socket) {
         tookMs: result.tookMs,
         activated: result.activated,
         tabWasCreated: result.tabWasCreated,
-        noActivate: result.noActivate
+        noActivate: result.noActivate,
+        attachment: result.attachment || null
       }, null);
     }).catch((err) => {
       sendToolResponse(socket, originalId, null, err.message);

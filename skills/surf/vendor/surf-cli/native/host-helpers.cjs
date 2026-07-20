@@ -1079,6 +1079,7 @@ function mapToolToMessage(tool, args, tabId) {
         query: a.query,
         sentinel: a.sentinel,
         stablePolls: a["stable-polls"] ? parseInt(a["stable-polls"], 10) : undefined,
+        file: a.file,
         keepTab: a["keep-tab"] === true,
         noActivate: a["no-activate"] === true,
         targetTabId: (a["target-tab-id"] || a["tab-id"] || tabId) ? parseInt(a["target-tab-id"] || a["tab-id"] || tabId, 10) : undefined,
