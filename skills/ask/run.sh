@@ -25,20 +25,6 @@ if [ -f "$PROJECT_ROOT/.env" ]; then
     set +a
 fi
 
-# Match the credential used by the running local SciLLM stack when callers did
-# not provide one explicitly. Read only the master-key assignment so the
-# provider project's other environment settings cannot leak into /ask.
-if [[ -z "${SCILLM_API_KEY:-}" ]]; then
-    SCILLM_ENV_FILE="${SCILLM_ENV_FILE:-${SCILLM_ROOT:-$HOME/workspace/experiments/scillm}/.env}"
-    if [[ -f "$SCILLM_ENV_FILE" ]]; then
-        SCILLM_LOCAL_KEY="$(sed -n 's/^SCILLM_MASTER_KEY=//p' "$SCILLM_ENV_FILE" | tail -n 1)"
-        if [[ -n "$SCILLM_LOCAL_KEY" ]]; then
-            export SCILLM_API_KEY="$SCILLM_LOCAL_KEY"
-        fi
-        unset SCILLM_LOCAL_KEY
-    fi
-fi
-
 # Resolve skill runner paths
 MEMORY_RUN="${SKILLS_DIR}/../../.agent/skills/memory/run.sh"
 DISCOVER_BOOKS_RUN="${SKILLS_DIR}/discover-books/run.sh"
@@ -99,7 +85,6 @@ Tau DAG Options:
   --local-fixture       Use local command workers for deterministic scheduler proof
   --allow-provider-calls Permit real provider calls through the SciLLM container
   --require-provider-calls Fail if SciLLM/provider calls are unavailable
-  --scillm-api-key <key> Explicit SciLLM key; otherwise resolve the local stack .env
   --viewer-link         Ask Tau for the React Flow DAG viewer link
   --run-output-root <dir> Directory for request/DAG/Tau receipt artifacts
   --json                JSON output

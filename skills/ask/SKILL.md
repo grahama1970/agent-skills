@@ -2,7 +2,8 @@
 name: ask
 description: >
   Use when the user asks to query project memory, ask an oracle, use supported
-  browser-backed reviewers, run persona/roundtable/deep-review workflows,
+  browser-backed reviewers, run Tau roundtable/single-handler workflows,
+  run persona/deep-review workflows,
   generate image prompts, check OS/project health through composed skills, or run
   an ask DAG. This skill is the executable /ask runtime; do not replace it with
   an informal subagent, plain web search, or hand-written review.
@@ -21,8 +22,9 @@ triggers:
 provides:
   - >
     Executable ask runtime for memory-backed answers, oracle calls, reviews,
-    supported browser-backed review, persona workflows, image generation,
-    legacy ask DAG runs, and strict Tau DAG runs.
+    supported browser-backed review, Tau single-handler and roundtable
+    workflows, persona workflows, image generation, ask/scillm-style DAG runs,
+    and strict Tau DAG runs.
   - >
     Evidence artifacts for each run: request, status, events, and mode-specific
     review outputs.
@@ -72,12 +74,14 @@ manual summary, or an invented review for `$ask`.
 
 ## Runtime Entrypoint
 
-Run commands from this directory:
+Run commands from this directory. `./run.sh tau-dag "<request>"` maps to the
+Typer `tau-dag run` subcommand internally.
 
 ```bash
 cd skills/ask
 ./run.sh --help
 ./run.sh ask --help
+./run.sh tau-dag run --help
 ```
 
 Every nontrivial run must preserve the runtime artifacts. The standard artifact
@@ -99,19 +103,24 @@ ask artifacts.
 - Build a concrete bundle before review or oracle escalation: objective, target
   files/artifacts, commands already run, uncertainty, exact question, and
   acceptance gates.
-- For human requests that ask multiple subagents/models to solve or review work,
-  prefer `./run.sh tau-dag ...` as the front door. `$ask` compiles the request
-  into a strict `tau.dag_contract.v1` bundle, emits `dag.json` before execution,
-  uses `$interview` when required DAG fields are missing, and delegates execution
-  and live status/viewer polling to `$tau`.
+- For human requests that ask a named handler/model to answer, solve, review, or
+  collaborate, use `./run.sh tau-dag ...` as the modern front door. `$ask`
+  compiles the request into a strict `tau.dag_contract.v1` bundle, emits
+  `dag.json` before execution, uses `$interview` when required DAG fields are
+  missing, and delegates execution and live status/viewer polling to `$tau`.
+- Treat modern roundtable and creator-reviewer loops as prompt-to-Tau-DAG. The
+  user should only need to name handlers and shape: single call, concurrent
+  roundtable, sequential roundtable, or explicit multi-step DAG. It must not
+  matter to the user whether a handler is browser-backed or API-backed except
+  for the handler/model name they request.
 - Pass the bundle to the documented ask mode. Do not compress a review target
   into an informal prompt when the mode has a target option.
 - Report artifact paths as evidence. Browser reviewers or model
   reviewers are not deterministic proof by themselves.
-- WebGPT/ChatGPT routing is deprecated in `/ask`: `$ask webgpt`, `$ask chatgpt`,
-  `--oracle-backend webgpt`, `--webgpt-*`, and `webgpt-project` must fail
-  closed. Use `$surf webgpt.submit` or the project-level `$webgpt` workflow
-  directly instead.
+- Direct WebGPT/ChatGPT oracle routing is not an `$ask ask` backend: `$ask
+  webgpt`, `$ask chatgpt`, `--oracle-backend webgpt`, `--webgpt-*`, and
+  `webgpt-project` must fail closed. This does not ban Tau roundtable
+  `webgpt`: `webgpt` is a supported Tau browser handler routed through `$surf`.
 - Close only from local deterministic proof appropriate to the task: tests,
   schema checks, endpoint responses, screenshots, database/query evidence, or
   generated artifact validation.
@@ -127,6 +136,87 @@ ask artifacts.
   `--local-fixture` only for Tau scheduler sanity proof; report that it does
   not prove provider/model behavior.
 
+## Single Calls And Roundtables
+
+Use `./run.sh tau-dag` for current handler/model orchestration.
+
+- **Single call**: use one Tau handler or one solver/reviewer model. This is the
+  path for "ask webclaude", "ask webkimi", "ask webgemini", "ask webgpt", or one
+  API-backed model such as `gpt-5.5`, `claude-sonnet-4-6`, or another model
+  routed by `$tau` through `$scillm`.
+- **Roundtable**: use repeatable `--handler` values and `--topology concurrent`
+  or `--topology sequential`. A roundtable compiles to `tau.dag_contract.v1`
+  with handler nodes and a join node.
+- **Creator-reviewer loop**: use `--topology sequential` and list the creator
+  handler first, then reviewer handlers. Downstream handlers receive prior
+  handler receipts and response excerpts. If the request asks for pass/fail
+  review, the reviewer prompt requires `VERDICT: PASS`, `VERDICT: FAIL`, or
+  `VERDICT: NEEDS_ATTENTION`.
+- **Explicit DAG**: describe the dependency order in the request when the user
+  wants multiple steps. Use `--topology sequential` for a linear handler chain;
+  use `--topology concurrent` when handlers can work independently before join.
+- **Supported browser handlers**: `webgpt`, `webclaude`, `webkimi`,
+  `webgemini`. Aliases normalize as `gpt -> webgpt`, `claude -> webclaude`,
+  `kimi -> webkimi`, and `gemini -> webgemini`.
+- **Supported API handlers**: any explicit non-browser handler label is treated
+  as a `$scillm` model name and emitted as a Tau-owned `scillm.chat` adapter
+  node. `$ask` does not decide provider internals.
+- **Browser transport**: browser handlers execute through `$surf` and
+  `$browser-oracle` from Tau command specs. Use `--handler-project
+  handler=project` when the browser-oracle project differs from the handler
+  name, for example `--handler-project webgpt=tau`.
+- **Evidence**: `--json` returns the Ask Tau bundle path, provider/handler gate,
+  and Tau execution receipt when `--execute` is used. Preserve `dag.json`,
+  command specs, node receipts, and join receipts.
+
+Current command patterns:
+
+```bash
+# Compile a single browser-handler call without executing it.
+./run.sh tau-dag "Ask webclaude to answer: <prompt>" \
+  --repo local/ask --target single-webclaude \
+  --handler webclaude --json
+
+# Execute a single browser-handler call through Tau and Surf/browser-oracle.
+./run.sh tau-dag "Ask webkimi to answer: <prompt>" \
+  --repo local/ask --target single-webkimi \
+  --handler webkimi --execute --json
+
+# Compile a concurrent browser roundtable, then join.
+./run.sh tau-dag "Roundtable these handlers concurrently, then join." \
+  --repo local/ask --target roundtable-web \
+  --handler webclaude --handler webkimi --handler webgemini --handler webgpt \
+  --handler-project webgpt=tau \
+  --topology concurrent --json
+
+# Execute a sequential browser roundtable.
+./run.sh tau-dag "Ask webclaude, pass its answer to webkimi, then have webgpt review." \
+  --repo local/ask --target sequential-web \
+  --handler webclaude --handler webkimi --handler webgpt \
+  --handler-project webgpt=tau \
+  --topology sequential --execute --json
+
+# Creator-reviewer loop with a browser creator and pass/fail browser reviewer.
+./run.sh tau-dag "Ask webgpt to do the work, then ask webclaude to review the work for pass/fail." \
+  --repo local/ask --target webgpt-webclaude-passfail \
+  --handler webgpt --handler webclaude \
+  --handler-project webgpt=tau \
+  --topology sequential --execute --json
+
+# Mixed API/browser loop. The API handler is routed by Tau through SciLLM.
+./run.sh tau-dag "Ask gpt-5.5 to draft an answer, then ask webclaude to review it for pass/fail." \
+  --repo local/ask --target api-webclaude-passfail \
+  --handler gpt-5.5 --handler webclaude \
+  --topology sequential --execute --json
+
+# API/model DAG with real provider calls requires explicit provider consent.
+./run.sh tau-dag "Solve X with two solvers, then review." \
+  --repo local/tau --target issue-123 \
+  --solver-model gpt-5.6-xhigh --solver-model gpt-5.6-xhigh \
+  --reviewer-model claude-fable --criterion correctness \
+  --allow-provider-calls --execute --json
+```
+
 ## Mode Router
 
 Use the narrowest mode that matches the user request.
@@ -135,23 +225,29 @@ Use the narrowest mode that matches the user request.
 | --- | --- | --- |
 | Memory-backed question | `./run.sh ask "<question>" --json` | Include scope when relevant. |
 | Oracle answer | `./run.sh ask "<question>" --oracle ... --json` | Choose backend/model/persona explicitly when requested. |
-| Supported browser review | documented browser mode such as `webgemini`, `webkimi`, `webperplexity`, or `cursor-browser` | Use bound tab/config where required; attach local target content when browser cannot read paths. |
+| Single named handler | `./run.sh tau-dag "<request>" --handler <handler-or-model> --json` | Browser handlers use `$surf`; non-browser handlers are `$scillm` model names routed by Tau. Add `--execute` for live transport. |
+| Multi-handler roundtable | `./run.sh tau-dag "<request>" --handler webclaude --handler gpt-5.5 ... --topology <concurrent|sequential> --json` | Roundtable is prompt-to-Tau-DAG. Preserve `dag.json`, command specs, handler receipts, and join receipts. |
+| Creator-reviewer loop | `./run.sh tau-dag "<request>" --handler <creator> --handler <reviewer> --topology sequential --json` | The reviewer receives prior handler receipts. Pass/fail requests require a verdict in the reviewer response. |
+| Supported direct browser oracle | documented browser mode such as `webgemini`, `webkimi`, `webperplexity`, or `cursor-browser` | Use only when the user asks for that direct mode; attach local target content when browser cannot read paths. |
 | Deep review | `./run.sh ask "<question>" --deep-review --deep-review-target <path> ... --json` | Pass complete target bundle; return `review.md` and `review.json`. |
 | Parallel review | `./run.sh ask "<question>" --parallel-review ... --json` | State reviewer count/focus and preserve per-reviewer outputs. |
-| Roundtable/argue | `./run.sh ask "<question>" --roundtable ... --json` or argue mode | Name personas and rounds; do not invent missing personas silently. |
+| Persona roundtable/argue | `./run.sh ask "<question>" --roundtable ... --json` or argue mode | Persona deliberation only. For web/API handler roundtables, use `tau-dag`. |
 | CAE gap review | documented CAE gap mode | Include current claim, evidence, gaps, and acceptance gate. |
 | Tau DAG front door | `./run.sh tau-dag "<request>" --repo <repo> --target <target> --solver-model <model> --reviewer-model <model> --criterion <c> --json` | Emits strict `tau.dag_contract.v1` first; uses `$interview` packet when incomplete; add `--execute` to delegate to Tau. |
-| Legacy ask DAG | `./run.sh ask "<question>" --dag-file <graph.json> ... --json` | Preserve DAG manifest, node outputs, and fail-closed events. |
+| Ask/scillm-style DAG file | `./run.sh ask "<question>" --dag-file <graph.json> ... --json` | Use only when the user provides an existing ask/scillm-style DAG file; preserve DAG manifest, node outputs, and fail-closed events. |
 | Image generation | documented image mode | Preserve prompt, provider response, output path, and review artifact. |
 | OS/project health | `./run.sh os ... --json`, `./run.sh doctor ... --json` | Report degraded dependencies, not green-by-absence. |
 | Status/config | `./run.sh status ... --json`, `./run.sh config doctor ... --json` | Use for artifact inspection and readiness preflight. |
 
 ## Browser Rules
 
-WebGPT/ChatGPT browser workflows have moved out of `$ask` to `$webgpt`.
+Direct WebGPT/ChatGPT browser oracle workflows have moved out of `$ask ask`.
 `$ask webgpt`, `$ask chatgpt`, `--oracle-backend webgpt`, `--webgpt-*`, and
-`webgpt-project` must fail closed; do not recreate or route those flows through
-ask.
+`webgpt-project` must fail closed.
+
+Do not confuse that direct-oracle restriction with Tau roundtable handlers:
+`webgpt`, `webclaude`, `webkimi`, and `webgemini` are supported as peer Tau
+browser handlers through `$surf`/`$browser-oracle` command specs.
 
 - A browser tab cannot inspect bare local paths unless the runtime attaches file
   contents or serves an artifact URL. Include readable target content in the
@@ -160,7 +256,8 @@ ask.
   or cannot be proven to match the requested reviewer, stop with
   `NEEDS_ATTENTION`.
 - Do not use raw `surf` as a substitute for `$ask`; use it only for transport
-  debugging or when an ask reference explicitly routes there.
+  debugging, direct project-level WebGPT workflows, or Tau command specs emitted
+  by `./run.sh tau-dag`.
 - Browser review output is reviewer evidence. It still must be reconciled
   against repository state and deterministic local checks before closure.
 
@@ -174,8 +271,6 @@ Load only the reference needed for the selected mode:
 - CAE gap review: `docs/ASK_CAE_GAP_REVIEW_CONTRACT.md`
 - SPARTA preflight: `docs/ASK_SPARTA_PREFLIGHT_CONTRACT.md`
 - Human chat examples: `docs/HUMAN_CHAT_EXAMPLES.md`
-- Legacy WebGPT reliability notes: `docs/WEBGPT_EXECUTION_RELIABILITY.md`
-  (deprecated; do not use for `/ask` routing)
 - Project knowledge: `docs/PROJECT_KNOWLEDGE.md`
 - Review chains: `docs/chains/`
 - Reviewer definitions: `docs/reviewers/`
@@ -190,25 +285,24 @@ When a reference file is selected, read it completely before running that mode.
 ./run.sh doctor --json
 ./run.sh ask "What do we know about this project?" --scope ask --json
 ./run.sh ask "Review this target" --deep-review --deep-review-target path/to/file --json
+./run.sh tau-dag "Ask webclaude to answer this prompt" --repo local/ask --target single-webclaude --handler webclaude --json
+./run.sh tau-dag "Roundtable webclaude, webkimi, webgemini, and webgpt concurrently, then join" --repo local/ask --target roundtable-web --handler webclaude --handler webkimi --handler webgemini --handler webgpt --handler-project webgpt=tau --topology concurrent --json
 ./run.sh tau-dag "Solve X with two GPT 5.6 xhigh solvers, then Claude Fable reviews" --repo local/tau --target issue-123 --solver-model gpt-5.6-xhigh --solver-model gpt-5.6-xhigh --reviewer-model claude-fable --criterion correctness --criterion maintainability --json
 ./run.sh tau-dag "Solve X" --repo local/tau --target issue-123 --solver-model gpt-5.6-xhigh --solver-model gpt-5.6-xhigh --reviewer-model claude-fable --criterion correctness --criterion maintainability --execute --local-fixture --viewer-link --json
 ./run.sh status --run <ask_id> --json
 ```
-
-For real provider execution, add `--allow-provider-calls --require-provider-calls`
-and omit `--local-fixture`. `run.sh` preserves an explicit `SCILLM_API_KEY`;
-otherwise it reads only `SCILLM_MASTER_KEY` from
-`${SCILLM_ENV_FILE}` or `${SCILLM_ROOT}/.env` (default:
-`~/workspace/experiments/scillm/.env`). `--scillm-api-key` is the final explicit
-CLI override. Legacy `SCILLM_PROXY_KEY` remains the fallback when no local stack
-environment file exists. A provider-required run stops before Tau execution
-when this credential cannot authenticate.
 
 Opt-in live sanity checks are intentionally outside the default test suite:
 
 ```bash
 uv run python scripts/live_sanity_report.py --plan-only --profile smoke
 uv run python scripts/live_sanity_report.py --allow-live --profile smoke
+uv run python scripts/webclaude_sanity_eval.py --plan-only
+uv run python scripts/webclaude_sanity_eval.py --allow-live --project webclaude
+uv run python scripts/webkimi_sanity_eval.py --plan-only
+uv run python scripts/webkimi_sanity_eval.py --allow-live --project webkimi
+uv run python scripts/tau_roundtable_sanity_eval.py --plan-only
+uv run python scripts/tau_roundtable_sanity_eval.py --allow-live --output-root /tmp/ask-roundtable-live --timeout-seconds 1800 --json
 uv run python scripts/dag_negative_sanity.py
 uv run python scripts/dag_e2e_sanity.py
 uv run python scripts/tau_dag_e2e_sanity.py --json
