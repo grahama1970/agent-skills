@@ -58,10 +58,17 @@ ebf05ef11  fix pytest collection + stale child_tau_dag assertions
 ```
 
 ## 5. Open / not done
-- **`#battle/receipt` vs `#battle/live` not unified.** Streaming console + real codenames
-  are on `#battle/live` only; `#battle/receipt` shows static Docker-replay/lifecycle
-  evidence + generic lane names. (PRIOR-CLAIM: `#battle/live` streaming works — NOT
-  re-verified this session.)
+- **`#battle/live` is NOT a route (VERIFIED 2026-07-20).** Loading
+  `#battle/live?engine=pixi&battle=battle-004` renders the **Sparta Explorer** dashboard,
+  not battle (0 `battle:*` qids). The router only matches `#battle`, `#battle/isolation`,
+  `#battle/receipt` (`battle-mockup-lanes.ts` / `battle-receipt-replay.ts`). The prior
+  handoff's `#battle/live` reproduce command is stale. The "Live" streaming the prior agent
+  described is an `AgentDetailPane` `stdout latest`/`stderr latest` panel + a "LIVE PROOF"
+  badge (summary tab), NOT a separate streaming route. Whether that panel consumes the live
+  SSE bus (vs the static derived fixture) is UNVERIFIED.
+- **`#battle/receipt` shows generic lane names + static evidence.** Race view uses
+  "RED G1 PARENT" etc. and a static Docker-replay/lifecycle evidence pane; not unified with
+  live streaming or fun codenames. (VERIFIED 2026-07-20 render.)
 - **Ephemeral SSE server** — background process, dies on reboot; restart via §6.
 - **Tau recognizer fix** (importlib/spec_from_file_location robustness for method_replace
   mutations) lives only on worktree branch `tau-adaptive-mechanics` + GitHub issue
