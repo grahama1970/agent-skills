@@ -15,7 +15,9 @@ A single canonical Battle demonstrates end to end that adaptive lineage works:
 the backend emits a **live, non-mocked** four-specimen qualification receipt, and
 the **finished** spectator renders that exact receipt — proper PixiJS sprites,
 honest `LIVE` badge, and the real selection decision — at
-`http://localhost:3002/#battle`.
+the agent-skills Battle receipt host. For the 2026-07-20 recovery this is
+`http://127.0.0.1:3003/#battle/receipt?engine=pixi` because `:3002` was held by
+a stale uninterruptible Vite child and was not the accepted host.
 
 ## Canonical Subject Lock
 
@@ -95,14 +97,14 @@ Normalize the passing run into the UX fixture with a truthful source tag:
 ## UX Acceptance (finished interface)
 
 The interface is "finished" only when all of the following are true in a live
-browser at `http://localhost:3002/#battle`:
+browser at the active Battle receipt host. For the current recovery, use
+`http://127.0.0.1:3003/#battle/receipt?engine=pixi`:
 
-- **Deployment aligned.** `:3002` serves the **current** spectator source
-  (contains `spectator/src/lib/battle-adaptive-lineage.ts` and the current
-  `BattleLineageComparisonPanel.tsx`). The host resolves
-  `@agent-skills/battle-spectator` via
-  `/mnt/storage12tb/deployments/agent-skills/current`; that release must be
-  re-cut so `current` points at a build containing this goal's code. A frozen
+- **Deployment aligned.** The served host must identify the current
+  agent-skills Battle spectator source. For the 2026-07-20 recovery,
+  `curl http://127.0.0.1:3003/__host.json` must return
+  `host: agent-skills battle spectator` and entry
+  `skills/battle/spectator/src/main.tsx`. A pi-mono UX Lab route or frozen
   older release is a failure.
 - **Panel reachable and complete.** The adaptive-lineage view renders the four
   specimens `G0 -> {G1-A, G1-B} -> G2` with, per node: operator, changed AST
@@ -181,36 +183,39 @@ Three artifacts, all required, none optional:
    artifact that closes the "looks unfinished" gap; deterministic tests alone do
    not satisfy it.
 
-## Completion Criteria — MET (evidence per line)
+## Completion Criteria — Current Recovery Evidence (2026-07-20)
 
-- [x] Adaptive backend and Tau recognizer fix **committed** — `origin/main`
-      `9ac0b5438` (battle-only commits); Tau fix committed on
-      `tau-adaptive-mechanics`.
-- [x] `arena-adaptive-lineage-qualification battle-004` PASS, 11/11,
-      `mocked:false`, `live:true` — fresh durable receipt at
-      `local/adaptive-live-proof-1784396246/` (all 4 stages live, ≥4 distinct hashes).
-- [x] `adaptive-lineage-live.json` normalized `data_source:"live"` (validator PASS).
-- [x] `current` re-cut to release `995ea0ad8` containing this code; `:3002` HTTP 200
-      serving it (verified via `@fs` + live render).
-- [x] `#battle/receipt` renders G0 -> {G1-A, G1-B} -> G2 with operators, AST deltas,
-      novelty, selection row — verified live, no false gaps.
-- [x] Badge = `LIVE` (`data-proves-live=true`, `data-data-source=live`) — verified live.
-- [x] `plague_nurgling` mandatory floor: enabled, G0 seed, renders; proof frame in
-      `working-sprite-proof/`.
-- [x] Four distinct sprites (nurgling / crimson_chainsaw_demon / slug_demon / typhus),
-      each ACCEPTED by the `/sprite-atlas` + `/tau` sprite-reviewer loop (which
-      REJECTED crimson_hornbreaker + skull_horn); receipt-backed map, unit-tested.
-- [x] Parent->child connectors from the emitting parent — `EdgeRow` renders
-      `G0->G1-A`, `G0->G1-B`, `G1-A->G2` (G2 from its selected parent G1-A, not the
-      left edge); lineage-flow harness shows parent->child spawn connectors.
-- [x] Live-browser screenshot attached — `working-sprite-proof/LIVE-battle-adaptive-lineage-proof.jpg`.
-- [x] `data-qid` anchors present — badge / selected / runner-up.
-- [x] Backend adaptive suite (green), spectator suite (**191 pass**), pixi sprite
-      test (green); typecheck clean. (Note: 2 pre-existing `tests/` failures —
-      `child_tau_dag_private_boundary`, `proof_card_fixture_contract` — fail on the
-      merge-base and are unrelated to this goal.)
+- [x] Fresh live backend receipt:
+      `skills/battle/local/adaptive-lineage-relive-20260720T144034Z/adaptive-lineage-qualification.json`
+      reports `status: PASS`, `run_id: arena-adaptive-lineage-20260720T144034Z`,
+      `battle_id: battle-004`, 4 primary SciLLM calls, 4 HTTP completions,
+      4 red specimens, no budget overrun, and G2 Judge completion.
+- [x] Live fixture normalized with `data_source:"live"` and descriptive exploit
+      names in `skills/battle/spectator/src/lineage/__fixtures__/adaptive-lineage-live.json`:
+      `G0 Seed Slip`, `G1-A Module Slip`, `G1-B Arc Courier`, `G2 ZipInfo Path`.
+- [x] Agent-skills host proof:
+      `skills/battle/local/agent-skills-host-verify-20260720T1646Z/http-host-proof.json`
+      identifies `host: agent-skills battle spectator` and entry
+      `skills/battle/spectator/src/main.tsx`.
+- [x] Live-browser render proof:
+      `skills/battle/local/agent-skills-host-verify-20260720T1646Z/surf-assertions.json`
+      targets `http://127.0.0.1:3003/#battle/receipt?engine=pixi`, has
+      `mocked:false`, `live:true`, screenshot bytes `254726`, contains
+      `ADAPTIVE LINEAGE`, `LIVE: Qual PASS`, all four exploit names, and
+      `G1-A Module Slip · selected G1`, and excludes Sparta/error markers.
+- [x] WebGPT UX sign-off:
+      `skills/battle/local/webgpt-design-review-20260720T1742Z/response.md`
+      starts with `ACCEPTED`; `response.raw.md` contains terminal sentinel
+      `<<<WEBGPT_DONE:20260720T174108Z:099a3588>>>`; `response.meta.json`
+      has `response_proof_status: response_proven`, `raw_contains_sentinel:true`,
+      `controlled_tab_id == requested_tab_id`, and no clean-output
+      contamination markers. Caveat: Surf reports `proof_status: degraded_focus`
+      because focus changed after submission; this is degraded transport evidence,
+      not clean background-mode proof.
 
-**GOAL STATUS: MET** — 2026-07-18, verified end to end.
+**GOAL STATUS: CURRENT RECOVERY EVIDENCE ASSEMBLED** — 2026-07-20. Final closure
+still requires the relevant artifacts to be committed, pushed, and remote-ref
+verified.
 
 ## Allowed Scope
 

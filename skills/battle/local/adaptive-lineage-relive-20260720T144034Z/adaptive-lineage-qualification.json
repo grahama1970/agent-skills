@@ -1,0 +1,180 @@
+{
+  "battle_id": "battle-004",
+  "budget": {
+    "blue_artifacts": 1,
+    "descendant_generations": 2,
+    "elapsed_seconds": 5.039807,
+    "fixed_blue_artifacts": 1,
+    "g1_regen_attempts": 0,
+    "g2_judge_complete": true,
+    "http_completions": 4,
+    "max_descendant_generations": 2,
+    "max_g1_regen_attempts": 2,
+    "max_http_completions": 8,
+    "max_primary_scillm_calls": 6,
+    "max_red_specimens": 4,
+    "max_seconds": 1200.0,
+    "overrun": false,
+    "overrun_reasons": [],
+    "policy_id": "battle-adaptive-lineage-qualification-v1",
+    "primary_scillm_calls": 4,
+    "red_specimens": 4,
+    "schema": "battle.adaptive_lineage_budget.v1"
+  },
+  "checks": [
+    {
+      "condition": "red_3_present",
+      "detail": "no red-3 / extra specimens",
+      "ok": true
+    },
+    {
+      "condition": "specimen_count_not_four",
+      "detail": "specimens present: ['G0', 'G1-A', 'G1-B', 'G2']",
+      "ok": true
+    },
+    {
+      "condition": "invalid_mutation_contract",
+      "detail": "all descendant mutation contracts valid",
+      "ok": true
+    },
+    {
+      "condition": "duplicate_g1_signature",
+      "detail": "G1-A and G1-B signatures differ",
+      "ok": true
+    },
+    {
+      "condition": "g1_delta_validation_failed",
+      "detail": "both G1 delta validations passed",
+      "ok": true
+    },
+    {
+      "condition": "both_g1_failed_vulnerable_original",
+      "detail": "at least one G1 confirmed the vulnerable original",
+      "ok": true
+    },
+    {
+      "condition": "selection_receipt_missing",
+      "detail": "selection receipt present and bound to both G1 receipts",
+      "ok": true
+    },
+    {
+      "condition": "g2_bindings_missing",
+      "detail": "G2 bound to selected-G1 evidence, both G1 outcomes, and selection receipt",
+      "ok": true
+    },
+    {
+      "condition": "g2_judge_attempt_count_invalid",
+      "detail": "exactly one G2 Judge attempt ran",
+      "ok": true
+    },
+    {
+      "condition": "g2_reproduced_rejected_signature",
+      "detail": "G2 signature differs from the rejected G1 signature",
+      "ok": true
+    },
+    {
+      "condition": "budget_overrun",
+      "detail": "budget within envelope",
+      "ok": true
+    }
+  ],
+  "g2_outcome": {
+    "duration_seconds": 1.285213,
+    "judge_attempts": 1,
+    "patched_bypass": false,
+    "technique_signature": {
+      "dimensions": {
+        "app_load_mode": "from_import_app",
+        "archive_entry_construction": "zipinfo",
+        "exception_handling": "try[Exception:handle|Exception:return|OSError:return]",
+        "success_oracle": "file_existence+file_read_back",
+        "target_call_form": "function_call",
+        "traversal_representation": "dotdot_relative"
+      },
+      "parse_ok": true,
+      "policy_id": "battle-technique-signature-ast-v1",
+      "schema": "battle.technique_signature.v1",
+      "sha256": "45fea0a3d1bb1fcaad32ca8f77a808cb7ae5b61ea7a68928754c2bd8d21b3b8b"
+    },
+    "vulnerable_original_confirmed": true
+  },
+  "policy_id": "battle-adaptive-lineage-qualification-v1",
+  "reasons": [],
+  "run_id": "arena-adaptive-lineage-20260720T144034Z",
+  "runner_up_id": "G1-B",
+  "schema": "battle.adaptive_lineage_qualification.v1",
+  "selected_id": "G1-A",
+  "selection_receipt": {
+    "battle_id": "battle-004",
+    "bound_g1_ids": [
+      "G1-A",
+      "G1-B"
+    ],
+    "candidate_ids": [
+      "G1-A",
+      "G1-B"
+    ],
+    "created_at": "2026-07-20T14:42:08Z",
+    "deciding_criterion": "novelty_distance",
+    "policy_id": "battle-adaptive-lineage-qualification-v1",
+    "requires_both_g1_fitness": true,
+    "run_id": "arena-adaptive-lineage-20260720T144034Z",
+    "runner_up_id": "G1-B",
+    "runner_up_metrics": {
+      "duration_seconds": 1.260919,
+      "novelty_distance": 1,
+      "patched_bypass": false,
+      "specimen_id": "G1-B",
+      "vulnerable_original_confirmed": true
+    },
+    "schema": "battle.lineage_selection_receipt.v1",
+    "selected_id": "G1-A",
+    "selected_metrics": {
+      "duration_seconds": 1.195406,
+      "novelty_distance": 2,
+      "patched_bypass": false,
+      "specimen_id": "G1-A",
+      "vulnerable_original_confirmed": true
+    },
+    "selection_trace": [
+      {
+        "a_id": "G1-A",
+        "a_value": 1,
+        "b_id": "G1-B",
+        "b_value": 1,
+        "criterion": "vulnerable_original_confirmed",
+        "decisive": false,
+        "direction": "higher",
+        "winner": null
+      },
+      {
+        "a_id": "G1-A",
+        "a_value": 0,
+        "b_id": "G1-B",
+        "b_value": 0,
+        "criterion": "patched_bypass",
+        "decisive": false,
+        "direction": "higher",
+        "winner": null
+      },
+      {
+        "a_id": "G1-A",
+        "a_value": 2,
+        "b_id": "G1-B",
+        "b_value": 1,
+        "criterion": "novelty_distance",
+        "decisive": true,
+        "direction": "higher",
+        "winner": "G1-A"
+      }
+    ]
+  },
+  "specimen_ids": [
+    "G0",
+    "G1-A",
+    "G1-B",
+    "G2"
+  ],
+  "status": "PASS",
+  "stop_condition": null
+}

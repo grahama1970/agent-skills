@@ -1,0 +1,62 @@
+{
+  "url": "http://127.0.0.1:3003/#battle/receipt?engine=pixi",
+  "title": "Battle Spectator",
+  "hasCanvas": false,
+  "textBytes": 5337,
+  "screenshot": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/agent-skills-host-verify-20260720T1748Z/surf-receipt-agent-skills-3003-current.png",
+  "mocked": false,
+  "live": true,
+  "assertions": [
+    {
+      "needle": "ADAPTIVE LINEAGE",
+      "present": true
+    },
+    {
+      "needle": "LIVE: Qual PASS",
+      "present": true
+    },
+    {
+      "needle": "G0 Seed Slip",
+      "present": true
+    },
+    {
+      "needle": "G1-A Module Slip",
+      "present": true
+    },
+    {
+      "needle": "G1-B Arc Courier",
+      "present": true
+    },
+    {
+      "needle": "G2 ZipInfo Path",
+      "present": true
+    },
+    {
+      "needle": "G1-A Module Slip \u00b7 selected G1",
+      "present": true
+    }
+  ],
+  "forbidden": [
+    {
+      "needle": "SPARTA EXPLORER",
+      "present": false
+    },
+    {
+      "needle": "Sparta Explorer",
+      "present": false
+    },
+    {
+      "needle": "Battle spectator render blocked",
+      "present": false
+    },
+    {
+      "needle": "ERR_CONNECTION_REFUSED",
+      "present": false
+    },
+    {
+      "needle": "This site can\u2019t be reached",
+      "present": false
+    }
+  ],
+  "textExcerpt": "ADAPTIVE REPLAY\nDESIGN\nPROOFS & STAGES\nADAPTIVE LINEAGE\nLIVE: Qual PASS\nG1-A\n/\nG1-B\n\u00b7 novelty_distance\n\u25b8\nSHOW\nBATTLE-004\n/\nPOST /api/import-zip\nCWE-22\n/\nZip Slip path traversal\n/\nTARGET: Fastest Proven Crash\nLIVE EVENTS\n07:00:00 PM\nAdaptive lineage \u2014 G1-A MODULE SLIP: GENOME SELECTED\n07:00:00 PM\nAdaptive lineage \u2014 G1-B ARC COURIER: GENOME SELECTED\n07:00:00 PM\nAdaptive lineage \u2014 G2 ZIPINFO PATH: GENOME SELECTED\n\u00ab\nAGENTS\n4\nG0 Seed Slip\nSeed Slip \u00b7 seed\nG0\nG1-A Module Slip\nModule Slip \u00b7 selected G1 \u00b7 method_replace\nG1 \u00b7 selected\nG1-B Arc Courier\nArc Courier \u00b7 runner-up G1 \u00b7 oracle_or_parameter_mutation\nG1 \u00b7 runner-up\nG2 ZipInfo Path\nZipInfo Path \u00b7 descendant \u00b7 failure_guided_crossover\nG2\nTEAM STANDINGS\nRed Team\nExploit agents\n\u2014\nBlue Team\nPatch agents\n\u2014\nAGENT STATUS\nRUNNING\n4\nBLOCKED\n0\nKILLED\n0\nUSEFUL\n3\nPROMOTED\n0\nFASTEST CRASH\n0\nEVOLUTION & PROGRESS GRAPH\n100%\nPLAYHEAD 02:14\nRESUME FOLLOW\n00:00\n00:26\n00:53\n01:20\n01:47\n02:14\nG0 Seed Slip\nG0\nGEN 0\nACTIVE\nG1-A Module Slip\nG1-A\nGEN 1\nACTIVE\nG1-B Arc Courier\nG1-B\nGEN 1\nACTIVE\nG2 ZipInfo Path\nG2\nGEN 2\nACTIVE\n\u00bb\nAGENT DETAIL\nSelected agent cockpit\nRECEIPT-BACKED FIXTURE\nG1-A Module Slip\nGen 1 \u00b7 G1-A\nG1-A\nADAPTIVE QUALIFICATION\nPASS\nG1-A Module Slip \u00b7 selected G1\nRECEIPT-BACKED FIXTURE\nJUDGEvulnerable original confirmed \u00b7 no patched bypass\nBASISReplaced direct from-import loading of import_zip with importlib.import_module plus getattr while preserving archive construction, traversal entry, call semantics, exception handling, and filesystem oracle.\nLIFECYCLE EVIDENCE\nSHOW\nSummary\nLive\nTurns\nLogs\nSkills\nReceipts\nCURRENT LOOP \u00b7 #0\nG1-A Module Slip fitness PASS \u00b7 vulnerable original confirmed\njudge replay\nJUDGE.VERDICT\nPUBLIC TRACE\nOBSERVATION\nG2 ZipInfo Path derived from G1-A\nHYPOTHESIS\nnot emitted\nACTION\nChanged app loading from importlib/getattr to direct from-import, changed archive construction from writestr to ZipInfo plus zf.open member write, changed target call to pass Path objects, and strengthened the oracle with escaped file content plus returned-path resolution.\nRESULT\nPASS\nLEARNED\napp_load_mode, archive_entry_construction, target_call_form, exception_handling\nNEXT MOVE\nnot emitted\nSTDOUT LATEST\nG1-A Module Slip: fitness PASS; run=arena-adaptive-lineage-20260720T144034Z; novelty=2; judge_duration=1.195406s; vulnerable_original_confirmed=true; patched_bypass=false\nSTDERR LATEST\nnot emitted\nSKILLS / TOOLS USED\nno"
+}

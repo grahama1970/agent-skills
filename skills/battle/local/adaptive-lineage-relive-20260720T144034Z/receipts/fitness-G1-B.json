@@ -1,0 +1,103 @@
+{
+  "battle_id": "battle-004",
+  "delta_status": "PASS",
+  "delta_validation": {
+    "battle_id": "battle-004",
+    "changed_dimensions": [
+      "archive_entry_construction"
+    ],
+    "child_sha256": "efd7c13b4beac3bb7a414f8665afc866534989c91f89d131fa66abe0166859f3",
+    "claimed_mutation_operator": "oracle_or_parameter_mutation",
+    "novelty_distance": 1,
+    "operator_consistent": true,
+    "operator_in_vocabulary": true,
+    "parent_sha256": "f987e15fac7d2eff2a3f7b9c04bb157efd670cd00ba0250f69e818d7a865f036",
+    "per_dimension": [
+      {
+        "changed": false,
+        "child": "from_import_app",
+        "dimension": "app_load_mode",
+        "parent": "from_import_app"
+      },
+      {
+        "changed": true,
+        "child": "zipfile_write_arcname",
+        "dimension": "archive_entry_construction",
+        "parent": "zipfile_writestr"
+      },
+      {
+        "changed": false,
+        "child": "dotdot_relative",
+        "dimension": "traversal_representation",
+        "parent": "dotdot_relative"
+      },
+      {
+        "changed": false,
+        "child": "function_call",
+        "dimension": "target_call_form",
+        "parent": "function_call"
+      },
+      {
+        "changed": false,
+        "child": "file_existence+file_read_back",
+        "dimension": "success_oracle",
+        "parent": "file_existence+file_read_back"
+      },
+      {
+        "changed": false,
+        "child": "try[Exception:return]",
+        "dimension": "exception_handling",
+        "parent": "try[Exception:return]"
+      }
+    ],
+    "policy_id": "battle-technique-signature-ast-v1",
+    "reasons": [
+      "all changed dimensions are allowed for operator 'oracle_or_parameter_mutation'"
+    ],
+    "run_id": "arena-adaptive-lineage-20260720T144034Z",
+    "schema": "battle.technique_delta_validation.v1",
+    "sha256_differ": true,
+    "status": "PASS",
+    "unchanged_dimensions": [
+      "app_load_mode",
+      "traversal_representation",
+      "target_call_form",
+      "success_oracle",
+      "exception_handling"
+    ]
+  },
+  "judge_outcome": {
+    "duration_seconds": 1.260919,
+    "patched_bypass": false,
+    "vulnerable_original_confirmed": true
+  },
+  "mutation_operator": "oracle_or_parameter_mutation",
+  "novelty_distance": 1,
+  "parent_evidence_packet_ref": "arena-adaptive-lineage-20260720T144034Z:battle.parent_evidence_packet.v1:G0",
+  "parent_sha256": "f987e15fac7d2eff2a3f7b9c04bb157efd670cd00ba0250f69e818d7a865f036",
+  "parent_specimen_id": "G0",
+  "policy_id": "battle-adaptive-lineage-qualification-v1",
+  "reasons": [],
+  "recorded_source_sha256": "efd7c13b4beac3bb7a414f8665afc866534989c91f89d131fa66abe0166859f3",
+  "run_id": "arena-adaptive-lineage-20260720T144034Z",
+  "schema": "battle.candidate_fitness_receipt.v1",
+  "source_sha256": "efd7c13b4beac3bb7a414f8665afc866534989c91f89d131fa66abe0166859f3",
+  "source_sha256_matches": true,
+  "specimen_id": "G1-B",
+  "status": "PASS",
+  "technique_delta": "Changed malicious archive entry construction from ZipFile.writestr('../arena_escape.txt', payload) to writing a real temporary file with ZipFile.write(..., arcname='../arena_escape.txt'); app import mode, target call form, and oracle remain otherwise the same.",
+  "technique_signature": {
+    "dimensions": {
+      "app_load_mode": "from_import_app",
+      "archive_entry_construction": "zipfile_write_arcname",
+      "exception_handling": "try[Exception:return]",
+      "success_oracle": "file_existence+file_read_back",
+      "target_call_form": "function_call",
+      "traversal_representation": "dotdot_relative"
+    },
+    "parse_ok": true,
+    "policy_id": "battle-technique-signature-ast-v1",
+    "schema": "battle.technique_signature.v1",
+    "sha256": "efd7c13b4beac3bb7a414f8665afc866534989c91f89d131fa66abe0166859f3"
+  }
+}

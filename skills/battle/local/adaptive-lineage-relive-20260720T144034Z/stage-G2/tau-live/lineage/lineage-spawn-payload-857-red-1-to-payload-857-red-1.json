@@ -1,0 +1,29 @@
+{
+  "battle_id": "battle-004",
+  "child_lane_id": "payload-857-red-1",
+  "child_payload_id": "payload-857-red-1",
+  "child_subagent_receipt": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-lineage-relive-20260720T144034Z/stage-G2/tau-live/red/workers/red-1/tau-subagent-receipt.json",
+  "child_tau_subagent_id": "red-1",
+  "child_worker_id": "red-1",
+  "generation": 2,
+  "goal": "Materialize one receipt-backed Red child from the parent decision.",
+  "inherited_context": [
+    "parent_worker=red-1",
+    "parent_lane=payload-857-red-1",
+    "ZIP_SLIP_CONFIRMED"
+  ],
+  "inherited_evidence_refs": [],
+  "leased_task": "Continue the authorized Zip Slip proof using inherited receipt-backed parent evidence.",
+  "parent_lane_id": "payload-857-red-1",
+  "parent_subagent_receipt": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-lineage-relive-20260720T144034Z/stage-G1-A/tau-live/red/workers/red-1/tau-subagent-receipt.json",
+  "parent_tau_subagent_id": "red-1",
+  "parent_worker_id": "red-1",
+  "pressure_receipt_id": null,
+  "receipt_id": "lineage-spawn-payload-857-red-1-to-payload-857-red-1",
+  "receipt_path": "lineage/lineage-spawn-payload-857-red-1-to-payload-857-red-1.json",
+  "run_id": "arena-adaptive-lineage-20260720T144034Z",
+  "schema": "battle.lineage_spawn_receipt.v1",
+  "spawn_decision_receipt_id": null,
+  "spawn_type": "post_block_handoff",
+  "status": "PASS"
+}

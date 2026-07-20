@@ -1,0 +1,21 @@
+{
+  "artifact_bytes": 2590,
+  "artifact_sha256": "45fea0a3d1bb1fcaad32ca8f77a808cb7ae5b61ea7a68928754c2bd8d21b3b8b",
+  "artifact_type": "red_exploit",
+  "mutation_operator": "failure_guided_crossover",
+  "parsed_keys": [
+    "artifact_type",
+    "exploit_py",
+    "mutation_operator",
+    "rationale",
+    "strategy_genome",
+    "technique_delta"
+  ],
+  "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-lineage-relive-20260720T144034Z/stage-G2/tau-live/red/workers/red-1/red_exploit_submission.py",
+  "rationale": "Calls the public import_zip directly with a crafted ZIP member named ../arena_escape.txt and confirms the vulnerable extractor writes the payload outside the destination directory.",
+  "schema": "tau.battle_materialized_artifact_receipt.v1",
+  "scillm_call_receipt_sha256": "51dfddae6378f695ebc19fa1d761d2f9cd9e373452be044c6c0b194285f1a6fa",
+  "status": "PASS",
+  "strategy_genome_sha256": "8c69096425f0c0e3c9ad465253fb0df830c42088e91ea7f2a1a2778a59a3413d",
+  "technique_delta": "Changed app loading from importlib/getattr to direct from-import, changed archive construction from writestr to ZipInfo plus zf.open member write, changed target call to pass Path objects, and strengthened the oracle with escaped file content plus returned-path resolution."
+}

@@ -1,0 +1,17 @@
+{
+  "schema": "surf.webgpt_submit_receipt.v1",
+  "status": "submitted_to_chatgpt",
+  "submitted_to_chatgpt": true,
+  "prepared_prompt_is_transport_proof": false,
+  "input": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/webgpt-transport-sanity-foreground-20260720T172833Z/request.md",
+  "submitted_output": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/webgpt-transport-sanity-foreground-20260720T172833Z/response.submitted.md",
+  "output": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/webgpt-transport-sanity-foreground-20260720T172833Z/response.md",
+  "raw_output": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/webgpt-transport-sanity-foreground-20260720T172833Z/response.raw.md",
+  "meta_output": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/webgpt-transport-sanity-foreground-20260720T172833Z/response.meta.json",
+  "sentinel": "<<<WEBGPT_DONE:20260720T172847Z:173a8da6>>>",
+  "requested_tab_id": "837359775",
+  "requested_url": null,
+  "requested_model": null,
+  "requested_reasoning": "Pro",
+  "receipt_at": "2026-07-20T17:28:50Z"
+}

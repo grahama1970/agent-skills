@@ -1,0 +1,39 @@
+{
+  "api_key_present": true,
+  "api_key_resolution_errors": [],
+  "api_key_source": "docker:docker-scillm-proxy-1:SCILLM_MASTER_KEY",
+  "auth_body": {
+    "claude": {
+      "expires_in_s": 0,
+      "rate_tier": "default_claude_max_20x",
+      "source": "/root/.claude/.credentials.json",
+      "status": "expired",
+      "subscription": "max"
+    },
+    "codex": {
+      "account_id": "d78b6ed9-e2a...",
+      "expires_in_s": 254215,
+      "last_refresh": "2026-07-13T13:18:44.047809742Z",
+      "refresh_available": true,
+      "source": "/root/.codex/auth.json",
+      "status": "valid"
+    },
+    "timestamp": 1784558508567
+  },
+  "base_url": "http://localhost:4001",
+  "caller_skill": "battle",
+  "duration_seconds": 0.022252,
+  "endpoint": "/v1/scillm/auth",
+  "errors": [],
+  "live": true,
+  "mocked": false,
+  "model": "gpt-5.5",
+  "ok": true,
+  "repair_allowed": true,
+  "repair_attempted": false,
+  "repair_status": "not_requested",
+  "schema": "tau.battle_scillm_auth_preflight.v1",
+  "status": "PASS",
+  "status_code": 200,
+  "surface": "scillm.chat_completions"
+}

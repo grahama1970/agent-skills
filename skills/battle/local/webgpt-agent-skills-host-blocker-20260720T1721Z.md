@@ -4,6 +4,11 @@
 **Scope**: WebGPT UX acceptance for the agent-skills-hosted Battle receipt at
 `http://127.0.0.1:3003/#battle/receipt?engine=pixi`.
 
+**Resolution update (2026-07-20T17:42Z)**: the blocker was cleared after a Surf
+native-host restart plus a foreground text-only sanity check. The accepted
+review is recorded at
+`skills/battle/local/webgpt-agent-skills-host-accepted-20260720T1742Z.md`.
+
 ## Proven Local State
 
 - `curl http://127.0.0.1:3003/__host.json` returned:
@@ -62,25 +67,52 @@
    - Read-only tab inspection showed `Stop answering` still visible and no
      sentinel-bearing assistant response.
 
+5. Foreground focused repair check:
+   `skills/battle/local/webgpt-transport-sanity-foreground-20260720T172833Z/`
+   - Request: text-only prompt, no attachment.
+   - Status: `submitted_to_chatgpt:true`, requested tab `837359775`.
+   - Heartbeat: `phase: failed`, `page_state: stalled`, timeout remaining `0`.
+   - Failure signature: foreground visible ChatGPT tab still stalled with no
+     sentinel-bearing response before Surf host restart.
+
+6. Post-restart focused repair check:
+   `skills/battle/local/webgpt-transport-sanity-post-restart-20260720T1741Z/`
+   - Request: text-only prompt, no attachment.
+   - Status: `completed`, `proof_status: response_proven`,
+     `raw_contains_sentinel:true`, `focus_changed:false`.
+   - This proved WebGPT response generation had recovered.
+
+7. Accepted Battle review:
+   `skills/battle/local/webgpt-design-review-20260720T1742Z/`
+   - Request: screenshot attachment plus inline local proof summary.
+   - Response: starts with `ACCEPTED`.
+   - Transport: `response_proof_status: response_proven`,
+     `raw_contains_sentinel:true`, `controlled_tab_id` equals
+     `requested_tab_id`.
+   - Caveat: `proof_status: degraded_focus` because focus changed after
+     submission; clean output is uncontaminated and raw output contains the
+     sentinel.
+
 ## Campaign Status
 
 - `passed`: local backend receipt and local browser render proof.
-- `failed`: WebGPT transport delivery for the agent-skills-host review.
-- `blocked_by_systemic_failure`: further same-family Surf submits to new
-  ChatGPT tabs until ChatGPT response generation recovers.
-- `not_run`: final WebGPT acceptance for the agent-skills-hosted receipt.
+- `failed`: earlier WebGPT transport delivery attempts before Surf host restart.
+- `blocked_by_systemic_failure`: no longer active after the post-restart
+  text-only sanity reached `proof_status: response_proven`.
+- `not_run`: none for the WebGPT review gate.
 - `active_family`: Surf `webgpt.submit` prompt delivery to ChatGPT.
 - `latest_failure_signature`: `submitted_to_chatgpt:false`,
   `status: prepared_prompt`, prompt remains in composer, send disabled or not
   accepted for attachment-backed prompts; text-only prompt reaches
   `submitted_to_chatgpt:true` but stalls with `Stop answering` and no sentinel.
+  Latest successful signature: accepted Battle review returned raw sentinel and
+  clean `ACCEPTED` response, with degraded focus only.
 
 ## Next Focused Repair Check
 
-Do not rerun the broad WebGPT review first. First recover or wait out the
-currently stalled ChatGPT response path, then run a tiny Surf text-only
-`webgpt.submit` sentinel check in a fresh tab. Only after a text-only prompt
-reaches `proof_status: response_proven` should the Battle review be retried.
+The focused repair check passed after Surf host restart. The Battle review was
+retried and accepted. Future reruns should still start with a text-only sanity
+if ChatGPT begins stalling again.
 
 This is not a Battle receipt regression. It is a WebGPT transport delivery
 blocker after local Battle evidence already rendered from the agent-skills host.

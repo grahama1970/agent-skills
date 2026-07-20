@@ -1,0 +1,77 @@
+{
+  "artifacts": {
+    "team_public_brief": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-lineage-relive-20260720T144034Z/arena/team-public/scenario-brief.json",
+    "team_public_target": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-lineage-relive-20260720T144034Z/arena/team-public/target/app.py"
+  },
+  "battle.parent_evidence_packet.v1": {
+    "descendant_mutation_operator": "method_replace",
+    "descendant_stage": "G1-A",
+    "operator_guidance": "MUTATION OPERATOR method_replace: make a STRUCTURAL change to HOW app.py is loaded (the app_load_mode dimension). Concretely, if the parent uses `from app import import_zip`, instead load the module dynamically, e.g. `import importlib; module = importlib.import_module('app'); import_zip = getattr(module, 'import_zip')`, OR `spec = importlib.util.spec_from_file_location('app', 'app.py'); module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)`. Keep the archive construction, traversal path, and success oracle IDENTICAL to the parent. Do NOT merely wrap the call in a helper function or rename variables \u2014 that is NOT a method replacement and will be rejected. Allowed dimensions: app_load_mode, target_call_form. Keep EVERY OTHER technique dimension BYTE-IDENTICAL to the parent \u2014 changing any one of these makes the declared operator inconsistent and the specimen is REJECTED by the validator: archive_entry_construction, exception_handling, success_oracle, traversal_representation.",
+    "packet_ref": "arena-adaptive-lineage-20260720T144034Z:battle.parent_evidence_packet.v1:G0",
+    "parent_judge_outcome": {
+      "duration_seconds": 1.298269,
+      "patched_bypass": false,
+      "vulnerable_original_confirmed": true
+    },
+    "parent_mutation_operator": null,
+    "parent_source_sha256": "f987e15fac7d2eff2a3f7b9c04bb157efd670cd00ba0250f69e818d7a865f036",
+    "parent_specimen_id": "G0",
+    "parent_technique_delta": "seed exploit (no mutation operator)",
+    "schema": "battle.parent_evidence_packet.v1"
+  },
+  "bundle_path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-lineage-relive-20260720T144034Z/context/tau-public-context.json",
+  "mutation_guidance": {
+    "allowed_dimensions": [
+      "app_load_mode",
+      "target_call_form"
+    ],
+    "min_changed_dimensions": 1,
+    "mutation_operator": "method_replace",
+    "operator_guidance": "MUTATION OPERATOR method_replace: make a STRUCTURAL change to HOW app.py is loaded (the app_load_mode dimension). Concretely, if the parent uses `from app import import_zip`, instead load the module dynamically, e.g. `import importlib; module = importlib.import_module('app'); import_zip = getattr(module, 'import_zip')`, OR `spec = importlib.util.spec_from_file_location('app', 'app.py'); module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)`. Keep the archive construction, traversal path, and success oracle IDENTICAL to the parent. Do NOT merely wrap the call in a helper function or rename variables \u2014 that is NOT a method replacement and will be rejected. Allowed dimensions: app_load_mode, target_call_form. Keep EVERY OTHER technique dimension BYTE-IDENTICAL to the parent \u2014 changing any one of these makes the declared operator inconsistent and the specimen is REJECTED by the validator: archive_entry_construction, exception_handling, success_oracle, traversal_representation.",
+    "stage": "G1-A"
+  },
+  "schema": "tau.battle_context_bundle.v1",
+  "summary": {
+    "arena_private_artifact_count": 0,
+    "battle_id": "battle-004",
+    "mode": "bounded_worker_matrix",
+    "public_artifacts_inline": {
+      "app_py": "from pathlib import Path\nfrom zipfile import ZipFile\n\n\ndef import_zip(zip_path: str, destination: str) -> list[str]:\n    dest = Path(destination)\n    dest.mkdir(parents=True, exist_ok=True)\n    written: list[str] = []\n    with ZipFile(zip_path) as archive:\n        for name in archive.namelist():\n            target = dest / name\n            target.parent.mkdir(parents=True, exist_ok=True)\n            target.write_bytes(archive.read(name))\n            written.append(str(target))\n    return written\n",
+      "scenario_brief": {
+        "battle_id": "battle-004",
+        "public_contract": {
+          "input": "zip archive upload",
+          "method": "POST",
+          "visible_behavior": "Extract uploaded archive into an import workspace."
+        },
+        "public_entrypoint": "/api/import-zip",
+        "red_blue_visible": {
+          "entrypoint": "/api/import-zip",
+          "files": [
+            "app.py"
+          ],
+          "hint": "Archive import endpoint accepts zip files."
+        },
+        "scenario_id": "arena-zip-slip-import-001",
+        "title": "Archive import path traversal"
+      }
+    },
+    "public_entrypoint": "/api/import-zip",
+    "run_id": "arena-adaptive-lineage-20260720T144034Z",
+    "scenario_id": "arena-zip-slip-import-001",
+    "team_public_artifact_count": 2,
+    "teams": {
+      "blue": {
+        "objective": "Submit a hardening or patch strategy from public artifacts only. Include strategy_genome as a JSON object with selected_methods, rejected_methods, parameters, mutation_origin, and expected_observation."
+      },
+      "red": {
+        "objective": "Find and submit exploit evidence from public artifacts only. Include strategy_genome as a JSON object with selected_methods, rejected_methods, parameters, mutation_origin, and expected_observation."
+      }
+    },
+    "visibility_rule": "teams receive only the listed public artifacts",
+    "worker_counts": {
+      "blue": 1,
+      "red": 1
+    }
+  }
+}

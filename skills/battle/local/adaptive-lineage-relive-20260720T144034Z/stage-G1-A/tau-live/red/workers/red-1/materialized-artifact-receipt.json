@@ -1,0 +1,21 @@
+{
+  "artifact_bytes": 2060,
+  "artifact_sha256": "606075ffac0e4d613b761955f38f33bc89cbdf598dd14962fe40f0562c619c3c",
+  "artifact_type": "red_exploit",
+  "mutation_operator": "method_replace",
+  "parsed_keys": [
+    "artifact_type",
+    "exploit_py",
+    "mutation_operator",
+    "rationale",
+    "strategy_genome",
+    "technique_delta"
+  ],
+  "path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-lineage-relive-20260720T144034Z/stage-G1-A/tau-live/red/workers/red-1/red_exploit_submission.py",
+  "rationale": "Demonstrates the public app.py Zip Slip issue by dynamically loading app.import_zip, creating a ZIP member named ../arena_escape.txt, invoking import_zip directly, and confirming the file is written outside the destination directory.",
+  "schema": "tau.battle_materialized_artifact_receipt.v1",
+  "scillm_call_receipt_sha256": "3580b622b1a3ccfa8f5ddb5a93786077402a03f31adef4323d71dc9ae1c00a99",
+  "status": "PASS",
+  "strategy_genome_sha256": "da599378194e54c1f3392d841baf09d4859f854a2b49b665df5fbf3e512532d4",
+  "technique_delta": "Replaced direct from-import loading of import_zip with importlib.import_module plus getattr while preserving archive construction, traversal entry, call semantics, exception handling, and filesystem oracle."
+}

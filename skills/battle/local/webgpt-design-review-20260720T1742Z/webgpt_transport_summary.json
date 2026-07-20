@@ -1,0 +1,28 @@
+{
+  "schema": "surf.webgpt_transport_summary.v1",
+  "artifact_dir": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/webgpt-design-review-20260720T1742Z",
+  "requested_tab_id": "837360558",
+  "requested_url": null,
+  "controlled_tab_id": "837360558",
+  "submit_receipt_status": "submitted_to_chatgpt",
+  "submitted_to_chatgpt": true,
+  "prepared_prompt_is_transport_proof": false,
+  "response_raw_path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/webgpt-design-review-20260720T1742Z/response.raw.md",
+  "response_meta_path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/webgpt-design-review-20260720T1742Z/response.meta.json",
+  "response_receipt_path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/webgpt-design-review-20260720T1742Z/response.receipt.json",
+  "submitted_path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/webgpt-design-review-20260720T1742Z/response.submitted.md",
+  "sentinel": "<<<WEBGPT_DONE:20260720T174108Z:099a3588>>>",
+  "raw_sentinel_present": true,
+  "focus_changed": true,
+  "transport_degraded": true,
+  "raw_response_advisory": false,
+  "final_transport_state": "completed_with_focus_drift",
+  "proof_status": "degraded_focus",
+  "agent_diagnosis": "The controlled tab returned sentinel output, but browser focus changed during no-activate mode.",
+  "agent_action": "Preserve as degraded transport evidence only; rerun in a dedicated reviewer window for clean background proof.",
+  "next_command": "surf webgpt.recover --artifact-dir /home/graham/workspace/experiments/agent-skills/skills/battle/local/webgpt-design-review-20260720T1742Z --audit",
+  "do_not_do": [
+    "do_not_treat_focus_drift_as_transport_failure_when_sentinel_matches"
+  ],
+  "needs_attention": null
+}

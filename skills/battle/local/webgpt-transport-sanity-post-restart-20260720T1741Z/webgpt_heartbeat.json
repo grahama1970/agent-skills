@@ -1,0 +1,13 @@
+{
+  "schema": "surf.webgpt_heartbeat.v1",
+  "updated_at": "2026-07-20T17:40:27Z",
+  "submitted_at": "2026-07-20T17:40:16Z",
+  "last_browser_observation_at": "2026-07-20T17:40:27Z",
+  "phase": "completed",
+  "page_state": "response_detected",
+  "last_artifact_written": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/webgpt-transport-sanity-post-restart-20260720T1741Z/response.raw.md",
+  "next_expected_artifact": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/webgpt-transport-sanity-post-restart-20260720T1741Z/response.meta.json",
+  "timeout_remaining_seconds": 0,
+  "sentinel": "<<<WEBGPT_DONE:20260720T174015Z:25230e8a>>>",
+  "prepared_prompt_is_transport_proof": false
+}

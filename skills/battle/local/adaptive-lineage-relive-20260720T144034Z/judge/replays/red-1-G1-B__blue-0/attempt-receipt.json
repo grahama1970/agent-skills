@@ -1,0 +1,144 @@
+{
+  "blue_action_id": "blue-blue-0-patch",
+  "blue_artifact": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-lineage-relive-20260720T144034Z/stage-G0/tau-live/blue/app.py",
+  "blue_worker_id": "blue-0",
+  "capture": {
+    "blue_lane_id": "payload-857-blue-0",
+    "blue_worker_id": "blue-0",
+    "ended_elapsed_seconds": 92.287929,
+    "network_summary": {
+      "available": true,
+      "capture_method": "docker_network_namespace_posture",
+      "capture_requested": true,
+      "egress_permitted": false,
+      "evidence": {
+        "docker_network_flag": "none",
+        "exploit_confirmed_before_patch_under_isolation": true,
+        "exploit_still_succeeds_after_patch": false
+      },
+      "full_packet_capture_proven": true,
+      "http_requests": [],
+      "http_responses": [],
+      "network_isolation": "none",
+      "observation": "Exploit executes in-process against app.py:import_zip inside a Docker container launched with `docker run --network none`. With --network none the container has no network namespace, so zero HTTP/socket egress is possible; the Zip-Slip proof is filesystem-only. Vulnerability confirmed on original target: True; exploit still succeeds after patch: False.",
+      "packets_observed": 0,
+      "protocol": "in_process_function_call",
+      "reason": null,
+      "target": "app.py:import_zip",
+      "transport": "python_import_and_direct_call"
+    },
+    "pair_id": "red-1-G1-B__blue-0",
+    "red_lane_id": "payload-857-red-1",
+    "red_worker_id": "red-1-G1-B",
+    "schema": "battle.judge_exec_capture.v1",
+    "started_elapsed_seconds": 91.02701,
+    "stderr": {
+      "after": {
+        "artifact_uri": "judge/replays/red-1-G1-B__blue-0/judge-red-exploit-patched.stderr.txt",
+        "char_count": 0,
+        "exit_code": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "text": "",
+        "truncated": false
+      },
+      "available": false,
+      "before": {
+        "artifact_uri": "judge/replays/red-1-G1-B__blue-0/judge-red-exploit-original.stderr.txt",
+        "char_count": 0,
+        "exit_code": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "text": "",
+        "truncated": false
+      },
+      "stream": "stderr"
+    },
+    "stdout": {
+      "after": {
+        "artifact_uri": "judge/replays/red-1-G1-B__blue-0/judge-red-exploit-patched.stdout.txt",
+        "char_count": 0,
+        "exit_code": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "text": "",
+        "truncated": false
+      },
+      "available": true,
+      "before": {
+        "artifact_uri": "judge/replays/red-1-G1-B__blue-0/judge-red-exploit-original.stdout.txt",
+        "char_count": 22,
+        "exit_code": 0,
+        "sha256": "f14ac99734a447243011863a81c4a6a5a8b9de120099130dd55d6dc1f09cd2f9",
+        "text": "RED_EXPLOIT_CONFIRMED\n",
+        "truncated": false
+      },
+      "stream": "stdout"
+    }
+  },
+  "commands_run": [
+    {
+      "command": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cap-drop",
+        "ALL",
+        "--security-opt",
+        "no-new-privileges",
+        "--user",
+        "1000:1000",
+        "-v",
+        "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-lineage-relive-20260720T144034Z/judge/replays/red-1-G1-B__blue-0/original:/workspace:rw",
+        "-w",
+        "/workspace",
+        "python:3.12-slim",
+        "python",
+        "red_exploit_submission.py",
+        "--expect-vulnerable"
+      ],
+      "exit_code": 0,
+      "stderr_path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-lineage-relive-20260720T144034Z/judge/replays/red-1-G1-B__blue-0/judge-red-exploit-original.stderr.txt",
+      "stdout_path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-lineage-relive-20260720T144034Z/judge/replays/red-1-G1-B__blue-0/judge-red-exploit-original.stdout.txt"
+    },
+    {
+      "command": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--cap-drop",
+        "ALL",
+        "--security-opt",
+        "no-new-privileges",
+        "--user",
+        "1000:1000",
+        "-v",
+        "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-lineage-relive-20260720T144034Z/judge/replays/red-1-G1-B__blue-0/patched:/workspace:rw",
+        "-w",
+        "/workspace",
+        "python:3.12-slim",
+        "python",
+        "red_exploit_submission.py"
+      ],
+      "exit_code": 0,
+      "stderr_path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-lineage-relive-20260720T144034Z/judge/replays/red-1-G1-B__blue-0/judge-red-exploit-patched.stderr.txt",
+      "stdout_path": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-lineage-relive-20260720T144034Z/judge/replays/red-1-G1-B__blue-0/judge-red-exploit-patched.stdout.txt"
+    }
+  ],
+  "duration_elapsed_seconds": 1.260919,
+  "ended_elapsed_seconds": 92.287929,
+  "exploit_blocked_after_patch": true,
+  "exploit_confirmed_before_patch": true,
+  "exploit_still_succeeds_after_patch": false,
+  "functionality_preserved": true,
+  "pair_id": "red-1-G1-B__blue-0",
+  "red_artifact": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/adaptive-lineage-relive-20260720T144034Z/stage-G1-B/tau-live/red/workers/red-1/red_exploit_submission.py",
+  "red_lane_id": "payload-857-red-1",
+  "red_worker_id": "red-1-G1-B",
+  "schema": "battle.arena_tau_public_only_pair_attempt_receipt.v1",
+  "started_elapsed_seconds": 91.02701,
+  "status": "PASS",
+  "timing_source": "battle_control_plane_perf_counter",
+  "verdict": "BLUE_SUCCESS"
+}

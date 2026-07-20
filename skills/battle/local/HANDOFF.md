@@ -1,16 +1,15 @@
 # Handoff Report: battle adaptive-lineage receipt
 
-**Timestamp**: 2026-07-20T17:13:44Z  
-**Active Agent**: Codex  
-**Branch**: `battle-adaptive-lineage-goal`  
+**Timestamp**: 2026-07-20T17:48:56Z
+**Active Agent**: Codex
+**Branch**: `battle-adaptive-lineage-goal`
 **Current objective**: finish `GOAL_ADAPTIVE_LINEAGE.md` recovery from the
 agent-skills worktree, not the pi-mono shell.
 
 > Evidence rule for the next agent: trust receipts and command artifacts, not
-> stale prose. The old `GOAL_ADAPTIVE_LINEAGE.md` completion section says
-> `GOAL STATUS: MET`, but this recovery task supersedes that stale closure
-> claim. Current status is **pending WebGPT acceptance for the agent-skills
-> hosted receipt**.
+> stale prose. Current recovery evidence is the 2026-07-20 live backend receipt,
+> the agent-skills `:3003` browser proof, and the WebGPT accepted review in
+> `skills/battle/local/webgpt-design-review-20260720T1742Z/`.
 
 ## 1. Project Overview
 
@@ -47,10 +46,21 @@ agent-skills worktree, not the pi-mono shell.
   `live:true`, screenshot bytes `254726`, and asserts visible text for
   `ADAPTIVE LINEAGE`, `LIVE: Qual PASS`, all four exploit names, and
   `G1-A Module Slip · selected G1`.
-- **WebGPT acceptance for this new host is not obtained**:
-  `skills/battle/local/webgpt-design-review-20260720T1706Z/response.receipt.json`
-  reports `submitted_to_chatgpt:false`. The earlier `:3002` WebGPT acceptances
-  do not cover the new agent-skills `:3003` host.
+- **Fresh post-review browser screenshot exists**:
+  `skills/battle/local/agent-skills-host-verify-20260720T1748Z/` contains
+  `current-render.json`, `current-assertions.json`, and
+  `surf-receipt-agent-skills-3003-current.png` for the same `:3003` receipt
+  route. Visual inspection confirms the agent-skills Battle receipt is visible
+  with `G0 Seed Slip`, `G1-A Module Slip`, `G1-B Arc Courier`, and
+  `G2 ZipInfo Path`, with no Sparta Explorer content. Caveat:
+  `current-assertions.json` has `hasCanvas:false`, so this proof should be used
+  as receipt-view evidence, not as final Pixi canvas/sprite proof.
+- **WebGPT acceptance for this new host exists**:
+  `skills/battle/local/webgpt-design-review-20260720T1742Z/response.md` starts
+  with `ACCEPTED`, and `response.raw.md` contains the terminal sentinel. The
+  Surf meta is degraded-focus (`status: recovered_focus_changed`) but
+  `response_proof_status: response_proven`, `raw_contains_sentinel:true`,
+  clean output is uncontaminated, and the controlled tab id matches.
 
 ## 3. What is Working Well
 
@@ -68,17 +78,17 @@ agent-skills worktree, not the pi-mono shell.
   - `live: yes`
   - exercised: real adaptive-lineage qualification receipt, normalized fixture,
     standalone agent-skills static host, live browser render
-  - unverified: WebGPT design acceptance for the agent-skills hosted page
+  - WebGPT design acceptance: accepted with degraded-focus Surf transport
+  - unverified for full immutable-goal closure: distinct Pixi sprite/canvas
+    proof from the newest browser capture
 
 ## 4. What is Currently Broken Or Pending
 
-- **WebGPT transport / ChatGPT response health is the active blocker**. The
-  blocker summary is
+- **Prior WebGPT transport blocker was cleared**. See
   `skills/battle/local/webgpt-agent-skills-host-blocker-20260720T1721Z.md`.
-  Attachment-backed review attempts either stayed at `prepared_prompt` or left
-  the prompt in the composer; a focused text-only sanity reached
-  `submitted_to_chatgpt:true` but then stalled with `Stop answering` and no
-  sentinel.
+  After Surf host restart, a text-only sanity reached
+  `proof_status: response_proven`, and the Battle screenshot review returned
+  `ACCEPTED`.
 - **Existing Battle WebGPT tab is busy**. Tab `837359249` contains the prior
   `:3003` review prompt and still showed `Thinking` / `Stop answering` when
   inspected. Do not submit a new prompt into that tab while it is busy.
@@ -86,67 +96,25 @@ agent-skills worktree, not the pi-mono shell.
   child from an earlier attempt. Use `3003` until reboot or kernel release.
 - **Do not trust `#battle/live` claims**. That route was verified false earlier;
   valid served hashes are `#battle`, `#battle/isolation`, and `#battle/receipt`.
+- **Do not treat the current handoff as full immutable-goal closure**. The
+  recovery evidence is strong enough to put the project back on the
+  agent-skills-hosted receipt path, but the broader goal text still names Pixi
+  sprite acceptance and deterministic renderer tests as primary proof.
 - **Repo is dirty from unrelated agents**. Stage Battle handoff/artifact paths
   explicitly only. Never `git add -A`.
 
 ## 5. Next Steps
 
-1. Inspect whether the prior Battle WebGPT tab has produced a sentinel:
-   ```bash
-   cd skills/surf
-   ./run.sh js "return JSON.stringify({title:document.title,url:location.href,text:document.body.innerText.slice(-4000)},null,2)" --tab-id 837359249 --json
-   ```
-   If it is still thinking, do not reuse it.
-
-2. Do not rerun the broad Battle WebGPT review first. Run a tiny text-only Surf
-   WebGPT sanity after ChatGPT response health recovers:
-   ```bash
-   cd skills/surf
-   ./run.sh webgpt.submit --input <text-only-request.md> --output <response.md> \
-     --raw-output <response.raw.md> --meta-output <response.meta.json> \
-     --receipt-output <response.receipt.json> --submitted-output <response.submitted.md> \
-     --create-tab --timeout 180
-   ```
-   Only retry the Battle review once the text-only sanity reaches
-   `proof_status: response_proven`.
-
-3. Then submit the existing evidence bundle through Surf using a fresh,
-   identity-proven tab. The bundle exists at:
-   ```bash
-   skills/battle/local/webgpt-design-review-20260720T1706Z/request.md
-   skills/battle/local/webgpt-design-review-20260720T1706Z/battle-agent-skills-host-review-bundle.zip
-   ```
-   A created-tab preflight passed once:
-   ```bash
-   cd skills/surf
-   ./run.sh webgpt.preflight --create-tab --no-activate --json
-   ```
-   If zip attachments still leave `Send prompt` disabled, use the screenshot
-   request path:
-   `skills/battle/local/webgpt-design-review-20260720T1721Z/request.md` plus
-   `skills/battle/local/agent-skills-host-verify-20260720T1646Z/surf-receipt-agent-skills-3003.png`.
-
-4. When WebGPT returns `ACCEPTED` with a Surf sentinel-backed response, commit
-   the relevant handoff/review artifacts by explicit path and push:
-   ```bash
-   git add skills/battle/local/HANDOFF.md \
-     skills/battle/local/webgpt-design-review-20260720T1706Z/request.md \
-     skills/battle/local/webgpt-design-review-20260720T1706Z/battle-agent-skills-host-review-bundle.zip \
-     skills/battle/local/webgpt-design-review-20260720T1706Z/response.md \
-     skills/battle/local/webgpt-design-review-20260720T1706Z/response.raw.md \
-     skills/battle/local/webgpt-design-review-20260720T1706Z/response.meta.json \
-     skills/battle/local/webgpt-design-review-20260720T1706Z/response.receipt.json \
-     skills/battle/local/webgpt-design-review-20260720T1706Z/response.submitted.md
-   git diff --cached --name-only
-   git commit -m "battle: handoff adaptive lineage host state"
-   git push origin battle-adaptive-lineage-goal
-   git ls-remote origin refs/heads/battle-adaptive-lineage-goal
-   ```
-
-5. Only after the accepted review is committed and remote-verified, audit the
-   immutable goal checklist. Do not use closure language unless the final report
-   cites the backend receipt, browser screenshot/assertions, WebGPT response, and
-   remote commit proof.
+1. Commit and push this handoff plus the accepted WebGPT and fresh browser proof
+   artifacts by explicit path.
+2. Re-run or restore the deterministic renderer proof if the next agent is
+   closing the full immutable goal: spectator lineage suite, Pixi sprite-mapping
+   test, and a browser proof that actually demonstrates the expected sprite
+   surface.
+3. Audit the immutable goal checklist. Do not use closure language unless the
+   final report cites backend receipt, browser screenshot/assertions, WebGPT
+   response, deterministic renderer proof, sprite/canvas proof if applicable,
+   and remote commit proof.
 
 ## 6. Project Context for Success
 
