@@ -4,7 +4,7 @@
 **Active agent:** Codex
 **Repository:** `grahama1970/agent-skills`
 **Target branch:** `main`
-**Current pushed HEAD:** `e0998120f924de7c56a003baf0fb8d2da8919405`
+**Latest implementation-proof commit before this handoff:** `e0998120f924de7c56a003baf0fb8d2da8919405`
 **Skill root:** `skills/persona-dream`
 **Current skill contract:** `SKILL.md`
 
