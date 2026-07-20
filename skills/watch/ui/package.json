@@ -9,9 +9,12 @@
     "dev:all": "concurrently \"vite\" \"tsx watch server/index.ts\"",
     "build": "vite build",
     "start": "node server/prod.js",
-    "test": "tsx scripts/watchAnnotationSession.smoke.ts && tsx scripts/watchYoloLabelReceiptReplay.smoke.ts",
+    "test": "tsx scripts/watchAnnotationSession.smoke.ts && tsx scripts/watchYoloLabelReceiptReplay.smoke.ts && tsx scripts/watchYoloReceiptConcurrency.smoke.ts && tsx scripts/watchDetectorCandidateIsolation.smoke.ts",
     "test:memory-suggestion-live": "tsx scripts/watchMemorySuggestionLive.smoke.ts",
     "test:yolo-label-receipt": "tsx scripts/watchYoloLabelReceiptReplay.smoke.ts",
+    "test:receipt-concurrency": "tsx scripts/watchYoloReceiptConcurrency.smoke.ts",
+    "test:detector-isolation": "tsx scripts/watchDetectorCandidateIsolation.smoke.ts",
+    "test:backend-immutable": "npm run test:yolo-label-receipt && npm run test:receipt-concurrency && npm run test:detector-isolation",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

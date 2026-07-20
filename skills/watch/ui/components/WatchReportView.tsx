@@ -36,6 +36,7 @@ import {
   selectDeleteTarget,
   selectVisibleOverlays,
 } from '../src/watchAnnotationSession'
+import { projectYoloTrackLabelAtTime } from '../src/yoloLabelProjection'
 import type {
   AnnotationSessionState,
   SessionRow,
@@ -920,8 +921,9 @@ function readYoloLabelEvents(value: unknown): WatchYoloLabelEvent[] {
 }
 
 function yoloLabelEventTime(event: WatchYoloLabelEvent): number | null {
-  const time = Number(event.time_seconds)
-  return Number.isFinite(time) ? time : null
+  return typeof event.time_seconds === 'number' && Number.isFinite(event.time_seconds)
+    ? event.time_seconds
+    : null
 }
 
 function yoloLabelEventSortValue(event: WatchYoloLabelEvent, index: number): number {
@@ -951,7 +953,7 @@ export function latestYoloLabelEventForTrack(
   const boundedTime = Math.max(0, timeSeconds)
   const candidates = events
     .map((event, index) => ({ event, index, time: yoloLabelEventTime(event) }))
-    .filter(({ event, time }) => event.track_id === trackId && time != null && time <= boundedTime + 0.011)
+    .filter(({ event, time }) => event.track_id === trackId && time != null && time <= boundedTime)
     .sort((a, b) => yoloLabelEventSortValue(a.event, a.index) - yoloLabelEventSortValue(b.event, b.index))
   return candidates.length > 0 ? candidates[candidates.length - 1].event : null
 }
@@ -1048,11 +1050,30 @@ export function yoloLabelForOverlay(
   rejections: Record<string, WatchYoloBoxRejection> = {},
   timeSeconds = 0,
 ): WatchYoloTrackLabel | null {
-  const latestEvent = latestYoloLabelEventForTrack(events, overlay.track_id, timeSeconds)
-  if (latestEvent) return yoloLabelFromEvent(latestEvent)
-  if (rejections[yoloBoxInstanceKey(overlay.track_id, timeSeconds)]) return null
-  if (events.some((event) => event.track_id === overlay.track_id)) return null
-  return labels[overlay.track_id] ?? suggestions[overlay.track_id] ?? null
+  const boxRejection = rejections[yoloBoxInstanceKey(overlay.track_id, timeSeconds)]
+  if (boxRejection && timeSeconds >= boxRejection.timeSeconds) return null
+
+  const projected = projectYoloTrackLabelAtTime({
+    trackId: overlay.track_id,
+    timeSeconds,
+    events,
+    labels: { ...suggestions, ...labels },
+  })
+  if (projected) {
+    const accepted = labels[overlay.track_id]
+    const suggestion = suggestions[overlay.track_id]
+    const isSuggestionOnly = !accepted && suggestion?.characterName === projected.characterName
+    return {
+      trackId: overlay.track_id,
+      characterName: projected.characterName,
+      actorName: projected.actorName,
+      status: isSuggestionOnly ? 'suggested' : 'accepted',
+      source: isSuggestionOnly ? 'memory' : 'human',
+      confidence: projected.confidence,
+      updatedAt: accepted?.updatedAt || suggestion?.updatedAt || new Date().toISOString(),
+    }
+  }
+  return null
 }
 
 function yoloOverlayWithLabel(
