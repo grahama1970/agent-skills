@@ -75,36 +75,57 @@ def _boundary(tmp_path, name: str, samples: list[int]) -> dict:
     )
 
 
-# --- truncation detector ----------------------------------------------------
+# --- truncation detector (transcript-based) ---------------------------------
+
+EXPECTED = "show the memory reasoning trace inline for the current spoken response"
 
 
-def test_clean_utterance_not_flagged_truncated(tmp_path):
-    # speech followed by a natural >200ms trailing silence tail
-    boundary = _boundary(tmp_path, "clean.wav", _tone(0.8) + _silence(0.5))
-    telemetry = detect_generation_truncation(boundary)
-    assert telemetry["truncated"] is False
-    assert telemetry["ends_voiced"] is False
-    assert telemetry["trailing_silence_seconds"] >= 0.2
-    assert telemetry["server_finish_reason_available"] is False
+def test_complete_but_mispronounced_take_is_not_truncated():
+    # full-length transcript with scattered substitutions ("the"->"a",
+    # "inline"->"in line"): this is the real chat_ux_sync-soak-02 candidate that
+    # the old audio heuristic false-flagged. It must stay a quality sample.
+    actual = "show a memory reasoning trace in line for the current spoken response"
+    t = detect_generation_truncation(
+        expected_text=EXPECTED, transcript=actual, wer=0.2727, max_request_wer=0.25
+    )
+    assert t["truncated"] is False
+    assert t["detector"] == "transcript_trailing_deletion_v1"
+    assert t["missing_tail_tokens"] <= 0
 
 
-def test_utterance_cut_mid_speech_flagged_truncated(tmp_path):
-    # speech runs right up to the end of the file: no trailing silence
-    boundary = _boundary(tmp_path, "cut.wav", _tone(1.0))
-    telemetry = detect_generation_truncation(boundary)
-    assert telemetry["truncated"] is True
-    assert telemetry["ends_voiced"] is True
-    assert telemetry["trailing_silence_seconds"] < 0.2
+def test_clean_prefix_missing_tail_is_truncated():
+    # a budget-cut generation: clean leading prefix, trailing words gone
+    actual = "show the memory reasoning trace"
+    t = detect_generation_truncation(
+        expected_text=EXPECTED, transcript=actual, wer=0.4545, max_request_wer=0.25
+    )
+    assert t["truncated"] is True
+    assert t["transcript_is_leading_prefix"] is True
+    assert t["missing_tail_tokens"] >= 2
+
+
+def test_short_prefix_that_passes_wer_is_not_truncated():
+    # never reclassify a candidate that is within the WER ceiling
+    actual = "show the memory reasoning trace"
+    t = detect_generation_truncation(
+        expected_text=EXPECTED, transcript=actual, wer=0.10, max_request_wer=0.25
+    )
+    assert t["considered"] is False
+    assert t["truncated"] is False
 
 
 def test_truncation_becomes_rejection_reason_first(tmp_path):
-    boundary = _boundary(tmp_path, "cut2.wav", _tone(1.0))
-    telemetry = detect_generation_truncation(boundary)
+    boundary = _boundary(tmp_path, "any.wav", _tone(0.8) + _silence(0.4))
+    t = detect_generation_truncation(
+        expected_text=EXPECTED,
+        transcript="show the memory reasoning trace",
+        wer=0.4545,
+        max_request_wer=0.25,
+    )
     policy = {"max_request_wer": 0.25}
     reasons = qualification_rejection_reasons(
-        wer=0.0, boundary=boundary, qualification_policy=policy, truncation=telemetry
+        wer=0.4545, boundary=boundary, qualification_policy=policy, truncation=t
     )
-    # infra failure is surfaced first, even though WER passed
     assert reasons[0] == "tts_generation_truncated"
 
 

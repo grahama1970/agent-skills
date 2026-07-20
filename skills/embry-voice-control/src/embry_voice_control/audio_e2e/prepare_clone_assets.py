@@ -508,50 +508,75 @@ def analyze_internal_silence(
     }
 
 
-def detect_generation_truncation(boundary: dict[str, Any]) -> dict[str, Any]:
-    """Audio-side detection of a generation cut off mid-utterance.
+TRUNCATION_MIN_MISSING_TAIL_TOKENS = 2
+TRUNCATION_HEAD_ALIGNMENT_RATIO = 0.8
+
+
+def detect_generation_truncation(
+    *,
+    expected_text: str,
+    transcript: str,
+    wer: float,
+    max_request_wer: float,
+    audio_duration_seconds: float | None = None,
+) -> dict[str, Any]:
+    """Transcript-side detection of a generation cut off mid-utterance.
 
     The deployed Orpheus inference server (``/app/inference_server.py``, baked
     into the ``orpheus-infer`` image -- not a mounted, patchable local source)
     hard-caps ``max_new_tokens`` at 1200 and its synthesis receipt does NOT
-    surface ``finish_reason``/``stop_reason``/generated-token counts. Per the
-    oracle's stated fallback, truncation is therefore detected from the audio
-    itself rather than inferred after Whisper.
+    surface ``finish_reason``/``stop_reason``/generated-token counts, so
+    truncation must be inferred rather than read back.
 
-    A stop-token-terminated Orpheus utterance decays into >= the boundary
-    policy's ``minimum_silence_duration_seconds`` of trailing near-silence. A
-    generation cut off at the token budget instead ends WHILE still voiced: its
-    final speech segment is force-closed at the end of the file, leaving little
-    or no trailing silence. That is the signature we reject as infrastructure
-    failure (``tts_generation_truncated``) BEFORE spending a quality candidate
-    slot on it -- an incomplete generation is not an unsuccessful pronunciation
-    sample.
+    An earlier audio-trailing-silence heuristic was rejected after calibration:
+    accepted, complete Orpheus takes routinely end with 0.00-0.08 s of trailing
+    silence (the decoder trims tightly), so "no silence tail" does NOT
+    distinguish a complete take from a truncated one -- it flagged everything.
+
+    The discriminative signal is the TRANSCRIPT: a budget-cut generation
+    transcribes as a LEADING PREFIX of the expected words with the tail missing.
+    Crucially, truncation is only considered for a candidate that is already
+    failing WER -- a complete-but-mispronounced take (full length, scattered
+    substitutions) is a genuine pronunciation sample and must keep its quality
+    slot. Only a clean-prefix-with-missing-tail rejection is reclassified as the
+    infrastructure failure ``tts_generation_truncated`` (retried without
+    consuming a slot).
     """
-    policy = boundary.get("policy") or {}
-    min_trailing = float(policy.get("minimum_silence_duration_seconds", 0.20))
-    wav = boundary.get("wav") or {}
-    duration_seconds = float(wav.get("duration_seconds") or 0.0)
-    segments = boundary.get("speech_segments") or []
-    last_speech_end = (
-        max(float(seg["end_seconds"]) for seg in segments) if segments else 0.0
-    )
-    trailing_silence_seconds = round(max(0.0, duration_seconds - last_speech_end), 6)
-    ends_voiced = bool(segments) and trailing_silence_seconds < min_trailing
+    exp = normalized_tokens(expected_text)
+    act = normalized_tokens(transcript)
+    missing_tail = max(0, len(exp) - len(act))
+    ends_with_prefix = False
+    head_alignment = 0.0
+    truncated = False
+    if (
+        float(wer) > float(max_request_wer)
+        and act
+        and missing_tail >= TRUNCATION_MIN_MISSING_TAIL_TOKENS
+    ):
+        # Ignore the final captured token (a mid-word cut mistranscribes it);
+        # require the remaining leading tokens to align with the expected prefix.
+        head = act[:-1] if len(act) > 1 else act
+        matched = sum(1 for i, tok in enumerate(head) if i < len(exp) and exp[i] == tok)
+        head_alignment = matched / max(1, len(head))
+        ends_with_prefix = head_alignment >= TRUNCATION_HEAD_ALIGNMENT_RATIO
+        truncated = ends_with_prefix
     return {
         "schema": "embry.audio_e2e.generation_truncation.v1",
-        "detector": "audio_trailing_silence_v1",
+        "detector": "transcript_trailing_deletion_v1",
         "server_finish_reason_available": False,
         "server_token_counts_available": False,
-        "audio_duration_seconds": round(duration_seconds, 6),
-        "speech_segment_count": len(segments),
-        "last_speech_end_seconds": round(last_speech_end, 6),
-        "trailing_silence_seconds": trailing_silence_seconds,
-        "minimum_trailing_silence_seconds": min_trailing,
-        "maximum_internal_silence_seconds": float(
-            boundary.get("longest_internal_silence_seconds") or 0.0
+        "audio_duration_seconds": (
+            round(float(audio_duration_seconds), 6)
+            if audio_duration_seconds is not None
+            else None
         ),
-        "ends_voiced": ends_voiced,
-        "truncated": ends_voiced,
+        "expected_token_count": len(exp),
+        "actual_token_count": len(act),
+        "missing_tail_tokens": missing_tail,
+        "head_alignment_ratio": round(head_alignment, 4),
+        "transcript_is_leading_prefix": ends_with_prefix,
+        "considered": float(wer) > float(max_request_wer),
+        "truncated": truncated,
     }
 
 
@@ -1511,7 +1536,15 @@ def _validate_asr_receipt(
         raise AssetConflictError(
             "candidate_asr_utterance_boundary_mismatch"
         )
-    recomputed_truncation = detect_generation_truncation(boundary)
+    recomputed_truncation = detect_generation_truncation(
+        expected_text=prompt,
+        transcript=str(value.get("transcript") or ""),
+        wer=computed_wer,
+        max_request_wer=float(qualification_policy["max_request_wer"]),
+        audio_duration_seconds=float(
+            (boundary.get("wav") or {}).get("duration_seconds") or 0.0
+        ),
+    )
     stored_truncation = value.get("generation_truncation")
     if stored_truncation is not None:
         # Receipt written with truncation telemetry: it must reproduce exactly.
@@ -2241,7 +2274,15 @@ def complete_candidate(
             qualification_policy["utterance_boundary"],
         )
         asr["utterance_boundary"] = boundary
-        truncation = detect_generation_truncation(boundary)
+        truncation = detect_generation_truncation(
+            expected_text=prompt,
+            transcript=str(asr.get("transcript") or ""),
+            wer=float(asr["wer"]),
+            max_request_wer=float(qualification_policy["max_request_wer"]),
+            audio_duration_seconds=float(
+                (boundary.get("wav") or {}).get("duration_seconds") or 0.0
+            ),
+        )
         asr["generation_truncation"] = truncation
         reasons = qualification_rejection_reasons(
             wer=float(asr["wer"]),
@@ -2263,8 +2304,16 @@ def complete_candidate(
     truncation = asr.get("computed_generation_truncation")
     if truncation is None:
         # Resumed asr receipt written before truncation telemetry existed:
-        # derive it from the persisted boundary for the candidate receipt only.
-        truncation = detect_generation_truncation(boundary)
+        # derive it from the persisted transcript for the candidate receipt only.
+        truncation = detect_generation_truncation(
+            expected_text=prompt,
+            transcript=str(asr.get("transcript") or ""),
+            wer=computed_wer,
+            max_request_wer=float(qualification_policy["max_request_wer"]),
+            audio_duration_seconds=float(
+                (boundary.get("wav") or {}).get("duration_seconds") or 0.0
+            ),
+        )
     # ``computed_rejection_reasons`` is authoritative: the fresh-write path and
     # _validate_asr_receipt already fold in truncation (respecting legacy
     # receipts), so we never re-prepend it here.
