@@ -101,18 +101,18 @@ def test_roundtable_prompt_compiles_to_handler_neutral_tau_dag(tmp_path: Path) -
     dag = bundle["dag"]
     assert dag["schema"] == "tau.dag_contract.v1"
     assert dag["context"]["execution_owner"] == "$tau"
-    assert dag["context"]["provider_transport"] == "handler_neutral_adapter"
+    assert dag["context"]["transport_adapter"] == "handler_neutral_adapter"
     assert dag["context"]["roundtable_topology"] == "concurrent"
     assert dag["context"]["handlers"] == ["webkimi", "webclaude", "webgpt", "webgemini"]
+    assert dag["entry_node"] == "handler-webkimi"
     assert [node["id"] for node in dag["nodes"]] == [
-        "start",
         "handler-webkimi",
         "handler-webclaude",
         "handler-webgpt",
         "handler-webgemini",
         "join",
     ]
-    assert {"from": "start", "to": "handler-webkimi"} in dag["edges"]
+    assert {"from": "handler-webkimi", "to": "join"} in dag["edges"]
     assert {"from": "handler-webgemini", "to": "join"} in dag["edges"]
     join = dag["nodes"][-1]
     assert join["join"]["requires_completed"] == [
@@ -121,17 +121,21 @@ def test_roundtable_prompt_compiles_to_handler_neutral_tau_dag(tmp_path: Path) -
         "handler-webgpt",
         "handler-webgemini",
     ]
-    kimi = dag["nodes"][1]
-    assert kimi["handler"]["transport_owner"] == "$surf"
-    assert kimi["handler"]["transport"] == "kimi.submit"
+    kimi = dag["nodes"][0]
+    assert kimi["agent"] == "handler-webkimi"
+    assert kimi["context"]["handler"] == "webkimi"
+    assert kimi["context"]["handler_policy"]["transport_owner"] == "$surf"
+    assert kimi["context"]["handler_policy"]["transport"] == "kimi.submit"
     assert Path(bundle["command_spec_root"], "handler-webkimi", "tau-dispatch-command.json").is_file()
     command_spec = json.loads(
         Path(bundle["command_spec_root"], "handler-webkimi", "tau-dispatch-command.json").read_text(
             encoding="utf-8"
         )
     )
-    assert command_spec["compile_only"] is True
-    assert command_spec["requires_network"] is False
+    assert command_spec["compile_only"] is False
+    assert command_spec["requires_network"] is True
+    assert "kimi.submit" not in command_spec["command"]
+    assert "--browser-oracle-project" in command_spec["command"]
 
     validate = subprocess.run(
         [
@@ -173,12 +177,41 @@ def test_roundtable_handlers_can_be_explicit_and_sequential(tmp_path: Path) -> N
     assert bundle["status"] == "READY"
     dag = bundle["dag"]
     assert dag["context"]["roundtable_topology"] == "sequential"
+    assert dag["entry_node"] == "handler-webkimi"
     assert dag["edges"] == [
-        {"from": "start", "to": "handler-webkimi"},
         {"from": "handler-webkimi", "to": "handler-webgemini"},
         {"from": "handler-webgemini", "to": "join"},
         {"from": "join", "to": "human"},
     ]
+    join_spec = json.loads(
+        Path(bundle["command_spec_root"], "join", "tau-dispatch-command.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert "" not in join_spec["command"]
+    assert "--browser-oracle-project" not in join_spec["command"]
+
+
+def test_roundtable_handler_project_overrides_are_written_to_command_specs(tmp_path: Path) -> None:
+    request = infer_compile_input(
+        "Roundtable webgpt and webkimi.",
+        repo="local/agent-skills",
+        target="roundtable-projects",
+        handler_projects=["webgpt=tau", "webkimi=webkimi"],
+        output_root=tmp_path,
+    )
+
+    bundle = compile_tau_dag_bundle(request)
+
+    dag = bundle["dag"]
+    assert dag["context"]["handler_projects"] == {"webgpt": "tau", "webkimi": "webkimi"}
+    command_spec = json.loads(
+        Path(bundle["command_spec_root"], "handler-webgpt", "tau-dispatch-command.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    command = command_spec["command"]
+    assert command[command.index("--browser-oracle-project") + 1] == "tau"
 
 
 def test_command_spec_blocks_provider_execution_without_opt_in(tmp_path: Path) -> None:

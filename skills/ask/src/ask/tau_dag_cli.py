@@ -50,6 +50,13 @@ def run(
         str,
         typer.Option("--join-handler", help="Roundtable join/adjudicator handler label."),
     ] = "join",
+    handler_project: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--handler-project",
+            help="Browser-oracle project override as handler=project. Repeat for multiple handlers.",
+        ),
+    ] = None,
     criterion: Annotated[
         list[str] | None,
         typer.Option("--criterion", help="Reviewer criterion. Repeat for multiple criteria."),
@@ -112,6 +119,7 @@ def run(
         handlers=handler,
         topology=topology,
         join_handler=join_handler,
+        handler_projects=handler_project,
         ask_id=ask_id,
         output_root=output_root,
         local_fixture=local_fixture,
@@ -130,14 +138,15 @@ def run(
         if input_payload.handlers:
             provider_gate = {
                 "schema": "ask.tau_dag_roundtable_handler_gate.v1",
-                "status": "COMPILE_ONLY",
+                "status": "READY",
                 "ok": True,
                 "mocked": False,
                 "live": False,
                 "provider_live": False,
                 "handlers": list(input_payload.handlers),
                 "topology": input_payload.topology,
-                "message": "Handler DAG emitted only; live Surf/API adapter execution was not attempted.",
+                "handler_projects": list(input_payload.handler_projects),
+                "message": "Handler DAG emitted; live Surf/browser execution happens when Tau executes the DAG.",
             }
         else:
             provider_gate = probe_scillm_provider_gate(
@@ -152,19 +161,7 @@ def run(
         if require_provider_calls and provider_gate.get("ok") is not True:
             exit_code = 3
         elif execute:
-            if input_payload.handlers:
-                execution = {
-                    "schema": "ask.tau_dag_execution.v1",
-                    "status": "BLOCKED",
-                    "ok": False,
-                    "mocked": False,
-                    "live": False,
-                    "provider_live": False,
-                    "blocked_reason": "roundtable_handler_execution_not_implemented",
-                    "message": "This slice emits a Tau DAG only; live handler execution needs Tau adapter receipts.",
-                }
-                exit_code = 3
-            elif not local_fixture and not allow_provider_calls:
+            if not input_payload.handlers and not local_fixture and not allow_provider_calls:
                 execution = {
                     "schema": "ask.tau_dag_execution.v1",
                     "status": "BLOCKED",
@@ -200,7 +197,8 @@ def run(
         "live": output_live,
         "provider_live": bool(
             isinstance(provider_gate, dict) and provider_gate.get("provider_live") is True
-        ),
+        )
+        or bool(isinstance(execution, dict) and execution.get("provider_live") is True),
         "bundle": bundle,
         "provider_gate": provider_gate,
         "execution": execution,
