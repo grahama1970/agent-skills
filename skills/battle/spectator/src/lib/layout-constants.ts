@@ -1,5 +1,5 @@
 /** Lane label column width — matches battle-004-shell mockup --label-w */
-export const BATTLE_LANE_LABEL_PX = 290;
+export const BATTLE_LANE_LABEL_PX = 380;
 
 /** Mockup shell proportions from battle-004-original-mockup.png / shell HTML */
 export const BATTLE_MOCKUP_VIEWPORT = { width: 1672, height: 941 } as const;

@@ -11,8 +11,9 @@ describe("battleRaceEngineFromHash", () => {
 		expect(battleRaceEngineFromHash("#battle/receipt?engine=dom")).toBe("dom");
 	});
 
-	it("keeps dom default on design route", () => {
-		expect(battleRaceEngineFromHash("#battle")).toBe("dom");
+	it("defaults to pixi on the top-level battle UX route", () => {
+		expect(battleRaceEngineFromHash("#battle")).toBe("pixi");
+		expect(battleRaceEngineFromHash("#battle?engine=dom")).toBe("dom");
 		expect(battleRaceEngineFromHash("#battle?engine=pixi")).toBe("pixi");
 	});
 

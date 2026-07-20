@@ -5,7 +5,6 @@ import { isBattleSynthesisView } from "../lib/battle-synthesis-registry";
 import { isBattleCompileView } from "../lib/battle-compile-registry";
 import { isBattleRuntimeView } from "../lib/battle-runtime-registry";
 import { isBattlePopulationView } from "../lib/battle-population-registry";
-import { isBattleLiveView } from "../lib/battle-transport-registry";
 import { isBattleCampaignView } from "../lib/battle-campaign-registry";
 import { isBattleMusicView } from "../lib/battle-music-registry";
 
@@ -16,21 +15,20 @@ export function BattleProofNav() {
 	const onCompile = isBattleCompileView(hash);
 	const onRuntime = isBattleRuntimeView(hash);
 	const onPopulation = isBattlePopulationView(hash);
-	const onLive = isBattleLiveView(hash);
 	const onCampaign = isBattleCampaignView(hash);
 	const onMusic = isBattleMusicView(hash);
 	const onGenetic = hash.includes("pr6-genetic") && !onCampaign;
 	const onAdaptive = hash.includes("adaptive-lineage-v13") || hash.includes("adaptive-lineage-live");
 	const onDesign = isBattleDesignView();
-	const onProofFamily = onProof || onSynthesis || onCompile || onRuntime || onPopulation || onGenetic || onAdaptive || onCampaign || onMusic || onLive;
+	const onProofFamily = onProof || onSynthesis || onCompile || onRuntime || onPopulation || onGenetic || onAdaptive || onCampaign || onMusic;
 	const onRace = !onDesign && !onProofFamily && (isBattleReceiptReplayView() || hash.startsWith("#battle/receipt"));
 
 	return (
 		<nav className="battle-proof-nav" aria-label="Battle views" data-qid="battle:proof-card:nav">
-			<a href="#battle/receipt?engine=pixi" aria-current={onRace ? "page" : undefined} data-qid="battle:nav:race">
+			<a href="#battle" aria-current={onRace ? "page" : undefined} data-qid="battle:nav:race">
 				Adaptive Replay
 			</a>
-			<a href="#battle" aria-current={onDesign ? "page" : undefined} data-qid="battle:nav:design" title="Dense design-parity mockup (not receipt truth)">
+			<a href="#battle/isolation" aria-current={onDesign ? "page" : undefined} data-qid="battle:nav:design" title="Dense design-parity mockup (not receipt truth)">
 				Design
 			</a>
 			<details className="battle-proof-nav-more" data-qid="battle:nav:proofs-menu">
@@ -62,9 +60,6 @@ export function BattleProofNav() {
 					</a>
 					<a href="#battle/music?fixture=battle-004-music-runtime" aria-current={onMusic ? "page" : undefined} data-qid="battle:nav:music">
 						Music Schedule
-					</a>
-					<a href="#battle/live?engine=pixi&battle=battle-004" aria-current={onLive ? "page" : undefined} data-qid="battle:nav:live">
-						Live Transport
 					</a>
 					<a href="#battle/proof?fixture=battle-004-pr3b" aria-current={onProof ? "page" : undefined} data-qid="battle:nav:proof">
 						Research &amp; Genome Proof

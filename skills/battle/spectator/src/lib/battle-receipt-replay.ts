@@ -21,14 +21,15 @@ export const BATTLE_RECEIPT_REPLAY_FIXTURE_URLS = {
 
 export type BattleReceiptReplayFixtureKey = keyof typeof BATTLE_RECEIPT_REPLAY_FIXTURE_URLS;
 
-export function battleHashPath(): string {
-	if (typeof window === "undefined") return "";
-	return window.location.hash.split("?")[0];
+export function battleHashPath(hash?: string): string {
+	const source = hash ?? (typeof window === "undefined" ? "" : window.location.hash);
+	return source.split("?")[0];
 }
 
-export function isBattleReceiptReplayView(): boolean {
-	const path = battleHashPath();
+export function isBattleReceiptReplayView(hash?: string): boolean {
+	const path = battleHashPath(hash);
 	return (
+		path === "#battle" ||
 		path === "#battle/receipt" ||
 		path.startsWith("#battle/receipt/") ||
 		path === "#battle/campaign" ||

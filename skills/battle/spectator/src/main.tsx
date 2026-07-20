@@ -6,7 +6,7 @@ import { BattleSpectatorArena } from "./BattleSpectatorArena";
 import "./standalone.generated.css";
 
 if (!window.location.hash) {
-  window.location.hash = "#battle/receipt?engine=pixi";
+  window.location.hash = "#battle";
 }
 
 const root = document.getElementById("root");

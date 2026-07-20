@@ -1159,7 +1159,7 @@
 .agent-row {
   display: grid;
   grid-template-columns: 10px minmax(0, 1fr) auto;
-  align-items: center;
+  align-items: start;
   gap: 8px;
   width: 100%;
   border: 1px solid transparent;
@@ -1189,6 +1189,7 @@
   border-radius: 50%;
   background: #8b949e;
   box-shadow: 0 0 5px rgba(139, 148, 158, 0.5);
+  margin-top: 5px;
 }
 .status-dot.running  { background: #58a6ff; box-shadow: 0 0 6px rgba(88, 166, 255, 0.7); }
 .status-dot.promoted { background: #3fb950; box-shadow: 0 0 6px rgba(63, 185, 80, 0.7); }
@@ -1206,9 +1207,10 @@
   font-size: 0.74rem;
   font-weight: 700;
   color: #e6edf3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.2;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
 }
 .agent-name .an-sub {
   font-size: 0.6rem;
@@ -1218,6 +1220,7 @@
   text-overflow: ellipsis;
 }
 .agent-metric {
+  margin-top: 2px;
   font-family: ui-monospace, monospace;
   font-size: 0.68rem;
   font-weight: 700;

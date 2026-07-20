@@ -70,7 +70,7 @@
     {
       "changed_dimensions": [],
       "delta_status": null,
-      "exploit_short_name": "Seed Slip",
+      "exploit_short_name": "Zip Slip Spark",
       "fitness_status": null,
       "generation": 0,
       "id": "G0",
@@ -97,7 +97,7 @@
         }
       ],
       "delta_status": "PASS",
-      "exploit_short_name": "Module Slip",
+      "exploit_short_name": "Importlib Slipstream",
       "fitness_status": "PASS",
       "generation": 1,
       "id": "G1-A",
@@ -123,7 +123,7 @@
         }
       ],
       "delta_status": "PASS",
-      "exploit_short_name": "Arc Courier",
+      "exploit_short_name": "Writestr Detour",
       "fitness_status": "PASS",
       "generation": 1,
       "id": "G1-B",
@@ -164,7 +164,7 @@
         }
       ],
       "delta_status": "PASS",
-      "exploit_short_name": "ZipInfo Path",
+      "exploit_short_name": "ZipInfo Switchback",
       "fitness_status": "PASS",
       "generation": 2,
       "id": "G2",

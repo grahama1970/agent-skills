@@ -71,10 +71,10 @@ describe("buildAdaptiveLineageViewModel", () => {
 		]);
 		expect(model.descendant?.mutationOperator).toBe("failure_guided_crossover");
 		expect(model.candidates.map((n) => [n.id, n.exploitShortName])).toEqual([
-			["G1-A", "Module Slip"],
-			["G1-B", "Arc Courier"],
+			["G1-A", "Importlib Slipstream"],
+			["G1-B", "Writestr Detour"],
 		]);
-		expect(model.descendant?.exploitShortName).toBe("ZipInfo Path");
+		expect(model.descendant?.exploitShortName).toBe("ZipInfo Switchback");
 		expect(model.selection.selectedId).toBe("G1-A");
 		expect(model.selection.decidingCriterion).toBe("novelty_distance");
 	});

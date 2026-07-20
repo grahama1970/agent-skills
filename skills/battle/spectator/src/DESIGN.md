@@ -157,7 +157,7 @@ HTML mockup uses `.main` for the 3-column row; React uses `.battle-mockup-main` 
 
 | Constant | px | CSS variable | Usage |
 |----------|-----|--------------|-------|
-| `BATTLE_LANE_LABEL_PX` | 290 | `--label-w` | Lane label column, axis corner, blue strip grid |
+| `BATTLE_LANE_LABEL_PX` | 380 | `--label-w` | Lane label column, axis corner, blue strip grid |
 | `BATTLE_MOCKUP_LEFT_RAIL_PX` | 260 | `--rail-w` | Left rail width |
 | `BATTLE_MOCKUP_AGENT_PANE_PX` | 360 | `--detail-w` | Agent detail width |
 | `BATTLE_MOCKUP_HEADER_PX` | 118 | — | Header row height |

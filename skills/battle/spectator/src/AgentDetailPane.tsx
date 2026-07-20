@@ -487,7 +487,7 @@ function LiveStreamPanel({ meta, console, packets, isLiveRoute }: { meta: Battle
         <span className="font-mono text-[10px] text-slate-500">seq {meta.appliedSeq}/{meta.lastSeq}</span>
       </div>
       {!isLiveRoute ? (
-        <EmptyState label="Live SSE transport is not connected. Start ./run.sh serve-live-transport and open #battle/live to stream evidence." />
+        <EmptyState label="Live SSE transport is not connected. Start ./run.sh serve-live-transport and open the receipt-backed #battle view to stream evidence." />
       ) : null}
       <LiveConsole label="stdout" icon="stdout" lines={stdoutLines} tone="text-slate-200" />
       <LiveConsole label="stderr" icon="stderr" lines={stderrLines} tone="text-battle-red" />

@@ -47,10 +47,10 @@ ROLE: dict[str, str] = {
 }
 G1_IDS: tuple[str, ...] = ("G1-A", "G1-B")
 EXPLOIT_SHORT_NAMES: dict[str, str] = {
-    "G0": "Seed Slip",
-    "G1-A": "Module Slip",
-    "G1-B": "Arc Courier",
-    "G2": "ZipInfo Path",
+    "G0": "Zip Slip Spark",
+    "G1-A": "Importlib Slipstream",
+    "G1-B": "Writestr Detour",
+    "G2": "ZipInfo Switchback",
 }
 
 

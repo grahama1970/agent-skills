@@ -15,9 +15,10 @@ A single canonical Battle demonstrates end to end that adaptive lineage works:
 the backend emits a **live, non-mocked** four-specimen qualification receipt, and
 the **finished** spectator renders that exact receipt — proper PixiJS sprites,
 honest `LIVE` badge, and the real selection decision — at
-the agent-skills Battle receipt host. For the 2026-07-20 recovery this is
-`http://127.0.0.1:3003/#battle/receipt?engine=pixi` because `:3002` was held by
-a stale uninterruptible Vite child and was not the accepted host.
+the agent-skills Battle spectator host. For the 2026-07-20 recovery this is
+`http://127.0.0.1:3003/#battle`; the live adaptive-lineage receipt renders in
+the top-level Battle UX because `:3002` was held by a stale uninterruptible Vite
+child and was not the accepted host.
 
 ## Canonical Subject Lock
 
@@ -97,8 +98,8 @@ Normalize the passing run into the UX fixture with a truthful source tag:
 ## UX Acceptance (finished interface)
 
 The interface is "finished" only when all of the following are true in a live
-browser at the active Battle receipt host. For the current recovery, use
-`http://127.0.0.1:3003/#battle/receipt?engine=pixi`:
+browser at the active Battle spectator host. For the current recovery, use
+`http://127.0.0.1:3003/#battle`:
 
 - **Deployment aligned.** The served host must identify the current
   agent-skills Battle spectator source. For the 2026-07-20 recovery,
@@ -192,17 +193,20 @@ Three artifacts, all required, none optional:
       4 red specimens, no budget overrun, and G2 Judge completion.
 - [x] Live fixture normalized with `data_source:"live"` and descriptive exploit
       names in `skills/battle/spectator/src/lineage/__fixtures__/adaptive-lineage-live.json`:
-      `G0 Seed Slip`, `G1-A Module Slip`, `G1-B Arc Courier`, `G2 ZipInfo Path`.
+      `G0 Zip Slip Spark`, `G1-A Importlib Slipstream`,
+      `G1-B Writestr Detour`, `G2 ZipInfo Switchback`.
 - [x] Agent-skills host proof:
       `skills/battle/local/agent-skills-host-verify-20260720T1646Z/http-host-proof.json`
       identifies `host: agent-skills battle spectator` and entry
       `skills/battle/spectator/src/main.tsx`.
-- [x] Live-browser render proof:
+- [x] Historical receipt-route render proof:
       `skills/battle/local/agent-skills-host-verify-20260720T1646Z/surf-assertions.json`
       targets `http://127.0.0.1:3003/#battle/receipt?engine=pixi`, has
       `mocked:false`, `live:true`, screenshot bytes `254726`, contains
       `ADAPTIVE LINEAGE`, `LIVE: Qual PASS`, all four exploit names, and
-      `G1-A Module Slip · selected G1`, and excludes Sparta/error markers.
+      selected-G1 evidence, and excludes Sparta/error markers. This is retained
+      as historical receipt-route evidence; the current acceptance route is
+      `#battle`.
 - [x] WebGPT UX sign-off:
       `skills/battle/local/webgpt-design-review-20260720T1742Z/response.md`
       starts with `ACCEPTED`; `response.raw.md` contains terminal sentinel
@@ -231,10 +235,21 @@ Three artifacts, all required, none optional:
       `skills/battle/local/agent-skills-host-verify-20260720T1755Z/playwright-receipt-pixi-canvas.png`
       visually shows the four named lineage specimens with four distinct Pixi
       sprites.
+- [x] Top-level `#battle` UX proof:
+      `skills/battle/local/battle-ux-integration-20260720T2022Z/battle-route-render-proof.json`
+      targets `http://127.0.0.1:3003/#battle`, has `mocked:false`,
+      `live:true`, `hasCanvas:true`, canvas `1030x277`,
+      `data-data-source:"live"`, `data-proves-live:"true"`, no failed
+      requests, no console errors, no Sparta/render-blocked markers, no
+      standalone `battle:nav:live`, contains
+      `G0 Zip Slip Spark`, `G1-A Importlib Slipstream`,
+      `G1-B Writestr Detour`, `G2 ZipInfo Switchback`, contains none of the old
+      ambiguous names, and reports no lane/roster name overflow. Screenshot:
+      `skills/battle/local/battle-ux-integration-20260720T2022Z/battle-route-adaptive-lineage.png`.
 
-**GOAL STATUS: MET BY CURRENT RECOVERY EVIDENCE** — 2026-07-20. Closure requires
-the final Battle evidence commit to be pushed and remote-ref verified in the
-agent final report.
+**GOAL STATUS: CURRENT RECOVERY EVIDENCE READY FOR COMMIT** — 2026-07-20.
+Closure requires the final Battle evidence commit to be pushed and remote-ref
+verified in the agent final report.
 
 ## Allowed Scope
 

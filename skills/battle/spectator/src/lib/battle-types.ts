@@ -1136,7 +1136,7 @@ export type BattleTimelineViewportState = {
 	worldRightSeconds: number;
 	currentSeconds: number;
 	followMode: TimelineFollowMode;
-	labelWidthPx: 290;
+	labelWidthPx: number;
 	rowHeightPx: number;
 };
 

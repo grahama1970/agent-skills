@@ -7,6 +7,7 @@ import {
 	battleReceiptReplayFixtureKey,
 	battleReceiptReplayFixtureUrl,
 	childSpawnElapsedSeconds,
+	isBattleReceiptReplayView,
 	lanesVisibleAtPlayhead,
 	spawnTimingFieldsConsistent,
 } from "./battle-receipt-replay";
@@ -47,6 +48,8 @@ describe("battle receipt lineage", () => {
 	});
 
 	it("resolves committed receipt replay fixture keys from the route hash", () => {
+		expect(isBattleReceiptReplayView("#battle")).toBe(true);
+		expect(battleReceiptReplayFixtureKey("#battle")).toBe("battle-004-adaptive-lineage-live");
 		expect(battleReceiptReplayFixtureKey("#battle/receipt?engine=pixi")).toBe("battle-004-adaptive-lineage-live");
 		expect(battleReceiptReplayFixtureKey("#battle/receipt?engine=pixi&fixture=missing")).toBe("battle-004-adaptive-lineage-live");
 		expect(battleReceiptReplayFixtureUrl("#battle/receipt?engine=pixi&fixture=battle-005-ssrf-metadata")).toBe(
