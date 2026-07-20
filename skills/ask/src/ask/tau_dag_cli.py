@@ -38,6 +38,18 @@ def run(
         typer.Option("--solver-model", help="Solver model to run. Repeat for parallel solvers."),
     ] = None,
     reviewer_model: Annotated[str, typer.Option("--reviewer-model", help="Reviewer model.")] = "",
+    handler: Annotated[
+        list[str] | None,
+        typer.Option("--handler", help="Roundtable handler to route through Tau. Repeat for multiple handlers."),
+    ] = None,
+    topology: Annotated[
+        str,
+        typer.Option("--topology", help="Roundtable topology: concurrent or sequential."),
+    ] = "",
+    join_handler: Annotated[
+        str,
+        typer.Option("--join-handler", help="Roundtable join/adjudicator handler label."),
+    ] = "join",
     criterion: Annotated[
         list[str] | None,
         typer.Option("--criterion", help="Reviewer criterion. Repeat for multiple criteria."),
@@ -97,6 +109,9 @@ def run(
         solver_models=solver_model,
         reviewer_model=reviewer_model,
         criteria=criterion,
+        handlers=handler,
+        topology=topology,
+        join_handler=join_handler,
         ask_id=ask_id,
         output_root=output_root,
         local_fixture=local_fixture,
@@ -112,19 +127,44 @@ def run(
     if bundle.get("status") == "NEEDS_INTERVIEW":
         exit_code = 2
     else:
-        provider_gate = probe_scillm_provider_gate(
-            models=[*input_payload.solver_models, input_payload.reviewer_model],
-            base_url=scillm_base_url,
-            api_key=scillm_api_key,
-            allow_provider_calls=allow_provider_calls,
-        )
+        if input_payload.handlers:
+            provider_gate = {
+                "schema": "ask.tau_dag_roundtable_handler_gate.v1",
+                "status": "COMPILE_ONLY",
+                "ok": True,
+                "mocked": False,
+                "live": False,
+                "provider_live": False,
+                "handlers": list(input_payload.handlers),
+                "topology": input_payload.topology,
+                "message": "Handler DAG emitted only; live Surf/API adapter execution was not attempted.",
+            }
+        else:
+            provider_gate = probe_scillm_provider_gate(
+                models=[*input_payload.solver_models, input_payload.reviewer_model],
+                base_url=scillm_base_url,
+                api_key=scillm_api_key,
+                allow_provider_calls=allow_provider_calls,
+            )
         gate_path = Path(str(bundle["run_dir"])) / "provider-gate.json"
         gate_path.write_text(json.dumps(provider_gate, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         provider_gate["path"] = str(gate_path)
         if require_provider_calls and provider_gate.get("ok") is not True:
             exit_code = 3
         elif execute:
-            if not local_fixture and not allow_provider_calls:
+            if input_payload.handlers:
+                execution = {
+                    "schema": "ask.tau_dag_execution.v1",
+                    "status": "BLOCKED",
+                    "ok": False,
+                    "mocked": False,
+                    "live": False,
+                    "provider_live": False,
+                    "blocked_reason": "roundtable_handler_execution_not_implemented",
+                    "message": "This slice emits a Tau DAG only; live handler execution needs Tau adapter receipts.",
+                }
+                exit_code = 3
+            elif not local_fixture and not allow_provider_calls:
                 execution = {
                     "schema": "ask.tau_dag_execution.v1",
                     "status": "BLOCKED",
@@ -148,12 +188,16 @@ def run(
                 if execution.get("ok") is not True:
                     exit_code = 4
 
+    output_live = bool(
+        (isinstance(execution, dict) and execution.get("live") is True)
+        or (isinstance(provider_gate, dict) and provider_gate.get("live") is True)
+    )
     output = {
         "schema": "ask.tau_dag_cli_result.v1",
         "status": execution.get("status") if isinstance(execution, dict) else bundle.get("status"),
         "ok": exit_code == 0,
         "mocked": False,
-        "live": bool(execution),
+        "live": output_live,
         "provider_live": bool(
             isinstance(provider_gate, dict) and provider_gate.get("provider_live") is True
         ),

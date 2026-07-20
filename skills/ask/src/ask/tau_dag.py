@@ -26,6 +26,40 @@ DEFAULT_SCILLM_API_KEY = ""
 DEFAULT_TAU_PROJECT_ROOT = Path("/home/graham/workspace/experiments/tau")
 DEFAULT_OUTPUT_ROOT = Path(".ask_artifacts/tau-dag-runs")
 TERMINAL_STATUSES = {"PASS", "BLOCKED", "FAILED", "ERROR"}
+ROUNDTABLE_TOPOLOGIES = {"concurrent", "sequential"}
+ROUNDTABLE_HANDLERS = {
+    "webgpt": {
+        "transport_owner": "$surf",
+        "transport": "webgpt.submit",
+        "runtime": "browser",
+        "proof_required": "surf_sentinel_meta",
+    },
+    "webkimi": {
+        "transport_owner": "$surf",
+        "transport": "kimi.submit",
+        "runtime": "browser",
+        "proof_required": "surf_sentinel_meta",
+    },
+    "webclaude": {
+        "transport_owner": "$surf",
+        "transport": "claude.submit",
+        "runtime": "browser",
+        "proof_required": "surf_sentinel_meta",
+    },
+    "webgemini": {
+        "transport_owner": "$surf",
+        "transport": "gemini.submit",
+        "runtime": "browser",
+        "proof_required": "surf_sentinel_meta",
+    },
+}
+_HANDLER_ALIASES = {
+    "chatgpt": "webgpt",
+    "gpt": "webgpt",
+    "kimi": "webkimi",
+    "claude": "webclaude",
+    "gemini": "webgemini",
+}
 FAIL_CLOSED_ON = [
     "goal_hash_mismatch",
     "target_changed",
@@ -68,6 +102,9 @@ class TauDagCompileInput:
     solver_models: tuple[str, ...]
     reviewer_model: str
     criteria: tuple[str, ...]
+    handlers: tuple[str, ...] = ()
+    topology: str = "concurrent"
+    join_handler: str = "join"
     ask_id: str | None = None
     output_root: Path = DEFAULT_OUTPUT_ROOT
     local_fixture: bool = False
@@ -84,6 +121,9 @@ def infer_compile_input(
     solver_models: list[str] | None = None,
     reviewer_model: str = "",
     criteria: list[str] | None = None,
+    handlers: list[str] | None = None,
+    topology: str = "",
+    join_handler: str = "join",
     ask_id: str | None = None,
     output_root: Path = DEFAULT_OUTPUT_ROOT,
     local_fixture: bool = False,
@@ -94,8 +134,11 @@ def infer_compile_input(
     """Merge explicit CLI fields with conservative request-text inference."""
 
     inferred_solvers = list(solver_models or [])
+    inferred_handlers = [_normalize_handler(item) for item in (handlers or []) if item.strip()]
     normalized_request = request.strip()
     lower = normalized_request.lower()
+    if not inferred_handlers:
+        inferred_handlers = _infer_roundtable_handlers(lower)
     if not inferred_solvers:
         gpt_match = re.search(r"\b(\d+)\s+gpt[\s-]*([0-9.]+)\s*xhigh\b", lower)
         if gpt_match:
@@ -114,6 +157,9 @@ def infer_compile_input(
         solver_models=tuple(_normalize_model(item) for item in inferred_solvers if item.strip()),
         reviewer_model=_normalize_model(inferred_reviewer) if inferred_reviewer else "",
         criteria=tuple(item.strip() for item in (criteria or []) if item.strip()),
+        handlers=tuple(inferred_handlers),
+        topology=_normalize_topology(topology or ("sequential" if "sequential" in lower else "concurrent")),
+        join_handler=_normalize_handler(join_handler) if join_handler else "join",
         ask_id=ask_id,
         output_root=output_root,
         local_fixture=local_fixture,
@@ -131,6 +177,25 @@ def missing_dag_fields(input: TauDagCompileInput) -> list[dict[str, Any]]:
         missing.append(_question("repo", "Which repository or project identifier should the DAG bind to?"))
     if not input.target:
         missing.append(_question("target", "Which issue, task, file, or work target should the DAG bind to?"))
+    if input.handlers:
+        unknown_handlers = [item for item in input.handlers if item not in ROUNDTABLE_HANDLERS]
+        if unknown_handlers:
+            missing.append(
+                _question(
+                    "handlers",
+                    f"Unknown Tau roundtable handler(s): {', '.join(unknown_handlers)}.",
+                    expects="list[str]",
+                )
+            )
+        if input.topology not in ROUNDTABLE_TOPOLOGIES:
+            missing.append(
+                _question(
+                    "topology",
+                    "Roundtable topology must be concurrent or sequential.",
+                    expects="concurrent|sequential",
+                )
+            )
+        return missing
     if not input.solver_models:
         missing.append(
             _question(
@@ -229,6 +294,9 @@ def compile_tau_dag_bundle(input: TauDagCompileInput) -> dict[str, Any]:
             "solver_models": list(input.solver_models),
             "reviewer_model": input.reviewer_model,
             "criteria": list(input.criteria),
+            "handlers": list(input.handlers),
+            "topology": input.topology,
+            "join_handler": input.join_handler,
             "local_fixture": input.local_fixture,
         },
     )
@@ -240,19 +308,29 @@ def compile_tau_dag_bundle(input: TauDagCompileInput) -> dict[str, Any]:
         _write_json(run_dir / "compile-status.json", packet)
         return packet
 
-    worker_path = _write_worker(run_dir)
+    worker_path = _write_roundtable_worker(run_dir) if input.handlers else _write_worker(run_dir)
     command_specs_dir = run_dir / "command-specs"
     agents_dir = run_dir / "agents"
-    dag = _build_tau_dag(input, run_dir=run_dir)
+    dag = _build_roundtable_tau_dag(input, run_dir=run_dir) if input.handlers else _build_tau_dag(input, run_dir=run_dir)
     for node in dag["nodes"]:
         _write_agent_stub(agents_dir, node_id=str(node["id"]), role=str(node["agent"]))
-        _write_command_spec(
-            command_specs_dir,
-            node=node,
-            input=input,
-            worker_path=worker_path,
-            run_dir=run_dir,
-        )
+        if node.get("command_spec"):
+            if input.handlers:
+                _write_roundtable_command_spec(
+                    command_specs_dir,
+                    node=node,
+                    input=input,
+                    worker_path=worker_path,
+                    run_dir=run_dir,
+                )
+            else:
+                _write_command_spec(
+                    command_specs_dir,
+                    node=node,
+                    input=input,
+                    worker_path=worker_path,
+                    run_dir=run_dir,
+                )
     dag_path = run_dir / "dag.json"
     _write_json(dag_path, dag)
     dag_sha = f"sha256:{_sha256(dag_path)}"
@@ -281,6 +359,7 @@ def compile_tau_dag_bundle(input: TauDagCompileInput) -> dict[str, Any]:
                 "Provider/model calls have succeeded.",
                 "The Tau DAG has been executed.",
                 "Semantic quality of solver or reviewer outputs.",
+                "Browser handlers have run unless a later Tau execution receipt proves the adapter node.",
             ],
         },
     }
@@ -664,6 +743,122 @@ def _build_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> dict[str, Any
     }
 
 
+def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> dict[str, Any]:
+    dag_id = _dag_id(input)
+    goal = {
+        "goal_id": f"ask-{dag_id}",
+        "goal_version": 1,
+        "goal_hash": _goal_hash(input),
+    }
+    handler_nodes: list[dict[str, Any]] = []
+    for handler in input.handlers:
+        node_id = f"handler-{handler}"
+        handler_nodes.append(
+            {
+                "id": node_id,
+                "agent": handler,
+                "executor": "local",
+                "max_attempts": 1,
+                "command_spec": f"command-specs/{node_id}/tau-dispatch-command.json",
+                "required_evidence": [
+                    "handler_response_receipt",
+                    "normalized_handler_receipt",
+                    "transport_metadata",
+                ],
+                "handler": _handler_policy(handler),
+                "prompt_contract": _roundtable_handler_prompt_contract(input, handler=handler),
+                "context": {
+                    "role": "roundtable_handler",
+                    "handler": handler,
+                    "request": input.request,
+                    "topology": input.topology,
+                },
+            }
+        )
+    join_node = {
+        "id": "join",
+        "agent": input.join_handler or "join",
+        "executor": "local",
+        "max_attempts": 1,
+        "command_spec": "command-specs/join/tau-dispatch-command.json",
+        "required_evidence": [
+            "roundtable_join_receipt",
+            "handler_response_index",
+            "unresolved_gaps",
+        ],
+        "join": {
+            "requires_completed": [node["id"] for node in handler_nodes],
+            "reconciles_evidence": True,
+            "topology": input.topology,
+        },
+        "prompt_contract": _roundtable_join_prompt_contract(input),
+        "context": {
+            "role": "roundtable_join",
+            "request": input.request,
+            "handlers": list(input.handlers),
+            "topology": input.topology,
+        },
+    }
+    start_node = {
+        "id": "start",
+        "agent": "goal-guardian",
+        "executor": "scheduler",
+        "max_attempts": 1,
+        "required_evidence": [],
+    }
+    edges: list[dict[str, str]] = []
+    if input.topology == "sequential":
+        previous = "start"
+        for node in handler_nodes:
+            edges.append({"from": previous, "to": str(node["id"])})
+            previous = str(node["id"])
+        edges.append({"from": previous, "to": "join"})
+    else:
+        edges.extend({"from": "start", "to": str(node["id"])} for node in handler_nodes)
+        edges.extend({"from": str(node["id"]), "to": "join"} for node in handler_nodes)
+    edges.append({"from": "join", "to": "human"})
+    return {
+        "schema": TAU_DAG_SCHEMA,
+        "dag_id": dag_id,
+        "goal": goal,
+        "target": {"repo": input.repo, "target": input.target},
+        "entry_node": "start",
+        "terminal_nodes": ["human"],
+        "limits": {
+            "resume": True,
+            "default_timeout_seconds": 300,
+            "max_total_attempts": len(handler_nodes) + 1,
+            "max_concurrency": len(handler_nodes) if input.topology == "concurrent" else 1,
+        },
+        "context": {
+            "compiled_by": "$ask",
+            "delegated_runtime": "$tau",
+            "transport_owner": "$surf_or_api_adapter",
+            "request": input.request,
+            "run_dir": str(run_dir),
+            "execution_owner": "$tau",
+            "provider_transport": "handler_neutral_adapter",
+            "provider_route": "tau_roundtable_handler_adapter",
+            "execution_mode": "compile_only",
+            "roundtable_topology": input.topology,
+            "handlers": list(input.handlers),
+        },
+        "provider_sensitive": True,
+        "requires_provider_route": True,
+        "nodes": [start_node, *handler_nodes, join_node],
+        "edges": edges,
+        "required_evidence": [
+            "handler_response_receipt",
+            "normalized_handler_receipt",
+            "roundtable_join_receipt",
+        ],
+        "fail_closed_on": [
+            *FAIL_CLOSED_ON,
+            "unresolved_block_alert",
+        ],
+    }
+
+
 def _write_command_spec(
     root: Path,
     *,
@@ -711,6 +906,47 @@ def _write_command_spec(
     _write_json(spec_path, payload)
 
 
+def _write_roundtable_command_spec(
+    root: Path,
+    *,
+    node: dict[str, Any],
+    input: TauDagCompileInput,
+    worker_path: Path,
+    run_dir: Path,
+) -> None:
+    node_id = str(node["id"])
+    handler_policy = node.get("handler") if isinstance(node.get("handler"), dict) else {}
+    command = [
+        sys.executable,
+        str(worker_path),
+        "--node-id",
+        node_id,
+        "--handler",
+        str(handler_policy.get("id") or node_id),
+        "--topology",
+        input.topology,
+        "--artifact-dir",
+        str(run_dir / "node-artifacts" / node_id),
+    ]
+    for evidence in node.get("required_evidence", []):
+        command.extend(["--evidence", str(evidence)])
+    payload = {
+        "command": command,
+        "cwd": str(run_dir),
+        "timeout_s": 30,
+        "requires_network": False,
+        "mutates": False,
+        "requires_clean_worktree": False,
+        "compile_only": True,
+        "runtime_note": (
+            "This adapter command records fail-closed compile-only metadata; "
+            "live Surf/API execution is a later Tau adapter slice."
+        ),
+    }
+    spec_path = root / node_id / "tau-dispatch-command.json"
+    _write_json(spec_path, payload)
+
+
 def _write_agent_stub(root: Path, *, node_id: str, role: str) -> None:
     path = root / node_id / "AGENTS.md"
     text = "\n".join(
@@ -740,6 +976,14 @@ def _write_worker(run_dir: Path) -> Path:
     return worker_path
 
 
+def _write_roundtable_worker(run_dir: Path) -> Path:
+    worker_path = run_dir / "workers" / "ask_tau_roundtable_worker.py"
+    worker_path.parent.mkdir(parents=True, exist_ok=True)
+    worker_path.write_text(_ROUNDTABLE_WORKER_SOURCE, encoding="utf-8")
+    worker_path.chmod(0o755)
+    return worker_path
+
+
 def _model_policy(model: str, *, base_url: str = DEFAULT_SCILLM_BASE_URL) -> dict[str, str]:
     route = resolve_scillm_model_route(model)
     payload: dict[str, str] = {
@@ -759,6 +1003,40 @@ def _model_policy(model: str, *, base_url: str = DEFAULT_SCILLM_BASE_URL) -> dic
     if route.reasoning_downgrade_reason:
         payload["reasoning_downgrade_reason"] = route.reasoning_downgrade_reason
     return payload
+
+
+def _handler_policy(handler: str) -> dict[str, Any]:
+    policy = dict(ROUNDTABLE_HANDLERS[handler])
+    policy["id"] = handler
+    policy["execution_owner"] = "$tau"
+    policy["receipt_schema"] = "ask.tau_dag_handler_receipt.v1"
+    return policy
+
+
+def _roundtable_handler_prompt_contract(input: TauDagCompileInput, *, handler: str) -> dict[str, Any]:
+    return {
+        "schema": "ask.tau_dag_prompt_contract.v1",
+        "system": "You are a Tau-managed roundtable handler. Return receipt-backed findings only.",
+        "user_template": (
+            f"Roundtable request: {input.request}\n"
+            f"Handler: {handler}\n"
+            "Return a concise position, evidence, uncertainties, and blockers."
+        ),
+        "handler": handler,
+    }
+
+
+def _roundtable_join_prompt_contract(input: TauDagCompileInput) -> dict[str, Any]:
+    return {
+        "schema": "ask.tau_dag_prompt_contract.v1",
+        "system": "You are a Tau join node. Reconcile handler receipts without hiding gaps.",
+        "user_template": (
+            f"Roundtable request: {input.request}\n"
+            f"Handlers: {', '.join(input.handlers)}\n"
+            "Produce a synthesized answer, dissent list, and unresolved proof gaps."
+        ),
+        "topology": input.topology,
+    }
 
 
 def resolve_scillm_model_route(model: str) -> ScillmModelRoute:
@@ -922,6 +1200,9 @@ def _dag_id(input: TauDagCompileInput) -> str:
             ",".join(input.solver_models),
             input.reviewer_model,
             ",".join(input.criteria),
+            ",".join(input.handlers),
+            input.topology,
+            input.join_handler,
         ]
     )
     digest = hashlib.sha256(seed.encode("utf-8")).hexdigest()[:12]
@@ -936,12 +1217,40 @@ def _goal_hash(input: TauDagCompileInput) -> str:
         "solver_models": list(input.solver_models),
         "reviewer_model": input.reviewer_model,
         "criteria": list(input.criteria),
+        "handlers": list(input.handlers),
+        "topology": input.topology,
+        "join_handler": input.join_handler,
     }
     return f"sha256:{hashlib.sha256(json.dumps(payload, sort_keys=True).encode('utf-8')).hexdigest()}"
 
 
 def _normalize_model(value: str) -> str:
     return re.sub(r"\s+", "-", value.strip().lower())
+
+
+def _normalize_handler(value: str) -> str:
+    normalized = re.sub(r"[^a-z0-9]+", "", value.strip().lower().removeprefix("$"))
+    return _HANDLER_ALIASES.get(normalized, normalized)
+
+
+def _normalize_topology(value: str) -> str:
+    normalized = value.strip().lower()
+    return normalized if normalized in ROUNDTABLE_TOPOLOGIES else value.strip().lower()
+
+
+def _infer_roundtable_handlers(lower_request: str) -> list[str]:
+    if "roundtable" not in lower_request and "handler" not in lower_request:
+        return []
+    matches: list[tuple[int, str]] = []
+    for name in [*ROUNDTABLE_HANDLERS, *_HANDLER_ALIASES]:
+        pattern = rf"(?<![a-z0-9])\$?{re.escape(name)}(?![a-z0-9])"
+        for match in re.finditer(pattern, lower_request):
+            matches.append((match.start(), _normalize_handler(name)))
+    found: list[str] = []
+    for _position, canonical in sorted(matches, key=lambda item: item[0]):
+        if canonical not in found:
+            found.append(canonical)
+    return found
 
 
 def _slug(value: str) -> str:
@@ -1194,6 +1503,85 @@ def _prompt(start: dict[str, Any]) -> str:
         },
         sort_keys=True,
     )
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+'''
+
+
+_ROUNDTABLE_WORKER_SOURCE = r'''#!/usr/bin/env python3
+"""Generated compile-only $ask Tau roundtable worker."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from datetime import UTC, datetime
+from pathlib import Path
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--node-id", required=True)
+    parser.add_argument("--handler", required=True)
+    parser.add_argument("--topology", required=True)
+    parser.add_argument("--artifact-dir", required=True)
+    parser.add_argument("--evidence", action="append", default=[])
+    args = parser.parse_args()
+    start = json.loads(sys.stdin.read() or "{}")
+    artifact_dir = Path(args.artifact_dir)
+    artifact_dir.mkdir(parents=True, exist_ok=True)
+    receipt_path = artifact_dir / "node-receipt.json"
+    receipt = {
+        "schema": "ask.tau_dag_handler_receipt.v1",
+        "created_at": datetime.now(UTC).isoformat(),
+        "node_id": args.node_id,
+        "handler": args.handler,
+        "topology": args.topology,
+        "status": "BLOCKED",
+        "ok": False,
+        "mocked": False,
+        "live": False,
+        "provider_live": False,
+        "blocked_reason": "compile_only_roundtable_adapter",
+        "message": "Tau received a compile-only roundtable adapter node. Live Surf/API execution is not implemented in this worker.",
+        "context": start.get("context", {}),
+    }
+    receipt_path.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    response = {
+        "schema": "tau.agent_handoff.v1",
+        "github": start.get("github", {"repo": "unknown", "target": "unknown"}),
+        "goal": start.get("goal", {}),
+        "previous_subagent": args.node_id,
+        "context": {
+            "summary": f"{args.node_id} blocked because only compile-only roundtable metadata exists.",
+            "artifacts": [str(receipt_path)],
+        },
+        "result": {
+            "status": "BLOCKED",
+            "summary": "Live roundtable handler execution needs a Tau adapter receipt before this node can pass.",
+            "evidence": [
+                {
+                    "kind": "handler_response_receipt",
+                    "node_id": args.node_id,
+                    "path": str(receipt_path),
+                    "status": "BLOCKED",
+                }
+            ],
+        },
+        "rationale": "Fail closed instead of fabricating handler output from a compile-only DAG.",
+        "next_agent": {
+            "name": "human",
+            "executor": "human",
+            "reason": "Live handler adapter implementation is pending.",
+        },
+        "required_evidence": list(args.evidence),
+        "stop_condition": "Stop after emitting a blocked tau.agent_handoff.v1 response.",
+    }
+    print(json.dumps(response, sort_keys=True))
+    return 0
 
 
 if __name__ == "__main__":

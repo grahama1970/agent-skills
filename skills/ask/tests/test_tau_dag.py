@@ -87,6 +87,100 @@ def test_complete_tau_dag_bundle_emits_strict_tau_contract(tmp_path: Path) -> No
     assert validate.stdout.strip() == "ok"
 
 
+def test_roundtable_prompt_compiles_to_handler_neutral_tau_dag(tmp_path: Path) -> None:
+    request = infer_compile_input(
+        "Roundtable webkimi, webclaude, webgpt, and webgemini concurrently, then join the answers.",
+        repo="local/agent-skills",
+        target="roundtable-web-handlers",
+        output_root=tmp_path,
+    )
+
+    bundle = compile_tau_dag_bundle(request)
+
+    assert bundle["status"] == "READY"
+    dag = bundle["dag"]
+    assert dag["schema"] == "tau.dag_contract.v1"
+    assert dag["context"]["execution_owner"] == "$tau"
+    assert dag["context"]["provider_transport"] == "handler_neutral_adapter"
+    assert dag["context"]["roundtable_topology"] == "concurrent"
+    assert dag["context"]["handlers"] == ["webkimi", "webclaude", "webgpt", "webgemini"]
+    assert [node["id"] for node in dag["nodes"]] == [
+        "start",
+        "handler-webkimi",
+        "handler-webclaude",
+        "handler-webgpt",
+        "handler-webgemini",
+        "join",
+    ]
+    assert {"from": "start", "to": "handler-webkimi"} in dag["edges"]
+    assert {"from": "handler-webgemini", "to": "join"} in dag["edges"]
+    join = dag["nodes"][-1]
+    assert join["join"]["requires_completed"] == [
+        "handler-webkimi",
+        "handler-webclaude",
+        "handler-webgpt",
+        "handler-webgemini",
+    ]
+    kimi = dag["nodes"][1]
+    assert kimi["handler"]["transport_owner"] == "$surf"
+    assert kimi["handler"]["transport"] == "kimi.submit"
+    assert Path(bundle["command_spec_root"], "handler-webkimi", "tau-dispatch-command.json").is_file()
+    command_spec = json.loads(
+        Path(bundle["command_spec_root"], "handler-webkimi", "tau-dispatch-command.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert command_spec["compile_only"] is True
+    assert command_spec["requires_network"] is False
+
+    validate = subprocess.run(
+        [
+            "uv",
+            "run",
+            "--project",
+            str(TAU_ROOT),
+            "python",
+            "-c",
+            (
+                "from pathlib import Path;"
+                "from tau_coding.project_dag import load_dag_contract_payload, validate_dag_contract;"
+                "validate_dag_contract(load_dag_contract_payload(Path(__import__('sys').argv[1])));"
+                "print('ok')"
+            ),
+            str(bundle["dag_path"]),
+        ],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    assert validate.returncode == 0, validate.stderr
+    assert validate.stdout.strip() == "ok"
+
+
+def test_roundtable_handlers_can_be_explicit_and_sequential(tmp_path: Path) -> None:
+    request = infer_compile_input(
+        "Roundtable the implementation plan.",
+        repo="local/agent-skills",
+        target="roundtable-sequential",
+        handlers=["webkimi", "webgemini"],
+        topology="sequential",
+        output_root=tmp_path,
+    )
+
+    bundle = compile_tau_dag_bundle(request)
+
+    assert bundle["status"] == "READY"
+    dag = bundle["dag"]
+    assert dag["context"]["roundtable_topology"] == "sequential"
+    assert dag["edges"] == [
+        {"from": "start", "to": "handler-webkimi"},
+        {"from": "handler-webkimi", "to": "handler-webgemini"},
+        {"from": "handler-webgemini", "to": "join"},
+        {"from": "join", "to": "human"},
+    ]
+
+
 def test_command_spec_blocks_provider_execution_without_opt_in(tmp_path: Path) -> None:
     request = infer_compile_input(
         "solve X",
