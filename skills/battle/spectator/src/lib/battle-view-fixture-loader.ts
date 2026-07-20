@@ -11,7 +11,7 @@ import { validateSynthesisFixture } from "./battle-synthesis-validator";
 import type { BattleAdaptiveLineageMechanicsFixtureV1, BattleNormalizedUxFixture } from "./battle-types";
 import type { BattleNormalizedAdaptiveLineageFixtureV1 } from "./battle-adaptive-lineage-types";
 import { validateAdaptiveLineageFixture } from "./battle-adaptive-lineage-validator";
-import { adaptiveLineageToRaceFixture } from "./battle-adaptive-lineage-view-model";
+import { adaptiveLineageToRaceFixture, applyAdaptiveMechanicsToRaceFixture } from "./battle-adaptive-lineage-view-model";
 import {
 	BATTLE_VIEW_FIXTURE_SCHEMAS,
 	readFixtureSchema,
@@ -277,7 +277,7 @@ export async function loadBattleRaceFixture(url: string): Promise<BattleFixtureL
 	// Receipt-authoritative adaptive-lineage mechanics: co-fetched from the loaded
 	// receipt's own directory and verified against it. Fail-closed if absent/mismatched.
 	const adaptiveLineage = await loadColocatedAdaptiveLineageMechanics(url, base.battle_id);
-	const fixture = adaptiveLineage ? { ...base, adaptive_lineage: adaptiveLineage } : base;
+	const fixture = adaptiveLineage ? applyAdaptiveMechanicsToRaceFixture(base, adaptiveLineage) : base;
 	return {
 		ok: true,
 		fixture,

@@ -44,11 +44,12 @@ export function hungerGamesNotification(cue: BattleEffectCueKind, lane: Lane): H
 		default:
 			if (isGeneticLaneEventKind(cue)) {
 				const label = cue.replace(/_/g, " ").toUpperCase();
+				const lifecycle = lane.actor_visual?.state_source === "battle.adaptive_lineage_mechanics_fixture.v1" ? "Adaptive lineage" : "Genetic lifecycle";
 				return {
-					prefix: "Genetic lifecycle — ",
+					prefix: `${lifecycle} — `,
 					highlight: `${tribute}: ${label}`,
 					highlightTone: "green",
-					notification: `Genetic lifecycle — ${tribute}: ${label}`,
+					notification: `${lifecycle} — ${tribute}: ${label}`,
 				};
 			}
 			return {

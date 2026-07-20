@@ -1,5 +1,15 @@
 import type { BattleNormalizedAdaptiveLineageFixtureV1, AdaptiveLineageEvent, AdaptiveLineageLane } from "./battle-adaptive-lineage-types";
-import type { BattleEvent, BattleMemoryPromotion, BattleNormalizedUxFixture, Lane, LaneActivitySegment, LaneEvent } from "./battle-types";
+import type {
+	AdaptiveLineageNode,
+	BattleAdaptiveLineageMechanicsFixtureV1,
+	BattleEvent,
+	BattleMemoryPromotion,
+	BattleNormalizedUxFixture,
+	BattleReceiptRef,
+	Lane,
+	LaneActivitySegment,
+	LaneEvent,
+} from "./battle-types";
 
 function pct(seconds: number, duration: number): number {
 	return Math.max(0, Math.min(100, (seconds / Math.max(1, duration)) * 100));
@@ -377,5 +387,392 @@ export function adaptiveLineageToRaceFixture(source: BattleNormalizedAdaptiveLin
 		leaderboard: [],
 		receipts: source.receipt_refs.map((receipt) => ({ receipt_id: receipt.receipt_id ?? `${receipt.schema}:${receipt.sha256.slice(0, 12)}`, receipt_type: receipt.schema, artifact_ref: `sha256:${receipt.sha256}`, summary: receipt.verdict ?? receipt.status ?? "receipt", proof_mode: "receipt_backed_fixture" })),
 		validation: { schema: "battle.adaptive_lineage_frontend_projection.v1", fail_closed: true, source_schema: source.schema, renderer_contract: source.renderer_contract },
+	};
+}
+
+const MECHANICS_LANE_ORDER = ["G0", "G1-A", "G1-B", "G2"];
+const MECHANICS_TEMPLATE_LANE_IDS = ["red-g1", "red-g2", "blue-g1", "blue-g2"];
+
+function mechanicsNodeLabel(node: AdaptiveLineageNode): string {
+	if (node.id === "G0") return "G0 SEED";
+	if (node.selected) return `${node.id} SELECTED`;
+	if (node.runner_up) return `${node.id} RUNNER-UP`;
+	if (node.role === "descendant") return `${node.id} DESCENDANT`;
+	return node.id;
+}
+
+function mechanicsReceipt(node: AdaptiveLineageNode, fixture: BattleAdaptiveLineageMechanicsFixtureV1): BattleReceiptRef {
+	return {
+		receipt_id: `${fixture.run_id}:${node.id}:fitness`,
+		receipt_type: "battle.adaptive_lineage_node_fitness.v1",
+		summary: node.judge_outcome
+			? `fitness ${node.fitness_status ?? "evaluated"} · vulnerable original ${node.judge_outcome.vulnerable_original_confirmed ? "yes" : "no"}`
+			: "seed specimen receipt",
+		proof_mode: "receipt_backed_fixture",
+	};
+}
+
+function judgeDurationLabel(node: AdaptiveLineageNode): string {
+	return typeof node.judge_outcome?.duration_seconds === "number" ? `${node.judge_outcome.duration_seconds}s` : "no Judge duration";
+}
+
+function mechanicsOutputSummary(node: AdaptiveLineageNode, fixture: BattleAdaptiveLineageMechanicsFixtureV1): string {
+	if (!node.judge_outcome) return `${node.id}: seed specimen · run ${fixture.run_id}`;
+	return [
+		`${node.id}: fitness ${node.fitness_status ?? "evaluated"}`,
+		`run=${fixture.run_id}`,
+		`novelty=${node.novelty_distance ?? "n/a"}`,
+		`judge_duration=${judgeDurationLabel(node)}`,
+		`vulnerable_original_confirmed=${node.judge_outcome.vulnerable_original_confirmed}`,
+		`patched_bypass=${node.judge_outcome.patched_bypass}`,
+	].join("; ");
+}
+
+function mechanicsLaneEvents(node: AdaptiveLineageNode, fixture: BattleAdaptiveLineageMechanicsFixtureV1, duration: number): LaneEvent[] {
+	const mutationAt = node.id === "G0" ? 0 : node.generation === 1 ? duration * 0.42 : duration * 0.76;
+	const events: LaneEvent[] = [];
+	if (node.mutation_operator) {
+		events.push({
+			id: `${node.id}:mutation`,
+			kind: "genome_selected",
+			x: pct(mutationAt, duration),
+			label: `${node.id} · ${node.mutation_operator}`,
+			timeLabel: "adaptive receipt",
+			proven: true,
+			proofMode: "receipt_backed_fixture",
+			receiptId: `${fixture.run_id}:${node.id}:mutation`,
+			elapsed_seconds: mutationAt,
+			at_seconds: mutationAt,
+			order_index: node.generation,
+			label_band: node.selected ? "upper" : "lower",
+			marker_priority: node.selected || node.runner_up ? 95 : 80,
+			collision_group: `adaptive-mechanics:${node.id}`,
+		});
+	}
+	if (node.judge_outcome) {
+		const judgeAt = node.generation === 1 ? duration * 0.54 : duration * 0.9;
+		events.push({
+			id: `${node.id}:fitness`,
+			kind: "useful",
+			x: pct(judgeAt, duration),
+			label: `${node.id} · fitness ${node.fitness_status ?? "evaluated"}`,
+			timeLabel: "Judge receipt",
+			proven: true,
+			proofMode: "receipt_backed_fixture",
+			receiptId: mechanicsReceipt(node, fixture).receipt_id,
+			elapsed_seconds: judgeAt,
+			at_seconds: judgeAt,
+			order_index: node.generation + 10,
+			label_band: "upper",
+			marker_priority: 100,
+			collision_group: `adaptive-mechanics:${node.id}`,
+		});
+	}
+	return events;
+}
+
+function mechanicsActivitySegments(node: AdaptiveLineageNode, visibleAt: number, activeAt: number, duration: number): LaneActivitySegment[] {
+	if (!node.parentId) return [];
+	return [
+		{
+			id: `${node.id}:authorized-pending`,
+			phase: "authorized_pending",
+			label: `${node.id} authorized from ${node.parentId}`,
+			start_x: pct(visibleAt, duration),
+			end_x: pct(activeAt, duration),
+			start_elapsed_seconds: visibleAt,
+			end_elapsed_seconds: activeAt,
+			proof_mode: "receipt_backed_fixture",
+		},
+		{
+			id: `${node.id}:mutation-evidence`,
+			phase: "mutation_evidence",
+			label: `${node.mutation_operator ?? "seed"} · ${node.id}`,
+			start_x: pct(activeAt, duration),
+			end_x: 100,
+			start_elapsed_seconds: activeAt,
+			end_elapsed_seconds: duration,
+			proof_mode: "receipt_backed_fixture",
+		},
+	];
+}
+
+function mechanicsLaneTiming(node: AdaptiveLineageNode, duration: number) {
+	const visibleAt = node.id === "G0" ? 0 : node.generation === 1 ? duration * 0.28 : duration * 0.58;
+	const activeAt = node.id === "G0" ? 0 : Math.min(duration, visibleAt + duration * 0.06);
+	return { visibleAt, activeAt };
+}
+
+function mechanicsLane(node: AdaptiveLineageNode, template: Lane | undefined, fixture: BattleAdaptiveLineageMechanicsFixtureV1, duration: number): Lane {
+	const { visibleAt, activeAt } = mechanicsLaneTiming(node, duration);
+	const receipt = mechanicsReceipt(node, fixture);
+	const changedDimensions = node.changed_dimensions.map((dim) => dim.dimension);
+	const selectionText = node.selected ? "selected G1" : node.runner_up ? "runner-up G1" : node.role;
+	return {
+		...(template ?? {}),
+		id: node.id,
+		name: mechanicsNodeLabel(node),
+		payloadId: node.id,
+		generation: node.generation,
+		team: "red",
+		parentId: node.parentId ?? undefined,
+		parent_id: node.parentId ?? undefined,
+		children: [],
+		selected: node.selected,
+		runner_up: node.runner_up,
+		summary: `${node.id} · ${selectionText}${node.mutation_operator ? ` · ${node.mutation_operator}` : ""}`,
+		xStart: pct(visibleAt, duration),
+		xEnd: 100,
+		start_elapsed_seconds: visibleAt,
+		visible_from_elapsed_seconds: visibleAt,
+		first_active_segment_elapsed_seconds: activeAt,
+		end_elapsed_seconds: duration,
+		duration_elapsed_seconds: duration - visibleAt,
+		runnerX: 100,
+		runnerState: node.role === "seed" ? "advance" : "mutate",
+		runnerVerb: node.role === "seed" ? "seed" : "mutate",
+		lineColor: node.runner_up ? "purple" : node.selected ? "green" : "red",
+		terminal: "none",
+		events: mechanicsLaneEvents(node, fixture, duration),
+		activitySegments: mechanicsActivitySegments(node, visibleAt, activeAt, duration),
+		lineageGroupId: node.parentId ? `adaptive:${node.parentId}` : `adaptive:${node.id}`,
+		collapsible: fixture.edges.some((edge) => edge.from === node.id),
+		expandedByDefault: true,
+		inheritedContext: node.parentId ? [`parent=${node.parentId}`, `operator=${node.mutation_operator ?? "none"}`] : [],
+		mutationRationale: node.technique_delta ?? undefined,
+		stdout: [
+			mechanicsOutputSummary(node, fixture),
+		],
+		stderr: [],
+		cockpit: undefined,
+		receipts: [receipt.receipt_id],
+		proofMode: "receipt_backed_fixture",
+		actor_visual: {
+			schema: "battle.actor_visual.v1",
+			actor_id: node.id,
+			lane_id: node.id,
+			role: node.role,
+			team: "red",
+			archetype: "adaptive-lineage-runner",
+			variant_id: node.id,
+			style_family: "adaptive-lineage",
+			initial_state: node.role === "seed" ? "idle" : "mutate",
+			state_source: "battle.adaptive_lineage_mechanics_fixture.v1",
+		},
+		knowledge_packet: node.parentId
+			? {
+					present: true,
+					status: "PASS",
+					packet_id: `${fixture.run_id}:${node.parentId}->${node.id}`,
+					parent_packet_id: node.parentId,
+					research_goals: [`derive ${node.id} from ${node.parentId}`],
+					parent_analysis: {
+						parent_id: node.parentId,
+						mutation_operator: node.mutation_operator ?? "none",
+						selection_binding: node.parentId === fixture.selection.selected_id ? "selected_parent" : "candidate_parent",
+					},
+					child_ack: {
+						required: true,
+						received: true,
+						ack_source: `${fixture.run_id}:${node.id}:qualification`,
+					},
+				}
+			: undefined,
+		score_calibration: node.judge_outcome
+			? {
+					schema: "battle.adaptive_lineage_score_calibration.v1",
+					outcome_class: `fitness ${node.fitness_status ?? "evaluated"}`,
+					formula: "Qualification PASS requires Judge-backed vulnerable_original_confirmed and fail-closed adaptive checks.",
+					profile_inputs: {
+						node_id: node.id,
+						parent_id: node.parentId,
+						mutation_operator: node.mutation_operator,
+						novelty_distance: node.novelty_distance,
+						changed_dimensions: changedDimensions,
+						judge_outcome: node.judge_outcome,
+					},
+				}
+			: undefined,
+		score_semantics: {
+			schema: "battle.adaptive_lineage_lane_score_semantics.v1",
+			lane_id: node.id,
+			outcome_class: selectionText,
+			outcome_tier: node.fitness_status ?? fixture.qualification.status,
+			terminal_state: fixture.qualification.status === "PASS" ? "qualification_pass" : "qualification_pending",
+			spawn_state: node.parentId ? `derived_from_${node.parentId}` : "seed",
+			score_basis: node.technique_delta ?? `${node.id} adaptive lineage node`,
+			proof_mode: "receipt_backed_fixture",
+			rules: {
+				qualification_pass: fixture.qualification.status === "PASS",
+				selected: node.selected,
+				runner_up: node.runner_up,
+				vulnerable_original_confirmed: node.judge_outcome?.vulnerable_original_confirmed ?? false,
+				patched_bypass: node.judge_outcome?.patched_bypass ?? false,
+			},
+		},
+	};
+}
+
+function mechanicsBattleEvents(nodes: AdaptiveLineageNode[], fixture: BattleAdaptiveLineageMechanicsFixtureV1, duration: number): BattleEvent[] {
+	const events: BattleEvent[] = [];
+	for (const node of nodes) {
+		const { activeAt } = mechanicsLaneTiming(node, duration);
+		if (node.mutation_operator) {
+			events.push({
+				id: `${node.id}:mutation`,
+				ts: activeAt,
+				battle_id: fixture.battle_id,
+				team: "red",
+				actor_id: node.id,
+				actor_kind: "exploit_agent",
+				parent_id: node.parentId ?? undefined,
+				elapsed_seconds: activeAt,
+				at_seconds: activeAt,
+				event_type: "genome_selected",
+				summary: `${node.id} · ${node.mutation_operator} · novelty ${node.novelty_distance ?? "n/a"}`,
+				proof_mode: "receipt_backed_fixture",
+				public_trace: {
+					observation: node.parentId ? `${node.id} derived from ${node.parentId}` : "seed",
+					action: node.technique_delta ?? node.mutation_operator,
+					result: node.fitness_status ?? fixture.qualification.status,
+					learned: node.changed_dimensions.map((dim) => dim.dimension).join(", "),
+				},
+				receipts: [mechanicsReceipt(node, fixture)],
+				ui: {
+					importance: node.role === "descendant" ? "hero" : "visible",
+					runner_state: "mutate",
+					runner_animation: "mutate_pulse",
+					sound_cue: "mutate_chirp",
+					spectator_caption: `${node.id} mutation evidence is bound to the adaptive qualification receipt.`,
+					notification: `Adaptive lineage — ${node.id}: ${node.mutation_operator}`,
+				},
+			});
+		}
+		if (node.judge_outcome) {
+			const judgeAt = node.generation === 1 ? duration * 0.54 : duration * 0.9;
+			events.push({
+				id: `${node.id}:fitness`,
+				ts: judgeAt,
+				battle_id: fixture.battle_id,
+				team: "judge",
+				actor_id: node.id,
+				actor_kind: "judge",
+				elapsed_seconds: judgeAt,
+				at_seconds: judgeAt,
+				event_type: "judge.verdict",
+				summary: `${node.id} fitness ${node.fitness_status ?? "evaluated"} · vulnerable original ${node.judge_outcome.vulnerable_original_confirmed ? "confirmed" : "not confirmed"}`,
+				proof_mode: "receipt_backed_fixture",
+				receipts: [mechanicsReceipt(node, fixture)],
+				judge_attempt: {
+					pair_id: `${fixture.run_id}:${node.id}`,
+					red_worker_id: node.id,
+					red_lane_id: node.id,
+					blue_worker_id: "qualification-judge",
+					blue_action_id: "adaptive-lineage-fitness",
+					verdict: node.judge_outcome.vulnerable_original_confirmed ? "QUALIFICATION_PASS" : "QUALIFICATION_FAIL",
+					status: node.fitness_status ?? fixture.qualification.status,
+				},
+				ui: {
+					importance: node.selected || node.role === "descendant" ? "hero" : "visible",
+					runner_state: "advance",
+					sound_cue: "none",
+					spectator_caption: `${node.id} Judge-backed fitness is present in the adaptive qualification receipt.`,
+					notification: `Adaptive lineage — ${node.id}: fitness ${node.fitness_status ?? "evaluated"}`,
+				},
+			});
+		}
+	}
+	events.push({
+		id: "adaptive-lineage-selection",
+		ts: duration * 0.62,
+		battle_id: fixture.battle_id,
+		team: "system",
+		actor_id: "adaptive-lineage-selection",
+		actor_kind: "battle_orchestrator",
+		target_actor_ids: [fixture.selection.selected_id, fixture.selection.runner_up_id].filter((id): id is string => Boolean(id)),
+		elapsed_seconds: duration * 0.62,
+		at_seconds: duration * 0.62,
+		event_type: "judge.receipt_verified",
+		summary: `Selection: ${fixture.selection.selected_id ?? "n/a"} over ${fixture.selection.runner_up_id ?? "n/a"} · ${fixture.selection.deciding_criterion ?? "criterion not emitted"}`,
+		proof_mode: "receipt_backed_fixture",
+		ui: {
+			importance: "hero",
+			runner_state: "advance",
+			sound_cue: "none",
+			spectator_caption: "Deterministic selection receipt binds both G1 outcomes before G2 reproduction.",
+			notification: `Adaptive lineage — selected ${fixture.selection.selected_id ?? "n/a"} -> G2`,
+		},
+	});
+	return events.sort((a, b) => Number(a.elapsed_seconds ?? 0) - Number(b.elapsed_seconds ?? 0));
+}
+
+export function applyAdaptiveMechanicsToRaceFixture(
+	base: BattleNormalizedUxFixture,
+	adaptiveLineage: BattleAdaptiveLineageMechanicsFixtureV1,
+): BattleNormalizedUxFixture {
+	const duration = base.battle_clock?.allotted_seconds ?? base.battle_clock?.elapsed_seconds ?? 120;
+	const nodesById = new Map(adaptiveLineage.nodes.map((node) => [node.id, node]));
+	const orderedNodes = MECHANICS_LANE_ORDER.map((id) => nodesById.get(id)).filter((node): node is AdaptiveLineageNode => Boolean(node));
+	if (orderedNodes.length !== 4 || adaptiveLineage.qualification.status !== "PASS") {
+		return { ...base, adaptive_lineage: adaptiveLineage };
+	}
+	const templateById = new Map(base.lanes.map((lane) => [lane.id, lane]));
+	const lanes = orderedNodes.map((node, index) =>
+		mechanicsLane(node, templateById.get(MECHANICS_TEMPLATE_LANE_IDS[index]), adaptiveLineage, duration),
+	);
+	const laneById = new Map(lanes.map((lane) => [lane.id, lane]));
+	for (const edge of adaptiveLineage.edges) {
+		const parent = laneById.get(edge.from);
+		if (parent) parent.children = [...(parent.children ?? []), edge.to];
+	}
+	const events = mechanicsBattleEvents(orderedNodes, adaptiveLineage, duration);
+	const spawns = adaptiveLineage.edges.map((edge) => {
+		const child = laneById.get(edge.to);
+		const visibleAt = child?.visible_from_elapsed_seconds ?? 0;
+		const activeAt = child?.first_active_segment_elapsed_seconds ?? visibleAt;
+		return {
+			receipt_id: `${adaptiveLineage.run_id}:${edge.from}->${edge.to}`,
+			parent_lane_id: edge.from,
+			child_lane_id: edge.to,
+			generation: child?.generation ?? 0,
+			spawn_elapsed_seconds: visibleAt,
+			visible_from_elapsed_seconds: visibleAt,
+			child_start_elapsed_seconds: activeAt,
+			first_active_segment_elapsed_seconds: activeAt,
+			proof_mode: "receipt_backed_fixture" as const,
+		};
+	});
+	return {
+		...base,
+		adaptive_lineage: adaptiveLineage,
+		lanes,
+		events,
+		receipts: [
+			...(base.receipts ?? []),
+			...orderedNodes.map((node) => mechanicsReceipt(node, adaptiveLineage)),
+		],
+		timeline: base.timeline
+			? { ...base.timeline, lane_count: lanes.length, event_count: events.length }
+			: { mode: "elapsed_seconds", min_x: 0, max_x: 100, event_count: events.length, lane_count: lanes.length, supports_zoom: true, supports_pan: true },
+		lineage: {
+			...(base.lineage ?? { mode: "receipt_backed", spawn_count: 0 }),
+			mode: "receipt_backed",
+			spawn_count: adaptiveLineage.edges.length,
+			parent_lane_ids: adaptiveLineage.edges.map((edge) => edge.from),
+			child_lane_ids: adaptiveLineage.edges.map((edge) => edge.to),
+			groups: adaptiveLineage.edges.map((edge) => ({
+				group_id: `adaptive:${edge.from}`,
+				parent_lane_id: edge.from,
+				child_lane_ids: [edge.to],
+				lane_ids: [edge.from, edge.to],
+				collapsible: true,
+				expanded_by_default: true,
+				spawn_receipt_ids: [`${adaptiveLineage.run_id}:${edge.from}->${edge.to}`],
+				lane_count: 2,
+				proof_mode: "receipt_backed_fixture",
+			})),
+			spawns,
+			proof_mode: "receipt_backed_fixture",
+		},
 	};
 }

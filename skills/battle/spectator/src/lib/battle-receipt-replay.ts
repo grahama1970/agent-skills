@@ -49,7 +49,7 @@ export function battleHashSearchParams(hash: string): URLSearchParams {
 export function battleReceiptReplayFixtureKey(hash: string): BattleReceiptReplayFixtureKey {
 	const path = (hash || "").split("?")[0] || "";
 	const isCampaign = path === "#battle/campaign" || path.startsWith("#battle/campaign/");
-	const fallback = isCampaign ? "battle-004-pr6-genetic-pixi" : "battle-004-adaptive-lineage-v13";
+	const fallback = isCampaign ? "battle-004-pr6-genetic-pixi" : "battle-004-adaptive-lineage-live";
 	const requested = battleHashSearchParams(hash).get("fixture") ?? fallback;
 	return requested in BATTLE_RECEIPT_REPLAY_FIXTURE_URLS ? (requested as BattleReceiptReplayFixtureKey) : fallback;
 }

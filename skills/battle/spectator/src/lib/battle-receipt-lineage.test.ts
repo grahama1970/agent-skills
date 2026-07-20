@@ -47,8 +47,8 @@ describe("battle receipt lineage", () => {
 	});
 
 	it("resolves committed receipt replay fixture keys from the route hash", () => {
-		expect(battleReceiptReplayFixtureKey("#battle/receipt?engine=pixi")).toBe("battle-004-adaptive-lineage-v13");
-		expect(battleReceiptReplayFixtureKey("#battle/receipt?engine=pixi&fixture=missing")).toBe("battle-004-adaptive-lineage-v13");
+		expect(battleReceiptReplayFixtureKey("#battle/receipt?engine=pixi")).toBe("battle-004-adaptive-lineage-live");
+		expect(battleReceiptReplayFixtureKey("#battle/receipt?engine=pixi&fixture=missing")).toBe("battle-004-adaptive-lineage-live");
 		expect(battleReceiptReplayFixtureUrl("#battle/receipt?engine=pixi&fixture=battle-005-ssrf-metadata")).toBe(
 			"/battle-fixtures/battle-005-ssrf-metadata-pixi-replay/battle.normalized_ux_fixture.json",
 		);
@@ -60,6 +60,9 @@ describe("battle receipt lineage", () => {
 		);
 		expect(battleReceiptReplayFixtureKey("#battle/receipt?engine=pixi&fixture=battle-004-adaptive-lineage-v13")).toBe(
 			"battle-004-adaptive-lineage-v13",
+		);
+		expect(battleReceiptReplayFixtureKey("#battle/receipt?engine=pixi&fixture=battle-004-adaptive-lineage-live")).toBe(
+			"battle-004-adaptive-lineage-live",
 		);
 		expect(battleReceiptReplayFixtureUrl("#battle/receipt?engine=pixi&fixture=battle-004-adaptive-memory-v14")).toBe(
 			"/battle-fixtures/battle-004-adaptive-memory-v14/battle.normalized_ux_fixture.json",

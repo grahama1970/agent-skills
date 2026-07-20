@@ -95,8 +95,9 @@ export function BattleSpectatorArena() {
   useRegisterAction("battle:stream:jsonl-open", { action: "BATTLE_JSONL_STREAM_OPEN", label: "Open Receipt Event Stream", description: "Open the receipt-backed Battle event stream sheet", tags: ["battle", "receipt-backed"] });
   useRegisterAction("battle:sheet:close", { action: "BATTLE_SHEET_CLOSE", label: "Close Battle Sheet", description: "Close the receipt-backed Battle event stream sheet", tags: ["battle", "receipt-backed"] });
 
+  const selectedReceiptLane = initialLanes.find((lane) => lane.selected)?.id;
   const firstReplayLane = initialLanes.find((lane) => lane.replay)?.id;
-  const defaultLaneId = isBattleDesignView() ? mockupDefaultSelectedLaneId() : (firstReplayLane ?? initialLanes[0]?.id ?? "");
+  const defaultLaneId = isBattleDesignView() ? mockupDefaultSelectedLaneId() : (selectedReceiptLane ?? firstReplayLane ?? initialLanes[0]?.id ?? "");
   const [selectedId, setSelectedId] = useState(defaultLaneId);
   const [speed, setSpeed] = useState("1x");
   const [playing, setPlaying] = useState(false);
@@ -157,8 +158,9 @@ export function BattleSpectatorArena() {
     if (!initialLanes.length) return;
     const exists = initialLanes.some((lane) => lane.id === selectedId);
     if (exists) return;
+    const selectedReceiptLane = initialLanes.find((lane) => lane.selected)?.id;
     const firstReplayLane = initialLanes.find((lane) => lane.replay)?.id;
-    setSelectedId(firstReplayLane ?? initialLanes[0]?.id ?? "");
+    setSelectedId(selectedReceiptLane ?? firstReplayLane ?? initialLanes[0]?.id ?? "");
   }, [initialLanes, selectedId]);
 
   function playCue(cue: string) {
@@ -347,7 +349,7 @@ export function BattleSpectatorArena() {
         </div>
       ) : null}
       {receiptReplay && typedReceiptFixture?.adaptive_lineage ? (
-        <div className="mx-auto w-full max-w-[1672px] shrink-0 overflow-y-auto" style={{ maxHeight: "32vh" }} data-qid="battle:adaptive-lineage:panel">
+        <div className="mx-auto w-full max-w-[1672px] shrink-0 overflow-y-auto" style={{ maxHeight: "48vh" }} data-qid="battle:adaptive-lineage:panel">
           {/* Receipt-authoritative: the mechanics fixture is co-fetched from the loaded
               receipt's own directory and battle_id/qualification-verified by the loader.
               No static/global fixture supplies LIVE/selection/operator/novelty here. */}

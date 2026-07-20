@@ -3,10 +3,11 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { runnerAnimationForLane } from "../engine/battle-runner-animation";
 import { lineageTransitionPhase } from "../engine/battle-pixi-lineage";
-import { adaptiveLineageToRaceFixture } from "./battle-adaptive-lineage-view-model";
+import { adaptiveLineageToRaceFixture, applyAdaptiveMechanicsToRaceFixture } from "./battle-adaptive-lineage-view-model";
 import { validateAdaptiveLineageFixture } from "./battle-adaptive-lineage-validator";
 import { collectReceiptBeats, receiptBeatsVisibleAtPlayhead } from "./battle-receipt-beats";
 import { lanesVisibleAtPlayhead } from "./battle-receipt-replay";
+import type { BattleAdaptiveLineageMechanicsFixtureV1 } from "./battle-types";
 
 async function sourceFixture() {
 	return JSON.parse(
@@ -21,6 +22,15 @@ async function memoryFixture() {
 	return JSON.parse(
 		await readFile(
 			resolve(import.meta.dirname, "../../public/battle-fixtures/battle-004-adaptive-memory-v14/battle.normalized_ux_fixture.json"),
+			"utf8",
+		),
+	);
+}
+
+async function liveMechanicsFixture(): Promise<BattleAdaptiveLineageMechanicsFixtureV1> {
+	return JSON.parse(
+		await readFile(
+			resolve(import.meta.dirname, "../../public/battle-fixtures/battle-004-adaptive-lineage-live/adaptive-lineage-mechanics-fixture.json"),
 			"utf8",
 		),
 	);
@@ -78,6 +88,52 @@ describe("Battle V13 adaptive lineage projection", () => {
 		const result = validateAdaptiveLineageFixture(source);
 		expect(result.ok).toBe(false);
 		if (!result.ok) expect(result.error.detail).toMatch(/plague_nurgling theme/i);
+	});
+
+	it("projects colocated live mechanics into G0/G1-A/G1-B/G2 race identities", async () => {
+		const validated = validateAdaptiveLineageFixture(await sourceFixture());
+		if (!validated.ok) throw new Error(validated.error.detail);
+		const base = adaptiveLineageToRaceFixture(validated.fixture);
+		const mechanics = await liveMechanicsFixture();
+		const fixture = applyAdaptiveMechanicsToRaceFixture(base, mechanics);
+
+		expect(mechanics.run_id).toBe("arena-adaptive-lineage-20260720T144034Z");
+		expect(mechanics.nodes.find((node) => node.id === "G2")?.novelty_distance).toBe(4);
+		expect(mechanics.nodes.find((node) => node.id === "G1-A")?.judge_outcome?.duration_seconds).toBe(1.195406);
+		expect(mechanics.nodes.find((node) => node.id === "G1-B")?.judge_outcome?.duration_seconds).toBe(1.260919);
+		expect(mechanics.nodes.find((node) => node.id === "G2")?.judge_outcome?.duration_seconds).toBe(1.285213);
+
+		expect(fixture.lanes.map((lane) => lane.id)).toEqual(["G0", "G1-A", "G1-B", "G2"]);
+		expect(fixture.lanes.map((lane) => lane.name)).toEqual(["G0 SEED", "G1-A SELECTED", "G1-B RUNNER-UP", "G2 DESCENDANT"]);
+		expect(fixture.lanes.find((lane) => lane.id === "G1-A")).toMatchObject({
+			parentId: "G0",
+			selected: true,
+			runner_up: false,
+			proofMode: "receipt_backed_fixture",
+		});
+		expect(fixture.lanes.find((lane) => lane.id === "G1-B")).toMatchObject({
+			parentId: "G0",
+			selected: false,
+			runner_up: true,
+		});
+		expect(fixture.lanes.find((lane) => lane.id === "G2")).toMatchObject({
+			parentId: "G1-A",
+			generation: 2,
+		});
+		expect(fixture.lineage?.spawns?.map((spawn) => `${spawn.parent_lane_id}->${spawn.child_lane_id}`)).toEqual([
+			"G0->G1-A",
+			"G0->G1-B",
+			"G1-A->G2",
+		]);
+		const selected = fixture.lanes.find((lane) => lane.id === "G1-A")!;
+		expect(selected.stdout?.join("\n")).toContain("run=arena-adaptive-lineage-20260720T144034Z");
+		expect(selected.stdout?.join("\n")).toContain("judge_duration=1.195406s");
+		expect(selected.cockpit).toBeUndefined();
+		expect(selected.score_semantics?.rules?.vulnerable_original_confirmed).toBe(true);
+		expect(selected.knowledge_packet?.parent_analysis).toMatchObject({ parent_id: "G0", mutation_operator: "method_replace" });
+		expect(fixture.lanes.find((lane) => lane.id === "G2")?.stdout?.join("\n")).toContain("novelty=4");
+		expect(fixture.events.some((event) => event.summary.includes("Selection: G1-A over G1-B"))).toBe(true);
+		expect(JSON.stringify(fixture)).not.toContain("20260719");
 	});
 });
 

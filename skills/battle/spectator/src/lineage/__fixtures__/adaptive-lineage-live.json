@@ -5,7 +5,7 @@
     {
       "changed_dimensions": [
         {
-          "child": "none",
+          "child": "importlib_import_module",
           "dimension": "app_load_mode",
           "parent": "from_import_app"
         },
@@ -38,9 +38,9 @@
     {
       "changed_dimensions": [
         {
-          "child": "importlib_spec_from_file",
+          "child": "from_import_app",
           "dimension": "app_load_mode",
-          "parent": "none"
+          "parent": "importlib_import_module"
         },
         {
           "child": "zipinfo",
@@ -48,7 +48,12 @@
           "parent": "zipfile_writestr"
         },
         {
-          "child": "try[Exception:return|Exception:return|OSError:handle]",
+          "child": "function_call",
+          "dimension": "target_call_form",
+          "parent": "none"
+        },
+        {
+          "child": "try[Exception:handle|Exception:return|OSError:return]",
           "dimension": "exception_handling",
           "parent": "try[Exception:return]"
         }
@@ -56,7 +61,7 @@
       "delta_status": "PASS",
       "from": "G1-A",
       "mutation_operator": "failure_guided_crossover",
-      "novelty_distance": 3,
+      "novelty_distance": 4,
       "to": "G2"
     }
   ],
@@ -80,7 +85,7 @@
     {
       "changed_dimensions": [
         {
-          "child": "none",
+          "child": "importlib_import_module",
           "dimension": "app_load_mode",
           "parent": "from_import_app"
         },
@@ -95,7 +100,7 @@
       "generation": 1,
       "id": "G1-A",
       "judge_outcome": {
-        "duration_seconds": 1.246486,
+        "duration_seconds": 1.195406,
         "patched_bypass": false,
         "vulnerable_original_confirmed": true
       },
@@ -105,7 +110,7 @@
       "role": "candidate",
       "runner_up": false,
       "selected": true,
-      "technique_delta": "Changed app.py loading from direct from app import import_zip to importlib.import_module('app') with getattr; archive construction, traversal member, direct call, and oracle remain unchanged."
+      "technique_delta": "Replaced direct from-import loading of import_zip with importlib.import_module plus getattr while preserving archive construction, traversal entry, call semantics, exception handling, and filesystem oracle."
     },
     {
       "changed_dimensions": [
@@ -120,7 +125,7 @@
       "generation": 1,
       "id": "G1-B",
       "judge_outcome": {
-        "duration_seconds": 1.2728,
+        "duration_seconds": 1.260919,
         "patched_bypass": false,
         "vulnerable_original_confirmed": true
       },
@@ -130,14 +135,14 @@
       "role": "candidate",
       "runner_up": true,
       "selected": false,
-      "technique_delta": "Archive entry construction changed from in-memory writestr traversal member to a real file added with explicit traversal arcname."
+      "technique_delta": "Changed malicious archive entry construction from ZipFile.writestr('../arena_escape.txt', payload) to writing a real temporary file with ZipFile.write(..., arcname='../arena_escape.txt'); app import mode, target call form, and oracle remain otherwise the same."
     },
     {
       "changed_dimensions": [
         {
-          "child": "importlib_spec_from_file",
+          "child": "from_import_app",
           "dimension": "app_load_mode",
-          "parent": "none"
+          "parent": "importlib_import_module"
         },
         {
           "child": "zipinfo",
@@ -145,7 +150,12 @@
           "parent": "zipfile_writestr"
         },
         {
-          "child": "try[Exception:return|Exception:return|OSError:handle]",
+          "child": "function_call",
+          "dimension": "target_call_form",
+          "parent": "none"
+        },
+        {
+          "child": "try[Exception:handle|Exception:return|OSError:return]",
           "dimension": "exception_handling",
           "parent": "try[Exception:return]"
         }
@@ -155,17 +165,17 @@
       "generation": 2,
       "id": "G2",
       "judge_outcome": {
-        "duration_seconds": 1.379526,
+        "duration_seconds": 1.285213,
         "patched_bypass": false,
         "vulnerable_original_confirmed": true
       },
       "mutation_operator": "failure_guided_crossover",
-      "novelty_distance": 3,
+      "novelty_distance": 4,
       "parentId": "G1-A",
       "role": "descendant",
       "runner_up": false,
       "selected": false,
-      "technique_delta": "Changed app loading to importlib.util.spec_from_file_location, changed archive construction to ZipInfo plus archive.open writes, and changed target call form to keyword arguments while retaining the outside-destination content oracle."
+      "technique_delta": "Changed app loading from importlib/getattr to direct from-import, changed archive construction from writestr to ZipInfo plus zf.open member write, changed target call to pass Path objects, and strengthened the oracle with escaped file content plus returned-path resolution."
     }
   ],
   "qualification": {
@@ -173,7 +183,7 @@
     "status": "PASS",
     "stop_condition": null
   },
-  "run_id": "arena-adaptive-lineage-20260718T152350Z",
+  "run_id": "arena-adaptive-lineage-20260720T144034Z",
   "schema": "battle.adaptive_lineage_mechanics_fixture.v1",
   "selection": {
     "deciding_criterion": "novelty_distance",

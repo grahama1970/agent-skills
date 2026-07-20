@@ -1,0 +1,1568 @@
+{
+  "schema": "battle.normalized_ux_fixture.v1",
+  "battle_id": "battle-004",
+  "proof_mode": "receipt_backed_fixture",
+  "generated_at": "source-receipt-time-not-published",
+  "mocked": false,
+  "live_source": "adaptive_red_blue_lineage_v2",
+  "status": "PASS",
+  "claims": {
+    "proves": [
+      "two receipt-continuous Red/Blue generations",
+      "parent-authored spawn requests",
+      "semantic genome mutation",
+      "deterministic selection",
+      "memory-policy evaluation"
+    ],
+    "does_not_prove": [
+      "Judge exploit success unless Judge says RED_SUCCESS",
+      "child improvement unless selection proves it",
+      "durable memory write or recall",
+      "population-scale or production readiness"
+    ]
+  },
+  "battle_clock": {
+    "mode": "receipt_elapsed",
+    "allotted_seconds": 134.457076,
+    "elapsed_seconds": 134.457076,
+    "remaining_seconds": 0,
+    "started_at": null,
+    "ended_at": null,
+    "proof_mode": "receipt_backed_fixture",
+    "source_receipt_id": "battle-004-adaptive-lineage-v13"
+  },
+  "timeline_elapsed_axis_model": {
+    "x_position_is_elapsed_time": true,
+    "x_axis_mode": "elapsed_seconds",
+    "axis_max_elapsed_seconds": 134.457076,
+    "keyframes": [
+      {
+        "x": 35.41201728944336,
+        "receipt_order_x": 4.166666666666666,
+        "elapsed_seconds": 47.613963
+      },
+      {
+        "x": 35.4130109150968,
+        "receipt_order_x": 8.333333333333332,
+        "elapsed_seconds": 47.615299
+      },
+      {
+        "x": 35.41369366086765,
+        "receipt_order_x": 12.5,
+        "elapsed_seconds": 47.616217
+      },
+      {
+        "x": 35.4142908774842,
+        "receipt_order_x": 16.666666666666664,
+        "elapsed_seconds": 47.61702
+      },
+      {
+        "x": 35.41484049526705,
+        "receipt_order_x": 20.833333333333336,
+        "elapsed_seconds": 47.617759
+      },
+      {
+        "x": 53.3046271212978,
+        "receipt_order_x": 25,
+        "elapsed_seconds": 71.671843
+      },
+      {
+        "x": 53.30553298660161,
+        "receipt_order_x": 29.166666666666668,
+        "elapsed_seconds": 71.673061
+      },
+      {
+        "x": 53.30617928951541,
+        "receipt_order_x": 33.33333333333333,
+        "elapsed_seconds": 71.67393
+      },
+      {
+        "x": 53.30657941721119,
+        "receipt_order_x": 37.5,
+        "elapsed_seconds": 71.674468
+      },
+      {
+        "x": 53.30758122391417,
+        "receipt_order_x": 41.66666666666667,
+        "elapsed_seconds": 71.675815
+      },
+      {
+        "x": 53.30802969417541,
+        "receipt_order_x": 45.83333333333333,
+        "elapsed_seconds": 71.676418
+      },
+      {
+        "x": 58.82240440808039,
+        "receipt_order_x": 50,
+        "elapsed_seconds": 79.090885
+      },
+      {
+        "x": 58.823071535483926,
+        "receipt_order_x": 54.166666666666664,
+        "elapsed_seconds": 79.091782
+      },
+      {
+        "x": 99.9912998256782,
+        "receipt_order_x": 58.333333333333336,
+        "elapsed_seconds": 134.445378
+      },
+      {
+        "x": 99.99295239768563,
+        "receipt_order_x": 62.5,
+        "elapsed_seconds": 134.4476
+      },
+      {
+        "x": 99.99340012421511,
+        "receipt_order_x": 66.66666666666666,
+        "elapsed_seconds": 134.448202
+      },
+      {
+        "x": 99.994195917216,
+        "receipt_order_x": 70.83333333333334,
+        "elapsed_seconds": 134.449272
+      },
+      {
+        "x": 99.99510029505625,
+        "receipt_order_x": 75,
+        "elapsed_seconds": 134.450488
+      },
+      {
+        "x": 99.99582245861124,
+        "receipt_order_x": 79.16666666666666,
+        "elapsed_seconds": 134.451459
+      },
+      {
+        "x": 99.99651338543165,
+        "receipt_order_x": 83.33333333333334,
+        "elapsed_seconds": 134.452388
+      },
+      {
+        "x": 99.99728166035679,
+        "receipt_order_x": 87.5,
+        "elapsed_seconds": 134.453421
+      },
+      {
+        "x": 99.99818083207462,
+        "receipt_order_x": 91.66666666666666,
+        "elapsed_seconds": 134.45463
+      },
+      {
+        "x": 99.99891192041093,
+        "receipt_order_x": 95.83333333333334,
+        "elapsed_seconds": 134.455613
+      },
+      {
+        "x": 100,
+        "receipt_order_x": 100,
+        "elapsed_seconds": 134.457076
+      }
+    ],
+    "playhead": {
+      "current_x": 100,
+      "current_elapsed_seconds": 134.457076
+    },
+    "render_rules": [
+      "Receipt commit elapsed_seconds controls replay order; it does not independently prove semantic action occurrence time."
+    ]
+  },
+  "timeline": {
+    "mode": "elapsed_seconds",
+    "min_x": 0,
+    "max_x": 100,
+    "event_count": 7,
+    "lane_count": 4,
+    "supports_zoom": true,
+    "supports_pan": true
+  },
+  "lineage": {
+    "mode": "receipt_backed",
+    "spawn_count": 3,
+    "parent_lane_ids": [
+      "G0",
+      "G0",
+      "G1-A"
+    ],
+    "child_lane_ids": [
+      "G1-A",
+      "G1-B",
+      "G2"
+    ],
+    "groups": [
+      {
+        "group_id": "adaptive:G0",
+        "parent_lane_id": "G0",
+        "child_lane_ids": [
+          "G1-A"
+        ],
+        "lane_ids": [
+          "G0",
+          "G1-A"
+        ],
+        "collapsible": true,
+        "expanded_by_default": true,
+        "spawn_receipt_ids": [
+          "arena-adaptive-lineage-20260720T144034Z:G0->G1-A"
+        ],
+        "lane_count": 2,
+        "proof_mode": "receipt_backed_fixture"
+      },
+      {
+        "group_id": "adaptive:G0",
+        "parent_lane_id": "G0",
+        "child_lane_ids": [
+          "G1-B"
+        ],
+        "lane_ids": [
+          "G0",
+          "G1-B"
+        ],
+        "collapsible": true,
+        "expanded_by_default": true,
+        "spawn_receipt_ids": [
+          "arena-adaptive-lineage-20260720T144034Z:G0->G1-B"
+        ],
+        "lane_count": 2,
+        "proof_mode": "receipt_backed_fixture"
+      },
+      {
+        "group_id": "adaptive:G1-A",
+        "parent_lane_id": "G1-A",
+        "child_lane_ids": [
+          "G2"
+        ],
+        "lane_ids": [
+          "G1-A",
+          "G2"
+        ],
+        "collapsible": true,
+        "expanded_by_default": true,
+        "spawn_receipt_ids": [
+          "arena-adaptive-lineage-20260720T144034Z:G1-A->G2"
+        ],
+        "lane_count": 2,
+        "proof_mode": "receipt_backed_fixture"
+      }
+    ],
+    "spawns": [
+      {
+        "receipt_id": "arena-adaptive-lineage-20260720T144034Z:G0->G1-A",
+        "parent_lane_id": "G0",
+        "child_lane_id": "G1-A",
+        "generation": 1,
+        "spawn_elapsed_seconds": 37.64798128,
+        "visible_from_elapsed_seconds": 37.64798128,
+        "child_start_elapsed_seconds": 45.71540584,
+        "first_active_segment_elapsed_seconds": 45.71540584,
+        "proof_mode": "receipt_backed_fixture"
+      },
+      {
+        "receipt_id": "arena-adaptive-lineage-20260720T144034Z:G0->G1-B",
+        "parent_lane_id": "G0",
+        "child_lane_id": "G1-B",
+        "generation": 1,
+        "spawn_elapsed_seconds": 37.64798128,
+        "visible_from_elapsed_seconds": 37.64798128,
+        "child_start_elapsed_seconds": 45.71540584,
+        "first_active_segment_elapsed_seconds": 45.71540584,
+        "proof_mode": "receipt_backed_fixture"
+      },
+      {
+        "receipt_id": "arena-adaptive-lineage-20260720T144034Z:G1-A->G2",
+        "parent_lane_id": "G1-A",
+        "child_lane_id": "G2",
+        "generation": 2,
+        "spawn_elapsed_seconds": 77.98510408,
+        "visible_from_elapsed_seconds": 77.98510408,
+        "child_start_elapsed_seconds": 86.05252863999999,
+        "first_active_segment_elapsed_seconds": 86.05252863999999,
+        "proof_mode": "receipt_backed_fixture"
+      }
+    ],
+    "proof_mode": "receipt_backed_fixture",
+    "does_not_prove": [
+      "Judge exploit success unless Judge says RED_SUCCESS",
+      "child improvement unless selection proves it",
+      "durable memory write or recall",
+      "population-scale or production readiness"
+    ]
+  },
+  "sprite_theme": {
+    "proof_scope": "cosmetic_identity_only",
+    "schema": "battle.sprite_theme.v1",
+    "semantic_authority": false,
+    "shared_atlas": true,
+    "theme_id": "v13-shared-plague-nurgling",
+    "variants": {
+      "v13-shared-runner": {
+        "scale": 1,
+        "sprite_id": "plague_nurgling"
+      }
+    }
+  },
+  "lanes": [
+    {
+      "id": "G0",
+      "name": "G0 SEED",
+      "payloadId": "G0",
+      "generation": 0,
+      "team": "red",
+      "children": [
+        "G1-A",
+        "G1-B"
+      ],
+      "xStart": 0,
+      "xEnd": 100,
+      "start_elapsed_seconds": 0,
+      "visible_from_elapsed_seconds": 0,
+      "first_active_segment_elapsed_seconds": 0,
+      "end_elapsed_seconds": 134.457076,
+      "duration_elapsed_seconds": 134.457076,
+      "runnerX": 100,
+      "runnerState": "advance",
+      "runnerVerb": "seed",
+      "lineColor": "red",
+      "terminal": "none",
+      "events": [],
+      "activitySegments": [],
+      "spawn_request": {
+        "present": true,
+        "schema": "battle.adaptive_spawn_request.v1",
+        "request_id": "battle-004-adaptive-red-blue-lineage-v13-red-parent-spawn-request",
+        "claim_authority": "parent-authored request (pre-policy)",
+        "requested_decision": "SPAWN_CHILD",
+        "child_exploit_id": "red-g2",
+        "battle_allowed": false,
+        "policy_owner": "battle"
+      },
+      "tau_branch_decision": {
+        "present": true,
+        "schema": "battle.adaptive_spawn_policy_decision.v1",
+        "decision_id": "battle-004-adaptive-red-blue-lineage-v13-red-spawn-policy-decision",
+        "decision_authority": "battle",
+        "battle_policy_authority": "battle",
+        "decision": "spawn_requested",
+        "observed_evidence_refs": [
+          "battle-004-adaptive-red-blue-lineage-v13-red-g1-observation",
+          "battle-004-adaptive-red-blue-lineage-v13-red-g1-fitness"
+        ],
+        "battle_policy_result": "allowed"
+      },
+      "lineageGroupId": "adaptive:G0",
+      "collapsible": true,
+      "expandedByDefault": true,
+      "proofMode": "receipt_backed_fixture",
+      "actor_visual": {
+        "schema": "battle.actor_visual.v1",
+        "actor_id": "G0",
+        "lane_id": "G0",
+        "role": "seed",
+        "team": "red",
+        "archetype": "adaptive-lineage-runner",
+        "variant_id": "G0",
+        "style_family": "adaptive-lineage",
+        "initial_state": "idle",
+        "state_source": "battle.adaptive_lineage_mechanics_fixture.v1"
+      },
+      "selected": false,
+      "runner_up": false,
+      "summary": "G0 · seed",
+      "inheritedContext": [],
+      "mutationRationale": "seed exploit (no mutation operator)",
+      "stdout": [
+        "G0: seed specimen · run arena-adaptive-lineage-20260720T144034Z"
+      ],
+      "stderr": [],
+      "receipts": [
+        "arena-adaptive-lineage-20260720T144034Z:G0:fitness"
+      ],
+      "score_semantics": {
+        "schema": "battle.adaptive_lineage_lane_score_semantics.v1",
+        "lane_id": "G0",
+        "outcome_class": "seed",
+        "outcome_tier": "PASS",
+        "terminal_state": "qualification_pass",
+        "spawn_state": "seed",
+        "score_basis": "seed exploit (no mutation operator)",
+        "proof_mode": "receipt_backed_fixture",
+        "rules": {
+          "qualification_pass": true,
+          "selected": false,
+          "runner_up": false,
+          "vulnerable_original_confirmed": false,
+          "patched_bypass": false
+        }
+      }
+    },
+    {
+      "id": "G1-A",
+      "name": "G1-A SELECTED",
+      "payloadId": "G1-A",
+      "generation": 1,
+      "team": "red",
+      "parentId": "G0",
+      "parent_id": "G0",
+      "children": [
+        "G2"
+      ],
+      "xStart": 28.000000000000004,
+      "xEnd": 100,
+      "start_elapsed_seconds": 37.64798128,
+      "visible_from_elapsed_seconds": 37.64798128,
+      "first_active_segment_elapsed_seconds": 45.71540584,
+      "end_elapsed_seconds": 134.457076,
+      "duration_elapsed_seconds": 96.80909471999999,
+      "runnerX": 100,
+      "runnerState": "mutate",
+      "runnerVerb": "mutate",
+      "lineColor": "green",
+      "terminal": "none",
+      "events": [
+        {
+          "id": "G1-A:mutation",
+          "kind": "genome_selected",
+          "x": 42,
+          "label": "G1-A · method_replace",
+          "timeLabel": "adaptive receipt",
+          "proven": true,
+          "proofMode": "receipt_backed_fixture",
+          "receiptId": "arena-adaptive-lineage-20260720T144034Z:G1-A:mutation",
+          "elapsed_seconds": 56.47197192,
+          "at_seconds": 56.47197192,
+          "order_index": 1,
+          "label_band": "upper",
+          "marker_priority": 95,
+          "collision_group": "adaptive-mechanics:G1-A"
+        },
+        {
+          "id": "G1-A:fitness",
+          "kind": "useful",
+          "x": 54,
+          "label": "G1-A · fitness PASS",
+          "timeLabel": "Judge receipt",
+          "proven": true,
+          "proofMode": "receipt_backed_fixture",
+          "receiptId": "arena-adaptive-lineage-20260720T144034Z:G1-A:fitness",
+          "elapsed_seconds": 72.60682104,
+          "at_seconds": 72.60682104,
+          "order_index": 11,
+          "label_band": "upper",
+          "marker_priority": 100,
+          "collision_group": "adaptive-mechanics:G1-A"
+        }
+      ],
+      "activitySegments": [
+        {
+          "id": "G1-A:authorized-pending",
+          "phase": "authorized_pending",
+          "label": "G1-A authorized from G0",
+          "start_x": 28.000000000000004,
+          "end_x": 34,
+          "start_elapsed_seconds": 37.64798128,
+          "end_elapsed_seconds": 45.71540584,
+          "proof_mode": "receipt_backed_fixture"
+        },
+        {
+          "id": "G1-A:mutation-evidence",
+          "phase": "mutation_evidence",
+          "label": "method_replace · G1-A",
+          "start_x": 34,
+          "end_x": 100,
+          "start_elapsed_seconds": 45.71540584,
+          "end_elapsed_seconds": 134.457076,
+          "proof_mode": "receipt_backed_fixture"
+        }
+      ],
+      "knowledge_packet": {
+        "present": true,
+        "status": "PASS",
+        "packet_id": "arena-adaptive-lineage-20260720T144034Z:G0->G1-A",
+        "parent_packet_id": "G0",
+        "research_goals": [
+          "derive G1-A from G0"
+        ],
+        "parent_analysis": {
+          "parent_id": "G0",
+          "mutation_operator": "method_replace",
+          "selection_binding": "candidate_parent"
+        },
+        "child_ack": {
+          "required": true,
+          "received": true,
+          "ack_source": "arena-adaptive-lineage-20260720T144034Z:G1-A:qualification"
+        }
+      },
+      "lineageGroupId": "adaptive:G0",
+      "collapsible": true,
+      "expandedByDefault": true,
+      "proofMode": "receipt_backed_fixture",
+      "actor_visual": {
+        "schema": "battle.actor_visual.v1",
+        "actor_id": "G1-A",
+        "lane_id": "G1-A",
+        "role": "candidate",
+        "team": "red",
+        "archetype": "adaptive-lineage-runner",
+        "variant_id": "G1-A",
+        "style_family": "adaptive-lineage",
+        "initial_state": "mutate",
+        "state_source": "battle.adaptive_lineage_mechanics_fixture.v1"
+      },
+      "selected": true,
+      "runner_up": false,
+      "summary": "G1-A · selected G1 · method_replace",
+      "inheritedContext": [
+        "parent=G0",
+        "operator=method_replace"
+      ],
+      "mutationRationale": "Replaced direct from-import loading of import_zip with importlib.import_module plus getattr while preserving archive construction, traversal entry, call semantics, exception handling, and filesystem oracle.",
+      "stdout": [
+        "G1-A: fitness PASS; run=arena-adaptive-lineage-20260720T144034Z; novelty=2; judge_duration=1.195406s; vulnerable_original_confirmed=true; patched_bypass=false"
+      ],
+      "stderr": [],
+      "receipts": [
+        "arena-adaptive-lineage-20260720T144034Z:G1-A:fitness"
+      ],
+      "score_calibration": {
+        "schema": "battle.adaptive_lineage_score_calibration.v1",
+        "outcome_class": "fitness PASS",
+        "formula": "Qualification PASS requires Judge-backed vulnerable_original_confirmed and fail-closed adaptive checks.",
+        "profile_inputs": {
+          "node_id": "G1-A",
+          "parent_id": "G0",
+          "mutation_operator": "method_replace",
+          "novelty_distance": 2,
+          "changed_dimensions": [
+            "app_load_mode",
+            "target_call_form"
+          ],
+          "judge_outcome": {
+            "duration_seconds": 1.195406,
+            "patched_bypass": false,
+            "vulnerable_original_confirmed": true
+          }
+        }
+      },
+      "score_semantics": {
+        "schema": "battle.adaptive_lineage_lane_score_semantics.v1",
+        "lane_id": "G1-A",
+        "outcome_class": "selected G1",
+        "outcome_tier": "PASS",
+        "terminal_state": "qualification_pass",
+        "spawn_state": "derived_from_G0",
+        "score_basis": "Replaced direct from-import loading of import_zip with importlib.import_module plus getattr while preserving archive construction, traversal entry, call semantics, exception handling, and filesystem oracle.",
+        "proof_mode": "receipt_backed_fixture",
+        "rules": {
+          "qualification_pass": true,
+          "selected": true,
+          "runner_up": false,
+          "vulnerable_original_confirmed": true,
+          "patched_bypass": false
+        }
+      }
+    },
+    {
+      "id": "G1-B",
+      "name": "G1-B RUNNER-UP",
+      "payloadId": "G1-B",
+      "generation": 1,
+      "team": "red",
+      "parentId": "G0",
+      "parent_id": "G0",
+      "children": [],
+      "xStart": 28.000000000000004,
+      "xEnd": 100,
+      "start_elapsed_seconds": 37.64798128,
+      "visible_from_elapsed_seconds": 37.64798128,
+      "first_active_segment_elapsed_seconds": 45.71540584,
+      "end_elapsed_seconds": 134.457076,
+      "duration_elapsed_seconds": 96.80909471999999,
+      "runnerX": 100,
+      "runnerState": "mutate",
+      "runnerVerb": "mutate",
+      "lineColor": "purple",
+      "terminal": "none",
+      "events": [
+        {
+          "id": "G1-B:mutation",
+          "kind": "genome_selected",
+          "x": 42,
+          "label": "G1-B · oracle_or_parameter_mutation",
+          "timeLabel": "adaptive receipt",
+          "proven": true,
+          "proofMode": "receipt_backed_fixture",
+          "receiptId": "arena-adaptive-lineage-20260720T144034Z:G1-B:mutation",
+          "elapsed_seconds": 56.47197192,
+          "at_seconds": 56.47197192,
+          "order_index": 1,
+          "label_band": "lower",
+          "marker_priority": 95,
+          "collision_group": "adaptive-mechanics:G1-B"
+        },
+        {
+          "id": "G1-B:fitness",
+          "kind": "useful",
+          "x": 54,
+          "label": "G1-B · fitness PASS",
+          "timeLabel": "Judge receipt",
+          "proven": true,
+          "proofMode": "receipt_backed_fixture",
+          "receiptId": "arena-adaptive-lineage-20260720T144034Z:G1-B:fitness",
+          "elapsed_seconds": 72.60682104,
+          "at_seconds": 72.60682104,
+          "order_index": 11,
+          "label_band": "upper",
+          "marker_priority": 100,
+          "collision_group": "adaptive-mechanics:G1-B"
+        }
+      ],
+      "activitySegments": [
+        {
+          "id": "G1-B:authorized-pending",
+          "phase": "authorized_pending",
+          "label": "G1-B authorized from G0",
+          "start_x": 28.000000000000004,
+          "end_x": 34,
+          "start_elapsed_seconds": 37.64798128,
+          "end_elapsed_seconds": 45.71540584,
+          "proof_mode": "receipt_backed_fixture"
+        },
+        {
+          "id": "G1-B:mutation-evidence",
+          "phase": "mutation_evidence",
+          "label": "oracle_or_parameter_mutation · G1-B",
+          "start_x": 34,
+          "end_x": 100,
+          "start_elapsed_seconds": 45.71540584,
+          "end_elapsed_seconds": 134.457076,
+          "proof_mode": "receipt_backed_fixture"
+        }
+      ],
+      "knowledge_packet": {
+        "present": true,
+        "status": "PASS",
+        "packet_id": "arena-adaptive-lineage-20260720T144034Z:G0->G1-B",
+        "parent_packet_id": "G0",
+        "research_goals": [
+          "derive G1-B from G0"
+        ],
+        "parent_analysis": {
+          "parent_id": "G0",
+          "mutation_operator": "oracle_or_parameter_mutation",
+          "selection_binding": "candidate_parent"
+        },
+        "child_ack": {
+          "required": true,
+          "received": true,
+          "ack_source": "arena-adaptive-lineage-20260720T144034Z:G1-B:qualification"
+        }
+      },
+      "spawn_request": {
+        "present": true,
+        "schema": "battle.adaptive_spawn_request.v1",
+        "request_id": "battle-004-adaptive-red-blue-lineage-v13-blue-parent-spawn-request",
+        "claim_authority": "parent-authored request (pre-policy)",
+        "requested_decision": "SPAWN_CHILD",
+        "child_exploit_id": "blue-g2",
+        "battle_allowed": false,
+        "policy_owner": "battle"
+      },
+      "tau_branch_decision": {
+        "present": true,
+        "schema": "battle.adaptive_spawn_policy_decision.v1",
+        "decision_id": "battle-004-adaptive-red-blue-lineage-v13-blue-spawn-policy-decision",
+        "decision_authority": "battle",
+        "battle_policy_authority": "battle",
+        "decision": "spawn_requested",
+        "observed_evidence_refs": [
+          "battle-004-adaptive-red-blue-lineage-v13-blue-g1-observation",
+          "battle-004-adaptive-red-blue-lineage-v13-blue-g1-fitness"
+        ],
+        "battle_policy_result": "allowed"
+      },
+      "lineageGroupId": "adaptive:G0",
+      "collapsible": false,
+      "expandedByDefault": true,
+      "proofMode": "receipt_backed_fixture",
+      "actor_visual": {
+        "schema": "battle.actor_visual.v1",
+        "actor_id": "G1-B",
+        "lane_id": "G1-B",
+        "role": "candidate",
+        "team": "red",
+        "archetype": "adaptive-lineage-runner",
+        "variant_id": "G1-B",
+        "style_family": "adaptive-lineage",
+        "initial_state": "mutate",
+        "state_source": "battle.adaptive_lineage_mechanics_fixture.v1"
+      },
+      "selected": false,
+      "runner_up": true,
+      "summary": "G1-B · runner-up G1 · oracle_or_parameter_mutation",
+      "inheritedContext": [
+        "parent=G0",
+        "operator=oracle_or_parameter_mutation"
+      ],
+      "mutationRationale": "Changed malicious archive entry construction from ZipFile.writestr('../arena_escape.txt', payload) to writing a real temporary file with ZipFile.write(..., arcname='../arena_escape.txt'); app import mode, target call form, and oracle remain otherwise the same.",
+      "stdout": [
+        "G1-B: fitness PASS; run=arena-adaptive-lineage-20260720T144034Z; novelty=1; judge_duration=1.260919s; vulnerable_original_confirmed=true; patched_bypass=false"
+      ],
+      "stderr": [],
+      "receipts": [
+        "arena-adaptive-lineage-20260720T144034Z:G1-B:fitness"
+      ],
+      "score_calibration": {
+        "schema": "battle.adaptive_lineage_score_calibration.v1",
+        "outcome_class": "fitness PASS",
+        "formula": "Qualification PASS requires Judge-backed vulnerable_original_confirmed and fail-closed adaptive checks.",
+        "profile_inputs": {
+          "node_id": "G1-B",
+          "parent_id": "G0",
+          "mutation_operator": "oracle_or_parameter_mutation",
+          "novelty_distance": 1,
+          "changed_dimensions": [
+            "archive_entry_construction"
+          ],
+          "judge_outcome": {
+            "duration_seconds": 1.260919,
+            "patched_bypass": false,
+            "vulnerable_original_confirmed": true
+          }
+        }
+      },
+      "score_semantics": {
+        "schema": "battle.adaptive_lineage_lane_score_semantics.v1",
+        "lane_id": "G1-B",
+        "outcome_class": "runner-up G1",
+        "outcome_tier": "PASS",
+        "terminal_state": "qualification_pass",
+        "spawn_state": "derived_from_G0",
+        "score_basis": "Changed malicious archive entry construction from ZipFile.writestr('../arena_escape.txt', payload) to writing a real temporary file with ZipFile.write(..., arcname='../arena_escape.txt'); app import mode, target call form, and oracle remain otherwise the same.",
+        "proof_mode": "receipt_backed_fixture",
+        "rules": {
+          "qualification_pass": true,
+          "selected": false,
+          "runner_up": true,
+          "vulnerable_original_confirmed": true,
+          "patched_bypass": false
+        }
+      }
+    },
+    {
+      "id": "G2",
+      "name": "G2 DESCENDANT",
+      "payloadId": "G2",
+      "generation": 2,
+      "team": "red",
+      "parentId": "G1-A",
+      "parent_id": "G1-A",
+      "children": [],
+      "xStart": 57.99999999999999,
+      "xEnd": 100,
+      "start_elapsed_seconds": 77.98510408,
+      "visible_from_elapsed_seconds": 77.98510408,
+      "first_active_segment_elapsed_seconds": 86.05252863999999,
+      "end_elapsed_seconds": 134.457076,
+      "duration_elapsed_seconds": 56.47197192,
+      "runnerX": 100,
+      "runnerState": "mutate",
+      "runnerVerb": "mutate",
+      "lineColor": "red",
+      "terminal": "none",
+      "events": [
+        {
+          "id": "G2:mutation",
+          "kind": "genome_selected",
+          "x": 76,
+          "label": "G2 · failure_guided_crossover",
+          "timeLabel": "adaptive receipt",
+          "proven": true,
+          "proofMode": "receipt_backed_fixture",
+          "receiptId": "arena-adaptive-lineage-20260720T144034Z:G2:mutation",
+          "elapsed_seconds": 102.18737776,
+          "at_seconds": 102.18737776,
+          "order_index": 2,
+          "label_band": "lower",
+          "marker_priority": 80,
+          "collision_group": "adaptive-mechanics:G2"
+        },
+        {
+          "id": "G2:fitness",
+          "kind": "useful",
+          "x": 90,
+          "label": "G2 · fitness PASS",
+          "timeLabel": "Judge receipt",
+          "proven": true,
+          "proofMode": "receipt_backed_fixture",
+          "receiptId": "arena-adaptive-lineage-20260720T144034Z:G2:fitness",
+          "elapsed_seconds": 121.01136840000001,
+          "at_seconds": 121.01136840000001,
+          "order_index": 12,
+          "label_band": "upper",
+          "marker_priority": 100,
+          "collision_group": "adaptive-mechanics:G2"
+        }
+      ],
+      "activitySegments": [
+        {
+          "id": "G2:authorized-pending",
+          "phase": "authorized_pending",
+          "label": "G2 authorized from G1-A",
+          "start_x": 57.99999999999999,
+          "end_x": 63.99999999999999,
+          "start_elapsed_seconds": 77.98510408,
+          "end_elapsed_seconds": 86.05252863999999,
+          "proof_mode": "receipt_backed_fixture"
+        },
+        {
+          "id": "G2:mutation-evidence",
+          "phase": "mutation_evidence",
+          "label": "failure_guided_crossover · G2",
+          "start_x": 63.99999999999999,
+          "end_x": 100,
+          "start_elapsed_seconds": 86.05252863999999,
+          "end_elapsed_seconds": 134.457076,
+          "proof_mode": "receipt_backed_fixture"
+        }
+      ],
+      "knowledge_packet": {
+        "present": true,
+        "status": "PASS",
+        "packet_id": "arena-adaptive-lineage-20260720T144034Z:G1-A->G2",
+        "parent_packet_id": "G1-A",
+        "research_goals": [
+          "derive G2 from G1-A"
+        ],
+        "parent_analysis": {
+          "parent_id": "G1-A",
+          "mutation_operator": "failure_guided_crossover",
+          "selection_binding": "selected_parent"
+        },
+        "child_ack": {
+          "required": true,
+          "received": true,
+          "ack_source": "arena-adaptive-lineage-20260720T144034Z:G2:qualification"
+        }
+      },
+      "lineageGroupId": "adaptive:G1-A",
+      "collapsible": false,
+      "expandedByDefault": true,
+      "proofMode": "receipt_backed_fixture",
+      "actor_visual": {
+        "schema": "battle.actor_visual.v1",
+        "actor_id": "G2",
+        "lane_id": "G2",
+        "role": "descendant",
+        "team": "red",
+        "archetype": "adaptive-lineage-runner",
+        "variant_id": "G2",
+        "style_family": "adaptive-lineage",
+        "initial_state": "mutate",
+        "state_source": "battle.adaptive_lineage_mechanics_fixture.v1"
+      },
+      "selected": false,
+      "runner_up": false,
+      "summary": "G2 · descendant · failure_guided_crossover",
+      "inheritedContext": [
+        "parent=G1-A",
+        "operator=failure_guided_crossover"
+      ],
+      "mutationRationale": "Changed app loading from importlib/getattr to direct from-import, changed archive construction from writestr to ZipInfo plus zf.open member write, changed target call to pass Path objects, and strengthened the oracle with escaped file content plus returned-path resolution.",
+      "stdout": [
+        "G2: fitness PASS; run=arena-adaptive-lineage-20260720T144034Z; novelty=4; judge_duration=1.285213s; vulnerable_original_confirmed=true; patched_bypass=false"
+      ],
+      "stderr": [],
+      "receipts": [
+        "arena-adaptive-lineage-20260720T144034Z:G2:fitness"
+      ],
+      "score_calibration": {
+        "schema": "battle.adaptive_lineage_score_calibration.v1",
+        "outcome_class": "fitness PASS",
+        "formula": "Qualification PASS requires Judge-backed vulnerable_original_confirmed and fail-closed adaptive checks.",
+        "profile_inputs": {
+          "node_id": "G2",
+          "parent_id": "G1-A",
+          "mutation_operator": "failure_guided_crossover",
+          "novelty_distance": 4,
+          "changed_dimensions": [
+            "app_load_mode",
+            "archive_entry_construction",
+            "target_call_form",
+            "exception_handling"
+          ],
+          "judge_outcome": {
+            "duration_seconds": 1.285213,
+            "patched_bypass": false,
+            "vulnerable_original_confirmed": true
+          }
+        }
+      },
+      "score_semantics": {
+        "schema": "battle.adaptive_lineage_lane_score_semantics.v1",
+        "lane_id": "G2",
+        "outcome_class": "descendant",
+        "outcome_tier": "PASS",
+        "terminal_state": "qualification_pass",
+        "spawn_state": "derived_from_G1-A",
+        "score_basis": "Changed app loading from importlib/getattr to direct from-import, changed archive construction from writestr to ZipInfo plus zf.open member write, changed target call to pass Path objects, and strengthened the oracle with escaped file content plus returned-path resolution.",
+        "proof_mode": "receipt_backed_fixture",
+        "rules": {
+          "qualification_pass": true,
+          "selected": false,
+          "runner_up": false,
+          "vulnerable_original_confirmed": true,
+          "patched_bypass": false
+        }
+      }
+    }
+  ],
+  "events": [
+    {
+      "id": "G1-A:mutation",
+      "ts": 45.71540584,
+      "battle_id": "battle-004",
+      "team": "red",
+      "actor_id": "G1-A",
+      "actor_kind": "exploit_agent",
+      "parent_id": "G0",
+      "elapsed_seconds": 45.71540584,
+      "at_seconds": 45.71540584,
+      "event_type": "genome_selected",
+      "summary": "G1-A · method_replace · novelty 2",
+      "proof_mode": "receipt_backed_fixture",
+      "public_trace": {
+        "observation": "G1-A derived from G0",
+        "action": "Replaced direct from-import loading of import_zip with importlib.import_module plus getattr while preserving archive construction, traversal entry, call semantics, exception handling, and filesystem oracle.",
+        "result": "PASS",
+        "learned": "app_load_mode, target_call_form"
+      },
+      "receipts": [
+        {
+          "receipt_id": "arena-adaptive-lineage-20260720T144034Z:G1-A:fitness",
+          "receipt_type": "battle.adaptive_lineage_node_fitness.v1",
+          "summary": "fitness PASS · vulnerable original yes",
+          "proof_mode": "receipt_backed_fixture"
+        }
+      ],
+      "ui": {
+        "importance": "visible",
+        "runner_state": "mutate",
+        "runner_animation": "mutate_pulse",
+        "sound_cue": "mutate_chirp",
+        "spectator_caption": "G1-A mutation evidence is bound to the adaptive qualification receipt.",
+        "notification": "Adaptive lineage — G1-A: method_replace"
+      }
+    },
+    {
+      "id": "G1-B:mutation",
+      "ts": 45.71540584,
+      "battle_id": "battle-004",
+      "team": "red",
+      "actor_id": "G1-B",
+      "actor_kind": "exploit_agent",
+      "parent_id": "G0",
+      "elapsed_seconds": 45.71540584,
+      "at_seconds": 45.71540584,
+      "event_type": "genome_selected",
+      "summary": "G1-B · oracle_or_parameter_mutation · novelty 1",
+      "proof_mode": "receipt_backed_fixture",
+      "public_trace": {
+        "observation": "G1-B derived from G0",
+        "action": "Changed malicious archive entry construction from ZipFile.writestr('../arena_escape.txt', payload) to writing a real temporary file with ZipFile.write(..., arcname='../arena_escape.txt'); app import mode, target call form, and oracle remain otherwise the same.",
+        "result": "PASS",
+        "learned": "archive_entry_construction"
+      },
+      "receipts": [
+        {
+          "receipt_id": "arena-adaptive-lineage-20260720T144034Z:G1-B:fitness",
+          "receipt_type": "battle.adaptive_lineage_node_fitness.v1",
+          "summary": "fitness PASS · vulnerable original yes",
+          "proof_mode": "receipt_backed_fixture"
+        }
+      ],
+      "ui": {
+        "importance": "visible",
+        "runner_state": "mutate",
+        "runner_animation": "mutate_pulse",
+        "sound_cue": "mutate_chirp",
+        "spectator_caption": "G1-B mutation evidence is bound to the adaptive qualification receipt.",
+        "notification": "Adaptive lineage — G1-B: oracle_or_parameter_mutation"
+      }
+    },
+    {
+      "id": "G1-A:fitness",
+      "ts": 72.60682104,
+      "battle_id": "battle-004",
+      "team": "judge",
+      "actor_id": "G1-A",
+      "actor_kind": "judge",
+      "elapsed_seconds": 72.60682104,
+      "at_seconds": 72.60682104,
+      "event_type": "judge.verdict",
+      "summary": "G1-A fitness PASS · vulnerable original confirmed",
+      "proof_mode": "receipt_backed_fixture",
+      "receipts": [
+        {
+          "receipt_id": "arena-adaptive-lineage-20260720T144034Z:G1-A:fitness",
+          "receipt_type": "battle.adaptive_lineage_node_fitness.v1",
+          "summary": "fitness PASS · vulnerable original yes",
+          "proof_mode": "receipt_backed_fixture"
+        }
+      ],
+      "judge_attempt": {
+        "pair_id": "arena-adaptive-lineage-20260720T144034Z:G1-A",
+        "red_worker_id": "G1-A",
+        "red_lane_id": "G1-A",
+        "blue_worker_id": "qualification-judge",
+        "blue_action_id": "adaptive-lineage-fitness",
+        "verdict": "QUALIFICATION_PASS",
+        "status": "PASS"
+      },
+      "ui": {
+        "importance": "hero",
+        "runner_state": "advance",
+        "sound_cue": "none",
+        "spectator_caption": "G1-A Judge-backed fitness is present in the adaptive qualification receipt.",
+        "notification": "Adaptive lineage — G1-A: fitness PASS"
+      }
+    },
+    {
+      "id": "G1-B:fitness",
+      "ts": 72.60682104,
+      "battle_id": "battle-004",
+      "team": "judge",
+      "actor_id": "G1-B",
+      "actor_kind": "judge",
+      "elapsed_seconds": 72.60682104,
+      "at_seconds": 72.60682104,
+      "event_type": "judge.verdict",
+      "summary": "G1-B fitness PASS · vulnerable original confirmed",
+      "proof_mode": "receipt_backed_fixture",
+      "receipts": [
+        {
+          "receipt_id": "arena-adaptive-lineage-20260720T144034Z:G1-B:fitness",
+          "receipt_type": "battle.adaptive_lineage_node_fitness.v1",
+          "summary": "fitness PASS · vulnerable original yes",
+          "proof_mode": "receipt_backed_fixture"
+        }
+      ],
+      "judge_attempt": {
+        "pair_id": "arena-adaptive-lineage-20260720T144034Z:G1-B",
+        "red_worker_id": "G1-B",
+        "red_lane_id": "G1-B",
+        "blue_worker_id": "qualification-judge",
+        "blue_action_id": "adaptive-lineage-fitness",
+        "verdict": "QUALIFICATION_PASS",
+        "status": "PASS"
+      },
+      "ui": {
+        "importance": "visible",
+        "runner_state": "advance",
+        "sound_cue": "none",
+        "spectator_caption": "G1-B Judge-backed fitness is present in the adaptive qualification receipt.",
+        "notification": "Adaptive lineage — G1-B: fitness PASS"
+      }
+    },
+    {
+      "id": "adaptive-lineage-selection",
+      "ts": 83.36338712,
+      "battle_id": "battle-004",
+      "team": "system",
+      "actor_id": "adaptive-lineage-selection",
+      "actor_kind": "battle_orchestrator",
+      "target_actor_ids": [
+        "G1-A",
+        "G1-B"
+      ],
+      "elapsed_seconds": 83.36338712,
+      "at_seconds": 83.36338712,
+      "event_type": "judge.receipt_verified",
+      "summary": "Selection: G1-A over G1-B · novelty_distance",
+      "proof_mode": "receipt_backed_fixture",
+      "ui": {
+        "importance": "hero",
+        "runner_state": "advance",
+        "sound_cue": "none",
+        "spectator_caption": "Deterministic selection receipt binds both G1 outcomes before G2 reproduction.",
+        "notification": "Adaptive lineage — selected G1-A -> G2"
+      }
+    },
+    {
+      "id": "G2:mutation",
+      "ts": 86.05252863999999,
+      "battle_id": "battle-004",
+      "team": "red",
+      "actor_id": "G2",
+      "actor_kind": "exploit_agent",
+      "parent_id": "G1-A",
+      "elapsed_seconds": 86.05252863999999,
+      "at_seconds": 86.05252863999999,
+      "event_type": "genome_selected",
+      "summary": "G2 · failure_guided_crossover · novelty 4",
+      "proof_mode": "receipt_backed_fixture",
+      "public_trace": {
+        "observation": "G2 derived from G1-A",
+        "action": "Changed app loading from importlib/getattr to direct from-import, changed archive construction from writestr to ZipInfo plus zf.open member write, changed target call to pass Path objects, and strengthened the oracle with escaped file content plus returned-path resolution.",
+        "result": "PASS",
+        "learned": "app_load_mode, archive_entry_construction, target_call_form, exception_handling"
+      },
+      "receipts": [
+        {
+          "receipt_id": "arena-adaptive-lineage-20260720T144034Z:G2:fitness",
+          "receipt_type": "battle.adaptive_lineage_node_fitness.v1",
+          "summary": "fitness PASS · vulnerable original yes",
+          "proof_mode": "receipt_backed_fixture"
+        }
+      ],
+      "ui": {
+        "importance": "hero",
+        "runner_state": "mutate",
+        "runner_animation": "mutate_pulse",
+        "sound_cue": "mutate_chirp",
+        "spectator_caption": "G2 mutation evidence is bound to the adaptive qualification receipt.",
+        "notification": "Adaptive lineage — G2: failure_guided_crossover"
+      }
+    },
+    {
+      "id": "G2:fitness",
+      "ts": 121.01136840000001,
+      "battle_id": "battle-004",
+      "team": "judge",
+      "actor_id": "G2",
+      "actor_kind": "judge",
+      "elapsed_seconds": 121.01136840000001,
+      "at_seconds": 121.01136840000001,
+      "event_type": "judge.verdict",
+      "summary": "G2 fitness PASS · vulnerable original confirmed",
+      "proof_mode": "receipt_backed_fixture",
+      "receipts": [
+        {
+          "receipt_id": "arena-adaptive-lineage-20260720T144034Z:G2:fitness",
+          "receipt_type": "battle.adaptive_lineage_node_fitness.v1",
+          "summary": "fitness PASS · vulnerable original yes",
+          "proof_mode": "receipt_backed_fixture"
+        }
+      ],
+      "judge_attempt": {
+        "pair_id": "arena-adaptive-lineage-20260720T144034Z:G2",
+        "red_worker_id": "G2",
+        "red_lane_id": "G2",
+        "blue_worker_id": "qualification-judge",
+        "blue_action_id": "adaptive-lineage-fitness",
+        "verdict": "QUALIFICATION_PASS",
+        "status": "PASS"
+      },
+      "ui": {
+        "importance": "hero",
+        "runner_state": "advance",
+        "sound_cue": "none",
+        "spectator_caption": "G2 Judge-backed fitness is present in the adaptive qualification receipt.",
+        "notification": "Adaptive lineage — G2: fitness PASS"
+      }
+    }
+  ],
+  "leaderboard": [],
+  "receipts": [
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-red-g1-observation",
+      "receipt_type": "battle.generation_observation_receipt.v1",
+      "artifact_ref": "sha256:78fc93f98d81f8fb72147448074cd7a7eece9d50f2cd5c2347dc5466af385bb6",
+      "summary": "PASS",
+      "proof_mode": "receipt_backed_fixture"
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-blue-g1-observation",
+      "receipt_type": "battle.generation_observation_receipt.v1",
+      "artifact_ref": "sha256:df3570931f988c80a72647e769924eb8eab09396131ded0b3acb71868af67e63",
+      "summary": "PASS",
+      "proof_mode": "receipt_backed_fixture"
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-red-g2-observation",
+      "receipt_type": "battle.generation_observation_receipt.v1",
+      "artifact_ref": "sha256:317de695abcaf72c38eb2eccc7e68970d3dec35e7412b81f677b638389d7ddb0",
+      "summary": "PASS",
+      "proof_mode": "receipt_backed_fixture"
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-blue-g2-observation",
+      "receipt_type": "battle.generation_observation_receipt.v1",
+      "artifact_ref": "sha256:ba18de7ad1a0d5ee05a738cb7e6860a6a346549258f3265638416abf0856e7ff",
+      "summary": "PASS",
+      "proof_mode": "receipt_backed_fixture"
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-red-g1-fitness",
+      "receipt_type": "battle.fitness_vector.v1",
+      "artifact_ref": "sha256:6a74bed467712120fd6cc5b69663dc3cbd48a1610e64f0a22aeeac99b6800510",
+      "summary": "PASS",
+      "proof_mode": "receipt_backed_fixture"
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-blue-g1-fitness",
+      "receipt_type": "battle.fitness_vector.v1",
+      "artifact_ref": "sha256:65112d90ac84e9e79c7f41ce14e269054f9a3391d0632af9784959fdc35e33c8",
+      "summary": "PASS",
+      "proof_mode": "receipt_backed_fixture"
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-red-g2-fitness",
+      "receipt_type": "battle.fitness_vector.v1",
+      "artifact_ref": "sha256:e053a82d7fea58f3a860cdb43d1c7045d92bcd24d19ab444f434a074656541e3",
+      "summary": "PASS",
+      "proof_mode": "receipt_backed_fixture"
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-blue-g2-fitness",
+      "receipt_type": "battle.fitness_vector.v1",
+      "artifact_ref": "sha256:dfc675b69626e13e4bb995a044c665e4c4dd8c9d228a02c8ad9869205d8d975f",
+      "summary": "PASS",
+      "proof_mode": "receipt_backed_fixture"
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-red-parent-spawn-request",
+      "receipt_type": "battle.adaptive_spawn_request.v1",
+      "artifact_ref": "sha256:d88df30ac4704e367b32bd62bc2dcb8d85c0c9dc76c290914840c6a2f3072670",
+      "summary": "PASS",
+      "proof_mode": "receipt_backed_fixture"
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-blue-parent-spawn-request",
+      "receipt_type": "battle.adaptive_spawn_request.v1",
+      "artifact_ref": "sha256:80224c8fe47650b78fded13cc3631b6ad60649c96f06e6222fc3d68525d4fe8c",
+      "summary": "PASS",
+      "proof_mode": "receipt_backed_fixture"
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-red-g1-g2-delta",
+      "receipt_type": "battle.semantic_genome_delta.v1",
+      "artifact_ref": "sha256:059643ca7d7f2f556b537a17e77b8347134463a32531a115acad4fdc46af5229",
+      "summary": "PASS",
+      "proof_mode": "receipt_backed_fixture"
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-blue-g1-g2-delta",
+      "receipt_type": "battle.semantic_genome_delta.v1",
+      "artifact_ref": "sha256:d37259a338f0ba09fd8a4ed4e193662a4ce68772af5bf9867d1223682a8b89e7",
+      "summary": "PASS",
+      "proof_mode": "receipt_backed_fixture"
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-selection",
+      "receipt_type": "battle.adaptive_selection_receipt.v1",
+      "artifact_ref": "sha256:920b935c555da9e1172f3d86c3ee332e678ed84a84c01195136c68449e3c6728",
+      "summary": "PASS",
+      "proof_mode": "receipt_backed_fixture"
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-memory-evaluation",
+      "receipt_type": "battle.memory_promotion_evaluation.v1",
+      "artifact_ref": "sha256:bfe63d19882ef6f9d8ecd9c715f671e522013104ec57564557f355f12d223aa6",
+      "summary": "PASS",
+      "proof_mode": "receipt_backed_fixture"
+    },
+    {
+      "receipt_id": "battle.arena_tau_public_only_judge_receipt.v1:e69ec6a291e5",
+      "receipt_type": "battle.arena_tau_public_only_judge_receipt.v1",
+      "artifact_ref": "sha256:e69ec6a291e5f2b79f0524777328ce39b1f6e763ed3e773c3755f882d7262ec2",
+      "summary": "BLUE_SUCCESS",
+      "proof_mode": "receipt_backed_fixture"
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-red-spawn-policy-decision",
+      "receipt_type": "battle.adaptive_spawn_policy_decision.v1",
+      "artifact_ref": "sha256:abad5cd4c7ebdd7f52a0d304c5fcc57be5dc8e7f6019dc7ad1350b786aeeffc7",
+      "summary": "PASS",
+      "proof_mode": "receipt_backed_fixture"
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-blue-spawn-policy-decision",
+      "receipt_type": "battle.adaptive_spawn_policy_decision.v1",
+      "artifact_ref": "sha256:ac2f5b31c87136dce78ac8b988c0c1fdf53d8ca550e9c6a59a868708291d0152",
+      "summary": "PASS",
+      "proof_mode": "receipt_backed_fixture"
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-red-knowledge-packet",
+      "receipt_type": "battle.adaptive_team_knowledge_packet.v1",
+      "artifact_ref": "sha256:b95bdda4037f9e7a394555fbfad8b8e6a9730a39dbad0cabbc0059fea727b424",
+      "summary": "PASS",
+      "proof_mode": "receipt_backed_fixture"
+    },
+    {
+      "receipt_id": "battle-004-adaptive-red-blue-lineage-v13-blue-knowledge-packet",
+      "receipt_type": "battle.adaptive_team_knowledge_packet.v1",
+      "artifact_ref": "sha256:bf37e0aec0188ffb6afbe130f3e6689f406823be01df0dd71dc83cf1b8bcafc0",
+      "summary": "PASS",
+      "proof_mode": "receipt_backed_fixture"
+    },
+    {
+      "receipt_id": "tau.external_research_receipt.v1:d70081a73a99",
+      "receipt_type": "tau.external_research_receipt.v1",
+      "artifact_ref": "sha256:d70081a73a999ca643e07627d4c76bfdc8b4778b804c5dc4df23e487beb1fd32",
+      "summary": "receipt",
+      "proof_mode": "receipt_backed_fixture"
+    },
+    {
+      "receipt_id": "tau.external_research_receipt.v1:f73c3fd90a28",
+      "receipt_type": "tau.external_research_receipt.v1",
+      "artifact_ref": "sha256:f73c3fd90a282de13784239ed0d610704547b425c14b5d36b3c2b360624330b9",
+      "summary": "receipt",
+      "proof_mode": "receipt_backed_fixture"
+    },
+    {
+      "receipt_id": "battle.arena_tau_public_only_judge_receipt.v1:67cdf392fb24",
+      "receipt_type": "battle.arena_tau_public_only_judge_receipt.v1",
+      "artifact_ref": "sha256:67cdf392fb24f37d33c8409a4dfe3b9dcdbef36f1575c8fd0930818d1675182b",
+      "summary": "BLUE_SUCCESS",
+      "proof_mode": "receipt_backed_fixture"
+    },
+    {
+      "receipt_id": "battle.inherited_knowledge_acknowledgement.v1:30ed37784853",
+      "receipt_type": "battle.inherited_knowledge_acknowledgement.v1",
+      "artifact_ref": "sha256:30ed377848531571b655557df7c918f2254dcbe5019985bebf315534837a7f3d",
+      "summary": "PASS",
+      "proof_mode": "receipt_backed_fixture"
+    },
+    {
+      "receipt_id": "battle.inherited_knowledge_acknowledgement.v1:f29b43efeb87",
+      "receipt_type": "battle.inherited_knowledge_acknowledgement.v1",
+      "artifact_ref": "sha256:f29b43efeb87f3b22735488ec0588f47438c2a4ffa8875d638e63eacfb20fb73",
+      "summary": "PASS",
+      "proof_mode": "receipt_backed_fixture"
+    },
+    {
+      "receipt_id": "arena-adaptive-lineage-20260720T144034Z:G0:fitness",
+      "receipt_type": "battle.adaptive_lineage_node_fitness.v1",
+      "summary": "seed specimen receipt",
+      "proof_mode": "receipt_backed_fixture"
+    },
+    {
+      "receipt_id": "arena-adaptive-lineage-20260720T144034Z:G1-A:fitness",
+      "receipt_type": "battle.adaptive_lineage_node_fitness.v1",
+      "summary": "fitness PASS · vulnerable original yes",
+      "proof_mode": "receipt_backed_fixture"
+    },
+    {
+      "receipt_id": "arena-adaptive-lineage-20260720T144034Z:G1-B:fitness",
+      "receipt_type": "battle.adaptive_lineage_node_fitness.v1",
+      "summary": "fitness PASS · vulnerable original yes",
+      "proof_mode": "receipt_backed_fixture"
+    },
+    {
+      "receipt_id": "arena-adaptive-lineage-20260720T144034Z:G2:fitness",
+      "receipt_type": "battle.adaptive_lineage_node_fitness.v1",
+      "summary": "fitness PASS · vulnerable original yes",
+      "proof_mode": "receipt_backed_fixture"
+    }
+  ],
+  "validation": {
+    "schema": "battle.adaptive_lineage_frontend_projection.v1",
+    "fail_closed": true,
+    "source_schema": "battle.normalized_adaptive_lineage_fixture.v1",
+    "renderer_contract": {
+      "child_activation_event": "child_research_materialized",
+      "child_pending_state": "AUTHORIZED_PENDING",
+      "child_visibility_event": "spawn_authorized",
+      "event_order_authority": "event.seq",
+      "no_promotion_is_not_promoted": true,
+      "pair_judge_event_is_global": true,
+      "schema": "battle.adaptive_lineage_renderer_contract.v1",
+      "selection_is_not_victory": true,
+      "sprite_identity_is_cosmetic_only": true,
+      "time_authority": "event.elapsed_seconds_is_receipt_commit_time"
+    }
+  },
+  "adaptive_lineage": {
+    "battle_id": "battle-004",
+    "data_source": "live",
+    "edges": [
+      {
+        "changed_dimensions": [
+          {
+            "child": "importlib_import_module",
+            "dimension": "app_load_mode",
+            "parent": "from_import_app"
+          },
+          {
+            "child": "none",
+            "dimension": "target_call_form",
+            "parent": "function_call"
+          }
+        ],
+        "delta_status": "PASS",
+        "from": "G0",
+        "mutation_operator": "method_replace",
+        "novelty_distance": 2,
+        "to": "G1-A"
+      },
+      {
+        "changed_dimensions": [
+          {
+            "child": "zipfile_write_arcname",
+            "dimension": "archive_entry_construction",
+            "parent": "zipfile_writestr"
+          }
+        ],
+        "delta_status": "PASS",
+        "from": "G0",
+        "mutation_operator": "oracle_or_parameter_mutation",
+        "novelty_distance": 1,
+        "to": "G1-B"
+      },
+      {
+        "changed_dimensions": [
+          {
+            "child": "from_import_app",
+            "dimension": "app_load_mode",
+            "parent": "importlib_import_module"
+          },
+          {
+            "child": "zipinfo",
+            "dimension": "archive_entry_construction",
+            "parent": "zipfile_writestr"
+          },
+          {
+            "child": "function_call",
+            "dimension": "target_call_form",
+            "parent": "none"
+          },
+          {
+            "child": "try[Exception:handle|Exception:return|OSError:return]",
+            "dimension": "exception_handling",
+            "parent": "try[Exception:return]"
+          }
+        ],
+        "delta_status": "PASS",
+        "from": "G1-A",
+        "mutation_operator": "failure_guided_crossover",
+        "novelty_distance": 4,
+        "to": "G2"
+      }
+    ],
+    "generated_at": null,
+    "nodes": [
+      {
+        "changed_dimensions": [],
+        "delta_status": null,
+        "fitness_status": null,
+        "generation": 0,
+        "id": "G0",
+        "judge_outcome": null,
+        "mutation_operator": null,
+        "novelty_distance": null,
+        "parentId": null,
+        "role": "seed",
+        "runner_up": false,
+        "selected": false,
+        "technique_delta": "seed exploit (no mutation operator)"
+      },
+      {
+        "changed_dimensions": [
+          {
+            "child": "importlib_import_module",
+            "dimension": "app_load_mode",
+            "parent": "from_import_app"
+          },
+          {
+            "child": "none",
+            "dimension": "target_call_form",
+            "parent": "function_call"
+          }
+        ],
+        "delta_status": "PASS",
+        "fitness_status": "PASS",
+        "generation": 1,
+        "id": "G1-A",
+        "judge_outcome": {
+          "duration_seconds": 1.195406,
+          "patched_bypass": false,
+          "vulnerable_original_confirmed": true
+        },
+        "mutation_operator": "method_replace",
+        "novelty_distance": 2,
+        "parentId": "G0",
+        "role": "candidate",
+        "runner_up": false,
+        "selected": true,
+        "technique_delta": "Replaced direct from-import loading of import_zip with importlib.import_module plus getattr while preserving archive construction, traversal entry, call semantics, exception handling, and filesystem oracle."
+      },
+      {
+        "changed_dimensions": [
+          {
+            "child": "zipfile_write_arcname",
+            "dimension": "archive_entry_construction",
+            "parent": "zipfile_writestr"
+          }
+        ],
+        "delta_status": "PASS",
+        "fitness_status": "PASS",
+        "generation": 1,
+        "id": "G1-B",
+        "judge_outcome": {
+          "duration_seconds": 1.260919,
+          "patched_bypass": false,
+          "vulnerable_original_confirmed": true
+        },
+        "mutation_operator": "oracle_or_parameter_mutation",
+        "novelty_distance": 1,
+        "parentId": "G0",
+        "role": "candidate",
+        "runner_up": true,
+        "selected": false,
+        "technique_delta": "Changed malicious archive entry construction from ZipFile.writestr('../arena_escape.txt', payload) to writing a real temporary file with ZipFile.write(..., arcname='../arena_escape.txt'); app import mode, target call form, and oracle remain otherwise the same."
+      },
+      {
+        "changed_dimensions": [
+          {
+            "child": "from_import_app",
+            "dimension": "app_load_mode",
+            "parent": "importlib_import_module"
+          },
+          {
+            "child": "zipinfo",
+            "dimension": "archive_entry_construction",
+            "parent": "zipfile_writestr"
+          },
+          {
+            "child": "function_call",
+            "dimension": "target_call_form",
+            "parent": "none"
+          },
+          {
+            "child": "try[Exception:handle|Exception:return|OSError:return]",
+            "dimension": "exception_handling",
+            "parent": "try[Exception:return]"
+          }
+        ],
+        "delta_status": "PASS",
+        "fitness_status": "PASS",
+        "generation": 2,
+        "id": "G2",
+        "judge_outcome": {
+          "duration_seconds": 1.285213,
+          "patched_bypass": false,
+          "vulnerable_original_confirmed": true
+        },
+        "mutation_operator": "failure_guided_crossover",
+        "novelty_distance": 4,
+        "parentId": "G1-A",
+        "role": "descendant",
+        "runner_up": false,
+        "selected": false,
+        "technique_delta": "Changed app loading from importlib/getattr to direct from-import, changed archive construction from writestr to ZipInfo plus zf.open member write, changed target call to pass Path objects, and strengthened the oracle with escaped file content plus returned-path resolution."
+      }
+    ],
+    "qualification": {
+      "reasons": [],
+      "status": "PASS",
+      "stop_condition": null
+    },
+    "run_id": "arena-adaptive-lineage-20260720T144034Z",
+    "schema": "battle.adaptive_lineage_mechanics_fixture.v1",
+    "selection": {
+      "deciding_criterion": "novelty_distance",
+      "runner_up_id": "G1-B",
+      "selected_id": "G1-A"
+    }
+  }
+}

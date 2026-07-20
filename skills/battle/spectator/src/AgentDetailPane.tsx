@@ -62,7 +62,7 @@ export function AgentDetailPane({ lane, lanes, events, activeFinisher, onSound }
           </div>
         </header>
 
-        {replay ? <ReplayPanel replay={replay} /> : <NoReplayPanel />}
+        {replay ? <ReplayPanel replay={replay} /> : lifecycle.scoreSemantics?.schema === "battle.adaptive_lineage_lane_score_semantics.v1" ? <AdaptiveQualificationPanel lifecycle={lifecycle} lane={lane} /> : <NoReplayPanel />}
 
         <LifecycleEvidencePanel lifecycle={lifecycle} />
 
@@ -179,6 +179,30 @@ function NoReplayPanel() {
       <div className="battle-label mb-1">Docker replay</div>
       <div className="rounded-md border border-dashed border-white/20 bg-white/[.05] px-4 py-3 text-center text-sm italic text-slate-400">
         No Judge replay receipt is attached to this selected exploit lane.
+      </div>
+    </section>
+  );
+}
+
+function AdaptiveQualificationPanel({ lifecycle, lane }: { lifecycle: ReturnType<typeof laneLifecycleEvidenceView>; lane: Lane }) {
+  const semantics = lifecycle.scoreSemantics;
+  const calibration = lifecycle.scoreCalibration;
+  const rules = semantics?.rules ?? {};
+  const confirmed = rules.vulnerable_original_confirmed ? "vulnerable original confirmed" : "vulnerable original not confirmed";
+  const bypass = rules.patched_bypass ? "patched bypass observed" : "no patched bypass";
+  return (
+    <section className="m-3 rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-3" data-qid="battle:agent-pane:adaptive-qualification">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="battle-label text-emerald-200">Adaptive qualification</div>
+          <div className="mt-1 text-lg font-black text-white">{semantics?.outcome_tier ?? "PASS"}</div>
+          <div className="mt-1 text-xs leading-5 text-slate-300">{lane.name} · {semantics?.outcome_class ?? "receipt-backed node"}</div>
+        </div>
+        <ProofBadge mode={semantics?.proof_mode ?? lane.proofMode ?? "receipt_backed_fixture"} />
+      </div>
+      <div className="mt-2 grid gap-2 text-[11px] text-slate-300">
+        <InfoLine label="Judge" value={`${confirmed} · ${bypass}`} />
+        <InfoLine label="Basis" value={semantics?.score_basis ?? calibration?.formula ?? "adaptive lineage receipt"} />
       </div>
     </section>
   );

@@ -20,7 +20,7 @@ export function BattleProofNav() {
 	const onCampaign = isBattleCampaignView(hash);
 	const onMusic = isBattleMusicView(hash);
 	const onGenetic = hash.includes("pr6-genetic") && !onCampaign;
-	const onAdaptive = hash.includes("adaptive-lineage-v13");
+	const onAdaptive = hash.includes("adaptive-lineage-v13") || hash.includes("adaptive-lineage-live");
 	const onDesign = isBattleDesignView();
 	const onProofFamily = onProof || onSynthesis || onCompile || onRuntime || onPopulation || onGenetic || onAdaptive || onCampaign || onMusic || onLive;
 	const onRace = !onDesign && !onProofFamily && (isBattleReceiptReplayView() || hash.startsWith("#battle/receipt"));
@@ -37,12 +37,12 @@ export function BattleProofNav() {
 				<summary className={onProofFamily ? "is-active" : undefined}>Proofs &amp; stages</summary>
 				<div className="battle-proof-nav-more-links">
 					<a
-						href="#battle/receipt?engine=pixi&fixture=battle-004-adaptive-lineage-v13"
+						href="#battle/receipt?engine=pixi&fixture=battle-004-adaptive-lineage-live"
 						aria-current={onAdaptive ? "page" : undefined}
 						data-qid="battle:nav:adaptive"
-						title="Single-run causal Red/Blue parent-child lineage"
+						title="Live four-specimen adaptive-lineage receipt"
 					>
-						Adaptive Lineage V13
+						Adaptive Lineage Live
 					</a>
 					<a
 						href="#battle/receipt?engine=pixi&fixture=battle-004-pr6-genetic-pixi"
