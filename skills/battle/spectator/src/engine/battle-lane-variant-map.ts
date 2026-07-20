@@ -26,6 +26,9 @@ export const BATTLE_RUNNER_FLOOR_SPRITE_ID: BattleRunnerSpriteId = BATTLE_ACTIVE
  */
 export const ENABLED_RUNNER_SPRITE_IDS: BattleRunnerSpriteId[] = [
 	"plague_nurgling",
+	"crimson_chainsaw_demon",
+	"slug_demon",
+	"typhus",
 ];
 
 /** Resolve fixture theme metadata without granting it runtime character selection. */
@@ -95,11 +98,14 @@ const LANE_SPRITE_TABLE: Record<string, BattleRunnerSpriteId> = {
  * cosmetic shared-atlas theme deliberately maps every variant to one sprite, which
  * is the exact lock this mapping overrides to make specimens distinct.
  */
-export function spriteIdForLane(_lane: Lane, _spriteTheme?: BattleSpriteThemeV1): BattleRunnerSpriteId {
-	// Requirement: every lane uses the single proven-rendering sprite (plague_nurgling).
-	// The multi-sprite LANE_SPRITE_TABLE is retained above for reference but no longer
-	// drives selection — the other atlases render as garbage at lane scale.
-	return BATTLE_ACTIVE_RUNNER_SPRITE_ID;
+export function spriteIdForLane(lane: Lane, _spriteTheme?: BattleSpriteThemeV1): BattleRunnerSpriteId {
+	// Deterministic receipt-backed identity -> reviewer-ACCEPTED atlas. Keyed on
+	// team + generation + selection role (GOAL_ADAPTIVE_LINEAGE.md — the four specimens
+	// must render as DISTINCT themed sprites). Unknown identities fall back to the
+	// mandatory floor sprite. This replaces the single-atlas lock that forced every
+	// lane to plague_nurgling.
+	const key = `${lane.team}:${lane.generation}:${selectionRole(lane)}`;
+	return LANE_SPRITE_TABLE[key] ?? BATTLE_RUNNER_FLOOR_SPRITE_ID;
 }
 
 /** @deprecated use spriteIdForLane */

@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Adaptive Lineage Battle Scorecard</title>
+  <style>
+:root {
+  color-scheme: dark;
+  --red: #ff2c42;
+  --blue: #258fff;
+  --cyan: #4ad9ff;
+}
+
+* { box-sizing: border-box; }
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #01040a;
+  font-family: "Roboto Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+}
+
+.demo-stage {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 48%, rgba(19, 37, 61, 0.20), transparent 55%),
+    linear-gradient(#040a14, #01040a);
+}
+
+.battle-scorecard {
+  position: relative;
+  width: min(100vw, 2172px);
+  aspect-ratio: 2172 / 724;
+  overflow: hidden;
+  isolation: isolate;
+  background: #01050c;
+}
+
+.battle-scorecard::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0.17;
+  mix-blend-mode: screen;
+  background:
+    repeating-linear-gradient(to bottom, rgba(255,255,255,0.035) 0 1px, transparent 1px 4px),
+    radial-gradient(circle, rgba(153, 204, 255, 0.12) 0 0.7px, transparent 0.9px);
+  background-size: auto, 4px 4px;
+}
+
+.battle-scorecard__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.plate,
+.footer,
+.face,
+.bridge,
+.center-diamond {
+  vector-effect: non-scaling-stroke;
+}
+
+.plate--red,
+.footer--red {
+  fill: url(#redPlate);
+  stroke: #8c1027;
+  stroke-width: 2.5;
+}
+
+.plate--blue,
+.footer--blue {
+  fill: url(#bluePlate);
+  stroke: #0b5ca9;
+  stroke-width: 2.5;
+}
+
+.face--red {
+  fill: #050810;
+  stroke: url(#redStroke);
+  stroke-width: 2.1;
+}
+
+.face--blue {
+  fill: #050910;
+  stroke: url(#blueStroke);
+  stroke-width: 2.1;
+}
+
+.outer-stroke,
+.inner-stroke,
+.trace {
+  fill: none;
+  vector-effect: non-scaling-stroke;
+  stroke-linecap: square;
+  stroke-linejoin: miter;
+}
+
+.outer-stroke {
+  stroke-width: 2.7;
+}
+
+.outer-stroke--red {
+  stroke: url(#redStroke);
+  filter: url(#redGlow);
+}
+
+.outer-stroke--blue {
+  stroke: url(#blueStroke);
+  filter: url(#blueGlow);
+}
+
+.inner-stroke {
+  stroke-width: 1.4;
+  opacity: 0.72;
+}
+
+.inner-stroke--red { stroke: #9f1830; }
+.inner-stroke--blue { stroke: #0d5da4; }
+
+.trace {
+  stroke-width: 1.2;
+  opacity: 0.5;
+}
+.trace--red { stroke: #9d1730; }
+.trace--blue { stroke: #0c5da6; }
+.trace.faint { opacity: 0.26; }
+
+.bridge {
+  fill: #050a12;
+  stroke: #15364d;
+  stroke-width: 2;
+}
+
+.center-diamond {
+  fill: #050b14;
+  stroke: url(#centerStroke);
+  stroke-width: 2.2;
+}
+
+.team-title,
+.score,
+.versus,
+.mode-label {
+  font-family: "Roboto Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  font-weight: 800;
+  user-select: none;
+}
+
+.team-title {
+  font-size: 43px;
+  letter-spacing: 0.4px;
+}
+
+.team-title--red {
+  fill: url(#redText);
+  filter: url(#redGlow);
+}
+
+.team-title--blue {
+  fill: url(#blueText);
+  filter: url(#blueGlow);
+}
+
+.score {
+  font-family: "Arial Black", Arial, Helvetica, sans-serif;
+  font-size: 170px;
+  letter-spacing: -7px;
+  filter: url(#scoreShadow);
+}
+
+.score--red {
+  fill: url(#redText);
+}
+
+.score--blue {
+  fill: url(#blueText);
+}
+
+.versus {
+  fill: url(#vsText);
+  font-size: 68px;
+  letter-spacing: -2px;
+  filter: url(#cyanGlow);
+}
+
+.mode-label {
+  font-size: 24px;
+  letter-spacing: 9px;
+}
+.mode-label--red { fill: #ff344a; }
+.mode-label--blue { fill: #2995ff; }
+
+.emblem {
+  filter: drop-shadow(0 0 10px rgba(0,0,0,0.8));
+}
+
+.meter use {
+  filter: drop-shadow(0 0 4px rgba(0,0,0,0.8));
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .battle-scorecard {
+    animation: scorecard-entry 420ms cubic-bezier(.19,.7,.2,1) both;
+  }
+  @keyframes scorecard-entry {
+    from { opacity: 0; transform: scale(.985); filter: brightness(.7); }
+    to { opacity: 1; transform: scale(1); filter: brightness(1); }
+  }
+}
+
+</style>
+</head>
+<body>
+  <main class="demo-stage">
+    <section
+      class="battle-scorecard"
+      aria-labelledby="scorecard-title"
+      data-red-team="RED TEAM"
+      data-red-score="8.4"
+      data-blue-team="BLUE TEAM"
+      data-blue-score="7.2"
+    >
+      <h1 id="scorecard-title" class="sr-only">Red Team 8.4 versus Blue Team 7.2</h1>
+
+      <svg class="battle-scorecard__svg" viewBox="0 0 2172 724" role="img" aria-hidden="true">
+        <defs>
+          <linearGradient id="stageGlow" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#07101e" />
+            <stop offset="0.42" stop-color="#030915" />
+            <stop offset="1" stop-color="#01050c" />
+          </linearGradient>
+
+          <radialGradient id="stageBloom" cx="50%" cy="49%" r="60%">
+            <stop offset="0" stop-color="#0a1526" stop-opacity="0.66" />
+            <stop offset="0.48" stop-color="#06101f" stop-opacity="0.28" />
+            <stop offset="1" stop-color="#01040a" stop-opacity="0" />
+          </radialGradient>
+
+          <linearGradient id="redPlate" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#13050b" />
+            <stop offset="0.33" stop-color="#090811" />
+            <stop offset="0.76" stop-color="#070a13" />
+            <stop offset="1" stop-color="#0a0b14" />
+          </linearGradient>
+          <linearGradient id="bluePlate" x1="1" y1="0" x2="0" y2="0">
+            <stop offset="0" stop-color="#02152d" />
+            <stop offset="0.34" stop-color="#050b17" />
+            <stop offset="0.78" stop-color="#060a13" />
+            <stop offset="1" stop-color="#080b14" />
+          </linearGradient>
+
+          <radialGradient id="redScoreBloom" cx="50%" cy="54%" r="64%">
+            <stop offset="0" stop-color="#5f0715" stop-opacity="0.48" />
+            <stop offset="0.42" stop-color="#29030b" stop-opacity="0.24" />
+            <stop offset="1" stop-color="#05070e" stop-opacity="0" />
+          </radialGradient>
+          <radialGradient id="blueScoreBloom" cx="50%" cy="54%" r="64%">
+            <stop offset="0" stop-color="#063d8a" stop-opacity="0.52" />
+            <stop offset="0.42" stop-color="#031d45" stop-opacity="0.24" />
+            <stop offset="1" stop-color="#05070e" stop-opacity="0" />
+          </radialGradient>
+
+          <linearGradient id="redStroke" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#ff3347" />
+            <stop offset="0.48" stop-color="#e41635" />
+            <stop offset="1" stop-color="#62102d" />
+          </linearGradient>
+          <linearGradient id="blueStroke" x1="1" y1="0" x2="0" y2="0">
+            <stop offset="0" stop-color="#1e96ff" />
+            <stop offset="0.48" stop-color="#0879eb" />
+            <stop offset="1" stop-color="#0d294e" />
+          </linearGradient>
+          <linearGradient id="centerStroke" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#8b2443" />
+            <stop offset="0.42" stop-color="#243852" />
+            <stop offset="0.58" stop-color="#174465" />
+            <stop offset="1" stop-color="#0f5b9a" />
+          </linearGradient>
+          <linearGradient id="cyanTrim" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#156d9e" />
+            <stop offset="0.2" stop-color="#60e6ff" />
+            <stop offset="0.8" stop-color="#38d4f6" />
+            <stop offset="1" stop-color="#115f93" />
+          </linearGradient>
+          <linearGradient id="redText" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#ff5261" />
+            <stop offset="0.46" stop-color="#ff253b" />
+            <stop offset="1" stop-color="#e3132c" />
+          </linearGradient>
+          <linearGradient id="blueText" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#53b4ff" />
+            <stop offset="0.46" stop-color="#258fff" />
+            <stop offset="1" stop-color="#0d70e5" />
+          </linearGradient>
+          <linearGradient id="vsText" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#d6f3ff" />
+            <stop offset="1" stop-color="#76c7f7" />
+          </linearGradient>
+
+          <pattern id="redGrid" width="42" height="42" patternUnits="userSpaceOnUse">
+            <path d="M42 0H0V42" fill="none" stroke="#b71631" stroke-opacity="0.16" stroke-width="1" />
+            <path d="M21 0V42M0 21H42" fill="none" stroke="#6f1327" stroke-opacity="0.10" stroke-width="1" />
+          </pattern>
+          <pattern id="blueGrid" width="42" height="42" patternUnits="userSpaceOnUse">
+            <path d="M42 0H0V42" fill="none" stroke="#116dc9" stroke-opacity="0.17" stroke-width="1" />
+            <path d="M21 0V42M0 21H42" fill="none" stroke="#0c477f" stroke-opacity="0.10" stroke-width="1" />
+          </pattern>
+          <pattern id="microDots" width="7" height="7" patternUnits="userSpaceOnUse">
+            <circle cx="1.3" cy="1.3" r="0.9" fill="#8bcfff" fill-opacity="0.18" />
+          </pattern>
+          <pattern id="scanLines" width="8" height="8" patternUnits="userSpaceOnUse">
+            <rect width="8" height="1" fill="#ffffff" fill-opacity="0.028" />
+          </pattern>
+
+          <clipPath id="redFaceClip">
+            <path d="M208 201 L258 167 H867 L923 221 H988 L951 263 L909 337 L838 458 H170 V273 Z" />
+          </clipPath>
+          <clipPath id="blueFaceClip">
+            <path d="M1964 201 L1914 167 H1305 L1249 221 H1184 L1221 263 L1263 337 L1334 458 H2002 V273 Z" />
+          </clipPath>
+          <clipPath id="centerClip">
+            <path d="M984 253 H1188 L1252 358 L1188 462 H984 L920 358 Z" />
+          </clipPath>
+
+          <filter id="redGlow" x="-35%" y="-35%" width="170%" height="170%">
+            <feGaussianBlur stdDeviation="8" result="blur" />
+            <feFlood flood-color="#ff1535" flood-opacity="0.5" result="color" />
+            <feComposite in="color" in2="blur" operator="in" result="glow" />
+            <feMerge><feMergeNode in="glow" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+          <filter id="blueGlow" x="-35%" y="-35%" width="170%" height="170%">
+            <feGaussianBlur stdDeviation="8" result="blur" />
+            <feFlood flood-color="#148cff" flood-opacity="0.5" result="color" />
+            <feComposite in="color" in2="blur" operator="in" result="glow" />
+            <feMerge><feMergeNode in="glow" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+          <filter id="cyanGlow" x="-45%" y="-80%" width="190%" height="260%">
+            <feGaussianBlur stdDeviation="7" result="blur" />
+            <feFlood flood-color="#51dcff" flood-opacity="0.8" result="color" />
+            <feComposite in="color" in2="blur" operator="in" result="glow" />
+            <feMerge><feMergeNode in="glow" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+          <filter id="softShadow" x="-20%" y="-25%" width="150%" height="170%">
+            <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#000" flood-opacity="0.85" />
+          </filter>
+          <filter id="scoreShadow" x="-30%" y="-30%" width="160%" height="175%">
+            <feGaussianBlur in="SourceAlpha" stdDeviation="10" result="blur" />
+            <feOffset in="blur" dx="0" dy="7" result="offset" />
+            <feComponentTransfer in="offset" result="shadow"><feFuncA type="linear" slope="0.75" /></feComponentTransfer>
+            <feMerge><feMergeNode in="shadow" /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+
+          <symbol id="slash" viewBox="0 0 52 24">
+            <path d="M14 0H52L38 24H0Z" />
+          </symbol>
+        </defs>
+
+        <rect width="2172" height="724" fill="url(#stageGlow)" />
+        <rect width="2172" height="724" fill="url(#stageBloom)" />
+
+        <g class="scorecard-art" filter="url(#softShadow)">
+          <!-- RED BACK PLATE / FOOTER -->
+          <path class="plate plate--red" d="M255 156 H947 L1008 219 H1077 L1035 266 L989 347 L923 455 H147 V272 Z" />
+          <path class="footer footer--red" d="M101 455 H998 L939 526 H292 L278 512 H101 Z" />
+
+          <!-- BLUE BACK PLATE / FOOTER -->
+          <path class="plate plate--blue" d="M1917 156 H1225 L1164 219 H1095 L1137 266 L1183 347 L1249 455 H2025 V272 Z" />
+          <path class="footer footer--blue" d="M2071 455 H1174 L1233 526 H1880 L1894 512 H2071 Z" />
+
+          <!-- MAIN INTERIOR SURFACES -->
+          <path class="face face--red" d="M208 201 L258 167 H867 L923 221 H988 L951 263 L909 337 L838 458 H170 V273 Z" />
+          <path class="face face--blue" d="M1964 201 L1914 167 H1305 L1249 221 H1184 L1221 263 L1263 337 L1334 458 H2002 V273 Z" />
+
+          <g clip-path="url(#redFaceClip)">
+            <rect x="145" y="155" width="850" height="315" fill="url(#redScoreBloom)" />
+            <rect x="145" y="155" width="850" height="315" fill="url(#redGrid)" />
+            <rect x="145" y="155" width="850" height="315" fill="url(#scanLines)" />
+            <path d="M183 246 H923 M183 366 H872 M258 190 V445 M452 190 V445" fill="none" stroke="#bf1532" stroke-opacity="0.16" />
+            <path d="M184 431 H885" fill="none" stroke="#ff233e" stroke-opacity="0.31" />
+            <path d="M208 203 L258 168 H867" fill="none" stroke="#ff3d4c" stroke-opacity="0.35" stroke-width="2" />
+          </g>
+          <g clip-path="url(#blueFaceClip)">
+            <rect x="1177" y="155" width="850" height="315" fill="url(#blueScoreBloom)" />
+            <rect x="1177" y="155" width="850" height="315" fill="url(#blueGrid)" />
+            <rect x="1177" y="155" width="850" height="315" fill="url(#scanLines)" />
+            <path d="M1249 246 H1989 M1300 366 H1989 M1718 190 V445 M1914 190 V445" fill="none" stroke="#1174d8" stroke-opacity="0.16" />
+            <path d="M1288 431 H1988" fill="none" stroke="#168eff" stroke-opacity="0.31" />
+            <path d="M1305 168 H1914 L1964 203" fill="none" stroke="#42a9ff" stroke-opacity="0.34" stroke-width="2" />
+          </g>
+
+          <!-- OUTER GEOMETRY AND TRACE LINES -->
+          <path class="outer-stroke outer-stroke--red" d="M255 156 H947 L1008 219 H1077 M147 272 L255 156 M147 272 V424 L101 470 V512 H278 L292 526 H939 L998 455" />
+          <path class="outer-stroke outer-stroke--blue" d="M1917 156 H1225 L1164 219 H1095 M2025 272 L1917 156 M2025 272 V424 L2071 470 V512 H1894 L1880 526 H1233 L1174 455" />
+
+          <path class="inner-stroke inner-stroke--red" d="M209 201 L258 168 H867 L923 221 H989 M170 273 V446 L838 446 L907 337" />
+          <path class="inner-stroke inner-stroke--blue" d="M1963 201 L1914 168 H1305 L1249 221 H1183 M2002 273 V446 L1334 446 L1265 337" />
+
+          <path class="trace trace--red" d="M268 177 H710 L725 193 H811 L824 180 H874" />
+          <path class="trace trace--red" d="M198 319 H566 M360 458 L324 497 H883" />
+          <path class="trace trace--red faint" d="M212 395 H826 L858 360" />
+          <path class="trace trace--blue" d="M1904 177 H1462 L1447 193 H1361 L1348 180 H1298" />
+          <path class="trace trace--blue" d="M1974 319 H1606 M1812 458 L1848 497 H1289" />
+          <path class="trace trace--blue faint" d="M1960 395 H1346 L1314 360" />
+
+          <!-- TOP-END ACCENTS -->
+          <path d="M255 156 H305 L288 174 H238 Z" fill="#ff5260" filter="url(#redGlow)" />
+          <path d="M286 156 H482 L463 176 H308 Z" fill="#2c0912" stroke="#a3152c" stroke-width="1.5" />
+          <g fill="#e71d39" opacity="0.9">
+            <rect x="336" y="165" width="10" height="4" rx="2" />
+            <rect x="361" y="165" width="10" height="4" rx="2" />
+            <rect x="386" y="165" width="10" height="4" rx="2" />
+            <rect x="411" y="165" width="10" height="4" rx="2" />
+          </g>
+          <path d="M1917 156 H1867 L1884 174 H1934 Z" fill="#289fff" filter="url(#blueGlow)" />
+          <path d="M1886 156 H1690 L1709 176 H1864 Z" fill="#021632" stroke="#0b5eb5" stroke-width="1.5" />
+          <g fill="#258fff" opacity="0.9">
+            <rect x="1761" y="165" width="10" height="4" rx="2" />
+            <rect x="1786" y="165" width="10" height="4" rx="2" />
+            <rect x="1811" y="165" width="10" height="4" rx="2" />
+            <rect x="1836" y="165" width="10" height="4" rx="2" />
+          </g>
+
+          <!-- BOTTOM CORNER HIGHLIGHTS -->
+          <path d="M101 512 H128" stroke="#ff5060" stroke-width="7" />
+          <path d="M2071 512 H2044" stroke="#41aaff" stroke-width="7" />
+          <path d="M1990 510 H2047 L2018 482 H1963 Z" fill="#248fff" opacity="0.85" />
+          <path d="M182 437 L151 469 V420" fill="none" stroke="#e7253d" stroke-width="2" opacity="0.6" />
+          <path d="M1990 437 L2021 469 V420" fill="none" stroke="#1689ee" stroke-width="2" opacity="0.6" />
+
+          <!-- CENTER BRIDGES -->
+          <path class="bridge" d="M946 219 L904 177 H1268 L1226 219 H1179 L1155 247 H1017 L993 219 Z" />
+          <path class="bridge bridge--bottom" d="M993 457 L1017 431 H1155 L1179 457 H1226 L1268 499 H904 L946 457 Z" />
+          <path d="M955 181 H1120 L1107 193 H970 Z" fill="url(#cyanTrim)" filter="url(#cyanGlow)" />
+          <path d="M970 484 H1107 L1120 496 H955 Z" fill="url(#cyanTrim)" filter="url(#cyanGlow)" />
+          <path d="M920 206 H1252" stroke="#19354a" stroke-width="2" opacity="0.75" />
+          <path d="M920 471 H1252" stroke="#19354a" stroke-width="2" opacity="0.75" />
+
+          <!-- CENTER VS DIAMOND -->
+          <path class="center-diamond" d="M984 253 H1188 L1252 358 L1188 462 H984 L920 358 Z" />
+          <g clip-path="url(#centerClip)">
+            <rect x="920" y="252" width="332" height="211" fill="url(#microDots)" opacity="0.42" />
+            <ellipse cx="1086" cy="358" rx="116" ry="105" fill="#0b3b5c" opacity="0.17" />
+            <path d="M930 358 H1242 M1086 258 V458" stroke="#18344c" stroke-opacity="0.22" />
+          </g>
+
+          <!-- RED EMBLEM -->
+          <g class="emblem emblem--red" transform="translate(204 237)">
+            <path d="M56 0 L112 34 V116 L56 150 L0 116 V34 Z" fill="#15070c" stroke="#ff3449" stroke-width="7" />
+            <path d="M56 9 L103 38 V111 L56 140 L9 111 V38 Z" fill="none" stroke="#8b1429" stroke-width="2" opacity="0.65" />
+            <g transform="translate(24 36)" fill="none" stroke="#ff374c" stroke-linecap="round" stroke-linejoin="round">
+              <ellipse cx="32" cy="41" rx="19" ry="27" stroke-width="8" />
+              <path d="M20 20 Q32 8 44 20 M32 13 V74" stroke-width="7" />
+              <path d="M13 31 L2 21 M13 43 H0 M14 56 L2 67 M51 31 L62 21 M51 43 H64 M50 56 L62 67" stroke-width="7" />
+              <path d="M23 14 L17 5 M41 14 L47 5" stroke-width="6" />
+            </g>
+          </g>
+
+          <!-- BLUE EMBLEM -->
+          <g class="emblem emblem--blue" transform="translate(1856 237)">
+            <path d="M56 0 L112 34 V93 Q112 126 56 150 Q0 126 0 93 V34 Z" fill="#04172d" stroke="#3ca7ff" stroke-width="7" />
+            <path d="M56 9 L103 38 V91 Q103 118 56 139 Q9 118 9 91 V38 Z" fill="none" stroke="#145994" stroke-width="2" opacity="0.75" />
+            <g transform="translate(25 38)" fill="#3ca7ff">
+              <path d="M14 31 V22 C14 9 23 0 31 0 C40 0 49 9 49 22 V31 H40 V22 C40 14 36 10 31 10 C27 10 23 14 23 22 V31 Z" />
+              <path d="M7 29 H56 V70 L31 85 L7 70 Z" />
+              <circle cx="31.5" cy="49" r="7" fill="#06162a" />
+              <path d="M29 53 H35 V67 H29 Z" fill="#06162a" />
+            </g>
+          </g>
+
+          <!-- TITLES AND SCORES -->
+          <text id="redTeam" class="team-title team-title--red" x="528" y="238">RED TEAM</text>
+          <text id="blueTeam" class="team-title team-title--blue" x="1326" y="238">BLUE TEAM</text>
+          <text id="redScore" class="score score--red" x="493" y="422">8.4</text>
+          <text id="blueScore" class="score score--blue" x="1324" y="422">7.2</text>
+          <text class="versus" x="1086" y="383" text-anchor="middle">VS</text>
+
+          <!-- FOOTER LABELS -->
+          <text class="mode-label mode-label--red" x="390" y="499">EXPLOIT</text>
+          <text class="mode-label mode-label--blue" x="1212" y="499">PATCH</text>
+
+          <g class="meter meter--red" transform="translate(538 475)">
+            <use href="#slash" x="0" width="52" height="24" fill="#ff2940" />
+            <use href="#slash" x="47" width="52" height="24" fill="#ff2940" />
+            <use href="#slash" x="94" width="52" height="24" fill="#ff2940" />
+            <use href="#slash" x="141" width="52" height="24" fill="#ff2940" />
+            <use href="#slash" x="188" width="52" height="24" fill="#f3263d" />
+            <use href="#slash" x="235" width="52" height="24" fill="#c51f35" />
+            <use href="#slash" x="282" width="52" height="24" fill="#7d1a2d" />
+          </g>
+          <g class="meter meter--blue" transform="translate(1334 475)">
+            <use href="#slash" x="0" width="52" height="24" fill="#258fff" />
+            <use href="#slash" x="47" width="52" height="24" fill="#258fff" />
+            <use href="#slash" x="94" width="52" height="24" fill="#258fff" />
+            <use href="#slash" x="141" width="52" height="24" fill="#258fff" />
+            <use href="#slash" x="188" width="52" height="24" fill="#2081ec" />
+            <use href="#slash" x="235" width="52" height="24" fill="#145db2" />
+            <use href="#slash" x="282" width="52" height="24" fill="#0d376c" />
+          </g>
+        </g>
+
+        <rect width="2172" height="724" fill="url(#scanLines)" opacity="0.32" pointer-events="none" />
+      </svg>
+    </section>
+  </main>
+
+  <script>
+(() => {
+  const root = document.querySelector('.battle-scorecard');
+  if (!root) return;
+
+  const fields = {
+    redTeam: document.querySelector('#redTeam'),
+    redScore: document.querySelector('#redScore'),
+    blueTeam: document.querySelector('#blueTeam'),
+    blueScore: document.querySelector('#blueScore'),
+  };
+
+  function syncFromDataset() {
+    fields.redTeam.textContent = root.dataset.redTeam || 'RED TEAM';
+    fields.redScore.textContent = root.dataset.redScore || '8.4';
+    fields.blueTeam.textContent = root.dataset.blueTeam || 'BLUE TEAM';
+    fields.blueScore.textContent = root.dataset.blueScore || '7.2';
+
+    const description = `${fields.redTeam.textContent} ${fields.redScore.textContent} versus ${fields.blueTeam.textContent} ${fields.blueScore.textContent}`;
+    root.setAttribute('aria-label', description);
+  }
+
+  syncFromDataset();
+
+  window.battleScorecard = {
+    update(values = {}) {
+      for (const [key, value] of Object.entries(values)) {
+        if (value == null) continue;
+        root.dataset[key] = String(value);
+      }
+      syncFromDataset();
+    },
+  };
+})();
+
+</script>
+</body>
+</html>
