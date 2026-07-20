@@ -19,6 +19,7 @@ type Props = {
   onHighlightReelChange: (enabled: boolean) => void;
   onJumpToNextHighlight: () => void;
   receiptStreamButton?: ReactNode;
+  adaptiveReceipt?: boolean;
 };
 
 export function BattleReceiptFooter({
@@ -34,11 +35,25 @@ export function BattleReceiptFooter({
   onHighlightReelChange,
   onJumpToNextHighlight,
   receiptStreamButton,
+  adaptiveReceipt = false,
 }: Props) {
   useRegisterAction("battle:control:playhead", { action: "BATTLE_REPLAY_PLAYHEAD_TOGGLE", label: "Toggle Battle Playhead", description: "Play or pause receipt-backed Battle replay", tags: ["battle", "receipt-backed"] });
   useRegisterAction("battle:control:sound-arm", { action: "BATTLE_SOUND_ARM", label: "Arm Battle Sound", description: "Arm sound for receipt-backed events with explicit cues", tags: ["battle", "receipt-backed"] });
   useRegisterAction("battle:control:speed", { action: "BATTLE_SPEED_SET", label: "Set Battle Replay Speed", description: "Set receipt-backed replay speed", tags: ["battle", "receipt-backed"] });
   useRegisterAction("battle:control:focus", { action: "BATTLE_FILTER_SET", label: "Set Battle Focus", description: "Filter receipt-backed Battle lanes", tags: ["battle", "receipt-backed"] });
+  const focusOptions: ReadonlyArray<readonly [BattleFilter, string]> = adaptiveReceipt
+    ? [
+        ["all", "All"],
+        ["useful", "Useful"],
+        ["receipt", "Receipts"],
+      ]
+    : [
+        ["all", "All"],
+        ["red", "Red"],
+        ["blue", "Blue"],
+        ["useful", "Useful"],
+        ["receipt", "Receipts"],
+      ];
 
   return (
     <footer
@@ -63,13 +78,7 @@ export function BattleReceiptFooter({
 
       <div className="battle-receipt-footer-focus flex min-w-0 items-center justify-center">
         <div className="segmented-control" role="group" aria-label="Focus filter">
-          {([
-            ["all", "All"],
-            ["red", "Red"],
-            ["blue", "Blue"],
-            ["useful", "Useful"],
-            ["receipt", "Receipts"],
-          ] as const).map(([id, label]) => (
+          {focusOptions.map(([id, label]) => (
             <button
               key={id}
               type="button"

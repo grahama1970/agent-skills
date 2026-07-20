@@ -44,6 +44,10 @@ export function BattleHeader({ receiptFixture, events, onSelectActor, onOpenJson
   const battleTitle = fixture.spectator_shell?.battle_title ?? `${fixture.battle_id?.toUpperCase() ?? "BATTLE-004"} · POST ${endpoint}`;
   const arenaLabel = designView ? mockupArenaLabel() : "ZIP_SLIP_ARB";
   const difficultyLabel = designView ? mockupDifficultyLabel() : "JUDGE";
+  const adaptiveQualification = fixture.adaptive_lineage?.qualification.status;
+  const objectiveLabel = adaptiveQualification
+    ? `QUALIFICATION: Adaptive Lineage ${adaptiveQualification}`
+    : "TARGET: Fastest Proven Crash";
   // Numeric scores per the accepted mockup (RED 8.4 / BLUE 7.2). Render only when the
   // receipt scoreboard is populated; hide gracefully (clean nameplate, no "—") when null.
   const redScore =
@@ -152,15 +156,12 @@ export function BattleHeader({ receiptFixture, events, onSelectActor, onOpenJson
               <span className="divider">/</span>
               <span className="data-point">{family}</span>
               <span className="divider">/</span>
-              <span className="data-point objective">TARGET: Fastest Proven Crash</span>
+              <span className="data-point objective">{objectiveLabel}</span>
             </h2>
           </div>
         </div>
       </div>
 
-      {/* CENTER — esports matchup arena per the mockup (RED TEAM 8.4 · VS · BLUE TEAM 7.2):
-          glowing team cards with icons on the outside, a laser-gradient bridge, and a
-          circular VS hub. Numeric score renders inside each card only when populated. */}
       <iframe
         className="battle-scorecard-frame pointer-events-none"
         data-qid="battle:header:score"
@@ -181,7 +182,7 @@ export function BattleHeader({ receiptFixture, events, onSelectActor, onOpenJson
         <div className="live-events-feed">
           {events.slice(-3).map((event, index) => (
             <button key={`${event.id}:${index}`} type="button" data-qid={`battle:events:item:${event.id}`} data-qs-action="BATTLE_EVENT_SELECT" title={`Select receipt event ${event.id}`} onClick={() => selectEvent(event)} className="event-row">
-              <span className="event-time">{new Date(event.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}</span>
+              <span className="event-time">{new Date(event.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })}</span>
               <span className="event-icon" aria-hidden="true">
                 <span className={`status-led led-${event.team === "red" ? "red" : event.team === "blue" ? "blue" : "neutral"}`} />
               </span>

@@ -157,11 +157,11 @@ export function SpectatorRail({ receiptFixture, leaderboard, selectedId, onSelec
                   <>
                     {counts.running ? <ReceiptStatusLine icon={<Icons.Activity className="h-4 w-4" />} label="Running" value={String(counts.running)} tone="text-battle-cyan" /> : null}
                     <ReceiptStatusLine icon={<Icons.ShieldCheck className="h-4 w-4" />} label="Qualified" value={String(counts.survivor)} tone="text-battle-green" />
-                    <ReceiptStatusLine icon={<Icons.ShieldX className="h-4 w-4" />} label="Blocked" value={String(counts.blocked)} tone="text-battle-blue" />
-                    <ReceiptStatusLine icon={<Icons.Skull className="h-4 w-4" />} label="Killed" value={String(counts.killed)} tone="text-battle-red" />
-                    <ReceiptStatusLine icon={<Icons.Lightbulb className="h-4 w-4" />} label="Useful" value={String(usefulCount)} tone="text-battle-yellow" />
-                    <ReceiptStatusLine icon={<Icons.ShieldCheck className="h-4 w-4" />} label="Promoted" value={String(counts.promoted)} tone="text-battle-green" />
-                    <ReceiptStatusLine icon={<Icons.Rocket className="h-4 w-4" />} label="Fastest crash" value={String(counts.fastest_crash)} tone="text-slate-500" />
+                    {counts.blocked ? <ReceiptStatusLine icon={<Icons.ShieldX className="h-4 w-4" />} label="Blocked" value={String(counts.blocked)} tone="text-battle-blue" /> : null}
+                    {counts.killed ? <ReceiptStatusLine icon={<Icons.Skull className="h-4 w-4" />} label="Killed" value={String(counts.killed)} tone="text-battle-red" /> : null}
+                    {usefulCount ? <ReceiptStatusLine icon={<Icons.Lightbulb className="h-4 w-4" />} label="Useful" value={String(usefulCount)} tone="text-battle-yellow" /> : null}
+                    {counts.promoted ? <ReceiptStatusLine icon={<Icons.ShieldCheck className="h-4 w-4" />} label="Promoted" value={String(counts.promoted)} tone="text-battle-green" /> : null}
+                    {counts.fastest_crash ? <ReceiptStatusLine icon={<Icons.Rocket className="h-4 w-4" />} label="Fastest crash" value={String(counts.fastest_crash)} tone="text-slate-500" /> : null}
                   </>
                 );
               })()}

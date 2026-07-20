@@ -77,24 +77,6 @@ writeFileSync(
   </head>
   <body>
     <div id="root"></div>
-    <script>
-      window.__battleBootErrors = [];
-      window.addEventListener("error", (event) => {
-        window.__battleBootErrors.push({
-          type: "error",
-          message: event.message,
-          filename: event.filename,
-          lineno: event.lineno,
-          colno: event.colno,
-        });
-      });
-      window.addEventListener("unhandledrejection", (event) => {
-        window.__battleBootErrors.push({
-          type: "unhandledrejection",
-          reason: String(event.reason && (event.reason.stack || event.reason.message || event.reason)),
-        });
-      });
-    </script>
     <script type="module" src="/assets/main.js"></script>
   </body>
 </html>

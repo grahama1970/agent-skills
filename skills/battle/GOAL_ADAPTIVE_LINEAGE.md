@@ -257,6 +257,13 @@ Three artifacts, all required, none optional:
       lane labels, and Red/Blue dash score rows, and reports no failed requests,
       no console errors, and no lane/roster name overflow. Screenshot:
       `skills/battle/local/battle-ux-obvious-errors-20260720T2047Z/battle-route-no-obvious-errors.png`.
+- [x] Final Surf/Pixi obvious-error proof:
+      `skills/battle/local/surf-obvious-errors-20260720T2120Z/battle-obvious-errors-and-pixijs-proof.json`
+      targets the served top-level `#battle` route, has `mocked:false`,
+      `live:true`, `forbiddenHits:[]`, `has_scorecard:true`, live badge
+      `data_source:"live"` / `proves_live:"true"`, canvas `1030x277`, and six
+      observed Pixi sprite/manifest resource requests. Screenshot:
+      `skills/battle/local/surf-obvious-errors-20260720T2120Z/battle-scorecard-restored.png`.
 
 **GOAL STATUS: CURRENT RECOVERY EVIDENCE READY FOR COMMIT** — 2026-07-20.
 Closure requires the final Battle evidence commit to be pushed and remote-ref

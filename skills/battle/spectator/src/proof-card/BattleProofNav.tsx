@@ -31,9 +31,10 @@ export function BattleProofNav() {
 			<a href="#battle/isolation" aria-current={onDesign ? "page" : undefined} data-qid="battle:nav:design" title="Dense design-parity mockup (not receipt truth)">
 				Design
 			</a>
-			<details className="battle-proof-nav-more" data-qid="battle:nav:proofs-menu">
-				<summary className={onProofFamily ? "is-active" : undefined}>Proofs &amp; stages</summary>
-				<div className="battle-proof-nav-more-links">
+			{onProofFamily ? (
+				<details className="battle-proof-nav-more" data-qid="battle:nav:proofs-menu" open>
+					<summary className="is-active">Proofs &amp; stages</summary>
+					<div className="battle-proof-nav-more-links">
 					<a
 						href="#battle/receipt?engine=pixi&fixture=battle-004-adaptive-lineage-live"
 						aria-current={onAdaptive ? "page" : undefined}
@@ -76,8 +77,9 @@ export function BattleProofNav() {
 					<a href="#battle/population?fixture=battle-004-pr5-population" aria-current={onPopulation ? "page" : undefined} data-qid="battle:nav:population">
 						Population
 					</a>
-				</div>
-			</details>
+					</div>
+				</details>
+			) : null}
 		</nav>
 	);
 }

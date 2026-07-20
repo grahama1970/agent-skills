@@ -719,7 +719,7 @@
 .live-events-feed .event-row:nth-last-child(2) { opacity: 0.65; }
 .live-events-feed .event-row:nth-last-child(3) { opacity: 0.3; }
 .live-events-feed .event-row:nth-last-child(n+4) { display: none; }
-.live-events-feed .event-time { color: rgba(255, 255, 255, 0.3); flex-shrink: 0; width: 62px; }
+.live-events-feed .event-time { color: rgba(255, 255, 255, 0.3); flex-shrink: 0; width: 38px; white-space: nowrap; }
 .live-events-feed .event-icon { display: flex; align-items: center; justify-content: center; width: 12px; flex-shrink: 0; margin-top: 2px; }
 .live-events-feed .event-icon .status-led { width: 6px; height: 6px; border-radius: 50%; }
 .live-events-feed .event-icon .led-red { background: #f85149; box-shadow: 0 0 5px rgba(248, 81, 73, 0.6); }

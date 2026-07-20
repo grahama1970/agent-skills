@@ -92,6 +92,15 @@ agent-skills worktree, not the pi-mono shell.
   ambiguous names, empty stderr/skills summary cards, `RUNNING 4`, `ACTIVE`
   lane labels, and Red/Blue dash score rows. It also reports no failed requests,
   no console errors, and no lane/roster name overflow.
+- **Final Surf/Pixi obvious-error pass exists**:
+  `skills/battle/local/surf-obvious-errors-20260720T2120Z/` contains
+  `battle-obvious-errors-and-pixijs-proof.json`,
+  `battle-scorecard-restored.text`, and `battle-scorecard-restored.png`.
+  It targets the served top-level `#battle` route, has `mocked:false`,
+  `live:true`, `forbiddenHits:[]`, `has_scorecard:true`, live badge
+  `data_source:"live"` / `proves_live:"true"`, canvas `1030x277`, and six
+  observed Pixi sprite/manifest resource requests. This pass keeps the accepted
+  scorecard mounted and does not modify sprite mapping files.
 - **WebGPT acceptance for this new host exists**:
   `skills/battle/local/webgpt-design-review-20260720T1742Z/response.md` starts
   with `ACCEPTED`, and `response.raw.md` contains the terminal sentinel. The

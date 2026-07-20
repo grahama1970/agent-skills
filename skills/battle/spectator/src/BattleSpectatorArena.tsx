@@ -78,6 +78,7 @@ export function BattleSpectatorArena() {
   const typedReceiptFixture = (
     liveReplay ? liveTransport.companion : receiptFixture
   ) as BattleNormalizedUxFixture | null;
+  const adaptiveReceipt = Boolean(typedReceiptFixture?.adaptive_lineage);
   const streamReady = !liveReplay || Boolean(typedReceiptFixture);
   const receiptReady = (!receiptReplay || Boolean(typedReceiptFixture)) && streamReady;
   const transportLoading = liveReplay && liveTransport.loading;
@@ -479,7 +480,7 @@ export function BattleSpectatorArena() {
                 It is static reference content, so it renders regardless of fixture data.
                 Rendering it here also fills the shell grid's legend row so the footer lands
                 in its own row instead of overflowing the collapsed (0px) legend track. */}
-            <BattleMockupLegend />
+            <BattleMockupLegend adaptiveReceipt={adaptiveReceipt} />
             <BattleReceiptFooter
               playing={playing}
               setPlaying={setPlaying}
@@ -492,12 +493,9 @@ export function BattleSpectatorArena() {
               highlightReel={highlightReel}
               onHighlightReelChange={setHighlightReel}
               onJumpToNextHighlight={() => setHighlightJumpToken((value) => value + 1)}
+              adaptiveReceipt={adaptiveReceipt}
               receiptStreamButton={
-                <>
-                  <Button data-qid="battle:control:event:blue-patch" data-qs-action="BATTLE_RECEIPT_PROOF_SELECT" title="Show Blue patch receipt proof" variant="outline" size="sm" className="min-h-11" onClick={() => showProof("Blue worker patch receipts are materialized and receipt-backed.")}><Icons.Shield className="h-4 w-4" /> Blue patch proof</Button>
-                  <Button data-qid="battle:control:event:blue-block" data-qs-action="BATTLE_RECEIPT_PROOF_SELECT" title="Show Blue block receipt proof" variant="outline" size="sm" className="min-h-11" onClick={() => showProof("Blue block proof comes only from Judge BLUE_SUCCESS attempts.")}><Icons.ShieldX className="h-4 w-4" /> Blue block proof</Button>
-                  <LogSheet open={jsonlOpen} onOpenChange={setJsonlOpen} events={battleEvents} />
-                </>
+                <LogSheet open={jsonlOpen} onOpenChange={setJsonlOpen} events={battleEvents} />
               }
             />
           </>
@@ -508,7 +506,24 @@ export function BattleSpectatorArena() {
 }
 
 
-function BattleMockupLegend() {
+function BattleMockupLegend({ adaptiveReceipt = false }: { adaptiveReceipt?: boolean }) {
+  if (adaptiveReceipt) {
+    return (
+      <div className="footerLegend">
+        <b>LEGEND:</b>
+        <span style={{ color: "var(--battle-red, #ff4d5c)" }}>— Lineage Path</span>
+        <span style={{ color: "var(--battle-green, #3cf07a)" }}>
+          <Icons.ShieldCheck className="h-3 w-3" /> Judge Qualified
+        </span>
+        <span style={{ color: "var(--battle-yellow, #ffd24d)" }}>
+          <Icons.Lightbulb className="h-3 w-3" /> Useful Mutation
+        </span>
+        <span style={{ color: "var(--battle-blue, #5aadff)" }}>
+          <Icons.GitBranch className="h-3 w-3" /> Selected / Runner-up
+        </span>
+      </div>
+    );
+  }
   return (
     <div className="footerLegend">
       <b>LEGEND:</b>
