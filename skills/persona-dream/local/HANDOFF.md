@@ -1,273 +1,127 @@
 # Handoff Report: Persona Dream
 
-**Timestamp:** 2026-07-18 (post-Phase-D)
-**Repository:** `/home/graham/workspace/experiments/agent-skills-main` (branch `main`)
+**Timestamp:** 2026-07-19 (post-pilot-execution; M5 human gates pending)
+**Repository:** `/home/graham/workspace/experiments/agent-skills-main` (branch `main`, canonical remote agent-skills@main; latest handoff-relevant commit `864f6cf5`)
 **Skill root:** `skills/persona-dream`
-**Immutable goal status:** `BLOCKED_FINAL_ACCEPTANCE` (acceptance rung reached; paid boundary not crossed)
-**Active revision:** `rev_successor_943b01ecd9a3` (`PASS_ACTIVE_CONSISTENT`)
+**Controlling goal:** `GOAL_V2.md` (immutable; supersedes GOAL.md v1, which carries a pointer note)
+**Goal checker:** `python3 scripts/check_goal_v2_boundary.py --json` — the single machine proof; exit 0 + `PASS_GOAL_V2_P0_BOUNDARY` = goal complete
+**Active revision:** `rev_successor_943b01ecd9a3`
+**Current truth page:** `CURRENT_STATE.md` (generated; `generate_current_state.py --check` is in the test suite)
 
-## 1. Where This Stands
+## 1. Where This Stands (checker state, VERIFIED 2026-07-19)
 
-The immutable goal (`GOAL.md`) is a working, human-accepted Kling video through
-the 42-step pipeline, with a durable Memory write and exact reread for every
-step. That goal is **not** complete. The successor revision has reached its
-local **acceptance rung** — the last checkpoint before the human paid-call
-boundary — and stops there.
+| Criterion | State | Authority |
+|---|---|---|
+| P0.1 human acceptance | **MISSING — HUMAN ONLY** | operator watches `provider_return.mp4` (sha256 `59b9ff3155d6…e211fff`) and authors `RR/human_acceptance_receipt.v1.json` (`author:"human"`, video sha, verdict). Agents must never author it. |
+| P0.2 v2 lineage | PASS | `RR/watch_gauntlet/59b9ff3155d6/cognitive_loop_v2/lineage_receipt.v1.json` |
+| P0.3 routing semantics | PASS | `RR/routing_semantics_calibration_receipt.v1.json` (montage 6/6 exact) |
+| P0.4 GMO pin | PASS | `RR/gmo_deployment_pin.v1.json` |
+| P0.5 phase16 v2 | PASS | `RR/phase_16_behavior_evaluation/phase16_v2_lineage_receipt.v1.json` |
+| P0.6 voice expression | PASS | `RR/voice_expression/voice_expression_evaluation_receipt.v1.json` (text+audio PASS, LatentSync 1.5 canary `output_ready`, zero paid video calls) |
+| P0.7 pilot result | **MISSING — waits on the two human gates below, then two agent commands** | `contracts/pilot_c_vs_f_result_receipt.v1.json` (checker requires `published_under == pilot_c_vs_f_frozen_protocol.v3` + final protocol hash `483fb170…d0ee0a6` + supersession lineage + `m5_read_author:"human"`) |
 
-Acceptance rung receipt (single machine-readable proof):
-`reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3/acceptance_rung_receipt.v1.json`
-(`status: PASS_ACCEPTANCE_RUNG`). It proves exactly three things and lists what
-it does not prove.
+`RR` = `reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3`.
 
-## 2. What Passed (Phases A-D)
+## 2. THE ONLY REMAINING WORK
 
-### Phase A - Clean baseline
-Workspace committed and rebased onto `origin/main`; patch-equivalent local
-commits dropped out. (Completed before Phase B.)
+**Human gate A — M5 blind read** (`reports/pilot_c_vs_f/m5/`):
+Operator reads `pair_r1_X.md` vs `pair_r1_Y.md`, then `pair_r2_X.md` vs
+`pair_r2_Y.md` (no agent summaries), and writes `judgment_r1.json` +
+`judgment_r2.json` per `OPERATOR_INSTRUCTIONS.md` in that directory
+(`author:"human"` required; assembler hard-blocks otherwise). X/Y order is
+sealed per pair behind sha256 commitments (`sealed/`, commitments alongside).
 
-### Phase B - Successor immutable revision
-`scripts/create_successor_revision.py` (modeled on
-`reconstruct_upstream_contract_revision.py`) built `rev_successor_943b01ecd9a3`
-from the frozen `rev_upstream_bf3b05d47fb8`, bound Embry's identity to the
-qualified `embry_contact_sheet_v3`
-(`sha256:3ce40b3b6839ebba0f468d75a1adbb7f82e0d95457aefd3627e222eb569de00c`,
-Memory key `b11474f2fd5b54f332223a253fd743d1`), and emitted an invalidation
-ledger marking every montage-derived Phase 07-11 artifact stale. Durable
-repo-rooted `revisionRoot`; activation fails closed if it resolves outside the
-repo.
+**Human gate B — P0.1 acceptance receipt** (see P0.1 row above).
 
-### Phase C - Regenerated 8 storyboard frames
-All eight Phase 07 start/end frames were regenerated from
-`embry_contact_sheet_v3` with GPT Image 2 and reviewed at actual-pixel by the
-node's real reviewer (scillm gpt-5.5, `image_url`). Result: **8/8 frames PASS
-actual-pixel identity review, first attempt each; 7/7 inter-frame continuity
-pairs PASS.** Evidence:
-`…/phase_07_storyboard_live_tau/phase_c_successor_regen/phase_c_regeneration_receipt.json`
-(`overall_status: 8/8_FRAMES_PASS_ACTUAL_PIXEL_IDENTITY_REVIEW`), with per-frame
-review receipts under `…/phase_c_successor_regen/receipts/storyboard_identity_review/`.
+**Then the successor agent runs exactly:**
+1. Per pair: `python3 scripts/pilot_m5_presentation.py unseal --pair-id r1 --out-dir reports/pilot_c_vs_f/m5 --judgment reports/pilot_c_vs_f/m5/judgment_r1.json` (and r2) — verifies commitments, reveals mapping.
+2. Verify the manifest first: `python3 scripts/pilot_run_manifest.py --verify` must exit 0. Then assemble:
+   `python3 scripts/pilot_result_receipt.py --metrics-dir reports/pilot_c_vs_f/metrics --m5-dir reports/pilot_c_vs_f/m5 --blinding-dir <staging dir> --scope-notes <optional>`
+   (NOTE: the assembler expects `blinding_<RUN>.json` all in ONE dir — copy
+   the four from `reports/pilot_c_vs_f/runs/<RUN>/blinding_<RUN>.json` into a
+   staging dir first. Metrics receipts already exist at
+   `reports/pilot_c_vs_f/metrics/metrics_<RUN>.json`.)
+3. `python3 scripts/check_goal_v2_boundary.py --json` — with both human
+   receipts present this should exit 0. Regenerate `CURRENT_STATE.md`
+   (`generate_current_state.py`), commit, push.
 
-### Phase D - Rebuild + acceptance rung (this handoff)
-- **Artifact index + phase bindings rebuilt** to fold in the Phase C outputs:
-  `scripts/rebuild_revision_artifact_bindings.py` re-derives the index, the ten
-  phase bindings, and the lineage manifest. The eight Phase C frames now own the
-  canonical `sb_XXX.<role>_frame` accepted-frame slots; the montage frames stay
-  in the tree but are demoted to `superseded_frame` optional evidence. Index:
-  398 artifacts, 16 required, lineage 10/10. Rebuilt index
-  `sha256:06496a6af982b9650dc3684e56961ba99c5573a627181e6e48e95315da4f7198`.
-- **Full qualification chain re-run and PASS** against the successor with the
-  updated index: `prepare` (`PASS_MEMORY_REVISION_PREPARED`), `verify`
-  (`PASS_MEMORY_REVISION_VERIFIED`), activation (`PASS_ACTIVE_CONSISTENT`,
-  `semantic_sync_state=synced`).
-- **Memory exact reread** of the 42-step bundle re-persisted:
-  `PASS_EXACT_REREAD_42_OF_42`, collection `persona_dream_pipeline_steps`
-  (`reports/pipeline-complete/.persona-dream/state/pipeline_step_memory_receipt_rev_successor_943b01ecd9a3.json`).
-  Step records 40 (`BLOCKED_PROVIDER_EVIDENCE_PENDING`) and 42
-  (`BLOCKED_AWAITING_PROVIDER_RETURN`) updated to the post-rebuild rung, still
-  fail-closed.
-- **Acceptance rung receipt** written and committed inside the revision tree.
-- Tests: `test_revision_artifact_index*`, `test_create_successor_revision`,
-  `test_revision_activation_qualification`, `test_revision_memory_qualification`,
-  `test_phase11_payload_binding_bootstrap`, `test_phase11_multi_prompt_end_image_contract`
-  all green.
+**Expected result: NULL** (a valid completion under the frozen decision rule) —
+precommitted in amendment v1: R1-F's N1 negative-control failure is retained
+literally (the R1-F dream legitimately contains SN15 launch-vehicle imagery
+matching the "orbital telemetry" control; premise break documented, no waiver).
 
-## 3. Open Item / Documented Deviation
+## 3. What Was Done This Session (all receipt-backed, committed, pushed)
 
-- **OPEN — CRITICAL: the Phase C identity reviewer is under-calibrated; the 8/8
-  first-attempt PASS is NOT trustworthy as specific-identity evidence (2026-07-18).**
-  A reviewer-calibration negative control ran the SAME reviewer used by Phase C
-  (`phase07_storyboard_tau_node._run_identity_continuity_review`, scillm gpt-5.5
-  `image_url`, schema `persona_dream.identity_continuity_review.v1` — reused, not
-  forked) against known-bad ground truth: the stale montage-derived Phase 07
-  frames marked `STALE_IDENTITY_SOURCE_SUPERSEDED` (derived from the montage that
-  FAILED identity qualification, `FAIL_IDENTITY_REFERENCE_INCONSISTENT`), reviewed
-  against the accepted `embry_contact_sheet_v3` under the exact Phase C conditions.
-  - **Result: `REVIEWER_CALIBRATION_FAILED`.** 2 of 3 known-bad frames
-    (`known_bad_sb_001_start`, `known_bad_sb_002_start`) **PASSED** identity
-    review; only 1 of 3 failed. Reproduced across two independent live runs.
-  - The reviewer is **not** a blanket rubber stamp — the third known-bad frame
-    FAILED ("reads more like a generic adult female surfer"), both accepted
-    positive controls PASSED, and a synthetic tamper case (accepted frame + wrong
-    Embry reference = the Kai sheet) **FAILED** with the reviewer explicitly noting
-    the reference "shows a young man matching Kai," proving the contract does read
-    reference pixels.
-  - Root cause: the identity threshold is too coarse — it accepts "adult woman,
-    brown hair, navy top … closely enough" without enforcing specific facial
-    identity/age to the reference. Side-by-side pixel review confirmed the two
-    passed frames depict a visibly older/different woman than v3 (sb_002 a
-    weathered ~40s-50s woman), so this is a genuine leniency defect, not a
-    ground-truth-granularity artifact.
-  - Hardening **proposed, not implemented** (contained to the reviewer prompt
-    contract): add a specific-identity gate (face shape/age/eyebrow/nose/distinctive
-    features, not demographic category), an age-consistency clause, and require the
-    reviewer to enumerate the concrete facial features it matched. Not applied here
-    because (a) the constraint forbids modifying the reviewer to make the
-    calibration pass, and (b) the Phase C receipts + prompt hashes are bound to the
-    current prompt — changing it requires a human-gated full Phase C re-review.
-  - Evidence: `reports/…/revisions/rev_successor_943b01ecd9a3/reviewer_calibration_receipt.v1.json`
-    (per-image verdicts, image/prompt hashes, `analyst_visual_verification`,
-    `proposed_hardening`); probe `scripts/reviewer_negative_control_probe.py`;
-    memory `PASS_EXACT_REREAD_REVIEWER_CALIBRATION`
-    (`reports/…/state/reviewer_calibration_memory_receipt_rev_successor_943b01ecd9a3.json`);
-    tests `tests/test_reviewer_negative_control_probe.py` (13/13).
-  - Consequence: any downstream trust in the regenerated frames' *specific* Embry
-    identity must be re-established after the reviewer is hardened and the negative
-    control re-passes (all known-bad + tamper FAIL, both positives still PASS),
-    then Phase C re-run. No paid/provider work may rely on the 8/8 claim until then.
+- **P0.6 complete**: voice pipeline (Tau text → chatterbox_turbo `/synthesize`
+  — response `audio` is a CONTAINER path `/out/<label>.wav`, host mount
+  `~/workspace/experiments/chatterbox/logs`; Whisper CPU ASR accuracies
+  0.966/1.0/0.917/1.0) + LatentSync **1.5** lip-sync canary (8 GB VRAM path:
+  dedicated venv `~/workspace/experiments/LatentSync/.venv-latentsync`, ckpt
+  `checkpoints-v1.5/latentsync_unet.pt`, config `stage2.yaml`; chatterbox
+  container stopped for VRAM during the run and restarted, health verified).
+- **P0.7 protocol lineage**: v2 selection ruled gameable by webgpt →
+  **protocol v3** (`contracts/pilot_c_vs_f_frozen_protocol.v3.md`): frozen
+  cluster ontology (age-band × person-tag), biographical recency, seeded-hash
+  tie-break, first-original-order disjoint R2, K=3 member cap, fail-closed
+  timestamps. R1 = `age23_current:person:brandon`, R2 =
+  `age19_23:person:marketa_lawson` (addendum appended; selection deterministic).
+- **GOAL_V2 checker correction** (webgpt-approved, stricter): p0_7 requires v3
+  + final protocol hash + lineage (the goal text said v2; the round-2 ruling
+  explicitly accepted this pre-run authority correction; disclosed to the
+  operator in-session).
+- **Four arms executed in frozen order** R1-C → R1-F → R2-F → R2-C
+  (runners: `run_pilot_arm.py` for C, `run_pilot_arm_f.py` for F). All
+  persisted through the certified transactional path and ACTIVATED
+  (`/persona-dream/commit/activate`), produced records read back `active`:
+  `dream_pilot_r1_c`, `dream_pilot_r1_f`, `dream_pilot_r2_f`, `dream_pilot_r2_c`.
+  F frames: gpt-image-2 via the standard phase_c engine; **the prompt MUST name
+  the Embry contact-sheet absolute path** (codex `view_image` loads it —
+  without it ArcFace cosines drop to ~0.22; with it 0.72–0.80 vs gate 0.421).
+- **Measurement amendment lineage v1→v1.5** (all pre-M5, originals preserved
+  in `reports/pilot_c_vs_f/metrics_original_v1/`), through 9 adversarial
+  webgpt rounds ending **PASS_CURRENT_GATE**:
+  real claim-level M2 (persist-snapshot keyset hash ownership + edge/endpoint
+  resolution), M4 fail-closed typed classifier, M3 = **closed enum contract**
+  (DENIED/AFFIRMED/UNCERTAIN/CONTRADICTORY + record_class vs stored kind;
+  free text audit-only — the v1.1–v1.4 regex classifier stack is retired),
+  deletion-only M5 redaction, N1 precommitment.
+- **Final metrics** (uniform, committed): M3 PASS ×4 (all DENIED + correct
+  class), M4 PASS ×4 (7 anchors byte-unchanged incl. dream-004 node), M2 0.0
+  ×4 — REAL symmetric finding: both arms' `grounds_interpretation` edges cite
+  watch-evidence vertices never persisted (runners passed `watch_vertices=[]`);
+  reported, not patched. M1 positives absent ×4 (frozen dream-004 probes don't
+  match new content; symmetric).
 
-## 3b. Open Item / Documented Deviation — RESOLVED (2026-07-18)
+## 4. Standing Constraints (unchanged)
 
-- **RESOLVED: `phase07_prompt_renderer` now exists as a real deterministic
-  callable, the spine-chain preflight passes on genuinely rendered artifacts, and
-  the Tau command-loop is proven to reach the panel-specific 3rd node (no
-  `max_steps=2` truncation).** Full diagnosis:
-  `local/PHASE07_RENDERER_DIAGNOSIS.md`.
+- Only /tau reaches /scillm (strict checker exit 0). ArcFace buffalo_l 0.421 is
+  the sole identity authority; VLM advisory only. Evidence classes never
+  silently convert. Paid video calls forbidden; imagegen via the established
+  scillm lane is normal operation. WebGPT reviews: tab 837359230, routing proof
+  required every submit; `-p persona-dream` route.
+- GMO daemon `embry-memory` (127.0.0.1:8601): default `/list` hides pending
+  records (add `visibility_state` to filters to bypass). It wedged once this
+  session (worker pool stuck during an unrelated 22 GB SPARTA Arango scan
+  burst; app-container restart fixed it — DB untouched). The scillm proxy 502s
+  during the same window; a 502 on `/v1/chat/completions` with "JSON
+  validation failed after repair" in proxy logs means the MODEL answered in
+  prose — the prompt must explicitly demand strict JSON (or use the closed
+  enum contract).
+- Harness kills long background tasks in this environment (multiple kills this
+  session; NOT the operator — confirmed in-session). Run long webgpt
+  submits/extracts in FOREGROUND with `timeout ≤580`; extraction with the
+  sentinel via `surf webgpt.extract --tab-id 837359230 --sentinel ... --wait`
+  recovers responses whose submit process was killed after injection (receipt
+  `submitted: true` tells you which case you're in).
 
-  Diagnosis (was the renderer ever real? **No**): `phase07_prompt_renderer`
-  existed only as a `renderer.name` string in manifest fixtures/design notes; git
-  history shows no such file was ever added in either repo. The one 12TB precedent
-  run satisfied the gate with **2-line hand-authored stub prompts** binding
-  fictional fixture assets, while its manifest asserted
-  `deterministic/not-hand-edited` — a fabricated claim; the gate never verified
-  the prompt was a function of the contract.
+## 5. Known Residual Risks / Deferred
 
-  Fix (integrity strengthened, never weakened): `scripts/phase07_prompt_renderer.py`
-  renders each compiled prompt as a **pure, byte-stable function of the panel
-  prompt contract** (`compile_prompt(contract)`), builds the upstream spine
-  contracts as typed projections hash-bound to the successor's real phase
-  artifacts, binds the 8 `panel_prompt_contract.v2` files to the real
-  `embry_contact_sheet_v3` + Kai reference + accepted Phase C frames, and emits
-  reviewer acceptance claims bound to the **real Phase C actual-pixel reviews**.
-  `verify_render` re-derives every prompt and fails closed on tampering, so the
-  "not hand-edited" claim is now re-checkable. Tests:
-  `tests/test_phase07_prompt_renderer.py` (9/9 green); node tests still green.
-
-  Proof (no paid call, no image generation; Phase C frames reused):
-  - `scripts/prove_phase07_tau_loop_preflight.py` →
-    `phase_07_storyboard_live_tau/tau_loop_preflight_proof/tau_loop_preflight_proof_receipt.v1.json`
-    (`PASS_TAU_LOOP_PREFLIGHT_PROOF`): deterministic render, spine-chain gate PASS,
-    node creator+reviewer live preflight PASS (both full-storyboard and targeted
-    `require_target_scope=True`).
-  - `.../tau_loop_preflight_proof/tau_command_loop_evidence.v1.json`: the Tau
-    handoff loop (dry-run, `max_steps=4`) advances **panel-creator →
-    panel-reviewer → persona-dream-panel-repair-gate** and halts at
-    `next_agent_is_human`. **No tau code change was required** — there is no hard
-    `max_steps=2`; the loop default is 5. The historical stop-at-2 was a
-    DAG-contract config case (`limits.max_total_attempts` unset on a 2-node graph
-    → `_max_steps==2`), not a code defect.
-
-### Phase D state-clearing deviation — AUDITED / RESOLVED (2026-07-18)
-
-- **What happened.** Re-qualifying the successor after the artifact index was
-  rebuilt (old `sha256:fbeedef1…` → new `sha256:06496a6a…`) required re-running
-  the chain for the SAME revision id with a CHANGED index. Three fail-closed
-  guards blocked it, and the Phase D agent hand-cleared five pieces of derived
-  state: one ArangoDB active-pointer document, one immutable queue terminal
-  event, and three immutable qualification receipts (prepare/verify/activation).
-- **Audit verdict: `AUDIT_PASS_NO_EVIDENCE_LOST`.** All four file items are
-  recoverable byte-for-byte from git commit `a97c734e` (old hashes reverified),
-  and the ArangoDB pointer is a single-slot CAS pointer deterministically
-  re-derivable from the committed old activation receipt. Nothing evidentiary is
-  unrecoverable; frozen `rev_upstream_bf3b05d47fb8` was untouched. The worst-case
-  hypothesis (deleted receipts were gitignored `state/` ones with no git
-  recovery) is DISPROVEN — the deleted receipts live in the tracked revision
-  tree, not the gitignored `state/` layer. Receipt:
-  `reports/…/revisions/rev_successor_943b01ecd9a3/state_clearing_audit_receipt.v1.json`.
-  Memory: `project_knowledge` key
-  `persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:state_clearing_audit_and_supersession`
-  (exact reread PASS).
-- **Resolution / no recurrence.** Ad hoc deletion is replaced by a sanctioned
-  supersession path: `scripts/revision_supersession.py` (retain-and-mark —
-  archives predecessors under `superseded/`, snapshots the old pointer as
-  `SUPERSEDED` in Memory, appends an old→new artifact-index entry to an
-  append-only ledger) plus `activate_revision_qualification.py --supersede`,
-  which accepts only a properly-superseded predecessor; every other pointer
-  mismatch stays fail-closed. Tests:
-  `tests/test_revision_requalification_supersession.py` (3/3).
-
-## 4. Exact Next Steps (all human-gated, steps 9+)
-
-Do **not** start these without explicit human authorization. The acceptance rung
-does not authorize any of them.
-
-1. **Compile a successor provider request** from the regenerated storyboard
-   evidence (a fresh canonical live request; the prior request hash
-   `ca90ba9f…` is consumed and montage-derived).
-2. **Provider media publication** for the eight regenerated frames (staging,
-   preflight, human publication authorization, public-URL probe, handoff, lock).
-3. **New hash-bound paid authorization** for the freshly compiled request hash.
-4. Submit at most one Kling job; poll; download; ffprobe; frame sheet;
-   post-Kling identity/action continuity review.
-5. Resolve step 38 visible-speaker lip sync **before** compiling the next paid
-   Kling call. The decision is recorded in
-   `reports/…/revisions/rev_successor_943b01ecd9a3/step38_lipsync_decision_packet.v1.json`
-   (+ `.md` twin; Memory key
-   `persona_dream:pipeline-complete:rev_successor_943b01ecd9a3:38:step38_lipsync_decision`,
-   exact reread PASS). **Primary (non-paid, recommended): lane C** — change SB_003
-   so Kai's mouth is not camera-readable during the 5.0–7.7s spoken interval
-   (keep the start frame as identity anchor, regenerate the **SB_003 end frame
-   only**, update the per-segment Kling motion prompt), which makes the
-   visible-speaker rule inapplicable so the existing post-mux exact Kai line
-   suffices. Delta proposal (frames NOT yet regenerated):
-   `step38_sb_003_composition_delta_proposal.v1.json` — a human must approve the
-   single-frame regeneration + continuity re-review before it runs. **Fallback
-   (paid): lane A** — post-return Kling lip-sync API (`/v1/videos/lip-sync` or
-   `/advanced-lip-sync`, JWT HS256; note the 10.041667s return exceeds fal's 10s
-   cap and the one-person constraint on a two-shot); an unsent, placeholdered
-   request template is in the packet and needs a fresh hash-bound paid
-   authorization. **Rejected: lane B** (`generate_audio=true`) — provider audio
-   cannot carry the exact canonical line in the consented Kai voice. Whichever
-   lane runs, require both forced alignment and the visible-speaker review to
-   pass (or record `PASS_VISIBLE_SPEAKER_RULE_INAPPLICABLE` for lane C).
-6. Regenerate steps 39, 40, 42; persist and exactly reread all 42 states. Final
-   acceptance stays blocked until steps 36 and 38 pass.
-
-## 5. What Is Still Broken / Superseded
-
-- **Historical live Kling return is superseded.** `rev_upstream_bf3b05d47fb8`
-  crossed the paid boundary once (`sha256:ca90ba9f…`, one submit, 54 polls, a
-  valid 10.04s MP4) but failed Embry identity continuity (step 36) and
-  visible-speaker lip sync (step 38), and derives from the rejected montage. It
-  is historical evidence only, referenced by hash, never reused.
-- **No successor provider evidence exists.** Steps 20-38 remain stale/superseded
-  on the successor until a new authorized provider return is produced.
-- **The frozen `rev_upstream_bf3b05d47fb8` is untouched** and must stay so.
-
-## 6. Key Files
-
-- `GOAL.md` - immutable 42-step goal and evidence boundary.
-- `local/SUCCESSOR_PLAN.md` - the A-D plan this handoff completes.
-- `reports/…/revisions/rev_successor_943b01ecd9a3/acceptance_rung_receipt.v1.json`
-- `reports/…/revisions/rev_successor_943b01ecd9a3/revision_artifact_index.json`
-- `reports/…/revisions/rev_successor_943b01ecd9a3/revision_activation_receipt.json`
-- `reports/…/revisions/rev_successor_943b01ecd9a3/pipeline_step_records.v1.json`
-- `reports/…/revisions/rev_successor_943b01ecd9a3/phase_07_storyboard_live_tau/phase_c_successor_regen/`
-- `scripts/rebuild_revision_artifact_bindings.py`, `scripts/emit_acceptance_rung_receipt.py`
-
-## Stop Condition
-
-This is the paid-call boundary. The next agent may cross it only with an
-explicit, hash-bound human paid authorization for a freshly compiled successor
-provider request. Otherwise, advance only the human-gated preparation in section
-4 and report the exact blocker.
-
-## Transaction gate closed (2026-07-19, appended)
-
-ACTIVE_MANIFEST_REPLAY_VALIDATION ruled PASS_CURRENT_GATE by the webgpt
-reviewer after a five-round fix/fault-proof loop (see PROJECT_KNOWLEDGE
-2026-07-19 entry; commits 2e3d2837..7c517c8e; 12 fault proofs in
-tests/test_phase15_transactional.py). The transaction-correctness repair loop
-is terminated per the ruling. Next actions unchanged: pilot preconditions
-(R1/R2 selection addendum + producer-blinding receipts), then the C-vs-F
-pilot; routing-semantics debt tracked in issues/428.
-
-## Live fault proof closed (2026-07-19, appended)
-
-Both LIVE_PROOF_REQUIRED preconditions from the webgpt clarification are
-closed: PASS_LIVE_TRANSACTION_FAULT_PROOF against the deployed daemon (receipt
-in state/; governance record persona_dream_live_fault_proof_20260719, exact
-reread PASS). En route the live path exposed and fixed: GMO semantic-sync
-empty-points Qdrant 400 (GMO branch persona-dream-gmo-integration-livefix) and
-phase15 rereads blinded by the /list visibility gate (client-side assert-state
-filters). The transaction layer is now closed at BOTH code level (5-round
-webgpt PASS) and live level. No preconditions remain before the next canonical
-dream write beyond the pilot's own setup items.
+- M2's dangling-citation defect (watch-evidence vertices not persisted by arm
+  runners) is a producer-machinery fix for any successor protocol — do NOT
+  re-persist the executed arms.
+- Brandon/Marketa have no identity reference sheets (Embry-only ArcFace
+  certification; disclosed in F receipts as scope notes).
+- The M1 probe set is dream-004-specific; a successor protocol needs
+  content-matched probes frozen at selection time.
+- `local/webgpt-bundles/` holds all 9 review rounds (bundle + response +
+  routing meta per round) — the full adversarial audit trail.
