@@ -1,96 +1,156 @@
-# Handoff Report: battle (adaptive-lineage spectator)
+# Handoff Report: battle adaptive-lineage receipt
 
-**Timestamp**: 2026-07-20T14:19Z
-**Active Agent**: Claude (Fable)
-**Branch**: `battle-adaptive-lineage-goal` @ `6915e1875` — a SHARED integration branch,
-~64 commits ahead of `origin/main` (`1b4d564cb`), battle work interleaved with unrelated
-`watch:` / `embry-voice:` / `ask` / `audio_e2e:` / memory commits. Operator decision
-(2026-07-20): keep the shared branch; do NOT extract battle-only history.
+**Timestamp**: 2026-07-20T17:13:44Z  
+**Active Agent**: Codex  
+**Branch**: `battle-adaptive-lineage-goal`  
+**Current objective**: finish `GOAL_ADAPTIVE_LINEAGE.md` recovery from the
+agent-skills worktree, not the pi-mono shell.
 
-> Every claim is labeled **VERIFIED** (a command this session proved it — the command is
-> given), **PRIOR-CLAIM** (asserted by an earlier agent, NOT re-proven), or **ASPIRATIONAL**
-> (goal, not built). Trust the receipts, not the prose.
+> Evidence rule for the next agent: trust receipts and command artifacts, not
+> stale prose. The old `GOAL_ADAPTIVE_LINEAGE.md` completion section says
+> `GOAL STATUS: MET`, but this recovery task supersedes that stale closure
+> claim. Current status is **pending WebGPT acceptance for the agent-skills
+> hosted receipt**.
 
 ## 1. Project Overview
-- **Ecosystem**: Python backend (`skills/battle/src/battle_skill`) + TypeScript/React/PixiJS
-  v8 spectator (`skills/battle/spectator`). Served at `:3002` by a vite dev server rooted in
-  `pi-mono/packages/ux-lab`, which imports this spectator via the vite alias
-  `@agent-skills/battle-spectator` → `skills/battle/spectator/src` (working tree).
-- **Core Purpose** (`GOAL_ADAPTIVE_LINEAGE.md`): a live, non-mocked four-specimen
-  adaptive-lineage qualification (G0 seed → G1-A/G1-B → deterministic selection → G2), and a
-  finished spectator that renders that exact receipt with proper PixiJS sprites + an honest
-  live/recorded badge.
 
-## 2. Current State (doc–code alignment)
-- **Routes**: valid battle hashes are `#battle`, `#battle/isolation`, `#battle/receipt`
-  (VERIFIED: `battle-mockup-lanes.ts` / `battle-receipt-replay.ts`). The prior handoff's
-  `#battle/live` route **does not exist** — see §4.
-- **Data**: served live fixture `spectator/public/battle-fixtures/battle-004-adaptive-live/
-  battle.normalized_ux_fixture.json` is real-derived (VERIFIED: contains `RED_EXPLOIT_CONFIRMED`,
-  no `/workspace` path leak) from an 18-event capture via `local/derive_adaptive_live_fixture.py`.
+- **Ecosystem**: Python Battle backend under `skills/battle/src/battle_skill`
+  plus TypeScript/React/Pixi spectator under `skills/battle/spectator`.
+- **Core purpose**: prove one canonical BATTLE-004 adaptive lineage:
+  `G0 -> {G1-A, G1-B} -> G2`, with a live SciLLM + Docker qualification receipt
+  and a spectator that renders that exact receipt with honest live/recorded
+  state.
+- **Current hosting decision**: agent-skills owns the receipt host. Use
+  `http://127.0.0.1:3003/#battle/receipt?engine=pixi`. Do not resume from
+  `pi-mono/packages/ux-lab` or add a standalone `#battle/live` route.
 
-## 3. What is Working Well (VERIFIED 2026-07-20)
-- **Backend adaptive-lineage logic** — `pytest tests/test_adaptive_lineage_reducer.py
-  tests/test_g1_delta_retry.py tests/test_selection_receipt_ordering_timestamp.py` → **32 passed**.
-- **Spectator gates** — `npm run typecheck` → 0 errors; `npx vitest run` → **42 files / 191 pass**.
-- **`#battle/receipt` renders** — fresh browser tab on
-  `#battle/receipt?engine=pixi&fixture=battle-004-adaptive-lineage-live` → `#root` populated,
-  `<canvas>`, 120 `data-qid`s, RED-TEAM scorecard header, and **four distinct lineage sprites**
-  (crimson demon / typhus / slug / green nurgling). Single-atlas lock removed.
-- **SSE transport server** — `curl :18765/healthz` → PASS, 54 events (ephemeral; dies on reboot).
-- NOTE: spectator has **no `build` script** — vite-dev-served; `tsc` is the gate.
+## 2. Current State
 
-## 4. What is Currently Broken (VERIFIED 2026-07-20)
-- **`#battle/live` is not a route.** Loading `#battle/live?engine=pixi&battle=battle-004`
-  renders the **Sparta Explorer** dashboard (0 `battle:*` qids). The prior handoff's reproduce
-  command is stale.
-- **No standalone live-streaming view.** The "Live" the prior agent described is an
-  `AgentDetailPane` `stdout latest` / `stderr latest` panel + a "LIVE PROOF" badge (summary
-  tab), not a scrolling stream on its own route. Whether that panel consumes the live SSE bus
-  (vs the static derived fixture) is UNVERIFIED.
-- **`#battle/receipt` not unified with live** — generic lane names (`RED G1 PARENT`) + static
-  Docker-replay/lifecycle evidence; no codenames, no live bus.
-- **Repo hygiene** — 27 modified + 42 untracked files (concurrent agents). Do NOT `git add -A`;
-  commit battle files by explicit path only.
+- **Backend receipt is fresh and live**:
+  `skills/battle/local/adaptive-lineage-relive-20260720T144034Z/adaptive-lineage-qualification.json`.
+  It reports `status: PASS`, `run_id: arena-adaptive-lineage-20260720T144034Z`,
+  `battle_id: battle-004`, 4 primary SciLLM calls, 4 HTTP completions,
+  4 red specimens, no budget overrun, and exactly one G2 Judge completion.
+- **Fixture is normalized with descriptive exploit names**:
+  `skills/battle/spectator/src/lineage/__fixtures__/adaptive-lineage-live.json`
+  has `data_source: live`, selected `G1-A`, runner-up `G1-B`, criterion
+  `novelty_distance`, and names:
+  `G0 Seed Slip`, `G1-A Module Slip`, `G1-B Arc Courier`, `G2 ZipInfo Path`.
+- **Agent-skills host exists and is committed**:
+  `skills/battle/spectator/index.html`, `src/main.tsx`, `src/standalone.css`,
+  and `scripts/{build-static,serve-static}.mjs`.
+  `curl http://127.0.0.1:3003/__host.json` returns host
+  `agent-skills battle spectator` and entry `skills/battle/spectator/src/main.tsx`.
+- **Live-browser proof exists**:
+  `skills/battle/local/agent-skills-host-verify-20260720T1646Z/surf-assertions.json`
+  targets `http://127.0.0.1:3003/#battle/receipt?engine=pixi`, `mocked:false`,
+  `live:true`, screenshot bytes `254726`, and asserts visible text for
+  `ADAPTIVE LINEAGE`, `LIVE: Qual PASS`, all four exploit names, and
+  `G1-A Module Slip · selected G1`.
+- **WebGPT acceptance for this new host is not obtained**:
+  `skills/battle/local/webgpt-design-review-20260720T1706Z/response.receipt.json`
+  reports `submitted_to_chatgpt:false`. The earlier `:3002` WebGPT acceptances
+  do not cover the new agent-skills `:3003` host.
 
-## 5. Unverified / prior-claims (prove before trusting)
-- **Live four-specimen qualification PASS** — deterministic tests pass (VERIFIED); a fresh
-  SciLLM+Docker run PASS is PRIOR-CLAIM (`2026-07-19` run `arena-adaptive-lineage-20260719T141223Z`).
-- **stdout/stderr panel fed by the live SSE bus** — UNVERIFIED (blocked by the broken `/live` route).
-- **Sprite visual quality** — distinct (VERIFIED); "coherent, not garbage at lane scale" is
-  reviewer-ACCEPTED per the GOAL doc (PRIOR-CLAIM).
+## 3. What is Working Well
 
-## 6. Next Steps (priority order)
-1. **Resolve the live-streaming story (the crux).** Decide if streaming-on-a-route is a real
-   GOAL requirement. If yes: pick a real route (`#battle`/`#battle/receipt`), wire the
-   AgentDetail panel to the SSE bus, and VERIFY one live frame end-to-end in a FRESH tab. If no:
-   delete the stale `#battle/live` claims.
-2. **Re-run the live backend qualification** (immutable-goal closure):
-   `TAU_REPO=/home/graham/workspace/experiments/tau-adaptive-mechanics ./run.sh
-   arena-adaptive-lineage-qualification battle-004 --out /tmp/relive` (needs the Tau recognizer
-   fix — issue `grahama1970/tau#116`, currently only on worktree branch `tau-adaptive-mechanics`).
-3. **Unify `#battle/receipt`** with real codenames (+ live if step 1 pans out).
-4. **/webgpt design review** of the receipt view before claiming UX done. Binding VERIFIED:
-   `skills/battle/.ask/browser-oracles.yaml` → `webgpt.default: battle`. Drive via /webgpt +
-   /browser-oracle (native skill node, NOT behind scillm). Tab liveness/auth NOT established
-   this session — establish at use time.
-5. Merge Tau fix (#116); prune worktrees `agent-skills-adaptive-mechanics`, `tau-adaptive-mechanics`.
+- Recent Battle commits on this branch:
+  - `f3d9d5c36 battle: host receipt from agent-skills`
+  - `4e6eda537 battle: name adaptive lineage exploits`
+  - `e5e2893a7 battle: render live adaptive lineage receipt`
+- Focused deterministic checks already passed for the committed host work:
+  - `node node_modules/typescript/bin/tsc --noEmit -p tsconfig.json`
+  - `node scripts/build-static.mjs`
+  - Curl of `:3003/__host.json`
+  - Surf screenshot/assertion readback of the receipt route
+- Current evidence posture:
+  - `mocked: no`
+  - `live: yes`
+  - exercised: real adaptive-lineage qualification receipt, normalized fixture,
+    standalone agent-skills static host, live browser render
+  - unverified: WebGPT design acceptance for the agent-skills hosted page
 
-## 7. Project Context for Success
+## 4. What is Currently Broken Or Pending
+
+- **WebGPT transport is the active blocker**. The fresh bundle at
+  `skills/battle/local/webgpt-design-review-20260720T1706Z/` contains the
+  request and zip bundle, but Surf failed before main submission:
+  `roundtrip_preflight_failed` / `submitted_to_chatgpt:false`.
+- **Existing Battle WebGPT tab is busy**. Tab `837359249` contains the prior
+  `:3003` review prompt and still showed `Thinking` / `Stop answering` when
+  inspected. Do not submit a new prompt into that tab while it is busy.
+- **Port `3002` is unusable in this session**. It is held by a stale D-state Vite
+  child from an earlier attempt. Use `3003` until reboot or kernel release.
+- **Do not trust `#battle/live` claims**. That route was verified false earlier;
+  valid served hashes are `#battle`, `#battle/isolation`, and `#battle/receipt`.
+- **Repo is dirty from unrelated agents**. Stage Battle handoff/artifact paths
+  explicitly only. Never `git add -A`.
+
+## 5. Next Steps
+
+1. Inspect whether the prior Battle WebGPT tab has produced a sentinel:
+   ```bash
+   cd skills/surf
+   ./run.sh js "return JSON.stringify({title:document.title,url:location.href,text:document.body.innerText.slice(-4000)},null,2)" --tab-id 837359249 --json
+   ```
+   If it is still thinking, do not reuse it.
+
+2. Submit the existing `1706Z` evidence bundle through Surf using a fresh,
+   identity-proven tab. The bundle already exists:
+   ```bash
+   skills/battle/local/webgpt-design-review-20260720T1706Z/request.md
+   skills/battle/local/webgpt-design-review-20260720T1706Z/battle-agent-skills-host-review-bundle.zip
+   ```
+   A created-tab preflight passed once:
+   ```bash
+   cd skills/surf
+   ./run.sh webgpt.preflight --create-tab --no-activate --json
+   ```
+   The previous main submit without roundtrip was interrupted and produced only
+   `prepared_prompt`; rerun only after checking stale Surf tab locks.
+
+3. When WebGPT returns `ACCEPTED` with a Surf sentinel-backed response, commit
+   the relevant handoff/review artifacts by explicit path and push:
+   ```bash
+   git add skills/battle/local/HANDOFF.md \
+     skills/battle/local/webgpt-design-review-20260720T1706Z/request.md \
+     skills/battle/local/webgpt-design-review-20260720T1706Z/battle-agent-skills-host-review-bundle.zip \
+     skills/battle/local/webgpt-design-review-20260720T1706Z/response.md \
+     skills/battle/local/webgpt-design-review-20260720T1706Z/response.raw.md \
+     skills/battle/local/webgpt-design-review-20260720T1706Z/response.meta.json \
+     skills/battle/local/webgpt-design-review-20260720T1706Z/response.receipt.json \
+     skills/battle/local/webgpt-design-review-20260720T1706Z/response.submitted.md
+   git diff --cached --name-only
+   git commit -m "battle: handoff adaptive lineage host state"
+   git push origin battle-adaptive-lineage-goal
+   git ls-remote origin refs/heads/battle-adaptive-lineage-goal
+   ```
+
+4. Only after the accepted review is committed and remote-verified, audit the
+   immutable goal checklist. Do not use closure language unless the final report
+   cites the backend receipt, browser screenshot/assertions, WebGPT response, and
+   remote commit proof.
+
+## 6. Project Context for Success
+
 - **Key files**:
-  - `src/battle_skill/adaptive_lineage.py` (reducer, G1 retry, selection), `arena_live_battle_proof.py` (Docker/Judge), `cli.py`.
-  - `spectator/src/engine/battle-lane-variant-map.ts` (sprite mapping — 4 distinct), `spectator/src/BattleHeader.tsx` (scorecard iframe), `spectator/src/battle-scorecard.html` (embedded scorecard).
-  - `spectator/src/lineage/__fixtures__/adaptive-lineage-live.json`, served fixture under `spectator/public/battle-fixtures/battle-004-adaptive-live/`.
-  - Routing/consumers live in `pi-mono/packages/ux-lab/src/components/battle/` (the served app).
-- **Recent battle commits** (this session, newest first):
-  - `6915e1875` handoff — back-on-track plan + /webgpt binding
-  - `7faa14eda` handoff — verified `#battle/live` is not a route
-  - `0cdeb82f6` handoff — accurate evidence-backed state
-  - `4a8337857` track `battle-scorecard.html` + four distinct lineage sprites (fixes broken import + sprite lock)
-  - `e0cb1d9f4` stream real adaptive-lineage capture into Live view (prior agent)
-- **Verification discipline (learned the hard way this session):**
-  - Load the spectator in a FRESH tab. A tab navigated many times / after a CDP reset renders
-    blank (`#root` empty) — that is a poisoned automation tab, NOT an app failure (~1 hr lost
-    to that false diagnosis).
-  - Deterministic tests over self-authored code are NOT proof of the live problem. Sprites,
-    streaming, and qualification each need a live read-back from the produced artifact.
+  - `skills/battle/src/battle_skill/adaptive_lineage.py`
+  - `skills/battle/src/battle_skill/arena_live_battle_proof.py`
+  - `skills/battle/spectator/src/lib/battle-adaptive-lineage-view-model.ts`
+  - `skills/battle/spectator/src/lib/battle-data.ts`
+  - `skills/battle/spectator/src/main.tsx`
+  - `skills/battle/spectator/scripts/build-static.mjs`
+  - `skills/battle/spectator/scripts/serve-static.mjs`
+- **Current local server**:
+  `node scripts/serve-static.mjs --host 127.0.0.1 --port 3003` from
+  `skills/battle/spectator`.
+- **Avoid npm** in this environment. `npm --version` and Vite operations hung.
+  Use direct Node scripts:
+  ```bash
+  cd skills/battle/spectator
+  node node_modules/typescript/bin/tsc --noEmit -p tsconfig.json
+  node scripts/build-static.mjs
+  node scripts/serve-static.mjs --host 127.0.0.1 --port 3003
+  ```
+- **Do not move back to pi-mono**. The current recovery path is agent-skills
+  hosted receipt evidence plus WebGPT acceptance for that host.
