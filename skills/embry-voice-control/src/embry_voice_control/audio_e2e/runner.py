@@ -1124,6 +1124,7 @@ def _memory_tau_stage(
     source_evidence_event: dict[str, Any],
     contract_locator: dict[str, str],
     turn_state: dict[str, Any],
+    journal_db: Path,
 ) -> dict[str, Any]:
     existing = turn_state["receipts"].get("memory_tau")
     if existing:
@@ -1226,14 +1227,27 @@ def _memory_tau_stage(
             raise RuntimeError(
                 "memory_answer_retry_not_before:" + retry_not_before.isoformat()
             )
-        partials = [
-            output / "source-event-claim-receipt.json",
-            output / "memory-speaker-resolution-receipt.json",
-            output / "memory-intent-receipt.json",
-            output / "stderr.log",
-        ]
-        if not all(path.is_file() for path in partials):
+        # The retry gate exists to prevent a second provider execution from
+        # double-answering a turn. Proof comes from the journal, not from how
+        # far the crashed attempt got writing partial files: a total service
+        # outage can die after the claim but before ANY memory receipt exists.
+        # Require the claim receipt (the attempt provably started) and require
+        # that no answer was ever journaled for this turn (the actual hazard).
+        if not (output / "source-event-claim-receipt.json").is_file():
             raise RuntimeError("memory_answer_retry_partial_receipts_missing")
+        journaled_answers = [
+            event
+            for event in session_snapshot(
+                journal_db, source["session_id"]
+            )["events"]
+            if event["turn_id"] == turn["turn_id"]
+            and event["type"] == "memory.answer_resolved"
+        ]
+        if journaled_answers:
+            raise RuntimeError(
+                "memory_answer_retry_answer_already_journaled:"
+                f"{journaled_answers[0]['event_id']}"
+            )
         authorization = {
             "schema": "embry.audio_e2e.memory_answer_retry_authorization.v1",
             "status": "PASS",
@@ -2385,6 +2399,7 @@ def run_campaign(
                     source_evidence_event,
                     contract_locator,
                     turn_state,
+                    journal_db,
                 )
                 write_json(state_path, state)
                 _render_stage(
