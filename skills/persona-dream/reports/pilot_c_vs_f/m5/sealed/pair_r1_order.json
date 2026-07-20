@@ -1,0 +1,10 @@
+{
+  "created_at": "2026-07-20T00:31:19Z",
+  "mapping": {
+    "X": "C",
+    "Y": "F"
+  },
+  "nonce": "7361bd605ff1ef39da4d8babd183dc05",
+  "pair_id": "r1",
+  "schema": "persona_dream.pilot_m5_sealed_order.v1"
+}

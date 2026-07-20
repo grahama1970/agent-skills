@@ -1,0 +1,22 @@
+{
+  "arm": "C",
+  "created_at": "2026-07-20T00:31:19Z",
+  "input_sha256": "5701938dc8ac7c4f759b8808c23ac1bfdb699c49f2f6fe66f93747cb0cb0ac75",
+  "note": "deletion-only: every match becomes the content-free marker; same fixed patterns for both arms; frozen leak gate remains the output authority",
+  "output_sha256": "2528c6142f981a55b631f804725f55111faeb8c579ce94601896db9a3a8d7228",
+  "pair_id": "r1",
+  "redaction_patterns_sha256": "33e2ebc000d8475f53bcad377a9b35ebcc7f59a0a571e70ad0da219b923dd312",
+  "replacement_count": 1,
+  "replacements": [
+    {
+      "claim_index": 1,
+      "matched": "frame",
+      "replaced_with": "[modality detail redacted]",
+      "span": [
+        108,
+        113
+      ]
+    }
+  ],
+  "schema": "persona_dream.pilot_m5_claim_redaction_receipt.v1"
+}

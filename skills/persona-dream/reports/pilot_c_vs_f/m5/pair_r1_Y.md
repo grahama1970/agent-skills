@@ -1,0 +1,6 @@
+# Interpretation set Y (pair r1)
+
+1. Embry may be rehearsing a bounded disclosure to Brandon: the long-table encounter and the repeated presence of a man near or across from her suggest a controlled interpersonal setting where she is close to speaking but still managing what can safely be revealed.
+2. The glowing tablet and small white cylindrical object may express Embry's desire for controllable, documented, reversible tools before making a high-consequence decision, echoing her reliance on written handoffs, dual confirmation, and recovery paths.
+3. The [modality detail redacted] supports reading the repeated woman as a stable Embry figure, which may tentatively point to a coherent self-position: she remains the same decision-maker across consultation, procedure, and threshold scenes even while the correct honest action remains unresolved.
+4. The open doorway may symbolize Embry's fear of crossing from preparation into irreversible disclosure, especially because her prepared truth to Brandon must avoid exposing James's secret while still acknowledging moral conflict.

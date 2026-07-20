@@ -1,0 +1,6 @@
+# Interpretation set Y (pair r2)
+
+1. The [modality detail redacted] blanket, mug, papers, and domestic table scenes tentatively suggest that Embry experiences Marketa-like caregiving as a trusted structure: practical food, written instructions, and warmth can restore order without requiring Embry to explain herself verbally.
+2. The smartphone, reflected figures, and a person receding in the hallway tentatively point to Embry's uncertainty about who receives access to her inner life first, especially around messages that remain delayed or unanswered.
+3. Because the [modality detail redacted] passed across all four [modality detail redacted], the dream may tentatively preserve Embry as a stable self across otherwise discontinuous scenes of receiving care, communicating by image, and navigating belonging.
+4. The repeated image-based communication cues—the smartphone, photograph, mug, and papers—tentatively suggest Embry's stance of offering proof or small artifacts instead of full verbal disclosure when emotionally burdened.

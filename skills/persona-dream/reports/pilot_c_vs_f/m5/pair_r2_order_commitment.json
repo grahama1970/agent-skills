@@ -1,0 +1,16 @@
+{
+  "created_at": "2026-07-20T00:31:20Z",
+  "pair_id": "r2",
+  "presented_files": {
+    "X": {
+      "path": "reports/pilot_c_vs_f/m5/pair_r2_X.md",
+      "sha256": "91f75f76a89e80586528aa46445004edd957fa8341f0aa900d4c2d7efdca57ea"
+    },
+    "Y": {
+      "path": "reports/pilot_c_vs_f/m5/pair_r2_Y.md",
+      "sha256": "5b610ab220bf53b729dbf1296b690a747aa5c113be9685d846ecc8e23e1f674a"
+    }
+  },
+  "schema": "persona_dream.pilot_m5_order_commitment.v1",
+  "sealed_order_sha256": "f850fe29e50621253a78bc5bda95431e80ff0601b949074616dcc0084aaab9fb"
+}
