@@ -1,127 +1,364 @@
 # Handoff Report: Persona Dream
 
-**Timestamp:** 2026-07-19 (post-pilot-execution; M5 human gates pending)
-**Repository:** `/home/graham/workspace/experiments/agent-skills-main` (branch `main`, canonical remote agent-skills@main; latest handoff-relevant commit `864f6cf5`)
+**Timestamp:** 2026-07-20T17:10:00Z
+**Active agent:** Codex
+**Repository:** `grahama1970/agent-skills`
+**Target branch:** `main`
+**Current pushed HEAD:** `e0998120f924de7c56a003baf0fb8d2da8919405`
 **Skill root:** `skills/persona-dream`
-**Controlling goal:** `GOAL_V2.md` (immutable; supersedes GOAL.md v1, which carries a pointer note)
-**Goal checker:** `python3 scripts/check_goal_v2_boundary.py --json` — the single machine proof; exit 0 + `PASS_GOAL_V2_P0_BOUNDARY` = goal complete
-**Active revision:** `rev_successor_943b01ecd9a3`
-**Current truth page:** `CURRENT_STATE.md` (generated; `generate_current_state.py --check` is in the test suite)
+**Current skill contract:** `SKILL.md`
 
-## 1. Where This Stands (checker state, VERIFIED 2026-07-19)
+## 1. Operating Model
 
-| Criterion | State | Authority |
-|---|---|---|
-| P0.1 human acceptance | **MISSING — HUMAN ONLY** | operator watches `provider_return.mp4` (sha256 `59b9ff3155d6…e211fff`) and authors `RR/human_acceptance_receipt.v1.json` (`author:"human"`, video sha, verdict). Agents must never author it. |
-| P0.2 v2 lineage | PASS | `RR/watch_gauntlet/59b9ff3155d6/cognitive_loop_v2/lineage_receipt.v1.json` |
-| P0.3 routing semantics | PASS | `RR/routing_semantics_calibration_receipt.v1.json` (montage 6/6 exact) |
-| P0.4 GMO pin | PASS | `RR/gmo_deployment_pin.v1.json` |
-| P0.5 phase16 v2 | PASS | `RR/phase_16_behavior_evaluation/phase16_v2_lineage_receipt.v1.json` |
-| P0.6 voice expression | PASS | `RR/voice_expression/voice_expression_evaluation_receipt.v1.json` (text+audio PASS, LatentSync 1.5 canary `output_ready`, zero paid video calls) |
-| P0.7 pilot result | **MISSING — waits on the two human gates below, then two agent commands** | `contracts/pilot_c_vs_f_result_receipt.v1.json` (checker requires `published_under == pilot_c_vs_f_frozen_protocol.v3` + final protocol hash `483fb170…d0ee0a6` + supersession lineage + `m5_read_author:"human"`) |
+The human's intent is agent-facing, not audience-facing: `persona-dream` should
+prove that an agent can dream from memory residue and that each pipeline step
+checks its inputs, outputs, lineage, and side-effect boundaries. The human does
+not need to judge dream content for the core automation path.
 
-`RR` = `reports/pipeline-complete/.persona-dream/revisions/rev_successor_943b01ecd9a3`.
+Source-derived workflow:
 
-## 2. THE ONLY REMAINING WORK
+1. **Initiating idea / request** — intended and partially implemented.
+   The skill contract says Phase 01 must persist an explicit human idea and bind
+   Phase 01-10 records to deterministic ids and canonical SHA-256 values.
 
-**Human gate A — M5 blind read** (`reports/pilot_c_vs_f/m5/`):
-Operator reads `pair_r1_X.md` vs `pair_r1_Y.md`, then `pair_r2_X.md` vs
-`pair_r2_Y.md` (no agent summaries), and writes `judgment_r1.json` +
-`judgment_r2.json` per `OPERATOR_INSTRUCTIONS.md` in that directory
-(`author:"human"` required; assembler hard-blocks otherwise). X/Y order is
-sealed per pair behind sha256 commitments (`sealed/`, commitments alongside).
+2. **Live persona memory recall** — implemented for `generate`; now also
+   independently checked by `check-live-memory-recall`.
+   The non-fixture path calls Memory over Unix socket
+   `/run/user/1000/embry/memory.sock`, endpoint `/recall`, then records recall
+   receipts and normalized residue.
 
-**Human gate B — P0.1 acceptance receipt** (see P0.1 row above).
+3. **Residue normalization and fail-closed no-dream gate** — implemented.
+   `persona_dream.py generate` writes `response.json` and exits 3 with
+   `status: blocked`, `reason: no_dream` when no usable residue exists.
 
-**Then the successor agent runs exactly:**
-1. Per pair: `python3 scripts/pilot_m5_presentation.py unseal --pair-id r1 --out-dir reports/pilot_c_vs_f/m5 --judgment reports/pilot_c_vs_f/m5/judgment_r1.json` (and r2) — verifies commitments, reveals mapping.
-2. Verify the manifest first: `python3 scripts/pilot_run_manifest.py --verify` must exit 0. Then assemble:
-   `python3 scripts/pilot_result_receipt.py --metrics-dir reports/pilot_c_vs_f/metrics --m5-dir reports/pilot_c_vs_f/m5 --blinding-dir <staging dir> --scope-notes <optional>`
-   (NOTE: the assembler expects `blinding_<RUN>.json` all in ONE dir — copy
-   the four from `reports/pilot_c_vs_f/runs/<RUN>/blinding_<RUN>.json` into a
-   staging dir first. Metrics receipts already exist at
-   `reports/pilot_c_vs_f/metrics/metrics_<RUN>.json`.)
-3. `python3 scripts/check_goal_v2_boundary.py --json` — with both human
-   receipts present this should exit 0. Regenerate `CURRENT_STATE.md`
-   (`generate_current_state.py`), commit, push.
+4. **Static dream packet generation** — implemented.
+   Successful runs write `residue_links.json`, `dream_packet.json`,
+   `dream_prompt.txt`, `frame_prompts.json`, `contact_sheet.png`,
+   `dream_reflection.md`, `memory_write_receipt.json`, `manifest.json`, and
+   stage reports.
 
-**Expected result: NULL** (a valid completion under the frozen decision rule) —
-precommitted in amendment v1: R1-F's N1 negative-control failure is retained
-literally (the R1-F dream legitimately contains SN15 launch-vehicle imagery
-matching the "orbital telemetry" control; premise break documented, no waiver).
+5. **No-write default** — implemented.
+   `--no-write-memory` writes `memory_write_receipt.json` with
+   `status: skipped`, `reason: write_memory_false`. Memory writeback remains
+   explicit and must not be inferred.
 
-## 3. What Was Done This Session (all receipt-backed, committed, pushed)
+6. **Video planning path** — implemented for deterministic planning only.
+   `--mode video_plan` can emit story, character/scene bible, storyboard, timed
+   transcript, multimodal prompts, voice handoff plan, and stage report.
+   It does not prove provider execution.
 
-- **P0.6 complete**: voice pipeline (Tau text → chatterbox_turbo `/synthesize`
-  — response `audio` is a CONTAINER path `/out/<label>.wav`, host mount
-  `~/workspace/experiments/chatterbox/logs`; Whisper CPU ASR accuracies
-  0.966/1.0/0.917/1.0) + LatentSync **1.5** lip-sync canary (8 GB VRAM path:
-  dedicated venv `~/workspace/experiments/LatentSync/.venv-latentsync`, ckpt
-  `checkpoints-v1.5/latentsync_unet.pt`, config `stage2.yaml`; chatterbox
-  container stopped for VRAM during the run and restarted, health verified).
-- **P0.7 protocol lineage**: v2 selection ruled gameable by webgpt →
-  **protocol v3** (`contracts/pilot_c_vs_f_frozen_protocol.v3.md`): frozen
-  cluster ontology (age-band × person-tag), biographical recency, seeded-hash
-  tie-break, first-original-order disjoint R2, K=3 member cap, fail-closed
-  timestamps. R1 = `age23_current:person:brandon`, R2 =
-  `age19_23:person:marketa_lawson` (addendum appended; selection deterministic).
-- **GOAL_V2 checker correction** (webgpt-approved, stricter): p0_7 requires v3
-  + final protocol hash + lineage (the goal text said v2; the round-2 ruling
-  explicitly accepted this pre-run authority correction; disclosed to the
-  operator in-session).
-- **Four arms executed in frozen order** R1-C → R1-F → R2-F → R2-C
-  (runners: `run_pilot_arm.py` for C, `run_pilot_arm_f.py` for F). All
-  persisted through the certified transactional path and ACTIVATED
-  (`/persona-dream/commit/activate`), produced records read back `active`:
-  `dream_pilot_r1_c`, `dream_pilot_r1_f`, `dream_pilot_r2_f`, `dream_pilot_r2_c`.
-  F frames: gpt-image-2 via the standard phase_c engine; **the prompt MUST name
-  the Embry contact-sheet absolute path** (codex `view_image` loads it —
-  without it ArcFace cosines drop to ~0.22; with it 0.72–0.80 vs gate 0.421).
-- **Measurement amendment lineage v1→v1.5** (all pre-M5, originals preserved
-  in `reports/pilot_c_vs_f/metrics_original_v1/`), through 9 adversarial
-  webgpt rounds ending **PASS_CURRENT_GATE**:
-  real claim-level M2 (persist-snapshot keyset hash ownership + edge/endpoint
-  resolution), M4 fail-closed typed classifier, M3 = **closed enum contract**
-  (DENIED/AFFIRMED/UNCERTAIN/CONTRADICTORY + record_class vs stored kind;
-  free text audit-only — the v1.1–v1.4 regex classifier stack is retired),
-  deletion-only M5 redaction, N1 precommitment.
-- **Final metrics** (uniform, committed): M3 PASS ×4 (all DENIED + correct
-  class), M4 PASS ×4 (7 anchors byte-unchanged incl. dream-004 node), M2 0.0
-  ×4 — REAL symmetric finding: both arms' `grounds_interpretation` edges cite
-  watch-evidence vertices never persisted (runners passed `watch_vertices=[]`);
-  reported, not patched. M1 positives absent ×4 (frozen dream-004 probes don't
-  match new content; symmetric).
+7. **Revision qualification / provider readiness** — intended and represented
+   by many existing gates, but not newly proven by the latest work.
+   Existing contracts describe active revision qualification, Phase 11
+   zero-call boundaries, failed historical canaries, and provider final gates.
 
-## 4. Standing Constraints (unchanged)
+8. **Generated image/video/audio lanes** — intended downstream lanes.
+   Still images must go through receipt-backed image generation. Motion,
+   voice, mux, Watch observation, interpretation, and persistence require their
+   own receipts. No paid provider call is authorized by the current handoff.
 
-- Only /tau reaches /scillm (strict checker exit 0). ArcFace buffalo_l 0.421 is
-  the sole identity authority; VLM advisory only. Evidence classes never
-  silently convert. Paid video calls forbidden; imagegen via the established
-  scillm lane is normal operation. WebGPT reviews: tab 837359230, routing proof
-  required every submit; `-p persona-dream` route.
-- GMO daemon `embry-memory` (127.0.0.1:8601): default `/list` hides pending
-  records (add `visibility_state` to filters to bypass). It wedged once this
-  session (worker pool stuck during an unrelated 22 GB SPARTA Arango scan
-  burst; app-container restart fixed it — DB untouched). The scillm proxy 502s
-  during the same window; a 502 on `/v1/chat/completions` with "JSON
-  validation failed after repair" in proxy logs means the MODEL answered in
-  prose — the prompt must explicitly demand strict JSON (or use the closed
-  enum contract).
-- Harness kills long background tasks in this environment (multiple kills this
-  session; NOT the operator — confirmed in-session). Run long webgpt
-  submits/extracts in FOREGROUND with `timeout ≤580`; extraction with the
-  sentinel via `surf webgpt.extract --tab-id 837359230 --sentinel ... --wait`
-  recovers responses whose submit process was killed after injection (receipt
-  `submitted: true` tells you which case you're in).
+9. **Cognitive loop / durable dream memory** — implemented historically for
+   specific canonical runs, but not exercised by the new live-memory rung.
+   Prior project knowledge records Phase 13-16 work and canonical dream memory
+   writes. The latest proof does not rerun that full loop.
 
-## 5. Known Residual Risks / Deferred
+## 2. Current State
 
-- M2's dangling-citation defect (watch-evidence vertices not persisted by arm
-  runners) is a producer-machinery fix for any successor protocol — do NOT
-  re-persist the executed arms.
-- Brandon/Marketa have no identity reference sheets (Embry-only ArcFace
-  certification; disclosed in F receipts as scope notes).
-- The M1 probe set is dream-004-specific; a successor protocol needs
-  content-matched probes frozen at selection time.
-- `local/webgpt-bundles/` holds all 9 review rounds (bundle + response +
-  routing meta per round) — the full adversarial audit trail.
+Recent commits relevant to this handoff:
+
+- `e0998120f` — `persona-dream: add live memory recall check`
+- `96accaaba` — `persona-dream: add pipeline robustness harness`
+- `1b4d564cb` — prior handoff report for pilot execution / human gates
+
+The two latest commits were pushed to `origin/main` and remote-ref verified at
+the time of work.
+
+The handoff helper required by the `/handoff` skill was not available in this
+clean worktree:
+
+```text
+test -x .pi/skills/handoff/run.sh -> exit 1
+```
+
+This handoff was therefore produced by manual source inspection, recent commit
+history, existing `HANDOFF.md` / `README.md` / `PROJECT_KNOWLEDGE.md`, and the
+latest deterministic receipts.
+
+## 3. What Is Working
+
+### Offline Pipeline Robustness Harness
+
+Command:
+
+```bash
+cd skills/persona-dream
+./run.sh check-pipeline-robustness \
+  --output-root /tmp/persona-dream-robustness-post-live-rung-20260720 \
+  --json
+```
+
+Receipt:
+
+```text
+/tmp/persona-dream-robustness-post-live-rung-20260720/pipeline_robustness_receipt.v1.json
+```
+
+Observed summary:
+
+```text
+status: PASS_PERSONA_DREAM_PIPELINE_ROBUSTNESS
+check_count: 14
+passed_count: 14
+failed_count: 0
+mocked: false
+live: false
+fixture_backed: true
+actual_provider_call_attempts: 0
+```
+
+This proves fixture-backed static/video planning, contract, lineage,
+stale-write, respawn, run-state, run-root, provider-routing, FAL-preflight, and
+spine-chain fixture families still execute under one deterministic harness. It
+does not prove live memory recall or provider execution.
+
+### Live Memory Recall Rung
+
+New command:
+
+```bash
+cd skills/persona-dream
+./run.sh check-live-memory-recall \
+  --persona embry \
+  --about "pipeline robustness autonomous dream residue" \
+  --limit 6 \
+  --run-id persona-dream-live-memory-r3 \
+  --output-root /tmp/persona-dream-live-memory-r3-20260720 \
+  --receipt-out /tmp/persona-dream-live-memory-r3-20260720/live_memory_recall_receipt.v1.json \
+  --timeout-s 90 \
+  --json
+```
+
+Receipt:
+
+```text
+/tmp/persona-dream-live-memory-r3-20260720/live_memory_recall_receipt.v1.json
+```
+
+Observed summary:
+
+```text
+status: PASS_LIVE_MEMORY_RECALL
+mocked: false
+live: true
+fixture_backed: false
+child_exit_code: 0
+successful_query_count: 5
+failed_query_count: 0
+residue_count: 6
+unique_source_count: 6
+memory_write_status: skipped
+actual_provider_call_attempts: 0
+observed_blockers: []
+```
+
+The receipt checks:
+
+- output root is fresh before execution;
+- no fixture is used;
+- five expected one-persona recall query receipts exist;
+- query counts and accepted counts are internally consistent;
+- no partial recall error is allowed for PASS;
+- normalized residue has nonempty `source_id`, `scope`, and `text`;
+- residue is non-synthetic and not fixture-marked;
+- duplicate `(scope, source_id)` pairs are rejected;
+- explicit persona ids must match requested persona aliases when present;
+- `dream_packet.residue_items` equals `residue_links.items`;
+- frame prompt source ids and contradiction refs resolve to residue source ids;
+- stage-02 recall receipts agree with `residue_links.json`;
+- every manifest artifact exists under the output root;
+- writeback remains skipped under `--no-write-memory`;
+- provider call count remains zero.
+
+### Stale Output Boundary
+
+Negative command reran `check-live-memory-recall` against the already populated
+live output root and asserted the checker exits 1.
+
+Receipt:
+
+```text
+/tmp/persona-dream-live-memory-r3-nonempty-20260720.json
+```
+
+Observed summary:
+
+```text
+status: BLOCKED_LIVE_MEMORY_INVARIANT
+child_exit_code: null
+errors: ["output_root_exists_nonempty"]
+observed_blockers:
+  - BLOCKED_LIVE_MEMORY_INVARIANT
+  - output_root_exists_nonempty
+```
+
+This proves the checker does not silently reuse a nonempty output directory.
+
+## 4. WebGPT / Browser Oracle State
+
+Browser Oracle round 1 for project `dream` routed correctly:
+
+```text
+requested_tab_id: 837359230
+controlled_tab_id: 837359230
+controlled_tab_id_mismatch: false
+tab_was_created: false
+proof_status: response_proven
+```
+
+Round 1 advised the exact live-memory rung that was implemented:
+
+- keep `check-pipeline-robustness` offline by default;
+- add separate `check-live-memory-recall`;
+- invoke the existing generator instead of duplicating recall logic;
+- PASS only when live recall, non-fixture lineage, and no-write checks all pass;
+- classify no-residue, unavailable memory, stale output, malformed artifacts,
+  partial recall, duplicate residue, and writeback mismatch fail-closed.
+
+Round 2 was submitted with the actual patch and receipts but failed as a
+transport/reviewer artifact, not as local code evidence:
+
+```text
+GitHub issue: https://github.com/grahama1970/agent-skills/issues/481
+raw WebGPT output: "Pro thinking"
+proof_status: submitted_no_response_proof
+failure: missing_sentinel
+```
+
+After the failed listen attempt, Browser Oracle reported the new bound tab as
+stale:
+
+```text
+project: dream
+tab_id: 837359738
+readiness: needs_attention
+issues: ["tab_stale_manual_binding"]
+```
+
+Next agent should repair/rebind Browser Oracle before further WebGPT use.
+
+## 5. What Is Brittle
+
+- `check-live-memory-recall` is live-state dependent. Memory ranking and
+  contents are mutable, so do not compare semantic content to a golden fixture.
+  Use source ids, scopes, hashes, query receipts, and lineage checks instead.
+- The new checker can prove generator-to-artifact lineage, but not exact raw
+  `/recall` response-to-normalized-item provenance. Adding accepted source ids
+  to each generator query receipt would harden this.
+- The checker currently treats duplicate `(scope, source_id)` pairs as a hard
+  invariant failure. This is intentional; if the live fan-out returns duplicate
+  records in the future, the generator should deduplicate or receipts should
+  explain the duplicate rather than the checker normalizing it away.
+- The offline aggregate harness is intentionally fixture-backed. Do not rename
+  it or report it as live proof.
+- `pytest` is not installed in the skill uv environment in the current clean
+  worktree, so focused pytest was not rerun for the new script.
+- `scripts/check_mock_evidence_claims.py` is absent from this `origin/main`
+  worktree, so that CI-style wording checker could not be run.
+- `README.md` still contains older proof-boundary prose from 2026-07-18/19 and
+  does not yet describe the 2026-07-20 live-memory checker.
+
+## 6. What Is Not Proven
+
+- Semantic or psychological quality of dreams.
+- That recalled memories were the best or most emotionally salient memories.
+- Human preference or acceptance.
+- Paid provider execution.
+- Provider-ready storyboard or final video.
+- Image, video, voice, lip-sync, mux, or Watch observation for the latest rung.
+- Memory writeback durability for the latest rung.
+- Complete live Phase 01-16 runtime execution.
+- Repeatability against an unchanged Memory index.
+- Independence from backend mocks not visible to this client.
+- Exact raw `/recall` response-to-item provenance.
+
+## 7. Recommended Next Steps
+
+1. **Repair Browser Oracle / WebGPT binding for `dream`.**
+   Round 2 could not complete because the browser review did not return a
+   sentinel and the binding is now stale. Do this before asking WebGPT for more
+   project review.
+
+2. **Add accepted source ids to recall receipts.**
+   Patch `persona_dream.py` so each live recall query receipt records the
+   accepted normalized source ids. Then extend `check-live-memory-recall` to
+   prove endpoint-query-to-residue attribution, not only artifact lineage.
+
+3. **Add deterministic negative fixtures for the new checker.**
+   The live stale-output negative exists. Add fixture or monkeypatch-level tests
+   for partial query failure, duplicate residue, fixture marker leakage,
+   persona mismatch, frame-source mismatch, and writeback mismatch. Keep them
+   labeled as deterministic checker tests, not live proof.
+
+4. **Reconcile README/current-state documentation.**
+   Add a short 2026-07-20 proof-boundary note that distinguishes:
+   offline fixture robustness, live Memory recall, historical Phase 13-16
+   evidence, and unproven provider/audio/video lanes.
+
+5. **Only then consider the next live rung.**
+   Candidate next rung: live no-residue/unavailable-memory receipt proof using
+   a controlled persona/query that returns no accepted residue or a controlled
+   Memory outage. Do not fake this with mocked Memory and call it live.
+
+## 8. Key Files
+
+Core runtime:
+
+```text
+skills/persona-dream/SKILL.md
+skills/persona-dream/README.md
+skills/persona-dream/PROJECT_KNOWLEDGE.md
+skills/persona-dream/run.sh
+skills/persona-dream/scripts/persona_dream.py
+```
+
+Latest proof commands:
+
+```text
+skills/persona-dream/scripts/check_pipeline_robustness.py
+skills/persona-dream/scripts/check_live_memory_recall.py
+```
+
+Important live proof artifacts from the latest session:
+
+```text
+/tmp/persona-dream-live-memory-r3-20260720/live_memory_recall_receipt.v1.json
+/tmp/persona-dream-live-memory-r3-nonempty-20260720.json
+/tmp/persona-dream-robustness-post-live-rung-20260720/pipeline_robustness_receipt.v1.json
+/tmp/persona-dream-webgpt-round1-20260720-response.md
+/tmp/persona-dream-webgpt-round1-20260720-response.meta.json
+/tmp/persona-dream-webgpt-round2-20260720-response.receipt.json
+```
+
+## 9. Claim Boundary For Successor Agent
+
+Use this phrasing:
+
+```text
+The 2026-07-20 live-memory rung exercised the live Memory /recall client path
+without fixtures, produced six non-fixture residues, preserved residue lineage
+into the dream packet, kept writeback skipped, and made zero provider calls.
+```
+
+Do not say:
+
+```text
+persona-dream is end-to-end complete
+semantic dream quality is proven
+provider readiness is proven
+Phase 01-16 is live-proven by this rung
+WebGPT verified the patch
+```
+
+WebGPT round 1 was useful advisory review. Round 2 failed to produce a
+sentinel. The deterministic local receipts are the proof authority for the
+latest commit.
