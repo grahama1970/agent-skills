@@ -70,6 +70,7 @@
     {
       "changed_dimensions": [],
       "delta_status": null,
+      "exploit_short_name": "Seed Slip",
       "fitness_status": null,
       "generation": 0,
       "id": "G0",
@@ -96,6 +97,7 @@
         }
       ],
       "delta_status": "PASS",
+      "exploit_short_name": "Module Slip",
       "fitness_status": "PASS",
       "generation": 1,
       "id": "G1-A",
@@ -121,6 +123,7 @@
         }
       ],
       "delta_status": "PASS",
+      "exploit_short_name": "Arc Courier",
       "fitness_status": "PASS",
       "generation": 1,
       "id": "G1-B",
@@ -161,6 +164,7 @@
         }
       ],
       "delta_status": "PASS",
+      "exploit_short_name": "ZipInfo Path",
       "fitness_status": "PASS",
       "generation": 2,
       "id": "G2",

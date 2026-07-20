@@ -102,9 +102,20 @@ describe("Battle V13 adaptive lineage projection", () => {
 		expect(mechanics.nodes.find((node) => node.id === "G1-A")?.judge_outcome?.duration_seconds).toBe(1.195406);
 		expect(mechanics.nodes.find((node) => node.id === "G1-B")?.judge_outcome?.duration_seconds).toBe(1.260919);
 		expect(mechanics.nodes.find((node) => node.id === "G2")?.judge_outcome?.duration_seconds).toBe(1.285213);
+		expect(mechanics.nodes.map((node) => [node.id, node.exploit_short_name])).toEqual([
+			["G0", "Seed Slip"],
+			["G1-A", "Module Slip"],
+			["G1-B", "Arc Courier"],
+			["G2", "ZipInfo Path"],
+		]);
 
 		expect(fixture.lanes.map((lane) => lane.id)).toEqual(["G0", "G1-A", "G1-B", "G2"]);
-		expect(fixture.lanes.map((lane) => lane.name)).toEqual(["G0 SEED", "G1-A SELECTED", "G1-B RUNNER-UP", "G2 DESCENDANT"]);
+		expect(fixture.lanes.map((lane) => lane.name)).toEqual([
+			"G0 Seed Slip",
+			"G1-A Module Slip",
+			"G1-B Arc Courier",
+			"G2 ZipInfo Path",
+		]);
 		expect(fixture.lanes.find((lane) => lane.id === "G1-A")).toMatchObject({
 			parentId: "G0",
 			selected: true,

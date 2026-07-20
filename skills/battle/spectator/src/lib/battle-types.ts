@@ -22,6 +22,7 @@ export type AdaptiveLineageJudgeOutcome = {
 
 export type AdaptiveLineageNode = {
 	id: string;
+	exploit_short_name?: string;
 	role: "seed" | "candidate" | "descendant" | string;
 	generation: number;
 	parentId: string | null;

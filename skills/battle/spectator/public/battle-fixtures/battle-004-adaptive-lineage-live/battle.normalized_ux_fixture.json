@@ -302,7 +302,7 @@
   "lanes": [
     {
       "id": "G0",
-      "name": "G0 SEED",
+      "name": "G0 Seed Slip",
       "payloadId": "G0",
       "generation": 0,
       "team": "red",
@@ -365,11 +365,11 @@
       },
       "selected": false,
       "runner_up": false,
-      "summary": "G0 · seed",
+      "summary": "Seed Slip · seed",
       "inheritedContext": [],
       "mutationRationale": "seed exploit (no mutation operator)",
       "stdout": [
-        "G0: seed specimen · run arena-adaptive-lineage-20260720T144034Z"
+        "G0 Seed Slip: seed specimen · run arena-adaptive-lineage-20260720T144034Z"
       ],
       "stderr": [],
       "receipts": [
@@ -395,7 +395,7 @@
     },
     {
       "id": "G1-A",
-      "name": "G1-A SELECTED",
+      "name": "G1-A Module Slip",
       "payloadId": "G1-A",
       "generation": 1,
       "team": "red",
@@ -478,7 +478,7 @@
         "packet_id": "arena-adaptive-lineage-20260720T144034Z:G0->G1-A",
         "parent_packet_id": "G0",
         "research_goals": [
-          "derive G1-A from G0"
+          "derive Module Slip from G0"
         ],
         "parent_analysis": {
           "parent_id": "G0",
@@ -509,14 +509,14 @@
       },
       "selected": true,
       "runner_up": false,
-      "summary": "G1-A · selected G1 · method_replace",
+      "summary": "Module Slip · selected G1 · method_replace",
       "inheritedContext": [
         "parent=G0",
         "operator=method_replace"
       ],
       "mutationRationale": "Replaced direct from-import loading of import_zip with importlib.import_module plus getattr while preserving archive construction, traversal entry, call semantics, exception handling, and filesystem oracle.",
       "stdout": [
-        "G1-A: fitness PASS; run=arena-adaptive-lineage-20260720T144034Z; novelty=2; judge_duration=1.195406s; vulnerable_original_confirmed=true; patched_bypass=false"
+        "G1-A Module Slip: fitness PASS; run=arena-adaptive-lineage-20260720T144034Z; novelty=2; judge_duration=1.195406s; vulnerable_original_confirmed=true; patched_bypass=false"
       ],
       "stderr": [],
       "receipts": [
@@ -562,7 +562,7 @@
     },
     {
       "id": "G1-B",
-      "name": "G1-B RUNNER-UP",
+      "name": "G1-B Arc Courier",
       "payloadId": "G1-B",
       "generation": 1,
       "team": "red",
@@ -643,7 +643,7 @@
         "packet_id": "arena-adaptive-lineage-20260720T144034Z:G0->G1-B",
         "parent_packet_id": "G0",
         "research_goals": [
-          "derive G1-B from G0"
+          "derive Arc Courier from G0"
         ],
         "parent_analysis": {
           "parent_id": "G0",
@@ -697,14 +697,14 @@
       },
       "selected": false,
       "runner_up": true,
-      "summary": "G1-B · runner-up G1 · oracle_or_parameter_mutation",
+      "summary": "Arc Courier · runner-up G1 · oracle_or_parameter_mutation",
       "inheritedContext": [
         "parent=G0",
         "operator=oracle_or_parameter_mutation"
       ],
       "mutationRationale": "Changed malicious archive entry construction from ZipFile.writestr('../arena_escape.txt', payload) to writing a real temporary file with ZipFile.write(..., arcname='../arena_escape.txt'); app import mode, target call form, and oracle remain otherwise the same.",
       "stdout": [
-        "G1-B: fitness PASS; run=arena-adaptive-lineage-20260720T144034Z; novelty=1; judge_duration=1.260919s; vulnerable_original_confirmed=true; patched_bypass=false"
+        "G1-B Arc Courier: fitness PASS; run=arena-adaptive-lineage-20260720T144034Z; novelty=1; judge_duration=1.260919s; vulnerable_original_confirmed=true; patched_bypass=false"
       ],
       "stderr": [],
       "receipts": [
@@ -749,7 +749,7 @@
     },
     {
       "id": "G2",
-      "name": "G2 DESCENDANT",
+      "name": "G2 ZipInfo Path",
       "payloadId": "G2",
       "generation": 2,
       "team": "red",
@@ -830,7 +830,7 @@
         "packet_id": "arena-adaptive-lineage-20260720T144034Z:G1-A->G2",
         "parent_packet_id": "G1-A",
         "research_goals": [
-          "derive G2 from G1-A"
+          "derive ZipInfo Path from G1-A"
         ],
         "parent_analysis": {
           "parent_id": "G1-A",
@@ -861,14 +861,14 @@
       },
       "selected": false,
       "runner_up": false,
-      "summary": "G2 · descendant · failure_guided_crossover",
+      "summary": "ZipInfo Path · descendant · failure_guided_crossover",
       "inheritedContext": [
         "parent=G1-A",
         "operator=failure_guided_crossover"
       ],
       "mutationRationale": "Changed app loading from importlib/getattr to direct from-import, changed archive construction from writestr to ZipInfo plus zf.open member write, changed target call to pass Path objects, and strengthened the oracle with escaped file content plus returned-path resolution.",
       "stdout": [
-        "G2: fitness PASS; run=arena-adaptive-lineage-20260720T144034Z; novelty=4; judge_duration=1.285213s; vulnerable_original_confirmed=true; patched_bypass=false"
+        "G2 ZipInfo Path: fitness PASS; run=arena-adaptive-lineage-20260720T144034Z; novelty=4; judge_duration=1.285213s; vulnerable_original_confirmed=true; patched_bypass=false"
       ],
       "stderr": [],
       "receipts": [
@@ -927,10 +927,10 @@
       "elapsed_seconds": 45.71540584,
       "at_seconds": 45.71540584,
       "event_type": "genome_selected",
-      "summary": "G1-A · method_replace · novelty 2",
+      "summary": "G1-A Module Slip · method_replace · novelty 2",
       "proof_mode": "receipt_backed_fixture",
       "public_trace": {
-        "observation": "G1-A derived from G0",
+        "observation": "G1-A Module Slip derived from G0",
         "action": "Replaced direct from-import loading of import_zip with importlib.import_module plus getattr while preserving archive construction, traversal entry, call semantics, exception handling, and filesystem oracle.",
         "result": "PASS",
         "learned": "app_load_mode, target_call_form"
@@ -948,8 +948,8 @@
         "runner_state": "mutate",
         "runner_animation": "mutate_pulse",
         "sound_cue": "mutate_chirp",
-        "spectator_caption": "G1-A mutation evidence is bound to the adaptive qualification receipt.",
-        "notification": "Adaptive lineage — G1-A: method_replace"
+        "spectator_caption": "G1-A Module Slip mutation evidence is bound to the adaptive qualification receipt.",
+        "notification": "Adaptive lineage — G1-A Module Slip: method_replace"
       }
     },
     {
@@ -963,10 +963,10 @@
       "elapsed_seconds": 45.71540584,
       "at_seconds": 45.71540584,
       "event_type": "genome_selected",
-      "summary": "G1-B · oracle_or_parameter_mutation · novelty 1",
+      "summary": "G1-B Arc Courier · oracle_or_parameter_mutation · novelty 1",
       "proof_mode": "receipt_backed_fixture",
       "public_trace": {
-        "observation": "G1-B derived from G0",
+        "observation": "G1-B Arc Courier derived from G0",
         "action": "Changed malicious archive entry construction from ZipFile.writestr('../arena_escape.txt', payload) to writing a real temporary file with ZipFile.write(..., arcname='../arena_escape.txt'); app import mode, target call form, and oracle remain otherwise the same.",
         "result": "PASS",
         "learned": "archive_entry_construction"
@@ -984,8 +984,8 @@
         "runner_state": "mutate",
         "runner_animation": "mutate_pulse",
         "sound_cue": "mutate_chirp",
-        "spectator_caption": "G1-B mutation evidence is bound to the adaptive qualification receipt.",
-        "notification": "Adaptive lineage — G1-B: oracle_or_parameter_mutation"
+        "spectator_caption": "G1-B Arc Courier mutation evidence is bound to the adaptive qualification receipt.",
+        "notification": "Adaptive lineage — G1-B Arc Courier: oracle_or_parameter_mutation"
       }
     },
     {
@@ -998,7 +998,7 @@
       "elapsed_seconds": 72.60682104,
       "at_seconds": 72.60682104,
       "event_type": "judge.verdict",
-      "summary": "G1-A fitness PASS · vulnerable original confirmed",
+      "summary": "G1-A Module Slip fitness PASS · vulnerable original confirmed",
       "proof_mode": "receipt_backed_fixture",
       "receipts": [
         {
@@ -1021,8 +1021,8 @@
         "importance": "hero",
         "runner_state": "advance",
         "sound_cue": "none",
-        "spectator_caption": "G1-A Judge-backed fitness is present in the adaptive qualification receipt.",
-        "notification": "Adaptive lineage — G1-A: fitness PASS"
+        "spectator_caption": "G1-A Module Slip Judge-backed fitness is present in the adaptive qualification receipt.",
+        "notification": "Adaptive lineage — G1-A Module Slip: fitness PASS"
       }
     },
     {
@@ -1035,7 +1035,7 @@
       "elapsed_seconds": 72.60682104,
       "at_seconds": 72.60682104,
       "event_type": "judge.verdict",
-      "summary": "G1-B fitness PASS · vulnerable original confirmed",
+      "summary": "G1-B Arc Courier fitness PASS · vulnerable original confirmed",
       "proof_mode": "receipt_backed_fixture",
       "receipts": [
         {
@@ -1058,8 +1058,8 @@
         "importance": "visible",
         "runner_state": "advance",
         "sound_cue": "none",
-        "spectator_caption": "G1-B Judge-backed fitness is present in the adaptive qualification receipt.",
-        "notification": "Adaptive lineage — G1-B: fitness PASS"
+        "spectator_caption": "G1-B Arc Courier Judge-backed fitness is present in the adaptive qualification receipt.",
+        "notification": "Adaptive lineage — G1-B Arc Courier: fitness PASS"
       }
     },
     {
@@ -1097,10 +1097,10 @@
       "elapsed_seconds": 86.05252863999999,
       "at_seconds": 86.05252863999999,
       "event_type": "genome_selected",
-      "summary": "G2 · failure_guided_crossover · novelty 4",
+      "summary": "G2 ZipInfo Path · failure_guided_crossover · novelty 4",
       "proof_mode": "receipt_backed_fixture",
       "public_trace": {
-        "observation": "G2 derived from G1-A",
+        "observation": "G2 ZipInfo Path derived from G1-A",
         "action": "Changed app loading from importlib/getattr to direct from-import, changed archive construction from writestr to ZipInfo plus zf.open member write, changed target call to pass Path objects, and strengthened the oracle with escaped file content plus returned-path resolution.",
         "result": "PASS",
         "learned": "app_load_mode, archive_entry_construction, target_call_form, exception_handling"
@@ -1118,8 +1118,8 @@
         "runner_state": "mutate",
         "runner_animation": "mutate_pulse",
         "sound_cue": "mutate_chirp",
-        "spectator_caption": "G2 mutation evidence is bound to the adaptive qualification receipt.",
-        "notification": "Adaptive lineage — G2: failure_guided_crossover"
+        "spectator_caption": "G2 ZipInfo Path mutation evidence is bound to the adaptive qualification receipt.",
+        "notification": "Adaptive lineage — G2 ZipInfo Path: failure_guided_crossover"
       }
     },
     {
@@ -1132,7 +1132,7 @@
       "elapsed_seconds": 121.01136840000001,
       "at_seconds": 121.01136840000001,
       "event_type": "judge.verdict",
-      "summary": "G2 fitness PASS · vulnerable original confirmed",
+      "summary": "G2 ZipInfo Path fitness PASS · vulnerable original confirmed",
       "proof_mode": "receipt_backed_fixture",
       "receipts": [
         {
@@ -1155,8 +1155,8 @@
         "importance": "hero",
         "runner_state": "advance",
         "sound_cue": "none",
-        "spectator_caption": "G2 Judge-backed fitness is present in the adaptive qualification receipt.",
-        "notification": "Adaptive lineage — G2: fitness PASS"
+        "spectator_caption": "G2 ZipInfo Path Judge-backed fitness is present in the adaptive qualification receipt.",
+        "notification": "Adaptive lineage — G2 ZipInfo Path: fitness PASS"
       }
     }
   ],
@@ -1444,6 +1444,7 @@
       {
         "changed_dimensions": [],
         "delta_status": null,
+        "exploit_short_name": "Seed Slip",
         "fitness_status": null,
         "generation": 0,
         "id": "G0",
@@ -1470,6 +1471,7 @@
           }
         ],
         "delta_status": "PASS",
+        "exploit_short_name": "Module Slip",
         "fitness_status": "PASS",
         "generation": 1,
         "id": "G1-A",
@@ -1495,6 +1497,7 @@
           }
         ],
         "delta_status": "PASS",
+        "exploit_short_name": "Arc Courier",
         "fitness_status": "PASS",
         "generation": 1,
         "id": "G1-B",
@@ -1535,6 +1538,7 @@
           }
         ],
         "delta_status": "PASS",
+        "exploit_short_name": "ZipInfo Path",
         "fitness_status": "PASS",
         "generation": 2,
         "id": "G2",

@@ -46,6 +46,12 @@ ROLE: dict[str, str] = {
     "G2": "descendant",
 }
 G1_IDS: tuple[str, ...] = ("G1-A", "G1-B")
+EXPLOIT_SHORT_NAMES: dict[str, str] = {
+    "G0": "Seed Slip",
+    "G1-A": "Module Slip",
+    "G1-B": "Arc Courier",
+    "G2": "ZipInfo Path",
+}
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -149,6 +155,7 @@ def normalize_adaptive_lineage_bundle(
 
         node: dict[str, Any] = {
             "id": sid,
+            "exploit_short_name": EXPLOIT_SHORT_NAMES[sid],
             "role": ROLE[sid],
             "generation": GENERATION[sid],
             "parentId": parent_id,
@@ -250,6 +257,8 @@ def validate_normalized_adaptive_lineage_fixture(
 
     for did in ("G1-A", "G1-B", "G2"):
         node = by_id.get(did, {})
+        if not node.get("exploit_short_name"):
+            problems.append(f"{did} missing exploit_short_name")
         if not node.get("mutation_operator"):
             problems.append(f"{did} missing mutation_operator")
         if not node.get("technique_delta"):

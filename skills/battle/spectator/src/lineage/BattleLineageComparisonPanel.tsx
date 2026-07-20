@@ -53,7 +53,9 @@ function NodeCard({ node, accent }: { node: AdaptiveLineageNodeView; accent: str
 			data-runner-up={node.runnerUp ? "true" : "false"}
 		>
 			<div className="flex items-center justify-between gap-2">
-				<span className={`text-[11px] font-black uppercase tracking-[0.08em] ${accent}`}>{node.id}</span>
+				<span className={`min-w-0 truncate text-[11px] font-black uppercase tracking-[0.08em] ${accent}`}>
+					{node.id} {node.exploitShortName ?? ""}
+				</span>
 				<span className="text-[9px] uppercase tracking-[0.1em] text-slate-500">gen {node.generation} · {node.role}</span>
 			</div>
 			{node.mutationOperator ? (

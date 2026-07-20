@@ -29,6 +29,7 @@ export type AdaptiveLineageDataSourceBadge = {
 
 export type AdaptiveLineageNodeView = {
 	id: string;
+	exploitShortName: string | null;
 	role: string;
 	generation: number;
 	parentId: string | null;
@@ -81,6 +82,7 @@ function toNodeView(node: AdaptiveLineageNode): AdaptiveLineageNodeView {
 	const changedDimensions = node.changed_dimensions ?? [];
 	return {
 		id: node.id,
+		exploitShortName: node.exploit_short_name ?? null,
 		role: node.role,
 		generation: node.generation,
 		parentId: node.parentId,
