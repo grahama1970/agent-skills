@@ -6,5 +6,11 @@ webgpt:
     personas/mathematics: project-name-for-subpath
   lanes:
     code-review: another-project-name
+webgemini:
+  default: gemini-project-name
+webkimi:
+  default: kimi-project-name
+webclaude:
+  default: claude-project-name
 cursor-browser:
   default: cursor-project-name
