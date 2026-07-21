@@ -42,6 +42,37 @@ This supersedes the prior media-spine and Kling-video goals for current work.
 Those goals remain historical evidence in Git and in `GOAL_V2.md`, but they are
 not the active critical path unless the human explicitly reactivates them.
 
+## Alignment Lock
+
+For this active goal, "aligned" has a narrow operational meaning:
+
+```text
+Persona Dream is for the agent's internal counterfactual experience.
+The human does not need to care what the agent dreams about.
+The human needs proof that the agent can dream, seal forecasts before outcomes,
+score those forecasts deterministically, revise beliefs without rewriting
+evidence, and fail closed between pipeline steps.
+```
+
+Therefore, every next-step proposal and status update must point to one of
+these research-control objects:
+
+- accepted-source recall lineage;
+- deterministic hidden-state social episodes;
+- probabilistic first- or second-order ToM distributions;
+- counterfactual dream branches marked as synthetic;
+- sealed prediction commitments with recomputed hashes;
+- deterministic outcome reveals and scoring receipts;
+- constrained action selections and planning-regret receipts;
+- non-destructive prior -> error -> posterior revision chains;
+- retry, perturbation, fault-containment, and causal-replay receipts.
+
+Anything else is historical, supporting, or out of scope for the active goal
+unless it directly unblocks one of those objects. Git commits and pushes are
+durability steps only. They are not progress evidence by themselves. Progress
+evidence is a named local artifact, receipt status, command result, count,
+hash, or fail-closed blocker tied to the PCTOM-R gate model.
+
 ## Alignment With README
 
 `README.md` describes the broader Persona Dream research purpose: a persistent
@@ -132,6 +163,29 @@ video review, or Chatterbox voice expression remains open, that is historical
 media-spine context. It is not the next task for this goal. The active PCTOM-R
 task is to move from fixture-backed gates to live text-first receipts while
 preserving the same fail-closed invariants.
+
+## Active Acceptance Bar
+
+The active goal is not satisfied by a coherent dream, a passing mock, a local
+commit, a pushed branch, or a reviewer opinion. It remains open until local
+receipt-backed evidence covers both sides of the PCTOM-R question:
+
+1. **Prospective benefit:** CD counterfactual dreaming is compared against M,
+   R, and D on sealed future-facing predictions and action choices, with the
+   preregistered proper score and planning-regret deltas reported even when the
+   result is null or negative.
+2. **Reliability under faults:** repeated execution, semantic perturbations,
+   retries after uncertain completion, memory/model/tool/schema/persistence
+   faults, and causal replay terminate only as recovered, blocked before side
+   effect, or quarantined with no active partial state.
+
+The current bounded live Tau sealed-test replication is live-originated
+evidence, but it is a bounded 4-episode / 16-case slice and produced a null
+benefit signal for CD versus the strongest baseline. It must be reported as
+evidence of the runner and contracts, not as proof that dreaming improves ToM.
+The next acceptance movement is either full 64-episode live Tau sealed-test
+replication or a production retry/fault proof over the live-originated sealed
+artifacts.
 
 ## Research Question
 
