@@ -1,10 +1,27 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R full64 live Tau action-policy sensitivity accepted) by agent
+**Last updated:** 2026-07-21 (PCTOM-R floor4 trust/commit live Tau replication accepted) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R FLOOR4 TRUST/COMMIT LIVE TAU REPLICATION): focused
+  trust/commitment live Tau replication evidence now exists at
+  `/tmp/persona-dream-live-tau-trust-commit-replication-floor4-20260721T101929Z/live_tau_trust_commit_replication_receipt.v1.json`.
+  It reports `PASS_LIVE_TAU_PCTOM_TRUST_COMMIT_REPLICATION` with
+  `mocked:false`, `live:true`, `live_tau_reexecuted:true`, 4 trust/commitment
+  episodes, 16 M/R/D/CD Tau calls, 16 sealed/scored cases, and 16 constrained
+  action decisions. The run reached the existing action-selection floor that
+  blocked the one-episode smoke attempt. CD had a negative planning-regret
+  point estimate versus the strongest baseline (`-0.15000000000000002`) with 2
+  action switches, 1 oracle-match gain, 1 oracle-match loss, and 2 unchanged
+  rows, but the bootstrap planning-regret CI
+  `[-0.6375000000000001, 0.1875]` crosses zero. This is accepted floor
+  evidence, not confidence-bounded planning-benefit proof. Next PCTOM-R work
+  should add repeated live Tau seeds, expand the deterministic
+  trust/commitment corpus beyond the current variants, or prove production
+  retry-service behavior. Do not reactivate provider/video or semantic dream
+  quality as the critical path.
 - 2026-07-21 (PCTOM-R FULL64 LIVE TAU ACTION-POLICY SENSITIVITY): live Tau
   full64 action-policy sensitivity evidence now exists at
   `/tmp/persona-dream-live-tau-full64-action-policy-sensitivity-20260721T094805Z/live_tau_full64_action_policy_sensitivity_receipt.v1.json`.
