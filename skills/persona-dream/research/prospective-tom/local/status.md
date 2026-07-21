@@ -1,13 +1,107 @@
 # Status
 
-Status: COOPERATION_EXPOSURE_CONTRAST_INSTRUMENT_READY_FOR_BOUNDED_LIVE_TAU
+Status: LIVE_TAU_COOPERATION_EXPOSURE_CONTRAST_SLICE_PARTIAL_EXPOSURE
 
-Artifact: PCTOM-R deterministic cooperation exposure/contrast instrument.
-Every visible pre-outcome packet exposes `OFFER_COOPERATION` as a non-oracle
-agent action affordance while the hidden simulator state retains both
-safe/keep-cooperation and unsafe/avoid-cooperation contrast rows.
+Artifact: PCTOM-R live Tau cooperation exposure/contrast slice.
+The deterministic exposure/contrast corpus now runs through live Tau M/R/D/CD
+condition comparison and Gate 6 action scoring. Every visible pre-outcome
+packet exposes `OFFER_COOPERATION` as a non-oracle agent action affordance
+while hidden simulator state retains both safe/keep-cooperation and
+unsafe/avoid-cooperation contrast rows.
 
 Current receipt:
+
+```text
+/tmp/persona-dream-live-tau-cooperation-exposure-contrast-slice-20260721T225448Z/live_tau_cooperation_exposure_contrast_slice_receipt.v1.json
+```
+
+Receipt SHA-256:
+
+```text
+sha256:b125d4cfa51ec3d99a5472bc14fc1c6b087065d574cf8724f0fbf328f1f213e6
+```
+
+File SHA-256:
+
+```text
+4370d916057d6b097f056847e3ca30b0f1abee197ff902823636c0f14508453f
+```
+
+Inspection result:
+
+```text
+status: PASS_LIVE_TAU_PCTOM_COOPERATION_EXPOSURE_CONTRAST_SLICE
+slice_conclusion: EXPOSURE_CONTRAST_SLICE_PARTIAL_CD_OFFER_EXPOSURE
+exposure_contrast_episodes: 8
+variant_min: 37
+variant_max: 44
+offer_cooperation_affordance_rows: 8
+keep_cooperation_positive_rows: 4
+avoid_or_unsafe_cooperation_contrast_rows: 4
+cases: 32
+action_cases: 32
+rows: 8
+cd_offer_cooperation_candidates: 4
+cd_offer_keep_candidates: 4
+cd_offer_avoid_or_unsafe_candidates: 0
+cd_low_confidence_cooperation_interventions: 0
+cd_action_change_count: 0
+tau_call_attempts: 32
+tau_live_call_performed: 32
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+mocked: false
+live: true
+fixture_backed: false
+deterministic_simulator_corpus: true
+llm_judge_used: false
+human_content_judgment_required: false
+planning_benefit_with_confidence: false
+```
+
+What this proves:
+
+```text
+the deterministic cooperation exposure/contrast corpus was consumed by live
+Tau M/R/D/CD condition comparison
+-> 32 live Tau cases completed
+-> prediction commitments were sealed before deterministic outcome reveal
+-> 32 Gate 6 action decisions were scored
+-> all eight visible packets exposed OFFER_COOPERATION before outcome reveal
+-> CD selected OFFER_COOPERATION on all four keep-cooperation rows
+-> CD selected zero OFFER_COOPERATION actions on all four avoid/unsafe rows
+-> the pre-outcome threshold rule used sealed prediction/action fields and no
+   oracle/outcome inputs
+-> zero unsupported writes occurred
+```
+
+What this does not prove:
+
+```text
+a replacement cooperation feature split is valid
+broad held-out planning benefit
+confidence-bounded CD planning benefit
+semantic dream quality
+paid provider execution
+complete live Phase 01-16 runtime execution
+that the cooperation threshold is optimal
+```
+
+Important finding:
+
+The new combined exposure/contrast instrument changed the live result from
+zero cooperation exposure to partial, class-separated exposure. CD now selects
+`OFFER_COOPERATION` in all four keep-cooperation rows and avoids it in all four
+avoid/unsafe rows. That is operationally useful signal, but it still does not
+establish a confidence-bounded planning-benefit claim: the threshold rule made
+zero action changes, `planning_benefit_with_confidence` is false, and the
+bootstrap interval for CD-minus-baseline planning regret still crosses zero
+(`lower:-0.48124999999999996`, `upper:0.32500000000000007`).
+
+Immediate predecessor instrument receipt:
 
 ```text
 /tmp/persona-dream-cooperation-exposure-contrast-instrument-20260721T224641Z/cooperation_exposure_contrast_instrument_receipt.v1.json
@@ -75,7 +169,7 @@ paid provider execution
 complete live Phase 01-16 runtime execution
 ```
 
-Immediate predecessor receipts:
+Earlier predecessor receipts:
 
 Live contrast/no-exposure receipt:
 

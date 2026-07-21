@@ -5,6 +5,32 @@
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R LIVE TAU COOPERATION EXPOSURE/CONTRAST SLICE): the
+  combined deterministic cooperation exposure/contrast instrument was consumed
+  by the live Tau M/R/D/CD condition runner and Gate 6 action scorer. Command:
+  `./skills/persona-dream/run.sh run-live-tau-cooperation-exposure-contrast-slice`.
+  Final receipt:
+  `/tmp/persona-dream-live-tau-cooperation-exposure-contrast-slice-20260721T225448Z/live_tau_cooperation_exposure_contrast_slice_receipt.v1.json`.
+  Status `PASS_LIVE_TAU_PCTOM_COOPERATION_EXPOSURE_CONTRAST_SLICE`, receipt
+  field SHA-256
+  `sha256:b125d4cfa51ec3d99a5472bc14fc1c6b087065d574cf8724f0fbf328f1f213e6`,
+  file SHA-256
+  `4370d916057d6b097f056847e3ca30b0f1abee197ff902823636c0f14508453f`.
+  Counts: eight exposure/contrast episodes, variants 37-44, eight visible
+  `OFFER_COOPERATION` affordance rows, four keep-cooperation positive rows,
+  four avoid/unsafe-cooperation contrast rows, 32 cases, 32 action cases, 32
+  Tau attempts, 32 live Tau calls, and zero Memory/provider/canonical/identity/
+  source-memory writes. The pre-outcome rule inputs exclude oracle/outcome
+  fields and Tau receipts are hash-bound. Result:
+  `EXPOSURE_CONTRAST_SLICE_PARTIAL_CD_OFFER_EXPOSURE`; CD selected
+  `OFFER_COOPERATION` on all four keep-cooperation rows and selected zero
+  `OFFER_COOPERATION` actions on all four avoid/unsafe rows. The threshold
+  rule made zero action changes, `planning_benefit_with_confidence:false`, and
+  the planning-regret confidence interval still crosses zero. This proves
+  live class-separated cooperation exposure over the combined instrument, not
+  a replacement cooperation feature split, confidence-bounded planning benefit,
+  broad held-out planning benefit, semantic dream quality, paid provider
+  execution, or complete Phase 01-16 runtime execution.
 - 2026-07-21 (PCTOM-R LIVE TAU COOPERATION CONTRAST SLICE): the deterministic
   cooperation-contrast corpus was consumed by the live Tau M/R/D/CD condition
   runner and Gate 6 action scorer. Command:

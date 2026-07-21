@@ -133,6 +133,28 @@ Next: <one immediate action or stop condition>
 
 ## Current Evidence Snapshot
 
+- PCTOM-R live Tau cooperation exposure/contrast slice:
+  `/tmp/persona-dream-live-tau-cooperation-exposure-contrast-slice-20260721T225448Z/live_tau_cooperation_exposure_contrast_slice_receipt.v1.json`.
+  Status `PASS_LIVE_TAU_PCTOM_COOPERATION_EXPOSURE_CONTRAST_SLICE`,
+  receipt field SHA-256
+  `sha256:b125d4cfa51ec3d99a5472bc14fc1c6b087065d574cf8724f0fbf328f1f213e6`,
+  file SHA-256
+  `4370d916057d6b097f056847e3ca30b0f1abee197ff902823636c0f14508453f`,
+  `mocked:false`, `live:true`, deterministic simulator corpus `true`, 32
+  Tau attempts, 32 live Tau calls, 32 Gate 6 action cases, zero Memory/
+  provider/canonical/identity/source-memory writes, no LLM judge, and no
+  human content judgment. Counts: eight exposure/contrast rows, variants
+  37-44, eight visible `OFFER_COOPERATION` affordance rows, four
+  keep-cooperation positive rows, four avoid/unsafe-cooperation contrast rows,
+  four CD `OFFER_COOPERATION` candidates on keep rows, zero CD
+  `OFFER_COOPERATION` candidates on avoid/unsafe rows, zero threshold-rule
+  interventions, and zero rule action changes. Slice conclusion:
+  `EXPOSURE_CONTRAST_SLICE_PARTIAL_CD_OFFER_EXPOSURE`. This proves the
+  combined instrument can produce class-separated live Tau cooperation
+  exposure without oracle/outcome leakage or unsupported writes. It does not
+  prove a replacement cooperation feature split, confidence-bounded planning
+  benefit, broad held-out planning benefit, semantic dream quality, paid
+  provider execution, or complete live Phase 01-16 runtime execution.
 - PCTOM-R cooperation exposure/contrast instrument:
   `/tmp/persona-dream-cooperation-exposure-contrast-instrument-20260721T224641Z/cooperation_exposure_contrast_instrument_receipt.v1.json`.
   Status `PASS_PCTOM_COOPERATION_EXPOSURE_CONTRAST_INSTRUMENT`, receipt
