@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import collections
 import datetime as dt
 import hashlib
 import importlib.util
@@ -24,6 +25,7 @@ GATE5_SCRIPT = RESEARCH_ROOT / "scripts" / "reveal_and_score_trial.py"
 CONDITIONS = ("M", "R", "D", "CD")
 PASS_STATUS = "PASS_LIVE_TAU_PCTOM_CONDITION_COMPARISON"
 BLOCKED_STATUS = "BLOCKED_LIVE_TAU_PCTOM_CONDITION_COMPARISON"
+SYSTEMIC_FAILURE_THRESHOLD = 3
 
 
 CONDITION_INSTRUCTIONS = {
@@ -65,6 +67,16 @@ def _one_second_after(value: str) -> str:
 def _stable_json_sha256(value: Any) -> str:
     payload = json.dumps(value, ensure_ascii=False, separators=(",", ":"), sort_keys=True).encode("utf-8")
     return "sha256:" + hashlib.sha256(payload).hexdigest()
+
+
+def _systemic_failure_signature(error: str) -> str | None:
+    if "Tau dispatch timed out after" in error:
+        return "tau_text_reasoning_timeout"
+    if "tau_error:scillm_http_status_401" in error or "scillm_http_status_401" in error:
+        return "tau_scillm_auth_401"
+    if "tau_error:scillm_api_key_unavailable" in error or "scillm_api_key_unavailable" in error:
+        return "tau_scillm_api_key_unavailable"
+    return None
 
 
 def _write_json(path: Path, data: Any) -> None:
@@ -211,6 +223,26 @@ def _output_contract() -> dict[str, Any]:
             "Use synthetic_counterfactual refs only in the counterfactual ToM distribution evidence_refs.",
             "The counterfactual branch must be synthetic and must not be literal history.",
             "The prediction_payload condition must equal the requested condition.",
+        ],
+    }
+
+
+def _preflight_prompt() -> str:
+    return (
+        "You are checking the Persona Dream PCTOM-R Tau text-reasoning route. "
+        "Return exactly this JSON object shape with no prose: "
+        '{"route_ready":true,"surface":"tau_scillm_text_reasoning","note":"preflight_only"}'
+    )
+
+
+def _preflight_output_contract() -> dict[str, Any]:
+    return {
+        "schema": "persona_dream.research.prospective_tom.live_tau_text_reasoning_preflight_contract.v1",
+        "required_top_level_keys": ["route_ready", "surface", "note"],
+        "requirements": [
+            "Return exactly one JSON object and no prose.",
+            "route_ready must be true only if the Tau text-reasoning route produced this response.",
+            "This preflight must not reveal outcomes, write memory, call providers, or produce PCTOM-R predictions.",
         ],
     }
 
@@ -591,6 +623,7 @@ def run_live_comparison(
     episode_limit: int,
     model: str | None,
     timeout_s: float,
+    preflight_timeout_s: float | None = None,
 ) -> dict[str, Any]:
     started = time.monotonic()
     output_root = output_root.resolve()
@@ -599,6 +632,7 @@ def run_live_comparison(
     receipts_root = output_root / "receipts"
     corpus_path = artifacts_root / "social_episode_corpus.v1.json"
     corpus_check_receipt_path = receipts_root / "social_episode_corpus_check_receipt.json"
+    tau_preflight_receipt_path = receipts_root / "tau_text_reasoning_preflight_receipt.json"
     case_index_path = artifacts_root / "live_condition_case_index.json"
     metrics_path = artifacts_root / "live_condition_metrics_summary.json"
 
@@ -625,6 +659,10 @@ def run_live_comparison(
         errors.extend(f"corpus_check_error:{error}" for error in corpus_check.get("errors", []))
 
     selected = _select_episodes(corpus, episode_limit)
+    tau_preflight_attempted = False
+    tau_preflight_live_call_performed = False
+    tau_preflight_receipt: dict[str, Any] | None = None
+    tau_preflight_passed = False
     tau_call_attempts = 0
     tau_live_call_performed = 0
     tau_receipts_hash_bound = True
@@ -632,129 +670,198 @@ def run_live_comparison(
     scored_counts = {condition: 0 for condition in CONDITIONS}
     status_counts: dict[str, int] = {}
     rows: list[dict[str, Any]] = []
+    systemic_failure_counts: collections.Counter[str] = collections.Counter()
+    systemic_failure_signature: str | None = None
+    blocked_by_systemic_failure = 0
 
-    for episode in selected:
-        for condition in CONDITIONS:
-            case_root = artifacts_root / "cases" / episode["episode_id"] / condition
-            case_receipts = receipts_root / "cases" / episode["episode_id"] / condition
-            tau_receipt_path = case_receipts / "tau_text_reasoning_receipt.json"
-            parsed_path = case_root / "tau_parsed_json.json"
-            distribution_path = case_root / "tom_belief_distribution_bundle.json"
-            branch_path = case_root / "counterfactual_branch_bundle.json"
-            commitment_path = case_root / "tom_prediction_commitment_bundle.json"
-            outcome_path = case_root / "tom_outcome_reveal.json"
-            gate2_receipt_path = case_receipts / "gate2_distribution_check_receipt.json"
-            gate3_receipt_path = case_receipts / "gate3_branch_check_receipt.json"
-            gate4_receipt_path = case_receipts / "gate4_commitment_check_receipt.json"
-            gate5_receipt_path = case_receipts / "gate5_scoring_receipt.json"
-            case_errors: list[str] = []
-            receipts: dict[str, dict[str, Any]] = {}
-            tau_receipt: dict[str, Any] | None = None
-            parsed: dict[str, Any] | None = None
-
-            try:
-                tau_call_attempts += 1
-                parsed_candidate, tau_receipt = adapter.dispatch_text_reasoning(
-                    _prompt(episode, condition),
-                    f"pctom-live-condition-{condition.lower()}",
-                    output_contract=_output_contract(),
-                    caller_skill="persona-dream",
-                    model=model,
-                    timeout_s=timeout_s,
-                )
-                _write_json(tau_receipt_path, tau_receipt)
-                if tau_receipt.get("live_call_performed") is True:
-                    tau_live_call_performed += 1
-                if tau_receipt.get("status") != "PASS":
-                    case_errors.append(f"tau_status:{tau_receipt.get('status')}")
-                    if tau_receipt.get("error"):
-                        case_errors.append(f"tau_error:{tau_receipt.get('error')}")
-                if isinstance(parsed_candidate, dict):
-                    parsed = parsed_candidate
-                    _write_json(parsed_path, parsed)
-                else:
-                    case_errors.append("tau_parsed_json_not_object")
-            except Exception as exc:
-                case_errors.append(f"tau_text_reasoning_failed:{exc}")
-
-            if parsed:
-                distribution_bundle = parsed.get("tom_belief_distribution_bundle")
-                branch_bundle = parsed.get("counterfactual_branch_bundle")
-                prediction_payload = parsed.get("prediction_payload")
-                if isinstance(distribution_bundle, dict):
-                    _write_json(distribution_path, distribution_bundle)
-                else:
-                    case_errors.append("parsed_missing_distribution_bundle")
-                if isinstance(branch_bundle, dict):
-                    _write_json(branch_path, branch_bundle)
-                else:
-                    case_errors.append("parsed_missing_branch_bundle")
-                if not isinstance(prediction_payload, dict):
-                    case_errors.append("parsed_missing_prediction_payload")
-
-                if isinstance(distribution_bundle, dict) and isinstance(branch_bundle, dict) and isinstance(prediction_payload, dict):
-                    commitment_bundle = _commitment_bundle(
-                        episode["episode_id"],
-                        condition,
-                        prediction_payload,
-                        tau_receipt or {},
-                        distribution_bundle,
-                        branch_bundle,
-                    )
-                    model_hash_ok = commitment_bundle["commitments"][0]["model_receipts_sha256"] == _stable_json_sha256(
-                        commitment_bundle["commitments"][0]["model_receipts"]
-                    )
-                    tau_receipts_hash_bound = tau_receipts_hash_bound and model_hash_ok
-                    _write_json(commitment_path, commitment_bundle)
-                    outcome = _outcome_reveal(episode, condition, distribution_bundle, branch_bundle, commitment_bundle)
-                    _write_json(outcome_path, outcome)
-                    receipts = {
-                        "gate2": gate2.build_receipt(corpus_path, distribution_path, gate2_receipt_path),
-                        "gate3": gate3.build_receipt(corpus_path, distribution_path, branch_path, gate3_receipt_path),
-                        "gate4": gate4.build_receipt(corpus_path, distribution_path, branch_path, commitment_path, gate4_receipt_path),
-                        "gate5": gate5.build_receipt(
-                            corpus_path,
-                            distribution_path,
-                            branch_path,
-                            commitment_path,
-                            outcome_path,
-                            gate5_receipt_path,
-                        ),
-                    }
-                    if receipts["gate4"].get("status") == "PASS_TOM_PREDICTION_COMMITMENTS":
-                        sealed_counts[condition] += 1
-                    if receipts["gate5"].get("status") == "PASS_TOM_SCORING_RECEIPT":
-                        scored_counts[condition] += 1
-                    for gate_name, receipt in receipts.items():
-                        status = str(receipt.get("status"))
-                        status_counts[status] = status_counts.get(status, 0) + 1
-                        if not status.startswith("PASS_"):
-                            case_errors.append(f"{gate_name}_status:{status}")
-                            case_errors.extend(f"{gate_name}_error:{error}" for error in receipt.get("errors", []))
-
-            rows.append(
-                {
-                    "episode_id": episode["episode_id"],
-                    "condition": condition,
-                    "case_root": str(case_root),
-                    "receipt_root": str(case_receipts),
-                    "tau_receipt_path": str(tau_receipt_path),
-                    "tau_status": tau_receipt.get("status") if tau_receipt else None,
-                    "tau_live_call_performed": tau_receipt.get("live_call_performed") if tau_receipt else False,
-                    "statuses": {name: receipt.get("status") for name, receipt in receipts.items()},
-                    "scoring_metrics": receipts.get("gate5", {}).get("metrics", {}),
-                    "errors": case_errors,
-                }
+    if not errors:
+        tau_preflight_attempted = True
+        try:
+            parsed_preflight, tau_preflight_receipt = adapter.dispatch_text_reasoning(
+                _preflight_prompt(),
+                "pctom-live-condition-preflight",
+                output_contract=_preflight_output_contract(),
+                caller_skill="persona-dream",
+                model=model,
+                timeout_s=preflight_timeout_s if preflight_timeout_s is not None else min(timeout_s, 30.0),
             )
-            errors.extend(f"{episode['episode_id']}:{condition}:{error}" for error in case_errors)
+            _write_json(tau_preflight_receipt_path, tau_preflight_receipt)
+            tau_preflight_live_call_performed = tau_preflight_receipt.get("live_call_performed") is True
+            tau_preflight_passed = (
+                tau_preflight_receipt.get("status") == "PASS"
+                and isinstance(parsed_preflight, dict)
+                and parsed_preflight.get("route_ready") is True
+                and parsed_preflight.get("surface") == "tau_scillm_text_reasoning"
+            )
+            if not tau_preflight_passed:
+                errors.append(f"tau_preflight_status:{tau_preflight_receipt.get('status')}")
+                if tau_preflight_receipt.get("error"):
+                    errors.append(f"tau_preflight_error:{tau_preflight_receipt.get('error')}")
+                if not isinstance(parsed_preflight, dict):
+                    errors.append("tau_preflight_parsed_json_not_object")
+        except Exception as exc:
+            errors.append(f"tau_preflight_failed:{exc}")
 
-    for condition in CONDITIONS:
-        if sealed_counts[condition] < 1:
-            errors.append(f"sealed_commitments_per_condition_insufficient:{condition}:{sealed_counts[condition]}")
-        if scored_counts[condition] < 1:
-            errors.append(f"deterministic_scores_per_condition_insufficient:{condition}:{scored_counts[condition]}")
-    if tau_call_attempts < len(CONDITIONS):
-        errors.append(f"tau_call_attempts_insufficient:{tau_call_attempts}")
+    if tau_preflight_passed:
+        for episode in selected:
+            for condition in CONDITIONS:
+                case_root = artifacts_root / "cases" / episode["episode_id"] / condition
+                case_receipts = receipts_root / "cases" / episode["episode_id"] / condition
+                tau_receipt_path = case_receipts / "tau_text_reasoning_receipt.json"
+                parsed_path = case_root / "tau_parsed_json.json"
+                distribution_path = case_root / "tom_belief_distribution_bundle.json"
+                branch_path = case_root / "counterfactual_branch_bundle.json"
+                commitment_path = case_root / "tom_prediction_commitment_bundle.json"
+                outcome_path = case_root / "tom_outcome_reveal.json"
+                gate2_receipt_path = case_receipts / "gate2_distribution_check_receipt.json"
+                gate3_receipt_path = case_receipts / "gate3_branch_check_receipt.json"
+                gate4_receipt_path = case_receipts / "gate4_commitment_check_receipt.json"
+                gate5_receipt_path = case_receipts / "gate5_scoring_receipt.json"
+                case_errors: list[str] = []
+                receipts: dict[str, dict[str, Any]] = {}
+                tau_receipt: dict[str, Any] | None = None
+                parsed: dict[str, Any] | None = None
+
+                if systemic_failure_signature is not None:
+                    blocked_by_systemic_failure += 1
+                    case_errors.append(f"blocked_by_systemic_failure:{systemic_failure_signature}")
+                    rows.append(
+                        {
+                            "episode_id": episode["episode_id"],
+                            "condition": condition,
+                            "case_root": str(case_root),
+                            "receipt_root": str(case_receipts),
+                            "tau_receipt_path": str(tau_receipt_path),
+                            "tau_status": None,
+                            "tau_live_call_performed": False,
+                            "blocked_by_systemic_failure": True,
+                            "systemic_failure_signature": systemic_failure_signature,
+                            "statuses": {},
+                            "scoring_metrics": {},
+                            "errors": case_errors,
+                        }
+                    )
+                    errors.extend(f"{episode['episode_id']}:{condition}:{error}" for error in case_errors)
+                    continue
+
+                try:
+                    tau_call_attempts += 1
+                    parsed_candidate, tau_receipt = adapter.dispatch_text_reasoning(
+                        _prompt(episode, condition),
+                        f"pctom-live-condition-{condition.lower()}",
+                        output_contract=_output_contract(),
+                        caller_skill="persona-dream",
+                        model=model,
+                        timeout_s=timeout_s,
+                    )
+                    _write_json(tau_receipt_path, tau_receipt)
+                    if tau_receipt.get("live_call_performed") is True:
+                        tau_live_call_performed += 1
+                    if tau_receipt.get("status") != "PASS":
+                        case_errors.append(f"tau_status:{tau_receipt.get('status')}")
+                        if tau_receipt.get("error"):
+                            case_errors.append(f"tau_error:{tau_receipt.get('error')}")
+                    if isinstance(parsed_candidate, dict):
+                        parsed = parsed_candidate
+                        _write_json(parsed_path, parsed)
+                    else:
+                        case_errors.append("tau_parsed_json_not_object")
+                except Exception as exc:
+                    case_errors.append(f"tau_text_reasoning_failed:{exc}")
+
+                if parsed:
+                    distribution_bundle = parsed.get("tom_belief_distribution_bundle")
+                    branch_bundle = parsed.get("counterfactual_branch_bundle")
+                    prediction_payload = parsed.get("prediction_payload")
+                    if isinstance(distribution_bundle, dict):
+                        _write_json(distribution_path, distribution_bundle)
+                    else:
+                        case_errors.append("parsed_missing_distribution_bundle")
+                    if isinstance(branch_bundle, dict):
+                        _write_json(branch_path, branch_bundle)
+                    else:
+                        case_errors.append("parsed_missing_branch_bundle")
+                    if not isinstance(prediction_payload, dict):
+                        case_errors.append("parsed_missing_prediction_payload")
+
+                    if isinstance(distribution_bundle, dict) and isinstance(branch_bundle, dict) and isinstance(prediction_payload, dict):
+                        commitment_bundle = _commitment_bundle(
+                            episode["episode_id"],
+                            condition,
+                            prediction_payload,
+                            tau_receipt or {},
+                            distribution_bundle,
+                            branch_bundle,
+                        )
+                        model_hash_ok = commitment_bundle["commitments"][0]["model_receipts_sha256"] == _stable_json_sha256(
+                            commitment_bundle["commitments"][0]["model_receipts"]
+                        )
+                        tau_receipts_hash_bound = tau_receipts_hash_bound and model_hash_ok
+                        _write_json(commitment_path, commitment_bundle)
+                        outcome = _outcome_reveal(episode, condition, distribution_bundle, branch_bundle, commitment_bundle)
+                        _write_json(outcome_path, outcome)
+                        receipts = {
+                            "gate2": gate2.build_receipt(corpus_path, distribution_path, gate2_receipt_path),
+                            "gate3": gate3.build_receipt(corpus_path, distribution_path, branch_path, gate3_receipt_path),
+                            "gate4": gate4.build_receipt(corpus_path, distribution_path, branch_path, commitment_path, gate4_receipt_path),
+                            "gate5": gate5.build_receipt(
+                                corpus_path,
+                                distribution_path,
+                                branch_path,
+                                commitment_path,
+                                outcome_path,
+                                gate5_receipt_path,
+                            ),
+                        }
+                        if receipts["gate4"].get("status") == "PASS_TOM_PREDICTION_COMMITMENTS":
+                            sealed_counts[condition] += 1
+                        if receipts["gate5"].get("status") == "PASS_TOM_SCORING_RECEIPT":
+                            scored_counts[condition] += 1
+                        for gate_name, receipt in receipts.items():
+                            status = str(receipt.get("status"))
+                            status_counts[status] = status_counts.get(status, 0) + 1
+                            if not status.startswith("PASS_"):
+                                case_errors.append(f"{gate_name}_status:{status}")
+                                case_errors.extend(f"{gate_name}_error:{error}" for error in receipt.get("errors", []))
+
+                rows.append(
+                    {
+                        "episode_id": episode["episode_id"],
+                        "condition": condition,
+                        "case_root": str(case_root),
+                        "receipt_root": str(case_receipts),
+                        "tau_receipt_path": str(tau_receipt_path),
+                        "tau_status": tau_receipt.get("status") if tau_receipt else None,
+                        "tau_live_call_performed": tau_receipt.get("live_call_performed") if tau_receipt else False,
+                        "statuses": {name: receipt.get("status") for name, receipt in receipts.items()},
+                        "scoring_metrics": receipts.get("gate5", {}).get("metrics", {}),
+                        "errors": case_errors,
+                    }
+                )
+                errors.extend(f"{episode['episode_id']}:{condition}:{error}" for error in case_errors)
+                for error in case_errors:
+                    signature = _systemic_failure_signature(error)
+                    if signature is None:
+                        continue
+                    systemic_failure_counts[signature] += 1
+                    if (
+                        systemic_failure_signature is None
+                        and systemic_failure_counts[signature] >= SYSTEMIC_FAILURE_THRESHOLD
+                    ):
+                        systemic_failure_signature = signature
+                        errors.append(f"systemic_failure_threshold_reached:{signature}:{SYSTEMIC_FAILURE_THRESHOLD}")
+                        break
+    elif not errors:
+        errors.append("tau_preflight_not_attempted")
+
+    if tau_preflight_passed:
+        for condition in CONDITIONS:
+            if sealed_counts[condition] < 1:
+                errors.append(f"sealed_commitments_per_condition_insufficient:{condition}:{sealed_counts[condition]}")
+            if scored_counts[condition] < 1:
+                errors.append(f"deterministic_scores_per_condition_insufficient:{condition}:{scored_counts[condition]}")
+        if systemic_failure_signature is None and tau_call_attempts < len(CONDITIONS):
+            errors.append(f"tau_call_attempts_insufficient:{tau_call_attempts}")
     if not tau_receipts_hash_bound:
         errors.append("tau_receipts_hash_bound_false")
 
@@ -772,16 +879,28 @@ def run_live_comparison(
         "split": split,
         "corpus_path": str(corpus_path),
         "corpus_check_receipt_path": str(corpus_check_receipt_path),
+        "tau_preflight_receipt_path": str(tau_preflight_receipt_path),
+        "tau_preflight_receipt_sha256": _stable_json_sha256(tau_preflight_receipt)
+        if isinstance(tau_preflight_receipt, dict)
+        else None,
         "case_index_path": str(case_index_path),
         "metrics_summary_path": str(metrics_path),
         "mocked": False,
-        "live": tau_live_call_performed > 0,
+        "live": tau_preflight_live_call_performed or tau_live_call_performed > 0,
         "fixture_backed": False,
         "deterministic_simulator_corpus_fixture_backed": True,
         "human_content_judgment_required": False,
+        "tau_preflight_attempted": tau_preflight_attempted,
+        "tau_preflight_status": tau_preflight_receipt.get("status") if isinstance(tau_preflight_receipt, dict) else None,
+        "tau_preflight_live_call_performed": tau_preflight_live_call_performed,
+        "tau_preflight_passed": tau_preflight_passed,
         "tau_call_attempts": tau_call_attempts,
         "tau_live_call_performed": tau_live_call_performed,
         "tau_receipts_hash_bound": tau_receipts_hash_bound,
+        "systemic_failure_threshold": SYSTEMIC_FAILURE_THRESHOLD,
+        "systemic_failure_signature": systemic_failure_signature,
+        "systemic_failure_counts": dict(systemic_failure_counts),
+        "blocked_by_systemic_failure": blocked_by_systemic_failure,
         "memory_write_attempts": 0,
         "provider_call_attempts": 0,
         "canonical_memory_write_attempts": 0,
@@ -793,9 +912,23 @@ def run_live_comparison(
             "families_consumed": len({episode.get("scenario_family") for episode in selected}),
             "conditions": len(CONDITIONS),
             "cases": len(rows),
+            "executed_cases": len(rows) - blocked_by_systemic_failure,
+            "blocked_by_systemic_failure": blocked_by_systemic_failure,
             "sealed_commitments_per_condition": sealed_counts,
             "deterministic_scores_per_condition": scored_counts,
             "status_counts": dict(sorted(status_counts.items())),
+        },
+        "checks": {
+            "corpus_check_passed": corpus_check.get("status") == "PASS_SOCIAL_EPISODE_CORPUS",
+            "tau_preflight_passed": tau_preflight_passed,
+            "case_fanout_blocked_until_preflight_passes": not rows if not tau_preflight_passed else True,
+            "systemic_failure_breaker_tripped": systemic_failure_signature is not None,
+            "systemic_failure_threshold_respected": systemic_failure_signature is None
+            or systemic_failure_counts.get(systemic_failure_signature, 0) == SYSTEMIC_FAILURE_THRESHOLD,
+            "remaining_cases_marked_blocked_by_systemic_failure": systemic_failure_signature is None
+            or blocked_by_systemic_failure > 0,
+            "human_content_judgment_absent": True,
+            "unsupported_writes_absent": True,
         },
         "metrics": metrics,
         "errors": errors,
@@ -810,6 +943,8 @@ def run_live_comparison(
             if status == PASS_STATUS
             else [
                 "the live Tau condition comparison runner produced an inspectable fail-closed receipt",
+                "case fan-out is blocked until the Tau text-reasoning preflight passes",
+                "repeated Tau case failures are circuit-broken after the configured systemic failure threshold",
             ],
             "does_not_prove": [
                 "held-out test-set prediction benefit",
@@ -835,6 +970,7 @@ def main() -> int:
     parser.add_argument("--episode-limit", type=int, default=1)
     parser.add_argument("--model", default=None)
     parser.add_argument("--timeout-s", type=float, default=240.0)
+    parser.add_argument("--preflight-timeout-s", type=float, default=None)
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
 
@@ -847,6 +983,7 @@ def main() -> int:
         episode_limit=args.episode_limit,
         model=args.model,
         timeout_s=args.timeout_s,
+        preflight_timeout_s=args.preflight_timeout_s,
     )
     if args.json:
         print(json.dumps(receipt, indent=2, sort_keys=True))

@@ -496,12 +496,33 @@ def run_strict_replication(
     expected_episodes = family_episode_limit * len(balanced.FAMILIES)
     expected_cases = expected_episodes * len(CONDITIONS)
     counts = condition_receipt.get("counts") if isinstance(condition_receipt.get("counts"), dict) else {}
-    if condition_receipt.get("tau_call_attempts") != expected_cases:
-        errors.append(f"tau_call_attempts_mismatch:{condition_receipt.get('tau_call_attempts')}:{expected_cases}")
-    if condition_receipt.get("tau_live_call_performed") != expected_cases:
-        errors.append(f"tau_live_call_performed_mismatch:{condition_receipt.get('tau_live_call_performed')}:{expected_cases}")
-    if counts.get("cases") != expected_cases:
-        errors.append(f"case_count_mismatch:{counts.get('cases')}:{expected_cases}")
+    condition_preflight_blocked = (
+        condition_receipt.get("tau_preflight_attempted") is True
+        and condition_receipt.get("tau_preflight_passed") is not True
+    )
+    condition_systemic_failure_blocked = (
+        isinstance(counts.get("blocked_by_systemic_failure"), int)
+        and counts.get("blocked_by_systemic_failure", 0) > 0
+        and isinstance(condition_receipt.get("systemic_failure_signature"), str)
+    )
+    if condition_receipt.get("status") == live_condition.PASS_STATUS:
+        if condition_receipt.get("tau_call_attempts") != expected_cases:
+            errors.append(f"tau_call_attempts_mismatch:{condition_receipt.get('tau_call_attempts')}:{expected_cases}")
+        if condition_receipt.get("tau_live_call_performed") != expected_cases:
+            errors.append(f"tau_live_call_performed_mismatch:{condition_receipt.get('tau_live_call_performed')}:{expected_cases}")
+        if counts.get("cases") != expected_cases:
+            errors.append(f"case_count_mismatch:{counts.get('cases')}:{expected_cases}")
+    elif condition_preflight_blocked and counts.get("cases") == 0:
+        errors.append("condition_preflight_blocked_case_fanout")
+    elif condition_systemic_failure_blocked:
+        errors.append(
+            f"condition_systemic_failure_breaker_tripped:{condition_receipt.get('systemic_failure_signature')}"
+        )
+    else:
+        if condition_receipt.get("tau_call_attempts") != expected_cases:
+            errors.append(f"tau_call_attempts_mismatch:{condition_receipt.get('tau_call_attempts')}:{expected_cases}")
+        if counts.get("cases") != expected_cases:
+            errors.append(f"case_count_mismatch:{counts.get('cases')}:{expected_cases}")
     if distribution_summary["non_template_distribution_count"] <= 0:
         errors.append("strict_prompt_no_non_template_action_distributions")
     if set(planning_summary["families"]) != set(balanced.FAMILIES):
@@ -579,6 +600,15 @@ def run_strict_replication(
         "live_tau_reexecuted": True,
         "live_tau_originated_artifacts_consumed": condition_receipt.get("tau_live_call_performed") == expected_cases
         and action_receipt.get("live_tau_originated_artifacts_consumed") is True,
+        "tau_preflight_attempted": condition_receipt.get("tau_preflight_attempted"),
+        "tau_preflight_status": condition_receipt.get("tau_preflight_status"),
+        "tau_preflight_passed": condition_receipt.get("tau_preflight_passed"),
+        "tau_preflight_live_call_performed": condition_receipt.get("tau_preflight_live_call_performed"),
+        "tau_preflight_receipt_path": condition_receipt.get("tau_preflight_receipt_path"),
+        "condition_preflight_blocked_case_fanout": condition_preflight_blocked and counts.get("cases") == 0,
+        "condition_systemic_failure_signature": condition_receipt.get("systemic_failure_signature"),
+        "condition_systemic_failure_counts": condition_receipt.get("systemic_failure_counts"),
+        "condition_blocked_by_systemic_failure": counts.get("blocked_by_systemic_failure"),
         "human_content_judgment_required": False,
         "llm_judge_used": False,
         "tau_call_attempts": condition_receipt.get("tau_call_attempts"),
@@ -604,6 +634,16 @@ def run_strict_replication(
             "oracle_match_transitions": planning_summary["oracle_match_transitions"],
         },
         "checks": {
+            "condition_tau_preflight_passed": condition_receipt.get("tau_preflight_passed") is True,
+            "condition_case_fanout_blocked_until_preflight_passes": (
+                condition_preflight_blocked and counts.get("cases") == 0
+            )
+            or condition_receipt.get("status") == live_condition.PASS_STATUS,
+            "condition_systemic_failure_breaker_tripped": condition_systemic_failure_blocked,
+            "remaining_cases_marked_blocked_by_systemic_failure": (
+                not condition_systemic_failure_blocked
+                or bool(counts.get("blocked_by_systemic_failure"))
+            ),
             "condition_receipt_passed": condition_receipt.get("status") == live_condition.PASS_STATUS,
             "action_selection_receipt_passed": action_receipt.get("status") == action_selection.PASS_STATUS,
             "strict_prompt_produced_non_template_distribution": distribution_summary["non_template_distribution_count"] > 0,

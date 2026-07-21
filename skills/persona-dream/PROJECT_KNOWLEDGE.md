@@ -1,10 +1,29 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R Tau timeout containment repaired) by agent
+**Last updated:** 2026-07-21 (PCTOM-R Tau systemic timeout breaker added) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R TAU SYSTEMIC TIMEOUT BREAKER): live Tau/scillm
+  text-reasoning now reaches the one-shot Tau preflight, but case prompts are
+  timing out. The live condition runner now performs a bounded Tau preflight
+  before case fan-out and stops a repeated Tau case-failure family after three
+  matching signatures. Receipt:
+  `/tmp/persona-dream-live-tau-systemic-breaker-final-20260721T1448Z/live_tau_condition_comparison_receipt.v1.json`
+  reports `BLOCKED_LIVE_TAU_PCTOM_CONDITION_COMPARISON`,
+  `tau_preflight_passed:true`, `tau_preflight_live_call_performed:true`,
+  `tau_call_attempts:3`, `tau_live_call_performed:0`,
+  `systemic_failure_signature:tau_text_reasoning_timeout`, and
+  `blocked_by_systemic_failure:1`. Strict-inference receipt:
+  `/tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_prompt_replication_receipt.v1.json`
+  reports `BLOCKED_LIVE_TAU_PCTOM_STRICT_INFERENCE_PROMPT_REPLICATION`,
+  `tau_call_attempts:3`, `condition_blocked_by_systemic_failure:13`,
+  0 action decisions, and no accepted planning rows. This is fail-closed
+  reliability evidence only. It does not prove planning benefit or strict prompt
+  quality. Next PCTOM-R work should diagnose why full condition prompts timeout
+  after preflight succeeds, then rerun the strict-inference replication with
+  normal timeouts.
 - 2026-07-21 (PCTOM-R TAU TIMEOUT CONTAINMENT / STRICT INFERENCE BLOCKER):
   the next planning-quality issue is not provider/video work. The live Tau
   condition prompt can copy schema/template probabilities, so a new strict
