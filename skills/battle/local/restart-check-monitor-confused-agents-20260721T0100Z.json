@@ -1,0 +1,133 @@
+{
+  "schema": "battle.monitor_confused_agents_restart_check.v1",
+  "generated_at": "2026-07-21T01:01:58.691Z",
+  "trigger": "monitor-confused-agents restart check",
+  "immutable_goal": "skills/battle/GOAL_ADAPTIVE_LINEAGE.md",
+  "immutable_goal_state": "ACHIEVED_WITH_RECEIPT:skills/battle/local/goal-adaptive-lineage-audit-20260721T0005Z.json",
+  "mocked": false,
+  "live": true,
+  "head": "633a2fe25e99e9cbf5fd1b222a343dc4e021415c",
+  "remote_ref": "refs/heads/battle-adaptive-lineage-goal",
+  "remote_sha": "633a2fe25e99e9cbf5fd1b222a343dc4e021415c",
+  "source_derived_step_model": [
+    {
+      "step": 1,
+      "name": "Backend adaptive-lineage qualification",
+      "status": "implemented_evidenced",
+      "source": "skills/battle/local/adaptive-lineage-relive-20260720T144034Z/adaptive-lineage-qualification.json",
+      "evidence": {
+        "status": "PASS",
+        "battle_id": "battle-004",
+        "run_id": "arena-adaptive-lineage-20260720T144034Z"
+      }
+    },
+    {
+      "step": 2,
+      "name": "Live UX fixture normalization",
+      "status": "implemented_evidenced",
+      "source": "skills/battle/spectator/src/lineage/__fixtures__/adaptive-lineage-live.json",
+      "evidence": {
+        "data_source": "live",
+        "names": [
+          "G0 Zip Slip Spark",
+          "G1-A Importlib Slipstream",
+          "G1-B Writestr Detour",
+          "G2 ZipInfo Switchback"
+        ]
+      }
+    },
+    {
+      "step": 3,
+      "name": "Agent-skills spectator host and accepted route",
+      "status": "implemented_evidenced",
+      "source": "skills/battle/spectator/scripts/serve-static.mjs",
+      "evidence": {
+        "accepted_route": "#battle",
+        "rejected_route": "#battle/live"
+      }
+    },
+    {
+      "step": 4,
+      "name": "PixiJS top-level arena render",
+      "status": "implemented_evidenced",
+      "source": "skills/battle/local/surf-obvious-errors-20260720T2120Z/battle-obvious-errors-and-pixijs-proof.json",
+      "evidence": {
+        "has_scorecard": true,
+        "canvas": {
+          "present": true,
+          "width": 1030,
+          "height": 277
+        },
+        "loaded_sprite_resource_count": 6
+      }
+    },
+    {
+      "step": 5,
+      "name": "Obvious-error browser scan",
+      "status": "implemented_evidenced_top_level_only",
+      "source": "skills/battle/local/surf-obvious-errors-20260720T2120Z/battle-obvious-errors-and-pixijs-proof.json",
+      "evidence": {
+        "forbiddenHits": []
+      }
+    },
+    {
+      "step": 6,
+      "name": "Goal evidence ledger",
+      "status": "implemented_evidenced",
+      "source": "skills/battle/local/goal-adaptive-lineage-audit-20260721T0005Z.json",
+      "evidence": {
+        "status": "PASS",
+        "failed": [],
+        "audited_evidence_commit": "d476a192d28421bfbbe04aa69a87f1104e94aae1"
+      }
+    },
+    {
+      "step": 7,
+      "name": "Wider route audit",
+      "status": "not_required_by_current_immutable_goal",
+      "source": null,
+      "evidence": {
+        "routes_not_audited_in_this_receipt": [
+          "#battle/receipt?engine=pixi",
+          "#battle/isolation",
+          "mobile viewport"
+        ]
+      }
+    },
+    {
+      "step": 8,
+      "name": "External WebGPT reviewer loop",
+      "status": "not_run_not_required_after_local_deterministic_receipt",
+      "source": null,
+      "evidence": {
+        "reason": "No current blocker requiring reviewer/oracle help; WebGPT review from 20260720T1742Z remains cited in goal."
+      }
+    }
+  ],
+  "brave_search": {
+    "query": "PixiJS v8 Assets.load AnimatedSprite spritesheet official docs",
+    "result_count": 3,
+    "urls": [
+      "https://pixijs.download/dev/docs/scene.AnimatedSprite.html",
+      "https://pixijs.download/v8.4.1/docs/scene.AnimatedSprite.html",
+      "https://www.codeandweb.com/texturepacker/tutorials/how-to-create-sprite-sheets-and-animations-with-pixijs"
+    ]
+  },
+  "checks": {
+    "goal_file_exists": true,
+    "goal_names_audit_receipt": true,
+    "goal_status_achieved_with_receipt": true,
+    "audit_status_pass": true,
+    "audit_failed_empty": true,
+    "backend_status_pass": true,
+    "surf_forbidden_empty": true,
+    "surf_scorecard_present": true,
+    "surf_canvas_present": true,
+    "remote_matches_head": true,
+    "brave_search_current_docs_present": true
+  },
+  "failed": [],
+  "status": "PASS",
+  "next": "STOP_ALLOWED_goal_has_receipt_and_remote_ref_matches_head",
+  "disposition": "DONE_WITH_RECEIPT"
+}
