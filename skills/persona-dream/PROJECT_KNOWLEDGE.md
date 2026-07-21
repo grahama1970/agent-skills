@@ -62,6 +62,15 @@
   production retry machinery, live Tau sealed-test execution, complete Phase
   01-16 runtime execution, provider execution, video/audio, or semantic dream
   quality.
+- 2026-07-21 (PCTOM-R STRICT120 BALANCED PLANNING REUSE): the strict120
+  condition/action roots were re-consumed without new Tau calls by
+  `/tmp/persona-dream-live-tau-balanced-planning-reuse-strict120-v17-limit1-20260721T1550Z/live_tau_balanced_planning_replication_receipt.v1.json`.
+  Status `PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION`; it consumed 16
+  hash-bound live Tau case artifacts, represented all four families, produced
+  four action decisions per condition, and attempted zero writes. The planning
+  result is explicitly negative/insufficient: `planning_benefit_with_confidence:false`,
+  CD planning regret mean `0.275`, strongest baseline D `0.1375`, CD-minus-D
+  `0.1375`, one `LOSS`, and three `UNCHANGED` transitions.
 - 2026-07-21 (PCTOM-R TAU PROMPT TIMEOUT DIAGNOSTIC): the full-prompt timeout
   boundary is now narrowed. New command:
   `./skills/persona-dream/run.sh run-live-tau-prompt-timeout-diagnostic`.

@@ -178,6 +178,14 @@ Next: <one immediate action or stop condition>
   live Memory fault probes, 0 `CONTINUED_WITH_UNKNOWN_STATE`, 0 side-effect
   violations, and 0 Memory/provider/Tau/canonical/identity/source-memory writes.
   It does not prove production retry machinery or live Tau sealed-test execution.
+- Balanced planning reuse over the strict120 live roots:
+  `/tmp/persona-dream-live-tau-balanced-planning-reuse-strict120-v17-limit1-20260721T1550Z/live_tau_balanced_planning_replication_receipt.v1.json`.
+  Status `PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION`, 16 hash-bound
+  live Tau case artifacts consumed, four families represented, four action
+  decisions per condition, and 0 writes. It reports
+  `planning_benefit_with_confidence:false`; CD planning regret mean `0.275`
+  versus strongest baseline D `0.1375`, so CD is worse by `0.1375` on this
+  four-episode strict120 slice.
 - Preceding failed boundary:
   `/tmp/persona-dream-live-tau-strict-inference-timeout90-v17-20260721T1516Z/live_tau_strict_inference_prompt_replication_receipt.v1.json`
   blocked after a 90s Tau timeout and subsequent scillm `gpt-5.5` cooldown/502
