@@ -574,3 +574,44 @@ Gate 9 invariants:
 Gate 9 does not prove live Tau execution, live Memory recall, real service fault
 injection, production causal replay, statistical prediction benefit, or complete
 live Phase 01-16 runtime execution.
+
+## Live Gate 0 Bridge - Memory Recall To Prospective Case
+
+After the fixture-backed Gate 0-9 contracts exist, the first live validation
+bridge exercises the existing Persona Dream live Memory recall generator and
+mechanically derives a PCTOM-R Gate 0 case from the accepted live residue.
+
+This bridge must:
+
+- run the generator without fixtures;
+- keep `write_memory` disabled;
+- require the live Memory checker to return `PASS_LIVE_MEMORY_RECALL`;
+- copy the live recall receipts, including `accepted_source_ids` and
+  `accepted_source_ids_sha256`;
+- normalize only live accepted residue with nonempty `scope`, `source_id`, and
+  `text`;
+- map every normalized residue item back to its accepting query receipt;
+- derive factual and counterfactual branches from the accepted residue without
+  human content judgment;
+- create a sealed prediction commitment with `outcome_visible: false`;
+- run the ordinary Gate 0 checker against the derived case;
+- write a live bridge receipt that states `mocked`, `live`, `fixture_backed`,
+  Memory write attempts, Tau call attempts, and provider call attempts.
+
+Accepted status:
+
+```text
+PASS_LIVE_PCTOM_GATE0_LINEAGE
+```
+
+Blocked status:
+
+```text
+BLOCKED_LIVE_PCTOM_GATE0_LINEAGE
+```
+
+This bridge proves live recall source IDs can survive normalization into a
+prospective PCTOM-R lineage case. It does not prove live Tau generation of ToM
+distributions or commitments, outcome scoring, belief revision, fault-injected
+live reliability, semantic memory quality, paid provider execution, or complete
+live Phase 01-16 runtime execution.

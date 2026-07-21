@@ -261,6 +261,7 @@ Gate 6 proof root: /tmp/persona-dream-pctom-gate6-final-20260721T011945Z
 Gate 7 proof root: /tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z
 Gate 8 proof root: /tmp/persona-dream-pctom-gate8-rebased-20260721T014053Z
 Gate 9 proof root: /tmp/persona-dream-pctom-gate9-final-20260721T015757Z
+Live Gate 0 proof root: /tmp/persona-dream-live-pctom-gate0-r2-20260721T020456Z
 ```
 
 Gate 0 proof summary:
@@ -482,6 +483,44 @@ prove live Tau execution, live Memory recall, real service fault injection,
 production causal replay, statistical prediction benefit, or complete live
 Phase 01-16 runtime execution.
 
+Live Gate 0 bridge proof summary:
+
+```text
+status: PASS_LIVE_PCTOM_GATE0_LINEAGE
+live_memory_status: PASS_LIVE_MEMORY_RECALL
+pctom_gate0_status: PASS_PCTOM_GATE0_LINEAGE
+successful_query_count: 5
+failed_query_count: 0
+accepted_source_id_pair_count: 28
+residue_count: 6
+unique_source_count: 6
+derived_recall_receipts: 5
+derived_normalized_residue: 6
+derived_dream_branches: 2
+derived_prediction_evidence_refs: 6
+prediction_branch_links: 2
+prediction_payload_hash_recomputed: true
+prediction_sealed_before_reveal: true
+mocked: false
+live: true
+fixture_backed: false
+human_content_judgment_required: false
+memory_write_attempts: 0
+tau_call_attempts: 0
+provider_call_attempts: 0
+first_attempt_status: BLOCKED_LIVE_PCTOM_GATE0_LINEAGE
+first_attempt_blocker: one live Memory query timed out and the checker failed closed with partial_recall_failure
+```
+
+This live bridge proves accepted live Memory `/recall` source IDs can survive
+normalization into a prospective PCTOM-R Gate 0 case without human content
+judgment. It preserves query receipt -> accepted source ID -> normalized residue
+-> dream branch -> sealed prediction lineage and hash-checks the derived case
+with the ordinary Gate 0 checker. It does not prove semantic memory quality,
+optimal memory selection, live Tau generation, scoring, belief revision,
+fault-injected live reliability, paid provider execution, or complete live
+Phase 01-16 runtime execution.
+
 ## Completion Rule
 
 The goal is not complete until an artifact-backed final report cites local
@@ -505,11 +544,12 @@ receipts proving all of the following:
 10. Gate 9 causal replay identifies the first divergent receipt for failed or
     unstable trials.
 
-The current evidence through Gate 9 is still fixture-backed. It does not prove
-live Memory recall, live Tau text execution, paid provider execution, semantic
-dream quality, held-out prediction benefit, complete live Phase 01-16 runtime
-execution, or autonomous operation without human content judgment. Those require
-separate live receipts.
+The current evidence through Gate 9 is fixture-backed, with one live Gate 0
+bridge proving live Memory recall-to-prospective-lineage wiring. It does not
+prove live Tau text execution, paid provider execution, semantic dream quality,
+held-out prediction benefit, live fault containment, complete live Phase 01-16
+runtime execution, or autonomous operation beyond the Gate 0 bridge. Those
+require separate live receipts.
 
 No agent may claim final, green, complete, fixed, verified, or closed for this
 research goal unless those concrete proof artifacts exist and are cited.
@@ -519,14 +559,12 @@ research goal unless those concrete proof artifacts exist and are cited.
 Move from fixture-backed wiring evidence to live validation evidence for the
 same PCTOM-R lane, without reactivating provider/video as the critical path.
 
-The next accepted artifact must answer one of these live questions with
-receipts:
+The next accepted artifact must answer one of these remaining live questions
+with receipts:
 
-1. Does live Memory `/recall` produce accepted source IDs that survive
-   normalization into a prospective trial without manual content judgment?
-2. Can Tau text execution produce sealed ToM distributions or commitments that
+1. Can Tau text execution produce sealed ToM distributions or commitments that
    pass the same deterministic Gate 2-4 contracts?
-3. Can a bounded live fault or stale-artifact event be contained and diagnosed
+2. Can a bounded live fault or stale-artifact event be contained and diagnosed
    by the Gate 8-9 receipts without canonical memory, identity, or source-memory
    writes?
 
