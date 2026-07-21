@@ -293,7 +293,7 @@ phrases such as achieved, done, verified, green, or closed for this goal.
       observed Pixi sprite/manifest resource requests. Screenshot:
       `skills/battle/local/surf-obvious-errors-20260720T2120Z/battle-scorecard-restored.png`.
 
-**GOAL STATUS: DISPUTED_PENDING_FRESH_UX_PROOF**.
+**GOAL STATUS: DISPUTED_PENDING_HUMAN_OR_EXTERNAL_UX_ACCEPTANCE**.
 
 The prior audit receipt
 `skills/battle/local/goal-adaptive-lineage-audit-20260721T0005Z.json` remains a
@@ -303,6 +303,19 @@ commit `d476a192d28421bfbbe04aa69a87f1104e94aae1`, and cites the live backend
 receipt plus final Surf/Pixi proof artifacts above. It does **not** close this
 goal after the UX has been challenged, because it does not by itself establish a
 fresh, expanded, human-acceptable top-level `#battle` visual state.
+
+Fresh local browser evidence now exists at
+`skills/battle/local/fresh-ux-proof-20260721T0130Z/fresh-visible-ux-proof.json`
+with `status:"PASS"`, `failed:[]`, `mocked:false`, `live:true`, expanded
+top-level route `http://127.0.0.1:3003/#battle`, host identity
+`agent-skills battle spectator`, screenshot
+`skills/battle/local/fresh-ux-proof-20260721T0130Z/battle-expanded-lineage.png`,
+and positive checks for the scorecard, honest live badge, four descriptive
+names, selected-vs-runner-up row, operators, novelty values, changed AST
+dimensions, four lineage nodes, Pixi canvas, observed sprite resources, no
+failed requests, no console errors, and no forbidden text. This satisfies the
+fresh local proof rung, but the goal remains pending until the disputed visual
+result receives human acceptance or an explicit external-review artifact.
 
 ## Allowed Scope
 

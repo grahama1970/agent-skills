@@ -1,0 +1,160 @@
+{
+  "schema": "battle.fresh_visible_ux_proof.v1",
+  "generated_at": "2026-07-21T03:46:29.357Z",
+  "url": "http://127.0.0.1:3003/#battle",
+  "mocked": false,
+  "live": true,
+  "host": {
+    "host": "agent-skills battle spectator",
+    "packageRoot": "/home/graham/workspace/experiments/agent-skills/skills/battle/spectator",
+    "entry": "skills/battle/spectator/src/main.tsx"
+  },
+  "viewport": {
+    "width": 1600,
+    "height": 1050
+  },
+  "screenshot": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/fresh-ux-proof-20260721T0130Z/battle-expanded-lineage.png",
+  "details_was_open_before_click": false,
+  "state": {
+    "location": "http://127.0.0.1:3003/#battle?freshUxProof=20260721T0130Z",
+    "detailsOpen": true,
+    "badge": {
+      "text": "LIVE: Qual PASS",
+      "dataSource": "live",
+      "provesLive": "true"
+    },
+    "criterion": {
+      "text": "Selection: G1-A over G1-B · deciding criterion novelty_distance",
+      "selectedId": "G1-A",
+      "runnerUpId": "G1-B",
+      "decidingCriterion": "novelty_distance"
+    },
+    "canvas": {
+      "present": true,
+      "width": 1030,
+      "height": 277,
+      "mountId": "1"
+    },
+    "nodeCount": 4,
+    "nodes": [
+      {
+        "qid": "battle:adaptive-lineage:node:G0",
+        "nodeId": "G0",
+        "selected": "false",
+        "runnerUp": "false",
+        "text": "G0 Zip Slip Sparkgen 0 · seedseed exploit · no mutationseed exploit (no mutation operator)"
+      },
+      {
+        "qid": "battle:adaptive-lineage:node:G1-A",
+        "nodeId": "G1-A",
+        "selected": "true",
+        "runnerUp": "false",
+        "text": "G1-A Importlib Slipstreamgen 1 · candidatemethod_replace · novelty 2Replaced direct from-import loading of import_zip with importlib.import_module plus getattr while preserving archive construction, traversal entry, call semantics, exception handling, and filesystem oracle.app_load_modetarget_call_formvuln-original yes · bypass no · 1.195406s · fitness PASS"
+      },
+      {
+        "qid": "battle:adaptive-lineage:node:G1-B",
+        "nodeId": "G1-B",
+        "selected": "false",
+        "runnerUp": "true",
+        "text": "G1-B Writestr Detourgen 1 · candidateoracle_or_parameter_mutation · novelty 1Changed malicious archive entry construction from ZipFile.writestr('../arena_escape.txt', payload) to writing a real temporary file with ZipFile.write(..., arcname='../arena_escape.txt'); app import mode, target call form, and oracle remain otherwise the same.archive_entry_constructionvuln-original yes · bypass no · 1.260919s · fitness PASS"
+      },
+      {
+        "qid": "battle:adaptive-lineage:node:G2",
+        "nodeId": "G2",
+        "selected": "false",
+        "runnerUp": "false",
+        "text": "G2 ZipInfo Switchbackgen 2 · descendantfailure_guided_crossover · novelty 4Changed app loading from importlib/getattr to direct from-import, changed archive construction from writestr to ZipInfo plus zf.open member write, changed target call to pass Path objects, and strengthened the oracle with escaped file content plus returned-path resolution.app_load_modearchive_entry_constructiontarget_call_formexception_handlingvuln-original yes · bypass no · 1.285213s · fitness PASS"
+      }
+    ],
+    "laneCount": 4,
+    "forbiddenHits": []
+  },
+  "requiredNames": [
+    "G0 Zip Slip Spark",
+    "G1-A Importlib Slipstream",
+    "G1-B Writestr Detour",
+    "G2 ZipInfo Switchback"
+  ],
+  "requiredOperators": [
+    "method_replace",
+    "oracle_or_parameter_mutation",
+    "failure_guided_crossover"
+  ],
+  "requiredDimensions": [
+    "app_load_mode",
+    "target_call_form",
+    "archive_entry_construction",
+    "exception_handling"
+  ],
+  "spriteRequests": [
+    "http://127.0.0.1:3003/battle-fixtures/battle-004-adaptive-lineage-live/adaptive-lineage-mechanics-fixture.json",
+    "http://127.0.0.1:3003/battle-fixtures/battle-004-adaptive-lineage-live/battle.normalized_ux_fixture.json",
+    "http://127.0.0.1:3003/battle-sprites/pixijs/battle-race-atlas.png",
+    "http://127.0.0.1:3003/battle-sprites/pixijs/battle-race-atlas.png.json",
+    "http://127.0.0.1:3003/battle-sprites/pixijs/battle-sprite-assets.manifest.json",
+    "http://127.0.0.1:3003/battle-sprites/pixijs/crimson_chainsaw_demon.json?v=4",
+    "http://127.0.0.1:3003/battle-sprites/pixijs/crimson_chainsaw_demon.png?v=4",
+    "http://127.0.0.1:3003/battle-sprites/pixijs/plague_nurgling.json?v=4",
+    "http://127.0.0.1:3003/battle-sprites/pixijs/plague_nurgling.png?v=4",
+    "http://127.0.0.1:3003/battle-sprites/pixijs/slug_demon.json?v=4",
+    "http://127.0.0.1:3003/battle-sprites/pixijs/slug_demon.png?v=4",
+    "http://127.0.0.1:3003/battle-sprites/pixijs/typhus.json?v=4",
+    "http://127.0.0.1:3003/battle-sprites/pixijs/typhus.png?v=4"
+  ],
+  "failedRequests": [],
+  "consoleMessages": [
+    {
+      "type": "warning",
+      "text": "PixiJS Warning:  [Assets] Asset id battle-race-atlas was not found in the Cache"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x357c0015c200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x357c0015c200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x357c0015c200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x357c0015c200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)"
+    }
+  ],
+  "errors": [],
+  "checks": {
+    "mocked_false": true,
+    "live_true": true,
+    "host_identity": true,
+    "route_top_level_battle": true,
+    "lineage_panel_expanded": true,
+    "scorecard_present": true,
+    "live_badge_honest": true,
+    "all_descriptive_names_visible": true,
+    "selected_runner_up_visible": true,
+    "operators_visible": true,
+    "novelty_visible": true,
+    "ast_dimensions_visible": true,
+    "four_lineage_nodes_visible": true,
+    "canvas_present_sized": true,
+    "sprite_resources_observed": true,
+    "no_failed_requests": true,
+    "no_console_errors": true,
+    "no_forbidden_text": true
+  },
+  "failed": [],
+  "status": "PASS",
+  "claims": {
+    "proves": [
+      "fresh served browser loaded top-level #battle and expanded lineage panel"
+    ],
+    "does_not_prove": [
+      "human visual acceptance",
+      "external reviewer acceptance",
+      "new backend qualification rerun"
+    ]
+  }
+}

@@ -12,9 +12,9 @@ agent-skills worktree, not the pi-mono shell.
 > proof, WebGPT accepted review, and immutable-goal audit receipt remain
 > supporting evidence only. The human disputed the visible UX closure on
 > 2026-07-21, so `GOAL_ADAPTIVE_LINEAGE.md` is now
-> `DISPUTED_PENDING_FRESH_UX_PROOF`. Do not report achieved/done/closed until a
-> new expanded top-level `#battle` proof bundle satisfies the non-self-serving
-> closure rule in the goal file.
+> `DISPUTED_PENDING_HUMAN_OR_EXTERNAL_UX_ACCEPTANCE`. Do not report
+> achieved/done/closed until the fresh expanded top-level `#battle` proof bundle
+> is accepted by the human or by an explicit external-review artifact.
 
 ## 1. Project Overview
 
@@ -107,6 +107,19 @@ agent-skills worktree, not the pi-mono shell.
   observed Pixi sprite/manifest resource requests. This pass is useful
   supporting evidence, but it is not sufficient after the human disputed whether
   the visible UX works as expected.
+- **Fresh expanded top-level UX proof exists after challenge**:
+  `skills/battle/local/fresh-ux-proof-20260721T0130Z/` contains
+  `fresh-visible-ux-proof.json` and `battle-expanded-lineage.png`. The proof
+  targets `http://127.0.0.1:3003/#battle`, has `status:"PASS"`, `failed:[]`,
+  `mocked:false`, `live:true`, host identity `agent-skills battle spectator`,
+  expanded lineage panel, scorecard present, live badge
+  `data-data-source:"live"` / `data-proves-live:"true"`, all four descriptive
+  exploit names, selected-vs-runner-up row, operators, novelty values, changed
+  AST dimensions, four lineage nodes, Pixi canvas `1030x277`, observed sprite
+  resources, no failed requests, no console errors, and no forbidden text.
+  Visual inspection of the screenshot shows the expanded lineage panel above the
+  race view, the scorecard, and four distinct Pixi sprites. This is current
+  local evidence, but closure still requires human or external acceptance.
 - **WebGPT acceptance for this new host exists**:
   `skills/battle/local/webgpt-design-review-20260720T1742Z/response.md` starts
   with `ACCEPTED`, and `response.raw.md` contains the terminal sentinel. The
@@ -156,28 +169,23 @@ agent-skills worktree, not the pi-mono shell.
 - **Do not trust `#battle/live` claims**. The valid primary UX is now
   `#battle`, with the live receipt rendered in-place. Keep `#battle/receipt`
   only as a compatible/deep-link receipt route, not as the main acceptance URL.
-- **Current blocker: fresh visible UX proof is missing after challenge**. The
-  goal cannot close on the prior audit receipt. The next proof must freshly
-  build and serve the agent-skills spectator, open `http://127.0.0.1:3003/#battle`
-  in a browser, expand the adaptive-lineage panel, capture a screenshot/video,
-  and record machine-readable assertions for the scorecard, LIVE badge, four
-  descriptive exploit names, four distinct sprites, selected-vs-runner-up row,
-  operators, changed AST dimensions, novelty values, console errors, failed
-  requests, canvas dimensions, and sprite resource URLs.
+- **Current blocker: acceptance is missing after challenge**. Fresh local
+  browser proof now exists, but the goal's non-self-serving closure rule also
+  requires human acceptance or an explicit external-review artifact because the
+  visual result was disputed.
 - **Repo is dirty from unrelated agents**. Stage Battle handoff/artifact paths
   explicitly only. Never `git add -A`.
 
 ## 5. Next Steps
 
-1. Re-run the disputed visible UX proof rung from the current worktree:
-   build, serve, open `#battle`, expand the adaptive-lineage panel, capture a
-   screenshot/video, and write a proof JSON under `skills/battle/local/`.
+1. Obtain human acceptance of
+   `skills/battle/local/fresh-ux-proof-20260721T0130Z/battle-expanded-lineage.png`
+   or run an explicit external review against that screenshot and proof JSON.
 2. Keep using `#battle` on the agent-skills host as the primary acceptance
    route. Treat `#battle/receipt` as a compatible deep link and do not revive
    standalone `#battle/live` without a new written goal.
-3. Leave the goal status as `DISPUTED_PENDING_FRESH_UX_PROOF` unless the new
-   proof bundle and human/external acceptance satisfy the non-self-serving
-   closure rule.
+3. Leave the goal status as `DISPUTED_PENDING_HUMAN_OR_EXTERNAL_UX_ACCEPTANCE`
+   unless human/external acceptance satisfies the non-self-serving closure rule.
 
 ## 6. Project Context for Success
 
