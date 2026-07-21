@@ -159,10 +159,10 @@ step model:
    live Tau-originated condition outputs, included in the deterministic sealed
    test, and now exercised across 256 full64 live Tau sealed-test action
    decisions. The missing research proof is confidence-bounded planning-regret
-   benefit over the strongest baseline or a narrower action-policy sensitivity
-   receipt that explains when and why CD changes decisions. The current
-   diagnostic says the planning signal is sparse and concentrated in
-   `trust-commit`.
+   benefit over the strongest baseline or expanded trust/commitment replication.
+   The current action-policy sensitivity receipt explains the sparse planning
+   point estimate: the only four nonzero deltas are CD action switches in
+   `trust-commit`, with three oracle-match gains and one oracle-match loss.
 7. **Non-destructive belief revision** - implemented fixture-backed by Gate 7,
    bridged over live Tau-originated action decisions, and recalled through live
    Memory without canonical/source/identity writes. The remaining research
@@ -435,12 +435,13 @@ Full64 live Tau sealed-test replication proof root: /tmp/persona-dream-live-tau-
 Full64 live Tau statistical-confidence proof root: /tmp/persona-dream-live-tau-full64-statistical-confidence-20260721T092609Z
 Full64 live Tau sealed-test retry proof root: /tmp/persona-dream-live-tau-full64-sealed-test-retry-proof-20260721T092754Z
 Full64 live Tau planning diagnostic proof root: /tmp/persona-dream-live-tau-full64-planning-diagnostic-20260721T093504Z
+Full64 live Tau action-policy sensitivity proof root: /tmp/persona-dream-live-tau-full64-action-policy-sensitivity-20260721T094805Z
 ```
 
 Current active phase boundary:
 
 ```text
-phase: post-full64-live-tau-planning-diagnostic, pre-expanded-planning-replication-or-production-retry-service-proof
+phase: post-full64-live-tau-action-policy-sensitivity, pre-expanded-trust-commit-replication-or-production-retry-service-proof
 last_live_condition_receipt: /tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z/live_tau_condition_comparison_receipt.v1.json
 last_reliability_receipt: /tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z/live_tau_condition_reliability_bridge_receipt.v1.json
 last_action_selection_receipt: /tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z/live_tau_condition_action_selection_receipt.v1.json
@@ -459,7 +460,8 @@ last_full64_live_tau_sealed_test_replication_receipt: /tmp/persona-dream-live-ta
 last_full64_live_tau_statistical_confidence_receipt: /tmp/persona-dream-live-tau-full64-statistical-confidence-20260721T092609Z/live_tau_full64_statistical_confidence_receipt.v1.json
 last_full64_live_tau_sealed_test_retry_proof_receipt: /tmp/persona-dream-live-tau-full64-sealed-test-retry-proof-20260721T092754Z/live_tau_sealed_test_retry_proof_receipt.v1.json
 last_full64_live_tau_planning_diagnostic_receipt: /tmp/persona-dream-live-tau-full64-planning-diagnostic-20260721T093504Z/live_tau_full64_planning_diagnostic_receipt.v1.json
-next_required_receipt: expanded planning replication/sensitivity receipt or production retry service proof, selected by the active research question
+last_full64_live_tau_action_policy_sensitivity_receipt: /tmp/persona-dream-live-tau-full64-action-policy-sensitivity-20260721T094805Z/live_tau_full64_action_policy_sensitivity_receipt.v1.json
+next_required_receipt: expanded trust/commitment planning replication or production retry service proof, selected by the active research question
 secondary_receipt: live Memory fault injection in the same sealed-test loop or deployed always-on orchestrator retry proof
 ```
 
@@ -490,14 +492,51 @@ planning regret. The statistical-confidence and retry receipts consuming that
 full64 root now exist: the statistical-confidence receipt shows
 confidence-bounded belief-Brier benefit, and the retry proof shows bounded
 terminal-outcome discipline over 256 active predictions and 256 action
-decisions. The active next movement is planning/action-policy sensitivity or
-expanded trust/commitment replication, because the full64 planning diagnostic
-shows a sparse family-concentrated signal rather than confidence-bounded
-planning benefit: 60 ties, 3 beneficial deltas, 1 harmful delta, and all
-nonzero deltas in `trust-commit`. Retry/fault proof inside a permanently
-deployed always-on service boundary remains unproven. The run.sh orchestration
-proof exercises the local skill command dispatcher, but it is not an always-on
-external service.
+decisions. The action-policy sensitivity receipt now explains the sparse
+planning point estimate at the realized-action level: all 4 nonzero deltas are
+action switches in `trust-commit`, with 3 oracle-match gains and 1 oracle-match
+loss. The active next movement is expanded trust/commitment replication,
+repeated live Tau seeds, or production retry-service proof; the sensitivity
+receipt does not turn the planning-regret CI into confidence-bounded planning
+benefit. Retry/fault proof inside a permanently deployed always-on service
+boundary remains unproven. The run.sh orchestration proof exercises the local
+skill command dispatcher, but it is not an always-on external service.
+
+Full64 live Tau action-policy sensitivity proof summary:
+
+```text
+receipt: /tmp/persona-dream-live-tau-full64-action-policy-sensitivity-20260721T094805Z/live_tau_full64_action_policy_sensitivity_receipt.v1.json
+status: PASS_LIVE_TAU_PCTOM_FULL64_ACTION_POLICY_SENSITIVITY
+base_receipt_sha256: sha256:e5f4b3bc5964d2965861a5a91a0f2393f819b5e37db07147943d87933b744053
+planning_diagnostic_receipt_sha256: sha256:da419d8100de60248ccedacdfe84158273bc007b44ec3dad2b2f625453507021
+episodes: 64
+action_switch_count: 4
+nonzero_delta_count: 4
+nonzero_action_switch_count: 4
+nonzero_families: trust-commit
+oracle_match_gain_count: 3
+oracle_match_loss_count: 1
+net_oracle_match_gain: 2
+sensitivity_conclusion: REALIZED_ACTION_SWITCH_EXPLAINS_SPARSE_PLANNING_SIGNAL
+mocked: false
+live: true
+fixture_backed: false
+live_tau_reexecuted: false
+tau_call_attempts: 0
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+```
+
+This proves that the sparse full64 planning-regret point-estimate signal comes
+from four realized CD-versus-baseline action switches in trust/commitment
+episodes, not from broad action-policy changes across the corpus. It does not
+prove confidence-bounded planning-regret benefit, repeated-seed planning
+benefit, production retry machinery, live Memory recall in the sealed-test
+loop, complete Phase 01-16 runtime execution, paid provider execution, or
+semantic dream quality.
 
 Bounded live Tau sealed-test retry proof summary:
 

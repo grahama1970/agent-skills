@@ -1,10 +1,34 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R full64 live Tau planning diagnostic accepted) by agent
+**Last updated:** 2026-07-21 (PCTOM-R full64 live Tau action-policy sensitivity accepted) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R FULL64 LIVE TAU ACTION-POLICY SENSITIVITY): live Tau
+  full64 action-policy sensitivity evidence now exists at
+  `/tmp/persona-dream-live-tau-full64-action-policy-sensitivity-20260721T094805Z/live_tau_full64_action_policy_sensitivity_receipt.v1.json`.
+  It consumes the accepted full64 live Tau sealed-test root and full64 planning
+  diagnostic receipt without reexecuting Tau and reports
+  `PASS_LIVE_TAU_PCTOM_FULL64_ACTION_POLICY_SENSITIVITY`. Counts: 64 episodes,
+  4 action switches, 4 nonzero planning-regret deltas, all 4 nonzero deltas in
+  `trust-commit`, 3 oracle-match gains, 1 oracle-match loss, and net oracle
+  match gain 2. The sensitivity conclusion is
+  `REALIZED_ACTION_SWITCH_EXPLAINS_SPARSE_PLANNING_SIGNAL`: CD changed action
+  only on the four nonzero trust/commitment cases, selecting
+  `ASK_CLARIFYING_QUESTION` instead of the baseline `SET_BOUNDARY`; three
+  switches matched the simulator oracle and one did not. Per-action
+  deterministic utility surfaces were present for the compared selected and
+  oracle actions. `mocked:false`, `live:true`, `fixture_backed:false`,
+  `live_tau_reexecuted:false`, `human_content_judgment_required:false`, and
+  Tau/Memory/provider/canonical/identity/source-memory write or call attempts
+  were all 0. This explains the sparse planning point estimate at the action
+  policy level, but it still does not prove confidence-bounded planning-regret
+  benefit, repeated-seed planning benefit, production retry machinery, live
+  Memory recall inside the sealed-test loop, paid provider execution, semantic
+  dream quality, or complete Phase 01-16 runtime execution. The next planning
+  evidence should repeat or expand trust/commitment episodes before upgrading
+  planning benefit.
 - 2026-07-21 (PCTOM-R FULL64 LIVE TAU PLANNING DIAGNOSTIC): live Tau full64
   planning diagnostic evidence now exists at
   `/tmp/persona-dream-live-tau-full64-planning-diagnostic-20260721T093504Z/live_tau_full64_planning_diagnostic_receipt.v1.json`.
@@ -22,8 +46,9 @@
   Tau/Memory/provider/canonical/identity/source-memory write or call attempts
   were all 0. This explains why the full64 planning point estimate cannot be
   upgraded to a planning-benefit claim: the signal is sparse and
-  family-concentrated. The next planning evidence would need repeated seeds,
-  more trust/commitment episodes, or action-policy sensitivity checks.
+  family-concentrated. The later action-policy sensitivity receipt explains
+  the sparse action-switch mechanism; the next planning evidence would need
+  repeated seeds or more trust/commitment episodes.
 - 2026-07-21 (PCTOM-R FULL64 LIVE TAU STATISTICAL CONFIDENCE): live Tau
   full64 statistical-confidence evidence now exists at
   `/tmp/persona-dream-live-tau-full64-statistical-confidence-20260721T092609Z/live_tau_full64_statistical_confidence_receipt.v1.json`.

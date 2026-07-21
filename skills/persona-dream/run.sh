@@ -94,6 +94,7 @@ Commands:
   run-live-tau-sealed-test-replication  Run bounded live Tau-authored sealed-test replication plus Gate 6 actions
   run-live-tau-full64-statistical-confidence  Compute confidence intervals over accepted full64 live Tau artifacts
   run-live-tau-full64-planning-diagnostic  Diagnose why full64 planning-regret benefit is not confidence-bound
+  run-live-tau-full64-action-policy-sensitivity  Explain sparse full64 planning deltas through action switches
   run-live-tau-sealed-test-retry-proof  Prove retry/idempotence over live Tau sealed-test artifacts
   run-live-tau-sealed-test-runsh-orchestration-retry-proof  Exercise sealed-test retry proof through run.sh dispatch
   run-live-tau-sealed-test-queue-worker-retry-proof  Exercise sealed-test retry proof through a bounded queue worker
@@ -461,6 +462,9 @@ case "$COMMAND" in
     ;;
   run-live-tau-full64-planning-diagnostic)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_tau_full64_planning_diagnostic.py" "$@"
+    ;;
+  run-live-tau-full64-action-policy-sensitivity)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_tau_full64_action_policy_sensitivity.py" "$@"
     ;;
   run-live-tau-sealed-test-retry-proof)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_tau_sealed_test_retry_proof.py" "$@"
