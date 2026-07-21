@@ -73,6 +73,12 @@ durability steps only. They are not progress evidence by themselves. Progress
 evidence is a named local artifact, receipt status, command result, count,
 hash, or fail-closed blocker tied to the PCTOM-R gate model.
 
+When an agent is asked to align this goal with the README, the default action is
+not to create a new immutable goal. The default action is to keep this
+PCTOM-R objective active and amend this file only when the README, receipts, or
+human instruction expose a concrete mismatch in the active gate model, evidence
+boundary, or next artifact order.
+
 ## Alignment With README
 
 `README.md` describes the broader Persona Dream research purpose: a persistent
@@ -183,9 +189,11 @@ The current bounded live Tau sealed-test replication is live-originated
 evidence, but it is a bounded 4-episode / 16-case slice and produced a null
 benefit signal for CD versus the strongest baseline. It must be reported as
 evidence of the runner and contracts, not as proof that dreaming improves ToM.
-The next acceptance movement is either full 64-episode live Tau sealed-test
-replication or a production retry/fault proof over the live-originated sealed
-artifacts.
+The primary next acceptance movement is full 64-episode live Tau sealed-test
+replication. A permanently deployed always-on retry/fault proof is secondary
+unless the full-64 live Tau path is concretely blocked by a missing credential,
+paid-call authority, unavailable Tau service, or deterministic runner defect
+recorded in a local receipt.
 
 ## Research Question
 
@@ -416,7 +424,7 @@ Bounded queue-worker retry proof root: /tmp/persona-dream-live-tau-sealed-test-q
 Current active phase boundary:
 
 ```text
-phase: post-bounded-queue-worker-retry-proof, pre-full-64-live-tau-replication-or-permanently-deployed-service-retry-proof
+phase: post-bounded-queue-worker-retry-proof, pre-full-64-live-tau-sealed-test-replication
 last_live_condition_receipt: /tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z/live_tau_condition_comparison_receipt.v1.json
 last_reliability_receipt: /tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z/live_tau_condition_reliability_bridge_receipt.v1.json
 last_action_selection_receipt: /tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z/live_tau_condition_action_selection_receipt.v1.json
@@ -431,7 +439,8 @@ last_bounded_live_tau_sealed_test_replication_receipt: /tmp/persona-dream-live-t
 last_bounded_live_tau_sealed_test_retry_proof_receipt: /tmp/persona-dream-live-tau-sealed-test-retry-proof-20260721T052430Z/live_tau_sealed_test_retry_proof_receipt.v1.json
 last_runsh_orchestration_retry_proof_receipt: /tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/live_tau_sealed_test_runsh_orchestration_retry_proof_receipt.v1.json
 last_bounded_queue_worker_retry_proof_receipt: /tmp/persona-dream-live-tau-sealed-test-queue-worker-retry-proof-20260721T054051Z/live_tau_sealed_test_queue_worker_retry_proof_receipt.v1.json
-next_required_receipt: full 64-episode live Tau sealed-test replication receipt or permanently deployed always-on service retry proof receipt
+next_required_receipt: full 64-episode live Tau sealed-test replication receipt
+secondary_receipt_if_full64_blocked: permanently deployed always-on service retry/fault proof receipt
 ```
 
 This boundary means Gate 8/9 condition reliability over live-originated
@@ -455,10 +464,12 @@ signal rather than live CD improvement. The bounded retry proof now adds
 hash-recomputed active prediction/action indexes over those 16 live-originated
 cases plus 8 retry/fault trials with only recovered, blocked-before-side-effect,
 or quarantined terminal outcomes and one causal replay. The next useful
-movement is full 64-episode live Tau sealed-test replication or retry/fault
-proof inside an always-on service or queue-worker boundary. The run.sh
-orchestration proof now exercises the local skill command dispatcher, but it is
-not an always-on external service.
+movement is full 64-episode live Tau sealed-test replication. Retry/fault proof
+inside a permanently deployed always-on service boundary is the secondary path
+only if full-64 live Tau replication is blocked by a concrete local receipt or
+the human explicitly reorders the work. The run.sh orchestration proof now
+exercises the local skill command dispatcher, but it is not an always-on
+external service.
 
 Bounded live Tau sealed-test retry proof summary:
 
@@ -1623,15 +1634,19 @@ Memory recall-after-revision evidence, the broader live fault-injection
 surface, bounded live Tau sealed-test replication, and bounded retry/idempotence
 over live-originated sealed-test artifacts, plus run.sh orchestration retry
 evidence and bounded local queue-worker evidence, to full 64-episode live Tau
-replication or permanently deployed always-on service retry proof, without
-reactivating provider/video as the critical path.
+sealed-test replication, without reactivating provider/video as the critical
+path.
 
-The next accepted artifact must answer one of these narrower questions:
+The next accepted artifact must answer this narrower question:
 
 1. Does the 64-episode sealed-test result persist when all M/R/D/CD prediction
    payloads are authored through live Tau rather than deterministic profiles,
    given that the bounded 4-episode live slice produced a null CD benefit?
-2. Does retry/fault handling preserve the same terminal-outcome discipline
+
+The secondary artifact, only after a full-64 blocker receipt or explicit human
+reordering, must answer this question:
+
+1. Does retry/fault handling preserve the same terminal-outcome discipline
    inside a permanently deployed always-on service boundary, not only the
    bounded research bridge, local `run.sh` dispatcher, and bounded local
    queue-worker process?
