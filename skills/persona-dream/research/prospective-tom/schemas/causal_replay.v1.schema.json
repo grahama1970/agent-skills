@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.research.prospective_tom.causal_replay.v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "replay_id",
+    "surface_id",
+    "trial_id",
+    "reliability_surface_sha256",
+    "first_divergent_receipt",
+    "replay_start_receipt_id",
+    "suspected_tool_return",
+    "comparison",
+    "localized_cause",
+    "terminal_outcome",
+    "unknown_state_continued",
+    "canonical_memory_write",
+    "identity_write",
+    "source_memory_write"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "persona_dream.research.prospective_tom.causal_replay.v1"
+    },
+    "replay_id": {"type": "string", "minLength": 1},
+    "surface_id": {"type": "string", "minLength": 1},
+    "trial_id": {"type": "string", "minLength": 1},
+    "reliability_surface_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "first_divergent_receipt": {
+      "type": "object",
+      "required": [
+        "receipt_id",
+        "receipt_index",
+        "boundary",
+        "expected_state_sha256",
+        "observed_state_sha256"
+      ],
+      "properties": {
+        "receipt_id": {"type": "string", "minLength": 1},
+        "receipt_index": {"type": "integer", "minimum": 0},
+        "boundary": {"type": "string", "minLength": 1},
+        "expected_state_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "observed_state_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+      },
+      "additionalProperties": false
+    },
+    "replay_start_receipt_id": {"type": "string", "minLength": 1},
+    "suspected_tool_return": {
+      "type": "object",
+      "required": [
+        "tool_return_id",
+        "receipt_id",
+        "tool_name",
+        "operation",
+        "original_return_sha256"
+      ],
+      "properties": {
+        "tool_return_id": {"type": "string", "minLength": 1},
+        "receipt_id": {"type": "string", "minLength": 1},
+        "tool_name": {"type": "string", "minLength": 1},
+        "operation": {"type": "string", "enum": ["REMOVE_TOOL_RETURN", "REPLACE_TOOL_RETURN"]},
+        "original_return_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "replacement_return_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"}
+      },
+      "additionalProperties": false
+    },
+    "comparison": {
+      "type": "object",
+      "required": [
+        "factual_end_state_sha256",
+        "counterfactual_end_state_sha256",
+        "expected_end_state_sha256",
+        "counterfactual_matches_expected"
+      ],
+      "properties": {
+        "factual_end_state_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "counterfactual_end_state_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "expected_end_state_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "counterfactual_matches_expected": {"type": "boolean", "const": true}
+      },
+      "additionalProperties": false
+    },
+    "localized_cause": {
+      "type": "object",
+      "required": [
+        "cause_type",
+        "receipt_id",
+        "tool_return_id",
+        "causal_confidence",
+        "evidence_refs"
+      ],
+      "properties": {
+        "cause_type": {"type": "string", "minLength": 1},
+        "receipt_id": {"type": "string", "minLength": 1},
+        "tool_return_id": {"type": "string", "minLength": 1},
+        "causal_confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "evidence_refs": {"type": "array", "minItems": 1, "items": {"type": "string"}}
+      },
+      "additionalProperties": false
+    },
+    "terminal_outcome": {
+      "type": "string",
+      "enum": [
+        "CAUSAL_FAILURE_LOCALIZED",
+        "BLOCKED_REPLAY_INSUFFICIENT_EVIDENCE",
+        "NO_CAUSAL_EFFECT_FOUND"
+      ]
+    },
+    "unknown_state_continued": {"type": "boolean", "const": false},
+    "canonical_memory_write": {"type": "boolean", "const": false},
+    "identity_write": {"type": "boolean", "const": false},
+    "source_memory_write": {"type": "boolean", "const": false}
+  },
+  "additionalProperties": false
+}

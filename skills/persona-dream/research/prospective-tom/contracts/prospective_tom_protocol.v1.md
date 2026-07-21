@@ -510,3 +510,67 @@ Gate 8 invariants:
 Gate 8 does not prove live Tau execution, live Memory recall, real service
 fault injection, production retry behavior, statistical prediction benefit, or
 Gate 9 causal replay.
+
+## Gate 9 - Causal Replay
+
+Gate 9 diagnoses a failed, quarantined, or divergent Gate 8 reliability trial by
+replaying from the first receipt where state diverged. It asks which specific
+tool return or persistence event caused downstream divergence. The first
+implementation is deterministic and fixture-backed: it checks a causal replay
+receipt against a Gate 8 reliability surface before production replay exists.
+
+Each causal replay must include:
+
+```text
+replay_id
+surface_id
+trial_id
+reliability_surface_sha256
+first_divergent_receipt
+replay_start_receipt_id
+suspected_tool_return
+comparison
+localized_cause
+terminal_outcome
+unknown_state_continued: false
+canonical_memory_write: false
+identity_write: false
+source_memory_write: false
+```
+
+The first divergent receipt must include:
+
+```text
+receipt_id
+receipt_index
+boundary
+expected_state_sha256
+observed_state_sha256
+```
+
+The suspected tool return must be exactly one object, not a list, and its
+operation must be one of:
+
+```text
+REMOVE_TOOL_RETURN
+REPLACE_TOOL_RETURN
+```
+
+Gate 9 invariants:
+
+- the reliability surface hash recomputes exactly;
+- the target trial resolves inside the Gate 8 reliability surface;
+- the target trial is faulted, quarantined, blocked, or otherwise divergent;
+- the first divergent receipt has different expected and observed state hashes;
+- replay starts at the first divergent receipt, not a later boundary;
+- exactly one suspected tool return is removed or replaced;
+- factual, counterfactual, and expected end-state hashes are compared;
+- the counterfactual replay must match the expected end state for a PASS;
+- a causal failure-localization receipt names the cause, receipt, tool return,
+  confidence, and evidence references;
+- `CONTINUED_WITH_UNKNOWN_STATE` is forbidden;
+- no canonical memory, identity, or source-memory write occurs.
+
+Gate 9 does not prove live Tau execution, live Memory recall, real service fault
+injection, production causal replay, statistical prediction benefit, or complete
+live Phase 01-16 runtime execution.

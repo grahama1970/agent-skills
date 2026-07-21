@@ -1,0 +1,36 @@
+{
+  "canonical_memory_write": false,
+  "comparison": {
+    "counterfactual_end_state_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "counterfactual_matches_expected": true,
+    "expected_end_state_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "factual_end_state_sha256": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+  },
+  "identity_write": false,
+  "localized_cause": {
+    "causal_confidence": 1.0,
+    "cause_type": "STALE_ARTIFACT",
+    "evidence_refs": [
+      "gate8-trial-fault-stale-artifact-001"
+    ],
+    "receipt_id": "receipt-003-load-artifact",
+    "tool_return_id": "tool-return-stale-artifact-001"
+  },
+  "reliability_surface_sha256": "sha256:32c3e23b69ad01ecc242c82256aeefcfe94db8f465e89bcc46f5d5aaebfdcaf1",
+  "replay_id": "gate9-negative-missing-first-divergence",
+  "replay_start_receipt_id": "receipt-003-load-artifact",
+  "schema": "persona_dream.research.prospective_tom.causal_replay.v1",
+  "source_memory_write": false,
+  "surface_id": "gate8-surface-dev-info-asym-01-cd",
+  "suspected_tool_return": {
+    "operation": "REPLACE_TOOL_RETURN",
+    "original_return_sha256": "sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+    "receipt_id": "receipt-003-load-artifact",
+    "replacement_return_sha256": "sha256:eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+    "tool_name": "artifact_store.read",
+    "tool_return_id": "tool-return-stale-artifact-001"
+  },
+  "terminal_outcome": "CAUSAL_FAILURE_LOCALIZED",
+  "trial_id": "gate8-trial-fault-stale-artifact-001",
+  "unknown_state_continued": false
+}
