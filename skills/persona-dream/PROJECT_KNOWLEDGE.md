@@ -1,10 +1,37 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R balanced v17-22 aggregate evidence) by agent
+**Last updated:** 2026-07-21 (PCTOM-R balanced gain/loss diagnostic) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R BALANCED PLANNING GAIN/LOSS DIAGNOSTIC): a deterministic
+  diagnostic now explains the mixed balanced v17-22 planning signal without
+  reexecuting Tau. Receipt:
+  `/tmp/persona-dream-live-tau-balanced-planning-diagnostic-20260721T193929Z/live_tau_balanced_planning_diagnostic_receipt.v1.json`.
+  Status `PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_DIAGNOSTIC`, receipt SHA-256
+  `sha256:b2a65630a4e1c1d541416ccc182a8074cd4e95e60627356dc6f5b04915c21aa8`.
+  The diagnostic consumed the accepted v17-22 aggregate receipt at
+  `/tmp/persona-dream-live-tau-balanced-planning-v17-22-aggregate-20260721T192057Z/balanced_planning_aggregate_receipt.v1.json`
+  and recomputed the aggregate row file SHA-256
+  `sha256:e42a2497ae36aea1a0e22ec0f0df1d52ec735859ba68228d19e1b40fc025ad98`.
+  The diagnostic made zero Tau calls, while the consumed aggregate binds 96
+  live Tau calls; Memory/provider/canonical/identity/source-memory writes were
+  all zero. Counts: 24 rows, 8 action switches, 8 nonzero deltas, all nonzero
+  deltas are action switches, 4 BENEFIT / 4 HARM / 16 TIE, and 4 GAIN / 4 LOSS
+  / 16 UNCHANGED. Diagnostic conclusion:
+  `ACTION_SWITCH_GAIN_LOSS_SYMMETRY`. Concrete action-switch pattern:
+  `SET_BOUNDARY -> ASK_CLARIFYING_QUESTION` appears 4 times in trust/commitment
+  with 2 GAIN and 2 LOSS; `WAIT -> OFFER_COOPERATION` appears 3 times in
+  coordination/conflict with 1 GAIN and 2 LOSS; `WAIT -> ASK_CLARIFYING_QUESTION`
+  appears once in preference/desire with 1 GAIN. This proves the current
+  balanced nonzero planning-regret signal is action-policy threshold behavior,
+  not broad planning benefit. It does not prove confidence-bounded CD planning
+  benefit, semantic dream quality, paid provider execution, complete live
+  Phase 01-16 runtime execution, or reproducibility on a larger/different
+  corpus. Next PCTOM-R work should add a targeted controlled intervention that
+  separates clarifying-question and cooperation thresholds in coordination/
+  conflict and trust/commitment before any planning-benefit claim.
 - 2026-07-21 (PCTOM-R BALANCED LIVE TAU V17-22 AGGREGATE): a follow-on
   balanced variants 21-22 slice also passed, then accepted balanced slices
   v17-18, v19-20 retry, and v21-22 were aggregated without reexecuting Tau.
