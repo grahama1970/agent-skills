@@ -101,36 +101,35 @@ async function main(): Promise<void> {
   assert.ok(row10Receipt.events?.some((event: any) => event.action === 'reject_box'))
   assert.ok(row10Receipt.events?.filter((event: any) => event.action === 'accept').every((event: any) => event.memory_sync?.state === 'stored'))
 
-  await writeProofManifest({
-    proofDir,
-    manifest: {
-      schema: 'watch.immutable_goal_proof.v1',
-      goal_id: 'watch-yolo-memory-identity',
-      status: 'PASS',
-      mocked: false,
-      live: true,
-      commit_sha: sha,
-      created_at: new Date().toISOString(),
-      memory_daemon_url: redactUrl(process.env.MEMORY_DAEMON_URL || 'http://127.0.0.1:8601'),
-      asset_uid: 'bad_santa_unrated_2003_brrip_xvidhd_720p_npw',
-      proof_only_row10_asset_uid: 'watch_immutable_proof_asset',
-      rows: [9, 10],
-      tracks: ['track_2', 'track_15'],
-      assertions: {
-        live_qdrant_suggestion: true,
-        suggestion_tentative: true,
-        human_accept_persisted: true,
-        stop_persisted: true,
-        identity_absent_after_stop: true,
-        explicit_reassignment_persisted: true,
-        reload_hydration_passed: true,
-        memory_sync_stored: true,
-        suggestion_query_did_not_mutate_receipt: true,
-      },
-    },
-  })
-
   if (persistProof) {
+    await writeProofManifest({
+      proofDir,
+      manifest: {
+        schema: 'watch.immutable_goal_proof.v1',
+        goal_id: 'watch-yolo-memory-identity',
+        status: 'PASS',
+        mocked: false,
+        live: true,
+        commit_sha: sha,
+        created_at: new Date().toISOString(),
+        memory_daemon_url: redactUrl(process.env.MEMORY_DAEMON_URL || 'http://127.0.0.1:8601'),
+        asset_uid: 'bad_santa_unrated_2003_brrip_xvidhd_720p_npw',
+        proof_only_row10_asset_uid: 'watch_immutable_proof_asset',
+        rows: [9, 10],
+        tracks: ['track_2', 'track_15'],
+        assertions: {
+          live_qdrant_suggestion: true,
+          suggestion_tentative: true,
+          human_accept_persisted: true,
+          stop_persisted: true,
+          identity_absent_after_stop: true,
+          explicit_reassignment_persisted: true,
+          reload_hydration_passed: true,
+          memory_sync_stored: true,
+          suggestion_query_did_not_mutate_receipt: true,
+        },
+      },
+    })
     const manifestPath = path.relative(repoRoot, path.join(proofDir, 'manifest.json'))
     await writeFile(
       path.resolve(repoRoot, 'skills/watch/proofs/immutable-goal/latest.json'),
