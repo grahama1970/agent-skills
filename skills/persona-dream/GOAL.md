@@ -27,6 +27,16 @@ receipt-backed, provenance-bound, and fail-closed under faults.
 The controlling research program is PCTOM-R: Prospective Counterfactual
 Theory-of-Mind Reliability.
 
+The recommended frontier is prospective and fault-aware, not another provider
+call, richer renderer, subjective dream-content gate, dashboard, or
+human-facing explanation artifact:
+
+```text
+Can synthetic dreaming improve an agent's calibrated predictions and decisions
+about other minds while the full pipeline remains reliable under memory, model,
+tool, schema, persistence, retry, and fault-injection pressure?
+```
+
 The active immutable research objective is:
 
 ```text
@@ -532,6 +542,7 @@ last_blocked_expanded_repeated_seed_one_source_receipt: /tmp/persona-dream-live-
 last_local_http_service_retry_receipt: /tmp/persona-dream-live-tau-sealed-test-service-retry-proof-20260721T121812Z/live_tau_sealed_test_service_retry_proof_receipt.v1.json
 last_full64_live_memory_fault_surface_receipt: /tmp/persona-dream-live-tau-full64-memory-fault-surface-20260721T122732Z/live_tau_full64_memory_fault_surface_receipt.v1.json
 last_planning_non_generalization_audit_receipt: /tmp/persona-dream-live-tau-planning-non-generalization-audit-20260721T124136Z/planning_non_generalization_audit_receipt.v1.json
+last_planning_non_generalization_audit_postrebase_receipt: /tmp/persona-dream-live-tau-planning-non-generalization-audit-postrebase-20260721T124457Z/planning_non_generalization_audit_receipt.v1.json
 next_required_receipt: broader/different planning intervention evidence that changes action policy beyond the current sparse trust/commit subset, or non-identical repeated live Tau behavior over a larger/balanced planning corpus
 secondary_receipt: permanently deployed external always-on orchestrator retry proof, only as supporting reliability evidence
 ```
@@ -1138,8 +1149,10 @@ Planning non-generalization audit summary:
 
 ```text
 receipt: /tmp/persona-dream-live-tau-planning-non-generalization-audit-20260721T124136Z/planning_non_generalization_audit_receipt.v1.json
+postrebase_receipt: /tmp/persona-dream-live-tau-planning-non-generalization-audit-postrebase-20260721T124457Z/planning_non_generalization_audit_receipt.v1.json
 status: PASS_LIVE_TAU_PCTOM_PLANNING_NON_GENERALIZATION_AUDIT
 receipt_sha256: sha256:35a6d2940863de21966a7d2c11edb373165035f358a886d4500b79a1515f5559
+postrebase_receipt_sha256: sha256:b543088fa98e8e4a35df6cd403d368dcd26838bc36a0da04ce93cf6873ff0708
 conclusion: PLANNING_SIGNAL_SPARSE_FAMILY_CONCENTRATED_NOT_GENERALIZED
 input_receipts: 4
 full64_statistical_confidence_sha256: sha256:299f499b59b4cbf37bbde42df7a293fe2d064658724fa53d63dd677fc40a5574
