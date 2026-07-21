@@ -216,8 +216,8 @@ CD belief-Brier benefit over the strongest baseline, but action Brier and
 planning-regret confidence intervals cross zero. The full64 retry receipt
 supports bounded idempotence and fail-closed retry/fault handling over the same
 full64 root. The goal remains open because planning benefit, expanded
-action-policy sensitivity, broader live service faults, and permanently deployed
-production retry machinery are not yet proven by local receipts. The expanded
+action-policy sensitivity, and permanently deployed production retry machinery
+are not yet proven by local receipts. The expanded
 deterministic trust/commitment receipts add 24 variants per family, a filtered
 8-episode trust/commitment slice over variants 17-24, and an empty-filter
 blocked receipt; this improves corpus coverage and filter-boundary discipline
@@ -237,8 +237,11 @@ accept retry jobs over HTTP, handle a duplicate job id idempotently, recover
 equivalent active state on retry jobs, and block missing-base-root plus
 interrupted-persistence jobs before active-state promotion. It is service
 boundary evidence over live Tau-originated full64 artifacts, but it is not a
-permanently deployed external production service and does not replace live
-Memory-in-loop/fault proof.
+permanently deployed external production service. The full64 live Memory fault
+surface now binds full64 live Tau evidence, live Memory revision recall, and
+local service retry evidence before probing live Memory faults; it still does
+not prove planning benefit or a permanently deployed external production
+service.
 
 ## Research Question
 
@@ -480,12 +483,13 @@ Blocked live expanded trust/commitment empty-filter proof root: /tmp/persona-dre
 Repeated expanded live trust/commitment Tau summary proof root: /tmp/persona-dream-live-tau-trust-commit-expanded-repeated-seed-summary-20260721T120650Z
 Blocked repeated expanded live trust/commitment one-source summary proof root: /tmp/persona-dream-live-tau-trust-commit-expanded-repeated-seed-summary-one-source-20260721T120712Z
 Local HTTP service retry proof root: /tmp/persona-dream-live-tau-sealed-test-service-retry-proof-20260721T121812Z
+Full64 live Memory fault surface proof root: /tmp/persona-dream-live-tau-full64-memory-fault-surface-20260721T122732Z
 ```
 
 Current active phase boundary:
 
 ```text
-phase: post-local-http-service-retry-proof, pre-live-memory-in-loop-fault-or-broader-planning-proof
+phase: post-full64-live-memory-fault-surface, pre-broader-planning-or-permanently-deployed-service-proof
 last_live_condition_receipt: /tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z/live_tau_condition_comparison_receipt.v1.json
 last_reliability_receipt: /tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z/live_tau_condition_reliability_bridge_receipt.v1.json
 last_action_selection_receipt: /tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z/live_tau_condition_action_selection_receipt.v1.json
@@ -517,8 +521,9 @@ last_blocked_live_expanded_trust_commit_empty_filter_receipt: /tmp/persona-dream
 last_expanded_repeated_seed_summary_receipt: /tmp/persona-dream-live-tau-trust-commit-expanded-repeated-seed-summary-20260721T120650Z/live_tau_trust_commit_repeated_seed_receipt.v1.json
 last_blocked_expanded_repeated_seed_one_source_receipt: /tmp/persona-dream-live-tau-trust-commit-expanded-repeated-seed-summary-one-source-20260721T120712Z/live_tau_trust_commit_repeated_seed_receipt.v1.json
 last_local_http_service_retry_receipt: /tmp/persona-dream-live-tau-sealed-test-service-retry-proof-20260721T121812Z/live_tau_sealed_test_service_retry_proof_receipt.v1.json
-next_required_receipt: live Memory-in-loop/fault evidence, broader/different planning intervention evidence, or permanently deployed external service evidence, selected by the active research question
-secondary_receipt: live Memory fault injection in the same sealed-test loop or deployed always-on orchestrator retry proof
+last_full64_live_memory_fault_surface_receipt: /tmp/persona-dream-live-tau-full64-memory-fault-surface-20260721T122732Z/live_tau_full64_memory_fault_surface_receipt.v1.json
+next_required_receipt: broader/different planning intervention evidence or permanently deployed external service evidence, selected by the active research question
+secondary_receipt: permanently deployed external always-on orchestrator retry proof
 ```
 
 This boundary means Gate 8/9 condition reliability over live-originated
@@ -551,8 +556,8 @@ terminal-outcome discipline over 256 active predictions and 256 action
 decisions. The action-policy sensitivity receipt now explains the sparse
 planning point estimate at the realized-action level: all 4 nonzero deltas are
 action switches in `trust-commit`, with 3 oracle-match gains and 1 oracle-match
-loss. The active next movement is now production retry-service proof, live
-Memory-in-loop/fault evidence, or a broader/different planning intervention.
+loss. The active next movement is now broader/different planning intervention
+evidence or permanently deployed external service proof.
 The deterministic corpus has now been expanded to 24
 episodes per family, and the filtered trust/commitment heldout slice over
 variants 17-24 produced sealed/scored/action coverage with an empty-filter
@@ -570,7 +575,10 @@ is repeated live execution evidence rather than confidence-bounded planning
 proof or non-identical seed-behavior evidence. The local HTTP service retry
 proof now exercises retry/fault handling through a separate service process
 and HTTP submission boundary, including duplicate submission idempotence. A
-permanently deployed external always-on service boundary remains unproven. The
+full64 live Memory fault surface now probes live Memory failures and recall
+perturbations against full64 live Tau-originated evidence with only allowed
+terminal outcomes. A permanently deployed external always-on service boundary
+remains unproven. The
 run.sh orchestration proof exercises the local skill command dispatcher, but
 it is not a service boundary.
 
@@ -1052,6 +1060,56 @@ promotion. It does not prove a permanently deployed external production
 service, new live Tau execution, live Memory service fault injection, paid
 provider execution, semantic dream quality, or complete live Phase 01-16
 runtime execution.
+
+Full64 live Memory fault surface summary:
+
+```text
+receipt: /tmp/persona-dream-live-tau-full64-memory-fault-surface-20260721T122732Z/live_tau_full64_memory_fault_surface_receipt.v1.json
+status: PASS_LIVE_TAU_PCTOM_FULL64_MEMORY_FAULT_SURFACE
+receipt_sha256: sha256:0fe9ca165aaec83bd948a9136419fa38a1fdd3b3a368b904cdcebdb6ced8f311
+base_full64_live_tau_statistical_confidence_receipt: /tmp/persona-dream-live-tau-full64-statistical-confidence-20260721T092609Z/live_tau_full64_statistical_confidence_receipt.v1.json
+base_live_memory_revision_recall_receipt: /tmp/persona-dream-live-memory-revision-recall-20260721T042742Z/live_memory_revision_recall_receipt.v1.json
+base_local_http_service_retry_receipt: /tmp/persona-dream-live-tau-sealed-test-service-retry-proof-20260721T121812Z/live_tau_sealed_test_service_retry_proof_receipt.v1.json
+fault_trials: 8
+fault_families: 8
+live_memory_fault_probes: 10
+condition_recall_queries: 4
+condition_recall_successes: 4
+causal_replay_receipts: 1
+terminal_outcome_counts: RECOVERED_WITH_EQUIVALENT_END_STATE=4, BLOCKED_BEFORE_SIDE_EFFECT=3, QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE=1
+fault_families_present: memory_timeout_or_unreachable, memory_malformed_payload, memory_collection_visibility_or_stale_recall, memory_condition_recall_perturbation, memory_duplicate_or_irrelevant_source, schema_drift, retry_after_uncertain_completion, untrusted_tool_text
+base_receipts_hash_bound: true
+live_memory_baseline_recall_ok: true
+live_memory_condition_recall_ok: true
+live_memory_malformed_payload_blocked: true
+live_memory_unreachable_blocked: true
+collection_visibility_recovered: true
+duplicate_irrelevant_source_recovered: true
+untrusted_tool_text_quarantined: true
+retry_boundary_reused_service_duplicate_idempotence: true
+permitted_terminal_outcomes_only: true
+continued_with_unknown_state: 0
+side_effect_violations: 0
+mocked: false
+live: true
+fixture_backed: false
+live_memory_fault_probes_performed: true
+live_tau_originated_artifacts_consumed: true
+live_tau_reexecuted: false
+memory_write_attempts: 0
+provider_call_attempts: 0
+tau_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+```
+
+This proves live Memory fault probes and condition-recall perturbations over
+hash-bound full64 live Tau statistical evidence, live Memory revision recall,
+and local HTTP service retry evidence. It does not prove new live Tau execution,
+new Memory writes, a permanently deployed external production service, paid
+provider execution, semantic dream quality, or complete live Phase 01-16 runtime
+execution.
 
 Sealed-test statistical-confidence proof summary:
 
@@ -2238,13 +2296,14 @@ belief Brier benefit with CI upper below zero while action and planning CIs
 cross zero, plus one full64 retry proof over 256 active predictions/actions
 with 8 retry/fault trials and zero unknown-state or side-effect violations, plus
 one planning diagnostic proving the planning-regret CI crosses zero because the
-signal is sparse and concentrated in `trust-commit`. It does not prove paid
-provider execution, semantic dream quality, confidence-bounded planning-regret
-benefit under repeated seeds or a larger/balanced corpus, full external service
-fault injection beyond Memory `/recall`, permanently deployed always-on
-production service retry machinery, complete live Phase 01-16 runtime
-execution, or autonomous operation beyond the bounded bridges. Those require
-separate live receipts.
+signal is sparse and concentrated in `trust-commit`, plus one local HTTP
+service retry proof and one full64 live Memory fault surface over eight fault
+families with no unknown-state continuation or side-effect violation. It does
+not prove paid provider execution, semantic dream quality,
+confidence-bounded planning-regret benefit under repeated seeds or a
+larger/balanced corpus, permanently deployed always-on production service retry
+machinery, complete live Phase 01-16 runtime execution, or autonomous
+operation beyond the bounded bridges. Those require separate live receipts.
 
 No agent may claim final, green, complete, fixed, verified, or closed for this
 research goal unless those concrete proof artifacts exist and are cited.
@@ -2260,9 +2319,9 @@ full64 live Tau belief-Brier confidence evidence, full64 retry/fault
 containment, a full64 planning diagnostic, a floor4 trust/commitment live Tau
 replication, a repeated-seed aggregate over two floor4 live Tau receipts,
 expanded repeated live trust/commitment summary evidence, and a local HTTP
-service retry proof to the remaining expanded/non-identical planning and
-live-Memory/service reliability questions, without reactivating provider/video
-as the critical path. The
+service retry proof, and a full64 live Memory fault surface to the remaining
+expanded/non-identical planning and permanently deployed external service
+questions, without reactivating provider/video as the critical path. The
 blocked one-episode trust/commitment smoke is part of that evidence boundary:
 it exercised 4 live Tau calls and failed closed because the action-selection
 bridge requires at least 16 Tau calls and at least 4 sealed/scored cases per
@@ -2273,7 +2332,9 @@ evidence because its planning-regret CI crosses zero and the second run
 reproduced the same action-row pattern as the first. The local HTTP service
 retry proof exercises a service process and HTTP submission boundary over
 full64 live-originated artifacts, but remains local process evidence rather
-than a permanently deployed external production service.
+than a permanently deployed external production service. The full64 live Memory
+fault surface exercises Memory `/recall` failure and perturbation boundaries
+against full64 live Tau evidence with allowed terminal outcomes only.
 
 The next accepted artifact must answer this narrower question:
 
@@ -2289,10 +2350,10 @@ The next accepted artifact must answer this narrower question:
 The secondary artifact must answer this question:
 
 1. Does retry/fault handling preserve the same terminal-outcome discipline
-   under live Memory service faults in the sealed-test loop and, separately,
    inside a permanently deployed external always-on service boundary, not only
    the bounded research bridge, local `run.sh` dispatcher, bounded local
-   queue-worker process, local HTTP service process, and full64 artifact replay?
+   queue-worker process, local HTTP service process, full64 artifact replay,
+   and live Memory `/recall` fault probes?
 
 Resolved live Memory diagnostic:
 

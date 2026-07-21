@@ -1,10 +1,32 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R local HTTP service retry boundary accepted) by agent
+**Last updated:** 2026-07-21 (PCTOM-R full64 live Memory fault surface accepted) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R FULL64 LIVE MEMORY FAULT SURFACE): full64 live
+  Memory-in-loop fault evidence now exists at
+  `/tmp/persona-dream-live-tau-full64-memory-fault-surface-20260721T122732Z/live_tau_full64_memory_fault_surface_receipt.v1.json`.
+  It reports `PASS_LIVE_TAU_PCTOM_FULL64_MEMORY_FAULT_SURFACE` while
+  hash-binding the full64 live Tau statistical-confidence receipt, the live
+  Memory revision-recall receipt, and the local HTTP service retry receipt.
+  Counts: 8 fault trials, 8 fault families, 10 live Memory `/recall` probes,
+  4 condition recall queries, 4 condition recall successes, 1 causal replay
+  receipt, 0 `CONTINUED_WITH_UNKNOWN_STATE`, 0 side-effect violations, and 0
+  Memory/provider/Tau/canonical/identity/source-memory writes by this fault
+  surface. Fault families covered: Memory unreachable, malformed Memory
+  payload, collection visibility/stale recall, condition recall perturbation,
+  duplicate/irrelevant source perturbation, schema drift, retry after uncertain
+  completion, and untrusted tool text. Terminal outcomes were constrained to
+  `RECOVERED_WITH_EQUIVALENT_END_STATE`, `BLOCKED_BEFORE_SIDE_EFFECT`, and
+  `QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE`. This is live Memory probe
+  evidence over full64 live Tau-originated artifacts and the local service
+  retry boundary; it does not prove new live Tau execution, new Memory writes,
+  a permanently deployed external production service, paid provider execution,
+  semantic dream quality, or complete Phase 01-16 runtime execution. Next
+  PCTOM-R work should target a broader/different planning intervention or a
+  permanently deployed external service boundary.
 - 2026-07-21 (PCTOM-R LOCAL HTTP SERVICE RETRY BOUNDARY): local HTTP
   service-boundary retry evidence now exists at
   `/tmp/persona-dream-live-tau-sealed-test-service-retry-proof-20260721T121812Z/live_tau_sealed_test_service_retry_proof_receipt.v1.json`.
