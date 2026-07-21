@@ -521,6 +521,8 @@ Tau adapter timeout containment control proof root: /tmp/persona-dream-live-tau-
 Blocked strict-inference prompt replication proof root: /tmp/persona-dream-live-tau-strict-inference-smoke-clean-timeout-20260721T143140Z
 Tau systemic timeout breaker proof root: /tmp/persona-dream-live-tau-systemic-breaker-final-20260721T1448Z
 Blocked strict-inference systemic timeout breaker proof root: /tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z
+Tau boundary receipt proof root: /tmp/persona-dream-live-tau-boundary-receipts-20260721T1500Z
+Blocked strict-inference boundary receipt proof root: /tmp/persona-dream-live-tau-strict-boundary-receipts-20260721T1500Z
 ```
 
 Current active phase boundary:
@@ -571,7 +573,9 @@ last_tau_adapter_timeout_control_receipt: /tmp/persona-dream-live-tau-default-co
 last_blocked_strict_inference_prompt_receipt: /tmp/persona-dream-live-tau-strict-inference-smoke-clean-timeout-20260721T143140Z/live_tau_strict_inference_prompt_replication_receipt.v1.json
 last_tau_systemic_timeout_breaker_receipt: /tmp/persona-dream-live-tau-systemic-breaker-final-20260721T1448Z/live_tau_condition_comparison_receipt.v1.json
 last_blocked_strict_inference_systemic_timeout_breaker_receipt: /tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_prompt_replication_receipt.v1.json
-next_required_receipt: diagnose why the Tau text preflight succeeds but full PCTOM-R condition prompts time out, rerun strict-inference prompt replication with normal timeouts after that boundary responds, then test a deterministic utility/reward or scenario/policy expansion for beneficial CD-vs-baseline planning under balanced live coverage
+last_tau_boundary_receipt_diagnostic: /tmp/persona-dream-live-tau-boundary-receipts-20260721T1500Z/live_tau_condition_comparison_receipt.v1.json
+last_blocked_strict_inference_boundary_receipt: /tmp/persona-dream-live-tau-strict-boundary-receipts-20260721T1500Z/live_tau_strict_inference_prompt_replication_receipt.v1.json
+next_required_receipt: diagnose why the Tau text preflight succeeds but full PCTOM-R condition prompts of roughly 15.8-16.8 KB time out, rerun strict-inference prompt replication with normal timeouts after that boundary responds, then test a deterministic utility/reward or scenario/policy expansion for beneficial CD-vs-baseline planning under balanced live coverage
 secondary_receipt: permanently deployed external always-on orchestrator retry proof, only as supporting reliability evidence
 ```
 
@@ -713,6 +717,17 @@ marked `blocked_by_systemic_failure`. The strict-inference receipt records the
 same timeout signature with only 3 Tau case attempts and 13 remaining planned
 cases marked `blocked_by_systemic_failure`. This is not planning benefit
 evidence; it is the current fail-closed reliability boundary.
+
+The boundary-receipt follow-up strengthens the timeout diagnosis. Every live
+Tau condition row now has an inspectable local Tau boundary receipt even when
+Tau dispatch times out before returning its own receipt or when the systemic
+breaker skips the planned case. The condition receipt records
+`tau_boundary_receipts_written:4` and
+`tau_boundary_receipts_written_for_all_rows:true`; the strict-inference receipt
+records `condition_tau_boundary_receipts_written:16` and
+`condition_tau_boundary_receipts_written_for_all_rows:true`. Those local
+receipts include prompt hashes and prompt byte counts. This closes the
+unreceipted timeout edge; it does not make the live condition calls pass.
 
 Expanded deterministic trust/commitment heldout summary:
 

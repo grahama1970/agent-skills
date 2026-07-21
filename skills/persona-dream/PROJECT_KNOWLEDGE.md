@@ -1,10 +1,28 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R Tau systemic timeout breaker added) by agent
+**Last updated:** 2026-07-21 (PCTOM-R Tau boundary receipts added) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R TAU BOUNDARY RECEIPTS): the preflight/pass plus
+  case-timeout boundary now has per-case local receipts. When Tau dispatch
+  raises before returning a Tau receipt, the live condition runner writes a
+  `persona_dream.research.prospective_tom.tau_text_reasoning_dispatch_boundary_receipt.v1`
+  with prompt SHA-256, prompt byte/character counts, output-contract hash,
+  timeout, status, and systemic-failure signature. When the systemic breaker
+  skips remaining cases, it writes the same receipt schema with
+  `BLOCKED_BY_SYSTEMIC_FAILURE`. Receipt:
+  `/tmp/persona-dream-live-tau-boundary-receipts-20260721T1500Z/live_tau_condition_comparison_receipt.v1.json`
+  reports `tau_boundary_receipts_written:4`,
+  `tau_boundary_receipts_written_for_all_rows:true`, `tau_call_attempts:3`,
+  and `blocked_by_systemic_failure:1`. Strict-inference receipt:
+  `/tmp/persona-dream-live-tau-strict-boundary-receipts-20260721T1500Z/live_tau_strict_inference_prompt_replication_receipt.v1.json`
+  reports `condition_tau_boundary_receipts_written:16`,
+  `condition_tau_boundary_receipts_written_for_all_rows:true`,
+  `tau_call_attempts:3`, and `condition_blocked_by_systemic_failure:13`.
+  This improves receipt discipline and timeout diagnosis; it still does not
+  prove strict prompt quality or planning benefit.
 - 2026-07-21 (PCTOM-R TAU SYSTEMIC TIMEOUT BREAKER): live Tau/scillm
   text-reasoning now reaches the one-shot Tau preflight, but case prompts are
   timing out. The live condition runner now performs a bounded Tau preflight

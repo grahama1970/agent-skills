@@ -69,6 +69,10 @@ def _stable_json_sha256(value: Any) -> str:
     return "sha256:" + hashlib.sha256(payload).hexdigest()
 
 
+def _text_sha256(value: str) -> str:
+    return "sha256:" + hashlib.sha256(value.encode("utf-8")).hexdigest()
+
+
 def _systemic_failure_signature(error: str) -> str | None:
     if "Tau dispatch timed out after" in error:
         return "tau_text_reasoning_timeout"
@@ -112,6 +116,43 @@ def _compact_tau_receipt(receipt: dict[str, Any]) -> dict[str, Any]:
         "error",
     ]
     return {key: receipt.get(key) for key in keys if key in receipt}
+
+
+def _dispatch_boundary_receipt(
+    *,
+    role: str,
+    model: str | None,
+    prompt: str,
+    output_contract: dict[str, Any],
+    timeout_s: float,
+    status: str,
+    error: str | None = None,
+    systemic_failure_signature: str | None = None,
+) -> dict[str, Any]:
+    return {
+        "schema": "persona_dream.research.prospective_tom.tau_text_reasoning_dispatch_boundary_receipt.v1",
+        "created_at": _now_iso(),
+        "role": role,
+        "mocked": False,
+        "live": False,
+        "surface": "tau:persona-dream-text-reasoning",
+        "model": model,
+        "caller_skill": "persona-dream",
+        "prompt_sha256": _text_sha256(prompt),
+        "prompt_char_count": len(prompt),
+        "prompt_byte_count": len(prompt.encode("utf-8")),
+        "output_contract_sha256": _stable_json_sha256(output_contract),
+        "timeout_s": timeout_s,
+        "status": status,
+        "error": error,
+        "systemic_failure_signature": systemic_failure_signature,
+        "live_call_performed": False,
+        "memory_write_attempts": 0,
+        "provider_call_attempts": 0,
+        "canonical_memory_write_attempts": 0,
+        "identity_write_attempts": 0,
+        "source_memory_write_attempts": 0,
+    }
 
 
 def _visible_refs(episode: dict[str, Any]) -> list[dict[str, str]]:
@@ -721,10 +762,23 @@ def run_live_comparison(
                 receipts: dict[str, dict[str, Any]] = {}
                 tau_receipt: dict[str, Any] | None = None
                 parsed: dict[str, Any] | None = None
+                role = f"pctom-live-condition-{condition.lower()}"
+                output_contract = _output_contract()
+                prompt_text = _prompt(episode, condition)
 
                 if systemic_failure_signature is not None:
                     blocked_by_systemic_failure += 1
                     case_errors.append(f"blocked_by_systemic_failure:{systemic_failure_signature}")
+                    tau_receipt = _dispatch_boundary_receipt(
+                        role=role,
+                        model=model,
+                        prompt=prompt_text,
+                        output_contract=output_contract,
+                        timeout_s=timeout_s,
+                        status="BLOCKED_BY_SYSTEMIC_FAILURE",
+                        systemic_failure_signature=systemic_failure_signature,
+                    )
+                    _write_json(tau_receipt_path, tau_receipt)
                     rows.append(
                         {
                             "episode_id": episode["episode_id"],
@@ -732,8 +786,12 @@ def run_live_comparison(
                             "case_root": str(case_root),
                             "receipt_root": str(case_receipts),
                             "tau_receipt_path": str(tau_receipt_path),
-                            "tau_status": None,
-                            "tau_live_call_performed": False,
+                            "tau_receipt_exists": tau_receipt_path.exists(),
+                            "prompt_sha256": tau_receipt.get("prompt_sha256"),
+                            "prompt_char_count": tau_receipt.get("prompt_char_count"),
+                            "prompt_byte_count": tau_receipt.get("prompt_byte_count"),
+                            "tau_status": tau_receipt.get("status"),
+                            "tau_live_call_performed": tau_receipt.get("live_call_performed"),
                             "blocked_by_systemic_failure": True,
                             "systemic_failure_signature": systemic_failure_signature,
                             "statuses": {},
@@ -747,9 +805,9 @@ def run_live_comparison(
                 try:
                     tau_call_attempts += 1
                     parsed_candidate, tau_receipt = adapter.dispatch_text_reasoning(
-                        _prompt(episode, condition),
-                        f"pctom-live-condition-{condition.lower()}",
-                        output_contract=_output_contract(),
+                        prompt_text,
+                        role,
+                        output_contract=output_contract,
                         caller_skill="persona-dream",
                         model=model,
                         timeout_s=timeout_s,
@@ -767,7 +825,19 @@ def run_live_comparison(
                     else:
                         case_errors.append("tau_parsed_json_not_object")
                 except Exception as exc:
-                    case_errors.append(f"tau_text_reasoning_failed:{exc}")
+                    error_text = str(exc)
+                    case_errors.append(f"tau_text_reasoning_failed:{error_text}")
+                    tau_receipt = _dispatch_boundary_receipt(
+                        role=role,
+                        model=model,
+                        prompt=prompt_text,
+                        output_contract=output_contract,
+                        timeout_s=timeout_s,
+                        status="BLOCKED_DISPATCH_ERROR",
+                        error=error_text,
+                        systemic_failure_signature=_systemic_failure_signature(error_text),
+                    )
+                    _write_json(tau_receipt_path, tau_receipt)
 
                 if parsed:
                     distribution_bundle = parsed.get("tom_belief_distribution_bundle")
@@ -831,8 +901,14 @@ def run_live_comparison(
                         "case_root": str(case_root),
                         "receipt_root": str(case_receipts),
                         "tau_receipt_path": str(tau_receipt_path),
+                        "tau_receipt_exists": tau_receipt_path.exists(),
+                        "prompt_sha256": tau_receipt.get("prompt_sha256") if tau_receipt else _text_sha256(prompt_text),
+                        "prompt_char_count": tau_receipt.get("prompt_char_count") if tau_receipt else len(prompt_text),
+                        "prompt_byte_count": tau_receipt.get("prompt_byte_count") if tau_receipt else len(prompt_text.encode("utf-8")),
                         "tau_status": tau_receipt.get("status") if tau_receipt else None,
                         "tau_live_call_performed": tau_receipt.get("live_call_performed") if tau_receipt else False,
+                        "blocked_by_systemic_failure": False,
+                        "systemic_failure_signature": tau_receipt.get("systemic_failure_signature") if tau_receipt else None,
                         "statuses": {name: receipt.get("status") for name, receipt in receipts.items()},
                         "scoring_metrics": receipts.get("gate5", {}).get("metrics", {}),
                         "errors": case_errors,
@@ -864,6 +940,17 @@ def run_live_comparison(
             errors.append(f"tau_call_attempts_insufficient:{tau_call_attempts}")
     if not tau_receipts_hash_bound:
         errors.append("tau_receipts_hash_bound_false")
+
+    tau_boundary_receipts_written = sum(
+        1 for row in rows if isinstance(row, dict) and row.get("tau_receipt_exists") is True
+    )
+    tau_boundary_receipts_missing = [
+        row.get("tau_receipt_path")
+        for row in rows
+        if isinstance(row, dict) and row.get("tau_receipt_exists") is not True
+    ]
+    if tau_boundary_receipts_missing:
+        errors.append(f"tau_boundary_receipts_missing:{len(tau_boundary_receipts_missing)}")
 
     metrics = _summarize(rows)
     _write_json(case_index_path, rows)
@@ -901,6 +988,8 @@ def run_live_comparison(
         "systemic_failure_signature": systemic_failure_signature,
         "systemic_failure_counts": dict(systemic_failure_counts),
         "blocked_by_systemic_failure": blocked_by_systemic_failure,
+        "tau_boundary_receipts_written": tau_boundary_receipts_written,
+        "tau_boundary_receipts_missing": tau_boundary_receipts_missing,
         "memory_write_attempts": 0,
         "provider_call_attempts": 0,
         "canonical_memory_write_attempts": 0,
@@ -914,6 +1003,7 @@ def run_live_comparison(
             "cases": len(rows),
             "executed_cases": len(rows) - blocked_by_systemic_failure,
             "blocked_by_systemic_failure": blocked_by_systemic_failure,
+            "tau_boundary_receipts_written": tau_boundary_receipts_written,
             "sealed_commitments_per_condition": sealed_counts,
             "deterministic_scores_per_condition": scored_counts,
             "status_counts": dict(sorted(status_counts.items())),
@@ -927,6 +1017,7 @@ def run_live_comparison(
             or systemic_failure_counts.get(systemic_failure_signature, 0) == SYSTEMIC_FAILURE_THRESHOLD,
             "remaining_cases_marked_blocked_by_systemic_failure": systemic_failure_signature is None
             or blocked_by_systemic_failure > 0,
+            "tau_boundary_receipts_written_for_all_rows": tau_boundary_receipts_written == len(rows),
             "human_content_judgment_absent": True,
             "unsupported_writes_absent": True,
         },

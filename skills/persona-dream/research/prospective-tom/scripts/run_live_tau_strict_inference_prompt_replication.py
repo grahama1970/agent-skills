@@ -609,6 +609,8 @@ def run_strict_replication(
         "condition_systemic_failure_signature": condition_receipt.get("systemic_failure_signature"),
         "condition_systemic_failure_counts": condition_receipt.get("systemic_failure_counts"),
         "condition_blocked_by_systemic_failure": counts.get("blocked_by_systemic_failure"),
+        "condition_tau_boundary_receipts_written": condition_receipt.get("tau_boundary_receipts_written"),
+        "condition_tau_boundary_receipts_missing": condition_receipt.get("tau_boundary_receipts_missing"),
         "human_content_judgment_required": False,
         "llm_judge_used": False,
         "tau_call_attempts": condition_receipt.get("tau_call_attempts"),
@@ -643,6 +645,9 @@ def run_strict_replication(
             "remaining_cases_marked_blocked_by_systemic_failure": (
                 not condition_systemic_failure_blocked
                 or bool(counts.get("blocked_by_systemic_failure"))
+            ),
+            "condition_tau_boundary_receipts_written_for_all_rows": (
+                condition_receipt.get("tau_boundary_receipts_written") == counts.get("cases")
             ),
             "condition_receipt_passed": condition_receipt.get("status") == live_condition.PASS_STATUS,
             "action_selection_receipt_passed": action_receipt.get("status") == action_selection.PASS_STATUS,
