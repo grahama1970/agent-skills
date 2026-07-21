@@ -133,6 +133,21 @@ Next: <one immediate action or stop condition>
 
 ## Current Evidence Snapshot
 
+- PCTOM-R live Tau cooperation contrast slice:
+  `/tmp/persona-dream-live-tau-cooperation-contrast-slice-reuse-proof-20260721T214048Z/live_tau_cooperation_contrast_slice_receipt.v1.json`.
+  Status `PASS_LIVE_TAU_PCTOM_COOPERATION_CONTRAST_SLICE`, receipt SHA-256
+  `sha256:2df9f209bcb005ea23ddc2233f18a694a1eb9cece38c886b785c937f331f875d`,
+  `mocked:false`, `live:true`, deterministic simulator corpus `true`, 32 Tau
+  attempts, 32 live Tau calls, 32 Gate 6 action cases, zero Memory/provider/
+  canonical/identity/source-memory writes, no LLM judge, and no human content
+  judgment. Counts: eight contrast rows, four keep-cooperation positives, four
+  avoid/unsafe-cooperation rows, zero CD `OFFER_COOPERATION` candidates, zero
+  low-confidence cooperation interventions, and zero threshold-rule action
+  changes. Slice conclusion:
+  `CONTRAST_SLICE_LIVE_TAU_NO_CD_OFFER_EXPOSURE`. This proves live Tau and
+  action-scoring execution over the contrast corpus, but it does not prove CD
+  exposure of both cooperation action classes, replacement policy validity, or
+  planning benefit.
 - PCTOM-R cooperation contrast instrument:
   `/tmp/persona-dream-cooperation-contrast-instrument-20260721T212749Z/cooperation_contrast_instrument_receipt.v1.json`.
   Status `PASS_PCTOM_COOPERATION_CONTRAST_INSTRUMENT`, receipt SHA-256

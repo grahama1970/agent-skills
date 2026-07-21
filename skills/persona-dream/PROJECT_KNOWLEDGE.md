@@ -1,10 +1,37 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R cooperation contrast instrument) by agent
+**Last updated:** 2026-07-21 (PCTOM-R live Tau cooperation contrast slice) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R LIVE TAU COOPERATION CONTRAST SLICE): the deterministic
+  cooperation-contrast corpus was consumed by the live Tau M/R/D/CD condition
+  runner and Gate 6 action scorer. Command:
+  `./skills/persona-dream/run.sh run-live-tau-cooperation-contrast-slice`.
+  Final receipt:
+  `/tmp/persona-dream-live-tau-cooperation-contrast-slice-reuse-proof-20260721T214048Z/live_tau_cooperation_contrast_slice_receipt.v1.json`.
+  Status `PASS_LIVE_TAU_PCTOM_COOPERATION_CONTRAST_SLICE`, receipt SHA-256
+  `sha256:2df9f209bcb005ea23ddc2233f18a694a1eb9cece38c886b785c937f331f875d`.
+  It consumed the live roots from
+  `/tmp/persona-dream-live-tau-cooperation-contrast-slice-20260721T213306Z`
+  after the initial wrapper run completed 32 live Tau calls and 32 Gate 6
+  action decisions but crashed in variant summarization because contrast
+  episode IDs ended in `-keep` or `-avoid`. The committed wrapper now binds
+  variants from the contrast corpus metadata. Counts: eight contrast episodes,
+  four keep-cooperation positive rows, four avoid/unsafe-cooperation contrast
+  rows, 32 cases, 32 action cases, 32 Tau attempts, 32 live Tau calls, eight
+  threshold-rule rows, and zero Memory/provider/canonical/identity/source-
+  memory writes. The pre-outcome rule inputs exclude oracle/outcome fields and
+  Tau receipts are hash-bound. Result:
+  `CONTRAST_SLICE_LIVE_TAU_NO_CD_OFFER_EXPOSURE`; CD selected zero
+  `OFFER_COOPERATION` actions across both keep and avoid/unsafe contrast rows,
+  so there are zero offer candidates, zero low-confidence cooperation
+  interventions, and zero rule action changes. Planning-benefit with confidence
+  remains false. This proves live execution over the contrast corpus, not a
+  replacement feature split or broad planning benefit. Next work should
+  diagnose why CD avoids `OFFER_COOPERATION` on both contrast classes, then
+  adjust the contrast prompt/corpus or record a no-exposure live result.
 - 2026-07-21 (PCTOM-R COOPERATION CONTRAST INSTRUMENT): a deterministic
   cooperation-contrast simulator corpus now exists to close the previous
   missing unsafe/avoid contrast blocker at the offline instrument layer.
