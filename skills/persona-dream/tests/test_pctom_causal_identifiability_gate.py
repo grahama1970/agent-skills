@@ -1,0 +1,168 @@
+"""Unit checks for the PCTOM-R causal-identifiability gate.
+
+These tests are deterministic fixture checks. They prove the derived checker
+recomputes a fixed policy surface and fails closed when raw recall attribution
+is absent; they do not prove live Tau or live Memory behavior.
+"""
+
+from __future__ import annotations
+
+import importlib.util
+import json
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+SCRIPT = ROOT / "research" / "prospective-tom" / "scripts" / "run_pctom_causal_identifiability_gate.py"
+
+
+def _load_module():
+    spec = importlib.util.spec_from_file_location("pctom_causal_identifiability_gate", SCRIPT)
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+gate = _load_module()
+
+
+def _write_json(path: Path, data: dict | list) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _seed_case(tmp_path: Path, *, raw_lineage: bool) -> tuple[Path, Path]:
+    condition_root = tmp_path / "condition"
+    action_root = tmp_path / "action"
+    episode_id = "episode-001"
+    condition = "CD"
+    action_index = [
+        {
+            "episode_id": episode_id,
+            "condition": condition,
+            "status": "PASS_TOM_ACTION_SELECTION",
+        }
+    ]
+    _write_json(
+        condition_root / "live_tau_condition_comparison_receipt.v1.json",
+        {
+            "status": "PASS_LIVE_TAU_PCTOM_CONDITION_COMPARISON",
+            "mocked": False,
+            "live": True,
+        },
+    )
+    _write_json(action_root / "artifacts" / "live_condition_action_decisions.json", action_index)
+    _write_json(
+        action_root / "live_tau_condition_action_selection_receipt.v1.json",
+        {
+            "status": "PASS_LIVE_TAU_PCTOM_CONDITION_ACTION_SELECTION",
+            "mocked": False,
+            "live": True,
+            "decision_index": str(action_root / "artifacts" / "live_condition_action_decisions.json"),
+        },
+    )
+    evidence_ref = {
+        "scope": "live_memory_recall",
+        "source_id": "normalized-memory-001",
+    }
+    if raw_lineage:
+        evidence_ref.update(
+            {
+                "accepted_source_id": "memory_001",
+                "content_sha256": "sha256:" + "a" * 64,
+            }
+        )
+    case_artifacts = condition_root / "artifacts" / "cases" / episode_id / condition
+    case_receipts = condition_root / "receipts" / "cases" / episode_id / condition
+    action_artifacts = action_root / "artifacts" / "cases" / episode_id / condition
+    action_receipts = action_root / "receipts" / "cases" / episode_id / condition
+    _write_json(
+        case_artifacts / "tom_prediction_commitment_bundle.json",
+        {
+            "commitments": [
+                {
+                    "prediction_id": "prediction-001",
+                    "prediction_payload": {
+                        "outcome_visible": False,
+                        "evidence_refs": [evidence_ref],
+                        "predicted_next_action_distribution": [
+                            {"value": "KAI_OFFERS_COOPERATION", "probability": 0.20},
+                            {"value": "KAI_SETS_BOUNDARY", "probability": 0.70},
+                            {"value": "KAI_QUIET_REVIEW", "probability": 0.10},
+                        ],
+                    },
+                }
+            ],
+        },
+    )
+    _write_json(
+        case_artifacts / "tom_outcome_reveal.json",
+        {
+            "episode_id": episode_id,
+            "prediction_id": "prediction-001",
+            "actual_next_action": "KAI_OFFERS_COOPERATION",
+        },
+    )
+    _write_json(case_receipts / "gate5_scoring_receipt.json", {"status": "PASS_TOM_SCORING_RECEIPT"})
+    _write_json(case_receipts / "gate4_commitment_check_receipt.json", {"status": "PASS_TOM_PREDICTION_COMMITMENT"})
+    _write_json(
+        action_artifacts / "action_selection.json",
+        {
+            "episode_id": episode_id,
+            "condition": condition,
+            "prediction_id": "prediction-001",
+            "selected_action": "SET_BOUNDARY",
+            "planning_regret": 0.85,
+        },
+    )
+    _write_json(action_receipts / "gate6_action_selection_receipt.json", {"status": "PASS_TOM_ACTION_SELECTION"})
+    return condition_root, action_root
+
+
+def test_oracle_and_anti_oracle_policy_projection_moves_regret():
+    actual = gate._projection("KAI_QUIET_REVIEW", actual_next_action="KAI_OFFERS_COOPERATION")
+    oracle = gate._projection("KAI_OFFERS_COOPERATION", actual_next_action="KAI_OFFERS_COOPERATION")
+    anti = gate._projection("KAI_SETS_BOUNDARY", actual_next_action="KAI_OFFERS_COOPERATION")
+    assert actual["selected_action"] == "WAIT"
+    assert oracle["selected_action"] == "OFFER_COOPERATION"
+    assert anti["selected_action"] == "SET_BOUNDARY"
+    assert oracle["planning_regret"] < actual["planning_regret"]
+    assert anti["planning_regret"] > actual["planning_regret"]
+
+
+def test_gate_passes_when_lineage_has_raw_source_ids_and_hashes(tmp_path):
+    condition_root, action_root = _seed_case(tmp_path, raw_lineage=True)
+    output_root = tmp_path / "out"
+    receipt = gate.run_causal_identifiability_gate(
+        condition_root=condition_root,
+        action_root=action_root,
+        output_root=output_root,
+        receipt_out=output_root / "pctom_causal_identifiability_receipt.json",
+    )
+    assert receipt["status"] == gate.PASS_STATUS
+    assert receipt["checks"]["fixed_action_policy_recomputed"] is True
+    assert receipt["checks"]["lineage_100_percent_complete"] is True
+    assert receipt["metrics"]["lineage"]["lineage_completeness"] == 1.0
+    assert (output_root / "pctom_causal_identifiability_manifest.json").exists()
+    assert (output_root / "pctom_oracle_policy_sensitivity.jsonl").exists()
+
+
+def test_gate_blocks_when_lineage_lacks_raw_recall_attribution(tmp_path):
+    condition_root, action_root = _seed_case(tmp_path, raw_lineage=False)
+    output_root = tmp_path / "out"
+    receipt = gate.run_causal_identifiability_gate(
+        condition_root=condition_root,
+        action_root=action_root,
+        output_root=output_root,
+        receipt_out=output_root / "pctom_causal_identifiability_receipt.json",
+    )
+    lineage = json.loads((output_root / "pctom_end_to_end_lineage_receipt.json").read_text(encoding="utf-8"))
+    sensitivity = json.loads((output_root / "pctom_oracle_policy_sensitivity_receipt.json").read_text(encoding="utf-8"))
+    assert receipt["status"] == gate.BLOCKED_STATUS
+    assert receipt["checks"]["fixed_action_policy_recomputed"] is True
+    assert receipt["checks"]["lineage_100_percent_complete"] is False
+    assert lineage["status"] == gate.LINEAGE_BLOCKED_STATUS
+    assert sensitivity["status"] == gate.SENSITIVITY_PASS_STATUS
+    assert lineage["summary"]["evidence_refs_with_accepted_raw_source_id"] == 0
+    assert lineage["summary"]["evidence_refs_with_raw_source_content_hash"] == 0
