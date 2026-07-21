@@ -268,6 +268,45 @@ Gate 4 does not prove prediction accuracy, calibration quality, outcome reveal,
 deterministic scoring, belief revision, Tau execution, live Memory recall, or
 fault-injection reliability.
 
+## Live Tau Gate 2-4 Bridge
+
+The live Tau bridge exercises the same Gate 2, Gate 3, and Gate 4 contracts
+with one real Tau text-reasoning call:
+
+```text
+deterministic social episode visible packet
+-> Tau text reasoning receipt
+-> Tau-authored ToM distribution bundle
+-> Tau-authored factual/counterfactual branch bundle
+-> sealed prediction commitment with Tau receipt hash-bound
+-> existing Gate 2/3/4 checkers
+```
+
+Required live bridge fields:
+
+```text
+mocked: false
+live: true when Tau reports live_call_performed
+fixture_backed: false
+deterministic_simulator_corpus_fixture_backed: true
+human_content_judgment_required: false
+memory_write_attempts: 0
+provider_call_attempts: 0
+tau_call_attempts: 1
+```
+
+The bridge must preserve the raw Tau receipt and parsed JSON. If Tau returns
+malformed JSON, invalid field names, hidden outcome leakage, unresolved refs,
+bad probabilities, canonical/source/identity writes, or a non-PASS Tau status,
+the bridge writes `BLOCKED_LIVE_TAU_PCTOM_GATE2_4` and does not repair the model
+output into a pass artifact.
+
+This bridge proves live Tau transport plus deterministic Gate 2-4 acceptance
+for one bounded text-first case. It does not prove prediction benefit,
+calibration quality beyond invariant checks, outcome reveal/scoring, belief
+revision, live Memory recall for the same case, real fault injection, or Phase
+01-16 media runtime execution.
+
 ## Gate 5 Scoring Contract
 
 Gate 5 reveals the deterministic outcome only after a sealed Gate 4 commitment

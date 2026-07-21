@@ -303,6 +303,7 @@ Gate 7 proof root: /tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z
 Gate 8 proof root: /tmp/persona-dream-pctom-gate8-rebased-20260721T014053Z
 Gate 9 proof root: /tmp/persona-dream-pctom-gate9-final-20260721T015757Z
 Live Gate 0 proof root: /tmp/persona-dream-live-pctom-gate0-r2-20260721T020456Z
+Live Tau Gate 2-4 proof root: /tmp/persona-dream-live-tau-gate2-4-20260721T021621Z
 ```
 
 Gate 0 proof summary:
@@ -562,6 +563,39 @@ optimal memory selection, live Tau generation, scoring, belief revision,
 fault-injected live reliability, paid provider execution, or complete live
 Phase 01-16 runtime execution.
 
+Live Tau Gate 2-4 bridge proof summary:
+
+```text
+status: PASS_LIVE_TAU_PCTOM_GATE2_4
+tau_text_status: PASS
+tau_live_call_performed: true
+Gate 2 checker result: PASS_TOM_BELIEF_DISTRIBUTIONS
+Gate 3 checker result: PASS_COUNTERFACTUAL_BRANCHES
+Gate 4 checker result: PASS_TOM_PREDICTION_COMMITMENTS
+tau_call_attempts: 1
+memory_write_attempts: 0
+provider_call_attempts: 0
+mocked: false
+live: true
+fixture_backed: false
+deterministic_simulator_corpus_fixture_backed: true
+human_content_judgment_required: false
+Gate 2 counts: 2 distributions, 2 label-matched, 1 counterfactual
+Gate 3 counts: 2 branches, 1 factual, 1 counterfactual, 1 intervention
+Gate 4 counts: 1 commitment, 3 hashes checked, 0 forbidden outcome paths
+first_attempt_status: BLOCKED_LIVE_TAU_PCTOM_GATE2_4
+first_attempt_blocker: live Tau returned parseable JSON, but Gate 3/4 validators rejected malformed branch/action field names
+```
+
+This live bridge proves one Tau-routed scillm text call can author Gate 2 ToM
+distributions, Gate 3 factual/counterfactual branches, and a Gate 4 prediction
+payload that pass the deterministic PCTOM-R validators after the ledger wrapper
+hash-binds the Tau receipt and evidence bundles. It does not prove held-out
+prediction benefit, calibration quality beyond local probability invariants,
+outcome reveal/scoring, belief revision, live Memory recall for the same trial,
+real service fault injection, provider/video execution, or complete Phase 01-16
+runtime execution.
+
 ## Completion Rule
 
 The goal is not complete until an artifact-backed final report cites local
@@ -586,42 +620,43 @@ receipts proving all of the following:
     unstable trials.
 
 The current evidence through Gate 9 is fixture-backed, with one live Gate 0
-bridge proving live Memory recall-to-prospective-lineage wiring. It does not
-prove live Tau text execution, paid provider execution, semantic dream quality,
-held-out prediction benefit, live fault containment, complete live Phase 01-16
-runtime execution, or autonomous operation beyond the Gate 0 bridge. Those
-require separate live receipts.
+bridge proving live Memory recall-to-prospective-lineage wiring and one live
+Tau Gate 2-4 bridge proving text-first Tau generation through sealed commitment
+validators. It does not prove paid provider execution, semantic dream quality,
+held-out prediction benefit, live outcome reveal/scoring, live belief revision,
+live fault containment, complete live Phase 01-16 runtime execution, or
+autonomous operation beyond the bounded bridges. Those require separate live
+receipts.
 
 No agent may claim final, green, complete, fixed, verified, or closed for this
 research goal unless those concrete proof artifacts exist and are cited.
 
 ## Next Critical Path
 
-Move from fixture-backed wiring evidence to live validation evidence for the
-same PCTOM-R lane, without reactivating provider/video as the critical path.
+Move from one-step live bridges to a live text-first prospective trial chain,
+without reactivating provider/video as the critical path.
 
-The next accepted artifact must answer the first remaining live question unless
-it is blocked by an unavailable Tau runtime:
+The next accepted artifact must consume the live Tau Gate 2-4 output root and
+answer this live question:
 
-1. Can Tau text execution produce sealed ToM distributions or commitments that
-   pass the same deterministic Gate 2-4 contracts?
+1. Can the Tau-authored sealed commitment be revealed and scored by the
+   deterministic Gate 5 contract, then feed non-destructive Gate 7 belief
+   revision without canonical/source/identity writes?
 
 Stop condition for that artifact:
 
 ```text
-live Tau text call attempted: yes
 mocked: no
-fixture_backed: no, except for deterministic simulator ground truth if used
+live Tau-originated commitment consumed: yes
+fixture_backed: no, except for deterministic simulator ground truth
 human_content_judgment_required: false
 memory_write_attempts: 0
 provider_call_attempts: 0
-Gate 2 checker result: PASS or fail-closed receipt
-Gate 3 checker result: PASS or fail-closed receipt
-Gate 4 checker result: PASS or fail-closed receipt
+Gate 5 scoring result: PASS or fail-closed receipt
+Gate 7 belief revision result: PASS or fail-closed receipt
 ```
 
-If live Tau is unavailable, preserve the failing receipt and do not replace it
-with a mocked proof. The next independent live question is:
+The next independent reliability question remains:
 
 2. Can a bounded live fault or stale-artifact event be contained and diagnosed
    by the Gate 8-9 receipts without canonical memory, identity, or source-memory
