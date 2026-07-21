@@ -1,10 +1,43 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R full64 live Memory fault surface accepted) by agent
+**Last updated:** 2026-07-21 (PCTOM-R planning non-generalization audit accepted) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R PLANNING NON-GENERALIZATION AUDIT): planning
+  generalization-boundary evidence now exists at
+  `/tmp/persona-dream-live-tau-planning-non-generalization-audit-20260721T124136Z/planning_non_generalization_audit_receipt.v1.json`.
+  It reports `PASS_LIVE_TAU_PCTOM_PLANNING_NON_GENERALIZATION_AUDIT` with
+  conclusion `PLANNING_SIGNAL_SPARSE_FAMILY_CONCENTRATED_NOT_GENERALIZED`.
+  The audit hash-binds four predecessor receipts: full64 statistical
+  confidence (`sha256:299f499b59b4cbf37bbde42df7a293fe2d064658724fa53d63dd677fc40a5574`),
+  full64 planning diagnostic (`sha256:da419d8100de60248ccedacdfe84158273bc007b44ec3dad2b2f625453507021`),
+  full64 action-policy sensitivity (`sha256:141a75da8dbe054150b2a6da279c738c9d67f24949ef48bd5f1665b216f2daef`),
+  and expanded repeated live trust/commitment summary
+  (`sha256:7757e06fcb88c985ad74a0fdc21d7f8c5f074871c6c8b2c64d677125d5da67f3`).
+  It separates belief-prediction benefit from planning non-benefit:
+  full64 belief-Brier CI upper is `-0.008604609375000004`, while full64
+  planning-regret CI upper is `0.00390625`. It records 64 full64 planning
+  episodes with 60 ties and 4 nonzero deltas; all 4 nonzero deltas are
+  trust/commitment action switches. It also records 64 expanded repeated live
+  Tau calls consumed, 16 expanded repeated planning rows, identical expanded
+  seed pattern hashes, and expanded repeated planning CI upper `0.0`.
+  `mocked:false`, `live:true`, `live_tau_receipts_consumed:true`,
+  `live_tau_reexecuted:false`, `human_content_judgment_required:false`,
+  `llm_judge_used:false`, and Tau/Memory/provider/canonical/identity/
+  source-memory write attempts were all 0. This satisfies the prior
+  receipt-backed explanation path for why planning remains sparse and
+  non-general. It does not prove confidence-bounded planning-regret benefit,
+  non-identical repeated live Tau planning behavior, planning benefit under a
+  larger/balanced corpus, new live Tau execution inside the audit, production
+  retry machinery, live Memory recall in the sealed-test loop, complete live
+  Phase 01-16 runtime execution, paid provider execution, or semantic dream
+  quality. Next PCTOM-R work should run a broader/different planning
+  intervention that changes action policy beyond the current sparse
+  trust/commitment subset, or non-identical repeated live Tau behavior over a
+  larger/balanced planning corpus. Service deployment remains supporting
+  reliability scope, not the primary planning research artifact.
 - 2026-07-21 (PCTOM-R FULL64 LIVE MEMORY FAULT SURFACE): full64 live
   Memory-in-loop fault evidence now exists at
   `/tmp/persona-dream-live-tau-full64-memory-fault-surface-20260721T122732Z/live_tau_full64_memory_fault_surface_receipt.v1.json`.

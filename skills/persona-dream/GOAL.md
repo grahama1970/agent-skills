@@ -149,8 +149,10 @@ step model:
    confidence-bounded belief-Brier benefit for CD over the strongest baseline
    plus deterministic, live expanded, and repeated expanded trust/commitment
    coverage. The remaining research proof is not another renderer call; it is
-   confidence-bounded planning benefit, non-identical repeated live behavior,
-   or broader service-boundary reliability.
+   confidence-bounded planning benefit or a broader/different planning
+   intervention that changes action policy beyond the current sparse
+   trust/commitment subset. Service-boundary reliability remains supporting
+   reliability scope, not a substitute for the planning question.
 5. **Deterministic hidden outcome and scoring** - implemented fixture-backed
    by Gate 5, bridged over a live Tau-originated sealed commitment, repeated
    over live Tau condition cases, scaled deterministically to 256 sealed test
@@ -167,14 +169,17 @@ step model:
    live Tau-originated condition outputs, included in the deterministic sealed
    test, and now exercised across 256 full64 live Tau sealed-test action
    decisions. The missing research proof is confidence-bounded planning-regret
-   benefit over the strongest baseline, non-identical repeated expanded live
-   Tau behavior, or production retry-service proof. Deterministic, live
+   benefit over the strongest baseline or non-identical repeated expanded live
+   Tau behavior. Deterministic, live
    expanded, and repeated expanded trust/commitment coverage exists for
    variants 17-24 and preserves the action-selection contract, but it still
    does not prove confidence-bounded planning benefit.
-   The current action-policy sensitivity receipt explains the sparse planning
-   point estimate: the only four nonzero deltas are CD action switches in
-   `trust-commit`, with three oracle-match gains and one oracle-match loss.
+   The action-policy sensitivity and planning non-generalization receipts
+   explain the sparse planning point estimate: the only four nonzero full64
+   deltas are CD action switches in `trust-commit`, with three oracle-match
+   gains and one oracle-match loss, while the expanded repeated
+   trust/commitment seeds duplicated the same action-row pattern and still have
+   CI upper `0.0`.
 7. **Non-destructive belief revision** - implemented fixture-backed by Gate 7,
    bridged over live Tau-originated action decisions, and recalled through live
    Memory without canonical/source/identity writes. The remaining research
@@ -215,9 +220,12 @@ sealed/scored/action cases. The full64 statistical-confidence receipt supports
 CD belief-Brier benefit over the strongest baseline, but action Brier and
 planning-regret confidence intervals cross zero. The full64 retry receipt
 supports bounded idempotence and fail-closed retry/fault handling over the same
-full64 root. The goal remains open because planning benefit, expanded
-action-policy sensitivity, and permanently deployed production retry machinery
-are not yet proven by local receipts. The expanded
+full64 root. The planning non-generalization audit now hash-binds the full64
+statistical-confidence, full64 planning diagnostic, full64 action-policy
+sensitivity, and expanded repeated trust/commitment receipts into one explicit
+null/generalization-boundary receipt. The goal remains open because
+confidence-bounded planning-regret benefit and broader/non-identical planning
+behavior are not proven by local receipts. The expanded
 deterministic trust/commitment receipts add 24 variants per family, a filtered
 8-episode trust/commitment slice over variants 17-24, and an empty-filter
 blocked receipt; this improves corpus coverage and filter-boundary discipline
@@ -484,12 +492,13 @@ Repeated expanded live trust/commitment Tau summary proof root: /tmp/persona-dre
 Blocked repeated expanded live trust/commitment one-source summary proof root: /tmp/persona-dream-live-tau-trust-commit-expanded-repeated-seed-summary-one-source-20260721T120712Z
 Local HTTP service retry proof root: /tmp/persona-dream-live-tau-sealed-test-service-retry-proof-20260721T121812Z
 Full64 live Memory fault surface proof root: /tmp/persona-dream-live-tau-full64-memory-fault-surface-20260721T122732Z
+Planning non-generalization audit proof root: /tmp/persona-dream-live-tau-planning-non-generalization-audit-20260721T124136Z
 ```
 
 Current active phase boundary:
 
 ```text
-phase: post-full64-live-memory-fault-surface, pre-planning-generalization-proof
+phase: post-planning-non-generalization-audit, pre-broader-planning-intervention
 last_live_condition_receipt: /tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z/live_tau_condition_comparison_receipt.v1.json
 last_reliability_receipt: /tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z/live_tau_condition_reliability_bridge_receipt.v1.json
 last_action_selection_receipt: /tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z/live_tau_condition_action_selection_receipt.v1.json
@@ -522,7 +531,8 @@ last_expanded_repeated_seed_summary_receipt: /tmp/persona-dream-live-tau-trust-c
 last_blocked_expanded_repeated_seed_one_source_receipt: /tmp/persona-dream-live-tau-trust-commit-expanded-repeated-seed-summary-one-source-20260721T120712Z/live_tau_trust_commit_repeated_seed_receipt.v1.json
 last_local_http_service_retry_receipt: /tmp/persona-dream-live-tau-sealed-test-service-retry-proof-20260721T121812Z/live_tau_sealed_test_service_retry_proof_receipt.v1.json
 last_full64_live_memory_fault_surface_receipt: /tmp/persona-dream-live-tau-full64-memory-fault-surface-20260721T122732Z/live_tau_full64_memory_fault_surface_receipt.v1.json
-next_required_receipt: broader/different planning intervention evidence, or a receipt-backed explanation that planning benefit remains sparse and non-general
+last_planning_non_generalization_audit_receipt: /tmp/persona-dream-live-tau-planning-non-generalization-audit-20260721T124136Z/planning_non_generalization_audit_receipt.v1.json
+next_required_receipt: broader/different planning intervention evidence that changes action policy beyond the current sparse trust/commit subset, or non-identical repeated live Tau behavior over a larger/balanced planning corpus
 secondary_receipt: permanently deployed external always-on orchestrator retry proof, only as supporting reliability evidence
 ```
 
@@ -583,6 +593,17 @@ remains unproven, but that is supporting reliability scope; it does not answer
 whether counterfactual dreaming improves prospective ToM planning. The
 run.sh orchestration proof exercises the local skill command dispatcher, but
 it is not a service boundary.
+
+The planning non-generalization audit now answers the previously open
+receipt-backed-explanation path. It consumes four hash-bound predecessor
+receipts, separates confidence-bounded belief-Brier benefit from unproven
+planning benefit, records that full64 planning-regret CI upper is
+`0.00390625`, records 60 ties plus 4 nonzero full64 planning deltas, records
+that all 4 nonzero full64 deltas are trust/commitment action switches, and
+records that the expanded repeated trust/commitment seed patterns are
+identical with planning CI upper `0.0`. This moves the phase boundary to
+broader/different planning intervention evidence rather than more status
+summaries, provider/video work, or service deployment.
 
 Expanded deterministic trust/commitment heldout summary:
 
@@ -1112,6 +1133,53 @@ and local HTTP service retry evidence. It does not prove new live Tau execution,
 new Memory writes, a permanently deployed external production service, paid
 provider execution, semantic dream quality, or complete live Phase 01-16 runtime
 execution.
+
+Planning non-generalization audit summary:
+
+```text
+receipt: /tmp/persona-dream-live-tau-planning-non-generalization-audit-20260721T124136Z/planning_non_generalization_audit_receipt.v1.json
+status: PASS_LIVE_TAU_PCTOM_PLANNING_NON_GENERALIZATION_AUDIT
+receipt_sha256: sha256:35a6d2940863de21966a7d2c11edb373165035f358a886d4500b79a1515f5559
+conclusion: PLANNING_SIGNAL_SPARSE_FAMILY_CONCENTRATED_NOT_GENERALIZED
+input_receipts: 4
+full64_statistical_confidence_sha256: sha256:299f499b59b4cbf37bbde42df7a293fe2d064658724fa53d63dd677fc40a5574
+full64_planning_diagnostic_sha256: sha256:da419d8100de60248ccedacdfe84158273bc007b44ec3dad2b2f625453507021
+full64_action_policy_sensitivity_sha256: sha256:141a75da8dbe054150b2a6da279c738c9d67f24949ef48bd5f1665b216f2daef
+expanded_repeated_seed_summary_sha256: sha256:7757e06fcb88c985ad74a0fdc21d7f8c5f074871c6c8b2c64d677125d5da67f3
+full64_belief_brier_ci_upper: -0.008604609375000004
+full64_planning_regret_ci_upper: 0.00390625
+full64_tie_count: 60
+full64_nonzero_delta_count: 4
+full64_action_switch_count: 4
+expanded_repeated_live_tau_calls_consumed: 64
+expanded_repeated_planning_rows: 16
+expanded_repeated_seed_patterns_identical: true
+planning_benefit_with_confidence: false
+mocked: false
+live: true
+fixture_backed: false
+live_tau_reexecuted: false
+live_tau_receipts_consumed: true
+human_content_judgment_required: false
+llm_judge_used: false
+tau_call_attempts: 0
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+```
+
+This proves the accepted planning receipts can be hash-bound into one audit
+that separates belief-prediction benefit from planning non-benefit. It proves
+the current planning signal is sparse, concentrated in trust/commitment action
+switches, and not generalized by the expanded repeated trust/commitment live
+Tau evidence. It does not prove confidence-bounded planning-regret benefit,
+non-identical repeated live Tau planning behavior, planning benefit under a
+larger or differently balanced corpus, new live Tau execution inside the audit,
+production retry machinery, live Memory recall in the sealed-test loop,
+complete live Phase 01-16 runtime execution, paid provider execution, or
+video/audio/semantic dream quality.
 
 Sealed-test statistical-confidence proof summary:
 
@@ -2300,12 +2368,16 @@ with 8 retry/fault trials and zero unknown-state or side-effect violations, plus
 one planning diagnostic proving the planning-regret CI crosses zero because the
 signal is sparse and concentrated in `trust-commit`, plus one local HTTP
 service retry proof and one full64 live Memory fault surface over eight fault
-families with no unknown-state continuation or side-effect violation. It does
-not prove paid provider execution, semantic dream quality,
+families with no unknown-state continuation or side-effect violation, plus one
+planning non-generalization audit hash-binding four planning receipts and
+showing the current planning signal remains sparse, trust/commitment
+concentrated, and not generalized by the expanded repeated live Tau seeds. It
+does not prove paid provider execution, semantic dream quality,
 confidence-bounded planning-regret benefit under repeated seeds or a
-larger/balanced corpus, permanently deployed always-on production service retry
-machinery, complete live Phase 01-16 runtime execution, or autonomous
-operation beyond the bounded bridges. Those require separate live receipts.
+larger/balanced corpus, broader/non-identical planning behavior, permanently
+deployed always-on production service retry machinery, complete live Phase
+01-16 runtime execution, or autonomous operation beyond the bounded bridges.
+Those require separate live receipts.
 
 No agent may claim final, green, complete, fixed, verified, or closed for this
 research goal unless those concrete proof artifacts exist and are cited.
@@ -2321,9 +2393,9 @@ full64 live Tau belief-Brier confidence evidence, full64 retry/fault
 containment, a full64 planning diagnostic, a floor4 trust/commitment live Tau
 replication, a repeated-seed aggregate over two floor4 live Tau receipts,
 expanded repeated live trust/commitment summary evidence, a local HTTP service
-retry proof, and a full64 live Memory fault surface to the remaining
-expanded/non-identical planning question, without reactivating provider/video
-or service deployment as the critical path. The
+retry proof, a full64 live Memory fault surface, and a planning
+non-generalization audit to a broader/different planning intervention, without
+reactivating provider/video or service deployment as the critical path. The
 blocked one-episode trust/commitment smoke is part of that evidence boundary:
 it exercised 4 live Tau calls and failed closed because the action-selection
 bridge requires at least 16 Tau calls and at least 4 sealed/scored cases per
@@ -2336,18 +2408,22 @@ retry proof exercises a service process and HTTP submission boundary over
 full64 live-originated artifacts, but remains local process evidence rather
 than a permanently deployed external production service. The full64 live Memory
 fault surface exercises Memory `/recall` failure and perturbation boundaries
-against full64 live Tau evidence with allowed terminal outcomes only.
+against full64 live Tau evidence with allowed terminal outcomes only. The
+planning non-generalization audit satisfies the prior explanation path:
+planning benefit remains pending because current full64 and repeated expanded
+planning evidence is sparse, trust/commitment concentrated, and duplicated
+across the available expanded repeated seeds.
 
 The next accepted artifact must answer this narrower question:
 
-1. Does the sparse `trust-commit` planning signal persist under non-identical
-   repeated live Tau behavior, a larger trust/commitment corpus, or explicit
-   action-policy sensitivity checks? A valid next planning artifact must either
-   expand the deterministic trust/commitment corpus beyond the current 16
-   variants and rerun the floor, add repeated live Tau evidence that changes
-   the action-row pattern rather than duplicating the existing rows, or explain
-   by receipt why planning benefit remains sparse and non-general. Otherwise
-   the result must remain pending, not accepted as planning-benefit proof.
+1. Can a broader or different planning intervention change action policy beyond
+   the current sparse trust/commitment subset and produce a confidence-bounded
+   planning-regret improvement, or does non-identical repeated live Tau
+   behavior over a larger/balanced planning corpus still fail to generalize?
+   A valid next planning artifact must run a new planning intervention or
+   non-identical repeated live behavior. Another prose summary or duplicate
+   aggregate over the same action-row pattern is not a valid planning-benefit
+   proof.
 
 The secondary reliability artifact is useful, but it is not a substitute for
 the planning research artifact. It must answer this question:
