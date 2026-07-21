@@ -2,6 +2,22 @@
 
 Last updated: 2026-07-21
 
+## Immutable Goal Evidence
+
+This file is the local immutable-goal evidence for `persona-dream`.
+
+Monitor phrase:
+
+```text
+IMMUTABLE_GOAL_EVIDENCE: persona-dream PCTOM-R text-first prospective Theory-of-Mind reliability lane is active.
+```
+
+The goal is not a GitHub-status goal, a video-provider goal, a dashboard goal,
+or a human-facing dream-content goal. The goal is to produce receipt-backed
+agent evidence that synthetic counterfactual dreaming can improve prospective
+Theory-of-Mind prediction and planning while provenance, sealing, scoring,
+belief revision, and fault containment remain fail-closed.
+
 ## Controlling Goal
 
 Meet the research goals of Persona Dream by proving that synthetic dreaming can
@@ -40,6 +56,12 @@ pipeline checks. The point is not that the human inspects or values the dream
 content directly. The point is that the agent can use explicitly synthetic
 counterfactual experience without corrupting memory, identity, evidence class,
 or pipeline state.
+
+The human-facing output is evidence, not dream prose. The agent-facing output is
+the dream/counterfactual simulation plus sealed prediction and action artifacts.
+Agents must not substitute subjective dream quality, polished narrative,
+human-readable status dashboards, or vague commit summaries for the actual
+research proof.
 
 Therefore the current critical path is not provider/video generation, dream
 aesthetic quality, dashboard presentation, or human-facing narrative polish. The
@@ -314,6 +336,20 @@ Live Tau condition comparison proof root: /tmp/persona-dream-live-tau-condition-
 Repeated live Tau condition comparison proof root: /tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z
 Live Tau condition reliability proof root: /tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z
 ```
+
+Current active phase boundary:
+
+```text
+phase: post-live-condition-reliability, pre-live-action-selection-regret
+last_live_condition_receipt: /tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z/live_tau_condition_comparison_receipt.v1.json
+last_reliability_receipt: /tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z/live_tau_condition_reliability_bridge_receipt.v1.json
+next_required_receipt: live Tau condition action-selection receipt
+```
+
+This boundary means Gate 8/9 condition reliability over live-originated
+artifacts is the current predecessor evidence. It does not authorize a final
+research success claim. The next useful movement is Gate 6 live planning
+evidence over the same M/R/D/CD condition outputs.
 
 Gate 0 proof summary:
 
@@ -975,6 +1011,32 @@ canonical_memory_write_attempts: 0
 identity_write_attempts: 0
 source_memory_write_attempts: 0
 ```
+
+Required artifact shape:
+
+```text
+receipt_status: PASS_LIVE_TAU_PCTOM_CONDITION_ACTION_SELECTION or fail-closed BLOCKED_*
+receipt_path: /tmp/persona-dream-live-tau-condition-action-selection-<timestamp>/live_tau_condition_action_selection_receipt.v1.json
+decision_index: live_condition_action_decisions.json
+base_receipt_sha256: recomputed from the repeated live Tau condition comparison receipt
+conditions_represented: M, R, D, CD
+oracle_policy_source: deterministic simulator labels and policy rules
+llm_judge_used: false
+human_content_judgment_required: false
+```
+
+Minimum acceptable evidence counts for that artifact:
+
+```text
+M action_decisions >= 1 and regret_scores >= 1
+R action_decisions >= 1 and regret_scores >= 1
+D action_decisions >= 1 and regret_scores >= 1
+CD action_decisions >= 1 and regret_scores >= 1
+```
+
+The action-selection receipt may consume prior live Tau artifacts without making
+new Tau calls. In that case `live: true` means live-originated artifacts were
+consumed and hash-bound, while `tau_call_attempts: 0` must be reported plainly.
 
 Any live validation report must state `mocked`, `live`, what was actually
 exercised, and what remains unverified.
