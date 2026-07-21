@@ -806,6 +806,7 @@ def send_prompt(client: HerdrClient, pane_id: str, prompt: str, *, project_root:
     terminal_result: dict[str, Any] = {"attempted": False, "reason": "not_real_herdr_client"}
     first_read = ""
     submit_confirmed = False
+    pane_run_prompt_visible = False
     if isinstance(client, HerdrClient):
         terminal_result = pane_run_submit(pane_id, prompt, socket_path=socket_path)
         if terminal_result.get("ok"):
@@ -819,10 +820,16 @@ def send_prompt(client: HerdrClient, pane_id: str, prompt: str, *, project_root:
                 if current.get("state") == "working":
                     submit_confirmed = True
                     break
+            pane_run_prompt_visible = prompt_visible_after_send(first_read, baseline=pre_read, prompt=prompt)
         else:
             logger.error("Herdr pane.run submit failed for pane {}", pane_id)
     before = len(client.trace)
-    if not submit_confirmed and not (isinstance(client, HerdrClient) and terminal_result.get("ok")):
+    needs_socket_text_fallback = not submit_confirmed and (
+        not (isinstance(client, HerdrClient) and terminal_result.get("ok"))
+        or pane_run_prompt_visible
+    )
+    socket_text_fallback_sent = False
+    if needs_socket_text_fallback:
         try:
             client.call("pane.send_text", {"pane_id": pane_id, "text": prompt})
         except RuntimeError:
@@ -830,6 +837,7 @@ def send_prompt(client: HerdrClient, pane_id: str, prompt: str, *, project_root:
             records.extend(client.trace[before:])
             return skipped_send("send_text_failed", wait_result=wait_result, pre_submit_state=explain.get("state"), pre_read=pre_read, terminal_result=terminal_result, records=records, send_failed=True)
         records.extend(client.trace[before:])
+        socket_text_fallback_sent = True
         before = len(client.trace)
         try:
             client.call("pane.send_keys", {"pane_id": pane_id, "keys": ["enter"]})
@@ -912,6 +920,8 @@ def send_prompt(client: HerdrClient, pane_id: str, prompt: str, *, project_root:
         "api_sent": transport_sent,
         "submit_confirmed": submit_confirmed,
         "input_modified": transport_sent,
+        "pane_run_prompt_visible": pane_run_prompt_visible,
+        "socket_text_fallback_sent": socket_text_fallback_sent,
         "second_enter_sent": second_enter_sent,
         "ctrl_j_sent": ctrl_j_sent,
         "post_submit_excerpt": (ctrl_j_read or second_read or first_read)[-1200:],

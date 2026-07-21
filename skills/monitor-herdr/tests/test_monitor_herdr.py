@@ -90,6 +90,49 @@ class FakeRealSubmitHerdr(monitor.HerdrClient):
         return {"type": "ok"}
 
 
+class FakePaneRunStrandsPromptHerdr(monitor.HerdrClient):
+    def __init__(self) -> None:
+        super().__init__(Path("/tmp/fake-herdr.sock"))
+        self.sent_text = False
+        self.enter_count = 0
+        self.ctrl_j_count = 0
+        self.read_count = 0
+
+    def call(self, method: str, params: dict) -> dict:
+        response = {"id": method, "result": {"type": "ok"}}
+        self.trace.append({"request": {"method": method, "params": params}, "response": response})
+        if method == "pane.send_text":
+            self.sent_text = True
+        if method == "pane.send_keys" and params.get("keys") == ["enter"]:
+            self.enter_count += 1
+        if method == "pane.send_keys" and params.get("keys") == ["ctrl+j"]:
+            self.ctrl_j_count += 1
+        if method in {"pane.send_text", "pane.send_keys"}:
+            return {"type": "ok"}
+        if method == "pane.read":
+            self.read_count += 1
+            if self.read_count == 1:
+                return {"type": "pane_read", "read": {"text": "Codex composer ready"}}
+            if self.sent_text and self.enter_count >= 1:
+                return {"type": "pane_read", "read": {"text": "Running UserPromptSubmit hook\nWorking (1s * esc to interrupt)"}}
+            return {
+                "type": "pane_read",
+                "read": {
+                    "text": (
+                        "RESTART CHECK FROM monitor-herdr\n"
+                        "Unblock Attempts: brave-search=<USED:path | NOT_APPLICABLE:reason>\n"
+                        "Disposition: <choose exactly one of RESUMING_NOW | CAN_SELF_UNBLOCK_WEBGPT>\n"
+                        "If the immutable goal is known and not achieved, keep going.\n"
+                        "›\n"
+                        "gpt-5.5 high · repo"
+                    )
+                },
+            }
+        if method == "agent.explain":
+            return {"type": "agent_explain", "explain": {"state": "idle", "matched_rule": "codex_prompt_idle_ready"}}
+        return {"type": "ok"}
+
+
 class FakeFallbackIdleHerdr(FakeSubmitHerdr):
     def call(self, method: str, params: dict) -> dict:
         if method == "agent.explain":
@@ -732,6 +775,32 @@ def test_real_herdr_client_uses_pane_run_submit_without_duplicate_send_text() ->
     assert pane_run_calls == [("w11:p8", "RESTART CHECK FROM monitor-herdr")]
     assert client.sent_text is False
     assert client.enter_count == 0
+
+
+def test_real_herdr_client_retypes_when_pane_run_strands_visible_prompt() -> None:
+    client = FakePaneRunStrandsPromptHerdr()
+    original_wait = monitor.wait_for_agent_idle
+    original_pane_run = monitor.pane_run_submit
+    monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
+    monitor.pane_run_submit = lambda pane_id, prompt, socket_path=None: {
+        "attempted": True,
+        "ok": True,
+        "transport": "herdr_pane_run",
+        "exit_code": 0,
+    }
+    try:
+        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-herdr")
+    finally:
+        monitor.wait_for_agent_idle = original_wait
+        monitor.pane_run_submit = original_pane_run
+
+    assert result["api_sent"] is True
+    assert result["submit_confirmed"] is True
+    assert result["pane_run_prompt_visible"] is True
+    assert result["socket_text_fallback_sent"] is True
+    assert client.sent_text is True
+    assert client.enter_count == 1
+    assert client.ctrl_j_count == 0
 
 
 def test_presend_idle_fallback_sends_no_input() -> None:
