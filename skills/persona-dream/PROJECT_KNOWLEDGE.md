@@ -1,10 +1,36 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R held-out cooperation threshold rule) by agent
+**Last updated:** 2026-07-21 (PCTOM-R held-out cooperation exposure slice) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R HELD-OUT COOPERATION EXPOSURE SLICE): a bounded live Tau
+  slice over variants 23-24 was added and run to test whether the pre-outcome
+  cooperation-threshold rule has held-out natural exposure beyond the full64
+  variants 1-16 and balanced derivation variants 17-22. Command:
+  `./skills/persona-dream/run.sh run-live-tau-cooperation-exposure-slice`.
+  Receipt:
+  `/tmp/persona-dream-live-tau-cooperation-exposure-slice-proof-20260721T200908Z/live_tau_cooperation_exposure_slice_receipt.v1.json`.
+  Status `BLOCKED_LIVE_TAU_PCTOM_COOPERATION_EXPOSURE_SLICE`, receipt SHA-256
+  `sha256:190a5c8c5313fb4298dc5840041e593713c9d1d4c436238fd69b912ca19608cb`.
+  The run made 32 live Tau attempts and 32 live Tau calls across eight
+  held-out rows, with `mocked:false`, `live:true`, no human content judgment,
+  no LLM judge, zero Memory/provider/canonical/identity/source-memory writes,
+  and hash-bound Tau receipts. Checks passed for derivation receipt, planning
+  receipt, expected 32 cases, expected 8 rows, variant disjointness, no
+  oracle/outcome inputs in the rule, and zero unsupported writes. The slice
+  included one coordination/conflict cooperation-outcome row, but CD selected
+  zero `OFFER_COOPERATION` actions from sealed `KAI_OFFERS_COOPERATION`
+  predictions, so there were zero low-confidence cooperation interventions and
+  zero action changes. Conclusion:
+  `HELDOUT_COOPERATION_OUTCOME_PRESENT_BUT_CD_NO_OFFER_EXPOSURE`. This is a
+  fail-closed live result: it blocks any planning-benefit claim for the
+  cooperation-threshold rule from natural held-out exposure. Next PCTOM-R work
+  should stop spending live calls looking for accidental cooperation exposure
+  in the exhausted 1-24 corpus and instead add an explicit deterministic
+  cooperation-exposure instrument or scenario variant before rerunning held-out
+  benefit checks.
 - 2026-07-21 (PCTOM-R HELD-OUT COOPERATION THRESHOLD RULE): a pre-outcome
   cooperation-threshold rule now replays over the accepted full64 live Tau
   root. Receipt:
