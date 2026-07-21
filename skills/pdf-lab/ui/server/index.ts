@@ -13,9 +13,22 @@ const PORT = Number(process.env.PDF_LAB_API_PORT || 3013)
 const PDF_LAB_UI_ROOT = resolve(__dirname, '..')
 const PDF_LAB_SKILL_ROOT = resolve(PDF_LAB_UI_ROOT, '..')
 const DIST_ROOT = resolve(PDF_LAB_UI_ROOT, 'dist')
-const LEGACY_UX_LAB_PUBLIC_ROOT = '${HOME}/workspace/experiments/pi-mono/packages/ux-lab/public'
-const PUBLIC_ROOT = resolve(process.env.PDF_LAB_PUBLIC_ROOT ?? LEGACY_UX_LAB_PUBLIC_ROOT)
-const ARTIFACTS_ROOT = resolve(process.env.PDF_LAB_ARTIFACTS_ROOT ?? '/mnt/storage12tb/pi-mono/artifacts/pdf-lab')
+// Self-contained defaults: artifacts live inside the pdf_oxide repo
+// (ui/ is <repo>/ui, so PDF_LAB_SKILL_ROOT is the repo root). Legacy
+// operator locations remain reachable via env overrides.
+const REPO_ARTIFACTS_ROOT = resolve(PDF_LAB_SKILL_ROOT, 'artifacts', 'pdf-lab')
+const LEGACY_UX_LAB_PUBLIC_ROOT = `${process.env.HOME ?? ''}/workspace/experiments/pi-mono/packages/ux-lab/public`
+const PUBLIC_ROOT = resolve(
+  process.env.PDF_LAB_PUBLIC_ROOT
+    ?? (existsSync(resolve(PDF_LAB_SKILL_ROOT, 'artifacts', 'public'))
+      ? resolve(PDF_LAB_SKILL_ROOT, 'artifacts', 'public')
+      : LEGACY_UX_LAB_PUBLIC_ROOT),
+)
+const ARTIFACTS_ROOT = resolve(
+  process.env.PDF_LAB_ARTIFACTS_ROOT
+    ?? (existsSync(REPO_ARTIFACTS_ROOT) ? REPO_ARTIFACTS_ROOT : '/mnt/storage12tb/pi-mono/artifacts/pdf-lab'),
+)
+const LOOP_RUNS_ROOT = resolve(process.env.PDF_LAB_LOOP_RUNS_ROOT ?? resolve(ARTIFACTS_ROOT, 'loop-runs'))
 const SIGNOFFS_DIR = resolve(process.env.PDF_LAB_SIGNOFFS_DIR ?? '/tmp/pdf-lab-ui/signoffs')
 const SIGNOFFS_PATH = resolve(SIGNOFFS_DIR, 'current.json')
 const IN_PROGRESS_PATH = resolve(SIGNOFFS_DIR, 'in_progress.json')
@@ -95,6 +108,132 @@ app.get('/api/pdf-lab/status', (_req, res) => {
     servedRoots: staticRoots,
     signoffsPath: SIGNOFFS_PATH,
   })
+})
+
+// --- Transparent tau-loop artifacts (read-only) -------------------------
+// One loop run directory holds the evidence chain the loop viewer renders:
+// comparison.json (pdf-lab.comparison.v2), pdf-lab-second-pass-backlog.json,
+// human_triage_queue.json, page_*/terminal_ledger.json,
+// gs001-ticket-projection.json and gs001-closure-report.json (tau audit).
+
+const LOOP_RUN_ARTIFACTS: Record<string, string> = {
+  comparison: 'comparison.json',
+  backlog: 'pdf-lab-second-pass-backlog.json',
+  human_triage_queue: 'human_triage_queue.json',
+  ticket_projection: 'gs001-ticket-projection.json',
+  closure_report: 'gs001-closure-report.json',
+  regression_verdict: 'regression_verdict.json',
+  run_summary: 'run_summary.json',
+}
+
+function loopRunsRoot(): string | null {
+  return allowedStaticRoot(LOOP_RUNS_ROOT)
+}
+
+app.get('/api/pdf-lab/loop-runs', async (_req, res) => {
+  const root = loopRunsRoot()
+  if (!root) {
+    res.status(404).json({ ok: false, error: 'missing_loop_runs_root', path: LOOP_RUNS_ROOT })
+    return
+  }
+  const entries = await readdir(root, { withFileTypes: true })
+  const runs = entries
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name)
+    .sort()
+    .reverse()
+  res.json({ ok: true, root, runs })
+})
+
+app.get('/api/pdf-lab/loop-runs/:runId', async (req, res) => {
+  const root = loopRunsRoot()
+  if (!root) {
+    res.status(404).json({ ok: false, error: 'missing_loop_runs_root', path: LOOP_RUNS_ROOT })
+    return
+  }
+  const runDir = resolve(root, safeKey(req.params.runId))
+  if (!isPathInside(root, runDir) || !existsSync(runDir)) {
+    res.status(404).json({ ok: false, error: 'unknown_loop_run', run: req.params.runId })
+    return
+  }
+  const artifacts: JsonRecord = {}
+  for (const [key, filename] of Object.entries(LOOP_RUN_ARTIFACTS)) {
+    const candidate = resolve(runDir, filename)
+    if (existsSync(candidate)) {
+      try {
+        artifacts[key] = JSON.parse(await readFile(candidate, 'utf-8'))
+      } catch (err) {
+        artifacts[key] = { ok: false, error: 'unreadable_artifact', detail: String(err) }
+      }
+    } else {
+      artifacts[key] = null
+    }
+  }
+  const pageDirs = (await readdir(runDir, { withFileTypes: true }))
+    .filter((entry) => entry.isDirectory() && /^page_\d+$/.test(entry.name))
+    .map((entry) => entry.name)
+    .sort()
+  const terminalLedgers: JsonRecord = {}
+  const repairReceipts: JsonRecord = {}
+  const pageImages: Record<string, string[]> = {}
+  for (const pageDir of pageDirs) {
+    const pageRoot = resolve(runDir, pageDir)
+    const ledgerPath = resolve(pageRoot, 'terminal_ledger.json')
+    if (existsSync(ledgerPath)) {
+      try {
+        terminalLedgers[pageDir] = JSON.parse(await readFile(ledgerPath, 'utf-8'))
+      } catch {
+        terminalLedgers[pageDir] = null
+      }
+    }
+    const receiptPath = resolve(pageRoot, 'repair_receipt.json')
+    if (existsSync(receiptPath)) {
+      try {
+        repairReceipts[pageDir] = JSON.parse(await readFile(receiptPath, 'utf-8'))
+      } catch {
+        repairReceipts[pageDir] = null
+      }
+    }
+    const pageEntries = await readdir(pageRoot, { withFileTypes: true })
+    pageImages[pageDir] = pageEntries
+      .filter((entry) => entry.isFile() && /\.(png|jpg|jpeg)$/i.test(entry.name))
+      .map((entry) => `${pageDir}/${entry.name}`)
+      .sort()
+  }
+  res.json({
+    ok: true,
+    run: req.params.runId,
+    runDir,
+    artifacts,
+    terminal_ledgers: terminalLedgers,
+    repair_receipts: repairReceipts,
+    page_images: pageImages,
+    page_dirs: pageDirs,
+  })
+})
+
+// Serve one file (image, patch, receipt) from inside a loop-run directory.
+app.get('/api/pdf-lab/loop-runs/:runId/file', (req, res) => {
+  const root = loopRunsRoot()
+  const relative = String(req.query.path ?? '')
+  if (!root || !relative) {
+    res.status(400).json({ ok: false, error: 'missing_root_or_path' })
+    return
+  }
+  const runDir = resolve(root, safeKey(req.params.runId))
+  const candidate = resolve(runDir, relative.replace(/^\/+/, ''))
+  if (!isPathInside(root, runDir) || !isPathInside(runDir, candidate) || !existsSync(candidate) || !statSync(candidate).isFile()) {
+    res.status(404).json({ ok: false, error: 'unknown_loop_run_file' })
+    return
+  }
+  if (/\.(png|jpg|jpeg)$/i.test(candidate)) {
+    res.type(candidate.endsWith('.png') ? 'image/png' : 'image/jpeg')
+  } else if (candidate.endsWith('.json')) {
+    res.type('application/json')
+  } else {
+    res.type('text/plain')
+  }
+  createReadStream(candidate).pipe(res)
 })
 
 app.get('/api/pdf-lab/nico-qa-report', (_req, res) => {

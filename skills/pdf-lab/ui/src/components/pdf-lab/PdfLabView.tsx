@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, FileText, Eye, Pencil, Save, RotateCcw, Trash2, Focus, PanelRightOpen, Navigation } from 'lucide-react'
 import PdfCanvas from '../datalake-explorer/PdfCanvas'
 import type { BboxBlock } from '../datalake-explorer/types'
+import { TauLoopView } from './TauLoopView'
 import { BLOCK_TYPE_COLORS, BLOCK_TYPE_LABELS } from '../datalake-explorer/BboxWorkspace'
 import BboxEditor from '../datalake-explorer/BboxEditor'
 import { LeftPane, LeftPaneSection, useLeftPaneSearch } from '../common/LeftPane'
@@ -1783,6 +1784,9 @@ export function PdfLabView({ pdfUrl: propPdfUrl, extractionUrl: propExtractionUr
     </div>
   ) : null
 
+  if (initialSubpath === 'loop' || initialSubpath === 'tau-loop') {
+    return <TauLoopView />
+  }
   if (initialSubpath === 'surgical-fixture') {
     return <SurgicalTriageFixture />
   }
