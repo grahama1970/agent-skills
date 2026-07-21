@@ -1,12 +1,12 @@
 {
-  "verified_at": "2026-07-21T09:51:53.352987+00:00",
+  "verified_at": "2026-07-21T10:17:50.240541+00:00",
   "cwd": "/tmp/persona-dream-full64.sXAttz",
   "root": "/tmp/persona-dream-full64.sXAttz",
   "output_root": "/tmp/codex-ui-verification/persona-dream-full64.sXAttz",
   "url": "http://localhost:3002/#dream",
-  "name": "persona-dream-full64-action-policy-sensitivity",
+  "name": "persona-dream-goal-alignment",
   "tab_id": null,
   "transport": "isolated_cdp",
-  "screenshot": "/tmp/codex-ui-verification/persona-dream-full64.sXAttz/persona-dream-full64-action-policy-sensitivity/20260721T095118Z.png",
-  "read_json": "/tmp/codex-ui-verification/persona-dream-full64.sXAttz/persona-dream-full64-action-policy-sensitivity/20260721T095118Z.read.json"
+  "screenshot": "/tmp/codex-ui-verification/persona-dream-full64.sXAttz/persona-dream-goal-alignment/20260721T101715Z.png",
+  "read_json": "/tmp/codex-ui-verification/persona-dream-full64.sXAttz/persona-dream-goal-alignment/20260721T101715Z.read.json"
 }
