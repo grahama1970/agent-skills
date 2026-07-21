@@ -16,6 +16,12 @@ agent-skills worktree, not the pi-mono shell.
 > `skills/battle/local/webgpt-fresh-ux-review-20260721T0035Z/response.md`, and
 > the final acceptance audit receipt is
 > `skills/battle/local/final-acceptance-audit-20260721T0445Z.json`.
+> After unrelated commits advanced the shared branch, the current-head
+> revalidation receipt is
+> `skills/battle/local/current-head-evidence-revalidation-20260721T0458Z.json`.
+> It reports `status:"PASS"`, `failed:[]`, and revalidates the Battle evidence
+> paths at branch head `6f8647981466db8f732c3914b9dd1581ecc2ddf2`, which matched
+> `origin/battle-adaptive-lineage-goal` when generated.
 
 ## 1. Project Overview
 
@@ -182,12 +188,21 @@ agent-skills worktree, not the pi-mono shell.
   `skills/battle/local/final-acceptance-audit-20260721T0445Z.json` reports
   `status:"PASS"`, `failed:[]`, `mocked:false`, `live:true`, and ties together
   deterministic local browser proof with the explicit WebGPT acceptance.
+- **Current-head revalidation exists after later branch movement**:
+  `skills/battle/local/current-head-evidence-revalidation-20260721T0458Z.json`
+  reports `status:"PASS"`, `failed:[]`, `mocked:false`, `live:true`,
+  `current_head:"6f8647981466db8f732c3914b9dd1581ecc2ddf2"`, and
+  `remote_sha:"6f8647981466db8f732c3914b9dd1581ecc2ddf2"`. It verifies that
+  the goal, handoff, final audit, fresh browser proof, screenshot, WebGPT
+  request/response/meta/raw artifacts, and badge-hook source file are tracked at
+  the current pushed branch head.
 - **Repo is dirty from unrelated agents**. Stage Battle handoff/artifact paths
   explicitly only. Never `git add -A`.
 
 ## 5. Next Steps
 
-1. Preserve the final acceptance audit receipt and WebGPT review artifacts.
+1. Preserve the final acceptance audit receipt, WebGPT review artifacts, and
+   current-head revalidation receipt.
 2. Keep using `#battle` on the agent-skills host as the primary acceptance
    route. Treat `#battle/receipt` as a compatible deep link and do not revive
    standalone `#battle/live` without a new written goal.

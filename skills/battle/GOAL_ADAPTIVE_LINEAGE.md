@@ -329,6 +329,17 @@ and `transport_degraded:false`. The final acceptance audit receipt above ties
 the deterministic local browser proof and the explicit external acceptance
 together; it reports `status:"PASS"` and `failed:[]`.
 
+After unrelated commits advanced the shared branch, current-head revalidation
+was recorded at
+`skills/battle/local/current-head-evidence-revalidation-20260721T0458Z.json`.
+It reports `status:"PASS"`, `failed:[]`, `mocked:false`, `live:true`, and
+revalidates that the Battle goal, handoff, final audit, fresh browser proof,
+screenshot, WebGPT review artifacts, and badge-hook source file are tracked at
+branch head `6f8647981466db8f732c3914b9dd1581ecc2ddf2`, which matched
+`origin/battle-adaptive-lineage-goal` when generated. Reports must cite this
+current-head revalidation together with a post-push remote-ref check for any
+later publication commit containing the revalidation receipt.
+
 ## Allowed Scope
 
 - `skills/battle/spectator/src/**` (canonical UI; incl. `lineage/**` and

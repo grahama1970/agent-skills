@@ -1,0 +1,113 @@
+{
+  "schema": "battle.current_head_evidence_revalidation.v1",
+  "generated_at": "2026-07-21T04:58:00Z",
+  "status": "PASS",
+  "failed": [],
+  "mocked": false,
+  "live": true,
+  "reason": "Revalidate Battle adaptive-lineage evidence against the current pushed branch head after unrelated commits advanced the branch beyond the earlier final acceptance audit.",
+  "current_head": "6f8647981466db8f732c3914b9dd1581ecc2ddf2",
+  "remote_ref": "refs/heads/battle-adaptive-lineage-goal",
+  "remote_sha": "6f8647981466db8f732c3914b9dd1581ecc2ddf2",
+  "audited_paths_tree_entries": {
+    "skills/battle/GOAL_ADAPTIVE_LINEAGE.md": "100644 blob 62f7f365e20de18c55c97378d5ea63f5d74cae5f\tskills/battle/GOAL_ADAPTIVE_LINEAGE.md",
+    "skills/battle/local/HANDOFF.md": "100644 blob df87561ab13894880e514b76a0312bd79203bc06\tskills/battle/local/HANDOFF.md",
+    "skills/battle/local/final-acceptance-audit-20260721T0445Z.json": "100644 blob 908d6201aa4cb216855e00a161b3e26c3e409286\tskills/battle/local/final-acceptance-audit-20260721T0445Z.json",
+    "skills/battle/local/fresh-ux-proof-20260721T0130Z/fresh-visible-ux-proof.json": "100644 blob b31f5b58dcc3d706847db8fa97d54db7e1499487\tskills/battle/local/fresh-ux-proof-20260721T0130Z/fresh-visible-ux-proof.json",
+    "skills/battle/local/fresh-ux-proof-20260721T0130Z/battle-expanded-lineage.png": "100644 blob 3a8ffbd6f75ea1b7c9e02ea1b46dea07c05a105b\tskills/battle/local/fresh-ux-proof-20260721T0130Z/battle-expanded-lineage.png",
+    "skills/battle/local/webgpt-fresh-ux-review-20260721T0035Z/request.md": "100644 blob 0528a5026796ce53c5a1add29b209565b495583a\tskills/battle/local/webgpt-fresh-ux-review-20260721T0035Z/request.md",
+    "skills/battle/local/webgpt-fresh-ux-review-20260721T0035Z/response.md": "100644 blob bca8938b89806e72135b803fb9de269b87111166\tskills/battle/local/webgpt-fresh-ux-review-20260721T0035Z/response.md",
+    "skills/battle/local/webgpt-fresh-ux-review-20260721T0035Z/response.raw.md": "100644 blob 8eb0c519aadc8974cb653512b62505c17335e06f\tskills/battle/local/webgpt-fresh-ux-review-20260721T0035Z/response.raw.md",
+    "skills/battle/local/webgpt-fresh-ux-review-20260721T0035Z/response.meta.json": "100644 blob a30beda6289559c872ab45e0280ba0dc595c8028\tskills/battle/local/webgpt-fresh-ux-review-20260721T0035Z/response.meta.json",
+    "skills/battle/spectator/src/lineage/BattleLineageComparisonPanel.tsx": "100644 blob 348328489d3bc16069db9ae0293c05c647f069e1\tskills/battle/spectator/src/lineage/BattleLineageComparisonPanel.tsx"
+  },
+  "underlying_final_acceptance_audit": {
+    "path": "skills/battle/local/final-acceptance-audit-20260721T0445Z.json",
+    "status": "PASS",
+    "failed": [],
+    "mocked": false,
+    "live": true,
+    "reviewed_commit": "65bf2d82a4b172fe5c562ec9a3238f979473b931",
+    "remote_sha_at_review": "65bf2d82a4b172fe5c562ec9a3238f979473b931"
+  },
+  "fresh_browser_proof": {
+    "path": "skills/battle/local/fresh-ux-proof-20260721T0130Z/fresh-visible-ux-proof.json",
+    "screenshot": "skills/battle/local/fresh-ux-proof-20260721T0130Z/battle-expanded-lineage.png",
+    "status": "PASS",
+    "failed": [],
+    "badge": {
+      "text": "LIVE: Qual PASS",
+      "dataSource": "live",
+      "provesLive": "true"
+    },
+    "canvas": {
+      "present": true,
+      "width": 1030,
+      "height": 277,
+      "mountId": "1"
+    },
+    "checks": {
+      "mocked_false": true,
+      "live_true": true,
+      "host_identity": true,
+      "route_top_level_battle": true,
+      "lineage_panel_expanded": true,
+      "scorecard_present": true,
+      "live_badge_honest": true,
+      "all_descriptive_names_visible": true,
+      "selected_runner_up_visible": true,
+      "operators_visible": true,
+      "novelty_visible": true,
+      "ast_dimensions_visible": true,
+      "four_lineage_nodes_visible": true,
+      "canvas_present_sized": true,
+      "sprite_resources_observed": true,
+      "no_failed_requests": true,
+      "no_console_errors": true,
+      "no_forbidden_text": true
+    }
+  },
+  "external_review": {
+    "response_path": "skills/battle/local/webgpt-fresh-ux-review-20260721T0035Z/response.md",
+    "meta_path": "skills/battle/local/webgpt-fresh-ux-review-20260721T0035Z/response.meta.json",
+    "raw_path": "skills/battle/local/webgpt-fresh-ux-review-20260721T0035Z/response.raw.md",
+    "verdict": "VERDICT: ACCEPT_CURRENT_UX_GATE",
+    "proof_status": "response_proven",
+    "response_proof_status": "response_proven",
+    "requested_tab_id": "837360432",
+    "controlled_tab_id": "837360432",
+    "raw_contains_sentinel": true,
+    "focus_changed": false,
+    "transport_degraded": false
+  },
+  "deterministic_command_results": [
+    {
+      "command": "git rev-parse HEAD",
+      "result": "6f8647981466db8f732c3914b9dd1581ecc2ddf2"
+    },
+    {
+      "command": "git ls-remote origin refs/heads/battle-adaptive-lineage-goal",
+      "result": "6f8647981466db8f732c3914b9dd1581ecc2ddf2\trefs/heads/battle-adaptive-lineage-goal"
+    },
+    {
+      "command": "node JSON revalidation of final audit, fresh UX proof, WebGPT meta, and tracked HEAD paths",
+      "result": "PASS"
+    }
+  ],
+  "checks": {
+    "current_head_remote_match": true,
+    "goal_points_to_final_audit": true,
+    "handoff_points_to_final_audit": true,
+    "final_audit_pass": true,
+    "final_audit_live_nonmocked": true,
+    "fresh_ux_proof_pass": true,
+    "fresh_ux_live_nonmocked": true,
+    "fresh_ux_gate_checks_true": true,
+    "screenshot_exists": true,
+    "webgpt_acceptance_present": true,
+    "webgpt_transport_proven": true,
+    "webgpt_exact_tab_clean": true,
+    "all_required_paths_tracked_at_head": true
+  },
+  "note": "This receipt is a current-head revalidation. The receipt file itself is added by a later publication commit; closure reports must cite both this receipt content and a post-push remote-ref check for the publication commit containing it."
+}
