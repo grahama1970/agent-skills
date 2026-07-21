@@ -1,10 +1,36 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R balanced gain/loss diagnostic) by agent
+**Last updated:** 2026-07-21 (PCTOM-R balanced threshold intervention) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R BALANCED THRESHOLD INTERVENTION): a deterministic
+  action-threshold ablation now separates the cooperation and clarifying-action
+  switches found by the balanced gain/loss diagnostic. Receipt:
+  `/tmp/persona-dream-live-tau-balanced-threshold-intervention-20260721T194434Z/live_tau_balanced_threshold_intervention_receipt.v1.json`.
+  Status `PASS_LIVE_TAU_PCTOM_BALANCED_THRESHOLD_INTERVENTION`, receipt SHA-256
+  `sha256:65a5fda6f552cba3db39f94ba5951faffda0cb09c50a6dae965b79ee17a23bf1`.
+  The runner consumed the accepted v17-22 aggregate and the balanced
+  gain/loss diagnostic, recomputed the aggregate rows SHA-256
+  `sha256:e42a2497ae36aea1a0e22ec0f0df1d52ec735859ba68228d19e1b40fc025ad98`,
+  and made zero Tau, Memory, provider, canonical-memory, identity, or
+  source-memory writes. The consumed aggregate still binds 96 live Tau calls.
+  Observed CD-minus-baseline mean was `-0.024999999999999994`. Blocking only
+  `WAIT -> OFFER_COOPERATION` changes three coordination/conflict rows,
+  avoids two HARM rows, loses one BENEFIT row, and improves the mean to
+  `-0.07291666666666667`. Blocking `SET_BOUNDARY -> ASK_CLARIFYING_QUESTION`
+  changes four trust/commitment rows, avoids two HARM rows, loses two BENEFIT
+  rows, and worsens the mean to `0.025000000000000012`. Blocking
+  `WAIT -> ASK_CLARIFYING_QUESTION` loses the single preference/desire benefit.
+  Conclusion: `RAISE_COOPERATION_THRESHOLD_KEEP_CLARIFYING_THRESHOLD_UNPROVEN`.
+  This is oracle-labeled aggregate ablation evidence, not an implementable
+  no-oracle runtime policy. It does not prove confidence-bounded CD planning
+  benefit, future reproduction, semantic dream quality, paid provider
+  execution, or complete live Phase 01-16 runtime execution. Next PCTOM-R work
+  should convert the cooperation-threshold finding into a pre-outcome,
+  evidence-only decision rule and test it on held-out live Tau rows before
+  making a planning-benefit claim.
 - 2026-07-21 (PCTOM-R BALANCED PLANNING GAIN/LOSS DIAGNOSTIC): a deterministic
   diagnostic now explains the mixed balanced v17-22 planning signal without
   reexecuting Tau. Receipt:
