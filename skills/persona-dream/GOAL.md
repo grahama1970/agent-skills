@@ -179,8 +179,9 @@ step model:
    live Tau-originated condition outputs, included in the deterministic sealed
    test, and now exercised across 256 full64 live Tau sealed-test action
    decisions. The missing research proof is confidence-bounded planning-regret
-   benefit over the strongest baseline or non-identical repeated expanded live
-   Tau behavior. Deterministic, live
+   benefit over the strongest baseline or a planning intervention/episode
+   distribution that creates beneficial CD-vs-baseline action deltas under
+   balanced live coverage. Deterministic, live
    expanded, and repeated expanded trust/commitment coverage exists for
    variants 17-24 and preserves the action-selection contract, but it still
    does not prove confidence-bounded planning benefit.
@@ -189,7 +190,11 @@ step model:
    deltas are CD action switches in `trust-commit`, with three oracle-match
    gains and one oracle-match loss, while the expanded repeated
    trust/commitment seeds duplicated the same action-row pattern and still have
-   CI upper `0.0`.
+   CI upper `0.0`. A balanced four-family live Tau planning replication over
+   variants 17-18 now consumes 32 live Tau-originated calls and 8 planning
+   rows, 2 per family. It proves balanced live planning coverage and no-write /
+   no-judge discipline, but it is a null planning result with 0 action
+   switches, 0 nonzero CD-vs-baseline planning deltas, and CI `[0.0, 0.0]`.
 7. **Non-destructive belief revision** - implemented fixture-backed by Gate 7,
    bridged over live Tau-originated action decisions, and recalled through live
    Memory without canonical/source/identity writes. The remaining research
@@ -259,7 +264,11 @@ permanently deployed external production service. The full64 live Memory fault
 surface now binds full64 live Tau evidence, live Memory revision recall, and
 local service retry evidence before probing live Memory faults; it still does
 not prove planning benefit or a permanently deployed external production
-service.
+service. The balanced four-family live Tau planning replication now covers a
+2-per-family sealed-test slice over variants 17-18 using 32 live Tau-originated
+condition calls and 32 Gate 6 action decisions. It improves balanced live
+planning coverage, but reports `planning_benefit_with_confidence:false` with
+planning CI `[0.0, 0.0]`.
 
 ## Research Question
 
@@ -505,6 +514,9 @@ Full64 live Memory fault surface proof root: /tmp/persona-dream-live-tau-full64-
 Planning non-generalization audit proof root: /tmp/persona-dream-live-tau-planning-non-generalization-audit-20260721T124136Z
 Distributional planning intervention proof root: /tmp/persona-dream-live-tau-distributional-planning-intervention-20260721T130137Z
 Confidence-gated planning intervention proof root: /tmp/persona-dream-live-tau-confidence-gated-planning-intervention-20260721T131015Z
+Balanced live Tau planning replication source proof root: /tmp/persona-dream-live-tau-balanced-planning-v17-18-20260721T132835Z
+Balanced live Tau planning replication proof root: /tmp/persona-dream-live-tau-balanced-planning-v17-18-final-20260721T135844Z
+Blocked balanced live Tau planning missing-root proof root: /tmp/persona-dream-live-tau-balanced-planning-negative-final-20260721T135844Z
 ```
 
 Current active phase boundary:
@@ -549,7 +561,9 @@ last_distributional_planning_intervention_receipt: /tmp/persona-dream-live-tau-d
 last_blocked_distributional_planning_missing_root_receipt: /tmp/persona-dream-live-tau-distributional-planning-intervention-negative-20260721T130208Z/distributional_planning_intervention_receipt.v1.json
 last_confidence_gated_planning_intervention_receipt: /tmp/persona-dream-live-tau-confidence-gated-planning-intervention-20260721T131015Z/confidence_gated_planning_intervention_receipt.v1.json
 last_blocked_confidence_gated_planning_missing_root_receipt: /tmp/persona-dream-live-tau-confidence-gated-planning-intervention-negative-20260721T131026Z/confidence_gated_planning_intervention_receipt.v1.json
-next_required_receipt: non-identical repeated live Tau behavior over a larger/balanced planning corpus, or a deterministic utility/reward intervention that improves CD-vs-baseline planning without adding the observed confidence-gated harm
+last_balanced_live_tau_planning_replication_receipt: /tmp/persona-dream-live-tau-balanced-planning-v17-18-final-20260721T135844Z/live_tau_balanced_planning_replication_receipt.v1.json
+last_blocked_balanced_live_tau_planning_missing_root_receipt: /tmp/persona-dream-live-tau-balanced-planning-negative-final-20260721T135844Z/live_tau_balanced_planning_replication_receipt.v1.json
+next_required_receipt: a deterministic utility/reward intervention or scenario/policy expansion that improves CD-vs-baseline planning under balanced live coverage without adding the observed confidence-gated harm
 secondary_receipt: permanently deployed external always-on orchestrator retry proof, only as supporting reliability evidence
 ```
 
@@ -651,6 +665,19 @@ unsupported writes. It does not prove planning benefit. The next primary
 planning artifact should therefore be non-identical repeated live Tau behavior
 over a larger/balanced corpus, or a utility/reward intervention that improves
 planning without introducing the observed epistemic-action harm.
+
+The balanced live Tau planning replication now resolves the larger/balanced
+corpus path as a null result. It consumes 32 live Tau-originated condition
+calls from variants 17-18, maps them through Gate 6 action selection, and
+reports 8 planning rows with 2 rows per scenario family. It preserves the
+sealed/scored/action/no-write/no-judge contract and includes a missing-root
+negative receipt that blocks before accepting live artifact consumption. It
+does not prove planning benefit: CD ties the strongest baseline on every row,
+with 0 action switches, 0 nonzero planning deltas, mean CD-minus-baseline
+planning regret `0.0`, and CI `[0.0, 0.0]`. The next primary planning artifact
+should therefore move to a deterministic utility/reward intervention or
+scenario/policy expansion that can create beneficial CD-vs-baseline planning
+deltas under balanced live coverage.
 
 Expanded deterministic trust/commitment heldout summary:
 

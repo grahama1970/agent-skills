@@ -1,10 +1,40 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R confidence-gated planning intervention accepted) by agent
+**Last updated:** 2026-07-21 (PCTOM-R balanced live Tau planning replication accepted) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R BALANCED LIVE TAU PLANNING REPLICATION): balanced
+  four-family live Tau planning replication evidence now exists at
+  `/tmp/persona-dream-live-tau-balanced-planning-v17-18-final-20260721T135844Z/live_tau_balanced_planning_replication_receipt.v1.json`.
+  It reports `PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION` while
+  consuming hash-bound live Tau-originated condition artifacts from
+  `/tmp/persona-dream-live-tau-balanced-planning-v17-18-20260721T132835Z`.
+  The source live run made 32 Tau calls across 8 sealed-test episodes, with 2
+  episodes each from `information_asymmetry_false_belief`,
+  `preference_desire_uncertainty`, `trust_commitment_relationship`, and
+  `coordination_conflict`, and 8 action decisions per M/R/D/CD condition. The
+  final reuse receipt records `mocked:false`, `live:true`,
+  `fixture_backed:false`, `deterministic_simulator_corpus_fixture_backed:true`,
+  `live_tau_reexecuted:false`,
+  `live_tau_originated_artifacts_consumed:true`, no human content judgment, no
+  LLM judge, 0 Memory/provider/canonical/identity/source-memory writes, and
+  no errors. The result is a planning null: CD tied the strongest baseline on
+  all 8 planning rows, action switches were 0, nonzero planning deltas were 0,
+  mean CD-minus-baseline planning regret was `0.0`, and bootstrap CI was
+  `[0.0, 0.0]`; `planning_benefit_with_confidence:false`. This improves
+  balanced live coverage and prevents the previous trust/commitment-only
+  planning evidence from being mistaken for general coverage, but it does not
+  prove planning benefit. The missing-root negative receipt at
+  `/tmp/persona-dream-live-tau-balanced-planning-negative-final-20260721T135844Z/live_tau_balanced_planning_replication_receipt.v1.json`
+  exits 1 and reports
+  `BLOCKED_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION` with `live:false` and
+  `live_tau_originated_artifacts_consumed:false`. Next PCTOM-R work should
+  target a deterministic utility/reward intervention or scenario/policy
+  expansion that can create beneficial CD-vs-baseline planning deltas without
+  corrupting sealed prediction, deterministic scoring, no-judge, and no-write
+  constraints.
 - 2026-07-21 (PCTOM-R CONFIDENCE-GATED PLANNING INTERVENTION): a
   non-tied deterministic planning-intervention receipt now exists at
   `/tmp/persona-dream-live-tau-confidence-gated-planning-intervention-20260721T131015Z/confidence_gated_planning_intervention_receipt.v1.json`.
