@@ -72,6 +72,21 @@ def _terminate_process_group(proc: subprocess.Popen[str]) -> None:
             pass
 
 
+def _arm_process_group_timeout(proc: subprocess.Popen[str], timeout_s: float) -> tuple[threading.Timer | None, threading.Event]:
+    timed_out = threading.Event()
+    if timeout_s <= 0:
+        return None, timed_out
+
+    def _timeout() -> None:
+        timed_out.set()
+        _terminate_process_group(proc)
+
+    timer = threading.Timer(timeout_s, _timeout)
+    timer.daemon = True
+    timer.start()
+    return timer, timed_out
+
+
 def dispatch_text_reasoning(
     prompt: str,
     role: str,
@@ -115,13 +130,18 @@ def dispatch_text_reasoning(
         raise TauRoutingError(f"Tau dispatch failed: {exc}") from exc
 
     previous_alarm_handler = _install_wall_clock_timeout(timeout_s)
+    timer, timer_timed_out = _arm_process_group_timeout(proc, timeout_s)
     try:
         stdout, stderr = proc.communicate(json.dumps(request), timeout=timeout_s)
     except (subprocess.TimeoutExpired, _WallClockTimeout) as exc:
         _terminate_process_group(proc)
         raise TauRoutingError(f"Tau dispatch timed out after {timeout_s}s") from exc
     finally:
+        if timer is not None:
+            timer.cancel()
         _clear_wall_clock_timeout(previous_alarm_handler)
+    if timer_timed_out.is_set():
+        raise TauRoutingError(f"Tau dispatch timed out after {timeout_s}s")
 
     stdout = stdout.strip()
     if not stdout:

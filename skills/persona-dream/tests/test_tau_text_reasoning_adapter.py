@@ -7,6 +7,7 @@ touches scillm (it only invokes Tau).
 import importlib.util
 import json
 import subprocess
+import threading
 import time
 from pathlib import Path
 
@@ -132,4 +133,29 @@ def test_adapter_wall_clock_timeout_kills_process_group(monkeypatch, tmp_path):
         adapter.dispatch_text_reasoning("p", role="r", timeout_s=0.1)
 
     assert time.monotonic() - started < 0.8
+    assert killed
+
+
+def test_adapter_timer_timeout_kills_process_group_from_non_main_thread(monkeypatch, tmp_path):
+    killed = []
+    proc = _Proc(json.dumps(_receipt()), delay_s=0.2)
+    result = {}
+
+    monkeypatch.setattr(subprocess, "Popen", lambda *a, **k: proc)
+    monkeypatch.setattr(adapter, "TAU_REPO", tmp_path)
+    monkeypatch.setattr(adapter.os, "killpg", lambda pid, sig: killed.append((pid, sig)))
+
+    def _run():
+        try:
+            adapter.dispatch_text_reasoning("p", role="r", timeout_s=0.05)
+        except Exception as exc:
+            result["exc"] = exc
+
+    thread = threading.Thread(target=_run)
+    thread.start()
+    thread.join(timeout=1.0)
+
+    assert not thread.is_alive()
+    assert isinstance(result.get("exc"), adapter.TauRoutingError)
+    assert "timed out" in str(result["exc"])
     assert killed
