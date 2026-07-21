@@ -101,6 +101,7 @@ Commands:
   run-live-tau-distributional-planning-intervention  Run a broader distributional planning intervention over full64 live Tau artifacts
   run-live-tau-confidence-gated-planning-intervention  Run a confidence-gated epistemic action intervention over full64 live Tau artifacts
   run-live-tau-balanced-planning-replication  Run live Tau planning over a balanced four-family slice
+  run-live-tau-strict-inference-prompt-replication  Run live Tau planning with strict non-template inference prompts
   run-live-tau-sealed-test-retry-proof  Prove retry/idempotence over live Tau sealed-test artifacts
   run-live-tau-sealed-test-runsh-orchestration-retry-proof  Exercise sealed-test retry proof through run.sh dispatch
   run-live-tau-sealed-test-queue-worker-retry-proof  Exercise sealed-test retry proof through a bounded queue worker
@@ -491,6 +492,9 @@ case "$COMMAND" in
     ;;
   run-live-tau-balanced-planning-replication)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_tau_balanced_planning_replication.py" "$@"
+    ;;
+  run-live-tau-strict-inference-prompt-replication)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_tau_strict_inference_prompt_replication.py" "$@"
     ;;
   run-live-tau-sealed-test-retry-proof)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_tau_sealed_test_retry_proof.py" "$@"

@@ -517,6 +517,8 @@ Confidence-gated planning intervention proof root: /tmp/persona-dream-live-tau-c
 Balanced live Tau planning replication source proof root: /tmp/persona-dream-live-tau-balanced-planning-v17-18-20260721T132835Z
 Balanced live Tau planning replication proof root: /tmp/persona-dream-live-tau-balanced-planning-v17-18-final-20260721T135844Z
 Blocked balanced live Tau planning missing-root proof root: /tmp/persona-dream-live-tau-balanced-planning-negative-final-20260721T135844Z
+Tau adapter timeout containment control proof root: /tmp/persona-dream-live-tau-default-control-adapter-timeout-20260721T142915Z
+Blocked strict-inference prompt replication proof root: /tmp/persona-dream-live-tau-strict-inference-smoke-clean-timeout-20260721T143140Z
 ```
 
 Current active phase boundary:
@@ -563,7 +565,9 @@ last_confidence_gated_planning_intervention_receipt: /tmp/persona-dream-live-tau
 last_blocked_confidence_gated_planning_missing_root_receipt: /tmp/persona-dream-live-tau-confidence-gated-planning-intervention-negative-20260721T131026Z/confidence_gated_planning_intervention_receipt.v1.json
 last_balanced_live_tau_planning_replication_receipt: /tmp/persona-dream-live-tau-balanced-planning-v17-18-final-20260721T135844Z/live_tau_balanced_planning_replication_receipt.v1.json
 last_blocked_balanced_live_tau_planning_missing_root_receipt: /tmp/persona-dream-live-tau-balanced-planning-negative-final-20260721T135844Z/live_tau_balanced_planning_replication_receipt.v1.json
-next_required_receipt: a deterministic utility/reward intervention or scenario/policy expansion that improves CD-vs-baseline planning under balanced live coverage without adding the observed confidence-gated harm
+last_tau_adapter_timeout_control_receipt: /tmp/persona-dream-live-tau-default-control-adapter-timeout-20260721T142915Z/live_tau_condition_comparison_receipt.v1.json
+last_blocked_strict_inference_prompt_receipt: /tmp/persona-dream-live-tau-strict-inference-smoke-clean-timeout-20260721T143140Z/live_tau_strict_inference_prompt_replication_receipt.v1.json
+next_required_receipt: rerun strict-inference prompt replication after live Tau/scillm text reasoning responds within bounded time, then test a deterministic utility/reward or scenario/policy expansion for beneficial CD-vs-baseline planning under balanced live coverage
 secondary_receipt: permanently deployed external always-on orchestrator retry proof, only as supporting reliability evidence
 ```
 
@@ -678,6 +682,21 @@ planning regret `0.0`, and CI `[0.0, 0.0]`. The next primary planning artifact
 should therefore move to a deterministic utility/reward intervention or
 scenario/policy expansion that can create beneficial CD-vs-baseline planning
 deltas under balanced live coverage.
+
+The strict-inference prompt attempt exposed a lower-level reliability defect
+before it could test planning benefit. The default live condition control and
+the strict-inference prompt runner both initially hung before writing a case
+receipt. `tau_text_reasoning_adapter.py` now starts Tau in a separate process
+group and kills that group on timeout. The default-control receipt proves the
+adapter now returns a blocked receipt after four bounded Tau timeouts instead
+of requiring an external shell kill. The strict-inference receipt proves the
+new strict prompt runner blocks after 16 bounded Tau timeouts with 16 blocked
+cases, 0 action decisions, 0 accepted planning rows, and no accepted live
+artifact consumption. This is fail-closed reliability progress, not a planning
+benefit result. The next live research step is to restore or confirm Tau/scillm
+text-reasoning availability, rerun strict-inference prompt replication with
+normal timeouts, and only then evaluate another deterministic utility/reward or
+scenario/policy expansion.
 
 Expanded deterministic trust/commitment heldout summary:
 

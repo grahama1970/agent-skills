@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import json
 import os
+import signal
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -63,27 +64,40 @@ def dispatch_text_reasoning(
         request["output_contract"] = output_contract
 
     try:
-        proc = subprocess.run(
+        proc = subprocess.Popen(
             ["uv", "run", "python", "-m", TAU_TEXT_MODULE],
-            input=json.dumps(request),
-            capture_output=True,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             text=True,
             cwd=str(tau_repo),
-            timeout=timeout_s,
-            check=False,
+            start_new_session=True,
         )
-    except (OSError, subprocess.TimeoutExpired) as exc:
+    except OSError as exc:
         raise TauRoutingError(f"Tau dispatch failed: {exc}") from exc
 
-    stdout = proc.stdout.strip()
+    try:
+        stdout, stderr = proc.communicate(json.dumps(request), timeout=timeout_s)
+    except subprocess.TimeoutExpired as exc:
+        try:
+            os.killpg(proc.pid, signal.SIGTERM)
+            proc.wait(timeout=5)
+        except Exception:
+            try:
+                os.killpg(proc.pid, signal.SIGKILL)
+            except Exception:
+                pass
+        raise TauRoutingError(f"Tau dispatch timed out after {timeout_s}s") from exc
+
+    stdout = stdout.strip()
     if not stdout:
         raise TauRoutingError(
-            f"Tau node returned no receipt (rc={proc.returncode}): {proc.stderr[-500:]}"
+            f"Tau node returned no receipt (rc={proc.returncode}): {stderr[-500:]}"
         )
     try:
         receipt = json.loads(stdout)
     except json.JSONDecodeError as exc:
-        raise TauRoutingError(f"Tau receipt not JSON: {exc}; stderr={proc.stderr[-300:]}") from exc
+        raise TauRoutingError(f"Tau receipt not JSON: {exc}; stderr={stderr[-300:]}") from exc
 
     if receipt.get("schema") != "tau.persona_dream.scillm_text_reasoning_receipt.v1":
         raise TauRoutingError(f"Unexpected Tau receipt schema: {receipt.get('schema')!r}")

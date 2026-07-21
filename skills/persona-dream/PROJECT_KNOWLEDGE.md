@@ -1,10 +1,38 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R balanced live Tau planning replication accepted) by agent
+**Last updated:** 2026-07-21 (PCTOM-R Tau timeout containment repaired) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R TAU TIMEOUT CONTAINMENT / STRICT INFERENCE BLOCKER):
+  the next planning-quality issue is not provider/video work. The live Tau
+  condition prompt can copy schema/template probabilities, so a new strict
+  inference command was added:
+  `./skills/persona-dream/run.sh run-live-tau-strict-inference-prompt-replication`.
+  It uses a schema-explicit prompt with `INFER_PROBABILITY` placeholders and
+  blocks unless at least one action distribution is non-template. While testing
+  it, both the strict runner and the default live condition runner hung before
+  the first case receipt. Root cause found in
+  `skills/persona-dream/scripts/tau_text_reasoning_adapter.py`: the Tau/uv
+  subprocess path was not reliably bounded by `subprocess.run(timeout=...)`.
+  The adapter now starts Tau in a new process group and kills the process group
+  on timeout. Control receipt:
+  `/tmp/persona-dream-live-tau-default-control-adapter-timeout-20260721T142915Z/live_tau_condition_comparison_receipt.v1.json`
+  reports `BLOCKED_LIVE_TAU_PCTOM_CONDITION_COMPARISON`, `mocked:false`,
+  `live:false`, 4 Tau attempts, 0 live calls completed, and four
+  `Tau dispatch timed out after 5.0s` errors without requiring an external
+  shell kill. Strict-inference receipt:
+  `/tmp/persona-dream-live-tau-strict-inference-smoke-clean-timeout-20260721T143140Z/live_tau_strict_inference_prompt_replication_receipt.v1.json`
+  reports `BLOCKED_LIVE_TAU_PCTOM_STRICT_INFERENCE_PROMPT_REPLICATION`,
+  `mocked:false`, `live:false`, `live_tau_reexecuted:true`,
+  `live_tau_originated_artifacts_consumed:false`, 16 bounded Tau attempts,
+  0 live calls completed, 16 blocked cases, 0 action decisions, and no
+  accepted strict-inference planning rows. This is fail-closed reliability
+  progress, not planning benefit. Next PCTOM-R work should first restore or
+  confirm live Tau/scillm text-reasoning availability, then rerun the strict
+  inference prompt replication with normal timeouts before attempting another
+  utility/reward intervention.
 - 2026-07-21 (PCTOM-R BALANCED LIVE TAU PLANNING REPLICATION): balanced
   four-family live Tau planning replication evidence now exists at
   `/tmp/persona-dream-live-tau-balanced-planning-v17-18-final-20260721T135844Z/live_tau_balanced_planning_replication_receipt.v1.json`.
