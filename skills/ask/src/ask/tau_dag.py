@@ -771,8 +771,7 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
         "goal_hash": _goal_hash(input),
     }
     handler_nodes: list[dict[str, Any]] = []
-    for handler in input.handlers:
-        node_id = _handler_node_id(handler)
+    for handler, node_id in zip(input.handlers, _handler_node_ids(input.handlers)):
         prior_nodes = _roundtable_prior_nodes(input, node_id)
         required_evidence = [
             "handler_response_receipt",
@@ -980,7 +979,7 @@ def _write_roundtable_command_spec(
     ]
     prior_nodes = _roundtable_prior_nodes(input, node_id)
     if node_id == "join":
-        prior_nodes = [_handler_node_id(handler) for handler in input.handlers]
+        prior_nodes = _handler_node_ids(input.handlers)
     for prior_node in prior_nodes:
         command.extend(["--prior-node", prior_node])
     if handler in ROUNDTABLE_HANDLERS:
@@ -1095,7 +1094,7 @@ def _roundtable_next_agent(input: TauDagCompileInput, node_id: str) -> str:
     if not node_id.startswith("handler-"):
         return "human"
     if input.topology == "sequential":
-        node_ids = [_handler_node_id(handler) for handler in input.handlers]
+        node_ids = _handler_node_ids(input.handlers)
         try:
             index = node_ids.index(node_id)
         except ValueError:
@@ -1108,8 +1107,7 @@ def _roundtable_next_agent(input: TauDagCompileInput, node_id: str) -> str:
 def _roundtable_prior_nodes(input: TauDagCompileInput, node_id: str) -> list[str]:
     if input.topology != "sequential" or not node_id.startswith("handler-"):
         return []
-    handlers = list(input.handlers)
-    node_ids = [_handler_node_id(handler) for handler in handlers]
+    node_ids = _handler_node_ids(input.handlers)
     try:
         index = node_ids.index(node_id)
     except ValueError:
@@ -1372,6 +1370,23 @@ def _normalize_handler(value: str) -> str:
 
 def _handler_node_id(handler: str) -> str:
     return f"handler-{_slug(handler)}"
+
+
+def _handler_node_ids(handlers: list[str] | tuple[str, ...]) -> list[str]:
+    """Unique node ids for the handler list, in order.
+
+    A handler may legitimately repeat (creator-reviewer loops with one bound
+    browser handler). Position-independent ids collide in that case and produce
+    a malformed DAG (duplicate node ids, self-edges), so repeats get an ordinal
+    suffix: handler-webgpt, handler-webgpt-2, ...
+    """
+    seen: dict[str, int] = {}
+    node_ids: list[str] = []
+    for handler in handlers:
+        base = _handler_node_id(handler)
+        seen[base] = seen.get(base, 0) + 1
+        node_ids.append(base if seen[base] == 1 else f"{base}-{seen[base]}")
+    return node_ids
 
 
 def _normalize_topology(value: str) -> str:
