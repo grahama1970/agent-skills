@@ -166,7 +166,7 @@ export function BattleSpectatorArena() {
 
   function playCue(cue: string) {
     if (!cue || cue === "none") return;
-    arm();
+    if (!enabled) return;
     play(cue as never);
   }
 
@@ -222,7 +222,7 @@ export function BattleSpectatorArena() {
   }, [initialLanes, playheadSeconds, receiptBeats, receiptReplay, typedReceiptFixture]);
 
   const handleReceiptBeat = useCallback((beat: ReceiptBeat) => {
-    if (campaignPresentation.mute) return;
+    if (campaignPresentation.mute || !enabled) return;
     if (beat.react.soundCue && beat.react.soundCue !== "none") {
       playCue(beat.react.soundCue);
       setSoundCaption(soundCaptionForCue(beat.react.soundCue, beat.kind as never));
@@ -241,10 +241,10 @@ export function BattleSpectatorArena() {
     void score.playMotif(spriteId).then((ok) => {
       if (ok) setSoundCaption(`Sprite motif (${spriteId}) — entrance receipt.`);
     });
-  }, [campaignPresentation.mute, initialLanes, score, typedReceiptFixture?.sprite_theme]);
+  }, [campaignPresentation.mute, enabled, initialLanes, score, typedReceiptFixture?.sprite_theme]);
 
   const handleReplayCue = useCallback((cue: BattleEffectCue) => {
-    if (campaignPresentation.mute) return;
+    if (campaignPresentation.mute || !enabled) return;
     if (cue.soundCue && cue.soundCue !== "none") {
       playCue(cue.soundCue);
       setSoundCaption(soundCaptionForCue(cue.soundCue));
@@ -263,7 +263,7 @@ export function BattleSpectatorArena() {
     void score.playMotif(spriteId).then((ok) => {
       if (ok) setSoundCaption(`Sprite motif (${spriteId}) — entrance receipt.`);
     });
-  }, [campaignPresentation.mute, initialLanes, score, typedReceiptFixture?.sprite_theme]);
+  }, [campaignPresentation.mute, enabled, initialLanes, score, typedReceiptFixture?.sprite_theme]);
 
   const handlePlayheadSeconds = useCallback((seconds: number) => {
     setPlayheadSeconds(seconds);
@@ -286,7 +286,7 @@ export function BattleSpectatorArena() {
     const exists = initialLanes.some((lane) => lane.id === id);
     if (!exists) return;
     setSelectedId(id);
-    if (campaignPresentation.mute) return;
+    if (campaignPresentation.mute || !enabled) return;
     const lane = initialLanes.find((item) => item.id === id);
     if (!lane) return;
     const spriteId = spriteIdForLane(lane, typedReceiptFixture?.sprite_theme);

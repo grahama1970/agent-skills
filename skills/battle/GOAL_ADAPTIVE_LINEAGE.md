@@ -315,6 +315,24 @@ Follow prompt during normal replay, no forbidden text, and a playable Pixi canva
 Closure remains pending human or fresh external acceptance of the visible replay
 state.
 
+Fresh full-replay proof now exists at
+`skills/battle/local/full-replay-proof-20260721T1734Z/battle-full-replay-proof.json`.
+It records `status:"PASS"`, `failed:[]`, `mocked:false`, `live:true`, route
+`http://127.0.0.1:3003/#battle`, sound armed through the UI, no audio starts or
+audio fetches before the Arm gesture, three OGG score/motif fetches with HTTP
+200, fifteen WebAudio source/oscillator starts after arming, full replay through
+the receipt end at `02:14`, paused-at-end behavior instead of wrapping back to
+`00:00`, G1/G2/terminal windows observed, terminal lanes visible, scorecard
+present, footer visible, nonblank Pixi canvas, sprite resources loaded, no
+console/page/network errors, and no forbidden visible text. Screenshot:
+`skills/battle/local/full-replay-proof-20260721T1734Z/battle-full-replay-end.png`.
+Visual inspection of that screenshot shows the end-state Battle with all four
+lanes visible, G2 selected, the nurgling sprite visible on the track, the header
+scorecard present, sound marked `Live`, and controls still usable. This is the
+current strongest local evidence for the human's "play one complete working
+Battle" challenge, but it does not override the explicit human-acceptance rule
+above.
+
 The prior audit receipt
 `skills/battle/local/goal-adaptive-lineage-audit-20260721T0005Z.json` remains a
 supporting evidence index: it reports `status:"PASS"`, `failed:[]`, local `HEAD`

@@ -1,0 +1,772 @@
+{
+  "schema": "battle.full_replay_ux_proof.v1",
+  "generated_at": "2026-07-21T17:33:05.188Z",
+  "route": "http://127.0.0.1:3003/#battle",
+  "status": "PASS",
+  "mocked": false,
+  "live": true,
+  "exercised": "served static Battle spectator route in Chromium; armed sound through UI; played adaptive-lineage receipt replay at 8x until the receipt end; captured terminal screenshot and browser instrumentation",
+  "checks": {
+    "route_loaded": true,
+    "sound_initially_unstarted": true,
+    "sound_button_live_after_arm": true,
+    "audio_fetches_present": true,
+    "audio_fetches_ok": true,
+    "audio_started_after_arm": true,
+    "full_replay_reached_terminal_window": true,
+    "full_replay_paused_at_end": true,
+    "g1_window_observed": true,
+    "g2_window_observed": true,
+    "terminal_lanes_visible": true,
+    "end_lanes_visible": true,
+    "canvas_visible": true,
+    "canvas_nonblank_export": true,
+    "sprite_assets_loaded": true,
+    "scorecard_present": true,
+    "footer_visible": true,
+    "no_failed_requests": true,
+    "no_page_errors": true,
+    "no_console_errors": true,
+    "no_forbidden_console_warnings": true,
+    "no_forbidden_visible_text": true
+  },
+  "failed": [],
+  "maxSeconds": 134,
+  "states": [
+    {
+      "label": "initial",
+      "playheadText": "PLAYHEAD 00:00",
+      "seconds": 0,
+      "visibleLaneCount": 2,
+      "visibleLaneIds": [
+        "battle:lane:G0",
+        "battle:lane:G0"
+      ],
+      "agentPaneQid": "battle:agent-pane:G0",
+      "soundButtonText": "Arm",
+      "soundButtonTitle": "Arm sound for receipt-backed events with explicit cues",
+      "playButtonTitle": "Play receipt replay playhead",
+      "scorecard": {
+        "width": 340,
+        "height": 140,
+        "top": 83,
+        "left": 589
+      },
+      "footer": {
+        "width": 1408,
+        "height": 48,
+        "top": 856
+      },
+      "canvas": {
+        "width": 1030,
+        "height": 260,
+        "top": 315,
+        "left": 577
+      },
+      "canvasDataUrlLength": 8514,
+      "resourceCounts": {
+        "sprites": 3,
+        "audio": 0
+      },
+      "forbiddenVisibleText": []
+    },
+    {
+      "label": "after_sound_arm",
+      "playheadText": "PLAYHEAD 00:00",
+      "seconds": 0,
+      "visibleLaneCount": 2,
+      "visibleLaneIds": [
+        "battle:lane:G0",
+        "battle:lane:G0"
+      ],
+      "agentPaneQid": "battle:agent-pane:G0",
+      "soundButtonText": "Live",
+      "soundButtonTitle": "Spectator mode live",
+      "playButtonTitle": "Play receipt replay playhead",
+      "scorecard": {
+        "width": 340,
+        "height": 140,
+        "top": 83,
+        "left": 589
+      },
+      "footer": {
+        "width": 1408,
+        "height": 48,
+        "top": 856
+      },
+      "canvas": {
+        "width": 1030,
+        "height": 260,
+        "top": 315,
+        "left": 577
+      },
+      "canvasDataUrlLength": 8514,
+      "resourceCounts": {
+        "sprites": 3,
+        "audio": 0
+      },
+      "forbiddenVisibleText": []
+    },
+    {
+      "label": "g1_mutation_window",
+      "playheadText": "PLAYHEAD 00:48",
+      "seconds": 48,
+      "visibleLaneCount": 6,
+      "visibleLaneIds": [
+        "battle:lane:G0",
+        "battle:lane:G1-A",
+        "battle:lane:G1-B",
+        "battle:lane:G0",
+        "battle:lane:G1-A",
+        "battle:lane:G1-B"
+      ],
+      "agentPaneQid": "battle:agent-pane:G0",
+      "soundButtonText": "Live",
+      "soundButtonTitle": "Spectator mode live",
+      "playButtonTitle": "Pause receipt replay playhead",
+      "scorecard": {
+        "width": 340,
+        "height": 140,
+        "top": 83,
+        "left": 589
+      },
+      "footer": {
+        "width": 1408,
+        "height": 48,
+        "top": 856
+      },
+      "canvas": {
+        "width": 1030,
+        "height": 260,
+        "top": 315,
+        "left": 576
+      },
+      "canvasDataUrlLength": 8514,
+      "resourceCounts": {
+        "sprites": 3,
+        "audio": 0
+      },
+      "forbiddenVisibleText": []
+    },
+    {
+      "label": "g2_mutation_window",
+      "playheadText": "PLAYHEAD 01:29",
+      "seconds": 89,
+      "visibleLaneCount": 8,
+      "visibleLaneIds": [
+        "battle:lane:G0",
+        "battle:lane:G1-A",
+        "battle:lane:G1-B",
+        "battle:lane:G2",
+        "battle:lane:G0",
+        "battle:lane:G1-A",
+        "battle:lane:G1-B",
+        "battle:lane:G2"
+      ],
+      "agentPaneQid": "battle:agent-pane:G1-B",
+      "soundButtonText": "Live",
+      "soundButtonTitle": "Spectator mode live",
+      "playButtonTitle": "Pause receipt replay playhead",
+      "scorecard": {
+        "width": 340,
+        "height": 140,
+        "top": 83,
+        "left": 589
+      },
+      "footer": {
+        "width": 1408,
+        "height": 48,
+        "top": 856
+      },
+      "canvas": {
+        "width": 1030,
+        "height": 260,
+        "top": 315,
+        "left": 174
+      },
+      "canvasDataUrlLength": 8514,
+      "resourceCounts": {
+        "sprites": 3,
+        "audio": 2
+      },
+      "forbiddenVisibleText": []
+    },
+    {
+      "label": "terminal_fitness_window",
+      "playheadText": "PLAYHEAD 02:02",
+      "seconds": 122,
+      "visibleLaneCount": 8,
+      "visibleLaneIds": [
+        "battle:lane:G0",
+        "battle:lane:G1-A",
+        "battle:lane:G1-B",
+        "battle:lane:G2",
+        "battle:lane:G0",
+        "battle:lane:G1-A",
+        "battle:lane:G1-B",
+        "battle:lane:G2"
+      ],
+      "agentPaneQid": "battle:agent-pane:G2",
+      "soundButtonText": "Live",
+      "soundButtonTitle": "Spectator mode live",
+      "playButtonTitle": "Pause receipt replay playhead",
+      "scorecard": {
+        "width": 340,
+        "height": 140,
+        "top": 83,
+        "left": 589
+      },
+      "footer": {
+        "width": 1408,
+        "height": 48,
+        "top": 856
+      },
+      "canvas": {
+        "width": 1030,
+        "height": 260,
+        "top": 315,
+        "left": 9
+      },
+      "canvasDataUrlLength": 8514,
+      "resourceCounts": {
+        "sprites": 3,
+        "audio": 3
+      },
+      "forbiddenVisibleText": []
+    },
+    {
+      "label": "paused_at_end",
+      "playheadText": "PLAYHEAD 02:14",
+      "seconds": 134,
+      "visibleLaneCount": 8,
+      "visibleLaneIds": [
+        "battle:lane:G0",
+        "battle:lane:G1-A",
+        "battle:lane:G1-B",
+        "battle:lane:G2",
+        "battle:lane:G0",
+        "battle:lane:G1-A",
+        "battle:lane:G1-B",
+        "battle:lane:G2"
+      ],
+      "agentPaneQid": "battle:agent-pane:G2",
+      "soundButtonText": "Live",
+      "soundButtonTitle": "Spectator mode live",
+      "playButtonTitle": "Play receipt replay playhead",
+      "scorecard": {
+        "width": 340,
+        "height": 140,
+        "top": 83,
+        "left": 589
+      },
+      "footer": {
+        "width": 1408,
+        "height": 48,
+        "top": 856
+      },
+      "canvas": {
+        "width": 1030,
+        "height": 260,
+        "top": 315,
+        "left": 9
+      },
+      "canvasDataUrlLength": 8514,
+      "resourceCounts": {
+        "sprites": 3,
+        "audio": 3
+      },
+      "forbiddenVisibleText": []
+    },
+    {
+      "label": "end_screenshot_state",
+      "playheadText": "PLAYHEAD 02:14",
+      "seconds": 134,
+      "visibleLaneCount": 8,
+      "visibleLaneIds": [
+        "battle:lane:G0",
+        "battle:lane:G1-A",
+        "battle:lane:G1-B",
+        "battle:lane:G2",
+        "battle:lane:G0",
+        "battle:lane:G1-A",
+        "battle:lane:G1-B",
+        "battle:lane:G2"
+      ],
+      "agentPaneQid": "battle:agent-pane:G2",
+      "soundButtonText": "Live",
+      "soundButtonTitle": "Spectator mode live",
+      "playButtonTitle": "Play receipt replay playhead",
+      "scorecard": {
+        "width": 340,
+        "height": 140,
+        "top": 83,
+        "left": 589
+      },
+      "footer": {
+        "width": 1408,
+        "height": 48,
+        "top": 856
+      },
+      "canvas": {
+        "width": 1030,
+        "height": 260,
+        "top": 315,
+        "left": 9
+      },
+      "canvasDataUrlLength": 8514,
+      "resourceCounts": {
+        "sprites": 3,
+        "audio": 3
+      },
+      "forbiddenVisibleText": []
+    }
+  ],
+  "timelineTail": [
+    {
+      "label": "tick_25",
+      "playheadText": "PLAYHEAD 01:45",
+      "seconds": 105,
+      "visibleLaneCount": 8,
+      "visibleLaneIds": [
+        "battle:lane:G0",
+        "battle:lane:G1-A",
+        "battle:lane:G1-B",
+        "battle:lane:G2",
+        "battle:lane:G0",
+        "battle:lane:G1-A",
+        "battle:lane:G1-B",
+        "battle:lane:G2"
+      ],
+      "agentPaneQid": "battle:agent-pane:G2",
+      "soundButtonText": "Live",
+      "soundButtonTitle": "Spectator mode live",
+      "playButtonTitle": "Pause receipt replay playhead",
+      "scorecard": {
+        "width": 340,
+        "height": 140,
+        "top": 83,
+        "left": 589
+      },
+      "footer": {
+        "width": 1408,
+        "height": 48,
+        "top": 856
+      },
+      "canvas": {
+        "width": 1030,
+        "height": 260,
+        "top": 315,
+        "left": 14
+      },
+      "canvasDataUrlLength": 8514,
+      "resourceCounts": {
+        "sprites": 3,
+        "audio": 3
+      },
+      "forbiddenVisibleText": []
+    },
+    {
+      "label": "tick_26",
+      "playheadText": "PLAYHEAD 01:50",
+      "seconds": 110,
+      "visibleLaneCount": 8,
+      "visibleLaneIds": [
+        "battle:lane:G0",
+        "battle:lane:G1-A",
+        "battle:lane:G1-B",
+        "battle:lane:G2",
+        "battle:lane:G0",
+        "battle:lane:G1-A",
+        "battle:lane:G1-B",
+        "battle:lane:G2"
+      ],
+      "agentPaneQid": "battle:agent-pane:G2",
+      "soundButtonText": "Live",
+      "soundButtonTitle": "Spectator mode live",
+      "playButtonTitle": "Pause receipt replay playhead",
+      "scorecard": {
+        "width": 340,
+        "height": 140,
+        "top": 83,
+        "left": 589
+      },
+      "footer": {
+        "width": 1408,
+        "height": 48,
+        "top": 856
+      },
+      "canvas": {
+        "width": 1030,
+        "height": 260,
+        "top": 315,
+        "left": 9
+      },
+      "canvasDataUrlLength": 8514,
+      "resourceCounts": {
+        "sprites": 3,
+        "audio": 3
+      },
+      "forbiddenVisibleText": []
+    },
+    {
+      "label": "tick_27",
+      "playheadText": "PLAYHEAD 01:54",
+      "seconds": 114,
+      "visibleLaneCount": 8,
+      "visibleLaneIds": [
+        "battle:lane:G0",
+        "battle:lane:G1-A",
+        "battle:lane:G1-B",
+        "battle:lane:G2",
+        "battle:lane:G0",
+        "battle:lane:G1-A",
+        "battle:lane:G1-B",
+        "battle:lane:G2"
+      ],
+      "agentPaneQid": "battle:agent-pane:G2",
+      "soundButtonText": "Live",
+      "soundButtonTitle": "Spectator mode live",
+      "playButtonTitle": "Pause receipt replay playhead",
+      "scorecard": {
+        "width": 340,
+        "height": 140,
+        "top": 83,
+        "left": 589
+      },
+      "footer": {
+        "width": 1408,
+        "height": 48,
+        "top": 856
+      },
+      "canvas": {
+        "width": 1030,
+        "height": 260,
+        "top": 315,
+        "left": 9
+      },
+      "canvasDataUrlLength": 8514,
+      "resourceCounts": {
+        "sprites": 3,
+        "audio": 3
+      },
+      "forbiddenVisibleText": []
+    },
+    {
+      "label": "tick_28",
+      "playheadText": "PLAYHEAD 01:58",
+      "seconds": 118,
+      "visibleLaneCount": 8,
+      "visibleLaneIds": [
+        "battle:lane:G0",
+        "battle:lane:G1-A",
+        "battle:lane:G1-B",
+        "battle:lane:G2",
+        "battle:lane:G0",
+        "battle:lane:G1-A",
+        "battle:lane:G1-B",
+        "battle:lane:G2"
+      ],
+      "agentPaneQid": "battle:agent-pane:G2",
+      "soundButtonText": "Live",
+      "soundButtonTitle": "Spectator mode live",
+      "playButtonTitle": "Pause receipt replay playhead",
+      "scorecard": {
+        "width": 340,
+        "height": 140,
+        "top": 83,
+        "left": 589
+      },
+      "footer": {
+        "width": 1408,
+        "height": 48,
+        "top": 856
+      },
+      "canvas": {
+        "width": 1030,
+        "height": 260,
+        "top": 315,
+        "left": 9
+      },
+      "canvasDataUrlLength": 8514,
+      "resourceCounts": {
+        "sprites": 3,
+        "audio": 3
+      },
+      "forbiddenVisibleText": []
+    },
+    {
+      "label": "tick_29",
+      "playheadText": "PLAYHEAD 02:02",
+      "seconds": 122,
+      "visibleLaneCount": 8,
+      "visibleLaneIds": [
+        "battle:lane:G0",
+        "battle:lane:G1-A",
+        "battle:lane:G1-B",
+        "battle:lane:G2",
+        "battle:lane:G0",
+        "battle:lane:G1-A",
+        "battle:lane:G1-B",
+        "battle:lane:G2"
+      ],
+      "agentPaneQid": "battle:agent-pane:G2",
+      "soundButtonText": "Live",
+      "soundButtonTitle": "Spectator mode live",
+      "playButtonTitle": "Pause receipt replay playhead",
+      "scorecard": {
+        "width": 340,
+        "height": 140,
+        "top": 83,
+        "left": 589
+      },
+      "footer": {
+        "width": 1408,
+        "height": 48,
+        "top": 856
+      },
+      "canvas": {
+        "width": 1030,
+        "height": 260,
+        "top": 315,
+        "left": 9
+      },
+      "canvasDataUrlLength": 8514,
+      "resourceCounts": {
+        "sprites": 3,
+        "audio": 3
+      },
+      "forbiddenVisibleText": []
+    },
+    {
+      "label": "tick_30",
+      "playheadText": "PLAYHEAD 02:06",
+      "seconds": 126,
+      "visibleLaneCount": 8,
+      "visibleLaneIds": [
+        "battle:lane:G0",
+        "battle:lane:G1-A",
+        "battle:lane:G1-B",
+        "battle:lane:G2",
+        "battle:lane:G0",
+        "battle:lane:G1-A",
+        "battle:lane:G1-B",
+        "battle:lane:G2"
+      ],
+      "agentPaneQid": "battle:agent-pane:G2",
+      "soundButtonText": "Live",
+      "soundButtonTitle": "Spectator mode live",
+      "playButtonTitle": "Pause receipt replay playhead",
+      "scorecard": {
+        "width": 340,
+        "height": 140,
+        "top": 83,
+        "left": 589
+      },
+      "footer": {
+        "width": 1408,
+        "height": 48,
+        "top": 856
+      },
+      "canvas": {
+        "width": 1030,
+        "height": 260,
+        "top": 315,
+        "left": 9
+      },
+      "canvasDataUrlLength": 8514,
+      "resourceCounts": {
+        "sprites": 3,
+        "audio": 3
+      },
+      "forbiddenVisibleText": []
+    },
+    {
+      "label": "tick_31",
+      "playheadText": "PLAYHEAD 02:10",
+      "seconds": 130,
+      "visibleLaneCount": 8,
+      "visibleLaneIds": [
+        "battle:lane:G0",
+        "battle:lane:G1-A",
+        "battle:lane:G1-B",
+        "battle:lane:G2",
+        "battle:lane:G0",
+        "battle:lane:G1-A",
+        "battle:lane:G1-B",
+        "battle:lane:G2"
+      ],
+      "agentPaneQid": "battle:agent-pane:G2",
+      "soundButtonText": "Live",
+      "soundButtonTitle": "Spectator mode live",
+      "playButtonTitle": "Pause receipt replay playhead",
+      "scorecard": {
+        "width": 340,
+        "height": 140,
+        "top": 83,
+        "left": 589
+      },
+      "footer": {
+        "width": 1408,
+        "height": 48,
+        "top": 856
+      },
+      "canvas": {
+        "width": 1030,
+        "height": 260,
+        "top": 315,
+        "left": 9
+      },
+      "canvasDataUrlLength": 8514,
+      "resourceCounts": {
+        "sprites": 3,
+        "audio": 3
+      },
+      "forbiddenVisibleText": []
+    },
+    {
+      "label": "tick_32",
+      "playheadText": "PLAYHEAD 02:14",
+      "seconds": 134,
+      "visibleLaneCount": 8,
+      "visibleLaneIds": [
+        "battle:lane:G0",
+        "battle:lane:G1-A",
+        "battle:lane:G1-B",
+        "battle:lane:G2",
+        "battle:lane:G0",
+        "battle:lane:G1-A",
+        "battle:lane:G1-B",
+        "battle:lane:G2"
+      ],
+      "agentPaneQid": "battle:agent-pane:G2",
+      "soundButtonText": "Live",
+      "soundButtonTitle": "Spectator mode live",
+      "playButtonTitle": "Play receipt replay playhead",
+      "scorecard": {
+        "width": 340,
+        "height": 140,
+        "top": 83,
+        "left": 589
+      },
+      "footer": {
+        "width": 1408,
+        "height": 48,
+        "top": 856
+      },
+      "canvas": {
+        "width": 1030,
+        "height": 260,
+        "top": 315,
+        "left": 9
+      },
+      "canvasDataUrlLength": 8514,
+      "resourceCounts": {
+        "sprites": 3,
+        "audio": 3
+      },
+      "forbiddenVisibleText": []
+    }
+  ],
+  "audio": {
+    "beforeArm": {
+      "resumes": 0,
+      "starts": 0,
+      "oscillatorStarts": 0,
+      "decodeCalls": 0,
+      "fetches": [],
+      "contextStates": [],
+      "patchErrors": []
+    },
+    "afterReplay": {
+      "resumes": 0,
+      "starts": 3,
+      "oscillatorStarts": 12,
+      "decodeCalls": 3,
+      "fetches": [
+        {
+          "url": "/battle-audio/score/v1/motifs/crimson_chainsaw_demon.ogg",
+          "status": 200,
+          "ok": true
+        },
+        {
+          "url": "/battle-audio/score/v1/motifs/slug_demon.ogg",
+          "status": 200,
+          "ok": true
+        },
+        {
+          "url": "/battle-audio/score/v1/motifs/typhus.ogg",
+          "status": 200,
+          "ok": true
+        }
+      ],
+      "contextStates": [
+        "running",
+        "running",
+        "running",
+        "running",
+        "running",
+        "running",
+        "running",
+        "running",
+        "running",
+        "running",
+        "running",
+        "running",
+        "running",
+        "running",
+        "running"
+      ],
+      "patchErrors": []
+    },
+    "fetchCount": 3,
+    "fetches": [
+      {
+        "url": "/battle-audio/score/v1/motifs/crimson_chainsaw_demon.ogg",
+        "status": 200,
+        "ok": true
+      },
+      {
+        "url": "/battle-audio/score/v1/motifs/slug_demon.ogg",
+        "status": 200,
+        "ok": true
+      },
+      {
+        "url": "/battle-audio/score/v1/motifs/typhus.ogg",
+        "status": 200,
+        "ok": true
+      }
+    ]
+  },
+  "browser": {
+    "consoleErrors": [],
+    "forbiddenConsoleWarnings": [],
+    "consoleMessagesTail": [
+      {
+        "type": "warning",
+        "text": "PixiJS Warning:  [Assets] Asset id battle-race-atlas was not found in the Cache"
+      },
+      {
+        "type": "warning",
+        "text": "[.WebGL-0xb8c0014c800]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+      },
+      {
+        "type": "warning",
+        "text": "[.WebGL-0xb8c0014c800]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+      },
+      {
+        "type": "warning",
+        "text": "[.WebGL-0xb8c0014c800]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+      },
+      {
+        "type": "warning",
+        "text": "[.WebGL-0xb8c0014c800]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)"
+      }
+    ],
+    "pageErrors": [],
+    "failedRequests": []
+  },
+  "artifacts": {
+    "screenshot": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/full-replay-proof-20260721T1734Z/battle-full-replay-end.png",
+    "proof": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/full-replay-proof-20260721T1734Z/battle-full-replay-proof.json"
+  }
+}

@@ -347,13 +347,18 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
       last = now;
       setPlayheadSeconds((value) => {
         const next = value + dt * multiplier;
-        return next >= allotted ? 0 : next;
+        if (next < allotted) return next;
+        if (receiptReplay) {
+          onPlayingChange?.(false);
+          return allotted;
+        }
+        return 0;
       });
       frame = window.requestAnimationFrame(tick);
     };
     frame = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(frame);
-  }, [allotted, playing, speed]);
+  }, [allotted, onPlayingChange, playing, receiptReplay, speed]);
 
   useEffect(() => {
     followPlayhead(playing ? "auto" : "smooth");

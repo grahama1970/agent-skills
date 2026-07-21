@@ -227,6 +227,22 @@ agent-skills worktree, not the pi-mono shell.
   Follow prompt during normal replay, no forbidden text, and Pixi canvas height
   at least 240px. Screenshot:
   `skills/battle/local/replay-ux-proof-20260721T1724Z/battle-replay-after-play.png`.
+- **Fresh full-replay UX proof exists, but human acceptance is still the final
+  disputed-goal gate**:
+  `skills/battle/local/full-replay-proof-20260721T1734Z/battle-full-replay-proof.json`
+  records `status:"PASS"`, `failed:[]`, `mocked:false`, `live:true`, route
+  `http://127.0.0.1:3003/#battle`, sound armed by the UI, no audio starts or
+  audio fetches before the Arm gesture, three OGG score/motif fetches with HTTP
+  200, fifteen WebAudio source/oscillator starts after arming, full replay
+  reaching the receipt end at `02:14`, paused-at-end behavior instead of
+  wrapping to `00:00`, G1/G2/terminal windows observed, terminal lanes visible,
+  scorecard present, footer visible, nonblank Pixi canvas, sprite resources
+  loaded, no console/page/network errors, and no forbidden visible text.
+  Screenshot:
+  `skills/battle/local/full-replay-proof-20260721T1734Z/battle-full-replay-end.png`.
+  Visual inspection showed all four lanes visible, G2 selected, the nurgling
+  sprite on the track, the scorecard present, sound marked `Live`, and usable
+  controls at the end state.
 - **Repo is dirty from unrelated agents**. Stage Battle handoff/artifact paths
   explicitly only. Never `git add -A`.
 
@@ -235,9 +251,10 @@ agent-skills worktree, not the pi-mono shell.
 1. Keep using `#battle` on the agent-skills host as the primary acceptance
    route. Treat `#battle/receipt` as a compatible deep link and do not revive
    standalone `#battle/live` without a new written goal.
-2. Use the fresh pre-human proof and replay proof as the next review target. If
-   a reviewer or human rejects it, preserve the screenshot and fix the next
-   concrete visual/replay defect before making another closure claim.
+2. Use the fresh pre-human proof, replay proof, and full-replay proof as the next
+   review target. If a reviewer or human rejects it, preserve the screenshot and
+   fix the next concrete visual/replay defect before making another closure
+   claim.
 3. Do not claim a new backend rerun unless a backend command actually reruns the
    live SciLLM + Docker qualification. The existing backend receipt remains the
    current source fixture, not a new run.
