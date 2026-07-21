@@ -1,10 +1,35 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R expanded repeated live trust/commit summary accepted) by agent
+**Last updated:** 2026-07-21 (PCTOM-R local HTTP service retry boundary accepted) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R LOCAL HTTP SERVICE RETRY BOUNDARY): local HTTP
+  service-boundary retry evidence now exists at
+  `/tmp/persona-dream-live-tau-sealed-test-service-retry-proof-20260721T121812Z/live_tau_sealed_test_service_retry_proof_receipt.v1.json`.
+  It reports `PASS_LIVE_TAU_PCTOM_SERVICE_RETRY_PROOF` while consuming the
+  full64 live Tau sealed-test root
+  `/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z`.
+  A separate service process accepted retry jobs over HTTP and wrote start/stop
+  receipts. Counts: 5 HTTP job submissions, 4 unique service jobs, 1 duplicate
+  submission detected, 2 completed jobs, 2 blocked jobs, 0 quarantined jobs,
+  256 active predictions, 256 action decisions, 256 Gate 6 receipts, 8 child
+  retry/fault trials, 0 `CONTINUED_WITH_UNKNOWN_STATE`, 0 side-effect
+  violations, 0 duplicate active predictions promoted, and 0 duplicate action
+  decisions promoted. Checks show duplicate submission for the same job id was
+  idempotent, exact retry and retry-after-uncertain-completion recovered
+  equivalent active state, missing base root and interrupted persistence
+  blocked before active-state promotion, and terminal outcomes stayed inside
+  `RECOVERED_WITH_EQUIVALENT_END_STATE` or `BLOCKED_BEFORE_SIDE_EFFECT`.
+  `mocked:false`, `live:true`, `fixture_backed:false`,
+  `live_tau_originated_artifacts_consumed:true`, `live_tau_reexecuted:false`,
+  and Memory/provider/canonical/identity/source-memory write attempts were all
+  0. This closes a local HTTP service-boundary rung, not a permanently deployed
+  external production service, new live Tau execution, live Memory service
+  fault injection, paid provider execution, semantic dream quality, or complete
+  Phase 01-16 runtime execution. Next PCTOM-R work should target live
+  Memory-in-loop/fault evidence or a broader/different planning intervention.
 - 2026-07-21 (PCTOM-R EXPANDED REPEATED LIVE TRUST/COMMIT SUMMARY):
   repeated expanded live Tau trust/commitment summary evidence now exists at
   `/tmp/persona-dream-live-tau-trust-commit-expanded-repeated-seed-summary-20260721T120650Z/live_tau_trust_commit_repeated_seed_receipt.v1.json`.

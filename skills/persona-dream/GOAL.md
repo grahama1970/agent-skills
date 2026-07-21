@@ -183,8 +183,8 @@ step model:
    bridged over live-originated artifacts with controlled fault families. The
    full64 retry receipt now covers bounded idempotence and fail-closed retry
    behavior over 256 active predictions and 256 action decisions. The remaining
-   research proof is broader live fault injection and deployed service-boundary
-   retry behavior across Memory, model-output, tool-return, schema,
+   research proof is broader live fault injection and permanently deployed
+   external service-boundary retry behavior across Memory, model-output, tool-return, schema,
    persistence, and retry boundaries with no `CONTINUED_WITH_UNKNOWN_STATE`.
 
 Therefore, when README language says that media acceptance, human subjective
@@ -216,8 +216,8 @@ CD belief-Brier benefit over the strongest baseline, but action Brier and
 planning-regret confidence intervals cross zero. The full64 retry receipt
 supports bounded idempotence and fail-closed retry/fault handling over the same
 full64 root. The goal remains open because planning benefit, expanded
-action-policy sensitivity, broader live service faults, and deployed production
-retry machinery are not yet proven by local receipts. The expanded
+action-policy sensitivity, broader live service faults, and permanently deployed
+production retry machinery are not yet proven by local receipts. The expanded
 deterministic trust/commitment receipts add 24 variants per family, a filtered
 8-episode trust/commitment slice over variants 17-24, and an empty-filter
 blocked receipt; this improves corpus coverage and filter-boundary discipline
@@ -232,6 +232,13 @@ sealed/scored cases, and 16 planning rows, but its planning-regret confidence
 interval also has upper bound `0.0`. This is repeated live execution evidence,
 not confidence-bounded planning-benefit proof. The one-source negative summary
 receipt blocks before accepting an under-supported aggregate.
+The local HTTP service retry receipt now proves a separate service process can
+accept retry jobs over HTTP, handle a duplicate job id idempotently, recover
+equivalent active state on retry jobs, and block missing-base-root plus
+interrupted-persistence jobs before active-state promotion. It is service
+boundary evidence over live Tau-originated full64 artifacts, but it is not a
+permanently deployed external production service and does not replace live
+Memory-in-loop/fault proof.
 
 ## Research Question
 
@@ -472,12 +479,13 @@ Live expanded trust/commitment Tau replication proof root: /tmp/persona-dream-li
 Blocked live expanded trust/commitment empty-filter proof root: /tmp/persona-dream-live-tau-trust-commit-expanded-empty-filter-20260721T113450Z
 Repeated expanded live trust/commitment Tau summary proof root: /tmp/persona-dream-live-tau-trust-commit-expanded-repeated-seed-summary-20260721T120650Z
 Blocked repeated expanded live trust/commitment one-source summary proof root: /tmp/persona-dream-live-tau-trust-commit-expanded-repeated-seed-summary-one-source-20260721T120712Z
+Local HTTP service retry proof root: /tmp/persona-dream-live-tau-sealed-test-service-retry-proof-20260721T121812Z
 ```
 
 Current active phase boundary:
 
 ```text
-phase: post-expanded-repeated-live-trust-commit-summary, pre-production-retry-or-live-memory-in-loop-fault-proof
+phase: post-local-http-service-retry-proof, pre-live-memory-in-loop-fault-or-broader-planning-proof
 last_live_condition_receipt: /tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z/live_tau_condition_comparison_receipt.v1.json
 last_reliability_receipt: /tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z/live_tau_condition_reliability_bridge_receipt.v1.json
 last_action_selection_receipt: /tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z/live_tau_condition_action_selection_receipt.v1.json
@@ -508,7 +516,8 @@ last_live_expanded_trust_commit_repeat2_receipt: /tmp/persona-dream-live-tau-tru
 last_blocked_live_expanded_trust_commit_empty_filter_receipt: /tmp/persona-dream-live-tau-trust-commit-expanded-empty-filter-20260721T113450Z/live_tau_trust_commit_replication_receipt.v1.json
 last_expanded_repeated_seed_summary_receipt: /tmp/persona-dream-live-tau-trust-commit-expanded-repeated-seed-summary-20260721T120650Z/live_tau_trust_commit_repeated_seed_receipt.v1.json
 last_blocked_expanded_repeated_seed_one_source_receipt: /tmp/persona-dream-live-tau-trust-commit-expanded-repeated-seed-summary-one-source-20260721T120712Z/live_tau_trust_commit_repeated_seed_receipt.v1.json
-next_required_receipt: production retry service proof, live Memory-in-loop/fault evidence, or broader/different planning intervention evidence, selected by the active research question
+last_local_http_service_retry_receipt: /tmp/persona-dream-live-tau-sealed-test-service-retry-proof-20260721T121812Z/live_tau_sealed_test_service_retry_proof_receipt.v1.json
+next_required_receipt: live Memory-in-loop/fault evidence, broader/different planning intervention evidence, or permanently deployed external service evidence, selected by the active research question
 secondary_receipt: live Memory fault injection in the same sealed-test loop or deployed always-on orchestrator retry proof
 ```
 
@@ -558,10 +567,12 @@ calls and one beneficial action switch. A second expanded live Tau run plus
 the repeated expanded aggregate consumes 64 live Tau calls and 16 planning
 rows, but the repeated expanded planning-regret CI upper is still `0.0`, so it
 is repeated live execution evidence rather than confidence-bounded planning
-proof or non-identical seed-behavior evidence. Retry/fault
-proof inside a permanently deployed always-on service boundary remains
-unproven. The run.sh orchestration proof exercises the local skill command
-dispatcher, but it is not an always-on external service.
+proof or non-identical seed-behavior evidence. The local HTTP service retry
+proof now exercises retry/fault handling through a separate service process
+and HTTP submission boundary, including duplicate submission idempotence. A
+permanently deployed external always-on service boundary remains unproven. The
+run.sh orchestration proof exercises the local skill command dispatcher, but
+it is not a service boundary.
 
 Expanded deterministic trust/commitment heldout summary:
 
@@ -987,6 +998,60 @@ promotion. It does not prove a permanently deployed always-on production
 service, full 64-episode live Tau replication, new live Tau execution, live
 Memory service fault injection, paid provider execution, semantic dream
 quality, or complete Phase 01-16 runtime execution.
+
+Local HTTP service retry proof summary:
+
+```text
+receipt: /tmp/persona-dream-live-tau-sealed-test-service-retry-proof-20260721T121812Z/live_tau_sealed_test_service_retry_proof_receipt.v1.json
+status: PASS_LIVE_TAU_PCTOM_SERVICE_RETRY_PROOF
+receipt_sha256: sha256:fffbd49c3ef7ff3d3328732cc607cb3941d449dca731b8dbbf301f8c9bc0f88d
+base_root: /tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z
+http_service_boundary_exercised: true
+local_service_process: true
+permanently_deployed_external_service: false
+http_requests_submitted: 5
+unique_service_jobs: 4
+duplicate_submissions_detected: 1
+completed_jobs: 2
+blocked_jobs: 2
+quarantined_jobs: 0
+active_predictions: 256
+action_decisions: 256
+gate6_receipts: 256
+retry_fault_trials: 8
+terminal_outcome_counts: RECOVERED_WITH_EQUIVALENT_END_STATE=2, BLOCKED_BEFORE_SIDE_EFFECT=2
+continued_with_unknown_state: 0
+side_effect_violations: 0
+duplicate_active_predictions_promoted: 0
+duplicate_action_decisions_promoted: 0
+duplicate_submission_idempotent: true
+duplicate_submission_not_promoted: true
+exact_retry_completed: true
+uncertain_retry_completed: true
+missing_base_root_blocked: true
+interrupted_persistence_blocked: true
+equivalent_end_state_after_retry: true
+mocked: false
+live: true
+fixture_backed: false
+live_tau_originated_artifacts_consumed: true
+live_tau_reexecuted: false
+tau_call_attempts: 0
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+```
+
+This proves a separate local HTTP service process can accept retry/fault jobs,
+recover equivalent active state for exact and uncertain-completion retry jobs,
+reject duplicate active promotion for a duplicate service submission, and block
+missing-base-root plus interrupted-persistence jobs before active-state
+promotion. It does not prove a permanently deployed external production
+service, new live Tau execution, live Memory service fault injection, paid
+provider execution, semantic dream quality, or complete live Phase 01-16
+runtime execution.
 
 Sealed-test statistical-confidence proof summary:
 
@@ -2193,9 +2258,11 @@ over live-originated sealed-test artifacts, run.sh orchestration retry evidence,
 bounded local queue-worker evidence, full64 live Tau sealed-test replication,
 full64 live Tau belief-Brier confidence evidence, full64 retry/fault
 containment, a full64 planning diagnostic, a floor4 trust/commitment live Tau
-replication, and a repeated-seed aggregate over two floor4 live Tau receipts to
-the remaining expanded/non-identical planning and production-reliability
-questions, without reactivating provider/video as the critical path. The
+replication, a repeated-seed aggregate over two floor4 live Tau receipts,
+expanded repeated live trust/commitment summary evidence, and a local HTTP
+service retry proof to the remaining expanded/non-identical planning and
+live-Memory/service reliability questions, without reactivating provider/video
+as the critical path. The
 blocked one-episode trust/commitment smoke is part of that evidence boundary:
 it exercised 4 live Tau calls and failed closed because the action-selection
 bridge requires at least 16 Tau calls and at least 4 sealed/scored cases per
@@ -2203,7 +2270,10 @@ condition before accepting a planning receipt. The floor4 replication now
 satisfies that floor. The repeated-seed aggregate consumes two accepted floor4
 live Tau receipts, but it is still not confidence-bounded planning-benefit
 evidence because its planning-regret CI crosses zero and the second run
-reproduced the same action-row pattern as the first.
+reproduced the same action-row pattern as the first. The local HTTP service
+retry proof exercises a service process and HTTP submission boundary over
+full64 live-originated artifacts, but remains local process evidence rather
+than a permanently deployed external production service.
 
 The next accepted artifact must answer this narrower question:
 
@@ -2219,10 +2289,10 @@ The next accepted artifact must answer this narrower question:
 The secondary artifact must answer this question:
 
 1. Does retry/fault handling preserve the same terminal-outcome discipline
-   inside a permanently deployed always-on service boundary and under live
-   Memory service faults in the sealed-test loop, not only the bounded research
-   bridge, local `run.sh` dispatcher, bounded local queue-worker process, and
-   full64 artifact replay?
+   under live Memory service faults in the sealed-test loop and, separately,
+   inside a permanently deployed external always-on service boundary, not only
+   the bounded research bridge, local `run.sh` dispatcher, bounded local
+   queue-worker process, local HTTP service process, and full64 artifact replay?
 
 Resolved live Memory diagnostic:
 
@@ -2349,12 +2419,16 @@ source_memory_write_attempts: 0
 ```
 
 Current run.sh orchestration proof satisfies the local command-dispatch subset
-of that stop condition. It does not satisfy an always-on external service or
-queue-worker stop condition.
+of that stop condition. It does not satisfy an always-on external service,
+queue-worker, or HTTP service stop condition.
 
 Current bounded queue-worker proof satisfies the local queue-worker subset of
 that stop condition. It does not satisfy a permanently deployed always-on
 service stop condition.
+
+Current local HTTP service proof satisfies the local service-process and HTTP
+submission subset of that stop condition. It does not satisfy a permanently
+deployed external always-on service stop condition.
 
 Required artifact shape:
 
