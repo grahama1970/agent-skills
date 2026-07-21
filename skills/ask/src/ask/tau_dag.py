@@ -53,6 +53,16 @@ ROUNDTABLE_HANDLERS = {
         "runtime": "browser",
         "proof_required": "surf_sentinel_meta",
     },
+    # Local coding agent. Runs `codex exec` inside a caller-named workspace
+    # (git worktree) with a writable sandbox; the node's response is the
+    # summary plus the actual `git diff` of the workspace, so a downstream
+    # reviewer handler judges the real change, not a narrative.
+    "codex": {
+        "transport_owner": "$tau",
+        "transport": "codex.exec",
+        "runtime": "local_cli",
+        "proof_required": "workspace_git_diff",
+    },
 }
 _HANDLER_ALIASES = {
     "chatgpt": "webgpt",
@@ -107,6 +117,7 @@ class TauDagCompileInput:
     topology: str = "concurrent"
     join_handler: str = "join"
     handler_projects: tuple[str, ...] = ()
+    handler_workspaces: tuple[str, ...] = ()
     ask_id: str | None = None
     output_root: Path = DEFAULT_OUTPUT_ROOT
     local_fixture: bool = False
@@ -127,6 +138,7 @@ def infer_compile_input(
     topology: str = "",
     join_handler: str = "join",
     handler_projects: list[str] | None = None,
+    handler_workspaces: list[str] | None = None,
     ask_id: str | None = None,
     output_root: Path = DEFAULT_OUTPUT_ROOT,
     local_fixture: bool = False,
@@ -164,6 +176,7 @@ def infer_compile_input(
         topology=_normalize_topology(topology or ("sequential" if "sequential" in lower else "concurrent")),
         join_handler=_normalize_handler(join_handler) if join_handler else "join",
         handler_projects=tuple(item.strip() for item in (handler_projects or []) if item.strip()),
+        handler_workspaces=tuple(item.strip() for item in (handler_workspaces or []) if item.strip()),
         ask_id=ask_id,
         output_root=output_root,
         local_fixture=local_fixture,
@@ -972,7 +985,7 @@ def _write_roundtable_command_spec(
         "--scillm-api-key",
         input.scillm_api_key,
         "--timeout",
-        "900" if handler == "webgpt" else "300",
+        "3000" if handler == "codex" else ("900" if handler == "webgpt" else "300"),
         "--stable-polls",
         "2",
         "--no-activate",
@@ -982,16 +995,23 @@ def _write_roundtable_command_spec(
         prior_nodes = _handler_node_ids(input.handlers)
     for prior_node in prior_nodes:
         command.extend(["--prior-node", prior_node])
-    if handler in ROUNDTABLE_HANDLERS:
+    if handler in ROUNDTABLE_HANDLERS and handler != "codex":
         command.extend(["--browser-oracle-project", _handler_project(input, handler)])
+    if handler == "codex":
+        workspace = _handler_workspace(input, handler)
+        if not workspace:
+            raise TauDagError(
+                "codex handler requires --handler-workspace codex=/path/to/worktree"
+            )
+        command.extend(["--codex-workspace", workspace])
     for evidence in node.get("required_evidence", []):
         command.extend(["--evidence", str(evidence)])
     payload = {
         "command": command,
         "cwd": str(run_dir),
-        "timeout_s": 1200 if handler == "webgpt" else 420,
+        "timeout_s": 3600 if handler == "codex" else (1200 if handler == "webgpt" else 420),
         "requires_network": node_id != "join",
-        "mutates": False,
+        "mutates": handler == "codex",
         "requires_clean_worktree": False,
         "compile_only": False,
         "runtime_note": (
@@ -1086,6 +1106,15 @@ def _handler_project(input: TauDagCompileInput, handler: str) -> str:
             return item[len(prefix) :].strip() or handler
     env_key = f"ASK_ROUNDTABLE_{handler.upper()}_PROJECT"
     return os.environ.get(env_key, "").strip() or handler
+
+
+def _handler_workspace(input: TauDagCompileInput, handler: str) -> str:
+    """Workspace directory bound to a local-CLI handler (codex coder node)."""
+    prefix = f"{handler}="
+    for item in input.handler_workspaces:
+        if item.startswith(prefix):
+            return item[len(prefix) :].strip()
+    return ""
 
 
 def _roundtable_next_agent(input: TauDagCompileInput, node_id: str) -> str:

@@ -47,6 +47,7 @@ def main() -> int:
     parser.add_argument("--stable-polls", type=int, default=2)
     parser.add_argument("--no-activate", action="store_true")
     parser.add_argument("--evidence", action="append", default=[])
+    parser.add_argument("--codex-workspace", default="")
     args = parser.parse_args()
 
     start = _read_stdin_handoff()
@@ -97,7 +98,16 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
         ]
         if prior_failures:
             raise RuntimeError("prior_handler_receipts_not_ready: " + "; ".join(prior_failures))
-        if handler in HANDLER_SUBMIT_COMMANDS:
+        if handler == "codex":
+            response_text, submit_meta, codex_commands = _run_codex_handler(
+                args,
+                prompt_path=prompt_path,
+                response_path=response_path,
+                raw_path=raw_path,
+                meta_path=meta_path,
+            )
+            commands.extend(codex_commands)
+        elif handler in HANDLER_SUBMIT_COMMANDS:
             project = args.browser_oracle_project or handler
             resolve = _run_cmd(
                 [
@@ -144,6 +154,10 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
                     submit_cmd.extend(["--expect-url", url])
                 else:
                     submit_cmd.extend(["--url", url])
+            for prior in prior_receipts:
+                prior_response = str(prior.get("response_path") or "")
+                if prior_response and Path(prior_response).is_file():
+                    submit_cmd.extend(["--attach-file", prior_response])
             if args.no_activate:
                 submit_cmd.append("--no-activate")
             submit = _run_cmd(submit_cmd, cwd=Path(args.surf_run).parent, timeout=max(args.timeout + 90, 180))
@@ -222,7 +236,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             "execution_owner": "$tau",
             "provider_transport": "$surf",
             "handler": handler,
-            "transport": HANDLER_SUBMIT_COMMANDS[handler],
+            "transport": HANDLER_SUBMIT_COMMANDS.get(handler, f"{handler}.local"),
         },
     }
     receipt_path.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -386,7 +400,11 @@ def _handler_prompt(
                     f"### {receipt.get('node_id')} / {receipt.get('handler')}",
                     f"- status: {receipt.get('status')}",
                     "",
-                    str(receipt.get("response_excerpt") or "").strip(),
+                    # Inline only the summary portion. Raw git diffs contain
+                    # tokens (Rust // comments, /paths) that trip the browser
+                    # transport's local-path preflight; the full response is
+                    # provided to browser handlers as a file attachment.
+                    _excerpt_before_diff(str(receipt.get("response_excerpt") or "")),
                     "",
                 ]
             )
@@ -470,6 +488,126 @@ def _run_cmd(command: list[str], *, cwd: Path, timeout: int) -> CmdResult:
     return CmdResult(command, proc.returncode, proc.stdout, proc.stderr, time.time() - started)
 
 
+def _run_codex_handler(
+    args: argparse.Namespace,
+    *,
+    prompt_path: Path,
+    response_path: Path,
+    raw_path: Path,
+    meta_path: Path,
+) -> tuple[str, dict[str, Any], list[dict[str, Any]]]:
+    """Run the local codex coder inside its bound workspace.
+
+    The node response is codex's final message PLUS the workspace's actual
+    `git diff` so the downstream reviewer judges the real change. A run that
+    produces no diff is a node failure, not a soft pass.
+    """
+    workspace = Path(args.codex_workspace).expanduser()
+    if not workspace.is_dir() or not (workspace / ".git").exists():
+        raise RuntimeError(f"codex workspace is not a git worktree: {workspace}")
+    commands: list[dict[str, Any]] = []
+    final_message_path = raw_path
+    codex_cmd = [
+        "codex",
+        "exec",
+        "-c",
+        'model_reasoning_effort="high"',
+        "-c",
+        "features.hooks=false",
+        "--ignore-user-config",
+        "--ignore-rules",
+        "--ephemeral",
+        # codex's bwrap sandbox cannot initialize in this environment
+        # (RTM_NEWADDR loopback failure; workspace-write rejects all writes,
+        # verified by direct probe 2026-07-21). Containment comes from the
+        # isolated git worktree, the diff-only review, and the downstream
+        # gates -- not from codex's own sandbox.
+        "--sandbox",
+        "danger-full-access",
+        "--cd",
+        str(workspace),
+        "-o",
+        str(final_message_path),
+        "-",
+    ]
+    prompt_text = prompt_path.read_text(encoding="utf-8")
+    started = time.monotonic()
+    proc = subprocess.run(
+        codex_cmd,
+        input=prompt_text,
+        capture_output=True,
+        text=True,
+        timeout=args.timeout,
+        cwd=str(workspace),
+    )
+    duration = time.monotonic() - started
+    commands.append(
+        {
+            "command": codex_cmd[:12] + ["..."],
+            "returncode": proc.returncode,
+            "duration_seconds": round(duration, 3),
+            "stdout_excerpt": (proc.stdout or "")[-1500:],
+            "stderr_excerpt": (proc.stderr or "")[-800:],
+        }
+    )
+    if proc.returncode != 0:
+        raise RuntimeError(f"codex exec failed rc={proc.returncode}: {(proc.stderr or proc.stdout)[-500:]}")
+    diff = subprocess.run(
+        ["git", "-C", str(workspace), "diff"],
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    status_out = subprocess.run(
+        ["git", "-C", str(workspace), "status", "--short"],
+        capture_output=True,
+        text=True,
+        timeout=60,
+    )
+    commands.append(
+        {
+            "command": ["git", "-C", str(workspace), "diff"],
+            "returncode": diff.returncode,
+            "duration_seconds": 0,
+            "stdout_excerpt": (diff.stdout or "")[:400],
+            "stderr_excerpt": (diff.stderr or "")[:200],
+        }
+    )
+    if not (diff.stdout or "").strip() and not (status_out.stdout or "").strip():
+        raise RuntimeError("codex_no_workspace_change: coder ran but produced no diff")
+    final_message = ""
+    if final_message_path.is_file():
+        final_message = final_message_path.read_text(encoding="utf-8")
+    response = "\n".join(
+        [
+            "## Coder summary",
+            final_message.strip() or "(codex produced no final message)",
+            "",
+            "## Workspace status",
+            "```",
+            (status_out.stdout or "").strip(),
+            "```",
+            "",
+            "## Workspace diff (git diff)",
+            "```diff",
+            (diff.stdout or "").strip()[:60000],
+            "```",
+            "",
+        ]
+    )
+    response_path.write_text(response, encoding="utf-8")
+    meta = {
+        "schema": "ask.codex_handler_meta.v1",
+        "workspace": str(workspace),
+        "codex_returncode": proc.returncode,
+        "duration_seconds": round(duration, 3),
+        "diff_bytes": len(diff.stdout or ""),
+        "finished_at": _now(),
+    }
+    meta_path.write_text(json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return response, meta, commands
+
+
 def _run_scillm_handler(
     args: argparse.Namespace,
     *,
@@ -526,6 +664,15 @@ def _run_scillm_handler(
     }
     meta_path.write_text(json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return text, meta
+
+
+def _excerpt_before_diff(text: str) -> str:
+    """Summary portion of a response: everything before a workspace diff block."""
+    for marker in ("## Workspace status", "## Workspace diff", "```diff"):
+        idx = text.find(marker)
+        if idx != -1:
+            return text[:idx].strip() + "\n\n(full response including the git diff is attached as a file)"
+    return text.strip()
 
 
 def _load_prior_receipts(node_artifacts_root: Path, prior_nodes: list[str]) -> list[dict[str, Any]]:
