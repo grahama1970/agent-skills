@@ -1,10 +1,23 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R live Tau condition comparison accepted) by agent
+**Last updated:** 2026-07-21 (PCTOM-R repeated live Tau condition comparison accepted) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R REPEATED LIVE TAU CONDITION COMPARISON): the next
+  repeated live condition artifact is
+  `/tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z/live_tau_condition_comparison_receipt.v1.json`.
+  It reports `PASS_LIVE_TAU_PCTOM_CONDITION_COMPARISON`, 16 Tau call attempts,
+  16 live Tau calls, 4 calibration episodes consumed across 4 scenario families,
+  4 sealed commitments and 4 deterministic Gate 5 scores per condition, and
+  zero Memory/provider/canonical/identity/source-memory writes. Gate counts:
+  16 PASS each for Gate 2, Gate 3, Gate 4, and Gate 5. The bounded calibration
+  subset had CD mean action Brier 0.61265 versus strongest baseline M
+  0.6534 (`cd_minus_strongest_baseline=-0.04075`), but this is not a held-out
+  statistical claim. Next critical path is condition-runner reliability:
+  controlled artifact faults, retry boundaries, and causal replay over the live
+  condition artifacts with no `CONTINUED_WITH_UNKNOWN_STATE`.
 - 2026-07-21 (PCTOM-R LIVE TAU CONDITION COMPARISON): the text-first
   condition lane now has a live Tau-authored M/R/D/CD comparison receipt:
   `/tmp/persona-dream-live-tau-condition-comparison-20260721T030038Z/live_tau_condition_comparison_receipt.v1.json`

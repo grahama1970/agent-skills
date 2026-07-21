@@ -311,6 +311,7 @@ Live Tau Gate 5/7 proof root: /tmp/persona-dream-live-tau-score-revision-2026072
 Live Tau Gate 8/9 proof root: /tmp/persona-dream-live-tau-reliability-bridge-20260721T023518Z
 Condition comparison proof root: /tmp/persona-dream-condition-comparison-20260721T024538Z
 Live Tau condition comparison proof root: /tmp/persona-dream-live-tau-condition-comparison-20260721T030038Z
+Repeated live Tau condition comparison proof root: /tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z
 ```
 
 Gate 0 proof summary:
@@ -716,6 +717,59 @@ retry machinery, longitudinal recall after revision, complete live Phase 01-16
 runtime execution, paid provider execution, video quality, or semantic dream
 quality.
 
+Repeated live Tau condition comparison proof summary:
+
+```text
+receipt: /tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z/live_tau_condition_comparison_receipt.v1.json
+status: PASS_LIVE_TAU_PCTOM_CONDITION_COMPARISON
+split: calibration
+episodes_in_corpus: 24
+episodes_consumed: 4
+families_consumed: 4
+episodes: cal-coord-conflict-01, cal-info-asym-01, cal-pref-desire-01, cal-trust-commit-01
+conditions: M, R, D, CD
+cases: 16
+tau_call_attempts: 16
+tau_live_call_performed: 16
+tau_receipts_hash_bound: true
+tau_status_counts: PASS=16
+sealed_commitments_per_condition: M=4, R=4, D=4, CD=4
+deterministic_scores_per_condition: M=4, R=4, D=4, CD=4
+Gate 2 PASS receipts: 16
+Gate 3 PASS receipts: 16
+Gate 4 PASS receipts: 16
+Gate 5 PASS receipts: 16
+mocked: false
+live: true
+fixture_backed: false
+deterministic_simulator_corpus_fixture_backed: true
+human_content_judgment_required: false
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+mean_action_brier: M=0.6533999999999999, R=0.6533999999999999, D=0.6533999999999999, CD=0.6126499999999999
+mean_belief_brier: M=0.41500000000000004, R=0.41500000000000004, D=0.41500000000000004, CD=0.39222500000000005
+primary_metric: mean_action_brier
+strongest_baseline_condition: M
+cd_minus_strongest_baseline: -0.04074999999999995
+case_error_rows: 0
+```
+
+This is repeated live Tau-authored, deterministic simulator-backed evidence
+over one calibration episode from each of the four scenario families. It proves
+the live condition runner can route 16 M/R/D/CD Tau calls, seal and hash-bind
+the Tau-authored outputs, reveal deterministic outcomes, score every condition,
+and aggregate paired metrics without human content judgment or unsupported
+writes. In this bounded calibration subset, CD beat the strongest baseline on
+mean action Brier by 0.04074999999999995. This is not a held-out statistical
+claim; it does not prove held-out test-set prediction benefit, robust
+calibration, action-selection regret improvement, external service fault
+injection, production retry machinery, longitudinal recall after revision,
+complete live Phase 01-16 runtime execution, paid provider execution, video
+quality, or semantic dream quality.
+
 First live Tau condition-comparison repair note:
 
 ```text
@@ -831,56 +885,52 @@ case, one live Tau-originated Gate 8/9 bridge proving bounded controlled
 stale-artifact containment and causal localization, and one deterministic
 calibration condition-comparison run over 24 episodes and 96 M/R/D/CD cases,
 plus one live Tau condition-comparison run over one paired calibration episode
-and four M/R/D/CD cases. It
+and four M/R/D/CD cases, plus one repeated live Tau condition-comparison run
+over four paired calibration episodes and 16 M/R/D/CD cases. It
 does not prove paid provider execution, semantic dream quality, held-out test
-benefit, statistical calibration over repeated live runs, action-selection
-regret improvement, external service fault injection, production retry
-machinery, longitudinal recall after revision, complete live Phase 01-16
-runtime execution, or autonomous operation beyond the bounded bridges. Those
-require separate live receipts.
+benefit, robust statistical calibration, action-selection regret improvement,
+external service fault injection, production retry machinery, longitudinal
+recall after revision, complete live Phase 01-16 runtime execution, or
+autonomous operation beyond the bounded bridges. Those require separate live
+receipts.
 
 No agent may claim final, green, complete, fixed, verified, or closed for this
 research goal unless those concrete proof artifacts exist and are cited.
 
 ## Next Critical Path
 
-Move from one paired live Tau condition comparison to repeated and reliability
-stress evidence, without reactivating provider/video as the critical path.
+Move from repeated live condition execution to live condition-runner
+reliability and fault-containment evidence, without reactivating provider/video
+as the critical path.
 
-The next accepted artifact must answer one of these two questions:
+The next accepted artifact must answer this reliability question:
 
-1. Can repeated Tau-authored M/R/D/CD condition outputs across a broader
-   calibration subset produce sealed predictions, deterministic scores, and
-   comparable metrics without human content judgment or unsupported writes?
+1. Can the same live condition runner survive controlled condition-runner
+   artifact faults and production retry boundaries with accepted Gate 8-9
+   terminal outcomes?
 
-Stop condition for the repeated-live artifact:
+Stop condition for the live condition reliability artifact:
 
 ```text
 mocked: no
-episodes_consumed: calibration subset
+base_receipt: repeated live Tau condition comparison receipt
 conditions: M, R, D, CD
-sealed_commitments_per_condition: >= 1
-deterministic_scores_per_condition: >= 1
-tau_call_attempts: >= 16
-tau_receipts_hash_bound: true
+fault_families: stale_artifact, missing_graph_edge, malformed_structured_output, interrupted_persistence_or_retry
+terminal_outcomes include only: RECOVERED_WITH_EQUIVALENT_END_STATE, BLOCKED_BEFORE_SIDE_EFFECT, QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE
+continued_with_unknown_state: 0
+causal_replay_receipts: >= 1 when divergence is injected
 human_content_judgment_required: false
 memory_write_attempts: 0
 provider_call_attempts: 0
 canonical_memory_write_attempts: 0
 identity_write_attempts: 0
 source_memory_write_attempts: 0
-primary_metric: Brier score by condition, with Tau-authored CD compared to the
-strongest Tau-authored baseline when enough paired trials exist
 ```
-
-2. Can the same live condition runner survive controlled condition-runner
-   artifact faults and production retry boundaries with accepted Gate 8-9
-   terminal outcomes?
 
 Any live validation report must state `mocked`, `live`, what was actually
 exercised, and what remains unverified.
 
-Candidate repeated-live command:
+Candidate base repeated-live command, already satisfied by the receipt above:
 
 ```bash
 ./run.sh run-live-tau-condition-comparison \
