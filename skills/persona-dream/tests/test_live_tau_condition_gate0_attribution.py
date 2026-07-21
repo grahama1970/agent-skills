@@ -150,6 +150,87 @@ def test_generated_calibration_prompt_stays_below_live_boundary():
     assert max(lengths.values()) < 18_000
 
 
+def test_condition_prompt_preflight_blocks_case_fanout(tmp_path):
+    class FakeBuildCorpus:
+        @staticmethod
+        def build_corpus(split, episodes_per_family):
+            return {"episode_count": 1, "episodes": [_episode()]}
+
+    class FakeCheckCorpus:
+        @staticmethod
+        def build_receipt(corpus_path, receipt_path, expect_total, expect_per_family):
+            receipt = {
+                "status": "PASS_SOCIAL_EPISODE_CORPUS",
+                "errors": [],
+                "checks": {"policies_deterministic": True},
+            }
+            _write_json(receipt_path, receipt)
+            return receipt
+
+    class FakeAdapter:
+        calls: list[str] = []
+
+        @staticmethod
+        def dispatch_text_reasoning(prompt, role, output_contract, caller_skill, model, timeout_s):
+            FakeAdapter.calls.append(role)
+            if role == "pctom-live-condition-preflight":
+                return (
+                    {
+                        "route_ready": True,
+                        "surface": "tau_scillm_text_reasoning",
+                        "note": "preflight_only",
+                    },
+                    {
+                        "status": "PASS",
+                        "live_call_performed": True,
+                        "prompt_sha256": runner._text_sha256(prompt),
+                    },
+                )
+            raise RuntimeError("Tau dispatch timed out after 0.1s")
+
+    def fake_load_module(path, name):
+        if "build" in name:
+            return FakeBuildCorpus
+        if "check_corpus" in name:
+            return FakeCheckCorpus
+        if "tau_text_adapter" in name:
+            return FakeAdapter
+        return object()
+
+    original_load_module = runner._load_module
+    runner._load_module = fake_load_module
+    try:
+        receipt = runner.run_live_comparison(
+            output_root=tmp_path / "out",
+            receipt_out=tmp_path / "out" / "receipt.json",
+            split="calibration",
+            episodes_per_family=1,
+            episode_limit=1,
+            model=None,
+            timeout_s=0.1,
+        )
+    finally:
+        runner._load_module = original_load_module
+
+    condition_receipt_path = Path(receipt["condition_prompt_preflight_receipt_path"])
+    condition_receipt = json.loads(condition_receipt_path.read_text())
+
+    assert receipt["status"] == runner.BLOCKED_STATUS
+    assert receipt["tau_preflight_passed"] is True
+    assert receipt["condition_prompt_preflight_attempted"] is True
+    assert receipt["condition_prompt_preflight_passed"] is False
+    assert receipt["condition_prompt_preflight_status"] == "BLOCKED_DISPATCH_ERROR"
+    assert receipt["checks"]["case_fanout_blocked_until_condition_prompt_preflight_passes"] is True
+    assert receipt["counts"]["cases"] == 0
+    assert receipt["tau_call_attempts"] == 0
+    assert "pctom-live-condition-preflight" in FakeAdapter.calls
+    assert "pctom-live-condition-representative-preflight" in FakeAdapter.calls
+    assert condition_receipt["status"] == "BLOCKED_DISPATCH_ERROR"
+    assert condition_receipt["systemic_failure_signature"] == "tau_text_reasoning_timeout"
+    assert condition_receipt["memory_write_attempts"] == 0
+    assert condition_receipt["provider_call_attempts"] == 0
+
+
 def test_balanced_planning_wrapper_forwards_gate0_case_root(tmp_path):
     script = ROOT / "research" / "prospective-tom" / "scripts" / "run_live_tau_balanced_planning_replication.py"
     spec = importlib.util.spec_from_file_location("balanced_planning_gate0_test", script)

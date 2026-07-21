@@ -767,6 +767,7 @@ def run_live_comparison(
     corpus_path = artifacts_root / "social_episode_corpus.v1.json"
     corpus_check_receipt_path = receipts_root / "social_episode_corpus_check_receipt.json"
     tau_preflight_receipt_path = receipts_root / "tau_text_reasoning_preflight_receipt.json"
+    tau_condition_preflight_receipt_path = receipts_root / "tau_text_reasoning_condition_preflight_receipt.json"
     case_index_path = artifacts_root / "live_condition_case_index.json"
     metrics_path = artifacts_root / "live_condition_metrics_summary.json"
     gate0_case_root = gate0_case_root.resolve() if gate0_case_root is not None else None
@@ -805,6 +806,10 @@ def run_live_comparison(
     tau_preflight_live_call_performed = False
     tau_preflight_receipt: dict[str, Any] | None = None
     tau_preflight_passed = False
+    condition_prompt_preflight_attempted = False
+    condition_prompt_preflight_live_call_performed = False
+    condition_prompt_preflight_receipt: dict[str, Any] | None = None
+    condition_prompt_preflight_passed = False
     tau_call_attempts = 0
     tau_live_call_performed = 0
     tau_receipts_hash_bound = True
@@ -844,7 +849,60 @@ def run_live_comparison(
         except Exception as exc:
             errors.append(f"tau_preflight_failed:{exc}")
 
-    if tau_preflight_passed:
+    if tau_preflight_passed and selected:
+        condition_prompt_preflight_attempted = True
+        representative_episode = selected[0]
+        representative_condition = "CD"
+        representative_prompt = _prompt(representative_episode, representative_condition, gate0_records)
+        representative_contract = _output_contract()
+        try:
+            parsed_condition_preflight, condition_prompt_preflight_receipt = adapter.dispatch_text_reasoning(
+                representative_prompt,
+                "pctom-live-condition-representative-preflight",
+                output_contract=representative_contract,
+                caller_skill="persona-dream",
+                model=model,
+                timeout_s=timeout_s,
+            )
+            _write_json(tau_condition_preflight_receipt_path, condition_prompt_preflight_receipt)
+            condition_prompt_preflight_live_call_performed = (
+                condition_prompt_preflight_receipt.get("live_call_performed") is True
+            )
+            condition_prompt_preflight_passed = (
+                condition_prompt_preflight_receipt.get("status") == "PASS"
+                and isinstance(parsed_condition_preflight, dict)
+                and isinstance(parsed_condition_preflight.get("tom_belief_distribution_bundle"), dict)
+                and isinstance(parsed_condition_preflight.get("counterfactual_branch_bundle"), dict)
+                and isinstance(parsed_condition_preflight.get("prediction_payload"), dict)
+            )
+            if not condition_prompt_preflight_passed:
+                errors.append(f"condition_prompt_preflight_status:{condition_prompt_preflight_receipt.get('status')}")
+                if condition_prompt_preflight_receipt.get("error"):
+                    errors.append(f"condition_prompt_preflight_error:{condition_prompt_preflight_receipt.get('error')}")
+                if not isinstance(parsed_condition_preflight, dict):
+                    errors.append("condition_prompt_preflight_parsed_json_not_object")
+                elif not isinstance(parsed_condition_preflight.get("tom_belief_distribution_bundle"), dict):
+                    errors.append("condition_prompt_preflight_missing_distribution_bundle")
+                elif not isinstance(parsed_condition_preflight.get("counterfactual_branch_bundle"), dict):
+                    errors.append("condition_prompt_preflight_missing_branch_bundle")
+                elif not isinstance(parsed_condition_preflight.get("prediction_payload"), dict):
+                    errors.append("condition_prompt_preflight_missing_prediction_payload")
+        except Exception as exc:
+            error_text = str(exc)
+            errors.append(f"condition_prompt_preflight_failed:{error_text}")
+            condition_prompt_preflight_receipt = _dispatch_boundary_receipt(
+                role="pctom-live-condition-representative-preflight",
+                model=model,
+                prompt=representative_prompt,
+                output_contract=representative_contract,
+                timeout_s=timeout_s,
+                status="BLOCKED_DISPATCH_ERROR",
+                error=error_text,
+                systemic_failure_signature=_systemic_failure_signature(error_text),
+            )
+            _write_json(tau_condition_preflight_receipt_path, condition_prompt_preflight_receipt)
+
+    if tau_preflight_passed and condition_prompt_preflight_passed:
         for episode in selected:
             for condition in CONDITIONS:
                 case_root = artifacts_root / "cases" / episode["episode_id"] / condition
@@ -1034,9 +1092,12 @@ def run_live_comparison(
                         errors.append(f"systemic_failure_threshold_reached:{signature}:{SYSTEMIC_FAILURE_THRESHOLD}")
                         break
     elif not errors:
-        errors.append("tau_preflight_not_attempted")
+        if not tau_preflight_passed:
+            errors.append("tau_preflight_not_attempted")
+        elif not condition_prompt_preflight_passed:
+            errors.append("condition_prompt_preflight_not_attempted")
 
-    if tau_preflight_passed:
+    if tau_preflight_passed and condition_prompt_preflight_passed:
         for condition in CONDITIONS:
             if sealed_counts[condition] < 1:
                 errors.append(f"sealed_commitments_per_condition_insufficient:{condition}:{sealed_counts[condition]}")
@@ -1076,10 +1137,16 @@ def run_live_comparison(
         "tau_preflight_receipt_sha256": _stable_json_sha256(tau_preflight_receipt)
         if isinstance(tau_preflight_receipt, dict)
         else None,
+        "condition_prompt_preflight_receipt_path": str(tau_condition_preflight_receipt_path),
+        "condition_prompt_preflight_receipt_sha256": _stable_json_sha256(condition_prompt_preflight_receipt)
+        if isinstance(condition_prompt_preflight_receipt, dict)
+        else None,
         "case_index_path": str(case_index_path),
         "metrics_summary_path": str(metrics_path),
         "mocked": False,
-        "live": tau_preflight_live_call_performed or tau_live_call_performed > 0,
+        "live": tau_preflight_live_call_performed
+        or condition_prompt_preflight_live_call_performed
+        or tau_live_call_performed > 0,
         "fixture_backed": False,
         "deterministic_simulator_corpus_fixture_backed": True,
         "human_content_judgment_required": False,
@@ -1087,6 +1154,12 @@ def run_live_comparison(
         "tau_preflight_status": tau_preflight_receipt.get("status") if isinstance(tau_preflight_receipt, dict) else None,
         "tau_preflight_live_call_performed": tau_preflight_live_call_performed,
         "tau_preflight_passed": tau_preflight_passed,
+        "condition_prompt_preflight_attempted": condition_prompt_preflight_attempted,
+        "condition_prompt_preflight_status": condition_prompt_preflight_receipt.get("status")
+        if isinstance(condition_prompt_preflight_receipt, dict)
+        else None,
+        "condition_prompt_preflight_live_call_performed": condition_prompt_preflight_live_call_performed,
+        "condition_prompt_preflight_passed": condition_prompt_preflight_passed,
         "tau_call_attempts": tau_call_attempts,
         "tau_live_call_performed": tau_live_call_performed,
         "tau_receipts_hash_bound": tau_receipts_hash_bound,
@@ -1120,7 +1193,11 @@ def run_live_comparison(
         "checks": {
             "corpus_check_passed": corpus_check.get("status") == "PASS_SOCIAL_EPISODE_CORPUS",
             "tau_preflight_passed": tau_preflight_passed,
+            "condition_prompt_preflight_passed": condition_prompt_preflight_passed,
             "case_fanout_blocked_until_preflight_passes": not rows if not tau_preflight_passed else True,
+            "case_fanout_blocked_until_condition_prompt_preflight_passes": not rows
+            if tau_preflight_passed and not condition_prompt_preflight_passed
+            else True,
             "systemic_failure_breaker_tripped": systemic_failure_signature is not None,
             "systemic_failure_threshold_respected": systemic_failure_signature is None
             or systemic_failure_counts.get(systemic_failure_signature, 0) == SYSTEMIC_FAILURE_THRESHOLD,
@@ -1144,7 +1221,7 @@ def run_live_comparison(
             if status == PASS_STATUS
             else [
                 "the live Tau condition comparison runner produced an inspectable fail-closed receipt",
-                "case fan-out is blocked until the Tau text-reasoning preflight passes",
+                "case fan-out is blocked until the Tau text-reasoning preflight and representative PCTOM condition prompt preflight pass",
                 "repeated Tau case failures are circuit-broken after the configured systemic failure threshold",
             ],
             "does_not_prove": [
