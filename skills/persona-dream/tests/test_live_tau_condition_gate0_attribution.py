@@ -147,3 +147,140 @@ def test_generated_calibration_prompt_stays_below_live_boundary():
 
     assert lengths
     assert max(lengths.values()) < 18_000
+
+
+def test_balanced_planning_wrapper_forwards_gate0_case_root(tmp_path):
+    script = ROOT / "research" / "prospective-tom" / "scripts" / "run_live_tau_balanced_planning_replication.py"
+    spec = importlib.util.spec_from_file_location("balanced_planning_gate0_test", script)
+    assert spec and spec.loader
+    balanced = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(balanced)
+
+    gate0_case_root = tmp_path / "gate0"
+    seen: dict[str, Path | None] = {"gate0_case_root": None}
+    episodes = [
+        "sealedte-info-asym-17",
+        "sealedte-pref-desire-17",
+        "sealedte-trust-commit-17",
+        "sealedte-coord-conflict-17",
+    ]
+
+    class FakeLiveCondition:
+        PASS_STATUS = "PASS_LIVE_TAU_PCTOM_CONDITION_COMPARISON"
+
+        @staticmethod
+        def _select_episodes(corpus, limit):
+            return []
+
+        @staticmethod
+        def run_live_comparison(**kwargs):
+            seen["gate0_case_root"] = kwargs.get("gate0_case_root")
+            output_root = kwargs["output_root"]
+            receipt_out = kwargs["receipt_out"]
+            case_index = [
+                {"episode_id": episode_id, "condition": condition}
+                for episode_id in episodes
+                for condition in balanced.CONDITIONS
+            ]
+            case_index_path = output_root / "artifacts" / "live_condition_case_index.json"
+            _write_json(case_index_path, case_index)
+            receipt = {
+                "status": FakeLiveCondition.PASS_STATUS,
+                "counts": {"episodes_consumed": 4, "families_consumed": 4, "cases": 16},
+                "case_index_path": str(case_index_path),
+                "tau_call_attempts": 16,
+                "tau_live_call_performed": 16,
+                "tau_receipts_hash_bound": True,
+                "gate0_attribution_overlay_used": True,
+            }
+            _write_json(receipt_out, receipt)
+            return receipt
+
+    class FakeActionSelection:
+        PASS_STATUS = "PASS_LIVE_TAU_PCTOM_CONDITION_ACTION_SELECTION"
+
+        @staticmethod
+        def run_bridge(condition_root, action_root, action_receipt_path):
+            action_index = [
+                {
+                    "episode_id": episode_id,
+                    "condition": condition,
+                    "selected_action": "WAIT",
+                    "oracle_action": "WAIT",
+                    "planning_regret": 0.0,
+                }
+                for episode_id in episodes
+                for condition in balanced.CONDITIONS
+            ]
+            action_index_path = action_root / "artifacts" / "live_condition_action_decisions.json"
+            _write_json(action_index_path, action_index)
+            receipt = {
+                "status": FakeActionSelection.PASS_STATUS,
+                "counts": {
+                    "action_decisions_per_condition": {condition: 4 for condition in balanced.CONDITIONS},
+                    "deterministic_reward_or_regret_scores_per_condition": {
+                        condition: 4 for condition in balanced.CONDITIONS
+                    },
+                },
+                "decision_index": str(action_index_path),
+                "live_tau_originated_artifacts_consumed": True,
+            }
+            _write_json(action_receipt_path, receipt)
+            return receipt
+
+    def fake_load_module(path, name):
+        if "action" in name:
+            return FakeActionSelection
+        if "condition" in name:
+            return FakeLiveCondition
+        raise AssertionError(name)
+
+    original_load_module = balanced._load_module
+    balanced._load_module = fake_load_module
+    try:
+        receipt = balanced.run_balanced_replication(
+            output_root=tmp_path / "out",
+            receipt_out=tmp_path / "out" / "receipt.json",
+            family_episode_limit=1,
+            episodes_per_family=24,
+            variant_min=17,
+            variant_max=17,
+            model=None,
+            timeout_s=1.0,
+            bootstrap_samples=10,
+            bootstrap_seed=1,
+            alpha=0.05,
+            gate0_case_root=gate0_case_root,
+        )
+    finally:
+        balanced._load_module = original_load_module
+
+    assert receipt["status"] == balanced.PASS_STATUS
+    assert receipt["gate0_case_root"] == str(gate0_case_root.resolve())
+    assert receipt["checks"]["gate0_attribution_loaded_if_requested"] is True
+    assert seen["gate0_case_root"] == gate0_case_root.resolve()
+
+
+def test_strict_prompt_accepts_gate0_records_argument():
+    script = ROOT / "research" / "prospective-tom" / "scripts" / "run_live_tau_strict_inference_prompt_replication.py"
+    spec = importlib.util.spec_from_file_location("strict_prompt_gate0_test", script)
+    assert spec and spec.loader
+    strict = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(strict)
+    digest = "sha256:" + "f" * 64
+    records = [
+        {
+            "accepted_source_id": "memory_004",
+            "accepted_source_ids_sha256": digest,
+            "gate0_residue_source_id": "memory_004",
+            "gate0_query_receipt_index": 3,
+            "gate0_attribution_kind": "live_recall_residue_grounding",
+        }
+    ]
+
+    prompt = strict._strict_prompt(runner, _episode(), "CD", records)
+
+    assert isinstance(prompt, str)
+    assert "Persona Dream PCTOM-R" in prompt
+    assert '"accepted_source_id":"memory_004"' not in prompt
+    assert '"source_id": "episode-001:observable_history:0"' in prompt

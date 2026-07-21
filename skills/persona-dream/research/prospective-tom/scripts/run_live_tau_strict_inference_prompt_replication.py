@@ -89,11 +89,16 @@ def _bootstrap_ci(values: list[float], *, samples: int, seed: int, alpha: float)
     }
 
 
-def _strict_prompt(live_condition: Any, episode: dict[str, Any], condition: str) -> str:
+def _strict_prompt(
+    live_condition: Any,
+    episode: dict[str, Any],
+    condition: str,
+    gate0_records: list[dict[str, Any]] | None = None,
+) -> str:
     episode_id = episode["episode_id"]
     ids = live_condition._ids(episode_id, condition)
-    visible = live_condition._visible_packet(episode)
-    visible_refs = live_condition._visible_refs(episode)
+    visible = live_condition._visible_packet(episode, gate0_records)
+    visible_refs = live_condition._visible_refs(episode, gate0_records)
     targets = live_condition._prediction_targets(episode)
     actions = list(episode.get("allowed_next_actions") or ["UNKNOWN"])
     synthetic_ref = {"scope": "synthetic_counterfactual", "source_id": f"{episode_id}:{condition}:do-policy-alternative"}
@@ -378,6 +383,7 @@ def run_strict_replication(
     bootstrap_samples: int,
     bootstrap_seed: int,
     alpha: float,
+    gate0_case_root: Path | None = None,
 ) -> dict[str, Any]:
     started = time.monotonic()
     output_root = output_root.resolve()
@@ -394,6 +400,7 @@ def run_strict_replication(
     rows_path = output_root / "artifacts" / "strict_inference_action_distribution_rows.json"
     planning_rows_path = output_root / "artifacts" / "strict_inference_planning_rows.json"
     summary_path = output_root / "artifacts" / "strict_inference_prompt_summary.json"
+    gate0_case_root = gate0_case_root.resolve() if gate0_case_root is not None else None
 
     original_prompt = live_condition._prompt
     original_selector = live_condition._select_episodes
@@ -406,8 +413,12 @@ def run_strict_replication(
             variant_max=variant_max,
         )
 
-    def _prompt(episode: dict[str, Any], condition: str) -> str:
-        return _strict_prompt(live_condition, episode, condition)
+    def _prompt(
+        episode: dict[str, Any],
+        condition: str,
+        gate0_records: list[dict[str, Any]] | None = None,
+    ) -> str:
+        return _strict_prompt(live_condition, episode, condition, gate0_records)
 
     condition_receipt: dict[str, Any] = {}
     action_receipt: dict[str, Any] = {}
@@ -424,6 +435,7 @@ def run_strict_replication(
                 episode_limit=family_episode_limit * len(balanced.FAMILIES),
                 model=model,
                 timeout_s=timeout_s,
+                gate0_case_root=gate0_case_root,
             )
         finally:
             live_condition._prompt = original_prompt
@@ -580,6 +592,7 @@ def run_strict_replication(
         "episodes_per_family": episodes_per_family,
         "variant_min": variant_min,
         "variant_max": variant_max,
+        "gate0_case_root": str(gate0_case_root) if gate0_case_root is not None else None,
         "timeout_s": timeout_s,
         "outer_timeout_s": outer_timeout_s,
         "conditions": list(CONDITIONS),
@@ -649,6 +662,10 @@ def run_strict_replication(
             "condition_tau_boundary_receipts_written_for_all_rows": (
                 condition_receipt.get("tau_boundary_receipts_written") == counts.get("cases")
             ),
+            "gate0_attribution_loaded_if_requested": (
+                gate0_case_root is None
+                or condition_receipt.get("gate0_attribution_overlay_used") is True
+            ),
             "condition_receipt_passed": condition_receipt.get("status") == live_condition.PASS_STATUS,
             "action_selection_receipt_passed": action_receipt.get("status") == action_selection.PASS_STATUS,
             "strict_prompt_produced_non_template_distribution": distribution_summary["non_template_distribution_count"] > 0,
@@ -697,6 +714,7 @@ def main() -> int:
     parser.add_argument("--bootstrap-samples", type=int, default=2000)
     parser.add_argument("--bootstrap-seed", type=int, default=20260727)
     parser.add_argument("--alpha", type=float, default=0.05)
+    parser.add_argument("--gate0-case-root", type=Path, default=None)
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
     receipt_out = args.receipt_out or (args.output_root / "live_tau_strict_inference_prompt_replication_receipt.v1.json")
@@ -713,6 +731,7 @@ def main() -> int:
         bootstrap_samples=args.bootstrap_samples,
         bootstrap_seed=args.bootstrap_seed,
         alpha=args.alpha,
+        gate0_case_root=args.gate0_case_root,
     )
     if args.json:
         print(json.dumps(receipt, indent=2, sort_keys=True))

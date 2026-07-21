@@ -261,6 +261,7 @@ def run_balanced_replication(
     bootstrap_samples: int,
     bootstrap_seed: int,
     alpha: float,
+    gate0_case_root: Path | None = None,
     reuse_condition_root: Path | None = None,
     reuse_action_root: Path | None = None,
 ) -> dict[str, Any]:
@@ -277,6 +278,7 @@ def run_balanced_replication(
     action_receipt_path = action_root / "live_tau_condition_action_selection_receipt.v1.json"
     summary_path = output_root / "artifacts" / "live_tau_balanced_planning_summary.json"
     planning_rows_path = output_root / "artifacts" / "balanced_planning_rows.json"
+    gate0_case_root = gate0_case_root.resolve() if gate0_case_root is not None else None
 
     if reuse_condition_root is not None:
         condition_root = reuse_condition_root.resolve()
@@ -305,6 +307,7 @@ def run_balanced_replication(
                 episode_limit=family_episode_limit * len(FAMILIES),
                 model=model,
                 timeout_s=timeout_s,
+                gate0_case_root=gate0_case_root,
             )
         finally:
             live_condition._select_episodes = original_selector
@@ -446,6 +449,7 @@ def run_balanced_replication(
         "episodes_per_family": episodes_per_family,
         "variant_min": variant_min,
         "variant_max": variant_max,
+        "gate0_case_root": str(gate0_case_root) if gate0_case_root is not None else None,
         "conditions": list(CONDITIONS),
         "live_tau_condition_comparison_receipt": str(condition_receipt_path),
         "live_tau_condition_comparison_receipt_sha256": _file_sha256(condition_receipt_path)
@@ -489,6 +493,10 @@ def run_balanced_replication(
         "checks": {
             "condition_receipt_passed": condition_receipt.get("status") == live_condition.PASS_STATUS,
             "action_selection_receipt_passed": action_receipt.get("status") == action_selection.PASS_STATUS,
+            "gate0_attribution_loaded_if_requested": (
+                gate0_case_root is None
+                or condition_receipt.get("gate0_attribution_overlay_used") is True
+            ),
             "all_four_families_selected": set(planning_summary["families"]) == set(FAMILIES),
             "balanced_family_counts": all(
                 planning_summary["episodes_per_family"].get(family) == family_episode_limit for family in FAMILIES
@@ -542,6 +550,7 @@ def main() -> int:
     parser.add_argument("--bootstrap-samples", type=int, default=10000)
     parser.add_argument("--bootstrap-seed", type=int, default=20260726)
     parser.add_argument("--alpha", type=float, default=0.05)
+    parser.add_argument("--gate0-case-root", type=Path, default=None)
     parser.add_argument("--reuse-condition-root", type=Path, default=None)
     parser.add_argument("--reuse-action-root", type=Path, default=None)
     parser.add_argument("--json", action="store_true")
@@ -559,6 +568,7 @@ def main() -> int:
         bootstrap_samples=args.bootstrap_samples,
         bootstrap_seed=args.bootstrap_seed,
         alpha=args.alpha,
+        gate0_case_root=args.gate0_case_root,
         reuse_condition_root=args.reuse_condition_root,
         reuse_action_root=args.reuse_action_root,
     )
