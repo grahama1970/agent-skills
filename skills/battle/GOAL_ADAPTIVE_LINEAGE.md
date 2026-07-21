@@ -265,9 +265,12 @@ Three artifacts, all required, none optional:
       observed Pixi sprite/manifest resource requests. Screenshot:
       `skills/battle/local/surf-obvious-errors-20260720T2120Z/battle-scorecard-restored.png`.
 
-**GOAL STATUS: CURRENT RECOVERY EVIDENCE READY FOR COMMIT** — 2026-07-20.
-Closure requires the final Battle evidence commit to be pushed and remote-ref
-verified in the agent final report.
+**GOAL STATUS: ACHIEVED_WITH_RECEIPT** —
+`skills/battle/local/goal-adaptive-lineage-audit-20260721T0005Z.json`.
+The audit receipt reports `status:"PASS"`, `failed:[]`, local `HEAD` and
+`origin/battle-adaptive-lineage-goal` both at
+`d476a192d28421bfbbe04aa69a87f1104e94aae1`, and cites the live backend receipt
+plus final Surf/Pixi proof artifacts above.
 
 ## Allowed Scope
 

@@ -1,0 +1,52 @@
+{
+  "schema": "battle.goal_adaptive_lineage_audit.v1",
+  "generated_at": "2026-07-21T00:06:28.347Z",
+  "goal": "skills/battle/GOAL_ADAPTIVE_LINEAGE.md",
+  "mocked": false,
+  "live": true,
+  "remote_ref": "refs/heads/battle-adaptive-lineage-goal",
+  "head": "d476a192d28421bfbbe04aa69a87f1104e94aae1",
+  "remoteSha": "d476a192d28421bfbbe04aa69a87f1104e94aae1",
+  "artifacts": {
+    "backend": "skills/battle/local/adaptive-lineage-relive-20260720T144034Z/adaptive-lineage-qualification.json",
+    "surfPixi": "skills/battle/local/surf-obvious-errors-20260720T2120Z/battle-obvious-errors-and-pixijs-proof.json",
+    "goal": "skills/battle/GOAL_ADAPTIVE_LINEAGE.md",
+    "handoff": "skills/battle/local/HANDOFF.md"
+  },
+  "backend_summary": {
+    "status": "PASS",
+    "battle_id": "battle-004",
+    "run_id": "arena-adaptive-lineage-20260720T144034Z"
+  },
+  "surf_pixi_summary": {
+    "url": "http://127.0.0.1:3003/?surfcheck=20260720T2132#battle",
+    "forbiddenHits": [],
+    "has_scorecard": true,
+    "has_live_badge": true,
+    "canvas": {
+      "present": true,
+      "width": 1030,
+      "height": 277
+    },
+    "loaded_sprite_resource_count": 6
+  },
+  "checks": {
+    "backend_receipt_exists": true,
+    "backend_status_pass": true,
+    "backend_battle_id": true,
+    "backend_primary_scillm_calls_4": true,
+    "surf_pixi_exists": true,
+    "surf_pixi_live": true,
+    "surf_pixi_forbidden_hits_empty": true,
+    "surf_pixi_scorecard": true,
+    "surf_pixi_canvas_1030x277": true,
+    "surf_pixi_sprites_loaded": true,
+    "remote_matches_head": true,
+    "goal_has_final_surf_pixi_bullet": true,
+    "handoff_has_final_surf_pixi_bullet": true
+  },
+  "status": "PASS",
+  "failed": [],
+  "proves": "Local audit that current HEAD is pushed and referenced Battle backend plus Surf/Pixi proof artifacts satisfy the immutable goal evidence ledger.",
+  "does_not_prove": "Does not rerun the live SciLLM/Docker qualification or re-run WebGPT review."
+}

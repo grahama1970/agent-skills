@@ -1,6 +1,6 @@
 # Handoff Report: battle adaptive-lineage receipt
 
-**Timestamp**: 2026-07-20T20:22:00Z
+**Timestamp**: 2026-07-21T00:05:00Z
 **Active Agent**: Codex
 **Branch**: `battle-adaptive-lineage-goal`
 **Current objective**: finish `GOAL_ADAPTIVE_LINEAGE.md` recovery from the
@@ -10,6 +10,11 @@ agent-skills worktree, not the pi-mono shell.
 > stale prose. Current recovery evidence is the 2026-07-20 live backend receipt,
 > the agent-skills `:3003` Pixi browser proof, and the WebGPT accepted review in
 > `skills/battle/local/webgpt-design-review-20260720T1742Z/`.
+> The immutable goal audit receipt is
+> `skills/battle/local/goal-adaptive-lineage-audit-20260721T0005Z.json`.
+> It reports `status:"PASS"` and confirms local `HEAD` matches
+> `origin/battle-adaptive-lineage-goal` at
+> `d476a192d28421bfbbe04aa69a87f1104e94aae1`.
 
 ## 1. Project Overview
 
@@ -150,20 +155,20 @@ agent-skills worktree, not the pi-mono shell.
 - **Do not trust `#battle/live` claims**. The valid primary UX is now
   `#battle`, with the live receipt rendered in-place. Keep `#battle/receipt`
   only as a compatible/deep-link receipt route, not as the main acceptance URL.
-- **No Battle-path blocker remains in the current recovery evidence**. Closure
-  still requires the final Battle evidence commit to be pushed and remote-ref
-  verified before any agent claims completion.
+- **No Battle-path blocker remains in the current recovery evidence**. The final
+  Battle evidence commit was pushed and remote-ref verified by
+  `skills/battle/local/goal-adaptive-lineage-audit-20260721T0005Z.json`.
 - **Repo is dirty from unrelated agents**. Stage Battle handoff/artifact paths
   explicitly only. Never `git add -A`.
 
 ## 5. Next Steps
 
-1. Commit and push the obvious-error cleanup, proof artifacts, and handoff
-   update by explicit path.
-2. Audit the immutable goal checklist. Do not use closure language unless the
-   final report cites backend receipt, browser screenshot/assertions, WebGPT
-   response, deterministic renderer proof, Pixi sprite/canvas proof, and remote
-   commit proof.
+1. If reopening this goal, start from
+   `skills/battle/local/goal-adaptive-lineage-audit-20260721T0005Z.json` and
+   re-run only the stale or disputed proof rung.
+2. Keep using `#battle` on the agent-skills host as the primary acceptance
+   route. Treat `#battle/receipt` as a compatible deep link and do not revive
+   standalone `#battle/live` without a new written goal.
 
 ## 6. Project Context for Success
 
