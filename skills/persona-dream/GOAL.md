@@ -143,30 +143,37 @@ step model:
 4. **Prospective ToM prediction** - implemented fixture-backed by Gates 2-4,
    bridged through live Tau text execution, repeated across M/R/D/CD condition
    cases, scaled deterministically to a 64-episode sealed test, and now run as
-   a full64 live Tau sealed-test replication. The remaining research proof is
-   statistical confidence over live Tau-authored sealed-test results and
-   reliability over that full64 root, not another renderer call.
+   a full64 live Tau sealed-test replication. Current receipts include
+   confidence-bounded belief-Brier benefit for CD over the strongest baseline.
+   The remaining research proof is not another renderer call; it is planning
+   benefit or action-policy sensitivity evidence and broader service-boundary
+   reliability.
 5. **Deterministic hidden outcome and scoring** - implemented fixture-backed
    by Gate 5, bridged over a live Tau-originated sealed commitment, repeated
    over live Tau condition cases, scaled deterministically to 256 sealed test
    cases, and now exercised across 256 full64 live Tau sealed-test cases. The
-   remaining research proof is statistical confidence and calibration over the
-   live Tau full64 receipt under the same frozen protocol.
+   full64 statistical-confidence receipt supports the preregistered belief
+   Brier benefit claim, while action Brier and planning-regret confidence
+   intervals still cross zero.
 6. **Action selection** - implemented fixture-backed by Gate 6, bridged over
    live Tau-originated condition outputs, included in the deterministic sealed
    test, and now exercised across 256 full64 live Tau sealed-test action
    decisions. The missing research proof is confidence-bounded planning-regret
-   benefit over the strongest baseline and reliability over the full64 action
-   evidence.
+   benefit over the strongest baseline or a narrower action-policy sensitivity
+   receipt that explains when and why CD changes decisions. The current
+   diagnostic says the planning signal is sparse and concentrated in
+   `trust-commit`.
 7. **Non-destructive belief revision** - implemented fixture-backed by Gate 7,
    bridged over live Tau-originated action decisions, and recalled through live
    Memory without canonical/source/identity writes. The remaining research
    proof is repeated no-write behavior under broader live faults.
 8. **Reliability under faults** - implemented fixture-backed by Gates 8-9 and
    bridged over live-originated artifacts with controlled fault families. The
-   remaining research proof is broader live fault injection across Memory,
-   model-output, tool-return, schema, persistence, and retry boundaries with no
-   `CONTINUED_WITH_UNKNOWN_STATE`.
+   full64 retry receipt now covers bounded idempotence and fail-closed retry
+   behavior over 256 active predictions and 256 action decisions. The remaining
+   research proof is broader live fault injection and deployed service-boundary
+   retry behavior across Memory, model-output, tool-return, schema,
+   persistence, and retry boundaries with no `CONTINUED_WITH_UNKNOWN_STATE`.
 
 Therefore, when README language says that media acceptance, human subjective
 video review, or Chatterbox voice expression remains open, that is historical
@@ -189,16 +196,16 @@ receipt-backed evidence covers both sides of the PCTOM-R question:
    faults, and causal replay terminate only as recovered, blocked before side
    effect, or quarantined with no active partial state.
 
-The prior bounded live Tau sealed-test replication is live-originated evidence
-for the runner and contracts, not a proof that dreaming improves ToM. The
-current full64 live Tau sealed-test replication now covers 64 episodes and 256
-Tau-authored sealed/scored/action cases with negative CD-minus-baseline point
-estimates for belief Brier, action Brier, and planning regret. It still must be
-reported as point-estimate evidence, not as a final research success claim,
-until statistical confidence and reliability over the full64 root are recorded
-in local receipts. A permanently deployed always-on retry/fault proof remains
-secondary unless the statistical-confidence path is blocked by a concrete local
-receipt or the human explicitly reorders the work.
+The bounded live Tau sealed-test replication is live-originated evidence for
+the runner and contracts, not the final research result. The current full64
+live Tau sealed-test replication covers 64 episodes and 256 Tau-authored
+sealed/scored/action cases. The full64 statistical-confidence receipt supports
+CD belief-Brier benefit over the strongest baseline, but action Brier and
+planning-regret confidence intervals cross zero. The full64 retry receipt
+supports bounded idempotence and fail-closed retry/fault handling over the same
+full64 root. The goal remains open because planning benefit, expanded
+action-policy sensitivity, broader live service faults, and deployed production
+retry machinery are not yet proven by local receipts.
 
 ## Research Question
 
@@ -479,18 +486,17 @@ recovered, blocked-before-side-effect, or quarantined terminal outcomes and one
 causal replay. The full64 live Tau sealed-test replication now adds 64 episodes,
 256 live Tau calls, 256 sealed/scored/action cases, and negative
 CD-minus-strongest-baseline point estimates for belief Brier, action Brier, and
-planning regret. The next useful movement is statistical confidence over the
-full64 live Tau point estimates or retry/fault proof consuming that full64 root.
-The full64 statistical-confidence receipt now shows confidence-bounded belief
-Brier benefit, while action Brier and planning regret remain point-estimate
-improvements whose confidence intervals cross zero. The full64 retry proof now
-shows the same bounded terminal-outcome discipline over 256 active predictions
-and 256 action decisions. The full64 planning diagnostic now explains that the
-planning point-estimate improvement is sparse and family-concentrated rather
-than confidence-bounded: 60 ties, 3 beneficial deltas, 1 harmful delta, and all
+planning regret. The statistical-confidence and retry receipts consuming that
+full64 root now exist: the statistical-confidence receipt shows
+confidence-bounded belief-Brier benefit, and the retry proof shows bounded
+terminal-outcome discipline over 256 active predictions and 256 action
+decisions. The active next movement is planning/action-policy sensitivity or
+expanded trust/commitment replication, because the full64 planning diagnostic
+shows a sparse family-concentrated signal rather than confidence-bounded
+planning benefit: 60 ties, 3 beneficial deltas, 1 harmful delta, and all
 nonzero deltas in `trust-commit`. Retry/fault proof inside a permanently
-deployed always-on service boundary remains unproven. The run.sh orchestration proof now
-exercises the local skill command dispatcher, but it is not an always-on
+deployed always-on service boundary remains unproven. The run.sh orchestration
+proof exercises the local skill command dispatcher, but it is not an always-on
 external service.
 
 Bounded live Tau sealed-test retry proof summary:
