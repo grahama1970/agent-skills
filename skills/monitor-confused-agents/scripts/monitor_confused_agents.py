@@ -18,6 +18,7 @@ from loguru import logger
 import typer
 
 from cron_support import install_cron, status_payload
+from goal_discovery import discover_immutable_goal, path_is_relative_to, project_root_for_cwd
 from herdr_terminal_control import terminal_control_submit, wait_for_agent_idle
 from transcript_classifier import goal_allows_stop, latest_transcript_region, transcript_goal_claim
 
@@ -33,15 +34,6 @@ DEFAULT_CWD_PREFIX = str(Path.home() / "workspace" / "experiments")
 DEFAULT_STOPPED_STATUSES = ("done", "idle", "blocked", "unknown")
 DEFAULT_COOLDOWN_SECONDS = 60 * 60
 DEFAULT_SOCKET_PATH = Path.home() / ".config" / "herdr" / "herdr.sock"
-GOAL_FILE_NAMES = (
-    "IMMUTABLE_GOAL.md",
-    "GOAL.md",
-    ".goal",
-    ".codex/goal.json",
-    ".codex/GOAL.md",
-    ".tau/goal.json",
-)
-
 EARLY_STOP_PATTERNS = [
     r"\bno active blocker\b",
     r"\bno current blocker\b",
@@ -120,6 +112,15 @@ class HerdrClient:
             except json.JSONDecodeError as exc:
                 logger.error("Herdr socket returned invalid JSON for {}: {}", method, exc)
                 response = {"error": {"code": "invalid_json", "message": str(exc), "raw": line.decode("utf-8", "replace")[:2000]}}
+            if response.get("id") != request["id"]:
+                response = {
+                    "error": {
+                        "code": "response_id_mismatch",
+                        "message": f"expected {request['id']!r}, got {response.get('id')!r}",
+                    }
+                }
+            elif "result" not in response and "error" not in response:
+                response = {"error": {"code": "invalid_response_shape", "message": "missing result/error"}}
         record = HerdrResponse(request=request, response=response).as_dict()
         record["duration_seconds"] = (datetime.now(UTC) - started).total_seconds()
         self.trace.append(redact_api_record(record))
@@ -222,7 +223,7 @@ def ensure_dirs() -> None:
 
 
 def timestamp() -> str:
-    return datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
+    return datetime.now(UTC).strftime("%Y%m%dT%H%M%S%fZ")
 
 
 def now_iso() -> str:
@@ -237,7 +238,9 @@ def log_event(run_id: str, message: str, **fields: Any) -> None:
 
 def write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    tmp_path = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    tmp_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    tmp_path.replace(path)
 
 
 def append_jsonl(path: Path, payload: dict[str, Any]) -> None:
@@ -253,9 +256,9 @@ def load_state() -> dict[str, Any]:
         payload = json.loads(STATE_PATH.read_text(encoding="utf-8"))
     except json.JSONDecodeError:
         logger.error("Monitor state JSON is corrupt: {}", STATE_PATH)
-        return {"schema": "agent_skills.monitor_confused_agents.state.v1", "prompts": {}}
+        return {"schema": "agent_skills.monitor_confused_agents.state.v1", "prompts": {}, "input_suppressed": True, "state_error": "corrupt_json"}
     if not isinstance(payload, dict):
-        return {"schema": "agent_skills.monitor_confused_agents.state.v1", "prompts": {}}
+        return {"schema": "agent_skills.monitor_confused_agents.state.v1", "prompts": {}, "input_suppressed": True, "state_error": "invalid_state_shape"}
     payload.setdefault("schema", "agent_skills.monitor_confused_agents.state.v1")
     payload.setdefault("prompts", {})
     return payload
@@ -333,6 +336,11 @@ def tick(
     try:
         client = HerdrClient(socket_path)
         try:
+            try:
+                client.call("ping", {})
+            except RuntimeError as exc:
+                receipt.update({"ok": False, "status": "BLOCKED", "errors": [f"Herdr ping failed: {exc}"]})
+                return finish(receipt, 2)
             return tick_locked(
                 client=client,
                 receipt=receipt,
@@ -380,6 +388,10 @@ def tick_locked(
 
     receipt["observed_panes"] = len(panes)
     state = load_state()
+    input_suppressed = bool(state.get("input_suppressed"))
+    if input_suppressed:
+        receipt["input_suppressed"] = True
+        receipt["state_error"] = state.get("state_error")
     now_epoch = int(datetime.now(UTC).timestamp())
     selected: list[dict[str, Any]] = []
 
@@ -402,7 +414,7 @@ def tick_locked(
         append_jsonl(events_path, {"event": "stopped_pane", "ts": now_iso(), **candidate_without_text(candidate)})
         should_prompt = candidate.get("action") != "observe_only"
         candidate["select_for_prompt"] = should_prompt
-        if should_prompt and not candidate["cooldown_active"] and len(selected) < max_prompts:
+        if should_prompt and not input_suppressed and not candidate["cooldown_active"] and len(selected) < max_prompts:
             selected.append(candidate)
 
     receipt["selected_panes"] = [candidate_without_text(item) for item in selected]
@@ -444,6 +456,8 @@ def tick_locked(
         write_json(STATE_PATH, state)
 
     receipt["status"] = "RESTART_PROMPTS_SUBMITTED" if apply and receipt["prompts"] else "OBSERVED"
+    if input_suppressed:
+        receipt["status"] = "NEEDS_ATTENTION"
     receipt["ok"] = all(item.get("sent", True) or not apply for item in receipt["prompts"])
     if apply and any(not item.get("sent") for item in receipt["prompts"]):
         receipt["status"] = "NEEDS_ATTENTION"
@@ -481,7 +495,7 @@ def classify_pane(
     if status not in stopped_statuses:
         return None
     cwd = str(pane.get("foreground_cwd") or pane.get("cwd") or "")
-    if cwd_prefix and cwd and not cwd.startswith(cwd_prefix):
+    if cwd_prefix and (not cwd or not path_is_relative_to(cwd, cwd_prefix)):
         return None
     pane_id = str(pane.get("pane_id") or "")
     if not pane_id:
@@ -495,8 +509,13 @@ def classify_pane(
     if only_obvious_early_stops and not early_markers:
         return None
 
-    immutable_goal = discover_immutable_goal(cwd)
-    if not immutable_goal.get("found"):
+    project_root = project_root_for_cwd(cwd, cwd_prefix)
+    immutable_goal = discover_immutable_goal(cwd, boundary=project_root)
+    if status in {"blocked", "unknown"}:
+        classification = "blocked_or_unknown_observe_only"
+        action = "observe_only"
+        reasons = [f"stopped_status:{status}", "blocked_unknown_never_prompted"]
+    elif not immutable_goal.get("found"):
         classification = "no_immutable_goal"
         action = "observe_only"
         reasons = [f"stopped_status:{status}", "immutable_goal_unknown_stop_allowed"]
@@ -571,25 +590,21 @@ def find_patterns(text: str, patterns: list[str]) -> list[str]:
 
 
 def send_prompt(client: HerdrClient, pane_id: str, prompt: str) -> dict[str, Any]:
-    wait_result = wait_for_agent_idle(pane_id)
+    socket_path = getattr(client, "socket_path", None)
+    wait_result = wait_for_agent_idle(pane_id, socket_path=socket_path)
+    pre_read = read_pane_text(client, pane_id)
+    if not pre_read:
+        return skipped_send("pre_read_failed", wait_result=wait_result)
     explain = explain_agent(client, pane_id)
-    if explain.get("state") == "working":
-        return {
-            "send_api": [],
-            "terminal_control": {"attempted": False, "reason": "agent_already_working"},
-            "idle_wait": wait_result,
-            "pre_submit_state": explain.get("state"),
-            "api_sent": False,
-            "submit_confirmed": False,
-            "second_enter_sent": False,
-            "post_submit_excerpt": "",
-            "skipped": True,
-        }
-    terminal_result = terminal_control_submit(pane_id, prompt)
+    if not wait_result.get("ok") and explain.get("state") not in {"idle", "done"}:
+        return skipped_send("idle_wait_failed", wait_result=wait_result, pre_submit_state=explain.get("state"), pre_read=pre_read)
+    if explain.get("error") or explain.get("state") not in {"idle", "done"}:
+        return skipped_send("unsafe_pre_submit_state", wait_result=wait_result, pre_submit_state=explain.get("state"), pre_read=pre_read)
+    terminal_result = terminal_control_submit(pane_id, prompt, socket_path=socket_path)
     if terminal_result["attempted"]:
         time.sleep(0.8)
         text = read_pane_text(client, pane_id)
-        if terminal_result["ok"] and prompt_submitted(text):
+        if terminal_result["ok"] and prompt_submitted(text, baseline=pre_read):
             return {
                 "send_api": [],
                 "terminal_control": terminal_result,
@@ -598,21 +613,34 @@ def send_prompt(client: HerdrClient, pane_id: str, prompt: str) -> dict[str, Any
                 "second_enter_sent": False,
                 "post_submit_excerpt": text[-1200:],
             }
+        if terminal_result["ok"]:
+            return skipped_send(
+                "ambiguous_controller_success",
+                wait_result=wait_result,
+                pre_submit_state=explain.get("state"),
+                pre_read=pre_read,
+                terminal_result=terminal_result,
+            )
     records: list[dict[str, Any]] = []
-    for method, params in [
-        ("pane.send_text", {"pane_id": pane_id, "text": prompt}),
-        ("pane.send_keys", {"pane_id": pane_id, "keys": ["enter"]}),
-    ]:
-        before = len(client.trace)
-        try:
-            client.call(method, params)
-        except RuntimeError:
-            logger.error("Herdr {} failed for pane {}", method, pane_id)
-            pass
+    before = len(client.trace)
+    try:
+        client.call("pane.send_text", {"pane_id": pane_id, "text": prompt})
+    except RuntimeError:
+        logger.error("Herdr pane.send_text failed for pane {}", pane_id)
         records.extend(client.trace[before:])
+        return skipped_send("send_text_failed", wait_result=wait_result, pre_submit_state=explain.get("state"), pre_read=pre_read, terminal_result=terminal_result, records=records)
+    records.extend(client.trace[before:])
+    before = len(client.trace)
+    try:
+        client.call("pane.send_keys", {"pane_id": pane_id, "keys": ["enter"]})
+    except RuntimeError:
+        logger.error("Herdr pane.send_keys enter failed for pane {}", pane_id)
+        records.extend(client.trace[before:])
+        return skipped_send("send_enter_failed", wait_result=wait_result, pre_submit_state=explain.get("state"), pre_read=pre_read, terminal_result=terminal_result, records=records)
+    records.extend(client.trace[before:])
     time.sleep(0.6)
     first_read = read_pane_text(client, pane_id)
-    submit_confirmed = prompt_submitted(first_read)
+    submit_confirmed = prompt_submitted(first_read, baseline=pre_read)
     second_enter_sent = False
     second_read = ""
     if not submit_confirmed:
@@ -625,7 +653,7 @@ def send_prompt(client: HerdrClient, pane_id: str, prompt: str) -> dict[str, Any
         second_enter_sent = True
         time.sleep(0.8)
         second_read = read_pane_text(client, pane_id)
-        submit_confirmed = prompt_submitted(second_read)
+        submit_confirmed = prompt_submitted(second_read, baseline=pre_read)
     api_sent = all("error" not in item.get("response", {}) for item in records)
     return {
         "send_api": records,
@@ -639,48 +667,41 @@ def send_prompt(client: HerdrClient, pane_id: str, prompt: str) -> dict[str, Any
     }
 
 
-def prompt_submitted(text: str) -> bool:
+def prompt_submitted(text: str, *, baseline: str = "") -> bool:
+    return prompt_submission_marker(text, baseline=baseline) != ""
+
+
+def prompt_submission_marker(text: str, *, baseline: str = "") -> str:
     if not text:
-        return False
-    return any(
-        marker in text
-        for marker in [
-            "Running UserPromptSubmit hook",
-            "Working (",
-            "Booting MCP server",
-        ]
-    )
+        return ""
+    for marker in ["Running UserPromptSubmit hook", "Working (", "Booting MCP server"]:
+        if marker in text and (not baseline or marker not in baseline):
+            return marker
+    return ""
 
 
-def discover_immutable_goal(cwd: str) -> dict[str, Any]:
-    if not cwd:
-        return {"found": False, "source": None, "excerpt": ""}
-    start = Path(cwd).expanduser()
-    try:
-        current = start.resolve()
-    except OSError as exc:
-        logger.error("Could not resolve cwd {} while discovering immutable goal: {}", cwd, exc)
-        return {"found": False, "source": None, "excerpt": ""}
-    for root in [current, *current.parents]:
-        for name in GOAL_FILE_NAMES:
-            path = root / name
-            if not path.is_file():
-                continue
-            try:
-                text = path.read_text(encoding="utf-8", errors="replace")
-            except OSError as exc:
-                logger.error("Could not read immutable goal candidate {}: {}", path, exc)
-                continue
-            excerpt = compact_excerpt(text)
-            return {"found": True, "source": str(path), "excerpt": excerpt}
-        if root == root.parent:
-            break
-    return {"found": False, "source": None, "excerpt": ""}
-
-
-def compact_excerpt(text: str, limit: int = 700) -> str:
-    cleaned = re.sub(r"\s+", " ", text).strip()
-    return cleaned[:limit]
+def skipped_send(
+    reason: str,
+    *,
+    wait_result: dict[str, Any] | None = None,
+    pre_submit_state: str | None = None,
+    pre_read: str = "",
+    terminal_result: dict[str, Any] | None = None,
+    records: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    return {
+        "send_api": records or [],
+        "terminal_control": terminal_result or {"attempted": False, "reason": reason},
+        "idle_wait": wait_result or {},
+        "pre_submit_state": pre_submit_state,
+        "api_sent": False,
+        "submit_confirmed": False,
+        "second_enter_sent": False,
+        "post_submit_excerpt": "",
+        "pre_submit_excerpt": pre_read[-1200:],
+        "skipped": True,
+        "skip_reason": reason,
+    }
 
 
 def build_prompt(candidate: dict[str, Any]) -> str:

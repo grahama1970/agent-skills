@@ -54,6 +54,16 @@ def status_payload() -> dict[str, Any]:
 
 
 def install_cron(*, apply: bool, minute: str, space: str, apply_prompts: bool, cwd_prefix: str) -> tuple[int, dict[str, Any]]:
+    validation_error = validate_cron_args(minute=minute, space=space, cwd_prefix=cwd_prefix)
+    if validation_error:
+        return 2, {
+            "schema": "agent_skills.monitor_confused_agents.cron_install.v1",
+            "mocked": False,
+            "live": True,
+            "apply": apply,
+            "status": "BLOCKED",
+            "error": validation_error,
+        }
     script_path = SKILL_DIR / "run.sh"
     cron_log = LOG_DIR / "cron.log"
     tick_args = "--apply" if apply_prompts else ""
@@ -63,6 +73,17 @@ def install_cron(*, apply: bool, minute: str, space: str, apply_prompts: bool, c
         f">> {shell_quote(str(cron_log))} 2>&1 {CRON_MARKER}"
     ).replace("  ", " ").strip()
     current = run_process_sync(["crontab", "-l"])
+    no_crontab = current["exit_code"] != 0 and "no crontab for" in current["stderr"].lower()
+    if current["exit_code"] != 0 and not no_crontab:
+        return 1, {
+            "schema": "agent_skills.monitor_confused_agents.cron_install.v1",
+            "mocked": False,
+            "live": True,
+            "apply": apply,
+            "status": "BLOCKED",
+            "error": "crontab_read_failed",
+            "read_command": {"command": ["crontab", "-l"], "exit_code": current["exit_code"], "stderr": current["stderr"]},
+        }
     existing = current["stdout"] if current["exit_code"] == 0 else ""
     filtered = [item for item in existing.splitlines() if CRON_MARKER not in item]
     next_crontab = "\n".join(filtered + [line]).strip() + "\n"
@@ -87,3 +108,12 @@ def install_cron(*, apply: bool, minute: str, space: str, apply_prompts: bool, c
 
 def shell_quote(value: str) -> str:
     return "'" + value.replace("'", "'\"'\"'") + "'"
+
+
+def validate_cron_args(*, minute: str, space: str, cwd_prefix: str) -> str:
+    if minute != "*/10":
+        return "minute_must_be_exactly_every_10"
+    for name, value in {"space": space, "cwd_prefix": cwd_prefix}.items():
+        if any(char in value for char in "\r\n%"):
+            return f"{name}_contains_cron_control_character"
+    return ""

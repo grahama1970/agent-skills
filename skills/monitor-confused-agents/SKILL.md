@@ -73,9 +73,18 @@ skills/monitor-confused-agents/sanity.sh
 - Before injecting input, the monitor runs Herdr's idle wait and then checks
   `agent.explain`. If the agent is already `working`, it skips injection and
   records `skipped:true`.
+- `blocked` and `unknown` pane states are observation-only. The monitor records
+  them but does not type into them because they may be approval, permission, or
+  human-input surfaces.
+- Herdr CLI helper calls receive the same `HERDR_SOCKET_PATH` as the socket
+  observation client so a custom session cannot observe one Herdr server and
+  inject into another.
 - Some Codex panes need a second Enter after a multi-line paste. If the first
   Enter does not produce submission evidence, the monitor sends one additional
   Enter and records `second_enter_sent:true`.
+- Submission evidence must newly appear after the prompt attempt. Old
+  `Running UserPromptSubmit hook`, `Working (`, or `Booting MCP server` text in
+  scrollback does not confirm the current prompt.
 - Prompt spam is prevented by a state file and a cooldown.
 - Every run writes:
 
@@ -117,6 +126,9 @@ same current region does not contain proof-blocker or remaining-work markers,
 the monitor records the pane and does not prompt it. Cron may inspect completed
 panes every 10 minutes; deterministic inspection is acceptable, but restart
 prompts are not.
+
+Goal discovery is bounded to the pane's project root. A parent directory outside
+that root must not donate a `GOAL.md` or `IMMUTABLE_GOAL.md` to the pane.
 
 If an immutable goal is found or the transcript shows remaining work / hook
 failure / early stop language, the monitor selects the pane. The restart prompt

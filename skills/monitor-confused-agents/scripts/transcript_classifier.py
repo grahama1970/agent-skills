@@ -5,25 +5,6 @@ from __future__ import annotations
 import re
 
 
-GOAL_COMPLETE_PATTERNS = [
-    r"\bgoal achieved\b",
-    r"\bdone_with_receipt\b",
-    r"\bachieved_with_receipt\s*:",
-    r"\bimmutable goal\b.{0,180}\b(achieved|met|satisfied)\b",
-]
-
-GOAL_INCOMPLETE_PATTERNS = [
-    r"\bgoal\b.{0,180}\b(blocked|unmet|not met|not achieved|remaining)\b",
-    r"\bimmutable goal\b.{0,180}\b(blocked|unmet|not met|not achieved|remaining|unknown)\b",
-]
-
-EXHAUSTED_BLOCKER_PATTERN = (
-    r"\bimmutable goal\s*:\s*blocked\s*:[^\n]+[\s\S]{0,800}"
-    r"\bunblock attempts\s*:\s*brave-search\s*=\s*(used\s*:[^;\n]+|not_applicable\s*:[^;\n]+)\s*;\s*"
-    r"webgpt\s*=\s*(used\s*:[^\n]+|not_applicable\s*:[^\n]+)"
-)
-
-
 def latest_transcript_region(text: str, limit: int = 2800) -> str:
     if not text:
         return ""
@@ -43,12 +24,21 @@ def strip_monitor_prompt(text: str) -> str:
 
 
 def transcript_goal_claim(text: str) -> dict[str, str]:
-    lowered = text.lower()
-    if _find_patterns(lowered, GOAL_INCOMPLETE_PATTERNS):
-        return {"state": "unmet", "source": "latest_transcript_region"}
-    if _find_patterns(lowered, GOAL_COMPLETE_PATTERNS):
-        return {"state": "achieved", "source": "latest_transcript_region"}
-    if "immutable goal" in lowered:
+    line = structured_line_value(text, "Immutable Goal")
+    if line:
+        lowered = line.lower()
+        if lowered.startswith("achieved_with_receipt:") or lowered == "done_with_receipt":
+            return {"state": "achieved", "source": "immutable_goal_line"}
+        if lowered.startswith("blocked:"):
+            return {"state": "blocked", "source": "immutable_goal_line"}
+        if lowered.startswith(("not_met", "unknown")):
+            return {"state": "unmet", "source": "immutable_goal_line"}
+        return {"state": "mentioned", "source": "immutable_goal_line"}
+    if re.search(r"^\s*goal achieved\b", text, flags=re.IGNORECASE | re.MULTILINE):
+        return {"state": "achieved", "source": "status_line"}
+    if re.search(r"^\s*done_with_receipt\b", text, flags=re.IGNORECASE | re.MULTILINE):
+        return {"state": "achieved", "source": "status_line"}
+    if "immutable goal" in text.lower():
         return {"state": "mentioned", "source": "latest_transcript_region"}
     return {"state": "none", "source": "latest_transcript_region"}
 
@@ -65,8 +55,33 @@ def goal_allows_stop(text: str, *, goal_found: bool, has_early_markers: bool) ->
 
 
 def exhausted_blocker_claim(text: str) -> bool:
-    return bool(re.search(EXHAUSTED_BLOCKER_PATTERN, text, flags=re.IGNORECASE | re.MULTILINE))
+    goal = structured_line_value(text, "Immutable Goal")
+    attempts = structured_line_value(text, "Unblock Attempts")
+    if not goal or not goal.lower().startswith("blocked:") or not attempts:
+        return False
+    parsed = parse_unblock_attempts(attempts)
+    brave = parsed.get("brave-search")
+    reviewer = parsed.get("browser-oracle") or parsed.get("webgpt")
+    return bool(valid_attempt_value(brave) and valid_attempt_value(reviewer))
 
 
-def _find_patterns(text: str, patterns: list[str]) -> list[str]:
-    return [pattern for pattern in patterns if re.search(pattern, text, flags=re.IGNORECASE | re.MULTILINE | re.DOTALL)]
+def structured_line_value(text: str, label: str) -> str:
+    match = re.search(rf"^\s*{re.escape(label)}\s*:\s*(.+?)\s*$", text, flags=re.IGNORECASE | re.MULTILINE)
+    return match.group(1).strip() if match else ""
+
+
+def parse_unblock_attempts(text: str) -> dict[str, str]:
+    attempts: dict[str, str] = {}
+    for part in text.split(";"):
+        if "=" not in part:
+            continue
+        key, value = part.split("=", 1)
+        attempts[key.strip().lower()] = value.strip()
+    return attempts
+
+
+def valid_attempt_value(value: str | None) -> bool:
+    if not value:
+        return False
+    lowered = value.lower()
+    return lowered.startswith("used:") or lowered.startswith("not_applicable:")

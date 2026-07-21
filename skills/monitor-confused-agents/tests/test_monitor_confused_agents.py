@@ -30,6 +30,7 @@ class FakeSubmitHerdr:
     def __init__(self) -> None:
         self.trace = []
         self.enter_count = 0
+        self.socket_path = Path("/tmp/fake-herdr.sock")
 
     def call(self, method: str, params: dict) -> dict:
         response = {"id": method, "result": {"type": "ok"}}
@@ -45,6 +46,14 @@ class FakeSubmitHerdr:
         if method == "agent.explain":
             return {"type": "agent_explain", "explain": {"state": "idle"}}
         raise AssertionError(method)
+
+
+class FakeFailSendTextHerdr(FakeSubmitHerdr):
+    def call(self, method: str, params: dict) -> dict:
+        if method == "pane.send_text":
+            self.trace.append({"request": {"method": method, "params": params}, "response": {"error": {"code": "fail"}}})
+            raise RuntimeError("send failed")
+        return super().call(method, params)
 
 
 def test_early_stop_transcript_restarts_done_agent(tmp_path: Path) -> None:
@@ -125,6 +134,41 @@ def test_done_agent_without_goal_can_stop_despite_early_marker(tmp_path: Path) -
     assert candidate["classification"] == "no_immutable_goal"
 
 
+def test_cwd_prefix_rejects_sibling_path(tmp_path: Path) -> None:
+    prefix = tmp_path / "scope"
+    sibling = tmp_path / "scope-other"
+    prefix.mkdir()
+    sibling.mkdir()
+    (sibling / "GOAL.md").write_text("Do not monitor this sibling.", encoding="utf-8")
+    pane = {
+        "agent": "codex",
+        "agent_status": "done",
+        "cwd": str(sibling),
+        "pane_id": "w11:pD",
+    }
+
+    assert monitor.classify_pane(
+        FakeHerdr("Stop hook (stopped). What remains is work."),
+        pane,
+        cwd_prefix=str(prefix),
+        include_agents={"codex"},
+        stopped_statuses={"done"},
+        only_obvious_early_stops=False,
+    ) is None
+
+
+def test_goal_discovery_never_crosses_project_boundary(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    subdir = repo / "subdir"
+    subdir.mkdir(parents=True)
+    (repo / ".git").mkdir()
+    (tmp_path / "GOAL.md").write_text("Parent goal must not leak into repo.", encoding="utf-8")
+
+    result = monitor.discover_immutable_goal(str(subdir), boundary=repo)
+
+    assert result["found"] is False
+
+
 def test_latest_goal_achieved_allows_stop_despite_old_early_marker(tmp_path: Path) -> None:
     pane = {
         "agent": "codex",
@@ -203,8 +247,8 @@ def test_human_blocker_is_not_restarted_without_early_marker(tmp_path: Path) -> 
     )
 
     assert candidate is not None
-    assert candidate["action"] == "needs_human"
-    assert candidate["classification"] == "legitimate_human_blocker"
+    assert candidate["action"] == "observe_only"
+    assert candidate["classification"] == "blocked_or_unknown_observe_only"
 
 
 def test_exhausted_blocker_claim_can_stay_blocked(tmp_path: Path) -> None:
@@ -233,7 +277,7 @@ def test_exhausted_blocker_claim_can_stay_blocked(tmp_path: Path) -> None:
 
     assert candidate is not None
     assert candidate["action"] == "observe_only"
-    assert candidate["classification"] == "goal_stop_allowed"
+    assert candidate["classification"] == "blocked_or_unknown_observe_only"
 
 
 def test_probe_text_names_human_brave_and_webgpt_routes() -> None:
@@ -260,8 +304,8 @@ def test_send_prompt_uses_second_enter_until_submission_is_visible() -> None:
     client = FakeSubmitHerdr()
     original = monitor.terminal_control_submit
     original_wait = monitor.wait_for_agent_idle
-    monitor.terminal_control_submit = lambda pane_id, prompt: {"attempted": True, "ok": False, "exit_code": 2}
-    monitor.wait_for_agent_idle = lambda pane_id: {"ok": True, "exit_code": 0}
+    monitor.terminal_control_submit = lambda pane_id, prompt, socket_path=None: {"attempted": True, "ok": False, "exit_code": 2}
+    monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
     try:
         result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-confused-agents")
     finally:
@@ -286,6 +330,13 @@ def test_prompt_boilerplate_is_not_submission_evidence() -> None:
     assert monitor.prompt_submitted(text) is False
 
 
+def test_old_submission_marker_cannot_confirm_new_attempt() -> None:
+    before = "Running UserPromptSubmit hook\nWorking (1s * esc to interrupt)"
+    after = before + "\nRESTART CHECK FROM monitor-confused-agents"
+
+    assert monitor.prompt_submission_marker(after, baseline=before) == ""
+
+
 def test_install_cron_renders_ten_minute_apply_line() -> None:
     exit_code, payload = monitor.install_cron(
         apply=False,
@@ -301,3 +352,51 @@ def test_install_cron_renders_ten_minute_apply_line() -> None:
     assert "tick --apply" in payload["cron_line"]
     assert "--space 'codex'" in payload["cron_line"]
     assert monitor.CRON_MARKER in payload["cron_line"]
+
+
+def test_send_text_failure_never_sends_enter() -> None:
+    client = FakeFailSendTextHerdr()
+    original = monitor.terminal_control_submit
+    original_wait = monitor.wait_for_agent_idle
+    monitor.terminal_control_submit = lambda pane_id, prompt, socket_path=None: {"attempted": True, "ok": False, "exit_code": 2}
+    monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
+    try:
+        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-confused-agents")
+    finally:
+        monitor.terminal_control_submit = original
+        monitor.wait_for_agent_idle = original_wait
+
+    assert result["skipped"] is True
+    assert result["skip_reason"] == "send_text_failed"
+    assert client.enter_count == 0
+
+
+def test_ambiguous_controller_success_never_falls_back() -> None:
+    client = FakeSubmitHerdr()
+    original = monitor.terminal_control_submit
+    original_wait = monitor.wait_for_agent_idle
+    monitor.terminal_control_submit = lambda pane_id, prompt, socket_path=None: {"attempted": True, "ok": True, "exit_code": 0}
+    monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
+    try:
+        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-confused-agents")
+    finally:
+        monitor.terminal_control_submit = original
+        monitor.wait_for_agent_idle = original_wait
+
+    assert result["skipped"] is True
+    assert result["skip_reason"] == "ambiguous_controller_success"
+    assert client.enter_count == 0
+
+
+def test_invalid_cron_fields_are_rejected() -> None:
+    exit_code, payload = monitor.install_cron(
+        apply=False,
+        minute="*/5",
+        space="codex",
+        apply_prompts=True,
+        cwd_prefix="/home/graham/workspace/experiments",
+    )
+
+    assert exit_code == 2
+    assert payload["status"] == "BLOCKED"
+    assert payload["error"] == "minute_must_be_exactly_every_10"
