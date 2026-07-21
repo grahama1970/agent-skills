@@ -93,6 +93,7 @@ Commands:
   run-live-fault-injection-surface  Exercise broader PCTOM-R fault containment over live Memory and receipt boundaries
   run-live-tau-sealed-test-replication  Run bounded live Tau-authored sealed-test replication plus Gate 6 actions
   run-live-tau-sealed-test-retry-proof  Prove retry/idempotence over live Tau sealed-test artifacts
+  run-live-tau-sealed-test-runsh-orchestration-retry-proof  Exercise sealed-test retry proof through run.sh dispatch
   check-prospective-tom-protocol  Validate PCTOM-R Gate 0 fixture lineage through a sealed prediction
   build-social-episode-corpus  Build deterministic PCTOM-R Gate 1 social episodes
   check-social-episode-corpus  Validate deterministic PCTOM-R Gate 1 social episodes
@@ -454,6 +455,9 @@ case "$COMMAND" in
     ;;
   run-live-tau-sealed-test-retry-proof)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_tau_sealed_test_retry_proof.py" "$@"
+    ;;
+  run-live-tau-sealed-test-runsh-orchestration-retry-proof)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_tau_sealed_test_runsh_orchestration_retry_proof.py" "$@"
     ;;
   check-prospective-tom-protocol)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_prospective_tom_protocol.py" "$@"

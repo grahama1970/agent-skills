@@ -1358,3 +1358,72 @@ prove deployed production orchestrator retry machinery, full 64-episode live
 Tau replication, new live Tau execution, live Memory service fault injection,
 provider/video execution, semantic dream quality, or complete live Phase 01-16
 runtime execution.
+
+## Run.sh Orchestration Retry Proof
+
+The run.sh orchestration retry proof exercises the local Persona Dream command
+dispatcher rather than importing the retry proof directly. It consumes the
+accepted bounded live Tau sealed-test root and invokes:
+
+```text
+skills/persona-dream/run.sh run-live-tau-sealed-test-retry-proof
+```
+
+Pipeline:
+
+```text
+run.sh exact retry invocation
+-> run.sh retry-after-uncertain-completion invocation
+-> run.sh missing-base-root negative invocation
+-> run.sh interrupted-output-persistence negative invocation
+-> orchestration trace
+-> run.sh orchestration retry proof receipt
+```
+
+Required checks:
+
+```text
+runsh_invocations: >= 4
+successful_runsh_invocations: >= 2
+blocked_runsh_invocations: >= 2
+active_predictions: >= 16
+action_decisions: >= 16
+retry_after_uncertain_completion_trials: >= 1
+interrupted_persistence_trials: >= 1
+conflicting_active_pointer_trials: >= 1
+causal_replay_receipts: >= 1
+equivalent_end_state_after_retry: true
+continued_with_unknown_state: 0
+side_effect_violations: 0
+duplicate_active_predictions_promoted: 0
+duplicate_action_decisions_promoted: 0
+canonical/source/identity/provider/Memory attempts: 0
+```
+
+Accepted status:
+
+```text
+PASS_LIVE_TAU_PCTOM_RUNSH_ORCHESTRATION_RETRY_PROOF
+```
+
+Blocked status:
+
+```text
+BLOCKED_LIVE_TAU_PCTOM_RUNSH_ORCHESTRATION_RETRY_PROOF
+```
+
+Current accepted receipt:
+
+```text
+/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/live_tau_sealed_test_runsh_orchestration_retry_proof_receipt.v1.json
+```
+
+This bridge proves local command-dispatch retry discipline through
+`skills/persona-dream/run.sh`: exact retry and uncertain-completion retry
+recover equivalent active state, bad input blocks, interrupted output
+persistence blocks before active-state promotion, and the child proof preserves
+recovered/blocked/quarantined terminal-outcome discipline. It does not prove an
+always-on external production service or queue worker, full 64-episode live Tau
+replication, new live Tau execution, live Memory service fault injection,
+provider/video execution, semantic dream quality, or complete live Phase 01-16
+runtime execution.

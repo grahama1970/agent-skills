@@ -1,10 +1,33 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R bounded live Tau sealed-test retry proof accepted) by agent
+**Last updated:** 2026-07-21 (PCTOM-R run.sh orchestration retry proof accepted) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R RUN.SH ORCHESTRATION RETRY PROOF): local command-dispatch
+  retry/fault evidence now exists at
+  `/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/live_tau_sealed_test_runsh_orchestration_retry_proof_receipt.v1.json`.
+  It reports `PASS_LIVE_TAU_PCTOM_RUNSH_ORCHESTRATION_RETRY_PROOF` while
+  exercising `skills/persona-dream/run.sh` as the orchestration boundary.
+  Counts: 4 run.sh invocations, 2 successful invocations, 2 blocked
+  invocations, 16 active predictions, 16 action decisions, 16 Gate 6 receipts,
+  8 child retry/fault trials, 1 retry-after-uncertain-completion trial, 1
+  interrupted-persistence trial, 1 conflicting-active-pointer trial, 1 causal
+  replay receipt, 0 `CONTINUED_WITH_UNKNOWN_STATE`, 0 side-effect violations,
+  0 duplicate active predictions promoted, and 0 duplicate action decisions
+  promoted. The exact retry and retry-after-uncertain-completion run.sh
+  invocations recovered equivalent active state; missing base root returned a
+  fail-closed blocked child receipt; output-root-as-file interrupted persistence
+  exited nonzero before active-state promotion. `mocked:false`, `live:true`,
+  `fixture_backed:false`, `live_tau_reexecuted:false`,
+  `human_content_judgment_required:false`, and Memory/provider/canonical/
+  identity/source-memory write attempts were all 0. This proves local run.sh
+  command-dispatch retry discipline over live-originated sealed-test artifacts.
+  It does not prove an always-on external production service or queue worker,
+  full 64-episode live Tau sealed-test replication, new live Tau execution,
+  live Memory service fault injection, paid provider execution, semantic dream
+  quality, or complete Phase 01-16 runtime execution.
 - 2026-07-21 (PCTOM-R BOUNDED LIVE TAU SEALED-TEST RETRY PROOF): bounded
   retry/idempotence evidence over live Tau-originated sealed-test artifacts now
   exists at

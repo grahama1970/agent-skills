@@ -409,12 +409,13 @@ Sealed-test statistical-confidence proof root: /tmp/persona-dream-sealed-test-st
 Live fault-injection surface proof root: /tmp/persona-dream-live-fault-injection-surface-20260721T044950Z
 Bounded live Tau sealed-test replication proof root: /tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z
 Bounded live Tau sealed-test retry proof root: /tmp/persona-dream-live-tau-sealed-test-retry-proof-20260721T052430Z
+Run.sh orchestration retry proof root: /tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z
 ```
 
 Current active phase boundary:
 
 ```text
-phase: post-bounded-live-tau-sealed-test-retry-proof, pre-full-64-live-tau-replication-or-deployed-orchestration-retry-proof
+phase: post-runsh-orchestration-retry-proof, pre-full-64-live-tau-replication-or-external-service-worker-retry-proof
 last_live_condition_receipt: /tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z/live_tau_condition_comparison_receipt.v1.json
 last_reliability_receipt: /tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z/live_tau_condition_reliability_bridge_receipt.v1.json
 last_action_selection_receipt: /tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z/live_tau_condition_action_selection_receipt.v1.json
@@ -427,7 +428,8 @@ last_sealed_test_statistical_confidence_receipt: /tmp/persona-dream-sealed-test-
 last_live_fault_injection_surface_receipt: /tmp/persona-dream-live-fault-injection-surface-20260721T044950Z/live_fault_injection_surface_receipt.v1.json
 last_bounded_live_tau_sealed_test_replication_receipt: /tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_replication_receipt.v1.json
 last_bounded_live_tau_sealed_test_retry_proof_receipt: /tmp/persona-dream-live-tau-sealed-test-retry-proof-20260721T052430Z/live_tau_sealed_test_retry_proof_receipt.v1.json
-next_required_receipt: full 64-episode live Tau sealed-test replication receipt or deployed orchestration retry/fault proof receipt
+last_runsh_orchestration_retry_proof_receipt: /tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/live_tau_sealed_test_runsh_orchestration_retry_proof_receipt.v1.json
+next_required_receipt: full 64-episode live Tau sealed-test replication receipt or external service/queue-worker retry proof receipt
 ```
 
 This boundary means Gate 8/9 condition reliability over live-originated
@@ -452,7 +454,9 @@ hash-recomputed active prediction/action indexes over those 16 live-originated
 cases plus 8 retry/fault trials with only recovered, blocked-before-side-effect,
 or quarantined terminal outcomes and one causal replay. The next useful
 movement is full 64-episode live Tau sealed-test replication or retry/fault
-proof inside the deployed orchestration boundary.
+proof inside an always-on service or queue-worker boundary. The run.sh
+orchestration proof now exercises the local skill command dispatcher, but it is
+not an always-on external service.
 
 Bounded live Tau sealed-test retry proof summary:
 
@@ -490,6 +494,49 @@ state indexing. It does not prove deployed production orchestrator retry
 machinery, full 64-episode live Tau sealed-test replication, new live Tau
 execution, live Memory service fault injection, paid provider execution,
 semantic dream quality, or complete Phase 01-16 runtime execution.
+
+Run.sh orchestration retry proof summary:
+
+```text
+receipt: /tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/live_tau_sealed_test_runsh_orchestration_retry_proof_receipt.v1.json
+status: PASS_LIVE_TAU_PCTOM_RUNSH_ORCHESTRATION_RETRY_PROOF
+orchestration_boundary: skills/persona-dream/run.sh
+runsh_invocations: 4
+successful_runsh_invocations: 2
+blocked_runsh_invocations: 2
+active_predictions: 16
+action_decisions: 16
+gate6_receipts: 16
+retry_fault_trials: 8
+retry_after_uncertain_completion_trials: 1
+interrupted_persistence_trials: 1
+conflicting_active_pointer_trials: 1
+causal_replay_receipts: 1
+continued_with_unknown_state: 0
+side_effect_violations: 0
+duplicate_active_predictions_promoted: 0
+duplicate_action_decisions_promoted: 0
+mocked: false
+live: true
+fixture_backed: false
+live_tau_originated_artifacts_consumed: true
+live_tau_reexecuted: false
+human_content_judgment_required: false
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+```
+
+This proves the local `skills/persona-dream/run.sh` command-dispatch boundary
+can invoke the sealed-test retry proof, recover equivalent active state for
+exact retry and retry-after-uncertain-completion, block a missing base root,
+and block an interrupted output-persistence attempt before active-state
+promotion. It does not prove an always-on external production service, queue
+worker, full 64-episode live Tau replication, new live Tau execution, live
+Memory service fault injection, paid provider execution, semantic dream
+quality, or complete Phase 01-16 runtime execution.
 
 Sealed-test statistical-confidence proof summary:
 
@@ -1503,13 +1550,15 @@ persistence/retry boundaries with eight fault families and no unknown-state
 continuation, plus one bounded live Tau sealed-test replication slice with 16
 Tau-authored sealed/scored/action cases and no observed CD benefit, plus one
 bounded retry/idempotence proof over those live-originated sealed-test artifacts
-with 8 retry/fault trials and one causal replay. It does not
+with 8 retry/fault trials and one causal replay, plus one run.sh orchestration
+proof with 4 command-dispatch invocations and fail-closed missing-base-root and
+interrupted-persistence attempts. It does not
 prove paid provider execution, semantic dream quality, planning-regret benefit,
 full 64-episode live Tau sealed-test execution, statistical confidence for live
 Tau CD benefit, full external service fault injection beyond Memory `/recall`,
-deployed production retry machinery, complete live Phase 01-16 runtime
-execution, or autonomous operation beyond the bounded bridges. Those require
-separate live receipts.
+always-on external production service or queue-worker retry machinery, complete
+live Phase 01-16 runtime execution, or autonomous operation beyond the bounded
+bridges. Those require separate live receipts.
 
 No agent may claim final, green, complete, fixed, verified, or closed for this
 research goal unless those concrete proof artifacts exist and are cited.
@@ -1519,9 +1568,10 @@ research goal unless those concrete proof artifacts exist and are cited.
 Move from deterministic sealed-test statistical-confidence evidence, PASS live
 Memory recall-after-revision evidence, the broader live fault-injection
 surface, bounded live Tau sealed-test replication, and bounded retry/idempotence
-over live-originated sealed-test artifacts to full 64-episode live Tau
-replication or deployed orchestration retry/fault proof, without reactivating
-provider/video as the critical path.
+over live-originated sealed-test artifacts, plus run.sh orchestration retry
+evidence, to full 64-episode live Tau replication or always-on external
+service/queue-worker retry proof, without reactivating provider/video as the
+critical path.
 
 The next accepted artifact must answer one of these narrower questions:
 
@@ -1529,8 +1579,8 @@ The next accepted artifact must answer one of these narrower questions:
    payloads are authored through live Tau rather than deterministic profiles,
    given that the bounded 4-episode live slice produced a null CD benefit?
 2. Does retry/fault handling preserve the same terminal-outcome discipline
-   inside the deployed orchestration boundary, not only the bounded research
-   bridge over live-originated artifacts?
+   inside an always-on external service or queue-worker boundary, not only the
+   bounded research bridge and local `run.sh` dispatcher?
 
 Resolved live Memory diagnostic:
 
@@ -1655,6 +1705,10 @@ canonical_memory_write_attempts: 0
 identity_write_attempts: 0
 source_memory_write_attempts: 0
 ```
+
+Current run.sh orchestration proof satisfies the local command-dispatch subset
+of that stop condition. It does not satisfy an always-on external service or
+queue-worker stop condition.
 
 Required artifact shape:
 
