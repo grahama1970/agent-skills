@@ -98,10 +98,12 @@ def _episode(
     }
 
 
-def _information_asymmetry(variant: int) -> dict[str, Any]:
-    episode_id = f"dev-info-asym-{variant:02d}"
-    severity = ["low", "medium", "high"][variant - 1]
-    action = ["KAI_HINTS_CONSTRAINT", "KAI_WARNS_PRIVATELY", "KAI_INTERRUPTS_WITH_CORRECTION"][variant - 1]
+def _information_asymmetry(variant: int, prefix: str = "dev") -> dict[str, Any]:
+    episode_id = f"{prefix}-info-asym-{variant:02d}"
+    severity = ["low", "medium", "high", "deadline", "compliance", "safety"][variant - 1]
+    action = ["KAI_HINTS_CONSTRAINT", "KAI_WARNS_PRIVATELY", "KAI_INTERRUPTS_WITH_CORRECTION"][
+        (variant - 1) % 3
+    ]
     return _episode(
         episode_id=episode_id,
         family="information_asymmetry_false_belief",
@@ -135,10 +137,19 @@ def _information_asymmetry(variant: int) -> dict[str, Any]:
     )
 
 
-def _preference_uncertainty(variant: int) -> dict[str, Any]:
-    episode_id = f"dev-pref-desire-{variant:02d}"
-    private_preference = ["quiet review", "fast handoff", "shared draft"][variant - 1]
-    action = ["KAI_CHOOSES_QUIET_REVIEW", "KAI_REQUESTS_FAST_HANDOFF", "KAI_OFFERS_SHARED_DRAFT"][variant - 1]
+def _preference_uncertainty(variant: int, prefix: str = "dev") -> dict[str, Any]:
+    episode_id = f"{prefix}-pref-desire-{variant:02d}"
+    private_preference = [
+        "quiet review",
+        "fast handoff",
+        "shared draft",
+        "low interruption",
+        "paired walkthrough",
+        "written checkpoint",
+    ][variant - 1]
+    action = ["KAI_CHOOSES_QUIET_REVIEW", "KAI_REQUESTS_FAST_HANDOFF", "KAI_OFFERS_SHARED_DRAFT"][
+        (variant - 1) % 3
+    ]
     return _episode(
         episode_id=episode_id,
         family="preference_desire_uncertainty",
@@ -171,10 +182,10 @@ def _preference_uncertainty(variant: int) -> dict[str, Any]:
     )
 
 
-def _trust_commitment(variant: int) -> dict[str, Any]:
-    episode_id = f"dev-trust-commit-{variant:02d}"
-    trust_state = ["strained", "stable", "high"][variant - 1]
-    action = ["KAI_SETS_BOUNDARY", "KAI_RESTATES_COMMITMENT", "KAI_DELEGATES_TRUST"][variant - 1]
+def _trust_commitment(variant: int, prefix: str = "dev") -> dict[str, Any]:
+    episode_id = f"{prefix}-trust-commit-{variant:02d}"
+    trust_state = ["strained", "stable", "high", "recovering", "fragile", "delegated"][variant - 1]
+    action = ["KAI_SETS_BOUNDARY", "KAI_RESTATES_COMMITMENT", "KAI_DELEGATES_TRUST"][(variant - 1) % 3]
     return _episode(
         episode_id=episode_id,
         family="trust_commitment_relationship",
@@ -207,10 +218,12 @@ def _trust_commitment(variant: int) -> dict[str, Any]:
     )
 
 
-def _coordination_conflict(variant: int) -> dict[str, Any]:
-    episode_id = f"dev-coord-conflict-{variant:02d}"
-    conflict = ["timing", "resource", "authority"][variant - 1]
-    action = ["KAI_ASKS_TO_WAIT", "KAI_OFFERS_COOPERATION", "KAI_DISCLOSES_AUTHORITY_CONSTRAINT"][variant - 1]
+def _coordination_conflict(variant: int, prefix: str = "dev") -> dict[str, Any]:
+    episode_id = f"{prefix}-coord-conflict-{variant:02d}"
+    conflict = ["timing", "resource", "authority", "handoff", "visibility", "dependency"][variant - 1]
+    action = ["KAI_ASKS_TO_WAIT", "KAI_OFFERS_COOPERATION", "KAI_DISCLOSES_AUTHORITY_CONSTRAINT"][
+        (variant - 1) % 3
+    ]
     return _episode(
         episode_id=episode_id,
         family="coordination_conflict",
@@ -251,16 +264,29 @@ BUILDERS = {
 }
 
 
+def _split_prefix(split: str) -> str:
+    mapping = {
+        "development": "dev",
+        "calibration": "cal",
+        "test": "test",
+    }
+    if split in mapping:
+        return mapping[split]
+    normalized = "".join(ch for ch in split.lower() if ch.isalnum())
+    return (normalized or "split")[:8]
+
+
 def build_corpus(split: str, episodes_per_family: int, generated_at: str | None = None) -> dict[str, Any]:
     if episodes_per_family < 1:
         raise ValueError("episodes_per_family must be >= 1")
+    if episodes_per_family > 6:
+        raise ValueError("this deterministic seed set currently supports up to 6 episodes per family")
+    prefix = _split_prefix(split)
     episodes = []
     for family in FAMILIES:
         builder = BUILDERS[family]
         for variant in range(1, episodes_per_family + 1):
-            if variant > 3:
-                raise ValueError("this deterministic seed set currently supports up to 3 episodes per family")
-            episodes.append(builder(variant))
+            episodes.append(builder(variant, prefix))
     family_counts = {family: 0 for family in FAMILIES}
     for episode in episodes:
         family_counts[episode["scenario_family"]] += 1

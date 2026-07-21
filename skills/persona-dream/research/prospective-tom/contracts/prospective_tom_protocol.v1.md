@@ -754,6 +754,69 @@ fault injection, production retry machinery, statistical prediction benefit,
 held-out M/R/D/CD comparison, longitudinal recall after revision, complete live
 Phase 01-16 runtime execution, paid provider execution, or video quality.
 
+## Condition Comparison Instrumentation
+
+The deterministic condition comparison runner validates the experimental
+instrument before live model comparison. It builds a calibration social episode
+corpus, runs M, R, D, and CD condition priors through the existing Gate 2, Gate
+3, Gate 4, and Gate 5 validators, then aggregates Brier and log-loss metrics by
+condition.
+
+The required chain is:
+
+```text
+calibration social episode corpus
+-> M/R/D/CD condition priors
+-> Gate 2 ToM distribution bundles
+-> Gate 3 factual/counterfactual branch bundles
+-> Gate 4 sealed prediction commitments
+-> Gate 5 deterministic outcome reveals and scoring receipts
+-> condition comparison receipt
+```
+
+Required fields:
+
+```text
+mocked: false
+fixture_backed: false
+deterministic_simulator_corpus_fixture_backed: true
+human_content_judgment_required: false
+memory_write_attempts: 0
+provider_call_attempts: 0
+tau_call_attempts: 0 for deterministic instrumentation
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+sealed_commitments_per_condition[M/R/D/CD] >= 1
+deterministic_scores_per_condition[M/R/D/CD] >= 1
+```
+
+Accepted status:
+
+```text
+PASS_PCTOM_CONDITION_COMPARISON
+```
+
+Blocked status:
+
+```text
+BLOCKED_PCTOM_CONDITION_COMPARISON
+```
+
+This runner proves the condition-comparison instrument can seal, reveal, score,
+and aggregate all four condition lanes without unsupported writes or human
+content judgment. A negative result is valid evidence. If CD does not beat the
+strongest baseline on the preregistered primary metric, the receipt must report
+that directly rather than reframe success around narrative quality or secondary
+metrics.
+
+This deterministic instrumentation does not prove live model prediction
+benefit, Tau-authored condition outputs, held-out test-set benefit,
+action-selection regret improvement, external service fault injection,
+production retry machinery, longitudinal recall after revision, complete live
+Phase 01-16 runtime execution, paid provider execution, or semantic dream
+quality.
+
 ## Live Gate 0 Bridge - Memory Recall To Prospective Case
 
 After the fixture-backed Gate 0-9 contracts exist, the first live validation

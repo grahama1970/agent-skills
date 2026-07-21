@@ -77,7 +77,7 @@ step model:
    observes a completed dream and then interprets it.
 4. **Prospective ToM prediction** - implemented fixture-backed by Gates 2-4
    and bridged once through live Tau text execution. The remaining research
-   proof is repeated, held-out execution across conditions and seeds.
+   proof is live repeated execution across conditions and seeds.
 5. **Deterministic hidden outcome and scoring** - implemented fixture-backed
    by Gate 5 and bridged once over a live Tau-originated sealed commitment.
    The remaining research proof is held-out prospective scoring across
@@ -309,6 +309,7 @@ Live Gate 0 proof root: /tmp/persona-dream-live-pctom-gate0-r2-20260721T020456Z
 Live Tau Gate 2-4 proof root: /tmp/persona-dream-live-tau-gate2-4-20260721T021621Z
 Live Tau Gate 5/7 proof root: /tmp/persona-dream-live-tau-score-revision-20260721T022807Z
 Live Tau Gate 8/9 proof root: /tmp/persona-dream-live-tau-reliability-bridge-20260721T023518Z
+Condition comparison proof root: /tmp/persona-dream-condition-comparison-20260721T024538Z
 ```
 
 Gate 0 proof summary:
@@ -620,6 +621,52 @@ benefit, held-out M/R/D/CD comparison, longitudinal recall after revision,
 complete Phase 01-16 runtime execution, paid provider execution, or video
 quality.
 
+Condition comparison proof summary:
+
+```text
+receipt: /tmp/persona-dream-condition-comparison-20260721T024538Z/condition_comparison_receipt.v1.json
+status: PASS_PCTOM_CONDITION_COMPARISON
+split: calibration
+episodes_in_corpus: 24
+episodes_consumed: 24
+families_consumed: 4
+conditions: M, R, D, CD
+cases: 96
+sealed_commitments_per_condition: M=24, R=24, D=24, CD=24
+deterministic_scores_per_condition: M=24, R=24, D=24, CD=24
+Gate 2 PASS receipts: 96
+Gate 3 PASS receipts: 96
+Gate 4 PASS receipts: 96
+Gate 5 PASS receipts: 96
+mocked: false
+live: false
+fixture_backed: false
+deterministic_simulator_corpus_fixture_backed: true
+human_content_judgment_required: false
+memory_write_attempts: 0
+provider_call_attempts: 0
+tau_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+mean_action_brier: M=0.6666666666666666, R=0.7133333333333334, D=0.7083333333333334, CD=0.7133333333333334
+mean_belief_brier: M=0.45500000000000007, R=0.30499999999999994, D=0.2198, CD=0.14000000000000004
+primary_metric: mean_action_brier
+strongest_baseline_condition: M
+cd_minus_strongest_baseline: 0.046666666666666745
+```
+
+This is deterministic calibration instrumentation evidence. It proves the
+condition runner can generate a calibration corpus, seal M/R/D/CD commitments,
+score every condition with Gate 5, and aggregate Brier/log-loss metrics without
+human content judgment or unsupported writes. It also records a negative action
+Brier result for this deterministic prior set: CD did not beat the strongest
+baseline on mean action Brier. It does not prove live model prediction benefit,
+Tau-authored condition outputs, held-out test-set benefit, action-selection
+regret improvement, external service fault injection, production retry
+machinery, longitudinal recall after revision, complete Phase 01-16 runtime
+execution, paid provider execution, or semantic dream quality.
+
 Live Gate 0 bridge proof summary:
 
 ```text
@@ -719,51 +766,55 @@ bridge proving live Memory recall-to-prospective-lineage wiring and one live
 Tau Gate 2-4 bridge proving text-first Tau generation through sealed commitment
 validators, plus one live Tau-originated Gate 5/7 bridge proving deterministic
 outcome reveal, scoring, and non-destructive revision for a bounded text-first
-case, plus one live Tau-originated Gate 8/9 bridge proving bounded controlled
-stale-artifact containment and causal localization. It does not prove paid
-provider execution, semantic dream quality, held-out prediction benefit,
-factual second-order live Tau scoring, external service fault injection,
-production retry machinery, longitudinal recall after revision, complete live
-Phase 01-16 runtime execution, or autonomous operation beyond the bounded
-bridges. Those require separate live receipts.
+case, one live Tau-originated Gate 8/9 bridge proving bounded controlled
+stale-artifact containment and causal localization, and one deterministic
+calibration condition-comparison run over 24 episodes and 96 M/R/D/CD cases. It
+does not prove paid provider execution, semantic dream quality, held-out test
+benefit, live model condition outputs, action-selection regret improvement,
+external service fault injection, production retry machinery, longitudinal
+recall after revision, complete live Phase 01-16 runtime execution, or
+autonomous operation beyond the bounded bridges. Those require separate live
+receipts.
 
 No agent may claim final, green, complete, fixed, verified, or closed for this
 research goal unless those concrete proof artifacts exist and are cited.
 
 ## Next Critical Path
 
-Move from bounded live bridges to repeated held-out text-first experiment
-evidence, without reactivating provider/video as the critical path.
+Move from deterministic calibration instrumentation to live text-first
+condition execution, without reactivating provider/video as the critical path.
 
-The next accepted artifact must consume the existing PCTOM-R social episode
-corpus and answer this experimental question:
+The next accepted artifact must consume the calibration condition runner and
+answer this live-model question:
 
-1. Can repeated M/R/D/CD condition runs on held-out or calibration episodes
-   produce sealed predictions, deterministic scores, and comparable metrics
-   without human content judgment or unsupported writes?
+1. Can Tau-authored M/R/D/CD condition outputs produce sealed predictions,
+   deterministic scores, and comparable metrics on at least one calibration
+   episode per condition without human content judgment or unsupported writes?
 
 Stop condition for that artifact:
 
 ```text
 mocked: no
-episodes_consumed: calibration or held-out corpus subset
+episodes_consumed: calibration subset
 conditions: M, R, D, CD
 sealed_commitments_per_condition: >= 1
 deterministic_scores_per_condition: >= 1
+tau_call_attempts: >= 4
+tau_receipts_hash_bound: true
 human_content_judgment_required: false
 memory_write_attempts: 0
 provider_call_attempts: 0
 canonical_memory_write_attempts: 0
 identity_write_attempts: 0
 source_memory_write_attempts: 0
-primary_metric: Brier score by condition, with CD compared to strongest
-baseline when enough paired trials exist
+primary_metric: Brier score by condition, with Tau-authored CD compared to the
+strongest Tau-authored baseline when enough paired trials exist
 ```
 
 The next independent reliability question remains:
 
-2. Can the same held-out condition runner survive real external service faults
-   and production retry boundaries with accepted Gate 8-9 terminal outcomes?
+2. Can the same live condition runner survive real external service faults and
+   production retry boundaries with accepted Gate 8-9 terminal outcomes?
 
 Any live validation report must state `mocked`, `live`, what was actually
 exercised, and what remains unverified.
