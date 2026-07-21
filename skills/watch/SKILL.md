@@ -201,6 +201,32 @@ extracted watch evidence first -> Brave corroboration second
 If Brave finds a fact that extraction does not, that is a coverage gap, not an
 answer.
 
+## Immutable YOLO Identity Ledger Contract
+
+- Detector `track_id` values are observations, not identity truth.
+- Watch owns accepted identity segments over detector observations.
+- Memory/Qdrant suggestions are tentative and must render as suggestions until a human accepts them.
+- Human accept is required before a character label is accepted identity.
+- `reject_box` or `reset_box` closes the current segment for that detector track.
+- No identity can propagate across a closed segment.
+- Reassignment after a stop creates a new segment, even when the detector `track_id` is unchanged.
+- Local YOLO label receipts persist before Memory sync is attempted.
+- Failed Memory sync remains durable and retryable; it must not exist only in a transient HTTP response.
+- Held/interpolated runtime boxes are UI state, not canonical identity evidence.
+
+Required immutable-gate commands:
+
+```bash
+npm --prefix skills/watch/ui test
+npm --prefix skills/watch/ui run typecheck
+npm --prefix skills/watch/ui run build
+npm --prefix skills/watch/ui run test:memory-suggestion-live
+npm --prefix skills/watch/ui run test:immutable-browser-live
+npm --prefix skills/watch/ui run prove:immutable-goal
+```
+
+`sanity.sh` does not replace the live immutable goal gate.
+
 ## Commands
 
 ### `run.sh` — Main Typer entry point

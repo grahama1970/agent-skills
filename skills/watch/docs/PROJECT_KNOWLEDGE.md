@@ -81,7 +81,8 @@ Two-pass approach (no `-frames:v` limit that caused partial coverage):
 1. ffmpeg `select='gt(scene,0.3)'` detects all scene changes across the entire video
 2. Results subsampled evenly to `--max-frames` if more than budget
 
-Covers the full movie. Frame budget defaults to 150 (capped at 500).
+Covers the full movie. Frame budget defaults to 100. The YOLO materializer has
+a separate `--max-events` cap of 500 for tracker events.
 
 ## Whisper Docker
 
@@ -165,6 +166,7 @@ Aliases: `grandma`→`Granny`, `kid`→`Thurman Merman`, `santa`→`Willie T. So
 
 - 2026-07-01: Watch row 5 character annotation workflow now treats human keyframes as durable identity seeds. Visible keyframes are stored in memory collection watch_keyframe_annotations with movie_metadata, actor_metadata, interpolation metadata, scene_context_refs, training_role, detector links when available, and qdrant_refs pointing to watch_track_crop_embeddings_jina_v5_1024; raw vectors stay in Qdrant, not Arango. Runtime interpolation/hold is computed in the Watch UI and offscreen stop markers end a character scan without deleting earlier keyframes. Delete/Backspace on a held/interpolated visible box should insert an offscreen stop at the playhead; exact keyframe deletion marks that keyframe deleted. Evidence from row 5 Bad Santa check: memory HTTP /list returned 8 active row 5 Willie docs, 6 visible keyframes, 2 offscreen stop markers, and 6 visible keyframes with Qdrant crop pointers; live Watch UI rehydrated 8 saved boxes from memory.
 - 2026-07-07: Watch world-model architecture: YOLOAnalytics supplies detector boxes/tracks only; Watch owns temporal identity sequences, unassign/stop control points, interpolation between explicit labels, Qdrant/Memory crop recall, readiness counters, and escalation to Tau for deeper sequence analysis. Qdrant/Memory suggestions are tentative evidence, not accepted truth, until a human or accepted policy confirms them. For high-risk streaming domains, Watch should write durable evidence records and confidence-scored recommendations for human review, not targeting or autonomous engagement decisions.
+- 2026-07-20: Immutable YOLO identity goal scope: row 9 is the narrow live Memory/Qdrant canary for tentative Marcus crop suggestion; row 10 accept/stop/reassign/reload is deterministic browser-gated behavior over a proof-only asset to avoid contaminating canonical Bad Santa identity memory. Broad handoff coverage remains pending. RTSP, drone, F36, production identity accuracy, and full streaming runtime are not implemented by this gate. Durable proof manifests live under `skills/watch/proofs/immutable-goal/<git-sha>/manifest.json`.
 
 ## Recent Decisions
 

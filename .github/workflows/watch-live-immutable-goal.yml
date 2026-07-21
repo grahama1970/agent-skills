@@ -1,0 +1,35 @@
+name: watch-live-immutable-goal
+
+on:
+  workflow_dispatch:
+
+jobs:
+  watch-live:
+    runs-on: [self-hosted, linux, watch-live]
+    defaults:
+      run:
+        working-directory: skills/watch/ui
+    env:
+      MEMORY_DAEMON_URL: http://127.0.0.1:8601
+      WATCH_IMMUTABLE_REPORT_PATH: ${{ vars.WATCH_IMMUTABLE_REPORT_PATH }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: skills/watch/ui/package-lock.json
+      - name: Require report path
+        run: test -n "$WATCH_IMMUTABLE_REPORT_PATH"
+      - run: npm ci
+      - run: npm run playwright:install
+      - run: npm run prove:immutable-goal
+      - name: Assert proof manifest passed
+        run: |
+          manifest="$(find ../proofs/immutable-goal -name manifest.json | sort | tail -1)"
+          test -n "$manifest"
+          node -e "const fs=require('fs'); const m=JSON.parse(fs.readFileSync(process.argv[1])); if (m.status !== 'PASS' || m.mocked !== false || m.live !== true) process.exit(1)" "$manifest"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: watch-immutable-goal-proof
+          path: skills/watch/proofs/immutable-goal/**

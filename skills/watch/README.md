@@ -198,7 +198,7 @@ python3 scripts/materialize_yolo_bytetrack_for_report.py --report /tmp/watch-wex
 After materialization, verify the UX server can see a row's detector candidates:
 
 ```bash
-curl -sS "http://127.0.0.1:3002/api/projects/watch/detector-candidates/rows/4?asset_uid=bad_santa_unrated_2003_brrip_xvidhd_720p_npw&source_width=1280&source_height=696" \
+curl -sS "http://127.0.0.1:3002/api/projects/watch/detector-candidates?row_index=4&asset_uid=bad_santa_unrated_2003_brrip_xvidhd_720p_npw" \
   | jq '{row_index,total,source_log_count}'
 ```
 
@@ -291,6 +291,19 @@ The current proof state is:
 Use this feature for tentative auto-labeling, not silent auto-accept. The point
 is to reduce human labeling work while keeping a fast accept/reject/reset path
 for the wrong cases.
+
+Immutable backend and live browser gates:
+
+```bash
+npm --prefix skills/watch/ui run test:backend-immutable
+npm --prefix skills/watch/ui run test:memory-suggestion-live
+npm --prefix skills/watch/ui run test:immutable-browser-live
+npm --prefix skills/watch/ui run prove:immutable-goal
+```
+
+Proof screenshots must be committed under `skills/watch/proofs/immutable-goal/`
+or uploaded as workflow artifacts. Proof manifests must use repo-relative paths
+and SHA256 hashes; temporary paths are not durable proof.
 
 ## Orpheus Dataset Boundary
 
