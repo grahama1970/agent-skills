@@ -2382,7 +2382,8 @@ async function handleResponse(response) {
     if (softFail) {
       console.warn("Warning:", errContent);
       socket.end();
-      process.exit(0);
+      process.exitCode = 0;
+      return;
     }
     console.error("Error:", errContent);
 
@@ -2391,7 +2392,8 @@ async function handleResponse(response) {
     }
 
     socket.end();
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   }
 
   const result = response.result?.content?.[0]?.text;
@@ -2406,7 +2408,8 @@ async function handleResponse(response) {
   if (wantJson) {
     console.log(JSON.stringify(data, null, 2));
     socket.end();
-    process.exit(0);
+    process.exitCode = 0;
+    return;
   }
 
   if (tool === "screenshot" && data?.base64 && (outputPath || toolArgs.savePath)) {
@@ -2522,7 +2525,8 @@ async function handleResponse(response) {
     
     if (summary.fail > 0) {
       socket.end();
-      process.exit(1);
+      process.exitCode = 1;
+      return;
     }
   } else if (tool === "zoom" && data?.zoom !== undefined) {
     console.log(`Zoom: ${Math.round(data.zoom * 100)}%`);
@@ -2648,18 +2652,21 @@ async function handleResponse(response) {
     if (softFail) {
       console.warn("Warning:", data.error);
       socket.end();
-      process.exit(0);
+      process.exitCode = 0;
+      return;
     }
     console.error("Error:", data.error);
     if (autoCapture) {
       await performAutoCapture();
     }
     socket.end();
-    process.exit(1);
+    process.exitCode = 1;
+    return;
   } else {
     console.log(JSON.stringify(data, null, 2));
   }
 
   socket.end();
-  process.exit(0);
+  process.exitCode = 0;
+  return;
 }
