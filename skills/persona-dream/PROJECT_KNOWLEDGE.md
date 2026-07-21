@@ -1,10 +1,48 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R cooperation unsafe-offer-pressure instrument) by agent
+**Last updated:** 2026-07-21 (PCTOM-R live Tau cooperation unsafe-offer-pressure slice) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R LIVE TAU COOPERATION UNSAFE-OFFER-PRESSURE SLICE):
+  the deterministic unsafe-offer-pressure instrument was consumed by the live
+  Tau M/R/D/CD condition runner and Gate 6 action scorer. Command:
+  `./skills/persona-dream/run.sh run-live-tau-cooperation-unsafe-offer-pressure-slice`.
+  Final receipt:
+  `/tmp/persona-dream-live-tau-cooperation-unsafe-offer-pressure-slice-20260721T232423Z/live_tau_cooperation_unsafe_offer_pressure_slice_receipt.v1.json`.
+  Status `PASS_LIVE_TAU_PCTOM_COOPERATION_UNSAFE_OFFER_PRESSURE_SLICE`;
+  slice conclusion `UNSAFE_OFFER_PRESSURE_SLICE_NO_CD_OFFER_EXPOSURE`;
+  receipt field SHA-256
+  `sha256:aeb0b689973bed7a6a0fd4f55d853958d5152e718c60e2a8205d9f7bfe54ba3d`;
+  file SHA-256
+  `f3b3d34603b997c527f7369789ec1e17d91adfc6fb5bfe82266b889c9f8b96ee`;
+  condition receipt SHA-256
+  `sha256:4e00442d623385463375f87e50cf95344e9ffad0745399c463c0a30c1f9b8774`;
+  action receipt SHA-256
+  `sha256:3238c7c310a2ba3259d6a060f7fb5ad8ba871bfc9f37abd4a4ca6657de6d71d5`;
+  rows SHA-256
+  `sha256:f5ce4f4fa529d7a87cca66999aa540112fa4afac8e2892bb5dd4499783fe0589`;
+  summary SHA-256
+  `sha256:2b6bd5d08de21ab0499d2fc7a43ff8e20b7e27bc538d34a56fcb2c9985dc60f7`.
+  Counts: four unsafe-offer-pressure episodes, 16 Tau attempts, 16 live Tau
+  calls, 16 Gate 6 action cases, four unsafe-offer-pressure rows, four visible
+  `OFFER_COOPERATION` affordance rows, four actual wait/disclose outcomes,
+  zero CD unsafe `OFFER_COOPERATION` candidates, zero unsafe offer suppression
+  rows, zero rule action changes, and zero Memory/provider/canonical/identity/
+  source-memory writes. This proves live Tau and Gate 6 execution over the
+  unsafe-offer-pressure corpus with sealed pre-outcome rule inputs, hash-bound
+  receipts, no oracle/outcome rule inputs, no LLM judge, and no human content
+  judgment. It does not prove unsafe offer suppression, a replacement
+  cooperation feature split, confidence-bounded CD planning benefit, broad
+  held-out planning benefit, semantic dream quality, paid provider execution,
+  or complete Phase 01-16 runtime execution. The current research state is
+  therefore a live no-exposure finding for unsafe rows: CD chose
+  `DISCLOSE_INFORMATION` on two rows and `WAIT` on two rows, so the suppression
+  gate still has no unsafe `OFFER_COOPERATION` candidate to exercise. Next
+  work should diagnose whether this is a stable no-exposure result or build a
+  stronger non-oracle unsafe-pressure instrument that can expose unsafe CD
+  offers without leaking hidden outcomes.
 - 2026-07-21 (PCTOM-R COOPERATION UNSAFE-OFFER-PRESSURE INSTRUMENT): a
   deterministic offline simulator instrument now creates the missing unsafe
   cooperation pressure rows needed before the next live Tau slice. Command:
