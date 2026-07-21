@@ -148,6 +148,31 @@ Next: <one immediate action or stop condition>
   action-scoring execution over the contrast corpus, but it does not prove CD
   exposure of both cooperation action classes, replacement policy validity, or
   planning benefit.
+- PCTOM-R cooperation no-exposure diagnostic:
+  `/tmp/persona-dream-cooperation-no-exposure-diagnostic-20260721T2208Z/cooperation_no_exposure_diagnostic_receipt.v1.json`.
+  Status `PASS_PCTOM_COOPERATION_NO_EXPOSURE_DIAGNOSTIC`, receipt SHA-256
+  `sha256:0367d1a6789b3a0fcdbfec48596068861df471f2c641a2b25d7f7bba7fcc14b9`,
+  `mocked:false`, `live:true`, deterministic simulator corpus `true`, zero
+  Tau calls reexecuted, zero Memory/provider/canonical/identity/source-memory
+  writes, no LLM judge, and no human content judgment. It hash-binds the live
+  cooperation contrast slice rows
+  `sha256:d6e8aad158129cf23f6744c44aad5ad124a44619eab6c042792be6fba2cd136d`
+  and summary
+  `sha256:36d53b7a5573329ab4228a8a87b9f84583bbef7eec4346dc0df5d9bedc74e62d`.
+  Counts: eight rows, four keep-cooperation positives, four avoid/unsafe
+  cooperation contrast rows, zero CD `OFFER_COOPERATION` candidates, CD action
+  counts `WAIT:4` and `DISCLOSE_INFORMATION:4`, selected counterpart-action
+  counts `KAI_ASKS_TO_WAIT:4` and
+  `KAI_DISCLOSES_AUTHORITY_CONSTRAINT:4`, and no oracle/outcome inputs in the
+  pre-outcome rule rows. Mean CD `KAI_OFFERS_COOPERATION` probability was
+  `0.29833325` for keep rows and `0.1` for avoid rows. Diagnostic conclusion:
+  `NO_CD_OFFER_EXPOSURE_CONFIRMED`. This proves a null/no-exposure boundary
+  and blocks feature-split acceptance, replacement-policy claims, and broad
+  planning-benefit claims from the contrast slice. It does not prove why Tau
+  semantically preferred wait/disclose beyond the structured distributions, a
+  replacement cooperation policy, confidence-bounded planning benefit,
+  semantic dream quality, paid provider execution, or complete live Phase 01-16
+  runtime execution.
 - PCTOM-R cooperation contrast instrument:
   `/tmp/persona-dream-cooperation-contrast-instrument-20260721T212749Z/cooperation_contrast_instrument_receipt.v1.json`.
   Status `PASS_PCTOM_COOPERATION_CONTRAST_INSTRUMENT`, receipt SHA-256

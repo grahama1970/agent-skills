@@ -1,6 +1,6 @@
 # Status
 
-Status: LIVE_TAU_COOPERATION_CONTRAST_SLICE_NO_CD_OFFER_EXPOSURE
+Status: COOPERATION_CONTRAST_NO_EXPOSURE_DIAGNOSED
 
 Artifact: PCTOM-R live Tau cooperation-contrast slice over the deterministic
 contrast corpus, with Gate 6 action scoring and pre-outcome threshold-rule
@@ -12,10 +12,22 @@ Current receipt:
 /tmp/persona-dream-live-tau-cooperation-contrast-slice-reuse-proof-20260721T214048Z/live_tau_cooperation_contrast_slice_receipt.v1.json
 ```
 
+Current no-exposure diagnostic receipt:
+
+```text
+/tmp/persona-dream-cooperation-no-exposure-diagnostic-20260721T2208Z/cooperation_no_exposure_diagnostic_receipt.v1.json
+```
+
 Receipt SHA-256:
 
 ```text
 sha256:2df9f209bcb005ea23ddc2233f18a694a1eb9cece38c886b785c937f331f875d
+```
+
+No-exposure diagnostic receipt SHA-256:
+
+```text
+sha256:0367d1a6789b3a0fcdbfec48596068861df471f2c641a2b25d7f7bba7fcc14b9
 ```
 
 Inspection result:
@@ -50,6 +62,35 @@ human_content_judgment_required: false
 planning_benefit_with_confidence: false
 ```
 
+No-exposure diagnostic result:
+
+```text
+status: PASS_PCTOM_COOPERATION_NO_EXPOSURE_DIAGNOSTIC
+diagnostic_conclusion: NO_CD_OFFER_EXPOSURE_CONFIRMED
+rows: 8
+keep_cooperation_positive_rows: 4
+avoid_or_unsafe_cooperation_contrast_rows: 4
+cd_offer_cooperation_candidates: 0
+cd_original_action_counts:
+  WAIT: 4
+  DISCLOSE_INFORMATION: 4
+selected_counterpart_action_counts:
+  KAI_ASKS_TO_WAIT: 4
+  KAI_DISCLOSES_AUTHORITY_CONSTRAINT: 4
+mean_kai_offers_cooperation_probability:
+  KEEP_COOPERATION_POSITIVE: 0.29833325
+  AVOID_OR_UNSAFE_COOPERATION_CONTRAST: 0.1
+no_oracle_or_outcome_inputs: true
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+mocked: false
+live: true
+tau_live_call_performed_by_diagnostic: 0
+```
+
 What this proves:
 
 ```text
@@ -79,10 +120,14 @@ Important finding:
 
 The contrast corpus now runs through live Tau and Gate 6, but it still does not
 create the action exposure needed for a replacement cooperation feature split.
-CD selected zero `OFFER_COOPERATION` actions across all eight contrast rows:
-zero keep-cooperation offer candidates and zero avoid/unsafe offer candidates.
-The threshold rule therefore made zero action changes. Planning-benefit with
-confidence remains false.
+The no-exposure diagnostic now records the reason in a hash-bound artifact: CD
+selected zero `OFFER_COOPERATION` actions across all eight contrast rows. On
+keep rows, CD avoided the simulator-oracle cooperation action by selecting
+`WAIT` or `DISCLOSE_INFORMATION`; on avoid rows, CD also suppressed unsafe
+cooperation by selecting `WAIT` or `DISCLOSE_INFORMATION` while predicted
+`KAI_OFFERS_COOPERATION` probability stayed below the threshold. The threshold
+rule therefore made zero action changes. Planning-benefit with confidence
+remains false.
 
 This wrapper reused the already-completed live Tau condition/action roots from:
 
@@ -136,9 +181,11 @@ positive keep-cooperation row and zero unsafe/avoid-cooperation contrast rows.
 Next legal move:
 
 The threshold rule remains quarantined for the observed regression slice. The
-contrast corpus now has live Tau and Gate 6 evidence, but no CD offer exposure.
-The next PCTOM-R step is to diagnose why CD avoided `OFFER_COOPERATION` on both
-keep and avoid contrast rows, then either adjust the contrast prompt/corpus to
-produce action exposure or explicitly record this as a no-exposure live result.
-Do not claim broad planning benefit or replacement-policy validity from this
+contrast corpus now has live Tau and Gate 6 evidence plus a deterministic
+no-exposure diagnostic, but still no CD offer exposure. The next PCTOM-R step is
+to design a non-oracle, pre-outcome exposure instrument or prompt/corpus
+adjustment that can produce CD cooperation action exposure while retaining
+avoid/unsafe contrast rows. If bounded attempts still produce no exposure,
+preserve the null result as a research finding. Do not claim broad planning
+benefit, feature-split acceptance, or replacement-policy validity from this
 slice.
