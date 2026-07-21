@@ -87,6 +87,10 @@ uv run --project skills/monitor-confused-agents pytest -q skills/monitor-confuse
 - Some Codex panes need a second Enter after a multi-line paste. If the first
   Enter does not produce submission evidence, the monitor sends one additional
   Enter and records `second_enter_sent:true`.
+- Some Herdr/Codex terminal states accept `ctrl+j` as the submit/newline key
+  where repeated `enter` does not submit. If both Enter attempts fail and the
+  pane is still prompt-ready, the monitor sends one bounded `ctrl+j` fallback
+  using Herdr key-combo syntax and records `ctrl_j_sent:true`.
 - Submission evidence must newly appear after the prompt attempt. Old
   `Running UserPromptSubmit hook`, `Working (`, or `Booting MCP server` text in
   scrollback does not confirm the current prompt.

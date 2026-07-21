@@ -31,6 +31,7 @@ class FakeSubmitHerdr:
     def __init__(self) -> None:
         self.trace = []
         self.enter_count = 0
+        self.ctrl_j_count = 0
         self.sent_text = False
         self.socket_path = Path("/tmp/fake-herdr.sock")
 
@@ -41,6 +42,8 @@ class FakeSubmitHerdr:
             self.sent_text = True
         if method == "pane.send_keys" and params.get("keys") == ["enter"]:
             self.enter_count += 1
+        if method == "pane.send_keys" and params.get("keys") == ["ctrl+j"]:
+            self.ctrl_j_count += 1
         if method in {"pane.send_text", "pane.send_keys"}:
             return {"type": "ok"}
         if method == "pane.read":
@@ -155,6 +158,31 @@ class FakeDelayedWorkingAfterSecondEnterHerdr(FakeSubmitHerdr):
             return {"type": "pane_read", "read": {"text": "Codex composer ready"}}
         if method == "agent.explain":
             state = "working" if self.enter_count >= 2 else "idle"
+            return {"type": "agent_explain", "explain": {"state": state, "matched_rule": "codex_prompt_idle_ready"}}
+        raise AssertionError(method)
+
+
+class FakeCtrlJSubmitHerdr(FakeSubmitHerdr):
+    def call(self, method: str, params: dict) -> dict:
+        response = {"id": method, "result": {"type": "ok"}}
+        self.trace.append({"request": {"method": method, "params": params}, "response": response})
+        if method == "pane.send_text":
+            self.sent_text = True
+            return {"type": "ok"}
+        if method == "pane.send_keys" and params.get("keys") == ["enter"]:
+            self.enter_count += 1
+            return {"type": "ok"}
+        if method == "pane.send_keys" and params.get("keys") == ["ctrl+j"]:
+            self.ctrl_j_count += 1
+            return {"type": "ok"}
+        if method == "pane.read":
+            if not self.sent_text:
+                return {"type": "pane_read", "read": {"text": "Codex composer ready"}}
+            if self.ctrl_j_count:
+                return {"type": "pane_read", "read": {"text": "UserPromptSubmit hook (completed)\nWorking (1s * esc to interrupt)"}}
+            return {"type": "pane_read", "read": {"text": "RESTART CHECK FROM monitor-confused-agents\nDisposition: <choose exactly one of RESUMING_NOW | DONE_WITH_RECEIPT>"}}
+        if method == "agent.explain":
+            state = "working" if self.ctrl_j_count else "idle"
             return {"type": "agent_explain", "explain": {"state": state, "matched_rule": "codex_prompt_idle_ready"}}
         raise AssertionError(method)
 
@@ -692,6 +720,42 @@ def test_prompt_boilerplate_is_not_submission_evidence() -> None:
     assert monitor.prompt_submitted(text) is False
 
 
+def test_monitor_prompt_body_does_not_hide_prior_done_receipt() -> None:
+    text = """
+    Status/Phase: Stop-condition proof completed.
+    Immutable Goal: DONE_WITH_RECEIPT
+    Next: STOP_ALLOWED because the goal has a fresh receipt.
+    Disposition: DONE_WITH_RECEIPT
+
+    ─ Worked for 3m 22s ─────────────────────────────────────────────────────
+
+    › You stopped or went idle while the transcript still shows follow-up work or no real blocker. Resume the task now.
+      Ask the human only for a missing decision, credential, authority, acceptance choice, or external state you cannot obtain.
+      Status/Phase: <one line>
+      Immutable Goal: <known goal, UNKNOWN, or ACHIEVED_WITH_RECEIPT:path>
+      Disposition: <choose exactly one of RESUMING_NOW | BLOCKED_NEEDS_HUMAN | DONE_WITH_RECEIPT>
+
+      gpt-5.5 high · ~/workspace/experiments/sparta
+    """
+
+    current = monitor.latest_transcript_region(text)
+
+    assert "external state" not in current
+    assert monitor.transcript_goal_claim(current)["state"] == "achieved"
+
+
+def test_wrapped_achieved_receipt_with_done_disposition_allows_stop() -> None:
+    text = """
+    Status/Phase: Stop-condition proof completed.
+    Immutable Goal: ACHIEVED_WITH_RECEIPT:/tmp/codex-ui-verification/sparta/sparta-threat-matrix-goal-stop-
+      condition/20260721T1110Z-selected-rd0003.json
+    Next: STOP_ALLOWED because the goal has a fresh receipt.
+    Disposition: DONE_WITH_RECEIPT
+    """
+
+    assert monitor.transcript_goal_claim(text)["state"] == "achieved"
+
+
 def test_old_submission_marker_cannot_confirm_new_attempt() -> None:
     before = "Running UserPromptSubmit hook\nWorking (1s * esc to interrupt)"
     after = before + "\nRESTART CHECK FROM monitor-confused-agents"
@@ -833,6 +897,7 @@ def test_send_prompt_uses_second_enter_when_readback_lags() -> None:
 
     assert result["submit_confirmed"] is True
     assert result["second_enter_sent"] is True
+    assert result["ctrl_j_sent"] is False
     assert client.enter_count == 2
 
 
@@ -847,7 +912,24 @@ def test_send_prompt_confirms_working_state_after_second_enter_when_readback_lag
 
     assert result["submit_confirmed"] is True
     assert result["second_enter_sent"] is True
+    assert result["ctrl_j_sent"] is False
     assert client.enter_count == 2
+
+
+def test_send_prompt_uses_ctrl_j_when_enter_does_not_submit() -> None:
+    client = FakeCtrlJSubmitHerdr()
+    original_wait = monitor.wait_for_agent_idle
+    monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
+    try:
+        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-confused-agents")
+    finally:
+        monitor.wait_for_agent_idle = original_wait
+
+    assert result["submit_confirmed"] is True
+    assert result["second_enter_sent"] is True
+    assert result["ctrl_j_sent"] is True
+    assert client.enter_count == 2
+    assert client.ctrl_j_count == 1
 
 
 def test_completion_between_selection_and_send_sends_nothing_with_valid_receipt(tmp_path: Path) -> None:

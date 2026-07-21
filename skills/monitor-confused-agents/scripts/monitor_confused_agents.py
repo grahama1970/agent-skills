@@ -695,6 +695,8 @@ def send_prompt(client: HerdrClient, pane_id: str, prompt: str, *, project_root:
             break
     second_enter_sent = False
     second_read = ""
+    ctrl_j_sent = False
+    ctrl_j_read = ""
     if not submit_confirmed:
         current = explain_agent(client, pane_id)
         if not explain_allows_input(current):
@@ -724,6 +726,26 @@ def send_prompt(client: HerdrClient, pane_id: str, prompt: str, *, project_root:
             if current.get("state") == "working":
                 submit_confirmed = True
                 break
+    if not submit_confirmed:
+        current = explain_agent(client, pane_id)
+        if explain_allows_input(current):
+            before = len(client.trace)
+            try:
+                client.call("pane.send_keys", {"pane_id": pane_id, "keys": ["ctrl+j"]})
+            except RuntimeError:
+                logger.error("Herdr pane.send_keys ctrl+j failed for pane {}", pane_id)
+            records.extend(client.trace[before:])
+            ctrl_j_sent = True
+            for _ in range(5):
+                time.sleep(0.4)
+                ctrl_j_read = read_pane_text(client, pane_id)
+                submit_confirmed = prompt_submitted(ctrl_j_read, baseline=pre_read)
+                if submit_confirmed:
+                    break
+                current = explain_agent(client, pane_id)
+                if current.get("state") == "working":
+                    submit_confirmed = True
+                    break
     api_sent = all("error" not in item.get("response", {}) for item in records)
     return {
         "send_api": records,
@@ -734,7 +756,8 @@ def send_prompt(client: HerdrClient, pane_id: str, prompt: str, *, project_root:
         "submit_confirmed": submit_confirmed,
         "input_modified": True,
         "second_enter_sent": second_enter_sent,
-        "post_submit_excerpt": (second_read or first_read)[-1200:],
+        "ctrl_j_sent": ctrl_j_sent,
+        "post_submit_excerpt": (ctrl_j_read or second_read or first_read)[-1200:],
     }
 
 

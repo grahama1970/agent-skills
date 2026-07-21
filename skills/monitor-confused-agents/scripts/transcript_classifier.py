@@ -11,17 +11,37 @@ def latest_transcript_region(text: str, limit: int = 2800) -> str:
         return ""
     text = strip_monitor_prompt(text)
     parts = re.split(r"\n[^\n]*Worked for [^\n]*\n", text)
-    region = parts[-1] if parts else text
+    region = next((part for part in reversed(parts) if meaningful_region(part)), text)
     return region[-limit:]
 
 
 def strip_monitor_prompt(text: str) -> str:
-    return re.sub(
-        r"RESTART CHECK FROM monitor-confused-agents[\s\S]*?(?=\n\s*gpt-[^\n]*·)",
+    text = re.sub(
+        r"RESTART CHECK FROM monitor-confused-agents[\s\S]*?(?=\n\s*gpt-[^\n]*·|\Z)",
         "",
         text,
         flags=re.IGNORECASE,
     )
+    for pattern in [
+        r"\n\s*›\s*You stopped or went idle while the transcript still shows[\s\S]*?(?=\n\s*gpt-[^\n]*·|\Z)",
+        r"\n\s*›\s*You appear legitimately blocked\.[\s\S]*?(?=\n\s*gpt-[^\n]*·|\Z)",
+    ]:
+        text = re.sub(pattern, "\n", text, flags=re.IGNORECASE)
+    return text
+
+
+def meaningful_region(text: str) -> bool:
+    stripped = text.strip()
+    if not stripped:
+        return False
+    non_status_lines = [
+        line
+        for line in stripped.splitlines()
+        if line.strip() and not re.match(r"^\s*gpt-[^\n]*·", line)
+    ]
+    if non_status_lines:
+        return True
+    return bool(re.search(r"\bGoal (?:achieved|blocked)\b|DONE_WITH_RECEIPT", stripped, flags=re.IGNORECASE))
 
 
 def transcript_goal_claim(text: str, *, project_root: Path | None = None) -> dict[str, str]:
@@ -31,7 +51,9 @@ def transcript_goal_claim(text: str, *, project_root: Path | None = None) -> dic
         lowered = line.lower()
         if lowered.startswith("achieved_with_receipt:"):
             receipt = line.split(":", 1)[1].strip()
-            return {"state": "achieved" if path_inside_project(receipt, project_root) else "unmet", "source": "immutable_goal_line"}
+            if path_inside_project(receipt, project_root) or re.search(r"^\s*Disposition\s*:\s*DONE_WITH_RECEIPT\s*$", block, flags=re.IGNORECASE | re.MULTILINE):
+                return {"state": "achieved", "source": "immutable_goal_line"}
+            return {"state": "unmet", "source": "immutable_goal_line"}
         if lowered == "done_with_receipt":
             return {"state": "achieved", "source": "immutable_goal_line"}
         if lowered.startswith("blocked:"):
