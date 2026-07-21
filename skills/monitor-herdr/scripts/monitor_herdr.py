@@ -37,6 +37,7 @@ DEFAULT_CWD_PREFIX = str(Path.home() / "workspace" / "experiments")
 DEFAULT_STOPPED_STATUSES = ("done", "idle", "blocked", "unknown")
 DEFAULT_COOLDOWN_SECONDS = 60 * 60
 DEFAULT_UNCONFIRMED_COOLDOWN_SECONDS = 10 * 60
+DEFAULT_MIN_STOPPED_SECONDS = 0
 DEFAULT_SOCKET_PATH = Path.home() / ".config" / "herdr" / "herdr.sock"
 EARLY_STOP_PATTERNS = [
     r"\bwhat remains\b",
@@ -141,6 +142,7 @@ def tick_command(
     stopped_status: list[str] = typer.Option(list(DEFAULT_STOPPED_STATUSES), "--stopped-status", help="Statuses treated as stopped."),
     cooldown_seconds: int = typer.Option(DEFAULT_COOLDOWN_SECONDS, "--cooldown-seconds", min=0, help="Per-pane prompt cooldown."),
     unconfirmed_cooldown_seconds: int = typer.Option(DEFAULT_UNCONFIRMED_COOLDOWN_SECONDS, "--unconfirmed-cooldown-seconds", min=0, help="Cooldown for prompt attempts that modified input but were not confirmed submitted."),
+    min_stopped_seconds: int = typer.Option(DEFAULT_MIN_STOPPED_SECONDS, "--min-stopped-seconds", min=0, help="Minimum observed stopped/idle age before prompting."),
     max_prompts: int = typer.Option(20, "--max-prompts", min=1, help="Maximum prompts per tick."),
     only_obvious_early_stops: bool = typer.Option(False, "--only-obvious-early-stops", help="Prompt only stopped panes with early-stop transcript markers."),
     json_output: bool = typer.Option(True, "--json/--no-json", help="Print JSON receipt."),
@@ -156,6 +158,7 @@ def tick_command(
         stopped_statuses={item.lower() for item in stopped_status},
         cooldown_seconds=cooldown_seconds,
         unconfirmed_cooldown_seconds=unconfirmed_cooldown_seconds,
+        min_stopped_seconds=min_stopped_seconds,
         max_prompts=max_prompts,
         only_obvious_early_stops=only_obvious_early_stops,
     )
@@ -178,6 +181,7 @@ def install_cron_command(
     space: str = typer.Option(DEFAULT_SPACE, "--space", help="Herdr space/workspace to monitor."),
     apply_prompts: bool = typer.Option(True, "--apply-prompts/--dry-run-prompts", help="Cron should send restart prompts."),
     cwd_prefix: str = typer.Option(DEFAULT_CWD_PREFIX, "--cwd-prefix", help="Cron cwd-prefix scope."),
+    min_stopped_seconds: int = typer.Option(600, "--min-stopped-seconds", min=0, help="Cron prompt threshold based on observed stopped age."),
 ) -> None:
     """Install or preview a 10 minute cron entry."""
     ensure_dirs()
@@ -187,6 +191,7 @@ def install_cron_command(
         space=space,
         apply_prompts=apply_prompts,
         cwd_prefix=cwd_prefix,
+        min_stopped_seconds=min_stopped_seconds,
     )
     print(json.dumps(payload, indent=2, sort_keys=True))
     raise typer.Exit(exit_code)
@@ -232,6 +237,10 @@ def timestamp() -> str:
 
 def now_iso() -> str:
     return datetime.now(UTC).isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
+def current_epoch() -> int:
+    return int(datetime.now(UTC).timestamp())
 
 
 def log_event(run_id: str, message: str, **fields: Any) -> None:
@@ -320,6 +329,7 @@ def tick(
     stopped_statuses: set[str],
     cooldown_seconds: int,
     unconfirmed_cooldown_seconds: int,
+    min_stopped_seconds: int,
     max_prompts: int,
     only_obvious_early_stops: bool,
 ) -> tuple[int, dict[str, Any]]:
@@ -346,6 +356,7 @@ def tick(
             "stopped_statuses": sorted(stopped_statuses),
             "cooldown_seconds": cooldown_seconds,
             "unconfirmed_cooldown_seconds": unconfirmed_cooldown_seconds,
+            "min_stopped_seconds": min_stopped_seconds,
             "max_prompts": max_prompts,
             "only_obvious_early_stops": only_obvious_early_stops,
         },
@@ -384,6 +395,7 @@ def tick(
                     stopped_statuses=stopped_statuses,
                     cooldown_seconds=cooldown_seconds,
                     unconfirmed_cooldown_seconds=unconfirmed_cooldown_seconds,
+                    min_stopped_seconds=min_stopped_seconds,
                     max_prompts=max_prompts,
                     only_obvious_early_stops=only_obvious_early_stops,
                 )
@@ -409,6 +421,7 @@ def tick_locked(
     stopped_statuses: set[str],
     cooldown_seconds: int,
     unconfirmed_cooldown_seconds: int,
+    min_stopped_seconds: int,
     max_prompts: int,
     only_obvious_early_stops: bool,
 ) -> tuple[int, dict[str, Any]]:
@@ -430,8 +443,11 @@ def tick_locked(
     if input_suppressed:
         receipt["input_suppressed"] = True
         receipt["state_error"] = state.get("state_error")
-    now_epoch = int(datetime.now(UTC).timestamp())
+    now_epoch = current_epoch()
     selected: list[dict[str, Any]] = []
+    stopped_observations = state.setdefault("stopped_observations", {})
+    observed_pane_ids = {str(pane.get("pane_id") or "") for pane in panes if pane.get("pane_id")}
+    current_stopped_ids: set[str] = set()
 
     for pane in panes:
         candidate = classify_pane(
@@ -445,6 +461,8 @@ def tick_locked(
         if not candidate:
             continue
         pane_id = str(candidate["pane_id"])
+        current_stopped_ids.add(pane_id)
+        update_stopped_observation(stopped_observations, candidate, now_epoch=now_epoch)
         prompt_state = state.get("prompts", {}).get(pane_id, {})
         last_prompt_at = int(prompt_state.get("last_prompt_epoch", 0) or 0)
         effective_cooldown_seconds = cooldown_for_prompt_state(
@@ -455,12 +473,28 @@ def tick_locked(
         candidate["cooldown_active"] = effective_cooldown_seconds > 0 and (now_epoch - last_prompt_at) < effective_cooldown_seconds
         candidate["cooldown_seconds_effective"] = effective_cooldown_seconds
         candidate["last_prompt_epoch"] = last_prompt_at or None
+        candidate["min_stopped_seconds"] = min_stopped_seconds
+        candidate["stopped_age_satisfied"] = (
+            candidate.get("stopped_age_seconds") is not None
+            and int(candidate.get("stopped_age_seconds") or 0) >= min_stopped_seconds
+        )
         receipt["stopped_panes"].append(candidate)
         append_jsonl(events_path, {"event": "stopped_pane", "ts": now_iso(), **candidate_without_text(candidate)})
         should_prompt = candidate.get("action") != "observe_only"
         candidate["select_for_prompt"] = should_prompt
-        if should_prompt and not input_suppressed and not candidate["cooldown_active"] and len(selected) < max_prompts:
+        if (
+            should_prompt
+            and not input_suppressed
+            and not candidate["cooldown_active"]
+            and candidate["stopped_age_satisfied"]
+            and len(selected) < max_prompts
+        ):
             selected.append(candidate)
+    prune_stopped_observations(
+        stopped_observations,
+        observed_pane_ids=observed_pane_ids,
+        current_stopped_ids=current_stopped_ids,
+    )
 
     receipt["selected_panes"] = [candidate_without_text(item) for item in selected]
 
@@ -499,7 +533,7 @@ def tick_locked(
         receipt["prompts"].append(prompt_record)
         append_jsonl(events_path, {"event": "prompt", "ts": now_iso(), **prompt_record})
 
-    if apply:
+    if apply or min_stopped_seconds > 0:
         write_json(STATE_PATH, state)
 
     receipt["status"] = "RESTART_PROMPTS_SUBMITTED" if apply and receipt["prompts"] else "OBSERVED"
@@ -528,6 +562,105 @@ def resolve_workspace(client: HerdrClient, space: str) -> dict[str, Any] | list[
     raise RuntimeError(f"Herdr workspace not found for --space {space!r}")
 
 
+def update_stopped_observation(observations: dict[str, Any], candidate: dict[str, Any], *, now_epoch: int) -> None:
+    pane_id = str(candidate.get("pane_id") or "")
+    if not pane_id:
+        return
+    record = observations.get(pane_id)
+    if not isinstance(record, dict):
+        record = {
+            "first_seen_stopped_epoch": now_epoch,
+            "first_seen_stopped_at": now_iso(),
+            "consecutive_stopped_ticks": 0,
+        }
+    record["last_seen_stopped_epoch"] = now_epoch
+    record["last_seen_stopped_at"] = now_iso()
+    record["consecutive_stopped_ticks"] = int(record.get("consecutive_stopped_ticks", 0) or 0) + 1
+    record["agent"] = candidate.get("agent")
+    record["agent_status"] = candidate.get("agent_status")
+    record["cwd"] = candidate.get("cwd")
+    record["classification"] = candidate.get("classification")
+    observations[pane_id] = record
+
+    api_age = candidate.get("herdr_stopped_age_seconds")
+    if api_age is not None:
+        candidate["stopped_age_seconds"] = int(api_age)
+        candidate["stopped_age_source"] = candidate.get("herdr_stopped_age_source") or "herdr_api"
+        return
+    first_seen = int(record.get("first_seen_stopped_epoch", now_epoch) or now_epoch)
+    candidate["stopped_age_seconds"] = max(0, now_epoch - first_seen)
+    candidate["stopped_age_source"] = "monitor_state"
+    candidate["stopped_first_seen_at"] = record.get("first_seen_stopped_at")
+    candidate["consecutive_stopped_ticks"] = record.get("consecutive_stopped_ticks")
+
+
+def prune_stopped_observations(
+    observations: dict[str, Any],
+    *,
+    observed_pane_ids: set[str],
+    current_stopped_ids: set[str],
+) -> None:
+    for pane_id in list(observations):
+        if pane_id in observed_pane_ids and pane_id not in current_stopped_ids:
+            del observations[pane_id]
+
+
+def herdr_stopped_age(pane: dict[str, Any], explain: dict[str, Any], *, now_epoch: int) -> tuple[int | None, str | None]:
+    for source_name, payload in (("pane", pane), ("explain", explain)):
+        if not isinstance(payload, dict):
+            continue
+        for field in ("idle_seconds", "idle_duration_seconds", "stopped_seconds", "agent_idle_seconds", "state_age_seconds"):
+            value = seconds_value(payload.get(field))
+            if value is not None:
+                return value, f"herdr_api:{source_name}.{field}"
+        for field in ("idle_since_unix", "stopped_since_unix", "agent_status_since_unix", "state_since_unix", "last_state_change_unix"):
+            value = epoch_age(payload.get(field), now_epoch=now_epoch)
+            if value is not None:
+                return value, f"herdr_api:{source_name}.{field}"
+        for field in ("idle_since", "stopped_since", "agent_status_since", "state_since", "last_state_change_at"):
+            value = iso_age(payload.get(field), now_epoch=now_epoch)
+            if value is not None:
+                return value, f"herdr_api:{source_name}.{field}"
+    return None, None
+
+
+def seconds_value(value: Any) -> int | None:
+    if isinstance(value, bool) or value is None:
+        return None
+    try:
+        seconds = int(float(value))
+    except (TypeError, ValueError):
+        return None
+    return seconds if seconds >= 0 else None
+
+
+def epoch_age(value: Any, *, now_epoch: int) -> int | None:
+    if isinstance(value, bool) or value is None:
+        return None
+    try:
+        epoch = int(float(value))
+    except (TypeError, ValueError):
+        return None
+    if epoch <= 0 or epoch > now_epoch:
+        return None
+    return now_epoch - epoch
+
+
+def iso_age(value: Any, *, now_epoch: int) -> int | None:
+    if not isinstance(value, str) or not value.strip():
+        return None
+    try:
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=UTC)
+    epoch = int(parsed.timestamp())
+    if epoch > now_epoch:
+        return None
+    return now_epoch - epoch
+
+
 def classify_pane(
     client: HerdrClient,
     pane: dict[str, Any],
@@ -553,6 +686,7 @@ def classify_pane(
     text = read_pane_text(client, pane_id)
     current_text = latest_transcript_region(text)
     explain = explain_agent(client, pane_id)
+    api_age, api_age_source = herdr_stopped_age(pane, explain, now_epoch=current_epoch())
     early_markers = find_patterns(current_text, EARLY_STOP_PATTERNS)
     human_markers = find_patterns(current_text, HUMAN_BLOCKER_PATTERNS)
     if only_obvious_early_stops and not early_markers:
@@ -613,6 +747,8 @@ def classify_pane(
         "recent_excerpt": text[-2400:],
         "analysis_excerpt": current_text[-1200:],
         "explain_state": explain.get("state") if isinstance(explain, dict) else None,
+        "herdr_stopped_age_seconds": api_age,
+        "herdr_stopped_age_source": api_age_source,
     }
 
 

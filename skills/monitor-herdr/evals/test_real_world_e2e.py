@@ -86,7 +86,7 @@ class EvalHerdrClient:
 
 def receipt(tmp_path: Path) -> dict[str, Any]:
     receipt_dir = tmp_path / "receipt"
-    receipt_dir.mkdir()
+    receipt_dir.mkdir(exist_ok=True)
     return {
         "schema": "agent_skills.monitor_herdr.tick_receipt.v1",
         "run_id": "eval",
@@ -109,12 +109,20 @@ def receipt(tmp_path: Path) -> dict[str, Any]:
     }
 
 
-def run_eval_tick(tmp_path: Path, client: EvalHerdrClient) -> tuple[int, dict[str, Any]]:
+def run_eval_tick(
+    tmp_path: Path,
+    client: EvalHerdrClient,
+    *,
+    min_stopped_seconds: int = 0,
+    now_epoch: int = 1000,
+) -> tuple[int, dict[str, Any]]:
     original_state = monitor.STATE_PATH
     original_wait = monitor.wait_for_agent_idle
+    original_epoch = monitor.current_epoch
     try:
         monitor.STATE_PATH = tmp_path / "state.json"
         monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
+        monitor.current_epoch = lambda: now_epoch
         return monitor.tick_locked(
             client=client,
             receipt=receipt(tmp_path),
@@ -126,12 +134,14 @@ def run_eval_tick(tmp_path: Path, client: EvalHerdrClient) -> tuple[int, dict[st
             stopped_statuses={"done", "idle", "blocked", "unknown"},
             cooldown_seconds=0,
             unconfirmed_cooldown_seconds=600,
+            min_stopped_seconds=min_stopped_seconds,
             max_prompts=20,
             only_obvious_early_stops=False,
         )
     finally:
         monitor.STATE_PATH = original_state
         monitor.wait_for_agent_idle = original_wait
+        monitor.current_epoch = original_epoch
 
 
 def test_eval_plain_no_immutable_goal_never_enters_prompt(tmp_path: Path) -> None:
@@ -169,6 +179,66 @@ def test_eval_no_immutable_goal_with_explicit_early_stop_enters_prompt(tmp_path:
     assert result["prompts"][0]["sent"] is True
     assert client.sent_text_count == 1
     assert client.enter_count == 1
+
+
+def test_eval_min_stopped_seconds_waits_for_second_observation(tmp_path: Path) -> None:
+    project = tmp_path / "idle_gate"
+    project.mkdir()
+    (project / "GOAL.md").write_text("Finish the route audit.", encoding="utf-8")
+    pane = {"workspace_id": "w1", "pane_id": "w1:p1", "agent": "codex", "agent_status": "done", "cwd": str(project)}
+    text = "Stop hook (stopped)\nWhat remains is the receipt deep link."
+    first_client = EvalHerdrClient(panes=[pane], text_by_pane={"w1:p1": text})
+
+    first_exit, first_result = run_eval_tick(tmp_path, first_client, min_stopped_seconds=600, now_epoch=1000)
+
+    assert first_exit == 0
+    assert first_result["ok"] is True
+    assert first_result["stopped_panes"][0]["stopped_age_seconds"] == 0
+    assert first_result["stopped_panes"][0]["stopped_age_source"] == "monitor_state"
+    assert first_result["stopped_panes"][0]["stopped_age_satisfied"] is False
+    assert first_result["selected_panes"] == []
+    assert first_client.sent_text_count == 0
+    assert first_client.enter_count == 0
+
+    second_client = EvalHerdrClient(panes=[pane], text_by_pane={"w1:p1": text})
+    second_exit, second_result = run_eval_tick(tmp_path, second_client, min_stopped_seconds=600, now_epoch=1601)
+
+    assert second_exit == 0
+    assert second_result["ok"] is True
+    assert second_result["stopped_panes"][0]["stopped_age_seconds"] == 601
+    assert second_result["stopped_panes"][0]["stopped_age_satisfied"] is True
+    assert second_result["selected_panes"][0]["pane_id"] == "w1:p1"
+    assert second_result["prompts"][0]["sent"] is True
+    assert second_client.sent_text_count == 1
+    assert second_client.enter_count == 1
+
+
+def test_eval_uses_herdr_api_idle_seconds_when_present(tmp_path: Path) -> None:
+    project = tmp_path / "api_idle"
+    project.mkdir()
+    (project / "GOAL.md").write_text("Finish the route audit.", encoding="utf-8")
+    pane = {
+        "workspace_id": "w1",
+        "pane_id": "w1:p1",
+        "agent": "codex",
+        "agent_status": "done",
+        "cwd": str(project),
+        "idle_seconds": 700,
+    }
+    client = EvalHerdrClient(
+        panes=[pane],
+        text_by_pane={"w1:p1": "Stop hook (stopped)\nWhat remains is the receipt deep link."},
+    )
+
+    exit_code, result = run_eval_tick(tmp_path, client, min_stopped_seconds=600, now_epoch=1000)
+
+    assert exit_code == 0
+    assert result["ok"] is True
+    assert result["stopped_panes"][0]["stopped_age_seconds"] == 700
+    assert result["stopped_panes"][0]["stopped_age_source"] == "herdr_api:pane.idle_seconds"
+    assert result["stopped_panes"][0]["stopped_age_satisfied"] is True
+    assert result["selected_panes"][0]["pane_id"] == "w1:p1"
+    assert result["prompts"][0]["sent"] is True
 
 
 def test_eval_goal_achieved_line_never_enters_prompt(tmp_path: Path) -> None:

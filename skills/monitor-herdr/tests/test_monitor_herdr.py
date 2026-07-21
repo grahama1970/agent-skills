@@ -858,6 +858,8 @@ def test_install_cron_renders_ten_minute_apply_line() -> None:
     assert payload["cron_line"].startswith("*/10 * * * *")
     assert "tick --apply" in payload["cron_line"]
     assert "--space 'codex'" in payload["cron_line"]
+    assert "--min-stopped-seconds 600" in payload["cron_line"]
+    assert payload["min_stopped_seconds"] == 600
     assert monitor.CRON_MARKER in payload["cron_line"]
 
 

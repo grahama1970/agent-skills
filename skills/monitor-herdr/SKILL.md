@@ -45,6 +45,7 @@ prompt to selected stopped panes.
 
 ```bash
 skills/monitor-herdr/run.sh tick --space codex
+skills/monitor-herdr/run.sh tick --space codex --min-stopped-seconds 600
 skills/monitor-herdr/run.sh tick --space codex --apply
 skills/monitor-herdr/run.sh status
 skills/monitor-herdr/run.sh install-cron
@@ -52,6 +53,8 @@ skills/monitor-herdr/run.sh install-cron --space codex --apply
 skills/monitor-herdr/run.sh probe-text --pane-id w11:pG --agent codex --reason early_stop
 skills/monitor-herdr/sanity.sh
 uv run --project skills/monitor-herdr pytest -q skills/monitor-herdr/evals/test_real_world_e2e.py
+uv run --project skills/monitor-herdr python skills/monitor-herdr/evals/live_herdr_e2e.py run --allow-live
+uv run --project skills/monitor-herdr python skills/monitor-herdr/evals/live_herdr_e2e.py run --allow-live --allow-apply --require-prompt
 ```
 
 ## Runtime Contract
@@ -63,6 +66,12 @@ uv run --project skills/monitor-herdr pytest -q skills/monitor-herdr/evals/test_
 - By default `tick` is observation-only and sends nothing.
 - `tick --apply` sends one prompt per selected pane using `pane.send_text` plus
   `pane.send_keys`.
+- `tick --min-stopped-seconds N` requires a stopped pane to have been stopped
+  for at least `N` seconds before it is selected for prompting. When Herdr
+  exposes an idle/stopped age field, the monitor uses that field. On Herdr
+  versions that expose only current state, including the installed `0.7.1`
+  server on this host, the monitor records the first observed stopped timestamp
+  in its own state file and uses that observed age on later ticks.
 - On Herdr versions that expose `terminal session control`, that lower-level
   controller is the preferred future path for text plus carriage return. The
   installed Herdr `0.7.1` on this host exposes `terminal attach` but not
@@ -105,6 +114,10 @@ uv run --project skills/monitor-herdr pytest -q skills/monitor-herdr/evals/test_
 - Prompt spam is prevented by a state file and cooldowns: confirmed submissions
   default to one hour; unconfirmed input-modifying attempts retry on the
   10-minute cron cadence unless configured otherwise.
+- Stopped-age tracking is monitor-owned state when the Herdr API does not
+  provide idle duration. A first observation can record the stopped pane without
+  selecting it; a later cron tick may select it once `--min-stopped-seconds` is
+  satisfied.
 - Every run writes:
 
 ```text
@@ -216,7 +229,10 @@ The installed cron is marked with:
 ```
 
 It runs `tick --apply` every 10 minutes and appends output to the skill log
-directory. Re-running `install-cron --apply` replaces the existing marked line.
+directory. The installed cron defaults to `--min-stopped-seconds 600`, so a
+freshly stopped pane normally has to remain stopped across the 10-minute cadence
+before the monitor types into it. Re-running `install-cron --apply` replaces
+the existing marked line.
 
 ## Proof Boundaries
 
@@ -226,7 +242,12 @@ Report `mocked` and `live` explicitly:
   crontab rendering only.
 - `evals/test_real_world_e2e.py` exercises deterministic Herdr-like socket
   flows through pane selection, prompt transport, receipt status, false-positive
-  suppression, and typed-but-not-submitted failure accounting.
+  suppression, stopped-age gating, Herdr idle-age field preference, and
+  typed-but-not-submitted failure accounting.
+- `evals/live_herdr_e2e.py` is the opt-in live Herdr eval. It runs the real
+  `run.sh tick` command against the active Herdr socket, writes a JSON report
+  under `/mnt/storage12tb/skills/monitor-herdr/outputs/live-e2e/`, and can
+  optionally require an applied prompt with `submit_confirmed:true`.
 - A dry-run `tick` proves Herdr can be observed and receipts can be written.
 - An applied `tick --apply` proves the monitor attempted Herdr prompt transport
   and records both API results and post-Enter submission evidence. Treat

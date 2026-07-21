@@ -54,8 +54,21 @@ def status_payload() -> dict[str, Any]:
     }
 
 
-def install_cron(*, apply: bool, minute: str, space: str, apply_prompts: bool, cwd_prefix: str) -> tuple[int, dict[str, Any]]:
-    validation_error = validate_cron_args(minute=minute, space=space, cwd_prefix=cwd_prefix)
+def install_cron(
+    *,
+    apply: bool,
+    minute: str,
+    space: str,
+    apply_prompts: bool,
+    cwd_prefix: str,
+    min_stopped_seconds: int = 600,
+) -> tuple[int, dict[str, Any]]:
+    validation_error = validate_cron_args(
+        minute=minute,
+        space=space,
+        cwd_prefix=cwd_prefix,
+        min_stopped_seconds=min_stopped_seconds,
+    )
     if validation_error:
         return 2, {
             "schema": "agent_skills.monitor_herdr.cron_install.v1",
@@ -70,7 +83,8 @@ def install_cron(*, apply: bool, minute: str, space: str, apply_prompts: bool, c
     tick_args = "--apply" if apply_prompts else ""
     line = (
         f"{minute} * * * * cd {shell_quote(str(SKILL_DIR))} && "
-        f"{shell_quote(str(script_path))} tick {tick_args} --space {shell_quote(space)} --cwd-prefix {shell_quote(cwd_prefix)} "
+        f"{shell_quote(str(script_path))} tick {tick_args} --space {shell_quote(space)} "
+        f"--cwd-prefix {shell_quote(cwd_prefix)} --min-stopped-seconds {min_stopped_seconds} "
         f">> {shell_quote(str(cron_log))} 2>&1 {CRON_MARKER}"
     ).replace("  ", " ").strip()
     current = run_process_sync(["crontab", "-l"])
@@ -96,6 +110,7 @@ def install_cron(*, apply: bool, minute: str, space: str, apply_prompts: bool, c
         "apply": apply,
         "cron_marker": CRON_MARKER,
         "cron_line": line,
+        "min_stopped_seconds": min_stopped_seconds,
         "would_replace_existing": any(marker in existing for marker in markers),
         "log_file": str(cron_log),
     }
@@ -112,9 +127,11 @@ def shell_quote(value: str) -> str:
     return "'" + value.replace("'", "'\"'\"'") + "'"
 
 
-def validate_cron_args(*, minute: str, space: str, cwd_prefix: str) -> str:
+def validate_cron_args(*, minute: str, space: str, cwd_prefix: str, min_stopped_seconds: int = 600) -> str:
     if minute != "*/10":
         return "minute_must_be_exactly_every_10"
+    if min_stopped_seconds < 0:
+        return "min_stopped_seconds_must_be_non_negative"
     for name, value in {"space": space, "cwd_prefix": cwd_prefix}.items():
         if any(char in value for char in "\r\n%"):
             return f"{name}_contains_cron_control_character"
