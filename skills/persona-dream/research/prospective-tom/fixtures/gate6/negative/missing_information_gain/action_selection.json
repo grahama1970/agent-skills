@@ -1,0 +1,33 @@
+{
+  "action_options": [
+    {
+      "action": "ASK_CLARIFYING_QUESTION",
+      "expected_social_cost": 0.1,
+      "expected_task_reward": 0.75,
+      "expected_utility": 1.1,
+      "policy_compliant": true
+    }
+  ],
+  "canonical_memory_write": false,
+  "decision_basis": {
+    "prediction_id": "gate5-commitment-cd-001",
+    "scoring_status": "PASS_TOM_SCORING_RECEIPT"
+  },
+  "episode_id": "dev-info-asym-01",
+  "oracle_policy": {
+    "action": "ASK_CLARIFYING_QUESTION",
+    "expected_utility": 1.1
+  },
+  "outcome_id": "gate5-outcome-dev-info-asym-01",
+  "outcome_reveal_sha256": "sha256:473ac603556b90e1a8df13e354ecdb66f4b9c3efa6b153cd922fab34aad84d0e",
+  "planning_regret": 0.0,
+  "prediction_id": "gate5-commitment-cd-001",
+  "realized_outcome": {
+    "information_gain": 0.4,
+    "social_cost": 0.1,
+    "task_reward": 0.8
+  },
+  "schema": "persona_dream.research.prospective_tom.action_selection.v1",
+  "scoring_receipt_sha256": "sha256:9413a8b9fcc1d31614c2e3aa8c97ea019ebf44381700d53739714c7d4ece864e",
+  "selected_action": "ASK_CLARIFYING_QUESTION"
+}

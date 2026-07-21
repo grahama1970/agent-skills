@@ -324,3 +324,57 @@ Gate 5 invariants:
 Gate 5 does not prove a prediction benefit over baselines, held-out statistical
 calibration, action-selection regret, belief revision, Tau execution, live
 Memory recall, or fault-injection reliability.
+
+## Gate 6 Action Selection Contract
+
+Gate 6 turns a scored prospective ToM prediction into a constrained action
+choice. The checker consumes a PASS Gate 5 scoring receipt, the immutable
+outcome reveal, and an action-selection fixture. It recomputes scoring/outcome
+hashes, verifies the action vocabulary, and recomputes utility and planning
+regret against a deterministic oracle policy.
+
+Allowed action vocabulary:
+
+```text
+ASK_CLARIFYING_QUESTION
+WAIT
+DISCLOSE_INFORMATION
+OFFER_COOPERATION
+SET_BOUNDARY
+ACT_INDEPENDENTLY
+ABSTAIN
+```
+
+Each action selection must include:
+
+```text
+episode_id
+prediction_id
+outcome_id
+selected_action
+scoring_receipt_sha256
+outcome_reveal_sha256
+action_options[]
+oracle_policy
+planning_regret
+realized_outcome
+decision_basis
+canonical_memory_write: false
+```
+
+Gate 6 invariants:
+
+- the consumed Gate 5 scoring receipt has PASS status;
+- scoring receipt and outcome reveal hashes recompute exactly;
+- selected action is in the constrained action vocabulary;
+- selected action appears in the evaluated options;
+- every option has task reward, social cost, information gain, expected
+  utility, and policy-compliance fields;
+- oracle policy matches the maximum-utility option;
+- planning regret recomputes as oracle utility minus selected utility;
+- realized task reward, social cost, and information gain are present;
+- no canonical memory write occurs during action selection.
+
+Gate 6 does not prove live model action generation, human social
+appropriateness beyond deterministic simulator rules, belief revision, live
+Memory recall, or fault-injection reliability.

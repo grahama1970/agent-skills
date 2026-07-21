@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.research.prospective_tom.action_selection.v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "episode_id",
+    "prediction_id",
+    "outcome_id",
+    "selected_action",
+    "scoring_receipt_sha256",
+    "outcome_reveal_sha256",
+    "action_options",
+    "oracle_policy",
+    "planning_regret",
+    "realized_outcome",
+    "decision_basis",
+    "canonical_memory_write"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "persona_dream.research.prospective_tom.action_selection.v1"
+    },
+    "episode_id": {"type": "string", "minLength": 1},
+    "prediction_id": {"type": "string", "minLength": 1},
+    "outcome_id": {"type": "string", "minLength": 1},
+    "selected_action": {
+      "type": "string",
+      "enum": [
+        "ASK_CLARIFYING_QUESTION",
+        "WAIT",
+        "DISCLOSE_INFORMATION",
+        "OFFER_COOPERATION",
+        "SET_BOUNDARY",
+        "ACT_INDEPENDENTLY",
+        "ABSTAIN"
+      ]
+    },
+    "scoring_receipt_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "outcome_reveal_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "action_options": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "object"}
+    },
+    "oracle_policy": {"type": "object"},
+    "planning_regret": {"type": "number", "minimum": 0},
+    "realized_outcome": {"type": "object"},
+    "decision_basis": {"type": "object"},
+    "canonical_memory_write": {"type": "boolean", "const": false}
+  },
+  "additionalProperties": false
+}

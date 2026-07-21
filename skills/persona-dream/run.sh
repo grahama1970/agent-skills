@@ -84,6 +84,7 @@ Commands:
   check-counterfactual-branches  Validate PCTOM-R Gate 3 counterfactual branch invariants
   check-tom-prediction-commitments  Validate PCTOM-R Gate 4 sealed prediction commitments
   reveal-and-score-tom-trial  Reveal and score PCTOM-R Gate 5 sealed predictions
+  run-tom-action-selection-trial  Validate PCTOM-R Gate 6 action selection and planning regret
   check-pipeline-contract  Validate the canonical Phase 01-16 pipeline contract
   write-phase10-reproducibility-receipt  Prove Phase 10 committed artifacts are canonically reproducible
   repair-semantic-mix-revision Create, Memory-verify, and activate a new explicit-human-idea revision
@@ -407,6 +408,9 @@ case "$COMMAND" in
     ;;
   reveal-and-score-tom-trial)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/reveal_and_score_trial.py" "$@"
+    ;;
+  run-tom-action-selection-trial)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_action_selection_trial.py" "$@"
     ;;
   check-pipeline-contract)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_persona_dream_pipeline_contract.py" "$@"

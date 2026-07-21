@@ -224,11 +224,13 @@ Gate 1 commit: 0cecce8193606522a1d56283cc240c5bddc83c2a
 Gate 2 commit: 6b6b7d843f1a24a1192273a3215f6b2f795fd734
 Gate 3 commit: 781bc10e51c516f11930f274e30970c42d240297
 Gate 4 commit: 82a0078294cd0a29e789151a59375428ed2e5a3c
+Gate 5 commit: 81dd203200bcc3786ad561cb1845230254967069
 Gate 1 proof root: /tmp/persona-dream-pctom-gate1-final-postpatch-20260721T001545Z
 Gate 2 proof root: /tmp/persona-dream-pctom-gate2-postrebase-20260721T003945Z
 Gate 3 proof root: /tmp/persona-dream-pctom-gate3-final-20260721T004724Z
 Gate 4 proof root: /tmp/persona-dream-pctom-gate4-final-20260721T010232Z
 Gate 5 proof root: /tmp/persona-dream-pctom-gate5-final-20260721T011122Z
+Gate 6 proof root: /tmp/persona-dream-pctom-gate6-final-20260721T011945Z
 ```
 
 Gate 0 proof summary:
@@ -327,9 +329,30 @@ Gate 5 negatives: 6 x BLOCKED_TOM_SCORING_RECEIPT
 git_diff_check: clean
 ```
 
+Gate 6 proof summary:
+
+```text
+json_files_parsed: 74
+python_files_ast_parsed: 8
+matrix_commands: 47
+expected_negative_failures: 37
+Gate 6 positive: PASS_TOM_ACTION_SELECTION
+Gate 6 actions_considered: 7
+Gate 6 policy_compliant_actions: 7
+Gate 6 selected_action: ASK_CLARIFYING_QUESTION
+Gate 6 oracle_action: ASK_CLARIFYING_QUESTION
+Gate 6 reward_components_checked: 21
+Gate 6 planning_regret: 0.0
+Gate 6 realized_task_reward: 0.8
+Gate 6 realized_social_cost: 0.1
+Gate 6 realized_information_gain: 0.4
+Gate 6 negatives: 6 x BLOCKED_TOM_ACTION_SELECTION
+git_diff_check: clean
+```
+
 This is fixture-backed deterministic evidence. It does not prove live Memory
 recall, Tau text execution, semantic dream quality, prediction benefit,
-held-out statistical calibration, action improvement, belief revision,
+held-out statistical calibration, live action improvement, belief revision,
 fault-surface coverage, or complete Phase 01-16 runtime execution.
 
 ## Completion Rule
@@ -360,10 +383,10 @@ research goal unless those concrete proof artifacts exist and are cited.
 
 ## Next Critical Path
 
-Implement Gate 6: action-selection receipts that consume sealed predictions and
-scored outcomes, choose from the constrained action vocabulary, and compute
-reward, social cost, information gain, and planning regret against the
-deterministic simulator oracle policy.
+Implement Gate 7: non-destructive belief revision receipts that consume the
+prior sealed hypothesis, scored prediction error, and revealed evidence, then
+write a prior -> error -> posterior chain while preserving the prior as
+auditable history.
 
 The next accepted artifact must be inspectable as files and receipts under the
 research namespace, with positive and negative fixtures. Mocked or fixture
