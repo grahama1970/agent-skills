@@ -226,6 +226,7 @@ Gate 3 commit: 781bc10e51c516f11930f274e30970c42d240297
 Gate 4 commit: 82a0078294cd0a29e789151a59375428ed2e5a3c
 Gate 5 commit: 81dd203200bcc3786ad561cb1845230254967069
 Gate 6 commit: d31c0314e0e66fdd085c7ce7567d8f16830c070f
+Gate 7 commit: 7c941e1efcdaaefe5fbed596c9a14093b24a8403
 Gate 1 proof root: /tmp/persona-dream-pctom-gate1-final-postpatch-20260721T001545Z
 Gate 2 proof root: /tmp/persona-dream-pctom-gate2-postrebase-20260721T003945Z
 Gate 3 proof root: /tmp/persona-dream-pctom-gate3-final-20260721T004724Z
@@ -233,6 +234,7 @@ Gate 4 proof root: /tmp/persona-dream-pctom-gate4-final-20260721T010232Z
 Gate 5 proof root: /tmp/persona-dream-pctom-gate5-final-20260721T011122Z
 Gate 6 proof root: /tmp/persona-dream-pctom-gate6-final-20260721T011945Z
 Gate 7 proof root: /tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z
+Gate 8 proof root: /tmp/persona-dream-pctom-gate8-rebased-20260721T014053Z
 ```
 
 Gate 0 proof summary:
@@ -386,6 +388,39 @@ non-PASS scoring. It does not prove live Tau belief-revision generation, live
 Memory recall, longitudinal recall after revision, semantic posterior quality,
 fault-injection reliability, or provider/video execution.
 
+Gate 8 proof summary:
+
+```text
+json_files_parsed: 92
+python_files_ast_parsed: 10
+matrix_commands: 61
+expected_negative_failures: 51
+Gate 8 positive: PASS_TOM_RELIABILITY_SURFACE
+Gate 8 trials: 5
+Gate 8 repeat_groups: 3
+Gate 8 recovered: 3
+Gate 8 blocked: 1
+Gate 8 quarantined: 1
+Gate 8 perturbed_trials: 2
+Gate 8 fault_injected_trials: 2
+Gate 8 equivalent_end_state_trials: 3
+Gate 8 forbidden_terminal_outcomes: 0
+Gate 8 side_effect_violations: 0
+Gate 8 pass_k: 1.0
+Gate 8 fault_containment_rate: 1.0
+Gate 8 negatives: 7 x BLOCKED_TOM_RELIABILITY_SURFACE
+git_diff_check: clean
+```
+
+This is fixture-backed deterministic evidence. It proves the local Gate 8
+contract can require repeated execution, semantic perturbations, injected
+faults, accepted terminal states, equivalent recovered end states, no side
+effects for blocked/quarantined outcomes, no unknown-state continuation, no
+duplicate active state on retry, and no canonical/identity/source-memory
+writes. It does not prove live Tau execution, live Memory recall, real service
+fault injection, production retry behavior, statistical prediction benefit, or
+Gate 9 causal replay.
+
 ## Completion Rule
 
 The goal is not complete until an artifact-backed final report cites local
@@ -414,12 +449,10 @@ research goal unless those concrete proof artifacts exist and are cited.
 
 ## Next Critical Path
 
-Implement Gate 8: an `R(k, epsilon, lambda)` reliability surface that repeats
-PCTOM-R trial execution under semantic perturbations and boundary-specific
-faults. The accepted terminal states are only
-`RECOVERED_WITH_EQUIVALENT_END_STATE`, `BLOCKED_BEFORE_SIDE_EFFECT`, or
-`QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE`; `CONTINUED_WITH_UNKNOWN_STATE` must
-fail closed.
+Implement Gate 9: causal replay for reliability diagnosis. When a trial
+diverges or is quarantined, identify the first differing receipt, replay from
+that boundary, remove or replace one suspected tool return, compare resulting
+state, and write a causal failure-localization receipt.
 
 The next accepted artifact must be inspectable as files and receipts under the
 research namespace, with positive and negative fixtures. Mocked or fixture

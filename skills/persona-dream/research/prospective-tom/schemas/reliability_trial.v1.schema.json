@@ -3,31 +3,58 @@
   "$id": "persona_dream.research.prospective_tom.reliability_trial.v1",
   "type": "object",
   "required": [
+    "schema",
     "trial_id",
+    "repeat_group_id",
     "episode_id",
     "condition",
     "k",
     "epsilon",
     "lambda",
+    "perturbations",
     "faults",
-    "accepted_outcome"
+    "terminal_outcome",
+    "end_state_equivalence_sha256",
+    "side_effect_count",
+    "active_partial_state",
+    "unknown_state_continued",
+    "duplicate_active_predictions",
+    "duplicate_active_revisions",
+    "canonical_memory_write",
+    "identity_write",
+    "source_memory_write"
   ],
   "properties": {
+    "schema": {
+      "type": "string",
+      "const": "persona_dream.research.prospective_tom.reliability_trial.v1"
+    },
     "trial_id": {"type": "string", "minLength": 1},
+    "repeat_group_id": {"type": "string", "minLength": 1},
     "episode_id": {"type": "string", "minLength": 1},
     "condition": {"type": "string", "enum": ["M", "R", "D", "CD"]},
     "k": {"type": "integer", "minimum": 1},
     "epsilon": {"type": "number", "minimum": 0},
     "lambda": {"type": "number", "minimum": 0},
+    "perturbations": {"type": "array", "items": {"type": "string"}},
     "faults": {"type": "array", "items": {"type": "string"}},
-    "accepted_outcome": {
+    "terminal_outcome": {
       "type": "string",
       "enum": [
         "RECOVERED_WITH_EQUIVALENT_END_STATE",
         "BLOCKED_BEFORE_SIDE_EFFECT",
         "QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE"
       ]
-    }
+    },
+    "end_state_equivalence_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "side_effect_count": {"type": "integer", "minimum": 0},
+    "active_partial_state": {"type": "boolean"},
+    "unknown_state_continued": {"type": "boolean", "const": false},
+    "duplicate_active_predictions": {"type": "integer", "minimum": 0},
+    "duplicate_active_revisions": {"type": "integer", "minimum": 0},
+    "canonical_memory_write": {"type": "boolean", "const": false},
+    "identity_write": {"type": "boolean", "const": false},
+    "source_memory_write": {"type": "boolean", "const": false}
   },
   "additionalProperties": false
 }

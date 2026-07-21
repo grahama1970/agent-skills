@@ -1,0 +1,36 @@
+{
+  "canonical_memory_write": true,
+  "condition": "CD",
+  "episode_id": "dev-info-asym-01",
+  "epsilon_values": [0, 0.25],
+  "identity_write": false,
+  "k": 1,
+  "lambda_values": [0.5],
+  "schema": "persona_dream.research.prospective_tom.reliability_surface.v1",
+  "source_memory_write": false,
+  "surface_id": "gate8-negative-canonical-write",
+  "trials": [
+    {
+      "active_partial_state": false,
+      "canonical_memory_write": true,
+      "condition": "CD",
+      "duplicate_active_predictions": 0,
+      "duplicate_active_revisions": 0,
+      "end_state_equivalence_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "episode_id": "dev-info-asym-01",
+      "epsilon": 0.25,
+      "faults": ["schema_drift"],
+      "identity_write": false,
+      "k": 1,
+      "lambda": 0.5,
+      "perturbations": ["change_formatting"],
+      "repeat_group_id": "canonical-write",
+      "schema": "persona_dream.research.prospective_tom.reliability_trial.v1",
+      "side_effect_count": 0,
+      "source_memory_write": false,
+      "terminal_outcome": "RECOVERED_WITH_EQUIVALENT_END_STATE",
+      "trial_id": "canonical-write-001",
+      "unknown_state_continued": false
+    }
+  ]
+}

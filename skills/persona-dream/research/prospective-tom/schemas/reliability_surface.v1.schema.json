@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.research.prospective_tom.reliability_surface.v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "surface_id",
+    "episode_id",
+    "condition",
+    "k",
+    "epsilon_values",
+    "lambda_values",
+    "trials",
+    "canonical_memory_write",
+    "identity_write",
+    "source_memory_write"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "persona_dream.research.prospective_tom.reliability_surface.v1"
+    },
+    "surface_id": {"type": "string", "minLength": 1},
+    "episode_id": {"type": "string", "minLength": 1},
+    "condition": {"type": "string", "enum": ["M", "R", "D", "CD"]},
+    "k": {"type": "integer", "minimum": 1},
+    "epsilon_values": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "number", "minimum": 0}
+    },
+    "lambda_values": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "number", "minimum": 0}
+    },
+    "trials": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "persona_dream.research.prospective_tom.reliability_trial.v1"}
+    },
+    "canonical_memory_write": {"type": "boolean", "const": false},
+    "identity_write": {"type": "boolean", "const": false},
+    "source_memory_write": {"type": "boolean", "const": false}
+  },
+  "additionalProperties": false
+}

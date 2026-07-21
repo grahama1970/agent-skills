@@ -427,3 +427,86 @@ Gate 7 invariants:
 Gate 7 does not prove live Tau belief-revision generation, longitudinal recall
 after revision, live Memory recall, fault-injection reliability, semantic
 quality of the posterior explanation, or provider/video execution.
+
+## Gate 8 - Reliability Surface
+
+Gate 8 measures a local PCTOM-R analogue of:
+
+```text
+R(k, epsilon, lambda)
+```
+
+where `k` is repeated executions, `epsilon` is semantic perturbation intensity,
+and `lambda` is fault intensity. The first implementation is deterministic and
+fixture-backed: it checks the reliability-surface receipt contract before live
+service fault injection exists.
+
+Each reliability surface must include:
+
+```text
+surface_id
+episode_id
+condition
+k
+epsilon_values[]
+lambda_values[]
+trials[]
+canonical_memory_write: false
+identity_write: false
+source_memory_write: false
+```
+
+Each trial must include:
+
+```text
+trial_id
+repeat_group_id
+episode_id
+condition
+k
+epsilon
+lambda
+perturbations[]
+faults[]
+terminal_outcome
+end_state_equivalence_sha256
+side_effect_count
+active_partial_state
+unknown_state_continued: false
+duplicate_active_predictions
+duplicate_active_revisions
+canonical_memory_write: false
+identity_write: false
+source_memory_write: false
+```
+
+Allowed terminal outcomes:
+
+```text
+RECOVERED_WITH_EQUIVALENT_END_STATE
+BLOCKED_BEFORE_SIDE_EFFECT
+QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE
+```
+
+Forbidden terminal outcome:
+
+```text
+CONTINUED_WITH_UNKNOWN_STATE
+```
+
+Gate 8 invariants:
+
+- at least one repeat group has `k` executions;
+- at least one trial uses semantic perturbation (`epsilon > 0`);
+- at least one trial injects a fault (`lambda > 0`);
+- recovered trials keep the same end-state equivalence hash within their repeat
+  group;
+- blocked trials have zero side effects;
+- quarantined trials have zero side effects and no active partial state;
+- unknown-state continuation is never accepted;
+- retries do not duplicate active predictions or active revisions;
+- no canonical memory, identity, or source-memory write occurs.
+
+Gate 8 does not prove live Tau execution, live Memory recall, real service
+fault injection, production retry behavior, statistical prediction benefit, or
+Gate 9 causal replay.
