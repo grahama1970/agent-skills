@@ -3,12 +3,12 @@
     "checkout": "/home/graham/workspace/experiments/agent-skills-cron-main",
     "checkout_commit": null,
     "installed": true,
-    "line": "*/10 * * * * cd '/home/graham/workspace/experiments/agent-skills-cron-main/skills/monitor-confused-agents' && '/home/graham/workspace/experiments/agent-skills-cron-main/skills/monitor-confused-agents/run.sh' tick --apply --space 'codex' --cwd-prefix '/home/graham/workspace/experiments' >> '/home/graham/.local/state/monitor-confused-agents/logs/cron.log' 2>&1 # monitor-confused-agents herdr cron",
+    "line": "*/10 * * * * cd '/home/graham/workspace/experiments/agent-skills-cron-main/skills/monitor-herdr' && '/home/graham/workspace/experiments/agent-skills-cron-main/skills/monitor-herdr/run.sh' tick --apply --space 'codex' --cwd-prefix '/home/graham/workspace/experiments' >> '/home/graham/.local/state/monitor-herdr/logs/cron.log' 2>&1 # monitor-herdr herdr cron",
     "live": true,
     "mocked": false
   },
   "deterministic_proof": {
-    "post_push_observe_receipt": "/home/graham/.local/state/monitor-confused-agents/receipts/monitor-confused-agents-20260721T021138485224Z/receipt.json",
+    "post_push_observe_receipt": "/home/graham/.local/state/monitor-herdr/receipts/monitor-herdr-20260721T021138485224Z/receipt.json",
     "post_push_observe_summary": {
       "live": true,
       "mocked": false,
@@ -19,7 +19,7 @@
       "status": "OBSERVED",
       "stopped_count": 8
     },
-    "sanity_command": "./skills/monitor-confused-agents/sanity.sh",
+    "sanity_command": "./skills/monitor-herdr/sanity.sh",
     "sanity_exit_code": 0,
     "sanity_stdout_summary": "41 passed in 14.14s"
   },
@@ -35,7 +35,7 @@
       "include deterministic evals for false positives and failed/non-submitted prompt entry",
       "prove live real-Codex composer transport with submit_confirmed true"
     ],
-    "summary": "Provide monitor-confused-agents as a fail-closed Herdr monitor skill with 10-minute cron, false-positive and failed-submission evals, WebGPT review, and live real-Codex transport proof."
+    "summary": "Provide monitor-herdr as a fail-closed Herdr monitor skill with 10-minute cron, false-positive and failed-submission evals, WebGPT review, and live real-Codex transport proof."
   },
   "live_transport_proof": {
     "disposable_workspace": {
@@ -61,7 +61,7 @@
       "skip_reason": null,
       "submit_confirmed": true
     },
-    "receipt_path": "/home/graham/.local/state/monitor-confused-agents/receipts/monitor-confused-agents-20260721T020948168240Z/receipt.json",
+    "receipt_path": "/home/graham/.local/state/monitor-herdr/receipts/monitor-herdr-20260721T020948168240Z/receipt.json",
     "selected_count": 1,
     "status": "RESTART_PROMPTS_SUBMITTED"
   },
@@ -78,8 +78,8 @@
     "monitor_transport_commit_sha": "b870d21cce9b32e3ab378b5e7dbeaed931b7f444",
     "name": "origin"
   },
-  "schema": "agent_skills.monitor_confused_agents.immutable_goal_completion.v1",
-  "skill": "monitor-confused-agents",
+  "schema": "agent_skills.monitor_herdr.immutable_goal_completion.v1",
+  "skill": "monitor-herdr",
   "status": "ACHIEVED_WITH_RECEIPT",
   "webgpt_review": {
     "controlled_tab_id": "837360631",

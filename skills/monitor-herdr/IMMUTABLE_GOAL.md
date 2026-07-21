@@ -1,6 +1,6 @@
 # Immutable Goal
 
-Provide `monitor-confused-agents` as a fail-closed Herdr monitor skill that:
+Provide `monitor-herdr` as a fail-closed Herdr monitor skill that:
 
 - observes stopped agents in a named Herdr space;
 - does not resume agents with no immutable goal;

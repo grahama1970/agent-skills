@@ -6,12 +6,12 @@ from pathlib import Path
 from typing import Any
 
 
-SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "monitor_confused_agents.py"
+SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "monitor_herdr.py"
 sys.path.insert(0, str(SCRIPT.parent))
-SPEC = importlib.util.spec_from_file_location("monitor_confused_agents", SCRIPT)
+SPEC = importlib.util.spec_from_file_location("monitor_herdr", SCRIPT)
 assert SPEC and SPEC.loader
 monitor = importlib.util.module_from_spec(SPEC)
-sys.modules["monitor_confused_agents"] = monitor
+sys.modules["monitor_herdr"] = monitor
 SPEC.loader.exec_module(monitor)
 
 
@@ -88,7 +88,7 @@ def receipt(tmp_path: Path) -> dict[str, Any]:
     receipt_dir = tmp_path / "receipt"
     receipt_dir.mkdir()
     return {
-        "schema": "agent_skills.monitor_confused_agents.tick_receipt.v1",
+        "schema": "agent_skills.monitor_herdr.tick_receipt.v1",
         "run_id": "eval",
         "mocked": False,
         "live": False,

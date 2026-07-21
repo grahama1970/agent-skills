@@ -3,7 +3,7 @@ revision = 3
 requires-python = ">=3.11"
 
 [[package]]
-name = "agent-skills-monitor-confused-agents"
+name = "agent-skills-monitor-herdr"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

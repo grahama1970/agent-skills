@@ -25,13 +25,13 @@ from prompt_builder import build_prompt
 from transcript_classifier import exhausted_blocker_claim, goal_allows_stop, latest_transcript_region, transcript_goal_claim, valid_attempt_value
 
 SKILL_DIR = Path(__file__).resolve().parents[1]
-STATE_ROOT = Path.home() / ".local" / "state" / "monitor-confused-agents"
+STATE_ROOT = Path.home() / ".local" / "state" / "monitor-herdr"
 LOG_DIR = STATE_ROOT / "logs"
 RECEIPT_ROOT = STATE_ROOT / "receipts"
 STATE_PATH = STATE_ROOT / "state.json"
 LOCK_DIR = STATE_ROOT / "lock"
 LOCK_PATH = STATE_ROOT / "monitor.lock"
-CRON_MARKER = "# monitor-confused-agents herdr cron"
+CRON_MARKER = "# monitor-herdr herdr cron"
 DEFAULT_SPACE = "codex"
 DEFAULT_CWD_PREFIX = str(Path.home() / "workspace" / "experiments")
 DEFAULT_STOPPED_STATUSES = ("done", "idle", "blocked", "unknown")
@@ -88,7 +88,7 @@ class HerdrClient:
     def call(self, method: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
         self.counter += 1
         request = {
-            "id": f"monitor_confused_agents_{self.counter}",
+            "id": f"monitor_herdr_{self.counter}",
             "method": method,
             "params": params or {},
         }
@@ -211,7 +211,7 @@ def probe_text_command(
     })
     if json_output:
         print(json.dumps({
-            "schema": "agent_skills.monitor_confused_agents.probe.v1",
+            "schema": "agent_skills.monitor_herdr.probe.v1",
             "pane_id": pane_id,
             "agent": agent,
             "action": action,
@@ -236,7 +236,8 @@ def now_iso() -> str:
 
 def log_event(run_id: str, message: str, **fields: Any) -> None:
     event = {"ts": now_iso(), "run_id": run_id, "message": message, **fields}
-    with (LOG_DIR / "monitor-confused-agents.log").open("a", encoding="utf-8") as handle:
+    LOG_DIR.mkdir(parents=True, exist_ok=True)
+    with (LOG_DIR / "monitor-herdr.log").open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(event, sort_keys=True) + "\n")
 
 
@@ -266,15 +267,15 @@ def cooldown_for_prompt_state(
 
 def load_state() -> dict[str, Any]:
     if not STATE_PATH.exists():
-        return {"schema": "agent_skills.monitor_confused_agents.state.v1", "prompts": {}}
+        return {"schema": "agent_skills.monitor_herdr.state.v1", "prompts": {}}
     try:
         payload = json.loads(STATE_PATH.read_text(encoding="utf-8"))
     except json.JSONDecodeError:
         logger.error("Monitor state JSON is corrupt: {}", STATE_PATH)
-        return {"schema": "agent_skills.monitor_confused_agents.state.v1", "prompts": {}, "input_suppressed": True, "state_error": "corrupt_json"}
+        return {"schema": "agent_skills.monitor_herdr.state.v1", "prompts": {}, "input_suppressed": True, "state_error": "corrupt_json"}
     if not isinstance(payload, dict):
-        return {"schema": "agent_skills.monitor_confused_agents.state.v1", "prompts": {}, "input_suppressed": True, "state_error": "invalid_state_shape"}
-    payload.setdefault("schema", "agent_skills.monitor_confused_agents.state.v1")
+        return {"schema": "agent_skills.monitor_herdr.state.v1", "prompts": {}, "input_suppressed": True, "state_error": "invalid_state_shape"}
+    payload.setdefault("schema", "agent_skills.monitor_herdr.state.v1")
     payload.setdefault("prompts", {})
     return payload
 
@@ -322,12 +323,12 @@ def tick(
     max_prompts: int,
     only_obvious_early_stops: bool,
 ) -> tuple[int, dict[str, Any]]:
-    run_id = f"monitor-confused-agents-{timestamp()}"
+    run_id = f"monitor-herdr-{timestamp()}"
     receipt_dir = RECEIPT_ROOT / run_id
     receipt_dir.mkdir(parents=True, exist_ok=True)
     events_path = receipt_dir / "events.jsonl"
     receipt: dict[str, Any] = {
-        "schema": "agent_skills.monitor_confused_agents.tick_receipt.v1",
+        "schema": "agent_skills.monitor_herdr.tick_receipt.v1",
         "run_id": run_id,
         "mocked": False,
         "live": True,
@@ -335,7 +336,7 @@ def tick(
         "apply": apply,
         "receipt_dir": str(receipt_dir),
         "events_path": str(events_path),
-        "log_file": str(LOG_DIR / "monitor-confused-agents.log"),
+        "log_file": str(LOG_DIR / "monitor-herdr.log"),
         "state_path": str(STATE_PATH),
         "selection": {
             "space": space,

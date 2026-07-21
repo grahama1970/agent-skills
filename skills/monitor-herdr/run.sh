@@ -6,4 +6,4 @@ UV_BIN="${UV_BIN:-${HOME}/.local/bin/uv}"
 if [[ ! -x "$UV_BIN" ]]; then
   UV_BIN="uv"
 fi
-exec "$UV_BIN" run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/monitor_confused_agents.py" "$@"
+exec "$UV_BIN" run --project "$SCRIPT_DIR" python "$SCRIPT_DIR/scripts/monitor_herdr.py" "$@"

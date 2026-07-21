@@ -1,4 +1,4 @@
-"""Cron and status helpers for monitor-confused-agents."""
+"""Cron and status helpers for monitor-herdr."""
 
 from __future__ import annotations
 
@@ -8,11 +8,12 @@ from typing import Any
 
 
 SKILL_DIR = Path(__file__).resolve().parents[1]
-STATE_ROOT = Path.home() / ".local" / "state" / "monitor-confused-agents"
+STATE_ROOT = Path.home() / ".local" / "state" / "monitor-herdr"
 LOG_DIR = STATE_ROOT / "logs"
 RECEIPT_ROOT = STATE_ROOT / "receipts"
 STATE_PATH = STATE_ROOT / "state.json"
-CRON_MARKER = "# monitor-confused-agents herdr cron"
+CRON_MARKER = "# monitor-herdr herdr cron"
+LEGACY_CRON_MARKERS = ("# monitor-confused-agents herdr cron",)
 
 
 async def run_process(command: list[str], *, input_text: str | None = None) -> dict[str, Any]:
@@ -40,14 +41,14 @@ def status_payload() -> dict[str, Any]:
     crontab_result = run_process_sync(["crontab", "-l"])
     cron_stdout = crontab_result["stdout"] if crontab_result["exit_code"] == 0 else ""
     return {
-        "schema": "agent_skills.monitor_confused_agents.status.v1",
+        "schema": "agent_skills.monitor_herdr.status.v1",
         "mocked": False,
         "live": True,
         "api": "herdr_socket",
         "state_root": str(STATE_ROOT),
         "cron_installed": CRON_MARKER in cron_stdout,
         "cron_marker": CRON_MARKER,
-        "log_file": str(LOG_DIR / "monitor-confused-agents.log"),
+        "log_file": str(LOG_DIR / "monitor-herdr.log"),
         "state_path": str(STATE_PATH),
         "latest_receipts": [str(path) for path in receipts[:5]],
     }
@@ -57,7 +58,7 @@ def install_cron(*, apply: bool, minute: str, space: str, apply_prompts: bool, c
     validation_error = validate_cron_args(minute=minute, space=space, cwd_prefix=cwd_prefix)
     if validation_error:
         return 2, {
-            "schema": "agent_skills.monitor_confused_agents.cron_install.v1",
+            "schema": "agent_skills.monitor_herdr.cron_install.v1",
             "mocked": False,
             "live": True,
             "apply": apply,
@@ -76,7 +77,7 @@ def install_cron(*, apply: bool, minute: str, space: str, apply_prompts: bool, c
     no_crontab = current["exit_code"] != 0 and "no crontab for" in current["stderr"].lower()
     if current["exit_code"] != 0 and not no_crontab:
         return 1, {
-            "schema": "agent_skills.monitor_confused_agents.cron_install.v1",
+            "schema": "agent_skills.monitor_herdr.cron_install.v1",
             "mocked": False,
             "live": True,
             "apply": apply,
@@ -85,16 +86,17 @@ def install_cron(*, apply: bool, minute: str, space: str, apply_prompts: bool, c
             "read_command": {"command": ["crontab", "-l"], "exit_code": current["exit_code"], "stderr": current["stderr"]},
         }
     existing = current["stdout"] if current["exit_code"] == 0 else ""
-    filtered = [item for item in existing.splitlines() if CRON_MARKER not in item]
+    markers = (CRON_MARKER, *LEGACY_CRON_MARKERS)
+    filtered = [item for item in existing.splitlines() if not any(marker in item for marker in markers)]
     next_crontab = "\n".join(filtered + [line]).strip() + "\n"
     payload = {
-        "schema": "agent_skills.monitor_confused_agents.cron_install.v1",
+        "schema": "agent_skills.monitor_herdr.cron_install.v1",
         "mocked": False,
         "live": True,
         "apply": apply,
         "cron_marker": CRON_MARKER,
         "cron_line": line,
-        "would_replace_existing": CRON_MARKER in existing,
+        "would_replace_existing": any(marker in existing for marker in markers),
         "log_file": str(cron_log),
     }
     if not apply:

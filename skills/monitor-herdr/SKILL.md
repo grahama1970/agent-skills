@@ -1,5 +1,5 @@
 ---
-name: monitor-confused-agents
+name: monitor-herdr
 description: >
   Monitor Herdr-visible Codex/Claude agent panes for stalled, blocked, unknown,
   or confused state, then ask each stalled agent whether it needs human
@@ -31,7 +31,7 @@ taxonomy:
   - resilience
 ---
 
-# Monitor Confused Agents
+# Monitor Herdr
 
 Use this skill to monitor Herdr agent panes and restart agents that stopped
 before the immutable goal was met.
@@ -44,14 +44,14 @@ prompt to selected stopped panes.
 ## Commands
 
 ```bash
-skills/monitor-confused-agents/run.sh tick --space codex
-skills/monitor-confused-agents/run.sh tick --space codex --apply
-skills/monitor-confused-agents/run.sh status
-skills/monitor-confused-agents/run.sh install-cron
-skills/monitor-confused-agents/run.sh install-cron --space codex --apply
-skills/monitor-confused-agents/run.sh probe-text --pane-id w11:pG --agent codex --reason early_stop
-skills/monitor-confused-agents/sanity.sh
-uv run --project skills/monitor-confused-agents pytest -q skills/monitor-confused-agents/evals/test_real_world_e2e.py
+skills/monitor-herdr/run.sh tick --space codex
+skills/monitor-herdr/run.sh tick --space codex --apply
+skills/monitor-herdr/run.sh status
+skills/monitor-herdr/run.sh install-cron
+skills/monitor-herdr/run.sh install-cron --space codex --apply
+skills/monitor-herdr/run.sh probe-text --pane-id w11:pG --agent codex --reason early_stop
+skills/monitor-herdr/sanity.sh
+uv run --project skills/monitor-herdr pytest -q skills/monitor-herdr/evals/test_real_world_e2e.py
 ```
 
 ## Runtime Contract
@@ -108,9 +108,9 @@ uv run --project skills/monitor-confused-agents pytest -q skills/monitor-confuse
 - Every run writes:
 
 ```text
-~/.local/state/monitor-confused-agents/receipts/<run-id>/receipt.json
-~/.local/state/monitor-confused-agents/receipts/<run-id>/events.jsonl
-~/.local/state/monitor-confused-agents/logs/monitor-confused-agents.log
+~/.local/state/monitor-herdr/receipts/<run-id>/receipt.json
+~/.local/state/monitor-herdr/receipts/<run-id>/events.jsonl
+~/.local/state/monitor-herdr/logs/monitor-herdr.log
 ```
 
 ## Candidate Selection And Immutable Goal Gate
@@ -206,13 +206,13 @@ state.
 Install the 10 minute cron line:
 
 ```bash
-skills/monitor-confused-agents/run.sh install-cron --apply
+skills/monitor-herdr/run.sh install-cron --apply
 ```
 
 The installed cron is marked with:
 
 ```text
-# monitor-confused-agents herdr cron
+# monitor-herdr herdr cron
 ```
 
 It runs `tick --apply` every 10 minutes and appends output to the skill log

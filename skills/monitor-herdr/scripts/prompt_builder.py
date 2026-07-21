@@ -1,4 +1,4 @@
-"""Restart prompt construction for monitor-confused-agents."""
+"""Restart prompt construction for monitor-herdr."""
 
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ def build_prompt(candidate: dict[str, Any]) -> str:
             "Ask the human only for a missing decision, credential, authority, acceptance choice, or external state you cannot obtain."
         )
     return (
-        "RESTART CHECK FROM monitor-confused-agents\n\n"
+        "RESTART CHECK FROM monitor-herdr\n\n"
         f"Herdr pane: {pane_id}\n"
         f"Agent: {agent}\n"
         f"Cwd: {cwd}\n"

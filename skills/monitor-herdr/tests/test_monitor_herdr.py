@@ -5,12 +5,12 @@ import sys
 from pathlib import Path
 
 
-SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "monitor_confused_agents.py"
+SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "monitor_herdr.py"
 sys.path.insert(0, str(SCRIPT.parent))
-SPEC = importlib.util.spec_from_file_location("monitor_confused_agents", SCRIPT)
+SPEC = importlib.util.spec_from_file_location("monitor_herdr", SCRIPT)
 assert SPEC and SPEC.loader
 monitor = importlib.util.module_from_spec(SPEC)
-sys.modules["monitor_confused_agents"] = monitor
+sys.modules["monitor_herdr"] = monitor
 SPEC.loader.exec_module(monitor)
 
 
@@ -54,7 +54,7 @@ class FakeSubmitHerdr:
                     "type": "pane_read",
                     "read": {
                         "text": (
-                            "RESTART CHECK FROM monitor-confused-agents\n"
+                            "RESTART CHECK FROM monitor-herdr\n"
                             "Disposition: <choose exactly one of RESUMING_NOW | CAN_SELF_UNBLOCK_WEBGPT>\n"
                             "If the immutable goal is known and not achieved, keep going.\n"
                         )
@@ -180,7 +180,7 @@ class FakeCtrlJSubmitHerdr(FakeSubmitHerdr):
                 return {"type": "pane_read", "read": {"text": "Codex composer ready"}}
             if self.ctrl_j_count:
                 return {"type": "pane_read", "read": {"text": "UserPromptSubmit hook (completed)\nWorking (1s * esc to interrupt)"}}
-            return {"type": "pane_read", "read": {"text": "RESTART CHECK FROM monitor-confused-agents\nDisposition: <choose exactly one of RESUMING_NOW | DONE_WITH_RECEIPT>"}}
+            return {"type": "pane_read", "read": {"text": "RESTART CHECK FROM monitor-herdr\nDisposition: <choose exactly one of RESUMING_NOW | DONE_WITH_RECEIPT>"}}
         if method == "agent.explain":
             state = "working" if self.ctrl_j_count else "idle"
             return {"type": "agent_explain", "explain": {"state": state, "matched_rule": "codex_prompt_idle_ready"}}
@@ -378,7 +378,7 @@ def test_monitor_prompt_boilerplate_does_not_override_goal_achieved(tmp_path: Pa
         "pane_id": "w11:pS",
     }
     text = """
-    RESTART CHECK FROM monitor-confused-agents
+    RESTART CHECK FROM monitor-herdr
     Ask the human only for a missing decision, credential, authority, acceptance choice, or external state you cannot obtain.
     Disposition: <choose exactly one of RESUMING_NOW | BLOCKED_NEEDS_HUMAN | DONE_WITH_RECEIPT>
 
@@ -670,7 +670,7 @@ def test_send_prompt_uses_second_enter_until_submission_is_visible() -> None:
     original_wait = monitor.wait_for_agent_idle
     monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
     try:
-        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-confused-agents")
+        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-herdr")
     finally:
         monitor.wait_for_agent_idle = original_wait
 
@@ -687,7 +687,7 @@ def test_presend_idle_fallback_sends_no_input() -> None:
     original_wait = monitor.wait_for_agent_idle
     monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
     try:
-        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-confused-agents")
+        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-herdr")
     finally:
         monitor.wait_for_agent_idle = original_wait
 
@@ -701,7 +701,7 @@ def test_working_after_first_enter_prevents_second_enter() -> None:
     original_wait = monitor.wait_for_agent_idle
     monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
     try:
-        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-confused-agents")
+        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-herdr")
     finally:
         monitor.wait_for_agent_idle = original_wait
 
@@ -712,7 +712,7 @@ def test_working_after_first_enter_prevents_second_enter() -> None:
 
 def test_prompt_boilerplate_is_not_submission_evidence() -> None:
     text = """
-    RESTART CHECK FROM monitor-confused-agents
+    RESTART CHECK FROM monitor-herdr
     Disposition: <choose exactly one of RESUMING_NOW | BLOCKED_NEEDS_HUMAN | DONE_WITH_RECEIPT>
       gpt-5.5 high · ~/workspace/experiments/agent-skills
     """
@@ -758,28 +758,28 @@ def test_wrapped_achieved_receipt_with_done_disposition_allows_stop() -> None:
 
 def test_old_submission_marker_cannot_confirm_new_attempt() -> None:
     before = "Running UserPromptSubmit hook\nWorking (1s * esc to interrupt)"
-    after = before + "\nRESTART CHECK FROM monitor-confused-agents"
+    after = before + "\nRESTART CHECK FROM monitor-herdr"
 
     assert monitor.prompt_submission_marker(after, baseline=before) == ""
 
 
 def test_completed_submission_marker_confirms_new_attempt() -> None:
-    before = "RESTART CHECK FROM monitor-confused-agents"
+    before = "RESTART CHECK FROM monitor-herdr"
     after = before + "\nUserPromptSubmit hook (completed)"
 
     assert monitor.prompt_submission_marker(after, baseline=before) == "UserPromptSubmit hook (completed)"
 
 
 def test_stale_completed_submission_marker_cannot_confirm_new_attempt() -> None:
-    before = "UserPromptSubmit hook (completed)\nRESTART CHECK FROM monitor-confused-agents"
-    after = before + "\nRESTART CHECK FROM monitor-confused-agents"
+    before = "UserPromptSubmit hook (completed)\nRESTART CHECK FROM monitor-herdr"
+    after = before + "\nRESTART CHECK FROM monitor-herdr"
 
     assert monitor.prompt_submission_marker(after, baseline=before) == ""
 
 
 def test_repeated_submission_marker_prevents_second_enter() -> None:
     before = "Running UserPromptSubmit hook\nWorking (1s * esc to interrupt)"
-    after = before + "\nRESTART CHECK FROM monitor-confused-agents"
+    after = before + "\nRESTART CHECK FROM monitor-herdr"
 
     assert monitor.prompt_submitted(after, baseline=before) is False
 
@@ -862,7 +862,7 @@ def test_send_text_failure_never_sends_enter() -> None:
     original_wait = monitor.wait_for_agent_idle
     monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
     try:
-        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-confused-agents")
+        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-herdr")
     finally:
         monitor.wait_for_agent_idle = original_wait
 
@@ -877,7 +877,7 @@ def test_send_prompt_uses_second_enter_when_wrapped_prompt_is_visible() -> None:
     original_wait = monitor.wait_for_agent_idle
     monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
     try:
-        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-confused-agents")
+        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-herdr")
     finally:
         monitor.wait_for_agent_idle = original_wait
 
@@ -891,7 +891,7 @@ def test_send_prompt_uses_second_enter_when_readback_lags() -> None:
     original_wait = monitor.wait_for_agent_idle
     monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
     try:
-        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-confused-agents")
+        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-herdr")
     finally:
         monitor.wait_for_agent_idle = original_wait
 
@@ -906,7 +906,7 @@ def test_send_prompt_confirms_working_state_after_second_enter_when_readback_lag
     original_wait = monitor.wait_for_agent_idle
     monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
     try:
-        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-confused-agents")
+        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-herdr")
     finally:
         monitor.wait_for_agent_idle = original_wait
 
@@ -921,7 +921,7 @@ def test_send_prompt_uses_ctrl_j_when_enter_does_not_submit() -> None:
     original_wait = monitor.wait_for_agent_idle
     monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
     try:
-        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-confused-agents")
+        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-herdr")
     finally:
         monitor.wait_for_agent_idle = original_wait
 
@@ -938,7 +938,7 @@ def test_completion_between_selection_and_send_sends_nothing_with_valid_receipt(
     original_wait = monitor.wait_for_agent_idle
     monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
     try:
-        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-confused-agents", project_root=tmp_path)
+        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-herdr", project_root=tmp_path)
     finally:
         monitor.wait_for_agent_idle = original_wait
 
@@ -953,7 +953,7 @@ def test_completion_between_selection_and_send_missing_receipt_does_not_suppress
     original_wait = monitor.wait_for_agent_idle
     monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
     try:
-        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-confused-agents", project_root=tmp_path)
+        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-herdr", project_root=tmp_path)
     finally:
         monitor.wait_for_agent_idle = original_wait
 
@@ -966,7 +966,7 @@ def test_send_prompt_never_uses_takeover_controller() -> None:
     original_wait = monitor.wait_for_agent_idle
     monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
     try:
-        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-confused-agents")
+        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-herdr")
     finally:
         monitor.wait_for_agent_idle = original_wait
 
