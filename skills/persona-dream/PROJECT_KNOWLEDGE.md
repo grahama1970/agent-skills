@@ -1,10 +1,37 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R bounded queue-worker retry proof accepted) by agent
+**Last updated:** 2026-07-21 (PCTOM-R full64 live Tau sealed-test replication accepted) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R FULL64 LIVE TAU SEALED-TEST REPLICATION): full
+  64-episode live Tau sealed-test replication evidence now exists at
+  `/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z/live_tau_sealed_test_replication_receipt.v1.json`.
+  It reports `PASS_LIVE_TAU_PCTOM_SEALED_TEST_REPLICATION` on split
+  `sealed_test` with `full_64_episode_replication:true`, 4 scenario families,
+  64 episodes, 256 condition cases, 256 Tau call attempts, and 256 live Tau
+  calls. Counts per condition are
+  `tau_authored_prediction_payloads_per_condition: M=64, R=64, D=64, CD=64`,
+  `sealed_commitments_per_condition: M=64, R=64, D=64, CD=64`,
+  `deterministic_scores_per_condition: M=64, R=64, D=64, CD=64`,
+  `action_decisions_per_condition: M=64, R=64, D=64, CD=64`, and
+  `planning_regret_scores_per_condition: M=64, R=64, D=64, CD=64`.
+  CD improved the strongest baseline in the full64 point estimates:
+  belief Brier `-0.01830156249999998`, action Brier
+  `-0.0008531250000000101`, and planning regret
+  `-0.03593750000000001`. `mocked:false`, `live:true`,
+  `fixture_backed:false`, `llm_judge_used:false`,
+  `human_content_judgment_required:false`, and Memory/provider/canonical/
+  identity/source-memory write attempts were all 0. This proves full64 live
+  Tau sealed-test execution through sealed commitments, deterministic scoring,
+  and constrained action selection. It does not prove statistical confidence
+  for the live Tau CD benefit point estimates, production retry machinery over
+  the full64 root, live Memory service fault injection in the same loop, paid
+  provider execution, semantic dream quality, or complete Phase 01-16 runtime
+  execution. The next critical path is a receipt-backed statistical-confidence
+  analysis over this full64 live Tau root or retry/fault proof consuming this
+  root, not another provider/video run or vague GitHub status update.
 - 2026-07-21 (PCTOM-R BOUNDED QUEUE-WORKER RETRY PROOF): bounded local
   queue-worker retry/fault evidence now exists at
   `/tmp/persona-dream-live-tau-sealed-test-queue-worker-retry-proof-20260721T054051Z/live_tau_sealed_test_queue_worker_retry_proof_receipt.v1.json`.

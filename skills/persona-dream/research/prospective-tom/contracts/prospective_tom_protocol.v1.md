@@ -1284,17 +1284,17 @@ BLOCKED_LIVE_TAU_PCTOM_SEALED_TEST_REPLICATION
 Current accepted receipt:
 
 ```text
-/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_replication_receipt.v1.json
+/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z/live_tau_sealed_test_replication_receipt.v1.json
 ```
 
-This bridge proves bounded live Tau sealed-test mechanics and Gate 6 action
-scoring. The current accepted receipt covers 4 episodes, 16 Tau calls, and 16
-sealed/scored/action cases; `full_64_episode_replication` is false and
-CD-minus-strongest-baseline is 0.0 for belief Brier, action Brier, and planning
-regret. It does not prove full 64-episode live Tau replication, statistical
-confidence for live Tau CD benefit, production retry machinery, provider/video
-execution, semantic dream quality, or complete live Phase 01-16 runtime
-execution.
+This bridge proves live Tau sealed-test mechanics and Gate 6 action scoring.
+The current accepted receipt covers the full 64-episode sealed-test split, 256
+Tau calls, and 256 sealed/scored/action cases; `full_64_episode_replication` is
+true. CD-minus-strongest-baseline point estimates are negative for belief
+Brier, action Brier, and planning regret, but this receipt does not prove
+statistical confidence for live Tau CD benefit. It also does not prove
+production retry machinery over the full64 root, provider/video execution,
+semantic dream quality, or complete live Phase 01-16 runtime execution.
 
 ## Bounded Live Tau Sealed-Test Retry Proof
 

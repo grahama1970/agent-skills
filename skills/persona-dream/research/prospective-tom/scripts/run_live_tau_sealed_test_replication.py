@@ -241,6 +241,21 @@ def run_replication(
     _write_json(summary_path, summary)
 
     status = PASS_STATUS if not errors else BLOCKED_STATUS
+    full_64_replication = split == DEFAULT_SPLIT and episode_limit == 64
+    replication_claim = (
+        "the full 64-episode sealed-test split was executed with live Tau-authored M/R/D/CD prediction payloads"
+        if full_64_replication
+        else "a sealed-test split subset was executed with live Tau-authored M/R/D/CD prediction payloads"
+    )
+    does_not_prove = [
+        "statistical confidence for live Tau CD benefit on the full sealed test",
+        "production retry machinery",
+        "complete live Phase 01-16 runtime execution",
+        "paid provider execution",
+        "video, audio, or semantic dream quality",
+    ]
+    if not full_64_replication:
+        does_not_prove.insert(0, "full 64-episode live Tau replication")
     receipt = {
         "schema": "persona_dream.research.prospective_tom.live_tau_sealed_test_replication_receipt.v1",
         "created_at": _now_iso(),
@@ -323,7 +338,7 @@ def run_replication(
         "errors": errors,
         "claims": {
             "proves": [
-                "a sealed-test split subset was executed with live Tau-authored M/R/D/CD prediction payloads",
+                replication_claim,
                 "accepted predictions were sealed before deterministic outcome reveal",
                 "accepted predictions were scored by Gate 5 without human content judgment",
                 "accepted predictions fed constrained Gate 6 action selection and planning-regret scoring",
@@ -334,14 +349,7 @@ def run_replication(
             else [
                 "the live Tau sealed-test replication bridge failed closed before claiming accepted replication evidence",
             ],
-            "does_not_prove": [
-                "full 64-episode live Tau replication unless full_64_episode_replication is true",
-                "statistical confidence for live Tau CD benefit on the full sealed test",
-                "production retry machinery",
-                "complete live Phase 01-16 runtime execution",
-                "paid provider execution",
-                "video, audio, or semantic dream quality",
-            ],
+            "does_not_prove": does_not_prove,
         },
     }
     receipt["receipt_sha256"] = _stable_json_sha256({key: value for key, value in receipt.items() if key != "receipt_sha256"})

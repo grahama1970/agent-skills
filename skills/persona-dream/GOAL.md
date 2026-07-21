@@ -142,18 +142,22 @@ step model:
    observes a completed dream and then interprets it.
 4. **Prospective ToM prediction** - implemented fixture-backed by Gates 2-4,
    bridged through live Tau text execution, repeated across M/R/D/CD condition
-   cases, and scaled deterministically to a 64-episode sealed test. The
-   remaining research proof is live Tau-authored sealed-test replication, not
-   another renderer call.
+   cases, scaled deterministically to a 64-episode sealed test, and now run as
+   a full64 live Tau sealed-test replication. The remaining research proof is
+   statistical confidence over live Tau-authored sealed-test results and
+   reliability over that full64 root, not another renderer call.
 5. **Deterministic hidden outcome and scoring** - implemented fixture-backed
    by Gate 5, bridged over a live Tau-originated sealed commitment, repeated
-   over live Tau condition cases, and scaled deterministically to 256 sealed
-   test cases. The remaining research proof is live Tau sealed-test scoring and
-   calibration under the same frozen protocol.
+   over live Tau condition cases, scaled deterministically to 256 sealed test
+   cases, and now exercised across 256 full64 live Tau sealed-test cases. The
+   remaining research proof is statistical confidence and calibration over the
+   live Tau full64 receipt under the same frozen protocol.
 6. **Action selection** - implemented fixture-backed by Gate 6, bridged over
-   live Tau-originated condition outputs, and included in the deterministic
-   sealed test. The missing research proof is planning-regret benefit over the
-   strongest baseline and live Tau sealed-test action evidence.
+   live Tau-originated condition outputs, included in the deterministic sealed
+   test, and now exercised across 256 full64 live Tau sealed-test action
+   decisions. The missing research proof is confidence-bounded planning-regret
+   benefit over the strongest baseline and reliability over the full64 action
+   evidence.
 7. **Non-destructive belief revision** - implemented fixture-backed by Gate 7,
    bridged over live Tau-originated action decisions, and recalled through live
    Memory without canonical/source/identity writes. The remaining research
@@ -185,15 +189,16 @@ receipt-backed evidence covers both sides of the PCTOM-R question:
    faults, and causal replay terminate only as recovered, blocked before side
    effect, or quarantined with no active partial state.
 
-The current bounded live Tau sealed-test replication is live-originated
-evidence, but it is a bounded 4-episode / 16-case slice and produced a null
-benefit signal for CD versus the strongest baseline. It must be reported as
-evidence of the runner and contracts, not as proof that dreaming improves ToM.
-The primary next acceptance movement is full 64-episode live Tau sealed-test
-replication. A permanently deployed always-on retry/fault proof is secondary
-unless the full-64 live Tau path is concretely blocked by a missing credential,
-paid-call authority, unavailable Tau service, or deterministic runner defect
-recorded in a local receipt.
+The prior bounded live Tau sealed-test replication is live-originated evidence
+for the runner and contracts, not a proof that dreaming improves ToM. The
+current full64 live Tau sealed-test replication now covers 64 episodes and 256
+Tau-authored sealed/scored/action cases with negative CD-minus-baseline point
+estimates for belief Brier, action Brier, and planning regret. It still must be
+reported as point-estimate evidence, not as a final research success claim,
+until statistical confidence and reliability over the full64 root are recorded
+in local receipts. A permanently deployed always-on retry/fault proof remains
+secondary unless the statistical-confidence path is blocked by a concrete local
+receipt or the human explicitly reorders the work.
 
 ## Research Question
 
@@ -419,12 +424,13 @@ Bounded live Tau sealed-test replication proof root: /tmp/persona-dream-live-tau
 Bounded live Tau sealed-test retry proof root: /tmp/persona-dream-live-tau-sealed-test-retry-proof-20260721T052430Z
 Run.sh orchestration retry proof root: /tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z
 Bounded queue-worker retry proof root: /tmp/persona-dream-live-tau-sealed-test-queue-worker-retry-proof-20260721T054051Z
+Full64 live Tau sealed-test replication proof root: /tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z
 ```
 
 Current active phase boundary:
 
 ```text
-phase: post-bounded-queue-worker-retry-proof, pre-full-64-live-tau-sealed-test-replication
+phase: post-full64-live-tau-sealed-test-replication, pre-live-tau-full64-statistical-confidence-or-full64-retry-fault-proof
 last_live_condition_receipt: /tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z/live_tau_condition_comparison_receipt.v1.json
 last_reliability_receipt: /tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z/live_tau_condition_reliability_bridge_receipt.v1.json
 last_action_selection_receipt: /tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z/live_tau_condition_action_selection_receipt.v1.json
@@ -439,8 +445,9 @@ last_bounded_live_tau_sealed_test_replication_receipt: /tmp/persona-dream-live-t
 last_bounded_live_tau_sealed_test_retry_proof_receipt: /tmp/persona-dream-live-tau-sealed-test-retry-proof-20260721T052430Z/live_tau_sealed_test_retry_proof_receipt.v1.json
 last_runsh_orchestration_retry_proof_receipt: /tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/live_tau_sealed_test_runsh_orchestration_retry_proof_receipt.v1.json
 last_bounded_queue_worker_retry_proof_receipt: /tmp/persona-dream-live-tau-sealed-test-queue-worker-retry-proof-20260721T054051Z/live_tau_sealed_test_queue_worker_retry_proof_receipt.v1.json
-next_required_receipt: full 64-episode live Tau sealed-test replication receipt
-secondary_receipt_if_full64_blocked: permanently deployed always-on service retry/fault proof receipt
+last_full64_live_tau_sealed_test_replication_receipt: /tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z/live_tau_sealed_test_replication_receipt.v1.json
+next_required_receipt: live Tau full64 statistical-confidence receipt over the full64 replication root
+secondary_receipt_if_statistical_confidence_blocked: full64 retry/fault proof receipt consuming the full64 replication root
 ```
 
 This boundary means Gate 8/9 condition reliability over live-originated
@@ -458,16 +465,20 @@ belief Brier metric. The broader live fault-injection slice now adds live
 Memory fault probes plus controlled local model/tool/schema/persistence/retry
 fault containment over the hash-bound predecessor receipts. These receipts
 still do not authorize a final research success claim. The bounded live Tau
-sealed-test replication slice now adds 16 live Tau-authored sealed-test cases
-plus Gate 5 scoring and Gate 6 action decisions, but shows a null benefit
-signal rather than live CD improvement. The bounded retry proof now adds
-hash-recomputed active prediction/action indexes over those 16 live-originated
-cases plus 8 retry/fault trials with only recovered, blocked-before-side-effect,
-or quarantined terminal outcomes and one causal replay. The next useful
-movement is full 64-episode live Tau sealed-test replication. Retry/fault proof
-inside a permanently deployed always-on service boundary is the secondary path
-only if full-64 live Tau replication is blocked by a concrete local receipt or
-the human explicitly reorders the work. The run.sh orchestration proof now
+sealed-test replication slice added 16 live Tau-authored sealed-test cases plus
+Gate 5 scoring and Gate 6 action decisions, but showed a null benefit signal.
+The bounded retry proof then added hash-recomputed active prediction/action
+indexes over those 16 live-originated cases plus 8 retry/fault trials with only
+recovered, blocked-before-side-effect, or quarantined terminal outcomes and one
+causal replay. The full64 live Tau sealed-test replication now adds 64 episodes,
+256 live Tau calls, 256 sealed/scored/action cases, and negative
+CD-minus-strongest-baseline point estimates for belief Brier, action Brier, and
+planning regret. The next useful movement is statistical confidence over the
+full64 live Tau point estimates or retry/fault proof consuming that full64 root.
+Retry/fault proof inside a permanently deployed always-on service boundary is
+the secondary path only if full64 statistical confidence is blocked by a
+concrete local receipt or the human explicitly reorders the work. The run.sh
+orchestration proof now
 exercises the local skill command dispatcher, but it is not an always-on
 external service.
 
@@ -780,6 +791,50 @@ benefit, production retry machinery, paid provider execution, video/audio
 quality, semantic dream quality, or complete live Phase 01-16 runtime
 execution. The null CD-minus-baseline deltas are a real finding: this live Tau
 slice proves pipeline mechanics, not a live prediction advantage.
+
+Full64 live Tau sealed-test replication proof summary:
+
+```text
+receipt: /tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z/live_tau_sealed_test_replication_receipt.v1.json
+status: PASS_LIVE_TAU_PCTOM_SEALED_TEST_REPLICATION
+receipt_sha256: sha256:ab532da6a6c3e031ab950274fbec88b3e6aeb282b2dd52dd4b936e57e959daa7
+split: sealed_test
+episodes_per_family: 16
+episodes_consumed: 64
+families_consumed: 4
+cases: 256
+tau_call_attempts: 256
+tau_live_call_performed: 256
+tau_authored_prediction_payloads_per_condition: M=64, R=64, D=64, CD=64
+sealed_commitments_per_condition: M=64, R=64, D=64, CD=64
+deterministic_scores_per_condition: M=64, R=64, D=64, CD=64
+action_decisions_per_condition: M=64, R=64, D=64, CD=64
+planning_regret_scores_per_condition: M=64, R=64, D=64, CD=64
+belief_brier_cd_minus_strongest_baseline: -0.01830156249999998
+action_brier_cd_minus_strongest_baseline: -0.0008531250000000101
+planning_regret_cd_minus_strongest_baseline: -0.03593750000000001
+full_64_episode_replication: true
+mocked: false
+live: true
+fixture_backed: false
+deterministic_simulator_corpus_fixture_backed: true
+llm_judge_used: false
+human_content_judgment_required: false
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+```
+
+This proves the full 64-episode sealed-test split can run with live
+Tau-authored M/R/D/CD prediction payloads, seal predictions before deterministic
+reveal, score them with Gate 5, and feed them into constrained Gate 6 action
+selection without human content judgment or unsupported writes. It does not
+prove statistical confidence for the live Tau CD benefit point estimates,
+production retry machinery over the full64 root, paid provider execution,
+video/audio quality, semantic dream quality, or complete live Phase 01-16
+runtime execution.
 
 Prior blocked live Memory revision-recall repair note:
 
@@ -1616,13 +1671,15 @@ with 8 retry/fault trials and one causal replay, plus one run.sh orchestration
 proof with 4 command-dispatch invocations and fail-closed missing-base-root and
 interrupted-persistence attempts, plus one bounded local queue-worker proof
 with 4 queued jobs, 2 completed jobs, 2 blocked jobs, and zero unknown-state or
-side-effect violations. It does not
-prove paid provider execution, semantic dream quality, planning-regret benefit,
-full 64-episode live Tau sealed-test execution, statistical confidence for live
-Tau CD benefit, full external service fault injection beyond Memory `/recall`,
-permanently deployed always-on production service retry machinery, complete live
-Phase 01-16 runtime execution, or autonomous operation beyond the bounded
-bridges. Those require separate live receipts.
+side-effect violations, plus one full64 live Tau sealed-test replication receipt
+with 64 episodes, 256 Tau-authored sealed/scored/action cases, and negative
+CD-minus-strongest-baseline point estimates for belief Brier, action Brier, and
+planning regret. It does not prove paid provider execution, semantic dream
+quality, statistical confidence for live Tau CD benefit, full external service
+fault injection beyond Memory `/recall`, retry/fault behavior over the full64
+root, permanently deployed always-on production service retry machinery,
+complete live Phase 01-16 runtime execution, or autonomous operation beyond the
+bounded bridges. Those require separate live receipts.
 
 No agent may claim final, green, complete, fixed, verified, or closed for this
 research goal unless those concrete proof artifacts exist and are cited.
@@ -1631,25 +1688,27 @@ research goal unless those concrete proof artifacts exist and are cited.
 
 Move from deterministic sealed-test statistical-confidence evidence, PASS live
 Memory recall-after-revision evidence, the broader live fault-injection
-surface, bounded live Tau sealed-test replication, and bounded retry/idempotence
-over live-originated sealed-test artifacts, plus run.sh orchestration retry
-evidence and bounded local queue-worker evidence, to full 64-episode live Tau
-sealed-test replication, without reactivating provider/video as the critical
-path.
+surface, bounded live Tau sealed-test replication, bounded retry/idempotence
+over live-originated sealed-test artifacts, run.sh orchestration retry evidence,
+bounded local queue-worker evidence, and full64 live Tau sealed-test
+replication to confidence-bounded live Tau benefit analysis and retry/fault
+containment over the full64 root, without reactivating provider/video as the
+critical path.
 
 The next accepted artifact must answer this narrower question:
 
-1. Does the 64-episode sealed-test result persist when all M/R/D/CD prediction
-   payloads are authored through live Tau rather than deterministic profiles,
-   given that the bounded 4-episode live slice produced a null CD benefit?
+1. Are the full64 live Tau CD-minus-strongest-baseline point estimates
+   confidence-bounded on the preregistered belief Brier metric and the action
+   planning-regret metric, or are they too small/unstable to claim live Tau
+   benefit?
 
-The secondary artifact, only after a full-64 blocker receipt or explicit human
-reordering, must answer this question:
+The secondary artifact, only after a statistical-confidence blocker receipt or
+explicit human reordering, must answer this question:
 
-1. Does retry/fault handling preserve the same terminal-outcome discipline
-   inside a permanently deployed always-on service boundary, not only the
-   bounded research bridge, local `run.sh` dispatcher, and bounded local
-   queue-worker process?
+1. Does retry/fault handling preserve the same terminal-outcome discipline over
+   the full64 live Tau root and, later, inside a permanently deployed always-on
+   service boundary, not only the bounded research bridge, local `run.sh`
+   dispatcher, and bounded local queue-worker process?
 
 Resolved live Memory diagnostic:
 
