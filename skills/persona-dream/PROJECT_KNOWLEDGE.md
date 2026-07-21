@@ -1,10 +1,32 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R expanded deterministic trust/commit coverage accepted) by agent
+**Last updated:** 2026-07-21 (PCTOM-R live expanded trust/commit coverage accepted) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R LIVE EXPANDED TRUST/COMMIT COVERAGE): live Tau
+  execution now covers the expanded trust/commitment variants 17-24. The
+  accepted receipt at
+  `/tmp/persona-dream-live-tau-trust-commit-expanded-v17-24-20260721T110845Z/live_tau_trust_commit_replication_receipt.v1.json`
+  reports `PASS_LIVE_TAU_PCTOM_TRUST_COMMIT_REPLICATION` with `mocked:false`,
+  `live:true`, `live_tau_reexecuted:true`, 8 selected trust/commitment
+  episodes (`sealedte-trust-commit-17` through `sealedte-trust-commit-24`),
+  32 Tau calls, 32 sealed/scored cases, 8 action decisions per condition, all
+  variant filter checks true, and zero Memory/provider/canonical/identity/
+  source-memory writes. CD beat the strongest baseline on point estimates:
+  belief Brier `-0.009062500000000029`, action Brier
+  `-0.026050000000000018`, and planning regret `-0.10625000000000007`.
+  Planning benefit is still not confidence-bounded because the bootstrap CI is
+  `[-0.31875000000000003, 0.0]`. Only one action switch occurred
+  (`sealedte-trust-commit-23`), producing one oracle-match gain and seven
+  unchanged rows. The empty-filter negative receipt at
+  `/tmp/persona-dream-live-tau-trust-commit-expanded-empty-filter-20260721T113450Z/live_tau_trust_commit_replication_receipt.v1.json`
+  reports `BLOCKED_LIVE_TAU_PCTOM_TRUST_COMMIT_REPLICATION`, 0 cases, 0 Tau
+  calls, and no writes, so the expanded live runner fails closed when no
+  variants match. Next PCTOM-R work should produce repeated expanded live Tau
+  seeds, live Memory-in-loop/fault evidence, or production retry-service proof
+  instead of returning to provider/video or subjective dream quality.
 - 2026-07-21 (PCTOM-R EXPANDED DETERMINISTIC TRUST/COMMIT COVERAGE):
   deterministic trust/commitment coverage has been expanded before another
   live Tau retry. The corpus generator now supports 24 episodes per family,

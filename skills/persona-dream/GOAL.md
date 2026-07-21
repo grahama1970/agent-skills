@@ -143,13 +143,13 @@ step model:
 4. **Prospective ToM prediction** - implemented fixture-backed by Gates 2-4,
    bridged through live Tau text execution, repeated across M/R/D/CD condition
    cases, scaled deterministically to a 64-episode sealed test, run as a
-   full64 live Tau sealed-test replication, and now expanded deterministically
-   for trust/commitment variants 17-24. Current receipts include
-   confidence-bounded belief-Brier benefit for CD over the strongest baseline
-   plus deterministic expanded trust/commitment heldout coverage. The
-   remaining research proof is not another renderer call; it is live expanded
-   trust/commitment execution, planning benefit, action-policy sensitivity over
-   broader variants, or broader service-boundary reliability.
+   full64 live Tau sealed-test replication, expanded deterministically for
+   trust/commitment variants 17-24, and now run live over those expanded
+   variants. Current receipts include confidence-bounded belief-Brier benefit
+   for CD over the strongest baseline plus deterministic and live expanded
+   trust/commitment coverage. The remaining research proof is not another
+   renderer call; it is confidence-bounded planning benefit, repeated expanded
+   live behavior, or broader service-boundary reliability.
 5. **Deterministic hidden outcome and scoring** - implemented fixture-backed
    by Gate 5, bridged over a live Tau-originated sealed commitment, repeated
    over live Tau condition cases, scaled deterministically to 256 sealed test
@@ -157,17 +157,20 @@ step model:
    full64 statistical-confidence receipt supports the preregistered belief
    Brier benefit claim, while action Brier and planning-regret confidence
    intervals still cross zero. The expanded trust/commitment deterministic
-   heldout receipt adds variants 17-24 with sealed/scored/action coverage, but
-   it is not live Tau execution and does not upgrade planning benefit because
-   CD ties the strongest baseline on mean planning regret.
+   heldout receipt adds variants 17-24 with sealed/scored/action coverage, and
+   the live expanded trust/commitment receipt reruns the same variant band
+   through live Tau. Neither upgrades planning benefit because deterministic
+   heldout ties the strongest baseline on mean planning regret and the live
+   expanded planning CI upper is `0.0`.
 6. **Action selection** - implemented fixture-backed by Gate 6, bridged over
    live Tau-originated condition outputs, included in the deterministic sealed
    test, and now exercised across 256 full64 live Tau sealed-test action
    decisions. The missing research proof is confidence-bounded planning-regret
-   benefit over the strongest baseline or live expanded trust/commitment
-   replication. Deterministic expanded trust/commitment coverage exists for
-   variants 17-24 and preserves the action-selection contract, but it does not
-   itself prove live planning benefit.
+   benefit over the strongest baseline, repeated expanded live Tau behavior,
+   or production retry-service proof. Deterministic and live expanded
+   trust/commitment coverage exists for variants 17-24 and preserves the
+   action-selection contract, but it still does not prove confidence-bounded
+   planning benefit.
    The current action-policy sensitivity receipt explains the sparse planning
    point estimate: the only four nonzero deltas are CD action switches in
    `trust-commit`, with three oracle-match gains and one oracle-match loss.
@@ -218,7 +221,10 @@ deterministic trust/commitment receipts add 24 variants per family, a filtered
 8-episode trust/commitment slice over variants 17-24, and an empty-filter
 blocked receipt; this improves corpus coverage and filter-boundary discipline
 but remains deterministic simulator evidence rather than live Tau, live
-Memory, or deployed service evidence.
+Memory, or deployed service evidence. The live expanded trust/commitment
+receipt now covers variants 17-24 through 32 live Tau calls and Gate 5/6
+receipts, but planning benefit remains unproven at the confidence-bound level
+because the planning CI upper is `0.0`.
 
 ## Research Question
 
@@ -455,12 +461,14 @@ Repeated-seed trust/commitment live Tau summary proof root: /tmp/persona-dream-l
 Expanded deterministic corpus proof root: /tmp/persona-dream-expanded-corpus-20260721T110141Z
 Expanded deterministic trust/commitment heldout proof root: /tmp/persona-dream-expanded-trust-heldout-20260721T110148Z
 Blocked expanded trust/commitment empty-filter proof root: /tmp/persona-dream-expanded-trust-heldout-empty-filter-20260721T110157Z
+Live expanded trust/commitment Tau replication proof root: /tmp/persona-dream-live-tau-trust-commit-expanded-v17-24-20260721T110845Z
+Blocked live expanded trust/commitment empty-filter proof root: /tmp/persona-dream-live-tau-trust-commit-expanded-empty-filter-20260721T113450Z
 ```
 
 Current active phase boundary:
 
 ```text
-phase: post-expanded-deterministic-trust-commit-heldout, pre-live-expanded-trust-commit-or-production-retry-service-proof
+phase: post-live-expanded-trust-commit-v17-24, pre-repeated-expanded-live-tau-or-production-retry-service-proof
 last_live_condition_receipt: /tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z/live_tau_condition_comparison_receipt.v1.json
 last_reliability_receipt: /tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z/live_tau_condition_reliability_bridge_receipt.v1.json
 last_action_selection_receipt: /tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z/live_tau_condition_action_selection_receipt.v1.json
@@ -486,7 +494,9 @@ last_repeated_seed_trust_commit_summary_receipt: /tmp/persona-dream-live-tau-tru
 last_expanded_social_episode_corpus_check_receipt: /tmp/persona-dream-expanded-corpus-20260721T110141Z/social_episode_corpus_check_receipt.json
 last_expanded_trust_commit_heldout_receipt: /tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/heldout_condition_benefit_receipt.v1.json
 last_blocked_expanded_trust_commit_empty_filter_receipt: /tmp/persona-dream-expanded-trust-heldout-empty-filter-20260721T110157Z/heldout_condition_benefit_receipt.v1.json
-next_required_receipt: live Tau execution over expanded trust/commitment variants 17-24, additional repeated live Tau seeds with non-identical behavior, or production retry service proof, selected by the active research question
+last_live_expanded_trust_commit_receipt: /tmp/persona-dream-live-tau-trust-commit-expanded-v17-24-20260721T110845Z/live_tau_trust_commit_replication_receipt.v1.json
+last_blocked_live_expanded_trust_commit_empty_filter_receipt: /tmp/persona-dream-live-tau-trust-commit-expanded-empty-filter-20260721T113450Z/live_tau_trust_commit_replication_receipt.v1.json
+next_required_receipt: repeated live Tau execution over expanded trust/commitment variants, production retry service proof, or live Memory-in-loop/fault evidence, selected by the active research question
 secondary_receipt: live Memory fault injection in the same sealed-test loop or deployed always-on orchestrator retry proof
 ```
 
@@ -531,7 +541,11 @@ variants. The floor4 trust/commitment replication satisfied the
 action-selection acceptance floor and reproduced a negative
 CD-minus-baseline planning-regret point estimate. A second independent live Tau
 floor4 run reproduced the same action rows, and the repeated-seed aggregate
-still has a planning-regret confidence interval crossing zero. Retry/fault
+still has a planning-regret confidence interval crossing zero. The live
+expanded trust/commitment replication over variants 17-24 now adds 32 live Tau
+calls and one beneficial action switch, but its planning-regret CI upper is
+`0.0`, so it is still point-estimate evidence rather than confidence-bounded
+planning proof. Retry/fault
 proof inside a permanently deployed always-on service boundary remains
 unproven. The run.sh orchestration proof exercises the local skill command
 dispatcher, but it is not an always-on external service.
@@ -575,6 +589,50 @@ comparison. It does not prove live Tau heldout execution over variants 17-24,
 live Memory recall after revision, production retry machinery, real external
 service fault injection, complete live Phase 01-16 runtime execution, paid
 provider execution, video quality, or semantic dream quality.
+
+Live expanded trust/commitment Tau replication summary:
+
+```text
+receipt: /tmp/persona-dream-live-tau-trust-commit-expanded-v17-24-20260721T110845Z/live_tau_trust_commit_replication_receipt.v1.json
+status: PASS_LIVE_TAU_PCTOM_TRUST_COMMIT_REPLICATION
+receipt_sha256: sha256:9323b4523f5b0e492bbe5b920c85bf22e82c268cc731ee5fc511ec6ceadf1a8d
+episodes_per_family: 24
+trust_episode_limit: 8
+variant_min: 17
+variant_max: 24
+selected_episode_ids: sealedte-trust-commit-17 through sealedte-trust-commit-24
+tau_call_attempts: 32
+tau_live_call_performed: 32
+cases: 32
+action_decisions_per_condition: M=8, R=8, D=8, CD=8
+planning_regret_scores_per_condition: M=8, R=8, D=8, CD=8
+belief_brier_cd_minus_strongest_baseline: -0.009062500000000029
+action_brier_cd_minus_strongest_baseline: -0.026050000000000018
+planning_regret_cd_minus_strongest_baseline: -0.10625000000000007
+planning_regret_ci: [-0.31875000000000003, 0.0]
+planning_benefit_with_confidence: false
+action_switch_count: 1
+oracle_match_transitions: GAIN=1, UNCHANGED=7
+mocked: false
+live: true
+fixture_backed: false
+deterministic_simulator_corpus_fixture_backed: true
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+blocked_empty_filter_receipt: /tmp/persona-dream-live-tau-trust-commit-expanded-empty-filter-20260721T113450Z/live_tau_trust_commit_replication_receipt.v1.json
+blocked_empty_filter_status: BLOCKED_LIVE_TAU_PCTOM_TRUST_COMMIT_REPLICATION
+blocked_empty_filter_tau_call_attempts: 0
+```
+
+This proves live Tau execution over the expanded trust/commitment variants
+17-24 with sealed predictions, deterministic scoring, action selection,
+variant-filter checks, and no unsupported writes or provider calls. It does
+not prove confidence-bounded planning benefit, production retry machinery,
+live Memory recall in the sealed-test loop, complete live Phase 01-16 runtime
+execution, paid provider execution, or video/audio/semantic dream quality.
 
 Full64 live Tau action-policy sensitivity proof summary:
 

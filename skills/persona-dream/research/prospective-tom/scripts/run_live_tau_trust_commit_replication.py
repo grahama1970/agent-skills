@@ -70,15 +70,31 @@ def _mean(values: list[float]) -> float | None:
     return statistics.fmean(values) if values else None
 
 
-def _select_trust_commit_episodes(corpus: dict[str, Any], limit: int) -> list[dict[str, Any]]:
+def _select_trust_commit_episodes(
+    corpus: dict[str, Any],
+    limit: int,
+    *,
+    variant_min: int | None = None,
+    variant_max: int | None = None,
+) -> list[dict[str, Any]]:
     episodes = [
         episode
         for episode in corpus.get("episodes", [])
         if isinstance(episode, dict) and episode.get("scenario_family") == TRUST_FAMILY
+        and (variant_min is None or isinstance(episode.get("variant"), int) and episode["variant"] >= variant_min)
+        and (variant_max is None or isinstance(episode.get("variant"), int) and episode["variant"] <= variant_max)
     ]
     if limit > 0:
         episodes = episodes[:limit]
     return episodes
+
+
+def _variant_from_episode_id(episode_id: str) -> int | None:
+    suffix = episode_id.rsplit("-", 1)[-1]
+    try:
+        return int(suffix)
+    except ValueError:
+        return None
 
 
 def _bootstrap_ci(values: list[float], *, samples: int, seed: int, alpha: float) -> dict[str, Any] | None:
@@ -255,6 +271,9 @@ def run_trust_commit_replication(
     output_root: Path,
     receipt_out: Path,
     trust_episode_limit: int,
+    episodes_per_family: int,
+    variant_min: int | None,
+    variant_max: int | None,
     model: str | None,
     timeout_s: float,
     bootstrap_samples: int,
@@ -272,7 +291,7 @@ def run_trust_commit_replication(
 
     def _selector(corpus: dict[str, Any], limit: int) -> list[dict[str, Any]]:
         requested = trust_episode_limit if trust_episode_limit > 0 else limit
-        return _select_trust_commit_episodes(corpus, requested)
+        return _select_trust_commit_episodes(corpus, requested, variant_min=variant_min, variant_max=variant_max)
 
     condition_root = output_root / "live_tau_trust_commit_condition_comparison"
     condition_receipt_path = condition_root / "live_tau_condition_comparison_receipt.v1.json"
@@ -287,7 +306,7 @@ def run_trust_commit_replication(
             output_root=condition_root,
             receipt_out=condition_receipt_path,
             split=DEFAULT_SPLIT,
-            episodes_per_family=16,
+            episodes_per_family=episodes_per_family,
             episode_limit=trust_episode_limit,
             model=model,
             timeout_s=timeout_s,
@@ -334,8 +353,14 @@ def run_trust_commit_replication(
     for row in case_index:
         if not isinstance(row, dict):
             continue
-        if "trust-commit" not in str(row.get("episode_id")):
+        episode_id = str(row.get("episode_id"))
+        if "trust-commit" not in episode_id:
             errors.append(f"case_index_non_trust_episode:{row.get('episode_id')}")
+        variant = _variant_from_episode_id(episode_id)
+        if variant_min is not None and (not isinstance(variant, int) or variant < variant_min):
+            errors.append(f"case_index_variant_below_min:{episode_id}:{variant}:{variant_min}")
+        if variant_max is not None and (not isinstance(variant, int) or variant > variant_max):
+            errors.append(f"case_index_variant_above_max:{episode_id}:{variant}:{variant_max}")
 
     action_counts = action_receipt.get("counts", {}).get("action_decisions_per_condition") if isinstance(action_receipt.get("counts"), dict) else {}
     regret_counts = (
@@ -356,6 +381,7 @@ def run_trust_commit_replication(
         bootstrap_seed=bootstrap_seed,
         alpha=alpha,
     )
+    selected_episode_ids = sorted({row["episode_id"] for row in planning_rows if isinstance(row.get("episode_id"), str)})
     belief_means = _condition_metric_means(case_index, "belief_brier")
     action_means = _condition_metric_means(case_index, "action_brier")
     regret_means = _condition_regret_means(action_index)
@@ -364,6 +390,9 @@ def run_trust_commit_replication(
         "split": DEFAULT_SPLIT,
         "scenario_family": TRUST_FAMILY,
         "trust_episode_limit": trust_episode_limit,
+        "episodes_per_family": episodes_per_family,
+        "variant_min": variant_min,
+        "variant_max": variant_max,
         "condition_means": {
             "belief_brier": belief_means,
             "action_brier": action_means,
@@ -380,6 +409,15 @@ def run_trust_commit_replication(
     }
     _write_json(planning_rows_path, {"schema": "persona_dream.research.prospective_tom.live_tau_trust_commit_planning_rows.v1", "rows": planning_rows})
     _write_json(summary_path, summary)
+    does_not_prove = [
+        "production retry machinery",
+        "live Memory recall in the sealed-test loop",
+        "complete live Phase 01-16 runtime execution",
+        "paid provider execution",
+        "video, audio, or semantic dream quality",
+    ]
+    if not planning_summary["planning_benefit_with_confidence"]:
+        does_not_prove.insert(0, "confidence-bounded planning benefit")
 
     status = PASS_STATUS if not errors else BLOCKED_STATUS
     receipt = {
@@ -392,6 +430,9 @@ def run_trust_commit_replication(
         "split": DEFAULT_SPLIT,
         "scenario_family": TRUST_FAMILY,
         "trust_episode_limit": trust_episode_limit,
+        "episodes_per_family": episodes_per_family,
+        "variant_min": variant_min,
+        "variant_max": variant_max,
         "conditions": list(CONDITIONS),
         "live_tau_condition_comparison_receipt": str(condition_receipt_path),
         "live_tau_condition_comparison_receipt_sha256": _file_sha256(condition_receipt_path)
@@ -422,6 +463,7 @@ def run_trust_commit_replication(
         "counts": {
             "episodes": len(planning_rows),
             "cases": len(case_index),
+            "selected_episode_ids": selected_episode_ids,
             "action_decisions_per_condition": action_counts,
             "planning_regret_scores_per_condition": regret_counts,
             "action_switch_count": planning_summary["action_switch_count"],
@@ -433,6 +475,8 @@ def run_trust_commit_replication(
             "condition_receipt_passed": condition_receipt.get("status") == live_condition.PASS_STATUS,
             "action_selection_receipt_passed": action_receipt.get("status") == action_selection.PASS_STATUS,
             "only_trust_commit_episodes_selected": not any("non_trust_episode" in error for error in errors),
+            "variant_min_respected": not any("variant_below_min" in error for error in errors),
+            "variant_max_respected": not any("variant_above_max" in error for error in errors),
             "tau_receipts_hash_bound": condition_receipt.get("tau_receipts_hash_bound") is True,
             "all_conditions_have_expected_action_counts": all(
                 action_counts.get(condition) == trust_episode_limit for condition in CONDITIONS
@@ -456,14 +500,7 @@ def run_trust_commit_replication(
             else [
                 "the focused trust/commitment live Tau replication failed closed before accepting a planning-benefit claim",
             ],
-            "does_not_prove": [
-                "planning benefit on a newly expanded trust/commitment corpus beyond the existing 16 deterministic variants",
-                "production retry machinery",
-                "live Memory recall in the sealed-test loop",
-                "complete live Phase 01-16 runtime execution",
-                "paid provider execution",
-                "video, audio, or semantic dream quality",
-            ],
+            "does_not_prove": does_not_prove,
         },
     }
     receipt["planning_benefit_with_confidence"] = planning_summary["planning_benefit_with_confidence"]
@@ -477,6 +514,9 @@ def main() -> int:
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--receipt-out", type=Path, default=None)
     parser.add_argument("--trust-episode-limit", type=int, default=16)
+    parser.add_argument("--episodes-per-family", type=int, default=16)
+    parser.add_argument("--variant-min", type=int, default=None)
+    parser.add_argument("--variant-max", type=int, default=None)
     parser.add_argument("--model", default=None)
     parser.add_argument("--timeout-s", type=float, default=240.0)
     parser.add_argument("--bootstrap-samples", type=int, default=10000)
@@ -489,6 +529,9 @@ def main() -> int:
         output_root=args.output_root,
         receipt_out=receipt_out,
         trust_episode_limit=args.trust_episode_limit,
+        episodes_per_family=args.episodes_per_family,
+        variant_min=args.variant_min,
+        variant_max=args.variant_max,
         model=args.model,
         timeout_s=args.timeout_s,
         bootstrap_samples=args.bootstrap_samples,
