@@ -860,6 +860,8 @@ def send_prompt(client: HerdrClient, pane_id: str, prompt: str, *, project_root:
     second_read = ""
     ctrl_j_sent = False
     ctrl_j_read = ""
+    final_read = ""
+    final_grace_poll_used = False
     if not submit_confirmed:
         current = explain_agent(client, pane_id)
         if not explain_allows_input(current):
@@ -910,6 +912,18 @@ def send_prompt(client: HerdrClient, pane_id: str, prompt: str, *, project_root:
                 if current.get("state") == "working":
                     submit_confirmed = True
                     break
+    if not submit_confirmed and (bool(terminal_result.get("ok")) or records):
+        final_grace_poll_used = True
+        for _ in range(10):
+            time.sleep(0.75)
+            final_read = read_pane_text(client, pane_id)
+            submit_confirmed = prompt_submitted(final_read, baseline=pre_read)
+            if submit_confirmed:
+                break
+            current = explain_agent(client, pane_id)
+            if current.get("state") == "working":
+                submit_confirmed = True
+                break
     api_sent = all("error" not in item.get("response", {}) for item in records)
     transport_sent = bool(terminal_result.get("ok")) or api_sent
     return {
@@ -924,7 +938,8 @@ def send_prompt(client: HerdrClient, pane_id: str, prompt: str, *, project_root:
         "socket_text_fallback_sent": socket_text_fallback_sent,
         "second_enter_sent": second_enter_sent,
         "ctrl_j_sent": ctrl_j_sent,
-        "post_submit_excerpt": (ctrl_j_read or second_read or first_read)[-1200:],
+        "final_grace_poll_used": final_grace_poll_used,
+        "post_submit_excerpt": (final_read or ctrl_j_read or second_read or first_read)[-1200:],
     }
 
 

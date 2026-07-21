@@ -254,6 +254,33 @@ class FakeCtrlJSubmitHerdr(FakeSubmitHerdr):
         raise AssertionError(method)
 
 
+class FakeDelayedWorkingAfterCtrlJHerdr(FakeSubmitHerdr):
+    def __init__(self) -> None:
+        super().__init__()
+        self.post_ctrl_j_explain_count = 0
+
+    def call(self, method: str, params: dict) -> dict:
+        response = {"id": method, "result": {"type": "ok"}}
+        self.trace.append({"request": {"method": method, "params": params}, "response": response})
+        if method == "pane.send_text":
+            self.sent_text = True
+            return {"type": "ok"}
+        if method == "pane.send_keys" and params.get("keys") == ["enter"]:
+            self.enter_count += 1
+            return {"type": "ok"}
+        if method == "pane.send_keys" and params.get("keys") == ["ctrl+j"]:
+            self.ctrl_j_count += 1
+            return {"type": "ok"}
+        if method == "pane.read":
+            return {"type": "pane_read", "read": {"text": "RESTART CHECK FROM monitor-herdr\n›\n\ngpt-5.5 high · repo"}}
+        if method == "agent.explain":
+            if self.ctrl_j_count:
+                self.post_ctrl_j_explain_count += 1
+            state = "working" if self.post_ctrl_j_explain_count >= 7 else "idle"
+            return {"type": "agent_explain", "explain": {"state": state, "matched_rule": "codex_prompt_idle_ready"}}
+        raise AssertionError(method)
+
+
 class FakeCompletionBeforeSendHerdr(FakeSubmitHerdr):
     def __init__(self, text: str = "Immutable Goal: ACHIEVED_WITH_RECEIPT:receipt.json\n") -> None:
         super().__init__()
@@ -1051,6 +1078,22 @@ def test_send_prompt_uses_ctrl_j_when_enter_does_not_submit() -> None:
 
     assert result["submit_confirmed"] is True
     assert result["second_enter_sent"] is True
+    assert result["ctrl_j_sent"] is True
+    assert client.enter_count == 2
+    assert client.ctrl_j_count == 1
+
+
+def test_send_prompt_final_grace_confirms_delayed_working_after_ctrl_j() -> None:
+    client = FakeDelayedWorkingAfterCtrlJHerdr()
+    original_wait = monitor.wait_for_agent_idle
+    monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
+    try:
+        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-herdr")
+    finally:
+        monitor.wait_for_agent_idle = original_wait
+
+    assert result["submit_confirmed"] is True
+    assert result["final_grace_poll_used"] is True
     assert result["ctrl_j_sent"] is True
     assert client.enter_count == 2
     assert client.ctrl_j_count == 1
