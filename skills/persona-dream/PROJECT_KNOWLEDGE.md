@@ -1,10 +1,33 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R run.sh orchestration retry proof accepted) by agent
+**Last updated:** 2026-07-21 (PCTOM-R bounded queue-worker retry proof accepted) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R BOUNDED QUEUE-WORKER RETRY PROOF): bounded local
+  queue-worker retry/fault evidence now exists at
+  `/tmp/persona-dream-live-tau-sealed-test-queue-worker-retry-proof-20260721T054051Z/live_tau_sealed_test_queue_worker_retry_proof_receipt.v1.json`.
+  It reports `PASS_LIVE_TAU_PCTOM_QUEUE_WORKER_RETRY_PROOF` while starting a
+  separate worker process over a filesystem queue. Counts: 4 queued jobs, 4
+  job results, 1 worker process, worker exit code 0, 2 completed jobs, 2
+  blocked jobs, 0 quarantined jobs, 16 active predictions, 16 action decisions,
+  16 Gate 6 receipts, 8 child retry/fault trials, 1 retry-after-uncertain-
+  completion trial, 1 interrupted-persistence trial, 1 conflicting-active-
+  pointer trial, 1 causal replay receipt, 0 `CONTINUED_WITH_UNKNOWN_STATE`, 0
+  side-effect violations, and 0 promoted duplicate active predictions/actions.
+  The worker recovered equivalent active state for exact retry and uncertain-
+  completion retry jobs, blocked missing-base-root and interrupted-persistence
+  jobs, and preserved the recovered/blocked terminal-outcome discipline of the
+  sealed-test retry proof. `mocked:false`, `live:true`,
+  `fixture_backed:false`, `always_on_external_service:false`,
+  `live_tau_reexecuted:false`, `human_content_judgment_required:false`, and
+  Memory/provider/canonical/identity/source-memory write attempts were all 0.
+  This proves a bounded local queue-worker process over live-originated
+  sealed-test artifacts. It does not prove a permanently deployed always-on
+  production service, full 64-episode live Tau sealed-test replication, new
+  live Tau execution, live Memory service fault injection, paid provider
+  execution, semantic dream quality, or complete Phase 01-16 runtime execution.
 - 2026-07-21 (PCTOM-R RUN.SH ORCHESTRATION RETRY PROOF): local command-dispatch
   retry/fault evidence now exists at
   `/tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/live_tau_sealed_test_runsh_orchestration_retry_proof_receipt.v1.json`.

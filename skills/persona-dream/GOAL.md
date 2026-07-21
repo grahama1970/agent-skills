@@ -410,12 +410,13 @@ Live fault-injection surface proof root: /tmp/persona-dream-live-fault-injection
 Bounded live Tau sealed-test replication proof root: /tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z
 Bounded live Tau sealed-test retry proof root: /tmp/persona-dream-live-tau-sealed-test-retry-proof-20260721T052430Z
 Run.sh orchestration retry proof root: /tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z
+Bounded queue-worker retry proof root: /tmp/persona-dream-live-tau-sealed-test-queue-worker-retry-proof-20260721T054051Z
 ```
 
 Current active phase boundary:
 
 ```text
-phase: post-runsh-orchestration-retry-proof, pre-full-64-live-tau-replication-or-external-service-worker-retry-proof
+phase: post-bounded-queue-worker-retry-proof, pre-full-64-live-tau-replication-or-permanently-deployed-service-retry-proof
 last_live_condition_receipt: /tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z/live_tau_condition_comparison_receipt.v1.json
 last_reliability_receipt: /tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z/live_tau_condition_reliability_bridge_receipt.v1.json
 last_action_selection_receipt: /tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z/live_tau_condition_action_selection_receipt.v1.json
@@ -429,7 +430,8 @@ last_live_fault_injection_surface_receipt: /tmp/persona-dream-live-fault-injecti
 last_bounded_live_tau_sealed_test_replication_receipt: /tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_replication_receipt.v1.json
 last_bounded_live_tau_sealed_test_retry_proof_receipt: /tmp/persona-dream-live-tau-sealed-test-retry-proof-20260721T052430Z/live_tau_sealed_test_retry_proof_receipt.v1.json
 last_runsh_orchestration_retry_proof_receipt: /tmp/persona-dream-live-tau-sealed-test-runsh-orchestration-retry-proof-20260721T053400Z/live_tau_sealed_test_runsh_orchestration_retry_proof_receipt.v1.json
-next_required_receipt: full 64-episode live Tau sealed-test replication receipt or external service/queue-worker retry proof receipt
+last_bounded_queue_worker_retry_proof_receipt: /tmp/persona-dream-live-tau-sealed-test-queue-worker-retry-proof-20260721T054051Z/live_tau_sealed_test_queue_worker_retry_proof_receipt.v1.json
+next_required_receipt: full 64-episode live Tau sealed-test replication receipt or permanently deployed always-on service retry proof receipt
 ```
 
 This boundary means Gate 8/9 condition reliability over live-originated
@@ -535,6 +537,55 @@ exact retry and retry-after-uncertain-completion, block a missing base root,
 and block an interrupted output-persistence attempt before active-state
 promotion. It does not prove an always-on external production service, queue
 worker, full 64-episode live Tau replication, new live Tau execution, live
+Memory service fault injection, paid provider execution, semantic dream
+quality, or complete Phase 01-16 runtime execution.
+
+Bounded queue-worker retry proof summary:
+
+```text
+receipt: /tmp/persona-dream-live-tau-sealed-test-queue-worker-retry-proof-20260721T054051Z/live_tau_sealed_test_queue_worker_retry_proof_receipt.v1.json
+status: PASS_LIVE_TAU_PCTOM_QUEUE_WORKER_RETRY_PROOF
+queue_worker_boundary_exercised: true
+bounded_local_queue_worker: true
+always_on_external_service: false
+queue_jobs_submitted: 4
+queue_job_results: 4
+worker_processes_started: 1
+worker_exit_code: 0
+completed_jobs: 2
+blocked_jobs: 2
+quarantined_jobs: 0
+active_predictions: 16
+action_decisions: 16
+gate6_receipts: 16
+retry_fault_trials: 8
+retry_after_uncertain_completion_trials: 1
+interrupted_persistence_trials: 1
+conflicting_active_pointer_trials: 1
+causal_replay_receipts: 1
+continued_with_unknown_state: 0
+side_effect_violations: 0
+duplicate_active_predictions_promoted: 0
+duplicate_action_decisions_promoted: 0
+mocked: false
+live: true
+fixture_backed: false
+live_tau_originated_artifacts_consumed: true
+live_tau_reexecuted: false
+human_content_judgment_required: false
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+```
+
+This proves a separate bounded local queue-worker process can consume queued
+retry/fault jobs over live-originated sealed-test artifacts, recover equivalent
+active state for exact and uncertain-completion retry jobs, and block
+missing-base-root plus interrupted-persistence jobs without active-state
+promotion. It does not prove a permanently deployed always-on production
+service, full 64-episode live Tau replication, new live Tau execution, live
 Memory service fault injection, paid provider execution, semantic dream
 quality, or complete Phase 01-16 runtime execution.
 
@@ -1552,12 +1603,14 @@ Tau-authored sealed/scored/action cases and no observed CD benefit, plus one
 bounded retry/idempotence proof over those live-originated sealed-test artifacts
 with 8 retry/fault trials and one causal replay, plus one run.sh orchestration
 proof with 4 command-dispatch invocations and fail-closed missing-base-root and
-interrupted-persistence attempts. It does not
+interrupted-persistence attempts, plus one bounded local queue-worker proof
+with 4 queued jobs, 2 completed jobs, 2 blocked jobs, and zero unknown-state or
+side-effect violations. It does not
 prove paid provider execution, semantic dream quality, planning-regret benefit,
 full 64-episode live Tau sealed-test execution, statistical confidence for live
 Tau CD benefit, full external service fault injection beyond Memory `/recall`,
-always-on external production service or queue-worker retry machinery, complete
-live Phase 01-16 runtime execution, or autonomous operation beyond the bounded
+permanently deployed always-on production service retry machinery, complete live
+Phase 01-16 runtime execution, or autonomous operation beyond the bounded
 bridges. Those require separate live receipts.
 
 No agent may claim final, green, complete, fixed, verified, or closed for this
@@ -1569,9 +1622,9 @@ Move from deterministic sealed-test statistical-confidence evidence, PASS live
 Memory recall-after-revision evidence, the broader live fault-injection
 surface, bounded live Tau sealed-test replication, and bounded retry/idempotence
 over live-originated sealed-test artifacts, plus run.sh orchestration retry
-evidence, to full 64-episode live Tau replication or always-on external
-service/queue-worker retry proof, without reactivating provider/video as the
-critical path.
+evidence and bounded local queue-worker evidence, to full 64-episode live Tau
+replication or permanently deployed always-on service retry proof, without
+reactivating provider/video as the critical path.
 
 The next accepted artifact must answer one of these narrower questions:
 
@@ -1579,8 +1632,9 @@ The next accepted artifact must answer one of these narrower questions:
    payloads are authored through live Tau rather than deterministic profiles,
    given that the bounded 4-episode live slice produced a null CD benefit?
 2. Does retry/fault handling preserve the same terminal-outcome discipline
-   inside an always-on external service or queue-worker boundary, not only the
-   bounded research bridge and local `run.sh` dispatcher?
+   inside a permanently deployed always-on service boundary, not only the
+   bounded research bridge, local `run.sh` dispatcher, and bounded local
+   queue-worker process?
 
 Resolved live Memory diagnostic:
 
@@ -1709,6 +1763,10 @@ source_memory_write_attempts: 0
 Current run.sh orchestration proof satisfies the local command-dispatch subset
 of that stop condition. It does not satisfy an always-on external service or
 queue-worker stop condition.
+
+Current bounded queue-worker proof satisfies the local queue-worker subset of
+that stop condition. It does not satisfy a permanently deployed always-on
+service stop condition.
 
 Required artifact shape:
 

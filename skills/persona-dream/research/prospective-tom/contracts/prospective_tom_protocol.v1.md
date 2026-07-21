@@ -1427,3 +1427,70 @@ always-on external production service or queue worker, full 64-episode live Tau
 replication, new live Tau execution, live Memory service fault injection,
 provider/video execution, semantic dream quality, or complete live Phase 01-16
 runtime execution.
+
+## Bounded Queue-Worker Retry Proof
+
+The bounded queue-worker retry proof starts a separate worker process and feeds
+it filesystem queue jobs. The worker dispatches the sealed-test retry proof for
+positive jobs and records fail-closed results for negative jobs.
+
+Pipeline:
+
+```text
+queue pending job files
+-> separate worker process
+-> run.sh sealed-test retry child command
+-> completed / blocked / quarantine result files
+-> queue worker manifest
+-> queue worker retry proof receipt
+```
+
+Required checks:
+
+```text
+queue_jobs_submitted: >= 4
+queue_job_results: >= 4
+worker_processes_started: >= 1
+worker_exit_code: 0
+completed_jobs: >= 2
+blocked_jobs: >= 2
+quarantined_jobs: 0
+active_predictions: >= 16
+action_decisions: >= 16
+retry_after_uncertain_completion_trials: >= 1
+interrupted_persistence_trials: >= 1
+conflicting_active_pointer_trials: >= 1
+causal_replay_receipts: >= 1
+continued_with_unknown_state: 0
+side_effect_violations: 0
+duplicate_active_predictions_promoted: 0
+duplicate_action_decisions_promoted: 0
+canonical/source/identity/provider/Memory attempts: 0
+```
+
+Accepted status:
+
+```text
+PASS_LIVE_TAU_PCTOM_QUEUE_WORKER_RETRY_PROOF
+```
+
+Blocked status:
+
+```text
+BLOCKED_LIVE_TAU_PCTOM_QUEUE_WORKER_RETRY_PROOF
+```
+
+Current accepted receipt:
+
+```text
+/tmp/persona-dream-live-tau-sealed-test-queue-worker-retry-proof-20260721T054051Z/live_tau_sealed_test_queue_worker_retry_proof_receipt.v1.json
+```
+
+This bridge proves a bounded local queue-worker process can consume queued
+retry/fault jobs over live-originated sealed-test artifacts, recover equivalent
+active state for exact retry and uncertain-completion retry, block negative
+jobs before active-state promotion, and preserve allowed terminal outcomes. It
+does not prove a permanently deployed always-on production service, full
+64-episode live Tau replication, new live Tau execution, live Memory service
+fault injection, provider/video execution, semantic dream quality, or complete
+live Phase 01-16 runtime execution.
