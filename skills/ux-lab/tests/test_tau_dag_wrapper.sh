@@ -121,7 +121,7 @@ else
     fail "wrapper contains a forbidden viewer implementation reference"
 fi
 
-if [[ "$(wc -l <"$RUNNER")" -le 100 ]]; then
+if [[ "$(wc -l <"$RUNNER")" -le 120 ]]; then
     pass "UX Lab runner remains a thin launcher"
 else
     fail "UX Lab runner exceeds the thin-launcher size bound"

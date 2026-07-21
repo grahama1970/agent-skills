@@ -1,0 +1,141 @@
+{
+  "schema": "ux_lab.project_registry.v1",
+  "default_project": "ux-lab",
+  "projects": [
+    {
+      "id": "ux-lab",
+      "label": "UX Lab",
+      "description": "Lightweight multi-project UI housing and launcher for agent-skills surfaces.",
+      "workspace": "agent-skills/skills/ux-lab",
+      "start": {
+        "command": ["bash", "run.sh", "serve"],
+        "cwd": "agent-skills/skills/ux-lab"
+      },
+      "surfaces": [
+        {
+          "id": "hub",
+          "label": "Project Hub",
+          "url": "http://127.0.0.1:${UX_LAB_PORT:-3002}/",
+          "owned_by": "ux-lab",
+          "mounted": true
+        }
+      ],
+      "docs": [
+        "agent-skills/skills/ux-lab/SKILL.md",
+        "agent-skills/skills/ux-lab/projects.v1.json"
+      ]
+    },
+    {
+      "id": "persona-dream",
+      "label": "Persona Dream",
+      "description": "Agentic dream and PCTOM-R research artifacts for provenance-bound synthetic dreaming.",
+      "workspace": "agent-skills/skills/persona-dream",
+      "surfaces": [
+        {
+          "id": "hub",
+          "label": "UX Lab Project Card",
+          "url": "http://127.0.0.1:${UX_LAB_PORT:-3002}/?project=persona-dream",
+          "owned_by": "ux-lab",
+          "mounted": true
+        },
+        {
+          "id": "legacy-dream-route",
+          "label": "Legacy Dream Route",
+          "url": "http://127.0.0.1:3002/#dream",
+          "owned_by": "external-project",
+          "mounted": false,
+          "note": "This route has existing verification markers, but the current 3002 runtime is Sparta Explorer and does not mount Persona Dream."
+        }
+      ],
+      "docs": [
+        "agent-skills/skills/persona-dream/GOAL.md",
+        "agent-skills/skills/persona-dream/README.md",
+        "agent-skills/skills/persona-dream/local/HANDOFF.md"
+      ]
+    },
+    {
+      "id": "sparta-explorer",
+      "label": "Sparta Explorer",
+      "description": "Canonical SPARTA Explorer runtime owned by experiments/sparta/explorer.",
+      "workspace": "sparta/explorer",
+      "start": {
+        "command": ["npm", "run", "dev"],
+        "cwd": "sparta/explorer"
+      },
+      "surfaces": [
+        {
+          "id": "threat-matrix",
+          "label": "Threat Matrix",
+          "url": "http://127.0.0.1:3002/#sparta-explorer/threat-matrix",
+          "owned_by": "sparta-explorer",
+          "mounted": true
+        },
+        {
+          "id": "qras",
+          "label": "QRAs",
+          "url": "http://127.0.0.1:3002/#sparta-explorer/qras",
+          "owned_by": "sparta-explorer",
+          "mounted": true
+        }
+      ],
+      "docs": [
+        "sparta/explorer/package.json"
+      ]
+    },
+    {
+      "id": "battle",
+      "label": "Battle",
+      "description": "Battle spectator and receipt surfaces when a battle project runtime is active.",
+      "workspace": "agent-skills/skills/battle",
+      "surfaces": [
+        {
+          "id": "hub",
+          "label": "UX Lab Project Card",
+          "url": "http://127.0.0.1:${UX_LAB_PORT:-3002}/?project=battle",
+          "owned_by": "ux-lab",
+          "mounted": true
+        }
+      ],
+      "docs": [
+        "agent-skills/skills/battle/SKILL.md"
+      ]
+    },
+    {
+      "id": "watch",
+      "label": "Watch",
+      "description": "Watch memory and observation project surface metadata.",
+      "workspace": "agent-skills/skills/watch",
+      "surfaces": [
+        {
+          "id": "hub",
+          "label": "UX Lab Project Card",
+          "url": "http://127.0.0.1:${UX_LAB_PORT:-3002}/?project=watch",
+          "owned_by": "ux-lab",
+          "mounted": true
+        }
+      ],
+      "docs": [
+        "agent-skills/skills/watch/SKILL.md"
+      ]
+    },
+    {
+      "id": "tau-dag",
+      "label": "Tau DAG Viewer",
+      "description": "Read-only Tau-owned DAG viewer launched through the UX Lab wrapper.",
+      "workspace": "agent-skills/skills/tau",
+      "surfaces": [
+        {
+          "id": "delegated-viewer",
+          "label": "Delegated Tau Viewer",
+          "url": "run: skills/ux-lab/run.sh tau-dag-view --run-dir /path/to/run",
+          "owned_by": "tau",
+          "mounted": false,
+          "note": "Tau owns the viewer; UX Lab validates read-only capabilities and delegates."
+        }
+      ],
+      "docs": [
+        "agent-skills/skills/ux-lab/references/tau-dag-viewer.md"
+      ]
+    }
+  ]
+}

@@ -2,7 +2,8 @@
 set -euo pipefail
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_ROOT="${WORKSPACE_ROOT:-$(cd "${SKILL_DIR}/../../.." && pwd)}"
-APP_DIR="${SPARTA_EXPLORER_ROOT:-${WORKSPACE_ROOT}/sparta/explorer}"
+REGISTRY="${SKILL_DIR}/scripts/project_registry.py"
+HUB_SERVER="${SKILL_DIR}/scripts/serve_project_hub.py"
 
 tau_dag_view() {
     local tau_bin="${TAU_BIN:-}"
@@ -54,20 +55,39 @@ case "${1:-start}" in
         shift
         tau_dag_view "$@"
         ;;
-    start)
+    start|serve)
         shift || true
-        [[ $# -eq 0 ]] || { echo "Unexpected arguments for Sparta Explorer: $*" >&2; exit 2; }
-        [[ -f "${APP_DIR}/package.json" ]] || {
-            echo "Missing canonical Sparta Explorer: ${APP_DIR}" >&2
-            exit 2
-        }
-        cd "${APP_DIR}"
-        exec npm run dev
+        [[ $# -eq 0 ]] || { echo "Unexpected arguments for UX Lab hub: $*" >&2; exit 2; }
+        exec python3 "${HUB_SERVER}"
+        ;;
+    list|projects)
+        shift || true
+        exec python3 "${REGISTRY}" list "$@"
+        ;;
+    url)
+        shift || true
+        exec python3 "${REGISTRY}" url "$@"
+        ;;
+    status)
+        shift || true
+        exec python3 "${REGISTRY}" status "$@"
+        ;;
+    start-project)
+        shift || true
+        exec python3 "${REGISTRY}" start-project "$@"
+        ;;
+    validate)
+        shift || true
+        exec python3 "${REGISTRY}" validate "$@"
         ;;
     help|--help|-h)
         printf '%s\n' \
             'Usage:' \
-            '  run.sh [start]' \
+            '  run.sh [start|serve]' \
+            '  run.sh list [--json]' \
+            '  run.sh url [project] [surface]' \
+            '  run.sh status [project]' \
+            '  run.sh start-project <project>' \
             '  run.sh tau-dag-view --run-dir /path/to/tau-run'
         ;;
     *)

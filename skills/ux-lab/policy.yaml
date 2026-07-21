@@ -1,9 +1,10 @@
 name: ux-lab
 slash_command: /ux-lab
-canonical_application: ../../../sparta/explorer
+canonical_application: project_registry
+project_registry: projects.v1.json
 required_reads:
   - .pi/skills/ux-lab/SKILL.md
 forbidden_paths:
-  - ui
+  - legacy_multi_application_host
 forbidden_runtime_references:
   - legacy_multi_application_host

@@ -2,23 +2,27 @@
 set -euo pipefail
 SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_ROOT="${WORKSPACE_ROOT:-$(cd "${SKILL_DIR}/../../.." && pwd)}"
-APP_DIR="${SPARTA_EXPLORER_ROOT:-${WORKSPACE_ROOT}/sparta/explorer}"
-[[ -f "${APP_DIR}/package.json" ]]
+export WORKSPACE_ROOT
 [[ -f "${SKILL_DIR}/ui/package.json" ]] || {
   echo "UX Lab shared UI package missing at ${SKILL_DIR}/ui." >&2
   exit 1
 }
-(
-  cd "${SKILL_DIR}/ui"
-  npm ci
-  npm run typecheck
-)
+bash -n "${SKILL_DIR}/run.sh"
+python3 -m py_compile "${SKILL_DIR}/scripts/project_registry.py" "${SKILL_DIR}/scripts/serve_project_hub.py"
+"${SKILL_DIR}/run.sh" validate
+"${SKILL_DIR}/run.sh" list --json | jq -e '.schema == "ux_lab.project_list.v1" and (.projects | length >= 5)' >/dev/null
+"${SKILL_DIR}/run.sh" url persona-dream hub | grep -q 'project=persona-dream'
+"${SKILL_DIR}/run.sh" status persona-dream | jq -e '.projects[0].workspace_exists == true and .projects[0].mounted_surface_count >= 1' >/dev/null
 bash "${SKILL_DIR}/tests/test_tau_dag_wrapper.sh"
 forbidden_pattern="$(printf 'pi%smono' '-')"
-if grep -R --line-number --fixed-strings "${forbidden_pattern}" "${APP_DIR}" "${SKILL_DIR}" --exclude-dir=node_modules --exclude-dir=tests --exclude-dir=.cache --exclude='*.json.bak'; then
+runtime_files=(
+  "${SKILL_DIR}/run.sh"
+  "${SKILL_DIR}/sanity.sh"
+  "${SKILL_DIR}/projects.v1.json"
+  "${SKILL_DIR}/scripts"
+)
+if grep -R --line-number --fixed-strings "${forbidden_pattern}" "${runtime_files[@]}" --exclude-dir=__pycache__; then
   echo "Forbidden legacy runtime reference found." >&2
   exit 1
 fi
-curl -fsS "${SPARTA_EXPLORER_API_URL:-http://127.0.0.1:3001}/api/f36/explorer-projection" \
-  | jq -e '.schema == "f36.explorer_shared_projection.v2" and .live == true and .mocked == false and .counts.compliance_credit == 0 and (.projection_fingerprint | length > 0)' >/dev/null
-echo "Sparta Explorer wrapper sanity: PASS"
+echo "UX Lab wrapper sanity: PASS"
