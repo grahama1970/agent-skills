@@ -31,18 +31,32 @@ class FakeSubmitHerdr:
     def __init__(self) -> None:
         self.trace = []
         self.enter_count = 0
+        self.sent_text = False
         self.socket_path = Path("/tmp/fake-herdr.sock")
 
     def call(self, method: str, params: dict) -> dict:
         response = {"id": method, "result": {"type": "ok"}}
         self.trace.append({"request": {"method": method, "params": params}, "response": response})
+        if method == "pane.send_text":
+            self.sent_text = True
         if method == "pane.send_keys" and params.get("keys") == ["enter"]:
             self.enter_count += 1
         if method in {"pane.send_text", "pane.send_keys"}:
             return {"type": "ok"}
         if method == "pane.read":
+            if not self.sent_text:
+                return {"type": "pane_read", "read": {"text": "Codex composer ready"}}
             if self.enter_count < 2:
-                return {"type": "pane_read", "read": {"text": "RESTART CHECK FROM monitor-confused-agents\n  gpt-5.5 high"}}
+                return {
+                    "type": "pane_read",
+                    "read": {
+                        "text": (
+                            "RESTART CHECK FROM monitor-confused-agents\n"
+                            "Disposition: <choose exactly one of RESUMING_NOW | CAN_SELF_UNBLOCK_WEBGPT>\n"
+                            "If the immutable goal is known and not achieved, keep going.\n"
+                        )
+                    },
+                }
             return {"type": "pane_read", "read": {"text": "Running UserPromptSubmit hook\nWorking (1s * esc to interrupt)"}}
         if method == "agent.explain":
             return {"type": "agent_explain", "explain": {"state": "idle", "matched_rule": "codex_prompt_idle_ready"}}
@@ -72,6 +86,38 @@ class FakeWorkingAfterEnterHerdr(FakeSubmitHerdr):
         if method == "agent.explain" and self.enter_count >= 1:
             return {"type": "agent_explain", "explain": {"state": "working"}}
         return super().call(method, params)
+
+
+class FakeWrappedPromptAfterEnterHerdr(FakeSubmitHerdr):
+    def call(self, method: str, params: dict) -> dict:
+        response = {"id": method, "result": {"type": "ok"}}
+        self.trace.append({"request": {"method": method, "params": params}, "response": response})
+        if method == "pane.send_keys" and params.get("keys") == ["enter"]:
+            self.enter_count += 1
+        if method in {"pane.send_text", "pane.send_keys"}:
+            if method == "pane.send_text":
+                self.sent_text = True
+            return {"type": "ok"}
+        if method == "pane.read":
+            if not self.sent_text:
+                return {"type": "pane_read", "read": {"text": "Codex composer ready"}}
+            if self.enter_count < 2:
+                return {
+                    "type": "pane_read",
+                    "read": {
+                        "text": (
+                            "Unblock Attempts: brave-search=<USED:path | NOT_APPLICABLE:reason>; "
+                            "browser-oracle=<USED:path | NOT_APPLICABLE:reason>\n"
+                            "Disposition: <choose exactly one of RESUMING_NOW | BLOCKED_NEEDS_HUMAN | "
+                            "CAN_SELF_UNBLOCK_WEBGPT | DONE_WITH_RECEIPT>\n"
+                            "If the immutable goal is known and not achieved, keep going.\n"
+                        )
+                    },
+                }
+            return {"type": "pane_read", "read": {"text": "Running UserPromptSubmit hook\nWorking (1s * esc to interrupt)"}}
+        if method == "agent.explain":
+            return {"type": "agent_explain", "explain": {"state": "idle", "matched_rule": "codex_prompt_idle_ready"}}
+        raise AssertionError(method)
 
 
 class FakeCompletionBeforeSendHerdr(FakeSubmitHerdr):
@@ -547,6 +593,27 @@ def test_repeated_submission_marker_prevents_second_enter() -> None:
     assert monitor.prompt_submitted(after, baseline=before) is False
 
 
+def test_wrapped_prompt_signature_allows_second_enter() -> None:
+    baseline = "Codex composer ready"
+    wrapped = """
+    Unblock Attempts: brave-search=<USED:path | NOT_APPLICABLE:reason>
+    Disposition: <choose exactly one of RESUMING_NOW | CAN_SELF_UNBLOCK_WEBGPT>
+    If the immutable goal is known and not achieved, keep going.
+    """
+
+    assert monitor.prompt_visible_after_send(wrapped, baseline=baseline, prompt="full prompt not visible") is True
+
+
+def test_stale_wrapped_prompt_signature_does_not_allow_second_enter() -> None:
+    baseline = """
+    Unblock Attempts: brave-search=<USED:path | NOT_APPLICABLE:reason>
+    Disposition: <choose exactly one of RESUMING_NOW | CAN_SELF_UNBLOCK_WEBGPT>
+    If the immutable goal is known and not achieved, keep going.
+    """
+
+    assert monitor.prompt_visible_after_send(baseline, baseline=baseline, prompt="full prompt not visible") is False
+
+
 def test_install_cron_renders_ten_minute_apply_line() -> None:
     exit_code, payload = monitor.install_cron(
         apply=False,
@@ -577,6 +644,20 @@ def test_send_text_failure_never_sends_enter() -> None:
     assert result["skip_reason"] == "send_text_failed"
     assert result["send_failed"] is True
     assert client.enter_count == 0
+
+
+def test_send_prompt_uses_second_enter_when_wrapped_prompt_is_visible() -> None:
+    client = FakeWrappedPromptAfterEnterHerdr()
+    original_wait = monitor.wait_for_agent_idle
+    monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
+    try:
+        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-confused-agents")
+    finally:
+        monitor.wait_for_agent_idle = original_wait
+
+    assert result["submit_confirmed"] is True
+    assert result["second_enter_sent"] is True
+    assert client.enter_count == 2
 
 
 def test_completion_between_selection_and_send_sends_nothing_with_valid_receipt(tmp_path: Path) -> None:

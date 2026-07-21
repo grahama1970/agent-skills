@@ -666,7 +666,7 @@ def send_prompt(client: HerdrClient, pane_id: str, prompt: str, *, project_root:
     second_read = ""
     if not submit_confirmed:
         current = explain_agent(client, pane_id)
-        if not explain_allows_input(current) or prompt not in first_read:
+        if not explain_allows_input(current) or not prompt_visible_after_send(first_read, baseline=pre_read, prompt=prompt):
             return skipped_send(
                 "post_enter_uncertain",
                 wait_result=wait_result,
@@ -725,6 +725,21 @@ def prompt_submission_marker(text: str, *, baseline: str = "") -> str:
         if text.count(marker) > baseline.count(marker):
             return marker
     return ""
+
+
+def prompt_visible_after_send(text: str, *, baseline: str, prompt: str) -> bool:
+    if not text:
+        return False
+    if prompt in text and prompt not in baseline:
+        return True
+    signatures = [
+        "Unblock Attempts:",
+        "Disposition:",
+        "CAN_SELF_UNBLOCK_WEBGPT",
+        "If the immutable goal is known and not achieved",
+    ]
+    new_hits = sum(1 for item in signatures if text.count(item) > baseline.count(item))
+    return new_hits >= 2
 
 
 def prompt_send_failed(prompt_record: dict[str, Any]) -> bool:
