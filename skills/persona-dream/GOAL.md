@@ -133,6 +133,25 @@ Next: <one immediate action or stop condition>
 
 ## Current Evidence Snapshot
 
+- PCTOM-R no-intervention cooperation policy acceptance:
+  `/tmp/persona-dream-cooperation-no-intervention-policy-proof-20260721T211544Z/cooperation_no_intervention_policy_acceptance_receipt.v1.json`.
+  Status `PASS_PCTOM_COOPERATION_NO_INTERVENTION_POLICY_ACCEPTANCE`, receipt
+  SHA-256
+  `sha256:ee9e77e35d948dc7c202ae56dfb0644474a5f0e8fd3032299280c1a3c5499eb6`,
+  `mocked:false`, `live:true`, one accepted row, one quarantined
+  threshold-rule regression row, mean regret delta avoided `0.55`, zero Tau
+  calls, zero Memory/provider/canonical/identity/source-memory writes, no LLM
+  judge, and no human content judgment. The accepted policy is
+  `pre_outcome_no_intervention_on_observed_cooperation_candidate.v1`; the
+  quarantined policy is `pre_outcome_cooperation_threshold_rule.v1`.
+  Negative mutations failed closed for `diagnostic_conclusion_not_reject`,
+  `missing_regression_candidate`, `pre_outcome_oracle_leak`, and
+  `no_intervention_not_lower_regret`. This preserves the observed
+  `instr-coord-exposure-26` CD `OFFER_COOPERATION` action against the rejected
+  threshold fallback's `WAIT` action. It does not prove broad held-out planning
+  benefit, replacement cooperation policy benefit, confidence-bounded CD
+  benefit, semantic dream quality, paid provider execution, or complete
+  Phase 01-16 runtime execution.
 - UX Lab project housing is reachable at
   `http://127.0.0.1:3002/?project=persona-dream`. Fresh CDP marker:
   `/home/graham/workspace/experiments/agent-skills-main/.codex/ui-verification/latest.json`;

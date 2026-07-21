@@ -1,10 +1,46 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R cooperation policy diagnostic) by agent
+**Last updated:** 2026-07-21 (PCTOM-R no-intervention cooperation policy acceptance) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R NO-INTERVENTION COOPERATION POLICY ACCEPTANCE): a
+  deterministic acceptance receipt now quarantines
+  `pre_outcome_cooperation_threshold_rule.v1` for the observed live
+  cooperation-instrument regression slice and accepts
+  `pre_outcome_no_intervention_on_observed_cooperation_candidate.v1` only for
+  that slice. Command:
+  `./skills/persona-dream/run.sh accept-cooperation-no-intervention-policy`.
+  Receipt:
+  `/tmp/persona-dream-cooperation-no-intervention-policy-proof-20260721T211544Z/cooperation_no_intervention_policy_acceptance_receipt.v1.json`.
+  Status `PASS_PCTOM_COOPERATION_NO_INTERVENTION_POLICY_ACCEPTANCE`, receipt
+  SHA-256
+  `sha256:ee9e77e35d948dc7c202ae56dfb0644474a5f0e8fd3032299280c1a3c5499eb6`.
+  It consumed the prior deterministic cooperation-policy diagnostic receipt
+  from
+  `/tmp/persona-dream-cooperation-policy-diagnostic-proof-20260721T205236Z/cooperation_policy_diagnostic_receipt.v1.json`,
+  accepted one row, quarantined one threshold-rule regression row, avoided a
+  regret delta of `0.55`, made zero Tau calls, zero Memory/provider/canonical/
+  identity/source-memory writes, used no LLM judge, and required no human
+  content judgment. Built-in negative mutations failed closed for
+  `diagnostic_conclusion_not_reject`, `missing_regression_candidate`,
+  `pre_outcome_oracle_leak`, and `no_intervention_not_lower_regret`. The
+  accepted row is still `instr-coord-exposure-26`: CD's original
+  `OFFER_COOPERATION` action is kept, the threshold fallback's `WAIT` action
+  is quarantined, and the accepted pre-outcome basis is selected predicted
+  counterpart action `KAI_OFFERS_COOPERATION`, probability `0.36`, probability
+  margin `0.02`, distribution sum `1.0`, and M/R/D baselines all `WAIT`.
+  Post-outcome evaluation remains audit-only: oracle action
+  `OFFER_COOPERATION`, original CD regret `0.0`, quarantined-rule regret
+  `0.55`, avoided regret delta `0.55`. This does not prove broad held-out
+  planning benefit, a replacement cooperation policy, confidence-bounded CD
+  benefit, no-intervention optimality outside this observed candidate,
+  semantic dream quality, paid provider execution, or complete Phase 01-16
+  runtime. Next PCTOM-R work should design a replacement pre-outcome
+  cooperation feature split and run it through the same diagnostic/negative
+  checks over broader held-out cooperation exposure before any planning-benefit
+  claim.
 - 2026-07-21 (PCTOM-R COOPERATION POLICY DIAGNOSTIC): a deterministic
   diagnostic now classifies the observed live cooperation-instrument policy
   effect without reexecuting Tau. Command:
