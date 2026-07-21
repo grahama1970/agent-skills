@@ -125,6 +125,7 @@ def run_eval_tick(tmp_path: Path, client: EvalHerdrClient) -> tuple[int, dict[st
             include_agents={"codex"},
             stopped_statuses={"done", "idle", "blocked", "unknown"},
             cooldown_seconds=0,
+            unconfirmed_cooldown_seconds=600,
             max_prompts=20,
             only_obvious_early_stops=False,
         )

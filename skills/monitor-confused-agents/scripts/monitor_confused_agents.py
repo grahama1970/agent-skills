@@ -36,6 +36,7 @@ DEFAULT_SPACE = "codex"
 DEFAULT_CWD_PREFIX = str(Path.home() / "workspace" / "experiments")
 DEFAULT_STOPPED_STATUSES = ("done", "idle", "blocked", "unknown")
 DEFAULT_COOLDOWN_SECONDS = 60 * 60
+DEFAULT_UNCONFIRMED_COOLDOWN_SECONDS = 10 * 60
 DEFAULT_SOCKET_PATH = Path.home() / ".config" / "herdr" / "herdr.sock"
 EARLY_STOP_PATTERNS = [
     r"\bwhat remains\b",
@@ -139,6 +140,7 @@ def tick_command(
     include_agent: list[str] = typer.Option(["codex", "claude"], "--include-agent", help="Agent labels to monitor."),
     stopped_status: list[str] = typer.Option(list(DEFAULT_STOPPED_STATUSES), "--stopped-status", help="Statuses treated as stopped."),
     cooldown_seconds: int = typer.Option(DEFAULT_COOLDOWN_SECONDS, "--cooldown-seconds", min=0, help="Per-pane prompt cooldown."),
+    unconfirmed_cooldown_seconds: int = typer.Option(DEFAULT_UNCONFIRMED_COOLDOWN_SECONDS, "--unconfirmed-cooldown-seconds", min=0, help="Cooldown for prompt attempts that modified input but were not confirmed submitted."),
     max_prompts: int = typer.Option(20, "--max-prompts", min=1, help="Maximum prompts per tick."),
     only_obvious_early_stops: bool = typer.Option(False, "--only-obvious-early-stops", help="Prompt only stopped panes with early-stop transcript markers."),
     json_output: bool = typer.Option(True, "--json/--no-json", help="Print JSON receipt."),
@@ -153,6 +155,7 @@ def tick_command(
         include_agents={item for item in include_agent if item},
         stopped_statuses={item.lower() for item in stopped_status},
         cooldown_seconds=cooldown_seconds,
+        unconfirmed_cooldown_seconds=unconfirmed_cooldown_seconds,
         max_prompts=max_prompts,
         only_obvious_early_stops=only_obvious_early_stops,
     )
@@ -250,6 +253,17 @@ def append_jsonl(path: Path, payload: dict[str, Any]) -> None:
         handle.write(json.dumps(payload, sort_keys=True) + "\n")
 
 
+def cooldown_for_prompt_state(
+    prompt_state: dict[str, Any],
+    *,
+    cooldown_seconds: int,
+    unconfirmed_cooldown_seconds: int,
+) -> int:
+    if prompt_state.get("input_modified") and prompt_state.get("submit_confirmed") is False:
+        return min(cooldown_seconds, unconfirmed_cooldown_seconds) if cooldown_seconds > 0 else unconfirmed_cooldown_seconds
+    return cooldown_seconds
+
+
 def load_state() -> dict[str, Any]:
     if not STATE_PATH.exists():
         return {"schema": "agent_skills.monitor_confused_agents.state.v1", "prompts": {}}
@@ -304,6 +318,7 @@ def tick(
     include_agents: set[str],
     stopped_statuses: set[str],
     cooldown_seconds: int,
+    unconfirmed_cooldown_seconds: int,
     max_prompts: int,
     only_obvious_early_stops: bool,
 ) -> tuple[int, dict[str, Any]]:
@@ -329,6 +344,7 @@ def tick(
             "include_agents": sorted(include_agents),
             "stopped_statuses": sorted(stopped_statuses),
             "cooldown_seconds": cooldown_seconds,
+            "unconfirmed_cooldown_seconds": unconfirmed_cooldown_seconds,
             "max_prompts": max_prompts,
             "only_obvious_early_stops": only_obvious_early_stops,
         },
@@ -366,6 +382,7 @@ def tick(
                     include_agents=include_agents,
                     stopped_statuses=stopped_statuses,
                     cooldown_seconds=cooldown_seconds,
+                    unconfirmed_cooldown_seconds=unconfirmed_cooldown_seconds,
                     max_prompts=max_prompts,
                     only_obvious_early_stops=only_obvious_early_stops,
                 )
@@ -390,6 +407,7 @@ def tick_locked(
     include_agents: set[str],
     stopped_statuses: set[str],
     cooldown_seconds: int,
+    unconfirmed_cooldown_seconds: int,
     max_prompts: int,
     only_obvious_early_stops: bool,
 ) -> tuple[int, dict[str, Any]]:
@@ -426,8 +444,15 @@ def tick_locked(
         if not candidate:
             continue
         pane_id = str(candidate["pane_id"])
-        last_prompt_at = int(state.get("prompts", {}).get(pane_id, {}).get("last_prompt_epoch", 0) or 0)
-        candidate["cooldown_active"] = cooldown_seconds > 0 and (now_epoch - last_prompt_at) < cooldown_seconds
+        prompt_state = state.get("prompts", {}).get(pane_id, {})
+        last_prompt_at = int(prompt_state.get("last_prompt_epoch", 0) or 0)
+        effective_cooldown_seconds = cooldown_for_prompt_state(
+            prompt_state,
+            cooldown_seconds=cooldown_seconds,
+            unconfirmed_cooldown_seconds=unconfirmed_cooldown_seconds,
+        )
+        candidate["cooldown_active"] = effective_cooldown_seconds > 0 and (now_epoch - last_prompt_at) < effective_cooldown_seconds
+        candidate["cooldown_seconds_effective"] = effective_cooldown_seconds
         candidate["last_prompt_epoch"] = last_prompt_at or None
         receipt["stopped_panes"].append(candidate)
         append_jsonl(events_path, {"event": "stopped_pane", "ts": now_iso(), **candidate_without_text(candidate)})

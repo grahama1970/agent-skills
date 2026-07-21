@@ -95,10 +95,12 @@ uv run --project skills/monitor-confused-agents pytest -q skills/monitor-confuse
   before typing.
 - Pre-read failures, Herdr send failures, Enter failures, and typed-but-not
   submitted attempts make the tick exit nonzero with `status:NEEDS_ATTENTION`.
-- Any input-modifying uncertain attempt is recorded in cooldown state, even when
-  submission is not confirmed, so cron does not repeat the same ambiguous input
-  every 10 minutes.
-- Prompt spam is prevented by a state file and a cooldown.
+- Any input-modifying uncertain attempt is recorded in cooldown state, but it
+  uses the shorter unconfirmed-attempt cooldown, default `600` seconds, rather
+  than the normal confirmed-submit cooldown.
+- Prompt spam is prevented by a state file and cooldowns: confirmed submissions
+  default to one hour; unconfirmed input-modifying attempts retry on the
+  10-minute cron cadence unless configured otherwise.
 - Every run writes:
 
 ```text

@@ -756,6 +756,26 @@ def test_repeated_monitor_prompt_with_longer_composer_allows_second_enter() -> N
     assert monitor.prompt_visible_after_send(text, baseline=baseline, prompt="full prompt not visible") is True
 
 
+def test_confirmed_prompt_uses_full_cooldown() -> None:
+    prompt_state = {"input_modified": True, "submit_confirmed": True}
+
+    assert monitor.cooldown_for_prompt_state(
+        prompt_state,
+        cooldown_seconds=3600,
+        unconfirmed_cooldown_seconds=600,
+    ) == 3600
+
+
+def test_unconfirmed_prompt_uses_shorter_retry_cooldown() -> None:
+    prompt_state = {"input_modified": True, "submit_confirmed": False}
+
+    assert monitor.cooldown_for_prompt_state(
+        prompt_state,
+        cooldown_seconds=3600,
+        unconfirmed_cooldown_seconds=600,
+    ) == 600
+
+
 def test_install_cron_renders_ten_minute_apply_line() -> None:
     exit_code, payload = monitor.install_cron(
         apply=False,
