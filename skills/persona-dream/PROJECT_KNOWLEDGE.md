@@ -1,10 +1,35 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R cooperation feature-split prerequisite audit) by agent
+**Last updated:** 2026-07-21 (PCTOM-R cooperation contrast instrument) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R COOPERATION CONTRAST INSTRUMENT): a deterministic
+  cooperation-contrast simulator corpus now exists to close the previous
+  missing unsafe/avoid contrast blocker at the offline instrument layer.
+  Command:
+  `./skills/persona-dream/run.sh check-cooperation-contrast-instrument`.
+  Receipt:
+  `/tmp/persona-dream-cooperation-contrast-instrument-20260721T212749Z/cooperation_contrast_instrument_receipt.v1.json`.
+  Status `PASS_PCTOM_COOPERATION_CONTRAST_INSTRUMENT`, receipt SHA-256
+  `sha256:58118f340a778133193811afb7f379522a3c3b5f9c95748252f22170a86b9444`.
+  Counts: 8 deterministic simulator episodes, variants 29-36, four
+  keep-cooperation positive rows, four avoid/unsafe-cooperation contrast rows,
+  eight visible packet hashes, six negative mutations, and six negative
+  mutations failed closed. Negative mutations were
+  `missing_avoid_or_unsafe_contrast`, `missing_keep_cooperation_positive`,
+  `visible_outcome_key_leak`, `variant_not_disjoint_from_prior_instruments`,
+  `counterpart_policy_actual_mismatch`, and
+  `missing_contrast_class_withheld_field`. The corpus made zero Tau calls,
+  zero Memory/provider/canonical/identity/source-memory writes, used no LLM
+  judge, and required no human content judgment. This is offline deterministic
+  simulator evidence, not live Tau evidence. It does not prove CD will expose
+  both cooperation action classes, a replacement cooperation feature split,
+  broad planning benefit, semantic dream quality, paid provider execution, or
+  complete Phase 01-16 runtime. Next PCTOM-R work should adapt or run the live
+  Tau condition/action/policy diagnostic path over this contrast corpus, then
+  rerun the feature-split prerequisite audit on live-originated contrast rows.
 - 2026-07-21 (PCTOM-R COOPERATION FEATURE-SPLIT PREREQUISITE AUDIT): a
   deterministic guard now checks whether current live-originated cooperation
   evidence can support a replacement pre-outcome cooperation feature split.

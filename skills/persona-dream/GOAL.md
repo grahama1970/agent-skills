@@ -133,6 +133,20 @@ Next: <one immediate action or stop condition>
 
 ## Current Evidence Snapshot
 
+- PCTOM-R cooperation contrast instrument:
+  `/tmp/persona-dream-cooperation-contrast-instrument-20260721T212749Z/cooperation_contrast_instrument_receipt.v1.json`.
+  Status `PASS_PCTOM_COOPERATION_CONTRAST_INSTRUMENT`, receipt SHA-256
+  `sha256:58118f340a778133193811afb7f379522a3c3b5f9c95748252f22170a86b9444`,
+  `mocked:false`, `live:false`, deterministic simulator corpus `true`, zero
+  Tau calls, zero Memory/provider/canonical/identity/source-memory writes, no
+  LLM judge, and no human content judgment. Counts: eight episodes, variants
+  29-36, four keep-cooperation positive rows, four avoid/unsafe-cooperation
+  contrast rows, and six of six negative mutations failed closed. This closes
+  the missing contrast blocker at the offline simulator-corpus layer only. It
+  does not prove live Tau execution over the contrast corpus, CD exposure of
+  both cooperation action classes, a replacement cooperation policy, broad
+  planning benefit, semantic dream quality, paid provider execution, or
+  complete Phase 01-16 runtime execution.
 - PCTOM-R cooperation feature-split prerequisite audit:
   `/tmp/persona-dream-cooperation-feature-split-prereq-audit-20260721T212150Z/cooperation_feature_split_prerequisite_audit_receipt.v1.json`.
   Status `PASS_PCTOM_COOPERATION_FEATURE_SPLIT_PREREQUISITE_AUDIT`, receipt

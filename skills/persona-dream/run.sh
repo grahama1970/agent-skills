@@ -106,6 +106,7 @@ Commands:
   run-live-tau-cooperation-threshold-rule  Replay a pre-outcome cooperation threshold rule on held-out live Tau rows
   run-live-tau-cooperation-exposure-slice  Run held-out live Tau variants 23-24 for cooperation-rule exposure
   check-cooperation-exposure-instrument  Build and check deterministic held-out cooperation-exposure episodes
+  check-cooperation-contrast-instrument  Build and check deterministic held-out cooperation contrast episodes
   run-live-tau-cooperation-instrument-slice  Run deterministic cooperation-exposure instrument through live Tau
   diagnose-cooperation-policy  Diagnose cooperation-threshold policy effects over live instrument artifacts
   accept-cooperation-no-intervention-policy  Accept no-intervention for observed cooperation regression slice
@@ -518,6 +519,9 @@ case "$COMMAND" in
     ;;
   check-cooperation-exposure-instrument)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_cooperation_exposure_instrument.py" "$@"
+    ;;
+  check-cooperation-contrast-instrument)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_cooperation_contrast_instrument.py" "$@"
     ;;
   run-live-tau-cooperation-instrument-slice)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_tau_cooperation_instrument_slice.py" "$@"

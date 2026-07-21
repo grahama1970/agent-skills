@@ -1,46 +1,43 @@
 # Status
 
-Status: COOPERATION_FEATURE_SPLIT_PREREQUISITE_AUDIT_BLOCKS_REPLACEMENT_POLICY
+Status: COOPERATION_CONTRAST_INSTRUMENT_CREATED
 
-Artifact: PCTOM-R cooperation feature-split prerequisite audit over the
-live-originated no-intervention acceptance and policy diagnostic artifacts.
+Artifact: PCTOM-R deterministic cooperation-contrast instrument with both
+keep-cooperation positives and avoid/unsafe-cooperation contrast rows.
 
 Current receipt:
 
 ```text
-/tmp/persona-dream-cooperation-feature-split-prereq-audit-20260721T212150Z/cooperation_feature_split_prerequisite_audit_receipt.v1.json
+/tmp/persona-dream-cooperation-contrast-instrument-20260721T212749Z/cooperation_contrast_instrument_receipt.v1.json
 ```
 
 Receipt SHA-256:
 
 ```text
-sha256:b4b382e52f0d85c4a0f5144057f5145d96a1d5b30b0bcee8cf13daa09d827acb
+sha256:58118f340a778133193811afb7f379522a3c3b5f9c95748252f22170a86b9444
 ```
 
 Inspection result:
 
 ```text
-status: PASS_PCTOM_COOPERATION_FEATURE_SPLIT_PREREQUISITE_AUDIT
-conclusion: FEATURE_SPLIT_BLOCKED_INSUFFICIENT_CONTRAST
-feature_split_acceptance_allowed: false
-missing_prerequisites: missing_unsafe_or_avoid_cooperation_contrast_candidate
-accepted_keep_cooperation_positive_candidates: 1
-diagnostic_keep_cooperation_label_count: 1
-diagnostic_avoid_or_unsafe_cooperation_candidates: 0
-diagnostic_avoid_or_unsafe_label_count: 0
-diagnostic_candidate_count: 1
+status: PASS_PCTOM_COOPERATION_CONTRAST_INSTRUMENT
+episode_count: 8
+variant_min: 29
+variant_max: 36
+keep_cooperation_positive_rows: 4
+avoid_or_unsafe_cooperation_contrast_rows: 4
 negative_checks_failed_closed: true
+negative_mutations: 6
+negative_mutations_failed_closed: 6
 tau_call_attempts: 0
-tau_live_call_performed: 0
-live_tau_originated_artifacts_consumed: true
-live_tau_reexecuted_by_this_command: false
 memory_write_attempts: 0
 provider_call_attempts: 0
 canonical_memory_write_attempts: 0
 identity_write_attempts: 0
 source_memory_write_attempts: 0
 mocked: false
-live: true
+live: false
+deterministic_simulator_corpus: true
 llm_judge_used: false
 human_content_judgment_required: false
 ```
@@ -48,26 +45,28 @@ human_content_judgment_required: false
 What this proves:
 
 ```text
-current live-originated cooperation evidence is one-sided for replacement
-feature-split learning
--> the accepted keep-cooperation row has pre-outcome basis that excludes
-   oracle/outcome fields
--> no replacement cooperation policy or broad planning-benefit claim is
-   accepted by this audit
+a deterministic cooperation-contrast corpus exists beyond variants 1-28
+-> the corpus contains both keep-cooperation positive rows and
+   avoid/unsafe-cooperation contrast rows
+-> visible packets omit actual_next_action, counterpart_policy, contrast_class,
+   oracle_agent_action, and hidden cooperation-safety fields
 -> negative mutations fail closed:
-   acceptance_status_not_pass
-   broad_planning_benefit_claim_injected
-   accepted_pre_outcome_oracle_leak
-   missing_keep_cooperation_candidate
--> no new Tau calls or unsupported writes
+   missing_avoid_or_unsafe_contrast
+   missing_keep_cooperation_positive
+   visible_outcome_key_leak
+   variant_not_disjoint_from_prior_instruments
+   counterpart_policy_actual_mismatch
+   missing_contrast_class_withheld_field
+-> no Tau calls or unsupported writes
 ```
 
 What this does not prove:
 
 ```text
+live Tau execution over the contrast corpus
+CD will expose both cooperation action classes
 a replacement cooperation feature split is valid
 broad held-out planning benefit
-replacement cooperation policy benefit
 confidence-bounded CD benefit
 semantic dream quality
 paid provider execution
@@ -75,6 +74,15 @@ complete live Phase 01-16 runtime execution
 ```
 
 Important finding:
+
+The contrast instrument closes the previous missing-data blocker at the
+deterministic simulator-corpus layer. It creates four hidden-state cases where
+cooperation is the correct counterpart action and four hidden-state cases where
+wait/disclose is the correct counterpart action because cooperation is unsafe
+or not authorized. Visible packets are separately hash-bound and withhold
+outcome, policy, contrast class, oracle agent action, and hidden safety fields.
+
+Prior prerequisite blocker:
 
 The feature-split prerequisite audit consumes the no-intervention acceptance:
 
@@ -104,10 +112,10 @@ positive keep-cooperation row and zero unsafe/avoid-cooperation contrast rows.
 
 Next legal move:
 
-The threshold rule remains quarantined for the observed regression slice, and a
-replacement feature split is now explicitly blocked by insufficient contrast.
-The next PCTOM-R step is to create or collect a broader cooperation-exposure
-slice containing both keep-cooperation positives and unsafe/avoid-cooperation
-contrast rows, then rerun this prerequisite audit before attempting any
-replacement policy. Do not claim broad planning benefit or replacement-policy
-validity from the current one-sided evidence.
+The threshold rule remains quarantined for the observed regression slice. The
+new contrast corpus is offline deterministic simulator evidence, not live Tau
+evidence. The next PCTOM-R step is to run or adapt the live Tau condition
+runner against this contrast corpus, then run action scoring, policy diagnostic,
+and the feature-split prerequisite audit over live-originated contrast rows.
+Do not claim broad planning benefit or replacement-policy validity from the
+offline contrast corpus alone.
