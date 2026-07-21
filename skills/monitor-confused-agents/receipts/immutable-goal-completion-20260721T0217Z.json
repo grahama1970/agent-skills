@@ -1,0 +1,94 @@
+{
+  "cron": {
+    "checkout": "/home/graham/workspace/experiments/agent-skills-cron-main",
+    "checkout_commit": "b870d21cc",
+    "installed": true,
+    "line": "*/10 * * * * cd '/home/graham/workspace/experiments/agent-skills-cron-main/skills/monitor-confused-agents' && '/home/graham/workspace/experiments/agent-skills-cron-main/skills/monitor-confused-agents/run.sh' tick --apply --space 'codex' --cwd-prefix '/home/graham/workspace/experiments' >> '/home/graham/.local/state/monitor-confused-agents/logs/cron.log' 2>&1 # monitor-confused-agents herdr cron",
+    "live": true,
+    "mocked": false
+  },
+  "deterministic_proof": {
+    "post_push_observe_receipt": "/home/graham/.local/state/monitor-confused-agents/receipts/monitor-confused-agents-20260721T021138485224Z/receipt.json",
+    "post_push_observe_summary": {
+      "live": true,
+      "mocked": false,
+      "observed_panes": 13,
+      "ok": true,
+      "prompt_count": 0,
+      "selected_count": 0,
+      "status": "OBSERVED",
+      "stopped_count": 8
+    },
+    "sanity_command": "./skills/monitor-confused-agents/sanity.sh",
+    "sanity_exit_code": 0,
+    "sanity_stdout_summary": "41 passed in 14.14s"
+  },
+  "final_commit_sha": null,
+  "immutable_goal": {
+    "criteria": [
+      "observe stopped agents in a named Herdr space",
+      "do not resume agents with no immutable goal",
+      "do not resume agents whose immutable goal is already achieved with receipt evidence",
+      "do not type into fallback-idle, blocked, unknown, approval, or ambiguous panes",
+      "prompt selected stopped agents with brave-search and project-bound browser-oracle unblock instructions",
+      "install a 10-minute cron for the codex Herdr space",
+      "include deterministic evals for false positives and failed/non-submitted prompt entry",
+      "prove live real-Codex composer transport with submit_confirmed true"
+    ],
+    "summary": "Provide monitor-confused-agents as a fail-closed Herdr monitor skill with 10-minute cron, false-positive and failed-submission evals, WebGPT review, and live real-Codex transport proof."
+  },
+  "live_transport_proof": {
+    "disposable_workspace": {
+      "closed_after_proof": true,
+      "cwd": "/tmp/monitor-confused-codex-live-20260720T220912",
+      "pane_id": "w7V:p2",
+      "workspace_id": "w7V"
+    },
+    "herdr_methods": [
+      "pane.send_text",
+      "pane.send_keys",
+      "pane.send_keys"
+    ],
+    "live": true,
+    "mocked": false,
+    "ok": true,
+    "prompt_count": 1,
+    "prompt_result": {
+      "api_sent": true,
+      "input_modified": true,
+      "second_enter_sent": true,
+      "sent": true,
+      "skip_reason": null,
+      "submit_confirmed": true
+    },
+    "receipt_path": "/home/graham/.local/state/monitor-confused-agents/receipts/monitor-confused-agents-20260721T020948168240Z/receipt.json",
+    "selected_count": 1,
+    "status": "RESTART_PROMPTS_SUBMITTED"
+  },
+  "notes": [
+    "The final commit containing this receipt is intentionally verified by git ls-remote after push instead of embedded here, because embedding the commit hash changes the commit hash.",
+    "The untracked skills/brave-search/uv.lock file was intentionally not committed because it is unrelated to this skill receipt.",
+    "WebGPT review is advisory; deterministic closure evidence is the sanity suite plus live Herdr/Codex receipts listed above."
+  ],
+  "receipt_created_at": "2026-07-21T02:17:00Z",
+  "remote": {
+    "branch": "main",
+    "contains_monitor_transport_commit": true,
+    "monitor_transport_commit_sha": "b870d21cce9b32e3ab378b5e7dbeaed931b7f444",
+    "name": "origin"
+  },
+  "schema": "agent_skills.monitor_confused_agents.immutable_goal_completion.v1",
+  "skill": "monitor-confused-agents",
+  "status": "ACHIEVED_WITH_RECEIPT",
+  "webgpt_review": {
+    "controlled_tab_id": "837360631",
+    "controlled_tab_id_mismatch": false,
+    "metadata": "/tmp/monitor-confused-webgpt-round5-review-assess-response.meta.json",
+    "proof_status": "response_proven",
+    "requested_tab_id": "837360631",
+    "response": "/tmp/monitor-confused-webgpt-round5-review-assess-response.md",
+    "ruling": "PASS_CURRENT_GATE",
+    "tab_was_created": false,
+    "transport_degraded": false
+  }
+}
