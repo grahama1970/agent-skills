@@ -1295,3 +1295,66 @@ regret. It does not prove full 64-episode live Tau replication, statistical
 confidence for live Tau CD benefit, production retry machinery, provider/video
 execution, semantic dream quality, or complete live Phase 01-16 runtime
 execution.
+
+## Bounded Live Tau Sealed-Test Retry Proof
+
+The bounded live Tau sealed-test retry proof consumes the accepted bounded live
+Tau sealed-test replication root without reexecuting Tau. It is a research
+bridge over live-originated artifacts, not a deployed-orchestrator proof.
+
+Pipeline:
+
+```text
+live Tau sealed-test replication receipt
+-> recomputed commitment/model/evidence hashes
+-> active prediction index
+-> action decision index
+-> exact retry and uncertain-completion retry trials
+-> partial/stale/interrupted/conflicting-pointer fault trials
+-> causal retry replay
+-> retry proof receipt
+```
+
+Required checks:
+
+```text
+base receipt status: PASS_LIVE_TAU_PCTOM_SEALED_TEST_REPLICATION
+active_predictions: >= 16
+action_decisions: >= 16
+gate6_receipts: >= 16
+commitment_hashes_recomputed: true
+predictions_have_actions: true
+allowed_terminal_outcomes_only: true
+continued_with_unknown_state: 0
+side_effect_violations: 0
+human_content_judgment_required: false
+canonical/source/identity/provider/Memory attempts: 0
+```
+
+Accepted status:
+
+```text
+PASS_LIVE_TAU_PCTOM_SEALED_TEST_RETRY_PROOF
+```
+
+Blocked status:
+
+```text
+BLOCKED_LIVE_TAU_PCTOM_SEALED_TEST_RETRY_PROOF
+```
+
+Current accepted receipt:
+
+```text
+/tmp/persona-dream-live-tau-sealed-test-retry-proof-20260721T052430Z/live_tau_sealed_test_retry_proof_receipt.v1.json
+```
+
+This bridge proves bounded retry/idempotence over live Tau-originated
+sealed-test artifacts. It proves hash recomputation before active-state
+indexing, equivalent-state recovery for exact and uncertain-completion retry,
+fail-closed handling for partial Tau output, stale scoring, interrupted action
+selection, conflicting active pointers, and one causal replay. It does not
+prove deployed production orchestrator retry machinery, full 64-episode live
+Tau replication, new live Tau execution, live Memory service fault injection,
+provider/video execution, semantic dream quality, or complete live Phase 01-16
+runtime execution.

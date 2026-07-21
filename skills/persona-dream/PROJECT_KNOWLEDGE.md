@@ -1,10 +1,37 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R bounded live Tau sealed-test replication accepted) by agent
+**Last updated:** 2026-07-21 (PCTOM-R bounded live Tau sealed-test retry proof accepted) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R BOUNDED LIVE TAU SEALED-TEST RETRY PROOF): bounded
+  retry/idempotence evidence over live Tau-originated sealed-test artifacts now
+  exists at
+  `/tmp/persona-dream-live-tau-sealed-test-retry-proof-20260721T052430Z/live_tau_sealed_test_retry_proof_receipt.v1.json`.
+  It reports `PASS_LIVE_TAU_PCTOM_SEALED_TEST_RETRY_PROOF` while consuming the
+  bounded live Tau sealed-test replication receipt
+  (`sha256:c066eabd3d5a1a08f4a426cdd7347f91e969998795872d4d2e7e773b84f94087`).
+  Counts: 16 active predictions, 16 action decisions, 16 Gate 6 receipts, 8
+  retry/fault trials, 3 recovered trials, 3 blocked-before-side-effect trials,
+  2 quarantined trials, 0 `CONTINUED_WITH_UNKNOWN_STATE`, 0 side-effect
+  violations, 2 duplicate active-prediction attempts detected and rejected, and
+  0 duplicate action decisions promoted. The runner recomputes prediction
+  payload, model receipt, and evidence bundle hashes before indexing active
+  state, proves exact retry and retry-after-uncertain-completion recover to an
+  equivalent state, blocks/quarantines partial Tau output, stale scoring,
+  interrupted action selection, and conflicting active pointers, and writes one
+  causal replay for the conflicting active-prediction pointer boundary.
+  `mocked:false`, `live:true`, `fixture_backed:false`,
+  `live_tau_originated_artifacts_consumed:true`,
+  `live_tau_reexecuted:false`, `controlled_retry_faults_used:true`,
+  `human_content_judgment_required:false`, and Memory/provider/canonical/
+  identity/source-memory write attempts were all 0. This proves bounded
+  retry/idempotence over live-originated sealed-test artifacts. It does not
+  prove deployed production orchestrator retry machinery, full 64-episode live
+  Tau sealed-test replication, new live Tau execution, live Memory service
+  fault injection, paid provider execution, semantic dream quality, or complete
+  Phase 01-16 runtime execution.
 - 2026-07-21 (PCTOM-R BOUNDED LIVE TAU SEALED-TEST REPLICATION): bounded live
   Tau sealed-test replication evidence now exists at
   `/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_replication_receipt.v1.json`.

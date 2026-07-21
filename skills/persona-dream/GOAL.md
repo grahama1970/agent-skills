@@ -408,12 +408,13 @@ Live Memory revision-recall proof root: /tmp/persona-dream-live-memory-revision-
 Sealed-test statistical-confidence proof root: /tmp/persona-dream-sealed-test-statistical-confidence-20260721T043620Z
 Live fault-injection surface proof root: /tmp/persona-dream-live-fault-injection-surface-20260721T044950Z
 Bounded live Tau sealed-test replication proof root: /tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z
+Bounded live Tau sealed-test retry proof root: /tmp/persona-dream-live-tau-sealed-test-retry-proof-20260721T052430Z
 ```
 
 Current active phase boundary:
 
 ```text
-phase: post-bounded-live-tau-sealed-test-replication, pre-full-64-live-tau-replication-or-production-retry-proof
+phase: post-bounded-live-tau-sealed-test-retry-proof, pre-full-64-live-tau-replication-or-deployed-orchestration-retry-proof
 last_live_condition_receipt: /tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z/live_tau_condition_comparison_receipt.v1.json
 last_reliability_receipt: /tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z/live_tau_condition_reliability_bridge_receipt.v1.json
 last_action_selection_receipt: /tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z/live_tau_condition_action_selection_receipt.v1.json
@@ -425,7 +426,8 @@ last_live_memory_revision_recall_receipt: /tmp/persona-dream-live-memory-revisio
 last_sealed_test_statistical_confidence_receipt: /tmp/persona-dream-sealed-test-statistical-confidence-20260721T043620Z/sealed_test_statistical_confidence_receipt.v1.json
 last_live_fault_injection_surface_receipt: /tmp/persona-dream-live-fault-injection-surface-20260721T044950Z/live_fault_injection_surface_receipt.v1.json
 last_bounded_live_tau_sealed_test_replication_receipt: /tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_replication_receipt.v1.json
-next_required_receipt: full 64-episode live Tau sealed-test replication receipt or production retry/fault proof receipt
+last_bounded_live_tau_sealed_test_retry_proof_receipt: /tmp/persona-dream-live-tau-sealed-test-retry-proof-20260721T052430Z/live_tau_sealed_test_retry_proof_receipt.v1.json
+next_required_receipt: full 64-episode live Tau sealed-test replication receipt or deployed orchestration retry/fault proof receipt
 ```
 
 This boundary means Gate 8/9 condition reliability over live-originated
@@ -445,9 +447,49 @@ fault containment over the hash-bound predecessor receipts. These receipts
 still do not authorize a final research success claim. The bounded live Tau
 sealed-test replication slice now adds 16 live Tau-authored sealed-test cases
 plus Gate 5 scoring and Gate 6 action decisions, but shows a null benefit
-signal rather than live CD improvement. The next useful movement is full
-64-episode live Tau sealed-test replication or production retry/fault proof in
-the deployed orchestration boundary.
+signal rather than live CD improvement. The bounded retry proof now adds
+hash-recomputed active prediction/action indexes over those 16 live-originated
+cases plus 8 retry/fault trials with only recovered, blocked-before-side-effect,
+or quarantined terminal outcomes and one causal replay. The next useful
+movement is full 64-episode live Tau sealed-test replication or retry/fault
+proof inside the deployed orchestration boundary.
+
+Bounded live Tau sealed-test retry proof summary:
+
+```text
+receipt: /tmp/persona-dream-live-tau-sealed-test-retry-proof-20260721T052430Z/live_tau_sealed_test_retry_proof_receipt.v1.json
+status: PASS_LIVE_TAU_PCTOM_SEALED_TEST_RETRY_PROOF
+base_receipt_sha256: sha256:c066eabd3d5a1a08f4a426cdd7347f91e969998795872d4d2e7e773b84f94087
+base_cases: 16
+active_predictions: 16
+action_decisions: 16
+gate6_receipts: 16
+retry_fault_trials: 8
+terminal_outcomes: RECOVERED_WITH_EQUIVALENT_END_STATE=3, BLOCKED_BEFORE_SIDE_EFFECT=3, QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE=2
+continued_with_unknown_state: 0
+side_effect_violations: 0
+duplicate_active_predictions_detected_and_rejected: 2
+duplicate_action_decisions_detected_and_rejected: 0
+mocked: false
+live: true
+fixture_backed: false
+live_tau_originated_artifacts_consumed: true
+live_tau_reexecuted: false
+controlled_retry_faults_used: true
+human_content_judgment_required: false
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+```
+
+This proves bounded retry/idempotence over live Tau-originated sealed-test
+artifacts, including recomputed commitment/model/evidence hashes before active
+state indexing. It does not prove deployed production orchestrator retry
+machinery, full 64-episode live Tau sealed-test replication, new live Tau
+execution, live Memory service fault injection, paid provider execution,
+semantic dream quality, or complete Phase 01-16 runtime execution.
 
 Sealed-test statistical-confidence proof summary:
 
@@ -1459,13 +1501,15 @@ preregistered belief Brier with a paired bootstrap CI below zero, plus one
 broader live fault-injection surface over Memory/model/tool/schema/
 persistence/retry boundaries with eight fault families and no unknown-state
 continuation, plus one bounded live Tau sealed-test replication slice with 16
-Tau-authored sealed/scored/action cases and no observed CD benefit. It does not
+Tau-authored sealed/scored/action cases and no observed CD benefit, plus one
+bounded retry/idempotence proof over those live-originated sealed-test artifacts
+with 8 retry/fault trials and one causal replay. It does not
 prove paid provider execution, semantic dream quality, planning-regret benefit,
 full 64-episode live Tau sealed-test execution, statistical confidence for live
 Tau CD benefit, full external service fault injection beyond Memory `/recall`,
-production retry machinery, complete live Phase 01-16 runtime execution, or
-autonomous operation beyond the bounded bridges. Those require separate live
-receipts.
+deployed production retry machinery, complete live Phase 01-16 runtime
+execution, or autonomous operation beyond the bounded bridges. Those require
+separate live receipts.
 
 No agent may claim final, green, complete, fixed, verified, or closed for this
 research goal unless those concrete proof artifacts exist and are cited.
@@ -1474,8 +1518,9 @@ research goal unless those concrete proof artifacts exist and are cited.
 
 Move from deterministic sealed-test statistical-confidence evidence, PASS live
 Memory recall-after-revision evidence, the broader live fault-injection
-surface, and bounded live Tau sealed-test replication to full 64-episode live
-Tau replication or production retry/fault proof, without reactivating
+surface, bounded live Tau sealed-test replication, and bounded retry/idempotence
+over live-originated sealed-test artifacts to full 64-episode live Tau
+replication or deployed orchestration retry/fault proof, without reactivating
 provider/video as the critical path.
 
 The next accepted artifact must answer one of these narrower questions:
@@ -1483,9 +1528,9 @@ The next accepted artifact must answer one of these narrower questions:
 1. Does the 64-episode sealed-test result persist when all M/R/D/CD prediction
    payloads are authored through live Tau rather than deterministic profiles,
    given that the bounded 4-episode live slice produced a null CD benefit?
-2. Does production retry/fault handling preserve the same terminal-outcome
-   discipline inside the deployed orchestration boundary, not only the bounded
-   research bridge?
+2. Does retry/fault handling preserve the same terminal-outcome discipline
+   inside the deployed orchestration boundary, not only the bounded research
+   bridge over live-originated artifacts?
 
 Resolved live Memory diagnostic:
 
@@ -1578,6 +1623,31 @@ primary_metric: preregistered proper score
 cd_minus_strongest_baseline: reported even if positive, zero, or negative
 planning_regret_delta: reported even if positive, zero, or negative
 llm_judge_used: false
+human_content_judgment_required: false
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+```
+
+Stop condition for a deployed orchestration retry/fault artifact:
+
+```text
+mocked: no
+base_receipt: live Tau sealed-test replication receipt
+deployed_orchestration_boundary_exercised: true
+active_predictions: >= 16
+action_decisions: >= 16
+retry_after_uncertain_completion_trials: >= 1
+interrupted_persistence_trials: >= 1
+conflicting_active_pointer_trials: >= 1
+causal_replay_receipts: >= 1
+permitted_terminal_outcomes_only: true
+continued_with_unknown_state: 0
+side_effect_violations: 0
+duplicate_active_predictions_promoted: 0
+duplicate_action_decisions_promoted: 0
 human_content_judgment_required: false
 memory_write_attempts: 0
 provider_call_attempts: 0
