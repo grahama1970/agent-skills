@@ -17,15 +17,18 @@ def build_prompt(candidate: dict[str, Any]) -> str:
         goal_line = f"{goal.get('source')}: {goal.get('excerpt')}"
     if action == "needs_human":
         instruction = (
+            "Answer directly first: Are you blocked, why did you stop, and have you completed your immutable goal? "
             "You appear legitimately blocked. Do not bury the blocker in a final answer. "
             "Reply with the exact human decision, credential, authority, or external state you need. "
-            "If the blocker is actually research or reviewer uncertainty, use $brave-search or $webgpt instead of stopping."
+            "If the blocker is actually research or reviewer uncertainty, use $brave-search, $ask webgpt, or $ask webkimi instead of stopping."
         )
     else:
         instruction = (
+            "Answer directly first: Are you blocked, why did you stop early, have you completed your immutable goal, "
+            "and do you need $brave-search, $ask webgpt, or $ask webkimi to unblock yourself? "
             "You stopped or went idle while the transcript still shows follow-up work or no real blocker. "
             "Resume the task now. Pick the next concrete remaining action, run it, and continue until a real blocker or deterministic proof exists. "
-            "Use $brave-search for current external facts/docs before another stale retry. Use $webgpt/$ask with a concrete bundle when reviewer/oracle help would unblock you. "
+            "Use $brave-search for current external facts/docs before another stale retry. Use $ask webgpt or $ask webkimi with a concrete bundle when reviewer/oracle help would unblock you. "
             "Ask the human only for a missing decision, credential, authority, acceptance choice, or external state you cannot obtain."
         )
     return (

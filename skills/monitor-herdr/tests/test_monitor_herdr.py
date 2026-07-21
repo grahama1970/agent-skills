@@ -660,8 +660,12 @@ def test_probe_text_names_human_brave_and_webgpt_routes() -> None:
     assert "CAN_SELF_UNBLOCK_BRAVE_SEARCH" in text
     assert "CAN_SELF_UNBLOCK_WEBGPT" in text
     assert "Unblock Attempts:" in text
+    assert "Are you blocked" in text
+    assert "why did you stop early" in text
+    assert "have you completed your immutable goal" in text
     assert "$brave-search" in text
-    assert "$webgpt" in text
+    assert "$ask webgpt" in text
+    assert "$ask webkimi" in text
     assert "browser-oracle=" in text
 
 
