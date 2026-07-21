@@ -678,6 +678,82 @@ Gate 9 does not prove live Tau execution, live Memory recall, real service fault
 injection, production causal replay, statistical prediction benefit, or complete
 live Phase 01-16 runtime execution.
 
+## Live Tau Gate 8/9 Reliability Bridge
+
+The live Tau reliability bridge consumes a previously accepted live
+Tau-originated Gate 5/7 score-revision case as the reliability subject. It
+constructs a bounded reliability surface over hash-bound live-originated
+artifacts, injects a controlled stale-artifact boundary, validates the surface
+with Gate 8, then writes and validates a Gate 9 causal replay for the stale
+artifact.
+
+The required chain is:
+
+```text
+live Tau Gate 5/7 score-revision receipt
+-> current live-originated artifact manifest
+-> stale or controlled-stale artifact manifest
+-> Gate 8 reliability surface
+-> Gate 9 causal replay
+-> live reliability bridge receipt
+```
+
+Required bridge fields:
+
+```text
+mocked: false
+live: true when the consumed score-revision bridge reports live
+live_tau_originated_case_consumed: true
+fixture_backed: false
+deterministic_simulator_corpus_fixture_backed: true
+controlled_fault_definition: true
+human_content_judgment_required: false
+memory_write_attempts: 0
+provider_call_attempts: 0
+tau_call_attempts: 0
+```
+
+Gate 8 must include:
+
+```text
+at least one repeat group with k >= 2
+at least one semantic perturbation
+at least one fault-injected trial
+no CONTINUED_WITH_UNKNOWN_STATE
+no canonical/source/identity writes
+no duplicate active predictions
+no duplicate active revisions
+```
+
+The stale-artifact trial must end in:
+
+```text
+QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE
+```
+
+Gate 9 must identify the first divergent receipt, replace or remove exactly one
+suspected tool return, compare factual/counterfactual/expected end-state hashes,
+and localize `STALE_ARTIFACT` without continuing unknown state or writing
+canonical/source/identity records.
+
+Accepted status:
+
+```text
+PASS_LIVE_TAU_PCTOM_RELIABILITY_BRIDGE
+```
+
+Blocked status:
+
+```text
+BLOCKED_LIVE_TAU_PCTOM_RELIABILITY_BRIDGE
+```
+
+This bridge proves bounded controlled-fault containment and causal localization
+over live Tau-originated PCTOM artifacts. It does not prove external service
+fault injection, production retry machinery, statistical prediction benefit,
+held-out M/R/D/CD comparison, longitudinal recall after revision, complete live
+Phase 01-16 runtime execution, paid provider execution, or video quality.
+
 ## Live Gate 0 Bridge - Memory Recall To Prospective Case
 
 After the fixture-backed Gate 0-9 contracts exist, the first live validation

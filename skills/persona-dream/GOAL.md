@@ -89,9 +89,11 @@ step model:
    and bridged once over the live Tau-originated scored commitment. The
    remaining research proof is longitudinal recall/use after revision and
    repeated no-write behavior under faults.
-8. **Reliability under faults** - implemented fixture-backed by Gates 8-9. The
-   missing live proof is bounded service or stale-artifact fault containment and
-   causal replay over real runtime receipts.
+8. **Reliability under faults** - implemented fixture-backed by Gates 8-9 and
+   bridged once over a live Tau-originated score/revision case with a
+   controlled stale-artifact fault. The remaining research proof is production
+   retry behavior and external service fault injection across repeated
+   held-out runs.
 
 Therefore, when README language says that media acceptance, human subjective
 video review, or Chatterbox voice expression remains open, that is historical
@@ -306,6 +308,7 @@ Gate 9 proof root: /tmp/persona-dream-pctom-gate9-final-20260721T015757Z
 Live Gate 0 proof root: /tmp/persona-dream-live-pctom-gate0-r2-20260721T020456Z
 Live Tau Gate 2-4 proof root: /tmp/persona-dream-live-tau-gate2-4-20260721T021621Z
 Live Tau Gate 5/7 proof root: /tmp/persona-dream-live-tau-score-revision-20260721T022807Z
+Live Tau Gate 8/9 proof root: /tmp/persona-dream-live-tau-reliability-bridge-20260721T023518Z
 ```
 
 Gate 0 proof summary:
@@ -570,6 +573,53 @@ prove live Tau execution, live Memory recall, real service fault injection,
 production causal replay, statistical prediction benefit, or complete live
 Phase 01-16 runtime execution.
 
+Live Tau Gate 8/9 proof summary:
+
+```text
+receipt: /tmp/persona-dream-live-tau-reliability-bridge-20260721T023518Z/live_tau_reliability_bridge_receipt.v1.json
+status: PASS_LIVE_TAU_PCTOM_RELIABILITY_BRIDGE
+mocked: false
+live: true
+live_tau_originated_case_consumed: true
+fixture_backed: false
+deterministic_simulator_corpus_fixture_backed: true
+controlled_fault_definition: true
+human_content_judgment_required: false
+memory_write_attempts: 0
+provider_call_attempts: 0
+tau_call_attempts: 0
+Gate 8 status: PASS_TOM_RELIABILITY_SURFACE
+Gate 8 trials: 5
+Gate 8 recovered: 3
+Gate 8 blocked: 1
+Gate 8 quarantined: 1
+Gate 8 fault_injected_trials: 2
+Gate 8 perturbed_trials: 2
+Gate 8 forbidden_terminal_outcomes: 0
+Gate 8 side_effect_violations: 0
+Gate 8 pass_k: 1.0
+Gate 8 fault_containment_rate: 1.0
+Gate 9 status: PASS_TOM_CAUSAL_REPLAY
+Gate 9 target_trial_id: live-gate8-trial-stale-artifact-001
+Gate 9 target_terminal_outcome: QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE
+Gate 9 first_divergent_receipt_id: live-receipt-003-load-score-revision-artifact
+Gate 9 localized_cause_type: STALE_ARTIFACT
+Gate 9 causal_confidence: 1.0
+Gate 9 forbidden_write_attempts: 0
+```
+
+This is live Tau-originated, controlled-fault evidence for one bounded
+text-first case. It proves that the live score/revision artifact set can be
+used as a Gate 8 reliability subject, that a controlled stale-artifact fault is
+quarantined with no active partial state, and that Gate 9 can localize the first
+divergent receipt and replacement tool return without canonical/source/identity
+writes, duplicate active predictions, duplicate active revisions, new Tau
+calls, provider calls, or human content judgment. It does not prove external
+service fault injection, production retry machinery, statistical prediction
+benefit, held-out M/R/D/CD comparison, longitudinal recall after revision,
+complete Phase 01-16 runtime execution, paid provider execution, or video
+quality.
+
 Live Gate 0 bridge proof summary:
 
 ```text
@@ -669,51 +719,51 @@ bridge proving live Memory recall-to-prospective-lineage wiring and one live
 Tau Gate 2-4 bridge proving text-first Tau generation through sealed commitment
 validators, plus one live Tau-originated Gate 5/7 bridge proving deterministic
 outcome reveal, scoring, and non-destructive revision for a bounded text-first
-case. It does not prove paid provider execution, semantic dream quality,
-held-out prediction benefit, factual second-order live Tau scoring, live fault
-containment, longitudinal recall after revision, complete live Phase 01-16
-runtime execution, or autonomous operation beyond the bounded bridges. Those
-require separate live receipts.
+case, plus one live Tau-originated Gate 8/9 bridge proving bounded controlled
+stale-artifact containment and causal localization. It does not prove paid
+provider execution, semantic dream quality, held-out prediction benefit,
+factual second-order live Tau scoring, external service fault injection,
+production retry machinery, longitudinal recall after revision, complete live
+Phase 01-16 runtime execution, or autonomous operation beyond the bounded
+bridges. Those require separate live receipts.
 
 No agent may claim final, green, complete, fixed, verified, or closed for this
 research goal unless those concrete proof artifacts exist and are cited.
 
 ## Next Critical Path
 
-Move from one-step live bridges to bounded live reliability evidence, without
-reactivating provider/video as the critical path.
+Move from bounded live bridges to repeated held-out text-first experiment
+evidence, without reactivating provider/video as the critical path.
 
-The next accepted artifact must consume the live Tau-originated PCTOM case and
-answer this live reliability question:
+The next accepted artifact must consume the existing PCTOM-R social episode
+corpus and answer this experimental question:
 
-1. Can a bounded live stale-artifact, malformed-runtime, or retry-boundary
-   event be contained and diagnosed by the Gate 8-9 receipts without canonical
-   memory, identity, source-memory writes, duplicate active predictions, or
-   unknown-state continuation?
+1. Can repeated M/R/D/CD condition runs on held-out or calibration episodes
+   produce sealed predictions, deterministic scores, and comparable metrics
+   without human content judgment or unsupported writes?
 
 Stop condition for that artifact:
 
 ```text
 mocked: no
-live Tau-originated case consumed: yes
-fixture_backed: no, except for deterministic simulator ground truth and the
-controlled fault definition
+episodes_consumed: calibration or held-out corpus subset
+conditions: M, R, D, CD
+sealed_commitments_per_condition: >= 1
+deterministic_scores_per_condition: >= 1
 human_content_judgment_required: false
 memory_write_attempts: 0
 provider_call_attempts: 0
-terminal_outcome: RECOVERED_WITH_EQUIVALENT_END_STATE,
-  BLOCKED_BEFORE_SIDE_EFFECT, or QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE
-unknown_state_continued: false
-active_partial_state: false when quarantined
-duplicate_active_predictions: 0
-duplicate_active_revisions: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+primary_metric: Brier score by condition, with CD compared to strongest
+baseline when enough paired trials exist
 ```
 
-The next independent experimental question remains:
+The next independent reliability question remains:
 
-2. Can repeated held-out M/R/D/CD runs show prediction or planning benefit over
-   the strongest baseline with calibration and abstention metrics, including
-   factual first- and second-order ToM distributions?
+2. Can the same held-out condition runner survive real external service faults
+   and production retry boundaries with accepted Gate 8-9 terminal outcomes?
 
 Any live validation report must state `mocked`, `live`, what was actually
 exercised, and what remains unverified.

@@ -80,6 +80,7 @@ Commands:
   run-live-pctom-gate0  Exercise live Memory recall and derive a PCTOM-R Gate 0 lineage case
   run-live-tau-gate2-4  Exercise live Tau text reasoning through PCTOM-R Gate 2-4 validators
   run-live-tau-score-revision  Score live Tau PCTOM-R commitments and validate Gate 7 revision
+  run-live-tau-reliability-bridge  Validate controlled Gate 8/9 fault containment over live Tau PCTOM artifacts
   check-prospective-tom-protocol  Validate PCTOM-R Gate 0 fixture lineage through a sealed prediction
   build-social-episode-corpus  Build deterministic PCTOM-R Gate 1 social episodes
   check-social-episode-corpus  Validate deterministic PCTOM-R Gate 1 social episodes
@@ -402,6 +403,9 @@ case "$COMMAND" in
     ;;
   run-live-tau-score-revision)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_tau_score_revision.py" "$@"
+    ;;
+  run-live-tau-reliability-bridge)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_tau_reliability_bridge.py" "$@"
     ;;
   check-prospective-tom-protocol)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_prospective_tom_protocol.py" "$@"
