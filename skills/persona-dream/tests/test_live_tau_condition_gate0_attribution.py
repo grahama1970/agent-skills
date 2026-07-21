@@ -112,3 +112,38 @@ def test_overlay_updates_social_refs_but_not_synthetic_refs(tmp_path):
     assert social_ref["accepted_source_id"] == "memory_002"
     assert social_ref["accepted_source_ids_sha256"] == digest
     assert "accepted_source_id" not in synthetic_ref
+
+
+def test_prompt_is_compact_and_preserves_gate0_attribution():
+    digest = "sha256:" + "e" * 64
+    records = [
+        {
+            "accepted_source_id": "memory_003",
+            "accepted_source_ids_sha256": digest,
+            "gate0_residue_source_id": "memory_003",
+            "gate0_query_receipt_index": 2,
+            "gate0_attribution_kind": "live_recall_residue_grounding",
+        }
+    ]
+
+    prompt = runner._prompt(_episode(), "CD", records)
+
+    assert len(prompt) < 20_000
+    assert '"accepted_source_id":"memory_003"' not in prompt
+    assert '"accepted_source_ids_sha256":"' + digest + '"' not in prompt
+    assert '"source_id":"episode-001:observable_history:0"' in prompt
+    assert "\n  " not in prompt
+
+
+def test_generated_calibration_prompt_stays_below_live_boundary():
+    build_corpus = runner._load_module(runner.BUILD_CORPUS_SCRIPT, "build_corpus_for_prompt_size_test")
+    corpus = build_corpus.build_corpus("calibration", 1)
+    episode = runner._select_episodes(corpus, 1)[0]
+
+    lengths = {
+        condition: len(runner._prompt(episode, condition, []))
+        for condition in runner.CONDITIONS
+    }
+
+    assert lengths
+    assert max(lengths.values()) < 18_000

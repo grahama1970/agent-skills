@@ -381,8 +381,10 @@ def _preflight_output_contract() -> dict[str, Any]:
 def _prompt(episode: dict[str, Any], condition: str, gate0_records: list[dict[str, Any]] | None = None) -> str:
     episode_id = episode["episode_id"]
     ids = _ids(episode_id, condition)
-    records = gate0_records or []
-    visible = _visible_packet(episode, records)
+    # Keep accepted-source attribution out of the model prompt to avoid repeated
+    # metadata bloat. The runner overlays Gate 0 attribution onto parsed social
+    # refs before writing sealed artifacts and commitments.
+    visible = _visible_packet(episode, [])
     targets = _prediction_targets(episode)
     actions = list(episode.get("allowed_next_actions") or [])
     if not actions:
@@ -400,7 +402,7 @@ def _prompt(episode: dict[str, Any], condition: str, gate0_records: list[dict[st
     cf_action_shape = [{"value": action, "probability": 0.0} for action in actions[:3]]
     cf_action_shape.append({"value": "UNKNOWN", "probability": 1.0})
     synthetic_ref = {"scope": "synthetic_counterfactual", "source_id": f"{episode_id}:{condition}:do-policy-alternative"}
-    visible_refs = _visible_refs(episode, records)
+    visible_refs = _visible_refs(episode, [])
     held_fixed = [
         "counterpart_goals",
         "counterpart_preferences",
@@ -561,10 +563,9 @@ def _prompt(episode: dict[str, Any], condition: str, gate0_records: list[dict[st
     }
     return (
         "You are producing machine-validated JSON for Persona Dream PCTOM-R. "
-        "Return one JSON object matching output_shape. The evaluator will reject aliases, hidden outcome fields, "
-        "unresolved evidence refs, distributions that do not sum to one, synthetic refs in branch source refs, "
-        "synthetic refs in prediction_payload evidence_refs, and synthetic branches treated as history.\n\n"
-        + json.dumps(prompt_payload, indent=2, sort_keys=True)
+        "Return one JSON object matching output_shape. Hidden outcome fields, unresolved refs, invalid probability sums, "
+        "or synthetic refs in literal-history evidence fields are rejected.\n\n"
+        + json.dumps(prompt_payload, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
     )
 
 
