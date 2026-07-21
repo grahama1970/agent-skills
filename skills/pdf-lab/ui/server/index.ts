@@ -13,9 +13,20 @@ const PORT = Number(process.env.PDF_LAB_API_PORT || 3013)
 const PDF_LAB_UI_ROOT = resolve(__dirname, '..')
 const PDF_LAB_SKILL_ROOT = resolve(PDF_LAB_UI_ROOT, '..')
 const DIST_ROOT = resolve(PDF_LAB_UI_ROOT, 'dist')
-const LEGACY_UX_LAB_PUBLIC_ROOT = '${HOME}/workspace/experiments/pi-mono/packages/ux-lab/public'
-const PUBLIC_ROOT = resolve(process.env.PDF_LAB_PUBLIC_ROOT ?? LEGACY_UX_LAB_PUBLIC_ROOT)
-const ARTIFACTS_ROOT = resolve(process.env.PDF_LAB_ARTIFACTS_ROOT ?? '/mnt/storage12tb/pi-mono/artifacts/pdf-lab')
+// Self-contained defaults: prefer repo-relative artifact roots; legacy
+// operator locations remain reachable via env overrides.
+const REPO_ARTIFACTS_ROOT = resolve(PDF_LAB_SKILL_ROOT, 'artifacts', 'pdf-lab')
+const LEGACY_UX_LAB_PUBLIC_ROOT = `${process.env.HOME ?? ''}/workspace/experiments/pi-mono/packages/ux-lab/public`
+const PUBLIC_ROOT = resolve(
+  process.env.PDF_LAB_PUBLIC_ROOT
+    ?? (existsSync(resolve(PDF_LAB_SKILL_ROOT, 'artifacts', 'public'))
+      ? resolve(PDF_LAB_SKILL_ROOT, 'artifacts', 'public')
+      : LEGACY_UX_LAB_PUBLIC_ROOT),
+)
+const ARTIFACTS_ROOT = resolve(
+  process.env.PDF_LAB_ARTIFACTS_ROOT
+    ?? (existsSync(REPO_ARTIFACTS_ROOT) ? REPO_ARTIFACTS_ROOT : '/mnt/storage12tb/pi-mono/artifacts/pdf-lab'),
+)
 const LOOP_RUNS_ROOT = resolve(process.env.PDF_LAB_LOOP_RUNS_ROOT ?? resolve(ARTIFACTS_ROOT, 'loop-runs'))
 
 const SIGNOFFS_DIR = resolve(process.env.PDF_LAB_SIGNOFFS_DIR ?? '/tmp/pdf-lab-ui/signoffs')
