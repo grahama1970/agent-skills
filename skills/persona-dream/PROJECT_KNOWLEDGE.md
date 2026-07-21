@@ -1,10 +1,32 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R live fault-injection surface accepted) by agent
+**Last updated:** 2026-07-21 (PCTOM-R bounded live Tau sealed-test replication accepted) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R BOUNDED LIVE TAU SEALED-TEST REPLICATION): bounded live
+  Tau sealed-test replication evidence now exists at
+  `/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_replication_receipt.v1.json`.
+  It reports `PASS_LIVE_TAU_PCTOM_SEALED_TEST_REPLICATION` on split
+  `sealed_test` with 4 episodes, 4 scenario families, 16 Tau calls, and 16
+  live Tau calls. Counts per condition are
+  `tau_authored_prediction_payloads_per_condition: M=4, R=4, D=4, CD=4`,
+  `sealed_commitments_per_condition: M=4, R=4, D=4, CD=4`,
+  `deterministic_scores_per_condition: M=4, R=4, D=4, CD=4`,
+  `action_decisions_per_condition: M=4, R=4, D=4, CD=4`, and
+  `planning_regret_scores_per_condition: M=4, R=4, D=4, CD=4`. The run used
+  live Tau-authored prediction payloads, sealed them before deterministic
+  reveal, scored them with Gate 5, and fed them into constrained Gate 6 action
+  selection. It produced a null benefit signal: CD-minus-strongest-baseline was
+  `0.0` for belief Brier, action Brier, and planning regret. `mocked:false`,
+  `live:true`, `fixture_backed:false`, `llm_judge_used:false`,
+  `human_content_judgment_required:false`, and Memory/provider/canonical/
+  identity/source-memory write attempts were all 0. This proves bounded live
+  Tau sealed-test plumbing and scoring, not full 64-episode live Tau
+  replication, statistical confidence for live Tau CD benefit, production
+  retry machinery, full Phase 01-16 runtime, paid provider execution, or
+  semantic dream quality.
 - 2026-07-21 (PCTOM-R LIVE FAULT-INJECTION SURFACE): broader fault-containment
   evidence now exists at
   `/tmp/persona-dream-live-fault-injection-surface-20260721T044950Z/live_fault_injection_surface_receipt.v1.json`.

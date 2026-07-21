@@ -1233,3 +1233,65 @@ fault containment over hash-bound PCTOM-R predecessor receipts. It does not
 prove live Tau sealed-test execution, production retry machinery inside a
 deployed orchestrator, paid provider execution, video/audio quality, semantic
 dream quality, or complete live Phase 01-16 runtime execution.
+
+## Bounded Live Tau Sealed-Test Replication Bridge
+
+The bounded live Tau sealed-test replication bridge runs the live Tau condition
+comparison runner on `split: sealed_test`, then consumes that receipt through
+the Gate 6 action-selection bridge. It is intentionally text-first and does not
+touch provider/video paths.
+
+Pipeline:
+
+```text
+sealed_test social episode corpus
+-> live Tau-authored M/R/D/CD prediction payloads
+-> Gate 4 sealed commitments
+-> deterministic outcome reveal
+-> Gate 5 scoring
+-> Gate 6 constrained action selection and planning regret
+-> live Tau sealed-test replication receipt
+```
+
+Required checks:
+
+```text
+split: sealed_test
+tau_authored_prediction_payloads_per_condition >= 1
+sealed_commitments_per_condition >= 1
+deterministic_scores_per_condition >= 1
+action_decisions_per_condition >= 1
+planning_regret_scores_per_condition >= 1
+outcome_visible_before_seal: false
+tau_receipts_hash_bound: true
+llm_judge_used: false
+human_content_judgment_required: false
+canonical/source/identity/provider/Memory attempts: 0
+```
+
+Accepted status:
+
+```text
+PASS_LIVE_TAU_PCTOM_SEALED_TEST_REPLICATION
+```
+
+Blocked status:
+
+```text
+BLOCKED_LIVE_TAU_PCTOM_SEALED_TEST_REPLICATION
+```
+
+Current accepted receipt:
+
+```text
+/tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_replication_receipt.v1.json
+```
+
+This bridge proves bounded live Tau sealed-test mechanics and Gate 6 action
+scoring. The current accepted receipt covers 4 episodes, 16 Tau calls, and 16
+sealed/scored/action cases; `full_64_episode_replication` is false and
+CD-minus-strongest-baseline is 0.0 for belief Brier, action Brier, and planning
+regret. It does not prove full 64-episode live Tau replication, statistical
+confidence for live Tau CD benefit, production retry machinery, provider/video
+execution, semantic dream quality, or complete live Phase 01-16 runtime
+execution.

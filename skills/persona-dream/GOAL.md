@@ -353,12 +353,13 @@ Blocked live Memory revision-recall attempt root: /tmp/persona-dream-live-memory
 Live Memory revision-recall proof root: /tmp/persona-dream-live-memory-revision-recall-20260721T042742Z
 Sealed-test statistical-confidence proof root: /tmp/persona-dream-sealed-test-statistical-confidence-20260721T043620Z
 Live fault-injection surface proof root: /tmp/persona-dream-live-fault-injection-surface-20260721T044950Z
+Bounded live Tau sealed-test replication proof root: /tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z
 ```
 
 Current active phase boundary:
 
 ```text
-phase: post-broader-live-fault-injection, pre-live-tau-sealed-test-replication-or-production-retry-proof
+phase: post-bounded-live-tau-sealed-test-replication, pre-full-64-live-tau-replication-or-production-retry-proof
 last_live_condition_receipt: /tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z/live_tau_condition_comparison_receipt.v1.json
 last_reliability_receipt: /tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z/live_tau_condition_reliability_bridge_receipt.v1.json
 last_action_selection_receipt: /tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z/live_tau_condition_action_selection_receipt.v1.json
@@ -369,7 +370,8 @@ last_blocked_live_memory_revision_recall_attempt_receipt: /tmp/persona-dream-liv
 last_live_memory_revision_recall_receipt: /tmp/persona-dream-live-memory-revision-recall-20260721T042742Z/live_memory_revision_recall_receipt.v1.json
 last_sealed_test_statistical_confidence_receipt: /tmp/persona-dream-sealed-test-statistical-confidence-20260721T043620Z/sealed_test_statistical_confidence_receipt.v1.json
 last_live_fault_injection_surface_receipt: /tmp/persona-dream-live-fault-injection-surface-20260721T044950Z/live_fault_injection_surface_receipt.v1.json
-next_required_receipt: live Tau sealed-test replication receipt or production retry/fault proof receipt
+last_bounded_live_tau_sealed_test_replication_receipt: /tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_replication_receipt.v1.json
+next_required_receipt: full 64-episode live Tau sealed-test replication receipt or production retry/fault proof receipt
 ```
 
 This boundary means Gate 8/9 condition reliability over live-originated
@@ -386,9 +388,12 @@ confidence intervals for CD versus the strongest baseline on the preregistered
 belief Brier metric. The broader live fault-injection slice now adds live
 Memory fault probes plus controlled local model/tool/schema/persistence/retry
 fault containment over the hash-bound predecessor receipts. These receipts
-still do not authorize a final research success claim. The next useful
-movement is live Tau-authored sealed-test replication or production
-retry/fault proof in the deployed orchestration boundary.
+still do not authorize a final research success claim. The bounded live Tau
+sealed-test replication slice now adds 16 live Tau-authored sealed-test cases
+plus Gate 5 scoring and Gate 6 action decisions, but shows a null benefit
+signal rather than live CD improvement. The next useful movement is full
+64-episode live Tau sealed-test replication or production retry/fault proof in
+the deployed orchestration boundary.
 
 Sealed-test statistical-confidence proof summary:
 
@@ -528,6 +533,48 @@ do not continue in unknown state or produce unsupported side effects. It does
 not prove live Tau sealed-test execution, production retry machinery inside a
 deployed orchestrator, paid provider execution, video/audio quality, semantic
 dream quality, or complete live Phase 01-16 runtime execution.
+
+Bounded live Tau sealed-test replication proof summary:
+
+```text
+receipt: /tmp/persona-dream-live-tau-sealed-test-replication-20260721T045807Z/live_tau_sealed_test_replication_receipt.v1.json
+status: PASS_LIVE_TAU_PCTOM_SEALED_TEST_REPLICATION
+split: sealed_test
+episodes_consumed: 4
+families_consumed: 4
+cases: 16
+tau_call_attempts: 16
+tau_live_call_performed: 16
+tau_authored_prediction_payloads_per_condition: M=4, R=4, D=4, CD=4
+sealed_commitments_per_condition: M=4, R=4, D=4, CD=4
+deterministic_scores_per_condition: M=4, R=4, D=4, CD=4
+action_decisions_per_condition: M=4, R=4, D=4, CD=4
+planning_regret_scores_per_condition: M=4, R=4, D=4, CD=4
+belief_brier_cd_minus_strongest_baseline: 0.0
+action_brier_cd_minus_strongest_baseline: 0.0
+planning_regret_cd_minus_strongest_baseline: 0.0
+full_64_episode_replication: false
+mocked: false
+live: true
+fixture_backed: false
+llm_judge_used: false
+human_content_judgment_required: false
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+```
+
+This proves a bounded sealed-test split subset can run with live Tau-authored
+M/R/D/CD prediction payloads, seal predictions before deterministic reveal,
+score them with Gate 5, and feed them into constrained Gate 6 action selection
+without human content judgment or unsupported writes. It does not prove full
+64-episode live Tau replication, statistical confidence for live Tau CD
+benefit, production retry machinery, paid provider execution, video/audio
+quality, semantic dream quality, or complete live Phase 01-16 runtime
+execution. The null CD-minus-baseline deltas are a real finding: this live Tau
+slice proves pipeline mechanics, not a live prediction advantage.
 
 Prior blocked live Memory revision-recall repair note:
 
@@ -1357,12 +1404,14 @@ statistical-confidence receipt showing CD beats the strongest baseline on
 preregistered belief Brier with a paired bootstrap CI below zero, plus one
 broader live fault-injection surface over Memory/model/tool/schema/
 persistence/retry boundaries with eight fault families and no unknown-state
-continuation. It does not
+continuation, plus one bounded live Tau sealed-test replication slice with 16
+Tau-authored sealed/scored/action cases and no observed CD benefit. It does not
 prove paid provider execution, semantic dream quality, planning-regret benefit,
-live Tau sealed-test execution, full external service fault injection beyond
-Memory `/recall`, production retry machinery, complete live Phase 01-16 runtime
-execution, or autonomous operation beyond the bounded bridges. Those require
-separate live receipts.
+full 64-episode live Tau sealed-test execution, statistical confidence for live
+Tau CD benefit, full external service fault injection beyond Memory `/recall`,
+production retry machinery, complete live Phase 01-16 runtime execution, or
+autonomous operation beyond the bounded bridges. Those require separate live
+receipts.
 
 No agent may claim final, green, complete, fixed, verified, or closed for this
 research goal unless those concrete proof artifacts exist and are cited.
@@ -1370,14 +1419,16 @@ research goal unless those concrete proof artifacts exist and are cited.
 ## Next Critical Path
 
 Move from deterministic sealed-test statistical-confidence evidence, PASS live
-Memory recall-after-revision evidence, and the broader live fault-injection
-surface to live Tau sealed-test replication or production retry/fault proof,
-without reactivating provider/video as the critical path.
+Memory recall-after-revision evidence, the broader live fault-injection
+surface, and bounded live Tau sealed-test replication to full 64-episode live
+Tau replication or production retry/fault proof, without reactivating
+provider/video as the critical path.
 
 The next accepted artifact must answer one of these narrower questions:
 
-1. Does the 64-episode sealed-test result persist when the M/R/D/CD prediction
-   payloads are authored through live Tau rather than deterministic profiles?
+1. Does the 64-episode sealed-test result persist when all M/R/D/CD prediction
+   payloads are authored through live Tau rather than deterministic profiles,
+   given that the bounded 4-episode live slice produced a null CD benefit?
 2. Does production retry/fault handling preserve the same terminal-outcome
    discipline inside the deployed orchestration boundary, not only the bounded
    research bridge?
