@@ -35,6 +35,33 @@
   `planning_benefit_with_confidence:false`, `oracle_match_transitions` is one
   `LOSS` and three `UNCHANGED`, and CD-vs-baseline mean planning regret delta is
   `0.1375`.
+- 2026-07-21 (PCTOM-R LIVE ACTION-LINKED REVISION, MEMORY RECALL, FAULT
+  SURFACE): the strict120 live slice now has a follow-on Gate 7 and reliability
+  chain. Action-linked revision receipt:
+  `/tmp/persona-dream-live-tau-action-linked-revision-strict120-v17-20260721T1545Z/live_tau_action_linked_revision_receipt.v1.json`
+  reports `PASS_LIVE_TAU_PCTOM_ACTION_LINKED_REVISION`, 16/16
+  `PASS_TOM_BELIEF_REVISION`, four prior hypotheses and four posterior
+  revisions per condition, and zero Memory/provider/canonical/identity/source
+  writes. Deterministic recall receipt:
+  `/tmp/persona-dream-live-tau-revision-recall-strict120-v17-20260721T1546Z/live_tau_revision_recall_receipt.v1.json`
+  reports `PASS_LIVE_TAU_PCTOM_REVISION_RECALL`, 16 revision documents, 16
+  local recall hits, prior/posterior distinction preserved, synthetic/literal
+  boundary preserved, and zero write violations. Live Memory receipt:
+  `/tmp/persona-dream-live-memory-revision-recall-strict120-v17-20260721T1547Z/live_memory_revision_recall_receipt.v1.json`
+  reports `PASS_PCTOM_LIVE_MEMORY_REVISION_RECALL`, 16 noncanonical PCTOM-R
+  revision docs upserted and exact-reread, 16 semantic mirrors upserted and
+  exact-reread, four `/recall` condition queries, 16 recall hits, and zero
+  canonical/identity/source-memory/provider/Tau writes. Fault surface receipt:
+  `/tmp/persona-dream-live-fault-injection-surface-strict120-v17-20260721T1548Z/live_fault_injection_surface_receipt.v1.json`
+  reports `PASS_PCTOM_LIVE_FAULT_INJECTION_SURFACE`,
+  `receipt_sha256:sha256:aa0bf2389ff88f299ccfaf77f3b017e40e4159d851fc7928aca379cb49ded84f`,
+  eight required fault families, eight trials, one causal replay artifact, three
+  live Memory fault probes, zero `CONTINUED_WITH_UNKNOWN_STATE`, zero
+  side-effect violations, and zero Memory/provider/Tau/canonical/identity/source
+  writes. Limits remain explicit: this does not prove planning benefit,
+  production retry machinery, live Tau sealed-test execution, complete Phase
+  01-16 runtime execution, provider execution, video/audio, or semantic dream
+  quality.
 - 2026-07-21 (PCTOM-R TAU PROMPT TIMEOUT DIAGNOSTIC): the full-prompt timeout
   boundary is now narrowed. New command:
   `./skills/persona-dream/run.sh run-live-tau-prompt-timeout-diagnostic`.

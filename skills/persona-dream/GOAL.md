@@ -152,6 +152,32 @@ Next: <one immediate action or stop condition>
   `mean_cd_minus_baseline: 0.1375`. This is live balanced-slice plumbing and
   strict non-template inference evidence; it is not a positive planning-benefit
   result.
+- Live Gate 7 action-linked belief revision:
+  `/tmp/persona-dream-live-tau-action-linked-revision-strict120-v17-20260721T1545Z/live_tau_action_linked_revision_receipt.v1.json`.
+  Status `PASS_LIVE_TAU_PCTOM_ACTION_LINKED_REVISION`, 16/16
+  `PASS_TOM_BELIEF_REVISION`, four prior hypotheses and four posterior
+  revisions per M/R/D/CD condition, and 0 Memory/provider/canonical/identity/
+  source-memory writes.
+- Deterministic recall over those live-originated revisions:
+  `/tmp/persona-dream-live-tau-revision-recall-strict120-v17-20260721T1546Z/live_tau_revision_recall_receipt.v1.json`.
+  Status `PASS_LIVE_TAU_PCTOM_REVISION_RECALL`, 16 revision documents, 16 local
+  recall hits, prior/posterior distinction preserved, synthetic/literal boundary
+  preserved, and 0 write violations.
+- Live Memory revision recall:
+  `/tmp/persona-dream-live-memory-revision-recall-strict120-v17-20260721T1547Z/live_memory_revision_recall_receipt.v1.json`.
+  Status `PASS_PCTOM_LIVE_MEMORY_REVISION_RECALL`, 16 noncanonical PCTOM-R
+  revision documents upserted and exact-reread, 16 searchable semantic mirrors
+  upserted and exact-reread, four `/recall` condition queries, 16 recall hits,
+  and 0 canonical/identity/source-memory/provider/Tau writes. This is a bounded
+  research Memory write/recall proof, not canonical persona-memory promotion.
+- Live fault-injection surface:
+  `/tmp/persona-dream-live-fault-injection-surface-strict120-v17-20260721T1548Z/live_fault_injection_surface_receipt.v1.json`.
+  Status `PASS_PCTOM_LIVE_FAULT_INJECTION_SURFACE`, receipt SHA-256
+  `sha256:aa0bf2389ff88f299ccfaf77f3b017e40e4159d851fc7928aca379cb49ded84f`,
+  eight required fault families, eight trials, one causal replay artifact, three
+  live Memory fault probes, 0 `CONTINUED_WITH_UNKNOWN_STATE`, 0 side-effect
+  violations, and 0 Memory/provider/Tau/canonical/identity/source-memory writes.
+  It does not prove production retry machinery or live Tau sealed-test execution.
 - Preceding failed boundary:
   `/tmp/persona-dream-live-tau-strict-inference-timeout90-v17-20260721T1516Z/live_tau_strict_inference_prompt_replication_receipt.v1.json`
   blocked after a 90s Tau timeout and subsequent scillm `gpt-5.5` cooldown/502
