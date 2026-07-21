@@ -251,6 +251,7 @@ Gate 5 commit: 81dd203200bcc3786ad561cb1845230254967069
 Gate 6 commit: d31c0314e0e66fdd085c7ce7567d8f16830c070f
 Gate 7 commit: 7c941e1efcdaaefe5fbed596c9a14093b24a8403
 Gate 8 commit: 5a53ca5d49024ce092152315fda85224cac5483a
+Gate 9 commit: c294d7a49676bb35c48f33c90fb1630e4754a1f6
 Gate 1 proof root: /tmp/persona-dream-pctom-gate1-final-postpatch-20260721T001545Z
 Gate 2 proof root: /tmp/persona-dream-pctom-gate2-postrebase-20260721T003945Z
 Gate 3 proof root: /tmp/persona-dream-pctom-gate3-final-20260721T004724Z
@@ -259,6 +260,7 @@ Gate 5 proof root: /tmp/persona-dream-pctom-gate5-final-20260721T011122Z
 Gate 6 proof root: /tmp/persona-dream-pctom-gate6-final-20260721T011945Z
 Gate 7 proof root: /tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z
 Gate 8 proof root: /tmp/persona-dream-pctom-gate8-rebased-20260721T014053Z
+Gate 9 proof root: /tmp/persona-dream-pctom-gate9-final-20260721T015757Z
 ```
 
 Gate 0 proof summary:
@@ -445,16 +447,40 @@ writes. It does not prove live Tau execution, live Memory recall, real service
 fault injection, production retry behavior, statistical prediction benefit, or
 Gate 9 causal replay.
 
-Active remaining local research gate:
+Gate 9 proof summary:
 
 ```text
-Gate 9 status: not implemented in the cited evidence boundary
-required artifact: causal failure-localization receipt
-required command shape: check positive replay plus fail-closed negative fixtures
-required proof: first divergent receipt -> replay boundary -> one replaced or
-removed tool return -> state comparison -> localized cause receipt
-forbidden outcome: CONTINUED_WITH_UNKNOWN_STATE
+json_files_parsed: 101
+python_files_ast_parsed: 11
+matrix_commands: 70
+expected_negative_failures: 58
+unexpected_failures: 0
+Gate 9 positive: PASS_TOM_CAUSAL_REPLAY
+Gate 9 target_trial_id: gate8-trial-fault-stale-artifact-001
+Gate 9 target_terminal_outcome: QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE
+Gate 9 first_divergent_receipt_id: receipt-003-load-artifact
+Gate 9 suspected_tool_returns: 1
+Gate 9 state_comparisons: 1
+Gate 9 localized_causes: 1
+Gate 9 localized_cause_type: STALE_ARTIFACT
+Gate 9 causal_confidence: 1.0
+Gate 9 forbidden_terminal_outcomes: 0
+Gate 9 forbidden_write_attempts: 0
+Gate 9 negatives: 7 x BLOCKED_TOM_CAUSAL_REPLAY
+git_diff_check: clean
 ```
+
+This is fixture-backed deterministic evidence. It proves the local Gate 9
+contract can bind a causal replay to a Gate 8 reliability surface, resolve a
+faulted/quarantined trial, identify the first divergent receipt, start replay at
+that boundary, replace one suspected tool return, compare factual versus
+counterfactual end-state hashes, localize the stale-artifact cause, and reject
+fixtures that continue unknown state, skip comparison, replay from the wrong
+boundary, omit first divergence, fail to remove or replace a tool return, write
+canonical memory, or reference an unresolved reliability trial. It does not
+prove live Tau execution, live Memory recall, real service fault injection,
+production causal replay, statistical prediction benefit, or complete live
+Phase 01-16 runtime execution.
 
 ## Completion Rule
 
@@ -479,23 +505,30 @@ receipts proving all of the following:
 10. Gate 9 causal replay identifies the first divergent receipt for failed or
     unstable trials.
 
-After Gate 9, the local deterministic research lane may have a fixture-backed
-milestone, but that still does not prove live Memory recall, live Tau text
-execution, paid provider execution, semantic dream quality, held-out prediction
-benefit, complete live Phase 01-16 runtime execution, or autonomous operation
-without human content judgment. Those require separate live receipts.
+The current evidence through Gate 9 is still fixture-backed. It does not prove
+live Memory recall, live Tau text execution, paid provider execution, semantic
+dream quality, held-out prediction benefit, complete live Phase 01-16 runtime
+execution, or autonomous operation without human content judgment. Those require
+separate live receipts.
 
 No agent may claim final, green, complete, fixed, verified, or closed for this
 research goal unless those concrete proof artifacts exist and are cited.
 
 ## Next Critical Path
 
-Implement Gate 9: causal replay for reliability diagnosis. When a trial
-diverges or is quarantined, identify the first differing receipt, replay from
-that boundary, remove or replace one suspected tool return, compare resulting
-state, and write a causal failure-localization receipt.
+Move from fixture-backed wiring evidence to live validation evidence for the
+same PCTOM-R lane, without reactivating provider/video as the critical path.
 
-The next accepted artifact must be inspectable as files and receipts under the
-research namespace, with positive and negative fixtures. Mocked or fixture
-checks prove wiring only; any later claim about live Memory, Tau, or autonomous
-execution requires separate live receipts.
+The next accepted artifact must answer one of these live questions with
+receipts:
+
+1. Does live Memory `/recall` produce accepted source IDs that survive
+   normalization into a prospective trial without manual content judgment?
+2. Can Tau text execution produce sealed ToM distributions or commitments that
+   pass the same deterministic Gate 2-4 contracts?
+3. Can a bounded live fault or stale-artifact event be contained and diagnosed
+   by the Gate 8-9 receipts without canonical memory, identity, or source-memory
+   writes?
+
+Any live validation report must state `mocked`, `live`, what was actually
+exercised, and what remains unverified.
