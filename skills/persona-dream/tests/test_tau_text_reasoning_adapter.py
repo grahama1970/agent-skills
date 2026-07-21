@@ -7,6 +7,7 @@ touches scillm (it only invokes Tau).
 import importlib.util
 import json
 import subprocess
+import time
 from pathlib import Path
 
 import pytest
@@ -26,10 +27,22 @@ adapter = _load("tau_text_reasoning_adapter")
 
 
 class _Proc:
-    def __init__(self, stdout, returncode=0, stderr=""):
-        self.stdout = stdout
+    def __init__(self, stdout="", returncode=0, stderr="", delay_s=0.0):
+        self._stdout = stdout
+        self._stderr = stderr
         self.returncode = returncode
-        self.stderr = stderr
+        self.pid = 999999
+        self.delay_s = delay_s
+
+    def communicate(self, input=None, timeout=None):
+        self.input = input
+        self.timeout = timeout
+        if self.delay_s:
+            time.sleep(self.delay_s)
+        return self._stdout, self._stderr
+
+    def wait(self, timeout=None):
+        return self.returncode
 
 
 def _receipt(status="PASS", parsed=None):
@@ -49,23 +62,26 @@ def _receipt(status="PASS", parsed=None):
 def test_adapter_returns_parsed_json_and_receipt(monkeypatch, tmp_path):
     captured = {}
 
-    def fake_run(cmd, input=None, capture_output=None, text=None, cwd=None, timeout=None, check=None):
+    def fake_popen(cmd, stdin=None, stdout=None, stderr=None, text=None, cwd=None, start_new_session=None):
         captured["cmd"] = cmd
         captured["cwd"] = cwd
-        captured["request"] = json.loads(input)
-        return _Proc(json.dumps(_receipt()))
+        captured["start_new_session"] = start_new_session
+        captured["proc"] = _Proc(json.dumps(_receipt()))
+        return captured["proc"]
 
-    monkeypatch.setattr(subprocess, "run", fake_run)
+    monkeypatch.setattr(subprocess, "Popen", fake_popen)
     monkeypatch.setattr(adapter, "TAU_REPO", tmp_path)  # exists
 
     parsed, receipt = adapter.dispatch_text_reasoning(
         "prompt text", role="persona-self-interpretation", output_contract={"type": "object"},
     )
+    captured["request"] = json.loads(captured["proc"].input)
     assert parsed == {"candidates": [{"id": "x"}]}
     assert receipt["api_key_source"] == "docker:scillm-proxy:SCILLM_MASTER_KEY"
     # It dispatches to the Tau node module, in the Tau repo cwd.
     assert "tau_coding.persona_dream_text_reasoning_agent" in captured["cmd"]
     assert captured["cwd"] == str(tmp_path)
+    assert captured["start_new_session"] is True
     assert captured["request"]["role"] == "persona-self-interpretation"
     assert captured["request"]["output_contract"] == {"type": "object"}
     prov = adapter.receipt_provenance(receipt)
@@ -74,7 +90,7 @@ def test_adapter_returns_parsed_json_and_receipt(monkeypatch, tmp_path):
 
 
 def test_adapter_fail_closed_on_blocked_receipt(monkeypatch, tmp_path):
-    monkeypatch.setattr(subprocess, "run",
+    monkeypatch.setattr(subprocess, "Popen",
                         lambda *a, **k: _Proc(json.dumps(_receipt(status="BLOCKED", parsed=None)), returncode=1))
     monkeypatch.setattr(adapter, "TAU_REPO", tmp_path)
     parsed, receipt = adapter.dispatch_text_reasoning("p", role="r")
@@ -83,7 +99,7 @@ def test_adapter_fail_closed_on_blocked_receipt(monkeypatch, tmp_path):
 
 
 def test_adapter_raises_on_wrong_schema(monkeypatch, tmp_path):
-    monkeypatch.setattr(subprocess, "run",
+    monkeypatch.setattr(subprocess, "Popen",
                         lambda *a, **k: _Proc(json.dumps({"schema": "something.else", "status": "PASS"})))
     monkeypatch.setattr(adapter, "TAU_REPO", tmp_path)
     with pytest.raises(adapter.TauRoutingError):
@@ -97,7 +113,23 @@ def test_adapter_raises_when_tau_repo_missing(monkeypatch):
 
 
 def test_adapter_raises_on_empty_output(monkeypatch, tmp_path):
-    monkeypatch.setattr(subprocess, "run", lambda *a, **k: _Proc("", returncode=1, stderr="boom"))
+    monkeypatch.setattr(subprocess, "Popen", lambda *a, **k: _Proc("", returncode=1, stderr="boom"))
     monkeypatch.setattr(adapter, "TAU_REPO", tmp_path)
     with pytest.raises(adapter.TauRoutingError):
         adapter.dispatch_text_reasoning("p", role="r")
+
+
+def test_adapter_wall_clock_timeout_kills_process_group(monkeypatch, tmp_path):
+    killed = []
+    proc = _Proc("", delay_s=1.0)
+
+    monkeypatch.setattr(subprocess, "Popen", lambda *a, **k: proc)
+    monkeypatch.setattr(adapter, "TAU_REPO", tmp_path)
+    monkeypatch.setattr(adapter.os, "killpg", lambda pid, sig: killed.append((pid, sig)))
+
+    started = time.monotonic()
+    with pytest.raises(adapter.TauRoutingError, match="timed out"):
+        adapter.dispatch_text_reasoning("p", role="r", timeout_s=0.1)
+
+    assert time.monotonic() - started < 0.8
+    assert killed

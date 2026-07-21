@@ -23,6 +23,7 @@ import json
 import os
 import signal
 import subprocess
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -33,6 +34,42 @@ DEFAULT_MODEL = os.environ.get("PERSONA_DREAM_SCILLM_MODEL", "gpt-5.5")
 
 class TauRoutingError(RuntimeError):
     """Raised when the Tau text-reasoning node cannot be reached or fails."""
+
+
+class _WallClockTimeout(TimeoutError):
+    """Raised when the adapter-level wall-clock guard expires."""
+
+
+def _install_wall_clock_timeout(timeout_s: float):
+    if timeout_s <= 0 or threading.current_thread() is not threading.main_thread():
+        return None
+
+    previous_handler = signal.getsignal(signal.SIGALRM)
+
+    def _raise_timeout(_signum, _frame):
+        raise _WallClockTimeout(f"Tau dispatch wall-clock timeout after {timeout_s}s")
+
+    signal.signal(signal.SIGALRM, _raise_timeout)
+    signal.setitimer(signal.ITIMER_REAL, timeout_s)
+    return previous_handler
+
+
+def _clear_wall_clock_timeout(previous_handler: Any) -> None:
+    if previous_handler is None:
+        return
+    signal.setitimer(signal.ITIMER_REAL, 0)
+    signal.signal(signal.SIGALRM, previous_handler)
+
+
+def _terminate_process_group(proc: subprocess.Popen[str]) -> None:
+    try:
+        os.killpg(proc.pid, signal.SIGTERM)
+        proc.wait(timeout=5)
+    except Exception:
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)
+        except Exception:
+            pass
 
 
 def dispatch_text_reasoning(
@@ -77,18 +114,14 @@ def dispatch_text_reasoning(
     except OSError as exc:
         raise TauRoutingError(f"Tau dispatch failed: {exc}") from exc
 
+    previous_alarm_handler = _install_wall_clock_timeout(timeout_s)
     try:
         stdout, stderr = proc.communicate(json.dumps(request), timeout=timeout_s)
-    except subprocess.TimeoutExpired as exc:
-        try:
-            os.killpg(proc.pid, signal.SIGTERM)
-            proc.wait(timeout=5)
-        except Exception:
-            try:
-                os.killpg(proc.pid, signal.SIGKILL)
-            except Exception:
-                pass
+    except (subprocess.TimeoutExpired, _WallClockTimeout) as exc:
+        _terminate_process_group(proc)
         raise TauRoutingError(f"Tau dispatch timed out after {timeout_s}s") from exc
+    finally:
+        _clear_wall_clock_timeout(previous_alarm_handler)
 
     stdout = stdout.strip()
     if not stdout:
