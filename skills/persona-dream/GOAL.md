@@ -75,19 +75,20 @@ step model:
 3. **Dream observation / interpretation** - implemented historically for
    retrospective Phase 13-16 runs. This is not enough for PCTOM-R because it
    observes a completed dream and then interprets it.
-4. **Prospective ToM prediction** - intended and partially implemented by
-   fixture-backed Gates 2-4. The missing live proof is Tau text execution
-   producing valid distributions and sealed commitments before reveal.
+4. **Prospective ToM prediction** - implemented fixture-backed by Gates 2-4
+   and bridged once through live Tau text execution. The remaining research
+   proof is repeated, held-out execution across conditions and seeds.
 5. **Deterministic hidden outcome and scoring** - implemented fixture-backed
-   by Gate 5. The missing research proof is a held-out prospective run where
-   predictions are scored against simulator ground truth.
+   by Gate 5 and bridged once over a live Tau-originated sealed commitment.
+   The remaining research proof is held-out prospective scoring across
+   baselines, including factual second-order Tau hypotheses.
 6. **Action selection** - implemented fixture-backed by Gate 6. The missing
    research proof is live condition-runner evidence showing decisions are
    chosen from ToM forecasts without human content judgment.
-7. **Non-destructive belief revision** - implemented fixture-backed by Gate 7.
-   The missing live proof is outcome-driven prior -> error -> posterior
-   revision that preserves the sealed prior and avoids canonical/source/identity
-   writes.
+7. **Non-destructive belief revision** - implemented fixture-backed by Gate 7
+   and bridged once over the live Tau-originated scored commitment. The
+   remaining research proof is longitudinal recall/use after revision and
+   repeated no-write behavior under faults.
 8. **Reliability under faults** - implemented fixture-backed by Gates 8-9. The
    missing live proof is bounded service or stale-artifact fault containment and
    causal replay over real runtime receipts.
@@ -304,6 +305,7 @@ Gate 8 proof root: /tmp/persona-dream-pctom-gate8-rebased-20260721T014053Z
 Gate 9 proof root: /tmp/persona-dream-pctom-gate9-final-20260721T015757Z
 Live Gate 0 proof root: /tmp/persona-dream-live-pctom-gate0-r2-20260721T020456Z
 Live Tau Gate 2-4 proof root: /tmp/persona-dream-live-tau-gate2-4-20260721T021621Z
+Live Tau Gate 5/7 proof root: /tmp/persona-dream-live-tau-score-revision-20260721T022807Z
 ```
 
 Gate 0 proof summary:
@@ -425,8 +427,8 @@ git_diff_check: clean
 
 This is fixture-backed deterministic evidence. It does not prove live Memory
 recall, Tau text execution, semantic dream quality, prediction benefit,
-held-out statistical calibration, live action improvement, live belief
-revision, fault-surface coverage, or complete Phase 01-16 runtime execution.
+held-out statistical calibration, live action improvement, fault-surface
+coverage, or complete Phase 01-16 runtime execution.
 
 Gate 7 proof summary:
 
@@ -456,6 +458,49 @@ the prior, mutate evidence, write source memory, write canonical memory, or use
 non-PASS scoring. It does not prove live Tau belief-revision generation, live
 Memory recall, longitudinal recall after revision, semantic posterior quality,
 fault-injection reliability, or provider/video execution.
+
+Live Tau Gate 5/7 proof summary:
+
+```text
+receipt: /tmp/persona-dream-live-tau-score-revision-20260721T022807Z/live_tau_score_revision_receipt.v1.json
+status: PASS_LIVE_TAU_PCTOM_SCORE_REVISION
+mocked: false
+live: true
+live_tau_originated_commitment_consumed: true
+fixture_backed: false
+deterministic_simulator_corpus_fixture_backed: true
+human_content_judgment_required: false
+memory_write_attempts: 0
+provider_call_attempts: 0
+tau_call_attempts: 0
+Gate 5 status: PASS_TOM_SCORING_RECEIPT
+Gate 5 commitments_scored: 1
+Gate 5 action_scores: 1
+Gate 5 belief_scores: 1
+Gate 5 first_order_scores: 1
+Gate 5 second_order_scores: 0
+Gate 5 counterfactual_pairs: 1
+Gate 5 false_history_rate: 0.0
+Gate 5 action_brier: 0.26
+Gate 5 action_log_loss: 0.5108256237659907
+Gate 5 expected_calibration_error: 0.4
+Gate 7 status: PASS_TOM_BELIEF_REVISION
+Gate 7 prior_hypothesis_id: live-tau-gate2-factual-bdi-001
+Gate 7 prior_actual_probability: 0.6
+Gate 7 posterior_actual_probability: 0.78
+Gate 7 surprise: 0.5108256237659907
+Gate 7 forbidden_write_attempts: 0
+```
+
+This is live Tau-originated, deterministic simulator-backed evidence for one
+bounded text-first case. It proves that a Tau-authored sealed commitment can be
+revealed after sealing, scored by the Gate 5 contract, and used to write a Gate
+7 prior -> error -> posterior revision without canonical/source/identity writes
+or human content judgment. It does not prove held-out prediction benefit,
+statistical calibration, factual second-order live Tau scoring, live Memory
+recall for the same scored trial, longitudinal recall after revision, real
+service fault injection or causal replay, complete Phase 01-16 runtime
+execution, paid provider execution, or video quality.
 
 Gate 8 proof summary:
 
@@ -622,45 +667,53 @@ receipts proving all of the following:
 The current evidence through Gate 9 is fixture-backed, with one live Gate 0
 bridge proving live Memory recall-to-prospective-lineage wiring and one live
 Tau Gate 2-4 bridge proving text-first Tau generation through sealed commitment
-validators. It does not prove paid provider execution, semantic dream quality,
-held-out prediction benefit, live outcome reveal/scoring, live belief revision,
-live fault containment, complete live Phase 01-16 runtime execution, or
-autonomous operation beyond the bounded bridges. Those require separate live
-receipts.
+validators, plus one live Tau-originated Gate 5/7 bridge proving deterministic
+outcome reveal, scoring, and non-destructive revision for a bounded text-first
+case. It does not prove paid provider execution, semantic dream quality,
+held-out prediction benefit, factual second-order live Tau scoring, live fault
+containment, longitudinal recall after revision, complete live Phase 01-16
+runtime execution, or autonomous operation beyond the bounded bridges. Those
+require separate live receipts.
 
 No agent may claim final, green, complete, fixed, verified, or closed for this
 research goal unless those concrete proof artifacts exist and are cited.
 
 ## Next Critical Path
 
-Move from one-step live bridges to a live text-first prospective trial chain,
-without reactivating provider/video as the critical path.
+Move from one-step live bridges to bounded live reliability evidence, without
+reactivating provider/video as the critical path.
 
-The next accepted artifact must consume the live Tau Gate 2-4 output root and
-answer this live question:
+The next accepted artifact must consume the live Tau-originated PCTOM case and
+answer this live reliability question:
 
-1. Can the Tau-authored sealed commitment be revealed and scored by the
-   deterministic Gate 5 contract, then feed non-destructive Gate 7 belief
-   revision without canonical/source/identity writes?
+1. Can a bounded live stale-artifact, malformed-runtime, or retry-boundary
+   event be contained and diagnosed by the Gate 8-9 receipts without canonical
+   memory, identity, source-memory writes, duplicate active predictions, or
+   unknown-state continuation?
 
 Stop condition for that artifact:
 
 ```text
 mocked: no
-live Tau-originated commitment consumed: yes
-fixture_backed: no, except for deterministic simulator ground truth
+live Tau-originated case consumed: yes
+fixture_backed: no, except for deterministic simulator ground truth and the
+controlled fault definition
 human_content_judgment_required: false
 memory_write_attempts: 0
 provider_call_attempts: 0
-Gate 5 scoring result: PASS or fail-closed receipt
-Gate 7 belief revision result: PASS or fail-closed receipt
+terminal_outcome: RECOVERED_WITH_EQUIVALENT_END_STATE,
+  BLOCKED_BEFORE_SIDE_EFFECT, or QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE
+unknown_state_continued: false
+active_partial_state: false when quarantined
+duplicate_active_predictions: 0
+duplicate_active_revisions: 0
 ```
 
-The next independent reliability question remains:
+The next independent experimental question remains:
 
-2. Can a bounded live fault or stale-artifact event be contained and diagnosed
-   by the Gate 8-9 receipts without canonical memory, identity, or source-memory
-   writes?
+2. Can repeated held-out M/R/D/CD runs show prediction or planning benefit over
+   the strongest baseline with calibration and abstention metrics, including
+   factual first- and second-order ToM distributions?
 
 Any live validation report must state `mocked`, `live`, what was actually
 exercised, and what remains unverified.

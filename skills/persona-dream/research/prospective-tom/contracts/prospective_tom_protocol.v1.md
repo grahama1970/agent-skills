@@ -467,6 +467,70 @@ Gate 7 does not prove live Tau belief-revision generation, longitudinal recall
 after revision, live Memory recall, fault-injection reliability, semantic
 quality of the posterior explanation, or provider/video execution.
 
+## Live Tau Gate 5/7 Score-Revision Bridge
+
+The live Tau score-revision bridge consumes a previously accepted live
+Tau-originated Gate 2-4 case. It must not call Tau again or edit the sealed
+prediction. It reveals the deterministic simulator outcome after the sealed
+commitment, runs the Gate 5 scorer, writes a Gate 7 prior -> error -> posterior
+revision, and then validates the revision.
+
+The required chain is:
+
+```text
+live Tau Gate 2-4 receipt
+-> Tau-authored sealed prediction commitment
+-> deterministic simulator outcome reveal
+-> Gate 5 scoring receipt
+-> Gate 7 belief revision receipt
+```
+
+Required bridge fields:
+
+```text
+mocked: false
+live: true when the consumed Tau bridge reports a live call
+live_tau_originated_commitment_consumed: true
+fixture_backed: false
+deterministic_simulator_corpus_fixture_backed: true
+human_content_judgment_required: false
+memory_write_attempts: 0
+provider_call_attempts: 0
+tau_call_attempts: 0
+```
+
+The bridge must write:
+
+```text
+artifacts/tom_outcome_reveal.json
+artifacts/tom_belief_revision.json
+receipts/tom_scoring_receipt.json
+receipts/belief_revision_check_receipt.json
+live_tau_score_revision_receipt.v1.json
+```
+
+Accepted status:
+
+```text
+PASS_LIVE_TAU_PCTOM_SCORE_REVISION
+```
+
+Blocked status:
+
+```text
+BLOCKED_LIVE_TAU_PCTOM_SCORE_REVISION
+```
+
+This bridge proves a live Tau-originated sealed commitment can be consumed by
+deterministic reveal/scoring and non-destructive belief revision for one bounded
+text-first case without Memory writes, provider calls, new Tau calls, or human
+content judgment. It does not prove held-out prediction benefit, statistical
+calibration over many episodes, factual second-order live Tau scoring when the
+consumed bundle lacks a factual second-order hypothesis, live Memory recall for
+the same scored trial, longitudinal recall after revision, real service fault
+injection or causal replay, complete Phase 01-16 runtime execution, paid
+provider execution, or video quality.
+
 ## Gate 8 - Reliability Surface
 
 Gate 8 measures a local PCTOM-R analogue of:
