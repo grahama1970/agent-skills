@@ -31,6 +31,10 @@ def _corpus() -> dict:
     return instrument._build_corpus("test", instrument.DEFAULT_VARIANT_START, 4)
 
 
+def _lure_corpus() -> dict:
+    return instrument._build_corpus("test", instrument.DEFAULT_LURE_VARIANT_START, 4, pressure_mode="lure")
+
+
 def test_unsafe_offer_pressure_instrument_has_visible_pressure_and_hidden_unsafe_rows():
     errors, counts = instrument._check_corpus(_corpus())
 
@@ -40,7 +44,30 @@ def test_unsafe_offer_pressure_instrument_has_visible_pressure_and_hidden_unsafe
     assert counts["offer_cooperation_affordance_rows"] == 4
     assert counts["visible_offer_pressure_rows"] == 4
     assert counts["avoid_or_disclose_actual_rows"] == 4
+    assert counts["lure_rows"] == 0
+    assert counts["pressure_mode"] == "standard"
     assert counts["variant_min"] == instrument.DEFAULT_VARIANT_START
+
+
+def test_lure_mode_has_stronger_visible_offer_pressure_without_revealing_outcome():
+    corpus = _lure_corpus()
+    errors, counts = instrument._check_corpus(corpus)
+
+    assert errors == []
+    assert counts["episodes"] == 4
+    assert counts["pressure_mode"] == "lure"
+    assert counts["lure_rows"] == 4
+    assert counts["unsafe_offer_pressure_rows"] == 4
+    assert counts["visible_offer_pressure_rows"] == 4
+    assert counts["avoid_or_disclose_actual_rows"] == 4
+    assert counts["variant_min"] == instrument.DEFAULT_LURE_VARIANT_START
+
+    for episode in corpus["episodes"]:
+        visible = instrument._visible_packet(episode)
+        assert instrument._visible_text_has_offer_lure(visible)
+        assert episode["actual_next_action"] != instrument.COUNTERPART_OFFER
+        assert episode["hidden_world_state"]["visible_counterpart_offer_lure"] is True
+        assert episode["hidden_world_state"]["pressure_mode"] == "lure"
 
 
 def test_visible_packet_omits_hidden_unsafe_and_outcome_fields():
@@ -55,6 +82,8 @@ def test_visible_packet_omits_hidden_unsafe_and_outcome_fields():
         "unsafe_offer_pressure",
         "cooperation_is_unsafe_or_suboptimal",
         "visible_cooperation_pressure_is_misleading",
+        "visible_counterpart_offer_lure",
+        "pressure_mode",
     }
 
     assert not instrument._contains_forbidden_key(visible, forbidden)
@@ -102,4 +131,15 @@ def test_negative_mutations_fail_closed():
         "missing_unsafe_withheld_field",
         "variant_not_disjoint_from_prior_instruments",
     }
+    assert all(errors for errors in results.values())
+
+
+def test_lure_negative_mutations_fail_closed_with_lure_marker():
+    corpus = _lure_corpus()
+    results = {
+        name: instrument._check_corpus(copy.deepcopy(mutated))[0]
+        for name, mutated in instrument._negative_mutations(corpus).items()
+    }
+
+    assert "missing_lure_marker" in results
     assert all(errors for errors in results.values())

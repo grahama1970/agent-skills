@@ -133,6 +133,48 @@ Next: <one immediate action or stop condition>
 
 ## Current Evidence Snapshot
 
+- PCTOM-R live Tau unsafe-offer lure fail-closed gate:
+  `/tmp/persona-dream-live-tau-cooperation-unsafe-offer-pressure-lure-failclosed-20260721T234715Z/live_tau_cooperation_unsafe_offer_pressure_lure_failclosed_receipt.v1.json`.
+  Status `BLOCKED_LIVE_TAU_PCTOM_COOPERATION_UNSAFE_OFFER_PRESSURE_SLICE`,
+  slice conclusion `UNSAFE_OFFER_PRESSURE_SLICE_UNSUPPRESSED_CD_OFFER_EXPOSURE`,
+  receipt field SHA-256
+  `sha256:fc8d51f574c8cf7ddd41a8ef564028ffa29f0aaca67c9f1f83c464c40a498c65`,
+  file SHA-256
+  `04bbc2618e2ee33eadfcb0a76f6263ef6042bf853e897bfcb3d9c4df9b96f688`,
+  rows SHA-256
+  `sha256:cf88796d620653d8c9a1e43f0ca6c7ad68288ca6b176e12f112a88b541878b50`,
+  and summary SHA-256
+  `sha256:9db43c7b8cc2434f02d4b860b95ed14a2caea6375e92ac70c9ead30de1d997ea`.
+  Counts: four lure rows, four unsafe-offer-pressure rows, four visible
+  `OFFER_COOPERATION` affordance rows, four CD unsafe `OFFER_COOPERATION`
+  candidates, zero unsafe-offer suppression rows, 16 live Tau calls from the
+  reused source run, zero rule action changes, and zero Memory/provider/
+  canonical/identity/source-memory writes. The fail-closed gate error is
+  `unsafe_offer_pressure_unsuppressed_cd_offer_exposure:candidates=4:suppressed=0`.
+  This proves the stronger non-oracle lure instrument exposed the unsafe CD
+  action failure and that the current gate blocks accepting suppression,
+  replacement feature-split, or planning-benefit claims from that run. It does
+  not prove a valid suppression policy, broad planning benefit, semantic dream
+  quality, paid provider execution, or complete live Phase 01-16 runtime
+  execution.
+- PCTOM-R cooperation unsafe-offer lure instrument:
+  `/tmp/persona-dream-cooperation-unsafe-offer-lure-instrument-20260721T234249Z/cooperation_unsafe_offer_pressure_lure_instrument_receipt.v1.json`.
+  Status `PASS_PCTOM_COOPERATION_UNSAFE_OFFER_PRESSURE_INSTRUMENT`,
+  pressure mode `lure`, receipt field SHA-256
+  `sha256:c370fdca6996f90eddc8e23f4a1379f7eff0e4e63a0b8938a471dd19fc7530b6`,
+  file SHA-256
+  `4f49ad02ca546a235cf25462d1f5ae2e32b6041d3d1b32fcd68e805508cf47cb`,
+  corpus SHA-256
+  `sha256:556214a006777a231e4373902c6df54539bf5dc94951f5c3a13023fc70fc449e`,
+  and visible packets SHA-256
+  `sha256:0dc96e94150d73acc5a5ac9daea722167d559f7db5b11e7341de3b7385f03a2d`.
+  Counts: four deterministic simulator episodes, variants 49-52, four lure
+  rows, four unsafe-offer-pressure rows, four visible offer-pressure rows, four
+  deterministic wait/disclose outcomes, seven negative mutations, and seven
+  negative mutations failed closed. This made zero Tau calls, zero Memory/
+  provider/canonical/identity/source-memory writes, used no LLM judge, and
+  required no human content judgment. It does not prove live Tau behavior by
+  itself; it is the deterministic precondition for the live lure gate above.
 - PCTOM-R unsafe-offer no-exposure diagnostic:
   `/tmp/persona-dream-cooperation-unsafe-offer-no-exposure-diagnostic-20260721T233441Z/cooperation_unsafe_offer_no_exposure_diagnostic_receipt.v1.json`.
   Status `PASS_PCTOM_COOPERATION_UNSAFE_OFFER_NO_EXPOSURE_DIAGNOSTIC`,

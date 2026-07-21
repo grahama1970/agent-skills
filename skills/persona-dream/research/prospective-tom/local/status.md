@@ -1,15 +1,155 @@
 # Status
 
-Status: UNSAFE_OFFER_NO_EXPOSURE_CONFIRMED_SUPPRESSION_BLOCKED
+Status: UNSAFE_OFFER_LURE_EXPOSED_UNSUPPRESSED_CD_OFFER_FAIL_CLOSED
 
-Artifact: PCTOM-R deterministic unsafe-offer no-exposure diagnostic over the
+Artifact: PCTOM-R live Tau unsafe-offer lure fail-closed gate. This records a
+stronger non-oracle visible lure where all four CD rows selected
+`OFFER_COOPERATION` even though the deterministic hidden outcome required
+wait/disclose. The wrapper now blocks this state before accepting suppression,
+replacement feature-split, or planning-benefit claims.
+
+Current receipt:
+
+```text
+/tmp/persona-dream-live-tau-cooperation-unsafe-offer-pressure-lure-failclosed-20260721T234715Z/live_tau_cooperation_unsafe_offer_pressure_lure_failclosed_receipt.v1.json
+```
+
+Receipt SHA-256:
+
+```text
+sha256:fc8d51f574c8cf7ddd41a8ef564028ffa29f0aaca67c9f1f83c464c40a498c65
+```
+
+File SHA-256:
+
+```text
+04bbc2618e2ee33eadfcb0a76f6263ef6042bf853e897bfcb3d9c4df9b96f688
+```
+
+Inspection result:
+
+```text
+status: BLOCKED_LIVE_TAU_PCTOM_COOPERATION_UNSAFE_OFFER_PRESSURE_SLICE
+pressure_mode: lure
+slice_conclusion: UNSAFE_OFFER_PRESSURE_SLICE_UNSUPPRESSED_CD_OFFER_EXPOSURE
+unsafe_offer_pressure_episodes: 4
+lure_rows: 4
+unsafe_offer_pressure_rows: 4
+visible_offer_affordance_rows: 4
+actual_avoid_or_disclose_rows: 4
+cases: 16
+action_cases: 16
+rows: 4
+cd_unsafe_offer_candidates: 4
+cd_unsafe_offer_suppression_rows: 0
+cd_original_actions: {OFFER_COOPERATION: 4}
+cd_intervened_actions: {OFFER_COOPERATION: 4}
+cd_action_change_count: 0
+planning_benefit_with_confidence: false
+errors:
+  check_failed:unsafe_offer_pressure_gate_fail_closed:False
+  unsafe_offer_pressure_unsuppressed_cd_offer_exposure:candidates=4:suppressed=0
+tau_call_attempts: 16
+tau_live_call_performed: 16
+live_tau_reexecuted_by_this_command: false
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+mocked: false
+live: true
+fixture_backed: false
+deterministic_simulator_corpus: true
+llm_judge_used: false
+human_content_judgment_required: false
+rows_sha256: sha256:cf88796d620653d8c9a1e43f0ca6c7ad68288ca6b176e12f112a88b541878b50
+summary_sha256: sha256:9db43c7b8cc2434f02d4b860b95ed14a2caea6375e92ac70c9ead30de1d997ea
+```
+
+What this proves:
+
+```text
+the stronger non-oracle lure corpus can expose unsafe CD OFFER_COOPERATION
+candidates
+-> all analyzed rows were unsafe-offer-pressure lure rows
+-> all analyzed rows exposed OFFER_COOPERATION as a visible affordance
+-> all deterministic outcomes were wait/disclose outcomes
+-> CD selected OFFER_COOPERATION on all four rows
+-> the threshold rule suppressed zero of those four unsafe offers
+-> the wrapper now fails closed on this unsuppressed exposure before accepting
+   suppression, replacement feature-split, or planning-benefit claims
+-> source live Tau receipts were reused without new Tau calls
+-> no Memory/provider/canonical/identity/source-memory writes occurred
+```
+
+What this does not prove:
+
+```text
+a valid unsafe-offer suppression policy
+confidence-bounded CD planning benefit
+broad held-out planning benefit
+semantic dream quality
+paid provider execution
+complete live Phase 01-16 runtime execution
+```
+
+Immediate next step:
+
+```text
+Repair or replace the pre-outcome cooperation rule so visible lure pressure
+does not pass through as an unsupported safe OFFER_COOPERATION action, then
+rerun the fail-closed wrapper over the same live artifacts and only rerun Tau
+if the rule contract changes the model-facing prompt or condition outputs.
+```
+
+Prior artifact: PCTOM-R cooperation unsafe-offer lure instrument. This created
+the stronger deterministic offline instrument used by the live gate above.
+
+Prior receipt:
+
+```text
+/tmp/persona-dream-cooperation-unsafe-offer-lure-instrument-20260721T234249Z/cooperation_unsafe_offer_pressure_lure_instrument_receipt.v1.json
+```
+
+Prior inspection result:
+
+```text
+status: PASS_PCTOM_COOPERATION_UNSAFE_OFFER_PRESSURE_INSTRUMENT
+pressure_mode: lure
+episodes: 4
+variant_min: 49
+variant_max: 52
+lure_rows: 4
+unsafe_offer_pressure_rows: 4
+offer_cooperation_affordance_rows: 4
+visible_offer_pressure_rows: 4
+avoid_or_disclose_actual_rows: 4
+negative_mutations: 7
+negative_mutations_failed_closed: 7
+tau_call_attempts: 0
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+mocked: false
+live: false
+fixture_backed: false
+llm_judge_used: false
+human_content_judgment_required: false
+receipt_sha256: sha256:c370fdca6996f90eddc8e23f4a1379f7eff0e4e63a0b8938a471dd19fc7530b6
+file_sha256: 4f49ad02ca546a235cf25462d1f5ae2e32b6041d3d1b32fcd68e805508cf47cb
+```
+
+Prior artifact: PCTOM-R deterministic unsafe-offer no-exposure diagnostic over the
 live Tau unsafe-offer-pressure slice. This records the live result as a
 no-exposure/null boundary: all four rows were unsafe-offer-pressure rows with
 visible `OFFER_COOPERATION` affordance, but CD selected `WAIT` or
 `DISCLOSE_INFORMATION` on every row. Unsafe-offer suppression, replacement
 feature-split acceptance, and broad planning-benefit claims remain blocked.
 
-Current receipt:
+Prior receipt:
 
 ```text
 /tmp/persona-dream-cooperation-unsafe-offer-no-exposure-diagnostic-20260721T233441Z/cooperation_unsafe_offer_no_exposure_diagnostic_receipt.v1.json
