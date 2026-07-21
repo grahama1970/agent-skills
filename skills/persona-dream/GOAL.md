@@ -57,6 +57,47 @@ Evidence: <exact path, count, or command result>
 Next: <one immediate action or stop condition>
 ```
 
+## README Reconciliation For Current Agents
+
+The README is a broad research narrative plus historical media/cognitive-loop
+evidence. It is not permission to reactivate video, provider, Chatterbox,
+dashboard, or human subjective review work as the current critical path. For
+this active goal, agents must interpret the README through this source-derived
+step model:
+
+1. **Grounded memory residue** - implemented for ordinary dream runs and live
+   PCTOM Gate 0. The active research question requires exact accepted-source
+   attribution into prospective residues, not just a plausible memory summary.
+2. **Synthetic dream construction** - historically implemented for media and
+   fixture-backed PCTOM branches. The current lane treats dreams as
+   agent-facing counterfactual simulations whose content matters only through
+   sealed predictions and later scores.
+3. **Dream observation / interpretation** - implemented historically for
+   retrospective Phase 13-16 runs. This is not enough for PCTOM-R because it
+   observes a completed dream and then interprets it.
+4. **Prospective ToM prediction** - intended and partially implemented by
+   fixture-backed Gates 2-4. The missing live proof is Tau text execution
+   producing valid distributions and sealed commitments before reveal.
+5. **Deterministic hidden outcome and scoring** - implemented fixture-backed
+   by Gate 5. The missing research proof is a held-out prospective run where
+   predictions are scored against simulator ground truth.
+6. **Action selection** - implemented fixture-backed by Gate 6. The missing
+   research proof is live condition-runner evidence showing decisions are
+   chosen from ToM forecasts without human content judgment.
+7. **Non-destructive belief revision** - implemented fixture-backed by Gate 7.
+   The missing live proof is outcome-driven prior -> error -> posterior
+   revision that preserves the sealed prior and avoids canonical/source/identity
+   writes.
+8. **Reliability under faults** - implemented fixture-backed by Gates 8-9. The
+   missing live proof is bounded service or stale-artifact fault containment and
+   causal replay over real runtime receipts.
+
+Therefore, when README language says that media acceptance, human subjective
+video review, or Chatterbox voice expression remains open, that is historical
+media-spine context. It is not the next task for this goal. The active PCTOM-R
+task is to move from fixture-backed gates to live text-first receipts while
+preserving the same fail-closed invariants.
+
 ## Research Question
 
 Can counterfactual dreaming improve an agent's calibrated predictions and
@@ -559,11 +600,29 @@ research goal unless those concrete proof artifacts exist and are cited.
 Move from fixture-backed wiring evidence to live validation evidence for the
 same PCTOM-R lane, without reactivating provider/video as the critical path.
 
-The next accepted artifact must answer one of these remaining live questions
-with receipts:
+The next accepted artifact must answer the first remaining live question unless
+it is blocked by an unavailable Tau runtime:
 
 1. Can Tau text execution produce sealed ToM distributions or commitments that
    pass the same deterministic Gate 2-4 contracts?
+
+Stop condition for that artifact:
+
+```text
+live Tau text call attempted: yes
+mocked: no
+fixture_backed: no, except for deterministic simulator ground truth if used
+human_content_judgment_required: false
+memory_write_attempts: 0
+provider_call_attempts: 0
+Gate 2 checker result: PASS or fail-closed receipt
+Gate 3 checker result: PASS or fail-closed receipt
+Gate 4 checker result: PASS or fail-closed receipt
+```
+
+If live Tau is unavailable, preserve the failing receipt and do not replace it
+with a mocked proof. The next independent live question is:
+
 2. Can a bounded live fault or stale-artifact event be contained and diagnosed
    by the Gate 8-9 receipts without canonical memory, identity, or source-memory
    writes?
