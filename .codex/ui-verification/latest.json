@@ -1,12 +1,12 @@
 {
-  "verified_at": "2026-07-21T15:42:58.844139+00:00",
-  "cwd": "/tmp/agent-skills-monitor-herdr-main.RFn0g9",
-  "root": "/tmp/agent-skills-monitor-herdr-main.RFn0g9",
-  "output_root": "/tmp/codex-ui-verification/agent-skills-monitor-herdr-main.RFn0g9",
-  "url": "http://127.0.0.1:18767/index.html",
-  "name": "monitor-herdr-readme-header",
+  "verified_at": "2026-07-21T15:53:31.345682+00:00",
+  "cwd": "/tmp/persona-dream-pctom-next-main-T7LEYn",
+  "root": "/tmp/persona-dream-pctom-next-main-T7LEYn",
+  "output_root": "/tmp/codex-ui-verification/persona-dream-pctom-next-main-T7LEYn",
+  "url": "http://127.0.0.1:3002/?project=persona-dream",
+  "name": "ux-lab-persona-dream-hub",
   "tab_id": null,
   "transport": "isolated_cdp",
-  "screenshot": "/tmp/codex-ui-verification/agent-skills-monitor-herdr-main.RFn0g9/monitor-herdr-readme-header/20260721T154224Z.png",
-  "read_json": "/tmp/codex-ui-verification/agent-skills-monitor-herdr-main.RFn0g9/monitor-herdr-readme-header/20260721T154224Z.read.json"
+  "screenshot": "/tmp/codex-ui-verification/persona-dream-pctom-next-main-T7LEYn/ux-lab-persona-dream-hub/20260721T155256Z.png",
+  "read_json": "/tmp/codex-ui-verification/persona-dream-pctom-next-main-T7LEYn/ux-lab-persona-dream-hub/20260721T155256Z.read.json"
 }
