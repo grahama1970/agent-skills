@@ -489,7 +489,7 @@ Full64 live Memory fault surface proof root: /tmp/persona-dream-live-tau-full64-
 Current active phase boundary:
 
 ```text
-phase: post-full64-live-memory-fault-surface, pre-broader-planning-or-permanently-deployed-service-proof
+phase: post-full64-live-memory-fault-surface, pre-planning-generalization-proof
 last_live_condition_receipt: /tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z/live_tau_condition_comparison_receipt.v1.json
 last_reliability_receipt: /tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z/live_tau_condition_reliability_bridge_receipt.v1.json
 last_action_selection_receipt: /tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z/live_tau_condition_action_selection_receipt.v1.json
@@ -522,8 +522,8 @@ last_expanded_repeated_seed_summary_receipt: /tmp/persona-dream-live-tau-trust-c
 last_blocked_expanded_repeated_seed_one_source_receipt: /tmp/persona-dream-live-tau-trust-commit-expanded-repeated-seed-summary-one-source-20260721T120712Z/live_tau_trust_commit_repeated_seed_receipt.v1.json
 last_local_http_service_retry_receipt: /tmp/persona-dream-live-tau-sealed-test-service-retry-proof-20260721T121812Z/live_tau_sealed_test_service_retry_proof_receipt.v1.json
 last_full64_live_memory_fault_surface_receipt: /tmp/persona-dream-live-tau-full64-memory-fault-surface-20260721T122732Z/live_tau_full64_memory_fault_surface_receipt.v1.json
-next_required_receipt: broader/different planning intervention evidence or permanently deployed external service evidence, selected by the active research question
-secondary_receipt: permanently deployed external always-on orchestrator retry proof
+next_required_receipt: broader/different planning intervention evidence, or a receipt-backed explanation that planning benefit remains sparse and non-general
+secondary_receipt: permanently deployed external always-on orchestrator retry proof, only as supporting reliability evidence
 ```
 
 This boundary means Gate 8/9 condition reliability over live-originated
@@ -557,7 +557,8 @@ decisions. The action-policy sensitivity receipt now explains the sparse
 planning point estimate at the realized-action level: all 4 nonzero deltas are
 action switches in `trust-commit`, with 3 oracle-match gains and 1 oracle-match
 loss. The active next movement is now broader/different planning intervention
-evidence or permanently deployed external service proof.
+evidence, or a receipt-backed audit explaining why the current planning signal
+remains sparse and non-general.
 The deterministic corpus has now been expanded to 24
 episodes per family, and the filtered trust/commitment heldout slice over
 variants 17-24 produced sealed/scored/action coverage with an empty-filter
@@ -578,7 +579,8 @@ and HTTP submission boundary, including duplicate submission idempotence. A
 full64 live Memory fault surface now probes live Memory failures and recall
 perturbations against full64 live Tau-originated evidence with only allowed
 terminal outcomes. A permanently deployed external always-on service boundary
-remains unproven. The
+remains unproven, but that is supporting reliability scope; it does not answer
+whether counterfactual dreaming improves prospective ToM planning. The
 run.sh orchestration proof exercises the local skill command dispatcher, but
 it is not a service boundary.
 
@@ -2318,10 +2320,10 @@ bounded local queue-worker evidence, full64 live Tau sealed-test replication,
 full64 live Tau belief-Brier confidence evidence, full64 retry/fault
 containment, a full64 planning diagnostic, a floor4 trust/commitment live Tau
 replication, a repeated-seed aggregate over two floor4 live Tau receipts,
-expanded repeated live trust/commitment summary evidence, and a local HTTP
-service retry proof, and a full64 live Memory fault surface to the remaining
-expanded/non-identical planning and permanently deployed external service
-questions, without reactivating provider/video as the critical path. The
+expanded repeated live trust/commitment summary evidence, a local HTTP service
+retry proof, and a full64 live Memory fault surface to the remaining
+expanded/non-identical planning question, without reactivating provider/video
+or service deployment as the critical path. The
 blocked one-episode trust/commitment smoke is part of that evidence boundary:
 it exercised 4 live Tau calls and failed closed because the action-selection
 bridge requires at least 16 Tau calls and at least 4 sealed/scored cases per
@@ -2347,7 +2349,8 @@ The next accepted artifact must answer this narrower question:
    by receipt why planning benefit remains sparse and non-general. Otherwise
    the result must remain pending, not accepted as planning-benefit proof.
 
-The secondary artifact must answer this question:
+The secondary reliability artifact is useful, but it is not a substitute for
+the planning research artifact. It must answer this question:
 
 1. Does retry/fault handling preserve the same terminal-outcome discipline
    inside a permanently deployed external always-on service boundary, not only
