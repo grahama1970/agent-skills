@@ -1,6 +1,6 @@
 # Persona Dream Immutable Goal
 
-Last updated: 2026-07-20
+Last updated: 2026-07-21
 
 ## Controlling Goal
 
@@ -14,6 +14,25 @@ Theory-of-Mind Reliability.
 This supersedes the prior media-spine and Kling-video goals for current work.
 Those goals remain historical evidence in Git and in `GOAL_V2.md`, but they are
 not the active critical path unless the human explicitly reactivates them.
+
+## Alignment With README
+
+`README.md` describes the broader Persona Dream research purpose: a persistent
+persona can synthesize an explicitly synthetic dream from grounded memories,
+observe it, interpret it, persist only supported ToM state, and later use that
+memory without confusing imagination with literal history or mutating identity.
+
+This `GOAL.md` narrows the active work to the next falsifiable research question
+inside that broader program: whether counterfactual dreaming improves
+prospective, calibrated Theory of Mind and planning decisions under robust
+pipeline checks.
+
+Therefore the current critical path is not provider/video generation, dream
+aesthetic quality, dashboard presentation, or human-facing narrative polish. The
+human does not need vague GitHub commit status or prose reassurance about
+progress. The useful status is operational: which gate is active, which exact
+file/command/artifact is being touched, which receipts or counts exist, what is
+mocked versus live, and what concrete stop condition remains.
 
 ## Research Question
 
@@ -202,9 +221,19 @@ Current evidence boundaries:
 ```text
 Gate 0 commit: 81f51b5689914782c54a4b9c5672579bcd97d440
 Gate 1 commit: 0cecce8193606522a1d56283cc240c5bddc83c2a
+Gate 2 commit: 6b6b7d843f1a24a1192273a3215f6b2f795fd734
+Gate 3 commit: 781bc10e51c516f11930f274e30970c42d240297
 Gate 1 proof root: /tmp/persona-dream-pctom-gate1-final-postpatch-20260721T001545Z
 Gate 2 proof root: /tmp/persona-dream-pctom-gate2-postrebase-20260721T003945Z
 Gate 3 proof root: /tmp/persona-dream-pctom-gate3-final-20260721T004724Z
+```
+
+Gate 0 proof summary:
+
+```text
+Gate 0 positive: PASS_PCTOM_GATE0_LINEAGE
+Gate 0 negatives: 4 x BLOCKED_PCTOM_GATE0_LINEAGE
+Gate 0 invariant: query receipt -> accepted raw source ID -> normalized residue -> dream branch -> ToM prediction
 ```
 
 Gate 1 proof summary:
