@@ -1,7 +1,7 @@
 {
   "cron": {
     "checkout": "/home/graham/workspace/experiments/agent-skills-cron-main",
-    "checkout_commit": "b870d21cc",
+    "checkout_commit": null,
     "installed": true,
     "line": "*/10 * * * * cd '/home/graham/workspace/experiments/agent-skills-cron-main/skills/monitor-confused-agents' && '/home/graham/workspace/experiments/agent-skills-cron-main/skills/monitor-confused-agents/run.sh' tick --apply --space 'codex' --cwd-prefix '/home/graham/workspace/experiments' >> '/home/graham/.local/state/monitor-confused-agents/logs/cron.log' 2>&1 # monitor-confused-agents herdr cron",
     "live": true,
@@ -67,6 +67,7 @@
   },
   "notes": [
     "The final commit containing this receipt is intentionally verified by git ls-remote after push instead of embedded here, because embedding the commit hash changes the commit hash.",
+    "The cron checkout commit is intentionally verified by git -C /home/graham/workspace/experiments/agent-skills-cron-main log -1 after push instead of embedded here, because this receipt is committed in that same final commit.",
     "The untracked skills/brave-search/uv.lock file was intentionally not committed because it is unrelated to this skill receipt.",
     "WebGPT review is advisory; deterministic closure evidence is the sanity suite plus live Herdr/Codex receipts listed above."
   ],
