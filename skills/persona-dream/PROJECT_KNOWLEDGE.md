@@ -1,10 +1,40 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R balanced v19-20 retry evidence) by agent
+**Last updated:** 2026-07-21 (PCTOM-R balanced v17-22 aggregate evidence) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R BALANCED LIVE TAU V17-22 AGGREGATE): a follow-on
+  balanced variants 21-22 slice also passed, then accepted balanced slices
+  v17-18, v19-20 retry, and v21-22 were aggregated without reexecuting Tau.
+  New v21-22 receipt:
+  `/tmp/persona-dream-live-tau-balanced-planning-v21-22-20260721T191328Z/live_tau_balanced_planning_replication_receipt.v1.json`,
+  status `PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION`, receipt SHA-256
+  `sha256:08c3f1c63d4e2abfe632acf655dc842a38586979d964ccfce63b5843ab664a6e`.
+  It made 32 live Tau attempts and 32 live Tau calls over eight balanced
+  sealed-test episodes, with all Gate 0 attribution, hash-bound Tau receipts,
+  Gate 5 scoring, Gate 6 action rows, no human content judgment, no LLM judge,
+  and zero Memory/provider/canonical/identity/source-memory writes. Its
+  planning result was mildly harmful for CD: CD mean planning regret `0.275`,
+  strongest baseline M `0.24375`, CD-minus-baseline `0.03125`, one BENEFIT,
+  two HARM, five TIE, and CI `[-0.28750000000000003, 0.31875000000000003]`.
+  Aggregate receipt:
+  `/tmp/persona-dream-live-tau-balanced-planning-v17-22-aggregate-20260721T192057Z/balanced_planning_aggregate_receipt.v1.json`,
+  status `PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_AGGREGATE`, receipt SHA-256
+  `sha256:a740a7b889716ae04f2ace6e0020d13636ea008f061ce3922d2bdf81ac79f6a6`.
+  Across 24 balanced accepted episodes from variants 17-22, source receipts
+  contain 96 live Tau calls, 4 BENEFIT rows, 4 HARM rows, 16 TIE rows, four
+  oracle-match GAINs, four LOSSes, sixteen UNCHANGED rows, and mean
+  CD-minus-baseline `-0.024999999999999994`. Family means are:
+  coordination/conflict `0.19166666666666674`, information asymmetry `0.0`,
+  preference/desire `-0.09166666666666666`, and trust/commitment
+  `-0.20000000000000004`. Current interpretation is
+  `MIXED_BALANCED_SIGNAL_NOT_CONFIDENCE_BOUNDED`: the PCTOM-R pipeline is
+  producing objective prospective planning signal, but not yet a stable
+  confidence-bounded CD planning benefit. Next work should inspect the GAIN vs
+  LOSS rows and adjust deterministic scenario/policy design or run a larger
+  balanced slice; do not claim research success from the small negative mean.
 - 2026-07-21 (PCTOM-R BALANCED LIVE TAU V19-20 RETRY): the earlier blocked
   balanced variants 19-20 slice was rerun from clean `origin/main` with Gate 0
   attribution overlay and passed. Receipt:
