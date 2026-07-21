@@ -57,6 +57,13 @@ def run(
             help="Browser-oracle project override as handler=project. Repeat for multiple handlers.",
         ),
     ] = None,
+    handler_workspace: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--handler-workspace",
+            help="Workspace binding for local-CLI handlers as handler=/path (e.g. codex=/path/to/worktree).",
+        ),
+    ] = None,
     criterion: Annotated[
         list[str] | None,
         typer.Option("--criterion", help="Reviewer criterion. Repeat for multiple criteria."),
@@ -120,6 +127,7 @@ def run(
         topology=topology,
         join_handler=join_handler,
         handler_projects=handler_project,
+        handler_workspaces=handler_workspace,
         ask_id=ask_id,
         output_root=output_root,
         local_fixture=local_fixture,
