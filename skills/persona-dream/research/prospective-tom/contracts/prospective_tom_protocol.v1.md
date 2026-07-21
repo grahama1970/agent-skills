@@ -267,3 +267,60 @@ Gate 4 invariants:
 Gate 4 does not prove prediction accuracy, calibration quality, outcome reveal,
 deterministic scoring, belief revision, Tau execution, live Memory recall, or
 fault-injection reliability.
+
+## Gate 5 Scoring Contract
+
+Gate 5 reveals the deterministic outcome only after a sealed Gate 4 commitment
+exists, then writes a scoring receipt. The scorer must recompute commitment
+hashes before scoring and must reject any reveal that appears before the seal,
+uses an unresolved prediction, exposes an impossible action, or treats a
+synthetic counterfactual branch as literal history.
+
+Each outcome reveal must include:
+
+```text
+schema
+outcome_id
+episode_id
+prediction_id
+revealed_at
+outcome_visible: true
+reveal_complete: true
+canonical_memory_write: false
+actual_next_action
+hidden_state_labels
+factual_branch_id
+literal_history_branch_ids
+equivalent_formulation_checks
+```
+
+Each scoring receipt must include deterministic metrics:
+
+```text
+action Brier score
+action log loss
+first-order ToM label scores
+second-order ToM label scores
+expected calibration error
+risk-coverage/selective accuracy
+equivalent-formulation consistency
+counterfactual causal-sensitivity diagnostic
+false-history rate
+```
+
+Gate 5 invariants:
+
+- outcome reveal time is after the commitment seal time;
+- the commitment payload, model receipts, and evidence bundle hashes still
+  recompute before scoring;
+- actual next action is in the deterministic episode action vocabulary;
+- first- and second-order hidden-state labels come from simulator labels;
+- Brier score and log loss are computed from sealed probability distributions;
+- calibration and consistency metrics are computed deterministically;
+- counterfactual branches are not counted as literal history;
+- no canonical memory write occurs during reveal or scoring;
+- scoring receipts do not alter the sealed prediction.
+
+Gate 5 does not prove a prediction benefit over baselines, held-out statistical
+calibration, action-selection regret, belief revision, Tau execution, live
+Memory recall, or fault-injection reliability.

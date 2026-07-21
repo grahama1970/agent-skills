@@ -1,0 +1,25 @@
+{
+  "actual_next_action": "KAI_HINTS_CONSTRAINT",
+  "canonical_memory_write": false,
+  "episode_id": "dev-info-asym-01",
+  "equivalent_formulation_checks": [
+    {
+      "check_id": "eq-action-paraphrase-001",
+      "expected_top_action": "KAI_HINTS_CONSTRAINT",
+      "formulation_id": "same-question-paraphrase-001",
+      "prediction_id": "gate5-commitment-cd-001"
+    }
+  ],
+  "factual_branch_id": "factual-observed",
+  "hidden_state_labels": {
+    "gate2-positive-hyp-001": "TRUE",
+    "gate2-positive-hyp-002": "TRUE"
+  },
+  "literal_history_branch_ids": ["factual-observed"],
+  "outcome_id": "gate5-outcome-not-visible",
+  "outcome_visible": false,
+  "prediction_id": "gate5-commitment-cd-001",
+  "reveal_complete": false,
+  "revealed_at": "2026-07-20T00:05:00Z",
+  "schema": "persona_dream.research.prospective_tom.tom_outcome_reveal.v1"
+}

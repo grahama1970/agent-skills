@@ -1,0 +1,102 @@
+{
+  "canonical_memory_write": false,
+  "commitments": [
+    {
+      "canonical_memory_write": false,
+      "condition": "CD",
+      "episode_id": "dev-info-asym-01",
+      "evidence_bundle": {
+        "belief_distribution_refs": [
+          "gate2-positive-hyp-001",
+          "gate2-positive-hyp-002"
+        ],
+        "branch_bundle_sha256": "sha256:555dd04ed329208dec610b746214d0d977ada8f85abf0c300b64bf50a7b9976c",
+        "branch_refs": [
+          "factual-observed",
+          "cf-kai-gives-no-warning"
+        ],
+        "distribution_bundle_sha256": "sha256:2e2e4778b37d9c0efb72fa3887be7e451b0a1168c7aec2e065f8cfcf4d3a9ee5",
+        "episode_id": "dev-info-asym-01",
+        "source_evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "dev-info-asym-01:observable_history:0"
+          },
+          {
+            "scope": "social_episode_observation",
+            "source_id": "dev-info-asym-01:observable_history:1"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "dev-info-asym-01:information_access_by_agent"
+          }
+        ]
+      },
+      "evidence_bundle_sha256": "sha256:0dcffd13cfe35bac1938f8c26c69f30985f21b48e9e54cd37fabf34d498dde67",
+      "model_receipts": [
+        {
+          "claim_scope": "scoring-fixture-only",
+          "fixture_backed": true,
+          "live": false,
+          "mocked": false,
+          "model_call_attempts": 0,
+          "receipt_id": "gate5-fixture-no-model-call",
+          "tau_call_attempts": 0
+        }
+      ],
+      "model_receipts_sha256": "sha256:d493deeb492bac5f98cdf1f68e1415f2fc7fc55df16208d7d9f2aef61cce7f2b",
+      "outcome_visible": false,
+      "prediction_id": "gate5-commitment-cd-001",
+      "prediction_payload": {
+        "abstain": false,
+        "belief_distribution_refs": [
+          "gate2-positive-hyp-001",
+          "gate2-positive-hyp-002"
+        ],
+        "branch_refs": [
+          "factual-observed",
+          "cf-kai-gives-no-warning"
+        ],
+        "condition": "CD",
+        "episode_id": "dev-info-asym-01",
+        "evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "dev-info-asym-01:observable_history:0"
+          },
+          {
+            "scope": "social_episode_observation",
+            "source_id": "dev-info-asym-01:observable_history:1"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "dev-info-asym-01:information_access_by_agent"
+          }
+        ],
+        "outcome_visible": false,
+        "predicted_next_action_distribution": [
+          {
+            "probability": 0.62,
+            "value": "KAI_HINTS_CONSTRAINT"
+          },
+          {
+            "probability": 0.28,
+            "value": "KAI_WARNS_PRIVATELY"
+          },
+          {
+            "probability": 0.1,
+            "value": "KAI_INTERRUPTS_WITH_CORRECTION"
+          }
+        ],
+        "prediction_horizon": "next_action",
+        "schema": "persona_dream.research.prospective_tom.tom_prediction_payload.v1"
+      },
+      "prediction_payload_sha256": "sha256:4a099a185135cc714a0a285240a8aa7caed667acd73bf33f447b3dc4b9286c32",
+      "sealed_at": "2026-07-20T00:00:00Z"
+    }
+  ],
+  "episode_id": "dev-info-asym-01",
+  "outcome_visible": false,
+  "schema": "persona_dream.research.prospective_tom.tom_prediction_commitment_bundle.v1",
+  "sealed": true
+}

@@ -3,24 +3,53 @@
   "$id": "persona_dream.research.prospective_tom.tom_scoring_receipt.v1",
   "type": "object",
   "required": [
-    "scoring_id",
-    "episode_id",
-    "prediction_id",
-    "outcome_id",
-    "brier_score",
-    "log_loss",
-    "calibration_bucket",
-    "scored_at"
+    "schema",
+    "created_at",
+    "status",
+    "errors",
+    "counts",
+    "checks",
+    "metrics",
+    "mocked",
+    "live",
+    "fixture_backed",
+    "claims"
   ],
   "properties": {
-    "scoring_id": {"type": "string", "minLength": 1},
-    "episode_id": {"type": "string", "minLength": 1},
-    "prediction_id": {"type": "string", "minLength": 1},
-    "outcome_id": {"type": "string", "minLength": 1},
-    "brier_score": {"type": "number", "minimum": 0},
-    "log_loss": {"type": "number", "minimum": 0},
-    "calibration_bucket": {"type": "string", "minLength": 1},
-    "scored_at": {"type": "string", "minLength": 1}
+    "schema": {
+      "type": "string",
+      "const": "persona_dream.research.prospective_tom.tom_scoring_receipt.v1"
+    },
+    "created_at": {"type": "string", "minLength": 1},
+    "status": {
+      "type": "string",
+      "enum": ["PASS_TOM_SCORING_RECEIPT", "BLOCKED_TOM_SCORING_RECEIPT"]
+    },
+    "errors": {"type": "array", "items": {"type": "string"}},
+    "corpus_path": {"type": "string"},
+    "distribution_bundle_path": {"type": "string"},
+    "branch_bundle_path": {"type": "string"},
+    "commitment_bundle_path": {"type": "string"},
+    "outcome_reveal_path": {"type": "string"},
+    "receipt_path": {"type": "string"},
+    "counts": {"type": "object"},
+    "checks": {"type": "object"},
+    "metrics": {"type": "object"},
+    "commitment_bundle_sha256": {
+      "type": ["string", "null"],
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "outcome_reveal_sha256": {
+      "type": ["string", "null"],
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "mocked": {"type": "boolean", "const": false},
+    "live": {"type": "boolean", "const": false},
+    "fixture_backed": {"type": "boolean"},
+    "tau_call_attempts": {"type": "integer", "minimum": 0},
+    "memory_write_attempts": {"type": "integer", "minimum": 0},
+    "provider_call_attempts": {"type": "integer", "minimum": 0},
+    "claims": {"type": "object"}
   },
   "additionalProperties": false
 }

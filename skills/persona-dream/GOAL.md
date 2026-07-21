@@ -223,10 +223,12 @@ Gate 0 commit: 81f51b5689914782c54a4b9c5672579bcd97d440
 Gate 1 commit: 0cecce8193606522a1d56283cc240c5bddc83c2a
 Gate 2 commit: 6b6b7d843f1a24a1192273a3215f6b2f795fd734
 Gate 3 commit: 781bc10e51c516f11930f274e30970c42d240297
+Gate 4 commit: 82a0078294cd0a29e789151a59375428ed2e5a3c
 Gate 1 proof root: /tmp/persona-dream-pctom-gate1-final-postpatch-20260721T001545Z
 Gate 2 proof root: /tmp/persona-dream-pctom-gate2-postrebase-20260721T003945Z
 Gate 3 proof root: /tmp/persona-dream-pctom-gate3-final-20260721T004724Z
 Gate 4 proof root: /tmp/persona-dream-pctom-gate4-final-20260721T010232Z
+Gate 5 proof root: /tmp/persona-dream-pctom-gate5-final-20260721T011122Z
 ```
 
 Gate 0 proof summary:
@@ -302,10 +304,33 @@ Gate 4 negatives: 8 x BLOCKED_TOM_PREDICTION_COMMITMENTS
 git_diff_check: clean
 ```
 
+Gate 5 proof summary:
+
+```text
+json_files_parsed: 65
+python_files_ast_parsed: 7
+matrix_commands: 40
+expected_negative_failures: 31
+Gate 5 commitment precheck: PASS_TOM_PREDICTION_COMMITMENTS
+Gate 5 positive: PASS_TOM_SCORING_RECEIPT
+Gate 5 action_scores: 1
+Gate 5 belief_scores: 2
+Gate 5 first_order_scores: 1
+Gate 5 second_order_scores: 1
+Gate 5 equivalent_formulation_checks: 1
+Gate 5 counterfactual_pairs: 1
+Gate 5 false_history_rate: 0.0
+Gate 5 action_brier: 0.2328
+Gate 5 action_log_loss: 0.4780358009429998
+Gate 5 expected_calibration_error: 0.3533333333333334
+Gate 5 negatives: 6 x BLOCKED_TOM_SCORING_RECEIPT
+git_diff_check: clean
+```
+
 This is fixture-backed deterministic evidence. It does not prove live Memory
 recall, Tau text execution, semantic dream quality, prediction benefit,
-calibration, scoring, action improvement, belief revision, fault-surface
-coverage, or complete Phase 01-16 runtime execution.
+held-out statistical calibration, action improvement, belief revision,
+fault-surface coverage, or complete Phase 01-16 runtime execution.
 
 ## Completion Rule
 
@@ -335,10 +360,10 @@ research goal unless those concrete proof artifacts exist and are cited.
 
 ## Next Critical Path
 
-Implement Gate 5: deterministic scoring receipts that consume sealed Gate 4
-prediction commitments and later outcome reveals, then compute prediction,
-calibration, consistency, and counterfactual metrics without allowing prediction
-edits after reveal.
+Implement Gate 6: action-selection receipts that consume sealed predictions and
+scored outcomes, choose from the constrained action vocabulary, and compute
+reward, social cost, information gain, and planning regret against the
+deterministic simulator oracle policy.
 
 The next accepted artifact must be inspectable as files and receipts under the
 research namespace, with positive and negative fixtures. Mocked or fixture
