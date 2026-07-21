@@ -1,10 +1,47 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R cooperation exposure instrument) by agent
+**Last updated:** 2026-07-21 (PCTOM-R live cooperation instrument slice) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R LIVE COOPERATION INSTRUMENT SLICE): the deterministic
+  cooperation-exposure instrument was consumed by the live Tau M/R/D/CD
+  condition runner through a new explicit `--corpus-path` lane and then scored
+  through Gate 6 action selection plus the pre-outcome cooperation-threshold
+  rule. Primary receipt:
+  `/tmp/persona-dream-live-tau-cooperation-instrument-slice-reuse-proof-20260721T204705Z/live_tau_cooperation_instrument_slice_receipt.v1.json`.
+  Status `PASS_LIVE_TAU_PCTOM_COOPERATION_INSTRUMENT_SLICE`, receipt SHA-256
+  `sha256:6fec3c6804219613878a03cbc8bcd38adb8b523ab027d001467fe4769db8dae5`.
+  The receipt consumes live-originated artifacts from
+  `/tmp/persona-dream-live-tau-cooperation-instrument-slice-proof-20260721T204326Z`
+  without reexecuting Tau in the final wrapper pass. The live condition receipt
+  made 16 Tau attempts and 16 live Tau calls over 4 instrument episodes and
+  4 conditions; it used the external instrument corpus, wrote 16 Tau boundary
+  receipts, sealed 4 commitments per condition, scored 4 cases per condition,
+  and kept Tau receipts hash-bound. Gate 6 wrote 16 action cases. Unsupported
+  writes were zero across Memory, provider, canonical memory, identity, and
+  source-memory paths; no human content judgment or LLM judge was used.
+  This closes the prior no-exposure blocker as an instrumentation blocker:
+  the live pipeline now has one CD `OFFER_COOPERATION` candidate and one
+  low-confidence cooperation intervention. The scientific result is not a
+  planning-benefit win for the current rule. In
+  `instr-coord-exposure-26`, CD selected `OFFER_COOPERATION` from sealed
+  predicted counterpart action `KAI_OFFERS_COOPERATION` at probability `0.36`;
+  the deterministic oracle action was also `OFFER_COOPERATION`, so original CD
+  regret was `0.0` while the best baseline regret was `0.55`. The
+  `LOW_CONFIDENCE_COOPERATION_FALLBACK_TO_WAIT` rule changed CD to `WAIT`,
+  raising CD regret to `0.55` and converting the original BENEFIT row into a
+  TIE. Across four rows, original CD-minus-baseline planning regret mean was
+  `-0.1375`, intervened mean was `0.0`, and improvement-vs-original mean was
+  `-0.1375`. Treat the low-confidence cooperation-threshold rule as falsified
+  on first live instrument exposure. Next PCTOM-R work should add a
+  deterministic policy diagnostic that separates "low confidence but top
+  action is correct" from genuinely unsafe cooperation, then reject or replace
+  the threshold rule without using oracle/outcome fields. Do not claim
+  confidence-bounded CD planning benefit, broad held-out planning benefit,
+  semantic dream quality, paid provider execution, or complete Phase 01-16
+  runtime execution from this receipt.
 - 2026-07-21 (PCTOM-R COOPERATION EXPOSURE INSTRUMENT): after the natural
   held-out variants 23-24 slice failed closed with no CD `OFFER_COOPERATION`
   exposure, a deterministic cooperation-exposure instrument was added under

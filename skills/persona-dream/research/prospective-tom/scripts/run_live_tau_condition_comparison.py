@@ -74,6 +74,10 @@ def _text_sha256(value: str) -> str:
     return "sha256:" + hashlib.sha256(value.encode("utf-8")).hexdigest()
 
 
+def _file_sha256(path: Path) -> str:
+    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+
+
 def _systemic_failure_signature(error: str) -> str | None:
     if "Tau dispatch timed out after" in error:
         return "tau_text_reasoning_timeout"
@@ -890,6 +894,7 @@ def run_live_comparison(
     timeout_s: float,
     preflight_timeout_s: float | None = None,
     gate0_case_root: Path | None = None,
+    corpus_path_override: Path | None = None,
 ) -> dict[str, Any]:
     started = time.monotonic()
     output_root = output_root.resolve()
@@ -903,6 +908,9 @@ def run_live_comparison(
     case_index_path = artifacts_root / "live_condition_case_index.json"
     metrics_path = artifacts_root / "live_condition_metrics_summary.json"
     gate0_case_root = gate0_case_root.resolve() if gate0_case_root is not None else None
+    corpus_path_override = corpus_path_override.resolve() if corpus_path_override is not None else None
+    external_corpus_used = corpus_path_override is not None
+    external_corpus_sha256 = _file_sha256(corpus_path_override) if corpus_path_override is not None and corpus_path_override.exists() else None
 
     build_corpus = _load_module(BUILD_CORPUS_SCRIPT, "persona_dream_pctom_build_corpus")
     check_corpus = _load_module(CHECK_CORPUS_SCRIPT, "persona_dream_pctom_check_corpus")
@@ -912,16 +920,80 @@ def run_live_comparison(
     gate4 = _load_module(GATE4_SCRIPT, "persona_dream_pctom_gate4")
     gate5 = _load_module(GATE5_SCRIPT, "persona_dream_pctom_gate5")
 
-    corpus = build_corpus.build_corpus(split, episodes_per_family)
-    _write_json(corpus_path, corpus)
-    corpus_check = check_corpus.build_receipt(
-        corpus_path,
-        corpus_check_receipt_path,
-        expect_total=episodes_per_family * 4,
-        expect_per_family=episodes_per_family,
-    )
-
     errors: list[str] = []
+    if corpus_path_override is not None:
+        if corpus_path_override.is_symlink():
+            errors.append(f"external_corpus_path_is_symlink:{corpus_path_override}")
+        try:
+            corpus = _load_json(corpus_path_override)
+        except Exception as exc:
+            errors.append(f"external_corpus_load_failed:{corpus_path_override}:{exc}")
+            corpus = {
+                "schema": "persona_dream.research.prospective_tom.social_episode_corpus.v1",
+                "generator_version": "invalid_external_corpus",
+                "episode_count": 0,
+                "episodes": [],
+            }
+        external_errors: list[str] = []
+        episodes = corpus.get("episodes") if isinstance(corpus, dict) else None
+        if not isinstance(corpus, dict):
+            external_errors.append("external_corpus_not_object")
+            corpus = {
+                "schema": "persona_dream.research.prospective_tom.social_episode_corpus.v1",
+                "generator_version": "invalid_external_corpus",
+                "episode_count": 0,
+                "episodes": [],
+            }
+            episodes = []
+        if corpus.get("schema") != "persona_dream.research.prospective_tom.social_episode_corpus.v1":
+            external_errors.append(f"external_corpus_invalid_schema:{corpus.get('schema')}")
+        if not isinstance(episodes, list):
+            external_errors.append("external_corpus_episodes_not_list")
+            episodes = []
+            corpus["episodes"] = episodes
+        if corpus.get("episode_count") != len(episodes):
+            external_errors.append(f"external_corpus_episode_count_mismatch:{corpus.get('episode_count')}:{len(episodes)}")
+        if corpus.get("episodes_sha256") != _stable_json_sha256(episodes):
+            external_errors.append("external_corpus_episodes_sha256_mismatch")
+        _write_json(corpus_path, corpus)
+        corpus_check = {
+            "schema": "persona_dream.research.prospective_tom.external_social_episode_corpus_check_receipt.v1",
+            "created_at": _now_iso(),
+            "status": "PASS_EXTERNAL_SOCIAL_EPISODE_CORPUS" if not external_errors else "BLOCKED_EXTERNAL_SOCIAL_EPISODE_CORPUS",
+            "source_corpus_path": str(corpus_path_override),
+            "source_corpus_sha256": external_corpus_sha256,
+            "copied_corpus_path": str(corpus_path),
+            "copied_corpus_sha256": _file_sha256(corpus_path),
+            "episode_count": len(episodes),
+            "errors": external_errors,
+            "claims": {
+                "proves": [
+                    "the caller-supplied social episode corpus is syntactically usable by the live Tau condition runner",
+                    "episode_count and episodes_sha256 match the supplied episodes array",
+                ]
+                if not external_errors
+                else [
+                    "the caller-supplied social episode corpus failed closed before live Tau case fan-out",
+                ],
+                "does_not_prove": [
+                    "instrument-specific cooperation exposure",
+                    "hidden-outcome withholding",
+                    "planning benefit",
+                    "semantic dream quality",
+                ],
+            },
+        }
+        _write_json(corpus_check_receipt_path, corpus_check)
+    else:
+        corpus = build_corpus.build_corpus(split, episodes_per_family)
+        _write_json(corpus_path, corpus)
+        corpus_check = check_corpus.build_receipt(
+            corpus_path,
+            corpus_check_receipt_path,
+            expect_total=episodes_per_family * 4,
+            expect_per_family=episodes_per_family,
+        )
+
     gate0_records: list[dict[str, Any]] = []
     gate0_attribution_overlay_used = False
     try:
@@ -929,7 +1001,11 @@ def run_live_comparison(
         gate0_attribution_overlay_used = bool(gate0_records)
     except Exception as exc:
         errors.append(f"gate0_attribution_load_failed:{exc}")
-    if corpus_check.get("status") != "PASS_SOCIAL_EPISODE_CORPUS":
+    corpus_check_passed = corpus_check.get("status") in {
+        "PASS_SOCIAL_EPISODE_CORPUS",
+        "PASS_EXTERNAL_SOCIAL_EPISODE_CORPUS",
+    }
+    if not corpus_check_passed:
         errors.append(f"corpus_check_status:{corpus_check.get('status')}")
         errors.extend(f"corpus_check_error:{error}" for error in corpus_check.get("errors", []))
 
@@ -1265,6 +1341,9 @@ def run_live_comparison(
         "receipt_path": str(receipt_out),
         "processing_time_s": round(time.monotonic() - started, 3),
         "split": split,
+        "external_corpus_used": external_corpus_used,
+        "external_corpus_path": str(corpus_path_override) if corpus_path_override else None,
+        "external_corpus_sha256": external_corpus_sha256,
         "corpus_path": str(corpus_path),
         "corpus_check_receipt_path": str(corpus_check_receipt_path),
         "tau_preflight_receipt_path": str(tau_preflight_receipt_path),
@@ -1312,7 +1391,7 @@ def run_live_comparison(
         "identity_write_attempts": 0,
         "source_memory_write_attempts": 0,
         "counts": {
-            "episodes_in_corpus": corpus["episode_count"],
+            "episodes_in_corpus": corpus.get("episode_count", len(corpus.get("episodes") or [])),
             "episodes_consumed": len(selected),
             "families_consumed": len({episode.get("scenario_family") for episode in selected}),
             "conditions": len(CONDITIONS),
@@ -1325,7 +1404,8 @@ def run_live_comparison(
             "status_counts": dict(sorted(status_counts.items())),
         },
         "checks": {
-            "corpus_check_passed": corpus_check.get("status") == "PASS_SOCIAL_EPISODE_CORPUS",
+            "corpus_check_passed": corpus_check_passed,
+            "external_corpus_copied_if_requested": not external_corpus_used or corpus_check_passed,
             "tau_preflight_passed": tau_preflight_passed,
             "condition_prompt_preflight_passed": condition_prompt_preflight_passed,
             "case_fanout_blocked_until_preflight_passes": not rows if not tau_preflight_passed else True,
@@ -1384,6 +1464,7 @@ def main() -> int:
     parser.add_argument("--timeout-s", type=float, default=240.0)
     parser.add_argument("--preflight-timeout-s", type=float, default=None)
     parser.add_argument("--gate0-case-root", type=Path, default=None)
+    parser.add_argument("--corpus-path", type=Path, default=None)
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
 
@@ -1398,6 +1479,7 @@ def main() -> int:
         timeout_s=args.timeout_s,
         preflight_timeout_s=args.preflight_timeout_s,
         gate0_case_root=args.gate0_case_root,
+        corpus_path_override=args.corpus_path,
     )
     if args.json:
         print(json.dumps(receipt, indent=2, sort_keys=True))
