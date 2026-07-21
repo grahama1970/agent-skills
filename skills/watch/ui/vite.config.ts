@@ -1,6 +1,10 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
+const watchApiTarget =
+  process.env.VITE_WATCH_API_TARGET ||
+  'http://127.0.0.1:3003'
+
 export default defineConfig({
   plugins: [react()],
   server: {
@@ -8,7 +12,7 @@ export default defineConfig({
     strictPort: true,
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:3003',
+        target: watchApiTarget,
         changeOrigin: true,
       },
     },

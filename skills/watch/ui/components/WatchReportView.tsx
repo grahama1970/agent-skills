@@ -36,6 +36,7 @@ import {
   selectDeleteTarget,
   selectVisibleOverlays,
 } from '../src/watchAnnotationSession'
+import { projectYoloTrackLabelAtTime } from '../src/yoloLabelProjection'
 import type {
   AnnotationSessionState,
   SessionRow,
@@ -290,6 +291,7 @@ interface WatchYoloBoxRejection {
 
 interface WatchYoloLabelEvent {
   id?: string
+  sequence?: number
   action: string
   status?: string
   track_id: string
@@ -303,6 +305,7 @@ interface WatchYoloLabelEvent {
 
 interface WatchYoloSequenceRow {
   key: string
+  sequence?: number
   timeLabel: string
   sortValue: number
   source: 'yolo' | 'watch'
@@ -810,12 +813,15 @@ function mediaUrl(path: string | undefined, prefix: string): string | null {
 }
 
 function sceneThumbUrl(row: SceneElement): string | null {
+  if (row.scene_marker_image_path?.startsWith('/tmp/')) return mediaUrl(row.scene_marker_image_path, 'tmp')
   if (row.scene_marker_image_path) return mediaUrl(row.scene_marker_image_path, 'watch-frames')
+  if (row.video_clip_path?.startsWith('/tmp/')) return mediaUrl(row.video_clip_path.replace(/\.mp4$/, '.jpg'), 'tmp')
   if (row.video_clip_path) return mediaUrl(row.video_clip_path.replace(/\.mp4$/, '.jpg'), 'watch-frames')
   return null
 }
 
 function segmentVideoUrl(row: SceneElement): string | null {
+  if (row.video_clip_path?.startsWith('/tmp/')) return mediaUrl(row.video_clip_path, 'tmp')
   return row.video_clip_path ? mediaUrl(row.video_clip_path, 'watch-frames') : null
 }
 
@@ -920,8 +926,9 @@ function readYoloLabelEvents(value: unknown): WatchYoloLabelEvent[] {
 }
 
 function yoloLabelEventTime(event: WatchYoloLabelEvent): number | null {
-  const time = Number(event.time_seconds)
-  return Number.isFinite(time) ? time : null
+  return typeof event.time_seconds === 'number' && Number.isFinite(event.time_seconds)
+    ? event.time_seconds
+    : null
 }
 
 function yoloLabelEventSortValue(event: WatchYoloLabelEvent, index: number): number {
@@ -951,7 +958,7 @@ export function latestYoloLabelEventForTrack(
   const boundedTime = Math.max(0, timeSeconds)
   const candidates = events
     .map((event, index) => ({ event, index, time: yoloLabelEventTime(event) }))
-    .filter(({ event, time }) => event.track_id === trackId && time != null && time <= boundedTime + 0.011)
+    .filter(({ event, time }) => event.track_id === trackId && time != null && time <= boundedTime)
     .sort((a, b) => yoloLabelEventSortValue(a.event, a.index) - yoloLabelEventSortValue(b.event, b.index))
   return candidates.length > 0 ? candidates[candidates.length - 1].event : null
 }
@@ -977,6 +984,7 @@ function yoloSequenceRowFromEvent(event: WatchYoloLabelEvent, index: number): Wa
   const isReset = event.action === 'reset' || event.action === 'reset_box' || event.status === 'reset'
   return {
     key: `${event.track_id}:${event.box_key || 'track'}:${event.action}:${event.created_at || index}`,
+    sequence: typeof event.sequence === 'number' ? event.sequence : index + 1,
     timeLabel: time == null ? '--' : `${time.toFixed(2)}s`,
     sortValue: (time ?? Number.MAX_SAFE_INTEGER) * 100000 + index,
     source: 'yolo',
@@ -1048,11 +1056,30 @@ export function yoloLabelForOverlay(
   rejections: Record<string, WatchYoloBoxRejection> = {},
   timeSeconds = 0,
 ): WatchYoloTrackLabel | null {
-  const latestEvent = latestYoloLabelEventForTrack(events, overlay.track_id, timeSeconds)
-  if (latestEvent) return yoloLabelFromEvent(latestEvent)
-  if (rejections[yoloBoxInstanceKey(overlay.track_id, timeSeconds)]) return null
-  if (events.some((event) => event.track_id === overlay.track_id)) return null
-  return labels[overlay.track_id] ?? suggestions[overlay.track_id] ?? null
+  const boxRejection = rejections[yoloBoxInstanceKey(overlay.track_id, timeSeconds)]
+  if (boxRejection && timeSeconds >= boxRejection.timeSeconds) return null
+
+  const projected = projectYoloTrackLabelAtTime({
+    trackId: overlay.track_id,
+    timeSeconds,
+    events,
+    labels: { ...suggestions, ...labels },
+  })
+  if (projected) {
+    const accepted = labels[overlay.track_id]
+    const suggestion = suggestions[overlay.track_id]
+    const isSuggestionOnly = !accepted && suggestion?.characterName === projected.characterName
+    return {
+      trackId: overlay.track_id,
+      characterName: projected.characterName,
+      actorName: projected.actorName,
+      status: isSuggestionOnly ? 'suggested' : 'accepted',
+      source: isSuggestionOnly ? 'memory' : 'human',
+      confidence: projected.confidence,
+      updatedAt: accepted?.updatedAt || suggestion?.updatedAt || new Date().toISOString(),
+    }
+  }
+  return null
 }
 
 function yoloOverlayWithLabel(
@@ -3846,7 +3873,7 @@ export function WatchReportView({
   ]
 
   return (
-    <div style={{ height: '100%', display: 'grid', gridTemplateColumns: `${leftPaneWidth}px minmax(0, 1fr) ${rightSidebarCollapsed ? '0px' : '6px'} ${rightPaneWidth}px`, background: '#0b0d10', color: '#e6edf3', overflow: 'hidden' }}>
+    <div data-testid="watch-report-view" style={{ height: '100%', display: 'grid', gridTemplateColumns: `${leftPaneWidth}px minmax(0, 1fr) ${rightSidebarCollapsed ? '0px' : '6px'} ${rightPaneWidth}px`, background: '#0b0d10', color: '#e6edf3', overflow: 'hidden' }}>
       <style>{`
         @keyframes watch-status-pulse {
           0%, 100% { opacity: 0.48; box-shadow: 0 0 0 0 rgba(187,134,252,0.42); }
@@ -4338,6 +4365,7 @@ export function WatchReportView({
                   <tr
                     key={row.index}
                     data-qid="watch:table:row"
+                    data-testid={`watch-row-${row.index}`}
                     data-watch-row-index={row.index}
                     data-playback-active={isActivePlayback ? 'true' : 'false'}
                     onClick={() => setSelectedRow(row.index)}
@@ -4403,6 +4431,7 @@ export function WatchReportView({
                           <button
                             type="button"
                             data-qid="watch:table:evidence-expand"
+                            data-testid={`watch-open-annotation-${row.index}`}
                             aria-label={`Expand segment ${row.movie_segment ?? row.timecode}`}
                             onClick={(event) => {
                               event.stopPropagation()
@@ -4730,6 +4759,7 @@ export function WatchReportView({
       {expandedClip && (
         <div
           data-qid="watch:clip-modal"
+          data-testid="watch-clip-modal"
           role="dialog"
           aria-modal="true"
           aria-label={`Expanded movie segment ${expandedClip.segment}`}
@@ -4760,6 +4790,7 @@ export function WatchReportView({
               <video
                 ref={clipModalVideoRef}
                 data-qid="watch:clip-modal:video"
+                data-testid="watch-clip-video"
                 src={expandedClip.src}
                 autoPlay
                 playsInline
@@ -4907,6 +4938,7 @@ export function WatchReportView({
                     Character
                     <select
                       data-qid="watch:clip-modal:character-input"
+                      data-testid={clipModalSelectedYoloTrackId ? `watch-character-select-${clipModalSelectedYoloTrackId}` : undefined}
                       value={clipModalCharacterName}
                       onChange={(event) => updateClipModalCharacter(event.target.value)}
                       style={{ height: 28, minWidth: 0, border: '1px solid rgba(255,215,0,0.32)', borderRadius: 6, background: 'rgba(2,6,12,0.78)', color: '#f8fafc', padding: '0 8px', fontSize: 12, fontWeight: 850 }}
@@ -4972,6 +5004,7 @@ export function WatchReportView({
                   <button
                     type="button"
                     data-qid="watch:clip-modal:save-yolo-label"
+                    data-testid={clipModalSelectedYoloTrackId ? `watch-save-label-${clipModalSelectedYoloTrackId}` : undefined}
                     disabled={!clipModalSelectedYoloTrackId}
                     onClick={(event) => {
                       event.stopPropagation()
@@ -4985,6 +5018,7 @@ export function WatchReportView({
                   <button
                     type="button"
                     data-qid="watch:clip-modal:reset-yolo-label"
+                    data-testid={clipModalSelectedYoloTrackId ? `watch-reset-track-${clipModalSelectedYoloTrackId}` : undefined}
                     disabled={!clipModalSelectedYoloTrackId}
                     onClick={(event) => {
                       event.stopPropagation()
@@ -4998,6 +5032,7 @@ export function WatchReportView({
                   <button
                     type="button"
                     data-qid="watch:clip-modal:unassign-yolo-frame"
+                    data-testid={clipModalSelectedYoloTrackId ? `watch-stop-track-${clipModalSelectedYoloTrackId}` : undefined}
                     disabled={!clipModalSelectedYoloTrackId}
                     onClick={(event) => {
                       event.stopPropagation()
@@ -5049,6 +5084,7 @@ export function WatchReportView({
               {clipModalIdentitySequenceRows.length > 0 ? (
                 <section
                   data-qid="watch:clip-modal:yolo-identity-sequence"
+                  data-testid={clipModalSelectedYoloTrackId ? `watch-sequence-ledger-${clipModalSelectedYoloTrackId}` : undefined}
                   aria-label="Watch identity sequence"
                   onClick={(event) => event.stopPropagation()}
                   style={{
@@ -5115,6 +5151,7 @@ export function WatchReportView({
                   {clipModalSelectedYoloTrackId ? (
                     <div
                       data-qid="watch:clip-modal:yolo-identity-current-state"
+                      data-testid={`watch-identity-status-${clipModalSelectedYoloTrackId}`}
                       style={{
                         border: '1px solid rgba(148,163,184,0.18)',
                         borderRadius: 6,
@@ -5144,6 +5181,7 @@ export function WatchReportView({
                       <div
                         key={row.key}
                         data-qid="watch:clip-modal:yolo-identity-sequence-row"
+                        data-testid={row.sequence ? `watch-sequence-event-${row.sequence}` : undefined}
                         data-track-id={row.trackId}
                         data-sequence-state={row.tone}
                         data-sequence-source={row.source}
@@ -5256,6 +5294,7 @@ export function WatchReportView({
 	                    key={overlay.overlay_id}
 	                    className={`annotation-box ${overlay.classification === 'interpolated_keyframe' ? 'interpolated' : ''}`}
 	                    data-qid="watch:clip-modal:event-overlay"
+                      data-testid={isYoloOverlay ? `watch-yolo-track-${overlay.track_id}` : undefined}
 	                    data-overlay-id={overlay.overlay_id}
 		                    data-track-id={overlay.track_id}
 		                    data-identity-status={overlay.identity_status}
@@ -5285,6 +5324,11 @@ export function WatchReportView({
 	                  >
                     <div
                       data-qid="watch:clip-modal:event-overlay-label"
+                      data-testid={isYoloOverlay && candidate?.status === 'PROVISIONAL'
+                        ? `watch-suggestion-label-${overlay.track_id}`
+                        : isYoloOverlay && candidate
+                          ? `watch-accepted-label-${overlay.track_id}`
+                          : undefined}
                       role={isYoloOverlay ? 'button' : undefined}
                       tabIndex={isYoloOverlay ? 0 : undefined}
                       onPointerDown={isYoloOverlay ? (event) => selectClipModalYoloTrack(event, overlay) : undefined}
