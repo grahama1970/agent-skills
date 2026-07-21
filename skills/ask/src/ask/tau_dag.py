@@ -248,14 +248,31 @@ def unsupported_model_routes(input: TauDagCompileInput) -> list[str]:
 
 
 def default_scillm_api_key() -> str:
-    return (
-        os.environ.get("SCILLM_API_KEY")
-        or os.environ.get("SCILLM_PROXY_API_KEY")
-        or os.environ.get("SCILLM_PROXY_KEY")
-        or os.environ.get("SCILLM_MASTER_KEY")
-        or os.environ.get("LITELLM_MASTER_KEY")
-        or DEFAULT_SCILLM_API_KEY
+    """Resolve the scillm bearer per the tau#114 auth contract.
+
+    The deployed master key wins; the ambient SCILLM_PROXY_KEY is LAST
+    because stale dev defaults linger in shells after a key override is
+    configured (that inversion was this function's bug). When no ambient
+    master key is exported, fall back to the scillm deployment .env --
+    the compose files name that file as the key's canonical home.
+    """
+    for var in ("SCILLM_MASTER_KEY", "LITELLM_MASTER_KEY", "SCILLM_API_KEY", "SCILLM_PROXY_API_KEY"):
+        value = os.environ.get(var)
+        if value:
+            return value
+    env_file = Path(
+        os.environ.get(
+            "SCILLM_ENV_FILE",
+            str(Path.home() / "workspace/experiments/scillm/.env"),
+        )
     )
+    if env_file.is_file():
+        for line in env_file.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            for var in ("SCILLM_MASTER_KEY", "LITELLM_MASTER_KEY"):
+                if line.startswith(f"{var}=") and line.split("=", 1)[1].strip():
+                    return line.split("=", 1)[1].strip().strip('"')
+    return os.environ.get("SCILLM_PROXY_KEY") or DEFAULT_SCILLM_API_KEY
 
 
 def build_interview_packet(
@@ -1223,6 +1240,26 @@ def resolve_scillm_model_route(model: str) -> ScillmModelRoute:
             provider="anthropic",
             auth="scillm_claude_code_credentials",
         )
+    # Generic effort-suffix selectors (gpt-5.5-high, gpt-5.5-medium, ...):
+    # the deployed router has routes for base model names, not suffixed
+    # selectors, so split the suffix into reasoning effort.
+    for effort in ("xhigh", "high", "medium", "low"):
+        if lower.endswith(f"-{effort}"):
+            base = requested[: -(len(effort) + 1)]
+            dispatched = "high" if effort == "xhigh" else effort
+            return ScillmModelRoute(
+                requested_model=requested,
+                model=base,
+                provider="openai",
+                auth="scillm_proxy_bearer",
+                reasoning_effort=dispatched,
+                requested_reasoning_effort=effort,
+                reasoning_downgrade_reason=(
+                    "SciLLM accepts none/low/medium/high; xhigh dispatched as high."
+                    if effort == "xhigh"
+                    else None
+                ),
+            )
     return ScillmModelRoute(
         requested_model=requested,
         model=requested,

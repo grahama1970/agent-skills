@@ -78,6 +78,9 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             handler,
             prior_receipts=prior_receipts,
             requires_verdict=_requires_verdict(request_text, prior_receipts),
+            # API (scillm) handlers have no attachment channel and no path
+            # preflight: give them the full prior response including the diff.
+            inline_full=handler not in HANDLER_SUBMIT_COMMANDS and handler != "codex",
         ),
         encoding="utf-8",
     )
@@ -379,6 +382,7 @@ def _handler_prompt(
     *,
     prior_receipts: list[dict[str, Any]] | None = None,
     requires_verdict: bool = False,
+    inline_full: bool = False,
 ) -> str:
     prior_receipts = prior_receipts or []
     lines = [
@@ -404,7 +408,11 @@ def _handler_prompt(
                     # tokens (Rust // comments, /paths) that trip the browser
                     # transport's local-path preflight; the full response is
                     # provided to browser handlers as a file attachment.
-                    _excerpt_before_diff(str(receipt.get("response_excerpt") or "")),
+                    (
+                        str(receipt.get("response_excerpt") or "").strip()
+                        if inline_full
+                        else _excerpt_before_diff(str(receipt.get("response_excerpt") or ""))
+                    ),
                     "",
                 ]
             )
@@ -619,11 +627,22 @@ def _run_scillm_handler(
 ) -> tuple[str, dict[str, Any]]:
     prompt = prompt_path.read_text(encoding="utf-8")
     base_url = str(args.scillm_base_url).rstrip("/")
+    # Effort-suffix selectors (gpt-5.5-high, ...): the router serves base
+    # model names; the suffix becomes reasoning_effort (xhigh -> high).
+    model = handler
+    reasoning_effort = None
+    for effort in ("xhigh", "high", "medium", "low"):
+        if handler.lower().endswith(f"-{effort}"):
+            model = handler[: -(len(effort) + 1)]
+            reasoning_effort = "high" if effort == "xhigh" else effort
+            break
     payload = {
-        "model": handler,
+        "model": model,
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0,
     }
+    if reasoning_effort:
+        payload["reasoning_effort"] = reasoning_effort
     body = json.dumps(payload).encode("utf-8")
     request = urllib.request.Request(
         f"{base_url}/v1/chat/completions",
@@ -694,7 +713,7 @@ def _load_prior_receipts(node_artifacts_root: Path, prior_nodes: list[str]) -> l
         response_path = Path(str(receipt.get("response_path") or ""))
         response_excerpt = ""
         if response_path.is_file():
-            response_excerpt = response_path.read_text(encoding="utf-8").strip()[:4000]
+            response_excerpt = response_path.read_text(encoding="utf-8").strip()[:80000]
         receipts.append({"path": str(path), "response_excerpt": response_excerpt, **receipt})
     return receipts
 
