@@ -817,6 +817,70 @@ production retry machinery, longitudinal recall after revision, complete live
 Phase 01-16 runtime execution, paid provider execution, or semantic dream
 quality.
 
+## Live Tau Condition Comparison
+
+The live Tau condition comparison runner is the first text-first condition
+execution artifact after deterministic instrumentation. It makes one sanctioned
+Tau text-reasoning call per condition lane and sends Tau-authored outputs
+through the same Gate 2, Gate 3, Gate 4, and Gate 5 validators.
+
+The required chain is:
+
+```text
+calibration social episode corpus
+-> live Tau call for M
+-> live Tau call for R
+-> live Tau call for D
+-> live Tau call for CD
+-> Gate 2 ToM distribution bundles
+-> Gate 3 factual/counterfactual branch bundles
+-> Gate 4 sealed prediction commitments with Tau receipt hashes
+-> Gate 5 deterministic outcome reveals and scoring receipts
+-> live Tau condition comparison receipt
+```
+
+Required fields:
+
+```text
+mocked: false
+fixture_backed: false
+deterministic_simulator_corpus_fixture_backed: true
+human_content_judgment_required: false
+conditions: M, R, D, CD
+tau_call_attempts: >= 4
+tau_receipts_hash_bound: true
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+sealed_commitments_per_condition[M/R/D/CD] >= 1
+deterministic_scores_per_condition[M/R/D/CD] >= 1
+```
+
+Accepted status:
+
+```text
+PASS_LIVE_TAU_PCTOM_CONDITION_COMPARISON
+```
+
+Blocked status:
+
+```text
+BLOCKED_LIVE_TAU_PCTOM_CONDITION_COMPARISON
+```
+
+This runner proves only the bounded live-model condition instrumentation: Tau
+authored M/R/D/CD structured outputs, accepted cases were sealed before reveal,
+and deterministic scoring ran without unsupported writes or human content
+judgment. A negative or mixed condition metric is valid evidence and must be
+reported directly.
+
+This live Tau comparison does not prove held-out test-set prediction benefit,
+action-selection regret improvement, external service fault injection,
+production retry machinery, longitudinal recall after revision, complete live
+Phase 01-16 runtime execution, paid provider execution, or video quality.
+
 ## Live Gate 0 Bridge - Memory Recall To Prospective Case
 
 After the fixture-backed Gate 0-9 contracts exist, the first live validation

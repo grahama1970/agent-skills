@@ -1,10 +1,25 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-19 (P1 Tau-routing debt paid — strict ratchet is the gate) by agent
+**Last updated:** 2026-07-21 (PCTOM-R live Tau condition comparison accepted) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R LIVE TAU CONDITION COMPARISON): the text-first
+  condition lane now has a live Tau-authored M/R/D/CD comparison receipt:
+  `/tmp/persona-dream-live-tau-condition-comparison-20260721T030038Z/live_tau_condition_comparison_receipt.v1.json`
+  reports `PASS_LIVE_TAU_PCTOM_CONDITION_COMPARISON`, 4 Tau call attempts, 4
+  live Tau calls, 1 sealed commitment and 1 deterministic Gate 5 score per
+  condition, and zero Memory/provider/canonical/identity/source-memory writes.
+  This proves bounded live condition instrumentation only; it does not prove
+  held-out benefit, statistical calibration, action regret, production retry,
+  longitudinal recall, Phase 01-16, paid provider, video, or semantic dream
+  quality. First-run repair lesson:
+  `/tmp/persona-dream-live-tau-condition-comparison-20260721T025653Z/live_tau_condition_comparison_receipt.v1.json`
+  correctly failed because the reveal timestamp equaled `sealed_at` and one
+  Tau R output put a `synthetic_counterfactual` ref in branch source refs /
+  prediction evidence refs. The runner now sets reveal time to `sealed_at + 1s`
+  and the prompt contract forbids synthetic refs in visible-ref fields.
 - 2026-07-19 (WEEKS-1-2 INTEGRITY FIXES, accepted external re-review — 6 defects
   closed): cognitive-loop correctness + lineage hardening. (1) The interpretation
   guard no longer self-compares — `run_cognitive_loop` binds the INDEPENDENTLY

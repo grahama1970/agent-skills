@@ -82,6 +82,7 @@ Commands:
   run-live-tau-score-revision  Score live Tau PCTOM-R commitments and validate Gate 7 revision
   run-live-tau-reliability-bridge  Validate controlled Gate 8/9 fault containment over live Tau PCTOM artifacts
   run-condition-comparison  Run deterministic M/R/D/CD PCTOM-R condition comparison instrumentation
+  run-live-tau-condition-comparison  Run live Tau-authored M/R/D/CD PCTOM-R condition comparison
   check-prospective-tom-protocol  Validate PCTOM-R Gate 0 fixture lineage through a sealed prediction
   build-social-episode-corpus  Build deterministic PCTOM-R Gate 1 social episodes
   check-social-episode-corpus  Validate deterministic PCTOM-R Gate 1 social episodes
@@ -410,6 +411,9 @@ case "$COMMAND" in
     ;;
   run-condition-comparison)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_condition_comparison.py" "$@"
+    ;;
+  run-live-tau-condition-comparison)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_tau_condition_comparison.py" "$@"
     ;;
   check-prospective-tom-protocol)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_prospective_tom_protocol.py" "$@"

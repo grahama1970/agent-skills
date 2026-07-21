@@ -310,6 +310,7 @@ Live Tau Gate 2-4 proof root: /tmp/persona-dream-live-tau-gate2-4-20260721T02162
 Live Tau Gate 5/7 proof root: /tmp/persona-dream-live-tau-score-revision-20260721T022807Z
 Live Tau Gate 8/9 proof root: /tmp/persona-dream-live-tau-reliability-bridge-20260721T023518Z
 Condition comparison proof root: /tmp/persona-dream-condition-comparison-20260721T024538Z
+Live Tau condition comparison proof root: /tmp/persona-dream-live-tau-condition-comparison-20260721T030038Z
 ```
 
 Gate 0 proof summary:
@@ -667,6 +668,66 @@ regret improvement, external service fault injection, production retry
 machinery, longitudinal recall after revision, complete Phase 01-16 runtime
 execution, paid provider execution, or semantic dream quality.
 
+Live Tau condition comparison proof summary:
+
+```text
+receipt: /tmp/persona-dream-live-tau-condition-comparison-20260721T030038Z/live_tau_condition_comparison_receipt.v1.json
+status: PASS_LIVE_TAU_PCTOM_CONDITION_COMPARISON
+split: calibration
+episodes_in_corpus: 24
+episodes_consumed: 1
+families_consumed: 1
+conditions: M, R, D, CD
+cases: 4
+tau_call_attempts: 4
+tau_live_call_performed: 4
+tau_receipts_hash_bound: true
+sealed_commitments_per_condition: M=1, R=1, D=1, CD=1
+deterministic_scores_per_condition: M=1, R=1, D=1, CD=1
+Gate 2 PASS receipts: 4
+Gate 3 PASS receipts: 4
+Gate 4 PASS receipts: 4
+Gate 5 PASS receipts: 4
+mocked: false
+live: true
+fixture_backed: false
+deterministic_simulator_corpus_fixture_backed: true
+human_content_judgment_required: false
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+mean_action_brier: M=0.6533999999999999, R=0.6533999999999999, D=0.6533999999999999, CD=0.6533999999999999
+mean_belief_brier: M=0.41500000000000004, R=0.41500000000000004, D=0.41500000000000004, CD=0.41500000000000004
+primary_metric: mean_action_brier
+strongest_baseline_condition: M
+cd_minus_strongest_baseline: 0.0
+```
+
+This is live Tau-authored, deterministic simulator-backed evidence for one
+paired calibration episode across all four condition lanes. It proves the live
+condition runner can route M/R/D/CD through Tau, seal the Tau-authored outputs,
+bind Tau receipts into prediction commitments, reveal deterministic outcomes,
+and score every condition without human content judgment or unsupported writes.
+It does not prove held-out prediction benefit, statistical calibration, action
+selection regret improvement, external service fault injection, production
+retry machinery, longitudinal recall after revision, complete live Phase 01-16
+runtime execution, paid provider execution, video quality, or semantic dream
+quality.
+
+First live Tau condition-comparison repair note:
+
+```text
+blocked receipt: /tmp/persona-dream-live-tau-condition-comparison-20260721T025653Z/live_tau_condition_comparison_receipt.v1.json
+status: BLOCKED_LIVE_TAU_PCTOM_CONDITION_COMPARISON
+tau_call_attempts: 4
+tau_live_call_performed: 4
+systemic blocker 1: outcome reveal timestamp equaled sealed_at, so Gate 5 failed reveal-after-seal
+systemic blocker 2: one Tau R output placed a synthetic_counterfactual ref in branch source refs / prediction evidence refs, so Gate 3/4 failed visible-ref checks
+repair: deterministic reveal timestamp set to sealed_at + 1 second; prompt contract now forbids synthetic refs in branch source_evidence_refs and prediction_payload evidence_refs
+```
+
 Live Gate 0 bridge proof summary:
 
 ```text
@@ -768,30 +829,31 @@ validators, plus one live Tau-originated Gate 5/7 bridge proving deterministic
 outcome reveal, scoring, and non-destructive revision for a bounded text-first
 case, one live Tau-originated Gate 8/9 bridge proving bounded controlled
 stale-artifact containment and causal localization, and one deterministic
-calibration condition-comparison run over 24 episodes and 96 M/R/D/CD cases. It
+calibration condition-comparison run over 24 episodes and 96 M/R/D/CD cases,
+plus one live Tau condition-comparison run over one paired calibration episode
+and four M/R/D/CD cases. It
 does not prove paid provider execution, semantic dream quality, held-out test
-benefit, live model condition outputs, action-selection regret improvement,
-external service fault injection, production retry machinery, longitudinal
-recall after revision, complete live Phase 01-16 runtime execution, or
-autonomous operation beyond the bounded bridges. Those require separate live
-receipts.
+benefit, statistical calibration over repeated live runs, action-selection
+regret improvement, external service fault injection, production retry
+machinery, longitudinal recall after revision, complete live Phase 01-16
+runtime execution, or autonomous operation beyond the bounded bridges. Those
+require separate live receipts.
 
 No agent may claim final, green, complete, fixed, verified, or closed for this
 research goal unless those concrete proof artifacts exist and are cited.
 
 ## Next Critical Path
 
-Move from deterministic calibration instrumentation to live text-first
-condition execution, without reactivating provider/video as the critical path.
+Move from one paired live Tau condition comparison to repeated and reliability
+stress evidence, without reactivating provider/video as the critical path.
 
-The next accepted artifact must consume the calibration condition runner and
-answer this live-model question:
+The next accepted artifact must answer one of these two questions:
 
-1. Can Tau-authored M/R/D/CD condition outputs produce sealed predictions,
-   deterministic scores, and comparable metrics on at least one calibration
-   episode per condition without human content judgment or unsupported writes?
+1. Can repeated Tau-authored M/R/D/CD condition outputs across a broader
+   calibration subset produce sealed predictions, deterministic scores, and
+   comparable metrics without human content judgment or unsupported writes?
 
-Stop condition for that artifact:
+Stop condition for the repeated-live artifact:
 
 ```text
 mocked: no
@@ -799,7 +861,7 @@ episodes_consumed: calibration subset
 conditions: M, R, D, CD
 sealed_commitments_per_condition: >= 1
 deterministic_scores_per_condition: >= 1
-tau_call_attempts: >= 4
+tau_call_attempts: >= 16
 tau_receipts_hash_bound: true
 human_content_judgment_required: false
 memory_write_attempts: 0
@@ -811,10 +873,35 @@ primary_metric: Brier score by condition, with Tau-authored CD compared to the
 strongest Tau-authored baseline when enough paired trials exist
 ```
 
-The next independent reliability question remains:
-
-2. Can the same live condition runner survive real external service faults and
-   production retry boundaries with accepted Gate 8-9 terminal outcomes?
+2. Can the same live condition runner survive controlled condition-runner
+   artifact faults and production retry boundaries with accepted Gate 8-9
+   terminal outcomes?
 
 Any live validation report must state `mocked`, `live`, what was actually
 exercised, and what remains unverified.
+
+Candidate repeated-live command:
+
+```bash
+./run.sh run-live-tau-condition-comparison \
+  --output-root /tmp/persona-dream-live-tau-condition-comparison-<timestamp> \
+  --episode-limit 4 \
+  --json
+```
+
+Candidate receipt status:
+
+```text
+PASS_LIVE_TAU_PCTOM_CONDITION_COMPARISON
+```
+
+If the live Tau calls return malformed structured outputs or Tau is
+unavailable, the accepted intermediate artifact is the fail-closed receipt:
+
+```text
+BLOCKED_LIVE_TAU_PCTOM_CONDITION_COMPARISON
+```
+
+That blocked receipt must preserve per-condition Tau receipts and Gate errors
+so the next repair is driven by concrete boundary failures, not prose
+interpretation.
