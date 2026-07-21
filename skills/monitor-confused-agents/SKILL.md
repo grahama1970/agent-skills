@@ -62,6 +62,20 @@ skills/monitor-confused-agents/sanity.sh
 - By default `tick` is observation-only and sends nothing.
 - `tick --apply` sends one prompt per selected pane using `pane.send_text` plus
   `pane.send_keys`.
+- On Herdr versions that expose `terminal session control`, that lower-level
+  controller is the preferred future path for text plus carriage return. The
+  installed Herdr `0.7.1` on this host exposes `terminal attach` but not
+  `terminal session control`, so this skill uses the available socket methods
+  and post-submit readback.
+- A Herdr `ok` response is transport evidence only. The monitor reads the pane
+  after pressing Enter and requires visible submission evidence before marking
+  `submit_confirmed:true`.
+- Before injecting input, the monitor runs Herdr's idle wait and then checks
+  `agent.explain`. If the agent is already `working`, it skips injection and
+  records `skipped:true`.
+- Some Codex panes need a second Enter after a multi-line paste. If the first
+  Enter does not produce submission evidence, the monitor sends one additional
+  Enter and records `second_enter_sent:true`.
 - Prompt spam is prevented by a state file and a cooldown.
 - Every run writes:
 
@@ -92,8 +106,17 @@ GOAL.md
 .tau/goal.json
 ```
 
-If no immutable goal is found or claimed, and the transcript does not show an
-early-stop marker, the monitor records the pane and allows it to remain stopped.
+If no immutable goal is found in project files, the monitor records the pane and
+allows it to remain stopped. The monitor must not invent an objective from
+generic early-stop language; defining the immutable goal is on the human or
+project instructions.
+
+If the current transcript region says `Immutable Goal:
+ACHIEVED_WITH_RECEIPT:path`, `DONE_WITH_RECEIPT`, or `Goal achieved`, and that
+same current region does not contain proof-blocker or remaining-work markers,
+the monitor records the pane and does not prompt it. Cron may inspect completed
+panes every 10 minutes; deterministic inspection is acceptable, but restart
+prompts are not.
 
 If an immutable goal is found or the transcript shows remaining work / hook
 failure / early stop language, the monitor selects the pane. The restart prompt
@@ -102,12 +125,20 @@ requires the agent to state:
 - the immutable goal or `UNKNOWN`;
 - whether the goal is achieved with a receipt;
 - why it stopped if the goal is not achieved;
+- `Unblock Attempts:` showing `$brave-search` and the project-bound
+  `$browser-oracle` reviewer receipt, or why each is not applicable;
 - whether it will resume, use `$brave-search`, use `$webgpt`/`$ask`, or ask the
   human for a legitimate blocker.
 
 If recent text shows a real missing human decision, credential, authority, or
 external state, and there is no early-stop evidence overriding that blocker, the
 monitor sends a human-blocker prompt instead of a resume prompt.
+
+If the current transcript region includes `Immutable Goal: BLOCKED:...` and a
+complete `Unblock Attempts:` line showing `$brave-search` plus the project-bound
+browser-oracle reviewer receipt or `NOT_APPLICABLE` reasons, the monitor treats
+the blocker as legitimate human intervention and leaves the pane stopped unless
+current early-stop markers override that claim.
 
 ## Prompt Actions
 
@@ -151,7 +182,9 @@ Report `mocked` and `live` explicitly:
 - Fixture tests prove parsing, selection, cooldown, prompt construction, and
   crontab rendering only.
 - A dry-run `tick` proves Herdr can be observed and receipts can be written.
-- An applied `tick --apply` proves the monitor attempted to send Herdr prompts
-  and records each Herdr command result.
+- An applied `tick --apply` proves the monitor attempted Herdr prompt transport
+  and records both API results and post-Enter submission evidence. Treat
+  `api_sent:true` without `submit_confirmed:true` as a transport failure that
+  still needs attention.
 - A sent probe is not proof that an agent correctly unblocked itself; the next
   proof is the agent's own receipt, status artifact, or human decision.

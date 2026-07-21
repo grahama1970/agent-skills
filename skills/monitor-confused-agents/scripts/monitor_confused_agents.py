@@ -7,8 +7,8 @@ import json
 import os
 import re
 import socket
-import subprocess
 import sys
+import time
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -16,6 +16,10 @@ from typing import Any
 
 from loguru import logger
 import typer
+
+from cron_support import install_cron, status_payload
+from herdr_terminal_control import terminal_control_submit, wait_for_agent_idle
+from transcript_classifier import goal_allows_stop, latest_transcript_region, transcript_goal_claim
 
 SKILL_DIR = Path(__file__).resolve().parents[1]
 STATE_ROOT = Path.home() / ".local" / "state" / "monitor-confused-agents"
@@ -396,7 +400,9 @@ def tick_locked(
         candidate["last_prompt_epoch"] = last_prompt_at or None
         receipt["stopped_panes"].append(candidate)
         append_jsonl(events_path, {"event": "stopped_pane", "ts": now_iso(), **candidate_without_text(candidate)})
-        if not candidate["cooldown_active"] and len(selected) < max_prompts:
+        should_prompt = candidate.get("action") != "observe_only"
+        candidate["select_for_prompt"] = should_prompt
+        if should_prompt and not candidate["cooldown_active"] and len(selected) < max_prompts:
             selected.append(candidate)
 
     receipt["selected_panes"] = [candidate_without_text(item) for item in selected]
@@ -414,12 +420,15 @@ def tick_locked(
             "selection_reasons": candidate.get("selection_reasons", []),
             "prompt_path": str(prompt_path),
             "sent": False,
+            "api_sent": False,
+            "submit_confirmed": False,
             "send_api": [],
         }
         if apply:
-            prompt_record["send_api"] = send_prompt(client, str(candidate["pane_id"]), prompt)
-            prompt_record["sent"] = all("error" not in item.get("response", {}) for item in prompt_record["send_api"])
-            if prompt_record["sent"]:
+            send_result = send_prompt(client, str(candidate["pane_id"]), prompt)
+            prompt_record.update(send_result)
+            prompt_record["sent"] = bool(send_result.get("submit_confirmed") or send_result.get("skipped"))
+            if prompt_record["submit_confirmed"]:
                 state.setdefault("prompts", {})[str(candidate["pane_id"])] = {
                     "last_prompt_epoch": now_epoch,
                     "last_prompt_at": now_iso(),
@@ -434,7 +443,7 @@ def tick_locked(
     if apply:
         write_json(STATE_PATH, state)
 
-    receipt["status"] = "RESTART_PROMPTS_SENT" if apply and receipt["prompts"] else "OBSERVED"
+    receipt["status"] = "RESTART_PROMPTS_SUBMITTED" if apply and receipt["prompts"] else "OBSERVED"
     receipt["ok"] = all(item.get("sent", True) or not apply for item in receipt["prompts"])
     if apply and any(not item.get("sent") for item in receipt["prompts"]):
         receipt["status"] = "NEEDS_ATTENTION"
@@ -479,18 +488,26 @@ def classify_pane(
         return None
 
     text = read_pane_text(client, pane_id)
+    current_text = latest_transcript_region(text)
     explain = explain_agent(client, pane_id)
-    early_markers = find_patterns(text, EARLY_STOP_PATTERNS)
-    human_markers = find_patterns(text, HUMAN_BLOCKER_PATTERNS)
+    early_markers = find_patterns(current_text, EARLY_STOP_PATTERNS)
+    human_markers = find_patterns(current_text, HUMAN_BLOCKER_PATTERNS)
     if only_obvious_early_stops and not early_markers:
         return None
 
-    if human_markers and not early_markers:
+    immutable_goal = discover_immutable_goal(cwd)
+    if not immutable_goal.get("found"):
+        classification = "no_immutable_goal"
+        action = "observe_only"
+        reasons = [f"stopped_status:{status}", "immutable_goal_unknown_stop_allowed"]
+    elif goal_allows_stop(current_text, goal_found=True, has_early_markers=bool(early_markers)):
+        classification = "goal_stop_allowed"
+        action = "observe_only"
+        reasons = [f"stopped_status:{status}", f"goal_claim:{transcript_goal_claim(current_text)['state']}"]
+    elif human_markers and not early_markers:
         classification = "legitimate_human_blocker"
         action = "needs_human"
         reasons = [f"human_blocker:{item}" for item in human_markers[:5]]
-    elif goal_allows_stop(text, cwd) and not early_markers:
-        return None
     else:
         classification = "stopped_or_early_stop"
         action = "restart_continue"
@@ -498,7 +515,6 @@ def classify_pane(
         reasons.extend(f"early_stop:{item}" for item in early_markers[:6])
         if human_markers:
             reasons.extend(f"human_marker_overridden_by_early_stop:{item}" for item in human_markers[:3])
-        immutable_goal = discover_immutable_goal(cwd)
         if immutable_goal.get("found"):
             reasons.append("immutable_goal_found")
         else:
@@ -517,9 +533,10 @@ def classify_pane(
         "selection_reasons": reasons,
         "early_stop_markers": early_markers,
         "human_blocker_markers": human_markers,
-        "immutable_goal": discover_immutable_goal(cwd),
-        "transcript_goal_claim": transcript_goal_claim(text),
+        "immutable_goal": immutable_goal,
+        "transcript_goal_claim": transcript_goal_claim(current_text),
         "recent_excerpt": text[-2400:],
+        "analysis_excerpt": current_text[-1200:],
         "explain_state": explain.get("state") if isinstance(explain, dict) else None,
     }
 
@@ -553,7 +570,34 @@ def find_patterns(text: str, patterns: list[str]) -> list[str]:
     return matches
 
 
-def send_prompt(client: HerdrClient, pane_id: str, prompt: str) -> list[dict[str, Any]]:
+def send_prompt(client: HerdrClient, pane_id: str, prompt: str) -> dict[str, Any]:
+    wait_result = wait_for_agent_idle(pane_id)
+    explain = explain_agent(client, pane_id)
+    if explain.get("state") == "working":
+        return {
+            "send_api": [],
+            "terminal_control": {"attempted": False, "reason": "agent_already_working"},
+            "idle_wait": wait_result,
+            "pre_submit_state": explain.get("state"),
+            "api_sent": False,
+            "submit_confirmed": False,
+            "second_enter_sent": False,
+            "post_submit_excerpt": "",
+            "skipped": True,
+        }
+    terminal_result = terminal_control_submit(pane_id, prompt)
+    if terminal_result["attempted"]:
+        time.sleep(0.8)
+        text = read_pane_text(client, pane_id)
+        if terminal_result["ok"] and prompt_submitted(text):
+            return {
+                "send_api": [],
+                "terminal_control": terminal_result,
+                "api_sent": True,
+                "submit_confirmed": True,
+                "second_enter_sent": False,
+                "post_submit_excerpt": text[-1200:],
+            }
     records: list[dict[str, Any]] = []
     for method, params in [
         ("pane.send_text", {"pane_id": pane_id, "text": prompt}),
@@ -566,26 +610,46 @@ def send_prompt(client: HerdrClient, pane_id: str, prompt: str) -> list[dict[str
             logger.error("Herdr {} failed for pane {}", method, pane_id)
             pass
         records.extend(client.trace[before:])
-    return records
+    time.sleep(0.6)
+    first_read = read_pane_text(client, pane_id)
+    submit_confirmed = prompt_submitted(first_read)
+    second_enter_sent = False
+    second_read = ""
+    if not submit_confirmed:
+        before = len(client.trace)
+        try:
+            client.call("pane.send_keys", {"pane_id": pane_id, "keys": ["enter"]})
+        except RuntimeError:
+            logger.error("Herdr second pane.send_keys enter failed for pane {}", pane_id)
+        records.extend(client.trace[before:])
+        second_enter_sent = True
+        time.sleep(0.8)
+        second_read = read_pane_text(client, pane_id)
+        submit_confirmed = prompt_submitted(second_read)
+    api_sent = all("error" not in item.get("response", {}) for item in records)
+    return {
+        "send_api": records,
+        "terminal_control": terminal_result,
+        "idle_wait": wait_result,
+        "pre_submit_state": explain.get("state"),
+        "api_sent": api_sent,
+        "submit_confirmed": submit_confirmed,
+        "second_enter_sent": second_enter_sent,
+        "post_submit_excerpt": (second_read or first_read)[-1200:],
+    }
 
 
-def goal_allows_stop(text: str, cwd: str) -> bool:
-    goal = discover_immutable_goal(cwd)
-    claim = transcript_goal_claim(text)
-    if not goal.get("found") and claim["state"] == "none":
-        return True
-    return claim["state"] == "achieved" and not find_patterns(text, EARLY_STOP_PATTERNS)
-
-
-def transcript_goal_claim(text: str) -> dict[str, str]:
-    lowered = text.lower()
-    if re.search(r"\bimmutable goal\b.{0,160}\b(achieved|met|satisfied)\b", lowered, re.DOTALL):
-        return {"state": "achieved", "source": "transcript"}
-    if re.search(r"\bgoal\b.{0,160}\b(blocked|unmet|not met|not achieved|remaining)\b", lowered, re.DOTALL):
-        return {"state": "unmet", "source": "transcript"}
-    if "immutable goal" in lowered:
-        return {"state": "mentioned", "source": "transcript"}
-    return {"state": "none", "source": "transcript"}
+def prompt_submitted(text: str) -> bool:
+    if not text:
+        return False
+    return any(
+        marker in text
+        for marker in [
+            "Running UserPromptSubmit hook",
+            "Working (",
+            "Booting MCP server",
+        ]
+    )
 
 
 def discover_immutable_goal(cwd: str) -> dict[str, Any]:
@@ -655,6 +719,7 @@ def build_prompt(candidate: dict[str, Any]) -> str:
         "Immutable Goal: <known goal, UNKNOWN, or ACHIEVED_WITH_RECEIPT:path>\n"
         "Now: <current file, command, artifact, or exact blocker>\n"
         "Evidence: <latest concrete command/result/artifact path, or NONE>\n"
+        "Unblock Attempts: brave-search=<USED:path | NOT_APPLICABLE:reason>; webgpt=<USED:path | NOT_APPLICABLE:project-browser-oracle-uses-other-backend>\n"
         "Next: <one immediate action you will execute now, or STOP_ALLOWED because no immutable goal exists / goal is achieved>\n"
         "Disposition: <choose exactly one of RESUMING_NOW | BLOCKED_NEEDS_HUMAN | CONFUSED_NEEDS_HUMAN | "
         "CAN_SELF_UNBLOCK_BRAVE_SEARCH | CAN_SELF_UNBLOCK_WEBGPT | DONE_WITH_RECEIPT>\n\n"
@@ -704,60 +769,6 @@ def finish(receipt: dict[str, Any], exit_code: int) -> tuple[int, dict[str, Any]
         exit_code=exit_code,
     )
     return exit_code, receipt
-
-
-def status_payload() -> dict[str, Any]:
-    receipts = sorted(RECEIPT_ROOT.glob("*/receipt.json"), key=lambda path: path.stat().st_mtime, reverse=True)
-    crontab_result = subprocess.run(["crontab", "-l"], text=True, capture_output=True, check=False)
-    cron_stdout = crontab_result.stdout if crontab_result.returncode == 0 else ""
-    return {
-        "schema": "agent_skills.monitor_confused_agents.status.v1",
-        "mocked": False,
-        "live": True,
-        "api": "herdr_socket",
-        "state_root": str(STATE_ROOT),
-        "cron_installed": CRON_MARKER in cron_stdout,
-        "cron_marker": CRON_MARKER,
-        "log_file": str(LOG_DIR / "monitor-confused-agents.log"),
-        "state_path": str(STATE_PATH),
-        "latest_receipts": [str(path) for path in receipts[:5]],
-    }
-
-
-def install_cron(*, apply: bool, minute: str, space: str, apply_prompts: bool, cwd_prefix: str) -> tuple[int, dict[str, Any]]:
-    script_path = SKILL_DIR / "run.sh"
-    cron_log = LOG_DIR / "cron.log"
-    tick_args = "--apply" if apply_prompts else ""
-    line = (
-        f"{minute} * * * * cd {shell_quote(str(SKILL_DIR))} && "
-        f"{shell_quote(str(script_path))} tick {tick_args} --space {shell_quote(space)} --cwd-prefix {shell_quote(cwd_prefix)} "
-        f">> {shell_quote(str(cron_log))} 2>&1 {CRON_MARKER}"
-    ).replace("  ", " ").strip()
-    current = subprocess.run(["crontab", "-l"], text=True, capture_output=True, check=False)
-    existing = current.stdout if current.returncode == 0 else ""
-    filtered = [item for item in existing.splitlines() if CRON_MARKER not in item]
-    next_crontab = "\n".join(filtered + [line]).strip() + "\n"
-    payload = {
-        "schema": "agent_skills.monitor_confused_agents.cron_install.v1",
-        "mocked": False,
-        "live": True,
-        "apply": apply,
-        "cron_marker": CRON_MARKER,
-        "cron_line": line,
-        "would_replace_existing": CRON_MARKER in existing,
-        "log_file": str(cron_log),
-    }
-    if not apply:
-        payload["status"] = "DRY_RUN"
-        return 0, payload
-    proc = subprocess.run(["crontab", "-"], input=next_crontab, text=True, capture_output=True, check=False)
-    payload["install_command"] = {"command": ["crontab", "-"], "exit_code": proc.returncode, "stderr": proc.stderr}
-    payload["status"] = "INSTALLED" if proc.returncode == 0 else "BLOCKED"
-    return (0 if proc.returncode == 0 else 1), payload
-
-
-def shell_quote(value: str) -> str:
-    return "'" + value.replace("'", "'\"'\"'") + "'"
 
 
 if __name__ == "__main__":
