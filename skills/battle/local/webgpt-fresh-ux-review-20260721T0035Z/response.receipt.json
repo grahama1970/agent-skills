@@ -1,0 +1,17 @@
+{
+  "schema": "surf.webgpt_submit_receipt.v1",
+  "status": "submitted_to_chatgpt",
+  "submitted_to_chatgpt": true,
+  "prepared_prompt_is_transport_proof": false,
+  "input": "../battle/local/webgpt-fresh-ux-review-20260721T0035Z/request.md",
+  "submitted_output": "../battle/local/webgpt-fresh-ux-review-20260721T0035Z/response.md.submitted.md",
+  "output": "../battle/local/webgpt-fresh-ux-review-20260721T0035Z/response.md",
+  "raw_output": "../battle/local/webgpt-fresh-ux-review-20260721T0035Z/response.raw.md",
+  "meta_output": "../battle/local/webgpt-fresh-ux-review-20260721T0035Z/response.meta.json",
+  "sentinel": "<<<WEBGPT_DONE:20260721T043317Z:ee0940c1>>>",
+  "requested_tab_id": "837360432",
+  "requested_url": null,
+  "requested_model": null,
+  "requested_reasoning": "Pro",
+  "receipt_at": "2026-07-21T04:33:21Z"
+}

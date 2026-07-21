@@ -1,0 +1,104 @@
+{
+  "schema": "battle.adaptive_lineage_final_acceptance_audit.v1",
+  "generated_at": "2026-07-21T04:45:00Z",
+  "status": "PASS",
+  "failed": [],
+  "mocked": false,
+  "live": true,
+  "goal": "skills/battle/GOAL_ADAPTIVE_LINEAGE.md",
+  "reviewed_commit": "65bf2d82a4b172fe5c562ec9a3238f979473b931",
+  "remote_ref": "refs/heads/battle-adaptive-lineage-goal",
+  "remote_sha_at_review": "65bf2d82a4b172fe5c562ec9a3238f979473b931",
+  "local_browser_proof": {
+    "path": "skills/battle/local/fresh-ux-proof-20260721T0130Z/fresh-visible-ux-proof.json",
+    "status": "PASS",
+    "failed": [],
+    "screenshot": "skills/battle/local/fresh-ux-proof-20260721T0130Z/battle-expanded-lineage.png",
+    "checks": {
+      "mocked_false": true,
+      "live_true": true,
+      "host_identity": true,
+      "route_top_level_battle": true,
+      "lineage_panel_expanded": true,
+      "scorecard_present": true,
+      "live_badge_honest": true,
+      "all_descriptive_names_visible": true,
+      "selected_runner_up_visible": true,
+      "operators_visible": true,
+      "novelty_visible": true,
+      "ast_dimensions_visible": true,
+      "four_lineage_nodes_visible": true,
+      "canvas_present_sized": true,
+      "sprite_resources_observed": true,
+      "no_failed_requests": true,
+      "no_console_errors": true,
+      "no_forbidden_text": true
+    },
+    "badge": {
+      "text": "LIVE: Qual PASS",
+      "dataSource": "live",
+      "provesLive": "true"
+    },
+    "canvas": {
+      "present": true,
+      "width": 1030,
+      "height": 277,
+      "mountId": "1"
+    },
+    "claims": {
+      "proves": [
+        "fresh served browser loaded top-level #battle and expanded lineage panel"
+      ],
+      "does_not_prove": [
+        "human visual acceptance",
+        "external reviewer acceptance",
+        "new backend qualification rerun"
+      ]
+    }
+  },
+  "external_review": {
+    "tool": "surf webgpt.submit",
+    "request": "skills/battle/local/webgpt-fresh-ux-review-20260721T0035Z/request.md",
+    "response": "skills/battle/local/webgpt-fresh-ux-review-20260721T0035Z/response.md",
+    "raw_response": "skills/battle/local/webgpt-fresh-ux-review-20260721T0035Z/response.raw.md",
+    "meta": "skills/battle/local/webgpt-fresh-ux-review-20260721T0035Z/response.meta.json",
+    "verdict": "VERDICT: ACCEPT_CURRENT_UX_GATE",
+    "sentinel": "<<<WEBGPT_DONE:20260721T043317Z:ee0940c1>>>",
+    "raw_contains_sentinel": true,
+    "requested_tab_id": "837360432",
+    "controlled_tab_id": "837360432",
+    "focus_changed": false,
+    "transport_degraded": false
+  },
+  "deterministic_commands": [
+    {
+      "command": "node node_modules/vitest/vitest.mjs run src/lineage/ src/lib/battle-adaptive-lineage.test.ts src/engine/battle-lane-variant-map.test.ts",
+      "cwd": "skills/battle/spectator",
+      "result": "Test Files 3 passed (3); Tests 31 passed (31)"
+    },
+    {
+      "command": "node node_modules/typescript/bin/tsc --noEmit -p tsconfig.json && node scripts/build-static.mjs && fresh Playwright browser proof",
+      "cwd": "skills/battle/spectator",
+      "result": "browser proof status PASS; failed []"
+    },
+    {
+      "command": "skills/surf/run.sh webgpt.submit ... --tab-id 837360432 --expect-url ... --no-activate --no-remember --sentinel auto",
+      "cwd": "skills/surf",
+      "result": "status completed; proof_status response_proven; raw_contains_sentinel true; focus_changed false"
+    }
+  ],
+  "checks": {
+    "local_proof_pass": true,
+    "local_proof_live_nonmocked": true,
+    "local_proof_top_level_route": true,
+    "local_proof_expanded_lineage": true,
+    "local_proof_visible_gate": true,
+    "screenshot_exists": true,
+    "webgpt_accepts_gate": true,
+    "webgpt_transport_proven": true,
+    "webgpt_exact_tab": true,
+    "webgpt_clean_background": true,
+    "remote_matches_reviewed_commit": true
+  },
+  "note": "This receipt closes only the amended adaptive-lineage visible UX gate by combining deterministic local browser proof with explicit external reviewer acceptance. It does not claim new backend rerun beyond the already cited live backend receipt."
+}

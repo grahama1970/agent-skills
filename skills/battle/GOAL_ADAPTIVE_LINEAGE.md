@@ -293,7 +293,8 @@ phrases such as achieved, done, verified, green, or closed for this goal.
       observed Pixi sprite/manifest resource requests. Screenshot:
       `skills/battle/local/surf-obvious-errors-20260720T2120Z/battle-scorecard-restored.png`.
 
-**GOAL STATUS: DISPUTED_PENDING_HUMAN_OR_EXTERNAL_UX_ACCEPTANCE**.
+**GOAL STATUS: ACHIEVED_WITH_RECEIPT** —
+`skills/battle/local/final-acceptance-audit-20260721T0445Z.json`.
 
 The prior audit receipt
 `skills/battle/local/goal-adaptive-lineage-audit-20260721T0005Z.json` remains a
@@ -314,8 +315,19 @@ and positive checks for the scorecard, honest live badge, four descriptive
 names, selected-vs-runner-up row, operators, novelty values, changed AST
 dimensions, four lineage nodes, Pixi canvas, observed sprite resources, no
 failed requests, no console errors, and no forbidden text. This satisfies the
-fresh local proof rung, but the goal remains pending until the disputed visual
-result receives human acceptance or an explicit external-review artifact.
+fresh local proof rung.
+
+External review evidence now exists at
+`skills/battle/local/webgpt-fresh-ux-review-20260721T0035Z/response.md` with
+`VERDICT: ACCEPT_CURRENT_UX_GATE`. Surf metadata in
+`skills/battle/local/webgpt-fresh-ux-review-20260721T0035Z/response.meta.json`
+reports `status:"completed"`, `proof_status:"response_proven"`,
+`response_proof_status:"response_proven"`, `requested_tab_id:"837360432"`,
+`controlled_tab_id:"837360432"`, `controlled_tab_id_mismatch:false`,
+`tab_was_created:false`, `raw_contains_sentinel:true`, `focus_changed:false`,
+and `transport_degraded:false`. The final acceptance audit receipt above ties
+the deterministic local browser proof and the explicit external acceptance
+together; it reports `status:"PASS"` and `failed:[]`.
 
 ## Allowed Scope
 

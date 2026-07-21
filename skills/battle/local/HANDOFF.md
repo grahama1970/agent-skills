@@ -11,10 +11,11 @@ agent-skills worktree, not the pi-mono shell.
 > The prior 2026-07-20 live backend receipt, agent-skills `:3003` Pixi browser
 > proof, WebGPT accepted review, and immutable-goal audit receipt remain
 > supporting evidence only. The human disputed the visible UX closure on
-> 2026-07-21, so `GOAL_ADAPTIVE_LINEAGE.md` is now
-> `DISPUTED_PENDING_HUMAN_OR_EXTERNAL_UX_ACCEPTANCE`. Do not report
-> achieved/done/closed until the fresh expanded top-level `#battle` proof bundle
-> is accepted by the human or by an explicit external-review artifact.
+> 2026-07-21, so the goal required fresh local proof plus human or external
+> acceptance. That acceptance now exists in
+> `skills/battle/local/webgpt-fresh-ux-review-20260721T0035Z/response.md`, and
+> the final acceptance audit receipt is
+> `skills/battle/local/final-acceptance-audit-20260721T0445Z.json`.
 
 ## 1. Project Overview
 
@@ -169,23 +170,30 @@ agent-skills worktree, not the pi-mono shell.
 - **Do not trust `#battle/live` claims**. The valid primary UX is now
   `#battle`, with the live receipt rendered in-place. Keep `#battle/receipt`
   only as a compatible/deep-link receipt route, not as the main acceptance URL.
-- **Current blocker: acceptance is missing after challenge**. Fresh local
-  browser proof now exists, but the goal's non-self-serving closure rule also
-  requires human acceptance or an explicit external-review artifact because the
-  visual result was disputed.
+- **Fresh external acceptance exists after challenge**:
+  `skills/battle/local/webgpt-fresh-ux-review-20260721T0035Z/response.md`
+  contains `VERDICT: ACCEPT_CURRENT_UX_GATE`. Surf transport metadata in
+  `response.meta.json` reports `status:"completed"`,
+  `proof_status:"response_proven"`, `response_proof_status:"response_proven"`,
+  exact tab routing (`requested_tab_id == controlled_tab_id == "837360432"`),
+  `tab_was_created:false`, `raw_contains_sentinel:true`,
+  `focus_changed:false`, and `transport_degraded:false`.
+- **Final acceptance audit receipt exists**:
+  `skills/battle/local/final-acceptance-audit-20260721T0445Z.json` reports
+  `status:"PASS"`, `failed:[]`, `mocked:false`, `live:true`, and ties together
+  deterministic local browser proof with the explicit WebGPT acceptance.
 - **Repo is dirty from unrelated agents**. Stage Battle handoff/artifact paths
   explicitly only. Never `git add -A`.
 
 ## 5. Next Steps
 
-1. Obtain human acceptance of
-   `skills/battle/local/fresh-ux-proof-20260721T0130Z/battle-expanded-lineage.png`
-   or run an explicit external review against that screenshot and proof JSON.
+1. Preserve the final acceptance audit receipt and WebGPT review artifacts.
 2. Keep using `#battle` on the agent-skills host as the primary acceptance
    route. Treat `#battle/receipt` as a compatible deep link and do not revive
    standalone `#battle/live` without a new written goal.
-3. Leave the goal status as `DISPUTED_PENDING_HUMAN_OR_EXTERNAL_UX_ACCEPTANCE`
-   unless human/external acceptance satisfies the non-self-serving closure rule.
+3. Do not claim a new backend rerun; the final acceptance receipt closes the
+   amended visible UX dispute by combining the existing live backend evidence,
+   fresh local browser proof, and explicit external UX acceptance.
 
 ## 6. Project Context for Success
 

@@ -1,0 +1,13 @@
+{
+  "schema": "surf.webgpt_heartbeat.v1",
+  "updated_at": "2026-07-21T04:41:40Z",
+  "submitted_at": "2026-07-21T04:33:18Z",
+  "last_browser_observation_at": "2026-07-21T04:41:40Z",
+  "phase": "completed",
+  "page_state": "response_detected",
+  "last_artifact_written": "../battle/local/webgpt-fresh-ux-review-20260721T0035Z/response.raw.md",
+  "next_expected_artifact": "../battle/local/webgpt-fresh-ux-review-20260721T0035Z/response.meta.json",
+  "timeout_remaining_seconds": 0,
+  "sentinel": "<<<WEBGPT_DONE:20260721T043317Z:ee0940c1>>>",
+  "prepared_prompt_is_transport_proof": false
+}
