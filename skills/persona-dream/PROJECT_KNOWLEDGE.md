@@ -1,10 +1,29 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R Tau prompt timeout diagnosed) by agent
+**Last updated:** 2026-07-21 (PCTOM-R fresh service-boundary retry proof) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R FRESH FULL64 SERVICE-BOUNDARY RETRY PROOF): fresh local
+  HTTP service retry evidence exists at
+  `/tmp/persona-dream-live-tau-sealed-test-service-retry-proof-fresh-20260721T155119Z/live_tau_sealed_test_service_retry_proof_receipt.v1.json`.
+  Status `PASS_LIVE_TAU_PCTOM_SERVICE_RETRY_PROOF`, receipt SHA-256
+  `sha256:d92fd93008ec467b515b745083947459d875b33dfa87bd423a4bf64e7cf509ef`.
+  The proof consumed the full64 live Tau sealed-test replication root without
+  reexecuting Tau: `mocked:false`, `live:true`,
+  `live_tau_originated_artifacts_consumed:true`, `live_tau_reexecuted:false`.
+  Counts: 256 action decisions, 256 active predictions, five HTTP submissions,
+  four unique service jobs, one duplicate submission detected and not promoted,
+  two completed jobs, two blocked jobs, eight retry fault trials, zero
+  `CONTINUED_WITH_UNKNOWN_STATE`, zero duplicate active/action promotions, zero
+  side-effect violations, and zero Memory/provider/canonical/identity/
+  source-memory writes. This proves a separate local HTTP process boundary for
+  retry/idempotence/fail-closed handling over live-originated PCTOM-R artifacts.
+  It does not prove a permanently deployed external always-on orchestrator, new
+  live Tau execution, paid provider execution, semantic dream quality, or
+  complete live Phase 01-16 runtime execution. Planning benefit remains
+  unproven.
 - 2026-07-21 (PCTOM-R LIVE STRICT-INFERENCE BALANCED SLICE + UX LAB
   HOUSING): UX Lab is a light multi-project wrapper in `agent-skills@main`, not
   the old pi-mono app. The live service `ux-lab-vite.service` was corrected

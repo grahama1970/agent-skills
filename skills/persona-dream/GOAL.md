@@ -177,7 +177,23 @@ Next: <one immediate action or stop condition>
   eight required fault families, eight trials, one causal replay artifact, three
   live Memory fault probes, 0 `CONTINUED_WITH_UNKNOWN_STATE`, 0 side-effect
   violations, and 0 Memory/provider/Tau/canonical/identity/source-memory writes.
-  It does not prove production retry machinery or live Tau sealed-test execution.
+  It does not prove service-boundary retry machinery or live Tau sealed-test
+  execution.
+- Fresh full64 live Tau service-boundary retry proof:
+  `/tmp/persona-dream-live-tau-sealed-test-service-retry-proof-fresh-20260721T155119Z/live_tau_sealed_test_service_retry_proof_receipt.v1.json`.
+  Status `PASS_LIVE_TAU_PCTOM_SERVICE_RETRY_PROOF`, receipt SHA-256
+  `sha256:d92fd93008ec467b515b745083947459d875b33dfa87bd423a4bf64e7cf509ef`,
+  `mocked:false`, `live:true`, `live_tau_originated_artifacts_consumed:true`,
+  `live_tau_reexecuted:false`, 256 action decisions, 256 active predictions,
+  five HTTP requests, four unique service jobs, one duplicate submission
+  detected and not promoted, two completed jobs, two blocked jobs, eight retry
+  fault trials, 0 `CONTINUED_WITH_UNKNOWN_STATE`, 0 duplicate active/action
+  promotions, 0 side-effect violations, and 0 Memory/provider/canonical/
+  identity/source-memory writes. It proves a separate local HTTP service
+  boundary for retry/idempotence/fail-closed handling over full64 live
+  Tau-originated artifacts. It does not prove a permanently deployed external
+  always-on orchestrator, new live Tau execution, paid provider execution,
+  semantic dream quality, or complete live Phase 01-16 runtime execution.
 - Balanced planning reuse over the strict120 live roots:
   `/tmp/persona-dream-live-tau-balanced-planning-reuse-strict120-v17-limit1-20260721T1550Z/live_tau_balanced_planning_replication_receipt.v1.json`.
   Status `PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION`, 16 hash-bound
@@ -570,6 +586,7 @@ Blocked live expanded trust/commitment empty-filter proof root: /tmp/persona-dre
 Repeated expanded live trust/commitment Tau summary proof root: /tmp/persona-dream-live-tau-trust-commit-expanded-repeated-seed-summary-20260721T120650Z
 Blocked repeated expanded live trust/commitment one-source summary proof root: /tmp/persona-dream-live-tau-trust-commit-expanded-repeated-seed-summary-one-source-20260721T120712Z
 Local HTTP service retry proof root: /tmp/persona-dream-live-tau-sealed-test-service-retry-proof-20260721T121812Z
+Fresh local HTTP service retry proof root: /tmp/persona-dream-live-tau-sealed-test-service-retry-proof-fresh-20260721T155119Z
 Full64 live Memory fault surface proof root: /tmp/persona-dream-live-tau-full64-memory-fault-surface-20260721T122732Z
 Planning non-generalization audit proof root: /tmp/persona-dream-live-tau-planning-non-generalization-audit-20260721T124136Z
 Distributional planning intervention proof root: /tmp/persona-dream-live-tau-distributional-planning-intervention-20260721T130137Z
@@ -624,6 +641,7 @@ last_blocked_live_expanded_trust_commit_empty_filter_receipt: /tmp/persona-dream
 last_expanded_repeated_seed_summary_receipt: /tmp/persona-dream-live-tau-trust-commit-expanded-repeated-seed-summary-20260721T120650Z/live_tau_trust_commit_repeated_seed_receipt.v1.json
 last_blocked_expanded_repeated_seed_one_source_receipt: /tmp/persona-dream-live-tau-trust-commit-expanded-repeated-seed-summary-one-source-20260721T120712Z/live_tau_trust_commit_repeated_seed_receipt.v1.json
 last_local_http_service_retry_receipt: /tmp/persona-dream-live-tau-sealed-test-service-retry-proof-20260721T121812Z/live_tau_sealed_test_service_retry_proof_receipt.v1.json
+last_fresh_local_http_service_retry_receipt: /tmp/persona-dream-live-tau-sealed-test-service-retry-proof-fresh-20260721T155119Z/live_tau_sealed_test_service_retry_proof_receipt.v1.json
 last_full64_live_memory_fault_surface_receipt: /tmp/persona-dream-live-tau-full64-memory-fault-surface-20260721T122732Z/live_tau_full64_memory_fault_surface_receipt.v1.json
 last_planning_non_generalization_audit_receipt: /tmp/persona-dream-live-tau-planning-non-generalization-audit-20260721T124136Z/planning_non_generalization_audit_receipt.v1.json
 last_planning_non_generalization_audit_postrebase_receipt: /tmp/persona-dream-live-tau-planning-non-generalization-audit-postrebase-20260721T124457Z/planning_non_generalization_audit_receipt.v1.json
