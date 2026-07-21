@@ -66,6 +66,30 @@ class FakeSubmitHerdr:
         raise AssertionError(method)
 
 
+class FakeRealSubmitHerdr(monitor.HerdrClient):
+    def __init__(self) -> None:
+        super().__init__(Path("/tmp/fake-herdr.sock"))
+        self.sent_text = False
+        self.enter_count = 0
+        self.read_count = 0
+
+    def call(self, method: str, params: dict) -> dict:
+        response = {"id": method, "result": {"type": "ok"}}
+        self.trace.append({"request": {"method": method, "params": params}, "response": response})
+        if method == "pane.send_text":
+            self.sent_text = True
+        if method == "pane.send_keys" and params.get("keys") == ["enter"]:
+            self.enter_count += 1
+        if method == "pane.read":
+            self.read_count += 1
+            if self.read_count == 1:
+                return {"type": "pane_read", "read": {"text": "Codex composer ready"}}
+            return {"type": "pane_read", "read": {"text": "UserPromptSubmit hook (completed)\nWorking (1s * esc to interrupt)"}}
+        if method == "agent.explain":
+            return {"type": "agent_explain", "explain": {"state": "idle", "matched_rule": "codex_prompt_idle_ready"}}
+        return {"type": "ok"}
+
+
 class FakeFallbackIdleHerdr(FakeSubmitHerdr):
     def call(self, method: str, params: dict) -> dict:
         if method == "agent.explain":
@@ -686,6 +710,30 @@ def test_send_prompt_uses_second_enter_until_submission_is_visible() -> None:
     assert "Running UserPromptSubmit hook" in result["post_submit_excerpt"]
 
 
+def test_real_herdr_client_uses_pane_run_submit_without_duplicate_send_text() -> None:
+    client = FakeRealSubmitHerdr()
+    original_wait = monitor.wait_for_agent_idle
+    original_pane_run = monitor.pane_run_submit
+    pane_run_calls: list[tuple[str, str]] = []
+    monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
+    monitor.pane_run_submit = lambda pane_id, prompt, socket_path=None: (
+        pane_run_calls.append((pane_id, prompt))
+        or {"attempted": True, "ok": True, "transport": "herdr_pane_run", "exit_code": 0}
+    )
+    try:
+        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-herdr")
+    finally:
+        monitor.wait_for_agent_idle = original_wait
+        monitor.pane_run_submit = original_pane_run
+
+    assert result["api_sent"] is True
+    assert result["submit_confirmed"] is True
+    assert result["terminal_control"]["transport"] == "herdr_pane_run"
+    assert pane_run_calls == [("w11:p8", "RESTART CHECK FROM monitor-herdr")]
+    assert client.sent_text is False
+    assert client.enter_count == 0
+
+
 def test_presend_idle_fallback_sends_no_input() -> None:
     client = FakeFallbackIdleHerdr()
     original_wait = monitor.wait_for_agent_idle
@@ -856,6 +904,7 @@ def test_install_cron_renders_ten_minute_apply_line() -> None:
     assert exit_code == 0
     assert payload["status"] == "DRY_RUN"
     assert payload["cron_line"].startswith("*/10 * * * *")
+    assert "MONITOR_HERDR_INVOCATION_SOURCE=cron" in payload["cron_line"]
     assert "tick --apply" in payload["cron_line"]
     assert "--space 'codex'" in payload["cron_line"]
     assert "--min-stopped-seconds 600" in payload["cron_line"]
@@ -993,6 +1042,70 @@ def test_invalid_cron_fields_are_rejected() -> None:
     assert exit_code == 2
     assert payload["status"] == "BLOCKED"
     assert payload["error"] == "minute_must_be_exactly_every_10"
+
+
+def test_scheduler_health_reports_not_installed_without_prompting() -> None:
+    health = monitor.scheduler_health(
+        cron_installed=False,
+        latest_receipt={},
+        stale_after_seconds=900,
+    )
+
+    assert health["status"] == "NOT_INSTALLED"
+    assert health["backend"] == "cron"
+    assert health["cron_installed"] is False
+
+
+def test_scheduler_health_reports_stale_latest_receipt() -> None:
+    health = monitor.scheduler_health(
+        cron_installed=True,
+        latest_receipt={"path": "/tmp/receipt.json", "readable": True, "age_seconds": 1200, "ok": True, "status": "OBSERVED"},
+        stale_after_seconds=900,
+    )
+
+    assert health["status"] == "STALE"
+    assert health["latest_receipt_path"] == "/tmp/receipt.json"
+
+
+def test_latest_receipt_summary_counts_confirmed_prompts(tmp_path: Path) -> None:
+    receipt = tmp_path / "receipt.json"
+    receipt.write_text(
+        """{
+          "run_id": "monitor-herdr-test",
+          "status": "RESTART_PROMPTS_SUBMITTED",
+          "ok": true,
+          "invocation_source": "cron",
+          "mocked": false,
+          "live": true,
+          "observed_panes": 2,
+          "selected_panes": [{"pane_id": "w1:p1"}],
+          "prompts": [{"submit_confirmed": true}]
+        }""",
+        encoding="utf-8",
+    )
+
+    summary = monitor.latest_receipt_summary(receipt)
+
+    assert summary["readable"] is True
+    assert summary["status"] == "RESTART_PROMPTS_SUBMITTED"
+    assert summary["invocation_source"] == "cron"
+    assert summary["selected_panes"] == 1
+    assert summary["prompts"] == 1
+    assert summary["submit_confirmed"] == [True]
+
+
+def test_latest_cron_receipt_ignores_newer_manual_receipt(tmp_path: Path) -> None:
+    older_cron = tmp_path / "cron" / "receipt.json"
+    newer_cli = tmp_path / "cli" / "receipt.json"
+    older_cron.parent.mkdir()
+    newer_cli.parent.mkdir()
+    older_cron.write_text('{"run_id":"cron","invocation_source":"cron","status":"OBSERVED","ok":true}', encoding="utf-8")
+    newer_cli.write_text('{"run_id":"cli","invocation_source":"cli","status":"OBSERVED","ok":true}', encoding="utf-8")
+
+    summary = monitor.latest_cron_receipt_summary([newer_cli, older_cron])
+
+    assert summary["run_id"] == "cron"
+    assert summary["invocation_source"] == "cron"
 
 
 def test_corrupt_state_suppresses_input() -> None:

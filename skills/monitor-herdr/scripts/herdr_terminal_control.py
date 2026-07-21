@@ -1,4 +1,10 @@
-"""Submit text to Herdr terminals through the documented terminal.input bridge."""
+"""Submit text to Herdr terminals through Herdr CLI input helpers.
+
+The installed Herdr CLI may not expose the newer terminal session control
+bridge. This module therefore keeps subprocess-based helpers small and explicit:
+prefer pane.run for text plus Enter, and report the exact CLI result so the
+caller can still fail closed on missing post-submit evidence.
+"""
 
 from __future__ import annotations
 
@@ -86,4 +92,13 @@ def terminal_control_submit(pane_id: str, prompt: str, socket_path: Path | None 
     command = [herdr_bin_path(), "terminal", "session", "control", pane_id, "--takeover"]
     result = run_process_sync(command, input_text=json.dumps(payload) + "\n", timeout_s=5, socket_path=socket_path)
     result["attempted"] = True
+    return result
+
+
+def pane_run_submit(pane_id: str, prompt: str, socket_path: Path | None = None) -> dict[str, Any]:
+    """Send prompt text through `herdr pane run`, which appends Enter."""
+    command = [herdr_bin_path(), "pane", "run", pane_id, prompt]
+    result = run_process_sync(command, timeout_s=5, socket_path=socket_path)
+    result["attempted"] = True
+    result["transport"] = "herdr_pane_run"
     return result

@@ -1,0 +1,30 @@
+id = "agent-skills.monitor-herdr"
+name = "Monitor Herdr"
+version = "0.1.0"
+min_herdr_version = "0.7.0"
+description = "Run monitor-herdr ticks and health checks from Herdr."
+platforms = ["linux", "macos"]
+
+[[actions]]
+id = "status"
+title = "Monitor Herdr Status"
+contexts = ["workspace"]
+command = ["bash", "bin/monitor-herdr-plugin", "status"]
+
+[[actions]]
+id = "tick-dry-run"
+title = "Monitor Herdr Dry Run"
+contexts = ["workspace"]
+command = ["bash", "bin/monitor-herdr-plugin", "tick-dry-run"]
+
+[[actions]]
+id = "tick-apply"
+title = "Monitor Herdr Apply Tick"
+contexts = ["workspace"]
+command = ["bash", "bin/monitor-herdr-plugin", "tick-apply"]
+
+[[actions]]
+id = "probe-current-pane"
+title = "Monitor Herdr Probe Current Pane"
+contexts = ["pane"]
+command = ["bash", "bin/monitor-herdr-plugin", "probe-current-pane"]

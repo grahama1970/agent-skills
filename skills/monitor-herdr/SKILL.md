@@ -64,20 +64,19 @@ uv run --project skills/monitor-herdr python skills/monitor-herdr/evals/live_her
 - `tick` resolves the named Herdr `--space` by workspace id, number, or label.
 - `tick` reads `workspace.list`, `pane.list`, `pane.read`, and `agent.explain`.
 - By default `tick` is observation-only and sends nothing.
-- `tick --apply` sends one prompt per selected pane using `pane.send_text` plus
-  `pane.send_keys`.
+- `tick --apply` sends one prompt per selected pane using `herdr pane run`,
+  which submits text plus Enter atomically on supported Herdr builds. The
+  socket `pane.send_text` plus `pane.send_keys` path remains a bounded fallback
+  only when `pane run` fails before modifying input.
 - `tick --min-stopped-seconds N` requires a stopped pane to have been stopped
   for at least `N` seconds before it is selected for prompting. When Herdr
   exposes an idle/stopped age field, the monitor uses that field. On Herdr
   versions that expose only current state, including the installed `0.7.1`
   server on this host, the monitor records the first observed stopped timestamp
   in its own state file and uses that observed age on later ticks.
-- On Herdr versions that expose `terminal session control`, that lower-level
-  controller is the preferred future path for text plus carriage return. The
-  installed Herdr `0.7.1` on this host exposes `terminal attach` but not
-  `terminal session control`, and controller takeover can replace a human or
-  other controller, so this skill uses only the available socket methods and
-  post-submit readback.
+- The official Herdr CLI documents `pane run` as the command that submits text
+  plus Enter. Use that path for live Codex/Claude prompt submission unless a
+  future Herdr release exposes a better non-takeover agent prompt API.
 - A Herdr `ok` response is transport evidence only. The monitor reads the pane
   after pressing Enter and requires visible submission evidence before marking
   `submit_confirmed:true`.
@@ -125,6 +124,11 @@ uv run --project skills/monitor-herdr python skills/monitor-herdr/evals/live_her
 ~/.local/state/monitor-herdr/receipts/<run-id>/events.jsonl
 ~/.local/state/monitor-herdr/logs/monitor-herdr.log
 ```
+
+Receipts include `invocation_source`. Normal manual runs use `cli`, plugin
+ticks use `herdr_plugin`, and installed cron uses `cron`. Scheduler health
+looks for cron receipts specifically, so a manual live eval cannot hide a bad
+scheduled job.
 
 ## Candidate Selection And Immutable Goal Gate
 
@@ -234,6 +238,29 @@ freshly stopped pane normally has to remain stopped across the 10-minute cadence
 before the monitor types into it. Re-running `install-cron --apply` replaces
 the existing marked line.
 
+`run.sh status` reports `scheduler.status`, `latest_receipt`, and
+`latest_cron_receipt`. If cron is installed but no cron-sourced receipt exists,
+the scheduler status is `NEEDS_ATTENTION`; do not treat a manual `tick` or live
+eval receipt as proof that cron is healthy.
+
+## Herdr Plugin
+
+The skill includes a native Herdr plugin wrapper under:
+
+```text
+skills/monitor-herdr/herdr-plugin/herdr-plugin.toml
+```
+
+Link it for local use:
+
+```bash
+herdr plugin link skills/monitor-herdr/herdr-plugin
+herdr plugin action list --plugin agent-skills.monitor-herdr
+```
+
+The plugin actions are thin launchers around `run.sh`: status, dry-run tick,
+apply tick, and current-pane prompt probe. They do not duplicate monitor logic.
+
 ## Proof Boundaries
 
 Report `mocked` and `live` explicitly:
@@ -248,6 +275,9 @@ Report `mocked` and `live` explicitly:
   `run.sh tick` command against the active Herdr socket, writes a JSON report
   under `/mnt/storage12tb/skills/monitor-herdr/outputs/live-e2e/`, and can
   optionally require an applied prompt with `submit_confirmed:true`.
+- `evals/live_plugin_e2e.py` is the opt-in live Herdr plugin eval. It links the
+  local plugin, lists actions, invokes the status action, waits for the specific
+  Herdr plugin log id, and requires `status:succeeded` with `exit_code:0`.
 - A dry-run `tick` proves Herdr can be observed and receipts can be written.
 - An applied `tick --apply` proves the monitor attempted Herdr prompt transport
   and records both API results and post-Enter submission evidence. Treat

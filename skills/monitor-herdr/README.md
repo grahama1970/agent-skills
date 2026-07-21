@@ -34,8 +34,8 @@ silently becoming human chores.
 `monitor-herdr` connects to Herdr, finds stopped panes in a named space, reads
 recent text and `agent.explain` state, looks for an immutable goal, classifies
 the stop reason, and records the decision. With `--apply`, it sends one bounded
-prompt and confirms submission appeared in the pane. See
-[What It Will Not Do](#what-it-will-not-do) for the fail-closed rules.
+prompt through `herdr pane run` and confirms submission appeared in the pane.
+See [What It Will Not Do](#what-it-will-not-do) for the fail-closed rules.
 
 The prompt is deliberately direct. It asks the stopped agent whether the
 immutable goal is achieved, why it stopped, and whether it can resume, search,
@@ -64,7 +64,7 @@ also leaves it alone.
 | Blocked, unknown, approval-like, or ambiguous | Observes only; never types |
 | No immutable goal and no early-stop evidence | Records and leaves alone |
 | Likely early stop and positively prompt-ready | With `--apply`, sends one bounded prompt |
-| API call succeeds but submission not visible | Records `NEEDS_ATTENTION` |
+| Transport call succeeds but submission not visible | Records `NEEDS_ATTENTION` |
 
 ## Start Here
 
@@ -91,6 +91,9 @@ Inspect current monitor state:
 skills/monitor-herdr/run.sh status
 ```
 
+Status distinguishes the latest receipt from the latest cron-sourced receipt.
+That matters because a manual live eval should not make cron look healthy.
+
 Generate the exact prompt text for one pane without sending it:
 
 ```bash
@@ -115,6 +118,7 @@ skills/monitor-herdr/
   scripts/             Herdr client, classifier, goal discovery, prompt builder
   tests/               unit coverage
   evals/               deterministic and opt-in live E2E checks
+  herdr-plugin/        native Herdr plugin wrapper around run.sh
   receipts/            committed minimal state receipts, not runtime logs
 ```
 
@@ -145,6 +149,9 @@ uv run --project skills/monitor-herdr python \
 uv run --project skills/monitor-herdr python \
   skills/monitor-herdr/evals/live_herdr_e2e.py run \
   --allow-live --allow-apply --require-prompt
+
+uv run --project skills/monitor-herdr python \
+  skills/monitor-herdr/evals/live_plugin_e2e.py run --allow-live
 ```
 
 Fixture and deterministic evals prove parsing, selection, prompt construction,
@@ -153,11 +160,26 @@ They do not prove that a live pane accepted a prompt. The live apply eval is the
 gate for proving that an eligible pane accepted a prompt and produced
 `submit_confirmed:true`.
 
+## Herdr Plugin
+
+The plugin wrapper is intentionally boring. Herdr launches an action, and the
+action calls the same `run.sh` entrypoint as the skill:
+
+```bash
+herdr plugin link skills/monitor-herdr/herdr-plugin
+herdr plugin action list --plugin agent-skills.monitor-herdr
+```
+
+The actions are status, dry-run tick, apply tick, and current-pane prompt
+probe. Plugin tick receipts use `invocation_source:"herdr_plugin"`; cron
+receipts use `invocation_source:"cron"`.
+
 ## Current State
 
-The skill has deterministic coverage and Herdr-observation behavior. Its
-immutable goal still names one remaining live gate: run the live apply eval
-against an eligible Herdr pane and require `submit_confirmed:true`.
+The skill has deterministic coverage, live Herdr observation behavior, live
+prompt-submit receipts using `herdr pane run`, and a native Herdr plugin wrapper
+with a live action-log eval.
 
-Until that receipt exists, the honest state is `NEEDS_ATTENTION` for full live
-restart proof, even if dry-run observation and local evals pass.
+Scheduler health is separate. Until an installed cron line produces a
+cron-sourced receipt, `status` reports scheduler health as `NEEDS_ATTENTION`
+even when manual live evals pass.

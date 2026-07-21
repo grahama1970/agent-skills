@@ -18,9 +18,9 @@ from typing import Any
 from loguru import logger
 import typer
 
-from cron_support import install_cron, status_payload
+from cron_support import install_cron, latest_cron_receipt_summary, latest_receipt_summary, scheduler_health, status_payload
 from goal_discovery import discover_immutable_goal, path_is_relative_to, project_root_for_cwd
-from herdr_terminal_control import wait_for_agent_idle
+from herdr_terminal_control import pane_run_submit, wait_for_agent_idle
 from prompt_builder import build_prompt
 from transcript_classifier import exhausted_blocker_claim, goal_allows_stop, latest_transcript_region, transcript_goal_claim, valid_attempt_value
 
@@ -344,6 +344,7 @@ def tick(
         "live": True,
         "api": "herdr_socket",
         "apply": apply,
+        "invocation_source": os.environ.get("MONITOR_HERDR_INVOCATION_SOURCE", "cli"),
         "receipt_dir": str(receipt_dir),
         "events_path": str(events_path),
         "log_file": str(LOG_DIR / "monitor-herdr.log"),
@@ -802,34 +803,51 @@ def send_prompt(client: HerdrClient, pane_id: str, prompt: str, *, project_root:
     if not explain_allows_input(explain):
         return skipped_send("unsafe_pre_submit_state", wait_result=wait_result, pre_submit_state=explain.get("state"), pre_read=pre_read)
     records: list[dict[str, Any]] = []
-    before = len(client.trace)
-    try:
-        client.call("pane.send_text", {"pane_id": pane_id, "text": prompt})
-    except RuntimeError:
-        logger.error("Herdr pane.send_text failed for pane {}", pane_id)
-        records.extend(client.trace[before:])
-        return skipped_send("send_text_failed", wait_result=wait_result, pre_submit_state=explain.get("state"), pre_read=pre_read, records=records, send_failed=True)
-    records.extend(client.trace[before:])
-    before = len(client.trace)
-    try:
-        client.call("pane.send_keys", {"pane_id": pane_id, "keys": ["enter"]})
-    except RuntimeError:
-        logger.error("Herdr pane.send_keys enter failed for pane {}", pane_id)
-        records.extend(client.trace[before:])
-        return skipped_send("send_enter_failed", wait_result=wait_result, pre_submit_state=explain.get("state"), pre_read=pre_read, records=records, input_modified=True, send_failed=True)
-    records.extend(client.trace[before:])
+    terminal_result: dict[str, Any] = {"attempted": False, "reason": "not_real_herdr_client"}
     first_read = ""
     submit_confirmed = False
-    for _ in range(5):
-        time.sleep(0.4)
-        first_read = read_pane_text(client, pane_id)
-        submit_confirmed = prompt_submitted(first_read, baseline=pre_read)
-        if submit_confirmed:
-            break
-        current = explain_agent(client, pane_id)
-        if current.get("state") == "working":
-            submit_confirmed = True
-            break
+    if isinstance(client, HerdrClient):
+        terminal_result = pane_run_submit(pane_id, prompt, socket_path=socket_path)
+        if terminal_result.get("ok"):
+            for _ in range(5):
+                time.sleep(0.4)
+                first_read = read_pane_text(client, pane_id)
+                submit_confirmed = prompt_submitted(first_read, baseline=pre_read)
+                if submit_confirmed:
+                    break
+                current = explain_agent(client, pane_id)
+                if current.get("state") == "working":
+                    submit_confirmed = True
+                    break
+        else:
+            logger.error("Herdr pane.run submit failed for pane {}", pane_id)
+    before = len(client.trace)
+    if not submit_confirmed and not (isinstance(client, HerdrClient) and terminal_result.get("ok")):
+        try:
+            client.call("pane.send_text", {"pane_id": pane_id, "text": prompt})
+        except RuntimeError:
+            logger.error("Herdr pane.send_text failed for pane {}", pane_id)
+            records.extend(client.trace[before:])
+            return skipped_send("send_text_failed", wait_result=wait_result, pre_submit_state=explain.get("state"), pre_read=pre_read, terminal_result=terminal_result, records=records, send_failed=True)
+        records.extend(client.trace[before:])
+        before = len(client.trace)
+        try:
+            client.call("pane.send_keys", {"pane_id": pane_id, "keys": ["enter"]})
+        except RuntimeError:
+            logger.error("Herdr pane.send_keys enter failed for pane {}", pane_id)
+            records.extend(client.trace[before:])
+            return skipped_send("send_enter_failed", wait_result=wait_result, pre_submit_state=explain.get("state"), pre_read=pre_read, terminal_result=terminal_result, records=records, input_modified=True, send_failed=True)
+        records.extend(client.trace[before:])
+        for _ in range(5):
+            time.sleep(0.4)
+            first_read = read_pane_text(client, pane_id)
+            submit_confirmed = prompt_submitted(first_read, baseline=pre_read)
+            if submit_confirmed:
+                break
+            current = explain_agent(client, pane_id)
+            if current.get("state") == "working":
+                submit_confirmed = True
+                break
     second_enter_sent = False
     second_read = ""
     ctrl_j_sent = False
@@ -842,6 +860,7 @@ def send_prompt(client: HerdrClient, pane_id: str, prompt: str, *, project_root:
                 wait_result=wait_result,
                 pre_submit_state=explain.get("state"),
                 pre_read=pre_read,
+                terminal_result=terminal_result,
                 records=records,
                 input_modified=True,
                 send_failed=True,
@@ -884,14 +903,15 @@ def send_prompt(client: HerdrClient, pane_id: str, prompt: str, *, project_root:
                     submit_confirmed = True
                     break
     api_sent = all("error" not in item.get("response", {}) for item in records)
+    transport_sent = bool(terminal_result.get("ok")) or api_sent
     return {
         "send_api": records,
-        "terminal_control": {"attempted": False, "reason": "controller_takeover_disabled"},
+        "terminal_control": terminal_result,
         "idle_wait": wait_result,
         "pre_submit_state": explain.get("state"),
-        "api_sent": api_sent,
+        "api_sent": transport_sent,
         "submit_confirmed": submit_confirmed,
-        "input_modified": True,
+        "input_modified": transport_sent,
         "second_enter_sent": second_enter_sent,
         "ctrl_j_sent": ctrl_j_sent,
         "post_submit_excerpt": (ctrl_j_read or second_read or first_read)[-1200:],
