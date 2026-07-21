@@ -253,6 +253,27 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
                 "handler": handler,
                 "meta_path": str(meta_path),
             },
+            # Downstream nodes declare prior_handler_receipts as required
+            # evidence; the handoff must name it or Tau's evidence gate
+            # blocks the DAG even though the node itself passed.
+            *(
+                [
+                    {
+                        "kind": "prior_handler_receipts",
+                        "node_id": args.node_id,
+                        "prior_nodes": [
+                            {
+                                "node_id": item.get("node_id"),
+                                "status": item.get("status"),
+                                "path": item.get("path"),
+                            }
+                            for item in prior_receipts
+                        ],
+                    }
+                ]
+                if prior_receipts
+                else []
+            ),
         ],
     )
     return {"exit_code": 0 if ok else 1, "handoff": handoff}
