@@ -11,6 +11,17 @@ receipt-backed, provenance-bound, and fail-closed under faults.
 The controlling research program is PCTOM-R: Prospective Counterfactual
 Theory-of-Mind Reliability.
 
+The active immutable research objective is:
+
+```text
+Meet Persona Dream's research goals through the PCTOM-R text-first prospective
+Theory-of-Mind reliability lane: provenance-bound recall residue, deterministic
+hidden-state social episodes, valid ToM distributions, sealed prediction
+commitments, deterministic scoring, non-destructive belief revision, and
+fail-closed reliability checks, without treating provider/video work as the
+current critical path.
+```
+
 This supersedes the prior media-spine and Kling-video goals for current work.
 Those goals remain historical evidence in Git and in `GOAL_V2.md`, but they are
 not the active critical path unless the human explicitly reactivates them.
@@ -25,7 +36,10 @@ memory without confusing imagination with literal history or mutating identity.
 This `GOAL.md` narrows the active work to the next falsifiable research question
 inside that broader program: whether counterfactual dreaming improves
 prospective, calibrated Theory of Mind and planning decisions under robust
-pipeline checks.
+pipeline checks. The point is not that the human inspects or values the dream
+content directly. The point is that the agent can use explicitly synthetic
+counterfactual experience without corrupting memory, identity, evidence class,
+or pipeline state.
 
 Therefore the current critical path is not provider/video generation, dream
 aesthetic quality, dashboard presentation, or human-facing narrative polish. The
@@ -33,6 +47,15 @@ human does not need vague GitHub commit status or prose reassurance about
 progress. The useful status is operational: which gate is active, which exact
 file/command/artifact is being touched, which receipts or counts exist, what is
 mocked versus live, and what concrete stop condition remains.
+
+All status for this goal must be stated as an operational snapshot:
+
+```text
+Status/Phase: <gate or blocker>
+Now: <current file, command, or artifact>
+Evidence: <exact path, count, or command result>
+Next: <one immediate action or stop condition>
+```
 
 ## Research Question
 
@@ -227,6 +250,7 @@ Gate 4 commit: 82a0078294cd0a29e789151a59375428ed2e5a3c
 Gate 5 commit: 81dd203200bcc3786ad561cb1845230254967069
 Gate 6 commit: d31c0314e0e66fdd085c7ce7567d8f16830c070f
 Gate 7 commit: 7c941e1efcdaaefe5fbed596c9a14093b24a8403
+Gate 8 commit: 5a53ca5d49024ce092152315fda85224cac5483a
 Gate 1 proof root: /tmp/persona-dream-pctom-gate1-final-postpatch-20260721T001545Z
 Gate 2 proof root: /tmp/persona-dream-pctom-gate2-postrebase-20260721T003945Z
 Gate 3 proof root: /tmp/persona-dream-pctom-gate3-final-20260721T004724Z
@@ -421,6 +445,17 @@ writes. It does not prove live Tau execution, live Memory recall, real service
 fault injection, production retry behavior, statistical prediction benefit, or
 Gate 9 causal replay.
 
+Active remaining local research gate:
+
+```text
+Gate 9 status: not implemented in the cited evidence boundary
+required artifact: causal failure-localization receipt
+required command shape: check positive replay plus fail-closed negative fixtures
+required proof: first divergent receipt -> replay boundary -> one replaced or
+removed tool return -> state comparison -> localized cause receipt
+forbidden outcome: CONTINUED_WITH_UNKNOWN_STATE
+```
+
 ## Completion Rule
 
 The goal is not complete until an artifact-backed final report cites local
@@ -443,6 +478,12 @@ receipts proving all of the following:
    equivalent end state, block before side effects, or quarantine partial state.
 10. Gate 9 causal replay identifies the first divergent receipt for failed or
     unstable trials.
+
+After Gate 9, the local deterministic research lane may have a fixture-backed
+milestone, but that still does not prove live Memory recall, live Tau text
+execution, paid provider execution, semantic dream quality, held-out prediction
+benefit, complete live Phase 01-16 runtime execution, or autonomous operation
+without human content judgment. Those require separate live receipts.
 
 No agent may claim final, green, complete, fixed, verified, or closed for this
 research goal unless those concrete proof artifacts exist and are cited.
