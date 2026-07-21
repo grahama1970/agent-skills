@@ -881,6 +881,65 @@ action-selection regret improvement, external service fault injection,
 production retry machinery, longitudinal recall after revision, complete live
 Phase 01-16 runtime execution, paid provider execution, or video quality.
 
+## Live Tau Condition Reliability Bridge
+
+The live Tau condition reliability bridge consumes a repeated live Tau
+condition-comparison receipt and validates controlled Gate 8/9 reliability
+properties over the produced condition artifacts. It does not make new Tau,
+Memory, provider, canonical memory, identity, or source-memory calls.
+
+The required chain is:
+
+```text
+repeated live Tau condition comparison receipt
+-> condition artifact manifest
+-> controlled fault manifests
+-> Gate 8 reliability surface
+-> Gate 9 causal replay for a divergent fault
+-> live Tau condition reliability bridge receipt
+```
+
+Required fields:
+
+```text
+mocked: false
+base_receipt: repeated live Tau condition comparison receipt
+conditions: M, R, D, CD
+fault_families: stale_artifact, missing_graph_edge, malformed_structured_output, interrupted_persistence_or_retry
+terminal_outcomes subset: RECOVERED_WITH_EQUIVALENT_END_STATE, BLOCKED_BEFORE_SIDE_EFFECT, QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE
+continued_with_unknown_state: 0
+causal_replay_receipts: >= 1
+human_content_judgment_required: false
+tau_call_attempts: 0
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+```
+
+Accepted status:
+
+```text
+PASS_LIVE_TAU_PCTOM_CONDITION_RELIABILITY_BRIDGE
+```
+
+Blocked status:
+
+```text
+BLOCKED_LIVE_TAU_PCTOM_CONDITION_RELIABILITY_BRIDGE
+```
+
+This bridge proves bounded local reliability checks over live-originated
+condition artifacts: repeated and perturbed trials preserve equivalent accepted
+state, controlled artifact faults are blocked or quarantined without unknown
+continuation, interrupted retry has no duplicate active prediction or revision,
+and one stale-artifact divergence is causally localized. It does not prove real
+external service fault injection, production retry machinery, held-out
+prediction benefit, action-selection regret improvement, longitudinal recall,
+complete Phase 01-16 runtime execution, paid provider execution, or video
+quality.
+
 ## Live Gate 0 Bridge - Memory Recall To Prospective Case
 
 After the fixture-backed Gate 0-9 contracts exist, the first live validation

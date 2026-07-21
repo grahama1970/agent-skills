@@ -312,6 +312,7 @@ Live Tau Gate 8/9 proof root: /tmp/persona-dream-live-tau-reliability-bridge-202
 Condition comparison proof root: /tmp/persona-dream-condition-comparison-20260721T024538Z
 Live Tau condition comparison proof root: /tmp/persona-dream-live-tau-condition-comparison-20260721T030038Z
 Repeated live Tau condition comparison proof root: /tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z
+Live Tau condition reliability proof root: /tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z
 ```
 
 Gate 0 proof summary:
@@ -770,6 +771,53 @@ injection, production retry machinery, longitudinal recall after revision,
 complete live Phase 01-16 runtime execution, paid provider execution, video
 quality, or semantic dream quality.
 
+Live Tau condition reliability proof summary:
+
+```text
+receipt: /tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z/live_tau_condition_reliability_bridge_receipt.v1.json
+status: PASS_LIVE_TAU_PCTOM_CONDITION_RELIABILITY_BRIDGE
+base_receipt: /tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z/live_tau_condition_comparison_receipt.v1.json
+base_receipt_sha256: sha256:15254b5b5cd47c89d6c0ca538a838dee754a438256f743d1e27a62645dae9168
+conditions: M, R, D, CD
+fault_families: interrupted_persistence_or_retry, malformed_structured_output, missing_graph_edge, stale_artifact
+missing_fault_families: []
+terminal_outcome_counts: BLOCKED_BEFORE_SIDE_EFFECT=2, QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE=1, RECOVERED_WITH_EQUIVALENT_END_STATE=4
+continued_with_unknown_state: 0
+causal_replay_receipts: 1
+Gate 8 status: PASS_TOM_RELIABILITY_SURFACE
+Gate 8 trials: 7
+Gate 8 fault_injected_trials: 4
+Gate 8 perturbed_trials: 3
+Gate 8 pass_k: 1.0
+Gate 8 fault_containment_rate: 1.0
+Gate 9 status: PASS_TOM_CAUSAL_REPLAY
+Gate 9 localized_cause_type: STALE_ARTIFACT
+Gate 9 target_terminal_outcome: QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE
+mocked: false
+live: true
+fixture_backed: false
+controlled_fault_definition: true
+human_content_judgment_required: false
+tau_call_attempts: 0
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+```
+
+This is controlled Gate 8/9 reliability evidence over the repeated live Tau
+condition-comparison artifacts. It proves the bridge can consume a repeated
+live M/R/D/CD condition receipt, generate a reliability surface with the
+required artifact-fault families, constrain terminal outcomes to recovered,
+blocked, or quarantined states, avoid unknown-state continuation, and localize
+one stale-artifact divergence through causal replay without unsupported writes
+or human content judgment. It does not prove real external service fault
+injection, production retry machinery, held-out test-set prediction benefit,
+action-selection regret improvement, longitudinal recall after revision,
+complete live Phase 01-16 runtime execution, paid provider execution, video
+quality, or semantic dream quality.
+
 First live Tau condition-comparison repair note:
 
 ```text
@@ -886,39 +934,40 @@ stale-artifact containment and causal localization, and one deterministic
 calibration condition-comparison run over 24 episodes and 96 M/R/D/CD cases,
 plus one live Tau condition-comparison run over one paired calibration episode
 and four M/R/D/CD cases, plus one repeated live Tau condition-comparison run
-over four paired calibration episodes and 16 M/R/D/CD cases. It
+over four paired calibration episodes and 16 M/R/D/CD cases, plus one
+controlled Gate 8/9 condition reliability bridge over those live-originated
+artifacts. It
 does not prove paid provider execution, semantic dream quality, held-out test
 benefit, robust statistical calibration, action-selection regret improvement,
-external service fault injection, production retry machinery, longitudinal
-recall after revision, complete live Phase 01-16 runtime execution, or
-autonomous operation beyond the bounded bridges. Those require separate live
-receipts.
+real external service fault injection, production retry machinery,
+longitudinal recall after revision, complete live Phase 01-16 runtime
+execution, or autonomous operation beyond the bounded bridges. Those require
+separate live receipts.
 
 No agent may claim final, green, complete, fixed, verified, or closed for this
 research goal unless those concrete proof artifacts exist and are cited.
 
 ## Next Critical Path
 
-Move from repeated live condition execution to live condition-runner
-reliability and fault-containment evidence, without reactivating provider/video
-as the critical path.
+Move from prediction/scoring/reliability evidence to planning-relevant action
+selection, without reactivating provider/video as the critical path.
 
-The next accepted artifact must answer this reliability question:
+The next accepted artifact must answer this planning question:
 
-1. Can the same live condition runner survive controlled condition-runner
-   artifact faults and production retry boundaries with accepted Gate 8-9
-   terminal outcomes?
+1. Can Tau-authored M/R/D/CD condition outputs select constrained actions and
+   produce deterministic reward/regret or information-seeking metrics without
+   human content judgment or unsupported writes?
 
-Stop condition for the live condition reliability artifact:
+Stop condition for the live planning artifact:
 
 ```text
 mocked: no
 base_receipt: repeated live Tau condition comparison receipt
 conditions: M, R, D, CD
-fault_families: stale_artifact, missing_graph_edge, malformed_structured_output, interrupted_persistence_or_retry
-terminal_outcomes include only: RECOVERED_WITH_EQUIVALENT_END_STATE, BLOCKED_BEFORE_SIDE_EFFECT, QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE
-continued_with_unknown_state: 0
-causal_replay_receipts: >= 1 when divergence is injected
+action_set: ASK_CLARIFYING_QUESTION, WAIT, DISCLOSE_INFORMATION, OFFER_COOPERATION, SET_BOUNDARY, ACT_INDEPENDENTLY, ABSTAIN
+action_decisions_per_condition: >= 1
+deterministic_reward_or_regret_scores_per_condition: >= 1
+oracle_policy_reference: deterministic simulator policy, not LLM judge
 human_content_judgment_required: false
 memory_write_attempts: 0
 provider_call_attempts: 0

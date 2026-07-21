@@ -1,10 +1,25 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R repeated live Tau condition comparison accepted) by agent
+**Last updated:** 2026-07-21 (PCTOM-R condition reliability accepted) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R CONDITION RELIABILITY): controlled Gate 8/9 reliability
+  over repeated live condition artifacts now has receipt
+  `/tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z/live_tau_condition_reliability_bridge_receipt.v1.json`.
+  It reports `PASS_LIVE_TAU_PCTOM_CONDITION_RELIABILITY_BRIDGE`, consumes base
+  receipt `/tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z/live_tau_condition_comparison_receipt.v1.json`
+  (`sha256:15254b5b5cd47c89d6c0ca538a838dee754a438256f743d1e27a62645dae9168`),
+  covers fault families `stale_artifact`, `missing_graph_edge`,
+  `malformed_structured_output`, and `interrupted_persistence_or_retry`, and
+  has `continued_with_unknown_state: 0`. Gate 8 accepted 7 trials with
+  `fault_containment_rate: 1.0`; Gate 9 localized a stale-artifact divergence
+  with one replacement tool return. No Tau, Memory, provider, canonical,
+  identity, or source-memory writes were attempted. This is controlled local
+  artifact fault evidence over live-originated artifacts, not real external
+  service fault injection or production retry machinery. Next critical path is
+  planning-relevant action selection/regret over Tau-authored condition outputs.
 - 2026-07-21 (PCTOM-R REPEATED LIVE TAU CONDITION COMPARISON): the next
   repeated live condition artifact is
   `/tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z/live_tau_condition_comparison_receipt.v1.json`.
