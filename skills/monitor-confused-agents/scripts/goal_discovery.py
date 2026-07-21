@@ -37,11 +37,19 @@ def discover_immutable_goal(cwd: str, *, boundary: Path | None = None) -> dict[s
             if not path.is_file():
                 continue
             try:
-                text = path.read_text(encoding="utf-8", errors="replace")
+                resolved_path = path.resolve()
+            except OSError as exc:
+                logger.error("Could not resolve immutable goal candidate {}: {}", path, exc)
+                continue
+            if not resolved_path.is_relative_to(stop_at):
+                logger.error("Immutable goal candidate {} resolves outside boundary {}", path, stop_at)
+                continue
+            try:
+                text = resolved_path.read_text(encoding="utf-8", errors="replace")
             except OSError as exc:
                 logger.error("Could not read immutable goal candidate {}: {}", path, exc)
                 continue
-            return {"found": True, "source": str(path), "excerpt": compact_excerpt(text)}
+            return {"found": True, "source": str(resolved_path), "excerpt": compact_excerpt(text)}
         if root == stop_at or root == root.parent:
             break
     return {"found": False, "source": None, "excerpt": ""}

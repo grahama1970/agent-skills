@@ -15,14 +15,15 @@ SPEC.loader.exec_module(monitor)
 
 
 class FakeHerdr:
-    def __init__(self, text: str) -> None:
+    def __init__(self, text: str, explain: dict | None = None) -> None:
         self.text = text
+        self.explain = explain or {"state": "done"}
 
     def call(self, method: str, params: dict) -> dict:
         if method == "pane.read":
             return {"type": "pane_read", "read": {"text": self.text}}
         if method == "agent.explain":
-            return {"type": "agent_explain", "explain": {"state": "done"}}
+            return {"type": "agent_explain", "explain": self.explain}
         raise AssertionError(method)
 
 
@@ -48,11 +49,28 @@ class FakeSubmitHerdr:
         raise AssertionError(method)
 
 
+class FakeFallbackIdleHerdr(FakeSubmitHerdr):
+    def call(self, method: str, params: dict) -> dict:
+        if method == "agent.explain":
+            return {
+                "type": "agent_explain",
+                "explain": {"state": "idle", "fallback_reason": "default_known_agent_idle_fallback"},
+            }
+        return super().call(method, params)
+
+
 class FakeFailSendTextHerdr(FakeSubmitHerdr):
     def call(self, method: str, params: dict) -> dict:
         if method == "pane.send_text":
             self.trace.append({"request": {"method": method, "params": params}, "response": {"error": {"code": "fail"}}})
             raise RuntimeError("send failed")
+        return super().call(method, params)
+
+
+class FakeWorkingAfterEnterHerdr(FakeSubmitHerdr):
+    def call(self, method: str, params: dict) -> dict:
+        if method == "agent.explain" and self.enter_count >= 1:
+            return {"type": "agent_explain", "explain": {"state": "working"}}
         return super().call(method, params)
 
 
@@ -170,6 +188,7 @@ def test_goal_discovery_never_crosses_project_boundary(tmp_path: Path) -> None:
 
 
 def test_latest_goal_achieved_allows_stop_despite_old_early_marker(tmp_path: Path) -> None:
+    (tmp_path / "GOAL.md").write_text("Finish feature.", encoding="utf-8")
     pane = {
         "agent": "codex",
         "agent_status": "done",
@@ -201,6 +220,7 @@ def test_latest_goal_achieved_allows_stop_despite_old_early_marker(tmp_path: Pat
 
 
 def test_monitor_prompt_boilerplate_does_not_override_goal_achieved(tmp_path: Path) -> None:
+    (tmp_path / "GOAL.md").write_text("Finish feature.", encoding="utf-8")
     pane = {
         "agent": "codex",
         "agent_status": "done",
@@ -262,7 +282,7 @@ def test_exhausted_blocker_claim_can_stay_blocked(tmp_path: Path) -> None:
     text = """
     Status/Phase: blocked on missing credential
     Immutable Goal: BLOCKED:need production API key from human
-    Unblock Attempts: brave-search=NOT_APPLICABLE:credential is private; webgpt=NOT_APPLICABLE:credential is private
+    Unblock Attempts: brave-search=NOT_APPLICABLE:credential is private; browser-oracle=NOT_APPLICABLE:credential is private
     Evidence: NONE
     """
 
@@ -278,6 +298,89 @@ def test_exhausted_blocker_claim_can_stay_blocked(tmp_path: Path) -> None:
     assert candidate is not None
     assert candidate["action"] == "observe_only"
     assert candidate["classification"] == "blocked_or_unknown_observe_only"
+
+
+def test_idle_fallback_is_observe_only(tmp_path: Path) -> None:
+    (tmp_path / "GOAL.md").write_text("Finish feature.", encoding="utf-8")
+    pane = {
+        "agent": "codex",
+        "agent_status": "idle",
+        "cwd": str(tmp_path),
+        "pane_id": "w11:pD",
+    }
+
+    candidate = monitor.classify_pane(
+        FakeHerdr("What remains is implementation.", explain={"state": "idle", "fallback_reason": "default_known_agent_idle_fallback"}),
+        pane,
+        cwd_prefix=str(tmp_path.parent),
+        include_agents={"codex"},
+        stopped_statuses={"idle"},
+        only_obvious_early_stops=False,
+    )
+
+    assert candidate is not None
+    assert candidate["action"] == "observe_only"
+
+
+def test_goal_status_line_with_goal_file_allows_stop(tmp_path: Path) -> None:
+    (tmp_path / "GOAL.md").write_text("Finish feature.", encoding="utf-8")
+    pane = {
+        "agent": "codex",
+        "agent_status": "done",
+        "cwd": str(tmp_path),
+        "pane_id": "w11:pD",
+    }
+
+    candidate = monitor.classify_pane(
+        FakeHerdr("gpt-5.5 high · repo      Goal achieved (1h 32m)"),
+        pane,
+        cwd_prefix=str(tmp_path.parent),
+        include_agents={"codex"},
+        stopped_statuses={"done"},
+        only_obvious_early_stops=False,
+    )
+
+    assert candidate is not None
+    assert candidate["action"] == "observe_only"
+
+
+def test_webgpt_only_does_not_exhaust_blocker(tmp_path: Path) -> None:
+    (tmp_path / "GOAL.md").write_text("Finish feature.", encoding="utf-8")
+    pane = {
+        "agent": "codex",
+        "agent_status": "done",
+        "cwd": str(tmp_path),
+        "pane_id": "w11:pD",
+    }
+    text = """
+    Immutable Goal: BLOCKED:need human
+    Unblock Attempts: brave-search=NOT_APPLICABLE:human; webgpt=NOT_APPLICABLE:human
+    """
+
+    candidate = monitor.classify_pane(
+        FakeHerdr(text),
+        pane,
+        cwd_prefix=str(tmp_path.parent),
+        include_agents={"codex"},
+        stopped_statuses={"done"},
+        only_obvious_early_stops=False,
+    )
+
+    assert candidate is not None
+    assert candidate["action"] == "restart_continue"
+
+
+def test_goal_file_symlink_escape_is_rejected(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    outside = tmp_path / "outside"
+    project.mkdir()
+    outside.mkdir()
+    (outside / "GOAL.md").write_text("outside goal", encoding="utf-8")
+    (project / "GOAL.md").symlink_to(outside / "GOAL.md")
+
+    result = monitor.discover_immutable_goal(str(project), boundary=project)
+
+    assert result["found"] is False
 
 
 def test_probe_text_names_human_brave_and_webgpt_routes() -> None:
@@ -298,26 +401,52 @@ def test_probe_text_names_human_brave_and_webgpt_routes() -> None:
     assert "Unblock Attempts:" in text
     assert "$brave-search" in text
     assert "$webgpt" in text
+    assert "browser-oracle=" in text
 
 
 def test_send_prompt_uses_second_enter_until_submission_is_visible() -> None:
     client = FakeSubmitHerdr()
-    original = monitor.terminal_control_submit
     original_wait = monitor.wait_for_agent_idle
-    monitor.terminal_control_submit = lambda pane_id, prompt, socket_path=None: {"attempted": True, "ok": False, "exit_code": 2}
     monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
     try:
         result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-confused-agents")
     finally:
-        monitor.terminal_control_submit = original
         monitor.wait_for_agent_idle = original_wait
 
     assert result["api_sent"] is True
     assert result["submit_confirmed"] is True
     assert result["second_enter_sent"] is True
-    assert result["terminal_control"]["ok"] is False
+    assert result["terminal_control"]["attempted"] is False
     assert client.enter_count == 2
     assert "Running UserPromptSubmit hook" in result["post_submit_excerpt"]
+
+
+def test_presend_idle_fallback_sends_no_input() -> None:
+    client = FakeFallbackIdleHerdr()
+    original_wait = monitor.wait_for_agent_idle
+    monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
+    try:
+        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-confused-agents")
+    finally:
+        monitor.wait_for_agent_idle = original_wait
+
+    assert result["skipped"] is True
+    assert result["skip_reason"] == "unsafe_pre_submit_state"
+    assert client.enter_count == 0
+
+
+def test_working_after_first_enter_prevents_second_enter() -> None:
+    client = FakeWorkingAfterEnterHerdr()
+    original_wait = monitor.wait_for_agent_idle
+    monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
+    try:
+        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-confused-agents")
+    finally:
+        monitor.wait_for_agent_idle = original_wait
+
+    assert result["submit_confirmed"] is True
+    assert result["second_enter_sent"] is False
+    assert client.enter_count == 1
 
 
 def test_prompt_boilerplate_is_not_submission_evidence() -> None:
@@ -356,14 +485,11 @@ def test_install_cron_renders_ten_minute_apply_line() -> None:
 
 def test_send_text_failure_never_sends_enter() -> None:
     client = FakeFailSendTextHerdr()
-    original = monitor.terminal_control_submit
     original_wait = monitor.wait_for_agent_idle
-    monitor.terminal_control_submit = lambda pane_id, prompt, socket_path=None: {"attempted": True, "ok": False, "exit_code": 2}
     monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
     try:
         result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-confused-agents")
     finally:
-        monitor.terminal_control_submit = original
         monitor.wait_for_agent_idle = original_wait
 
     assert result["skipped"] is True
@@ -371,21 +497,18 @@ def test_send_text_failure_never_sends_enter() -> None:
     assert client.enter_count == 0
 
 
-def test_ambiguous_controller_success_never_falls_back() -> None:
+def test_send_prompt_never_uses_takeover_controller() -> None:
     client = FakeSubmitHerdr()
-    original = monitor.terminal_control_submit
     original_wait = monitor.wait_for_agent_idle
-    monitor.terminal_control_submit = lambda pane_id, prompt, socket_path=None: {"attempted": True, "ok": True, "exit_code": 0}
     monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
     try:
         result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-confused-agents")
     finally:
-        monitor.terminal_control_submit = original
         monitor.wait_for_agent_idle = original_wait
 
-    assert result["skipped"] is True
-    assert result["skip_reason"] == "ambiguous_controller_success"
-    assert client.enter_count == 0
+    assert result["terminal_control"]["attempted"] is False
+    assert result["submit_confirmed"] is True
+    assert client.enter_count == 2
 
 
 def test_invalid_cron_fields_are_rejected() -> None:
@@ -400,3 +523,17 @@ def test_invalid_cron_fields_are_rejected() -> None:
     assert exit_code == 2
     assert payload["status"] == "BLOCKED"
     assert payload["error"] == "minute_must_be_exactly_every_10"
+
+
+def test_corrupt_state_suppresses_input() -> None:
+    original = monitor.STATE_PATH
+    try:
+        monitor.STATE_PATH = Path("/tmp/monitor-confused-corrupt-state-test.json")
+        monitor.STATE_PATH.write_text("{not-json", encoding="utf-8")
+        state = monitor.load_state()
+    finally:
+        monitor.STATE_PATH.unlink(missing_ok=True)
+        monitor.STATE_PATH = original
+
+    assert state["input_suppressed"] is True
+    assert state["state_error"] == "corrupt_json"

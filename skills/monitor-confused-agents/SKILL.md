@@ -65,8 +65,9 @@ skills/monitor-confused-agents/sanity.sh
 - On Herdr versions that expose `terminal session control`, that lower-level
   controller is the preferred future path for text plus carriage return. The
   installed Herdr `0.7.1` on this host exposes `terminal attach` but not
-  `terminal session control`, so this skill uses the available socket methods
-  and post-submit readback.
+  `terminal session control`, and controller takeover can replace a human or
+  other controller, so this skill uses only the available socket methods and
+  post-submit readback.
 - A Herdr `ok` response is transport evidence only. The monitor reads the pane
   after pressing Enter and requires visible submission evidence before marking
   `submit_confirmed:true`.
@@ -76,6 +77,8 @@ skills/monitor-confused-agents/sanity.sh
 - `blocked` and `unknown` pane states are observation-only. The monitor records
   them but does not type into them because they may be approval, permission, or
   human-input surfaces.
+- `idle` based on Herdr fallback classification is also observation-only. A
+  prompt is injected only when Herdr state is prompt-ready enough for input.
 - Herdr CLI helper calls receive the same `HERDR_SOCKET_PATH` as the socket
   observation client so a custom session cannot observe one Herdr server and
   inject into another.
@@ -85,6 +88,9 @@ skills/monitor-confused-agents/sanity.sh
 - Submission evidence must newly appear after the prompt attempt. Old
   `Running UserPromptSubmit hook`, `Working (`, or `Booting MCP server` text in
   scrollback does not confirm the current prompt.
+- Any input-modifying uncertain attempt is recorded in cooldown state, even when
+  submission is not confirmed, so cron does not repeat the same ambiguous input
+  every 10 minutes.
 - Prompt spam is prevented by a state file and a cooldown.
 - Every run writes:
 

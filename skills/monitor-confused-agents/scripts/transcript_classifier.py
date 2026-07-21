@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from pathlib import Path
 
 
 def latest_transcript_region(text: str, limit: int = 2800) -> str:
@@ -23,18 +24,21 @@ def strip_monitor_prompt(text: str) -> str:
     )
 
 
-def transcript_goal_claim(text: str) -> dict[str, str]:
+def transcript_goal_claim(text: str, *, project_root: Path | None = None) -> dict[str, str]:
     line = structured_line_value(text, "Immutable Goal")
     if line:
         lowered = line.lower()
-        if lowered.startswith("achieved_with_receipt:") or lowered == "done_with_receipt":
+        if lowered.startswith("achieved_with_receipt:"):
+            receipt = line.split(":", 1)[1].strip()
+            return {"state": "achieved" if path_inside_project(receipt, project_root) else "unmet", "source": "immutable_goal_line"}
+        if lowered == "done_with_receipt":
             return {"state": "achieved", "source": "immutable_goal_line"}
         if lowered.startswith("blocked:"):
             return {"state": "blocked", "source": "immutable_goal_line"}
         if lowered.startswith(("not_met", "unknown")):
             return {"state": "unmet", "source": "immutable_goal_line"}
         return {"state": "mentioned", "source": "immutable_goal_line"}
-    if re.search(r"^\s*goal achieved\b", text, flags=re.IGNORECASE | re.MULTILINE):
+    if re.search(r"^\s*(?:.*\s)?goal achieved\b", text, flags=re.IGNORECASE | re.MULTILINE):
         return {"state": "achieved", "source": "status_line"}
     if re.search(r"^\s*done_with_receipt\b", text, flags=re.IGNORECASE | re.MULTILINE):
         return {"state": "achieved", "source": "status_line"}
@@ -43,31 +47,31 @@ def transcript_goal_claim(text: str) -> dict[str, str]:
     return {"state": "none", "source": "latest_transcript_region"}
 
 
-def goal_allows_stop(text: str, *, goal_found: bool, has_early_markers: bool) -> bool:
+def goal_allows_stop(text: str, *, goal_found: bool, has_early_markers: bool, project_root: Path | None = None) -> bool:
     if has_early_markers:
         return False
-    if exhausted_blocker_claim(text):
+    if exhausted_blocker_claim(text, project_root=project_root):
         return True
-    claim = transcript_goal_claim(text)
+    claim = transcript_goal_claim(text, project_root=project_root)
     if not goal_found and claim["state"] == "none":
         return True
     return claim["state"] == "achieved"
 
 
-def exhausted_blocker_claim(text: str) -> bool:
+def exhausted_blocker_claim(text: str, *, project_root: Path | None = None) -> bool:
     goal = structured_line_value(text, "Immutable Goal")
     attempts = structured_line_value(text, "Unblock Attempts")
     if not goal or not goal.lower().startswith("blocked:") or not attempts:
         return False
     parsed = parse_unblock_attempts(attempts)
     brave = parsed.get("brave-search")
-    reviewer = parsed.get("browser-oracle") or parsed.get("webgpt")
-    return bool(valid_attempt_value(brave) and valid_attempt_value(reviewer))
+    reviewer = parsed.get("browser-oracle")
+    return bool(valid_attempt_value(brave, project_root=project_root) and valid_attempt_value(reviewer, project_root=project_root))
 
 
 def structured_line_value(text: str, label: str) -> str:
-    match = re.search(rf"^\s*{re.escape(label)}\s*:\s*(.+?)\s*$", text, flags=re.IGNORECASE | re.MULTILINE)
-    return match.group(1).strip() if match else ""
+    matches = list(re.finditer(rf"^\s*{re.escape(label)}\s*:\s*(.+?)\s*$", text, flags=re.IGNORECASE | re.MULTILINE))
+    return matches[-1].group(1).strip() if matches else ""
 
 
 def parse_unblock_attempts(text: str) -> dict[str, str]:
@@ -80,8 +84,33 @@ def parse_unblock_attempts(text: str) -> dict[str, str]:
     return attempts
 
 
-def valid_attempt_value(value: str | None) -> bool:
+def valid_attempt_value(value: str | None, *, project_root: Path | None = None) -> bool:
     if not value:
         return False
     lowered = value.lower()
-    return lowered.startswith("used:") or lowered.startswith("not_applicable:")
+    if lowered.startswith("not_applicable:"):
+        return True
+    if lowered.startswith("used:"):
+        return path_inside_project(value.split(":", 1)[1].strip(), project_root)
+    return False
+
+
+def path_inside_project(value: str, project_root: Path | None) -> bool:
+    if not value:
+        return False
+    path = Path(value).expanduser()
+    if not path.is_absolute():
+        if project_root is None:
+            return True
+        path = project_root / path
+    try:
+        resolved = path.resolve()
+    except OSError:
+        return False
+    if project_root is None:
+        return resolved.is_file()
+    try:
+        root = project_root.resolve()
+    except OSError:
+        return False
+    return resolved.is_file() and resolved.is_relative_to(root)

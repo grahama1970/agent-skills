@@ -9,6 +9,7 @@ import re
 import socket
 import sys
 import time
+import fcntl
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -19,7 +20,8 @@ import typer
 
 from cron_support import install_cron, status_payload
 from goal_discovery import discover_immutable_goal, path_is_relative_to, project_root_for_cwd
-from herdr_terminal_control import terminal_control_submit, wait_for_agent_idle
+from herdr_terminal_control import wait_for_agent_idle
+from prompt_builder import build_prompt
 from transcript_classifier import goal_allows_stop, latest_transcript_region, transcript_goal_claim
 
 SKILL_DIR = Path(__file__).resolve().parents[1]
@@ -28,6 +30,7 @@ LOG_DIR = STATE_ROOT / "logs"
 RECEIPT_ROOT = STATE_ROOT / "receipts"
 STATE_PATH = STATE_ROOT / "state.json"
 LOCK_DIR = STATE_ROOT / "lock"
+LOCK_PATH = STATE_ROOT / "monitor.lock"
 CRON_MARKER = "# monitor-confused-agents herdr cron"
 DEFAULT_SPACE = "codex"
 DEFAULT_CWD_PREFIX = str(Path.home() / "workspace" / "experiments")
@@ -35,9 +38,6 @@ DEFAULT_STOPPED_STATUSES = ("done", "idle", "blocked", "unknown")
 DEFAULT_COOLDOWN_SECONDS = 60 * 60
 DEFAULT_SOCKET_PATH = Path.home() / ".config" / "herdr" / "herdr.sock"
 EARLY_STOP_PATTERNS = [
-    r"\bno active blocker\b",
-    r"\bno current blocker\b",
-    r"\bno active confusion\b",
     r"\bwhat remains\b",
     r"\bremaining work\b",
     r"\bif continuing\b",
@@ -65,6 +65,7 @@ HUMAN_BLOCKER_PATTERNS = [
 ]
 
 app = typer.Typer(add_completion=False, help="Monitor Herdr spaces for stopped/confused agents.")
+LOCK_HANDLE: Any | None = None
 
 
 @dataclass(frozen=True)
@@ -265,21 +266,33 @@ def load_state() -> dict[str, Any]:
 
 
 def acquire_lock(run_id: str) -> bool:
+    global LOCK_HANDLE
+    LOCK_PATH.parent.mkdir(parents=True, exist_ok=True)
+    LOCK_HANDLE = LOCK_PATH.open("a+", encoding="utf-8")
     try:
-        LOCK_DIR.mkdir(parents=True)
-    except FileExistsError:
+        fcntl.flock(LOCK_HANDLE.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        LOCK_HANDLE.close()
+        LOCK_HANDLE = None
         return False
-    write_json(LOCK_DIR / "owner.json", {"run_id": run_id, "pid": os.getpid(), "ts": now_iso()})
+    LOCK_HANDLE.seek(0)
+    LOCK_HANDLE.truncate()
+    LOCK_HANDLE.write(json.dumps({"run_id": run_id, "pid": os.getpid(), "ts": now_iso()}) + "\n")
+    LOCK_HANDLE.flush()
     return True
 
 
 def release_lock() -> None:
-    try:
-        (LOCK_DIR / "owner.json").unlink(missing_ok=True)
-        LOCK_DIR.rmdir()
-    except OSError:
-        logger.error("Could not release monitor lock at {}", LOCK_DIR)
+    global LOCK_HANDLE
+    if LOCK_HANDLE is None:
         return
+    try:
+        fcntl.flock(LOCK_HANDLE.fileno(), fcntl.LOCK_UN)
+        LOCK_HANDLE.close()
+    except OSError:
+        logger.error("Could not release monitor lock at {}", LOCK_PATH)
+    finally:
+        LOCK_HANDLE = None
 
 
 def tick(
@@ -336,24 +349,30 @@ def tick(
     try:
         client = HerdrClient(socket_path)
         try:
+            result: tuple[int, dict[str, Any]]
             try:
                 client.call("ping", {})
             except RuntimeError as exc:
                 receipt.update({"ok": False, "status": "BLOCKED", "errors": [f"Herdr ping failed: {exc}"]})
-                return finish(receipt, 2)
-            return tick_locked(
-                client=client,
-                receipt=receipt,
-                events_path=events_path,
-                apply=apply,
-                space=space,
-                cwd_prefix=cwd_prefix,
-                include_agents=include_agents,
-                stopped_statuses=stopped_statuses,
-                cooldown_seconds=cooldown_seconds,
-                max_prompts=max_prompts,
-                only_obvious_early_stops=only_obvious_early_stops,
-            )
+                result = finish(receipt, 2)
+            else:
+                result = tick_locked(
+                    client=client,
+                    receipt=receipt,
+                    events_path=events_path,
+                    apply=apply,
+                    space=space,
+                    cwd_prefix=cwd_prefix,
+                    include_agents=include_agents,
+                    stopped_statuses=stopped_statuses,
+                    cooldown_seconds=cooldown_seconds,
+                    max_prompts=max_prompts,
+                    only_obvious_early_stops=only_obvious_early_stops,
+                )
+            receipt["api_trace"] = client.trace
+            if receipt.get("receipt_path"):
+                write_json(Path(str(receipt["receipt_path"])), receipt)
+            return result
         finally:
             receipt["api_trace"] = client.trace
     finally:
@@ -439,8 +458,8 @@ def tick_locked(
         if apply:
             send_result = send_prompt(client, str(candidate["pane_id"]), prompt)
             prompt_record.update(send_result)
-            prompt_record["sent"] = bool(send_result.get("submit_confirmed") or send_result.get("skipped"))
-            if prompt_record["submit_confirmed"]:
+            prompt_record["sent"] = bool(send_result.get("submit_confirmed"))
+            if prompt_record["submit_confirmed"] or prompt_record.get("input_modified"):
                 state.setdefault("prompts", {})[str(candidate["pane_id"])] = {
                     "last_prompt_epoch": now_epoch,
                     "last_prompt_at": now_iso(),
@@ -448,6 +467,8 @@ def tick_locked(
                     "cwd": candidate.get("cwd"),
                     "classification": candidate.get("classification"),
                     "action": candidate.get("action"),
+                    "submit_confirmed": bool(prompt_record["submit_confirmed"]),
+                    "input_modified": bool(prompt_record.get("input_modified")),
                 }
         receipt["prompts"].append(prompt_record)
         append_jsonl(events_path, {"event": "prompt", "ts": now_iso(), **prompt_record})
@@ -458,7 +479,12 @@ def tick_locked(
     receipt["status"] = "RESTART_PROMPTS_SUBMITTED" if apply and receipt["prompts"] else "OBSERVED"
     if input_suppressed:
         receipt["status"] = "NEEDS_ATTENTION"
-    receipt["ok"] = all(item.get("sent", True) or not apply for item in receipt["prompts"])
+        receipt["ok"] = False
+        return finish(receipt, 1)
+    receipt["ok"] = all(
+        item.get("sent", True) or item.get("skipped") and not item.get("input_modified") or not apply
+        for item in receipt["prompts"]
+    )
     if apply and any(not item.get("sent") for item in receipt["prompts"]):
         receipt["status"] = "NEEDS_ATTENTION"
     return finish(receipt, 0 if receipt["ok"] else 1)
@@ -511,18 +537,18 @@ def classify_pane(
 
     project_root = project_root_for_cwd(cwd, cwd_prefix)
     immutable_goal = discover_immutable_goal(cwd, boundary=project_root)
-    if status in {"blocked", "unknown"}:
+    if status in {"blocked", "unknown"} or not explain_allows_input(explain):
         classification = "blocked_or_unknown_observe_only"
         action = "observe_only"
-        reasons = [f"stopped_status:{status}", "blocked_unknown_never_prompted"]
+        reasons = [f"stopped_status:{status}", "unsafe_or_uncertain_state_never_prompted"]
     elif not immutable_goal.get("found"):
         classification = "no_immutable_goal"
         action = "observe_only"
         reasons = [f"stopped_status:{status}", "immutable_goal_unknown_stop_allowed"]
-    elif goal_allows_stop(current_text, goal_found=True, has_early_markers=bool(early_markers)):
+    elif goal_allows_stop(current_text, goal_found=True, has_early_markers=bool(early_markers), project_root=project_root):
         classification = "goal_stop_allowed"
         action = "observe_only"
-        reasons = [f"stopped_status:{status}", f"goal_claim:{transcript_goal_claim(current_text)['state']}"]
+        reasons = [f"stopped_status:{status}", f"goal_claim:{transcript_goal_claim(current_text, project_root=project_root)['state']}"]
     elif human_markers and not early_markers:
         classification = "legitimate_human_blocker"
         action = "needs_human"
@@ -553,7 +579,7 @@ def classify_pane(
         "early_stop_markers": early_markers,
         "human_blocker_markers": human_markers,
         "immutable_goal": immutable_goal,
-        "transcript_goal_claim": transcript_goal_claim(current_text),
+        "transcript_goal_claim": transcript_goal_claim(current_text, project_root=project_root),
         "recent_excerpt": text[-2400:],
         "analysis_excerpt": current_text[-1200:],
         "explain_state": explain.get("state") if isinstance(explain, dict) else None,
@@ -598,29 +624,8 @@ def send_prompt(client: HerdrClient, pane_id: str, prompt: str) -> dict[str, Any
     explain = explain_agent(client, pane_id)
     if not wait_result.get("ok") and explain.get("state") not in {"idle", "done"}:
         return skipped_send("idle_wait_failed", wait_result=wait_result, pre_submit_state=explain.get("state"), pre_read=pre_read)
-    if explain.get("error") or explain.get("state") not in {"idle", "done"}:
+    if not explain_allows_input(explain):
         return skipped_send("unsafe_pre_submit_state", wait_result=wait_result, pre_submit_state=explain.get("state"), pre_read=pre_read)
-    terminal_result = terminal_control_submit(pane_id, prompt, socket_path=socket_path)
-    if terminal_result["attempted"]:
-        time.sleep(0.8)
-        text = read_pane_text(client, pane_id)
-        if terminal_result["ok"] and prompt_submitted(text, baseline=pre_read):
-            return {
-                "send_api": [],
-                "terminal_control": terminal_result,
-                "api_sent": True,
-                "submit_confirmed": True,
-                "second_enter_sent": False,
-                "post_submit_excerpt": text[-1200:],
-            }
-        if terminal_result["ok"]:
-            return skipped_send(
-                "ambiguous_controller_success",
-                wait_result=wait_result,
-                pre_submit_state=explain.get("state"),
-                pre_read=pre_read,
-                terminal_result=terminal_result,
-            )
     records: list[dict[str, Any]] = []
     before = len(client.trace)
     try:
@@ -628,7 +633,7 @@ def send_prompt(client: HerdrClient, pane_id: str, prompt: str) -> dict[str, Any
     except RuntimeError:
         logger.error("Herdr pane.send_text failed for pane {}", pane_id)
         records.extend(client.trace[before:])
-        return skipped_send("send_text_failed", wait_result=wait_result, pre_submit_state=explain.get("state"), pre_read=pre_read, terminal_result=terminal_result, records=records)
+        return skipped_send("send_text_failed", wait_result=wait_result, pre_submit_state=explain.get("state"), pre_read=pre_read, records=records)
     records.extend(client.trace[before:])
     before = len(client.trace)
     try:
@@ -636,14 +641,33 @@ def send_prompt(client: HerdrClient, pane_id: str, prompt: str) -> dict[str, Any
     except RuntimeError:
         logger.error("Herdr pane.send_keys enter failed for pane {}", pane_id)
         records.extend(client.trace[before:])
-        return skipped_send("send_enter_failed", wait_result=wait_result, pre_submit_state=explain.get("state"), pre_read=pre_read, terminal_result=terminal_result, records=records)
+        return skipped_send("send_enter_failed", wait_result=wait_result, pre_submit_state=explain.get("state"), pre_read=pre_read, records=records, input_modified=True)
     records.extend(client.trace[before:])
-    time.sleep(0.6)
-    first_read = read_pane_text(client, pane_id)
-    submit_confirmed = prompt_submitted(first_read, baseline=pre_read)
+    first_read = ""
+    submit_confirmed = False
+    for _ in range(5):
+        time.sleep(0.4)
+        first_read = read_pane_text(client, pane_id)
+        submit_confirmed = prompt_submitted(first_read, baseline=pre_read)
+        if submit_confirmed:
+            break
+        current = explain_agent(client, pane_id)
+        if current.get("state") == "working":
+            submit_confirmed = True
+            break
     second_enter_sent = False
     second_read = ""
     if not submit_confirmed:
+        current = explain_agent(client, pane_id)
+        if not explain_allows_input(current) or prompt not in first_read:
+            return skipped_send(
+                "post_enter_uncertain",
+                wait_result=wait_result,
+                pre_submit_state=explain.get("state"),
+                pre_read=pre_read,
+                records=records,
+                input_modified=True,
+            )
         before = len(client.trace)
         try:
             client.call("pane.send_keys", {"pane_id": pane_id, "keys": ["enter"]})
@@ -657,14 +681,27 @@ def send_prompt(client: HerdrClient, pane_id: str, prompt: str) -> dict[str, Any
     api_sent = all("error" not in item.get("response", {}) for item in records)
     return {
         "send_api": records,
-        "terminal_control": terminal_result,
+        "terminal_control": {"attempted": False, "reason": "controller_takeover_disabled"},
         "idle_wait": wait_result,
         "pre_submit_state": explain.get("state"),
         "api_sent": api_sent,
         "submit_confirmed": submit_confirmed,
+        "input_modified": True,
         "second_enter_sent": second_enter_sent,
         "post_submit_excerpt": (second_read or first_read)[-1200:],
     }
+
+
+def explain_allows_input(explain: dict[str, Any]) -> bool:
+    if explain.get("error") or explain.get("state") not in {"idle", "done"}:
+        return False
+    fallback = str(explain.get("fallback_reason") or "")
+    if fallback == "default_known_agent_idle_fallback":
+        return False
+    matched_rule = str(explain.get("matched_rule") or explain.get("rule") or "")
+    if matched_rule and any(token in matched_rule.lower() for token in ["approval", "permission", "question"]):
+        return False
+    return True
 
 
 def prompt_submitted(text: str, *, baseline: str = "") -> bool:
@@ -688,6 +725,7 @@ def skipped_send(
     pre_read: str = "",
     terminal_result: dict[str, Any] | None = None,
     records: list[dict[str, Any]] | None = None,
+    input_modified: bool = False,
 ) -> dict[str, Any]:
     return {
         "send_api": records or [],
@@ -696,57 +734,13 @@ def skipped_send(
         "pre_submit_state": pre_submit_state,
         "api_sent": False,
         "submit_confirmed": False,
+        "input_modified": input_modified,
         "second_enter_sent": False,
         "post_submit_excerpt": "",
         "pre_submit_excerpt": pre_read[-1200:],
         "skipped": True,
         "skip_reason": reason,
     }
-
-
-def build_prompt(candidate: dict[str, Any]) -> str:
-    reasons = ", ".join(str(item) for item in candidate.get("selection_reasons", [])) or "stopped"
-    cwd = candidate.get("cwd") or "unknown"
-    pane_id = candidate.get("pane_id") or "unknown"
-    agent = candidate.get("agent") or "agent"
-    action = candidate.get("action") or "restart_continue"
-    goal = candidate.get("immutable_goal") or {}
-    goal_line = "not found in project files"
-    if goal.get("found"):
-        goal_line = f"{goal.get('source')}: {goal.get('excerpt')}"
-    if action == "needs_human":
-        instruction = (
-            "You appear legitimately blocked. Do not bury the blocker in a final answer. "
-            "Reply with the exact human decision, credential, authority, or external state you need. "
-            "If the blocker is actually research or reviewer uncertainty, use $brave-search or $webgpt instead of stopping."
-        )
-    else:
-        instruction = (
-            "You stopped or went idle while the transcript still shows follow-up work or no real blocker. "
-            "Resume the task now. Pick the next concrete remaining action, run it, and continue until a real blocker or deterministic proof exists. "
-            "Use $brave-search for current external facts/docs before another stale retry. Use $webgpt/$ask with a concrete bundle when reviewer/oracle help would unblock you. "
-            "Ask the human only for a missing decision, credential, authority, acceptance choice, or external state you cannot obtain."
-        )
-    return (
-        "RESTART CHECK FROM monitor-confused-agents\n\n"
-        f"Herdr pane: {pane_id}\n"
-        f"Agent: {agent}\n"
-        f"Cwd: {cwd}\n"
-        f"Immutable goal evidence: {goal_line}\n"
-        f"Reason: {reasons}\n\n"
-        f"{instruction}\n\n"
-        "Respond and act with this operational shape:\n"
-        "Status/Phase: <one line>\n"
-        "Immutable Goal: <known goal, UNKNOWN, or ACHIEVED_WITH_RECEIPT:path>\n"
-        "Now: <current file, command, artifact, or exact blocker>\n"
-        "Evidence: <latest concrete command/result/artifact path, or NONE>\n"
-        "Unblock Attempts: brave-search=<USED:path | NOT_APPLICABLE:reason>; webgpt=<USED:path | NOT_APPLICABLE:project-browser-oracle-uses-other-backend>\n"
-        "Next: <one immediate action you will execute now, or STOP_ALLOWED because no immutable goal exists / goal is achieved>\n"
-        "Disposition: <choose exactly one of RESUMING_NOW | BLOCKED_NEEDS_HUMAN | CONFUSED_NEEDS_HUMAN | "
-        "CAN_SELF_UNBLOCK_BRAVE_SEARCH | CAN_SELF_UNBLOCK_WEBGPT | DONE_WITH_RECEIPT>\n\n"
-        "If the immutable goal is known and not achieved, keep going and use available tools until it is met. "
-        "Do not claim complete unless you can cite deterministic local proof artifacts and there is no remaining user-requested work."
-    )
 
 
 def candidate_without_text(candidate: dict[str, Any]) -> dict[str, Any]:
