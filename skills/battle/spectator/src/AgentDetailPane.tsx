@@ -75,15 +75,15 @@ export function AgentDetailPane({ lane, lanes, events, activeFinisher, onSound }
         <LifecycleEvidencePanel lifecycle={lifecycle} />
 
         <Tabs defaultValue="summary" className="flex min-h-0 flex-1 flex-col">
-          <TabsList className="grid w-full grid-cols-6 rounded-none border-b border-white/10 bg-black/20">
-            <TabsTrigger data-qid="battle:agent-pane:tab:summary" data-qs-action="BATTLE_AGENT_PANE_TAB_SUMMARY" value="summary" title="Show Summary tab" className="min-h-11 px-1 text-[11px]">Summary</TabsTrigger>
-            <TabsTrigger data-qid="battle:agent-pane:tab:live" data-qs-action="BATTLE_AGENT_PANE_TAB_LIVE" value="live" title="Show live streaming stdout/stderr console and packet panel" className="min-h-11 px-1 text-[11px]">
+          <TabsList className="h-auto w-full rounded-none border-b border-white/10 bg-black/20" style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))" }}>
+            <TabsTrigger data-qid="battle:agent-pane:tab:summary" data-qs-action="BATTLE_AGENT_PANE_TAB_SUMMARY" value="summary" title="Show Summary tab" className="min-h-9 px-1 text-[10px] leading-none">Summary</TabsTrigger>
+            <TabsTrigger data-qid="battle:agent-pane:tab:live" data-qs-action="BATTLE_AGENT_PANE_TAB_LIVE" value="live" title="Show live streaming stdout/stderr console and packet panel" className="min-h-9 px-1 text-[10px] leading-none">
               <span className="flex items-center gap-1"><Radio className={`h-3.5 w-3.5 ${liveBus.meta.status === "open" || liveBus.meta.status === "following" ? "text-battle-green" : ""}`} />Live{liveConsole.length || livePackets.length ? <span className="rounded bg-white/10 px-1 text-[9px]">{liveConsole.length + livePackets.length}</span> : null}</span>
             </TabsTrigger>
-            <TabsTrigger data-qid="battle:agent-pane:tab:turns" data-qs-action="BATTLE_AGENT_PANE_TAB_TURNS" value="turns" title="Show Turns tab" className="min-h-11 px-1 text-[11px]">Turns</TabsTrigger>
-            <TabsTrigger data-qid="battle:agent-pane:tab:logs" data-qs-action="BATTLE_AGENT_PANE_TAB_LOGS" value="logs" title="Show Logs tab" className="min-h-11 px-1 text-[11px]">Logs</TabsTrigger>
-            <TabsTrigger data-qid="battle:agent-pane:tab:skills" data-qs-action="BATTLE_AGENT_PANE_TAB_SKILLS" value="skills" title="Show Skills tab" className="min-h-11 px-1 text-[11px]">Skills</TabsTrigger>
-            <TabsTrigger data-qid="battle:agent-pane:tab:receipts" data-qs-action="BATTLE_AGENT_PANE_TAB_RECEIPTS" value="receipts" title="Show Receipts tab" className="min-h-11 px-1 text-[11px]">Receipts</TabsTrigger>
+            <TabsTrigger data-qid="battle:agent-pane:tab:turns" data-qs-action="BATTLE_AGENT_PANE_TAB_TURNS" value="turns" title="Show Turns tab" className="min-h-9 px-1 text-[10px] leading-none">Turns</TabsTrigger>
+            <TabsTrigger data-qid="battle:agent-pane:tab:logs" data-qs-action="BATTLE_AGENT_PANE_TAB_LOGS" value="logs" title="Show Logs tab" className="min-h-9 px-1 text-[10px] leading-none">Logs</TabsTrigger>
+            <TabsTrigger data-qid="battle:agent-pane:tab:skills" data-qs-action="BATTLE_AGENT_PANE_TAB_SKILLS" value="skills" title="Show Skills tab" className="min-h-9 px-1 text-[10px] leading-none">Skills</TabsTrigger>
+            <TabsTrigger data-qid="battle:agent-pane:tab:receipts" data-qs-action="BATTLE_AGENT_PANE_TAB_RECEIPTS" value="receipts" title="Show Receipts tab" className="min-h-9 px-1 text-[10px] leading-none">Receipts</TabsTrigger>
           </TabsList>
           <div className="min-h-0 flex-1 overflow-auto p-2.5">
             <TabsContent value="summary" className="mt-0 space-y-2"><CurrentTurn model={model} /><TraceCard trace={model.trace} /><OutputCard stdout={liveStdout || model.stdout} stderr={liveStderr || model.stderr} live={Boolean(liveStdout || liveStderr)} />{model.skills.length ? <SkillsCard skills={model.skills} /> : null}</TabsContent>

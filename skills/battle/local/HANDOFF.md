@@ -10,12 +10,12 @@ agent-skills worktree, not the pi-mono shell.
 > screenshot inspection over stale prose or agent-authored closure receipts.
 > The prior 2026-07-20 live backend receipt, agent-skills `:3003` Pixi browser
 > proof, WebGPT accepted review, and immutable-goal audit receipt remain
-> supporting evidence only. The human disputed the visible UX closure on
-> 2026-07-21, so the goal required fresh local proof plus human or external
-> acceptance. That acceptance now exists in
-> `skills/battle/local/webgpt-fresh-ux-review-20260721T0035Z/response.md`, and
-> the final acceptance audit receipt is
-> `skills/battle/local/final-acceptance-audit-20260721T0445Z.json`.
+> supporting evidence only. The human disputed the visible UX closure again on
+> 2026-07-21, so the current status is
+> `DISPUTED_PENDING_ACCEPTANCE`. Fresh local pre-human repair proof exists at
+> `skills/battle/local/pre-human-readiness-audit-20260721T170004Z/pre-human-readiness-audit.json`,
+> but it is marked `not_a_closure_receipt:true`; do not restore closure language
+> until the visible state receives human or fresh external acceptance.
 > After unrelated commits advanced the shared branch, the current-head
 > revalidation receipt is
 > `skills/battle/local/current-head-evidence-revalidation-20260721T0458Z.json`.
@@ -114,7 +114,7 @@ agent-skills worktree, not the pi-mono shell.
   observed Pixi sprite/manifest resource requests. This pass is useful
   supporting evidence, but it is not sufficient after the human disputed whether
   the visible UX works as expected.
-- **Fresh expanded top-level UX proof exists after challenge**:
+- **Fresh expanded top-level UX proof exists after the earlier challenge**:
   `skills/battle/local/fresh-ux-proof-20260721T0130Z/` contains
   `fresh-visible-ux-proof.json` and `battle-expanded-lineage.png`. The proof
   targets `http://127.0.0.1:3003/#battle`, has `status:"PASS"`, `failed:[]`,
@@ -125,8 +125,9 @@ agent-skills worktree, not the pi-mono shell.
   AST dimensions, four lineage nodes, Pixi canvas `1030x277`, observed sprite
   resources, no failed requests, no console errors, and no forbidden text.
   Visual inspection of the screenshot shows the expanded lineage panel above the
-  race view, the scorecard, and four distinct Pixi sprites. This is current
-  local evidence, but closure still requires human or external acceptance.
+  race view, the scorecard, and four distinct Pixi sprites. This is supporting
+  local evidence, but it is not enough after the later human rejection of UX
+  readiness.
 - **WebGPT acceptance for this new host exists**:
   `skills/battle/local/webgpt-design-review-20260720T1742Z/response.md` starts
   with `ACCEPTED`, and `response.raw.md` contains the terminal sentinel. The
@@ -176,7 +177,7 @@ agent-skills worktree, not the pi-mono shell.
 - **Do not trust `#battle/live` claims**. The valid primary UX is now
   `#battle`, with the live receipt rendered in-place. Keep `#battle/receipt`
   only as a compatible/deep-link receipt route, not as the main acceptance URL.
-- **Fresh external acceptance exists after challenge**:
+- **Fresh external acceptance exists after the earlier challenge**:
   `skills/battle/local/webgpt-fresh-ux-review-20260721T0035Z/response.md`
   contains `VERDICT: ACCEPT_CURRENT_UX_GATE`. Surf transport metadata in
   `response.meta.json` reports `status:"completed"`,
@@ -196,19 +197,36 @@ agent-skills worktree, not the pi-mono shell.
   the goal, handoff, final audit, fresh browser proof, screenshot, WebGPT
   request/response/meta/raw artifacts, and badge-hook source file are tracked at
   the current pushed branch head.
+- **Prior blocker: pre-human readiness was disputed**. The screenshot
+  `skills/battle/local/fresh-ux-proof-20260721T0130Z/battle-expanded-lineage.png`
+  has obvious human-facing issues: the right detail tabs are cramped/visually
+  overlapping, the main timeline leaves a large empty region after early events,
+  and the expanded lineage summary is dense enough that it is not a clean
+  inspection surface.
+- **Fresh local repair proof exists, but it is not closure**:
+  `skills/battle/local/pre-human-readiness-audit-20260721T170004Z/pre-human-readiness-audit.json`
+  records `status:"PASS_LOCAL_PRE_HUMAN_CHECKS_PENDING_ACCEPTANCE"`,
+  `failed:[]`, `mocked:false`, `live:true`, final browser proof
+  `fresh-browser-proof-after-layout-fix.json`, and screenshot
+  `battle-default-pre-human-readiness-after-layout-fix.png`. The local proof
+  records no tab collision, no large blank race well, scorecard visible, Pixi
+  sprites visible, lineage collapsed by default, and no console/page/network
+  errors. It still requires human or fresh external acceptance before goal
+  closure can be restored.
 - **Repo is dirty from unrelated agents**. Stage Battle handoff/artifact paths
   explicitly only. Never `git add -A`.
 
 ## 5. Next Steps
 
-1. Preserve the final acceptance audit receipt, WebGPT review artifacts, and
-   current-head revalidation receipt.
-2. Keep using `#battle` on the agent-skills host as the primary acceptance
+1. Keep using `#battle` on the agent-skills host as the primary acceptance
    route. Treat `#battle/receipt` as a compatible deep link and do not revive
    standalone `#battle/live` without a new written goal.
-3. Do not claim a new backend rerun; the final acceptance receipt closes the
-   amended visible UX dispute by combining the existing live backend evidence,
-   fresh local browser proof, and explicit external UX acceptance.
+2. Use the fresh pre-human proof as the next review target. If a reviewer or
+   human rejects it, preserve the screenshot and fix the next concrete visual
+   defect before making another closure claim.
+3. Do not claim a new backend rerun unless a backend command actually reruns the
+   live SciLLM + Docker qualification. The existing backend receipt remains the
+   current source fixture, not a new run.
 
 ## 6. Project Context for Success
 

@@ -293,8 +293,20 @@ phrases such as achieved, done, verified, green, or closed for this goal.
       observed Pixi sprite/manifest resource requests. Screenshot:
       `skills/battle/local/surf-obvious-errors-20260720T2120Z/battle-scorecard-restored.png`.
 
-**GOAL STATUS: ACHIEVED_WITH_RECEIPT** —
-`skills/battle/local/final-acceptance-audit-20260721T0445Z.json`.
+**GOAL STATUS: DISPUTED_PENDING_ACCEPTANCE** —
+the 2026-07-21 human rejection of visible UX readiness supersedes the earlier
+external-review acceptance and current-head revalidation. A fresh local
+pre-human repair proof now exists at
+`skills/battle/local/pre-human-readiness-audit-20260721T170004Z/pre-human-readiness-audit.json`,
+but it is explicitly not a closure receipt.
+
+The prior final acceptance audit, WebGPT review, and current-head revalidation
+remain supporting evidence only. They do not authorize asking the human to
+verify the Battle UX as closed. The current local repair proof records
+`status:"PASS_LOCAL_PRE_HUMAN_CHECKS_PENDING_ACCEPTANCE"`, `failed:[]`,
+`mocked:false`, `live:true`, and screenshot
+`skills/battle/local/pre-human-readiness-audit-20260721T170004Z/battle-default-pre-human-readiness-after-layout-fix.png`.
+Closure remains pending human or fresh external acceptance of that visible state.
 
 The prior audit receipt
 `skills/battle/local/goal-adaptive-lineage-audit-20260721T0005Z.json` remains a
@@ -305,7 +317,7 @@ receipt plus final Surf/Pixi proof artifacts above. It does **not** close this
 goal after the UX has been challenged, because it does not by itself establish a
 fresh, expanded, human-acceptable top-level `#battle` visual state.
 
-Fresh local browser evidence now exists at
+Fresh local browser evidence exists at
 `skills/battle/local/fresh-ux-proof-20260721T0130Z/fresh-visible-ux-proof.json`
 with `status:"PASS"`, `failed:[]`, `mocked:false`, `live:true`, expanded
 top-level route `http://127.0.0.1:3003/#battle`, host identity
@@ -315,9 +327,10 @@ and positive checks for the scorecard, honest live badge, four descriptive
 names, selected-vs-runner-up row, operators, novelty values, changed AST
 dimensions, four lineage nodes, Pixi canvas, observed sprite resources, no
 failed requests, no console errors, and no forbidden text. This satisfies the
-fresh local proof rung.
+fresh local proof rung, but it is not a final readiness receipt after the
+human's later rejection.
 
-External review evidence now exists at
+External review evidence exists at
 `skills/battle/local/webgpt-fresh-ux-review-20260721T0035Z/response.md` with
 `VERDICT: ACCEPT_CURRENT_UX_GATE`. Surf metadata in
 `skills/battle/local/webgpt-fresh-ux-review-20260721T0035Z/response.meta.json`
@@ -327,7 +340,8 @@ reports `status:"completed"`, `proof_status:"response_proven"`,
 `tab_was_created:false`, `raw_contains_sentinel:true`, `focus_changed:false`,
 and `transport_degraded:false`. The final acceptance audit receipt above ties
 the deterministic local browser proof and the explicit external acceptance
-together; it reports `status:"PASS"` and `failed:[]`.
+together; it reports `status:"PASS"` and `failed:[]`. After the later human
+rejection, these are historical support artifacts, not closure authority.
 
 After unrelated commits advanced the shared branch, current-head revalidation
 was recorded at

@@ -823,6 +823,9 @@
   height: 100%;
   min-height: 0;
 }
+.battle-mockup-app {
+  height: 100vh;
+}
 .battle-mockup-shell > * {
   min-width: 0;
   max-width: 100%;

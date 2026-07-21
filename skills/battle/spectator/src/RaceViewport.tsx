@@ -400,9 +400,11 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
     () => pixiRowLayout.reduce((max, row) => Math.max(max, row.topPx + row.heightPx), 0),
     [pixiRowLayout],
   );
+  const receiptRaceHeightPx = receiptReplay && pixiEngine ? Math.max(360, pixiRowsHeight + 72) : undefined;
 
   const shellClass = cn(
-    "flex h-full min-h-0 flex-1 flex-col overflow-hidden",
+    "flex min-h-0 flex-col overflow-hidden",
+    receiptReplay && !designView ? "flex-none" : "h-full flex-1",
     designView ? "center battle-mockup-panel battle-mockup-center" : cn("rounded-2xl border-battle-cyan/20", receiptReplay && "justify-start"),
   );
 
@@ -618,7 +620,7 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
     return <div className={shellClass}>{providerBody}</div>;
   }
 
-  return <Card className={shellClass}>{providerBody}</Card>;
+  return <Card className={shellClass} style={receiptRaceHeightPx ? { height: `${receiptRaceHeightPx}px` } : undefined}>{providerBody}</Card>;
 }
 
 function BattleTimelineCanvas({ contentWidth, children, designView = false }: { contentWidth: number; children: ReactNode; designView?: boolean }) {

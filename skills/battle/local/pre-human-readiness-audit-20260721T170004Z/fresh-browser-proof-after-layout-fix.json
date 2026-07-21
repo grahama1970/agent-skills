@@ -1,0 +1,191 @@
+{
+  "href": "http://127.0.0.1:3003/#battle",
+  "app": {
+    "x": 0,
+    "y": 0,
+    "width": 1440,
+    "height": 1000,
+    "right": 1440,
+    "bottom": 1000
+  },
+  "right_pane_inner": {
+    "rect": {
+      "x": 1064,
+      "y": 242,
+      "width": 360,
+      "height": 640,
+      "right": 1424,
+      "bottom": 882
+    },
+    "scrollHeight": 640,
+    "clientHeight": 640
+  },
+  "adaptive_badge_text": "LIVE: Qual PASS",
+  "adaptive_badge_attrs": {
+    "data_source": "live",
+    "proves_live": "true"
+  },
+  "lineage_default_open": false,
+  "canvas": {
+    "x": 8,
+    "y": 315,
+    "width": 1030,
+    "height": 277,
+    "right": 1038,
+    "bottom": 592
+  },
+  "timeline_scroll": {
+    "x": 287,
+    "y": 279,
+    "width": 766,
+    "height": 322,
+    "right": 1053,
+    "bottom": 601
+  },
+  "excess_timeline_below_canvas_px": 9,
+  "tab_rects": [
+    {
+      "qid": "battle:agent-pane:tab:summary",
+      "text": "Summary",
+      "rect": {
+        "x": 1070,
+        "y": 790.5,
+        "width": 116,
+        "height": 36,
+        "right": 1186,
+        "bottom": 826.5
+      },
+      "scrollWidth": 116,
+      "clientWidth": 116
+    },
+    {
+      "qid": "battle:agent-pane:tab:live",
+      "text": "Live",
+      "rect": {
+        "x": 1186,
+        "y": 790.5,
+        "width": 116,
+        "height": 36,
+        "right": 1302,
+        "bottom": 826.5
+      },
+      "scrollWidth": 116,
+      "clientWidth": 116
+    },
+    {
+      "qid": "battle:agent-pane:tab:turns",
+      "text": "Turns",
+      "rect": {
+        "x": 1302,
+        "y": 790.5,
+        "width": 116,
+        "height": 36,
+        "right": 1418,
+        "bottom": 826.5
+      },
+      "scrollWidth": 116,
+      "clientWidth": 116
+    },
+    {
+      "qid": "battle:agent-pane:tab:logs",
+      "text": "Logs",
+      "rect": {
+        "x": 1070,
+        "y": 826.5,
+        "width": 116,
+        "height": 36,
+        "right": 1186,
+        "bottom": 862.5
+      },
+      "scrollWidth": 116,
+      "clientWidth": 116
+    },
+    {
+      "qid": "battle:agent-pane:tab:skills",
+      "text": "Skills",
+      "rect": {
+        "x": 1186,
+        "y": 826.5,
+        "width": 116,
+        "height": 36,
+        "right": 1302,
+        "bottom": 862.5
+      },
+      "scrollWidth": 116,
+      "clientWidth": 116
+    },
+    {
+      "qid": "battle:agent-pane:tab:receipts",
+      "text": "Receipts",
+      "rect": {
+        "x": 1302,
+        "y": 826.5,
+        "width": 116,
+        "height": 36,
+        "right": 1418,
+        "bottom": 862.5
+      },
+      "scrollWidth": 116,
+      "clientWidth": 116
+    }
+  ],
+  "tab_overlaps": [],
+  "tab_text_overflow": [],
+  "counts": {
+    "canvases": 1,
+    "agent_tabs": 6,
+    "tab_rows": 2
+  },
+  "checks": {
+    "top_level_battle_route": true,
+    "has_live_badge": true,
+    "badge_claims_live": true,
+    "default_lineage_is_collapsed": true,
+    "scorecard_visible_text": true,
+    "descriptive_names_visible": true,
+    "old_ambiguous_names_absent": true,
+    "forbidden_text_absent": true,
+    "pixi_canvas_visible": true,
+    "agent_tabs_non_overlapping": true,
+    "agent_tabs_no_text_overflow": true,
+    "agent_tabs_are_two_rows": true,
+    "timeline_not_stretched_by_side_pane": true,
+    "app_height_bound_to_viewport": true,
+    "right_pane_scrolls_internally": true
+  },
+  "old_ambiguous_hits": [],
+  "forbidden_hits": [],
+  "mocked": false,
+  "live": true,
+  "viewport": {
+    "width": 1440,
+    "height": 1000
+  },
+  "console_messages": [
+    {
+      "type": "warning",
+      "text": "PixiJS Warning:  [Assets] Asset id battle-race-atlas was not found in the Cache"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x30a40014c200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x30a40014c200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x30a40014c200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x30a40014c200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)"
+    }
+  ],
+  "page_errors": [],
+  "failed_requests": [],
+  "screenshot": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/pre-human-readiness-audit-20260721T170004Z/battle-default-pre-human-readiness-after-layout-fix.png",
+  "status": "PASS",
+  "failed": []
+}

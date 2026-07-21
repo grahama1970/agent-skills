@@ -1,0 +1,69 @@
+{
+  "schema": "battle.pre_human_readiness_audit.v1",
+  "timestamp_utc": "2026-07-21T17:00:04Z",
+  "status": "PASS_LOCAL_PRE_HUMAN_CHECKS_PENDING_ACCEPTANCE",
+  "mocked": false,
+  "live": true,
+  "route_under_review": "http://127.0.0.1:3003/#battle",
+  "source_screenshot": "skills/battle/local/fresh-ux-proof-20260721T0130Z/battle-expanded-lineage.png",
+  "human_readiness": "pending_human_acceptance",
+  "latest_human_signal": "Battle is not ready to be viewed/verified by the human.",
+  "final_browser_proof": "skills/battle/local/pre-human-readiness-audit-20260721T170004Z/fresh-browser-proof-after-layout-fix.json",
+  "final_screenshot": "skills/battle/local/pre-human-readiness-audit-20260721T170004Z/battle-default-pre-human-readiness-after-layout-fix.png",
+  "repairs_applied_in_this_pass": [
+    {
+      "id": "goal_status_downgraded_after_human_rejection",
+      "path": "skills/battle/GOAL_ADAPTIVE_LINEAGE.md",
+      "result": "GOAL STATUS changed from ACHIEVED_WITH_RECEIPT to DISPUTED_PENDING_ACCEPTANCE"
+    },
+    {
+      "id": "handoff_status_downgraded_after_human_rejection",
+      "path": "skills/battle/local/HANDOFF.md",
+      "result": "handoff now warns not to ask for human verification before a clean pre-human readiness audit"
+    },
+    {
+      "id": "agent_detail_tabs_two_row_wrap",
+      "path": "skills/battle/spectator/src/AgentDetailPane.tsx",
+      "result": "six cramped right-pane tabs changed from one six-column row to a two-row three-column grid"
+    },
+    {
+      "id": "receipt_timeline_height_bound_to_lane_content",
+      "path": "skills/battle/spectator/src/RaceViewport.tsx",
+      "result": "receipt/Pixi race card no longer stretches to the right detail pane height"
+    },
+    {
+      "id": "battle_app_height_bound_to_viewport",
+      "path": "skills/battle/spectator/src/battle-race.css",
+      "result": "Battle app shell height is viewport-bound so side panes scroll internally instead of elongating the arena"
+    }
+  ],
+  "previously_failed": [
+    {
+      "id": "right_detail_tabs_cramped_in_prior_screenshot",
+      "evidence": "skills/battle/local/fresh-ux-proof-20260721T0130Z/battle-expanded-lineage.png",
+      "status_after_patch": "repaired_by_final_browser_proof"
+    },
+    {
+      "id": "timeline_large_empty_region_in_prior_screenshot",
+      "evidence": "skills/battle/local/fresh-ux-proof-20260721T0130Z/battle-expanded-lineage.png",
+      "status_after_patch": "repaired_by_final_browser_proof"
+    },
+    {
+      "id": "expanded_lineage_panel_density_in_prior_screenshot",
+      "evidence": "skills/battle/local/fresh-ux-proof-20260721T0130Z/battle-expanded-lineage.png",
+      "status_after_patch": "default_route_now_collapses_lineage_for_initial_human_view"
+    }
+  ],
+  "failed": [],
+  "local_checks": [
+    "targeted Vitest: 3 files / 31 tests passed",
+    "TypeScript: node node_modules/typescript/bin/tsc --noEmit -p tsconfig.json passed",
+    "static build: node scripts/build-static.mjs passed",
+    "fresh browser proof: status PASS, failed []",
+    "screenshot inspection: no tab collision, no large blank race well, scorecard visible, Pixi sprites visible, lineage collapsed by default"
+  ],
+  "remaining_acceptance_gate": [
+    "human or external reviewer must accept the visible UX before goal closure is restored"
+  ],
+  "not_a_closure_receipt": true
+}
