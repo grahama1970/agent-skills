@@ -512,6 +512,42 @@ esac
     assert meta["raw_response_advisory"] is True
 
 
+def test_webgpt_submit_classifies_conversation_full_without_timeout(
+    tmp_path: Path,
+) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    fake_run = (
+        FAKE_RUN_PREAMBLE
+        + """  chatgpt)
+    echo 'BLOCKED_WEBGPT_CONVERSATION_FULL: You have reached the maximum length for this conversation, but you can keep talking by starting a new chat.' >&2
+    exit 1
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+    )
+
+    started = time.monotonic()
+    proc = run_submit(tmp_path, archive, fake_run, extra_args=["--timeout", "930"])
+    elapsed = time.monotonic() - started
+
+    assert proc.returncode == 1
+    assert elapsed < 10
+    assert "BLOCKED_WEBGPT_CONVERSATION_FULL" in proc.stderr
+    meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["status"] == "failed"
+    assert meta["failure"] == "BLOCKED_WEBGPT_CONVERSATION_FULL"
+    assert meta["blocker"] == "BLOCKED_WEBGPT_CONVERSATION_FULL"
+    assert meta["recommended_action"] == "rebind_handler_project_to_fresh_chatgpt_conversation"
+    assert meta["proof_status"] == "not_submitted"
+    assert "fresh ChatGPT conversation" in meta["agent_action"]
+    assert meta["exit_code"] == 1
+
+
 def test_webgpt_submit_missing_sentinel_writes_advisory_raw_meta(tmp_path: Path) -> None:
     archive = tmp_path / "five.zip"
     make_zip(archive, 5)
@@ -589,6 +625,63 @@ async function cdpEvaluate(_expr) {{
     if (Date.now() - started > 5000) {{
       console.error('waited too long');
       process.exit(4);
+    }}
+  }}
+}})();
+""",
+        encoding="utf-8",
+    )
+
+    proc = subprocess.run(
+        ["node", str(node_script)],
+        cwd=tmp_path,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stderr
+
+
+def test_chatgpt_client_conversation_full_fails_fast(tmp_path: Path) -> None:
+    node_script = tmp_path / "conversation-full.js"
+    client_path = REPO_ROOT / "skills/surf/vendor/surf-cli/native/chatgpt-client.cjs"
+    node_script.write_text(
+        f"""
+const client = require({json.dumps(str(client_path))});
+const started = Date.now();
+async function cdpEvaluate(_expr) {{
+  return {{result: {{value: {{
+    text: '',
+    stopVisible: false,
+    finished: false,
+    source: 'awaiting-assistant-turn',
+    pageTextContainsSentinel: false,
+    conversationFull: true,
+    conversationFullText: 'You have reached the maximum length for this conversation, but you can keep talking by starting a new chat.',
+    documentHidden: false,
+    visibilityState: 'visible',
+    baselineAssistantCount: 0,
+    newAssistantTurnCount: 0,
+  }}}}}};
+}}
+(async () => {{
+  try {{
+    await client.waitForResponse(cdpEvaluate, 30000, {{
+      sentinel: '<<<WEBGPT_DONE:test>>>',
+      stablePolls: 3,
+    }});
+    console.error('expected conversation full block');
+    process.exit(1);
+  }} catch (err) {{
+    if (!String(err.message).includes('BLOCKED_WEBGPT_CONVERSATION_FULL')) {{
+      console.error('unexpected error', err.message);
+      process.exit(2);
+    }}
+    if (Date.now() - started > 5000) {{
+      console.error('waited too long');
+      process.exit(3);
     }}
   }}
 }})();

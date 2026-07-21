@@ -30,6 +30,7 @@ HANDLER_SUBMIT_COMMANDS = {
 }
 ATTACH_FILE_HANDLERS = {"webgpt", "webkimi", "webgemini"}
 RECOVERY_PACKET_SCHEMA = "ask.browser_failure_recovery_packet.v1"
+WEBGPT_CONVERSATION_FULL_BLOCKER = "BLOCKED_WEBGPT_CONVERSATION_FULL"
 
 
 def main() -> int:
@@ -212,7 +213,12 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             json.dumps(recovery_packet, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
+        if recovery_packet.get("failure_code") == WEBGPT_CONVERSATION_FULL_BLOCKER:
+            status = "BLOCKED"
 
+    verdict = _extract_verdict(response_text)
+    if verdict is None and recovery_packet is not None:
+        verdict = str(recovery_packet.get("failure_code") or "") or None
     receipt = {
         "schema": "ask.tau_dag_handler_receipt.v1",
         "created_at": _now(),
@@ -237,7 +243,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
         "prior_nodes": list(args.prior_node),
         "prior_handler_receipts": prior_receipts,
         "requires_verdict": _requires_verdict(request_text, prior_receipts),
-        "verdict": _extract_verdict(response_text),
+        "verdict": verdict,
         "failure": failure or None,
         "failure_code": recovery_packet.get("failure_code") if recovery_packet else None,
         "recovery_packet": recovery_packet,
@@ -263,6 +269,8 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             "handler": handler,
             "path": str(receipt_path),
             "status": status,
+            "verdict": verdict,
+            "failure_code": recovery_packet.get("failure_code") if recovery_packet else None,
         },
         {
             "kind": "normalized_handler_receipt",
@@ -343,7 +351,9 @@ def _browser_failure_recovery_packet(
     )
     bundle_paths = _local_readable_bundle_paths(prompt_text, request_payload)
     can_attach = handler in ATTACH_FILE_HANDLERS
-    auto_retry_allowed = bool(bundle_paths) and can_attach
+    auto_retry_allowed = (
+        failure_code != WEBGPT_CONVERSATION_FULL_BLOCKER and bool(bundle_paths) and can_attach
+    )
     next_command = _recovery_next_command(
         args,
         request_payload=request_payload,
@@ -379,7 +389,11 @@ def _browser_failure_recovery_packet(
         "auto_retry_allowed": auto_retry_allowed,
         "auto_retry_blocked_reason": None
         if auto_retry_allowed
-        else _auto_retry_blocked_reason(bundle_paths=bundle_paths, can_attach=can_attach),
+        else _auto_retry_blocked_reason(
+            failure_code=failure_code,
+            bundle_paths=bundle_paths,
+            can_attach=can_attach,
+        ),
         "next_command": next_command,
         "fallback_instruction": _fallback_instruction(
             failure_code,
@@ -409,6 +423,12 @@ def _classify_browser_failure(
             json.dumps(commands[-1] if commands else {}, sort_keys=True, default=str),
         ]
     ).lower()
+    if (
+        str(submit_meta.get("failure") or "") == WEBGPT_CONVERSATION_FULL_BLOCKER
+        or str(submit_meta.get("blocker") or "") == WEBGPT_CONVERSATION_FULL_BLOCKER
+        or WEBGPT_CONVERSATION_FULL_BLOCKER.lower() in haystack
+    ):
+        return WEBGPT_CONVERSATION_FULL_BLOCKER
     if _looks_repo_access_blocked(haystack):
         return "repo_access_blocked"
     if _looks_stale_raw_capture(haystack, submit_meta):
@@ -555,6 +575,29 @@ def _recovery_next_command(
     meta_path: Path,
     prompt_path: Path,
 ) -> list[str]:
+    if failure_code == WEBGPT_CONVERSATION_FULL_BLOCKER:
+        command = [
+            str(args.surf_run),
+            HANDLER_SUBMIT_COMMANDS[str(args.handler)],
+            "--input",
+            str(prompt_path),
+            "--output",
+            str(response_path.with_name("response.fresh-conversation.md")),
+            "--raw-output",
+            str(raw_path.with_name("response.fresh-conversation.raw.md")),
+            "--meta-output",
+            str(meta_path.with_name("response.fresh-conversation.meta.json")),
+            "--timeout",
+            str(args.timeout),
+            "--stable-polls",
+            str(args.stable_polls),
+            "--create-tab",
+        ]
+        if args.browser_oracle_project:
+            command.extend(["--project", str(args.browser_oracle_project)])
+        if args.no_activate:
+            command.append("--no-activate")
+        return command
     if bundle_path and can_attach:
         retry_prompt = prompt_path.with_name("retry-with-local-bundle.md")
         retry_prompt.write_text(
@@ -629,6 +672,7 @@ def _tab_id_from_commands(args: argparse.Namespace) -> str:
 
 def _recovery_reason(failure_code: str) -> str:
     return {
+        WEBGPT_CONVERSATION_FULL_BLOCKER: "The controlled ChatGPT conversation is at its maximum length and cannot accept the WebGPT round.",
         "repo_access_blocked": "The browser reviewer appears unable to read the referenced repository or local path.",
         "missing_sentinel": "The browser transport did not produce the expected completion sentinel.",
         "prompt_too_large_or_stalled": "The browser submit appears to have timed out, stalled, or exceeded prompt size limits.",
@@ -636,7 +680,11 @@ def _recovery_reason(failure_code: str) -> str:
     }[failure_code]
 
 
-def _auto_retry_blocked_reason(*, bundle_paths: list[str], can_attach: bool) -> str:
+def _auto_retry_blocked_reason(
+    *, failure_code: str, bundle_paths: list[str], can_attach: bool
+) -> str:
+    if failure_code == WEBGPT_CONVERSATION_FULL_BLOCKER:
+        return "conversation_full_requires_fresh_chatgpt_conversation"
     if not bundle_paths:
         return "missing_local_readable_bundle"
     if not can_attach:
@@ -645,6 +693,11 @@ def _auto_retry_blocked_reason(*, bundle_paths: list[str], can_attach: bool) -> 
 
 
 def _fallback_instruction(failure_code: str, *, has_bundle: bool, can_attach: bool, handler: str) -> str:
+    if failure_code == WEBGPT_CONVERSATION_FULL_BLOCKER:
+        return (
+            "Do not wait or retry in the same conversation. Rebind browser-oracle to a fresh ChatGPT "
+            "conversation, then rerun the Tau DAG node."
+        )
     if has_bundle and not can_attach:
         return (
             f"Do not auto-retry {handler}: the current Surf transport does not expose --attach-file for this handler. "

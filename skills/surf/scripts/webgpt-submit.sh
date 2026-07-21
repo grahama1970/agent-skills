@@ -334,6 +334,10 @@ elif failure == "roundtrip_preflight_failed":
     proof_status = "not_submitted"
     diagnosis = "The small sentinel roundtrip failed, so Surf blocked the main prompt before submission."
     action = "Inspect roundtrip_preflight_output_dir, repair tab visibility/state, or use a foreground/fresh reviewer tab before retrying."
+elif failure == "BLOCKED_WEBGPT_CONVERSATION_FULL":
+    proof_status = "not_submitted"
+    diagnosis = "The controlled ChatGPT conversation is at its maximum length and cannot accept this WebGPT round."
+    action = "Rebind the browser-oracle/WebGPT handler project to a fresh ChatGPT conversation, then rerun the Tau DAG node."
 elif failure == "stale_cdp_on_explicit_tab":
     proof_status = "not_submitted"
     diagnosis = "Surf could not attach CDP to the explicitly requested tab in no-activate mode."
@@ -1180,6 +1184,7 @@ extract_fallback_raw = None
 extract_fallback_meta = None
 tab_id = None
 chatgpt_ready_error = None
+conversation_full_blocked = "BLOCKED_WEBGPT_CONVERSATION_FULL" in stderr_text
 if "ChatGPT prompt composer is not empty before submit" in stderr_text:
     chatgpt_ready_error = "composer_not_empty"
 elif "ChatGPT page is in a stopped-generation state before submit" in stderr_text:
@@ -1209,7 +1214,9 @@ for line in reversed(stderr_text.splitlines()):
         extract_fallback_meta = line.split(":", 1)[1].strip()
 pathlib.Path(meta).write_text(json.dumps({
     "status": "failed",
-    "failure": "submit_failed",
+    "failure": "BLOCKED_WEBGPT_CONVERSATION_FULL" if conversation_full_blocked else "submit_failed",
+    "blocker": "BLOCKED_WEBGPT_CONVERSATION_FULL" if conversation_full_blocked else None,
+    "recommended_action": "rebind_handler_project_to_fresh_chatgpt_conversation" if conversation_full_blocked else None,
     "chatgpt_ready_error": chatgpt_ready_error,
     "exit_code": int(status),
     "input": inp,

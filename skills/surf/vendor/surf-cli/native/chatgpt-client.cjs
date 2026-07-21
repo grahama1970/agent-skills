@@ -271,6 +271,11 @@ const assistantSnapshotExpression = (sentinel, baselineAssistantCount = 0) => {
         }
       }
     }
+    const pageText = document.body?.innerText || '';
+    const conversationFull = /you have reached the maximum length for this conversation|maximum length for this conversation[\s\S]{0,160}starting a new chat/i.test(pageText);
+    const conversationFullText = conversationFull
+      ? ((pageText.match(/.{0,120}maximum length for this conversation.{0,220}/i) || [])[0] || 'You have reached the maximum length for this conversation.')
+      : null;
     const documentHidden = document.hidden === true;
     const visibilityState = document.visibilityState || null;
     const documentHasFocus = typeof document.hasFocus === 'function' ? document.hasFocus() : null;
@@ -281,6 +286,8 @@ const assistantSnapshotExpression = (sentinel, baselineAssistantCount = 0) => {
         finished: false,
         source: 'awaiting-assistant-turn',
         pageTextContainsSentinel: false,
+        conversationFull,
+        conversationFullText,
         documentHidden,
         visibilityState,
         documentHasFocus,
@@ -324,6 +331,8 @@ const assistantSnapshotExpression = (sentinel, baselineAssistantCount = 0) => {
       source,
       pageTextContainsSentinel,
       sentinelMatch,
+      conversationFull,
+      conversationFullText,
       documentHidden,
       visibilityState,
       documentHasFocus,
@@ -1140,6 +1149,16 @@ async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
     if (!snapshot) {
       await delay(400);
       continue;
+    }
+    if (snapshot.conversationFull === true) {
+      const detail = snapshot.conversationFullText
+        ? `: ${String(snapshot.conversationFullText).replace(/\s+/g, ' ').trim()}`
+        : "";
+      const error = new Error(`BLOCKED_WEBGPT_CONVERSATION_FULL${detail}`);
+      error.code = "BLOCKED_WEBGPT_CONVERSATION_FULL";
+      error.conversationFull = true;
+      error.partialResponse = null;
+      throw error;
     }
     if (snapshot.documentHidden === true) {
       hiddenPolls++;

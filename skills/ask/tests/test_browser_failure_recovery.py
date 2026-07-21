@@ -125,6 +125,30 @@ def test_missing_sentinel_classification_uses_submit_metadata(tmp_path: Path) ->
     assert "completion sentinel" in packet["reason"]
 
 
+def test_webgpt_conversation_full_blocks_same_conversation_retry(tmp_path: Path) -> None:
+    packet = _packet(
+        tmp_path,
+        handler="webgpt",
+        failure=(
+            "BLOCKED_WEBGPT_CONVERSATION_FULL: You have reached the maximum length "
+            "for this conversation, but you can keep talking by starting a new chat."
+        ),
+        prompt_text="Ask webgpt to review this Tau DAG bundle.",
+        submit_meta={
+            "failure": "BLOCKED_WEBGPT_CONVERSATION_FULL",
+            "blocker": "BLOCKED_WEBGPT_CONVERSATION_FULL",
+            "recommended_action": "rebind_handler_project_to_fresh_chatgpt_conversation",
+        },
+    )
+
+    assert packet["failure_code"] == "BLOCKED_WEBGPT_CONVERSATION_FULL"
+    assert packet["auto_retry_allowed"] is False
+    assert packet["auto_retry_blocked_reason"] == "conversation_full_requires_fresh_chatgpt_conversation"
+    assert "--create-tab" in packet["next_command"]
+    assert "--project" in packet["next_command"]
+    assert "fresh ChatGPT conversation" in packet["fallback_instruction"]
+
+
 def test_stale_raw_capture_takes_precedence_over_missing_sentinel(tmp_path: Path) -> None:
     packet = _packet(
         tmp_path,
