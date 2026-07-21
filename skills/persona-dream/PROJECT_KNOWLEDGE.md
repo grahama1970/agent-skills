@@ -5,6 +5,36 @@
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R LIVE STRICT-INFERENCE BALANCED SLICE + UX LAB
+  HOUSING): UX Lab is a light multi-project wrapper in `agent-skills@main`, not
+  the old pi-mono app. The live service `ux-lab-vite.service` was corrected
+  locally to run the Python hub from
+  `/home/graham/workspace/experiments/agent-skills-main/skills/ux-lab`, and the
+  Persona Dream card is reachable at
+  `http://127.0.0.1:3002/?project=persona-dream`. CDP marker:
+  `/home/graham/workspace/experiments/agent-skills-main/.codex/ui-verification/latest.json`;
+  screenshot:
+  `/tmp/codex-ui-verification/agent-skills-main/ux-lab-persona-dream-hub/20260721T151457Z.png`.
+  This proves hub/card visibility only; the declared legacy `#dream` route is
+  not an active mounted dream runtime. Registry wording was clarified in commit
+  `ad83c9e6d685dbfea08a14c7294e1c8a5555f5d4`.
+- 2026-07-21 (PCTOM-R LIVE STRICT-INFERENCE BALANCED SLICE): the 90s strict
+  replication blocked at
+  `/tmp/persona-dream-live-tau-strict-inference-timeout90-v17-20260721T1516Z/live_tau_strict_inference_prompt_replication_receipt.v1.json`
+  after one Tau timeout and subsequent scillm `gpt-5.5` cooldown/502 responses.
+  Authenticated scillm health later showed `gpt-5.5` half-open with no active
+  calls, and a minimal Tau-routed recovery probe passed at
+  `/tmp/persona-dream-live-tau-minimal-recovery-probe-20260721T1526Z.json`.
+  The rerun with `--timeout-s 120` passed:
+  `/tmp/persona-dream-live-tau-strict-inference-timeout120-v17-20260721T1527Z/live_tau_strict_inference_prompt_replication_receipt.v1.json`,
+  receipt SHA-256 `sha256:27e7469cea92f3546ae6a2df3377548a3f6b61cf813cc7d02d1e79bcc38e5f0d`.
+  It reports `mocked:false`, `live:true`, 16/16 Tau live calls, 16 non-template
+  distributions, 16 Gate 6 action decisions, 4 planning rows, one episode from
+  each of the four scenario families, 0 blocked cases, and 0 Memory/provider/
+  canonical/identity/source-memory writes. It does not prove planning benefit:
+  `planning_benefit_with_confidence:false`, `oracle_match_transitions` is one
+  `LOSS` and three `UNCHANGED`, and CD-vs-baseline mean planning regret delta is
+  `0.1375`.
 - 2026-07-21 (PCTOM-R TAU PROMPT TIMEOUT DIAGNOSTIC): the full-prompt timeout
   boundary is now narrowed. New command:
   `./skills/persona-dream/run.sh run-live-tau-prompt-timeout-diagnostic`.

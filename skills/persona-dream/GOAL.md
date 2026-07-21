@@ -131,6 +131,32 @@ Evidence: <exact path, count, or command result>
 Next: <one immediate action or stop condition>
 ```
 
+## Current Evidence Snapshot
+
+- UX Lab project housing is reachable at
+  `http://127.0.0.1:3002/?project=persona-dream`. Fresh CDP marker:
+  `/home/graham/workspace/experiments/agent-skills-main/.codex/ui-verification/latest.json`;
+  screenshot:
+  `/tmp/codex-ui-verification/agent-skills-main/ux-lab-persona-dream-hub/20260721T151457Z.png`.
+  This proves the wrapper/card is visible, not that legacy `#dream` runtime is
+  mounted.
+- Live strict-inference PCTOM-R balanced slice:
+  `/tmp/persona-dream-live-tau-strict-inference-timeout120-v17-20260721T1527Z/live_tau_strict_inference_prompt_replication_receipt.v1.json`.
+  Status `PASS_LIVE_TAU_PCTOM_STRICT_INFERENCE_PROMPT_REPLICATION`,
+  receipt SHA-256 `sha256:27e7469cea92f3546ae6a2df3377548a3f6b61cf813cc7d02d1e79bcc38e5f0d`,
+  `mocked:false`, `live:true`, 16/16 Tau calls performed, 16 action decisions,
+  4 planning rows, 4 scenario families represented, 0 blocked cases, and 0
+  Memory/provider/canonical/identity/source-memory writes.
+- The same receipt reports `planning_benefit_with_confidence:false`,
+  `oracle_match_transitions: {"LOSS": 1, "UNCHANGED": 3}`, and
+  `mean_cd_minus_baseline: 0.1375`. This is live balanced-slice plumbing and
+  strict non-template inference evidence; it is not a positive planning-benefit
+  result.
+- Preceding failed boundary:
+  `/tmp/persona-dream-live-tau-strict-inference-timeout90-v17-20260721T1516Z/live_tau_strict_inference_prompt_replication_receipt.v1.json`
+  blocked after a 90s Tau timeout and subsequent scillm `gpt-5.5` cooldown/502
+  responses. The 120s rerun above is the current successful live slice.
+
 ## README Reconciliation For Current Agents
 
 The README is a broad research narrative plus historical media/cognitive-loop
