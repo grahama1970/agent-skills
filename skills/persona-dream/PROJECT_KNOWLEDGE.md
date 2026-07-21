@@ -1,10 +1,51 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R unsafe-offer no-exposure diagnostic) by agent
+**Last updated:** 2026-07-21 (PCTOM-R unsafe-offer visible-pressure suppression) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R UNSAFE-OFFER VISIBLE-PRESSURE SUPPRESSION): the
+  pre-outcome cooperation rule now accepts a visible cooperation-pressure flag
+  from the episode access metadata and falls back from `OFFER_COOPERATION` to
+  `ASK_CLARIFYING_QUESTION` when CD predicts `KAI_OFFERS_COOPERATION` under
+  that visible pressure. It uses no outcome/oracle fields. Command:
+  `./skills/persona-dream/run.sh run-live-tau-cooperation-unsafe-offer-pressure-slice`
+  with `--pressure-mode lure` and reused live Tau roots from
+  `/tmp/persona-dream-live-tau-cooperation-unsafe-offer-pressure-lure-slice-20260721T234308Z`.
+  Final receipt:
+  `/tmp/persona-dream-live-tau-cooperation-unsafe-offer-pressure-lure-visible-rule-20260721T235504Z/live_tau_cooperation_unsafe_offer_pressure_lure_visible_rule_receipt.v1.json`.
+  Status `PASS_LIVE_TAU_PCTOM_COOPERATION_UNSAFE_OFFER_PRESSURE_SLICE`;
+  slice conclusion `UNSAFE_OFFER_PRESSURE_SLICE_SUPPRESSION_EXERCISED`;
+  receipt field SHA-256
+  `sha256:6bd8774995b7ddadb84bcddb3753149e8c315471e6ffed9bfd21522b1ee8684d`;
+  file SHA-256
+  `9741eeb4ff4a8dbafd5ad6a2f8e21e35127b49d447aabdc27603393db52553a8`;
+  rows SHA-256
+  `sha256:f4764d9d9bab0b6548e009fa52d062fe84a4c04b869c2dc8d7b8c5eb11ee46c4`;
+  summary SHA-256
+  `sha256:7ad6eac64f781bff6ff3c2f3928abbb82ca9af8b07cd07df936fcc869af0c278`.
+  Observed: four lure rows, four unsafe-offer-pressure rows, four visible
+  `OFFER_COOPERATION` affordance rows, four CD unsafe `OFFER_COOPERATION`
+  candidates, four unsafe-offer suppression rows, and four rule action changes
+  to `ASK_CLARIFYING_QUESTION`. The replay reexecuted zero Tau calls, consumed
+  16 live Tau calls from the source artifacts, made zero Memory/provider/
+  canonical/identity/source-memory writes, used no LLM judge, and required no
+  human content judgment. This proves suppression on the four-row lure slice,
+  not a replacement feature split, not broad held-out planning benefit, not
+  confidence-bounded CD planning benefit, not semantic dream quality, not paid
+  provider execution, and not complete Phase 01-16 runtime execution. Next
+  work also replayed the broader exposure/contrast roots:
+  `/tmp/persona-dream-live-tau-cooperation-exposure-contrast-visible-rule-20260721T235747Z/live_tau_cooperation_exposure_contrast_visible_rule_receipt.v1.json`.
+  That replay kept class separation stable: eight rows, four keep-cooperation
+  rows, four avoid/unsafe rows, four CD offer candidates on keep rows, zero CD
+  offer candidates on avoid/unsafe rows, zero action changes, zero new Tau
+  calls, and zero unsupported writes. The broader replay receipt field SHA-256
+  is
+  `sha256:29186622bbea0f5acea1d53c361f31ce1f0650353284495b62f290074a194340`.
+  Next work should run a sealed held-out cooperation slice or larger
+  perturbation/fault replay that includes visible-pressure rows before any
+  feature-split or planning claim is accepted.
 - 2026-07-21 (PCTOM-R UNSAFE-OFFER NO-EXPOSURE DIAGNOSTIC): a deterministic
   post-run audit now records the live unsafe-offer-pressure result as a
   no-exposure/null boundary and blocks suppression/feature-split claims.

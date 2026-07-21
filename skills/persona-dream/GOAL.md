@@ -133,6 +133,52 @@ Next: <one immediate action or stop condition>
 
 ## Current Evidence Snapshot
 
+- PCTOM-R live Tau exposure/contrast visible-pressure rule replay:
+  `/tmp/persona-dream-live-tau-cooperation-exposure-contrast-visible-rule-20260721T235747Z/live_tau_cooperation_exposure_contrast_visible_rule_receipt.v1.json`.
+  Status `PASS_LIVE_TAU_PCTOM_COOPERATION_EXPOSURE_CONTRAST_SLICE`,
+  slice conclusion `EXPOSURE_CONTRAST_SLICE_PARTIAL_CD_OFFER_EXPOSURE`,
+  receipt field SHA-256
+  `sha256:29186622bbea0f5acea1d53c361f31ce1f0650353284495b62f290074a194340`,
+  rows SHA-256
+  `sha256:296ba3e151c1a38fc31b2a48a19159edd7faceefe8dd2a6bae397b6fe83f36b4`,
+  and summary SHA-256
+  `sha256:6ca2e0a3c72a6675f096ebbd8f567cefc84e84965bbb908898a5b90232312702`.
+  Counts: eight exposure/contrast rows, four keep-cooperation rows, four
+  avoid/unsafe rows, four CD offer candidates on keep rows, zero CD offer
+  candidates on avoid/unsafe rows, zero rule action changes, 32 live Tau calls
+  in the consumed source artifacts, zero Tau calls reexecuted by this replay,
+  and zero Memory/provider/canonical/identity/source-memory writes. This proves
+  the visible-pressure fallback did not regress the broader live
+  exposure/contrast replay. It does not prove broad held-out planning benefit,
+  confidence-bounded CD planning benefit, semantic dream quality, paid provider
+  execution, or complete live Phase 01-16 runtime execution.
+- PCTOM-R live Tau unsafe-offer lure visible-pressure rule replay:
+  `/tmp/persona-dream-live-tau-cooperation-unsafe-offer-pressure-lure-visible-rule-20260721T235504Z/live_tau_cooperation_unsafe_offer_pressure_lure_visible_rule_receipt.v1.json`.
+  Status `PASS_LIVE_TAU_PCTOM_COOPERATION_UNSAFE_OFFER_PRESSURE_SLICE`,
+  slice conclusion `UNSAFE_OFFER_PRESSURE_SLICE_SUPPRESSION_EXERCISED`,
+  receipt field SHA-256
+  `sha256:6bd8774995b7ddadb84bcddb3753149e8c315471e6ffed9bfd21522b1ee8684d`,
+  file SHA-256
+  `9741eeb4ff4a8dbafd5ad6a2f8e21e35127b49d447aabdc27603393db52553a8`,
+  rows SHA-256
+  `sha256:f4764d9d9bab0b6548e009fa52d062fe84a4c04b869c2dc8d7b8c5eb11ee46c4`,
+  and summary SHA-256
+  `sha256:7ad6eac64f781bff6ff3c2f3928abbb82ca9af8b07cd07df936fcc869af0c278`.
+  Counts: four lure rows, four unsafe-offer-pressure rows, four visible
+  `OFFER_COOPERATION` affordance rows, four CD unsafe `OFFER_COOPERATION`
+  candidates, four unsafe-offer suppression rows, four rule action changes
+  from `OFFER_COOPERATION` to `ASK_CLARIFYING_QUESTION`, 16 live Tau calls in
+  the consumed source artifacts, zero Tau calls reexecuted by this replay, and
+  zero Memory/provider/canonical/identity/source-memory writes. The accepted
+  pre-outcome rule inputs on every suppressed CD row are the original selected
+  action, selected counterpart action/probability, threshold, visible
+  cooperation-pressure flag, and `uses_outcome_or_oracle:false`. This proves
+  that the stronger non-oracle lure run can expose unsafe CD offers and that a
+  visible-pressure fallback can suppress them without outcome/oracle rule
+  inputs on this four-row slice. It does not prove a replacement cooperation
+  feature split is valid, broad held-out planning benefit, confidence-bounded
+  CD planning benefit, semantic dream quality, paid provider execution, or
+  complete live Phase 01-16 runtime execution.
 - PCTOM-R live Tau unsafe-offer lure fail-closed gate:
   `/tmp/persona-dream-live-tau-cooperation-unsafe-offer-pressure-lure-failclosed-20260721T234715Z/live_tau_cooperation_unsafe_offer_pressure_lure_failclosed_receipt.v1.json`.
   Status `BLOCKED_LIVE_TAU_PCTOM_COOPERATION_UNSAFE_OFFER_PRESSURE_SLICE`,

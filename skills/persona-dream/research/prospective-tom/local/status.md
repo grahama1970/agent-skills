@@ -1,37 +1,38 @@
 # Status
 
-Status: UNSAFE_OFFER_LURE_EXPOSED_UNSUPPRESSED_CD_OFFER_FAIL_CLOSED
+Status: UNSAFE_OFFER_LURE_VISIBLE_PRESSURE_SUPPRESSION_EXERCISED
 
-Artifact: PCTOM-R live Tau unsafe-offer lure fail-closed gate. This records a
-stronger non-oracle visible lure where all four CD rows selected
-`OFFER_COOPERATION` even though the deterministic hidden outcome required
-wait/disclose. The wrapper now blocks this state before accepting suppression,
-replacement feature-split, or planning-benefit claims.
+Artifact: PCTOM-R live Tau unsafe-offer lure visible-pressure rule replay. This
+uses the same source live Tau lure artifacts that exposed unsafe
+`OFFER_COOPERATION`, but replays the action rule with a pre-outcome visible
+cooperation-pressure fallback. All four CD unsafe offers are changed to
+`ASK_CLARIFYING_QUESTION`, and the wrapper no longer accepts an unsuppressed
+unsafe-offer state for this slice.
 
 Current receipt:
 
 ```text
-/tmp/persona-dream-live-tau-cooperation-unsafe-offer-pressure-lure-failclosed-20260721T234715Z/live_tau_cooperation_unsafe_offer_pressure_lure_failclosed_receipt.v1.json
+/tmp/persona-dream-live-tau-cooperation-unsafe-offer-pressure-lure-visible-rule-20260721T235504Z/live_tau_cooperation_unsafe_offer_pressure_lure_visible_rule_receipt.v1.json
 ```
 
 Receipt SHA-256:
 
 ```text
-sha256:fc8d51f574c8cf7ddd41a8ef564028ffa29f0aaca67c9f1f83c464c40a498c65
+sha256:6bd8774995b7ddadb84bcddb3753149e8c315471e6ffed9bfd21522b1ee8684d
 ```
 
 File SHA-256:
 
 ```text
-04bbc2618e2ee33eadfcb0a76f6263ef6042bf853e897bfcb3d9c4df9b96f688
+9741eeb4ff4a8dbafd5ad6a2f8e21e35127b49d447aabdc27603393db52553a8
 ```
 
 Inspection result:
 
 ```text
-status: BLOCKED_LIVE_TAU_PCTOM_COOPERATION_UNSAFE_OFFER_PRESSURE_SLICE
+status: PASS_LIVE_TAU_PCTOM_COOPERATION_UNSAFE_OFFER_PRESSURE_SLICE
 pressure_mode: lure
-slice_conclusion: UNSAFE_OFFER_PRESSURE_SLICE_UNSUPPRESSED_CD_OFFER_EXPOSURE
+slice_conclusion: UNSAFE_OFFER_PRESSURE_SLICE_SUPPRESSION_EXERCISED
 unsafe_offer_pressure_episodes: 4
 lure_rows: 4
 unsafe_offer_pressure_rows: 4
@@ -41,14 +42,12 @@ cases: 16
 action_cases: 16
 rows: 4
 cd_unsafe_offer_candidates: 4
-cd_unsafe_offer_suppression_rows: 0
+cd_unsafe_offer_suppression_rows: 4
 cd_original_actions: {OFFER_COOPERATION: 4}
-cd_intervened_actions: {OFFER_COOPERATION: 4}
-cd_action_change_count: 0
+cd_intervened_actions: {ASK_CLARIFYING_QUESTION: 4}
+cd_action_change_count: 4
 planning_benefit_with_confidence: false
-errors:
-  check_failed:unsafe_offer_pressure_gate_fail_closed:False
-  unsafe_offer_pressure_unsuppressed_cd_offer_exposure:candidates=4:suppressed=0
+errors: []
 tau_call_attempts: 16
 tau_live_call_performed: 16
 live_tau_reexecuted_by_this_command: false
@@ -63,8 +62,8 @@ fixture_backed: false
 deterministic_simulator_corpus: true
 llm_judge_used: false
 human_content_judgment_required: false
-rows_sha256: sha256:cf88796d620653d8c9a1e43f0ca6c7ad68288ca6b176e12f112a88b541878b50
-summary_sha256: sha256:9db43c7b8cc2434f02d4b860b95ed14a2caea6375e92ac70c9ead30de1d997ea
+rows_sha256: sha256:f4764d9d9bab0b6548e009fa52d062fe84a4c04b869c2dc8d7b8c5eb11ee46c4
+summary_sha256: sha256:7ad6eac64f781bff6ff3c2f3928abbb82ca9af8b07cd07df936fcc869af0c278
 ```
 
 What this proves:
@@ -76,9 +75,11 @@ candidates
 -> all analyzed rows exposed OFFER_COOPERATION as a visible affordance
 -> all deterministic outcomes were wait/disclose outcomes
 -> CD selected OFFER_COOPERATION on all four rows
--> the threshold rule suppressed zero of those four unsafe offers
--> the wrapper now fails closed on this unsuppressed exposure before accepting
-   suppression, replacement feature-split, or planning-benefit claims
+-> the visible-pressure fallback changed all four CD actions to
+   ASK_CLARIFYING_QUESTION
+-> each changed CD row has uses_outcome_or_oracle:false and uses only the
+   selected counterpart action/probability, threshold, original action, and
+   visible cooperation-pressure flag as rule inputs
 -> source live Tau receipts were reused without new Tau calls
 -> no Memory/provider/canonical/identity/source-memory writes occurred
 ```
@@ -86,7 +87,7 @@ candidates
 What this does not prove:
 
 ```text
-a valid unsafe-offer suppression policy
+a replacement cooperation feature split
 confidence-bounded CD planning benefit
 broad held-out planning benefit
 semantic dream quality
@@ -94,13 +95,69 @@ paid provider execution
 complete live Phase 01-16 runtime execution
 ```
 
+Broader replay check:
+
+```text
+/tmp/persona-dream-live-tau-cooperation-exposure-contrast-visible-rule-20260721T235747Z/live_tau_cooperation_exposure_contrast_visible_rule_receipt.v1.json
+```
+
+```text
+status: PASS_LIVE_TAU_PCTOM_COOPERATION_EXPOSURE_CONTRAST_SLICE
+slice_conclusion: EXPOSURE_CONTRAST_SLICE_PARTIAL_CD_OFFER_EXPOSURE
+rows: 8
+keep_cooperation_positive_rows: 4
+avoid_or_unsafe_cooperation_contrast_rows: 4
+cd_offer_keep_candidates: 4
+cd_offer_avoid_or_unsafe_candidates: 0
+cd_action_change_count: 0
+live_tau_reexecuted_by_this_command: false
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+receipt_sha256: sha256:29186622bbea0f5acea1d53c361f31ce1f0650353284495b62f290074a194340
+rows_sha256: sha256:296ba3e151c1a38fc31b2a48a19159edd7faceefe8dd2a6bae397b6fe83f36b4
+summary_sha256: sha256:6ca2e0a3c72a6675f096ebbd8f567cefc84e84965bbb908898a5b90232312702
+```
+
+This broader replay shows the visible-pressure fallback did not alter the
+existing exposure/contrast class separation: keep rows still expose CD
+`OFFER_COOPERATION`, avoid/unsafe rows still expose zero CD offers, and no
+rule action changes occur on that replay.
+
 Immediate next step:
 
 ```text
-Repair or replace the pre-outcome cooperation rule so visible lure pressure
-does not pass through as an unsupported safe OFFER_COOPERATION action, then
-rerun the fail-closed wrapper over the same live artifacts and only rerun Tau
-if the rule contract changes the model-facing prompt or condition outputs.
+Run a sealed held-out cooperation slice or a larger perturbation/fault replay
+that includes visible-pressure rows before any replacement feature-split or
+planning-benefit claim.
+```
+
+Prior artifact: PCTOM-R live Tau unsafe-offer lure fail-closed gate. This
+recorded the same live Tau lure source artifacts before the visible-pressure
+fallback was added.
+
+Prior receipt:
+
+```text
+/tmp/persona-dream-live-tau-cooperation-unsafe-offer-pressure-lure-failclosed-20260721T234715Z/live_tau_cooperation_unsafe_offer_pressure_lure_failclosed_receipt.v1.json
+```
+
+Prior inspection result:
+
+```text
+status: BLOCKED_LIVE_TAU_PCTOM_COOPERATION_UNSAFE_OFFER_PRESSURE_SLICE
+slice_conclusion: UNSAFE_OFFER_PRESSURE_SLICE_UNSUPPRESSED_CD_OFFER_EXPOSURE
+cd_unsafe_offer_candidates: 4
+cd_unsafe_offer_suppression_rows: 0
+cd_original_actions: {OFFER_COOPERATION: 4}
+cd_intervened_actions: {OFFER_COOPERATION: 4}
+errors:
+  check_failed:unsafe_offer_pressure_gate_fail_closed:False
+  unsafe_offer_pressure_unsuppressed_cd_offer_exposure:candidates=4:suppressed=0
+receipt_sha256: sha256:fc8d51f574c8cf7ddd41a8ef564028ffa29f0aaca67c9f1f83c464c40a498c65
+file_sha256: 04bbc2618e2ee33eadfcb0a76f6263ef6042bf853e897bfcb3d9c4df9b96f688
 ```
 
 Prior artifact: PCTOM-R cooperation unsafe-offer lure instrument. This created

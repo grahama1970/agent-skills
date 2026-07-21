@@ -21,6 +21,7 @@ DERIVATION_PASS_STATUS = "PASS_LIVE_TAU_PCTOM_BALANCED_THRESHOLD_INTERVENTION"
 BASE_PASS_STATUS = "PASS_LIVE_TAU_PCTOM_SEALED_TEST_REPLICATION"
 POLICY_ID = "pre_outcome_cooperation_threshold_rule.v1"
 DEFAULT_THRESHOLD = 0.5
+VISIBLE_PRESSURE_FALLBACK_ACTION = "ASK_CLARIFYING_QUESTION"
 ZERO_WRITE_KEYS = (
     "memory_write_attempts",
     "provider_call_attempts",
@@ -217,14 +218,26 @@ def _apply_rule(
     selected_from: str | None,
     selected_probability: float | None,
     threshold: float,
+    visible_cooperation_pressure: bool | None = None,
 ) -> tuple[str, dict[str, Any]]:
     rule_inputs = {
         "original_selected_action": original_action,
         "selected_from_predicted_counterpart_action": selected_from,
         "selected_counterpart_action_probability": selected_probability,
         "cooperation_probability_threshold": threshold,
+        "visible_cooperation_pressure": visible_cooperation_pressure,
         "uses_outcome_or_oracle": False,
     }
+    if (
+        original_action == "OFFER_COOPERATION"
+        and selected_from == "KAI_OFFERS_COOPERATION"
+        and visible_cooperation_pressure is True
+    ):
+        return VISIBLE_PRESSURE_FALLBACK_ACTION, {
+            **rule_inputs,
+            "rule": "VISIBLE_COOPERATION_PRESSURE_FALLBACK_TO_ASK",
+            "action_changed": True,
+        }
     if (
         original_action == "OFFER_COOPERATION"
         and selected_from == "KAI_OFFERS_COOPERATION"
@@ -250,6 +263,7 @@ def _build_rows(
     action_index: list[Any],
     threshold: float,
     errors: list[str],
+    episode_pre_outcome_metadata: dict[str, dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     case_by_key = {
         (str(row.get("episode_id")), str(row.get("condition"))): row
@@ -302,11 +316,23 @@ def _build_rows(
                 if isinstance(basis_probability, (int, float)) and not isinstance(basis_probability, bool):
                     selected_probability = float(basis_probability)
             original_action = str(action_index_row.get("selected_action"))
+            pre_outcome_metadata = (
+                episode_pre_outcome_metadata.get(episode_id, {})
+                if isinstance(episode_pre_outcome_metadata, dict)
+                else {}
+            )
+            visible_cooperation_pressure = pre_outcome_metadata.get("visible_cooperation_pressure")
+            if visible_cooperation_pressure is not None and not isinstance(visible_cooperation_pressure, bool):
+                errors.append(
+                    f"visible_cooperation_pressure_not_bool:{episode_id}:{condition}:{visible_cooperation_pressure}"
+                )
+                visible_cooperation_pressure = None
             intervened_action, rule = _apply_rule(
                 original_action=original_action,
                 selected_from=selected_from,
                 selected_probability=selected_probability,
                 threshold=threshold,
+                visible_cooperation_pressure=visible_cooperation_pressure,
             )
             surface = _utility_surface(action_selection, errors, f"{episode_id}_{condition}")
             oracle_action = action_index_row.get("oracle_action")

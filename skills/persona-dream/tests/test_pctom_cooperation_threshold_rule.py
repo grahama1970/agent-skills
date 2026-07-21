@@ -1,0 +1,152 @@
+"""Unit checks for the PCTOM-R pre-outcome cooperation rule.
+
+These tests exercise deterministic helper logic only. They do not call Tau,
+Memory, providers, or judge semantic dream quality.
+"""
+
+from __future__ import annotations
+
+import importlib.util
+import json
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+SCRIPT_PATH = (
+    ROOT
+    / "research"
+    / "prospective-tom"
+    / "scripts"
+    / "run_live_tau_cooperation_threshold_rule.py"
+)
+
+
+spec = importlib.util.spec_from_file_location("run_live_tau_cooperation_threshold_rule", SCRIPT_PATH)
+assert spec and spec.loader
+rule = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(rule)
+
+
+def test_visible_cooperation_pressure_falls_back_to_clarifying_question():
+    action, inputs = rule._apply_rule(
+        original_action="OFFER_COOPERATION",
+        selected_from="KAI_OFFERS_COOPERATION",
+        selected_probability=0.6,
+        threshold=0.5,
+        visible_cooperation_pressure=True,
+    )
+
+    assert action == "ASK_CLARIFYING_QUESTION"
+    assert inputs["rule"] == "VISIBLE_COOPERATION_PRESSURE_FALLBACK_TO_ASK"
+    assert inputs["action_changed"] is True
+    assert inputs["uses_outcome_or_oracle"] is False
+    assert inputs["visible_cooperation_pressure"] is True
+
+
+def test_visible_pressure_fallback_does_not_use_probability_threshold():
+    action, inputs = rule._apply_rule(
+        original_action="OFFER_COOPERATION",
+        selected_from="KAI_OFFERS_COOPERATION",
+        selected_probability=0.9,
+        threshold=0.5,
+        visible_cooperation_pressure=True,
+    )
+
+    assert action == "ASK_CLARIFYING_QUESTION"
+    assert inputs["rule"] == "VISIBLE_COOPERATION_PRESSURE_FALLBACK_TO_ASK"
+
+
+def test_no_visible_pressure_keeps_high_confidence_cooperation():
+    action, inputs = rule._apply_rule(
+        original_action="OFFER_COOPERATION",
+        selected_from="KAI_OFFERS_COOPERATION",
+        selected_probability=0.64,
+        threshold=0.5,
+        visible_cooperation_pressure=None,
+    )
+
+    assert action == "OFFER_COOPERATION"
+    assert inputs["rule"] == "KEEP_ORIGINAL_ACTION"
+    assert inputs["action_changed"] is False
+
+
+def test_build_rows_applies_visible_pressure_metadata_without_oracle_inputs(tmp_path):
+    episode_id = "episode-visible-pressure"
+    case_index = []
+    action_index = []
+    for condition in rule.CONDITIONS:
+        case_root = tmp_path / "cases" / episode_id / condition
+        case_root.mkdir(parents=True)
+        action_selection_path = case_root / "action_selection.json"
+        (case_root / "tom_prediction_commitment_bundle.json").write_text(
+            json.dumps(
+                {
+                    "commitments": [
+                        {
+                            "prediction_payload": {
+                                "predicted_next_action_distribution": [
+                                    {"value": "KAI_ASKS_TO_WAIT", "probability": 0.2},
+                                    {"value": "KAI_OFFERS_COOPERATION", "probability": 0.6},
+                                    {"value": "KAI_DISCLOSES_AUTHORITY_CONSTRAINT", "probability": 0.2},
+                                ]
+                            }
+                        }
+                    ]
+                }
+            ),
+            encoding="utf-8",
+        )
+        action_selection_path.write_text(
+            json.dumps(
+                {
+                    "decision_basis": {
+                        "selected_from_predicted_counterpart_action": "KAI_OFFERS_COOPERATION",
+                        "selected_counterpart_action_probability": 0.6,
+                    },
+                    "action_options": [
+                        {"action": "ASK_CLARIFYING_QUESTION", "expected_utility": 0.75},
+                        {"action": "WAIT", "expected_utility": 1.0},
+                        {"action": "OFFER_COOPERATION", "expected_utility": 0.15},
+                    ],
+                }
+            ),
+            encoding="utf-8",
+        )
+        case_index.append(
+            {
+                "episode_id": episode_id,
+                "condition": condition,
+                "case_root": str(case_root),
+                "tau_live_call_performed": True,
+                "tau_status": "PASS",
+            }
+        )
+        action_index.append(
+            {
+                "episode_id": episode_id,
+                "condition": condition,
+                "status": "PASS_TOM_ACTION_SELECTION",
+                "selected_action": "OFFER_COOPERATION",
+                "oracle_action": "WAIT",
+                "planning_regret": 0.85,
+                "action_selection_path": str(action_selection_path),
+            }
+        )
+    errors: list[str] = []
+
+    rows = rule._build_rows(
+        base_root=tmp_path,
+        case_index=case_index,
+        action_index=action_index,
+        threshold=0.5,
+        errors=errors,
+        episode_pre_outcome_metadata={episode_id: {"visible_cooperation_pressure": True}},
+    )
+
+    assert errors == []
+    assert len(rows) == 1
+    assert rows[0]["cd_original_action"] == "OFFER_COOPERATION"
+    assert rows[0]["cd_intervened_action"] == "ASK_CLARIFYING_QUESTION"
+    assert rows[0]["cd_action_changed_by_rule"] is True
+    assert rows[0]["cd_pre_outcome_rule_inputs"]["visible_cooperation_pressure"] is True
+    assert rows[0]["cd_pre_outcome_rule_inputs"]["uses_outcome_or_oracle"] is False

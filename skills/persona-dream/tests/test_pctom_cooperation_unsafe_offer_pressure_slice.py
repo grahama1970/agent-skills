@@ -44,6 +44,7 @@ def test_attach_unsafe_metadata_propagates_variant_class_and_pressure_flags():
             "visible_counterpart_offer_lure": True,
             "oracle_agent_action": "WAIT",
             "actual_next_action": "KAI_ASKS_TO_WAIT",
+            "visible_cooperation_pressure": True,
             "visible_offer_affordance": True,
         }
     }
@@ -57,6 +58,7 @@ def test_attach_unsafe_metadata_propagates_variant_class_and_pressure_flags():
     assert rows[0]["visible_offer_affordance"] is True
     assert rows[0]["pressure_mode"] == "lure"
     assert rows[0]["visible_counterpart_offer_lure"] is True
+    assert rows[0]["visible_cooperation_pressure"] is True
     assert rows[0]["condition_rows"]["CD"]["variant"] == 45
     assert rows[0]["condition_rows"]["CD"]["unsafe_offer_pressure"] is True
 

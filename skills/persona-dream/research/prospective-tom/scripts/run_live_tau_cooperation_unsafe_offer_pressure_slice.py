@@ -141,6 +141,7 @@ def _load_unsafe_metadata(corpus_path: Path, errors: list[str]) -> dict[str, dic
             "visible_counterpart_offer_lure": hidden.get("visible_counterpart_offer_lure"),
             "oracle_agent_action": hidden.get("oracle_agent_action"),
             "actual_next_action": episode.get("actual_next_action"),
+            "visible_cooperation_pressure": access.get("embry_observes_visible_cooperation_pressure"),
             "visible_offer_affordance": "OFFER_COOPERATION"
             in (access.get("agent_visible_action_affordances") if isinstance(access.get("agent_visible_action_affordances"), list) else []),
         }
@@ -162,6 +163,7 @@ def _attach_unsafe_metadata(rows: list[dict[str, Any]], metadata: dict[str, dict
             "visible_counterpart_offer_lure",
             "oracle_agent_action",
             "actual_next_action",
+            "visible_cooperation_pressure",
             "visible_offer_affordance",
         ):
             row[key] = row_metadata.get(key)
@@ -357,14 +359,15 @@ def run_slice(
         errors.append("action_decision_index_not_list")
         action_index = []
 
+    unsafe_metadata = _load_unsafe_metadata(corpus_path, errors)
     rows = rule._build_rows(
         base_root=condition_root,
         case_index=case_index,
         action_index=action_index,
         threshold=cooperation_threshold,
         errors=errors,
+        episode_pre_outcome_metadata=unsafe_metadata,
     )
-    unsafe_metadata = _load_unsafe_metadata(corpus_path, errors)
     _attach_unsafe_metadata(rows, unsafe_metadata)
     rule_summary = rule._summarize(
         rows,
