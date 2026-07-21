@@ -7,6 +7,7 @@ import hashlib
 import importlib.util
 import json
 import time
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
@@ -62,6 +63,11 @@ CONDITION_PROFILES = {
 
 def _now_iso() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+
+def _case_timestamp(base: datetime, episode_index: int, condition_index: int) -> str:
+    offset = timedelta(minutes=episode_index, seconds=condition_index)
+    return (base + offset).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def _stable_json_sha256(value: Any) -> str:
@@ -502,12 +508,14 @@ def run_comparison(
     sealed_counts = {condition: 0 for condition in CONDITIONS}
     scored_counts = {condition: 0 for condition in CONDITIONS}
     status_counts: dict[str, int] = {}
+    sealed_base = datetime(2026, 7, 21, 3, 0, 0, tzinfo=timezone.utc)
+    reveal_base = datetime(2026, 7, 21, 4, 0, 0, tzinfo=timezone.utc)
     for episode_index, episode in enumerate(selected):
         for condition_index, condition in enumerate(CONDITIONS):
             profile = CONDITION_PROFILES[condition]
             action_dist = _action_distribution(episode["allowed_next_actions"], profile["action"])
-            sealed_at = f"2026-07-21T03:{episode_index:02d}:{condition_index:02d}Z"
-            revealed_at = f"2026-07-21T04:{episode_index:02d}:{condition_index:02d}Z"
+            sealed_at = _case_timestamp(sealed_base, episode_index, condition_index)
+            revealed_at = _case_timestamp(reveal_base, episode_index, condition_index)
             case_root = artifacts_root / "cases" / episode["episode_id"] / condition
             case_receipts = receipts_root / "cases" / episode["episode_id"] / condition
             distribution_path = case_root / "tom_belief_distribution_bundle.json"

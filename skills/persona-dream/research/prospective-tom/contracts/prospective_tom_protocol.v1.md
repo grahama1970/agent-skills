@@ -1126,3 +1126,52 @@ prospective PCTOM-R lineage case. It does not prove live Tau generation of ToM
 distributions or commitments, outcome scoring, belief revision, fault-injected
 live reliability, semantic memory quality, paid provider execution, or complete
 live Phase 01-16 runtime execution.
+
+## Sealed-Test Statistical-Confidence Bridge
+
+After deterministic held-out condition-benefit evidence exists, the
+statistical-confidence bridge expands the same text-first runner to a sealed
+64-episode test split and computes paired CD-minus-strongest-baseline bootstrap
+confidence intervals.
+
+This bridge must:
+
+- generate 16 deterministic episodes per scenario family;
+- consume exactly 64 episodes and 256 M/R/D/CD cases;
+- require M, R, D, and CD to each produce 64 sealed commitments before reveal;
+- require M, R, D, and CD to each produce 64 deterministic Gate 5 scores;
+- require M, R, D, and CD to each produce 64 constrained Gate 6 action
+  decisions;
+- compare CD against the strongest M/R/D baseline for the preregistered
+  `belief_brier` proper score;
+- write paired deltas and bootstrap summary artifacts with stable hashes;
+- require the primary paired confidence interval upper bound to be below zero;
+- report planning-regret confidence separately without treating a tied or
+  crossing-zero interval as a planning benefit;
+- keep human content judgment, LLM judging, Memory writes, provider calls,
+  canonical writes, identity writes, and source-memory writes absent.
+
+Accepted status:
+
+```text
+PASS_PCTOM_SEALED_TEST_STATISTICAL_CONFIDENCE
+```
+
+Blocked status:
+
+```text
+BLOCKED_PCTOM_SEALED_TEST_STATISTICAL_CONFIDENCE
+```
+
+Current accepted receipt:
+
+```text
+/tmp/persona-dream-sealed-test-statistical-confidence-20260721T043620Z/sealed_test_statistical_confidence_receipt.v1.json
+```
+
+This bridge proves deterministic sealed-test statistical benefit for the
+preregistered belief Brier score only. It does not prove planning-regret
+benefit, live Tau sealed-test execution, live Memory recall in the sealed-test
+loop, real external service fault injection, production retry machinery,
+complete live Phase 01-16 runtime execution, paid provider execution, video
+quality, or semantic dream quality.

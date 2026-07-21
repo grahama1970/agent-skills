@@ -30,6 +30,22 @@
 
 ## Current Understanding
 
+- 2026-07-21 Persona Dream PCTOM-R sealed-test statistical-confidence rung:
+  implemented `run-sealed-test-statistical-confidence`, expanded the
+  deterministic social-world generator to 16 variants per family, and repaired
+  condition-comparison timestamps to use real UTC datetime arithmetic instead
+  of minute-formatted indices (`03:60:00Z` blocked Gate 5 at 64-episode scale).
+  PASS receipt:
+  `/tmp/persona-dream-sealed-test-statistical-confidence-20260721T043620Z/sealed_test_statistical_confidence_receipt.v1.json`.
+  Evidence: split `sealed_test`, 64 episodes, 256 cases, M/R/D/CD each 64
+  sealed commitments, deterministic scores, and action decisions. Primary
+  preregistered metric `belief_brier`: CD vs strongest baseline D mean delta
+  `-0.07979999999999995`, paired bootstrap 95% CI upper
+  `-0.07979999999999995`, `primary_benefit_with_confidence=true`. Planning
+  regret is not proven beneficial: CI crosses zero and the receipt records
+  `planning_benefit_with_confidence=false`. No live Tau sealed-test execution,
+  live Memory in-loop recall, real external fault injection, provider call, or
+  semantic dream-quality claim is proven by this rung.
 - 2026-07-21 Persona Dream PCTOM-R live Memory revision-recall lesson:
   action-linked revision records written to a custom research collection
   (`persona_dream_pctom_revision_recall`) are exact-readable with `/list` and

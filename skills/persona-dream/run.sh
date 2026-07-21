@@ -89,6 +89,7 @@ Commands:
   run-live-tau-revision-recall  Check deterministic recall over action-linked revisions
   run-heldout-condition-benefit  Run frozen held-out M/R/D/CD scoring plus Gate 6 action decisions
   run-live-memory-revision-recall  Persist action-linked revisions and recall them through live Memory
+  run-sealed-test-statistical-confidence  Run 64-episode sealed-test CD-vs-baseline bootstrap confidence
   check-prospective-tom-protocol  Validate PCTOM-R Gate 0 fixture lineage through a sealed prediction
   build-social-episode-corpus  Build deterministic PCTOM-R Gate 1 social episodes
   check-social-episode-corpus  Validate deterministic PCTOM-R Gate 1 social episodes
@@ -438,6 +439,9 @@ case "$COMMAND" in
     ;;
   run-live-memory-revision-recall)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_memory_revision_recall.py" "$@"
+    ;;
+  run-sealed-test-statistical-confidence)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_sealed_test_statistical_confidence.py" "$@"
     ;;
   check-prospective-tom-protocol)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_prospective_tom_protocol.py" "$@"

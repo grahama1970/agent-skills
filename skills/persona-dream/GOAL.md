@@ -341,12 +341,13 @@ Live Tau revision recall proof root: /tmp/persona-dream-live-tau-revision-recall
 Held-out condition benefit proof root: /tmp/persona-dream-heldout-condition-benefit-final-20260721T041000Z
 Blocked live Memory revision-recall attempt root: /tmp/persona-dream-live-memory-revision-recall-20260721T041839Z
 Live Memory revision-recall proof root: /tmp/persona-dream-live-memory-revision-recall-20260721T042742Z
+Sealed-test statistical-confidence proof root: /tmp/persona-dream-sealed-test-statistical-confidence-20260721T043620Z
 ```
 
 Current active phase boundary:
 
 ```text
-phase: post-live-memory-recall-after-revision, pre-sealed-test-statistical-confidence
+phase: post-sealed-test-statistical-confidence, pre-broader-live-fault-injection
 last_live_condition_receipt: /tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z/live_tau_condition_comparison_receipt.v1.json
 last_reliability_receipt: /tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z/live_tau_condition_reliability_bridge_receipt.v1.json
 last_action_selection_receipt: /tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z/live_tau_condition_action_selection_receipt.v1.json
@@ -355,7 +356,8 @@ last_revision_recall_receipt: /tmp/persona-dream-live-tau-revision-recall-202607
 last_heldout_condition_benefit_receipt: /tmp/persona-dream-heldout-condition-benefit-final-20260721T041000Z/heldout_condition_benefit_receipt.v1.json
 last_blocked_live_memory_revision_recall_attempt_receipt: /tmp/persona-dream-live-memory-revision-recall-20260721T041839Z/live_memory_revision_recall_receipt.v1.json
 last_live_memory_revision_recall_receipt: /tmp/persona-dream-live-memory-revision-recall-20260721T042742Z/live_memory_revision_recall_receipt.v1.json
-next_required_receipt: sealed-test statistical-confidence receipt or broader live fault-injection receipt
+last_sealed_test_statistical_confidence_receipt: /tmp/persona-dream-sealed-test-statistical-confidence-20260721T043620Z/sealed_test_statistical_confidence_receipt.v1.json
+next_required_receipt: broader live fault-injection receipt or live Tau sealed-test replication receipt
 ```
 
 This boundary means Gate 8/9 condition reliability over live-originated
@@ -366,11 +368,58 @@ are predecessor evidence. The held-out condition-benefit slice now adds a
 frozen deterministic held-out comparison with the same sealed/scored/action
 contracts. The live Memory revision-recall slice now adds live semantic
 recall/use after action-linked revision, using a noncanonical exact audit
-collection plus searchable lesson mirrors. These receipts still do not
-authorize a final research success claim. The next useful movement is to expand
-the held-out result into a sealed statistical test-set run with confidence
-intervals and explicit live/model boundaries, or broaden live fault injection
-beyond controlled artifact faults.
+collection plus searchable lesson mirrors. The sealed-test statistical slice
+now adds a 64-episode deterministic sealed test with paired bootstrap
+confidence intervals for CD versus the strongest baseline on the preregistered
+belief Brier metric. These receipts still do not authorize a final research
+success claim. The next useful movement is to broaden live fault injection
+beyond controlled artifact faults or replicate the sealed-test loop with live
+Tau-authored predictions.
+
+Sealed-test statistical-confidence proof summary:
+
+```text
+receipt: /tmp/persona-dream-sealed-test-statistical-confidence-20260721T043620Z/sealed_test_statistical_confidence_receipt.v1.json
+status: PASS_PCTOM_SEALED_TEST_STATISTICAL_CONFIDENCE
+split: sealed_test
+episodes_consumed: 64
+families_consumed: 4
+cases: 256
+sealed_commitments_per_condition: M=64, R=64, D=64, CD=64
+deterministic_scores_per_condition: M=64, R=64, D=64, CD=64
+action_decisions_per_condition: M=64, R=64, D=64, CD=64
+primary_metric: belief_brier
+primary_baseline_condition: D
+primary_cd_minus_baseline_mean: -0.07979999999999995
+primary_cd_minus_baseline_ci: lower=-0.07979999999999995, upper=-0.07979999999999995
+bootstrap_samples: 2000
+bootstrap_seed: 20260721
+primary_benefit_with_confidence: true
+planning_benefit_with_confidence: false
+planning_regret_ci: lower=-0.07968750000000001, upper=0.07968750000000001
+mocked: false
+live: false
+fixture_backed: false
+deterministic_simulator_corpus_fixture_backed: true
+llm_judge_used: false
+human_content_judgment_required: false
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+```
+
+This proves the deterministic sealed-test runner can generate 64 hidden-state
+episodes, seal and score all 256 M/R/D/CD cases before outcome reveal, compute
+paired CD-minus-strongest-baseline bootstrap confidence intervals, and show
+counterfactual dreaming beating the strongest baseline on the preregistered
+belief Brier score without human content judgment, LLM judging, Memory writes,
+provider calls, or unsupported canonical/source/identity writes. It does not
+prove planning-regret benefit, live Tau sealed-test execution, live Memory
+recall in the sealed-test loop, real external service fault injection,
+production retry machinery, complete live Phase 01-16 runtime execution, paid
+provider execution, video quality, or semantic dream quality.
 
 Live Memory revision-recall proof summary:
 
@@ -1241,31 +1290,32 @@ bridge over those action-linked revision artifacts, plus one deterministic
 held-out condition-benefit receipt, one blocked live Memory revision-recall
 attempt that exposed custom-collection recall visibility, and one PASS live
 Memory revision-recall receipt using exact research documents plus searchable
-noncanonical mirrors. It does not prove paid provider execution, semantic dream
-quality, robust statistical calibration, planning benefit over the strongest
-baseline, real external service fault injection, production retry machinery,
-complete live Phase 01-16 runtime execution, or autonomous operation beyond the
-bounded bridges. Those require separate live receipts.
+noncanonical mirrors, plus one deterministic 64-episode sealed-test
+statistical-confidence receipt showing CD beats the strongest baseline on
+preregistered belief Brier with a paired bootstrap CI below zero. It does not
+prove paid provider execution, semantic dream quality, planning-regret benefit,
+live Tau sealed-test execution, real external service fault injection,
+production retry machinery, complete live Phase 01-16 runtime execution, or
+autonomous operation beyond the bounded bridges. Those require separate live
+receipts.
 
 No agent may claim final, green, complete, fixed, verified, or closed for this
 research goal unless those concrete proof artifacts exist and are cited.
 
 ## Next Critical Path
 
-Move from deterministic held-out benefit evidence and PASS live Memory
-recall-after-revision evidence to a larger sealed-test statistical-confidence
-run or broader live fault-injection run, without reactivating provider/video as
-the critical path.
+Move from deterministic sealed-test statistical-confidence evidence and PASS
+live Memory recall-after-revision evidence to broader live fault-injection or
+live Tau sealed-test replication, without reactivating provider/video as the
+critical path.
 
 The next accepted artifact must answer one of these narrower questions:
 
-1. On a held-out test slice, does CD improve the preregistered proper-scoring
-   metric or planning-regret metric over the strongest M/R/D baseline? Current
-   deterministic held-out answer: yes for `mean_belief_brier`, tied for
-   planning regret, not yet a 64-episode statistical-confidence result.
-2. Do live fault-injection runs over Memory, model, tool, schema, persistence,
-   and retry boundaries recover, block, or quarantine without unknown-state
-   continuation?
+1. Do broader live fault-injection runs over Memory, model, tool, schema,
+   persistence, and retry boundaries recover, block, or quarantine without
+   unknown-state continuation?
+2. Does the 64-episode sealed-test result persist when the M/R/D/CD prediction
+   payloads are authored through live Tau rather than deterministic profiles?
 
 Resolved live Memory diagnostic:
 
