@@ -56,6 +56,58 @@ memory_write_attempts: 0
 provider_call_attempts: 0
 ```
 
+## Gate 3 Inspection
+
+Command family:
+
+```bash
+skills/persona-dream/run.sh check-counterfactual-branches \
+  --corpus skills/persona-dream/research/prospective-tom/fixtures/gate1/development/social_episode_corpus.v1.json \
+  --distributions <tom_belief_distribution_bundle.json> \
+  --branches <counterfactual_branch_bundle.json> \
+  --receipt-out <receipt.json> \
+  --json
+```
+
+Final proof root:
+
+```text
+/tmp/persona-dream-pctom-gate3-final-20260721T004724Z
+```
+
+Positive result:
+
+```text
+status: PASS_COUNTERFACTUAL_BRANCHES
+branches: 2
+factual_branches: 1
+counterfactual_branches: 1
+interventions: 1
+resolved_source_evidence_refs: 4
+distribution_refs: 2
+```
+
+Negative fixture results:
+
+```text
+counterfactual_not_synthetic: BLOCKED_COUNTERFACTUAL_BRANCHES
+factual_uses_counterfactual_distribution: BLOCKED_COUNTERFACTUAL_BRANCHES
+held_fixed_includes_intervention: BLOCKED_COUNTERFACTUAL_BRANCHES
+hidden_source_evidence: BLOCKED_COUNTERFACTUAL_BRANCHES
+missing_factual_branch: BLOCKED_COUNTERFACTUAL_BRANCHES
+unresolved_distribution_ref: BLOCKED_COUNTERFACTUAL_BRANCHES
+```
+
+Inspection limitation:
+
+```text
+fixture_backed: true
+live: false
+tau_call_attempts: 0
+memory_write_attempts: 0
+provider_call_attempts: 0
+```
+
 ## Gate 1 Inspection
 
 Build command:

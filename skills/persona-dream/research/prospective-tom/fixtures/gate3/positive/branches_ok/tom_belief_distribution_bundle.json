@@ -1,0 +1,80 @@
+{
+  "canonical_memory_write": false,
+  "distributions": [
+    {
+      "abstain": false,
+      "counterfactual": false,
+      "counterfactual_context": null,
+      "distribution": [
+        {
+          "probability": 0.7,
+          "value": "TRUE"
+        },
+        {
+          "probability": 0.2,
+          "value": "FALSE"
+        },
+        {
+          "probability": 0.1,
+          "value": "UNKNOWN"
+        }
+      ],
+      "episode_id": "dev-info-asym-01",
+      "evidence_refs": [
+        {
+          "scope": "social_episode_observation",
+          "source_id": "dev-info-asym-01:observable_history:0"
+        }
+      ],
+      "hypothesis_id": "gate3-factual-bdi-001",
+      "mental_state_type": "belief",
+      "perspective_order": 1,
+      "prediction_horizon": "next_action",
+      "proposition": "Kai believes Embry has stale constraint information.",
+      "subject": "kai",
+      "support_status": "supported",
+      "target": "embry"
+    },
+    {
+      "abstain": false,
+      "counterfactual": true,
+      "counterfactual_context": {
+        "intervention_id": "do-kai-gives-no-warning",
+        "synthetic": true
+      },
+      "distribution": [
+        {
+          "probability": 0.15,
+          "value": "TRUE"
+        },
+        {
+          "probability": 0.7,
+          "value": "FALSE"
+        },
+        {
+          "probability": 0.15,
+          "value": "UNKNOWN"
+        }
+      ],
+      "episode_id": "dev-info-asym-01",
+      "evidence_refs": [
+        {
+          "scope": "synthetic_counterfactual",
+          "source_id": "dev-info-asym-01:do:kai_gives_no_warning"
+        }
+      ],
+      "hypothesis_id": "gate3-counterfactual-bdi-001",
+      "mental_state_type": "belief",
+      "perspective_order": 1,
+      "prediction_horizon": "next_action",
+      "proposition": "Kai believes Embry has stale constraint information.",
+      "subject": "kai",
+      "support_status": "supported",
+      "target": "embry"
+    }
+  ],
+  "episode_id": "dev-info-asym-01",
+  "outcome_visible": false,
+  "schema": "persona_dream.research.prospective_tom.tom_belief_distribution_bundle.v1",
+  "sealed": true
+}

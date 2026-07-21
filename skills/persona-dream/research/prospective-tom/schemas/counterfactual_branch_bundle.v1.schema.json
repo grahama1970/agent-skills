@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.research.prospective_tom.counterfactual_branch_bundle.v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "episode_id",
+    "outcome_visible",
+    "canonical_memory_write",
+    "branches"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "persona_dream.research.prospective_tom.counterfactual_branch_bundle.v1"
+    },
+    "episode_id": {"type": "string", "minLength": 1},
+    "outcome_visible": {"type": "boolean"},
+    "canonical_memory_write": {"type": "boolean"},
+    "branches": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "branch_id",
+          "episode_id",
+          "branch_type",
+          "synthetic",
+          "intervention",
+          "source_evidence_refs",
+          "held_fixed",
+          "predicted_bdi_distribution_refs",
+          "predicted_action_distribution",
+          "expected_observation",
+          "uncertainty"
+        ],
+        "properties": {
+          "branch_id": {"type": "string", "minLength": 1},
+          "episode_id": {"type": "string", "minLength": 1},
+          "branch_type": {"type": "string", "enum": ["factual", "counterfactual"]},
+          "synthetic": {"type": "boolean"},
+          "intervention": {
+            "anyOf": [
+              {"type": "null"},
+              {"$ref": "persona_dream.research.prospective_tom.counterfactual_intervention.v1"}
+            ]
+          },
+          "source_evidence_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["scope", "source_id"],
+              "properties": {
+                "scope": {"type": "string", "minLength": 1},
+                "source_id": {"type": "string", "minLength": 1}
+              },
+              "additionalProperties": false
+            }
+          },
+          "held_fixed": {
+            "type": "array",
+            "items": {"type": "string", "minLength": 1}
+          },
+          "predicted_bdi_distribution_refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {"type": "string", "minLength": 1}
+          },
+          "predicted_action_distribution": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "object",
+              "required": ["value", "probability"],
+              "properties": {
+                "value": {"type": "string", "minLength": 1},
+                "probability": {"type": "number", "minimum": 0, "maximum": 1}
+              },
+              "additionalProperties": false
+            }
+          },
+          "expected_observation": {"type": "string", "minLength": 1},
+          "uncertainty": {"type": "number", "minimum": 0, "maximum": 1}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

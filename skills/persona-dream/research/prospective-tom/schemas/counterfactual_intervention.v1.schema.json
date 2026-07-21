@@ -8,6 +8,7 @@
     "intervened_variable",
     "intervened_value",
     "held_fixed",
+    "synthetic",
     "expected_observation"
   ],
   "properties": {
@@ -16,6 +17,7 @@
     "intervened_variable": {"type": "string", "minLength": 1},
     "intervened_value": {},
     "held_fixed": {"type": "array", "items": {"type": "string"}},
+    "synthetic": {"type": "boolean"},
     "expected_observation": {"type": "string", "minLength": 1}
   },
   "additionalProperties": false

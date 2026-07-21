@@ -161,3 +161,55 @@ Gate 2 invariants:
 Gate 2 does not prove prediction accuracy, calibration quality, Tau execution,
 live Memory recall, outcome scoring, belief revision, or reliability under
 faults.
+
+## Gate 3 Counterfactual Branch Contract
+
+Gate 3 represents factual and `do()`-style counterfactual branches before any
+condition runner or persistence path can consume them.
+
+Each branch bundle must include:
+
+```text
+episode_id
+outcome_visible: false
+canonical_memory_write: false
+branches[]
+```
+
+Each branch must include:
+
+```text
+branch_id
+episode_id
+branch_type
+synthetic
+intervention
+source_evidence_refs
+held_fixed
+predicted_bdi_distribution_refs
+predicted_action_distribution
+expected_observation
+uncertainty
+```
+
+Gate 3 invariants:
+
+- every bundle has at least one factual branch and one counterfactual branch;
+- factual branches are not synthetic and have no intervention;
+- counterfactual branches are synthetic and have exactly one intervention
+  variable;
+- the intervened variable is not listed as held fixed;
+- intervention records are explicitly synthetic;
+- branch evidence references resolve only to agent-visible episode fields;
+- BDI distribution refs resolve to a sealed Gate 2 distribution bundle;
+- factual branches use factual distributions;
+- counterfactual branches use counterfactual distributions;
+- predicted action distributions sum to one;
+- predicted actions are drawn from the episode's allowed action vocabulary or
+  `UNKNOWN`;
+- no branch bundle writes canonical memory;
+- no branch bundle exposes the outcome before a later reveal gate.
+
+Gate 3 does not prove counterfactual causal correctness, prediction accuracy,
+calibration quality, Tau execution, live Memory recall, outcome scoring, belief
+revision, or reliability under faults.

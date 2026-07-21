@@ -197,15 +197,14 @@ a causal failure-localization receipt.
 
 ## Current Provenance Boundary
 
-Committed and pushed evidence exists for Gates 0 and 1. Local Gate 2 evidence
-exists in this worktree and becomes committed evidence when the Gate 2 commit is
-pushed.
+Current evidence boundaries:
 
 ```text
 Gate 0 commit: 81f51b5689914782c54a4b9c5672579bcd97d440
 Gate 1 commit: 0cecce8193606522a1d56283cc240c5bddc83c2a
 Gate 1 proof root: /tmp/persona-dream-pctom-gate1-final-postpatch-20260721T001545Z
 Gate 2 proof root: /tmp/persona-dream-pctom-gate2-postrebase-20260721T003945Z
+Gate 3 proof root: /tmp/persona-dream-pctom-gate3-final-20260721T004724Z
 ```
 
 Gate 1 proof summary:
@@ -234,6 +233,23 @@ Gate 2 abstained_or_pending hypotheses: 1
 Gate 2 resolved_evidence_refs: 4
 Gate 2 label_matched_distributions: 2
 Gate 2 negatives: 7 x BLOCKED_TOM_BELIEF_DISTRIBUTIONS
+git_diff_check: clean
+```
+
+Gate 3 proof summary:
+
+```text
+json_files_parsed: 47
+python_files_ast_parsed: 5
+Gate 3 distribution bundle: PASS_TOM_BELIEF_DISTRIBUTIONS
+Gate 3 positive: PASS_COUNTERFACTUAL_BRANCHES
+Gate 3 branches: 2
+Gate 3 factual_branches: 1
+Gate 3 counterfactual_branches: 1
+Gate 3 interventions: 1
+Gate 3 resolved_source_evidence_refs: 4
+Gate 3 distribution_refs: 2
+Gate 3 negatives: 6 x BLOCKED_COUNTERFACTUAL_BRANCHES
 git_diff_check: clean
 ```
 
@@ -270,9 +286,9 @@ research goal unless those concrete proof artifacts exist and are cited.
 
 ## Next Critical Path
 
-Implement Gate 3: counterfactual branch contracts that preserve the distinction
-between factual social evidence and synthetic `do()` branches before any
-condition runner persists or compares them.
+Implement Gate 4: sealed prediction commitments that consume Gate 3 branches,
+hash prediction/evidence/model payloads, and prove predictions are committed
+before outcome reveal.
 
 The next accepted artifact must be inspectable as files and receipts under the
 research namespace, with positive and negative fixtures. Mocked or fixture

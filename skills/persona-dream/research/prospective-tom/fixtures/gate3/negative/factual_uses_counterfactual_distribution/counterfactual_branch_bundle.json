@@ -1,0 +1,80 @@
+{
+  "branches": [
+    {
+      "branch_id": "factual-observed",
+      "branch_type": "factual",
+      "episode_id": "dev-info-asym-01",
+      "expected_observation": "Kai flags the constraint before Embry acts.",
+      "held_fixed": [
+        "hidden_world_state.constraint_changed"
+      ],
+      "intervention": null,
+      "predicted_action_distribution": [
+        {
+          "probability": 1.0,
+          "value": "KAI_HINTS_CONSTRAINT"
+        },
+        {
+          "probability": 0.0,
+          "value": "KAI_WARNS_PRIVATELY"
+        }
+      ],
+      "predicted_bdi_distribution_refs": [
+        "gate3-counterfactual-bdi-001"
+      ],
+      "source_evidence_refs": [
+        {
+          "scope": "social_episode_observation",
+          "source_id": "dev-info-asym-01:observable_history:0"
+        }
+      ],
+      "synthetic": false,
+      "uncertainty": 0.2
+    },
+    {
+      "branch_id": "cf-kai-gives-no-warning",
+      "branch_type": "counterfactual",
+      "episode_id": "dev-info-asym-01",
+      "expected_observation": "Kai withholds the warning.",
+      "held_fixed": [
+        "hidden_world_state.constraint_changed"
+      ],
+      "intervention": {
+        "episode_id": "dev-info-asym-01",
+        "expected_observation": "Kai gives no warning.",
+        "held_fixed": [
+          "hidden_world_state.constraint_changed"
+        ],
+        "intervened_value": "KAI_GIVES_NO_WARNING",
+        "intervened_variable": "counterpart_policy.expected_actual_next_action",
+        "intervention_id": "do-kai-gives-no-warning",
+        "synthetic": true
+      },
+      "predicted_action_distribution": [
+        {
+          "probability": 1.0,
+          "value": "UNKNOWN"
+        },
+        {
+          "probability": 0.0,
+          "value": "KAI_HINTS_CONSTRAINT"
+        }
+      ],
+      "predicted_bdi_distribution_refs": [
+        "gate3-counterfactual-bdi-001"
+      ],
+      "source_evidence_refs": [
+        {
+          "scope": "social_episode_observation",
+          "source_id": "dev-info-asym-01:observable_history:0"
+        }
+      ],
+      "synthetic": true,
+      "uncertainty": 0.35
+    }
+  ],
+  "canonical_memory_write": false,
+  "episode_id": "dev-info-asym-01",
+  "outcome_visible": false,
+  "schema": "persona_dream.research.prospective_tom.counterfactual_branch_bundle.v1"
+}
