@@ -268,9 +268,10 @@ Three artifacts, all required, none optional:
 **GOAL STATUS: ACHIEVED_WITH_RECEIPT** —
 `skills/battle/local/goal-adaptive-lineage-audit-20260721T0005Z.json`.
 The audit receipt reports `status:"PASS"`, `failed:[]`, local `HEAD` and
-`origin/battle-adaptive-lineage-goal` both at
+`origin/battle-adaptive-lineage-goal` both at the audited Battle evidence commit
 `d476a192d28421bfbbe04aa69a87f1104e94aae1`, and cites the live backend receipt
-plus final Surf/Pixi proof artifacts above.
+plus final Surf/Pixi proof artifacts above. The later documentation commit only
+records this audit receipt.
 
 ## Allowed Scope
 

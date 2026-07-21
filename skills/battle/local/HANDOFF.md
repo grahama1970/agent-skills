@@ -13,8 +13,9 @@ agent-skills worktree, not the pi-mono shell.
 > The immutable goal audit receipt is
 > `skills/battle/local/goal-adaptive-lineage-audit-20260721T0005Z.json`.
 > It reports `status:"PASS"` and confirms local `HEAD` matches
-> `origin/battle-adaptive-lineage-goal` at
-> `d476a192d28421bfbbe04aa69a87f1104e94aae1`.
+> `origin/battle-adaptive-lineage-goal` at the audited Battle evidence commit
+> `d476a192d28421bfbbe04aa69a87f1104e94aae1`. The later documentation commit
+> records the audit receipt itself.
 
 ## 1. Project Overview
 
