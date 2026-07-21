@@ -133,12 +133,12 @@ def run_eval_tick(tmp_path: Path, client: EvalHerdrClient) -> tuple[int, dict[st
         monitor.wait_for_agent_idle = original_wait
 
 
-def test_eval_false_positive_no_immutable_goal_never_enters_prompt(tmp_path: Path) -> None:
+def test_eval_plain_no_immutable_goal_never_enters_prompt(tmp_path: Path) -> None:
     project = tmp_path / "nogal"
     project.mkdir()
     client = EvalHerdrClient(
         panes=[{"workspace_id": "w1", "pane_id": "w1:p1", "agent": "codex", "agent_status": "done", "cwd": str(project)}],
-        text_by_pane={"w1:p1": "Stop hook (stopped)\nWhat remains is a broader route audit."},
+        text_by_pane={"w1:p1": "Idle composer with no explicit hook failure."},
     )
 
     exit_code, result = run_eval_tick(tmp_path, client)
@@ -149,6 +149,25 @@ def test_eval_false_positive_no_immutable_goal_never_enters_prompt(tmp_path: Pat
     assert result["selected_panes"] == []
     assert client.sent_text_count == 0
     assert client.enter_count == 0
+
+
+def test_eval_no_immutable_goal_with_explicit_early_stop_enters_prompt(tmp_path: Path) -> None:
+    project = tmp_path / "nogal_early"
+    project.mkdir()
+    client = EvalHerdrClient(
+        panes=[{"workspace_id": "w1", "pane_id": "w1:p1", "agent": "codex", "agent_status": "done", "cwd": str(project)}],
+        text_by_pane={"w1:p1": "Stop hook (stopped)\nWhat remains is a broader route audit."},
+    )
+
+    exit_code, result = run_eval_tick(tmp_path, client)
+
+    assert exit_code == 0
+    assert result["ok"] is True
+    assert result["stopped_panes"][0]["classification"] == "stopped_or_early_stop"
+    assert result["selected_panes"][0]["selection_reasons"][-1] == "immutable_goal_unknown_but_early_stop_marker"
+    assert result["prompts"][0]["sent"] is True
+    assert client.sent_text_count == 1
+    assert client.enter_count == 1
 
 
 def test_eval_goal_achieved_line_never_enters_prompt(tmp_path: Path) -> None:

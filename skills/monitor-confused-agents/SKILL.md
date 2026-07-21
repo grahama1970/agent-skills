@@ -128,10 +128,17 @@ GOAL.md
 .tau/goal.json
 ```
 
-If no immutable goal is found in project files, the monitor records the pane and
-allows it to remain stopped. The monitor must not invent an objective from
-generic early-stop language; defining the immutable goal is on the human or
-project instructions.
+If no immutable goal is found in project files and there is no explicit
+early-stop/hook-failure marker, the monitor records the pane and allows it to
+remain stopped. The monitor must not invent an objective from generic idle text;
+defining the immutable goal is on the human or project instructions.
+
+If no immutable goal is found but the current transcript has explicit
+early-stop/hook-failure markers such as `Stop hook (stopped)`, `status response
+blocked`, `remaining work`, or `what remains`, the monitor may select the pane.
+The prompt forces the agent to answer with `Immutable Goal: UNKNOWN` if needed
+and either resume the obvious remaining work, use `$brave-search`/browser-oracle
+to unblock, or state a real human blocker.
 
 Codex's own `/goal` footer is also treated as an immutable-goal signal. A
 footer such as `Goal blocked (/goal resume)` means there is an active goal that

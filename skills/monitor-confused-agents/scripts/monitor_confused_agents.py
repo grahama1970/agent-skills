@@ -540,7 +540,7 @@ def classify_pane(
         classification = "blocked_or_unknown_observe_only"
         action = "observe_only"
         reasons = [f"stopped_status:{status}", "unsafe_or_uncertain_state_never_prompted"]
-    elif not has_goal_signal:
+    elif not has_goal_signal and not early_markers:
         classification = "no_immutable_goal"
         action = "observe_only"
         reasons = [f"stopped_status:{status}", "immutable_goal_unknown_stop_allowed"]
@@ -563,6 +563,8 @@ def classify_pane(
             reasons.append("immutable_goal_found")
         elif goal_claim["state"] != "none":
             reasons.append(f"transcript_goal:{goal_claim['state']}")
+        elif early_markers:
+            reasons.append("immutable_goal_unknown_but_early_stop_marker")
         else:
             reasons.append("immutable_goal_unknown")
 
@@ -670,7 +672,7 @@ def send_prompt(client: HerdrClient, pane_id: str, prompt: str, *, project_root:
     second_read = ""
     if not submit_confirmed:
         current = explain_agent(client, pane_id)
-        if not explain_allows_input(current) or not prompt_visible_after_send(first_read, baseline=pre_read, prompt=prompt):
+        if not explain_allows_input(current):
             return skipped_send(
                 "post_enter_uncertain",
                 wait_result=wait_result,
@@ -687,9 +689,16 @@ def send_prompt(client: HerdrClient, pane_id: str, prompt: str, *, project_root:
             logger.error("Herdr second pane.send_keys enter failed for pane {}", pane_id)
         records.extend(client.trace[before:])
         second_enter_sent = True
-        time.sleep(0.8)
-        second_read = read_pane_text(client, pane_id)
-        submit_confirmed = prompt_submitted(second_read, baseline=pre_read)
+        for _ in range(5):
+            time.sleep(0.4)
+            second_read = read_pane_text(client, pane_id)
+            submit_confirmed = prompt_submitted(second_read, baseline=pre_read)
+            if submit_confirmed:
+                break
+            current = explain_agent(client, pane_id)
+            if current.get("state") == "working":
+                submit_confirmed = True
+                break
     api_sent = all("error" not in item.get("response", {}) for item in records)
     return {
         "send_api": records,
@@ -725,7 +734,7 @@ def prompt_submitted(text: str, *, baseline: str = "") -> bool:
 def prompt_submission_marker(text: str, *, baseline: str = "") -> str:
     if not text:
         return ""
-    for marker in ["Running UserPromptSubmit hook", "Working (", "Booting MCP server"]:
+    for marker in ["Running UserPromptSubmit hook", "UserPromptSubmit hook (completed)", "Working (", "Booting MCP server"]:
         if text.count(marker) > baseline.count(marker):
             return marker
     return ""
@@ -743,7 +752,10 @@ def prompt_visible_after_send(text: str, *, baseline: str, prompt: str) -> bool:
         "If the immutable goal is known and not achieved",
     ]
     new_hits = sum(1 for item in signatures if text.count(item) > baseline.count(item))
-    return new_hits >= 2
+    if new_hits >= 2:
+        return True
+    strong_visible_hits = sum(1 for item in signatures if item in text)
+    return strong_visible_hits >= 3 and len(text) > len(baseline) + 200
 
 
 def prompt_send_failed(prompt_record: dict[str, Any]) -> bool:

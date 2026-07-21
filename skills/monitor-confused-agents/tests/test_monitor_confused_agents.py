@@ -120,6 +120,45 @@ class FakeWrappedPromptAfterEnterHerdr(FakeSubmitHerdr):
         raise AssertionError(method)
 
 
+class FakeLaggingPromptReadbackHerdr(FakeSubmitHerdr):
+    def call(self, method: str, params: dict) -> dict:
+        response = {"id": method, "result": {"type": "ok"}}
+        self.trace.append({"request": {"method": method, "params": params}, "response": response})
+        if method == "pane.send_text":
+            self.sent_text = True
+            return {"type": "ok"}
+        if method == "pane.send_keys" and params.get("keys") == ["enter"]:
+            self.enter_count += 1
+            return {"type": "ok"}
+        if method == "pane.read":
+            if not self.sent_text:
+                return {"type": "pane_read", "read": {"text": "Codex composer ready"}}
+            if self.enter_count < 2:
+                return {"type": "pane_read", "read": {"text": "Codex composer ready"}}
+            return {"type": "pane_read", "read": {"text": "Running UserPromptSubmit hook\nWorking (1s * esc to interrupt)"}}
+        if method == "agent.explain":
+            return {"type": "agent_explain", "explain": {"state": "idle", "matched_rule": "codex_prompt_idle_ready"}}
+        raise AssertionError(method)
+
+
+class FakeDelayedWorkingAfterSecondEnterHerdr(FakeSubmitHerdr):
+    def call(self, method: str, params: dict) -> dict:
+        response = {"id": method, "result": {"type": "ok"}}
+        self.trace.append({"request": {"method": method, "params": params}, "response": response})
+        if method == "pane.send_text":
+            self.sent_text = True
+            return {"type": "ok"}
+        if method == "pane.send_keys" and params.get("keys") == ["enter"]:
+            self.enter_count += 1
+            return {"type": "ok"}
+        if method == "pane.read":
+            return {"type": "pane_read", "read": {"text": "Codex composer ready"}}
+        if method == "agent.explain":
+            state = "working" if self.enter_count >= 2 else "idle"
+            return {"type": "agent_explain", "explain": {"state": state, "matched_rule": "codex_prompt_idle_ready"}}
+        raise AssertionError(method)
+
+
 class FakeCompletionBeforeSendHerdr(FakeSubmitHerdr):
     def __init__(self, text: str = "Immutable Goal: ACHIEVED_WITH_RECEIPT:receipt.json\n") -> None:
         super().__init__()
@@ -186,7 +225,7 @@ def test_done_agent_without_goal_or_early_marker_can_stop(tmp_path: Path) -> Non
     assert candidate["classification"] == "no_immutable_goal"
 
 
-def test_done_agent_without_goal_can_stop_despite_early_marker(tmp_path: Path) -> None:
+def test_done_agent_without_goal_with_early_marker_restarts(tmp_path: Path) -> None:
     pane = {
         "agent": "codex",
         "agent_status": "done",
@@ -200,6 +239,29 @@ def test_done_agent_without_goal_can_stop_despite_early_marker(tmp_path: Path) -
 
     candidate = monitor.classify_pane(
         FakeHerdr(text),
+        pane,
+        cwd_prefix=str(tmp_path.parent),
+        include_agents={"codex"},
+        stopped_statuses={"done"},
+        only_obvious_early_stops=False,
+    )
+
+    assert candidate is not None
+    assert candidate["action"] == "restart_continue"
+    assert candidate["classification"] == "stopped_or_early_stop"
+    assert "immutable_goal_unknown_but_early_stop_marker" in candidate["selection_reasons"]
+
+
+def test_done_agent_without_goal_and_no_early_marker_can_stop(tmp_path: Path) -> None:
+    pane = {
+        "agent": "codex",
+        "agent_status": "done",
+        "cwd": str(tmp_path),
+        "pane_id": "w11:pD",
+    }
+
+    candidate = monitor.classify_pane(
+        FakeHerdr("Idle with no explicit hook failure."),
         pane,
         cwd_prefix=str(tmp_path.parent),
         include_agents={"codex"},
@@ -637,6 +699,20 @@ def test_old_submission_marker_cannot_confirm_new_attempt() -> None:
     assert monitor.prompt_submission_marker(after, baseline=before) == ""
 
 
+def test_completed_submission_marker_confirms_new_attempt() -> None:
+    before = "RESTART CHECK FROM monitor-confused-agents"
+    after = before + "\nUserPromptSubmit hook (completed)"
+
+    assert monitor.prompt_submission_marker(after, baseline=before) == "UserPromptSubmit hook (completed)"
+
+
+def test_stale_completed_submission_marker_cannot_confirm_new_attempt() -> None:
+    before = "UserPromptSubmit hook (completed)\nRESTART CHECK FROM monitor-confused-agents"
+    after = before + "\nRESTART CHECK FROM monitor-confused-agents"
+
+    assert monitor.prompt_submission_marker(after, baseline=before) == ""
+
+
 def test_repeated_submission_marker_prevents_second_enter() -> None:
     before = "Running UserPromptSubmit hook\nWorking (1s * esc to interrupt)"
     after = before + "\nRESTART CHECK FROM monitor-confused-agents"
@@ -663,6 +739,21 @@ def test_stale_wrapped_prompt_signature_does_not_allow_second_enter() -> None:
     """
 
     assert monitor.prompt_visible_after_send(baseline, baseline=baseline, prompt="full prompt not visible") is False
+
+
+def test_repeated_monitor_prompt_with_longer_composer_allows_second_enter() -> None:
+    baseline = """
+    Unblock Attempts: brave-search=<USED:path | NOT_APPLICABLE:reason>
+    Disposition: <choose exactly one of RESUMING_NOW | CAN_SELF_UNBLOCK_WEBGPT>
+    If the immutable goal is known and not achieved, keep going.
+    """
+    text = baseline + "\n" + ("visible newly pasted prompt body " * 20) + """
+    Unblock Attempts: brave-search=<USED:path | NOT_APPLICABLE:reason>
+    Disposition: <choose exactly one of RESUMING_NOW | CAN_SELF_UNBLOCK_WEBGPT>
+    If the immutable goal is known and not achieved, keep going.
+    """
+
+    assert monitor.prompt_visible_after_send(text, baseline=baseline, prompt="full prompt not visible") is True
 
 
 def test_install_cron_renders_ten_minute_apply_line() -> None:
@@ -699,6 +790,34 @@ def test_send_text_failure_never_sends_enter() -> None:
 
 def test_send_prompt_uses_second_enter_when_wrapped_prompt_is_visible() -> None:
     client = FakeWrappedPromptAfterEnterHerdr()
+    original_wait = monitor.wait_for_agent_idle
+    monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
+    try:
+        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-confused-agents")
+    finally:
+        monitor.wait_for_agent_idle = original_wait
+
+    assert result["submit_confirmed"] is True
+    assert result["second_enter_sent"] is True
+    assert client.enter_count == 2
+
+
+def test_send_prompt_uses_second_enter_when_readback_lags() -> None:
+    client = FakeLaggingPromptReadbackHerdr()
+    original_wait = monitor.wait_for_agent_idle
+    monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
+    try:
+        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-confused-agents")
+    finally:
+        monitor.wait_for_agent_idle = original_wait
+
+    assert result["submit_confirmed"] is True
+    assert result["second_enter_sent"] is True
+    assert client.enter_count == 2
+
+
+def test_send_prompt_confirms_working_state_after_second_enter_when_readback_lags() -> None:
+    client = FakeDelayedWorkingAfterSecondEnterHerdr()
     original_wait = monitor.wait_for_agent_idle
     monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
     try:
