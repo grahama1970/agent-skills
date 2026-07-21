@@ -359,9 +359,11 @@ def _handler_prompt(
         for receipt in prior_receipts:
             lines.extend(
                 [
+                    # No local filesystem paths in a browser-bound prompt: surf's
+                    # prompt preflight fails closed on them (the browser model
+                    # cannot read local files). The path stays in the node receipt.
                     f"### {receipt.get('node_id')} / {receipt.get('handler')}",
                     f"- status: {receipt.get('status')}",
-                    f"- response_path: {receipt.get('response_path')}",
                     "",
                     str(receipt.get("response_excerpt") or "").strip(),
                     "",
