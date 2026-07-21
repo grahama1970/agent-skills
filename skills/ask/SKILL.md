@@ -252,6 +252,16 @@ browser handlers through `$surf`/`$browser-oracle` command specs.
 - A browser tab cannot inspect bare local paths unless the runtime attaches file
   contents or serves an artifact URL. Include readable target content in the
   bundle when needed.
+- Browser handler failures must emit
+  `ask.browser_failure_recovery_packet.v1` in the node artifact directory when
+  they can be classified as `repo_access_blocked`, `missing_sentinel`,
+  `prompt_too_large_or_stalled`, or `stale_raw_capture`. The packet must include
+  `failure_code`, `local_readable_bundle_paths`, `auto_retry_allowed`,
+  `auto_retry_blocked_reason`, `next_command`, and `fallback_instruction`.
+- Browser auto-retry is allowed only when `$ask` can read a local bundle file
+  and the selected Surf handler supports `--attach-file`. A private GitHub URL,
+  a bare local path inside the prompt, or a stale raw capture is not enough.
+  Without a readable bundle, fail closed and return the recovery packet.
 - Use the configured tab id when available. If the tab is missing, wrong, stale,
   or cannot be proven to match the requested reviewer, stop with
   `NEEDS_ATTENTION`.

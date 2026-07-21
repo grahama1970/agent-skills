@@ -265,6 +265,17 @@ else
     FAIL=1
 fi
 
+# Test 10b: browser failure recovery packet classifier (deterministic; no live browser)
+echo ""
+echo "10b. Browser failure recovery packet classifier..."
+if PYTHONPATH="$SCRIPT_DIR/src" uv run --project "$SCRIPT_DIR" --group dev pytest -q \
+    tests/test_browser_failure_recovery.py; then
+    echo "   PASS"
+else
+    echo "   FAIL: browser failure recovery packet classifier broken"
+    FAIL=1
+fi
+
 # Test 11: Tau DAG front-door stress sanity (non-mocked local Tau route, no provider spend)
 echo ""
 echo "11. Tau DAG front-door stress sanity..."

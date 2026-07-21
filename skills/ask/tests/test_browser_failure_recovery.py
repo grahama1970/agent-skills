@@ -1,0 +1,159 @@
+"""Browser failure recovery packet tests for Tau roundtable workers."""
+
+from __future__ import annotations
+
+import argparse
+import importlib.util
+import sys
+from pathlib import Path
+
+
+WORKER_PATH = Path(__file__).resolve().parents[1] / "scripts" / "tau_roundtable_worker.py"
+SPEC = importlib.util.spec_from_file_location("tau_roundtable_worker", WORKER_PATH)
+assert SPEC and SPEC.loader
+tau_roundtable_worker = importlib.util.module_from_spec(SPEC)
+sys.modules[SPEC.name] = tau_roundtable_worker
+SPEC.loader.exec_module(tau_roundtable_worker)
+
+
+def _args(tmp_path: Path, *, handler: str = "webkimi") -> argparse.Namespace:
+    return argparse.Namespace(
+        node_id=f"handler-{handler}",
+        handler=handler,
+        topology="sequential",
+        browser_oracle_project=handler,
+        surf_run=str(tmp_path / "skills" / "surf" / "run.sh"),
+        timeout=300,
+        stable_polls=2,
+        no_activate=True,
+    )
+
+
+def _packet(
+    tmp_path: Path,
+    *,
+    handler: str = "webkimi",
+    failure: str = "",
+    response_text: str = "",
+    raw_text: str = "",
+    prompt_text: str = "",
+    submit_meta: dict | None = None,
+) -> dict:
+    artifact_dir = tmp_path / "artifacts"
+    artifact_dir.mkdir()
+    prompt_path = artifact_dir / "prompt.md"
+    prompt_path.write_text(prompt_text, encoding="utf-8")
+    return tau_roundtable_worker._browser_failure_recovery_packet(
+        _args(tmp_path, handler=handler),
+        request_payload={
+            "request": prompt_text,
+            "repo": "local/agent-skills",
+            "target": "browser-recovery",
+        },
+        failure=failure,
+        response_text=response_text,
+        raw_text=raw_text,
+        prompt_text=prompt_text,
+        submit_meta=submit_meta or {},
+        commands=[
+            {
+                "command": ["surf", f"{handler}.submit"],
+                "returncode": 1,
+                "stdout_excerpt": "",
+                "stderr_excerpt": failure,
+            }
+        ],
+        browser_oracle={"tab_id": "837359704"},
+        response_path=artifact_dir / "response.md",
+        raw_path=artifact_dir / "response.raw.md",
+        meta_path=artifact_dir / "response.meta.json",
+        prompt_path=prompt_path,
+    )
+
+
+def test_repo_access_blocked_fails_closed_without_local_readable_bundle(tmp_path: Path) -> None:
+    packet = _packet(
+        tmp_path,
+        handler="webclaude",
+        failure="Claude cannot access this private GitHub repository until GitHub App access is granted.",
+        prompt_text="Review https://github.com/private-owner/private-repo for correctness.",
+    )
+
+    assert packet["schema"] == "ask.browser_failure_recovery_packet.v1"
+    assert packet["failure_code"] == "repo_access_blocked"
+    assert packet["local_readable_bundle_paths"] == []
+    assert packet["auto_retry_allowed"] is False
+    assert packet["auto_retry_blocked_reason"] == "missing_local_readable_bundle"
+    assert packet["next_command"][:2][-1] == "tau-dag"
+    assert "--execute" in packet["next_command"]
+    assert "local readable review bundle" in packet["fallback_instruction"]
+
+
+def test_prompt_too_large_or_stalled_allows_retry_only_with_attachable_bundle(tmp_path: Path) -> None:
+    bundle = tmp_path / "review-bundle.md"
+    bundle.write_text("# Bundle\n\nReadable local target.", encoding="utf-8")
+    packet = _packet(
+        tmp_path,
+        handler="webkimi",
+        failure="surf kimi.submit timed out after 300s; prompt too large or stalled",
+        prompt_text=f"Review local bundle {bundle}",
+    )
+
+    assert packet["failure_code"] == "prompt_too_large_or_stalled"
+    assert packet["local_readable_bundle_paths"] == [str(bundle)]
+    assert packet["attach_file_supported"] is True
+    assert packet["auto_retry_allowed"] is True
+    assert "--attach-file" in packet["next_command"]
+    assert packet["next_command"][packet["next_command"].index("--attach-file") + 1] == str(bundle)
+    assert "--tab-id" in packet["next_command"]
+    assert packet["next_command"][packet["next_command"].index("--tab-id") + 1] == "837359704"
+    assert (tmp_path / "artifacts" / "retry-with-local-bundle.md").is_file()
+
+
+def test_missing_sentinel_classification_uses_submit_metadata(tmp_path: Path) -> None:
+    packet = _packet(
+        tmp_path,
+        handler="webgemini",
+        failure="",
+        prompt_text="Answer with the sentinel at the end.",
+        submit_meta={"raw_contains_sentinel": False, "clean_contains_sentinel": False},
+    )
+
+    assert packet["failure_code"] == "missing_sentinel"
+    assert packet["auto_retry_allowed"] is False
+    assert packet["auto_retry_blocked_reason"] == "missing_local_readable_bundle"
+    assert "completion sentinel" in packet["reason"]
+
+
+def test_stale_raw_capture_takes_precedence_over_missing_sentinel(tmp_path: Path) -> None:
+    packet = _packet(
+        tmp_path,
+        handler="webgpt",
+        failure="missing sentinel",
+        raw_text="Found previous response with old sentinel from an earlier assistant turn.",
+        prompt_text="Ask webgpt for a current answer.",
+        submit_meta={"raw_contains_sentinel": False, "stale_raw_capture": True},
+    )
+
+    assert packet["failure_code"] == "stale_raw_capture"
+    assert "stale" in packet["fallback_instruction"]
+
+
+def test_webclaude_does_not_auto_retry_even_with_readable_bundle_until_transport_supports_attach_file(
+    tmp_path: Path,
+) -> None:
+    bundle = tmp_path / "review-bundle.md"
+    bundle.write_text("# Bundle\n\nReadable local target.", encoding="utf-8")
+    packet = _packet(
+        tmp_path,
+        handler="webclaude",
+        failure="Claude cannot access this private GitHub repository.",
+        prompt_text=f"Review {bundle}",
+    )
+
+    assert packet["failure_code"] == "repo_access_blocked"
+    assert packet["local_readable_bundle_paths"] == [str(bundle)]
+    assert packet["attach_file_supported"] is False
+    assert packet["auto_retry_allowed"] is False
+    assert packet["auto_retry_blocked_reason"] == "handler_transport_does_not_support_attach_file"
+    assert "does not expose --attach-file" in packet["fallback_instruction"]
