@@ -202,6 +202,18 @@ Next: <one immediate action or stop condition>
   `planning_benefit_with_confidence:false`; CD planning regret mean `0.275`
   versus strongest baseline D `0.1375`, so CD is worse by `0.1375` on this
   four-episode strict120 slice.
+- CI-derived planning-benefit flag repair:
+  `skills/persona-dream/research/prospective-tom/scripts/run_live_tau_distributional_planning_intervention.py`
+  and
+  `skills/persona-dream/research/prospective-tom/scripts/run_live_tau_confidence_gated_planning_intervention.py`
+  now compute `planning_benefit_with_confidence` from the bootstrap planning
+  regret CI upper bound instead of hard-coding it false. Unit proof:
+  `uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_pctom_planning_intervention_ci.py -q`
+  returned `4 passed in 0.03s`; `python3 -m py_compile` over both scripts and
+  the new test emitted no errors. Fresh full64 intervention receipts still do
+  not prove planning benefit: distributional ties all 64 planning rows with CI
+  `[0.0, 0.0]`, and confidence-gated reports 63 ties plus one harm with CI
+  upper `0.014062499999999997`.
 - Preceding failed boundary:
   `/tmp/persona-dream-live-tau-strict-inference-timeout90-v17-20260721T1516Z/live_tau_strict_inference_prompt_replication_receipt.v1.json`
   blocked after a 90s Tau timeout and subsequent scillm `gpt-5.5` cooldown/502
@@ -591,6 +603,8 @@ Full64 live Memory fault surface proof root: /tmp/persona-dream-live-tau-full64-
 Planning non-generalization audit proof root: /tmp/persona-dream-live-tau-planning-non-generalization-audit-20260721T124136Z
 Distributional planning intervention proof root: /tmp/persona-dream-live-tau-distributional-planning-intervention-20260721T130137Z
 Confidence-gated planning intervention proof root: /tmp/persona-dream-live-tau-confidence-gated-planning-intervention-20260721T131015Z
+CI-derived distributional planning intervention proof root: /tmp/persona-dream-live-tau-distributional-planning-intervention-ci-derived-20260721T155724Z
+CI-derived confidence-gated planning intervention proof root: /tmp/persona-dream-live-tau-confidence-gated-planning-intervention-ci-derived-20260721T155724Z
 Balanced live Tau planning replication source proof root: /tmp/persona-dream-live-tau-balanced-planning-v17-18-20260721T132835Z
 Balanced live Tau planning replication proof root: /tmp/persona-dream-live-tau-balanced-planning-v17-18-final-20260721T135844Z
 Blocked balanced live Tau planning missing-root proof root: /tmp/persona-dream-live-tau-balanced-planning-negative-final-20260721T135844Z
@@ -648,6 +662,8 @@ last_planning_non_generalization_audit_postrebase_receipt: /tmp/persona-dream-li
 last_distributional_planning_intervention_receipt: /tmp/persona-dream-live-tau-distributional-planning-intervention-20260721T130137Z/distributional_planning_intervention_receipt.v1.json
 last_blocked_distributional_planning_missing_root_receipt: /tmp/persona-dream-live-tau-distributional-planning-intervention-negative-20260721T130208Z/distributional_planning_intervention_receipt.v1.json
 last_confidence_gated_planning_intervention_receipt: /tmp/persona-dream-live-tau-confidence-gated-planning-intervention-20260721T131015Z/confidence_gated_planning_intervention_receipt.v1.json
+last_ci_derived_distributional_planning_intervention_receipt: /tmp/persona-dream-live-tau-distributional-planning-intervention-ci-derived-20260721T155724Z/distributional_planning_intervention_receipt.v1.json
+last_ci_derived_confidence_gated_planning_intervention_receipt: /tmp/persona-dream-live-tau-confidence-gated-planning-intervention-ci-derived-20260721T155724Z/confidence_gated_planning_intervention_receipt.v1.json
 last_blocked_confidence_gated_planning_missing_root_receipt: /tmp/persona-dream-live-tau-confidence-gated-planning-intervention-negative-20260721T131026Z/confidence_gated_planning_intervention_receipt.v1.json
 last_balanced_live_tau_planning_replication_receipt: /tmp/persona-dream-live-tau-balanced-planning-v17-18-final-20260721T135844Z/live_tau_balanced_planning_replication_receipt.v1.json
 last_blocked_balanced_live_tau_planning_missing_root_receipt: /tmp/persona-dream-live-tau-balanced-planning-negative-final-20260721T135844Z/live_tau_balanced_planning_replication_receipt.v1.json

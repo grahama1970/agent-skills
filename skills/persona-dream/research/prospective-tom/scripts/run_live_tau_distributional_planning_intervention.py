@@ -99,6 +99,11 @@ def _bootstrap_ci(values: list[float], *, samples: int, seed: int, alpha: float)
     }
 
 
+def _planning_benefit_with_confidence(ci: dict[str, Any]) -> bool:
+    upper = ci.get("upper")
+    return isinstance(upper, (int, float)) and not isinstance(upper, bool) and upper < 0
+
+
 def _counterpart_to_agent_action(counterpart_action: str) -> str:
     action = counterpart_action.upper()
     if "ASKS_TO_WAIT" in action or "QUIET_REVIEW" in action:
@@ -400,6 +405,7 @@ def _summarize(
     non_trust_changed_families = sorted(
         family for family in changed_by_family if family not in TRUST_COMMIT_FAMILY_VALUES
     )
+    planning_regret_ci = _bootstrap_ci(deltas, samples=bootstrap_samples, seed=bootstrap_seed, alpha=alpha)
     return {
         "planning_rows": planning_rows,
         "delta_values": deltas,
@@ -407,8 +413,8 @@ def _summarize(
             "planning_rows": len(planning_rows),
             "direction_counts": dict(collections.Counter(row["direction"] for row in planning_rows)),
             "mean_cd_minus_baseline_planning_regret": _mean(deltas),
-            "planning_regret_ci": _bootstrap_ci(deltas, samples=bootstrap_samples, seed=bootstrap_seed, alpha=alpha),
-            "planning_benefit_with_confidence": False,
+            "planning_regret_ci": planning_regret_ci,
+            "planning_benefit_with_confidence": _planning_benefit_with_confidence(planning_regret_ci),
             "action_policy_change_count": sum(changed_by_condition.values()),
             "action_policy_change_count_by_condition": dict(changed_by_condition),
             "action_policy_change_count_by_family": dict(changed_by_family),
@@ -674,7 +680,7 @@ def run_intervention(
             "non_trust_commit_changed_families": intervention_summary["non_trust_commit_changed_families"],
             "nonzero_planning_delta_families": intervention_summary["nonzero_planning_delta_families"],
             "changes_beyond_trust_commit_subset": intervention_summary["changes_beyond_trust_commit_subset"],
-            "planning_benefit_with_confidence": False,
+            "planning_benefit_with_confidence": intervention_summary["planning_benefit_with_confidence"],
             "belief_prediction_benefit_kept_separate_from_planning_benefit": True,
         },
         "checks": {
@@ -685,7 +691,10 @@ def run_intervention(
             "intervention_policy_named": POLICY_ID,
             "intervention_changes_action_policy": intervention_summary["action_policy_change_count"] > 0,
             "intervention_changes_beyond_trust_commit_subset": intervention_summary["changes_beyond_trust_commit_subset"],
-            "planning_benefit_not_claimed_when_tied": intervention_summary["direction_counts"] == {"TIE": 64},
+            "planning_benefit_not_claimed_when_tied": (
+                intervention_summary["direction_counts"] != {"TIE": 64}
+                or intervention_summary["planning_benefit_with_confidence"] is False
+            ),
             "belief_prediction_benefit_kept_separate_from_planning_benefit": True,
             "human_content_judgment_absent": True,
             "unsupported_writes_absent": True,

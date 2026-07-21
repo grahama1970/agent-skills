@@ -1,10 +1,30 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R fresh service-boundary retry proof) by agent
+**Last updated:** 2026-07-21 (PCTOM-R planning CI flag repair) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R PLANNING CI FLAG REPAIR): the distributional and
+  confidence-gated planning-intervention runners no longer hard-code
+  `planning_benefit_with_confidence:false`; they derive it from the bootstrap
+  planning-regret CI upper bound (`upper < 0`, lower-is-better). Regression
+  test `skills/persona-dream/tests/test_pctom_planning_intervention_ci.py`
+  proves all-negative deltas set the flag true and tie/harm-only cases keep it
+  false. Focused proof:
+  `uv run --project skills/persona-dream pytest skills/persona-dream/tests/test_pctom_planning_intervention_ci.py -q`
+  returned `4 passed in 0.03s`; `python3 -m py_compile` over both patched
+  scripts and the new test emitted no errors. Fresh receipts over the full64
+  live Tau root are:
+  `/tmp/persona-dream-live-tau-distributional-planning-intervention-ci-derived-20260721T155724Z/distributional_planning_intervention_receipt.v1.json`
+  and
+  `/tmp/persona-dream-live-tau-confidence-gated-planning-intervention-ci-derived-20260721T155724Z/confidence_gated_planning_intervention_receipt.v1.json`.
+  Both report `mocked:false`, `live:true`, `live_tau_originated_artifacts_consumed:true`,
+  `live_tau_reexecuted:false`, `tau_call_attempts:0`, and zero Memory/provider/
+  canonical/identity/source-memory writes. They still do not prove planning
+  benefit: distributional ties all 64 planning rows with CI `[0.0, 0.0]`;
+  confidence-gated has 63 ties, one harm, mean CD-minus-baseline planning regret
+  `0.004687499999999999`, and CI upper `0.014062499999999997`.
 - 2026-07-21 (PCTOM-R FRESH FULL64 SERVICE-BOUNDARY RETRY PROOF): fresh local
   HTTP service retry evidence exists at
   `/tmp/persona-dream-live-tau-sealed-test-service-retry-proof-fresh-20260721T155119Z/live_tau_sealed_test_service_retry_proof_receipt.v1.json`.

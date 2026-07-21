@@ -1,0 +1,105 @@
+"""Regression tests for PCTOM-R planning-intervention CI benefit flags.
+
+These tests are deterministic unit checks only. They prove the intervention
+summaries derive the planning-benefit flag from the bootstrap CI instead of
+hard-coding it false; they do not prove live Tau planning benefit.
+"""
+
+from __future__ import annotations
+
+import importlib.util
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+PCTOM_SCRIPTS = ROOT / "research" / "prospective-tom" / "scripts"
+CONDITIONS = ("M", "R", "D", "CD")
+
+
+def _load(script_name: str):
+    spec = importlib.util.spec_from_file_location(
+        script_name,
+        PCTOM_SCRIPTS / f"{script_name}.py",
+    )
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+distributional = _load("run_live_tau_distributional_planning_intervention")
+confidence_gated = _load("run_live_tau_confidence_gated_planning_intervention")
+
+
+def _rows_for_deltas(deltas: list[float]) -> list[dict]:
+    rows = []
+    for idx, delta in enumerate(deltas, start=1):
+        episode_id = f"episode-{idx:03d}"
+        baseline_regret = 0.20
+        regrets = {
+            "M": baseline_regret,
+            "R": baseline_regret + 0.10,
+            "D": baseline_regret + 0.20,
+            "CD": baseline_regret + delta,
+        }
+        for condition in CONDITIONS:
+            rows.append(
+                {
+                    "status": "PASS_TOM_ACTION_SELECTION",
+                    "episode_id": episode_id,
+                    "condition": condition,
+                    "family": "coordination_conflict",
+                    "planning_regret": regrets[condition],
+                    "selected_action": "WAIT" if condition != "CD" else "ASK_CLARIFYING_QUESTION",
+                    "decision_rule": "TEST_RULE",
+                }
+            )
+    return rows
+
+
+def test_distributional_planning_benefit_flag_comes_from_negative_ci():
+    summary = distributional._summarize(
+        action_rows=_rows_for_deltas([-0.10, -0.10, -0.10, -0.10]),
+        original_rows={},
+        bootstrap_samples=100,
+        bootstrap_seed=1,
+        alpha=0.05,
+    )["summary"]
+    assert summary["planning_regret_ci"]["upper"] < 0
+    assert summary["planning_benefit_with_confidence"] is True
+
+
+def test_distributional_planning_benefit_flag_stays_false_for_tie():
+    summary = distributional._summarize(
+        action_rows=_rows_for_deltas([0.0, 0.0, 0.0, 0.0]),
+        original_rows={},
+        bootstrap_samples=100,
+        bootstrap_seed=1,
+        alpha=0.05,
+    )["summary"]
+    assert summary["planning_regret_ci"]["upper"] == 0.0
+    assert summary["planning_benefit_with_confidence"] is False
+
+
+def test_confidence_gated_planning_benefit_flag_comes_from_negative_ci():
+    summary = confidence_gated._summarize(
+        _rows_for_deltas([-0.10, -0.10, -0.10, -0.10]),
+        original_rows={},
+        bootstrap_samples=100,
+        bootstrap_seed=1,
+        alpha=0.05,
+    )["summary"]
+    assert summary["planning_regret_ci"]["upper"] < 0
+    assert summary["planning_benefit_with_confidence"] is True
+
+
+def test_confidence_gated_planning_benefit_flag_stays_false_for_harm_only():
+    summary = confidence_gated._summarize(
+        _rows_for_deltas([0.10, 0.10, 0.10, 0.10]),
+        original_rows={},
+        bootstrap_samples=100,
+        bootstrap_seed=1,
+        alpha=0.05,
+    )["summary"]
+    assert summary["planning_regret_ci"]["upper"] > 0
+    assert summary["planning_benefit_with_confidence"] is False

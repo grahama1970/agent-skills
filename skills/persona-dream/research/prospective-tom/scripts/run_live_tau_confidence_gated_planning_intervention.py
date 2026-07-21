@@ -90,6 +90,11 @@ def _bootstrap_ci(values: list[float], *, samples: int, seed: int, alpha: float)
     }
 
 
+def _planning_benefit_with_confidence(ci: dict[str, Any]) -> bool:
+    upper = ci.get("upper")
+    return isinstance(upper, (int, float)) and not isinstance(upper, bool) and upper < 0
+
+
 def _mapped_action_mass(distribution: list[dict[str, Any]]) -> dict[str, float]:
     mapped = {action: 0.0 for action in ACTION_VOCABULARY}
     for item in distribution:
@@ -251,6 +256,7 @@ def _summarize(action_rows: list[dict[str, Any]], original_rows: dict[tuple[str,
                 "baseline_original_selected_action": baseline_row.get("original_selected_action"),
             }
         )
+    planning_regret_ci = _bootstrap_ci(deltas, samples=bootstrap_samples, seed=bootstrap_seed, alpha=alpha)
     return {
         "planning_rows": planning_rows,
         "delta_values": deltas,
@@ -258,8 +264,8 @@ def _summarize(action_rows: list[dict[str, Any]], original_rows: dict[tuple[str,
             "planning_rows": len(planning_rows),
             "direction_counts": dict(collections.Counter(row["direction"] for row in planning_rows)),
             "mean_cd_minus_baseline_planning_regret": _mean(deltas),
-            "planning_regret_ci": _bootstrap_ci(deltas, samples=bootstrap_samples, seed=bootstrap_seed, alpha=alpha),
-            "planning_benefit_with_confidence": False,
+            "planning_regret_ci": planning_regret_ci,
+            "planning_benefit_with_confidence": _planning_benefit_with_confidence(planning_regret_ci),
             "action_policy_change_count": sum(changed_by_condition.values()),
             "action_policy_change_count_by_condition": dict(changed_by_condition),
             "action_policy_change_count_by_family": dict(changed_by_family),
@@ -454,10 +460,11 @@ def run_intervention(
         errors.append(f"planning_rows_count_mismatch:{intervention_summary['planning_rows']}:64")
     if intervention_summary["nonzero_planning_delta_count"] <= 0:
         errors.append("intervention_nonzero_planning_delta_count_zero")
-    if intervention_summary["direction_counts"].get("HARM", 0) > 0 and intervention_summary["direction_counts"].get("BENEFIT", 0) == 0:
-        planning_benefit_with_confidence = False
-    else:
-        planning_benefit_with_confidence = False
+    planning_benefit_with_confidence = intervention_summary["planning_benefit_with_confidence"]
+    harm_only = (
+        intervention_summary["direction_counts"].get("HARM", 0) > 0
+        and intervention_summary["direction_counts"].get("BENEFIT", 0) == 0
+    )
 
     base_is_full64_live_tau = base_receipt.get("full_64_episode_replication") is True and base_receipt.get("live") is True
     live_tau_artifacts_consumed = base_is_full64_live_tau and len(action_rows) > 0
@@ -537,7 +544,7 @@ def run_intervention(
             "reward_or_regret_scores_recomputed": all(regret_counts[condition] == 64 for condition in CONDITIONS),
             "intervention_policy_named": POLICY_ID,
             "intervention_produces_non_tied_planning_delta": intervention_summary["nonzero_planning_delta_count"] > 0,
-            "planning_benefit_not_claimed_when_harm_only": planning_benefit_with_confidence is False,
+            "planning_benefit_not_claimed_when_harm_only": not harm_only or planning_benefit_with_confidence is False,
             "belief_prediction_benefit_kept_separate_from_planning_benefit": True,
             "human_content_judgment_absent": True,
             "unsupported_writes_absent": True,
