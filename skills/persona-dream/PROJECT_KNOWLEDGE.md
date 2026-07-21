@@ -1,10 +1,32 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R held-out condition benefit accepted) by agent
+**Last updated:** 2026-07-21 (PCTOM-R live fault-injection surface accepted) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R LIVE FAULT-INJECTION SURFACE): broader fault-containment
+  evidence now exists at
+  `/tmp/persona-dream-live-fault-injection-surface-20260721T044950Z/live_fault_injection_surface_receipt.v1.json`.
+  It reports `PASS_PCTOM_LIVE_FAULT_INJECTION_SURFACE` while consuming the
+  deterministic sealed-test statistical-confidence receipt and the live Memory
+  revision-recall receipt. Counts: 8 fault families, 8 fault trials, 4 live
+  Memory fault probes, and 1 causal replay receipt. The fault families are
+  `memory_timeout_or_unreachable`, `memory_malformed_payload`,
+  `memory_collection_visibility_or_stale_recall`,
+  `model_malformed_structured_output`, `schema_drift`,
+  `interrupted_persistence`, `retry_after_uncertain_completion`, and
+  `untrusted_tool_text`. Terminal outcomes were constrained to
+  `BLOCKED_BEFORE_SIDE_EFFECT`,
+  `QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE`, or
+  `RECOVERED_WITH_EQUIVALENT_END_STATE`; `continued_with_unknown_state: 0`,
+  `side_effect_violations: 0`, and canonical/source/identity/provider/Tau
+  write or call attempts were all 0. This proves live Memory /recall fault
+  probes plus controlled local model/tool/schema/persistence/retry fault
+  containment over hash-bound PCTOM-R predecessor receipts. It does not prove
+  live Tau sealed-test execution, production retry machinery inside a deployed
+  orchestrator, paid provider execution, video/audio quality, semantic dream
+  quality, or complete live Phase 01-16 runtime execution.
 - 2026-07-21 (PCTOM-R HELD-OUT CONDITION BENEFIT): frozen held-out
   condition-benefit evidence now exists at
   `/tmp/persona-dream-heldout-condition-benefit-final-20260721T041000Z/heldout_condition_benefit_receipt.v1.json`.

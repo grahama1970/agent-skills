@@ -1175,3 +1175,61 @@ benefit, live Tau sealed-test execution, live Memory recall in the sealed-test
 loop, real external service fault injection, production retry machinery,
 complete live Phase 01-16 runtime execution, paid provider execution, video
 quality, or semantic dream quality.
+
+## Live Fault-Injection Surface Bridge
+
+The live fault-injection surface bridge consumes the deterministic sealed-test
+statistical-confidence receipt and the live Memory revision-recall receipt. It
+then probes live Memory `/recall` failure modes and creates controlled local
+fault manifests for model-output, tool-return, schema, persistence, and retry
+boundaries.
+
+Pipeline:
+
+```text
+sealed-test statistical-confidence receipt
++ live Memory revision-recall receipt
+-> live Memory baseline/malformed/unreachable/collection probes
+-> controlled model/tool/schema/persistence/retry fault manifests
+-> fault trials with permitted terminal outcomes
+-> causal replay receipt for memory collection visibility
+-> live fault-injection surface receipt
+```
+
+Required checks:
+
+```text
+base sealed-test receipt status: PASS_PCTOM_SEALED_TEST_STATISTICAL_CONFIDENCE
+base live Memory receipt status: PASS_PCTOM_LIVE_MEMORY_REVISION_RECALL
+fault_families_present >= 8
+live_memory_fault_probes >= 3
+permitted_terminal_outcomes_only: true
+continued_with_unknown_state: 0
+side_effect_violations: 0
+causal_replay_receipts >= 1
+canonical/source/identity/provider/Tau attempts: 0
+```
+
+Accepted status:
+
+```text
+PASS_PCTOM_LIVE_FAULT_INJECTION_SURFACE
+```
+
+Blocked status:
+
+```text
+BLOCKED_PCTOM_LIVE_FAULT_INJECTION_SURFACE
+```
+
+Current accepted receipt:
+
+```text
+/tmp/persona-dream-live-fault-injection-surface-20260721T044950Z/live_fault_injection_surface_receipt.v1.json
+```
+
+This bridge proves bounded live Memory fault probing plus controlled local
+fault containment over hash-bound PCTOM-R predecessor receipts. It does not
+prove live Tau sealed-test execution, production retry machinery inside a
+deployed orchestrator, paid provider execution, video/audio quality, semantic
+dream quality, or complete live Phase 01-16 runtime execution.
