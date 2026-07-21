@@ -21,12 +21,14 @@ class EvalHerdrClient:
         *,
         panes: list[dict[str, Any]],
         text_by_pane: dict[str, str],
+        after_first_read_by_pane: dict[str, str] | None = None,
         explain_by_pane: dict[str, dict[str, Any]] | None = None,
         fail_send_text: bool = False,
         confirm_submission: bool = True,
     ) -> None:
         self.panes = panes
         self.text_by_pane = dict(text_by_pane)
+        self.after_first_read_by_pane = after_first_read_by_pane or {}
         self.explain_by_pane = explain_by_pane or {}
         self.fail_send_text = fail_send_text
         self.confirm_submission = confirm_submission
@@ -34,6 +36,7 @@ class EvalHerdrClient:
         self.socket_path = Path("/tmp/monitor-confused-eval-herdr.sock")
         self.enter_count = 0
         self.sent_text_count = 0
+        self.read_count_by_pane: dict[str, int] = {}
 
     def call(self, method: str, params: dict[str, Any]) -> dict[str, Any]:
         try:
@@ -51,6 +54,10 @@ class EvalHerdrClient:
             return {"panes": self.panes}
         if method == "pane.read":
             pane_id = str(params["pane_id"])
+            self.read_count_by_pane[pane_id] = self.read_count_by_pane.get(pane_id, 0) + 1
+            if self.read_count_by_pane[pane_id] > 1 and pane_id in self.after_first_read_by_pane:
+                self.text_by_pane[pane_id] = self.after_first_read_by_pane[pane_id]
+                del self.after_first_read_by_pane[pane_id]
             return {"type": "pane_read", "read": {"text": self.text_by_pane[pane_id]}}
         if method == "agent.explain":
             pane_id = str(params["target"])
@@ -222,3 +229,23 @@ def test_eval_no_submission_marker_after_enter_returns_nonzero(tmp_path: Path) -
     assert result["prompts"][0]["submit_confirmed"] is False
     assert result["prompts"][0]["input_modified"] is True
     assert client.enter_count == 2
+
+
+def test_eval_invalid_receipt_appearing_before_send_does_not_suppress_prompt(tmp_path: Path) -> None:
+    project = tmp_path / "stale"
+    project.mkdir()
+    (project / "GOAL.md").write_text("Finish the route audit.", encoding="utf-8")
+    client = EvalHerdrClient(
+        panes=[{"workspace_id": "w1", "pane_id": "w1:p6", "agent": "codex", "agent_status": "done", "cwd": str(project)}],
+        text_by_pane={"w1:p6": "What remains is the receipt deep link."},
+        after_first_read_by_pane={"w1:p6": "Immutable Goal: ACHIEVED_WITH_RECEIPT:missing.json\n"},
+    )
+
+    exit_code, result = run_eval_tick(tmp_path, client)
+
+    assert exit_code == 0
+    assert result["ok"] is True
+    assert result["prompts"][0]["sent"] is True
+    assert result["prompts"][0].get("skip_reason") != "pre_submit_stop_allowed"
+    assert client.sent_text_count == 1
+    assert client.enter_count == 1

@@ -456,7 +456,7 @@ def tick_locked(
             "send_api": [],
         }
         if apply:
-            send_result = send_prompt(client, str(candidate["pane_id"]), prompt)
+            send_result = send_prompt(client, str(candidate["pane_id"]), prompt, project_root=candidate.get("project_root"))
             prompt_record.update(send_result)
             prompt_record["sent"] = bool(send_result.get("submit_confirmed"))
             if prompt_record["submit_confirmed"] or prompt_record.get("input_modified"):
@@ -576,6 +576,7 @@ def classify_pane(
         "early_stop_markers": early_markers,
         "human_blocker_markers": human_markers,
         "immutable_goal": immutable_goal,
+        "project_root": str(project_root) if project_root else None,
         "transcript_goal_claim": transcript_goal_claim(current_text, project_root=project_root),
         "recent_excerpt": text[-2400:],
         "analysis_excerpt": current_text[-1200:],
@@ -612,14 +613,20 @@ def find_patterns(text: str, patterns: list[str]) -> list[str]:
     return matches
 
 
-def send_prompt(client: HerdrClient, pane_id: str, prompt: str) -> dict[str, Any]:
+def send_prompt(client: HerdrClient, pane_id: str, prompt: str, *, project_root: str | Path | None = None) -> dict[str, Any]:
     socket_path = getattr(client, "socket_path", None)
     wait_result = wait_for_agent_idle(pane_id, socket_path=socket_path)
     pre_read = read_pane_text(client, pane_id)
     if not pre_read:
         return skipped_send("pre_read_failed", wait_result=wait_result, send_failed=True)
     pre_region = latest_transcript_region(pre_read)
-    if goal_allows_stop(pre_region, goal_found=True, has_early_markers=bool(find_patterns(pre_region, EARLY_STOP_PATTERNS))):
+    root_path = Path(project_root).expanduser() if project_root else None
+    if goal_allows_stop(
+        pre_region,
+        goal_found=True,
+        has_early_markers=bool(find_patterns(pre_region, EARLY_STOP_PATTERNS)),
+        project_root=root_path,
+    ):
         return skipped_send("pre_submit_stop_allowed", wait_result=wait_result, pre_read=pre_read)
     explain = explain_agent(client, pane_id)
     if not wait_result.get("ok") and explain.get("state") not in {"idle", "done"}:

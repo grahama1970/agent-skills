@@ -75,11 +75,15 @@ class FakeWorkingAfterEnterHerdr(FakeSubmitHerdr):
 
 
 class FakeCompletionBeforeSendHerdr(FakeSubmitHerdr):
+    def __init__(self, text: str = "Immutable Goal: ACHIEVED_WITH_RECEIPT:receipt.json\n") -> None:
+        super().__init__()
+        self.completion_text = text
+
     def call(self, method: str, params: dict) -> dict:
         if method == "pane.read":
             return {
                 "type": "pane_read",
-                "read": {"text": "Immutable Goal: ACHIEVED_WITH_RECEIPT:receipt.json\n"},
+                "read": {"text": self.completion_text},
             }
         return super().call(method, params)
 
@@ -575,12 +579,13 @@ def test_send_text_failure_never_sends_enter() -> None:
     assert client.enter_count == 0
 
 
-def test_completion_between_selection_and_send_sends_nothing() -> None:
+def test_completion_between_selection_and_send_sends_nothing_with_valid_receipt(tmp_path: Path) -> None:
+    (tmp_path / "receipt.json").write_text("{}", encoding="utf-8")
     client = FakeCompletionBeforeSendHerdr()
     original_wait = monitor.wait_for_agent_idle
     monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
     try:
-        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-confused-agents")
+        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-confused-agents", project_root=tmp_path)
     finally:
         monitor.wait_for_agent_idle = original_wait
 
@@ -588,6 +593,19 @@ def test_completion_between_selection_and_send_sends_nothing() -> None:
     assert result["skip_reason"] == "pre_submit_stop_allowed"
     assert result["input_modified"] is False
     assert client.enter_count == 0
+
+
+def test_completion_between_selection_and_send_missing_receipt_does_not_suppress_prompt(tmp_path: Path) -> None:
+    client = FakeCompletionBeforeSendHerdr()
+    original_wait = monitor.wait_for_agent_idle
+    monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
+    try:
+        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-confused-agents", project_root=tmp_path)
+    finally:
+        monitor.wait_for_agent_idle = original_wait
+
+    assert result.get("skip_reason") != "pre_submit_stop_allowed"
+    assert client.enter_count >= 1
 
 
 def test_send_prompt_never_uses_takeover_controller() -> None:
