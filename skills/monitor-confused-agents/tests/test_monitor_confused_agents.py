@@ -17,7 +17,7 @@ SPEC.loader.exec_module(monitor)
 class FakeHerdr:
     def __init__(self, text: str, explain: dict | None = None) -> None:
         self.text = text
-        self.explain = explain or {"state": "done"}
+        self.explain = explain or {"state": "done", "matched_rule": "codex_prompt_done_ready"}
 
     def call(self, method: str, params: dict) -> dict:
         if method == "pane.read":
@@ -45,7 +45,7 @@ class FakeSubmitHerdr:
                 return {"type": "pane_read", "read": {"text": "RESTART CHECK FROM monitor-confused-agents\n  gpt-5.5 high"}}
             return {"type": "pane_read", "read": {"text": "Running UserPromptSubmit hook\nWorking (1s * esc to interrupt)"}}
         if method == "agent.explain":
-            return {"type": "agent_explain", "explain": {"state": "idle"}}
+            return {"type": "agent_explain", "explain": {"state": "idle", "matched_rule": "codex_prompt_idle_ready"}}
         raise AssertionError(method)
 
 
@@ -71,6 +71,16 @@ class FakeWorkingAfterEnterHerdr(FakeSubmitHerdr):
     def call(self, method: str, params: dict) -> dict:
         if method == "agent.explain" and self.enter_count >= 1:
             return {"type": "agent_explain", "explain": {"state": "working"}}
+        return super().call(method, params)
+
+
+class FakeCompletionBeforeSendHerdr(FakeSubmitHerdr):
+    def call(self, method: str, params: dict) -> dict:
+        if method == "pane.read":
+            return {
+                "type": "pane_read",
+                "read": {"text": "Immutable Goal: ACHIEVED_WITH_RECEIPT:receipt.json\n"},
+            }
         return super().call(method, params)
 
 
@@ -322,6 +332,41 @@ def test_idle_fallback_is_observe_only(tmp_path: Path) -> None:
     assert candidate["action"] == "observe_only"
 
 
+def test_idle_without_matched_rule_is_observe_only(tmp_path: Path) -> None:
+    (tmp_path / "GOAL.md").write_text("Finish feature.", encoding="utf-8")
+    pane = {
+        "agent": "codex",
+        "agent_status": "idle",
+        "cwd": str(tmp_path),
+        "pane_id": "w11:pD",
+    }
+
+    candidate = monitor.classify_pane(
+        FakeHerdr("What remains is implementation.", explain={"state": "idle"}),
+        pane,
+        cwd_prefix=str(tmp_path.parent),
+        include_agents={"codex"},
+        stopped_statuses={"idle"},
+        only_obvious_early_stops=False,
+    )
+
+    assert candidate is not None
+    assert candidate["action"] == "observe_only"
+    assert candidate["classification"] == "blocked_or_unknown_observe_only"
+
+
+def test_any_fallback_or_skip_reason_sends_no_input() -> None:
+    unsafe_explains = [
+        {"state": "idle", "matched_rule": "codex_prompt_idle_ready", "fallback_reason": "any_nonempty_fallback"},
+        {"state": "done", "matched_rule": "codex_prompt_done_ready", "skip_reason": "screen too small"},
+        {"state": "idle", "matched_rule": "codex_prompt_idle_ready", "screen_detection_skip_reason": "no bottom buffer"},
+        {"state": "done", "matched_rule": "codex_prompt_done_ready", "warning": "ambiguous"},
+    ]
+
+    for explain in unsafe_explains:
+        assert monitor.explain_allows_input(explain) is False
+
+
 def test_goal_status_line_with_goal_file_allows_stop(tmp_path: Path) -> None:
     (tmp_path / "GOAL.md").write_text("Finish feature.", encoding="utf-8")
     pane = {
@@ -342,6 +387,31 @@ def test_goal_status_line_with_goal_file_allows_stop(tmp_path: Path) -> None:
 
     assert candidate is not None
     assert candidate["action"] == "observe_only"
+
+
+def test_goal_achieved_instruction_is_not_completion() -> None:
+    text = "Do not claim Goal achieved until tests pass."
+
+    assert monitor.transcript_goal_claim(text)["state"] == "none"
+
+
+def test_old_attempts_do_not_satisfy_new_blocker(tmp_path: Path) -> None:
+    receipt = tmp_path / "review.md"
+    receipt.write_text("review", encoding="utf-8")
+    text = f"""
+    Immutable Goal: BLOCKED:old blocker
+    Unblock Attempts: brave-search=USED:{receipt}; browser-oracle=USED:{receipt}
+
+    Status/Phase: new blocker
+    Immutable Goal: BLOCKED:new missing credential
+    Evidence: none yet
+    """
+
+    assert monitor.exhausted_blocker_claim(text, project_root=tmp_path) is False
+
+
+def test_empty_not_applicable_reason_is_invalid() -> None:
+    assert monitor.valid_attempt_value("NOT_APPLICABLE:") is False
 
 
 def test_webgpt_only_does_not_exhaust_blocker(tmp_path: Path) -> None:
@@ -466,6 +536,13 @@ def test_old_submission_marker_cannot_confirm_new_attempt() -> None:
     assert monitor.prompt_submission_marker(after, baseline=before) == ""
 
 
+def test_repeated_submission_marker_prevents_second_enter() -> None:
+    before = "Running UserPromptSubmit hook\nWorking (1s * esc to interrupt)"
+    after = before + "\nRESTART CHECK FROM monitor-confused-agents"
+
+    assert monitor.prompt_submitted(after, baseline=before) is False
+
+
 def test_install_cron_renders_ten_minute_apply_line() -> None:
     exit_code, payload = monitor.install_cron(
         apply=False,
@@ -494,6 +571,22 @@ def test_send_text_failure_never_sends_enter() -> None:
 
     assert result["skipped"] is True
     assert result["skip_reason"] == "send_text_failed"
+    assert result["send_failed"] is True
+    assert client.enter_count == 0
+
+
+def test_completion_between_selection_and_send_sends_nothing() -> None:
+    client = FakeCompletionBeforeSendHerdr()
+    original_wait = monitor.wait_for_agent_idle
+    monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
+    try:
+        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-confused-agents")
+    finally:
+        monitor.wait_for_agent_idle = original_wait
+
+    assert result["skipped"] is True
+    assert result["skip_reason"] == "pre_submit_stop_allowed"
+    assert result["input_modified"] is False
     assert client.enter_count == 0
 
 

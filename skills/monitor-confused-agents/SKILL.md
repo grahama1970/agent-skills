@@ -51,6 +51,7 @@ skills/monitor-confused-agents/run.sh install-cron
 skills/monitor-confused-agents/run.sh install-cron --space codex --apply
 skills/monitor-confused-agents/run.sh probe-text --pane-id w11:pG --agent codex --reason early_stop
 skills/monitor-confused-agents/sanity.sh
+uv run --project skills/monitor-confused-agents pytest -q skills/monitor-confused-agents/evals/test_real_world_e2e.py
 ```
 
 ## Runtime Contract
@@ -72,8 +73,9 @@ skills/monitor-confused-agents/sanity.sh
   after pressing Enter and requires visible submission evidence before marking
   `submit_confirmed:true`.
 - Before injecting input, the monitor runs Herdr's idle wait and then checks
-  `agent.explain`. If the agent is already `working`, it skips injection and
-  records `skipped:true`.
+  `agent.explain`. It requires a positive prompt-ready matched rule and rejects
+  fallback, skip, or warning explain output. If the agent is already `working`
+  or explain is ambiguous, it skips injection and records `skipped:true`.
 - `blocked` and `unknown` pane states are observation-only. The monitor records
   them but does not type into them because they may be approval, permission, or
   human-input surfaces.
@@ -88,6 +90,11 @@ skills/monitor-confused-agents/sanity.sh
 - Submission evidence must newly appear after the prompt attempt. Old
   `Running UserPromptSubmit hook`, `Working (`, or `Booting MCP server` text in
   scrollback does not confirm the current prompt.
+- If the transcript changes between selection and send to a current
+  goal-achieved or fully exhausted-blocker state, the monitor skips the prompt
+  before typing.
+- Pre-read failures, Herdr send failures, Enter failures, and typed-but-not
+  submitted attempts make the tick exit nonzero with `status:NEEDS_ATTENTION`.
 - Any input-modifying uncertain attempt is recorded in cooldown state, even when
   submission is not confirmed, so cron does not repeat the same ambiguous input
   every 10 minutes.
@@ -199,6 +206,9 @@ Report `mocked` and `live` explicitly:
 
 - Fixture tests prove parsing, selection, cooldown, prompt construction, and
   crontab rendering only.
+- `evals/test_real_world_e2e.py` exercises deterministic Herdr-like socket
+  flows through pane selection, prompt transport, receipt status, false-positive
+  suppression, and typed-but-not-submitted failure accounting.
 - A dry-run `tick` proves Herdr can be observed and receipts can be written.
 - An applied `tick --apply` proves the monitor attempted Herdr prompt transport
   and records both API results and post-Enter submission evidence. Treat

@@ -25,7 +25,8 @@ def strip_monitor_prompt(text: str) -> str:
 
 
 def transcript_goal_claim(text: str, *, project_root: Path | None = None) -> dict[str, str]:
-    line = structured_line_value(text, "Immutable Goal")
+    block = latest_operational_block(text)
+    line = structured_line_value(block, "Immutable Goal")
     if line:
         lowered = line.lower()
         if lowered.startswith("achieved_with_receipt:"):
@@ -38,11 +39,11 @@ def transcript_goal_claim(text: str, *, project_root: Path | None = None) -> dic
         if lowered.startswith(("not_met", "unknown")):
             return {"state": "unmet", "source": "immutable_goal_line"}
         return {"state": "mentioned", "source": "immutable_goal_line"}
-    if re.search(r"^\s*(?:.*\s)?goal achieved\b", text, flags=re.IGNORECASE | re.MULTILINE):
+    if re.search(r"^\s*(?:gpt-[^\n]*\s+.*?\s+)?Goal achieved(?:\s*\([^)]*\))?\s*$", block, flags=re.MULTILINE):
         return {"state": "achieved", "source": "status_line"}
-    if re.search(r"^\s*done_with_receipt\b", text, flags=re.IGNORECASE | re.MULTILINE):
+    if re.search(r"^\s*DONE_WITH_RECEIPT(?:\s|$)", block, flags=re.MULTILINE):
         return {"state": "achieved", "source": "status_line"}
-    if "immutable goal" in text.lower():
+    if "immutable goal" in block.lower():
         return {"state": "mentioned", "source": "latest_transcript_region"}
     return {"state": "none", "source": "latest_transcript_region"}
 
@@ -59,14 +60,23 @@ def goal_allows_stop(text: str, *, goal_found: bool, has_early_markers: bool, pr
 
 
 def exhausted_blocker_claim(text: str, *, project_root: Path | None = None) -> bool:
-    goal = structured_line_value(text, "Immutable Goal")
-    attempts = structured_line_value(text, "Unblock Attempts")
+    block = latest_operational_block(text)
+    goal = structured_line_value(block, "Immutable Goal")
+    attempts = structured_line_value(block, "Unblock Attempts")
     if not goal or not goal.lower().startswith("blocked:") or not attempts:
         return False
     parsed = parse_unblock_attempts(attempts)
     brave = parsed.get("brave-search")
     reviewer = parsed.get("browser-oracle")
     return bool(valid_attempt_value(brave, project_root=project_root) and valid_attempt_value(reviewer, project_root=project_root))
+
+
+def latest_operational_block(text: str) -> str:
+    """Return the newest status block so old unblock attempts cannot satisfy a new blocker."""
+    matches = list(re.finditer(r"^\s*(?:Status/Phase|Immutable Goal)\s*:", text, flags=re.IGNORECASE | re.MULTILINE))
+    if not matches:
+        return text
+    return text[matches[-1].start():]
 
 
 def structured_line_value(text: str, label: str) -> str:
@@ -89,7 +99,7 @@ def valid_attempt_value(value: str | None, *, project_root: Path | None = None) 
         return False
     lowered = value.lower()
     if lowered.startswith("not_applicable:"):
-        return True
+        return bool(value.split(":", 1)[1].strip())
     if lowered.startswith("used:"):
         return path_inside_project(value.split(":", 1)[1].strip(), project_root)
     return False

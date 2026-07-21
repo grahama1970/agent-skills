@@ -22,7 +22,7 @@ from cron_support import install_cron, status_payload
 from goal_discovery import discover_immutable_goal, path_is_relative_to, project_root_for_cwd
 from herdr_terminal_control import wait_for_agent_idle
 from prompt_builder import build_prompt
-from transcript_classifier import goal_allows_stop, latest_transcript_region, transcript_goal_claim
+from transcript_classifier import exhausted_blocker_claim, goal_allows_stop, latest_transcript_region, transcript_goal_claim, valid_attempt_value
 
 SKILL_DIR = Path(__file__).resolve().parents[1]
 STATE_ROOT = Path.home() / ".local" / "state" / "monitor-confused-agents"
@@ -481,10 +481,7 @@ def tick_locked(
         receipt["status"] = "NEEDS_ATTENTION"
         receipt["ok"] = False
         return finish(receipt, 1)
-    receipt["ok"] = all(
-        item.get("sent", True) or item.get("skipped") and not item.get("input_modified") or not apply
-        for item in receipt["prompts"]
-    )
+    receipt["ok"] = all(not prompt_send_failed(item) for item in receipt["prompts"]) or not apply
     if apply and any(not item.get("sent") for item in receipt["prompts"]):
         receipt["status"] = "NEEDS_ATTENTION"
     return finish(receipt, 0 if receipt["ok"] else 1)
@@ -620,10 +617,13 @@ def send_prompt(client: HerdrClient, pane_id: str, prompt: str) -> dict[str, Any
     wait_result = wait_for_agent_idle(pane_id, socket_path=socket_path)
     pre_read = read_pane_text(client, pane_id)
     if not pre_read:
-        return skipped_send("pre_read_failed", wait_result=wait_result)
+        return skipped_send("pre_read_failed", wait_result=wait_result, send_failed=True)
+    pre_region = latest_transcript_region(pre_read)
+    if goal_allows_stop(pre_region, goal_found=True, has_early_markers=bool(find_patterns(pre_region, EARLY_STOP_PATTERNS))):
+        return skipped_send("pre_submit_stop_allowed", wait_result=wait_result, pre_read=pre_read)
     explain = explain_agent(client, pane_id)
     if not wait_result.get("ok") and explain.get("state") not in {"idle", "done"}:
-        return skipped_send("idle_wait_failed", wait_result=wait_result, pre_submit_state=explain.get("state"), pre_read=pre_read)
+        return skipped_send("idle_wait_failed", wait_result=wait_result, pre_submit_state=explain.get("state"), pre_read=pre_read, send_failed=True)
     if not explain_allows_input(explain):
         return skipped_send("unsafe_pre_submit_state", wait_result=wait_result, pre_submit_state=explain.get("state"), pre_read=pre_read)
     records: list[dict[str, Any]] = []
@@ -633,7 +633,7 @@ def send_prompt(client: HerdrClient, pane_id: str, prompt: str) -> dict[str, Any
     except RuntimeError:
         logger.error("Herdr pane.send_text failed for pane {}", pane_id)
         records.extend(client.trace[before:])
-        return skipped_send("send_text_failed", wait_result=wait_result, pre_submit_state=explain.get("state"), pre_read=pre_read, records=records)
+        return skipped_send("send_text_failed", wait_result=wait_result, pre_submit_state=explain.get("state"), pre_read=pre_read, records=records, send_failed=True)
     records.extend(client.trace[before:])
     before = len(client.trace)
     try:
@@ -641,7 +641,7 @@ def send_prompt(client: HerdrClient, pane_id: str, prompt: str) -> dict[str, Any
     except RuntimeError:
         logger.error("Herdr pane.send_keys enter failed for pane {}", pane_id)
         records.extend(client.trace[before:])
-        return skipped_send("send_enter_failed", wait_result=wait_result, pre_submit_state=explain.get("state"), pre_read=pre_read, records=records, input_modified=True)
+        return skipped_send("send_enter_failed", wait_result=wait_result, pre_submit_state=explain.get("state"), pre_read=pre_read, records=records, input_modified=True, send_failed=True)
     records.extend(client.trace[before:])
     first_read = ""
     submit_confirmed = False
@@ -667,6 +667,7 @@ def send_prompt(client: HerdrClient, pane_id: str, prompt: str) -> dict[str, Any
                 pre_read=pre_read,
                 records=records,
                 input_modified=True,
+                send_failed=True,
             )
         before = len(client.trace)
         try:
@@ -695,13 +696,15 @@ def send_prompt(client: HerdrClient, pane_id: str, prompt: str) -> dict[str, Any
 def explain_allows_input(explain: dict[str, Any]) -> bool:
     if explain.get("error") or explain.get("state") not in {"idle", "done"}:
         return False
-    fallback = str(explain.get("fallback_reason") or "")
-    if fallback == "default_known_agent_idle_fallback":
+    if any(explain.get(key) for key in ("fallback_reason", "skip_reason", "screen_detection_skip_reason", "warning", "warnings")):
         return False
     matched_rule = str(explain.get("matched_rule") or explain.get("rule") or "")
-    if matched_rule and any(token in matched_rule.lower() for token in ["approval", "permission", "question"]):
+    if not matched_rule:
         return False
-    return True
+    lowered = matched_rule.lower()
+    if any(token in lowered for token in ["approval", "permission", "question", "blocked", "fallback", "skip"]):
+        return False
+    return any(token in lowered for token in ["prompt", "idle", "done", "stopped", "ready"])
 
 
 def prompt_submitted(text: str, *, baseline: str = "") -> bool:
@@ -712,9 +715,17 @@ def prompt_submission_marker(text: str, *, baseline: str = "") -> str:
     if not text:
         return ""
     for marker in ["Running UserPromptSubmit hook", "Working (", "Booting MCP server"]:
-        if marker in text and (not baseline or marker not in baseline):
+        if text.count(marker) > baseline.count(marker):
             return marker
     return ""
+
+
+def prompt_send_failed(prompt_record: dict[str, Any]) -> bool:
+    if prompt_record.get("sent"):
+        return False
+    if prompt_record.get("send_failed") or prompt_record.get("input_modified"):
+        return True
+    return False
 
 
 def skipped_send(
@@ -726,6 +737,7 @@ def skipped_send(
     terminal_result: dict[str, Any] | None = None,
     records: list[dict[str, Any]] | None = None,
     input_modified: bool = False,
+    send_failed: bool = False,
 ) -> dict[str, Any]:
     return {
         "send_api": records or [],
@@ -735,6 +747,7 @@ def skipped_send(
         "api_sent": False,
         "submit_confirmed": False,
         "input_modified": input_modified,
+        "send_failed": send_failed,
         "second_enter_sent": False,
         "post_submit_excerpt": "",
         "pre_submit_excerpt": pre_read[-1200:],
