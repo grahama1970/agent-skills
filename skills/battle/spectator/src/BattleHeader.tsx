@@ -180,7 +180,7 @@ export function BattleHeader({ receiptFixture, events, onSelectActor, onOpenJson
         </div>
         <BattleHungerGamesDeathAnnouncement card={deathAnnouncement} onDismiss={onDismissDeathAnnouncement ?? (() => undefined)} />
         <div className="live-events-feed">
-          {events.slice(-3).map((event, index) => (
+          {events.length ? events.slice(-3).map((event, index) => (
             <button key={`${event.id}:${index}`} type="button" data-qid={`battle:events:item:${event.id}`} data-qs-action="BATTLE_EVENT_SELECT" title={`Select receipt event ${event.id}`} onClick={() => selectEvent(event)} className="event-row">
               <span className="event-time">{new Date(event.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false })}</span>
               <span className="event-icon" aria-hidden="true">
@@ -188,7 +188,13 @@ export function BattleHeader({ receiptFixture, events, onSelectActor, onOpenJson
               </span>
               <span className={`event-msg type-${eventLevel(event)}`}><ReceiptLiveEventText event={event} /></span>
             </button>
-          ))}
+          )) : (
+            <div className="event-row event-row-empty" data-qid="battle:events:empty">
+              <span className="event-time">00:00</span>
+              <span className="event-icon" aria-hidden="true"><span className="status-led led-neutral" /></span>
+              <span className="event-msg type-info">receipt stream armed · press Play or Next</span>
+            </div>
+          )}
         </div>
       </div>
     </header>

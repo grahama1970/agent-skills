@@ -1239,6 +1239,102 @@
   padding: 8px 8px 4px;
 }
 
+.receipt-evidence-panel {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.receipt-evidence-clock,
+.receipt-evidence-next,
+.receipt-evidence-empty {
+  font-family: ui-monospace, monospace;
+  font-size: 0.66rem;
+  line-height: 1.35;
+  color: #8b949e;
+}
+
+.receipt-evidence-counts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.receipt-evidence-counts span {
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  background: rgba(1, 4, 9, 0.65);
+  padding: 4px 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: ui-monospace, monospace;
+  font-size: 0.62rem;
+  color: #c9d1d9;
+}
+
+.receipt-evidence-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.receipt-evidence-row {
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 6px;
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 5px;
+  background: rgba(1, 4, 9, 0.55);
+  padding: 5px 6px;
+  text-align: left;
+}
+
+.receipt-evidence-row:hover {
+  border-color: rgba(88, 166, 255, 0.35);
+  background: rgba(88, 166, 255, 0.08);
+}
+
+.receipt-evidence-kind {
+  align-self: start;
+  border-radius: 4px;
+  padding: 2px 3px;
+  text-align: center;
+  font-family: ui-monospace, monospace;
+  font-size: 0.54rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.receipt-evidence-kind.stdout { color: #c9d1d9; background: rgba(201, 209, 217, 0.08); }
+.receipt-evidence-kind.stderr { color: #ff7b72; background: rgba(248, 81, 73, 0.12); }
+.receipt-evidence-kind.event { color: #f2cc60; background: rgba(242, 204, 96, 0.12); }
+
+.receipt-evidence-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.receipt-evidence-meta {
+  font-family: ui-monospace, monospace;
+  font-size: 0.58rem;
+  color: #6e7681;
+}
+
+.receipt-evidence-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: ui-monospace, monospace;
+  font-size: 0.64rem;
+  color: #e6edf3;
+}
+
 
 /* ============================================================================
    DAW_ZOOM_CONTROL — single inline zoom slider replacing the +/- buttons and

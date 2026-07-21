@@ -1,0 +1,64 @@
+{
+  "schema": "battle.visible_defect_repair_proof.v1",
+  "generated_at": "2026-07-21T17:55:09.303Z",
+  "route": "http://127.0.0.1:3003/#battle",
+  "mocked": false,
+  "live": true,
+  "status": "PASS",
+  "failed": [],
+  "checks": {
+    "first_playhead_starts_zero": true,
+    "first_left_evidence_has_stdout": true,
+    "first_header_not_blank": true,
+    "advanced_left_evidence_updates": true,
+    "advanced_header_events_present": true,
+    "canvas_nonblank": true,
+    "no_page_errors": true,
+    "no_failed_requests": true
+  },
+  "first": {
+    "playhead": "PLAYHEAD 00:00",
+    "leftEvidenceText": "receipt playhead 00:00stdout 1stderr 0events 0stdout00:00 · G0G0 Zip Slip Spark: seed specimen · run arena-adaptive-lineage-20260720T144034Znext 00:45 · G1-A · stdout",
+    "headerEventText": "00:00receipt stream armed · press Play or Next",
+    "forbidden": []
+  },
+  "advanced": {
+    "playhead": "PLAYHEAD 01:33",
+    "leftEvidenceText": "receipt playhead 01:33stdout 4stderr 0events 4event00:56 · G1-BG1-B · oracle_or_parameter_mutationevent01:12 · G1-AG1-A · fitness PASSevent01:12 · G1-BG1-B · fitness PASSstdout01:26 · G2G2 ZipInfo Switchback: fitness PASS; run=arena-adaptive-lineage-20260720T144034Z; novelty=4; judge_duration=1.285213s; vulnerable_original_confirmed=true; patched_bypass=falsenext 01:42 · G2 · event",
+    "headerEventText": "19:00Adaptive lineage — G1-A IMPORTLIB SLIPSTREAM: GENOME SELECTED19:00Adaptive lineage — G1-B WRITESTR DETOUR: GENOME SELECTED",
+    "canvasDataUrlLength": 8514,
+    "forbidden": []
+  },
+  "browser": {
+    "pageErrors": [],
+    "failedRequests": [],
+    "consoleErrors": [],
+    "consoleMessagesTail": [
+      {
+        "type": "warning",
+        "text": "PixiJS Warning:  [Assets] Asset id battle-race-atlas was not found in the Cache"
+      },
+      {
+        "type": "warning",
+        "text": "[.WebGL-0xef400158200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+      },
+      {
+        "type": "warning",
+        "text": "[.WebGL-0xef400158200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+      },
+      {
+        "type": "warning",
+        "text": "[.WebGL-0xef400158200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+      },
+      {
+        "type": "warning",
+        "text": "[.WebGL-0xef400158200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)"
+      }
+    ]
+  },
+  "artifacts": {
+    "firstScreenshot": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/ux-visible-defect-repair-20260721T1824Z/battle-first-screen-evidence.png",
+    "advancedScreenshot": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/ux-visible-defect-repair-20260721T1824Z/battle-replay-evidence-markers.png",
+    "proof": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/ux-visible-defect-repair-20260721T1824Z/visible-defect-repair-proof.json"
+  }
+}

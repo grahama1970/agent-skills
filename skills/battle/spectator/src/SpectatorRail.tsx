@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { LeaderboardEntry } from "./lib/battle-types";
+import type { Lane, LeaderboardEntry } from "./lib/battle-types";
 import { activeBattleFixture, battleLanesForView } from "./lib/battle-data";
 import { isBattleDesignView } from "./lib/battle-mockup-lanes";
 import { mockupAgentStatus, mockupRaceLeaders, mockupScoreboard } from "./lib/mockup-design-fixture";
@@ -10,9 +10,14 @@ import { cn } from "./lib/utils";
 import { formatReceiptScore } from "./lib/format-receipt-score";
 
 type Props = {
-  receiptFixture?: import("./lib/battle-types").BattleNormalizedUxFixture | null; leaderboard: LeaderboardEntry[]; selectedId?: string; onSelect: (id: string) => void };
+  receiptFixture?: import("./lib/battle-types").BattleNormalizedUxFixture | null;
+  leaderboard: LeaderboardEntry[];
+  selectedId?: string;
+  playheadSeconds?: number;
+  onSelect: (id: string) => void;
+};
 
-export function SpectatorRail({ receiptFixture, leaderboard, selectedId, onSelect }: Props) {
+export function SpectatorRail({ receiptFixture, leaderboard, selectedId, playheadSeconds = 0, onSelect }: Props) {
   const designView = isBattleDesignView();
   const activeLanes = battleLanesForView(undefined, receiptFixture);
   useRegisterAction("battle:leaderboard:select", { action: "BATTLE_LEADERBOARD_SELECT", label: "Select Battle Leaderboard Entry", description: "Select a receipt-backed Battle lane from the spectator rail", tags: ["battle", "receipt-backed"] });
@@ -59,6 +64,7 @@ export function SpectatorRail({ receiptFixture, leaderboard, selectedId, onSelec
     );
   }, [activeLanes, agentSearchQuery]);
   const hasReceiptScores = typeof scoreboard?.red_score === "number" || typeof scoreboard?.blue_score === "number";
+  const evidenceFrames = useMemo(() => receiptEvidenceFrames(activeLanes, playheadSeconds), [activeLanes, playheadSeconds]);
 
   return (
     <aside className={cn("min-h-0 overflow-hidden", designView ? "leftRail battle-mockup-left-rail battle-mockup-panel" : "grid grid-rows-[auto_auto_minmax(0,1fr)] gap-3")}>
@@ -140,6 +146,48 @@ export function SpectatorRail({ receiptFixture, leaderboard, selectedId, onSelec
         </Panel>
       ) : null}
 
+      {!designView ? (
+        <Panel title="Live Evidence" designView={false} count={evidenceFrames.revealed.length}>
+          <div className="receipt-evidence-panel" data-qid="battle:left-pane:live-evidence">
+            <div className="receipt-evidence-clock" data-qid="battle:left-pane:live-evidence:clock">
+              receipt playhead {formatRailSeconds(playheadSeconds)}
+            </div>
+            <div className="receipt-evidence-counts">
+              <span>stdout {evidenceFrames.stdoutCount}</span>
+              <span>stderr {evidenceFrames.stderrCount}</span>
+              <span>events {evidenceFrames.eventCount}</span>
+            </div>
+            <div className="receipt-evidence-list">
+              {evidenceFrames.revealed.length ? (
+                evidenceFrames.revealed.slice(-4).map((frame) => (
+                  <button
+                    key={frame.key}
+                    type="button"
+                    className="receipt-evidence-row"
+                    data-qid={`battle:left-pane:live-evidence:${frame.kind}:${frame.laneId}`}
+                    title={`${frame.laneName}: ${frame.text}`}
+                    onClick={() => onSelect(frame.laneId)}
+                  >
+                    <span className={`receipt-evidence-kind ${frame.kind}`}>{frame.kind}</span>
+                    <span className="receipt-evidence-body">
+                      <span className="receipt-evidence-meta">{formatRailSeconds(frame.atSeconds)} · {frame.laneId}</span>
+                      <span className="receipt-evidence-text">{frame.text}</span>
+                    </span>
+                  </button>
+                ))
+              ) : (
+                <div className="receipt-evidence-empty">No receipt stdout/stderr frame has crossed this playhead yet.</div>
+              )}
+            </div>
+            {evidenceFrames.next ? (
+              <div className="receipt-evidence-next" data-qid="battle:left-pane:live-evidence:next">
+                next {formatRailSeconds(evidenceFrames.next.atSeconds)} · {evidenceFrames.next.laneId} · {evidenceFrames.next.kind}
+              </div>
+            ) : null}
+          </div>
+        </Panel>
+      ) : null}
+
       <Panel title="Agent Status" designView={designView} className={designView ? "min-h-0 flex-1" : undefined}>
         {designView
           ? mockupAgentStatus.map((row) => (
@@ -170,6 +218,58 @@ export function SpectatorRail({ receiptFixture, leaderboard, selectedId, onSelec
       </Panel>
     </aside>
   );
+}
+
+type ReceiptEvidenceFrame = {
+  key: string;
+  laneId: string;
+  laneName: string;
+  kind: "stdout" | "stderr" | "event";
+  atSeconds: number;
+  text: string;
+};
+
+function receiptEvidenceFrames(lanes: Lane[], playheadSeconds: number): { revealed: ReceiptEvidenceFrame[]; next: ReceiptEvidenceFrame | null; stdoutCount: number; stderrCount: number; eventCount: number } {
+  const frames: ReceiptEvidenceFrame[] = [];
+  for (const lane of lanes) {
+    const laneAt = lane.first_active_segment_elapsed_seconds ?? lane.visible_from_elapsed_seconds ?? lane.start_elapsed_seconds ?? 0;
+    for (const [index, text] of (lane.stdout ?? []).entries()) {
+      if (isReceiptText(text)) frames.push({ key: `${lane.id}:stdout:${index}`, laneId: lane.id, laneName: lane.name, kind: "stdout", atSeconds: laneAt, text });
+    }
+    for (const [index, text] of (lane.stderr ?? []).entries()) {
+      if (isReceiptText(text)) frames.push({ key: `${lane.id}:stderr:${index}`, laneId: lane.id, laneName: lane.name, kind: "stderr", atSeconds: laneAt, text });
+    }
+    for (const event of lane.events) {
+      if (!event.proven) continue;
+      const atSeconds = event.elapsed_seconds ?? event.at_seconds ?? laneAt;
+      frames.push({
+        key: `${lane.id}:event:${event.id}`,
+        laneId: lane.id,
+        laneName: lane.name,
+        kind: "event",
+        atSeconds,
+        text: event.label || event.kind,
+      });
+    }
+  }
+  frames.sort((a, b) => a.atSeconds - b.atSeconds || a.key.localeCompare(b.key));
+  const revealed = frames.filter((frame) => frame.atSeconds <= playheadSeconds + 0.05);
+  return {
+    revealed,
+    next: frames.find((frame) => frame.atSeconds > playheadSeconds + 0.05) ?? null,
+    stdoutCount: revealed.filter((frame) => frame.kind === "stdout").length,
+    stderrCount: revealed.filter((frame) => frame.kind === "stderr").length,
+    eventCount: revealed.filter((frame) => frame.kind === "event").length,
+  };
+}
+
+function isReceiptText(value: string | undefined): value is string {
+  return Boolean(value && value.trim() && value !== "not emitted");
+}
+
+function formatRailSeconds(seconds: number): string {
+  const safe = Math.max(0, Math.floor(seconds));
+  return `${String(Math.floor(safe / 60)).padStart(2, "0")}:${String(safe % 60).padStart(2, "0")}`;
 }
 
 function Panel({ title, children, designView = false, className, count }: { title: string; children: React.ReactNode; designView?: boolean; className?: string; count?: number }) {

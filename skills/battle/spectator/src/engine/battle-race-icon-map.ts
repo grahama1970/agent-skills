@@ -25,7 +25,7 @@ const MARKER_FRAMES: Partial<Record<LaneEventKind, string>> = {
 	fastest_crash: "marker-fastest_crash",
 	promoted: "marker-promoted",
 	handoff: "marker-handoff",
-	useful: "marker-useful",
+	useful: "fx-useful",
 };
 
 export function normalizeRunnerState(state: RunnerState | string): RunnerState {
@@ -48,7 +48,7 @@ export function markerAtlasFrame(event: LaneEvent): string {
 	if (isGeneticLaneEventKind(event.kind)) return geneticMarkerAtlasFrame(
 		event.kind === "compile_failed" || event.kind === "method_rejected" || event.kind === "branch_abandoned"
 			? "compile_error"
-			: "research_scan",
+			: "genome_lock",
 	);
 	return MARKER_FRAMES[event.kind] ?? "marker-blocked";
 }

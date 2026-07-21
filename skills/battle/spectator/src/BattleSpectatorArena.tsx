@@ -138,8 +138,12 @@ export function BattleSpectatorArena() {
       return;
     }
     if (liveReplay) return;
+    if (receiptReplay) {
+      setPlayheadSeconds(typedReceiptFixture.battle_timeline_control?.time_domain?.start_seconds ?? 0);
+      return;
+    }
     setPlayheadSeconds(battleTimelineDomain(typedReceiptFixture, false).currentSeconds);
-  }, [typedReceiptFixture, liveReplay, liveTransport.model?.followLive, liveTransport.model?.liveSeconds]);
+  }, [typedReceiptFixture, liveReplay, receiptReplay, liveTransport.model?.followLive, liveTransport.model?.liveSeconds]);
 
   useEffect(() => {
     if (!receiptReplay || !receiptReady || !battleHungerGamesDeathDemoFromUrl()) return;
@@ -453,7 +457,7 @@ export function BattleSpectatorArena() {
           <div className={cn("battle-spectator-rail-slot left-pane relative h-full min-h-0 min-w-0", leftPaneCollapsed && "collapsed")} style={{ overflow: "visible" }}>
             <button type="button" onClick={toggleLeftPane} title="Toggle Left Pane (Cmd/Ctrl + [)" data-qid="battle:pane:left-toggle" className="pane-toggle-btn left-toggle">{leftPaneCollapsed ? "»" : "«"}</button>
             <div className="h-full min-h-0 min-w-0 overflow-y-auto overflow-x-hidden">
-              {leftPaneCollapsed ? null : <SpectatorRail receiptFixture={typedReceiptFixture} leaderboard={leaderboard} selectedId={selectedLane?.id} onSelect={selectActor} />}
+              {leftPaneCollapsed ? null : <SpectatorRail receiptFixture={typedReceiptFixture} leaderboard={leaderboard} selectedId={selectedLane?.id} playheadSeconds={playheadSeconds} onSelect={selectActor} />}
             </div>
           </div>
           <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">

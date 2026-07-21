@@ -499,6 +499,7 @@ function syncEntities(
 		for (const event of lane.events) {
 			const eventSeconds = eventElapsedSeconds(event, allottedSeconds, useElapsed);
 			if (eventSeconds > currentSeconds) continue;
+			if (event.kind === "useful") continue;
 			const mx = secondsToWorldX(eventSeconds, allottedSeconds, contentWidth);
 			const marker = battleSpriteTheme.markerForEvent(event);
 			if (Math.abs(mx - runnerX) < 16) continue;
