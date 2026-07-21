@@ -7,6 +7,7 @@ import collections
 import hashlib
 import importlib.util
 import json
+import multiprocessing as mp
 import random
 import statistics
 import time
@@ -258,6 +259,7 @@ def run_balanced_replication(
     variant_max: int | None,
     model: str | None,
     timeout_s: float,
+    outer_timeout_s: float | None,
     bootstrap_samples: int,
     bootstrap_seed: int,
     alpha: float,
@@ -297,20 +299,56 @@ def run_balanced_replication(
                 variant_max=variant_max,
             )
 
-        try:
-            live_condition._select_episodes = _selector
-            condition_receipt = live_condition.run_live_comparison(
-                output_root=condition_root,
-                receipt_out=condition_receipt_path,
-                split=DEFAULT_SPLIT,
-                episodes_per_family=episodes_per_family,
-                episode_limit=family_episode_limit * len(FAMILIES),
-                model=model,
-                timeout_s=timeout_s,
-                gate0_case_root=gate0_case_root,
-            )
-        finally:
-            live_condition._select_episodes = original_selector
+        def _run_condition_once() -> dict[str, Any]:
+            try:
+                live_condition._select_episodes = _selector
+                return live_condition.run_live_comparison(
+                    output_root=condition_root,
+                    receipt_out=condition_receipt_path,
+                    split=DEFAULT_SPLIT,
+                    episodes_per_family=episodes_per_family,
+                    episode_limit=family_episode_limit * len(FAMILIES),
+                    model=model,
+                    timeout_s=timeout_s,
+                    gate0_case_root=gate0_case_root,
+                )
+            finally:
+                live_condition._select_episodes = original_selector
+
+        if outer_timeout_s is None:
+            try:
+                condition_receipt = _run_condition_once()
+            except Exception as exc:
+                errors.append(f"condition_exception:{type(exc).__name__}:{exc}")
+                condition_receipt = {}
+        else:
+            ctx = mp.get_context("fork")
+            queue: Any = ctx.Queue()
+
+            def _child() -> None:
+                try:
+                    queue.put({"ok": True, "receipt": _run_condition_once()})
+                except Exception as exc:  # pragma: no cover - child process transport
+                    queue.put({"ok": False, "error": f"{type(exc).__name__}:{exc}"})
+
+            process = ctx.Process(target=_child)
+            process.start()
+            process.join(outer_timeout_s)
+            if process.is_alive():
+                process.terminate()
+                process.join(5)
+                errors.append(f"condition_outer_timeout_s:{outer_timeout_s}")
+                condition_receipt = {}
+            elif not queue.empty():
+                result = queue.get()
+                if result.get("ok") is True and isinstance(result.get("receipt"), dict):
+                    condition_receipt = result["receipt"]
+                else:
+                    errors.append(f"condition_child_error:{result.get('error')}")
+                    condition_receipt = {}
+            else:
+                errors.append(f"condition_child_no_result:exitcode:{process.exitcode}")
+                condition_receipt = {}
 
     if condition_receipt.get("status") != live_condition.PASS_STATUS:
         errors.append(f"live_condition_status:{condition_receipt.get('status')}")
@@ -323,10 +361,21 @@ def run_balanced_replication(
         if not isinstance(action_receipt, dict):
             action_receipt = {}
     else:
-        action_receipt = action_selection.run_bridge(condition_root, action_root, action_receipt_path)
+        if condition_receipt.get("status") == live_condition.PASS_STATUS:
+            action_receipt = action_selection.run_bridge(condition_root, action_root, action_receipt_path)
+        else:
+            action_receipt = {}
+            errors.append("action_selection_skipped_without_passed_condition_receipt")
     if action_receipt.get("status") != action_selection.PASS_STATUS:
         errors.append(f"action_selection_status:{action_receipt.get('status')}")
         errors.extend(f"action_selection_error:{error}" for error in action_receipt.get("errors", []))
+
+    condition_outer_timeout_blocked = any(error.startswith("condition_outer_timeout_s:") for error in errors)
+    condition_blocked_before_case_acceptance = (
+        condition_outer_timeout_blocked
+        and condition_receipt.get("status") is None
+        and action_receipt.get("status") is None
+    )
 
     case_index_value = condition_receipt.get("case_index_path")
     if isinstance(case_index_value, str) and case_index_value:
@@ -335,7 +384,8 @@ def run_balanced_replication(
             errors.append("condition_case_index_not_list")
             case_index = []
     else:
-        errors.append("missing_condition_case_index_path")
+        if not condition_blocked_before_case_acceptance:
+            errors.append("missing_condition_case_index_path")
         case_index = []
 
     action_index_value = action_receipt.get("decision_index")
@@ -345,24 +395,26 @@ def run_balanced_replication(
             errors.append("action_decision_index_not_list")
             action_index = []
     else:
-        errors.append("missing_action_decision_index_path")
+        if not condition_blocked_before_case_acceptance:
+            errors.append("missing_action_decision_index_path")
         action_index = []
 
     expected_episodes = family_episode_limit * len(FAMILIES)
     expected_cases = expected_episodes * len(CONDITIONS)
     counts = condition_receipt.get("counts") if isinstance(condition_receipt.get("counts"), dict) else {}
-    if counts.get("episodes_consumed") != expected_episodes:
-        errors.append(f"episodes_consumed_mismatch:{counts.get('episodes_consumed')}:{expected_episodes}")
-    if counts.get("families_consumed") != len(FAMILIES):
-        errors.append(f"families_consumed_mismatch:{counts.get('families_consumed')}:{len(FAMILIES)}")
-    if counts.get("cases") != expected_cases:
-        errors.append(f"case_count_mismatch:{counts.get('cases')}:{expected_cases}")
-    if condition_receipt.get("tau_call_attempts") != expected_cases:
-        errors.append(f"tau_call_attempts_mismatch:{condition_receipt.get('tau_call_attempts')}:{expected_cases}")
-    if condition_receipt.get("tau_live_call_performed") != expected_cases:
-        errors.append(f"tau_live_call_performed_mismatch:{condition_receipt.get('tau_live_call_performed')}:{expected_cases}")
-    if condition_receipt.get("tau_receipts_hash_bound") is not True:
-        errors.append("tau_receipts_hash_bound_false")
+    if not condition_blocked_before_case_acceptance:
+        if counts.get("episodes_consumed") != expected_episodes:
+            errors.append(f"episodes_consumed_mismatch:{counts.get('episodes_consumed')}:{expected_episodes}")
+        if counts.get("families_consumed") != len(FAMILIES):
+            errors.append(f"families_consumed_mismatch:{counts.get('families_consumed')}:{len(FAMILIES)}")
+        if counts.get("cases") != expected_cases:
+            errors.append(f"case_count_mismatch:{counts.get('cases')}:{expected_cases}")
+        if condition_receipt.get("tau_call_attempts") != expected_cases:
+            errors.append(f"tau_call_attempts_mismatch:{condition_receipt.get('tau_call_attempts')}:{expected_cases}")
+        if condition_receipt.get("tau_live_call_performed") != expected_cases:
+            errors.append(f"tau_live_call_performed_mismatch:{condition_receipt.get('tau_live_call_performed')}:{expected_cases}")
+        if condition_receipt.get("tau_receipts_hash_bound") is not True:
+            errors.append("tau_receipts_hash_bound_false")
 
     planning_rows = _planning_rows(action_index, errors)
     planning_summary = _summarize_planning(
@@ -371,15 +423,16 @@ def run_balanced_replication(
         bootstrap_seed=bootstrap_seed,
         alpha=alpha,
     )
-    if len(planning_rows) != expected_episodes:
-        errors.append(f"planning_rows_mismatch:{len(planning_rows)}:{expected_episodes}")
-    if set(planning_summary["families"]) != set(FAMILIES):
-        errors.append(f"planning_families_mismatch:{planning_summary['families']}")
-    for family in FAMILIES:
-        if planning_summary["episodes_per_family"].get(family) != family_episode_limit:
-            errors.append(
-                f"planning_family_count_mismatch:{family}:{planning_summary['episodes_per_family'].get(family)}:{family_episode_limit}"
-            )
+    if not condition_blocked_before_case_acceptance:
+        if len(planning_rows) != expected_episodes:
+            errors.append(f"planning_rows_mismatch:{len(planning_rows)}:{expected_episodes}")
+        if set(planning_summary["families"]) != set(FAMILIES):
+            errors.append(f"planning_families_mismatch:{planning_summary['families']}")
+        for family in FAMILIES:
+            if planning_summary["episodes_per_family"].get(family) != family_episode_limit:
+                errors.append(
+                    f"planning_family_count_mismatch:{family}:{planning_summary['episodes_per_family'].get(family)}:{family_episode_limit}"
+                )
 
     action_counts = action_receipt.get("counts", {}).get("action_decisions_per_condition") if isinstance(action_receipt.get("counts"), dict) else {}
     regret_counts = (
@@ -387,11 +440,12 @@ def run_balanced_replication(
         if isinstance(action_receipt.get("counts"), dict)
         else {}
     )
-    for condition in CONDITIONS:
-        if action_counts.get(condition) != expected_episodes:
-            errors.append(f"action_decisions_per_condition_mismatch:{condition}:{action_counts.get(condition)}:{expected_episodes}")
-        if regret_counts.get(condition) != expected_episodes:
-            errors.append(f"planning_regret_scores_per_condition_mismatch:{condition}:{regret_counts.get(condition)}:{expected_episodes}")
+    if not condition_blocked_before_case_acceptance:
+        for condition in CONDITIONS:
+            if action_counts.get(condition) != expected_episodes:
+                errors.append(f"action_decisions_per_condition_mismatch:{condition}:{action_counts.get(condition)}:{expected_episodes}")
+            if regret_counts.get(condition) != expected_episodes:
+                errors.append(f"planning_regret_scores_per_condition_mismatch:{condition}:{regret_counts.get(condition)}:{expected_episodes}")
 
     summary = {
         "schema": "persona_dream.research.prospective_tom.live_tau_balanced_planning_summary.v1",
@@ -450,6 +504,8 @@ def run_balanced_replication(
         "variant_min": variant_min,
         "variant_max": variant_max,
         "gate0_case_root": str(gate0_case_root) if gate0_case_root is not None else None,
+        "timeout_s": timeout_s,
+        "outer_timeout_s": outer_timeout_s,
         "conditions": list(CONDITIONS),
         "live_tau_condition_comparison_receipt": str(condition_receipt_path),
         "live_tau_condition_comparison_receipt_sha256": _file_sha256(condition_receipt_path)
@@ -491,11 +547,20 @@ def run_balanced_replication(
             "oracle_match_transitions": planning_summary["oracle_match_transitions"],
         },
         "checks": {
+            "condition_outer_timeout_contained_if_triggered": (
+                not condition_outer_timeout_blocked
+                or (
+                    condition_blocked_before_case_acceptance
+                    and "action_selection_skipped_without_passed_condition_receipt" in errors
+                )
+            ),
+            "condition_blocked_before_case_acceptance": condition_blocked_before_case_acceptance,
             "condition_receipt_passed": condition_receipt.get("status") == live_condition.PASS_STATUS,
             "action_selection_receipt_passed": action_receipt.get("status") == action_selection.PASS_STATUS,
             "gate0_attribution_loaded_if_requested": (
                 gate0_case_root is None
                 or condition_receipt.get("gate0_attribution_overlay_used") is True
+                or condition_blocked_before_case_acceptance
             ),
             "all_four_families_selected": set(planning_summary["families"]) == set(FAMILIES),
             "balanced_family_counts": all(
@@ -547,6 +612,7 @@ def main() -> int:
     parser.add_argument("--variant-max", type=int, default=None)
     parser.add_argument("--model", default=None)
     parser.add_argument("--timeout-s", type=float, default=240.0)
+    parser.add_argument("--outer-timeout-s", type=float, default=None)
     parser.add_argument("--bootstrap-samples", type=int, default=10000)
     parser.add_argument("--bootstrap-seed", type=int, default=20260726)
     parser.add_argument("--alpha", type=float, default=0.05)
@@ -565,6 +631,7 @@ def main() -> int:
         variant_max=args.variant_max,
         model=args.model,
         timeout_s=args.timeout_s,
+        outer_timeout_s=args.outer_timeout_s,
         bootstrap_samples=args.bootstrap_samples,
         bootstrap_seed=args.bootstrap_seed,
         alpha=args.alpha,

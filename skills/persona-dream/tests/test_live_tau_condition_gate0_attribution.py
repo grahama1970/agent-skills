@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import time
 from pathlib import Path
 
 
@@ -247,6 +248,7 @@ def test_balanced_planning_wrapper_forwards_gate0_case_root(tmp_path):
             variant_max=17,
             model=None,
             timeout_s=1.0,
+            outer_timeout_s=None,
             bootstrap_samples=10,
             bootstrap_seed=1,
             alpha=0.05,
@@ -259,6 +261,72 @@ def test_balanced_planning_wrapper_forwards_gate0_case_root(tmp_path):
     assert receipt["gate0_case_root"] == str(gate0_case_root.resolve())
     assert receipt["checks"]["gate0_attribution_loaded_if_requested"] is True
     assert seen["gate0_case_root"] == gate0_case_root.resolve()
+
+
+def test_balanced_planning_wrapper_outer_timeout_blocks_before_action_selection(tmp_path):
+    script = ROOT / "research" / "prospective-tom" / "scripts" / "run_live_tau_balanced_planning_replication.py"
+    spec = importlib.util.spec_from_file_location("balanced_planning_timeout_test", script)
+    assert spec and spec.loader
+    balanced = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(balanced)
+
+    class SlowLiveCondition:
+        PASS_STATUS = "PASS_LIVE_TAU_PCTOM_CONDITION_COMPARISON"
+
+        @staticmethod
+        def _select_episodes(corpus, limit):
+            return []
+
+        @staticmethod
+        def run_live_comparison(**kwargs):
+            time.sleep(5)
+            return {"status": SlowLiveCondition.PASS_STATUS}
+
+    class ActionSelectionShouldNotRun:
+        PASS_STATUS = "PASS_LIVE_TAU_PCTOM_CONDITION_ACTION_SELECTION"
+
+        @staticmethod
+        def run_bridge(condition_root, action_root, action_receipt_path):
+            raise AssertionError("action selection must not run without a passed condition receipt")
+
+    def fake_load_module(path, name):
+        if "action" in name:
+            return ActionSelectionShouldNotRun
+        if "condition" in name:
+            return SlowLiveCondition
+        raise AssertionError(name)
+
+    original_load_module = balanced._load_module
+    balanced._load_module = fake_load_module
+    try:
+        receipt = balanced.run_balanced_replication(
+            output_root=tmp_path / "out",
+            receipt_out=tmp_path / "out" / "receipt.json",
+            family_episode_limit=1,
+            episodes_per_family=24,
+            variant_min=17,
+            variant_max=17,
+            model=None,
+            timeout_s=1.0,
+            outer_timeout_s=0.1,
+            bootstrap_samples=10,
+            bootstrap_seed=1,
+            alpha=0.05,
+        )
+    finally:
+        balanced._load_module = original_load_module
+
+    assert receipt["status"] == balanced.BLOCKED_STATUS
+    assert receipt["outer_timeout_s"] == 0.1
+    assert "condition_outer_timeout_s:0.1" in receipt["errors"]
+    assert "action_selection_skipped_without_passed_condition_receipt" in receipt["errors"]
+    assert receipt["checks"]["condition_outer_timeout_contained_if_triggered"] is True
+    assert receipt["checks"]["condition_blocked_before_case_acceptance"] is True
+    assert receipt["checks"]["gate0_attribution_loaded_if_requested"] is True
+    assert receipt["checks"]["condition_receipt_passed"] is False
+    assert receipt["checks"]["action_selection_receipt_passed"] is False
+    assert receipt["memory_write_attempts"] == 0
+    assert receipt["provider_call_attempts"] == 0
 
 
 def test_strict_prompt_accepts_gate0_records_argument():
