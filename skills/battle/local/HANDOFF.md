@@ -1,10 +1,99 @@
 # Handoff Report: battle adaptive-lineage receipt
 
-**Timestamp**: 2026-07-21T01:25:00Z
+**Timestamp**: 2026-07-21T18:18:08Z
 **Active Agent**: Codex
 **Branch**: `battle-adaptive-lineage-goal`
 **Current objective**: finish `GOAL_ADAPTIVE_LINEAGE.md` recovery from the
 agent-skills worktree, not the pi-mono shell.
+
+## 0. Current Operational Handoff (2026-07-21T18:18:08Z)
+
+This is the current handoff for the next agent. Do not treat older "accepted",
+"final", or "goal complete" prose below as authority. The human has repeatedly
+rejected the Battle UX as not usable and specifically called out missing
+visible stdout/stderr evidence, empty-looking live events, text-backed `USEFUL`
+markers in the race canvas, and the agent's over-reliance on side proof/tests.
+
+- **Current route to inspect**:
+  `http://127.0.0.1:3003/#battle`
+- **Current host check**:
+  `curl http://127.0.0.1:3003/__host.json` returned
+  `host:"agent-skills battle spectator"` and
+  `entry:"skills/battle/spectator/src/main.tsx"`.
+- **Latest pushed commit**:
+  `5f8b5bced3de3ef6640abc65589e5b0bcfafdcaa`
+  (`battle: surface replay evidence in rail`), verified on
+  `origin/battle-adaptive-lineage-goal`.
+- **Latest focused checks**:
+  - `cd skills/battle/spectator && node node_modules/typescript/bin/tsc --noEmit -p tsconfig.json`
+    exited 0.
+  - `cd skills/battle/spectator && node scripts/build-static.mjs` exited 0.
+  - Browser smoke against `http://127.0.0.1:3003/#battle` produced
+    `skills/battle/local/ux-visible-defect-repair-20260721T1824Z/visible-defect-repair-proof.json`
+    with `status:"PASS"`, `failed:[]`, `mocked:false`, `live:true`.
+- **Latest screenshots to inspect before touching code**:
+  - First screen:
+    `skills/battle/local/ux-visible-defect-repair-20260721T1824Z/battle-first-screen-evidence.png`
+  - Advanced replay:
+    `skills/battle/local/ux-visible-defect-repair-20260721T1824Z/battle-replay-evidence-markers.png`
+
+### Latest Source Changes
+
+- `skills/battle/spectator/src/SpectatorRail.tsx`
+  now receives `playheadSeconds` and renders a left-pane `Live Evidence` block
+  with receipt-backed stdout/stderr/event rows at and before the current
+  playhead.
+- `skills/battle/spectator/src/BattleSpectatorArena.tsx`
+  now initializes the parent playhead to receipt start (`00:00`) for `#battle`
+  receipt replay, keeping the left rail synchronized with the race viewport.
+- `skills/battle/spectator/src/BattleHeader.tsx`
+  renders an explicit receipt-stream empty state instead of an apparently blank
+  live-events panel at first load.
+- `skills/battle/spectator/src/engine/battle-pixi-scene.ts`
+  suppresses text-backed `useful` event markers in the Pixi track.
+- `skills/battle/spectator/src/engine/battle-race-icon-map.ts`
+  routes generic genetic event markers away from the `marker-useful` atlas
+  frame that visibly contains the word `USEFUL`.
+- `skills/battle/spectator/src/battle-race.css`
+  adds compact styling for the left-pane evidence block.
+
+### Current Broken / Disputed State
+
+- **Do not declare victory.** The human still disputes usability. The latest
+  proof shows a better first screen and replay evidence, but it is not human
+  acceptance.
+- **"Live Evidence" is receipt-backed replay evidence, not true live SSE.**
+  The right pane already has a live SSE console path, but the accepted top-level
+  `#battle` route is currently rendering the normalized adaptive-lineage
+  receipt. If the human requires actual dynamic SSE stdout/stderr, the next
+  agent must wire/run the live transport adapter and verify it, not relabel
+  receipt replay as live.
+- **External design owner**: The human explicitly said Gemini will design the
+  UX. Do not originate new UI architecture locally. Make only narrow usability
+  repairs or implement externally supplied design instructions mechanically.
+- **Proof is not enough by itself**: screenshot inspection is mandatory. DOM
+  assertions, unit tests, and proof JSON alone are not visual proof.
+- **Failed/rejected proof attempts remain untracked**:
+  `skills/battle/local/ux-visible-defect-repair-20260721T1810Z/` and
+  `skills/battle/local/ux-visible-defect-repair-20260721T1818Z/` are failed
+  local attempts and were intentionally not committed.
+- **Repo still has unrelated untracked Battle local artifacts**. Stage explicit
+  task paths only. Never `git add -A`.
+
+### Recommended Next Steps
+
+1. Open `http://127.0.0.1:3003/#battle` and inspect the current first screen
+   manually. Confirm whether the left evidence rail and header event empty-state
+   address the human's immediate complaint.
+2. If the human still rejects the page, ask one concrete question about the
+   next visible defect or hand the current screenshots to Gemini/external design.
+   Do not keep inventing local design changes.
+3. If actual dynamic stdout/stderr is required, stop treating receipt replay as
+   enough. Run or repair the live transport adapter, open the real live route
+   supported by the app, and produce browser screenshot evidence that SSE frames
+   are visible.
+4. Preserve any repair with explicit-path staging, focused build/browser proof,
+   commit, push, and `git ls-remote` remote-ref verification.
 
 > Evidence rule for the next agent: trust fresh browser artifacts and visible
 > screenshot inspection over stale prose or agent-authored closure receipts.
