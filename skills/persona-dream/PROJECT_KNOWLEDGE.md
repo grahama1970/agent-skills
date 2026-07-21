@@ -1,10 +1,30 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R condition reliability accepted) by agent
+**Last updated:** 2026-07-21 (PCTOM-R condition action selection accepted) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R CONDITION ACTION SELECTION): repeated live Tau condition
+  outputs now feed Gate 6 constrained action selection with receipt
+  `/tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z/live_tau_condition_action_selection_receipt.v1.json`.
+  It consumes the repeated live Tau M/R/D/CD comparison receipt
+  `/tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z/live_tau_condition_comparison_receipt.v1.json`
+  (`sha256:15254b5b5cd47c89d6c0ca538a838dee754a438256f743d1e27a62645dae9168`),
+  writes 16 Gate 6 action cases, and reports 4 action decisions plus 4
+  deterministic reward/regret scores for each condition (`M`, `R`, `D`, `CD`).
+  The action vocabulary is the constrained PCTOM-R set:
+  `ASK_CLARIFYING_QUESTION`, `WAIT`, `DISCLOSE_INFORMATION`,
+  `OFFER_COOPERATION`, `SET_BOUNDARY`, `ACT_INDEPENDENTLY`, and `ABSTAIN`.
+  The oracle policy source is deterministic simulator policy, `llm_judge_used:
+  false`, `human_content_judgment_required: false`, and Tau/Memory/provider/
+  canonical/identity/source-memory attempts are all 0 for the bridge itself.
+  Mean planning regret is 0.0 for all four conditions in this bounded
+  calibration subset because each Tau top action mapped to the deterministic
+  oracle action. This is Gate 6 live-originated planning instrumentation, not a
+  held-out planning-benefit claim, real external fault injection, production
+  retry proof, longitudinal recall, complete Phase 01-16 runtime, paid provider
+  execution, video quality, or semantic dream quality.
 - 2026-07-21 (PCTOM-R CONDITION RELIABILITY): controlled Gate 8/9 reliability
   over repeated live condition artifacts now has receipt
   `/tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z/live_tau_condition_reliability_bridge_receipt.v1.json`.

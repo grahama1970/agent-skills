@@ -418,6 +418,33 @@ Gate 6 does not prove live model action generation, human social
 appropriateness beyond deterministic simulator rules, belief revision, live
 Memory recall, or fault-injection reliability.
 
+### Live-Originated Condition Action Bridge
+
+`run_live_tau_condition_action_selection.py` is the live-originated Gate 6
+bridge. It consumes a repeated live Tau condition-comparison receipt and its
+hash-bound M/R/D/CD case artifacts, then writes one constrained action-selection
+record per accepted case.
+
+Bridge invariants:
+
+- base receipt status is `PASS_LIVE_TAU_PCTOM_CONDITION_COMPARISON`;
+- base receipt is `mocked: false`, `live: true`, `fixture_backed: false`;
+- base receipt has at least four sealed/scored cases per M/R/D/CD condition;
+- each consumed case has PASS Gate 5 scoring and a live Tau receipt in its
+  predecessor chain;
+- selected actions are mapped from sealed predicted counterpart actions into
+  the constrained Gate 6 action vocabulary;
+- oracle policy comes from deterministic simulator policy and outcome labels,
+  not an LLM judge;
+- every condition has at least one action decision and one reward/regret score;
+- no Tau call, Memory write, provider call, canonical write, identity write, or
+  source-memory write occurs in the bridge.
+
+The bridge proves live-originated Gate 6 instrumentation. It does not prove
+held-out planning benefit, longitudinal belief revision, real external service
+fault injection, production retry behavior, complete Phase 01-16 execution,
+paid provider execution, or semantic dream quality.
+
 ## Gate 7 - Non-Destructive Belief Revision
 
 Gate 7 consumes the sealed prior ToM hypothesis, PASS scoring receipt, and

@@ -335,21 +335,25 @@ Condition comparison proof root: /tmp/persona-dream-condition-comparison-2026072
 Live Tau condition comparison proof root: /tmp/persona-dream-live-tau-condition-comparison-20260721T030038Z
 Repeated live Tau condition comparison proof root: /tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z
 Live Tau condition reliability proof root: /tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z
+Live Tau condition action-selection proof root: /tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z
 ```
 
 Current active phase boundary:
 
 ```text
-phase: post-live-condition-reliability, pre-live-action-selection-regret
+phase: post-live-condition-action-selection, pre-action-linked-revision-and-held-out-benefit
 last_live_condition_receipt: /tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z/live_tau_condition_comparison_receipt.v1.json
 last_reliability_receipt: /tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z/live_tau_condition_reliability_bridge_receipt.v1.json
-next_required_receipt: live Tau condition action-selection receipt
+last_action_selection_receipt: /tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z/live_tau_condition_action_selection_receipt.v1.json
+next_required_receipt: action-linked belief revision or held-out condition benefit receipt
 ```
 
 This boundary means Gate 8/9 condition reliability over live-originated
-artifacts is the current predecessor evidence. It does not authorize a final
-research success claim. The next useful movement is Gate 6 live planning
-evidence over the same M/R/D/CD condition outputs.
+artifacts and Gate 6 action-selection instrumentation over the same
+live-originated M/R/D/CD artifacts are the current predecessor evidence. It
+does not authorize a final research success claim. The next useful movement is
+to connect action decisions to non-destructive belief revision and/or run a
+held-out condition-benefit slice with the same sealed/scored/action contracts.
 
 Gate 0 proof summary:
 
@@ -854,6 +858,45 @@ action-selection regret improvement, longitudinal recall after revision,
 complete live Phase 01-16 runtime execution, paid provider execution, video
 quality, or semantic dream quality.
 
+Live Tau condition action-selection proof summary:
+
+```text
+receipt: /tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z/live_tau_condition_action_selection_receipt.v1.json
+status: PASS_LIVE_TAU_PCTOM_CONDITION_ACTION_SELECTION
+base_receipt: /tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z/live_tau_condition_comparison_receipt.v1.json
+base_receipt_sha256: sha256:15254b5b5cd47c89d6c0ca538a838dee754a438256f743d1e27a62645dae9168
+conditions: M, R, D, CD
+action_set: ASK_CLARIFYING_QUESTION, WAIT, DISCLOSE_INFORMATION, OFFER_COOPERATION, SET_BOUNDARY, ACT_INDEPENDENTLY, ABSTAIN
+action_cases_written: 16
+action_decisions_per_condition: M=4, R=4, D=4, CD=4
+deterministic_reward_or_regret_scores_per_condition: M=4, R=4, D=4, CD=4
+individual_status_counts: PASS_TOM_ACTION_SELECTION=16
+mean_planning_regret_by_condition: M=0.0, R=0.0, D=0.0, CD=0.0
+oracle_policy_reference: deterministic_simulator_policy.v1
+llm_judge_used: false
+mocked: false
+live: true
+fixture_backed: false
+deterministic_simulator_corpus_fixture_backed: true
+human_content_judgment_required: false
+tau_call_attempts: 0
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+```
+
+This is live-originated Gate 6 planning instrumentation over the repeated live
+Tau M/R/D/CD condition artifacts. It proves those Tau-authored predictions can
+be mapped into the constrained action set and deterministically scored for
+reward/regret against simulator oracle policy without human content judgment,
+LLM judging, or unsupported writes. It does not prove held-out statistical
+prediction benefit, planning benefit over the strongest baseline, longitudinal
+recall after action-linked belief revision, real external service fault
+injection, production retry machinery, complete live Phase 01-16 runtime
+execution, paid provider execution, video quality, or semantic dream quality.
+
 First live Tau condition-comparison repair note:
 
 ```text
@@ -972,37 +1015,59 @@ plus one live Tau condition-comparison run over one paired calibration episode
 and four M/R/D/CD cases, plus one repeated live Tau condition-comparison run
 over four paired calibration episodes and 16 M/R/D/CD cases, plus one
 controlled Gate 8/9 condition reliability bridge over those live-originated
-artifacts. It
+artifacts, plus one live-originated Gate 6 action-selection bridge over those
+same 16 condition cases. It
 does not prove paid provider execution, semantic dream quality, held-out test
-benefit, robust statistical calibration, action-selection regret improvement,
-real external service fault injection, production retry machinery,
-longitudinal recall after revision, complete live Phase 01-16 runtime
-execution, or autonomous operation beyond the bounded bridges. Those require
-separate live receipts.
+benefit, robust statistical calibration, planning benefit over the strongest
+baseline, real external service fault injection, production retry machinery,
+longitudinal recall after action-linked revision, complete live Phase 01-16
+runtime execution, or autonomous operation beyond the bounded bridges. Those
+require separate live receipts.
 
 No agent may claim final, green, complete, fixed, verified, or closed for this
 research goal unless those concrete proof artifacts exist and are cited.
 
 ## Next Critical Path
 
-Move from prediction/scoring/reliability evidence to planning-relevant action
-selection, without reactivating provider/video as the critical path.
+Move from live-originated action-selection instrumentation to action-linked
+belief revision and held-out benefit evidence, without reactivating
+provider/video as the critical path.
 
-The next accepted artifact must answer this planning question:
+The next accepted artifact must answer one of these narrower questions:
 
-1. Can Tau-authored M/R/D/CD condition outputs select constrained actions and
-   produce deterministic reward/regret or information-seeking metrics without
-   human content judgment or unsupported writes?
+1. Can action-selected Tau M/R/D/CD cases write non-destructive
+   prior -> action error -> posterior revision chains without canonical,
+   identity, or source-memory writes?
+2. On a held-out test slice, does CD improve the preregistered proper-scoring
+   metric or planning-regret metric over the strongest M/R/D baseline?
 
-Stop condition for the live planning artifact:
+Stop condition for an action-linked revision artifact:
 
 ```text
 mocked: no
-base_receipt: repeated live Tau condition comparison receipt
+base_receipt: live Tau condition action-selection receipt
 conditions: M, R, D, CD
-action_set: ASK_CLARIFYING_QUESTION, WAIT, DISCLOSE_INFORMATION, OFFER_COOPERATION, SET_BOUNDARY, ACT_INDEPENDENTLY, ABSTAIN
+prior_action_hypotheses_per_condition: >= 1
+posterior_action_revisions_per_condition: >= 1
+prior_remains_auditable: true
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+human_content_judgment_required: false
+```
+
+Stop condition for a held-out benefit artifact:
+
+```text
+mocked: no
+split: sealed_test or explicitly frozen heldout
+conditions: M, R, D, CD
+sealed_commitments_per_condition: >= 1
+deterministic_scores_per_condition: >= 1
 action_decisions_per_condition: >= 1
-deterministic_reward_or_regret_scores_per_condition: >= 1
+primary_metric: preregistered proper score or planning regret
+strongest_baseline_condition: one of M, R, D
+cd_minus_strongest_baseline: reported even if positive, zero, or negative
 oracle_policy_reference: deterministic simulator policy, not LLM judge
 human_content_judgment_required: false
 memory_write_attempts: 0
@@ -1015,54 +1080,14 @@ source_memory_write_attempts: 0
 Required artifact shape:
 
 ```text
-receipt_status: PASS_LIVE_TAU_PCTOM_CONDITION_ACTION_SELECTION or fail-closed BLOCKED_*
-receipt_path: /tmp/persona-dream-live-tau-condition-action-selection-<timestamp>/live_tau_condition_action_selection_receipt.v1.json
-decision_index: live_condition_action_decisions.json
-base_receipt_sha256: recomputed from the repeated live Tau condition comparison receipt
-conditions_represented: M, R, D, CD
-oracle_policy_source: deterministic simulator labels and policy rules
+receipt_status: PASS_* or fail-closed BLOCKED_*
+receipt_path: /tmp/persona-dream-<artifact-kind>-<timestamp>/*.json
+base_receipt_sha256: recomputed from the consumed predecessor receipt
+conditions_represented: M, R, D, CD when condition comparison is in scope
+oracle_policy_source: deterministic simulator labels and policy rules when action scoring is in scope
 llm_judge_used: false
 human_content_judgment_required: false
 ```
 
-Minimum acceptable evidence counts for that artifact:
-
-```text
-M action_decisions >= 1 and regret_scores >= 1
-R action_decisions >= 1 and regret_scores >= 1
-D action_decisions >= 1 and regret_scores >= 1
-CD action_decisions >= 1 and regret_scores >= 1
-```
-
-The action-selection receipt may consume prior live Tau artifacts without making
-new Tau calls. In that case `live: true` means live-originated artifacts were
-consumed and hash-bound, while `tau_call_attempts: 0` must be reported plainly.
-
 Any live validation report must state `mocked`, `live`, what was actually
 exercised, and what remains unverified.
-
-Candidate base repeated-live command, already satisfied by the receipt above:
-
-```bash
-./run.sh run-live-tau-condition-comparison \
-  --output-root /tmp/persona-dream-live-tau-condition-comparison-<timestamp> \
-  --episode-limit 4 \
-  --json
-```
-
-Candidate receipt status:
-
-```text
-PASS_LIVE_TAU_PCTOM_CONDITION_COMPARISON
-```
-
-If the live Tau calls return malformed structured outputs or Tau is
-unavailable, the accepted intermediate artifact is the fail-closed receipt:
-
-```text
-BLOCKED_LIVE_TAU_PCTOM_CONDITION_COMPARISON
-```
-
-That blocked receipt must preserve per-condition Tau receipts and Gate errors
-so the next repair is driven by concrete boundary failures, not prose
-interpretation.
