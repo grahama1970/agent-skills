@@ -1,10 +1,31 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R floor4 trust/commit live Tau replication accepted) by agent
+**Last updated:** 2026-07-21 (PCTOM-R repeated-seed trust/commit summary accepted) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R REPEATED-SEED TRUST/COMMIT SUMMARY): repeated-seed
+  trust/commitment planning evidence now exists at
+  `/tmp/persona-dream-live-tau-trust-commit-repeated-seed-summary-20260721T105120Z/live_tau_trust_commit_repeated_seed_receipt.v1.json`.
+  It consumes two accepted floor4 live Tau receipts:
+  `/tmp/persona-dream-live-tau-trust-commit-replication-floor4-20260721T101929Z/live_tau_trust_commit_replication_receipt.v1.json`
+  and
+  `/tmp/persona-dream-live-tau-trust-commit-replication-floor4-repeat2-20260721T103729Z/live_tau_trust_commit_replication_receipt.v1.json`.
+  Status is `PASS_LIVE_TAU_PCTOM_TRUST_COMMIT_REPEATED_SEED_SUMMARY`;
+  `mocked:false`, `live:true`, `live_tau_receipts_consumed:true`,
+  aggregate command `live_tau_reexecuted:false`, 2 passed seed receipts, 32
+  total Tau calls consumed, 32 sealed/scored cases, and 8 planning rows. The
+  aggregate CD-minus-baseline planning-regret mean is `-0.15000000000000002`,
+  with 4 action switches, 2 oracle-match gains, 2 oracle-match losses, and 4
+  unchanged rows. The aggregate planning-regret CI is
+  `[-0.42500000000000004, 0.125]`, so planning benefit is still not
+  confidence-bounded. The second floor4 run reproduced the same action-row
+  pattern as the first, so next planning work should expand the deterministic
+  trust/commitment corpus or obtain non-identical repeated live Tau behavior
+  before upgrading planning claims. Production retry-service proof also remains
+  open. Provider/video and semantic dream quality remain outside the current
+  critical path.
 - 2026-07-21 (PCTOM-R FLOOR4 TRUST/COMMIT LIVE TAU REPLICATION): focused
   trust/commitment live Tau replication evidence now exists at
   `/tmp/persona-dream-live-tau-trust-commit-replication-floor4-20260721T101929Z/live_tau_trust_commit_replication_receipt.v1.json`.

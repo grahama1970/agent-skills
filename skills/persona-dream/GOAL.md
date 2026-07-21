@@ -438,12 +438,13 @@ Full64 live Tau planning diagnostic proof root: /tmp/persona-dream-live-tau-full
 Full64 live Tau action-policy sensitivity proof root: /tmp/persona-dream-live-tau-full64-action-policy-sensitivity-20260721T094805Z
 Blocked trust/commitment live Tau smoke attempt root: /tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z
 Floor4 trust/commitment live Tau replication proof root: /tmp/persona-dream-live-tau-trust-commit-replication-floor4-20260721T101929Z
+Repeated-seed trust/commitment live Tau summary proof root: /tmp/persona-dream-live-tau-trust-commit-repeated-seed-summary-20260721T105120Z
 ```
 
 Current active phase boundary:
 
 ```text
-phase: post-floor4-trust-commit-live-tau-replication, pre-repeated-seed-trust-commit-replication-or-production-retry-service-proof
+phase: post-repeated-seed-trust-commit-live-tau-summary, pre-expanded-trust-commit-corpus-or-production-retry-service-proof
 last_live_condition_receipt: /tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z/live_tau_condition_comparison_receipt.v1.json
 last_reliability_receipt: /tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z/live_tau_condition_reliability_bridge_receipt.v1.json
 last_action_selection_receipt: /tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z/live_tau_condition_action_selection_receipt.v1.json
@@ -465,7 +466,8 @@ last_full64_live_tau_planning_diagnostic_receipt: /tmp/persona-dream-live-tau-fu
 last_full64_live_tau_action_policy_sensitivity_receipt: /tmp/persona-dream-live-tau-full64-action-policy-sensitivity-20260721T094805Z/live_tau_full64_action_policy_sensitivity_receipt.v1.json
 last_blocked_trust_commit_smoke_receipt: /tmp/persona-dream-live-tau-trust-commit-replication-smoke1-20260721T101023Z/live_tau_trust_commit_replication_receipt.v1.json
 last_floor4_trust_commit_replication_receipt: /tmp/persona-dream-live-tau-trust-commit-replication-floor4-20260721T101929Z/live_tau_trust_commit_replication_receipt.v1.json
-next_required_receipt: repeated-seed trust/commitment replication, larger trust/commitment corpus coverage, or production retry service proof, selected by the active research question
+last_repeated_seed_trust_commit_summary_receipt: /tmp/persona-dream-live-tau-trust-commit-repeated-seed-summary-20260721T105120Z/live_tau_trust_commit_repeated_seed_receipt.v1.json
+next_required_receipt: larger trust/commitment corpus coverage, additional repeated live Tau seeds with non-identical behavior, or production retry service proof, selected by the active research question
 secondary_receipt: live Memory fault injection in the same sealed-test loop or deployed always-on orchestrator retry proof
 ```
 
@@ -499,15 +501,16 @@ terminal-outcome discipline over 256 active predictions and 256 action
 decisions. The action-policy sensitivity receipt now explains the sparse
 planning point estimate at the realized-action level: all 4 nonzero deltas are
 action switches in `trust-commit`, with 3 oracle-match gains and 1 oracle-match
-loss. The active next movement is now repeated-seed trust/commitment
-replication, larger trust/commitment corpus coverage, or production
+loss. The active next movement is now larger trust/commitment corpus coverage,
+additional repeated live Tau seeds with non-identical behavior, or production
 retry-service proof. The floor4 trust/commitment replication satisfied the
 action-selection acceptance floor and reproduced a negative
-CD-minus-baseline planning-regret point estimate, but its bootstrap confidence
-interval still crosses zero. Retry/fault proof inside a permanently deployed
-always-on service boundary remains unproven. The run.sh orchestration proof
-exercises the local skill command dispatcher, but it is not an always-on
-external service.
+CD-minus-baseline planning-regret point estimate. A second independent live Tau
+floor4 run reproduced the same action rows, and the repeated-seed aggregate
+still has a planning-regret confidence interval crossing zero. Retry/fault
+proof inside a permanently deployed always-on service boundary remains
+unproven. The run.sh orchestration proof exercises the local skill command
+dispatcher, but it is not an always-on external service.
 
 Full64 live Tau action-policy sensitivity proof summary:
 
@@ -628,6 +631,47 @@ not prove confidence-bounded planning benefit because the bootstrap planning
 CI crosses zero. It also does not prove planning benefit on a newly expanded
 trust/commitment corpus beyond the existing deterministic variants, repeated
 seed stability, production retry machinery, live Memory recall in the
+sealed-test loop, complete live Phase 01-16 runtime execution, paid provider
+execution, or video/audio/semantic dream quality.
+
+Repeated-seed trust/commitment live Tau summary:
+
+```text
+receipt: /tmp/persona-dream-live-tau-trust-commit-repeated-seed-summary-20260721T105120Z/live_tau_trust_commit_repeated_seed_receipt.v1.json
+status: PASS_LIVE_TAU_PCTOM_TRUST_COMMIT_REPEATED_SEED_SUMMARY
+receipt_sha256: sha256:f3c5b640585b6645702b22475ab107a1fdca7f9799062097cbb208cd91dafa72
+source_receipts: 2
+source_receipt_1: /tmp/persona-dream-live-tau-trust-commit-replication-floor4-20260721T101929Z/live_tau_trust_commit_replication_receipt.v1.json
+source_receipt_2: /tmp/persona-dream-live-tau-trust-commit-replication-floor4-repeat2-20260721T103729Z/live_tau_trust_commit_replication_receipt.v1.json
+passed_seed_receipts: 2
+total_tau_call_attempts_consumed: 32
+total_cases: 32
+total_planning_rows: 8
+action_switch_count: 4
+nonzero_delta_count: 4
+oracle_match_transitions: GAIN=2, LOSS=2, UNCHANGED=4
+planning_mean_cd_minus_baseline: -0.15000000000000002
+planning_regret_ci: [-0.42500000000000004, 0.125]
+planning_benefit_with_confidence: false
+mocked: false
+live: true
+fixture_backed: false
+live_tau_reexecuted_by_aggregate_command: false
+live_tau_receipts_consumed: true
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+```
+
+This proves that two accepted floor4 trust/commitment live Tau receipts were
+hash-bound, consumed, and aggregated into a repeated-seed planning summary. It
+does not upgrade planning benefit because the aggregate planning-regret
+confidence interval still crosses zero. The second live Tau run reproduced the
+same row pattern as the first, so this is repeated execution evidence but not
+evidence of non-identical seed behavior. It does not prove an expanded
+trust/commitment corpus, production retry machinery, live Memory recall in the
 sealed-test loop, complete live Phase 01-16 runtime execution, paid provider
 execution, or video/audio/semantic dream quality.
 
@@ -1964,27 +2008,29 @@ surface, bounded live Tau sealed-test replication, bounded retry/idempotence
 over live-originated sealed-test artifacts, run.sh orchestration retry evidence,
 bounded local queue-worker evidence, full64 live Tau sealed-test replication,
 full64 live Tau belief-Brier confidence evidence, full64 retry/fault
-containment, a full64 planning diagnostic, and a floor4 trust/commitment live
-Tau replication to the remaining repeated-seed planning and
-production-reliability questions, without reactivating provider/video as the
-critical path. The blocked one-episode trust/commitment smoke is part of that
-evidence boundary: it exercised 4 live Tau calls and failed closed because the
-action-selection bridge requires at least 16 Tau calls and at least 4
-sealed/scored cases per condition before accepting a planning receipt. The
-floor4 replication now satisfies that floor, but it is still not
-confidence-bounded planning-benefit evidence because its planning-regret CI
-crosses zero.
+containment, a full64 planning diagnostic, a floor4 trust/commitment live Tau
+replication, and a repeated-seed aggregate over two floor4 live Tau receipts to
+the remaining expanded/non-identical planning and production-reliability
+questions, without reactivating provider/video as the critical path. The
+blocked one-episode trust/commitment smoke is part of that evidence boundary:
+it exercised 4 live Tau calls and failed closed because the action-selection
+bridge requires at least 16 Tau calls and at least 4 sealed/scored cases per
+condition before accepting a planning receipt. The floor4 replication now
+satisfies that floor. The repeated-seed aggregate consumes two accepted floor4
+live Tau receipts, but it is still not confidence-bounded planning-benefit
+evidence because its planning-regret CI crosses zero and the second run
+reproduced the same action-row pattern as the first.
 
 The next accepted artifact must answer this narrower question:
 
-1. Does the sparse `trust-commit` planning signal persist under repeated live
-   Tau seeds, a larger trust/commitment corpus, or explicit action-policy
-   sensitivity checks? A valid next planning artifact must either add repeated
-   live Tau seed evidence over the floor4 trust/commitment subset, expand the
-   deterministic trust/commitment corpus beyond the current 16 variants and
-   rerun the floor, or explain by receipt why planning benefit remains sparse
-   and non-general. Otherwise the result must remain pending, not accepted as
-   planning-benefit proof.
+1. Does the sparse `trust-commit` planning signal persist under non-identical
+   repeated live Tau behavior, a larger trust/commitment corpus, or explicit
+   action-policy sensitivity checks? A valid next planning artifact must either
+   expand the deterministic trust/commitment corpus beyond the current 16
+   variants and rerun the floor, add repeated live Tau evidence that changes
+   the action-row pattern rather than duplicating the existing rows, or explain
+   by receipt why planning benefit remains sparse and non-general. Otherwise
+   the result must remain pending, not accepted as planning-benefit proof.
 
 The secondary artifact must answer this question:
 
