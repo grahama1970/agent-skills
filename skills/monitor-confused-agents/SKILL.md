@@ -133,6 +133,11 @@ allows it to remain stopped. The monitor must not invent an objective from
 generic early-stop language; defining the immutable goal is on the human or
 project instructions.
 
+Codex's own `/goal` footer is also treated as an immutable-goal signal. A
+footer such as `Goal blocked (/goal resume)` means there is an active goal that
+has not reached an allowed stop state, so an otherwise prompt-ready stopped pane
+can be selected even when no project `GOAL.md` exists.
+
 If the current transcript region says `Immutable Goal:
 ACHIEVED_WITH_RECEIPT:path`, `DONE_WITH_RECEIPT`, or `Goal achieved`, and that
 same current region does not contain proof-blocker or remaining-work markers,

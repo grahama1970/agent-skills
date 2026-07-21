@@ -534,18 +534,20 @@ def classify_pane(
 
     project_root = project_root_for_cwd(cwd, cwd_prefix)
     immutable_goal = discover_immutable_goal(cwd, boundary=project_root)
+    goal_claim = transcript_goal_claim(current_text, project_root=project_root)
+    has_goal_signal = bool(immutable_goal.get("found")) or goal_claim["state"] in {"achieved", "blocked", "unmet"}
     if status in {"blocked", "unknown"} or not explain_allows_input(explain):
         classification = "blocked_or_unknown_observe_only"
         action = "observe_only"
         reasons = [f"stopped_status:{status}", "unsafe_or_uncertain_state_never_prompted"]
-    elif not immutable_goal.get("found"):
+    elif not has_goal_signal:
         classification = "no_immutable_goal"
         action = "observe_only"
         reasons = [f"stopped_status:{status}", "immutable_goal_unknown_stop_allowed"]
-    elif goal_allows_stop(current_text, goal_found=True, has_early_markers=bool(early_markers), project_root=project_root):
+    elif goal_allows_stop(current_text, goal_found=has_goal_signal, has_early_markers=bool(early_markers), project_root=project_root):
         classification = "goal_stop_allowed"
         action = "observe_only"
-        reasons = [f"stopped_status:{status}", f"goal_claim:{transcript_goal_claim(current_text, project_root=project_root)['state']}"]
+        reasons = [f"stopped_status:{status}", f"goal_claim:{goal_claim['state']}"]
     elif human_markers and not early_markers:
         classification = "legitimate_human_blocker"
         action = "needs_human"
@@ -559,6 +561,8 @@ def classify_pane(
             reasons.extend(f"human_marker_overridden_by_early_stop:{item}" for item in human_markers[:3])
         if immutable_goal.get("found"):
             reasons.append("immutable_goal_found")
+        elif goal_claim["state"] != "none":
+            reasons.append(f"transcript_goal:{goal_claim['state']}")
         else:
             reasons.append("immutable_goal_unknown")
 
@@ -577,7 +581,7 @@ def classify_pane(
         "human_blocker_markers": human_markers,
         "immutable_goal": immutable_goal,
         "project_root": str(project_root) if project_root else None,
-        "transcript_goal_claim": transcript_goal_claim(current_text, project_root=project_root),
+        "transcript_goal_claim": goal_claim,
         "recent_excerpt": text[-2400:],
         "analysis_excerpt": current_text[-1200:],
         "explain_state": explain.get("state") if isinstance(explain, dict) else None,

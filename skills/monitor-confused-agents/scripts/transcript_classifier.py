@@ -41,6 +41,8 @@ def transcript_goal_claim(text: str, *, project_root: Path | None = None) -> dic
         return {"state": "mentioned", "source": "immutable_goal_line"}
     if re.search(r"^\s*(?:gpt-[^\n]*\s+.*?\s+)?Goal achieved(?:\s*\([^)]*\))?\s*$", block, flags=re.MULTILINE):
         return {"state": "achieved", "source": "status_line"}
+    if re.search(r"^\s*(?:gpt-[^\n]*\s+.*?\s+)?Goal blocked(?:\s*\([^)]*\))?\s*$", block, flags=re.MULTILINE):
+        return {"state": "blocked", "source": "status_line"}
     if re.search(r"^\s*DONE_WITH_RECEIPT(?:\s|$)", block, flags=re.MULTILINE):
         return {"state": "achieved", "source": "status_line"}
     if "immutable goal" in block.lower():

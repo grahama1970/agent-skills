@@ -439,8 +439,59 @@ def test_goal_status_line_with_goal_file_allows_stop(tmp_path: Path) -> None:
     assert candidate["action"] == "observe_only"
 
 
+def test_goal_achieved_status_without_goal_file_allows_stop(tmp_path: Path) -> None:
+    pane = {
+        "agent": "codex",
+        "agent_status": "done",
+        "cwd": str(tmp_path),
+        "pane_id": "w11:pD",
+    }
+
+    candidate = monitor.classify_pane(
+        FakeHerdr("gpt-5.5 high · repo      Goal achieved (1h 32m)"),
+        pane,
+        cwd_prefix=str(tmp_path.parent),
+        include_agents={"codex"},
+        stopped_statuses={"done"},
+        only_obvious_early_stops=False,
+    )
+
+    assert candidate is not None
+    assert candidate["action"] == "observe_only"
+    assert candidate["classification"] == "goal_stop_allowed"
+
+
+def test_goal_blocked_status_without_goal_file_restarts(tmp_path: Path) -> None:
+    pane = {
+        "agent": "codex",
+        "agent_status": "done",
+        "cwd": str(tmp_path),
+        "pane_id": "w11:pD",
+    }
+
+    candidate = monitor.classify_pane(
+        FakeHerdr("gpt-5.5 high · repo      Goal blocked (/goal resume)"),
+        pane,
+        cwd_prefix=str(tmp_path.parent),
+        include_agents={"codex"},
+        stopped_statuses={"done"},
+        only_obvious_early_stops=False,
+    )
+
+    assert candidate is not None
+    assert candidate["action"] == "restart_continue"
+    assert candidate["classification"] == "stopped_or_early_stop"
+    assert "transcript_goal:blocked" in candidate["selection_reasons"]
+
+
 def test_goal_achieved_instruction_is_not_completion() -> None:
     text = "Do not claim Goal achieved until tests pass."
+
+    assert monitor.transcript_goal_claim(text)["state"] == "none"
+
+
+def test_goal_blocked_instruction_is_not_status_line() -> None:
+    text = "Do not treat the words Goal blocked inside prose as a footer."
 
     assert monitor.transcript_goal_claim(text)["state"] == "none"
 
