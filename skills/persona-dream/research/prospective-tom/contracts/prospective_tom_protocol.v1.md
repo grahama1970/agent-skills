@@ -1325,6 +1325,33 @@ machinery, live Memory recall in the sealed-test loop, provider/video
 execution, semantic dream quality, or complete live Phase 01-16 runtime
 execution.
 
+## Live Tau Full64 Planning Diagnostic Bridge
+
+The live Tau full64 planning diagnostic consumes the full64 live Tau
+sealed-test root and the full64 statistical-confidence receipt without
+reexecuting Tau. It explains why the planning-regret point-estimate improvement
+is not a confidence-bounded planning-benefit result.
+
+Current accepted receipt:
+
+```text
+/tmp/persona-dream-live-tau-full64-planning-diagnostic-20260721T093504Z/live_tau_full64_planning_diagnostic_receipt.v1.json
+```
+
+Accepted status:
+
+```text
+PASS_LIVE_TAU_PCTOM_FULL64_PLANNING_DIAGNOSTIC
+```
+
+This bridge proves that the full64 planning-regret CI crosses zero and that the
+nonzero planning signal is sparse and family-concentrated: 60 ties, 3
+beneficial deltas, 1 harmful delta, and all nonzero deltas in the `trust-commit`
+family. It does not prove confidence-bounded planning benefit, planning benefit
+under repeated live Tau seeds, planning benefit under a larger or differently
+balanced corpus, production retry machinery, provider/video execution,
+semantic dream quality, or complete live Phase 01-16 runtime execution.
+
 ## Bounded Live Tau Sealed-Test Retry Proof
 
 The bounded live Tau sealed-test retry proof consumes an accepted live Tau

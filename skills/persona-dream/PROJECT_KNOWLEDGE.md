@@ -1,10 +1,29 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R full64 live Tau confidence and retry proof accepted) by agent
+**Last updated:** 2026-07-21 (PCTOM-R full64 live Tau planning diagnostic accepted) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R FULL64 LIVE TAU PLANNING DIAGNOSTIC): live Tau full64
+  planning diagnostic evidence now exists at
+  `/tmp/persona-dream-live-tau-full64-planning-diagnostic-20260721T093504Z/live_tau_full64_planning_diagnostic_receipt.v1.json`.
+  It consumes the accepted full64 live Tau sealed-test root and full64
+  statistical-confidence receipt without reexecuting Tau and reports
+  `PASS_LIVE_TAU_PCTOM_FULL64_PLANNING_DIAGNOSTIC`. Counts: 64 planning rows,
+  60 ties, 3 beneficial deltas, 1 harmful delta, and 4 nonzero deltas. The
+  planning-regret CI is `[-0.08515625000000002, 0.00390625]`, so it crosses
+  zero. The diagnostic conclusion is `SPARSE_FAMILY_CONCENTRATED_SIGNAL`: all
+  nonzero deltas are in the `trust-commit` family. Three `trust-commit`
+  episodes improved when CD selected `ASK_CLARIFYING_QUESTION` instead of the
+  baseline `SET_BOUNDARY`; one `trust-commit` episode was worse for that same
+  CD action. `mocked:false`, `live:true`, `fixture_backed:false`,
+  `live_tau_reexecuted:false`, `human_content_judgment_required:false`, and
+  Tau/Memory/provider/canonical/identity/source-memory write or call attempts
+  were all 0. This explains why the full64 planning point estimate cannot be
+  upgraded to a planning-benefit claim: the signal is sparse and
+  family-concentrated. The next planning evidence would need repeated seeds,
+  more trust/commitment episodes, or action-policy sensitivity checks.
 - 2026-07-21 (PCTOM-R FULL64 LIVE TAU STATISTICAL CONFIDENCE): live Tau
   full64 statistical-confidence evidence now exists at
   `/tmp/persona-dream-live-tau-full64-statistical-confidence-20260721T092609Z/live_tau_full64_statistical_confidence_receipt.v1.json`.

@@ -427,12 +427,13 @@ Bounded queue-worker retry proof root: /tmp/persona-dream-live-tau-sealed-test-q
 Full64 live Tau sealed-test replication proof root: /tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z
 Full64 live Tau statistical-confidence proof root: /tmp/persona-dream-live-tau-full64-statistical-confidence-20260721T092609Z
 Full64 live Tau sealed-test retry proof root: /tmp/persona-dream-live-tau-full64-sealed-test-retry-proof-20260721T092754Z
+Full64 live Tau planning diagnostic proof root: /tmp/persona-dream-live-tau-full64-planning-diagnostic-20260721T093504Z
 ```
 
 Current active phase boundary:
 
 ```text
-phase: post-full64-live-tau-statistical-confidence-and-retry-proof, pre-planning-benefit-diagnostic-or-production-retry-service-proof
+phase: post-full64-live-tau-planning-diagnostic, pre-expanded-planning-replication-or-production-retry-service-proof
 last_live_condition_receipt: /tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z/live_tau_condition_comparison_receipt.v1.json
 last_reliability_receipt: /tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z/live_tau_condition_reliability_bridge_receipt.v1.json
 last_action_selection_receipt: /tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z/live_tau_condition_action_selection_receipt.v1.json
@@ -450,7 +451,8 @@ last_bounded_queue_worker_retry_proof_receipt: /tmp/persona-dream-live-tau-seale
 last_full64_live_tau_sealed_test_replication_receipt: /tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z/live_tau_sealed_test_replication_receipt.v1.json
 last_full64_live_tau_statistical_confidence_receipt: /tmp/persona-dream-live-tau-full64-statistical-confidence-20260721T092609Z/live_tau_full64_statistical_confidence_receipt.v1.json
 last_full64_live_tau_sealed_test_retry_proof_receipt: /tmp/persona-dream-live-tau-full64-sealed-test-retry-proof-20260721T092754Z/live_tau_sealed_test_retry_proof_receipt.v1.json
-next_required_receipt: planning-benefit diagnostic/replication receipt or production retry service proof, selected by the active research question
+last_full64_live_tau_planning_diagnostic_receipt: /tmp/persona-dream-live-tau-full64-planning-diagnostic-20260721T093504Z/live_tau_full64_planning_diagnostic_receipt.v1.json
+next_required_receipt: expanded planning replication/sensitivity receipt or production retry service proof, selected by the active research question
 secondary_receipt: live Memory fault injection in the same sealed-test loop or deployed always-on orchestrator retry proof
 ```
 
@@ -483,8 +485,11 @@ The full64 statistical-confidence receipt now shows confidence-bounded belief
 Brier benefit, while action Brier and planning regret remain point-estimate
 improvements whose confidence intervals cross zero. The full64 retry proof now
 shows the same bounded terminal-outcome discipline over 256 active predictions
-and 256 action decisions. Retry/fault proof inside a permanently deployed
-always-on service boundary remains unproven. The run.sh orchestration proof now
+and 256 action decisions. The full64 planning diagnostic now explains that the
+planning point-estimate improvement is sparse and family-concentrated rather
+than confidence-bounded: 60 ties, 3 beneficial deltas, 1 harmful delta, and all
+nonzero deltas in `trust-commit`. Retry/fault proof inside a permanently
+deployed always-on service boundary remains unproven. The run.sh orchestration proof now
 exercises the local skill command dispatcher, but it is not an always-on
 external service.
 
@@ -919,6 +924,45 @@ discipline over the full64 live-originated sealed-test artifacts. It does not
 prove deployed production orchestrator retry machinery, new live Tau execution,
 live Memory service fault injection, paid provider execution, semantic dream
 quality, or complete live Phase 01-16 runtime execution.
+
+Full64 live Tau planning diagnostic proof summary:
+
+```text
+receipt: /tmp/persona-dream-live-tau-full64-planning-diagnostic-20260721T093504Z/live_tau_full64_planning_diagnostic_receipt.v1.json
+status: PASS_LIVE_TAU_PCTOM_FULL64_PLANNING_DIAGNOSTIC
+receipt_sha256: sha256:77a01ac124ae0c72a227af560e1702b906f3bd3f38400d76c85b62b79808b489
+diagnostic_conclusion: SPARSE_FAMILY_CONCENTRATED_SIGNAL
+planning_regret_ci: [-0.08515625000000002, 0.00390625]
+planning_ci_crosses_zero: true
+episodes: 64
+tie_count: 60
+benefit_count: 3
+harm_count: 1
+nonzero_count: 4
+nonzero_families: trust-commit
+base_is_full64_live_tau: true
+confidence_receipt_passed: true
+planning_rows_cover_64_episodes: true
+nonzero_deltas_are_family_concentrated: true
+mocked: false
+live: true
+fixture_backed: false
+live_tau_reexecuted: false
+human_content_judgment_required: false
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+```
+
+This proves why the full64 planning-regret point estimate cannot be upgraded to
+a confidence-bounded planning-benefit claim: 60 of 64 paired planning deltas are
+ties, and every nonzero delta occurs in the `trust-commit` family. It does not
+prove planning benefit under repeated live Tau seeds, a larger corpus, a
+differently balanced corpus, production retry machinery, paid provider
+execution, semantic dream quality, or complete live Phase 01-16 runtime
+execution.
 
 Prior blocked live Memory revision-recall repair note:
 
@@ -1761,13 +1805,15 @@ CD-minus-strongest-baseline point estimates for belief Brier, action Brier, and
 planning regret, plus one full64 live Tau statistical-confidence receipt showing
 belief Brier benefit with CI upper below zero while action and planning CIs
 cross zero, plus one full64 retry proof over 256 active predictions/actions
-with 8 retry/fault trials and zero unknown-state or side-effect violations. It
-does not prove paid provider execution, semantic dream quality,
-confidence-bounded planning-regret benefit, full external service fault
-injection beyond Memory `/recall`, permanently deployed always-on production
-service retry machinery, complete live Phase 01-16 runtime execution, or
-autonomous operation beyond the bounded bridges. Those require separate live
-receipts.
+with 8 retry/fault trials and zero unknown-state or side-effect violations, plus
+one planning diagnostic proving the planning-regret CI crosses zero because the
+signal is sparse and concentrated in `trust-commit`. It does not prove paid
+provider execution, semantic dream quality, confidence-bounded planning-regret
+benefit under repeated seeds or a larger/balanced corpus, full external service
+fault injection beyond Memory `/recall`, permanently deployed always-on
+production service retry machinery, complete live Phase 01-16 runtime
+execution, or autonomous operation beyond the bounded bridges. Those require
+separate live receipts.
 
 No agent may claim final, green, complete, fixed, verified, or closed for this
 research goal unless those concrete proof artifacts exist and are cited.
@@ -1779,15 +1825,17 @@ Memory recall-after-revision evidence, the broader live fault-injection
 surface, bounded live Tau sealed-test replication, bounded retry/idempotence
 over live-originated sealed-test artifacts, run.sh orchestration retry evidence,
 bounded local queue-worker evidence, full64 live Tau sealed-test replication,
-full64 live Tau belief-Brier confidence evidence, and full64 retry/fault
-containment to the remaining planning-benefit and production-reliability
-questions, without reactivating provider/video as the critical path.
+full64 live Tau belief-Brier confidence evidence, full64 retry/fault
+containment, and a full64 planning diagnostic to the remaining expanded
+planning-replication and production-reliability questions, without reactivating
+provider/video as the critical path.
 
 The next accepted artifact must answer this narrower question:
 
-1. Is the planning-regret point-estimate improvement a real planning benefit
-   under repeated seeds, larger sealed-test samples, or a diagnostic that
-   explains why the current full64 planning CI crosses zero?
+1. Does the sparse `trust-commit` planning signal persist under repeated live
+   Tau seeds, more trust/commitment episodes, or explicit action-policy
+   sensitivity checks, or was the full64 planning point estimate too
+   family-concentrated to generalize?
 
 The secondary artifact must answer this question:
 
