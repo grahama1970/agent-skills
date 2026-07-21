@@ -1,10 +1,39 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R held-out cooperation exposure slice) by agent
+**Last updated:** 2026-07-21 (PCTOM-R cooperation exposure instrument) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R COOPERATION EXPOSURE INSTRUMENT): after the natural
+  held-out variants 23-24 slice failed closed with no CD `OFFER_COOPERATION`
+  exposure, a deterministic cooperation-exposure instrument was added under
+  the research namespace. Command:
+  `./skills/persona-dream/run.sh check-cooperation-exposure-instrument`.
+  Receipt:
+  `/tmp/persona-dream-cooperation-exposure-instrument-proof-20260721T203146Z/cooperation_exposure_instrument_receipt.v1.json`.
+  Status `PASS_PCTOM_COOPERATION_EXPOSURE_INSTRUMENT`, receipt SHA-256
+  `sha256:f24ac1bc75054959346274c974936c2f7dfe8c3651c07637af31f6382d341515`.
+  It generated four deterministic coordination/conflict instrument episodes
+  with variants 25-28, all disjoint from the 1-24 corpus, all with
+  deterministic `KAI_OFFERS_COOPERATION` outcomes, and all with visible packet
+  hashes bound. The visible packet omits `actual_next_action` and
+  `counterpart_policy` fields; outcome and policy triggers remain withheld.
+  Counts: 4 rows, 4 cooperation-exposure rows, 4 visible packet hashes,
+  4 built-in negative mutations, and 4 negative mutations failed closed
+  (`no_cooperation_exposure`, `visible_outcome_key_leak`,
+  `variant_not_disjoint_from_prior_corpus`, and
+  `missing_actual_next_action_withheld_field`). The command made zero Tau
+  calls, zero Memory/provider/canonical/identity/source-memory writes, used no
+  LLM judge, and required no human content judgment. This closes the immediate
+  no-exposure prerequisite by creating a falsifiable, deterministic instrument.
+  It does not prove live CD will select `OFFER_COOPERATION`, planning benefit,
+  confidence-bounded CD benefit, semantic dream quality, paid provider
+  execution, or complete Phase 01-16 runtime execution. Next PCTOM-R work
+  should adapt the live Tau condition-comparison runner to consume this
+  instrument corpus as an explicit evaluation slice, then rerun the
+  pre-outcome cooperation-threshold scoring against live-originated instrument
+  artifacts.
 - 2026-07-21 (PCTOM-R HELD-OUT COOPERATION EXPOSURE SLICE): a bounded live Tau
   slice over variants 23-24 was added and run to test whether the pre-outcome
   cooperation-threshold rule has held-out natural exposure beyond the full64

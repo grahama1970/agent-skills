@@ -1,77 +1,84 @@
 # Status
 
-Status: BLOCKED_ON_NATURAL_COOPERATION_EXPOSURE
+Status: INSTRUMENT_READY_FOR_LIVE_TAU_SLICE
 
-Artifact: PCTOM-R held-out cooperation exposure slice.
+Artifact: PCTOM-R deterministic cooperation-exposure instrument.
 
 Current receipt:
 
 ```text
-/tmp/persona-dream-live-tau-cooperation-exposure-slice-proof-20260721T200908Z/live_tau_cooperation_exposure_slice_receipt.v1.json
+/tmp/persona-dream-cooperation-exposure-instrument-proof-20260721T203146Z/cooperation_exposure_instrument_receipt.v1.json
 ```
 
 Receipt SHA-256:
 
 ```text
-sha256:190a5c8c5313fb4298dc5840041e593713c9d1d4c436238fd69b912ca19608cb
+sha256:f24ac1bc75054959346274c974936c2f7dfe8c3651c07637af31f6382d341515
 ```
 
 Inspection result:
 
 ```text
-status: BLOCKED_LIVE_TAU_PCTOM_COOPERATION_EXPOSURE_SLICE
-conclusion: HELDOUT_COOPERATION_OUTCOME_PRESENT_BUT_CD_NO_OFFER_EXPOSURE
-rows: 8
-cases: 32
-tau_call_attempts: 32
-tau_live_call_performed: 32
-cooperation_outcome_rows: 1
-cd_offer_cooperation_candidates: 0
-cd_low_confidence_cooperation_interventions: 0
-cd_action_change_count: 0
+status: PASS_PCTOM_COOPERATION_EXPOSURE_INSTRUMENT
+generator_version: pctom_cooperation_exposure_instrument.v1
+variant_min: 25
+variant_max: 28
+episodes: 4
+exposure_rows: 4
+counterpart_action: KAI_OFFERS_COOPERATION
+agent_action: OFFER_COOPERATION
+visible_packet_hashes: 4
+negative_mutations: 4
+negative_mutations_failed_closed: 4
+tau_call_attempts: 0
 memory_write_attempts: 0
 provider_call_attempts: 0
 canonical_memory_write_attempts: 0
 identity_write_attempts: 0
 source_memory_write_attempts: 0
 mocked: false
-live: true
+live: false
+llm_judge_used: false
+human_content_judgment_required: false
 ```
-
-Reason blocked:
-
-The variants 23-24 held-out live Tau slice is disjoint from both the full64
-variants 1-16 and the balanced derivation variants 17-22. It includes one
-coordination/conflict cooperation-outcome row, but CD did not select
-`OFFER_COOPERATION` from sealed `KAI_OFFERS_COOPERATION` predictions in any
-row. Therefore the pre-outcome cooperation-threshold rule has no natural
-held-out exposure to score in the exhausted 1-24 corpus.
 
 What this proves:
 
 ```text
-variant 23-24 live Tau slice executed
--> sealed M/R/D/CD prediction artifacts produced
--> Gate 6 action rows produced
--> pre-outcome cooperation rule recomputed
--> no natural held-out CD cooperation exposure found
--> planning-benefit claim failed closed
+deterministic held-out variants 25-28 exist
+-> every row has deterministic KAI_OFFERS_COOPERATION outcome
+-> visible packets omit actual_next_action and counterpart_policy fields
+-> no outcome/policy trigger is exposed to the model packet
+-> negative mutations fail closed:
+   no_cooperation_exposure
+   visible_outcome_key_leak
+   variant_not_disjoint_from_prior_corpus
+   missing_actual_next_action_withheld_field
 ```
 
 What this does not prove:
 
 ```text
-broad held-out planning benefit
-confidence-bounded CD planning benefit
+CD will select OFFER_COOPERATION in live Tau
+planning benefit
+confidence-bounded CD benefit
 semantic dream quality
 paid provider execution
 complete live Phase 01-16 runtime execution
-that the cooperation threshold is optimal
 ```
+
+Reason this supersedes the prior no-exposure blocker:
+
+The prior variants 23-24 live slice had one cooperation-outcome row but zero CD
+`OFFER_COOPERATION` candidates, so it could not score the cooperation-threshold
+rule under natural held-out exposure. The instrument creates an explicit,
+deterministic, outcome-hidden cooperation-exposure slice beyond the exhausted
+variants 1-24 corpus.
 
 Next legal move:
 
-Add an explicit deterministic cooperation-exposure instrument or scenario
-variant before rerunning held-out benefit checks. Do not keep spending live Tau
-calls looking for accidental `OFFER_COOPERATION` exposure in the existing
-variants 1-24 corpus.
+Adapt the live Tau condition-comparison runner to consume this instrument
+corpus as an explicit evaluation slice, then rerun the pre-outcome
+cooperation-threshold scoring against live-originated instrument artifacts. Do
+not claim planning benefit from this instrument until live Tau predictions,
+Gate 6 action rows, and post-outcome scoring receipts exist.

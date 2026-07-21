@@ -105,6 +105,7 @@ Commands:
   run-live-tau-balanced-threshold-intervention  Run action-threshold ablations over a balanced live Tau aggregate
   run-live-tau-cooperation-threshold-rule  Replay a pre-outcome cooperation threshold rule on held-out live Tau rows
   run-live-tau-cooperation-exposure-slice  Run held-out live Tau variants 23-24 for cooperation-rule exposure
+  check-cooperation-exposure-instrument  Build and check deterministic held-out cooperation-exposure episodes
   run-live-tau-strict-inference-prompt-replication  Run live Tau planning with strict non-template inference prompts
   run-pctom-causal-identifiability-gate  Recompute fixed-policy oracle/anti-oracle sensitivity and fail-closed lineage
   run-live-tau-prompt-timeout-diagnostic  Diagnose Tau/scillm prompt timeout boundaries
@@ -510,6 +511,9 @@ case "$COMMAND" in
     ;;
   run-live-tau-cooperation-exposure-slice)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_tau_cooperation_exposure_slice.py" "$@"
+    ;;
+  check-cooperation-exposure-instrument)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_cooperation_exposure_instrument.py" "$@"
     ;;
   run-live-tau-strict-inference-prompt-replication)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_tau_strict_inference_prompt_replication.py" "$@"
