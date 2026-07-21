@@ -16,6 +16,11 @@ agent-skills worktree, not the pi-mono shell.
 > `skills/battle/local/pre-human-readiness-audit-20260721T170004Z/pre-human-readiness-audit.json`,
 > but it is marked `not_a_closure_receipt:true`; do not restore closure language
 > until the visible state receives human or fresh external acceptance.
+> Replay interaction proof exists at
+> `skills/battle/local/replay-ux-proof-20260721T1724Z/battle-replay-proof.json`;
+> it is local evidence that the Battle UX now starts at replay time 00:00,
+> advances on Play, jumps on Next, keeps the selected detail pane aligned with
+> visible lanes, and renders a playable Pixi canvas.
 > After unrelated commits advanced the shared branch, the current-head
 > revalidation receipt is
 > `skills/battle/local/current-head-evidence-revalidation-20260721T0458Z.json`.
@@ -213,6 +218,15 @@ agent-skills worktree, not the pi-mono shell.
   sprites visible, lineage collapsed by default, and no console/page/network
   errors. It still requires human or fresh external acceptance before goal
   closure can be restored.
+- **Fresh replay interaction proof exists, but it is not closure**:
+  `skills/battle/local/replay-ux-proof-20260721T1724Z/battle-replay-proof.json`
+  records `status:"PASS"`, `failed:[]`, `mocked:false`, `live:true`, route
+  `http://127.0.0.1:3003/#battle`, initial playhead `00:00`, Play advancing to
+  `00:01`, Next advancing to `00:56`, G0 selected while only G0 is visible, no
+  stale G1-A current-loop text in the opening detail pane, no false Resume
+  Follow prompt during normal replay, no forbidden text, and Pixi canvas height
+  at least 240px. Screenshot:
+  `skills/battle/local/replay-ux-proof-20260721T1724Z/battle-replay-after-play.png`.
 - **Repo is dirty from unrelated agents**. Stage Battle handoff/artifact paths
   explicitly only. Never `git add -A`.
 
@@ -221,9 +235,9 @@ agent-skills worktree, not the pi-mono shell.
 1. Keep using `#battle` on the agent-skills host as the primary acceptance
    route. Treat `#battle/receipt` as a compatible deep link and do not revive
    standalone `#battle/live` without a new written goal.
-2. Use the fresh pre-human proof as the next review target. If a reviewer or
-   human rejects it, preserve the screenshot and fix the next concrete visual
-   defect before making another closure claim.
+2. Use the fresh pre-human proof and replay proof as the next review target. If
+   a reviewer or human rejects it, preserve the screenshot and fix the next
+   concrete visual/replay defect before making another closure claim.
 3. Do not claim a new backend rerun unless a backend command actually reruns the
    live SciLLM + Docker qualification. The existing backend receipt remains the
    current source fixture, not a new run.

@@ -306,7 +306,14 @@ verify the Battle UX as closed. The current local repair proof records
 `status:"PASS_LOCAL_PRE_HUMAN_CHECKS_PENDING_ACCEPTANCE"`, `failed:[]`,
 `mocked:false`, `live:true`, and screenshot
 `skills/battle/local/pre-human-readiness-audit-20260721T170004Z/battle-default-pre-human-readiness-after-layout-fix.png`.
-Closure remains pending human or fresh external acceptance of that visible state.
+Fresh replay interaction proof now exists at
+`skills/battle/local/replay-ux-proof-20260721T1724Z/battle-replay-proof.json`.
+It records `status:"PASS"`, `failed:[]`, `mocked:false`, `live:true`,
+initial playhead `00:00`, Play advancing to `00:01`, Next advancing to `00:56`,
+selected-agent/detail-pane synchronization with visible lanes, no false Resume
+Follow prompt during normal replay, no forbidden text, and a playable Pixi canvas.
+Closure remains pending human or fresh external acceptance of the visible replay
+state.
 
 The prior audit receipt
 `skills/battle/local/goal-adaptive-lineage-audit-20260721T0005Z.json` remains a

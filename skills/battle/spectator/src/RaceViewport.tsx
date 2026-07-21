@@ -86,13 +86,14 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
   const clock = fixture.battle_clock;
   const timelineDomain = useMemo(() => battleTimelineDomain(fixture, designView), [designView, fixture]);
   const allotted = timelineDomain.allottedSeconds;
+  const replayStartSeconds = receiptReplay ? (fixture.battle_timeline_control?.time_domain?.start_seconds ?? 0) : timelineDomain.currentSeconds;
   const testModeFromUrl = battlePixiTestModeFromUrl();
-  const [playheadSeconds, setPlayheadSeconds] = useState(() => testModeFromUrl?.currentSeconds ?? timelineDomain.currentSeconds);
+  const [playheadSeconds, setPlayheadSeconds] = useState(() => testModeFromUrl?.currentSeconds ?? replayStartSeconds);
 
   useEffect(() => {
     const testMode = battlePixiTestModeFromUrl();
-    setPlayheadSeconds(testMode?.currentSeconds ?? timelineDomain.currentSeconds);
-  }, [timelineDomain.currentSeconds, receiptReplay, typeof window !== "undefined" ? window.location.hash : ""]);
+    setPlayheadSeconds(testMode?.currentSeconds ?? replayStartSeconds);
+  }, [replayStartSeconds, receiptReplay, typeof window !== "undefined" ? window.location.hash : ""]);
 
   const effectivePlayheadSeconds = testModeFromUrl?.freezeTime ? testModeFromUrl.currentSeconds : playheadSeconds;
 
@@ -143,6 +144,11 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
       return queryMatch && filterMatch;
     });
   }, [lineageLanes, query, filter, collapsed]);
+  useEffect(() => {
+    if (!receiptReplay || !visibleLanes.length) return;
+    if (visibleLanes.some((lane) => lane.id === selectedId)) return;
+    onSelect(visibleLanes[0].id);
+  }, [onSelect, receiptReplay, selectedId, visibleLanes]);
 
   const layoutKey = `${visibleLanes.map((lane) => lane.id).join(",")}|${zoom}|${[...collapsed].sort().join(",")}`;
   const contentWidth = timelineContentWidth(zoom);
@@ -171,6 +177,16 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
       scrollWidth: node.scrollWidth,
       viewportWidth: node.clientWidth,
     });
+  }, []);
+  const programmaticScrollRef = useRef(false);
+  const programmaticScrollResetRef = useRef<number | null>(null);
+  const markProgrammaticScroll = useCallback((behavior: ScrollBehavior) => {
+    programmaticScrollRef.current = true;
+    if (programmaticScrollResetRef.current != null) window.clearTimeout(programmaticScrollResetRef.current);
+    programmaticScrollResetRef.current = window.setTimeout(() => {
+      programmaticScrollRef.current = false;
+      programmaticScrollResetRef.current = null;
+    }, behavior === "smooth" ? 500 : 100);
   }, []);
 
   const scrubPlayheadFromClientX = useCallback(
@@ -217,10 +233,13 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
         viewportWidth: node.clientWidth,
         scrollWidth: node.scrollWidth,
       });
-      if (Math.abs(node.scrollLeft - nextLeft) > 1) node.scrollTo({ left: nextLeft, behavior });
+      if (Math.abs(node.scrollLeft - nextLeft) > 1) {
+        markProgrammaticScroll(behavior);
+        node.scrollTo({ left: nextLeft, behavior });
+      }
       syncScrollMetrics();
     },
-    [allotted, contentWidth, playheadSeconds, playing, syncScrollMetrics]
+    [allotted, contentWidth, markProgrammaticScroll, playheadSeconds, playing, syncScrollMetrics]
   );
 
   const focusTimelineAtSeconds = useCallback(
@@ -232,10 +251,13 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
         viewportWidth: node.clientWidth,
         scrollWidth: node.scrollWidth,
       });
-      if (Math.abs(node.scrollLeft - left) > 1) node.scrollTo({ left, behavior });
+      if (Math.abs(node.scrollLeft - left) > 1) {
+        markProgrammaticScroll(behavior);
+        node.scrollTo({ left, behavior });
+      }
       syncScrollMetrics();
     },
-    [allotted, contentWidth, syncScrollMetrics],
+    [allotted, contentWidth, markProgrammaticScroll, syncScrollMetrics],
   );
 
   const director = useBattleReceiptDirector({
@@ -343,7 +365,7 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
     if (!node) return;
     const onScroll = () => {
       syncScrollMetrics();
-      if (receiptReplay && pixiEngine) director.pauseCameraFollow();
+      if (receiptReplay && pixiEngine && !programmaticScrollRef.current) director.pauseCameraFollow();
     };
     node.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", syncScrollMetrics);
@@ -351,6 +373,7 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
     return () => {
       node.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", syncScrollMetrics);
+      if (programmaticScrollResetRef.current != null) window.clearTimeout(programmaticScrollResetRef.current);
     };
   }, [contentWidth, director.pauseCameraFollow, pixiEngine, receiptReplay, visibleLanes.length, followPlayhead, syncScrollMetrics]);
 
@@ -400,7 +423,8 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
     () => pixiRowLayout.reduce((max, row) => Math.max(max, row.topPx + row.heightPx), 0),
     [pixiRowLayout],
   );
-  const receiptRaceHeightPx = receiptReplay && pixiEngine ? Math.max(360, pixiRowsHeight + 72) : undefined;
+  const pixiStageHeightPx = receiptReplay && pixiEngine ? Math.max(260, pixiRowsHeight) : pixiRowsHeight;
+  const receiptRaceHeightPx = receiptReplay && pixiEngine ? Math.max(360, pixiStageHeightPx + 72) : undefined;
 
   const shellClass = cn(
     "flex min-h-0 flex-col overflow-hidden",
@@ -465,7 +489,7 @@ export function RaceViewport({ lanes, receiptFixture, selectedId, activeFinisher
             contentWidth={contentWidth}
             allottedSeconds={allotted}
             scrollLeft={scrollMetrics.scrollLeft}
-            heightPx={pixiRowsHeight}
+            heightPx={pixiStageHeightPx}
             playing={playing}
             collapsedParentIds={collapsed}
           />

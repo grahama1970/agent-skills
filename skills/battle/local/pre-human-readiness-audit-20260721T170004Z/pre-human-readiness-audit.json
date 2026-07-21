@@ -10,6 +10,8 @@
   "latest_human_signal": "Battle is not ready to be viewed/verified by the human.",
   "final_browser_proof": "skills/battle/local/pre-human-readiness-audit-20260721T170004Z/fresh-browser-proof-after-layout-fix.json",
   "final_screenshot": "skills/battle/local/pre-human-readiness-audit-20260721T170004Z/battle-default-pre-human-readiness-after-layout-fix.png",
+  "replay_browser_proof": "skills/battle/local/replay-ux-proof-20260721T1724Z/battle-replay-proof.json",
+  "replay_screenshot": "skills/battle/local/replay-ux-proof-20260721T1724Z/battle-replay-after-play.png",
   "repairs_applied_in_this_pass": [
     {
       "id": "goal_status_downgraded_after_human_rejection",
@@ -35,6 +37,21 @@
       "id": "battle_app_height_bound_to_viewport",
       "path": "skills/battle/spectator/src/battle-race.css",
       "result": "Battle app shell height is viewport-bound so side panes scroll internally instead of elongating the arena"
+    },
+    {
+      "id": "receipt_replay_starts_at_beginning",
+      "path": "skills/battle/spectator/src/RaceViewport.tsx",
+      "result": "receipt replay initializes at the timeline start instead of the terminal receipt clock"
+    },
+    {
+      "id": "selected_detail_follows_visible_replay_lanes",
+      "path": "skills/battle/spectator/src/RaceViewport.tsx",
+      "result": "selected agent is changed when replay time hides the previously selected lane"
+    },
+    {
+      "id": "lane_detail_excludes_unrelated_child_or_judge_events",
+      "path": "skills/battle/spectator/src/AgentDetailPane.tsx",
+      "result": "detail pane now relates events only through explicit actor, red lane, payload, or target ids"
     }
   ],
   "previously_failed": [
@@ -60,7 +77,9 @@
     "TypeScript: node node_modules/typescript/bin/tsc --noEmit -p tsconfig.json passed",
     "static build: node scripts/build-static.mjs passed",
     "fresh browser proof: status PASS, failed []",
-    "screenshot inspection: no tab collision, no large blank race well, scorecard visible, Pixi sprites visible, lineage collapsed by default"
+    "screenshot inspection: no tab collision, no large blank race well, scorecard visible, Pixi sprites visible, lineage collapsed by default",
+    "replay browser proof: status PASS, failed []",
+    "replay screenshot inspection: Play advances the Battle from 00:00 to 00:01 with G0 visible and selected; Next jumps to 00:56 and selects a visible descendant"
   ],
   "remaining_acceptance_gate": [
     "human or external reviewer must accept the visible UX before goal closure is restored"

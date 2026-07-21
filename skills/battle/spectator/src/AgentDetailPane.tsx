@@ -374,7 +374,7 @@ function buildModel(lane: Lane, events: BattleEvent[]): AgentPaneModel {
 }
 
 function isRelatedEvent(event: BattleEvent, lane: Lane) {
-  return event.actor_id === lane.id || event.red_lane_id === lane.id || event.payload_id === lane.payloadId || event.target_actor_ids?.includes(lane.id) || event.target_actor_ids?.includes(lane.payloadId) || event.parent_id === lane.id || event.team === "judge";
+  return event.actor_id === lane.id || event.red_lane_id === lane.id || event.payload_id === lane.payloadId || event.target_actor_ids?.includes(lane.id) || event.target_actor_ids?.includes(lane.payloadId);
 }
 
 function uniqueSkills(skills: AgentPaneSkill[]) {

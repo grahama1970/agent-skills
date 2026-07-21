@@ -1,0 +1,186 @@
+{
+  "schema": "battle.replay_ux_proof.v1",
+  "timestamp_utc": "2026-07-21T17:24:00Z",
+  "mocked": false,
+  "live": true,
+  "route": "http://127.0.0.1:3003/#battle",
+  "screenshot": "/home/graham/workspace/experiments/agent-skills/skills/battle/local/replay-ux-proof-20260721T1724Z/battle-replay-after-play.png",
+  "states": [
+    {
+      "label": "initial",
+      "playheadLabel": "PLAYHEAD 00:00",
+      "selectedAgent": "G0 Zip Slip Spark",
+      "agentPaneText": "Agent DetailSelected agent cockpitRECEIPT-BACKED FIXTUREG0 Zip Slip SparkGen 0 · G0 receipt-backed-workerAdaptive qualificationPASSG0 Zip Slip Spark · seedRECEIPT-BACKED FIXTUREJudgevulnerable original not confirmed · no patched bypassBasisseed exploit (no mutation operator)Lifecycle evidenceShowNo adaptive-lifecycle receipts on this lane yet. Fail-closed: nothing invented.SummaryLiveTurnsLogsSkillsReceiptsCurrent loop · #0Receipt-backed qualification evidence.judge replayreceipt evidencePublic traceNo public trace fields attached to this receipt event.stdout latestG0 Zip Slip Spark: seed specimen · run arena-adaptive-lineage-20260720T144034Z",
+      "visibleLaneCount": 1,
+      "laneTexts": [
+        "G0 Zip Slip SparkG0GEN 0QUALIFIED"
+      ],
+      "textSample": "ADAPTIVE REPLAY\nDESIGN\nADAPTIVE LINEAGE\nLIVE: Qual PASS\nG1-A\n/\nG1-B\n· novelty_distance\n▸\nSHOW\nBATTLE-004\n/\nPOST /api/import-zip\nCWE-22\n/\nZip Slip path traversal\n/\nQUALIFICATION: Adaptive Lineage PASS\nLIVE EVENTS\n19:00\nAdaptive lineage — G1-A IMPORTLIB SLIPSTREAM: GENOME SELECTED\n19:00\nAdaptive lineage — G1-B WRITESTR DETOUR: GENOME SELECTED\n19:00\nAdaptive lineage — G2 ZIPINFO SWITCHBACK: GENOME SELECTED\n«\nAGENTS\n4\nG0 Zip Slip Spark\nZip Slip Spark · seed\nG0\nG1-A Importlib Slipstream\nImportlib Slipstream · selected G1 · method_replace\nG1 · selected\nG1-B Writestr Detour\nWritestr Detour · runner-up G1 · oracle_or_parameter_mutation\nG1 · runner-up\nG2 ZipInfo Switchback\nZipInfo Switchback · descendant · failure_guided_crossover\nG2\nAGENT STATUS\nQUALIFIED\n4\nUSEFUL\n3\nEVOLUTION & PROGRESS GRAPH\n100%\nPLAYHEAD 00:00\n00:00\n00:26\n00:53\n01:20\n01:47\n02:14\nG0 Zip Slip Spark\nG0\nGEN 0\nQUALIFIED\nMORE OUTCOMES →\n»\nAGENT DETAIL\nSelected agent cockpit\nRECEIPT-BACKED FIXTURE\nG0 Zip Slip Spark\nGen 0 · G0\nreceipt-backed-worker\nADAPTIVE QUALIFICATION\nPASS\nG0 Zip Slip Spark · seed\nRECEIPT-BACKED FIXTURE\nJUDGEvulnerable original not confirmed · no patched bypass\nBASISseed exploit (no mutation operator)\nLIFECYCLE EVIDENCE\nSHOW\n\nNo adaptive-lifecycle receipts on this lane yet. Fail-closed: nothing invented.\n\nSummary\nLive\nTurns\nLogs\nSkills\nReceipts\nCURRENT LOOP · #0\nReceipt-backed qualification evidence.\njudge replay\nRECEIPT EVIDENCE\nPUBLIC TRACE\nNo public trace fields attached to this receipt event.\nSTDOUT",
+      "resumeFollowVisible": false,
+      "playButtonTitle": "Play receipt replay playhead",
+      "canvasRect": {
+        "x": 577,
+        "y": 315,
+        "width": 1030,
+        "height": 260,
+        "right": 1607,
+        "bottom": 575
+      },
+      "timelineRect": {
+        "x": 287,
+        "y": 279,
+        "width": 766,
+        "height": 322,
+        "right": 1053,
+        "bottom": 601
+      },
+      "forbiddenHits": []
+    },
+    {
+      "label": "after_1_4s_playing",
+      "playheadLabel": "PLAYHEAD 00:01",
+      "selectedAgent": "G0 Zip Slip Spark",
+      "agentPaneText": "Agent DetailSelected agent cockpitRECEIPT-BACKED FIXTUREG0 Zip Slip SparkGen 0 · G0 receipt-backed-workerAdaptive qualificationPASSG0 Zip Slip Spark · seedRECEIPT-BACKED FIXTUREJudgevulnerable original not confirmed · no patched bypassBasisseed exploit (no mutation operator)Lifecycle evidenceShowNo adaptive-lifecycle receipts on this lane yet. Fail-closed: nothing invented.SummaryLiveTurnsLogsSkillsReceiptsCurrent loop · #0Receipt-backed qualification evidence.judge replayreceipt evidencePublic traceNo public trace fields attached to this receipt event.stdout latestG0 Zip Slip Spark: seed specimen · run arena-adaptive-lineage-20260720T144034Z",
+      "visibleLaneCount": 1,
+      "laneTexts": [
+        "G0 Zip Slip SparkG0GEN 0QUALIFIED"
+      ],
+      "textSample": "ADAPTIVE REPLAY\nDESIGN\nADAPTIVE LINEAGE\nLIVE: Qual PASS\nG1-A\n/\nG1-B\n· novelty_distance\n▸\nSHOW\nBATTLE-004\n/\nPOST /api/import-zip\nCWE-22\n/\nZip Slip path traversal\n/\nQUALIFICATION: Adaptive Lineage PASS\nLIVE EVENTS\n«\nAGENTS\n4\nG0 Zip Slip Spark\nZip Slip Spark · seed\nG0\nG1-A Importlib Slipstream\nImportlib Slipstream · selected G1 · method_replace\nG1 · selected\nG1-B Writestr Detour\nWritestr Detour · runner-up G1 · oracle_or_parameter_mutation\nG1 · runner-up\nG2 ZipInfo Switchback\nZipInfo Switchback · descendant · failure_guided_crossover\nG2\nAGENT STATUS\nQUALIFIED\n4\nUSEFUL\n3\nEVOLUTION & PROGRESS GRAPH\n100%\nPLAYHEAD 00:01\n00:00\n00:26\n00:53\n01:20\n01:47\n02:14\nG0 Zip Slip Spark\nG0\nGEN 0\nQUALIFIED\nMORE OUTCOMES →\n»\nAGENT DETAIL\nSelected agent cockpit\nRECEIPT-BACKED FIXTURE\nG0 Zip Slip Spark\nGen 0 · G0\nreceipt-backed-worker\nADAPTIVE QUALIFICATION\nPASS\nG0 Zip Slip Spark · seed\nRECEIPT-BACKED FIXTURE\nJUDGEvulnerable original not confirmed · no patched bypass\nBASISseed exploit (no mutation operator)\nLIFECYCLE EVIDENCE\nSHOW\n\nNo adaptive-lifecycle receipts on this lane yet. Fail-closed: nothing invented.\n\nSummary\nLive\nTurns\nLogs\nSkills\nReceipts\nCURRENT LOOP · #0\nReceipt-backed qualification evidence.\njudge replay\nRECEIPT EVIDENCE\nPUBLIC TRACE\nNo public trace fields attached to this receipt event.\nSTDOUT LATEST\nG0 Zip Slip Spark: seed specimen · run arena-adaptive-lineage-20260720T144034Z\nLEGEND:\n— Lineage Path\nJudge Qualified\nUseful Mutation\nSelected / Runner-up\nNext\nHighlights\nLive\n1x\n2x\n4x\n8x",
+      "resumeFollowVisible": false,
+      "playButtonTitle": "Pause receipt replay playhead",
+      "canvasRect": {
+        "x": 577,
+        "y": 315,
+        "width": 1030,
+        "height": 260,
+        "right": 1607,
+        "bottom": 575
+      },
+      "timelineRect": {
+        "x": 287,
+        "y": 279,
+        "width": 766,
+        "height": 322,
+        "right": 1053,
+        "bottom": 601
+      },
+      "forbiddenHits": []
+    },
+    {
+      "label": "after_pause",
+      "playheadLabel": "PLAYHEAD 00:01",
+      "selectedAgent": "G0 Zip Slip Spark",
+      "agentPaneText": "Agent DetailSelected agent cockpitRECEIPT-BACKED FIXTUREG0 Zip Slip SparkGen 0 · G0 receipt-backed-workerAdaptive qualificationPASSG0 Zip Slip Spark · seedRECEIPT-BACKED FIXTUREJudgevulnerable original not confirmed · no patched bypassBasisseed exploit (no mutation operator)Lifecycle evidenceShowNo adaptive-lifecycle receipts on this lane yet. Fail-closed: nothing invented.SummaryLiveTurnsLogsSkillsReceiptsCurrent loop · #0Receipt-backed qualification evidence.judge replayreceipt evidencePublic traceNo public trace fields attached to this receipt event.stdout latestG0 Zip Slip Spark: seed specimen · run arena-adaptive-lineage-20260720T144034Z",
+      "visibleLaneCount": 1,
+      "laneTexts": [
+        "G0 Zip Slip SparkG0GEN 0QUALIFIED"
+      ],
+      "textSample": "ADAPTIVE REPLAY\nDESIGN\nADAPTIVE LINEAGE\nLIVE: Qual PASS\nG1-A\n/\nG1-B\n· novelty_distance\n▸\nSHOW\nBATTLE-004\n/\nPOST /api/import-zip\nCWE-22\n/\nZip Slip path traversal\n/\nQUALIFICATION: Adaptive Lineage PASS\nLIVE EVENTS\n«\nAGENTS\n4\nG0 Zip Slip Spark\nZip Slip Spark · seed\nG0\nG1-A Importlib Slipstream\nImportlib Slipstream · selected G1 · method_replace\nG1 · selected\nG1-B Writestr Detour\nWritestr Detour · runner-up G1 · oracle_or_parameter_mutation\nG1 · runner-up\nG2 ZipInfo Switchback\nZipInfo Switchback · descendant · failure_guided_crossover\nG2\nAGENT STATUS\nQUALIFIED\n4\nUSEFUL\n3\nEVOLUTION & PROGRESS GRAPH\n100%\nPLAYHEAD 00:01\n00:00\n00:26\n00:53\n01:20\n01:47\n02:14\nG0 Zip Slip Spark\nG0\nGEN 0\nQUALIFIED\nMORE OUTCOMES →\n»\nAGENT DETAIL\nSelected agent cockpit\nRECEIPT-BACKED FIXTURE\nG0 Zip Slip Spark\nGen 0 · G0\nreceipt-backed-worker\nADAPTIVE QUALIFICATION\nPASS\nG0 Zip Slip Spark · seed\nRECEIPT-BACKED FIXTURE\nJUDGEvulnerable original not confirmed · no patched bypass\nBASISseed exploit (no mutation operator)\nLIFECYCLE EVIDENCE\nSHOW\n\nNo adaptive-lifecycle receipts on this lane yet. Fail-closed: nothing invented.\n\nSummary\nLive\nTurns\nLogs\nSkills\nReceipts\nCURRENT LOOP · #0\nReceipt-backed qualification evidence.\njudge replay\nRECEIPT EVIDENCE\nPUBLIC TRACE\nNo public trace fields attached to this receipt event.\nSTDOUT LATEST\nG0 Zip Slip Spark: seed specimen · run arena-adaptive-lineage-20260720T144034Z\nLEGEND:\n— Lineage Path\nJudge Qualified\nUseful Mutation\nSelected / Runner-up\nNext\nHighlights\nLive\n1x\n2x\n4x\n8x",
+      "resumeFollowVisible": false,
+      "playButtonTitle": "Play receipt replay playhead",
+      "canvasRect": {
+        "x": 577,
+        "y": 315,
+        "width": 1030,
+        "height": 260,
+        "right": 1607,
+        "bottom": 575
+      },
+      "timelineRect": {
+        "x": 287,
+        "y": 279,
+        "width": 766,
+        "height": 322,
+        "right": 1053,
+        "bottom": 601
+      },
+      "forbiddenHits": []
+    },
+    {
+      "label": "after_next_highlight",
+      "playheadLabel": "PLAYHEAD 00:56",
+      "selectedAgent": "G1-A Importlib Slipstream",
+      "agentPaneText": "Agent DetailSelected agent cockpitRECEIPT-BACKED FIXTUREG1-A Importlib SlipstreamGen 1 · G1-A G1-AAdaptive qualificationPASSG1-A Importlib Slipstream · selected G1RECEIPT-BACKED FIXTUREJudgevulnerable original confirmed · no patched bypassBasisReplaced direct from-import loading of import_zip with importlib.import_module plus getattr while preserving archive construction, traversal entry, call semantics, exception handling, and filesystem oracle.Lifecycle evidenceShowSummaryLiveTurnsLogsSkillsReceiptsCurrent loop · #0G1-A Importlib Slipstream fitness PASS · vulnerable original confirmedjudge replayjudge.verdictPublic traceObservationG1-A Importlib Slipstream derived from G0ActionReplaced direct from-import loading of import_zip with importlib.import_module plus getattr while preserving archive construction, traversal entry, call semantics, exception handling, and filesystem oracle.ResultPASSLearnedapp_load_mode, target_call_formstdout latestG1-A Importlib Slipstream: fitness PASS; run=arena-adaptive-lineage-20260720T144034Z; novelty=2; judge_duration=1.195406s; vulnerable_original_confirmed=true; patched_bypass=false",
+      "visibleLaneCount": 3,
+      "laneTexts": [
+        "G0 Zip Slip SparkG0GEN 0QUALIFIED",
+        "G1-A Importlib SlipstreamG1-AGEN 1QUALIFIED",
+        "G1-B Writestr DetourG1-BGEN 1QUALIFIED"
+      ],
+      "textSample": "ADAPTIVE REPLAY\nDESIGN\nADAPTIVE LINEAGE\nLIVE: Qual PASS\nG1-A\n/\nG1-B\n· novelty_distance\n▸\nSHOW\nBATTLE-004\n/\nPOST /api/import-zip\nCWE-22\n/\nZip Slip path traversal\n/\nQUALIFICATION: Adaptive Lineage PASS\nLIVE EVENTS\n«\nAGENTS\n4\nG0 Zip Slip Spark\nZip Slip Spark · seed\nG0\nG1-A Importlib Slipstream\nImportlib Slipstream · selected G1 · method_replace\nG1 · selected\nG1-B Writestr Detour\nWritestr Detour · runner-up G1 · oracle_or_parameter_mutation\nG1 · runner-up\nG2 ZipInfo Switchback\nZipInfo Switchback · descendant · failure_guided_crossover\nG2\nAGENT STATUS\nQUALIFIED\n4\nUSEFUL\n3\nEVOLUTION & PROGRESS GRAPH\n100%\nPLAYHEAD 00:56\n00:00\n00:26\n00:53\n01:20\n01:47\n02:14\nG0 Zip Slip Spark\nG0\nGEN 0\nQUALIFIED\nG1-A Importlib Slipstream\nG1-A\nGEN 1\nQUALIFIED\nG1-B Writestr Detour\nG1-B\nGEN 1\nQUALIFIED\nMORE OUTCOMES →\n»\nAGENT DETAIL\nSelected agent cockpit\nRECEIPT-BACKED FIXTURE\nG1-A Importlib Slipstream\nGen 1 · G1-A\nG1-A\nADAPTIVE QUALIFICATION\nPASS\nG1-A Importlib Slipstream · selected G1\nRECEIPT-BACKED FIXTURE\nJUDGEvulnerable original confirmed · no patched bypass\nBASISReplaced direct from-import loading of import_zip with importlib.import_module plus getattr while preserving archive construction, traversal entry, call semantics, exception handling, and filesystem oracle.\nLIFECYCLE EVIDENCE\nSHOW\nSummary\nLive\nTurns\nLogs\nSkills\nReceipts\nCURRENT LOOP · #0\nG1-A Importlib Slipstream fitness PASS · vulnerable original confirmed\njudge replay\nJUDGE.VERDICT\nPUBLIC TRACE\nOBSERVATION\nG1-A Importlib Slipstream derived",
+      "resumeFollowVisible": false,
+      "playButtonTitle": "Play receipt replay playhead",
+      "canvasRect": {
+        "x": 498,
+        "y": 315,
+        "width": 1030,
+        "height": 260,
+        "right": 1528,
+        "bottom": 575
+      },
+      "timelineRect": {
+        "x": 287,
+        "y": 279,
+        "width": 766,
+        "height": 322,
+        "right": 1053,
+        "bottom": 601
+      },
+      "forbiddenHits": []
+    }
+  ],
+  "checks": {
+    "initial_starts_at_beginning": true,
+    "playhead_advances_after_play": true,
+    "play_button_toggles_pause_state": true,
+    "selected_agent_visible_initial": true,
+    "selected_agent_visible_after_play": true,
+    "selected_agent_visible_after_next": true,
+    "opening_detail_matches_g0": true,
+    "playing_detail_matches_g0": true,
+    "lane_reveal_progression_after_play": true,
+    "next_highlight_advances_playhead": true,
+    "next_highlight_selects_visible_descendant": true,
+    "resume_follow_not_visible_during_normal_follow": true,
+    "no_forbidden_text": true,
+    "pixi_canvas_visible": true
+  },
+  "consoleMessages": [
+    {
+      "type": "warning",
+      "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
+    },
+    {
+      "type": "warning",
+      "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
+    },
+    {
+      "type": "warning",
+      "text": "The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. https://developer.chrome.com/blog/autoplay/#web_audio"
+    },
+    {
+      "type": "warning",
+      "text": "PixiJS Warning:  [Assets] Asset id battle-race-atlas was not found in the Cache"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x28e40014c200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x28e40014c200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x28e40014c200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x28e40014c200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)"
+    }
+  ],
+  "pageErrors": [],
+  "failedRequests": [],
+  "status": "PASS",
+  "failed": []
+}
