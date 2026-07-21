@@ -225,6 +225,19 @@ Next: <one immediate action or stop condition>
   leaving 7/8 accepted planning rows and family count
   `information_asymmetry_false_belief:1:2`. This is live reliability/blocker
   evidence, not a planning-benefit result.
+- WebGPT advisory project-state review, seeded by Brave Search and routed
+  through Browser Oracle/Tau:
+  `skills/persona-dream/local/webgpt_reviews/20260721T-pctom-state-review/reconciliation.md`.
+  Transport metadata:
+  `skills/persona-dream/local/webgpt_reviews/20260721T-pctom-state-review/response.sanitized.meta.json`.
+  Surf captured a sentinel-bearing assistant response from controlled tab
+  `837360427` with `response_proof_status:response_proven` and
+  `raw_contains_sentinel:true`, but `proof_status:degraded_focus` because focus
+  changed during no-activate mode. This is advisory review evidence only. It
+  does not prove any Persona Dream research claim. Its useful conclusion is
+  that current local receipts support PCTOM-R as an executable test platform,
+  but do not support the main efficacy claim that counterfactual dreaming
+  improves prospective calibrated ToM prediction or planning.
 - Preceding failed boundary:
   `/tmp/persona-dream-live-tau-strict-inference-timeout90-v17-20260721T1516Z/live_tau_strict_inference_prompt_replication_receipt.v1.json`
   blocked after a 90s Tau timeout and subsequent scillm `gpt-5.5` cooldown/502
@@ -2668,16 +2681,23 @@ planning benefit remains pending because current full64 and repeated expanded
 planning evidence is sparse, trust/commitment concentrated, and duplicated
 across the available expanded repeated seeds.
 
-The next accepted artifact must answer this narrower question:
+The next accepted artifact must answer this narrower causal-identifiability
+question before additional live CD efficacy runs:
 
-1. Can a broader or different planning intervention change action policy beyond
-   the current sparse trust/commitment subset and produce a confidence-bounded
-   planning-regret improvement, or does non-identical repeated live Tau
-   behavior over a larger/balanced planning corpus still fail to generalize?
-   A valid next planning artifact must run a new planning intervention or
-   non-identical repeated live behavior. Another prose summary or duplicate
-   aggregate over the same action-row pattern is not a valid planning-benefit
-   proof.
+1. Can the current action selector, action set, utility function, and scenario
+   corpus use demonstrably better beliefs to choose better actions? The
+   immediate gate must compare actual committed beliefs against oracle-aligned
+   and anti-oracle belief distributions while holding the action policy fixed.
+   If oracle beliefs do not reduce regret and produce action switches on cases
+   where the Bayes-optimal action differs, more CD generation is not
+   interpretable as a planning experiment. Repair the action policy, utility
+   model, scenario identifiability, or lineage first.
+
+Only after the causal-identifiability gate passes should the planning path
+return to a broader/different planning intervention, non-identical repeated live
+Tau behavior, or larger/balanced planning corpus. Another prose summary,
+duplicate aggregate over the same action-row pattern, or corpus-tuning effort to
+force a CD win is not a valid planning-benefit proof.
 
 The secondary reliability artifact is useful, but it is not a substitute for
 the planning research artifact. It must answer this question:
@@ -2734,6 +2754,61 @@ provider_call_attempts: 0
 canonical_memory_write_attempts: 0
 identity_write_attempts: 0
 source_memory_write_attempts: 0
+```
+
+Stop condition for the causal-identifiability artifact:
+
+```text
+mocked: no
+base_receipts:
+  - live_tau_or_full64_sealed_prediction_root
+  - action_selection_or_planning_receipt_root
+lineage_completeness: 100%
+lineage_chain_per_episode:
+  - recall query
+  - accepted raw source id/content hash
+  - normalized residue hash
+  - condition assignment
+  - factual or counterfactual branch hash
+  - prediction commitment hash
+  - sealed timestamp
+  - outcome reveal hash
+  - score receipt hash
+  - action decision hash
+  - revision hash when revision exists
+post_reveal_inputs_influencing_commitment: 0
+belief_inputs_compared:
+  - actual committed distribution
+  - oracle-aligned distribution
+  - anti-oracle distribution
+action_selector_changed_between_conditions: false
+utility_function_changed_between_conditions: false
+oracle_minus_actual_regret_delta: reported with confidence interval
+anti_oracle_minus_oracle_regret_delta: reported with confidence interval
+oracle_action_switch_count: reported
+episodes_with_bayes_optimal_action_difference: >= 1
+continued_with_unknown_state: 0
+llm_judge_used: false
+human_content_judgment_required: false
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+```
+
+Required causal-identifiability artifact shape:
+
+```text
+pctom_causal_identifiability_manifest.json
+pctom_end_to_end_lineage_receipt.json
+pctom_oracle_policy_sensitivity.jsonl
+pctom_oracle_policy_sensitivity_receipt.json
+receipt_status: PASS_* or fail-closed BLOCKED_*
+base_receipt_sha256: recomputed from consumed predecessor receipt
+oracle_policy_source: deterministic simulator labels and policy rules
+anti_oracle_policy_source: deterministic complement or explicitly declared
+  wrong-belief intervention
 ```
 
 Stop condition for a broader live fault-injection artifact:
