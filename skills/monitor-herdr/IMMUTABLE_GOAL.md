@@ -29,9 +29,9 @@ Status: ACHIEVED_WITH_RECEIPT:
   `/home/graham/.local/state/monitor-herdr/receipts/monitor-herdr-20260721T171728192864Z/receipt.json`
 - live plugin eval report:
   `/mnt/storage12tb/skills/monitor-herdr/outputs/live-plugin-e2e/live-plugin-e2e-20260721T171718424807Z/report.json`
+- cron-sourced production-checkout apply receipt:
+  `/home/graham/.local/state/monitor-herdr/receipts/monitor-herdr-20260721T172249320422Z/receipt.json`
 
-Post-merge operational gate: reinstall or refresh the production cron checkout
-so the marked cron line runs this version and emits
-`invocation_source:"cron"` receipts. Until then, `run.sh status` must report
-scheduler health as `NEEDS_ATTENTION` instead of treating manual receipts as
-cron proof.
+Operational scheduler status after cron refresh: `OK` with
+`latest_cron_receipt.invocation_source:"cron"` and
+`latest_cron_receipt.submit_confirmed:[true]`.
