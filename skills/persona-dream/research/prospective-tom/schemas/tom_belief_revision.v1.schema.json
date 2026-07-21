@@ -3,26 +3,100 @@
   "$id": "persona_dream.research.prospective_tom.tom_belief_revision.v1",
   "type": "object",
   "required": [
+    "schema",
     "revision_id",
+    "episode_id",
+    "prediction_id",
     "prior_hypothesis_id",
     "prior_distribution",
+    "prior_distribution_sha256",
+    "prior_audit_ref",
     "observed_outcome_id",
+    "outcome_reveal_sha256",
+    "scoring_receipt_sha256",
+    "prediction_error",
     "surprise",
     "posterior_distribution",
+    "posterior_distribution_sha256",
     "update_reason",
+    "update_evidence_refs",
+    "evidence_mutations",
     "supersedes_for_current_use",
-    "prior_remains_auditable"
+    "prior_remains_auditable",
+    "canonical_memory_write",
+    "identity_write",
+    "source_memory_write"
   ],
   "properties": {
+    "schema": {
+      "type": "string",
+      "const": "persona_dream.research.prospective_tom.tom_belief_revision.v1"
+    },
     "revision_id": {"type": "string", "minLength": 1},
+    "episode_id": {"type": "string", "minLength": 1},
+    "prediction_id": {"type": "string", "minLength": 1},
     "prior_hypothesis_id": {"type": "string", "minLength": 1},
     "prior_distribution": {"type": "object"},
+    "prior_distribution_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "prior_audit_ref": {
+      "type": "object",
+      "required": ["distribution_bundle_sha256", "hypothesis_id"],
+      "properties": {
+        "distribution_bundle_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "hypothesis_id": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
     "observed_outcome_id": {"type": "string", "minLength": 1},
+    "outcome_reveal_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "scoring_receipt_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "prediction_error": {
+      "type": "object",
+      "required": ["actual_label", "prior_actual_probability", "brier", "log_loss", "top_correct"],
+      "properties": {
+        "actual_label": {"type": "string", "minLength": 1},
+        "prior_actual_probability": {"type": "number", "minimum": 0, "maximum": 1},
+        "brier": {"type": "number", "minimum": 0},
+        "log_loss": {"type": "number", "minimum": 0},
+        "top_correct": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
     "surprise": {"type": "number", "minimum": 0},
-    "posterior_distribution": {"type": "object"},
+    "posterior_distribution": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["value", "probability"],
+        "properties": {
+          "value": {"type": "string", "minLength": 1},
+          "probability": {"type": "number", "minimum": 0, "maximum": 1}
+        },
+        "additionalProperties": false
+      }
+    },
+    "posterior_distribution_sha256": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
     "update_reason": {"type": "string", "minLength": 1},
-    "supersedes_for_current_use": {"type": "boolean"},
-    "prior_remains_auditable": {"type": "boolean", "const": true}
+    "update_evidence_refs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["scope", "source_id"],
+        "properties": {
+          "scope": {"type": "string", "const": "outcome_reveal"},
+          "source_id": {"type": "string", "minLength": 1}
+        },
+        "additionalProperties": false
+      }
+    },
+    "evidence_mutations": {"type": "array", "maxItems": 0},
+    "supersedes_for_current_use": {"type": "boolean", "const": true},
+    "prior_remains_auditable": {"type": "boolean", "const": true},
+    "canonical_memory_write": {"type": "boolean", "const": false},
+    "identity_write": {"type": "boolean", "const": false},
+    "source_memory_write": {"type": "boolean", "const": false}
   },
   "additionalProperties": false
 }

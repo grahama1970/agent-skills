@@ -225,12 +225,14 @@ Gate 2 commit: 6b6b7d843f1a24a1192273a3215f6b2f795fd734
 Gate 3 commit: 781bc10e51c516f11930f274e30970c42d240297
 Gate 4 commit: 82a0078294cd0a29e789151a59375428ed2e5a3c
 Gate 5 commit: 81dd203200bcc3786ad561cb1845230254967069
+Gate 6 commit: d31c0314e0e66fdd085c7ce7567d8f16830c070f
 Gate 1 proof root: /tmp/persona-dream-pctom-gate1-final-postpatch-20260721T001545Z
 Gate 2 proof root: /tmp/persona-dream-pctom-gate2-postrebase-20260721T003945Z
 Gate 3 proof root: /tmp/persona-dream-pctom-gate3-final-20260721T004724Z
 Gate 4 proof root: /tmp/persona-dream-pctom-gate4-final-20260721T010232Z
 Gate 5 proof root: /tmp/persona-dream-pctom-gate5-final-20260721T011122Z
 Gate 6 proof root: /tmp/persona-dream-pctom-gate6-final-20260721T011945Z
+Gate 7 proof root: /tmp/persona-dream-pctom-gate7-rebased-20260721T013253Z
 ```
 
 Gate 0 proof summary:
@@ -352,8 +354,37 @@ git_diff_check: clean
 
 This is fixture-backed deterministic evidence. It does not prove live Memory
 recall, Tau text execution, semantic dream quality, prediction benefit,
-held-out statistical calibration, live action improvement, belief revision,
-fault-surface coverage, or complete Phase 01-16 runtime execution.
+held-out statistical calibration, live action improvement, live belief
+revision, fault-surface coverage, or complete Phase 01-16 runtime execution.
+
+Gate 7 proof summary:
+
+```text
+json_files_parsed: 83
+python_files_ast_parsed: 9
+matrix_commands: 53
+expected_negative_failures: 44
+Gate 7 positive: PASS_TOM_BELIEF_REVISION
+Gate 7 prior_hypotheses_checked: 1
+Gate 7 prediction_error_fields_checked: 3
+Gate 7 posterior_distribution_values: 3
+Gate 7 evidence_update_refs: 1
+Gate 7 forbidden_write_attempts: 0
+Gate 7 prior_hypothesis_id: gate2-positive-hyp-001
+Gate 7 prior_actual_probability: 0.7
+Gate 7 posterior_actual_probability: 0.82
+Gate 7 surprise: 0.35667494393873245
+Gate 7 negatives: 7 x BLOCKED_TOM_BELIEF_REVISION
+git_diff_check: clean
+```
+
+This is fixture-backed deterministic evidence. It proves the local Gate 7
+contract can preserve a sealed prior, recompute prediction error from a scoring
+receipt, write a hash-bound posterior, and block fixture attempts to overwrite
+the prior, mutate evidence, write source memory, write canonical memory, or use
+non-PASS scoring. It does not prove live Tau belief-revision generation, live
+Memory recall, longitudinal recall after revision, semantic posterior quality,
+fault-injection reliability, or provider/video execution.
 
 ## Completion Rule
 
@@ -383,10 +414,12 @@ research goal unless those concrete proof artifacts exist and are cited.
 
 ## Next Critical Path
 
-Implement Gate 7: non-destructive belief revision receipts that consume the
-prior sealed hypothesis, scored prediction error, and revealed evidence, then
-write a prior -> error -> posterior chain while preserving the prior as
-auditable history.
+Implement Gate 8: an `R(k, epsilon, lambda)` reliability surface that repeats
+PCTOM-R trial execution under semantic perturbations and boundary-specific
+faults. The accepted terminal states are only
+`RECOVERED_WITH_EQUIVALENT_END_STATE`, `BLOCKED_BEFORE_SIDE_EFFECT`, or
+`QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE`; `CONTINUED_WITH_UNKNOWN_STATE` must
+fail closed.
 
 The next accepted artifact must be inspectable as files and receipts under the
 research namespace, with positive and negative fixtures. Mocked or fixture

@@ -378,3 +378,52 @@ Gate 6 invariants:
 Gate 6 does not prove live model action generation, human social
 appropriateness beyond deterministic simulator rules, belief revision, live
 Memory recall, or fault-injection reliability.
+
+## Gate 7 - Non-Destructive Belief Revision
+
+Gate 7 consumes the sealed prior ToM hypothesis, PASS scoring receipt, and
+revealed outcome. It writes a prior -> prediction-error -> posterior revision
+record while preserving the prior as auditable history.
+
+Each belief revision must include:
+
+```text
+revision_id
+episode_id
+prediction_id
+prior_hypothesis_id
+prior_distribution
+prior_distribution_sha256
+prior_audit_ref
+observed_outcome_id
+outcome_reveal_sha256
+scoring_receipt_sha256
+prediction_error
+surprise
+posterior_distribution
+posterior_distribution_sha256
+update_reason
+update_evidence_refs
+evidence_mutations: []
+supersedes_for_current_use: true
+prior_remains_auditable: true
+canonical_memory_write: false
+identity_write: false
+source_memory_write: false
+```
+
+Gate 7 invariants:
+
+- the consumed scoring receipt has PASS status;
+- the outcome reveal is complete and visible;
+- the prior hypothesis resolves to the sealed Gate 2 distribution bundle;
+- the prior snapshot and its hash match the sealed hypothesis exactly;
+- prediction error and surprise match the scoring receipt;
+- the posterior distribution is hash-bound and sums to one;
+- the outcome reveal is cited as update evidence;
+- no evidence, source memory, or identity record is rewritten;
+- no canonical memory write occurs during belief revision.
+
+Gate 7 does not prove live Tau belief-revision generation, longitudinal recall
+after revision, live Memory recall, fault-injection reliability, semantic
+quality of the posterior explanation, or provider/video execution.

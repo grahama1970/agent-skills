@@ -85,6 +85,7 @@ Commands:
   check-tom-prediction-commitments  Validate PCTOM-R Gate 4 sealed prediction commitments
   reveal-and-score-tom-trial  Reveal and score PCTOM-R Gate 5 sealed predictions
   run-tom-action-selection-trial  Validate PCTOM-R Gate 6 action selection and planning regret
+  check-tom-belief-revision  Validate PCTOM-R Gate 7 non-destructive belief revision
   check-pipeline-contract  Validate the canonical Phase 01-16 pipeline contract
   write-phase10-reproducibility-receipt  Prove Phase 10 committed artifacts are canonically reproducible
   repair-semantic-mix-revision Create, Memory-verify, and activate a new explicit-human-idea revision
@@ -411,6 +412,9 @@ case "$COMMAND" in
     ;;
   run-tom-action-selection-trial)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_action_selection_trial.py" "$@"
+    ;;
+  check-tom-belief-revision)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_tom_belief_revision.py" "$@"
     ;;
   check-pipeline-contract)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_persona_dream_pipeline_contract.py" "$@"

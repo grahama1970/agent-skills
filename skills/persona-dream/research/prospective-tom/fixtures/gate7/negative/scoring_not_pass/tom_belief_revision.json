@@ -1,0 +1,89 @@
+{
+  "canonical_memory_write": false,
+  "episode_id": "dev-info-asym-01",
+  "evidence_mutations": [],
+  "identity_write": false,
+  "observed_outcome_id": "gate5-outcome-dev-info-asym-01",
+  "outcome_reveal_sha256": "sha256:473ac603556b90e1a8df13e354ecdb66f4b9c3efa6b153cd922fab34aad84d0e",
+  "posterior_distribution": [
+    {
+      "probability": 0.82,
+      "value": "TRUE"
+    },
+    {
+      "probability": 0.12,
+      "value": "FALSE"
+    },
+    {
+      "probability": 0.06,
+      "value": "UNKNOWN"
+    }
+  ],
+  "posterior_distribution_sha256": "sha256:db9e91a5298ae1a8ab47c6b7a6bec53c04d06f3afc14062f4bb5a32e41de3840",
+  "prediction_error": {
+    "actual_label": "TRUE",
+    "brier": 0.14000000000000004,
+    "log_loss": 0.35667494393873245,
+    "prior_actual_probability": 0.7,
+    "top_correct": true
+  },
+  "prediction_id": "gate5-commitment-cd-001",
+  "prior_audit_ref": {
+    "distribution_bundle_sha256": "sha256:2e2e4778b37d9c0efb72fa3887be7e451b0a1168c7aec2e065f8cfcf4d3a9ee5",
+    "hypothesis_id": "gate2-positive-hyp-001"
+  },
+  "prior_distribution": {
+    "abstain": false,
+    "counterfactual": false,
+    "counterfactual_context": null,
+    "distribution": [
+      {
+        "probability": 0.7,
+        "value": "TRUE"
+      },
+      {
+        "probability": 0.2,
+        "value": "FALSE"
+      },
+      {
+        "probability": 0.1,
+        "value": "UNKNOWN"
+      }
+    ],
+    "episode_id": "dev-info-asym-01",
+    "evidence_refs": [
+      {
+        "scope": "social_episode_observation",
+        "source_id": "dev-info-asym-01:observable_history:0"
+      },
+      {
+        "scope": "social_episode_access",
+        "source_id": "dev-info-asym-01:information_access_by_agent"
+      }
+    ],
+    "hypothesis_id": "gate2-positive-hyp-001",
+    "mental_state_type": "belief",
+    "perspective_order": 1,
+    "prediction_horizon": "next_action",
+    "proposition": "Kai believes Embry has stale constraint information.",
+    "subject": "kai",
+    "support_status": "supported",
+    "target": "embry"
+  },
+  "prior_distribution_sha256": "sha256:5674f8bb535a8d303b844b7a44edda5078c20451a53bbe09ad6435426540c49d",
+  "prior_hypothesis_id": "gate2-positive-hyp-001",
+  "prior_remains_auditable": true,
+  "revision_id": "gate7-revision-dev-info-asym-01-hyp-001",
+  "schema": "persona_dream.research.prospective_tom.tom_belief_revision.v1",
+  "scoring_receipt_sha256": "sha256:9413a8b9fcc1d31614c2e3aa8c97ea019ebf44381700d53739714c7d4ece864e",
+  "source_memory_write": false,
+  "supersedes_for_current_use": true,
+  "surprise": 0.35667494393873245,
+  "update_evidence_refs": [
+    {
+      "scope": "outcome_reveal",
+      "source_id": "gate5-outcome-dev-info-asym-01"
+    }
+  ],
+  "update_reason": "Outcome reveal confirmed Kai's belief label as TRUE; posterior increases TRUE while preserving the sealed prior and prediction error."
+}
