@@ -360,7 +360,23 @@ def compile_tau_dag_bundle(input: TauDagCompileInput) -> dict[str, Any]:
         },
     }
     _write_json(run_dir / "compile-status.json", final_bundle)
+    # tau#113: READY must never be a false green. Assert the runtime artifacts
+    # exist non-empty on disk before the bundle is handed to the caller.
+    _assert_runtime_artifacts(
+        request_path,
+        dag_path,
+        run_dir / "compile-status.json",
+    )
     return final_bundle
+
+
+def _assert_runtime_artifacts(*paths: Path) -> None:
+    missing = [str(p) for p in paths if not p.is_file() or p.stat().st_size == 0]
+    if missing:
+        raise TauDagError(
+            "READY blocked: runtime artifacts missing or empty on disk: "
+            + ", ".join(missing)
+        )
 
 
 def run_tau_dag_bundle(
