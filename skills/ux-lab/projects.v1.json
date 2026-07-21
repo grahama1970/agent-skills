@@ -44,7 +44,7 @@
           "url": "http://127.0.0.1:3002/#dream",
           "owned_by": "external-project",
           "mounted": false,
-          "note": "This route has existing verification markers, but the current 3002 runtime is Sparta Explorer and does not mount Persona Dream."
+          "note": "Declared legacy route only. The UX Lab hub exposes Persona Dream as a project card; a project-owned dream runtime must mount #dream before this route is treated as active."
         }
       ],
       "docs": [
