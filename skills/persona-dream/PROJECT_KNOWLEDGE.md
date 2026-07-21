@@ -1,10 +1,42 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R live cooperation instrument slice) by agent
+**Last updated:** 2026-07-21 (PCTOM-R cooperation policy diagnostic) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R COOPERATION POLICY DIAGNOSTIC): a deterministic
+  diagnostic now classifies the observed live cooperation-instrument policy
+  effect without reexecuting Tau. Command:
+  `./skills/persona-dream/run.sh diagnose-cooperation-policy`. Receipt:
+  `/tmp/persona-dream-cooperation-policy-diagnostic-proof-20260721T205236Z/cooperation_policy_diagnostic_receipt.v1.json`.
+  Status `PASS_PCTOM_COOPERATION_POLICY_DIAGNOSTIC`, receipt SHA-256
+  `sha256:ca61df14a35d3b6f75e2484d47083da27947303329b5369148f9b9bbda95a51c`.
+  It consumed the live-originated cooperation-instrument slice receipt
+  `sha256:6fec3c6804219613878a03cbc8bcd38adb8b523ab027d001467fe4769db8dae5`,
+  made zero Tau calls, zero Memory/provider/canonical/identity/source-memory
+  writes, used no LLM judge, and required no human content judgment. Built-in
+  negative mutations failed closed for `rule_input_oracle_outcome_leak`,
+  `missing_cd_cooperation_candidate`, and `summary_row_count_mismatch`.
+  Diagnostic conclusion:
+  `REJECT_SINGLE_PROBABILITY_COOPERATION_FALLBACK`. The one observed candidate
+  was labeled `LOW_CONFIDENCE_TOP_ACTION_CORRECT_RULE_REGRESSION`. In
+  `instr-coord-exposure-26`, pre-outcome features were: CD selected
+  `OFFER_COOPERATION`, selected predicted counterpart action was
+  `KAI_OFFERS_COOPERATION`, selected probability was `0.36`, probability
+  margin was `0.02`, M/R/D baselines selected `WAIT`, and distribution sum was
+  `1.0`. Post-outcome evaluation only: oracle action was `OFFER_COOPERATION`,
+  original CD regret was `0.0`, intervened regret was `0.55`, and the rule
+  regression delta was `+0.55`. This differentiates "low confidence but
+  correct top cooperation action" from genuinely unsafe cooperation; no unsafe
+  cooperation case helped by the rule was observed. Next work must remove or
+  quarantine `pre_outcome_cooperation_threshold_rule.v1` from any
+  planning-benefit claim, then either write a no-intervention acceptance
+  receipt preserving the observed instrument benefit or design a replacement
+  pre-outcome policy that passes the same diagnostic and negative checks
+  without oracle/outcome inputs. This does not prove a replacement policy,
+  confidence-bounded CD benefit, broad held-out planning benefit, semantic
+  dream quality, paid provider execution, or complete Phase 01-16 runtime.
 - 2026-07-21 (PCTOM-R LIVE COOPERATION INSTRUMENT SLICE): the deterministic
   cooperation-exposure instrument was consumed by the live Tau M/R/D/CD
   condition runner through a new explicit `--corpus-path` lane and then scored
