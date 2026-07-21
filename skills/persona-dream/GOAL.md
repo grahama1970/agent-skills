@@ -49,6 +49,11 @@ persona can synthesize an explicitly synthetic dream from grounded memories,
 observe it, interpret it, persist only supported ToM state, and later use that
 memory without confusing imagination with literal history or mutating identity.
 
+For the active goal, the README is source context, not a scope expansion. Its
+media-spine history, Kling returns, Chatterbox notes, and human subjective
+review language explain earlier proof boundaries. They do not make provider
+video, voice, dashboard, or human content judgment the next critical path.
+
 This `GOAL.md` narrows the active work to the next falsifiable research question
 inside that broader program: whether counterfactual dreaming improves
 prospective, calibrated Theory of Mind and planning decisions under robust
@@ -87,9 +92,10 @@ dashboard, or human subjective review work as the current critical path. For
 this active goal, agents must interpret the README through this source-derived
 step model:
 
-1. **Grounded memory residue** - implemented for ordinary dream runs and live
-   PCTOM Gate 0. The active research question requires exact accepted-source
-   attribution into prospective residues, not just a plausible memory summary.
+1. **Grounded memory residue** - implemented for ordinary dream runs, live
+   PCTOM Gate 0, and live Memory revision recall. The active research question
+   still requires the same accepted-source attribution inside any future live
+   sealed-test loop, not just a plausible memory summary.
 2. **Synthetic dream construction** - historically implemented for media and
    fixture-backed PCTOM branches. The current lane treats dreams as
    agent-facing counterfactual simulations whose content matters only through
@@ -97,25 +103,29 @@ step model:
 3. **Dream observation / interpretation** - implemented historically for
    retrospective Phase 13-16 runs. This is not enough for PCTOM-R because it
    observes a completed dream and then interprets it.
-4. **Prospective ToM prediction** - implemented fixture-backed by Gates 2-4
-   and bridged once through live Tau text execution. The remaining research
-   proof is live repeated execution across conditions and seeds.
+4. **Prospective ToM prediction** - implemented fixture-backed by Gates 2-4,
+   bridged through live Tau text execution, repeated across M/R/D/CD condition
+   cases, and scaled deterministically to a 64-episode sealed test. The
+   remaining research proof is live Tau-authored sealed-test replication, not
+   another renderer call.
 5. **Deterministic hidden outcome and scoring** - implemented fixture-backed
-   by Gate 5 and bridged once over a live Tau-originated sealed commitment.
-   The remaining research proof is held-out prospective scoring across
-   baselines, including factual second-order Tau hypotheses.
-6. **Action selection** - implemented fixture-backed by Gate 6. The missing
-   research proof is live condition-runner evidence showing decisions are
-   chosen from ToM forecasts without human content judgment.
-7. **Non-destructive belief revision** - implemented fixture-backed by Gate 7
-   and bridged once over the live Tau-originated scored commitment. The
-   remaining research proof is longitudinal recall/use after revision and
-   repeated no-write behavior under faults.
+   by Gate 5, bridged over a live Tau-originated sealed commitment, repeated
+   over live Tau condition cases, and scaled deterministically to 256 sealed
+   test cases. The remaining research proof is live Tau sealed-test scoring and
+   calibration under the same frozen protocol.
+6. **Action selection** - implemented fixture-backed by Gate 6, bridged over
+   live Tau-originated condition outputs, and included in the deterministic
+   sealed test. The missing research proof is planning-regret benefit over the
+   strongest baseline and live Tau sealed-test action evidence.
+7. **Non-destructive belief revision** - implemented fixture-backed by Gate 7,
+   bridged over live Tau-originated action decisions, and recalled through live
+   Memory without canonical/source/identity writes. The remaining research
+   proof is repeated no-write behavior under broader live faults.
 8. **Reliability under faults** - implemented fixture-backed by Gates 8-9 and
-   bridged once over a live Tau-originated score/revision case with a
-   controlled stale-artifact fault. The remaining research proof is production
-   retry behavior and external service fault injection across repeated
-   held-out runs.
+   bridged over live-originated artifacts with controlled fault families. The
+   remaining research proof is broader live fault injection across Memory,
+   model-output, tool-return, schema, persistence, and retry boundaries with no
+   `CONTINUED_WITH_UNKNOWN_STATE`.
 
 Therefore, when README language says that media acceptance, human subjective
 video review, or Chatterbox voice expression remains open, that is historical
@@ -1309,6 +1319,10 @@ live Memory recall-after-revision evidence to broader live fault-injection or
 live Tau sealed-test replication, without reactivating provider/video as the
 critical path.
 
+The default next accepted artifact is broader live fault injection. Live Tau
+sealed-test replication is the alternate next artifact if the fault surface
+cannot be exercised because a real service or credential boundary is down.
+
 The next accepted artifact must answer one of these narrower questions:
 
 1. Do broader live fault-injection runs over Memory, model, tool, schema,
@@ -1357,6 +1371,57 @@ primary_metric: preregistered proper score or planning regret
 strongest_baseline_condition: one of M, R, D
 cd_minus_strongest_baseline: reported even if positive, zero, or negative
 oracle_policy_reference: deterministic simulator policy, not LLM judge
+human_content_judgment_required: false
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+```
+
+Stop condition for a broader live fault-injection artifact:
+
+```text
+mocked: no
+base_receipts:
+  - sealed_test_statistical_confidence_receipt
+  - live_memory_revision_recall_receipt
+fault_families_present:
+  - memory_timeout_or_unreachable
+  - memory_malformed_payload
+  - memory_collection_visibility_or_stale_recall
+  - model_malformed_structured_output
+  - schema_drift
+  - interrupted_persistence
+  - retry_after_uncertain_completion
+  - untrusted_tool_text
+permitted_terminal_outcomes_only: true
+continued_with_unknown_state: 0
+side_effect_violations: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+provider_call_attempts: 0
+human_content_judgment_required: false
+causal_replay_receipts: >= 1
+```
+
+Stop condition for a live Tau sealed-test replication artifact:
+
+```text
+mocked: no
+live: true
+split: sealed_test
+conditions: M, R, D, CD
+tau_authored_prediction_payloads_per_condition: >= 1
+sealed_commitments_per_condition: >= 1
+deterministic_scores_per_condition: >= 1
+action_decisions_per_condition: >= 1
+outcome_visible_before_seal: false
+primary_metric: preregistered proper score
+cd_minus_strongest_baseline: reported even if positive, zero, or negative
+planning_regret_delta: reported even if positive, zero, or negative
+llm_judge_used: false
 human_content_judgment_required: false
 memory_write_attempts: 0
 provider_call_attempts: 0
