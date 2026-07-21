@@ -1,5 +1,7 @@
 # Monitor Herdr
 
+![Monitor Herdr header](assets/monitor-herdr-header.webp)
+
 `monitor-herdr` watches Herdr-visible agent panes for the failure mode that is
 most expensive for a human: an agent stops, says something plausible, and leaves
 real work unfinished.
