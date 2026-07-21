@@ -1,10 +1,43 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R cooperation class-separated exposure audit) by agent
+**Last updated:** 2026-07-21 (PCTOM-R cooperation unsafe-offer-pressure instrument) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R COOPERATION UNSAFE-OFFER-PRESSURE INSTRUMENT): a
+  deterministic offline simulator instrument now creates the missing unsafe
+  cooperation pressure rows needed before the next live Tau slice. Command:
+  `./skills/persona-dream/run.sh check-cooperation-unsafe-offer-pressure-instrument`.
+  Final receipt:
+  `/tmp/persona-dream-cooperation-unsafe-offer-pressure-instrument-20260721T231718Z/cooperation_unsafe_offer_pressure_instrument_receipt.v1.json`.
+  Status `PASS_PCTOM_COOPERATION_UNSAFE_OFFER_PRESSURE_INSTRUMENT`,
+  receipt field SHA-256
+  `sha256:97b3675285cf5845a4b93f6f99893219527138a811d1c43e0bb400e49444b0f7`,
+  file SHA-256
+  `664eee7fdc592dfeb72cbfd15a98035943e2ac71011d2685e8bd9d5533ff8298`,
+  corpus file SHA-256
+  `sha256:fca0d06bd6a0a79f26c5cf79da4957f4532efabe258c35e95fc786769e358c90`,
+  and visible packet file SHA-256
+  `sha256:dbba4f701b84646c5d28dc842dda020e5dcb2a49482c62242636a001d45077db`.
+  Counts: four deterministic simulator episodes, variants 45-48, four
+  unsafe-offer-pressure rows, four visible `OFFER_COOPERATION` affordance
+  rows, four visible offer-pressure rows, four actual outcomes that avoid or
+  disclose constraints instead of offering cooperation, six negative
+  mutations, and six negative mutations failed closed. The instrument makes
+  zero Tau calls, zero Memory/provider/canonical/identity/source-memory writes,
+  uses no LLM judge, and requires no human content judgment. It specifically
+  pressures the earlier blocker: the previous live class-separated slice
+  showed CD offers cooperation on safe rows and avoids it on unsafe rows, so no
+  unsafe offer suppression candidate existed. This new corpus exposes tempting
+  cooperation pressure while withholding hidden safety blockers and oracle/
+  outcome keys. It proves the offline instrument and fail-closed mutations,
+  not live Tau behavior, unsafe offer suppression, a replacement feature
+  split, confidence-bounded planning benefit, semantic dream quality, paid
+  provider execution, or complete Phase 01-16 runtime execution. Next work is
+  a live Tau M/R/D/CD slice over this corpus, followed by an audit of whether
+  any CD condition selects unsafe `OFFER_COOPERATION` and whether suppression
+  changes that action without oracle leakage.
 - 2026-07-21 (PCTOM-R COOPERATION CLASS-SEPARATED EXPOSURE AUDIT): a
   deterministic audit now consumes the live Tau exposure/contrast slice and
   separates what the new evidence proves from what remains blocked. Command:

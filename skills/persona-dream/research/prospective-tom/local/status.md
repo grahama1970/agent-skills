@@ -1,31 +1,131 @@
 # Status
 
-Status: COOPERATION_CLASS_SEPARATED_EXPOSURE_OBSERVED_FEATURE_SPLIT_BLOCKED
+Status: COOPERATION_UNSAFE_OFFER_PRESSURE_INSTRUMENT_READY_FOR_LIVE_TAU
 
-Artifact: PCTOM-R cooperation class-separated exposure audit over a live Tau
-exposure/contrast slice. The live slice produced the desired class-separated
-behavior, but the feature-split acceptance gate remains blocked because no
-unsafe `OFFER_COOPERATION` suppression candidate was exercised.
+Artifact: PCTOM-R cooperation unsafe-offer-pressure instrument. This is a
+deterministic offline simulator corpus that creates four avoid/unsafe rows
+where `OFFER_COOPERATION` is visibly available and socially tempting, while
+the hidden deterministic policy makes cooperation unsafe or suboptimal. It is
+the next instrument needed before a live Tau slice can test whether CD ever
+selects an unsafe `OFFER_COOPERATION` action and whether a suppression rule is
+exercised.
 
 Current receipt:
 
 ```text
-/tmp/persona-dream-cooperation-class-separated-exposure-audit-20260721T230709Z/cooperation_class_separated_exposure_audit_receipt.v1.json
+/tmp/persona-dream-cooperation-unsafe-offer-pressure-instrument-20260721T231718Z/cooperation_unsafe_offer_pressure_instrument_receipt.v1.json
 ```
 
 Receipt SHA-256:
 
 ```text
-sha256:e2db88050fe44f518b483be27c87c879d7c5ddf7b9158c9cd31e681af32d8785
+sha256:97b3675285cf5845a4b93f6f99893219527138a811d1c43e0bb400e49444b0f7
 ```
 
 File SHA-256:
 
 ```text
-23d6e87fc5c5d301e3174debcc1265854745aad70a773fd8ee687bb72f424a09
+664eee7fdc592dfeb72cbfd15a98035943e2ac71011d2685e8bd9d5533ff8298
 ```
 
 Inspection result:
+
+```text
+status: PASS_PCTOM_COOPERATION_UNSAFE_OFFER_PRESSURE_INSTRUMENT
+instrument_conclusion: UNSAFE_OFFER_PRESSURE_INSTRUMENT_READY_FOR_LIVE_TAU
+episodes: 4
+variant_min: 45
+variant_max: 48
+unsafe_offer_pressure_rows: 4
+offer_cooperation_affordance_rows: 4
+visible_offer_pressure_rows: 4
+avoid_or_disclose_actual_rows: 4
+negative_mutations: 6
+negative_mutations_failed_closed: 6
+visible_packets_sha256: sha256:af047337b05e83945791cc93718d3ff3f23c1c445d063bed9ccc17c549e13b33
+corpus_file_sha256: sha256:fca0d06bd6a0a79f26c5cf79da4957f4532efabe258c35e95fc786769e358c90
+visible_packet_file_sha256: sha256:dbba4f701b84646c5d28dc842dda020e5dcb2a49482c62242636a001d45077db
+tau_call_attempts: 0
+tau_live_call_performed: 0
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+mocked: false
+live: false
+fixture_backed: false
+deterministic_simulator_corpus: true
+llm_judge_used: false
+human_content_judgment_required: false
+```
+
+What this proves:
+
+```text
+the deterministic instrument can generate unsafe-offer-pressure rows
+-> every visible packet exposes OFFER_COOPERATION as an available action
+-> every visible packet contains tempting cooperation pressure
+-> hidden simulator state marks the cooperation offer as unsafe or suboptimal
+-> deterministic actual outcomes avoid or disclose constraints instead of
+   offering cooperation
+-> visible packets are hash-bound and exclude outcome/oracle keys
+-> six negative mutations failed closed:
+   missing_visible_offer_affordance
+   missing_visible_offer_pressure
+   unsafe_row_actual_offer
+   visible_outcome_key_leak
+   missing_unsafe_withheld_field
+   variant_not_disjoint_from_prior_instruments
+```
+
+What this does not prove:
+
+```text
+live Tau execution over the unsafe-offer-pressure corpus
+CD will select an unsafe OFFER_COOPERATION action
+unsafe offer suppression was exercised
+replacement cooperation feature split valid
+confidence-bounded CD planning benefit
+semantic dream quality
+paid provider execution
+complete live Phase 01-16 runtime execution
+```
+
+Immediate next step:
+
+```text
+Run a live Tau M/R/D/CD condition slice over this unsafe-offer-pressure corpus,
+then audit whether any CD condition selected OFFER_COOPERATION on an
+avoid/unsafe row and whether the pre-outcome suppression rule changes that
+action without oracle or outcome leakage.
+```
+
+Prior artifact: PCTOM-R cooperation class-separated exposure audit over a live
+Tau exposure/contrast slice. The live slice produced the desired
+class-separated behavior, but the feature-split acceptance gate remains
+blocked because no unsafe `OFFER_COOPERATION` suppression candidate was
+exercised.
+
+Prior receipt:
+
+```text
+/tmp/persona-dream-cooperation-class-separated-exposure-audit-20260721T230709Z/cooperation_class_separated_exposure_audit_receipt.v1.json
+```
+
+Prior receipt SHA-256:
+
+```text
+sha256:e2db88050fe44f518b483be27c87c879d7c5ddf7b9158c9cd31e681af32d8785
+```
+
+Prior file SHA-256:
+
+```text
+23d6e87fc5c5d301e3174debcc1265854745aad70a773fd8ee687bb72f424a09
+```
+
+Prior inspection result:
 
 ```text
 status: PASS_PCTOM_COOPERATION_CLASS_SEPARATED_EXPOSURE_AUDIT
@@ -59,7 +159,7 @@ llm_judge_used: false
 human_content_judgment_required: false
 ```
 
-What this proves:
+Prior proof summary:
 
 ```text
 the live Tau exposure/contrast slice contains class-separated CD cooperation
@@ -69,23 +169,6 @@ behavior
 -> sealed pre-outcome rule inputs did not leak oracle/outcome fields
 -> replacement feature-split acceptance remains blocked because there is no
    unsafe OFFER_COOPERATION suppression candidate
--> five negative checks failed closed:
-   live_slice_status_not_pass
-   missing_keep_offer_cooperation
-   avoid_row_offer_cooperation
-   pre_outcome_oracle_leak
-   planning_benefit_claim_injected
-```
-
-What this does not prove:
-
-```text
-a replacement cooperation feature split is valid
-confidence-bounded CD planning benefit
-broad held-out planning benefit
-semantic dream quality
-paid provider execution
-complete live Phase 01-16 runtime execution
 ```
 
 Input live slice receipt:

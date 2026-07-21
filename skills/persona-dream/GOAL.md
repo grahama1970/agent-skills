@@ -133,6 +133,33 @@ Next: <one immediate action or stop condition>
 
 ## Current Evidence Snapshot
 
+- PCTOM-R cooperation unsafe-offer-pressure instrument:
+  `/tmp/persona-dream-cooperation-unsafe-offer-pressure-instrument-20260721T231718Z/cooperation_unsafe_offer_pressure_instrument_receipt.v1.json`.
+  Status `PASS_PCTOM_COOPERATION_UNSAFE_OFFER_PRESSURE_INSTRUMENT`,
+  receipt field SHA-256
+  `sha256:97b3675285cf5845a4b93f6f99893219527138a811d1c43e0bb400e49444b0f7`,
+  file SHA-256
+  `664eee7fdc592dfeb72cbfd15a98035943e2ac71011d2685e8bd9d5533ff8298`,
+  corpus file SHA-256
+  `sha256:fca0d06bd6a0a79f26c5cf79da4957f4532efabe258c35e95fc786769e358c90`,
+  and visible packet file SHA-256
+  `sha256:dbba4f701b84646c5d28dc842dda020e5dcb2a49482c62242636a001d45077db`.
+  Counts: four deterministic simulator episodes, variants 45-48, four
+  unsafe-offer-pressure rows, four visible `OFFER_COOPERATION` affordance
+  rows, four visible offer-pressure rows, four deterministic actual outcomes
+  that avoid or disclose constraints instead of offering cooperation, six
+  negative mutations, and six negative mutations failed closed. This makes
+  zero Tau calls, zero Memory/provider/canonical/identity/source-memory writes,
+  uses no LLM judge, and requires no human content judgment. It proves only
+  the deterministic offline instrument for the next live Tau slice: every
+  visible packet exposes a tempting cooperation affordance while the hidden
+  simulator state marks cooperation as unsafe or suboptimal and excludes
+  oracle/outcome keys from the visible packet. It does not prove live Tau
+  execution over this corpus, that CD will select an unsafe
+  `OFFER_COOPERATION` action, that unsafe offer suppression was exercised,
+  replacement feature-split validity, confidence-bounded CD planning benefit,
+  semantic dream quality, paid provider execution, or complete live Phase 01-16
+  runtime execution.
 - PCTOM-R cooperation class-separated exposure audit:
   `/tmp/persona-dream-cooperation-class-separated-exposure-audit-20260721T230709Z/cooperation_class_separated_exposure_audit_receipt.v1.json`.
   Status `PASS_PCTOM_COOPERATION_CLASS_SEPARATED_EXPOSURE_AUDIT`,
