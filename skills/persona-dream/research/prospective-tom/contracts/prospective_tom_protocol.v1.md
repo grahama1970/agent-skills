@@ -524,6 +524,35 @@ benefit, real external service fault injection, production retry behavior,
 complete Phase 01-16 execution, paid provider execution, or semantic dream
 quality.
 
+### Revision Recall Bridge
+
+`run_live_tau_revision_recall.py` is the deterministic recall/use bridge over
+action-linked revisions. It consumes a
+`PASS_LIVE_TAU_PCTOM_ACTION_LINKED_REVISION` receipt, builds recall documents
+from the strict revision records, and runs condition-scoped local recall queries
+against those documents.
+
+Bridge invariants:
+
+- base receipt status is `PASS_LIVE_TAU_PCTOM_ACTION_LINKED_REVISION`;
+- base receipt is `mocked: false`, `live: true`, `fixture_backed: false`;
+- base receipt has 16 PASS Gate 7 revision cases and at least one prior and
+  posterior action-linked revision per M/R/D/CD condition;
+- recall documents distinguish sealed prior distributions from current-use
+  posterior distributions;
+- synthetic counterfactual branches do not appear in literal-history branch
+  ids for the recalled context;
+- canonical writes, identity writes, source-memory writes, provider calls, and
+  Tau calls are absent;
+- `live_memory_recall_performed` is explicitly false unless the Memory service
+  is actually queried.
+
+The bridge proves deterministic artifact recall over live-originated revision
+artifacts. It does not prove live Memory recall after revision, held-out
+benefit, real external service fault injection, production retry behavior,
+complete Phase 01-16 execution, paid provider execution, or semantic dream
+quality.
+
 ## Live Tau Gate 5/7 Score-Revision Bridge
 
 The live Tau score-revision bridge consumes a previously accepted live

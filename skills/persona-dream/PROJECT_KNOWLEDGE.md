@@ -1,10 +1,25 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R action-linked revision accepted) by agent
+**Last updated:** 2026-07-21 (PCTOM-R revision recall accepted) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R REVISION RECALL): action-linked revision artifacts now
+  have deterministic longitudinal recall/use evidence with receipt
+  `/tmp/persona-dream-live-tau-revision-recall-20260721T035640Z/live_tau_revision_recall_receipt.v1.json`.
+  It consumes the live Tau action-linked revision receipt
+  `/tmp/persona-dream-live-tau-action-linked-revision-20260721T034916Z/live_tau_action_linked_revision_receipt.v1.json`
+  (`sha256:2f642fe5cb41a23f762a870356bea62b8eb7c3d37d9f3d47e05c9dbbe4166ebe`),
+  builds 16 deterministic recall documents, runs 4 condition-scoped recall
+  queries, and returns 16 hits. It reports `prior_and_posterior_distinguished:
+  true`, `synthetic_literal_boundary_preserved: true`, and `write_violations:
+  0`, with Tau/Memory/provider/canonical/identity/source-memory attempts all
+  0. This is deterministic artifact recall over live-originated revision
+  artifacts, not live Memory recall after revision. It also does not prove
+  held-out statistical benefit, planning benefit over the strongest baseline,
+  real external fault injection, production retry proof, complete Phase 01-16
+  runtime, paid provider execution, video quality, or semantic dream quality.
 - 2026-07-21 (PCTOM-R ACTION-LINKED REVISION): live-originated Gate 6 action
   decisions now feed strict Gate 7 non-destructive belief revisions with
   receipt

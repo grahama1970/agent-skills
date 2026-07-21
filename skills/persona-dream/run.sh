@@ -86,6 +86,7 @@ Commands:
   run-live-tau-condition-reliability-bridge  Validate Gate 8/9 fault containment over live Tau condition artifacts
   run-live-tau-condition-action-selection  Score Gate 6 actions over live Tau condition artifacts
   run-live-tau-action-linked-revision  Link Gate 6 action decisions to Gate 7 belief revisions
+  run-live-tau-revision-recall  Check deterministic recall over action-linked revisions
   check-prospective-tom-protocol  Validate PCTOM-R Gate 0 fixture lineage through a sealed prediction
   build-social-episode-corpus  Build deterministic PCTOM-R Gate 1 social episodes
   check-social-episode-corpus  Validate deterministic PCTOM-R Gate 1 social episodes
@@ -426,6 +427,9 @@ case "$COMMAND" in
     ;;
   run-live-tau-action-linked-revision)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_tau_action_linked_revision.py" "$@"
+    ;;
+  run-live-tau-revision-recall)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_tau_revision_recall.py" "$@"
     ;;
   check-prospective-tom-protocol)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_prospective_tom_protocol.py" "$@"
