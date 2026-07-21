@@ -184,7 +184,35 @@ Three artifacts, all required, none optional:
    artifact that closes the "looks unfinished" gap; deterministic tests alone do
    not satisfy it.
 
-## Completion Criteria — Current Recovery Evidence (2026-07-20)
+## Non-Self-Serving Closure Rule
+
+This goal is **not** closed by an agent-authored status line, an audit receipt
+that only cites earlier agent receipts, DOM selector existence, WebGPT acceptance
+alone, or a collapsed screenshot that hides the adaptive-lineage details. Those
+artifacts may be supporting evidence, but they are not closure authority.
+
+After any human challenge to visible UX quality, the goal returns to
+`DISPUTED_PENDING_FRESH_UX_PROOF` until a new proof bundle exists with all of
+the following:
+
+- A freshly built and served agent-skills Battle spectator host.
+- Browser proof against the accepted top-level route
+  `http://127.0.0.1:3003/#battle`, not only `#battle/receipt`.
+- The adaptive-lineage `<details>` panel explicitly expanded before capture.
+- A screenshot or video that visibly shows the four distinct sprites, the score
+  card, the `LIVE` badge, the selected-vs-runner-up decision, operators, changed
+  AST dimensions, novelty values, and the descriptive exploit names.
+- A machine-readable proof JSON that records `mocked:false`, `live:true`,
+  host identity, route, viewport, console/page errors, failed network requests,
+  canvas dimensions, badge attributes, sprite resource URLs, visible text
+  assertions, and whether the lineage panel was expanded.
+- A human acceptance note or an explicit external-review artifact if the human
+  has disputed the visual result.
+
+If any of these are missing, report the goal as pending or disputed. Do not use
+phrases such as achieved, done, verified, green, or closed for this goal.
+
+## Prior Recovery Evidence (2026-07-20; supporting, not closure by itself)
 
 - [x] Fresh live backend receipt:
       `skills/battle/local/adaptive-lineage-relive-20260720T144034Z/adaptive-lineage-qualification.json`
@@ -265,13 +293,16 @@ Three artifacts, all required, none optional:
       observed Pixi sprite/manifest resource requests. Screenshot:
       `skills/battle/local/surf-obvious-errors-20260720T2120Z/battle-scorecard-restored.png`.
 
-**GOAL STATUS: ACHIEVED_WITH_RECEIPT** —
-`skills/battle/local/goal-adaptive-lineage-audit-20260721T0005Z.json`.
-The audit receipt reports `status:"PASS"`, `failed:[]`, local `HEAD` and
-`origin/battle-adaptive-lineage-goal` both at the audited Battle evidence commit
-`d476a192d28421bfbbe04aa69a87f1104e94aae1`, and cites the live backend receipt
-plus final Surf/Pixi proof artifacts above. The later documentation commit only
-records this audit receipt.
+**GOAL STATUS: DISPUTED_PENDING_FRESH_UX_PROOF**.
+
+The prior audit receipt
+`skills/battle/local/goal-adaptive-lineage-audit-20260721T0005Z.json` remains a
+supporting evidence index: it reports `status:"PASS"`, `failed:[]`, local `HEAD`
+and `origin/battle-adaptive-lineage-goal` both at the audited Battle evidence
+commit `d476a192d28421bfbbe04aa69a87f1104e94aae1`, and cites the live backend
+receipt plus final Surf/Pixi proof artifacts above. It does **not** close this
+goal after the UX has been challenged, because it does not by itself establish a
+fresh, expanded, human-acceptable top-level `#battle` visual state.
 
 ## Allowed Scope
 

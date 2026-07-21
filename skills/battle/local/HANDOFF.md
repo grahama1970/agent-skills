@@ -1,21 +1,20 @@
 # Handoff Report: battle adaptive-lineage receipt
 
-**Timestamp**: 2026-07-21T00:05:00Z
+**Timestamp**: 2026-07-21T01:25:00Z
 **Active Agent**: Codex
 **Branch**: `battle-adaptive-lineage-goal`
 **Current objective**: finish `GOAL_ADAPTIVE_LINEAGE.md` recovery from the
 agent-skills worktree, not the pi-mono shell.
 
-> Evidence rule for the next agent: trust receipts and command artifacts, not
-> stale prose. Current recovery evidence is the 2026-07-20 live backend receipt,
-> the agent-skills `:3003` Pixi browser proof, and the WebGPT accepted review in
-> `skills/battle/local/webgpt-design-review-20260720T1742Z/`.
-> The immutable goal audit receipt is
-> `skills/battle/local/goal-adaptive-lineage-audit-20260721T0005Z.json`.
-> It reports `status:"PASS"` and confirms local `HEAD` matches
-> `origin/battle-adaptive-lineage-goal` at the audited Battle evidence commit
-> `d476a192d28421bfbbe04aa69a87f1104e94aae1`. The later documentation commit
-> records the audit receipt itself.
+> Evidence rule for the next agent: trust fresh browser artifacts and visible
+> screenshot inspection over stale prose or agent-authored closure receipts.
+> The prior 2026-07-20 live backend receipt, agent-skills `:3003` Pixi browser
+> proof, WebGPT accepted review, and immutable-goal audit receipt remain
+> supporting evidence only. The human disputed the visible UX closure on
+> 2026-07-21, so `GOAL_ADAPTIVE_LINEAGE.md` is now
+> `DISPUTED_PENDING_FRESH_UX_PROOF`. Do not report achieved/done/closed until a
+> new expanded top-level `#battle` proof bundle satisfies the non-self-serving
+> closure rule in the goal file.
 
 ## 1. Project Overview
 
@@ -98,15 +97,16 @@ agent-skills worktree, not the pi-mono shell.
   ambiguous names, empty stderr/skills summary cards, `RUNNING 4`, `ACTIVE`
   lane labels, and Red/Blue dash score rows. It also reports no failed requests,
   no console errors, and no lane/roster name overflow.
-- **Final Surf/Pixi obvious-error pass exists**:
+- **Prior Surf/Pixi obvious-error pass exists**:
   `skills/battle/local/surf-obvious-errors-20260720T2120Z/` contains
   `battle-obvious-errors-and-pixijs-proof.json`,
   `battle-scorecard-restored.text`, and `battle-scorecard-restored.png`.
   It targets the served top-level `#battle` route, has `mocked:false`,
   `live:true`, `forbiddenHits:[]`, `has_scorecard:true`, live badge
   `data_source:"live"` / `proves_live:"true"`, canvas `1030x277`, and six
-  observed Pixi sprite/manifest resource requests. This pass keeps the accepted
-  scorecard mounted and does not modify sprite mapping files.
+  observed Pixi sprite/manifest resource requests. This pass is useful
+  supporting evidence, but it is not sufficient after the human disputed whether
+  the visible UX works as expected.
 - **WebGPT acceptance for this new host exists**:
   `skills/battle/local/webgpt-design-review-20260720T1742Z/response.md` starts
   with `ACCEPTED`, and `response.raw.md` contains the terminal sentinel. The
@@ -156,20 +156,28 @@ agent-skills worktree, not the pi-mono shell.
 - **Do not trust `#battle/live` claims**. The valid primary UX is now
   `#battle`, with the live receipt rendered in-place. Keep `#battle/receipt`
   only as a compatible/deep-link receipt route, not as the main acceptance URL.
-- **No Battle-path blocker remains in the current recovery evidence**. The final
-  Battle evidence commit was pushed and remote-ref verified by
-  `skills/battle/local/goal-adaptive-lineage-audit-20260721T0005Z.json`.
+- **Current blocker: fresh visible UX proof is missing after challenge**. The
+  goal cannot close on the prior audit receipt. The next proof must freshly
+  build and serve the agent-skills spectator, open `http://127.0.0.1:3003/#battle`
+  in a browser, expand the adaptive-lineage panel, capture a screenshot/video,
+  and record machine-readable assertions for the scorecard, LIVE badge, four
+  descriptive exploit names, four distinct sprites, selected-vs-runner-up row,
+  operators, changed AST dimensions, novelty values, console errors, failed
+  requests, canvas dimensions, and sprite resource URLs.
 - **Repo is dirty from unrelated agents**. Stage Battle handoff/artifact paths
   explicitly only. Never `git add -A`.
 
 ## 5. Next Steps
 
-1. If reopening this goal, start from
-   `skills/battle/local/goal-adaptive-lineage-audit-20260721T0005Z.json` and
-   re-run only the stale or disputed proof rung.
+1. Re-run the disputed visible UX proof rung from the current worktree:
+   build, serve, open `#battle`, expand the adaptive-lineage panel, capture a
+   screenshot/video, and write a proof JSON under `skills/battle/local/`.
 2. Keep using `#battle` on the agent-skills host as the primary acceptance
    route. Treat `#battle/receipt` as a compatible deep link and do not revive
    standalone `#battle/live` without a new written goal.
+3. Leave the goal status as `DISPUTED_PENDING_FRESH_UX_PROOF` unless the new
+   proof bundle and human/external acceptance satisfy the non-self-serving
+   closure rule.
 
 ## 6. Project Context for Success
 
