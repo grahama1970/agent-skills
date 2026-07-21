@@ -1,10 +1,37 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R live expanded trust/commit coverage accepted) by agent
+**Last updated:** 2026-07-21 (PCTOM-R expanded repeated live trust/commit summary accepted) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R EXPANDED REPEATED LIVE TRUST/COMMIT SUMMARY):
+  repeated expanded live Tau trust/commitment summary evidence now exists at
+  `/tmp/persona-dream-live-tau-trust-commit-expanded-repeated-seed-summary-20260721T120650Z/live_tau_trust_commit_repeated_seed_receipt.v1.json`.
+  It consumes two accepted expanded live Tau source receipts:
+  `/tmp/persona-dream-live-tau-trust-commit-expanded-v17-24-20260721T110845Z/live_tau_trust_commit_replication_receipt.v1.json`
+  and
+  `/tmp/persona-dream-live-tau-trust-commit-expanded-v17-24-repeat2-20260721T114011Z/live_tau_trust_commit_replication_receipt.v1.json`.
+  Status is `PASS_LIVE_TAU_PCTOM_TRUST_COMMIT_REPEATED_SEED_SUMMARY` with
+  `mocked:false`, `live:true`, `live_tau_receipts_consumed:true`,
+  aggregate command `live_tau_reexecuted:false`, expected 24 episodes per
+  family, expected trust episode limit 8, variants 17-24, 2 passed source
+  receipts, 64 total live Tau calls consumed from those source receipts, 64
+  sealed/scored cases, 16 planning rows, 2 action switches, 2 nonzero
+  planning deltas, and oracle-match transitions `GAIN=2`, `UNCHANGED=14`.
+  The aggregate CD-minus-baseline planning-regret mean is
+  `-0.10625000000000001` with bootstrap CI `[-0.265625, 0.0]`, so planning
+  benefit is still not confidence-bounded. The second expanded live Tau run
+  reproduced the same row pattern as the first, so this is repeated live
+  execution evidence but not non-identical seed-behavior evidence. The
+  one-source negative receipt at
+  `/tmp/persona-dream-live-tau-trust-commit-expanded-repeated-seed-summary-one-source-20260721T120712Z/live_tau_trust_commit_repeated_seed_receipt.v1.json`
+  reports `BLOCKED_LIVE_TAU_PCTOM_TRUST_COMMIT_REPEATED_SEED_SUMMARY` with
+  error `requires_at_least_two_seed_receipts:1`, showing the aggregate summary
+  fails closed when only one source receipt is supplied. Next PCTOM-R work
+  should produce production retry-service proof, live Memory-in-loop/fault
+  evidence, or a broader/different planning intervention; do not return to
+  provider/video or subjective dream quality.
 - 2026-07-21 (PCTOM-R LIVE EXPANDED TRUST/COMMIT COVERAGE): live Tau
   execution now covers the expanded trust/commitment variants 17-24. The
   accepted receipt at

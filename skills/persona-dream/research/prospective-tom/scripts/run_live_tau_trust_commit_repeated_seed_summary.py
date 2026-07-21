@@ -108,39 +108,56 @@ def _load_planning_rows(receipt: dict[str, Any], errors: list[str], seed_index: 
     return loaded
 
 
-def _source_summary(receipt: dict[str, Any], path: Path, seed_index: int, errors: list[str]) -> dict[str, Any]:
+def _source_summary(
+    receipt: dict[str, Any],
+    path: Path,
+    seed_index: int,
+    errors: list[str],
+    *,
+    expected_trust_episode_limit: int,
+    expected_episodes_per_family: int | None,
+    variant_min: int | None,
+    variant_max: int | None,
+) -> dict[str, Any]:
     counts = receipt.get("counts") if isinstance(receipt.get("counts"), dict) else {}
     metrics = receipt.get("metrics") if isinstance(receipt.get("metrics"), dict) else {}
     planning = metrics.get("planning_summary") if isinstance(metrics.get("planning_summary"), dict) else {}
     checks = receipt.get("checks") if isinstance(receipt.get("checks"), dict) else {}
     source_errors: list[str] = []
+    expected_cases = expected_trust_episode_limit * len(CONDITIONS)
 
     if receipt.get("status") != EXPECTED_SOURCE_STATUS:
         source_errors.append(f"status:{receipt.get('status')}")
     if receipt.get("scenario_family") != TRUST_FAMILY:
         source_errors.append(f"scenario_family:{receipt.get('scenario_family')}")
-    if receipt.get("trust_episode_limit") != 4:
+    if receipt.get("trust_episode_limit") != expected_trust_episode_limit:
         source_errors.append(f"trust_episode_limit:{receipt.get('trust_episode_limit')}")
+    if expected_episodes_per_family is not None and receipt.get("episodes_per_family") != expected_episodes_per_family:
+        source_errors.append(f"episodes_per_family:{receipt.get('episodes_per_family')}")
+    if variant_min is not None and receipt.get("variant_min") != variant_min:
+        source_errors.append(f"variant_min:{receipt.get('variant_min')}")
+    if variant_max is not None and receipt.get("variant_max") != variant_max:
+        source_errors.append(f"variant_max:{receipt.get('variant_max')}")
     if receipt.get("mocked") is not False:
         source_errors.append(f"mocked:{receipt.get('mocked')}")
     if receipt.get("live") is not True:
         source_errors.append(f"live:{receipt.get('live')}")
     if receipt.get("live_tau_reexecuted") is not True:
         source_errors.append(f"live_tau_reexecuted:{receipt.get('live_tau_reexecuted')}")
-    if receipt.get("tau_call_attempts") != 16:
+    if receipt.get("tau_call_attempts") != expected_cases:
         source_errors.append(f"tau_call_attempts:{receipt.get('tau_call_attempts')}")
-    if receipt.get("tau_live_call_performed") != 16:
+    if receipt.get("tau_live_call_performed") != expected_cases:
         source_errors.append(f"tau_live_call_performed:{receipt.get('tau_live_call_performed')}")
-    if counts.get("episodes") != 4:
+    if counts.get("episodes") != expected_trust_episode_limit:
         source_errors.append(f"episodes:{counts.get('episodes')}")
-    if counts.get("cases") != 16:
+    if counts.get("cases") != expected_cases:
         source_errors.append(f"cases:{counts.get('cases')}")
     for condition in CONDITIONS:
         action_counts = counts.get("action_decisions_per_condition")
         regret_counts = counts.get("planning_regret_scores_per_condition")
-        if not isinstance(action_counts, dict) or action_counts.get(condition) != 4:
+        if not isinstance(action_counts, dict) or action_counts.get(condition) != expected_trust_episode_limit:
             source_errors.append(f"action_decisions_{condition}:{action_counts}")
-        if not isinstance(regret_counts, dict) or regret_counts.get(condition) != 4:
+        if not isinstance(regret_counts, dict) or regret_counts.get(condition) != expected_trust_episode_limit:
             source_errors.append(f"planning_regret_scores_{condition}:{regret_counts}")
     for key in (
         "condition_receipt_passed",
@@ -177,6 +194,7 @@ def _source_summary(receipt: dict[str, Any], path: Path, seed_index: int, errors
         "action_switch_count": counts.get("action_switch_count"),
         "nonzero_delta_count": counts.get("nonzero_delta_count"),
         "oracle_match_transitions": counts.get("oracle_match_transitions"),
+        "selected_episode_ids": counts.get("selected_episode_ids"),
         "planning_mean_cd_minus_baseline": planning.get("mean_cd_minus_baseline"),
         "planning_regret_ci": planning.get("planning_regret_ci"),
         "planning_benefit_with_confidence": planning.get("planning_benefit_with_confidence"),
@@ -189,6 +207,10 @@ def summarize_repeated_seeds(
     receipt_paths: list[Path],
     output_root: Path,
     receipt_out: Path,
+    expected_trust_episode_limit: int,
+    expected_episodes_per_family: int | None,
+    variant_min: int | None,
+    variant_max: int | None,
     bootstrap_samples: int,
     bootstrap_seed: int,
     alpha: float,
@@ -208,7 +230,18 @@ def summarize_repeated_seeds(
         if not isinstance(receipt, dict):
             errors.append(f"seed_{seed_index}_receipt_not_object")
             continue
-        source_summaries.append(_source_summary(receipt, path, seed_index, errors))
+        source_summaries.append(
+            _source_summary(
+                receipt,
+                path,
+                seed_index,
+                errors,
+                expected_trust_episode_limit=expected_trust_episode_limit,
+                expected_episodes_per_family=expected_episodes_per_family,
+                variant_min=variant_min,
+                variant_max=variant_max,
+            )
+        )
         receipt_hashes.append(_file_sha256(path))
         all_rows.extend(_load_planning_rows(receipt, errors, seed_index))
 
@@ -233,6 +266,10 @@ def summarize_repeated_seeds(
         "schema": "persona_dream.research.prospective_tom.live_tau_trust_commit_repeated_seed_summary.v1",
         "source_receipts": source_summaries,
         "source_receipt_hashes_sha256": _stable_json_sha256(receipt_hashes),
+        "expected_trust_episode_limit": expected_trust_episode_limit,
+        "expected_episodes_per_family": expected_episodes_per_family,
+        "variant_min": variant_min,
+        "variant_max": variant_max,
         "counts": {
             "seed_receipts": len(source_summaries),
             "passed_seed_receipts": sum(1 for row in source_summaries if row.get("status") == EXPECTED_SOURCE_STATUS),
@@ -270,10 +307,10 @@ def summarize_repeated_seeds(
     checks = {
         "at_least_two_seed_receipts": len(source_summaries) >= 2,
         "all_seed_receipts_passed": all(row.get("status") == EXPECTED_SOURCE_STATUS for row in source_summaries),
-        "all_seed_receipts_live": all(row.get("tau_call_attempts") == 16 for row in source_summaries),
-        "all_seed_receipts_have_four_episodes": all(row.get("episodes") == 4 for row in source_summaries),
-        "all_seed_receipts_have_sixteen_cases": all(row.get("cases") == 16 for row in source_summaries),
-        "planning_rows_cover_all_seed_episodes": len(all_rows) == 4 * len(source_summaries),
+        "all_seed_receipts_live": all(row.get("tau_call_attempts") == expected_trust_episode_limit * len(CONDITIONS) for row in source_summaries),
+        "all_seed_receipts_have_expected_episodes": all(row.get("episodes") == expected_trust_episode_limit for row in source_summaries),
+        "all_seed_receipts_have_expected_cases": all(row.get("cases") == expected_trust_episode_limit * len(CONDITIONS) for row in source_summaries),
+        "planning_rows_cover_all_seed_episodes": len(all_rows) == expected_trust_episode_limit * len(source_summaries),
         "source_receipts_hash_bound": len(receipt_hashes) == len(source_summaries),
         "llm_judge_absent": True,
         "human_content_judgment_absent": True,
@@ -292,6 +329,10 @@ def summarize_repeated_seeds(
         "receipt_path": str(receipt_out),
         "processing_time_s": round(time.monotonic() - started, 3),
         "source_receipts": [str(path) for path in receipt_paths],
+        "expected_trust_episode_limit": expected_trust_episode_limit,
+        "expected_episodes_per_family": expected_episodes_per_family,
+        "variant_min": variant_min,
+        "variant_max": variant_max,
         "summary_path": str(summary_path),
         "summary_sha256": _file_sha256(summary_path),
         "planning_rows_path": str(repeated_rows_path),
@@ -315,7 +356,7 @@ def summarize_repeated_seeds(
         "errors": errors,
         "claims": {
             "proves": [
-                "multiple accepted floor4 trust/commitment live Tau replication receipts were hash-bound and aggregated",
+                "multiple accepted trust/commitment live Tau replication receipts were hash-bound and aggregated",
                 "repeated live Tau trust/commitment planning rows were recomputed without human content judgment or an LLM judge",
                 "aggregate CD-minus-baseline planning-regret deltas were recomputed across repeated live Tau receipts",
                 "no Memory write, provider call, canonical write, identity write, or source-memory write was attempted",
@@ -327,7 +368,6 @@ def summarize_repeated_seeds(
             "does_not_prove": [
                 "new live Tau execution inside this aggregate command",
                 "planning benefit if the aggregate confidence interval crosses zero",
-                "planning benefit on an expanded trust/commitment corpus beyond the consumed source receipts",
                 "production retry machinery",
                 "live Memory recall in the sealed-test loop",
                 "complete live Phase 01-16 runtime execution",
@@ -346,6 +386,10 @@ def main() -> int:
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--receipt-out", type=Path, default=None)
     parser.add_argument("--source-receipt", type=Path, action="append", required=True)
+    parser.add_argument("--expected-trust-episode-limit", type=int, default=4)
+    parser.add_argument("--expected-episodes-per-family", type=int, default=None)
+    parser.add_argument("--variant-min", type=int, default=None)
+    parser.add_argument("--variant-max", type=int, default=None)
     parser.add_argument("--bootstrap-samples", type=int, default=10000)
     parser.add_argument("--bootstrap-seed", type=int, default=20260725)
     parser.add_argument("--alpha", type=float, default=0.05)
@@ -356,6 +400,10 @@ def main() -> int:
         receipt_paths=args.source_receipt,
         output_root=args.output_root,
         receipt_out=receipt_out,
+        expected_trust_episode_limit=args.expected_trust_episode_limit,
+        expected_episodes_per_family=args.expected_episodes_per_family,
+        variant_min=args.variant_min,
+        variant_max=args.variant_max,
         bootstrap_samples=args.bootstrap_samples,
         bootstrap_seed=args.bootstrap_seed,
         alpha=args.alpha,
