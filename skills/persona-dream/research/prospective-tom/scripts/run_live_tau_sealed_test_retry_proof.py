@@ -78,32 +78,42 @@ def _validate_base_receipt(base_root: Path, errors: list[str]) -> dict[str, Any]
         "fixture_backed": False,
         "deterministic_simulator_corpus_fixture_backed": True,
         "split": "sealed_test",
-        "episode_limit": 4,
-        "full_64_episode_replication": False,
         "human_content_judgment_required": False,
         "llm_judge_used": False,
-        "tau_call_attempts": 16,
-        "tau_live_call_performed": 16,
     }
     for key, value in expected.items():
         if receipt.get(key) != value:
             errors.append(f"base_{key}_mismatch:{receipt.get(key)}:{value}")
     _expected_zero_writes(receipt, errors, "base")
 
+    episode_limit = receipt.get("episode_limit")
+    if not isinstance(episode_limit, int) or isinstance(episode_limit, bool) or episode_limit <= 0:
+        errors.append(f"base_episode_limit_invalid:{episode_limit}")
+        episode_limit = 0
+    expected_cases = episode_limit * len(CONDITIONS)
+    expected_full64 = episode_limit == 64
+    if receipt.get("full_64_episode_replication") is not expected_full64:
+        errors.append(f"base_full_64_episode_replication_mismatch:{receipt.get('full_64_episode_replication')}:{expected_full64}")
+    if receipt.get("tau_call_attempts") != expected_cases:
+        errors.append(f"base_tau_call_attempts_mismatch:{receipt.get('tau_call_attempts')}:{expected_cases}")
+    if receipt.get("tau_live_call_performed") != expected_cases:
+        errors.append(f"base_tau_live_call_performed_mismatch:{receipt.get('tau_live_call_performed')}:{expected_cases}")
+
     counts = receipt.get("counts") if isinstance(receipt.get("counts"), dict) else {}
-    if counts.get("cases") != 16 or counts.get("episodes_consumed") != 4:
-        errors.append(f"base_case_count_mismatch:{counts.get('cases')}:{counts.get('episodes_consumed')}")
+    if counts.get("cases") != expected_cases or counts.get("episodes_consumed") != episode_limit:
+        errors.append(f"base_case_count_mismatch:{counts.get('cases')}:{counts.get('episodes_consumed')}:{expected_cases}:{episode_limit}")
     for key in (
         "tau_authored_prediction_payloads_per_condition",
         "sealed_commitments_per_condition",
         "deterministic_scores_per_condition",
         "action_decisions_per_condition",
+        "planning_regret_scores_per_condition",
     ):
         values = counts.get(key)
         if not isinstance(values, dict) or set(values) != set(CONDITIONS):
             errors.append(f"base_{key}_conditions_mismatch:{values}")
             continue
-        if any(value != 4 for value in values.values()):
+        if any(value != episode_limit for value in values.values()):
             errors.append(f"base_{key}_count_mismatch:{values}")
 
     checks = receipt.get("checks") if isinstance(receipt.get("checks"), dict) else {}
@@ -124,6 +134,13 @@ def _validate_base_receipt(base_root: Path, errors: list[str]) -> dict[str, Any]
     return receipt
 
 
+def _base_expected_counts(base_receipt: dict[str, Any]) -> tuple[int, int]:
+    episode_limit = base_receipt.get("episode_limit")
+    if not isinstance(episode_limit, int) or isinstance(episode_limit, bool) or episode_limit <= 0:
+        episode_limit = 0
+    return episode_limit, episode_limit * len(CONDITIONS)
+
+
 def _condition_from_path(path: Path) -> str | None:
     parts = path.parts
     for condition in CONDITIONS:
@@ -132,15 +149,21 @@ def _condition_from_path(path: Path) -> str | None:
     return None
 
 
-def _index_commitments(base_root: Path, errors: list[str]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+def _index_commitments(
+    base_root: Path,
+    errors: list[str],
+    *,
+    expected_per_condition: int,
+    expected_cases: int,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     seen_prediction_ids: set[str] = set()
     seen_episode_condition: set[tuple[str, str]] = set()
     per_condition = {condition: 0 for condition in CONDITIONS}
 
     paths = sorted(base_root.glob("**/tom_prediction_commitment_bundle.json"))
-    if len(paths) != 16:
-        errors.append(f"commitment_bundle_count_mismatch:{len(paths)}:16")
+    if len(paths) != expected_cases:
+        errors.append(f"commitment_bundle_count_mismatch:{len(paths)}:{expected_cases}")
 
     for path in paths:
         bundle = _load_json(path, errors, "commitment_bundle")
@@ -199,7 +222,7 @@ def _index_commitments(base_root: Path, errors: list[str]) -> tuple[list[dict[st
             }
         )
 
-    if any(value != 4 for value in per_condition.values()):
+    if any(value != expected_per_condition for value in per_condition.values()):
         errors.append(f"commitments_per_condition_mismatch:{per_condition}")
     summary = {
         "commitment_count": len(rows),
@@ -210,14 +233,20 @@ def _index_commitments(base_root: Path, errors: list[str]) -> tuple[list[dict[st
     return rows, summary
 
 
-def _index_actions(base_root: Path, errors: list[str]) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+def _index_actions(
+    base_root: Path,
+    errors: list[str],
+    *,
+    expected_per_condition: int,
+    expected_cases: int,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     seen_episode_prediction: set[tuple[str, str]] = set()
     per_condition = {condition: 0 for condition in CONDITIONS}
 
     paths = sorted(base_root.glob("**/action_selection.json"))
-    if len(paths) != 16:
-        errors.append(f"action_selection_count_mismatch:{len(paths)}:16")
+    if len(paths) != expected_cases:
+        errors.append(f"action_selection_count_mismatch:{len(paths)}:{expected_cases}")
 
     for path in paths:
         action = _load_json(path, errors, "action_selection")
@@ -264,7 +293,7 @@ def _index_actions(base_root: Path, errors: list[str]) -> tuple[list[dict[str, A
             }
         )
 
-    if any(value != 4 for value in per_condition.values()):
+    if any(value != expected_per_condition for value in per_condition.values()):
         errors.append(f"actions_per_condition_mismatch:{per_condition}")
     summary = {
         "action_decision_count": len(rows),
@@ -274,10 +303,16 @@ def _index_actions(base_root: Path, errors: list[str]) -> tuple[list[dict[str, A
     return rows, summary
 
 
-def _index_gate6_receipts(base_root: Path, errors: list[str]) -> dict[str, Any]:
+def _index_gate6_receipts(
+    base_root: Path,
+    errors: list[str],
+    *,
+    expected_per_condition: int,
+    expected_cases: int,
+) -> dict[str, Any]:
     paths = sorted(base_root.glob("**/gate6_action_selection_receipt.json"))
-    if len(paths) != 16:
-        errors.append(f"gate6_receipt_count_mismatch:{len(paths)}:16")
+    if len(paths) != expected_cases:
+        errors.append(f"gate6_receipt_count_mismatch:{len(paths)}:{expected_cases}")
     per_condition = {condition: 0 for condition in CONDITIONS}
     statuses: dict[str, int] = {}
     for path in paths:
@@ -294,6 +329,8 @@ def _index_gate6_receipts(base_root: Path, errors: list[str]) -> dict[str, Any]:
         if receipt.get("human_content_judgment_required") is not False:
             errors.append(f"gate6_human_judgment_not_false:{path}")
         _expected_zero_writes(receipt, errors, "gate6")
+    if any(value != expected_per_condition for value in per_condition.values()):
+        errors.append(f"gate6_per_condition_mismatch:{per_condition}")
     return {
         "gate6_receipt_count": len(paths),
         "statuses": statuses,
@@ -476,9 +513,25 @@ def run(base_root: Path, output_root: Path) -> dict[str, Any]:
     base_receipt = _validate_base_receipt(base_root, errors)
     base_receipt_path = base_root / "live_tau_sealed_test_replication_receipt.v1.json"
     base_receipt_sha = _file_sha256(base_receipt_path) if base_receipt_path.exists() else None
-    commitments, commitment_summary = _index_commitments(base_root, errors)
-    actions, action_summary = _index_actions(base_root, errors)
-    gate6_summary = _index_gate6_receipts(base_root, errors)
+    expected_per_condition, expected_cases = _base_expected_counts(base_receipt)
+    commitments, commitment_summary = _index_commitments(
+        base_root,
+        errors,
+        expected_per_condition=expected_per_condition,
+        expected_cases=expected_cases,
+    )
+    actions, action_summary = _index_actions(
+        base_root,
+        errors,
+        expected_per_condition=expected_per_condition,
+        expected_cases=expected_cases,
+    )
+    gate6_summary = _index_gate6_receipts(
+        base_root,
+        errors,
+        expected_per_condition=expected_per_condition,
+        expected_cases=expected_cases,
+    )
 
     commitment_ids = {row["prediction_id"] for row in commitments}
     action_ids = {row["prediction_id"] for row in actions}
@@ -519,6 +572,8 @@ def run(base_root: Path, output_root: Path) -> dict[str, Any]:
         "commitment_summary": commitment_summary,
         "action_summary": action_summary,
         "gate6_summary": gate6_summary,
+        "expected_per_condition": expected_per_condition,
+        "expected_cases": expected_cases,
         "missing_actions": missing_actions,
         "orphan_actions": orphan_actions,
     }
@@ -565,9 +620,11 @@ def run(base_root: Path, output_root: Path) -> dict[str, Any]:
         },
         "checks": {
             "base_receipt_passed": base_receipt.get("status") == "PASS_LIVE_TAU_PCTOM_SEALED_TEST_REPLICATION",
+            "base_is_full64_live_tau": base_receipt.get("full_64_episode_replication") is True
+            and base_receipt.get("episode_limit") == 64,
             "commitment_hashes_recomputed": not any(error.startswith("commitment_hash_mismatch") for error in errors),
-            "active_predictions_unique": commitment_summary.get("unique_prediction_ids") == len(commitments) == 16,
-            "action_decisions_unique": action_summary.get("unique_episode_prediction_pairs") == len(actions) == 16,
+            "active_predictions_unique": commitment_summary.get("unique_prediction_ids") == len(commitments) == expected_cases,
+            "action_decisions_unique": action_summary.get("unique_episode_prediction_pairs") == len(actions) == expected_cases,
             "predictions_have_actions": not missing_actions and not orphan_actions,
             "allowed_terminal_outcomes_only": not any(
                 trial.get("terminal_outcome") not in ALLOWED_TERMINAL_OUTCOMES for trial in trials
@@ -595,7 +652,6 @@ def run(base_root: Path, output_root: Path) -> dict[str, Any]:
             ],
             "does_not_prove": [
                 "deployed production orchestrator retry machinery",
-                "full 64-episode live Tau sealed-test replication",
                 "new live Tau execution",
                 "live Memory service fault injection",
                 "paid provider execution",

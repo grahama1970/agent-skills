@@ -1,10 +1,50 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R full64 live Tau sealed-test replication accepted) by agent
+**Last updated:** 2026-07-21 (PCTOM-R full64 live Tau confidence and retry proof accepted) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R FULL64 LIVE TAU STATISTICAL CONFIDENCE): live Tau
+  full64 statistical-confidence evidence now exists at
+  `/tmp/persona-dream-live-tau-full64-statistical-confidence-20260721T092609Z/live_tau_full64_statistical_confidence_receipt.v1.json`.
+  It consumes the accepted full64 live Tau sealed-test replication root without
+  reexecuting Tau and reports
+  `PASS_LIVE_TAU_PCTOM_FULL64_STATISTICAL_CONFIDENCE`. Counts: 64 episodes,
+  256 cases, 64 paired deltas each for belief Brier, action Brier, and
+  planning regret, and 10,000 bootstrap samples. The preregistered belief
+  Brier CD-minus-strongest-baseline mean is `-0.018301562500000004` with
+  95% bootstrap CI `[-0.029314882812500002, -0.008604609375000004]`, so
+  `primary_benefit_with_confidence:true`. Action Brier and planning regret do
+  not have confidence-bounded benefit: `action_benefit_with_confidence:false`
+  and `planning_benefit_with_confidence:false` because their CI uppers cross
+  zero. `mocked:false`, `live:true`, `fixture_backed:false`,
+  `live_tau_reexecuted:false`, `human_content_judgment_required:false`, and
+  Tau/Memory/provider/canonical/identity/source-memory write or call attempts
+  were all 0. This proves the live Tau full64 primary ToM prediction benefit
+  on belief Brier, not planning-regret benefit, production retry machinery,
+  live Memory recall in the sealed-test loop, paid provider execution,
+  semantic dream quality, or complete Phase 01-16 runtime execution.
+- 2026-07-21 (PCTOM-R FULL64 LIVE TAU RETRY PROOF): bounded retry/fault
+  evidence over the full64 live Tau sealed-test root now exists at
+  `/tmp/persona-dream-live-tau-full64-sealed-test-retry-proof-20260721T092754Z/live_tau_sealed_test_retry_proof_receipt.v1.json`.
+  It reports `PASS_LIVE_TAU_PCTOM_SEALED_TEST_RETRY_PROOF` while consuming the
+  full64 replication receipt without reexecuting Tau. Counts: 256 active
+  predictions, 256 action decisions, 256 Gate 6 receipts, 8 retry/fault trials,
+  3 recovered trials, 3 blocked-before-side-effect trials, 2 quarantined
+  trials, 0 `CONTINUED_WITH_UNKNOWN_STATE`, 0 side-effect violations, 2
+  duplicate active-prediction attempts detected and rejected, and 0 duplicate
+  action decisions promoted. Checks show `base_is_full64_live_tau:true`,
+  `commitment_hashes_recomputed:true`, `active_predictions_unique:true`,
+  `action_decisions_unique:true`, `predictions_have_actions:true`, and
+  `causal_replay_written:true`. `mocked:false`, `live:true`,
+  `fixture_backed:false`, `live_tau_reexecuted:false`,
+  `human_content_judgment_required:false`, and Tau/Memory/provider/canonical/
+  identity/source-memory write or call attempts were all 0. This proves bounded
+  retry/idempotence over full64 live-originated sealed-test artifacts. It does
+  not prove deployed production orchestrator retry machinery, new live Tau
+  execution, live Memory service fault injection, paid provider execution,
+  semantic dream quality, or complete Phase 01-16 runtime execution.
 - 2026-07-21 (PCTOM-R FULL64 LIVE TAU SEALED-TEST REPLICATION): full
   64-episode live Tau sealed-test replication evidence now exists at
   `/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z/live_tau_sealed_test_replication_receipt.v1.json`.

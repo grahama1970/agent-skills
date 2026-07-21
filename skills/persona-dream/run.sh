@@ -92,6 +92,7 @@ Commands:
   run-sealed-test-statistical-confidence  Run 64-episode sealed-test CD-vs-baseline bootstrap confidence
   run-live-fault-injection-surface  Exercise broader PCTOM-R fault containment over live Memory and receipt boundaries
   run-live-tau-sealed-test-replication  Run bounded live Tau-authored sealed-test replication plus Gate 6 actions
+  run-live-tau-full64-statistical-confidence  Compute confidence intervals over accepted full64 live Tau artifacts
   run-live-tau-sealed-test-retry-proof  Prove retry/idempotence over live Tau sealed-test artifacts
   run-live-tau-sealed-test-runsh-orchestration-retry-proof  Exercise sealed-test retry proof through run.sh dispatch
   run-live-tau-sealed-test-queue-worker-retry-proof  Exercise sealed-test retry proof through a bounded queue worker
@@ -453,6 +454,9 @@ case "$COMMAND" in
     ;;
   run-live-tau-sealed-test-replication)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_tau_sealed_test_replication.py" "$@"
+    ;;
+  run-live-tau-full64-statistical-confidence)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_tau_full64_statistical_confidence.py" "$@"
     ;;
   run-live-tau-sealed-test-retry-proof)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_tau_sealed_test_retry_proof.py" "$@"

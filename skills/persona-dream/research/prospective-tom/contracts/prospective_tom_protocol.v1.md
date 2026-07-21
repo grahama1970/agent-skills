@@ -1296,11 +1296,40 @@ statistical confidence for live Tau CD benefit. It also does not prove
 production retry machinery over the full64 root, provider/video execution,
 semantic dream quality, or complete live Phase 01-16 runtime execution.
 
+## Live Tau Full64 Statistical Confidence Bridge
+
+The live Tau full64 statistical-confidence bridge consumes an accepted full64
+live Tau sealed-test replication root without reexecuting Tau. It computes
+paired bootstrap confidence intervals from the live Tau case index and action
+decision index.
+
+Current accepted receipt:
+
+```text
+/tmp/persona-dream-live-tau-full64-statistical-confidence-20260721T092609Z/live_tau_full64_statistical_confidence_receipt.v1.json
+```
+
+Accepted status:
+
+```text
+PASS_LIVE_TAU_PCTOM_FULL64_STATISTICAL_CONFIDENCE
+```
+
+This bridge proves that the preregistered belief Brier
+CD-minus-strongest-baseline mean is negative with a bootstrap confidence
+interval below zero over 64 paired live Tau episodes. It also reports action
+Brier and planning-regret intervals without upgrading them to proven benefits;
+the current accepted receipt has `action_benefit_with_confidence:false` and
+`planning_benefit_with_confidence:false`. It does not prove production retry
+machinery, live Memory recall in the sealed-test loop, provider/video
+execution, semantic dream quality, or complete live Phase 01-16 runtime
+execution.
+
 ## Bounded Live Tau Sealed-Test Retry Proof
 
-The bounded live Tau sealed-test retry proof consumes the accepted bounded live
-Tau sealed-test replication root without reexecuting Tau. It is a research
-bridge over live-originated artifacts, not a deployed-orchestrator proof.
+The bounded live Tau sealed-test retry proof consumes an accepted live Tau
+sealed-test replication root without reexecuting Tau. It is a research bridge
+over live-originated artifacts, not a deployed-orchestrator proof.
 
 Pipeline:
 
@@ -1346,18 +1375,19 @@ BLOCKED_LIVE_TAU_PCTOM_SEALED_TEST_RETRY_PROOF
 Current accepted receipt:
 
 ```text
-/tmp/persona-dream-live-tau-sealed-test-retry-proof-20260721T052430Z/live_tau_sealed_test_retry_proof_receipt.v1.json
+/tmp/persona-dream-live-tau-full64-sealed-test-retry-proof-20260721T092754Z/live_tau_sealed_test_retry_proof_receipt.v1.json
 ```
 
 This bridge proves bounded retry/idempotence over live Tau-originated
 sealed-test artifacts. It proves hash recomputation before active-state
 indexing, equivalent-state recovery for exact and uncertain-completion retry,
 fail-closed handling for partial Tau output, stale scoring, interrupted action
-selection, conflicting active pointers, and one causal replay. It does not
-prove deployed production orchestrator retry machinery, full 64-episode live
-Tau replication, new live Tau execution, live Memory service fault injection,
-provider/video execution, semantic dream quality, or complete live Phase 01-16
-runtime execution.
+selection, conflicting active pointers, and one causal replay. The current
+accepted receipt consumes the full64 live Tau root and indexes 256 active
+predictions, 256 action decisions, and 256 Gate 6 receipts. It does not prove
+deployed production orchestrator retry machinery, new live Tau execution, live
+Memory service fault injection, provider/video execution, semantic dream
+quality, or complete live Phase 01-16 runtime execution.
 
 ## Run.sh Orchestration Retry Proof
 
