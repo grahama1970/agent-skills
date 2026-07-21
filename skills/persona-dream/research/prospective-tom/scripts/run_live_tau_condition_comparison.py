@@ -26,6 +26,7 @@ CONDITIONS = ("M", "R", "D", "CD")
 PASS_STATUS = "PASS_LIVE_TAU_PCTOM_CONDITION_COMPARISON"
 BLOCKED_STATUS = "BLOCKED_LIVE_TAU_PCTOM_CONDITION_COMPARISON"
 SYSTEMIC_FAILURE_THRESHOLD = 3
+COMPACT_PATCH_SUM_EPSILON = 0.0001
 
 
 CONDITION_INSTRUCTIONS = {
@@ -336,24 +337,31 @@ def _ids(episode_id: str, condition: str) -> dict[str, str]:
 
 def _output_contract() -> dict[str, Any]:
     return {
-        "schema": "persona_dream.research.prospective_tom.live_tau_condition_output_contract.v1",
+        "schema": "persona_dream.research.prospective_tom.live_tau_condition_patch_contract.v1",
         "required_top_level_keys": [
-            "tom_belief_distribution_bundle",
-            "counterfactual_branch_bundle",
-            "prediction_payload",
+            "schema",
+            "condition",
+            "belief_distributions",
+            "counterfactual_belief_distribution",
+            "predicted_next_action_distribution",
+            "counterfactual_next_action_distribution",
+            "factual_expected_observation",
+            "counterfactual_expected_observation",
+            "uncertainty",
+            "abstain",
         ],
         "requirements": [
             "Return exactly one JSON object and no prose.",
-            "Do not include hidden_world_state, actual_next_action, ground_truth_tom_labels, outcome, score, or reveal fields.",
-            "Use exact IDs and exact field names from output_shape.",
-            "Use only supplied social_episode_observation, social_episode_access, and synthetic_counterfactual evidence refs.",
-            "Every factual supported ToM distribution must match a supplied prediction target.",
-            "Every probability distribution must sum to one.",
-            "Branch source_evidence_refs must contain only visible social episode refs.",
-            "Never put synthetic_counterfactual refs in branch source_evidence_refs or prediction_payload evidence_refs.",
-            "Use synthetic_counterfactual refs only in the counterfactual ToM distribution evidence_refs.",
-            "The counterfactual branch must be synthetic and must not be literal history.",
-            "The prediction_payload condition must equal the requested condition.",
+            "Do not include hidden_world_state, actual_next_action, ground_truth_tom_labels, outcome, score, reveal, evidence_refs, source_id, or SHA fields.",
+            "schema must equal persona_dream.research.prospective_tom.live_tau_condition_patch.v1.",
+            "condition must equal the requested condition.",
+            "belief_distributions must contain exactly two entries, target_index 0 and 1.",
+            "Each belief distribution must contain TRUE, FALSE, and UNKNOWN probabilities summing to one.",
+            "predicted_next_action_distribution must contain every supplied allowed action exactly once and sum to one.",
+            "counterfactual_next_action_distribution may contain supplied allowed actions and UNKNOWN only, and must sum to one.",
+            "abstain must be a boolean.",
+            "uncertainty must be a number from 0 to 1.",
+            "The runner, not Tau, constructs sealed artifacts, source evidence refs, hashes, commitments, and reveal/scoring records.",
         ],
     }
 
@@ -380,7 +388,6 @@ def _preflight_output_contract() -> dict[str, Any]:
 
 def _prompt(episode: dict[str, Any], condition: str, gate0_records: list[dict[str, Any]] | None = None) -> str:
     episode_id = episode["episode_id"]
-    ids = _ids(episode_id, condition)
     # Keep accepted-source attribution out of the model prompt to avoid repeated
     # metadata bloat. The runner overlays Gate 0 attribution onto parsed social
     # refs before writing sealed artifacts and commitments.
@@ -389,184 +396,309 @@ def _prompt(episode: dict[str, Any], condition: str, gate0_records: list[dict[st
     actions = list(episode.get("allowed_next_actions") or [])
     if not actions:
         actions = ["UNKNOWN"]
-    if len(actions) == 1:
-        action_shape = [{"value": actions[0], "probability": 1.0}]
-    elif len(actions) == 2:
-        action_shape = [{"value": actions[0], "probability": 0.55}, {"value": actions[1], "probability": 0.45}]
-    else:
-        action_shape = [
-            {"value": actions[0], "probability": 0.34},
-            {"value": actions[1], "probability": 0.33},
-            {"value": actions[2], "probability": 0.33},
-        ]
-    cf_action_shape = [{"value": action, "probability": 0.0} for action in actions[:3]]
-    cf_action_shape.append({"value": "UNKNOWN", "probability": 1.0})
+    prompt_payload = {
+        "task": "Return one compact pre-reveal PCTOM-R prediction patch. The runner will construct all sealed artifacts.",
+        "condition": condition,
+        "condition_instruction": CONDITION_INSTRUCTIONS[condition],
+        "episode_visible_to_agent": visible,
+        "prediction_targets_without_truth_values": [
+            {"target_index": idx, **target}
+            for idx, target in enumerate(targets)
+        ],
+        "counterfactual_intervention": {
+            "episode_id": episode_id,
+            "intervened_variable": "counterpart_policy.expected_actual_next_action",
+            "intervened_value": "UNKNOWN",
+            "note": "This is synthetic imagination only; do not treat it as literal history.",
+        },
+        "allowed_next_actions": actions,
+        "output_json_shape": {
+            "schema": "persona_dream.research.prospective_tom.live_tau_condition_patch.v1",
+            "condition": condition,
+            "belief_distributions": [
+                {
+                    "target_index": 0,
+                    "distribution": [
+                        {"value": "TRUE", "probability": 0.5},
+                        {"value": "FALSE", "probability": 0.25},
+                        {"value": "UNKNOWN", "probability": 0.25},
+                    ],
+                    "abstain": False,
+                },
+                {
+                    "target_index": 1,
+                    "distribution": [
+                        {"value": "TRUE", "probability": 0.45},
+                        {"value": "FALSE", "probability": 0.25},
+                        {"value": "UNKNOWN", "probability": 0.30},
+                    ],
+                    "abstain": False,
+                },
+            ],
+            "counterfactual_belief_distribution": [
+                {"value": "TRUE", "probability": 0.30},
+                {"value": "FALSE", "probability": 0.35},
+                {"value": "UNKNOWN", "probability": 0.35},
+            ],
+            "predicted_next_action_distribution": [
+                {"value": action, "probability": round(1.0 / len(actions), 6)}
+                for action in actions
+            ],
+            "counterfactual_next_action_distribution": [
+                {"value": action, "probability": 0.0}
+                for action in actions
+            ] + [{"value": "UNKNOWN", "probability": 1.0}],
+            "factual_expected_observation": "One sentence, no hidden outcome.",
+            "counterfactual_expected_observation": "One sentence, explicitly synthetic.",
+            "uncertainty": 0.35,
+            "abstain": False,
+        },
+    }
+    return (
+        "Persona Dream PCTOM-R compact Tau patch. Return exactly one JSON object matching output_json_shape. "
+        "Do not include hidden truth, evidence refs, hashes, commitments, outcomes, scores, prose, or markdown.\n\n"
+        + json.dumps(prompt_payload, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
+    )
+
+
+def _string(value: Any, field: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise RuntimeError(f"compact_patch_invalid_{field}")
+    return value.strip()
+
+
+def _number_0_to_1(value: Any, field: str) -> float:
+    if not isinstance(value, (int, float)) or isinstance(value, bool):
+        raise RuntimeError(f"compact_patch_invalid_{field}:{value}")
+    number = float(value)
+    if number < 0.0 or number > 1.0:
+        raise RuntimeError(f"compact_patch_{field}_out_of_range:{value}")
+    return number
+
+
+def _compact_distribution(
+    entries: Any,
+    *,
+    allowed_values: list[str],
+    required_values: list[str],
+    field: str,
+) -> list[dict[str, Any]]:
+    if not isinstance(entries, list) or not entries:
+        raise RuntimeError(f"compact_patch_{field}_not_nonempty_list")
+    seen: dict[str, float] = {}
+    for idx, entry in enumerate(entries):
+        if not isinstance(entry, dict):
+            raise RuntimeError(f"compact_patch_{field}_{idx}_not_object")
+        value = entry.get("value")
+        probability = entry.get("probability")
+        if not isinstance(value, str) or not value:
+            raise RuntimeError(f"compact_patch_{field}_{idx}_missing_value")
+        if value not in allowed_values:
+            raise RuntimeError(f"compact_patch_{field}_{idx}_value_not_allowed:{value}")
+        if value in seen:
+            raise RuntimeError(f"compact_patch_{field}_{idx}_duplicate_value:{value}")
+        seen[value] = _number_0_to_1(probability, f"{field}_{idx}_probability")
+    missing = [value for value in required_values if value not in seen]
+    if missing:
+        raise RuntimeError(f"compact_patch_{field}_missing_values:{','.join(missing)}")
+    total = sum(seen.values())
+    residual = 1.0 - total
+    if abs(residual) > COMPACT_PATCH_SUM_EPSILON:
+        raise RuntimeError(f"compact_patch_{field}_probability_sum:{total:.6f}")
+    if abs(residual) > 0.0:
+        adjust_value = max(seen, key=lambda key: seen[key])
+        adjusted = seen[adjust_value] + residual
+        if adjusted < 0.0 or adjusted > 1.0:
+            raise RuntimeError(f"compact_patch_{field}_probability_sum_adjustment_out_of_range:{total:.6f}")
+        seen[adjust_value] = adjusted
+    return [{"value": value, "probability": seen[value]} for value in allowed_values if value in seen]
+
+
+def _bundles_from_patch(
+    episode: dict[str, Any],
+    condition: str,
+    patch: dict[str, Any],
+    gate0_records: list[dict[str, Any]] | None = None,
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+    if patch.get("schema") != "persona_dream.research.prospective_tom.live_tau_condition_patch.v1":
+        raise RuntimeError(f"compact_patch_invalid_schema:{patch.get('schema')}")
+    if patch.get("condition") != condition:
+        raise RuntimeError(f"compact_patch_condition_mismatch:{patch.get('condition')}:{condition}")
+    abstain = patch.get("abstain")
+    if not isinstance(abstain, bool):
+        raise RuntimeError(f"compact_patch_abstain_not_bool:{abstain}")
+    uncertainty = _number_0_to_1(patch.get("uncertainty"), "uncertainty")
+
+    episode_id = episode["episode_id"]
+    ids = _ids(episode_id, condition)
+    targets = _prediction_targets(episode)
+    visible_refs = _visible_refs(episode, gate0_records or [])
+    actions = list(episode.get("allowed_next_actions") or [])
+    if not actions:
+        actions = ["UNKNOWN"]
+    bool_values = ["TRUE", "FALSE", "UNKNOWN"]
+    action_distribution = _compact_distribution(
+        patch.get("predicted_next_action_distribution"),
+        allowed_values=actions,
+        required_values=actions,
+        field="predicted_next_action_distribution",
+    )
+    counterfactual_action_values = actions + ([] if "UNKNOWN" in actions else ["UNKNOWN"])
+    counterfactual_action_distribution = _compact_distribution(
+        patch.get("counterfactual_next_action_distribution"),
+        allowed_values=counterfactual_action_values,
+        required_values=[],
+        field="counterfactual_next_action_distribution",
+    )
+    counterfactual_belief_distribution = _compact_distribution(
+        patch.get("counterfactual_belief_distribution"),
+        allowed_values=bool_values,
+        required_values=bool_values,
+        field="counterfactual_belief_distribution",
+    )
+
+    belief_rows = patch.get("belief_distributions")
+    if not isinstance(belief_rows, list) or len(belief_rows) != 2:
+        raise RuntimeError("compact_patch_belief_distributions_must_have_two_entries")
+    by_target: dict[int, dict[str, Any]] = {}
+    for idx, row in enumerate(belief_rows):
+        if not isinstance(row, dict):
+            raise RuntimeError(f"compact_patch_belief_distributions_{idx}_not_object")
+        target_index = row.get("target_index")
+        if target_index not in {0, 1}:
+            raise RuntimeError(f"compact_patch_belief_distributions_{idx}_invalid_target_index:{target_index}")
+        if target_index in by_target:
+            raise RuntimeError(f"compact_patch_belief_distributions_duplicate_target_index:{target_index}")
+        row_abstain = row.get("abstain", abstain)
+        if not isinstance(row_abstain, bool):
+            raise RuntimeError(f"compact_patch_belief_distributions_{idx}_abstain_not_bool:{row_abstain}")
+        by_target[target_index] = {
+            "abstain": row_abstain,
+            "distribution": _compact_distribution(
+                row.get("distribution"),
+                allowed_values=bool_values,
+                required_values=bool_values,
+                field=f"belief_distributions_{target_index}",
+            ),
+        }
+
     synthetic_ref = {"scope": "synthetic_counterfactual", "source_id": f"{episode_id}:{condition}:do-policy-alternative"}
-    visible_refs = _visible_refs(episode, [])
     held_fixed = [
         "counterpart_goals",
         "counterpart_preferences",
         "information_access_by_agent",
         "observable_history",
     ]
-    prompt_payload = {
-        "task": "Produce one pre-reveal PCTOM-R condition prediction for deterministic scoring.",
+    distribution_bundle = {
+        "schema": "persona_dream.research.prospective_tom.tom_belief_distribution_bundle.v1",
+        "episode_id": episode_id,
         "condition": condition,
-        "condition_instruction": CONDITION_INSTRUCTIONS[condition],
-        "episode_visible_to_agent": visible,
-        "prediction_targets_without_truth_values": targets,
-        "required_ids": ids,
-        "counterfactual_intervention": {
-            "intervention_id": ids["intervention"],
-            "episode_id": episode_id,
-            "intervened_variable": "counterpart_policy.expected_actual_next_action",
-            "intervened_value": "UNKNOWN",
-            "synthetic_counterfactual_ref": synthetic_ref,
-            "held_fixed": held_fixed,
-        },
-        "allowed_next_actions": actions,
-        "ref_rules": {
-            "visible_refs_allowed_in_branch_source_evidence_refs": visible_refs,
-            "visible_refs_allowed_in_prediction_payload_evidence_refs": visible_refs,
-            "synthetic_counterfactual_ref_allowed_only_in_counterfactual_distribution_evidence_refs": synthetic_ref,
-            "forbidden_in_branch_source_evidence_refs": [synthetic_ref],
-            "forbidden_in_prediction_payload_evidence_refs": [synthetic_ref],
-        },
-        "output_shape": {
-            "tom_belief_distribution_bundle": {
-                "schema": "persona_dream.research.prospective_tom.tom_belief_distribution_bundle.v1",
+        "sealed": True,
+        "outcome_visible": False,
+        "canonical_memory_write": False,
+        "distributions": [],
+    }
+    for target_index, hypothesis_id in [(0, ids["tom1_factual"]), (1, ids["tom2_factual"])]:
+        target = targets[target_index]
+        row = by_target[target_index]
+        distribution_bundle["distributions"].append(
+            {
+                "hypothesis_id": hypothesis_id,
                 "episode_id": episode_id,
-                "condition": condition,
-                "sealed": True,
-                "outcome_visible": False,
-                "canonical_memory_write": False,
-                "distributions": [
-                    {
-                        "hypothesis_id": ids["tom1_factual"],
-                        "episode_id": episode_id,
-                        "perspective_order": targets[0]["perspective_order"],
-                        "subject": targets[0]["subject"],
-                        "target": targets[0]["target"],
-                        "mental_state_type": targets[0]["mental_state_type"],
-                        "proposition": targets[0]["proposition"],
-                        "distribution": [
-                            {"value": "TRUE", "probability": 0.5},
-                            {"value": "FALSE", "probability": 0.25},
-                            {"value": "UNKNOWN", "probability": 0.25},
-                        ],
-                        "evidence_refs": visible_refs,
-                        "prediction_horizon": "next_action",
-                        "counterfactual": False,
-                        "counterfactual_context": None,
-                        "abstain": False,
-                        "support_status": "supported",
-                    },
-                    {
-                        "hypothesis_id": ids["tom2_factual"],
-                        "episode_id": episode_id,
-                        "perspective_order": targets[1]["perspective_order"],
-                        "subject": targets[1]["subject"],
-                        "target": targets[1]["target"],
-                        "mental_state_type": targets[1]["mental_state_type"],
-                        "proposition": targets[1]["proposition"],
-                        "distribution": [
-                            {"value": "TRUE", "probability": 0.45},
-                            {"value": "FALSE", "probability": 0.25},
-                            {"value": "UNKNOWN", "probability": 0.30},
-                        ],
-                        "evidence_refs": visible_refs,
-                        "prediction_horizon": "next_action",
-                        "counterfactual": False,
-                        "counterfactual_context": None,
-                        "abstain": False,
-                        "support_status": "supported",
-                    },
-                    {
-                        "hypothesis_id": ids["tom1_counterfactual"],
-                        "episode_id": episode_id,
-                        "perspective_order": targets[0]["perspective_order"],
-                        "subject": targets[0]["subject"],
-                        "target": targets[0]["target"],
-                        "mental_state_type": targets[0]["mental_state_type"],
-                        "proposition": targets[0]["proposition"],
-                        "distribution": [
-                            {"value": "TRUE", "probability": 0.30},
-                            {"value": "FALSE", "probability": 0.35},
-                            {"value": "UNKNOWN", "probability": 0.35},
-                        ],
-                        "evidence_refs": [synthetic_ref],
-                        "prediction_horizon": "next_action",
-                        "counterfactual": True,
-                        "counterfactual_context": {"intervention_id": ids["intervention"], "synthetic": True},
-                        "abstain": False,
-                        "support_status": "supported",
-                    },
-                ],
-            },
-            "counterfactual_branch_bundle": {
-                "schema": "persona_dream.research.prospective_tom.counterfactual_branch_bundle.v1",
-                "episode_id": episode_id,
-                "condition": condition,
-                "outcome_visible": False,
-                "canonical_memory_write": False,
-                "branches": [
-                    {
-                        "branch_id": ids["factual_branch"],
-                        "episode_id": episode_id,
-                        "branch_type": "factual",
-                        "synthetic": False,
-                        "intervention": None,
-                        "source_evidence_refs": visible_refs,
-                        "held_fixed": held_fixed,
-                        "predicted_bdi_distribution_refs": [ids["tom1_factual"], ids["tom2_factual"]],
-                        "predicted_action_distribution": action_shape,
-                        "expected_observation": "The visible social episode continues without revealing hidden evaluator-only truth.",
-                        "uncertainty": 0.35,
-                    },
-                    {
-                        "branch_id": ids["counterfactual_branch"],
-                        "episode_id": episode_id,
-                        "branch_type": "counterfactual",
-                        "synthetic": True,
-                        "intervention": {
-                            "intervention_id": ids["intervention"],
-                            "episode_id": episode_id,
-                            "synthetic": True,
-                            "intervened_variable": "counterpart_policy.expected_actual_next_action",
-                            "intervened_value": "UNKNOWN",
-                            "held_fixed": held_fixed,
-                            "expected_observation": "The counterpart policy is replaced by an unspecified alternative.",
-                        },
-                        "source_evidence_refs": visible_refs,
-                        "held_fixed": held_fixed,
-                        "predicted_bdi_distribution_refs": [ids["tom1_counterfactual"]],
-                        "predicted_action_distribution": cf_action_shape,
-                        "expected_observation": "This branch is synthetic and excluded from literal history.",
-                        "uncertainty": 0.45,
-                    },
-                ],
-            },
-            "prediction_payload": {
-                "schema": "persona_dream.research.prospective_tom.tom_prediction_payload.v1",
-                "episode_id": episode_id,
-                "condition": condition,
-                "outcome_visible": False,
-                "belief_distribution_refs": [ids["tom1_factual"], ids["tom2_factual"], ids["tom1_counterfactual"]],
-                "branch_refs": [ids["factual_branch"], ids["counterfactual_branch"]],
+                "perspective_order": target["perspective_order"],
+                "subject": target["subject"],
+                "target": target["target"],
+                "mental_state_type": target["mental_state_type"],
+                "proposition": target["proposition"],
+                "distribution": row["distribution"],
                 "evidence_refs": visible_refs,
                 "prediction_horizon": "next_action",
-                "predicted_next_action_distribution": action_shape,
-                "abstain": False,
-                "condition_method": CONDITION_INSTRUCTIONS[condition],
-            },
-        },
-    }
-    return (
-        "You are producing machine-validated JSON for Persona Dream PCTOM-R. "
-        "Return one JSON object matching output_shape. Hidden outcome fields, unresolved refs, invalid probability sums, "
-        "or synthetic refs in literal-history evidence fields are rejected.\n\n"
-        + json.dumps(prompt_payload, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
+                "counterfactual": False,
+                "counterfactual_context": None,
+                "abstain": row["abstain"],
+                "support_status": "pending" if row["abstain"] else "supported",
+            }
+        )
+    target = targets[0]
+    distribution_bundle["distributions"].append(
+        {
+            "hypothesis_id": ids["tom1_counterfactual"],
+            "episode_id": episode_id,
+            "perspective_order": target["perspective_order"],
+            "subject": target["subject"],
+            "target": target["target"],
+            "mental_state_type": target["mental_state_type"],
+            "proposition": target["proposition"],
+            "distribution": counterfactual_belief_distribution,
+            "evidence_refs": [synthetic_ref],
+            "prediction_horizon": "next_action",
+            "counterfactual": True,
+            "counterfactual_context": {"intervention_id": ids["intervention"], "synthetic": True},
+            "abstain": abstain,
+            "support_status": "pending" if abstain else "supported",
+        }
     )
+
+    branch_bundle = {
+        "schema": "persona_dream.research.prospective_tom.counterfactual_branch_bundle.v1",
+        "episode_id": episode_id,
+        "condition": condition,
+        "outcome_visible": False,
+        "canonical_memory_write": False,
+        "branches": [
+            {
+                "branch_id": ids["factual_branch"],
+                "episode_id": episode_id,
+                "branch_type": "factual",
+                "synthetic": False,
+                "intervention": None,
+                "source_evidence_refs": visible_refs,
+                "held_fixed": held_fixed,
+                "predicted_bdi_distribution_refs": [ids["tom1_factual"], ids["tom2_factual"]],
+                "predicted_action_distribution": action_distribution,
+                "expected_observation": _string(patch.get("factual_expected_observation"), "factual_expected_observation"),
+                "uncertainty": uncertainty,
+            },
+            {
+                "branch_id": ids["counterfactual_branch"],
+                "episode_id": episode_id,
+                "branch_type": "counterfactual",
+                "synthetic": True,
+                "intervention": {
+                    "intervention_id": ids["intervention"],
+                    "episode_id": episode_id,
+                    "synthetic": True,
+                    "intervened_variable": "counterpart_policy.expected_actual_next_action",
+                    "intervened_value": "UNKNOWN",
+                    "held_fixed": held_fixed,
+                    "expected_observation": "The counterpart policy is replaced by an unspecified alternative.",
+                },
+                "source_evidence_refs": visible_refs,
+                "held_fixed": held_fixed,
+                "predicted_bdi_distribution_refs": [ids["tom1_counterfactual"]],
+                "predicted_action_distribution": counterfactual_action_distribution,
+                "expected_observation": _string(
+                    patch.get("counterfactual_expected_observation"),
+                    "counterfactual_expected_observation",
+                ),
+                "uncertainty": uncertainty,
+            },
+        ],
+    }
+    prediction_payload = {
+        "schema": "persona_dream.research.prospective_tom.tom_prediction_payload.v1",
+        "episode_id": episode_id,
+        "condition": condition,
+        "outcome_visible": False,
+        "belief_distribution_refs": [ids["tom1_factual"], ids["tom2_factual"], ids["tom1_counterfactual"]],
+        "branch_refs": [ids["factual_branch"], ids["counterfactual_branch"]],
+        "evidence_refs": visible_refs,
+        "prediction_horizon": "next_action",
+        "predicted_next_action_distribution": action_distribution,
+        "abstain": abstain,
+        "condition_method": CONDITION_INSTRUCTIONS[condition],
+    }
+    return distribution_bundle, branch_bundle, prediction_payload
 
 
 def _commitment_bundle(
@@ -868,12 +1000,22 @@ def run_live_comparison(
             condition_prompt_preflight_live_call_performed = (
                 condition_prompt_preflight_receipt.get("live_call_performed") is True
             )
+            condition_preflight_artifacts_constructed = False
+            if isinstance(parsed_condition_preflight, dict):
+                try:
+                    _bundles_from_patch(
+                        representative_episode,
+                        representative_condition,
+                        parsed_condition_preflight,
+                        gate0_records,
+                    )
+                    condition_preflight_artifacts_constructed = True
+                except Exception as exc:
+                    errors.append(f"condition_prompt_preflight_compact_patch_invalid:{exc}")
             condition_prompt_preflight_passed = (
                 condition_prompt_preflight_receipt.get("status") == "PASS"
                 and isinstance(parsed_condition_preflight, dict)
-                and isinstance(parsed_condition_preflight.get("tom_belief_distribution_bundle"), dict)
-                and isinstance(parsed_condition_preflight.get("counterfactual_branch_bundle"), dict)
-                and isinstance(parsed_condition_preflight.get("prediction_payload"), dict)
+                and condition_preflight_artifacts_constructed
             )
             if not condition_prompt_preflight_passed:
                 errors.append(f"condition_prompt_preflight_status:{condition_prompt_preflight_receipt.get('status')}")
@@ -881,12 +1023,8 @@ def run_live_comparison(
                     errors.append(f"condition_prompt_preflight_error:{condition_prompt_preflight_receipt.get('error')}")
                 if not isinstance(parsed_condition_preflight, dict):
                     errors.append("condition_prompt_preflight_parsed_json_not_object")
-                elif not isinstance(parsed_condition_preflight.get("tom_belief_distribution_bundle"), dict):
-                    errors.append("condition_prompt_preflight_missing_distribution_bundle")
-                elif not isinstance(parsed_condition_preflight.get("counterfactual_branch_bundle"), dict):
-                    errors.append("condition_prompt_preflight_missing_branch_bundle")
-                elif not isinstance(parsed_condition_preflight.get("prediction_payload"), dict):
-                    errors.append("condition_prompt_preflight_missing_prediction_payload")
+                elif not condition_preflight_artifacts_constructed:
+                    errors.append("condition_prompt_preflight_compact_patch_not_constructible")
         except Exception as exc:
             error_text = str(exc)
             errors.append(f"condition_prompt_preflight_failed:{error_text}")
@@ -999,26 +1137,22 @@ def run_live_comparison(
                     _write_json(tau_receipt_path, tau_receipt)
 
                 if parsed:
-                    distribution_bundle = parsed.get("tom_belief_distribution_bundle")
-                    branch_bundle = parsed.get("counterfactual_branch_bundle")
-                    prediction_payload = parsed.get("prediction_payload")
-                    visible_refs = _visible_refs(episode, gate0_records)
-                    if isinstance(distribution_bundle, dict):
-                        distribution_bundle = _overlay_gate0_attribution(distribution_bundle, visible_refs)
+                    distribution_bundle: dict[str, Any] | None = None
+                    branch_bundle: dict[str, Any] | None = None
+                    prediction_payload: dict[str, Any] | None = None
+                    try:
+                        distribution_bundle, branch_bundle, prediction_payload = _bundles_from_patch(
+                            episode,
+                            condition,
+                            parsed,
+                            gate0_records,
+                        )
                         _write_json(distribution_path, distribution_bundle)
-                    else:
-                        case_errors.append("parsed_missing_distribution_bundle")
-                    if isinstance(branch_bundle, dict):
-                        branch_bundle = _overlay_gate0_attribution(branch_bundle, visible_refs)
                         _write_json(branch_path, branch_bundle)
-                    else:
-                        case_errors.append("parsed_missing_branch_bundle")
-                    if not isinstance(prediction_payload, dict):
-                        case_errors.append("parsed_missing_prediction_payload")
-                    else:
-                        prediction_payload = _overlay_gate0_attribution(prediction_payload, visible_refs)
+                    except Exception as exc:
+                        case_errors.append(f"compact_patch_invalid:{exc}")
 
-                    if isinstance(distribution_bundle, dict) and isinstance(branch_bundle, dict) and isinstance(prediction_payload, dict):
+                    if distribution_bundle is not None and branch_bundle is not None and prediction_payload is not None:
                         commitment_bundle = _commitment_bundle(
                             episode["episode_id"],
                             condition,

@@ -62,6 +62,51 @@ def _episode() -> dict:
     }
 
 
+def _compact_patch(condition: str = "CD") -> dict:
+    return {
+        "schema": "persona_dream.research.prospective_tom.live_tau_condition_patch.v1",
+        "condition": condition,
+        "belief_distributions": [
+            {
+                "target_index": 0,
+                "distribution": [
+                    {"value": "TRUE", "probability": 0.60},
+                    {"value": "FALSE", "probability": 0.20},
+                    {"value": "UNKNOWN", "probability": 0.20},
+                ],
+                "abstain": False,
+            },
+            {
+                "target_index": 1,
+                "distribution": [
+                    {"value": "TRUE", "probability": 0.30},
+                    {"value": "FALSE", "probability": 0.50},
+                    {"value": "UNKNOWN", "probability": 0.20},
+                ],
+                "abstain": False,
+            },
+        ],
+        "counterfactual_belief_distribution": [
+            {"value": "TRUE", "probability": 0.20},
+            {"value": "FALSE", "probability": 0.55},
+            {"value": "UNKNOWN", "probability": 0.25},
+        ],
+        "predicted_next_action_distribution": [
+            {"value": "KAI_HINTS_CONSTRAINT", "probability": 0.70},
+            {"value": "KAI_SETS_BOUNDARY", "probability": 0.30},
+        ],
+        "counterfactual_next_action_distribution": [
+            {"value": "KAI_HINTS_CONSTRAINT", "probability": 0.20},
+            {"value": "KAI_SETS_BOUNDARY", "probability": 0.60},
+            {"value": "UNKNOWN", "probability": 0.20},
+        ],
+        "factual_expected_observation": "Kai probably continues by hinting at the constraint.",
+        "counterfactual_expected_observation": "In the synthetic branch, Kai may withhold the hint and set a boundary.",
+        "uncertainty": 0.35,
+        "abstain": False,
+    }
+
+
 def test_visible_refs_carry_gate0_accepted_source_attribution(tmp_path):
     digest = "sha256:" + "c" * 64
     case_root = tmp_path / "gate0"
@@ -129,10 +174,13 @@ def test_prompt_is_compact_and_preserves_gate0_attribution():
 
     prompt = runner._prompt(_episode(), "CD", records)
 
-    assert len(prompt) < 20_000
+    assert len(prompt) < 6_000
     assert '"accepted_source_id":"memory_003"' not in prompt
     assert '"accepted_source_ids_sha256":"' + digest + '"' not in prompt
     assert '"source_id":"episode-001:observable_history:0"' in prompt
+    assert "tom_belief_distribution_bundle" not in prompt
+    assert "counterfactual_branch_bundle" not in prompt
+    assert "prediction_payload" not in prompt
     assert "\n  " not in prompt
 
 
@@ -147,7 +195,109 @@ def test_generated_calibration_prompt_stays_below_live_boundary():
     }
 
     assert lengths
-    assert max(lengths.values()) < 18_000
+    assert max(lengths.values()) < 6_000
+
+
+def test_compact_patch_constructs_gate2_to_gate5_artifacts(tmp_path):
+    corpus_path = tmp_path / "corpus.json"
+    distribution_path = tmp_path / "distribution.json"
+    branch_path = tmp_path / "branches.json"
+    commitment_path = tmp_path / "commitment.json"
+    outcome_path = tmp_path / "outcome.json"
+    gate2_receipt_path = tmp_path / "gate2.json"
+    gate3_receipt_path = tmp_path / "gate3.json"
+    gate4_receipt_path = tmp_path / "gate4.json"
+    gate5_receipt_path = tmp_path / "gate5.json"
+    digest = "sha256:" + "a" * 64
+    records = [
+        {
+            "accepted_source_id": "memory_005",
+            "accepted_source_ids_sha256": digest,
+            "gate0_residue_source_id": "memory_005",
+            "gate0_query_receipt_index": 4,
+            "gate0_attribution_kind": "live_recall_residue_grounding",
+        }
+    ]
+    episode = _episode()
+    episode["actual_next_action"] = "KAI_HINTS_CONSTRAINT"
+    episode["ground_truth_tom_labels"][0]["value"] = "TRUE"
+    episode["ground_truth_tom_labels"][1]["value"] = "FALSE"
+    corpus = {"schema": "persona_dream.research.prospective_tom.social_episode_corpus.v1", "episode_count": 1, "episodes": [episode]}
+    _write_json(corpus_path, corpus)
+
+    distribution_bundle, branch_bundle, prediction_payload = runner._bundles_from_patch(
+        episode,
+        "CD",
+        _compact_patch("CD"),
+        records,
+    )
+    commitment_bundle = runner._commitment_bundle(
+        episode["episode_id"],
+        "CD",
+        prediction_payload,
+        {"status": "PASS", "live_call_performed": True, "prompt_sha256": "sha256:" + "b" * 64},
+        distribution_bundle,
+        branch_bundle,
+    )
+    outcome = runner._outcome_reveal(episode, "CD", distribution_bundle, branch_bundle, commitment_bundle)
+    _write_json(distribution_path, distribution_bundle)
+    _write_json(branch_path, branch_bundle)
+    _write_json(commitment_path, commitment_bundle)
+    _write_json(outcome_path, outcome)
+
+    gate2 = runner._load_module(runner.GATE2_SCRIPT, "gate2_compact_patch_test")
+    gate3 = runner._load_module(runner.GATE3_SCRIPT, "gate3_compact_patch_test")
+    gate4 = runner._load_module(runner.GATE4_SCRIPT, "gate4_compact_patch_test")
+    gate5 = runner._load_module(runner.GATE5_SCRIPT, "gate5_compact_patch_test")
+
+    gate2_receipt = gate2.build_receipt(corpus_path, distribution_path, gate2_receipt_path)
+    gate3_receipt = gate3.build_receipt(corpus_path, distribution_path, branch_path, gate3_receipt_path)
+    gate4_receipt = gate4.build_receipt(corpus_path, distribution_path, branch_path, commitment_path, gate4_receipt_path)
+    gate5_receipt = gate5.build_receipt(corpus_path, distribution_path, branch_path, commitment_path, outcome_path, gate5_receipt_path)
+
+    assert gate2_receipt["status"] == "PASS_TOM_BELIEF_DISTRIBUTIONS"
+    assert gate3_receipt["status"] == "PASS_COUNTERFACTUAL_BRANCHES"
+    assert gate4_receipt["status"] == "PASS_TOM_PREDICTION_COMMITMENTS"
+    assert gate5_receipt["status"] == "PASS_TOM_SCORING_RECEIPT"
+    assert distribution_bundle["distributions"][0]["evidence_refs"][0]["accepted_source_id"] == "memory_005"
+    assert branch_bundle["branches"][1]["synthetic"] is True
+    assert commitment_bundle["commitments"][0]["outcome_visible"] is False
+    assert outcome["outcome_visible"] is True
+
+
+def test_compact_patch_missing_allowed_action_fails_closed():
+    patch = _compact_patch("CD")
+    patch["predicted_next_action_distribution"] = [
+        {"value": "KAI_HINTS_CONSTRAINT", "probability": 1.0},
+    ]
+
+    try:
+        runner._bundles_from_patch(_episode(), "CD", patch, [])
+    except RuntimeError as exc:
+        assert "missing_values:KAI_SETS_BOUNDARY" in str(exc)
+    else:
+        raise AssertionError("compact patch with missing allowed action must fail closed")
+
+
+def test_compact_patch_tiny_probability_residual_is_repaired_deterministically():
+    patch = _compact_patch("CD")
+    patch["predicted_next_action_distribution"] = [
+        {"value": "KAI_HINTS_CONSTRAINT", "probability": 0.333333},
+        {"value": "KAI_SETS_BOUNDARY", "probability": 0.666666},
+    ]
+
+    _distribution_bundle, branch_bundle, prediction_payload = runner._bundles_from_patch(
+        _episode(),
+        "CD",
+        patch,
+        [],
+    )
+
+    branch_total = sum(row["probability"] for row in branch_bundle["branches"][0]["predicted_action_distribution"])
+    payload_total = sum(row["probability"] for row in prediction_payload["predicted_next_action_distribution"])
+    assert branch_total == 1.0
+    assert payload_total == 1.0
+    assert prediction_payload["predicted_next_action_distribution"][1]["probability"] == 0.666667
 
 
 def test_condition_prompt_preflight_blocks_case_fanout(tmp_path):
