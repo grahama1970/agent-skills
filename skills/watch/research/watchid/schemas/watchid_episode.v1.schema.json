@@ -1,0 +1,323 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agent-skills.local/watch/research/watchid/watchid_episode.v1.schema.json",
+  "title": "WatchID benchmark episode",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "episode_id",
+    "video_id",
+    "asset_uid",
+    "episode_type",
+    "split",
+    "time_range_seconds",
+    "identities",
+    "observations",
+    "interventions",
+    "expected_segments",
+    "artifacts",
+    "limitations"
+  ],
+  "properties": {
+    "schema": {
+      "const": "watchid.episode.v1"
+    },
+    "episode_id": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[a-zA-Z0-9._:-]+$"
+    },
+    "video_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "asset_uid": {
+      "type": "string",
+      "minLength": 1
+    },
+    "episode_type": {
+      "type": "string",
+      "enum": [
+        "synthetic_proof_asset",
+        "naturalistic_video",
+        "suggestion_only_canary",
+        "fault_injection"
+      ]
+    },
+    "split": {
+      "type": "string",
+      "enum": [
+        "train",
+        "validation",
+        "test",
+        "seed"
+      ]
+    },
+    "time_range_seconds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "type": "number",
+          "minimum": 0
+        },
+        "end": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "dataset": {
+          "type": "string"
+        },
+        "license": {
+          "type": "string"
+        },
+        "consent_basis": {
+          "type": "string"
+        },
+        "public_reference": {
+          "type": "string"
+        }
+      }
+    },
+    "identities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "identity_id",
+          "display_name"
+        ],
+        "properties": {
+          "identity_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "display_name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "actor_name": {
+            "type": "string"
+          },
+          "pseudonymous": {
+            "type": "boolean",
+            "default": true
+          }
+        }
+      }
+    },
+    "observations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "observation_id",
+          "track_id",
+          "time_seconds",
+          "bbox_xywh_norm",
+          "source"
+        ],
+        "properties": {
+          "observation_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "track_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "time_seconds": {
+            "type": "number",
+            "minimum": 0
+          },
+          "bbox_xywh_norm": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "detector_confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "detector",
+              "proof_fixture",
+              "manual_annotation"
+            ]
+          }
+        }
+      }
+    },
+    "interventions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "sequence",
+          "action",
+          "track_id",
+          "time_seconds",
+          "source"
+        ],
+        "properties": {
+          "sequence": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "accept",
+              "reject",
+              "reset",
+              "reject_box",
+              "reset_box"
+            ]
+          },
+          "track_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "box_key": {
+            "type": "string"
+          },
+          "time_seconds": {
+            "type": "number",
+            "minimum": 0
+          },
+          "identity_id": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "human",
+              "proof_fixture"
+            ]
+          },
+          "idempotency_key": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "expected_segments": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "track_id",
+          "start_seconds",
+          "end_seconds",
+          "identity_id"
+        ],
+        "properties": {
+          "track_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "start_seconds": {
+            "type": "number",
+            "minimum": 0
+          },
+          "end_seconds": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "identity_id": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "boundary_type": {
+            "type": "string",
+            "enum": [
+              "pre_accept_null",
+              "accepted_identity",
+              "stop_null",
+              "post_reassignment_identity"
+            ]
+          }
+        }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "sha256",
+          "artifact_type"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1,
+            "not": {
+              "pattern": "^/"
+            }
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "artifact_type": {
+            "type": "string",
+            "enum": [
+              "source_video",
+              "detector_log",
+              "receipt",
+              "projection",
+              "screenshot",
+              "manifest",
+              "metric_output"
+            ]
+          }
+        }
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  }
+}
