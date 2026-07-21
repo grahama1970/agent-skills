@@ -277,6 +277,8 @@ case "${{1:-}}" in
     echo 'Tab ID: 837352334' >&2
     echo 'Activated: false' >&2
     echo 'TabWasCreated: false' >&2
+    echo 'ConversationUrl: https://chatgpt.com/c/new-example' >&2
+    echo 'CurrentUrl: https://chatgpt.com/c/new-example' >&2
     echo 'ResponseSource: assistant-dom' >&2
     exit 0
     ;;
@@ -299,6 +301,9 @@ esac
     assert meta["status"] == "completed"
     assert meta["requested_tab_id"] == "837352334"
     assert meta["controlled_tab_id"] == "837352334"
+    assert meta["conversation_url"] == "https://chatgpt.com/c/new-example"
+    assert meta["current_url"] == "https://chatgpt.com/c/new-example"
+    assert meta["tab_url"] == "https://chatgpt.com/c/new-example"
     assert meta["raw_contains_sentinel"] is True
     assert meta["clean_contains_sentinel"] is False
     invocations = invocation_log.read_text(encoding="utf-8")

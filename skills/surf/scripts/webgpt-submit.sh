@@ -1178,6 +1178,7 @@ response_timed_out = None
 timeout_error = None
 response_source = None
 conversation_url = None
+current_url = None
 extract_fallback_used = False
 extract_fallback_reason = None
 extract_fallback_raw = None
@@ -1202,6 +1203,8 @@ for line in reversed(stderr_text.splitlines()):
         response_source = line.split(":", 1)[1].strip()
     elif line.startswith("ConversationUrl:") and conversation_url is None:
         conversation_url = line.split(":", 1)[1].strip()
+    elif line.startswith("CurrentUrl:") and current_url is None:
+        current_url = line.split(":", 1)[1].strip()
     elif line.startswith("Tab ID:") and tab_id is None:
         tab_id = line.split(":", 1)[1].strip()
     elif line.startswith("ExtractFallback:") and not extract_fallback_used:
@@ -1236,6 +1239,8 @@ pathlib.Path(meta).write_text(json.dumps({
     "roundtrip_preflight": roundtrip,
     "controlled_tab_id": tab_id,
     "conversation_url": conversation_url,
+    "current_url": current_url or conversation_url,
+    "tab_url": current_url or conversation_url,
     "response_source": response_source,
     "response_timed_out": response_timed_out,
     "timeout_error": timeout_error,
@@ -1280,6 +1285,7 @@ response_timed_out = None
 timeout_error = None
 response_source = None
 conversation_url = None
+current_url = None
 extract_fallback_used = False
 extract_fallback_reason = None
 extract_fallback_raw = None
@@ -1294,6 +1300,8 @@ for line in reversed(stderr_text.splitlines()):
         response_source = line.split(":", 1)[1].strip()
     elif line.startswith("ConversationUrl:") and conversation_url is None:
         conversation_url = line.split(":", 1)[1].strip()
+    elif line.startswith("CurrentUrl:") and current_url is None:
+        current_url = line.split(":", 1)[1].strip()
     elif line.startswith("Tab ID:") and tab_id is None:
         tab_id = line.split(":", 1)[1].strip()
     elif line.startswith("ExtractFallback:") and not extract_fallback_used:
@@ -1324,6 +1332,8 @@ pathlib.Path(meta).write_text(json.dumps({
     "roundtrip_preflight": roundtrip,
     "controlled_tab_id": tab_id,
     "conversation_url": conversation_url,
+    "current_url": current_url or conversation_url,
+    "tab_url": current_url or conversation_url,
     "response_source": response_source,
     "response_timed_out": response_timed_out,
     "timeout_error": timeout_error,
@@ -1514,6 +1524,7 @@ activated = None
 tab_was_created = None
 response_source = None
 conversation_url = None
+current_url = None
 page_text_contains_sentinel = None
 document_hidden_at_completion = None
 visibility_state_at_completion = None
@@ -1542,6 +1553,8 @@ for line in reversed(stderr_text.splitlines()):
         response_source = line.split(":", 1)[1].strip()
     elif line.startswith("ConversationUrl:") and conversation_url is None:
         conversation_url = line.split(":", 1)[1].strip()
+    elif line.startswith("CurrentUrl:") and current_url is None:
+        current_url = line.split(":", 1)[1].strip()
     elif line.startswith("PageTextContainsSentinel:") and page_text_contains_sentinel is None:
         page_text_contains_sentinel = line.split(":", 1)[1].strip() == "true"
     elif line.startswith("DocumentHiddenAtCompletion:") and document_hidden_at_completion is None:
@@ -1707,6 +1720,8 @@ pathlib.Path(meta).write_text(json.dumps({
     "extract_fallback_raw": extract_fallback_raw,
     "extract_fallback_meta": extract_fallback_meta,
     "conversation_url": conversation_url,
+    "current_url": current_url or conversation_url,
+    "tab_url": current_url or conversation_url,
     "page_text_contains_sentinel": page_text_contains_sentinel,
     "document_hidden_at_completion": document_hidden_at_completion,
     "visibility_state_at_completion": visibility_state_at_completion,

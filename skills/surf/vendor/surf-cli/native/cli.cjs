@@ -2585,6 +2585,10 @@ async function handleResponse(response) {
     if (data.noActivate !== undefined) {
       console.error(`NoActivate: ${data.noActivate}`);
     }
+    if (data.conversationUrl) {
+      console.error(`ConversationUrl: ${data.conversationUrl}`);
+      console.error(`CurrentUrl: ${data.conversationUrl}`);
+    }
     if (data.requestedModel) console.error(`RequestedModel: ${data.requestedModel}`);
     if (data.selectedModel) console.error(`SelectedModel: ${data.selectedModel}`);
     if (data.modelSelectionStatus) console.error(`ModelSelectionStatus: ${data.modelSelectionStatus}`);

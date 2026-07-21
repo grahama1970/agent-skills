@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import importlib.util
 import json
 import sys
@@ -130,4 +131,108 @@ def test_worker_prior_receipts_marks_missing_upstream_not_ready(tmp_path: Path) 
             "failure": f"missing prior receipt: {tmp_path / 'handler-webgpt' / 'node-receipt.json'}",
             "path": str(tmp_path / "handler-webgpt" / "node-receipt.json"),
         }
+    ]
+
+
+def test_worker_refreshes_webgpt_binding_after_response_proof_metadata(tmp_path: Path) -> None:
+    request_path = tmp_path / "request.json"
+    request_path.write_text(json.dumps({"request": "Ask WebGPT for a concise answer."}), encoding="utf-8")
+    artifact_dir = tmp_path / "node-artifacts" / "handler-webgpt"
+    artifact_dir.mkdir(parents=True)
+    bind_log = tmp_path / "bind-args.json"
+    browser_oracle_run = tmp_path / "browser-oracle-run.sh"
+    browser_oracle_run.write_text(
+        f"""#!/usr/bin/env bash
+set -euo pipefail
+case "${{1:-}}" in
+  resolve)
+    printf '%s\\n' '{{"project":"sparta-f36-review","tab_id":"837360696","conversation_url":"https://chatgpt.com/c/old","binding_path":"/tmp/sparta-f36-review.json"}}'
+    ;;
+  bind)
+    python3 - "$@" > {str(bind_log)!r} <<'PY'
+import json, sys
+print(json.dumps(sys.argv[1:]))
+PY
+    printf '%s\\n' '{{"name":"sparta-f36-review","backend":"webgpt","tab_id":"837360696","conversation_url":"https://chatgpt.com/c/new","state_path":"/tmp/sparta-f36-review.json"}}'
+    ;;
+  *)
+    echo "unexpected browser-oracle command: $*" >&2
+    exit 99
+    ;;
+esac
+""",
+        encoding="utf-8",
+    )
+    browser_oracle_run.chmod(0o755)
+    surf_run = tmp_path / "surf-run.sh"
+    surf_run.write_text(
+        """#!/usr/bin/env bash
+set -euo pipefail
+output=""
+raw_output=""
+meta_output=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --output) output="$2"; shift 2 ;;
+    --raw-output) raw_output="$2"; shift 2 ;;
+    --meta-output) meta_output="$2"; shift 2 ;;
+    *) shift ;;
+  esac
+done
+printf 'A concise response.\\n' > "$output"
+printf 'A concise response.\\n<<<WEBGPT_DONE:test>>>\\n' > "$raw_output"
+cat > "$meta_output" <<'JSON'
+{
+  "status": "completed",
+  "response_proof_status": "response_proven",
+  "requested_tab_id": "837360696",
+  "controlled_tab_id": "837360696",
+  "conversation_url": "https://chatgpt.com/c/new",
+  "current_url": "https://chatgpt.com/c/new",
+  "raw_contains_sentinel": true,
+  "clean_contains_sentinel": false
+}
+JSON
+""",
+        encoding="utf-8",
+    )
+    surf_run.chmod(0o755)
+    args = argparse.Namespace(
+        node_id="handler-webgpt",
+        handler="webgpt",
+        topology="parallel",
+        request_file=str(request_path),
+        browser_oracle_project="sparta-f36-review",
+        next_agent="human",
+        artifact_dir=str(artifact_dir),
+        surf_run=str(surf_run),
+        browser_oracle_run=str(browser_oracle_run),
+        scillm_base_url="http://127.0.0.1:4001",
+        scillm_api_key="",
+        prior_node=[],
+        timeout=10,
+        stable_polls=1,
+        no_activate=True,
+        evidence=[],
+    )
+
+    result = tau_roundtable_worker._run_handler(args, {}, artifact_dir)
+
+    assert result["exit_code"] == 0
+    receipt = json.loads((artifact_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    assert receipt["browser_oracle_binding_refresh"]["status"] == "updated"
+    assert receipt["browser_oracle_binding_refresh"]["previous_url"] == "https://chatgpt.com/c/old"
+    assert receipt["browser_oracle_binding_refresh"]["current_url"] == "https://chatgpt.com/c/new"
+    bind_args = json.loads(bind_log.read_text(encoding="utf-8"))
+    assert bind_args == [
+        "bind",
+        "sparta-f36-review",
+        "--backend",
+        "webgpt",
+        "--tab-id",
+        "837360696",
+        "--url",
+        "https://chatgpt.com/c/new",
+        "--manual",
+        "--json",
     ]

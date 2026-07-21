@@ -10,6 +10,7 @@ import subprocess
 import sys
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 from datetime import UTC, datetime
 from pathlib import Path
@@ -31,6 +32,7 @@ HANDLER_SUBMIT_COMMANDS = {
 ATTACH_FILE_HANDLERS = {"webgpt", "webkimi", "webgemini"}
 RECOVERY_PACKET_SCHEMA = "ask.browser_failure_recovery_packet.v1"
 WEBGPT_CONVERSATION_FULL_BLOCKER = "BLOCKED_WEBGPT_CONVERSATION_FULL"
+WEBGPT_BINDING_STALE_BLOCKER = "BLOCKED_WEBGPT_BINDING_STALE"
 
 
 def main() -> int:
@@ -92,6 +94,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
     response_text = ""
     resolve_payload: dict[str, Any] = {}
     submit_meta: dict[str, Any] = {}
+    binding_refresh: dict[str, Any] | None = None
     failure = ""
     recovery_packet: dict[str, Any] | None = None
     started = _now()
@@ -159,6 +162,14 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             if submit.returncode != 0:
                 raise RuntimeError(submit.stderr or submit.stdout or f"{HANDLER_SUBMIT_COMMANDS[handler]} failed")
             response_text = response_path.read_text(encoding="utf-8")
+            binding_refresh = _refresh_webgpt_binding_after_proven_submit(
+                args,
+                project=project,
+                tab_id=tab_id,
+                previous_url=url,
+                submit_meta=submit_meta,
+                commands=commands,
+            )
         else:
             response_text, submit_meta = _run_scillm_handler(
                 args,
@@ -213,7 +224,10 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             json.dumps(recovery_packet, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
-        if recovery_packet.get("failure_code") == WEBGPT_CONVERSATION_FULL_BLOCKER:
+        if recovery_packet.get("failure_code") in {
+            WEBGPT_CONVERSATION_FULL_BLOCKER,
+            WEBGPT_BINDING_STALE_BLOCKER,
+        }:
             status = "BLOCKED"
 
     verdict = _extract_verdict(response_text)
@@ -238,6 +252,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
         "recovery_packet_path": str(recovery_packet_path) if recovery_packet else None,
         "response_chars": len(response_text),
         "browser_oracle": resolve_payload,
+        "browser_oracle_binding_refresh": binding_refresh,
         "submit_meta": submit_meta,
         "commands": commands,
         "prior_nodes": list(args.prior_node),
@@ -313,6 +328,18 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
                 "next_command": recovery_packet["next_command"],
             }
         )
+    if binding_refresh and binding_refresh.get("status") == "updated":
+        evidence.append(
+            {
+                "kind": "browser_oracle_binding_refresh",
+                "node_id": args.node_id,
+                "handler": handler,
+                "project": binding_refresh.get("project"),
+                "previous_url": binding_refresh.get("previous_url"),
+                "current_url": binding_refresh.get("current_url"),
+                "binding_path": binding_refresh.get("binding_path"),
+            }
+        )
     handoff = _handoff(
         args,
         start,
@@ -322,6 +349,96 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
         evidence=evidence,
     )
     return {"exit_code": 0 if ok else 1, "handoff": handoff}
+
+
+def _refresh_webgpt_binding_after_proven_submit(
+    args: argparse.Namespace,
+    *,
+    project: str,
+    tab_id: str,
+    previous_url: str,
+    submit_meta: dict[str, Any],
+    commands: list[dict[str, Any]],
+) -> dict[str, Any]:
+    if str(args.handler) != "webgpt":
+        return {"status": "skipped", "reason": "handler_not_webgpt"}
+    current_url = _proven_live_webgpt_conversation_url(submit_meta)
+    if not current_url:
+        return {"status": "skipped", "reason": "no_proven_live_conversation_url"}
+    if _same_url(previous_url, current_url):
+        return {
+            "status": "not_needed",
+            "project": project,
+            "tab_id": tab_id,
+            "current_url": current_url,
+            "previous_url": previous_url or None,
+        }
+    bind_cmd = [
+        str(args.browser_oracle_run),
+        "bind",
+        project,
+        "--backend",
+        "webgpt",
+        "--tab-id",
+        tab_id,
+        "--url",
+        current_url,
+        "--manual",
+        "--json",
+    ]
+    bind = _run_cmd(bind_cmd, cwd=Path(args.browser_oracle_run).parent, timeout=60)
+    commands.append(bind.summary())
+    if bind.returncode != 0:
+        raise RuntimeError(
+            "BLOCKED_WEBGPT_BINDING_REFRESH_FAILED: "
+            + (bind.stderr.strip() or bind.stdout.strip() or "browser-oracle bind failed")
+        )
+    payload = _parse_json_object(bind.stdout)
+    return {
+        "status": "updated",
+        "project": project,
+        "tab_id": tab_id,
+        "previous_url": previous_url or None,
+        "current_url": current_url,
+        "binding_path": payload.get("state_path"),
+        "browser_oracle": payload,
+    }
+
+
+def _proven_live_webgpt_conversation_url(meta: dict[str, Any]) -> str:
+    if not isinstance(meta, dict):
+        return ""
+    status = str(meta.get("status") or "")
+    proof_status = str(meta.get("response_proof_status") or meta.get("proof_status") or "")
+    if status not in {"completed", "recovered_focus_changed"}:
+        return ""
+    if proof_status != "response_proven":
+        return ""
+    requested_tab = str(meta.get("requested_tab_id") or "")
+    controlled_tab = str(meta.get("controlled_tab_id") or "")
+    if requested_tab and controlled_tab and requested_tab != controlled_tab:
+        return ""
+    for key in ("current_url", "conversation_url", "tab_url", "final_url"):
+        url = str(meta.get(key) or "").strip()
+        if _is_chatgpt_conversation_url(url):
+            return url
+    return ""
+
+
+def _is_chatgpt_conversation_url(url: str) -> bool:
+    if not url:
+        return False
+    parsed = urllib.parse.urlparse(url)
+    if parsed.scheme != "https":
+        return False
+    if parsed.netloc not in {"chatgpt.com", "www.chatgpt.com"}:
+        return False
+    parts = [part for part in parsed.path.split("/") if part]
+    return "c" in parts and parts[-1] != "project"
+
+
+def _same_url(left: str, right: str) -> bool:
+    return left.strip().rstrip("/") == right.strip().rstrip("/")
 
 
 def _browser_failure_recovery_packet(
@@ -352,8 +469,11 @@ def _browser_failure_recovery_packet(
     bundle_paths = _local_readable_bundle_paths(prompt_text, request_payload)
     can_attach = handler in ATTACH_FILE_HANDLERS
     auto_retry_allowed = (
-        failure_code != WEBGPT_CONVERSATION_FULL_BLOCKER and bool(bundle_paths) and can_attach
+        failure_code not in {WEBGPT_CONVERSATION_FULL_BLOCKER, WEBGPT_BINDING_STALE_BLOCKER}
+        and bool(bundle_paths)
+        and can_attach
     )
+    stale_binding = _webgpt_stale_binding_details(submit_meta)
     next_command = _recovery_next_command(
         args,
         request_payload=request_payload,
@@ -361,6 +481,7 @@ def _browser_failure_recovery_packet(
         bundle_path=bundle_paths[0] if bundle_paths else "",
         can_attach=can_attach,
         browser_oracle=browser_oracle,
+        submit_meta=submit_meta,
         response_path=response_path,
         raw_path=raw_path,
         meta_path=meta_path,
@@ -382,6 +503,7 @@ def _browser_failure_recovery_packet(
             "prompt_chars": len(prompt_text),
             "submit_meta_status": submit_meta.get("status") or submit_meta.get("status_code"),
             "last_command": commands[-1] if commands else None,
+            "stale_binding": stale_binding,
         },
         "local_readable_bundle_paths": bundle_paths,
         "requires_local_readable_bundle": True,
@@ -429,6 +551,8 @@ def _classify_browser_failure(
         or WEBGPT_CONVERSATION_FULL_BLOCKER.lower() in haystack
     ):
         return WEBGPT_CONVERSATION_FULL_BLOCKER
+    if _webgpt_stale_binding_details(submit_meta):
+        return WEBGPT_BINDING_STALE_BLOCKER
     if _looks_repo_access_blocked(haystack):
         return "repo_access_blocked"
     if _looks_stale_raw_capture(haystack, submit_meta):
@@ -438,6 +562,32 @@ def _classify_browser_failure(
     if _looks_missing_sentinel(haystack, submit_meta):
         return "missing_sentinel"
     return "missing_sentinel"
+
+
+def _webgpt_stale_binding_details(meta: dict[str, Any]) -> dict[str, Any]:
+    if not isinstance(meta, dict):
+        return {}
+    identity = meta.get("tab_identity_preflight")
+    if not isinstance(identity, dict):
+        return {}
+    if str(meta.get("failure") or "") != "tab_identity_preflight_failed":
+        return {}
+    if str(identity.get("error") or "") != "expected_url_mismatch":
+        return {}
+    tab = identity.get("tab")
+    if not isinstance(tab, dict):
+        tab = {}
+    live_url = str(tab.get("url") or "").strip()
+    expected_url = str(identity.get("expected_url") or meta.get("requested_url") or "").strip()
+    tab_id = str(identity.get("expected_tab_id") or meta.get("requested_tab_id") or tab.get("id") or "").strip()
+    if not live_url:
+        return {}
+    return {
+        "expected_url": expected_url or None,
+        "live_url": live_url,
+        "tab_id": tab_id or None,
+        "tab_title": tab.get("title"),
+    }
 
 
 def _looks_repo_access_blocked(text: str) -> bool:
@@ -570,11 +720,30 @@ def _recovery_next_command(
     bundle_path: str,
     can_attach: bool,
     browser_oracle: dict[str, Any],
+    submit_meta: dict[str, Any],
     response_path: Path,
     raw_path: Path,
     meta_path: Path,
     prompt_path: Path,
 ) -> list[str]:
+    if failure_code == WEBGPT_BINDING_STALE_BLOCKER:
+        stale = _webgpt_stale_binding_details(submit_meta)
+        project = str(args.browser_oracle_project or browser_oracle.get("project") or args.handler)
+        tab_id = str(stale.get("tab_id") or browser_oracle.get("tab_id") or "")
+        live_url = str(stale.get("live_url") or "")
+        command = [
+            str(args.browser_oracle_run),
+            "bind",
+            project,
+            "--backend",
+            HANDLER_BACKENDS[str(args.handler)],
+        ]
+        if tab_id:
+            command.extend(["--tab-id", tab_id])
+        if live_url:
+            command.extend(["--url", live_url])
+        command.extend(["--manual", "--json"])
+        return command
     if failure_code == WEBGPT_CONVERSATION_FULL_BLOCKER:
         command = [
             str(args.surf_run),
@@ -673,6 +842,7 @@ def _tab_id_from_commands(args: argparse.Namespace) -> str:
 def _recovery_reason(failure_code: str) -> str:
     return {
         WEBGPT_CONVERSATION_FULL_BLOCKER: "The controlled ChatGPT conversation is at its maximum length and cannot accept the WebGPT round.",
+        WEBGPT_BINDING_STALE_BLOCKER: "The browser-oracle binding points at a stale ChatGPT URL; the controlled tab is open at a different live URL.",
         "repo_access_blocked": "The browser reviewer appears unable to read the referenced repository or local path.",
         "missing_sentinel": "The browser transport did not produce the expected completion sentinel.",
         "prompt_too_large_or_stalled": "The browser submit appears to have timed out, stalled, or exceeded prompt size limits.",
@@ -685,6 +855,8 @@ def _auto_retry_blocked_reason(
 ) -> str:
     if failure_code == WEBGPT_CONVERSATION_FULL_BLOCKER:
         return "conversation_full_requires_fresh_chatgpt_conversation"
+    if failure_code == WEBGPT_BINDING_STALE_BLOCKER:
+        return "browser_oracle_binding_stale_rebind_required"
     if not bundle_paths:
         return "missing_local_readable_bundle"
     if not can_attach:
@@ -698,6 +870,8 @@ def _fallback_instruction(failure_code: str, *, has_bundle: bool, can_attach: bo
             "Do not wait or retry in the same conversation. Rebind browser-oracle to a fresh ChatGPT "
             "conversation, then rerun the Tau DAG node."
         )
+    if failure_code == WEBGPT_BINDING_STALE_BLOCKER:
+        return "Run the next_command to rebind browser-oracle to the live ChatGPT tab URL, then rerun the Tau DAG node."
     if has_bundle and not can_attach:
         return (
             f"Do not auto-retry {handler}: the current Surf transport does not expose --attach-file for this handler. "

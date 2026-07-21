@@ -23,6 +23,7 @@ def _args(tmp_path: Path, *, handler: str = "webkimi") -> argparse.Namespace:
         topology="sequential",
         browser_oracle_project=handler,
         surf_run=str(tmp_path / "skills" / "surf" / "run.sh"),
+        browser_oracle_run=str(tmp_path / "skills" / "browser-oracle" / "run.sh"),
         timeout=300,
         stable_polls=2,
         no_activate=True,
@@ -124,6 +125,46 @@ def test_missing_sentinel_classification_uses_submit_metadata(tmp_path: Path) ->
     assert packet["auto_retry_blocked_reason"] == "missing_local_readable_bundle"
     assert "completion sentinel" in packet["reason"]
 
+
+def test_stale_webgpt_binding_classification_returns_rebind_command(tmp_path: Path) -> None:
+    packet = _packet(
+        tmp_path,
+        handler="webgpt",
+        failure="webgpt.submit tab identity preflight failed for tab 837360696.\nexpected_url_mismatch",
+        submit_meta={
+            "failure": "tab_identity_preflight_failed",
+            "requested_tab_id": "837360696",
+            "requested_url": "https://chatgpt.com/c/old",
+            "tab_identity_preflight": {
+                "error": "expected_url_mismatch",
+                "expected_tab_id": "837360696",
+                "expected_url": "https://chatgpt.com/c/old",
+                "tab": {
+                    "id": 837360696,
+                    "title": "Sparta Explorer",
+                    "url": "https://chatgpt.com/c/new",
+                },
+            },
+        },
+    )
+
+    assert packet["failure_code"] == "BLOCKED_WEBGPT_BINDING_STALE"
+    assert packet["auto_retry_allowed"] is False
+    assert packet["auto_retry_blocked_reason"] == "browser_oracle_binding_stale_rebind_required"
+    assert packet["evidence"]["stale_binding"]["live_url"] == "https://chatgpt.com/c/new"
+    assert packet["next_command"] == [
+        str(tmp_path / "skills" / "browser-oracle" / "run.sh"),
+        "bind",
+        "webgpt",
+        "--backend",
+        "webgpt",
+        "--tab-id",
+        "837360696",
+        "--url",
+        "https://chatgpt.com/c/new",
+        "--manual",
+        "--json",
+    ]
 
 def test_webgpt_conversation_full_blocks_same_conversation_retry(tmp_path: Path) -> None:
     packet = _packet(
