@@ -1,0 +1,1004 @@
+#!/usr/bin/env python3
+"""Tau worker for live $ask roundtable browser handler nodes."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import subprocess
+import sys
+import time
+import urllib.error
+import urllib.request
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
+
+
+HANDLER_BACKENDS = {
+    "webgpt": "webgpt",
+    "webclaude": "webclaude",
+    "webkimi": "webkimi",
+    "webgemini": "webgemini",
+}
+HANDLER_SUBMIT_COMMANDS = {
+    "webgpt": "webgpt.submit",
+    "webclaude": "claude.submit",
+    "webkimi": "kimi.submit",
+    "webgemini": "gemini.submit",
+}
+ATTACH_FILE_HANDLERS = {"webgpt", "webkimi", "webgemini"}
+RECOVERY_PACKET_SCHEMA = "ask.browser_failure_recovery_packet.v1"
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--node-id", required=True)
+    parser.add_argument("--handler", required=True)
+    parser.add_argument("--topology", required=True)
+    parser.add_argument("--request-file", required=True)
+    parser.add_argument("--browser-oracle-project", default="")
+    parser.add_argument("--next-agent", default="human")
+    parser.add_argument("--artifact-dir", required=True)
+    parser.add_argument("--surf-run", required=True)
+    parser.add_argument("--browser-oracle-run", required=True)
+    parser.add_argument("--scillm-base-url", default="http://127.0.0.1:4001")
+    parser.add_argument("--scillm-api-key", default="")
+    parser.add_argument("--prior-node", action="append", default=[])
+    parser.add_argument("--timeout", type=int, default=300)
+    parser.add_argument("--stable-polls", type=int, default=2)
+    parser.add_argument("--no-activate", action="store_true")
+    parser.add_argument("--evidence", action="append", default=[])
+    args = parser.parse_args()
+
+    start = _read_stdin_handoff()
+    artifact_dir = Path(args.artifact_dir)
+    artifact_dir.mkdir(parents=True, exist_ok=True)
+    if args.node_id == "join":
+        result = _run_join(args, start, artifact_dir)
+    else:
+        result = _run_handler(args, start, artifact_dir)
+    print(json.dumps(result["handoff"], sort_keys=True))
+    return int(result["exit_code"])
+
+
+def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: Path) -> dict[str, Any]:
+    request_payload = _read_json(Path(args.request_file))
+    request_text = str(request_payload.get("request") or "")
+    handler = args.handler
+    response_path = artifact_dir / "response.md"
+    raw_path = artifact_dir / "response.raw.md"
+    meta_path = artifact_dir / "response.meta.json"
+    prompt_path = artifact_dir / "prompt.md"
+    receipt_path = artifact_dir / "node-receipt.json"
+    recovery_packet_path = artifact_dir / "browser-recovery-packet.json"
+    commands: list[dict[str, Any]] = []
+    prior_receipts = _load_prior_receipts(artifact_dir.parent, args.prior_node)
+    prompt_path.write_text(
+        _handler_prompt(
+            request_text,
+            handler,
+            prior_receipts=prior_receipts,
+            requires_verdict=_requires_verdict(request_text, prior_receipts),
+        ),
+        encoding="utf-8",
+    )
+
+    status = "ERROR"
+    ok = False
+    provider_live = False
+    response_text = ""
+    resolve_payload: dict[str, Any] = {}
+    submit_meta: dict[str, Any] = {}
+    failure = ""
+    recovery_packet: dict[str, Any] | None = None
+    started = _now()
+    try:
+        prior_failures = [
+            f"{item.get('node_id')}: {item.get('failure') or item.get('status')}"
+            for item in prior_receipts
+            if item.get("ok") is not True
+        ]
+        if prior_failures:
+            raise RuntimeError("prior_handler_receipts_not_ready: " + "; ".join(prior_failures))
+        if handler in HANDLER_SUBMIT_COMMANDS:
+            project = args.browser_oracle_project or handler
+            resolve = _run_cmd(
+                [
+                    str(args.browser_oracle_run),
+                    "resolve",
+                    "--backend",
+                    HANDLER_BACKENDS[handler],
+                    "--project",
+                    project,
+                    "--json",
+                ],
+                cwd=Path(args.browser_oracle_run).parent,
+                timeout=60,
+            )
+            commands.append(resolve.summary())
+            if resolve.returncode != 0:
+                raise RuntimeError(resolve.stderr or resolve.stdout)
+            resolve_payload = _parse_json_object(resolve.stdout)
+            tab_id = str(resolve_payload.get("tab_id") or "")
+            url = str(resolve_payload.get("conversation_url") or "")
+            if not tab_id:
+                raise RuntimeError(f"browser-oracle project {project!r} resolved without tab_id")
+
+            submit_cmd = [
+                str(args.surf_run),
+                HANDLER_SUBMIT_COMMANDS[handler],
+                "--input",
+                str(prompt_path),
+                "--output",
+                str(response_path),
+                "--raw-output",
+                str(raw_path),
+                "--meta-output",
+                str(meta_path),
+                "--tab-id",
+                tab_id,
+                "--timeout",
+                str(args.timeout),
+                "--stable-polls",
+                str(args.stable_polls),
+            ]
+            if url:
+                if handler == "webgpt":
+                    submit_cmd.extend(["--expect-url", url])
+                else:
+                    submit_cmd.extend(["--url", url])
+            if args.no_activate:
+                submit_cmd.append("--no-activate")
+            submit = _run_cmd(submit_cmd, cwd=Path(args.surf_run).parent, timeout=max(args.timeout + 90, 180))
+            commands.append(submit.summary())
+            if meta_path.is_file():
+                submit_meta = _read_json(meta_path)
+            if submit.returncode != 0:
+                raise RuntimeError(submit.stderr or submit.stdout or f"{HANDLER_SUBMIT_COMMANDS[handler]} failed")
+            response_text = response_path.read_text(encoding="utf-8")
+        else:
+            response_text, submit_meta = _run_scillm_handler(
+                args,
+                handler=handler,
+                prompt_path=prompt_path,
+                response_path=response_path,
+                raw_path=raw_path,
+                meta_path=meta_path,
+            )
+            commands.append(
+                {
+                    "command": ["scillm.chat", handler],
+                    "returncode": 0,
+                    "duration_seconds": submit_meta.get("duration_seconds"),
+                    "stdout_excerpt": response_text[:1000],
+                    "stderr_excerpt": "",
+                }
+            )
+        ok = bool(response_text.strip())
+        if ok and _requires_verdict(request_text, prior_receipts):
+            ok = _has_verdict(response_text)
+            if not ok:
+                failure = "review_verdict_missing: expected PASS, FAIL, or NEEDS_ATTENTION"
+        status = "PASS" if ok else "ERROR"
+        provider_live = ok
+    except Exception as exc:
+        failure = str(exc)
+        status = "ERROR"
+        ok = False
+        provider_live = False
+        if response_path.is_file():
+            response_text = response_path.read_text(encoding="utf-8")
+    if handler in HANDLER_SUBMIT_COMMANDS and not ok:
+        raw_text = raw_path.read_text(encoding="utf-8", errors="replace") if raw_path.is_file() else ""
+        prompt_text = prompt_path.read_text(encoding="utf-8", errors="replace") if prompt_path.is_file() else ""
+        recovery_packet = _browser_failure_recovery_packet(
+            args,
+            request_payload=request_payload,
+            failure=failure,
+            response_text=response_text,
+            raw_text=raw_text,
+            prompt_text=prompt_text,
+            submit_meta=submit_meta,
+            commands=commands,
+            browser_oracle=resolve_payload,
+            response_path=response_path,
+            raw_path=raw_path,
+            meta_path=meta_path,
+            prompt_path=prompt_path,
+        )
+        recovery_packet_path.write_text(
+            json.dumps(recovery_packet, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+
+    receipt = {
+        "schema": "ask.tau_dag_handler_receipt.v1",
+        "created_at": _now(),
+        "started_at": started,
+        "node_id": args.node_id,
+        "handler": handler,
+        "topology": args.topology,
+        "status": status,
+        "ok": ok,
+        "mocked": False,
+        "live": bool(commands),
+        "provider_live": provider_live,
+        "response_path": str(response_path),
+        "raw_response_path": str(raw_path),
+        "meta_path": str(meta_path),
+        "prompt_path": str(prompt_path),
+        "recovery_packet_path": str(recovery_packet_path) if recovery_packet else None,
+        "response_chars": len(response_text),
+        "browser_oracle": resolve_payload,
+        "submit_meta": submit_meta,
+        "commands": commands,
+        "prior_nodes": list(args.prior_node),
+        "prior_handler_receipts": prior_receipts,
+        "requires_verdict": _requires_verdict(request_text, prior_receipts),
+        "verdict": _extract_verdict(response_text),
+        "failure": failure or None,
+        "failure_code": recovery_packet.get("failure_code") if recovery_packet else None,
+        "recovery_packet": recovery_packet,
+        "provider_receipt": {
+            "schema": "ask.tau_dag_provider_route_receipt.v1",
+            "status": status,
+            "ok": ok,
+            "mocked": False,
+            "live": bool(commands),
+            "provider_live": provider_live,
+            "route": "tau_roundtable_handler_adapter",
+            "execution_owner": "$tau",
+            "provider_transport": "$surf",
+            "handler": handler,
+            "transport": HANDLER_SUBMIT_COMMANDS[handler],
+        },
+    }
+    receipt_path.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    evidence = [
+        {
+            "kind": "handler_response_receipt",
+            "node_id": args.node_id,
+            "handler": handler,
+            "path": str(receipt_path),
+            "status": status,
+        },
+        {
+            "kind": "normalized_handler_receipt",
+            "node_id": args.node_id,
+            "handler": handler,
+            "response_path": str(response_path),
+            "response_chars": len(response_text),
+        },
+        {
+            "kind": "transport_metadata",
+            "node_id": args.node_id,
+            "handler": handler,
+            "meta_path": str(meta_path),
+        },
+    ]
+    if prior_receipts:
+        evidence.append(
+            {
+                "kind": "prior_handler_receipts",
+                "node_id": args.node_id,
+                "prior_nodes": [
+                    {
+                        "node_id": item.get("node_id"),
+                        "status": item.get("status"),
+                        "path": item.get("path"),
+                    }
+                    for item in prior_receipts
+                ],
+            }
+        )
+    if recovery_packet:
+        evidence.append(
+            {
+                "kind": "browser_failure_recovery_packet",
+                "node_id": args.node_id,
+                "handler": handler,
+                "path": str(recovery_packet_path),
+                "failure_code": recovery_packet["failure_code"],
+                "auto_retry_allowed": recovery_packet["auto_retry_allowed"],
+                "next_command": recovery_packet["next_command"],
+            }
+        )
+    handoff = _handoff(
+        args,
+        start,
+        status=status,
+        summary=f"{args.node_id} {status.lower()} via {HANDLER_SUBMIT_COMMANDS.get(handler, handler)}.",
+        artifacts=[receipt_path, prompt_path, response_path, raw_path, meta_path, recovery_packet_path],
+        evidence=evidence,
+    )
+    return {"exit_code": 0 if ok else 1, "handoff": handoff}
+
+
+def _browser_failure_recovery_packet(
+    args: argparse.Namespace,
+    *,
+    request_payload: dict[str, Any],
+    failure: str,
+    response_text: str,
+    raw_text: str,
+    prompt_text: str,
+    submit_meta: dict[str, Any],
+    commands: list[dict[str, Any]],
+    browser_oracle: dict[str, Any],
+    response_path: Path,
+    raw_path: Path,
+    meta_path: Path,
+    prompt_path: Path,
+) -> dict[str, Any]:
+    handler = str(args.handler)
+    failure_code = _classify_browser_failure(
+        failure=failure,
+        response_text=response_text,
+        raw_text=raw_text,
+        prompt_text=prompt_text,
+        submit_meta=submit_meta,
+        commands=commands,
+    )
+    bundle_paths = _local_readable_bundle_paths(prompt_text, request_payload)
+    can_attach = handler in ATTACH_FILE_HANDLERS
+    auto_retry_allowed = bool(bundle_paths) and can_attach
+    next_command = _recovery_next_command(
+        args,
+        request_payload=request_payload,
+        failure_code=failure_code,
+        bundle_path=bundle_paths[0] if bundle_paths else "",
+        can_attach=can_attach,
+        browser_oracle=browser_oracle,
+        response_path=response_path,
+        raw_path=raw_path,
+        meta_path=meta_path,
+        prompt_path=prompt_path,
+    )
+    return {
+        "schema": RECOVERY_PACKET_SCHEMA,
+        "status": "NEEDS_ATTENTION",
+        "mocked": False,
+        "live": bool(commands),
+        "failure_code": failure_code,
+        "handler": handler,
+        "node_id": args.node_id,
+        "reason": _recovery_reason(failure_code),
+        "evidence": {
+            "failure_excerpt": failure.strip()[:2000],
+            "response_chars": len(response_text),
+            "raw_response_chars": len(raw_text),
+            "prompt_chars": len(prompt_text),
+            "submit_meta_status": submit_meta.get("status") or submit_meta.get("status_code"),
+            "last_command": commands[-1] if commands else None,
+        },
+        "local_readable_bundle_paths": bundle_paths,
+        "requires_local_readable_bundle": True,
+        "attach_file_supported": can_attach,
+        "auto_retry_allowed": auto_retry_allowed,
+        "auto_retry_blocked_reason": None
+        if auto_retry_allowed
+        else _auto_retry_blocked_reason(bundle_paths=bundle_paths, can_attach=can_attach),
+        "next_command": next_command,
+        "fallback_instruction": _fallback_instruction(
+            failure_code,
+            has_bundle=bool(bundle_paths),
+            can_attach=can_attach,
+            handler=handler,
+        ),
+    }
+
+
+def _classify_browser_failure(
+    *,
+    failure: str,
+    response_text: str,
+    raw_text: str,
+    prompt_text: str,
+    submit_meta: dict[str, Any],
+    commands: list[dict[str, Any]],
+) -> str:
+    haystack = "\n".join(
+        [
+            failure,
+            response_text,
+            raw_text,
+            prompt_text,
+            json.dumps(submit_meta, sort_keys=True, default=str),
+            json.dumps(commands[-1] if commands else {}, sort_keys=True, default=str),
+        ]
+    ).lower()
+    if _looks_repo_access_blocked(haystack):
+        return "repo_access_blocked"
+    if _looks_stale_raw_capture(haystack, submit_meta):
+        return "stale_raw_capture"
+    if _looks_prompt_too_large_or_stalled(haystack):
+        return "prompt_too_large_or_stalled"
+    if _looks_missing_sentinel(haystack, submit_meta):
+        return "missing_sentinel"
+    return "missing_sentinel"
+
+
+def _looks_repo_access_blocked(text: str) -> bool:
+    markers = (
+        "can't access the repository",
+        "cannot access the repository",
+        "can't access this repository",
+        "cannot access this repository",
+        "private repository",
+        "private github repo",
+        "github app access",
+        "grant access to repos",
+        "repository access",
+        "repo access",
+        "unauthorized",
+        "403",
+        "404 not found",
+        "prompt references unreadable local filesystem paths",
+        "unreadable local filesystem paths",
+        "local path",
+        "no such file or directory",
+    )
+    return any(marker in text for marker in markers)
+
+
+def _looks_stale_raw_capture(text: str, meta: dict[str, Any]) -> bool:
+    if meta.get("stale_raw_capture") is True or meta.get("stale_capture") is True:
+        return True
+    markers = (
+        "stale raw",
+        "stale capture",
+        "stale cdp",
+        "old sentinel",
+        "previous response",
+        "prior response",
+        "wrong assistant turn",
+        "sentinel from an earlier",
+        "current sentinel",
+    )
+    return any(marker in text for marker in markers)
+
+
+def _looks_prompt_too_large_or_stalled(text: str) -> bool:
+    markers = (
+        "timed out",
+        "timeout",
+        "stalled",
+        "hang",
+        "context length",
+        "context_length",
+        "maximum context",
+        "too large",
+        "too long",
+        "message is too long",
+        "input is too long",
+        "prompt too large",
+        "payload too large",
+        "request entity too large",
+        "413",
+    )
+    return any(marker in text for marker in markers)
+
+
+def _looks_missing_sentinel(text: str, meta: dict[str, Any]) -> bool:
+    if meta.get("raw_contains_sentinel") is False or meta.get("clean_contains_sentinel") is False:
+        return True
+    markers = (
+        "missing sentinel",
+        "sentinel missing",
+        "sentinel_not_found",
+        "did not emit sentinel",
+        "completion marker",
+        "expected sentinel",
+    )
+    return any(marker in text for marker in markers)
+
+
+def _local_readable_bundle_paths(prompt_text: str, request_payload: dict[str, Any]) -> list[str]:
+    candidates: list[str] = []
+    for value in [prompt_text, str(request_payload.get("request") or "")]:
+        candidates.extend(_extract_path_candidates(value))
+    bundle_paths: list[str] = []
+    for candidate in candidates:
+        path = Path(candidate).expanduser()
+        if not path.is_absolute():
+            continue
+        if not path.is_file():
+            continue
+        if not _is_bundle_like(path):
+            continue
+        try:
+            with path.open("rb") as handle:
+                handle.read(1)
+        except OSError:
+            continue
+        resolved = str(path.resolve())
+        if resolved not in bundle_paths:
+            bundle_paths.append(resolved)
+    return bundle_paths
+
+
+def _extract_path_candidates(text: str) -> list[str]:
+    quoted = re.findall(r"['\"](/[^'\"\s]+)['\"]", text)
+    bare = re.findall(r"(?<![\w:])(/[^\s`'\"<>]+)", text)
+    return [item.rstrip(").,;:]") for item in [*quoted, *bare]]
+
+
+def _is_bundle_like(path: Path) -> bool:
+    name = path.name.lower()
+    suffixes = "".join(path.suffixes).lower()
+    if any(token in name for token in ("bundle", "review", "target", "evidence", "handoff")):
+        return True
+    return suffixes in {
+        ".md",
+        ".txt",
+        ".json",
+        ".jsonl",
+        ".zip",
+        ".tar",
+        ".tar.gz",
+        ".tgz",
+    }
+
+
+def _recovery_next_command(
+    args: argparse.Namespace,
+    *,
+    request_payload: dict[str, Any],
+    failure_code: str,
+    bundle_path: str,
+    can_attach: bool,
+    browser_oracle: dict[str, Any],
+    response_path: Path,
+    raw_path: Path,
+    meta_path: Path,
+    prompt_path: Path,
+) -> list[str]:
+    if bundle_path and can_attach:
+        retry_prompt = prompt_path.with_name("retry-with-local-bundle.md")
+        retry_prompt.write_text(
+            "\n".join(
+                [
+                    "Use the attached local bundle as the source of truth.",
+                    "Do not rely on bare private GitHub URLs or local paths not present in the attachment.",
+                    "Answer the original request using the attached bundle and state any remaining access gaps.",
+                    "",
+                    "Original request:",
+                    str(request_payload.get("request") or ""),
+                    "",
+                    f"Browser failure class that triggered this retry packet: {failure_code}",
+                ]
+            ),
+            encoding="utf-8",
+        )
+        command = [
+            str(args.surf_run),
+            HANDLER_SUBMIT_COMMANDS[str(args.handler)],
+            "--input",
+            str(retry_prompt),
+            "--output",
+            str(response_path.with_name("response.retry.md")),
+            "--raw-output",
+            str(raw_path.with_name("response.retry.raw.md")),
+            "--meta-output",
+            str(meta_path.with_name("response.retry.meta.json")),
+            "--timeout",
+            str(args.timeout),
+            "--stable-polls",
+            str(args.stable_polls),
+            "--attach-file",
+            bundle_path,
+        ]
+        tab_id = ""
+        if isinstance(browser_oracle, dict):
+            tab_id = str(browser_oracle.get("tab_id") or browser_oracle.get("controlled_tab_id") or "")
+        if not tab_id:
+            tab_id = _tab_id_from_commands(args)
+        if tab_id:
+            command.extend(["--tab-id", tab_id])
+        if args.no_activate:
+            command.append("--no-activate")
+        return command
+    ask_root = Path(args.surf_run).resolve().parent.parent / "ask"
+    command = [
+        str(ask_root / "run.sh"),
+        "tau-dag",
+        str(request_payload.get("request") or ""),
+        "--repo",
+        str(request_payload.get("repo") or "local/ask"),
+        "--target",
+        str(request_payload.get("target") or args.node_id),
+        "--handler",
+        str(args.handler),
+        "--topology",
+        str(args.topology),
+        "--execute",
+        "--json",
+    ]
+    if str(args.browser_oracle_project or ""):
+        command.extend(["--handler-project", f"{args.handler}={args.browser_oracle_project}"])
+    return command
+
+
+def _tab_id_from_commands(args: argparse.Namespace) -> str:
+    # The primary receipt keeps browser-oracle resolution separately; tests and
+    # recovery packets still need a deterministic fallback when only args exist.
+    return ""
+
+
+def _recovery_reason(failure_code: str) -> str:
+    return {
+        "repo_access_blocked": "The browser reviewer appears unable to read the referenced repository or local path.",
+        "missing_sentinel": "The browser transport did not produce the expected completion sentinel.",
+        "prompt_too_large_or_stalled": "The browser submit appears to have timed out, stalled, or exceeded prompt size limits.",
+        "stale_raw_capture": "The raw browser capture appears to be from the wrong or stale assistant turn.",
+    }[failure_code]
+
+
+def _auto_retry_blocked_reason(*, bundle_paths: list[str], can_attach: bool) -> str:
+    if not bundle_paths:
+        return "missing_local_readable_bundle"
+    if not can_attach:
+        return "handler_transport_does_not_support_attach_file"
+    return "unknown"
+
+
+def _fallback_instruction(failure_code: str, *, has_bundle: bool, can_attach: bool, handler: str) -> str:
+    if has_bundle and not can_attach:
+        return (
+            f"Do not auto-retry {handler}: the current Surf transport does not expose --attach-file for this handler. "
+            "Use a handler with attachment support or add attachment support before retrying."
+        )
+    if has_bundle and can_attach:
+        return "Run the next_command; it resubmits a concise prompt with the readable local bundle attached."
+    if failure_code == "repo_access_blocked":
+        return (
+            "Create a local readable review bundle, or grant/add the repository through the browser provider's GitHub integration, "
+            "then rerun the next_command with the bundle path in the request."
+        )
+    if failure_code == "prompt_too_large_or_stalled":
+        return "Write the target material to a local readable bundle and rerun with that bundle instead of inlining a large prompt."
+    if failure_code == "stale_raw_capture":
+        return "Refresh or rebind the browser-oracle tab, then rerun the next_command; do not reuse the stale raw capture."
+    return "Rerun only after the browser tab is responsive or a local readable bundle is available."
+
+
+def _run_join(args: argparse.Namespace, start: dict[str, Any], artifact_dir: Path) -> dict[str, Any]:
+    receipt_path = artifact_dir / "node-receipt.json"
+    summary_path = artifact_dir / "roundtable-summary.md"
+    node_artifacts_root = artifact_dir.parent
+    handler_receipts = []
+    failures = []
+    for path in sorted(node_artifacts_root.glob("handler-*/node-receipt.json")):
+        receipt = _read_json(path)
+        if receipt.get("schema") != "ask.tau_dag_handler_receipt.v1":
+            continue
+        handler_receipts.append({"path": str(path), **receipt})
+        if receipt.get("ok") is not True:
+            failures.append(f"{receipt.get('node_id')}: {receipt.get('failure') or receipt.get('status')}")
+    lines = [
+        "# Tau Roundtable Join",
+        "",
+        f"- topology: `{args.topology}`",
+        f"- handlers: `{len(handler_receipts)}`",
+        "",
+    ]
+    for receipt in handler_receipts:
+        lines.extend(
+            [
+                f"## {receipt.get('handler')}",
+                "",
+                f"- status: `{receipt.get('status')}`",
+                f"- response: `{receipt.get('response_path')}`",
+                "",
+            ]
+        )
+        response_path = Path(str(receipt.get("response_path") or ""))
+        if response_path.is_file():
+            text = response_path.read_text(encoding="utf-8").strip()
+            lines.append(text[:2000])
+            lines.append("")
+    summary_path.write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
+    ok = bool(handler_receipts) and not failures
+    status = "PASS" if ok else "BLOCKED"
+    receipt = {
+        "schema": "ask.tau_dag_roundtable_join_receipt.v1",
+        "created_at": _now(),
+        "node_id": args.node_id,
+        "handler": args.handler,
+        "topology": args.topology,
+        "status": status,
+        "ok": ok,
+        "mocked": False,
+        "live": any(item.get("live") is True for item in handler_receipts),
+        "provider_live": ok and all(item.get("provider_live") is True for item in handler_receipts),
+        "handler_response_index": handler_receipts,
+        "summary_path": str(summary_path),
+        "unresolved_gaps": failures,
+        "provider_receipt": {
+            "schema": "ask.tau_dag_provider_route_receipt.v1",
+            "status": status,
+            "ok": ok,
+            "mocked": False,
+            "live": any(item.get("live") is True for item in handler_receipts),
+            "provider_live": ok and all(item.get("provider_live") is True for item in handler_receipts),
+            "route": "tau_roundtable_join_adapter",
+            "execution_owner": "$tau",
+            "provider_transport": "$surf",
+        },
+    }
+    receipt_path.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    handoff = _handoff(
+        args,
+        start,
+        status=status,
+        summary=f"Roundtable join {status.lower()} over {len(handler_receipts)} handler receipts.",
+        artifacts=[receipt_path, summary_path],
+        evidence=[
+            {"kind": "roundtable_join_receipt", "path": str(receipt_path), "status": status},
+            {"kind": "handler_response_index", "count": len(handler_receipts), "failures": failures},
+            {"kind": "unresolved_gaps", "items": failures},
+        ],
+    )
+    return {"exit_code": 0 if ok else 1, "handoff": handoff}
+
+
+def _handler_prompt(
+    request_text: str,
+    handler: str,
+    *,
+    prior_receipts: list[dict[str, Any]] | None = None,
+    requires_verdict: bool = False,
+) -> str:
+    prior_receipts = prior_receipts or []
+    lines = [
+        "You are one participant in a Tau-managed roundtable.",
+        f"Handler: {handler}",
+        "",
+        "Request:",
+        request_text,
+        "",
+    ]
+    if prior_receipts:
+        lines.extend(["Prior handler receipts to use as input:", ""])
+        for receipt in prior_receipts:
+            lines.extend(
+                [
+                    # No local filesystem paths in a browser-bound prompt: surf's
+                    # prompt preflight fails closed on them (the browser model
+                    # cannot read local files). The path stays in the node receipt.
+                    f"### {receipt.get('node_id')} / {receipt.get('handler')}",
+                    f"- status: {receipt.get('status')}",
+                    "",
+                    str(receipt.get("response_excerpt") or "").strip(),
+                    "",
+                ]
+            )
+    if requires_verdict:
+        lines.extend(
+            [
+                "Return a review verdict using exactly one of:",
+                "VERDICT: PASS",
+                "VERDICT: FAIL",
+                "VERDICT: NEEDS_ATTENTION",
+                "",
+            ]
+        )
+    lines.extend(
+        [
+            "Return a concise position with these Markdown headings:",
+            "## Position",
+            "## Evidence",
+            "## Uncertainties",
+            "## Blockers",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def _handoff(
+    args: argparse.Namespace,
+    start: dict[str, Any],
+    *,
+    status: str,
+    summary: str,
+    artifacts: list[Path],
+    evidence: list[dict[str, Any]],
+) -> dict[str, Any]:
+    return {
+        "schema": "tau.agent_handoff.v1",
+        "github": start.get("github", {"repo": "unknown", "target": "unknown"}),
+        "goal": start.get("goal", {}),
+        "previous_subagent": args.node_id,
+        "context": {
+            "summary": summary,
+            "artifacts": [str(path) for path in artifacts if path.exists()],
+        },
+        "result": {
+            "status": status,
+            "summary": summary,
+            "evidence": evidence,
+        },
+        "rationale": "The node emitted receipt-backed Tau roundtable evidence.",
+        "next_agent": {
+            "name": args.next_agent,
+            "executor": "human" if args.next_agent == "human" else "local",
+            "reason": "Return node evidence to the Tau scheduler.",
+        },
+        "required_evidence": list(args.evidence),
+        "stop_condition": "Stop after emitting a single tau.agent_handoff.v1 response.",
+    }
+
+
+class CmdResult:
+    def __init__(self, command: list[str], returncode: int, stdout: str, stderr: str, duration: float) -> None:
+        self.command = command
+        self.returncode = returncode
+        self.stdout = stdout
+        self.stderr = stderr
+        self.duration = duration
+
+    def summary(self) -> dict[str, Any]:
+        return {
+            "command": self.command,
+            "returncode": self.returncode,
+            "duration_seconds": round(self.duration, 3),
+            "stdout_excerpt": self.stdout.strip()[:1000],
+            "stderr_excerpt": self.stderr.strip()[:1000],
+        }
+
+
+def _run_cmd(command: list[str], *, cwd: Path, timeout: int) -> CmdResult:
+    started = time.time()
+    proc = subprocess.run(command, cwd=cwd, capture_output=True, text=True, timeout=timeout)
+    return CmdResult(command, proc.returncode, proc.stdout, proc.stderr, time.time() - started)
+
+
+def _run_scillm_handler(
+    args: argparse.Namespace,
+    *,
+    handler: str,
+    prompt_path: Path,
+    response_path: Path,
+    raw_path: Path,
+    meta_path: Path,
+) -> tuple[str, dict[str, Any]]:
+    prompt = prompt_path.read_text(encoding="utf-8")
+    base_url = str(args.scillm_base_url).rstrip("/")
+    payload = {
+        "model": handler,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0,
+    }
+    body = json.dumps(payload).encode("utf-8")
+    request = urllib.request.Request(
+        f"{base_url}/v1/chat/completions",
+        data=body,
+        headers={
+            "Authorization": f"Bearer {args.scillm_api_key}",
+            "Content-Type": "application/json",
+            "X-Caller-Skill": "ask-tau-roundtable",
+        },
+        method="POST",
+    )
+    started = time.time()
+    try:
+        with urllib.request.urlopen(request, timeout=args.timeout) as response:
+            raw = response.read().decode("utf-8", errors="replace")
+            status_code = response.status
+    except urllib.error.HTTPError as exc:
+        raw = exc.read().decode("utf-8", errors="replace")
+        raise RuntimeError(f"scillm.chat failed HTTP {exc.code}: {raw[:1000]}") from exc
+    except urllib.error.URLError as exc:
+        raise RuntimeError(f"scillm.chat failed: {exc}") from exc
+    raw_path.write_text(raw, encoding="utf-8")
+    payload = _parse_json_object(raw)
+    choices = payload.get("choices") if isinstance(payload.get("choices"), list) else []
+    message = choices[0].get("message") if choices and isinstance(choices[0], dict) else {}
+    content = message.get("content") if isinstance(message, dict) else ""
+    if isinstance(content, list):
+        text = "\n".join(str(item.get("text") or item) for item in content)
+    else:
+        text = str(content or "")
+    response_path.write_text(text, encoding="utf-8")
+    meta = {
+        "schema": "ask.tau_dag_scillm_submit_meta.v1",
+        "status_code": status_code,
+        "model": handler,
+        "duration_seconds": round(time.time() - started, 3),
+        "usage": payload.get("usage"),
+    }
+    meta_path.write_text(json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return text, meta
+
+
+def _load_prior_receipts(node_artifacts_root: Path, prior_nodes: list[str]) -> list[dict[str, Any]]:
+    receipts: list[dict[str, Any]] = []
+    for node_id in prior_nodes:
+        path = node_artifacts_root / node_id / "node-receipt.json"
+        if not path.is_file():
+            receipts.append(
+                {
+                    "node_id": node_id,
+                    "status": "MISSING",
+                    "ok": False,
+                    "failure": f"missing prior receipt: {path}",
+                    "path": str(path),
+                }
+            )
+            continue
+        receipt = _read_json(path)
+        response_path = Path(str(receipt.get("response_path") or ""))
+        response_excerpt = ""
+        if response_path.is_file():
+            response_excerpt = response_path.read_text(encoding="utf-8").strip()[:4000]
+        receipts.append({"path": str(path), "response_excerpt": response_excerpt, **receipt})
+    return receipts
+
+
+def _requires_verdict(request_text: str, prior_receipts: list[dict[str, Any]]) -> bool:
+    if not prior_receipts:
+        return False
+    lower = request_text.lower()
+    return any(
+        marker in lower
+        for marker in (
+            "pass/fail",
+            "pass or fail",
+            "pass fail",
+            "pass-fail",
+            "review for pass",
+            "review it for pass",
+            "review the work for pass",
+        )
+    )
+
+
+def _extract_verdict(text: str) -> str | None:
+    upper = text.upper()
+    for verdict in ("NEEDS_ATTENTION", "PASS", "FAIL"):
+        if f"VERDICT: {verdict}" in upper or f"VERDICT {verdict}" in upper:
+            return verdict
+    return None
+
+
+def _has_verdict(text: str) -> bool:
+    return _extract_verdict(text) is not None
+
+
+def _read_stdin_handoff() -> dict[str, Any]:
+    text = sys.stdin.read()
+    if not text.strip():
+        return {}
+    try:
+        payload = json.loads(text)
+    except json.JSONDecodeError:
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def _read_json(path: Path) -> dict[str, Any]:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(payload, dict):
+        raise RuntimeError(f"JSON root is not an object: {path}")
+    return payload
+
+
+def _parse_json_object(text: str) -> dict[str, Any]:
+    stripped = text.strip()
+    start = stripped.find("{")
+    if start > 0:
+        stripped = stripped[start:]
+    payload = json.loads(stripped)
+    if not isinstance(payload, dict):
+        raise RuntimeError("JSON root is not an object")
+    return payload
+
+
+def _now() -> str:
+    return datetime.now(UTC).isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

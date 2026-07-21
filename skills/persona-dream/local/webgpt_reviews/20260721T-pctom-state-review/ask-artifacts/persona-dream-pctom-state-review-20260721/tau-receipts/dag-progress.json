@@ -1,0 +1,90 @@
+{
+  "active_goal_hash": "sha256:3ba35eabd71e39b521b2ab4fc6e1031bbaf00fab08b5437470db39d985a7ebec",
+  "active_subagents": [],
+  "completed_subagents": [],
+  "dag_id": "ask-tau-webgpt-review-request-persona-dr-3ddc3b7e4a9c",
+  "entry_node": "handler-webgpt",
+  "event_count": 3,
+  "events": [
+    {
+      "agent": "handler-webgpt",
+      "attempt": 1,
+      "event": "node_started",
+      "node_id": "handler-webgpt",
+      "ts": "2026-07-21T16:35:30Z"
+    },
+    {
+      "agent": "handler-webgpt",
+      "attempt": 1,
+      "event": "node_completed",
+      "node_id": "handler-webgpt",
+      "ok": false,
+      "ts": "2026-07-21T16:35:31Z"
+    },
+    {
+      "agent": "handler-webgpt",
+      "attempt": 1,
+      "errors": [
+        "command exited 1"
+      ],
+      "event": "node_attempt_failed",
+      "node_id": "handler-webgpt",
+      "retrying": false,
+      "stop_reason": "command_failed",
+      "ts": "2026-07-21T16:35:31Z"
+    }
+  ],
+  "last_event": {
+    "agent": "handler-webgpt",
+    "attempt": 1,
+    "errors": [
+      "command exited 1"
+    ],
+    "event": "node_attempt_failed",
+    "node_id": "handler-webgpt",
+    "retrying": false,
+    "stop_reason": "command_failed",
+    "ts": "2026-07-21T16:35:31Z"
+  },
+  "live": true,
+  "mocked": false,
+  "node_count": 2,
+  "node_progress": [
+    {
+      "agent": "handler-webgpt",
+      "attempt": 1,
+      "last_event_at": "2026-07-21T16:35:31Z",
+      "node_id": "handler-webgpt",
+      "status": "BLOCKED"
+    },
+    {
+      "agent": "join",
+      "attempt": 0,
+      "last_event_at": null,
+      "node_id": "join",
+      "status": "PENDING"
+    }
+  ],
+  "ok": false,
+  "proof_scope": {
+    "does_not_prove": [
+      "The active subprocess will finish successfully.",
+      "Provider/model semantic quality.",
+      "Final DAG acceptance before dag-receipt.json is written."
+    ],
+    "proves": [
+      "Tau has written a durable local progress artifact for this DAG run.",
+      "Operators can inspect active and completed subagents before the final DAG receipt exists."
+    ]
+  },
+  "provider_live": false,
+  "run_dir": "/tmp/persona-dream-pctom-next-main-T7LEYn/skills/persona-dream/local/webgpt_reviews/20260721T-pctom-state-review/ask-artifacts/persona-dream-pctom-state-review-20260721/tau-receipts",
+  "scheduler": "bounded-ready-queue",
+  "schema": "tau.dag_progress.v1",
+  "status": "BLOCKED",
+  "terminal_nodes": [
+    "human"
+  ],
+  "updated_at": "2026-07-21T16:35:31Z",
+  "verdict": "COMMAND_FAILED"
+}

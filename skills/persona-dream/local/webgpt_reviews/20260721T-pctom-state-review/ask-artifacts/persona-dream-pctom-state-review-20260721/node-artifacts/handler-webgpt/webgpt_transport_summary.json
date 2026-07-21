@@ -1,0 +1,28 @@
+{
+  "schema": "surf.webgpt_transport_summary.v1",
+  "artifact_dir": "/tmp/persona-dream-pctom-next-main-T7LEYn/skills/persona-dream/local/webgpt_reviews/20260721T-pctom-state-review/ask-artifacts/persona-dream-pctom-state-review-20260721/node-artifacts/handler-webgpt",
+  "requested_tab_id": null,
+  "requested_url": null,
+  "controlled_tab_id": null,
+  "submit_receipt_status": null,
+  "submitted_to_chatgpt": false,
+  "prepared_prompt_is_transport_proof": false,
+  "response_raw_path": "skills/persona-dream/local/webgpt_reviews/20260721T-pctom-state-review/ask-artifacts/persona-dream-pctom-state-review-20260721/node-artifacts/handler-webgpt/response.retry.raw.md",
+  "response_meta_path": "skills/persona-dream/local/webgpt_reviews/20260721T-pctom-state-review/ask-artifacts/persona-dream-pctom-state-review-20260721/node-artifacts/handler-webgpt/response.retry.meta.json",
+  "response_receipt_path": "skills/persona-dream/local/webgpt_reviews/20260721T-pctom-state-review/ask-artifacts/persona-dream-pctom-state-review-20260721/node-artifacts/handler-webgpt/response.retry.receipt.json",
+  "submitted_path": "skills/persona-dream/local/webgpt_reviews/20260721T-pctom-state-review/ask-artifacts/persona-dream-pctom-state-review-20260721/node-artifacts/handler-webgpt/response.retry.md.submitted.md",
+  "sentinel": "<<<WEBGPT_DONE:20260721T163653Z:6a66a144>>>",
+  "raw_sentinel_present": false,
+  "focus_changed": null,
+  "transport_degraded": false,
+  "raw_response_advisory": false,
+  "final_transport_state": "failed",
+  "proof_status": "unknown_failure",
+  "agent_diagnosis": "Surf did not map this result to a known agent-facing diagnosis.",
+  "agent_action": "Inspect status, failure, stderr_log, receipt_output, raw_output, and meta_output before retrying.",
+  "next_command": "surf webgpt.recover --artifact-dir /tmp/persona-dream-pctom-next-main-T7LEYn/skills/persona-dream/local/webgpt_reviews/20260721T-pctom-state-review/ask-artifacts/persona-dream-pctom-state-review-20260721/node-artifacts/handler-webgpt",
+  "do_not_do": [
+    "do_not_infer_completion_from_submitted_markers"
+  ],
+  "needs_attention": null
+}

@@ -1,0 +1,16 @@
+{
+  "handler_projects": [
+    "webgpt=tau"
+  ],
+  "handlers": [
+    "webgpt"
+  ],
+  "live": false,
+  "message": "Handler DAG emitted; live Surf/browser execution happens when Tau executes the DAG.",
+  "mocked": false,
+  "ok": true,
+  "provider_live": false,
+  "schema": "ask.tau_dag_roundtable_handler_gate.v1",
+  "status": "READY",
+  "topology": "sequential"
+}

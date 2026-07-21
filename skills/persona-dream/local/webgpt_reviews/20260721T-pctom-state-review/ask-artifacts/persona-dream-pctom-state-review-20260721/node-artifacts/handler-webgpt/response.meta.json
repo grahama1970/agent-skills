@@ -1,0 +1,79 @@
+{
+  "agent_action": "Inspect status, failure, stderr_log, receipt_output, raw_output, and meta_output before retrying.",
+  "agent_diagnosis": "Surf did not map this result to a known agent-facing diagnosis.",
+  "failure": "prompt_path_preflight_failed",
+  "finished_at": "2026-07-21T16:35:31Z",
+  "input": "/tmp/persona-dream-pctom-next-main-T7LEYn/skills/persona-dream/local/webgpt_reviews/20260721T-pctom-state-review/ask-artifacts/persona-dream-pctom-state-review-20260721/node-artifacts/handler-webgpt/prompt.md",
+  "output": "/tmp/persona-dream-pctom-next-main-T7LEYn/skills/persona-dream/local/webgpt_reviews/20260721T-pctom-state-review/ask-artifacts/persona-dream-pctom-state-review-20260721/node-artifacts/handler-webgpt/response.md",
+  "prompt_path_preflight": {
+    "agent_action": "Concatenate readable text into one markdown file or attach a small zip (<=5 files).",
+    "browser_submit_allowed": false,
+    "local_paths": [
+      {
+        "exists_locally": true,
+        "path": "/tmp/persona-dream-pctom-next-main-T7LEYn"
+      },
+      {
+        "exists_locally": true,
+        "path": "/tmp/persona-dream-live-tau-strict-inference-timeout120-v17-20260721T1527Z/live_tau_strict_inference_prompt_replication_receipt.v1.json"
+      },
+      {
+        "exists_locally": true,
+        "path": "/tmp/persona-dream-live-tau-action-linked-revision-strict120-v17-20260721T1545Z/live_tau_action_linked_revision_receipt.v1.json"
+      },
+      {
+        "exists_locally": true,
+        "path": "/tmp/persona-dream-live-tau-revision-recall-strict120-v17-20260721T1546Z/live_tau_revision_recall_receipt.v1.json"
+      },
+      {
+        "exists_locally": true,
+        "path": "/tmp/persona-dream-live-memory-revision-recall-strict120-v17-20260721T1547Z/live_memory_revision_recall_receipt.v1.json"
+      },
+      {
+        "exists_locally": true,
+        "path": "/tmp/persona-dream-live-fault-injection-surface-strict120-v17-20260721T1548Z/live_fault_injection_surface_receipt.v1.json"
+      },
+      {
+        "exists_locally": true,
+        "path": "/tmp/persona-dream-live-tau-sealed-test-service-retry-proof-fresh-20260721T155119Z/live_tau_sealed_test_service_retry_proof_receipt.v1.json"
+      },
+      {
+        "exists_locally": true,
+        "path": "/tmp/persona-dream-live-tau-balanced-planning-reuse-strict120-v17-limit1-20260721T1550Z/live_tau_balanced_planning_replication_receipt.v1.json"
+      },
+      {
+        "exists_locally": true,
+        "path": "/tmp/persona-dream-live-tau-distributional-planning-intervention-ci-derived-20260721T155724Z/distributional_planning_intervention_receipt.v1.json"
+      },
+      {
+        "exists_locally": true,
+        "path": "/tmp/persona-dream-live-tau-confidence-gated-planning-intervention-ci-derived-20260721T155724Z/confidence_gated_planning_intervention_receipt.v1.json"
+      },
+      {
+        "exists_locally": true,
+        "path": "/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_planning_replication_receipt.v1.json"
+      },
+      {
+        "exists_locally": true,
+        "path": "/home/graham/workspace/experiments/agent-skills-main/.codex/ui-verification/latest.json"
+      },
+      {
+        "exists_locally": true,
+        "path": "/home/graham/.pi/webgpt-projects/tau.json"
+      }
+    ],
+    "reason": "web_review_bundle_unreadable",
+    "safe_default": "provide_concatenated_text_or_small_zip",
+    "schema": "surf.webgpt_prompt_preflight.v1",
+    "status": "fail"
+  },
+  "proof_status": "unknown_failure",
+  "raw_output": "/tmp/persona-dream-pctom-next-main-T7LEYn/skills/persona-dream/local/webgpt_reviews/20260721T-pctom-state-review/ask-artifacts/persona-dream-pctom-state-review-20260721/node-artifacts/handler-webgpt/response.raw.md",
+  "sentinel": "<<<WEBGPT_DONE:20260721T163530Z:82129d69>>>",
+  "started_at": "2026-07-21T16:35:31Z",
+  "status": "failed",
+  "stderr_log": "/dev/null",
+  "submitted_output": "/tmp/persona-dream-pctom-next-main-T7LEYn/skills/persona-dream/local/webgpt_reviews/20260721T-pctom-state-review/ask-artifacts/persona-dream-pctom-state-review-20260721/node-artifacts/handler-webgpt/response.md.submitted.md",
+  "submitted_to_chatgpt": false,
+  "surf_doctor_request_path": "/tmp/persona-dream-pctom-next-main-T7LEYn/skills/persona-dream/local/webgpt_reviews/20260721T-pctom-state-review/ask-artifacts/persona-dream-pctom-state-review-20260721/node-artifacts/handler-webgpt/response.meta.surf-doctor-request.json"
+}

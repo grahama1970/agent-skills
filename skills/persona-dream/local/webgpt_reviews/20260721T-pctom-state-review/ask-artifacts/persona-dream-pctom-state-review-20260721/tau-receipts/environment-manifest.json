@@ -1,0 +1,42 @@
+{
+  "created_at": "2026-07-21T16:35:30.728847Z",
+  "data_boundary": null,
+  "data_boundary_artifact": null,
+  "host_id": "graham-MS-7C60",
+  "live": false,
+  "mocked": false,
+  "mounted_paths": [],
+  "network_policy": "allowlisted",
+  "ok": true,
+  "platform": {
+    "machine": "x86_64",
+    "release": "6.8.0-57-generic",
+    "system": "Linux"
+  },
+  "policy_profile": null,
+  "policy_profile_artifact": null,
+  "proof_scope": {
+    "does_not_prove": [
+      "Runtime sandbox enforcement.",
+      "Network egress enforcement.",
+      "Secret absence outside the declared list.",
+      "Provider/model semantic safety.",
+      "ITAR compliance or legal sufficiency."
+    ],
+    "proves": [
+      "Tau recorded declared environment controls for this run.",
+      "Tau checked environment manifest shape and closed vocabulary fields."
+    ]
+  },
+  "provider_access": "allowed",
+  "provider_live": false,
+  "run_id": "ask-tau-webgpt-review-request-persona-dr-3ddc3b7e4a9c",
+  "schema": "tau.environment_manifest.v1",
+  "secrets_visible": [],
+  "status": "PASS",
+  "tool_versions": {
+    "git": "git version 2.43.0",
+    "python": "3.14.3",
+    "uv": "uv 0.10.4"
+  }
+}
