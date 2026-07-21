@@ -1,10 +1,37 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R balanced threshold intervention) by agent
+**Last updated:** 2026-07-21 (PCTOM-R held-out cooperation threshold rule) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R HELD-OUT COOPERATION THRESHOLD RULE): a pre-outcome
+  cooperation-threshold rule now replays over the accepted full64 live Tau
+  root. Receipt:
+  `/tmp/persona-dream-live-tau-cooperation-threshold-rule-20260721T195055Z/live_tau_cooperation_threshold_rule_receipt.v1.json`.
+  Status `PASS_LIVE_TAU_PCTOM_COOPERATION_THRESHOLD_RULE`, receipt SHA-256
+  `sha256:a118bac2373a1cc5b5e9748cdb8efbe542d8e65b180301ba5e17ad0d56dd3020`.
+  The rule is `pre_outcome_cooperation_threshold_rule.v1`: if CD selected
+  `OFFER_COOPERATION` from sealed predicted counterpart action
+  `KAI_OFFERS_COOPERATION` with probability below `0.50`, fall back to `WAIT`;
+  otherwise keep the original action. Rule inputs are sealed prediction/action
+  fields only, with `uses_outcome_or_oracle:false`; outcome/oracle utility is
+  used only after action selection for scoring. The runner consumed the
+  derivation receipt
+  `/tmp/persona-dream-live-tau-balanced-threshold-intervention-20260721T194434Z/live_tau_balanced_threshold_intervention_receipt.v1.json`
+  and the held-out full64 root
+  `/tmp/persona-dream-live-tau-sealed-test-replication-full64-20260721T055039Z`
+  without reexecuting Tau. Held-out variants were 1-16, disjoint from balanced
+  derivation variants 17-22. Counts: 64 held-out rows, 256 consumed live Tau
+  calls, zero new Tau calls, zero Memory/provider/canonical/identity/
+  source-memory writes, zero CD `OFFER_COOPERATION` candidates, zero rule
+  interventions, and zero planning-regret change. Conclusion:
+  `HELDOUT_NO_COOPERATION_EXPOSURE_NO_REGRESSION`. This proves the rule can be
+  applied pre-outcome over held-out live-originated artifacts and does not
+  perturb unrelated full64 decisions, but it does not prove held-out benefit
+  under cooperation-exposure cases, confidence-bounded CD planning benefit, or
+  threshold optimality. Next PCTOM-R work should create or run a held-out
+  cooperation-exposure slice before claiming planning benefit from this rule.
 - 2026-07-21 (PCTOM-R BALANCED THRESHOLD INTERVENTION): a deterministic
   action-threshold ablation now separates the cooperation and clarifying-action
   switches found by the balanced gain/loss diagnostic. Receipt:
