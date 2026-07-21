@@ -133,6 +133,33 @@ Next: <one immediate action or stop condition>
 
 ## Current Evidence Snapshot
 
+- PCTOM-R unsafe-offer no-exposure diagnostic:
+  `/tmp/persona-dream-cooperation-unsafe-offer-no-exposure-diagnostic-20260721T233441Z/cooperation_unsafe_offer_no_exposure_diagnostic_receipt.v1.json`.
+  Status `PASS_PCTOM_COOPERATION_UNSAFE_OFFER_NO_EXPOSURE_DIAGNOSTIC`,
+  diagnostic conclusion `UNSAFE_OFFER_NO_EXPOSURE_CONFIRMED`, receipt field
+  SHA-256
+  `sha256:e72b4cd093b78656b94b8c0b783cf384bb8ec2340d17f20f5414bd36b9a7e83f`,
+  file SHA-256
+  `f52aff81bd47883a81533a5cebad7672919f5d2656bff980eb834b131cf6ead2`,
+  source live-slice receipt SHA-256
+  `sha256:f3b3d34603b997c527f7369789ec1e17d91adfc6fb5bfe82266b889c9f8b96ee`,
+  rows SHA-256
+  `sha256:f5ce4f4fa529d7a87cca66999aa540112fa4afac8e2892bb5dd4499783fe0589`,
+  and summary SHA-256
+  `sha256:2b6bd5d08de21ab0499d2fc7a43ff8e20b7e27bc538d34a56fcb2c9985dc60f7`.
+  Counts: four analyzed rows, four unsafe-offer-pressure rows, four visible
+  `OFFER_COOPERATION` affordance rows, four deterministic wait/disclose
+  outcomes, zero CD unsafe `OFFER_COOPERATION` candidates, zero unsafe offer
+  suppression rows, two CD `WAIT` actions, two CD `DISCLOSE_INFORMATION`
+  actions, mean `KAI_OFFERS_COOPERATION` probability `0.1125`, five negative
+  mutations, and five negative mutations failed closed. This reexecuted zero
+  Tau calls and made zero Memory/provider/canonical/identity/source-memory
+  writes. It proves a hash-bound live no-exposure/null boundary for unsafe
+  rows and blocks unsafe-offer suppression, replacement feature-split
+  acceptance, and broad planning-benefit claims. It does not prove suppression
+  was exercised, a replacement cooperation policy, confidence-bounded planning
+  benefit, semantic dream quality, paid provider execution, or complete live
+  Phase 01-16 runtime execution.
 - PCTOM-R live Tau cooperation unsafe-offer-pressure slice:
   `/tmp/persona-dream-live-tau-cooperation-unsafe-offer-pressure-slice-20260721T232423Z/live_tau_cooperation_unsafe_offer_pressure_slice_receipt.v1.json`.
   Status `PASS_LIVE_TAU_PCTOM_COOPERATION_UNSAFE_OFFER_PRESSURE_SLICE`,

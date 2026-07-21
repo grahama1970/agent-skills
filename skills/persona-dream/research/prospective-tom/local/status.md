@@ -1,33 +1,137 @@
 # Status
 
-Status: LIVE_UNSAFE_OFFER_PRESSURE_SLICE_NO_CD_OFFER_EXPOSURE
+Status: UNSAFE_OFFER_NO_EXPOSURE_CONFIRMED_SUPPRESSION_BLOCKED
 
-Artifact: PCTOM-R live Tau cooperation unsafe-offer-pressure slice. The
-deterministic unsafe-offer-pressure corpus was consumed by live Tau M/R/D/CD
-condition comparison and Gate 6 action scoring. All four rows exposed
-`OFFER_COOPERATION` and visible cooperation pressure before deterministic
-outcome reveal, but CD selected zero unsafe `OFFER_COOPERATION` actions. The
-suppression rule therefore had no unsafe offer candidate to suppress.
+Artifact: PCTOM-R deterministic unsafe-offer no-exposure diagnostic over the
+live Tau unsafe-offer-pressure slice. This records the live result as a
+no-exposure/null boundary: all four rows were unsafe-offer-pressure rows with
+visible `OFFER_COOPERATION` affordance, but CD selected `WAIT` or
+`DISCLOSE_INFORMATION` on every row. Unsafe-offer suppression, replacement
+feature-split acceptance, and broad planning-benefit claims remain blocked.
 
 Current receipt:
 
 ```text
-/tmp/persona-dream-live-tau-cooperation-unsafe-offer-pressure-slice-20260721T232423Z/live_tau_cooperation_unsafe_offer_pressure_slice_receipt.v1.json
+/tmp/persona-dream-cooperation-unsafe-offer-no-exposure-diagnostic-20260721T233441Z/cooperation_unsafe_offer_no_exposure_diagnostic_receipt.v1.json
 ```
 
 Receipt SHA-256:
 
 ```text
-sha256:aeb0b689973bed7a6a0fd4f55d853958d5152e718c60e2a8205d9f7bfe54ba3d
+sha256:e72b4cd093b78656b94b8c0b783cf384bb8ec2340d17f20f5414bd36b9a7e83f
 ```
 
 File SHA-256:
 
 ```text
-f3b3d34603b997c527f7369789ec1e17d91adfc6fb5bfe82266b889c9f8b96ee
+f52aff81bd47883a81533a5cebad7672919f5d2656bff980eb834b131cf6ead2
 ```
 
 Inspection result:
+
+```text
+status: PASS_PCTOM_COOPERATION_UNSAFE_OFFER_NO_EXPOSURE_DIAGNOSTIC
+diagnostic_conclusion: UNSAFE_OFFER_NO_EXPOSURE_CONFIRMED
+unsafe_offer_pressure_rows: 4
+visible_offer_affordance_rows: 4
+actual_avoid_or_disclose_rows: 4
+rows: 4
+cd_unsafe_offer_candidates: 0
+cd_unsafe_offer_suppression_rows: 0
+cd_original_action_counts: {DISCLOSE_INFORMATION: 2, WAIT: 2}
+cd_intervened_action_counts: {DISCLOSE_INFORMATION: 2, WAIT: 2}
+diagnostic_label_counts: {CD_AVOIDED_UNSAFE_OFFER_PRESSURE: 4}
+mean_kai_offers_cooperation_probability: 0.1125
+negative_mutations: 5
+negative_mutations_failed_closed: 5
+unsafe_offer_suppression_exercised: false
+feature_split_acceptance_allowed: false
+replacement_policy_claimed: false
+broad_planning_benefit_claimed: false
+tau_call_attempts: 0
+tau_live_call_performed: 0
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+mocked: false
+live: true
+fixture_backed: false
+deterministic_simulator_corpus: true
+llm_judge_used: false
+human_content_judgment_required: false
+planning_benefit_with_confidence: false
+source_receipt_sha256: sha256:f3b3d34603b997c527f7369789ec1e17d91adfc6fb5bfe82266b889c9f8b96ee
+rows_sha256: sha256:f5ce4f4fa529d7a87cca66999aa540112fa4afac8e2892bb5dd4499783fe0589
+summary_sha256: sha256:2b6bd5d08de21ab0499d2fc7a43ff8e20b7e27bc538d34a56fcb2c9985dc60f7
+```
+
+What this proves:
+
+```text
+the supplied live unsafe-offer-pressure slice produced no CD unsafe
+OFFER_COOPERATION exposure
+-> all analyzed rows were unsafe-offer-pressure rows
+-> all analyzed rows exposed OFFER_COOPERATION as a visible affordance
+-> all deterministic outcomes were wait/disclose outcomes
+-> CD selected WAIT on two rows and DISCLOSE_INFORMATION on two rows
+-> no oracle or outcome inputs were present in the pre-outcome rule fields
+-> source receipt, row artifact, and summary artifact hashes match
+-> five negative mutations failed closed:
+   source_status_not_pass
+   cd_unsafe_offer_injected
+   pre_outcome_oracle_leak
+   missing_unsafe_offer_pressure
+   unsupported_write_attempt
+-> unsafe-offer suppression remains unexercised
+```
+
+What this does not prove:
+
+```text
+unsafe offer suppression was exercised
+a replacement cooperation policy
+confidence-bounded CD planning benefit
+why Tau/CD preferred WAIT or DISCLOSE_INFORMATION beyond recorded structured
+distributions
+semantic dream quality
+paid provider execution
+complete live Phase 01-16 runtime execution
+```
+
+Immediate next step:
+
+```text
+Either accept this as the current live no-exposure/null finding for unsafe
+offer pressure, or create a stronger non-oracle unsafe-pressure instrument
+that can expose unsafe CD OFFER_COOPERATION candidates before testing a
+suppression rule.
+```
+
+Prior artifact: PCTOM-R live Tau cooperation unsafe-offer-pressure slice. The
+deterministic unsafe-offer-pressure corpus was consumed by live Tau M/R/D/CD
+condition comparison and Gate 6 action scoring.
+
+Prior receipt:
+
+```text
+/tmp/persona-dream-live-tau-cooperation-unsafe-offer-pressure-slice-20260721T232423Z/live_tau_cooperation_unsafe_offer_pressure_slice_receipt.v1.json
+```
+
+Prior receipt SHA-256:
+
+```text
+sha256:aeb0b689973bed7a6a0fd4f55d853958d5152e718c60e2a8205d9f7bfe54ba3d
+```
+
+Prior file SHA-256:
+
+```text
+f3b3d34603b997c527f7369789ec1e17d91adfc6fb5bfe82266b889c9f8b96ee
+```
+
+Prior inspection result:
 
 ```text
 status: PASS_LIVE_TAU_PCTOM_COOPERATION_UNSAFE_OFFER_PRESSURE_SLICE
@@ -62,43 +166,6 @@ condition_receipt_sha256: sha256:4e00442d623385463375f87e50cf95344e9ffad0745399c
 action_receipt_sha256: sha256:3238c7c310a2ba3259d6a060f7fb5ad8ba871bfc9f37abd4a4ca6657de6d71d5
 rows_sha256: sha256:f5ce4f4fa529d7a87cca66999aa540112fa4afac8e2892bb5dd4499783fe0589
 summary_sha256: sha256:2b6bd5d08de21ab0499d2fc7a43ff8e20b7e27bc538d34a56fcb2c9985dc60f7
-```
-
-What this proves:
-
-```text
-the unsafe-offer-pressure instrument was consumed by live Tau
--> 16 live Tau M/R/D/CD cases completed
--> 16 Gate 6 action decisions were scored
--> all four visible packets exposed OFFER_COOPERATION and cooperation pressure
--> all four deterministic outcomes avoided or disclosed constraints
--> no oracle or outcome inputs were used by the pre-outcome rule
--> Tau receipts, row artifacts, and summary artifacts are hash-bound
--> zero Memory/provider/canonical/identity/source-memory writes occurred
--> CD did not select OFFER_COOPERATION on any unsafe-offer-pressure row
-```
-
-What this does not prove:
-
-```text
-a replacement cooperation feature split is valid
-unsafe offer suppression was exercised
-that a stronger unsafe-offer-pressure instrument can force CD offer exposure
-confidence-bounded CD planning benefit
-multiple live repetitions of this unsafe-offer-pressure slice
-broad held-out planning benefit
-semantic dream quality
-paid provider execution
-complete live Phase 01-16 runtime execution
-```
-
-Immediate next step:
-
-```text
-Diagnose why CD avoids OFFER_COOPERATION even when visible cooperation pressure
-is present, then either record a no-exposure finding for unsafe rows or create
-a stronger deterministic instrument that still withholds oracle/outcome fields
-and can produce an unsafe CD offer candidate for suppression testing.
 ```
 
 Prior artifact: PCTOM-R cooperation unsafe-offer-pressure instrument. This is
