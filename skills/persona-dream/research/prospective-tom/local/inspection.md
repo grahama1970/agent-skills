@@ -110,3 +110,54 @@ errors:
 - episode_0_actual_next_action_not_allowed:INVALID_UNLISTED_ACTION
 - episode_0_policy_actual_mismatch:KAI_HINTS_CONSTRAINT:INVALID_UNLISTED_ACTION
 ```
+
+## Gate 2 Inspection
+
+Command family:
+
+```bash
+skills/persona-dream/run.sh check-tom-belief-distributions \
+  --corpus skills/persona-dream/research/prospective-tom/fixtures/gate1/development/social_episode_corpus.v1.json \
+  --bundle <gate2-bundle.json> \
+  --receipt-out <receipt.json> \
+  --json
+```
+
+Final proof root:
+
+```text
+/tmp/persona-dream-pctom-gate2-postrebase-20260721T003945Z
+```
+
+Positive result:
+
+```text
+status: PASS_TOM_BELIEF_DISTRIBUTIONS
+distributions: 3
+supported: 2
+abstained_or_pending: 1
+label_matched_distributions: 2
+resolved_evidence_refs: 4
+```
+
+Negative fixture results:
+
+```text
+bad_probability_sum: BLOCKED_TOM_BELIEF_DISTRIBUTIONS
+canonical_memory_write: BLOCKED_TOM_BELIEF_DISTRIBUTIONS
+counterfactual_literal_mix: BLOCKED_TOM_BELIEF_DISTRIBUTIONS
+hidden_evidence_ref: BLOCKED_TOM_BELIEF_DISTRIBUTIONS
+outcome_visible: BLOCKED_TOM_BELIEF_DISTRIBUTIONS
+perspective_label_mismatch: BLOCKED_TOM_BELIEF_DISTRIBUTIONS
+unsupported_not_abstained: BLOCKED_TOM_BELIEF_DISTRIBUTIONS
+```
+
+Inspection limitation:
+
+```text
+fixture_backed: true
+live: false
+tau_call_attempts: 0
+memory_write_attempts: 0
+provider_call_attempts: 0
+```

@@ -197,12 +197,15 @@ a causal failure-localization receipt.
 
 ## Current Provenance Boundary
 
-Committed and pushed evidence exists for the first two gates:
+Committed and pushed evidence exists for Gates 0 and 1. Local Gate 2 evidence
+exists in this worktree and becomes committed evidence when the Gate 2 commit is
+pushed.
 
 ```text
 Gate 0 commit: 81f51b5689914782c54a4b9c5672579bcd97d440
 Gate 1 commit: 0cecce8193606522a1d56283cc240c5bddc83c2a
 Gate 1 proof root: /tmp/persona-dream-pctom-gate1-final-postpatch-20260721T001545Z
+Gate 2 proof root: /tmp/persona-dream-pctom-gate2-postrebase-20260721T003945Z
 ```
 
 Gate 1 proof summary:
@@ -216,6 +219,21 @@ Gate 1 build: PASS_SOCIAL_EPISODE_CORPUS_BUILT
 Gate 1 committed corpus: PASS_SOCIAL_EPISODE_CORPUS
 Gate 1 corpus: 12 episodes, 4 families, 12 first-order labels, 12 second-order labels
 Gate 1 bad-action negative: BLOCKED_SOCIAL_EPISODE_CORPUS
+git_diff_check: clean
+```
+
+Gate 2 proof summary:
+
+```text
+json_files_parsed: 38
+python_files_ast_parsed: 4
+Gate 2 positive: PASS_TOM_BELIEF_DISTRIBUTIONS
+Gate 2 distributions: 3
+Gate 2 supported hypotheses: 2
+Gate 2 abstained_or_pending hypotheses: 1
+Gate 2 resolved_evidence_refs: 4
+Gate 2 label_matched_distributions: 2
+Gate 2 negatives: 7 x BLOCKED_TOM_BELIEF_DISTRIBUTIONS
 git_diff_check: clean
 ```
 
@@ -252,10 +270,9 @@ research goal unless those concrete proof artifacts exist and are cited.
 
 ## Next Critical Path
 
-Implement Gate 2: a deterministic ToM belief-distribution invariant checker
-that consumes Gate 1 social episodes and rejects malformed, unsupported,
-cross-perspective, counterfactual/literal-mixed, or unsealed hypotheses before
-any condition runner exists.
+Implement Gate 3: counterfactual branch contracts that preserve the distinction
+between factual social evidence and synthetic `do()` branches before any
+condition runner persists or compares them.
 
 The next accepted artifact must be inspectable as files and receipts under the
 research namespace, with positive and negative fixtures. Mocked or fixture

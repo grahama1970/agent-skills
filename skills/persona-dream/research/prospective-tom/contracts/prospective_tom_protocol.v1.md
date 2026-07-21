@@ -108,3 +108,56 @@ Gate 1 invariants:
 
 Gate 1 does not prove model prediction accuracy, scoring, calibration, belief
 revision, live Tau execution, or reliability under faults.
+
+## Gate 2 ToM Distribution Contract
+
+Gate 2 represents Theory-of-Mind hypotheses as structured probability
+distributions, not prose labels. It consumes Gate 1 social episodes and a
+sealed belief-distribution bundle.
+
+Each bundle must include:
+
+```text
+episode_id
+outcome_visible: false
+sealed: true
+canonical_memory_write: false
+distributions[]
+```
+
+Each distribution must include:
+
+```text
+hypothesis_id
+episode_id
+perspective_order
+subject
+target
+mental_state_type
+proposition
+distribution
+evidence_refs
+prediction_horizon
+counterfactual
+counterfactual_context
+abstain
+support_status
+```
+
+Gate 2 invariants:
+
+- every probability distribution sums to one;
+- supported hypotheses resolve evidence from agent-visible episode fields;
+- hidden simulator state and ground-truth labels cannot be used as evidence;
+- supported hypotheses match a first- or second-order Gate 1 label;
+- unsupported hypotheses must be `abstained` or `pending` and assign
+  probability 1.0 to `UNKNOWN`;
+- `subject` and `target` remain separate;
+- factual predictions cannot consume `synthetic_counterfactual` evidence;
+- counterfactual hypotheses require explicit synthetic context;
+- no bundle writes canonical memory;
+- no bundle may expose the outcome before a later reveal gate.
+
+Gate 2 does not prove prediction accuracy, calibration quality, Tau execution,
+live Memory recall, outcome scoring, belief revision, or reliability under
+faults.

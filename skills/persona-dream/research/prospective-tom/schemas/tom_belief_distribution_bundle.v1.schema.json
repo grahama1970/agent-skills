@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.research.prospective_tom.tom_belief_distribution_bundle.v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "episode_id",
+    "outcome_visible",
+    "sealed",
+    "canonical_memory_write",
+    "distributions"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "persona_dream.research.prospective_tom.tom_belief_distribution_bundle.v1"
+    },
+    "episode_id": {"type": "string", "minLength": 1},
+    "outcome_visible": {"type": "boolean"},
+    "sealed": {"type": "boolean"},
+    "canonical_memory_write": {"type": "boolean"},
+    "distributions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "persona_dream.research.prospective_tom.tom_belief_distribution.v1"}
+    }
+  },
+  "additionalProperties": false
+}

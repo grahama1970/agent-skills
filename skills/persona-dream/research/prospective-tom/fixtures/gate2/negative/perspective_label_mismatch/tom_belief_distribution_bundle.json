@@ -1,0 +1,43 @@
+{
+  "canonical_memory_write": false,
+  "distributions": [
+    {
+      "abstain": false,
+      "counterfactual": false,
+      "counterfactual_context": null,
+      "distribution": [
+        {
+          "probability": 0.6,
+          "value": "TRUE"
+        },
+        {
+          "probability": 0.3,
+          "value": "FALSE"
+        },
+        {
+          "probability": 0.1,
+          "value": "UNKNOWN"
+        }
+      ],
+      "episode_id": "dev-info-asym-01",
+      "evidence_refs": [
+        {
+          "scope": "social_episode_observation",
+          "source_id": "dev-info-asym-01:observable_history:0"
+        }
+      ],
+      "hypothesis_id": "gate2-perspective-mismatch",
+      "mental_state_type": "belief",
+      "perspective_order": 1,
+      "prediction_horizon": "next_action",
+      "proposition": "Embry believes Kai thinks Embry has stale constraint information.",
+      "subject": "embry",
+      "support_status": "supported",
+      "target": "kai"
+    }
+  ],
+  "episode_id": "dev-info-asym-01",
+  "outcome_visible": false,
+  "schema": "persona_dream.research.prospective_tom.tom_belief_distribution_bundle.v1",
+  "sealed": true
+}

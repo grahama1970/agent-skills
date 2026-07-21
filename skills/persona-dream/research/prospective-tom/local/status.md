@@ -2,26 +2,26 @@
 
 Status: ACCEPTED
 
-Artifact: PCTOM-R Gate 1 deterministic social episode corpus.
+Artifact: PCTOM-R Gate 2 ToM belief-distribution invariant checker.
 
 Candidate:
 
 ```text
-scripts/build_social_episode_corpus.py
-scripts/check_social_episode_corpus.py
-fixtures/gate1/development/social_episode_corpus.v1.json
-schemas/social_episode.v1.schema.json
+scripts/check_tom_belief_distributions.py
+schemas/tom_belief_distribution.v1.schema.json
+schemas/tom_belief_distribution_bundle.v1.schema.json
+fixtures/gate2/positive/distributions_ok/tom_belief_distribution_bundle.json
+fixtures/gate2/negative/*/tom_belief_distribution_bundle.json
 ```
 
 Inspection result:
 
 ```text
-12 development episodes built
-4 scenario families represented
-3 episodes per family
-12 first-order ToM labels
-12 second-order ToM labels
-1 negative mutation failed closed
+1 positive ToM distribution bundle passed
+3 distributions checked
+2 supported hypotheses matched Gate 1 labels
+1 unsupported hypothesis abstained with UNKNOWN certainty
+7 targeted negative bundles failed closed
 0 live calls
 0 memory writes
 0 provider calls
@@ -29,14 +29,14 @@ Inspection result:
 
 Reason accepted:
 
-The artifact mechanically checks the requested Gate 1 research-lane chain:
+The artifact mechanically checks the requested Gate 2 research-lane chain:
 
 ```text
-hidden world state
--> deterministic counterpart policy
--> actual next action
--> first-order ToM label
--> second-order ToM label
+Gate 1 social episode
+-> visible evidence refs
+-> first-/second-order ToM labels
+-> sealed probability distributions
+-> no canonical memory write
 ```
 
 Can be used by:
@@ -47,6 +47,5 @@ Can be used by:
 
 Next legal move:
 
-Implement the Gate 2 distribution invariant checker that consumes a social
-episode and rejects unsupported or malformed ToM belief distributions before
-any condition runner exists.
+Implement Gate 3 counterfactual branch contracts and ensure counterfactual
+branches remain marked synthetic before any condition runner persists them.

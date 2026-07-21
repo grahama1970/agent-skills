@@ -1,0 +1,38 @@
+{
+  "canonical_memory_write": false,
+  "distributions": [
+    {
+      "abstain": false,
+      "counterfactual": false,
+      "counterfactual_context": null,
+      "distribution": [
+        {
+          "probability": 0.55,
+          "value": "TRUE"
+        },
+        {
+          "probability": 0.25,
+          "value": "FALSE"
+        },
+        {
+          "probability": 0.2,
+          "value": "UNKNOWN"
+        }
+      ],
+      "episode_id": "dev-info-asym-01",
+      "evidence_refs": [],
+      "hypothesis_id": "gate2-unsupported-not-abstained",
+      "mental_state_type": "knowledge",
+      "perspective_order": 1,
+      "prediction_horizon": "next_action",
+      "proposition": "Kai knows the exact hidden launch-window value Embry will infer.",
+      "subject": "kai",
+      "support_status": "supported",
+      "target": "embry"
+    }
+  ],
+  "episode_id": "dev-info-asym-01",
+  "outcome_visible": false,
+  "schema": "persona_dream.research.prospective_tom.tom_belief_distribution_bundle.v1",
+  "sealed": true
+}

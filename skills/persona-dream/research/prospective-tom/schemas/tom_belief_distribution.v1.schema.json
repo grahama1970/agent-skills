@@ -3,6 +3,8 @@
   "$id": "persona_dream.research.prospective_tom.tom_belief_distribution.v1",
   "type": "object",
   "required": [
+    "hypothesis_id",
+    "episode_id",
     "perspective_order",
     "subject",
     "target",
@@ -12,9 +14,13 @@
     "evidence_refs",
     "prediction_horizon",
     "counterfactual",
-    "abstain"
+    "counterfactual_context",
+    "abstain",
+    "support_status"
   ],
   "properties": {
+    "hypothesis_id": {"type": "string", "minLength": 1},
+    "episode_id": {"type": "string", "minLength": 1},
     "perspective_order": {"type": "integer", "minimum": 1, "maximum": 2},
     "subject": {"type": "string", "minLength": 1},
     "target": {"type": "string", "minLength": 1},
@@ -42,7 +48,15 @@
         "type": "object",
         "required": ["scope", "source_id"],
         "properties": {
-          "scope": {"type": "string", "minLength": 1},
+          "scope": {
+            "type": "string",
+            "enum": [
+              "social_episode_observation",
+              "social_episode_access",
+              "memory_residue",
+              "synthetic_counterfactual"
+            ]
+          },
           "source_id": {"type": "string", "minLength": 1}
         },
         "additionalProperties": false
@@ -50,7 +64,25 @@
     },
     "prediction_horizon": {"type": "string", "minLength": 1},
     "counterfactual": {"type": "boolean"},
-    "abstain": {"type": "boolean"}
+    "counterfactual_context": {
+      "anyOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "required": ["intervention_id", "synthetic"],
+          "properties": {
+            "intervention_id": {"type": "string", "minLength": 1},
+            "synthetic": {"type": "boolean"}
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "abstain": {"type": "boolean"},
+    "support_status": {
+      "type": "string",
+      "enum": ["supported", "abstained", "pending"]
+    }
   },
   "additionalProperties": false
 }
