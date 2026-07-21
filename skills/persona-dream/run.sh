@@ -110,6 +110,7 @@ Commands:
   run-live-tau-cooperation-instrument-slice  Run deterministic cooperation-exposure instrument through live Tau
   run-live-tau-cooperation-contrast-slice  Run deterministic cooperation-contrast instrument through live Tau
   run-live-tau-cooperation-exposure-contrast-slice  Run deterministic cooperation exposure/contrast instrument through live Tau
+  check-cooperation-class-separated-exposure  Audit class-separated cooperation exposure from a live Tau slice
   diagnose-cooperation-policy  Diagnose cooperation-threshold policy effects over live instrument artifacts
   accept-cooperation-no-intervention-policy  Accept no-intervention for observed cooperation regression slice
   check-cooperation-feature-split-prerequisites  Audit whether cooperation evidence can support a replacement feature split
@@ -533,6 +534,9 @@ case "$COMMAND" in
     ;;
   run-live-tau-cooperation-exposure-contrast-slice)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_tau_cooperation_exposure_contrast_slice.py" "$@"
+    ;;
+  check-cooperation-class-separated-exposure)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_cooperation_class_separated_exposure.py" "$@"
     ;;
   diagnose-cooperation-policy)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/diagnose_cooperation_policy.py" "$@"

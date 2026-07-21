@@ -1,8 +1,126 @@
 # Status
 
-Status: LIVE_TAU_COOPERATION_EXPOSURE_CONTRAST_SLICE_PARTIAL_EXPOSURE
+Status: COOPERATION_CLASS_SEPARATED_EXPOSURE_OBSERVED_FEATURE_SPLIT_BLOCKED
 
-Artifact: PCTOM-R live Tau cooperation exposure/contrast slice.
+Artifact: PCTOM-R cooperation class-separated exposure audit over a live Tau
+exposure/contrast slice. The live slice produced the desired class-separated
+behavior, but the feature-split acceptance gate remains blocked because no
+unsafe `OFFER_COOPERATION` suppression candidate was exercised.
+
+Current receipt:
+
+```text
+/tmp/persona-dream-cooperation-class-separated-exposure-audit-20260721T230709Z/cooperation_class_separated_exposure_audit_receipt.v1.json
+```
+
+Receipt SHA-256:
+
+```text
+sha256:e2db88050fe44f518b483be27c87c879d7c5ddf7b9158c9cd31e681af32d8785
+```
+
+File SHA-256:
+
+```text
+23d6e87fc5c5d301e3174debcc1265854745aad70a773fd8ee687bb72f424a09
+```
+
+Inspection result:
+
+```text
+status: PASS_PCTOM_COOPERATION_CLASS_SEPARATED_EXPOSURE_AUDIT
+conclusion: CD_CLASS_SEPARATED_COOPERATION_OBSERVED_FEATURE_SPLIT_STILL_BLOCKED
+class_separated_cd_discrimination_observed: true
+unsafe_offer_suppression_exercised: false
+feature_split_acceptance_allowed: false
+missing_prerequisites:
+  missing_unsafe_offer_suppression_candidate
+rows: 8
+keep_rows: 4
+avoid_or_unsafe_rows: 4
+keep_offer_rows: 4
+avoid_offer_rows: 0
+keep_counterpart_offer_rows: 4
+avoid_counterpart_offer_rows: 0
+threshold_action_change_rows: 0
+negative_checks_failed_closed: true
+tau_call_attempts: 0
+tau_live_call_performed: 0
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+mocked: false
+live: true
+fixture_backed: false
+deterministic_simulator_corpus: true
+llm_judge_used: false
+human_content_judgment_required: false
+```
+
+What this proves:
+
+```text
+the live Tau exposure/contrast slice contains class-separated CD cooperation
+behavior
+-> CD selected OFFER_COOPERATION on keep-cooperation rows
+-> CD avoided OFFER_COOPERATION on avoid/unsafe rows
+-> sealed pre-outcome rule inputs did not leak oracle/outcome fields
+-> replacement feature-split acceptance remains blocked because there is no
+   unsafe OFFER_COOPERATION suppression candidate
+-> five negative checks failed closed:
+   live_slice_status_not_pass
+   missing_keep_offer_cooperation
+   avoid_row_offer_cooperation
+   pre_outcome_oracle_leak
+   planning_benefit_claim_injected
+```
+
+What this does not prove:
+
+```text
+a replacement cooperation feature split is valid
+confidence-bounded CD planning benefit
+broad held-out planning benefit
+semantic dream quality
+paid provider execution
+complete live Phase 01-16 runtime execution
+```
+
+Input live slice receipt:
+
+```text
+/tmp/persona-dream-live-tau-cooperation-exposure-contrast-slice-20260721T225448Z/live_tau_cooperation_exposure_contrast_slice_receipt.v1.json
+```
+
+Input live slice summary:
+
+The deterministic exposure/contrast corpus now runs through live Tau M/R/D/CD
+condition comparison and Gate 6 action scoring. Every visible pre-outcome
+packet exposes `OFFER_COOPERATION` as a non-oracle agent action affordance
+while hidden simulator state retains both safe/keep-cooperation and
+unsafe/avoid-cooperation contrast rows.
+
+Input live slice receipt:
+
+```text
+/tmp/persona-dream-live-tau-cooperation-exposure-contrast-slice-20260721T225448Z/live_tau_cooperation_exposure_contrast_slice_receipt.v1.json
+```
+
+Input live slice receipt SHA-256:
+
+```text
+sha256:b125d4cfa51ec3d99a5472bc14fc1c6b087065d574cf8724f0fbf328f1f213e6
+```
+
+Input live slice file SHA-256:
+
+```text
+4370d916057d6b097f056847e3ca30b0f1abee197ff902823636c0f14508453f
+```
+
+Prior artifact: PCTOM-R live Tau cooperation exposure/contrast slice.
 The deterministic exposure/contrast corpus now runs through live Tau M/R/D/CD
 condition comparison and Gate 6 action scoring. Every visible pre-outcome
 packet exposes `OFFER_COOPERATION` as a non-oracle agent action affordance

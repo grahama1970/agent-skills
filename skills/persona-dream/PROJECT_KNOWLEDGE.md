@@ -1,10 +1,38 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R live Tau cooperation contrast slice) by agent
+**Last updated:** 2026-07-21 (PCTOM-R cooperation class-separated exposure audit) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R COOPERATION CLASS-SEPARATED EXPOSURE AUDIT): a
+  deterministic audit now consumes the live Tau exposure/contrast slice and
+  separates what the new evidence proves from what remains blocked. Command:
+  `./skills/persona-dream/run.sh check-cooperation-class-separated-exposure`.
+  Final receipt:
+  `/tmp/persona-dream-cooperation-class-separated-exposure-audit-20260721T230709Z/cooperation_class_separated_exposure_audit_receipt.v1.json`.
+  Status `PASS_PCTOM_COOPERATION_CLASS_SEPARATED_EXPOSURE_AUDIT`, receipt
+  field SHA-256
+  `sha256:e2db88050fe44f518b483be27c87c879d7c5ddf7b9158c9cd31e681af32d8785`,
+  file SHA-256
+  `23d6e87fc5c5d301e3174debcc1265854745aad70a773fd8ee687bb72f424a09`.
+  The audit reexecuted zero Tau calls and made zero Memory/provider/canonical/
+  identity/source-memory writes. It observed class-separated CD behavior over
+  the live instrument: four of four keep rows selected `OFFER_COOPERATION`,
+  zero of four avoid/unsafe rows selected `OFFER_COOPERATION`, four of four
+  keep rows selected `KAI_OFFERS_COOPERATION` as counterpart action, zero
+  avoid/unsafe rows selected `KAI_OFFERS_COOPERATION`, and the threshold rule
+  changed zero actions. Conclusion:
+  `CD_CLASS_SEPARATED_COOPERATION_OBSERVED_FEATURE_SPLIT_STILL_BLOCKED`.
+  `feature_split_acceptance_allowed:false`; missing prerequisite:
+  `missing_unsafe_offer_suppression_candidate`. Built-in negative checks
+  failed closed for `live_slice_status_not_pass`,
+  `missing_keep_offer_cooperation`, `avoid_row_offer_cooperation`,
+  `pre_outcome_oracle_leak`, and `planning_benefit_claim_injected`. This
+  proves class-separated CD cooperation behavior over the live instrument, not
+  a replacement cooperation feature split, confidence-bounded CD planning
+  benefit, broad held-out planning benefit, semantic dream quality, paid
+  provider execution, or complete Phase 01-16 runtime execution.
 - 2026-07-21 (PCTOM-R LIVE TAU COOPERATION EXPOSURE/CONTRAST SLICE): the
   combined deterministic cooperation exposure/contrast instrument was consumed
   by the live Tau M/R/D/CD condition runner and Gate 6 action scorer. Command:

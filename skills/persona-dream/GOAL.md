@@ -133,6 +133,29 @@ Next: <one immediate action or stop condition>
 
 ## Current Evidence Snapshot
 
+- PCTOM-R cooperation class-separated exposure audit:
+  `/tmp/persona-dream-cooperation-class-separated-exposure-audit-20260721T230709Z/cooperation_class_separated_exposure_audit_receipt.v1.json`.
+  Status `PASS_PCTOM_COOPERATION_CLASS_SEPARATED_EXPOSURE_AUDIT`,
+  receipt field SHA-256
+  `sha256:e2db88050fe44f518b483be27c87c879d7c5ddf7b9158c9cd31e681af32d8785`,
+  file SHA-256
+  `23d6e87fc5c5d301e3174debcc1265854745aad70a773fd8ee687bb72f424a09`,
+  `mocked:false`, `live:true`, deterministic simulator corpus `true`, zero
+  new Tau calls, zero Memory/provider/canonical/identity/source-memory writes,
+  no LLM judge, and no human content judgment. It consumed the live
+  exposure/contrast slice and observed class-separated CD behavior: four of
+  four keep rows selected `OFFER_COOPERATION`, zero of four avoid/unsafe rows
+  selected `OFFER_COOPERATION`, four of four keep rows selected
+  `KAI_OFFERS_COOPERATION` as the counterpart action, zero avoid/unsafe rows
+  selected `KAI_OFFERS_COOPERATION`, and the threshold rule changed zero
+  actions. Conclusion:
+  `CD_CLASS_SEPARATED_COOPERATION_OBSERVED_FEATURE_SPLIT_STILL_BLOCKED`.
+  This proves class-separated CD cooperation behavior over the live instrument
+  and keeps replacement feature-split acceptance blocked because no unsafe
+  `OFFER_COOPERATION` suppression candidate was exercised. It does not prove a
+  replacement cooperation feature split, confidence-bounded CD planning
+  benefit, broad held-out planning benefit, semantic dream quality, paid
+  provider execution, or complete live Phase 01-16 runtime execution.
 - PCTOM-R live Tau cooperation exposure/contrast slice:
   `/tmp/persona-dream-live-tau-cooperation-exposure-contrast-slice-20260721T225448Z/live_tau_cooperation_exposure_contrast_slice_receipt.v1.json`.
   Status `PASS_LIVE_TAU_PCTOM_COOPERATION_EXPOSURE_CONTRAST_SLICE`,
