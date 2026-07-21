@@ -59,6 +59,7 @@ def dispatch_text_reasoning(
         "role": role,
         "model": model or DEFAULT_MODEL,
         "caller_skill": caller_skill,
+        "timeout_s": timeout_s,
     }
     if output_contract is not None:
         request["output_contract"] = output_contract

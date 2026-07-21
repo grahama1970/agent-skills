@@ -1,10 +1,36 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R Tau boundary receipts added) by agent
+**Last updated:** 2026-07-21 (PCTOM-R Tau prompt timeout diagnosed) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R TAU PROMPT TIMEOUT DIAGNOSTIC): the full-prompt timeout
+  boundary is now narrowed. New command:
+  `./skills/persona-dream/run.sh run-live-tau-prompt-timeout-diagnostic`.
+  It routes through the sanctioned Persona Dream Tau adapter and writes
+  hash-bound case receipts for short preflight, padded prompt, compact domain
+  payload, default condition prompt, and strict condition prompt cases. Receipt
+  `/tmp/persona-dream-live-tau-prompt-timeout-diagnostic-20260721T1510Z/live_tau_prompt_timeout_diagnostic_receipt.v1.json`
+  with `timeout_s:30` reports the 204-byte preflight, 15,481-byte padded
+  prompt, and 2,912-byte compact domain payload pass in roughly 2-3 seconds,
+  while the 15,481-byte actual condition prompt and 16,430-byte strict prompt
+  timeout at 30 seconds. Receipt
+  `/tmp/persona-dream-live-tau-prompt-timeout-diagnostic-90s-20260721T1511Z/live_tau_prompt_timeout_diagnostic_receipt.v1.json`
+  with `timeout_s:90` reports all five cases passing; actual and strict
+  condition prompts each take about 52 seconds. Size alone is not the blocker:
+  full structured PCTOM-R output generation needs a live-call budget above 30s.
+  The adapter now forwards `timeout_s` into Tau's inner scillm HTTP request
+  instead of only enforcing the parent subprocess timeout. A real one-episode
+  live condition smoke at
+  `/tmp/persona-dream-live-tau-condition-comparison-timeout90-smoke-20260721T1512Z/live_tau_condition_comparison_receipt.v1.json`
+  reports `PASS_LIVE_TAU_PCTOM_CONDITION_COMPARISON`, 4 Tau calls, 4 sealed
+  commitments, 4 deterministic scores, and all Gate 2-5 checks passing with
+  zero writes. The Gate 6 bridge over that root wrote 4 individual action
+  receipts but blocked at
+  `/tmp/persona-dream-live-tau-condition-action-selection-timeout90-smoke-20260721T1512Z/live_tau_condition_action_selection_receipt.v1.json`
+  because the base root only had 1 case per condition and the bridge acceptance
+  floor expects 4 per condition. This is a smoke boundary, not planning benefit.
 - 2026-07-21 (PCTOM-R TAU BOUNDARY RECEIPTS): the preflight/pass plus
   case-timeout boundary now has per-case local receipts. When Tau dispatch
   raises before returning a Tau receipt, the live condition runner writes a

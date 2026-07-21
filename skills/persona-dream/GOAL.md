@@ -523,6 +523,10 @@ Tau systemic timeout breaker proof root: /tmp/persona-dream-live-tau-systemic-br
 Blocked strict-inference systemic timeout breaker proof root: /tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z
 Tau boundary receipt proof root: /tmp/persona-dream-live-tau-boundary-receipts-20260721T1500Z
 Blocked strict-inference boundary receipt proof root: /tmp/persona-dream-live-tau-strict-boundary-receipts-20260721T1500Z
+Tau prompt timeout diagnostic 30s proof root: /tmp/persona-dream-live-tau-prompt-timeout-diagnostic-20260721T1510Z
+Tau prompt timeout diagnostic 90s proof root: /tmp/persona-dream-live-tau-prompt-timeout-diagnostic-90s-20260721T1511Z
+Tau condition comparison timeout90 smoke proof root: /tmp/persona-dream-live-tau-condition-comparison-timeout90-smoke-20260721T1512Z
+Blocked Gate 6 timeout90 smoke floor proof root: /tmp/persona-dream-live-tau-condition-action-selection-timeout90-smoke-20260721T1512Z
 ```
 
 Current active phase boundary:
@@ -575,7 +579,11 @@ last_tau_systemic_timeout_breaker_receipt: /tmp/persona-dream-live-tau-systemic-
 last_blocked_strict_inference_systemic_timeout_breaker_receipt: /tmp/persona-dream-live-tau-strict-systemic-breaker-20260721T1448Z/live_tau_strict_inference_prompt_replication_receipt.v1.json
 last_tau_boundary_receipt_diagnostic: /tmp/persona-dream-live-tau-boundary-receipts-20260721T1500Z/live_tau_condition_comparison_receipt.v1.json
 last_blocked_strict_inference_boundary_receipt: /tmp/persona-dream-live-tau-strict-boundary-receipts-20260721T1500Z/live_tau_strict_inference_prompt_replication_receipt.v1.json
-next_required_receipt: diagnose why the Tau text preflight succeeds but full PCTOM-R condition prompts of roughly 15.8-16.8 KB time out, rerun strict-inference prompt replication with normal timeouts after that boundary responds, then test a deterministic utility/reward or scenario/policy expansion for beneficial CD-vs-baseline planning under balanced live coverage
+last_tau_prompt_timeout_diagnostic_30s_receipt: /tmp/persona-dream-live-tau-prompt-timeout-diagnostic-20260721T1510Z/live_tau_prompt_timeout_diagnostic_receipt.v1.json
+last_tau_prompt_timeout_diagnostic_90s_receipt: /tmp/persona-dream-live-tau-prompt-timeout-diagnostic-90s-20260721T1511Z/live_tau_prompt_timeout_diagnostic_receipt.v1.json
+last_tau_condition_comparison_timeout90_smoke_receipt: /tmp/persona-dream-live-tau-condition-comparison-timeout90-smoke-20260721T1512Z/live_tau_condition_comparison_receipt.v1.json
+last_blocked_gate6_timeout90_smoke_floor_receipt: /tmp/persona-dream-live-tau-condition-action-selection-timeout90-smoke-20260721T1512Z/live_tau_condition_action_selection_receipt.v1.json
+next_required_receipt: rerun strict-inference prompt replication with normal timeout budget, then run enough Gate 6 action-selection coverage to satisfy the bridge floor, then test a deterministic utility/reward or scenario/policy expansion for beneficial CD-vs-baseline planning under balanced live coverage
 secondary_receipt: permanently deployed external always-on orchestrator retry proof, only as supporting reliability evidence
 ```
 
@@ -728,6 +736,19 @@ records `condition_tau_boundary_receipts_written:16` and
 `condition_tau_boundary_receipts_written_for_all_rows:true`. Those local
 receipts include prompt hashes and prompt byte counts. This closes the
 unreceipted timeout edge; it does not make the live condition calls pass.
+
+The prompt-timeout diagnostic now shows the timeout cause is budget, not prompt
+byte size alone. A 15,481-byte padded diagnostic prompt passes in about 2.4s,
+while full default and strict condition prompts timeout at 30s and pass at 90s,
+taking about 52s each. The adapter now forwards the chosen timeout into Tau's
+inner scillm HTTP request. A one-episode live condition smoke with
+`timeout_s:90` passes Gate 2-5 for M/R/D/CD with 4 Tau calls, 4 sealed
+commitments, 4 deterministic scores, 4 hash-bound Tau boundary receipts, and
+zero writes. Gate 6 over that root wrote 4 individual action-selection receipts
+but blocked because the acceptance floor expects 4 cases per condition and the
+smoke root has 1 per condition. This proves the corrected timeout budget can
+carry a one-episode live condition loop; it does not prove strict-replication
+planning benefit.
 
 Expanded deterministic trust/commitment heldout summary:
 
