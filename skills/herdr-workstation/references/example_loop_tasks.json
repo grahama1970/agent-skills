@@ -1,0 +1,14 @@
+[
+  {
+    "task_id": "monitor-sparta-d3fend-prompt-contract",
+    "title": "Repair D3FEND native prompt approval contract",
+    "prompt": "Patch only the scoped prompt-health path so Petey can produce a PASS/NEEDS_CHANGES/BLOCKED approval artifact for d3fend_native / D3FEND / qra_coverage_per_control. Do not patch Qbert or broad monitor-sparta mutation code.",
+    "max_iterations": 3
+  },
+  {
+    "task_id": "dewey-stale-embedding-repair",
+    "title": "Repair Dewey stale embedding primitive",
+    "prompt": "Implement the scoped Dewey repair primitive so one selected source_embedding_coverage issue repairs all stale text-hash embeddings for one selected collection in one invocation, with rollback and before/after proof.",
+    "max_iterations": 3
+  }
+]
