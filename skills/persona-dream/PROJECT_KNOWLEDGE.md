@@ -1,10 +1,32 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R planning CI flag repair) by agent
+**Last updated:** 2026-07-21 (PCTOM-R balanced v19-20 retry evidence) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R BALANCED LIVE TAU V19-20 RETRY): the earlier blocked
+  balanced variants 19-20 slice was rerun from clean `origin/main` with Gate 0
+  attribution overlay and passed. Receipt:
+  `/tmp/persona-dream-live-tau-balanced-planning-v19-20-retry-20260721T190511Z/live_tau_balanced_planning_replication_receipt.v1.json`.
+  Status `PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION`, receipt SHA-256
+  `sha256:f78c4113d10be6bbe0cc67d7b3ed9560919f14fc4e223f0ffad6edf9e06b2249`.
+  It made 32 live Tau attempts and 32 live Tau calls over eight sealed-test
+  episodes: two each from information asymmetry, preference/desire,
+  trust/commitment, and coordination/conflict. Gate 0 attribution was loaded,
+  all four M/R/D/CD conditions produced eight action decisions and eight
+  planning-regret scores, Tau receipts were hash-bound, and Memory/provider/
+  canonical/identity/source-memory write attempts were all zero. The slice is
+  useful positive planning-signal evidence but not confidence-bounded planning
+  proof: CD mean planning regret was `0.1375` versus strongest baseline M
+  `0.24375`, CD-minus-baseline mean `-0.10624999999999998`, with three
+  BENEFIT rows, two HARM rows, three TIE rows, and bootstrap CI
+  `[-0.45625000000000004, 0.25000000000000006]`. This supersedes the earlier
+  v19-20 service-failure blocker as the current state for that slice, but it
+  does not supersede the broader limitation that planning benefit remains
+  unproven at confidence. Next PCTOM-R work should expand or aggregate balanced
+  live slices specifically around the mixed GAIN/LOSS cases, not restart
+  provider/video work.
 - 2026-07-21 (PCTOM-R PLANNING CI FLAG REPAIR): the distributional and
   confidence-gated planning-intervention runners no longer hard-code
   `planning_benefit_with_confidence:false`; they derive it from the bootstrap
