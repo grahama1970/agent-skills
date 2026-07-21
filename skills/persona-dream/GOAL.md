@@ -504,12 +504,13 @@ Local HTTP service retry proof root: /tmp/persona-dream-live-tau-sealed-test-ser
 Full64 live Memory fault surface proof root: /tmp/persona-dream-live-tau-full64-memory-fault-surface-20260721T122732Z
 Planning non-generalization audit proof root: /tmp/persona-dream-live-tau-planning-non-generalization-audit-20260721T124136Z
 Distributional planning intervention proof root: /tmp/persona-dream-live-tau-distributional-planning-intervention-20260721T130137Z
+Confidence-gated planning intervention proof root: /tmp/persona-dream-live-tau-confidence-gated-planning-intervention-20260721T131015Z
 ```
 
 Current active phase boundary:
 
 ```text
-phase: post-distributional-planning-intervention, pre-non-identical-repeated-live-tau-planning-or-new-utility-policy
+phase: post-confidence-gated-planning-intervention, pre-non-identical-repeated-live-tau-planning-or-beneficial-utility-policy
 last_live_condition_receipt: /tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z/live_tau_condition_comparison_receipt.v1.json
 last_reliability_receipt: /tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z/live_tau_condition_reliability_bridge_receipt.v1.json
 last_action_selection_receipt: /tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z/live_tau_condition_action_selection_receipt.v1.json
@@ -546,7 +547,9 @@ last_planning_non_generalization_audit_receipt: /tmp/persona-dream-live-tau-plan
 last_planning_non_generalization_audit_postrebase_receipt: /tmp/persona-dream-live-tau-planning-non-generalization-audit-postrebase-20260721T124457Z/planning_non_generalization_audit_receipt.v1.json
 last_distributional_planning_intervention_receipt: /tmp/persona-dream-live-tau-distributional-planning-intervention-20260721T130137Z/distributional_planning_intervention_receipt.v1.json
 last_blocked_distributional_planning_missing_root_receipt: /tmp/persona-dream-live-tau-distributional-planning-intervention-negative-20260721T130208Z/distributional_planning_intervention_receipt.v1.json
-next_required_receipt: non-identical repeated live Tau behavior over a larger/balanced planning corpus, or a different deterministic utility/reward intervention that produces non-tied CD-vs-baseline planning deltas beyond the current all-condition tie
+last_confidence_gated_planning_intervention_receipt: /tmp/persona-dream-live-tau-confidence-gated-planning-intervention-20260721T131015Z/confidence_gated_planning_intervention_receipt.v1.json
+last_blocked_confidence_gated_planning_missing_root_receipt: /tmp/persona-dream-live-tau-confidence-gated-planning-intervention-negative-20260721T131026Z/confidence_gated_planning_intervention_receipt.v1.json
+next_required_receipt: non-identical repeated live Tau behavior over a larger/balanced planning corpus, or a deterministic utility/reward intervention that improves CD-vs-baseline planning without adding the observed confidence-gated harm
 secondary_receipt: permanently deployed external always-on orchestrator retry proof, only as supporting reliability evidence
 ```
 
@@ -633,6 +636,21 @@ artifact must either produce non-identical repeated live Tau planning behavior
 over a larger/balanced corpus or test a different deterministic utility/reward
 intervention that creates non-tied CD-vs-baseline planning deltas while keeping
 belief prediction benefit separate from planning benefit.
+
+The confidence-gated epistemic planning intervention now satisfies the
+non-tied-delta artifact path, but as negative evidence. It consumes the same
+full64 live Tau sealed-test root, rewrites 256 Gate 6 action decisions under
+`confidence_gated_epistemic_action.v1`, and produces one non-tied planning
+delta in the coordination/conflict family. That nonzero delta is harmful:
+63 ties, 1 harm, mean CD-minus-baseline planning regret
+`0.004687499999999999`, CI `[0.0, 0.014062499999999997]`. This proves the
+planning surface can move under a different deterministic epistemic-action
+policy while still preserving sealed predictions, deterministic scoring,
+oracle-policy scoring, no LLM judge, no human content judgment, and zero
+unsupported writes. It does not prove planning benefit. The next primary
+planning artifact should therefore be non-identical repeated live Tau behavior
+over a larger/balanced corpus, or a utility/reward intervention that improves
+planning without introducing the observed epistemic-action harm.
 
 Expanded deterministic trust/commitment heldout summary:
 

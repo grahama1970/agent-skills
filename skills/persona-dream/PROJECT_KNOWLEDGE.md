@@ -1,10 +1,39 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R distributional planning intervention accepted) by agent
+**Last updated:** 2026-07-21 (PCTOM-R confidence-gated planning intervention accepted) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R CONFIDENCE-GATED PLANNING INTERVENTION): a
+  non-tied deterministic planning-intervention receipt now exists at
+  `/tmp/persona-dream-live-tau-confidence-gated-planning-intervention-20260721T131015Z/confidence_gated_planning_intervention_receipt.v1.json`.
+  It reports `PASS_LIVE_TAU_PCTOM_CONFIDENCE_GATED_PLANNING_INTERVENTION` for
+  policy `confidence_gated_epistemic_action.v1` with confidence threshold
+  `0.35`. The command consumed the full64 live Tau sealed-test root without
+  reexecuting Tau: 64 episodes, 256 rewritten action cases, 256
+  `PASS_TOM_ACTION_SELECTION` receipts, and 64 action decisions per M/R/D/CD
+  condition. It changed selected actions in 187 cases and exercised two
+  explicit rules: `CONFIDENT_TOP_MAPPED_ACTION=193` and
+  `LOW_CONFIDENCE_EPISTEMIC_ACTION=63`. Unlike the previous distributional
+  intervention, this produced non-tied CD-vs-baseline planning deltas:
+  `TIE=63`, `HARM=1`, nonzero family `coordination_conflict`, mean
+  CD-minus-baseline planning regret `0.004687499999999999`, CI `[0.0,
+  0.014062499999999997]`. This is useful negative evidence: the epistemic
+  confidence gate can change the planning outcome, but it harms one
+  coordination/conflict case and does not prove planning benefit.
+  `mocked:false`, `live:true`, `fixture_backed:false`,
+  `live_tau_originated_artifacts_consumed:true`, `live_tau_reexecuted:false`,
+  `human_content_judgment_required:false`, `llm_judge_used:false`, and
+  Tau/Memory/provider/canonical/identity/source-memory write attempts were all
+  0. The missing-root negative receipt at
+  `/tmp/persona-dream-live-tau-confidence-gated-planning-intervention-negative-20260721T131026Z/confidence_gated_planning_intervention_receipt.v1.json`
+  reports `BLOCKED_LIVE_TAU_PCTOM_CONFIDENCE_GATED_PLANNING_INTERVENTION`,
+  exits 1, and records `live:false` plus
+  `live_tau_originated_artifacts_consumed:false`. Next PCTOM-R planning work
+  should target non-identical repeated live Tau behavior over a larger/balanced
+  corpus or a utility/reward intervention that improves planning without
+  simply adding an epistemic-action harm.
 - 2026-07-21 (PCTOM-R DISTRIBUTIONAL PLANNING INTERVENTION): broader
   planning-intervention evidence now exists at
   `/tmp/persona-dream-live-tau-distributional-planning-intervention-20260721T130137Z/distributional_planning_intervention_receipt.v1.json`.
