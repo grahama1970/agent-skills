@@ -1,18 +1,89 @@
 # Status
 
-Status: COOPERATION_CONTRAST_NO_EXPOSURE_DIAGNOSED
+Status: COOPERATION_EXPOSURE_CONTRAST_INSTRUMENT_READY_FOR_BOUNDED_LIVE_TAU
 
-Artifact: PCTOM-R live Tau cooperation-contrast slice over the deterministic
-contrast corpus, with Gate 6 action scoring and pre-outcome threshold-rule
-rows.
+Artifact: PCTOM-R deterministic cooperation exposure/contrast instrument.
+Every visible pre-outcome packet exposes `OFFER_COOPERATION` as a non-oracle
+agent action affordance while the hidden simulator state retains both
+safe/keep-cooperation and unsafe/avoid-cooperation contrast rows.
 
 Current receipt:
+
+```text
+/tmp/persona-dream-cooperation-exposure-contrast-instrument-20260721T224641Z/cooperation_exposure_contrast_instrument_receipt.v1.json
+```
+
+Receipt SHA-256:
+
+```text
+sha256:1919eaaf30b995bf0a21d8d5e4c2d5fde31b91a47c39b1fa28dceaffe8d3d818
+```
+
+Inspection result:
+
+```text
+status: PASS_PCTOM_COOPERATION_EXPOSURE_CONTRAST_INSTRUMENT
+episodes: 8
+variant_min: 37
+variant_max: 44
+offer_cooperation_affordance_rows: 8
+keep_cooperation_positive_rows: 4
+avoid_or_unsafe_cooperation_contrast_rows: 4
+negative_mutations: 5
+negative_mutations_failed_closed: 5
+tau_call_attempts: 0
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+mocked: false
+live: false
+fixture_backed: false
+deterministic_simulator_corpus: true
+llm_judge_used: false
+human_content_judgment_required: false
+```
+
+What this proves:
+
+```text
+the next deterministic non-oracle cooperation instrument exists
+-> every visible pre-outcome packet exposes OFFER_COOPERATION as available
+-> hidden simulator labels still split keep/safe cooperation from avoid/unsafe
+   cooperation
+-> visible packets omit actual_next_action, counterpart_policy, contrast_class,
+   oracle_agent_action, and hidden cooperation safety fields
+-> five negative mutations failed closed:
+   missing_visible_offer_affordance
+   missing_avoid_contrast_rows
+   avoid_row_actual_offer
+   visible_outcome_key_leak
+   missing_oracle_withheld_field
+-> zero unsupported writes occurred
+```
+
+What this does not prove:
+
+```text
+live Tau execution over this exposure/contrast corpus
+CD will select OFFER_COOPERATION
+planning benefit
+confidence-bounded CD benefit
+semantic dream quality
+paid provider execution
+complete live Phase 01-16 runtime execution
+```
+
+Immediate predecessor receipts:
+
+Live contrast/no-exposure receipt:
 
 ```text
 /tmp/persona-dream-live-tau-cooperation-contrast-slice-reuse-proof-20260721T214048Z/live_tau_cooperation_contrast_slice_receipt.v1.json
 ```
 
-Current no-exposure diagnostic receipt:
+No-exposure diagnostic receipt:
 
 ```text
 /tmp/persona-dream-cooperation-no-exposure-diagnostic-20260721T2208Z/cooperation_no_exposure_diagnostic_receipt.v1.json
@@ -181,11 +252,12 @@ positive keep-cooperation row and zero unsafe/avoid-cooperation contrast rows.
 Next legal move:
 
 The threshold rule remains quarantined for the observed regression slice. The
-contrast corpus now has live Tau and Gate 6 evidence plus a deterministic
-no-exposure diagnostic, but still no CD offer exposure. The next PCTOM-R step is
-to design a non-oracle, pre-outcome exposure instrument or prompt/corpus
-adjustment that can produce CD cooperation action exposure while retaining
-avoid/unsafe contrast rows. If bounded attempts still produce no exposure,
-preserve the null result as a research finding. Do not claim broad planning
-benefit, feature-split acceptance, or replacement-policy validity from this
-slice.
+contrast corpus has live Tau and Gate 6 evidence plus a deterministic
+no-exposure diagnostic, but no CD offer exposure. The newly added deterministic
+exposure/contrast instrument is now the next candidate input for a bounded live
+Tau slice. Run live Tau over this instrument with the same seal/reveal/action
+discipline, then diagnose whether CD exposes `OFFER_COOPERATION` without
+leaking oracle/outcome fields. If bounded live attempts still produce no
+exposure, preserve the null result as a research finding. Do not claim broad
+planning benefit, feature-split acceptance, or replacement-policy validity
+from the offline instrument.

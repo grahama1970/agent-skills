@@ -133,6 +133,25 @@ Next: <one immediate action or stop condition>
 
 ## Current Evidence Snapshot
 
+- PCTOM-R cooperation exposure/contrast instrument:
+  `/tmp/persona-dream-cooperation-exposure-contrast-instrument-20260721T224641Z/cooperation_exposure_contrast_instrument_receipt.v1.json`.
+  Status `PASS_PCTOM_COOPERATION_EXPOSURE_CONTRAST_INSTRUMENT`, receipt
+  SHA-256
+  `sha256:1919eaaf30b995bf0a21d8d5e4c2d5fde31b91a47c39b1fa28dceaffe8d3d818`,
+  `mocked:false`, `live:false`, `fixture_backed:false`, deterministic
+  simulator corpus `true`, zero Tau calls, zero Memory/provider/canonical/
+  identity/source-memory writes, no LLM judge, and no human content judgment.
+  Counts: eight episodes, variants 37-44, eight visible
+  `OFFER_COOPERATION` affordance rows, four keep-cooperation positive rows,
+  four avoid/unsafe-cooperation contrast rows, and five of five negative
+  mutations failed closed. This creates the next deterministic non-oracle
+  instrument after the live no-exposure finding: the visible pre-outcome packet
+  exposes cooperation as an available agent action in every row while hidden
+  simulator state still separates safe/keep cooperation from unsafe/avoid
+  cooperation. It proves only the offline instrument and fail-closed mutations;
+  it does not prove live Tau CD will select `OFFER_COOPERATION`, planning
+  benefit, semantic dream quality, paid provider execution, or complete live
+  Phase 01-16 runtime execution.
 - PCTOM-R live Tau cooperation contrast slice:
   `/tmp/persona-dream-live-tau-cooperation-contrast-slice-reuse-proof-20260721T214048Z/live_tau_cooperation_contrast_slice_receipt.v1.json`.
   Status `PASS_LIVE_TAU_PCTOM_COOPERATION_CONTRAST_SLICE`, receipt SHA-256

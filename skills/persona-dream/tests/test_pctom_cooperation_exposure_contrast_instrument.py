@@ -1,0 +1,99 @@
+"""Unit checks for the PCTOM-R cooperation exposure/contrast instrument.
+
+These are deterministic artifact-contract tests only. They do not call Tau,
+Memory, providers, or judge semantic dream quality.
+"""
+
+from __future__ import annotations
+
+import copy
+import importlib.util
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+SCRIPT_PATH = (
+    ROOT
+    / "research"
+    / "prospective-tom"
+    / "scripts"
+    / "check_cooperation_exposure_contrast_instrument.py"
+)
+
+
+spec = importlib.util.spec_from_file_location("check_cooperation_exposure_contrast_instrument", SCRIPT_PATH)
+assert spec and spec.loader
+instrument = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(instrument)
+
+
+def _corpus() -> dict:
+    return instrument._build_corpus("test", instrument.DEFAULT_VARIANT_START, 2)
+
+
+def test_exposure_contrast_instrument_has_visible_offer_affordance_and_contrast_rows():
+    errors, counts = instrument._check_corpus(_corpus())
+    assert errors == []
+    assert counts["episodes"] == 4
+    assert counts["keep_cooperation_positive_rows"] == 2
+    assert counts["avoid_or_unsafe_cooperation_contrast_rows"] == 2
+    assert counts["offer_cooperation_affordance_rows"] == 4
+    assert counts["variant_min"] == instrument.DEFAULT_VARIANT_START
+
+
+def test_exposure_contrast_visible_packet_omits_hidden_or_outcome_fields():
+    corpus = _corpus()
+    visible = instrument._visible_packet(corpus["episodes"][0])
+    forbidden = {
+        "hidden_world_state",
+        "counterpart_policy",
+        "actual_next_action",
+        "oracle_agent_action",
+        "contrast_class",
+        "cooperation_is_counterpart_policy_action",
+        "cooperation_is_unsafe_or_suboptimal",
+    }
+    assert not instrument._contains_forbidden_key(visible, forbidden)
+    assert instrument.AGENT_OFFER in visible["information_access_by_agent"]["agent_visible_action_affordances"]
+
+
+def test_exposure_contrast_blocks_missing_visible_offer_affordance():
+    corpus = _corpus()
+    access = corpus["episodes"][0]["information_access_by_agent"]
+    access["embry_observes_visible_cooperation_affordance"] = False
+    access["agent_visible_action_affordances"] = [
+        action for action in access["agent_visible_action_affordances"] if action != instrument.AGENT_OFFER
+    ]
+    corpus["episodes_sha256"] = instrument._stable_json_sha256(corpus["episodes"])
+    errors, _counts = instrument._check_corpus(corpus)
+    assert any("missing_visible_offer_cooperation_affordance" in error for error in errors)
+
+
+def test_exposure_contrast_blocks_avoid_row_that_offers_cooperation():
+    corpus = _corpus()
+    avoid = next(
+        episode
+        for episode in corpus["episodes"]
+        if episode["hidden_world_state"]["contrast_class"] == instrument.AVOID_CLASS
+    )
+    avoid["actual_next_action"] = instrument.COUNTERPART_OFFER
+    avoid["counterpart_policy"]["expected_actual_next_action"] = instrument.COUNTERPART_OFFER
+    corpus["episodes_sha256"] = instrument._stable_json_sha256(corpus["episodes"])
+    errors, _counts = instrument._check_corpus(corpus)
+    assert any("avoid_actual_offer_leak" in error for error in errors)
+
+
+def test_exposure_contrast_negative_mutations_fail_closed():
+    corpus = _corpus()
+    results = {
+        name: instrument._check_corpus(copy.deepcopy(mutated))[0]
+        for name, mutated in instrument._negative_mutations(corpus).items()
+    }
+    assert set(results) == {
+        "missing_visible_offer_affordance",
+        "missing_avoid_contrast_rows",
+        "avoid_row_actual_offer",
+        "visible_outcome_key_leak",
+        "missing_oracle_withheld_field",
+    }
+    assert all(errors for errors in results.values())
