@@ -1,10 +1,29 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R condition action selection accepted) by agent
+**Last updated:** 2026-07-21 (PCTOM-R action-linked revision accepted) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R ACTION-LINKED REVISION): live-originated Gate 6 action
+  decisions now feed strict Gate 7 non-destructive belief revisions with
+  receipt
+  `/tmp/persona-dream-live-tau-action-linked-revision-20260721T034916Z/live_tau_action_linked_revision_receipt.v1.json`.
+  It consumes the live Tau condition action-selection receipt
+  `/tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z/live_tau_condition_action_selection_receipt.v1.json`
+  (`sha256:95521d5fa8171e96b0466df8015ddf9f7154144d1e959eb490322ad1d479861e`),
+  writes 16 strict `tom_belief_revision.v1` records, and reports 16
+  `PASS_TOM_BELIEF_REVISION` checks. Counts per condition are
+  `prior_action_hypotheses_per_condition: M=4, R=4, D=4, CD=4` and
+  `posterior_action_revisions_per_condition: M=4, R=4, D=4, CD=4`.
+  The strict revision records keep action linkage outside the revision schema,
+  preserve the sealed prior as auditable, update current-use posterior
+  distributions from deterministic outcome evidence, mutate no evidence, and
+  attempt zero Tau/Memory/provider/canonical/identity/source-memory writes.
+  This is action-linked Gate 7 instrumentation over live-originated artifacts;
+  it is not longitudinal recall after revision, held-out statistical benefit,
+  real external fault injection, production retry proof, complete Phase 01-16
+  runtime, paid provider execution, video quality, or semantic dream quality.
 - 2026-07-21 (PCTOM-R CONDITION ACTION SELECTION): repeated live Tau condition
   outputs now feed Gate 6 constrained action selection with receipt
   `/tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z/live_tau_condition_action_selection_receipt.v1.json`.

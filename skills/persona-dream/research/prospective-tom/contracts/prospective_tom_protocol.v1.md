@@ -494,6 +494,36 @@ Gate 7 does not prove live Tau belief-revision generation, longitudinal recall
 after revision, live Memory recall, fault-injection reliability, semantic
 quality of the posterior explanation, or provider/video execution.
 
+### Action-Linked Revision Bridge
+
+`run_live_tau_action_linked_revision.py` is the live-originated Gate 7 bridge
+from action decisions to non-destructive belief revision. It consumes a
+`PASS_LIVE_TAU_PCTOM_CONDITION_ACTION_SELECTION` receipt and its M/R/D/CD Gate 6
+case artifacts, then writes one strict `tom_belief_revision.v1` record per
+accepted action case.
+
+Bridge invariants:
+
+- base receipt status is `PASS_LIVE_TAU_PCTOM_CONDITION_ACTION_SELECTION`;
+- base receipt is `mocked: false`, `live: true`, `fixture_backed: false`;
+- base receipt has at least four action decisions and reward/regret scores per
+  M/R/D/CD condition;
+- every consumed action case has PASS Gate 6 status;
+- every written revision passes the ordinary Gate 7 checker;
+- action linkage is stored in the aggregate receipt/index, not inside the
+  strict `tom_belief_revision.v1` object;
+- sealed priors remain auditable and posterior distributions are hash-bound;
+- evidence mutations, canonical writes, identity writes, and source-memory
+  writes are absent;
+- no Tau call, Memory write, provider call, canonical write, identity write, or
+  source-memory write occurs in the bridge.
+
+The bridge proves action-linked Gate 7 instrumentation over live-originated
+artifacts. It does not prove longitudinal recall after revision, held-out
+benefit, real external service fault injection, production retry behavior,
+complete Phase 01-16 execution, paid provider execution, or semantic dream
+quality.
+
 ## Live Tau Gate 5/7 Score-Revision Bridge
 
 The live Tau score-revision bridge consumes a previously accepted live

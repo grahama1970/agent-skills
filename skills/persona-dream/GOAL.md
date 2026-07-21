@@ -336,24 +336,27 @@ Live Tau condition comparison proof root: /tmp/persona-dream-live-tau-condition-
 Repeated live Tau condition comparison proof root: /tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z
 Live Tau condition reliability proof root: /tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z
 Live Tau condition action-selection proof root: /tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z
+Live Tau action-linked revision proof root: /tmp/persona-dream-live-tau-action-linked-revision-20260721T034916Z
 ```
 
 Current active phase boundary:
 
 ```text
-phase: post-live-condition-action-selection, pre-action-linked-revision-and-held-out-benefit
+phase: post-action-linked-revision, pre-held-out-benefit-and-longitudinal-recall
 last_live_condition_receipt: /tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z/live_tau_condition_comparison_receipt.v1.json
 last_reliability_receipt: /tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z/live_tau_condition_reliability_bridge_receipt.v1.json
 last_action_selection_receipt: /tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z/live_tau_condition_action_selection_receipt.v1.json
-next_required_receipt: action-linked belief revision or held-out condition benefit receipt
+last_action_linked_revision_receipt: /tmp/persona-dream-live-tau-action-linked-revision-20260721T034916Z/live_tau_action_linked_revision_receipt.v1.json
+next_required_receipt: held-out condition benefit or longitudinal recall-after-revision receipt
 ```
 
 This boundary means Gate 8/9 condition reliability over live-originated
 artifacts and Gate 6 action-selection instrumentation over the same
-live-originated M/R/D/CD artifacts are the current predecessor evidence. It
-does not authorize a final research success claim. The next useful movement is
-to connect action decisions to non-destructive belief revision and/or run a
-held-out condition-benefit slice with the same sealed/scored/action contracts.
+live-originated M/R/D/CD artifacts, plus action-linked Gate 7 revision over
+those action decisions, are the current predecessor evidence. It does not
+authorize a final research success claim. The next useful movement is to run a
+held-out condition-benefit slice with the same sealed/scored/action contracts
+or prove longitudinal recall/use after action-linked revision.
 
 Gate 0 proof summary:
 
@@ -897,6 +900,43 @@ recall after action-linked belief revision, real external service fault
 injection, production retry machinery, complete live Phase 01-16 runtime
 execution, paid provider execution, video quality, or semantic dream quality.
 
+Live Tau action-linked revision proof summary:
+
+```text
+receipt: /tmp/persona-dream-live-tau-action-linked-revision-20260721T034916Z/live_tau_action_linked_revision_receipt.v1.json
+status: PASS_LIVE_TAU_PCTOM_ACTION_LINKED_REVISION
+base_receipt: /tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z/live_tau_condition_action_selection_receipt.v1.json
+base_receipt_sha256: sha256:95521d5fa8171e96b0466df8015ddf9f7154144d1e959eb490322ad1d479861e
+conditions: M, R, D, CD
+revision_cases_written: 16
+individual_status_counts: PASS_TOM_BELIEF_REVISION=16
+prior_action_hypotheses_per_condition: M=4, R=4, D=4, CD=4
+posterior_action_revisions_per_condition: M=4, R=4, D=4, CD=4
+prior_remains_auditable: true
+mocked: false
+live: true
+fixture_backed: false
+deterministic_simulator_corpus_fixture_backed: true
+human_content_judgment_required: false
+tau_call_attempts: 0
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+```
+
+This is live-originated Gate 7 revision instrumentation over the Gate 6
+action-selection artifacts. It proves action decisions can be linked to strict
+non-destructive belief revision records while preserving auditable sealed
+priors, hash-bound posteriors, evidence immutability, and zero unsupported
+writes. Action linkage is stored in the aggregate receipt/index, not by
+weakening the strict `tom_belief_revision.v1` schema. It does not prove
+longitudinal recall after revision, held-out statistical prediction benefit,
+planning benefit over the strongest baseline, real external service fault
+injection, production retry machinery, complete live Phase 01-16 runtime
+execution, paid provider execution, video quality, or semantic dream quality.
+
 First live Tau condition-comparison repair note:
 
 ```text
@@ -1016,7 +1056,8 @@ and four M/R/D/CD cases, plus one repeated live Tau condition-comparison run
 over four paired calibration episodes and 16 M/R/D/CD cases, plus one
 controlled Gate 8/9 condition reliability bridge over those live-originated
 artifacts, plus one live-originated Gate 6 action-selection bridge over those
-same 16 condition cases. It
+same 16 condition cases, plus one live-originated Gate 7 action-linked revision
+bridge over those action decisions. It
 does not prove paid provider execution, semantic dream quality, held-out test
 benefit, robust statistical calibration, planning benefit over the strongest
 baseline, real external service fault injection, production retry machinery,
@@ -1029,27 +1070,27 @@ research goal unless those concrete proof artifacts exist and are cited.
 
 ## Next Critical Path
 
-Move from live-originated action-selection instrumentation to action-linked
-belief revision and held-out benefit evidence, without reactivating
+Move from live-originated action-linked revision to held-out benefit evidence
+or longitudinal recall-after-revision evidence, without reactivating
 provider/video as the critical path.
 
 The next accepted artifact must answer one of these narrower questions:
 
-1. Can action-selected Tau M/R/D/CD cases write non-destructive
-   prior -> action error -> posterior revision chains without canonical,
-   identity, or source-memory writes?
-2. On a held-out test slice, does CD improve the preregistered proper-scoring
+1. On a held-out test slice, does CD improve the preregistered proper-scoring
    metric or planning-regret metric over the strongest M/R/D baseline?
+2. Can action-linked revisions be recalled and used later while preserving the
+   synthetic/literal boundary and without canonical identity/source mutation?
 
-Stop condition for an action-linked revision artifact:
+Stop condition for a longitudinal recall-after-revision artifact:
 
 ```text
 mocked: no
-base_receipt: live Tau condition action-selection receipt
+base_receipt: live Tau action-linked revision receipt
 conditions: M, R, D, CD
-prior_action_hypotheses_per_condition: >= 1
-posterior_action_revisions_per_condition: >= 1
-prior_remains_auditable: true
+revision_recall_queries: >= 1
+revision_recall_hits: >= 1
+prior_and_posterior_distinguished: true
+synthetic_literal_boundary_preserved: true
 canonical_memory_write_attempts: 0
 identity_write_attempts: 0
 source_memory_write_attempts: 0
