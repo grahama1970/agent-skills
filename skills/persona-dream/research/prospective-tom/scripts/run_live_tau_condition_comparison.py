@@ -97,6 +97,10 @@ def _load_module(path: Path, name: str) -> Any:
     return module
 
 
+def _load_json(path: Path) -> Any:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
 def _compact_tau_receipt(receipt: dict[str, Any]) -> dict[str, Any]:
     keys = [
         "schema",
@@ -155,35 +159,121 @@ def _dispatch_boundary_receipt(
     }
 
 
-def _visible_refs(episode: dict[str, Any]) -> list[dict[str, str]]:
+def _gate0_attribution_records(gate0_case_root: Path | None) -> list[dict[str, Any]]:
+    if gate0_case_root is None:
+        return []
+    residue_path = gate0_case_root / "normalized_residue.json"
+    if not residue_path.exists() or residue_path.is_symlink():
+        raise RuntimeError(f"gate0_normalized_residue_missing:{residue_path}")
+    residue = _load_json(residue_path)
+    if not isinstance(residue, list):
+        raise RuntimeError(f"gate0_normalized_residue_not_list:{residue_path}")
+    records: list[dict[str, Any]] = []
+    for idx, item in enumerate(residue):
+        if not isinstance(item, dict):
+            raise RuntimeError(f"gate0_residue_{idx}_not_object")
+        source_id = item.get("source_id")
+        accepted_source_id = item.get("accepted_source_id") or source_id
+        source_digest = item.get("accepted_source_ids_sha256")
+        query_receipt_index = item.get("query_receipt_index")
+        if not isinstance(source_id, str) or not source_id:
+            raise RuntimeError(f"gate0_residue_{idx}_missing_source_id")
+        if not isinstance(accepted_source_id, str) or not accepted_source_id:
+            raise RuntimeError(f"gate0_residue_{idx}_missing_accepted_source_id")
+        if not isinstance(source_digest, str) or not source_digest.startswith("sha256:"):
+            raise RuntimeError(f"gate0_residue_{idx}_missing_accepted_source_ids_sha256")
+        if not isinstance(query_receipt_index, int):
+            raise RuntimeError(f"gate0_residue_{idx}_missing_query_receipt_index")
+        records.append(
+            {
+                "accepted_source_id": accepted_source_id,
+                "accepted_source_ids_sha256": source_digest,
+                "gate0_residue_source_id": source_id,
+                "gate0_residue_scope": item.get("scope"),
+                "gate0_query_receipt_index": query_receipt_index,
+                "gate0_residue_index": idx,
+                "gate0_attribution_kind": "live_recall_residue_grounding",
+            }
+        )
+    return records
+
+
+def _with_gate0_attribution(ref: dict[str, Any], records: list[dict[str, Any]], index: int) -> dict[str, Any]:
+    attributed = dict(ref)
+    if not records:
+        return attributed
+    record = records[index % len(records)]
+    attributed.update(record)
+    return attributed
+
+
+def _visible_refs(episode: dict[str, Any], gate0_records: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
     episode_id = episode["episode_id"]
-    refs = [{"scope": "social_episode_access", "source_id": f"{episode_id}:information_access_by_agent"}]
+    records = gate0_records or []
+    refs: list[dict[str, Any]] = [
+        {"scope": "social_episode_access", "source_id": f"{episode_id}:information_access_by_agent"}
+    ]
     history = episode.get("observable_history") or []
     if history:
         refs.insert(0, {"scope": "social_episode_observation", "source_id": f"{episode_id}:observable_history:0"})
     if len(history) > 1:
         refs.append({"scope": "social_episode_observation", "source_id": f"{episode_id}:observable_history:1"})
-    return refs
+    return [_with_gate0_attribution(ref, records, idx) for idx, ref in enumerate(refs)]
 
 
-def _visible_packet(episode: dict[str, Any]) -> dict[str, Any]:
+def _visible_packet(episode: dict[str, Any], gate0_records: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     episode_id = episode["episode_id"]
+    records = gate0_records or []
     return {
         "episode_id": episode_id,
         "scenario_family": episode.get("scenario_family"),
         "information_access_by_agent": episode.get("information_access_by_agent"),
-        "information_access_ref": {
-            "scope": "social_episode_access",
-            "source_id": f"{episode_id}:information_access_by_agent",
-        },
+        "information_access_ref": _with_gate0_attribution(
+            {
+                "scope": "social_episode_access",
+                "source_id": f"{episode_id}:information_access_by_agent",
+            },
+            records,
+            0,
+        ),
         "observable_history": episode.get("observable_history"),
         "observable_history_refs": [
-            {"scope": "social_episode_observation", "source_id": f"{episode_id}:observable_history:{idx}"}
+            _with_gate0_attribution(
+                {"scope": "social_episode_observation", "source_id": f"{episode_id}:observable_history:{idx}"},
+                records,
+                idx,
+            )
             for idx, item in enumerate(episode.get("observable_history", []))
             if isinstance(item, dict)
         ],
         "allowed_next_actions": episode.get("allowed_next_actions"),
     }
+
+
+def _overlay_gate0_attribution(value: Any, visible_refs: list[dict[str, Any]]) -> Any:
+    if not visible_refs:
+        return value
+    by_pair = {
+        (ref.get("scope"), ref.get("source_id")): ref
+        for ref in visible_refs
+        if isinstance(ref, dict) and isinstance(ref.get("scope"), str) and isinstance(ref.get("source_id"), str)
+    }
+    if isinstance(value, list):
+        return [_overlay_gate0_attribution(item, visible_refs) for item in value]
+    if not isinstance(value, dict):
+        return value
+    updated = {
+        key: _overlay_gate0_attribution(child, visible_refs)
+        for key, child in value.items()
+    }
+    key = (updated.get("scope"), updated.get("source_id"))
+    if key in by_pair and updated.get("scope") != "synthetic_counterfactual":
+        merged = dict(updated)
+        for attr_key, attr_value in by_pair[key].items():
+            if attr_key not in {"scope", "source_id"}:
+                merged.setdefault(attr_key, attr_value)
+        return merged
+    return updated
 
 
 def _prediction_targets(episode: dict[str, Any]) -> list[dict[str, Any]]:
@@ -288,10 +378,11 @@ def _preflight_output_contract() -> dict[str, Any]:
     }
 
 
-def _prompt(episode: dict[str, Any], condition: str) -> str:
+def _prompt(episode: dict[str, Any], condition: str, gate0_records: list[dict[str, Any]] | None = None) -> str:
     episode_id = episode["episode_id"]
     ids = _ids(episode_id, condition)
-    visible = _visible_packet(episode)
+    records = gate0_records or []
+    visible = _visible_packet(episode, records)
     targets = _prediction_targets(episode)
     actions = list(episode.get("allowed_next_actions") or [])
     if not actions:
@@ -309,7 +400,7 @@ def _prompt(episode: dict[str, Any], condition: str) -> str:
     cf_action_shape = [{"value": action, "probability": 0.0} for action in actions[:3]]
     cf_action_shape.append({"value": "UNKNOWN", "probability": 1.0})
     synthetic_ref = {"scope": "synthetic_counterfactual", "source_id": f"{episode_id}:{condition}:do-policy-alternative"}
-    visible_refs = _visible_refs(episode)
+    visible_refs = _visible_refs(episode, records)
     held_fixed = [
         "counterpart_goals",
         "counterpart_preferences",
@@ -665,6 +756,7 @@ def run_live_comparison(
     model: str | None,
     timeout_s: float,
     preflight_timeout_s: float | None = None,
+    gate0_case_root: Path | None = None,
 ) -> dict[str, Any]:
     started = time.monotonic()
     output_root = output_root.resolve()
@@ -676,6 +768,7 @@ def run_live_comparison(
     tau_preflight_receipt_path = receipts_root / "tau_text_reasoning_preflight_receipt.json"
     case_index_path = artifacts_root / "live_condition_case_index.json"
     metrics_path = artifacts_root / "live_condition_metrics_summary.json"
+    gate0_case_root = gate0_case_root.resolve() if gate0_case_root is not None else None
 
     build_corpus = _load_module(BUILD_CORPUS_SCRIPT, "persona_dream_pctom_build_corpus")
     check_corpus = _load_module(CHECK_CORPUS_SCRIPT, "persona_dream_pctom_check_corpus")
@@ -695,6 +788,13 @@ def run_live_comparison(
     )
 
     errors: list[str] = []
+    gate0_records: list[dict[str, Any]] = []
+    gate0_attribution_overlay_used = False
+    try:
+        gate0_records = _gate0_attribution_records(gate0_case_root)
+        gate0_attribution_overlay_used = bool(gate0_records)
+    except Exception as exc:
+        errors.append(f"gate0_attribution_load_failed:{exc}")
     if corpus_check.get("status") != "PASS_SOCIAL_EPISODE_CORPUS":
         errors.append(f"corpus_check_status:{corpus_check.get('status')}")
         errors.extend(f"corpus_check_error:{error}" for error in corpus_check.get("errors", []))
@@ -764,7 +864,7 @@ def run_live_comparison(
                 parsed: dict[str, Any] | None = None
                 role = f"pctom-live-condition-{condition.lower()}"
                 output_contract = _output_contract()
-                prompt_text = _prompt(episode, condition)
+                prompt_text = _prompt(episode, condition, gate0_records)
 
                 if systemic_failure_signature is not None:
                     blocked_by_systemic_failure += 1
@@ -843,16 +943,21 @@ def run_live_comparison(
                     distribution_bundle = parsed.get("tom_belief_distribution_bundle")
                     branch_bundle = parsed.get("counterfactual_branch_bundle")
                     prediction_payload = parsed.get("prediction_payload")
+                    visible_refs = _visible_refs(episode, gate0_records)
                     if isinstance(distribution_bundle, dict):
+                        distribution_bundle = _overlay_gate0_attribution(distribution_bundle, visible_refs)
                         _write_json(distribution_path, distribution_bundle)
                     else:
                         case_errors.append("parsed_missing_distribution_bundle")
                     if isinstance(branch_bundle, dict):
+                        branch_bundle = _overlay_gate0_attribution(branch_bundle, visible_refs)
                         _write_json(branch_path, branch_bundle)
                     else:
                         case_errors.append("parsed_missing_branch_bundle")
                     if not isinstance(prediction_payload, dict):
                         case_errors.append("parsed_missing_prediction_payload")
+                    else:
+                        prediction_payload = _overlay_gate0_attribution(prediction_payload, visible_refs)
 
                     if isinstance(distribution_bundle, dict) and isinstance(branch_bundle, dict) and isinstance(prediction_payload, dict):
                         commitment_bundle = _commitment_bundle(
@@ -987,6 +1092,9 @@ def run_live_comparison(
         "systemic_failure_threshold": SYSTEMIC_FAILURE_THRESHOLD,
         "systemic_failure_signature": systemic_failure_signature,
         "systemic_failure_counts": dict(systemic_failure_counts),
+        "gate0_case_root": str(gate0_case_root) if gate0_case_root else None,
+        "gate0_attribution_overlay_used": gate0_attribution_overlay_used,
+        "gate0_attribution_record_count": len(gate0_records),
         "blocked_by_systemic_failure": blocked_by_systemic_failure,
         "tau_boundary_receipts_written": tau_boundary_receipts_written,
         "tau_boundary_receipts_missing": tau_boundary_receipts_missing,
@@ -1018,6 +1126,7 @@ def run_live_comparison(
             "remaining_cases_marked_blocked_by_systemic_failure": systemic_failure_signature is None
             or blocked_by_systemic_failure > 0,
             "tau_boundary_receipts_written_for_all_rows": tau_boundary_receipts_written == len(rows),
+            "gate0_attribution_loaded_if_requested": gate0_case_root is None or gate0_attribution_overlay_used,
             "human_content_judgment_absent": True,
             "unsupported_writes_absent": True,
         },
@@ -1062,6 +1171,7 @@ def main() -> int:
     parser.add_argument("--model", default=None)
     parser.add_argument("--timeout-s", type=float, default=240.0)
     parser.add_argument("--preflight-timeout-s", type=float, default=None)
+    parser.add_argument("--gate0-case-root", type=Path, default=None)
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
 
@@ -1075,6 +1185,7 @@ def main() -> int:
         model=args.model,
         timeout_s=args.timeout_s,
         preflight_timeout_s=args.preflight_timeout_s,
+        gate0_case_root=args.gate0_case_root,
     )
     if args.json:
         print(json.dumps(receipt, indent=2, sort_keys=True))
