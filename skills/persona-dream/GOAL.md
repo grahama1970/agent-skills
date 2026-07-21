@@ -339,19 +339,21 @@ Live Tau condition action-selection proof root: /tmp/persona-dream-live-tau-cond
 Live Tau action-linked revision proof root: /tmp/persona-dream-live-tau-action-linked-revision-20260721T034916Z
 Live Tau revision recall proof root: /tmp/persona-dream-live-tau-revision-recall-20260721T035640Z
 Held-out condition benefit proof root: /tmp/persona-dream-heldout-condition-benefit-final-20260721T041000Z
+Blocked live Memory revision-recall attempt root: /tmp/persona-dream-live-memory-revision-recall-20260721T041839Z
 ```
 
 Current active phase boundary:
 
 ```text
-phase: post-held-out-condition-benefit, pre-live-memory-recall-after-revision-and-sealed-test-statistical-confidence
+phase: post-held-out-condition-benefit, diagnosing-live-memory-recall-after-revision
 last_live_condition_receipt: /tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z/live_tau_condition_comparison_receipt.v1.json
 last_reliability_receipt: /tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z/live_tau_condition_reliability_bridge_receipt.v1.json
 last_action_selection_receipt: /tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z/live_tau_condition_action_selection_receipt.v1.json
 last_action_linked_revision_receipt: /tmp/persona-dream-live-tau-action-linked-revision-20260721T034916Z/live_tau_action_linked_revision_receipt.v1.json
 last_revision_recall_receipt: /tmp/persona-dream-live-tau-revision-recall-20260721T035640Z/live_tau_revision_recall_receipt.v1.json
 last_heldout_condition_benefit_receipt: /tmp/persona-dream-heldout-condition-benefit-final-20260721T041000Z/heldout_condition_benefit_receipt.v1.json
-next_required_receipt: live Memory recall-after-revision receipt or sealed-test statistical-confidence receipt
+last_blocked_live_memory_revision_recall_attempt_receipt: /tmp/persona-dream-live-memory-revision-recall-20260721T041839Z/live_memory_revision_recall_receipt.v1.json
+next_required_receipt: PASS live Memory recall-after-revision receipt or sealed-test statistical-confidence receipt
 ```
 
 This boundary means Gate 8/9 condition reliability over live-originated
@@ -364,6 +366,43 @@ contracts. It still does not authorize a final research success claim. The next
 useful movement is to prove live Memory recall/use after action-linked revision
 or expand the held-out result into a sealed statistical test-set run with
 confidence intervals and explicit live/model boundaries.
+
+Blocked live Memory revision-recall attempt summary:
+
+```text
+receipt: /tmp/persona-dream-live-memory-revision-recall-20260721T041839Z/live_memory_revision_recall_receipt.v1.json
+status: BLOCKED_PCTOM_LIVE_MEMORY_REVISION_RECALL
+base_receipt: /tmp/persona-dream-live-tau-revision-recall-20260721T035640Z/live_tau_revision_recall_receipt.v1.json
+conditions: M, R, D, CD
+counts.memory_documents_prepared: 16
+counts.memory_documents_upserted: 16
+memory_upsert_http_status: 200
+counts.memory_exact_rereads: 16
+counts.revision_documents_per_condition: M=4, R=4, D=4, CD=4
+live_memory_recall_performed: true
+memory_recall_attempts: 12
+counts.revision_recall_queries: 4
+counts.revision_recall_hits: 0
+counts.revision_recall_hits_per_condition: M=0, R=0, D=0, CD=0
+checks.prior_and_posterior_distinguished: true
+checks.synthetic_literal_boundary_preserved: true
+counts.write_violations: 0
+mocked: false
+live: true
+fixture_backed: false
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+```
+
+This proves the first live Memory recall-after-revision attempt reached the
+Memory daemon, wrote the 16 noncanonical research revision documents, and
+exact-reread all 16 documents by key. It does not prove semantic live Memory
+recall after revision because `/recall` returned zero hits for every condition.
+The current blocker is narrower than the PCTOM-R goal: diagnose whether the
+custom research collection is outside the semantic recall surface or whether
+the inserted document shape/query contract is insufficient, then rerun the same
+stop condition with a PASS or fail-closed receipt.
 
 Held-out condition benefit proof summary:
 
@@ -1147,22 +1186,25 @@ controlled Gate 8/9 condition reliability bridge over those live-originated
 artifacts, plus one live-originated Gate 6 action-selection bridge over those
 same 16 condition cases, plus one live-originated Gate 7 action-linked revision
 bridge over those action decisions, plus one deterministic revision-recall
-bridge over those action-linked revision artifacts. It
-does not prove paid provider execution, semantic dream quality, held-out test
-benefit, robust statistical calibration, planning benefit over the strongest
-baseline, real external service fault injection, production retry machinery,
-live Memory recall after action-linked revision, complete live Phase 01-16
-runtime execution, or autonomous operation beyond the bounded bridges. Those
-require separate live receipts.
+bridge over those action-linked revision artifacts, plus one deterministic
+held-out condition-benefit receipt and one blocked live Memory
+revision-recall attempt that exact-reread inserted research documents but
+returned zero semantic `/recall` hits. It does not prove paid provider
+execution, semantic dream quality, robust statistical calibration, planning
+benefit over the strongest baseline, real external service fault injection,
+production retry machinery, live Memory recall after action-linked revision,
+complete live Phase 01-16 runtime execution, or autonomous operation beyond the
+bounded bridges. Those require separate live receipts.
 
 No agent may claim final, green, complete, fixed, verified, or closed for this
 research goal unless those concrete proof artifacts exist and are cited.
 
 ## Next Critical Path
 
-Move from deterministic held-out benefit evidence to live Memory
-recall-after-revision evidence or a larger sealed-test statistical-confidence
-run, without reactivating provider/video as the critical path.
+Move from deterministic held-out benefit evidence and a blocked first live
+Memory revision-recall attempt to a PASS live Memory recall-after-revision
+receipt or a larger sealed-test statistical-confidence run, without
+reactivating provider/video as the critical path.
 
 The next accepted artifact must answer one of these narrower questions:
 
@@ -1173,6 +1215,17 @@ The next accepted artifact must answer one of these narrower questions:
 2. Can action-linked revisions be recalled through live Memory and used later
    while preserving the synthetic/literal boundary and without canonical
    identity/source mutation?
+
+Immediate diagnostic stop condition for the blocked live Memory path:
+
+```text
+identify whether zero recall hits are caused by collection search visibility,
+document shape, query shape, or Memory service indexing latency
+preserve the blocked receipt as evidence, not as success
+do not write canonical memory, source memory, or identity records
+rerun the live Memory recall-after-revision checker only after the recall
+surface/document contract is repaired or intentionally rerouted
+```
 
 Stop condition for a live Memory recall-after-revision artifact:
 
