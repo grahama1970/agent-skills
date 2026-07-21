@@ -8,8 +8,13 @@
     "condition",
     "sealed_at",
     "outcome_visible",
+    "canonical_memory_write",
     "prediction_payload_sha256",
-    "prediction_payload"
+    "prediction_payload",
+    "model_receipts_sha256",
+    "model_receipts",
+    "evidence_bundle_sha256",
+    "evidence_bundle"
   ],
   "properties": {
     "prediction_id": {"type": "string", "minLength": 1},
@@ -17,11 +22,22 @@
     "condition": {"type": "string", "enum": ["M", "R", "D", "CD", "ORACLE_DIAGNOSTIC"]},
     "sealed_at": {"type": "string", "minLength": 1},
     "outcome_visible": {"type": "boolean", "const": false},
+    "canonical_memory_write": {"type": "boolean", "const": false},
     "prediction_payload_sha256": {
       "type": "string",
       "pattern": "^sha256:[0-9a-f]{64}$"
     },
-    "prediction_payload": {"type": "object"}
+    "prediction_payload": {"type": "object"},
+    "model_receipts_sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "model_receipts": {"type": "array"},
+    "evidence_bundle_sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "evidence_bundle": {"type": "object"}
   },
   "additionalProperties": false
 }

@@ -82,6 +82,7 @@ Commands:
   check-social-episode-corpus  Validate deterministic PCTOM-R Gate 1 social episodes
   check-tom-belief-distributions  Validate PCTOM-R Gate 2 ToM distribution invariants
   check-counterfactual-branches  Validate PCTOM-R Gate 3 counterfactual branch invariants
+  check-tom-prediction-commitments  Validate PCTOM-R Gate 4 sealed prediction commitments
   check-pipeline-contract  Validate the canonical Phase 01-16 pipeline contract
   write-phase10-reproducibility-receipt  Prove Phase 10 committed artifacts are canonically reproducible
   repair-semantic-mix-revision Create, Memory-verify, and activate a new explicit-human-idea revision
@@ -399,6 +400,9 @@ case "$COMMAND" in
     ;;
   check-counterfactual-branches)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_counterfactual_branches.py" "$@"
+    ;;
+  check-tom-prediction-commitments)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_tom_prediction_commitments.py" "$@"
     ;;
   check-pipeline-contract)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_persona_dream_pipeline_contract.py" "$@"

@@ -1,0 +1,23 @@
+{
+  "canonical_memory_write": false,
+  "commitments": [
+    {
+      "canonical_memory_write": false,
+      "condition": "CD",
+      "episode_id": "dev-info-asym-01",
+      "evidence_bundle": {"branch_bundle_sha256": "sha256:555dd04ed329208dec610b746214d0d977ada8f85abf0c300b64bf50a7b9976c", "distribution_bundle_sha256": "sha256:b86857ec786198f1be922331d6a52d485c294528ce2421432f63e2ffe330b24f"},
+      "evidence_bundle_sha256": "sha256:70d429d88a15d3c0b38577c3f6163de92207a42cde0b3f002705552564274300",
+      "model_receipts": [],
+      "model_receipts_sha256": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "outcome_visible": false,
+      "prediction_id": "gate4-unresolved-branch",
+      "prediction_payload": {"branch_refs": ["missing-branch"], "condition": "CD", "episode_id": "dev-info-asym-01", "outcome_visible": false},
+      "prediction_payload_sha256": "sha256:a9b4885d28a67a394ba0c6a11678170df65450bf4e13ccfefd9e58c6f1f676cf",
+      "sealed_at": "2026-07-20T00:00:00Z"
+    }
+  ],
+  "episode_id": "dev-info-asym-01",
+  "outcome_visible": false,
+  "schema": "persona_dream.research.prospective_tom.tom_prediction_commitment_bundle.v1",
+  "sealed": true
+}

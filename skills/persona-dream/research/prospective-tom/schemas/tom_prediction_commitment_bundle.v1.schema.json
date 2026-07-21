@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.research.prospective_tom.tom_prediction_commitment_bundle.v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "episode_id",
+    "sealed",
+    "outcome_visible",
+    "canonical_memory_write",
+    "commitments"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "persona_dream.research.prospective_tom.tom_prediction_commitment_bundle.v1"
+    },
+    "episode_id": {"type": "string", "minLength": 1},
+    "sealed": {"type": "boolean", "const": true},
+    "outcome_visible": {"type": "boolean", "const": false},
+    "canonical_memory_write": {"type": "boolean", "const": false},
+    "commitments": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "tom_prediction_commitment.v1.schema.json"}
+    }
+  },
+  "additionalProperties": false
+}

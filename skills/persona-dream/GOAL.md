@@ -226,6 +226,7 @@ Gate 3 commit: 781bc10e51c516f11930f274e30970c42d240297
 Gate 1 proof root: /tmp/persona-dream-pctom-gate1-final-postpatch-20260721T001545Z
 Gate 2 proof root: /tmp/persona-dream-pctom-gate2-postrebase-20260721T003945Z
 Gate 3 proof root: /tmp/persona-dream-pctom-gate3-final-20260721T004724Z
+Gate 4 proof root: /tmp/persona-dream-pctom-gate4-final-20260721T010232Z
 ```
 
 Gate 0 proof summary:
@@ -282,6 +283,25 @@ Gate 3 negatives: 6 x BLOCKED_COUNTERFACTUAL_BRANCHES
 git_diff_check: clean
 ```
 
+Gate 4 proof summary:
+
+```text
+json_files_parsed: 57
+python_files_ast_parsed: 6
+matrix_commands: 32
+expected_negative_failures: 25
+Gate 4 positive: PASS_TOM_PREDICTION_COMMITMENTS
+Gate 4 commitments: 1
+Gate 4 conditions: 1
+Gate 4 branch_refs: 4
+Gate 4 distribution_refs: 4
+Gate 4 resolved_source_evidence_refs: 4
+Gate 4 hashes_checked: 3
+Gate 4 forbidden_outcome_paths: 0
+Gate 4 negatives: 8 x BLOCKED_TOM_PREDICTION_COMMITMENTS
+git_diff_check: clean
+```
+
 This is fixture-backed deterministic evidence. It does not prove live Memory
 recall, Tau text execution, semantic dream quality, prediction benefit,
 calibration, scoring, action improvement, belief revision, fault-surface
@@ -315,9 +335,10 @@ research goal unless those concrete proof artifacts exist and are cited.
 
 ## Next Critical Path
 
-Implement Gate 4: sealed prediction commitments that consume Gate 3 branches,
-hash prediction/evidence/model payloads, and prove predictions are committed
-before outcome reveal.
+Implement Gate 5: deterministic scoring receipts that consume sealed Gate 4
+prediction commitments and later outcome reveals, then compute prediction,
+calibration, consistency, and counterfactual metrics without allowing prediction
+edits after reveal.
 
 The next accepted artifact must be inspectable as files and receipts under the
 research namespace, with positive and negative fixtures. Mocked or fixture

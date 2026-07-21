@@ -1,0 +1,94 @@
+{
+  "canonical_memory_write": false,
+  "commitments": [
+    {
+      "canonical_memory_write": false,
+      "condition": "CD",
+      "episode_id": "dev-info-asym-01",
+      "evidence_bundle": {
+        "belief_distribution_refs": [
+          "gate3-factual-bdi-001",
+          "gate3-counterfactual-bdi-001"
+        ],
+        "branch_bundle_sha256": "sha256:555dd04ed329208dec610b746214d0d977ada8f85abf0c300b64bf50a7b9976c",
+        "branch_refs": [
+          "factual-observed",
+          "cf-kai-gives-no-warning"
+        ],
+        "distribution_bundle_sha256": "sha256:b86857ec786198f1be922331d6a52d485c294528ce2421432f63e2ffe330b24f",
+        "episode_id": "dev-info-asym-01",
+        "source_evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "dev-info-asym-01:observable_history:0"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "dev-info-asym-01:information_access_by_agent"
+          }
+        ]
+      },
+      "evidence_bundle_sha256": "sha256:65f3bf4e762dd59ec93cd88e1e76ffc2e7d783b88314acdedbbb999ac478a688",
+      "model_receipts": [
+        {
+          "claim_scope": "sealed-ledger-fixture-only",
+          "fixture_backed": true,
+          "live": false,
+          "mocked": false,
+          "model_call_attempts": 0,
+          "receipt_id": "gate4-fixture-no-model-call",
+          "tau_call_attempts": 0
+        }
+      ],
+      "model_receipts_sha256": "sha256:c138cbc6be356a8850510eaacbbf3d2e48e4d91ade2a2fa083d69ca472071b26",
+      "outcome_visible": false,
+      "prediction_id": "gate4-commitment-cd-001",
+      "prediction_payload": {
+        "abstain": false,
+        "belief_distribution_refs": [
+          "gate3-factual-bdi-001",
+          "gate3-counterfactual-bdi-001"
+        ],
+        "branch_refs": [
+          "factual-observed",
+          "cf-kai-gives-no-warning"
+        ],
+        "condition": "CD",
+        "episode_id": "dev-info-asym-01",
+        "evidence_refs": [
+          {
+            "scope": "social_episode_observation",
+            "source_id": "dev-info-asym-01:observable_history:0"
+          },
+          {
+            "scope": "social_episode_access",
+            "source_id": "dev-info-asym-01:information_access_by_agent"
+          }
+        ],
+        "outcome_visible": false,
+        "predicted_next_action_distribution": [
+          {
+            "probability": 0.62,
+            "value": "KAI_HINTS_CONSTRAINT"
+          },
+          {
+            "probability": 0.28,
+            "value": "KAI_WARNS_PRIVATELY"
+          },
+          {
+            "probability": 0.1,
+            "value": "KAI_INTERRUPTS_WITH_CORRECTION"
+          }
+        ],
+        "prediction_horizon": "next_action",
+        "schema": "persona_dream.research.prospective_tom.tom_prediction_payload.v1"
+      },
+      "prediction_payload_sha256": "sha256:fa0cb4e233cca3f15260f42d3e4bb6233c8714329a409c8521686d71c1bcaa51",
+      "sealed_at": "2026-07-20T00:00:00Z"
+    }
+  ],
+  "episode_id": "dev-info-asym-01",
+  "outcome_visible": false,
+  "schema": "persona_dream.research.prospective_tom.tom_prediction_commitment_bundle.v1",
+  "sealed": true
+}

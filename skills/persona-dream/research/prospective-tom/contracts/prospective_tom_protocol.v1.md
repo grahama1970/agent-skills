@@ -213,3 +213,57 @@ Gate 3 invariants:
 Gate 3 does not prove counterfactual causal correctness, prediction accuracy,
 calibration quality, Tau execution, live Memory recall, outcome scoring, belief
 revision, or reliability under faults.
+
+## Gate 4 Sealed Prediction Ledger Contract
+
+Gate 4 commits predictions before outcome reveal. It does not execute the
+counterpart policy or score the result; it only proves that the prediction,
+model receipts, and evidence bundle are immutable, hash-bound, and free of
+outcome leakage at the commitment boundary.
+
+Each commitment bundle must include:
+
+```text
+episode_id
+sealed: true
+outcome_visible: false
+canonical_memory_write: false
+commitments[]
+```
+
+Each commitment must include:
+
+```text
+prediction_id
+episode_id
+condition
+sealed_at
+outcome_visible: false
+prediction_payload
+prediction_payload_sha256
+model_receipts
+model_receipts_sha256
+evidence_bundle
+evidence_bundle_sha256
+```
+
+Gate 4 invariants:
+
+- every commitment is sealed while `outcome_visible` is false;
+- the prediction payload hash recomputes exactly;
+- the model receipt bundle hash recomputes exactly;
+- the evidence bundle hash recomputes exactly;
+- evidence bundle hashes match the consumed Gate 2 distribution bundle and
+  Gate 3 branch bundle;
+- branch refs resolve to Gate 3 branches;
+- belief distribution refs resolve to Gate 2 distributions;
+- source evidence refs resolve only to agent-visible episode fields;
+- prediction action distributions sum to one when present;
+- hidden state, actual next action, ground-truth labels, outcome reveals, and
+  scores are forbidden inside commitments;
+- no canonical memory write occurs before outcome scoring;
+- prediction edits after reveal are forbidden.
+
+Gate 4 does not prove prediction accuracy, calibration quality, outcome reveal,
+deterministic scoring, belief revision, Tau execution, live Memory recall, or
+fault-injection reliability.
