@@ -1,10 +1,41 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R planning non-generalization audit accepted) by agent
+**Last updated:** 2026-07-21 (PCTOM-R distributional planning intervention accepted) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R DISTRIBUTIONAL PLANNING INTERVENTION): broader
+  planning-intervention evidence now exists at
+  `/tmp/persona-dream-live-tau-distributional-planning-intervention-20260721T130137Z/distributional_planning_intervention_receipt.v1.json`.
+  It reports `PASS_LIVE_TAU_PCTOM_DISTRIBUTIONAL_PLANNING_INTERVENTION` for
+  policy `distributional_expected_utility_over_predicted_next_action.v1`.
+  The command consumed the full64 live Tau sealed-test root without reexecuting
+  Tau: 64 episodes, 256 full64 base cases, 256 rewritten action cases, 256
+  `PASS_TOM_ACTION_SELECTION` receipts, and 64 action decisions per M/R/D/CD
+  condition. It changed selected actions in 188 cases: M=48, R=48, D=48,
+  CD=44. Action-policy changes were not trust/commitment-only:
+  `coordination_conflict=64`, `preference_desire_uncertainty=64`, and
+  `trust_commitment_relationship=60`; CD changed in coordination/conflict 16,
+  preference/desire 16, and trust/commitment 12. This satisfies the request for
+  a broader/different planning intervention that changes action policy beyond
+  the previous sparse trust/commitment subset. It does not prove planning
+  benefit: CD versus the strongest M/R/D baseline tied on all 64 planning rows,
+  mean CD-minus-baseline planning regret was `0.0`, and bootstrap CI was
+  `[0.0, 0.0]`. `mocked:false`, `live:true`, `fixture_backed:false`,
+  `live_tau_originated_artifacts_consumed:true`, `live_tau_reexecuted:false`,
+  `human_content_judgment_required:false`, `llm_judge_used:false`, and
+  Tau/Memory/provider/canonical/identity/source-memory write attempts were all
+  0. The missing-root negative receipt at
+  `/tmp/persona-dream-live-tau-distributional-planning-intervention-negative-20260721T130208Z/distributional_planning_intervention_receipt.v1.json`
+  reports `BLOCKED_LIVE_TAU_PCTOM_DISTRIBUTIONAL_PLANNING_INTERVENTION`,
+  exits 1, and correctly records `live:false` plus
+  `live_tau_originated_artifacts_consumed:false`. Next PCTOM-R work should
+  target non-identical repeated live Tau behavior over a larger/balanced
+  planning corpus, or a different deterministic utility/reward intervention
+  that produces non-tied CD-vs-baseline planning deltas without weakening
+  sealed prediction, deterministic scoring, oracle-policy, no-judge, and
+  no-write constraints.
 - 2026-07-21 (PCTOM-R PLANNING NON-GENERALIZATION AUDIT): planning
   generalization-boundary evidence now exists at
   `/tmp/persona-dream-live-tau-planning-non-generalization-audit-20260721T124136Z/planning_non_generalization_audit_receipt.v1.json`.

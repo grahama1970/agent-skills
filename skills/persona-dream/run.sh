@@ -98,6 +98,7 @@ Commands:
   run-live-tau-trust-commit-replication  Rerun focused live Tau M/R/D/CD trust-commitment planning cases
   run-live-tau-trust-commit-repeated-seed-summary  Aggregate repeated focused trust-commitment live Tau planning receipts
   run-live-tau-planning-non-generalization-audit  Hash-bind planning receipts and explain sparse/non-general planning benefit
+  run-live-tau-distributional-planning-intervention  Run a broader distributional planning intervention over full64 live Tau artifacts
   run-live-tau-sealed-test-retry-proof  Prove retry/idempotence over live Tau sealed-test artifacts
   run-live-tau-sealed-test-runsh-orchestration-retry-proof  Exercise sealed-test retry proof through run.sh dispatch
   run-live-tau-sealed-test-queue-worker-retry-proof  Exercise sealed-test retry proof through a bounded queue worker
@@ -479,6 +480,9 @@ case "$COMMAND" in
     ;;
   run-live-tau-planning-non-generalization-audit)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_tau_planning_non_generalization_audit.py" "$@"
+    ;;
+  run-live-tau-distributional-planning-intervention)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_tau_distributional_planning_intervention.py" "$@"
     ;;
   run-live-tau-sealed-test-retry-proof)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_tau_sealed_test_retry_proof.py" "$@"

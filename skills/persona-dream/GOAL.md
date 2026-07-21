@@ -503,12 +503,13 @@ Blocked repeated expanded live trust/commitment one-source summary proof root: /
 Local HTTP service retry proof root: /tmp/persona-dream-live-tau-sealed-test-service-retry-proof-20260721T121812Z
 Full64 live Memory fault surface proof root: /tmp/persona-dream-live-tau-full64-memory-fault-surface-20260721T122732Z
 Planning non-generalization audit proof root: /tmp/persona-dream-live-tau-planning-non-generalization-audit-20260721T124136Z
+Distributional planning intervention proof root: /tmp/persona-dream-live-tau-distributional-planning-intervention-20260721T130137Z
 ```
 
 Current active phase boundary:
 
 ```text
-phase: post-planning-non-generalization-audit, pre-broader-planning-intervention
+phase: post-distributional-planning-intervention, pre-non-identical-repeated-live-tau-planning-or-new-utility-policy
 last_live_condition_receipt: /tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z/live_tau_condition_comparison_receipt.v1.json
 last_reliability_receipt: /tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z/live_tau_condition_reliability_bridge_receipt.v1.json
 last_action_selection_receipt: /tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z/live_tau_condition_action_selection_receipt.v1.json
@@ -543,7 +544,9 @@ last_local_http_service_retry_receipt: /tmp/persona-dream-live-tau-sealed-test-s
 last_full64_live_memory_fault_surface_receipt: /tmp/persona-dream-live-tau-full64-memory-fault-surface-20260721T122732Z/live_tau_full64_memory_fault_surface_receipt.v1.json
 last_planning_non_generalization_audit_receipt: /tmp/persona-dream-live-tau-planning-non-generalization-audit-20260721T124136Z/planning_non_generalization_audit_receipt.v1.json
 last_planning_non_generalization_audit_postrebase_receipt: /tmp/persona-dream-live-tau-planning-non-generalization-audit-postrebase-20260721T124457Z/planning_non_generalization_audit_receipt.v1.json
-next_required_receipt: broader/different planning intervention evidence that changes action policy beyond the current sparse trust/commit subset, or non-identical repeated live Tau behavior over a larger/balanced planning corpus
+last_distributional_planning_intervention_receipt: /tmp/persona-dream-live-tau-distributional-planning-intervention-20260721T130137Z/distributional_planning_intervention_receipt.v1.json
+last_blocked_distributional_planning_missing_root_receipt: /tmp/persona-dream-live-tau-distributional-planning-intervention-negative-20260721T130208Z/distributional_planning_intervention_receipt.v1.json
+next_required_receipt: non-identical repeated live Tau behavior over a larger/balanced planning corpus, or a different deterministic utility/reward intervention that produces non-tied CD-vs-baseline planning deltas beyond the current all-condition tie
 secondary_receipt: permanently deployed external always-on orchestrator retry proof, only as supporting reliability evidence
 ```
 
@@ -615,6 +618,21 @@ records that the expanded repeated trust/commitment seed patterns are
 identical with planning CI upper `0.0`. This moves the phase boundary to
 broader/different planning intervention evidence rather than more status
 summaries, provider/video work, or service deployment.
+
+The distributional planning intervention now satisfies the next broader-policy
+artifact path without overclaiming planning benefit. It consumes the full64
+live Tau sealed-test root, rewrites 256 Gate 6 action decisions under
+`distributional_expected_utility_over_predicted_next_action.v1`, and changes
+188 selected actions across coordination/conflict, preference/desire, and
+trust/commitment families. CD action choices change in 44 cases across three
+families. However, CD still ties the strongest M/R/D baseline on all 64
+planning rows, with mean CD-minus-baseline planning regret `0.0` and CI
+`[0.0, 0.0]`. This moves the phase boundary again: broader action-policy
+change is now proven, but planning benefit remains unproven. The next planning
+artifact must either produce non-identical repeated live Tau planning behavior
+over a larger/balanced corpus or test a different deterministic utility/reward
+intervention that creates non-tied CD-vs-baseline planning deltas while keeping
+belief prediction benefit separate from planning benefit.
 
 Expanded deterministic trust/commitment heldout summary:
 
