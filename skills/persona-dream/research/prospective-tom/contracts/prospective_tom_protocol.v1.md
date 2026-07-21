@@ -64,3 +64,47 @@ Gate 0 does not prove:
 - paid provider execution.
 
 Those belong to later PCTOM-R gates.
+
+## Gate 1 Social World Contract
+
+Gate 1 creates a deterministic text-first social world. The evaluator knows the
+hidden state; Embry only receives the observable history and information-access
+view. Ground truth comes from simulator configuration and deterministic
+counterpart policy, not from an LLM judge.
+
+Each social episode must include:
+
+```text
+hidden_world_state
+counterpart_beliefs
+counterpart_goals
+counterpart_preferences
+counterpart_policy
+information_access_by_agent
+observable_history
+allowed_next_actions
+actual_next_action
+ground_truth_tom_labels
+```
+
+The development corpus must contain 12 episodes:
+
+```text
+3 information_asymmetry_false_belief
+3 preference_desire_uncertainty
+3 trust_commitment_relationship
+3 coordination_conflict
+```
+
+Gate 1 invariants:
+
+- every actual next action is one of the allowed next actions;
+- every actual next action matches the deterministic counterpart policy;
+- each episode has at least one first-order ToM label;
+- each episode has at least one second-order ToM label;
+- every ToM label has `label_source: simulator_config`;
+- no episode uses an LLM judge for ground truth;
+- the episode list hash recomputes exactly.
+
+Gate 1 does not prove model prediction accuracy, scoring, calibration, belief
+revision, live Tau execution, or reliability under faults.

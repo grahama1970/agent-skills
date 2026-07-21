@@ -1,6 +1,6 @@
 # Inspection
 
-Command family:
+Gate 0 command family:
 
 ```bash
 skills/persona-dream/run.sh check-prospective-tom-protocol \
@@ -54,4 +54,59 @@ live: false
 tau_call_attempts: 0
 memory_write_attempts: 0
 provider_call_attempts: 0
+```
+
+## Gate 1 Inspection
+
+Build command:
+
+```bash
+skills/persona-dream/run.sh build-social-episode-corpus \
+  --split development \
+  --episodes-per-family 3 \
+  --generated-at 2026-07-20T00:00:00Z \
+  --output skills/persona-dream/research/prospective-tom/fixtures/gate1/development/social_episode_corpus.v1.json \
+  --receipt-out /tmp/persona-dream-pctom-gate1-build-receipt.json \
+  --json
+```
+
+Build result:
+
+```text
+status: PASS_SOCIAL_EPISODE_CORPUS_BUILT
+episode_count: 12
+family_counts: 3 per family across 4 families
+episodes_sha256: sha256:713877facd124815548959012da04818d31e8790ed4b914bcdb1b59b8a759d3e
+corpus_sha256: sha256:3b80c6a04f24dda488d881b0934ae8200e71cef67d94258d8eec09af8f465028
+tau_call_attempts: 0
+memory_write_attempts: 0
+provider_call_attempts: 0
+```
+
+Latest final proof root:
+
+```text
+/tmp/persona-dream-pctom-gate1-final-20260721T001454Z
+```
+
+Positive result:
+
+```text
+status: PASS_SOCIAL_EPISODE_CORPUS
+episodes: 12
+families: 4
+first_order_labels: 12
+second_order_labels: 12
+errors: 0
+```
+
+Negative mutation result:
+
+```text
+status: BLOCKED_SOCIAL_EPISODE_CORPUS
+exit: 1
+errors:
+- episodes_sha256_mismatch
+- episode_0_actual_next_action_not_allowed:INVALID_UNLISTED_ACTION
+- episode_0_policy_actual_mismatch:KAI_HINTS_CONSTRAINT:INVALID_UNLISTED_ACTION
 ```

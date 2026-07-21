@@ -1,32 +1,34 @@
 # Active Contract
 
-Artifact: PCTOM-R Gate 0 lineage checker slice.
+Artifact: PCTOM-R Gate 1 deterministic social episode corpus.
 
-Input: fixture case directories containing recall receipts, normalized residue,
-dream branches, and one sealed ToM prediction commitment.
+Input: deterministic simulator templates for four scenario families.
 
-Output shape: one JSON receipt with status, errors, counts, lineage links,
-hash checks, and explicit claim boundaries.
+Output shape: one development corpus JSON with 12 social episodes and one JSON
+checker receipt with status, errors, counts, invariant checks, and explicit
+claim boundaries.
 
-Must include: accepted source-id hash recomputation, residue-to-recall
-resolution, branch-to-residue resolution, prediction-to-branch resolution,
-prediction evidence-to-residue resolution, sealed-before-reveal check, and
-probability-sum checks.
+Must include: hidden world state, counterpart beliefs/goals/preferences,
+deterministic counterpart policy, information access by agent, observable
+history, allowed next actions, actual next action, first-order ToM label,
+second-order ToM label, and simulator-config label source.
 
 Must not include: model calls, provider calls, memory writes, Phase 01-16 state
-machine changes, outcome scoring claims, or semantic quality claims.
+machine changes, outcome scoring claims, or prediction-accuracy claims.
 
 Runtime/tooling: Python standard library only.
 
-Inspection method: run `scripts/check_prospective_tom_protocol.py` against
-positive and negative fixtures.
+Inspection method: run `scripts/build_social_episode_corpus.py`, then
+`scripts/check_social_episode_corpus.py` against the generated corpus and a
+mutated negative corpus.
 
-Failure conditions: malformed JSON, missing required files, source-id hash
-mismatch, unresolved residue, unresolved dream branch, unsealed prediction,
-bad prediction payload hash, or invalid probability distribution.
+Failure conditions: malformed JSON, missing fields, wrong family counts,
+actual action outside allowed actions, policy/action mismatch, missing
+first-/second-order labels, non-simulator label source, LLM judge ground truth,
+or episode-list hash mismatch.
 
 Allowed writes: files under `skills/persona-dream/research/prospective-tom/`
-and a `run.sh` dispatch entry for the checker.
+and `run.sh` dispatch entries for the builder/checker.
 
 Forbidden writes: memory records, provider receipts, production Phase 01-16
 state files, generated image/video/audio artifacts.

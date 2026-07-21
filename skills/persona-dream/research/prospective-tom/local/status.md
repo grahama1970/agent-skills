@@ -2,23 +2,26 @@
 
 Status: ACCEPTED
 
-Artifact: PCTOM-R Gate 0 lineage checker slice.
+Artifact: PCTOM-R Gate 1 deterministic social episode corpus.
 
 Candidate:
 
 ```text
-contracts/prospective_tom_protocol.v1.md
-schemas/*.v1.schema.json
-scripts/check_prospective_tom_protocol.py
-fixtures/gate0/positive/lineage_ok
-fixtures/gate0/negative/*
+scripts/build_social_episode_corpus.py
+scripts/check_social_episode_corpus.py
+fixtures/gate1/development/social_episode_corpus.v1.json
+schemas/social_episode.v1.schema.json
 ```
 
 Inspection result:
 
 ```text
-1 positive fixture passed
-4 negative fixtures failed closed
+12 development episodes built
+4 scenario families represented
+3 episodes per family
+12 first-order ToM labels
+12 second-order ToM labels
+1 negative mutation failed closed
 0 live calls
 0 memory writes
 0 provider calls
@@ -26,23 +29,24 @@ Inspection result:
 
 Reason accepted:
 
-The artifact mechanically checks the requested Gate 0 research-lane chain:
+The artifact mechanically checks the requested Gate 1 research-lane chain:
 
 ```text
-recall receipt
--> accepted source ID
--> normalized residue
--> dream branch
--> sealed ToM prediction
+hidden world state
+-> deterministic counterpart policy
+-> actual next action
+-> first-order ToM label
+-> second-order ToM label
 ```
 
 Can be used by:
 
-- a later deterministic social-world simulator;
-- a Tau text-call trial runner after it writes the same commitment contract;
+- a Tau text-call trial runner;
+- a future condition runner for M/R/D/CD;
 - a future seal/reveal scoring checker.
 
 Next legal move:
 
-Implement the text-first social episode corpus builder as a separate artifact
-under the same research namespace.
+Implement the Gate 2 distribution invariant checker that consumes a social
+episode and rejects unsupported or malformed ToM belief distributions before
+any condition runner exists.

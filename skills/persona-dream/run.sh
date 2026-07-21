@@ -78,6 +78,8 @@ Commands:
   check-pipeline-robustness  Aggregate offline autonomous, lineage, fail-closed, and provider-boundary checks
   check-live-memory-recall  Exercise live Memory /recall through static dream generation and write a fail-closed receipt
   check-prospective-tom-protocol  Validate PCTOM-R Gate 0 fixture lineage through a sealed prediction
+  build-social-episode-corpus  Build deterministic PCTOM-R Gate 1 social episodes
+  check-social-episode-corpus  Validate deterministic PCTOM-R Gate 1 social episodes
   check-pipeline-contract  Validate the canonical Phase 01-16 pipeline contract
   write-phase10-reproducibility-receipt  Prove Phase 10 committed artifacts are canonically reproducible
   repair-semantic-mix-revision Create, Memory-verify, and activate a new explicit-human-idea revision
@@ -383,6 +385,12 @@ case "$COMMAND" in
     ;;
   check-prospective-tom-protocol)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_prospective_tom_protocol.py" "$@"
+    ;;
+  build-social-episode-corpus)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/build_social_episode_corpus.py" "$@"
+    ;;
+  check-social-episode-corpus)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_social_episode_corpus.py" "$@"
     ;;
   check-pipeline-contract)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/scripts/check_persona_dream_pipeline_contract.py" "$@"
