@@ -60,8 +60,10 @@ case "$1" in
         echo "  $0 assess /path/to/script.py --json"
         echo ""
         echo "For LLM completions, call the proxy directly:"
+        echo "  SCILLM_PROXY_KEY=\"\${SCILLM_MASTER_KEY:-\${LITELLM_MASTER_KEY:-\${SCILLM_PROXY_KEY:-sk-dev-proxy-123}}}\""
         echo "  curl http://localhost:4001/v1/chat/completions \\"
-        echo "    -H 'Authorization: Bearer sk-dev-proxy-123' \\"
+        echo "    -H \"Authorization: Bearer \$SCILLM_PROXY_KEY\" \\"
+        echo "    -H 'X-Caller-Skill: scillm' \\"
         echo "    -H 'Content-Type: application/json' \\"
         echo "    -d '{\"model\":\"text\",\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}]}'"
         exit 1

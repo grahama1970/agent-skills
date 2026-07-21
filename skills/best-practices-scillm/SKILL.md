@@ -34,11 +34,11 @@ Load this skill when scillm calls fail. It covers common mistakes and how to fix
 ```bash
 # Get LLM-powered analysis of your recent calls
 curl "http://localhost:4001/v1/scillm/debug?caller=YOUR_SKILL_NAME&limit=3" \
-  -H "Authorization: Bearer sk-dev-proxy-123"
+  -H "Authorization: Bearer $SCILLM_PROXY_KEY"
 
 # Or analyze a specific call by ID
 curl "http://localhost:4001/v1/scillm/debug/CALL_ID" \
-  -H "Authorization: Bearer sk-dev-proxy-123"
+  -H "Authorization: Bearer $SCILLM_PROXY_KEY"
 ```
 
 The debug endpoint returns:
@@ -82,10 +82,18 @@ resp = httpx.post(url, json={"model": "text", ...})
 
 **RIGHT:**
 ```python
+import os
+
+proxy_key = (
+    os.getenv("SCILLM_MASTER_KEY")
+    or os.getenv("LITELLM_MASTER_KEY")
+    or os.getenv("SCILLM_PROXY_KEY")
+    or "sk-dev-proxy-123"
+)
 resp = httpx.post(
     url,
     headers={
-        "Authorization": "Bearer sk-dev-proxy-123",
+        "Authorization": f"Bearer {proxy_key}",
         "X-Caller-Skill": "your-skill-name",  # REQUIRED
     },
     json={"model": "text", ...},
@@ -139,10 +147,18 @@ client = OpenAI(api_key="sk-...")  # Direct to OpenAI
 
 **RIGHT:**
 ```python
+import os
 from openai import OpenAI
+
+proxy_key = (
+    os.getenv("SCILLM_MASTER_KEY")
+    or os.getenv("LITELLM_MASTER_KEY")
+    or os.getenv("SCILLM_PROXY_KEY")
+    or "sk-dev-proxy-123"
+)
 client = OpenAI(
     base_url="http://localhost:4001/v1",
-    api_key="sk-dev-proxy-123",
+    api_key=proxy_key,
 )
 ```
 
@@ -195,7 +211,7 @@ With 60s queue timeout → requests #25+ die before reaching LLM
 | `429 Rate limit` | Upstream provider exhausted | Proxy auto-retries; let fallback chain work |
 | `Connection refused :4001` | Proxy not running | `docker compose -p scillm up -d` |
 | `400 Missing X-Caller-Skill` | Required header missing | Add header to all requests |
-| `401 Unauthorized` | Missing/wrong auth | Use `Bearer sk-dev-proxy-123` |
+| `401 Unauthorized` | Missing/wrong auth | Use the configured local proxy key: `SCILLM_MASTER_KEY`, `LITELLM_MASTER_KEY`, then `SCILLM_PROXY_KEY`; the dev default only works when no key override is configured. |
 | `Empty response` | Model returned nothing | Check prompt; try different model |
 | `TRUNCATED status` | Low completion tokens | Normal for short prompts; ignore |
 | `FALLBACK status` | Unexpected model routing | Check cascade in `/v1/scillm/providers` |
@@ -251,7 +267,8 @@ Before debugging errors, check proxy state:
 
 ```bash
 # Full health check
-curl -s -H "Authorization: Bearer sk-dev-proxy-123" \
+SCILLM_PROXY_KEY="${SCILLM_MASTER_KEY:-${LITELLM_MASTER_KEY:-${SCILLM_PROXY_KEY:-sk-dev-proxy-123}}}"
+curl -s -H "Authorization: Bearer $SCILLM_PROXY_KEY" \
   "http://localhost:4001/v1/scillm/health" | jq '.concurrency.chutes'
 
 # Response shows:
@@ -273,7 +290,8 @@ curl -s -H "Authorization: Bearer sk-dev-proxy-123" \
 
 **Reset stuck state:**
 ```bash
-curl -X POST -H "Authorization: Bearer sk-dev-proxy-123" \
+SCILLM_PROXY_KEY="${SCILLM_MASTER_KEY:-${LITELLM_MASTER_KEY:-${SCILLM_PROXY_KEY:-sk-dev-proxy-123}}}"
+curl -X POST -H "Authorization: Bearer $SCILLM_PROXY_KEY" \
   "http://localhost:4001/v1/scillm/concurrency/reset"
 ```
 
@@ -290,10 +308,19 @@ curl -X POST -H "Authorization: Bearer sk-dev-proxy-123" \
 Or programmatically:
 ```python
 # In your error handler
+import os
+
+proxy_key = (
+    os.getenv("SCILLM_MASTER_KEY")
+    or os.getenv("LITELLM_MASTER_KEY")
+    or os.getenv("SCILLM_PROXY_KEY")
+    or "sk-dev-proxy-123"
+)
+
 async def debug_my_call(call_id: str) -> str:
     resp = await httpx.get(
         f"http://localhost:4001/v1/scillm/debug/{call_id}",
-        headers={"Authorization": "Bearer sk-dev-proxy-123"},
+        headers={"Authorization": f"Bearer {proxy_key}"},
     )
     return resp.json().get("analysis", "No analysis")
 ```
@@ -305,7 +332,7 @@ async def debug_my_call(call_id: str) -> str:
 ```
 [ ] Using httpx or openai SDK (NOT requests)
 [ ] base_url = "http://localhost:4001/v1"
-[ ] Authorization: Bearer sk-dev-proxy-123
+[ ] Authorization uses the configured local proxy key, not a stale hardcoded default
 [ ] X-Caller-Skill header set
 [ ] timeout >= 60s
 [ ] NO max_tokens in request

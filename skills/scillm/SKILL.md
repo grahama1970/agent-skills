@@ -83,7 +83,8 @@ taxonomy:
 
 Rebuild: `docker compose -p scillm -f deploy/docker/compose.scillm.core.yml up -d --build`
 
-**Auth:** `GET /v1/scillm/auth` with `Authorization: Bearer sk-dev-proxy-123`
+**Auth:** `GET /v1/scillm/auth` with the configured local proxy key.
+For this repo's local proxy scripts, resolve it as `${SCILLM_MASTER_KEY:-${LITELLM_MASTER_KEY:-${SCILLM_PROXY_KEY:-sk-dev-proxy-123}}}`; the dev default works only when the running proxy has not rotated `SCILLM_MASTER_KEY`/`LITELLM_MASTER_KEY`.
 
 ## Invocation surfaces (pick one)
 
@@ -110,11 +111,12 @@ Exec profiles: [references/exec-workers.md](references/exec-workers.md) · [docs
 
 ## How to call
 
-**Chat (default):** `POST http://localhost:4001/v1/chat/completions` — OpenAI format. Auth: `Bearer sk-dev-proxy-123`, `X-Caller-Skill: <project>`.
+**Chat (default):** `POST http://localhost:4001/v1/chat/completions` — OpenAI format. Auth: configured proxy bearer, `X-Caller-Skill: <project>`.
 
 ```bash
+SCILLM_PROXY_KEY="${SCILLM_MASTER_KEY:-${LITELLM_MASTER_KEY:-${SCILLM_PROXY_KEY:-sk-dev-proxy-123}}}"
 curl -s http://localhost:4001/v1/chat/completions \
-  -H "Authorization: Bearer sk-dev-proxy-123" \
+  -H "Authorization: Bearer $SCILLM_PROXY_KEY" \
   -H "X-Caller-Skill: my-project" \
   -H "Content-Type: application/json" \
   -d '{"model":"chutes-deepseek","messages":[{"role":"user","content":"What is 2+2?"}]}'
@@ -123,8 +125,9 @@ curl -s http://localhost:4001/v1/chat/completions \
 **OpenCode serve (multi-step coding delegate):**
 
 ```bash
+SCILLM_PROXY_KEY="${SCILLM_MASTER_KEY:-${LITELLM_MASTER_KEY:-${SCILLM_PROXY_KEY:-sk-dev-proxy-123}}}"
 curl -s -X POST http://localhost:4001/v1/scillm/opencode/runs \
-  -H "Authorization: Bearer sk-dev-proxy-123" \
+  -H "Authorization: Bearer $SCILLM_PROXY_KEY" \
   -H "X-Caller-Skill: my-project" \
   -H "Content-Type: application/json" \
   -d '{"prompt":"Inspect tests/test_foo.py; do not edit.","agent":"build","skills":["memory","scillm"],"timeout_s":600}'
