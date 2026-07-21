@@ -117,6 +117,14 @@ def _information_asymmetry(variant: int, prefix: str = "dev") -> dict[str, Any]:
         "legal",
         "handoff",
         "authority",
+        "audit",
+        "capacity",
+        "dependency-chain",
+        "handover",
+        "redline",
+        "access-window",
+        "owner-shift",
+        "incident",
     ][variant - 1]
     action = ["KAI_HINTS_CONSTRAINT", "KAI_WARNS_PRIVATELY", "KAI_INTERRUPTS_WITH_CORRECTION"][
         (variant - 1) % 3
@@ -173,6 +181,14 @@ def _preference_uncertainty(variant: int, prefix: str = "dev") -> dict[str, Any]
         "joint edit",
         "risk memo",
         "short debrief",
+        "asynchronous review",
+        "direct escalation",
+        "quiet handoff",
+        "paired decision",
+        "structured critique",
+        "private rehearsal",
+        "narrow debrief",
+        "delayed disclosure",
     ][variant - 1]
     action = ["KAI_CHOOSES_QUIET_REVIEW", "KAI_REQUESTS_FAST_HANDOFF", "KAI_OFFERS_SHARED_DRAFT"][
         (variant - 1) % 3
@@ -228,6 +244,14 @@ def _trust_commitment(variant: int, prefix: str = "dev") -> dict[str, Any]:
         "guarded",
         "established",
         "contested",
+        "probationary",
+        "transparent",
+        "fatigued",
+        "renewed",
+        "asymmetric",
+        "contractual",
+        "dependent",
+        "uncertain",
     ][variant - 1]
     action = ["KAI_SETS_BOUNDARY", "KAI_RESTATES_COMMITMENT", "KAI_DELEGATES_TRUST"][(variant - 1) % 3]
     return _episode(
@@ -281,6 +305,14 @@ def _coordination_conflict(variant: int, prefix: str = "dev") -> dict[str, Any]:
         "approval",
         "coverage",
         "rollback",
+        "handover timing",
+        "shared account",
+        "audit trail",
+        "fallback owner",
+        "parallel review",
+        "incident window",
+        "safety check",
+        "handoff proof",
     ][variant - 1]
     action = ["KAI_ASKS_TO_WAIT", "KAI_OFFERS_COOPERATION", "KAI_DISCLOSES_AUTHORITY_CONSTRAINT"][
         (variant - 1) % 3
@@ -340,8 +372,8 @@ def _split_prefix(split: str) -> str:
 def build_corpus(split: str, episodes_per_family: int, generated_at: str | None = None) -> dict[str, Any]:
     if episodes_per_family < 1:
         raise ValueError("episodes_per_family must be >= 1")
-    if episodes_per_family > 16:
-        raise ValueError("this deterministic seed set currently supports up to 16 episodes per family")
+    if episodes_per_family > 24:
+        raise ValueError("this deterministic seed set currently supports up to 24 episodes per family")
     prefix = _split_prefix(split)
     episodes = []
     for family in FAMILIES:

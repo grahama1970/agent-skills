@@ -1,10 +1,37 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R repeated-seed trust/commit summary accepted) by agent
+**Last updated:** 2026-07-21 (PCTOM-R expanded deterministic trust/commit coverage accepted) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R EXPANDED DETERMINISTIC TRUST/COMMIT COVERAGE):
+  deterministic trust/commitment coverage has been expanded before another
+  live Tau retry. The corpus generator now supports 24 episodes per family,
+  and the fresh corpus check receipt at
+  `/tmp/persona-dream-expanded-corpus-20260721T110141Z/social_episode_corpus_check_receipt.json`
+  reports `PASS_SOCIAL_EPISODE_CORPUS` with `mocked:false`, `live:false`,
+  `fixture_backed:true`, 96 total episodes, 24 episodes per family, 96
+  first-order labels, 96 second-order labels, deterministic policies, and no
+  LLM judge. The filtered trust/commitment heldout receipt at
+  `/tmp/persona-dream-expanded-trust-heldout-20260721T110148Z/heldout_condition_benefit_receipt.v1.json`
+  reports `PASS_PCTOM_HELDOUT_CONDITION_BENEFIT` with `mocked:false`,
+  `live:false`, 8 selected trust/commitment episodes
+  (`explicit-trust-commit-17` through `explicit-trust-commit-24`), 32 M/R/D/CD
+  cases, 8 sealed commitments, deterministic scores, action decisions, and
+  planning-regret scores per condition, and all scenario-family/variant filter
+  checks true. CD beats the strongest baseline on mean belief Brier
+  (`-0.07979999999999995`) but ties the strongest baseline on mean planning
+  regret (`0.0`). An empty-filter negative receipt at
+  `/tmp/persona-dream-expanded-trust-heldout-empty-filter-20260721T110157Z/heldout_condition_benefit_receipt.v1.json`
+  reports `BLOCKED_PCTOM_HELDOUT_CONDITION_BENEFIT`, 0 cases, 0 action
+  decisions, missing CD delta, and no writes/calls, so the filtered heldout
+  boundary fails closed instead of accepting an empty comparison. This is
+  deterministic simulator evidence, not live Tau heldout execution, live
+  Memory recall, production retry machinery, paid provider execution,
+  semantic dream quality, or complete Phase 01-16 runtime evidence. Next
+  PCTOM-R work should run live Tau over the expanded trust/commitment variants
+  or prove the production retry service boundary.
 - 2026-07-21 (PCTOM-R REPEATED-SEED TRUST/COMMIT SUMMARY): repeated-seed
   trust/commitment planning evidence now exists at
   `/tmp/persona-dream-live-tau-trust-commit-repeated-seed-summary-20260721T105120Z/live_tau_trust_commit_repeated_seed_receipt.v1.json`.

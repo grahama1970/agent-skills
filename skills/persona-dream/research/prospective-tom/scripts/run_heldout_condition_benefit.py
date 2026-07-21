@@ -91,6 +91,31 @@ def _episode_index(corpus: Any, errors: list[str]) -> dict[str, dict[str, Any]]:
     return episodes
 
 
+def _filtered_episodes(
+    corpus: dict[str, Any],
+    limit: int,
+    *,
+    scenario_family: str | None,
+    variant_min: int | None,
+    variant_max: int | None,
+) -> list[dict[str, Any]]:
+    episodes = []
+    for episode in corpus.get("episodes", []):
+        if not isinstance(episode, dict):
+            continue
+        if scenario_family and episode.get("scenario_family") != scenario_family:
+            continue
+        variant = episode.get("variant")
+        if variant_min is not None and (not isinstance(variant, int) or variant < variant_min):
+            continue
+        if variant_max is not None and (not isinstance(variant, int) or variant > variant_max):
+            continue
+        episodes.append(episode)
+    if limit > 0:
+        return episodes[:limit]
+    return episodes
+
+
 def _condition_metric_comparison(metrics: dict[str, Any], metric_name: str) -> dict[str, Any]:
     baseline_scores = {
         condition: metrics.get(condition, {}).get(metric_name)
@@ -139,6 +164,9 @@ def _build_freeze_manifest(
     generated_at: str,
     episodes_per_family: int,
     episode_limit: int,
+    scenario_family: str | None,
+    variant_min: int | None,
+    variant_max: int | None,
     condition_receipt: dict[str, Any],
     condition_receipt_sha256: str,
     corpus_file_sha256: str | None,
@@ -150,6 +178,9 @@ def _build_freeze_manifest(
         "generated_at": generated_at,
         "episodes_per_family": episodes_per_family,
         "episode_limit": episode_limit,
+        "scenario_family_filter": scenario_family,
+        "variant_min": variant_min,
+        "variant_max": variant_max,
         "condition_receipt_sha256": condition_receipt_sha256,
         "corpus_path": condition_receipt.get("corpus_path"),
         "corpus_file_sha256": corpus_file_sha256,
@@ -170,6 +201,9 @@ def run_heldout_benefit(
     episodes_per_family: int,
     episode_limit: int,
     generated_at: str,
+    scenario_family: str | None = None,
+    variant_min: int | None = None,
+    variant_max: int | None = None,
 ) -> dict[str, Any]:
     started = time.monotonic()
     output_root = output_root.resolve()
@@ -185,14 +219,26 @@ def run_heldout_benefit(
     action_index_path = action_root / "heldout_action_decisions.json"
     freeze_manifest_path = output_root / "heldout_freeze_manifest.v1.json"
 
-    condition_receipt = condition.run_comparison(
-        output_root=condition_root,
-        receipt_out=condition_receipt_path,
-        split=split,
-        episodes_per_family=episodes_per_family,
-        episode_limit=episode_limit,
-        generated_at=generated_at,
-    )
+    original_selector = condition._select_episodes
+    try:
+        if scenario_family or variant_min is not None or variant_max is not None:
+            condition._select_episodes = lambda corpus, limit: _filtered_episodes(
+                corpus,
+                limit,
+                scenario_family=scenario_family,
+                variant_min=variant_min,
+                variant_max=variant_max,
+            )
+        condition_receipt = condition.run_comparison(
+            output_root=condition_root,
+            receipt_out=condition_receipt_path,
+            split=split,
+            episodes_per_family=episodes_per_family,
+            episode_limit=episode_limit,
+            generated_at=generated_at,
+        )
+    finally:
+        condition._select_episodes = original_selector
     condition_receipt_sha256 = _file_sha256(condition_receipt_path)
     if condition_receipt.get("status") != condition.PASS_STATUS:
         errors.append(f"condition_comparison_status:{condition_receipt.get('status')}")
@@ -338,6 +384,9 @@ def run_heldout_benefit(
         generated_at=generated_at,
         episodes_per_family=episodes_per_family,
         episode_limit=episode_limit,
+        scenario_family=scenario_family,
+        variant_min=variant_min,
+        variant_max=variant_max,
         condition_receipt=condition_receipt,
         condition_receipt_sha256=condition_receipt_sha256,
         corpus_file_sha256=corpus_file_sha256,
@@ -362,6 +411,63 @@ def run_heldout_benefit(
         if not isinstance(scored_counts.get(condition_name), int) or scored_counts[condition_name] < 1:
             errors.append(f"deterministic_scores_per_condition_insufficient:{condition_name}:{scored_counts.get(condition_name)}")
 
+    selected_episode_ids = sorted({str(row.get("episode_id")) for row in action_rows if row.get("episode_id")})
+    scenario_family_filter_respected = (
+        True
+        if not scenario_family
+        else all(
+            isinstance(episodes.get(str(row.get("episode_id"))), dict)
+            and episodes[str(row.get("episode_id"))].get("scenario_family") == scenario_family
+            for row in action_rows
+            if row.get("episode_id")
+        )
+    )
+    variant_min_respected = (
+        True
+        if variant_min is None
+        else all(
+            isinstance(episodes.get(str(row.get("episode_id"))), dict)
+            and isinstance(episodes[str(row.get("episode_id"))].get("variant"), int)
+            and episodes[str(row.get("episode_id"))]["variant"] >= variant_min
+            for row in action_rows
+            if row.get("episode_id")
+        )
+    )
+    variant_max_respected = (
+        True
+        if variant_max is None
+        else all(
+            isinstance(episodes.get(str(row.get("episode_id"))), dict)
+            and isinstance(episodes[str(row.get("episode_id"))].get("variant"), int)
+            and episodes[str(row.get("episode_id"))]["variant"] <= variant_max
+            for row in action_rows
+            if row.get("episode_id")
+        )
+    )
+    if not scenario_family_filter_respected:
+        errors.append(f"scenario_family_filter_violation:{scenario_family}")
+    if not variant_min_respected:
+        errors.append(f"variant_min_filter_violation:{variant_min}")
+    if not variant_max_respected:
+        errors.append(f"variant_max_filter_violation:{variant_max}")
+    checks = {
+        "split_is_explicitly_frozen_heldout": split == DEFAULT_SPLIT,
+        "scenario_family_filter_respected": scenario_family_filter_respected,
+        "variant_min_respected": variant_min_respected,
+        "variant_max_respected": variant_max_respected,
+        "freeze_manifest_written": freeze_manifest_path.exists(),
+        "condition_receipt_hash_recomputed": isinstance(condition_receipt_sha256, str) and condition_receipt_sha256.startswith("sha256:"),
+        "conditions_represented": all(action_counts[condition_name] >= 1 for condition_name in CONDITIONS),
+        "sealed_commitments_present": all(isinstance(sealed_counts.get(condition_name), int) and sealed_counts[condition_name] >= 1 for condition_name in CONDITIONS),
+        "deterministic_scores_present": all(isinstance(scored_counts.get(condition_name), int) and scored_counts[condition_name] >= 1 for condition_name in CONDITIONS),
+        "action_decisions_present": all(action_counts[condition_name] >= 1 for condition_name in CONDITIONS),
+        "strongest_baseline_is_allowed": primary_comparison["strongest_baseline_condition"] in ("M", "R", "D"),
+        "cd_delta_reported": primary_comparison["cd_minus_strongest_baseline"] is not None,
+        "llm_judge_absent": True,
+        "human_content_judgment_absent": True,
+        "unsupported_writes_absent": True,
+    }
+
     status = PASS_STATUS if not errors else BLOCKED_STATUS
     receipt = {
         "schema": "persona_dream.research.prospective_tom.heldout_condition_benefit_receipt.v1",
@@ -372,6 +478,9 @@ def run_heldout_benefit(
         "processing_time_s": round(time.monotonic() - started, 3),
         "split": split,
         "generated_at": generated_at,
+        "scenario_family_filter": scenario_family,
+        "variant_min": variant_min,
+        "variant_max": variant_max,
         "frozen_heldout_manifest_path": str(freeze_manifest_path),
         "frozen_heldout_manifest_sha256": freeze_manifest_sha256,
         "condition_receipt_path": str(condition_receipt_path),
@@ -409,6 +518,7 @@ def run_heldout_benefit(
             "action_decisions_per_condition": action_counts,
             "planning_regret_scores_per_condition": regret_counts,
             "gate6_status_counts": dict(sorted(gate6_status_counts.items())),
+            "selected_episode_ids": selected_episode_ids,
         },
         "metrics": {
             "condition_metrics": metrics,
@@ -417,20 +527,7 @@ def run_heldout_benefit(
             "planning_regret_comparison": action_regret_comparison,
             "selected_actions_by_condition": selected_actions,
         },
-        "checks": {
-            "split_is_explicitly_frozen_heldout": split == DEFAULT_SPLIT,
-            "freeze_manifest_written": freeze_manifest_path.exists(),
-            "condition_receipt_hash_recomputed": isinstance(condition_receipt_sha256, str) and condition_receipt_sha256.startswith("sha256:"),
-            "conditions_represented": all(action_counts[condition_name] >= 1 for condition_name in CONDITIONS),
-            "sealed_commitments_present": all(isinstance(sealed_counts.get(condition_name), int) and sealed_counts[condition_name] >= 1 for condition_name in CONDITIONS),
-            "deterministic_scores_present": all(isinstance(scored_counts.get(condition_name), int) and scored_counts[condition_name] >= 1 for condition_name in CONDITIONS),
-            "action_decisions_present": all(action_counts[condition_name] >= 1 for condition_name in CONDITIONS),
-            "strongest_baseline_is_allowed": primary_comparison["strongest_baseline_condition"] in ("M", "R", "D"),
-            "cd_delta_reported": primary_comparison["cd_minus_strongest_baseline"] is not None,
-            "llm_judge_absent": True,
-            "human_content_judgment_absent": True,
-            "unsupported_writes_absent": True,
-        },
+        "checks": checks,
         "errors": errors,
         "claims": {
             "proves": [
@@ -471,6 +568,9 @@ def main() -> int:
     parser.add_argument("--episodes-per-family", type=int, default=6)
     parser.add_argument("--episode-limit", type=int, default=24)
     parser.add_argument("--generated-at", default=DEFAULT_GENERATED_AT)
+    parser.add_argument("--scenario-family", default=None)
+    parser.add_argument("--variant-min", type=int, default=None)
+    parser.add_argument("--variant-max", type=int, default=None)
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
 
@@ -482,6 +582,9 @@ def main() -> int:
         episodes_per_family=args.episodes_per_family,
         episode_limit=args.episode_limit,
         generated_at=args.generated_at,
+        scenario_family=args.scenario_family,
+        variant_min=args.variant_min,
+        variant_max=args.variant_max,
     )
     if args.json:
         print(json.dumps(receipt, indent=2, sort_keys=True))
