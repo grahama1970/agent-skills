@@ -1,10 +1,36 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R no-intervention cooperation policy acceptance) by agent
+**Last updated:** 2026-07-21 (PCTOM-R cooperation feature-split prerequisite audit) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R COOPERATION FEATURE-SPLIT PREREQUISITE AUDIT): a
+  deterministic guard now checks whether current live-originated cooperation
+  evidence can support a replacement pre-outcome cooperation feature split.
+  Command:
+  `./skills/persona-dream/run.sh check-cooperation-feature-split-prerequisites`.
+  Receipt:
+  `/tmp/persona-dream-cooperation-feature-split-prereq-audit-20260721T212150Z/cooperation_feature_split_prerequisite_audit_receipt.v1.json`.
+  Status `PASS_PCTOM_COOPERATION_FEATURE_SPLIT_PREREQUISITE_AUDIT`, receipt
+  SHA-256
+  `sha256:b4b382e52f0d85c4a0f5144057f5145d96a1d5b30b0bcee8cf13daa09d827acb`.
+  Conclusion: `FEATURE_SPLIT_BLOCKED_INSUFFICIENT_CONTRAST`.
+  `feature_split_acceptance_allowed:false`. Observed contrast:
+  one accepted keep-cooperation positive candidate, one diagnostic
+  keep-cooperation label, zero unsafe/avoid-cooperation candidates, zero
+  unsafe/avoid labels, and one diagnostic candidate total. Missing
+  prerequisite:
+  `missing_unsafe_or_avoid_cooperation_contrast_candidate`. Built-in negative
+  mutations failed closed for `acceptance_status_not_pass`,
+  `broad_planning_benefit_claim_injected`,
+  `accepted_pre_outcome_oracle_leak`, and
+  `missing_keep_cooperation_candidate`. The audit made zero Tau calls, zero
+  Memory/provider/canonical/identity/source-memory writes, used no LLM judge,
+  and required no human content judgment. This is not a replacement policy and
+  not a planning-benefit result. It proves the current evidence is one-sided
+  and blocks feature-split acceptance until a broader cooperation-exposure
+  slice includes unsafe/avoid-cooperation contrast rows.
 - 2026-07-21 (PCTOM-R NO-INTERVENTION COOPERATION POLICY ACCEPTANCE): a
   deterministic acceptance receipt now quarantines
   `pre_outcome_cooperation_threshold_rule.v1` for the observed live

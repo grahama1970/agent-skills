@@ -133,6 +133,25 @@ Next: <one immediate action or stop condition>
 
 ## Current Evidence Snapshot
 
+- PCTOM-R cooperation feature-split prerequisite audit:
+  `/tmp/persona-dream-cooperation-feature-split-prereq-audit-20260721T212150Z/cooperation_feature_split_prerequisite_audit_receipt.v1.json`.
+  Status `PASS_PCTOM_COOPERATION_FEATURE_SPLIT_PREREQUISITE_AUDIT`, receipt
+  SHA-256
+  `sha256:b4b382e52f0d85c4a0f5144057f5145d96a1d5b30b0bcee8cf13daa09d827acb`,
+  `mocked:false`, `live:true`, zero Tau calls, zero Memory/provider/
+  canonical/identity/source-memory writes, no LLM judge, and no human content
+  judgment. Conclusion:
+  `FEATURE_SPLIT_BLOCKED_INSUFFICIENT_CONTRAST`; feature-split acceptance is
+  not allowed. Observed contrast is one accepted keep-cooperation positive
+  candidate and zero unsafe/avoid-cooperation contrast candidates. Missing
+  prerequisite:
+  `missing_unsafe_or_avoid_cooperation_contrast_candidate`. Negative mutations
+  failed closed for `acceptance_status_not_pass`,
+  `broad_planning_benefit_claim_injected`,
+  `accepted_pre_outcome_oracle_leak`, and
+  `missing_keep_cooperation_candidate`. This blocks replacement policy and
+  broad planning-benefit claims until a broader cooperation-exposure slice
+  supplies contrast rows.
 - PCTOM-R no-intervention cooperation policy acceptance:
   `/tmp/persona-dream-cooperation-no-intervention-policy-proof-20260721T211544Z/cooperation_no_intervention_policy_acceptance_receipt.v1.json`.
   Status `PASS_PCTOM_COOPERATION_NO_INTERVENTION_POLICY_ACCEPTANCE`, receipt
