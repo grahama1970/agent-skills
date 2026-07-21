@@ -165,4 +165,30 @@ def test_gate_blocks_when_lineage_lacks_raw_recall_attribution(tmp_path):
     assert lineage["status"] == gate.LINEAGE_BLOCKED_STATUS
     assert sensitivity["status"] == gate.SENSITIVITY_PASS_STATUS
     assert lineage["summary"]["evidence_refs_with_accepted_raw_source_id"] == 0
-    assert lineage["summary"]["evidence_refs_with_raw_source_content_hash"] == 0
+    assert lineage["summary"]["evidence_refs_with_raw_source_digest"] == 0
+
+
+def test_gate_accepts_gate0_source_id_list_digest_as_recall_attribution(tmp_path):
+    condition_root, action_root = _seed_case(tmp_path, raw_lineage=True)
+    commitment_path = (
+        condition_root
+        / "artifacts"
+        / "cases"
+        / "episode-001"
+        / "CD"
+        / "tom_prediction_commitment_bundle.json"
+    )
+    commitment = json.loads(commitment_path.read_text(encoding="utf-8"))
+    evidence_ref = commitment["commitments"][0]["prediction_payload"]["evidence_refs"][0]
+    evidence_ref.pop("content_sha256")
+    evidence_ref["accepted_source_ids_sha256"] = "sha256:" + "b" * 64
+    _write_json(commitment_path, commitment)
+    output_root = tmp_path / "out"
+    receipt = gate.run_causal_identifiability_gate(
+        condition_root=condition_root,
+        action_root=action_root,
+        output_root=output_root,
+        receipt_out=output_root / "pctom_causal_identifiability_receipt.json",
+    )
+    assert receipt["status"] == gate.PASS_STATUS
+    assert receipt["metrics"]["lineage"]["evidence_refs_with_raw_source_digest"] == 1

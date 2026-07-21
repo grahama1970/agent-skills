@@ -45,7 +45,7 @@ def _load_module(path: Path, name: str) -> Any:
     return module
 
 
-def _prediction_commitment(*, run_id: str, residue_refs: list[dict[str, str]], branch_ids: list[str]) -> dict[str, Any]:
+def _prediction_commitment(*, run_id: str, residue_refs: list[dict[str, Any]], branch_ids: list[str]) -> dict[str, Any]:
     payload = {
         "episode_id": f"live-{run_id}",
         "condition": "CD",
@@ -103,7 +103,7 @@ def _derive_case(*, live_receipt: dict[str, Any], case_root: Path) -> dict[str, 
     }
 
     normalized_residue: list[dict[str, Any]] = []
-    residue_refs: list[dict[str, str]] = []
+    residue_refs: list[dict[str, Any]] = []
     for idx, item in enumerate(items):
         scope = item.get("scope")
         source_id = item.get("source_id")
@@ -112,16 +112,38 @@ def _derive_case(*, live_receipt: dict[str, Any], case_root: Path) -> dict[str, 
             raise RuntimeError(f"live_residue_item_missing_required_fields:{idx}")
         if idx not in link_by_residue_index:
             raise RuntimeError(f"live_residue_missing_query_receipt_link:{idx}")
+        query_receipt_index = link_by_residue_index[idx]
+        if query_receipt_index < 0 or query_receipt_index >= len(recall_receipts):
+            raise RuntimeError(f"live_residue_query_receipt_index_out_of_range:{idx}:{query_receipt_index}")
+        receipt = recall_receipts[query_receipt_index]
+        if not isinstance(receipt, dict):
+            raise RuntimeError(f"live_residue_query_receipt_not_object:{idx}:{query_receipt_index}")
+        accepted_source_ids = receipt.get("accepted_source_ids")
+        if not isinstance(accepted_source_ids, list) or source_id not in accepted_source_ids:
+            raise RuntimeError(f"live_residue_source_not_accepted_by_query_receipt:{idx}:{source_id}")
+        accepted_source_ids_sha256 = receipt.get("accepted_source_ids_sha256")
+        if not isinstance(accepted_source_ids_sha256, str) or not accepted_source_ids_sha256.startswith("sha256:"):
+            raise RuntimeError(f"live_residue_missing_accepted_source_ids_sha256:{idx}:{query_receipt_index}")
         normalized_residue.append(
             {
                 "source_id": source_id,
+                "accepted_source_id": source_id,
+                "accepted_source_ids_sha256": accepted_source_ids_sha256,
                 "scope": scope,
                 "text": text,
                 "synthetic": False,
-                "query_receipt_index": link_by_residue_index[idx],
+                "query_receipt_index": query_receipt_index,
             }
         )
-        residue_refs.append({"scope": scope, "source_id": source_id})
+        residue_refs.append(
+            {
+                "scope": scope,
+                "source_id": source_id,
+                "accepted_source_id": source_id,
+                "accepted_source_ids_sha256": accepted_source_ids_sha256,
+                "query_receipt_index": query_receipt_index,
+            }
+        )
 
     factual_refs = residue_refs[:]
     counterfactual_refs = residue_refs[:1]

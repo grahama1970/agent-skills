@@ -37,6 +37,7 @@ RAW_SOURCE_ID_KEYS = ("accepted_raw_source_id", "accepted_source_id", "raw_sourc
 RAW_SOURCE_HASH_KEYS = (
     "accepted_raw_source_sha256",
     "accepted_source_sha256",
+    "accepted_source_ids_sha256",
     "raw_source_sha256",
     "source_sha256",
     "content_sha256",
@@ -257,11 +258,11 @@ def _lineage_case(
                 "scope": ref_obj.get("scope"),
                 "source_id": ref_obj.get("source_id"),
                 "has_accepted_raw_source_id": _has_raw_source_id(ref_obj),
-                "has_raw_source_content_hash": _has_raw_source_hash(ref_obj),
+                "has_raw_source_digest": _has_raw_source_hash(ref_obj),
             }
         )
     all_refs_have_raw = bool(ref_results) and all(
-        row["has_accepted_raw_source_id"] and row["has_raw_source_content_hash"] for row in ref_results
+        row["has_accepted_raw_source_id"] and row["has_raw_source_digest"] for row in ref_results
     )
     required_paths = {
         "commitment_bundle": commitment_bundle_path,
@@ -284,7 +285,7 @@ def _lineage_case(
         "evidence_ref_count": len(ref_results),
         "evidence_refs": ref_results,
         "all_required_artifacts_hash_bound": all_required_hashes,
-        "all_evidence_refs_have_raw_source_id_and_hash": all_refs_have_raw,
+        "all_evidence_refs_have_raw_source_id_and_digest": all_refs_have_raw,
         "lineage_complete": all_required_hashes and all_refs_have_raw and payload.get("outcome_visible") is False,
     }
 
@@ -479,7 +480,7 @@ def _summarize_lineage(rows: list[dict[str, Any]]) -> dict[str, Any]:
         1
         for row in rows
         for ref in row["evidence_refs"]
-        if ref["has_raw_source_content_hash"]
+        if ref["has_raw_source_digest"]
     )
     completeness = 1.0 if rows and len(complete) == len(rows) else (len(complete) / len(rows) if rows else 0.0)
     return {
@@ -488,15 +489,15 @@ def _summarize_lineage(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "lineage_completeness": completeness,
         "total_evidence_refs": total_refs,
         "evidence_refs_with_accepted_raw_source_id": refs_with_raw_id,
-        "evidence_refs_with_raw_source_content_hash": refs_with_hash,
+        "evidence_refs_with_raw_source_digest": refs_with_hash,
         "incomplete_rows": [
             {
                 "episode_id": row["episode_id"],
                 "condition": row["condition"],
                 "evidence_ref_count": row["evidence_ref_count"],
                 "all_required_artifacts_hash_bound": row["all_required_artifacts_hash_bound"],
-                "all_evidence_refs_have_raw_source_id_and_hash": row[
-                    "all_evidence_refs_have_raw_source_id_and_hash"
+                "all_evidence_refs_have_raw_source_id_and_digest": row[
+                    "all_evidence_refs_have_raw_source_id_and_digest"
                 ],
                 "outcome_visible_at_commitment": row["outcome_visible_at_commitment"],
             }
@@ -586,7 +587,7 @@ def run_causal_identifiability_gate(
         "status": lineage_status,
         "lineage_rows": lineage_rows,
         "summary": lineage_summary,
-        "stop_condition": "every_case_has_commitment_outcome_score_action_hashes_and_every_evidence_ref_has_accepted_raw_source_id_and_content_hash",
+        "stop_condition": "every_case_has_commitment_outcome_score_action_hashes_and_every_evidence_ref_has_accepted_raw_source_id_and_source_digest",
     }
     lineage_receipt["receipt_sha256"] = _stable_json_sha256(lineage_receipt)
     _write_json(lineage_receipt_path, lineage_receipt)
