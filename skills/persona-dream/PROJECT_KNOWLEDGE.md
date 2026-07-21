@@ -25,6 +25,18 @@
   benefit: distributional ties all 64 planning rows with CI `[0.0, 0.0]`;
   confidence-gated has 63 ties, one harm, mean CD-minus-baseline planning regret
   `0.004687499999999999`, and CI upper `0.014062499999999997`.
+- 2026-07-21 (PCTOM-R BLOCKED BALANCED LIVE TAU V19-20 SLICE): a fresh live
+  balanced planning run over variants 19-20 wrote
+  `/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_planning_replication_receipt.v1.json`.
+  Status `BLOCKED_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION`, receipt
+  SHA-256 `sha256:9f7fddbca26b1442e62c0c81e0beb7c3e695975ae52eeae88f81502721e4a585`.
+  It made 32 live Tau attempts and 32 live Tau calls, with 0 Memory/provider/
+  canonical/identity/source-memory writes, then failed closed because
+  `sealedte-info-asym-19` R and D returned `scillm_http_status_502`. The
+  resulting partial action-selection layer had 7/8 planning rows and did not
+  satisfy balanced family counts (`information_asymmetry_false_belief:1:2`).
+  This is useful live blocker/reliability evidence; it must not be treated as
+  balanced planning coverage or planning-benefit proof.
 - 2026-07-21 (PCTOM-R FRESH FULL64 SERVICE-BOUNDARY RETRY PROOF): fresh local
   HTTP service retry evidence exists at
   `/tmp/persona-dream-live-tau-sealed-test-service-retry-proof-fresh-20260721T155119Z/live_tau_sealed_test_service_retry_proof_receipt.v1.json`.

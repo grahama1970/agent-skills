@@ -214,6 +214,17 @@ Next: <one immediate action or stop condition>
   not prove planning benefit: distributional ties all 64 planning rows with CI
   `[0.0, 0.0]`, and confidence-gated reports 63 ties plus one harm with CI
   upper `0.014062499999999997`.
+- Blocked fresh balanced live Tau planning slice over variants 19-20:
+  `/tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_planning_replication_receipt.v1.json`.
+  Status `BLOCKED_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION`, receipt
+  SHA-256 `sha256:9f7fddbca26b1442e62c0c81e0beb7c3e695975ae52eeae88f81502721e4a585`,
+  `mocked:false`, `live:true`, `tau_call_attempts:32`,
+  `tau_live_call_performed:32`, processing time `1632.21s`, and 0 Memory/
+  provider/canonical/identity/source-memory writes. The runner failed closed
+  because `sealedte-info-asym-19` R and D returned `scillm_http_status_502`,
+  leaving 7/8 accepted planning rows and family count
+  `information_asymmetry_false_belief:1:2`. This is live reliability/blocker
+  evidence, not a planning-benefit result.
 - Preceding failed boundary:
   `/tmp/persona-dream-live-tau-strict-inference-timeout90-v17-20260721T1516Z/live_tau_strict_inference_prompt_replication_receipt.v1.json`
   blocked after a 90s Tau timeout and subsequent scillm `gpt-5.5` cooldown/502
@@ -605,6 +616,7 @@ Distributional planning intervention proof root: /tmp/persona-dream-live-tau-dis
 Confidence-gated planning intervention proof root: /tmp/persona-dream-live-tau-confidence-gated-planning-intervention-20260721T131015Z
 CI-derived distributional planning intervention proof root: /tmp/persona-dream-live-tau-distributional-planning-intervention-ci-derived-20260721T155724Z
 CI-derived confidence-gated planning intervention proof root: /tmp/persona-dream-live-tau-confidence-gated-planning-intervention-ci-derived-20260721T155724Z
+Blocked balanced live Tau planning v19-20 proof root: /tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z
 Balanced live Tau planning replication source proof root: /tmp/persona-dream-live-tau-balanced-planning-v17-18-20260721T132835Z
 Balanced live Tau planning replication proof root: /tmp/persona-dream-live-tau-balanced-planning-v17-18-final-20260721T135844Z
 Blocked balanced live Tau planning missing-root proof root: /tmp/persona-dream-live-tau-balanced-planning-negative-final-20260721T135844Z
@@ -664,6 +676,7 @@ last_blocked_distributional_planning_missing_root_receipt: /tmp/persona-dream-li
 last_confidence_gated_planning_intervention_receipt: /tmp/persona-dream-live-tau-confidence-gated-planning-intervention-20260721T131015Z/confidence_gated_planning_intervention_receipt.v1.json
 last_ci_derived_distributional_planning_intervention_receipt: /tmp/persona-dream-live-tau-distributional-planning-intervention-ci-derived-20260721T155724Z/distributional_planning_intervention_receipt.v1.json
 last_ci_derived_confidence_gated_planning_intervention_receipt: /tmp/persona-dream-live-tau-confidence-gated-planning-intervention-ci-derived-20260721T155724Z/confidence_gated_planning_intervention_receipt.v1.json
+last_blocked_balanced_live_tau_planning_v19_20_receipt: /tmp/persona-dream-live-tau-balanced-planning-v19-20-20260721T155956Z/live_tau_balanced_planning_replication_receipt.v1.json
 last_blocked_confidence_gated_planning_missing_root_receipt: /tmp/persona-dream-live-tau-confidence-gated-planning-intervention-negative-20260721T131026Z/confidence_gated_planning_intervention_receipt.v1.json
 last_balanced_live_tau_planning_replication_receipt: /tmp/persona-dream-live-tau-balanced-planning-v17-18-final-20260721T135844Z/live_tau_balanced_planning_replication_receipt.v1.json
 last_blocked_balanced_live_tau_planning_missing_root_receipt: /tmp/persona-dream-live-tau-balanced-planning-negative-final-20260721T135844Z/live_tau_balanced_planning_replication_receipt.v1.json
