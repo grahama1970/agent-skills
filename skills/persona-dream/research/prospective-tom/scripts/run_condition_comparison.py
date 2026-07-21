@@ -446,6 +446,7 @@ def run_comparison(
     split: str,
     episodes_per_family: int,
     episode_limit: int,
+    generated_at: str | None = None,
 ) -> dict[str, Any]:
     started = time.monotonic()
     output_root = output_root.resolve()
@@ -463,7 +464,7 @@ def run_comparison(
     gate4 = _load_module(GATE4_SCRIPT, "persona_dream_pctom_gate4")
     gate5 = _load_module(GATE5_SCRIPT, "persona_dream_pctom_gate5")
 
-    corpus = build_corpus.build_corpus(split, episodes_per_family)
+    corpus = build_corpus.build_corpus(split, episodes_per_family, generated_at=generated_at)
     _write_json(corpus_path, corpus)
     corpus_build_receipt = {
         "schema": "persona_dream.research.prospective_tom.social_episode_corpus_build_receipt.v1",
@@ -473,6 +474,7 @@ def run_comparison(
         "corpus_sha256": _stable_json_sha256(corpus),
         "episodes_sha256": corpus["episodes_sha256"],
         "split": split,
+        "generated_at": corpus.get("generated_at"),
         "episode_count": corpus["episode_count"],
         "family_counts": corpus["family_counts"],
         "mocked": False,
@@ -590,6 +592,7 @@ def run_comparison(
         "receipt_path": str(receipt_out),
         "processing_time_s": round(time.monotonic() - started, 3),
         "split": split,
+        "generated_at": corpus.get("generated_at"),
         "corpus_path": str(corpus_path),
         "corpus_build_receipt_path": str(corpus_build_receipt_path),
         "corpus_check_receipt_path": str(corpus_check_receipt_path),
@@ -620,7 +623,7 @@ def run_comparison(
         "errors": errors,
         "claims": {
             "proves": [
-                "a calibration social episode corpus was generated and accepted by the Gate 1 checker",
+                "the requested social episode corpus was generated and accepted by the Gate 1 checker",
                 "M, R, D, and CD condition commitments were sealed before deterministic outcome reveal",
                 "each condition has at least one deterministic Gate 5 score",
                 "Brier and log-loss metrics were aggregated by condition",
@@ -652,6 +655,7 @@ def main() -> int:
     parser.add_argument("--split", default="calibration")
     parser.add_argument("--episodes-per-family", type=int, default=6)
     parser.add_argument("--episode-limit", type=int, default=4)
+    parser.add_argument("--generated-at")
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
 
@@ -662,6 +666,7 @@ def main() -> int:
         split=args.split,
         episodes_per_family=args.episodes_per_family,
         episode_limit=args.episode_limit,
+        generated_at=args.generated_at,
     )
     if args.json:
         print(json.dumps(receipt, indent=2, sort_keys=True))

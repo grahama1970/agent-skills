@@ -967,6 +967,66 @@ action-selection regret improvement, external service fault injection,
 production retry machinery, longitudinal recall after revision, complete live
 Phase 01-16 runtime execution, paid provider execution, or video quality.
 
+## Held-Out Condition Benefit Receipt
+
+The held-out condition-benefit runner freezes a deterministic held-out split,
+runs M/R/D/CD through the same Gate 2-5 condition comparison validators, then
+computes Gate 6 constrained action decisions over every scored case. It is a
+deterministic research artifact, not a live Tau or Memory run.
+
+Required chain:
+
+```text
+explicitly frozen held-out social episode corpus
+-> M/R/D/CD Gate 2 ToM distribution bundles
+-> M/R/D/CD Gate 3 branch bundles
+-> M/R/D/CD Gate 4 sealed commitments
+-> M/R/D/CD Gate 5 deterministic scores
+-> M/R/D/CD Gate 6 constrained action decisions
+-> held-out condition benefit receipt
+```
+
+Required fields:
+
+```text
+mocked: false
+split: explicitly_frozen_heldout or sealed_test
+fixture_backed: false
+deterministic_simulator_corpus_fixture_backed: true
+conditions: M, R, D, CD
+sealed_commitments_per_condition[M/R/D/CD] >= 1
+deterministic_scores_per_condition[M/R/D/CD] >= 1
+action_decisions_per_condition[M/R/D/CD] >= 1
+primary_metric: preregistered proper score or planning regret
+strongest_baseline_condition: one of M, R, D
+cd_minus_strongest_baseline: reported even if positive, zero, or negative
+oracle_policy_reference: deterministic_simulator_policy.v1
+llm_judge_used: false
+human_content_judgment_required: false
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+```
+
+Accepted status:
+
+```text
+PASS_PCTOM_HELDOUT_CONDITION_BENEFIT
+```
+
+Blocked status:
+
+```text
+BLOCKED_PCTOM_HELDOUT_CONDITION_BENEFIT
+```
+
+This receipt may report a positive, null, or negative CD delta. Positive
+benefit on one preregistered score is not a final research success claim unless
+planning benefit, calibration, belief revision, evidence-class safety, and
+fault containment are also proven at the required scope.
+
 ## Live Tau Condition Reliability Bridge
 
 The live Tau condition reliability bridge consumes a repeated live Tau

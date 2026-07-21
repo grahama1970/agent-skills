@@ -338,28 +338,75 @@ Live Tau condition reliability proof root: /tmp/persona-dream-live-tau-condition
 Live Tau condition action-selection proof root: /tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z
 Live Tau action-linked revision proof root: /tmp/persona-dream-live-tau-action-linked-revision-20260721T034916Z
 Live Tau revision recall proof root: /tmp/persona-dream-live-tau-revision-recall-20260721T035640Z
+Held-out condition benefit proof root: /tmp/persona-dream-heldout-condition-benefit-final-20260721T041000Z
 ```
 
 Current active phase boundary:
 
 ```text
-phase: post-deterministic-revision-recall, pre-held-out-benefit-and-live-memory-recall
+phase: post-held-out-condition-benefit, pre-live-memory-recall-after-revision-and-sealed-test-statistical-confidence
 last_live_condition_receipt: /tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z/live_tau_condition_comparison_receipt.v1.json
 last_reliability_receipt: /tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z/live_tau_condition_reliability_bridge_receipt.v1.json
 last_action_selection_receipt: /tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z/live_tau_condition_action_selection_receipt.v1.json
 last_action_linked_revision_receipt: /tmp/persona-dream-live-tau-action-linked-revision-20260721T034916Z/live_tau_action_linked_revision_receipt.v1.json
 last_revision_recall_receipt: /tmp/persona-dream-live-tau-revision-recall-20260721T035640Z/live_tau_revision_recall_receipt.v1.json
-next_required_receipt: held-out condition benefit or live Memory recall-after-revision receipt
+last_heldout_condition_benefit_receipt: /tmp/persona-dream-heldout-condition-benefit-final-20260721T041000Z/heldout_condition_benefit_receipt.v1.json
+next_required_receipt: live Memory recall-after-revision receipt or sealed-test statistical-confidence receipt
 ```
 
 This boundary means Gate 8/9 condition reliability over live-originated
 artifacts and Gate 6 action-selection instrumentation over the same
 live-originated M/R/D/CD artifacts, plus action-linked Gate 7 revision over
 those action decisions, plus deterministic artifact recall over those revisions,
-are the current predecessor evidence. It does not authorize a final research
-success claim. The next useful movement is to run a held-out condition-benefit
-slice with the same sealed/scored/action contracts or prove live Memory
-recall/use after action-linked revision.
+are predecessor evidence. The held-out condition-benefit slice now adds a
+frozen deterministic held-out comparison with the same sealed/scored/action
+contracts. It still does not authorize a final research success claim. The next
+useful movement is to prove live Memory recall/use after action-linked revision
+or expand the held-out result into a sealed statistical test-set run with
+confidence intervals and explicit live/model boundaries.
+
+Held-out condition benefit proof summary:
+
+```text
+receipt: /tmp/persona-dream-heldout-condition-benefit-final-20260721T041000Z/heldout_condition_benefit_receipt.v1.json
+status: PASS_PCTOM_HELDOUT_CONDITION_BENEFIT
+split: explicitly_frozen_heldout
+generated_at: 2026-07-21T00:00:00Z
+cases: 96
+episodes_consumed: 24
+families_consumed: 4
+sealed_commitments_per_condition: M=24, R=24, D=24, CD=24
+deterministic_scores_per_condition: M=24, R=24, D=24, CD=24
+action_decisions_per_condition: M=24, R=24, D=24, CD=24
+primary_metric: mean_belief_brier
+strongest_baseline_condition: D
+CD mean_belief_brier: 0.14000000000000004
+D mean_belief_brier: 0.2198
+cd_minus_strongest_baseline: -0.07979999999999995
+benefit_observed: true for preregistered belief Brier
+planning_regret_comparison: CD tied strongest baseline D, cd_minus_strongest_baseline=0.0
+oracle_policy_reference: deterministic_simulator_policy.v1
+mocked: false
+live: false
+fixture_backed: false
+deterministic_simulator_corpus_fixture_backed: true
+llm_judge_used: false
+human_content_judgment_required: false
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+```
+
+This proves a deterministic frozen held-out artifact can answer the
+condition-benefit question for a preregistered proper ToM score while preserving
+sealed commitments, deterministic outcome scoring, action decisions, and zero
+unsupported writes. It does not prove live Tau held-out execution, live Memory
+recall after revision, real external fault injection, production retry
+machinery, statistical confidence over 64 sealed test episodes, planning-regret
+benefit, complete Phase 01-16 runtime execution, paid provider execution, video
+quality, or semantic dream quality.
 
 Gate 0 proof summary:
 
@@ -1113,14 +1160,16 @@ research goal unless those concrete proof artifacts exist and are cited.
 
 ## Next Critical Path
 
-Move from live-originated action-linked revision to held-out benefit evidence
-or live Memory recall-after-revision evidence, without reactivating
-provider/video as the critical path.
+Move from deterministic held-out benefit evidence to live Memory
+recall-after-revision evidence or a larger sealed-test statistical-confidence
+run, without reactivating provider/video as the critical path.
 
 The next accepted artifact must answer one of these narrower questions:
 
 1. On a held-out test slice, does CD improve the preregistered proper-scoring
-   metric or planning-regret metric over the strongest M/R/D baseline?
+   metric or planning-regret metric over the strongest M/R/D baseline? Current
+   deterministic held-out answer: yes for `mean_belief_brier`, tied for
+   planning regret, not yet a 64-episode statistical-confidence result.
 2. Can action-linked revisions be recalled through live Memory and used later
    while preserving the synthetic/literal boundary and without canonical
    identity/source mutation?

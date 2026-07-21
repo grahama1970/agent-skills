@@ -1,10 +1,36 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R revision recall accepted) by agent
+**Last updated:** 2026-07-21 (PCTOM-R held-out condition benefit accepted) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-21 (PCTOM-R HELD-OUT CONDITION BENEFIT): frozen held-out
+  condition-benefit evidence now exists at
+  `/tmp/persona-dream-heldout-condition-benefit-final-20260721T041000Z/heldout_condition_benefit_receipt.v1.json`.
+  It reports `PASS_PCTOM_HELDOUT_CONDITION_BENEFIT` on split
+  `explicitly_frozen_heldout` with `generated_at: 2026-07-21T00:00:00Z`.
+  The run consumed 24 deterministic simulator episodes across 4 families and
+  wrote 96 condition cases. Counts per condition are
+  `sealed_commitments_per_condition: M=24, R=24, D=24, CD=24`,
+  `deterministic_scores_per_condition: M=24, R=24, D=24, CD=24`, and
+  `action_decisions_per_condition: M=24, R=24, D=24, CD=24`. The
+  preregistered primary proper score is `mean_belief_brier`; CD scored
+  `0.14000000000000004` versus strongest baseline D at `0.2198`, so
+  `cd_minus_strongest_baseline=-0.07979999999999995` and
+  `benefit_observed: true` for this deterministic held-out ToM score. Planning
+  regret did not improve over the strongest baseline: CD tied D with
+  `cd_minus_strongest_baseline=0.0`. The oracle policy source is
+  `deterministic_simulator_policy.v1`; `llm_judge_used:false`,
+  `human_content_judgment_required:false`, `mocked:false`, `live:false`,
+  `fixture_backed:false`, and Tau/Memory/provider/canonical/identity/
+  source-memory attempts are all 0. This proves a deterministic frozen
+  held-out artifact with sealed commitments, deterministic scores, and action
+  decisions; it does not prove live Tau held-out execution, live Memory recall
+  after revision, real external service fault injection, production retry
+  machinery, 64-episode statistical confidence intervals, planning-regret
+  benefit, complete Phase 01-16 runtime, paid provider execution, video
+  quality, or semantic dream quality.
 - 2026-07-21 (PCTOM-R REVISION RECALL): action-linked revision artifacts now
   have deterministic longitudinal recall/use evidence with receipt
   `/tmp/persona-dream-live-tau-revision-recall-20260721T035640Z/live_tau_revision_recall_receipt.v1.json`.
