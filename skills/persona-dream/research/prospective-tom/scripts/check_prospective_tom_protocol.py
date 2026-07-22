@@ -182,6 +182,7 @@ def _check_case(case_root: Path) -> tuple[list[str], dict[str, Any]]:
         errors.append("normalized_residue_not_list")
 
     branch_ids: set[str] = set()
+    branch_residue_pairs: dict[str, set[tuple[str, str]]] = {}
     branch_lineage_links: list[dict[str, Any]] = []
     if isinstance(dream_branches, list):
         for idx, branch in enumerate(dream_branches):
@@ -211,11 +212,13 @@ def _check_case(case_root: Path) -> tuple[list[str], dict[str, Any]]:
             if not isinstance(refs, list) or not refs:
                 errors.append(f"dream_branch_{idx}_missing_source_residue_refs")
                 continue
+            branch_residue_pairs.setdefault(branch_id, set())
             for ref_idx, ref in enumerate(refs):
                 pair = _as_pair(ref, f"dream_branch_{idx}_source_ref_{ref_idx}", errors)
                 if pair and pair not in residue_pairs:
                     errors.append(f"dream_branch_{idx}_unresolved_residue_ref:{pair[0]}:{pair[1]}")
                 if pair:
+                    branch_residue_pairs[branch_id].add(pair)
                     branch_lineage_links.append({
                         "branch_id": branch_id,
                         "scope": pair[0],
@@ -272,6 +275,17 @@ def _check_case(case_root: Path) -> tuple[list[str], dict[str, Any]]:
                         errors.append(f"prediction_unresolved_dream_branch_ref:{branch_ref}")
                     else:
                         prediction_branch_links.append(branch_ref)
+            if prediction_evidence_links and prediction_branch_links:
+                branch_prediction_pairs: set[tuple[str, str]] = set()
+                for branch_ref in prediction_branch_links:
+                    branch_prediction_pairs.update(branch_residue_pairs.get(branch_ref, set()))
+                for ref_idx, link in enumerate(prediction_evidence_links):
+                    pair = (link["scope"], link["source_id"])
+                    if pair not in branch_prediction_pairs:
+                        errors.append(
+                            "prediction_evidence_ref_not_carried_by_prediction_branch:"
+                            f"{ref_idx}:{pair[0]}:{pair[1]}"
+                        )
             belief_distributions = payload.get("belief_distributions")
             if not isinstance(belief_distributions, list) or not belief_distributions:
                 errors.append("prediction_payload_missing_belief_distributions")
@@ -303,6 +317,13 @@ def _check_case(case_root: Path) -> tuple[list[str], dict[str, Any]]:
         "branch_lineage_links": branch_lineage_links,
         "prediction_evidence_links": prediction_evidence_links,
         "prediction_branch_links": prediction_branch_links,
+        "prediction_branch_residue_pair_count": len(
+            {
+                pair
+                for branch_ref in prediction_branch_links
+                for pair in branch_residue_pairs.get(branch_ref, set())
+            }
+        ),
     }
     return errors, derived
 
@@ -332,6 +353,7 @@ def build_receipt(case_root: Path, receipt_out: Path) -> dict[str, Any]:
             "dream_branches": derived["dream_branch_count"],
             "prediction_evidence_links": derived["prediction_evidence_link_count"],
             "prediction_branch_links": derived["prediction_branch_link_count"],
+            "prediction_branch_residue_pairs": derived["prediction_branch_residue_pair_count"],
         },
         "lineage_checks": {
             "accepted_source_id_hashes_recomputed": not any(
@@ -346,6 +368,9 @@ def build_receipt(case_root: Path, receipt_out: Path) -> dict[str, Any]:
             "prediction_links_to_residue": not any(
                 "prediction_unresolved_evidence_ref" in error or "belief_" in error and "unresolved_evidence_ref" in error
                 for error in errors
+            ),
+            "prediction_evidence_carried_by_prediction_branches": not any(
+                error.startswith("prediction_evidence_ref_not_carried_by_prediction_branch") for error in errors
             ),
             "prediction_payload_hash_recomputed": derived["prediction_payload_hash_valid"],
             "prediction_sealed_before_reveal": "commitment_outcome_visible_not_false" not in errors,
@@ -379,6 +404,7 @@ def build_receipt(case_root: Path, receipt_out: Path) -> dict[str, Any]:
             ],
         },
     }
+    receipt["receipt_sha256"] = _stable_json_sha256({key: value for key, value in receipt.items() if key != "receipt_sha256"})
     _write_json(receipt_out, receipt)
     return receipt
 

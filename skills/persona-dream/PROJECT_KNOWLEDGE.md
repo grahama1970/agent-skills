@@ -3342,3 +3342,11 @@
   recursively scans each evidence receipt for provider/canonical-memory/
   identity/source-memory side-effect counters; a nested `provider_calls=1`
   blocks even when the tampered file is hash-bound in the manifest.
+
+- 2026-07-22 (PCTOM-R Gate 0 branch-to-prediction lineage): the Gate 0 checker
+  now requires each sealed prediction evidence residue to be carried by at
+  least one dream branch referenced by that same prediction. It no longer
+  accepts a prediction that separately names a residue and separately names a
+  branch when the named branch does not carry that residue. Gate 0 and live
+  Gate 0 bridge receipts now emit `receipt_sha256`; the live bridge also
+  records file hashes for its live-memory and Gate 0 child receipts.

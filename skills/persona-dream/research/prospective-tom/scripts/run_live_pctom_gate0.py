@@ -32,6 +32,10 @@ def _write_json(path: Path, data: Any) -> None:
     path.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def _file_sha256(path: Path) -> str:
+    return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
+
+
 def _load_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -242,7 +246,11 @@ def build_receipt(
         "case_root": str(case_root),
         "receipt_path": str(receipt_out),
         "live_memory_receipt_path": str(live_receipt_path),
+        "live_memory_receipt_file_sha256": _file_sha256(live_receipt_path) if live_receipt_path.exists() else None,
+        "live_memory_receipt_sha256": live_receipt.get("receipt_sha256"),
         "pctom_gate0_receipt_path": str(gate0_receipt_path),
+        "pctom_gate0_receipt_file_sha256": _file_sha256(gate0_receipt_path) if gate0_receipt_path.exists() else None,
+        "pctom_gate0_receipt_sha256": gate0_receipt.get("receipt_sha256") if gate0_receipt else None,
         "processing_time_s": round(time.monotonic() - started, 3),
         "mocked": False,
         "live": True,
@@ -288,6 +296,7 @@ def build_receipt(
             ],
         },
     }
+    receipt["receipt_sha256"] = _stable_json_sha256({key: value for key, value in receipt.items() if key != "receipt_sha256"})
     _write_json(receipt_out, receipt)
     return receipt
 

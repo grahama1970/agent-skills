@@ -2996,3 +2996,82 @@ what remains unverified: paid provider execution, semantic dream quality,
   complete Phase 01-16 media runtime execution, and future receipts not added
   to the strict manifest
 ```
+
+## 2026-07-22 — Gate 0 Branch-To-Prediction Lineage Boundary
+
+The Gate 0 lineage checker now verifies the full path from accepted recall
+source ids into the branches that the sealed prediction actually references.
+It is no longer enough for a sealed prediction to name evidence residues and
+also name dream branches independently; every prediction evidence residue must
+appear in at least one prediction-referenced dream branch. Gate 0 receipts and
+live Gate 0 bridge receipts now emit `receipt_sha256`.
+
+Positive local Gate 0 receipt:
+
+```text
+path: /tmp/persona-dream-pctom-gate0-branch-coverage-positive-rerun-20260722T063948Z/gate0_positive_receipt.json
+status: PASS_PCTOM_GATE0_LINEAGE
+receipt_sha256: sha256:50f5c7247aa19b071f69ffee80bb46fb5c31d894a88f48344d10536a4dd27366
+prediction_evidence_carried_by_prediction_branches: true
+prediction_branch_residue_pairs: 2
+```
+
+Negative local Gate 0 receipt:
+
+```text
+path: /tmp/persona-dream-pctom-gate0-branch-coverage-negative-rerun-20260722T064005Z/gate0_negative_branch_coverage_receipt.json
+status: BLOCKED_PCTOM_GATE0_LINEAGE
+receipt_sha256: sha256:e3a284d10bbe970a0c073e782e9dc3af3c818e60bf7df593053b178cbce918c8
+prediction_evidence_carried_by_prediction_branches: false
+errors:
+  - prediction_evidence_ref_not_carried_by_prediction_branch:1:persona-dream:memory_42
+```
+
+Fresh live Gate 0 bridge:
+
+```text
+path: /tmp/persona-dream-live-pctom-gate0-child-hash-bound-20260722T063540Z/live_pctom_gate0_receipt.v1.json
+status: PASS_LIVE_PCTOM_GATE0_LINEAGE
+receipt_sha256: sha256:57c3b0615427b423dbf63d4ebd57b57807788c4e1cecdad69500513259c239f1
+live_memory_status: PASS_LIVE_MEMORY_RECALL
+pctom_gate0_status: PASS_PCTOM_GATE0_LINEAGE
+live_memory_receipt_file_sha256: sha256:9c9c695002eb615e3fcc6c008f9ac92d6152ae2e849355a64d2bb802f8616881
+pctom_gate0_receipt_file_sha256: sha256:4e22b6511dcacfe65098b2b7422b690b677eb351dc3d1302fada1cc8d13dda7b
+pctom_gate0_receipt_sha256: sha256:f5db4c9813a2416e7769e22df657284715ff6f8e40514973f2553f4870a9ae8b
+```
+
+Refreshed strict chain with the new live Gate 0 receipt added to goal coverage:
+
+```text
+manifest: /tmp/persona-dream-pctom-strict-coverage-with-live-gate0-20260722T063615Z/pctom_goal_coverage_strict_with_live_gate0_manifest.v1.json
+coverage_receipt: /tmp/persona-dream-pctom-strict-coverage-with-live-gate0-20260722T063615Z/coverage/pctom_goal_coverage_receipt.v1.json
+coverage_status: PASS_PCTOM_GOAL_COVERAGE
+coverage_receipt_sha256: sha256:7900005b5f342dcf6942c580afd62bdfa9776e5a7639f576b314d4f87e74bdf1
+evidence_receipts_seen: 38
+positive_evidence_receipts: 28
+live_positive_evidence_receipts: 17
+unbound_evidence_receipts: 0
+recursive_forbidden_side_effects: 0
+
+success_receipt: /tmp/persona-dream-pctom-strict-coverage-with-live-gate0-20260722T063615Z/success/pctom_success_criteria_audit_receipt.v1.json
+success_status: PASS_PCTOM_SUCCESS_CRITERIA_AUDIT
+success_receipt_sha256: sha256:40d7d5cc8140be655a32f25445f97fb63698d8ccf8f2426b3329639ae1725f3d
+
+objective_receipt: /tmp/persona-dream-pctom-strict-coverage-with-live-gate0-20260722T063615Z/objective/pctom_objective_evidence_audit_receipt.v1.json
+objective_status: PASS_PCTOM_OBJECTIVE_EVIDENCE_AUDIT
+objective_receipt_sha256: sha256:c1d37a76f2274995739414ef54125686f481d0cc5db02ed2e41e78478bd23d8b
+```
+
+Proof scope:
+
+```text
+mocked: no
+live: yes for the fresh Gate 0 bridge; no for the local fixture checker
+what was exercised: local Gate 0 branch-to-prediction lineage, fail-closed
+  negative branch coverage, live Memory recall into a derived Gate 0 case,
+  child receipt file-hash binding, strict goal coverage, success criteria, and
+  objective evidence chaining
+what remains unverified: semantic dream quality, paid provider execution,
+  complete Phase 01-16 media runtime execution, and future receipts not added
+  to the strict manifest
+```

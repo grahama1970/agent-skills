@@ -4414,3 +4414,62 @@ receipt_sha256: sha256:28d629f529e80a789b436e18b321e71b54614df00aeb37f4c4b45c73e
 status: PASS_PCTOM_OBJECTIVE_EVIDENCE_AUDIT
 receipt_sha256: sha256:c0f3e9ca8ca42a21d7659f68ab83abda6a1db5bb8a24bc366a71e3c627a178fe
 ```
+
+## Current Gate 0 Branch-To-Prediction Boundary
+
+As of 2026-07-22, `check-prospective-tom-protocol` requires every sealed
+prediction evidence residue to be carried by at least one dream branch
+referenced by that same sealed prediction. This closes the gap where evidence
+could be accepted by recall and appear in the prediction payload, while the
+actual prediction-referenced dream branches did not carry that residue.
+
+Current positive Gate 0 receipt:
+
+```text
+/tmp/persona-dream-pctom-gate0-branch-coverage-positive-rerun-20260722T063948Z/gate0_positive_receipt.json
+status: PASS_PCTOM_GATE0_LINEAGE
+receipt_sha256: sha256:50f5c7247aa19b071f69ffee80bb46fb5c31d894a88f48344d10536a4dd27366
+prediction_evidence_carried_by_prediction_branches: true
+```
+
+Current fail-closed Gate 0 tamper receipt:
+
+```text
+/tmp/persona-dream-pctom-gate0-branch-coverage-negative-rerun-20260722T064005Z/gate0_negative_branch_coverage_receipt.json
+status: BLOCKED_PCTOM_GATE0_LINEAGE
+receipt_sha256: sha256:e3a284d10bbe970a0c073e782e9dc3af3c818e60bf7df593053b178cbce918c8
+errors:
+  - prediction_evidence_ref_not_carried_by_prediction_branch:1:persona-dream:memory_42
+```
+
+Current live Gate 0 bridge:
+
+```text
+/tmp/persona-dream-live-pctom-gate0-child-hash-bound-20260722T063540Z/live_pctom_gate0_receipt.v1.json
+status: PASS_LIVE_PCTOM_GATE0_LINEAGE
+receipt_sha256: sha256:57c3b0615427b423dbf63d4ebd57b57807788c4e1cecdad69500513259c239f1
+live_memory_status: PASS_LIVE_MEMORY_RECALL
+pctom_gate0_status: PASS_PCTOM_GATE0_LINEAGE
+live_memory_receipt_file_sha256: sha256:9c9c695002eb615e3fcc6c008f9ac92d6152ae2e849355a64d2bb802f8616881
+pctom_gate0_receipt_file_sha256: sha256:4e22b6511dcacfe65098b2b7422b690b677eb351dc3d1302fada1cc8d13dda7b
+pctom_gate0_receipt_sha256: sha256:f5db4c9813a2416e7769e22df657284715ff6f8e40514973f2553f4870a9ae8b
+```
+
+Current strict chain including the live Gate 0 bridge:
+
+```text
+/tmp/persona-dream-pctom-strict-coverage-with-live-gate0-20260722T063615Z/coverage/pctom_goal_coverage_receipt.v1.json
+status: PASS_PCTOM_GOAL_COVERAGE
+receipt_sha256: sha256:7900005b5f342dcf6942c580afd62bdfa9776e5a7639f576b314d4f87e74bdf1
+evidence_receipts_seen: 38
+live_positive_evidence_receipts: 17
+unbound_evidence_receipts: 0
+
+/tmp/persona-dream-pctom-strict-coverage-with-live-gate0-20260722T063615Z/success/pctom_success_criteria_audit_receipt.v1.json
+status: PASS_PCTOM_SUCCESS_CRITERIA_AUDIT
+receipt_sha256: sha256:40d7d5cc8140be655a32f25445f97fb63698d8ccf8f2426b3329639ae1725f3d
+
+/tmp/persona-dream-pctom-strict-coverage-with-live-gate0-20260722T063615Z/objective/pctom_objective_evidence_audit_receipt.v1.json
+status: PASS_PCTOM_OBJECTIVE_EVIDENCE_AUDIT
+receipt_sha256: sha256:c1d37a76f2274995739414ef54125686f481d0cc5db02ed2e41e78478bd23d8b
+```
