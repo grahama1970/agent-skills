@@ -3306,3 +3306,13 @@
   each row must be `kind=negative`, have `BLOCKED_` status, be non-mocked, and
   avoid human content judgment and LLM judge usage. Changing negative rows to
   `PASS_` or `mocked=true` blocks the objective audit.
+
+- 2026-07-22 (PCTOM-R objective clause evidence audit): do not treat coverage-id
+  presence as enough to satisfy an active objective clause. The objective audit
+  now derives clause truth from row-level positive/negative evidence counts:
+  Gate 0/1/2/4/5/7 clauses require positive evidence, unsupported-evidence
+  abstention requires both positive and negative evidence, and fail-closed
+  reliability requires positive Gate 8/Gate 9/fail-closed coverage plus
+  fail-closed negative rows. Tampering `gate4_sealed_prediction_commitments`
+  to `positive_evidence=0` or `unsupported_evidence_abstention` to
+  `negative_evidence=0` blocks the objective audit with clause-specific errors.

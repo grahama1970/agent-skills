@@ -162,6 +162,19 @@ def _coverage_map(coverage: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return mapped
 
 
+def _coverage_count(mapped: dict[str, dict[str, Any]], coverage_id: str, field: str) -> int:
+    value = mapped.get(coverage_id, {}).get(field, 0)
+    return value if isinstance(value, int) else 0
+
+
+def _has_positive_evidence(mapped: dict[str, dict[str, Any]], coverage_id: str) -> bool:
+    return _coverage_count(mapped, coverage_id, "positive_evidence") > 0
+
+
+def _has_negative_evidence(mapped: dict[str, dict[str, Any]], coverage_id: str) -> bool:
+    return _coverage_count(mapped, coverage_id, "negative_evidence") > 0
+
+
 def run(
     *,
     success_receipt_path: Path,
@@ -366,26 +379,42 @@ def run(
                 f"{child_path}:{item['path']}:{item['value']}"
             )
 
+    coverage_evidence_boundary = [
+        {
+            "coverage_id": coverage_id,
+            "positive_evidence": _coverage_count(mapped, coverage_id, "positive_evidence"),
+            "negative_evidence": _coverage_count(mapped, coverage_id, "negative_evidence"),
+            "live_positive_evidence": _coverage_count(mapped, coverage_id, "live_positive_evidence"),
+        }
+        for coverage_id in sorted(REQUIRED_COVERAGE_IDS)
+    ]
+
     objective_clauses = {
-        "provenance_bound_recall_residue": "gate0_provenance_bound_recall_residue" in mapped,
-        "deterministic_hidden_state_social_episodes": "gate1_deterministic_hidden_state_social_episodes" in mapped,
-        "valid_tom_distributions": "gate2_valid_tom_distributions" in mapped,
-        "sealed_prediction_commitments": "gate4_sealed_prediction_commitments" in mapped,
-        "deterministic_scoring": "gate5_deterministic_scoring" in mapped,
-        "non_destructive_belief_revision": "gate7_non_destructive_belief_revision" in mapped,
+        "provenance_bound_recall_residue": _has_positive_evidence(mapped, "gate0_provenance_bound_recall_residue"),
+        "deterministic_hidden_state_social_episodes": _has_positive_evidence(
+            mapped, "gate1_deterministic_hidden_state_social_episodes"
+        ),
+        "valid_tom_distributions": _has_positive_evidence(mapped, "gate2_valid_tom_distributions"),
+        "sealed_prediction_commitments": _has_positive_evidence(mapped, "gate4_sealed_prediction_commitments"),
+        "deterministic_scoring": _has_positive_evidence(mapped, "gate5_deterministic_scoring"),
+        "non_destructive_belief_revision": _has_positive_evidence(mapped, "gate7_non_destructive_belief_revision"),
         "fail_closed_reliability_checks": (
-            "gate8_fault_containment" in mapped
-            and "gate9_causal_replay" in mapped
-            and "negative_fixtures_fail_closed" in mapped
+            _has_positive_evidence(mapped, "gate8_fault_containment")
+            and _has_positive_evidence(mapped, "gate9_causal_replay")
+            and _has_positive_evidence(mapped, "negative_fixtures_fail_closed")
+            and _has_negative_evidence(mapped, "negative_fixtures_fail_closed")
             and counts.get("negative_evidence_receipts", 0) >= 10
             and len(negative_row_checks) >= 10
             and not negative_row_violations
         ),
         "autonomous_without_human_content_judgment": (
-            "autonomous_no_human_judgment" in mapped
+            _has_positive_evidence(mapped, "autonomous_no_human_judgment")
             and not autonomous_row_violations
         ),
-        "unsupported_evidence_abstention": "unsupported_evidence_abstention" in mapped,
+        "unsupported_evidence_abstention": (
+            _has_positive_evidence(mapped, "unsupported_evidence_abstention")
+            and _has_negative_evidence(mapped, "unsupported_evidence_abstention")
+        ),
         "provider_video_not_critical_path": (
             not success_forbidden_side_effects
             and not coverage_forbidden_side_effects
@@ -451,6 +480,12 @@ def run(
             ),
             "negative_llm_judge_rows": sum(1 for item in negative_row_checks if "llm_judge_used_true" in item["violations"]),
             "items": negative_row_checks,
+        },
+        "coverage_evidence_boundary": {
+            "required_coverage_rows_checked": len(coverage_evidence_boundary),
+            "rows_missing_positive_evidence": missing_positive,
+            "rows_missing_required_negative_evidence": missing_negative,
+            "items": coverage_evidence_boundary,
         },
         "receipt_integrity": {
             "receipts_checked": len(receipt_integrity),

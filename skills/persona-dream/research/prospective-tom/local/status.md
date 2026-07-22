@@ -2786,3 +2786,57 @@ leaking oracle/outcome fields. If bounded live attempts still produce no
 exposure, preserve the null result as a research finding. Do not claim broad
 planning benefit, feature-split acceptance, or replacement-policy validity
 from the offline instrument.
+
+## 2026-07-22 — Objective Clause Evidence Boundary
+
+The PCTOM-R objective audit now treats row-level coverage evidence counts as the
+source of truth for objective clauses. A required coverage id is not enough by
+itself. Gate 0/1/2/4/5/7 objective clauses require positive evidence rows;
+unsupported-evidence abstention requires both positive and negative evidence;
+fail-closed reliability requires positive Gate 8/Gate 9/fail-closed coverage,
+negative fail-closed coverage, at least 10 negative rows, and no negative-row
+violations.
+
+Positive receipt:
+
+```text
+path: /tmp/persona-dream-pctom-objective-evidence-coverage-boundary-20260722T061351Z/pctom_objective_evidence_audit_receipt.v1.json
+status: PASS_PCTOM_OBJECTIVE_EVIDENCE_AUDIT
+receipt_sha256: sha256:9bfc90e301801ebacf62ed8aeca8960f9b933ee2f98bb4b8bad3df02de34eb97
+coverage_rows_checked: 15
+evidence_rows_checked: 37
+negative_rows_checked: 10
+rows_missing_positive_evidence: 0
+rows_missing_required_negative_evidence: 0
+```
+
+Negative receipts:
+
+```text
+path: /tmp/persona-dream-pctom-objective-evidence-negative-missing-positive-20260722T061416Z/output/pctom_objective_evidence_audit_receipt.v1.json
+status: BLOCKED_PCTOM_OBJECTIVE_EVIDENCE_AUDIT
+receipt_sha256: sha256:b3c1ac4c77a544681ceeea3066eafb52c9f98fc31a754a546c04fb5bd23a3ab3
+errors:
+  - coverage_missing_positive_evidence:gate4_sealed_prediction_commitments
+  - objective_clause_not_proven:sealed_prediction_commitments
+
+path: /tmp/persona-dream-pctom-objective-evidence-negative-missing-required-negative-20260722T061441Z/output/pctom_objective_evidence_audit_receipt.v1.json
+status: BLOCKED_PCTOM_OBJECTIVE_EVIDENCE_AUDIT
+receipt_sha256: sha256:c2c94a8d84eda145ecfa8c1dbd3aeb5a218155f4d40f993f13f564ea1d4f3e7c
+errors:
+  - coverage_missing_negative_evidence:unsupported_evidence_abstention
+  - objective_clause_not_proven:unsupported_evidence_abstention
+```
+
+Proof scope:
+
+```text
+mocked: no
+live: no
+what was exercised: deterministic receipt audit over existing live/offline
+  PCTOM-R evidence rows, top-level receipt hashes, child file hashes, and
+  row-level coverage counts
+what remains unverified: paid provider execution, semantic dream quality,
+  complete Phase 01-16 media runtime execution, and future receipts not routed
+  through this objective audit
+```

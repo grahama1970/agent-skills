@@ -4246,3 +4246,50 @@ human_content_judgment_required: false
 
 Any live validation report must state `mocked`, `live`, what was actually
 exercised, and what remains unverified.
+
+## Current Objective-Audit Boundary
+
+As of 2026-07-22, `check-pctom-objective-evidence` does not accept
+coverage-id presence as objective proof. The audit derives active objective
+clauses from coverage row evidence counts:
+
+```text
+Gate 0/1/2/4/5/7 clauses -> positive_evidence > 0
+unsupported_evidence_abstention -> positive_evidence > 0 and negative_evidence > 0
+fail_closed_reliability_checks -> positive Gate 8/Gate 9/fail-closed coverage,
+  negative fail-closed coverage, >=10 negative rows, and no negative-row
+  fail-closed violations
+autonomous_without_human_content_judgment -> positive autonomous coverage and
+  no human-content, LLM-judge, or mocked-row violations
+provider_video_not_critical_path -> required does_not_prove claims and no
+  provider/canonical/identity/source-memory side-effect counters
+```
+
+Current positive receipt:
+
+```text
+/tmp/persona-dream-pctom-objective-evidence-coverage-boundary-20260722T061351Z/pctom_objective_evidence_audit_receipt.v1.json
+status: PASS_PCTOM_OBJECTIVE_EVIDENCE_AUDIT
+receipt_sha256: sha256:9bfc90e301801ebacf62ed8aeca8960f9b933ee2f98bb4b8bad3df02de34eb97
+coverage_rows_checked: 15
+evidence_rows_checked: 37
+negative_rows_checked: 10
+```
+
+Current fail-closed tamper receipts:
+
+```text
+/tmp/persona-dream-pctom-objective-evidence-negative-missing-positive-20260722T061416Z/output/pctom_objective_evidence_audit_receipt.v1.json
+status: BLOCKED_PCTOM_OBJECTIVE_EVIDENCE_AUDIT
+receipt_sha256: sha256:b3c1ac4c77a544681ceeea3066eafb52c9f98fc31a754a546c04fb5bd23a3ab3
+errors:
+  - coverage_missing_positive_evidence:gate4_sealed_prediction_commitments
+  - objective_clause_not_proven:sealed_prediction_commitments
+
+/tmp/persona-dream-pctom-objective-evidence-negative-missing-required-negative-20260722T061441Z/output/pctom_objective_evidence_audit_receipt.v1.json
+status: BLOCKED_PCTOM_OBJECTIVE_EVIDENCE_AUDIT
+receipt_sha256: sha256:c2c94a8d84eda145ecfa8c1dbd3aeb5a218155f4d40f993f13f564ea1d4f3e7c
+errors:
+  - coverage_missing_negative_evidence:unsupported_evidence_abstention
+  - objective_clause_not_proven:unsupported_evidence_abstention
+```
