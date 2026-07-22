@@ -302,6 +302,33 @@ Next: <one immediate action or stop condition>
   human-judgment flag. It does not prove future receipts unless they are routed
   through this audit, semantic dream quality, paid provider execution, or
   complete Phase 01-16 runtime execution.
+  A manifest-driven goal-coverage checker then bound the active PCTOM-R
+  objective clauses to current local receipts. Manifest:
+  `/tmp/persona-dream-pctom-goal-coverage-20260722T093000Z/pctom_goal_coverage_manifest.v1.json`.
+  Receipt:
+  `/tmp/persona-dream-pctom-goal-coverage-20260722T093000Z/pctom_goal_coverage_receipt.v1.json`.
+  It returned `PASS_PCTOM_GOAL_COVERAGE`; counts: 14 required coverage ids,
+  14 seen, 0 missing, 35 evidence receipts, 26 positive evidence receipts,
+  9 negative evidence receipts, and 16 live positive evidence receipts.
+  Required coverage ids were Gate 0 provenance, Gate 1 hidden-state social
+  episodes, Gates 2-7 ToM distribution/branch/seal/score/action/revision,
+  Gate 8 fault containment, Gate 9 causal replay, cross-stage hash lineage,
+  autonomous no-human-judgment, memory retention/recall, and negative fixtures
+  fail-closed. Manifest SHA-256:
+  `sha256:cba428e1d80fb728079c2b4386a72bcf1b7e786074da4e519f1059b686982131`;
+  receipt SHA-256:
+  `sha256:56cd33cb7d3f9ad50ac06cfc49a5f2446c4275aa0b265cdc52ccfcb095c0115d`.
+  A fixture-backed negative removed the required `gate9_causal_replay`
+  coverage id and exited 1 with `BLOCKED_PCTOM_GOAL_COVERAGE`,
+  `coverage_ids_seen=13`, `coverage_ids_missing=1`, and error
+  `missing_required_coverage_id:gate9_causal_replay`; negative receipt
+  SHA-256:
+  `sha256:042a331bea370b9b50c579dce76e3d0964ed06fe6bad45b6e44143223f14cd9b`.
+  This proves the current evidence bundle is mechanically mapped to every
+  active goal clause and fails closed when a required clause is omitted. It
+  does not prove semantic dream quality, paid provider execution, future
+  receipts not added to the manifest, or complete Phase 01-16 media runtime
+  execution.
   The live run consumed simulator variants 17-24, 32 sealed-test
   episodes, all four scenario families, and 128 live Tau-authored M/R/D/CD
   condition predictions. It used the Gate 0 attribution root

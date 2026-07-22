@@ -224,6 +224,35 @@
   execution, future receipts not passed through the audit, or complete live
   Phase 01-16 runtime execution.
 
+  A manifest-driven PCTOM-R goal-coverage checker now prevents agents from
+  claiming alignment from prose alone. Command:
+  `./skills/persona-dream/run.sh check-pctom-goal-coverage --manifest
+  /tmp/persona-dream-pctom-goal-coverage-20260722T093000Z/pctom_goal_coverage_manifest.v1.json
+  --output-root /tmp/persona-dream-pctom-goal-coverage-20260722T093000Z
+  --receipt-out
+  /tmp/persona-dream-pctom-goal-coverage-20260722T093000Z/pctom_goal_coverage_receipt.v1.json
+  --json`. Receipt status: `PASS_PCTOM_GOAL_COVERAGE`; counts: 14 required
+  coverage ids, 14 seen, 0 missing, 35 evidence receipts, 26 positive evidence
+  receipts, 9 negative evidence receipts, and 16 live positive evidence
+  receipts. The manifest covers Gate 0 provenance, Gate 1 deterministic hidden
+  social episodes, Gates 2-7 ToM distribution/branch/seal/score/action/
+  revision, Gate 8 fault containment, Gate 9 causal replay, cross-stage hash
+  lineage, autonomous no-human-judgment, memory retention/recall, and negative
+  fixtures fail-closed. Manifest SHA-256:
+  `sha256:cba428e1d80fb728079c2b4386a72bcf1b7e786074da4e519f1059b686982131`;
+  receipt SHA-256:
+  `sha256:56cd33cb7d3f9ad50ac06cfc49a5f2446c4275aa0b265cdc52ccfcb095c0115d`.
+  A missing-coverage negative removed `gate9_causal_replay`; the checker
+  exited 1 with `BLOCKED_PCTOM_GOAL_COVERAGE`, `coverage_ids_seen=13`,
+  `coverage_ids_missing=1`, and error
+  `missing_required_coverage_id:gate9_causal_replay`. Negative receipt
+  SHA-256:
+  `sha256:042a331bea370b9b50c579dce76e3d0964ed06fe6bad45b6e44143223f14cd9b`.
+  This proves a machine-checkable evidence map for the current active goal.
+  It does not prove semantic dream quality, paid provider execution, future
+  receipts outside the manifest, or complete Phase 01-16 media runtime
+  execution.
+
   Command:
   `./skills/persona-dream/run.sh run-live-tau-balanced-planning-replication
   --family-episode-limit 8 --episodes-per-family 24 --variant-min 17

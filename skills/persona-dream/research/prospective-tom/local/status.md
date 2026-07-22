@@ -29,6 +29,9 @@ A PCTOM-R autonomous judgment-surface audit now aggregates 15 selected
 live-originated/deterministic receipts and fails closed if a PASS-like receipt
 requires human content judgment, uses an LLM judge, is mocked, is fixture-backed,
 or reports provider/canonical/identity/source-memory write counters.
+A PCTOM-R goal-coverage audit now maps the active immutable goal clauses to
+concrete local receipt evidence and fails closed when a required coverage id is
+missing.
 
 Sealed64 deterministic social episode corpus:
 
@@ -192,6 +195,24 @@ PCTOM-R autonomous no-human-judgment negative receipt:
 /tmp/persona-dream-autonomous-no-human-judgment-surface-negative-human-required-20260722T090100Z/output/autonomous_no_human_judgment_surface_receipt.v1.json
 ```
 
+PCTOM-R goal-coverage manifest:
+
+```text
+/tmp/persona-dream-pctom-goal-coverage-20260722T093000Z/pctom_goal_coverage_manifest.v1.json
+```
+
+PCTOM-R goal-coverage receipt:
+
+```text
+/tmp/persona-dream-pctom-goal-coverage-20260722T093000Z/pctom_goal_coverage_receipt.v1.json
+```
+
+PCTOM-R goal-coverage negative missing-Gate9 receipt:
+
+```text
+/tmp/persona-dream-pctom-goal-coverage-negative-missing-gate9-20260722T093100Z/pctom_goal_coverage_receipt.v1.json
+```
+
 Inspection result:
 
 ```text
@@ -243,6 +264,21 @@ autonomous_no_human_judgment_negative_fixture_backed: true
 autonomous_no_human_judgment_negative_exit_code: 1
 autonomous_no_human_judgment_negative_error: receipt_human_content_judgment_required_true
 autonomous_no_human_judgment_negative_receipt_sha256: sha256:2320082b585245df8a7576f529de443cae6b3aa563136e46050277c3bf94f99e
+pctom_goal_coverage_status: PASS_PCTOM_GOAL_COVERAGE
+pctom_goal_coverage_required_coverage_ids: 14
+pctom_goal_coverage_coverage_ids_seen: 14
+pctom_goal_coverage_coverage_ids_missing: 0
+pctom_goal_coverage_evidence_receipts_seen: 35
+pctom_goal_coverage_positive_evidence_receipts: 26
+pctom_goal_coverage_negative_evidence_receipts: 9
+pctom_goal_coverage_live_positive_evidence_receipts: 16
+pctom_goal_coverage_manifest_sha256: sha256:cba428e1d80fb728079c2b4386a72bcf1b7e786074da4e519f1059b686982131
+pctom_goal_coverage_receipt_sha256: sha256:56cd33cb7d3f9ad50ac06cfc49a5f2446c4275aa0b265cdc52ccfcb095c0115d
+pctom_goal_coverage_negative_status: BLOCKED_PCTOM_GOAL_COVERAGE
+pctom_goal_coverage_negative_exit_code: 1
+pctom_goal_coverage_negative_missing_coverage_ids: 1
+pctom_goal_coverage_negative_error: missing_required_coverage_id:gate9_causal_replay
+pctom_goal_coverage_negative_receipt_sha256: sha256:042a331bea370b9b50c579dce76e3d0964ed06fe6bad45b6e44143223f14cd9b
 live_fault_injection_status: PASS_PCTOM_LIVE_FAULT_INJECTION_SURFACE
 local_http_service_retry_status: PASS_LIVE_TAU_PCTOM_SERVICE_RETRY_PROOF
 combined_full64_memory_fault_surface_status: PASS_LIVE_TAU_PCTOM_FULL64_MEMORY_FAULT_SURFACE
