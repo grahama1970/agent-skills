@@ -1,10 +1,43 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-22 UTC (PCTOM-R sealed-test planning-gap diagnostic) by agent
+**Last updated:** 2026-07-22 UTC (PCTOM-R full64 causal-identifiability blocked boundary) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-22 UTC (PCTOM-R FULL64 CAUSAL-IDENTIFIABILITY BLOCKED
+  BOUNDARY): the causal-identifiability checker now matches Gate 6's
+  first-max tie behavior for equal-probability committed next-action
+  distributions, and blocked receipts no longer use pass-style claim language.
+  Regression proof: `python3 -m py_compile
+  skills/persona-dream/research/prospective-tom/scripts/run_pctom_causal_identifiability_gate.py`
+  and `uv run --project skills/persona-dream pytest
+  skills/persona-dream/tests/test_pctom_causal_identifiability_gate.py`
+  (`5 passed`). Fresh full64 command:
+  `./skills/persona-dream/run.sh run-pctom-causal-identifiability-gate`.
+  Receipt:
+  `/tmp/persona-dream-pctom-causal-identifiability-full64-20260722T004853Z/pctom_causal_identifiability_receipt.json`.
+  Status `BLOCKED_PCTOM_CAUSAL_IDENTIFIABILITY_GATE`; receipt SHA-256
+  `sha256:e8814fbe89e5d2386cc7389bbed5feb29c76a2c8daa8d8c4dce61480902fe972`;
+  manifest SHA-256
+  `sha256:3132a2c61cb29d9e3682f3be5e9d9c03efbd24fb9a7e49cc3dcbe3669cdeee36`;
+  lineage receipt SHA-256
+  `sha256:e74018ccf5b3c6ae884a2f5d4dd56b898da6dd14e236b89e1a8b9cdec06620f5`;
+  sensitivity rows SHA-256
+  `sha256:c8f9f38865bad93505259b7d8240b4de409e95edd6f8a8803e5d91b32ecba57c`.
+  Observed: 256 live Tau-originated action rows consumed, 256 sensitivity
+  rows, 256 lineage rows, `fixed_action_policy_recomputed=true`,
+  `lineage_100_percent_complete=false`, `lineage_complete_rows=0`,
+  768 total evidence refs, 0 refs with accepted raw source IDs, and 0 refs
+  with raw source digests. Oracle-aligned projections improve regret on 118
+  rows; anti-oracle projections worsen regret on 114 rows; actual-to-oracle
+  mean regret delta is `-0.295703125`; anti-oracle-minus-actual mean regret
+  delta is `0.18242187500000004`. The run reexecuted zero Tau calls and made
+  zero Memory/provider/canonical/identity/source-memory writes. This proves the
+  fixed action policy is causally sensitive in the diagnostic projection, but
+  the full gate is correctly blocked by missing accepted raw-source lineage.
+  Next work should close Gate 0 lineage inside live full64 evidence refs before
+  treating additional planning-benefit runs as interpretable.
 - 2026-07-22 UTC (PCTOM-R SEALED-TEST PLANNING GAP): a deterministic
   planning-gap diagnostic now explains why sealed-test prediction benefit did
   not become planning-regret benefit. Command:

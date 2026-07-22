@@ -133,6 +133,39 @@ Next: <one immediate action or stop condition>
 
 ## Current Evidence Snapshot
 
+- PCTOM-R full64 causal-identifiability blocked boundary:
+  `/tmp/persona-dream-pctom-causal-identifiability-full64-20260722T004853Z/pctom_causal_identifiability_receipt.json`.
+  Manifest:
+  `/tmp/persona-dream-pctom-causal-identifiability-full64-20260722T004853Z/pctom_causal_identifiability_manifest.json`.
+  Lineage receipt:
+  `/tmp/persona-dream-pctom-causal-identifiability-full64-20260722T004853Z/pctom_end_to_end_lineage_receipt.json`.
+  Oracle-policy sensitivity rows:
+  `/tmp/persona-dream-pctom-causal-identifiability-full64-20260722T004853Z/pctom_oracle_policy_sensitivity.jsonl`.
+  Status `BLOCKED_PCTOM_CAUSAL_IDENTIFIABILITY_GATE`;
+  receipt SHA-256
+  `sha256:e8814fbe89e5d2386cc7389bbed5feb29c76a2c8daa8d8c4dce61480902fe972`;
+  manifest SHA-256
+  `sha256:3132a2c61cb29d9e3682f3be5e9d9c03efbd24fb9a7e49cc3dcbe3669cdeee36`;
+  lineage receipt SHA-256
+  `sha256:e74018ccf5b3c6ae884a2f5d4dd56b898da6dd14e236b89e1a8b9cdec06620f5`;
+  sensitivity rows SHA-256
+  `sha256:c8f9f38865bad93505259b7d8240b4de409e95edd6f8a8803e5d91b32ecba57c`.
+  Counts: 256 live Tau-originated action rows consumed, 256 sensitivity rows,
+  256 lineage rows, 0 complete lineage rows, 768 total evidence refs, 0 refs
+  with accepted raw source IDs, and 0 refs with raw source digests. Checks:
+  `fixed_action_policy_recomputed=true`, `lineage_100_percent_complete=false`,
+  `post_reveal_inputs_not_used_for_commitment=true`, and
+  `unsupported_writes_absent=true`. Oracle-aligned projections reduce regret
+  on 118 rows; anti-oracle projections worsen regret on 114 rows. Mean
+  actual-to-oracle regret delta is `-0.295703125`; mean
+  anti-oracle-minus-actual regret delta is `0.18242187500000004`. The run made
+  zero Tau, Memory, provider, canonical-memory, identity, or source-memory
+  writes and did not reexecute Tau. This proves the fixed action policy is
+  causally sensitive in the diagnostic projection after matching Gate 6
+  first-max tie behavior. It does not prove the full causal-identifiability
+  gate because live full64 evidence refs still lack accepted raw source IDs and
+  source digests. The next accepted artifact is therefore Gate 0 lineage
+  closure for live full64 evidence refs, not another planning-benefit run.
 - PCTOM-R sealed-test planning-gap diagnostic:
   `/tmp/persona-dream-sealed-test-planning-gap-20260722T004128Z/sealed_test_planning_gap_diagnostic_receipt.v1.json`.
   Summary artifact:
@@ -3186,23 +3219,27 @@ planning benefit remains pending because current full64 and repeated expanded
 planning evidence is sparse, trust/commitment concentrated, and duplicated
 across the available expanded repeated seeds.
 
-The next accepted artifact must answer this narrower causal-identifiability
-question before additional live CD efficacy runs:
+The causal-identifiability question has now been run against full64
+live-originated artifacts and is blocked on lineage, not on policy sensitivity.
+The next accepted artifact must close the narrower Gate 0 lineage gap before
+additional live CD efficacy runs:
 
-1. Can the current action selector, action set, utility function, and scenario
-   corpus use demonstrably better beliefs to choose better actions? The
-   immediate gate must compare actual committed beliefs against oracle-aligned
-   and anti-oracle belief distributions while holding the action policy fixed.
-   If oracle beliefs do not reduce regret and produce action switches on cases
-   where the Bayes-optimal action differs, more CD generation is not
-   interpretable as a planning experiment. Repair the action policy, utility
-   model, scenario identifiability, or lineage first.
+1. Can every full64 live evidence ref map to an accepted raw source ID and
+   digest before the prediction is sealed? The immediate gate must carry
+   `accepted_source_id` or equivalent accepted raw source ID plus a SHA-256
+   digest from recall residue into social evidence refs, then rerun the
+   causal-identifiability gate. The current full64 run already shows the fixed
+   action policy is sensitive: oracle-aligned projections reduce regret on 118
+   rows and anti-oracle projections worsen regret on 114 rows. The full gate is
+   still blocked because lineage completeness is 0/256, with 768 evidence refs
+   and no accepted raw source IDs or source digests.
 
-Only after the causal-identifiability gate passes should the planning path
-return to a broader/different planning intervention, non-identical repeated live
-Tau behavior, or larger/balanced planning corpus. Another prose summary,
-duplicate aggregate over the same action-row pattern, or corpus-tuning effort to
-force a CD win is not a valid planning-benefit proof.
+Only after accepted raw-source lineage reaches 100% and the
+causal-identifiability gate passes should the planning path return to a
+broader/different planning intervention, non-identical repeated live Tau
+behavior, or larger/balanced planning corpus. Another prose summary, duplicate
+aggregate over the same action-row pattern, or corpus-tuning effort to force a
+CD win is not a valid planning-benefit proof.
 
 The secondary reliability artifact is useful, but it is not a substitute for
 the planning research artifact. It must answer this question:

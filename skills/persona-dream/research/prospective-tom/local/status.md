@@ -1,5 +1,107 @@
 # Status
 
+Status: FULL64_CAUSAL_IDENTIFIABILITY_BLOCKED_ON_RAW_SOURCE_LINEAGE
+
+Artifact: PCTOM-R full64 causal-identifiability gate over live Tau-originated
+sealed-test condition and action artifacts. It recomputes the fixed action
+policy from sealed committed next-action distributions, compares oracle-aligned
+and anti-oracle policy projections, and checks that every evidence ref carries
+accepted raw-source attribution.
+
+Causal-identifiability receipt:
+
+```text
+/tmp/persona-dream-pctom-causal-identifiability-full64-20260722T004853Z/pctom_causal_identifiability_receipt.json
+```
+
+Manifest:
+
+```text
+/tmp/persona-dream-pctom-causal-identifiability-full64-20260722T004853Z/pctom_causal_identifiability_manifest.json
+```
+
+Lineage receipt:
+
+```text
+/tmp/persona-dream-pctom-causal-identifiability-full64-20260722T004853Z/pctom_end_to_end_lineage_receipt.json
+```
+
+Oracle-policy sensitivity rows:
+
+```text
+/tmp/persona-dream-pctom-causal-identifiability-full64-20260722T004853Z/pctom_oracle_policy_sensitivity.jsonl
+```
+
+Inspection result:
+
+```text
+status: BLOCKED_PCTOM_CAUSAL_IDENTIFIABILITY_GATE
+receipt_sha256: sha256:e8814fbe89e5d2386cc7389bbed5feb29c76a2c8daa8d8c4dce61480902fe972
+manifest_sha256: sha256:3132a2c61cb29d9e3682f3be5e9d9c03efbd24fb9a7e49cc3dcbe3669cdeee36
+lineage_receipt_sha256: sha256:e74018ccf5b3c6ae884a2f5d4dd56b898da6dd14e236b89e1a8b9cdec06620f5
+sensitivity_rows_sha256: sha256:c8f9f38865bad93505259b7d8240b4de409e95edd6f8a8803e5d91b32ecba57c
+action_index_rows: 256
+sensitivity_rows: 256
+lineage_rows: 256
+lineage_complete_rows: 0
+total_evidence_refs: 768
+evidence_refs_with_accepted_raw_source_id: 0
+evidence_refs_with_raw_source_digest: 0
+fixed_action_policy_recomputed: true
+lineage_100_percent_complete: false
+oracle_improves_regret_count: 118
+anti_oracle_worsens_regret_count: 114
+actual_to_oracle_regret_delta_mean: -0.295703125
+anti_oracle_minus_actual_regret_delta_mean: 0.18242187500000004
+tau_call_attempts: 0
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+mocked: false
+live: true
+live_tau_originated_artifacts_consumed: true
+live_tau_reexecuted: false
+human_content_judgment_required: false
+```
+
+What this proves:
+
+```text
+the full64 live Tau condition/action receipts can be consumed without
+reexecuting Tau
+-> Gate 6 first-max tie behavior now matches causal-identifiability replay
+-> oracle-aligned projections reduce regret on 118 rows
+-> anti-oracle projections worsen regret on 114 rows
+-> no Tau, Memory, provider, canonical-memory, identity, source-memory, LLM
+   judge, or human content judgment path is used
+```
+
+What this does not prove:
+
+```text
+the full causal-identifiability gate
+planning-regret benefit
+complete accepted raw-source lineage for full64 live evidence refs
+live Memory recall in the sealed-test loop
+real external service fault injection
+production retry machinery
+semantic dream quality
+paid provider execution
+complete live Phase 01-16 runtime execution
+```
+
+Immediate next step:
+
+```text
+Close Gate 0 lineage for live full64 evidence refs so every social evidence ref
+maps to an accepted raw source ID and digest before additional planning-benefit
+runs are treated as interpretable.
+```
+
+Prior status:
+
 Status: SEALED_TEST_PLANNING_GAP_DIAGNOSTIC
 
 Artifact: PCTOM-R sealed-test planning-gap diagnostic. It consumes the

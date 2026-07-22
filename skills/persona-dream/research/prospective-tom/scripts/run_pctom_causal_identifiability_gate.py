@@ -177,7 +177,9 @@ def _distribution(commitment_bundle: dict[str, Any], errors: list[str], label: s
 def _top_counterpart_action(distribution: list[tuple[str, float]]) -> tuple[str, float]:
     if not distribution:
         return "UNKNOWN", 1.0
-    return max(distribution, key=lambda item: (item[1], item[0]))
+    # Match Gate 6 action selection: ties keep the first committed distribution
+    # entry instead of lexicographically reordering equally likely actions.
+    return max(distribution, key=lambda item: item[1])
 
 
 def _anti_oracle_counterpart_action(
@@ -618,6 +620,19 @@ def run_causal_identifiability_gate(
     manifest["manifest_sha256"] = _stable_json_sha256(manifest)
     _write_json(manifest_path, manifest)
 
+    passed_claims = [
+        "the fixed action selector can be recomputed from sealed committed next-action distributions",
+        "oracle-aligned and anti-oracle policy projections are compared under the same deterministic utility function",
+        "lineage receipt confirms every evidence reference includes accepted raw source ids and content hashes",
+        "no new Tau, Memory, provider, canonical-memory, identity, or source-memory write was attempted",
+    ]
+    blocked_claims = [
+        "the causal-identifiability gate failed closed before accepting the full gate",
+        "oracle-aligned and anti-oracle policy projections were still written for diagnosis when available",
+        "lineage receipt failed closed unless evidence references include accepted raw source ids and content hashes",
+        "no new Tau, Memory, provider, canonical-memory, identity, or source-memory write was attempted",
+    ]
+
     receipt = {
         "schema": "persona_dream.research.prospective_tom.causal_identifiability_gate_receipt.v1",
         "created_at": _now_iso(),
@@ -675,14 +690,16 @@ def run_causal_identifiability_gate(
         },
         "errors": errors,
         "claims": {
-            "proves": [
-                "the fixed action selector can be recomputed from sealed committed next-action distributions",
-                "oracle-aligned and anti-oracle policy projections are compared under the same deterministic utility function",
-                "lineage receipt fails closed unless evidence references include accepted raw source ids and content hashes",
-                "no new Tau, Memory, provider, canonical-memory, identity, or source-memory write was attempted",
-            ],
-            "does_not_prove": [
-                "that counterfactual dreaming improves prediction or planning",
+            "proves": passed_claims if status == PASS_STATUS else blocked_claims,
+            "does_not_prove": (
+                ["that counterfactual dreaming improves prediction or planning"]
+                if status == PASS_STATUS
+                else [
+                    "the full causal-identifiability gate",
+                    "that counterfactual dreaming improves prediction or planning",
+                ]
+            )
+            + [
                 "that every historical PCTOM-R artifact already has complete raw Memory recall attribution",
                 "semantic dream quality",
                 "paid provider execution",

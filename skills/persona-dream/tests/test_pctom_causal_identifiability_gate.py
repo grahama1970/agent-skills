@@ -131,6 +131,19 @@ def test_oracle_and_anti_oracle_policy_projection_moves_regret():
     assert anti["planning_regret"] > actual["planning_regret"]
 
 
+def test_top_counterpart_action_preserves_first_committed_tie():
+    action, probability = gate._top_counterpart_action(
+        [
+            ("KAI_CHOOSES_QUIET_REVIEW", 0.4),
+            ("KAI_REQUESTS_FAST_HANDOFF", 0.2),
+            ("KAI_OFFERS_SHARED_DRAFT", 0.4),
+        ]
+    )
+
+    assert action == "KAI_CHOOSES_QUIET_REVIEW"
+    assert probability == 0.4
+
+
 def test_gate_passes_when_lineage_has_raw_source_ids_and_hashes(tmp_path):
     condition_root, action_root = _seed_case(tmp_path, raw_lineage=True)
     output_root = tmp_path / "out"
@@ -166,6 +179,8 @@ def test_gate_blocks_when_lineage_lacks_raw_recall_attribution(tmp_path):
     assert sensitivity["status"] == gate.SENSITIVITY_PASS_STATUS
     assert lineage["summary"]["evidence_refs_with_accepted_raw_source_id"] == 0
     assert lineage["summary"]["evidence_refs_with_raw_source_digest"] == 0
+    assert "the full causal-identifiability gate" in receipt["claims"]["does_not_prove"]
+    assert "lineage receipt failed closed" in " ".join(receipt["claims"]["proves"])
 
 
 def test_gate_accepts_gate0_source_id_list_digest_as_recall_attribution(tmp_path):
