@@ -20,6 +20,32 @@
   no Memory/Tau/provider calls. This is deterministic simulator evidence, not
   live model evidence.
 
+  A generator-independent replay checker now validates the sealed64 corpus
+  without importing `build_social_episode_corpus.py`. Command:
+  `./skills/persona-dream/run.sh check-social-episode-independent-replay
+  --corpus
+  /tmp/persona-dream-pctom-social-corpus-sealed64-20260722T041800Z/social_episode_corpus.v1.json
+  --receipt-out
+  /tmp/persona-dream-pctom-social-corpus-independent-replay-sealed64-20260722T064500Z/social_episode_independent_replay_receipt.v1.json
+  --expect-total 64 --expect-per-family 16 --json`. Receipt status:
+  `PASS_PCTOM_SOCIAL_EPISODE_INDEPENDENT_REPLAY`; counts: 64 episodes,
+  4 families, 64 action matches, 64 label matches, 64 hidden-state matches,
+  64 withheld-field matches, `independent_of_generator_imports=true`, and zero
+  Memory/Tau/provider calls. Declared receipt SHA-256:
+  `sha256:aefadffad7c90c5d038ec9527bf0ef2eccfc00800a80512affd5e69be9657f21`;
+  replay rows SHA-256:
+  `sha256:b6e088b4e6e65b256c88fe1a05c7b34aeafb3a8aa4d99574eaba73aa2c9f86af`.
+  A mutated-action negative fixture then changed the first episode's
+  `actual_next_action` and exited 1 with
+  `BLOCKED_PCTOM_SOCIAL_EPISODE_INDEPENDENT_REPLAY`, 63 action matches, and
+  errors `episodes_sha256_mismatch` plus
+  `episode_action_replay_mismatch:sealedte-info-asym-01:KAI_INTERRUPTS_WITH_CORRECTION:KAI_HINTS_CONSTRAINT`.
+  Negative receipt SHA-256:
+  `sha256:1e611b93c2e1ae02b2f8f96cdf73022beed8570037aacd8c2067610f64e478cd`.
+  This proves generator-independent deterministic replay and a fail-closed
+  mismatch boundary. It does not prove a separately deployed external simulator
+  service.
+
   Command:
   `./skills/persona-dream/run.sh run-live-tau-balanced-planning-replication
   --family-episode-limit 8 --episodes-per-family 24 --variant-min 17
@@ -288,7 +314,7 @@
   and Gate 6, a controlled artifact-bound Gate 8/9 reliability bridge, and
   Gate 7 non-destructive belief revision linked to live-originated action
   decisions, including deterministic and live Memory recall after revision. It
-  does not prove an independently implemented external simulator, a permanently
+  does not prove a separately deployed external simulator service, a permanently
   deployed external production service, non-Memory external service faults,
   long-duration wall-clock retention, semantic dream quality, paid provider
   execution, or complete live Phase 01-16 runtime execution.

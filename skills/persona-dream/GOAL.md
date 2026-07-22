@@ -141,6 +141,10 @@ Next: <one immediate action or stop condition>
   `/tmp/persona-dream-pctom-social-corpus-sealed64-20260722T041800Z/social_episode_corpus_build_receipt.v1.json`;
   sealed64 corpus check receipt
   `/tmp/persona-dream-pctom-social-corpus-sealed64-20260722T041800Z/social_episode_corpus_check_receipt.v1.json`;
+  sealed64 independent replay receipt
+  `/tmp/persona-dream-pctom-social-corpus-independent-replay-sealed64-20260722T064500Z/social_episode_independent_replay_receipt.v1.json`;
+  sealed64 independent replay negative-action receipt
+  `/tmp/persona-dream-pctom-social-corpus-independent-replay-negative-action-20260722T064800Z/social_episode_independent_replay_receipt.v1.json`;
   replication receipt
   `/tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_planning_replication_receipt.v1.json`;
   causal-identifiability receipt
@@ -175,7 +179,16 @@ Next: <one immediate action or stop condition>
   `coordination_conflict`. The checker recomputed the episode hash, found 64
   first-order labels and 64 second-order labels, confirmed labels came from
   `simulator_config`, and used no LLM judge, Memory write, Tau call, or
-  provider call. The live run consumed simulator variants 17-24, 32 sealed-test
+  provider call. A generator-independent replay checker consumed the
+  frozen sealed64 corpus without importing `build_social_episode_corpus.py` and
+  returned `PASS_PCTOM_SOCIAL_EPISODE_INDEPENDENT_REPLAY`: 64/64 actual actions,
+  64/64 ToM label sets, 64/64 hidden-state family invariants, and 64/64
+  withheld-field invariants matched the independently replayed contract. Its
+  mutated-action negative fixture returned
+  `BLOCKED_PCTOM_SOCIAL_EPISODE_INDEPENDENT_REPLAY`, 63 action matches, and
+  errors `episodes_sha256_mismatch` plus
+  `episode_action_replay_mismatch:sealedte-info-asym-01:KAI_INTERRUPTS_WITH_CORRECTION:KAI_HINTS_CONSTRAINT`.
+  The live run consumed simulator variants 17-24, 32 sealed-test
   episodes, all four scenario families, and 128 live Tau-authored M/R/D/CD
   condition predictions. It used the Gate 0 attribution root
   `/tmp/persona-dream-live-pctom-gate0-attribution-20260721T1700Z/pctom_gate0_case`,
@@ -318,12 +331,18 @@ Next: <one immediate action or stop condition>
   sealed64 corpus stable payload
   `sha256:d39a692e435e03ef9bae5a93ad4f143f8e3f3e52cc8201698983547af7a4355c`;
   sealed64 episodes payload
-  `sha256:f8f85a905452b280341571fd6cd84984bca209d25a97edc8799ab074c2514891`.
+  `sha256:f8f85a905452b280341571fd6cd84984bca209d25a97edc8799ab074c2514891`;
+  sealed64 independent replay
+  `sha256:aefadffad7c90c5d038ec9527bf0ef2eccfc00800a80512affd5e69be9657f21`;
+  sealed64 independent replay rows
+  `sha256:b6e088b4e6e65b256c88fe1a05c7b34aeafb3a8aa4d99574eaba73aa2c9f86af`;
+  sealed64 independent replay negative-action
+  `sha256:1e611b93c2e1ae02b2f8f96cdf73022beed8570037aacd8c2067610f64e478cd`.
   This advances held-out variant evidence beyond variants 1-16. It does not
-  prove an independently implemented external simulator, a permanently deployed
-  external production service, non-Memory external service fault injection,
-  long-duration wall-clock retention, semantic dream quality, paid provider
-  execution, or complete live Phase 01-16 runtime execution.
+  prove a separately deployed external simulator service, a permanently
+  deployed external production service, non-Memory external service fault
+  injection, long-duration wall-clock retention, semantic dream quality, paid
+  provider execution, or complete live Phase 01-16 runtime execution.
 - PCTOM-R repeated full64 live Tau sealed-test evidence over two Gate
   0-attributed runs:
   repeat2 replication receipt

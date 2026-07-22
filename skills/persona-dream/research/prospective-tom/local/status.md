@@ -11,8 +11,9 @@ Memory fault containment. Negative delayed-recall fixtures now prove the
 fresh-process checker blocks when either the primary source-document provenance
 index or the semantic provenance index is missing. A live Memory service
 restart proof now shows post-restart exact reread and `/recall` recovery of the
-noncanonical PCTOM-R revision state. The latest deterministic simulator support
-artifact is a frozen 64-episode `sealed_test` social corpus build/check.
+noncanonical PCTOM-R revision state. A generator-independent replay checker now
+recomputes the frozen social corpus policies, labels, hidden-state invariants,
+and withheld-field invariants without importing the corpus generator.
 
 Sealed64 deterministic social episode corpus:
 
@@ -30,6 +31,18 @@ Sealed64 social episode corpus check receipt:
 
 ```text
 /tmp/persona-dream-pctom-social-corpus-sealed64-20260722T041800Z/social_episode_corpus_check_receipt.v1.json
+```
+
+Sealed64 independent social episode replay receipt:
+
+```text
+/tmp/persona-dream-pctom-social-corpus-independent-replay-sealed64-20260722T064500Z/social_episode_independent_replay_receipt.v1.json
+```
+
+Sealed64 independent social episode replay negative-action receipt:
+
+```text
+/tmp/persona-dream-pctom-social-corpus-independent-replay-negative-action-20260722T064800Z/social_episode_independent_replay_receipt.v1.json
 ```
 
 Held-out variant replication receipt:
@@ -136,6 +149,18 @@ sealed64_corpus_first_order_labels: 64
 sealed64_corpus_second_order_labels: 64
 sealed64_corpus_labels_from_simulator_config: true
 sealed64_corpus_no_llm_judge: true
+sealed64_independent_replay_status: PASS_PCTOM_SOCIAL_EPISODE_INDEPENDENT_REPLAY
+sealed64_independent_replay_episodes: 64
+sealed64_independent_replay_families: 4
+sealed64_independent_replay_action_matches: 64
+sealed64_independent_replay_label_matches: 64
+sealed64_independent_replay_hidden_state_matches: 64
+sealed64_independent_replay_withheld_fields_matches: 64
+sealed64_independent_replay_generator_imports: false
+sealed64_independent_replay_negative_status: BLOCKED_PCTOM_SOCIAL_EPISODE_INDEPENDENT_REPLAY
+sealed64_independent_replay_negative_exit_code: 1
+sealed64_independent_replay_negative_action_matches: 63
+sealed64_independent_replay_negative_errors: episodes_sha256_mismatch, episode_action_replay_mismatch
 variant_min: 17
 variant_max: 24
 episodes: 32
@@ -318,6 +343,11 @@ sealed64_corpus_build_receipt_file_sha256: sha256:7d126282525cd8d0815a4e0bbcb510
 sealed64_corpus_check_receipt_file_sha256: sha256:657c34eec0449dedc939ef8896d30f7ea3c722aafbeb79904535b09d41a318fa
 sealed64_corpus_stable_payload_sha256: sha256:d39a692e435e03ef9bae5a93ad4f143f8e3f3e52cc8201698983547af7a4355c
 sealed64_corpus_episodes_payload_sha256: sha256:f8f85a905452b280341571fd6cd84984bca209d25a97edc8799ab074c2514891
+sealed64_independent_replay_receipt_sha256: sha256:aefadffad7c90c5d038ec9527bf0ef2eccfc00800a80512affd5e69be9657f21
+sealed64_independent_replay_rows_sha256: sha256:b6e088b4e6e65b256c88fe1a05c7b34aeafb3a8aa4d99574eaba73aa2c9f86af
+sealed64_independent_replay_negative_receipt_sha256: sha256:1e611b93c2e1ae02b2f8f96cdf73022beed8570037aacd8c2067610f64e478cd
+sealed64_independent_replay_negative_corpus_sha256: sha256:47b4b6583e245d14d588c9b712ffc30c09fdbb76ff021c6325c27d11c31492d9
+sealed64_independent_replay_negative_rows_sha256: sha256:4a3e45634b3aaf4db239c898ad78417d6d88f905868d3ef75e9a3b4e8e68e797
 mocked: false
 live: true
 tau_prediction_memory_write_attempts: 0
@@ -337,6 +367,11 @@ variants 17-24, outside the prior full64 variants 1-16 slice, ran through live
 -> the sealed64 deterministic corpus is versioned as `pctom_social_world.v1`,
    has four balanced scenario families, and exposes first- and second-order
    labels from simulator configuration
+-> a generator-independent replay checker recomputed 64/64 actual actions,
+   64/64 ToM label sets, 64/64 hidden-state family invariants, and 64/64
+   withheld-field invariants without importing the corpus generator
+-> a mutated-action negative fixture failed closed with the exact corpus hash
+   mismatch and action replay mismatch recorded
 -> predictions were sealed before deterministic outcome reveal and scored
 -> constrained action selections and planning regret were recomputed
 -> Gate 0 accepted raw-source IDs and digests were present on 128/128 rows
@@ -372,7 +407,7 @@ variants 17-24, outside the prior full64 variants 1-16 slice, ran through live
 What this does not prove:
 
 ```text
-a separately implemented external simulator
+a separately deployed external simulator service
 a permanently deployed external production service
 non-Memory external service fault injection
 long-duration wall-clock retention
