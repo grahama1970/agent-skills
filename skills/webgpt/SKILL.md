@@ -153,6 +153,15 @@ claims.
    inline JSON or prose, there is no Chrome download step. Do not blame
    `~/Downloads`, Chrome save settings, or `webgpt.download` unless a download
    command was actually executed and expected to return a local file.
+6. **Conversation-limit rollover.** If ChatGPT displays
+   `You've reached the maximum length for this conversation, but you can keep
+   talking by starting a new chat.`, this is a conversation state, not a
+   download or sentinel-parser defect. The Surf transport polls for this text,
+   clicks the controlled tab's **Start new chat** button, and resubmits the same
+   prepared prompt once. If same-tab rollover cannot be clicked, Surf opens a
+   fresh ChatGPT tab and resubmits once. Check metadata fields
+   `conversation_max_length_detected` and `conversation_max_length_rollover`
+   before deciding the next action.
 
 When a project agent reports success or failure, it must name which layer was
 proved and which layer failed. Example: "routing and sentinel capture passed;

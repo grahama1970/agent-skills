@@ -24,6 +24,42 @@ function delay(ms) {
 }
 
 const BACKGROUND_WAKE_EVERY_POLLS = 5;
+const CONVERSATION_MAX_LENGTH_NEEDLES = [
+  "you've reached the maximum length for this conversation",
+  "you have reached the maximum length for this conversation",
+  "maximum length for this conversation",
+  "keep talking by starting a new chat",
+  "start a new chat",
+];
+
+function normalizeConversationLimitText(text) {
+  return String(text || "")
+    .toLowerCase()
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function detectsConversationMaxLength(text) {
+  const normalized = normalizeConversationLimitText(text);
+  if (!normalized) return false;
+  const reachedLimit = CONVERSATION_MAX_LENGTH_NEEDLES
+    .slice(0, 3)
+    .some((needle) => normalized.includes(needle));
+  const newChatInstruction = CONVERSATION_MAX_LENGTH_NEEDLES
+    .slice(3)
+    .some((needle) => normalized.includes(needle));
+  return reachedLimit && newChatInstruction;
+}
+
+function conversationMaxLengthError(state = {}) {
+  const error = new Error(
+    "ChatGPT conversation reached maximum length; start a new chat is required",
+  );
+  error.code = "chatgpt_conversation_max_length";
+  error.chatgptPageState = state;
+  return error;
+}
 
 async function wakeBackgroundTab(inputCdp, log, reason = "poll") {
   if (!inputCdp) return false;
@@ -236,6 +272,27 @@ const assistantSnapshotExpression = (sentinel, baselineAssistantCount = 0) => {
     const ASSISTANT_SELECTOR = '${SELECTORS.assistantMessage}';
     const STOP_SELECTOR = '${SELECTORS.stopButton}';
     const FINISHED_SELECTOR = '${SELECTORS.finishedActions}';
+    const detectsConversationMaxLength = (text) => {
+      const normalized = String(text || '')
+        .toLowerCase()
+        .replace(/[\\u2018\\u2019]/g, "'")
+        .replace(/\\s+/g, ' ')
+        .trim();
+      if (!normalized) return false;
+      const reachedLimit = (
+        normalized.includes("you've reached the maximum length for this conversation") ||
+        normalized.includes('you have reached the maximum length for this conversation') ||
+        normalized.includes('maximum length for this conversation')
+      );
+      const newChatInstruction = (
+        normalized.includes('keep talking by starting a new chat') ||
+        normalized.includes('start a new chat')
+      );
+      return reachedLimit && newChatInstruction;
+    };
+    const pageText = document.body?.innerText || document.body?.textContent || '';
+    const conversationMaxLengthDetected = detectsConversationMaxLength(pageText);
+    const conversationMaxLengthTail = conversationMaxLengthDetected ? pageText.slice(-1200) : '';
     const isAssistantTurn = (node) => {
       if (!(node instanceof HTMLElement)) return false;
       const role = (node.getAttribute('data-message-author-role') || '').toLowerCase();
@@ -281,6 +338,8 @@ const assistantSnapshotExpression = (sentinel, baselineAssistantCount = 0) => {
         finished: false,
         source: 'awaiting-assistant-turn',
         pageTextContainsSentinel: false,
+        conversationMaxLengthDetected,
+        conversationMaxLengthTail,
         documentHidden,
         visibilityState,
         documentHasFocus,
@@ -324,6 +383,8 @@ const assistantSnapshotExpression = (sentinel, baselineAssistantCount = 0) => {
       source,
       pageTextContainsSentinel,
       sentinelMatch,
+      conversationMaxLengthDetected,
+      conversationMaxLengthTail,
       documentHidden,
       visibilityState,
       documentHasFocus,
@@ -459,6 +520,24 @@ async function assertReadyForNewPrompt(cdp) {
       const prompt = document.querySelector(PROMPT_SELECTOR);
       const promptText = prompt ? (prompt.innerText || prompt.value || prompt.textContent || '').trim() : '';
       const visibleText = (document.body?.innerText || '').slice(-4000);
+      const detectsConversationMaxLength = (text) => {
+        const normalized = String(text || '')
+          .toLowerCase()
+          .replace(/[\\u2018\\u2019]/g, "'")
+          .replace(/\\s+/g, ' ')
+          .trim();
+        if (!normalized) return false;
+        const reachedLimit = (
+          normalized.includes("you've reached the maximum length for this conversation") ||
+          normalized.includes('you have reached the maximum length for this conversation') ||
+          normalized.includes('maximum length for this conversation')
+        );
+        const newChatInstruction = (
+          normalized.includes('keep talking by starting a new chat') ||
+          normalized.includes('start a new chat')
+        );
+        return reachedLimit && newChatInstruction;
+      };
       const buttons = Array.from(document.querySelectorAll('button'))
         .map((button) => ({
           text: (button.innerText || button.textContent || '').trim(),
@@ -500,11 +579,16 @@ async function assertReadyForNewPrompt(cdp) {
         visibilityState: document.visibilityState || null,
         documentHasFocus: typeof document.hasFocus === 'function' ? document.hasFocus() : null,
         tailContainsStoppedThinking: visibleText.toLowerCase().includes('stopped thinking'),
+        conversationMaxLengthDetected: detectsConversationMaxLength(document.body?.innerText || ''),
+        conversationMaxLengthTail: detectsConversationMaxLength(document.body?.innerText || '') ? visibleText : '',
         title: document.title || '',
         url: location.href || '',
       };
     })()`
   );
+  if (state?.conversationMaxLengthDetected) {
+    throw conversationMaxLengthError(state);
+  }
   if (state?.stopVisible) {
     const err = new Error("ChatGPT page is busy before submit: stop button is visible; wait, extract the existing response, or use a fresh reviewer tab");
     err.chatgptPageState = state;
@@ -1141,6 +1225,14 @@ async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
       await delay(400);
       continue;
     }
+    if (snapshot.conversationMaxLengthDetected === true) {
+      throw conversationMaxLengthError({
+        conversationMaxLengthTail: snapshot.conversationMaxLengthTail || "",
+        source: snapshot.source || "page-text",
+        documentHidden: snapshot.documentHidden === true,
+        visibilityState: snapshot.visibilityState || null,
+      });
+    }
     if (snapshot.documentHidden === true) {
       hiddenPolls++;
       if (noActivate) {
@@ -1508,4 +1600,5 @@ module.exports = {
   recoverCloudflareChallenge,
   attemptOptionalSelection,
   waitForResponse,
+  detectsConversationMaxLength,
 };

@@ -630,6 +630,132 @@ attempt_extract_fallback() {
   } >> "$stderr_log"
   return 1
 }
+
+conversation_rollover_attempted=0
+conversation_rollover_from_tab=""
+conversation_rollover_to_tab=""
+conversation_rollover_error=""
+
+strip_chatgpt_target_args() {
+  rollover_args=()
+  local skip_next=0
+  local arg
+  for arg in "${args[@]}"; do
+    if [[ "$skip_next" -eq 1 ]]; then
+      skip_next=0
+      continue
+    fi
+    case "$arg" in
+      --tab-id|--target-tab-id)
+        skip_next=1
+        ;;
+      *)
+        rollover_args+=("$arg")
+        ;;
+    esac
+  done
+}
+
+attempt_conversation_max_length_rollover() {
+  if ! grep -Fq "ChatGPT conversation reached maximum length" "$stderr_log"; then
+    return 1
+  fi
+  conversation_rollover_attempted=1
+  conversation_rollover_from_tab="${requested_tab_id:-}"
+  {
+    echo "ConversationMaxLengthDetected: true"
+    echo "ConversationMaxLengthRolloverFromTab: ${conversation_rollover_from_tab}"
+  } >> "$stderr_log"
+
+  if [[ -n "$conversation_rollover_from_tab" ]]; then
+    local rollover_click_js rollover_click_out
+    rollover_click_js='(() => {
+      const visible = (el) => {
+        if (!(el instanceof HTMLElement)) return false;
+        const rect = el.getBoundingClientRect();
+        const style = getComputedStyle(el);
+        return rect.width > 0 && rect.height > 0 && style.visibility !== "hidden" && style.display !== "none";
+      };
+      const controls = Array.from(document.querySelectorAll("button,[role=button],a"))
+        .filter(visible);
+      const target = controls.find((el) => {
+        const text = (el.innerText || el.textContent || "").trim().toLowerCase();
+        const aria = (el.getAttribute("aria-label") || "").trim().toLowerCase();
+        return text.includes("start new chat") || aria.includes("start new chat");
+      });
+      if (!target) throw new Error("start_new_chat_control_not_found");
+      target.scrollIntoView({block: "center"});
+      target.click();
+      return JSON.stringify({clicked: true, text: (target.innerText || target.textContent || "").trim(), url: location.href});
+    })()'
+    if rollover_click_out="$("$RUN_SH" js "$rollover_click_js" --tab-id "$conversation_rollover_from_tab" --no-activate 2>&1)"; then
+      conversation_rollover_to_tab="$conversation_rollover_from_tab"
+      {
+        echo "ConversationMaxLengthRolloverToTab: ${conversation_rollover_to_tab}"
+        echo "ConversationMaxLengthRolloverAction: click_start_new_chat_same_tab_and_resubmit"
+        echo "ConversationMaxLengthRolloverClick: ${rollover_click_out}"
+      } >> "$stderr_log"
+      sleep 1
+      if run_submit > "$raw_tmp" 2>> "$stderr_log"; then
+        write_submit_receipt "submitted_to_chatgpt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "true"
+        write_webgpt_heartbeat "submitted" "conversation_max_length_same_tab_rollover" "$receipt_output" "$raw_output" "$timeout_s"
+        return 0
+      fi
+      local same_tab_status=$?
+      conversation_rollover_error="same_tab_resubmit_failed_exit_${same_tab_status}"
+      echo "ConversationMaxLengthRolloverError: ${conversation_rollover_error}" >> "$stderr_log"
+    else
+      conversation_rollover_error="same_tab_start_new_chat_click_failed"
+      {
+        echo "ConversationMaxLengthRolloverError: ${conversation_rollover_error}"
+        echo "$rollover_click_out"
+      } >> "$stderr_log"
+    fi
+  fi
+
+  local create_out new_tab_id
+  create_out="$("$RUN_SH" tab.new "https://chatgpt.com/" --background 2>&1)" || {
+    conversation_rollover_error="tab_new_failed"
+    {
+      echo "ConversationMaxLengthRolloverError: ${conversation_rollover_error}"
+      echo "$create_out"
+    } >> "$stderr_log"
+    return 1
+  }
+  new_tab_id="$(printf '%s' "$create_out" | sed -n 's/^Created tab \([0-9][0-9]*\):.*/\1/p' | head -n 1)"
+  if [[ -z "$new_tab_id" ]]; then
+    conversation_rollover_error="tab_new_id_parse_failed"
+    {
+      echo "ConversationMaxLengthRolloverError: ${conversation_rollover_error}"
+      echo "$create_out"
+    } >> "$stderr_log"
+    return 1
+  fi
+
+  conversation_rollover_to_tab="$new_tab_id"
+  requested_tab_id="$new_tab_id"
+  requested_tab_source="conversation-max-length-rollover"
+  target_url=""
+  expect_url=""
+  identity_preflight_json="{\"ok\":true,\"source\":\"conversation_max_length_rollover\",\"tab\":{\"id\":${new_tab_id},\"url\":\"https://chatgpt.com/\"}}"
+  {
+    echo "ConversationMaxLengthRolloverToTab: ${conversation_rollover_to_tab}"
+    echo "ConversationMaxLengthRolloverAction: open_fresh_chatgpt_tab_and_resubmit"
+  } >> "$stderr_log"
+
+  strip_chatgpt_target_args
+  rollover_args+=(--tab-id "$new_tab_id" --target-tab-id "$new_tab_id")
+  args=("${rollover_args[@]}")
+  if run_submit > "$raw_tmp" 2>> "$stderr_log"; then
+    write_submit_receipt "submitted_to_chatgpt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "true"
+    write_webgpt_heartbeat "submitted" "conversation_max_length_rollover" "$receipt_output" "$raw_output" "$timeout_s"
+    return 0
+  fi
+  local rollover_status=$?
+  conversation_rollover_error="resubmit_failed_exit_${rollover_status}"
+  echo "ConversationMaxLengthRolloverError: ${conversation_rollover_error}" >> "$stderr_log"
+  return "$rollover_status"
+}
 # Dedicated reviewer tab (inactive). Avoids reusing global state or auto-picking
 # the newest chatgpt.com tab (often the user's foreground conversation).
 if [[ "$create_tab" -eq 1 ]]; then
@@ -1138,6 +1264,21 @@ fi
 cp "$raw_tmp" "$raw_output"
 
 if [[ $status -ne 0 ]]; then
+  if attempt_conversation_max_length_rollover; then
+    status=0
+    finished_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    cp "$raw_tmp" "$raw_output"
+  else
+    rollover_status=$?
+    if [[ "$conversation_rollover_attempted" -eq 1 ]]; then
+      status="$rollover_status"
+      finished_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+      cp "$raw_tmp" "$raw_output"
+    fi
+  fi
+fi
+
+if [[ $status -ne 0 ]]; then
   attempt_extract_fallback "submit_failed" || true
   if grep -Fq "$sentinel" "$raw_output"; then
     {
@@ -1180,6 +1321,11 @@ extract_fallback_raw = None
 extract_fallback_meta = None
 tab_id = None
 chatgpt_ready_error = None
+conversation_max_length_detected = False
+conversation_max_length_rollover_from_tab = None
+conversation_max_length_rollover_to_tab = None
+conversation_max_length_rollover_action = None
+conversation_max_length_rollover_error = None
 if "ChatGPT prompt composer is not empty before submit" in stderr_text:
     chatgpt_ready_error = "composer_not_empty"
 elif "ChatGPT page is in a stopped-generation state before submit" in stderr_text:
@@ -1207,6 +1353,16 @@ for line in reversed(stderr_text.splitlines()):
         extract_fallback_raw = line.split(":", 1)[1].strip()
     elif line.startswith("ExtractFallbackMeta:") and extract_fallback_meta is None:
         extract_fallback_meta = line.split(":", 1)[1].strip()
+    elif line.startswith("ConversationMaxLengthDetected:"):
+        conversation_max_length_detected = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("ConversationMaxLengthRolloverFromTab:") and conversation_max_length_rollover_from_tab is None:
+        conversation_max_length_rollover_from_tab = line.split(":", 1)[1].strip() or None
+    elif line.startswith("ConversationMaxLengthRolloverToTab:") and conversation_max_length_rollover_to_tab is None:
+        conversation_max_length_rollover_to_tab = line.split(":", 1)[1].strip() or None
+    elif line.startswith("ConversationMaxLengthRolloverAction:") and conversation_max_length_rollover_action is None:
+        conversation_max_length_rollover_action = line.split(":", 1)[1].strip() or None
+    elif line.startswith("ConversationMaxLengthRolloverError:") and conversation_max_length_rollover_error is None:
+        conversation_max_length_rollover_error = line.split(":", 1)[1].strip() or None
 pathlib.Path(meta).write_text(json.dumps({
     "status": "failed",
     "failure": "submit_failed",
@@ -1237,6 +1393,14 @@ pathlib.Path(meta).write_text(json.dumps({
     "raw_chars": len(raw_text),
     "clean_chars": len(out_text),
     "raw_response_advisory": bool(raw_text),
+    "conversation_max_length_detected": conversation_max_length_detected,
+    "conversation_max_length_rollover": {
+        "attempted": bool(conversation_max_length_rollover_from_tab or conversation_max_length_rollover_to_tab or conversation_max_length_rollover_error),
+        "from_tab_id": conversation_max_length_rollover_from_tab,
+        "to_tab_id": conversation_max_length_rollover_to_tab,
+        "action": conversation_max_length_rollover_action,
+        "error": conversation_max_length_rollover_error,
+    },
     "extract_fallback_used": extract_fallback_used,
     "extract_fallback_reason": extract_fallback_reason,
     "extract_fallback_raw": extract_fallback_raw,
@@ -1278,6 +1442,11 @@ extract_fallback_reason = None
 extract_fallback_raw = None
 extract_fallback_meta = None
 tab_id = None
+conversation_max_length_detected = False
+conversation_max_length_rollover_from_tab = None
+conversation_max_length_rollover_to_tab = None
+conversation_max_length_rollover_action = None
+conversation_max_length_rollover_error = None
 for line in reversed(stderr_text.splitlines()):
     if line.startswith("ResponseTimedOut:") and response_timed_out is None:
         response_timed_out = line.split(":", 1)[1].strip() == "true"
@@ -1297,6 +1466,16 @@ for line in reversed(stderr_text.splitlines()):
         extract_fallback_raw = line.split(":", 1)[1].strip()
     elif line.startswith("ExtractFallbackMeta:") and extract_fallback_meta is None:
         extract_fallback_meta = line.split(":", 1)[1].strip()
+    elif line.startswith("ConversationMaxLengthDetected:"):
+        conversation_max_length_detected = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("ConversationMaxLengthRolloverFromTab:") and conversation_max_length_rollover_from_tab is None:
+        conversation_max_length_rollover_from_tab = line.split(":", 1)[1].strip() or None
+    elif line.startswith("ConversationMaxLengthRolloverToTab:") and conversation_max_length_rollover_to_tab is None:
+        conversation_max_length_rollover_to_tab = line.split(":", 1)[1].strip() or None
+    elif line.startswith("ConversationMaxLengthRolloverAction:") and conversation_max_length_rollover_action is None:
+        conversation_max_length_rollover_action = line.split(":", 1)[1].strip() or None
+    elif line.startswith("ConversationMaxLengthRolloverError:") and conversation_max_length_rollover_error is None:
+        conversation_max_length_rollover_error = line.split(":", 1)[1].strip() or None
 pathlib.Path(meta).write_text(json.dumps({
     "status": "missing_sentinel",
     "failure": "missing_sentinel",
@@ -1325,6 +1504,14 @@ pathlib.Path(meta).write_text(json.dumps({
     "raw_chars": len(raw_text),
     "clean_chars": len(out_text),
     "raw_response_advisory": bool(raw_text),
+    "conversation_max_length_detected": conversation_max_length_detected,
+    "conversation_max_length_rollover": {
+        "attempted": bool(conversation_max_length_rollover_from_tab or conversation_max_length_rollover_to_tab or conversation_max_length_rollover_error),
+        "from_tab_id": conversation_max_length_rollover_from_tab,
+        "to_tab_id": conversation_max_length_rollover_to_tab,
+        "action": conversation_max_length_rollover_action,
+        "error": conversation_max_length_rollover_error,
+    },
     "extract_fallback_used": extract_fallback_used,
     "extract_fallback_reason": extract_fallback_reason,
     "extract_fallback_raw": extract_fallback_raw,
@@ -1524,6 +1711,11 @@ extract_fallback_used = False
 extract_fallback_reason = None
 extract_fallback_raw = None
 extract_fallback_meta = None
+conversation_max_length_detected = False
+conversation_max_length_rollover_from_tab = None
+conversation_max_length_rollover_to_tab = None
+conversation_max_length_rollover_action = None
+conversation_max_length_rollover_error = None
 for line in reversed(stderr_text.splitlines()):
     if line.startswith("Tab ID:") and tab_id is None:
         tab_id = line.split(":", 1)[1].strip()
@@ -1575,6 +1767,16 @@ for line in reversed(stderr_text.splitlines()):
         extract_fallback_raw = line.split(":", 1)[1].strip()
     elif line.startswith("ExtractFallbackMeta:") and extract_fallback_meta is None:
         extract_fallback_meta = line.split(":", 1)[1].strip()
+    elif line.startswith("ConversationMaxLengthDetected:"):
+        conversation_max_length_detected = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("ConversationMaxLengthRolloverFromTab:") and conversation_max_length_rollover_from_tab is None:
+        conversation_max_length_rollover_from_tab = line.split(":", 1)[1].strip() or None
+    elif line.startswith("ConversationMaxLengthRolloverToTab:") and conversation_max_length_rollover_to_tab is None:
+        conversation_max_length_rollover_to_tab = line.split(":", 1)[1].strip() or None
+    elif line.startswith("ConversationMaxLengthRolloverAction:") and conversation_max_length_rollover_action is None:
+        conversation_max_length_rollover_action = line.split(":", 1)[1].strip() or None
+    elif line.startswith("ConversationMaxLengthRolloverError:") and conversation_max_length_rollover_error is None:
+        conversation_max_length_rollover_error = line.split(":", 1)[1].strip() or None
     if (
         tab_id is not None
         and activated is not None
@@ -1695,6 +1897,14 @@ pathlib.Path(meta).write_text(json.dumps({
     "focus_mid_log": focus_mid_log,
     "response_source": response_source,
     "response_proof_status": "response_proven" if response_integrity_ok else "response_unproven",
+    "conversation_max_length_detected": conversation_max_length_detected,
+    "conversation_max_length_rollover": {
+        "attempted": bool(conversation_max_length_rollover_from_tab or conversation_max_length_rollover_to_tab or conversation_max_length_rollover_error),
+        "from_tab_id": conversation_max_length_rollover_from_tab,
+        "to_tab_id": conversation_max_length_rollover_to_tab,
+        "action": conversation_max_length_rollover_action,
+        "error": conversation_max_length_rollover_error,
+    },
     "extract_fallback_used": extract_fallback_used,
     "extract_fallback_reason": extract_fallback_reason,
     "extract_fallback_raw": extract_fallback_raw,
