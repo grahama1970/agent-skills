@@ -7,7 +7,26 @@ Gate 0 accepted-source attribution, causal-identifiability lineage replay, and
 Gate 8/9 condition reliability bridge, plus Gate 7 action-linked belief
 revision, live Memory recall after revision, and broader live fault-injection
 surface coverage, including local HTTP service retry and combined full64
-Memory fault containment.
+Memory fault containment. The latest deterministic simulator support artifact
+is a frozen 64-episode `sealed_test` social corpus build/check.
+
+Sealed64 deterministic social episode corpus:
+
+```text
+/tmp/persona-dream-pctom-social-corpus-sealed64-20260722T041800Z/social_episode_corpus.v1.json
+```
+
+Sealed64 social episode corpus build receipt:
+
+```text
+/tmp/persona-dream-pctom-social-corpus-sealed64-20260722T041800Z/social_episode_corpus_build_receipt.v1.json
+```
+
+Sealed64 social episode corpus check receipt:
+
+```text
+/tmp/persona-dream-pctom-social-corpus-sealed64-20260722T041800Z/social_episode_corpus_check_receipt.v1.json
+```
 
 Held-out variant replication receipt:
 
@@ -75,8 +94,19 @@ live_memory_revision_recall_status: PASS_PCTOM_LIVE_MEMORY_REVISION_RECALL
 live_fault_injection_status: PASS_PCTOM_LIVE_FAULT_INJECTION_SURFACE
 local_http_service_retry_status: PASS_LIVE_TAU_PCTOM_SERVICE_RETRY_PROOF
 combined_full64_memory_fault_surface_status: PASS_LIVE_TAU_PCTOM_FULL64_MEMORY_FAULT_SURFACE
+sealed64_corpus_build_status: PASS_SOCIAL_EPISODE_CORPUS_BUILT
+sealed64_corpus_check_status: PASS_SOCIAL_EPISODE_CORPUS
 gate8_status: PASS_TOM_RELIABILITY_SURFACE
 gate9_status: PASS_TOM_CAUSAL_REPLAY
+sealed64_corpus_generator_version: pctom_social_world.v1
+sealed64_corpus_split: sealed_test
+sealed64_corpus_episodes: 64
+sealed64_corpus_families: 4
+sealed64_corpus_episodes_per_family: 16
+sealed64_corpus_first_order_labels: 64
+sealed64_corpus_second_order_labels: 64
+sealed64_corpus_labels_from_simulator_config: true
+sealed64_corpus_no_llm_judge: true
 variant_min: 17
 variant_max: 24
 episodes: 32
@@ -186,6 +216,11 @@ combined_full64_memory_fault_surface_receipt_sha256: sha256:adb6190f59be7999f286
 combined_full64_memory_fault_trials_sha256: sha256:455979b5b42bb8d5431df73b3a75cf172b90def0d4aa2fb923241752cd642c94
 combined_full64_live_memory_probes_sha256: sha256:125921d11ce5a34483551cfc7039e029cb27d32fa7cc3aa1722da43246661f75
 combined_full64_causal_replay_sha256: sha256:2c7b9ee5604b83fa80e04da5b82bda35d7b3e415af56975b626f8915ad7ea5ac
+sealed64_corpus_file_sha256: sha256:e29475d5f02db694cac595e26347ebcaef5a44ebbd24ef0fc19598eb1e8e2419
+sealed64_corpus_build_receipt_file_sha256: sha256:7d126282525cd8d0815a4e0bbcb510c3873a8c10603cfa1ae9d2f3282b8efa2d
+sealed64_corpus_check_receipt_file_sha256: sha256:657c34eec0449dedc939ef8896d30f7ea3c722aafbeb79904535b09d41a318fa
+sealed64_corpus_stable_payload_sha256: sha256:d39a692e435e03ef9bae5a93ad4f143f8e3f3e52cc8201698983547af7a4355c
+sealed64_corpus_episodes_payload_sha256: sha256:f8f85a905452b280341571fd6cd84984bca209d25a97edc8799ab074c2514891
 mocked: false
 live: true
 tau_prediction_memory_write_attempts: 0
@@ -202,6 +237,9 @@ What this proves:
 ```text
 variants 17-24, outside the prior full64 variants 1-16 slice, ran through live
    Tau-authored M/R/D/CD condition predictions
+-> the sealed64 deterministic corpus is versioned as `pctom_social_world.v1`,
+   has four balanced scenario families, and exposes first- and second-order
+   labels from simulator configuration
 -> predictions were sealed before deterministic outcome reveal and scored
 -> constrained action selections and planning regret were recomputed
 -> Gate 0 accepted raw-source IDs and digests were present on 128/128 rows
@@ -232,7 +270,7 @@ variants 17-24, outside the prior full64 variants 1-16 slice, ran through live
 What this does not prove:
 
 ```text
-an independently versioned simulator corpus
+a separately implemented external simulator
 a permanently deployed external production service
 non-Memory external service fault injection
 delayed multi-session recall after process restart

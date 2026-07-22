@@ -135,6 +135,12 @@ Next: <one immediate action or stop condition>
 
 - PCTOM-R held-out variant 17-24 live Tau balanced-planning slice with Gate 0
   accepted-source attribution:
+  sealed64 social episode corpus
+  `/tmp/persona-dream-pctom-social-corpus-sealed64-20260722T041800Z/social_episode_corpus.v1.json`;
+  sealed64 corpus build receipt
+  `/tmp/persona-dream-pctom-social-corpus-sealed64-20260722T041800Z/social_episode_corpus_build_receipt.v1.json`;
+  sealed64 corpus check receipt
+  `/tmp/persona-dream-pctom-social-corpus-sealed64-20260722T041800Z/social_episode_corpus_check_receipt.v1.json`;
   replication receipt
   `/tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_planning_replication_receipt.v1.json`;
   causal-identifiability receipt
@@ -154,10 +160,18 @@ Next: <one immediate action or stop condition>
   combined full64 Memory fault-surface receipt
   `/tmp/persona-dream-live-tau-full64-memory-fault-surface-repeat2-20260722T041500Z/live_tau_full64_memory_fault_surface_receipt.v1.json`.
   Statuses:
+  `PASS_SOCIAL_EPISODE_CORPUS_BUILT`, `PASS_SOCIAL_EPISODE_CORPUS`,
   `PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION` and
   `PASS_PCTOM_CAUSAL_IDENTIFIABILITY_GATE`, followed by
   `PASS_LIVE_TAU_PCTOM_CONDITION_RELIABILITY_BRIDGE` over the held-out
-  condition root. The run consumed simulator variants 17-24, 32 sealed-test
+  condition root. The corpus artifact used generator version
+  `pctom_social_world.v1` and froze 64 `sealed_test` deterministic simulator
+  episodes: 16 per family across `information_asymmetry_false_belief`,
+  `preference_desire_uncertainty`, `trust_commitment_relationship`, and
+  `coordination_conflict`. The checker recomputed the episode hash, found 64
+  first-order labels and 64 second-order labels, confirmed labels came from
+  `simulator_config`, and used no LLM judge, Memory write, Tau call, or
+  provider call. The live run consumed simulator variants 17-24, 32 sealed-test
   episodes, all four scenario families, and 128 live Tau-authored M/R/D/CD
   condition predictions. It used the Gate 0 attribution root
   `/tmp/persona-dream-live-pctom-gate0-attribution-20260721T1700Z/pctom_gate0_case`,
@@ -264,9 +278,19 @@ Next: <one immediate action or stop condition>
   combined full64 live Memory probes
   `sha256:125921d11ce5a34483551cfc7039e029cb27d32fa7cc3aa1722da43246661f75`;
   combined full64 causal replay
-  `sha256:2c7b9ee5604b83fa80e04da5b82bda35d7b3e415af56975b626f8915ad7ea5ac`.
+  `sha256:2c7b9ee5604b83fa80e04da5b82bda35d7b3e415af56975b626f8915ad7ea5ac`;
+  sealed64 corpus file
+  `sha256:e29475d5f02db694cac595e26347ebcaef5a44ebbd24ef0fc19598eb1e8e2419`;
+  sealed64 corpus build receipt file
+  `sha256:7d126282525cd8d0815a4e0bbcb510c3873a8c10603cfa1ae9d2f3282b8efa2d`;
+  sealed64 corpus check receipt file
+  `sha256:657c34eec0449dedc939ef8896d30f7ea3c722aafbeb79904535b09d41a318fa`;
+  sealed64 corpus stable payload
+  `sha256:d39a692e435e03ef9bae5a93ad4f143f8e3f3e52cc8201698983547af7a4355c`;
+  sealed64 episodes payload
+  `sha256:f8f85a905452b280341571fd6cd84984bca209d25a97edc8799ab074c2514891`.
   This advances held-out variant evidence beyond variants 1-16. It does not
-  prove an independently versioned simulator corpus, a permanently deployed
+  prove an independently implemented external simulator, a permanently deployed
   external production service, non-Memory external service fault injection,
   delayed multi-session recall after process restart, semantic dream quality,
   paid provider execution, or complete live Phase 01-16 runtime execution.

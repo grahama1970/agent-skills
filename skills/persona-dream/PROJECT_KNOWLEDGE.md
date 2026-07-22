@@ -7,7 +7,20 @@
 
 - 2026-07-22 UTC (PCTOM-R GATE 0 HELD-OUT VARIANT LIVE TAU BOUNDARY): a
   Gate 0-attributed held-out variant slice now exists beyond the prior full64
-  variants 1-16 evidence. Command:
+  variants 1-16 evidence. A fresh frozen deterministic `sealed_test` social
+  corpus was also built and checked at
+  `/tmp/persona-dream-pctom-social-corpus-sealed64-20260722T041800Z/social_episode_corpus.v1.json`.
+  Build receipt:
+  `/tmp/persona-dream-pctom-social-corpus-sealed64-20260722T041800Z/social_episode_corpus_build_receipt.v1.json`.
+  Check receipt:
+  `/tmp/persona-dream-pctom-social-corpus-sealed64-20260722T041800Z/social_episode_corpus_check_receipt.v1.json`.
+  Corpus generator version `pctom_social_world.v1`; 64 episodes, 4 families,
+  16 per family, 64 first-order labels, 64 second-order labels,
+  labels from `simulator_config`, policies deterministic, no LLM judge, and
+  no Memory/Tau/provider calls. This is deterministic simulator evidence, not
+  live model evidence.
+
+  Command:
   `./skills/persona-dream/run.sh run-live-tau-balanced-planning-replication
   --family-episode-limit 8 --episodes-per-family 24 --variant-min 17
   --variant-max 24 --gate0-case-root
@@ -32,7 +45,8 @@
   Combined full64 Memory fault-surface receipt:
   `/tmp/persona-dream-live-tau-full64-memory-fault-surface-repeat2-20260722T041500Z/live_tau_full64_memory_fault_surface_receipt.v1.json`.
 
-  Statuses `PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION` and
+  Statuses `PASS_SOCIAL_EPISODE_CORPUS_BUILT`, `PASS_SOCIAL_EPISODE_CORPUS`,
+  `PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION` and
   `PASS_PCTOM_CAUSAL_IDENTIFIABILITY_GATE`; the condition reliability bridge
   then returned `PASS_LIVE_TAU_PCTOM_CONDITION_RELIABILITY_BRIDGE`. Observed:
   variants 17-24, 32 sealed-test episodes, all four scenario families, 128
@@ -173,12 +187,22 @@
   combined full64 live Memory probes
   `sha256:125921d11ce5a34483551cfc7039e029cb27d32fa7cc3aa1722da43246661f75`;
   combined full64 causal replay
-  `sha256:2c7b9ee5604b83fa80e04da5b82bda35d7b3e415af56975b626f8915ad7ea5ac`.
+  `sha256:2c7b9ee5604b83fa80e04da5b82bda35d7b3e415af56975b626f8915ad7ea5ac`;
+  sealed64 corpus file
+  `sha256:e29475d5f02db694cac595e26347ebcaef5a44ebbd24ef0fc19598eb1e8e2419`;
+  sealed64 corpus build receipt file
+  `sha256:7d126282525cd8d0815a4e0bbcb510c3873a8c10603cfa1ae9d2f3282b8efa2d`;
+  sealed64 corpus check receipt file
+  `sha256:657c34eec0449dedc939ef8896d30f7ea3c722aafbeb79904535b09d41a318fa`;
+  sealed64 corpus stable payload
+  `sha256:d39a692e435e03ef9bae5a93ad4f143f8e3f3e52cc8201698983547af7a4355c`;
+  sealed64 episodes payload
+  `sha256:f8f85a905452b280341571fd6cd84984bca209d25a97edc8799ab074c2514891`.
   This advances held-out variant/generalization evidence for PCTOM-R Gate 0
   and Gate 6, a controlled artifact-bound Gate 8/9 reliability bridge, and
   Gate 7 non-destructive belief revision linked to live-originated action
   decisions, including deterministic and live Memory recall after revision. It
-  does not prove an independently versioned simulator corpus, a permanently
+  does not prove an independently implemented external simulator, a permanently
   deployed external production service, non-Memory external service faults,
   delayed multi-session recall after process restart, semantic dream quality,
   paid provider execution, or complete live Phase 01-16 runtime execution.
