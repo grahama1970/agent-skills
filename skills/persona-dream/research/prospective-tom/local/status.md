@@ -1,8 +1,19 @@
 # Status
 
-Status: GATE0_HELD_OUT_VARIANT17_24_LIVE_TAU_REVISION_RECALL_MEMORY_RESTART_AND_FAULT_SURFACE_ACCEPTED
+Status: PCTOM_OBJECTIVE_EVIDENCE_FAILCLOSED_BOUNDARY_ACCEPTED
 
-Latest artifact: held-out variant 17-24 live Tau balanced-planning slice with
+Latest artifact: objective-evidence fail-closed boundary audit
+`/tmp/persona-dream-pctom-objective-evidence-failclosed-boundary-20260722T133500Z/pctom_objective_evidence_audit_receipt.v1.json`
+with status `PASS_PCTOM_OBJECTIVE_EVIDENCE_AUDIT`, receipt SHA-256
+`sha256:649c683e27ecaa61a6a60c84e99ef9d78a378fbb4b7f10594080dbae20c77e3d`,
+`mocked=false`, `live=false`, and `fixture_backed=false`. This supersedes the
+older active-boundary wording that still asked for independent corpus replay or
+local service proof as next work; those are now recorded predecessor evidence.
+The next useful receipt is either a genuinely new independent live-generalization
+slice or an external always-on service reliability proof. It is not another
+duplicate local full64 aggregate and not provider/video work.
+
+Previous major artifact: held-out variant 17-24 live Tau balanced-planning slice with
 Gate 0 accepted-source attribution, causal-identifiability lineage replay, and
 Gate 8/9 condition reliability bridge, plus Gate 7 action-linked belief
 revision, live Memory recall after revision, and broader live fault-injection

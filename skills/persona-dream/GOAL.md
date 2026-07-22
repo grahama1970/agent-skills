@@ -1977,7 +1977,21 @@ Blocked Gate 6 timeout90 smoke floor proof root: /tmp/persona-dream-live-tau-con
 Current active phase boundary:
 
 ```text
-phase: post-heldout-variant17-24-balanced-planning-and-reliability, pre-independent-generalization-or-external-service-reliability
+phase: post-expanded-objective-evidence-failclosed-boundary, pre-next-independent-live-generalization-or-external-always-on-service-reliability
+latest_objective_evidence_receipt: /tmp/persona-dream-pctom-objective-evidence-failclosed-boundary-20260722T133500Z/pctom_objective_evidence_audit_receipt.v1.json
+latest_objective_evidence_status: PASS_PCTOM_OBJECTIVE_EVIDENCE_AUDIT
+latest_objective_evidence_receipt_sha256: sha256:649c683e27ecaa61a6a60c84e99ef9d78a378fbb4b7f10594080dbae20c77e3d
+latest_objective_evidence_mocked: false
+latest_objective_evidence_live: false
+latest_objective_evidence_fixture_backed: false
+latest_success_criteria_receipt: /tmp/persona-dream-pctom-success-criteria-expanded-coverage-r2-20260722T120400Z/pctom_success_criteria_audit_receipt.v1.json
+latest_success_criteria_status: PASS_PCTOM_SUCCESS_CRITERIA_AUDIT
+latest_success_criteria_receipt_sha256: sha256:adeb6ad468edc718c087998865b94d7f9e38ab6653bcca53e2070b5ad8b75c96
+latest_goal_coverage_receipt: /tmp/persona-dream-pctom-goal-coverage-unsupported-abstention-20260722T120100Z/pctom_goal_coverage_receipt.v1.json
+latest_goal_coverage_status: PASS_PCTOM_GOAL_COVERAGE
+latest_goal_coverage_receipt_sha256: sha256:19d64e0123136e7dd5bc856e12f7ec5e4b29657e044da6135ee4454e86bf8ca4
+latest_independent_social_replay_receipt: /tmp/persona-dream-pctom-social-corpus-independent-replay-sealed64-20260722T064500Z/social_episode_independent_replay_receipt.v1.json
+latest_local_http_social_simulator_service_receipt: /tmp/persona-dream-social-simulator-service-proof-20260722T082000Z/social_simulator_service_proof_receipt.v1.json
 latest_balanced_planning_receipt: /tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_planning_replication_receipt.v1.json
 latest_balanced_planning_status: PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION
 latest_balanced_planning_receipt_sha256: sha256:98336825a38be02d455e391735e2153986e89e2eba619b9a9a894b9ac6a6d272
@@ -2051,7 +2065,7 @@ last_tau_prompt_timeout_diagnostic_30s_receipt: /tmp/persona-dream-live-tau-prom
 last_tau_prompt_timeout_diagnostic_90s_receipt: /tmp/persona-dream-live-tau-prompt-timeout-diagnostic-90s-20260721T1511Z/live_tau_prompt_timeout_diagnostic_receipt.v1.json
 last_tau_condition_comparison_timeout90_smoke_receipt: /tmp/persona-dream-live-tau-condition-comparison-timeout90-smoke-20260721T1512Z/live_tau_condition_comparison_receipt.v1.json
 last_blocked_gate6_timeout90_smoke_floor_receipt: /tmp/persona-dream-live-tau-condition-action-selection-timeout90-smoke-20260721T1512Z/live_tau_condition_action_selection_receipt.v1.json
-next_required_receipt: independent scenario-corpus generalization or external always-on service reliability, not another duplicate full64 aggregate and not provider/video work
+next_required_receipt: next independent live-generalization slice or external always-on service reliability, not another duplicate local full64 aggregate and not provider/video work
 secondary_receipt: permanently deployed external always-on orchestrator retry proof, only as supporting reliability evidence
 ```
 
@@ -2068,6 +2082,22 @@ now adds a 64-episode deterministic sealed test with paired bootstrap
 confidence intervals for CD versus the strongest baseline on the preregistered
 belief Brier metric. The broader live fault-injection slice now adds live
 Memory fault probes plus controlled local model/tool/schema/persistence/retry
+boundaries. Since this boundary was first written, the project also added
+sealed64 generator-independent social replay, a separate local HTTP social
+simulator service proof, expanded goal coverage with unsupported-evidence
+abstention, success-criteria audits bound to that expanded coverage, and an
+objective-evidence fail-closed audit that recursively checks child receipt
+hashes, provider/canonical/identity/source-memory counters, autonomous
+no-human-judgment flags, and required negative fail-closed evidence.
+
+Therefore, the prior `pre-independent-generalization-or-external-service`
+wording is historical. Independent corpus replay and local service-boundary
+proof are now predecessor evidence. The next useful research receipt is either
+a genuinely new independent live-generalization slice that changes the
+episode/action distribution beyond the current sealed64 and variant 17-24
+surfaces, or an external always-on service reliability proof. It is not another
+local duplicate of the already aggregated full64 evidence, and it is not a
+provider/video run.
 fault containment over the hash-bound predecessor receipts. These receipts
 still do not authorize a final research success claim. The bounded live Tau
 sealed-test replication slice added 16 live Tau-authored sealed-test cases plus
