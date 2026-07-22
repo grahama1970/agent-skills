@@ -38,6 +38,8 @@
   `/tmp/persona-dream-live-tau-revision-recall-variant17-24-20260722T034200Z/live_tau_revision_recall_receipt.v1.json`.
   Live Memory revision-recall receipt:
   `/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z/live_memory_revision_recall_receipt.v1.json`.
+  Live Memory delayed-recall receipt:
+  `/tmp/persona-dream-live-memory-revision-delayed-recall-variant17-24-20260722T042700Z/live_memory_revision_delayed_recall_receipt.v1.json`.
   Live fault-injection surface receipt:
   `/tmp/persona-dream-live-fault-injection-surface-variant17-24-20260722T034600Z/live_fault_injection_surface_receipt.v1.json`.
   Local HTTP service retry proof receipt:
@@ -96,6 +98,16 @@
   M/R/D/CD condition. It made `memory_write_attempts=2` for the noncanonical
   research/mirror writes and zero canonical, identity, source-memory, provider,
   Tau, or human-content-judgment calls/writes.
+
+  A fresh no-write delayed-recall process then consumed that live Memory root.
+  It reports `PASS_PCTOM_LIVE_MEMORY_REVISION_DELAYED_RECALL`: 128 source
+  Memory documents, 128 semantic mirrors, 128 delayed exact rereads, 128
+  delayed semantic exact rereads, 4 delayed `/recall` queries, 40 delayed
+  recall hits, 10 hits per M/R/D/CD condition, `memory_write_attempts=0`,
+  `write_violations=0`, prior/posterior distinction true, and
+  synthetic/literal boundary true. This proves a fresh process can re-read and
+  recall the prior noncanonical revision Memory state without writing. It does
+  not prove a Memory service restart or long-duration wall-clock retention.
 
   The broader live fault-injection surface consumed the deterministic sealed
   test statistical-confidence root
@@ -168,6 +180,14 @@
   `sha256:925333b88ab513c57fdf595a14010497f8408c7a5e34c78bd977b571cef92290`;
   live Memory recall results
   `sha256:1ca8c485b658d43f8cceb4a97986ee3b0104c5399bedd07ce23c9391ad96c786`;
+  live Memory delayed recall declared receipt
+  `sha256:db582b1fd3737d2162e1745fdb13bd08345b4dcb9ed57706b797b0acad8e984e`;
+  live Memory delayed exact rereads
+  `sha256:8a548e5863046496702aeca207e9db1a17c62ed0b2d23d7437234c781ffe0d3e`;
+  live Memory delayed semantic exact rereads
+  `sha256:42faa2361dca97a7d26c4b0e145ca32955a9ba2b68c0741e3cb2ca19b27f74c0`;
+  live Memory delayed recall results
+  `sha256:045f38d09fdb5b337b5dc3868cdbd25ee8afbc92b37078c334ad9edbef54ecde`;
   live fault-surface declared receipt
   `sha256:2931a8c493a384cda42f9ed88e808c2b859f1fd920e1c99c322d5dadfefe2a4f`;
   live fault trials
@@ -204,8 +224,9 @@
   decisions, including deterministic and live Memory recall after revision. It
   does not prove an independently implemented external simulator, a permanently
   deployed external production service, non-Memory external service faults,
-  delayed multi-session recall after process restart, semantic dream quality,
-  paid provider execution, or complete live Phase 01-16 runtime execution.
+  Memory service restart, long-duration wall-clock retention, semantic dream
+  quality, paid provider execution, or complete live Phase 01-16 runtime
+  execution.
 - 2026-07-22 UTC (PCTOM-R GATE 0 REPEATED FULL64 LIVE TAU BOUNDARY): a second
   Gate 0-attributed full64 live Tau sealed-test replication now exists, and a
   two-root repeated-run summary consumes both full64 roots. Repeat2 command:

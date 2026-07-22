@@ -153,6 +153,8 @@ Next: <one immediate action or stop condition>
   `/tmp/persona-dream-live-tau-revision-recall-variant17-24-20260722T034200Z/live_tau_revision_recall_receipt.v1.json`;
   live Memory revision-recall receipt
   `/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z/live_memory_revision_recall_receipt.v1.json`;
+  live Memory delayed-recall receipt
+  `/tmp/persona-dream-live-memory-revision-delayed-recall-variant17-24-20260722T042700Z/live_memory_revision_delayed_recall_receipt.v1.json`;
   live fault-injection surface receipt
   `/tmp/persona-dream-live-fault-injection-surface-variant17-24-20260722T034600Z/live_fault_injection_surface_receipt.v1.json`;
   local HTTP service retry proof receipt
@@ -203,7 +205,12 @@ Next: <one immediate action or stop condition>
   noncanonical lesson mirrors. Live Memory exact reread returned 128/128
   research documents and 128/128 semantic mirrors; live `/recall` returned 40
   hits, 10 per M/R/D/CD condition, while keeping prior/posterior distributions
-  distinguishable and excluding synthetic branches from literal history. The
+  distinguishable and excluding synthetic branches from literal history. A
+  fresh no-write delayed-recall process then consumed the prior live Memory
+  root, exact-reread 128/128 noncanonical revision documents and 128/128
+  semantic mirrors, and returned 40 delayed `/recall` hits, 10 per M/R/D/CD
+  condition, with `memory_write_attempts=0`, `write_violations=0`, and the
+  prior/posterior plus synthetic/literal checks still true. The
   broader live fault-injection surface consumed the sealed-test statistical
   confidence root
   `/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z`
@@ -259,6 +266,14 @@ Next: <one immediate action or stop condition>
   `sha256:925333b88ab513c57fdf595a14010497f8408c7a5e34c78bd977b571cef92290`;
   live Memory recall results
   `sha256:1ca8c485b658d43f8cceb4a97986ee3b0104c5399bedd07ce23c9391ad96c786`;
+  live Memory delayed recall declared receipt
+  `sha256:db582b1fd3737d2162e1745fdb13bd08345b4dcb9ed57706b797b0acad8e984e`;
+  live Memory delayed exact rereads
+  `sha256:8a548e5863046496702aeca207e9db1a17c62ed0b2d23d7437234c781ffe0d3e`;
+  live Memory delayed semantic exact rereads
+  `sha256:42faa2361dca97a7d26c4b0e145ca32955a9ba2b68c0741e3cb2ca19b27f74c0`;
+  live Memory delayed recall results
+  `sha256:045f38d09fdb5b337b5dc3868cdbd25ee8afbc92b37078c334ad9edbef54ecde`;
   live fault-surface declared receipt
   `sha256:2931a8c493a384cda42f9ed88e808c2b859f1fd920e1c99c322d5dadfefe2a4f`;
   live fault trials
@@ -292,8 +307,9 @@ Next: <one immediate action or stop condition>
   This advances held-out variant evidence beyond variants 1-16. It does not
   prove an independently implemented external simulator, a permanently deployed
   external production service, non-Memory external service fault injection,
-  delayed multi-session recall after process restart, semantic dream quality,
-  paid provider execution, or complete live Phase 01-16 runtime execution.
+  Memory service restart, long-duration wall-clock retention, semantic dream
+  quality, paid provider execution, or complete live Phase 01-16 runtime
+  execution.
 - PCTOM-R repeated full64 live Tau sealed-test evidence over two Gate
   0-attributed runs:
   repeat2 replication receipt

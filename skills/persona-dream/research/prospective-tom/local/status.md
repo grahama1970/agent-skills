@@ -64,6 +64,12 @@ Held-out variant live Memory revision-recall receipt:
 /tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z/live_memory_revision_recall_receipt.v1.json
 ```
 
+Held-out variant live Memory delayed-recall receipt:
+
+```text
+/tmp/persona-dream-live-memory-revision-delayed-recall-variant17-24-20260722T042700Z/live_memory_revision_delayed_recall_receipt.v1.json
+```
+
 Held-out variant live fault-injection surface receipt:
 
 ```text
@@ -91,6 +97,7 @@ condition_reliability_bridge_status: PASS_LIVE_TAU_PCTOM_CONDITION_RELIABILITY_B
 action_linked_revision_status: PASS_LIVE_TAU_PCTOM_ACTION_LINKED_REVISION
 deterministic_revision_recall_status: PASS_LIVE_TAU_PCTOM_REVISION_RECALL
 live_memory_revision_recall_status: PASS_PCTOM_LIVE_MEMORY_REVISION_RECALL
+live_memory_revision_delayed_recall_status: PASS_PCTOM_LIVE_MEMORY_REVISION_DELAYED_RECALL
 live_fault_injection_status: PASS_PCTOM_LIVE_FAULT_INJECTION_SURFACE
 local_http_service_retry_status: PASS_LIVE_TAU_PCTOM_SERVICE_RETRY_PROOF
 combined_full64_memory_fault_surface_status: PASS_LIVE_TAU_PCTOM_FULL64_MEMORY_FAULT_SURFACE
@@ -157,6 +164,15 @@ live_memory_write_attempts: 2
 live_memory_canonical_memory_write_attempts: 0
 live_memory_identity_write_attempts: 0
 live_memory_source_memory_write_attempts: 0
+live_memory_delayed_source_documents: 128
+live_memory_delayed_source_semantic_documents: 128
+live_memory_delayed_exact_rereads: 128
+live_memory_delayed_semantic_exact_rereads: 128
+live_memory_delayed_recall_queries: 4
+live_memory_delayed_recall_hits: 40
+live_memory_delayed_recall_hits_per_condition: M=10 R=10 D=10 CD=10
+live_memory_delayed_write_attempts: 0
+live_memory_delayed_write_violations: 0
 live_fault_families: 8
 live_fault_trials: 8
 live_memory_fault_probes: 4
@@ -206,6 +222,10 @@ deterministic_revision_recall_results_sha256: sha256:e2ce3d8c8adf6e6bb15a85ade9a
 live_memory_revision_recall_receipt_sha256: sha256:ea4546e85f8f1bc5392dd810bb83d0b5b7ae42682b093384eac25c8cce8fb63a
 live_memory_revision_documents_sha256: sha256:925333b88ab513c57fdf595a14010497f8408c7a5e34c78bd977b571cef92290
 live_memory_recall_results_sha256: sha256:1ca8c485b658d43f8cceb4a97986ee3b0104c5399bedd07ce23c9391ad96c786
+live_memory_delayed_recall_receipt_sha256: sha256:db582b1fd3737d2162e1745fdb13bd08345b4dcb9ed57706b797b0acad8e984e
+live_memory_delayed_exact_rereads_sha256: sha256:8a548e5863046496702aeca207e9db1a17c62ed0b2d23d7437234c781ffe0d3e
+live_memory_delayed_semantic_exact_rereads_sha256: sha256:42faa2361dca97a7d26c4b0e145ca32955a9ba2b68c0741e3cb2ca19b27f74c0
+live_memory_delayed_recall_results_sha256: sha256:045f38d09fdb5b337b5dc3868cdbd25ee8afbc92b37078c334ad9edbef54ecde
 live_fault_surface_receipt_sha256: sha256:2931a8c493a384cda42f9ed88e808c2b859f1fd920e1c99c322d5dadfefe2a4f
 live_fault_surface_fault_trials_sha256: sha256:faaa9d4991e474eee5b6a04649f7361480ee75d0573e1e4456f5f1a8cb2a8b92
 live_fault_surface_memory_fault_probes_sha256: sha256:2006a53b480e1646941c18b2800b7e1909e5a9221bd53f8e0eaecc916c88b085
@@ -253,6 +273,8 @@ variants 17-24, outside the prior full64 variants 1-16 slice, ran through live
 -> live Memory exact reread and `/recall` recovered noncanonical revision
    documents for all four conditions while preserving prior/posterior and
    synthetic/literal boundaries
+-> a fresh no-write process exact-reread and recalled the prior noncanonical
+   revision Memory state without mutating Memory
 -> live Memory fault probes and controlled local model/tool/schema/
    persistence/retry faults were contained with allowed terminal outcomes only
 -> the broader fault surface wrote one causal replay and did not continue with
@@ -273,7 +295,8 @@ What this does not prove:
 a separately implemented external simulator
 a permanently deployed external production service
 non-Memory external service fault injection
-delayed multi-session recall after process restart
+Memory service restart
+long-duration wall-clock retention
 semantic dream quality
 paid provider execution
 complete live Phase 01-16 runtime execution
