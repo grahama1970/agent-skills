@@ -4011,26 +4011,34 @@ planning evidence is sparse, trust/commitment concentrated, and duplicated
 across the available expanded repeated seeds.
 
 The causal-identifiability question has now been run against full64
-live-originated artifacts and is blocked on lineage, not on policy sensitivity.
-The next accepted artifact must close the narrower Gate 0 lineage gap before
-additional live CD efficacy runs:
+live-originated artifacts after the Gate 0 attribution overlay was added. The
+current full64 and repeat2 causal-identifiability receipts both pass with
+complete accepted-source lineage:
 
-1. Can every full64 live evidence ref map to an accepted raw source ID and
-   digest before the prediction is sealed? The immediate gate must carry
-   `accepted_source_id` or equivalent accepted raw source ID plus a SHA-256
-   digest from recall residue into social evidence refs, then rerun the
-   causal-identifiability gate. The current full64 run already shows the fixed
-   action policy is sensitive: oracle-aligned projections reduce regret on 118
-   rows and anti-oracle projections worsen regret on 114 rows. The full gate is
-   still blocked because lineage completeness is 0/256, with 768 evidence refs
-   and no accepted raw source IDs or source digests.
+```text
+/tmp/persona-dream-pctom-causal-identifiability-gate0-full64-20260722T015148Z/pctom_causal_identifiability_receipt.json
+status: PASS_PCTOM_CAUSAL_IDENTIFIABILITY_GATE
+receipt_sha256: sha256:afa4bb6ea181cc68cd1a36f74221d3377e11abfeba13cdc53752615b5c54e848
+lineage_complete_rows: 256/256
+evidence refs with accepted raw-source IDs and digests: 768/768
+oracle_improves_regret_count: 112
+anti_oracle_worsens_regret_count: 116
 
-Only after accepted raw-source lineage reaches 100% and the
-causal-identifiability gate passes should the planning path return to a
-broader/different planning intervention, non-identical repeated live Tau
-behavior, or larger/balanced planning corpus. Another prose summary, duplicate
-aggregate over the same action-row pattern, or corpus-tuning effort to force a
-CD win is not a valid planning-benefit proof.
+/tmp/persona-dream-pctom-causal-identifiability-gate0-full64-repeat2-20260722T025200Z/pctom_causal_identifiability_receipt.json
+status: PASS_PCTOM_CAUSAL_IDENTIFIABILITY_GATE
+receipt_sha256: sha256:d47453d237ccd520ab45911be624539f7cc707f76b7c0f451163d8e492cb9ef1
+lineage_complete_rows: 256/256
+evidence refs with accepted raw-source IDs and digests: 768/768
+oracle_improves_regret_count: 113
+anti_oracle_worsens_regret_count: 115
+```
+
+The next accepted planning artifact must therefore move beyond lineage repair:
+it must test a broader or different planning intervention, non-identical
+repeated live Tau behavior, independent scenario generalization, or a
+larger/balanced planning corpus. Another prose summary, duplicate aggregate
+over the same action-row pattern, or corpus-tuning effort to force a CD win is
+not a valid planning-benefit proof.
 
 The secondary reliability artifact is useful, but it is not a substitute for
 the planning research artifact. It must answer this question:
