@@ -51,7 +51,7 @@ def transcript_goal_claim(text: str, *, project_root: Path | None = None) -> dic
         lowered = line.lower()
         if lowered.startswith("achieved_with_receipt:"):
             receipt = line.split(":", 1)[1].strip()
-            if valid_local_artifact(receipt, project_root=project_root):
+            if valid_local_artifact(receipt, project_root=project_root) and completion_claim_has_evidence(block, project_root=project_root):
                 return {"state": "achieved", "source": "immutable_goal_line"}
             return {"state": "unmet", "source": "immutable_goal_line"}
         if lowered == "done_with_receipt":
@@ -93,6 +93,24 @@ def exhausted_blocker_claim(text: str, *, project_root: Path | None = None) -> b
     brave = parsed.get("brave-search")
     reviewer = parsed.get("browser-oracle")
     return bool(valid_attempt_value(brave, project_root=project_root) and valid_attempt_value(reviewer, project_root=project_root))
+
+
+def completion_claim_has_evidence(block: str, *, project_root: Path | None = None) -> bool:
+    evidence = structured_line_value(block, "Evidence")
+    if not evidence or evidence.lower() == "none":
+        return False
+    return any(valid_local_artifact(value, project_root=project_root) for value in candidate_path_values(evidence))
+
+
+def candidate_path_values(text: str) -> list[str]:
+    values: list[str] = []
+    for match in re.finditer(r"(?:~|/|\.)?[\w@%+=:,./-]*[/][\w@%+=:,./-]+", text):
+        value = match.group(0).strip(" \t\r\n,;:()[]{}<>`'\"")
+        if "/" in value and not value.startswith(("/", "~", ".")):
+            value = value[value.index("/") :]
+        if value:
+            values.append(value)
+    return values
 
 
 def latest_operational_block(text: str) -> str:

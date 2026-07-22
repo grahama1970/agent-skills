@@ -922,6 +922,20 @@ def test_existing_project_receipt_allows_achieved_stop(tmp_path: Path) -> None:
     assert monitor.transcript_goal_claim(text, project_root=tmp_path)["state"] == "achieved"
 
 
+def test_existing_receipt_without_evidence_line_does_not_allow_stop(tmp_path: Path) -> None:
+    receipt = tmp_path / ".codex" / "ui-verification" / "latest.json"
+    receipt.parent.mkdir(parents=True)
+    receipt.write_text('{"ok":true}', encoding="utf-8")
+    text = f"""
+    Status/Phase: Stop-condition proof completed.
+    Immutable Goal: ACHIEVED_WITH_RECEIPT:{receipt}
+    Next: STOP_ALLOWED because the goal has a fresh receipt.
+    Disposition: DONE_WITH_RECEIPT
+    """
+
+    assert monitor.transcript_goal_claim(text, project_root=tmp_path)["state"] == "unmet"
+
+
 def test_out_of_project_receipt_does_not_allow_stop(tmp_path: Path) -> None:
     project = tmp_path / "project"
     outside = tmp_path / "outside"
@@ -1130,8 +1144,13 @@ def test_send_prompt_final_grace_confirms_delayed_working_after_ctrl_j() -> None
 
 
 def test_completion_between_selection_and_send_sends_nothing_with_valid_receipt(tmp_path: Path) -> None:
-    (tmp_path / "receipt.json").write_text("{}", encoding="utf-8")
-    client = FakeCompletionBeforeSendHerdr()
+    receipt = tmp_path / "receipt.json"
+    receipt.write_text("{}", encoding="utf-8")
+    client = FakeCompletionBeforeSendHerdr(
+        f"Immutable Goal: ACHIEVED_WITH_RECEIPT:{receipt}\n"
+        f"Evidence: receipt={receipt}; command=verify-ui-cdp\n"
+        "Disposition: DONE_WITH_RECEIPT\n"
+    )
     original_wait = monitor.wait_for_agent_idle
     monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
     try:
