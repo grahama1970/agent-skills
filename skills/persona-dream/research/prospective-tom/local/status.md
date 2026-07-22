@@ -32,6 +32,9 @@ or reports provider/canonical/identity/source-memory write counters.
 A PCTOM-R goal-coverage audit now maps the active immutable goal clauses to
 concrete local receipt evidence and fails closed when a required coverage id is
 missing.
+A PCTOM-R success-criteria audit now separates scoped evidence from full hard
+success: current receipts show confidence-bound prediction benefit and
+confidence-bound live planning benefit, but not in one same-scope experiment.
 
 Sealed64 deterministic social episode corpus:
 
@@ -213,6 +216,18 @@ PCTOM-R goal-coverage negative missing-Gate9 receipt:
 /tmp/persona-dream-pctom-goal-coverage-negative-missing-gate9-20260722T093100Z/pctom_goal_coverage_receipt.v1.json
 ```
 
+PCTOM-R success-criteria audit receipt:
+
+```text
+/tmp/persona-dream-pctom-success-criteria-20260722T094500Z/pctom_success_criteria_audit_receipt.v1.json
+```
+
+PCTOM-R success-criteria negative planning receipt:
+
+```text
+/tmp/persona-dream-pctom-success-criteria-negative-planning-20260722T094600Z/pctom_success_criteria_audit_receipt.v1.json
+```
+
 Inspection result:
 
 ```text
@@ -279,6 +294,19 @@ pctom_goal_coverage_negative_exit_code: 1
 pctom_goal_coverage_negative_missing_coverage_ids: 1
 pctom_goal_coverage_negative_error: missing_required_coverage_id:gate9_causal_replay
 pctom_goal_coverage_negative_receipt_sha256: sha256:042a331bea370b9b50c579dce76e3d0964ed06fe6bad45b6e44143223f14cd9b
+pctom_success_criteria_audit_status: PASS_PCTOM_SUCCESS_CRITERIA_AUDIT
+pctom_success_criteria_prediction_benefit_with_confidence: true
+pctom_success_criteria_prediction_scope: deterministic sealed64 full split
+pctom_success_criteria_planning_benefit_with_confidence: true
+pctom_success_criteria_planning_scope: live Tau balanced variants 17-24 slice
+pctom_success_criteria_goal_coverage_complete: true
+pctom_success_criteria_same_scope_joint_success: false
+pctom_success_criteria_full_hard_success_criteria_met: false
+pctom_success_criteria_receipt_sha256: sha256:5b14a97dd245ece531fc59e345e560f073d153177706e5525bf3223e2c2ee3dd
+pctom_success_criteria_negative_status: BLOCKED_PCTOM_SUCCESS_CRITERIA_AUDIT
+pctom_success_criteria_negative_exit_code: 1
+pctom_success_criteria_negative_error: planning_benefit_with_confidence_not_proven
+pctom_success_criteria_negative_receipt_sha256: sha256:1d5dbe5a73bdc32f522f82eed3e463a68e2dc4c35a9cb85ed48723d05b4d42f3
 live_fault_injection_status: PASS_PCTOM_LIVE_FAULT_INJECTION_SURFACE
 local_http_service_retry_status: PASS_LIVE_TAU_PCTOM_SERVICE_RETRY_PROOF
 combined_full64_memory_fault_surface_status: PASS_LIVE_TAU_PCTOM_FULL64_MEMORY_FAULT_SURFACE

@@ -253,6 +253,34 @@
   receipts outside the manifest, or complete Phase 01-16 media runtime
   execution.
 
+  A PCTOM-R success-criteria audit now prevents a scoped result from being
+  reported as full hard success. Command:
+  `./skills/persona-dream/run.sh check-pctom-success-criteria
+  --prediction-receipt
+  /tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/sealed_test_statistical_confidence_receipt.v1.json
+  --planning-receipt
+  /tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_planning_replication_receipt.v1.json
+  --goal-coverage-receipt
+  /tmp/persona-dream-pctom-goal-coverage-20260722T093000Z/pctom_goal_coverage_receipt.v1.json
+  --output-root /tmp/persona-dream-pctom-success-criteria-20260722T094500Z
+  --receipt-out
+  /tmp/persona-dream-pctom-success-criteria-20260722T094500Z/pctom_success_criteria_audit_receipt.v1.json
+  --json`. Receipt status: `PASS_PCTOM_SUCCESS_CRITERIA_AUDIT`; summary:
+  `prediction_benefit_with_confidence=true`,
+  `planning_benefit_with_confidence=true`, `goal_coverage_complete=true`,
+  `same_scope_joint_success=false`, and
+  `full_hard_success_criteria_met=false`. Receipt SHA-256:
+  `sha256:5b14a97dd245ece531fc59e345e560f073d153177706e5525bf3223e2c2ee3dd`.
+  A fixture-backed negative mutated the live planning receipt's planning
+  benefit flags false; the audit exited 1 with
+  `BLOCKED_PCTOM_SUCCESS_CRITERIA_AUDIT`, error
+  `planning_benefit_with_confidence_not_proven`, and receipt SHA-256
+  `sha256:1d5dbe5a73bdc32f522f82eed3e463a68e2dc4c35a9cb85ed48723d05b4d42f3`.
+  This proves confidence-bound prediction and planning benefits are currently
+  scoped evidence, not one same-scope full-success result. The next scientific
+  gap is a same-scope sealed live experiment that proves prediction benefit and
+  planning benefit together while preserving the existing reliability surface.
+
   Command:
   `./skills/persona-dream/run.sh run-live-tau-balanced-planning-replication
   --family-episode-limit 8 --episodes-per-family 24 --variant-min 17

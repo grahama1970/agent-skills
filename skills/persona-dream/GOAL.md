@@ -329,6 +329,26 @@ Next: <one immediate action or stop condition>
   does not prove semantic dream quality, paid provider execution, future
   receipts not added to the manifest, or complete Phase 01-16 media runtime
   execution.
+  A success-criteria audit then checked the primary research claims without
+  collapsing distinct scopes. Receipt:
+  `/tmp/persona-dream-pctom-success-criteria-20260722T094500Z/pctom_success_criteria_audit_receipt.v1.json`.
+  It returned `PASS_PCTOM_SUCCESS_CRITERIA_AUDIT` with
+  `prediction_benefit_with_confidence=true`, using the deterministic sealed64
+  full-split `belief_brier` result; `planning_benefit_with_confidence=true`,
+  using the live Tau balanced variants 17-24 planning-regret result; and
+  `goal_coverage_complete=true`, using the goal-coverage receipt above. It
+  also recorded `same_scope_joint_success=false` and
+  `full_hard_success_criteria_met=false`, because current prediction and
+  planning benefits are proven by different receipts/scopes rather than one
+  same-scope sealed live experiment. Receipt SHA-256:
+  `sha256:5b14a97dd245ece531fc59e345e560f073d153177706e5525bf3223e2c2ee3dd`.
+  A fixture-backed negative flipped the live planning benefit flags false and
+  exited 1 with `BLOCKED_PCTOM_SUCCESS_CRITERIA_AUDIT`, error
+  `planning_benefit_with_confidence_not_proven`, and receipt SHA-256
+  `sha256:1d5dbe5a73bdc32f522f82eed3e463a68e2dc4c35a9cb85ed48723d05b4d42f3`.
+  This proves the audit catches loss of planning-benefit evidence and preserves
+  the remaining hard-success gap instead of turning scoped evidence into a full
+  research-success claim.
   The live run consumed simulator variants 17-24, 32 sealed-test
   episodes, all four scenario families, and 128 live Tau-authored M/R/D/CD
   condition predictions. It used the Gate 0 attribution root
