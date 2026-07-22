@@ -19,6 +19,8 @@
   `/tmp/persona-dream-pctom-causal-identifiability-gate0-variant17-24-20260722T032200Z/pctom_causal_identifiability_receipt.json`.
   Condition reliability bridge receipt:
   `/tmp/persona-dream-live-tau-condition-reliability-bridge-variant17-24-20260722T033000Z/live_tau_condition_reliability_bridge_receipt.v1.json`.
+  Action-linked belief-revision receipt:
+  `/tmp/persona-dream-live-tau-action-linked-revision-variant17-24-20260722T034000Z/live_tau_action_linked_revision_receipt.v1.json`.
 
   Statuses `PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION` and
   `PASS_PCTOM_CAUSAL_IDENTIFIABILITY_GATE`; the condition reliability bridge
@@ -47,6 +49,14 @@
   `continued_with_unknown_state=0`. Gate 9 accepted one causal replay and
   localized stale-artifact divergence to one replaced tool return.
 
+  The action-linked revision bridge consumed the held-out live Gate 6
+  action-selection root with zero new Tau calls. It wrote and checked 128/128
+  strict Gate 7 non-destructive belief revisions. Each condition has 32 prior
+  action-linked hypotheses and 32 posterior current-use revisions. Checks
+  confirmed the action-selection base receipt hash recomputed, all four
+  conditions were represented, priors remained auditable, unsupported writes
+  were absent, and no human content judgment was required.
+
   Receipt SHA-256 values: replication
   `sha256:98336825a38be02d455e391735e2153986e89e2eba619b9a9a894b9ac6a6d272`;
   condition
@@ -62,12 +72,18 @@
   Gate 8 surface check
   `sha256:c658c1fb86d87ea8d87deaf759d00332a30c6634429bfd3cc35e9ab106cbef64`;
   Gate 9 replay check
-  `sha256:189a9435d742e8692b067458152c0acaaa67d8f9a6bf34df2b6d1e03422d2c6d`.
+  `sha256:189a9435d742e8692b067458152c0acaaa67d8f9a6bf34df2b6d1e03422d2c6d`;
+  action-linked revision
+  `sha256:7955621d16a13224f13558d959dcfd3b36ff0dfdedb4c05140ab0c0a10aedb93`;
+  action-linked revision index
+  `sha256:41cee5aa52c5786ad8b6ac9d79271c21df1d660217c5594e335951025a78107b`.
   This advances held-out variant/generalization evidence for PCTOM-R Gate 0
-  and Gate 6, plus a controlled artifact-bound Gate 8/9 reliability bridge.
-  It does not prove an independently versioned simulator corpus, real external
-  service fault injection, production retry machinery, semantic dream quality,
-  paid provider execution, or complete live Phase 01-16 runtime execution.
+  and Gate 6, a controlled artifact-bound Gate 8/9 reliability bridge, and
+  Gate 7 non-destructive belief revision linked to live-originated action
+  decisions. It does not prove an independently versioned simulator corpus,
+  real external service fault injection, production retry machinery,
+  longitudinal recall after revision, semantic dream quality, paid provider
+  execution, or complete live Phase 01-16 runtime execution.
 - 2026-07-22 UTC (PCTOM-R GATE 0 REPEATED FULL64 LIVE TAU BOUNDARY): a second
   Gate 0-attributed full64 live Tau sealed-test replication now exists, and a
   two-root repeated-run summary consumes both full64 roots. Repeat2 command:

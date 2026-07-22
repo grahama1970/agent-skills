@@ -140,7 +140,9 @@ Next: <one immediate action or stop condition>
   causal-identifiability receipt
   `/tmp/persona-dream-pctom-causal-identifiability-gate0-variant17-24-20260722T032200Z/pctom_causal_identifiability_receipt.json`;
   condition reliability bridge receipt
-  `/tmp/persona-dream-live-tau-condition-reliability-bridge-variant17-24-20260722T033000Z/live_tau_condition_reliability_bridge_receipt.v1.json`.
+  `/tmp/persona-dream-live-tau-condition-reliability-bridge-variant17-24-20260722T033000Z/live_tau_condition_reliability_bridge_receipt.v1.json`;
+  action-linked belief-revision receipt
+  `/tmp/persona-dream-live-tau-action-linked-revision-variant17-24-20260722T034000Z/live_tau_action_linked_revision_receipt.v1.json`.
   Statuses:
   `PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION` and
   `PASS_PCTOM_CAUSAL_IDENTIFIABILITY_GATE`, followed by
@@ -165,7 +167,13 @@ Next: <one immediate action or stop condition>
   `BLOCKED_BEFORE_SIDE_EFFECT=2`, and
   `QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE=1`, with
   `continued_with_unknown_state=0`. Gate 9 localized a stale-artifact
-  divergence by replacing one suspected tool return. Receipt SHA-256 values:
+  divergence by replacing one suspected tool return. The action-linked
+  revision bridge consumed the live Gate 6 action-selection root and wrote
+  128/128 strict Gate 7 non-destructive belief revisions, with 32 prior
+  hypotheses and 32 posterior revisions per M/R/D/CD condition. It preserved
+  sealed priors as auditable, wrote hash-bound current-use posteriors, and made
+  zero new Tau, Memory, provider, canonical-memory, identity, or source-memory
+  calls/writes. Receipt SHA-256 values:
   replication `sha256:98336825a38be02d455e391735e2153986e89e2eba619b9a9a894b9ac6a6d272`;
   condition comparison `sha256:2da4ed6c0d49e6ed8d61ce4667862b8cf78114a3b37b6ccc92646ce39daeb31c`;
   action selection `sha256:b11d4abfbe53b91fb08d8e0dc95f9536ba68a92ba6438c64b0245e01e6b158df`;
@@ -176,11 +184,16 @@ Next: <one immediate action or stop condition>
   Gate 8 surface check
   `sha256:c658c1fb86d87ea8d87deaf759d00332a30c6634429bfd3cc35e9ab106cbef64`;
   Gate 9 replay check
-  `sha256:189a9435d742e8692b067458152c0acaaa67d8f9a6bf34df2b6d1e03422d2c6d`.
+  `sha256:189a9435d742e8692b067458152c0acaaa67d8f9a6bf34df2b6d1e03422d2c6d`;
+  action-linked revision
+  `sha256:7955621d16a13224f13558d959dcfd3b36ff0dfdedb4c05140ab0c0a10aedb93`;
+  action-linked revision index
+  `sha256:41cee5aa52c5786ad8b6ac9d79271c21df1d660217c5594e335951025a78107b`.
   This advances held-out variant evidence beyond variants 1-16. It does not
   prove an independently versioned simulator corpus, real external service
-  fault injection, production retry machinery, semantic dream quality, paid
-  provider execution, or complete live Phase 01-16 runtime execution.
+  fault injection, production retry machinery, longitudinal recall after
+  revision, semantic dream quality, paid provider execution, or complete live
+  Phase 01-16 runtime execution.
 - PCTOM-R repeated full64 live Tau sealed-test evidence over two Gate
   0-attributed runs:
   repeat2 replication receipt

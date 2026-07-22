@@ -1,10 +1,11 @@
 # Status
 
-Status: GATE0_HELD_OUT_VARIANT17_24_LIVE_TAU_AND_RELIABILITY_BRIDGE_ACCEPTED
+Status: GATE0_HELD_OUT_VARIANT17_24_LIVE_TAU_RELIABILITY_AND_REVISION_ACCEPTED
 
 Latest artifact: held-out variant 17-24 live Tau balanced-planning slice with
 Gate 0 accepted-source attribution, causal-identifiability lineage replay, and
-Gate 8/9 condition reliability bridge.
+Gate 8/9 condition reliability bridge, plus Gate 7 action-linked belief
+revision.
 
 Held-out variant replication receipt:
 
@@ -24,12 +25,19 @@ Held-out variant condition reliability bridge receipt:
 /tmp/persona-dream-live-tau-condition-reliability-bridge-variant17-24-20260722T033000Z/live_tau_condition_reliability_bridge_receipt.v1.json
 ```
 
+Held-out variant action-linked belief-revision receipt:
+
+```text
+/tmp/persona-dream-live-tau-action-linked-revision-variant17-24-20260722T034000Z/live_tau_action_linked_revision_receipt.v1.json
+```
+
 Inspection result:
 
 ```text
 replication_status: PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION
 causal_identifiability_status: PASS_PCTOM_CAUSAL_IDENTIFIABILITY_GATE
 condition_reliability_bridge_status: PASS_LIVE_TAU_PCTOM_CONDITION_RELIABILITY_BRIDGE
+action_linked_revision_status: PASS_LIVE_TAU_PCTOM_ACTION_LINKED_REVISION
 gate8_status: PASS_TOM_RELIABILITY_SURFACE
 gate9_status: PASS_TOM_CAUSAL_REPLAY
 variant_min: 17
@@ -60,6 +68,13 @@ continued_with_unknown_state: 0
 gate9_causal_replay_receipts: 1
 gate9_localized_cause_type: STALE_ARTIFACT
 condition_reliability_tau_call_attempts: 0
+action_linked_revision_cases_written: 128
+action_linked_revision_pass_count: 128
+action_linked_prior_hypotheses_per_condition: M=32 R=32 D=32 CD=32
+action_linked_posterior_revisions_per_condition: M=32 R=32 D=32 CD=32
+action_linked_priors_remain_auditable: true
+action_linked_unsupported_writes_absent: true
+action_linked_revision_tau_call_attempts: 0
 replication_receipt_sha256: sha256:98336825a38be02d455e391735e2153986e89e2eba619b9a9a894b9ac6a6d272
 condition_receipt_sha256: sha256:2da4ed6c0d49e6ed8d61ce4667862b8cf78114a3b37b6ccc92646ce39daeb31c
 action_receipt_sha256: sha256:b11d4abfbe53b91fb08d8e0dc95f9536ba68a92ba6438c64b0245e01e6b158df
@@ -68,6 +83,8 @@ lineage_receipt_sha256: sha256:28cb8a34fa22b98bb06b4964ab8971afd0592c3e0624b2167
 condition_reliability_bridge_receipt_sha256: sha256:0fd7d4c4747d1d3eaa54c47d7d9ab7b93a61cbcd01c4e727b0450c9d4a850c86
 gate8_surface_check_receipt_sha256: sha256:c658c1fb86d87ea8d87deaf759d00332a30c6634429bfd3cc35e9ab106cbef64
 gate9_replay_check_receipt_sha256: sha256:189a9435d742e8692b067458152c0acaaa67d8f9a6bf34df2b6d1e03422d2c6d
+action_linked_revision_receipt_sha256: sha256:7955621d16a13224f13558d959dcfd3b36ff0dfdedb4c05140ab0c0a10aedb93
+action_linked_revision_index_sha256: sha256:41cee5aa52c5786ad8b6ac9d79271c21df1d660217c5594e335951025a78107b
 mocked: false
 live: true
 memory_write_attempts: 0
@@ -91,6 +108,8 @@ variants 17-24, outside the prior full64 variants 1-16 slice, ran through live
 -> Gate 8 accepted repeated, perturbed, and controlled fault-injected artifact
    trials for the live condition root
 -> Gate 9 localized stale-artifact divergence to one replaced tool return
+-> Gate 7 wrote 128/128 non-destructive action-linked belief revisions while
+   preserving sealed priors and hash-binding current-use posteriors
 -> no Memory, provider, canonical-memory, identity, source-memory, LLM judge,
    or human content judgment path was used
 ```
@@ -101,6 +120,7 @@ What this does not prove:
 an independently versioned simulator corpus
 real external service fault injection
 production retry machinery
+longitudinal recall after revision
 semantic dream quality
 paid provider execution
 complete live Phase 01-16 runtime execution
