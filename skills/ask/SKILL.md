@@ -180,6 +180,29 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
   and Tau execution receipt when `--execute` is used. Preserve `dag.json`,
   command specs, node receipts, and join receipts.
 
+## Roundtable Collaboration Protocol (operator directive 2026-07-22)
+
+Roundtable handlers are COLLABORATORS, not competitors. The panel's value is
+model diversity: each seat contributes from different training and strengths.
+Rules for the calling agent:
+
+- **No blind rounds.** Every round — including the first — shares the full
+  working context, all prior positions, and the calling agent's research brief
+  with every seat identically. Prompts may invite a seat's strengths; they must
+  never withhold context from any seat.
+- **Equal sharing means concurrent topology.** Put the synthesis + research
+  brief in the shared request text so all seats receive identical context.
+  Sequential receipt-passing is asymmetric (the first seat sees nothing new)
+  and is not a substitute for equal sharing.
+- **Iterate, never one-shot.** Between rounds the calling agent researches the
+  load-bearing claims from the responses — /dogpile (brave web + arxiv +
+  github + more) when available, else /brave-search (subcommand is `web`) —
+  and injects the fresh external evidence into the next round's shared prompt.
+- **Converge or surface dissent.** Iterate to convergence or a 3-round cap;
+  dissent surviving the cap goes to the human as a genuine split, never
+  papered over. Verify panel-cited external claims (repos, papers, standards)
+  before relying on them.
+
 Current command patterns:
 
 ```bash
