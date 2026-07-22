@@ -1,8 +1,24 @@
 # Status
 
-Status: PCTOM_INDEPENDENT_LIVE_GENERALIZATION_V53_56_UNSAFE_OFFER_PRESSURE
+Status: PCTOM_BROADER_LIVE_GENERALIZATION_V57_64_EXPOSURE_CONTRAST
 
-Latest artifact: independent live-generalization unsafe-offer-pressure lure
+Latest artifact: broader live-generalization cooperation exposure/contrast
+slice
+`/tmp/persona-dream-live-tau-cooperation-exposure-contrast-v57-64-20260722T071000Z/live_tau_cooperation_exposure_contrast_receipt.v1.json`
+with status `PASS_LIVE_TAU_PCTOM_COOPERATION_EXPOSURE_CONTRAST_SLICE`,
+receipt SHA-256
+`sha256:df43dc64ae3dcb318b14720f8df83e59957207c39b47bb6009ca5b38c5b7e408`,
+`mocked=false`, `live=true`, and `fixture_backed=false`. It reexecuted 32 Tau
+text calls over eight new variants 57-64, produced four keep-cooperation rows
+and four avoid/unsafe-cooperation contrast rows, exposed `OFFER_COOPERATION` in
+all eight visible packets, observed four CD offer candidates on keep rows and
+zero CD offer candidates on avoid/unsafe rows, and recorded zero
+Memory/provider/canonical/identity/source-memory write attempts. The slice
+conclusion is `EXPOSURE_CONTRAST_SLICE_PARTIAL_CD_OFFER_EXPOSURE`. It does not
+prove broad held-out planning benefit: `planning_benefit_with_confidence=false`,
+with intervened planning-regret CI upper `0.35625000000000007`.
+
+Previous artifact: independent live-generalization unsafe-offer-pressure lure
 slice
 `/tmp/persona-dream-live-tau-cooperation-unsafe-offer-pressure-lure-v53-56-20260722T070149Z/live_tau_cooperation_unsafe_offer_pressure_lure_receipt.v1.json`
 with status `PASS_LIVE_TAU_PCTOM_COOPERATION_UNSAFE_OFFER_PRESSURE_SLICE`,
@@ -25,10 +41,9 @@ with status `PASS_PCTOM_OBJECTIVE_EVIDENCE_AUDIT`, receipt SHA-256
 `mocked=false`, `live=false`, and `fixture_backed=false`. This supersedes the
 older active-boundary wording that still asked for independent corpus replay or
 local service proof as next work; those are now recorded predecessor evidence.
-The next useful receipt is either external always-on service reliability or a
-broader non-duplicate live-generalization slice that moves beyond the current
-coordination-only lure band. It is not another duplicate local full64 aggregate
-and not provider/video work.
+The next useful receipt is either external always-on service reliability or
+cross-family/non-coordination live generalization. It is not another duplicate
+local full64 aggregate and not provider/video work.
 
 Previous major artifact: held-out variant 17-24 live Tau balanced-planning slice with
 Gate 0 accepted-source attribution, causal-identifiability lineage replay, and

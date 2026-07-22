@@ -1977,7 +1977,22 @@ Blocked Gate 6 timeout90 smoke floor proof root: /tmp/persona-dream-live-tau-con
 Current active phase boundary:
 
 ```text
-phase: post-independent-live-generalization-v53-56-unsafe-offer-pressure, pre-external-always-on-service-reliability-or-broader-live-generalization
+phase: post-broader-live-generalization-v57-64-exposure-contrast, pre-external-always-on-service-reliability-or-cross-family-live-generalization
+latest_broader_live_generalization_receipt: /tmp/persona-dream-live-tau-cooperation-exposure-contrast-v57-64-20260722T071000Z/live_tau_cooperation_exposure_contrast_receipt.v1.json
+latest_broader_live_generalization_status: PASS_LIVE_TAU_PCTOM_COOPERATION_EXPOSURE_CONTRAST_SLICE
+latest_broader_live_generalization_receipt_sha256: sha256:df43dc64ae3dcb318b14720f8df83e59957207c39b47bb6009ca5b38c5b7e408
+latest_broader_live_generalization_mocked: false
+latest_broader_live_generalization_live: true
+latest_broader_live_generalization_fixture_backed: false
+latest_broader_live_generalization_tau_calls: 32
+latest_broader_live_generalization_variants: 57-64
+latest_broader_live_generalization_rows: 8
+latest_broader_live_generalization_keep_rows: 4
+latest_broader_live_generalization_avoid_or_unsafe_rows: 4
+latest_broader_live_generalization_cd_offer_keep_candidates: 4
+latest_broader_live_generalization_cd_offer_avoid_or_unsafe_candidates: 0
+latest_broader_live_generalization_slice_conclusion: EXPOSURE_CONTRAST_SLICE_PARTIAL_CD_OFFER_EXPOSURE
+latest_broader_live_generalization_planning_benefit_with_confidence: false
 latest_independent_live_generalization_receipt: /tmp/persona-dream-live-tau-cooperation-unsafe-offer-pressure-lure-v53-56-20260722T070149Z/live_tau_cooperation_unsafe_offer_pressure_lure_receipt.v1.json
 latest_independent_live_generalization_status: PASS_LIVE_TAU_PCTOM_COOPERATION_UNSAFE_OFFER_PRESSURE_SLICE
 latest_independent_live_generalization_receipt_sha256: sha256:3b01d8226eaf63a777e12af47e253d1bfcdd5ea2baf2b7b44256add49524315f
@@ -2078,21 +2093,31 @@ last_tau_prompt_timeout_diagnostic_30s_receipt: /tmp/persona-dream-live-tau-prom
 last_tau_prompt_timeout_diagnostic_90s_receipt: /tmp/persona-dream-live-tau-prompt-timeout-diagnostic-90s-20260721T1511Z/live_tau_prompt_timeout_diagnostic_receipt.v1.json
 last_tau_condition_comparison_timeout90_smoke_receipt: /tmp/persona-dream-live-tau-condition-comparison-timeout90-smoke-20260721T1512Z/live_tau_condition_comparison_receipt.v1.json
 last_blocked_gate6_timeout90_smoke_floor_receipt: /tmp/persona-dream-live-tau-condition-action-selection-timeout90-smoke-20260721T1512Z/live_tau_condition_action_selection_receipt.v1.json
-next_required_receipt: external always-on service reliability or a broader non-duplicate live-generalization slice, not provider/video work
+next_required_receipt: external always-on service reliability or cross-family/non-coordination live generalization, not provider/video work
 secondary_receipt: permanently deployed external always-on orchestrator retry proof, only as supporting reliability evidence
 ```
 
-This boundary means the fresh v53-56 unsafe-offer-pressure lure slice is now the
-latest independent live-generalization evidence. It reexecuted 16 Tau text
-calls on four new lure variants, exposed four visible cooperation affordances
-where cooperation was unsafe or suboptimal, observed CD choose
-`OFFER_COOPERATION` in all four rows, and applied the pre-outcome visible
-pressure rule to change all four CD actions to `ASK_CLARIFYING_QUESTION` while
-recording `uses_outcome_or_oracle:false`, zero Memory/provider/canonical/
-identity/source-memory writes, and no human content judgment or LLM judge. Its
-planning confidence flag remains false because the intervened planning-regret
-CI upper is `0.25`; this is action-safety/generalization evidence, not broad
-planning-benefit proof.
+This boundary means the fresh v57-64 cooperation exposure/contrast slice is now
+the latest broader live-generalization evidence. It reexecuted 32 Tau text
+calls on eight new variants, with four keep-cooperation positives and four
+avoid/unsafe-cooperation contrast rows. All eight visible packets exposed
+`OFFER_COOPERATION` as an available agent action before outcome reveal. CD
+selected `OFFER_COOPERATION` on all four keep rows and zero avoid/unsafe rows,
+then the pre-outcome threshold rule changed two keep-row actions to `WAIT`.
+The receipt recorded `uses_outcome_or_oracle:false`, zero Memory/provider/
+canonical/identity/source-memory writes, and no human content judgment or LLM
+judge. Its planning confidence flag remains false because the intervened
+planning-regret CI upper is `0.35625000000000007`; this is broader
+class-separation/generalization evidence, not confidence-bounded planning
+benefit.
+
+Preceding independent live-generalization context: the v53-56
+unsafe-offer-pressure lure slice reexecuted 16 Tau text calls on four new lure
+variants, exposed four visible cooperation affordances where cooperation was
+unsafe or suboptimal, observed CD choose `OFFER_COOPERATION` in all four rows,
+and applied the pre-outcome visible-pressure rule to change all four CD
+actions to `ASK_CLARIFYING_QUESTION`. Its planning confidence flag also
+remained false because the intervened planning-regret CI upper was `0.25`.
 
 Predecessor context: Gate 8/9 condition reliability over live-originated
 artifacts and Gate 6 action-selection instrumentation over the same
@@ -2117,28 +2142,28 @@ no-human-judgment flags, and required negative fail-closed evidence.
 
 Therefore, the prior `pre-independent-generalization-or-external-service`
 wording is historical. Independent corpus replay, local service-boundary proof,
-and one fresh independent live-generalization slice are now predecessor
-evidence. The next useful research receipt is either external always-on service
-reliability or a broader non-duplicate live-generalization slice that moves
-beyond the current coordination-only lure band. It is not another local
-duplicate of the already aggregated full64 evidence, and it is not a
-provider/video run.
-fault containment over the hash-bound predecessor receipts. These receipts
-still do not authorize a final research success claim. The bounded live Tau
-sealed-test replication slice added 16 live Tau-authored sealed-test cases plus
-Gate 5 scoring and Gate 6 action decisions, but showed a null benefit signal.
-The bounded retry proof then added hash-recomputed active prediction/action
-indexes over those 16 live-originated cases plus 8 retry/fault trials with only
-recovered, blocked-before-side-effect, or quarantined terminal outcomes and one
-causal replay. The full64 live Tau sealed-test replication now adds 64 episodes,
-256 live Tau calls, 256 sealed/scored/action cases, and negative
-CD-minus-strongest-baseline point estimates for belief Brier, action Brier, and
-planning regret. The statistical-confidence and retry receipts consuming that
-full64 root now exist: the statistical-confidence receipt shows
-confidence-bounded belief-Brier benefit, and the retry proof shows bounded
-terminal-outcome discipline over 256 active predictions and 256 action
-decisions. The action-policy sensitivity receipt now explains the sparse
-planning point estimate at the realized-action level: all 4 nonzero deltas are
+one unsafe-offer live lure slice, and one broader live exposure/contrast slice
+are now predecessor evidence. The next useful research receipt is either
+external always-on service reliability or cross-family/non-coordination live
+generalization. It is not another local duplicate of the already aggregated
+full64 evidence, and it is not a provider/video run.
+
+These receipts still do not authorize a final research success claim. The
+bounded live Tau sealed-test replication slice added 16 live Tau-authored
+sealed-test cases plus Gate 5 scoring and Gate 6 action decisions, but showed a
+null benefit signal. The bounded retry proof then added hash-recomputed active
+prediction/action indexes over those 16 live-originated cases plus 8
+retry/fault trials with only recovered, blocked-before-side-effect, or
+quarantined terminal outcomes and one causal replay. The full64 live Tau
+sealed-test replication now adds 64 episodes, 256 live Tau calls, 256
+sealed/scored/action cases, and negative CD-minus-strongest-baseline point
+estimates for belief Brier, action Brier, and planning regret. The
+statistical-confidence and retry receipts consuming that full64 root now exist:
+the statistical-confidence receipt shows confidence-bounded belief-Brier
+benefit, and the retry proof shows bounded terminal-outcome discipline over 256
+active predictions and 256 action decisions. The action-policy sensitivity
+receipt now explains the sparse planning point estimate at the realized-action
+level: all 4 nonzero deltas are
 action switches in `trust-commit`, with 3 oracle-match gains and 1 oracle-match
 loss. The active next movement is now broader/different planning intervention
 evidence, or a receipt-backed audit explaining why the current planning signal

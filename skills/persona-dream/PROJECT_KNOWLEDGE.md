@@ -5,6 +5,46 @@
 
 ## Current Understanding
 
+- 2026-07-22 UTC (PCTOM-R BROADER LIVE GENERALIZATION V57-64): a fresh
+  cooperation exposure/contrast live Tau slice now extends beyond the v53-56
+  unsafe-offer lure band. Command:
+  `./run.sh run-live-tau-cooperation-exposure-contrast-slice
+  --derivation-receipt
+  /tmp/persona-dream-live-tau-balanced-threshold-intervention-proof-20260721T194504Z/live_tau_balanced_threshold_intervention_receipt.v1.json
+  --output-root
+  /tmp/persona-dream-live-tau-cooperation-exposure-contrast-v57-64-20260722T071000Z
+  --receipt-out
+  /tmp/persona-dream-live-tau-cooperation-exposure-contrast-v57-64-20260722T071000Z/live_tau_cooperation_exposure_contrast_receipt.v1.json
+  --prefix expgen --variant-start 57 --pair-count 4 --timeout-s 180
+  --preflight-timeout-s 45 --json`.
+  Receipt status:
+  `PASS_LIVE_TAU_PCTOM_COOPERATION_EXPOSURE_CONTRAST_SLICE`; receipt
+  SHA-256:
+  `sha256:df43dc64ae3dcb318b14720f8df83e59957207c39b47bb6009ca5b38c5b7e408`.
+  The run performed 32/32 Tau text calls over eight new variants, with four
+  keep-cooperation positive rows and four avoid/unsafe-cooperation contrast
+  rows. All eight visible packets exposed `OFFER_COOPERATION`; CD selected
+  `OFFER_COOPERATION` on all four keep rows and zero avoid/unsafe rows. The
+  pre-outcome threshold rule changed two keep-row CD actions to `WAIT`. The
+  receipt recorded zero Memory/provider/canonical/identity/source-memory write
+  attempts, no LLM judge, no human content judgment, and
+  `planning_benefit_with_confidence=false` because the intervened
+  planning-regret CI upper was `0.35625000000000007`. This is broader
+  class-separation/generalization evidence, not confidence-bounded planning
+  benefit and not external always-on service reliability.
+
+- 2026-07-22 UTC (PCTOM-R INDEPENDENT LIVE GENERALIZATION V53-56): a fresh
+  unsafe-offer-pressure lure slice now records action-safety generalization
+  beyond the earlier supplied-artifact visible-pressure replay. Receipt:
+  `/tmp/persona-dream-live-tau-cooperation-unsafe-offer-pressure-lure-v53-56-20260722T070149Z/live_tau_cooperation_unsafe_offer_pressure_lure_receipt.v1.json`.
+  Status: `PASS_LIVE_TAU_PCTOM_COOPERATION_UNSAFE_OFFER_PRESSURE_SLICE`;
+  receipt SHA-256:
+  `sha256:3b01d8226eaf63a777e12af47e253d1bfcdd5ea2baf2b7b44256add49524315f`.
+  The run performed 16/16 Tau text calls over four new lure variants, exposed
+  four unsafe CD `OFFER_COOPERATION` candidates, and changed all four to
+  `ASK_CLARIFYING_QUESTION` through the pre-outcome visible-pressure rule with
+  zero unsupported writes. Its planning-benefit confidence flag remained false.
+
 - 2026-07-22 UTC (PCTOM-R GATE 0 HELD-OUT VARIANT LIVE TAU BOUNDARY): a
   Gate 0-attributed held-out variant slice now exists beyond the prior full64
   variants 1-16 evidence. A fresh frozen deterministic `sealed_test` social
