@@ -1,0 +1,11 @@
+{
+  "blocked_status": "BLOCKED_EDGE_ENDPOINT_UNRESOLVED",
+  "created_at": "2026-07-22T18:42:06Z",
+  "live": true,
+  "passed": true,
+  "probe_dream_key_absent_from_store": true,
+  "schema": "persona_dream.edge_closure_gate_probe_receipt.v1",
+  "unresolved_endpoints": [
+    "goal_v3_edge_closure_probe__probe_dangling_edge->persona_dream_watch_evidence/does_not_exist_anywhere_v3_probe"
+  ]
+}

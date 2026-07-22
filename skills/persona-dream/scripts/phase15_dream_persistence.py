@@ -911,6 +911,42 @@ def existing_commit_manifest(idempotency_key: str, base_url: str) -> dict[str, A
     return None
 
 
+def validate_edge_closure(
+    write_set: list[dict[str, Any]], base_url: str
+) -> list[str]:
+    """GOAL_V3.2 reliability gate: every edge endpoint must be satisfied by a
+    vertex INSIDE this write set or by a record already stored (any visibility
+    state). Returns unresolved endpoint refs; non-empty => the write set would
+    create dangling citations and MUST NOT be persisted. (The four GOAL_V2
+    pilot arms shipped grounds_interpretation edges whose watch-evidence
+    endpoints were never persisted — strict claim resolution read 0.0. This
+    check makes that class of defect impossible by construction.)"""
+    in_set = {f"{e['collection']}/{e['document']['_key']}" for e in write_set}
+    unresolved: list[str] = []
+    for e in write_set:
+        doc = e["document"]
+        for endpoint in (doc.get("_from"), doc.get("_to")):
+            if not endpoint or endpoint in in_set:
+                continue
+            coll, key = endpoint.split("/", 1)
+            found = False
+            for vs in ("active", "pending", None):
+                filt: dict[str, Any] = {"_key": key}
+                if vs:
+                    filt["visibility_state"] = vs
+                try:
+                    got = _http_post(f"{base_url}/list",
+                                     {"collection": coll, "filters": filt})
+                except Exception:
+                    got = {}
+                if got.get("documents"):
+                    found = True
+                    break
+            if not found:
+                unresolved.append(f"{doc.get('_key')}->{endpoint}")
+    return unresolved
+
+
 def persist_canonical(
     dream_doc: dict[str, Any],
     interpretation: dict[str, Any],
@@ -953,6 +989,16 @@ def persist_canonical(
     # (webgpt round-3: the returned plan embedded live references that were
     # mutated after their hashes were recorded).
     write_set = [{**e, "document": copy.deepcopy(e["document"])} for e in write_set]
+    unresolved_endpoints = validate_edge_closure(write_set, base_url)
+    if unresolved_endpoints:
+        return {
+            "status": "BLOCKED_EDGE_ENDPOINT_UNRESOLVED",
+            "all_exact_reread_match": False,
+            "commit_manifest": None,
+            "unresolved_endpoints": unresolved_endpoints[:20],
+            "detail": "write set would create dangling citation edges; "
+                      "supply the missing vertices (e.g. build_watch_evidence_vertices)",
+        }
     expected_count = len(write_set)
     # SINGLE TRANSACTION IDENTITY (webgpt re-assess 2026-07-19): derive the
     # plan-bound key over the commit-id-less write set, THEN stamp the derived

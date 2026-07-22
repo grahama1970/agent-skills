@@ -1,0 +1,154 @@
+{
+  "created_at": "2026-07-22T18:43:13Z",
+  "dream_node_key": "dream_dream_successor_943b01ecd9a3",
+  "live": true,
+  "profile_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/voice_weights/dream_dream_successor_943b01ecd9a3/dream_voice_weight_profile.v1.json",
+  "profile_sha256": "bed55a33fdc29d48b043ef3b13af34099fd153564e321305204f9f7e98d3cae9",
+  "render": {
+    "duration_seconds": 7.56,
+    "engine_meta": {
+      "delivery_stage": "neutral",
+      "duration_seconds": 7.56,
+      "engine": "chatterbox_turbo",
+      "failed_gates": [],
+      "generation_params": {
+        "norm_loudness": true,
+        "repetition_penalty": 1.2,
+        "temperature": 0.8,
+        "top_k": 1000,
+        "top_p": 0.95
+      },
+      "generation_seconds": 2.57,
+      "latency_events": [
+        {
+          "elapsed_ms": 0.001,
+          "name": "request_received"
+        },
+        {
+          "elapsed_ms": 0.255,
+          "name": "generation_params_ready"
+        },
+        {
+          "cache_hit": false,
+          "cache_key": "c5aa64ca9b082ece2d650dcc235985c651b69ffa4766b2061e9f73b7d7f69695",
+          "elapsed_ms": 220.496,
+          "name": "voice_conditioning_ready",
+          "render_lock": "held"
+        },
+        {
+          "elapsed_ms": 2569.824,
+          "generation_seconds": 2.57,
+          "name": "first_audio_ready"
+        },
+        {
+          "elapsed_ms": 2574.341,
+          "name": "audio_saved"
+        },
+        {
+          "elapsed_ms": 2661.035,
+          "name": "audio_metrics_ready"
+        }
+      ],
+      "live": true,
+      "metrics": {
+        "bytes": 362958,
+        "channels": 1,
+        "codec_name": "pcm_s16le",
+        "duration_seconds": 7.56,
+        "exists": true,
+        "ffprobe": {
+          "cmd": [
+            "ffprobe",
+            "-hide_banner",
+            "-v",
+            "error",
+            "-show_entries",
+            "format=duration,size",
+            "-show_entries",
+            "stream=codec_name,sample_rate,channels",
+            "-of",
+            "json",
+            "/out/vw_943b01ecd9a3_yearning.wav"
+          ],
+          "returncode": 0,
+          "stderr": "",
+          "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"7.560000\",\n        \"size\": \"362958\"\n    }\n}\n"
+        },
+        "ffprobe_size": 362958,
+        "path": "/out/vw_943b01ecd9a3_yearning.wav",
+        "sample_rate": 24000,
+        "sha256": "09517c8be40c8b3215f55eb00bb2dfc5c611c24502591dd58d16a62bd8d66057"
+      },
+      "mocked": false,
+      "ok": true,
+      "realtime_factor": 0.34,
+      "reference_audio": "/data/embry_ref.wav",
+      "requested_delivery_stage": null,
+      "requested_device": "cuda",
+      "requested_tone": "yearning_warm",
+      "text": "Embry may want Kai nearby because his warning and shared competence make a risky act of autonomy feel more legitimate and emotionally safer.",
+      "text_sha256": "55c54740278231383e7c12166a1eaef9f51b5b9be9ba1dd482c9da53d23bc19b",
+      "tone": "neutral_warm",
+      "total_elapsed_ms": 2661.046,
+      "voice_conditioning": {
+        "conditioning_cache_hit": false,
+        "conditioning_cache_key": "c5aa64ca9b082ece2d650dcc235985c651b69ffa4766b2061e9f73b7d7f69695",
+        "conditioning_prepared": true,
+        "fingerprint": {
+          "cache_key": "c5aa64ca9b082ece2d650dcc235985c651b69ffa4766b2061e9f73b7d7f69695",
+          "exaggeration": 0.0,
+          "mtime_ns": 1781618888946718482,
+          "norm_loudness": true,
+          "path": "/data/embry_ref.wav",
+          "sha256": "4d8e829fd7a7e5e4f7ceab22853b65f1adca5be012e3a8edca8be9bbfa56c098",
+          "size": 960078
+        },
+        "reference_audio": "/data/embry_ref.wav"
+      },
+      "voice_delivery": {
+        "confidence": null,
+        "delivery_stage": "neutral",
+        "delivery_stage_source": "tone_mapping",
+        "evidence": null,
+        "pace": "measured",
+        "pause_strategy": null,
+        "requested_delivery_stage": null,
+        "requested_tone": "yearning_warm",
+        "schema": "chatterbox.voice_delivery.v1",
+        "source": null,
+        "tone": "neutral_warm",
+        "wait_activity": null
+      }
+    },
+    "line": "Embry may want Kai nearby because his warning and shared competence make a risky act of autonomy feel more legitimate and emotionally safer.",
+    "pace": "measured",
+    "rendered_tag": "yearning",
+    "tone": "yearning_warm",
+    "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/voice_weights/dream_dream_successor_943b01ecd9a3/vw_943b01ecd9a3_yearning.wav",
+    "wav_sha256": "09517c8be40c8b3215f55eb00bb2dfc5c611c24502591dd58d16a62bd8d66057"
+  },
+  "schema": "persona_dream.dream_voice_weights_receipt.v1",
+  "tom_candidates_read": 4,
+  "weights_summary": [
+    {
+      "emotional_tag": "yearning",
+      "tone": "yearning_warm",
+      "weight": 0.52
+    },
+    {
+      "emotional_tag": "warmth",
+      "tone": "warm_open",
+      "weight": 0.46
+    },
+    {
+      "emotional_tag": "boundary",
+      "tone": "firm_boundary",
+      "weight": 0.44
+    },
+    {
+      "emotional_tag": "hesitance",
+      "tone": "hesitant_reflective",
+      "weight": 0.38
+    }
+  ]
+}
