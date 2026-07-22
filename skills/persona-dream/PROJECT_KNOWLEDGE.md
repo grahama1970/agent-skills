@@ -17,13 +17,17 @@
   `/tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_planning_replication_receipt.v1.json`.
   Causal-identifiability receipt:
   `/tmp/persona-dream-pctom-causal-identifiability-gate0-variant17-24-20260722T032200Z/pctom_causal_identifiability_receipt.json`.
+  Condition reliability bridge receipt:
+  `/tmp/persona-dream-live-tau-condition-reliability-bridge-variant17-24-20260722T033000Z/live_tau_condition_reliability_bridge_receipt.v1.json`.
 
   Statuses `PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION` and
-  `PASS_PCTOM_CAUSAL_IDENTIFIABILITY_GATE`. Observed: variants 17-24, 32
-  sealed-test episodes, all four scenario families, 128 live Tau calls, 32
-  sealed/scored/action rows per M/R/D/CD condition, `mocked=false`,
-  `live=true`, zero Memory/provider/canonical/identity/source-memory writes,
-  no LLM judge, and no human content judgment. Planning regret had a
+  `PASS_PCTOM_CAUSAL_IDENTIFIABILITY_GATE`; the condition reliability bridge
+  then returned `PASS_LIVE_TAU_PCTOM_CONDITION_RELIABILITY_BRIDGE`. Observed:
+  variants 17-24, 32 sealed-test episodes, all four scenario families, 128
+  live Tau calls, 32 sealed/scored/action rows per M/R/D/CD condition,
+  `mocked=false`, `live=true`, zero Memory/provider/canonical/identity/
+  source-memory writes, no LLM judge, and no human content judgment. Planning
+  regret had a
   confidence-bound CD advantage on this held-out slice: CD `0.196875` versus
   strongest baseline `R=0.365625`, CD-minus-baseline
   `-0.16874999999999998`, 95% CI
@@ -32,6 +36,16 @@
   128/128 lineage rows complete, 384/384 evidence refs with accepted raw-source
   IDs and source digests, `oracle_improves_regret_count=67`, and
   `anti_oracle_worsens_regret_count=53`.
+
+  The reliability bridge consumed the held-out live condition comparison root
+  with zero new Tau calls. Gate 8 accepted 7 trials across required fault
+  families: stale artifact, missing graph edge, malformed structured output,
+  and interrupted persistence/retry. Terminal outcomes were
+  `RECOVERED_WITH_EQUIVALENT_END_STATE=4`,
+  `BLOCKED_BEFORE_SIDE_EFFECT=2`, and
+  `QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE=1`, with
+  `continued_with_unknown_state=0`. Gate 9 accepted one causal replay and
+  localized stale-artifact divergence to one replaced tool return.
 
   Receipt SHA-256 values: replication
   `sha256:98336825a38be02d455e391735e2153986e89e2eba619b9a9a894b9ac6a6d272`;
@@ -42,12 +56,18 @@
   causal
   `sha256:2903066090fdff791feb509c2f5c670af6f2327f3389d9cc899f8a236d8a8032`;
   lineage
-  `sha256:28cb8a34fa22b98bb06b4964ab8971afd0592c3e0624b216796a1f61c4f4cdd3`.
+  `sha256:28cb8a34fa22b98bb06b4964ab8971afd0592c3e0624b216796a1f61c4f4cdd3`;
+  reliability bridge
+  `sha256:0fd7d4c4747d1d3eaa54c47d7d9ab7b93a61cbcd01c4e727b0450c9d4a850c86`;
+  Gate 8 surface check
+  `sha256:c658c1fb86d87ea8d87deaf759d00332a30c6634429bfd3cc35e9ab106cbef64`;
+  Gate 9 replay check
+  `sha256:189a9435d742e8692b067458152c0acaaa67d8f9a6bf34df2b6d1e03422d2c6d`.
   This advances held-out variant/generalization evidence for PCTOM-R Gate 0
-  and Gate 6. It does not prove an independently versioned simulator corpus,
-  complete model/tool/schema/persistence fault injection, production retry
-  machinery, semantic dream quality, paid provider execution, or complete live
-  Phase 01-16 runtime execution.
+  and Gate 6, plus a controlled artifact-bound Gate 8/9 reliability bridge.
+  It does not prove an independently versioned simulator corpus, real external
+  service fault injection, production retry machinery, semantic dream quality,
+  paid provider execution, or complete live Phase 01-16 runtime execution.
 - 2026-07-22 UTC (PCTOM-R GATE 0 REPEATED FULL64 LIVE TAU BOUNDARY): a second
   Gate 0-attributed full64 live Tau sealed-test replication now exists, and a
   two-root repeated-run summary consumes both full64 roots. Repeat2 command:

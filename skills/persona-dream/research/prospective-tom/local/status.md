@@ -1,9 +1,10 @@
 # Status
 
-Status: GATE0_HELD_OUT_VARIANT17_24_LIVE_TAU_ACCEPTED
+Status: GATE0_HELD_OUT_VARIANT17_24_LIVE_TAU_AND_RELIABILITY_BRIDGE_ACCEPTED
 
 Latest artifact: held-out variant 17-24 live Tau balanced-planning slice with
-Gate 0 accepted-source attribution and causal-identifiability lineage replay.
+Gate 0 accepted-source attribution, causal-identifiability lineage replay, and
+Gate 8/9 condition reliability bridge.
 
 Held-out variant replication receipt:
 
@@ -17,11 +18,20 @@ Held-out variant causal-identifiability receipt:
 /tmp/persona-dream-pctom-causal-identifiability-gate0-variant17-24-20260722T032200Z/pctom_causal_identifiability_receipt.json
 ```
 
+Held-out variant condition reliability bridge receipt:
+
+```text
+/tmp/persona-dream-live-tau-condition-reliability-bridge-variant17-24-20260722T033000Z/live_tau_condition_reliability_bridge_receipt.v1.json
+```
+
 Inspection result:
 
 ```text
 replication_status: PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION
 causal_identifiability_status: PASS_PCTOM_CAUSAL_IDENTIFIABILITY_GATE
+condition_reliability_bridge_status: PASS_LIVE_TAU_PCTOM_CONDITION_RELIABILITY_BRIDGE
+gate8_status: PASS_TOM_RELIABILITY_SURFACE
+gate9_status: PASS_TOM_CAUSAL_REPLAY
 variant_min: 17
 variant_max: 24
 episodes: 32
@@ -43,11 +53,21 @@ evidence_refs_with_accepted_raw_source_id: 384
 evidence_refs_with_raw_source_digest: 384
 oracle_improves_regret_count: 67
 anti_oracle_worsens_regret_count: 53
+gate8_trials: 7
+fault_families: interrupted_persistence_or_retry, malformed_structured_output, missing_graph_edge, stale_artifact
+terminal_outcomes: RECOVERED_WITH_EQUIVALENT_END_STATE=4 BLOCKED_BEFORE_SIDE_EFFECT=2 QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE=1
+continued_with_unknown_state: 0
+gate9_causal_replay_receipts: 1
+gate9_localized_cause_type: STALE_ARTIFACT
+condition_reliability_tau_call_attempts: 0
 replication_receipt_sha256: sha256:98336825a38be02d455e391735e2153986e89e2eba619b9a9a894b9ac6a6d272
 condition_receipt_sha256: sha256:2da4ed6c0d49e6ed8d61ce4667862b8cf78114a3b37b6ccc92646ce39daeb31c
 action_receipt_sha256: sha256:b11d4abfbe53b91fb08d8e0dc95f9536ba68a92ba6438c64b0245e01e6b158df
 causal_receipt_sha256: sha256:2903066090fdff791feb509c2f5c670af6f2327f3389d9cc899f8a236d8a8032
 lineage_receipt_sha256: sha256:28cb8a34fa22b98bb06b4964ab8971afd0592c3e0624b216796a1f61c4f4cdd3
+condition_reliability_bridge_receipt_sha256: sha256:0fd7d4c4747d1d3eaa54c47d7d9ab7b93a61cbcd01c4e727b0450c9d4a850c86
+gate8_surface_check_receipt_sha256: sha256:c658c1fb86d87ea8d87deaf759d00332a30c6634429bfd3cc35e9ab106cbef64
+gate9_replay_check_receipt_sha256: sha256:189a9435d742e8692b067458152c0acaaa67d8f9a6bf34df2b6d1e03422d2c6d
 mocked: false
 live: true
 memory_write_attempts: 0
@@ -68,6 +88,9 @@ variants 17-24, outside the prior full64 variants 1-16 slice, ran through live
 -> constrained action selections and planning regret were recomputed
 -> Gate 0 accepted raw-source IDs and digests were present on 128/128 rows
 -> the held-out slice shows confidence-bound planning-regret benefit for CD
+-> Gate 8 accepted repeated, perturbed, and controlled fault-injected artifact
+   trials for the live condition root
+-> Gate 9 localized stale-artifact divergence to one replaced tool return
 -> no Memory, provider, canonical-memory, identity, source-memory, LLM judge,
    or human content judgment path was used
 ```
@@ -76,7 +99,7 @@ What this does not prove:
 
 ```text
 an independently versioned simulator corpus
-complete model/tool/schema/persistence fault injection
+real external service fault injection
 production retry machinery
 semantic dream quality
 paid provider execution
