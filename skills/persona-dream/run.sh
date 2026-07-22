@@ -115,6 +115,7 @@ Commands:
   diagnose-cooperation-unsafe-offer-no-exposure  Diagnose live unsafe-offer-pressure no-exposure artifacts
   check-cooperation-class-separated-exposure  Audit class-separated cooperation exposure from a live Tau slice
   check-cooperation-visible-pressure-rule-reliability  Audit visible-pressure rule reliability over live Tau replays
+  build-cooperation-visible-pressure-reliability-surface  Build Gate 8 surface from visible-pressure reliability evidence
   diagnose-cooperation-policy  Diagnose cooperation-threshold policy effects over live instrument artifacts
   accept-cooperation-no-intervention-policy  Accept no-intervention for observed cooperation regression slice
   check-cooperation-feature-split-prerequisites  Audit whether cooperation evidence can support a replacement feature split
@@ -553,6 +554,9 @@ case "$COMMAND" in
     ;;
   check-cooperation-visible-pressure-rule-reliability)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_cooperation_visible_pressure_rule_reliability.py" "$@"
+    ;;
+  build-cooperation-visible-pressure-reliability-surface)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/build_cooperation_visible_pressure_reliability_surface.py" "$@"
     ;;
   diagnose-cooperation-policy)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/diagnose_cooperation_policy.py" "$@"

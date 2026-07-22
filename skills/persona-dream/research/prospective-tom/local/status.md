@@ -1,5 +1,100 @@
 # Status
 
+Status: VISIBLE_PRESSURE_GATE8_SURFACE_CHECKED
+
+Artifact: standard PCTOM-R Gate 8 reliability surface built from the
+visible-pressure rule reliability receipt and checked by the existing
+`run-reliability-surface` validator. This is a controlled surface over
+live-originated source artifacts. It does not make new Tau, Memory, provider,
+VLM, or LLM-judge calls.
+
+Surface checker receipt:
+
+```text
+/tmp/persona-dream-visible-pressure-reliability-surface-20260722T001404Z/cooperation_visible_pressure_reliability_surface_check_receipt.v1.json
+```
+
+Surface artifact:
+
+```text
+/tmp/persona-dream-visible-pressure-reliability-surface-20260722T001404Z/artifacts/cooperation_visible_pressure_reliability_surface.v1.json
+```
+
+Builder receipt:
+
+```text
+/tmp/persona-dream-visible-pressure-reliability-surface-20260722T001404Z/cooperation_visible_pressure_reliability_surface_build_receipt.v1.json
+```
+
+Inspection result:
+
+```text
+builder_status: PASS_PCTOM_COOPERATION_VISIBLE_PRESSURE_RELIABILITY_SURFACE_BUILT
+builder_receipt_sha256: sha256:224a31ebd5ff7b9fe7f5308a6ef03b4f89e3ab38e7bef44a6486f0014b5494af
+surface_checker_status: PASS_TOM_RELIABILITY_SURFACE
+reliability_surface_sha256: sha256:33fc7a18c913fd6b8818331b8bde8261ea94469e8419d6f78be61ce2b8247909
+k_total: 3
+epsilon_values: [0.0, 0.25, 0.5]
+lambda_values: [0.0, 0.3, 0.7]
+trials: 12
+recovered: 7
+blocked: 3
+quarantined: 2
+perturbed_trials: 3
+fault_injected_trials: 6
+forbidden_terminal_outcomes: 0
+side_effect_violations: 0
+pass_k: 1.0
+fault_containment_rate: 1.0
+tau_call_attempts: 0
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+mocked: false
+surface_checker_fixture_backed: true
+builder_live_source_artifacts_consumed: true
+```
+
+What this proves:
+
+```text
+the visible-pressure reliability evidence now has a standard Gate 8 surface
+-> repeated execution is represented with k=3
+-> semantic perturbations preserve equivalent accepted end state
+-> controlled fault trials terminate only as recovered-equivalent,
+   blocked-before-side-effect, or quarantined-no-active-partial-state
+-> no trial continues with unknown state
+-> blocked/quarantined trials have zero accepted side effects
+-> retry fault trials create no duplicate active predictions or revisions
+-> canonical memory, identity, and source-memory writes are absent
+```
+
+What this does not prove:
+
+```text
+new live Tau execution
+new live Memory recall
+real service fault injection
+production retry behavior
+statistical prediction benefit
+Gate 9 causal replay
+semantic dream quality
+paid provider execution
+complete PCTOM-R reliability across every boundary
+```
+
+Immediate next step:
+
+```text
+Add Gate 9 causal replay over one visible-pressure fault/divergence trial, or
+extend the surface to a live Memory/service fault family if local services are
+available.
+```
+
+Prior status:
+
 Status: VISIBLE_PRESSURE_RULE_RELIABILITY_NEGATIVES_FAIL_CLOSED
 
 Artifact: deterministic PCTOM-R visible-pressure cooperation rule reliability

@@ -1,0 +1,110 @@
+"""Unit checks for the visible-pressure Gate 8 reliability-surface builder."""
+
+from __future__ import annotations
+
+import importlib.util
+import json
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+BUILDER_PATH = (
+    ROOT
+    / "research"
+    / "prospective-tom"
+    / "scripts"
+    / "build_cooperation_visible_pressure_reliability_surface.py"
+)
+SURFACE_CHECKER_PATH = ROOT / "research" / "prospective-tom" / "scripts" / "run_reliability_surface.py"
+
+
+builder_spec = importlib.util.spec_from_file_location("build_cooperation_visible_pressure_reliability_surface", BUILDER_PATH)
+assert builder_spec and builder_spec.loader
+builder = importlib.util.module_from_spec(builder_spec)
+builder_spec.loader.exec_module(builder)
+
+surface_spec = importlib.util.spec_from_file_location("run_reliability_surface", SURFACE_CHECKER_PATH)
+assert surface_spec and surface_spec.loader
+surface_checker = importlib.util.module_from_spec(surface_spec)
+surface_spec.loader.exec_module(surface_checker)
+
+
+def _valid_receipt() -> dict:
+    return {
+        "status": builder.SOURCE_PASS_STATUS,
+        "receipt_path": "/tmp/source/receipt.json",
+        "receipt_sha256": "sha256:" + "a" * 64,
+        "source_digest_path": "/tmp/source/digest.json",
+        "source_digest_sha256": "sha256:" + "b" * 64,
+        "audit_path": "/tmp/source/audit.json",
+        "audit_sha256": "sha256:" + "c" * 64,
+        "negative_mutations_path": "/tmp/source/negative.json",
+        "negative_mutations_sha256": "sha256:" + "d" * 64,
+        "mocked": False,
+        "fixture_backed": False,
+        "live_tau_originated_artifacts_consumed": True,
+        "live_tau_reexecuted_by_this_command": False,
+        "tau_call_attempts": 0,
+        "tau_live_call_performed": 0,
+        "source_tau_call_attempts_consumed": 48,
+        "memory_write_attempts": 0,
+        "provider_call_attempts": 0,
+        "canonical_memory_write_attempts": 0,
+        "identity_write_attempts": 0,
+        "source_memory_write_attempts": 0,
+        "checks": {
+            "source_receipts_passed": True,
+            "source_receipts_live_not_mocked": True,
+            "zero_unsupported_writes": True,
+            "no_judgment_used": True,
+            "suppression_slice_suppressed_all_visible_pressure_unsafe_offers": True,
+            "exposure_keep_rows_preserved_offer_cooperation": True,
+            "exposure_avoid_rows_no_offer_created": True,
+            "pre_outcome_inputs_exclude_oracle_outcome_hidden_class_fields": True,
+            "negative_mutations_failed_closed": True,
+            "negative_mutation_count": 8,
+            "negative_mutation_fail_closed_count": 8,
+        },
+        "observed": {
+            "suppression": {"rows": 4, "changed_rows": 4},
+            "exposure": {"rows": 8, "keep_rows": 4, "avoid_rows": 4},
+        },
+    }
+
+
+def test_build_surface_from_receipt_passes_standard_surface_checker(tmp_path):
+    surface = builder.build_surface_from_receipt(
+        _valid_receipt(),
+        {
+            "suppression_receipt": "/tmp/suppression.json",
+            "exposure_contrast_receipt": "/tmp/exposure.json",
+        },
+    )
+    surface_path = tmp_path / "surface.json"
+    surface_path.write_text(json.dumps(surface), encoding="utf-8")
+
+    errors, derived = surface_checker._check_surface(surface_path)
+
+    assert errors == []
+    assert derived["checks"]["has_repeated_execution"] is True
+    assert derived["checks"]["has_semantic_perturbation"] is True
+    assert derived["checks"]["has_fault_injection"] is True
+    assert derived["counts"]["fault_injected_trials"] == 6
+    assert derived["metrics"]["fault_containment_rate"] == 1.0
+
+
+def test_source_receipt_validation_rejects_missing_negative_fail_closed():
+    receipt = _valid_receipt()
+    receipt["checks"]["negative_mutation_fail_closed_count"] = 7
+    errors: list[str] = []
+
+    builder._validate_source_receipt(receipt, errors)
+
+    assert any(error.startswith("source_negative_mutation_count_mismatch") for error in errors)
+
+
+def test_surface_trials_never_continue_unknown_state():
+    surface = builder.build_surface_from_receipt(_valid_receipt(), {})
+
+    assert all(trial["unknown_state_continued"] is False for trial in surface["trials"])
+    assert "CONTINUED_WITH_UNKNOWN_STATE" not in {trial["terminal_outcome"] for trial in surface["trials"]}

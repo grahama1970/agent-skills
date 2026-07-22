@@ -133,6 +133,31 @@ Next: <one immediate action or stop condition>
 
 ## Current Evidence Snapshot
 
+- PCTOM-R visible-pressure Gate 8 reliability surface:
+  `/tmp/persona-dream-visible-pressure-reliability-surface-20260722T001404Z/cooperation_visible_pressure_reliability_surface_check_receipt.v1.json`.
+  Surface artifact:
+  `/tmp/persona-dream-visible-pressure-reliability-surface-20260722T001404Z/artifacts/cooperation_visible_pressure_reliability_surface.v1.json`.
+  Builder receipt:
+  `/tmp/persona-dream-visible-pressure-reliability-surface-20260722T001404Z/cooperation_visible_pressure_reliability_surface_build_receipt.v1.json`.
+  Builder status
+  `PASS_PCTOM_COOPERATION_VISIBLE_PRESSURE_RELIABILITY_SURFACE_BUILT`;
+  builder receipt SHA-256
+  `sha256:224a31ebd5ff7b9fe7f5308a6ef03b4f89e3ab38e7bef44a6486f0014b5494af`;
+  surface checker status `PASS_TOM_RELIABILITY_SURFACE`;
+  reliability surface SHA-256
+  `sha256:33fc7a18c913fd6b8818331b8bde8261ea94469e8419d6f78be61ce2b8247909`.
+  Counts: 12 surface trials, `k=3`, three semantic perturbation trials, six
+  controlled fault trials, seven recovered-equivalent trials, three
+  blocked-before-side-effect trials, two quarantined-no-active-partial-state
+  trials, zero forbidden `CONTINUED_WITH_UNKNOWN_STATE` outcomes, zero side
+  effect violations, zero canonical/identity/source-memory writes, `pass_k`
+  `1.0`, and `fault_containment_rate` `1.0`. This proves a standard Gate 8
+  `R(k, epsilon, lambda)` surface for the visible-pressure rule boundary over
+  existing live-originated source artifacts. It does not prove new live Tau
+  execution, live Memory recall, real service fault injection, production retry
+  behavior, statistical prediction benefit, Gate 9 causal replay, semantic
+  dream quality, paid provider execution, or complete PCTOM-R reliability
+  across every boundary.
 - PCTOM-R visible-pressure cooperation rule reliability checker:
   `/tmp/persona-dream-cooperation-visible-pressure-rule-reliability-20260722T000807Z/cooperation_visible_pressure_rule_reliability_receipt.v1.json`.
   Status `PASS_PCTOM_COOPERATION_VISIBLE_PRESSURE_RULE_RELIABILITY`,
