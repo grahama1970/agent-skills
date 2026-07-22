@@ -147,6 +147,11 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
 - **Roundtable**: use repeatable `--handler` values and `--topology concurrent`
   or `--topology sequential`. A roundtable compiles to `tau.dag_contract.v1`
   with handler nodes and a join node.
+- **Roundtable reporting**: after processing results, report each handler's
+  unique insights, disagreements, corrections to prior handlers, and shared
+  conclusions separately. Do not collapse WebGPT/WebClaude/WebKimi/etc. into a
+  vague consensus before exposing what each contributed and which artifact path
+  supports it.
 - **Creator-reviewer loop**: use `--topology sequential` and list the creator
   handler first, then reviewer handlers. Downstream handlers receive prior
   handler receipts and response excerpts. If the request asks for pass/fail
