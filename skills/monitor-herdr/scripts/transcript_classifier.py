@@ -51,11 +51,11 @@ def transcript_goal_claim(text: str, *, project_root: Path | None = None) -> dic
         lowered = line.lower()
         if lowered.startswith("achieved_with_receipt:"):
             receipt = line.split(":", 1)[1].strip()
-            if path_inside_project(receipt, project_root) or re.search(r"^\s*Disposition\s*:\s*DONE_WITH_RECEIPT\s*$", block, flags=re.IGNORECASE | re.MULTILINE):
+            if valid_local_artifact(receipt, project_root=project_root):
                 return {"state": "achieved", "source": "immutable_goal_line"}
             return {"state": "unmet", "source": "immutable_goal_line"}
         if lowered == "done_with_receipt":
-            return {"state": "achieved", "source": "immutable_goal_line"}
+            return {"state": "unmet", "source": "immutable_goal_line"}
         if lowered.startswith("blocked:"):
             return {"state": "blocked", "source": "immutable_goal_line"}
         if lowered.startswith(("not_met", "unknown")):
@@ -66,7 +66,7 @@ def transcript_goal_claim(text: str, *, project_root: Path | None = None) -> dic
     if re.search(r"^\s*(?:gpt-[^\n]*\s+.*?\s+)?Goal blocked(?:\s*\([^)]*\))?\s*$", block, flags=re.MULTILINE):
         return {"state": "blocked", "source": "status_line"}
     if re.search(r"^\s*DONE_WITH_RECEIPT(?:\s|$)", block, flags=re.MULTILINE):
-        return {"state": "achieved", "source": "status_line"}
+        return {"state": "unmet", "source": "status_line"}
     if "immutable goal" in block.lower():
         return {"state": "mentioned", "source": "latest_transcript_region"}
     return {"state": "none", "source": "latest_transcript_region"}
@@ -125,8 +125,29 @@ def valid_attempt_value(value: str | None, *, project_root: Path | None = None) 
     if lowered.startswith("not_applicable:"):
         return bool(value.split(":", 1)[1].strip())
     if lowered.startswith("used:"):
-        return path_inside_project(value.split(":", 1)[1].strip(), project_root)
+        return valid_local_artifact(value.split(":", 1)[1].strip(), project_root=project_root)
     return False
+
+
+def valid_local_artifact(value: str, *, project_root: Path | None = None) -> bool:
+    if not value:
+        return False
+    path = Path(value).expanduser()
+    if not path.is_absolute():
+        if project_root is None:
+            return False
+        path = project_root / path
+    try:
+        resolved = path.resolve(strict=True)
+    except (OSError, RuntimeError):
+        return False
+    if project_root is None:
+        return True
+    try:
+        resolved.relative_to(project_root.resolve())
+    except ValueError:
+        return False
+    return True
 
 
 def path_inside_project(value: str, project_root: Path | None) -> bool:

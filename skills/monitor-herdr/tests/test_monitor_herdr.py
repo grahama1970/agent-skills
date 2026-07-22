@@ -761,6 +761,9 @@ def test_probe_text_names_human_brave_and_webgpt_routes() -> None:
     assert "$ask webgpt" in text
     assert "$ask webkimi" in text
     assert "browser-oracle=" in text
+    assert "Strict stop rule:" in text
+    assert "partial checkpoint" in text
+    assert "Immutable Goal: NOT_MET" in text
 
 
 def test_send_prompt_uses_second_enter_until_submission_is_visible() -> None:
@@ -889,10 +892,10 @@ def test_monitor_prompt_body_does_not_hide_prior_done_receipt() -> None:
     current = monitor.latest_transcript_region(text)
 
     assert "external state" not in current
-    assert monitor.transcript_goal_claim(current)["state"] == "achieved"
+    assert monitor.transcript_goal_claim(current)["state"] == "unmet"
 
 
-def test_wrapped_achieved_receipt_with_done_disposition_allows_stop() -> None:
+def test_wrapped_achieved_receipt_with_done_disposition_does_not_launder_missing_path() -> None:
     text = """
     Status/Phase: Stop-condition proof completed.
     Immutable Goal: ACHIEVED_WITH_RECEIPT:/tmp/codex-ui-verification/sparta/sparta-threat-matrix-goal-stop-
@@ -901,7 +904,34 @@ def test_wrapped_achieved_receipt_with_done_disposition_allows_stop() -> None:
     Disposition: DONE_WITH_RECEIPT
     """
 
-    assert monitor.transcript_goal_claim(text)["state"] == "achieved"
+    assert monitor.transcript_goal_claim(text)["state"] == "unmet"
+
+
+def test_existing_project_receipt_allows_achieved_stop(tmp_path: Path) -> None:
+    receipt = tmp_path / ".codex" / "ui-verification" / "latest.json"
+    receipt.parent.mkdir(parents=True)
+    receipt.write_text('{"ok":true}', encoding="utf-8")
+    text = f"""
+    Status/Phase: Stop-condition proof completed.
+    Immutable Goal: ACHIEVED_WITH_RECEIPT:{receipt}
+    Evidence: {receipt}; command=verify-ui-cdp
+    Next: STOP_ALLOWED because the goal has a fresh receipt.
+    Disposition: DONE_WITH_RECEIPT
+    """
+
+    assert monitor.transcript_goal_claim(text, project_root=tmp_path)["state"] == "achieved"
+
+
+def test_out_of_project_receipt_does_not_allow_stop(tmp_path: Path) -> None:
+    project = tmp_path / "project"
+    outside = tmp_path / "outside"
+    project.mkdir()
+    outside.mkdir()
+    receipt = outside / "receipt.json"
+    receipt.write_text("{}", encoding="utf-8")
+    text = f"Immutable Goal: ACHIEVED_WITH_RECEIPT:{receipt}\nDisposition: DONE_WITH_RECEIPT\n"
+
+    assert monitor.transcript_goal_claim(text, project_root=project)["state"] == "unmet"
 
 
 def test_old_submission_marker_cannot_confirm_new_attempt() -> None:

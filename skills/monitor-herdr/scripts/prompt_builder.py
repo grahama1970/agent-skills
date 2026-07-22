@@ -48,6 +48,10 @@ def build_prompt(candidate: dict[str, Any]) -> str:
         "Next: <one immediate action you will execute now, or STOP_ALLOWED because no immutable goal exists / goal is achieved>\n"
         "Disposition: <choose exactly one of RESUMING_NOW | BLOCKED_NEEDS_HUMAN | CONFUSED_NEEDS_HUMAN | "
         "CAN_SELF_UNBLOCK_BRAVE_SEARCH | CAN_SELF_UNBLOCK_WEBGPT | DONE_WITH_RECEIPT>\n\n"
+        "Strict stop rule: You may use ACHIEVED_WITH_RECEIPT or DONE_WITH_RECEIPT only if Evidence names a concrete "
+        "local receipt/artifact path and the command or verification result that proves the immutable goal. If any "
+        "human-requested work remains, or if the receipt proves only a partial checkpoint, answer Immutable Goal: NOT_MET "
+        "and Disposition: RESUMING_NOW, then immediately run the next critical-path command. "
         "If the immutable goal is known and not achieved, keep going and use available tools until it is met. "
         "Do not claim complete unless you can cite deterministic local proof artifacts and there is no remaining user-requested work."
     )

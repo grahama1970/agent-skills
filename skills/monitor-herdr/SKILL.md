@@ -190,6 +190,15 @@ requires the agent to state:
 - whether it will resume, use `$brave-search`, use `$webgpt`/`$ask`, or ask the
   human for a legitimate blocker.
 
+Completion claims are fail-closed. `ACHIEVED_WITH_RECEIPT` and
+`DONE_WITH_RECEIPT` are allowed only when the current answer names a concrete
+existing local receipt/artifact path that is inside the pane's project boundary
+and identifies the command or verification result proving the immutable goal. A
+partial checkpoint, advisory reviewer response, screenshot for only one
+surface, or receipt that proves a subtask must be reported as `Immutable Goal:
+NOT_MET` with `Disposition: RESUMING_NOW`. The classifier also rejects bare
+`DONE_WITH_RECEIPT` lines and non-existent or out-of-project receipt paths.
+
 If recent text shows a real missing human decision, credential, authority, or
 external state, and there is no early-stop evidence overriding that blocker, the
 monitor sends a human-blocker prompt instead of a resume prompt.
