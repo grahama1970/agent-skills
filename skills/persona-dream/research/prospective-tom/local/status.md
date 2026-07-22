@@ -16,7 +16,9 @@ recomputes the frozen social corpus policies, labels, hidden-state invariants,
 and withheld-field invariants without importing the corpus generator. A
 live-originated Gate 2-4 boundary-negative harness now proves distribution,
 counterfactual-synthetic, and sealed-payload-hash mutations fail closed through
-the reusable skill entrypoint.
+the reusable skill entrypoint. A separate local HTTP social-simulator service
+now serves the frozen corpus over a subprocess boundary and contains non-Memory
+service faults without unknown-state continuation.
 
 Sealed64 deterministic social episode corpus:
 
@@ -52,6 +54,12 @@ Live-originated Gate 2-4 boundary-negative receipt:
 
 ```text
 /tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/live_gate2_4_boundary_negatives_receipt.v1.json
+```
+
+Separate local HTTP social-simulator service receipt:
+
+```text
+/tmp/persona-dream-social-simulator-service-proof-20260722T082000Z/social_simulator_service_proof_receipt.v1.json
 ```
 
 Held-out variant replication receipt:
@@ -181,6 +189,19 @@ live_gate2_4_boundary_negative_gate3_status: BLOCKED_COUNTERFACTUAL_BRANCHES
 live_gate2_4_boundary_negative_gate3_errors: counterfactual_synthetic_not_true, intervention_not_synthetic
 live_gate2_4_boundary_negative_gate4_status: BLOCKED_TOM_PREDICTION_COMMITMENTS
 live_gate2_4_boundary_negative_gate4_error: prediction_payload_sha256_mismatch
+social_simulator_service_status: PASS_PCTOM_SOCIAL_SIMULATOR_SERVICE_PROOF
+social_simulator_service_pid: 180316
+social_simulator_service_process_returncode: 0
+social_simulator_service_episodes: 64
+social_simulator_service_policy_rows: 64
+social_simulator_service_policy_action_matches: 64
+social_simulator_service_fault_trials: 5
+social_simulator_service_fault_trials_blocked: 4
+social_simulator_service_fault_trials_quarantined: 1
+social_simulator_service_continued_with_unknown_state: 0
+social_simulator_service_side_effect_violations: 0
+social_simulator_service_active_partial_state_violations: 0
+social_simulator_service_faults: malformed_json, timeout, missing_endpoint, missing_episode, stale_episode_state
 variant_min: 17
 variant_max: 24
 episodes: 32
@@ -373,6 +394,11 @@ live_gate2_4_boundary_negative_source_artifacts_sha256: sha256:1cd85e6cdc56dde5f
 live_gate2_4_boundary_negative_gate2_mutated_artifact_sha256: sha256:652385c0b4d46e070557a9bfa66ee2589cca597e233286ee63c3aac620e1c6c6
 live_gate2_4_boundary_negative_gate3_mutated_artifact_sha256: sha256:c8ecb50b46cb9f971e374808e316888244c4883b231baf7774d9c443c5bc4336
 live_gate2_4_boundary_negative_gate4_mutated_artifact_sha256: sha256:8e522311226a101bf8a21ba26086ce73c8f6e6585efc1c71c191cafa7e18122c
+social_simulator_service_receipt_sha256: sha256:251fff9eb8b07cc160347e234d5dc9d1efe1d1cc026a05dda44545b526e988ff
+social_simulator_service_policy_rows_sha256: sha256:3c87733a317103d9c968336f7cb0fc308b958840efaa19ce57c28e008116f912
+social_simulator_service_fault_trials_sha256: sha256:d68a7892fd7e3ffd60f3d4ea48060e95c1cf04dcd96ed8de7c4bafebf67085fc
+social_simulator_service_start_receipt_sha256: sha256:eea94b14b5c495bdee013730be1a760074de4a14ac6dda5e47e1ddf696c95f8c
+social_simulator_service_stop_receipt_sha256: sha256:feb0ad2f197ac2b9c749b7267a044f951646cfb10fb7b28d801c62ffd1caa866
 mocked: false
 live: true
 tau_prediction_memory_write_attempts: 0
@@ -400,6 +426,10 @@ variants 17-24, outside the prior full64 variants 1-16 slice, ran through live
 -> a reusable live-originated Gate 2-4 boundary-negative harness confirmed
    that bad probability sums, stripped counterfactual synthetic markers, and
    post-seal payload edits each produce BLOCKED receipts with expected errors
+-> a separate local HTTP social-simulator service process served 64/64 policy
+   rows with independently recomputed actions and contained malformed JSON,
+   timeout, missing endpoint, missing episode, and stale episode-state faults
+   with allowed terminal outcomes only
 -> predictions were sealed before deterministic outcome reveal and scored
 -> constrained action selections and planning regret were recomputed
 -> Gate 0 accepted raw-source IDs and digests were present on 128/128 rows
@@ -435,9 +465,8 @@ variants 17-24, outside the prior full64 variants 1-16 slice, ran through live
 What this does not prove:
 
 ```text
-a separately deployed external simulator service
 a permanently deployed external production service
-non-Memory external service fault injection
+internet-hosted external simulator reliability
 long-duration wall-clock retention
 semantic dream quality
 paid provider execution

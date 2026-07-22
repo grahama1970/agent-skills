@@ -72,6 +72,28 @@
   Gate 2-4 artifacts. It does not prove new live Tau execution, new Memory
   recall, or long-duration retention.
 
+  A separate local HTTP social-simulator service proof now consumes the frozen
+  sealed64 corpus through a subprocess service boundary. Command:
+  `./skills/persona-dream/run.sh run-social-simulator-service-proof --corpus
+  /tmp/persona-dream-pctom-social-corpus-sealed64-20260722T041800Z/social_episode_corpus.v1.json
+  --output-root /tmp/persona-dream-social-simulator-service-proof-20260722T082000Z
+  --receipt-out
+  /tmp/persona-dream-social-simulator-service-proof-20260722T082000Z/social_simulator_service_proof_receipt.v1.json
+  --timeout-s 30 --json`. Receipt status:
+  `PASS_PCTOM_SOCIAL_SIMULATOR_SERVICE_PROOF`; service PID `180316`;
+  service process return code `0`; 64 episodes; 64/64 policy action matches
+  against independent replay; 5 fault trials. External simulator faults covered
+  malformed JSON, timeout, missing endpoint, missing episode, and stale episode
+  state. Terminal outcomes: 4 `BLOCKED_BEFORE_SIDE_EFFECT`,
+  1 `QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE`, 0
+  `CONTINUED_WITH_UNKNOWN_STATE`, 0 side-effect violations, 0 active partial
+  state violations, and zero Tau, Memory-write, provider, canonical-memory,
+  identity, or source-memory calls/writes. Declared receipt SHA-256:
+  `sha256:251fff9eb8b07cc160347e234d5dc9d1efe1d1cc026a05dda44545b526e988ff`.
+  This proves a separate local service process and local non-Memory service
+  fault containment. It does not prove an internet-hosted or permanently
+  deployed always-on production service.
+
   Command:
   `./skills/persona-dream/run.sh run-live-tau-balanced-planning-replication
   --family-episode-limit 8 --episodes-per-family 24 --variant-min 17
@@ -340,10 +362,10 @@
   and Gate 6, a controlled artifact-bound Gate 8/9 reliability bridge, and
   Gate 7 non-destructive belief revision linked to live-originated action
   decisions, including deterministic and live Memory recall after revision. It
-  does not prove a separately deployed external simulator service, a permanently
-  deployed external production service, non-Memory external service faults,
-  long-duration wall-clock retention, semantic dream quality, paid provider
-  execution, or complete live Phase 01-16 runtime execution.
+  does not prove a permanently deployed external production service,
+  internet-hosted external simulator reliability, long-duration wall-clock
+  retention, semantic dream quality, paid provider execution, or complete live
+  Phase 01-16 runtime execution.
 - 2026-07-22 UTC (PCTOM-R GATE 0 REPEATED FULL64 LIVE TAU BOUNDARY): a second
   Gate 0-attributed full64 live Tau sealed-test replication now exists, and a
   two-root repeated-run summary consumes both full64 roots. Repeat2 command:

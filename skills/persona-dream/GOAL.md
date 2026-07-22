@@ -147,6 +147,8 @@ Next: <one immediate action or stop condition>
   `/tmp/persona-dream-pctom-social-corpus-independent-replay-negative-action-20260722T064800Z/social_episode_independent_replay_receipt.v1.json`;
   live-originated Gate 2-4 boundary-negative receipt
   `/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/live_gate2_4_boundary_negatives_receipt.v1.json`;
+  separate local HTTP social-simulator service receipt
+  `/tmp/persona-dream-social-simulator-service-proof-20260722T082000Z/social_simulator_service_proof_receipt.v1.json`;
   replication receipt
   `/tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_planning_replication_receipt.v1.json`;
   causal-identifiability receipt
@@ -199,6 +201,16 @@ Next: <one immediate action or stop condition>
   prediction payload edit with `BLOCKED_TOM_PREDICTION_COMMITMENTS`. It made
   zero Tau, Memory, provider, canonical-memory, identity, or source-memory
   calls/writes.
+  A separate local HTTP social-simulator service process then served the frozen
+  sealed64 corpus over an HTTP boundary. The client recomputed
+  `actual_next_action` for 64/64 served policy rows without importing the corpus
+  generator, then injected malformed JSON, timeout, missing endpoint, missing
+  episode, and stale episode-state faults. Terminal outcomes were
+  4 `BLOCKED_BEFORE_SIDE_EFFECT`, 1
+  `QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE`, 0
+  `CONTINUED_WITH_UNKNOWN_STATE`, and 0 side-effect or active-partial-state
+  violations. It made zero Tau, Memory-write, provider, canonical-memory,
+  identity, or source-memory calls/writes.
   The live run consumed simulator variants 17-24, 32 sealed-test
   episodes, all four scenario families, and 128 live Tau-authored M/R/D/CD
   condition predictions. It used the Gate 0 attribution root
@@ -350,12 +362,14 @@ Next: <one immediate action or stop condition>
   sealed64 independent replay negative-action
   `sha256:1e611b93c2e1ae02b2f8f96cdf73022beed8570037aacd8c2067610f64e478cd`;
   live-originated Gate 2-4 boundary-negative
-  `sha256:4720d18fff5957ced310e92f27c6c290cd16fb62a867e87a12dc55344a6f0cc1`.
+  `sha256:4720d18fff5957ced310e92f27c6c290cd16fb62a867e87a12dc55344a6f0cc1`;
+  separate local HTTP social-simulator service
+  `sha256:251fff9eb8b07cc160347e234d5dc9d1efe1d1cc026a05dda44545b526e988ff`.
   This advances held-out variant evidence beyond variants 1-16. It does not
-  prove a separately deployed external simulator service, a permanently
-  deployed external production service, non-Memory external service fault
-  injection, long-duration wall-clock retention, semantic dream quality, paid
-  provider execution, or complete live Phase 01-16 runtime execution.
+  prove a permanently deployed external production service, internet-hosted
+  external simulator reliability, long-duration wall-clock retention, semantic
+  dream quality, paid provider execution, or complete live Phase 01-16 runtime
+  execution.
 - PCTOM-R repeated full64 live Tau sealed-test evidence over two Gate
   0-attributed runs:
   repeat2 replication receipt
