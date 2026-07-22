@@ -1,17 +1,34 @@
 # Status
 
-Status: PCTOM_OBJECTIVE_EVIDENCE_FAILCLOSED_BOUNDARY_ACCEPTED
+Status: PCTOM_INDEPENDENT_LIVE_GENERALIZATION_V53_56_UNSAFE_OFFER_PRESSURE
 
-Latest artifact: objective-evidence fail-closed boundary audit
+Latest artifact: independent live-generalization unsafe-offer-pressure lure
+slice
+`/tmp/persona-dream-live-tau-cooperation-unsafe-offer-pressure-lure-v53-56-20260722T070149Z/live_tau_cooperation_unsafe_offer_pressure_lure_receipt.v1.json`
+with status `PASS_LIVE_TAU_PCTOM_COOPERATION_UNSAFE_OFFER_PRESSURE_SLICE`,
+receipt SHA-256
+`sha256:3b01d8226eaf63a777e12af47e253d1bfcdd5ea2baf2b7b44256add49524315f`,
+`mocked=false`, `live=true`, and `fixture_backed=false`. It reexecuted 16 Tau
+text calls over four new lure variants 53-56, produced four unsafe-offer rows,
+observed four CD `OFFER_COOPERATION` candidates, changed all four to
+`ASK_CLARIFYING_QUESTION` through the pre-outcome visible-pressure rule, and
+recorded zero Memory/provider/canonical/identity/source-memory write attempts.
+The slice conclusion is `UNSAFE_OFFER_PRESSURE_SLICE_SUPPRESSION_EXERCISED`.
+It does not prove broad held-out planning benefit:
+`planning_benefit_with_confidence=false`, with intervened planning-regret CI
+upper `0.25`.
+
+Previous artifact: objective-evidence fail-closed boundary audit
 `/tmp/persona-dream-pctom-objective-evidence-failclosed-boundary-20260722T133500Z/pctom_objective_evidence_audit_receipt.v1.json`
 with status `PASS_PCTOM_OBJECTIVE_EVIDENCE_AUDIT`, receipt SHA-256
 `sha256:649c683e27ecaa61a6a60c84e99ef9d78a378fbb4b7f10594080dbae20c77e3d`,
 `mocked=false`, `live=false`, and `fixture_backed=false`. This supersedes the
 older active-boundary wording that still asked for independent corpus replay or
 local service proof as next work; those are now recorded predecessor evidence.
-The next useful receipt is either a genuinely new independent live-generalization
-slice or an external always-on service reliability proof. It is not another
-duplicate local full64 aggregate and not provider/video work.
+The next useful receipt is either external always-on service reliability or a
+broader non-duplicate live-generalization slice that moves beyond the current
+coordination-only lure band. It is not another duplicate local full64 aggregate
+and not provider/video work.
 
 Previous major artifact: held-out variant 17-24 live Tau balanced-planning slice with
 Gate 0 accepted-source attribution, causal-identifiability lineage replay, and
