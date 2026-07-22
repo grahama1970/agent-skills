@@ -91,6 +91,7 @@ Commands:
   run-live-memory-revision-recall  Persist action-linked revisions and recall them through live Memory
   run-live-memory-revision-delayed-recall  Re-read persisted revision Memory records from a fresh no-write process
   run-live-memory-restart-delayed-recall  Restart Memory, then re-run delayed revision recall
+  run-live-memory-aged-retention-recall  Re-run delayed Memory recall only after a minimum elapsed source age
   check-social-episode-independent-replay  Recompute social episode policy/label invariants without generator imports
   run-sealed-test-statistical-confidence  Run 64-episode sealed-test CD-vs-baseline bootstrap confidence
   analyze-sealed-test-planning-gap  Explain why sealed-test prediction benefit did not become planning benefit
@@ -491,6 +492,9 @@ case "$COMMAND" in
     ;;
   run-live-memory-restart-delayed-recall)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_memory_restart_delayed_recall.py" "$@"
+    ;;
+  run-live-memory-aged-retention-recall)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_memory_aged_retention_recall.py" "$@"
     ;;
   check-social-episode-independent-replay)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_social_episode_independent_replay.py" "$@"

@@ -165,6 +165,10 @@ Next: <one immediate action or stop condition>
   `/tmp/persona-dream-live-memory-revision-delayed-recall-variant17-24-20260722T042700Z/live_memory_revision_delayed_recall_receipt.v1.json`;
   live Memory restart delayed-recall receipt
   `/tmp/persona-dream-live-memory-restart-delayed-recall-variant17-24-20260722T061500Z/live_memory_restart_delayed_recall_receipt.v1.json`;
+  live Memory aged-retention recall receipt
+  `/tmp/persona-dream-live-memory-aged-retention-recall-variant17-24-20260722T044000Z/live_memory_aged_retention_recall_receipt.v1.json`;
+  live Memory aged-retention negative too-young receipt
+  `/tmp/persona-dream-live-memory-aged-retention-negative-too-young-20260722T044100Z/live_memory_aged_retention_recall_receipt.v1.json`;
   live fault-injection surface receipt
   `/tmp/persona-dream-live-fault-injection-surface-variant17-24-20260722T034600Z/live_fault_injection_surface_receipt.v1.json`;
   local HTTP service retry proof receipt
@@ -211,6 +215,27 @@ Next: <one immediate action or stop condition>
   `CONTINUED_WITH_UNKNOWN_STATE`, and 0 side-effect or active-partial-state
   violations. It made zero Tau, Memory-write, provider, canonical-memory,
   identity, or source-memory calls/writes.
+  A live Memory aged-retention wrapper then consumed the live Memory
+  revision-recall source root and required `elapsed_age_s >= min_age_s` before
+  delegating to the existing no-write delayed-recall checker. The positive run
+  accepted the source after `3653.0` seconds with `--min-age-s 1800`, nested
+  status `PASS_PCTOM_LIVE_MEMORY_REVISION_DELAYED_RECALL`, 128 source Memory
+  documents, 128 semantic mirrors, 128 exact rereads, 128 semantic exact
+  rereads, 4 live `/recall` queries, 40 hits, 10 hits per M/R/D/CD, and zero
+  write violations or Memory/Tau/provider/canonical/identity/source-memory
+  writes/calls. Receipt SHA-256:
+  `sha256:a4374d1cfba1939f7926936285b95fff186dfb284ad275adfbe454a5a69982e3`.
+  The negative too-young fixture with `--min-age-s 999999999` exited 1 with
+  `BLOCKED_PCTOM_LIVE_MEMORY_AGED_RETENTION_RECALL`, error
+  `minimum_age_not_satisfied:3676.0:999999999`, nested delayed recall
+  `executed=false`, 0 nested recall queries, and zero writes/calls. Negative
+  receipt SHA-256:
+  `sha256:570aa04762329319804927d8dd5b5137f56af021484eae1084e37a6396d8be75`.
+  This proves a fail-closed minimum-age boundary and about one hour of no-write
+  live Memory retention for this PCTOM-R revision state. It does not prove
+  multi-day wall-clock retention, permanently deployed service availability,
+  new live Tau execution, paid provider execution, semantic dream quality, or
+  complete Phase 01-16 runtime execution.
   The live run consumed simulator variants 17-24, 32 sealed-test
   episodes, all four scenario families, and 128 live Tau-authored M/R/D/CD
   condition predictions. It used the Gate 0 attribution root

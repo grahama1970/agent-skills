@@ -18,7 +18,10 @@ live-originated Gate 2-4 boundary-negative harness now proves distribution,
 counterfactual-synthetic, and sealed-payload-hash mutations fail closed through
 the reusable skill entrypoint. A separate local HTTP social-simulator service
 now serves the frozen corpus over a subprocess boundary and contains non-Memory
-service faults without unknown-state continuation.
+service faults without unknown-state continuation. A new aged-retention wrapper
+now refuses to accept delayed live Memory recall until the source receipt has
+reached an explicit minimum age, then delegates to the existing no-write delayed
+recall checker.
 
 Sealed64 deterministic social episode corpus:
 
@@ -122,6 +125,18 @@ Held-out variant live Memory restart delayed-recall receipt:
 /tmp/persona-dream-live-memory-restart-delayed-recall-variant17-24-20260722T061500Z/live_memory_restart_delayed_recall_receipt.v1.json
 ```
 
+Held-out variant live Memory aged-retention recall receipt:
+
+```text
+/tmp/persona-dream-live-memory-aged-retention-recall-variant17-24-20260722T044000Z/live_memory_aged_retention_recall_receipt.v1.json
+```
+
+Held-out variant live Memory aged-retention negative too-young receipt:
+
+```text
+/tmp/persona-dream-live-memory-aged-retention-negative-too-young-20260722T044100Z/live_memory_aged_retention_recall_receipt.v1.json
+```
+
 Held-out variant live fault-injection surface receipt:
 
 ```text
@@ -150,6 +165,20 @@ action_linked_revision_status: PASS_LIVE_TAU_PCTOM_ACTION_LINKED_REVISION
 deterministic_revision_recall_status: PASS_LIVE_TAU_PCTOM_REVISION_RECALL
 live_memory_revision_recall_status: PASS_PCTOM_LIVE_MEMORY_REVISION_RECALL
 live_memory_revision_delayed_recall_status: PASS_PCTOM_LIVE_MEMORY_REVISION_DELAYED_RECALL
+live_memory_aged_retention_recall_status: PASS_PCTOM_LIVE_MEMORY_AGED_RETENTION_RECALL
+live_memory_aged_retention_recall_elapsed_age_s: 3653.0
+live_memory_aged_retention_recall_min_age_s: 1800
+live_memory_aged_retention_nested_exact_rereads: 128
+live_memory_aged_retention_nested_semantic_exact_rereads: 128
+live_memory_aged_retention_nested_recall_queries: 4
+live_memory_aged_retention_nested_recall_hits: 40
+live_memory_aged_retention_nested_recall_hits_per_condition: M=10, R=10, D=10, CD=10
+live_memory_aged_retention_write_violations: 0
+live_memory_aged_retention_positive_receipt_sha256: sha256:a4374d1cfba1939f7926936285b95fff186dfb284ad275adfbe454a5a69982e3
+live_memory_aged_retention_negative_status: BLOCKED_PCTOM_LIVE_MEMORY_AGED_RETENTION_RECALL
+live_memory_aged_retention_negative_error: minimum_age_not_satisfied:3676.0:999999999
+live_memory_aged_retention_negative_nested_executed: false
+live_memory_aged_retention_negative_receipt_sha256: sha256:570aa04762329319804927d8dd5b5137f56af021484eae1084e37a6396d8be75
 live_fault_injection_status: PASS_PCTOM_LIVE_FAULT_INJECTION_SURFACE
 local_http_service_retry_status: PASS_LIVE_TAU_PCTOM_SERVICE_RETRY_PROOF
 combined_full64_memory_fault_surface_status: PASS_LIVE_TAU_PCTOM_FULL64_MEMORY_FAULT_SURFACE

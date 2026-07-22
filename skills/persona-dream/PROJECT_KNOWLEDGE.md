@@ -94,6 +94,38 @@
   fault containment. It does not prove an internet-hosted or permanently
   deployed always-on production service.
 
+  A live Memory aged-retention wrapper now adds the missing minimum-age
+  acceptance guard around the existing no-write delayed recall checker. Command:
+  `./skills/persona-dream/run.sh run-live-memory-aged-retention-recall
+  --source-root
+  /tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z
+  --output-root
+  /tmp/persona-dream-live-memory-aged-retention-recall-variant17-24-20260722T044000Z
+  --receipt-out
+  /tmp/persona-dream-live-memory-aged-retention-recall-variant17-24-20260722T044000Z/live_memory_aged_retention_recall_receipt.v1.json
+  --min-age-s 1800 --recall-attempts 3 --recall-sleep-s 1 --json`.
+  Receipt status: `PASS_PCTOM_LIVE_MEMORY_AGED_RETENTION_RECALL`; source
+  created at `2026-07-22T03:33:18Z`, accepted at
+  `2026-07-22T04:34:11Z`, elapsed age `3653.0` seconds, minimum age
+  `1800` seconds. The nested delayed-recall receipt returned
+  `PASS_PCTOM_LIVE_MEMORY_REVISION_DELAYED_RECALL` with 128 source Memory
+  documents, 128 semantic mirrors, 128 exact rereads, 128 semantic exact
+  rereads, 4 live `/recall` queries, 40 hits, 10 hits per M/R/D/CD, and
+  zero write violations or Memory/Tau/provider/canonical/identity/source-memory
+  writes/calls. Declared wrapper receipt SHA-256:
+  `sha256:a4374d1cfba1939f7926936285b95fff186dfb284ad275adfbe454a5a69982e3`.
+  A negative too-young fixture with `--min-age-s 999999999` exited 1 with
+  `BLOCKED_PCTOM_LIVE_MEMORY_AGED_RETENTION_RECALL`, error
+  `minimum_age_not_satisfied:3676.0:999999999`, nested delayed recall
+  `executed=false`, 0 nested recall queries, and zero writes/calls. Negative
+  receipt SHA-256:
+  `sha256:570aa04762329319804927d8dd5b5137f56af021484eae1084e37a6396d8be75`.
+  This proves a fail-closed minimum-age boundary and about one hour of
+  no-write live Memory retention for this PCTOM-R revision state. It does not
+  prove multi-day wall-clock retention, permanently deployed service
+  availability, new live Tau execution, paid provider execution, semantic dream
+  quality, or complete Phase 01-16 runtime execution.
+
   Command:
   `./skills/persona-dream/run.sh run-live-tau-balanced-planning-replication
   --family-episode-limit 8 --episodes-per-family 24 --variant-min 17
