@@ -2791,23 +2791,25 @@ from the offline instrument.
 
 The PCTOM-R objective audit now treats row-level coverage evidence counts as the
 source of truth for objective clauses. A required coverage id is not enough by
-itself. Gate 0/1/2/4/5/7 objective clauses require positive evidence rows;
-unsupported-evidence abstention requires both positive and negative evidence;
-fail-closed reliability requires positive Gate 8/Gate 9/fail-closed coverage,
-negative fail-closed coverage, at least 10 negative rows, and no negative-row
-violations.
+itself. Gate 0/1/2/3/4/5/6/7, cross-stage lineage, and memory-retention
+objective clauses require positive evidence rows; unsupported-evidence
+abstention requires both positive and negative evidence; fail-closed reliability
+requires positive Gate 8/Gate 9/fail-closed coverage, negative fail-closed
+coverage, at least 10 negative rows, and no negative-row violations.
 
 Positive receipt:
 
 ```text
-path: /tmp/persona-dream-pctom-objective-evidence-coverage-boundary-20260722T061351Z/pctom_objective_evidence_audit_receipt.v1.json
+path: /tmp/persona-dream-pctom-objective-evidence-expanded-clauses-20260722T061702Z/pctom_objective_evidence_audit_receipt.v1.json
 status: PASS_PCTOM_OBJECTIVE_EVIDENCE_AUDIT
-receipt_sha256: sha256:9bfc90e301801ebacf62ed8aeca8960f9b933ee2f98bb4b8bad3df02de34eb97
+receipt_sha256: sha256:74580fb1f46d01391bb174b1660a3604ef664fdf17e394a4401fa6ddca6836c1
 coverage_rows_checked: 15
 evidence_rows_checked: 37
 negative_rows_checked: 10
 rows_missing_positive_evidence: 0
 rows_missing_required_negative_evidence: 0
+objective_clauses: 14
+false_objective_clauses: 0
 ```
 
 Negative receipts:
@@ -2826,6 +2828,13 @@ receipt_sha256: sha256:c2c94a8d84eda145ecfa8c1dbd3aeb5a218155f4d40f993f13f564ea1
 errors:
   - coverage_missing_negative_evidence:unsupported_evidence_abstention
   - objective_clause_not_proven:unsupported_evidence_abstention
+
+path: /tmp/persona-dream-pctom-objective-evidence-negative-missing-action-planning-20260722T061722Z/output/pctom_objective_evidence_audit_receipt.v1.json
+status: BLOCKED_PCTOM_OBJECTIVE_EVIDENCE_AUDIT
+receipt_sha256: sha256:ebd6dbde250163e6185f649ec2b23721f50d3fa3b2aec8acdce113a1ac2be255
+errors:
+  - coverage_missing_positive_evidence:gate6_action_selection_planning
+  - objective_clause_not_proven:action_selection_planning
 ```
 
 Proof scope:

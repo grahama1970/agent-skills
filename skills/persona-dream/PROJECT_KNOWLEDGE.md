@@ -3316,3 +3316,10 @@
   fail-closed negative rows. Tampering `gate4_sealed_prediction_commitments`
   to `positive_evidence=0` or `unsupported_evidence_abstention` to
   `negative_evidence=0` blocks the objective audit with clause-specific errors.
+
+- 2026-07-22 (PCTOM-R expanded objective clauses): the objective audit now also
+  exposes `counterfactual_branches_synthetic`, `action_selection_planning`,
+  `cross_stage_hash_lineage`, and `memory_retention_and_recall` as named
+  objective clauses instead of leaving them only as required coverage ids.
+  Tampering `gate6_action_selection_planning` to `positive_evidence=0` blocks
+  with `objective_clause_not_proven:action_selection_planning`.

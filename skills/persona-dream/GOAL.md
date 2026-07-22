@@ -4254,7 +4254,9 @@ coverage-id presence as objective proof. The audit derives active objective
 clauses from coverage row evidence counts:
 
 ```text
-Gate 0/1/2/4/5/7 clauses -> positive_evidence > 0
+Gate 0/1/2/3/4/5/6/7 clauses -> positive_evidence > 0
+cross_stage_hash_lineage -> positive_evidence > 0
+memory_retention_and_recall -> positive_evidence > 0
 unsupported_evidence_abstention -> positive_evidence > 0 and negative_evidence > 0
 fail_closed_reliability_checks -> positive Gate 8/Gate 9/fail-closed coverage,
   negative fail-closed coverage, >=10 negative rows, and no negative-row
@@ -4268,12 +4270,14 @@ provider_video_not_critical_path -> required does_not_prove claims and no
 Current positive receipt:
 
 ```text
-/tmp/persona-dream-pctom-objective-evidence-coverage-boundary-20260722T061351Z/pctom_objective_evidence_audit_receipt.v1.json
+/tmp/persona-dream-pctom-objective-evidence-expanded-clauses-20260722T061702Z/pctom_objective_evidence_audit_receipt.v1.json
 status: PASS_PCTOM_OBJECTIVE_EVIDENCE_AUDIT
-receipt_sha256: sha256:9bfc90e301801ebacf62ed8aeca8960f9b933ee2f98bb4b8bad3df02de34eb97
+receipt_sha256: sha256:74580fb1f46d01391bb174b1660a3604ef664fdf17e394a4401fa6ddca6836c1
 coverage_rows_checked: 15
 evidence_rows_checked: 37
 negative_rows_checked: 10
+objective_clauses: 14
+false_objective_clauses: 0
 ```
 
 Current fail-closed tamper receipts:
@@ -4292,4 +4296,11 @@ receipt_sha256: sha256:c2c94a8d84eda145ecfa8c1dbd3aeb5a218155f4d40f993f13f564ea1
 errors:
   - coverage_missing_negative_evidence:unsupported_evidence_abstention
   - objective_clause_not_proven:unsupported_evidence_abstention
+
+/tmp/persona-dream-pctom-objective-evidence-negative-missing-action-planning-20260722T061722Z/output/pctom_objective_evidence_audit_receipt.v1.json
+status: BLOCKED_PCTOM_OBJECTIVE_EVIDENCE_AUDIT
+receipt_sha256: sha256:ebd6dbde250163e6185f649ec2b23721f50d3fa3b2aec8acdce113a1ac2be255
+errors:
+  - coverage_missing_positive_evidence:gate6_action_selection_planning
+  - objective_clause_not_proven:action_selection_planning
 ```

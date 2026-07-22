@@ -395,9 +395,15 @@ def run(
             mapped, "gate1_deterministic_hidden_state_social_episodes"
         ),
         "valid_tom_distributions": _has_positive_evidence(mapped, "gate2_valid_tom_distributions"),
+        "counterfactual_branches_synthetic": _has_positive_evidence(
+            mapped, "gate3_counterfactual_branches_synthetic"
+        ),
         "sealed_prediction_commitments": _has_positive_evidence(mapped, "gate4_sealed_prediction_commitments"),
         "deterministic_scoring": _has_positive_evidence(mapped, "gate5_deterministic_scoring"),
+        "action_selection_planning": _has_positive_evidence(mapped, "gate6_action_selection_planning"),
         "non_destructive_belief_revision": _has_positive_evidence(mapped, "gate7_non_destructive_belief_revision"),
+        "cross_stage_hash_lineage": _has_positive_evidence(mapped, "cross_stage_hash_lineage"),
+        "memory_retention_and_recall": _has_positive_evidence(mapped, "memory_retention_and_recall"),
         "fail_closed_reliability_checks": (
             _has_positive_evidence(mapped, "gate8_fault_containment")
             and _has_positive_evidence(mapped, "gate9_causal_replay")
