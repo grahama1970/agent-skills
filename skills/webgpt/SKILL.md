@@ -162,6 +162,15 @@ claims.
    fresh ChatGPT tab and resubmits once. Check metadata fields
    `conversation_max_length_detected` and `conversation_max_length_rollover`
    before deciding the next action.
+7. **Too-many-requests cooldown.** If ChatGPT displays a **Too many requests**
+   modal saying requests are being made too quickly and access is temporarily
+   limited, this is provider throttling, not a routing, download, sentinel, or
+   parser defect. The Surf transport clicks **Got it** when possible, waits
+   `SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS` (default `300`), and retries the same
+   prepared prompt once on the same controlled tab. Check
+   `chatgpt_too_many_requests_detected` and `chatgpt_rate_limit` metadata. If
+   `proof_status` is `rate_limited`, do not launch parallel WebGPT attempts;
+   let the outer scheduler back off and requeue later.
 
 When a project agent reports success or failure, it must name which layer was
 proved and which layer failed. Example: "routing and sentinel capture passed;

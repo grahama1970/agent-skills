@@ -34,6 +34,7 @@ def run_submit(
     env = os.environ.copy()
     env["SURF_RUN_SH"] = str(fake_run)
     env["SURF_WEBGPT_EXTRACT_FALLBACK_BUDGET"] = "0"
+    env["SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS"] = "0"
     env["TMPDIR"] = str(tmp_path)
     return subprocess.run(
         [
@@ -603,6 +604,89 @@ esac
     assert invocations.count("chatgpt ") == 2
 
 
+def test_webgpt_submit_cools_down_and_retries_same_tab_on_too_many_requests(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    invocation_log = tmp_path / "surf-invocations.log"
+    chatgpt_count_file = tmp_path / "chatgpt-count"
+    fake_run = f"""#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\\n' "$*" >> {str(invocation_log)!r}
+case "${{1:-}}" in
+  tab.list)
+    printf '837352334\\tThrottled conversation\\thttps://chatgpt.com/c/example\\n'
+    ;;
+  focus.state)
+    printf '{{"active_tab_id":"123","active_window_id":"456"}}\\n'
+    ;;
+  js)
+    if [[ "$*" == *"got_it_control_not_found"* || "$*" == *"Got it"* || "$*" == *"got it"* ]]; then
+      printf '%s\n' '"{{\"dismissed\":true,\"text\":\"Got it\",\"url\":\"https://chatgpt.com/c/example\"}}"'
+    else
+      printf '"cdp-ok"\\n'
+    fi
+    ;;
+  tab.new)
+    echo "fresh tab should not be created for rate-limit cooldown" >&2
+    exit 44
+    ;;
+  chatgpt)
+    count="$(cat {str(chatgpt_count_file)!r} 2>/dev/null || printf '0')"
+    count="$((count + 1))"
+    printf '%s' "$count" > {str(chatgpt_count_file)!r}
+    sentinel=""
+    target_tab=""
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --sentinel) sentinel="${{2:-}}"; shift 2 ;;
+        --target-tab-id) target_tab="${{2:-}}"; shift 2 ;;
+        *) shift ;;
+      esac
+    done
+    if [[ "$count" -eq 1 ]]; then
+      echo 'Error: ChatGPT is rate limited: too many requests; wait before retrying' >&2
+      exit 1
+    fi
+    if [[ "$target_tab" != "837352334" ]]; then
+      echo "expected same-tab retry target 837352334, got $target_tab" >&2
+      exit 43
+    fi
+    printf 'same tab response after cooldown\\n%s\\n' "$sentinel"
+    echo 'Tab ID: 837352334' >&2
+    echo 'Activated: false' >&2
+    echo 'TabWasCreated: false' >&2
+    echo 'ResponseSource: assistant-dom' >&2
+    exit 0
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+
+    proc = run_submit(tmp_path, archive, fake_run)
+
+    assert proc.returncode == 0, proc.stderr
+    assert (tmp_path / "response.md").read_text(encoding="utf-8") == "same tab response after cooldown\n"
+    meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["status"] == "completed"
+    assert meta["requested_tab_id"] == "837352334"
+    assert meta["controlled_tab_id"] == "837352334"
+    assert meta["chatgpt_too_many_requests_detected"] is True
+    assert meta["chatgpt_rate_limit"]["wait_seconds"] == 0
+    assert meta["chatgpt_rate_limit"]["retry_attempts"] == 1
+    assert meta["chatgpt_rate_limit"]["dismiss_attempted"] is True
+    assert meta["chatgpt_rate_limit"]["dismissed"] is True
+    assert meta["chatgpt_rate_limit"]["retry_attempted"] is True
+    assert meta["chatgpt_rate_limit"]["exhausted"] is False
+    assert meta["chatgpt_rate_limit"]["action"] == "dismiss_got_it_cooldown_and_retry"
+    invocations = invocation_log.read_text(encoding="utf-8")
+    assert "tab.new https://chatgpt.com/ --background" not in invocations
+    assert "Got it" in invocations or "got it" in invocations
+    assert invocations.count("chatgpt ") == 2
+
+
 def test_webgpt_submit_missing_sentinel_writes_advisory_raw_meta(tmp_path: Path) -> None:
     archive = tmp_path / "five.zip"
     make_zip(archive, 5)
@@ -715,6 +799,40 @@ if (!client.detectsConversationMaxLength("You’ve reached the maximum length fo
 }}
 if (client.detectsConversationMaxLength("Start a new chat whenever you want.")) {{
   console.error('new-chat affordance alone must not trigger rollover');
+  process.exit(3);
+}}
+""",
+        encoding="utf-8",
+    )
+
+    proc = subprocess.run(
+        ["node", str(node_script)],
+        cwd=tmp_path,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stderr
+
+
+def test_chatgpt_client_detects_too_many_requests_message(tmp_path: Path) -> None:
+    node_script = tmp_path / "too-many-requests.js"
+    client_path = REPO_ROOT / "skills/surf/vendor/surf-cli/native/chatgpt-client.cjs"
+    node_script.write_text(
+        f"""
+const client = require({json.dumps(str(client_path))});
+if (!client.detectsTooManyRequests("Too many requests\\n\\nYou're making requests too quickly. We've temporarily limited access to your conversations to protect your data.\\n\\nPlease wait a few minutes before trying again.")) {{
+  console.error('expected exact rate-limit modal to be detected');
+  process.exit(1);
+}}
+if (!client.detectsTooManyRequests("Too many requests\\n\\nYou’re making requests too quickly. We’ve temporarily limited access to your conversations to protect your data.")) {{
+  console.error('expected curly apostrophe rate-limit modal to be detected');
+  process.exit(2);
+}}
+if (client.detectsTooManyRequests("Please wait a few minutes before trying again.")) {{
+  console.error('wait text alone must not trigger rate-limit handling');
   process.exit(3);
 }}
 """,
