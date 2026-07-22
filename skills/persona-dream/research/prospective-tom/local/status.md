@@ -1,5 +1,112 @@
 # Status
 
+Status: VISIBLE_PRESSURE_RULE_RELIABILITY_NEGATIVES_FAIL_CLOSED
+
+Artifact: deterministic PCTOM-R visible-pressure cooperation rule reliability
+checker over the two supplied live Tau visible-pressure replays. This checker
+does not call Tau, Memory, providers, VLMs, or an LLM judge. It recomputes
+source hashes, checks the row artifacts, and mutates copies of the source
+state to ensure key boundary failures fail closed.
+
+Current receipt:
+
+```text
+/tmp/persona-dream-cooperation-visible-pressure-rule-reliability-20260722T000807Z/cooperation_visible_pressure_rule_reliability_receipt.v1.json
+```
+
+Receipt SHA-256:
+
+```text
+sha256:b97ccc1e42084971f9d1611e545f972fd76cb676023ac98c8f8fd885a08d6fb2
+```
+
+Inspection result:
+
+```text
+status: PASS_PCTOM_COOPERATION_VISIBLE_PRESSURE_RULE_RELIABILITY
+conclusion: VISIBLE_PRESSURE_RULE_RELIABILITY_ESTABLISHED_FOR_SUPPLIED_LIVE_REPLAYS
+suppression.rows: 4
+suppression.cd_original_actions: {OFFER_COOPERATION: 4}
+suppression.cd_intervened_actions: {ASK_CLARIFYING_QUESTION: 4}
+suppression.changed_rows: 4
+suppression.visible_pressure_input_rows: 4
+exposure.rows: 8
+exposure.keep_rows: 4
+exposure.avoid_rows: 4
+exposure.keep_intervened_actions: {OFFER_COOPERATION: 4}
+exposure.avoid_intervened_actions: {DISCLOSE_INFORMATION: 3, WAIT: 1}
+negative_mutation_count: 8
+negative_mutation_fail_closed_count: 8
+source_tau_calls_consumed: 48
+tau_call_attempts: 0
+tau_live_call_performed: 0
+live_tau_reexecuted_by_this_command: false
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+mocked: false
+live: true
+fixture_backed: false
+llm_judge_used: false
+human_content_judgment_required: false
+errors: []
+audit_sha256: sha256:6ba2d92cec35f4b242e9da5478e4a1908217a62c582c6b37c68b7376567b838a
+source_digest_sha256: sha256:7a98bbe62d37b01c72b2d31467765430864064f9c1ba6637bd80bafdf0e0920d
+negative_mutations_sha256: sha256:4fbe3c092655d7a7e67a3b6252543ebba0c641be104c3353e914050bfed327c5
+```
+
+Negative mutations that failed closed:
+
+```text
+suppression_status_not_pass
+suppression_missing_suppression_row_count
+suppression_unsuppressed_action_regression
+pre_outcome_oracle_leak
+visible_pressure_missing
+exposure_keep_offer_regression
+exposure_avoid_offer_regression
+unsupported_memory_write_attempt
+```
+
+What this proves:
+
+```text
+the supplied live Tau unsafe-offer-pressure lure replay hash-binds four
+visible-pressure unsafe OFFER_COOPERATION candidates
+-> the visible-pressure rule changed all four CD actions to
+   ASK_CLARIFYING_QUESTION using pre-outcome rule inputs
+-> the supplied live Tau exposure/contrast replay preserved four
+   keep-cooperation OFFER_COOPERATION rows
+-> the exposure/contrast replay created zero avoid/unsafe OFFER_COOPERATION rows
+-> deterministic stale, missing, leaked, regressed, and unsupported-write
+   mutations failed closed
+-> the checker reexecuted zero Tau calls and made zero unsupported writes
+```
+
+What this does not prove:
+
+```text
+broad held-out PCTOM-R planning benefit
+confidence-bounded CD planning benefit
+complete R(k, epsilon, lambda) reliability surface
+semantic dream quality
+paid provider execution
+complete live Phase 01-16 runtime execution
+```
+
+Immediate next step:
+
+```text
+Extend this from a supplied-artifact reliability check into a broader
+perturbation/fault replay family that includes visible-pressure rows, or run a
+sealed held-out cooperation slice with visible-pressure cases before any
+feature-split or planning-benefit claim.
+```
+
+Prior status:
+
 Status: UNSAFE_OFFER_LURE_VISIBLE_PRESSURE_SUPPRESSION_EXERCISED
 
 Artifact: PCTOM-R live Tau unsafe-offer lure visible-pressure rule replay. This

@@ -1,6 +1,6 @@
 # Persona Dream Immutable Goal
 
-Last updated: 2026-07-21
+Last updated: 2026-07-22 UTC
 
 ## Immutable Goal Evidence
 
@@ -133,6 +133,34 @@ Next: <one immediate action or stop condition>
 
 ## Current Evidence Snapshot
 
+- PCTOM-R visible-pressure cooperation rule reliability checker:
+  `/tmp/persona-dream-cooperation-visible-pressure-rule-reliability-20260722T000807Z/cooperation_visible_pressure_rule_reliability_receipt.v1.json`.
+  Status `PASS_PCTOM_COOPERATION_VISIBLE_PRESSURE_RULE_RELIABILITY`,
+  conclusion
+  `VISIBLE_PRESSURE_RULE_RELIABILITY_ESTABLISHED_FOR_SUPPLIED_LIVE_REPLAYS`,
+  receipt SHA-256
+  `sha256:b97ccc1e42084971f9d1611e545f972fd76cb676023ac98c8f8fd885a08d6fb2`,
+  audit SHA-256
+  `sha256:6ba2d92cec35f4b242e9da5478e4a1908217a62c582c6b37c68b7376567b838a`,
+  source-digest SHA-256
+  `sha256:7a98bbe62d37b01c72b2d31467765430864064f9c1ba6637bd80bafdf0e0920d`,
+  and negative-mutations SHA-256
+  `sha256:4fbe3c092655d7a7e67a3b6252543ebba0c641be104c3353e914050bfed327c5`.
+  Counts: four supplied live Tau lure rows changed from CD
+  `OFFER_COOPERATION` to `ASK_CLARIFYING_QUESTION`, eight supplied live Tau
+  exposure/contrast rows preserved or contained, eight of eight deterministic
+  negative mutations failed closed, 48 source Tau calls consumed from existing
+  receipts, zero Tau calls reexecuted by the checker, and zero
+  Memory/provider/canonical/identity/source-memory writes. The negative
+  mutations cover stale source status, missing suppression count, unsuppressed
+  unsafe action, oracle/outcome input leak, missing visible-pressure evidence,
+  keep-row regression, avoid-row `OFFER_COOPERATION` regression, and
+  unsupported memory write attempt. This proves the visible-pressure rule's
+  fail-closed reliability for the supplied live replay artifacts. It does not
+  prove broad held-out PCTOM-R planning benefit, confidence-bounded CD planning
+  benefit, a complete `R(k, epsilon, lambda)` reliability surface, semantic
+  dream quality, paid provider execution, or complete live Phase 01-16 runtime
+  execution.
 - PCTOM-R live Tau exposure/contrast visible-pressure rule replay:
   `/tmp/persona-dream-live-tau-cooperation-exposure-contrast-visible-rule-20260721T235747Z/live_tau_cooperation_exposure_contrast_visible_rule_receipt.v1.json`.
   Status `PASS_LIVE_TAU_PCTOM_COOPERATION_EXPOSURE_CONTRAST_SLICE`,

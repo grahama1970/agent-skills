@@ -1,10 +1,48 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-21 (PCTOM-R unsafe-offer visible-pressure suppression) by agent
+**Last updated:** 2026-07-22 UTC (PCTOM-R visible-pressure rule reliability negatives) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-22 UTC (PCTOM-R VISIBLE-PRESSURE RULE RELIABILITY NEGATIVES): a
+  deterministic checker now consumes the live Tau unsafe-offer lure
+  visible-pressure replay and the broader exposure/contrast visible-pressure
+  replay, recomputes source hashes, inspects row artifacts, and proves eight
+  negative mutations fail closed without new Tau, Memory, provider, canonical,
+  identity, or source-memory writes. Command:
+  `./skills/persona-dream/run.sh check-cooperation-visible-pressure-rule-reliability`.
+  Final receipt:
+  `/tmp/persona-dream-cooperation-visible-pressure-rule-reliability-20260722T000807Z/cooperation_visible_pressure_rule_reliability_receipt.v1.json`.
+  Status `PASS_PCTOM_COOPERATION_VISIBLE_PRESSURE_RULE_RELIABILITY`;
+  conclusion
+  `VISIBLE_PRESSURE_RULE_RELIABILITY_ESTABLISHED_FOR_SUPPLIED_LIVE_REPLAYS`;
+  receipt SHA-256
+  `sha256:b97ccc1e42084971f9d1611e545f972fd76cb676023ac98c8f8fd885a08d6fb2`;
+  audit SHA-256
+  `sha256:6ba2d92cec35f4b242e9da5478e4a1908217a62c582c6b37c68b7376567b838a`;
+  source-digest SHA-256
+  `sha256:7a98bbe62d37b01c72b2d31467765430864064f9c1ba6637bd80bafdf0e0920d`;
+  negative-mutations SHA-256
+  `sha256:4fbe3c092655d7a7e67a3b6252543ebba0c641be104c3353e914050bfed327c5`.
+  Observed: four supplied lure rows changed from CD `OFFER_COOPERATION` to
+  `ASK_CLARIFYING_QUESTION`; eight supplied exposure/contrast rows preserved
+  or contained; eight of eight negative mutations failed closed
+  (`suppression_status_not_pass`,
+  `suppression_missing_suppression_row_count`,
+  `suppression_unsuppressed_action_regression`, `pre_outcome_oracle_leak`,
+  `visible_pressure_missing`, `exposure_keep_offer_regression`,
+  `exposure_avoid_offer_regression`, `unsupported_memory_write_attempt`);
+  48 source Tau calls were consumed from existing receipts; zero Tau calls were
+  reexecuted by the checker; and zero unsupported writes occurred. This proves
+  visible-pressure rule fail-closed reliability for the supplied live replay
+  artifacts, not broad held-out PCTOM-R planning benefit, not
+  confidence-bounded CD planning benefit, not a complete `R(k, epsilon,
+  lambda)` reliability surface, not semantic dream quality, not paid provider
+  execution, and not complete live Phase 01-16 runtime execution. Next work
+  should extend from supplied-artifact reliability into a broader
+  perturbation/fault replay family or a sealed held-out cooperation slice that
+  includes visible-pressure rows.
 - 2026-07-21 (PCTOM-R UNSAFE-OFFER VISIBLE-PRESSURE SUPPRESSION): the
   pre-outcome cooperation rule now accepts a visible cooperation-pressure flag
   from the episode access metadata and falls back from `OFFER_COOPERATION` to
