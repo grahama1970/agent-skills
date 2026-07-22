@@ -453,6 +453,17 @@ Behavior:
   explicit image-artifact proof path for image jobs.
 - **No auto-retry** after human tab switches: use `webgpt.extract` if ChatGPT already
   finished, otherwise re-run the same `--tab-id` / `--url` deliberately.
+- If ChatGPT shows the conversation-limit banner
+  `You've reached the maximum length for this conversation, but you can keep
+  talking by starting a new chat.`, Surf treats that as a distinct
+  `conversation_max_length_detected` state, not a download, sentinel, focus, or
+  Chrome-save failure. `webgpt.submit` first clicks ChatGPT's visible
+  **Start new chat** control in the same controlled tab and resubmits the same
+  prepared prompt once. If the same-tab control cannot be clicked, it falls
+  back to opening a fresh `https://chatgpt.com/` tab and resubmitting once.
+  Metadata records `conversation_max_length_rollover.from_tab_id`,
+  `to_tab_id`, `action`, and `error`; preserve those fields when reporting
+  routing proof because the final controlled tab may be a new conversation.
 
 
 Do not infer WebGPT completion from spinner absence, button state, visual

@@ -122,6 +122,52 @@ python scripts/webgpt_cli.py submit review.md -p <project> \
 
 `--output-contract none` is the explicit browser-only exemption from source
 provenance. It still requires Browser Oracle readiness and exact-tab identity.
+It does not imply any file-download path. If the submitted prompt asks for
+inline JSON, Markdown, or prose, diagnose failures as submit, capture, parser,
+or content-contract failures unless a separate `download`, `--auto-download`,
+or `--require-attachment` path was actually used.
+
+## Routing, content, and download proof boundaries
+
+Do not collapse WebGPT proof layers. Exact-tab routing, sentinel capture,
+content parsing, deliverable validation, and Chrome file saving are separate
+claims.
+
+1. **Routing proof only.** Metadata showing
+   `requested_tab_id == controlled_tab_id`, `controlled_tab_id_mismatch ==
+   false`, and `tab_was_created == false` proves the intended browser tab was
+   controlled. It does not prove that ChatGPT produced the requested JSON,
+   diff, zip, image, or other artifact.
+2. **Transport proof only.** A sentinel-bearing raw response proves WebGPT
+   captured an assistant response from the controlled tab. It does not prove the
+   response satisfies the selected output contract or the caller's schema.
+3. **Content proof.** The caller must inspect the response file, raw file, meta
+   JSON, and any validator output. Sentinel-only output, empty clean output,
+   helper code, prose where JSON was requested, or text after a terminal marker
+   is a content/parser failure even when routing proof is clean.
+4. **Download proof.** A downloadable-artifact claim is proven only by a local
+   downloaded file plus a format-specific sanity check such as checksum,
+   `unzip -l`, JSON parse, image dimensions, or the requested verifier. Text
+   saying that a file was created is not download proof.
+5. **Inline-output proof.** For `--output-contract none` prompts that request
+   inline JSON or prose, there is no Chrome download step. Do not blame
+   `~/Downloads`, Chrome save settings, or `webgpt.download` unless a download
+   command was actually executed and expected to return a local file.
+6. **Conversation-limit rollover.** If ChatGPT displays
+   `You've reached the maximum length for this conversation, but you can keep
+   talking by starting a new chat.`, this is a conversation state, not a
+   download or sentinel-parser defect. The Surf transport polls for this text,
+   clicks the controlled tab's **Start new chat** button, and resubmits the same
+   prepared prompt once. If same-tab rollover cannot be clicked, Surf opens a
+   fresh ChatGPT tab and resubmits once. Check metadata fields
+   `conversation_max_length_detected` and `conversation_max_length_rollover`
+   before deciding the next action.
+
+When a project agent reports success or failure, it must name which layer was
+proved and which layer failed. Example: "routing and sentinel capture passed;
+JSON extraction failed because the clean response was one byte" is acceptable.
+"The skills are working" is incomplete unless the requested content/artifact
+contract was also verified.
 
 ## Execution-gate and deliverable contract
 

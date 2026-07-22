@@ -265,6 +265,15 @@ browser handlers through `$surf`/`$browser-oracle` command specs.
 - Use the configured tab id when available. If the tab is missing, wrong, stale,
   or cannot be proven to match the requested reviewer, stop with
   `NEEDS_ATTENTION`.
+- If a WebGPT/Tau browser-handler receipt or Surf metadata reports
+  `conversation_max_length_detected` or `conversation_max_length_rollover`, treat
+  it as Surf's controlled-tab conversation rollover path. Do not reclassify it
+  as a generic reviewer failure, browser-oracle mismatch, download failure, or
+  sentinel parser defect. If rollover succeeded, continue from the returned
+  controlled tab and preserve the `from_tab_id`, `to_tab_id`, and `action`
+  fields in the Ask/Tau artifacts. If rollover failed, mark only that handler
+  node `NEEDS_ATTENTION` and route the next attempt through the same Surf
+  `Start new chat`/fresh-tab recovery contract.
 - Do not use raw `surf` as a substitute for `$ask`; use it only for transport
   debugging, direct project-level WebGPT workflows, or Tau command specs emitted
   by `./run.sh tau-dag`.
