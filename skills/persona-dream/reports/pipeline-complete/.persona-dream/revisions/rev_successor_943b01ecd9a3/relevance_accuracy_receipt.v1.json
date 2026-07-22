@@ -1,0 +1,31 @@
+{
+  "acceptance_rung_status": "PASS_ACCEPTANCE_RUNG",
+  "author": "agent:relevance-verifier",
+  "created_at": "2026-07-22T18:23:09Z",
+  "criterion": "the agent's dream is accurate given experience",
+  "delegation": "GOAL_V2_AMENDMENT_1",
+  "does_not_prove": [
+    "subjective aesthetic quality (out of scope per GOAL_V2_AMENDMENT_1)"
+  ],
+  "dream_node_active": true,
+  "dream_node_key": "dream_dream_successor_943b01ecd9a3",
+  "schema": "persona_dream.relevance_accuracy_receipt.v1",
+  "source_memory_ids_bound": true,
+  "source_memory_resolution": [
+    {
+      "source_id": "embry_age15_19_b02_memory_019",
+      "stored": true
+    },
+    {
+      "source_id": "embry_age15_19_b03_memory_014",
+      "stored": true
+    },
+    {
+      "source_id": "embry_age15_19_b03_memory_016",
+      "stored": true
+    }
+  ],
+  "synthetic_marking_verified": true,
+  "video_file_recomputed": true,
+  "video_sha256": "sha256:59b9ff3155d6ba9d0b90d795bafe7b84cc4e10849db08299217b65d61e211fff"
+}

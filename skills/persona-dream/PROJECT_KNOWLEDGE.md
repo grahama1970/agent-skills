@@ -5,6 +5,25 @@
 
 ## Current Understanding
 
+- 2026-07-22 (OPERATOR PURPOSE STATEMENT — governs all goals; verbatim
+  instructions recorded in `GOAL_V2_AMENDMENT_1.md`): persona-dream is an
+  AUTONOMOUS agent pipeline; humans are never pipeline components. The human
+  does not consume the dream content. The dreams exist to be the persona's
+  AFFECT ENGINE: experience -> memory residue -> autonomous dream ->
+  interpretation/ToM states -> emotional weights -> conversational tone and
+  emotional tags in the Embry chatterbox voice. Dreams provide the nuance and
+  conflict that make her live voice carry an inner life. The only properties
+  the human requires: (1) the dream is ACCURATE GIVEN THE AGENT'S EXPERIENCE
+  (grounded in real memories, nothing fabricated beyond residue, always
+  marked synthetic — phase 13/14 citation gates, M2 grounding, M3
+  distinction); (2) the pipeline is RELIABLE (fail-closed, receipted,
+  repeatable, unattended). Subjective human judgment of dream quality is out
+  of scope by explicit operator direction. The P0.6 voice pipeline
+  (dream-derived 4-chunk affective arc passed as tone/pace tags to
+  /synthesize) is the working prototype of the dream->voice-weights path;
+  productionizing dream ToM states -> chatterbox /render-plan emotional tags
+  is the successor work.
+
 - 2026-07-22 UTC (PCTOM-R STRICT OBJECTIVE BUNDLE WITH V25-26 EVIDENCE):
   the latest machine-checked PCTOM-R objective bundle is
   `/tmp/persona-dream-pctom-strict-coverage-with-v25-26-20260722T154000Z`.

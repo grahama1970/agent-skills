@@ -76,6 +76,10 @@ def main() -> int:
                         help="dir holding blinding_<RUN>.json receipts")
     parser.add_argument("--manifest", type=Path,
                         default=ROOT / "contracts/pilot_run_manifest.v2.json")
+    parser.add_argument("--m5-waived", action="store_true",
+                        help="GOAL_V2_AMENDMENT_1: M5 waived by goal owner; "
+                             "no judgment files; result from M1-M4 under the "
+                             "frozen rule (F cannot win without M5)")
     parser.add_argument("--scope-notes", type=Path, default=None,
                         help="optional JSON with declared scope notes (e.g. F render boundary)")
     parser.add_argument("--out", type=Path,
@@ -107,6 +111,15 @@ def main() -> int:
 
     pairs = {}
     for pair in ("r1", "r2"):
+        if args.m5_waived:
+            c_run, f_run = f"{pair.upper()}-C", f"{pair.upper()}-F"
+            pairs[pair] = {
+                "m5_primary_preferred_arm": "WAIVED_BY_GOAL_OWNER",
+                "m5_waiver": "GOAL_V2_AMENDMENT_1",
+                "sealed_presentation_preserved_unopened": True,
+                "regression": regression_check(metrics[c_run], metrics[f_run]),
+            }
+            continue
         judgment = load(args.m5_dir / f"judgment_{pair}.json", f"JUDGMENT_{pair.upper()}")
         if judgment.get("author") != "human":
             print(f"BLOCKED_PILOT_RESULT_M5_NOT_HUMAN: {pair}", file=sys.stderr)
@@ -129,7 +142,11 @@ def main() -> int:
     if invalid:
         result = "INVALID"
     else:
-        f_wins = (all(p["regression"]["no_regression"] for p in pairs.values())
+        # Under the frozen rule F wins only with an M5 preference in BOTH
+        # pairs; a goal-owner waiver of M5 therefore makes POSITIVE
+        # impossible — the result is NULL (a valid completion).
+        f_wins = (not args.m5_waived
+                  and all(p["regression"]["no_regression"] for p in pairs.values())
                   and all(p["m5_primary_preferred_arm"] == "F" for p in pairs.values()))
         result = "POSITIVE" if f_wins else "NULL"
 
@@ -153,7 +170,8 @@ def main() -> int:
         "per_run_metrics_sha256": {run: sha256_file(args.metrics_dir / f"metrics_{run}.json")
                                    for run in RUNS},
         "producer_blinding": blinding,
-        "m5_read_author": "human",
+        "m5_read_author": ("WAIVED_BY_GOAL_OWNER" if args.m5_waived else "human"),
+        "m5_waiver": ("GOAL_V2_AMENDMENT_1" if args.m5_waived else None),
         "scope_notes": (json.loads(args.scope_notes.read_text())
                         if args.scope_notes and args.scope_notes.exists() else None),
     }

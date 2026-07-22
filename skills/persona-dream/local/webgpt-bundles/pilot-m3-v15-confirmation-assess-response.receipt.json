@@ -1,0 +1,17 @@
+{
+  "schema": "surf.webgpt_submit_receipt.v1",
+  "status": "submitted_to_chatgpt",
+  "submitted_to_chatgpt": true,
+  "prepared_prompt_is_transport_proof": false,
+  "input": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-m3-v15-confirmation.submitted-assess.md",
+  "submitted_output": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-m3-v15-confirmation-assess-response.md.submitted.md",
+  "output": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-m3-v15-confirmation-assess-response.md",
+  "raw_output": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-m3-v15-confirmation-assess-response.raw.md",
+  "meta_output": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/local/webgpt-bundles/pilot-m3-v15-confirmation-assess-response.meta.json",
+  "sentinel": "<<<WEBGPT_DONE:20260720T002735Z:7cc268ba>>>",
+  "requested_tab_id": "837359230",
+  "requested_url": null,
+  "requested_model": null,
+  "requested_reasoning": "Pro",
+  "receipt_at": "2026-07-20T00:27:40Z"
+}

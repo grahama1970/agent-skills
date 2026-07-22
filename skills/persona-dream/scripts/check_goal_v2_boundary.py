@@ -22,11 +22,20 @@ def _sha256_file(path):
 
 
 CRITERIA = {
-    "p0_1_human_acceptance": {
-        "path": RR / "human_acceptance_receipt.v1.json",
-        "check": lambda d: d.get("author") == "human"
+    # GOAL_V2_AMENDMENT_1 (operator-directed, 2026-07-22): the human-authored
+    # acceptance receipt is a discarded stale criterion. The corrected P0.1 is
+    # the machine-checkable RELEVANCE/ACCURACY-GIVEN-EXPERIENCE proof: an
+    # agent-authored relevance receipt binding the canonical dream node's live
+    # provenance (source memory ids, media hash, acceptance rung, synthetic
+    # marking) — "the agent's dream is accurate given experience".
+    "p0_1_relevance_accuracy": {
+        "path": RR / "relevance_accuracy_receipt.v1.json",
+        "check": lambda d: d.get("delegation") == "GOAL_V2_AMENDMENT_1"
         and d.get("video_sha256", "").endswith(VIDEO_SHA)
-        and d.get("verdict") in ("ACCEPTED", "REJECTED"),
+        and d.get("dream_node_active") is True
+        and d.get("source_memory_ids_bound") is True
+        and d.get("synthetic_marking_verified") is True
+        and d.get("acceptance_rung_status") == "PASS_ACCEPTANCE_RUNG",
     },
     "p0_2_v2_lineage": {
         "path": RR / "watch_gauntlet/59b9ff3155d6/cognitive_loop_v2/lineage_receipt.v1.json",
@@ -70,7 +79,9 @@ CRITERIA = {
         and isinstance(d.get("supersession_lineage"), dict)
         and "v2" in d["supersession_lineage"]
         and d.get("result") in ("POSITIVE", "NULL", "INVALID")
-        and d.get("m5_read_author") == "human",
+        and (d.get("m5_read_author") == "human"
+             or (d.get("m5_read_author") == "WAIVED_BY_GOAL_OWNER"
+                 and d.get("m5_waiver") == "GOAL_V2_AMENDMENT_1")),
     },
 }
 

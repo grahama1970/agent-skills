@@ -1,0 +1,76 @@
+{
+  "created_at": "2026-07-22T18:24:11Z",
+  "decision_rule": "F wins iff no regression on M1-M4 AND operator prefers F on the primary M5 question in BOTH pairs; ties/splits -> NULL",
+  "invalid_runs": [],
+  "m5_read_author": "WAIVED_BY_GOAL_OWNER",
+  "m5_waiver": "GOAL_V2_AMENDMENT_1",
+  "pairs": {
+    "r1": {
+      "m5_primary_preferred_arm": "WAIVED_BY_GOAL_OWNER",
+      "m5_waiver": "GOAL_V2_AMENDMENT_1",
+      "regression": {
+        "m1": true,
+        "m1_negative_control": false,
+        "m2": true,
+        "m3": true,
+        "m4": true,
+        "no_regression": false
+      },
+      "sealed_presentation_preserved_unopened": true
+    },
+    "r2": {
+      "m5_primary_preferred_arm": "WAIVED_BY_GOAL_OWNER",
+      "m5_waiver": "GOAL_V2_AMENDMENT_1",
+      "regression": {
+        "m1": true,
+        "m1_negative_control": true,
+        "m2": true,
+        "m3": true,
+        "m4": true,
+        "no_regression": true
+      },
+      "sealed_presentation_preserved_unopened": true
+    }
+  },
+  "per_run_metrics_sha256": {
+    "R1-C": "953cbdfb260f0bd3a76758264f6185b1fc87922a4651035d20e2712088e7dfbf",
+    "R1-F": "1bac83770b68492dbce00a90899e9cd4b5745ba00db53dd5559fa501caa1cf89",
+    "R2-C": "dafe0f26dcfb612cddb2f516c9ba1dfca085bb612cc3485c83d2b7cfd39673c5",
+    "R2-F": "d0c6e4721669d53159a8ab041e91d7ca687995a0a3a4afdfef01fa885a7d3f2d"
+  },
+  "post_run_measurement_amendment": "contracts/pilot_post_run_measurement_amendment.v1.md",
+  "producer_blinding": {
+    "R1-C": {
+      "sha256": "6d44a70db2fb1d13aabd2ccd45b06e00472d5ee806d30a5a30ed9079dcaade0b",
+      "shown_concat_sha256": "c84f0792dd80624144e73ec278ca61a6d931db39201094b86699bbe24ad091c9"
+    },
+    "R1-F": {
+      "sha256": "c238dc7e7216907a7229b62c244b2f83e291ffb58815aff06a454b6daea826c6",
+      "shown_concat_sha256": "b3077ab46292c28a3202e27a88ba322f0d90c218da517dec16995b3719851528"
+    },
+    "R2-C": {
+      "sha256": "886ee2b5e72fc04a30837dd7e02a117385e210b94bb15f265e5d8eca8db612e0",
+      "shown_concat_sha256": "171e66a1035b53cf2ae87294672facf2c346b23ae54b7def9b4f72d67087186c"
+    },
+    "R2-F": {
+      "sha256": "94c2bc8f2930c202186b6946ee89bf9a303086fe964d32f916015137f6e57935",
+      "shown_concat_sha256": "d569997b2586041348089cf7a2dcd8d8aa180e8a9a1f0af03613fb17ac14922f"
+    }
+  },
+  "protocol_v3_final_sha256": "483fb1706141c738aca1d57daa65a107df943eb5219a6bd7d0f0fb1d7d0ee0a6",
+  "published_under": "pilot_c_vs_f_frozen_protocol.v3",
+  "result": "NULL",
+  "run_manifest_sha256": "e4afa7518979f6f9328c3772c2e35992f3273fb6d717aef0330f1ea9f341855f",
+  "schema": "persona_dream.pilot_c_vs_f_result_receipt.v1",
+  "scope_notes": {
+    "identity_scope": "ArcFace certifies Embry only; Brandon/Marketa advisory (no reference sheets)",
+    "m2_symmetric_defect": "both arms' grounds_interpretation edges cite watch-evidence vertices never persisted by the arm runners; reported as-is, successor-protocol fix",
+    "n1_premise_break": "R1-F dream legitimately contains launch-vehicle imagery matching the frozen negative control; literal failure retained per amendment v1 precommitment",
+    "purpose_context": "dreams feed conversational tone and emotional tag weights for the Embry chatterbox voice (operator, 2026-07-22)",
+    "render_boundary": "no non-paid video renderer at run time; storyboard frames were F's visual artifact (protocol v3 F clause)"
+  },
+  "supersession_lineage": {
+    "v1": "superseded pre-run by v2 (tau-dag creator-reviewer review)",
+    "v2": "superseded pre-run by v3 (webgpt assess ruling, local/webgpt-bundles/pilot-selection-review-assess-response.md)"
+  }
+}
