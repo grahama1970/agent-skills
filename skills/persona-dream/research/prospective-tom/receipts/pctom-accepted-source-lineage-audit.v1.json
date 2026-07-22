@@ -1,0 +1,175 @@
+{
+  "case_root": "fixtures/gate0/positive/lineage_ok",
+  "claims": {
+    "does_not_prove": [
+      "live Memory recall",
+      "semantic dream quality",
+      "future prediction accuracy",
+      "proper scoring",
+      "belief revision",
+      "pipeline reliability under service faults",
+      "paid provider execution",
+      "production Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "archived Gate 0 fixture lineage maps each ToM prediction evidence source through query receipt, accepted raw source id, normalized residue, and dream branch",
+      "accepted-source lineage audit fails closed for unaccepted source ids, stale accepted-source hashes, cross-episode source use, post-seal payload mutation, and pre-seal outcome leakage"
+    ]
+  },
+  "counts": {
+    "accepted_source_ids": 2,
+    "accepted_source_lineage_missing": 0,
+    "cross_episode_sources": 0,
+    "dream_branches": 2,
+    "lineage_rows": 3,
+    "negative_fixtures": 5,
+    "negative_fixtures_blocked": 5,
+    "normalized_residue": 2,
+    "postseal_lineage_mutations": 0,
+    "prediction_branch_refs": 2,
+    "prediction_evidence_refs": 2,
+    "preseal_outcome_dependencies": 0,
+    "recall_receipts": 1,
+    "stale_source_substitutions": 0
+  },
+  "created_at": "2026-07-22T14:04:56Z",
+  "errors": [],
+  "evidence_path": "evidence/pctom-accepted-source-lineage.v1.json",
+  "evidence_sha256": "sha256:1847024ea4cd5c77fb99bacbfb9743239baf372f7d0dca4747c6610b9ff3da18",
+  "fixture_backed": true,
+  "human_content_judgment_rows": 0,
+  "lineage_checks": {
+    "accepted_source_id_hashes_recomputed": true,
+    "dream_branch_to_tom_prediction": true,
+    "normalized_residue_to_dream_branch": true,
+    "postseal_lineage_mutation_detected": true,
+    "prediction_payload_hash_recomputed": true,
+    "query_receipt_to_accepted_source": true,
+    "required_negative_statuses_observed": true
+  },
+  "live": false,
+  "llm_judge_rows": 0,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "negative_fixture_results": [
+    {
+      "blocked_as_expected": true,
+      "counts": {
+        "accepted_source_ids": 2,
+        "accepted_source_lineage_missing": 4,
+        "cross_episode_sources": 0,
+        "dream_branches": 2,
+        "normalized_residue": 1,
+        "postseal_lineage_mutations": 0,
+        "prediction_branch_refs": 2,
+        "prediction_evidence_refs": 2,
+        "preseal_outcome_dependencies": 0,
+        "recall_receipts": 1,
+        "stale_source_substitutions": 0
+      },
+      "errors": [
+        "unaccepted_source:residue_0:persona-dream:memory_999",
+        "unaccepted_source:branch_0_unresolved_residue_ref:persona-dream:memory_17",
+        "unaccepted_source:branch_1_unresolved_residue_ref:persona-dream:memory_17",
+        "unaccepted_source:prediction_unresolved_evidence_ref:persona-dream:memory_17"
+      ],
+      "expected_status": "BLOCKED_PCTOM_UNACCEPTED_SOURCE",
+      "fixture": "unaccepted-source",
+      "observed_status": "BLOCKED_PCTOM_UNACCEPTED_SOURCE"
+    },
+    {
+      "blocked_as_expected": true,
+      "counts": {
+        "accepted_source_ids": 2,
+        "accepted_source_lineage_missing": 0,
+        "cross_episode_sources": 0,
+        "dream_branches": 2,
+        "normalized_residue": 2,
+        "postseal_lineage_mutations": 0,
+        "prediction_branch_refs": 2,
+        "prediction_evidence_refs": 2,
+        "preseal_outcome_dependencies": 0,
+        "recall_receipts": 1,
+        "stale_source_substitutions": 1
+      },
+      "errors": [
+        "stale_source_substitution:recall_receipt_0_accepted_source_ids_sha256_mismatch"
+      ],
+      "expected_status": "BLOCKED_PCTOM_STALE_SOURCE_SUBSTITUTION",
+      "fixture": "stale-source-substitution",
+      "observed_status": "BLOCKED_PCTOM_STALE_SOURCE_SUBSTITUTION"
+    },
+    {
+      "blocked_as_expected": true,
+      "counts": {
+        "accepted_source_ids": 2,
+        "accepted_source_lineage_missing": 0,
+        "cross_episode_sources": 1,
+        "dream_branches": 2,
+        "normalized_residue": 2,
+        "postseal_lineage_mutations": 0,
+        "prediction_branch_refs": 2,
+        "prediction_evidence_refs": 2,
+        "preseal_outcome_dependencies": 0,
+        "recall_receipts": 1,
+        "stale_source_substitutions": 0
+      },
+      "errors": [
+        "cross_episode_source:branch_episode_mismatch:branch-factual-0001:episode-cross-source:episode-0001"
+      ],
+      "expected_status": "BLOCKED_PCTOM_CROSS_EPISODE_SOURCE",
+      "fixture": "cross-episode-source",
+      "observed_status": "BLOCKED_PCTOM_CROSS_EPISODE_SOURCE"
+    },
+    {
+      "blocked_as_expected": true,
+      "counts": {
+        "accepted_source_ids": 2,
+        "accepted_source_lineage_missing": 0,
+        "cross_episode_sources": 0,
+        "dream_branches": 2,
+        "normalized_residue": 2,
+        "postseal_lineage_mutations": 1,
+        "prediction_branch_refs": 2,
+        "prediction_evidence_refs": 3,
+        "preseal_outcome_dependencies": 0,
+        "recall_receipts": 1,
+        "stale_source_substitutions": 0
+      },
+      "errors": [
+        "postseal_lineage_mutation:commitment_prediction_payload_sha256_mismatch"
+      ],
+      "expected_status": "BLOCKED_PCTOM_POSTSEAL_LINEAGE_MUTATION",
+      "fixture": "postseal-lineage-mutation",
+      "observed_status": "BLOCKED_PCTOM_POSTSEAL_LINEAGE_MUTATION"
+    },
+    {
+      "blocked_as_expected": true,
+      "counts": {
+        "accepted_source_ids": 2,
+        "accepted_source_lineage_missing": 0,
+        "cross_episode_sources": 0,
+        "dream_branches": 2,
+        "normalized_residue": 2,
+        "postseal_lineage_mutations": 1,
+        "prediction_branch_refs": 2,
+        "prediction_evidence_refs": 2,
+        "preseal_outcome_dependencies": 2,
+        "recall_receipts": 1,
+        "stale_source_substitutions": 0
+      },
+      "errors": [
+        "postseal_lineage_mutation:commitment_prediction_payload_sha256_mismatch",
+        "prospective_leakage:forbidden_outcome_key:$.tom_prediction_commitment.prediction_payload.outcome_reveal",
+        "prospective_leakage:forbidden_outcome_key:$.tom_prediction_commitment.prediction_payload.outcome_reveal.actual_next_action"
+      ],
+      "expected_status": "BLOCKED_PCTOM_PROSPECTIVE_LEAKAGE",
+      "fixture": "prospective-leakage",
+      "observed_status": "BLOCKED_PCTOM_PROSPECTIVE_LEAKAGE"
+    }
+  ],
+  "provider_call_attempts": 0,
+  "receipt_sha256": "sha256:a04ea8d867d6dc32e58654c3b5e90dc01344ef4a2951b22db6401008f1894e24",
+  "schema": "persona_dream.research.prospective_tom.pctom_accepted_source_lineage_audit_receipt.v1",
+  "status": "PASS_PCTOM_ACCEPTED_SOURCE_LINEAGE"
+}

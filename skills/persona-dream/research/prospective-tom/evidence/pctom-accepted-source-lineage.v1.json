@@ -1,0 +1,143 @@
+{
+  "build_errors": [],
+  "claims": {
+    "does_not_prove": [
+      "live Memory recall",
+      "semantic dream quality",
+      "future prediction accuracy",
+      "proper scoring",
+      "belief revision",
+      "paid provider execution",
+      "production Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "Gate 0 positive fixture source ids are represented as explicit query receipt to accepted source to normalized residue to dream branch to ToM prediction rows",
+      "accepted source ids and sealed prediction payload hashes are recomputed for the archived fixture-backed lineage evidence"
+    ]
+  },
+  "counts": {
+    "accepted_source_ids": 2,
+    "accepted_source_lineage_missing": 0,
+    "build_errors": 0,
+    "cross_episode_sources": 0,
+    "dream_branches": 2,
+    "lineage_rows": 3,
+    "normalized_residue": 2,
+    "postseal_lineage_mutations": 0,
+    "prediction_branch_refs": 2,
+    "prediction_evidence_refs": 2,
+    "preseal_outcome_dependencies": 0,
+    "recall_receipts": 1,
+    "stale_source_substitutions": 0
+  },
+  "created_at": "2026-07-22T14:02:21Z",
+  "fixture_backed": true,
+  "human_content_judgment_rows": 0,
+  "lineage_rows": [
+    {
+      "accepted_order": 0,
+      "accepted_raw_source_id": "memory_17",
+      "accepted_source_id": "memory_17",
+      "accepted_source_ids_sha256": "sha256:ddd182839f944f91cb6bbfc8c6c207552b52ec432febe004488ff2f263e32d80",
+      "chain_id": "prediction-0001:branch-factual-0001:persona-dream:memory_17",
+      "condition": "CD",
+      "dream_branch_id": "branch-factual-0001",
+      "dream_branch_path": "fixtures/gate0/positive/lineage_ok/dream_branches.json",
+      "dream_branch_sha256": "sha256:bdc7e877effb535a80bfd2cbe38cdbfd2ed9bbd929a24430b89e7498aa282476",
+      "dream_branch_type": "factual",
+      "lineage_complete": true,
+      "normalized_residue_index": 0,
+      "normalized_residue_path": "fixtures/gate0/positive/lineage_ok/normalized_residue.json",
+      "normalized_residue_sha256": "sha256:b73f763a724de2b75cb0ef6b94327e413a0ee6687e7969bfe08509beb49529ee",
+      "outcome_visible": false,
+      "prediction_id": "prediction-0001",
+      "prediction_payload_recomputed_sha256": "sha256:474ccb3e4a6992e6a02627e04d85fc969afcde06a8d50f510752c3031251a638",
+      "prediction_payload_sha256": "sha256:474ccb3e4a6992e6a02627e04d85fc969afcde06a8d50f510752c3031251a638",
+      "query": "embry kai warning trust source-grounded memory",
+      "query_receipt_index": 0,
+      "query_receipt_path": "fixtures/gate0/positive/lineage_ok/recall_receipts.json",
+      "scope": "persona-dream",
+      "tom_prediction_commitment_path": "fixtures/gate0/positive/lineage_ok/tom_prediction_commitment.json"
+    },
+    {
+      "accepted_order": 0,
+      "accepted_raw_source_id": "memory_17",
+      "accepted_source_id": "memory_17",
+      "accepted_source_ids_sha256": "sha256:ddd182839f944f91cb6bbfc8c6c207552b52ec432febe004488ff2f263e32d80",
+      "chain_id": "prediction-0001:branch-cf-ask-0001:persona-dream:memory_17",
+      "condition": "CD",
+      "dream_branch_id": "branch-cf-ask-0001",
+      "dream_branch_path": "fixtures/gate0/positive/lineage_ok/dream_branches.json",
+      "dream_branch_sha256": "sha256:90c98f2a55f0e685b90fcbaaaf9b314c3c43c5cd88abdfa5c64018a843623090",
+      "dream_branch_type": "counterfactual",
+      "lineage_complete": true,
+      "normalized_residue_index": 0,
+      "normalized_residue_path": "fixtures/gate0/positive/lineage_ok/normalized_residue.json",
+      "normalized_residue_sha256": "sha256:b73f763a724de2b75cb0ef6b94327e413a0ee6687e7969bfe08509beb49529ee",
+      "outcome_visible": false,
+      "prediction_id": "prediction-0001",
+      "prediction_payload_recomputed_sha256": "sha256:474ccb3e4a6992e6a02627e04d85fc969afcde06a8d50f510752c3031251a638",
+      "prediction_payload_sha256": "sha256:474ccb3e4a6992e6a02627e04d85fc969afcde06a8d50f510752c3031251a638",
+      "query": "embry kai warning trust source-grounded memory",
+      "query_receipt_index": 0,
+      "query_receipt_path": "fixtures/gate0/positive/lineage_ok/recall_receipts.json",
+      "scope": "persona-dream",
+      "tom_prediction_commitment_path": "fixtures/gate0/positive/lineage_ok/tom_prediction_commitment.json"
+    },
+    {
+      "accepted_order": 1,
+      "accepted_raw_source_id": "memory_42",
+      "accepted_source_id": "memory_42",
+      "accepted_source_ids_sha256": "sha256:ddd182839f944f91cb6bbfc8c6c207552b52ec432febe004488ff2f263e32d80",
+      "chain_id": "prediction-0001:branch-factual-0001:persona-dream:memory_42",
+      "condition": "CD",
+      "dream_branch_id": "branch-factual-0001",
+      "dream_branch_path": "fixtures/gate0/positive/lineage_ok/dream_branches.json",
+      "dream_branch_sha256": "sha256:bdc7e877effb535a80bfd2cbe38cdbfd2ed9bbd929a24430b89e7498aa282476",
+      "dream_branch_type": "factual",
+      "lineage_complete": true,
+      "normalized_residue_index": 1,
+      "normalized_residue_path": "fixtures/gate0/positive/lineage_ok/normalized_residue.json",
+      "normalized_residue_sha256": "sha256:a8c6d01ba40dce64df7d068eeed60088c05be985230c181110f3a140bde0830e",
+      "outcome_visible": false,
+      "prediction_id": "prediction-0001",
+      "prediction_payload_recomputed_sha256": "sha256:474ccb3e4a6992e6a02627e04d85fc969afcde06a8d50f510752c3031251a638",
+      "prediction_payload_sha256": "sha256:474ccb3e4a6992e6a02627e04d85fc969afcde06a8d50f510752c3031251a638",
+      "query": "embry kai warning trust source-grounded memory",
+      "query_receipt_index": 0,
+      "query_receipt_path": "fixtures/gate0/positive/lineage_ok/recall_receipts.json",
+      "scope": "persona-dream",
+      "tom_prediction_commitment_path": "fixtures/gate0/positive/lineage_ok/tom_prediction_commitment.json"
+    }
+  ],
+  "live": false,
+  "llm_judge_rows": 0,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "provider_call_attempts": 0,
+  "schema": "persona_dream.research.prospective_tom.pctom_accepted_source_lineage.v1",
+  "source_case_root": "fixtures/gate0/positive/lineage_ok",
+  "source_files": [
+    {
+      "artifact": "recall_receipts",
+      "path": "fixtures/gate0/positive/lineage_ok/recall_receipts.json",
+      "sha256": "sha256:b8b1d9ad04bc075a541869a81a649083d382bfc4544aff47f6d1768ba974cc3d"
+    },
+    {
+      "artifact": "normalized_residue",
+      "path": "fixtures/gate0/positive/lineage_ok/normalized_residue.json",
+      "sha256": "sha256:7ea35269bb36884009570961e51571dc84975285b754e4e6791fc3bb3c8595b1"
+    },
+    {
+      "artifact": "dream_branches",
+      "path": "fixtures/gate0/positive/lineage_ok/dream_branches.json",
+      "sha256": "sha256:efa9c34788275ae742d58ff5b3e4eca7229fd3c8c5a790a390587b713aa169e4"
+    },
+    {
+      "artifact": "tom_prediction_commitment",
+      "path": "fixtures/gate0/positive/lineage_ok/tom_prediction_commitment.json",
+      "sha256": "sha256:94d902630e9fa4193b5809ebca354b086d05dde57f64cd46c6b535d87ab31227"
+    }
+  ],
+  "status": "ACCEPTED_SOURCE_LINEAGE_BUILT"
+}

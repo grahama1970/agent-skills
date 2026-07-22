@@ -1,0 +1,45 @@
+{
+  "schema": "persona_dream.research.prospective_tom.pctom_accepted_source_policy.v1",
+  "status": "ACTIVE",
+  "program": "PCTOM-R2",
+  "gate": "phase3_accepted_source_lineage_and_preseal_isolation",
+  "mocked": false,
+  "live": false,
+  "fixture_backed": true,
+  "provider_call_attempts": 0,
+  "memory_write_attempts": 0,
+  "required_lineage_chain": [
+    "query_receipt",
+    "accepted_raw_source_id",
+    "normalized_residue",
+    "dream_branch",
+    "tom_prediction_commitment"
+  ],
+  "required_negative_statuses": [
+    "BLOCKED_PCTOM_UNACCEPTED_SOURCE",
+    "BLOCKED_PCTOM_STALE_SOURCE_SUBSTITUTION",
+    "BLOCKED_PCTOM_CROSS_EPISODE_SOURCE",
+    "BLOCKED_PCTOM_POSTSEAL_LINEAGE_MUTATION",
+    "BLOCKED_PCTOM_PROSPECTIVE_LEAKAGE"
+  ],
+  "forbidden_preseal_outcome_keys": [
+    "actual_next_action",
+    "hidden_world_state",
+    "ground_truth_tom_labels",
+    "outcome",
+    "outcome_reveal",
+    "observed_outcome",
+    "revealed_outcome",
+    "score",
+    "scoring_receipt"
+  ],
+  "acceptance_stop_condition": {
+    "accepted_source_lineage_missing": 0,
+    "preseal_outcome_dependencies": 0,
+    "negative_mutations_blocked": "all_required"
+  },
+  "claim_limits": [
+    "This policy governs deterministic local fixtures and archived evidence only.",
+    "This policy does not prove live Memory recall, semantic dream quality, proper scoring, belief revision, paid provider execution, or production Phase 01-16 runtime execution."
+  ]
+}

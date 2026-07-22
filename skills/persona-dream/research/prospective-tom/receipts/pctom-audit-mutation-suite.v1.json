@@ -16,7 +16,7 @@
   },
   "contract_path": "contracts/pctom-audit-invariants.v1.json",
   "contract_sha256": "sha256:03c04336d4f2fb14e0f36db2a4dfd5bb633d9e8efdcf3b77986ec583ed2927be",
-  "created_at": "2026-07-22T13:53:32Z",
+  "created_at": "2026-07-22T14:05:20Z",
   "errors": [],
   "fixture_backed": true,
   "human_content_judgment_rows": 0,
@@ -59,7 +59,7 @@
       "blocked_as_expected": true,
       "errors": [
         "archive_entries_sha256_mismatch",
-        "archive_expected_child_omitted:contracts/pctom-audit-invariants.v1.json"
+        "archive_expected_child_omitted:contracts/pctom-accepted-source-policy.v1.json"
       ],
       "expected_status": "BLOCKED_PCTOM_CHILD_OMISSION",
       "fixture_missing": false,
@@ -73,7 +73,7 @@
     {
       "blocked_as_expected": true,
       "errors": [
-        "duplicate_archive_path:contracts/pctom-audit-invariants.v1.json"
+        "duplicate_archive_path:contracts/pctom-accepted-source-policy.v1.json"
       ],
       "expected_status": "BLOCKED_PCTOM_DUPLICATE_CHILD",
       "fixture_missing": false,

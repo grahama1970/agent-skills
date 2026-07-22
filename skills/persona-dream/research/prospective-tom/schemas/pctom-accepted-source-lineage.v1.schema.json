@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.research.prospective_tom.pctom_accepted_source_lineage.v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "created_at",
+    "status",
+    "mocked",
+    "live",
+    "fixture_backed",
+    "provider_call_attempts",
+    "memory_write_attempts",
+    "source_case_root",
+    "source_files",
+    "lineage_rows",
+    "counts",
+    "claims"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "persona_dream.research.prospective_tom.pctom_accepted_source_lineage.v1"
+    },
+    "status": {
+      "type": "string",
+      "const": "ACCEPTED_SOURCE_LINEAGE_BUILT"
+    },
+    "mocked": {"type": "boolean", "const": false},
+    "live": {"type": "boolean", "const": false},
+    "fixture_backed": {"type": "boolean", "const": true},
+    "provider_call_attempts": {"type": "integer", "const": 0},
+    "memory_write_attempts": {"type": "integer", "const": 0},
+    "source_case_root": {"type": "string"},
+    "source_files": {"type": "array"},
+    "lineage_rows": {"type": "array"},
+    "counts": {"type": "object"},
+    "claims": {"type": "object"}
+  },
+  "additionalProperties": true
+}

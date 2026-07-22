@@ -31,6 +31,13 @@ EXCLUDED_ARCHIVE_RECEIPTS = {
     "pctom-audit-mutation-suite.v1.json",
     "pctom-evidence-claim-integrity-audit.v1.json",
 }
+EXCLUDED_SCOPE_LEDGER_RECEIPTS = {
+    "pctom-evidence-scope-audit.v1.json",
+    "pctom-archive-integrity-audit.v1.json",
+    "pctom-receipt-discovery-audit.v1.json",
+    "pctom-audit-mutation-suite.v1.json",
+    "pctom-evidence-claim-integrity-audit.v1.json",
+}
 
 
 def now_iso() -> str:
@@ -119,6 +126,8 @@ def build_evidence_scope_ledger(root: Path, output_path: Path) -> dict[str, Any]
     receipts: list[dict[str, Any]] = []
     claim_rows: list[dict[str, Any]] = []
     for receipt_path in discover_receipts(root):
+        if receipt_path.name in EXCLUDED_SCOPE_LEDGER_RECEIPTS:
+            continue
         raw = load_json(receipt_path, errors, "receipt")
         if not isinstance(raw, dict):
             continue

@@ -1,0 +1,125 @@
+{
+  "case_root": "fixtures/gate0/positive/lineage_ok",
+  "claims": {
+    "does_not_prove": [
+      "live Memory recall",
+      "semantic dream quality",
+      "future prediction accuracy",
+      "proper scoring",
+      "belief revision",
+      "pipeline reliability under service faults",
+      "paid provider execution",
+      "production Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "Gate 0 fixture commitment, residue, and dream branch artifacts contain no pre-seal outcome or scoring dependencies",
+      "pre-seal outcome isolation audit fails closed when outcome visibility, hidden world state, or scoring artifacts are injected before reveal"
+    ]
+  },
+  "counts": {
+    "canonical_memory_write_attempts": 0,
+    "case_files": 4,
+    "forbidden_outcome_paths": 0,
+    "identity_write_attempts": 0,
+    "negative_fixtures": 3,
+    "negative_fixtures_blocked": 3,
+    "preseal_outcome_dependencies": 0,
+    "preseal_reveal_read_attempts": 0,
+    "source_memory_write_attempts": 0
+  },
+  "created_at": "2026-07-22T14:04:56Z",
+  "errors": [],
+  "fixture_backed": true,
+  "human_content_judgment_rows": 0,
+  "isolation_checks": {
+    "forbidden_outcome_keys_absent": true,
+    "negative_outcome_leaks_fail_closed": true,
+    "no_reveal_or_score_artifact_dependency": true,
+    "outcome_visible_false_before_reveal": true,
+    "prediction_payload_hash_recomputed": true
+  },
+  "live": false,
+  "llm_judge_rows": 0,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "negative_fixture_results": [
+    {
+      "blocked_as_expected": true,
+      "counts": {
+        "accepted_source_ids": 2,
+        "accepted_source_lineage_missing": 0,
+        "cross_episode_sources": 0,
+        "dream_branches": 2,
+        "normalized_residue": 2,
+        "postseal_lineage_mutations": 0,
+        "prediction_branch_refs": 2,
+        "prediction_evidence_refs": 2,
+        "preseal_outcome_dependencies": 1,
+        "recall_receipts": 1,
+        "stale_source_substitutions": 0
+      },
+      "errors": [
+        "prospective_leakage:commitment_outcome_visible_not_false"
+      ],
+      "expected_status": "BLOCKED_PCTOM_PROSPECTIVE_LEAKAGE",
+      "fixture": "outcome-visible-true",
+      "forbidden_paths": [],
+      "observed_status": "BLOCKED_PCTOM_PROSPECTIVE_LEAKAGE"
+    },
+    {
+      "blocked_as_expected": true,
+      "counts": {
+        "accepted_source_ids": 2,
+        "accepted_source_lineage_missing": 0,
+        "cross_episode_sources": 0,
+        "dream_branches": 2,
+        "normalized_residue": 2,
+        "postseal_lineage_mutations": 1,
+        "prediction_branch_refs": 2,
+        "prediction_evidence_refs": 2,
+        "preseal_outcome_dependencies": 1,
+        "recall_receipts": 1,
+        "stale_source_substitutions": 0
+      },
+      "errors": [
+        "postseal_lineage_mutation:commitment_prediction_payload_sha256_mismatch",
+        "prospective_leakage:forbidden_outcome_key:$.tom_prediction_commitment.prediction_payload.hidden_world_state"
+      ],
+      "expected_status": "BLOCKED_PCTOM_PROSPECTIVE_LEAKAGE",
+      "fixture": "hidden-world-state-in-payload",
+      "forbidden_paths": [
+        "$.tom_prediction_commitment.prediction_payload.hidden_world_state"
+      ],
+      "observed_status": "BLOCKED_PCTOM_PROSPECTIVE_LEAKAGE"
+    },
+    {
+      "blocked_as_expected": true,
+      "counts": {
+        "accepted_source_ids": 2,
+        "accepted_source_lineage_missing": 0,
+        "cross_episode_sources": 0,
+        "dream_branches": 2,
+        "normalized_residue": 2,
+        "postseal_lineage_mutations": 0,
+        "prediction_branch_refs": 2,
+        "prediction_evidence_refs": 2,
+        "preseal_outcome_dependencies": 1,
+        "recall_receipts": 1,
+        "stale_source_substitutions": 0
+      },
+      "errors": [
+        "prospective_leakage:forbidden_outcome_key:$.dream_branches[0].scoring_receipt"
+      ],
+      "expected_status": "BLOCKED_PCTOM_PROSPECTIVE_LEAKAGE",
+      "fixture": "score-artifact-in-branch",
+      "forbidden_paths": [
+        "$.dream_branches[0].scoring_receipt"
+      ],
+      "observed_status": "BLOCKED_PCTOM_PROSPECTIVE_LEAKAGE"
+    }
+  ],
+  "provider_call_attempts": 0,
+  "receipt_sha256": "sha256:d9e0fea7c6119e2f6440063fbafeec11ad640076c1afbdd7c8002433af9706fd",
+  "schema": "persona_dream.research.prospective_tom.pctom_preseal_outcome_isolation_receipt.v1",
+  "status": "PASS_PCTOM_PRESEAL_OUTCOME_ISOLATION"
+}

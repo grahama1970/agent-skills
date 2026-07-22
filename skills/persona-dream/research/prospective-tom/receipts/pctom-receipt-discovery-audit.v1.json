@@ -12,23 +12,41 @@
     ]
   },
   "counts": {
-    "discovered_receipts": 2,
-    "expected_receipts": 2,
+    "discovered_receipts": 4,
+    "expected_receipts": 4,
     "missing_receipts": 0,
     "negative_fixtures": 1,
     "negative_fixtures_blocked": 1,
     "unrouted_receipts": 0
   },
-  "created_at": "2026-07-22T13:53:32Z",
+  "created_at": "2026-07-22T14:05:20Z",
   "discovered_receipts": [
+    {
+      "fixture_backed": true,
+      "live": false,
+      "mocked": false,
+      "path": "receipts/pctom-accepted-source-lineage-audit.v1.json",
+      "schema": "persona_dream.research.prospective_tom.pctom_accepted_source_lineage_audit_receipt.v1",
+      "sha256": "sha256:280566fcfdd4567c8ec964281ebda28473e8ee045ce0e685408da12854546aa6",
+      "status": "PASS_PCTOM_ACCEPTED_SOURCE_LINEAGE"
+    },
     {
       "fixture_backed": true,
       "live": false,
       "mocked": false,
       "path": "receipts/pctom-evidence-scope-audit.v1.json",
       "schema": "persona_dream.research.prospective_tom.pctom_evidence_scope_audit.v1",
-      "sha256": "sha256:a0a9243b0cfa4773c02ede180fddebaa5f3e1c247195524bb4ddf454c5dbb0d8",
+      "sha256": "sha256:d82532d09832f860fd8254b56db41f0e8f2e34e4f481894a0ec5e073e1a2f3c8",
       "status": "PASS_PCTOM_EVIDENCE_SCOPE_LEDGER"
+    },
+    {
+      "fixture_backed": true,
+      "live": false,
+      "mocked": false,
+      "path": "receipts/pctom-preseal-outcome-isolation-audit.v1.json",
+      "schema": "persona_dream.research.prospective_tom.pctom_preseal_outcome_isolation_receipt.v1",
+      "sha256": "sha256:0078efb77b637d6ea9866524295a69450b8893bd70805ad07cb4812f914fa9ff",
+      "status": "PASS_PCTOM_PRESEAL_OUTCOME_ISOLATION"
     },
     {
       "fixture_backed": true,
@@ -36,19 +54,21 @@
       "mocked": false,
       "path": "receipts/pctom-r2-contract-receipt.v1.json",
       "schema": "persona_dream.research.prospective_tom.pctom_r2_contract_receipt.v1",
-      "sha256": "sha256:6047bbe2e3d76c628c513ead89fab3c9963b539c599387ace257c9ac24854861",
+      "sha256": "sha256:5266b0e5032e9b4561ff994c4ca9007ae3a5e93e7b376264fabe7beeadfadcb2",
       "status": "PASS_PCTOM_R2_CONTRACT"
     }
   ],
   "errors": [],
   "expected_receipt_paths": [
+    "receipts/pctom-accepted-source-lineage-audit.v1.json",
     "receipts/pctom-evidence-scope-audit.v1.json",
+    "receipts/pctom-preseal-outcome-isolation-audit.v1.json",
     "receipts/pctom-r2-contract-receipt.v1.json"
   ],
   "fixture_backed": true,
   "live": false,
   "manifest_path": "evidence/pctom-archive-manifest.v1.json",
-  "manifest_sha256": "sha256:0684b5f623a216aa1a450175e7a72d49cc4f4fb11b5dafe0c65078ac9b8304ad",
+  "manifest_sha256": "sha256:7cfa0d8481cdf2b7d49293c16f0f1de778bc34c03d63c28c7554b6aefa9c3b05",
   "memory_write_attempts": 0,
   "mocked": false,
   "negative_fixture_results": [
