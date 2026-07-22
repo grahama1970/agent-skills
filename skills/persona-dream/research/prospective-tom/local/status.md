@@ -7,10 +7,11 @@ Gate 0 accepted-source attribution, causal-identifiability lineage replay, and
 Gate 8/9 condition reliability bridge, plus Gate 7 action-linked belief
 revision, live Memory recall after revision, and broader live fault-injection
 surface coverage, including local HTTP service retry and combined full64
-Memory fault containment. A negative delayed-recall fixture now proves the
-fresh-process checker blocks when the semantic provenance index is missing. The
-latest deterministic simulator support artifact is a frozen 64-episode
-`sealed_test` social corpus build/check.
+Memory fault containment. Negative delayed-recall fixtures now prove the
+fresh-process checker blocks when either the primary source-document provenance
+index or the semantic provenance index is missing. The latest deterministic
+simulator support artifact is a frozen 64-episode `sealed_test` social corpus
+build/check.
 
 Sealed64 deterministic social episode corpus:
 
@@ -72,10 +73,16 @@ Held-out variant live Memory delayed-recall receipt:
 /tmp/persona-dream-live-memory-revision-delayed-recall-variant17-24-20260722T042700Z/live_memory_revision_delayed_recall_receipt.v1.json
 ```
 
-Held-out variant delayed-recall negative fixture receipt:
+Held-out variant delayed-recall negative semantic-index fixture receipt:
 
 ```text
 /tmp/persona-dream-live-memory-revision-delayed-recall-negative-missing-semantic-index-20260722T050300Z/output/live_memory_revision_delayed_recall_receipt.v1.json
+```
+
+Held-out variant delayed-recall negative document-index fixture receipt:
+
+```text
+/tmp/persona-dream-live-memory-revision-delayed-recall-negative-missing-document-index-20260722T051000Z/output/live_memory_revision_delayed_recall_receipt.v1.json
 ```
 
 Held-out variant live fault-injection surface receipt:
@@ -192,6 +199,17 @@ live_memory_delayed_negative_recall_queries: 4
 live_memory_delayed_negative_recall_hits: 0
 live_memory_delayed_negative_write_attempts: 0
 live_memory_delayed_negative_errors: missing_source_semantic_document_index, source_semantic_document_index_not_list, delayed_recall_hits_per_condition_insufficient for M/R/D/CD
+live_memory_delayed_negative_document_status: BLOCKED_PCTOM_LIVE_MEMORY_REVISION_DELAYED_RECALL
+live_memory_delayed_negative_document_exit_code: 1
+live_memory_delayed_negative_document_mutation: document_index points to a missing copied-source fixture path
+live_memory_delayed_negative_document_source_documents: 0
+live_memory_delayed_negative_document_source_semantic_documents: 128
+live_memory_delayed_negative_document_exact_rereads: 0
+live_memory_delayed_negative_document_semantic_exact_rereads: 128
+live_memory_delayed_negative_document_recall_queries: 4
+live_memory_delayed_negative_document_recall_hits: 40
+live_memory_delayed_negative_document_write_attempts: 0
+live_memory_delayed_negative_document_errors: missing_source_document_index, source_document_index_not_list
 live_fault_families: 8
 live_fault_trials: 8
 live_memory_fault_probes: 4
@@ -250,6 +268,11 @@ live_memory_delayed_negative_mutated_source_receipt_sha256: sha256:c713f139dc942
 live_memory_delayed_negative_exact_rereads_sha256: sha256:8a548e5863046496702aeca207e9db1a17c62ed0b2d23d7437234c781ffe0d3e
 live_memory_delayed_negative_semantic_exact_rereads_sha256: sha256:37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570
 live_memory_delayed_negative_recall_results_sha256: sha256:dea6ab5d93a482cd8b552bc7ceb5d3eeb5c197b0484e6d7c1f906bd01492a46c
+live_memory_delayed_negative_document_declared_receipt_sha256: sha256:9a8c2f8d0efe73a5ede095d3a8c0809369ea4beb7afca6e370cb174263fba704
+live_memory_delayed_negative_document_mutated_source_receipt_sha256: sha256:88d160fa6fa652b4c37393971a3948380d0685f664e6137e74cf030be93e43ca
+live_memory_delayed_negative_document_exact_rereads_sha256: sha256:37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570
+live_memory_delayed_negative_document_semantic_exact_rereads_sha256: sha256:42faa2361dca97a7d26c4b0e145ca32955a9ba2b68c0741e3cb2ca19b27f74c0
+live_memory_delayed_negative_document_recall_results_sha256: sha256:045f38d09fdb5b337b5dc3868cdbd25ee8afbc92b37078c334ad9edbef54ecde
 live_fault_surface_receipt_sha256: sha256:2931a8c493a384cda42f9ed88e808c2b859f1fd920e1c99c322d5dadfefe2a4f
 live_fault_surface_fault_trials_sha256: sha256:faaa9d4991e474eee5b6a04649f7361480ee75d0573e1e4456f5f1a8cb2a8b92
 live_fault_surface_memory_fault_probes_sha256: sha256:2006a53b480e1646941c18b2800b7e1909e5a9221bd53f8e0eaecc916c88b085

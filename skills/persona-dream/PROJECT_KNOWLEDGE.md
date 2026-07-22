@@ -130,6 +130,27 @@
   provenance boundary is missing; it does not prove service restart,
   long-duration retention, or non-Memory external-service faults.
 
+  A second negative delayed-recall fixture copied the source receipt and
+  mutated `document_index` to a missing path while leaving the semantic index
+  intact. Command:
+  `./skills/persona-dream/run.sh run-live-memory-revision-delayed-recall
+  --source-root
+  /tmp/persona-dream-live-memory-revision-delayed-recall-negative-missing-document-index-20260722T051000Z/source
+  --output-root
+  /tmp/persona-dream-live-memory-revision-delayed-recall-negative-missing-document-index-20260722T051000Z/output
+  --receipt-out
+  /tmp/persona-dream-live-memory-revision-delayed-recall-negative-missing-document-index-20260722T051000Z/output/live_memory_revision_delayed_recall_receipt.v1.json
+  --recall-attempts 1 --recall-sleep-s 0 --json`. It exited 1 and wrote
+  `BLOCKED_PCTOM_LIVE_MEMORY_REVISION_DELAYED_RECALL`, with 0 source Memory
+  documents, 128 semantic mirrors, 0 delayed exact rereads, 128 delayed
+  semantic exact rereads, 4 recall queries, 40 recall hits, and zero
+  Memory/canonical/identity/source-memory write attempts. Errors were
+  `missing_source_document_index` and `source_document_index_not_list`.
+  Declared receipt SHA-256:
+  `sha256:9a8c2f8d0efe73a5ede095d3a8c0809369ea4beb7afca6e370cb174263fba704`.
+  This proves live recall hits are not sufficient for delayed-recall
+  acceptance when primary source-document provenance is missing.
+
   The broader live fault-injection surface consumed the deterministic sealed
   test statistical-confidence root
   `/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z`
