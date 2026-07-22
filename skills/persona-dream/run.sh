@@ -90,6 +90,7 @@ Commands:
   run-heldout-condition-benefit  Run frozen held-out M/R/D/CD scoring plus Gate 6 action decisions
   run-live-memory-revision-recall  Persist action-linked revisions and recall them through live Memory
   run-sealed-test-statistical-confidence  Run 64-episode sealed-test CD-vs-baseline bootstrap confidence
+  analyze-sealed-test-planning-gap  Explain why sealed-test prediction benefit did not become planning benefit
   run-live-fault-injection-surface  Exercise broader PCTOM-R fault containment over live Memory and receipt boundaries
   run-live-tau-sealed-test-replication  Run bounded live Tau-authored sealed-test replication plus Gate 6 actions
   run-live-tau-full64-statistical-confidence  Compute confidence intervals over accepted full64 live Tau artifacts
@@ -481,6 +482,9 @@ case "$COMMAND" in
     ;;
   run-sealed-test-statistical-confidence)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_sealed_test_statistical_confidence.py" "$@"
+    ;;
+  analyze-sealed-test-planning-gap)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/analyze_sealed_test_planning_gap.py" "$@"
     ;;
   run-live-fault-injection-surface)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_fault_injection_surface.py" "$@"

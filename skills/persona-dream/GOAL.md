@@ -133,6 +133,39 @@ Next: <one immediate action or stop condition>
 
 ## Current Evidence Snapshot
 
+- PCTOM-R sealed-test planning-gap diagnostic:
+  `/tmp/persona-dream-sealed-test-planning-gap-20260722T004128Z/sealed_test_planning_gap_diagnostic_receipt.v1.json`.
+  Summary artifact:
+  `/tmp/persona-dream-sealed-test-planning-gap-20260722T004128Z/artifacts/sealed_test_planning_gap_summary.json`.
+  Margin-policy sensitivity artifact:
+  `/tmp/persona-dream-sealed-test-planning-gap-20260722T004128Z/artifacts/sealed_test_margin_policy_sensitivity.json`.
+  Status `PASS_PCTOM_SEALED_TEST_PLANNING_GAP_DIAGNOSTIC`;
+  receipt SHA-256
+  `sha256:d15afd27636b48f634531173f6c9d6819e729961486466bb33409af592258024`;
+  summary SHA-256
+  `sha256:c42b6cc167bee73ba115ebb133d0d08de5c565f7f33f12528e21e748449d6837`;
+  rows SHA-256
+  `sha256:c5e3c1fdcfcd5489be36d0a244a8fcdb34a8e21d31b966e05d1abb4023ce5006`;
+  top-action margins SHA-256
+  `sha256:fddd152e3836b38f683daecf62a8a635dae3cc0a702fab592cd799f8dac60a89`;
+  margin-policy sensitivity SHA-256
+  `sha256:0c6dd705e072c09fd5b79eba996f9e213a9aa337621c337d75792c2d0fa97333`.
+  The diagnostic conclusion is
+  `PREDICTION_BENEFIT_DID_NOT_TRANSFER_TO_PLANNING_UNDER_CURRENT_ACTION_POLICY`.
+  Counts: 64 episodes, 256 top-action margin rows, original CD-vs-baseline
+  planning directions `BENEFIT=5`, `HARM=5`, `TIE=54`, and 16 divergent
+  coordination rows where D selected `OFFER_COOPERATION` while CD selected
+  `DISCLOSE_INFORMATION`. Those 16 rows have balanced oracle actions:
+  `DISCLOSE_INFORMATION=5`, `OFFER_COOPERATION=5`, `WAIT=6`, producing mean
+  CD-minus-baseline planning regret `0.0`. A margin-gated epistemic action
+  sensitivity check over thresholds `0.0`, `0.2`, and `0.25` did not create CD
+  planning benefit over the strongest M/R/D baseline. This proves why the
+  sealed-test prediction benefit must not be upgraded into a planning-benefit
+  claim under the current action policy. It does not prove planning-regret
+  benefit, live Tau sealed-test execution, live Memory recall in the
+  sealed-test loop, real external service fault injection, production retry
+  machinery, semantic dream quality, paid provider execution, or complete live
+  Phase 01-16 runtime execution.
 - PCTOM-R sealed-test statistical-confidence artifact:
   `/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/sealed_test_statistical_confidence_receipt.v1.json`.
   Statistical summary:

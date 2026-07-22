@@ -1,10 +1,49 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-22 UTC (PCTOM-R sealed-test statistical confidence) by agent
+**Last updated:** 2026-07-22 UTC (PCTOM-R sealed-test planning-gap diagnostic) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-22 UTC (PCTOM-R SEALED-TEST PLANNING GAP): a deterministic
+  planning-gap diagnostic now explains why sealed-test prediction benefit did
+  not become planning-regret benefit. Command:
+  `./skills/persona-dream/run.sh analyze-sealed-test-planning-gap`. Receipt:
+  `/tmp/persona-dream-sealed-test-planning-gap-20260722T004128Z/sealed_test_planning_gap_diagnostic_receipt.v1.json`.
+  Summary artifact:
+  `/tmp/persona-dream-sealed-test-planning-gap-20260722T004128Z/artifacts/sealed_test_planning_gap_summary.json`.
+  Margin-policy sensitivity artifact:
+  `/tmp/persona-dream-sealed-test-planning-gap-20260722T004128Z/artifacts/sealed_test_margin_policy_sensitivity.json`.
+  Status `PASS_PCTOM_SEALED_TEST_PLANNING_GAP_DIAGNOSTIC`; receipt SHA-256
+  `sha256:d15afd27636b48f634531173f6c9d6819e729961486466bb33409af592258024`;
+  summary SHA-256
+  `sha256:c42b6cc167bee73ba115ebb133d0d08de5c565f7f33f12528e21e748449d6837`;
+  rows SHA-256
+  `sha256:c5e3c1fdcfcd5489be36d0a244a8fcdb34a8e21d31b966e05d1abb4023ce5006`;
+  top-action margins SHA-256
+  `sha256:fddd152e3836b38f683daecf62a8a635dae3cc0a702fab592cd799f8dac60a89`;
+  margin-policy sensitivity SHA-256
+  `sha256:0c6dd705e072c09fd5b79eba996f9e213a9aa337621c337d75792c2d0fa97333`.
+  The diagnostic conclusion is
+  `PREDICTION_BENEFIT_DID_NOT_TRANSFER_TO_PLANNING_UNDER_CURRENT_ACTION_POLICY`.
+  Observed: 64 episodes, 256 top-action margin rows, original CD-vs-baseline
+  planning directions `BENEFIT=5`, `HARM=5`, `TIE=54`, and 16 divergent
+  coordination rows where D selected `OFFER_COOPERATION` while CD selected
+  `DISCLOSE_INFORMATION`. The 16 divergent coordination rows are oracle
+  balanced: `DISCLOSE_INFORMATION=5`, `OFFER_COOPERATION=5`, `WAIT=6`, so
+  mean CD-minus-baseline planning regret is `0.0`. Margin-gated epistemic
+  action sensitivity at thresholds `0.0`, `0.2`, and `0.25` did not create CD
+  planning benefit over the strongest M/R/D baseline. The run made zero Tau,
+  Memory, provider, canonical-memory, identity, or source-memory writes and
+  required no human content judgment or LLM judge. This proves the current
+  planning gap and prevents a false planning-benefit claim. It does not prove
+  planning-regret benefit, live Tau sealed-test execution, live Memory recall
+  in the sealed-test loop, real external service fault injection, production
+  retry machinery, semantic dream quality, paid provider execution, or complete
+  live Phase 01-16 runtime execution. Next work should create or validate an
+  action-policy/corpus intervention where CD-specific counterfactual evidence
+  changes decisions without equally improving M/R/D, then rerun sealed-test
+  confidence before any broad planning-benefit claim.
 - 2026-07-22 UTC (PCTOM-R SEALED-TEST STATISTICAL CONFIDENCE): a deterministic
   text-first sealed-test statistical-confidence artifact now exists. Command:
   `./skills/persona-dream/run.sh run-sealed-test-statistical-confidence`.

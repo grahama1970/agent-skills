@@ -1,5 +1,97 @@
 # Status
 
+Status: SEALED_TEST_PLANNING_GAP_DIAGNOSTIC
+
+Artifact: PCTOM-R sealed-test planning-gap diagnostic. It consumes the
+sealed-test statistical-confidence receipt, rechecks source invariants, inspects
+Gate 6 action rows and prediction action distributions, and records why the
+prediction benefit does not transfer into planning-regret benefit under the
+current action policy.
+
+Planning-gap receipt:
+
+```text
+/tmp/persona-dream-sealed-test-planning-gap-20260722T004128Z/sealed_test_planning_gap_diagnostic_receipt.v1.json
+```
+
+Summary artifact:
+
+```text
+/tmp/persona-dream-sealed-test-planning-gap-20260722T004128Z/artifacts/sealed_test_planning_gap_summary.json
+```
+
+Margin-policy sensitivity artifact:
+
+```text
+/tmp/persona-dream-sealed-test-planning-gap-20260722T004128Z/artifacts/sealed_test_margin_policy_sensitivity.json
+```
+
+Inspection result:
+
+```text
+status: PASS_PCTOM_SEALED_TEST_PLANNING_GAP_DIAGNOSTIC
+receipt_sha256: sha256:d15afd27636b48f634531173f6c9d6819e729961486466bb33409af592258024
+summary_sha256: sha256:c42b6cc167bee73ba115ebb133d0d08de5c565f7f33f12528e21e748449d6837
+rows_sha256: sha256:c5e3c1fdcfcd5489be36d0a244a8fcdb34a8e21d31b966e05d1abb4023ce5006
+top_action_margins_sha256: sha256:fddd152e3836b38f683daecf62a8a635dae3cc0a702fab592cd799f8dac60a89
+margin_policy_sensitivity_sha256: sha256:0c6dd705e072c09fd5b79eba996f9e213a9aa337621c337d75792c2d0fa97333
+diagnostic_conclusion: PREDICTION_BENEFIT_DID_NOT_TRANSFER_TO_PLANNING_UNDER_CURRENT_ACTION_POLICY
+episodes: 64
+top_action_margin_rows: 256
+original_direction_counts: BENEFIT=5 HARM=5 TIE=54
+coordination_divergent_d_offer_cd_disclose_rows: 16
+coordination_oracle_action_counts: DISCLOSE_INFORMATION=5 OFFER_COOPERATION=5 WAIT=6
+original_mean_cd_minus_baseline: 0.0
+original_planning_ci: [-0.07968750000000001, 0.07968750000000001]
+margin_policy_thresholds_checked: [0.0, 0.2, 0.25]
+margin_policy_created_cd_planning_benefit: false
+tau_call_attempts: 0
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+mocked: false
+live: false
+human_content_judgment_required: false
+```
+
+What this proves:
+
+```text
+the sealed-test prediction-benefit receipt remains valid source evidence
+-> original Gate 6 planning regret crosses zero and must not be called benefit
+-> D/CD action differences are concentrated in 16 coordination rows
+-> those rows are oracle-balanced across disclose, offer, and wait
+-> margin-gated epistemic action variants tested here do not make CD beat the
+   strongest M/R/D baseline
+-> no Tau, Memory, provider, canonical-memory, identity, source-memory, LLM
+   judge, or human content judgment path is used
+```
+
+What this does not prove:
+
+```text
+planning-regret benefit
+live Tau sealed-test execution
+live Memory recall in the sealed-test loop
+real external service fault injection
+production retry machinery
+semantic dream quality
+paid provider execution
+complete live Phase 01-16 runtime execution
+```
+
+Immediate next step:
+
+```text
+Create or validate an action-policy/corpus intervention where CD-specific
+counterfactual evidence changes decisions without equally improving M/R/D, then
+rerun the sealed-test confidence path before any broad planning-benefit claim.
+```
+
+Prior status:
+
 Status: SEALED_TEST_STATISTICAL_CONFIDENCE_PRIMARY_BENEFIT
 
 Artifact: PCTOM-R sealed-test statistical-confidence artifact over the
