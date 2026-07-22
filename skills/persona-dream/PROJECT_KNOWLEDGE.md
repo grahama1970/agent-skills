@@ -281,6 +281,41 @@
   gap is a same-scope sealed live experiment that proves prediction benefit and
   planning benefit together while preserving the existing reliability surface.
 
+  The success-criteria checker was then extended with
+  `--repeated-full64-receipt` and applied to the two-run full64 live Tau
+  aggregate. Command:
+  `./skills/persona-dream/run.sh check-pctom-success-criteria
+  --prediction-receipt
+  /tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/sealed_test_statistical_confidence_receipt.v1.json
+  --planning-receipt
+  /tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_planning_replication_receipt.v1.json
+  --goal-coverage-receipt
+  /tmp/persona-dream-pctom-goal-coverage-20260722T093000Z/pctom_goal_coverage_receipt.v1.json
+  --repeated-full64-receipt
+  /tmp/persona-dream-live-tau-full64-repeated-run-summary-gate0-r2-20260722T025200Z/live_tau_full64_repeated_run_summary_receipt.v1.json
+  --output-root
+  /tmp/persona-dream-pctom-success-criteria-repeated-full64-20260722T101000Z
+  --receipt-out
+  /tmp/persona-dream-pctom-success-criteria-repeated-full64-20260722T101000Z/pctom_success_criteria_audit_receipt.v1.json
+  --json`. Receipt status: `PASS_PCTOM_SUCCESS_CRITERIA_AUDIT`; summary:
+  `prediction_benefit_with_confidence=true`,
+  `planning_benefit_with_confidence=true`, `goal_coverage_complete=true`,
+  `repeated_full64_same_scope_success=true`, `same_scope_joint_success=true`,
+  and `full_hard_success_criteria_met=true`. The repeated full64 aggregate
+  consumed 2 Gate 0-attributed live Tau full64 source roots, 128 episode metric
+  rows, and 512 live Tau calls; belief Brier CI upper was
+  `-0.07867421875000002`, and planning-regret CI upper was
+  `-0.027734374999999995`. Receipt SHA-256:
+  `sha256:07a55ddb3a5e51072343c222fb7ce11397aa8bd6033c31adaf5c058d49818098`.
+  A fixture-backed negative mutated the repeated full64 planning benefit flag
+  false and exited 1 with `BLOCKED_PCTOM_SUCCESS_CRITERIA_AUDIT`, error
+  `repeated_full64_same_scope_success_not_proven`, and receipt SHA-256
+  `sha256:fe06372a70c5f8e79b4023f5f5c34f8ccdb0591e78a381ae7b000df9802ba619`.
+  This closes the prior same-scope prediction-plus-planning evidence gap for
+  the repeated full64 live Tau aggregate. It does not prove paid provider
+  execution, semantic dream quality, multimodal perception, or complete
+  Phase 01-16 media runtime execution.
+
   Command:
   `./skills/persona-dream/run.sh run-live-tau-balanced-planning-replication
   --family-episode-limit 8 --episodes-per-family 24 --variant-min 17

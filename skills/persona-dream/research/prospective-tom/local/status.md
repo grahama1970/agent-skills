@@ -34,7 +34,8 @@ concrete local receipt evidence and fails closed when a required coverage id is
 missing.
 A PCTOM-R success-criteria audit now separates scoped evidence from full hard
 success: current receipts show confidence-bound prediction benefit and
-confidence-bound live planning benefit, but not in one same-scope experiment.
+confidence-bound live planning benefit. A later repeated-full64 success audit
+binds both benefits in one same-scope repeated live Tau aggregate.
 
 Sealed64 deterministic social episode corpus:
 
@@ -228,6 +229,18 @@ PCTOM-R success-criteria negative planning receipt:
 /tmp/persona-dream-pctom-success-criteria-negative-planning-20260722T094600Z/pctom_success_criteria_audit_receipt.v1.json
 ```
 
+PCTOM-R repeated-full64 success-criteria audit receipt:
+
+```text
+/tmp/persona-dream-pctom-success-criteria-repeated-full64-20260722T101000Z/pctom_success_criteria_audit_receipt.v1.json
+```
+
+PCTOM-R repeated-full64 success-criteria negative receipt:
+
+```text
+/tmp/persona-dream-pctom-success-criteria-repeated-full64-negative-planning-20260722T101100Z/pctom_success_criteria_audit_receipt.v1.json
+```
+
 Inspection result:
 
 ```text
@@ -307,6 +320,22 @@ pctom_success_criteria_negative_status: BLOCKED_PCTOM_SUCCESS_CRITERIA_AUDIT
 pctom_success_criteria_negative_exit_code: 1
 pctom_success_criteria_negative_error: planning_benefit_with_confidence_not_proven
 pctom_success_criteria_negative_receipt_sha256: sha256:1d5dbe5a73bdc32f522f82eed3e463a68e2dc4c35a9cb85ed48723d05b4d42f3
+pctom_repeated_full64_success_criteria_audit_status: PASS_PCTOM_SUCCESS_CRITERIA_AUDIT
+pctom_repeated_full64_success_prediction_benefit_with_confidence: true
+pctom_repeated_full64_success_planning_benefit_with_confidence: true
+pctom_repeated_full64_success_goal_coverage_complete: true
+pctom_repeated_full64_success_same_scope_joint_success: true
+pctom_repeated_full64_success_full_hard_success_criteria_met: true
+pctom_repeated_full64_success_source_roots: 2
+pctom_repeated_full64_success_episode_metric_rows: 128
+pctom_repeated_full64_success_tau_live_calls_consumed: 512
+pctom_repeated_full64_success_belief_brier_ci_upper: -0.07867421875000002
+pctom_repeated_full64_success_planning_regret_ci_upper: -0.027734374999999995
+pctom_repeated_full64_success_receipt_sha256: sha256:07a55ddb3a5e51072343c222fb7ce11397aa8bd6033c31adaf5c058d49818098
+pctom_repeated_full64_success_negative_status: BLOCKED_PCTOM_SUCCESS_CRITERIA_AUDIT
+pctom_repeated_full64_success_negative_exit_code: 1
+pctom_repeated_full64_success_negative_error: repeated_full64_same_scope_success_not_proven
+pctom_repeated_full64_success_negative_receipt_sha256: sha256:fe06372a70c5f8e79b4023f5f5c34f8ccdb0591e78a381ae7b000df9802ba619
 live_fault_injection_status: PASS_PCTOM_LIVE_FAULT_INJECTION_SURFACE
 local_http_service_retry_status: PASS_LIVE_TAU_PCTOM_SERVICE_RETRY_PROOF
 combined_full64_memory_fault_surface_status: PASS_LIVE_TAU_PCTOM_FULL64_MEMORY_FAULT_SURFACE

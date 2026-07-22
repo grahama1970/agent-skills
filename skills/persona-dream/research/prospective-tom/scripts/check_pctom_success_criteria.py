@@ -103,6 +103,7 @@ def run(
     prediction_receipt_path: Path,
     planning_receipt_path: Path,
     goal_coverage_receipt_path: Path,
+    repeated_full64_receipt_path: Path | None,
     output_root: Path,
     receipt_out: Path,
     fixture_backed: bool,
@@ -112,6 +113,7 @@ def run(
     prediction_receipt_path = prediction_receipt_path.resolve()
     planning_receipt_path = planning_receipt_path.resolve()
     goal_coverage_receipt_path = goal_coverage_receipt_path.resolve()
+    repeated_full64_receipt_path = repeated_full64_receipt_path.resolve() if repeated_full64_receipt_path else None
     output_root = output_root.resolve()
     receipt_out = receipt_out.resolve()
     output_root.mkdir(parents=True, exist_ok=True)
@@ -119,9 +121,15 @@ def run(
     prediction = _load_json(prediction_receipt_path, errors, "prediction_receipt")
     planning = _load_json(planning_receipt_path, errors, "planning_receipt")
     coverage = _load_json(goal_coverage_receipt_path, errors, "goal_coverage_receipt")
+    repeated = (
+        _load_json(repeated_full64_receipt_path, errors, "repeated_full64_receipt")
+        if repeated_full64_receipt_path
+        else None
+    )
     prediction = prediction if isinstance(prediction, dict) else {}
     planning = planning if isinstance(planning, dict) else {}
     coverage = coverage if isinstance(coverage, dict) else {}
+    repeated = repeated if isinstance(repeated, dict) else None
 
     if not _status_pass(prediction, "PASS_PCTOM_SEALED_TEST_STATISTICAL_CONFIDENCE"):
         errors.append(f"prediction_receipt_status_not_expected:{prediction.get('status')}")
@@ -224,11 +232,79 @@ def run(
     if not coverage_complete:
         errors.append(f"goal_coverage_incomplete:{c_counts}")
 
+    repeated_same_scope_success = False
+    repeated_summary: dict[str, Any] | None = None
+    if repeated is not None:
+        if not _status_pass(repeated, "PASS_LIVE_TAU_PCTOM_FULL64_REPEATED_RUN_SUMMARY"):
+            errors.append(f"repeated_full64_status_not_expected:{repeated.get('status')}")
+        if repeated.get("mocked") is not False:
+            errors.append(f"repeated_full64_mocked_not_false:{repeated.get('mocked')}")
+        if repeated.get("live") is not True:
+            errors.append(f"repeated_full64_live_not_true:{repeated.get('live')}")
+        if repeated.get("llm_judge_used") is True:
+            errors.append("repeated_full64_llm_judge_used_true")
+        if repeated.get("human_content_judgment_required") is True:
+            errors.append("repeated_full64_human_content_judgment_required_true")
+        if _forbidden_write_count(repeated):
+            errors.append("repeated_full64_forbidden_write_counter_nonzero")
+
+        r_counts = repeated.get("counts") if isinstance(repeated.get("counts"), dict) else {}
+        r_metrics = repeated.get("metrics") if isinstance(repeated.get("metrics"), dict) else {}
+        belief = r_metrics.get("belief_brier") if isinstance(r_metrics.get("belief_brier"), dict) else {}
+        planning_metric = r_metrics.get("planning_regret") if isinstance(r_metrics.get("planning_regret"), dict) else {}
+        belief_ci = (
+            belief.get("cd_minus_strongest_baseline_ci")
+            if isinstance(belief.get("cd_minus_strongest_baseline_ci"), dict)
+            else {}
+        )
+        repeated_planning_ci = (
+            planning_metric.get("cd_minus_strongest_baseline_ci")
+            if isinstance(planning_metric.get("cd_minus_strongest_baseline_ci"), dict)
+            else {}
+        )
+        checks = repeated.get("checks") if isinstance(repeated.get("checks"), dict) else {}
+        repeated_same_scope_success = bool(
+            belief.get("benefit_with_confidence") is True
+            and planning_metric.get("benefit_with_confidence") is True
+            and _num(belief_ci.get("upper")) is not None
+            and _num(belief_ci.get("upper")) < 0
+            and _num(repeated_planning_ci.get("upper")) is not None
+            and _num(repeated_planning_ci.get("upper")) < 0
+            and belief.get("paired_rows") == 128
+            and planning_metric.get("paired_rows") == 128
+            and r_counts.get("source_roots") == 2
+            and r_counts.get("accepted_source_runs") == 2
+            and r_counts.get("episode_metric_rows") == 128
+            and r_counts.get("tau_live_calls_consumed") == 512
+            and checks.get("all_source_runs_passed") is True
+            and checks.get("all_source_runs_gate0_attributed") is True
+            and checks.get("all_source_runs_have_64_metric_rows") is True
+            and checks.get("unsupported_writes_absent") is True
+        )
+        if not repeated_same_scope_success:
+            errors.append(
+                "repeated_full64_same_scope_success_not_proven:"
+                f"belief={belief}:planning={planning_metric}:counts={r_counts}:checks={checks}"
+            )
+        repeated_summary = {
+            "scope": "two live Tau full64 Gate 0-attributed sealed-test runs",
+            "source_roots": r_counts.get("source_roots"),
+            "accepted_source_runs": r_counts.get("accepted_source_runs"),
+            "episode_metric_rows": r_counts.get("episode_metric_rows"),
+            "tau_live_calls_consumed": r_counts.get("tau_live_calls_consumed"),
+            "belief_brier_mean": belief_ci.get("mean"),
+            "belief_brier_ci_upper": belief_ci.get("upper"),
+            "planning_regret_mean": repeated_planning_ci.get("mean"),
+            "planning_regret_ci_upper": repeated_planning_ci.get("upper"),
+            "belief_brier_benefit_with_confidence": belief.get("benefit_with_confidence"),
+            "planning_regret_benefit_with_confidence": planning_metric.get("benefit_with_confidence"),
+        }
+
     same_scope_joint_success = (
         prediction_receipt_path == planning_receipt_path
         and prediction_benefit_with_confidence
         and planning_benefit_with_confidence
-    )
+    ) or repeated_same_scope_success
     full_hard_success_criteria_met = bool(
         same_scope_joint_success
         and coverage_complete
@@ -268,8 +344,9 @@ def run(
             "reason": (
                 "prediction benefit and planning benefit are currently proven by different receipts/scopes"
                 if not same_scope_joint_success
-                else "same receipt proves prediction and planning benefit"
+                else "same-scope repeated full64 evidence proves prediction and planning benefit"
             ),
+            "repeated_full64": repeated_summary,
         },
     }
 
@@ -285,11 +362,15 @@ def run(
         "prediction_receipt": _receipt_ref(prediction_receipt_path, prediction),
         "planning_receipt": _receipt_ref(planning_receipt_path, planning),
         "goal_coverage_receipt": _receipt_ref(goal_coverage_receipt_path, coverage),
+        "repeated_full64_receipt": _receipt_ref(repeated_full64_receipt_path, repeated)
+        if repeated_full64_receipt_path is not None and isinstance(repeated, dict)
+        else None,
         "criteria": criteria,
         "summary": {
             "prediction_benefit_with_confidence": prediction_benefit_with_confidence,
             "planning_benefit_with_confidence": planning_benefit_with_confidence,
             "goal_coverage_complete": coverage_complete,
+            "repeated_full64_same_scope_success": repeated_same_scope_success,
             "same_scope_joint_success": same_scope_joint_success,
             "full_hard_success_criteria_met": full_hard_success_criteria_met,
         },
@@ -298,10 +379,10 @@ def run(
             "proves": [
                 "current evidence has confidence-bound prediction benefit in deterministic sealed64 scoring",
                 "current evidence has confidence-bound live Tau planning benefit on the balanced held-out slice",
+                "current repeated full64 evidence has same-scope confidence-bound prediction and planning benefit when repeated_full64_same_scope_success is true",
                 "current evidence has mapped reliability and fail-closed coverage through the goal coverage receipt",
             ],
             "does_not_prove": [
-                "one same-scope experiment proving both prediction and planning benefit together",
                 "paid provider execution",
                 "semantic dream quality",
                 "complete Phase 01-16 media runtime execution",
@@ -320,6 +401,7 @@ def main() -> int:
     parser.add_argument("--prediction-receipt", required=True)
     parser.add_argument("--planning-receipt", required=True)
     parser.add_argument("--goal-coverage-receipt", required=True)
+    parser.add_argument("--repeated-full64-receipt")
     parser.add_argument("--output-root", required=True)
     parser.add_argument("--receipt-out", required=True)
     parser.add_argument("--fixture-backed", action="store_true")
@@ -329,6 +411,7 @@ def main() -> int:
         prediction_receipt_path=Path(args.prediction_receipt),
         planning_receipt_path=Path(args.planning_receipt),
         goal_coverage_receipt_path=Path(args.goal_coverage_receipt),
+        repeated_full64_receipt_path=Path(args.repeated_full64_receipt) if args.repeated_full64_receipt else None,
         output_root=Path(args.output_root),
         receipt_out=Path(args.receipt_out),
         fixture_backed=args.fixture_backed,

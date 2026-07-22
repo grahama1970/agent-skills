@@ -349,6 +349,27 @@ Next: <one immediate action or stop condition>
   This proves the audit catches loss of planning-benefit evidence and preserves
   the remaining hard-success gap instead of turning scoped evidence into a full
   research-success claim.
+  The same checker was then extended to consume the repeated full64 live Tau
+  aggregate. Receipt:
+  `/tmp/persona-dream-pctom-success-criteria-repeated-full64-20260722T101000Z/pctom_success_criteria_audit_receipt.v1.json`.
+  It returned `PASS_PCTOM_SUCCESS_CRITERIA_AUDIT` with
+  `prediction_benefit_with_confidence=true`,
+  `planning_benefit_with_confidence=true`, `goal_coverage_complete=true`,
+  `repeated_full64_same_scope_success=true`, `same_scope_joint_success=true`,
+  and `full_hard_success_criteria_met=true`. The repeated full64 evidence
+  consumed 2 Gate 0-attributed live Tau full64 source roots, 128 episode metric
+  rows, and 512 live Tau calls; belief Brier CI upper was
+  `-0.07867421875000002`, and planning-regret CI upper was
+  `-0.027734374999999995`. Receipt SHA-256:
+  `sha256:07a55ddb3a5e51072343c222fb7ce11397aa8bd6033c31adaf5c058d49818098`.
+  A fixture-backed negative changed the repeated full64 planning benefit flag
+  false and exited 1 with `BLOCKED_PCTOM_SUCCESS_CRITERIA_AUDIT`, error
+  `repeated_full64_same_scope_success_not_proven`, and receipt SHA-256
+  `sha256:fe06372a70c5f8e79b4023f5f5c34f8ccdb0591e78a381ae7b000df9802ba619`.
+  This proves the previous same-scope prediction-plus-planning gap is now
+  represented by a stricter repeated-full64 audit. It still does not prove paid
+  provider execution, semantic dream quality, multimodal perception, or
+  complete Phase 01-16 media runtime execution.
   The live run consumed simulator variants 17-24, 32 sealed-test
   episodes, all four scenario families, and 128 live Tau-authored M/R/D/CD
   condition predictions. It used the Gate 0 attribution root
