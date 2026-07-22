@@ -281,8 +281,30 @@ def run_planning_diagnostic(
     )
     if not planning_ci_crosses_zero:
         errors.append(f"planning_ci_does_not_cross_zero:{planning_ci}")
-    if diagnostic_conclusion != "SPARSE_FAMILY_CONCENTRATED_SIGNAL":
-        errors.append(f"unexpected_diagnostic_conclusion:{diagnostic_conclusion}")
+    accepted_diagnostic_conclusions = {
+        "SPARSE_FAMILY_CONCENTRATED_SIGNAL",
+        "BROAD_BUT_UNCERTAIN_SIGNAL",
+        "NO_PLANNING_SIGNAL",
+    }
+    if diagnostic_conclusion not in accepted_diagnostic_conclusions:
+        errors.append(f"unknown_diagnostic_conclusion:{diagnostic_conclusion}")
+    reason_ci_crosses_zero = (
+        f"{zero_count} of 64 paired planning-regret deltas are ties; "
+        f"{benefit_count} are beneficial, {harm_count} are harmful, "
+        f"and nonzero deltas appear in {', '.join(nonzero_families) if nonzero_families else 'no families'}"
+    )
+    if diagnostic_conclusion == "SPARSE_FAMILY_CONCENTRATED_SIGNAL":
+        next_planning_evidence_needed = (
+            "repeat or expand the concentrated family and action-policy sensitivity before claiming planning benefit"
+        )
+    elif diagnostic_conclusion == "BROAD_BUT_UNCERTAIN_SIGNAL":
+        next_planning_evidence_needed = (
+            "repeat the full64 live Tau run across seeds or expand the corpus/action policy because beneficial and harmful deltas are spread across families"
+        )
+    else:
+        next_planning_evidence_needed = (
+            "change the action policy or corpus intervention because no planning-regret signal is present"
+        )
 
     artifacts_root = output_root / "artifacts"
     planning_rows_path = artifacts_root / "planning_delta_rows.json"
@@ -306,8 +328,8 @@ def run_planning_diagnostic(
             "harm_count": harm_count,
             "nonzero_count": nonzero_count,
             "nonzero_families": nonzero_families,
-            "reason_ci_crosses_zero": "60 of 64 paired planning-regret deltas are ties; the four nonzero deltas are all in trust-commit episodes",
-            "next_planning_evidence_needed": "repeat or expand trust/commitment planning episodes and action-policy sensitivity before claiming planning benefit",
+            "reason_ci_crosses_zero": reason_ci_crosses_zero,
+            "next_planning_evidence_needed": next_planning_evidence_needed,
         },
     }
     _write_json(planning_rows_path, {"schema": "persona_dream.research.prospective_tom.live_tau_full64_planning_delta_rows.v1", "rows": planning_rows})
@@ -366,6 +388,8 @@ def run_planning_diagnostic(
             "base_is_full64_live_tau": base_receipt.get("full_64_episode_replication") is True and base_receipt.get("live") is True,
             "planning_ci_crosses_zero": planning_ci_crosses_zero,
             "diagnostic_identifies_sparse_family_concentrated_signal": diagnostic_conclusion == "SPARSE_FAMILY_CONCENTRATED_SIGNAL",
+            "diagnostic_identifies_broad_but_uncertain_signal": diagnostic_conclusion == "BROAD_BUT_UNCERTAIN_SIGNAL",
+            "diagnostic_conclusion_supported": diagnostic_conclusion in accepted_diagnostic_conclusions,
             "planning_rows_cover_64_episodes": len(planning_rows) == 64,
             "nonzero_deltas_are_family_concentrated": len(nonzero_families) == 1,
             "llm_judge_absent": True,
@@ -378,8 +402,9 @@ def run_planning_diagnostic(
             "proves": [
                 "the accepted full64 live Tau action decisions were consumed without reexecuting Tau",
                 "the planning-regret confidence interval crosses zero",
-                "the planning signal is sparse: 60 ties, 3 beneficial deltas, and 1 harmful delta",
-                "all nonzero planning-regret deltas are concentrated in the trust-commit family",
+                f"the planning diagnostic conclusion is {diagnostic_conclusion}",
+                f"the planning signal contains {zero_count} ties, {benefit_count} beneficial deltas, and {harm_count} harmful deltas",
+                f"nonzero planning-regret deltas appear in {len(nonzero_families)} scenario families",
                 "no human content judgment, LLM judge, Memory write, provider call, canonical write, identity write, or source-memory write was attempted",
             ]
             if status == PASS_STATUS

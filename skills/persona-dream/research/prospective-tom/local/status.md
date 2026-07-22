@@ -1,27 +1,46 @@
 # Status
 
-Status: GATE0_MIN4_LINEAGE_ACCEPTED_FULL64_NOT_RERUN
+Status: GATE0_FULL64_CONFIDENCE_AND_MEMORY_FAULT_SURFACE_ACCEPTED
 
-Latest artifact: PCTOM-R minimum accepted sealed-test slice with Gate 0
-accepted-source attribution overlaid into live Tau condition artifacts, plus
-causal-identifiability/lineage replay over that slice.
+Latest artifact: PCTOM-R full64 sealed-test replication with Gate 0
+accepted-source attribution overlaid into live Tau condition artifacts,
+causal-identifiability/lineage replay, live full64 statistical confidence,
+planning diagnostic, and a live Memory/service fault surface.
+
+Full64 statistical-confidence receipt:
+
+```text
+/tmp/persona-dream-live-tau-full64-statistical-confidence-gate0-20260722T015400Z/live_tau_full64_statistical_confidence_receipt.v1.json
+```
+
+Planning diagnostic receipt:
+
+```text
+/tmp/persona-dream-live-tau-full64-planning-diagnostic-gate0-r2-20260722T015509Z/live_tau_full64_planning_diagnostic_receipt.v1.json
+```
+
+Memory fault-surface receipt:
+
+```text
+/tmp/persona-dream-live-tau-full64-memory-fault-surface-gate0-20260722T015602Z/live_tau_full64_memory_fault_surface_receipt.v1.json
+```
 
 Live sealed-test replication receipt:
 
 ```text
-/tmp/persona-dream-live-tau-sealed-test-gate0-min4-20260722T005651Z/live_tau_sealed_test_replication_receipt.v1.json
+/tmp/persona-dream-live-tau-sealed-test-gate0-full64-20260722T010402Z/live_tau_sealed_test_replication_receipt.v1.json
 ```
 
 Condition comparison receipt:
 
 ```text
-/tmp/persona-dream-live-tau-sealed-test-gate0-min4-20260722T005651Z/live_tau_sealed_test_condition_comparison/live_tau_condition_comparison_receipt.v1.json
+/tmp/persona-dream-live-tau-sealed-test-gate0-full64-20260722T010402Z/live_tau_sealed_test_condition_comparison/live_tau_condition_comparison_receipt.v1.json
 ```
 
 Causal-identifiability receipt:
 
 ```text
-/tmp/persona-dream-pctom-causal-identifiability-gate0-min4-20260722T010023Z/pctom_causal_identifiability_receipt.json
+/tmp/persona-dream-pctom-causal-identifiability-gate0-full64-20260722T015148Z/pctom_causal_identifiability_receipt.json
 ```
 
 Inspection result:
@@ -29,29 +48,58 @@ Inspection result:
 ```text
 sealed_test_replication_status: PASS_LIVE_TAU_PCTOM_SEALED_TEST_REPLICATION
 causal_identifiability_status: PASS_PCTOM_CAUSAL_IDENTIFIABILITY_GATE
+statistical_confidence_status: PASS_LIVE_TAU_PCTOM_FULL64_STATISTICAL_CONFIDENCE
+planning_diagnostic_status: PASS_LIVE_TAU_PCTOM_FULL64_PLANNING_DIAGNOSTIC
+memory_fault_surface_status: PASS_LIVE_TAU_PCTOM_FULL64_MEMORY_FAULT_SURFACE
 gate0_case_root: /tmp/persona-dream-live-pctom-gate0-attribution-20260721T1700Z/pctom_gate0_case
 gate0_attribution_overlay_used: true
 gate0_attribution_record_count: 6
-episodes_consumed: 4
+episodes_consumed: 64
 families_consumed: 4
-cases: 16
-tau_call_attempts: 16
-tau_live_call_performed: 16
-sealed_commitments_per_condition: M=4 R=4 D=4 CD=4
-deterministic_scores_per_condition: M=4 R=4 D=4 CD=4
-action_decisions_per_condition: M=4 R=4 D=4 CD=4
-lineage_rows: 16
-lineage_complete_rows: 16
-total_evidence_refs: 48
-evidence_refs_with_accepted_raw_source_id: 48
-evidence_refs_with_raw_source_digest: 48
+cases: 256
+tau_call_attempts: 256
+tau_live_call_performed: 256
+sealed_commitments_per_condition: M=64 R=64 D=64 CD=64
+deterministic_scores_per_condition: M=64 R=64 D=64 CD=64
+action_decisions_per_condition: M=64 R=64 D=64 CD=64
+lineage_rows: 256
+lineage_complete_rows: 256
+total_evidence_refs: 768
+evidence_refs_with_accepted_raw_source_id: 768
+evidence_refs_with_raw_source_digest: 768
 lineage_100_percent_complete: true
-receipt_sha256: sha256:feeb1e4972ed8465f7d27a62f496b2c0df52a6865930a888347491c768ec11e7
-lineage_receipt_sha256: sha256:694f76420e64a5e7cb25b3c63316680f7828466f4af2111a885024d039bf64e8
+replication_receipt_sha256: sha256:a9838493efa900532b38b78387281d72cc83b564e34888964ab1c80d0d6016ab
+condition_receipt_sha256: sha256:dc12c7de88f4df9e5c352884a6026b378a8edeab419b2904224f300df254d6b9
+action_receipt_sha256: sha256:676d08be65a7b1b4951a9c81a3303821dfd88cf742d6b4f59291b9774742da0a
+causal_receipt_sha256: sha256:afa4bb6ea181cc68cd1a36f74221d3377e11abfeba13cdc53752615b5c54e848
+lineage_receipt_sha256: sha256:690d3507b2a065b773bb9107c35ae39c3441247eeef8c3e133c9b2935b5892fc
+manifest_sha256: sha256:2b0fda003bd7ea981a91fd75a3d1266d692ad3700248dcb32d96a4cb769b9f88
+sensitivity_rows_sha256: sha256:533ec68d90bdf4ee8f600b1a63851c02d8138a9301e1f2ea192b6e0e4b8fa127
+belief_brier_cd_minus_strongest_baseline: -0.08194218750000004
+planning_regret_cd_minus_strongest_baseline: -0.0953125
+primary_belief_brier_ci: [-0.09819726562500003, -0.06552992187500004]
+primary_benefit_with_confidence: true
+planning_regret_ci: [-0.19533203124999998, 0.0031249999999999997]
+planning_benefit_with_confidence: false
+planning_diagnostic_conclusion: BROAD_BUT_UNCERTAIN_SIGNAL
+planning_direction_counts: BENEFIT=14 HARM=11 TIE=39
+planning_nonzero_families: coord-conflict, pref-desire, trust-commit
+oracle_improves_regret_count: 112
+anti_oracle_worsens_regret_count: 116
+memory_fault_trials: 8
+memory_fault_families: 8
+live_memory_fault_probes: 10
+fault_terminal_outcomes: BLOCKED_BEFORE_SIDE_EFFECT=3 QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE=1 RECOVERED_WITH_EQUIVALENT_END_STATE=4
+continued_with_unknown_state: 0
+side_effect_violations: 0
+memory_fault_surface_receipt_sha256: sha256:9a15fa6fc8120aa6c4d553382914a888532a901d680db6afe6571739c75c9f73
+statistical_confidence_receipt_sha256: sha256:c62ecfc46f257bc84d7cd0882e36c359a218c74800eed58f57f6314e473a8738
+planning_diagnostic_receipt_sha256: sha256:e81720ca722343d8a8246b2277d43bde5a3d4f0695be8adddd5c9964fea616b9
 mocked: false
 live: true
 live_tau_reexecuted_by_replication: true
 live_tau_reexecuted_by_causal_gate: false
+live_tau_reexecuted_by_confidence_or_fault_surface: false
 memory_write_attempts: 0
 provider_call_attempts: 0
 canonical_memory_write_attempts: 0
@@ -63,12 +111,12 @@ human_content_judgment_required: false
 Additional direct artifact count across generated condition bundles:
 
 ```text
-files: 48
-evidence_refs_total: 304
-synthetic_refs: 16
-non_synthetic_refs: 288
-non_synthetic_with_accepted_source_id: 288
-non_synthetic_with_accepted_source_ids_sha256: 288
+files: 768
+evidence_refs_total: 4864
+synthetic_refs: 256
+non_synthetic_refs: 4608
+non_synthetic_with_accepted_source_id: 4608
+non_synthetic_with_accepted_source_ids_sha256: 4608
 missing_non_synthetic_files: 0
 ```
 
@@ -77,9 +125,15 @@ What this proves:
 ```text
 the sealed-test replication wrapper can forward Gate 0 live recall attribution
 -> the condition runner overlays accepted raw-source ids into ToM evidence refs
--> the minimum action-selection bridge size accepts 4 episodes / 16 cases
--> causal-identifiability lineage replay accepts 16/16 rows with complete
+-> the full64 action-selection bridge accepts 64 episodes / 256 cases
+-> causal-identifiability lineage replay accepts 256/256 rows with complete
    accepted-source ids and digests
+-> CD is lower than the strongest M/R/D baseline on this live full64 run for
+   belief_brier with a paired-bootstrap CI below zero
+-> planning_regret has a beneficial point estimate but is broad and uncertain;
+   its CI crosses zero and no planning-benefit claim is accepted
+-> live Memory and local service fault probes terminate only in allowed states
+   with no continued-with-unknown-state and no side effects
 -> no Memory, provider, canonical-memory, identity, source-memory, LLM judge,
    or human content judgment path is used
 ```
@@ -87,11 +141,8 @@ the sealed-test replication wrapper can forward Gate 0 live recall attribution
 What this does not prove:
 
 ```text
-full64 accepted raw-source lineage
-full64 live Tau rerun with Gate 0 attribution
-statistical confidence for live Tau CD benefit on the full sealed test
-planning-regret benefit
-real external service fault injection
+confidence-bounded planning-regret benefit
+complete fault injection across every PCTOM-R and production service boundary
 production retry machinery
 semantic dream quality
 paid provider execution
@@ -101,9 +152,38 @@ complete live Phase 01-16 runtime execution
 Immediate next step:
 
 ```text
-Run the full64 sealed-test replication with --gate0-case-root, then rerun the
-causal-identifiability gate over that new full64 condition/action root.
+The next evidence rung should either repeat the full64 live Tau run across
+seeds, expand the corpus/action policy to pursue confidence-bounded planning
+benefit, or extend fault injection beyond Memory/service retry into the
+remaining model/tool/schema/persistence boundaries.
 ```
+
+Prior status:
+
+Status: GATE0_FULL64_LINEAGE_ACCEPTED
+
+Full64 Gate 0-attributed replication:
+`/tmp/persona-dream-live-tau-sealed-test-gate0-full64-20260722T010402Z/live_tau_sealed_test_replication_receipt.v1.json`.
+Causal-identifiability replay:
+`/tmp/persona-dream-pctom-causal-identifiability-gate0-full64-20260722T015148Z/pctom_causal_identifiability_receipt.json`.
+Observed: 64 episodes, 256 live Tau cases, 256/256 lineage rows complete,
+768/768 lineage-check evidence refs with accepted raw-source IDs and digests,
+and 4,608/4,608 non-synthetic generated-bundle evidence refs with accepted
+source ID and hash. This proved full64 accepted-source lineage, not statistical
+confidence or fault containment.
+
+Prior status:
+
+Status: GATE0_MIN4_LINEAGE_ACCEPTED_FULL64_NOT_RERUN
+
+Minimum accepted sealed-test slice with Gate 0 attribution:
+`/tmp/persona-dream-live-tau-sealed-test-gate0-min4-20260722T005651Z/live_tau_sealed_test_replication_receipt.v1.json`.
+Causal-identifiability replay:
+`/tmp/persona-dream-pctom-causal-identifiability-gate0-min4-20260722T010023Z/pctom_causal_identifiability_receipt.json`.
+Observed: 4 episodes, 16 live Tau cases, 16/16 lineage rows complete,
+48/48 lineage-check evidence refs with accepted raw-source IDs and digests,
+and 288/288 non-synthetic generated-bundle evidence refs with accepted-source
+ID and hash. This proved only the minimum accepted path, not full64.
 
 Prior status:
 

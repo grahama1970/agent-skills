@@ -133,6 +133,79 @@ Next: <one immediate action or stop condition>
 
 ## Current Evidence Snapshot
 
+- PCTOM-R Gate 0 full64 live sealed-test lineage:
+  `/tmp/persona-dream-live-tau-sealed-test-gate0-full64-20260722T010402Z/live_tau_sealed_test_replication_receipt.v1.json`.
+  Condition receipt:
+  `/tmp/persona-dream-live-tau-sealed-test-gate0-full64-20260722T010402Z/live_tau_sealed_test_condition_comparison/live_tau_condition_comparison_receipt.v1.json`.
+  Causal-identifiability receipt:
+  `/tmp/persona-dream-pctom-causal-identifiability-gate0-full64-20260722T015148Z/pctom_causal_identifiability_receipt.json`.
+  Statuses:
+  `PASS_LIVE_TAU_PCTOM_SEALED_TEST_REPLICATION` and
+  `PASS_PCTOM_CAUSAL_IDENTIFIABILITY_GATE`. Observed: 64 sealed-test episodes,
+  four scenario families, 256 live Tau case calls, 64 sealed/scored/action rows
+  per M/R/D/CD condition, `gate0_attribution_overlay_used=true`, 6 Gate 0
+  attribution records, 256/256 causal-identifiability lineage rows complete,
+  768/768 lineage-check evidence refs with accepted raw-source IDs and source
+  digests, and direct generated-bundle inspection found 4,608/4,608
+  non-synthetic ToM evidence refs with both `accepted_source_id` and
+  `accepted_source_ids_sha256`. Replication receipt SHA-256:
+  `sha256:a9838493efa900532b38b78387281d72cc83b564e34888964ab1c80d0d6016ab`.
+  Causal gate receipt SHA-256:
+  `sha256:afa4bb6ea181cc68cd1a36f74221d3377e11abfeba13cdc53752615b5c54e848`.
+  Lineage receipt SHA-256:
+  `sha256:690d3507b2a065b773bb9107c35ae39c3441247eeef8c3e133c9b2935b5892fc`.
+  Live point estimates from the replication summary: CD-minus-strongest-baseline
+  belief Brier `-0.08194218750000004`; CD-minus-strongest-baseline planning
+  regret `-0.0953125`. The causal replay observed `oracle_improves_regret_count`
+  `112` and `anti_oracle_worsens_regret_count` `116`. The replication made
+  zero Memory, provider, canonical-memory, identity, or source-memory write
+  attempts and used no LLM judge or human content judgment. This proves full64
+  accepted-source lineage for the new live Tau sealed-test run. It does not
+  prove confidence-bounded live Tau benefit, real external service fault
+  injection, production retry machinery, semantic dream quality, paid provider
+  execution, or complete live Phase 01-16 runtime execution.
+- PCTOM-R live full64 confidence, planning diagnostic, and Memory/service
+  fault surface over the Gate 0-attributed root:
+  statistical-confidence receipt
+  `/tmp/persona-dream-live-tau-full64-statistical-confidence-gate0-20260722T015400Z/live_tau_full64_statistical_confidence_receipt.v1.json`;
+  planning diagnostic receipt
+  `/tmp/persona-dream-live-tau-full64-planning-diagnostic-gate0-r2-20260722T015509Z/live_tau_full64_planning_diagnostic_receipt.v1.json`;
+  memory fault-surface receipt
+  `/tmp/persona-dream-live-tau-full64-memory-fault-surface-gate0-20260722T015602Z/live_tau_full64_memory_fault_surface_receipt.v1.json`.
+  Statuses:
+  `PASS_LIVE_TAU_PCTOM_FULL64_STATISTICAL_CONFIDENCE`,
+  `PASS_LIVE_TAU_PCTOM_FULL64_PLANNING_DIAGNOSTIC`, and
+  `PASS_LIVE_TAU_PCTOM_FULL64_MEMORY_FAULT_SURFACE`. Statistical confidence:
+  primary preregistered belief Brier CD-minus-strongest-baseline mean
+  `-0.08194218750000003`, 95% paired-bootstrap CI
+  `[-0.09819726562500003, -0.06552992187500004]`,
+  `primary_benefit_with_confidence=true`. Planning regret: mean
+  `-0.09531250000000001`, CI
+  `[-0.19533203124999998, 0.0031249999999999997]`,
+  `planning_benefit_with_confidence=false`. Planning diagnostic conclusion:
+  `BROAD_BUT_UNCERTAIN_SIGNAL`, with 39 ties, 14 beneficial deltas, 11 harmful
+  deltas, and nonzero deltas in `coord-conflict`, `pref-desire`, and
+  `trust-commit`. Memory/service fault surface: 8 fault families, 8 trials,
+  10 live Memory probes, terminal outcomes
+  `BLOCKED_BEFORE_SIDE_EFFECT=3`,
+  `QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE=1`, and
+  `RECOVERED_WITH_EQUIVALENT_END_STATE=4`; `continued_with_unknown_state=0`
+  and `side_effect_violations=0`. Receipt SHA-256 values:
+  statistical confidence
+  `sha256:c62ecfc46f257bc84d7cd0882e36c359a218c74800eed58f57f6314e473a8738`;
+  planning diagnostic
+  `sha256:e81720ca722343d8a8246b2277d43bde5a3d4f0695be8adddd5c9964fea616b9`;
+  memory fault surface
+  `sha256:9a15fa6fc8120aa6c4d553382914a888532a901d680db6afe6571739c75c9f73`.
+  These commands reexecuted zero Tau calls after the full64 replication, made
+  zero Memory/provider/canonical/identity/source-memory writes, and used no
+  LLM judge or human content judgment. This proves confidence-bounded live Tau
+  benefit for the preregistered belief Brier metric and a bounded Memory/service
+  fault surface over the full64 evidence root. It does not prove
+  confidence-bounded planning-regret benefit, complete fault injection across
+  every model/tool/schema/persistence boundary, production retry machinery,
+  semantic dream quality, paid provider execution, or complete live Phase 01-16
+  runtime execution.
 - PCTOM-R Gate 0 minimum live sealed-test slice with accepted-source lineage:
   `/tmp/persona-dream-live-tau-sealed-test-gate0-min4-20260722T005651Z/live_tau_sealed_test_replication_receipt.v1.json`.
   Causal-identifiability receipt:
