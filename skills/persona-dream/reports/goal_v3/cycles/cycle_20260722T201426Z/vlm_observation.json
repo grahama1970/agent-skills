@@ -1,0 +1,47 @@
+{
+  "raw": "{\"frames\":[{\"index\":1,\"people\":[\"young woman in a dark blue shirt seated at a desk\",\"faint reflected face on the laptop screen\"],\"activity\":\"The woman faces forward with one hand near a transparent laptop, appearing to work or inspect something on the screen.\",\"setting\":\"dim indoor room with a window, desk, benches, and a transparent futuristic laptop showing small text panels\",\"tone\":\"serious and quiet\"},{\"index\":2,\"people\":[\"young woman in a dark blue shirt in the foreground\",\"young man standing in the background wearing a dark YALE shirt\"],\"activity\":\"The woman looks off to the side while the man stands farther down the hallway near walls covered in writing.\",\"setting\":\"dark corridor or room with glossy floor and walls filled with repeated text\",\"tone\":\"tense and uneasy\"},{\"index\":3,\"people\":[\"young woman in a dark blue shirt\",\"young man in side profile\",\"small floating video-call image of another young man\"],\"activity\":\"The woman looks away while a young man stands close beside her, with a small holographic video-call screen floating between them.\",\"setting\":\"warm, dim library or archive space with tall stacks of books and patterned rugs\",\"tone\":\"thoughtful and suspicious\"},{\"index\":4,\"people\":[\"young woman in a dark blue shirt\",\"young man standing behind her with arms crossed\",\"adult man standing in the background\"],\"activity\":\"The woman reaches toward a glowing holographic oval interface while the two men watch nearby.\",\"setting\":\"dim high-tech archive or library with floating translucent documents and illuminated holographic displays\",\"tone\":\"focused and mysterious\"}]}",
+  "frames": [
+    {
+      "index": 1,
+      "people": [
+        "young woman in a dark blue shirt seated at a desk",
+        "faint reflected face on the laptop screen"
+      ],
+      "activity": "The woman faces forward with one hand near a transparent laptop, appearing to work or inspect something on the screen.",
+      "setting": "dim indoor room with a window, desk, benches, and a transparent futuristic laptop showing small text panels",
+      "tone": "serious and quiet"
+    },
+    {
+      "index": 2,
+      "people": [
+        "young woman in a dark blue shirt in the foreground",
+        "young man standing in the background wearing a dark YALE shirt"
+      ],
+      "activity": "The woman looks off to the side while the man stands farther down the hallway near walls covered in writing.",
+      "setting": "dark corridor or room with glossy floor and walls filled with repeated text",
+      "tone": "tense and uneasy"
+    },
+    {
+      "index": 3,
+      "people": [
+        "young woman in a dark blue shirt",
+        "young man in side profile",
+        "small floating video-call image of another young man"
+      ],
+      "activity": "The woman looks away while a young man stands close beside her, with a small holographic video-call screen floating between them.",
+      "setting": "warm, dim library or archive space with tall stacks of books and patterned rugs",
+      "tone": "thoughtful and suspicious"
+    },
+    {
+      "index": 4,
+      "people": [
+        "young woman in a dark blue shirt",
+        "young man standing behind her with arms crossed",
+        "adult man standing in the background"
+      ],
+      "activity": "The woman reaches toward a glowing holographic oval interface while the two men watch nearby.",
+      "setting": "dim high-tech archive or library with floating translucent documents and illuminated holographic displays",
+      "tone": "focused and mysterious"
+    }
+  ]
+}

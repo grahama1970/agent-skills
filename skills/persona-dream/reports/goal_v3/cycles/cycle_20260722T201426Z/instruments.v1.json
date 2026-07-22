@@ -1,0 +1,17 @@
+{
+  "frozen_at": "2026-07-22T20:14:31Z",
+  "frozen_before_dream_composition": true,
+  "negative_control": "best techniques for pruning apple trees in a backyard orchard",
+  "negative_control_root_overlap": [],
+  "probes": [
+    "Embry creates a two-column audit of what she said versus what others could reasonably infer, then closes it without sending",
+    "Kai asks if someone at Yale is replacing him and Embry gives a technically true but narrower denial",
+    "Embry tells James she watched Kai\u2019s call end before the rerun and insists the disclosure was just practical"
+  ],
+  "roots": [
+    "embry_age19_23_b01_memory_014",
+    "embry_age19_23_b01_memory_015",
+    "embry_age19_23_b01_memory_048"
+  ],
+  "schema": "persona_dream.cycle_instruments.v1"
+}

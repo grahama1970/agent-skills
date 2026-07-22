@@ -20,5 +20,29 @@
     "send computed synthesis params to chatterbox; preserve zero intensity; bind ToM candidates to active commit",
     "unique panel ids; require 4-frame VLM parse; per-frame path/sha bindings",
     "rerun a fresh unattended cycle; boundary recomputes from children"
-  ]
+  ],
+  "remediation": {
+    "at": "2026-07-22T20:30:36Z",
+    "critical_fixed": "counterpart bound from cluster into phase13 contract; hard gates after p13/p14",
+    "verification_cycle": "cycle_20260722T201426Z",
+    "verified_by_store_readback": "selection age19_23:person:kai -> all four persisted ToM candidates target kai (match)",
+    "cycle_result": {
+      "status": "PASS_AUTONOMOUS_CYCLE",
+      "grounding": 1.0,
+      "probe_ranks": {
+        "probe_1": 9,
+        "probe_2": 13,
+        "probe_3": null
+      },
+      "negative_control_clean": true
+    },
+    "blockers_remaining": [
+      "mismatch must-block fixture (Brandon-selected/Kai-target)",
+      "hardened recompute-from-children boundary checker",
+      "validate_edge_closure hardening + 6 negative fixtures",
+      "synthesis params transmitted to chatterbox; zero-intensity preserved; commit-bound ToM loads",
+      "per-frame path/sha bindings; unique panel ids; 4-frame VLM parse required",
+      "tau round-2 review to VERDICT: PASS"
+    ]
+  }
 }

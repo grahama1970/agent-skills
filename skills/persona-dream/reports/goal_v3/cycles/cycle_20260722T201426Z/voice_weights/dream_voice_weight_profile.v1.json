@@ -1,0 +1,57 @@
+{
+  "dream_node_key": "dream_auto_cycle_20260722T201426Z",
+  "mapping": "frozen in scripts/dream_voice_weights.py (TOM_TO_VOICE)",
+  "persona_id": "embry",
+  "schema": "persona_dream.dream_voice_weight_profile.v1",
+  "synthesis_params": {
+    "temperature": 0.771
+  },
+  "tom_state_types": [
+    "belief",
+    "fear",
+    "relationship_state",
+    "uncertainty"
+  ],
+  "weights": [
+    {
+      "emotional_tag": "hesitance",
+      "pace": "measured",
+      "sources": [
+        {
+          "emotional_intensity": 0.57,
+          "statement": "Embry may be unsure whether she is keeping Kai emotionally central or allowing him to become partial and mediated while another figure occupies her immediate attention.",
+          "tom_key": "dream:embry:auto_cycle_20260722T201426Z:tom:tom-001",
+          "tom_state_type": "uncertainty"
+        }
+      ],
+      "tone": "hesitant_reflective",
+      "weight": 0.57
+    },
+    {
+      "emotional_tag": "reflection",
+      "pace": "measured",
+      "sources": [
+        {
+          "emotional_intensity": 0.49,
+          "statement": "Embry may believe she has remained literally truthful with Kai while still recognizing that her framing may have led him to misread her emotional availability.",
+          "tom_key": "dream:embry:auto_cycle_20260722T201426Z:tom:tom-002",
+          "tom_state_type": "belief"
+        },
+        {
+          "emotional_intensity": 0.42,
+          "statement": "Embry's relationship with Kai may be experienced as continuous but filtered through unresolved attention to James and other observers rather than through a simple one-to-one bond.",
+          "tom_key": "dream:embry:auto_cycle_20260722T201426Z:tom:tom-003",
+          "tom_state_type": "relationship_state"
+        },
+        {
+          "emotional_intensity": 0.55,
+          "statement": "Embry may fear that Kai would interpret her closeness with James as replacement, even if she believes she can truthfully deny that anything overt has happened.",
+          "tom_key": "dream:embry:auto_cycle_20260722T201426Z:tom:tom-004",
+          "tom_state_type": "fear"
+        }
+      ],
+      "tone": "neutral_reflective",
+      "weight": 0.4867
+    }
+  ]
+}
