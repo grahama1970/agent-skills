@@ -52,7 +52,10 @@ binds the active objective clauses to the current expanded success and
 receipt mismatches. Its provider/video boundary now recursively inspects the
 goal-coverage receipt and its 37 referenced child receipts for provider,
 canonical-memory, identity, or source-memory side-effect counters instead of
-hardcoding that provider/video is out of the critical path.
+hardcoding that provider/video is out of the critical path. Its receipt
+integrity boundary now requires top-level success and goal-coverage receipt
+self-hashes to match and requires every child evidence file to match the
+`file_sha256` captured in the goal-coverage evidence rows.
 
 Sealed64 deterministic social episode corpus:
 
@@ -298,6 +301,24 @@ PCTOM-R objective-evidence negative child-provider-counter receipt:
 
 ```text
 /tmp/persona-dream-pctom-objective-evidence-negative-child-provider-counter-20260722T124200Z/pctom_objective_evidence_audit_receipt.v1.json
+```
+
+PCTOM-R self-hash objective-evidence audit receipt:
+
+```text
+/tmp/persona-dream-pctom-objective-evidence-self-hash-r2-20260722T130500Z/pctom_objective_evidence_audit_receipt.v1.json
+```
+
+PCTOM-R objective-evidence negative top-level self-hash receipt:
+
+```text
+/tmp/persona-dream-pctom-objective-evidence-negative-coverage-self-hash-20260722T130600Z/pctom_objective_evidence_audit_receipt.v1.json
+```
+
+PCTOM-R objective-evidence negative child-file-hash receipt:
+
+```text
+/tmp/persona-dream-pctom-objective-evidence-negative-child-file-hash-20260722T130700Z/pctom_objective_evidence_audit_receipt.v1.json
 ```
 
 PCTOM-R repeated-full64 calibration/abstention negative receipt:

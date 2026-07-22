@@ -85,6 +85,7 @@ def _load_json(path: Path, errors: list[str], label: str) -> Any:
 
 
 def _receipt_ref(path: Path, receipt: dict[str, Any]) -> dict[str, Any]:
+    calculated_receipt_sha256 = _calculated_receipt_sha256(receipt)
     return {
         "path": str(path),
         "status": receipt.get("status"),
@@ -93,7 +94,31 @@ def _receipt_ref(path: Path, receipt: dict[str, Any]) -> dict[str, Any]:
         "live": receipt.get("live"),
         "fixture_backed": receipt.get("fixture_backed"),
         "receipt_sha256": receipt.get("receipt_sha256"),
+        "calculated_receipt_sha256": calculated_receipt_sha256,
+        "receipt_sha256_matches_content": receipt.get("receipt_sha256") == calculated_receipt_sha256,
         "file_sha256": _file_sha256(path),
+    }
+
+
+def _calculated_receipt_sha256(receipt: dict[str, Any]) -> str:
+    return _stable_json_sha256({key: value for key, value in receipt.items() if key != "receipt_sha256"})
+
+
+def _check_receipt_self_hash(receipt: dict[str, Any], label: str, errors: list[str], *, required: bool) -> dict[str, Any]:
+    stored = receipt.get("receipt_sha256")
+    calculated = _calculated_receipt_sha256(receipt)
+    matches = stored == calculated
+    if required:
+        if not isinstance(stored, str) or not stored.startswith("sha256:"):
+            errors.append(f"{label}_receipt_sha256_missing_or_invalid:{stored}")
+        elif not matches:
+            errors.append(f"{label}_receipt_sha256_self_mismatch:{stored}:{calculated}")
+    return {
+        "label": label,
+        "required": required,
+        "stored": stored,
+        "calculated": calculated,
+        "matches": matches,
     }
 
 
@@ -153,6 +178,10 @@ def run(
     coverage = _load_json(goal_coverage_receipt_path, errors, "goal_coverage_receipt")
     success = success if isinstance(success, dict) else {}
     coverage = coverage if isinstance(coverage, dict) else {}
+    receipt_integrity = [
+        _check_receipt_self_hash(success, "success", errors, required=True),
+        _check_receipt_self_hash(coverage, "goal_coverage", errors, required=True),
+    ]
 
     if success.get("status") != "PASS_PCTOM_SUCCESS_CRITERIA_AUDIT":
         errors.append(f"success_status_not_expected:{success.get('status')}")
@@ -243,6 +272,7 @@ def run(
 
     child_receipt_refs = coverage.get("evidence") if isinstance(coverage.get("evidence"), list) else []
     child_receipts_checked = 0
+    child_file_hash_mismatches: list[dict[str, Any]] = []
     child_forbidden_side_effects: list[dict[str, Any]] = []
     for index, row in enumerate(child_receipt_refs):
         if not isinstance(row, dict):
@@ -253,10 +283,25 @@ def run(
             errors.append(f"coverage_evidence_row_path_missing:{index}")
             continue
         child_path = Path(raw_path).resolve()
+        expected_file_sha256 = row.get("file_sha256")
+        actual_file_sha256 = _file_sha256(child_path) if child_path.exists() and child_path.is_file() else None
+        if expected_file_sha256 != actual_file_sha256:
+            mismatch = {
+                "index": index,
+                "path": str(child_path),
+                "expected_file_sha256": expected_file_sha256,
+                "actual_file_sha256": actual_file_sha256,
+            }
+            child_file_hash_mismatches.append(mismatch)
+            errors.append(
+                "coverage_child_file_sha256_mismatch:"
+                f"{index}:{child_path}:{expected_file_sha256}:{actual_file_sha256}"
+            )
         child = _load_json(child_path, errors, f"coverage_evidence_receipt_{index}")
         if not isinstance(child, dict):
             continue
         child_receipts_checked += 1
+        receipt_integrity.append(_check_receipt_self_hash(child, f"coverage_evidence_{index}", errors, required=False))
         for item in _forbidden_side_effects(child, f"coverage_evidence[{index}]"):
             item["receipt_path"] = str(child_path)
             child_forbidden_side_effects.append(item)
@@ -315,6 +360,19 @@ def run(
             "positive_evidence_receipts": counts.get("positive_evidence_receipts"),
             "negative_evidence_receipts": counts.get("negative_evidence_receipts"),
             "live_positive_evidence_receipts": counts.get("live_positive_evidence_receipts"),
+        },
+        "receipt_integrity": {
+            "receipts_checked": len(receipt_integrity),
+            "required_receipts_checked": sum(1 for item in receipt_integrity if item["required"]),
+            "required_receipt_sha256_self_mismatches": sum(
+                1 for item in receipt_integrity if item["required"] and not item["matches"]
+            ),
+            "legacy_child_receipt_sha256_self_mismatches_or_missing": sum(
+                1 for item in receipt_integrity if not item["required"] and not item["matches"]
+            ),
+            "child_file_sha256_mismatches": len(child_file_hash_mismatches),
+            "child_file_hash_mismatches": child_file_hash_mismatches,
+            "items": receipt_integrity,
         },
         "provider_video_boundary": {
             "required_does_not_prove_claims": sorted(REQUIRED_PROVIDER_BOUNDARY_CLAIMS),

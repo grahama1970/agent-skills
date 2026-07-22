@@ -3283,3 +3283,11 @@
   goal coverage. A copied coverage receipt or copied child receipt with
   `actual_provider_call_attempts=1` makes the objective audit block with
   `provider_video_not_critical_path=false`.
+
+- 2026-07-22 (PCTOM-R objective receipt-integrity audit): top-level receipts
+  supplied to `check-pctom-objective-evidence` must self-hash under the stable
+  JSON receipt convention. Child receipts are historical and some lack valid
+  internal `receipt_sha256`, so the enforceable child invariant is the
+  goal-coverage evidence row's `file_sha256`: the child file currently at that
+  path must match the hash captured when goal coverage was built. Top-level
+  receipt tamper and child-file tamper now both fail closed.

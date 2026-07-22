@@ -542,6 +542,32 @@ Next: <one immediate action or stop condition>
   This closes a local audit weakness where provider/video critical-path
   exclusion was represented as a constant instead of being recomputed from the
   supplied receipt bundle.
+  The objective-evidence audit was then tightened again to recompute receipt
+  integrity for the supplied bundle. Superseding receipt:
+  `/tmp/persona-dream-pctom-objective-evidence-self-hash-r2-20260722T130500Z/pctom_objective_evidence_audit_receipt.v1.json`.
+  It returned `PASS_PCTOM_OBJECTIVE_EVIDENCE_AUDIT`, checked 39 receipts
+  total, required self-hash matches for the success and goal-coverage receipts,
+  found 0 required receipt self-hash mismatches, and found 0 child file SHA-256
+  mismatches against the file hashes recorded in the goal-coverage evidence
+  rows. It also recorded 27 legacy child receipts with missing or stale internal
+  `receipt_sha256` values as non-blocking legacy facts because their aggregate
+  binding is the goal-coverage row `file_sha256`. Receipt SHA-256:
+  `sha256:d8f2674c3ec402e4e2c290321d557da00ed51875eade79c981883c9a390b2ce1`.
+  A fixture-backed top-level tamper negative exited 1 with
+  `BLOCKED_PCTOM_OBJECTIVE_EVIDENCE_AUDIT`, 2 required receipt self-hash
+  mismatches, and errors `success_receipt_sha256_self_mismatch` plus
+  `goal_coverage_receipt_sha256_self_mismatch`; negative receipt SHA-256:
+  `sha256:5501a0d3dfc00894618225ff0e50b110311e1edeb36228d6207bf60968fd32cd`.
+  A fixture-backed child-file tamper negative recomputed the copied top-level
+  receipt hashes so only the child file binding failed. It exited 1 with
+  `BLOCKED_PCTOM_OBJECTIVE_EVIDENCE_AUDIT`,
+  `required_receipt_sha256_self_mismatches=0`,
+  `child_file_sha256_mismatches=1`, and error
+  `coverage_child_file_sha256_mismatch`; negative receipt SHA-256:
+  `sha256:23b4eb22ac38cba53ac9895fb509b84227790c3ec3c0760682aba8dd5a82ea48`.
+  This improves the cross-stage hash/lineage boundary for the current
+  objective audit: top-level receipts must self-hash, and child evidence files
+  must still match the hashes captured by goal coverage.
   The live run consumed simulator variants 17-24, 32 sealed-test
   episodes, all four scenario families, and 128 live Tau-authored M/R/D/CD
   condition predictions. It used the Gate 0 attribution root
