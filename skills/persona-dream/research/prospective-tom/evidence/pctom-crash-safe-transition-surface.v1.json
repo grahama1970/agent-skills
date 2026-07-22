@@ -1,0 +1,248 @@
+{
+  "build_errors": [],
+  "claims": {
+    "does_not_prove": [
+      "live service fault injection",
+      "deployed production retry machinery",
+      "statistical prediction benefit",
+      "paid provider execution",
+      "production Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "Gate 8 and Phase 5 fixture transition rows use only recovered, blocked-before-side-effect, and quarantined-with-no-active-partial terminal outcomes",
+      "deterministic retry, interrupted-persistence, and malformed-output transition rows are represented with side-effect and duplicate-active-state counters"
+    ]
+  },
+  "counts": {
+    "active_partial_quarantines": 0,
+    "blocked": 2,
+    "build_errors": 0,
+    "continued_unknown_state": 0,
+    "duplicate_active_state": 0,
+    "fault_boundaries": 7,
+    "missing_required_fault_boundaries": 0,
+    "quarantined": 2,
+    "recovered": 5,
+    "required_fault_boundaries": 6,
+    "restart_non_equivalent_recoveries": 0,
+    "side_effect_before_block": 0,
+    "transition_rows": 9,
+    "unauthorized_writes": 0
+  },
+  "created_at": "2026-07-22T14:17:50Z",
+  "fixture_backed": true,
+  "gate8_reliability_receipt_counts": {
+    "blocked": 1,
+    "equivalent_end_state_trials": 3,
+    "fault_injected_trials": 2,
+    "forbidden_terminal_outcomes": 0,
+    "perturbed_trials": 2,
+    "quarantined": 1,
+    "recovered": 3,
+    "repeat_groups": 3,
+    "side_effect_violations": 0,
+    "trials": 5
+  },
+  "gate8_reliability_receipt_status": "PASS_TOM_RELIABILITY_SURFACE",
+  "human_content_judgment_rows": 0,
+  "live": false,
+  "llm_judge_rows": 0,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "provider_call_attempts": 0,
+  "schema": "persona_dream.research.prospective_tom.pctom_crash_safe_transition_surface.v1",
+  "source_files": [
+    {
+      "artifact": "gate8_reliability_surface",
+      "path": "fixtures/gate8/positive/reliability_surface_ok/reliability_surface.json",
+      "sha256": "sha256:d01f07fa3a9d96583a15f966d6f6434574c4781b35a740cdb62b11357de63a69"
+    },
+    {
+      "artifact": "phase5_crash_transition_trials",
+      "path": "fixtures/phase5/crash_safe_transitions/crash_transition_trials.v1.json",
+      "sha256": "sha256:0777455aed3cf4afa465952f262b75422a11e827f6cd50a24302cca2ff22ff20"
+    },
+    {
+      "artifact": "gate8_reliability_receipt",
+      "path": "receipts/pctom-crash-safe-gate8-reliability-surface.v1.json",
+      "sha256": "sha256:bbf4a0e5839a9f4ae2263d8ac0ee3a14dbad32e878f6599b68e5cc46ae5d7ee0"
+    }
+  ],
+  "status": "CRASH_SAFE_TRANSITION_SURFACE_BUILT",
+  "transition_rows": [
+    {
+      "accepted_end_state_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "active_partial_state": false,
+      "boundary": "no_fault_repeat",
+      "canonical_memory_write": false,
+      "duplicate_active_predictions": 0,
+      "duplicate_active_revisions": 0,
+      "faults": [],
+      "identity_write": false,
+      "observed_end_state_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "side_effect_count": 0,
+      "source": "gate8_reliability_surface",
+      "source_memory_write": false,
+      "state_before_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "terminal_outcome": "RECOVERED_WITH_EQUIVALENT_END_STATE",
+      "transition_id": "gate8:gate8-trial-baseline-001",
+      "unknown_state_continued": false
+    },
+    {
+      "accepted_end_state_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "active_partial_state": false,
+      "boundary": "no_fault_repeat",
+      "canonical_memory_write": false,
+      "duplicate_active_predictions": 0,
+      "duplicate_active_revisions": 0,
+      "faults": [],
+      "identity_write": false,
+      "observed_end_state_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "side_effect_count": 0,
+      "source": "gate8_reliability_surface",
+      "source_memory_write": false,
+      "state_before_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "terminal_outcome": "RECOVERED_WITH_EQUIVALENT_END_STATE",
+      "transition_id": "gate8:gate8-trial-baseline-002",
+      "unknown_state_continued": false
+    },
+    {
+      "accepted_end_state_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "active_partial_state": false,
+      "boundary": "no_fault_repeat",
+      "canonical_memory_write": false,
+      "duplicate_active_predictions": 0,
+      "duplicate_active_revisions": 0,
+      "faults": [],
+      "identity_write": false,
+      "observed_end_state_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "side_effect_count": 0,
+      "source": "gate8_reliability_surface",
+      "source_memory_write": false,
+      "state_before_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "terminal_outcome": "RECOVERED_WITH_EQUIVALENT_END_STATE",
+      "transition_id": "gate8:gate8-trial-perturbed-001",
+      "unknown_state_continued": false
+    },
+    {
+      "accepted_end_state_sha256": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "active_partial_state": false,
+      "boundary": "memory_timeout",
+      "canonical_memory_write": false,
+      "duplicate_active_predictions": 0,
+      "duplicate_active_revisions": 0,
+      "faults": [
+        "memory_timeout"
+      ],
+      "identity_write": false,
+      "observed_end_state_sha256": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "side_effect_count": 0,
+      "source": "gate8_reliability_surface",
+      "source_memory_write": false,
+      "state_before_sha256": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "terminal_outcome": "BLOCKED_BEFORE_SIDE_EFFECT",
+      "transition_id": "gate8:gate8-trial-fault-memory-timeout-001",
+      "unknown_state_continued": false
+    },
+    {
+      "accepted_end_state_sha256": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "active_partial_state": false,
+      "boundary": "stale_artifact",
+      "canonical_memory_write": false,
+      "duplicate_active_predictions": 0,
+      "duplicate_active_revisions": 0,
+      "faults": [
+        "stale_artifact"
+      ],
+      "identity_write": false,
+      "observed_end_state_sha256": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "side_effect_count": 0,
+      "source": "gate8_reliability_surface",
+      "source_memory_write": false,
+      "state_before_sha256": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+      "terminal_outcome": "QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE",
+      "transition_id": "gate8:gate8-trial-fault-stale-artifact-001",
+      "unknown_state_continued": false
+    },
+    {
+      "accepted_end_state_sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "active_partial_state": false,
+      "boundary": "exact_retry",
+      "canonical_memory_write": false,
+      "duplicate_active_predictions": 0,
+      "duplicate_active_revisions": 0,
+      "faults": [
+        "exact_retry"
+      ],
+      "identity_write": false,
+      "observed_end_state_sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "side_effect_count": 0,
+      "source": "phase5_fixture",
+      "source_memory_write": false,
+      "state_before_sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "terminal_outcome": "RECOVERED_WITH_EQUIVALENT_END_STATE",
+      "transition_id": "phase5-exact-retry-recovery",
+      "unknown_state_continued": false
+    },
+    {
+      "accepted_end_state_sha256": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "active_partial_state": false,
+      "boundary": "retry_after_uncertain_completion",
+      "canonical_memory_write": false,
+      "duplicate_active_predictions": 0,
+      "duplicate_active_revisions": 0,
+      "faults": [
+        "retry_after_uncertain_completion"
+      ],
+      "identity_write": false,
+      "observed_end_state_sha256": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "side_effect_count": 0,
+      "source": "phase5_fixture",
+      "source_memory_write": false,
+      "state_before_sha256": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "terminal_outcome": "RECOVERED_WITH_EQUIVALENT_END_STATE",
+      "transition_id": "phase5-uncertain-retry-recovery",
+      "unknown_state_continued": false
+    },
+    {
+      "accepted_end_state_sha256": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+      "active_partial_state": false,
+      "boundary": "interrupted_persistence",
+      "canonical_memory_write": false,
+      "duplicate_active_predictions": 0,
+      "duplicate_active_revisions": 0,
+      "faults": [
+        "interrupted_persistence"
+      ],
+      "identity_write": false,
+      "observed_end_state_sha256": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+      "side_effect_count": 0,
+      "source": "phase5_fixture",
+      "source_memory_write": false,
+      "state_before_sha256": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+      "terminal_outcome": "BLOCKED_BEFORE_SIDE_EFFECT",
+      "transition_id": "phase5-interrupted-persistence-block",
+      "unknown_state_continued": false
+    },
+    {
+      "accepted_end_state_sha256": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+      "active_partial_state": false,
+      "boundary": "malformed_structured_output",
+      "canonical_memory_write": false,
+      "duplicate_active_predictions": 0,
+      "duplicate_active_revisions": 0,
+      "faults": [
+        "malformed_structured_output"
+      ],
+      "identity_write": false,
+      "observed_end_state_sha256": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+      "side_effect_count": 0,
+      "source": "phase5_fixture",
+      "source_memory_write": false,
+      "state_before_sha256": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+      "terminal_outcome": "QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE",
+      "transition_id": "phase5-malformed-output-quarantine",
+      "unknown_state_continued": false
+    }
+  ]
+}

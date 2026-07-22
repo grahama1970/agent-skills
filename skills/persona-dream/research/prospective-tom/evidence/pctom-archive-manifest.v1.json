@@ -1,11 +1,11 @@
 {
   "counts": {
-    "entries": 245,
-    "receipts": 7,
-    "schemas": 27,
-    "scripts": 97
+    "entries": 255,
+    "receipts": 9,
+    "schemas": 29,
+    "scripts": 100
   },
-  "created_at": "2026-07-22T14:12:32Z",
+  "created_at": "2026-07-22T14:18:15Z",
   "entries": [
     {
       "category": "contracts",
@@ -18,6 +18,12 @@
       "path": "contracts/pctom-audit-invariants.v1.json",
       "sha256": "sha256:03c04336d4f2fb14e0f36db2a4dfd5bb633d9e8efdcf3b77986ec583ed2927be",
       "size_bytes": 3125
+    },
+    {
+      "category": "contracts",
+      "path": "contracts/pctom-crash-safe-transition-policy.v1.json",
+      "sha256": "sha256:4bc14c1581a5a3c952d7841ccee96e72306d31943b6029b7357773ac132d880e",
+      "size_bytes": 1640
     },
     {
       "category": "contracts",
@@ -45,6 +51,12 @@
     },
     {
       "category": "evidence",
+      "path": "evidence/pctom-crash-safe-transition-surface.v1.json",
+      "sha256": "sha256:4a96fbdcdd4fc1d3dcf06851cc78cf5473807148340b597359d9b1ed87f0cff0",
+      "size_bytes": 10493
+    },
+    {
+      "category": "evidence",
       "path": "evidence/pctom-deterministic-scoring-surface.v1.json",
       "sha256": "sha256:26b956ab0d83c230dea30fd6eff8c8710263d830484e0ac8c256e370c7ed3a82",
       "size_bytes": 6291
@@ -52,8 +64,8 @@
     {
       "category": "evidence",
       "path": "evidence/pctom-evidence-scope-ledger.v1.json",
-      "sha256": "sha256:c75e72c1e5766df36431262af9f12c88b5bcf9e522f66a84df5937ea2189c0e6",
-      "size_bytes": 22649
+      "sha256": "sha256:9eea715af6d314aecdae10bfe1ad2afd454c665f63f20d8aaf05af46c660bae1",
+      "size_bytes": 32137
     },
     {
       "category": "fixtures",
@@ -668,6 +680,12 @@
       "size_bytes": 3452
     },
     {
+      "category": "fixtures",
+      "path": "fixtures/phase5/crash_safe_transitions/crash_transition_trials.v1.json",
+      "sha256": "sha256:0777455aed3cf4afa465952f262b75422a11e827f6cd50a24302cca2ff22ff20",
+      "size_bytes": 3859
+    },
+    {
       "category": "local",
       "path": "local/ACTIVE_CONTRACT.md",
       "sha256": "sha256:f56b31a6015ce221bd08873528155d191dd08493e524007b19d92a106743f975",
@@ -699,6 +717,18 @@
     },
     {
       "category": "receipts",
+      "path": "receipts/pctom-crash-safe-gate8-reliability-surface.v1.json",
+      "sha256": "sha256:bbf4a0e5839a9f4ae2263d8ac0ee3a14dbad32e878f6599b68e5cc46ae5d7ee0",
+      "size_bytes": 2640
+    },
+    {
+      "category": "receipts",
+      "path": "receipts/pctom-crash-safe-transition-surface-audit.v1.json",
+      "sha256": "sha256:7ac86d1697d4d50c44515e6ba8868631ca481e6533ac0f4adf45edb0a7952bda",
+      "size_bytes": 8515
+    },
+    {
+      "category": "receipts",
       "path": "receipts/pctom-deterministic-scoring-abstained.v1.json",
       "sha256": "sha256:0d9c0c66c38d46dd694957e0343df0b28e151978a6cff349a0df717f34b80a78",
       "size_bytes": 4875
@@ -718,7 +748,7 @@
     {
       "category": "receipts",
       "path": "receipts/pctom-evidence-scope-audit.v1.json",
-      "sha256": "sha256:bd5a57540855fd179d8a9951a4c91246391851f812c405ada4a0a57544d6094f",
+      "sha256": "sha256:a64ed18cb35e70235e999b3097ca7a41b21a581c4715b34cb4ae4dbce808af47",
       "size_bytes": 2366
     },
     {
@@ -786,6 +816,18 @@
       "path": "schemas/pctom-audit-mutation-suite-receipt.v1.schema.json",
       "sha256": "sha256:2aa56419d21755fd502558528173954f2e669c99fec9f2ac64992751a5b3076f",
       "size_bytes": 2075
+    },
+    {
+      "category": "schemas",
+      "path": "schemas/pctom-crash-safe-transition-audit-receipt.v1.schema.json",
+      "sha256": "sha256:cdf7c6b3e5617fb53bebe24ba5b3926459ade7b2242cf234cfe810f6bece2b2d",
+      "size_bytes": 1359
+    },
+    {
+      "category": "schemas",
+      "path": "schemas/pctom-crash-safe-transition-surface.v1.schema.json",
+      "sha256": "sha256:e04df44a004604b37a14bfc1999b2085071293d9eed6ab1b44c4fb8fc0bda552",
+      "size_bytes": 1146
     },
     {
       "category": "schemas",
@@ -927,6 +969,12 @@
     },
     {
       "category": "scripts",
+      "path": "scripts/audit_pctom_crash_safe_transition_surface.py",
+      "sha256": "sha256:c31704dbf60d3456dbc83f3fe34ddaa0b6daf3fb493e2d9a220440f7f33ea6b3",
+      "size_bytes": 7788
+    },
+    {
+      "category": "scripts",
       "path": "scripts/audit_pctom_deterministic_scoring_surface.py",
       "sha256": "sha256:d2d140e661f94725dc7100c46a4cd70f0073ffef1c48e933e574380306966f38",
       "size_bytes": 17003
@@ -978,6 +1026,12 @@
       "path": "scripts/build_pctom_archive_manifest.py",
       "sha256": "sha256:19f30271c01a0aee08feb529e13b464b8569712a85ffc5aa7e932c2a736d44c2",
       "size_bytes": 748
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/build_pctom_crash_safe_transition_surface.py",
+      "sha256": "sha256:ec6a8cb8d98a323e81442e9ffc34756a4aaf8af934fb6579c8ecb5f7abdefb2f",
+      "size_bytes": 1229
     },
     {
       "category": "scripts",
@@ -1170,6 +1224,12 @@
       "path": "scripts/pctom_phase4_scoring_lib.py",
       "sha256": "sha256:75fa7a3afed8eccf9bc50ae6b2824c9e28ea41e39cd8d9145077a83700549718",
       "size_bytes": 10085
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/pctom_phase5_transition_lib.py",
+      "sha256": "sha256:a4eec01a081098d7c4edf1dc23bb514fa9837fdcdbd266873d85670dd3732906",
+      "size_bytes": 17588
     },
     {
       "category": "scripts",
@@ -1478,7 +1538,7 @@
       "size_bytes": 30353
     }
   ],
-  "entries_sha256": "sha256:ed73fcaf7dee65563e38b06555e3ff8fbfca9114786c3a51f42704d053f22818",
+  "entries_sha256": "sha256:72e0ce73f3a9cdf655158ffcebd24b45ebd1b90bc6f8a55ef5057341b8455519",
   "excluded_paths": [
     "evidence/pctom-archive-manifest.v1.json"
   ],

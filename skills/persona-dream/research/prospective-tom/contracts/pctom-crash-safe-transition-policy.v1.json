@@ -1,0 +1,48 @@
+{
+  "schema": "persona_dream.research.prospective_tom.pctom_crash_safe_transition_policy.v1",
+  "status": "ACTIVE",
+  "program": "PCTOM-R2",
+  "gate": "phase5_crash_safe_pipeline_transitions",
+  "mocked": false,
+  "live": false,
+  "fixture_backed": true,
+  "provider_call_attempts": 0,
+  "memory_write_attempts": 0,
+  "allowed_terminal_outcomes": [
+    "RECOVERED_WITH_EQUIVALENT_END_STATE",
+    "BLOCKED_BEFORE_SIDE_EFFECT",
+    "QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE"
+  ],
+  "forbidden_terminal_outcomes": [
+    "CONTINUED_WITH_UNKNOWN_STATE"
+  ],
+  "required_fault_boundaries": [
+    "memory_timeout",
+    "stale_artifact",
+    "exact_retry",
+    "retry_after_uncertain_completion",
+    "interrupted_persistence",
+    "malformed_structured_output"
+  ],
+  "required_negative_statuses": [
+    "BLOCKED_PCTOM_CONTINUED_UNKNOWN_STATE",
+    "BLOCKED_PCTOM_NON_EQUIVALENT_RECOVERY",
+    "BLOCKED_PCTOM_SIDE_EFFECT_BEFORE_BLOCK",
+    "BLOCKED_PCTOM_ACTIVE_PARTIAL_QUARANTINE",
+    "BLOCKED_PCTOM_DUPLICATE_ACTIVE_STATE",
+    "BLOCKED_PCTOM_UNAUTHORIZED_WRITE"
+  ],
+  "acceptance_stop_condition": {
+    "continued_unknown_state": 0,
+    "restart_non_equivalent_recoveries": 0,
+    "side_effect_before_block": 0,
+    "active_partial_quarantines": 0,
+    "duplicate_active_state": 0,
+    "unauthorized_writes": 0,
+    "negative_mutations_blocked": "all_required"
+  },
+  "claim_limits": [
+    "This policy proves deterministic local crash-transition accounting only.",
+    "This policy does not prove deployed production retry machinery, live service fault injection, paid provider execution, or production Phase 01-16 runtime execution."
+  ]
+}

@@ -14,15 +14,15 @@
     ]
   },
   "counts": {
-    "claim_rows": 24,
+    "claim_rows": 34,
     "negative_fixtures": 3,
     "negative_fixtures_blocked": 3
   },
-  "created_at": "2026-07-22T14:12:32Z",
+  "created_at": "2026-07-22T14:18:15Z",
   "errors": [],
   "fixture_backed": true,
   "ledger_path": "evidence/pctom-evidence-scope-ledger.v1.json",
-  "ledger_sha256": "sha256:c75e72c1e5766df36431262af9f12c88b5bcf9e522f66a84df5937ea2189c0e6",
+  "ledger_sha256": "sha256:9eea715af6d314aecdae10bfe1ad2afd454c665f63f20d8aaf05af46c660bae1",
   "live": false,
   "memory_write_attempts": 0,
   "mocked": false,

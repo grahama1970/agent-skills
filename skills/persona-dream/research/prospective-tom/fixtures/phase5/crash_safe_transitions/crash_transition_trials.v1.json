@@ -1,0 +1,91 @@
+{
+  "fixture_backed": true,
+  "fixture_id": "phase5-crash-safe-transitions",
+  "live": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "provider_call_attempts": 0,
+  "schema": "persona_dream.research.prospective_tom.pctom_crash_transition_trials.v1",
+  "transition_rows": [
+    {
+      "accepted_end_state_sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "active_partial_state": false,
+      "boundary": "exact_retry",
+      "canonical_memory_write": false,
+      "duplicate_active_predictions": 0,
+      "duplicate_active_revisions": 0,
+      "faults": [
+        "exact_retry"
+      ],
+      "identity_write": false,
+      "observed_end_state_sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "side_effect_count": 0,
+      "source": "phase5_fixture",
+      "source_memory_write": false,
+      "state_before_sha256": "sha256:1111111111111111111111111111111111111111111111111111111111111111",
+      "terminal_outcome": "RECOVERED_WITH_EQUIVALENT_END_STATE",
+      "transition_id": "phase5-exact-retry-recovery",
+      "unknown_state_continued": false
+    },
+    {
+      "accepted_end_state_sha256": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "active_partial_state": false,
+      "boundary": "retry_after_uncertain_completion",
+      "canonical_memory_write": false,
+      "duplicate_active_predictions": 0,
+      "duplicate_active_revisions": 0,
+      "faults": [
+        "retry_after_uncertain_completion"
+      ],
+      "identity_write": false,
+      "observed_end_state_sha256": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "side_effect_count": 0,
+      "source": "phase5_fixture",
+      "source_memory_write": false,
+      "state_before_sha256": "sha256:2222222222222222222222222222222222222222222222222222222222222222",
+      "terminal_outcome": "RECOVERED_WITH_EQUIVALENT_END_STATE",
+      "transition_id": "phase5-uncertain-retry-recovery",
+      "unknown_state_continued": false
+    },
+    {
+      "accepted_end_state_sha256": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+      "active_partial_state": false,
+      "boundary": "interrupted_persistence",
+      "canonical_memory_write": false,
+      "duplicate_active_predictions": 0,
+      "duplicate_active_revisions": 0,
+      "faults": [
+        "interrupted_persistence"
+      ],
+      "identity_write": false,
+      "observed_end_state_sha256": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+      "side_effect_count": 0,
+      "source": "phase5_fixture",
+      "source_memory_write": false,
+      "state_before_sha256": "sha256:3333333333333333333333333333333333333333333333333333333333333333",
+      "terminal_outcome": "BLOCKED_BEFORE_SIDE_EFFECT",
+      "transition_id": "phase5-interrupted-persistence-block",
+      "unknown_state_continued": false
+    },
+    {
+      "accepted_end_state_sha256": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+      "active_partial_state": false,
+      "boundary": "malformed_structured_output",
+      "canonical_memory_write": false,
+      "duplicate_active_predictions": 0,
+      "duplicate_active_revisions": 0,
+      "faults": [
+        "malformed_structured_output"
+      ],
+      "identity_write": false,
+      "observed_end_state_sha256": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+      "side_effect_count": 0,
+      "source": "phase5_fixture",
+      "source_memory_write": false,
+      "state_before_sha256": "sha256:4444444444444444444444444444444444444444444444444444444444444444",
+      "terminal_outcome": "QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE",
+      "transition_id": "phase5-malformed-output-quarantine",
+      "unknown_state_continued": false
+    }
+  ]
+}

@@ -1,0 +1,233 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "live service fault injection",
+      "deployed production retry machinery",
+      "statistical prediction benefit",
+      "paid provider execution",
+      "production Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "deterministic crash-transition rows use only recovered, blocked-before-side-effect, or quarantined-with-no-active-partial terminal outcomes",
+      "recovered crash/retry transitions preserve accepted end-state equivalence, while blocked and quarantined transitions leave no accepted side effects",
+      "exact retry, retry-after-uncertain-completion, interrupted persistence, malformed structured output, memory timeout, and stale artifact boundaries are represented",
+      "continued unknown state, non-equivalent recovery, side effect before block, active partial quarantine, duplicate active state, and unauthorized write mutations fail closed"
+    ]
+  },
+  "counts": {
+    "active_partial_quarantines": 0,
+    "blocked": 2,
+    "continued_unknown_state": 0,
+    "duplicate_active_state": 0,
+    "fault_boundaries": 7,
+    "missing_required_fault_boundaries": 0,
+    "negative_fixtures": 6,
+    "negative_fixtures_blocked": 6,
+    "quarantined": 2,
+    "recovered": 5,
+    "required_fault_boundaries": 6,
+    "restart_non_equivalent_recoveries": 0,
+    "side_effect_before_block": 0,
+    "source_errors": 0,
+    "transition_rows": 9,
+    "unauthorized_writes": 0
+  },
+  "created_at": "2026-07-22T14:17:50Z",
+  "errors": [],
+  "evidence_path": "evidence/pctom-crash-safe-transition-surface.v1.json",
+  "evidence_sha256": "sha256:4a96fbdcdd4fc1d3dcf06851cc78cf5473807148340b597359d9b1ed87f0cff0",
+  "fixture_backed": true,
+  "human_content_judgment_rows": 0,
+  "live": false,
+  "llm_judge_rows": 0,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "negative_fixture_results": [
+    {
+      "blocked_as_expected": true,
+      "counts": {
+        "active_partial_quarantines": 0,
+        "blocked": 2,
+        "continued_unknown_state": 1,
+        "duplicate_active_state": 0,
+        "fault_boundaries": 7,
+        "missing_required_fault_boundaries": 0,
+        "negative_fixtures": 0,
+        "negative_fixtures_blocked": 0,
+        "quarantined": 2,
+        "recovered": 4,
+        "required_fault_boundaries": 6,
+        "restart_non_equivalent_recoveries": 0,
+        "side_effect_before_block": 0,
+        "source_errors": 0,
+        "transition_rows": 9,
+        "unauthorized_writes": 0
+      },
+      "errors": [
+        "continued_unknown_state:gate8:gate8-trial-baseline-001:CONTINUED_WITH_UNKNOWN_STATE:True",
+        "terminal_outcome_not_allowed:gate8:gate8-trial-baseline-001:CONTINUED_WITH_UNKNOWN_STATE"
+      ],
+      "expected_status": "BLOCKED_PCTOM_CONTINUED_UNKNOWN_STATE",
+      "fixture": "continued-unknown-state",
+      "observed_status": "BLOCKED_PCTOM_CONTINUED_UNKNOWN_STATE"
+    },
+    {
+      "blocked_as_expected": true,
+      "counts": {
+        "active_partial_quarantines": 0,
+        "blocked": 2,
+        "continued_unknown_state": 0,
+        "duplicate_active_state": 0,
+        "fault_boundaries": 7,
+        "missing_required_fault_boundaries": 0,
+        "negative_fixtures": 0,
+        "negative_fixtures_blocked": 0,
+        "quarantined": 2,
+        "recovered": 5,
+        "required_fault_boundaries": 6,
+        "restart_non_equivalent_recoveries": 1,
+        "side_effect_before_block": 0,
+        "source_errors": 0,
+        "transition_rows": 9,
+        "unauthorized_writes": 0
+      },
+      "errors": [
+        "non_equivalent_recovery:gate8:gate8-trial-baseline-001:sha256:9999999999999999999999999999999999999999999999999999999999999999:sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      ],
+      "expected_status": "BLOCKED_PCTOM_NON_EQUIVALENT_RECOVERY",
+      "fixture": "non-equivalent-recovery",
+      "observed_status": "BLOCKED_PCTOM_NON_EQUIVALENT_RECOVERY"
+    },
+    {
+      "blocked_as_expected": true,
+      "counts": {
+        "active_partial_quarantines": 0,
+        "blocked": 2,
+        "continued_unknown_state": 0,
+        "duplicate_active_state": 0,
+        "fault_boundaries": 7,
+        "missing_required_fault_boundaries": 0,
+        "negative_fixtures": 0,
+        "negative_fixtures_blocked": 0,
+        "quarantined": 2,
+        "recovered": 5,
+        "required_fault_boundaries": 6,
+        "restart_non_equivalent_recoveries": 0,
+        "side_effect_before_block": 1,
+        "source_errors": 0,
+        "transition_rows": 9,
+        "unauthorized_writes": 0
+      },
+      "errors": [
+        "side_effect_before_block:gate8:gate8-trial-fault-memory-timeout-001:1"
+      ],
+      "expected_status": "BLOCKED_PCTOM_SIDE_EFFECT_BEFORE_BLOCK",
+      "fixture": "blocked-with-side-effect",
+      "observed_status": "BLOCKED_PCTOM_SIDE_EFFECT_BEFORE_BLOCK"
+    },
+    {
+      "blocked_as_expected": true,
+      "counts": {
+        "active_partial_quarantines": 1,
+        "blocked": 2,
+        "continued_unknown_state": 0,
+        "duplicate_active_state": 0,
+        "fault_boundaries": 7,
+        "missing_required_fault_boundaries": 0,
+        "negative_fixtures": 0,
+        "negative_fixtures_blocked": 0,
+        "quarantined": 2,
+        "recovered": 5,
+        "required_fault_boundaries": 6,
+        "restart_non_equivalent_recoveries": 0,
+        "side_effect_before_block": 0,
+        "source_errors": 0,
+        "transition_rows": 9,
+        "unauthorized_writes": 0
+      },
+      "errors": [
+        "active_partial_quarantine:gate8:gate8-trial-fault-stale-artifact-001:0:True"
+      ],
+      "expected_status": "BLOCKED_PCTOM_ACTIVE_PARTIAL_QUARANTINE",
+      "fixture": "quarantined-active-partial",
+      "observed_status": "BLOCKED_PCTOM_ACTIVE_PARTIAL_QUARANTINE"
+    },
+    {
+      "blocked_as_expected": true,
+      "counts": {
+        "active_partial_quarantines": 0,
+        "blocked": 2,
+        "continued_unknown_state": 0,
+        "duplicate_active_state": 1,
+        "fault_boundaries": 7,
+        "missing_required_fault_boundaries": 0,
+        "negative_fixtures": 0,
+        "negative_fixtures_blocked": 0,
+        "quarantined": 2,
+        "recovered": 5,
+        "required_fault_boundaries": 6,
+        "restart_non_equivalent_recoveries": 0,
+        "side_effect_before_block": 0,
+        "source_errors": 0,
+        "transition_rows": 9,
+        "unauthorized_writes": 0
+      },
+      "errors": [
+        "duplicate_active_state:gate8:gate8-trial-baseline-001:1:0"
+      ],
+      "expected_status": "BLOCKED_PCTOM_DUPLICATE_ACTIVE_STATE",
+      "fixture": "duplicate-active-state",
+      "observed_status": "BLOCKED_PCTOM_DUPLICATE_ACTIVE_STATE"
+    },
+    {
+      "blocked_as_expected": true,
+      "counts": {
+        "active_partial_quarantines": 0,
+        "blocked": 2,
+        "continued_unknown_state": 0,
+        "duplicate_active_state": 0,
+        "fault_boundaries": 7,
+        "missing_required_fault_boundaries": 0,
+        "negative_fixtures": 0,
+        "negative_fixtures_blocked": 0,
+        "quarantined": 2,
+        "recovered": 5,
+        "required_fault_boundaries": 6,
+        "restart_non_equivalent_recoveries": 0,
+        "side_effect_before_block": 0,
+        "source_errors": 0,
+        "transition_rows": 9,
+        "unauthorized_writes": 1
+      },
+      "errors": [
+        "unauthorized_write:gate8:gate8-trial-baseline-001:True:False:False"
+      ],
+      "expected_status": "BLOCKED_PCTOM_UNAUTHORIZED_WRITE",
+      "fixture": "unauthorized-write",
+      "observed_status": "BLOCKED_PCTOM_UNAUTHORIZED_WRITE"
+    }
+  ],
+  "provider_call_attempts": 0,
+  "receipt_sha256": "sha256:57cab7a89d86c38547f8cbfac135442db89de3c5bda6ec4e55dc9ae209beb3f2",
+  "required_fault_boundaries": [
+    "exact_retry",
+    "interrupted_persistence",
+    "malformed_structured_output",
+    "memory_timeout",
+    "retry_after_uncertain_completion",
+    "stale_artifact"
+  ],
+  "schema": "persona_dream.research.prospective_tom.pctom_crash_safe_transition_audit_receipt.v1",
+  "status": "PASS_PCTOM_CRASH_SAFE_TRANSITIONS",
+  "transition_checks": {
+    "allowed_terminal_outcomes_only": true,
+    "blocked_before_side_effect": true,
+    "negative_mutations_fail_closed": true,
+    "no_duplicate_active_predictions_or_revisions": true,
+    "no_unauthorized_memory_identity_or_source_writes": true,
+    "quarantined_without_active_partial_state": true,
+    "recovered_end_states_equivalent": true,
+    "required_fault_boundaries_present": true,
+    "source_hashes_match": true
+  }
+}
