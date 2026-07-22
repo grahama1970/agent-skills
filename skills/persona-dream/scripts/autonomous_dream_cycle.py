@@ -377,16 +377,43 @@ def main() -> int:
     residue_path = out / "residue_links.json"
     residue_path.write_text(json.dumps(residue, indent=2) + "\n")
 
-    # 5. phases 13/14
+    # 5. phases 13/14 — cognition contract bound to the SELECTED counterpart
+    # (round-1 tau review CRITICAL: default Embry-Kai contract leaked; Brandon
+    # roots produced Kai-targeted ToM). The counterpart comes from the cluster.
+    cc = _load("persona_dream_cognition_contract")
+    counterpart_id = sel["cluster"]["cluster_id"].split(":person:")[1].split("_")[0]
+    contract = cc.load_contract()
+    contract = json.loads(json.dumps(contract))
+    contract["contract_id"] = f"cycle_{counterpart_id}_lane_v1"
+    contract["default_target"] = counterpart_id
+    contract["counterparts"] = [{"id": counterpart_id,
+                                 "display_name": art["other_person"],
+                                 "title": art["other_person"],
+                                 "relationship_description":
+                                 f"person anchoring the selected residue cluster {sel['cluster']['cluster_id']}"}]
+    contract["domain"] = {"domain_label": "selected_residue",
+                          "activity": "the recalled experiences",
+                          "locus": "the settings of the selected root memories"}
+    (out / "cycle_cognition_contract.json").write_text(json.dumps(contract, indent=2) + "\n")
     interp = p13.run_phase13(packet_path, residue_path, None, None,
-                             dream_id, cycle_id, "goal-v3", PERSONA, live=True)
+                             dream_id, cycle_id, "goal-v3", PERSONA, live=True,
+                             contract=contract)
     p13.write_json(out / "phase13_interpretation.json", interp)
     if not interp["status"].startswith("PASS") or not interp["accepted_interpretations"]:
         raise SystemExit(f"BLOCKED_CYCLE_PHASE13: {interp['status']}")
+    allowed_targets = {counterpart_id, "unknown_person"}
+    bad = [c.get("interpretation_id") for c in interp["accepted_interpretations"]
+           if str(c.get("target")) not in allowed_targets]
+    if bad:
+        raise SystemExit(f"BLOCKED_CYCLE_COUNTERPART_MISMATCH_P13: targets != {counterpart_id}: {bad}")
     tom = p14.run_phase14(interp, dream_id, cycle_id, "goal-v3", live=True)
     p13.write_json(out / "phase14_tom.json", tom)
     if not tom["status"].startswith("PASS") or not tom["accepted_tom_candidates"]:
         raise SystemExit(f"BLOCKED_CYCLE_PHASE14: {tom['status']}")
+    bad = [c.get("candidate_id") for c in tom["accepted_tom_candidates"]
+           if str(c.get("target")) not in allowed_targets]
+    if bad:
+        raise SystemExit(f"BLOCKED_CYCLE_COUNTERPART_MISMATCH_P14: targets != {counterpart_id}: {bad}")
 
     # 6. persist WITH watch vertices, closure-gated
     root_ids = sorted({b.get("source_id") for b in interp.get("source_memory_bindings", [])
@@ -455,6 +482,8 @@ def main() -> int:
         "cycle_id": cycle_id,
         "status": "PASS_AUTONOMOUS_CYCLE" if passed else "BLOCKED_AUTONOMOUS_CYCLE",
         "cluster": sel["cluster"]["cluster_id"],
+        "counterpart_id": counterpart_id,
+        "counterpart_gate": "all accepted p13/p14 targets in {counterpart, unknown_person}",
         "roots": roots,
         "instruments_sha256": instruments["sha256"],
         "instruments_frozen_before_dream": True,
