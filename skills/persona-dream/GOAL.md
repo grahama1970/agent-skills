@@ -133,6 +133,40 @@ Next: <one immediate action or stop condition>
 
 ## Current Evidence Snapshot
 
+- PCTOM-R sealed-test statistical-confidence artifact:
+  `/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/sealed_test_statistical_confidence_receipt.v1.json`.
+  Statistical summary:
+  `/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/artifacts/sealed_test_statistical_summary.json`.
+  Paired deltas:
+  `/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/artifacts/sealed_test_paired_deltas.json`.
+  Held-out condition-benefit receipt:
+  `/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/sealed_test_condition_benefit/heldout_condition_benefit_receipt.v1.json`.
+  Status `PASS_PCTOM_SEALED_TEST_STATISTICAL_CONFIDENCE`;
+  receipt file SHA-256
+  `sha256:25a91714d49d27a6f01c72adeb088371d675193550071fe1987be8d599f5a0fc`;
+  statistical summary SHA-256
+  `sha256:41cddbdae7514a80273b50ebee8c5f650950fb47e4e391726428ef66903e917f`;
+  paired deltas SHA-256
+  `sha256:e5c83e1df04762d23d76cc4d6fc84fd71bf2152f250bc0302c130e9e467041d3`;
+  held-out condition-benefit receipt SHA-256
+  `sha256:981998abc083c7d886d19537b17d403fac0034c76a5db039a585be7b96d0256f`.
+  Counts: sealed-test split, 64 episodes, four scenario families, 256 total
+  condition cases, and 64 sealed commitments, Gate 5 deterministic scores, and
+  Gate 6 action decisions per condition for M, R, D, and CD. Primary
+  preregistered metric: `belief_brier`. Strongest baseline: `D`.
+  CD-minus-D mean `-0.07979999999999995`; 95% paired-bootstrap CI
+  `[-0.07979999999999995, -0.07979999999999995]`; primary benefit with
+  confidence: `true`. Planning-regret confidence remains unresolved:
+  CD-minus-D mean `0.0`, 95% paired-bootstrap CI
+  `[-0.07968750000000001, 0.07968750000000001]`, planning benefit with
+  confidence: `false`. This proves deterministic text-first sealed-test
+  prediction benefit on the preregistered proper score under the local
+  simulator contract, with zero Tau, Memory, provider, canonical-memory,
+  identity, or source-memory writes and no human content judgment. It does not
+  prove live Tau sealed-test execution, live Memory recall in the sealed-test
+  loop, planning-regret benefit, real external service fault injection,
+  production retry machinery, semantic dream quality, paid provider execution,
+  or complete live Phase 01-16 runtime execution.
 - PCTOM-R visible-pressure Gate 6 planning-benefit diagnostic:
   `/tmp/persona-dream-visible-pressure-planning-benefit-20260722T002555Z/cooperation_visible_pressure_planning_benefit_diagnostic_receipt.v1.json`.
   Diagnostic artifact:

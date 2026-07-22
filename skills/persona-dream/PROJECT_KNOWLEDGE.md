@@ -1,10 +1,50 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-22 UTC (PCTOM-R visible-pressure Gate 6 planning-benefit diagnostic) by agent
+**Last updated:** 2026-07-22 UTC (PCTOM-R sealed-test statistical confidence) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-22 UTC (PCTOM-R SEALED-TEST STATISTICAL CONFIDENCE): a deterministic
+  text-first sealed-test statistical-confidence artifact now exists. Command:
+  `./skills/persona-dream/run.sh run-sealed-test-statistical-confidence`.
+  Receipt:
+  `/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/sealed_test_statistical_confidence_receipt.v1.json`.
+  Statistical summary:
+  `/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/artifacts/sealed_test_statistical_summary.json`.
+  Paired deltas:
+  `/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/artifacts/sealed_test_paired_deltas.json`.
+  Held-out condition-benefit receipt:
+  `/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/sealed_test_condition_benefit/heldout_condition_benefit_receipt.v1.json`.
+  Status `PASS_PCTOM_SEALED_TEST_STATISTICAL_CONFIDENCE`;
+  receipt file SHA-256
+  `sha256:25a91714d49d27a6f01c72adeb088371d675193550071fe1987be8d599f5a0fc`;
+  statistical summary SHA-256
+  `sha256:41cddbdae7514a80273b50ebee8c5f650950fb47e4e391726428ef66903e917f`;
+  paired deltas SHA-256
+  `sha256:e5c83e1df04762d23d76cc4d6fc84fd71bf2152f250bc0302c130e9e467041d3`;
+  held-out condition-benefit receipt SHA-256
+  `sha256:981998abc083c7d886d19537b17d403fac0034c76a5db039a585be7b96d0256f`.
+  Observed: sealed-test split, 64 episodes, four scenario families, 256 cases,
+  and 64 sealed commitments, deterministic Gate 5 scores, and constrained Gate
+  6 action decisions per condition for M, R, D, and CD. Primary preregistered
+  metric is `belief_brier`; strongest baseline is `D`; CD-minus-D mean is
+  `-0.07979999999999995`; 95% paired-bootstrap CI is
+  `[-0.07979999999999995, -0.07979999999999995]`; primary benefit with
+  confidence is `true`. Planning-regret benefit remains unproven because the
+  CD-minus-D mean is `0.0` and the 95% paired-bootstrap CI crosses zero:
+  `[-0.07968750000000001, 0.07968750000000001]`. The run made zero Tau,
+  Memory, provider, canonical-memory, identity, or source-memory writes and
+  required no human content judgment or LLM judge. This proves deterministic
+  sealed-test prediction benefit on the preregistered proper score under the
+  local simulator contract. It does not prove live Tau sealed-test execution,
+  live Memory recall in the sealed-test loop, planning-regret benefit, real
+  external service fault injection, production retry machinery, semantic dream
+  quality, paid provider execution, or complete live Phase 01-16 runtime
+  execution. Next work should either improve the action-policy layer until
+  planning regret separates under the same sealed-test discipline or connect
+  the sealed-test loop to live Tau/Memory evidence without weakening the
+  sealed-before-reveal and zero-write invariants.
 - 2026-07-22 UTC (PCTOM-R VISIBLE-PRESSURE GATE 6 PLANNING BENEFIT): a
   slice-local planning-benefit diagnostic now consumes the visible-pressure
   rule-reliability receipt and its live-originated row artifacts. Command:

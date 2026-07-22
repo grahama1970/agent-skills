@@ -1,5 +1,108 @@
 # Status
 
+Status: SEALED_TEST_STATISTICAL_CONFIDENCE_PRIMARY_BENEFIT
+
+Artifact: PCTOM-R sealed-test statistical-confidence artifact over the
+deterministic text-first simulator split. It runs M, R, D, and CD over 64
+sealed-test episodes, checks sealed commitments before reveal, deterministic
+Gate 5 scores, constrained Gate 6 action decisions, and paired bootstrap
+confidence for CD against the strongest M/R/D baseline.
+
+Sealed-test receipt:
+
+```text
+/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/sealed_test_statistical_confidence_receipt.v1.json
+```
+
+Statistical summary:
+
+```text
+/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/artifacts/sealed_test_statistical_summary.json
+```
+
+Paired deltas:
+
+```text
+/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/artifacts/sealed_test_paired_deltas.json
+```
+
+Held-out condition-benefit receipt:
+
+```text
+/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z/sealed_test_condition_benefit/heldout_condition_benefit_receipt.v1.json
+```
+
+Inspection result:
+
+```text
+status: PASS_PCTOM_SEALED_TEST_STATISTICAL_CONFIDENCE
+receipt_file_sha256: sha256:25a91714d49d27a6f01c72adeb088371d675193550071fe1987be8d599f5a0fc
+statistical_summary_sha256: sha256:41cddbdae7514a80273b50ebee8c5f650950fb47e4e391726428ef66903e917f
+paired_delta_sha256: sha256:e5c83e1df04762d23d76cc4d6fc84fd71bf2152f250bc0302c130e9e467041d3
+heldout_condition_benefit_receipt_sha256: sha256:981998abc083c7d886d19537b17d403fac0034c76a5db039a585be7b96d0256f
+split: sealed_test
+episodes_consumed: 64
+families_consumed: 4
+cases: 256
+sealed_commitments_per_condition: M=64 R=64 D=64 CD=64
+deterministic_scores_per_condition: M=64 R=64 D=64 CD=64
+action_decisions_per_condition: M=64 R=64 D=64 CD=64
+primary_metric: belief_brier
+primary_baseline_condition: D
+primary_cd_minus_baseline_mean: -0.07979999999999995
+primary_cd_minus_baseline_95pct_ci: [-0.07979999999999995, -0.07979999999999995]
+primary_benefit_with_confidence: true
+planning_regret_cd_minus_baseline_mean: 0.0
+planning_regret_95pct_ci: [-0.07968750000000001, 0.07968750000000001]
+planning_benefit_with_confidence: false
+tau_call_attempts: 0
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+mocked: false
+live: false
+human_content_judgment_required: false
+```
+
+What this proves:
+
+```text
+a deterministic sealed-test split has 64 episodes and all four conditions
+-> each condition has 64 sealed commitments before reveal
+-> each condition has 64 deterministic Gate 5 scores
+-> each condition has 64 constrained Gate 6 action decisions
+-> CD beats the strongest M/R/D baseline on preregistered belief Brier with a
+   paired-bootstrap confidence interval below zero
+-> no Tau, Memory, provider, canonical-memory, identity, source-memory, LLM
+   judge, or human content judgment path is used
+```
+
+What this does not prove:
+
+```text
+live Tau sealed-test execution
+live Memory recall in the sealed-test loop
+planning-regret benefit because the planning-regret CI crosses zero
+real external service fault injection
+production retry machinery
+semantic dream quality
+paid provider execution
+complete live Phase 01-16 runtime execution
+```
+
+Immediate next step:
+
+```text
+Use this sealed-test prediction-benefit artifact as the planning-research
+baseline, then either repair/extend the action-policy layer until planning
+regret separates, or connect the sealed-test loop to live Tau/Memory evidence
+without weakening the sealed-before-reveal and zero-write invariants.
+```
+
+Prior status:
+
 Status: VISIBLE_PRESSURE_GATE6_PLANNING_BENEFIT_DIAGNOSTIC
 
 Artifact: PCTOM-R Gate 6 planning-benefit diagnostic over the supplied
