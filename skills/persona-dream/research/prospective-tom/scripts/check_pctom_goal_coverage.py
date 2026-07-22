@@ -28,6 +28,7 @@ REQUIRED_COVERAGE_IDS = {
     "cross_stage_hash_lineage",
     "autonomous_no_human_judgment",
     "memory_retention_and_recall",
+    "unsupported_evidence_abstention",
     "negative_fixtures_fail_closed",
 }
 

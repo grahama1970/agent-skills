@@ -13,6 +13,7 @@ from typing import Any
 PASS_STATUS = "PASS_PCTOM_SUCCESS_CRITERIA_AUDIT"
 BLOCKED_STATUS = "BLOCKED_PCTOM_SUCCESS_CRITERIA_AUDIT"
 SCHEMA = "persona_dream.research.prospective_tom.success_criteria_audit_receipt.v1"
+REQUIRED_GOAL_COVERAGE_IDS = 15
 
 
 def _now_iso() -> str:
@@ -242,10 +243,10 @@ def run(
         errors.append(f"goal_coverage_status_not_expected:{coverage.get('status')}")
     c_counts = coverage.get("counts") if isinstance(coverage.get("counts"), dict) else {}
     coverage_complete = bool(
-        c_counts.get("required_coverage_ids") == 14
-        and c_counts.get("coverage_ids_seen") == 14
+        c_counts.get("required_coverage_ids") == REQUIRED_GOAL_COVERAGE_IDS
+        and c_counts.get("coverage_ids_seen") == REQUIRED_GOAL_COVERAGE_IDS
         and c_counts.get("coverage_ids_missing") == 0
-        and c_counts.get("negative_evidence_receipts", 0) >= 9
+        and c_counts.get("negative_evidence_receipts", 0) >= 10
         and c_counts.get("live_positive_evidence_receipts", 0) >= 16
         and coverage.get("mocked") is False
     )
@@ -521,10 +522,15 @@ def run(
                 "current evidence has confidence-bound live Tau planning benefit on the balanced held-out slice",
                 "current repeated full64 evidence has same-scope confidence-bound prediction and planning benefit when repeated_full64_same_scope_success is true",
                 "current calibration/abstention evidence has a full64 Gate 5 calibration and risk-coverage metric surface when calibration_surface_audited is true",
+                "current unsupported-abstention evidence exercises unsupported factual ToM hypotheses through Gate 2 and Gate 5 when unsupported_evidence_abstention_exercised is true",
                 "current evidence has mapped reliability and fail-closed coverage through the goal coverage receipt",
             ],
-            "does_not_prove": [
-                "unsupported-evidence abstention behavior when unsupported_evidence_abstention_exercised is false",
+            "does_not_prove": (
+                []
+                if unsupported_evidence_abstention_exercised
+                else ["unsupported-evidence abstention behavior"]
+            )
+            + [
                 "paid provider execution",
                 "semantic dream quality",
                 "complete Phase 01-16 media runtime execution",

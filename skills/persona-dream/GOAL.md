@@ -329,6 +329,27 @@ Next: <one immediate action or stop condition>
   does not prove semantic dream quality, paid provider execution, future
   receipts not added to the manifest, or complete Phase 01-16 media runtime
   execution.
+  After unsupported-evidence abstention was added, the goal-coverage checker
+  was tightened to require a fifteenth coverage id:
+  `unsupported_evidence_abstention`. The older 14-id manifest now fails closed.
+  Negative receipt:
+  `/tmp/persona-dream-pctom-goal-coverage-negative-missing-unsupported-abstention-20260722T120000Z/pctom_goal_coverage_receipt.v1.json`.
+  It returned `BLOCKED_PCTOM_GOAL_COVERAGE` with `required_coverage_ids=15`,
+  `coverage_ids_seen=14`, `coverage_ids_missing=1`, and error
+  `missing_required_coverage_id:unsupported_evidence_abstention`; receipt
+  SHA-256:
+  `sha256:03426a47433d0758222f9bbedcee4e0502af034f1668b8e06491d4b606754dd8`.
+  Superseding expanded manifest:
+  `/tmp/persona-dream-pctom-goal-coverage-unsupported-abstention-20260722T120100Z/pctom_goal_coverage_manifest.v1.json`.
+  It adds the unsupported-abstention positive receipt plus the marked-supported
+  fail-closed negative. The expanded coverage receipt:
+  `/tmp/persona-dream-pctom-goal-coverage-unsupported-abstention-20260722T120100Z/pctom_goal_coverage_receipt.v1.json`
+  returned `PASS_PCTOM_GOAL_COVERAGE` with 15 required coverage ids, 15 seen,
+  0 missing, 37 evidence receipts, 27 positive evidence receipts, 10 negative
+  evidence receipts, and 16 live positive evidence receipts. Manifest SHA-256:
+  `sha256:44eea9bb77a90a6b275afaaaadb2ffdf6205743d19a47e96cf808d4fc14915a7`;
+  receipt SHA-256:
+  `sha256:19d64e0123136e7dd5bc856e12f7ec5e4b29657e044da6135ee4454e86bf8ca4`.
   A success-criteria audit then checked the primary research claims without
   collapsing distinct scopes. Receipt:
   `/tmp/persona-dream-pctom-success-criteria-20260722T094500Z/pctom_success_criteria_audit_receipt.v1.json`.
@@ -449,6 +470,23 @@ Next: <one immediate action or stop condition>
   social corpus and existing validators. It is not live Tau generation of an
   abstention response, not paid provider execution, not semantic dream-quality
   proof, and not complete Phase 01-16 media runtime execution.
+  The success-criteria audit now also requires the expanded 15-id goal coverage
+  surface. Superseding expanded-coverage success receipt:
+  `/tmp/persona-dream-pctom-success-criteria-expanded-coverage-r2-20260722T120400Z/pctom_success_criteria_audit_receipt.v1.json`.
+  It returned `PASS_PCTOM_SUCCESS_CRITERIA_AUDIT` with
+  `goal_coverage_complete=true`, `same_scope_joint_success=true`,
+  `calibration_surface_audited=true`,
+  `unsupported_evidence_abstention_exercised=true`, and
+  `full_hard_success_criteria_met=true`; receipt SHA-256:
+  `sha256:adeb6ad468edc718c087998865b94d7f9e38ab6653bcca53e2070b5ad8b75c96`.
+  A fixture-backed negative passed the stale/missing-unsupported coverage
+  receipt into the same checker and exited 1 with
+  `BLOCKED_PCTOM_SUCCESS_CRITERIA_AUDIT`, errors
+  `goal_coverage_status_not_expected:BLOCKED_PCTOM_GOAL_COVERAGE` and
+  `goal_coverage_incomplete`; negative receipt SHA-256:
+  `sha256:0bea6958afbb7653c8db745adfd1e87851d6d2401034eaeb964fc120cbd1cfac`.
+  This proves the top-level success audit can no longer pass with the old
+  14-id goal-coverage surface.
   The live run consumed simulator variants 17-24, 32 sealed-test
   episodes, all four scenario families, and 128 live Tau-authored M/R/D/CD
   condition predictions. It used the Gate 0 attribution root

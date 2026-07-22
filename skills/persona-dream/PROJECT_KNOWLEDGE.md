@@ -253,6 +253,26 @@
   receipts outside the manifest, or complete Phase 01-16 media runtime
   execution.
 
+  The goal-coverage checker now requires a separate
+  `unsupported_evidence_abstention` coverage id. The old 14-id manifest exits 1
+  under the tightened checker. Negative receipt:
+  `/tmp/persona-dream-pctom-goal-coverage-negative-missing-unsupported-abstention-20260722T120000Z/pctom_goal_coverage_receipt.v1.json`.
+  Status: `BLOCKED_PCTOM_GOAL_COVERAGE`; counts: 15 required coverage ids,
+  14 seen, 1 missing; error:
+  `missing_required_coverage_id:unsupported_evidence_abstention`; receipt
+  SHA-256:
+  `sha256:03426a47433d0758222f9bbedcee4e0502af034f1668b8e06491d4b606754dd8`.
+  Superseding expanded manifest:
+  `/tmp/persona-dream-pctom-goal-coverage-unsupported-abstention-20260722T120100Z/pctom_goal_coverage_manifest.v1.json`.
+  Superseding expanded receipt:
+  `/tmp/persona-dream-pctom-goal-coverage-unsupported-abstention-20260722T120100Z/pctom_goal_coverage_receipt.v1.json`.
+  Status: `PASS_PCTOM_GOAL_COVERAGE`; counts: 15 required coverage ids,
+  15 seen, 0 missing, 37 evidence receipts, 27 positive receipts, 10 negative
+  receipts, and 16 live positive receipts. Manifest SHA-256:
+  `sha256:44eea9bb77a90a6b275afaaaadb2ffdf6205743d19a47e96cf808d4fc14915a7`;
+  receipt SHA-256:
+  `sha256:19d64e0123136e7dd5bc856e12f7ec5e4b29657e044da6135ee4454e86bf8ca4`.
+
   A PCTOM-R success-criteria audit now prevents a scoped result from being
   reported as full hard success. Command:
   `./skills/persona-dream/run.sh check-pctom-success-criteria
@@ -411,6 +431,23 @@
   authored an abstention response, paid provider execution, semantic dream
   quality, multimodal perception, or complete Phase 01-16 media runtime
   execution.
+
+  The success-criteria audit now requires the expanded 15-id goal-coverage
+  receipt. Superseding receipt:
+  `/tmp/persona-dream-pctom-success-criteria-expanded-coverage-r2-20260722T120400Z/pctom_success_criteria_audit_receipt.v1.json`.
+  It returned `PASS_PCTOM_SUCCESS_CRITERIA_AUDIT` with
+  `goal_coverage_complete=true`, `same_scope_joint_success=true`,
+  `calibration_surface_audited=true`,
+  `unsupported_evidence_abstention_exercised=true`, and
+  `full_hard_success_criteria_met=true`; receipt SHA-256:
+  `sha256:adeb6ad468edc718c087998865b94d7f9e38ab6653bcca53e2070b5ad8b75c96`.
+  Passing the stale/missing-unsupported coverage receipt into the same checker
+  exited 1 with `BLOCKED_PCTOM_SUCCESS_CRITERIA_AUDIT`, errors
+  `goal_coverage_status_not_expected:BLOCKED_PCTOM_GOAL_COVERAGE` and
+  `goal_coverage_incomplete`; negative receipt SHA-256:
+  `sha256:0bea6958afbb7653c8db745adfd1e87851d6d2401034eaeb964fc120cbd1cfac`.
+  This prevents a top-level success receipt from passing unless the explicit
+  unsupported-evidence abstention coverage clause is present.
 
   Command:
   `./skills/persona-dream/run.sh run-live-tau-balanced-planning-replication
