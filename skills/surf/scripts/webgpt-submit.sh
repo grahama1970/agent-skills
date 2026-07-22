@@ -476,13 +476,19 @@ PY
 fi
 
 prompt="$(cat "$input")"
-_pf_args="--input "$input" --json"
+_pf_args=(--input "$input" --json)
 if [[ "$warn_only" -eq 1 ]]; then
-  _pf_args="--input "$input" --json --warn-only"
+  _pf_args+=(--warn-only)
 fi
-prompt_path_preflight_json="$(python3 "${SCRIPT_DIR}/lib/webgpt_prompt_preflight.py" $_pf_args 2>&1)" || true
-_pf_status="$(printf '%s' "$prompt_path_preflight_json" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("status","fail"))' 2>/dev/null || echo "fail")"
-if [[ "$_pf_status" == "fail" ]]; then
+prompt_path_preflight_json="$(python3 "${SCRIPT_DIR}/lib/webgpt_prompt_preflight.py" "${_pf_args[@]}" 2>&1)" || true
+_pf_gate="$(
+  printf '%s' "$prompt_path_preflight_json" | python3 -c 'import json,sys
+d=json.load(sys.stdin)
+print((d.get("status") or "fail") + "\t" + ("true" if d.get("browser_submit_allowed") is True else "false"))' 2>/dev/null || printf 'fail\tfalse'
+)"
+_pf_status="${_pf_gate%%$'\t'*}"
+_pf_allowed="${_pf_gate#*$'\t'}"
+if [[ "$_pf_allowed" != "true" ]]; then
   failed_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "/dev/null" "$sentinel" "$prompt_path_preflight_json" "$failed_at" <<'PY'
 import json, pathlib, sys
@@ -1886,9 +1892,9 @@ if [[ -n "$verify_cmd" && ${#_downloaded_zips[@]} -gt 0 ]]; then
   done
 fi
 
-python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$stable_polls" "$timeout_s" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$no_activate" "$focus_before_json" "$focus_after_json" "$focus_stolen_mid" "$focus_mid_log" "$model" "$reasoning" "${identity_preflight_json:-}" "$roundtrip_preflight" "$roundtrip_preflight_status" "$roundtrip_preflight_dir" "$roundtrip_preflight_json" <<'PY'
+python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$stable_polls" "$timeout_s" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$no_activate" "$focus_before_json" "$focus_after_json" "$focus_stolen_mid" "$focus_mid_log" "$model" "$reasoning" "${identity_preflight_json:-}" "$roundtrip_preflight" "$roundtrip_preflight_status" "$roundtrip_preflight_dir" "$roundtrip_preflight_json" "$prompt_path_preflight_json" <<'PY'
 import json, pathlib, sys
-meta, inp, submitted, out, raw, err, sentinel, stable, timeout_s, started, finished, requested_tab_id, target_url, no_activate_s, focus_before_s, focus_after_s, focus_stolen_mid_s, focus_mid_log, model, reasoning, identity_s, roundtrip_required_s, roundtrip_status_s, roundtrip_dir, roundtrip_s = sys.argv[1:]
+meta, inp, submitted, out, raw, err, sentinel, stable, timeout_s, started, finished, requested_tab_id, target_url, no_activate_s, focus_before_s, focus_after_s, focus_stolen_mid_s, focus_mid_log, model, reasoning, identity_s, roundtrip_required_s, roundtrip_status_s, roundtrip_dir, roundtrip_s, prompt_preflight_s = sys.argv[1:]
 try:
     identity = json.loads(identity_s) if identity_s else None
 except Exception:
@@ -1897,6 +1903,10 @@ try:
     roundtrip = json.loads(roundtrip_s) if roundtrip_s else None
 except Exception:
     roundtrip = {"status": "invalid_json", "stdout_tail": (roundtrip_s or "")[-2000:]}
+try:
+    prompt_preflight = json.loads(prompt_preflight_s) if prompt_preflight_s else None
+except Exception:
+    prompt_preflight = {"status": "invalid_json", "stdout_tail": (prompt_preflight_s or "")[-2000:]}
 raw_text = pathlib.Path(raw).read_text()
 out_text = pathlib.Path(out).read_text()
 stderr_text = pathlib.Path(err).read_text() if pathlib.Path(err).exists() else ""
@@ -2116,6 +2126,7 @@ pathlib.Path(meta).write_text(json.dumps({
     "reasoning_selection_status": reasoning_selection_status,
     "reasoning_selection_error": reasoning_selection_error,
     "tab_identity_preflight": identity,
+    "prompt_path_preflight": prompt_preflight,
     "roundtrip_preflight_required": roundtrip_required_s == "1",
     "roundtrip_preflight_exit_code": int(roundtrip_status_s or 0),
     "roundtrip_preflight_output_dir": roundtrip_dir or None,
