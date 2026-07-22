@@ -4358,3 +4358,59 @@ receipt_sha256: sha256:cfd53388e4b24786293833c59bfc60458b09f0df49813fc3afdbe3c67
 success_receipt_sha256_matches_content: true
 goal_coverage_receipt_sha256_matches_content: true
 ```
+
+## Current Goal-Coverage Evidence Identity Boundary
+
+As of 2026-07-22, `check-pctom-goal-coverage` does not accept a stale child
+`receipt_sha256` string as evidence identity. Every evidence row must be bound
+by one of:
+
+```text
+matching child receipt_sha256
+matching manifest expected_file_sha256
+```
+
+The audit also recursively scans every evidence receipt for provider,
+canonical-memory, identity, and source-memory side-effect counters.
+
+Current strict coverage receipt:
+
+```text
+/tmp/persona-dream-pctom-goal-coverage-strict-manifest-20260722T062846Z/output/pctom_goal_coverage_receipt.v1.json
+status: PASS_PCTOM_GOAL_COVERAGE
+receipt_sha256: sha256:a5f9598bacbe3ec918ab90c9aa70096461047468fe9b6db8624aa6bc5e186705
+evidence_receipts_seen: 37
+receipt_sha256_identity_bound: 10
+expected_file_sha256_identity_bound: 27
+unbound_evidence_receipts: 0
+recursive_forbidden_side_effects: 0
+```
+
+Current fail-closed coverage tamper receipts:
+
+```text
+/tmp/persona-dream-pctom-goal-coverage-strict-old-manifest-negative-20260722T062823Z/pctom_goal_coverage_receipt.v1.json
+status: BLOCKED_PCTOM_GOAL_COVERAGE
+receipt_sha256: sha256:aba873ec7bacbf2b5abf4603b92dc7a9b97d7b6f66e4bec3058481ef89f0e1b8
+errors: 23 receipt_sha256_self_mismatch_without_file_fallback errors
+unbound_evidence_receipts: 23
+
+/tmp/persona-dream-pctom-goal-coverage-negative-nested-provider-counter-20260722T062931Z/output/pctom_goal_coverage_receipt.v1.json
+status: BLOCKED_PCTOM_GOAL_COVERAGE
+receipt_sha256: sha256:3bf96c0722445a6e9433bdce9c216ebbc55eafdd5e5a8ea0e984a8d903a0cc20
+errors:
+  - coverage_gate0_provenance_bound_recall_residue_evidence_0_provider_or_canonical_write_counter_nonzero:1
+recursive_forbidden_side_effects: 1
+```
+
+Current strict success/objective chain:
+
+```text
+/tmp/persona-dream-pctom-success-criteria-strict-coverage-20260722T062907Z/pctom_success_criteria_audit_receipt.v1.json
+status: PASS_PCTOM_SUCCESS_CRITERIA_AUDIT
+receipt_sha256: sha256:28d629f529e80a789b436e18b321e71b54614df00aeb37f4c4b45c73e78f9523
+
+/tmp/persona-dream-pctom-objective-evidence-strict-coverage-chain-20260722T062907Z/pctom_objective_evidence_audit_receipt.v1.json
+status: PASS_PCTOM_OBJECTIVE_EVIDENCE_AUDIT
+receipt_sha256: sha256:c0f3e9ca8ca42a21d7659f68ab83abda6a1db5bb8a24bc366a71e3c627a178fe
+```

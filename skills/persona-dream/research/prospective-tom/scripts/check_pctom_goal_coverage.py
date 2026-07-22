@@ -34,6 +34,17 @@ REQUIRED_COVERAGE_IDS = {
 
 POSITIVE_STATUS_PREFIXES = ("PASS_",)
 NEGATIVE_STATUS_PREFIXES = ("BLOCKED_",)
+FORBIDDEN_SIDE_EFFECT_COUNTERS = {
+    "actual_provider_call_attempts",
+    "provider_calls",
+    "provider_call_count",
+    "canonical_memory_writes",
+    "identity_writes",
+    "source_memory_writes",
+    "canonical_write_violations",
+    "identity_write_violations",
+    "source_memory_write_violations",
+}
 
 
 def _now_iso() -> str:
@@ -51,6 +62,10 @@ def _file_sha256(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return "sha256:" + digest.hexdigest()
+
+
+def _calculated_receipt_sha256(receipt: dict[str, Any]) -> str:
+    return _stable_json_sha256({key: value for key, value in receipt.items() if key != "receipt_sha256"})
 
 
 def _load_json(path: Path, errors: list[str], label: str) -> Any:
@@ -87,15 +102,25 @@ def _status_matches(status: Any, kind: str) -> bool:
     return False
 
 
-def _counter(receipt: dict[str, Any], *names: str) -> int:
-    total = 0
-    for name in names:
-        value = receipt.get(name)
-        if isinstance(value, bool):
-            total += int(value)
-        elif isinstance(value, int):
-            total += value
-    return total
+def _forbidden_side_effects(value: Any, path: str = "$") -> list[dict[str, Any]]:
+    found: list[dict[str, Any]] = []
+    if isinstance(value, dict):
+        for key, item in value.items():
+            next_path = f"{path}.{key}"
+            if key in FORBIDDEN_SIDE_EFFECT_COUNTERS:
+                if isinstance(item, bool):
+                    numeric = int(item)
+                elif isinstance(item, int):
+                    numeric = item
+                else:
+                    numeric = 0
+                if numeric:
+                    found.append({"path": next_path, "value": item})
+            found.extend(_forbidden_side_effects(item, next_path))
+    elif isinstance(value, list):
+        for index, item in enumerate(value):
+            found.extend(_forbidden_side_effects(item, f"{path}[{index}]"))
+    return found
 
 
 def _validate_evidence(
@@ -120,6 +145,15 @@ def _validate_evidence(
     if not isinstance(receipt, dict):
         return None
     file_sha256 = _file_sha256(path)
+    receipt_sha256 = receipt.get("receipt_sha256")
+    calculated_receipt_sha256 = _calculated_receipt_sha256(receipt)
+    receipt_sha256_matches_content = receipt_sha256 == calculated_receipt_sha256
+    expected_file_sha256 = item.get("expected_file_sha256")
+    file_sha256_matches_expected = (
+        isinstance(expected_file_sha256, str)
+        and expected_file_sha256.startswith("sha256:")
+        and file_sha256 == expected_file_sha256
+    )
 
     status = receipt.get("status")
     if not _status_matches(status, kind):
@@ -138,35 +172,32 @@ def _validate_evidence(
         errors.append(f"coverage_{coverage_id}_evidence_{item_index}_human_content_judgment_required_true")
 
     if item.get("require_receipt_sha256", True):
-        sha = receipt.get("receipt_sha256")
-        expected_file_sha256 = item.get("expected_file_sha256")
-        if isinstance(sha, str) and sha.startswith("sha256:"):
+        if (
+            isinstance(receipt_sha256, str)
+            and receipt_sha256.startswith("sha256:")
+            and receipt_sha256_matches_content
+        ):
             pass
+        elif file_sha256_matches_expected:
+            pass
+        elif isinstance(receipt_sha256, str) and receipt_sha256.startswith("sha256:"):
+            errors.append(
+                f"coverage_{coverage_id}_evidence_{item_index}_receipt_sha256_self_mismatch_without_file_fallback:"
+                f"{receipt_sha256}:{calculated_receipt_sha256}:{file_sha256}:{expected_file_sha256}"
+            )
         elif isinstance(expected_file_sha256, str) and expected_file_sha256.startswith("sha256:"):
-            if file_sha256 != expected_file_sha256:
-                errors.append(
-                    f"coverage_{coverage_id}_evidence_{item_index}_expected_file_sha256_mismatch:"
-                    f"{file_sha256}:{expected_file_sha256}"
-                )
+            errors.append(
+                f"coverage_{coverage_id}_evidence_{item_index}_expected_file_sha256_mismatch:"
+                f"{file_sha256}:{expected_file_sha256}"
+            )
         else:
             errors.append(f"coverage_{coverage_id}_evidence_{item_index}_receipt_sha256_missing")
 
-    forbidden_write_count = _counter(
-        receipt,
-        "actual_provider_call_attempts",
-        "provider_calls",
-        "provider_call_count",
-        "canonical_memory_writes",
-        "identity_writes",
-        "source_memory_writes",
-        "canonical_write_violations",
-        "identity_write_violations",
-        "source_memory_write_violations",
-    )
-    if item.get("require_no_provider_or_canonical_writes", True) and forbidden_write_count:
+    forbidden_side_effects = _forbidden_side_effects(receipt, "receipt")
+    if item.get("require_no_provider_or_canonical_writes", True) and forbidden_side_effects:
         errors.append(
             f"coverage_{coverage_id}_evidence_{item_index}_provider_or_canonical_write_counter_nonzero:"
-            f"{forbidden_write_count}"
+            f"{len(forbidden_side_effects)}"
         )
 
     required_errors = item.get("required_error_needles", [])
@@ -209,8 +240,17 @@ def _validate_evidence(
         "human_content_judgment_required": receipt.get("human_content_judgment_required"),
         "llm_judge_used": receipt.get("llm_judge_used"),
         "file_sha256": file_sha256,
-        "expected_file_sha256": item.get("expected_file_sha256"),
-        "receipt_sha256": receipt.get("receipt_sha256"),
+        "expected_file_sha256": expected_file_sha256,
+        "file_sha256_matches_expected": file_sha256_matches_expected,
+        "receipt_sha256": receipt_sha256,
+        "calculated_receipt_sha256": calculated_receipt_sha256,
+        "receipt_sha256_matches_content": receipt_sha256_matches_content,
+        "identity_bound_by": "receipt_sha256"
+        if receipt_sha256_matches_content
+        else "expected_file_sha256"
+        if file_sha256_matches_expected
+        else "unbound",
+        "forbidden_side_effects": forbidden_side_effects,
         "required_error_needles": required_errors,
         "matched_error_needles": matched_errors,
         "required_count_matches": count_matches,
@@ -302,6 +342,14 @@ def run(*, manifest_path: Path, output_root: Path, receipt_out: Path, fixture_ba
         "positive_evidence_receipts": positive_evidence,
         "negative_evidence_receipts": negative_evidence,
         "live_positive_evidence_receipts": live_positive_evidence,
+        "receipt_sha256_identity_bound": sum(
+            1 for row in evidence_rows if row.get("identity_bound_by") == "receipt_sha256"
+        ),
+        "expected_file_sha256_identity_bound": sum(
+            1 for row in evidence_rows if row.get("identity_bound_by") == "expected_file_sha256"
+        ),
+        "unbound_evidence_receipts": sum(1 for row in evidence_rows if row.get("identity_bound_by") == "unbound"),
+        "recursive_forbidden_side_effects": sum(len(row.get("forbidden_side_effects", [])) for row in evidence_rows),
     }
 
     receipt = {
@@ -325,7 +373,7 @@ def run(*, manifest_path: Path, output_root: Path, receipt_out: Path, fixture_ba
         "claims": {
             "proves": [
                 "the current PCTOM-R evidence bundle names concrete receipts for every active goal clause",
-                "positive evidence receipts have PASS status and required hashes",
+                "positive evidence receipts have PASS status and are bound by matching receipt SHA-256 or manifest file SHA-256",
                 "negative fixture evidence named in the manifest fails closed with expected BLOCKED status",
             ],
             "does_not_prove": [

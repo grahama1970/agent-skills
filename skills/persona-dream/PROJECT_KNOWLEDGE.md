@@ -3333,3 +3333,12 @@
   `prediction_receipt_sha256_self_mismatch`; a nested
   `debug_nested_counter_fixture.provider_calls=1` blocks even when the tampered
   input receipt has a recomputed self-hash.
+
+- 2026-07-22 (PCTOM-R goal-coverage evidence identity): the goal-coverage audit
+  now requires every evidence receipt to be identity-bound by either a matching
+  internal `receipt_sha256` or an explicit manifest `expected_file_sha256`
+  matching the current file. Legacy child receipts with stale self-hashes are
+  no longer accepted unless the manifest binds their file hash. The audit also
+  recursively scans each evidence receipt for provider/canonical-memory/
+  identity/source-memory side-effect counters; a nested `provider_calls=1`
+  blocks even when the tampered file is hash-bound in the manifest.
