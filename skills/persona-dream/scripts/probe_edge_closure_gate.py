@@ -47,24 +47,45 @@ def main() -> int:
     dream_doc = {"_key": f"dream_{PROBE_DREAM_ID}", "kind": "synthetic_dream_memory",
                  "persona_id": "embry", "dream_id": PROBE_DREAM_ID,
                  "retrieval_text": "edge-closure gate probe (never persisted)"}
-    dangling = [{
-        "collection": "persona_memory_edges", "kind": "edge",
-        "document": {
-            "_key": f"{PROBE_DREAM_ID}__probe_dangling_edge",
-            "_from": f"persona_memory/dream_{PROBE_DREAM_ID}",
-            "_to": "persona_dream_watch_evidence/does_not_exist_anywhere_v3_probe",
-            "relationship_type": "observed_in_scene",
-        },
-    }]
+    def edge(key, frm, to, drop=None):
+        d = {"_key": key, "_from": frm, "_to": to,
+             "relationship_type": "observed_in_scene"}
+        if drop:
+            d.pop(drop)
+        return {"collection": "persona_memory_edges", "kind": "edge", "document": d}
 
-    proof = p15.persist_canonical(
-        dream_doc, interp, tom, [], BASE,
-        dream_id=PROBE_DREAM_ID, return_id="probe", packet=packet,
-        phase13_sha="sha256:probe13", phase14_sha="sha256:probe14",
-        include_dream_node=True, extra_edges=dangling,
-        justification="GOAL_V3.2 negative closure probe",
-    )
-    blocked = proof.get("status") == "BLOCKED_EDGE_ENDPOINT_UNRESOLVED"
+    CASES = {
+        "dangling_vertex": [edge(f"{PROBE_DREAM_ID}__e1",
+                                 f"persona_memory/dream_{PROBE_DREAM_ID}",
+                                 "persona_dream_watch_evidence/does_not_exist_anywhere_v3_probe")],
+        "missing_endpoint": [edge(f"{PROBE_DREAM_ID}__e2",
+                                  f"persona_memory/dream_{PROBE_DREAM_ID}", None,
+                                  drop="_to")],
+        "malformed_ref": [edge(f"{PROBE_DREAM_ID}__e3",
+                               f"persona_memory/dream_{PROBE_DREAM_ID}",
+                               "not-a-collection-key-ref")],
+        "edge_to_edge": [edge(f"{PROBE_DREAM_ID}__e4",
+                              f"persona_memory/dream_{PROBE_DREAM_ID}",
+                              f"persona_memory_edges/{PROBE_DREAM_ID}__e5"),
+                         edge(f"{PROBE_DREAM_ID}__e5",
+                              f"persona_memory/dream_{PROBE_DREAM_ID}",
+                              f"persona_memory/dream_{PROBE_DREAM_ID}")],
+    }
+    case_results = {}
+    for name, dangling in CASES.items():
+        proof = p15.persist_canonical(
+            dream_doc, interp, tom, [], BASE,
+            dream_id=PROBE_DREAM_ID, return_id="probe", packet=packet,
+            phase13_sha="sha256:probe13", phase14_sha="sha256:probe14",
+            include_dream_node=True, extra_edges=dangling,
+            justification=f"GOAL_V3.2 negative closure probe: {name}",
+        )
+        case_results[name] = {
+            "blocked_status": proof.get("status"),
+            "unresolved": (proof.get("unresolved_endpoints") or [])[:4],
+            "blocked": proof.get("status") == "BLOCKED_EDGE_ENDPOINT_UNRESOLVED",
+        }
+    blocked = all(c["blocked"] for c in case_results.values())
 
     written = []
     for vs in ("active", "pending", None):
@@ -79,8 +100,7 @@ def main() -> int:
         "schema": "persona_dream.edge_closure_gate_probe_receipt.v1",
         "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "live": True,
-        "blocked_status": proof.get("status"),
-        "unresolved_endpoints": proof.get("unresolved_endpoints"),
+        "cases": case_results,
         "probe_dream_key_absent_from_store": store_untouched,
         "passed": blocked and store_untouched,
     }

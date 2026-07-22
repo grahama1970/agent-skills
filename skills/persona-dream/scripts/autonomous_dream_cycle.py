@@ -199,8 +199,12 @@ def compose_and_render(adapter, phase_c, subgate, sel: dict, out: Path) -> dict:
     frames_dir = out / "frames"
     frames_dir.mkdir(exist_ok=True)
     accepted, image_calls = [], 0
+    seen_ids: set[str] = set()
     for i, panel in enumerate(parsed["panels"]):
         panel_id = panel.get("panel_id") or f"sb_{i+1:03d}"
+        if panel_id in seen_ids:
+            raise SystemExit(f"BLOCKED_CYCLE_DUPLICATE_PANEL_ID: {panel_id}")
+        seen_ids.add(panel_id)
         base = (
             "Create a single cinematic storyboard frame. Real storyboard frame — "
             "not a contact sheet, not a collage, no rendered text.\n"
@@ -296,6 +300,8 @@ def observe(composite, art: dict, out: Path) -> list:
         frames = json.loads(text[text.index("{"):text.rindex("}") + 1]).get("frames", [])
     except Exception:
         frames = []
+    if len(frames) != 4:
+        raise SystemExit(f"BLOCKED_CYCLE_VLM_PARSE: expected 4 frame entries, got {len(frames)}")
     (out / "vlm_observation.json").write_text(json.dumps(
         {"raw": text[:4000], "frames": frames}, indent=2) + "\n")
     return frames
@@ -349,6 +355,9 @@ def main() -> int:
         "frame_evidence": [
             {"index": i + 1, "timestamp_seconds": round(i * 2.5, 2),
              "in_identity_window": True, "in_speaker_window": False,
+             "panel_id": art["frames"][i]["panel_id"],
+             "frame_path": art["frames"][i]["frame"],
+             "frame_sha256": art["frames"][i]["frame_sha256"],
              "observed_entities": (vlm_frames[i].get("people")
                                    if i < len(vlm_frames) else None)}
             for i in range(len(art["frames"]))],

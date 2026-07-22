@@ -69,14 +69,25 @@ def sha256_text(text: str) -> str:
 
 
 def load_tom_candidates(node: dict) -> list[dict]:
+    """Fail closed on missing candidates; when the dream has a commit
+    manifest, every loaded candidate key must be manifest-owned."""
     persona = node.get("persona_id")
     dream_id = node.get("dream_id")
+    manifest_keys = None
+    commit_id = node.get("commit_id")
+    if commit_id:
+        m = stored("persona_dream_commit_manifests", commit_id)
+        if m and m.get("record_index"):
+            manifest_keys = {e["key"] for e in m["record_index"]}
     out = []
     for cid in node.get("accepted_tom_candidate_ids") or []:
         doc = (stored("tom_candidates", f"dream:{persona}:{dream_id}:tom:{cid}")
                or stored("tom_candidates", cid))
-        if doc:
-            out.append(doc)
+        if not doc:
+            raise SystemExit(f"BLOCKED_VOICE_WEIGHTS_TOM_MISSING: {cid}")
+        if manifest_keys is not None and doc["_key"] not in manifest_keys:
+            raise SystemExit(f"BLOCKED_VOICE_WEIGHTS_TOM_NOT_MANIFEST_OWNED: {doc['_key']}")
+        out.append(doc)
     return out
 
 
@@ -88,7 +99,10 @@ def build_profile(node: dict, toms: list[dict]) -> dict:
     weights = []
     max_intensity = 0.0
     for tag, members in sorted(groups.items()):
-        intensities = [float(m["tom"].get("emotional_intensity") or 0.5) for m in members]
+        intensities = [
+            float(m["tom"]["emotional_intensity"])
+            if m["tom"].get("emotional_intensity") is not None else 0.5
+            for m in members]
         weight = sum(intensities) / len(intensities)
         max_intensity = max(max_intensity, max(intensities))
         weights.append({
@@ -123,6 +137,7 @@ def render_top_weight(profile: dict, out_dir: Path) -> dict:
     resp = post(f"{CHATTERBOX}/synthesize", {
         "text": line, "label": label,
         "tone": top["tone"], "pace": top["pace"],
+        "temperature": profile["synthesis_params"]["temperature"],
     }, timeout=180.0)
     audio_ref = str(resp.get("audio") or "")
     if not audio_ref.startswith("/out/"):
@@ -181,10 +196,12 @@ def main() -> int:
         "weights_summary": [{k: w[k] for k in ("emotional_tag", "tone", "weight")}
                             for w in profile["weights"]],
         "render": None,
-        "live": True,
+        "live": None,  # set from the engine response after render
     }
     if args.render:
         receipt["render"] = render_top_weight(profile, out_dir)
+        em = receipt["render"].get("engine_meta") or {}
+        receipt["live"] = bool(em.get("live", em.get("engine") == "chatterbox_turbo"))
     receipt_path = out_dir / "dream_voice_weights_receipt.v1.json"
     receipt_path.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n")
     print(json.dumps({"profile": receipt["weights_summary"],

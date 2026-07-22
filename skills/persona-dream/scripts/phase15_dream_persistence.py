@@ -914,36 +914,51 @@ def existing_commit_manifest(idempotency_key: str, base_url: str) -> dict[str, A
 def validate_edge_closure(
     write_set: list[dict[str, Any]], base_url: str
 ) -> list[str]:
-    """GOAL_V3.2 reliability gate: every edge endpoint must be satisfied by a
-    vertex INSIDE this write set or by a record already stored (any visibility
-    state). Returns unresolved endpoint refs; non-empty => the write set would
-    create dangling citations and MUST NOT be persisted. (The four GOAL_V2
-    pilot arms shipped grounds_interpretation edges whose watch-evidence
-    endpoints were never persisted — strict claim resolution read 0.0. This
-    check makes that class of defect impossible by construction.)"""
-    in_set = {f"{e['collection']}/{e['document']['_key']}" for e in write_set}
+    """GOAL_V3.2 reliability gate (round-1 review hardening): every edge must
+    carry BOTH endpoints with valid 'collection/key' syntax; endpoints must
+    resolve to VERTICES (never another edge) that are inside this write set or
+    already stored with visibility active/legacy (pending/quarantined external
+    endpoints block). Malformed references return deterministic unresolved
+    entries, never raise."""
+    in_set: dict[str, dict[str, Any]] = {
+        f"{e['collection']}/{e['document']['_key']}": e["document"] for e in write_set
+    }
     unresolved: list[str] = []
     for e in write_set:
         doc = e["document"]
-        for endpoint in (doc.get("_from"), doc.get("_to")):
-            if not endpoint or endpoint in in_set:
+        frm, to = doc.get("_from"), doc.get("_to")
+        if frm is None and to is None:
+            continue  # vertex
+        if not frm or not to:
+            unresolved.append(f"{doc.get('_key')}->missing-endpoint")
+            continue
+        for endpoint in (frm, to):
+            if not isinstance(endpoint, str) or endpoint.count("/") != 1                     or not all(endpoint.split("/", 1)):
+                unresolved.append(f"{doc.get('_key')}->malformed:{endpoint!r}")
+                continue
+            target = in_set.get(endpoint)
+            if target is not None:
+                if target.get("_from") or target.get("_to"):
+                    unresolved.append(f"{doc.get('_key')}->edge-endpoint-is-edge:{endpoint}")
                 continue
             coll, key = endpoint.split("/", 1)
-            found = False
-            for vs in ("active", "pending", None):
-                filt: dict[str, Any] = {"_key": key}
-                if vs:
-                    filt["visibility_state"] = vs
-                try:
+            found_doc = None
+            try:
+                for vs in ("active", None):
+                    filt: dict[str, Any] = {"_key": key}
+                    if vs:
+                        filt["visibility_state"] = vs
                     got = _http_post(f"{base_url}/list",
                                      {"collection": coll, "filters": filt})
-                except Exception:
-                    got = {}
-                if got.get("documents"):
-                    found = True
-                    break
-            if not found:
+                    if got.get("documents"):
+                        found_doc = got["documents"][0]
+                        break
+            except Exception:
+                found_doc = None
+            if found_doc is None:
                 unresolved.append(f"{doc.get('_key')}->{endpoint}")
+            elif found_doc.get("_from") or found_doc.get("_to"):
+                unresolved.append(f"{doc.get('_key')}->edge-endpoint-is-edge:{endpoint}")
     return unresolved
 
 
