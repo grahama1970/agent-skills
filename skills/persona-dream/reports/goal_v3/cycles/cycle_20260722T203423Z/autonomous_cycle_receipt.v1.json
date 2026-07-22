@@ -1,0 +1,41 @@
+{
+  "anchors_unchanged": true,
+  "arcface_cosines": [
+    0.643293,
+    0.792199,
+    0.741241,
+    0.770694
+  ],
+  "cluster": "age19_23:person:tommy_lawson",
+  "commit_manifest_key": "commit_841c33491db583a38f7293e37d1dfd6961eff2685fa241c2c252fe6aa89d790d",
+  "counterpart_gate": "all accepted p13/p14 targets in {counterpart, unknown_person}",
+  "counterpart_id": "tommy",
+  "created_at": "2026-07-22T20:48:30Z",
+  "cycle_id": "cycle_20260722T203423Z",
+  "distinction": {
+    "literal_occurrence_status": "DENIED",
+    "passed": true,
+    "record_class": "SYNTHETIC_DREAM"
+  },
+  "dream_node_key": "dream_auto_cycle_20260722T203423Z",
+  "grounding_fraction": 1.0,
+  "human_touches": 0,
+  "image_calls": 4,
+  "instruments_frozen_before_dream": true,
+  "instruments_sha256": "f55fe218ad651c7dd9c5e2fd5517af1aa859c533da01ef883060b93f133bbc1d",
+  "media_sha256": "d9e9709d6f8a83531c2b957579e59bed32bc09c91a8be710e027f3a7322f599d",
+  "negative_control_absent_top10": true,
+  "recall_probe_ranks": {
+    "probe_1": 17,
+    "probe_2": null,
+    "probe_3": null
+  },
+  "roots": [
+    "embry_age19_23_b01_memory_010",
+    "embry_age19_23_b01_memory_017",
+    "embry_age19_23_b01_memory_046"
+  ],
+  "schema": "persona_dream.autonomous_cycle_receipt.v1",
+  "status": "PASS_AUTONOMOUS_CYCLE",
+  "voice_weights_receipt": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260722T203423Z/voice_weights/dream_voice_weights_receipt.v1.json"
+}

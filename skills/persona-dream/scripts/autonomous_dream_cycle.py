@@ -145,8 +145,12 @@ def build_instruments(adapter, sel: dict, out: Path) -> dict:
     parsed, receipt = adapter.dispatch_text_reasoning(
         prompt, "embry-cycle-instruments",
         output_contract={"probes": ["3 strings"], "negative_control": "string"})
-    if parsed is None or len(parsed.get("probes", [])) != 3:
-        raise SystemExit(f"BLOCKED_CYCLE_INSTRUMENTS: {json.dumps(receipt)[:200]}")
+    probes = [str(x).strip() for x in (parsed or {}).get("probes") or [] if str(x).strip()]
+    neg = str((parsed or {}).get("negative_control") or "").strip()
+    if len(probes) < 3 or not neg:
+        raise SystemExit(f"BLOCKED_CYCLE_INSTRUMENTS: probes={len(probes)} neg={bool(neg)} "
+                         f"receipt={json.dumps(receipt)[:160]}")
+    parsed = {"probes": probes[:3], "negative_control": neg}
     root_words = set()
     for t in texts.values():
         root_words.update(w for w in re.findall(r"[a-z]{4,}", t.lower())

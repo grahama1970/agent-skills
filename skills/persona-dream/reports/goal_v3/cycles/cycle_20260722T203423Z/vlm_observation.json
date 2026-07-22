@@ -1,0 +1,44 @@
+{
+  "raw": "{\"frames\":[{\"index\":1,\"people\":[\"young woman holding up a smartphone with a man's face on the screen\"],\"activity\":\"The woman sits indoors and holds the phone beside her face, looking serious; a laptop and cluttered desk items are visible nearby.\",\"setting\":\"dim, cluttered room or workshop with boxes, desk, laptop, and household items\",\"tone\":\"serious and tense\"},{\"index\":2,\"people\":[\"young woman reaching toward a wall-mounted tool board\",\"older man standing behind her\"],\"activity\":\"The woman appears to handle or inspect tools on a pegboard while the man watches from behind.\",\"setting\":\"workshop or garage-like interior with tools, cabinets, and a patterned blanket\",\"tone\":\"focused and watchful\"},{\"index\":3,\"people\":[\"young woman touching her face\",\"man blurred in the background\"],\"activity\":\"The woman sits or leans near a vehicle or large machinery, touching her cheek while looking off to the side; a man stands out of focus behind her.\",\"setting\":\"garage or industrial workspace with a car and metal tubing\",\"tone\":\"concerned and contemplative\"},{\"index\":4,\"people\":[\"young woman holding a notebook\",\"hand holding a smartphone showing a man's face\"],\"activity\":\"The woman faces forward as if speaking or explaining while holding a notebook; another person holds up a phone with a man's image on it.\",\"setting\":\"workshop interior with tools, workbench, lamp, and equipment\",\"tone\":\"serious and investigative\"}]}",
+  "frames": [
+    {
+      "index": 1,
+      "people": [
+        "young woman holding up a smartphone with a man's face on the screen"
+      ],
+      "activity": "The woman sits indoors and holds the phone beside her face, looking serious; a laptop and cluttered desk items are visible nearby.",
+      "setting": "dim, cluttered room or workshop with boxes, desk, laptop, and household items",
+      "tone": "serious and tense"
+    },
+    {
+      "index": 2,
+      "people": [
+        "young woman reaching toward a wall-mounted tool board",
+        "older man standing behind her"
+      ],
+      "activity": "The woman appears to handle or inspect tools on a pegboard while the man watches from behind.",
+      "setting": "workshop or garage-like interior with tools, cabinets, and a patterned blanket",
+      "tone": "focused and watchful"
+    },
+    {
+      "index": 3,
+      "people": [
+        "young woman touching her face",
+        "man blurred in the background"
+      ],
+      "activity": "The woman sits or leans near a vehicle or large machinery, touching her cheek while looking off to the side; a man stands out of focus behind her.",
+      "setting": "garage or industrial workspace with a car and metal tubing",
+      "tone": "concerned and contemplative"
+    },
+    {
+      "index": 4,
+      "people": [
+        "young woman holding a notebook",
+        "hand holding a smartphone showing a man's face"
+      ],
+      "activity": "The woman faces forward as if speaking or explaining while holding a notebook; another person holds up a phone with a man's image on it.",
+      "setting": "workshop interior with tools, workbench, lamp, and equipment",
+      "tone": "serious and investigative"
+    }
+  ]
+}
