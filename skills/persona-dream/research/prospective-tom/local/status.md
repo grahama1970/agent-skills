@@ -25,6 +25,10 @@ recall checker. A cross-stage hash/lineage audit now re-walks the live-originate
 Gate 2-7 artifact chain and fails closed on sealed-payload tamper. A Gate 5-7
 boundary-negative harness now proves scoring, action-selection, and
 belief-revision validators fail closed on live-originated artifact mutations.
+A PCTOM-R autonomous judgment-surface audit now aggregates 15 selected
+live-originated/deterministic receipts and fails closed if a PASS-like receipt
+requires human content judgment, uses an LLM judge, is mocked, is fixture-backed,
+or reports provider/canonical/identity/source-memory write counters.
 
 Sealed64 deterministic social episode corpus:
 
@@ -176,6 +180,18 @@ Held-out variant live stage hash/lineage audit negative tamper receipt:
 /tmp/persona-dream-live-stage-hash-lineage-audit-negative-tampered-commitment-20260722T050300Z/output/live_stage_hash_lineage_audit_receipt.v1.json
 ```
 
+PCTOM-R autonomous no-human-judgment surface receipt:
+
+```text
+/tmp/persona-dream-autonomous-no-human-judgment-surface-20260722T090000Z/autonomous_no_human_judgment_surface_receipt.v1.json
+```
+
+PCTOM-R autonomous no-human-judgment negative receipt:
+
+```text
+/tmp/persona-dream-autonomous-no-human-judgment-surface-negative-human-required-20260722T090100Z/output/autonomous_no_human_judgment_surface_receipt.v1.json
+```
+
 Inspection result:
 
 ```text
@@ -214,6 +230,19 @@ live_stage_hash_lineage_audit_negative_status: BLOCKED_PCTOM_LIVE_STAGE_HASH_LIN
 live_stage_hash_lineage_audit_negative_fixture_backed: true
 live_stage_hash_lineage_audit_negative_error: prediction_payload_sha256_mismatch
 live_stage_hash_lineage_audit_negative_receipt_sha256: sha256:20bf4655a0b1fe01199bf52833a97129488e6afa46e2c592bc5d8d448bd019b3
+autonomous_no_human_judgment_surface_status: PASS_PCTOM_AUTONOMOUS_NO_HUMAN_JUDGMENT_SURFACE
+autonomous_no_human_judgment_surface_receipts_seen: 15
+autonomous_no_human_judgment_surface_live_true: 12
+autonomous_no_human_judgment_surface_explicit_human_content_judgment_false: 15
+autonomous_no_human_judgment_surface_llm_judge_true: 0
+autonomous_no_human_judgment_surface_mocked_true: 0
+autonomous_no_human_judgment_surface_provider_or_canonical_write_counters: 0
+autonomous_no_human_judgment_surface_receipt_sha256: sha256:374e83a9015a500ca6def7ac8e3dfc5677bdf57331e09f2d8578a8b3cb372b8a
+autonomous_no_human_judgment_negative_status: BLOCKED_PCTOM_AUTONOMOUS_NO_HUMAN_JUDGMENT_SURFACE
+autonomous_no_human_judgment_negative_fixture_backed: true
+autonomous_no_human_judgment_negative_exit_code: 1
+autonomous_no_human_judgment_negative_error: receipt_human_content_judgment_required_true
+autonomous_no_human_judgment_negative_receipt_sha256: sha256:2320082b585245df8a7576f529de443cae6b3aa563136e46050277c3bf94f99e
 live_fault_injection_status: PASS_PCTOM_LIVE_FAULT_INJECTION_SURFACE
 local_http_service_retry_status: PASS_LIVE_TAU_PCTOM_SERVICE_RETRY_PROOF
 combined_full64_memory_fault_surface_status: PASS_LIVE_TAU_PCTOM_FULL64_MEMORY_FAULT_SURFACE

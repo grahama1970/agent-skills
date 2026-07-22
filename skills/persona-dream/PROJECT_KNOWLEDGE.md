@@ -195,6 +195,35 @@
   paid provider execution, semantic dream quality, long-duration retention, or
   complete Phase 01-16 runtime execution.
 
+  A PCTOM-R autonomous no-human-judgment surface audit now aggregates selected
+  receipts instead of relying on vague status claims. Command:
+  `./skills/persona-dream/run.sh check-autonomous-no-human-judgment-surface
+  --receipt <15 selected PCTOM-R receipt paths> --output-root
+  /tmp/persona-dream-autonomous-no-human-judgment-surface-20260722T090000Z
+  --receipt-out
+  /tmp/persona-dream-autonomous-no-human-judgment-surface-20260722T090000Z/autonomous_no_human_judgment_surface_receipt.v1.json
+  --expect-receipts 15 --json`. Receipt status:
+  `PASS_PCTOM_AUTONOMOUS_NO_HUMAN_JUDGMENT_SURFACE`; counts: 15 receipts
+  seen, 15 PASS-status receipts, 12 `live=true`, 15 explicit
+  `human_content_judgment_required=false`, 11 explicit
+  `llm_judge_used=false`, 4 LLM-judge fields absent but none true,
+  `mocked_true=0`, `fixture_backed_true=0`, `human_forbidden_true=0`,
+  `llm_judge_true=0`, and `provider_or_canonical_write_counters=0`.
+  Declared receipt SHA-256:
+  `sha256:374e83a9015a500ca6def7ac8e3dfc5677bdf57331e09f2d8578a8b3cb372b8a`.
+  A fixture-backed negative mutated one otherwise PASS receipt to
+  `human_content_judgment_required=true`; the audit exited 1 with
+  `BLOCKED_PCTOM_AUTONOMOUS_NO_HUMAN_JUDGMENT_SURFACE`, errors containing
+  `receipt_human_content_judgment_required_true`,
+  `receipt_human_flag_true`, and `human_forbidden_true_count_nonzero`.
+  Negative receipt SHA-256:
+  `sha256:2320082b585245df8a7576f529de443cae6b3aa563136e46050277c3bf94f99e`.
+  This proves the selected PCTOM-R evidence surface is mechanically checked for
+  autonomous no-human-content-judgment execution and fails closed if that
+  boundary is violated. It does not prove semantic dream quality, paid provider
+  execution, future receipts not passed through the audit, or complete live
+  Phase 01-16 runtime execution.
+
   Command:
   `./skills/persona-dream/run.sh run-live-tau-balanced-planning-replication
   --family-episode-limit 8 --episodes-per-family 24 --variant-min 17

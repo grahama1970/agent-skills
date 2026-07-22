@@ -139,6 +139,7 @@ Commands:
   check-live-gate5-7-boundary-negatives  Mutate live-originated Gate 5-7 artifacts and require fail-closed receipts
   run-social-simulator-service-proof  Serve deterministic social episodes over HTTP and inject service faults
   check-live-stage-hash-lineage-audit  Recompute PCTOM-R Gate 2-7 hashes and artifact lineage
+  check-autonomous-no-human-judgment-surface  Audit PCTOM-R receipts for no human/LLM judgment
   check-prospective-tom-protocol  Validate PCTOM-R Gate 0 fixture lineage through a sealed prediction
   build-social-episode-corpus  Build deterministic PCTOM-R Gate 1 social episodes
   check-social-episode-corpus  Validate deterministic PCTOM-R Gate 1 social episodes
@@ -638,6 +639,9 @@ case "$COMMAND" in
     ;;
   check-live-stage-hash-lineage-audit)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_live_stage_hash_lineage_audit.py" "$@"
+    ;;
+  check-autonomous-no-human-judgment-surface)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_autonomous_no_human_judgment_surface.py" "$@"
     ;;
   check-prospective-tom-protocol)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_prospective_tom_protocol.py" "$@"

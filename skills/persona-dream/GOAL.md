@@ -276,6 +276,32 @@ Next: <one immediate action or stop condition>
   over existing live-originated artifacts. It does not prove new live Tau
   execution, new live Memory recall, paid provider execution, semantic dream
   quality, or complete Phase 01-16 runtime execution.
+  An autonomous judgment-surface audit then consumed 15 selected PCTOM-R
+  receipts spanning live Tau planning, causal identifiability, reliability
+  bridges, action-linked revision, live Memory recall/retention/restart,
+  fault-injection, boundary-negative validators, stage hash/lineage, simulator
+  service, and independent corpus replay. Receipt:
+  `/tmp/persona-dream-autonomous-no-human-judgment-surface-20260722T090000Z/autonomous_no_human_judgment_surface_receipt.v1.json`.
+  It returned `PASS_PCTOM_AUTONOMOUS_NO_HUMAN_JUDGMENT_SURFACE`; counts:
+  15 receipts seen, 15 PASS-status receipts, 12 `live=true` receipts,
+  15 explicit `human_content_judgment_required=false`, 11 explicit
+  `llm_judge_used=false`, 4 LLM-judge fields absent but none true,
+  `mocked_true=0`, `fixture_backed_true=0`, `llm_judge_true=0`,
+  `human_forbidden_true=0`, and
+  `provider_or_canonical_write_counters=0`. Receipt SHA-256:
+  `sha256:374e83a9015a500ca6def7ac8e3dfc5677bdf57331e09f2d8578a8b3cb372b8a`.
+  A fixture-backed negative changed one source receipt to
+  `human_content_judgment_required=true`; the audit exited 1 with
+  `BLOCKED_PCTOM_AUTONOMOUS_NO_HUMAN_JUDGMENT_SURFACE`, matched
+  `receipt_human_content_judgment_required_true`,
+  `receipt_human_flag_true`, and `human_forbidden_true_count_nonzero`, and
+  wrote receipt SHA-256
+  `sha256:2320082b585245df8a7576f529de443cae6b3aa563136e46050277c3bf94f99e`.
+  This proves the selected evidence surface is mechanically checked for
+  autonomous no-human-content-judgment execution and fails closed on a
+  human-judgment flag. It does not prove future receipts unless they are routed
+  through this audit, semantic dream quality, paid provider execution, or
+  complete Phase 01-16 runtime execution.
   The live run consumed simulator variants 17-24, 32 sealed-test
   episodes, all four scenario families, and 128 live Tau-authored M/R/D/CD
   condition predictions. It used the Gate 0 attribution root
