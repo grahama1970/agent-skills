@@ -2849,3 +2849,75 @@ what remains unverified: paid provider execution, semantic dream quality,
   complete Phase 01-16 media runtime execution, and future receipts not routed
   through this objective audit
 ```
+
+## 2026-07-22 — Success-Criteria Input Integrity Boundary
+
+The PCTOM-R success-criteria audit now enforces input receipt integrity before
+it derives the high-level success summary. Every supplied input receipt must
+self-hash under the stable JSON convention, and every supplied input receipt is
+recursively scanned for provider, canonical-memory, identity, and source-memory
+side-effect counters. This prevents a stale or nested side-effect-bearing
+prediction/planning/coverage receipt from feeding a top-level success claim.
+
+New self-hashed prediction-benefit receipt:
+
+```text
+path: /tmp/persona-dream-sealed-test-statistical-confidence-selfhash-20260722T062226Z/sealed_test_statistical_confidence_receipt.v1.json
+status: PASS_PCTOM_SEALED_TEST_STATISTICAL_CONFIDENCE
+receipt_sha256: sha256:77be045143d64f49c51155f18a95a5308bd6472fc905ac390db79c89e0205029
+primary_benefit_with_confidence: true
+planning_benefit_with_confidence: false
+```
+
+Positive success-criteria receipt:
+
+```text
+path: /tmp/persona-dream-pctom-success-criteria-integrity-boundary-selfhash-20260722T062246Z/pctom_success_criteria_audit_receipt.v1.json
+status: PASS_PCTOM_SUCCESS_CRITERIA_AUDIT
+receipt_sha256: sha256:a05c888dd9fb137924796960c4127e5287f1a53e9fcf0b4b5c6705a48e2f1853
+input_receipts_checked: 6
+input_receipt_sha256_self_mismatches: 0
+forbidden_counters_found: 0
+full_hard_success_criteria_met: true
+```
+
+Negative success-criteria receipts:
+
+```text
+path: /tmp/persona-dream-pctom-success-criteria-negative-selfhash-mismatch-20260722T062309Z/output/pctom_success_criteria_audit_receipt.v1.json
+status: BLOCKED_PCTOM_SUCCESS_CRITERIA_AUDIT
+receipt_sha256: sha256:c7d5c6982abbcb9b2547acb1c5678a2e8e17a480dcc24d86f49710aab3a3baf1
+errors:
+  - prediction_receipt_sha256_self_mismatch:sha256:77be045143d64f49c51155f18a95a5308bd6472fc905ac390db79c89e0205029:sha256:059f92a52f17d584732aa541dfaf4f1767ac9d074205f364ee4fe3bb4be158b0
+
+path: /tmp/persona-dream-pctom-success-criteria-negative-nested-provider-counter-20260722T062332Z/output/pctom_success_criteria_audit_receipt.v1.json
+status: BLOCKED_PCTOM_SUCCESS_CRITERIA_AUDIT
+receipt_sha256: sha256:9469addc7665ca75c244e4ec461113c777bf32e5e1751926de03016e7d98d63e
+errors:
+  - prediction_forbidden_side_effect_counter:prediction.debug_nested_counter_fixture.provider_calls:1
+```
+
+Refreshed objective-chain receipt consuming the hardened success receipt:
+
+```text
+path: /tmp/persona-dream-pctom-objective-evidence-success-integrity-chain-20260722T062351Z/pctom_objective_evidence_audit_receipt.v1.json
+status: PASS_PCTOM_OBJECTIVE_EVIDENCE_AUDIT
+receipt_sha256: sha256:cfd53388e4b24786293833c59bfc60458b09f0df49813fc3afdbe3c67f0cf5ea
+success_receipt_sha256_matches_content: true
+goal_coverage_receipt_sha256_matches_content: true
+```
+
+Proof scope:
+
+```text
+mocked: no
+live: no for the success audit itself
+live evidence consumed: yes, through the supplied planning, repeated full64,
+  calibration, unsupported-abstention, and coverage receipts
+what was exercised: deterministic success-criteria audit over six input
+  receipts, input self-hash verification, recursive side-effect scan, and
+  refreshed objective-evidence chaining
+what remains unverified: paid provider execution, semantic dream quality,
+  complete Phase 01-16 media runtime execution, and future receipts not routed
+  through this success/objective audit chain
+```

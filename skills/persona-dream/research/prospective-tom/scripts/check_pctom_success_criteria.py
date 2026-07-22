@@ -14,6 +14,17 @@ PASS_STATUS = "PASS_PCTOM_SUCCESS_CRITERIA_AUDIT"
 BLOCKED_STATUS = "BLOCKED_PCTOM_SUCCESS_CRITERIA_AUDIT"
 SCHEMA = "persona_dream.research.prospective_tom.success_criteria_audit_receipt.v1"
 REQUIRED_GOAL_COVERAGE_IDS = 15
+FORBIDDEN_SIDE_EFFECT_COUNTERS = {
+    "actual_provider_call_attempts",
+    "provider_calls",
+    "provider_call_count",
+    "canonical_memory_writes",
+    "identity_writes",
+    "source_memory_writes",
+    "canonical_write_violations",
+    "identity_write_violations",
+    "source_memory_write_violations",
+}
 
 
 def _now_iso() -> str:
@@ -31,6 +42,10 @@ def _file_sha256(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return "sha256:" + digest.hexdigest()
+
+
+def _calculated_receipt_sha256(receipt: dict[str, Any]) -> str:
+    return _stable_json_sha256({key: value for key, value in receipt.items() if key != "receipt_sha256"})
 
 
 def _load_json(path: Path, errors: list[str], label: str) -> Any:
@@ -63,28 +78,45 @@ def _status_pass(receipt: dict[str, Any], expected: str | None = None) -> bool:
     return isinstance(status, str) and status.startswith("PASS_")
 
 
-def _forbidden_write_count(receipt: dict[str, Any]) -> int:
-    total = 0
-    for key in (
-        "actual_provider_call_attempts",
-        "provider_calls",
-        "provider_call_count",
-        "canonical_memory_writes",
-        "identity_writes",
-        "source_memory_writes",
-        "canonical_write_violations",
-        "identity_write_violations",
-        "source_memory_write_violations",
-    ):
-        value = receipt.get(key)
-        if isinstance(value, bool):
-            total += int(value)
-        elif isinstance(value, int):
-            total += value
-    return total
+def _forbidden_side_effects(value: Any, path: str = "$") -> list[dict[str, Any]]:
+    found: list[dict[str, Any]] = []
+    if isinstance(value, dict):
+        for key, item in value.items():
+            next_path = f"{path}.{key}"
+            if key in FORBIDDEN_SIDE_EFFECT_COUNTERS:
+                if isinstance(item, bool):
+                    numeric = int(item)
+                elif isinstance(item, int):
+                    numeric = item
+                else:
+                    numeric = 0
+                if numeric:
+                    found.append({"path": next_path, "value": item})
+            found.extend(_forbidden_side_effects(item, next_path))
+    elif isinstance(value, list):
+        for index, item in enumerate(value):
+            found.extend(_forbidden_side_effects(item, f"{path}[{index}]"))
+    return found
+
+
+def _check_receipt_self_hash(receipt: dict[str, Any], label: str, errors: list[str]) -> dict[str, Any]:
+    stored = receipt.get("receipt_sha256")
+    calculated = _calculated_receipt_sha256(receipt)
+    matches = stored == calculated
+    if not isinstance(stored, str) or not stored.startswith("sha256:"):
+        errors.append(f"{label}_receipt_sha256_missing_or_invalid:{stored}")
+    elif not matches:
+        errors.append(f"{label}_receipt_sha256_self_mismatch:{stored}:{calculated}")
+    return {
+        "label": label,
+        "stored": stored,
+        "calculated": calculated,
+        "matches": matches,
+    }
 
 
 def _receipt_ref(path: Path, receipt: dict[str, Any]) -> dict[str, Any]:
+    calculated_receipt_sha256 = _calculated_receipt_sha256(receipt)
     return {
         "path": str(path),
         "status": receipt.get("status"),
@@ -96,6 +128,8 @@ def _receipt_ref(path: Path, receipt: dict[str, Any]) -> dict[str, Any]:
         "llm_judge_used": receipt.get("llm_judge_used"),
         "file_sha256": _file_sha256(path),
         "receipt_sha256": receipt.get("receipt_sha256"),
+        "calculated_receipt_sha256": calculated_receipt_sha256,
+        "receipt_sha256_matches_content": receipt.get("receipt_sha256") == calculated_receipt_sha256,
     }
 
 
@@ -152,6 +186,26 @@ def run(
     calibration_abstention = calibration_abstention if isinstance(calibration_abstention, dict) else None
     unsupported_abstention = unsupported_abstention if isinstance(unsupported_abstention, dict) else None
 
+    input_receipts: list[tuple[str, Path, dict[str, Any]]] = [
+        ("prediction", prediction_receipt_path, prediction),
+        ("planning", planning_receipt_path, planning),
+        ("goal_coverage", goal_coverage_receipt_path, coverage),
+    ]
+    if repeated_full64_receipt_path is not None and repeated is not None:
+        input_receipts.append(("repeated_full64", repeated_full64_receipt_path, repeated))
+    if calibration_abstention_receipt_path is not None and calibration_abstention is not None:
+        input_receipts.append(("calibration_abstention", calibration_abstention_receipt_path, calibration_abstention))
+    if unsupported_abstention_receipt_path is not None and unsupported_abstention is not None:
+        input_receipts.append(("unsupported_abstention", unsupported_abstention_receipt_path, unsupported_abstention))
+
+    receipt_integrity = [_check_receipt_self_hash(receipt, label, errors) for label, _, receipt in input_receipts]
+    recursive_forbidden_side_effects: dict[str, list[dict[str, Any]]] = {}
+    for label, _, receipt in input_receipts:
+        found = _forbidden_side_effects(receipt, label)
+        recursive_forbidden_side_effects[label] = found
+        for item in found:
+            errors.append(f"{label}_forbidden_side_effect_counter:{item['path']}:{item['value']}")
+
     if not _status_pass(prediction, "PASS_PCTOM_SEALED_TEST_STATISTICAL_CONFIDENCE"):
         errors.append(f"prediction_receipt_status_not_expected:{prediction.get('status')}")
     if prediction.get("mocked") is not False:
@@ -162,8 +216,6 @@ def run(
         errors.append("prediction_receipt_llm_judge_used_true")
     if prediction.get("human_content_judgment_required") is True:
         errors.append("prediction_receipt_human_content_judgment_required_true")
-    if _forbidden_write_count(prediction):
-        errors.append("prediction_receipt_forbidden_write_counter_nonzero")
 
     p_metrics = prediction.get("metrics") if isinstance(prediction.get("metrics"), dict) else {}
     p_counts = prediction.get("counts") if isinstance(prediction.get("counts"), dict) else {}
@@ -205,8 +257,6 @@ def run(
         errors.append("planning_receipt_llm_judge_used_true")
     if planning.get("human_content_judgment_required") is True:
         errors.append("planning_receipt_human_content_judgment_required_true")
-    if _forbidden_write_count(planning):
-        errors.append("planning_receipt_forbidden_write_counter_nonzero")
 
     pl_metrics = planning.get("metrics") if isinstance(planning.get("metrics"), dict) else {}
     pl_counts = planning.get("counts") if isinstance(planning.get("counts"), dict) else {}
@@ -266,8 +316,6 @@ def run(
             errors.append("repeated_full64_llm_judge_used_true")
         if repeated.get("human_content_judgment_required") is True:
             errors.append("repeated_full64_human_content_judgment_required_true")
-        if _forbidden_write_count(repeated):
-            errors.append("repeated_full64_forbidden_write_counter_nonzero")
 
         r_counts = repeated.get("counts") if isinstance(repeated.get("counts"), dict) else {}
         r_metrics = repeated.get("metrics") if isinstance(repeated.get("metrics"), dict) else {}
@@ -335,8 +383,6 @@ def run(
             errors.append("calibration_abstention_llm_judge_used_true")
         if calibration_abstention.get("human_content_judgment_required") is True:
             errors.append("calibration_abstention_human_content_judgment_required_true")
-        if _forbidden_write_count(calibration_abstention):
-            errors.append("calibration_abstention_forbidden_write_counter_nonzero")
         ca_counts = calibration_abstention.get("counts") if isinstance(calibration_abstention.get("counts"), dict) else {}
         ca_metrics = calibration_abstention.get("metrics") if isinstance(calibration_abstention.get("metrics"), dict) else {}
         ca_checks = calibration_abstention.get("checks") if isinstance(calibration_abstention.get("checks"), dict) else {}
@@ -381,8 +427,6 @@ def run(
             errors.append("unsupported_abstention_llm_judge_used_true")
         if unsupported_abstention.get("human_content_judgment_required") is True:
             errors.append("unsupported_abstention_human_content_judgment_required_true")
-        if _forbidden_write_count(unsupported_abstention):
-            errors.append("unsupported_abstention_forbidden_write_counter_nonzero")
         ua_counts = unsupported_abstention.get("counts") if isinstance(unsupported_abstention.get("counts"), dict) else {}
         ua_checks = unsupported_abstention.get("checks") if isinstance(unsupported_abstention.get("checks"), dict) else {}
         unsupported_evidence_abstention_exercised = bool(
@@ -504,6 +548,15 @@ def run(
         "unsupported_abstention_receipt": _receipt_ref(unsupported_abstention_receipt_path, unsupported_abstention)
         if unsupported_abstention_receipt_path is not None and isinstance(unsupported_abstention, dict)
         else None,
+        "receipt_integrity": {
+            "input_receipts_checked": len(receipt_integrity),
+            "input_receipt_sha256_self_mismatches": sum(1 for item in receipt_integrity if not item["matches"]),
+            "items": receipt_integrity,
+        },
+        "recursive_side_effect_boundary": {
+            "forbidden_counters_found": sum(len(items) for items in recursive_forbidden_side_effects.values()),
+            "items": recursive_forbidden_side_effects,
+        },
         "criteria": criteria,
         "summary": {
             "prediction_benefit_with_confidence": prediction_benefit_with_confidence,

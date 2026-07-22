@@ -480,6 +480,7 @@ def run_statistical_confidence(
             ],
         },
     }
+    receipt["receipt_sha256"] = _stable_json_sha256({key: value for key, value in receipt.items() if key != "receipt_sha256"})
     _write_json(receipt_out, receipt)
     return receipt
 

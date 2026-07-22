@@ -3323,3 +3323,13 @@
   objective clauses instead of leaving them only as required coverage ids.
   Tampering `gate6_action_selection_planning` to `positive_evidence=0` blocks
   with `objective_clause_not_proven:action_selection_planning`.
+
+- 2026-07-22 (PCTOM-R success-criteria input integrity): the success-criteria
+  audit now requires every supplied input receipt to self-hash and recursively
+  scans each input for provider/canonical-memory/identity/source-memory side
+  effect counters. The sealed-test statistical-confidence producer now emits
+  `receipt_sha256` so its prediction-benefit receipt can pass this boundary.
+  A stale prediction self-hash blocks with
+  `prediction_receipt_sha256_self_mismatch`; a nested
+  `debug_nested_counter_fixture.provider_calls=1` blocks even when the tampered
+  input receipt has a recomputed self-hash.
