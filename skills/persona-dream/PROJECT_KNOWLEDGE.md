@@ -1,10 +1,53 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-22 UTC (PCTOM-R Gate 0 repeated full64 live Tau boundary) by agent
+**Last updated:** 2026-07-22 UTC (PCTOM-R Gate 0 held-out variant live Tau boundary) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-22 UTC (PCTOM-R GATE 0 HELD-OUT VARIANT LIVE TAU BOUNDARY): a
+  Gate 0-attributed held-out variant slice now exists beyond the prior full64
+  variants 1-16 evidence. Command:
+  `./skills/persona-dream/run.sh run-live-tau-balanced-planning-replication
+  --family-episode-limit 8 --episodes-per-family 24 --variant-min 17
+  --variant-max 24 --gate0-case-root
+  /tmp/persona-dream-live-pctom-gate0-attribution-20260721T1700Z/pctom_gate0_case
+  --timeout-s 120 --outer-timeout-s 5400 --bootstrap-samples 10000
+  --bootstrap-seed 20260727`. Replication receipt:
+  `/tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_planning_replication_receipt.v1.json`.
+  Causal-identifiability receipt:
+  `/tmp/persona-dream-pctom-causal-identifiability-gate0-variant17-24-20260722T032200Z/pctom_causal_identifiability_receipt.json`.
+
+  Statuses `PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION` and
+  `PASS_PCTOM_CAUSAL_IDENTIFIABILITY_GATE`. Observed: variants 17-24, 32
+  sealed-test episodes, all four scenario families, 128 live Tau calls, 32
+  sealed/scored/action rows per M/R/D/CD condition, `mocked=false`,
+  `live=true`, zero Memory/provider/canonical/identity/source-memory writes,
+  no LLM judge, and no human content judgment. Planning regret had a
+  confidence-bound CD advantage on this held-out slice: CD `0.196875` versus
+  strongest baseline `R=0.365625`, CD-minus-baseline
+  `-0.16874999999999998`, 95% CI
+  `[-0.290625, -0.056249999999999994]`,
+  `planning_benefit_with_confidence=true`. Causal lineage replay observed
+  128/128 lineage rows complete, 384/384 evidence refs with accepted raw-source
+  IDs and source digests, `oracle_improves_regret_count=67`, and
+  `anti_oracle_worsens_regret_count=53`.
+
+  Receipt SHA-256 values: replication
+  `sha256:98336825a38be02d455e391735e2153986e89e2eba619b9a9a894b9ac6a6d272`;
+  condition
+  `sha256:2da4ed6c0d49e6ed8d61ce4667862b8cf78114a3b37b6ccc92646ce39daeb31c`;
+  action
+  `sha256:b11d4abfbe53b91fb08d8e0dc95f9536ba68a92ba6438c64b0245e01e6b158df`;
+  causal
+  `sha256:2903066090fdff791feb509c2f5c670af6f2327f3389d9cc899f8a236d8a8032`;
+  lineage
+  `sha256:28cb8a34fa22b98bb06b4964ab8971afd0592c3e0624b216796a1f61c4f4cdd3`.
+  This advances held-out variant/generalization evidence for PCTOM-R Gate 0
+  and Gate 6. It does not prove an independently versioned simulator corpus,
+  complete model/tool/schema/persistence fault injection, production retry
+  machinery, semantic dream quality, paid provider execution, or complete live
+  Phase 01-16 runtime execution.
 - 2026-07-22 UTC (PCTOM-R GATE 0 REPEATED FULL64 LIVE TAU BOUNDARY): a second
   Gate 0-attributed full64 live Tau sealed-test replication now exists, and a
   two-root repeated-run summary consumes both full64 roots. Repeat2 command:

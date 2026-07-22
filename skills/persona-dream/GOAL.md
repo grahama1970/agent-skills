@@ -133,6 +133,37 @@ Next: <one immediate action or stop condition>
 
 ## Current Evidence Snapshot
 
+- PCTOM-R held-out variant 17-24 live Tau balanced-planning slice with Gate 0
+  accepted-source attribution:
+  replication receipt
+  `/tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_planning_replication_receipt.v1.json`;
+  causal-identifiability receipt
+  `/tmp/persona-dream-pctom-causal-identifiability-gate0-variant17-24-20260722T032200Z/pctom_causal_identifiability_receipt.json`.
+  Statuses:
+  `PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION` and
+  `PASS_PCTOM_CAUSAL_IDENTIFIABILITY_GATE`. The run consumed simulator
+  variants 17-24, 32 sealed-test episodes, all four scenario families, and 128
+  live Tau-authored M/R/D/CD condition predictions. It used the Gate 0
+  attribution root
+  `/tmp/persona-dream-live-pctom-gate0-attribution-20260721T1700Z/pctom_gate0_case`,
+  produced 32 action rows per condition, and made zero Memory, provider,
+  canonical-memory, identity, or source-memory write attempts. The balanced
+  planning summary observed CD planning regret `0.196875` versus strongest
+  baseline `R=0.365625`, CD-minus-baseline `-0.16874999999999998`, and a
+  bootstrap 95% CI `[-0.290625, -0.056249999999999994]` with
+  `planning_benefit_with_confidence=true`. Causal lineage replay observed
+  128/128 complete lineage rows, 384/384 evidence refs with accepted raw-source
+  IDs and source digests, `oracle_improves_regret_count=67`, and
+  `anti_oracle_worsens_regret_count=53`. Receipt SHA-256 values:
+  replication `sha256:98336825a38be02d455e391735e2153986e89e2eba619b9a9a894b9ac6a6d272`;
+  condition comparison `sha256:2da4ed6c0d49e6ed8d61ce4667862b8cf78114a3b37b6ccc92646ce39daeb31c`;
+  action selection `sha256:b11d4abfbe53b91fb08d8e0dc95f9536ba68a92ba6438c64b0245e01e6b158df`;
+  causal `sha256:2903066090fdff791feb509c2f5c670af6f2327f3389d9cc899f8a236d8a8032`;
+  lineage `sha256:28cb8a34fa22b98bb06b4964ab8971afd0592c3e0624b216796a1f61c4f4cdd3`.
+  This advances held-out variant evidence beyond variants 1-16. It does not
+  prove an independently versioned simulator corpus, complete production fault
+  injection, semantic dream quality, paid provider execution, or complete live
+  Phase 01-16 runtime execution.
 - PCTOM-R repeated full64 live Tau sealed-test evidence over two Gate
   0-attributed runs:
   repeat2 replication receipt

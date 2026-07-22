@@ -1,5 +1,90 @@
 # Status
 
+Status: GATE0_HELD_OUT_VARIANT17_24_LIVE_TAU_ACCEPTED
+
+Latest artifact: held-out variant 17-24 live Tau balanced-planning slice with
+Gate 0 accepted-source attribution and causal-identifiability lineage replay.
+
+Held-out variant replication receipt:
+
+```text
+/tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_planning_replication_receipt.v1.json
+```
+
+Held-out variant causal-identifiability receipt:
+
+```text
+/tmp/persona-dream-pctom-causal-identifiability-gate0-variant17-24-20260722T032200Z/pctom_causal_identifiability_receipt.json
+```
+
+Inspection result:
+
+```text
+replication_status: PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION
+causal_identifiability_status: PASS_PCTOM_CAUSAL_IDENTIFIABILITY_GATE
+variant_min: 17
+variant_max: 24
+episodes: 32
+families: 4
+cases: 128
+tau_call_attempts: 128
+tau_live_call_performed: 128
+gate0_case_root: /tmp/persona-dream-live-pctom-gate0-attribution-20260721T1700Z/pctom_gate0_case
+action_decisions_per_condition: M=32 R=32 D=32 CD=32
+planning_regret_cd: 0.196875
+planning_regret_strongest_baseline: R=0.365625
+planning_regret_cd_minus_strongest_baseline: -0.16874999999999998
+planning_regret_ci: [-0.290625, -0.056249999999999994]
+planning_benefit_with_confidence: true
+lineage_rows: 128
+lineage_complete_rows: 128
+total_evidence_refs: 384
+evidence_refs_with_accepted_raw_source_id: 384
+evidence_refs_with_raw_source_digest: 384
+oracle_improves_regret_count: 67
+anti_oracle_worsens_regret_count: 53
+replication_receipt_sha256: sha256:98336825a38be02d455e391735e2153986e89e2eba619b9a9a894b9ac6a6d272
+condition_receipt_sha256: sha256:2da4ed6c0d49e6ed8d61ce4667862b8cf78114a3b37b6ccc92646ce39daeb31c
+action_receipt_sha256: sha256:b11d4abfbe53b91fb08d8e0dc95f9536ba68a92ba6438c64b0245e01e6b158df
+causal_receipt_sha256: sha256:2903066090fdff791feb509c2f5c670af6f2327f3389d9cc899f8a236d8a8032
+lineage_receipt_sha256: sha256:28cb8a34fa22b98bb06b4964ab8971afd0592c3e0624b216796a1f61c4f4cdd3
+mocked: false
+live: true
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+human_content_judgment_required: false
+llm_judge_used: false
+```
+
+What this proves:
+
+```text
+variants 17-24, outside the prior full64 variants 1-16 slice, ran through live
+   Tau-authored M/R/D/CD condition predictions
+-> predictions were sealed before deterministic outcome reveal and scored
+-> constrained action selections and planning regret were recomputed
+-> Gate 0 accepted raw-source IDs and digests were present on 128/128 rows
+-> the held-out slice shows confidence-bound planning-regret benefit for CD
+-> no Memory, provider, canonical-memory, identity, source-memory, LLM judge,
+   or human content judgment path was used
+```
+
+What this does not prove:
+
+```text
+an independently versioned simulator corpus
+complete model/tool/schema/persistence fault injection
+production retry machinery
+semantic dream quality
+paid provider execution
+complete live Phase 01-16 runtime execution
+```
+
+Prior status:
+
 Status: GATE0_FULL64_REPEAT2_AND_REPEATED_RUN_SUMMARY_ACCEPTED
 
 Latest artifact: second PCTOM-R full64 sealed-test replication with Gate 0
