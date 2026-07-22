@@ -1,5 +1,124 @@
 # Status
 
+Status: GATE0_FULL64_REPEAT2_AND_REPEATED_RUN_SUMMARY_ACCEPTED
+
+Latest artifact: second PCTOM-R full64 sealed-test replication with Gate 0
+accepted-source attribution, repeat2 lineage replay, repeat2 statistical
+confidence, and a two-root repeated-run summary over the first and second
+full64 roots.
+
+Repeat2 live sealed-test replication receipt:
+
+```text
+/tmp/persona-dream-live-tau-sealed-test-gate0-full64-repeat2-20260722T020900Z/live_tau_sealed_test_replication_receipt.v1.json
+```
+
+Repeat2 causal-identifiability receipt:
+
+```text
+/tmp/persona-dream-pctom-causal-identifiability-gate0-full64-repeat2-20260722T025200Z/pctom_causal_identifiability_receipt.json
+```
+
+Repeat2 statistical-confidence receipt:
+
+```text
+/tmp/persona-dream-live-tau-full64-statistical-confidence-gate0-repeat2-20260722T025200Z/live_tau_full64_statistical_confidence_receipt.v1.json
+```
+
+Two-root repeated-run summary receipt:
+
+```text
+/tmp/persona-dream-live-tau-full64-repeated-run-summary-gate0-r2-20260722T025200Z/live_tau_full64_repeated_run_summary_receipt.v1.json
+```
+
+Inspection result:
+
+```text
+repeat2_replication_status: PASS_LIVE_TAU_PCTOM_SEALED_TEST_REPLICATION
+repeat2_causal_identifiability_status: PASS_PCTOM_CAUSAL_IDENTIFIABILITY_GATE
+repeat2_statistical_confidence_status: PASS_LIVE_TAU_PCTOM_FULL64_STATISTICAL_CONFIDENCE
+repeated_run_summary_status: PASS_LIVE_TAU_PCTOM_FULL64_REPEATED_RUN_SUMMARY
+repeat2_episodes_consumed: 64
+repeat2_cases: 256
+repeat2_tau_call_attempts: 256
+repeat2_tau_live_call_performed: 256
+repeat2_gate0_attribution_overlay_used: true
+repeat2_gate0_attribution_record_count: 6
+repeat2_lineage_rows: 256
+repeat2_lineage_complete_rows: 256
+repeat2_total_evidence_refs: 768
+repeat2_evidence_refs_with_accepted_raw_source_id: 768
+repeat2_evidence_refs_with_raw_source_digest: 768
+repeat2_belief_brier_cd_minus_strongest_baseline: -0.10039218750000002
+repeat2_primary_belief_brier_ci: [-0.11865976562500002, -0.08187894531250002]
+repeat2_primary_benefit_with_confidence: true
+repeat2_planning_regret_cd_minus_strongest_baseline: -0.09453125
+repeat2_planning_regret_ci: [-0.1953125, 0.0015625000000000031]
+repeat2_planning_benefit_with_confidence: false
+repeat2_oracle_improves_regret_count: 113
+repeat2_anti_oracle_worsens_regret_count: 115
+two_root_source_roots: 2
+two_root_accepted_source_runs: 2
+two_root_episode_metric_rows: 128
+two_root_tau_call_attempts_consumed: 512
+two_root_tau_live_calls_consumed: 512
+two_root_belief_brier_mean: -0.09116718750000002
+two_root_belief_brier_ci: [-0.10389453125000003, -0.07867421875000002]
+two_root_belief_brier_benefit_with_confidence: true
+two_root_planning_regret_mean: -0.094921875
+two_root_planning_regret_ci: [-0.1640625, -0.027734374999999995]
+two_root_planning_regret_benefit_with_confidence: true
+two_root_action_brier_mean: 0.03796882812435939
+two_root_action_brier_ci: [0.0035813281243750193, 0.07271834895771875]
+two_root_action_brier_benefit_with_confidence: false
+repeat2_replication_receipt_sha256_declared: sha256:bc6102d075fa1d48982054cf24dc61044595c855565b52769c2eb6ea9f9277b8
+repeat2_condition_receipt_sha256: sha256:ffb2053fd24fff2857e0787a677c519b69f5483aead4c137a2ebb10ee7bf47ca
+repeat2_action_receipt_sha256: sha256:ec487ccfa18f12fdc359a752231da4b6ab9e93b8f346c756cf5762bf67e43d25
+repeat2_causal_receipt_sha256: sha256:d47453d237ccd520ab45911be624539f7cc707f76b7c0f451163d8e492cb9ef1
+repeat2_lineage_receipt_sha256: sha256:f8b61885d926ddbbe15064eca259bbd411e807f5ec53a0a0bcd894f852eef198
+repeat2_statistical_confidence_receipt_sha256: sha256:2b69fc35c4a5c369e1ac8c75060f47c6a11c9d6199e9bfabfe9ccbae6cbaf1ef
+two_root_repeated_summary_receipt_sha256: sha256:0549f0698ec055561f736ce5b88a6f6394af377bc82e784d75f52b6d9f39c407
+mocked: false
+live: true
+live_tau_reexecuted_by_repeat2_replication: true
+live_tau_reexecuted_by_repeat2_causal_or_confidence: false
+live_tau_reexecuted_by_two_root_summary: false
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+human_content_judgment_required: false
+```
+
+What this proves:
+
+```text
+the second full64 sealed-test run independently produced 256 live Tau-authored
+   prediction cases with Gate 0 accepted-source attribution overlaid
+-> repeat2 causal-identifiability replay accepted 256/256 rows with complete
+   accepted-source IDs and digests
+-> repeat2 again shows confidence-bounded belief Brier benefit for CD over the
+   strongest M/R/D baseline
+-> the two-root summary hash-binds both full64 roots and recomputes 128
+   episode-level CD-vs-baseline rows from underlying condition/action indices
+-> no Memory, provider, canonical-memory, identity, source-memory, LLM judge,
+   or human content judgment path is used
+```
+
+What this does not prove:
+
+```text
+independent scenario-corpus generalization beyond the sealed-test split
+complete fault injection across every PCTOM-R and production service boundary
+production retry machinery
+semantic dream quality
+paid provider execution
+complete live Phase 01-16 runtime execution
+```
+
+Prior status:
+
 Status: GATE0_FULL64_CONFIDENCE_AND_MEMORY_FAULT_SURFACE_ACCEPTED
 
 Latest artifact: PCTOM-R full64 sealed-test replication with Gate 0

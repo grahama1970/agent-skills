@@ -94,6 +94,7 @@ Commands:
   run-live-fault-injection-surface  Exercise broader PCTOM-R fault containment over live Memory and receipt boundaries
   run-live-tau-sealed-test-replication  Run bounded live Tau-authored sealed-test replication plus Gate 6 actions
   run-live-tau-full64-statistical-confidence  Compute confidence intervals over accepted full64 live Tau artifacts
+  run-live-tau-full64-repeated-run-summary  Aggregate repeated full64 live Tau sealed-test replications
   run-live-tau-full64-planning-diagnostic  Diagnose why full64 planning-regret benefit is not confidence-bound
   run-live-tau-full64-action-policy-sensitivity  Explain sparse full64 planning deltas through action switches
   run-live-tau-trust-commit-replication  Rerun focused live Tau M/R/D/CD trust-commitment planning cases
@@ -494,6 +495,9 @@ case "$COMMAND" in
     ;;
   run-live-tau-full64-statistical-confidence)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_tau_full64_statistical_confidence.py" "$@"
+    ;;
+  run-live-tau-full64-repeated-run-summary)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_tau_full64_repeated_run_summary.py" "$@"
     ;;
   run-live-tau-full64-planning-diagnostic)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_tau_full64_planning_diagnostic.py" "$@"

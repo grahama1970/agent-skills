@@ -1,10 +1,75 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-22 UTC (PCTOM-R Gate 0 full64 confidence and fault surface boundary) by agent
+**Last updated:** 2026-07-22 UTC (PCTOM-R Gate 0 repeated full64 live Tau boundary) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-22 UTC (PCTOM-R GATE 0 REPEATED FULL64 LIVE TAU BOUNDARY): a second
+  Gate 0-attributed full64 live Tau sealed-test replication now exists, and a
+  two-root repeated-run summary consumes both full64 roots. Repeat2 command:
+  `./skills/persona-dream/run.sh run-live-tau-sealed-test-replication
+  --episode-limit 64 --episodes-per-family 16 --gate0-case-root
+  /tmp/persona-dream-live-pctom-gate0-attribution-20260721T1700Z/pctom_gate0_case`.
+  Repeat2 replication receipt:
+  `/tmp/persona-dream-live-tau-sealed-test-gate0-full64-repeat2-20260722T020900Z/live_tau_sealed_test_replication_receipt.v1.json`.
+  Repeat2 causal-identifiability receipt:
+  `/tmp/persona-dream-pctom-causal-identifiability-gate0-full64-repeat2-20260722T025200Z/pctom_causal_identifiability_receipt.json`.
+  Repeat2 statistical-confidence receipt:
+  `/tmp/persona-dream-live-tau-full64-statistical-confidence-gate0-repeat2-20260722T025200Z/live_tau_full64_statistical_confidence_receipt.v1.json`.
+  Two-root repeated-run summary receipt:
+  `/tmp/persona-dream-live-tau-full64-repeated-run-summary-gate0-r2-20260722T025200Z/live_tau_full64_repeated_run_summary_receipt.v1.json`.
+
+  Statuses `PASS_LIVE_TAU_PCTOM_SEALED_TEST_REPLICATION`,
+  `PASS_PCTOM_CAUSAL_IDENTIFIABILITY_GATE`,
+  `PASS_LIVE_TAU_PCTOM_FULL64_STATISTICAL_CONFIDENCE`, and
+  `PASS_LIVE_TAU_PCTOM_FULL64_REPEATED_RUN_SUMMARY`. Repeat2 observed 64
+  sealed-test episodes, four scenario families, 256 live Tau calls, 64
+  sealed/scored/action rows per M/R/D/CD condition,
+  `gate0_attribution_overlay_used=true`, 6 Gate 0 attribution records, zero
+  Memory/provider/canonical/identity/source-memory writes, and no LLM judge or
+  human content judgment. Repeat2 causal replay observed 256/256 lineage rows
+  complete and 768/768 evidence refs with accepted raw-source IDs and digests.
+  Repeat2 statistical confidence again accepted the preregistered belief Brier
+  benefit: mean `-0.10039218750000002`, 95% CI
+  `[-0.11865976562500002, -0.08187894531250002]`,
+  `primary_benefit_with_confidence=true`. Repeat2 planning-regret alone still
+  did not meet the confidence bar: mean `-0.09453125`, 95% CI
+  `[-0.1953125, 0.0015625000000000031]`,
+  `planning_benefit_with_confidence=false`.
+
+  The new repeated-run summary command
+  `./skills/persona-dream/run.sh run-live-tau-full64-repeated-run-summary`
+  hash-binds both Gate 0-attributed full64 roots and recomputes 128
+  episode-level CD-vs-strongest-baseline rows from condition/action indices.
+  It consumed 512 live Tau calls from source receipts without reexecuting Tau
+  inside the aggregate command. Repeated-run belief Brier remained
+  confidence-bound: mean `-0.09116718750000002`, 95% CI
+  `[-0.10389453125000003, -0.07867421875000002]`. Repeated-run planning regret
+  over the two same-split runs had a negative aggregate CI: mean
+  `-0.094921875`, 95% CI `[-0.1640625, -0.027734374999999995]`.
+  Action Brier remained harmful/not a benefit: mean `0.03796882812435939`, 95%
+  CI `[0.0035813281243750193, 0.07271834895771875]`.
+
+  Receipt SHA-256 values: repeat2 declared replication
+  `sha256:bc6102d075fa1d48982054cf24dc61044595c855565b52769c2eb6ea9f9277b8`;
+  repeat2 condition
+  `sha256:ffb2053fd24fff2857e0787a677c519b69f5483aead4c137a2ebb10ee7bf47ca`;
+  repeat2 action
+  `sha256:ec487ccfa18f12fdc359a752231da4b6ab9e93b8f346c756cf5762bf67e43d25`;
+  repeat2 causal
+  `sha256:d47453d237ccd520ab45911be624539f7cc707f76b7c0f451163d8e492cb9ef1`;
+  repeat2 lineage
+  `sha256:f8b61885d926ddbbe15064eca259bbd411e807f5ec53a0a0bcd894f852eef198`;
+  repeat2 statistical confidence
+  `sha256:2b69fc35c4a5c369e1ac8c75060f47c6a11c9d6199e9bfabfe9ccbae6cbaf1ef`;
+  repeated-run summary
+  `sha256:0549f0698ec055561f736ce5b88a6f6394af377bc82e784d75f52b6d9f39c407`.
+  This advances repeated-execution evidence for the same sealed-test split. It
+  does not prove independent scenario-corpus generalization, production retry
+  machinery, complete model/tool/schema/persistence fault injection, paid
+  provider execution, semantic dream quality, or complete live Phase 01-16
+  runtime execution.
 - 2026-07-22 UTC (PCTOM-R GATE 0 FULL64 CONFIDENCE AND MEMORY/SERVICE FAULT
   SURFACE): after the Gate 0-attributed full64 live Tau replication and lineage
   replay, the existing full64 confidence runner consumed the accepted root
