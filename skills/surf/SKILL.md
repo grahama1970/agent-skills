@@ -222,6 +222,7 @@ wait. The ChatGPT reasoning selector defaults to `Pro`
 |---|---|
 | "send this to ChatGPT", "ask ChatGPT", "use WebGPT" | `surf webgpt.submit --input REQ.md --output RESP.md --no-activate` (walk-up from cwd) or `--project <name>` or `--tab-id <id> --expect-url <url>` |
 | "recover an already completed WebGPT tab" | `surf webgpt.extract --tab-id <id> --sentinel <marker> --output RESP.md` |
+| "finalize an orphaned WebGPT submit" | `surf webgpt.recover --artifact-dir <round-dir> --finalize` |
 | "without stealing focus", "in the background", "don't foreground", "while I work" | add `--no-activate` (requires `--tab-id`, `--url`, or `--create-tab`) |
 | "verify WebGPT still works", "run the sentinel smoke" | `surf webgpt.sanity --tab-id <id>` |
 | "is WebGPT transport safe to use", "run e2e WebGPT sanity", "debug brittle Surf" | `surf webgpt.e2e-sanity [--tab-id <id> --expect-url <url>] --json` |
@@ -373,6 +374,10 @@ Behavior:
   count, SHA-256 hash, tail excerpt, last change time, sentinel-seen state,
   page-sentinel state, stable poll count, source, message id, turn index,
   hidden/visibility state, and background hidden poll count.
+- `$surf` also writes `webgpt_inflight.json` next to the response metadata. This
+  durable marker records the sentinel, requested tab id, output paths, and
+  submitted state so a separate scheduler or reaper can recover a completed
+  assistant DOM answer even after the original submit process exits.
 - Assistant-stream heartbeat fields are **monitoring only**. They can prove that
   Surf is observing a growing or stalled assistant turn, but they are not
   completion proof. Completion proof still requires the controlled tab's current
@@ -397,6 +402,11 @@ Behavior:
 - If only `.submitted.md` exists, treat the round as
   `NEEDS_ATTENTION: missing_webgpt_transport_artifacts`. If the receipt still
   says `prepared_prompt`, ChatGPT acceptance has not been proven.
+- If `webgpt_inflight.json` or the submit receipt says
+  `submitted_to_chatgpt: true` but response raw/meta artifacts are absent, run
+  `surf webgpt.recover --artifact-dir <round-dir> --finalize`. This claims the
+  existing controlled tab with `webgpt.extract --wait`; it must not submit a new
+  prompt.
 - `raw_contains_sentinel: true` with `clean_contains_sentinel: false` is normal
   when clean output correctly stripped the terminal marker. Do not diagnose this
   as Surf failure.

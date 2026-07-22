@@ -383,7 +383,11 @@ issue includes:
 - Surf CLI version
 - Environment variables (DISPLAY, KDE session, etc.)
 
-This ensures every failure is tracked and can be debugged. No silent failures.
+Failure filing is deduplicated: before creating a new issue, the CLI checks a
+local cooldown marker and searches for an already-open issue with the same
+title. Set `WEBGPT_AUTO_FILE_ISSUES=0` to disable auto-filing for a run, or
+`WEBGPT_ISSUE_COOLDOWN_SECONDS` to tune the duplicate window. Failures still
+print stderr and local artifacts; no silent failures.
 
 ## What's hidden
 

@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import importlib.util
+import json
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -235,3 +237,48 @@ def test_provenance_block_contains_clone_sha_and_relative_paths() -> None:
     assert "git clone --filter=blob:none https://github.com/example/project.git" in block
     assert f"checkout --detach {'a' * 40}" in block
     assert '"src/app.py"' in block
+
+
+def test_webgpt_issue_autofile_suppresses_recent_duplicate(tmp_path: Path, monkeypatch) -> None:
+    title = "webgpt: submit-webgpt failed - busy"
+    monkeypatch.setenv("WEBGPT_ISSUE_STATE_DIR", str(tmp_path))
+    webgpt_cli._write_issue_marker(title, "https://github.com/grahama1970/agent-skills/issues/974")
+
+    def fail_run(*_args, **_kwargs):
+        raise AssertionError("gh should not run for a recent duplicate")
+
+    monkeypatch.setattr(webgpt_cli.subprocess, "run", fail_run)
+
+    assert webgpt_cli._file_issue(title, "body") is False
+
+
+def test_webgpt_issue_autofile_reuses_open_duplicate(tmp_path: Path, monkeypatch) -> None:
+    title = "webgpt: submit-webgpt failed - busy"
+    monkeypatch.setenv("WEBGPT_ISSUE_STATE_DIR", str(tmp_path))
+    calls: list[list[str]] = []
+
+    def fake_run(cmd, **_kwargs):
+        calls.append(list(cmd))
+        if "list" in cmd:
+            return subprocess.CompletedProcess(
+                cmd,
+                0,
+                stdout=json.dumps(
+                    [
+                        {
+                            "number": 974,
+                            "title": title,
+                            "url": "https://github.com/grahama1970/agent-skills/issues/974",
+                        }
+                    ]
+                ),
+                stderr="",
+            )
+        raise AssertionError("gh issue create should be skipped for an open duplicate")
+
+    monkeypatch.setattr(webgpt_cli.subprocess, "run", fake_run)
+
+    assert webgpt_cli._file_issue(title, "body") is False
+    assert any("list" in call for call in calls)
+    marker_payload = json.loads(next(tmp_path.glob("*.json")).read_text(encoding="utf-8"))
+    assert marker_payload["url"].endswith("/974")

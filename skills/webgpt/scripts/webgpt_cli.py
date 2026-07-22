@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime
+import hashlib
 import json
 import os
 import re
@@ -49,6 +50,7 @@ CODE_GATE_FIELDS = (
 
 GITHUB_REPO = "agent-skills"
 GITHUB_ORG = "grahama1970"
+DEFAULT_ISSUE_COOLDOWN_SECONDS = 3600
 
 
 def validate_execution_lock(text: str) -> list[str]:
@@ -218,13 +220,27 @@ def _collect_context(command: str, error: str, stderr: str = "", binding: dict |
 
 def _file_issue(title: str, body: str) -> bool:
     """File a GitHub issue on the agent-skills repo. Returns True on success."""
+    if not _auto_file_issues_enabled():
+        print("  [issue suppressed] WEBGPT_AUTO_FILE_ISSUES disabled", file=sys.stderr)
+        return False
+    recent = _recent_issue_marker(title)
+    if recent:
+        print(f"  [issue suppressed] recent duplicate: {recent}", file=sys.stderr)
+        return False
+    existing = _find_existing_open_issue(title)
+    if existing:
+        _write_issue_marker(title, existing)
+        print(f"  [issue suppressed] open duplicate: {existing}", file=sys.stderr)
+        return False
     try:
         result = subprocess.run(
             ["gh", "issue", "create", "--repo", f"{GITHUB_ORG}/{GITHUB_REPO}", "--title", title, "--body", body, "--label", "bug", "--label", "webgpt"],
             capture_output=True, text=True, timeout=30,
         )
         if result.returncode == 0:
-            print(f"  [filed] {result.stdout.strip()}", file=sys.stderr)
+            url = result.stdout.strip()
+            _write_issue_marker(title, url)
+            print(f"  [filed] {url}", file=sys.stderr)
             return True
         else:
             print(f"  [issue failed] {result.stderr[:500]}", file=sys.stderr)
@@ -232,6 +248,116 @@ def _file_issue(title: str, body: str) -> bool:
     except Exception as exc:
         print(f"  [issue exception] {exc}", file=sys.stderr)
         return False
+
+
+def _auto_file_issues_enabled() -> bool:
+    value = os.environ.get("WEBGPT_AUTO_FILE_ISSUES", "1").strip().lower()
+    return value not in {"0", "false", "no", "off"}
+
+
+def _issue_state_dir() -> Path:
+    override = os.environ.get("WEBGPT_ISSUE_STATE_DIR", "").strip()
+    if override:
+        return Path(override)
+    return Path.home() / ".cache" / "webgpt" / "issue-autofile"
+
+
+def _issue_cooldown_seconds() -> int:
+    raw = os.environ.get("WEBGPT_ISSUE_COOLDOWN_SECONDS", str(DEFAULT_ISSUE_COOLDOWN_SECONDS))
+    try:
+        value = int(raw)
+    except ValueError:
+        return DEFAULT_ISSUE_COOLDOWN_SECONDS
+    return max(0, value)
+
+
+def _issue_marker_path(title: str) -> Path:
+    key = hashlib.sha256(title.encode("utf-8", errors="replace")).hexdigest()
+    return _issue_state_dir() / f"{key}.json"
+
+
+def _recent_issue_marker(title: str) -> str | None:
+    cooldown = _issue_cooldown_seconds()
+    if cooldown <= 0:
+        return None
+    path = _issue_marker_path(title)
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        marked_at = float(payload.get("marked_at_epoch") or 0)
+    except (OSError, json.JSONDecodeError, TypeError, ValueError) as exc:
+        if path.exists():
+            print(f"  [issue marker unreadable] {path}: {exc}", file=sys.stderr)
+        return None
+    if time.time() - marked_at <= cooldown:
+        return str(payload.get("url") or payload.get("title") or "duplicate")
+    return None
+
+
+def _write_issue_marker(title: str, url: str) -> None:
+    path = _issue_marker_path(title)
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(
+            json.dumps(
+                {
+                    "schema": "webgpt.issue_autofile_marker.v1",
+                    "title": title,
+                    "url": url,
+                    "marked_at": _now(),
+                    "marked_at_epoch": time.time(),
+                    "cooldown_seconds": _issue_cooldown_seconds(),
+                },
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+    except OSError as exc:
+        print(f"  [issue marker failed] {exc}", file=sys.stderr)
+
+
+def _find_existing_open_issue(title: str) -> str | None:
+    query = f'is:issue is:open in:title "{title}"'
+    try:
+        result = subprocess.run(
+            [
+                "gh",
+                "issue",
+                "list",
+                "--repo",
+                f"{GITHUB_ORG}/{GITHUB_REPO}",
+                "--state",
+                "open",
+                "--search",
+                query,
+                "--json",
+                "number,title,url",
+                "--limit",
+                "20",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=15,
+        )
+    except Exception as exc:
+        print(f"  [issue duplicate lookup exception] {exc}", file=sys.stderr)
+        return None
+    if result.returncode != 0:
+        detail = (result.stderr or result.stdout or "").strip()
+        if detail:
+            print(f"  [issue duplicate lookup failed] {detail[:500]}", file=sys.stderr)
+        return None
+    try:
+        issues = json.loads(result.stdout or "[]")
+    except json.JSONDecodeError as exc:
+        print(f"  [issue duplicate lookup invalid json] {exc}", file=sys.stderr)
+        return None
+    if not isinstance(issues, list):
+        return None
+    for issue in issues:
+        if isinstance(issue, dict) and str(issue.get("title") or "") == title:
+            return str(issue.get("url") or "")
+    return None
 
 
 def _report_failure(command: str, result: subprocess.CompletedProcess, binding: dict | None = None, **extra: str) -> None:

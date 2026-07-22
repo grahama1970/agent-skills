@@ -33,6 +33,9 @@ PREFERRED_SUBMITTED_NAMES = (
     "02_roundtrip_response.submitted.md",
     "response.submitted.md",
 )
+PREFERRED_INFLIGHT_NAMES = (
+    "webgpt_inflight.json",
+)
 
 
 def _read_json(path: Path | None) -> dict[str, Any]:
@@ -67,6 +70,7 @@ def discover_artifacts(directory: Path) -> dict[str, Path | None]:
     directory = directory.resolve()
     meta = _first_existing(directory, PREFERRED_META_NAMES)
     meta_data = _read_json(meta)
+    inflight = _first_existing(directory, PREFERRED_INFLIGHT_NAMES)
     raw = _resolve_path(
         directory,
         str(meta_data.get("raw_output") or ""),
@@ -88,6 +92,7 @@ def discover_artifacts(directory: Path) -> dict[str, Path | None]:
         "raw": raw,
         "receipt": receipt,
         "submitted": submitted,
+        "inflight": inflight,
     }
 
 
@@ -166,6 +171,30 @@ def build_recovery(
     raw_has_sentinel = bool(meta.get("raw_contains_sentinel"))
     failure = str(meta.get("failure") or "")
     needs_attention = _needs_attention_code(state, meta, raw_path, meta_path)
+    output_path = Path(str(meta.get("output") or receipt.get("output") or directory / "02_response.md"))
+    raw_output_path = Path(str(meta.get("raw_output") or receipt.get("raw_output") or directory / "02_response.raw.md"))
+    meta_output_path = Path(str(meta.get("meta_output") or receipt.get("meta_output") or directory / "02_response.meta.json"))
+    if not output_path.is_absolute():
+        output_path = directory / output_path
+    if not raw_output_path.is_absolute():
+        raw_output_path = directory / raw_output_path
+    if not meta_output_path.is_absolute():
+        meta_output_path = directory / meta_output_path
+    claim_available = bool(
+        requested_tab_id
+        and sentinel
+        and state in {"submitted_only", "missing_sentinel", "missing_response_artifacts"}
+    )
+    claim = {
+        "available": claim_available,
+        "tab_id": requested_tab_id or None,
+        "sentinel": sentinel or None,
+        "output": str(output_path),
+        "raw_output": str(raw_output_path),
+        "meta_output": str(meta_output_path),
+        "wait": True,
+        "stable_polls": 3,
+    }
 
     reason = str(meta.get("agent_diagnosis") or "")
     next_command = ""
@@ -191,12 +220,12 @@ def build_recovery(
         do_not_do.append("do_not_treat_prepared_prompt_as_completion_proof")
     elif state == "submitted_only":
         reason = reason or "Prompt was submitted but response transport proof is not available yet."
-        if requested_tab_id and sentinel:
+        if claim_available:
             next_command = (
                 f"surf webgpt.extract --tab-id {requested_tab_id} "
-                f"--output {directory / '02_response.md'} "
-                f"--raw-output {directory / '02_response.raw.md'} "
-                f"--meta-output {directory / '02_response.meta.json'} "
+                f"--output {output_path} "
+                f"--raw-output {raw_output_path} "
+                f"--meta-output {meta_output_path} "
                 f"--sentinel '{sentinel}'"
             )
         else:
@@ -225,6 +254,17 @@ def build_recovery(
                 f"surf webgpt.submit --input {submitted_path or directory / 'submitted.md'} "
                 f"--output {directory / '02_response.md'}"
             )
+    elif state == "missing_response_artifacts" and claim_available:
+        reason = reason or "Prompt was submitted and the submit process left no response artifacts; recover by claiming the controlled tab DOM."
+        next_command = (
+            f"surf webgpt.extract --tab-id {requested_tab_id} "
+            f"--output {output_path} "
+            f"--raw-output {raw_output_path} "
+            f"--meta-output {meta_output_path} "
+            f"--sentinel '{sentinel}'"
+        )
+        needs_attention = None
+        do_not_do.extend(["do_not_claim_completion_before_extract", "do_not_retry_submit_blindly"])
     elif state == "missing_response_artifacts" or needs_attention:
         reason = reason or "Submitted run is missing raw/meta transport artifacts."
         next_command = needs_attention or "NEEDS_ATTENTION: missing_webgpt_transport_artifacts"
@@ -258,6 +298,7 @@ def build_recovery(
         "next_command": next_command,
         "do_not_do": do_not_do,
         "needs_attention": needs_attention,
+        "claim": claim,
     }
 
 
@@ -278,6 +319,24 @@ def build_transport_summary(
 
     meta = _read_json(meta_file)
     receipt = _read_json(receipt_file)
+    inflight = _read_json(discovered["inflight"])
+    if inflight:
+        for key in (
+            "sentinel",
+            "requested_tab_id",
+            "requested_url",
+            "output",
+            "raw_output",
+            "meta_output",
+            "submitted_output",
+        ):
+            if not meta.get(key) and inflight.get(key):
+                meta[key] = inflight[key]
+            if not receipt.get(key) and inflight.get(key):
+                receipt[key] = inflight[key]
+        if inflight.get("submitted_to_chatgpt") and not receipt.get("submitted_to_chatgpt"):
+            receipt["submitted_to_chatgpt"] = True
+            receipt["status"] = receipt.get("status") or "submitted_to_chatgpt"
 
     if raw_file is None and meta.get("raw_output"):
         candidate = directory / str(meta["raw_output"])
@@ -323,6 +382,7 @@ def build_transport_summary(
         "next_command": recovery["next_command"],
         "do_not_do": recovery["do_not_do"],
         "needs_attention": recovery["needs_attention"],
+        "claim": recovery["claim"],
     }
 
 
@@ -350,6 +410,24 @@ def recover(directory: Path) -> dict[str, Any]:
     discovered = discover_artifacts(directory)
     meta = _read_json(discovered["meta"])
     receipt = _read_json(discovered["receipt"])
+    inflight = _read_json(discovered["inflight"])
+    if inflight:
+        for key in (
+            "sentinel",
+            "requested_tab_id",
+            "requested_url",
+            "output",
+            "raw_output",
+            "meta_output",
+            "submitted_output",
+        ):
+            if not meta.get(key) and inflight.get(key):
+                meta[key] = inflight[key]
+            if not receipt.get(key) and inflight.get(key):
+                receipt[key] = inflight[key]
+        if inflight.get("submitted_to_chatgpt") and not receipt.get("submitted_to_chatgpt"):
+            receipt["submitted_to_chatgpt"] = True
+            receipt["status"] = receipt.get("status") or "submitted_to_chatgpt"
     recovery = build_recovery(
         directory=directory.resolve(),
         meta=meta,

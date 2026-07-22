@@ -258,6 +258,7 @@ meta_output="${meta_output:-${output}.meta.json}"
 receipt_output="${receipt_output:-${output}.receipt.json}"
 submitted_output="${submitted_output:-${output}.submitted.md}"
 mkdir -p "$(dirname "$output")" "$(dirname "$raw_output")" "$(dirname "$meta_output")" "$(dirname "$receipt_output")" "$(dirname "$submitted_output")"
+inflight_output="$(dirname "$meta_output")/webgpt_inflight.json"
 
 
 
@@ -588,7 +589,61 @@ pathlib.Path(receipt).write_text(json.dumps({
 PY
 }
 
+write_inflight_marker() {
+  local status="$1"
+  local marker_at="$2"
+  local accepted="${3:-false}"
+  python3 - "$inflight_output" "$status" "$marker_at" "$accepted" "$input" "$submitted_output" "$output" "$raw_output" "$meta_output" "$receipt_output" "$sentinel" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" "$$" <<'PY'
+import json
+import os
+import pathlib
+import sys
+import tempfile
+
+(
+    marker, status, marker_at, accepted_s, inp, submitted, out, raw, meta, receipt,
+    sentinel, requested_tab_id, target_url, model, reasoning, pid,
+) = sys.argv[1:]
+payload = {
+    "schema": "surf.webgpt_inflight.v1",
+    "status": status,
+    "submitted_to_chatgpt": accepted_s == "true",
+    "prepared_prompt_is_transport_proof": False,
+    "input": inp,
+    "submitted_output": submitted,
+    "output": out,
+    "raw_output": raw,
+    "meta_output": meta,
+    "receipt_output": receipt,
+    "sentinel": sentinel,
+    "requested_tab_id": requested_tab_id or None,
+    "requested_url": target_url or None,
+    "requested_model": model or None,
+    "requested_reasoning": reasoning or None,
+    "submit_pid": int(pid),
+    "updated_at": marker_at,
+    "recovery_command": (
+        f"surf webgpt.recover --artifact-dir {pathlib.Path(meta).parent} --finalize"
+    ),
+}
+path = pathlib.Path(marker)
+path.parent.mkdir(parents=True, exist_ok=True)
+fd, tmp_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=str(path.parent))
+try:
+    with os.fdopen(fd, "w", encoding="utf-8") as handle:
+        json.dump(payload, handle, indent=2)
+        handle.write("\n")
+    os.replace(tmp_name, path)
+finally:
+    try:
+        os.unlink(tmp_name)
+    except FileNotFoundError:
+        pass
+PY
+}
+
 write_submit_receipt "prepared_prompt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "false"
+write_inflight_marker "prepared_prompt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "false"
 write_webgpt_heartbeat "prompt_prepared" "waiting" "$submitted_output" "$raw_output" "$timeout_s"
 
 stderr_log="$(mktemp /tmp/surf-webgpt-submit-stderr.XXXXXX.log)"
@@ -991,6 +1046,7 @@ fi
 # written before tab/url discovery so callers can see prompt preparation early;
 # this second write records the actual intended controlled tab when available.
 write_submit_receipt "prepared_prompt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "false"
+write_inflight_marker "prepared_prompt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "false"
 
 if [[ -n "${requested_tab_id:-}" ]]; then
   surf_tab_lock_path="/tmp/surf-webgpt-tab-${requested_tab_id}.lock"
@@ -1279,6 +1335,7 @@ receipt_marker="$(mktemp /tmp/surf-webgpt-submit-receipt.XXXXXX.mark)"
   while kill -0 "$submit_pid" 2>/dev/null; do
     if [[ -f "$host_log_file" ]] && grep -F "Prompt accepted: sentinel=$sentinel" "$host_log_file" >/dev/null 2>&1; then
       write_submit_receipt "submitted_to_chatgpt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "true"
+      write_inflight_marker "submitted_to_chatgpt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "true"
       write_webgpt_heartbeat "submitted" "generating" "$receipt_output" "$raw_output" "$timeout_s"
       printf 'submitted_to_chatgpt\n' > "$receipt_marker"
       exit 0
@@ -1294,6 +1351,7 @@ receipt_marker="$(mktemp /tmp/surf-webgpt-submit-receipt.XXXXXX.mark)"
   done
   if [[ -f "$host_log_file" ]] && grep -F "Prompt accepted: sentinel=$sentinel" "$host_log_file" >/dev/null 2>&1; then
     write_submit_receipt "submitted_to_chatgpt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "true"
+    write_inflight_marker "submitted_to_chatgpt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "true"
     printf 'submitted_to_chatgpt\n' > "$receipt_marker"
   fi
 ) &

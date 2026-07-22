@@ -167,6 +167,37 @@ def test_transport_summary_missing_response_artifacts() -> None:
     assert summary["next_command"].startswith("NEEDS_ATTENTION:")
 
 
+def test_transport_summary_inflight_orphan_is_claimable(tmp_path: Path) -> None:
+    round_dir = tmp_path / "round-inflight"
+    round_dir.mkdir(parents=True)
+    sentinel = "<<<WEBGPT_DONE:orphan>>>"
+    (round_dir / "webgpt_inflight.json").write_text(
+        json.dumps(
+            {
+                "schema": "surf.webgpt_inflight.v1",
+                "status": "submitted_to_chatgpt",
+                "submitted_to_chatgpt": True,
+                "sentinel": sentinel,
+                "requested_tab_id": "837360481",
+                "output": str(round_dir / "02_response.md"),
+                "raw_output": str(round_dir / "02_response.raw.md"),
+                "meta_output": str(round_dir / "02_response.meta.json"),
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    summary = write_summary(round_dir)
+
+    assert summary["final_transport_state"] == "missing_response_artifacts"
+    assert summary["needs_attention"] is None
+    assert summary["claim"]["available"] is True
+    assert summary["claim"]["tab_id"] == "837360481"
+    assert "webgpt.extract --tab-id 837360481" in summary["next_command"]
+
+
 def test_transport_summary_completed() -> None:
     tmp = Path("/tmp/surf-transport-test-completed")
     tmp.mkdir(parents=True, exist_ok=True)
@@ -187,3 +218,69 @@ def test_transport_summary_completed() -> None:
     summary = write_summary(round_dir)
     assert summary["final_transport_state"] == "completed"
     assert summary["raw_sentinel_present"] is True
+
+
+def test_recover_finalize_claims_orphaned_submitted_receipt(tmp_path: Path) -> None:
+    round_dir = tmp_path / "round-orphan"
+    round_dir.mkdir(parents=True)
+    sentinel = "<<<WEBGPT_DONE:finalize-orphan>>>"
+    receipt = {
+        "schema": "surf.webgpt_submit_receipt.v1",
+        "status": "submitted_to_chatgpt",
+        "submitted_to_chatgpt": True,
+        "sentinel": sentinel,
+        "requested_tab_id": "837360496",
+        "output": str(round_dir / "02_response.md"),
+        "raw_output": str(round_dir / "02_response.raw.md"),
+        "meta_output": str(round_dir / "02_response.meta.json"),
+    }
+    (round_dir / "02_response.receipt.json").write_text(
+        json.dumps(receipt, indent=2) + "\n",
+        encoding="utf-8",
+    )
+    calls = tmp_path / "calls.log"
+    fake_run = tmp_path / "run.sh"
+    fake_run.write_text(
+        f"""#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\\n' "$*" >> {str(calls)!r}
+case "${{1:-}}" in
+  chatgpt.extract)
+    printf 'recovered orphan answer\\n{sentinel}\\n'
+    ;;
+  *)
+    printf 'unexpected command: %s\\n' "$*" >&2
+    exit 99
+    ;;
+esac
+""",
+        encoding="utf-8",
+    )
+    fake_run.chmod(0o755)
+
+    proc = subprocess.run(
+        [
+            "bash",
+            str(WEBGPT_RECOVER),
+            "--artifact-dir",
+            str(round_dir),
+            "--finalize",
+            "--timeout",
+            "1",
+        ],
+        env={**__import__("os").environ, "SURF_RUN_SH": str(fake_run)},
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    payload = json.loads(proc.stdout)
+    assert payload["finalize_attempted"] is True
+    assert payload["finalize_exit_code"] == 0
+    assert (round_dir / "02_response.md").read_text(encoding="utf-8") == "recovered orphan answer\n"
+    assert sentinel in (round_dir / "02_response.raw.md").read_text(encoding="utf-8")
+    assert "chatgpt.extract --tab-id 837360496" in calls.read_text(encoding="utf-8")
+    summary = json.loads((round_dir / "webgpt_transport_summary.json").read_text(encoding="utf-8"))
+    assert summary["final_transport_state"] == "completed"
