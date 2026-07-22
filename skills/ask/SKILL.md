@@ -152,6 +152,12 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
   conclusions separately. Do not collapse WebGPT/WebClaude/WebKimi/etc. into a
   vague consensus before exposing what each contributed and which artifact path
   supports it.
+- **Provider web research**: when the user's question depends on current
+  external facts, literature, docs, pricing, releases, or other time-sensitive
+  context, instruct each browser-backed provider to use its own web search or
+  browsing capability when available and to state whether web research was used.
+  Preserve those source-backed insights per handler instead of treating one
+  provider's web search as shared evidence for all providers.
 - **Creator-reviewer loop**: use `--topology sequential` and list the creator
   handler first, then reviewer handlers. Downstream handlers receive prior
   handler receipts and response excerpts. If the request asks for pass/fail
