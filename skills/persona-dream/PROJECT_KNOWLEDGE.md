@@ -316,6 +316,56 @@
   execution, semantic dream quality, multimodal perception, or complete
   Phase 01-16 media runtime execution.
 
+  A PCTOM-R calibration/abstention audit now covers the repeated full64 Gate 5
+  metric surface. Command:
+  `./skills/persona-dream/run.sh check-pctom-calibration-abstention
+  --source-root /tmp/persona-dream-live-tau-sealed-test-gate0-full64-20260722T010402Z
+  --source-root /tmp/persona-dream-live-tau-sealed-test-gate0-full64-repeat2-20260722T020900Z
+  --output-root /tmp/persona-dream-pctom-calibration-abstention-full64-r2-20260722T110000Z
+  --json`. Receipt status:
+  `PASS_PCTOM_CALIBRATION_ABSTENTION_AUDIT`; counts: 2 source roots, 512
+  raw case rows, 512 audited case rows, 512 calibration rows, 512
+  risk-coverage rows, 1536 calibration bucket items, and 0 abstained rows.
+  Metrics: `mean_expected_calibration_error=0.36621092838541663`,
+  `mean_coverage=1.0`, `mean_selective_accuracy=0.3671875`, and
+  `abstention_observed=false`. Receipt SHA-256:
+  `sha256:32cd4119562b98aa7e74757e27d06658820f487b751052322e9a44fb39419bca`.
+  A fixture-backed negative removed one `risk_coverage` object from a copied
+  full64 case index and exited 1 with
+  `BLOCKED_PCTOM_CALIBRATION_ABSTENTION_AUDIT`, errors
+  `row_0_missing_risk_coverage`, `calibration_rows_mismatch:255:256`,
+  `risk_coverage_rows_mismatch:255:256`, and
+  `check_failed:audited_rows_match_expected_shape:False`; negative receipt
+  SHA-256:
+  `sha256:03e942068405a5cccfcf5a5c338ab1266f57fa86f638cb0d00c8e745abc65be4`.
+  This proves the full64 Gate 5 rows carry auditable calibration and
+  risk-coverage fields. It does not prove abstention improves decisions under
+  unsupported evidence because the repeated full64 surface contains no
+  abstained rows.
+
+  The success-criteria audit was then tightened with
+  `--calibration-abstention-receipt` so same-scope prediction plus planning
+  cannot be misreported as complete hard success without the calibration and
+  abstention surface. Superseding receipt:
+  `/tmp/persona-dream-pctom-success-criteria-calibration-bound-20260722T111000Z/pctom_success_criteria_audit_receipt.v1.json`.
+  It returned `PASS_PCTOM_SUCCESS_CRITERIA_AUDIT` with
+  `repeated_full64_same_scope_success=true`, `same_scope_joint_success=true`,
+  `calibration_surface_audited=true`,
+  `unsupported_evidence_abstention_exercised=false`, and
+  `full_hard_success_criteria_met=false`. Receipt SHA-256:
+  `sha256:527b3cd017d11ade9b2c59b0e061a2b46505d96ac46d791e0eaa14d1df04c248`.
+  A fixture-backed negative passed the blocked calibration receipt into the
+  success checker and exited 1 with
+  `BLOCKED_PCTOM_SUCCESS_CRITERIA_AUDIT`, errors
+  `calibration_abstention_status_not_expected`,
+  `calibration_abstention_live_not_true`, and
+  `calibration_surface_not_audited`; negative receipt SHA-256:
+  `sha256:d934716e84a8e5f6f43f93d262f94b887200176741f3e7b28fb5a09bfd9506e6`.
+  Current interpretation: PCTOM-R has same-scope repeated live Tau evidence for
+  prediction and planning benefit, plus a full64 calibration/risk-coverage
+  metric audit, but the broader hard-success claim remains pending until an
+  unsupported-evidence abstention fixture or live slice is exercised and scored.
+
   Command:
   `./skills/persona-dream/run.sh run-live-tau-balanced-planning-replication
   --family-episode-limit 8 --episodes-per-family 24 --variant-min 17

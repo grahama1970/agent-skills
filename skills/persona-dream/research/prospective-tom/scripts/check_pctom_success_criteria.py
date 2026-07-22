@@ -104,6 +104,7 @@ def run(
     planning_receipt_path: Path,
     goal_coverage_receipt_path: Path,
     repeated_full64_receipt_path: Path | None,
+    calibration_abstention_receipt_path: Path | None,
     output_root: Path,
     receipt_out: Path,
     fixture_backed: bool,
@@ -114,6 +115,9 @@ def run(
     planning_receipt_path = planning_receipt_path.resolve()
     goal_coverage_receipt_path = goal_coverage_receipt_path.resolve()
     repeated_full64_receipt_path = repeated_full64_receipt_path.resolve() if repeated_full64_receipt_path else None
+    calibration_abstention_receipt_path = (
+        calibration_abstention_receipt_path.resolve() if calibration_abstention_receipt_path else None
+    )
     output_root = output_root.resolve()
     receipt_out = receipt_out.resolve()
     output_root.mkdir(parents=True, exist_ok=True)
@@ -126,10 +130,16 @@ def run(
         if repeated_full64_receipt_path
         else None
     )
+    calibration_abstention = (
+        _load_json(calibration_abstention_receipt_path, errors, "calibration_abstention_receipt")
+        if calibration_abstention_receipt_path
+        else None
+    )
     prediction = prediction if isinstance(prediction, dict) else {}
     planning = planning if isinstance(planning, dict) else {}
     coverage = coverage if isinstance(coverage, dict) else {}
     repeated = repeated if isinstance(repeated, dict) else None
+    calibration_abstention = calibration_abstention if isinstance(calibration_abstention, dict) else None
 
     if not _status_pass(prediction, "PASS_PCTOM_SEALED_TEST_STATISTICAL_CONFIDENCE"):
         errors.append(f"prediction_receipt_status_not_expected:{prediction.get('status')}")
@@ -300,6 +310,57 @@ def run(
             "planning_regret_benefit_with_confidence": planning_metric.get("benefit_with_confidence"),
         }
 
+    calibration_surface_audited = False
+    unsupported_evidence_abstention_exercised = False
+    calibration_summary: dict[str, Any] | None = None
+    if calibration_abstention is not None:
+        if not _status_pass(calibration_abstention, "PASS_PCTOM_CALIBRATION_ABSTENTION_AUDIT"):
+            errors.append(f"calibration_abstention_status_not_expected:{calibration_abstention.get('status')}")
+        if calibration_abstention.get("mocked") is not False:
+            errors.append(f"calibration_abstention_mocked_not_false:{calibration_abstention.get('mocked')}")
+        if calibration_abstention.get("live") is not True:
+            errors.append(f"calibration_abstention_live_not_true:{calibration_abstention.get('live')}")
+        if calibration_abstention.get("llm_judge_used") is True:
+            errors.append("calibration_abstention_llm_judge_used_true")
+        if calibration_abstention.get("human_content_judgment_required") is True:
+            errors.append("calibration_abstention_human_content_judgment_required_true")
+        if _forbidden_write_count(calibration_abstention):
+            errors.append("calibration_abstention_forbidden_write_counter_nonzero")
+        ca_counts = calibration_abstention.get("counts") if isinstance(calibration_abstention.get("counts"), dict) else {}
+        ca_metrics = calibration_abstention.get("metrics") if isinstance(calibration_abstention.get("metrics"), dict) else {}
+        ca_checks = calibration_abstention.get("checks") if isinstance(calibration_abstention.get("checks"), dict) else {}
+        calibration_surface_audited = bool(
+            ca_counts.get("source_roots") == 2
+            and ca_counts.get("raw_case_rows") == 512
+            and ca_counts.get("calibration_rows") == 512
+            and ca_counts.get("risk_coverage_rows") == 512
+            and ca_counts.get("calibration_bucket_items") == 1536
+            and ca_checks.get("source_mode_live_hash_bound") is True
+            and ca_checks.get("calibration_present_for_all_rows") is True
+            and ca_checks.get("risk_coverage_present_for_all_rows") is True
+            and ca_checks.get("audited_rows_match_expected_shape") is True
+        )
+        if not calibration_surface_audited:
+            errors.append(
+                "calibration_surface_not_audited:"
+                f"counts={ca_counts}:metrics={ca_metrics}:checks={ca_checks}"
+            )
+        unsupported_evidence_abstention_exercised = ca_metrics.get("abstention_observed") is True
+        calibration_summary = {
+            "scope": "two live Tau full64 Gate 0-attributed Gate 5 case indexes",
+            "source_roots": ca_counts.get("source_roots"),
+            "raw_case_rows": ca_counts.get("raw_case_rows"),
+            "calibration_rows": ca_counts.get("calibration_rows"),
+            "risk_coverage_rows": ca_counts.get("risk_coverage_rows"),
+            "abstained_rows": ca_counts.get("abstained_rows"),
+            "mean_expected_calibration_error": ca_metrics.get("mean_expected_calibration_error"),
+            "mean_coverage": ca_metrics.get("mean_coverage"),
+            "mean_selective_accuracy": ca_metrics.get("mean_selective_accuracy"),
+            "abstention_observed": ca_metrics.get("abstention_observed"),
+            "calibration_surface_audited": calibration_surface_audited,
+            "unsupported_evidence_abstention_exercised": unsupported_evidence_abstention_exercised,
+        }
+
     same_scope_joint_success = (
         prediction_receipt_path == planning_receipt_path
         and prediction_benefit_with_confidence
@@ -310,6 +371,8 @@ def run(
         and coverage_complete
         and prediction_benefit_with_confidence
         and planning_benefit_with_confidence
+        and calibration_surface_audited
+        and unsupported_evidence_abstention_exercised
     )
 
     criteria = {
@@ -348,6 +411,23 @@ def run(
             ),
             "repeated_full64": repeated_summary,
         },
+        "calibration_and_abstention": {
+            "status": (
+                "PROVEN"
+                if calibration_surface_audited and unsupported_evidence_abstention_exercised
+                else "PARTIAL_PROVEN"
+                if calibration_surface_audited
+                else "NOT_PROVEN"
+            ),
+            "reason": (
+                "calibration and risk-coverage fields are audited, but unsupported-evidence abstention rows were not observed"
+                if calibration_surface_audited and not unsupported_evidence_abstention_exercised
+                else "calibration and abstention evidence is missing or failed"
+                if not calibration_surface_audited
+                else "calibration/risk-coverage and abstention behavior were both exercised"
+            ),
+            "calibration_abstention": calibration_summary,
+        },
     }
 
     receipt = {
@@ -365,12 +445,17 @@ def run(
         "repeated_full64_receipt": _receipt_ref(repeated_full64_receipt_path, repeated)
         if repeated_full64_receipt_path is not None and isinstance(repeated, dict)
         else None,
+        "calibration_abstention_receipt": _receipt_ref(calibration_abstention_receipt_path, calibration_abstention)
+        if calibration_abstention_receipt_path is not None and isinstance(calibration_abstention, dict)
+        else None,
         "criteria": criteria,
         "summary": {
             "prediction_benefit_with_confidence": prediction_benefit_with_confidence,
             "planning_benefit_with_confidence": planning_benefit_with_confidence,
             "goal_coverage_complete": coverage_complete,
             "repeated_full64_same_scope_success": repeated_same_scope_success,
+            "calibration_surface_audited": calibration_surface_audited,
+            "unsupported_evidence_abstention_exercised": unsupported_evidence_abstention_exercised,
             "same_scope_joint_success": same_scope_joint_success,
             "full_hard_success_criteria_met": full_hard_success_criteria_met,
         },
@@ -380,9 +465,11 @@ def run(
                 "current evidence has confidence-bound prediction benefit in deterministic sealed64 scoring",
                 "current evidence has confidence-bound live Tau planning benefit on the balanced held-out slice",
                 "current repeated full64 evidence has same-scope confidence-bound prediction and planning benefit when repeated_full64_same_scope_success is true",
+                "current calibration/abstention evidence has a full64 Gate 5 calibration and risk-coverage metric surface when calibration_surface_audited is true",
                 "current evidence has mapped reliability and fail-closed coverage through the goal coverage receipt",
             ],
             "does_not_prove": [
+                "unsupported-evidence abstention behavior when unsupported_evidence_abstention_exercised is false",
                 "paid provider execution",
                 "semantic dream quality",
                 "complete Phase 01-16 media runtime execution",
@@ -402,6 +489,7 @@ def main() -> int:
     parser.add_argument("--planning-receipt", required=True)
     parser.add_argument("--goal-coverage-receipt", required=True)
     parser.add_argument("--repeated-full64-receipt")
+    parser.add_argument("--calibration-abstention-receipt")
     parser.add_argument("--output-root", required=True)
     parser.add_argument("--receipt-out", required=True)
     parser.add_argument("--fixture-backed", action="store_true")
@@ -412,6 +500,9 @@ def main() -> int:
         planning_receipt_path=Path(args.planning_receipt),
         goal_coverage_receipt_path=Path(args.goal_coverage_receipt),
         repeated_full64_receipt_path=Path(args.repeated_full64_receipt) if args.repeated_full64_receipt else None,
+        calibration_abstention_receipt_path=Path(args.calibration_abstention_receipt)
+        if args.calibration_abstention_receipt
+        else None,
         output_root=Path(args.output_root),
         receipt_out=Path(args.receipt_out),
         fixture_backed=args.fixture_backed,

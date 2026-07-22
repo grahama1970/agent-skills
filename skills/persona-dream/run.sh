@@ -99,6 +99,7 @@ Commands:
   run-live-tau-sealed-test-replication  Run bounded live Tau-authored sealed-test replication plus Gate 6 actions
   run-live-tau-full64-statistical-confidence  Compute confidence intervals over accepted full64 live Tau artifacts
   run-live-tau-full64-repeated-run-summary  Aggregate repeated full64 live Tau sealed-test replications
+  check-pctom-calibration-abstention  Audit calibration/risk-coverage fields over full64 live Tau artifacts
   run-live-tau-full64-planning-diagnostic  Diagnose why full64 planning-regret benefit is not confidence-bound
   run-live-tau-full64-action-policy-sensitivity  Explain sparse full64 planning deltas through action switches
   run-live-tau-trust-commit-replication  Rerun focused live Tau M/R/D/CD trust-commitment planning cases
@@ -650,6 +651,9 @@ case "$COMMAND" in
     ;;
   check-pctom-success-criteria)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_pctom_success_criteria.py" "$@"
+    ;;
+  check-pctom-calibration-abstention)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_pctom_calibration_abstention.py" "$@"
     ;;
   check-prospective-tom-protocol)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_prospective_tom_protocol.py" "$@"

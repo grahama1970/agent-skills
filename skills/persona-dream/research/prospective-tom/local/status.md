@@ -36,6 +36,11 @@ A PCTOM-R success-criteria audit now separates scoped evidence from full hard
 success: current receipts show confidence-bound prediction benefit and
 confidence-bound live planning benefit. A later repeated-full64 success audit
 binds both benefits in one same-scope repeated live Tau aggregate.
+A PCTOM-R calibration/abstention audit now consumes the same two full64 live
+Tau roots and hash-binds 512 Gate 5 scoring rows with calibration and
+risk-coverage fields. It records `abstention_observed=false`, so unsupported
+evidence abstention behavior remains explicit remaining work rather than a
+hidden success claim.
 
 Sealed64 deterministic social episode corpus:
 
@@ -241,6 +246,30 @@ PCTOM-R repeated-full64 success-criteria negative receipt:
 /tmp/persona-dream-pctom-success-criteria-repeated-full64-negative-planning-20260722T101100Z/pctom_success_criteria_audit_receipt.v1.json
 ```
 
+PCTOM-R repeated-full64 calibration/abstention audit receipt:
+
+```text
+/tmp/persona-dream-pctom-calibration-abstention-full64-r2-20260722T110000Z/pctom_calibration_abstention_audit_receipt.v1.json
+```
+
+PCTOM-R repeated-full64 calibration/abstention negative receipt:
+
+```text
+/tmp/persona-dream-pctom-calibration-abstention-negative-missing-risk-20260722T110100Z/output/pctom_calibration_abstention_audit_receipt.v1.json
+```
+
+PCTOM-R calibration-bound success-criteria audit receipt:
+
+```text
+/tmp/persona-dream-pctom-success-criteria-calibration-bound-20260722T111000Z/pctom_success_criteria_audit_receipt.v1.json
+```
+
+PCTOM-R calibration-bound success-criteria negative receipt:
+
+```text
+/tmp/persona-dream-pctom-success-criteria-negative-calibration-20260722T111100Z/pctom_success_criteria_audit_receipt.v1.json
+```
+
 Inspection result:
 
 ```text
@@ -336,6 +365,28 @@ pctom_repeated_full64_success_negative_status: BLOCKED_PCTOM_SUCCESS_CRITERIA_AU
 pctom_repeated_full64_success_negative_exit_code: 1
 pctom_repeated_full64_success_negative_error: repeated_full64_same_scope_success_not_proven
 pctom_repeated_full64_success_negative_receipt_sha256: sha256:fe06372a70c5f8e79b4023f5f5c34f8ccdb0591e78a381ae7b000df9802ba619
+pctom_calibration_abstention_status: PASS_PCTOM_CALIBRATION_ABSTENTION_AUDIT
+pctom_calibration_abstention_source_roots: 2
+pctom_calibration_abstention_raw_case_rows: 512
+pctom_calibration_abstention_calibration_rows: 512
+pctom_calibration_abstention_risk_coverage_rows: 512
+pctom_calibration_abstention_abstained_rows: 0
+pctom_calibration_abstention_mean_ece: 0.36621092838541663
+pctom_calibration_abstention_mean_coverage: 1.0
+pctom_calibration_abstention_mean_selective_accuracy: 0.3671875
+pctom_calibration_abstention_receipt_sha256: sha256:32cd4119562b98aa7e74757e27d06658820f487b751052322e9a44fb39419bca
+pctom_calibration_abstention_negative_status: BLOCKED_PCTOM_CALIBRATION_ABSTENTION_AUDIT
+pctom_calibration_abstention_negative_error: row_0_missing_risk_coverage
+pctom_calibration_abstention_negative_receipt_sha256: sha256:03e942068405a5cccfcf5a5c338ab1266f57fa86f638cb0d00c8e745abc65be4
+pctom_calibration_bound_success_status: PASS_PCTOM_SUCCESS_CRITERIA_AUDIT
+pctom_calibration_bound_success_same_scope_joint_success: true
+pctom_calibration_bound_success_calibration_surface_audited: true
+pctom_calibration_bound_success_unsupported_evidence_abstention_exercised: false
+pctom_calibration_bound_success_full_hard_success_criteria_met: false
+pctom_calibration_bound_success_receipt_sha256: sha256:527b3cd017d11ade9b2c59b0e061a2b46505d96ac46d791e0eaa14d1df04c248
+pctom_calibration_bound_success_negative_status: BLOCKED_PCTOM_SUCCESS_CRITERIA_AUDIT
+pctom_calibration_bound_success_negative_error: calibration_abstention_status_not_expected
+pctom_calibration_bound_success_negative_receipt_sha256: sha256:d934716e84a8e5f6f43f93d262f94b887200176741f3e7b28fb5a09bfd9506e6
 live_fault_injection_status: PASS_PCTOM_LIVE_FAULT_INJECTION_SURFACE
 local_http_service_retry_status: PASS_LIVE_TAU_PCTOM_SERVICE_RETRY_PROOF
 combined_full64_memory_fault_surface_status: PASS_LIVE_TAU_PCTOM_FULL64_MEMORY_FAULT_SURFACE

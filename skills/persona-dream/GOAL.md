@@ -370,6 +370,52 @@ Next: <one immediate action or stop condition>
   represented by a stricter repeated-full64 audit. It still does not prove paid
   provider execution, semantic dream quality, multimodal perception, or
   complete Phase 01-16 media runtime execution.
+  A calibration/abstention audit now consumes the same two Gate 0-attributed
+  full64 live Tau roots and checks the Gate 5 scoring metric surface that the
+  full64 success receipt did not aggregate. Receipt:
+  `/tmp/persona-dream-pctom-calibration-abstention-full64-r2-20260722T110000Z/pctom_calibration_abstention_audit_receipt.v1.json`.
+  It returned `PASS_PCTOM_CALIBRATION_ABSTENTION_AUDIT` with 2 source roots,
+  512 raw case rows, 512 audited case rows, 512 calibration rows, 512
+  risk-coverage rows, 1536 calibration bucket items, 128 rows per condition,
+  `mean_expected_calibration_error=0.36621092838541663`,
+  `mean_coverage=1.0`, `mean_selective_accuracy=0.3671875`, and
+  `abstention_observed=false`. Receipt SHA-256:
+  `sha256:32cd4119562b98aa7e74757e27d06658820f487b751052322e9a44fb39419bca`.
+  A fixture-backed negative removed one `risk_coverage` object from a copied
+  full64 case index and exited 1 with
+  `BLOCKED_PCTOM_CALIBRATION_ABSTENTION_AUDIT`, errors
+  `row_0_missing_risk_coverage`, `calibration_rows_mismatch:255:256`,
+  `risk_coverage_rows_mismatch:255:256`, and
+  `check_failed:audited_rows_match_expected_shape:False`; negative receipt
+  SHA-256:
+  `sha256:03e942068405a5cccfcf5a5c338ab1266f57fa86f638cb0d00c8e745abc65be4`.
+  This proves the repeated live full64 Gate 5 rows carry deterministic
+  calibration and risk-coverage fields, and that the checker fails closed when
+  that surface is missing. It does not prove abstention improves decisions
+  under unsupported evidence because no abstention rows were observed in this
+  full64 surface.
+  The success-criteria audit was then tightened to consume this
+  calibration/abstention receipt before reporting full hard success. Superseding
+  receipt:
+  `/tmp/persona-dream-pctom-success-criteria-calibration-bound-20260722T111000Z/pctom_success_criteria_audit_receipt.v1.json`.
+  It returned `PASS_PCTOM_SUCCESS_CRITERIA_AUDIT` with
+  `prediction_benefit_with_confidence=true`,
+  `planning_benefit_with_confidence=true`,
+  `repeated_full64_same_scope_success=true`,
+  `same_scope_joint_success=true`, `calibration_surface_audited=true`,
+  `unsupported_evidence_abstention_exercised=false`, and
+  `full_hard_success_criteria_met=false`. Receipt SHA-256:
+  `sha256:527b3cd017d11ade9b2c59b0e061a2b46505d96ac46d791e0eaa14d1df04c248`.
+  A fixture-backed negative passed the blocked calibration receipt into the
+  success checker and exited 1 with `BLOCKED_PCTOM_SUCCESS_CRITERIA_AUDIT`,
+  errors `calibration_abstention_status_not_expected`,
+  `calibration_abstention_live_not_true`, and
+  `calibration_surface_not_audited`; negative receipt SHA-256:
+  `sha256:d934716e84a8e5f6f43f93d262f94b887200176741f3e7b28fb5a09bfd9506e6`.
+  This supersedes the earlier repeated-full64 hard-success reading: the
+  prediction/planning result is still same-scope evidence, but the broader
+  PCTOM-R hard-success claim remains pending until unsupported-evidence
+  abstention is exercised and scored.
   The live run consumed simulator variants 17-24, 32 sealed-test
   episodes, all four scenario families, and 128 live Tau-authored M/R/D/CD
   condition predictions. It used the Gate 0 attribution root
