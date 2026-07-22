@@ -1,10 +1,45 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-22 UTC (PCTOM-R visible-pressure Gate 8 surface) by agent
+**Last updated:** 2026-07-22 UTC (PCTOM-R visible-pressure Gate 9 replay) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-22 UTC (PCTOM-R VISIBLE-PRESSURE GATE 9 CAUSAL REPLAY): a Gate 9
+  causal replay now exists for one visible-pressure Gate 8 fault trial. Builder
+  command:
+  `./skills/persona-dream/run.sh build-cooperation-visible-pressure-causal-replay`.
+  Checker command:
+  `./skills/persona-dream/run.sh run-causal-replay`. Builder receipt:
+  `/tmp/persona-dream-visible-pressure-causal-replay-20260722T001823Z/cooperation_visible_pressure_causal_replay_build_receipt.v1.json`.
+  Replay artifact:
+  `/tmp/persona-dream-visible-pressure-causal-replay-20260722T001823Z/artifacts/cooperation_visible_pressure_causal_replay.v1.json`.
+  Checker receipt:
+  `/tmp/persona-dream-visible-pressure-causal-replay-20260722T001823Z/cooperation_visible_pressure_causal_replay_check_receipt.v1.json`.
+  Builder status `PASS_PCTOM_COOPERATION_VISIBLE_PRESSURE_CAUSAL_REPLAY_BUILT`;
+  builder receipt SHA-256
+  `sha256:798bfdc9dfba445becfe4038bafeccbbe02c6bc5a94417719302ae712b6f5e81`;
+  replay SHA-256
+  `sha256:eee437412b0e40e87d5b072bc1a2457f119a4f753f438196ee755a292b8bbaf9`;
+  checker status `PASS_TOM_CAUSAL_REPLAY`. The replay targets
+  `visible-pressure-fault-oracle-leak-001`, terminal
+  `QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE`, first divergent receipt
+  `visible-pressure-receipt-006-validate-pre-outcome-rule-inputs`, suspected
+  local artifact/tool return
+  `visible-pressure-tool-return-oracle-leak-001`, and localized cause
+  `PRE_OUTCOME_ORACLE_OR_HIDDEN_FIELD_LEAK` with causal confidence `1.0`.
+  Observed: one target trial, one first divergent receipt, one suspected tool
+  return, one state comparison, one localized cause, zero forbidden terminal
+  outcomes, zero forbidden write attempts, zero Tau/Memory/provider calls, and
+  zero canonical/identity/source-memory writes. This proves Gate 9 causal
+  replay for one visible-pressure controlled fault over the existing Gate 8
+  surface. It does not prove live Tau execution, live Memory recall, real
+  service fault injection, production causal replay, statistical prediction
+  benefit, complete PCTOM-R reliability across every boundary, or complete live
+  Phase 01-16 runtime execution. Next work should either extend causal replay
+  to another visible-pressure fault family or broaden held-out sealed
+  cooperation episodes so prediction/planning benefit is tested beyond this
+  controlled reliability slice.
 - 2026-07-22 UTC (PCTOM-R VISIBLE-PRESSURE GATE 8 SURFACE): a standard
   `persona_dream.research.prospective_tom.reliability_surface.v1` artifact now
   exists for the visible-pressure cooperation rule boundary. Builder command:

@@ -116,6 +116,7 @@ Commands:
   check-cooperation-class-separated-exposure  Audit class-separated cooperation exposure from a live Tau slice
   check-cooperation-visible-pressure-rule-reliability  Audit visible-pressure rule reliability over live Tau replays
   build-cooperation-visible-pressure-reliability-surface  Build Gate 8 surface from visible-pressure reliability evidence
+  build-cooperation-visible-pressure-causal-replay  Build Gate 9 replay from visible-pressure reliability surface
   diagnose-cooperation-policy  Diagnose cooperation-threshold policy effects over live instrument artifacts
   accept-cooperation-no-intervention-policy  Accept no-intervention for observed cooperation regression slice
   check-cooperation-feature-split-prerequisites  Audit whether cooperation evidence can support a replacement feature split
@@ -557,6 +558,9 @@ case "$COMMAND" in
     ;;
   build-cooperation-visible-pressure-reliability-surface)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/build_cooperation_visible_pressure_reliability_surface.py" "$@"
+    ;;
+  build-cooperation-visible-pressure-causal-replay)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/build_cooperation_visible_pressure_causal_replay.py" "$@"
     ;;
   diagnose-cooperation-policy)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/diagnose_cooperation_policy.py" "$@"

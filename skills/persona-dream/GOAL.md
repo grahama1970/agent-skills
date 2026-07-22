@@ -133,6 +133,36 @@ Next: <one immediate action or stop condition>
 
 ## Current Evidence Snapshot
 
+- PCTOM-R visible-pressure Gate 9 causal replay:
+  `/tmp/persona-dream-visible-pressure-causal-replay-20260722T001823Z/cooperation_visible_pressure_causal_replay_check_receipt.v1.json`.
+  Replay artifact:
+  `/tmp/persona-dream-visible-pressure-causal-replay-20260722T001823Z/artifacts/cooperation_visible_pressure_causal_replay.v1.json`.
+  Builder receipt:
+  `/tmp/persona-dream-visible-pressure-causal-replay-20260722T001823Z/cooperation_visible_pressure_causal_replay_build_receipt.v1.json`.
+  Builder status
+  `PASS_PCTOM_COOPERATION_VISIBLE_PRESSURE_CAUSAL_REPLAY_BUILT`;
+  builder receipt SHA-256
+  `sha256:798bfdc9dfba445becfe4038bafeccbbe02c6bc5a94417719302ae712b6f5e81`;
+  replay SHA-256
+  `sha256:eee437412b0e40e87d5b072bc1a2457f119a4f753f438196ee755a292b8bbaf9`;
+  causal replay checker status `PASS_TOM_CAUSAL_REPLAY`.
+  The replay targets `visible-pressure-fault-oracle-leak-001`, whose Gate 8
+  terminal outcome is `QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE`, starts at
+  first divergent receipt
+  `visible-pressure-receipt-006-validate-pre-outcome-rule-inputs`, replaces
+  exactly one suspected local artifact/tool return
+  `visible-pressure-tool-return-oracle-leak-001`, compares factual,
+  counterfactual, and expected end-state hashes, and localizes
+  `PRE_OUTCOME_ORACLE_OR_HIDDEN_FIELD_LEAK` with causal confidence `1.0`.
+  Counts: one target trial, one first divergent receipt, one suspected tool
+  return, one state comparison, one localized cause, zero forbidden terminal
+  outcomes, zero forbidden write attempts, zero Tau/Memory/provider calls, and
+  zero canonical/identity/source-memory writes. This proves Gate 9 causal
+  replay for one visible-pressure controlled fault over the existing Gate 8
+  surface. It does not prove live Tau execution, live Memory recall, real
+  service fault injection, production causal replay, statistical prediction
+  benefit, complete PCTOM-R reliability across every boundary, or complete live
+  Phase 01-16 runtime execution.
 - PCTOM-R visible-pressure Gate 8 reliability surface:
   `/tmp/persona-dream-visible-pressure-reliability-surface-20260722T001404Z/cooperation_visible_pressure_reliability_surface_check_receipt.v1.json`.
   Surface artifact:

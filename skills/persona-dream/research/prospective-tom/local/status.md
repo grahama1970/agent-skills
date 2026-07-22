@@ -1,5 +1,96 @@
 # Status
 
+Status: VISIBLE_PRESSURE_GATE9_CAUSAL_REPLAY_LOCALIZED
+
+Artifact: PCTOM-R Gate 9 causal replay for one visible-pressure Gate 8 fault
+trial. The replay targets an oracle/hidden-field leak in pre-outcome rule input
+validation, replaces exactly one suspected local artifact/tool return, and
+checks the replay with the existing `run-causal-replay` validator.
+
+Causal replay checker receipt:
+
+```text
+/tmp/persona-dream-visible-pressure-causal-replay-20260722T001823Z/cooperation_visible_pressure_causal_replay_check_receipt.v1.json
+```
+
+Replay artifact:
+
+```text
+/tmp/persona-dream-visible-pressure-causal-replay-20260722T001823Z/artifacts/cooperation_visible_pressure_causal_replay.v1.json
+```
+
+Builder receipt:
+
+```text
+/tmp/persona-dream-visible-pressure-causal-replay-20260722T001823Z/cooperation_visible_pressure_causal_replay_build_receipt.v1.json
+```
+
+Inspection result:
+
+```text
+builder_status: PASS_PCTOM_COOPERATION_VISIBLE_PRESSURE_CAUSAL_REPLAY_BUILT
+builder_receipt_sha256: sha256:798bfdc9dfba445becfe4038bafeccbbe02c6bc5a94417719302ae712b6f5e81
+replay_sha256: sha256:eee437412b0e40e87d5b072bc1a2457f119a4f753f438196ee755a292b8bbaf9
+causal_replay_checker_status: PASS_TOM_CAUSAL_REPLAY
+target_trial_id: visible-pressure-fault-oracle-leak-001
+target_terminal_outcome: QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE
+first_divergent_receipt_id: visible-pressure-receipt-006-validate-pre-outcome-rule-inputs
+suspected_tool_return: visible-pressure-tool-return-oracle-leak-001
+localized_cause_type: PRE_OUTCOME_ORACLE_OR_HIDDEN_FIELD_LEAK
+causal_confidence: 1.0
+target_trials: 1
+first_divergent_receipts: 1
+suspected_tool_returns: 1
+state_comparisons: 1
+localized_causes: 1
+forbidden_terminal_outcomes: 0
+forbidden_write_attempts: 0
+tau_call_attempts: 0
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+mocked: false
+causal_checker_fixture_backed: true
+```
+
+What this proves:
+
+```text
+one visible-pressure Gate 8 fault trial has a Gate 9 causal replay
+-> the target trial is resolved and faulted/divergent
+-> the first divergent receipt is identified
+-> replay starts at that first divergent receipt
+-> exactly one suspected local artifact/tool return is replaced
+-> factual, counterfactual, and expected end-state hashes are compared
+-> the counterfactual replay returns to expected state
+-> the localized cause is a pre-outcome oracle/hidden-field leak
+-> no unknown-state continuation or canonical/identity/source writes occur
+```
+
+What this does not prove:
+
+```text
+live Tau execution
+live Memory recall
+real service fault injection
+production causal replay
+statistical prediction benefit
+complete PCTOM-R reliability across every boundary
+complete live Phase 01-16 runtime execution
+```
+
+Immediate next step:
+
+```text
+Either extend causal replay to another visible-pressure fault family, or move
+back up the PCTOM-R stack to broaden held-out sealed cooperation episodes so
+prediction/planning benefit has more than this controlled reliability slice.
+```
+
+Prior status:
+
 Status: VISIBLE_PRESSURE_GATE8_SURFACE_CHECKED
 
 Artifact: standard PCTOM-R Gate 8 reliability surface built from the
