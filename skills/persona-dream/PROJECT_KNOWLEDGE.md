@@ -1,9 +1,39 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-22 UTC (PCTOM-R variant25-26 cross-family live generalization) by agent
+**Last updated:** 2026-07-22 UTC (PCTOM-R strict objective bundle with v25-26 evidence) by agent
 **Status:** Active development
 
 ## Current Understanding
+
+- 2026-07-22 UTC (PCTOM-R STRICT OBJECTIVE BUNDLE WITH V25-26 EVIDENCE):
+  the latest machine-checked PCTOM-R objective bundle is
+  `/tmp/persona-dream-pctom-strict-coverage-with-v25-26-20260722T154000Z`.
+  Manifest:
+  `/tmp/persona-dream-pctom-strict-coverage-with-v25-26-20260722T154000Z/pctom_goal_coverage_strict_with_v25_26_manifest.v1.json`.
+  Goal-coverage receipt:
+  `/tmp/persona-dream-pctom-strict-coverage-with-v25-26-20260722T154000Z/coverage/pctom_goal_coverage_receipt.v1.json`;
+  status `PASS_PCTOM_GOAL_COVERAGE`; receipt SHA-256
+  `sha256:30befd5cdc18312df472f68d0d7a2411355bb6976a8e0b6f1eb2ffb67c779bd6`;
+  15/15 required coverage ids seen; 43 evidence receipts; 31 positive rows;
+  12 negative rows; 19 live positive rows; 0 unbound evidence rows. Success
+  receipt:
+  `/tmp/persona-dream-pctom-strict-coverage-with-v25-26-20260722T154000Z/success/pctom_success_criteria_audit_receipt.v1.json`;
+  status `PASS_PCTOM_SUCCESS_CRITERIA_AUDIT`; receipt SHA-256
+  `sha256:4fb71ae2e4cfbb41a6c1ed46615b66c14b418da788efad80cf0cc4bf07d153e4`;
+  6 input receipts checked; 0 input receipt self-hash mismatches; 0 forbidden
+  counters found. Objective receipt:
+  `/tmp/persona-dream-pctom-strict-coverage-with-v25-26-20260722T154000Z/objective/pctom_objective_evidence_audit_receipt.v1.json`;
+  status `PASS_PCTOM_OBJECTIVE_EVIDENCE_AUDIT`; receipt SHA-256
+  `sha256:88e5f6941af8b1ed6336a19ce01c568b8075051b46a5f3df2666ee789edeeb14`.
+  The objective audit checked 43 child evidence receipts, saw all 15 required
+  coverage ids, found 0 human-content-judgment rows, 0 LLM-judge rows,
+  0 mocked-not-false rows, and 12/12 negative rows blocked. The provider/video
+  boundary was empty for provider, canonical-memory, identity, and
+  source-memory side-effect counters. This is current deterministic local
+  evidence for the text-first PCTOM-R research lane. It does not prove paid
+  provider execution, semantic dream quality, complete Phase 01-16 media
+  runtime execution, or future receipts that are not routed through this
+  objective audit.
 
 - 2026-07-22 UTC (PCTOM-R VARIANT25-26 CROSS-FAMILY LIVE GENERALIZATION):
   the Gate 1 social corpus generator now supports variants beyond 24 by

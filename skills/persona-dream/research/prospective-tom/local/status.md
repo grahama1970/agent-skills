@@ -1,8 +1,34 @@
 # Status
 
-Status: PCTOM_VARIANT25_26_CROSS_FAMILY_LIVE_GENERALIZATION
+Status: PCTOM_STRICT_OBJECTIVE_BUNDLE_WITH_V25_26
 
-Latest artifact: cross-family live Tau balanced-planning slice over newly
+Latest artifact: refreshed strict PCTOM-R objective bundle with v25-26 evidence
+folded into the manifest:
+`/tmp/persona-dream-pctom-strict-coverage-with-v25-26-20260722T154000Z/pctom_goal_coverage_strict_with_v25_26_manifest.v1.json`.
+The goal-coverage receipt
+`/tmp/persona-dream-pctom-strict-coverage-with-v25-26-20260722T154000Z/coverage/pctom_goal_coverage_receipt.v1.json`
+returned `PASS_PCTOM_GOAL_COVERAGE`, receipt SHA-256
+`sha256:30befd5cdc18312df472f68d0d7a2411355bb6976a8e0b6f1eb2ffb67c779bd6`,
+15/15 required coverage ids seen, 43 evidence receipts, 31 positive rows,
+12 negative rows, 19 live positive rows, and 0 unbound evidence rows. The
+success-criteria receipt
+`/tmp/persona-dream-pctom-strict-coverage-with-v25-26-20260722T154000Z/success/pctom_success_criteria_audit_receipt.v1.json`
+returned `PASS_PCTOM_SUCCESS_CRITERIA_AUDIT`, receipt SHA-256
+`sha256:4fb71ae2e4cfbb41a6c1ed46615b66c14b418da788efad80cf0cc4bf07d153e4`,
+with 6 input receipts checked, 0 input receipt self-hash mismatches, and 0
+forbidden counters found. The objective-evidence receipt
+`/tmp/persona-dream-pctom-strict-coverage-with-v25-26-20260722T154000Z/objective/pctom_objective_evidence_audit_receipt.v1.json`
+returned `PASS_PCTOM_OBJECTIVE_EVIDENCE_AUDIT`, receipt SHA-256
+`sha256:88e5f6941af8b1ed6336a19ce01c568b8075051b46a5f3df2666ee789edeeb14`,
+checked 43 child evidence receipts, saw 15/15 required coverage ids, recorded
+0 human-content-judgment rows, 0 LLM-judge rows, 0 mocked-not-false rows, 12/12
+negative rows blocked, and no provider/canonical-memory/identity/source-memory
+side-effect violations in the audited boundary. This is deterministic local
+PCTOM-R objective evidence over the text-first research lane; it still does not
+prove paid provider execution, semantic dream quality, complete Phase 01-16
+media runtime execution, or future receipts that bypass the objective audit.
+
+Supporting latest live artifact: cross-family live Tau balanced-planning slice over newly
 enabled variants 25-26
 `/tmp/persona-dream-live-tau-balanced-planning-gate0-variant25-26-20260722T152000Z/live_tau_balanced_planning_replication_receipt.v1.json`
 with status `PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION`, receipt

@@ -133,6 +133,43 @@ Next: <one immediate action or stop condition>
 
 ## Current Evidence Snapshot
 
+- PCTOM-R strict objective bundle with v25-26 evidence:
+  refreshed manifest
+  `/tmp/persona-dream-pctom-strict-coverage-with-v25-26-20260722T154000Z/pctom_goal_coverage_strict_with_v25_26_manifest.v1.json`;
+  goal-coverage receipt
+  `/tmp/persona-dream-pctom-strict-coverage-with-v25-26-20260722T154000Z/coverage/pctom_goal_coverage_receipt.v1.json`;
+  success-criteria receipt
+  `/tmp/persona-dream-pctom-strict-coverage-with-v25-26-20260722T154000Z/success/pctom_success_criteria_audit_receipt.v1.json`;
+  objective-evidence receipt
+  `/tmp/persona-dream-pctom-strict-coverage-with-v25-26-20260722T154000Z/objective/pctom_objective_evidence_audit_receipt.v1.json`.
+  The coverage checker returned `PASS_PCTOM_GOAL_COVERAGE` with receipt
+  SHA-256
+  `sha256:30befd5cdc18312df472f68d0d7a2411355bb6976a8e0b6f1eb2ffb67c779bd6`,
+  15 required coverage ids, 15 seen, 0 missing, 43 evidence receipts, 31
+  positive rows, 12 negative rows, 19 live positive rows, 13
+  receipt-SHA-bound rows, 30 expected-file-SHA-bound rows, and 0 unbound
+  evidence rows. The success checker returned
+  `PASS_PCTOM_SUCCESS_CRITERIA_AUDIT` with receipt SHA-256
+  `sha256:4fb71ae2e4cfbb41a6c1ed46615b66c14b418da788efad80cf0cc4bf07d153e4`,
+  6 input receipts checked, 0 input receipt self-hash mismatches, 0 forbidden
+  counters found, and every current hard-success criterion flag true within
+  the text-first PCTOM-R evidence scope. The objective checker returned
+  `PASS_PCTOM_OBJECTIVE_EVIDENCE_AUDIT` with receipt SHA-256
+  `sha256:88e5f6941af8b1ed6336a19ce01c568b8075051b46a5f3df2666ee789edeeb14`,
+  43 child evidence receipts checked, 15/15 coverage ids seen, 19 live
+  positive rows, 12 negative rows, 0 human-content-judgment rows, 0
+  LLM-judge rows, 0 mocked-not-false rows, and 0 negative rows outside
+  `BLOCKED_` status. It marks the active objective clauses true for
+  provenance-bound recall residue, deterministic hidden-state social episodes,
+  valid ToM distributions, counterfactual branches synthetic, sealed prediction
+  commitments, deterministic scoring, action selection and planning,
+  non-destructive belief revision, fail-closed reliability checks, autonomous
+  no-human-content-judgment operation, unsupported-evidence abstention,
+  provider/video outside the critical path, cross-stage hash lineage, and
+  Memory retention and recall. It does not prove paid provider execution,
+  semantic dream quality, complete Phase 01-16 media runtime execution, or
+  future receipts that are not routed through the objective audit.
+
 - PCTOM-R variant25-26 cross-family live Tau generalization:
   expanded deterministic social episode corpus
   `/tmp/persona-dream-pctom-social-corpus-sealed128-variantcycle-20260722T150000Z/social_episode_corpus.v1.json`;
@@ -2051,18 +2088,19 @@ latest_independent_live_generalization_cd_unsafe_offer_candidates: 4
 latest_independent_live_generalization_cd_unsafe_offer_suppression_rows: 4
 latest_independent_live_generalization_slice_conclusion: UNSAFE_OFFER_PRESSURE_SLICE_SUPPRESSION_EXERCISED
 latest_independent_live_generalization_planning_benefit_with_confidence: false
-latest_objective_evidence_receipt: /tmp/persona-dream-pctom-objective-evidence-failclosed-boundary-20260722T133500Z/pctom_objective_evidence_audit_receipt.v1.json
+latest_objective_bundle_manifest: /tmp/persona-dream-pctom-strict-coverage-with-v25-26-20260722T154000Z/pctom_goal_coverage_strict_with_v25_26_manifest.v1.json
+latest_objective_evidence_receipt: /tmp/persona-dream-pctom-strict-coverage-with-v25-26-20260722T154000Z/objective/pctom_objective_evidence_audit_receipt.v1.json
 latest_objective_evidence_status: PASS_PCTOM_OBJECTIVE_EVIDENCE_AUDIT
-latest_objective_evidence_receipt_sha256: sha256:649c683e27ecaa61a6a60c84e99ef9d78a378fbb4b7f10594080dbae20c77e3d
+latest_objective_evidence_receipt_sha256: sha256:88e5f6941af8b1ed6336a19ce01c568b8075051b46a5f3df2666ee789edeeb14
 latest_objective_evidence_mocked: false
 latest_objective_evidence_live: false
 latest_objective_evidence_fixture_backed: false
-latest_success_criteria_receipt: /tmp/persona-dream-pctom-success-criteria-expanded-coverage-r2-20260722T120400Z/pctom_success_criteria_audit_receipt.v1.json
+latest_success_criteria_receipt: /tmp/persona-dream-pctom-strict-coverage-with-v25-26-20260722T154000Z/success/pctom_success_criteria_audit_receipt.v1.json
 latest_success_criteria_status: PASS_PCTOM_SUCCESS_CRITERIA_AUDIT
-latest_success_criteria_receipt_sha256: sha256:adeb6ad468edc718c087998865b94d7f9e38ab6653bcca53e2070b5ad8b75c96
-latest_goal_coverage_receipt: /tmp/persona-dream-pctom-goal-coverage-unsupported-abstention-20260722T120100Z/pctom_goal_coverage_receipt.v1.json
+latest_success_criteria_receipt_sha256: sha256:4fb71ae2e4cfbb41a6c1ed46615b66c14b418da788efad80cf0cc4bf07d153e4
+latest_goal_coverage_receipt: /tmp/persona-dream-pctom-strict-coverage-with-v25-26-20260722T154000Z/coverage/pctom_goal_coverage_receipt.v1.json
 latest_goal_coverage_status: PASS_PCTOM_GOAL_COVERAGE
-latest_goal_coverage_receipt_sha256: sha256:19d64e0123136e7dd5bc856e12f7ec5e4b29657e044da6135ee4454e86bf8ca4
+latest_goal_coverage_receipt_sha256: sha256:30befd5cdc18312df472f68d0d7a2411355bb6976a8e0b6f1eb2ffb67c779bd6
 latest_independent_social_replay_receipt: /tmp/persona-dream-pctom-social-corpus-independent-replay-sealed64-20260722T064500Z/social_episode_independent_replay_receipt.v1.json
 latest_local_http_social_simulator_service_receipt: /tmp/persona-dream-social-simulator-service-proof-20260722T082000Z/social_simulator_service_proof_receipt.v1.json
 latest_balanced_planning_receipt: /tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_planning_replication_receipt.v1.json
@@ -4610,6 +4648,22 @@ pctom_gate0_receipt_sha256: sha256:f5db4c9813a2416e7769e22df657284715ff6f8e40514
 Current strict chain including the live Gate 0 bridge:
 
 ```text
+/tmp/persona-dream-pctom-strict-coverage-with-v25-26-20260722T154000Z/coverage/pctom_goal_coverage_receipt.v1.json
+status: PASS_PCTOM_GOAL_COVERAGE
+receipt_sha256: sha256:30befd5cdc18312df472f68d0d7a2411355bb6976a8e0b6f1eb2ffb67c779bd6
+evidence_receipts_seen: 43
+live_positive_evidence_receipts: 19
+negative_evidence_receipts: 12
+unbound_evidence_receipts: 0
+
+/tmp/persona-dream-pctom-strict-coverage-with-v25-26-20260722T154000Z/success/pctom_success_criteria_audit_receipt.v1.json
+status: PASS_PCTOM_SUCCESS_CRITERIA_AUDIT
+receipt_sha256: sha256:4fb71ae2e4cfbb41a6c1ed46615b66c14b418da788efad80cf0cc4bf07d153e4
+
+/tmp/persona-dream-pctom-strict-coverage-with-v25-26-20260722T154000Z/objective/pctom_objective_evidence_audit_receipt.v1.json
+status: PASS_PCTOM_OBJECTIVE_EVIDENCE_AUDIT
+receipt_sha256: sha256:88e5f6941af8b1ed6336a19ce01c568b8075051b46a5f3df2666ee789edeeb14
+
 /tmp/persona-dream-pctom-strict-coverage-with-live-gate0-20260722T063615Z/coverage/pctom_goal_coverage_receipt.v1.json
 status: PASS_PCTOM_GOAL_COVERAGE
 receipt_sha256: sha256:7900005b5f342dcf6942c580afd62bdfa9776e5a7639f576b314d4f87e74bdf1
