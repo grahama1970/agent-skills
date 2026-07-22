@@ -1,10 +1,4 @@
-"""Configuration and constants for GitHub Search skill.
-
-This module contains:
-- Skill integration paths
-- Default configuration values
-- Console instance for rich output
-"""
+"""Configuration and constants for the GitHub Search skill."""
 from pathlib import Path
 
 try:
@@ -14,17 +8,26 @@ except ImportError:
 
 # Skill directory paths
 SKILLS_DIR = Path(__file__).resolve().parents[1]
+BRAVE_SEARCH_SKILL = SKILLS_DIR / "brave-search"
 TREESITTER_SKILL = SKILLS_DIR / "treesitter"
 TAXONOMY_SKILL = SKILLS_DIR / "taxonomy"
 
-# Default limits
+# Search limits
 DEFAULT_REPO_LIMIT = 5
 DEFAULT_CODE_LIMIT = 5
 DEFAULT_ISSUE_LIMIT = 5
 DEFAULT_FILE_MAX_SIZE = 10_000
+DEFAULT_BRAVE_CANDIDATES = 12
+DEFAULT_EVALUATION_TOP = 3
+DEFAULT_MIN_STARS = 0
+DEFAULT_MAX_REPO_SIZE_MB = 250
 
-# Command timeout (seconds)
+# Command and execution limits
 DEFAULT_TIMEOUT = 60
+DEFAULT_CLONE_TIMEOUT = 180
+DEFAULT_RUN_TIMEOUT = 30
+DEFAULT_RUN_MEMORY_MB = 1024
+DEFAULT_OUTPUT_LIMIT = 20_000
 
 # Default search paths for code search
 DEFAULT_SEARCH_PATHS = ["src/", "lib/", "core/", "pkg/", "internal/"]
@@ -55,7 +58,6 @@ LANGUAGE_TO_SUFFIX = {
     "cpp": ".cpp",
 }
 
-# Console instance (lazy initialization)
 _console = None
 
 
