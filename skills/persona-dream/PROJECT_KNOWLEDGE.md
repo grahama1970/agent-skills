@@ -1,10 +1,43 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-22 UTC (PCTOM-R visible-pressure Gate 9 replay) by agent
+**Last updated:** 2026-07-22 UTC (PCTOM-R visible-pressure Gate 6 planning-benefit diagnostic) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-22 UTC (PCTOM-R VISIBLE-PRESSURE GATE 6 PLANNING BENEFIT): a
+  slice-local planning-benefit diagnostic now consumes the visible-pressure
+  rule-reliability receipt and its live-originated row artifacts. Command:
+  `./skills/persona-dream/run.sh analyze-cooperation-visible-pressure-planning-benefit`.
+  Diagnostic receipt:
+  `/tmp/persona-dream-visible-pressure-planning-benefit-20260722T002555Z/cooperation_visible_pressure_planning_benefit_diagnostic_receipt.v1.json`.
+  Diagnostic artifact:
+  `/tmp/persona-dream-visible-pressure-planning-benefit-20260722T002555Z/artifacts/cooperation_visible_pressure_planning_benefit_diagnostic.json`.
+  Status
+  `PASS_PCTOM_COOPERATION_VISIBLE_PRESSURE_PLANNING_BENEFIT_DIAGNOSTIC`;
+  receipt SHA-256
+  `sha256:f0a79d8fd1aee2f84062b1d11e7c00aa79265fa4daaa6714a6bfc24302b173f4`;
+  diagnostic SHA-256
+  `sha256:256fc4a12a4a0b47be808531fa982fa276bc5eaa99ed37b02c56632c4daacd90`;
+  source rule-reliability receipt SHA-256
+  `sha256:b97ccc1e42084971f9d1611e545f972fd76cb676023ac98c8f8fd885a08d6fb2`.
+  Observed: four suppression rows, eight exposure/contrast rows, 12 combined
+  rows, four suppression action changes, zero exposure action changes, zero
+  new Tau calls, zero Memory/provider calls, and zero canonical/identity/source
+  memory writes. Metrics: suppression mean planning-regret improvement
+  `0.6000000000000001`, 95% bootstrap CI
+  `[0.6000000000000001, 0.6000000000000001]`; exposure mean improvement
+  `0.0`, 95% bootstrap CI `[0.0, 0.0]`; combined mean improvement
+  `0.20000000000000004`, 95% bootstrap CI
+  `[0.05000000000000001, 0.3500000000000001]`. This proves slice-local
+  planning-regret benefit over supplied visible-pressure artifacts and
+  no-regression on the exposure/contrast rows. It does not prove broad
+  held-out PCTOM-R planning benefit, statistical generalization beyond those
+  artifacts, live service fault injection, semantic dream quality, paid
+  provider execution, or complete live Phase 01-16 runtime execution. Next work
+  should broaden to held-out sealed cooperation episodes or repeat the
+  diagnostic over another fault/perturbation family before making any broader
+  research claim.
 - 2026-07-22 UTC (PCTOM-R VISIBLE-PRESSURE GATE 9 CAUSAL REPLAY): a Gate 9
   causal replay now exists for one visible-pressure Gate 8 fault trial. Builder
   command:

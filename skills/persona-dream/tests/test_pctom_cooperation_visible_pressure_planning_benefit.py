@@ -1,0 +1,85 @@
+"""Unit checks for visible-pressure planning-benefit diagnostics."""
+
+from __future__ import annotations
+
+import importlib.util
+from pathlib import Path
+
+
+ROOT = Path(__file__).resolve().parents[1]
+SCRIPT_PATH = (
+    ROOT
+    / "research"
+    / "prospective-tom"
+    / "scripts"
+    / "analyze_cooperation_visible_pressure_planning_benefit.py"
+)
+
+
+spec = importlib.util.spec_from_file_location("analyze_cooperation_visible_pressure_planning_benefit", SCRIPT_PATH)
+assert spec and spec.loader
+diag = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(diag)
+
+
+def _row(original: float, intervened: float, cls: str, original_action: str, intervened_action: str, changed: bool) -> dict:
+    return {
+        "contrast_class": cls,
+        "cd_original_action": original_action,
+        "cd_intervened_action": intervened_action,
+        "cd_action_changed_by_rule": changed,
+        "original_cd_minus_baseline_planning_regret": original,
+        "intervened_cd_minus_baseline_planning_regret": intervened,
+    }
+
+
+def test_suppression_slice_has_positive_planning_benefit_ci():
+    errors: list[str] = []
+    rows = [
+        _row(0.85, 0.25, diag.AVOID_CLASS, diag.OFFER_ACTION, diag.ASK_ACTION, True),
+        _row(0.30, -0.30, diag.AVOID_CLASS, diag.OFFER_ACTION, diag.ASK_ACTION, True),
+        _row(0.85, 0.25, diag.AVOID_CLASS, diag.OFFER_ACTION, diag.ASK_ACTION, True),
+        _row(0.30, -0.30, diag.AVOID_CLASS, diag.OFFER_ACTION, diag.ASK_ACTION, True),
+    ]
+
+    result = diag._analyze_rows(rows, label="suppression", bootstrap_samples=200, bootstrap_seed=3, alpha=0.05, errors=errors)
+
+    assert errors == []
+    assert result["rows"] == 4
+    assert result["action_changes"] == 4
+    assert result["mean_improvement_vs_original"] == 0.6
+    assert result["planning_benefit_with_confidence"] is True
+
+
+def test_exposure_slice_no_regression():
+    errors: list[str] = []
+    rows = [
+        _row(-0.55, -0.55, diag.KEEP_CLASS, diag.OFFER_ACTION, diag.OFFER_ACTION, False),
+        _row(0.85, 0.85, diag.AVOID_CLASS, "DISCLOSE_INFORMATION", "DISCLOSE_INFORMATION", False),
+    ]
+
+    result = diag._analyze_rows(rows, label="exposure", bootstrap_samples=200, bootstrap_seed=5, alpha=0.05, errors=errors)
+
+    assert errors == []
+    assert result["action_changes"] == 0
+    assert result["mean_improvement_vs_original"] == 0.0
+    assert result["planning_benefit_with_confidence"] is False
+
+
+def test_expected_row_validator_fails_closed_on_avoid_offer_regression():
+    suppression = [
+        _row(0.85, 0.25, diag.AVOID_CLASS, diag.OFFER_ACTION, diag.ASK_ACTION, True)
+        for _ in range(4)
+    ]
+    exposure = [
+        _row(-0.55, -0.55, diag.KEEP_CLASS, diag.OFFER_ACTION, diag.OFFER_ACTION, False)
+        for _ in range(4)
+    ] + [
+        _row(0.85, 0.85, diag.AVOID_CLASS, "DISCLOSE_INFORMATION", diag.OFFER_ACTION, False)
+        for _ in range(4)
+    ]
+    errors: list[str] = []
+
+    diag._validate_expected_rows(suppression, exposure, errors)
+
+    assert "exposure_avoid_rows_created_offer" in errors

@@ -1,5 +1,87 @@
 # Status
 
+Status: VISIBLE_PRESSURE_GATE6_PLANNING_BENEFIT_DIAGNOSTIC
+
+Artifact: PCTOM-R Gate 6 planning-benefit diagnostic over the supplied
+visible-pressure suppression and exposure/contrast artifacts. The diagnostic
+consumes the prior rule-reliability receipt and row artifacts, recomputes
+hashes, computes planning-regret deltas, and writes a scoped receipt without
+new Tau, Memory, provider, canonical, identity, or source-memory writes.
+
+Diagnostic receipt:
+
+```text
+/tmp/persona-dream-visible-pressure-planning-benefit-20260722T002555Z/cooperation_visible_pressure_planning_benefit_diagnostic_receipt.v1.json
+```
+
+Diagnostic artifact:
+
+```text
+/tmp/persona-dream-visible-pressure-planning-benefit-20260722T002555Z/artifacts/cooperation_visible_pressure_planning_benefit_diagnostic.json
+```
+
+Inspection result:
+
+```text
+status: PASS_PCTOM_COOPERATION_VISIBLE_PRESSURE_PLANNING_BENEFIT_DIAGNOSTIC
+receipt_sha256: sha256:f0a79d8fd1aee2f84062b1d11e7c00aa79265fa4daaa6714a6bfc24302b173f4
+diagnostic_sha256: sha256:256fc4a12a4a0b47be808531fa982fa276bc5eaa99ed37b02c56632c4daacd90
+rule_reliability_receipt_sha256: sha256:b97ccc1e42084971f9d1611e545f972fd76cb676023ac98c8f8fd885a08d6fb2
+suppression_rows: 4
+exposure_rows: 8
+combined_rows: 12
+suppression_action_changes: 4
+exposure_action_changes: 0
+suppression_mean_improvement_vs_original: 0.6000000000000001
+suppression_95pct_bootstrap_ci: [0.6000000000000001, 0.6000000000000001]
+exposure_mean_improvement_vs_original: 0.0
+exposure_95pct_bootstrap_ci: [0.0, 0.0]
+combined_mean_improvement_vs_original: 0.20000000000000004
+combined_95pct_bootstrap_ci: [0.05000000000000001, 0.3500000000000001]
+tau_call_attempts: 0
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+mocked: false
+live: false
+live_source_artifacts_consumed: true
+```
+
+What this proves:
+
+```text
+the supplied visible-pressure suppression rows show slice-local planning-regret
+benefit with bootstrap confidence
+-> exposure/contrast rows show no action-change regression
+-> combined supplied visible-pressure artifacts show positive slice-local
+   planning-regret improvement
+-> source hashes are rechecked and no new Tau, Memory, provider, canonical,
+   identity, or source-memory writes are made
+```
+
+What this does not prove:
+
+```text
+broad held-out PCTOM-R planning benefit
+statistical generalization beyond the supplied visible-pressure artifacts
+live service fault injection
+semantic dream quality
+paid provider execution
+complete live Phase 01-16 runtime execution
+```
+
+Immediate next step:
+
+```text
+Broaden beyond the supplied visible-pressure slice with held-out sealed
+cooperation episodes, or extend the same planning-benefit diagnostic to another
+fault/perturbation family before making any broad PCTOM-R benefit claim.
+```
+
+Prior status:
+
 Status: VISIBLE_PRESSURE_GATE9_CAUSAL_REPLAY_LOCALIZED
 
 Artifact: PCTOM-R Gate 9 causal replay for one visible-pressure Gate 8 fault

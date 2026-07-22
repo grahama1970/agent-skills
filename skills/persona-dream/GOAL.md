@@ -133,6 +133,32 @@ Next: <one immediate action or stop condition>
 
 ## Current Evidence Snapshot
 
+- PCTOM-R visible-pressure Gate 6 planning-benefit diagnostic:
+  `/tmp/persona-dream-visible-pressure-planning-benefit-20260722T002555Z/cooperation_visible_pressure_planning_benefit_diagnostic_receipt.v1.json`.
+  Diagnostic artifact:
+  `/tmp/persona-dream-visible-pressure-planning-benefit-20260722T002555Z/artifacts/cooperation_visible_pressure_planning_benefit_diagnostic.json`.
+  Status
+  `PASS_PCTOM_COOPERATION_VISIBLE_PRESSURE_PLANNING_BENEFIT_DIAGNOSTIC`;
+  receipt SHA-256
+  `sha256:f0a79d8fd1aee2f84062b1d11e7c00aa79265fa4daaa6714a6bfc24302b173f4`;
+  diagnostic SHA-256
+  `sha256:256fc4a12a4a0b47be808531fa982fa276bc5eaa99ed37b02c56632c4daacd90`;
+  source rule-reliability receipt SHA-256
+  `sha256:b97ccc1e42084971f9d1611e545f972fd76cb676023ac98c8f8fd885a08d6fb2`.
+  Counts: four suppression rows, eight exposure/contrast rows, 12 combined
+  rows, four suppression action changes, zero exposure action changes, zero
+  Tau calls, zero Memory/provider calls, and zero canonical/identity/source
+  memory writes. Metrics: suppression mean planning-regret improvement
+  `0.6000000000000001`, 95% bootstrap CI
+  `[0.6000000000000001, 0.6000000000000001]`; exposure mean improvement
+  `0.0`, 95% bootstrap CI `[0.0, 0.0]`; combined mean improvement
+  `0.20000000000000004`, 95% bootstrap CI
+  `[0.05000000000000001, 0.3500000000000001]`.
+  This proves a slice-local planning-regret diagnostic over supplied
+  live-originated visible-pressure artifacts. It does not prove broad held-out
+  PCTOM-R planning benefit, statistical generalization beyond those artifacts,
+  live service fault injection, semantic dream quality, paid provider
+  execution, or complete live Phase 01-16 runtime execution.
 - PCTOM-R visible-pressure Gate 9 causal replay:
   `/tmp/persona-dream-visible-pressure-causal-replay-20260722T001823Z/cooperation_visible_pressure_causal_replay_check_receipt.v1.json`.
   Replay artifact:
