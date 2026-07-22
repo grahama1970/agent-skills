@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import sys
+from types import SimpleNamespace
 from pathlib import Path
 
 
@@ -117,6 +118,89 @@ def test_worker_prompt_includes_prior_receipts_and_verdict_contract(tmp_path: Pa
     assert "VERDICT: PASS" in prompt
     assert tau_roundtable_worker._extract_verdict("VERDICT: FAIL\nReason") == "FAIL"
     assert tau_roundtable_worker._has_verdict("No clear verdict") is False
+
+
+def test_worker_webclaude_submit_command_includes_prior_response_attachment(tmp_path: Path) -> None:
+    node_root = tmp_path / "node-artifacts"
+    prior_dir = node_root / "handler-webkimi"
+    prior_dir.mkdir(parents=True)
+    prior_response = prior_dir / "response.md"
+    prior_response.write_text("WebKimi prior response.\n", encoding="utf-8")
+    (prior_dir / "node-receipt.json").write_text(
+        json.dumps(
+            {
+                "schema": "ask.tau_dag_handler_receipt.v1",
+                "node_id": "handler-webkimi",
+                "handler": "webkimi",
+                "status": "PASS",
+                "ok": True,
+                "response_path": str(prior_response),
+            }
+        ),
+        encoding="utf-8",
+    )
+    request_file = tmp_path / "request.json"
+    request_file.write_text(
+        json.dumps({"request": "Ask webkimi, then ask webclaude to review for pass/fail."}),
+        encoding="utf-8",
+    )
+    artifact_dir = node_root / "handler-webclaude"
+    artifact_dir.mkdir(parents=True)
+    args = SimpleNamespace(
+        node_id="handler-webclaude",
+        handler="webclaude",
+        topology="sequential",
+        request_file=str(request_file),
+        browser_oracle_project="webclaude",
+        next_agent="join",
+        artifact_dir=str(artifact_dir),
+        surf_run=str(tmp_path / "surf-run.sh"),
+        browser_oracle_run=str(tmp_path / "browser-oracle-run.sh"),
+        scillm_base_url="http://127.0.0.1:4001",
+        scillm_api_key="",
+        prior_node=["handler-webkimi"],
+        timeout=300,
+        stable_polls=2,
+        no_activate=True,
+        evidence=[],
+        codex_workspace="",
+    )
+    seen_commands: list[list[str]] = []
+
+    def fake_run_cmd(command: list[str], *, cwd: Path, timeout: int) -> tau_roundtable_worker.CmdResult:
+        seen_commands.append(command)
+        if "resolve" in command:
+            return tau_roundtable_worker.CmdResult(
+                command,
+                0,
+                json.dumps({"tab_id": "837360812", "conversation_url": "https://claude.ai/chat/example"}),
+                "",
+                0.01,
+            )
+        if "claude.submit" in command:
+            response_path = Path(command[command.index("--output") + 1])
+            raw_path = Path(command[command.index("--raw-output") + 1])
+            meta_path = Path(command[command.index("--meta-output") + 1])
+            response_path.write_text("VERDICT: PASS\nClaude reviewed the prior response.\n", encoding="utf-8")
+            raw_path.write_text("VERDICT: PASS\nClaude reviewed the prior response.\n", encoding="utf-8")
+            meta_path.write_text(json.dumps({"status": "completed"}), encoding="utf-8")
+            return tau_roundtable_worker.CmdResult(command, 0, "", "", 0.01)
+        return tau_roundtable_worker.CmdResult(command, 99, "", "unexpected command", 0.01)
+
+    original_run_cmd = tau_roundtable_worker._run_cmd
+    tau_roundtable_worker._run_cmd = fake_run_cmd
+    try:
+        result = tau_roundtable_worker._run_handler(args, {}, artifact_dir)
+    finally:
+        tau_roundtable_worker._run_cmd = original_run_cmd
+
+    assert result["exit_code"] == 0
+    submit_command = next(command for command in seen_commands if "claude.submit" in command)
+    assert submit_command[submit_command.index("--attach-file") + 1] == str(prior_response)
+    receipt = json.loads((artifact_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    assert receipt["status"] == "PASS"
+    assert receipt["mocked"] is False
+    assert receipt["live"] is True
 
 
 def test_worker_prior_receipts_marks_missing_upstream_not_ready(tmp_path: Path) -> None:

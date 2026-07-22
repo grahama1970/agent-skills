@@ -43,6 +43,11 @@ def main() -> int:
     parser.add_argument("--tab-id", default="")
     parser.add_argument("--url", default="")
     parser.add_argument("--no-activate", action="store_true")
+    parser.add_argument(
+        "--attach-file",
+        default="",
+        help="Attach a file to the Claude message before submitting the prompt.",
+    )
     args = parser.parse_args()
 
     input_path = Path(args.input)
@@ -55,6 +60,9 @@ def main() -> int:
 
     if not input_path.is_file():
         raise SystemExit(f"Input file not found: {input_path}")
+    attach_file = Path(args.attach_file).expanduser() if args.attach_file else None
+    if attach_file and not attach_file.is_file():
+        raise SystemExit(f"--attach-file: file not found: {attach_file}")
     if "SURF_RUN_SH" not in os.environ and not Path("/tmp/surf.sock").exists():
         raise SystemExit("surf claude.submit requires the surf browser extension socket at /tmp/surf.sock.")
 
@@ -106,6 +114,7 @@ def main() -> int:
         if not requested_tab_id:
             raise SubmitFailure("No Claude tab id supplied, resolved, or remembered.")
         _assert_claude_tab(requested_tab_id, args.url)
+        attachment = _attach_file(requested_tab_id, attach_file) if attach_file else None
         _submit_prompt(requested_tab_id, submitted_prompt)
         raw_text = _wait_for_sentinel(
             requested_tab_id,
@@ -131,6 +140,8 @@ def main() -> int:
             focus_after=focus_after,
             clean_text=clean_text,
             raw_text=raw_text,
+            attach_file=attach_file,
+            attachment=attachment,
         )
         meta_path.write_text(json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         TAB_STATE_FILE.write_text(str(requested_tab_id).strip() + "\n", encoding="utf-8")
@@ -219,6 +230,44 @@ def _submit_prompt(tab_id: str, prompt: str) -> None:
         _surf(["key", "Enter", "--tab-id", tab_id], timeout=60)
 
 
+def _attach_file(tab_id: str, attach_file: Path) -> dict[str, Any]:
+    expose_script = (
+        "const input=document.querySelector('input[type=file][data-testid=file-upload],"
+        "input[type=file][aria-label=\"Upload files\"]');"
+        "if(!input) throw new Error('Claude file input not found');"
+        "input.id='surf-claude-submit-upload-input';"
+        "input.removeAttribute('aria-hidden');"
+        "input.tabIndex=0;"
+        "Object.assign(input.style,{position:'fixed',left:'20px',bottom:'20px',width:'240px',"
+        "height:'44px',opacity:'1',zIndex:'2147483647',background:'white',color:'black'});"
+        "return JSON.stringify({ok:true,id:input.id,type:input.type,multiple:input.multiple});"
+    )
+    _surf(["js", expose_script, "--tab-id", tab_id], timeout=60)
+    read = _surf(["read", "--filter", "all", "--tab-id", tab_id], timeout=60).stdout
+    upload_ref = _find_ref(read, r'button "Upload files" \[(e\d+)\] type="file"')
+    if not upload_ref:
+        raise SubmitFailure("Claude upload file input ref not found after expose step")
+    attach_file_abs = attach_file.resolve()
+    _surf(["upload", "--ref", upload_ref, "--files", str(attach_file_abs), "--tab-id", tab_id], timeout=60)
+    visible = _wait_for_attachment(tab_id, attach_file_abs.name)
+    return {
+        "path": str(attach_file_abs),
+        "filename": attach_file_abs.name,
+        "upload_ref": upload_ref,
+        "preview_visible": visible,
+    }
+
+
+def _wait_for_attachment(tab_id: str, filename: str) -> bool:
+    deadline = time.time() + 60
+    while time.time() < deadline:
+        text = _surf(["text", "--tab-id", tab_id], timeout=60).stdout
+        if filename in text:
+            return True
+        time.sleep(2)
+    raise SubmitFailure(f"uploaded attachment {filename!r} did not appear in Claude page text")
+
+
 def _wait_for_sentinel(tab_id: str, sentinel: str, *, timeout_seconds: int, stable_polls: int) -> str:
     deadline = time.time() + timeout_seconds
     previous_hash = ""
@@ -271,6 +320,8 @@ def _success_meta(
     focus_after: dict[str, Any],
     clean_text: str,
     raw_text: str,
+    attach_file: Path | None = None,
+    attachment: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     contamination = [
         needle
@@ -296,6 +347,10 @@ def _success_meta(
         "sentinel": sentinel,
         "requested_tab_id": requested_tab_id,
         "requested_url": args.url or None,
+        "attach_file": str(attach_file.resolve()) if attach_file else None,
+        "attachment": attachment,
+        "attachment_missing": bool(attach_file and not attachment),
+        "attachment_preview_missing": bool(attachment and not attachment.get("preview_visible")),
         "stable_polls": int(args.stable_polls),
         "timeout_s": int(args.timeout),
         "raw_contains_sentinel": sentinel in raw_text,
@@ -343,6 +398,8 @@ def _write_failed_meta(
         "sentinel": sentinel,
         "requested_tab_id": requested_tab_id or None,
         "requested_url": args.url or None,
+        "attach_file": str(Path(args.attach_file).expanduser()) if args.attach_file else None,
+        "attachment": None,
         "raw_contains_sentinel": sentinel in raw_text,
         "clean_contains_sentinel": False,
         "raw_chars": len(raw_text),
