@@ -1,6 +1,6 @@
 # Status
 
-Status: GATE0_HELD_OUT_VARIANT17_24_LIVE_TAU_REVISION_RECALL_FAULT_SURFACE_AND_NEGATIVE_DELAYED_RECALL_ACCEPTED
+Status: GATE0_HELD_OUT_VARIANT17_24_LIVE_TAU_REVISION_RECALL_MEMORY_RESTART_AND_FAULT_SURFACE_ACCEPTED
 
 Latest artifact: held-out variant 17-24 live Tau balanced-planning slice with
 Gate 0 accepted-source attribution, causal-identifiability lineage replay, and
@@ -9,9 +9,10 @@ revision, live Memory recall after revision, and broader live fault-injection
 surface coverage, including local HTTP service retry and combined full64
 Memory fault containment. Negative delayed-recall fixtures now prove the
 fresh-process checker blocks when either the primary source-document provenance
-index or the semantic provenance index is missing. The latest deterministic
-simulator support artifact is a frozen 64-episode `sealed_test` social corpus
-build/check.
+index or the semantic provenance index is missing. A live Memory service
+restart proof now shows post-restart exact reread and `/recall` recovery of the
+noncanonical PCTOM-R revision state. The latest deterministic simulator support
+artifact is a frozen 64-episode `sealed_test` social corpus build/check.
 
 Sealed64 deterministic social episode corpus:
 
@@ -83,6 +84,12 @@ Held-out variant delayed-recall negative document-index fixture receipt:
 
 ```text
 /tmp/persona-dream-live-memory-revision-delayed-recall-negative-missing-document-index-20260722T051000Z/output/live_memory_revision_delayed_recall_receipt.v1.json
+```
+
+Held-out variant live Memory restart delayed-recall receipt:
+
+```text
+/tmp/persona-dream-live-memory-restart-delayed-recall-variant17-24-20260722T061500Z/live_memory_restart_delayed_recall_receipt.v1.json
 ```
 
 Held-out variant live fault-injection surface receipt:
@@ -210,6 +217,24 @@ live_memory_delayed_negative_document_recall_queries: 4
 live_memory_delayed_negative_document_recall_hits: 40
 live_memory_delayed_negative_document_write_attempts: 0
 live_memory_delayed_negative_document_errors: missing_source_document_index, source_document_index_not_list
+live_memory_restart_delayed_status: PASS_PCTOM_LIVE_MEMORY_RESTART_DELAYED_RECALL
+live_memory_restart_delayed_service_name: embry-memory
+live_memory_restart_delayed_pre_pid: 4090
+live_memory_restart_delayed_post_pid: 4155998
+live_memory_restart_delayed_pid_changed: true
+live_memory_restart_delayed_restart_returncode: 0
+live_memory_restart_delayed_post_health_ok: true
+live_memory_restart_delayed_nested_status: PASS_PCTOM_LIVE_MEMORY_REVISION_DELAYED_RECALL
+live_memory_restart_delayed_source_documents: 128
+live_memory_restart_delayed_source_semantic_documents: 128
+live_memory_restart_delayed_exact_rereads: 128
+live_memory_restart_delayed_semantic_exact_rereads: 128
+live_memory_restart_delayed_recall_queries: 4
+live_memory_restart_delayed_recall_hits: 40
+live_memory_restart_delayed_recall_hits_per_condition: M=10 R=10 D=10 CD=10
+live_memory_restart_delayed_write_attempts: 0
+live_memory_restart_delayed_tau_call_attempts: 0
+live_memory_restart_delayed_provider_call_attempts: 0
 live_fault_families: 8
 live_fault_trials: 8
 live_memory_fault_probes: 4
@@ -273,6 +298,11 @@ live_memory_delayed_negative_document_mutated_source_receipt_sha256: sha256:88d1
 live_memory_delayed_negative_document_exact_rereads_sha256: sha256:37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570
 live_memory_delayed_negative_document_semantic_exact_rereads_sha256: sha256:42faa2361dca97a7d26c4b0e145ca32955a9ba2b68c0741e3cb2ca19b27f74c0
 live_memory_delayed_negative_document_recall_results_sha256: sha256:045f38d09fdb5b337b5dc3868cdbd25ee8afbc92b37078c334ad9edbef54ecde
+live_memory_restart_delayed_receipt_sha256: sha256:f21e540c7dee0520ab4ee6cf0594e872c88b86ef3d95d6434c433adb978cbbfc
+live_memory_restart_delayed_nested_receipt_sha256: sha256:f93870e00a64a8555d2c95a946cadfab6fa8874f0e926c667a239d8f09d9f8df
+live_memory_restart_delayed_exact_rereads_sha256: sha256:8a548e5863046496702aeca207e9db1a17c62ed0b2d23d7437234c781ffe0d3e
+live_memory_restart_delayed_semantic_exact_rereads_sha256: sha256:42faa2361dca97a7d26c4b0e145ca32955a9ba2b68c0741e3cb2ca19b27f74c0
+live_memory_restart_delayed_recall_results_sha256: sha256:045f38d09fdb5b337b5dc3868cdbd25ee8afbc92b37078c334ad9edbef54ecde
 live_fault_surface_receipt_sha256: sha256:2931a8c493a384cda42f9ed88e808c2b859f1fd920e1c99c322d5dadfefe2a4f
 live_fault_surface_fault_trials_sha256: sha256:faaa9d4991e474eee5b6a04649f7361480ee75d0573e1e4456f5f1a8cb2a8b92
 live_fault_surface_memory_fault_probes_sha256: sha256:2006a53b480e1646941c18b2800b7e1909e5a9221bd53f8e0eaecc916c88b085
@@ -322,6 +352,9 @@ variants 17-24, outside the prior full64 variants 1-16 slice, ran through live
    synthetic/literal boundaries
 -> a fresh no-write process exact-reread and recalled the prior noncanonical
    revision Memory state without mutating Memory
+-> after `systemctl --user restart embry-memory`, the Memory service MainPID
+   changed and post-restart `/health`, exact reread, and condition-scoped
+   `/recall` recovered the same noncanonical PCTOM-R revision state
 -> live Memory fault probes and controlled local model/tool/schema/
    persistence/retry faults were contained with allowed terminal outcomes only
 -> the broader fault surface wrote one causal replay and did not continue with
@@ -342,7 +375,6 @@ What this does not prove:
 a separately implemented external simulator
 a permanently deployed external production service
 non-Memory external service fault injection
-Memory service restart
 long-duration wall-clock retention
 semantic dream quality
 paid provider execution

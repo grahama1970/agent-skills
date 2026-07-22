@@ -151,6 +151,30 @@
   This proves live recall hits are not sufficient for delayed-recall
   acceptance when primary source-document provenance is missing.
 
+  A live Memory service restart proof then consumed the same live Memory
+  revision-recall source root. Command:
+  `./skills/persona-dream/run.sh run-live-memory-restart-delayed-recall
+  --source-root
+  /tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z
+  --output-root
+  /tmp/persona-dream-live-memory-restart-delayed-recall-variant17-24-20260722T061500Z
+  --receipt-out
+  /tmp/persona-dream-live-memory-restart-delayed-recall-variant17-24-20260722T061500Z/live_memory_restart_delayed_recall_receipt.v1.json
+  --wait-timeout-s 90 --wait-sleep-s 1 --recall-attempts 3
+  --recall-sleep-s 1 --json`. It restarted `embry-memory` through
+  `systemctl --user restart`, changed MainPID from `4090` to `4155998`,
+  observed post-restart `/health` `ok=true`, and then ran the existing delayed
+  revision-recall checker in a fresh subprocess. Receipt status:
+  `PASS_PCTOM_LIVE_MEMORY_RESTART_DELAYED_RECALL`; nested delayed-recall
+  status: `PASS_PCTOM_LIVE_MEMORY_REVISION_DELAYED_RECALL`; nested counts:
+  128 source documents, 128 semantic mirrors, 128 exact rereads, 128 semantic
+  exact rereads, 4 recall queries, 40 recall hits, 10 per M/R/D/CD. Write,
+  Tau, and provider counters were all zero. Declared receipt SHA-256:
+  `sha256:f21e540c7dee0520ab4ee6cf0594e872c88b86ef3d95d6434c433adb978cbbfc`.
+  This proves restart-interval retention and recall recovery for the
+  noncanonical PCTOM-R revision state. It does not prove long-duration
+  wall-clock retention or non-Memory external-service faults.
+
   The broader live fault-injection surface consumed the deterministic sealed
   test statistical-confidence root
   `/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z`
@@ -266,9 +290,8 @@
   decisions, including deterministic and live Memory recall after revision. It
   does not prove an independently implemented external simulator, a permanently
   deployed external production service, non-Memory external service faults,
-  Memory service restart, long-duration wall-clock retention, semantic dream
-  quality, paid provider execution, or complete live Phase 01-16 runtime
-  execution.
+  long-duration wall-clock retention, semantic dream quality, paid provider
+  execution, or complete live Phase 01-16 runtime execution.
 - 2026-07-22 UTC (PCTOM-R GATE 0 REPEATED FULL64 LIVE TAU BOUNDARY): a second
   Gate 0-attributed full64 live Tau sealed-test replication now exists, and a
   two-root repeated-run summary consumes both full64 roots. Repeat2 command:

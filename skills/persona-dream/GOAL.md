@@ -155,6 +155,8 @@ Next: <one immediate action or stop condition>
   `/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z/live_memory_revision_recall_receipt.v1.json`;
   live Memory delayed-recall receipt
   `/tmp/persona-dream-live-memory-revision-delayed-recall-variant17-24-20260722T042700Z/live_memory_revision_delayed_recall_receipt.v1.json`;
+  live Memory restart delayed-recall receipt
+  `/tmp/persona-dream-live-memory-restart-delayed-recall-variant17-24-20260722T061500Z/live_memory_restart_delayed_recall_receipt.v1.json`;
   live fault-injection surface receipt
   `/tmp/persona-dream-live-fault-injection-surface-variant17-24-20260722T034600Z/live_fault_injection_surface_receipt.v1.json`;
   local HTTP service retry proof receipt
@@ -210,7 +212,16 @@ Next: <one immediate action or stop condition>
   root, exact-reread 128/128 noncanonical revision documents and 128/128
   semantic mirrors, and returned 40 delayed `/recall` hits, 10 per M/R/D/CD
   condition, with `memory_write_attempts=0`, `write_violations=0`, and the
-  prior/posterior plus synthetic/literal checks still true. The
+  prior/posterior plus synthetic/literal checks still true. The live Memory
+  restart proof then restarted `embry-memory` via `systemctl --user restart`,
+  changed MainPID from `4090` to `4155998`, observed post-restart `/health`
+  `ok=true`, and ran the same delayed revision-recall checker in a fresh
+  subprocess. It returned
+  `PASS_PCTOM_LIVE_MEMORY_RESTART_DELAYED_RECALL` and nested
+  `PASS_PCTOM_LIVE_MEMORY_REVISION_DELAYED_RECALL`, with 128 source
+  documents, 128 semantic mirrors, 128 exact rereads, 128 semantic exact
+  rereads, 4 recall queries, 40 recall hits, and zero Memory/Tau/provider
+  write or call attempts. The
   broader live fault-injection surface consumed the sealed-test statistical
   confidence root
   `/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z`
@@ -274,6 +285,10 @@ Next: <one immediate action or stop condition>
   `sha256:42faa2361dca97a7d26c4b0e145ca32955a9ba2b68c0741e3cb2ca19b27f74c0`;
   live Memory delayed recall results
   `sha256:045f38d09fdb5b337b5dc3868cdbd25ee8afbc92b37078c334ad9edbef54ecde`;
+  live Memory restart delayed recall
+  `sha256:f21e540c7dee0520ab4ee6cf0594e872c88b86ef3d95d6434c433adb978cbbfc`;
+  live Memory restart nested delayed recall
+  `sha256:f93870e00a64a8555d2c95a946cadfab6fa8874f0e926c667a239d8f09d9f8df`;
   live fault-surface declared receipt
   `sha256:2931a8c493a384cda42f9ed88e808c2b859f1fd920e1c99c322d5dadfefe2a4f`;
   live fault trials
@@ -307,9 +322,8 @@ Next: <one immediate action or stop condition>
   This advances held-out variant evidence beyond variants 1-16. It does not
   prove an independently implemented external simulator, a permanently deployed
   external production service, non-Memory external service fault injection,
-  Memory service restart, long-duration wall-clock retention, semantic dream
-  quality, paid provider execution, or complete live Phase 01-16 runtime
-  execution.
+  long-duration wall-clock retention, semantic dream quality, paid provider
+  execution, or complete live Phase 01-16 runtime execution.
 - PCTOM-R repeated full64 live Tau sealed-test evidence over two Gate
   0-attributed runs:
   repeat2 replication receipt
