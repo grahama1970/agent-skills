@@ -1,0 +1,47 @@
+{
+  "schema": "persona_dream.research.prospective_tom.pctom_compute_matched_corpus_policy.v1",
+  "status": "ACTIVE",
+  "program": "PCTOM-R2",
+  "gate": "phase6_compute_matched_deterministic_corpora",
+  "mocked": false,
+  "live": false,
+  "fixture_backed": true,
+  "provider_call_attempts": 0,
+  "memory_write_attempts": 0,
+  "required_conditions": [
+    "MEMORY",
+    "FREE_CD",
+    "STRUCTURED_CD",
+    "FUNCTIONAL_TOM"
+  ],
+  "required_corpus_properties": [
+    "same_episode_ids_per_condition",
+    "same_compute_budget_per_condition",
+    "same_visible_evidence_bindings_per_episode",
+    "hidden_outcome_fields_absent_from_inputs",
+    "condition_specific_mechanism_fields_present",
+    "source_corpus_hash_bound",
+    "independently_replayable"
+  ],
+  "required_negative_statuses": [
+    "BLOCKED_PCTOM_COMPUTE_BUDGET_MISMATCH",
+    "BLOCKED_PCTOM_CORPUS_CONDITION_MISSING",
+    "BLOCKED_PCTOM_CORPUS_OUTCOME_LEAKAGE",
+    "BLOCKED_PCTOM_FUNCTIONAL_TOM_MISSING",
+    "BLOCKED_PCTOM_CORPUS_SOURCE_HASH_MISMATCH",
+    "BLOCKED_PCTOM_CORPUS_JUDGMENT_USED"
+  ],
+  "acceptance_stop_condition": {
+    "condition_missing": 0,
+    "compute_budget_mismatches": 0,
+    "outcome_leakage_rows": 0,
+    "functional_tom_missing_rows": 0,
+    "source_hash_mismatches": 0,
+    "human_or_llm_judgment_rows": 0,
+    "negative_mutations_blocked": "all_required"
+  },
+  "claim_limits": [
+    "This policy proves deterministic local corpus replayability and compute matching only.",
+    "This policy does not prove live Memory recall, Tau execution, prediction benefit, semantic dream quality, paid provider execution, or production Phase 01-16 runtime execution."
+  ]
+}

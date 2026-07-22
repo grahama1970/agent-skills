@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.research.prospective_tom.pctom_compute_matched_corpus.v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "created_at",
+    "status",
+    "mocked",
+    "live",
+    "fixture_backed",
+    "provider_call_attempts",
+    "memory_write_attempts",
+    "source_corpus_path",
+    "source_corpus_sha256",
+    "conditions",
+    "compute_budget",
+    "rows",
+    "counts",
+    "claims"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "persona_dream.research.prospective_tom.pctom_compute_matched_corpus.v1"
+    },
+    "status": {
+      "type": "string",
+      "const": "COMPUTE_MATCHED_CORPUS_BUILT"
+    },
+    "mocked": {"type": "boolean", "const": false},
+    "live": {"type": "boolean", "const": false},
+    "fixture_backed": {"type": "boolean", "const": true},
+    "provider_call_attempts": {"type": "integer", "const": 0},
+    "memory_write_attempts": {"type": "integer", "const": 0},
+    "source_corpus_path": {"type": "string"},
+    "source_corpus_sha256": {"type": "string"},
+    "conditions": {"type": "array"},
+    "compute_budget": {"type": "object"},
+    "rows": {"type": "array"},
+    "counts": {"type": "object"},
+    "claims": {"type": "object"}
+  },
+  "additionalProperties": true
+}

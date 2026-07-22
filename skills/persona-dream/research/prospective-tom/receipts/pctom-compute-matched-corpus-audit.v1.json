@@ -1,0 +1,249 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "live Memory recall",
+      "Tau execution",
+      "prediction benefit",
+      "semantic dream quality",
+      "paid provider execution",
+      "production Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "deterministic Memory, free-CD, structured-CD, and functional-ToM corpus rows cover the same source episode ids",
+      "all four deterministic corpus conditions carry the same declared compute budget",
+      "corpus input packets exclude hidden outcome fields and preserve source-corpus replay hashes",
+      "functional-ToM rows include explicit BDI-state and policy-rule artifacts",
+      "budget mismatch, missing condition, outcome leakage, missing functional-ToM, source-hash mismatch, and judgment-use mutations fail closed"
+    ]
+  },
+  "corpus_checks": {
+    "all_required_conditions_present": true,
+    "functional_tom_rows_present": true,
+    "hidden_outcome_fields_absent_from_inputs": true,
+    "human_or_llm_judgment_absent": true,
+    "independent_replay_hashes_match": true,
+    "negative_mutations_fail_closed": true,
+    "same_compute_budget_per_condition": true,
+    "same_episode_ids_per_condition": true,
+    "source_corpus_hash_bound": true
+  },
+  "corpus_path": "fixtures/phase6/compute_matched_corpora/pctom-compute-matched-corpus.v1.json",
+  "corpus_sha256": "sha256:0d8279e9ecaecaf856b0c7c2a868fd3c2c29d2275e80ee758eb0b368722dfb7b",
+  "counts": {
+    "compute_budget_mismatches": 0,
+    "condition_missing": 0,
+    "conditions": 4,
+    "functional_tom_missing_rows": 0,
+    "human_or_llm_judgment_rows": 0,
+    "negative_fixtures": 6,
+    "negative_fixtures_blocked": 6,
+    "outcome_leakage_rows": 0,
+    "replay_mismatches": 0,
+    "rows": 48,
+    "rows_per_condition": {
+      "FREE_CD": 12,
+      "FUNCTIONAL_TOM": 12,
+      "MEMORY": 12,
+      "STRUCTURED_CD": 12
+    },
+    "source_episodes": 12,
+    "source_hash_mismatches": 0
+  },
+  "created_at": "2026-07-22T14:25:18Z",
+  "errors": [],
+  "fixture_backed": true,
+  "human_content_judgment_rows": 0,
+  "live": false,
+  "llm_judge_rows": 0,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "negative_fixture_results": [
+    {
+      "blocked_as_expected": true,
+      "counts": {
+        "compute_budget_mismatches": 1,
+        "condition_missing": 0,
+        "conditions": 4,
+        "functional_tom_missing_rows": 0,
+        "human_or_llm_judgment_rows": 0,
+        "outcome_leakage_rows": 0,
+        "replay_mismatches": 0,
+        "rows": 48,
+        "rows_per_condition": {
+          "FREE_CD": 12,
+          "FUNCTIONAL_TOM": 12,
+          "MEMORY": 12,
+          "STRUCTURED_CD": 12
+        },
+        "source_episodes": 12,
+        "source_hash_mismatches": 0
+      },
+      "errors": [
+        "compute_budget_mismatch:dev-info-asym-01:MEMORY:{'condition_artifact_slots': 2, 'max_output_tokens': 256, 'max_prompt_tokens': 1024, 'memory_write_slots': 0, 'model_call_slots': 0, 'provider_call_slots': 0, 'tau_call_slots': 0, 'visible_evidence_slots': 3}"
+      ],
+      "expected_status": "BLOCKED_PCTOM_COMPUTE_BUDGET_MISMATCH",
+      "fixture": "compute-budget-mismatch",
+      "observed_status": "BLOCKED_PCTOM_COMPUTE_BUDGET_MISMATCH"
+    },
+    {
+      "blocked_as_expected": true,
+      "counts": {
+        "compute_budget_mismatches": 0,
+        "condition_missing": 13,
+        "conditions": 4,
+        "functional_tom_missing_rows": 0,
+        "human_or_llm_judgment_rows": 0,
+        "outcome_leakage_rows": 0,
+        "replay_mismatches": 0,
+        "rows": 36,
+        "rows_per_condition": {
+          "FREE_CD": 0,
+          "FUNCTIONAL_TOM": 12,
+          "MEMORY": 12,
+          "STRUCTURED_CD": 12
+        },
+        "source_episodes": 12,
+        "source_hash_mismatches": 0
+      },
+      "errors": [
+        "condition_missing:FREE_CD",
+        "episode_condition_missing:dev-coord-conflict-01:['FREE_CD']",
+        "episode_condition_missing:dev-coord-conflict-02:['FREE_CD']",
+        "episode_condition_missing:dev-coord-conflict-03:['FREE_CD']",
+        "episode_condition_missing:dev-info-asym-01:['FREE_CD']",
+        "episode_condition_missing:dev-info-asym-02:['FREE_CD']",
+        "episode_condition_missing:dev-info-asym-03:['FREE_CD']",
+        "episode_condition_missing:dev-pref-desire-01:['FREE_CD']",
+        "episode_condition_missing:dev-pref-desire-02:['FREE_CD']",
+        "episode_condition_missing:dev-pref-desire-03:['FREE_CD']",
+        "episode_condition_missing:dev-trust-commit-01:['FREE_CD']",
+        "episode_condition_missing:dev-trust-commit-02:['FREE_CD']",
+        "episode_condition_missing:dev-trust-commit-03:['FREE_CD']"
+      ],
+      "expected_status": "BLOCKED_PCTOM_CORPUS_CONDITION_MISSING",
+      "fixture": "condition-missing",
+      "observed_status": "BLOCKED_PCTOM_CORPUS_CONDITION_MISSING"
+    },
+    {
+      "blocked_as_expected": true,
+      "counts": {
+        "compute_budget_mismatches": 0,
+        "condition_missing": 0,
+        "conditions": 4,
+        "functional_tom_missing_rows": 0,
+        "human_or_llm_judgment_rows": 0,
+        "outcome_leakage_rows": 1,
+        "replay_mismatches": 0,
+        "rows": 48,
+        "rows_per_condition": {
+          "FREE_CD": 12,
+          "FUNCTIONAL_TOM": 12,
+          "MEMORY": 12,
+          "STRUCTURED_CD": 12
+        },
+        "source_episodes": 12,
+        "source_hash_mismatches": 0
+      },
+      "errors": [
+        "outcome_leakage:dev-info-asym-01:MEMORY:$.actual_next_action"
+      ],
+      "expected_status": "BLOCKED_PCTOM_CORPUS_OUTCOME_LEAKAGE",
+      "fixture": "outcome-leakage",
+      "observed_status": "BLOCKED_PCTOM_CORPUS_OUTCOME_LEAKAGE"
+    },
+    {
+      "blocked_as_expected": true,
+      "counts": {
+        "compute_budget_mismatches": 0,
+        "condition_missing": 0,
+        "conditions": 4,
+        "functional_tom_missing_rows": 1,
+        "human_or_llm_judgment_rows": 0,
+        "outcome_leakage_rows": 0,
+        "replay_mismatches": 1,
+        "rows": 48,
+        "rows_per_condition": {
+          "FREE_CD": 12,
+          "FUNCTIONAL_TOM": 12,
+          "MEMORY": 12,
+          "STRUCTURED_CD": 12
+        },
+        "source_episodes": 12,
+        "source_hash_mismatches": 0
+      },
+      "errors": [
+        "condition_artifact_count_mismatch:dev-info-asym-01:FUNCTIONAL_TOM",
+        "functional_tom_missing:dev-info-asym-01:FUNCTIONAL_TOM:False:False",
+        "condition_artifacts_hash_mismatch:dev-info-asym-01:FUNCTIONAL_TOM"
+      ],
+      "expected_status": "BLOCKED_PCTOM_FUNCTIONAL_TOM_MISSING",
+      "fixture": "functional-tom-missing",
+      "observed_status": "BLOCKED_PCTOM_FUNCTIONAL_TOM_MISSING"
+    },
+    {
+      "blocked_as_expected": true,
+      "counts": {
+        "compute_budget_mismatches": 0,
+        "condition_missing": 0,
+        "conditions": 4,
+        "functional_tom_missing_rows": 0,
+        "human_or_llm_judgment_rows": 0,
+        "outcome_leakage_rows": 0,
+        "replay_mismatches": 0,
+        "rows": 48,
+        "rows_per_condition": {
+          "FREE_CD": 12,
+          "FUNCTIONAL_TOM": 12,
+          "MEMORY": 12,
+          "STRUCTURED_CD": 12
+        },
+        "source_episodes": 12,
+        "source_hash_mismatches": 1
+      },
+      "errors": [
+        "source_hash_mismatch:source_corpus_sha256"
+      ],
+      "expected_status": "BLOCKED_PCTOM_CORPUS_SOURCE_HASH_MISMATCH",
+      "fixture": "source-hash-mismatch",
+      "observed_status": "BLOCKED_PCTOM_CORPUS_SOURCE_HASH_MISMATCH"
+    },
+    {
+      "blocked_as_expected": true,
+      "counts": {
+        "compute_budget_mismatches": 0,
+        "condition_missing": 0,
+        "conditions": 4,
+        "functional_tom_missing_rows": 0,
+        "human_or_llm_judgment_rows": 1,
+        "outcome_leakage_rows": 0,
+        "replay_mismatches": 0,
+        "rows": 48,
+        "rows_per_condition": {
+          "FREE_CD": 12,
+          "FUNCTIONAL_TOM": 12,
+          "MEMORY": 12,
+          "STRUCTURED_CD": 12
+        },
+        "source_episodes": 12,
+        "source_hash_mismatches": 0
+      },
+      "errors": [
+        "judgment_used:dev-info-asym-01:MEMORY:False:True"
+      ],
+      "expected_status": "BLOCKED_PCTOM_CORPUS_JUDGMENT_USED",
+      "fixture": "judgment-used",
+      "observed_status": "BLOCKED_PCTOM_CORPUS_JUDGMENT_USED"
+    }
+  ],
+  "provider_call_attempts": 0,
+  "receipt_sha256": "sha256:6d7e099397872e4abe4a69318135e8b19261ffc9fc553961370a14604cba99de",
+  "required_conditions": [
+    "MEMORY",
+    "FREE_CD",
+    "STRUCTURED_CD",
+    "FUNCTIONAL_TOM"
+  ],
+  "schema": "persona_dream.research.prospective_tom.pctom_compute_matched_corpus_audit_receipt.v1",
+  "source_corpus_path": "fixtures/gate1/development/social_episode_corpus.v1.json",
+  "status": "PASS_PCTOM_COMPUTE_MATCHED_CORPORA"
+}

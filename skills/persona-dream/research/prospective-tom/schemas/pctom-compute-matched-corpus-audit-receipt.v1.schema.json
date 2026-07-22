@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.research.prospective_tom.pctom_compute_matched_corpus_audit_receipt.v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "created_at",
+    "status",
+    "mocked",
+    "live",
+    "fixture_backed",
+    "provider_call_attempts",
+    "memory_write_attempts",
+    "corpus_path",
+    "counts",
+    "corpus_checks",
+    "negative_fixture_results",
+    "errors",
+    "claims"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "persona_dream.research.prospective_tom.pctom_compute_matched_corpus_audit_receipt.v1"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PASS_PCTOM_COMPUTE_MATCHED_CORPORA",
+        "BLOCKED_PCTOM_COMPUTE_MATCHED_CORPORA"
+      ]
+    },
+    "mocked": {"type": "boolean", "const": false},
+    "live": {"type": "boolean", "const": false},
+    "fixture_backed": {"type": "boolean", "const": true},
+    "provider_call_attempts": {"type": "integer", "const": 0},
+    "memory_write_attempts": {"type": "integer", "const": 0},
+    "corpus_path": {"type": "string"},
+    "counts": {"type": "object"},
+    "corpus_checks": {"type": "object"},
+    "negative_fixture_results": {"type": "array"},
+    "errors": {"type": "array"},
+    "claims": {"type": "object"}
+  },
+  "additionalProperties": true
+}

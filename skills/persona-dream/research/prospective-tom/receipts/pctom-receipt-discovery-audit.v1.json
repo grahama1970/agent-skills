@@ -12,14 +12,14 @@
     ]
   },
   "counts": {
-    "discovered_receipts": 9,
-    "expected_receipts": 9,
+    "discovered_receipts": 10,
+    "expected_receipts": 10,
     "missing_receipts": 0,
     "negative_fixtures": 1,
     "negative_fixtures_blocked": 1,
     "unrouted_receipts": 0
   },
-  "created_at": "2026-07-22T14:18:15Z",
+  "created_at": "2026-07-22T14:25:33Z",
   "discovered_receipts": [
     {
       "fixture_backed": true,
@@ -29,6 +29,15 @@
       "schema": "persona_dream.research.prospective_tom.pctom_accepted_source_lineage_audit_receipt.v1",
       "sha256": "sha256:280566fcfdd4567c8ec964281ebda28473e8ee045ce0e685408da12854546aa6",
       "status": "PASS_PCTOM_ACCEPTED_SOURCE_LINEAGE"
+    },
+    {
+      "fixture_backed": true,
+      "live": false,
+      "mocked": false,
+      "path": "receipts/pctom-compute-matched-corpus-audit.v1.json",
+      "schema": "persona_dream.research.prospective_tom.pctom_compute_matched_corpus_audit_receipt.v1",
+      "sha256": "sha256:9fa880b7a51a3dd14f231a1694b67256f7ac8751119f06df23a4331aa2768160",
+      "status": "PASS_PCTOM_COMPUTE_MATCHED_CORPORA"
     },
     {
       "fixture_backed": true,
@@ -81,7 +90,7 @@
       "mocked": false,
       "path": "receipts/pctom-evidence-scope-audit.v1.json",
       "schema": "persona_dream.research.prospective_tom.pctom_evidence_scope_audit.v1",
-      "sha256": "sha256:a64ed18cb35e70235e999b3097ca7a41b21a581c4715b34cb4ae4dbce808af47",
+      "sha256": "sha256:bced90d5d67f342ac1b88a0109a2e0cede044b9cb3479e2e927a2e6e5e98e8af",
       "status": "PASS_PCTOM_EVIDENCE_SCOPE_LEDGER"
     },
     {
@@ -106,6 +115,7 @@
   "errors": [],
   "expected_receipt_paths": [
     "receipts/pctom-accepted-source-lineage-audit.v1.json",
+    "receipts/pctom-compute-matched-corpus-audit.v1.json",
     "receipts/pctom-crash-safe-gate8-reliability-surface.v1.json",
     "receipts/pctom-crash-safe-transition-surface-audit.v1.json",
     "receipts/pctom-deterministic-scoring-abstained.v1.json",
@@ -118,7 +128,7 @@
   "fixture_backed": true,
   "live": false,
   "manifest_path": "evidence/pctom-archive-manifest.v1.json",
-  "manifest_sha256": "sha256:6259d777d361aba60796b622f4e109f3e84c32bd2b3fcd0d11f8cfaddc17dafe",
+  "manifest_sha256": "sha256:bbd6e1645104321f88c5aebdd4ef7edf5aec594392ea62cbc442bc69d5146314",
   "memory_write_attempts": 0,
   "mocked": false,
   "negative_fixture_results": [
