@@ -1,0 +1,42 @@
+{
+  "cases": {
+    "kai_targets_under_brandon_selection": {
+      "expected_violations": [
+        "i1",
+        "i2"
+      ],
+      "got": [
+        "i1",
+        "i2"
+      ],
+      "passed": true
+    },
+    "matching_targets_pass": {
+      "expected_violations": [],
+      "got": [],
+      "passed": true
+    },
+    "missing_target_blocks": {
+      "expected_violations": [
+        "i1"
+      ],
+      "got": [
+        "i1"
+      ],
+      "passed": true
+    },
+    "mixed_targets": {
+      "expected_violations": [
+        "i2"
+      ],
+      "got": [
+        "i2"
+      ],
+      "passed": true
+    }
+  },
+  "created_at": "2026-07-22T22:19:48Z",
+  "gate_source": "autonomous_dream_cycle.counterpart_violations (real gate)",
+  "passed": true,
+  "schema": "persona_dream.counterpart_gate_probe_receipt.v1"
+}

@@ -73,20 +73,26 @@ def load_tom_candidates(node: dict) -> list[dict]:
     manifest, every loaded candidate key must be manifest-owned."""
     persona = node.get("persona_id")
     dream_id = node.get("dream_id")
-    manifest_keys = None
+    manifest_entries = None
     commit_id = node.get("commit_id")
     if commit_id:
         m = stored("persona_dream_commit_manifests", commit_id)
-        if m and m.get("record_index"):
-            manifest_keys = {e["key"] for e in m["record_index"]}
+        if not m or not m.get("active") or not m.get("record_index"):
+            raise SystemExit(
+                f"BLOCKED_VOICE_WEIGHTS_MANIFEST_UNAVAILABLE: commit {commit_id} "
+                "missing, inactive, or without record_index")
+        manifest_entries = {(e["collection"], e["key"]) for e in m["record_index"]}
     out = []
     for cid in node.get("accepted_tom_candidate_ids") or []:
         doc = (stored("tom_candidates", f"dream:{persona}:{dream_id}:tom:{cid}")
                or stored("tom_candidates", cid))
         if not doc:
             raise SystemExit(f"BLOCKED_VOICE_WEIGHTS_TOM_MISSING: {cid}")
-        if manifest_keys is not None and doc["_key"] not in manifest_keys:
-            raise SystemExit(f"BLOCKED_VOICE_WEIGHTS_TOM_NOT_MANIFEST_OWNED: {doc['_key']}")
+        if manifest_entries is not None:
+            if ("tom_candidates", doc["_key"]) not in manifest_entries:
+                raise SystemExit(f"BLOCKED_VOICE_WEIGHTS_TOM_NOT_MANIFEST_OWNED: {doc['_key']}")
+            if doc.get("commit_id") and doc.get("commit_id") != commit_id:
+                raise SystemExit(f"BLOCKED_VOICE_WEIGHTS_TOM_FOREIGN_COMMIT: {doc['_key']}")
         out.append(doc)
     return out
 

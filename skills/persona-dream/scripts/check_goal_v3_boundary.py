@@ -57,8 +57,16 @@ def sha_file(p: Path) -> str:
 
 
 def main() -> int:
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--cycle-id", default=None,
+                    help="explicit cycle binding; default = newest by cycle_id timestamp name")
+    args = ap.parse_args()
     results, notes = {}, []
-    cycles = sorted((GV3 / "cycles").glob("*/autonomous_cycle_receipt.v1.json"))
+    cycles = sorted((GV3 / "cycles").glob("*/autonomous_cycle_receipt.v1.json"),
+                    key=lambda q: q.parent.name)
+    if args.cycle_id:
+        cycles = [c for c in cycles if c.parent.name == args.cycle_id]
     cycle_path = cycles[-1] if cycles else None
     cycle = json.loads(cycle_path.read_text()) if cycle_path else None
 
@@ -68,17 +76,39 @@ def main() -> int:
     if cycle:
         cyc_dir = cycle_path.parent
         node = stored("persona_memory", cycle["dream_node_key"])
-        node_active = bool(node) and node.get("visibility_state") in ("active", None)
-        # counterpart: reread every persisted ToM target
+        # strict for new cycles: must be explicitly active
+        node_active = bool(node) and node.get("visibility_state") == "active"
+        # counterpart derived from the SELECTION receipt, never the top-level field
+        sel = json.loads((cyc_dir / "selection_receipt.v1.json").read_text())
+        derived_cp = sel["chosen"]["cluster_id"].split(":person:")[1].split("_")[0]
+        # every expected ToM candidate must resolve, be commit-owned, and match
         targets = set()
+        toms_resolved = 0
+        dream_commit = (node or {}).get("commit_id")
+        manifest_entries = None
+        if dream_commit:
+            m = stored("persona_dream_commit_manifests", dream_commit)
+            if m and m.get("active") and m.get("record_index"):
+                manifest_entries = {(e["collection"], e["key"]) for e in m["record_index"]}
+        expected = (node or {}).get("accepted_tom_candidate_ids") or []
         if node:
             did = node.get("dream_id")
-            for cid in node.get("accepted_tom_candidate_ids") or []:
+            for cid in expected:
                 doc = (stored("tom_candidates", f"dream:embry:{did}:tom:{cid}")
                        or stored("tom_candidates", cid))
                 if doc:
+                    toms_resolved += 1
                     targets.add(str(doc.get("target")))
-        counterpart_ok = bool(targets) and targets <= {cycle.get("counterpart_id"), "unknown_person"}
+                    if manifest_entries is not None and                             ("tom_candidates", doc["_key"]) not in manifest_entries:
+                        targets.add(f"NOT_MANIFEST_OWNED:{doc['_key']}")
+        counterpart_ok = (bool(targets) and toms_resolved == len(expected)
+                          and targets <= {derived_cp, "unknown_person"}
+                          and manifest_entries is not None)
+        # frame sha recompute from disk
+        frames_ok = all(
+            Path(f["frame"]).exists()
+            and hashlib.sha256(Path(f["frame"]).read_bytes()).hexdigest() == f["frame_sha256"]
+            for f in cycle.get("frames", [])) if cycle.get("frames") else False
         inst = cyc_dir / "instruments.v1.json"
         instruments_ok = inst.exists() and hashlib.sha256(
             inst.read_text().encode()).hexdigest() == cycle.get("instruments_sha256")
@@ -87,10 +117,30 @@ def main() -> int:
         p15 = _load("phase15_dream_persistence")
         m4 = pm.m4_identity(p15, cycle["commit_manifest_key"], cyc_dir / "anchor_snapshot.json")
         anchors_ok = bool(m4.get("passed"))
+        # live distinction + negative-control recompute
+        adapter = _load("tau_text_reasoning_adapter")
+        pm2 = _load("pilot_metrics")
+        m3 = pm2.m3_distinction(adapter, cycle["dream_node_key"])
+        inst_doc = json.loads(inst.read_text()) if inst.exists() else {}
+        n_items = post("/recall", {"q": inst_doc.get("negative_control", ""),
+                                   "k": 10, "collections": ["persona_memory"],
+                                   "tags": []}).get("items") or []
+        n1_ok = cycle["dream_node_key"] not in [it.get("_key") for it in n_items[:10]]
+        # voice receipt path containment (no out-of-cycle absolute paths)
+        vw_rel_ok = str(cycle.get("voice_weights_receipt", "")).startswith(str(cyc_dir))
         v3_3 = (cycle.get("status") == "PASS_AUTONOMOUS_CYCLE" and node_active
-                and counterpart_ok and instruments_ok and anchors_ok)
-        notes.append({"counterpart_targets_reread": sorted(targets),
-                      "node_active": node_active, "instruments_sha_match": instruments_ok,
+                and counterpart_ok and instruments_ok and anchors_ok
+                and frames_ok and bool(m3.get("passed")) and n1_ok and vw_rel_ok)
+        notes.append({"counterpart_derived_from_selection": derived_cp,
+                      "counterpart_targets_reread": sorted(targets),
+                      "toms_resolved": f"{toms_resolved}/{len(expected)}",
+                      "manifest_owned": manifest_entries is not None,
+                      "node_strictly_active": node_active,
+                      "frames_sha_recomputed": frames_ok,
+                      "distinction_recomputed": m3.get("passed"),
+                      "negative_control_recomputed": n1_ok,
+                      "voice_path_in_cycle": vw_rel_ok,
+                      "instruments_sha_match": instruments_ok,
                       "anchors_recomputed_pass": anchors_ok})
     results["v3_3_autonomous_cycle"] = {
         "state": "PASS" if v3_3 else "MISSING",
@@ -128,6 +178,7 @@ def main() -> int:
             vw_path = SKILL / vw_path
         if vw_path.exists():
             vw = json.loads(vw_path.read_text())
+            engine_temp = ((vw.get("render") or {}).get("engine_meta") or {}).get("generation", {})
             prof = Path(vw["profile_path"])
             render = vw.get("render") or {}
             wav = Path(render.get("wav", "/nonexistent"))

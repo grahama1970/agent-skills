@@ -82,6 +82,13 @@ def fetch_embry_docs() -> list[dict]:
     return docs
 
 
+def counterpart_violations(claims: list, counterpart_id: str, id_field: str) -> list:
+    """GOAL_V3 counterpart gate (probe-able): a claim's target must be the
+    selected counterpart or the bounded unknown_person."""
+    allowed = {counterpart_id, "unknown_person"}
+    return [c.get(id_field) for c in claims if str(c.get("target")) not in allowed]
+
+
 def select_cluster(out: Path) -> dict:
     seed = sha256_text((ROOT / "GOAL_V3.md").read_text())
     docs = fetch_embry_docs()
@@ -205,7 +212,9 @@ def compose_and_render(adapter, phase_c, subgate, sel: dict, out: Path) -> dict:
     accepted, image_calls = [], 0
     seen_ids: set[str] = set()
     for i, panel in enumerate(parsed["panels"]):
-        panel_id = panel.get("panel_id") or f"sb_{i+1:03d}"
+        panel_id = f"sb_{i+1:03d}"  # canonical, never model-supplied (path safety)
+        if panel.get("panel_id") not in (None, panel_id):
+            panel = {**panel, "panel_id": panel_id}
         if panel_id in seen_ids:
             raise SystemExit(f"BLOCKED_CYCLE_DUPLICATE_PANEL_ID: {panel_id}")
         seen_ids.add(panel_id)
@@ -306,6 +315,13 @@ def observe(composite, art: dict, out: Path) -> list:
         frames = []
     if len(frames) != 4:
         raise SystemExit(f"BLOCKED_CYCLE_VLM_PARSE: expected 4 frame entries, got {len(frames)}")
+    idxs = [f.get("index") for f in frames]
+    if sorted(idxs) != [1, 2, 3, 4]:
+        raise SystemExit(f"BLOCKED_CYCLE_VLM_INDICES: {idxs}")
+    for f in frames:
+        if not all(str(f.get(k) or "").strip() for k in ("activity", "setting", "tone")) \
+                or not f.get("people"):
+            raise SystemExit(f"BLOCKED_CYCLE_VLM_EMPTY_FIELDS: index {f.get('index')}")
     (out / "vlm_observation.json").write_text(json.dumps(
         {"raw": text[:4000], "frames": frames}, indent=2) + "\n")
     return frames
@@ -362,6 +378,8 @@ def main() -> int:
              "panel_id": art["frames"][i]["panel_id"],
              "frame_path": art["frames"][i]["frame"],
              "frame_sha256": art["frames"][i]["frame_sha256"],
+             "path": art["frames"][i]["frame"],
+             "sha256": art["frames"][i]["frame_sha256"],
              "observed_entities": (vlm_frames[i].get("people")
                                    if i < len(vlm_frames) else None)}
             for i in range(len(art["frames"]))],
@@ -414,17 +432,16 @@ def main() -> int:
     p13.write_json(out / "phase13_interpretation.json", interp)
     if not interp["status"].startswith("PASS") or not interp["accepted_interpretations"]:
         raise SystemExit(f"BLOCKED_CYCLE_PHASE13: {interp['status']}")
-    allowed_targets = {counterpart_id, "unknown_person"}
-    bad = [c.get("interpretation_id") for c in interp["accepted_interpretations"]
-           if str(c.get("target")) not in allowed_targets]
+    bad = counterpart_violations(interp["accepted_interpretations"],
+                                 counterpart_id, "interpretation_id")
     if bad:
         raise SystemExit(f"BLOCKED_CYCLE_COUNTERPART_MISMATCH_P13: targets != {counterpart_id}: {bad}")
     tom = p14.run_phase14(interp, dream_id, cycle_id, "goal-v3", live=True)
     p13.write_json(out / "phase14_tom.json", tom)
     if not tom["status"].startswith("PASS") or not tom["accepted_tom_candidates"]:
         raise SystemExit(f"BLOCKED_CYCLE_PHASE14: {tom['status']}")
-    bad = [c.get("candidate_id") for c in tom["accepted_tom_candidates"]
-           if str(c.get("target")) not in allowed_targets]
+    bad = counterpart_violations(tom["accepted_tom_candidates"],
+                                 counterpart_id, "candidate_id")
     if bad:
         raise SystemExit(f"BLOCKED_CYCLE_COUNTERPART_MISMATCH_P14: targets != {counterpart_id}: {bad}")
 
