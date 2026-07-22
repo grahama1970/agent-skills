@@ -3264,3 +3264,13 @@
   pilot runs under v2 — fixed pre-run. LESSON: iterate plans, not just code,
   through the external reviewer; a plan draft carries defects the same way a
   transaction layer does.
+
+- 2026-07-22 (PCTOM-R objective evidence audit): top-level research progress
+  must be bound to the same current receipt bundle, not inferred from a
+  Git commit or from older success/coverage receipts. The
+  `check-pctom-objective-evidence` command now requires the expanded
+  15-id goal coverage receipt and the success-criteria receipt to reference
+  each other by exact path and receipt SHA-256. It also maps the active
+  objective clauses to named coverage ids and fails closed on stale success
+  receipts, stale coverage receipts, missing unsupported-evidence abstention
+  coverage, or missing fail-closed negative coverage.

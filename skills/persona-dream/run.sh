@@ -101,6 +101,7 @@ Commands:
   run-live-tau-full64-repeated-run-summary  Aggregate repeated full64 live Tau sealed-test replications
   check-pctom-calibration-abstention  Audit calibration/risk-coverage fields over full64 live Tau artifacts
   check-pctom-unsupported-evidence-abstention  Exercise unsupported-evidence abstention through Gate 2 and Gate 5
+  check-pctom-objective-evidence  Bind the active PCTOM-R objective to success and coverage receipts
   run-live-tau-full64-planning-diagnostic  Diagnose why full64 planning-regret benefit is not confidence-bound
   run-live-tau-full64-action-policy-sensitivity  Explain sparse full64 planning deltas through action switches
   run-live-tau-trust-commit-replication  Rerun focused live Tau M/R/D/CD trust-commitment planning cases
@@ -658,6 +659,9 @@ case "$COMMAND" in
     ;;
   check-pctom-unsupported-evidence-abstention)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_pctom_unsupported_evidence_abstention.py" "$@"
+    ;;
+  check-pctom-objective-evidence)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_pctom_objective_evidence.py" "$@"
     ;;
   check-prospective-tom-protocol)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_prospective_tom_protocol.py" "$@"

@@ -487,6 +487,37 @@ Next: <one immediate action or stop condition>
   `sha256:0bea6958afbb7653c8db745adfd1e87851d6d2401034eaeb964fc120cbd1cfac`.
   This proves the top-level success audit can no longer pass with the old
   14-id goal-coverage surface.
+  A final objective-evidence audit now binds the active PCTOM-R objective text
+  to the current expanded success and goal-coverage receipts. Receipt:
+  `/tmp/persona-dream-pctom-objective-evidence-20260722T121100Z/pctom_objective_evidence_audit_receipt.v1.json`.
+  It returned `PASS_PCTOM_OBJECTIVE_EVIDENCE_AUDIT` with 15 required coverage
+  ids, 15 seen, 0 missing, 37 evidence receipts, 10 negative evidence receipts,
+  and 16 live positive evidence receipts. It marks these objective clauses true:
+  provenance-bound recall residue, deterministic hidden-state social episodes,
+  valid ToM distributions, sealed prediction commitments, deterministic
+  scoring, non-destructive belief revision, fail-closed reliability checks,
+  autonomous operation without human content judgment, unsupported-evidence
+  abstention, and provider/video not being the current critical path. Receipt
+  SHA-256:
+  `sha256:e3af1de4805ee98be1b629d6e7315ba7b20f4ec3aa07142faae8021f02a5a84c`.
+  A fixture-backed stale-success negative returned
+  `BLOCKED_PCTOM_OBJECTIVE_EVIDENCE_AUDIT` with
+  `success_coverage_path_mismatch` and
+  `success_coverage_receipt_sha256_mismatch`; negative receipt SHA-256:
+  `sha256:662516c64ad50109f5d4e8a2fb35d57ab5fc5c742dfba0fa5889fe5785a93d5a`.
+  A fixture-backed stale-coverage negative returned
+  `BLOCKED_PCTOM_OBJECTIVE_EVIDENCE_AUDIT` with
+  `coverage_status_not_expected:BLOCKED_PCTOM_GOAL_COVERAGE`,
+  `coverage_seen_ids_mismatch:14:15`,
+  `missing_required_coverage_id:unsupported_evidence_abstention`,
+  `coverage_missing_negative_evidence:unsupported_evidence_abstention`, and
+  `objective_clause_not_proven:unsupported_evidence_abstention`; negative
+  receipt SHA-256:
+  `sha256:d770c7f784137861b8f25935fa47857ed36aa7074d48f9047bb8d11d67bdc6b6`.
+  This objective audit proves only the currently supplied local receipt bundle;
+  it does not prove paid provider execution, semantic dream quality, complete
+  Phase 01-16 media runtime execution, or future receipts not routed through
+  this audit.
   The live run consumed simulator variants 17-24, 32 sealed-test
   episodes, all four scenario families, and 128 live Tau-authored M/R/D/CD
   condition predictions. It used the Gate 0 attribution root

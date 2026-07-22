@@ -46,7 +46,10 @@ hypotheses across the four social families, Gate 2 distribution validation,
 and Gate 5 risk-coverage scoring. The success-criteria audit now consumes that
 receipt before reporting full hard success. This is deterministic
 sealed-corpus validator/scorer evidence, not live Tau-authored abstention
-behavior and not provider/video proof.
+behavior and not provider/video proof. A PCTOM-R objective-evidence audit now
+binds the active objective clauses to the current expanded success and
+15-id goal-coverage receipts, and fails closed on stale success/coverage
+receipt mismatches.
 
 Sealed64 deterministic social episode corpus:
 
@@ -256,6 +259,24 @@ PCTOM-R repeated-full64 calibration/abstention audit receipt:
 
 ```text
 /tmp/persona-dream-pctom-calibration-abstention-full64-r2-20260722T110000Z/pctom_calibration_abstention_audit_receipt.v1.json
+```
+
+PCTOM-R objective-evidence audit receipt:
+
+```text
+/tmp/persona-dream-pctom-objective-evidence-20260722T121100Z/pctom_objective_evidence_audit_receipt.v1.json
+```
+
+PCTOM-R objective-evidence negative stale-success receipt:
+
+```text
+/tmp/persona-dream-pctom-objective-evidence-negative-stale-success-20260722T121200Z/pctom_objective_evidence_audit_receipt.v1.json
+```
+
+PCTOM-R objective-evidence negative stale-coverage receipt:
+
+```text
+/tmp/persona-dream-pctom-objective-evidence-negative-stale-coverage-20260722T121300Z/pctom_objective_evidence_audit_receipt.v1.json
 ```
 
 PCTOM-R repeated-full64 calibration/abstention negative receipt:
