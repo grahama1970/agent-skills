@@ -109,6 +109,27 @@
   recall the prior noncanonical revision Memory state without writing. It does
   not prove a Memory service restart or long-duration wall-clock retention.
 
+  A negative delayed-recall fixture then copied only the source receipt and
+  mutated its `semantic_document_index` to a missing path. Command:
+  `./skills/persona-dream/run.sh run-live-memory-revision-delayed-recall
+  --source-root
+  /tmp/persona-dream-live-memory-revision-delayed-recall-negative-missing-semantic-index-20260722T050300Z/source
+  --output-root
+  /tmp/persona-dream-live-memory-revision-delayed-recall-negative-missing-semantic-index-20260722T050300Z/output
+  --receipt-out
+  /tmp/persona-dream-live-memory-revision-delayed-recall-negative-missing-semantic-index-20260722T050300Z/output/live_memory_revision_delayed_recall_receipt.v1.json
+  --recall-attempts 1 --recall-sleep-s 0 --json`. It exited 1 and wrote
+  `BLOCKED_PCTOM_LIVE_MEMORY_REVISION_DELAYED_RECALL`, with 128 exact rereads,
+  0 semantic source documents, 0 semantic exact rereads, 4 recall queries,
+  0 recall hits, and zero Memory/canonical/identity/source-memory write
+  attempts. Errors included `missing_source_semantic_document_index`,
+  `source_semantic_document_index_not_list`, and insufficient delayed recall
+  hits for M/R/D/CD. Declared receipt SHA-256:
+  `sha256:99ff128aa50c8aa9c02bde015c7fc8f0174b04ccda61c3c40a3961ce3a4ad31a`.
+  This proves the delayed-recall checker fails closed when the semantic
+  provenance boundary is missing; it does not prove service restart,
+  long-duration retention, or non-Memory external-service faults.
+
   The broader live fault-injection surface consumed the deterministic sealed
   test statistical-confidence root
   `/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z`

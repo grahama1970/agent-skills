@@ -1,14 +1,16 @@
 # Status
 
-Status: GATE0_HELD_OUT_VARIANT17_24_LIVE_TAU_REVISION_RECALL_AND_FAULT_SURFACE_ACCEPTED
+Status: GATE0_HELD_OUT_VARIANT17_24_LIVE_TAU_REVISION_RECALL_FAULT_SURFACE_AND_NEGATIVE_DELAYED_RECALL_ACCEPTED
 
 Latest artifact: held-out variant 17-24 live Tau balanced-planning slice with
 Gate 0 accepted-source attribution, causal-identifiability lineage replay, and
 Gate 8/9 condition reliability bridge, plus Gate 7 action-linked belief
 revision, live Memory recall after revision, and broader live fault-injection
 surface coverage, including local HTTP service retry and combined full64
-Memory fault containment. The latest deterministic simulator support artifact
-is a frozen 64-episode `sealed_test` social corpus build/check.
+Memory fault containment. A negative delayed-recall fixture now proves the
+fresh-process checker blocks when the semantic provenance index is missing. The
+latest deterministic simulator support artifact is a frozen 64-episode
+`sealed_test` social corpus build/check.
 
 Sealed64 deterministic social episode corpus:
 
@@ -68,6 +70,12 @@ Held-out variant live Memory delayed-recall receipt:
 
 ```text
 /tmp/persona-dream-live-memory-revision-delayed-recall-variant17-24-20260722T042700Z/live_memory_revision_delayed_recall_receipt.v1.json
+```
+
+Held-out variant delayed-recall negative fixture receipt:
+
+```text
+/tmp/persona-dream-live-memory-revision-delayed-recall-negative-missing-semantic-index-20260722T050300Z/output/live_memory_revision_delayed_recall_receipt.v1.json
 ```
 
 Held-out variant live fault-injection surface receipt:
@@ -173,6 +181,17 @@ live_memory_delayed_recall_hits: 40
 live_memory_delayed_recall_hits_per_condition: M=10 R=10 D=10 CD=10
 live_memory_delayed_write_attempts: 0
 live_memory_delayed_write_violations: 0
+live_memory_delayed_negative_status: BLOCKED_PCTOM_LIVE_MEMORY_REVISION_DELAYED_RECALL
+live_memory_delayed_negative_exit_code: 1
+live_memory_delayed_negative_mutation: semantic_document_index points to a missing copied-source fixture path
+live_memory_delayed_negative_source_documents: 128
+live_memory_delayed_negative_source_semantic_documents: 0
+live_memory_delayed_negative_exact_rereads: 128
+live_memory_delayed_negative_semantic_exact_rereads: 0
+live_memory_delayed_negative_recall_queries: 4
+live_memory_delayed_negative_recall_hits: 0
+live_memory_delayed_negative_write_attempts: 0
+live_memory_delayed_negative_errors: missing_source_semantic_document_index, source_semantic_document_index_not_list, delayed_recall_hits_per_condition_insufficient for M/R/D/CD
 live_fault_families: 8
 live_fault_trials: 8
 live_memory_fault_probes: 4
@@ -226,6 +245,11 @@ live_memory_delayed_recall_receipt_sha256: sha256:db582b1fd3737d2162e1745fdb13bd
 live_memory_delayed_exact_rereads_sha256: sha256:8a548e5863046496702aeca207e9db1a17c62ed0b2d23d7437234c781ffe0d3e
 live_memory_delayed_semantic_exact_rereads_sha256: sha256:42faa2361dca97a7d26c4b0e145ca32955a9ba2b68c0741e3cb2ca19b27f74c0
 live_memory_delayed_recall_results_sha256: sha256:045f38d09fdb5b337b5dc3868cdbd25ee8afbc92b37078c334ad9edbef54ecde
+live_memory_delayed_negative_declared_receipt_sha256: sha256:99ff128aa50c8aa9c02bde015c7fc8f0174b04ccda61c3c40a3961ce3a4ad31a
+live_memory_delayed_negative_mutated_source_receipt_sha256: sha256:c713f139dc94285ec3fc3ff0557ea4b7933db5ecea36b57dcac09e4cea923e34
+live_memory_delayed_negative_exact_rereads_sha256: sha256:8a548e5863046496702aeca207e9db1a17c62ed0b2d23d7437234c781ffe0d3e
+live_memory_delayed_negative_semantic_exact_rereads_sha256: sha256:37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570
+live_memory_delayed_negative_recall_results_sha256: sha256:dea6ab5d93a482cd8b552bc7ceb5d3eeb5c197b0484e6d7c1f906bd01492a46c
 live_fault_surface_receipt_sha256: sha256:2931a8c493a384cda42f9ed88e808c2b859f1fd920e1c99c322d5dadfefe2a4f
 live_fault_surface_fault_trials_sha256: sha256:faaa9d4991e474eee5b6a04649f7361480ee75d0573e1e4456f5f1a8cb2a8b92
 live_fault_surface_memory_fault_probes_sha256: sha256:2006a53b480e1646941c18b2800b7e1909e5a9221bd53f8e0eaecc916c88b085
