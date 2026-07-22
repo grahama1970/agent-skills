@@ -12,14 +12,14 @@
     ]
   },
   "counts": {
-    "discovered_receipts": 4,
-    "expected_receipts": 4,
+    "discovered_receipts": 7,
+    "expected_receipts": 7,
     "missing_receipts": 0,
     "negative_fixtures": 1,
     "negative_fixtures_blocked": 1,
     "unrouted_receipts": 0
   },
-  "created_at": "2026-07-22T14:05:20Z",
+  "created_at": "2026-07-22T14:12:32Z",
   "discovered_receipts": [
     {
       "fixture_backed": true,
@@ -34,9 +34,36 @@
       "fixture_backed": true,
       "live": false,
       "mocked": false,
+      "path": "receipts/pctom-deterministic-scoring-abstained.v1.json",
+      "schema": "persona_dream.research.prospective_tom.tom_scoring_receipt.v1",
+      "sha256": "sha256:0d9c0c66c38d46dd694957e0343df0b28e151978a6cff349a0df717f34b80a78",
+      "status": "PASS_TOM_SCORING_RECEIPT"
+    },
+    {
+      "fixture_backed": true,
+      "live": false,
+      "mocked": false,
+      "path": "receipts/pctom-deterministic-scoring-covered.v1.json",
+      "schema": "persona_dream.research.prospective_tom.tom_scoring_receipt.v1",
+      "sha256": "sha256:67f2346dd14f89614336444b29329f292fb09a51114b1e3c67753560bcf7a158",
+      "status": "PASS_TOM_SCORING_RECEIPT"
+    },
+    {
+      "fixture_backed": true,
+      "live": false,
+      "mocked": false,
+      "path": "receipts/pctom-deterministic-scoring-surface-audit.v1.json",
+      "schema": "persona_dream.research.prospective_tom.pctom_deterministic_scoring_audit_receipt.v1",
+      "sha256": "sha256:29b606cb07c6ad41b551ce4e80629bc0dbeb4b1e3e03e0af801574501b322d58",
+      "status": "PASS_PCTOM_DETERMINISTIC_SCORING_SURFACE"
+    },
+    {
+      "fixture_backed": true,
+      "live": false,
+      "mocked": false,
       "path": "receipts/pctom-evidence-scope-audit.v1.json",
       "schema": "persona_dream.research.prospective_tom.pctom_evidence_scope_audit.v1",
-      "sha256": "sha256:d82532d09832f860fd8254b56db41f0e8f2e34e4f481894a0ec5e073e1a2f3c8",
+      "sha256": "sha256:bd5a57540855fd179d8a9951a4c91246391851f812c405ada4a0a57544d6094f",
       "status": "PASS_PCTOM_EVIDENCE_SCOPE_LEDGER"
     },
     {
@@ -61,6 +88,9 @@
   "errors": [],
   "expected_receipt_paths": [
     "receipts/pctom-accepted-source-lineage-audit.v1.json",
+    "receipts/pctom-deterministic-scoring-abstained.v1.json",
+    "receipts/pctom-deterministic-scoring-covered.v1.json",
+    "receipts/pctom-deterministic-scoring-surface-audit.v1.json",
     "receipts/pctom-evidence-scope-audit.v1.json",
     "receipts/pctom-preseal-outcome-isolation-audit.v1.json",
     "receipts/pctom-r2-contract-receipt.v1.json"
@@ -68,7 +98,7 @@
   "fixture_backed": true,
   "live": false,
   "manifest_path": "evidence/pctom-archive-manifest.v1.json",
-  "manifest_sha256": "sha256:7cfa0d8481cdf2b7d49293c16f0f1de778bc34c03d63c28c7554b6aefa9c3b05",
+  "manifest_sha256": "sha256:c476619ed8efc48b04066e0dfbdfb6c061de00661a2ccd4f326b2c8f00474ba7",
   "memory_write_attempts": 0,
   "mocked": false,
   "negative_fixture_results": [

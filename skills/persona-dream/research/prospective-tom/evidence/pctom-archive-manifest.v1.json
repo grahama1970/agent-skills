@@ -1,11 +1,11 @@
 {
   "counts": {
-    "entries": 234,
-    "receipts": 4,
-    "schemas": 25,
-    "scripts": 94
+    "entries": 245,
+    "receipts": 7,
+    "schemas": 27,
+    "scripts": 97
   },
-  "created_at": "2026-07-22T14:05:20Z",
+  "created_at": "2026-07-22T14:12:32Z",
   "entries": [
     {
       "category": "contracts",
@@ -18,6 +18,12 @@
       "path": "contracts/pctom-audit-invariants.v1.json",
       "sha256": "sha256:03c04336d4f2fb14e0f36db2a4dfd5bb633d9e8efdcf3b77986ec583ed2927be",
       "size_bytes": 3125
+    },
+    {
+      "category": "contracts",
+      "path": "contracts/pctom-deterministic-scoring-policy.v1.json",
+      "sha256": "sha256:807263ced012f3266ab10c21f7f52f85168c9034861d0cbb88cdc099eae1e771",
+      "size_bytes": 1299
     },
     {
       "category": "contracts",
@@ -39,9 +45,15 @@
     },
     {
       "category": "evidence",
+      "path": "evidence/pctom-deterministic-scoring-surface.v1.json",
+      "sha256": "sha256:26b956ab0d83c230dea30fd6eff8c8710263d830484e0ac8c256e370c7ed3a82",
+      "size_bytes": 6291
+    },
+    {
+      "category": "evidence",
       "path": "evidence/pctom-evidence-scope-ledger.v1.json",
-      "sha256": "sha256:466942c21541e28393c89f78e2e324ed7d38c709c765a6dc358375049adebae5",
-      "size_bytes": 9313
+      "sha256": "sha256:c75e72c1e5766df36431262af9f12c88b5bcf9e522f66a84df5937ea2189c0e6",
+      "size_bytes": 22649
     },
     {
       "category": "fixtures",
@@ -650,6 +662,12 @@
       "size_bytes": 976
     },
     {
+      "category": "fixtures",
+      "path": "fixtures/phase4/abstention_case/tom_prediction_commitment_bundle.json",
+      "sha256": "sha256:c997e369f7b084360936459a9afbf022670e2327e01590ad047932c20449c5b4",
+      "size_bytes": 3452
+    },
+    {
       "category": "local",
       "path": "local/ACTIVE_CONTRACT.md",
       "sha256": "sha256:f56b31a6015ce221bd08873528155d191dd08493e524007b19d92a106743f975",
@@ -681,9 +699,27 @@
     },
     {
       "category": "receipts",
+      "path": "receipts/pctom-deterministic-scoring-abstained.v1.json",
+      "sha256": "sha256:0d9c0c66c38d46dd694957e0343df0b28e151978a6cff349a0df717f34b80a78",
+      "size_bytes": 4875
+    },
+    {
+      "category": "receipts",
+      "path": "receipts/pctom-deterministic-scoring-covered.v1.json",
+      "sha256": "sha256:67f2346dd14f89614336444b29329f292fb09a51114b1e3c67753560bcf7a158",
+      "size_bytes": 4877
+    },
+    {
+      "category": "receipts",
+      "path": "receipts/pctom-deterministic-scoring-surface-audit.v1.json",
+      "sha256": "sha256:29b606cb07c6ad41b551ce4e80629bc0dbeb4b1e3e03e0af801574501b322d58",
+      "size_bytes": 7184
+    },
+    {
+      "category": "receipts",
       "path": "receipts/pctom-evidence-scope-audit.v1.json",
-      "sha256": "sha256:d82532d09832f860fd8254b56db41f0e8f2e34e4f481894a0ec5e073e1a2f3c8",
-      "size_bytes": 2365
+      "sha256": "sha256:bd5a57540855fd179d8a9951a4c91246391851f812c405ada4a0a57544d6094f",
+      "size_bytes": 2366
     },
     {
       "category": "receipts",
@@ -750,6 +786,18 @@
       "path": "schemas/pctom-audit-mutation-suite-receipt.v1.schema.json",
       "sha256": "sha256:2aa56419d21755fd502558528173954f2e669c99fec9f2ac64992751a5b3076f",
       "size_bytes": 2075
+    },
+    {
+      "category": "schemas",
+      "path": "schemas/pctom-deterministic-scoring-audit-receipt.v1.schema.json",
+      "sha256": "sha256:8f721b196a29ff3d7af6ea82ae6b0a7861977dd7f13734439f85e765d5d8dd96",
+      "size_bytes": 1367
+    },
+    {
+      "category": "schemas",
+      "path": "schemas/pctom-deterministic-scoring-surface.v1.schema.json",
+      "sha256": "sha256:51f6765ed9aa79d56c0a25d9d153ddc30fc4b592ceea5769c97d0e82e51f3a3c",
+      "size_bytes": 1274
     },
     {
       "category": "schemas",
@@ -879,6 +927,12 @@
     },
     {
       "category": "scripts",
+      "path": "scripts/audit_pctom_deterministic_scoring_surface.py",
+      "sha256": "sha256:d2d140e661f94725dc7100c46a4cd70f0073ffef1c48e933e574380306966f38",
+      "size_bytes": 17003
+    },
+    {
+      "category": "scripts",
       "path": "scripts/audit_pctom_evidence_claims.py",
       "sha256": "sha256:e5219160a433d78d7c8b6aec09953cdcccc37020e6a9f4f9888eaa29579a3265",
       "size_bytes": 6057
@@ -924,6 +978,12 @@
       "path": "scripts/build_pctom_archive_manifest.py",
       "sha256": "sha256:19f30271c01a0aee08feb529e13b464b8569712a85ffc5aa7e932c2a736d44c2",
       "size_bytes": 748
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/build_pctom_deterministic_scoring_surface.py",
+      "sha256": "sha256:429af458bef8f670e18b0f8f50b656164665dfe8cefb71787e2c41527b47b7eb",
+      "size_bytes": 1693
     },
     {
       "category": "scripts",
@@ -1104,6 +1164,12 @@
       "path": "scripts/pctom_phase3_lineage_lib.py",
       "sha256": "sha256:1347351b8b344fa2daa127c055ffa48c9dceee4d7aae9ffc4e2fee712ab525e1",
       "size_bytes": 18290
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/pctom_phase4_scoring_lib.py",
+      "sha256": "sha256:75fa7a3afed8eccf9bc50ae6b2824c9e28ea41e39cd8d9145077a83700549718",
+      "size_bytes": 10085
     },
     {
       "category": "scripts",
@@ -1412,7 +1478,7 @@
       "size_bytes": 30353
     }
   ],
-  "entries_sha256": "sha256:5271b8006c2834f92fe1e3f9818d76a8ceea3a38b428d3a64a67a153a3c1417e",
+  "entries_sha256": "sha256:ed73fcaf7dee65563e38b06555e3ff8fbfca9114786c3a51f42704d053f22818",
   "excluded_paths": [
     "evidence/pctom-archive-manifest.v1.json"
   ],

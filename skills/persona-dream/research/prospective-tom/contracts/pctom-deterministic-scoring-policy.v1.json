@@ -1,0 +1,40 @@
+{
+  "schema": "persona_dream.research.prospective_tom.pctom_deterministic_scoring_policy.v1",
+  "status": "ACTIVE",
+  "program": "PCTOM-R2",
+  "gate": "phase4_deterministic_proper_scoring_and_abstention",
+  "mocked": false,
+  "live": false,
+  "fixture_backed": true,
+  "provider_call_attempts": 0,
+  "memory_write_attempts": 0,
+  "required_metrics": [
+    "brier",
+    "log_loss",
+    "actual_probability",
+    "top_correct",
+    "expected_calibration_error",
+    "risk_coverage.coverage",
+    "risk_coverage.selective_accuracy",
+    "risk_coverage.abstained"
+  ],
+  "required_abstention_cases": [
+    "covered_prediction",
+    "abstained_prediction"
+  ],
+  "required_negative_statuses": [
+    "BLOCKED_PCTOM_SCORING_METRIC_TAMPER",
+    "BLOCKED_PCTOM_ABSTENTION_ACCOUNTING",
+    "BLOCKED_PCTOM_SCORING_SOURCE_MISMATCH"
+  ],
+  "acceptance_stop_condition": {
+    "proper_score_rows_missing": 0,
+    "abstention_rows_missing": 0,
+    "metric_recomputation_mismatches": 0,
+    "negative_mutations_blocked": "all_required"
+  },
+  "claim_limits": [
+    "This policy proves deterministic local scoring arithmetic and abstention accounting only.",
+    "This policy does not prove live prediction benefit, semantic dream quality, paid provider execution, or production Phase 01-16 runtime execution."
+  ]
+}

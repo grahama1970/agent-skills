@@ -1,0 +1,189 @@
+{
+  "case_rows": [
+    {
+      "abstention_expected": false,
+      "case_id": "covered_prediction",
+      "receipt_path": "receipts/pctom-deterministic-scoring-covered.v1.json",
+      "receipt_sha256": "sha256:67f2346dd14f89614336444b29329f292fb09a51114b1e3c67753560bcf7a158",
+      "status": "PASS_TOM_SCORING_RECEIPT"
+    },
+    {
+      "abstention_expected": true,
+      "case_id": "abstained_prediction",
+      "receipt_path": "receipts/pctom-deterministic-scoring-abstained.v1.json",
+      "receipt_sha256": "sha256:0d9c0c66c38d46dd694957e0343df0b28e151978a6cff349a0df717f34b80a78",
+      "status": "PASS_TOM_SCORING_RECEIPT"
+    }
+  ],
+  "claims": {
+    "does_not_prove": [
+      "live prediction benefit over baselines",
+      "statistical calibration over a held-out corpus",
+      "semantic dream quality",
+      "belief revision",
+      "pipeline reliability under service faults",
+      "paid provider execution",
+      "production Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "Gate 5 fixture scoring receipts expose deterministic Brier, log-loss, calibration, and risk-coverage values for covered and abstained predictions",
+      "the abstention surface contains one covered prediction row and one abstained prediction row with explicit coverage/selective-accuracy accounting"
+    ]
+  },
+  "counts": {
+    "abstention_rows": 1,
+    "brier_rows": 6,
+    "calibration_rows": 2,
+    "case_rows": 2,
+    "covered_rows": 1,
+    "human_content_judgment_rows": 0,
+    "llm_judge_rows": 0,
+    "log_loss_rows": 6,
+    "memory_write_attempts": 0,
+    "proper_score_rows": 6,
+    "provider_call_attempts": 0,
+    "risk_coverage_rows": 2
+  },
+  "created_at": "2026-07-22T14:12:02Z",
+  "fixture_backed": true,
+  "human_content_judgment_rows": 0,
+  "live": false,
+  "llm_judge_rows": 0,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "proper_score_rows": [
+    {
+      "actual_label": null,
+      "actual_probability": 0.62,
+      "brier": 0.2328,
+      "case_id": "covered_prediction",
+      "log_loss": 0.4780358009429998,
+      "score_id": "action",
+      "score_kind": "action",
+      "top_correct": true,
+      "top_value": "KAI_HINTS_CONSTRAINT"
+    },
+    {
+      "actual_label": "TRUE",
+      "actual_probability": 0.7,
+      "brier": 0.14000000000000004,
+      "case_id": "covered_prediction",
+      "log_loss": 0.35667494393873245,
+      "perspective_order": 1,
+      "score_id": "gate2-positive-hyp-001",
+      "score_kind": "belief",
+      "top_correct": true,
+      "top_value": "TRUE"
+    },
+    {
+      "actual_label": "TRUE",
+      "actual_probability": 0.62,
+      "brier": 0.2198,
+      "case_id": "covered_prediction",
+      "log_loss": 0.4780358009429998,
+      "perspective_order": 2,
+      "score_id": "gate2-positive-hyp-002",
+      "score_kind": "belief",
+      "top_correct": true,
+      "top_value": "TRUE"
+    },
+    {
+      "actual_label": null,
+      "actual_probability": 0.62,
+      "brier": 0.2328,
+      "case_id": "abstained_prediction",
+      "log_loss": 0.4780358009429998,
+      "score_id": "action",
+      "score_kind": "action",
+      "top_correct": true,
+      "top_value": "KAI_HINTS_CONSTRAINT"
+    },
+    {
+      "actual_label": "TRUE",
+      "actual_probability": 0.7,
+      "brier": 0.14000000000000004,
+      "case_id": "abstained_prediction",
+      "log_loss": 0.35667494393873245,
+      "perspective_order": 1,
+      "score_id": "gate2-positive-hyp-001",
+      "score_kind": "belief",
+      "top_correct": true,
+      "top_value": "TRUE"
+    },
+    {
+      "actual_label": "TRUE",
+      "actual_probability": 0.62,
+      "brier": 0.2198,
+      "case_id": "abstained_prediction",
+      "log_loss": 0.4780358009429998,
+      "perspective_order": 2,
+      "score_id": "gate2-positive-hyp-002",
+      "score_kind": "belief",
+      "top_correct": true,
+      "top_value": "TRUE"
+    }
+  ],
+  "provider_call_attempts": 0,
+  "risk_coverage_rows": [
+    {
+      "abstained": false,
+      "calibration_bucket_count": 3,
+      "case_id": "covered_prediction",
+      "coverage": 1.0,
+      "expected_calibration_error": 0.3533333333333334,
+      "selective_accuracy": 1.0
+    },
+    {
+      "abstained": true,
+      "calibration_bucket_count": 3,
+      "case_id": "abstained_prediction",
+      "coverage": 0.0,
+      "expected_calibration_error": 0.3533333333333334,
+      "selective_accuracy": 0.0
+    }
+  ],
+  "schema": "persona_dream.research.prospective_tom.pctom_deterministic_scoring_surface.v1",
+  "source_files": [
+    {
+      "artifact": "corpus",
+      "path": "fixtures/gate1/development/social_episode_corpus.v1.json",
+      "sha256": "sha256:b3ca9a91e38b809bb537ebf806a55c3363912ed8a7bc0da60c921595260b0245"
+    },
+    {
+      "artifact": "distributions",
+      "path": "fixtures/gate2/positive/distributions_ok/tom_belief_distribution_bundle.json",
+      "sha256": "sha256:e97f472904c9ad13274a7e124d21efd8d5e82d843749999a5f0cbbce82dda0b2"
+    },
+    {
+      "artifact": "branches",
+      "path": "fixtures/gate3/positive/branches_ok/counterfactual_branch_bundle.json",
+      "sha256": "sha256:2064012659995d059af0eed4133bbdc2824fda44898a09fba946c1fb5336f3f8"
+    },
+    {
+      "artifact": "covered_commitments",
+      "path": "fixtures/gate5/positive/scoring_ok/tom_prediction_commitment_bundle.json",
+      "sha256": "sha256:67affb5e1f73b260af4e0a0d4db5533594aee5807ddfb44281073193800ab25b"
+    },
+    {
+      "artifact": "abstained_commitments",
+      "path": "fixtures/phase4/abstention_case/tom_prediction_commitment_bundle.json",
+      "sha256": "sha256:c997e369f7b084360936459a9afbf022670e2327e01590ad047932c20449c5b4"
+    },
+    {
+      "artifact": "outcome",
+      "path": "fixtures/gate5/positive/scoring_ok/tom_outcome_reveal.json",
+      "sha256": "sha256:2d42c52a2785a171f2ec47a2101d4e6b3f3faee45a0157fd43b32761bbfea480"
+    },
+    {
+      "artifact": "covered_receipt",
+      "path": "receipts/pctom-deterministic-scoring-covered.v1.json",
+      "sha256": "sha256:67f2346dd14f89614336444b29329f292fb09a51114b1e3c67753560bcf7a158"
+    },
+    {
+      "artifact": "abstained_receipt",
+      "path": "receipts/pctom-deterministic-scoring-abstained.v1.json",
+      "sha256": "sha256:0d9c0c66c38d46dd694957e0343df0b28e151978a6cff349a0df717f34b80a78"
+    }
+  ],
+  "status": "DETERMINISTIC_SCORING_SURFACE_BUILT"
+}
