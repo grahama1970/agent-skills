@@ -1,0 +1,24 @@
+{
+  "schema": "persona_dream.goal_v3_review_state.v1",
+  "created_at": "2026-07-22T20:02:26Z",
+  "tau_review_round": 1,
+  "verdict": "FAIL",
+  "review_artifact": "reports/goal_v3/tau_review_round1_FAIL.md",
+  "tau_run": "ask-tau-review-the-goal-v3-delivery-in-s-136ba2e1eca2",
+  "routing_proof": {
+    "requested": "837360856",
+    "controlled": "837360856",
+    "created": false
+  },
+  "critical_confirmed_by_store_readback": "cycle_20260722T184531Z selected Brandon-anchored roots but ALL FOUR persisted ToM candidates target kai (default Embry-Kai cognition contract leaked into phases 13/14 because the cycle passed contract=None and no counterpart-match gate exists)",
+  "goal_v3_status": "BOUNDARY CHECKER EXITS 0 BUT SUBSTANTIVELY NOT MET \u2014 checker is trust-based (reviewer HIGH finding); do not treat GOAL_V3 as complete until the blocker list is executed and a fresh cycle passes a round-2 tau review",
+  "blockers_from_reviewer": [
+    "derive cognition counterpart from selected cluster; bind through storyboard/observation/p13/p14/persistence/voice; add Brandon-selected/Kai-target fixture that must block",
+    "pass storyboard plan into phase13; accepted targets must match selected counterpart or bounded unknown_person",
+    "harden check_goal_v3_boundary: schema-validated, hash-recomputed child verification + live manifest/activation rereads (no trusting top-level fields)",
+    "validate_edge_closure: require both endpoints, endpoint syntax, vertex types, active-manifest ownership; add 6 negative fixtures",
+    "send computed synthesis params to chatterbox; preserve zero intensity; bind ToM candidates to active commit",
+    "unique panel ids; require 4-frame VLM parse; per-frame path/sha bindings",
+    "rerun a fresh unattended cycle; boundary recomputes from children"
+  ]
+}
