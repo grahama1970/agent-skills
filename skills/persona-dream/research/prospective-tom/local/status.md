@@ -6,7 +6,8 @@ Latest artifact: held-out variant 17-24 live Tau balanced-planning slice with
 Gate 0 accepted-source attribution, causal-identifiability lineage replay, and
 Gate 8/9 condition reliability bridge, plus Gate 7 action-linked belief
 revision, live Memory recall after revision, and broader live fault-injection
-surface coverage.
+surface coverage, including local HTTP service retry and combined full64
+Memory fault containment.
 
 Held-out variant replication receipt:
 
@@ -50,6 +51,18 @@ Held-out variant live fault-injection surface receipt:
 /tmp/persona-dream-live-fault-injection-surface-variant17-24-20260722T034600Z/live_fault_injection_surface_receipt.v1.json
 ```
 
+Repeat2 local HTTP service retry proof receipt:
+
+```text
+/tmp/persona-dream-live-tau-sealed-test-service-retry-proof-repeat2-20260722T041200Z/live_tau_sealed_test_service_retry_proof_receipt.v1.json
+```
+
+Repeat2 combined full64 Memory fault-surface receipt:
+
+```text
+/tmp/persona-dream-live-tau-full64-memory-fault-surface-repeat2-20260722T041500Z/live_tau_full64_memory_fault_surface_receipt.v1.json
+```
+
 Inspection result:
 
 ```text
@@ -60,6 +73,8 @@ action_linked_revision_status: PASS_LIVE_TAU_PCTOM_ACTION_LINKED_REVISION
 deterministic_revision_recall_status: PASS_LIVE_TAU_PCTOM_REVISION_RECALL
 live_memory_revision_recall_status: PASS_PCTOM_LIVE_MEMORY_REVISION_RECALL
 live_fault_injection_status: PASS_PCTOM_LIVE_FAULT_INJECTION_SURFACE
+local_http_service_retry_status: PASS_LIVE_TAU_PCTOM_SERVICE_RETRY_PROOF
+combined_full64_memory_fault_surface_status: PASS_LIVE_TAU_PCTOM_FULL64_MEMORY_FAULT_SURFACE
 gate8_status: PASS_TOM_RELIABILITY_SURFACE
 gate9_status: PASS_TOM_CAUSAL_REPLAY
 variant_min: 17
@@ -122,6 +137,29 @@ live_fault_causal_replay_receipts: 1
 live_fault_surface_memory_write_attempts: 0
 live_fault_surface_provider_call_attempts: 0
 live_fault_surface_tau_call_attempts: 0
+local_http_service_requests: 5
+local_http_service_unique_jobs: 4
+local_http_service_duplicate_submissions_detected: 1
+local_http_service_completed_jobs: 2
+local_http_service_blocked_jobs: 2
+local_http_service_active_predictions: 256
+local_http_service_action_decisions: 256
+local_http_service_gate6_receipts: 256
+local_http_service_retry_fault_trials: 8
+local_http_service_continued_with_unknown_state: 0
+local_http_service_side_effect_violations: 0
+combined_full64_fault_families: 8
+combined_full64_fault_trials: 8
+combined_full64_live_memory_fault_probes: 10
+combined_full64_condition_recall_queries: 4
+combined_full64_condition_recall_successes: 4
+combined_full64_terminal_outcomes: BLOCKED_BEFORE_SIDE_EFFECT=3 QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE=1 RECOVERED_WITH_EQUIVALENT_END_STATE=4
+combined_full64_causal_replay_receipts: 1
+combined_full64_continued_with_unknown_state: 0
+combined_full64_side_effect_violations: 0
+combined_full64_memory_write_attempts: 0
+combined_full64_provider_call_attempts: 0
+combined_full64_tau_call_attempts: 0
 replication_receipt_sha256: sha256:98336825a38be02d455e391735e2153986e89e2eba619b9a9a894b9ac6a6d272
 condition_receipt_sha256: sha256:2da4ed6c0d49e6ed8d61ce4667862b8cf78114a3b37b6ccc92646ce39daeb31c
 action_receipt_sha256: sha256:b11d4abfbe53b91fb08d8e0dc95f9536ba68a92ba6438c64b0245e01e6b158df
@@ -142,6 +180,12 @@ live_fault_surface_receipt_sha256: sha256:2931a8c493a384cda42f9ed88e808c2b859f1f
 live_fault_surface_fault_trials_sha256: sha256:faaa9d4991e474eee5b6a04649f7361480ee75d0573e1e4456f5f1a8cb2a8b92
 live_fault_surface_memory_fault_probes_sha256: sha256:2006a53b480e1646941c18b2800b7e1909e5a9221bd53f8e0eaecc916c88b085
 live_fault_surface_causal_replay_sha256: sha256:1120c65b75f3c9299420d56d2d7ac411365d5bfe853d61e226009bded032e807
+local_http_service_retry_receipt_sha256: sha256:75179079a9dca235c1f24ab191aa909399f349c7500ae2a0f729255965559f9e
+local_http_service_manifest_file_sha256: sha256:412bd68be6b3d6f7772bade88e2c1e538e2513628d7b12e89c4b85e38a4c2b85
+combined_full64_memory_fault_surface_receipt_sha256: sha256:adb6190f59be7999f28698c3915a063dcb383dccd212de3d26416900b2c69f6e
+combined_full64_memory_fault_trials_sha256: sha256:455979b5b42bb8d5431df73b3a75cf172b90def0d4aa2fb923241752cd642c94
+combined_full64_live_memory_probes_sha256: sha256:125921d11ce5a34483551cfc7039e029cb27d32fa7cc3aa1722da43246661f75
+combined_full64_causal_replay_sha256: sha256:2c7b9ee5604b83fa80e04da5b82bda35d7b3e415af56975b626f8915ad7ea5ac
 mocked: false
 live: true
 tau_prediction_memory_write_attempts: 0
@@ -175,6 +219,12 @@ variants 17-24, outside the prior full64 variants 1-16 slice, ran through live
    persistence/retry faults were contained with allowed terminal outcomes only
 -> the broader fault surface wrote one causal replay and did not continue with
    unknown state
+-> the local HTTP service boundary accepted retry jobs, recovered exact and
+   uncertain retry jobs, blocked missing/interrupted jobs, and did not promote
+   duplicate active predictions or actions
+-> the combined full64 Memory fault surface hash-bound full64 live Tau
+   statistical evidence, live Memory revision recall, and local service retry
+   receipts before running 8 required fault families
 -> no provider, canonical-memory, identity, source-memory, LLM judge, or human
    content judgment path was used
 ```
@@ -183,7 +233,7 @@ What this does not prove:
 
 ```text
 an independently versioned simulator corpus
-production retry machinery inside the deployed orchestrator
+a permanently deployed external production service
 non-Memory external service fault injection
 delayed multi-session recall after process restart
 semantic dream quality

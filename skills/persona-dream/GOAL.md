@@ -148,7 +148,11 @@ Next: <one immediate action or stop condition>
   live Memory revision-recall receipt
   `/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z/live_memory_revision_recall_receipt.v1.json`;
   live fault-injection surface receipt
-  `/tmp/persona-dream-live-fault-injection-surface-variant17-24-20260722T034600Z/live_fault_injection_surface_receipt.v1.json`.
+  `/tmp/persona-dream-live-fault-injection-surface-variant17-24-20260722T034600Z/live_fault_injection_surface_receipt.v1.json`;
+  local HTTP service retry proof receipt
+  `/tmp/persona-dream-live-tau-sealed-test-service-retry-proof-repeat2-20260722T041200Z/live_tau_sealed_test_service_retry_proof_receipt.v1.json`;
+  combined full64 Memory fault-surface receipt
+  `/tmp/persona-dream-live-tau-full64-memory-fault-surface-repeat2-20260722T041500Z/live_tau_full64_memory_fault_surface_receipt.v1.json`.
   Statuses:
   `PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION` and
   `PASS_PCTOM_CAUSAL_IDENTIFIABILITY_GATE`, followed by
@@ -197,7 +201,24 @@ Next: <one immediate action or stop condition>
   `RECOVERED_WITH_EQUIVALENT_END_STATE=2`, with
   `continued_with_unknown_state=0`, `side_effect_violations=0`, and zero
   Memory/provider/Tau/canonical/identity/source-memory write or call attempts
-  inside the fault-surface command.
+  inside the fault-surface command. The local HTTP service retry proof consumed
+  the repeat2 full64 live Tau sealed-test replication root through a separate
+  local service process. It submitted 5 HTTP requests, produced 4 unique
+  service jobs, detected 1 duplicate submission without promoting a duplicate
+  active prediction or action decision, reused 256 active predictions, 256
+  action decisions, and 256 Gate 6 receipts, and exercised 8 retry/fault
+  trials with `continued_with_unknown_state=0` and `side_effect_violations=0`.
+  The combined full64 Memory fault-surface then hash-bound the repeat2 full64
+  statistical-confidence root, the live Memory revision-recall root, and the
+  local HTTP service retry receipt before exercising 8 fault families, 8 fault
+  trials, 10 live Memory probes, 4 condition recall queries with 4 successes,
+  and 1 causal replay. Terminal outcomes were
+  `BLOCKED_BEFORE_SIDE_EFFECT=3`,
+  `QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE=1`, and
+  `RECOVERED_WITH_EQUIVALENT_END_STATE=4`, with
+  `continued_with_unknown_state=0`, `side_effect_violations=0`, and zero
+  Memory/provider/Tau/canonical/identity/source-memory write or call attempts
+  inside that combined fault-surface command.
   Receipt SHA-256 values:
   replication `sha256:98336825a38be02d455e391735e2153986e89e2eba619b9a9a894b9ac6a6d272`;
   condition comparison `sha256:2da4ed6c0d49e6ed8d61ce4667862b8cf78114a3b37b6ccc92646ce39daeb31c`;
@@ -231,13 +252,24 @@ Next: <one immediate action or stop condition>
   live Memory fault probes
   `sha256:2006a53b480e1646941c18b2800b7e1909e5a9221bd53f8e0eaecc916c88b085`;
   live fault causal replay
-  `sha256:1120c65b75f3c9299420d56d2d7ac411365d5bfe853d61e226009bded032e807`.
+  `sha256:1120c65b75f3c9299420d56d2d7ac411365d5bfe853d61e226009bded032e807`;
+  local HTTP service retry declared receipt
+  `sha256:75179079a9dca235c1f24ab191aa909399f349c7500ae2a0f729255965559f9e`;
+  local HTTP service manifest file
+  `sha256:412bd68be6b3d6f7772bade88e2c1e538e2513628d7b12e89c4b85e38a4c2b85`;
+  combined full64 Memory fault-surface declared receipt
+  `sha256:adb6190f59be7999f28698c3915a063dcb383dccd212de3d26416900b2c69f6e`;
+  combined full64 Memory fault trials
+  `sha256:455979b5b42bb8d5431df73b3a75cf172b90def0d4aa2fb923241752cd642c94`;
+  combined full64 live Memory probes
+  `sha256:125921d11ce5a34483551cfc7039e029cb27d32fa7cc3aa1722da43246661f75`;
+  combined full64 causal replay
+  `sha256:2c7b9ee5604b83fa80e04da5b82bda35d7b3e415af56975b626f8915ad7ea5ac`.
   This advances held-out variant evidence beyond variants 1-16. It does not
-  prove an independently versioned simulator corpus, production retry
-  machinery inside the deployed orchestrator, non-Memory external service fault
-  injection, delayed multi-session recall after process restart, semantic dream
-  quality, paid provider execution, or complete live Phase 01-16 runtime
-  execution.
+  prove an independently versioned simulator corpus, a permanently deployed
+  external production service, non-Memory external service fault injection,
+  delayed multi-session recall after process restart, semantic dream quality,
+  paid provider execution, or complete live Phase 01-16 runtime execution.
 - PCTOM-R repeated full64 live Tau sealed-test evidence over two Gate
   0-attributed runs:
   repeat2 replication receipt
