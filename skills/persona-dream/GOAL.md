@@ -1977,7 +1977,26 @@ Blocked Gate 6 timeout90 smoke floor proof root: /tmp/persona-dream-live-tau-con
 Current active phase boundary:
 
 ```text
-phase: post-confidence-gated-planning-intervention, pre-non-identical-repeated-live-tau-planning-or-beneficial-utility-policy
+phase: post-heldout-variant17-24-balanced-planning-and-reliability, pre-independent-generalization-or-external-service-reliability
+latest_balanced_planning_receipt: /tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_planning_replication_receipt.v1.json
+latest_balanced_planning_status: PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION
+latest_balanced_planning_receipt_sha256: sha256:98336825a38be02d455e391735e2153986e89e2eba619b9a9a894b9ac6a6d272
+latest_balanced_planning_mocked: false
+latest_balanced_planning_live: true
+latest_balanced_planning_episodes: 32
+latest_balanced_planning_cases: 128
+latest_balanced_planning_families: coordination_conflict, information_asymmetry_false_belief, preference_desire_uncertainty, trust_commitment_relationship
+latest_balanced_planning_benefit_with_confidence: true
+latest_balanced_planning_ci_upper: -0.056249999999999994
+latest_variant_causal_identifiability_receipt: /tmp/persona-dream-pctom-causal-identifiability-gate0-variant17-24-20260722T032200Z/pctom_causal_identifiability_receipt.json
+latest_condition_reliability_bridge_receipt: /tmp/persona-dream-live-tau-condition-reliability-bridge-variant17-24-20260722T033000Z/live_tau_condition_reliability_bridge_receipt.v1.json
+latest_action_linked_revision_receipt: /tmp/persona-dream-live-tau-action-linked-revision-variant17-24-20260722T034000Z/live_tau_action_linked_revision_receipt.v1.json
+latest_live_memory_revision_recall_receipt: /tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z/live_memory_revision_recall_receipt.v1.json
+latest_live_fault_injection_surface_receipt: /tmp/persona-dream-live-fault-injection-surface-variant17-24-20260722T034600Z/live_fault_injection_surface_receipt.v1.json
+latest_autonomous_no_human_judgment_surface_receipt: /tmp/persona-dream-autonomous-no-human-judgment-surface-20260722T090000Z/autonomous_no_human_judgment_surface_receipt.v1.json
+webgpt_review_status: blocked_transport_failed
+webgpt_ask_run_dir: .ask_artifacts/tau-dag-runs/ask-tau-persona-dream-pctom-r-next-step--9c3e3fc21cb2
+webgpt_failure: stale Persona Dream tab, documented browser-oracle open-bind/reconcile commands absent in local CLI, and Surf recovery ended with failed metadata
 last_live_condition_receipt: /tmp/persona-dream-live-tau-condition-comparison-20260721T030825Z/live_tau_condition_comparison_receipt.v1.json
 last_reliability_receipt: /tmp/persona-dream-live-tau-condition-reliability-20260721T032659Z/live_tau_condition_reliability_bridge_receipt.v1.json
 last_action_selection_receipt: /tmp/persona-dream-live-tau-condition-action-selection-20260721T034126Z/live_tau_condition_action_selection_receipt.v1.json
@@ -2032,7 +2051,7 @@ last_tau_prompt_timeout_diagnostic_30s_receipt: /tmp/persona-dream-live-tau-prom
 last_tau_prompt_timeout_diagnostic_90s_receipt: /tmp/persona-dream-live-tau-prompt-timeout-diagnostic-90s-20260721T1511Z/live_tau_prompt_timeout_diagnostic_receipt.v1.json
 last_tau_condition_comparison_timeout90_smoke_receipt: /tmp/persona-dream-live-tau-condition-comparison-timeout90-smoke-20260721T1512Z/live_tau_condition_comparison_receipt.v1.json
 last_blocked_gate6_timeout90_smoke_floor_receipt: /tmp/persona-dream-live-tau-condition-action-selection-timeout90-smoke-20260721T1512Z/live_tau_condition_action_selection_receipt.v1.json
-next_required_receipt: rerun strict-inference prompt replication with normal timeout budget, then run enough Gate 6 action-selection coverage to satisfy the bridge floor, then test a deterministic utility/reward or scenario/policy expansion for beneficial CD-vs-baseline planning under balanced live coverage
+next_required_receipt: independent scenario-corpus generalization or external always-on service reliability, not another duplicate full64 aggregate and not provider/video work
 secondary_receipt: permanently deployed external always-on orchestrator retry proof, only as supporting reliability evidence
 ```
 
