@@ -69,10 +69,17 @@ def _validate_base(revision_root: Path, errors: list[str]) -> dict[str, Any]:
         if receipt.get(key) != value:
             errors.append(f"base_{key}_mismatch:{receipt.get(key)}:{value}")
     counts = receipt.get("counts") if isinstance(receipt.get("counts"), dict) else {}
-    if counts.get("revision_cases_written") != 16:
-        errors.append(f"base_revision_cases_written_not_16:{counts.get('revision_cases_written')}")
-    if counts.get("individual_status_counts") != {"PASS_TOM_BELIEF_REVISION": 16}:
-        errors.append(f"base_individual_status_counts_mismatch:{counts.get('individual_status_counts')}")
+    revision_cases_written = counts.get("revision_cases_written")
+    if not isinstance(revision_cases_written, int) or revision_cases_written < 16:
+        errors.append(f"base_revision_cases_written_lt_16:{revision_cases_written}")
+    individual_status_counts = counts.get("individual_status_counts")
+    pass_count = (
+        individual_status_counts.get("PASS_TOM_BELIEF_REVISION")
+        if isinstance(individual_status_counts, dict)
+        else None
+    )
+    if pass_count != revision_cases_written:
+        errors.append(f"base_individual_status_counts_mismatch:{individual_status_counts}:{revision_cases_written}")
     for key in ("prior_action_hypotheses_per_condition", "posterior_action_revisions_per_condition"):
         values = counts.get(key)
         if not isinstance(values, dict) or set(values) != set(CONDITIONS):

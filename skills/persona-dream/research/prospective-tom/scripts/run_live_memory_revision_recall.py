@@ -80,8 +80,9 @@ def _validate_base(base_root: Path, errors: list[str]) -> dict[str, Any]:
         if receipt.get(key) != value:
             errors.append(f"base_{key}_mismatch:{receipt.get(key)}:{value}")
     counts = receipt.get("counts") if isinstance(receipt.get("counts"), dict) else {}
-    if counts.get("revision_documents") != 16:
-        errors.append(f"base_revision_documents_not_16:{counts.get('revision_documents')}")
+    revision_documents = counts.get("revision_documents")
+    if not isinstance(revision_documents, int) or revision_documents < 16:
+        errors.append(f"base_revision_documents_lt_16:{revision_documents}")
     for condition, count in (counts.get("revision_documents_per_condition") or {}).items():
         if condition not in CONDITIONS or not isinstance(count, int) or count < 1:
             errors.append(f"base_revision_documents_per_condition_invalid:{condition}:{count}")

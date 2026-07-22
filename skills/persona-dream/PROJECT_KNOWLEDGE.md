@@ -21,6 +21,10 @@
   `/tmp/persona-dream-live-tau-condition-reliability-bridge-variant17-24-20260722T033000Z/live_tau_condition_reliability_bridge_receipt.v1.json`.
   Action-linked belief-revision receipt:
   `/tmp/persona-dream-live-tau-action-linked-revision-variant17-24-20260722T034000Z/live_tau_action_linked_revision_receipt.v1.json`.
+  Deterministic revision-recall receipt:
+  `/tmp/persona-dream-live-tau-revision-recall-variant17-24-20260722T034200Z/live_tau_revision_recall_receipt.v1.json`.
+  Live Memory revision-recall receipt:
+  `/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z/live_memory_revision_recall_receipt.v1.json`.
 
   Statuses `PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION` and
   `PASS_PCTOM_CAUSAL_IDENTIFIABILITY_GATE`; the condition reliability bridge
@@ -57,6 +61,22 @@
   conditions were represented, priors remained auditable, unsupported writes
   were absent, and no human content judgment was required.
 
+  The deterministic revision-recall runner had an old exact-16 compatibility
+  guard. It was repaired to require at least 16 cases and full Gate 7 pass
+  coverage, so it can consume the current 128-case held-out root without
+  weakening condition/write checks. The paired live Memory runner now applies
+  the same at-least-16 guard for deterministic recall documents. Deterministic
+  recall over the held-out revision root produced 128 revision documents, 4
+  local recall queries, 128 hits, prior/posterior distinction true,
+  synthetic/literal boundary true, and zero write violations.
+
+  Live Memory recall after revision wrote 128 noncanonical PCTOM-R research
+  documents and 128 searchable noncanonical lesson mirrors, exactly reread
+  128/128 in both collections, and live `/recall` returned 40 hits, 10 per
+  M/R/D/CD condition. It made `memory_write_attempts=2` for the noncanonical
+  research/mirror writes and zero canonical, identity, source-memory, provider,
+  Tau, or human-content-judgment calls/writes.
+
   Receipt SHA-256 values: replication
   `sha256:98336825a38be02d455e391735e2153986e89e2eba619b9a9a894b9ac6a6d272`;
   condition
@@ -76,13 +96,26 @@
   action-linked revision
   `sha256:7955621d16a13224f13558d959dcfd3b36ff0dfdedb4c05140ab0c0a10aedb93`;
   action-linked revision index
-  `sha256:41cee5aa52c5786ad8b6ac9d79271c21df1d660217c5594e335951025a78107b`.
+  `sha256:41cee5aa52c5786ad8b6ac9d79271c21df1d660217c5594e335951025a78107b`;
+  deterministic revision recall
+  `sha256:3777f0938e13cb36038c91ed78797783fd0a8db3e3ff2e38ab411644dcac1a8e`;
+  deterministic revision recall index
+  `sha256:4998b2a64580476579f3cac21843d6f5019b728fe165dcc916d4fdae7bac23b1`;
+  deterministic revision recall results
+  `sha256:e2ce3d8c8adf6e6bb15a85ade9a57c9073facaa00ede65302e1ebc7f12e6995e`;
+  live Memory revision recall
+  `sha256:ea4546e85f8f1bc5392dd810bb83d0b5b7ae42682b093384eac25c8cce8fb63a`;
+  live Memory revision documents
+  `sha256:925333b88ab513c57fdf595a14010497f8408c7a5e34c78bd977b571cef92290`;
+  live Memory recall results
+  `sha256:1ca8c485b658d43f8cceb4a97986ee3b0104c5399bedd07ce23c9391ad96c786`.
   This advances held-out variant/generalization evidence for PCTOM-R Gate 0
   and Gate 6, a controlled artifact-bound Gate 8/9 reliability bridge, and
   Gate 7 non-destructive belief revision linked to live-originated action
-  decisions. It does not prove an independently versioned simulator corpus,
-  real external service fault injection, production retry machinery,
-  longitudinal recall after revision, semantic dream quality, paid provider
+  decisions, including deterministic and live Memory recall after revision. It
+  does not prove an independently versioned simulator corpus, real external
+  service fault injection, production retry machinery, delayed multi-session
+  recall after process restart, semantic dream quality, paid provider
   execution, or complete live Phase 01-16 runtime execution.
 - 2026-07-22 UTC (PCTOM-R GATE 0 REPEATED FULL64 LIVE TAU BOUNDARY): a second
   Gate 0-attributed full64 live Tau sealed-test replication now exists, and a

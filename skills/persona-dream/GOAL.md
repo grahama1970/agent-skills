@@ -142,7 +142,11 @@ Next: <one immediate action or stop condition>
   condition reliability bridge receipt
   `/tmp/persona-dream-live-tau-condition-reliability-bridge-variant17-24-20260722T033000Z/live_tau_condition_reliability_bridge_receipt.v1.json`;
   action-linked belief-revision receipt
-  `/tmp/persona-dream-live-tau-action-linked-revision-variant17-24-20260722T034000Z/live_tau_action_linked_revision_receipt.v1.json`.
+  `/tmp/persona-dream-live-tau-action-linked-revision-variant17-24-20260722T034000Z/live_tau_action_linked_revision_receipt.v1.json`;
+  deterministic revision-recall receipt
+  `/tmp/persona-dream-live-tau-revision-recall-variant17-24-20260722T034200Z/live_tau_revision_recall_receipt.v1.json`;
+  live Memory revision-recall receipt
+  `/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z/live_memory_revision_recall_receipt.v1.json`.
   Statuses:
   `PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION` and
   `PASS_PCTOM_CAUSAL_IDENTIFIABILITY_GATE`, followed by
@@ -173,7 +177,14 @@ Next: <one immediate action or stop condition>
   hypotheses and 32 posterior revisions per M/R/D/CD condition. It preserved
   sealed priors as auditable, wrote hash-bound current-use posteriors, and made
   zero new Tau, Memory, provider, canonical-memory, identity, or source-memory
-  calls/writes. Receipt SHA-256 values:
+  calls/writes. The recall bridge then indexed 128 revision documents,
+  returned 128 deterministic local recall hits, and the live Memory bridge
+  upserted 128 noncanonical PCTOM-R research documents plus 128 searchable
+  noncanonical lesson mirrors. Live Memory exact reread returned 128/128
+  research documents and 128/128 semantic mirrors; live `/recall` returned 40
+  hits, 10 per M/R/D/CD condition, while keeping prior/posterior distributions
+  distinguishable and excluding synthetic branches from literal history.
+  Receipt SHA-256 values:
   replication `sha256:98336825a38be02d455e391735e2153986e89e2eba619b9a9a894b9ac6a6d272`;
   condition comparison `sha256:2da4ed6c0d49e6ed8d61ce4667862b8cf78114a3b37b6ccc92646ce39daeb31c`;
   action selection `sha256:b11d4abfbe53b91fb08d8e0dc95f9536ba68a92ba6438c64b0245e01e6b158df`;
@@ -188,12 +199,22 @@ Next: <one immediate action or stop condition>
   action-linked revision
   `sha256:7955621d16a13224f13558d959dcfd3b36ff0dfdedb4c05140ab0c0a10aedb93`;
   action-linked revision index
-  `sha256:41cee5aa52c5786ad8b6ac9d79271c21df1d660217c5594e335951025a78107b`.
+  `sha256:41cee5aa52c5786ad8b6ac9d79271c21df1d660217c5594e335951025a78107b`;
+  deterministic revision recall
+  `sha256:3777f0938e13cb36038c91ed78797783fd0a8db3e3ff2e38ab411644dcac1a8e`;
+  deterministic revision recall index
+  `sha256:4998b2a64580476579f3cac21843d6f5019b728fe165dcc916d4fdae7bac23b1`;
+  live Memory revision recall
+  `sha256:ea4546e85f8f1bc5392dd810bb83d0b5b7ae42682b093384eac25c8cce8fb63a`;
+  live Memory revision documents
+  `sha256:925333b88ab513c57fdf595a14010497f8408c7a5e34c78bd977b571cef92290`;
+  live Memory recall results
+  `sha256:1ca8c485b658d43f8cceb4a97986ee3b0104c5399bedd07ce23c9391ad96c786`.
   This advances held-out variant evidence beyond variants 1-16. It does not
   prove an independently versioned simulator corpus, real external service
-  fault injection, production retry machinery, longitudinal recall after
-  revision, semantic dream quality, paid provider execution, or complete live
-  Phase 01-16 runtime execution.
+  fault injection, production retry machinery, delayed multi-session recall
+  after process restart, semantic dream quality, paid provider execution, or
+  complete live Phase 01-16 runtime execution.
 - PCTOM-R repeated full64 live Tau sealed-test evidence over two Gate
   0-attributed runs:
   repeat2 replication receipt

@@ -1,11 +1,11 @@
 # Status
 
-Status: GATE0_HELD_OUT_VARIANT17_24_LIVE_TAU_RELIABILITY_AND_REVISION_ACCEPTED
+Status: GATE0_HELD_OUT_VARIANT17_24_LIVE_TAU_REVISION_RECALL_ACCEPTED
 
 Latest artifact: held-out variant 17-24 live Tau balanced-planning slice with
 Gate 0 accepted-source attribution, causal-identifiability lineage replay, and
 Gate 8/9 condition reliability bridge, plus Gate 7 action-linked belief
-revision.
+revision and live Memory recall after revision.
 
 Held-out variant replication receipt:
 
@@ -31,6 +31,18 @@ Held-out variant action-linked belief-revision receipt:
 /tmp/persona-dream-live-tau-action-linked-revision-variant17-24-20260722T034000Z/live_tau_action_linked_revision_receipt.v1.json
 ```
 
+Held-out variant deterministic revision-recall receipt:
+
+```text
+/tmp/persona-dream-live-tau-revision-recall-variant17-24-20260722T034200Z/live_tau_revision_recall_receipt.v1.json
+```
+
+Held-out variant live Memory revision-recall receipt:
+
+```text
+/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z/live_memory_revision_recall_receipt.v1.json
+```
+
 Inspection result:
 
 ```text
@@ -38,6 +50,8 @@ replication_status: PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION
 causal_identifiability_status: PASS_PCTOM_CAUSAL_IDENTIFIABILITY_GATE
 condition_reliability_bridge_status: PASS_LIVE_TAU_PCTOM_CONDITION_RELIABILITY_BRIDGE
 action_linked_revision_status: PASS_LIVE_TAU_PCTOM_ACTION_LINKED_REVISION
+deterministic_revision_recall_status: PASS_LIVE_TAU_PCTOM_REVISION_RECALL
+live_memory_revision_recall_status: PASS_PCTOM_LIVE_MEMORY_REVISION_RECALL
 gate8_status: PASS_TOM_RELIABILITY_SURFACE
 gate9_status: PASS_TOM_CAUSAL_REPLAY
 variant_min: 17
@@ -75,6 +89,21 @@ action_linked_posterior_revisions_per_condition: M=32 R=32 D=32 CD=32
 action_linked_priors_remain_auditable: true
 action_linked_unsupported_writes_absent: true
 action_linked_revision_tau_call_attempts: 0
+deterministic_revision_documents: 128
+deterministic_revision_recall_queries: 4
+deterministic_revision_recall_hits: 128
+deterministic_prior_and_posterior_distinguished: true
+deterministic_synthetic_literal_boundary_preserved: true
+live_memory_documents_upserted: 128
+live_memory_exact_rereads: 128
+live_memory_semantic_documents_upserted: 128
+live_memory_semantic_exact_rereads: 128
+live_memory_revision_recall_hits: 40
+live_memory_revision_recall_hits_per_condition: M=10 R=10 D=10 CD=10
+live_memory_write_attempts: 2
+live_memory_canonical_memory_write_attempts: 0
+live_memory_identity_write_attempts: 0
+live_memory_source_memory_write_attempts: 0
 replication_receipt_sha256: sha256:98336825a38be02d455e391735e2153986e89e2eba619b9a9a894b9ac6a6d272
 condition_receipt_sha256: sha256:2da4ed6c0d49e6ed8d61ce4667862b8cf78114a3b37b6ccc92646ce39daeb31c
 action_receipt_sha256: sha256:b11d4abfbe53b91fb08d8e0dc95f9536ba68a92ba6438c64b0245e01e6b158df
@@ -85,9 +114,15 @@ gate8_surface_check_receipt_sha256: sha256:c658c1fb86d87ea8d87deaf759d00332a30c6
 gate9_replay_check_receipt_sha256: sha256:189a9435d742e8692b067458152c0acaaa67d8f9a6bf34df2b6d1e03422d2c6d
 action_linked_revision_receipt_sha256: sha256:7955621d16a13224f13558d959dcfd3b36ff0dfdedb4c05140ab0c0a10aedb93
 action_linked_revision_index_sha256: sha256:41cee5aa52c5786ad8b6ac9d79271c21df1d660217c5594e335951025a78107b
+deterministic_revision_recall_receipt_sha256: sha256:3777f0938e13cb36038c91ed78797783fd0a8db3e3ff2e38ab411644dcac1a8e
+deterministic_revision_recall_index_sha256: sha256:4998b2a64580476579f3cac21843d6f5019b728fe165dcc916d4fdae7bac23b1
+deterministic_revision_recall_results_sha256: sha256:e2ce3d8c8adf6e6bb15a85ade9a57c9073facaa00ede65302e1ebc7f12e6995e
+live_memory_revision_recall_receipt_sha256: sha256:ea4546e85f8f1bc5392dd810bb83d0b5b7ae42682b093384eac25c8cce8fb63a
+live_memory_revision_documents_sha256: sha256:925333b88ab513c57fdf595a14010497f8408c7a5e34c78bd977b571cef92290
+live_memory_recall_results_sha256: sha256:1ca8c485b658d43f8cceb4a97986ee3b0104c5399bedd07ce23c9391ad96c786
 mocked: false
 live: true
-memory_write_attempts: 0
+tau_prediction_memory_write_attempts: 0
 provider_call_attempts: 0
 canonical_memory_write_attempts: 0
 identity_write_attempts: 0
@@ -110,8 +145,12 @@ variants 17-24, outside the prior full64 variants 1-16 slice, ran through live
 -> Gate 9 localized stale-artifact divergence to one replaced tool return
 -> Gate 7 wrote 128/128 non-destructive action-linked belief revisions while
    preserving sealed priors and hash-binding current-use posteriors
--> no Memory, provider, canonical-memory, identity, source-memory, LLM judge,
-   or human content judgment path was used
+-> deterministic revision recall found 128/128 local revision documents
+-> live Memory exact reread and `/recall` recovered noncanonical revision
+   documents for all four conditions while preserving prior/posterior and
+   synthetic/literal boundaries
+-> no provider, canonical-memory, identity, source-memory, LLM judge, or human
+   content judgment path was used
 ```
 
 What this does not prove:
@@ -120,7 +159,7 @@ What this does not prove:
 an independently versioned simulator corpus
 real external service fault injection
 production retry machinery
-longitudinal recall after revision
+delayed multi-session recall after process restart
 semantic dream quality
 paid provider execution
 complete live Phase 01-16 runtime execution
