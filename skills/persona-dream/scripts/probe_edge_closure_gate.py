@@ -64,6 +64,18 @@ def main() -> int:
         "malformed_ref": [edge(f"{PROBE_DREAM_ID}__e3",
                                f"persona_memory/dream_{PROBE_DREAM_ID}",
                                "not-a-collection-key-ref")],
+        "both_endpoints_absent": [
+            {"collection": "persona_memory_edges", "kind": "edge",
+             "document": {"_key": f"{PROBE_DREAM_ID}__e6",
+                          "relationship_type": "observed_in_scene"}}],
+        "both_endpoints_null": [edge(f"{PROBE_DREAM_ID}__e7", None, None)],
+        "edge_targeting_endpointless_edge": [
+            {"collection": "persona_memory_edges", "kind": "edge",
+             "document": {"_key": f"{PROBE_DREAM_ID}__e8",
+                          "relationship_type": "observed_in_scene"}},
+            edge(f"{PROBE_DREAM_ID}__e9",
+                 f"persona_memory/dream_{PROBE_DREAM_ID}",
+                 f"persona_memory_edges/{PROBE_DREAM_ID}__e8")],
         "edge_to_edge": [edge(f"{PROBE_DREAM_ID}__e4",
                               f"persona_memory/dream_{PROBE_DREAM_ID}",
                               f"persona_memory_edges/{PROBE_DREAM_ID}__e5"),

@@ -1,10 +1,32 @@
 {
   "cases": {
+    "both_endpoints_absent": {
+      "blocked": true,
+      "blocked_status": "BLOCKED_EDGE_ENDPOINT_UNRESOLVED",
+      "unresolved": [
+        "goal_v3_edge_closure_probe__e6->missing-endpoint"
+      ]
+    },
+    "both_endpoints_null": {
+      "blocked": true,
+      "blocked_status": "BLOCKED_EDGE_ENDPOINT_UNRESOLVED",
+      "unresolved": [
+        "goal_v3_edge_closure_probe__e7->missing-endpoint"
+      ]
+    },
     "dangling_vertex": {
       "blocked": true,
       "blocked_status": "BLOCKED_EDGE_ENDPOINT_UNRESOLVED",
       "unresolved": [
         "goal_v3_edge_closure_probe__e1->persona_dream_watch_evidence/does_not_exist_anywhere_v3_probe"
+      ]
+    },
+    "edge_targeting_endpointless_edge": {
+      "blocked": true,
+      "blocked_status": "BLOCKED_EDGE_ENDPOINT_UNRESOLVED",
+      "unresolved": [
+        "goal_v3_edge_closure_probe__e8->missing-endpoint",
+        "goal_v3_edge_closure_probe__e9->edge-endpoint-is-edge:persona_memory_edges/goal_v3_edge_closure_probe__e8"
       ]
     },
     "edge_to_edge": {
@@ -29,7 +51,7 @@
       ]
     }
   },
-  "created_at": "2026-07-22T20:32:36Z",
+  "created_at": "2026-07-22T21:00:48Z",
   "live": true,
   "passed": true,
   "probe_dream_key_absent_from_store": true,

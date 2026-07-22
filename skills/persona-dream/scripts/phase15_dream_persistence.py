@@ -924,11 +924,18 @@ def validate_edge_closure(
         f"{e['collection']}/{e['document']['_key']}": e["document"] for e in write_set
     }
     unresolved: list[str] = []
+    def is_edge_entry(entry: dict[str, Any]) -> bool:
+        d = entry["document"]
+        return (entry.get("kind") == "edge" or "edge" in str(entry.get("collection", ""))
+                or d.get("_from") is not None or d.get("_to") is not None)
+
+    edge_keys = {f"{e['collection']}/{e['document']['_key']}"
+                 for e in write_set if is_edge_entry(e)}
     for e in write_set:
         doc = e["document"]
+        if not is_edge_entry(e):
+            continue  # vertex by declared kind AND shape
         frm, to = doc.get("_from"), doc.get("_to")
-        if frm is None and to is None:
-            continue  # vertex
         if not frm or not to:
             unresolved.append(f"{doc.get('_key')}->missing-endpoint")
             continue
@@ -936,23 +943,26 @@ def validate_edge_closure(
             if not isinstance(endpoint, str) or endpoint.count("/") != 1                     or not all(endpoint.split("/", 1)):
                 unresolved.append(f"{doc.get('_key')}->malformed:{endpoint!r}")
                 continue
-            target = in_set.get(endpoint)
-            if target is not None:
-                if target.get("_from") or target.get("_to"):
-                    unresolved.append(f"{doc.get('_key')}->edge-endpoint-is-edge:{endpoint}")
+            if endpoint in edge_keys:
+                unresolved.append(f"{doc.get('_key')}->edge-endpoint-is-edge:{endpoint}")
+                continue
+            if endpoint in in_set:
                 continue
             coll, key = endpoint.split("/", 1)
             found_doc = None
             try:
-                for vs in ("active", None):
-                    filt: dict[str, Any] = {"_key": key}
-                    if vs:
-                        filt["visibility_state"] = vs
+                # unfiltered lookup, then EXPLICIT state check — acceptability
+                # is never inferred from lookup visibility (round-2 review)
+                got = _http_post(f"{base_url}/list",
+                                 {"collection": coll,
+                                  "filters": {"_key": key, "visibility_state": "active"}})
+                docs = got.get("documents") or []
+                if not docs:
                     got = _http_post(f"{base_url}/list",
-                                     {"collection": coll, "filters": filt})
-                    if got.get("documents"):
-                        found_doc = got["documents"][0]
-                        break
+                                     {"collection": coll, "filters": {"_key": key}})
+                    docs = [d for d in (got.get("documents") or [])
+                            if d.get("visibility_state") in (None, "active")]
+                found_doc = docs[0] if docs else None
             except Exception:
                 found_doc = None
             if found_doc is None:

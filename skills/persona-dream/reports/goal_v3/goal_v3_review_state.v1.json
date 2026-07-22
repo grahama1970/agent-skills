@@ -44,5 +44,16 @@
       "per-frame path/sha bindings; unique panel ids; 4-frame VLM parse required",
       "tau round-2 review to VERDICT: PASS"
     ]
+  },
+  "round2": {
+    "at": "2026-07-22T21:01:02Z",
+    "verdict": "FAIL",
+    "artifact": "reports/goal_v3/tau_review_round2_FAIL.md",
+    "critical_fixed_immediately": "closure classifier now uses declared kind (endpointless declared edges block); external endpoint acceptability by explicit visibility_state (active or legacy-None), never unfiltered lookup; 7 live negative cases all BLOCKED, store untouched",
+    "remaining_from_round2": [
+      "checker blockers listed in round-2 response beyond the closure section (read tau_review_round2_FAIL.md in full next session)",
+      "inactive/foreign-manifest vertex negative",
+      "rerun fresh cycle + tau round-3"
+    ]
   }
 }
