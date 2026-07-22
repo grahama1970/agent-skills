@@ -39,8 +39,14 @@ binds both benefits in one same-scope repeated live Tau aggregate.
 A PCTOM-R calibration/abstention audit now consumes the same two full64 live
 Tau roots and hash-binds 512 Gate 5 scoring rows with calibration and
 risk-coverage fields. It records `abstention_observed=false`, so unsupported
-evidence abstention behavior remains explicit remaining work rather than a
-hidden success claim.
+evidence abstention behavior remained explicit remaining work rather than a
+hidden success claim. A later unsupported-evidence abstention audit now
+exercises that missing behavior through deterministic unsupported factual
+hypotheses across the four social families, Gate 2 distribution validation,
+and Gate 5 risk-coverage scoring. The success-criteria audit now consumes that
+receipt before reporting full hard success. This is deterministic
+sealed-corpus validator/scorer evidence, not live Tau-authored abstention
+behavior and not provider/video proof.
 
 Sealed64 deterministic social episode corpus:
 
@@ -270,6 +276,30 @@ PCTOM-R calibration-bound success-criteria negative receipt:
 /tmp/persona-dream-pctom-success-criteria-negative-calibration-20260722T111100Z/pctom_success_criteria_audit_receipt.v1.json
 ```
 
+PCTOM-R unsupported-evidence abstention audit receipt:
+
+```text
+/tmp/persona-dream-pctom-unsupported-evidence-abstention-20260722T112000Z/pctom_unsupported_evidence_abstention_receipt.v1.json
+```
+
+PCTOM-R unsupported-evidence abstention negative receipt:
+
+```text
+/tmp/persona-dream-pctom-unsupported-evidence-abstention-negative-supported-20260722T112100Z/pctom_unsupported_evidence_abstention_receipt.v1.json
+```
+
+PCTOM-R unsupported-abstention-bound success-criteria audit receipt:
+
+```text
+/tmp/persona-dream-pctom-success-criteria-unsupported-abstention-bound-20260722T113000Z/pctom_success_criteria_audit_receipt.v1.json
+```
+
+PCTOM-R unsupported-abstention-bound success-criteria negative receipt:
+
+```text
+/tmp/persona-dream-pctom-success-criteria-negative-unsupported-abstention-20260722T113100Z/pctom_success_criteria_audit_receipt.v1.json
+```
+
 Inspection result:
 
 ```text
@@ -387,6 +417,28 @@ pctom_calibration_bound_success_receipt_sha256: sha256:527b3cd017d11ade9b2c59b0e
 pctom_calibration_bound_success_negative_status: BLOCKED_PCTOM_SUCCESS_CRITERIA_AUDIT
 pctom_calibration_bound_success_negative_error: calibration_abstention_status_not_expected
 pctom_calibration_bound_success_negative_receipt_sha256: sha256:d934716e84a8e5f6f43f93d262f94b887200176741f3e7b28fb5a09bfd9506e6
+pctom_unsupported_evidence_abstention_status: PASS_PCTOM_UNSUPPORTED_EVIDENCE_ABSTENTION
+pctom_unsupported_evidence_abstention_case_rows: 4
+pctom_unsupported_evidence_abstention_families: 4
+pctom_unsupported_evidence_abstention_gate2_pass: 4
+pctom_unsupported_evidence_abstention_gate5_pass: 4
+pctom_unsupported_evidence_abstention_risk_coverage_rows: 4
+pctom_unsupported_evidence_abstention_abstained_rows: 4
+pctom_unsupported_evidence_abstention_unsupported_distribution_rows: 8
+pctom_unsupported_evidence_abstention_receipt_sha256: sha256:e26e29aebd860664199bac9ad0de4818a6c13691d4a21aac246b9c0398864894
+pctom_unsupported_evidence_abstention_negative_status: BLOCKED_PCTOM_UNSUPPORTED_EVIDENCE_ABSTENTION
+pctom_unsupported_evidence_abstention_negative_gate2_blocked: 4
+pctom_unsupported_evidence_abstention_negative_error: negative_mode_triggered_fail_closed:marked_supported
+pctom_unsupported_evidence_abstention_negative_receipt_sha256: sha256:04dca2e1106e5dee74aae95b2984a78de066ea4b8e7352ed256543d0fc0af297
+pctom_unsupported_abstention_bound_success_status: PASS_PCTOM_SUCCESS_CRITERIA_AUDIT
+pctom_unsupported_abstention_bound_success_same_scope_joint_success: true
+pctom_unsupported_abstention_bound_success_calibration_surface_audited: true
+pctom_unsupported_abstention_bound_success_unsupported_evidence_abstention_exercised: true
+pctom_unsupported_abstention_bound_success_full_hard_success_criteria_met: true
+pctom_unsupported_abstention_bound_success_receipt_sha256: sha256:20814bdfb3ba354cd51ef4bceb8a13b8c7303572413712170cd181dfcd04cefb
+pctom_unsupported_abstention_bound_success_negative_status: BLOCKED_PCTOM_SUCCESS_CRITERIA_AUDIT
+pctom_unsupported_abstention_bound_success_negative_error: unsupported_abstention_status_not_expected
+pctom_unsupported_abstention_bound_success_negative_receipt_sha256: sha256:c3fcd7ff13b4cd51d3af41e995ecfaf4be01b30ebb653038e6b79379f19436a6
 live_fault_injection_status: PASS_PCTOM_LIVE_FAULT_INJECTION_SURFACE
 local_http_service_retry_status: PASS_LIVE_TAU_PCTOM_SERVICE_RETRY_PROOF
 combined_full64_memory_fault_surface_status: PASS_LIVE_TAU_PCTOM_FULL64_MEMORY_FAULT_SURFACE

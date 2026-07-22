@@ -412,10 +412,43 @@ Next: <one immediate action or stop condition>
   `calibration_abstention_live_not_true`, and
   `calibration_surface_not_audited`; negative receipt SHA-256:
   `sha256:d934716e84a8e5f6f43f93d262f94b887200176741f3e7b28fb5a09bfd9506e6`.
-  This supersedes the earlier repeated-full64 hard-success reading: the
-  prediction/planning result is still same-scope evidence, but the broader
-  PCTOM-R hard-success claim remains pending until unsupported-evidence
-  abstention is exercised and scored.
+  This superseded the earlier repeated-full64 hard-success reading: the
+  prediction/planning result was still same-scope evidence, but the broader
+  PCTOM-R hard-success claim remained pending until unsupported-evidence
+  abstention was exercised and scored.
+  Unsupported-evidence abstention is now exercised through a deterministic
+  four-family fixture that feeds unsupported factual hypotheses into the
+  existing Gate 2 distribution validator and Gate 5 scorer. Receipt:
+  `/tmp/persona-dream-pctom-unsupported-evidence-abstention-20260722T112000Z/pctom_unsupported_evidence_abstention_receipt.v1.json`.
+  It returned `PASS_PCTOM_UNSUPPORTED_EVIDENCE_ABSTENTION` with 4 case rows,
+  4 families, 8 unsupported distribution rows, 4 Gate 2 passes, 4 Gate 5
+  passes, 4 risk-coverage rows, 4 abstained rows, zero write violations, no
+  LLM judge, and no human content judgment. Receipt SHA-256:
+  `sha256:e26e29aebd860664199bac9ad0de4818a6c13691d4a21aac246b9c0398864894`.
+  A negative fixture marked the unsupported hypotheses as supported and exited
+  1 with `BLOCKED_PCTOM_UNSUPPORTED_EVIDENCE_ABSTENTION`; Gate 2 blocked all
+  4 cases and the receipt recorded
+  `negative_mode_triggered_fail_closed:marked_supported`. Negative receipt
+  SHA-256:
+  `sha256:04dca2e1106e5dee74aae95b2984a78de066ea4b8e7352ed256543d0fc0af297`.
+  The success-criteria audit now consumes this unsupported-abstention receipt
+  through `--unsupported-abstention-receipt`. Superseding receipt:
+  `/tmp/persona-dream-pctom-success-criteria-unsupported-abstention-bound-20260722T113000Z/pctom_success_criteria_audit_receipt.v1.json`.
+  It returned `PASS_PCTOM_SUCCESS_CRITERIA_AUDIT` with
+  `same_scope_joint_success=true`, `calibration_surface_audited=true`,
+  `unsupported_evidence_abstention_exercised=true`, and
+  `full_hard_success_criteria_met=true`. Receipt SHA-256:
+  `sha256:20814bdfb3ba354cd51ef4bceb8a13b8c7303572413712170cd181dfcd04cefb`.
+  A fixture-backed negative passed the blocked unsupported-abstention receipt
+  into the success checker and exited 1 with
+  `BLOCKED_PCTOM_SUCCESS_CRITERIA_AUDIT`, errors
+  `unsupported_abstention_status_not_expected` and
+  `unsupported_evidence_abstention_not_exercised`; negative receipt SHA-256:
+  `sha256:c3fcd7ff13b4cd51d3af41e995ecfaf4be01b30ebb653038e6b79379f19436a6`.
+  This is deterministic, non-mocked, fixture-backed evidence over the sealed
+  social corpus and existing validators. It is not live Tau generation of an
+  abstention response, not paid provider execution, not semantic dream-quality
+  proof, and not complete Phase 01-16 media runtime execution.
   The live run consumed simulator variants 17-24, 32 sealed-test
   episodes, all four scenario families, and 128 live Tau-authored M/R/D/CD
   condition predictions. It used the Gate 0 attribution root

@@ -361,10 +361,56 @@
   `calibration_abstention_live_not_true`, and
   `calibration_surface_not_audited`; negative receipt SHA-256:
   `sha256:d934716e84a8e5f6f43f93d262f94b887200176741f3e7b28fb5a09bfd9506e6`.
-  Current interpretation: PCTOM-R has same-scope repeated live Tau evidence for
-  prediction and planning benefit, plus a full64 calibration/risk-coverage
-  metric audit, but the broader hard-success claim remains pending until an
-  unsupported-evidence abstention fixture or live slice is exercised and scored.
+  Current interpretation at that point: PCTOM-R had same-scope repeated live Tau
+  evidence for prediction and planning benefit, plus a full64
+  calibration/risk-coverage metric audit, but the broader hard-success claim
+  remained pending until an unsupported-evidence abstention fixture or live
+  slice was exercised and scored.
+
+  Unsupported-evidence abstention is now exercised through the existing Gate 2
+  and Gate 5 validators. Command:
+  `./skills/persona-dream/run.sh check-pctom-unsupported-evidence-abstention
+  --corpus
+  /tmp/persona-dream-pctom-social-corpus-sealed64-20260722T041800Z/social_episode_corpus.v1.json
+  --output-root
+  /tmp/persona-dream-pctom-unsupported-evidence-abstention-20260722T112000Z
+  --json`. Receipt status:
+  `PASS_PCTOM_UNSUPPORTED_EVIDENCE_ABSTENTION`; counts: 4 case rows,
+  4 families, 8 unsupported distribution rows, 4 Gate 2 passes, 4 Gate 5
+  passes, 4 risk-coverage rows, and 4 abstained rows. Checks:
+  `four_families_exercised=true`,
+  `gate2_unsupported_abstention_passed=true`,
+  `gate5_abstention_scored=true`,
+  `unsupported_evidence_abstention_exercised=true`,
+  `unsupported_writes_absent=true`, `llm_judge_absent=true`, and
+  `human_content_judgment_absent=true`. Receipt SHA-256:
+  `sha256:e26e29aebd860664199bac9ad0de4818a6c13691d4a21aac246b9c0398864894`.
+  A negative fixture with `--negative-mode marked_supported` exited 1 with
+  `BLOCKED_PCTOM_UNSUPPORTED_EVIDENCE_ABSTENTION`, 4 Gate 2 blocked cases,
+  0 Gate 5 passes, 0 risk-coverage rows, 0 abstained rows, and error
+  `negative_mode_triggered_fail_closed:marked_supported`. Negative receipt
+  SHA-256:
+  `sha256:04dca2e1106e5dee74aae95b2984a78de066ea4b8e7352ed256543d0fc0af297`.
+
+  The success-criteria audit now requires
+  `--unsupported-abstention-receipt` before full hard success can be reported.
+  Superseding receipt:
+  `/tmp/persona-dream-pctom-success-criteria-unsupported-abstention-bound-20260722T113000Z/pctom_success_criteria_audit_receipt.v1.json`.
+  It returned `PASS_PCTOM_SUCCESS_CRITERIA_AUDIT` with
+  `same_scope_joint_success=true`, `calibration_surface_audited=true`,
+  `unsupported_evidence_abstention_exercised=true`, and
+  `full_hard_success_criteria_met=true`. Receipt SHA-256:
+  `sha256:20814bdfb3ba354cd51ef4bceb8a13b8c7303572413712170cd181dfcd04cefb`.
+  Passing the blocked unsupported-abstention receipt into the same checker
+  exited 1 with `BLOCKED_PCTOM_SUCCESS_CRITERIA_AUDIT`, errors
+  `unsupported_abstention_status_not_expected` and
+  `unsupported_evidence_abstention_not_exercised`; negative receipt SHA-256:
+  `sha256:c3fcd7ff13b4cd51d3af41e995ecfaf4be01b30ebb653038e6b79379f19436a6`.
+  This closes the previous unsupported-evidence abstention exercise gap for the
+  deterministic sealed-corpus validator/scorer lane. It does not prove live Tau
+  authored an abstention response, paid provider execution, semantic dream
+  quality, multimodal perception, or complete Phase 01-16 media runtime
+  execution.
 
   Command:
   `./skills/persona-dream/run.sh run-live-tau-balanced-planning-replication

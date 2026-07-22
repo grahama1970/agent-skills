@@ -105,6 +105,7 @@ def run(
     goal_coverage_receipt_path: Path,
     repeated_full64_receipt_path: Path | None,
     calibration_abstention_receipt_path: Path | None,
+    unsupported_abstention_receipt_path: Path | None,
     output_root: Path,
     receipt_out: Path,
     fixture_backed: bool,
@@ -117,6 +118,9 @@ def run(
     repeated_full64_receipt_path = repeated_full64_receipt_path.resolve() if repeated_full64_receipt_path else None
     calibration_abstention_receipt_path = (
         calibration_abstention_receipt_path.resolve() if calibration_abstention_receipt_path else None
+    )
+    unsupported_abstention_receipt_path = (
+        unsupported_abstention_receipt_path.resolve() if unsupported_abstention_receipt_path else None
     )
     output_root = output_root.resolve()
     receipt_out = receipt_out.resolve()
@@ -135,11 +139,17 @@ def run(
         if calibration_abstention_receipt_path
         else None
     )
+    unsupported_abstention = (
+        _load_json(unsupported_abstention_receipt_path, errors, "unsupported_abstention_receipt")
+        if unsupported_abstention_receipt_path
+        else None
+    )
     prediction = prediction if isinstance(prediction, dict) else {}
     planning = planning if isinstance(planning, dict) else {}
     coverage = coverage if isinstance(coverage, dict) else {}
     repeated = repeated if isinstance(repeated, dict) else None
     calibration_abstention = calibration_abstention if isinstance(calibration_abstention, dict) else None
+    unsupported_abstention = unsupported_abstention if isinstance(unsupported_abstention, dict) else None
 
     if not _status_pass(prediction, "PASS_PCTOM_SEALED_TEST_STATISTICAL_CONFIDENCE"):
         errors.append(f"prediction_receipt_status_not_expected:{prediction.get('status')}")
@@ -345,7 +355,6 @@ def run(
                 "calibration_surface_not_audited:"
                 f"counts={ca_counts}:metrics={ca_metrics}:checks={ca_checks}"
             )
-        unsupported_evidence_abstention_exercised = ca_metrics.get("abstention_observed") is True
         calibration_summary = {
             "scope": "two live Tau full64 Gate 0-attributed Gate 5 case indexes",
             "source_roots": ca_counts.get("source_roots"),
@@ -358,6 +367,48 @@ def run(
             "mean_selective_accuracy": ca_metrics.get("mean_selective_accuracy"),
             "abstention_observed": ca_metrics.get("abstention_observed"),
             "calibration_surface_audited": calibration_surface_audited,
+            "abstention_observed_in_full64_surface": ca_metrics.get("abstention_observed"),
+        }
+
+    unsupported_summary: dict[str, Any] | None = None
+    if unsupported_abstention is not None:
+        if not _status_pass(unsupported_abstention, "PASS_PCTOM_UNSUPPORTED_EVIDENCE_ABSTENTION"):
+            errors.append(f"unsupported_abstention_status_not_expected:{unsupported_abstention.get('status')}")
+        if unsupported_abstention.get("mocked") is not False:
+            errors.append(f"unsupported_abstention_mocked_not_false:{unsupported_abstention.get('mocked')}")
+        if unsupported_abstention.get("llm_judge_used") is True:
+            errors.append("unsupported_abstention_llm_judge_used_true")
+        if unsupported_abstention.get("human_content_judgment_required") is True:
+            errors.append("unsupported_abstention_human_content_judgment_required_true")
+        if _forbidden_write_count(unsupported_abstention):
+            errors.append("unsupported_abstention_forbidden_write_counter_nonzero")
+        ua_counts = unsupported_abstention.get("counts") if isinstance(unsupported_abstention.get("counts"), dict) else {}
+        ua_checks = unsupported_abstention.get("checks") if isinstance(unsupported_abstention.get("checks"), dict) else {}
+        unsupported_evidence_abstention_exercised = bool(
+            ua_counts.get("families") == 4
+            and ua_counts.get("case_rows") == 4
+            and ua_counts.get("unsupported_distribution_rows") == 8
+            and ua_counts.get("gate2_pass") == 4
+            and ua_counts.get("gate5_pass") == 4
+            and ua_counts.get("risk_coverage_rows") == 4
+            and ua_counts.get("abstained_rows") == 4
+            and ua_checks.get("four_families_exercised") is True
+            and ua_checks.get("gate2_unsupported_abstention_passed") is True
+            and ua_checks.get("gate5_abstention_scored") is True
+            and ua_checks.get("unsupported_evidence_abstention_exercised") is True
+            and ua_checks.get("unsupported_writes_absent") is True
+        )
+        if not unsupported_evidence_abstention_exercised:
+            errors.append(f"unsupported_evidence_abstention_not_exercised:counts={ua_counts}:checks={ua_checks}")
+        unsupported_summary = {
+            "scope": "deterministic unsupported-evidence abstention exercise over four social episode families",
+            "families": ua_counts.get("families"),
+            "case_rows": ua_counts.get("case_rows"),
+            "unsupported_distribution_rows": ua_counts.get("unsupported_distribution_rows"),
+            "gate2_pass": ua_counts.get("gate2_pass"),
+            "gate5_pass": ua_counts.get("gate5_pass"),
+            "risk_coverage_rows": ua_counts.get("risk_coverage_rows"),
+            "abstained_rows": ua_counts.get("abstained_rows"),
             "unsupported_evidence_abstention_exercised": unsupported_evidence_abstention_exercised,
         }
 
@@ -427,6 +478,7 @@ def run(
                 else "calibration/risk-coverage and abstention behavior were both exercised"
             ),
             "calibration_abstention": calibration_summary,
+            "unsupported_abstention": unsupported_summary,
         },
     }
 
@@ -447,6 +499,9 @@ def run(
         else None,
         "calibration_abstention_receipt": _receipt_ref(calibration_abstention_receipt_path, calibration_abstention)
         if calibration_abstention_receipt_path is not None and isinstance(calibration_abstention, dict)
+        else None,
+        "unsupported_abstention_receipt": _receipt_ref(unsupported_abstention_receipt_path, unsupported_abstention)
+        if unsupported_abstention_receipt_path is not None and isinstance(unsupported_abstention, dict)
         else None,
         "criteria": criteria,
         "summary": {
@@ -490,6 +545,7 @@ def main() -> int:
     parser.add_argument("--goal-coverage-receipt", required=True)
     parser.add_argument("--repeated-full64-receipt")
     parser.add_argument("--calibration-abstention-receipt")
+    parser.add_argument("--unsupported-abstention-receipt")
     parser.add_argument("--output-root", required=True)
     parser.add_argument("--receipt-out", required=True)
     parser.add_argument("--fixture-backed", action="store_true")
@@ -502,6 +558,9 @@ def main() -> int:
         repeated_full64_receipt_path=Path(args.repeated_full64_receipt) if args.repeated_full64_receipt else None,
         calibration_abstention_receipt_path=Path(args.calibration_abstention_receipt)
         if args.calibration_abstention_receipt
+        else None,
+        unsupported_abstention_receipt_path=Path(args.unsupported_abstention_receipt)
+        if args.unsupported_abstention_receipt
         else None,
         output_root=Path(args.output_root),
         receipt_out=Path(args.receipt_out),
