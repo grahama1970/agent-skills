@@ -1002,7 +1002,10 @@ def _write_roundtable_command_spec(
         "--scillm-api-key",
         input.scillm_api_key,
         "--timeout",
-        "3000" if handler == "codex" else ("900" if handler == "webgpt" else "300"),
+        # codex coder orders carry mandatory finish sequences (wheel build +
+        # fixture suite + gate-document extractions + cargo test) that alone
+        # take ~20 min; 3000s starved a real repair mid-flight (2026-07-22).
+        "5400" if handler == "codex" else ("900" if handler == "webgpt" else "300"),
         "--stable-polls",
         "2",
         "--no-activate",
@@ -1026,7 +1029,7 @@ def _write_roundtable_command_spec(
     payload = {
         "command": command,
         "cwd": str(run_dir),
-        "timeout_s": 3600 if handler == "codex" else (1200 if handler == "webgpt" else 420),
+        "timeout_s": 6000 if handler == "codex" else (1200 if handler == "webgpt" else 420),
         "requires_network": node_id != "join",
         "mutates": handler == "codex",
         "requires_clean_worktree": False,
