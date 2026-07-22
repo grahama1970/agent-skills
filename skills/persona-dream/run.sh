@@ -136,6 +136,7 @@ Commands:
   run-live-tau-sealed-test-service-retry-proof  Exercise sealed-test retry proof through a local HTTP service
   run-live-tau-full64-memory-fault-surface  Exercise live Memory faults over full64 live Tau artifacts
   check-live-gate2-4-boundary-negatives  Mutate live-originated Gate 2-4 artifacts and require fail-closed receipts
+  check-live-gate5-7-boundary-negatives  Mutate live-originated Gate 5-7 artifacts and require fail-closed receipts
   run-social-simulator-service-proof  Serve deterministic social episodes over HTTP and inject service faults
   check-live-stage-hash-lineage-audit  Recompute PCTOM-R Gate 2-7 hashes and artifact lineage
   check-prospective-tom-protocol  Validate PCTOM-R Gate 0 fixture lineage through a sealed prediction
@@ -628,6 +629,9 @@ case "$COMMAND" in
     ;;
   check-live-gate2-4-boundary-negatives)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_live_gate2_4_boundary_negatives.py" "$@"
+    ;;
+  check-live-gate5-7-boundary-negatives)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_live_gate5_7_boundary_negatives.py" "$@"
     ;;
   run-social-simulator-service-proof)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_social_simulator_service_proof.py" "$@"

@@ -159,6 +159,42 @@
   Memory recall, paid provider execution, semantic dream quality, or complete
   Phase 01-16 runtime execution.
 
+  A reusable Gate 5-7 negative-boundary harness now consumes the same
+  live-originated held-out case and calls the existing validators. Command:
+  `./skills/persona-dream/run.sh check-live-gate5-7-boundary-negatives
+  --corpus
+  /tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_condition_comparison/artifacts/social_episode_corpus.v1.json
+  --case-root
+  /tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-info-asym-17/M
+  --scoring-receipt
+  /tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_condition_comparison/receipts/cases/sealedte-info-asym-17/M/gate5_scoring_receipt.json
+  --action-selection
+  /tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_action_selection/artifacts/cases/sealedte-info-asym-17/M/action_selection.json
+  --belief-revision
+  /tmp/persona-dream-live-tau-action-linked-revision-variant17-24-20260722T034000Z/artifacts/cases/sealedte-info-asym-17/M/tom_belief_revision.json
+  --output-root
+  /tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z
+  --receipt-out
+  /tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/live_gate5_7_boundary_negatives_receipt.v1.json
+  --json`. Receipt status:
+  `PASS_PCTOM_LIVE_GATE5_7_BOUNDARY_NEGATIVES`; 3/3 source positive checks
+  passed, 3/3 negative cases blocked, and 3/3 expected error sets matched.
+  Mutations covered Gate 5 invalid outcome action
+  (`BLOCKED_TOM_SCORING_RECEIPT`, `outcome_actual_next_action_not_allowed`),
+  Gate 6 invalid selected agent action (`BLOCKED_TOM_ACTION_SELECTION`,
+  `selected_action_not_in_vocabulary`), and Gate 7 non-auditable prior plus
+  evidence mutation (`BLOCKED_TOM_BELIEF_REVISION`,
+  `prior_remains_auditable_not_true` and `evidence_mutations_not_empty`).
+  The harness made zero Tau, Memory, provider, canonical-memory, identity,
+  source-memory, LLM-judge, or human-content-judgment calls/writes. Receipt
+  SHA-256:
+  `sha256:073f442055685be34598a531babad47ce583f96d98f800370813fa0942013993`.
+  This proves reusable fail-closed negative coverage for the live-originated
+  Gate 5 scoring, Gate 6 action-selection, and Gate 7 belief-revision
+  boundaries. It does not prove new live Tau execution, new Memory recall,
+  paid provider execution, semantic dream quality, long-duration retention, or
+  complete Phase 01-16 runtime execution.
+
   Command:
   `./skills/persona-dream/run.sh run-live-tau-balanced-planning-replication
   --family-episode-limit 8 --episodes-per-family 24 --variant-min 17

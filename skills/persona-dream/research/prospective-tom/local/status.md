@@ -22,7 +22,9 @@ service faults without unknown-state continuation. A new aged-retention wrapper
 now refuses to accept delayed live Memory recall until the source receipt has
 reached an explicit minimum age, then delegates to the existing no-write delayed
 recall checker. A cross-stage hash/lineage audit now re-walks the live-originated
-Gate 2-7 artifact chain and fails closed on sealed-payload tamper.
+Gate 2-7 artifact chain and fails closed on sealed-payload tamper. A Gate 5-7
+boundary-negative harness now proves scoring, action-selection, and
+belief-revision validators fail closed on live-originated artifact mutations.
 
 Sealed64 deterministic social episode corpus:
 
@@ -58,6 +60,12 @@ Live-originated Gate 2-4 boundary-negative receipt:
 
 ```text
 /tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/live_gate2_4_boundary_negatives_receipt.v1.json
+```
+
+Live-originated Gate 5-7 boundary-negative receipt:
+
+```text
+/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/live_gate5_7_boundary_negatives_receipt.v1.json
 ```
 
 Separate local HTTP social-simulator service receipt:
@@ -213,6 +221,16 @@ sealed64_corpus_build_status: PASS_SOCIAL_EPISODE_CORPUS_BUILT
 sealed64_corpus_check_status: PASS_SOCIAL_EPISODE_CORPUS
 gate8_status: PASS_TOM_RELIABILITY_SURFACE
 gate9_status: PASS_TOM_CAUSAL_REPLAY
+live_gate5_7_boundary_negative_status: PASS_PCTOM_LIVE_GATE5_7_BOUNDARY_NEGATIVES
+live_gate5_7_boundary_positive_source_checks: 3
+live_gate5_7_boundary_positive_source_passes: 3
+live_gate5_7_boundary_negative_cases: 3
+live_gate5_7_boundary_negative_cases_blocked: 3
+live_gate5_7_boundary_negative_expected_errors_matched: 3
+live_gate5_7_boundary_gate5_error: outcome_actual_next_action_not_allowed
+live_gate5_7_boundary_gate6_error: selected_action_not_in_vocabulary
+live_gate5_7_boundary_gate7_errors: prior_remains_auditable_not_true, evidence_mutations_not_empty
+live_gate5_7_boundary_receipt_sha256: sha256:073f442055685be34598a531babad47ce583f96d98f800370813fa0942013993
 sealed64_corpus_generator_version: pctom_social_world.v1
 sealed64_corpus_split: sealed_test
 sealed64_corpus_episodes: 64

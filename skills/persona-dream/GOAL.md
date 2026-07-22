@@ -147,6 +147,8 @@ Next: <one immediate action or stop condition>
   `/tmp/persona-dream-pctom-social-corpus-independent-replay-negative-action-20260722T064800Z/social_episode_independent_replay_receipt.v1.json`;
   live-originated Gate 2-4 boundary-negative receipt
   `/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/live_gate2_4_boundary_negatives_receipt.v1.json`;
+  live-originated Gate 5-7 boundary-negative receipt
+  `/tmp/persona-dream-live-gate5-7-boundary-negatives-20260722T051500Z/live_gate5_7_boundary_negatives_receipt.v1.json`;
   separate local HTTP social-simulator service receipt
   `/tmp/persona-dream-social-simulator-service-proof-20260722T082000Z/social_simulator_service_proof_receipt.v1.json`;
   replication receipt
@@ -209,6 +211,24 @@ Next: <one immediate action or stop condition>
   prediction payload edit with `BLOCKED_TOM_PREDICTION_COMMITMENTS`. It made
   zero Tau, Memory, provider, canonical-memory, identity, or source-memory
   calls/writes.
+  A reusable live-originated Gate 5-7 boundary-negative harness then consumed
+  the same held-out case, confirmed 3/3 source Gate 5/6/7 validators passed
+  before mutation, and required 3/3 mutated artifacts to fail closed. Gate 5
+  rejected an invalid deterministic outcome action with
+  `BLOCKED_TOM_SCORING_RECEIPT` and `outcome_actual_next_action_not_allowed`;
+  Gate 6 rejected an invalid selected agent action with
+  `BLOCKED_TOM_ACTION_SELECTION` and `selected_action_not_in_vocabulary`; Gate
+  7 rejected a non-auditable prior plus evidence mutation with
+  `BLOCKED_TOM_BELIEF_REVISION`, `prior_remains_auditable_not_true`, and
+  `evidence_mutations_not_empty`. Receipt SHA-256:
+  `sha256:073f442055685be34598a531babad47ce583f96d98f800370813fa0942013993`.
+  It made zero Tau, Memory, provider, canonical-memory, identity,
+  source-memory, LLM-judge, or human-content-judgment calls/writes. This proves
+  reusable fail-closed negative coverage for Gate 5 scoring, Gate 6
+  action-selection, and Gate 7 belief-revision boundaries. It does not prove
+  new live Tau execution, new Memory recall, paid provider execution, semantic
+  dream quality, long-duration retention, or complete Phase 01-16 runtime
+  execution.
   A separate local HTTP social-simulator service process then served the frozen
   sealed64 corpus over an HTTP boundary. The client recomputed
   `actual_next_action` for 64/64 served policy rows without importing the corpus
