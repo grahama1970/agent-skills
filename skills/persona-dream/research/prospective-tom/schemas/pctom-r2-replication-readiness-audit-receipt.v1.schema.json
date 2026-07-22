@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.research.prospective_tom.pctom_r2_replication_readiness_audit_receipt.v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "created_at",
+    "status",
+    "mocked",
+    "live",
+    "fixture_backed",
+    "required_receipts",
+    "stop_condition",
+    "counts",
+    "negative_fixture_results",
+    "errors",
+    "claims"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "persona_dream.research.prospective_tom.pctom_r2_replication_readiness_audit_receipt.v1"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PASS_PCTOM_R2_REPLICATION_READINESS",
+        "BLOCKED_PCTOM_R2_REPLICATION_READINESS"
+      ]
+    },
+    "mocked": {"type": "boolean", "const": false},
+    "live": {"type": "boolean", "const": false},
+    "fixture_backed": {"type": "boolean", "const": true},
+    "required_receipts": {"type": "array"},
+    "stop_condition": {"type": "object"},
+    "counts": {"type": "object"},
+    "negative_fixture_results": {"type": "array"},
+    "errors": {"type": "array"},
+    "claims": {"type": "object"}
+  },
+  "additionalProperties": true
+}

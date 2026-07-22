@@ -12,14 +12,14 @@
     ]
   },
   "counts": {
-    "discovered_receipts": 10,
-    "expected_receipts": 10,
+    "discovered_receipts": 11,
+    "expected_receipts": 11,
     "missing_receipts": 0,
     "negative_fixtures": 1,
     "negative_fixtures_blocked": 1,
     "unrouted_receipts": 0
   },
-  "created_at": "2026-07-22T14:25:33Z",
+  "created_at": "2026-07-22T14:33:02Z",
   "discovered_receipts": [
     {
       "fixture_backed": true,
@@ -90,8 +90,17 @@
       "mocked": false,
       "path": "receipts/pctom-evidence-scope-audit.v1.json",
       "schema": "persona_dream.research.prospective_tom.pctom_evidence_scope_audit.v1",
-      "sha256": "sha256:bced90d5d67f342ac1b88a0109a2e0cede044b9cb3479e2e927a2e6e5e98e8af",
+      "sha256": "sha256:a7dae75efb22de7a82a576eb5881ec003ca88d903a2f4b2102b6d17e27f39f56",
       "status": "PASS_PCTOM_EVIDENCE_SCOPE_LEDGER"
+    },
+    {
+      "fixture_backed": true,
+      "live": false,
+      "mocked": false,
+      "path": "receipts/pctom-powered-trial-protocol-audit.v1.json",
+      "schema": "persona_dream.research.prospective_tom.pctom_powered_trial_protocol_audit_receipt.v1",
+      "sha256": "sha256:fc1ae7fb52ed4e38f7f780daa95f2b73b3727fd11f59175331f02c231fb8a83c",
+      "status": "PASS_PCTOM_POWERED_TRIAL_PROTOCOL"
     },
     {
       "fixture_backed": true,
@@ -122,13 +131,14 @@
     "receipts/pctom-deterministic-scoring-covered.v1.json",
     "receipts/pctom-deterministic-scoring-surface-audit.v1.json",
     "receipts/pctom-evidence-scope-audit.v1.json",
+    "receipts/pctom-powered-trial-protocol-audit.v1.json",
     "receipts/pctom-preseal-outcome-isolation-audit.v1.json",
     "receipts/pctom-r2-contract-receipt.v1.json"
   ],
   "fixture_backed": true,
   "live": false,
   "manifest_path": "evidence/pctom-archive-manifest.v1.json",
-  "manifest_sha256": "sha256:bbd6e1645104321f88c5aebdd4ef7edf5aec594392ea62cbc442bc69d5146314",
+  "manifest_sha256": "sha256:f0002d564cb3fc83d0c81bea66c26b5daf808ac1b6d484543921b06066d4adee",
   "memory_write_attempts": 0,
   "mocked": false,
   "negative_fixture_results": [

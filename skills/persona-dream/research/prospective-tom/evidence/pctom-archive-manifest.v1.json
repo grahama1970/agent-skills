@@ -1,11 +1,11 @@
 {
   "counts": {
-    "entries": 263,
-    "receipts": 10,
-    "schemas": 31,
-    "scripts": 103
+    "entries": 272,
+    "receipts": 11,
+    "schemas": 34,
+    "scripts": 107
   },
-  "created_at": "2026-07-22T14:25:33Z",
+  "created_at": "2026-07-22T14:33:02Z",
   "entries": [
     {
       "category": "contracts",
@@ -36,6 +36,12 @@
       "path": "contracts/pctom-deterministic-scoring-policy.v1.json",
       "sha256": "sha256:807263ced012f3266ab10c21f7f52f85168c9034861d0cbb88cdc099eae1e771",
       "size_bytes": 1299
+    },
+    {
+      "category": "contracts",
+      "path": "contracts/pctom-powered-trial-protocol.v1.json",
+      "sha256": "sha256:9c54afeee052bff8500ecffee688b60d0d172e68dabd8b5e0a5ee34396cff1b7",
+      "size_bytes": 8098
     },
     {
       "category": "contracts",
@@ -70,8 +76,8 @@
     {
       "category": "evidence",
       "path": "evidence/pctom-evidence-scope-ledger.v1.json",
-      "sha256": "sha256:1e345b01de7b9aa61fd76f7de424b258cfc67f6193cf21795111ab8f90605226",
-      "size_bytes": 36760
+      "sha256": "sha256:e86cf6736be4acd367c6edd80696f50d4ec5b2914f2153ba5fdd26b289a18313",
+      "size_bytes": 41521
     },
     {
       "category": "fixtures",
@@ -766,8 +772,14 @@
     {
       "category": "receipts",
       "path": "receipts/pctom-evidence-scope-audit.v1.json",
-      "sha256": "sha256:bced90d5d67f342ac1b88a0109a2e0cede044b9cb3479e2e927a2e6e5e98e8af",
+      "sha256": "sha256:a7dae75efb22de7a82a576eb5881ec003ca88d903a2f4b2102b6d17e27f39f56",
       "size_bytes": 2366
+    },
+    {
+      "category": "receipts",
+      "path": "receipts/pctom-powered-trial-protocol-audit.v1.json",
+      "sha256": "sha256:fc1ae7fb52ed4e38f7f780daa95f2b73b3727fd11f59175331f02c231fb8a83c",
+      "size_bytes": 6341
     },
     {
       "category": "receipts",
@@ -891,6 +903,18 @@
     },
     {
       "category": "schemas",
+      "path": "schemas/pctom-powered-trial-protocol-audit-receipt.v1.schema.json",
+      "sha256": "sha256:02c6e3d0fcf18f7776da89f100cb962d617034484a26adf887b0d27aead0765e",
+      "size_bytes": 1221
+    },
+    {
+      "category": "schemas",
+      "path": "schemas/pctom-powered-trial-protocol.v1.schema.json",
+      "sha256": "sha256:18fc0522fbc8bf93b8f144b3ab94951d95bda745c2c70adf01dbeb63c912b1bf",
+      "size_bytes": 1546
+    },
+    {
+      "category": "schemas",
       "path": "schemas/pctom-preseal-outcome-isolation-receipt.v1.schema.json",
       "sha256": "sha256:b2ad3220a77a3b4f8e53e85cfa8639a67df2a5ab6482180d2f87b42ba2c46d42",
       "size_bytes": 1351
@@ -900,6 +924,12 @@
       "path": "schemas/pctom-r2-contract-receipt.v1.schema.json",
       "sha256": "sha256:e8f8bea622d25ca024b84b9f264e3a274bf395ee1c6b5da59635bc773196372c",
       "size_bytes": 2328
+    },
+    {
+      "category": "schemas",
+      "path": "schemas/pctom-r2-replication-readiness-audit-receipt.v1.schema.json",
+      "sha256": "sha256:30e7f0239e2f83b41bd2b9cc484bf3e22cca39b05abdfd2fad0624dd7539c382",
+      "size_bytes": 1186
     },
     {
       "category": "schemas",
@@ -1029,9 +1059,21 @@
     },
     {
       "category": "scripts",
+      "path": "scripts/audit_pctom_powered_trial_protocol.py",
+      "sha256": "sha256:4d9cd1a2ed1f1e9e1c0c6e392820f43d6f0a6d4ebe21f6fb679a5621f7452e01",
+      "size_bytes": 1037
+    },
+    {
+      "category": "scripts",
       "path": "scripts/audit_pctom_preseal_outcome_isolation.py",
       "sha256": "sha256:4b95978c2866db28f93db727e07803f8325a0814a41940f421b12008da8e3ac3",
       "size_bytes": 6211
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/audit_pctom_r2_replication_readiness.py",
+      "sha256": "sha256:d4e7cfc97b2c55add1d307d7f2365c4249620a241de93ded8734be844be728b7",
+      "size_bytes": 13697
     },
     {
       "category": "scripts",
@@ -1086,6 +1128,12 @@
       "path": "scripts/build_pctom_evidence_scope_ledger.py",
       "sha256": "sha256:f791ca1267e8f99ce92bd822ec6572892ed504d72010e6ba5bb88321df241a9e",
       "size_bytes": 759
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/build_pctom_powered_trial_protocol.py",
+      "sha256": "sha256:1201c04e940839b457f24aae5c04dfa86be47e66d7a5f175c7123010a3c799b7",
+      "size_bytes": 832
     },
     {
       "category": "scripts",
@@ -1281,9 +1329,15 @@
     },
     {
       "category": "scripts",
+      "path": "scripts/pctom_phase7_protocol_lib.py",
+      "sha256": "sha256:b952a8271287f9098fa12bef43f0eae8c4f423abd62eee3f2d5a64ba5634cd8e",
+      "size_bytes": 20256
+    },
+    {
+      "category": "scripts",
       "path": "scripts/pctom_r2_phase1_lib.py",
-      "sha256": "sha256:ad3837d0dd4975bfb8bf2340d241c3ac1da944597bdc8b1d7d579f8c97399ba1",
-      "size_bytes": 22422
+      "sha256": "sha256:19f5fd77c16a710b90993acb7f196d8bfcbcb41be5e580a0c3ea852162a7d889",
+      "size_bytes": 22526
     },
     {
       "category": "scripts",
@@ -1586,7 +1640,7 @@
       "size_bytes": 30353
     }
   ],
-  "entries_sha256": "sha256:e32bc25c8a15cd4b14b74896ea881ec812c329fe148e54d00f25aa5950f0d7a5",
+  "entries_sha256": "sha256:fe1ca28c762e58c40f0c154aa4b7a33da6168ffa97420750a9da732aaa8c70d1",
   "excluded_paths": [
     "evidence/pctom-archive-manifest.v1.json"
   ],
@@ -1594,6 +1648,7 @@
     "pctom-archive-integrity-audit.v1.json",
     "pctom-audit-mutation-suite.v1.json",
     "pctom-evidence-claim-integrity-audit.v1.json",
+    "pctom-r2-replication-readiness-audit.v1.json",
     "pctom-receipt-discovery-audit.v1.json"
   ],
   "fixture_backed": true,

@@ -1,0 +1,176 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "checks": {
+    "canonical_memory_write_attempts_matches": true,
+    "corpus_hash_bound": true,
+    "design_alpha_matches": true,
+    "design_bootstrap_samples_matches": true,
+    "design_episode_limit_matches": true,
+    "design_episodes_per_family_matches": true,
+    "design_primary_metric_matches": true,
+    "design_split_matches": true,
+    "endpoint_conditions_match": true,
+    "endpoint_hashes_match": true,
+    "endpoint_required_snippets_present": true,
+    "fixture_backed_matches": true,
+    "forbidden_work_present": true,
+    "human_content_judgment_required_matches": true,
+    "identity_write_attempts_matches": true,
+    "live_efficacy_claimed_matches": true,
+    "live_matches": true,
+    "llm_judge_used_matches": true,
+    "memory_write_attempts_matches": true,
+    "mocked_matches": true,
+    "powered_live_study_executed_matches": true,
+    "pre_execution_gates_present": true,
+    "provider_call_attempts_matches": true,
+    "schema_matches": true,
+    "source_memory_write_attempts_matches": true,
+    "status_matches": true,
+    "trial_execution_allowed_matches": true
+  },
+  "claims": {
+    "does_not_prove": [
+      "live Tau execution",
+      "live Memory recall",
+      "counterfactual-dream prediction benefit",
+      "planning benefit",
+      "provider execution",
+      "semantic dream quality",
+      "production Phase 01-16 execution"
+    ],
+    "proves": [
+      "the powered-trial protocol is sealed without executing the powered live efficacy study",
+      "the protocol is bound to existing endpoint script paths, endpoint hashes, and M/R/D/CD condition vocabulary",
+      "the protocol preregisters sealed_test, 64 episodes, belief_brier, alpha 0.05, 10000 bootstrap samples, and CD-vs-strongest-baseline comparison",
+      "the protocol maps deterministic MEMORY, FREE_CD, STRUCTURED_CD, and FUNCTIONAL_TOM corpus rows to endpoint use while fail-closing functional-ToM live-arm promotion",
+      "live-efficacy, execution-allowed, endpoint-hash, condition-mapping, functional-ToM-promotion, and human-judgment mutations fail closed"
+    ]
+  },
+  "counts": {
+    "condition_mapping_missing": 0,
+    "endpoint_hash_mismatches": 0,
+    "endpoint_records": 5,
+    "endpoint_snippet_misses": 0,
+    "forbidden_side_effects": 0,
+    "negative_fixtures": 6,
+    "negative_fixtures_blocked": 6
+  },
+  "created_at": "2026-07-22T14:33:02Z",
+  "errors": [],
+  "fixture_backed": true,
+  "human_content_judgment_rows": 0,
+  "identity_write_attempts": 0,
+  "live": false,
+  "live_efficacy_claimed": false,
+  "llm_judge_rows": 0,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "negative_fixture_results": [
+    {
+      "blocked_as_expected": true,
+      "counts": {
+        "condition_mapping_missing": 0,
+        "endpoint_hash_mismatches": 0,
+        "endpoint_records": 5,
+        "endpoint_snippet_misses": 0,
+        "forbidden_side_effects": 0
+      },
+      "errors": [
+        "live_efficacy_claimed_mismatch:True:False"
+      ],
+      "expected_status": "BLOCKED_PCTOM_POWERED_TRIAL_PROTOCOL",
+      "fixture": "live-efficacy-claimed",
+      "observed_status": "BLOCKED_PCTOM_POWERED_TRIAL_PROTOCOL"
+    },
+    {
+      "blocked_as_expected": true,
+      "counts": {
+        "condition_mapping_missing": 0,
+        "endpoint_hash_mismatches": 0,
+        "endpoint_records": 5,
+        "endpoint_snippet_misses": 0,
+        "forbidden_side_effects": 0
+      },
+      "errors": [
+        "trial_execution_allowed_mismatch:True:False"
+      ],
+      "expected_status": "BLOCKED_PCTOM_POWERED_TRIAL_PROTOCOL",
+      "fixture": "trial-execution-allowed",
+      "observed_status": "BLOCKED_PCTOM_POWERED_TRIAL_PROTOCOL"
+    },
+    {
+      "blocked_as_expected": true,
+      "counts": {
+        "condition_mapping_missing": 0,
+        "endpoint_hash_mismatches": 1,
+        "endpoint_records": 5,
+        "endpoint_snippet_misses": 0,
+        "forbidden_side_effects": 0
+      },
+      "errors": [
+        "endpoint_hash_mismatch:live_replication_runner"
+      ],
+      "expected_status": "BLOCKED_PCTOM_POWERED_TRIAL_PROTOCOL",
+      "fixture": "endpoint-hash-mismatch",
+      "observed_status": "BLOCKED_PCTOM_POWERED_TRIAL_PROTOCOL"
+    },
+    {
+      "blocked_as_expected": true,
+      "counts": {
+        "condition_mapping_missing": 1,
+        "endpoint_hash_mismatches": 0,
+        "endpoint_records": 5,
+        "endpoint_snippet_misses": 0,
+        "forbidden_side_effects": 0
+      },
+      "errors": [
+        "condition_mapping_missing:STRUCTURED_CD"
+      ],
+      "expected_status": "BLOCKED_PCTOM_POWERED_TRIAL_PROTOCOL",
+      "fixture": "condition-mapping-missing",
+      "observed_status": "BLOCKED_PCTOM_POWERED_TRIAL_PROTOCOL"
+    },
+    {
+      "blocked_as_expected": true,
+      "counts": {
+        "condition_mapping_missing": 0,
+        "endpoint_hash_mismatches": 0,
+        "endpoint_records": 5,
+        "endpoint_snippet_misses": 0,
+        "forbidden_side_effects": 0
+      },
+      "errors": [
+        "functional_tom_mapping_not_gated:CD"
+      ],
+      "expected_status": "BLOCKED_PCTOM_POWERED_TRIAL_PROTOCOL",
+      "fixture": "functional-tom-promoted-to-current-live-arm",
+      "observed_status": "BLOCKED_PCTOM_POWERED_TRIAL_PROTOCOL"
+    },
+    {
+      "blocked_as_expected": true,
+      "counts": {
+        "condition_mapping_missing": 0,
+        "endpoint_hash_mismatches": 0,
+        "endpoint_records": 5,
+        "endpoint_snippet_misses": 0,
+        "forbidden_side_effects": 0
+      },
+      "errors": [
+        "human_content_judgment_required_mismatch:True:False"
+      ],
+      "expected_status": "BLOCKED_PCTOM_POWERED_TRIAL_PROTOCOL",
+      "fixture": "human-content-judgment-required",
+      "observed_status": "BLOCKED_PCTOM_POWERED_TRIAL_PROTOCOL"
+    }
+  ],
+  "powered_live_study_executed": false,
+  "protocol_path": "contracts/pctom-powered-trial-protocol.v1.json",
+  "protocol_sha256": "sha256:9c54afeee052bff8500ecffee688b60d0d172e68dabd8b5e0a5ee34396cff1b7",
+  "provider_call_attempts": 0,
+  "receipt_sha256": "sha256:4dffc68b7ff30d614c87fa1ca94edb59174e629b48a04b0586ae158e785bfa2b",
+  "schema": "persona_dream.research.prospective_tom.pctom_powered_trial_protocol_audit_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "status": "PASS_PCTOM_POWERED_TRIAL_PROTOCOL",
+  "trial_execution_allowed": false
+}

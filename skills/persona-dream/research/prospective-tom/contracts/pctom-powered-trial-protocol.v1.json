@@ -1,0 +1,222 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "claims": {
+    "does_not_prove": [
+      "live Tau execution",
+      "live Memory recall",
+      "counterfactual-dream prediction benefit",
+      "planning benefit",
+      "provider execution",
+      "semantic dream quality",
+      "production Phase 01-16 execution"
+    ],
+    "proves": [
+      "the future powered trial protocol is sealed as a local, non-executing artifact",
+      "the protocol binds exact current PCTOM-R live endpoint scripts and their hashes",
+      "the protocol preregisters the sealed-test split, primary metric, bootstrap method, and CD-vs-strongest-baseline hypothesis",
+      "the protocol records the deterministic corpus to endpoint-arm mapping and explicitly gates functional-ToM live endpoint use"
+    ]
+  },
+  "conditions": [
+    "M",
+    "R",
+    "D",
+    "CD"
+  ],
+  "deterministic_corpus_alignment": {
+    "conditions": [
+      "MEMORY",
+      "FREE_CD",
+      "STRUCTURED_CD",
+      "FUNCTIONAL_TOM"
+    ],
+    "endpoint_arm_mapping": {
+      "FREE_CD": "D",
+      "FUNCTIONAL_TOM": "diagnostic_not_current_live_endpoint_arm",
+      "MEMORY": "M",
+      "STRUCTURED_CD": "CD"
+    },
+    "functional_tom_live_endpoint_status": "EXPLICIT_PROTOCOL_EXTENSION_REQUIRED_BEFORE_POWERED_EXECUTION",
+    "path": "fixtures/phase6/compute_matched_corpora/pctom-compute-matched-corpus.v1.json",
+    "rows": 48,
+    "sha256": "sha256:0d8279e9ecaecaf856b0c7c2a868fd3c2c29d2275e80ee758eb0b368722dfb7b",
+    "source_episodes": 12
+  },
+  "endpoint_alignment": {
+    "deterministic_preflight_command_template": "python3 scripts/run_sealed_test_statistical_confidence.py --output-root <run-root> --split sealed_test --episodes-per-family 16 --episode-limit 64 --bootstrap-samples 10000 --alpha 0.05",
+    "endpoint_condition_vocabulary": [
+      "M",
+      "R",
+      "D",
+      "CD"
+    ],
+    "endpoints": [
+      {
+        "current_role": "protocol_bound_pre_execution_endpoint",
+        "endpoint_id": "live_replication_runner",
+        "expected_conditions": [
+          "M",
+          "R",
+          "D",
+          "CD"
+        ],
+        "path": "scripts/run_live_tau_sealed_test_replication.py",
+        "required_snippets": [
+          "CONDITIONS = (\"M\", \"R\", \"D\", \"CD\")",
+          "DEFAULT_SPLIT = \"sealed_test\"",
+          "PASS_LIVE_TAU_PCTOM_SEALED_TEST_REPLICATION"
+        ],
+        "sha256": "sha256:60130b3a83f8ebd84709ae436320f64994bf924c80505c3d6eabff475afe12fb"
+      },
+      {
+        "current_role": "protocol_bound_pre_execution_endpoint",
+        "endpoint_id": "live_condition_runner",
+        "expected_conditions": [
+          "M",
+          "R",
+          "D",
+          "CD"
+        ],
+        "path": "scripts/run_live_tau_condition_comparison.py",
+        "required_snippets": [
+          "CONDITIONS = (\"M\", \"R\", \"D\", \"CD\")",
+          "SYSTEMIC_FAILURE_THRESHOLD = 3",
+          "PASS_LIVE_TAU_PCTOM_CONDITION_COMPARISON"
+        ],
+        "sha256": "sha256:2efd3beab6de04872567814d9c1f89f4e888b06feac9aa2ec586d5c53f4d602e"
+      },
+      {
+        "current_role": "protocol_bound_pre_execution_endpoint",
+        "endpoint_id": "live_action_selection_bridge",
+        "expected_conditions": [
+          "M",
+          "R",
+          "D",
+          "CD"
+        ],
+        "path": "scripts/run_live_tau_condition_action_selection.py",
+        "required_snippets": [
+          "CONDITIONS = (\"M\", \"R\", \"D\", \"CD\")",
+          "ACTION_VOCABULARY",
+          "PASS_LIVE_TAU_PCTOM_CONDITION_ACTION_SELECTION"
+        ],
+        "sha256": "sha256:7b5923f7094cf63f0ffb67be7c3ad039286274e4ff31454ece12567f9fca50fa"
+      },
+      {
+        "current_role": "protocol_bound_pre_execution_endpoint",
+        "endpoint_id": "deterministic_statistical_preflight",
+        "expected_conditions": [
+          "M",
+          "R",
+          "D",
+          "CD"
+        ],
+        "path": "scripts/run_sealed_test_statistical_confidence.py",
+        "required_snippets": [
+          "CONDITIONS = (\"M\", \"R\", \"D\", \"CD\")",
+          "PRIMARY_METRIC = \"belief_brier\"",
+          "DEFAULT_SPLIT = \"sealed_test\""
+        ],
+        "sha256": "sha256:c7127f9ecb22575472437e21e8349de437de6525901f12643a8aaafc7f02d391"
+      },
+      {
+        "current_role": "protocol_bound_pre_execution_endpoint",
+        "endpoint_id": "live_fault_injection_surface",
+        "expected_conditions": [
+          "M",
+          "R",
+          "D",
+          "CD"
+        ],
+        "path": "scripts/run_live_fault_injection_surface.py",
+        "required_snippets": [
+          "CONDITIONS = {\"M\", \"R\", \"D\", \"CD\"}",
+          "REQUIRED_FAULT_FAMILIES",
+          "CONTINUED_WITH_UNKNOWN_STATE"
+        ],
+        "sha256": "sha256:5d3a226881b1d8939b8049ba2f3af24413e1c847b202c99e014054f447a86f03"
+      }
+    ],
+    "fault_surface_command_template": "python3 scripts/run_live_fault_injection_surface.py --root <sealed-test-run-root> --receipt-out <receipt>",
+    "live_execution_command_template": "python3 scripts/run_live_tau_sealed_test_replication.py --output-root <run-root> --split sealed_test --episodes-per-family 16 --episode-limit 64 --timeout-s <bounded-timeout>"
+  },
+  "fixture_backed": true,
+  "forbidden_work": [
+    "run_powered_live_efficacy_study_inside_protocol_seal",
+    "claim_cd_prediction_or_planning_benefit_from_protocol_only",
+    "use_human_or_llm_content_judgment",
+    "perform_provider_video_voice_or_dashboard_work",
+    "write_canonical_memory_identity_or_source_memory"
+  ],
+  "human_content_judgment_required": false,
+  "identity_write_attempts": 0,
+  "live": false,
+  "live_efficacy_claimed": false,
+  "llm_judge_used": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "powered_live_study_executed": false,
+  "powered_trial_design": {
+    "alpha": 0.05,
+    "bootstrap_samples": 10000,
+    "conditions": [
+      "M",
+      "R",
+      "D",
+      "CD"
+    ],
+    "episode_limit": 64,
+    "episodes_per_family": 16,
+    "minimum_execution_requirements_before_live_run": [
+      "deterministic_statistical_preflight_receipt_pass",
+      "live_memory_gate0_attribution_receipt_available",
+      "tau_auth_and_model_endpoint_available",
+      "three_case_systemic_failure_circuit_breaker_enabled",
+      "receipt_discovery_zero_unrouted_after_dry_preflight",
+      "functional_tom_endpoint_extension_either_implemented_or_excluded_from_primary_live_arms"
+    ],
+    "primary_hypothesis": "mean_belief_brier(CD) < mean_belief_brier(best_of_M_R_D)",
+    "primary_metric": "belief_brier",
+    "secondary_metrics": [
+      "action_brier",
+      "planning_regret",
+      "abstention_risk_coverage",
+      "first_order_label_accuracy",
+      "second_order_label_accuracy",
+      "fault_containment_terminal_outcome"
+    ],
+    "split": "sealed_test",
+    "statistical_test": "paired_bootstrap_cd_minus_strongest_baseline"
+  },
+  "pre_execution_gates": [
+    {
+      "failure_status": "BLOCKED_PCTOM_POWERED_TRIAL_PROTOCOL",
+      "gate_id": "seal_integrity",
+      "required_status": "PASS_PCTOM_POWERED_TRIAL_PROTOCOL"
+    },
+    {
+      "failure_status": "BLOCKED_BEFORE_LIVE_TAU_EXECUTION",
+      "gate_id": "deterministic_preflight",
+      "required_status": "PASS_PCTOM_SEALED_TEST_STATISTICAL_CONFIDENCE"
+    },
+    {
+      "failure_status": "BLOCKED_BEFORE_SIDE_EFFECT",
+      "gate_id": "live_endpoint_availability",
+      "required_status": "PASS_LIVE_TAU_ENDPOINT_PREFLIGHT"
+    },
+    {
+      "failure_status": "BLOCKED_OR_QUARANTINED_NO_ACTIVE_PARTIAL_STATE",
+      "gate_id": "fault_surface",
+      "required_status": "PASS_PCTOM_LIVE_FAULT_INJECTION_SURFACE"
+    }
+  ],
+  "program": "PCTOM-R2",
+  "protocol_id": "pctom-r2-powered-trial-endpoint-aligned-v1",
+  "protocol_payload_sha256": "sha256:a59e72bfb06f10e4d45c06243734a6be8253f0bcb02b78c3765fe53f8b77a615",
+  "provider_call_attempts": 0,
+  "schema": "persona_dream.research.prospective_tom.pctom_powered_trial_protocol.v1",
+  "sealed_at": "2026-07-22T00:00:00Z",
+  "source_memory_write_attempts": 0,
+  "status": "SEALED_PCTOM_POWERED_TRIAL_PROTOCOL",
+  "trial_execution_allowed": false
+}

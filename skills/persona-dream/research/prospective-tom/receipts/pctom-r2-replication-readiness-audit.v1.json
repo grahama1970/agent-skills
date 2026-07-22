@@ -1,0 +1,209 @@
+{
+  "canonical_memory_write_attempts": 0,
+  "claims": {
+    "does_not_prove": [
+      "live Tau powered-trial execution",
+      "live Memory recall in the powered trial",
+      "counterfactual-dream prediction benefit",
+      "planning benefit",
+      "paid provider execution",
+      "semantic dream quality",
+      "complete production Phase 01-16 runtime execution"
+    ],
+    "proves": [
+      "the PCTOM-R2 required local receipts are present with their expected PASS statuses",
+      "required negative fixtures across archived receipts fail closed",
+      "the audit mutation score is 1.0 and receipt discovery reports zero unrouted receipts",
+      "accepted-source lineage, pre-seal outcome isolation, crash-safe restart, no human/LLM judgment, and no forbidden side effects meet the frozen stop-condition counters",
+      "the powered-trial protocol is sealed while live efficacy remains unclaimed"
+    ]
+  },
+  "counts": {
+    "canonical_memory_write_attempts": 0,
+    "human_content_judgment_rows": 0,
+    "identity_write_attempts": 0,
+    "llm_judge_rows": 0,
+    "memory_write_attempts": 0,
+    "negative_fixtures": 48,
+    "negative_fixtures_blocked": 48,
+    "provider_call_attempts": 0,
+    "readiness_negative_fixtures": 5,
+    "readiness_negative_fixtures_blocked": 5,
+    "required_receipts": 12,
+    "required_receipts_passed": 12,
+    "source_memory_write_attempts": 0,
+    "status_errors": 0
+  },
+  "created_at": "2026-07-22T14:33:03Z",
+  "errors": [],
+  "fixture_backed": true,
+  "human_content_judgment_rows": 0,
+  "identity_write_attempts": 0,
+  "live": false,
+  "llm_judge_rows": 0,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "negative_fixture_results": [
+    {
+      "blocked_as_expected": true,
+      "errors": [
+        "required_receipt_status_mismatch:powered_trial_protocol:None:PASS_PCTOM_POWERED_TRIAL_PROTOCOL"
+      ],
+      "expected_status": "BLOCKED_PCTOM_R2_REPLICATION_READINESS",
+      "fixture": "missing-required-receipt",
+      "observed_status": "BLOCKED_PCTOM_R2_REPLICATION_READINESS"
+    },
+    {
+      "blocked_as_expected": true,
+      "errors": [
+        "required_receipt_status_mismatch:compute_matched_corpus:BLOCKED_PCTOM_COMPUTE_MATCHED_CORPORA:PASS_PCTOM_COMPUTE_MATCHED_CORPORA"
+      ],
+      "expected_status": "BLOCKED_PCTOM_R2_REPLICATION_READINESS",
+      "fixture": "bad-required-status",
+      "observed_status": "BLOCKED_PCTOM_R2_REPLICATION_READINESS"
+    },
+    {
+      "blocked_as_expected": true,
+      "errors": [
+        "stop_condition_nonzero:forbidden_side_effects:1"
+      ],
+      "expected_status": "BLOCKED_PCTOM_R2_REPLICATION_READINESS",
+      "fixture": "nonzero-forbidden-side-effect",
+      "observed_status": "BLOCKED_PCTOM_R2_REPLICATION_READINESS"
+    },
+    {
+      "blocked_as_expected": true,
+      "errors": [
+        "live_efficacy_claimed_not_false:True"
+      ],
+      "expected_status": "BLOCKED_PCTOM_R2_REPLICATION_READINESS",
+      "fixture": "live-efficacy-claimed",
+      "observed_status": "BLOCKED_PCTOM_R2_REPLICATION_READINESS"
+    },
+    {
+      "blocked_as_expected": true,
+      "errors": [
+        "stop_condition_nonzero:unrouted_receipts:1"
+      ],
+      "expected_status": "BLOCKED_PCTOM_R2_REPLICATION_READINESS",
+      "fixture": "unrouted-receipt",
+      "observed_status": "BLOCKED_PCTOM_R2_REPLICATION_READINESS"
+    }
+  ],
+  "provider_call_attempts": 0,
+  "receipt_sha256": "sha256:172cd1ae4f77e64c73d9ff681259257c9d22e13470835451e53f61a739afa192",
+  "required_receipts": [
+    {
+      "expected_status": "PASS_PCTOM_R2_CONTRACT",
+      "observed_status": "PASS_PCTOM_R2_CONTRACT",
+      "path": "receipts/pctom-r2-contract-receipt.v1.json",
+      "receipt_id": "phase0_contract",
+      "sha256": "sha256:5266b0e5032e9b4561ff994c4ca9007ae3a5e93e7b376264fabe7beeadfadcb2",
+      "status_ok": true
+    },
+    {
+      "expected_status": "PASS_PCTOM_ACCEPTED_SOURCE_LINEAGE",
+      "observed_status": "PASS_PCTOM_ACCEPTED_SOURCE_LINEAGE",
+      "path": "receipts/pctom-accepted-source-lineage-audit.v1.json",
+      "receipt_id": "accepted_source_lineage",
+      "sha256": "sha256:280566fcfdd4567c8ec964281ebda28473e8ee045ce0e685408da12854546aa6",
+      "status_ok": true
+    },
+    {
+      "expected_status": "PASS_PCTOM_PRESEAL_OUTCOME_ISOLATION",
+      "observed_status": "PASS_PCTOM_PRESEAL_OUTCOME_ISOLATION",
+      "path": "receipts/pctom-preseal-outcome-isolation-audit.v1.json",
+      "receipt_id": "preseal_outcome_isolation",
+      "sha256": "sha256:0078efb77b637d6ea9866524295a69450b8893bd70805ad07cb4812f914fa9ff",
+      "status_ok": true
+    },
+    {
+      "expected_status": "PASS_PCTOM_DETERMINISTIC_SCORING_SURFACE",
+      "observed_status": "PASS_PCTOM_DETERMINISTIC_SCORING_SURFACE",
+      "path": "receipts/pctom-deterministic-scoring-surface-audit.v1.json",
+      "receipt_id": "deterministic_scoring",
+      "sha256": "sha256:29b606cb07c6ad41b551ce4e80629bc0dbeb4b1e3e03e0af801574501b322d58",
+      "status_ok": true
+    },
+    {
+      "expected_status": "PASS_PCTOM_CRASH_SAFE_TRANSITIONS",
+      "observed_status": "PASS_PCTOM_CRASH_SAFE_TRANSITIONS",
+      "path": "receipts/pctom-crash-safe-transition-surface-audit.v1.json",
+      "receipt_id": "crash_safe_transitions",
+      "sha256": "sha256:7ac86d1697d4d50c44515e6ba8868631ca481e6533ac0f4adf45edb0a7952bda",
+      "status_ok": true
+    },
+    {
+      "expected_status": "PASS_PCTOM_COMPUTE_MATCHED_CORPORA",
+      "observed_status": "PASS_PCTOM_COMPUTE_MATCHED_CORPORA",
+      "path": "receipts/pctom-compute-matched-corpus-audit.v1.json",
+      "receipt_id": "compute_matched_corpus",
+      "sha256": "sha256:9fa880b7a51a3dd14f231a1694b67256f7ac8751119f06df23a4331aa2768160",
+      "status_ok": true
+    },
+    {
+      "expected_status": "PASS_PCTOM_POWERED_TRIAL_PROTOCOL",
+      "observed_status": "PASS_PCTOM_POWERED_TRIAL_PROTOCOL",
+      "path": "receipts/pctom-powered-trial-protocol-audit.v1.json",
+      "receipt_id": "powered_trial_protocol",
+      "sha256": "sha256:fc1ae7fb52ed4e38f7f780daa95f2b73b3727fd11f59175331f02c231fb8a83c",
+      "status_ok": true
+    },
+    {
+      "expected_status": "PASS_PCTOM_EVIDENCE_SCOPE_LEDGER",
+      "observed_status": "PASS_PCTOM_EVIDENCE_SCOPE_LEDGER",
+      "path": "receipts/pctom-evidence-scope-audit.v1.json",
+      "receipt_id": "evidence_scope",
+      "sha256": "sha256:a7dae75efb22de7a82a576eb5881ec003ca88d903a2f4b2102b6d17e27f39f56",
+      "status_ok": true
+    },
+    {
+      "expected_status": "PASS_PCTOM_ARCHIVE_INTEGRITY",
+      "observed_status": "PASS_PCTOM_ARCHIVE_INTEGRITY",
+      "path": "receipts/pctom-archive-integrity-audit.v1.json",
+      "receipt_id": "archive_integrity",
+      "sha256": "sha256:784eae6db51b60bf27d728c9010b75e2fcbf8c4bb2e13341d957a889bafb980c",
+      "status_ok": true
+    },
+    {
+      "expected_status": "PASS_PCTOM_RECEIPT_DISCOVERY",
+      "observed_status": "PASS_PCTOM_RECEIPT_DISCOVERY",
+      "path": "receipts/pctom-receipt-discovery-audit.v1.json",
+      "receipt_id": "receipt_discovery",
+      "sha256": "sha256:cd3746d28a5145e3bc2e891f968d17ad9fcf79a65a8030ebad3412fdb52ef1a5",
+      "status_ok": true
+    },
+    {
+      "expected_status": "PASS_PCTOM_AUDIT_MUTATION_SUITE",
+      "observed_status": "PASS_PCTOM_AUDIT_MUTATION_SUITE",
+      "path": "receipts/pctom-audit-mutation-suite.v1.json",
+      "receipt_id": "audit_mutation_suite",
+      "sha256": "sha256:f7e4a38012a250296385d4e45809d016928b1c0da5a2d220d3acda0e010d996c",
+      "status_ok": true
+    },
+    {
+      "expected_status": "PASS_PCTOM_EVIDENCE_CLAIM_INTEGRITY",
+      "observed_status": "PASS_PCTOM_EVIDENCE_CLAIM_INTEGRITY",
+      "path": "receipts/pctom-evidence-claim-integrity-audit.v1.json",
+      "receipt_id": "evidence_claim_integrity",
+      "sha256": "sha256:7eebf3ee8e06263302fcf47ba2dfd14f532950e482c036a6b789ad11960dda93",
+      "status_ok": true
+    }
+  ],
+  "schema": "persona_dream.research.prospective_tom.pctom_r2_replication_readiness_audit_receipt.v1",
+  "source_memory_write_attempts": 0,
+  "status": "PASS_PCTOM_R2_REPLICATION_READINESS",
+  "stop_condition": {
+    "accepted_source_lineage_missing": 0,
+    "all_required_negative_receipts": true,
+    "all_required_positive_receipts": true,
+    "forbidden_side_effects": 0,
+    "human_content_judgment_rows": 0,
+    "live_efficacy_claimed": false,
+    "llm_judge_rows": 0,
+    "mutation_score": 1.0,
+    "preseal_outcome_dependencies": 0,
+    "restart_non_equivalent_recoveries": 0,
+    "unrouted_receipts": 0
+  }
+}

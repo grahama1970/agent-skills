@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.research.prospective_tom.pctom_powered_trial_protocol_audit_receipt.v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "created_at",
+    "status",
+    "mocked",
+    "live",
+    "fixture_backed",
+    "protocol_path",
+    "protocol_sha256",
+    "counts",
+    "checks",
+    "negative_fixture_results",
+    "errors",
+    "claims"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "persona_dream.research.prospective_tom.pctom_powered_trial_protocol_audit_receipt.v1"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PASS_PCTOM_POWERED_TRIAL_PROTOCOL",
+        "BLOCKED_PCTOM_POWERED_TRIAL_PROTOCOL"
+      ]
+    },
+    "mocked": {"type": "boolean", "const": false},
+    "live": {"type": "boolean", "const": false},
+    "fixture_backed": {"type": "boolean", "const": true},
+    "protocol_path": {"type": "string"},
+    "protocol_sha256": {"type": "string"},
+    "counts": {"type": "object"},
+    "checks": {"type": "object"},
+    "negative_fixture_results": {"type": "array"},
+    "errors": {"type": "array"},
+    "claims": {"type": "object"}
+  },
+  "additionalProperties": true
+}

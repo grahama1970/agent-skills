@@ -30,6 +30,7 @@ EXCLUDED_ARCHIVE_RECEIPTS = {
     "pctom-receipt-discovery-audit.v1.json",
     "pctom-audit-mutation-suite.v1.json",
     "pctom-evidence-claim-integrity-audit.v1.json",
+    "pctom-r2-replication-readiness-audit.v1.json",
 }
 EXCLUDED_SCOPE_LEDGER_RECEIPTS = {
     "pctom-evidence-scope-audit.v1.json",
@@ -37,6 +38,7 @@ EXCLUDED_SCOPE_LEDGER_RECEIPTS = {
     "pctom-receipt-discovery-audit.v1.json",
     "pctom-audit-mutation-suite.v1.json",
     "pctom-evidence-claim-integrity-audit.v1.json",
+    "pctom-r2-replication-readiness-audit.v1.json",
 }
 
 

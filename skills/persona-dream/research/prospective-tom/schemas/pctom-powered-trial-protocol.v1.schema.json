@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.research.prospective_tom.pctom_powered_trial_protocol.v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "status",
+    "protocol_id",
+    "sealed_at",
+    "mocked",
+    "live",
+    "fixture_backed",
+    "trial_execution_allowed",
+    "live_efficacy_claimed",
+    "conditions",
+    "deterministic_corpus_alignment",
+    "endpoint_alignment",
+    "powered_trial_design",
+    "pre_execution_gates",
+    "forbidden_work",
+    "claims"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "persona_dream.research.prospective_tom.pctom_powered_trial_protocol.v1"
+    },
+    "status": {
+      "type": "string",
+      "const": "SEALED_PCTOM_POWERED_TRIAL_PROTOCOL"
+    },
+    "protocol_id": {"type": "string", "minLength": 1},
+    "sealed_at": {"type": "string", "minLength": 1},
+    "mocked": {"type": "boolean", "const": false},
+    "live": {"type": "boolean", "const": false},
+    "fixture_backed": {"type": "boolean", "const": true},
+    "trial_execution_allowed": {"type": "boolean", "const": false},
+    "live_efficacy_claimed": {"type": "boolean", "const": false},
+    "conditions": {"type": "array", "minItems": 4},
+    "deterministic_corpus_alignment": {"type": "object"},
+    "endpoint_alignment": {"type": "object"},
+    "powered_trial_design": {"type": "object"},
+    "pre_execution_gates": {"type": "array"},
+    "forbidden_work": {"type": "array"},
+    "claims": {"type": "object"}
+  },
+  "additionalProperties": true
+}
