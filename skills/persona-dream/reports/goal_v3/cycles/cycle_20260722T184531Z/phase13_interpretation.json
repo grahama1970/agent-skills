@@ -1,0 +1,385 @@
+{
+  "accepted_interpretations": [
+    {
+      "alternative_explanation": "The transparent tabletop or glass may simply be a rendered office/interview setting with no symbolic meaning, and the male figure may be an incidental background character.",
+      "cites_renderer_review": false,
+      "confidence": 0.42,
+      "emotional_intensity": 0.46,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-001",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "frame_0002",
+        "frame_0003"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_038",
+        "embry_age23_current_b01_memory_022"
+      ],
+      "statement": "Embry may be orienting toward Kai through controlled, evidence-first contact: the repeated visual setup of Embry facing or leaning toward a male counterpart across a transparent surface suggests engagement, but with a boundary that keeps interaction observable and contained rather than fully intimate.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "kai",
+      "tom_state_type": "stance",
+      "uncertainty": "The male figure is not confirmed as Kai in the observations, and the intended dream is empty, so the relational target is inferred only from the requested interpretation schema."
+    },
+    {
+      "alternative_explanation": "The sense of incompleteness may come entirely from the artifact limits: storyboard frames without audio or motion naturally make any interaction look ambiguous.",
+      "cites_renderer_review": false,
+      "confidence": 0.37,
+      "emotional_intensity": 0.39,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-002",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "frame_0003",
+        "frame_0004",
+        "coverage_gap_00",
+        "coverage_gap_01"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_038",
+        "embry_age23_current_b01_memory_022"
+      ],
+      "statement": "Embry may feel uncertain about how much of herself to expose to Kai: the visual separation by glass and the absence of audio or motion make the encounter feel like a watched but incomplete exchange, consistent with a tendency to separate observable facts from assumptions and to keep private material compartmentalized.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "kai",
+      "tom_state_type": "uncertainty",
+      "uncertainty": "Because there is no audio track or inter-frame motion, it is impossible to know whether the scene involved hesitation, disclosure, conflict, or ordinary conversation."
+    },
+    {
+      "alternative_explanation": "The stable identity may simply indicate successful renderer continuity for Embry across frames, with no added psychological implication.",
+      "cites_renderer_review": true,
+      "confidence": 0.44,
+      "emotional_intensity": 0.34,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-003",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004",
+        "identity_temporal_continuity_review"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_038",
+        "embry_age23_current_b01_memory_035"
+      ],
+      "statement": "Because the identity continuity review reports that Embry's identity passed across all frames, the recurring woman in navy can be read as a stable self-position: Embry may experience the interaction with Kai as something she must manage consistently and precisely, rather than as a fluctuating or dream-fragmented role.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "kai",
+      "tom_state_type": "belief",
+      "uncertainty": "The identity review only verifies visual continuity against the reference sheet; it does not prove that the dream intended psychological stability or that the male figure is Kai."
+    },
+    {
+      "alternative_explanation": "The lack of audio and the static frames may make an ordinary meeting look tense or interrupted even if no loss of control was intended.",
+      "cites_renderer_review": false,
+      "confidence": 0.31,
+      "emotional_intensity": 0.55,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-004",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "frame_0001",
+        "frame_0002",
+        "coverage_gap_00"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_035",
+        "embry_age23_current_b01_memory_038"
+      ],
+      "statement": "Embry may fear losing conversational control around Kai: the silent visual of her near a male counterpart, combined with known memories of losing a few seconds of context after a sensory trigger and then compensating with exact questions, suggests anxiety about being observed while her cadence or attention shifts.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "kai",
+      "tom_state_type": "fear",
+      "uncertainty": "No industrial smell, compressed hiss, dialogue, or visible disruption is present in the rendered observations, so the link to a trigger response is weak and inferential."
+    }
+  ],
+  "blockers": [],
+  "candidates": [
+    {
+      "alternative_explanation": "The transparent tabletop or glass may simply be a rendered office/interview setting with no symbolic meaning, and the male figure may be an incidental background character.",
+      "cites_renderer_review": false,
+      "confidence": 0.42,
+      "emotional_intensity": 0.46,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-001",
+      "observation_refs": [
+        "frame_0002",
+        "frame_0003"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_038",
+        "embry_age23_current_b01_memory_022"
+      ],
+      "statement": "Embry may be orienting toward Kai through controlled, evidence-first contact: the repeated visual setup of Embry facing or leaning toward a male counterpart across a transparent surface suggests engagement, but with a boundary that keeps interaction observable and contained rather than fully intimate.",
+      "subject": "embry",
+      "target": "kai",
+      "tom_state_type": "stance",
+      "uncertainty": "The male figure is not confirmed as Kai in the observations, and the intended dream is empty, so the relational target is inferred only from the requested interpretation schema."
+    },
+    {
+      "alternative_explanation": "The sense of incompleteness may come entirely from the artifact limits: storyboard frames without audio or motion naturally make any interaction look ambiguous.",
+      "cites_renderer_review": false,
+      "confidence": 0.37,
+      "emotional_intensity": 0.39,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-002",
+      "observation_refs": [
+        "frame_0003",
+        "frame_0004",
+        "coverage_gap_00",
+        "coverage_gap_01"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_038",
+        "embry_age23_current_b01_memory_022"
+      ],
+      "statement": "Embry may feel uncertain about how much of herself to expose to Kai: the visual separation by glass and the absence of audio or motion make the encounter feel like a watched but incomplete exchange, consistent with a tendency to separate observable facts from assumptions and to keep private material compartmentalized.",
+      "subject": "embry",
+      "target": "kai",
+      "tom_state_type": "uncertainty",
+      "uncertainty": "Because there is no audio track or inter-frame motion, it is impossible to know whether the scene involved hesitation, disclosure, conflict, or ordinary conversation."
+    },
+    {
+      "alternative_explanation": "The stable identity may simply indicate successful renderer continuity for Embry across frames, with no added psychological implication.",
+      "cites_renderer_review": true,
+      "confidence": 0.44,
+      "emotional_intensity": 0.34,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-003",
+      "observation_refs": [
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004",
+        "identity_temporal_continuity_review"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_038",
+        "embry_age23_current_b01_memory_035"
+      ],
+      "statement": "Because the identity continuity review reports that Embry's identity passed across all frames, the recurring woman in navy can be read as a stable self-position: Embry may experience the interaction with Kai as something she must manage consistently and precisely, rather than as a fluctuating or dream-fragmented role.",
+      "subject": "embry",
+      "target": "kai",
+      "tom_state_type": "belief",
+      "uncertainty": "The identity review only verifies visual continuity against the reference sheet; it does not prove that the dream intended psychological stability or that the male figure is Kai."
+    },
+    {
+      "alternative_explanation": "The lack of audio and the static frames may make an ordinary meeting look tense or interrupted even if no loss of control was intended.",
+      "cites_renderer_review": false,
+      "confidence": 0.31,
+      "emotional_intensity": 0.55,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-004",
+      "observation_refs": [
+        "frame_0001",
+        "frame_0002",
+        "coverage_gap_00"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_035",
+        "embry_age23_current_b01_memory_038"
+      ],
+      "statement": "Embry may fear losing conversational control around Kai: the silent visual of her near a male counterpart, combined with known memories of losing a few seconds of context after a sensory trigger and then compensating with exact questions, suggests anxiety about being observed while her cadence or attention shifts.",
+      "subject": "embry",
+      "target": "kai",
+      "tom_state_type": "fear",
+      "uncertainty": "No industrial smell, compressed hiss, dialogue, or visible disruption is present in the rendered observations, so the link to a trigger response is weak and inferential."
+    }
+  ],
+  "dream_id": "auto_cycle_20260722T184531Z",
+  "generated_at": "2026-07-22T18:59:27.702686+00:00",
+  "honesty_rule": {
+    "identity_drift_dual_explanation_present": false,
+    "renderer_defect_favored_on_drift": false
+  },
+  "intended_dream": {},
+  "live": true,
+  "llm": {
+    "caller_skill": "persona-dream",
+    "candidate_count": 4,
+    "direct_scillm_call": false,
+    "model": "gpt-5.5",
+    "provider": "scillm",
+    "route": "tau:persona-dream-text-reasoning",
+    "tau_routing": {
+      "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+      "http_status": 200,
+      "live_call_performed": true,
+      "model": "gpt-5.5",
+      "output_contract_sha256": "sha256:97bbf92bb8eb1d13cb7a43a0975b2c62885880a6818689f7ec5dedd6e532c140",
+      "prompt_sha256": "sha256:030098cd6db37fd7749fa737c5b4d91b138716c586e2e9ade5b118c2e20214dd",
+      "route": "tau:persona-dream-text-reasoning",
+      "status": "PASS",
+      "tau_receipt_schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1"
+    }
+  },
+  "mocked": false,
+  "observation_index": [
+    {
+      "observation_id": "frame_0001",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 1 at t=0.0s; windows=identity; entities=['woman in navy shirt in foreground', 'man in navy shirt blurred in background']",
+      "timestamp_seconds": 0.0
+    },
+    {
+      "observation_id": "frame_0002",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 2 at t=2.5s; windows=identity; entities=['woman in navy shirt leaning over a transparent tabletop', 'man in dark jacket seated across from her']",
+      "timestamp_seconds": 2.5
+    },
+    {
+      "observation_id": "frame_0003",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 3 at t=5.0s; windows=identity; entities=['woman in navy shirt at left', 'man in dark shirt behind glass at right']",
+      "timestamp_seconds": 5.0
+    },
+    {
+      "observation_id": "frame_0004",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 4 at t=7.5s; windows=identity; entities=['woman in navy shirt seated in foreground', 'man in navy shirt standing blurred behind glass']",
+      "timestamp_seconds": 7.5
+    },
+    {
+      "observation_id": "identity_temporal_continuity_review",
+      "observation_type": "renderer_continuity_review",
+      "renderer_defect_verdict": "PASS",
+      "renderer_review": true,
+      "summary": "Identity continuity review over window [0.0, 10.0] (model=insightface:buffalo_l (authority) + gpt-5.5 montage (advisory), verdict=PASS): all 4 frames passed ArcFace vs embry_contact_sheet_v3"
+    },
+    {
+      "observation_id": "coverage_gap_00",
+      "observation_type": "coverage_gap",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "no audio track: storyboard frames are the visual artifact"
+    },
+    {
+      "observation_id": "coverage_gap_01",
+      "observation_type": "coverage_gap",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "no inter-frame motion"
+    },
+    {
+      "observation_id": "coverage_gap_02",
+      "observation_type": "coverage_gap",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Brandon identity advisory (no reference sheet)"
+    }
+  ],
+  "observation_packet_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260722T184531Z/observation_packet.json",
+  "observation_packet_sha256": "sha256:f4de256ab38cbc00a3005f97fca08737203acd4a2b3fa7be73a07ce2166ce622",
+  "persona_id": "embry",
+  "provider_live": true,
+  "recall_receipts": [
+    {
+      "collections": [
+        "persona_memory"
+      ],
+      "confidence": 0.924,
+      "found": true,
+      "question": "What memories explain why Embry trusts Kai about surf safety boundaries and hazards at the lineup?",
+      "residue_source_ids_confirmed": [],
+      "returned_keys": [
+        "persona_dream_phase_03_crew_contract_embry_kai_kahaluu_2024",
+        "persona_dream_phase_06_script_contract_embry_kai_kahaluu_2024",
+        "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024",
+        "embry-kai-sick-day_02_story_story_contract_843592d16ce27a53",
+        "embry_age19_23_b01_memory_010",
+        "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698",
+        "dream_dream_successor_943b01ecd9a3",
+        "embry_age19_23_b01_memory_014"
+      ],
+      "tags": [
+        "persona:embry"
+      ]
+    },
+    {
+      "collections": [
+        "persona_memory"
+      ],
+      "confidence": 0.917,
+      "found": true,
+      "question": "What memory shows Kai giving Embry operational surf knowledge while respecting her decisions?",
+      "residue_source_ids_confirmed": [],
+      "returned_keys": [
+        "persona_dream_phase_06_script_contract_embry_kai_kahaluu_2024",
+        "persona_dream_phase_03_crew_contract_embry_kai_kahaluu_2024",
+        "embry_age19_23_b01_memory_007",
+        "embry-kai-sick-day_02_story_story_contract_843592d16ce27a53",
+        "embry_age19_23_b01_memory_012",
+        "embry_age15_19_b01_memory_012",
+        "embry_age15_19_b03_memory_014",
+        "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698"
+      ],
+      "tags": [
+        "persona:embry"
+      ]
+    },
+    {
+      "collections": [
+        "persona_memory"
+      ],
+      "confidence": 0.898,
+      "found": true,
+      "question": "Why does Embry pause before crossing into surf traffic near Kai?",
+      "residue_source_ids_confirmed": [],
+      "returned_keys": [
+        "embry_age15_19_b01_memory_008",
+        "embry_age19_23_b01_memory_012",
+        "embry_age19_23_b01_memory_014",
+        "embry_age15_19_b01_memory_012",
+        "embry_age15_19_b03_memory_041",
+        "persona_dream_phase_06_script_contract_embry_kai_kahaluu_2024",
+        "embry_age15_19_b03_memory_044",
+        "embry_age15_19_b03_memory_040"
+      ],
+      "tags": [
+        "persona:embry"
+      ]
+    }
+  ],
+  "rejected_interpretations": [],
+  "revision_id": "cycle_20260722T184531Z",
+  "run_id": "goal-v3",
+  "schema": "persona_dream.dream_self_interpretation.v1",
+  "source_memory_bindings": [
+    {
+      "collection": "persona_memory",
+      "memory_text_sha256": "sha256:c38059b6aa23cc513255e22e2b01b6cd3ed9cdbad2101526c54b9af0d2d17cc1",
+      "persona_id": "embry",
+      "recall_confirmed": false,
+      "source_id": "embry_age23_current_b01_memory_035"
+    },
+    {
+      "collection": "persona_memory",
+      "memory_text_sha256": "sha256:60ee345c5c2c089e2c4a90423cdcb639d9d8f4943b9c41c0d11d5ace3306003a",
+      "persona_id": "embry",
+      "recall_confirmed": false,
+      "source_id": "embry_age23_current_b01_memory_038"
+    },
+    {
+      "collection": "persona_memory",
+      "memory_text_sha256": "sha256:03b62a7545732a53cb34f57b7f81f10e9464fc8760af2313175b874c30776a37",
+      "persona_id": "embry",
+      "recall_confirmed": false,
+      "source_id": "embry_age23_current_b01_memory_022"
+    }
+  ],
+  "status": "PASS_SELF_INTERPRETATION"
+}

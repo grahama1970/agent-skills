@@ -1,0 +1,45 @@
+{
+  "raw": "{\"frames\":[{\"index\":1,\"people\":[\"woman in navy shirt in foreground\",\"man in navy shirt blurred in background\"],\"activity\":\"The woman stares off to the side while the man behind her looks forward with a surprised or concerned expression.\",\"setting\":\"metallic futuristic interior with pipes and cool blue lighting\",\"tone\":\"tense and alert\"},{\"index\":2,\"people\":[\"woman in navy shirt leaning over a transparent tabletop\",\"man in dark jacket seated across from her\"],\"activity\":\"They sit at a glowing tabletop display with labeled sections including observed facts, assumptions, and hopes; the woman points or works with illuminated pieces while the man watches.\",\"setting\":\"high-tech conference or analysis room\",\"tone\":\"focused and analytical\"},{\"index\":3,\"people\":[\"woman in navy shirt at left\",\"man in dark shirt behind glass at right\"],\"activity\":\"The woman raises one hand toward a glass wall while the man stands behind it holding or gesturing with his hands.\",\"setting\":\"modern glass-walled office or lab corridor with digital reflections\",\"tone\":\"cautious and separated\"},{\"index\":4,\"people\":[\"woman in navy shirt seated in foreground\",\"man in navy shirt standing blurred behind glass\"],\"activity\":\"The woman faces forward near a small microphone while the man stands behind her with arms crossed.\",\"setting\":\"interview or observation room with glass partition and cool blue lighting\",\"tone\":\"serious and interrogative\"}]}",
+  "frames": [
+    {
+      "index": 1,
+      "people": [
+        "woman in navy shirt in foreground",
+        "man in navy shirt blurred in background"
+      ],
+      "activity": "The woman stares off to the side while the man behind her looks forward with a surprised or concerned expression.",
+      "setting": "metallic futuristic interior with pipes and cool blue lighting",
+      "tone": "tense and alert"
+    },
+    {
+      "index": 2,
+      "people": [
+        "woman in navy shirt leaning over a transparent tabletop",
+        "man in dark jacket seated across from her"
+      ],
+      "activity": "They sit at a glowing tabletop display with labeled sections including observed facts, assumptions, and hopes; the woman points or works with illuminated pieces while the man watches.",
+      "setting": "high-tech conference or analysis room",
+      "tone": "focused and analytical"
+    },
+    {
+      "index": 3,
+      "people": [
+        "woman in navy shirt at left",
+        "man in dark shirt behind glass at right"
+      ],
+      "activity": "The woman raises one hand toward a glass wall while the man stands behind it holding or gesturing with his hands.",
+      "setting": "modern glass-walled office or lab corridor with digital reflections",
+      "tone": "cautious and separated"
+    },
+    {
+      "index": 4,
+      "people": [
+        "woman in navy shirt seated in foreground",
+        "man in navy shirt standing blurred behind glass"
+      ],
+      "activity": "The woman faces forward near a small microphone while the man stands behind her with arms crossed.",
+      "setting": "interview or observation room with glass partition and cool blue lighting",
+      "tone": "serious and interrogative"
+    }
+  ]
+}

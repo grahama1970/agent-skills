@@ -1,0 +1,69 @@
+{
+  "schema": "persona_dream.cycle_storyboard_observation_packet.v1",
+  "status": "ACCEPTED_STORYBOARD_OBSERVATION",
+  "evidence_origin": "storyboard_frames",
+  "evidence_class": "synthetic_dream",
+  "source_video_sha256": "sha256:1e04f7bf2659fe8210ae0883227b11f4add1dd37d1eb093b2f31d8de6d3332c7",
+  "source_revision_id": "cycle_20260722T184531Z",
+  "frame_evidence": [
+    {
+      "index": 1,
+      "timestamp_seconds": 0.0,
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "observed_entities": [
+        "woman in navy shirt in foreground",
+        "man in navy shirt blurred in background"
+      ]
+    },
+    {
+      "index": 2,
+      "timestamp_seconds": 2.5,
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "observed_entities": [
+        "woman in navy shirt leaning over a transparent tabletop",
+        "man in dark jacket seated across from her"
+      ]
+    },
+    {
+      "index": 3,
+      "timestamp_seconds": 5.0,
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "observed_entities": [
+        "woman in navy shirt at left",
+        "man in dark shirt behind glass at right"
+      ]
+    },
+    {
+      "index": 4,
+      "timestamp_seconds": 7.5,
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "observed_entities": [
+        "woman in navy shirt seated in foreground",
+        "man in navy shirt standing blurred behind glass"
+      ]
+    }
+  ],
+  "transcript_facts": [],
+  "step_hooks": {
+    "step_36_identity_temporal_continuity": {
+      "identity_window_seconds": [
+        0.0,
+        10.0
+      ],
+      "vision_review": {
+        "model": "insightface:buffalo_l (authority) + gpt-5.5 montage (advisory)",
+        "verdict": "PASS",
+        "raw_output_tail": "all 4 frames passed ArcFace vs embry_contact_sheet_v3"
+      }
+    }
+  },
+  "coverage_gaps": [
+    "no audio track: storyboard frames are the visual artifact",
+    "no inter-frame motion",
+    "Brandon identity advisory (no reference sheet)"
+  ]
+}

@@ -1,0 +1,148 @@
+{
+  "accepted_count": 4,
+  "accepted_tom_candidates": [
+    {
+      "candidate_id": "tom-001",
+      "confidence": 0.42,
+      "emotional_intensity": 0.46,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-001",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_038",
+        "embry_age23_current_b01_memory_022"
+      ],
+      "statement": "Embry appears to take a cautious, evidence-first stance toward Kai, engaging him while preserving an observable boundary rather than moving into unguarded intimacy.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "kai",
+      "tom_state_type": "stance",
+      "watch_observation_refs": [
+        "frame_0002",
+        "frame_0003"
+      ]
+    },
+    {
+      "candidate_id": "tom-002",
+      "confidence": 0.37,
+      "emotional_intensity": 0.39,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-002",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_038",
+        "embry_age23_current_b01_memory_022"
+      ],
+      "statement": "Embry may be unsure how much personal material to reveal to Kai, keeping the exchange partially contained and separating what can be observed from what remains private or assumed.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "kai",
+      "tom_state_type": "uncertainty",
+      "watch_observation_refs": [
+        "frame_0003",
+        "frame_0004",
+        "coverage_gap_00",
+        "coverage_gap_01"
+      ]
+    },
+    {
+      "candidate_id": "tom-003",
+      "confidence": 0.44,
+      "emotional_intensity": 0.34,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-003",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_038",
+        "embry_age23_current_b01_memory_035"
+      ],
+      "statement": "Embry may believe her interaction with Kai requires consistent, precise self-management rather than allowing her role or presentation to fluctuate.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "kai",
+      "tom_state_type": "belief",
+      "watch_observation_refs": [
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004",
+        "identity_temporal_continuity_review"
+      ]
+    },
+    {
+      "candidate_id": "tom-004",
+      "confidence": 0.31,
+      "emotional_intensity": 0.43,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-004",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_035",
+        "embry_age23_current_b01_memory_038"
+      ],
+      "statement": "Embry may fear losing conversational control around Kai, especially if she feels observed while her attention or cadence shifts unexpectedly.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "kai",
+      "tom_state_type": "fear",
+      "watch_observation_refs": [
+        "frame_0001",
+        "frame_0002",
+        "coverage_gap_00"
+      ]
+    }
+  ],
+  "candidate_receipts": [
+    {
+      "candidate_id": "tom-001",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-001",
+      "reasons": []
+    },
+    {
+      "candidate_id": "tom-002",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-002",
+      "reasons": []
+    },
+    {
+      "candidate_id": "tom-003",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-003",
+      "reasons": []
+    },
+    {
+      "candidate_id": "tom-004",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-004",
+      "reasons": []
+    }
+  ],
+  "candidate_source": "llm_via_tau",
+  "canonical_memory_write_allowed": false,
+  "dream_id": "auto_cycle_20260722T184531Z",
+  "generated_at": "2026-07-22T18:59:42.131178+00:00",
+  "had_rejections": false,
+  "interpretation_sha256": "sha256:977329650c9214f4fe2106bf48db12ae80a7fbe87065d68936140442fe6aca09",
+  "live": true,
+  "live_route_attempted": true,
+  "live_route_failed": false,
+  "mocked": false,
+  "proposed_candidate_count": 4,
+  "rejected_count": 0,
+  "revision_id": "cycle_20260722T184531Z",
+  "run_id": "goal-v3",
+  "schema": "persona_dream.tom_validation_receipt.v1",
+  "status": "PASS_TOM_VALIDATION_LIVE",
+  "tau_routing": {
+    "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+    "http_status": 200,
+    "live_call_performed": true,
+    "model": "gpt-5.5",
+    "output_contract_sha256": "sha256:cdca7d6845ba5905353704db083e49ec40ce00451e5a60e2004b434b0a3fc5f6",
+    "prompt_sha256": "sha256:9926e54b9023c70122c625c5a6c3d63ecb9a1ffadd97fa56e14724549dccacb7",
+    "route": "tau:persona-dream-text-reasoning",
+    "status": "PASS",
+    "tau_receipt_schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1"
+  }
+}

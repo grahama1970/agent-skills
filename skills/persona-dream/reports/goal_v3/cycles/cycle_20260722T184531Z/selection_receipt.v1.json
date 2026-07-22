@@ -1,0 +1,15 @@
+{
+  "candidates_considered": 22,
+  "chosen": {
+    "cluster_id": "age23_current:person:brandon",
+    "selected": [
+      "embry_age23_current_b01_memory_035",
+      "embry_age23_current_b01_memory_038",
+      "embry_age23_current_b01_memory_022"
+    ]
+  },
+  "schema": "persona_dream.cycle_selection_receipt.v1",
+  "seed": "1c252d02141ae136d927a112b3160f2e5ca256197148833d8e7e0718e9f454c4",
+  "seed_source": "GOAL_V3.md sha256",
+  "skipped_already_used": 3
+}
