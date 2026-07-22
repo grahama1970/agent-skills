@@ -1,10 +1,49 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-22 UTC (PCTOM-R full64 causal-identifiability blocked boundary) by agent
+**Last updated:** 2026-07-22 UTC (PCTOM-R Gate 0 min4 lineage accepted boundary) by agent
 **Status:** Active development
 
 ## Current Understanding
 
+- 2026-07-22 UTC (PCTOM-R GATE 0 MIN4 LINEAGE ACCEPTED BOUNDARY):
+  `run_live_tau_sealed_test_replication.py` now accepts and forwards
+  `--gate0-case-root` to the lower-level live Tau condition runner, and its
+  receipt records `gate0_case_root`, `gate0_attribution_overlay_used`,
+  `gate0_attribution_record_count`, and
+  `checks.gate0_attribution_loaded_if_requested`. Regression proof:
+  `python3 -m py_compile
+  skills/persona-dream/research/prospective-tom/scripts/run_live_tau_sealed_test_replication.py`
+  and `uv run --project skills/persona-dream pytest
+  skills/persona-dream/tests/test_live_tau_condition_gate0_attribution.py -q`
+  (`12 passed`). Minimum live proof command:
+  `./skills/persona-dream/run.sh run-live-tau-sealed-test-replication
+  --episode-limit 4 --gate0-case-root
+  /tmp/persona-dream-live-pctom-gate0-attribution-20260721T1700Z/pctom_gate0_case`.
+  Replication receipt:
+  `/tmp/persona-dream-live-tau-sealed-test-gate0-min4-20260722T005651Z/live_tau_sealed_test_replication_receipt.v1.json`.
+  Causal-identifiability replay receipt:
+  `/tmp/persona-dream-pctom-causal-identifiability-gate0-min4-20260722T010023Z/pctom_causal_identifiability_receipt.json`.
+  Statuses `PASS_LIVE_TAU_PCTOM_SEALED_TEST_REPLICATION` and
+  `PASS_PCTOM_CAUSAL_IDENTIFIABILITY_GATE`; causal receipt SHA-256
+  `sha256:feeb1e4972ed8465f7d27a62f496b2c0df52a6865930a888347491c768ec11e7`;
+  lineage receipt SHA-256
+  `sha256:694f76420e64a5e7cb25b3c63316680f7828466f4af2111a885024d039bf64e8`.
+  Observed: 4 sealed-test episodes, 4 families, 16 cases, 16 live Tau case
+  calls, 4 sealed/scored/action rows per M/R/D/CD condition,
+  `gate0_attribution_overlay_used=true`, 6 Gate 0 attribution records, 16/16
+  causal-identifiability lineage rows complete, 48/48 lineage-check evidence
+  refs with accepted raw source IDs and digests. Direct generated-bundle
+  inspection counted 48 bundle files, 304 evidence refs, 16 synthetic refs, and
+  288/288 non-synthetic ToM evidence refs with both `accepted_source_id` and
+  `accepted_source_ids_sha256`. The checker reexecuted zero Tau calls and the
+  whole slice made zero Memory/provider/canonical/identity/source-memory writes
+  and used no LLM judge or human content judgment. This proves the minimum
+  accepted Gate 0-attributed sealed-test path. It does not prove full64
+  accepted-source lineage, full64 statistical confidence, planning-regret
+  benefit, real external service fault injection, semantic dream quality, paid
+  provider execution, or complete live Phase 01-16 runtime execution. Next work
+  should run full64 sealed-test replication with `--gate0-case-root` and replay
+  causal-identifiability over the new full64 condition/action roots.
 - 2026-07-22 UTC (PCTOM-R FULL64 CAUSAL-IDENTIFIABILITY BLOCKED
   BOUNDARY): the causal-identifiability checker now matches Gate 6's
   first-max tie behavior for equal-probability committed next-action

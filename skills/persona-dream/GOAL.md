@@ -133,6 +133,30 @@ Next: <one immediate action or stop condition>
 
 ## Current Evidence Snapshot
 
+- PCTOM-R Gate 0 minimum live sealed-test slice with accepted-source lineage:
+  `/tmp/persona-dream-live-tau-sealed-test-gate0-min4-20260722T005651Z/live_tau_sealed_test_replication_receipt.v1.json`.
+  Causal-identifiability receipt:
+  `/tmp/persona-dream-pctom-causal-identifiability-gate0-min4-20260722T010023Z/pctom_causal_identifiability_receipt.json`.
+  Gate 0 root:
+  `/tmp/persona-dream-live-pctom-gate0-attribution-20260721T1700Z/pctom_gate0_case`.
+  Statuses:
+  `PASS_LIVE_TAU_PCTOM_SEALED_TEST_REPLICATION` and
+  `PASS_PCTOM_CAUSAL_IDENTIFIABILITY_GATE`. Observed: 4 sealed-test episodes,
+  16 live Tau case calls, 4 sealed/scored/action rows per M/R/D/CD condition,
+  `gate0_attribution_overlay_used=true`, 6 Gate 0 attribution records,
+  16/16 causal-identifiability lineage rows complete, 48/48 lineage-check
+  evidence refs with accepted raw-source IDs and source digests, and direct
+  generated-bundle inspection found 288/288 non-synthetic ToM evidence refs
+  with both `accepted_source_id` and `accepted_source_ids_sha256`. The causal
+  gate receipt SHA-256 is
+  `sha256:feeb1e4972ed8465f7d27a62f496b2c0df52a6865930a888347491c768ec11e7`;
+  lineage receipt SHA-256 is
+  `sha256:694f76420e64a5e7cb25b3c63316680f7828466f4af2111a885024d039bf64e8`.
+  The run made zero Memory, provider, canonical-memory, identity, or
+  source-memory write attempts and used no LLM judge or human content judgment.
+  This is minimum-size live evidence for the Gate 0-attributed sealed-test path;
+  it does not prove full64 accepted raw-source lineage or full64 live Tau
+  statistical confidence.
 - PCTOM-R full64 causal-identifiability blocked boundary:
   `/tmp/persona-dream-pctom-causal-identifiability-full64-20260722T004853Z/pctom_causal_identifiability_receipt.json`.
   Manifest:

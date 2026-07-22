@@ -158,10 +158,12 @@ def run_replication(
     episode_limit: int,
     model: str | None,
     timeout_s: float,
+    gate0_case_root: Path | None = None,
 ) -> dict[str, Any]:
     started = time.monotonic()
     output_root = output_root.resolve()
     receipt_out = receipt_out.resolve()
+    gate0_case_root = gate0_case_root.resolve() if gate0_case_root is not None else None
     live_condition = _load_module(LIVE_CONDITION_SCRIPT, "pctom_live_tau_condition_comparison")
     action_selection = _load_module(ACTION_SELECTION_SCRIPT, "pctom_live_tau_condition_action_selection")
     errors: list[str] = []
@@ -180,6 +182,7 @@ def run_replication(
         episode_limit=episode_limit,
         model=model,
         timeout_s=timeout_s,
+        gate0_case_root=gate0_case_root,
     )
     if condition_receipt.get("status") != live_condition.PASS_STATUS:
         errors.append(f"live_condition_status:{condition_receipt.get('status')}")
@@ -268,6 +271,9 @@ def run_replication(
         "episode_limit": episode_limit,
         "conditions": list(CONDITIONS),
         "full_64_episode_replication": episode_limit == 64,
+        "gate0_case_root": str(gate0_case_root) if gate0_case_root else None,
+        "gate0_attribution_overlay_used": condition_receipt.get("gate0_attribution_overlay_used") is True,
+        "gate0_attribution_record_count": condition_receipt.get("gate0_attribution_record_count"),
         "live_tau_condition_comparison_receipt": str(condition_receipt_path),
         "live_tau_condition_comparison_receipt_sha256": _file_sha256(condition_receipt_path)
         if condition_receipt_path.exists()
@@ -303,6 +309,10 @@ def run_replication(
             "live_tau_action_selection_receipt_passed": action_receipt.get("status") == action_selection.PASS_STATUS,
             "outcome_visible_before_seal": False,
             "tau_receipts_hash_bound": condition_receipt.get("tau_receipts_hash_bound") is True,
+            "gate0_attribution_loaded_if_requested": (
+                gate0_case_root is None
+                or condition_receipt.get("gate0_attribution_overlay_used") is True
+            ),
             "conditions_have_tau_authored_prediction_payloads": all(
                 (counts.get("sealed_commitments_per_condition") or {}).get(condition) == episode_limit
                 for condition in CONDITIONS
@@ -366,6 +376,7 @@ def main() -> int:
     parser.add_argument("--episode-limit", type=int, default=4)
     parser.add_argument("--model", default=None)
     parser.add_argument("--timeout-s", type=float, default=240.0)
+    parser.add_argument("--gate0-case-root", type=Path, default=None)
     parser.add_argument("--json", action="store_true")
     args = parser.parse_args()
 
@@ -378,6 +389,7 @@ def main() -> int:
         episode_limit=args.episode_limit,
         model=args.model,
         timeout_s=args.timeout_s,
+        gate0_case_root=args.gate0_case_root,
     )
     if args.json:
         print(json.dumps(receipt, indent=2, sort_keys=True))

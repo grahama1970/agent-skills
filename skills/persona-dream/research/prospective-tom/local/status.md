@@ -1,5 +1,112 @@
 # Status
 
+Status: GATE0_MIN4_LINEAGE_ACCEPTED_FULL64_NOT_RERUN
+
+Latest artifact: PCTOM-R minimum accepted sealed-test slice with Gate 0
+accepted-source attribution overlaid into live Tau condition artifacts, plus
+causal-identifiability/lineage replay over that slice.
+
+Live sealed-test replication receipt:
+
+```text
+/tmp/persona-dream-live-tau-sealed-test-gate0-min4-20260722T005651Z/live_tau_sealed_test_replication_receipt.v1.json
+```
+
+Condition comparison receipt:
+
+```text
+/tmp/persona-dream-live-tau-sealed-test-gate0-min4-20260722T005651Z/live_tau_sealed_test_condition_comparison/live_tau_condition_comparison_receipt.v1.json
+```
+
+Causal-identifiability receipt:
+
+```text
+/tmp/persona-dream-pctom-causal-identifiability-gate0-min4-20260722T010023Z/pctom_causal_identifiability_receipt.json
+```
+
+Inspection result:
+
+```text
+sealed_test_replication_status: PASS_LIVE_TAU_PCTOM_SEALED_TEST_REPLICATION
+causal_identifiability_status: PASS_PCTOM_CAUSAL_IDENTIFIABILITY_GATE
+gate0_case_root: /tmp/persona-dream-live-pctom-gate0-attribution-20260721T1700Z/pctom_gate0_case
+gate0_attribution_overlay_used: true
+gate0_attribution_record_count: 6
+episodes_consumed: 4
+families_consumed: 4
+cases: 16
+tau_call_attempts: 16
+tau_live_call_performed: 16
+sealed_commitments_per_condition: M=4 R=4 D=4 CD=4
+deterministic_scores_per_condition: M=4 R=4 D=4 CD=4
+action_decisions_per_condition: M=4 R=4 D=4 CD=4
+lineage_rows: 16
+lineage_complete_rows: 16
+total_evidence_refs: 48
+evidence_refs_with_accepted_raw_source_id: 48
+evidence_refs_with_raw_source_digest: 48
+lineage_100_percent_complete: true
+receipt_sha256: sha256:feeb1e4972ed8465f7d27a62f496b2c0df52a6865930a888347491c768ec11e7
+lineage_receipt_sha256: sha256:694f76420e64a5e7cb25b3c63316680f7828466f4af2111a885024d039bf64e8
+mocked: false
+live: true
+live_tau_reexecuted_by_replication: true
+live_tau_reexecuted_by_causal_gate: false
+memory_write_attempts: 0
+provider_call_attempts: 0
+canonical_memory_write_attempts: 0
+identity_write_attempts: 0
+source_memory_write_attempts: 0
+human_content_judgment_required: false
+```
+
+Additional direct artifact count across generated condition bundles:
+
+```text
+files: 48
+evidence_refs_total: 304
+synthetic_refs: 16
+non_synthetic_refs: 288
+non_synthetic_with_accepted_source_id: 288
+non_synthetic_with_accepted_source_ids_sha256: 288
+missing_non_synthetic_files: 0
+```
+
+What this proves:
+
+```text
+the sealed-test replication wrapper can forward Gate 0 live recall attribution
+-> the condition runner overlays accepted raw-source ids into ToM evidence refs
+-> the minimum action-selection bridge size accepts 4 episodes / 16 cases
+-> causal-identifiability lineage replay accepts 16/16 rows with complete
+   accepted-source ids and digests
+-> no Memory, provider, canonical-memory, identity, source-memory, LLM judge,
+   or human content judgment path is used
+```
+
+What this does not prove:
+
+```text
+full64 accepted raw-source lineage
+full64 live Tau rerun with Gate 0 attribution
+statistical confidence for live Tau CD benefit on the full sealed test
+planning-regret benefit
+real external service fault injection
+production retry machinery
+semantic dream quality
+paid provider execution
+complete live Phase 01-16 runtime execution
+```
+
+Immediate next step:
+
+```text
+Run the full64 sealed-test replication with --gate0-case-root, then rerun the
+causal-identifiability gate over that new full64 condition/action root.
+```
+
+Prior status:
+
 Status: FULL64_CAUSAL_IDENTIFIABILITY_BLOCKED_ON_RAW_SOURCE_LINEAGE
 
 Artifact: PCTOM-R full64 causal-identifiability gate over live Tau-originated

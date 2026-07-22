@@ -494,6 +494,113 @@ def test_balanced_planning_wrapper_forwards_gate0_case_root(tmp_path):
     assert seen["gate0_case_root"] == gate0_case_root.resolve()
 
 
+def test_sealed_test_replication_wrapper_forwards_gate0_case_root(tmp_path):
+    script = ROOT / "research" / "prospective-tom" / "scripts" / "run_live_tau_sealed_test_replication.py"
+    spec = importlib.util.spec_from_file_location("sealed_test_gate0_test", script)
+    assert spec and spec.loader
+    sealed = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(sealed)
+
+    gate0_case_root = tmp_path / "gate0"
+    seen: dict[str, Path | None] = {"gate0_case_root": None}
+
+    class FakeLiveCondition:
+        PASS_STATUS = "PASS_LIVE_TAU_PCTOM_CONDITION_COMPARISON"
+
+        @staticmethod
+        def run_live_comparison(**kwargs):
+            seen["gate0_case_root"] = kwargs.get("gate0_case_root")
+            output_root = kwargs["output_root"]
+            receipt_out = kwargs["receipt_out"]
+            case_index = [
+                {"episode_id": "sealedte-info-asym-001", "condition": condition, "scoring_metrics": {}}
+                for condition in sealed.CONDITIONS
+            ]
+            case_index_path = output_root / "artifacts" / "live_condition_case_index.json"
+            _write_json(case_index_path, case_index)
+            receipt = {
+                "status": FakeLiveCondition.PASS_STATUS,
+                "split": sealed.DEFAULT_SPLIT,
+                "counts": {
+                    "episodes_consumed": 1,
+                    "families_consumed": 1,
+                    "cases": 4,
+                    "sealed_commitments_per_condition": {condition: 1 for condition in sealed.CONDITIONS},
+                    "deterministic_scores_per_condition": {condition: 1 for condition in sealed.CONDITIONS},
+                },
+                "case_index_path": str(case_index_path),
+                "tau_call_attempts": 4,
+                "tau_live_call_performed": 4,
+                "tau_receipts_hash_bound": True,
+                "gate0_attribution_overlay_used": True,
+                "gate0_attribution_record_count": 3,
+                "live": True,
+            }
+            _write_json(receipt_out, receipt)
+            return receipt
+
+    class FakeActionSelection:
+        PASS_STATUS = "PASS_LIVE_TAU_PCTOM_CONDITION_ACTION_SELECTION"
+
+        @staticmethod
+        def run_bridge(condition_root, action_root, action_receipt_path):
+            action_index = [
+                {
+                    "episode_id": "sealedte-info-asym-001",
+                    "condition": condition,
+                    "selected_action": "WAIT",
+                    "oracle_action": "WAIT",
+                    "planning_regret": 0.0,
+                }
+                for condition in sealed.CONDITIONS
+            ]
+            action_index_path = action_root / "artifacts" / "live_condition_action_decisions.json"
+            _write_json(action_index_path, action_index)
+            receipt = {
+                "status": FakeActionSelection.PASS_STATUS,
+                "counts": {
+                    "action_decisions_per_condition": {condition: 1 for condition in sealed.CONDITIONS},
+                    "deterministic_reward_or_regret_scores_per_condition": {
+                        condition: 1 for condition in sealed.CONDITIONS
+                    },
+                },
+                "decision_index": str(action_index_path),
+                "live": True,
+            }
+            _write_json(action_receipt_path, receipt)
+            return receipt
+
+    def fake_load_module(path, name):
+        if "action" in name:
+            return FakeActionSelection
+        if "condition" in name:
+            return FakeLiveCondition
+        raise AssertionError(name)
+
+    original_load_module = sealed._load_module
+    sealed._load_module = fake_load_module
+    try:
+        receipt = sealed.run_replication(
+            output_root=tmp_path / "out",
+            receipt_out=tmp_path / "out" / "receipt.json",
+            split=sealed.DEFAULT_SPLIT,
+            episodes_per_family=16,
+            episode_limit=1,
+            model=None,
+            timeout_s=1.0,
+            gate0_case_root=gate0_case_root,
+        )
+    finally:
+        sealed._load_module = original_load_module
+
+    assert receipt["status"] == sealed.PASS_STATUS
+    assert receipt["gate0_case_root"] == str(gate0_case_root.resolve())
+    assert receipt["gate0_attribution_overlay_used"] is True
+    assert receipt["gate0_attribution_record_count"] == 3
+    assert receipt["checks"]["gate0_attribution_loaded_if_requested"] is True
+    assert seen["gate0_case_root"] == gate0_case_root.resolve()
+
+
 def test_balanced_planning_wrapper_outer_timeout_blocks_before_action_selection(tmp_path):
     script = ROOT / "research" / "prospective-tom" / "scripts" / "run_live_tau_balanced_planning_replication.py"
     spec = importlib.util.spec_from_file_location("balanced_planning_timeout_test", script)
