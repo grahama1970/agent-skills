@@ -31,8 +31,15 @@ const CONVERSATION_MAX_LENGTH_NEEDLES = [
   "keep talking by starting a new chat",
   "start a new chat",
 ];
+const TOO_MANY_REQUESTS_NEEDLES = [
+  "too many requests",
+  "you're making requests too quickly",
+  "you are making requests too quickly",
+  "temporarily limited access to your conversations",
+  "please wait a few minutes before trying again",
+];
 
-function normalizeConversationLimitText(text) {
+function normalizeChatgptStateText(text) {
   return String(text || "")
     .toLowerCase()
     .replace(/[\u2018\u2019]/g, "'")
@@ -41,7 +48,7 @@ function normalizeConversationLimitText(text) {
 }
 
 function detectsConversationMaxLength(text) {
-  const normalized = normalizeConversationLimitText(text);
+  const normalized = normalizeChatgptStateText(text);
   if (!normalized) return false;
   const reachedLimit = CONVERSATION_MAX_LENGTH_NEEDLES
     .slice(0, 3)
@@ -52,11 +59,30 @@ function detectsConversationMaxLength(text) {
   return reachedLimit && newChatInstruction;
 }
 
+function detectsTooManyRequests(text) {
+  const normalized = normalizeChatgptStateText(text);
+  if (!normalized) return false;
+  const hasTitle = normalized.includes("too many requests");
+  const hasThrottle = TOO_MANY_REQUESTS_NEEDLES
+    .slice(1)
+    .some((needle) => normalized.includes(needle));
+  return hasTitle && hasThrottle;
+}
+
 function conversationMaxLengthError(state = {}) {
   const error = new Error(
     "ChatGPT conversation reached maximum length; start a new chat is required",
   );
   error.code = "chatgpt_conversation_max_length";
+  error.chatgptPageState = state;
+  return error;
+}
+
+function tooManyRequestsError(state = {}) {
+  const error = new Error(
+    "ChatGPT is rate limited: too many requests; wait before retrying",
+  );
+  error.code = "chatgpt_too_many_requests";
   error.chatgptPageState = state;
   return error;
 }
@@ -290,9 +316,27 @@ const assistantSnapshotExpression = (sentinel, baselineAssistantCount = 0) => {
       );
       return reachedLimit && newChatInstruction;
     };
+    const detectsTooManyRequests = (text) => {
+      const normalized = String(text || '')
+        .toLowerCase()
+        .replace(/[\\u2018\\u2019]/g, "'")
+        .replace(/\\s+/g, ' ')
+        .trim();
+      if (!normalized) return false;
+      const hasTitle = normalized.includes('too many requests');
+      const hasThrottle = (
+        normalized.includes("you're making requests too quickly") ||
+        normalized.includes('you are making requests too quickly') ||
+        normalized.includes('temporarily limited access to your conversations') ||
+        normalized.includes('please wait a few minutes before trying again')
+      );
+      return hasTitle && hasThrottle;
+    };
     const pageText = document.body?.innerText || document.body?.textContent || '';
     const conversationMaxLengthDetected = detectsConversationMaxLength(pageText);
     const conversationMaxLengthTail = conversationMaxLengthDetected ? pageText.slice(-1200) : '';
+    const tooManyRequestsDetected = detectsTooManyRequests(pageText);
+    const tooManyRequestsTail = tooManyRequestsDetected ? pageText.slice(-1200) : '';
     const isAssistantTurn = (node) => {
       if (!(node instanceof HTMLElement)) return false;
       const role = (node.getAttribute('data-message-author-role') || '').toLowerCase();
@@ -340,6 +384,8 @@ const assistantSnapshotExpression = (sentinel, baselineAssistantCount = 0) => {
         pageTextContainsSentinel: false,
         conversationMaxLengthDetected,
         conversationMaxLengthTail,
+        tooManyRequestsDetected,
+        tooManyRequestsTail,
         documentHidden,
         visibilityState,
         documentHasFocus,
@@ -385,6 +431,8 @@ const assistantSnapshotExpression = (sentinel, baselineAssistantCount = 0) => {
       sentinelMatch,
       conversationMaxLengthDetected,
       conversationMaxLengthTail,
+      tooManyRequestsDetected,
+      tooManyRequestsTail,
       documentHidden,
       visibilityState,
       documentHasFocus,
@@ -538,6 +586,23 @@ async function assertReadyForNewPrompt(cdp) {
         );
         return reachedLimit && newChatInstruction;
       };
+      const detectsTooManyRequests = (text) => {
+        const normalized = String(text || '')
+          .toLowerCase()
+          .replace(/[\\u2018\\u2019]/g, "'")
+          .replace(/\\s+/g, ' ')
+          .trim();
+        if (!normalized) return false;
+        const hasTitle = normalized.includes('too many requests');
+        const hasThrottle = (
+          normalized.includes("you're making requests too quickly") ||
+          normalized.includes('you are making requests too quickly') ||
+          normalized.includes('temporarily limited access to your conversations') ||
+          normalized.includes('please wait a few minutes before trying again')
+        );
+        return hasTitle && hasThrottle;
+      };
+      const pageText = document.body?.innerText || '';
       const buttons = Array.from(document.querySelectorAll('button'))
         .map((button) => ({
           text: (button.innerText || button.textContent || '').trim(),
@@ -579,8 +644,10 @@ async function assertReadyForNewPrompt(cdp) {
         visibilityState: document.visibilityState || null,
         documentHasFocus: typeof document.hasFocus === 'function' ? document.hasFocus() : null,
         tailContainsStoppedThinking: visibleText.toLowerCase().includes('stopped thinking'),
-        conversationMaxLengthDetected: detectsConversationMaxLength(document.body?.innerText || ''),
-        conversationMaxLengthTail: detectsConversationMaxLength(document.body?.innerText || '') ? visibleText : '',
+        conversationMaxLengthDetected: detectsConversationMaxLength(pageText),
+        conversationMaxLengthTail: detectsConversationMaxLength(pageText) ? visibleText : '',
+        tooManyRequestsDetected: detectsTooManyRequests(pageText),
+        tooManyRequestsTail: detectsTooManyRequests(pageText) ? visibleText : '',
         title: document.title || '',
         url: location.href || '',
       };
@@ -588,6 +655,9 @@ async function assertReadyForNewPrompt(cdp) {
   );
   if (state?.conversationMaxLengthDetected) {
     throw conversationMaxLengthError(state);
+  }
+  if (state?.tooManyRequestsDetected) {
+    throw tooManyRequestsError(state);
   }
   if (state?.stopVisible) {
     const err = new Error("ChatGPT page is busy before submit: stop button is visible; wait, extract the existing response, or use a fresh reviewer tab");
@@ -1233,6 +1303,14 @@ async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
         visibilityState: snapshot.visibilityState || null,
       });
     }
+    if (snapshot.tooManyRequestsDetected === true) {
+      throw tooManyRequestsError({
+        tooManyRequestsTail: snapshot.tooManyRequestsTail || "",
+        source: snapshot.source || "page-text",
+        documentHidden: snapshot.documentHidden === true,
+        visibilityState: snapshot.visibilityState || null,
+      });
+    }
     if (snapshot.documentHidden === true) {
       hiddenPolls++;
       if (noActivate) {
@@ -1601,4 +1679,5 @@ module.exports = {
   attemptOptionalSelection,
   waitForResponse,
   detectsConversationMaxLength,
+  detectsTooManyRequests,
 };

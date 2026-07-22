@@ -264,6 +264,17 @@ browser handlers through `$surf`/`$browser-oracle` command specs.
   fields in the Ask/Tau artifacts. If rollover failed, mark only that handler
   node `NEEDS_ATTENTION` and route the next attempt through the same Surf
   `Start new chat`/fresh-tab recovery contract.
+- If a WebGPT/Tau browser-handler receipt or Surf metadata reports
+  `chatgpt_too_many_requests_detected` or `chatgpt_rate_limit`, treat it as
+  Surf's provider-throttle cooldown path. Surf clicks **Got it** when possible,
+  waits `SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS`, and retries once by default on
+  the same controlled tab. Do not reclassify it as a reviewer failure,
+  browser-oracle mismatch, download failure, or sentinel parser defect. If Surf
+  succeeds after cooldown, preserve the throttle metadata and continue. If
+  `proof_status: rate_limited` or `chatgpt_rate_limit.exhausted: true`, mark
+  only that browser handler node `NEEDS_ATTENTION` or rate-limited and let the
+  outer scheduler back off; do not launch parallel WebGPT attempts to bypass
+  the throttle.
 - Do not use raw `surf` as a substitute for `$ask`; use it only for transport
   debugging, direct project-level WebGPT workflows, or Tau command specs emitted
   by `./run.sh tau-dag`.

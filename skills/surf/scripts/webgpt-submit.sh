@@ -95,6 +95,8 @@ sentinel="auto"
 stable_polls=3
 timeout_s="${SURF_WEBGPT_TIMEOUT:-2400}"
 advisory_after_s="${SURF_WEBGPT_ADVISORY_AFTER_SECONDS:-0}"
+rate_limit_wait_s="${SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS:-300}"
+rate_limit_retry_attempts="${SURF_WEBGPT_RATE_LIMIT_RETRY_ATTEMPTS:-1}"
 model=""
 reasoning="${SURF_WEBGPT_REASONING:-Pro}"
 tab_id=""
@@ -342,6 +344,13 @@ elif failure == "concurrent_submit_same_tab":
     proof_status = "not_submitted"
     diagnosis = "Another Surf WebGPT submit is already controlling the requested tab."
     action = "Wait for the active run to finish or use a separate explicitly verified tab."
+elif meta.get("chatgpt_too_many_requests_detected") is True:
+    proof_status = "rate_limited"
+    diagnosis = "ChatGPT displayed the Too many requests modal for the controlled tab."
+    if isinstance(meta.get("chatgpt_rate_limit"), dict) and meta["chatgpt_rate_limit"].get("exhausted") is False:
+        action = "Surf dismissed the modal, cooled down, and retried successfully; preserve chatgpt_rate_limit metadata as degraded throttle evidence."
+    else:
+        action = "Surf exhausted its bounded cooldown retry. Do not open parallel WebGPT attempts; preserve the receipt and let the outer scheduler wait before requeueing an explicitly verified tab."
 elif failure == "submit_failed":
     ready_error = str(meta.get("chatgpt_ready_error") or "")
     if ready_error:
@@ -755,6 +764,90 @@ attempt_conversation_max_length_rollover() {
   conversation_rollover_error="resubmit_failed_exit_${rollover_status}"
   echo "ConversationMaxLengthRolloverError: ${conversation_rollover_error}" >> "$stderr_log"
   return "$rollover_status"
+}
+
+chatgpt_too_many_requests_detected=0
+attempt_chatgpt_too_many_requests_cooldown() {
+  if ! grep -Eiq "ChatGPT is rate limited: too many requests|Too many requests|making requests too quickly|temporarily limited access to your conversations" "$stderr_log"; then
+    return 1
+  fi
+  chatgpt_too_many_requests_detected=1
+  {
+    echo "ChatGPTTooManyRequestsDetected: true"
+    echo "ChatGPTRateLimitWaitSeconds: ${rate_limit_wait_s}"
+    echo "ChatGPTRateLimitRetryAttempts: ${rate_limit_retry_attempts}"
+    echo "ChatGPTRateLimitAction: dismiss_got_it_cooldown_and_retry"
+  } >> "$stderr_log"
+
+  if [[ -z "${requested_tab_id:-}" ]]; then
+    echo "ChatGPTRateLimitDismissError: requested_tab_id_missing" >> "$stderr_log"
+  else
+    local dismiss_js dismiss_out
+    dismiss_js='(() => {
+      const visible = (el) => {
+        if (!(el instanceof HTMLElement)) return false;
+        const rect = el.getBoundingClientRect();
+        const style = getComputedStyle(el);
+        return rect.width > 0 && rect.height > 0 && style.visibility !== "hidden" && style.display !== "none";
+      };
+      const text = document.body?.innerText || "";
+      const limited = /too many requests|temporarily limited access|requests too quickly/i.test(text);
+      const target = Array.from(document.querySelectorAll("button,[role=button]"))
+        .filter(visible)
+        .find((el) => {
+          const label = ((el.innerText || el.textContent || "") + " " + (el.getAttribute("aria-label") || "")).trim().toLowerCase();
+          return label === "got it" || label.includes("got it");
+        });
+      if (!limited) throw new Error("too_many_requests_modal_not_visible");
+      if (!target) throw new Error("got_it_control_not_found");
+      target.scrollIntoView({block: "center"});
+      target.click();
+      return JSON.stringify({dismissed: true, text: (target.innerText || target.textContent || "").trim(), url: location.href});
+    })()'
+    if dismiss_out="$("$RUN_SH" js "$dismiss_js" --tab-id "$requested_tab_id" --no-activate 2>&1)"; then
+      {
+        echo "ChatGPTRateLimitDismissAttempted: true"
+        echo "ChatGPTRateLimitDismissed: true"
+        echo "ChatGPTRateLimitDismissResult: ${dismiss_out}"
+      } >> "$stderr_log"
+    else
+      {
+        echo "ChatGPTRateLimitDismissAttempted: true"
+        echo "ChatGPTRateLimitDismissed: false"
+        echo "ChatGPTRateLimitDismissError: ${dismiss_out}"
+      } >> "$stderr_log"
+    fi
+  fi
+
+  if ! [[ "$rate_limit_retry_attempts" =~ ^[0-9]+$ ]] || [[ "$rate_limit_retry_attempts" -lt 1 ]]; then
+    {
+      echo "ChatGPTRateLimitRetryAttempted: false"
+      echo "ChatGPTRateLimitExhausted: true"
+      echo "ChatGPTRateLimitError: retry_disabled"
+    } >> "$stderr_log"
+    return 1
+  fi
+
+  if [[ "$rate_limit_wait_s" =~ ^[0-9]+$ ]] && [[ "$rate_limit_wait_s" -gt 0 ]]; then
+    echo "ChatGPTRateLimitCooldownStarted: true" >> "$stderr_log"
+    sleep "$rate_limit_wait_s"
+  else
+    echo "ChatGPTRateLimitCooldownStarted: false" >> "$stderr_log"
+  fi
+  echo "ChatGPTRateLimitRetryAttempted: true" >> "$stderr_log"
+
+  if run_submit > "$raw_tmp" 2>> "$stderr_log"; then
+    write_submit_receipt "submitted_to_chatgpt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "true"
+    write_webgpt_heartbeat "submitted" "rate_limit_cooldown_retry" "$receipt_output" "$raw_output" "$timeout_s"
+    echo "ChatGPTRateLimitExhausted: false" >> "$stderr_log"
+    return 0
+  fi
+  local retry_status=$?
+  {
+    echo "ChatGPTRateLimitExhausted: true"
+    echo "ChatGPTRateLimitError: retry_failed_exit_${retry_status}"
+  } >> "$stderr_log"
+  return "$retry_status"
 }
 # Dedicated reviewer tab (inactive). Avoids reusing global state or auto-picking
 # the newest chatgpt.com tab (often the user's foreground conversation).
@@ -1264,16 +1357,27 @@ fi
 cp "$raw_tmp" "$raw_output"
 
 if [[ $status -ne 0 ]]; then
-  if attempt_conversation_max_length_rollover; then
+  if attempt_chatgpt_too_many_requests_cooldown; then
     status=0
     finished_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     cp "$raw_tmp" "$raw_output"
   else
-    rollover_status=$?
-    if [[ "$conversation_rollover_attempted" -eq 1 ]]; then
-      status="$rollover_status"
+    recovery_status=$?
+    if [[ "$chatgpt_too_many_requests_detected" -eq 1 ]]; then
+      status="$recovery_status"
       finished_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
       cp "$raw_tmp" "$raw_output"
+    elif attempt_conversation_max_length_rollover; then
+      status=0
+      finished_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+      cp "$raw_tmp" "$raw_output"
+    else
+      rollover_status=$?
+      if [[ "$conversation_rollover_attempted" -eq 1 ]]; then
+        status="$rollover_status"
+        finished_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        cp "$raw_tmp" "$raw_output"
+      fi
     fi
   fi
 fi
@@ -1326,6 +1430,15 @@ conversation_max_length_rollover_from_tab = None
 conversation_max_length_rollover_to_tab = None
 conversation_max_length_rollover_action = None
 conversation_max_length_rollover_error = None
+chatgpt_too_many_requests_detected = False
+chatgpt_rate_limit_wait_seconds = None
+chatgpt_rate_limit_retry_attempts = None
+chatgpt_rate_limit_dismiss_attempted = False
+chatgpt_rate_limit_dismissed = False
+chatgpt_rate_limit_action = None
+chatgpt_rate_limit_retry_attempted = False
+chatgpt_rate_limit_exhausted = None
+chatgpt_rate_limit_error = None
 if "ChatGPT prompt composer is not empty before submit" in stderr_text:
     chatgpt_ready_error = "composer_not_empty"
 elif "ChatGPT page is in a stopped-generation state before submit" in stderr_text:
@@ -1334,6 +1447,8 @@ elif "ChatGPT page is busy before submit" in stderr_text:
     chatgpt_ready_error = "busy_stop_button_visible"
 elif "ChatGPT prompt composer not present before submit" in stderr_text:
     chatgpt_ready_error = "composer_not_present"
+elif "ChatGPT is rate limited: too many requests" in stderr_text or "Too many requests" in stderr_text:
+    chatgpt_ready_error = "too_many_requests"
 for line in reversed(stderr_text.splitlines()):
     if line.startswith("ResponseTimedOut:") and response_timed_out is None:
         response_timed_out = line.split(":", 1)[1].strip() == "true"
@@ -1363,6 +1478,30 @@ for line in reversed(stderr_text.splitlines()):
         conversation_max_length_rollover_action = line.split(":", 1)[1].strip() or None
     elif line.startswith("ConversationMaxLengthRolloverError:") and conversation_max_length_rollover_error is None:
         conversation_max_length_rollover_error = line.split(":", 1)[1].strip() or None
+    elif line.startswith("ChatGPTTooManyRequestsDetected:"):
+        chatgpt_too_many_requests_detected = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("ChatGPTRateLimitWaitSeconds:") and chatgpt_rate_limit_wait_seconds is None:
+        try:
+            chatgpt_rate_limit_wait_seconds = int(line.split(":", 1)[1].strip())
+        except Exception:
+            chatgpt_rate_limit_wait_seconds = None
+    elif line.startswith("ChatGPTRateLimitRetryAttempts:") and chatgpt_rate_limit_retry_attempts is None:
+        try:
+            chatgpt_rate_limit_retry_attempts = int(line.split(":", 1)[1].strip())
+        except Exception:
+            chatgpt_rate_limit_retry_attempts = None
+    elif line.startswith("ChatGPTRateLimitDismissAttempted:"):
+        chatgpt_rate_limit_dismiss_attempted = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("ChatGPTRateLimitDismissed:"):
+        chatgpt_rate_limit_dismissed = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("ChatGPTRateLimitAction:") and chatgpt_rate_limit_action is None:
+        chatgpt_rate_limit_action = line.split(":", 1)[1].strip() or None
+    elif line.startswith("ChatGPTRateLimitRetryAttempted:"):
+        chatgpt_rate_limit_retry_attempted = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("ChatGPTRateLimitExhausted:") and chatgpt_rate_limit_exhausted is None:
+        chatgpt_rate_limit_exhausted = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("ChatGPTRateLimitError:") and chatgpt_rate_limit_error is None:
+        chatgpt_rate_limit_error = line.split(":", 1)[1].strip() or None
 pathlib.Path(meta).write_text(json.dumps({
     "status": "failed",
     "failure": "submit_failed",
@@ -1400,6 +1539,17 @@ pathlib.Path(meta).write_text(json.dumps({
         "to_tab_id": conversation_max_length_rollover_to_tab,
         "action": conversation_max_length_rollover_action,
         "error": conversation_max_length_rollover_error,
+    },
+    "chatgpt_too_many_requests_detected": chatgpt_too_many_requests_detected,
+    "chatgpt_rate_limit": {
+        "wait_seconds": chatgpt_rate_limit_wait_seconds,
+        "retry_attempts": chatgpt_rate_limit_retry_attempts,
+        "dismiss_attempted": chatgpt_rate_limit_dismiss_attempted,
+        "dismissed": chatgpt_rate_limit_dismissed,
+        "action": chatgpt_rate_limit_action,
+        "retry_attempted": chatgpt_rate_limit_retry_attempted,
+        "exhausted": chatgpt_rate_limit_exhausted,
+        "error": chatgpt_rate_limit_error,
     },
     "extract_fallback_used": extract_fallback_used,
     "extract_fallback_reason": extract_fallback_reason,
@@ -1447,6 +1597,15 @@ conversation_max_length_rollover_from_tab = None
 conversation_max_length_rollover_to_tab = None
 conversation_max_length_rollover_action = None
 conversation_max_length_rollover_error = None
+chatgpt_too_many_requests_detected = False
+chatgpt_rate_limit_wait_seconds = None
+chatgpt_rate_limit_retry_attempts = None
+chatgpt_rate_limit_dismiss_attempted = False
+chatgpt_rate_limit_dismissed = False
+chatgpt_rate_limit_action = None
+chatgpt_rate_limit_retry_attempted = False
+chatgpt_rate_limit_exhausted = None
+chatgpt_rate_limit_error = None
 for line in reversed(stderr_text.splitlines()):
     if line.startswith("ResponseTimedOut:") and response_timed_out is None:
         response_timed_out = line.split(":", 1)[1].strip() == "true"
@@ -1476,6 +1635,30 @@ for line in reversed(stderr_text.splitlines()):
         conversation_max_length_rollover_action = line.split(":", 1)[1].strip() or None
     elif line.startswith("ConversationMaxLengthRolloverError:") and conversation_max_length_rollover_error is None:
         conversation_max_length_rollover_error = line.split(":", 1)[1].strip() or None
+    elif line.startswith("ChatGPTTooManyRequestsDetected:"):
+        chatgpt_too_many_requests_detected = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("ChatGPTRateLimitWaitSeconds:") and chatgpt_rate_limit_wait_seconds is None:
+        try:
+            chatgpt_rate_limit_wait_seconds = int(line.split(":", 1)[1].strip())
+        except Exception:
+            chatgpt_rate_limit_wait_seconds = None
+    elif line.startswith("ChatGPTRateLimitRetryAttempts:") and chatgpt_rate_limit_retry_attempts is None:
+        try:
+            chatgpt_rate_limit_retry_attempts = int(line.split(":", 1)[1].strip())
+        except Exception:
+            chatgpt_rate_limit_retry_attempts = None
+    elif line.startswith("ChatGPTRateLimitDismissAttempted:"):
+        chatgpt_rate_limit_dismiss_attempted = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("ChatGPTRateLimitDismissed:"):
+        chatgpt_rate_limit_dismissed = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("ChatGPTRateLimitAction:") and chatgpt_rate_limit_action is None:
+        chatgpt_rate_limit_action = line.split(":", 1)[1].strip() or None
+    elif line.startswith("ChatGPTRateLimitRetryAttempted:"):
+        chatgpt_rate_limit_retry_attempted = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("ChatGPTRateLimitExhausted:") and chatgpt_rate_limit_exhausted is None:
+        chatgpt_rate_limit_exhausted = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("ChatGPTRateLimitError:") and chatgpt_rate_limit_error is None:
+        chatgpt_rate_limit_error = line.split(":", 1)[1].strip() or None
 pathlib.Path(meta).write_text(json.dumps({
     "status": "missing_sentinel",
     "failure": "missing_sentinel",
@@ -1511,6 +1694,17 @@ pathlib.Path(meta).write_text(json.dumps({
         "to_tab_id": conversation_max_length_rollover_to_tab,
         "action": conversation_max_length_rollover_action,
         "error": conversation_max_length_rollover_error,
+    },
+    "chatgpt_too_many_requests_detected": chatgpt_too_many_requests_detected,
+    "chatgpt_rate_limit": {
+        "wait_seconds": chatgpt_rate_limit_wait_seconds,
+        "retry_attempts": chatgpt_rate_limit_retry_attempts,
+        "dismiss_attempted": chatgpt_rate_limit_dismiss_attempted,
+        "dismissed": chatgpt_rate_limit_dismissed,
+        "action": chatgpt_rate_limit_action,
+        "retry_attempted": chatgpt_rate_limit_retry_attempted,
+        "exhausted": chatgpt_rate_limit_exhausted,
+        "error": chatgpt_rate_limit_error,
     },
     "extract_fallback_used": extract_fallback_used,
     "extract_fallback_reason": extract_fallback_reason,
@@ -1716,6 +1910,15 @@ conversation_max_length_rollover_from_tab = None
 conversation_max_length_rollover_to_tab = None
 conversation_max_length_rollover_action = None
 conversation_max_length_rollover_error = None
+chatgpt_too_many_requests_detected = False
+chatgpt_rate_limit_wait_seconds = None
+chatgpt_rate_limit_retry_attempts = None
+chatgpt_rate_limit_dismiss_attempted = False
+chatgpt_rate_limit_dismissed = False
+chatgpt_rate_limit_action = None
+chatgpt_rate_limit_retry_attempted = False
+chatgpt_rate_limit_exhausted = None
+chatgpt_rate_limit_error = None
 for line in reversed(stderr_text.splitlines()):
     if line.startswith("Tab ID:") and tab_id is None:
         tab_id = line.split(":", 1)[1].strip()
@@ -1777,6 +1980,30 @@ for line in reversed(stderr_text.splitlines()):
         conversation_max_length_rollover_action = line.split(":", 1)[1].strip() or None
     elif line.startswith("ConversationMaxLengthRolloverError:") and conversation_max_length_rollover_error is None:
         conversation_max_length_rollover_error = line.split(":", 1)[1].strip() or None
+    elif line.startswith("ChatGPTTooManyRequestsDetected:"):
+        chatgpt_too_many_requests_detected = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("ChatGPTRateLimitWaitSeconds:") and chatgpt_rate_limit_wait_seconds is None:
+        try:
+            chatgpt_rate_limit_wait_seconds = int(line.split(":", 1)[1].strip())
+        except Exception:
+            chatgpt_rate_limit_wait_seconds = None
+    elif line.startswith("ChatGPTRateLimitRetryAttempts:") and chatgpt_rate_limit_retry_attempts is None:
+        try:
+            chatgpt_rate_limit_retry_attempts = int(line.split(":", 1)[1].strip())
+        except Exception:
+            chatgpt_rate_limit_retry_attempts = None
+    elif line.startswith("ChatGPTRateLimitDismissAttempted:"):
+        chatgpt_rate_limit_dismiss_attempted = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("ChatGPTRateLimitDismissed:"):
+        chatgpt_rate_limit_dismissed = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("ChatGPTRateLimitAction:") and chatgpt_rate_limit_action is None:
+        chatgpt_rate_limit_action = line.split(":", 1)[1].strip() or None
+    elif line.startswith("ChatGPTRateLimitRetryAttempted:"):
+        chatgpt_rate_limit_retry_attempted = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("ChatGPTRateLimitExhausted:") and chatgpt_rate_limit_exhausted is None:
+        chatgpt_rate_limit_exhausted = line.split(":", 1)[1].strip() == "true"
+    elif line.startswith("ChatGPTRateLimitError:") and chatgpt_rate_limit_error is None:
+        chatgpt_rate_limit_error = line.split(":", 1)[1].strip() or None
     if (
         tab_id is not None
         and activated is not None
@@ -1904,6 +2131,17 @@ pathlib.Path(meta).write_text(json.dumps({
         "to_tab_id": conversation_max_length_rollover_to_tab,
         "action": conversation_max_length_rollover_action,
         "error": conversation_max_length_rollover_error,
+    },
+    "chatgpt_too_many_requests_detected": chatgpt_too_many_requests_detected,
+    "chatgpt_rate_limit": {
+        "wait_seconds": chatgpt_rate_limit_wait_seconds,
+        "retry_attempts": chatgpt_rate_limit_retry_attempts,
+        "dismiss_attempted": chatgpt_rate_limit_dismiss_attempted,
+        "dismissed": chatgpt_rate_limit_dismissed,
+        "action": chatgpt_rate_limit_action,
+        "retry_attempted": chatgpt_rate_limit_retry_attempted,
+        "exhausted": chatgpt_rate_limit_exhausted,
+        "error": chatgpt_rate_limit_error,
     },
     "extract_fallback_used": extract_fallback_used,
     "extract_fallback_reason": extract_fallback_reason,

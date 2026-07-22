@@ -464,6 +464,20 @@ Behavior:
   Metadata records `conversation_max_length_rollover.from_tab_id`,
   `to_tab_id`, `action`, and `error`; preserve those fields when reporting
   routing proof because the final controlled tab may be a new conversation.
+- If ChatGPT shows the **Too many requests** modal
+  `You're making requests too quickly. We've temporarily limited access to your
+  conversations to protect your data. Please wait a few minutes before trying
+  again.`, Surf treats it as provider throttling, not a tab-routing, download,
+  sentinel, parser, or reviewer-content failure. `webgpt.submit` clicks the
+  visible **Got it** control when present, waits
+  `SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS` (default `300`), then retries the same
+  prepared prompt once on the same controlled tab
+  (`SURF_WEBGPT_RATE_LIMIT_RETRY_ATTEMPTS`, default `1`). If throttling remains
+  after the bounded retry, metadata reports
+  `chatgpt_too_many_requests_detected: true`, `proof_status: rate_limited`, and
+  `chatgpt_rate_limit` fields for `wait_seconds`, `retry_attempted`,
+  `dismissed`, `exhausted`, and `error`. Project agents must not open parallel
+  WebGPT attempts or wrap this state in another immediate retry loop.
 
 
 Do not infer WebGPT completion from spinner absence, button state, visual
@@ -1199,7 +1213,7 @@ the default WebGPT path is that the controlled tab is not foregrounded.
 
 #### WebGPT submit auto-recovery (built into `scripts/webgpt-submit.sh`)
 
-`webgpt.submit` now handles three common failure modes automatically:
+`webgpt.submit` now handles four common failure modes automatically:
 
 1. **Duplicate tab cleanup**: Before submitting, `webgpt.submit` checks for any
    other open ChatGPT tabs sharing the same conversation URL. Duplicates are
@@ -1224,8 +1238,16 @@ the default WebGPT path is that the controlled tab is not foregrounded.
      "ChatGPT prompt composer is not empty" errors)
    - Retries the clear if ChatGPT restores the draft between clear and submit
 
-If all three recovery steps fail, use `--create-tab` which opens a fresh
-ChatGPT tab with no stale CDP and no restored draft:
+4. **ChatGPT Too many requests cooldown**: If the controlled tab shows the
+   Too many requests modal, `webgpt.submit` records
+   `chatgpt_too_many_requests_detected`, clicks **Got it** when possible, waits
+   `SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS` (default `300`), and retries the same
+   prepared prompt once on the same controlled tab. It does not create parallel
+   tabs to bypass throttling. If the retry is still throttled, the run fails
+   closed with `proof_status: rate_limited`.
+
+If stale-CDP/composer recovery still fails, use `--create-tab` which opens a
+fresh ChatGPT tab with no stale CDP and no restored draft:
 
 ```bash
 surf webgpt.submit --input REQ.md --output RESP.md --create-tab --timeout 900
