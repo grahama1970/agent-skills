@@ -2,7 +2,7 @@
 name: browser-oracle
 description: >
   Persistent browser-oracle tab bindings and directory walk-up registry for
-  WebGPT, Cursor Browser, Gemini, and Kimi. Binds tab id / viewId + URL once
+  WebGPT, Cursor Browser, Gemini, Kimi, and Claude. Binds tab id / viewId + URL once
   under ~/.pi; maps directories to project names via .ask/browser-oracles.yaml
   discovered like python-dotenv parent walk-up.
 triggers:
@@ -155,7 +155,7 @@ Within a registry root, `by_relative_path` keys are relative to that root
 
 ### `resolve`
 ```bash
-./run.sh resolve [--from PATH] [--backend webgpt|webgemini|webkimi|cursor-browser]
+./run.sh resolve [--from PATH] [--backend webgpt|webgemini|webkimi|webclaude|cursor-browser]
                  [--project NAME] [--lane LANE] [--json]
 ```
 Walk up from `--from` (default `.`), map directory → project, load `~/.pi/*-projects/<project>.json`.
@@ -283,6 +283,7 @@ Resolve + verify + readiness (`ready` | `needs_attention`).
 | `webgpt` | `tab_id` | `~/.pi/webgpt-projects/` |
 | `webgemini` | `tab_id` | `~/.pi/webgemini-projects/` |
 | `webkimi` | `tab_id` | `~/.pi/webkimi-projects/` |
+| `webclaude` | `tab_id` | `~/.pi/webclaude-projects/` |
 | `cursor-browser` | `view_id` | `~/.pi/cursor-browser-projects/` |
 
 ## Boundaries
