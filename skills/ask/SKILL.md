@@ -158,8 +158,13 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
   browsing capability when available and to state whether web research was used.
   Preserve those source-backed insights per handler instead of treating one
   provider's web search as shared evidence for all providers.
-- **Creator-reviewer loop**: use `--topology sequential` and list the creator
-  handler first, then reviewer handlers. Downstream handlers receive prior
+- **Roundtable (deliberation panel)**: repeatable `--handler` values with
+  `--topology concurrent` — ALWAYS concurrent; see the Roundtable
+  Collaboration Protocol below. Equal context demands that every seat answers
+  the same shared prompt; a sequential chain is a PIPELINE, not a roundtable.
+  Compiles to `tau.dag_contract.v1` with handler nodes and a join node.
+- **Creator-reviewer loop (pipeline, not a roundtable)**: use `--topology
+  sequential` and list the creator handler first, then reviewer handlers. Downstream handlers receive prior
   handler receipts and response excerpts. If the request asks for pass/fail
   review, the reviewer prompt requires `VERDICT: PASS`, `VERDICT: FAIL`, or
   `VERDICT: NEEDS_ATTENTION`.
@@ -253,9 +258,10 @@ Current command patterns:
   --handler-project webgpt=tau \
   --topology concurrent --json
 
-# Execute a sequential browser roundtable.
+# Execute a sequential handler PIPELINE (chain, not a roundtable —
+# roundtables are always concurrent per the protocol above).
 ./run.sh tau-dag "Ask webclaude, pass its answer to webkimi, then have webgpt review." \
-  --repo local/ask --target sequential-web \
+  --repo local/ask --target sequential-pipeline \
   --handler webclaude --handler webkimi --handler webgpt \
   --handler-project webgpt=tau \
   --topology sequential --execute --json
