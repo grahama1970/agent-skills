@@ -520,6 +520,7 @@ def main() -> int:
         "dream_node_key": dream_doc["_key"],
         "commit_manifest_key": manifest.get("key"),
         "media_sha256": art["media_sha"],
+        "frames": art["frames"],
         "image_calls": art["image_calls"],
         "arcface_cosines": [f.get("best_cosine") for f in art["frames"]],
         "grounding_fraction": m2.get("fraction_resolved"),

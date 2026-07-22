@@ -1,0 +1,45 @@
+{
+  "raw": "{\"frames\":[{\"index\":1,\"people\":[\"A woman in a dark blue shirt seated in the foreground using a tablet or laptop\",\"A man standing in the background among cardboard boxes\"],\"activity\":\"The woman is looking at and interacting with a device while the man stands behind her holding or leaning on something.\",\"setting\":\"A cluttered room or storage area with papers on the wall, bedding, and stacked cardboard boxes.\",\"tone\":\"Focused and tense\"},{\"index\":2,\"people\":[\"A woman in a dark blue shirt holding a small dark object\",\"A man crouched or seated in the background near a lamp\"],\"activity\":\"The woman examines an object in her hands while the man watches from behind near a surfboard-shaped item.\",\"setting\":\"A dim workshop or garage-like space with tools, a lamp, and a tall surfboard or board leaning upright.\",\"tone\":\"Serious and investigative\"},{\"index\":3,\"people\":[\"A woman in a dark blue shirt seen in close-up\",\"A man's face visible on a screen or reflected interface\"],\"activity\":\"The woman looks at a transparent screen or glass surface with digital interface icons and a small video/image of a man's face.\",\"setting\":\"An interior space with glass or a monitor-like surface showing overlay controls.\",\"tone\":\"Concentrated and concerned\"},{\"index\":4,\"people\":[\"A woman in a dark blue shirt holding a sheet of paper\",\"A man standing in the background holding a mug or cup\"],\"activity\":\"The woman holds up a blank-looking paper while looking forward; the man stands behind her in the cluttered room.\",\"setting\":\"A dark workshop or storage room with equipment, shelves, a bed or cot, and a surfboard-like object.\",\"tone\":\"Uncertain and tense\"}]}",
+  "frames": [
+    {
+      "index": 1,
+      "people": [
+        "A woman in a dark blue shirt seated in the foreground using a tablet or laptop",
+        "A man standing in the background among cardboard boxes"
+      ],
+      "activity": "The woman is looking at and interacting with a device while the man stands behind her holding or leaning on something.",
+      "setting": "A cluttered room or storage area with papers on the wall, bedding, and stacked cardboard boxes.",
+      "tone": "Focused and tense"
+    },
+    {
+      "index": 2,
+      "people": [
+        "A woman in a dark blue shirt holding a small dark object",
+        "A man crouched or seated in the background near a lamp"
+      ],
+      "activity": "The woman examines an object in her hands while the man watches from behind near a surfboard-shaped item.",
+      "setting": "A dim workshop or garage-like space with tools, a lamp, and a tall surfboard or board leaning upright.",
+      "tone": "Serious and investigative"
+    },
+    {
+      "index": 3,
+      "people": [
+        "A woman in a dark blue shirt seen in close-up",
+        "A man's face visible on a screen or reflected interface"
+      ],
+      "activity": "The woman looks at a transparent screen or glass surface with digital interface icons and a small video/image of a man's face.",
+      "setting": "An interior space with glass or a monitor-like surface showing overlay controls.",
+      "tone": "Concentrated and concerned"
+    },
+    {
+      "index": 4,
+      "people": [
+        "A woman in a dark blue shirt holding a sheet of paper",
+        "A man standing in the background holding a mug or cup"
+      ],
+      "activity": "The woman holds up a blank-looking paper while looking forward; the man stands behind her in the cluttered room.",
+      "setting": "A dark workshop or storage room with equipment, shelves, a bed or cot, and a surfboard-like object.",
+      "tone": "Uncertain and tense"
+    }
+  ]
+}

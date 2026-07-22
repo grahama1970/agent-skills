@@ -1,0 +1,76 @@
+{
+  "anchors_unchanged": true,
+  "arcface_cosines": [
+    0.67753,
+    0.76117,
+    0.639842,
+    0.762793
+  ],
+  "cluster": "age15_19:person:kai",
+  "commit_manifest_key": "commit_2ee4099809ebc2675a201b070d5fee569d3bcc6ae89d013971a69516a861153a",
+  "counterpart_gate": "all accepted p13/p14 targets in {counterpart, unknown_person}",
+  "counterpart_id": "kai",
+  "created_at": "2026-07-22T22:34:57Z",
+  "cycle_id": "cycle_20260722T222024Z",
+  "distinction": {
+    "literal_occurrence_status": "DENIED",
+    "passed": true,
+    "record_class": "SYNTHETIC_DREAM"
+  },
+  "dream_node_key": "dream_auto_cycle_20260722T222024Z",
+  "frames": [
+    {
+      "attempt": 1,
+      "best_cosine": 0.67753,
+      "frame": "reports/goal_v3/cycles/cycle_20260722T222024Z/frames/sb_001.attempt_01.png",
+      "frame_sha256": "aeaf4b6cbdc19fcb7ef5ac7fcf68430081e2786b2ccbd657e60de550ef4a01c7",
+      "panel_id": "sb_001",
+      "reconstructed_from": "reports/goal_v3/cycles/cycle_20260722T222024Z/frames/sb_001.attempt_01_arcface.json"
+    },
+    {
+      "attempt": 1,
+      "best_cosine": 0.76117,
+      "frame": "reports/goal_v3/cycles/cycle_20260722T222024Z/frames/sb_002.attempt_01.png",
+      "frame_sha256": "2a5c919d8063f629a67c1c296ff60a39eb678cb82a2d02c417f04c177d2c08db",
+      "panel_id": "sb_002",
+      "reconstructed_from": "reports/goal_v3/cycles/cycle_20260722T222024Z/frames/sb_002.attempt_01_arcface.json"
+    },
+    {
+      "attempt": 1,
+      "best_cosine": 0.639842,
+      "frame": "reports/goal_v3/cycles/cycle_20260722T222024Z/frames/sb_003.attempt_01.png",
+      "frame_sha256": "9ef64f841568525f7879c6fa8879bcaccef7698423c02d440f47653ef1675829",
+      "panel_id": "sb_003",
+      "reconstructed_from": "reports/goal_v3/cycles/cycle_20260722T222024Z/frames/sb_003.attempt_01_arcface.json"
+    },
+    {
+      "attempt": 1,
+      "best_cosine": 0.762793,
+      "frame": "reports/goal_v3/cycles/cycle_20260722T222024Z/frames/sb_004.attempt_01.png",
+      "frame_sha256": "c9b31a0ece4671c431f6d2baceb1fd487730b7cd770c98e4cd193f8d5c47a348",
+      "panel_id": "sb_004",
+      "reconstructed_from": "reports/goal_v3/cycles/cycle_20260722T222024Z/frames/sb_004.attempt_01_arcface.json"
+    }
+  ],
+  "frames_note": "reconstructed post-hoc from the run's own arcface receipts + PNGs (checker/receipt field mismatch fix)",
+  "grounding_fraction": 1.0,
+  "human_touches": 0,
+  "image_calls": 4,
+  "instruments_frozen_before_dream": true,
+  "instruments_sha256": "52109709e1a3ac2a727ba8d0d004c7f6eca834ad7bae5c472b2669250e9a4de1",
+  "media_sha256": "9d9c60778ab0dba00ddba67330da8eff03d1225793d40429b0a12b105f3d0b86",
+  "negative_control_absent_top10": true,
+  "recall_probe_ranks": {
+    "probe_1": null,
+    "probe_2": null,
+    "probe_3": null
+  },
+  "roots": [
+    "embry_age15_19_b02_memory_023",
+    "embry_age15_19_b02_memory_032",
+    "embry_age15_19_b03_memory_041"
+  ],
+  "schema": "persona_dream.autonomous_cycle_receipt.v1",
+  "status": "PASS_AUTONOMOUS_CYCLE",
+  "voice_weights_receipt": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260722T222024Z/voice_weights/dream_voice_weights_receipt.v1.json"
+}

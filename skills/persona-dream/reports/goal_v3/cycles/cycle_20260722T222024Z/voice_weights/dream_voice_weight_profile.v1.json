@@ -1,0 +1,50 @@
+{
+  "dream_node_key": "dream_auto_cycle_20260722T222024Z",
+  "mapping": "frozen in scripts/dream_voice_weights.py (TOM_TO_VOICE)",
+  "persona_id": "embry",
+  "schema": "persona_dream.dream_voice_weight_profile.v1",
+  "synthesis_params": {
+    "temperature": 0.786
+  },
+  "tom_state_types": [
+    "desire",
+    "fear",
+    "relationship_state"
+  ],
+  "weights": [
+    {
+      "emotional_tag": "reflection",
+      "pace": "measured",
+      "sources": [
+        {
+          "emotional_intensity": 0.62,
+          "statement": "Embry may fear that communication logistics and mediated contact with Kai are substituting for direct emotional presence.",
+          "tom_key": "dream:embry:auto_cycle_20260722T222024Z:tom:tom-001",
+          "tom_state_type": "fear"
+        },
+        {
+          "emotional_intensity": 0.55,
+          "statement": "Embry may experience the relationship as one where she holds a stable organizing role while Kai feels less fully accessible or emotionally available.",
+          "tom_key": "dream:embry:auto_cycle_20260722T222024Z:tom:tom-003",
+          "tom_state_type": "relationship_state"
+        }
+      ],
+      "tone": "neutral_reflective",
+      "weight": 0.585
+    },
+    {
+      "emotional_tag": "yearning",
+      "pace": "measured",
+      "sources": [
+        {
+          "emotional_intensity": 0.48,
+          "statement": "Embry may desire to protect the private emotional meaning of her connection with Kai while maintaining a controlled, practical outward presentation.",
+          "tom_key": "dream:embry:auto_cycle_20260722T222024Z:tom:tom-002",
+          "tom_state_type": "desire"
+        }
+      ],
+      "tone": "yearning_warm",
+      "weight": 0.48
+    }
+  ]
+}

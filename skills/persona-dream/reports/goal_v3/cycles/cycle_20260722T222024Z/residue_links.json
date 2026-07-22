@@ -1,0 +1,27 @@
+{
+  "schema": "persona_dream.residue_links.v1",
+  "idea_id": "auto_cycle_20260722T222024Z",
+  "items": [
+    {
+      "collection": "persona_memory",
+      "persona_id": "embry",
+      "source_id": "embry_age15_19_b02_memory_032",
+      "source_path": "gmo:persona_memory/embry_age15_19_b02_memory_032",
+      "text": "Embry begins checking transfer deadlines while telling Kai she is only planning for ordinary military uncertainty.\nKai notices school-transfer tabs. Embry has no confirmed orders, but patterns at home feel familiar. She minimizes the probability because naming it would change the remaining time.\npeople: Embry Lawson, Kai; events: confirmed orders to eglin; concepts: portable home, privacy\nSetting: age band 15-19. Situation: Embry begins checking transfer deadlines while telling Kai she is only planning for ordinary military uncertainty. Trigger: Family behavior suggests change without confirmation. Stakes: She prepares documents while withholding a prediction.\nEmotions: fear, guilt, uncertainty. Intensity: 4/5. Regulation: compartmentalization and concealment control. Conflict: Embry does not know whether orders will arrive, where they would lead, or when.\nTheory of mind: knowledge_gap: Embry does not know whether orders will arrive, where they would lead, or when. Trigger: Family behavior suggests change without confirmation. Consequence: She prepares documents while withholding a prediction. | relationship: Embry protects the present with Kai by excluding him from uncertainty she is already acting upon. Trigger: She fears anticipation will convert each interaction into goodbye. Consequence: She gives a technically true generic explanation."
+    },
+    {
+      "collection": "persona_memory",
+      "persona_id": "embry",
+      "source_id": "embry_age15_19_b02_memory_023",
+      "source_path": "gmo:persona_memory/embry_age15_19_b02_memory_023",
+      "text": "Embry gives her parents a technically true explanation for returning late from time with Kai.\nShe says a board strap failed and needed repair. That happened, but the delay also included an hour sitting together after the repair. She omits the second part.\npeople: Embry Lawson, James, Kai; objects: surfboard; concepts: privacy, repair, true fact hiding private duration\nSetting: age band 15-19. Situation: Embry gives her parents a technically true explanation for returning late from time with Kai. Trigger: A real repair supplies a sufficient explanation. Stakes: Embry reports the verifiable cause and hides the intimacy.\nEmotions: anger, guilt, longing, relief. Intensity: 4/5. Regulation: compartmentalization and concealment control. Conflict: \nTheory of mind: belief: Factual completeness is optional when omitted time feels private rather than dangerous. Trigger: A real repair supplies a sufficient explanation. Consequence: Embry reports the verifiable cause and hides the intimacy. | emotion: Embry feels relief at preserving privacy and discomfort that the answer prevents follow-up. Trigger: Her parents accept the explanation. Consequence: She reviews the wording rather than the choice."
+    },
+    {
+      "collection": "persona_memory",
+      "persona_id": "embry",
+      "source_id": "embry_age15_19_b03_memory_041",
+      "source_path": "gmo:persona_memory/embry_age15_19_b03_memory_041",
+      "text": "Embry structures long-distance calls so tightly that Kai begins reporting only problems he has already solved.\nEmbry's outline covers school, savings, surf, and next contact. Kai mentions a problem only in the final minute, after resolving it. Embry realizes the format trained both of them to hide unfinished difficulties.\npeople: Embry Lawson, kai; events: reliability versus emotional availability\nSetting: age band 15-19. Situation: Embry structures long-distance calls so tightly that Kai begins reporting only problems he has already solved. Trigger: Kai's delayed disclosure mirrors Embry's own reporting habit. Stakes: She removes the agenda from the next call but does not know what to say.\nEmotions: grief, guilt, uncertainty. Intensity: 4/5. Regulation: compartmentalization and concealment control. Conflict: \nTheory of mind: belief: A reliable communication structure can suppress the uncertainty intimacy needs to expose. Trigger: Kai's delayed disclosure mirrors Embry's own reporting habit. Consequence: She removes the agenda from the next call but does not know what to say. | relationship: Kai has adapted to Embry's controlled style in a way that reduces mutual access. Trigger: He withholds unresolved difficulty until support is unnecessary. Consequence: Embry experiences the symmetry as loss rather than success."
+    }
+  ]
+}

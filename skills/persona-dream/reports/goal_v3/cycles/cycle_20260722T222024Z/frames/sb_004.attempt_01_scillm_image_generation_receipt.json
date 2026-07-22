@@ -1,0 +1,8 @@
+{
+  "ok": true,
+  "auth": "codex_oauth_subscription:image_gen_builtin",
+  "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260722T222024Z/frames/sb_004.attempt_01.png",
+  "width": 1536,
+  "height": 864,
+  "sha256": "c9b31a0ece4671c431f6d2baceb1fd487730b7cd770c98e4cd193f8d5c47a348"
+}

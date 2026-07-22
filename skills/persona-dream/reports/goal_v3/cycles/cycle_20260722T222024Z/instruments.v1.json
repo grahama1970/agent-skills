@@ -1,0 +1,17 @@
+{
+  "frozen_at": "2026-07-22T22:20:29Z",
+  "frozen_before_dream_composition": true,
+  "negative_control": "best soil temperature for growing heirloom tomatoes in a greenhouse",
+  "negative_control_root_overlap": [],
+  "probes": [
+    "Embry checks school transfer deadlines while hiding possible military move uncertainty from Kai",
+    "Embry tells parents surfboard strap repair made her late but omits extra private time with Kai",
+    "Embry\u2019s structured long-distance call agenda causes Kai to share only already-solved problems"
+  ],
+  "roots": [
+    "embry_age15_19_b02_memory_023",
+    "embry_age15_19_b02_memory_032",
+    "embry_age15_19_b03_memory_041"
+  ],
+  "schema": "persona_dream.cycle_instruments.v1"
+}

@@ -1,0 +1,87 @@
+{
+  "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+  "blocking_findings": [],
+  "created_at": "2026-07-22T22:33:49Z",
+  "duration_seconds": 0.277682,
+  "events_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260722T222024Z/vlm_observation/panel_reviewer_events.jsonl",
+  "http_status": 200,
+  "image_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260722T222024Z/vlm_observation/tau_vlm_composite.png",
+  "live": true,
+  "live_call_performed": true,
+  "mocked": false,
+  "model": "gpt-5.5",
+  "parsed_response": {
+    "frames": [
+      {
+        "activity": "The woman is looking at and interacting with a device while the man stands behind her holding or leaning on something.",
+        "index": 1,
+        "people": [
+          "A woman in a dark blue shirt seated in the foreground using a tablet or laptop",
+          "A man standing in the background among cardboard boxes"
+        ],
+        "setting": "A cluttered room or storage area with papers on the wall, bedding, and stacked cardboard boxes.",
+        "tone": "Focused and tense"
+      },
+      {
+        "activity": "The woman examines an object in her hands while the man watches from behind near a surfboard-shaped item.",
+        "index": 2,
+        "people": [
+          "A woman in a dark blue shirt holding a small dark object",
+          "A man crouched or seated in the background near a lamp"
+        ],
+        "setting": "A dim workshop or garage-like space with tools, a lamp, and a tall surfboard or board leaning upright.",
+        "tone": "Serious and investigative"
+      },
+      {
+        "activity": "The woman looks at a transparent screen or glass surface with digital interface icons and a small video/image of a man's face.",
+        "index": 3,
+        "people": [
+          "A woman in a dark blue shirt seen in close-up",
+          "A man's face visible on a screen or reflected interface"
+        ],
+        "setting": "An interior space with glass or a monitor-like surface showing overlay controls.",
+        "tone": "Concentrated and concerned"
+      },
+      {
+        "activity": "The woman holds up a blank-looking paper while looking forward; the man stands behind her in the cluttered room.",
+        "index": 4,
+        "people": [
+          "A woman in a dark blue shirt holding a sheet of paper",
+          "A man standing in the background holding a mug or cup"
+        ],
+        "setting": "A dark workshop or storage room with equipment, shelves, a bed or cot, and a surfboard-like object.",
+        "tone": "Uncertain and tense"
+      }
+    ]
+  },
+  "passed_entities": [],
+  "receipt_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260722T222024Z/vlm_observation/visual_review_receipt.json",
+  "request": {
+    "messages": "<redacted-image-url-request>",
+    "model": "gpt-5.5",
+    "response_format": {
+      "type": "json_object"
+    },
+    "scillm_metadata": {
+      "caller": "tau",
+      "proof": "persona-dream-panel-review",
+      "role": "panel-reviewer"
+    },
+    "stream": true,
+    "stream_heartbeat_s": 15.0,
+    "stream_progress_events": true,
+    "temperature": 0
+  },
+  "response_content": "{\"frames\":[{\"index\":1,\"people\":[\"A woman in a dark blue shirt seated in the foreground using a tablet or laptop\",\"A man standing in the background among cardboard boxes\"],\"activity\":\"The woman is looking at and interacting with a device while the man stands behind her holding or leaning on something.\",\"setting\":\"A cluttered room or storage area with papers on the wall, bedding, and stacked cardboard boxes.\",\"tone\":\"Focused and tense\"},{\"index\":2,\"people\":[\"A woman in a dark blue shirt holding a small dark object\",\"A man crouched or seated in the background near a lamp\"],\"activity\":\"The woman examines an object in her hands while the man watches from behind near a surfboard-shaped item.\",\"setting\":\"A dim workshop or garage-like space with tools, a lamp, and a tall surfboard or board leaning upright.\",\"tone\":\"Serious and investigative\"},{\"index\":3,\"people\":[\"A woman in a dark blue shirt seen in close-up\",\"A man's face visible on a screen or reflected interface\"],\"activity\":\"The woman looks at a transparent screen or glass surface with digital interface icons and a small video/image of a man's face.\",\"setting\":\"An interior space with glass or a monitor-like surface showing overlay controls.\",\"tone\":\"Concentrated and concerned\"},{\"index\":4,\"people\":[\"A woman in a dark blue shirt holding a sheet of paper\",\"A man standing in the background holding a mug or cup\"],\"activity\":\"The woman holds up a blank-looking paper while looking forward; the man stands behind her in the cluttered room.\",\"setting\":\"A dark workshop or storage room with equipment, shelves, a bed or cot, and a surfboard-like object.\",\"tone\":\"Uncertain and tense\"}]}",
+  "review_prompt_sha256": "sha256:3f06d228504c819f65ea49a7c27fb145e1bf1a80f61d0dd8d8bfcaf4710c4a34",
+  "role": "panel-reviewer",
+  "schema": "tau.persona_dream.scillm_vlm_review_receipt.v1",
+  "status": "NEEDS_CHANGES",
+  "stream": true,
+  "stream_done_seen": true,
+  "stream_event_count": 351,
+  "stream_heartbeat_count": 0,
+  "stream_last_event_type": "done",
+  "summary": "Scillm VLM review completed.",
+  "surface": "scillm.chat_completions.image_url"
+}
