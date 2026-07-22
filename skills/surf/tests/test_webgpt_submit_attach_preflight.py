@@ -10,6 +10,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 WEBGPT_SUBMIT = REPO_ROOT / "skills/surf/scripts/webgpt-submit.sh"
+WEBGPT_PROMPT_PREFLIGHT = REPO_ROOT / "skills/surf/scripts/lib/webgpt_prompt_preflight.py"
 
 
 def run_submit(
@@ -19,12 +20,13 @@ def run_submit(
     tab_id: str = "837352334",
     extra_args: list[str] | None = None,
     no_activate: bool = True,
+    request_text: str = "review the attached bundle\n",
 ) -> subprocess.CompletedProcess[str]:
     request = tmp_path / "request.md"
     output = tmp_path / "response.md"
     meta = tmp_path / "response.meta.json"
     fake_run = tmp_path / "surf-run.sh"
-    request.write_text("review the attached bundle\n", encoding="utf-8")
+    request.write_text(request_text, encoding="utf-8")
     fake_run.write_text(
         fake_run_body
         or "#!/usr/bin/env bash\necho unexpected surf invocation >&2\nexit 99\n",
@@ -83,6 +85,84 @@ case "${1:-}" in
     printf '"cdp-ok"\\n'
     ;;
 """
+
+
+def test_prompt_preflight_does_not_treat_tilde_digit_approximation_as_path(tmp_path: Path) -> None:
+    request = tmp_path / "request.md"
+    request.write_text(
+        "Please expand the stratified random sample to ~20 pages.\n",
+        encoding="utf-8",
+    )
+
+    proc = subprocess.run(
+        [
+            "python3",
+            str(WEBGPT_PROMPT_PREFLIGHT),
+            "--input",
+            str(request),
+            "--json",
+            "--warn-only",
+        ],
+        cwd=tmp_path,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    payload = json.loads(proc.stdout)
+    assert payload["status"] == "pass"
+    assert payload["local_paths"] == []
+    assert payload["browser_submit_allowed"] is True
+
+
+def test_webgpt_submit_allows_warn_preflight_and_records_metadata(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    fake_run = (
+        FAKE_RUN_PREAMBLE
+        + """  chatgpt)
+    sentinel=""
+    while [[ $# -gt 0 ]]; do
+      if [[ "$1" == "--sentinel" ]]; then
+        sentinel="${2:-}"
+        break
+      fi
+      shift
+    done
+    printf 'warning allowed response\\n%s\\n' "$sentinel"
+    echo 'Tab ID: 837352334' >&2
+    echo 'Activated: false' >&2
+    echo 'TabWasCreated: false' >&2
+    echo 'ResponseSource: assistant-dom' >&2
+    exit 0
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+    )
+
+    proc = run_submit(
+        tmp_path,
+        archive,
+        fake_run,
+        request_text="Review this prose mention of /tmp/nonexistent-webgpt-warning-only.\n",
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    assert "Proceeding because --warn-only was set" in proc.stderr
+    assert (tmp_path / "response.md").read_text(encoding="utf-8") == "warning allowed response\n"
+    meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["status"] == "completed"
+    assert meta["prompt_path_preflight"]["status"] == "warn"
+    assert meta["prompt_path_preflight"]["browser_submit_allowed"] is True
+    assert meta["prompt_path_preflight"]["local_paths"] == [
+        {"path": "/tmp/nonexistent-webgpt-warning-only", "exists_locally": False}
+    ]
 
 
 def test_webgpt_submit_rejects_zip_attachment_with_more_than_five_files(tmp_path: Path) -> None:
