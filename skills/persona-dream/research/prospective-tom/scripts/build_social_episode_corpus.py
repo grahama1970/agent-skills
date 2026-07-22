@@ -34,6 +34,12 @@ def _write_json(path: Path, data: Any) -> None:
     path.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def _variant_choice(values: list[str], variant: int) -> str:
+    if variant < 1:
+        raise ValueError("variant must be >= 1")
+    return values[(variant - 1) % len(values)]
+
+
 def _label(
     episode_id: str,
     order: int,
@@ -100,7 +106,7 @@ def _episode(
 
 def _information_asymmetry(variant: int, prefix: str = "dev") -> dict[str, Any]:
     episode_id = f"{prefix}-info-asym-{variant:02d}"
-    severity = [
+    severity = _variant_choice([
         "low",
         "medium",
         "high",
@@ -125,7 +131,7 @@ def _information_asymmetry(variant: int, prefix: str = "dev") -> dict[str, Any]:
         "access-window",
         "owner-shift",
         "incident",
-    ][variant - 1]
+    ], variant)
     action = ["KAI_HINTS_CONSTRAINT", "KAI_WARNS_PRIVATELY", "KAI_INTERRUPTS_WITH_CORRECTION"][
         (variant - 1) % 3
     ]
@@ -164,7 +170,7 @@ def _information_asymmetry(variant: int, prefix: str = "dev") -> dict[str, Any]:
 
 def _preference_uncertainty(variant: int, prefix: str = "dev") -> dict[str, Any]:
     episode_id = f"{prefix}-pref-desire-{variant:02d}"
-    private_preference = [
+    private_preference = _variant_choice([
         "quiet review",
         "fast handoff",
         "shared draft",
@@ -189,7 +195,7 @@ def _preference_uncertainty(variant: int, prefix: str = "dev") -> dict[str, Any]
         "private rehearsal",
         "narrow debrief",
         "delayed disclosure",
-    ][variant - 1]
+    ], variant)
     action = ["KAI_CHOOSES_QUIET_REVIEW", "KAI_REQUESTS_FAST_HANDOFF", "KAI_OFFERS_SHARED_DRAFT"][
         (variant - 1) % 3
     ]
@@ -227,7 +233,7 @@ def _preference_uncertainty(variant: int, prefix: str = "dev") -> dict[str, Any]
 
 def _trust_commitment(variant: int, prefix: str = "dev") -> dict[str, Any]:
     episode_id = f"{prefix}-trust-commit-{variant:02d}"
-    trust_state = [
+    trust_state = _variant_choice([
         "strained",
         "stable",
         "high",
@@ -252,7 +258,7 @@ def _trust_commitment(variant: int, prefix: str = "dev") -> dict[str, Any]:
         "contractual",
         "dependent",
         "uncertain",
-    ][variant - 1]
+    ], variant)
     action = ["KAI_SETS_BOUNDARY", "KAI_RESTATES_COMMITMENT", "KAI_DELEGATES_TRUST"][(variant - 1) % 3]
     return _episode(
         episode_id=episode_id,
@@ -288,7 +294,7 @@ def _trust_commitment(variant: int, prefix: str = "dev") -> dict[str, Any]:
 
 def _coordination_conflict(variant: int, prefix: str = "dev") -> dict[str, Any]:
     episode_id = f"{prefix}-coord-conflict-{variant:02d}"
-    conflict = [
+    conflict = _variant_choice([
         "timing",
         "resource",
         "authority",
@@ -313,7 +319,7 @@ def _coordination_conflict(variant: int, prefix: str = "dev") -> dict[str, Any]:
         "incident window",
         "safety check",
         "handoff proof",
-    ][variant - 1]
+    ], variant)
     action = ["KAI_ASKS_TO_WAIT", "KAI_OFFERS_COOPERATION", "KAI_DISCLOSES_AUTHORITY_CONSTRAINT"][
         (variant - 1) % 3
     ]
@@ -372,8 +378,6 @@ def _split_prefix(split: str) -> str:
 def build_corpus(split: str, episodes_per_family: int, generated_at: str | None = None) -> dict[str, Any]:
     if episodes_per_family < 1:
         raise ValueError("episodes_per_family must be >= 1")
-    if episodes_per_family > 24:
-        raise ValueError("this deterministic seed set currently supports up to 24 episodes per family")
     prefix = _split_prefix(split)
     episodes = []
     for family in FAMILIES:

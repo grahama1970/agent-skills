@@ -1,9 +1,56 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-22 UTC (PCTOM-R Gate 0 held-out variant live fault surface) by agent
+**Last updated:** 2026-07-22 UTC (PCTOM-R variant25-26 cross-family live generalization) by agent
 **Status:** Active development
 
 ## Current Understanding
+
+- 2026-07-22 UTC (PCTOM-R VARIANT25-26 CROSS-FAMILY LIVE GENERALIZATION):
+  the Gate 1 social corpus generator now supports variants beyond 24 by
+  cycling the deterministic seed-value lists while keeping variant ids unique
+  and preserving the prior sealed64 episode payload. Rebuilding 16 episodes per
+  family produced the existing sealed64 `episodes_sha256`
+  `sha256:f8f85a905452b280341571fd6cd84984bca209d25a97edc8799ab074c2514891`.
+  A new 32-per-family deterministic corpus was built at
+  `/tmp/persona-dream-pctom-social-corpus-sealed128-variantcycle-20260722T150000Z/social_episode_corpus.v1.json`.
+  Build receipt:
+  `/tmp/persona-dream-pctom-social-corpus-sealed128-variantcycle-20260722T150000Z/social_episode_corpus_build_receipt.v1.json`.
+  Normal check receipt:
+  `/tmp/persona-dream-pctom-social-corpus-sealed128-variantcycle-20260722T150000Z/social_episode_corpus_check_receipt.v1.json`.
+  Independent replay receipt:
+  `/tmp/persona-dream-pctom-social-corpus-sealed128-variantcycle-20260722T150000Z/social_episode_independent_replay_receipt.v1.json`.
+  Independent replay status:
+  `PASS_PCTOM_SOCIAL_EPISODE_INDEPENDENT_REPLAY`; counts: 128 episodes, four
+  families, 128 action matches, 128 label matches, 128 hidden-state matches,
+  128 withheld-field matches; receipt SHA-256:
+  `sha256:ee57dbdfb09f200e9734def1a5806c015f5d41b039855a231a1e81f1f02c89c1`.
+  A mutated-action negative exited 1 with
+  `BLOCKED_PCTOM_SOCIAL_EPISODE_INDEPENDENT_REPLAY`, 127 action matches,
+  `episodes_sha256_mismatch`, action/policy replay mismatch errors, and receipt
+  SHA-256
+  `sha256:2b5d1dcc317323ea04e934d689e14486633cfbd6e092d97e7ebbad86f66d542e`.
+
+  A fresh live Tau balanced-planning replication then consumed variants 25-26
+  across all four families through the Gate 0 attribution overlay. Command:
+  `./run.sh run-live-tau-balanced-planning-replication --output-root
+  /tmp/persona-dream-live-tau-balanced-planning-gate0-variant25-26-20260722T152000Z
+  --receipt-out
+  /tmp/persona-dream-live-tau-balanced-planning-gate0-variant25-26-20260722T152000Z/live_tau_balanced_planning_replication_receipt.v1.json
+  --episodes-per-family 32 --family-episode-limit 2 --variant-min 25
+  --variant-max 26 --timeout-s 180 --outer-timeout-s 900 --gate0-case-root
+  /tmp/persona-dream-live-pctom-gate0-attribution-20260721T1700Z/pctom_gate0_case
+  --json`. Receipt status:
+  `PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION`; receipt SHA-256:
+  `sha256:236eef18ae76a9087c692df3b11cdd4860e8db2a030e82527fb0383b025e2d8a`.
+  The run performed 32/32 live Tau calls, consumed eight sealed-test episodes
+  across all four families, produced eight action rows and eight deterministic
+  planning-regret rows per M/R/D/CD condition, and recorded zero Memory,
+  provider, canonical-memory, identity, or source-memory write attempts. It
+  used no LLM judge and no human content judgment. This is live cross-family
+  generalization evidence for post-24 variants, not a planning-benefit proof:
+  `planning_benefit_with_confidence=false`, CD regret `0.275`, strongest
+  baseline `M=0.24375`, CD-minus-baseline `0.03125`, and bootstrap CI
+  `[-0.28750000000000003, 0.31875000000000003]`.
 
 - 2026-07-22 UTC (PCTOM-R BROADER LIVE GENERALIZATION V57-64): a fresh
   cooperation exposure/contrast live Tau slice now extends beyond the v53-56

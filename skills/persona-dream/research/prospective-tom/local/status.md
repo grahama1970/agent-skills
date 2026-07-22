@@ -1,8 +1,45 @@
 # Status
 
-Status: PCTOM_BROADER_LIVE_GENERALIZATION_V57_64_EXPOSURE_CONTRAST
+Status: PCTOM_VARIANT25_26_CROSS_FAMILY_LIVE_GENERALIZATION
 
-Latest artifact: broader live-generalization cooperation exposure/contrast
+Latest artifact: cross-family live Tau balanced-planning slice over newly
+enabled variants 25-26
+`/tmp/persona-dream-live-tau-balanced-planning-gate0-variant25-26-20260722T152000Z/live_tau_balanced_planning_replication_receipt.v1.json`
+with status `PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION`, receipt
+SHA-256
+`sha256:236eef18ae76a9087c692df3b11cdd4860e8db2a030e82527fb0383b025e2d8a`,
+`mocked=false`, `live=true`, and `fixture_backed=false`. It reexecuted 32 Tau
+text calls over eight new sealed-test episodes across all four social families
+using Gate 0 accepted-source attribution, produced eight action rows per
+condition, and recorded zero Memory/provider/canonical/identity/source-memory
+write attempts. The slice exercised the post-24 corpus path: `episodes_per_family=32`,
+`variant_min=25`, `variant_max=26`, and `family_episode_limit=2`. Planning
+benefit was not confidence-bound on this small generalization slice:
+`planning_benefit_with_confidence=false`, CD regret `0.275` versus strongest
+baseline `M=0.24375`, CD-minus-baseline `0.03125`, bootstrap CI
+`[-0.28750000000000003, 0.31875000000000003]`. This is useful
+cross-family/non-coordination live generalization evidence and a regression
+check for variants beyond 24; it is not a hard-success replacement for the
+existing repeated-full64 success/objective audits.
+
+Supporting deterministic corpus artifact: expanded sealed-test social corpus
+`/tmp/persona-dream-pctom-social-corpus-sealed128-variantcycle-20260722T150000Z/social_episode_corpus.v1.json`
+with build receipt
+`/tmp/persona-dream-pctom-social-corpus-sealed128-variantcycle-20260722T150000Z/social_episode_corpus_build_receipt.v1.json`,
+normal check receipt
+`/tmp/persona-dream-pctom-social-corpus-sealed128-variantcycle-20260722T150000Z/social_episode_corpus_check_receipt.v1.json`,
+and independent replay receipt
+`/tmp/persona-dream-pctom-social-corpus-sealed128-variantcycle-20260722T150000Z/social_episode_independent_replay_receipt.v1.json`.
+The independent replay returned `PASS_PCTOM_SOCIAL_EPISODE_INDEPENDENT_REPLAY`
+with 128 action matches, 128 label matches, 128 hidden-state matches, 128
+withheld-field matches, and receipt SHA-256
+`sha256:ee57dbdfb09f200e9734def1a5806c015f5d41b039855a231a1e81f1f02c89c1`.
+A mutated-action negative exited 1 with
+`BLOCKED_PCTOM_SOCIAL_EPISODE_INDEPENDENT_REPLAY`, 127 action matches, and
+receipt SHA-256
+`sha256:2b5d1dcc317323ea04e934d689e14486633cfbd6e092d97e7ebbad86f66d542e`.
+
+Previous artifact: broader live-generalization cooperation exposure/contrast
 slice
 `/tmp/persona-dream-live-tau-cooperation-exposure-contrast-v57-64-20260722T071000Z/live_tau_cooperation_exposure_contrast_receipt.v1.json`
 with status `PASS_LIVE_TAU_PCTOM_COOPERATION_EXPOSURE_CONTRAST_SLICE`,

@@ -133,6 +133,51 @@ Next: <one immediate action or stop condition>
 
 ## Current Evidence Snapshot
 
+- PCTOM-R variant25-26 cross-family live Tau generalization:
+  expanded deterministic social episode corpus
+  `/tmp/persona-dream-pctom-social-corpus-sealed128-variantcycle-20260722T150000Z/social_episode_corpus.v1.json`;
+  expanded corpus build receipt
+  `/tmp/persona-dream-pctom-social-corpus-sealed128-variantcycle-20260722T150000Z/social_episode_corpus_build_receipt.v1.json`;
+  expanded corpus normal check receipt
+  `/tmp/persona-dream-pctom-social-corpus-sealed128-variantcycle-20260722T150000Z/social_episode_corpus_check_receipt.v1.json`;
+  expanded corpus independent replay receipt
+  `/tmp/persona-dream-pctom-social-corpus-sealed128-variantcycle-20260722T150000Z/social_episode_independent_replay_receipt.v1.json`;
+  expanded corpus mutated-action negative replay receipt
+  `/tmp/persona-dream-pctom-social-corpus-sealed128-variantcycle-negative-action-20260722T150000Z/social_episode_independent_replay_receipt.v1.json`;
+  live Tau balanced-planning replication receipt
+  `/tmp/persona-dream-live-tau-balanced-planning-gate0-variant25-26-20260722T152000Z/live_tau_balanced_planning_replication_receipt.v1.json`.
+  The code change is a narrow Gate 1 generator repair: variants above 24 now
+  cycle deterministic seed-value lists instead of crashing, while variant ids
+  stay unique and the prior sealed64 episode payload remains unchanged. The
+  compatibility rebuild for 16 episodes per family produced the existing
+  sealed64 `episodes_sha256`
+  `sha256:f8f85a905452b280341571fd6cd84984bca209d25a97edc8799ab074c2514891`.
+  The expanded 128-episode corpus returned `PASS_SOCIAL_EPISODE_CORPUS` and
+  `PASS_PCTOM_SOCIAL_EPISODE_INDEPENDENT_REPLAY`: 128 episodes, four families,
+  128 first-order labels, 128 second-order labels, 128 action matches, 128
+  hidden-state matches, and 128 withheld-field matches. Independent replay
+  receipt SHA-256:
+  `sha256:ee57dbdfb09f200e9734def1a5806c015f5d41b039855a231a1e81f1f02c89c1`.
+  The mutated-action negative exited 1 with
+  `BLOCKED_PCTOM_SOCIAL_EPISODE_INDEPENDENT_REPLAY`, 127 action matches,
+  `episodes_sha256_mismatch`, action/policy replay mismatch errors, and receipt
+  SHA-256
+  `sha256:2b5d1dcc317323ea04e934d689e14486633cfbd6e092d97e7ebbad86f66d542e`.
+  The live Tau v25-26 slice returned
+  `PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION`; receipt SHA-256:
+  `sha256:236eef18ae76a9087c692df3b11cdd4860e8db2a030e82527fb0383b025e2d8a`.
+  It performed 32/32 live Tau calls, consumed eight episodes across all four
+  social families using Gate 0 accepted-source attribution, produced eight
+  action and planning-regret rows per M/R/D/CD condition, and recorded zero
+  Memory/provider/canonical/identity/source-memory write attempts. It used no
+  LLM judge and no human content judgment. This advances cross-family,
+  non-coordination live generalization beyond the old variant ceiling. It does
+  not prove confidence-bounded planning benefit on this small slice:
+  `planning_benefit_with_confidence=false`, CD regret `0.275` versus strongest
+  baseline `M=0.24375`, CD-minus-baseline `0.03125`, bootstrap CI
+  `[-0.28750000000000003, 0.31875000000000003]`. It also does not prove paid
+  provider execution, semantic dream quality, a permanently deployed external
+  production retry service, or complete Phase 01-16 media runtime execution.
 - PCTOM-R held-out variant 17-24 live Tau balanced-planning slice with Gate 0
   accepted-source attribution:
   sealed64 social episode corpus
