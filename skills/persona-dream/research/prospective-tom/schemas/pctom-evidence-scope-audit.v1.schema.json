@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.research.prospective_tom.pctom_evidence_scope_audit.v1",
+  "type": "object",
+  "required": ["schema", "created_at", "status", "mocked", "live", "fixture_backed", "ledger_path", "ledger_sha256", "negative_fixture_results", "errors", "claims"],
+  "properties": {
+    "schema": {"type": "string", "const": "persona_dream.research.prospective_tom.pctom_evidence_scope_audit.v1"},
+    "status": {"type": "string", "enum": ["PASS_PCTOM_EVIDENCE_SCOPE_LEDGER", "BLOCKED_PCTOM_EVIDENCE_SCOPE_LEDGER"]},
+    "mocked": {"type": "boolean", "const": false},
+    "live": {"type": "boolean", "const": false},
+    "fixture_backed": {"type": "boolean", "const": true},
+    "negative_fixture_results": {"type": "array"},
+    "errors": {"type": "array"},
+    "claims": {"type": "object"}
+  },
+  "additionalProperties": true
+}

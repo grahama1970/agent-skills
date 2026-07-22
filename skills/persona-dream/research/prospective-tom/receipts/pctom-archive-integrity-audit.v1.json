@@ -1,0 +1,53 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "that excluded future audit receipts are archived",
+      "accepted-source lineage",
+      "pre-seal outcome isolation",
+      "live efficacy"
+    ],
+    "proves": [
+      "archive manifest entries reread to their declared SHA-256 and size",
+      "archive entry digest substitution and duplicate path mutations fail closed"
+    ]
+  },
+  "counts": {
+    "entries": 208,
+    "receipts": 2,
+    "schemas": 20,
+    "scripts": 88
+  },
+  "created_at": "2026-07-22T13:29:48Z",
+  "errors": [],
+  "fixture_backed": true,
+  "live": false,
+  "manifest_path": "evidence/pctom-archive-manifest.v1.json",
+  "manifest_sha256": "sha256:002e0c95fa40501312e4095b8cad19f5c257e240402fbd34bfff2e07ea13107d",
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "negative_fixture_results": [
+    {
+      "blocked_as_expected": true,
+      "errors": [
+        "archive_entry_sha_mismatch:contracts/pctom-r2-experimental-integrity-and-trial-readiness.v1.md",
+        "archive_entries_sha256_mismatch"
+      ],
+      "expected_status": "BLOCKED_PCTOM_ARCHIVE_INTEGRITY",
+      "fixture": "one-byte-equivalent-sha-corruption",
+      "observed_status": "BLOCKED_PCTOM_ARCHIVE_INTEGRITY"
+    },
+    {
+      "blocked_as_expected": true,
+      "errors": [
+        "duplicate_archive_path:contracts/pctom-r2-experimental-integrity-and-trial-readiness.v1.md",
+        "archive_entries_sha256_mismatch"
+      ],
+      "expected_status": "BLOCKED_PCTOM_ARCHIVE_INTEGRITY",
+      "fixture": "duplicate-archive-path",
+      "observed_status": "BLOCKED_PCTOM_ARCHIVE_INTEGRITY"
+    }
+  ],
+  "provider_call_attempts": 0,
+  "schema": "persona_dream.research.prospective_tom.pctom_archive_integrity_audit.v1",
+  "status": "PASS_PCTOM_ARCHIVE_INTEGRITY"
+}

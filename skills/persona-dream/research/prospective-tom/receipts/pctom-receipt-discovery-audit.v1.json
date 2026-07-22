@@ -1,0 +1,68 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "future receipt discovery after later phases",
+      "accepted-source lineage",
+      "pre-seal outcome isolation",
+      "live efficacy"
+    ],
+    "proves": [
+      "receipt discovery finds the same eligible receipt set represented in the archive manifest",
+      "a synthetic unrouted receipt fixture is represented as a fail-closed discovery condition"
+    ]
+  },
+  "counts": {
+    "discovered_receipts": 2,
+    "expected_receipts": 2,
+    "missing_receipts": 0,
+    "negative_fixtures": 1,
+    "negative_fixtures_blocked": 1,
+    "unrouted_receipts": 0
+  },
+  "created_at": "2026-07-22T13:29:54Z",
+  "discovered_receipts": [
+    {
+      "fixture_backed": true,
+      "live": false,
+      "mocked": false,
+      "path": "receipts/pctom-evidence-scope-audit.v1.json",
+      "schema": "persona_dream.research.prospective_tom.pctom_evidence_scope_audit.v1",
+      "sha256": "sha256:a0a9243b0cfa4773c02ede180fddebaa5f3e1c247195524bb4ddf454c5dbb0d8",
+      "status": "PASS_PCTOM_EVIDENCE_SCOPE_LEDGER"
+    },
+    {
+      "fixture_backed": true,
+      "live": false,
+      "mocked": false,
+      "path": "receipts/pctom-r2-contract-receipt.v1.json",
+      "schema": "persona_dream.research.prospective_tom.pctom_r2_contract_receipt.v1",
+      "sha256": "sha256:6047bbe2e3d76c628c513ead89fab3c9963b539c599387ace257c9ac24854861",
+      "status": "PASS_PCTOM_R2_CONTRACT"
+    }
+  ],
+  "errors": [],
+  "expected_receipt_paths": [
+    "receipts/pctom-evidence-scope-audit.v1.json",
+    "receipts/pctom-r2-contract-receipt.v1.json"
+  ],
+  "fixture_backed": true,
+  "live": false,
+  "manifest_path": "evidence/pctom-archive-manifest.v1.json",
+  "manifest_sha256": "sha256:002e0c95fa40501312e4095b8cad19f5c257e240402fbd34bfff2e07ea13107d",
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "negative_fixture_results": [
+    {
+      "blocked_as_expected": true,
+      "errors": [
+        "unrouted_receipt:fixtures/receipt-discovery/synthetic-orphan-receipt.json"
+      ],
+      "expected_status": "BLOCKED_PCTOM_RECEIPT_DISCOVERY",
+      "fixture": "synthetic-unrouted-receipt",
+      "observed_status": "BLOCKED_PCTOM_RECEIPT_DISCOVERY"
+    }
+  ],
+  "provider_call_attempts": 0,
+  "schema": "persona_dream.research.prospective_tom.pctom_receipt_discovery_audit.v1",
+  "status": "PASS_PCTOM_RECEIPT_DISCOVERY"
+}

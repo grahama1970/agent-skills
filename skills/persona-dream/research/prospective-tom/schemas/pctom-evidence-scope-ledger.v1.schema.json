@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.research.prospective_tom.pctom_evidence_scope_ledger.v1",
+  "type": "object",
+  "required": ["schema", "created_at", "status", "mocked", "live", "fixture_backed", "receipt_inventory", "claim_rows", "counts"],
+  "properties": {
+    "schema": {"type": "string", "const": "persona_dream.research.prospective_tom.pctom_evidence_scope_ledger.v1"},
+    "created_at": {"type": "string", "minLength": 1},
+    "status": {"type": "string", "const": "SCOPE_LEDGER_BUILT"},
+    "mocked": {"type": "boolean", "const": false},
+    "live": {"type": "boolean", "const": false},
+    "fixture_backed": {"type": "boolean", "const": true},
+    "receipt_inventory": {"type": "array"},
+    "claim_rows": {"type": "array", "minItems": 1},
+    "counts": {"type": "object"}
+  },
+  "additionalProperties": true
+}

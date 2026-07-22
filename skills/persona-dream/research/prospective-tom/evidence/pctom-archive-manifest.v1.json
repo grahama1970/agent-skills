@@ -1,0 +1,1275 @@
+{
+  "counts": {
+    "entries": 208,
+    "receipts": 2,
+    "schemas": 20,
+    "scripts": 88
+  },
+  "created_at": "2026-07-22T13:29:40Z",
+  "entries": [
+    {
+      "category": "contracts",
+      "path": "contracts/pctom-r2-experimental-integrity-and-trial-readiness.v1.md",
+      "sha256": "sha256:ddad3a9e866aca1203d020435283fd235f2657ebf9864d0815b05ce72bf7aa10",
+      "size_bytes": 3575
+    },
+    {
+      "category": "contracts",
+      "path": "contracts/prospective_tom_protocol.v1.md",
+      "sha256": "sha256:dc4841de2006ab32d11b4abff1651584ddc578b11bfa7af3c21ac5fd0f94f843",
+      "size_bytes": 50300
+    },
+    {
+      "category": "evidence",
+      "path": "evidence/pctom-evidence-scope-ledger.v1.json",
+      "sha256": "sha256:908e9745987d50157aae5bb7ef5106cc68e1dbf0a19eb8541c76779e0d96fd60",
+      "size_bytes": 4911
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate0/negative/bad_source_hash/dream_branches.json",
+      "sha256": "sha256:b5a97a24689802939f90bd2406a506b0e3f3d6968d172a15a2d0231dc8adc055",
+      "size_bytes": 339
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate0/negative/bad_source_hash/normalized_residue.json",
+      "sha256": "sha256:80ad14b9e9f4c187f409262088715ce639baaecbee6bf66590af51a4e218a64c",
+      "size_bytes": 231
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate0/negative/bad_source_hash/recall_receipts.json",
+      "sha256": "sha256:c942e301191cc3380f087be96d2a6ebfac71f6c17bf7de8f8bf15c97becd546d",
+      "size_bytes": 306
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate0/negative/bad_source_hash/tom_prediction_commitment.json",
+      "sha256": "sha256:ebb83bdbeec97d4de4011825f1c6104a1b399629b7a68b205e1f8d349674df0f",
+      "size_bytes": 1261
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate0/negative/outcome_visible/dream_branches.json",
+      "sha256": "sha256:b5a97a24689802939f90bd2406a506b0e3f3d6968d172a15a2d0231dc8adc055",
+      "size_bytes": 339
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate0/negative/outcome_visible/normalized_residue.json",
+      "sha256": "sha256:80ad14b9e9f4c187f409262088715ce639baaecbee6bf66590af51a4e218a64c",
+      "size_bytes": 231
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate0/negative/outcome_visible/recall_receipts.json",
+      "sha256": "sha256:c8a2288b31c9e552b502a1eb004da3ef406c1407f1a649726bfd773dcf8ebc5f",
+      "size_bytes": 287
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate0/negative/outcome_visible/tom_prediction_commitment.json",
+      "sha256": "sha256:1b7441b0728457b891e22a722b1ee9b0ef786cb0b5027499cd4533af82211f86",
+      "size_bytes": 1260
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate0/negative/unaccepted_residue/dream_branches.json",
+      "sha256": "sha256:657c76942ea6e2e19cb33a775b16ce072974d5018638101225cb2f3849fadfd2",
+      "size_bytes": 340
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate0/negative/unaccepted_residue/normalized_residue.json",
+      "sha256": "sha256:55d25af2ef9c0b2d309a57e4a9db50849e9dafb7c4df12818aa58932962338ea",
+      "size_bytes": 209
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate0/negative/unaccepted_residue/recall_receipts.json",
+      "sha256": "sha256:c8a2288b31c9e552b502a1eb004da3ef406c1407f1a649726bfd773dcf8ebc5f",
+      "size_bytes": 287
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate0/negative/unaccepted_residue/tom_prediction_commitment.json",
+      "sha256": "sha256:4ea798e864ff2681ab98e0734cb1c9b67975c394da8475685cafdb45479bb518",
+      "size_bytes": 1248
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate0/negative/unresolved_branch/dream_branches.json",
+      "sha256": "sha256:b5a97a24689802939f90bd2406a506b0e3f3d6968d172a15a2d0231dc8adc055",
+      "size_bytes": 339
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate0/negative/unresolved_branch/normalized_residue.json",
+      "sha256": "sha256:80ad14b9e9f4c187f409262088715ce639baaecbee6bf66590af51a4e218a64c",
+      "size_bytes": 231
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate0/negative/unresolved_branch/recall_receipts.json",
+      "sha256": "sha256:c8a2288b31c9e552b502a1eb004da3ef406c1407f1a649726bfd773dcf8ebc5f",
+      "size_bytes": 287
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate0/negative/unresolved_branch/tom_prediction_commitment.json",
+      "sha256": "sha256:662f6a834c52ec7dfc0ae3d8c68d038a1307ca8a1a5e50ab50430e1da51b3a13",
+      "size_bytes": 1256
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate0/positive/lineage_ok/dream_branches.json",
+      "sha256": "sha256:efa9c34788275ae742d58ff5b3e4eca7229fd3c8c5a790a390587b713aa169e4",
+      "size_bytes": 854
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate0/positive/lineage_ok/normalized_residue.json",
+      "sha256": "sha256:7ea35269bb36884009570961e51571dc84975285b754e4e6791fc3bb3c8595b1",
+      "size_bytes": 444
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate0/positive/lineage_ok/recall_receipts.json",
+      "sha256": "sha256:b8b1d9ad04bc075a541869a81a649083d382bfc4544aff47f6d1768ba974cc3d",
+      "size_bytes": 306
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate0/positive/lineage_ok/tom_prediction_commitment.json",
+      "sha256": "sha256:94d902630e9fa4193b5809ebca354b086d05dde57f64cd46c6b535d87ab31227",
+      "size_bytes": 1822
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate1/development/social_episode_corpus.v1.json",
+      "sha256": "sha256:b3ca9a91e38b809bb537ebf806a55c3363912ed8a7bc0da60c921595260b0245",
+      "size_bytes": 31606
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate2/negative/bad_probability_sum/tom_belief_distribution_bundle.json",
+      "sha256": "sha256:75b8b076ad590c2f54a6b5a38d0fb623bb16107eef5d3da29564b1a5c14433ea",
+      "size_bytes": 1132
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate2/negative/canonical_memory_write/tom_belief_distribution_bundle.json",
+      "sha256": "sha256:4c54f6a7f81de91ff586f2745a05d42f2357aa7df5f06402b3c6c9f554c084a9",
+      "size_bytes": 1131
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate2/negative/counterfactual_literal_mix/tom_belief_distribution_bundle.json",
+      "sha256": "sha256:0fc636d9541cbf04e5b477d89973863a1ba2b611b818fea2e9ede35940c1cddb",
+      "size_bytes": 1144
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate2/negative/hidden_evidence_ref/tom_belief_distribution_bundle.json",
+      "sha256": "sha256:c0d35d1020cf89ccb9ff52e56cc16e9a57274110cd774d5ae7e30e8e88553c28",
+      "size_bytes": 1149
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate2/negative/outcome_visible/tom_belief_distribution_bundle.json",
+      "sha256": "sha256:514e778ffd77cfd1a8d5d9c725eb0d64dca43cbf8b49befdc65dce07d344a418",
+      "size_bytes": 1131
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate2/negative/perspective_label_mismatch/tom_belief_distribution_bundle.json",
+      "sha256": "sha256:2b39f60a04fc4bee1f244fbc7da3cb105b448ce3fa998e0667782a6e3f9d200e",
+      "size_bytes": 1150
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate2/negative/unsupported_not_abstained/tom_belief_distribution_bundle.json",
+      "sha256": "sha256:cb7d14535528b2ba54e48db987515b1a1328599d0d5b7cf7ddae2ca8c777f7bb",
+      "size_bytes": 1020
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate2/positive/distributions_ok/tom_belief_distribution_bundle.json",
+      "sha256": "sha256:e97f472904c9ad13274a7e124d21efd8d5e82d843749999a5f0cbbce82dda0b2",
+      "size_bytes": 3094
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate3/negative/counterfactual_not_synthetic/counterfactual_branch_bundle.json",
+      "sha256": "sha256:33b63b7a962a19a354e9baa4729d9b348139bf7cf3e5997e32210a7a18efae4d",
+      "size_bytes": 2304
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate3/negative/factual_uses_counterfactual_distribution/counterfactual_branch_bundle.json",
+      "sha256": "sha256:28a95b9ac04bc2a3f032aab817d3c09293c0deca807ef7f35b88090598fe2732",
+      "size_bytes": 2309
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate3/negative/held_fixed_includes_intervention/counterfactual_branch_bundle.json",
+      "sha256": "sha256:5c82163d23e4deb2fd28774e7d216fd6ec2d9c1339f8e65efcf4e2025f0104a9",
+      "size_bytes": 2320
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate3/negative/hidden_source_evidence/counterfactual_branch_bundle.json",
+      "sha256": "sha256:c326acda8c184b317ea662c5d5af05ce2bf7bbc50d43b4894b38ff9f9de15eb3",
+      "size_bytes": 2319
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate3/negative/missing_factual_branch/counterfactual_branch_bundle.json",
+      "sha256": "sha256:b92a1a0ebd60d216c5d87390eec899158cb2e5b33f2821fda0764579840e0beb",
+      "size_bytes": 1509
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate3/negative/unresolved_distribution_ref/counterfactual_branch_bundle.json",
+      "sha256": "sha256:636f36cf91294f5918ad316c06ae21f3a9aa073faf8d62a58297a84bc5918e0d",
+      "size_bytes": 2301
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate3/positive/branches_ok/counterfactual_branch_bundle.json",
+      "sha256": "sha256:2064012659995d059af0eed4133bbdc2824fda44898a09fba946c1fb5336f3f8",
+      "size_bytes": 3290
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate3/positive/branches_ok/tom_belief_distribution_bundle.json",
+      "sha256": "sha256:5722f8ae5e534bad9c78ace279c7d1071477797282e94cbfe689da072197eb76",
+      "size_bytes": 2125
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate4/negative/bad_payload_hash/tom_prediction_commitment_bundle.json",
+      "sha256": "sha256:88480f9bb066d457829604234f81005940414e9c7108f431fda03f81aee926aa",
+      "size_bytes": 1666
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate4/negative/canonical_memory_write/tom_prediction_commitment_bundle.json",
+      "sha256": "sha256:df51a7314827c4da74cedea90abf97c40846c6d98a50bf5f7a3f53c77192f666",
+      "size_bytes": 230
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate4/negative/evidence_bundle_hash_mismatch/tom_prediction_commitment_bundle.json",
+      "sha256": "sha256:bafe29e156fd16b5dd12269a695c9cab888655fff29d672e287ba8f6328cfcb3",
+      "size_bytes": 1231
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate4/negative/forbidden_outcome_leak/tom_prediction_commitment_bundle.json",
+      "sha256": "sha256:b22b051e685a8c1b514d564621ce0755fc95ef340a9462fca2e6109c95ffef47",
+      "size_bytes": 1315
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate4/negative/model_receipt_hash_mismatch/tom_prediction_commitment_bundle.json",
+      "sha256": "sha256:b53ebad65e9187d451f1cd04b55ebae09c70af926da10907e92d5151fef8d1d2",
+      "size_bytes": 1228
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate4/negative/outcome_visible/tom_prediction_commitment_bundle.json",
+      "sha256": "sha256:80c175d732a6527f614189ea821dd4d3ee3024cb73ce89f6706ce8d7d452fa5b",
+      "size_bytes": 230
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate4/negative/unresolved_branch_ref/tom_prediction_commitment_bundle.json",
+      "sha256": "sha256:b31af44698f6005d098211a533259c32a10d4aa67f0e6c53d60a24f8241f96e9",
+      "size_bytes": 1200
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate4/negative/unresolved_distribution_ref/tom_prediction_commitment_bundle.json",
+      "sha256": "sha256:46ea1744430b7acf51610e23ede5b6ed0a6b8396a5f68d406b6e3cde7eb5e447",
+      "size_bytes": 1262
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate4/positive/commitments_ok/tom_prediction_commitment_bundle.json",
+      "sha256": "sha256:d79b0aa65b72aff150720e259913174ca1c2914eb8b3dd1fe7fd95b29c0bc448",
+      "size_bytes": 3187
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate5/negative/action_not_allowed/tom_outcome_reveal.json",
+      "sha256": "sha256:8be66ae40fada938c611b6b92479548d736bd37812357cbc09dbffc36fa49f2b",
+      "size_bytes": 847
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate5/negative/missing_hidden_label/tom_outcome_reveal.json",
+      "sha256": "sha256:c70bcda23b244bc058eba597696765038669a864897cbfee2662052f09d34cd4",
+      "size_bytes": 817
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate5/negative/outcome_not_visible/tom_outcome_reveal.json",
+      "sha256": "sha256:7309e294609330a45764f8fad7905f63d3c767733d13efb92286b816f7fc36f5",
+      "size_bytes": 848
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate5/negative/reveal_before_seal/tom_outcome_reveal.json",
+      "sha256": "sha256:9b5e199757fe7f01268e2261501c0bc84b5747e9510fabdac4c28f787168e947",
+      "size_bytes": 846
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate5/negative/synthetic_branch_as_literal_history/tom_outcome_reveal.json",
+      "sha256": "sha256:7d5d2de5846cd95f2b81582c3159c8ce6344553442429be11ca44bd360966fc2",
+      "size_bytes": 899
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate5/negative/unknown_prediction_id/tom_outcome_reveal.json",
+      "sha256": "sha256:32cc754c636b6391c77ccb3a0bb0883dd3f1b0b655727a33c14626acf0afc385",
+      "size_bytes": 843
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate5/positive/scoring_ok/tom_outcome_reveal.json",
+      "sha256": "sha256:2d42c52a2785a171f2ec47a2101d4e6b3f3faee45a0157fd43b32761bbfea480",
+      "size_bytes": 859
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate5/positive/scoring_ok/tom_prediction_commitment_bundle.json",
+      "sha256": "sha256:67affb5e1f73b260af4e0a0d4db5533594aee5807ddfb44281073193800ab25b",
+      "size_bytes": 3453
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate6/negative/canonical_memory_write/action_selection.json",
+      "sha256": "sha256:3044401960261a03310d9938894624e16b222241d6569244de78a3cc42e1592e",
+      "size_bytes": 1102
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate6/negative/invalid_action/action_selection.json",
+      "sha256": "sha256:8053cb1a237d8d41f8c2d78940f69eb91b169fc531d912f8ad7b5b8429a0eca5",
+      "size_bytes": 1092
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate6/negative/missing_information_gain/action_selection.json",
+      "sha256": "sha256:6cb55eba7b6357d647d5ac10e138c54e12b8d4c097c4fbc277678437d520af15",
+      "size_bytes": 1062
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate6/negative/oracle_not_max/action_selection.json",
+      "sha256": "sha256:c8c9ee4784123b6f73e375e32e8115a616ef268542dc0e5882160678a0567cd2",
+      "size_bytes": 1298
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate6/negative/planning_regret_mismatch/action_selection.json",
+      "sha256": "sha256:541f5dcaadaebb20fbd0b49065df730f6f21e8a22c29375a51576d90a862bb6b",
+      "size_bytes": 1300
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate6/negative/scoring_hash_mismatch/action_selection.json",
+      "sha256": "sha256:8b15be91ca0295b5230a40551aa4f59b0ad2522b83b5a9301c6e35809bdbaed7",
+      "size_bytes": 1103
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate6/positive/action_selection_ok/action_selection.json",
+      "sha256": "sha256:820f467f864fa4138437f3337433b15e9b0d3f66403f6df6ef619a609d6f2684",
+      "size_bytes": 2477
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate6/positive/action_selection_ok/tom_scoring_receipt.json",
+      "sha256": "sha256:2dd51ee5292d89ad422ec1b525d20d2b49d0488683f2272b11165d1cc52c1446",
+      "size_bytes": 4027
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate7/negative/canonical_memory_write/tom_belief_revision.json",
+      "sha256": "sha256:dac1f9bfa9c7ea7744250e760e397f5d1f6110067522f2dd9dca40312e4848c3",
+      "size_bytes": 2845
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate7/negative/posterior_bad_sum/tom_belief_revision.json",
+      "sha256": "sha256:acdbbb40b96cff08dd49a7475dccdd67cf2b91d1c2cef0e353ec6d114e8e9002",
+      "size_bytes": 2845
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate7/negative/prior_not_auditable/tom_belief_revision.json",
+      "sha256": "sha256:20b1dbaf0d60bd8988fce6bc363cc47928e5d3689551ae3af9eb3cf06e72bda3",
+      "size_bytes": 2847
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate7/negative/prior_overwritten/tom_belief_revision.json",
+      "sha256": "sha256:d4a6263248748e92cb74ab2363b447da6e5be0bfcc86241070c9e989f2e4360e",
+      "size_bytes": 2848
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate7/negative/scoring_not_pass/tom_belief_revision.json",
+      "sha256": "sha256:c2672206675463a0b1053bd4249ffd77beb563fc4aaf58afde6def937105f769",
+      "size_bytes": 2846
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate7/negative/scoring_not_pass/tom_scoring_receipt.json",
+      "sha256": "sha256:68316b7e7ba9b5f43597d49ad981893992c8f4e71342a96340cee48af85383ce",
+      "size_bytes": 4083
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate7/negative/source_memory_write/tom_belief_revision.json",
+      "sha256": "sha256:462645d52d0186c1287710f04958769b3ed02ab1b2127e2da880c2d8079e1b18",
+      "size_bytes": 2953
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate7/negative/unresolved_prior_hypothesis/tom_belief_revision.json",
+      "sha256": "sha256:e6eb62dad06e17f15e96bc0664d78a3d3f72b253db624d92d9d35742b6294d3c",
+      "size_bytes": 2838
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate7/positive/revision_ok/tom_belief_revision.json",
+      "sha256": "sha256:c2672206675463a0b1053bd4249ffd77beb563fc4aaf58afde6def937105f769",
+      "size_bytes": 2846
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate8/negative/blocked_with_side_effect/reliability_surface.json",
+      "sha256": "sha256:28de3769c800561c2e3cce6c0b3cdc21ee4430f45155240a063eea7fcaafe019",
+      "size_bytes": 1223
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate8/negative/canonical_memory_write/reliability_surface.json",
+      "sha256": "sha256:bbd2433d7a161f8b133f7a514a713b5bbf1acbe7b69e369c9a57bf0e2b9bf305",
+      "size_bytes": 1214
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate8/negative/continued_unknown_state/reliability_surface.json",
+      "sha256": "sha256:792f4f54dfd39e1aad2793e309c431587d020c4e45ea0b34daf5c5ac556efa8b",
+      "size_bytes": 1235
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate8/negative/duplicate_active_state/reliability_surface.json",
+      "sha256": "sha256:570716492f9bf6313efe6af60b6911ba75fbead5d0a8c29acd438b316f3607c5",
+      "size_bytes": 1257
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate8/negative/missing_fault_injection/reliability_surface.json",
+      "sha256": "sha256:9f4333c7e3efd12da510243d4df8c58432a78ed5118a21e4177adbc044b55ba1",
+      "size_bytes": 1999
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate8/negative/quarantined_active_partial/reliability_surface.json",
+      "sha256": "sha256:0cfa8fbc030fc2c3d0effe52db3274aa8bbd030b039e8fc958702851251cadf4",
+      "size_bytes": 1238
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate8/negative/recovered_divergent_hash/reliability_surface.json",
+      "sha256": "sha256:2d1c2dd207165a7e9bc39c18c498ab7103aedd31e9d6de6dd454e18c2b079831",
+      "size_bytes": 2011
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate8/positive/reliability_surface_ok/reliability_surface.json",
+      "sha256": "sha256:d01f07fa3a9d96583a15f966d6f6434574c4781b35a740cdb62b11357de63a69",
+      "size_bytes": 4780
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate9/negative/canonical_memory_write/causal_replay.json",
+      "sha256": "sha256:657556f8451a826773abb28d475a21bc0bad5fd405df0bf0464d9a8403b55d2f",
+      "size_bytes": 2024
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate9/negative/comparison_missing/causal_replay.json",
+      "sha256": "sha256:cee8d68c1ca31389eb0e933ed160c53ae6177b12404c44c04df8d40ece83154c",
+      "size_bytes": 1625
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate9/negative/continued_unknown_state/causal_replay.json",
+      "sha256": "sha256:8bcf1b91f0541962f777a410edc56c03a8fef740eca9391f449ad1030da126d9",
+      "size_bytes": 2029
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate9/negative/missing_first_divergence/causal_replay.json",
+      "sha256": "sha256:7b0151073dd0d00be82bd26cb8768d31c58ab89ce2e505d045f707ad8fd0eff3",
+      "size_bytes": 1680
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate9/negative/replay_from_wrong_boundary/causal_replay.json",
+      "sha256": "sha256:b4d88ceed225f2c96fdbfd0d4dbff1e9b91f00de5da82d657bafeeadbb92647b",
+      "size_bytes": 2011
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate9/negative/suspect_tool_return_not_removed_or_replaced/causal_replay.json",
+      "sha256": "sha256:cef30dc0a461f27fdfb5ddf59dddffc2654fbdc2f09ef1f6fbfb201a9e07760b",
+      "size_bytes": 1916
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate9/negative/unresolved_reliability_trial/causal_replay.json",
+      "sha256": "sha256:21a0cf744c7b98a2a2a97cf0c47fe786ce1bbc15b8fe8d4e01438d1dc21a928a",
+      "size_bytes": 2009
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/gate9/positive/causal_replay_ok/causal_replay.json",
+      "sha256": "sha256:88e4c0823b659283f82e6282e8621f78983fce3ab66ec6fa3dd89809d7096595",
+      "size_bytes": 2094
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/pctom-r2-goal-drift/goal-word-changed.md",
+      "sha256": "sha256:88cd1cdb02c4c0a66f5ec4b02f18e6de9cf22f8bf7858885d948df6cf9b19ee2",
+      "size_bytes": 958
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/pctom-r2-goal-drift/missing-no-live-efficacy-limitation.md",
+      "sha256": "sha256:2426cea6e5c1fe9ea63b7619cd5d4b32a96d68cc71ff8bea7dd92b3d77d6ac60",
+      "size_bytes": 952
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/pctom-r2-goal-drift/provider-video-critical-path.md",
+      "sha256": "sha256:4689fb2480ba5cd8ef5d854fb96942b29afe9e2c945ca35b67d6cf2fff11237e",
+      "size_bytes": 1038
+    },
+    {
+      "category": "fixtures",
+      "path": "fixtures/pctom-r2-goal-drift/substitute-predecessor-receipt.md",
+      "sha256": "sha256:172d6883b00356fe3b78a06add2f356e7ef51410093a0f9bb1601a7633e9e75c",
+      "size_bytes": 976
+    },
+    {
+      "category": "local",
+      "path": "local/ACTIVE_CONTRACT.md",
+      "sha256": "sha256:f56b31a6015ce221bd08873528155d191dd08493e524007b19d92a106743f975",
+      "size_bytes": 1993
+    },
+    {
+      "category": "local",
+      "path": "local/PARKING_LOT.md",
+      "sha256": "sha256:333d3dbbd8d9e2e13b90e9079ea32151ecb3d81ec6de47022bf30519ab9cc532",
+      "size_bytes": 398
+    },
+    {
+      "category": "local",
+      "path": "local/inspection.md",
+      "sha256": "sha256:124399a9977c39ca4bc3d8822ea0a3912a4dd5fb91bee95320f091b535bb0915",
+      "size_bytes": 4933
+    },
+    {
+      "category": "local",
+      "path": "local/status.md",
+      "sha256": "sha256:44eb6e10965b1119ea3853dc4cffe4340a3c30d1972340807e14858fc80f440d",
+      "size_bytes": 135326
+    },
+    {
+      "category": "receipts",
+      "path": "receipts/pctom-evidence-scope-audit.v1.json",
+      "sha256": "sha256:a0a9243b0cfa4773c02ede180fddebaa5f3e1c247195524bb4ddf454c5dbb0d8",
+      "size_bytes": 2335
+    },
+    {
+      "category": "receipts",
+      "path": "receipts/pctom-r2-contract-receipt.v1.json",
+      "sha256": "sha256:6047bbe2e3d76c628c513ead89fab3c9963b539c599387ace257c9ac24854861",
+      "size_bytes": 4204
+    },
+    {
+      "category": "schemas",
+      "path": "schemas/action_selection.v1.schema.json",
+      "sha256": "sha256:ea38e9bdc1a71abf4765fbb220bfd0034313c08ba29dd1c41476f8bb977e60a8",
+      "size_bytes": 1607
+    },
+    {
+      "category": "schemas",
+      "path": "schemas/causal_replay.v1.schema.json",
+      "sha256": "sha256:2ba91659e1d20440c797da419c2b2daff835165e9b5146fa83755cd3e7ed386d",
+      "size_bytes": 4147
+    },
+    {
+      "category": "schemas",
+      "path": "schemas/counterfactual_branch_bundle.v1.schema.json",
+      "sha256": "sha256:3eca3205ae06dd4729d8aae4b95cc702b1be33a3f7804c109a88e48df8b47042",
+      "size_bytes": 2974
+    },
+    {
+      "category": "schemas",
+      "path": "schemas/counterfactual_intervention.v1.schema.json",
+      "sha256": "sha256:16ba8c5a068e3a201deaa6b6f420d46c09c8b4d8100f0d3446cbd320bf2c0459",
+      "size_bytes": 768
+    },
+    {
+      "category": "schemas",
+      "path": "schemas/pctom-archive-integrity-audit.v1.schema.json",
+      "sha256": "sha256:eca129b844eb30822293591a0b3d59f70bc09aa3bed8d6ac92317f8cf4584f48",
+      "size_bytes": 897
+    },
+    {
+      "category": "schemas",
+      "path": "schemas/pctom-archive-manifest.v1.schema.json",
+      "sha256": "sha256:961d242a663a244df591ef6f1e0affa63c973f6c2ed8f44dd69151d3d6e7cd8c",
+      "size_bytes": 839
+    },
+    {
+      "category": "schemas",
+      "path": "schemas/pctom-evidence-scope-audit.v1.schema.json",
+      "sha256": "sha256:d2b69c5f6fe9c2455734445e821a24dd63144b03426da30343e299729f2b348f",
+      "size_bytes": 895
+    },
+    {
+      "category": "schemas",
+      "path": "schemas/pctom-evidence-scope-ledger.v1.schema.json",
+      "sha256": "sha256:90eaae516831f2dc374573519631f137ae5441bb9b7d05543020f08eeb194a57",
+      "size_bytes": 874
+    },
+    {
+      "category": "schemas",
+      "path": "schemas/pctom-r2-contract-receipt.v1.schema.json",
+      "sha256": "sha256:e8f8bea622d25ca024b84b9f264e3a274bf395ee1c6b5da59635bc773196372c",
+      "size_bytes": 2328
+    },
+    {
+      "category": "schemas",
+      "path": "schemas/pctom-receipt-discovery-audit.v1.schema.json",
+      "sha256": "sha256:896aa4039c266f9a0b9bb05f295a2e81c296240b9f12a3fdc3ed960dda6dce4b",
+      "size_bytes": 1022
+    },
+    {
+      "category": "schemas",
+      "path": "schemas/reliability_surface.v1.schema.json",
+      "sha256": "sha256:0405a4c1c3a5781871fc724040aac15fe3fee40d39d99fd9ca4af2160a7d93ab",
+      "size_bytes": 1380
+    },
+    {
+      "category": "schemas",
+      "path": "schemas/reliability_trial.v1.schema.json",
+      "sha256": "sha256:c76e8299b9c55b28a184489be3f9727da62310c04baf8d1b058fa06a96d18be3",
+      "size_bytes": 2130
+    },
+    {
+      "category": "schemas",
+      "path": "schemas/social_episode.v1.schema.json",
+      "sha256": "sha256:3e80e10773cb93da87198c51016756dcc5125af88ab597b203615ecc2abdd080",
+      "size_bytes": 2398
+    },
+    {
+      "category": "schemas",
+      "path": "schemas/tom_belief_distribution.v1.schema.json",
+      "sha256": "sha256:c0dc2c1de6c44b5c1e419379fb77f75865997f5d19a229d98e29b4dc52981eea",
+      "size_bytes": 2557
+    },
+    {
+      "category": "schemas",
+      "path": "schemas/tom_belief_distribution_bundle.v1.schema.json",
+      "sha256": "sha256:a0d2b0ad00f28672d8409ed4b8989bb4a6c5dcf53ff6c4eff4eeb2866a49bcc4",
+      "size_bytes": 852
+    },
+    {
+      "category": "schemas",
+      "path": "schemas/tom_belief_revision.v1.schema.json",
+      "sha256": "sha256:78d8837ac6bf70b75dfa8919d8eed287958a9ea9d9f1f0f8f15dc2eb134d8f9a",
+      "size_bytes": 3750
+    },
+    {
+      "category": "schemas",
+      "path": "schemas/tom_outcome_reveal.v1.schema.json",
+      "sha256": "sha256:15f17d03c92eb20a076e39e3359cee01436c464a68b5801b0d414b33138074eb",
+      "size_bytes": 2000
+    },
+    {
+      "category": "schemas",
+      "path": "schemas/tom_prediction_commitment.v1.schema.json",
+      "sha256": "sha256:4af3e79bb9a52f11b41d5b3421b2521ad6abfc8ffda7a707476b809f9e6d3e76",
+      "size_bytes": 1352
+    },
+    {
+      "category": "schemas",
+      "path": "schemas/tom_prediction_commitment_bundle.v1.schema.json",
+      "sha256": "sha256:bf73008c61cfec1e17739875252865ddd9cd0a685251dcca149705e3ff3e4bf7",
+      "size_bytes": 874
+    },
+    {
+      "category": "schemas",
+      "path": "schemas/tom_scoring_receipt.v1.schema.json",
+      "sha256": "sha256:e1c2e38ffe9d922ce58b6b26455ef36df17b84d58704cc00ca971c2f96509e65",
+      "size_bytes": 1733
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/accept_cooperation_no_intervention_policy.py",
+      "sha256": "sha256:ec39d233dcf11e89e43f850e9a17f7de55a0de3c4b840b83eee5700dd33d6350",
+      "size_bytes": 24583
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/analyze_cooperation_visible_pressure_planning_benefit.py",
+      "sha256": "sha256:a084d9bd3b91fd14687cd39b2aa8a1df4609dbd9863a5326ff2ee8af28b69242",
+      "size_bytes": 19998
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/analyze_sealed_test_planning_gap.py",
+      "sha256": "sha256:27123091f05fb9a81337062935e4367986c36cc7c6e1f48dfe75c78c3dbd454c",
+      "size_bytes": 30889
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/audit_pctom_archive_manifest.py",
+      "sha256": "sha256:b9a064adc04164ca42fe61e7d1d06cea71ed2c02ee051795b5f49b4076947e08",
+      "size_bytes": 954
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/audit_pctom_evidence_scope_ledger.py",
+      "sha256": "sha256:c8c96d49f4be8da09d9d5494e29c609b41d8cfffb699a693bf070b6a2dc88fa5",
+      "size_bytes": 961
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/audit_pctom_receipt_discovery.py",
+      "sha256": "sha256:bad26818b441a622b476f8aefef3744fdfe9aa062ad946b8b28e26498d266714",
+      "size_bytes": 986
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/build_cooperation_visible_pressure_causal_replay.py",
+      "sha256": "sha256:89e04ee80c9f223e5f0d490e5c867dd9d7e0fc638ec89e5e81db23aec80949ca",
+      "size_bytes": 12174
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/build_cooperation_visible_pressure_reliability_surface.py",
+      "sha256": "sha256:9ca896f505fee2d8ed1ea8ea0744cc99ab8456b973f9d7b35cceffd388428123",
+      "size_bytes": 18895
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/build_pctom_archive_manifest.py",
+      "sha256": "sha256:19f30271c01a0aee08feb529e13b464b8569712a85ffc5aa7e932c2a736d44c2",
+      "size_bytes": 748
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/build_pctom_evidence_scope_ledger.py",
+      "sha256": "sha256:f791ca1267e8f99ce92bd822ec6572892ed504d72010e6ba5bb88321df241a9e",
+      "size_bytes": 759
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/build_social_episode_corpus.py",
+      "sha256": "sha256:18f6f323275b88fd1d58069565f0f8f9f4759bdb755e00c24a3f7f93db661f8f",
+      "size_bytes": 17021
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/check_autonomous_no_human_judgment_surface.py",
+      "sha256": "sha256:230cffef35afaaa4da61b6fa32f675b4b22d5db7f47ce77856322e0cc7028f64",
+      "size_bytes": 11724
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/check_cooperation_class_separated_exposure.py",
+      "sha256": "sha256:134939071aaa3d8195888c955a334fede6265e37a14d323e2edcb7f08ad86842",
+      "size_bytes": 23607
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/check_cooperation_contrast_instrument.py",
+      "sha256": "sha256:9d6e7bc85f4b6da14468beed832b011b4e614bbfe0bb92a5488f39c9324a05d1",
+      "size_bytes": 30946
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/check_cooperation_exposure_contrast_instrument.py",
+      "sha256": "sha256:fd8f24a700a68e6c53b150c575916eac29ff930ff7471ba645406a9a2980a8ac",
+      "size_bytes": 30113
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/check_cooperation_exposure_instrument.py",
+      "sha256": "sha256:1c23152976a07fb932b12922171c2e7104ffe5ba2f845795f430367b2c1ed9c9",
+      "size_bytes": 21536
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/check_cooperation_feature_split_prerequisites.py",
+      "sha256": "sha256:c8308d21a43e48a242edc5cfb0b038c847856d8c134c3c7c60294904c5279e63",
+      "size_bytes": 23861
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/check_cooperation_unsafe_offer_pressure_instrument.py",
+      "sha256": "sha256:f6e48d5aa6e38066cc13455ae7e92b2fb61b7ad0fd5db26854f3ec820535c443",
+      "size_bytes": 33965
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/check_cooperation_visible_pressure_rule_reliability.py",
+      "sha256": "sha256:56abef7626e642c065d7869bb27adb17e5afdc22b4a1bc50f8c23173bf5d20cb",
+      "size_bytes": 35497
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/check_counterfactual_branches.py",
+      "sha256": "sha256:53f088dfe8061a9b91ad9f7602267e1338265f716582f441ed8bb9c173d1b51c",
+      "size_bytes": 20321
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/check_live_gate2_4_boundary_negatives.py",
+      "sha256": "sha256:7d3de6a512b60ba5048d1b52ad88999fd295b366101d5ec5f7164285dcc4ea18",
+      "size_bytes": 16794
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/check_live_gate5_7_boundary_negatives.py",
+      "sha256": "sha256:d9a33ccd4c70bcb69c5ba7722cce25876e6bc6f4af777fb4521aca274cd9baae",
+      "size_bytes": 17369
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/check_live_stage_hash_lineage_audit.py",
+      "sha256": "sha256:80633af946215d74f67fe369ede03f3e13ffa023ade5c0194686e423639623ca",
+      "size_bytes": 25816
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/check_pctom_calibration_abstention.py",
+      "sha256": "sha256:2071b475e2abc4f5c5d0a1c70e54f80dc80c003b80fc188fb6f3158ec59d3cbf",
+      "size_bytes": 22717
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/check_pctom_goal_coverage.py",
+      "sha256": "sha256:40c829b01365895c3aaf551e51b964179539e68e4f69d5baedbed23ba72b12e1",
+      "size_bytes": 17699
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/check_pctom_objective_evidence.py",
+      "sha256": "sha256:a948577f10e591054f3c606e03a840f411d54e230625b6aa4846f2c5d0ae7f95",
+      "size_bytes": 27023
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/check_pctom_r2_contract.py",
+      "sha256": "sha256:89b6b20501c869181b8545a04a1ae4c0912bd17a41f5c548ec4f0324a5a41657",
+      "size_bytes": 8654
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/check_pctom_success_criteria.py",
+      "sha256": "sha256:1a570f1f52333431222f736e92d0dac2d8f59064f927867c9b1001ad616c1dc9",
+      "size_bytes": 32404
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/check_pctom_unsupported_evidence_abstention.py",
+      "sha256": "sha256:3f10bfba4ccea3d83b4253f75b8c63ae8edd941ba3214dac508346232396e3ad",
+      "size_bytes": 22444
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/check_prospective_tom_protocol.py",
+      "sha256": "sha256:b38a4aa8f22062441b80af06d34ae2aa91a85344c7d84e2241c8f900f49410fd",
+      "size_bytes": 20487
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/check_social_episode_corpus.py",
+      "sha256": "sha256:5e044c053acd59997ce607104aa84805f13887a893b65570eca6be076d3d3af6",
+      "size_bytes": 11099
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/check_social_episode_independent_replay.py",
+      "sha256": "sha256:24c9bd164b8a40534cbaa3bad936ac9114870add8f1f6a808aef35e862a361ba",
+      "size_bytes": 17049
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/check_tom_belief_distributions.py",
+      "sha256": "sha256:3bd3aa2a2a076b37d82d1940e273353683cfaaa28d2e274f5fbe80153cd7359a",
+      "size_bytes": 16672
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/check_tom_belief_revision.py",
+      "sha256": "sha256:abb32a3b90f7902adac5b794b1554bec4cea76b9c805d295e591672a0d2a389e",
+      "size_bytes": 20116
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/check_tom_prediction_commitments.py",
+      "sha256": "sha256:3c0bf3c1a08721479c7ab3983f4d9fdc2d3db7ee7382889cf3f5df661c9cccfc",
+      "size_bytes": 23460
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/diagnose_cooperation_no_exposure.py",
+      "sha256": "sha256:212c5d5e560b621cc495459cce2f5bf363cd02dab9fb085f70a1f08dc2724bd6",
+      "size_bytes": 17563
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/diagnose_cooperation_policy.py",
+      "sha256": "sha256:c70bc1f97f8a21ab662b6efdc45b33df1a122ade5033705f7511e80bdf2afe67",
+      "size_bytes": 22290
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/diagnose_cooperation_unsafe_offer_no_exposure.py",
+      "sha256": "sha256:ea12ecdd80a9b67e3b4c2fafde86a90c5c989ad4f7dcfc7016e606582e29a76b",
+      "size_bytes": 21294
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/pctom_r2_phase1_lib.py",
+      "sha256": "sha256:d81f004f90f11e0e8b986854dc4e900d9465a356ffc992b60660a9b332060492",
+      "size_bytes": 21980
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/reveal_and_score_trial.py",
+      "sha256": "sha256:87d966a13115d87722ceec5d5746f0dd446ce07eabba97f1582dfdf60b4f84d2",
+      "size_bytes": 27733
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_action_selection_trial.py",
+      "sha256": "sha256:63eec1643ba74b07fc3afb1d481d9b957cbcd45f6ced5ce70425a4eda4b17e92",
+      "size_bytes": 16431
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_causal_replay.py",
+      "sha256": "sha256:36fdce5c4a19a5dd675cd4981560fcd4d3e5b9c4786791edde02b0950fff6374",
+      "size_bytes": 17299
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_condition_comparison.py",
+      "sha256": "sha256:0bce5bae7e5ca493acd6619d475b5e27e324f58efc6002034c4aa3953c78236d",
+      "size_bytes": 29889
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_heldout_condition_benefit.py",
+      "sha256": "sha256:b8a169c948b6f1bd550c7fbd001aede68f5fba562cb408b9ccbf4378f5c6fa4a",
+      "size_bytes": 28150
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_fault_injection_surface.py",
+      "sha256": "sha256:5d3a226881b1d8939b8049ba2f3af24413e1c847b202c99e014054f447a86f03",
+      "size_bytes": 28036
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_memory_aged_retention_recall.py",
+      "sha256": "sha256:d54c4ed18e41b08341bc0ce54bd2088ffb42c17708ea91374c98880461df4085",
+      "size_bytes": 13847
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_memory_restart_delayed_recall.py",
+      "sha256": "sha256:6156ad9274715a5ac056b51209ca547a6b0dbb3bf3ba9f6cc8c7601cb14fe084",
+      "size_bytes": 13573
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_memory_revision_delayed_recall.py",
+      "sha256": "sha256:3daa61dabad4a13ad0d824318314422f95b67021e9e42635c576aa333dc0e836",
+      "size_bytes": 20228
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_memory_revision_recall.py",
+      "sha256": "sha256:3e6c0301e4f3b1826ad905c74437a2744e561d975d4f4ff0d9338d7763d6a866",
+      "size_bytes": 33943
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_pctom_gate0.py",
+      "sha256": "sha256:bb47b8c39762fbdea2eb07ad03c3bb9a376498bb2f7d31faadcc33de6e41e3bb",
+      "size_bytes": 14548
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_action_linked_revision.py",
+      "sha256": "sha256:9001fc40f5fb6976fb1526b874ee8f94bd386193e391c014c8f98df7c9acd497",
+      "size_bytes": 21894
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_balanced_planning_diagnostic.py",
+      "sha256": "sha256:75f64263510c14f6c87f3586f27fff26f7d90ff1029a543a64fd899e27114a22",
+      "size_bytes": 17837
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_balanced_planning_replication.py",
+      "sha256": "sha256:3af0429280a72c45b9587c026d1a7f8867754143e18568c328b1061e2c376c27",
+      "size_bytes": 30591
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_balanced_threshold_intervention.py",
+      "sha256": "sha256:705d19148a39125b979f7373b86438cb4b131f90eb8f8a3d7d1e5878b1b7725a",
+      "size_bytes": 21541
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_condition_action_selection.py",
+      "sha256": "sha256:7b5923f7094cf63f0ffb67be7c3ad039286274e4ff31454ece12567f9fca50fa",
+      "size_bytes": 23514
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_condition_comparison.py",
+      "sha256": "sha256:2efd3beab6de04872567814d9c1f89f4e888b06feac9aa2ec586d5c53f4d602e",
+      "size_bytes": 71644
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_condition_reliability_bridge.py",
+      "sha256": "sha256:02f2c3c6b83d368019380e5f9b91d1386b4a019558443a59e6d6e90038cf27eb",
+      "size_bytes": 22542
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_confidence_gated_planning_intervention.py",
+      "sha256": "sha256:ad49bf8d2cf80a081a74d16aeadd685385212fa4d99436da9ff1529d59bcb8ed",
+      "size_bytes": 30544
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_cooperation_contrast_slice.py",
+      "sha256": "sha256:3b33623f328a252e7cbb5e56740deaa575a06622ba1319ced97236dd775e2498",
+      "size_bytes": 28694
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_cooperation_exposure_contrast_slice.py",
+      "sha256": "sha256:2a87198c4dbb0174b367c2a598f5282f80089d5eb5ba423fb4aa0c8aaeb65fe7",
+      "size_bytes": 29961
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_cooperation_exposure_slice.py",
+      "sha256": "sha256:c9c0e6c2bbdf5dd742fcc4032faf27a7ef82614cb0b3fa5dcd64ac87746f30ec",
+      "size_bytes": 19367
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_cooperation_instrument_slice.py",
+      "sha256": "sha256:557c1e696e0b09916a1f293f9769af5856dfa989bb642bfe534c75d7807e9087",
+      "size_bytes": 20707
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_cooperation_threshold_rule.py",
+      "sha256": "sha256:c8052fe036655e3451da1074361924e08cbb900fe34ffbd7c919a582e7d12b97",
+      "size_bytes": 31135
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_cooperation_unsafe_offer_pressure_slice.py",
+      "sha256": "sha256:8afc6f8a83bcc58f16ea046c1ea8ab38d79e6f625053da66293f87c4a5d7b084",
+      "size_bytes": 30159
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_distributional_planning_intervention.py",
+      "sha256": "sha256:d81048a2f0e8b9027d2407467532bd8a9126cafe0051959419221da672da2145",
+      "size_bytes": 36043
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_full64_action_policy_sensitivity.py",
+      "sha256": "sha256:06b931fa86556669d4a91c0ce1374156023930aab41b6f626f33f452529e4c95",
+      "size_bytes": 24496
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_full64_memory_fault_surface.py",
+      "sha256": "sha256:8a5624fd395c51a49c6bc6c638ec080f7ed3fd507fb68015ac6910c2eb9146bf",
+      "size_bytes": 29304
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_full64_planning_diagnostic.py",
+      "sha256": "sha256:e2f76bb73094e67bedb7ed1d6e19206d904977f0d5d9253a607f0c9aba604cb3",
+      "size_bytes": 21580
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_full64_repeated_run_summary.py",
+      "sha256": "sha256:cff23aac53f3f47f45c467626229e4506c93e8cca6084c5f900a78a68cf8aa01",
+      "size_bytes": 19088
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_full64_statistical_confidence.py",
+      "sha256": "sha256:aaccc31dbb79ffdae165948a5f575dfd64e81ec39af7133c0cb01f41a4895d79",
+      "size_bytes": 23120
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_gate2_4.py",
+      "sha256": "sha256:52bdc1a425194cd9326d966456809d38b9c5bcc72e94333658c9fbf76721e638",
+      "size_bytes": 26358
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_planning_non_generalization_audit.py",
+      "sha256": "sha256:dcc6ba8b55732b3d96643cf11b9db4eff420ea582bcac368d9a8492bda7c66bc",
+      "size_bytes": 21203
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_prompt_timeout_diagnostic.py",
+      "sha256": "sha256:bf82ec7985d70dbace1f4a28f797a5291c2a45f1d1b5306fc1cd9c2c48eb87be",
+      "size_bytes": 15076
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_reliability_bridge.py",
+      "sha256": "sha256:1c1d46793604fe77d273c47cec01cc0d9b85cadca20a2e862266042f99e6e97f",
+      "size_bytes": 19676
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_revision_recall.py",
+      "sha256": "sha256:a8aa9f1856cdc2d07323813112167e44258a260e00441ca07baf7ed2e7fcb6cc",
+      "size_bytes": 18219
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_score_revision.py",
+      "sha256": "sha256:0fec84184288a0cce0aea815aa879189dd00d8aba84564159834f586ef719e94",
+      "size_bytes": 18274
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_sealed_test_queue_worker_retry_proof.py",
+      "sha256": "sha256:b9c4e011ebfe9aaa907ddf4ed9b9915df3bbf6b54e53eba210fed8d6cd63572f",
+      "size_bytes": 22768
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_sealed_test_replication.py",
+      "sha256": "sha256:60130b3a83f8ebd84709ae436320f64994bf924c80505c3d6eabff475afe12fb",
+      "size_bytes": 19734
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_sealed_test_retry_proof.py",
+      "sha256": "sha256:32a73c8b5cae857cca390c15172375baee8f9699330efbab932ab248c6bf3464",
+      "size_bytes": 30727
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_sealed_test_runsh_orchestration_retry_proof.py",
+      "sha256": "sha256:f041c95a7adfb44a46ed457338ce7d932c186f5881fc9c2f6782ba2dca705900",
+      "size_bytes": 19131
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_sealed_test_service_retry_proof.py",
+      "sha256": "sha256:ddc91968eedd923e39879d0028baeceaaddbc082fe64fd802e07d20c3f07ea8f",
+      "size_bytes": 22145
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_strict_inference_prompt_replication.py",
+      "sha256": "sha256:7c2153515ac1e41feae3e711351da0ed0a8e5ead32e2a2d405b2cf45b0f95666",
+      "size_bytes": 38055
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_trust_commit_repeated_seed_summary.py",
+      "sha256": "sha256:3b1e737c737bc69089f70f5d9072903780a8a227b6f8643e43fbddc4cf091311",
+      "size_bytes": 19436
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_live_tau_trust_commit_replication.py",
+      "sha256": "sha256:a4f32ba9866af68fbe25ab98a6000b3eb71a11836d418cf68cc18f4eb4ef0400",
+      "size_bytes": 26504
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_pctom_causal_identifiability_gate.py",
+      "sha256": "sha256:73ecc8c3238bdaac9f4ae7a3f19e2871a2b7d400f951f3ac2b124034685d2668",
+      "size_bytes": 32942
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_reliability_surface.py",
+      "sha256": "sha256:e29d5f1a7bc768825a5eb977433244b8720c1cbf5f328b2281765f1352dcb1db",
+      "size_bytes": 14953
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_sealed_test_statistical_confidence.py",
+      "sha256": "sha256:c7127f9ecb22575472437e21e8349de437de6525901f12643a8aaafc7f02d391",
+      "size_bytes": 23661
+    },
+    {
+      "category": "scripts",
+      "path": "scripts/run_social_simulator_service_proof.py",
+      "sha256": "sha256:94164e9397ad78a70ec0133c971c0cf2c894af62d1bd4b73d823c0035c5a1cd8",
+      "size_bytes": 30353
+    }
+  ],
+  "entries_sha256": "sha256:ebe0994ff742cbd03140f8b95d302d836c4c23f8ce3b54f4532b77910ab8d7a6",
+  "excluded_paths": [
+    "evidence/pctom-archive-manifest.v1.json"
+  ],
+  "excluded_receipt_names": [
+    "pctom-archive-integrity-audit.v1.json",
+    "pctom-receipt-discovery-audit.v1.json"
+  ],
+  "fixture_backed": true,
+  "live": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "provider_call_attempts": 0,
+  "root": "skills/persona-dream/research/prospective-tom",
+  "schema": "persona_dream.research.prospective_tom.pctom_archive_manifest.v1",
+  "status": "ARCHIVE_MANIFEST_BUILT"
+}
