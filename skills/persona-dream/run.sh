@@ -134,6 +134,7 @@ Commands:
   run-live-tau-sealed-test-queue-worker-retry-proof  Exercise sealed-test retry proof through a bounded queue worker
   run-live-tau-sealed-test-service-retry-proof  Exercise sealed-test retry proof through a local HTTP service
   run-live-tau-full64-memory-fault-surface  Exercise live Memory faults over full64 live Tau artifacts
+  check-live-gate2-4-boundary-negatives  Mutate live-originated Gate 2-4 artifacts and require fail-closed receipts
   check-prospective-tom-protocol  Validate PCTOM-R Gate 0 fixture lineage through a sealed prediction
   build-social-episode-corpus  Build deterministic PCTOM-R Gate 1 social episodes
   check-social-episode-corpus  Validate deterministic PCTOM-R Gate 1 social episodes
@@ -618,6 +619,9 @@ case "$COMMAND" in
     ;;
   run-live-tau-full64-memory-fault-surface)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/run_live_tau_full64_memory_fault_surface.py" "$@"
+    ;;
+  check-live-gate2-4-boundary-negatives)
+    exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_live_gate2_4_boundary_negatives.py" "$@"
     ;;
   check-prospective-tom-protocol)
     exec "${PYTHON[@]}" "${SCRIPT_DIR}/research/prospective-tom/scripts/check_prospective_tom_protocol.py" "$@"

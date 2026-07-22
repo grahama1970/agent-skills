@@ -145,6 +145,8 @@ Next: <one immediate action or stop condition>
   `/tmp/persona-dream-pctom-social-corpus-independent-replay-sealed64-20260722T064500Z/social_episode_independent_replay_receipt.v1.json`;
   sealed64 independent replay negative-action receipt
   `/tmp/persona-dream-pctom-social-corpus-independent-replay-negative-action-20260722T064800Z/social_episode_independent_replay_receipt.v1.json`;
+  live-originated Gate 2-4 boundary-negative receipt
+  `/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/live_gate2_4_boundary_negatives_receipt.v1.json`;
   replication receipt
   `/tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_planning_replication_receipt.v1.json`;
   causal-identifiability receipt
@@ -188,6 +190,15 @@ Next: <one immediate action or stop condition>
   `BLOCKED_PCTOM_SOCIAL_EPISODE_INDEPENDENT_REPLAY`, 63 action matches, and
   errors `episodes_sha256_mismatch` plus
   `episode_action_replay_mismatch:sealedte-info-asym-01:KAI_INTERRUPTS_WITH_CORRECTION:KAI_HINTS_CONSTRAINT`.
+  A reusable live-originated Gate 2-4 boundary-negative harness then consumed
+  the held-out `sealedte-info-asym-17/M` live Tau case, confirmed 3/3 source
+  Gate 2/3/4 validators passed before mutation, and required 3/3 mutated
+  artifacts to fail closed. Gate 2 rejected a bad probability sum with
+  `BLOCKED_TOM_BELIEF_DISTRIBUTIONS`; Gate 3 rejected stripped synthetic
+  markers with `BLOCKED_COUNTERFACTUAL_BRANCHES`; Gate 4 rejected a post-seal
+  prediction payload edit with `BLOCKED_TOM_PREDICTION_COMMITMENTS`. It made
+  zero Tau, Memory, provider, canonical-memory, identity, or source-memory
+  calls/writes.
   The live run consumed simulator variants 17-24, 32 sealed-test
   episodes, all four scenario families, and 128 live Tau-authored M/R/D/CD
   condition predictions. It used the Gate 0 attribution root
@@ -337,7 +348,9 @@ Next: <one immediate action or stop condition>
   sealed64 independent replay rows
   `sha256:b6e088b4e6e65b256c88fe1a05c7b34aeafb3a8aa4d99574eaba73aa2c9f86af`;
   sealed64 independent replay negative-action
-  `sha256:1e611b93c2e1ae02b2f8f96cdf73022beed8570037aacd8c2067610f64e478cd`.
+  `sha256:1e611b93c2e1ae02b2f8f96cdf73022beed8570037aacd8c2067610f64e478cd`;
+  live-originated Gate 2-4 boundary-negative
+  `sha256:4720d18fff5957ced310e92f27c6c290cd16fb62a867e87a12dc55344a6f0cc1`.
   This advances held-out variant evidence beyond variants 1-16. It does not
   prove a separately deployed external simulator service, a permanently
   deployed external production service, non-Memory external service fault

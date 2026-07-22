@@ -46,6 +46,32 @@
   mismatch boundary. It does not prove a separately deployed external simulator
   service.
 
+  A reusable live-originated Gate 2-4 boundary-negative harness now consumes
+  one held-out live Tau case without making new Tau, Memory, or provider calls.
+  Command:
+  `./skills/persona-dream/run.sh check-live-gate2-4-boundary-negatives
+  --corpus
+  /tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_condition_comparison/artifacts/social_episode_corpus.v1.json
+  --case-root
+  /tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_condition_comparison/artifacts/cases/sealedte-info-asym-17/M
+  --output-root /tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z
+  --receipt-out
+  /tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/live_gate2_4_boundary_negatives_receipt.v1.json
+  --json`. Receipt status:
+  `PASS_PCTOM_LIVE_GATE2_4_BOUNDARY_NEGATIVES`; counts: 3/3 source
+  validators passed before mutation, 3/3 negative cases blocked, and 3/3
+  expected error sets matched. Mutations covered Gate 2 bad probability sum
+  (`BLOCKED_TOM_BELIEF_DISTRIBUTIONS`, `distribution_0_distribution_sum`),
+  Gate 3 stripped counterfactual synthetic markers
+  (`BLOCKED_COUNTERFACTUAL_BRANCHES`, `counterfactual_synthetic_not_true` and
+  `intervention_not_synthetic`), and Gate 4 post-seal payload tamper
+  (`BLOCKED_TOM_PREDICTION_COMMITMENTS`,
+  `prediction_payload_sha256_mismatch`). Declared receipt SHA-256:
+  `sha256:4720d18fff5957ced310e92f27c6c290cd16fb62a867e87a12dc55344a6f0cc1`.
+  This proves reusable negative fail-closed coverage over live-originated
+  Gate 2-4 artifacts. It does not prove new live Tau execution, new Memory
+  recall, or long-duration retention.
+
   Command:
   `./skills/persona-dream/run.sh run-live-tau-balanced-planning-replication
   --family-episode-limit 8 --episodes-per-family 24 --variant-min 17

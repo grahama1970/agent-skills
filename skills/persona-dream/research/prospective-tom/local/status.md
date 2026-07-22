@@ -13,7 +13,10 @@ index or the semantic provenance index is missing. A live Memory service
 restart proof now shows post-restart exact reread and `/recall` recovery of the
 noncanonical PCTOM-R revision state. A generator-independent replay checker now
 recomputes the frozen social corpus policies, labels, hidden-state invariants,
-and withheld-field invariants without importing the corpus generator.
+and withheld-field invariants without importing the corpus generator. A
+live-originated Gate 2-4 boundary-negative harness now proves distribution,
+counterfactual-synthetic, and sealed-payload-hash mutations fail closed through
+the reusable skill entrypoint.
 
 Sealed64 deterministic social episode corpus:
 
@@ -43,6 +46,12 @@ Sealed64 independent social episode replay negative-action receipt:
 
 ```text
 /tmp/persona-dream-pctom-social-corpus-independent-replay-negative-action-20260722T064800Z/social_episode_independent_replay_receipt.v1.json
+```
+
+Live-originated Gate 2-4 boundary-negative receipt:
+
+```text
+/tmp/persona-dream-live-gate2-4-boundary-negatives-20260722T073000Z/live_gate2_4_boundary_negatives_receipt.v1.json
 ```
 
 Held-out variant replication receipt:
@@ -161,6 +170,17 @@ sealed64_independent_replay_negative_status: BLOCKED_PCTOM_SOCIAL_EPISODE_INDEPE
 sealed64_independent_replay_negative_exit_code: 1
 sealed64_independent_replay_negative_action_matches: 63
 sealed64_independent_replay_negative_errors: episodes_sha256_mismatch, episode_action_replay_mismatch
+live_gate2_4_boundary_negative_status: PASS_PCTOM_LIVE_GATE2_4_BOUNDARY_NEGATIVES
+live_gate2_4_boundary_negative_source_positive_passes: 3
+live_gate2_4_boundary_negative_cases: 3
+live_gate2_4_boundary_negative_cases_blocked: 3
+live_gate2_4_boundary_negative_expected_errors_matched: 3
+live_gate2_4_boundary_negative_gate2_status: BLOCKED_TOM_BELIEF_DISTRIBUTIONS
+live_gate2_4_boundary_negative_gate2_error: distribution_0_distribution_sum
+live_gate2_4_boundary_negative_gate3_status: BLOCKED_COUNTERFACTUAL_BRANCHES
+live_gate2_4_boundary_negative_gate3_errors: counterfactual_synthetic_not_true, intervention_not_synthetic
+live_gate2_4_boundary_negative_gate4_status: BLOCKED_TOM_PREDICTION_COMMITMENTS
+live_gate2_4_boundary_negative_gate4_error: prediction_payload_sha256_mismatch
 variant_min: 17
 variant_max: 24
 episodes: 32
@@ -348,6 +368,11 @@ sealed64_independent_replay_rows_sha256: sha256:b6e088b4e6e65b256c88fe1a05c7b34a
 sealed64_independent_replay_negative_receipt_sha256: sha256:1e611b93c2e1ae02b2f8f96cdf73022beed8570037aacd8c2067610f64e478cd
 sealed64_independent_replay_negative_corpus_sha256: sha256:47b4b6583e245d14d588c9b712ffc30c09fdbb76ff021c6325c27d11c31492d9
 sealed64_independent_replay_negative_rows_sha256: sha256:4a3e45634b3aaf4db239c898ad78417d6d88f905868d3ef75e9a3b4e8e68e797
+live_gate2_4_boundary_negative_receipt_sha256: sha256:4720d18fff5957ced310e92f27c6c290cd16fb62a867e87a12dc55344a6f0cc1
+live_gate2_4_boundary_negative_source_artifacts_sha256: sha256:1cd85e6cdc56dde5fe1ef7a8b77294e15d59d14436ea33760d1c7f15d8a971a9
+live_gate2_4_boundary_negative_gate2_mutated_artifact_sha256: sha256:652385c0b4d46e070557a9bfa66ee2589cca597e233286ee63c3aac620e1c6c6
+live_gate2_4_boundary_negative_gate3_mutated_artifact_sha256: sha256:c8ecb50b46cb9f971e374808e316888244c4883b231baf7774d9c443c5bc4336
+live_gate2_4_boundary_negative_gate4_mutated_artifact_sha256: sha256:8e522311226a101bf8a21ba26086ce73c8f6e6585efc1c71c191cafa7e18122c
 mocked: false
 live: true
 tau_prediction_memory_write_attempts: 0
@@ -372,6 +397,9 @@ variants 17-24, outside the prior full64 variants 1-16 slice, ran through live
    withheld-field invariants without importing the corpus generator
 -> a mutated-action negative fixture failed closed with the exact corpus hash
    mismatch and action replay mismatch recorded
+-> a reusable live-originated Gate 2-4 boundary-negative harness confirmed
+   that bad probability sums, stripped counterfactual synthetic markers, and
+   post-seal payload edits each produce BLOCKED receipts with expected errors
 -> predictions were sealed before deterministic outcome reveal and scored
 -> constrained action selections and planning regret were recomputed
 -> Gate 0 accepted raw-source IDs and digests were present on 128/128 rows
