@@ -62,6 +62,30 @@ def test_scan_roots_can_be_overridden_by_env(monkeypatch, tmp_path: Path) -> Non
     assert [root.relative_to(repo).as_posix() for root in roots] == ["scripts"]
 
 
+def test_blank_scan_root_env_uses_monitor_include_dirs(monkeypatch, tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    (repo / "src").mkdir(parents=True)
+    (repo / ".monitor-codebase.json").write_text(json.dumps({"include_dirs": ["src"]}))
+
+    for raw in ["", " ", "\t\n"]:
+        monkeypatch.setenv("CODE_SYMBOLS_SCAN_INCLUDE_DIRS", raw)
+
+        roots = ingest_code._extract_configured_scan_roots(repo)
+
+        assert roots == [repo.resolve() / "src"]
+
+
+def test_invalid_nonblank_scan_root_env_returns_empty_scope(monkeypatch, tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    (repo / "src").mkdir(parents=True)
+    (repo / ".monitor-codebase.json").write_text(json.dumps({"include_dirs": ["src"]}))
+    monkeypatch.setenv("CODE_SYMBOLS_SCAN_INCLUDE_DIRS", "missing-a, missing-b")
+
+    roots = ingest_code._extract_configured_scan_roots(repo)
+
+    assert roots == []
+
+
 def test_marker_status_reports_missing_and_fresh_marker(tmp_path: Path) -> None:
     missing = ingest_code.build_marker_status(tmp_path)
     assert missing["status"] == "missing"
@@ -86,6 +110,44 @@ def test_marker_status_reports_missing_and_fresh_marker(tmp_path: Path) -> None:
     assert status["completed"] is True
 
 
+def test_marker_status_treats_legacy_marker_as_fresh(tmp_path: Path) -> None:
+    marker = {
+        "ingested_at": "2026-05-01T08:00:00",
+        "path": str(tmp_path),
+        "stem": tmp_path.name,
+        "files_scanned": 2,
+        "knowledge_stored": 1,
+        "cwe_stored": 0,
+        "edges_stored": 0,
+        "code_index": {
+            "enabled": True,
+            "backend": "memory",
+            "collection": "code_symbols",
+            "symbols_stored": 4,
+        },
+        "scope": "legacy-scope",
+    }
+    (tmp_path / ".ingest-code.json").write_text(json.dumps(marker))
+
+    status = ingest_code.build_marker_status(tmp_path)
+
+    assert status["status"] == "fresh"
+    assert status["run_status"] == "complete"
+    assert status["completed"] is True
+    assert status["scope"] == "legacy-scope"
+    assert status["code_index"]["symbols_stored"] == 4
+
+
+def test_marker_status_reports_malformed_marker_as_invalid(tmp_path: Path) -> None:
+    (tmp_path / ".ingest-code.json").write_text("{not-json")
+
+    status = ingest_code.build_marker_status(tmp_path)
+
+    assert status["status"] == "invalid"
+    assert status["completed"] is False
+    assert status["code_index"]["enabled"] is False
+
+
 def test_marker_status_reports_running_marker(tmp_path: Path) -> None:
     ingest_code._write_ingest_marker(
         tmp_path,
@@ -108,6 +170,47 @@ def test_marker_status_reports_running_marker(tmp_path: Path) -> None:
     assert status["run_status"] == "running"
     assert status["completed"] is False
     assert status["scan_roots"] == [str(tmp_path / "scripts")]
+
+
+def test_marker_status_run_status_overrides_persisted_completed(tmp_path: Path) -> None:
+    marker = {
+        "run_status": "running",
+        "completed": True,
+        "scan_roots": ["src"],
+    }
+    (tmp_path / ".ingest-code.json").write_text(json.dumps(marker))
+
+    status = ingest_code.build_marker_status(tmp_path)
+
+    assert status["status"] == "running"
+    assert status["run_status"] == "running"
+    assert status["completed"] is False
+    assert status["scan_roots"] == ["src"]
+
+
+def test_write_marker_accepts_complete_zero_result_scan(tmp_path: Path) -> None:
+    marker_path = ingest_code._write_ingest_marker(
+        tmp_path,
+        files_scanned=0,
+        knowledge_stored=0,
+        cwe_stored=0,
+        edges_stored=0,
+        code_symbols_stored=0,
+        treesitter=False,
+        scope="zero-scan",
+    )
+    marker = json.loads(marker_path.read_text())
+
+    assert marker["run_status"] == "complete"
+    assert marker["completed"] is True
+    assert marker["files_scanned"] == 0
+    assert marker["knowledge_stored"] == 0
+    assert marker["code_index"]["symbols_stored"] == 0
+
+    status = ingest_code.build_marker_status(tmp_path)
+    assert status["status"] == "fresh"
+    assert status["completed"] is True
+    assert status["code_index"]["enabled"] is False
 
 
 def test_treesitter_store_resolves_relative_scan_roots(monkeypatch, tmp_path: Path) -> None:

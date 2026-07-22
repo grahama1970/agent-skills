@@ -32,8 +32,11 @@ class FakeResponse:
 
 
 class FakeHttpClient:
-    def __init__(self) -> None:
+    def __init__(self, fail_names: set[str] | None = None, fail_multi: bool = True) -> None:
         self.batch_sizes: list[int] = []
+        self.batch_names: list[list[str]] = []
+        self.fail_names = fail_names or set()
+        self.fail_multi = fail_multi
 
     def __enter__(self):
         return self
@@ -43,9 +46,12 @@ class FakeHttpClient:
 
     def post(self, path: str, json: dict):
         assert path == "/upsert"
-        size = len(json["documents"])
+        documents = json["documents"]
+        size = len(documents)
+        names = [document["symbol_name"] for document in documents]
         self.batch_sizes.append(size)
-        if size > 1:
+        self.batch_names.append(names)
+        if (self.fail_multi and size > 1) or any(name in self.fail_names for name in names):
             return FakeResponse(500, "embed batch failed")
         return FakeResponse(200)
 
@@ -96,3 +102,94 @@ def test_upsert_code_symbols_uses_env_batch_size(monkeypatch) -> None:
     assert result.stored == 2
     assert result.attempted == 2
     assert fake.batch_sizes == [1, 1]
+
+
+def test_upsert_code_symbols_recursively_splits_larger_failed_batches(monkeypatch) -> None:
+    fake = FakeHttpClient()
+    client = CodeMemoryClient()
+    monkeypatch.setattr(client, "_client", lambda: fake)
+    legacy_calls: list[str] = []
+
+    def record_legacy_fallback(record, *args, **kwargs):
+        legacy_calls.append(record.qualified_name)
+        return True
+
+    monkeypatch.setattr(client, "store_legacy_code_symbol", record_legacy_fallback)
+
+    result = client.upsert_code_symbols(
+        [_record("first"), _record("second"), _record("third"), _record("fourth")],
+        batch_size=4,
+    )
+
+    assert result.stored == 4
+    assert result.attempted == 4
+    assert result.errors == []
+    assert fake.batch_sizes == [4, 2, 1, 1, 2, 1, 1]
+    assert legacy_calls == []
+
+
+def test_upsert_code_symbols_ignores_invalid_env_batch_sizes(monkeypatch) -> None:
+    records = [_record("first"), _record("second")]
+    for raw in ["", "not-an-integer", "0", "-1"]:
+        fake = FakeHttpClient(fail_multi=False)
+        client = CodeMemoryClient()
+        monkeypatch.setenv("CODE_SYMBOLS_QDRANT_BATCH_SIZE", raw)
+        monkeypatch.setattr(client, "_client", lambda fake=fake: fake)
+
+        result = client.upsert_code_symbols(records)
+
+        assert result.stored == 2
+        assert result.attempted == 2
+        assert result.errors == []
+        assert fake.batch_sizes == [2]
+
+
+def test_upsert_code_symbols_explicit_batch_size_takes_precedence(monkeypatch) -> None:
+    fake = FakeHttpClient(fail_multi=False)
+    client = CodeMemoryClient()
+    monkeypatch.setenv("CODE_SYMBOLS_QDRANT_BATCH_SIZE", "1")
+    monkeypatch.setattr(client, "_client", lambda: fake)
+
+    result = client.upsert_code_symbols([_record("first"), _record("second")], batch_size=2)
+
+    assert result.stored == 2
+    assert result.attempted == 2
+    assert result.errors == []
+    assert fake.batch_sizes == [2]
+
+
+def test_upsert_code_symbols_records_singleton_upsert_and_legacy_failure(monkeypatch) -> None:
+    fake = FakeHttpClient(fail_names={"first"}, fail_multi=False)
+    client = CodeMemoryClient()
+    monkeypatch.setattr(client, "_client", lambda: fake)
+    monkeypatch.setattr(client, "store_legacy_code_symbol", lambda *args, **kwargs: False)
+
+    result = client.upsert_code_symbols([_record("first")], batch_size=1)
+
+    assert result.stored == 0
+    assert result.attempted == 1
+    assert len(result.errors) == 1
+    assert "first" in result.errors[0]
+    assert "HTTP 500" in result.errors[0]
+    assert "legacy=fallback failed" in result.errors[0]
+
+
+def test_upsert_code_symbols_mixed_singleton_recovery(monkeypatch) -> None:
+    fake = FakeHttpClient(fail_names={"second"})
+    client = CodeMemoryClient()
+    monkeypatch.setattr(client, "_client", lambda: fake)
+    legacy_calls: list[str] = []
+
+    def record_legacy_fallback(record, *args, **kwargs):
+        legacy_calls.append(record.qualified_name)
+        return True
+
+    monkeypatch.setattr(client, "store_legacy_code_symbol", record_legacy_fallback)
+
+    result = client.upsert_code_symbols([_record("first"), _record("second")], batch_size=2)
+
+    assert result.stored == 2
+    assert result.attempted == 2
+    assert result.errors == []
+    assert fake.batch_sizes == [2, 1, 1]
+    assert legacy_calls == ["second"]

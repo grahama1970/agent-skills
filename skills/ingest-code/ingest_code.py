@@ -26,7 +26,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, Sequence
 
 import httpx
 
@@ -75,6 +75,7 @@ SKIP_DIRS = {
 }
 
 MEMORY_SOCKET_PATH = "/run/user/1000/embry/memory.sock"
+SCAN_INCLUDE_DIRS_ENV = "CODE_SYMBOLS_SCAN_INCLUDE_DIRS"
 
 
 def load_taxonomy_module():
@@ -733,18 +734,169 @@ def _build_code_symbol_record(
     )
 
 
+def _resolve_existing_scan_roots(codebase_path: Path, entries: Sequence[str]) -> list[Path]:
+    """Resolve configured scan roots inside the codebase, preserving order."""
+    codebase_root = codebase_path.resolve()
+    roots: list[Path] = []
+    seen: set[Path] = set()
+    for entry in entries:
+        raw = str(entry).strip()
+        if not raw:
+            continue
+        candidate = Path(raw)
+        if not candidate.is_absolute():
+            candidate = codebase_root / candidate
+        try:
+            resolved = candidate.resolve()
+            resolved.relative_to(codebase_root)
+        except (OSError, ValueError):
+            continue
+        if resolved.is_dir() and resolved not in seen:
+            roots.append(resolved)
+            seen.add(resolved)
+    return roots
+
+
 def _extract_configured_scan_roots(codebase_path: Path) -> list[Path]:
-    """Resolve scan roots from .monitor-codebase.json include_dirs."""
+    """Resolve scan roots from env override or .monitor-codebase.json include_dirs."""
+    env_roots = os.environ.get(SCAN_INCLUDE_DIRS_ENV)
+    if env_roots and env_roots.strip():
+        return _resolve_existing_scan_roots(codebase_path, env_roots.split(","))
+
     config = _load_monitor_config(codebase_path)
     if config and config.get("include_dirs"):
-        roots: list[Path] = []
-        for include_dir in config["include_dirs"]:
-            full = codebase_path / include_dir
-            if full.is_dir():
-                roots.append(full)
+        roots = _resolve_existing_scan_roots(codebase_path, config["include_dirs"])
         if roots:
             return roots
-    return [codebase_path]
+    return [codebase_path.resolve()]
+
+
+def _marker_path(path: Path) -> Path:
+    """Return the canonical ingest-code marker path for a directory or marker path."""
+    if path.name == ".ingest-code.json":
+        return path
+    return path / ".ingest-code.json"
+
+
+def _write_ingest_marker(
+    path: Path,
+    files_scanned: int,
+    knowledge_stored: int,
+    cwe_stored: int,
+    edges_stored: int,
+    code_symbols_stored: int,
+    treesitter: bool,
+    scope: str,
+    *,
+    run_status: str = "complete",
+    started_at: str | None = None,
+    scan_roots: Sequence[str | Path] = (),
+    completed_scan_roots: Sequence[str | Path] = (),
+) -> Path:
+    """Write the local ingest-code marker and return its path."""
+    allowed_statuses = {"running", "complete", "failed"}
+    if run_status not in allowed_statuses:
+        raise ValueError(f"unsupported run_status: {run_status}")
+
+    marker_path = _marker_path(path)
+    codebase_root = marker_path.parent.resolve()
+    timestamp = started_at or datetime.now().isoformat()
+    completed = run_status == "complete"
+    marker = {
+        "ingested_at": timestamp,
+        "started_at": timestamp,
+        "path": str(codebase_root),
+        "stem": codebase_root.name,
+        "files_scanned": files_scanned,
+        "knowledge_stored": knowledge_stored,
+        "cwe_stored": cwe_stored,
+        "edges_stored": edges_stored,
+        "code_index": {
+            "enabled": code_symbols_stored > 0,
+            "backend": "memory",
+            "collection": "code_symbols",
+            "treesitter": bool(treesitter),
+            "symbols_stored": code_symbols_stored,
+            "lexical_terms": code_symbols_stored > 0,
+            "line_ranges": code_symbols_stored > 0,
+            "content_hashes": code_symbols_stored > 0,
+            "hybrid_retrieval_capable": code_symbols_stored > 0,
+        },
+        "scope": scope,
+        "run_status": run_status,
+        "completed": completed,
+        "scan_roots": [str(root) for root in scan_roots],
+        "completed_scan_roots": [str(root) for root in completed_scan_roots],
+    }
+    tmp_path = marker_path.with_suffix(marker_path.suffix + ".tmp")
+    tmp_path.write_text(json.dumps(marker, indent=2))
+    tmp_path.replace(marker_path)
+    return marker_path
+
+
+def build_marker_status(path: Path) -> dict[str, Any]:
+    """Read the ingest-code marker status without raising for missing or bad files."""
+    marker_path = _marker_path(path)
+    disabled_code_index = {"enabled": False}
+    if not marker_path.exists():
+        return {
+            "status": "missing",
+            "run_status": None,
+            "completed": False,
+            "scope": None,
+            "scan_roots": [],
+            "completed_scan_roots": [],
+            "code_index": disabled_code_index,
+        }
+
+    try:
+        payload = json.loads(marker_path.read_text())
+    except (OSError, json.JSONDecodeError):
+        payload = None
+
+    if not isinstance(payload, dict):
+        return {
+            "status": "invalid",
+            "run_status": None,
+            "completed": False,
+            "scope": None,
+            "scan_roots": [],
+            "completed_scan_roots": [],
+            "code_index": disabled_code_index,
+        }
+
+    status = dict(payload)
+    run_status = status.get("run_status") or "complete"
+    if run_status == "complete":
+        public_status = "fresh"
+        completed = True
+    elif run_status == "running":
+        public_status = "running"
+        completed = False
+    elif run_status == "failed":
+        public_status = "failed"
+        completed = False
+    else:
+        public_status = "invalid"
+        completed = False
+
+    code_index = status.get("code_index")
+    if not isinstance(code_index, dict):
+        code_index = disabled_code_index
+
+    status.update({
+        "status": public_status,
+        "run_status": run_status,
+        "completed": completed,
+        "scan_roots": status.get("scan_roots") if isinstance(status.get("scan_roots"), list) else [],
+        "completed_scan_roots": (
+            status.get("completed_scan_roots")
+            if isinstance(status.get("completed_scan_roots"), list)
+            else []
+        ),
+        "code_index": code_index,
+    })
+    return status
 
 
 def _parse_treesitter_scan_output(stdout: str) -> list[dict[str, Any]]:
@@ -779,11 +931,14 @@ def _store_treesitter_symbols_for_directory(
         print(f"Treesitter skill not found for {directory}", file=sys.stderr, flush=True)
         return 0
 
+    resolved_directory = directory.resolve()
+    resolved_codebase_root = codebase_root.resolve()
+
     cmd = [
         "bash",
         str(treesitter_script),
         "scan",
-        str(directory),
+        str(resolved_directory),
     ]
 
     for pattern in DEFAULT_GLOB_PATTERNS:
@@ -814,9 +969,9 @@ def _store_treesitter_symbols_for_directory(
     if not scan_results:
         return 0
 
-    repo = codebase_root.resolve().name
-    branch = _current_branch(codebase_root)
-    commit = _current_commit(codebase_root)
+    repo = resolved_codebase_root.name
+    branch = _current_branch(resolved_codebase_root)
+    commit = _current_commit(resolved_codebase_root)
     records: list[CodeSymbolRecord] = []
     for file_entry in scan_results:
         file_path_raw = file_entry.get("path")
@@ -830,7 +985,7 @@ def _store_treesitter_symbols_for_directory(
             record = _build_code_symbol_record(
                 symbol=symbol,
                 filepath=filepath,
-                codebase_root=codebase_root,
+                codebase_root=resolved_codebase_root,
                 scope=scope,
                 repo=repo,
                 branch=branch,
@@ -1327,13 +1482,16 @@ def scan(
 
     # --- Phase 4: Structured code symbol index ---
     code_symbols_stored = 0
+    code_symbol_scan_roots: list[Path] = []
+    completed_code_symbol_scan_roots: list[Path] = []
     if treesitter and code_index and not cwe_only:
         print("\n--- Phase 4: Upserting structured code symbols ---", flush=True)
         if dry_run:
             print("  [DRY RUN] treesitter code_symbols upsert skipped", flush=True)
         else:
             verification_samples: list[dict[str, str]] = []
-            for scan_root in _extract_configured_scan_roots(path):
+            code_symbol_scan_roots = _extract_configured_scan_roots(path)
+            for scan_root in code_symbol_scan_roots:
                 root_stored = _store_treesitter_symbols_for_directory(
                     scan_root,
                     path,
@@ -1341,6 +1499,7 @@ def scan(
                     verification_samples=verification_samples,
                 )
                 code_symbols_stored += root_stored
+                completed_code_symbol_scan_roots.append(scan_root)
                 print(f"Code index: {root_stored} symbols stored from {scan_root}", flush=True)
 
     # Output summary
@@ -1360,39 +1519,29 @@ def scan(
     print(f"\n{json.dumps(result, indent=2)}")
 
     # --- Write marker file + store ingestion record in /memory ---
-    if not dry_run and (knowledge_stored > 0 or code_symbols_stored > 0):
-        marker = {
-            "ingested_at": datetime.now().isoformat(),
-            "path": str(path.resolve()),
-            "stem": path.resolve().name,
-            "files_scanned": len(files),
-            "knowledge_stored": knowledge_stored,
-            "cwe_stored": cwe_stored,
-            "edges_stored": edges_stored,
-            "code_index": {
-                "enabled": code_symbols_stored > 0,
-                "backend": "memory",
-                "collection": "code_symbols",
-                "treesitter": bool(treesitter),
-                "symbols_stored": code_symbols_stored,
-                "lexical_terms": code_symbols_stored > 0,
-                "line_ranges": code_symbols_stored > 0,
-                "content_hashes": code_symbols_stored > 0,
-                "hybrid_retrieval_capable": code_symbols_stored > 0,
-            },
-            "scope": scope,
-        }
-        marker_path = path / ".ingest-code.json"
+    if not dry_run:
         try:
-            marker_path.write_text(json.dumps(marker, indent=2))
+            marker_path = _write_ingest_marker(
+                path,
+                files_scanned=len(files),
+                knowledge_stored=knowledge_stored,
+                cwe_stored=cwe_stored,
+                edges_stored=edges_stored,
+                code_symbols_stored=code_symbols_stored,
+                treesitter=treesitter,
+                scope=scope,
+                scan_roots=code_symbol_scan_roots,
+                completed_scan_roots=completed_code_symbol_scan_roots,
+            )
             print(f"\nMarker written: {marker_path}")
         except Exception as e:
             print(f"Warning: Could not write marker file: {e}", file=sys.stderr)
 
         # Store ingestion record in /memory for discoverability
+        ingested_at = datetime.now().isoformat()
         _learn_http(
             problem=f"Has codebase {path.resolve().name} been indexed for semantic search?",
-            solution=f"Yes, indexed on {marker['ingested_at']}. {knowledge_stored} lessons, {code_symbols_stored} code symbols, {cwe_stored} CWEs. Path: {path.resolve()}",
+            solution=f"Yes, indexed on {ingested_at}. {knowledge_stored} lessons, {code_symbols_stored} code symbols, {cwe_stored} CWEs. Path: {path.resolve()}",
             scope="system",
             tags=["ingest-code", "indexed-codebase", path.resolve().name, str(path.resolve())],
         )

@@ -30,35 +30,38 @@ composes:
 
 # ingest-code
 
-Codebase ingestion into `/memory`:
+`ingest-code` scans a source-code repository for reusable code knowledge,
+relationships, CWE/taxonomy metadata, and optional Tree-sitter code symbols. It
+writes supported records through the current `/memory` client.
 
-1. **Phase 1 — Functional Knowledge**: Python AST extracts module docstrings, function signatures, class hierarchies. Markdown parser extracts section-level knowledge from CONTEXT.md, README.md, etc. Generic parser handles TS/JS exports.
-2. **Phase 2 — CWE Scanning**: `/taxonomy` extracts security-relevant patterns (bridge tags + CWE mappings) per file.
-3. **Phase 3 — Relationship Edges**: Python import analysis stores code dependency edges in `/memory`.
-4. **Phase 4 — Structured Code Index**: Optional Tree-sitter extraction emits rich `code_symbol` records to `/memory` via `/upsert` into the `code_symbols` collection.
+This is a code-ingestion skill. It is not a general document, media, or
+multimodal extractor. Repository Markdown such as `README.md`, `AGENTS.md`, and
+`docs/` may contribute code-related lessons, but requests primarily involving
+PDF, DOCX, HTML, XML, PPTX, XLSX, EPUB, images, YouTube, video, or other media
+extraction belong to `$extractor` or to a separately implemented memory
+orchestration path.
 
-Functional lessons and CWE summaries remain lesson-style memory records for compatibility. Structured code symbols are stored through `/memory /upsert`; `/memory` owns ArangoDB, Qdrant, embeddings, sparse/hybrid retrieval, and payload/index behavior. `/ingest-code` must not talk to Qdrant directly.
+`/memory` owns ArangoDB, Qdrant, embeddings, sparse/hybrid retrieval, and
+payload/index behavior. `ingest-code` must not talk to Qdrant directly.
 
 ## Quick Start
 
 ```bash
-cd .pi/skills/ingest-code
+cd ${HOME}/workspace/experiments/agent-skills/skills/ingest-code
 
-# Full knowledge + CWE scan
-./run.sh scan /path/to/codebase
+# Initial or complete repository scan with structured code symbols
+./run.sh scan /absolute/path/to/repository --treesitter
 
-# CWE scan only (legacy mode)
-./run.sh scan /path/to/codebase --cwe-only
+# Refresh an existing repository index
+./run.sh rescan -c /absolute/path/to/repository --treesitter
 
-# Preview without storing to /memory
-./run.sh scan /path/to/codebase --dry-run
-
-# Include Tree-sitter structured code symbols for memory's hybrid code index
-./run.sh scan /path/to/codebase --treesitter
-
-# Nightly rescan (only files modified in last day)
-./run.sh rescan --since 1d -c /path/to/codebase --treesitter
+# Preview without writing to /memory or writing a marker
+./run.sh scan /absolute/path/to/repository --dry-run
 ```
+
+Use `scan` for an initial or complete scan. Use `rescan` when refreshing a
+repository. Add `--treesitter` when the caller needs structured `code_symbols`
+for memory-backed code retrieval. Prefer absolute repository paths.
 
 ## Commands
 
@@ -94,30 +97,106 @@ Options:
   --scope            Memory scope
 ```
 
-## What Gets Extracted
+## Agent Rules
 
-### Phase 1: Functional Knowledge (Python AST)
+Agents must:
 
-| Source | What | Example /memory Problem |
-|--------|------|------------------------|
-| Module docstring | Module purpose | "What does run_pipeline.py do?" |
-| Class definition | Class + methods + bases | "What is the ContentRepository class in content_query.py?" |
-| Function signature | Args, return type, docstring | "What does extract_tables() do in s05_table_extractor.py?" |
-| Markdown sections | Architecture decisions, bug fixes | "What does 'Bugs Fixed' say in MEMORY.md?" |
-| TS/JS exports | Exported symbols | "What is AnswerCanvas in AnswerCanvas.tsx?" |
+- Use only the supported `scan` or `rescan` commands for this skill.
+- Use `--treesitter` when structured code-symbol indexing is required.
+- Honor `.monitor-codebase.json`, `CODE_SYMBOLS_SCAN_INCLUDE_DIRS`, and the
+  hardcoded skip directories.
+- Treat `.ingest-code.json` according to its normalized status.
+- Report terminal memory-write errors instead of masking them.
+- Route document and media extraction requests to `$extractor`.
 
-### Phase 2: CWE Scanning (via /taxonomy)
+Agents must not:
 
-| Category | Example CWEs | Triggers |
-|----------|--------------|----------|
-| MemorySafety | CWE-120, CWE-787, CWE-416 | buffer, overflow, memory, pointer |
-| InputValidation | CWE-20, CWE-89, CWE-78 | input, validation, inject, command |
-| Authentication | CWE-287, CWE-798, CWE-522 | auth, credential, password, session |
-| Cryptography | CWE-311, CWE-327, CWE-330 | encrypt, crypto, key, random |
+- Call Qdrant directly.
+- Run or import Graphify.
+- Invent or call `/v1/ingest/*`, snapshot, commit, receipt, debugger-proof, or
+  DAG endpoints from this skill.
+- Claim multimodal ingestion from `ingest-code`.
+- Treat a dry run or a local marker as proof of backend embedding coverage.
+- Treat logs or static UI state as durable workflow receipts.
+- Move memory storage ownership into this skill.
 
-### Phase 4: Structured Code Index (Tree-sitter → /memory)
+## Scan Scope
 
-When `--treesitter --code-index` is enabled, `/ingest-code` emits `CodeSymbolRecord` documents to `/memory /upsert` with `collection="code_symbols"`.
+Scan roots are resolved in this order:
+
+1. A nonblank `CODE_SYMBOLS_SCAN_INCLUDE_DIRS` environment value overrides
+   `.monitor-codebase.json` `include_dirs`.
+2. The environment value is comma-separated. Entries are trimmed, resolved
+   under the repository, deduplicated in order, and kept only when the directory
+   exists.
+3. A nonblank override with no valid existing directories produces an empty
+   scoped scan. It does not broaden to the repository root.
+4. Without a nonblank environment override, `.monitor-codebase.json`
+   `include_dirs` controls scan roots.
+5. Without any configured include roots, the repository root is scanned.
+
+Example:
+
+```bash
+CODE_SYMBOLS_SCAN_INCLUDE_DIRS="src,scripts" \
+  ./run.sh rescan -c /absolute/path/to/repository --treesitter
+```
+
+`.monitor-codebase.json` `exclude_dirs` remains additive. It supplements both
+`.gitignore` and the hardcoded skip directories; the environment variable only
+overrides include roots.
+
+## Processing
+
+Current processing is local and command-driven:
+
+1. Discover files inside resolved scan roots while respecting git ignore rules,
+   configured exclusions, and hardcoded skip directories.
+2. Extract code lessons, relationships, CWE/taxonomy metadata, and optional
+   Tree-sitter symbols.
+3. Write supported records through the current `/memory` client.
+4. Write `.ingest-code.json` after a successful non-dry-run scan.
+
+`ingest-code` currently does not create memory snapshots, coordinate multimodal
+extractors, run Graphify, or perform server-side plan/commit orchestration.
+
+## Memory Writes
+
+`ingest-code` uses `httpx` over the configured `/memory` Unix socket. Lesson
+and compatibility records use the current memory compatibility calls.
+Structured `code_symbols` are sent in batches to `POST /upsert` with
+`collection="code_symbols"`.
+
+When a structured multi-record code-symbol batch fails, it is recursively split
+before using the legacy path. Legacy code-symbol storage is attempted only after
+a singleton structured upsert fails. If both methods fail, the terminal error
+must remain visible.
+
+Agents should invoke the `scan` or `rescan` command. They should not reproduce
+these internal HTTP calls manually.
+
+## Extracted Records
+
+### Functional Knowledge
+
+| Field | Purpose |
+|-------|---------|
+| Module docstring | Module purpose |
+| Class definition | Class, methods, and bases |
+| Function signature | Arguments, return type, and docstring |
+| Markdown sections | Code-related architecture notes, decisions, and local docs |
+| TS/JS exports | Exported symbols and component names |
+
+### CWE Metadata
+
+`/taxonomy` extracts security-relevant patterns and CWE mappings per source file
+when taxonomy support is available.
+
+### Structured Code Symbols
+
+When `--treesitter --code-index` is enabled, `ingest-code` emits
+`CodeSymbolRecord` documents to `/memory /upsert` with
+`collection="code_symbols"`.
 
 Each record includes:
 
@@ -125,11 +204,14 @@ Each record includes:
 |-------|---------|
 | `repo`, `branch`, `commit`, `path` | Scope and staleness control |
 | `language`, `symbol_kind`, `symbol_name`, `qualified_name` | Symbol filtering and exact lookup |
-| `start_line`, `end_line`, `code`, `content_hash` | Cited source retrieval and deterministic updates |
-| `imports`, `parameters`, `local_variables`, `called_symbols`, `string_literals` | Lexical terms for memory's sparse/hybrid retrieval |
+| `start_line`, `end_line`, `code`, `content_hash` | Source retrieval and deterministic updates |
+| `imports`, `parameters`, `local_variables`, `called_symbols`, `string_literals` | Lexical terms for sparse/hybrid retrieval |
 | `problem`, `solution`, `text`, `tags` | Compatibility with existing memory recall surfaces |
 
-Identifier-heavy fields are emitted as `lexical_terms` such as `symbol:build_evidence_case`, `param:enable_llm`, `call:execute_llm_request`, and split identifier tokens. These are inputs to `/memory`'s code retrieval backend; `/ingest-code` does not create Qdrant collections or payload indexes directly.
+Identifier-heavy fields are emitted as lexical terms such as
+`symbol:build_evidence_case`, `param:enable_llm`, `call:execute_llm_request`,
+and split identifier tokens. These are inputs to `/memory`'s code retrieval
+backend.
 
 ## Directory Filtering
 
@@ -169,11 +251,13 @@ The `exclude_dirs` list is additive — it supplements both `.gitignore` and the
 
 ## Indexing Marker
 
-After a successful scan, `/ingest-code` writes a `.ingest-code.json` marker file to the scanned directory:
+After a successful non-dry-run scan, `ingest-code` writes `.ingest-code.json` to
+the scanned directory:
 
 ```json
 {
   "ingested_at": "2026-04-14T13:30:00",
+  "started_at": "2026-04-14T13:30:00",
   "path": "${HOME}/workspace/my-project",
   "stem": "my-project",
   "files_scanned": 968,
@@ -191,20 +275,85 @@ After a successful scan, `/ingest-code` writes a `.ingest-code.json` marker file
     "content_hashes": true,
     "hybrid_retrieval_capable": true
   },
-  "scope": "code"
+  "scope": "code",
+  "run_status": "complete",
+  "completed": true,
+  "scan_roots": ["${HOME}/workspace/my-project/src"],
+  "completed_scan_roots": ["${HOME}/workspace/my-project/src"]
 }
 ```
 
-**Why this exists:** Other skills (like `/code-runner`) can check for this marker to determine if a codebase has been semantically indexed. If `code_index.enabled` is true, they should prefer `/memory recall` over `code_symbols`/hybrid code retrieval before falling back to ripgrep pattern matching.
+Normalized marker status:
+
+| Status | Meaning |
+|--------|---------|
+| `missing` | No `.ingest-code.json` exists |
+| `invalid` | The marker cannot be parsed or normalized |
+| `running` | The marker reports an incomplete run |
+| `fresh` | The marker reports `run_status: complete` and `completed: true` |
+| `failed` | The marker reports a failed run |
+
+The marker records local scan status, scope, completed roots, and code-index
+metadata. It is evidence that the local command completed its current workflow.
+It is not proof of a future memory snapshot, durable run receipt, Qdrant
+reconciliation, embedding completeness, or DAG state.
+
+Dry runs do not write to `/memory` and do not write this marker.
 
 The marker is also stored in `/memory` with tags `["ingest-code", "indexed-codebase", <stem>, <path>]` for discovery via recall.
+
+## Failure Behavior
+
+On a nonzero exit, reported storage error, invalid marker, or incomplete marker,
+report the failure and the relevant local details. Do not claim semantic
+indexing succeeded.
+
+Do not bypass failures by calling Qdrant, Graphify, or undocumented memory
+endpoints directly.
+
+## Handoffs
+
+**Extractor:** Route requests primarily involving PDF, DOCX, HTML, XML, PPTX,
+XLSX, EPUB, images, YouTube, video, or other media extraction to `$extractor`
+or an implemented memory orchestration command. Do not add those extraction
+responsibilities to `ingest-code`.
+
+**Graphify:** Graphify is not part of the current agent-facing contract. Do not
+run Graphify, import its modules, add a `--graphify` command, or treat its
+output as current ingest proof. Any future use must remain an internal,
+separately implemented and tested code-extraction component.
+
+**monitor-codebase:** `$monitor-codebase` may invoke the current `ingest-code`
+command and inspect the current marker. Do not claim memory run receipts or
+snapshot-bound coverage receipts exist until they are implemented.
+
+**debugger:** Use `$debugger` when `ingest-code` itself requires runtime
+debugging. `ingest-code` does not currently persist paused-frame debugger state.
+
+**DAG/Tau:** No `ingest-code` DAG endpoint or durable receipt viewer is
+currently implemented. Do not infer workflow success from a static or proposed
+DAG.
+
+## Proof Boundary
+
+Local deterministic checks can show that command code and marker/client behavior
+match the current implementation:
+
+```bash
+python3 -m pytest tests -q
+git diff --check
+```
+
+These checks do not prove live `/memory` availability, Qdrant embedding
+coverage, multimodal extraction, Graphify adapter behavior, monitor receipts,
+debugger-state storage, or DAG viewer behavior.
 
 ## Related Skills
 
 | Skill | Relationship |
 |-------|--------------|
-| `/memory` | Storage backend — lesson records use compatibility storage; structured code symbols use `/upsert` |
+| `/memory` | Storage backend; structured code symbols use `/upsert` |
 | `/taxonomy` | CWE extraction engine (Phase 2) |
 | `/monitor-codebase` | Nightly orchestrator that calls `rescan` |
 | `/treesitter` | Structured symbol extraction for the memory-backed code index |
-| `/scheduler` | Cron job registration |
+| `/extractor` | Owner for document/media extraction outside the code lane |
