@@ -49,7 +49,10 @@ sealed-corpus validator/scorer evidence, not live Tau-authored abstention
 behavior and not provider/video proof. A PCTOM-R objective-evidence audit now
 binds the active objective clauses to the current expanded success and
 15-id goal-coverage receipts, and fails closed on stale success/coverage
-receipt mismatches.
+receipt mismatches. Its provider/video boundary now recursively inspects the
+goal-coverage receipt and its 37 referenced child receipts for provider,
+canonical-memory, identity, or source-memory side-effect counters instead of
+hardcoding that provider/video is out of the critical path.
 
 Sealed64 deterministic social episode corpus:
 
@@ -277,6 +280,24 @@ PCTOM-R objective-evidence negative stale-coverage receipt:
 
 ```text
 /tmp/persona-dream-pctom-objective-evidence-negative-stale-coverage-20260722T121300Z/pctom_objective_evidence_audit_receipt.v1.json
+```
+
+PCTOM-R provider-boundary objective-evidence audit receipt:
+
+```text
+/tmp/persona-dream-pctom-objective-evidence-provider-boundary-20260722T124000Z/pctom_objective_evidence_audit_receipt.v1.json
+```
+
+PCTOM-R objective-evidence negative provider-counter receipt:
+
+```text
+/tmp/persona-dream-pctom-objective-evidence-negative-provider-counter-20260722T124100Z/pctom_objective_evidence_audit_receipt.v1.json
+```
+
+PCTOM-R objective-evidence negative child-provider-counter receipt:
+
+```text
+/tmp/persona-dream-pctom-objective-evidence-negative-child-provider-counter-20260722T124200Z/pctom_objective_evidence_audit_receipt.v1.json
 ```
 
 PCTOM-R repeated-full64 calibration/abstention negative receipt:

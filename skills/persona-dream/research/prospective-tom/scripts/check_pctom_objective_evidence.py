@@ -32,6 +32,23 @@ REQUIRED_COVERAGE_IDS = {
     "negative_fixtures_fail_closed",
 }
 
+FORBIDDEN_SIDE_EFFECT_COUNTERS = {
+    "actual_provider_call_attempts",
+    "provider_calls",
+    "provider_call_count",
+    "canonical_memory_writes",
+    "identity_writes",
+    "source_memory_writes",
+    "canonical_write_violations",
+    "identity_write_violations",
+    "source_memory_write_violations",
+}
+
+REQUIRED_PROVIDER_BOUNDARY_CLAIMS = {
+    "paid provider execution",
+    "complete Phase 01-16 media runtime execution",
+}
+
 
 def _now_iso() -> str:
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
@@ -78,6 +95,33 @@ def _receipt_ref(path: Path, receipt: dict[str, Any]) -> dict[str, Any]:
         "receipt_sha256": receipt.get("receipt_sha256"),
         "file_sha256": _file_sha256(path),
     }
+
+
+def _claims_do_not_prove(receipt: dict[str, Any]) -> set[str]:
+    claims = receipt.get("claims") if isinstance(receipt.get("claims"), dict) else {}
+    values = claims.get("does_not_prove") if isinstance(claims.get("does_not_prove"), list) else []
+    return {value for value in values if isinstance(value, str)}
+
+
+def _forbidden_side_effects(value: Any, path: str = "$") -> list[dict[str, Any]]:
+    found: list[dict[str, Any]] = []
+    if isinstance(value, dict):
+        for key, item in value.items():
+            next_path = f"{path}.{key}"
+            if key in FORBIDDEN_SIDE_EFFECT_COUNTERS:
+                if isinstance(item, bool):
+                    numeric = int(item)
+                elif isinstance(item, int):
+                    numeric = item
+                else:
+                    numeric = 0
+                if numeric:
+                    found.append({"path": next_path, "value": item})
+            found.extend(_forbidden_side_effects(item, next_path))
+    elif isinstance(value, list):
+        for index, item in enumerate(value):
+            found.extend(_forbidden_side_effects(item, f"{path}[{index}]"))
+    return found
 
 
 def _coverage_map(coverage: dict[str, Any]) -> dict[str, dict[str, Any]]:
@@ -183,6 +227,44 @@ def run(
     for coverage_id in missing_negative:
         errors.append(f"coverage_missing_negative_evidence:{coverage_id}")
 
+    success_forbidden_side_effects = _forbidden_side_effects(success, "success_receipt")
+    coverage_forbidden_side_effects = _forbidden_side_effects(coverage, "goal_coverage_receipt")
+    for item in success_forbidden_side_effects:
+        errors.append(f"success_forbidden_side_effect_counter:{item['path']}:{item['value']}")
+    for item in coverage_forbidden_side_effects:
+        errors.append(f"coverage_forbidden_side_effect_counter:{item['path']}:{item['value']}")
+
+    missing_success_boundary_claims = sorted(REQUIRED_PROVIDER_BOUNDARY_CLAIMS - _claims_do_not_prove(success))
+    missing_coverage_boundary_claims = sorted(REQUIRED_PROVIDER_BOUNDARY_CLAIMS - _claims_do_not_prove(coverage))
+    for claim in missing_success_boundary_claims:
+        errors.append(f"success_missing_does_not_prove_claim:{claim}")
+    for claim in missing_coverage_boundary_claims:
+        errors.append(f"coverage_missing_does_not_prove_claim:{claim}")
+
+    child_receipt_refs = coverage.get("evidence") if isinstance(coverage.get("evidence"), list) else []
+    child_receipts_checked = 0
+    child_forbidden_side_effects: list[dict[str, Any]] = []
+    for index, row in enumerate(child_receipt_refs):
+        if not isinstance(row, dict):
+            errors.append(f"coverage_evidence_row_not_object:{index}")
+            continue
+        raw_path = row.get("path")
+        if not isinstance(raw_path, str) or not raw_path:
+            errors.append(f"coverage_evidence_row_path_missing:{index}")
+            continue
+        child_path = Path(raw_path).resolve()
+        child = _load_json(child_path, errors, f"coverage_evidence_receipt_{index}")
+        if not isinstance(child, dict):
+            continue
+        child_receipts_checked += 1
+        for item in _forbidden_side_effects(child, f"coverage_evidence[{index}]"):
+            item["receipt_path"] = str(child_path)
+            child_forbidden_side_effects.append(item)
+            errors.append(
+                "coverage_child_forbidden_side_effect_counter:"
+                f"{child_path}:{item['path']}:{item['value']}"
+            )
+
     objective_clauses = {
         "provenance_bound_recall_residue": "gate0_provenance_bound_recall_residue" in mapped,
         "deterministic_hidden_state_social_episodes": "gate1_deterministic_hidden_state_social_episodes" in mapped,
@@ -198,7 +280,13 @@ def run(
         ),
         "autonomous_without_human_content_judgment": "autonomous_no_human_judgment" in mapped,
         "unsupported_evidence_abstention": "unsupported_evidence_abstention" in mapped,
-        "provider_video_not_critical_path": True,
+        "provider_video_not_critical_path": (
+            not success_forbidden_side_effects
+            and not coverage_forbidden_side_effects
+            and not child_forbidden_side_effects
+            and not missing_success_boundary_claims
+            and not missing_coverage_boundary_claims
+        ),
     }
     for key, value in objective_clauses.items():
         if value is not True:
@@ -223,9 +311,18 @@ def run(
             "coverage_ids_seen": counts.get("coverage_ids_seen"),
             "coverage_ids_missing": counts.get("coverage_ids_missing"),
             "evidence_receipts_seen": counts.get("evidence_receipts_seen"),
+            "child_evidence_receipts_checked": child_receipts_checked,
             "positive_evidence_receipts": counts.get("positive_evidence_receipts"),
             "negative_evidence_receipts": counts.get("negative_evidence_receipts"),
             "live_positive_evidence_receipts": counts.get("live_positive_evidence_receipts"),
+        },
+        "provider_video_boundary": {
+            "required_does_not_prove_claims": sorted(REQUIRED_PROVIDER_BOUNDARY_CLAIMS),
+            "success_missing_does_not_prove_claims": missing_success_boundary_claims,
+            "coverage_missing_does_not_prove_claims": missing_coverage_boundary_claims,
+            "success_forbidden_side_effects": success_forbidden_side_effects,
+            "coverage_forbidden_side_effects": coverage_forbidden_side_effects,
+            "coverage_child_forbidden_side_effects": child_forbidden_side_effects,
         },
         "errors": errors,
         "claims": {
@@ -233,6 +330,7 @@ def run(
                 "the current top-level PCTOM-R success receipt is bound to the same expanded goal-coverage receipt",
                 "all active text-first PCTOM-R objective clauses have named coverage evidence",
                 "the objective evidence surface includes fail-closed negative fixtures and unsupported-evidence abstention coverage",
+                "the supplied receipt bundle keeps provider/video work outside the current critical path when provider_video_not_critical_path is true",
             ],
             "does_not_prove": [
                 "paid provider execution",

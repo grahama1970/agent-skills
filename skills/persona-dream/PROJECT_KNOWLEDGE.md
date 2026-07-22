@@ -3274,3 +3274,12 @@
   objective clauses to named coverage ids and fails closed on stale success
   receipts, stale coverage receipts, missing unsupported-evidence abstention
   coverage, or missing fail-closed negative coverage.
+
+- 2026-07-22 (PCTOM-R provider/video critical-path audit): do not represent
+  provider/video exclusion as a constant in a top-level audit. The
+  `check-pctom-objective-evidence` command now recomputes that boundary from
+  `does_not_prove` claims and recursive side-effect counter scans over the
+  success receipt, goal-coverage receipt, and every child receipt referenced by
+  goal coverage. A copied coverage receipt or copied child receipt with
+  `actual_provider_call_attempts=1` makes the objective audit block with
+  `provider_video_not_critical_path=false`.

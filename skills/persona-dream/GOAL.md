@@ -518,6 +518,30 @@ Next: <one immediate action or stop condition>
   it does not prove paid provider execution, semantic dream quality, complete
   Phase 01-16 media runtime execution, or future receipts not routed through
   this audit.
+  The objective-evidence audit was then tightened so
+  `provider_video_not_critical_path` is derived from receipt boundaries rather
+  than hardcoded. Superseding receipt:
+  `/tmp/persona-dream-pctom-objective-evidence-provider-boundary-20260722T124000Z/pctom_objective_evidence_audit_receipt.v1.json`.
+  It returned `PASS_PCTOM_OBJECTIVE_EVIDENCE_AUDIT`, checked 37 child evidence
+  receipts referenced by the coverage receipt, found 0 forbidden provider /
+  canonical / identity / source-memory side-effect counters, and recorded
+  `provider_video_not_critical_path=true`. Receipt SHA-256:
+  `sha256:b8051137e1315b06ddbd4ab432db7d9db4d880d5b076945a977e154eec5cc7b2`.
+  A fixture-backed negative with `actual_provider_call_attempts=1` on a copied
+  coverage receipt exited 1 with `BLOCKED_PCTOM_OBJECTIVE_EVIDENCE_AUDIT`,
+  `provider_video_not_critical_path=false`, and error
+  `coverage_forbidden_side_effect_counter:goal_coverage_receipt.actual_provider_call_attempts:1`;
+  negative receipt SHA-256:
+  `sha256:83bb7e2bf7dd57c7e2246acbc9a60ad7ab5bd8d6800c49ee7e908c13d20112c9`.
+  A second fixture-backed negative hid the same provider counter in a copied
+  child evidence receipt and exited 1 with
+  `coverage_child_forbidden_side_effect_counter` plus
+  `objective_clause_not_proven:provider_video_not_critical_path`; negative
+  receipt SHA-256:
+  `sha256:fdcb95f52d6cf590f6a453e55863b41398e1b7c5f7906762dc02c3b1108a00ad`.
+  This closes a local audit weakness where provider/video critical-path
+  exclusion was represented as a constant instead of being recomputed from the
+  supplied receipt bundle.
   The live run consumed simulator variants 17-24, 32 sealed-test
   episodes, all four scenario families, and 128 live Tau-authored M/R/D/CD
   condition predictions. It used the Gate 0 attribution root
