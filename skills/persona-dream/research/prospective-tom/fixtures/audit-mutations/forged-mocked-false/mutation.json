@@ -1,0 +1,7 @@
+{
+  "operator_id": "forged-mocked-false",
+  "target": "synthetic forged receipt",
+  "expected_status": "BLOCKED_PCTOM_EVIDENCE_TRUTHFULNESS",
+  "violated_invariant": "fixture_backed_claims_cannot_overclaim_live_or_efficacy",
+  "mutation": "create a PASS-like fixture-backed receipt with mocked=false that claims live efficacy/provider proof"
+}

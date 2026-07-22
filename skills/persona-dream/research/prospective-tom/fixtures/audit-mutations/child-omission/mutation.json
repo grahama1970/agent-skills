@@ -1,0 +1,7 @@
+{
+  "operator_id": "child-omission",
+  "target": "evidence/pctom-archive-manifest.v1.json",
+  "expected_status": "BLOCKED_PCTOM_CHILD_OMISSION",
+  "violated_invariant": "archive_children_are_complete_and_unique",
+  "mutation": "remove one archive entry without accepting the changed child set"
+}

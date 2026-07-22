@@ -1,0 +1,7 @@
+{
+  "operator_id": "parent-substitution",
+  "target": "receipts/pctom-archive-integrity-audit.v1.json",
+  "expected_status": "BLOCKED_PCTOM_PARENT_SUBSTITUTION",
+  "violated_invariant": "parent_paths_resolve_to_expected_artifact_class",
+  "mutation": "rebind manifest_path to the evidence scope ledger while leaving the receipt shaped as an archive audit"
+}

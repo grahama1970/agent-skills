@@ -28,6 +28,8 @@ ARCHIVE_SELF_REL = "evidence/pctom-archive-manifest.v1.json"
 EXCLUDED_ARCHIVE_RECEIPTS = {
     "pctom-archive-integrity-audit.v1.json",
     "pctom-receipt-discovery-audit.v1.json",
+    "pctom-audit-mutation-suite.v1.json",
+    "pctom-evidence-claim-integrity-audit.v1.json",
 }
 
 

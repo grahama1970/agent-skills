@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.research.prospective_tom.pctom_audit_mutation_suite_receipt.v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "created_at",
+    "status",
+    "mocked",
+    "live",
+    "fixture_backed",
+    "provider_call_attempts",
+    "memory_write_attempts",
+    "mutation_operators_required",
+    "mutation_operators_detected",
+    "mutation_score",
+    "baseline_status",
+    "mutation_results",
+    "errors",
+    "claims"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "persona_dream.research.prospective_tom.pctom_audit_mutation_suite_receipt.v1"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "PASS_PCTOM_AUDIT_MUTATION_SUITE",
+        "BLOCKED_PCTOM_AUDIT_MUTATION_SUITE"
+      ]
+    },
+    "mocked": {"type": "boolean", "const": false},
+    "live": {"type": "boolean", "const": false},
+    "fixture_backed": {"type": "boolean", "const": true},
+    "provider_call_attempts": {"type": "integer", "const": 0},
+    "memory_write_attempts": {"type": "integer", "const": 0},
+    "mutation_score": {"type": "number", "minimum": 0, "maximum": 1},
+    "baseline_status": {"type": "string"},
+    "mutation_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "operator_id",
+          "expected_status",
+          "observed_status",
+          "blocked_as_expected",
+          "violated_invariant",
+          "generic_failure",
+          "errors"
+        ],
+        "properties": {
+          "operator_id": {"type": "string"},
+          "expected_status": {"type": "string"},
+          "observed_status": {"type": "string"},
+          "blocked_as_expected": {"type": "boolean"},
+          "violated_invariant": {"type": "string"},
+          "generic_failure": {"type": "boolean"},
+          "errors": {"type": "array"}
+        },
+        "additionalProperties": true
+      }
+    },
+    "errors": {"type": "array"},
+    "claims": {"type": "object"}
+  },
+  "additionalProperties": true
+}

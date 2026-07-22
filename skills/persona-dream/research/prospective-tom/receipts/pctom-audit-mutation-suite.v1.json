@@ -1,0 +1,165 @@
+{
+  "baseline_errors": [],
+  "baseline_status": "PASS_PCTOM_AUDIT_BASELINE",
+  "claims": {
+    "does_not_prove": [
+      "accepted-source lineage",
+      "pre-seal outcome isolation",
+      "proper scoring",
+      "restart atomicity",
+      "live efficacy"
+    ],
+    "proves": [
+      "PCTOM-R2 Phase 2 audit mutation operators fail closed with named invariant statuses",
+      "the current archive, scope, schema, lifecycle, origin, and fixture-claim truthfulness baseline passed before mutation"
+    ]
+  },
+  "contract_path": "contracts/pctom-audit-invariants.v1.json",
+  "contract_sha256": "sha256:03c04336d4f2fb14e0f36db2a4dfd5bb633d9e8efdcf3b77986ec583ed2927be",
+  "created_at": "2026-07-22T13:53:32Z",
+  "errors": [],
+  "fixture_backed": true,
+  "human_content_judgment_rows": 0,
+  "live": false,
+  "llm_judge_rows": 0,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "mutation_operators_detected": 9,
+  "mutation_operators_required": 9,
+  "mutation_results": [
+    {
+      "blocked_as_expected": true,
+      "errors": [
+        "self_hash_mismatch:archive:manifest_sha256"
+      ],
+      "expected_status": "BLOCKED_PCTOM_SELF_HASH_MISMATCH",
+      "fixture_missing": false,
+      "fixture_path": "fixtures/audit-mutations/self-hash/mutation.json",
+      "fixture_sha256": "sha256:485cad708ad94c34e882ec5d9949eca665c1e08070e53dfd1b588d5187bc33ea",
+      "generic_failure": false,
+      "observed_status": "BLOCKED_PCTOM_SELF_HASH_MISMATCH",
+      "operator_id": "self-hash",
+      "violated_invariant": "self_hash_receipts_match_parent_bytes"
+    },
+    {
+      "blocked_as_expected": true,
+      "errors": [
+        "parent_substitution:archive:manifest_path:evidence/pctom-evidence-scope-ledger.v1.json"
+      ],
+      "expected_status": "BLOCKED_PCTOM_PARENT_SUBSTITUTION",
+      "fixture_missing": false,
+      "fixture_path": "fixtures/audit-mutations/parent-substitution/mutation.json",
+      "fixture_sha256": "sha256:3cc5e855be4d6b153159b69aa4f68873ce23bac73fbd571f3e7f55fd693af845",
+      "generic_failure": false,
+      "observed_status": "BLOCKED_PCTOM_PARENT_SUBSTITUTION",
+      "operator_id": "parent-substitution",
+      "violated_invariant": "parent_paths_resolve_to_expected_artifact_class"
+    },
+    {
+      "blocked_as_expected": true,
+      "errors": [
+        "archive_entries_sha256_mismatch",
+        "archive_expected_child_omitted:contracts/pctom-audit-invariants.v1.json"
+      ],
+      "expected_status": "BLOCKED_PCTOM_CHILD_OMISSION",
+      "fixture_missing": false,
+      "fixture_path": "fixtures/audit-mutations/child-omission/mutation.json",
+      "fixture_sha256": "sha256:1abdec0ca14f901bd3e69d05158fdb4599d973eac8252b90d379045590960cb7",
+      "generic_failure": false,
+      "observed_status": "BLOCKED_PCTOM_CHILD_OMISSION",
+      "operator_id": "child-omission",
+      "violated_invariant": "archive_children_are_complete_and_unique"
+    },
+    {
+      "blocked_as_expected": true,
+      "errors": [
+        "duplicate_archive_path:contracts/pctom-audit-invariants.v1.json"
+      ],
+      "expected_status": "BLOCKED_PCTOM_DUPLICATE_CHILD",
+      "fixture_missing": false,
+      "fixture_path": "fixtures/audit-mutations/duplicate-child/mutation.json",
+      "fixture_sha256": "sha256:32e7d81f6845bcfbccd4dc49dafc5d21e487091a2f3da1c2968e178eed7a2831",
+      "generic_failure": false,
+      "observed_status": "BLOCKED_PCTOM_DUPLICATE_CHILD",
+      "operator_id": "duplicate-child",
+      "violated_invariant": "archive_children_are_complete_and_unique"
+    },
+    {
+      "blocked_as_expected": true,
+      "errors": [
+        "schema_version_invalid:contract:persona_dream.research.prospective_tom.pctom_r2_contract_receipt.v0"
+      ],
+      "expected_status": "BLOCKED_PCTOM_SCHEMA_DOWNGRADE",
+      "fixture_missing": false,
+      "fixture_path": "fixtures/audit-mutations/schema-downgrade/mutation.json",
+      "fixture_sha256": "sha256:08e434da8c23869e23d27390d4e57c4195e8d79f35637830c7fa7494842a7e5d",
+      "generic_failure": false,
+      "observed_status": "BLOCKED_PCTOM_SCHEMA_DOWNGRADE",
+      "operator_id": "schema-downgrade",
+      "violated_invariant": "schemas_are_current_phase_versions"
+    },
+    {
+      "blocked_as_expected": true,
+      "errors": [
+        "predecessor_scope_promoted_to_acceptance:predecessor:pctom_objective_evidence_audit",
+        "acceptance_claim_missing_available_evidence:predecessor:pctom_objective_evidence_audit",
+        "acceptance_claim_missing_evidence_path:predecessor:pctom_objective_evidence_audit"
+      ],
+      "expected_status": "BLOCKED_PCTOM_SCOPE_SWAP",
+      "fixture_missing": false,
+      "fixture_path": "fixtures/audit-mutations/scope-swap/mutation.json",
+      "fixture_sha256": "sha256:cf89a3ceb539563329195ebdee3fbebb7e9cb51219e7e3fa553abc6d123c8dd6",
+      "generic_failure": false,
+      "observed_status": "BLOCKED_PCTOM_SCOPE_SWAP",
+      "operator_id": "scope-swap",
+      "violated_invariant": "scope_rows_cannot_promote_predecessor_evidence"
+    },
+    {
+      "blocked_as_expected": true,
+      "errors": [
+        "lifecycle_reorder:archive:receipt_before_manifest"
+      ],
+      "expected_status": "BLOCKED_PCTOM_LIFECYCLE_REORDER",
+      "fixture_missing": false,
+      "fixture_path": "fixtures/audit-mutations/lifecycle-reorder/mutation.json",
+      "fixture_sha256": "sha256:9b68ba1cda6da0cf5b886a4e300ca67ef15f2df83edcfe3fae3efacda045dfb6",
+      "generic_failure": false,
+      "observed_status": "BLOCKED_PCTOM_LIFECYCLE_REORDER",
+      "operator_id": "lifecycle-reorder",
+      "violated_invariant": "audit_lifecycle_is_monotonic"
+    },
+    {
+      "blocked_as_expected": true,
+      "errors": [
+        "forbidden_counter_nonzero:contract:provider_call_attempts:1",
+        "forbidden_counter_nonzero:contract:human_content_judgment_rows:1"
+      ],
+      "expected_status": "BLOCKED_PCTOM_UNAUTHORIZED_EVIDENCE",
+      "fixture_missing": false,
+      "fixture_path": "fixtures/audit-mutations/unauthorized-origin/mutation.json",
+      "fixture_sha256": "sha256:bdeb2e8d498ba03c736f1929db25ab800a9c36ea820475d3f4fac994e0785762",
+      "generic_failure": false,
+      "observed_status": "BLOCKED_PCTOM_UNAUTHORIZED_EVIDENCE",
+      "operator_id": "unauthorized-origin",
+      "violated_invariant": "acceptance_evidence_has_no_forbidden_origin"
+    },
+    {
+      "blocked_as_expected": true,
+      "errors": [
+        "fixture_claim_overreach:forged:0:proves live efficacy"
+      ],
+      "expected_status": "BLOCKED_PCTOM_EVIDENCE_TRUTHFULNESS",
+      "fixture_missing": false,
+      "fixture_path": "fixtures/audit-mutations/forged-mocked-false/mutation.json",
+      "fixture_sha256": "sha256:4ff94d1f2d69ec5c09bb39159f8121b6b5b5e14619772448a286697e99d4ee38",
+      "generic_failure": false,
+      "observed_status": "BLOCKED_PCTOM_EVIDENCE_TRUTHFULNESS",
+      "operator_id": "forged-mocked-false",
+      "violated_invariant": "fixture_backed_claims_cannot_overclaim_live_or_efficacy"
+    }
+  ],
+  "mutation_score": 1.0,
+  "provider_call_attempts": 0,
+  "schema": "persona_dream.research.prospective_tom.pctom_audit_mutation_suite_receipt.v1",
+  "status": "PASS_PCTOM_AUDIT_MUTATION_SUITE"
+}

@@ -1,0 +1,7 @@
+{
+  "operator_id": "unauthorized-origin",
+  "target": "receipts/pctom-r2-contract-receipt.v1.json",
+  "expected_status": "BLOCKED_PCTOM_UNAUTHORIZED_EVIDENCE",
+  "violated_invariant": "acceptance_evidence_has_no_forbidden_origin",
+  "mutation": "set forbidden provider and judgment counters on an acceptance receipt"
+}

@@ -1,0 +1,7 @@
+{
+  "operator_id": "scope-swap",
+  "target": "evidence/pctom-evidence-scope-ledger.v1.json",
+  "expected_status": "BLOCKED_PCTOM_SCOPE_SWAP",
+  "violated_invariant": "scope_rows_cannot_promote_predecessor_evidence",
+  "mutation": "promote bounded predecessor evidence to current PCTOM-R2 acceptance use"
+}

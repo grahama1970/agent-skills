@@ -1,0 +1,85 @@
+{
+  "schema": "persona_dream.research.prospective_tom.pctom_audit_invariants.v1",
+  "contract_id": "pctom-audit-invariants-v1",
+  "status": "ACTIVE",
+  "scope": "PCTOM-R2 Phase 2 audit mutation and evidence-claim integrity",
+  "required_mutation_operators": [
+    "baseline",
+    "self-hash",
+    "parent-substitution",
+    "child-omission",
+    "duplicate-child",
+    "schema-downgrade",
+    "scope-swap",
+    "lifecycle-reorder",
+    "unauthorized-origin",
+    "forged-mocked-false"
+  ],
+  "required_block_statuses": [
+    "BLOCKED_PCTOM_SELF_HASH_MISMATCH",
+    "BLOCKED_PCTOM_PARENT_SUBSTITUTION",
+    "BLOCKED_PCTOM_CHILD_OMISSION",
+    "BLOCKED_PCTOM_DUPLICATE_CHILD",
+    "BLOCKED_PCTOM_SCHEMA_DOWNGRADE",
+    "BLOCKED_PCTOM_SCOPE_SWAP",
+    "BLOCKED_PCTOM_LIFECYCLE_REORDER",
+    "BLOCKED_PCTOM_UNAUTHORIZED_EVIDENCE",
+    "BLOCKED_PCTOM_EVIDENCE_TRUTHFULNESS"
+  ],
+  "allowed_success_status": "PASS_PCTOM_AUDIT_MUTATION_SUITE",
+  "forbidden_result_class": "CONTINUED_WITH_UNKNOWN_STATE",
+  "mocked": false,
+  "live": false,
+  "fixture_backed": true,
+  "provider_call_attempts": 0,
+  "memory_write_attempts": 0,
+  "human_content_judgment_rows": 0,
+  "llm_judge_rows": 0,
+  "invariants": [
+    {
+      "id": "self_hash_receipts_match_parent_bytes",
+      "description": "Audit receipts that name a parent artifact hash must match the current parent bytes."
+    },
+    {
+      "id": "parent_paths_resolve_to_expected_artifact_class",
+      "description": "Audit receipts may not be rebound from their expected parent artifact class to another archive object."
+    },
+    {
+      "id": "archive_children_are_complete_and_unique",
+      "description": "Archive manifest children must be present, hash-correct, size-correct, complete, and unique."
+    },
+    {
+      "id": "schemas_are_current_phase_versions",
+      "description": "Phase 2 acceptance evidence may not downgrade schema identifiers to an older or unrecognized version."
+    },
+    {
+      "id": "scope_rows_cannot_promote_predecessor_evidence",
+      "description": "Predecessor evidence can be recorded as context but cannot satisfy PCTOM-R2 acceptance rows."
+    },
+    {
+      "id": "audit_lifecycle_is_monotonic",
+      "description": "Audit receipts must be created no earlier than the artifact whose state they audit."
+    },
+    {
+      "id": "acceptance_evidence_has_no_forbidden_origin",
+      "description": "PCTOM-R2 Phase 2 acceptance evidence must report zero provider, Memory, canonical, identity, source-memory, human-judgment, and LLM-judge side effects."
+    },
+    {
+      "id": "fixture_backed_claims_cannot_overclaim_live_or_efficacy",
+      "description": "Fixture-backed receipts cannot claim live efficacy, provider execution, production readiness, or semantic dream quality."
+    }
+  ],
+  "claims": {
+    "proves": [
+      "the PCTOM-R2 Phase 2 mutation suite has a frozen local invariant vocabulary"
+    ],
+    "does_not_prove": [
+      "that the mutation suite has been run",
+      "accepted-source lineage",
+      "pre-seal outcome isolation",
+      "proper scoring",
+      "restart atomicity",
+      "live efficacy"
+    ]
+  }
+}

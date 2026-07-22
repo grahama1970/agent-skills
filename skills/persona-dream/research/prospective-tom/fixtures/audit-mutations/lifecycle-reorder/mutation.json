@@ -1,0 +1,7 @@
+{
+  "operator_id": "lifecycle-reorder",
+  "target": "receipts/pctom-archive-integrity-audit.v1.json",
+  "expected_status": "BLOCKED_PCTOM_LIFECYCLE_REORDER",
+  "violated_invariant": "audit_lifecycle_is_monotonic",
+  "mutation": "move audit receipt created_at before the parent manifest created_at"
+}

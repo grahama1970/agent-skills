@@ -1,0 +1,7 @@
+{
+  "operator_id": "schema-downgrade",
+  "target": "receipts/pctom-r2-contract-receipt.v1.json",
+  "expected_status": "BLOCKED_PCTOM_SCHEMA_DOWNGRADE",
+  "violated_invariant": "schemas_are_current_phase_versions",
+  "mutation": "replace the v1 schema identifier with a v0 identifier"
+}

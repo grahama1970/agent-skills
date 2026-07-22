@@ -1,0 +1,7 @@
+{
+  "operator_id": "self-hash",
+  "target": "receipts/pctom-archive-integrity-audit.v1.json",
+  "expected_status": "BLOCKED_PCTOM_SELF_HASH_MISMATCH",
+  "violated_invariant": "self_hash_receipts_match_parent_bytes",
+  "mutation": "replace manifest_sha256 with a digest that cannot match the named manifest"
+}

@@ -1,0 +1,103 @@
+{
+  "audited_receipts": [
+    {
+      "errors": [],
+      "fixture_backed": true,
+      "live": false,
+      "mocked": false,
+      "path": "receipts/pctom-archive-integrity-audit.v1.json",
+      "schema": "persona_dream.research.prospective_tom.pctom_archive_integrity_audit.v1",
+      "sha256": "sha256:c014090bb8b2f51e797b9cdc39d053d5e22b32eadfdceecb3f6878c387ac547a",
+      "status": "PASS_PCTOM_ARCHIVE_INTEGRITY"
+    },
+    {
+      "errors": [],
+      "fixture_backed": true,
+      "live": false,
+      "mocked": false,
+      "path": "receipts/pctom-audit-mutation-suite.v1.json",
+      "schema": "persona_dream.research.prospective_tom.pctom_audit_mutation_suite_receipt.v1",
+      "sha256": "sha256:6e0d0d482ad9f9737206e909c23481b0f245872f7fda969339c9baa14cf57ee0",
+      "status": "PASS_PCTOM_AUDIT_MUTATION_SUITE"
+    },
+    {
+      "errors": [],
+      "fixture_backed": true,
+      "live": false,
+      "mocked": false,
+      "path": "receipts/pctom-evidence-scope-audit.v1.json",
+      "schema": "persona_dream.research.prospective_tom.pctom_evidence_scope_audit.v1",
+      "sha256": "sha256:a0a9243b0cfa4773c02ede180fddebaa5f3e1c247195524bb4ddf454c5dbb0d8",
+      "status": "PASS_PCTOM_EVIDENCE_SCOPE_LEDGER"
+    },
+    {
+      "errors": [],
+      "fixture_backed": true,
+      "live": false,
+      "mocked": false,
+      "path": "receipts/pctom-r2-contract-receipt.v1.json",
+      "schema": "persona_dream.research.prospective_tom.pctom_r2_contract_receipt.v1",
+      "sha256": "sha256:6047bbe2e3d76c628c513ead89fab3c9963b539c599387ace257c9ac24854861",
+      "status": "PASS_PCTOM_R2_CONTRACT"
+    },
+    {
+      "errors": [],
+      "fixture_backed": true,
+      "live": false,
+      "mocked": false,
+      "path": "receipts/pctom-receipt-discovery-audit.v1.json",
+      "schema": "persona_dream.research.prospective_tom.pctom_receipt_discovery_audit.v1",
+      "sha256": "sha256:bcc424f083f6a9ef35badb918d58485673e3107cbc99fc982bc6fd4e67d090a1",
+      "status": "PASS_PCTOM_RECEIPT_DISCOVERY"
+    }
+  ],
+  "claims": {
+    "does_not_prove": [
+      "semantic correctness of the research hypotheses",
+      "accepted-source lineage",
+      "pre-seal outcome isolation",
+      "proper scoring",
+      "restart atomicity",
+      "live efficacy"
+    ],
+    "proves": [
+      "PCTOM-R2 PASS-like receipt claims avoid fixture-backed live efficacy, provider execution, semantic dream quality, and forbidden side-effect overclaims",
+      "forged mocked:false fixture-backed live-efficacy claims fail closed"
+    ]
+  },
+  "created_at": "2026-07-22T13:53:32Z",
+  "errors": [],
+  "fixture_backed": true,
+  "forbidden_claim_terms": [
+    "proves live efficacy",
+    "live efficacy proven",
+    "proves provider execution",
+    "provider execution proven",
+    "paid provider",
+    "production-ready",
+    "production ready",
+    "proves semantic dream quality",
+    "semantic dream quality proven",
+    "complete phase 01-16",
+    "complete phase 1-16"
+  ],
+  "human_content_judgment_rows": 0,
+  "live": false,
+  "llm_judge_rows": 0,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "negative_fixture_results": [
+    {
+      "blocked_as_expected": true,
+      "errors": [
+        "fixture_claim_overreach:fixtures/audit-mutations/forged-mocked-false:0:proves live efficacy"
+      ],
+      "expected_status": "BLOCKED_PCTOM_EVIDENCE_TRUTHFULNESS",
+      "fixture": "forged-mocked-false",
+      "observed_status": "BLOCKED_PCTOM_EVIDENCE_TRUTHFULNESS"
+    }
+  ],
+  "provider_call_attempts": 0,
+  "schema": "persona_dream.research.prospective_tom.pctom_evidence_claim_integrity_receipt.v1",
+  "status": "PASS_PCTOM_EVIDENCE_CLAIM_INTEGRITY"
+}

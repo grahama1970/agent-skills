@@ -1,0 +1,7 @@
+{
+  "operator_id": "baseline",
+  "target": "phase1_archive_and_scope",
+  "expected_status": "PASS_PCTOM_AUDIT_BASELINE",
+  "violated_invariant": "none",
+  "description": "Unmodified Phase 1 archive, scope, and receipt-discovery artifacts must pass before mutations are evaluated."
+}
