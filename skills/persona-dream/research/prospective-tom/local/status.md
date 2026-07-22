@@ -55,7 +55,10 @@ canonical-memory, identity, or source-memory side-effect counters instead of
 hardcoding that provider/video is out of the critical path. Its receipt
 integrity boundary now requires top-level success and goal-coverage receipt
 self-hashes to match and requires every child evidence file to match the
-`file_sha256` captured in the goal-coverage evidence rows.
+`file_sha256` captured in the goal-coverage evidence rows. Its autonomous
+judgment boundary now checks every goal-coverage evidence row for
+`human_content_judgment_required`, `llm_judge_used`, and `mocked` flags before
+accepting the autonomous/no-human-judgment objective clause.
 
 Sealed64 deterministic social episode corpus:
 
@@ -319,6 +322,24 @@ PCTOM-R objective-evidence negative child-file-hash receipt:
 
 ```text
 /tmp/persona-dream-pctom-objective-evidence-negative-child-file-hash-20260722T130700Z/pctom_objective_evidence_audit_receipt.v1.json
+```
+
+PCTOM-R autonomous-boundary objective-evidence audit receipt:
+
+```text
+/tmp/persona-dream-pctom-objective-evidence-autonomous-boundary-20260722T132000Z/pctom_objective_evidence_audit_receipt.v1.json
+```
+
+PCTOM-R objective-evidence negative human-judgment-row receipt:
+
+```text
+/tmp/persona-dream-pctom-objective-evidence-negative-human-judgment-row-20260722T132100Z/pctom_objective_evidence_audit_receipt.v1.json
+```
+
+PCTOM-R objective-evidence negative LLM-judge-row receipt:
+
+```text
+/tmp/persona-dream-pctom-objective-evidence-negative-llm-judge-row-20260722T132200Z/pctom_objective_evidence_audit_receipt.v1.json
 ```
 
 PCTOM-R repeated-full64 calibration/abstention negative receipt:

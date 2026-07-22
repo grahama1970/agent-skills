@@ -568,6 +568,30 @@ Next: <one immediate action or stop condition>
   This improves the cross-stage hash/lineage boundary for the current
   objective audit: top-level receipts must self-hash, and child evidence files
   must still match the hashes captured by goal coverage.
+  The objective-evidence audit was then tightened so
+  `autonomous_without_human_content_judgment` is derived from the goal-coverage
+  evidence rows rather than only the presence of an
+  `autonomous_no_human_judgment` coverage id. Superseding receipt:
+  `/tmp/persona-dream-pctom-objective-evidence-autonomous-boundary-20260722T132000Z/pctom_objective_evidence_audit_receipt.v1.json`.
+  It returned `PASS_PCTOM_OBJECTIVE_EVIDENCE_AUDIT`, checked 37 coverage
+  evidence rows, and found 0 rows requiring human content judgment, 0 rows
+  using an LLM judge, and 0 rows with `mocked != false`; receipt SHA-256:
+  `sha256:35595ce363e68815ffe55b64a8930a9321a5cbd19b14f56fcb6be1ac63c913a6`.
+  A fixture-backed negative set one coverage evidence row's
+  `human_content_judgment_required=true`, recomputed the copied top-level
+  receipt hashes, and exited 1 with
+  `BLOCKED_PCTOM_OBJECTIVE_EVIDENCE_AUDIT`,
+  `coverage_evidence_autonomous_violation`, and
+  `objective_clause_not_proven:autonomous_without_human_content_judgment`;
+  negative receipt SHA-256:
+  `sha256:55a6f4a1fb4b55342e17ab5421d784b7ebf4d025d2091411783a7f8e7da55a73`.
+  A second fixture-backed negative set `llm_judge_used=true` on one row and
+  exited 1 with the same autonomous objective blocker; negative receipt
+  SHA-256:
+  `sha256:3881eaac8865ee8c6e1a58c8e233ae14aee60120f0cfef2985c5501d729ee9ed`.
+  This strengthens the autonomous-mode claim: the current objective audit now
+  recomputes whether the supplied evidence surface avoids human content
+  judgment, LLM judges, and mocked rows.
   The live run consumed simulator variants 17-24, 32 sealed-test
   episodes, all four scenario families, and 128 live Tau-authored M/R/D/CD
   condition predictions. It used the Gate 0 attribution root

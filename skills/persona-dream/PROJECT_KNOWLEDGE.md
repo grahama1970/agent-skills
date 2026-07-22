@@ -3291,3 +3291,11 @@
   goal-coverage evidence row's `file_sha256`: the child file currently at that
   path must match the hash captured when goal coverage was built. Top-level
   receipt tamper and child-file tamper now both fail closed.
+
+- 2026-07-22 (PCTOM-R autonomous judgment audit): do not treat the
+  `autonomous_no_human_judgment` coverage id as sufficient by itself. The
+  objective audit now recomputes the autonomous boundary from all coverage
+  evidence rows: `human_content_judgment_required` must not be true,
+  `llm_judge_used` must not be true, and `mocked` must be false on every row.
+  Row-level tamper for either human judgment or LLM judge usage blocks the
+  objective audit.

@@ -274,10 +274,29 @@ def run(
     child_receipts_checked = 0
     child_file_hash_mismatches: list[dict[str, Any]] = []
     child_forbidden_side_effects: list[dict[str, Any]] = []
+    autonomous_row_violations: list[dict[str, Any]] = []
     for index, row in enumerate(child_receipt_refs):
         if not isinstance(row, dict):
             errors.append(f"coverage_evidence_row_not_object:{index}")
             continue
+        row_violations: list[str] = []
+        if row.get("mocked") is not False:
+            row_violations.append(f"mocked_not_false:{row.get('mocked')}")
+        if row.get("human_content_judgment_required") is True:
+            row_violations.append("human_content_judgment_required_true")
+        if row.get("llm_judge_used") is True:
+            row_violations.append("llm_judge_used_true")
+        if row_violations:
+            violation = {
+                "index": index,
+                "path": row.get("path"),
+                "violations": row_violations,
+            }
+            autonomous_row_violations.append(violation)
+            errors.append(
+                "coverage_evidence_autonomous_violation:"
+                f"{index}:{row.get('path')}:{','.join(row_violations)}"
+            )
         raw_path = row.get("path")
         if not isinstance(raw_path, str) or not raw_path:
             errors.append(f"coverage_evidence_row_path_missing:{index}")
@@ -323,7 +342,10 @@ def run(
             and "negative_fixtures_fail_closed" in mapped
             and counts.get("negative_evidence_receipts", 0) >= 10
         ),
-        "autonomous_without_human_content_judgment": "autonomous_no_human_judgment" in mapped,
+        "autonomous_without_human_content_judgment": (
+            "autonomous_no_human_judgment" in mapped
+            and not autonomous_row_violations
+        ),
         "unsupported_evidence_abstention": "unsupported_evidence_abstention" in mapped,
         "provider_video_not_critical_path": (
             not success_forbidden_side_effects
@@ -361,6 +383,21 @@ def run(
             "negative_evidence_receipts": counts.get("negative_evidence_receipts"),
             "live_positive_evidence_receipts": counts.get("live_positive_evidence_receipts"),
         },
+        "autonomous_judgment_boundary": {
+            "coverage_evidence_rows_checked": len(child_receipt_refs),
+            "coverage_evidence_autonomous_violations": autonomous_row_violations,
+            "human_content_judgment_required_rows": sum(
+                1
+                for row in child_receipt_refs
+                if isinstance(row, dict) and row.get("human_content_judgment_required") is True
+            ),
+            "llm_judge_used_rows": sum(
+                1 for row in child_receipt_refs if isinstance(row, dict) and row.get("llm_judge_used") is True
+            ),
+            "mocked_not_false_rows": sum(
+                1 for row in child_receipt_refs if isinstance(row, dict) and row.get("mocked") is not False
+            ),
+        },
         "receipt_integrity": {
             "receipts_checked": len(receipt_integrity),
             "required_receipts_checked": sum(1 for item in receipt_integrity if item["required"]),
@@ -388,6 +425,7 @@ def run(
                 "the current top-level PCTOM-R success receipt is bound to the same expanded goal-coverage receipt",
                 "all active text-first PCTOM-R objective clauses have named coverage evidence",
                 "the objective evidence surface includes fail-closed negative fixtures and unsupported-evidence abstention coverage",
+                "the supplied coverage evidence rows require no human content judgment, no LLM judge, and non-mocked receipts when autonomous_without_human_content_judgment is true",
                 "the supplied receipt bundle keeps provider/video work outside the current critical path when provider_video_not_critical_path is true",
             ],
             "does_not_prove": [
