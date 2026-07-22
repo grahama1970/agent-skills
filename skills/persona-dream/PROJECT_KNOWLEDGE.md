@@ -126,6 +126,39 @@
   availability, new live Tau execution, paid provider execution, semantic dream
   quality, or complete Phase 01-16 runtime execution.
 
+  A cross-stage hash/lineage audit now re-walks the held-out live-originated
+  Gate 2-7 artifact chain. Command:
+  `./skills/persona-dream/run.sh check-live-stage-hash-lineage-audit
+  --condition-case-index
+  /tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_condition_comparison/artifacts/live_condition_case_index.json
+  --action-selection-receipt
+  /tmp/persona-dream-live-tau-balanced-planning-gate0-variant17-24-20260722T030200Z/live_tau_balanced_action_selection/live_tau_condition_action_selection_receipt.v1.json
+  --action-linked-revision-receipt
+  /tmp/persona-dream-live-tau-action-linked-revision-variant17-24-20260722T034000Z/live_tau_action_linked_revision_receipt.v1.json
+  --output-root
+  /tmp/persona-dream-live-stage-hash-lineage-audit-variant17-24-20260722T050200Z
+  --receipt-out
+  /tmp/persona-dream-live-stage-hash-lineage-audit-variant17-24-20260722T050200Z/live_stage_hash_lineage_audit_receipt.v1.json
+  --expect-cases 128 --json`. Receipt status:
+  `PASS_PCTOM_LIVE_STAGE_HASH_LINEAGE_AUDIT`; counts: 128 condition cases,
+  128 action cases, 128 revision cases, 896 stage artifacts loaded, 768 stage
+  JSON hashes recomputed, 384 commitment hashes recomputed, 384 Gate 0
+  accepted-source refs checked, 128 Gate 6 links checked, 128 Gate 7 links
+  checked, and 0 write violations. The audit made zero Memory, Tau, provider,
+  canonical-memory, identity, source-memory, LLM-judge, or human-content
+  judgment calls/writes. Positive receipt SHA-256:
+  `sha256:ed8002a321cf58b0d884d4b7723305325b5334a8e3fa17ed8200c28d55b264be`.
+  A fixture-backed tamper negative changed one sealed prediction payload after
+  its recorded hash and exited 1 with
+  `BLOCKED_PCTOM_LIVE_STAGE_HASH_LINEAGE_AUDIT`, error containing
+  `prediction_payload_sha256_mismatch`, plus path lineage mismatches from the
+  copied case root. Negative receipt SHA-256:
+  `sha256:20bf4655a0b1fe01199bf52833a97129488e6afa46e2c592bc5d8d448bd019b3`.
+  This proves an independent cross-stage hash and lineage audit over existing
+  live-originated artifacts. It does not prove new live Tau execution, new live
+  Memory recall, paid provider execution, semantic dream quality, or complete
+  Phase 01-16 runtime execution.
+
   Command:
   `./skills/persona-dream/run.sh run-live-tau-balanced-planning-replication
   --family-episode-limit 8 --episodes-per-family 24 --variant-min 17

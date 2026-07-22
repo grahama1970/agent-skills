@@ -21,7 +21,8 @@ now serves the frozen corpus over a subprocess boundary and contains non-Memory
 service faults without unknown-state continuation. A new aged-retention wrapper
 now refuses to accept delayed live Memory recall until the source receipt has
 reached an explicit minimum age, then delegates to the existing no-write delayed
-recall checker.
+recall checker. A cross-stage hash/lineage audit now re-walks the live-originated
+Gate 2-7 artifact chain and fails closed on sealed-payload tamper.
 
 Sealed64 deterministic social episode corpus:
 
@@ -155,6 +156,18 @@ Repeat2 combined full64 Memory fault-surface receipt:
 /tmp/persona-dream-live-tau-full64-memory-fault-surface-repeat2-20260722T041500Z/live_tau_full64_memory_fault_surface_receipt.v1.json
 ```
 
+Held-out variant live stage hash/lineage audit receipt:
+
+```text
+/tmp/persona-dream-live-stage-hash-lineage-audit-variant17-24-20260722T050200Z/live_stage_hash_lineage_audit_receipt.v1.json
+```
+
+Held-out variant live stage hash/lineage audit negative tamper receipt:
+
+```text
+/tmp/persona-dream-live-stage-hash-lineage-audit-negative-tampered-commitment-20260722T050300Z/output/live_stage_hash_lineage_audit_receipt.v1.json
+```
+
 Inspection result:
 
 ```text
@@ -179,6 +192,20 @@ live_memory_aged_retention_negative_status: BLOCKED_PCTOM_LIVE_MEMORY_AGED_RETEN
 live_memory_aged_retention_negative_error: minimum_age_not_satisfied:3676.0:999999999
 live_memory_aged_retention_negative_nested_executed: false
 live_memory_aged_retention_negative_receipt_sha256: sha256:570aa04762329319804927d8dd5b5137f56af021484eae1084e37a6396d8be75
+live_stage_hash_lineage_audit_status: PASS_PCTOM_LIVE_STAGE_HASH_LINEAGE_AUDIT
+live_stage_hash_lineage_audit_cases_audited: 128
+live_stage_hash_lineage_audit_commitment_hashes_recomputed: 384
+live_stage_hash_lineage_audit_accepted_source_refs_checked: 384
+live_stage_hash_lineage_audit_stage_artifacts_loaded: 896
+live_stage_hash_lineage_audit_stage_json_hashes_recomputed: 768
+live_stage_hash_lineage_audit_gate6_links_checked: 128
+live_stage_hash_lineage_audit_gate7_links_checked: 128
+live_stage_hash_lineage_audit_write_violations: 0
+live_stage_hash_lineage_audit_positive_receipt_sha256: sha256:ed8002a321cf58b0d884d4b7723305325b5334a8e3fa17ed8200c28d55b264be
+live_stage_hash_lineage_audit_negative_status: BLOCKED_PCTOM_LIVE_STAGE_HASH_LINEAGE_AUDIT
+live_stage_hash_lineage_audit_negative_fixture_backed: true
+live_stage_hash_lineage_audit_negative_error: prediction_payload_sha256_mismatch
+live_stage_hash_lineage_audit_negative_receipt_sha256: sha256:20bf4655a0b1fe01199bf52833a97129488e6afa46e2c592bc5d8d448bd019b3
 live_fault_injection_status: PASS_PCTOM_LIVE_FAULT_INJECTION_SURFACE
 local_http_service_retry_status: PASS_LIVE_TAU_PCTOM_SERVICE_RETRY_PROOF
 combined_full64_memory_fault_surface_status: PASS_LIVE_TAU_PCTOM_FULL64_MEMORY_FAULT_SURFACE

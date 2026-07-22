@@ -174,7 +174,11 @@ Next: <one immediate action or stop condition>
   local HTTP service retry proof receipt
   `/tmp/persona-dream-live-tau-sealed-test-service-retry-proof-repeat2-20260722T041200Z/live_tau_sealed_test_service_retry_proof_receipt.v1.json`;
   combined full64 Memory fault-surface receipt
-  `/tmp/persona-dream-live-tau-full64-memory-fault-surface-repeat2-20260722T041500Z/live_tau_full64_memory_fault_surface_receipt.v1.json`.
+  `/tmp/persona-dream-live-tau-full64-memory-fault-surface-repeat2-20260722T041500Z/live_tau_full64_memory_fault_surface_receipt.v1.json`;
+  live stage hash/lineage audit receipt
+  `/tmp/persona-dream-live-stage-hash-lineage-audit-variant17-24-20260722T050200Z/live_stage_hash_lineage_audit_receipt.v1.json`;
+  live stage hash/lineage audit negative tamper receipt
+  `/tmp/persona-dream-live-stage-hash-lineage-audit-negative-tampered-commitment-20260722T050300Z/output/live_stage_hash_lineage_audit_receipt.v1.json`.
   Statuses:
   `PASS_SOCIAL_EPISODE_CORPUS_BUILT`, `PASS_SOCIAL_EPISODE_CORPUS`,
   `PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION` and
@@ -236,6 +240,22 @@ Next: <one immediate action or stop condition>
   multi-day wall-clock retention, permanently deployed service availability,
   new live Tau execution, paid provider execution, semantic dream quality, or
   complete Phase 01-16 runtime execution.
+  A cross-stage hash/lineage audit then re-walked the same live-originated
+  Gate 2-7 artifact chain. It audited 128 condition cases, 128 action cases,
+  and 128 revision cases; loaded 896 stage artifacts; recomputed 768 stage JSON
+  hashes; recomputed 384 Gate 4 commitment payload/model/evidence hashes;
+  checked 384 Gate 0 accepted-source refs; checked 128 Gate 6 links and 128
+  Gate 7 links; and observed 0 write violations. Receipt SHA-256:
+  `sha256:ed8002a321cf58b0d884d4b7723305325b5334a8e3fa17ed8200c28d55b264be`.
+  A fixture-backed tamper negative changed one sealed prediction payload after
+  its recorded hash and exited 1 with
+  `BLOCKED_PCTOM_LIVE_STAGE_HASH_LINEAGE_AUDIT`, error containing
+  `prediction_payload_sha256_mismatch`, and receipt SHA-256
+  `sha256:20bf4655a0b1fe01199bf52833a97129488e6afa46e2c592bc5d8d448bd019b3`.
+  This proves an independent fail-closed cross-stage hash and lineage audit
+  over existing live-originated artifacts. It does not prove new live Tau
+  execution, new live Memory recall, paid provider execution, semantic dream
+  quality, or complete Phase 01-16 runtime execution.
   The live run consumed simulator variants 17-24, 32 sealed-test
   episodes, all four scenario families, and 128 live Tau-authored M/R/D/CD
   condition predictions. It used the Gate 0 attribution root
