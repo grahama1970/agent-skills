@@ -192,6 +192,36 @@ Rules for the calling agent:
   papered over. Verify panel-cited external claims (repos, papers, standards)
   before relying on them.
 
+### Roundtable Runbook (exact steps)
+
+1. **Bind each seat's tab** (once per panel; verify tab URLs first with
+   `skills/surf/run.sh tab.list --json` — the URL, not the listing order, is
+   the identity truth):
+   `skills/browser-oracle/run.sh bind <project-name> --backend webgpt|webclaude|webkimi --tab-id <id> --url "<conversation-url>"`
+   Verify with `... resolve --backend <b> --project <name> --json` (expect the
+   tab_id back).
+2. **Round 1** (concurrent; the request text carries the FULL context —
+   problem state, constraints, evidence, and the questions):
+   `./run.sh tau-dag "<full-context request>" --repo <r> --target <t>-r1 --handler webgpt --handler webclaude --handler webkimi --handler-project webgpt=<p1> --handler-project webclaude=<p2> --handler-project webkimi=<p3> --topology concurrent --execute --poll-timeout-seconds 3600 --json`
+3. **Read responses** from the run dir printed in the bundle:
+   `<run_dir>/node-artifacts/handler-<seat>/response.md`. Verify transport per
+   seat: node-receipt.json browser_oracle.tab_id matches the bound tab.
+4. **Research between rounds (mandatory, before the next round is launched)**:
+   `skills/dogpile/run.sh "<load-bearing claim>"` (falls back:
+   `skills/brave-search/run.sh web "<query>" --count 5`). Read the output back;
+   empty output is a blocker to diagnose, not to skip.
+5. **Round N+1** (concurrent again): request text = synthesis of ALL prior
+   positions (attributed per seat) + the research brief + the open questions,
+   identical for every seat. Repeat 3-5 until convergence or 3 rounds.
+6. **Close**: commit per-round responses as artifacts; report converged
+   recommendations and any surviving dissent (attributed) to the human.
+
+Known traps: prompt text containing `~<digits>` (e.g. "~20 pages") trips
+surf's path preflight (agent-skills#973) — write "about 20"; ChatGPT project
+tabs fork to a new conversation URL after a submit, so re-verify tab URLs
+between rounds; zsh does not word-split unquoted argument variables — spell
+out surf/ask args or use bash -c.
+
 Current command patterns:
 
 ```bash
