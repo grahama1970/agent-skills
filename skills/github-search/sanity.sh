@@ -1,35 +1,47 @@
 #!/usr/bin/env bash
-# Sanity check for github-search skill (modular version)
+# Sanity check for github-search skill.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MAX_LINES=500
 FAIL_COUNT=0
+MODULES=(
+    "__init__.py"
+    "config.py"
+    "utils.py"
+    "repo_search.py"
+    "code_search.py"
+    "readme_analyzer.py"
+    "candidate_search.py"
+    "repo_runtime.py"
+    "repo_evaluator.py"
+    "evaluate_repos.py"
+    "github_search.py"
+)
 
 echo "=== Sanity check for github-search ==="
 
-# Check python3 exists
 if ! command -v python3 >/dev/null 2>&1; then
     echo "FAIL: python3 not found"
     exit 1
 fi
 echo "PASS: python3 found"
 
-# Check gh CLI exists
 if ! command -v gh >/dev/null 2>&1; then
     echo "WARN: gh CLI not found (required for GitHub search)"
+elif gh auth status >/dev/null 2>&1; then
+    echo "PASS: gh authenticated"
 else
-    echo "PASS: gh CLI found"
-    # Check gh auth status
-    if gh auth status >/dev/null 2>&1; then
-        echo "PASS: gh authenticated"
-    else
-        echo "WARN: gh not authenticated (run: gh auth login)"
-    fi
+    echo "WARN: gh not authenticated (run: gh auth login)"
 fi
 
-# Check all module files exist
-MODULES=("__init__.py" "config.py" "utils.py" "repo_search.py" "code_search.py" "readme_analyzer.py" "github_search.py")
+if [[ -f "$SCRIPT_DIR/../brave-search/run.sh" ]]; then
+    echo "PASS: sibling brave-search skill found"
+else
+    echo "FAIL: sibling brave-search skill not found"
+    FAIL_COUNT=$((FAIL_COUNT + 1))
+fi
+
 echo ""
 echo "--- Module existence check ---"
 for module in "${MODULES[@]}"; do
@@ -37,11 +49,10 @@ for module in "${MODULES[@]}"; do
         echo "PASS: $module exists"
     else
         echo "FAIL: $module not found"
-        ((FAIL_COUNT++))
+        FAIL_COUNT=$((FAIL_COUNT + 1))
     fi
 done
 
-# Check line counts (all modules < 500 lines)
 echo ""
 echo "--- Line count check (max $MAX_LINES lines per module) ---"
 for module in "${MODULES[@]}"; do
@@ -51,103 +62,106 @@ for module in "${MODULES[@]}"; do
             echo "PASS: $module has $line_count lines"
         else
             echo "FAIL: $module has $line_count lines (exceeds $MAX_LINES)"
-            ((FAIL_COUNT++))
+            FAIL_COUNT=$((FAIL_COUNT + 1))
         fi
     fi
 done
 
-# Check run.sh exists and is executable
 if [[ ! -x "$SCRIPT_DIR/run.sh" ]]; then
     echo "WARN: run.sh not found or not executable"
 else
     echo "PASS: run.sh exists and is executable"
 fi
 
-# Check SKILL.md exists
 if [[ ! -f "$SCRIPT_DIR/SKILL.md" ]]; then
     echo "FAIL: SKILL.md not found"
-    ((FAIL_COUNT++))
+    FAIL_COUNT=$((FAIL_COUNT + 1))
 else
     echo "PASS: SKILL.md exists"
 fi
 
-# Check Python syntax for all modules
 echo ""
 echo "--- Python syntax check ---"
-SYNTAX_FAIL=0
 for module in "${MODULES[@]}"; do
     if [[ -f "$SCRIPT_DIR/$module" ]]; then
         if python3 -m py_compile "$SCRIPT_DIR/$module" 2>&1; then
             echo "PASS: $module syntax OK"
         else
             echo "FAIL: $module has syntax errors"
-            SYNTAX_FAIL=1
-            ((FAIL_COUNT++))
+            FAIL_COUNT=$((FAIL_COUNT + 1))
         fi
     fi
 done
 
-# Check imports work when run as a package
 echo ""
 echo "--- Package import check ---"
-# Create a temporary symlink with valid Python package name
-TEMP_DIR=$(mktemp -d)
-ln -s "$SCRIPT_DIR" "$TEMP_DIR/github_search"
-
-if python3 -c "
-import sys
-sys.path.insert(0, '$TEMP_DIR')
-
-try:
-    # Import all modules through the package
-    from github_search import config
-    from github_search import utils
-    from github_search import repo_search
-    from github_search import code_search
-    from github_search import readme_analyzer
-    # Import main CLI module
-    from github_search import github_search as main_cli
-    print('PASS: All modules import successfully (no circular imports)')
-except ImportError as e:
-    print(f'FAIL: Import error: {e}')
-    sys.exit(1)
-except Exception as e:
-    print(f'FAIL: Error: {e}')
-    sys.exit(1)
+if PYTHONPATH="$SCRIPT_DIR:${PYTHONPATH:-}" python3 -c "
+import candidate_search
+import code_search
+import config
+import evaluate_repos
+import github_search
+import readme_analyzer
+import repo_evaluator
+import repo_runtime
+import repo_search
+import utils
+print('PASS: All modules import successfully')
 " 2>&1; then
     :
 else
     echo "FAIL: Package import check failed"
-    ((FAIL_COUNT++))
+    FAIL_COUNT=$((FAIL_COUNT + 1))
 fi
 
-# Cleanup temp symlink
-rm -rf "$TEMP_DIR"
+echo ""
+echo "--- Offline pipeline smoke check ---"
+if PYTHONPATH="$SCRIPT_DIR:${PYTHONPATH:-}" python3 - <<'PY'
+import tempfile
+from pathlib import Path
 
-# Check CLI app can be loaded
+from candidate_search import extract_github_repository
+from repo_evaluator import find_relevant_code
+from repo_runtime import detect_entrypoint
+
+assert extract_github_repository("https://github.com/owner/repo/blob/main/src/app.py") == "owner/repo"
+with tempfile.TemporaryDirectory() as directory:
+    root = Path(directory)
+    (root / "main.py").write_text(
+        "def oauth_device_flow():\n    return 'device code'\n\n"
+        "if __name__ == '__main__':\n    print('ok')\n",
+        encoding="utf-8",
+    )
+    entrypoint = detect_entrypoint(root)
+    assert entrypoint and entrypoint["command"][:2] == ["python3", "main.py"]
+    evidence = find_relevant_code(root, "oauth device flow")
+    assert evidence["matched_files"] == ["main.py"]
+print("PASS: URL normalization, entry-point detection, and local evidence search")
+PY
+then
+    :
+else
+    echo "FAIL: Offline pipeline smoke check failed"
+    FAIL_COUNT=$((FAIL_COUNT + 1))
+fi
+
 echo ""
 echo "--- CLI functionality check ---"
-TEMP_DIR2=$(mktemp -d)
-ln -s "$SCRIPT_DIR" "$TEMP_DIR2/github_search"
-if python3 -c "
-import sys
-sys.path.insert(0, '$TEMP_DIR2')
-from github_search.github_search import app
-print('PASS: CLI app imports successfully')
+if PYTHONPATH="$SCRIPT_DIR:${PYTHONPATH:-}" python3 -c "
+from github_search import app
+from evaluate_repos import main
+print('PASS: CLI entry points import successfully')
 " 2>&1; then
     :
 else
-    echo "WARN: CLI app import check failed (may need dependencies)"
+    echo "WARN: CLI import check failed (dependencies may be missing)"
 fi
-rm -rf "$TEMP_DIR2"
 
-# Summary
 echo ""
 echo "=== Sanity check complete ==="
 if [[ $FAIL_COUNT -eq 0 ]]; then
     echo "All checks passed!"
     exit 0
-else
-    echo "FAILED: $FAIL_COUNT check(s) failed"
-    exit 1
 fi
+echo "FAILED: $FAIL_COUNT check(s) failed"
+exit 1
