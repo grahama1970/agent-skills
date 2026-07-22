@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "persona_dream.research.prospective_tom.pctom_r2_contract_receipt.v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "created_at",
+    "status",
+    "contract_path",
+    "contract_sha256",
+    "mocked",
+    "live",
+    "fixture_backed",
+    "provider_call_attempts",
+    "memory_write_attempts",
+    "goal_checks",
+    "negative_fixture_results",
+    "errors",
+    "claims"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string",
+      "const": "persona_dream.research.prospective_tom.pctom_r2_contract_receipt.v1"
+    },
+    "created_at": {"type": "string", "minLength": 1},
+    "status": {
+      "type": "string",
+      "enum": ["PASS_PCTOM_R2_CONTRACT", "BLOCKED_PCTOM_R2_GOAL_DRIFT"]
+    },
+    "contract_path": {"type": "string", "minLength": 1},
+    "contract_sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "mocked": {"type": "boolean", "const": false},
+    "live": {"type": "boolean", "const": false},
+    "fixture_backed": {"type": "boolean", "const": true},
+    "provider_call_attempts": {"type": "integer", "const": 0},
+    "memory_write_attempts": {"type": "integer", "const": 0},
+    "goal_checks": {
+      "type": "object",
+      "additionalProperties": {"type": "boolean"}
+    },
+    "negative_fixture_results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["fixture", "expected_status", "observed_status", "blocked_as_expected"],
+        "properties": {
+          "fixture": {"type": "string", "minLength": 1},
+          "expected_status": {"type": "string", "const": "BLOCKED_PCTOM_R2_GOAL_DRIFT"},
+          "observed_status": {"type": "string"},
+          "blocked_as_expected": {"type": "boolean"}
+        },
+        "additionalProperties": true
+      }
+    },
+    "errors": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "claims": {
+      "type": "object",
+      "required": ["proves", "does_not_prove"],
+      "properties": {
+        "proves": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "does_not_prove": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": true
+}

@@ -1,0 +1,108 @@
+{
+  "claims": {
+    "does_not_prove": [
+      "scope-indexed evidence archive completion",
+      "automatic receipt discovery",
+      "accepted-source lineage",
+      "pre-seal outcome isolation",
+      "proper scoring implementation",
+      "abstention accounting",
+      "audit-tamper detection beyond the Phase 0 drift fixtures",
+      "restart atomicity",
+      "deterministic mechanism or functional-ToM corpus readiness",
+      "sealed powered-trial protocol readiness",
+      "live counterfactual-dream efficacy"
+    ],
+    "proves": [
+      "the PCTOM-R2 canonical goal text is present in the Phase 0 contract",
+      "the predecessor PCTOM objective receipt hash is recorded as bounded prior evidence",
+      "the contract excludes live efficacy, provider/video, dashboard, and subjective dream-quality work from the active critical path",
+      "selected goal-drift mutations fail closed"
+    ]
+  },
+  "contract_path": "skills/persona-dream/research/prospective-tom/contracts/pctom-r2-experimental-integrity-and-trial-readiness.v1.md",
+  "contract_sha256": "sha256:ddad3a9e866aca1203d020435283fd235f2657ebf9864d0815b05ce72bf7aa10",
+  "counts": {
+    "negative_fixtures": 4,
+    "negative_fixtures_blocked": 4
+  },
+  "created_at": "2026-07-22T13:23:49Z",
+  "errors": [],
+  "fixture_backed": true,
+  "goal_checks": {
+    "canonical_goal_exact": true,
+    "final_pass_status": true,
+    "forbidden_absent_dashboard_required": true,
+    "forbidden_absent_live_efficacy_required": true,
+    "forbidden_absent_provider_video_required": true,
+    "forbidden_absent_subjective_quality_required": true,
+    "live_efficacy_false": true,
+    "no_dashboard_proof": true,
+    "no_human_llm_judge": true,
+    "no_live_efficacy": true,
+    "no_live_efficacy_claim": true,
+    "no_provider_video": true,
+    "predecessor_sha": true,
+    "predecessor_status": true
+  },
+  "live": false,
+  "memory_write_attempts": 0,
+  "mocked": false,
+  "negative_fixture_results": [
+    {
+      "blocked_as_expected": true,
+      "errors": [
+        "missing_required_phrase:canonical_goal_exact",
+        "missing_required_phrase:no_live_efficacy",
+        "missing_required_phrase:no_live_efficacy_claim",
+        "missing_required_phrase:no_provider_video",
+        "missing_required_phrase:no_dashboard_proof"
+      ],
+      "expected_status": "BLOCKED_PCTOM_R2_GOAL_DRIFT",
+      "fixture": "goal-word-changed.md",
+      "observed_status": "BLOCKED_PCTOM_R2_GOAL_DRIFT"
+    },
+    {
+      "blocked_as_expected": true,
+      "errors": [
+        "missing_required_phrase:no_live_efficacy",
+        "missing_required_phrase:no_live_efficacy_claim",
+        "missing_required_phrase:no_provider_video",
+        "missing_required_phrase:no_dashboard_proof",
+        "missing_required_phrase:live_efficacy_false"
+      ],
+      "expected_status": "BLOCKED_PCTOM_R2_GOAL_DRIFT",
+      "fixture": "missing-no-live-efficacy-limitation.md",
+      "observed_status": "BLOCKED_PCTOM_R2_GOAL_DRIFT"
+    },
+    {
+      "blocked_as_expected": true,
+      "errors": [
+        "missing_required_phrase:no_live_efficacy",
+        "missing_required_phrase:no_live_efficacy_claim",
+        "missing_required_phrase:no_provider_video",
+        "missing_required_phrase:no_dashboard_proof"
+      ],
+      "expected_status": "BLOCKED_PCTOM_R2_GOAL_DRIFT",
+      "fixture": "provider-video-critical-path.md",
+      "observed_status": "BLOCKED_PCTOM_R2_GOAL_DRIFT"
+    },
+    {
+      "blocked_as_expected": true,
+      "errors": [
+        "missing_required_phrase:predecessor_sha",
+        "missing_required_phrase:no_live_efficacy",
+        "missing_required_phrase:no_live_efficacy_claim",
+        "missing_required_phrase:no_provider_video",
+        "missing_required_phrase:no_dashboard_proof"
+      ],
+      "expected_status": "BLOCKED_PCTOM_R2_GOAL_DRIFT",
+      "fixture": "substitute-predecessor-receipt.md",
+      "observed_status": "BLOCKED_PCTOM_R2_GOAL_DRIFT"
+    }
+  ],
+  "provider_call_attempts": 0,
+  "receipt_path": "skills/persona-dream/research/prospective-tom/receipts/pctom-r2-contract-receipt.v1.json",
+  "schema": "persona_dream.research.prospective_tom.pctom_r2_contract_receipt.v1",
+  "status": "PASS_PCTOM_R2_CONTRACT"
+}
