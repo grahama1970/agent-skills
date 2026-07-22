@@ -592,6 +592,30 @@ Next: <one immediate action or stop condition>
   This strengthens the autonomous-mode claim: the current objective audit now
   recomputes whether the supplied evidence surface avoids human content
   judgment, LLM judges, and mocked rows.
+  The objective-evidence audit was then tightened so
+  `fail_closed_reliability_checks` is derived from the actual negative evidence
+  rows rather than only aggregate negative counts. Superseding receipt:
+  `/tmp/persona-dream-pctom-objective-evidence-failclosed-boundary-20260722T133500Z/pctom_objective_evidence_audit_receipt.v1.json`.
+  It returned `PASS_PCTOM_OBJECTIVE_EVIDENCE_AUDIT`, checked 10 negative
+  evidence rows, found 0 negative row violations, and recorded
+  `fail_closed_reliability_checks=true`; receipt SHA-256:
+  `sha256:649c683e27ecaa61a6a60c84e99ef9d78a378fbb4b7f10594080dbae20c77e3d`.
+  A fixture-backed negative changed all 10 negative rows to
+  `PASS_SHOULD_NOT_BE_ACCEPTED`, recomputed the copied top-level receipt
+  hashes, and exited 1 with `BLOCKED_PCTOM_OBJECTIVE_EVIDENCE_AUDIT`,
+  `negative_status_not_blocked_rows=10`, and
+  `objective_clause_not_proven:fail_closed_reliability_checks`; negative
+  receipt SHA-256:
+  `sha256:2f5007a2bc581c316c46b7ea2a7b4fd42c231ce9de193f05124735896eba1f98`.
+  A second fixture-backed negative set `mocked=true` on all 10 negative rows
+  and exited 1 with `negative_mocked_not_false_rows=10`,
+  `objective_clause_not_proven:fail_closed_reliability_checks`, and
+  `objective_clause_not_proven:autonomous_without_human_content_judgment`;
+  negative receipt SHA-256:
+  `sha256:f1e403818a48ad467959c1be62662a92a21575cc642ff4305de497e9c44f9ba6`.
+  This strengthens the fail-closed reliability claim: the current objective
+  audit now recomputes that negative fixtures actually remain BLOCKED and
+  non-mocked in the supplied evidence surface.
   The live run consumed simulator variants 17-24, 32 sealed-test
   episodes, all four scenario families, and 128 live Tau-authored M/R/D/CD
   condition predictions. It used the Gate 0 attribution root

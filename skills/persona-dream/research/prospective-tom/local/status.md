@@ -58,7 +58,10 @@ self-hashes to match and requires every child evidence file to match the
 `file_sha256` captured in the goal-coverage evidence rows. Its autonomous
 judgment boundary now checks every goal-coverage evidence row for
 `human_content_judgment_required`, `llm_judge_used`, and `mocked` flags before
-accepting the autonomous/no-human-judgment objective clause.
+accepting the autonomous/no-human-judgment objective clause. Its fail-closed
+negative boundary now checks every negative goal-coverage evidence row for
+`BLOCKED_` status, `mocked=false`, no human content judgment, and no LLM judge
+before accepting the fail-closed reliability objective clause.
 
 Sealed64 deterministic social episode corpus:
 
@@ -340,6 +343,24 @@ PCTOM-R objective-evidence negative LLM-judge-row receipt:
 
 ```text
 /tmp/persona-dream-pctom-objective-evidence-negative-llm-judge-row-20260722T132200Z/pctom_objective_evidence_audit_receipt.v1.json
+```
+
+PCTOM-R fail-closed-boundary objective-evidence audit receipt:
+
+```text
+/tmp/persona-dream-pctom-objective-evidence-failclosed-boundary-20260722T133500Z/pctom_objective_evidence_audit_receipt.v1.json
+```
+
+PCTOM-R objective-evidence negative fail-closed status receipt:
+
+```text
+/tmp/persona-dream-pctom-objective-evidence-negative-failclosed-status-20260722T133600Z/pctom_objective_evidence_audit_receipt.v1.json
+```
+
+PCTOM-R objective-evidence negative fail-closed mocked receipt:
+
+```text
+/tmp/persona-dream-pctom-objective-evidence-negative-failclosed-mocked-20260722T133700Z/pctom_objective_evidence_audit_receipt.v1.json
 ```
 
 PCTOM-R repeated-full64 calibration/abstention negative receipt:

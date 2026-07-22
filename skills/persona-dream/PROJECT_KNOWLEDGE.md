@@ -3299,3 +3299,10 @@
   `llm_judge_used` must not be true, and `mocked` must be false on every row.
   Row-level tamper for either human judgment or LLM judge usage blocks the
   objective audit.
+
+- 2026-07-22 (PCTOM-R fail-closed negative evidence audit): do not treat the
+  aggregate negative count as sufficient by itself. The objective audit now
+  recomputes the fail-closed boundary from the negative coverage evidence rows:
+  each row must be `kind=negative`, have `BLOCKED_` status, be non-mocked, and
+  avoid human content judgment and LLM judge usage. Changing negative rows to
+  `PASS_` or `mocked=true` blocks the objective audit.

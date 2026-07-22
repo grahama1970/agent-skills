@@ -149,6 +149,10 @@ def _forbidden_side_effects(value: Any, path: str = "$") -> list[dict[str, Any]]
     return found
 
 
+def _status_has_prefix(status: Any, prefix: str) -> bool:
+    return isinstance(status, str) and status.startswith(prefix)
+
+
 def _coverage_map(coverage: dict[str, Any]) -> dict[str, dict[str, Any]]:
     rows = coverage.get("coverage") if isinstance(coverage.get("coverage"), list) else []
     mapped: dict[str, dict[str, Any]] = {}
@@ -275,6 +279,8 @@ def run(
     child_file_hash_mismatches: list[dict[str, Any]] = []
     child_forbidden_side_effects: list[dict[str, Any]] = []
     autonomous_row_violations: list[dict[str, Any]] = []
+    negative_row_checks: list[dict[str, Any]] = []
+    negative_row_violations: list[dict[str, Any]] = []
     for index, row in enumerate(child_receipt_refs):
         if not isinstance(row, dict):
             errors.append(f"coverage_evidence_row_not_object:{index}")
@@ -297,6 +303,37 @@ def run(
                 "coverage_evidence_autonomous_violation:"
                 f"{index}:{row.get('path')}:{','.join(row_violations)}"
             )
+        if row.get("kind") == "negative":
+            negative_violations: list[str] = []
+            if not _status_has_prefix(row.get("status"), "BLOCKED_"):
+                negative_violations.append(f"status_not_blocked:{row.get('status')}")
+            if row.get("mocked") is not False:
+                negative_violations.append(f"mocked_not_false:{row.get('mocked')}")
+            if row.get("human_content_judgment_required") is True:
+                negative_violations.append("human_content_judgment_required_true")
+            if row.get("llm_judge_used") is True:
+                negative_violations.append("llm_judge_used_true")
+            negative_row_checks.append(
+                {
+                    "index": index,
+                    "coverage_id": row.get("coverage_id"),
+                    "path": row.get("path"),
+                    "status": row.get("status"),
+                    "violations": negative_violations,
+                }
+            )
+            if negative_violations:
+                violation = {
+                    "index": index,
+                    "coverage_id": row.get("coverage_id"),
+                    "path": row.get("path"),
+                    "violations": negative_violations,
+                }
+                negative_row_violations.append(violation)
+                errors.append(
+                    "coverage_negative_evidence_fail_closed_violation:"
+                    f"{index}:{row.get('path')}:{','.join(negative_violations)}"
+                )
         raw_path = row.get("path")
         if not isinstance(raw_path, str) or not raw_path:
             errors.append(f"coverage_evidence_row_path_missing:{index}")
@@ -341,6 +378,8 @@ def run(
             and "gate9_causal_replay" in mapped
             and "negative_fixtures_fail_closed" in mapped
             and counts.get("negative_evidence_receipts", 0) >= 10
+            and len(negative_row_checks) >= 10
+            and not negative_row_violations
         ),
         "autonomous_without_human_content_judgment": (
             "autonomous_no_human_judgment" in mapped
@@ -398,6 +437,21 @@ def run(
                 1 for row in child_receipt_refs if isinstance(row, dict) and row.get("mocked") is not False
             ),
         },
+        "fail_closed_negative_boundary": {
+            "negative_evidence_rows_checked": len(negative_row_checks),
+            "negative_evidence_row_violations": negative_row_violations,
+            "negative_status_not_blocked_rows": sum(
+                1 for item in negative_row_checks if any(str(v).startswith("status_not_blocked:") for v in item["violations"])
+            ),
+            "negative_mocked_not_false_rows": sum(
+                1 for item in negative_row_checks if any(str(v).startswith("mocked_not_false:") for v in item["violations"])
+            ),
+            "negative_human_content_judgment_rows": sum(
+                1 for item in negative_row_checks if "human_content_judgment_required_true" in item["violations"]
+            ),
+            "negative_llm_judge_rows": sum(1 for item in negative_row_checks if "llm_judge_used_true" in item["violations"]),
+            "items": negative_row_checks,
+        },
         "receipt_integrity": {
             "receipts_checked": len(receipt_integrity),
             "required_receipts_checked": sum(1 for item in receipt_integrity if item["required"]),
@@ -425,6 +479,7 @@ def run(
                 "the current top-level PCTOM-R success receipt is bound to the same expanded goal-coverage receipt",
                 "all active text-first PCTOM-R objective clauses have named coverage evidence",
                 "the objective evidence surface includes fail-closed negative fixtures and unsupported-evidence abstention coverage",
+                "negative evidence rows have BLOCKED status and clean autonomous/mock flags when fail_closed_reliability_checks is true",
                 "the supplied coverage evidence rows require no human content judgment, no LLM judge, and non-mocked receipts when autonomous_without_human_content_judgment is true",
                 "the supplied receipt bundle keeps provider/video work outside the current critical path when provider_video_not_critical_path is true",
             ],
