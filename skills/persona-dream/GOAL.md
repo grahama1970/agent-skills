@@ -146,7 +146,9 @@ Next: <one immediate action or stop condition>
   deterministic revision-recall receipt
   `/tmp/persona-dream-live-tau-revision-recall-variant17-24-20260722T034200Z/live_tau_revision_recall_receipt.v1.json`;
   live Memory revision-recall receipt
-  `/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z/live_memory_revision_recall_receipt.v1.json`.
+  `/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z/live_memory_revision_recall_receipt.v1.json`;
+  live fault-injection surface receipt
+  `/tmp/persona-dream-live-fault-injection-surface-variant17-24-20260722T034600Z/live_fault_injection_surface_receipt.v1.json`.
   Statuses:
   `PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION` and
   `PASS_PCTOM_CAUSAL_IDENTIFIABILITY_GATE`, followed by
@@ -183,7 +185,19 @@ Next: <one immediate action or stop condition>
   noncanonical lesson mirrors. Live Memory exact reread returned 128/128
   research documents and 128/128 semantic mirrors; live `/recall` returned 40
   hits, 10 per M/R/D/CD condition, while keeping prior/posterior distributions
-  distinguishable and excluding synthetic branches from literal history.
+  distinguishable and excluding synthetic branches from literal history. The
+  broader live fault-injection surface consumed the sealed-test statistical
+  confidence root
+  `/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z`
+  and this live Memory revision-recall root. It exercised 8 required fault
+  families and 8 trials, including 4 live Memory fault probes and 1 causal
+  replay receipt. Terminal outcomes were
+  `BLOCKED_BEFORE_SIDE_EFFECT=4`,
+  `QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE=2`, and
+  `RECOVERED_WITH_EQUIVALENT_END_STATE=2`, with
+  `continued_with_unknown_state=0`, `side_effect_violations=0`, and zero
+  Memory/provider/Tau/canonical/identity/source-memory write or call attempts
+  inside the fault-surface command.
   Receipt SHA-256 values:
   replication `sha256:98336825a38be02d455e391735e2153986e89e2eba619b9a9a894b9ac6a6d272`;
   condition comparison `sha256:2da4ed6c0d49e6ed8d61ce4667862b8cf78114a3b37b6ccc92646ce39daeb31c`;
@@ -209,12 +223,21 @@ Next: <one immediate action or stop condition>
   live Memory revision documents
   `sha256:925333b88ab513c57fdf595a14010497f8408c7a5e34c78bd977b571cef92290`;
   live Memory recall results
-  `sha256:1ca8c485b658d43f8cceb4a97986ee3b0104c5399bedd07ce23c9391ad96c786`.
+  `sha256:1ca8c485b658d43f8cceb4a97986ee3b0104c5399bedd07ce23c9391ad96c786`;
+  live fault-surface declared receipt
+  `sha256:2931a8c493a384cda42f9ed88e808c2b859f1fd920e1c99c322d5dadfefe2a4f`;
+  live fault trials
+  `sha256:faaa9d4991e474eee5b6a04649f7361480ee75d0573e1e4456f5f1a8cb2a8b92`;
+  live Memory fault probes
+  `sha256:2006a53b480e1646941c18b2800b7e1909e5a9221bd53f8e0eaecc916c88b085`;
+  live fault causal replay
+  `sha256:1120c65b75f3c9299420d56d2d7ac411365d5bfe853d61e226009bded032e807`.
   This advances held-out variant evidence beyond variants 1-16. It does not
-  prove an independently versioned simulator corpus, real external service
-  fault injection, production retry machinery, delayed multi-session recall
-  after process restart, semantic dream quality, paid provider execution, or
-  complete live Phase 01-16 runtime execution.
+  prove an independently versioned simulator corpus, production retry
+  machinery inside the deployed orchestrator, non-Memory external service fault
+  injection, delayed multi-session recall after process restart, semantic dream
+  quality, paid provider execution, or complete live Phase 01-16 runtime
+  execution.
 - PCTOM-R repeated full64 live Tau sealed-test evidence over two Gate
   0-attributed runs:
   repeat2 replication receipt

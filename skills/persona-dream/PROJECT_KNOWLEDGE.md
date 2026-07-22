@@ -1,6 +1,6 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-22 UTC (PCTOM-R Gate 0 held-out variant live Tau boundary) by agent
+**Last updated:** 2026-07-22 UTC (PCTOM-R Gate 0 held-out variant live fault surface) by agent
 **Status:** Active development
 
 ## Current Understanding
@@ -25,6 +25,8 @@
   `/tmp/persona-dream-live-tau-revision-recall-variant17-24-20260722T034200Z/live_tau_revision_recall_receipt.v1.json`.
   Live Memory revision-recall receipt:
   `/tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z/live_memory_revision_recall_receipt.v1.json`.
+  Live fault-injection surface receipt:
+  `/tmp/persona-dream-live-fault-injection-surface-variant17-24-20260722T034600Z/live_fault_injection_surface_receipt.v1.json`.
 
   Statuses `PASS_LIVE_TAU_PCTOM_BALANCED_PLANNING_REPLICATION` and
   `PASS_PCTOM_CAUSAL_IDENTIFIABILITY_GATE`; the condition reliability bridge
@@ -77,6 +79,21 @@
   research/mirror writes and zero canonical, identity, source-memory, provider,
   Tau, or human-content-judgment calls/writes.
 
+  The broader live fault-injection surface consumed the deterministic sealed
+  test statistical-confidence root
+  `/tmp/persona-dream-sealed-test-statistical-confidence-20260722T002935Z`
+  and the live Memory revision-recall root above. It reports
+  `PASS_PCTOM_LIVE_FAULT_INJECTION_SURFACE` with 8 required fault families,
+  8 fault trials, 4 live Memory fault probes, and 1 causal replay receipt.
+  Terminal outcomes were `BLOCKED_BEFORE_SIDE_EFFECT=4`,
+  `QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE=2`, and
+  `RECOVERED_WITH_EQUIVALENT_END_STATE=2`; `continued_with_unknown_state=0`,
+  `side_effect_violations=0`, and Memory/provider/Tau/canonical/identity/
+  source-memory write or call attempts inside this fault-surface command were
+  all 0. This is broader live Memory fault-probe coverage plus controlled local
+  model/tool/schema/persistence/retry fault containment; it is not proof of
+  production-deployed retry machinery or non-Memory external service faults.
+
   Receipt SHA-256 values: replication
   `sha256:98336825a38be02d455e391735e2153986e89e2eba619b9a9a894b9ac6a6d272`;
   condition
@@ -108,15 +125,24 @@
   live Memory revision documents
   `sha256:925333b88ab513c57fdf595a14010497f8408c7a5e34c78bd977b571cef92290`;
   live Memory recall results
-  `sha256:1ca8c485b658d43f8cceb4a97986ee3b0104c5399bedd07ce23c9391ad96c786`.
+  `sha256:1ca8c485b658d43f8cceb4a97986ee3b0104c5399bedd07ce23c9391ad96c786`;
+  live fault-surface declared receipt
+  `sha256:2931a8c493a384cda42f9ed88e808c2b859f1fd920e1c99c322d5dadfefe2a4f`;
+  live fault trials
+  `sha256:faaa9d4991e474eee5b6a04649f7361480ee75d0573e1e4456f5f1a8cb2a8b92`;
+  live Memory fault probes
+  `sha256:2006a53b480e1646941c18b2800b7e1909e5a9221bd53f8e0eaecc916c88b085`;
+  live fault causal replay
+  `sha256:1120c65b75f3c9299420d56d2d7ac411365d5bfe853d61e226009bded032e807`.
   This advances held-out variant/generalization evidence for PCTOM-R Gate 0
   and Gate 6, a controlled artifact-bound Gate 8/9 reliability bridge, and
   Gate 7 non-destructive belief revision linked to live-originated action
   decisions, including deterministic and live Memory recall after revision. It
-  does not prove an independently versioned simulator corpus, real external
-  service fault injection, production retry machinery, delayed multi-session
-  recall after process restart, semantic dream quality, paid provider
-  execution, or complete live Phase 01-16 runtime execution.
+  does not prove an independently versioned simulator corpus, production retry
+  machinery inside the deployed orchestrator, non-Memory external service
+  faults, delayed multi-session recall after process restart, semantic dream
+  quality, paid provider execution, or complete live Phase 01-16 runtime
+  execution.
 - 2026-07-22 UTC (PCTOM-R GATE 0 REPEATED FULL64 LIVE TAU BOUNDARY): a second
   Gate 0-attributed full64 live Tau sealed-test replication now exists, and a
   two-root repeated-run summary consumes both full64 roots. Repeat2 command:

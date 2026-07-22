@@ -1,11 +1,12 @@
 # Status
 
-Status: GATE0_HELD_OUT_VARIANT17_24_LIVE_TAU_REVISION_RECALL_ACCEPTED
+Status: GATE0_HELD_OUT_VARIANT17_24_LIVE_TAU_REVISION_RECALL_AND_FAULT_SURFACE_ACCEPTED
 
 Latest artifact: held-out variant 17-24 live Tau balanced-planning slice with
 Gate 0 accepted-source attribution, causal-identifiability lineage replay, and
 Gate 8/9 condition reliability bridge, plus Gate 7 action-linked belief
-revision and live Memory recall after revision.
+revision, live Memory recall after revision, and broader live fault-injection
+surface coverage.
 
 Held-out variant replication receipt:
 
@@ -43,6 +44,12 @@ Held-out variant live Memory revision-recall receipt:
 /tmp/persona-dream-live-memory-revision-recall-variant17-24-20260722T034300Z/live_memory_revision_recall_receipt.v1.json
 ```
 
+Held-out variant live fault-injection surface receipt:
+
+```text
+/tmp/persona-dream-live-fault-injection-surface-variant17-24-20260722T034600Z/live_fault_injection_surface_receipt.v1.json
+```
+
 Inspection result:
 
 ```text
@@ -52,6 +59,7 @@ condition_reliability_bridge_status: PASS_LIVE_TAU_PCTOM_CONDITION_RELIABILITY_B
 action_linked_revision_status: PASS_LIVE_TAU_PCTOM_ACTION_LINKED_REVISION
 deterministic_revision_recall_status: PASS_LIVE_TAU_PCTOM_REVISION_RECALL
 live_memory_revision_recall_status: PASS_PCTOM_LIVE_MEMORY_REVISION_RECALL
+live_fault_injection_status: PASS_PCTOM_LIVE_FAULT_INJECTION_SURFACE
 gate8_status: PASS_TOM_RELIABILITY_SURFACE
 gate9_status: PASS_TOM_CAUSAL_REPLAY
 variant_min: 17
@@ -104,6 +112,16 @@ live_memory_write_attempts: 2
 live_memory_canonical_memory_write_attempts: 0
 live_memory_identity_write_attempts: 0
 live_memory_source_memory_write_attempts: 0
+live_fault_families: 8
+live_fault_trials: 8
+live_memory_fault_probes: 4
+live_fault_terminal_outcomes: BLOCKED_BEFORE_SIDE_EFFECT=4 QUARANTINED_WITH_NO_ACTIVE_PARTIAL_STATE=2 RECOVERED_WITH_EQUIVALENT_END_STATE=2
+live_fault_continued_with_unknown_state: 0
+live_fault_side_effect_violations: 0
+live_fault_causal_replay_receipts: 1
+live_fault_surface_memory_write_attempts: 0
+live_fault_surface_provider_call_attempts: 0
+live_fault_surface_tau_call_attempts: 0
 replication_receipt_sha256: sha256:98336825a38be02d455e391735e2153986e89e2eba619b9a9a894b9ac6a6d272
 condition_receipt_sha256: sha256:2da4ed6c0d49e6ed8d61ce4667862b8cf78114a3b37b6ccc92646ce39daeb31c
 action_receipt_sha256: sha256:b11d4abfbe53b91fb08d8e0dc95f9536ba68a92ba6438c64b0245e01e6b158df
@@ -120,6 +138,10 @@ deterministic_revision_recall_results_sha256: sha256:e2ce3d8c8adf6e6bb15a85ade9a
 live_memory_revision_recall_receipt_sha256: sha256:ea4546e85f8f1bc5392dd810bb83d0b5b7ae42682b093384eac25c8cce8fb63a
 live_memory_revision_documents_sha256: sha256:925333b88ab513c57fdf595a14010497f8408c7a5e34c78bd977b571cef92290
 live_memory_recall_results_sha256: sha256:1ca8c485b658d43f8cceb4a97986ee3b0104c5399bedd07ce23c9391ad96c786
+live_fault_surface_receipt_sha256: sha256:2931a8c493a384cda42f9ed88e808c2b859f1fd920e1c99c322d5dadfefe2a4f
+live_fault_surface_fault_trials_sha256: sha256:faaa9d4991e474eee5b6a04649f7361480ee75d0573e1e4456f5f1a8cb2a8b92
+live_fault_surface_memory_fault_probes_sha256: sha256:2006a53b480e1646941c18b2800b7e1909e5a9221bd53f8e0eaecc916c88b085
+live_fault_surface_causal_replay_sha256: sha256:1120c65b75f3c9299420d56d2d7ac411365d5bfe853d61e226009bded032e807
 mocked: false
 live: true
 tau_prediction_memory_write_attempts: 0
@@ -149,6 +171,10 @@ variants 17-24, outside the prior full64 variants 1-16 slice, ran through live
 -> live Memory exact reread and `/recall` recovered noncanonical revision
    documents for all four conditions while preserving prior/posterior and
    synthetic/literal boundaries
+-> live Memory fault probes and controlled local model/tool/schema/
+   persistence/retry faults were contained with allowed terminal outcomes only
+-> the broader fault surface wrote one causal replay and did not continue with
+   unknown state
 -> no provider, canonical-memory, identity, source-memory, LLM judge, or human
    content judgment path was used
 ```
@@ -157,8 +183,8 @@ What this does not prove:
 
 ```text
 an independently versioned simulator corpus
-real external service fault injection
-production retry machinery
+production retry machinery inside the deployed orchestrator
+non-Memory external service fault injection
 delayed multi-session recall after process restart
 semantic dream quality
 paid provider execution
