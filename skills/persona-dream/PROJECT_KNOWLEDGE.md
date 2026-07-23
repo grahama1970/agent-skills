@@ -3,6 +3,17 @@
 **Last updated:** 2026-07-22 UTC (PCTOM-R strict objective bundle with v25-26 evidence) by agent
 **Status:** Active development
 
+## 2026-07-23 — chatterbox fixed all six filed tickets; fixes verified live
+
+chatterbox #1-#6 closed by chatterbox-side maintainer with commits on
+chatterbox@main (686a17fb, 681729fc, ec73495, ac6f442, +2). Verified live from
+this side: native caller chunks with pause_after_ms=700 now produce the pause
+in the finished audio (longest silence 1.003s, no max_chars workaround
+needed) and the response carries applied_controls (requested vs normalized
+per chunk). Full GOAL_V4 checker re-driven against the patched server: PASS.
+repeat_group_id now available for variance-controlled probes; unknown tones
+now surface requested-vs-normalized in receipts.
+
 ## 2026-07-23 — Amendment 1, n=5 acoustic finding, roundtable 4 converged
 
 - GOAL_V4 Amendment 1: composer output vocabulary remapped onto chatterbox
