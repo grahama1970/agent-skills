@@ -76,7 +76,7 @@ class DiarizationEngine:
             if value is not None
         }
         started = time.monotonic()
-        output = pipeline(str(audio_path), **kwargs)
+        output = pipeline(load_audio_for_pipeline(audio_path), **kwargs)
         elapsed = time.monotonic() - started
         return build_receipt(
             audio_path,
@@ -123,6 +123,15 @@ def build_receipt(
         "exclusive_turns": shift_turns(exclusive, timeline_offset_seconds),
         "elapsed_seconds": round(float(elapsed_seconds), 3),
     }
+
+
+def load_audio_for_pipeline(audio_path: Path) -> dict[str, Any]:
+    import soundfile as sf
+    import torch
+
+    audio, sample_rate = sf.read(str(audio_path), dtype="float32", always_2d=True)
+    waveform = torch.from_numpy(audio.T.copy())
+    return {"waveform": waveform, "sample_rate": int(sample_rate)}
 
 
 def turns_from_annotation(annotation: Any) -> list[dict[str, Any]]:

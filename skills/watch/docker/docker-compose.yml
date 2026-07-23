@@ -26,6 +26,8 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile.diarization
+      args:
+        WATCH_DIARIZATION_BASE_IMAGE: ${WATCH_DIARIZATION_BASE_IMAGE:-agent-skills/audio-caption-service:local}
     container_name: watch-diarization
     restart: always
     ports:
