@@ -1251,8 +1251,12 @@ def _run_scillm_handler(
     payload = {
         "model": model,
         "messages": [{"role": "user", "content": prompt}],
-        "temperature": 0,
     }
+    # Anthropic rejects `temperature` on current Claude models
+    # ("`temperature` is deprecated for this model", observed live on
+    # claude-opus-4-8 2026-07-22); other routes keep deterministic sampling.
+    if not model.lower().startswith("claude"):
+        payload["temperature"] = 0
     if reasoning_effort:
         payload["reasoning_effort"] = reasoning_effort
     body = json.dumps(payload).encode("utf-8")
