@@ -318,6 +318,9 @@ is preserved only when Python parsing or exact AST matching fails.
 For exact Python AST matches, `qualified_name` uses the complete named lexical
 ancestry such as `Outer.Inner.run` or `Service.method.helper`; repository path
 continues to supply module location, and `parent_symbol` remains immediate.
+Exact Python AST matches also canonicalize `symbol_kind`: classes are `class`,
+functions directly enclosed by a class are `method`, and all other functions or
+async functions are `function`.
 
 ## Directory Filtering
 

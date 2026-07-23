@@ -1086,10 +1086,16 @@ def _python_node_matches_symbol_start(node: ast.AST, start_line: int) -> bool:
     )
 
 
-def _find_python_symbol_ancestry(tree: ast.AST, node: ast.AST) -> tuple[str, ...]:
+PythonDeclaration = ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef
+
+
+def _find_python_symbol_ancestry(
+    tree: ast.AST,
+    node: ast.AST,
+) -> tuple[PythonDeclaration, ...]:
     """Return the complete named lexical ancestry for a declaration node."""
-    ancestry_by_node: dict[ast.AST, tuple[str, ...]] = {}
-    active_declarations: list[ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef] = []
+    ancestry_by_node: dict[ast.AST, tuple[PythonDeclaration, ...]] = {}
+    active_declarations: list[PythonDeclaration] = []
 
     class ParentVisitor(ast.NodeVisitor):
         def visit_FunctionDef(self, candidate: ast.FunctionDef) -> None:
@@ -1106,15 +1112,25 @@ def _find_python_symbol_ancestry(tree: ast.AST, node: ast.AST) -> tuple[str, ...
             candidate: ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef,
         ) -> None:
             if active_declarations:
-                ancestry_by_node[candidate] = tuple(
-                    declaration.name for declaration in active_declarations
-                )
+                ancestry_by_node[candidate] = tuple(active_declarations)
             active_declarations.append(candidate)
             self.generic_visit(candidate)
             active_declarations.pop()
 
     ParentVisitor().visit(tree)
     return ancestry_by_node.get(node, ())
+
+
+def _python_structural_symbol_kind(
+    node: PythonDeclaration,
+    ancestry: tuple[PythonDeclaration, ...],
+) -> str:
+    """Return the source-structural kind for a Python declaration."""
+    if isinstance(node, ast.ClassDef):
+        return "class"
+    if ancestry and isinstance(ancestry[-1], ast.ClassDef):
+        return "method"
+    return "function"
 
 
 def _python_parameter_names(node: ast.FunctionDef | ast.AsyncFunctionDef) -> list[str]:
@@ -1339,17 +1355,11 @@ def _extract_python_symbol_details(
     except (SyntaxError, ValueError):
         return {}
 
-    node_types: tuple[type, ...]
-    if kind == "class":
-        node_types = (ast.ClassDef,)
-    else:
-        node_types = (ast.FunctionDef, ast.AsyncFunctionDef)
-
     candidates = [
         node
         for node in ast.walk(tree)
         if (
-            isinstance(node, node_types)
+            isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef))
             and getattr(node, "name", "") == name
             and _python_node_matches_symbol_start(node, start_line)
         )
@@ -1367,17 +1377,20 @@ def _extract_python_symbol_details(
     lexical_collector.visit(node)
 
     ancestry = _find_python_symbol_ancestry(tree, node)
-    parent_symbol = ancestry[-1] if ancestry else None
+    parent_symbol = ancestry[-1].name if ancestry else None
     return {
         "start_line": _python_declaration_start(node),
         "end_line": getattr(node, "end_lineno", start_line),
         "docstring": ast.get_docstring(node) or "",
+        "symbol_kind": _python_structural_symbol_kind(node, ancestry),
         "parameters": parameters,
         "local_variables": lexical_collector.normalized_local_variables(),
         "called_symbols": sorted(lexical_collector.called_symbols),
         "string_literals": sorted(lexical_collector.string_literals),
         "parent_symbol": parent_symbol,
-        "qualified_name": ".".join((*ancestry, node.name)),
+        "qualified_name": ".".join(
+            (*[declaration.name for declaration in ancestry], node.name)
+        ),
     }
 
 
@@ -1411,6 +1424,7 @@ def _build_code_symbol_record(
     if filepath.suffix == ".py":
         details = _extract_python_symbol_details(filepath, kind, name, start_line)
         if details:
+            kind = str(details.get("symbol_kind") or kind)
             start_line = int(details.get("start_line") or start_line)
             end_line = int(details.get("end_line") or end_line)
             docstring = docstring or details.get("docstring", "")
