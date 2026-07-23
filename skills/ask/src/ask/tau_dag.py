@@ -465,7 +465,11 @@ def run_tau_dag_bundle(
     review_verdicts: dict[str, str] = {}
     for item in node_provider_receipts:
         node_receipt = _read_json(Path(str(item.get("path")))) if item.get("path") else None
-        if isinstance(node_receipt, dict) and node_receipt.get("requires_verdict"):
+        # Bubble ANY verdict a node returned, not only requires_verdict nodes:
+        # the requires_verdict heuristic can miss a request that still demanded
+        # a verdict, and a returned NEEDS_ATTENTION/FAIL must never be masked
+        # (observed live: doc3 iter-2 reviewer NEEDS_ATTENTION, bundle PASS).
+        if isinstance(node_receipt, dict):
             verdict = node_receipt.get("verdict")
             if verdict:
                 review_verdicts[str(item.get("node_id"))] = str(verdict)
