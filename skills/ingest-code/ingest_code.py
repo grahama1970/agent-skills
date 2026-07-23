@@ -967,7 +967,38 @@ def _resolve_existing_scan_roots(codebase_path: Path, entries: Sequence[str]) ->
         if resolved.is_dir() and resolved not in seen:
             roots.append(resolved)
             seen.add(resolved)
-    return roots
+    return _collapse_overlapping_scan_roots(roots)
+
+
+def _collapse_overlapping_scan_roots(roots: Sequence[Path]) -> list[Path]:
+    """Remove exact duplicates and roots covered by another configured root."""
+    unique: list[Path] = []
+    seen: set[Path] = set()
+    for root in roots:
+        try:
+            resolved = root.resolve()
+        except OSError:
+            continue
+        if resolved not in seen:
+            unique.append(resolved)
+            seen.add(resolved)
+
+    effective: list[Path] = []
+    for root in unique:
+        covered = False
+        for other in unique:
+            if root == other:
+                continue
+            try:
+                root.relative_to(other)
+            except ValueError:
+                continue
+            covered = True
+            break
+        if not covered:
+            effective.append(root)
+
+    return effective
 
 
 def _configured_include_entries(config: dict[str, Any]) -> tuple[str, ...] | None:
