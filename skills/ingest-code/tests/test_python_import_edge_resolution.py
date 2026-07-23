@@ -122,6 +122,142 @@ def test_unique_short_alias_still_emits_edge(tmp_path: Path) -> None:
     ]
 
 
+def test_relative_module_import_resolves_sibling(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    service = _write(repo, "pkg/service.py", "from .helper import run\n")
+    helper = _write(repo, "pkg/helper.py")
+
+    edges = ingest_code.extract_edges([service, helper], repo)
+
+    assert edges == [
+        {
+            "from_file": str(service),
+            "to_file": str(helper.resolve()),
+            "edge_type": "depends_on",
+            "module": "pkg.helper",
+            "names": ["run"],
+        }
+    ]
+
+
+def test_relative_import_without_module_resolves_each_sibling(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    service = _write(repo, "pkg/service.py", "from . import helper, util\n")
+    helper = _write(repo, "pkg/helper.py")
+    util = _write(repo, "pkg/util.py")
+
+    edges = ingest_code.extract_edges([service, helper, util], repo)
+
+    assert sorted((edge["to_file"], edge["module"], edge["names"]) for edge in edges) == [
+        (str(helper.resolve()), "pkg.helper", []),
+        (str(util.resolve()), "pkg.util", []),
+    ]
+
+
+def test_parent_relative_module_import_resolves(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    service = _write(repo, "pkg/sub/service.py", "from ..common import load\n")
+    common = _write(repo, "pkg/common.py")
+
+    edges = ingest_code.extract_edges([service, common], repo)
+
+    assert edges[0]["to_file"] == str(common.resolve())
+    assert edges[0]["module"] == "pkg.common"
+    assert edges[0]["names"] == ["load"]
+
+
+def test_parent_relative_import_without_module_resolves(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    service = _write(repo, "pkg/sub/service.py", "from .. import common\n")
+    common = _write(repo, "pkg/common.py")
+
+    edges = ingest_code.extract_edges([service, common], repo)
+
+    assert edges == [
+        {
+            "from_file": str(service),
+            "to_file": str(common.resolve()),
+            "edge_type": "depends_on",
+            "module": "pkg.common",
+            "names": [],
+        }
+    ]
+
+
+def test_package_init_relative_import_resolves(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    init = _write(repo, "pkg/__init__.py", "from . import helper\n")
+    helper = _write(repo, "pkg/helper.py")
+
+    edges = ingest_code.extract_edges([init, helper], repo)
+
+    assert edges == [
+        {
+            "from_file": str(init),
+            "to_file": str(helper.resolve()),
+            "edge_type": "depends_on",
+            "module": "pkg.helper",
+            "names": [],
+        }
+    ]
+
+
+def test_relative_import_beyond_package_root_is_ignored(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    service = _write(repo, "pkg/service.py", "from .. import helper\n")
+    helper = _write(repo, "helper.py")
+
+    assert ingest_code.extract_edges([service, helper], repo) == []
+
+
+def test_root_level_relative_import_is_ignored(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    app = _write(repo, "app.py", "from . import helper\n")
+    helper = _write(repo, "helper.py")
+
+    assert ingest_code.extract_edges([app, helper], repo) == []
+
+
+def test_unresolved_relative_import_emits_no_edge(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    service = _write(repo, "pkg/service.py", "from .missing import run\n")
+
+    assert ingest_code.extract_edges([service], repo) == []
+
+
+def test_relative_import_resolution_is_file_order_independent(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    service = _write(repo, "pkg/sub/service.py", "from ..common import load\n")
+    common = _write(repo, "pkg/common.py")
+    files = [service, common]
+
+    forward_edges = ingest_code.extract_edges(files, repo)
+    reverse_edges = ingest_code.extract_edges(list(reversed(files)), repo)
+
+    assert _edge_pairs(forward_edges) == _edge_pairs(reverse_edges)
+
+
+def test_relative_import_preserves_ambiguity_suppression(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    service = _write(repo, "pkg/service.py", "from .helper import run\n")
+    sibling_helper = _write(repo, "pkg/helper.py")
+    colliding_helper = _write(repo, "src/pkg/helper.py")
+
+    edges = ingest_code.extract_edges([service, sibling_helper, colliding_helper], repo)
+
+    assert edges == []
+
+
 def test_package_init_alias_ambiguity_is_suppressed(tmp_path: Path) -> None:
     repo = tmp_path / "repo"
     repo.mkdir()

@@ -2015,7 +2015,61 @@ def _treesitter_query(run_sh: Path, filepath: Path, query: str) -> list[dict]:
     return []
 
 
-def extract_python_imports(filepath: Path) -> list[dict]:
+def _python_package_parts(filepath: Path, codebase_root: Path) -> tuple[str, ...]:
+    """Return repository-relative package components for a Python file."""
+    try:
+        resolved_file = filepath.resolve(strict=True)
+        resolved_root = codebase_root.resolve(strict=True)
+        relative = resolved_file.relative_to(resolved_root)
+    except (OSError, RuntimeError, ValueError):
+        return ()
+
+    if relative.suffix != ".py":
+        return ()
+
+    return tuple(relative.parent.parts)
+
+
+def _resolve_relative_python_imports(
+    *,
+    filepath: Path,
+    codebase_root: Path,
+    level: int,
+    module: str | None,
+    names: Sequence[str],
+    line: int,
+) -> list[dict[str, Any]]:
+    """Normalize relative imports to repository-relative dotted modules."""
+    package_parts = _python_package_parts(filepath, codebase_root)
+    if not package_parts or level < 1:
+        return []
+
+    parents_to_drop = level - 1
+    if parents_to_drop >= len(package_parts):
+        return []
+
+    base_parts = package_parts[: len(package_parts) - parents_to_drop]
+
+    if module:
+        return [{
+            "module": ".".join([*base_parts, *module.split(".")]),
+            "names": list(names),
+            "line": line,
+        }]
+
+    imports: list[dict[str, Any]] = []
+    for name in names:
+        if not name or name == "*":
+            continue
+        imports.append({
+            "module": ".".join([*base_parts, *name.split(".")]),
+            "names": [],
+            "line": line,
+        })
+    return imports
+
+
+def extract_python_imports(filepath: Path, codebase_root: Path | None = None) -> list[dict]:
     """Extract import relationships from a Python file using AST (fast, no treesitter needed)."""
     content = _read_source_text(filepath)
     try:
@@ -2025,12 +2079,25 @@ def extract_python_imports(filepath: Path) -> list[dict]:
 
     imports = []
     for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom) and node.module:
-            imports.append({
-                "module": node.module,
-                "names": [alias.name for alias in node.names],
-                "line": node.lineno,
-            })
+        if isinstance(node, ast.ImportFrom):
+            names = [alias.name for alias in node.names]
+            if node.level > 0 and codebase_root is not None:
+                imports.extend(
+                    _resolve_relative_python_imports(
+                        filepath=filepath,
+                        codebase_root=codebase_root,
+                        level=node.level,
+                        module=node.module,
+                        names=names,
+                        line=node.lineno,
+                    )
+                )
+            elif node.module:
+                imports.append({
+                    "module": node.module,
+                    "names": names,
+                    "line": node.lineno,
+                })
         elif isinstance(node, ast.Import):
             for alias in node.names:
                 imports.append({
@@ -2102,7 +2169,7 @@ def extract_edges(
     for filepath in files:
         if filepath.suffix != ".py":
             continue
-        imports = extract_python_imports(filepath)
+        imports = extract_python_imports(filepath, codebase_root)
         for imp in imports:
             module = imp["module"]
             # Try to resolve to a file in this codebase
