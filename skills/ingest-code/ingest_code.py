@@ -1086,31 +1086,33 @@ def _python_node_matches_symbol_start(node: ast.AST, start_line: int) -> bool:
     )
 
 
-def _find_python_parent_symbol(tree: ast.AST, start_line: int, node: ast.AST) -> Optional[str]:
-    containers: list[ast.ClassDef] = []
+def _find_python_parent_symbol(tree: ast.AST, node: ast.AST) -> Optional[str]:
+    """Return the immediate named lexical parent for a declaration node."""
+    parent_by_node: dict[ast.AST, str] = {}
+    active_declarations: list[ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef] = []
 
-    for candidate in ast.walk(tree):
-        if not isinstance(candidate, ast.ClassDef):
-            continue
-        if candidate is node:
-            continue
-        candidate_start = getattr(candidate, "lineno", 0)
-        candidate_end = getattr(candidate, "end_lineno", 0)
-        if candidate_start <= start_line <= candidate_end:
-            containers.append(candidate)
+    class ParentVisitor(ast.NodeVisitor):
+        def visit_FunctionDef(self, candidate: ast.FunctionDef) -> None:
+            self._visit_declaration(candidate)
 
-    if not containers:
-        return None
+        def visit_AsyncFunctionDef(self, candidate: ast.AsyncFunctionDef) -> None:
+            self._visit_declaration(candidate)
 
-    parent = min(
-        containers,
-        key=lambda candidate: (
-            getattr(candidate, "end_lineno", 0)
-            - getattr(candidate, "lineno", 0),
-            -getattr(candidate, "lineno", 0),
-        ),
-    )
-    return parent.name
+        def visit_ClassDef(self, candidate: ast.ClassDef) -> None:
+            self._visit_declaration(candidate)
+
+        def _visit_declaration(
+            self,
+            candidate: ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef,
+        ) -> None:
+            if active_declarations:
+                parent_by_node[candidate] = active_declarations[-1].name
+            active_declarations.append(candidate)
+            self.generic_visit(candidate)
+            active_declarations.pop()
+
+    ParentVisitor().visit(tree)
+    return parent_by_node.get(node)
 
 
 def _python_parameter_names(node: ast.FunctionDef | ast.AsyncFunctionDef) -> list[str]:
@@ -1362,7 +1364,7 @@ def _extract_python_symbol_details(
     lexical_collector = _PythonLexicalCollector(node)
     lexical_collector.visit(node)
 
-    parent_symbol = _find_python_parent_symbol(tree, getattr(node, "lineno", start_line), node)
+    parent_symbol = _find_python_parent_symbol(tree, node)
     return {
         "start_line": _python_declaration_start(node),
         "end_line": getattr(node, "end_lineno", start_line),
@@ -1403,14 +1405,15 @@ def _build_code_symbol_record(
 
     if filepath.suffix == ".py":
         details = _extract_python_symbol_details(filepath, kind, name, start_line)
-        start_line = int(details.get("start_line") or start_line)
-        end_line = int(details.get("end_line") or end_line)
-        docstring = docstring or details.get("docstring", "")
-        parent_symbol = parent_symbol or details.get("parent_symbol") or ""
-        parameters = list(details.get("parameters", []))
-        local_variables = list(details.get("local_variables", []))
-        called_symbols = list(details.get("called_symbols", []))
-        string_literals = list(details.get("string_literals", []))
+        if details:
+            start_line = int(details.get("start_line") or start_line)
+            end_line = int(details.get("end_line") or end_line)
+            docstring = docstring or details.get("docstring", "")
+            parent_symbol = details.get("parent_symbol") or ""
+            parameters = list(details.get("parameters", []))
+            local_variables = list(details.get("local_variables", []))
+            called_symbols = list(details.get("called_symbols", []))
+            string_literals = list(details.get("string_literals", []))
 
     code = _source_slice(filepath, start_line, end_line)
     qualified_name = ".".join(part for part in [parent_symbol, name] if part)
