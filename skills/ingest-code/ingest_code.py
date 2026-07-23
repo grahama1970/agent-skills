@@ -1671,16 +1671,23 @@ def rescan(
     total_cwes = 0
     total_ts_symbols = 0
     verifiable_samples: list[dict[str, str]] = []
+    pending_markers: list[dict[str, Any]] = []
 
     for path in resolved_codebases:
         files = collect_files(path, DEFAULT_GLOB_PATTERNS, mtime_after=mtime_threshold)
         print(f"Found {len(files)} files in {path}")
+        codebase_knowledge = 0
+        codebase_cwes = 0
+        codebase_ts_symbols = 0
+        code_symbol_scan_roots: list[Path] = []
+        completed_code_symbol_scan_roots: list[Path] = []
 
         for filepath in files:
             # Knowledge extraction
             for item in extract_knowledge(filepath):
                 if _learn(memory_script, item["problem"], item["solution"], scope, item["tags"]):
                     total_knowledge += 1
+                    codebase_knowledge += 1
                     verify_name = _extract_verification_name(item["tags"])
                     if verify_name:
                         verifiable_samples.append({
@@ -1697,21 +1704,32 @@ def rescan(
                     if _learn(memory_script, f"What CWEs are relevant to {filepath.name}?",
                               f"{cwe_id} ({cwe.get('name', '')}) - File: {filepath}", scope, tags):
                         total_cwes += 1
+                        codebase_cwes += 1
 
         # Treesitter symbol extraction (per codebase, not per file)
         if treesitter and code_index:
-            scan_roots = _extract_configured_scan_roots(path)
-            ts_stored = 0
-            for scan_root in scan_roots:
+            code_symbol_scan_roots = _extract_configured_scan_roots(path)
+            for scan_root in code_symbol_scan_roots:
                 root_stored = _store_treesitter_symbols_for_directory(
                     scan_root,
                     path,
                     scope,
                     verification_samples=verifiable_samples,
                 )
-                ts_stored += root_stored
+                codebase_ts_symbols += root_stored
+                completed_code_symbol_scan_roots.append(scan_root)
                 print(f"Treesitter: {root_stored} symbols stored from {scan_root}", flush=True)
-            total_ts_symbols += ts_stored
+            total_ts_symbols += codebase_ts_symbols
+
+        pending_markers.append({
+            "path": path,
+            "files_scanned": len(files),
+            "knowledge_stored": codebase_knowledge,
+            "cwe_stored": codebase_cwes,
+            "code_symbols_stored": codebase_ts_symbols,
+            "scan_roots": code_symbol_scan_roots,
+            "completed_scan_roots": completed_code_symbol_scan_roots,
+        })
 
     verification_result = None
     if verify_embeddings:
@@ -1721,6 +1739,24 @@ def rescan(
         }, indent=2))
         if verification_result["failed"] > 0:
             raise SystemExit(1)
+
+    for marker in pending_markers:
+        try:
+            marker_path = _write_ingest_marker(
+                marker["path"],
+                files_scanned=marker["files_scanned"],
+                knowledge_stored=marker["knowledge_stored"],
+                cwe_stored=marker["cwe_stored"],
+                edges_stored=0,
+                code_symbols_stored=marker["code_symbols_stored"],
+                treesitter=treesitter,
+                scope=scope,
+                scan_roots=marker["scan_roots"],
+                completed_scan_roots=marker["completed_scan_roots"],
+            )
+            print(f"Marker written: {marker_path}", flush=True)
+        except Exception as e:
+            print(f"Warning: Could not write marker file: {e}", file=sys.stderr)
 
     print(json.dumps({
         "codebases_scanned": len(resolved_codebases),
