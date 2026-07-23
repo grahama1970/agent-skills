@@ -1,0 +1,7 @@
+1
+00:00:00,000 --> 00:00:06,569
+This is speaker alpha. The watch diarization sanity check is running through a real video file.
+
+2
+00:00:07,169 --> 00:00:13,820
+This is speaker beta. Anonymous speakers must stay evidence, and must not become character names.

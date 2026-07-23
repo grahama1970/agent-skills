@@ -1,0 +1,126 @@
+{
+  "schema": "watch.immutable_goal_proof.v1",
+  "goal_id": "watch-yolo-memory-identity",
+  "status": "PASS",
+  "mocked": false,
+  "live": true,
+  "commit_sha": "04259f28d65124ba253dc60a88f0745b49ceb90e",
+  "created_at": "2026-07-23T23:41:21.681Z",
+  "memory_daemon_url": "http://127.0.0.1:8601/",
+  "asset_uid": "bad_santa_unrated_2003_brrip_xvidhd_720p_npw",
+  "proof_only_row10_asset_uid": "watch_immutable_proof_asset",
+  "rows": [
+    9,
+    10
+  ],
+  "tracks": [
+    "track_2",
+    "track_15"
+  ],
+  "assertions": {
+    "live_qdrant_suggestion": true,
+    "suggestion_tentative": true,
+    "human_accept_persisted": true,
+    "stop_persisted": true,
+    "identity_absent_after_stop": true,
+    "explicit_reassignment_persisted": true,
+    "reload_hydration_passed": true,
+    "memory_sync_stored": true,
+    "suggestion_query_did_not_mutate_receipt": true,
+    "pyannote_live_cuda_diarization": true,
+    "anonymous_speaker_evidence_written": true,
+    "pyannote_does_not_promote_identity": true
+  },
+  "artifacts": [
+    {
+      "path": "skills/watch/proofs/immutable-goal/04259f28d65124ba253dc60a88f0745b49ceb90e/01-row9-tentative-marcus.png",
+      "sha256": "5077d6395f3675604fa63989dec7f1d38f626326313dd30a77e79d6f56ff4bfb",
+      "bytes": 262007
+    },
+    {
+      "path": "skills/watch/proofs/immutable-goal/04259f28d65124ba253dc60a88f0745b49ceb90e/02-row10-marcus-accepted.png",
+      "sha256": "20e7cb18801262b51b679c7dc7b1d6237a01bf3cca20f46be1917c6c8b188a85",
+      "bytes": 855272
+    },
+    {
+      "path": "skills/watch/proofs/immutable-goal/04259f28d65124ba253dc60a88f0745b49ceb90e/03-row10-after-stop-unassigned.png",
+      "sha256": "1d4f288fd3a76805468183a371150d48094cac2489b5b514e2b54b26e8efd06d",
+      "bytes": 594026
+    },
+    {
+      "path": "skills/watch/proofs/immutable-goal/04259f28d65124ba253dc60a88f0745b49ceb90e/04-row10-willie-reassigned.png",
+      "sha256": "892352739a0f8d0d23f899d05de786aaf1d2e7b2995ba434aa54e75e3d448db4",
+      "bytes": 660561
+    },
+    {
+      "path": "skills/watch/proofs/immutable-goal/04259f28d65124ba253dc60a88f0745b49ceb90e/05-row10-reloaded.png",
+      "sha256": "7b65dde76c946024b1fb243c31de34d8f8b81955b8f53e9a8986406515e96049",
+      "bytes": 674572
+    },
+    {
+      "path": "skills/watch/proofs/immutable-goal/04259f28d65124ba253dc60a88f0745b49ceb90e/api-row10-final-receipt.json",
+      "sha256": "8353513db60b0982f525286bd7cf265383e3061e59590ea556a6f48997a0db76",
+      "bytes": 3423
+    },
+    {
+      "path": "skills/watch/proofs/immutable-goal/04259f28d65124ba253dc60a88f0745b49ceb90e/api-row10-projection-after-marcus.json",
+      "sha256": "5ab9f929abd65f5a2083e18ea753015805a6f0be18df4fe677bb197b5061a05f",
+      "bytes": 261
+    },
+    {
+      "path": "skills/watch/proofs/immutable-goal/04259f28d65124ba253dc60a88f0745b49ceb90e/api-row10-projection-after-stop.json",
+      "sha256": "30a77ce64975de240c1db9609f31b89123f496cb5bc462c666350ec0070a2d93",
+      "bytes": 181
+    },
+    {
+      "path": "skills/watch/proofs/immutable-goal/04259f28d65124ba253dc60a88f0745b49ceb90e/api-row10-projection-after-willie.json",
+      "sha256": "3444f79f700debf081d06b6bded72950d2d02f903e420825a0c4f1da6e208c7b",
+      "bytes": 269
+    },
+    {
+      "path": "skills/watch/proofs/immutable-goal/04259f28d65124ba253dc60a88f0745b49ceb90e/api-row10-projection-before-accept.json",
+      "sha256": "2f1900a7e46beaf34bace02f5dad6fac1a91a12980110bcb6fae39a6a6f362ea",
+      "bytes": 180
+    },
+    {
+      "path": "skills/watch/proofs/immutable-goal/04259f28d65124ba253dc60a88f0745b49ceb90e/api-row9-memory-suggestion.json",
+      "sha256": "09933ffa7d9a7ea628525321960632532567f38e2b7b33d9494d09dad0dead3c",
+      "bytes": 8467
+    },
+    {
+      "path": "skills/watch/proofs/immutable-goal/04259f28d65124ba253dc60a88f0745b49ceb90e/command-results.json",
+      "sha256": "6dd8adddb4ae1736b238bb56af17e3752665567b9f0a3a3668d9ec09ee98709f",
+      "bytes": 2958
+    },
+    {
+      "path": "skills/watch/proofs/immutable-goal/04259f28d65124ba253dc60a88f0745b49ceb90e/pyannote-immutable-e2e/captions.srt",
+      "sha256": "ff1a5c65dfa903a592e728c05234291a9c208b217c2d6f147c44109246a1ac19",
+      "bytes": 259
+    },
+    {
+      "path": "skills/watch/proofs/immutable-goal/04259f28d65124ba253dc60a88f0745b49ceb90e/pyannote-immutable-e2e/pyannote-diarization.json",
+      "sha256": "623f2e2d330fff28084be51a80935d4c9fa33491d9e4425a0af5857aabada802",
+      "bytes": 926
+    },
+    {
+      "path": "skills/watch/proofs/immutable-goal/04259f28d65124ba253dc60a88f0745b49ceb90e/pyannote-immutable-e2e/pyannote-e2e-summary.json",
+      "sha256": "91eb1f13d1e679bd4ecfd4d29587b57ed8e013434edcc043f745c34dd025dfc1",
+      "bytes": 1481
+    },
+    {
+      "path": "skills/watch/proofs/immutable-goal/04259f28d65124ba253dc60a88f0745b49ceb90e/pyannote-immutable-e2e/pyannote-report-speaker-rows.json",
+      "sha256": "3b0983c32a9689bb6080e35f8d763322bf776ce18b7265d7e65dcb456c23097d",
+      "bytes": 587
+    },
+    {
+      "path": "skills/watch/proofs/immutable-goal/04259f28d65124ba253dc60a88f0745b49ceb90e/pyannote-immutable-e2e/source-audio.wav",
+      "sha256": "32ae2a710a40dd8d33e88746899000f5c846036f7d2c7dcf5b450cba9268cd18",
+      "bytes": 442316
+    },
+    {
+      "path": "skills/watch/proofs/immutable-goal/04259f28d65124ba253dc60a88f0745b49ceb90e/pyannote-immutable-e2e/source-video.mp4",
+      "sha256": "6eb156a631b53e0d8257b4ed9988ae75df3e3ce95d1f0d3f2e71dfa9c92943b1",
+      "bytes": 1179802
+    }
+  ]
+}

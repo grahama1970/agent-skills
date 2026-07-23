@@ -1,0 +1,56 @@
+[
+  {
+    "name": "npm_run_test_backend_immutable",
+    "command": "npm run test:backend-immutable",
+    "exit_code": 0,
+    "stdout": "\n> watch-ui@1.0.0 test:backend-immutable\n> npm run test:yolo-label-receipt && npm run test:receipt-concurrency && npm run test:detector-isolation\n\n\n> watch-ui@1.0.0 test:yolo-label-receipt\n> tsx scripts/watchYoloLabelReceiptReplay.smoke.ts\n\nwatchYoloLabelReceiptReplay smoke passed\n\n> watch-ui@1.0.0 test:receipt-concurrency\n> tsx scripts/watchYoloReceiptConcurrency.smoke.ts\n\nwatchYoloReceiptConcurrency smoke passed\n\n> watch-ui@1.0.0 test:detector-isolation\n> tsx scripts/watchDetectorCandidateIsolation.smoke.ts\n\nwatchDetectorCandidateIsolation smoke passed\n",
+    "stderr": "",
+    "started_at": "2026-07-23T23:40:31.055Z",
+    "finished_at": "2026-07-23T23:40:40.676Z"
+  },
+  {
+    "name": "npm_run_typecheck",
+    "command": "npm run typecheck",
+    "exit_code": 0,
+    "stdout": "\n> watch-ui@1.0.0 typecheck\n> tsc --noEmit\n\n",
+    "stderr": "",
+    "started_at": "2026-07-23T23:40:40.676Z",
+    "finished_at": "2026-07-23T23:40:44.156Z"
+  },
+  {
+    "name": "npm_run_build",
+    "command": "npm run build",
+    "exit_code": 0,
+    "stdout": "\n> watch-ui@1.0.0 build\n> vite build\n\nvite v5.4.21 building for production...\ntransforming...\n✓ 1800 modules transformed.\nrendering chunks...\ncomputing gzip size...\ndist/index.html                            1.80 kB │ gzip:   0.88 kB\ndist/assets/index-ByYMoe1I.js            144.27 kB │ gzip:  46.59 kB\ndist/assets/WatchReportView-BgscnIpy.js  480.47 kB │ gzip: 137.45 kB\n✓ built in 3.23s\n",
+    "stderr": "",
+    "started_at": "2026-07-23T23:40:44.156Z",
+    "finished_at": "2026-07-23T23:40:47.803Z"
+  },
+  {
+    "name": "npm_run_test_memory_suggestion_live",
+    "command": "npm run test:memory-suggestion-live",
+    "exit_code": 0,
+    "stdout": "\n> watch-ui@1.0.0 test:memory-suggestion-live\n> tsx scripts/watchMemorySuggestionLive.smoke.ts\n\nwatchMemorySuggestionLive smoke passed\n",
+    "stderr": "",
+    "started_at": "2026-07-23T23:40:47.803Z",
+    "finished_at": "2026-07-23T23:40:50.652Z"
+  },
+  {
+    "name": "npm_run_test_immutable_browser_live",
+    "command": "npm run test:immutable-browser-live",
+    "exit_code": 0,
+    "stdout": "\n> watch-ui@1.0.0 test:immutable-browser-live\n> tsx scripts/watchImmutableGoalBrowserLive.smoke.ts\n\nwatchImmutableGoalBrowserLive smoke passed\n",
+    "stderr": "",
+    "started_at": "2026-07-23T23:40:50.652Z",
+    "finished_at": "2026-07-23T23:41:01.967Z"
+  },
+  {
+    "name": "npm_run_test_pyannote_immutable_live",
+    "command": "npm run test:pyannote-immutable-live",
+    "exit_code": 0,
+    "stdout": "\n> watch-ui@1.0.0 test:pyannote-immutable-live\n> tsx scripts/watchPyannoteImmutableLive.smoke.ts\n\nwatchPyannoteImmutableLive smoke passed\n",
+    "stderr": "",
+    "started_at": "2026-07-23T23:41:01.967Z",
+    "finished_at": "2026-07-23T23:41:21.662Z"
+  }
+]

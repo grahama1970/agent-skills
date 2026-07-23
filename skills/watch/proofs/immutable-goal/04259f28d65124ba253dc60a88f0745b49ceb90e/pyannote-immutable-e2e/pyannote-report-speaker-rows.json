@@ -1,0 +1,23 @@
+[
+  {
+    "timecode": "00:00",
+    "speaker_ids": [
+      "SPEAKER_00"
+    ],
+    "speaker_attribution_status": "assigned",
+    "overlapping_speech": false,
+    "diarization_source": "pyannote/speaker-diarization-community-1",
+    "diarization_artifact_path": "diarization.json"
+  },
+  {
+    "timecode": "00:05",
+    "speaker_ids": [
+      "SPEAKER_00",
+      "SPEAKER_01"
+    ],
+    "speaker_attribution_status": "assigned",
+    "overlapping_speech": false,
+    "diarization_source": "pyannote/speaker-diarization-community-1",
+    "diarization_artifact_path": "diarization.json"
+  }
+]

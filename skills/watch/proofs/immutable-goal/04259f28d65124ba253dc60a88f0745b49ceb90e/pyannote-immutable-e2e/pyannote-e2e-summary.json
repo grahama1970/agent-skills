@@ -1,0 +1,50 @@
+{
+  "schema": "watch.pyannote_immutable_e2e_proof.v1",
+  "status": "PASS",
+  "mocked": false,
+  "live": true,
+  "service": {
+    "provider": "pyannote",
+    "model": "pyannote/speaker-diarization-community-1",
+    "device": "cuda",
+    "model_loaded": true,
+    "model_load_count": 1
+  },
+  "watch_cli_exit_code": 0,
+  "assertions": {
+    "live_cuda_pyannote_service": true,
+    "watch_cli_exercised_real_media": true,
+    "diarization_receipt_complete": true,
+    "regular_and_exclusive_turns_retained": true,
+    "transcript_speaker_attribution_written": true,
+    "report_scene_rows_include_speaker_evidence": true,
+    "anonymous_speakers_not_promoted_to_identity": true
+  },
+  "artifacts": [
+    {
+      "path": "source-video.mp4",
+      "sha256": "6eb156a631b53e0d8257b4ed9988ae75df3e3ce95d1f0d3f2e71dfa9c92943b1",
+      "bytes": 1179802
+    },
+    {
+      "path": "source-audio.wav",
+      "sha256": "32ae2a710a40dd8d33e88746899000f5c846036f7d2c7dcf5b450cba9268cd18",
+      "bytes": 442316
+    },
+    {
+      "path": "captions.srt",
+      "sha256": "ff1a5c65dfa903a592e728c05234291a9c208b217c2d6f147c44109246a1ac19",
+      "bytes": 259
+    },
+    {
+      "path": "pyannote-diarization.json",
+      "sha256": "623f2e2d330fff28084be51a80935d4c9fa33491d9e4425a0af5857aabada802",
+      "bytes": 926
+    },
+    {
+      "path": "pyannote-report-speaker-rows.json",
+      "sha256": "3b0983c32a9689bb6080e35f8d763322bf776ce18b7265d7e65dcb456c23097d",
+      "bytes": 587
+    }
+  ]
+}

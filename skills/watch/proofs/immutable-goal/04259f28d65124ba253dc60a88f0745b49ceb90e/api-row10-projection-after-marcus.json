@@ -1,0 +1,12 @@
+{
+  "schema": "watch.yolo_label_projection.v1",
+  "asset_uid": "watch_immutable_proof_asset",
+  "row_index": 10,
+  "track_id": "track_15",
+  "time_seconds": 1.2,
+  "label": {
+    "characterName": "Marcus",
+    "actorName": "Tony Cox",
+    "confidence": 1
+  }
+}
