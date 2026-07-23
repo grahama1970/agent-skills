@@ -66,6 +66,21 @@ DEFAULT_GLOB_PATTERNS = [
     "*.rs", "*.go", "*.java", "*.ts", "*.tsx", "*.js", "*.jsx",
     "*.rb", "*.php", "*.swift", "*.kt", "*.scala"
 ]
+EXPLICIT_ROOT_DOC_STEMS = (
+    "CONTEXT",
+    "README",
+    "CLAUDE",
+    "MEMORY",
+    "AGENTS",
+)
+EXPLICIT_MARKDOWN_SUFFIXES = (
+    ".md",
+    ".mdx",
+)
+EXPLICIT_MARKDOWN_GLOBS = (
+    "*.md",
+    "*.mdx",
+)
 
 # Skip patterns — dirs that are never useful
 SKIP_DIRS = {
@@ -2815,20 +2830,28 @@ def collect_files(codebase_path: Path, patterns: list[str], mtime_after: Optiona
             except (OSError, ValueError, NotImplementedError) as exc:
                 raise FileDiscoveryError(f"non-git glob failed for pattern {pattern!r}: {exc}") from exc
 
-    # Also include markdown docs at project root (always)
-    for md_name in ["CONTEXT.md", "README.md", "CLAUDE.md", "MEMORY.md", "AGENTS.md"]:
-        _append_explicit_markdown(files, codebase_root / md_name, codebase_root, mtime_after)
-    # Recurse for local/docs/*.md and local/*.md
+    # Also include named Markdown docs at project root (always)
+    for stem in EXPLICIT_ROOT_DOC_STEMS:
+        for suffix in EXPLICIT_MARKDOWN_SUFFIXES:
+            _append_explicit_markdown(
+                files,
+                codebase_root / f"{stem}{suffix}",
+                codebase_root,
+                mtime_after,
+            )
+    # Recurse for direct-child Markdown docs in special documentation dirs.
     for local_dir in [codebase_root / "local" / "docs", codebase_root / "local"]:
         resolved_dir = _resolve_in_repo_directory(local_dir, codebase_root)
         if resolved_dir is None:
             continue
-        for md in resolved_dir.glob("*.md"):
-            _append_explicit_markdown(files, md, codebase_root, mtime_after)
+        for pattern in EXPLICIT_MARKDOWN_GLOBS:
+            for md in resolved_dir.glob(pattern):
+                _append_explicit_markdown(files, md, codebase_root, mtime_after)
     resolved_docs_dir = _resolve_in_repo_directory(codebase_root / "docs", codebase_root)
     if resolved_docs_dir is not None:
-        for md in resolved_docs_dir.glob("*.md"):
-            _append_explicit_markdown(files, md, codebase_root, mtime_after)
+        for pattern in EXPLICIT_MARKDOWN_GLOBS:
+            for md in resolved_docs_dir.glob(pattern):
+                _append_explicit_markdown(files, md, codebase_root, mtime_after)
 
     return sorted(set(files))
 

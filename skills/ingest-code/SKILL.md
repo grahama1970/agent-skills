@@ -296,7 +296,11 @@ backend.
 **Hardcoded skip directories** (always skipped, even in non-git dirs):
 `.venv`, `venv`, `node_modules`, `__pycache__`, `.git`, `dist`, `build`, `.eggs`, `.mypy_cache`, `.pytest_cache`, `site-packages`, `.uv`
 
-**Always included** (regardless of .gitignore): `CONTEXT.md`, `README.md`, `CLAUDE.md`, `MEMORY.md`, `AGENTS.md`, plus `docs/` and `local/docs/`.
+**Always included** (regardless of .gitignore): Named root documentation files
+with `.md` or `.mdx` suffixes, `CONTEXT`, `README`, `CLAUDE`, `MEMORY`, and
+`AGENTS`, plus direct `.md` and `.mdx` files under `docs/`, `local/`, and
+`local/docs/`. All candidates remain subject to repository-containment and
+`--since` checks.
 
 ## Integration with /monitor-codebase
 
