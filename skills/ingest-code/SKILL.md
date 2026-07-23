@@ -109,6 +109,11 @@ Tree-sitter source locations must resolve to real lines in the discovered file.
 Out-of-bounds or unreadable source ranges fail with status 1 before code-symbol
 preview or persistence.
 
+Tree-sitter records are canonicalized before preview or persistence. Exact
+duplicate source-symbol records count once. Conflicting records for the same
+path, qualified name, and start line fail with status 1 and produce no
+completed marker.
+
 Every discovered source file used by a requested phase must remain readable. A
 read failure exits with status 1 and prevents the completed marker. Readable
 files with unsupported or syntactically invalid content may still produce zero

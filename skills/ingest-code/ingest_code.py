@@ -1900,7 +1900,7 @@ def _extract_treesitter_records_for_directory(
                 f"Tree-sitter source read failed for {filepath}: {exc}"
             ) from exc
 
-    return tuple(records)
+    return _canonicalize_treesitter_records(records)
 
 
 def _store_treesitter_symbols_for_directory(
@@ -1939,20 +1939,52 @@ def _store_treesitter_symbols_for_directory(
     return result.stored
 
 
-def _code_symbol_preview_key(record: CodeSymbolRecord) -> tuple[str, int, int, str, str]:
-    """Sort code-symbol preview output deterministically."""
+def _treesitter_record_identity(record: CodeSymbolRecord) -> tuple[str, str, int]:
+    """Identify one symbol declaration at a source location."""
+    return (
+        record.path,
+        record.qualified_name,
+        record.start_line,
+    )
+
+
+def _code_symbol_record_order_key(record: CodeSymbolRecord) -> tuple[str, int, int, str, str, str]:
+    """Sort code-symbol records deterministically."""
     return (
         record.path,
         record.start_line,
         record.end_line,
-        record.symbol_kind,
         record.qualified_name,
+        record.symbol_kind,
+        record.content_hash,
     )
+
+
+def _canonicalize_treesitter_records(
+    records: Sequence[CodeSymbolRecord],
+) -> tuple[CodeSymbolRecord, ...]:
+    """Deduplicate exact records and reject conflicting source identities."""
+    by_identity: dict[tuple[str, str, int], CodeSymbolRecord] = {}
+
+    for record in records:
+        identity = _treesitter_record_identity(record)
+        existing = by_identity.get(identity)
+        if existing is None:
+            by_identity[identity] = record
+            continue
+
+        if existing.to_document() != record.to_document():
+            raise TreeSitterScanError(
+                "Conflicting Tree-sitter records for "
+                f"{record.path}:{record.start_line} {record.qualified_name}"
+            )
+
+    return tuple(sorted(by_identity.values(), key=_code_symbol_record_order_key))
 
 
 def _print_code_symbol_dry_run_preview(records: Sequence[CodeSymbolRecord]) -> None:
     """Print code-symbol records that would be upserted."""
-    for record in sorted(records, key=_code_symbol_preview_key):
+    for record in sorted(records, key=_code_symbol_record_order_key):
         print(
             f"  [CODE_SYMBOL] {record.path}:{record.start_line}-{record.end_line} "
             f"{record.symbol_kind} {record.qualified_name}",
