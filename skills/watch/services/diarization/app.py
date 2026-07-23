@@ -45,14 +45,13 @@ async def diarize(
         )
     except HTTPException:
         raise
-    except RuntimeError as exc:
-        status_code, error_code = classify_runtime_error(str(exc))
+    except Exception as exc:
+        error = f"diarization inference failed: {exc}"
+        status_code, error_code = classify_runtime_error(error)
         return JSONResponse(
             status_code=status_code,
-            content=failure_receipt(error_code, str(exc)),
+            content=failure_receipt(error_code, error),
         )
-    except Exception as exc:
-        raise HTTPException(status_code=500, detail=f"diarization inference failed: {exc}") from exc
     finally:
         if temp_path:
             try:
