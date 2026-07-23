@@ -18,7 +18,6 @@ import hashlib
 import importlib.util
 import json
 import os
-import random
 import re
 import subprocess
 import sys
@@ -77,6 +76,15 @@ SKIP_DIRS = {
 MEMORY_SOCKET_PATH = "/run/user/1000/embry/memory.sock"
 SCAN_INCLUDE_DIRS_ENV = "CODE_SYMBOLS_SCAN_INCLUDE_DIRS"
 CODE_SYMBOL_VERIFICATION_TOP_K = 5
+_VERIFICATION_IDENTITY_FIELDS = (
+    "repo",
+    "path",
+    "qualified_name",
+    "start_line",
+    "end_line",
+    "name",
+    "problem",
+)
 
 
 def load_taxonomy_module():
@@ -193,6 +201,37 @@ def _code_symbol_verification_sample(record: CodeSymbolRecord) -> dict[str, str]
     }
 
 
+def _verification_sample_identity(sample: dict[str, str]) -> str:
+    """Return the stable logical identity of one verification sample."""
+    return "\x1f".join(
+        str(sample.get(field, "")).strip()
+        for field in _VERIFICATION_IDENTITY_FIELDS
+    )
+
+
+def _select_verification_samples(
+    samples: list[dict[str, str]],
+    sample_size: int,
+) -> list[dict[str, str]]:
+    """Select a deterministic, duplicate-free verification subset."""
+    if sample_size <= 0 or not samples:
+        return []
+
+    unique_samples: dict[str, dict[str, str]] = {}
+    for sample in samples:
+        identity = _verification_sample_identity(sample)
+        unique_samples.setdefault(identity, sample)
+
+    ranked = sorted(
+        unique_samples.items(),
+        key=lambda item: (
+            hashlib.sha256(item[0].encode("utf-8")).hexdigest(),
+            item[0],
+        ),
+    )
+    return [sample for _, sample in ranked[:sample_size]]
+
+
 def _verification_query(sample: dict[str, str]) -> str:
     """Build a recall query for a verification sample."""
     path = sample.get("path", "").strip()
@@ -304,7 +343,7 @@ def verify_embedding_recall(samples: list[dict[str, str]], sample_size: int = 10
             "failures": [],
         }
 
-    chosen = random.sample(samples, min(sample_size, len(samples)))
+    chosen = _select_verification_samples(samples, sample_size)
     failures: list[dict[str, str]] = []
     passed = 0
 

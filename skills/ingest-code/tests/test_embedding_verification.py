@@ -31,6 +31,111 @@ def _sample(**overrides: str) -> dict[str, str]:
     return sample
 
 
+def test_verification_sample_selection_is_order_independent() -> None:
+    samples = [
+        _sample(
+            name=f"symbol_{index}",
+            problem=f"What is symbol_{index}?",
+            path=f"src/module_{index}.py",
+            qualified_name=f"Module{index}.symbol_{index}",
+            start_line=str(index * 10),
+            end_line=str(index * 10 + 4),
+        )
+        for index in range(6)
+    ]
+
+    selected_forward = ingest_code._select_verification_samples(samples, 3)
+    selected_reverse = ingest_code._select_verification_samples(list(reversed(samples)), 3)
+
+    assert [
+        ingest_code._verification_sample_identity(sample)
+        for sample in selected_forward
+    ] == [
+        ingest_code._verification_sample_identity(sample)
+        for sample in selected_reverse
+    ]
+
+
+def test_verification_sample_selection_deduplicates_identity() -> None:
+    duplicate = _sample()
+    samples = [
+        duplicate,
+        dict(duplicate),
+        _sample(
+            name="emit",
+            problem="What is emit?",
+            path="src/events.py",
+            qualified_name="Events.emit",
+            start_line="30",
+            end_line="40",
+        ),
+    ]
+
+    selected = ingest_code._select_verification_samples(samples, 10)
+
+    assert len(selected) == 2
+    assert len({
+        ingest_code._verification_sample_identity(sample)
+        for sample in selected
+    }) == 2
+
+
+def test_embedding_verification_query_sequence_is_deterministic(monkeypatch) -> None:
+    samples = [
+        _sample(
+            name=f"symbol_{index}",
+            problem=f"What is symbol_{index}?",
+            path=f"src/module_{index}.py",
+            qualified_name=f"Module{index}.symbol_{index}",
+            start_line=str(index * 10),
+            end_line=str(index * 10 + 4),
+        )
+        for index in range(6)
+    ]
+    forward_queries = []
+    reverse_queries = []
+
+    def fake_forward_recall(query: str, k: int = 1):
+        forward_queries.append((query, k))
+        return {"items": []}
+
+    monkeypatch.setattr(ingest_code, "_recall_http", fake_forward_recall)
+    forward_result = ingest_code.verify_embedding_recall(samples, sample_size=3)
+
+    def fake_reverse_recall(query: str, k: int = 1):
+        reverse_queries.append((query, k))
+        return {"items": []}
+
+    monkeypatch.setattr(ingest_code, "_recall_http", fake_reverse_recall)
+    reverse_result = ingest_code.verify_embedding_recall(list(reversed(samples)), sample_size=3)
+
+    assert forward_queries == reverse_queries
+    assert forward_result["checked"] == 3
+    assert reverse_result["checked"] == 3
+    assert forward_result["failures"] == reverse_result["failures"]
+
+
+@pytest.mark.parametrize("sample_size", [0, -1])
+def test_embedding_verification_nonpositive_size_makes_no_calls(
+    sample_size: int,
+    monkeypatch,
+) -> None:
+    recall_calls = []
+
+    def fake_recall(query: str, k: int = 1):
+        recall_calls.append((query, k))
+        return {"items": []}
+
+    monkeypatch.setattr(ingest_code, "_recall_http", fake_recall)
+
+    result = ingest_code.verify_embedding_recall([_sample()], sample_size=sample_size)
+
+    assert result["checked"] == 0
+    assert result["passed"] == 0
+    assert result["failed"] == 0
+    assert recall_calls == []
+
+
 def test_correct_item_after_same_name_collision(monkeypatch) -> None:
     calls = []
 
