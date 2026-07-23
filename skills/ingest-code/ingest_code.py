@@ -1788,19 +1788,26 @@ def extract_edges(
     return edges
 
 
+def _edge_preview_key(edge: dict[str, Any]) -> tuple[str, str, str, str]:
+    return (
+        str(edge.get("from_file", "")),
+        str(edge.get("to_file", "")),
+        str(edge.get("edge_type", "")),
+        str(edge.get("module", "")),
+    )
+
+
 def store_edges(edges: list[dict], scope: str = "code", dry_run: bool = False, monitor=None) -> int:
     """Store dependency edges in /memory via batch HTTP endpoint."""
     if dry_run:
-        stored = 0
-        for edge in edges:
+        for edge in sorted(edges, key=_edge_preview_key):
             from_name = Path(edge["from_file"]).name
             to_name = Path(edge["to_file"]).name
             names = ", ".join(edge.get("names", [])[:3])
             print(f"  [EDGE] {from_name} → {to_name} (imports {names})")
-            stored += 1
             if monitor:
-                monitor.update(1, item=f"{from_name}→{to_name}")
-        return stored
+                monitor.update(1, item=f"{from_name}->{to_name} previewed")
+        return 0
 
     # Build batch payload — use empty scope so add_edge matches any scope
     # (lessons may be stored as scope="code" or scope="extractor")
@@ -2464,11 +2471,15 @@ def scan(
         edges_total = len(edges)
         print(f"  Found {edges_total} internal dependency edges", flush=True)
         if edges_total > 0:
-            edge_monitor = Monitor(None, name="ingest-code-edges", desc="Storing edges", total=edges_total) if Monitor else None
+            edge_description = "Previewing edges" if dry_run else "Storing edges"
+            edge_monitor = Monitor(None, name="ingest-code-edges", desc=edge_description, total=edges_total) if Monitor else None
             edges_stored = store_edges(edges, scope=scope, dry_run=dry_run, monitor=edge_monitor)
             if edge_monitor:
                 edge_monitor._update(final=True)
-            print(f"Edges: {edges_stored} stored of {edges_total} found", flush=True)
+            if dry_run:
+                print(f"Edges: {edges_total} previewed, 0 stored", flush=True)
+            else:
+                print(f"Edges: {edges_stored} stored of {edges_total} found", flush=True)
         if not dry_run:
             _abort_if_memory_writes_incomplete(
                 phase="edges",
