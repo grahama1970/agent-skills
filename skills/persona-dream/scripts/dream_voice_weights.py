@@ -91,8 +91,9 @@ def load_tom_candidates(node: dict) -> list[dict]:
         if manifest_entries is not None:
             if ("tom_candidates", doc["_key"]) not in manifest_entries:
                 raise SystemExit(f"BLOCKED_VOICE_WEIGHTS_TOM_NOT_MANIFEST_OWNED: {doc['_key']}")
-            if doc.get("commit_id") and doc.get("commit_id") != commit_id:
-                raise SystemExit(f"BLOCKED_VOICE_WEIGHTS_TOM_FOREIGN_COMMIT: {doc['_key']}")
+            if doc.get("commit_id") != commit_id:
+                raise SystemExit(f"BLOCKED_VOICE_WEIGHTS_TOM_COMMIT_MISMATCH: "
+                                 f"{doc['_key']} commit={doc.get('commit_id')!r}")
         out.append(doc)
     return out
 

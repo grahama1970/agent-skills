@@ -943,7 +943,7 @@ def validate_edge_closure(
             if not isinstance(endpoint, str) or endpoint.count("/") != 1                     or not all(endpoint.split("/", 1)):
                 unresolved.append(f"{doc.get('_key')}->malformed:{endpoint!r}")
                 continue
-            if endpoint in edge_keys:
+            if endpoint in edge_keys or "edge" in endpoint.split("/", 1)[0]:
                 unresolved.append(f"{doc.get('_key')}->edge-endpoint-is-edge:{endpoint}")
                 continue
             if endpoint in in_set:
