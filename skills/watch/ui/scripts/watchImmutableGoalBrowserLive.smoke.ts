@@ -169,11 +169,19 @@ async function startWatchStack(input: {
   })
   await waitForHttpOk(`${apiBaseUrl}/api/projects/watch/health`, 15_000)
 
-  const vite = startProcess('npx', ['vite', '--host', '127.0.0.1', '--port', String(uiPort), '--strictPort'], uiRoot, {
+  const hasBuiltUi = existsSync(path.join(uiRoot, 'dist/index.html'))
+  const viteArgs = hasBuiltUi
+    ? ['vite', 'preview', '--host', '127.0.0.1', '--port', String(uiPort), '--strictPort']
+    : ['vite', '--host', '127.0.0.1', '--port', String(uiPort), '--strictPort']
+  const vite = startProcess('npx', viteArgs, uiRoot, {
     ...process.env,
     VITE_WATCH_API_TARGET: apiBaseUrl,
   })
-  await waitForHttpOk(uiBaseUrl, 20_000)
+  try {
+    await waitForHttpOk(uiBaseUrl, 20_000)
+  } catch (error) {
+    throw new Error(`Watch UI server did not become ready (${viteArgs.join(' ')}): ${error}\nstdout:\n${vite.stdout}\nstderr:\n${vite.stderr}`)
+  }
   return { apiBaseUrl, uiBaseUrl, api, vite }
 }
 

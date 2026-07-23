@@ -39,9 +39,15 @@ export async function waitForHttpOk(url: string, timeoutMs: number): Promise<voi
   let lastError = ''
   while (Date.now() - started < timeoutMs) {
     try {
-      const response = await fetch(url)
-      if (response.ok) return
-      lastError = `HTTP ${response.status}`
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 2_000)
+      try {
+        const response = await fetch(url, { signal: controller.signal })
+        if (response.ok) return
+        lastError = `HTTP ${response.status}`
+      } finally {
+        clearTimeout(timeout)
+      }
     } catch (error) {
       lastError = String(error)
     }
