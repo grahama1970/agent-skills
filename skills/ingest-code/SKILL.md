@@ -296,6 +296,8 @@ backend.
 Python parameter payloads cover positional-only, positional-or-keyword,
 variadic, keyword-only, and keyword-variadic arguments in declaration order,
 while preserving the existing omission of a parameter literally named `self`.
+Python lexical fields are declaration-scoped; they include nested declaration
+headers but exclude nested function, class, and lambda bodies.
 
 ## Directory Filtering
 

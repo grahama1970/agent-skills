@@ -1129,6 +1129,93 @@ def _python_parameter_names(node: ast.FunctionDef | ast.AsyncFunctionDef) -> lis
     return [arg.arg for arg in ordered_args if arg.arg != "self"]
 
 
+class _PythonLexicalCollector(ast.NodeVisitor):
+    """Collect lexical terms for one declaration without nested body leakage."""
+
+    def __init__(self, root: ast.AST) -> None:
+        self.root = root
+        self.local_variables: set[str] = set()
+        self.called_symbols: set[str] = set()
+        self.string_literals: set[str] = set()
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        self._visit_function_header(node)
+        if node is self.root:
+            for statement in node.body:
+                self.visit(statement)
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        self._visit_function_header(node)
+        if node is self.root:
+            for statement in node.body:
+                self.visit(statement)
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        self._visit_class_header(node)
+        if node is self.root:
+            for statement in node.body:
+                self.visit(statement)
+
+    def visit_Lambda(self, node: ast.Lambda) -> None:
+        self._visit_arguments(node.args)
+        if node is self.root:
+            self.visit(node.body)
+
+    def visit_Name(self, node: ast.Name) -> None:
+        if isinstance(node.ctx, ast.Store):
+            self.local_variables.add(node.id)
+
+    def visit_Call(self, node: ast.Call) -> None:
+        call_name = _name_from_call(node.func)
+        if call_name:
+            self.called_symbols.add(call_name)
+        self.generic_visit(node)
+
+    def visit_Constant(self, node: ast.Constant) -> None:
+        if isinstance(node.value, str):
+            literal = node.value.strip()
+            if 1 < len(literal) <= 120:
+                self.string_literals.add(literal)
+
+    def _visit_function_header(
+        self,
+        node: ast.FunctionDef | ast.AsyncFunctionDef,
+    ) -> None:
+        for decorator in node.decorator_list:
+            self.visit(decorator)
+        self._visit_arguments(node.args)
+        if node.returns is not None:
+            self.visit(node.returns)
+
+    def _visit_class_header(self, node: ast.ClassDef) -> None:
+        for decorator in node.decorator_list:
+            self.visit(decorator)
+        for base in node.bases:
+            self.visit(base)
+        for keyword in node.keywords:
+            self.visit(keyword.value)
+
+    def _visit_arguments(self, arguments: ast.arguments) -> None:
+        ordered_args = [
+            *arguments.posonlyargs,
+            *arguments.args,
+            *arguments.kwonlyargs,
+        ]
+        if arguments.vararg is not None:
+            ordered_args.append(arguments.vararg)
+        if arguments.kwarg is not None:
+            ordered_args.append(arguments.kwarg)
+
+        for arg in ordered_args:
+            if arg.annotation is not None:
+                self.visit(arg.annotation)
+        for default in arguments.defaults:
+            self.visit(default)
+        for default in arguments.kw_defaults:
+            if default is not None:
+                self.visit(default)
+
+
 def _extract_python_symbol_details(
     filepath: Path,
     kind: str,
@@ -1166,29 +1253,17 @@ def _extract_python_symbol_details(
     if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
         parameters = _python_parameter_names(node)
 
-    local_variables: set[str] = set()
-    called_symbols: set[str] = set()
-    string_literals: set[str] = set()
-    for child in ast.walk(node):
-        if isinstance(child, ast.Name) and isinstance(child.ctx, ast.Store):
-            local_variables.add(child.id)
-        elif isinstance(child, ast.Call):
-            call_name = _name_from_call(child.func)
-            if call_name:
-                called_symbols.add(call_name)
-        elif isinstance(child, ast.Constant) and isinstance(child.value, str):
-            literal = child.value.strip()
-            if 1 < len(literal) <= 120:
-                string_literals.add(literal)
+    lexical_collector = _PythonLexicalCollector(node)
+    lexical_collector.visit(node)
 
     parent_symbol = _find_python_parent_symbol(tree, getattr(node, "lineno", start_line), node)
     return {
         "end_line": getattr(node, "end_lineno", start_line),
         "docstring": ast.get_docstring(node) or "",
         "parameters": parameters,
-        "local_variables": sorted(local_variables),
-        "called_symbols": sorted(called_symbols),
-        "string_literals": sorted(string_literals),
+        "local_variables": sorted(lexical_collector.local_variables),
+        "called_symbols": sorted(lexical_collector.called_symbols),
+        "string_literals": sorted(lexical_collector.string_literals),
         "parent_symbol": parent_symbol,
     }
 
