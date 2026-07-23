@@ -1079,9 +1079,36 @@ def _write_ingest_marker(
         "completed_scan_roots": [str(root) for root in completed_scan_roots],
     }
     tmp_path = marker_path.with_suffix(marker_path.suffix + ".tmp")
-    tmp_path.write_text(json.dumps(marker, indent=2))
-    tmp_path.replace(marker_path)
+    try:
+        tmp_path.write_text(json.dumps(marker, indent=2))
+        tmp_path.replace(marker_path)
+    except Exception:
+        try:
+            tmp_path.unlink(missing_ok=True)
+        except OSError:
+            pass
+        raise
     return marker_path
+
+
+def _write_required_ingest_marker(
+    path: Path,
+    **marker_fields: Any,
+) -> Path:
+    """Write the required local completion marker or terminate the command."""
+    try:
+        return _write_ingest_marker(path, **marker_fields)
+    except Exception as exc:
+        print(
+            json.dumps({
+                "error": "Could not write ingest marker",
+                "codebase": str(path),
+                "marker": str(_marker_path(path)),
+                "detail": str(exc),
+            }),
+            file=sys.stderr,
+        )
+        raise SystemExit(1) from exc
 
 
 def build_marker_status(path: Path) -> dict[str, Any]:
@@ -1899,22 +1926,19 @@ def scan(
 
     # --- Write marker file + store ingestion record in /memory ---
     if not dry_run:
-        try:
-            marker_path = _write_ingest_marker(
-                path,
-                files_scanned=len(files),
-                knowledge_stored=knowledge_stored,
-                cwe_stored=cwe_stored,
-                edges_stored=edges_stored,
-                code_symbols_stored=code_symbols_stored,
-                treesitter=treesitter,
-                scope=scope,
-                scan_roots=code_symbol_scan_roots,
-                completed_scan_roots=completed_code_symbol_scan_roots,
-            )
-            print(f"\nMarker written: {marker_path}")
-        except Exception as e:
-            print(f"Warning: Could not write marker file: {e}", file=sys.stderr)
+        marker_path = _write_required_ingest_marker(
+            path,
+            files_scanned=len(files),
+            knowledge_stored=knowledge_stored,
+            cwe_stored=cwe_stored,
+            edges_stored=edges_stored,
+            code_symbols_stored=code_symbols_stored,
+            treesitter=treesitter,
+            scope=scope,
+            scan_roots=code_symbol_scan_roots,
+            completed_scan_roots=completed_code_symbol_scan_roots,
+        )
+        print(f"\nMarker written: {marker_path}")
 
         # Store ingestion record in /memory for discoverability
         ingested_at = datetime.now().isoformat()
@@ -2079,22 +2103,19 @@ def rescan(
             raise SystemExit(1)
 
     for marker in pending_markers:
-        try:
-            marker_path = _write_ingest_marker(
-                marker["path"],
-                files_scanned=marker["files_scanned"],
-                knowledge_stored=marker["knowledge_stored"],
-                cwe_stored=marker["cwe_stored"],
-                edges_stored=0,
-                code_symbols_stored=marker["code_symbols_stored"],
-                treesitter=treesitter,
-                scope=scope,
-                scan_roots=marker["scan_roots"],
-                completed_scan_roots=marker["completed_scan_roots"],
-            )
-            print(f"Marker written: {marker_path}", flush=True)
-        except Exception as e:
-            print(f"Warning: Could not write marker file: {e}", file=sys.stderr)
+        marker_path = _write_required_ingest_marker(
+            marker["path"],
+            files_scanned=marker["files_scanned"],
+            knowledge_stored=marker["knowledge_stored"],
+            cwe_stored=marker["cwe_stored"],
+            edges_stored=0,
+            code_symbols_stored=marker["code_symbols_stored"],
+            treesitter=treesitter,
+            scope=scope,
+            scan_roots=marker["scan_roots"],
+            completed_scan_roots=marker["completed_scan_roots"],
+        )
+        print(f"Marker written: {marker_path}", flush=True)
 
     print(json.dumps({
         "codebases_scanned": len(resolved_codebases),
