@@ -120,6 +120,34 @@ class ScanGlobError(ValueError):
         )
 
 
+class MemoryScopeError(ValueError):
+    """The ingest-code memory scope is invalid."""
+
+
+def _validate_memory_scope(scope: object) -> str:
+    """Return a normalized nonblank memory scope."""
+    if not isinstance(scope, str):
+        raise MemoryScopeError("--scope must be a nonblank string")
+
+    normalized = scope.strip()
+    if not normalized:
+        raise MemoryScopeError("--scope must be a nonblank string")
+
+    return normalized
+
+
+def _exit_invalid_memory_scope(scope: object, exc: MemoryScopeError) -> NoReturn:
+    print(
+        json.dumps({
+            "error": "Invalid memory scope",
+            "scope": scope,
+            "detail": str(exc),
+        }),
+        file=sys.stderr,
+    )
+    raise SystemExit(2) from exc
+
+
 class SourceReadError(RuntimeError):
     """A discovered source file could not be read."""
 
@@ -1209,6 +1237,7 @@ def _write_ingest_marker(
     completed_scan_roots: Sequence[str | Path] = (),
 ) -> Path:
     """Write the local ingest-code marker and return its path."""
+    scope = _validate_memory_scope(scope)
     allowed_statuses = {"running", "complete", "failed"}
     if run_status not in allowed_statuses:
         raise ValueError(f"unsupported run_status: {run_status}")
@@ -2560,6 +2589,11 @@ def scan(
         raise SystemExit(2) from exc
 
     try:
+        scope = _validate_memory_scope(scope)
+    except MemoryScopeError as exc:
+        _exit_invalid_memory_scope(scope, exc)
+
+    try:
         path = _resolve_codebase_directory(path)
     except ValueError as exc:
         print(json.dumps({"error": str(exc)}), file=sys.stderr)
@@ -2854,6 +2888,11 @@ def rescan(
         mtime_threshold = _parse_since_threshold(since)
     except RescanSinceError as exc:
         _exit_invalid_since(since, exc)
+
+    try:
+        scope = _validate_memory_scope(scope)
+    except MemoryScopeError as exc:
+        _exit_invalid_memory_scope(scope, exc)
 
     codebases = list(codebase) if codebase else []
     if not codebases:

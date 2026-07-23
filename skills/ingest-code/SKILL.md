@@ -85,6 +85,9 @@ Options:
 Invalid `scan --batch-size` values exit with status 2 before scanning. The
 value must be a positive integer.
 
+`--scope` must be a nonblank string. Leading and trailing whitespace is removed.
+Invalid values exit with status 2 before repository discovery or memory writes.
+
 Explicit `scan --glob` values must be positive repository-relative glob
 patterns. Basename-only patterns such as `*.py` are recursive. Blank, absolute,
 parent-traversing, or otherwise unsafe values exit with status 2 before
