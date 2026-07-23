@@ -12,6 +12,22 @@ from pathlib import Path
 WHISPER_API_URL: str = os.getenv("WHISPER_API_URL", "http://127.0.0.1:9000/v1/audio/transcriptions")
 WHISPER_API_KEY: str = os.getenv("WHISPER_API_KEY", "")
 
+# Diarization
+WATCH_DIARIZATION_URL: str = os.getenv(
+    "WATCH_DIARIZATION_URL",
+    "http://127.0.0.1:9001/v1/audio/diarizations",
+)
+WATCH_DIARIZATION_HEALTH_URL: str = os.getenv(
+    "WATCH_DIARIZATION_HEALTH_URL",
+    "http://127.0.0.1:9001/healthz",
+)
+WATCH_DIARIZATION_TIMEOUT_SECONDS: float = float(os.getenv("WATCH_DIARIZATION_TIMEOUT_SECONDS", "900"))
+WATCH_DIARIZATION_MODEL: str = os.getenv(
+    "WATCH_DIARIZATION_MODEL",
+    "pyannote/speaker-diarization-community-1",
+)
+WATCH_DIARIZATION_MAX_SECONDS: float = float(os.getenv("WATCH_DIARIZATION_MAX_SECONDS", "10800"))
+
 # Memory daemon
 MEMORY_DAEMON_URL: str = os.getenv("MEMORY_DAEMON_URL", "http://127.0.0.1:8601")
 
