@@ -1,0 +1,26 @@
+{
+  "schema": "persona_dream.tom_annotation_blinding_key.v1",
+  "do_not_open_until": "all three annotator responses captured",
+  "key": {
+    "cycle_20260722T184531Z": {
+      "A": "D",
+      "B": "M"
+    },
+    "cycle_20260722T201426Z": {
+      "A": "D",
+      "B": "M"
+    },
+    "cycle_20260722T203423Z": {
+      "A": "D",
+      "B": "M"
+    },
+    "cycle_20260722T222024Z": {
+      "A": "D",
+      "B": "M"
+    },
+    "cycle_20260723T102522Z": {
+      "A": "M",
+      "B": "D"
+    }
+  }
+}

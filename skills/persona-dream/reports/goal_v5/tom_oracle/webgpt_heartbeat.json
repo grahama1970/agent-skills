@@ -1,0 +1,13 @@
+{
+  "schema": "surf.webgpt_heartbeat.v1",
+  "updated_at": "2026-07-23T17:53:11Z",
+  "submitted_at": "2026-07-23T17:50:05Z",
+  "last_browser_observation_at": "2026-07-23T17:53:11Z",
+  "phase": "completed",
+  "page_state": "response_detected",
+  "last_artifact_written": "skills/persona-dream/reports/goal_v5/tom_oracle/annotator_webgpt.raw.md",
+  "next_expected_artifact": "skills/persona-dream/reports/goal_v5/tom_oracle/annotator_webgpt.meta.json",
+  "timeout_remaining_seconds": 0,
+  "sentinel": "<<<WEBGPT_DONE:20260723T175003Z:6b26dc6d>>>",
+  "prepared_prompt_is_transport_proof": false
+}

@@ -1,0 +1,105 @@
+{
+  "schema": "persona_dream.semantic_equivalence_probe_receipt.v1",
+  "approved_text": "I think we should take the backup to Marketa on Friday, and it needs 3 copies.",
+  "passed": true,
+  "cases": {
+    "identical": {
+      "expected_equivalent": true,
+      "got_equivalent": true,
+      "violations": [],
+      "pass": true
+    },
+    "delivery_preamble": {
+      "expected_equivalent": true,
+      "got_equivalent": true,
+      "violations": [],
+      "pass": true
+    },
+    "pause_punctuation_split": {
+      "expected_equivalent": true,
+      "got_equivalent": true,
+      "violations": [],
+      "pass": true
+    },
+    "connective_insert": {
+      "expected_equivalent": true,
+      "got_equivalent": true,
+      "violations": [],
+      "pass": true
+    },
+    "hedge_removed_commitment_raised": {
+      "expected_equivalent": false,
+      "got_equivalent": false,
+      "violations": [
+        "commitment_changed",
+        "content_dropped_or_reordered:i,think,we,should,take"
+      ],
+      "pass": true
+    },
+    "intensifier_added": {
+      "expected_equivalent": false,
+      "got_equivalent": false,
+      "violations": [
+        "commitment_changed",
+        "illegal_insertions:definitely"
+      ],
+      "pass": true
+    },
+    "negation_flip": {
+      "expected_equivalent": false,
+      "got_equivalent": false,
+      "violations": [
+        "negation_changed",
+        "illegal_insertions:not"
+      ],
+      "pass": true
+    },
+    "number_changed": {
+      "expected_equivalent": false,
+      "got_equivalent": false,
+      "violations": [
+        "numbers_changed",
+        "content_dropped_or_reordered:3,copies",
+        "illegal_insertions:5"
+      ],
+      "pass": true
+    },
+    "entity_swap": {
+      "expected_equivalent": false,
+      "got_equivalent": false,
+      "violations": [
+        "content_dropped_or_reordered:marketa,on,friday,and,it",
+        "illegal_insertions:tommy"
+      ],
+      "pass": true
+    },
+    "clause_dropped": {
+      "expected_equivalent": false,
+      "got_equivalent": false,
+      "violations": [
+        "numbers_changed",
+        "content_dropped_or_reordered:and,it,needs,3,copies"
+      ],
+      "pass": true
+    },
+    "modality_strengthened": {
+      "expected_equivalent": false,
+      "got_equivalent": false,
+      "violations": [
+        "modality_changed",
+        "content_dropped_or_reordered:should,take,the,backup,to",
+        "illegal_insertions:must"
+      ],
+      "pass": true
+    },
+    "paraphrase_content_words": {
+      "expected_equivalent": false,
+      "got_equivalent": false,
+      "violations": [
+        "content_dropped_or_reordered:take,the,backup,to,marketa",
+        "illegal_insertions:archive,bring"
+      ],
+      "pass": true
+    }
+  }
+}

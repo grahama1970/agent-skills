@@ -1,0 +1,240 @@
+{
+  "schema": "persona_dream.tom_oracle_receipt.v1",
+  "annotators": [
+    "webgpt",
+    "webkimi",
+    "webclaude"
+  ],
+  "n_packets": 5,
+  "profiles_judged": [
+    {
+      "packet": "cycle_20260722T184531Z",
+      "label": "A",
+      "kind": "D",
+      "valence_votes": [
+        "supported",
+        "unsupported",
+        "supported"
+      ],
+      "tag_votes": [
+        "yes",
+        "no",
+        "yes"
+      ],
+      "counterpart_votes": [
+        "no",
+        "no",
+        "no"
+      ],
+      "supported_2of3": true
+    },
+    {
+      "packet": "cycle_20260722T184531Z",
+      "label": "B",
+      "kind": "M",
+      "valence_votes": [
+        "supported",
+        "mixed",
+        "supported"
+      ],
+      "tag_votes": [
+        "yes",
+        "yes",
+        "yes"
+      ],
+      "counterpart_votes": [
+        "not-inferable",
+        "yes",
+        "not-inferable"
+      ],
+      "supported_2of3": true
+    },
+    {
+      "packet": "cycle_20260722T201426Z",
+      "label": "A",
+      "kind": "D",
+      "valence_votes": [
+        "supported",
+        "supported",
+        "supported"
+      ],
+      "tag_votes": [
+        "yes",
+        "yes",
+        "yes"
+      ],
+      "counterpart_votes": [
+        "yes",
+        "yes",
+        "yes"
+      ],
+      "supported_2of3": true
+    },
+    {
+      "packet": "cycle_20260722T201426Z",
+      "label": "B",
+      "kind": "M",
+      "valence_votes": [
+        "mixed",
+        "mixed",
+        "mixed"
+      ],
+      "tag_votes": [
+        "no",
+        "no",
+        "no"
+      ],
+      "counterpart_votes": [
+        "not-inferable",
+        "yes",
+        "not-inferable"
+      ],
+      "supported_2of3": false
+    },
+    {
+      "packet": "cycle_20260722T203423Z",
+      "label": "A",
+      "kind": "D",
+      "valence_votes": [
+        "supported",
+        "supported",
+        "supported"
+      ],
+      "tag_votes": [
+        "yes",
+        "yes",
+        "yes"
+      ],
+      "counterpart_votes": [
+        "yes",
+        "yes",
+        "yes"
+      ],
+      "supported_2of3": true
+    },
+    {
+      "packet": "cycle_20260722T203423Z",
+      "label": "B",
+      "kind": "M",
+      "valence_votes": [
+        "supported",
+        "supported",
+        "supported"
+      ],
+      "tag_votes": [
+        "no",
+        "yes",
+        "yes"
+      ],
+      "counterpart_votes": [
+        "not-inferable",
+        "yes",
+        "not-inferable"
+      ],
+      "supported_2of3": true
+    },
+    {
+      "packet": "cycle_20260722T222024Z",
+      "label": "A",
+      "kind": "D",
+      "valence_votes": [
+        "supported",
+        "supported",
+        "supported"
+      ],
+      "tag_votes": [
+        "yes",
+        "yes",
+        "yes"
+      ],
+      "counterpart_votes": [
+        "yes",
+        "yes",
+        "yes"
+      ],
+      "supported_2of3": true
+    },
+    {
+      "packet": "cycle_20260722T222024Z",
+      "label": "B",
+      "kind": "M",
+      "valence_votes": [
+        "supported",
+        "mixed",
+        "supported"
+      ],
+      "tag_votes": [
+        "yes",
+        "no",
+        "yes"
+      ],
+      "counterpart_votes": [
+        "not-inferable",
+        "yes",
+        "not-inferable"
+      ],
+      "supported_2of3": true
+    },
+    {
+      "packet": "cycle_20260723T102522Z",
+      "label": "A",
+      "kind": "M",
+      "valence_votes": [
+        "mixed",
+        "mixed",
+        "supported"
+      ],
+      "tag_votes": [
+        "no",
+        "no",
+        "yes"
+      ],
+      "counterpart_votes": [
+        "not-inferable",
+        "yes",
+        "not-inferable"
+      ],
+      "supported_2of3": false
+    },
+    {
+      "packet": "cycle_20260723T102522Z",
+      "label": "B",
+      "kind": "D",
+      "valence_votes": [
+        "supported",
+        "supported",
+        "supported"
+      ],
+      "tag_votes": [
+        "yes",
+        "yes",
+        "yes"
+      ],
+      "counterpart_votes": [
+        "yes",
+        "yes",
+        "yes"
+      ],
+      "supported_2of3": true
+    }
+  ],
+  "summary": {
+    "D_supported": "5/5",
+    "M_supported": "3/5",
+    "wrong_counterpart_2of3": {
+      "D": 1,
+      "M": 0
+    }
+  },
+  "gate_spec": "charter: >=15/20 D profiles 2-of-3 supported; PILOT n=5 packets (shortfall recorded: ~15 more cycles needed for the full gate)",
+  "limitations": [
+    "M-arm v0 lexicon mapper NOT compute-matched to the dream pipeline",
+    "LLM annotators (roundtable seats) with prior project exposure; human annotators required for the confirmatory gate",
+    "webclaude response contained a mangled first JSON; last well-formed object used"
+  ],
+  "verdict": {
+    "pilot_status": "PASS_PILOT_ORACLE_POST_FIX_CYCLES",
+    "detail": "D profiles: 5/5 supported 2-of-3 on valence+dominant tag. One D profile (cycle_20260722T184531Z) unanimously flagged counterpart-inconsistent: its ToM summaries reference Kai while its memories are Brandon/James \u2014 this is the KNOWN pre-counterpart-gate artifact from tau review r1, produced before the fix. The blinded oracle independently re-detected it, validating oracle sensitivity. Post-fix cycles: D 4/4 supported, 0 wrong-counterpart. M (dream-free lexicon v0): 3/5 supported, weaker than D on these packets (advisory only \u2014 not compute-matched).",
+    "action": "exclude cycle_20260722T184531Z from all GOAL_V5 arms; confirmatory gate needs ~15 more post-fix cycles + human annotators + compute-matched M-arm"
+  }
+}

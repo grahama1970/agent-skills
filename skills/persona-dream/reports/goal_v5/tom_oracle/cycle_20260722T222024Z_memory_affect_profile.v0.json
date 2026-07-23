@@ -1,0 +1,81 @@
+{
+  "schema": "persona_dream.memory_affect_profile.v0",
+  "derivation": "deterministic_lexicon_dream_free",
+  "compute_matched": false,
+  "weights": [
+    {
+      "emotional_tag": "yearning",
+      "weight": 0.333,
+      "evidence": [
+        {
+          "source_id": "embry_age15_19_b02_memory_032",
+          "keyword": "call"
+        },
+        {
+          "source_id": "embry_age15_19_b02_memory_023",
+          "keyword": "longing"
+        },
+        {
+          "source_id": "embry_age15_19_b02_memory_023",
+          "keyword": "call"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "warmth",
+      "weight": 0.25,
+      "evidence": [
+        {
+          "source_id": "embry_age15_19_b02_memory_032",
+          "keyword": "family"
+        },
+        {
+          "source_id": "embry_age15_19_b02_memory_023",
+          "keyword": "together"
+        },
+        {
+          "source_id": "embry_age15_19_b02_memory_023",
+          "keyword": "comfort"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "hesitance",
+      "weight": 0.167,
+      "evidence": [
+        {
+          "source_id": "embry_age15_19_b02_memory_032",
+          "keyword": "uncertain"
+        },
+        {
+          "source_id": "embry_age15_19_b03_memory_041",
+          "keyword": "uncertain"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "reflection",
+      "weight": 0.167,
+      "evidence": [
+        {
+          "source_id": "embry_age15_19_b02_memory_023",
+          "keyword": "choice"
+        },
+        {
+          "source_id": "embry_age15_19_b03_memory_041",
+          "keyword": "realizes"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "boundary",
+      "weight": 0.083,
+      "evidence": [
+        {
+          "source_id": "embry_age15_19_b02_memory_032",
+          "keyword": "firm"
+        }
+      ]
+    }
+  ]
+}

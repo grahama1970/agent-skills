@@ -1,0 +1,69 @@
+{
+  "schema": "persona_dream.memory_affect_profile.v0",
+  "derivation": "deterministic_lexicon_dream_free",
+  "compute_matched": false,
+  "weights": [
+    {
+      "emotional_tag": "boundary",
+      "weight": 0.444,
+      "evidence": [
+        {
+          "source_id": "embry_age23_current_b01_memory_035",
+          "keyword": "boundary"
+        },
+        {
+          "source_id": "embry_age23_current_b01_memory_038",
+          "keyword": "boundary"
+        },
+        {
+          "source_id": "embry_age23_current_b01_memory_022",
+          "keyword": "boundary"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "reflection",
+      "weight": 0.222,
+      "evidence": [
+        {
+          "source_id": "embry_age23_current_b01_memory_038",
+          "keyword": "decision"
+        },
+        {
+          "source_id": "embry_age23_current_b01_memory_022",
+          "keyword": "decision"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "warmth",
+      "weight": 0.111,
+      "evidence": [
+        {
+          "source_id": "embry_age23_current_b01_memory_038",
+          "keyword": "comfort"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "hesitance",
+      "weight": 0.111,
+      "evidence": [
+        {
+          "source_id": "embry_age23_current_b01_memory_038",
+          "keyword": "uncertain"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "yearning",
+      "weight": 0.111,
+      "evidence": [
+        {
+          "source_id": "embry_age23_current_b01_memory_035",
+          "keyword": "longing"
+        }
+      ]
+    }
+  ]
+}

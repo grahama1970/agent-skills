@@ -1,0 +1,85 @@
+{
+  "schema": "persona_dream.memory_affect_profile.v0",
+  "derivation": "deterministic_lexicon_dream_free",
+  "compute_matched": false,
+  "weights": [
+    {
+      "emotional_tag": "yearning",
+      "weight": 0.357,
+      "evidence": [
+        {
+          "source_id": "embry_age19_23_b01_memory_048",
+          "keyword": "longing"
+        },
+        {
+          "source_id": "embry_age19_23_b01_memory_048",
+          "keyword": "call"
+        },
+        {
+          "source_id": "embry_age19_23_b01_memory_015",
+          "keyword": "call"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "boundary",
+      "weight": 0.214,
+      "evidence": [
+        {
+          "source_id": "embry_age19_23_b01_memory_048",
+          "keyword": "boundary"
+        },
+        {
+          "source_id": "embry_age19_23_b01_memory_015",
+          "keyword": "declin"
+        },
+        {
+          "source_id": "embry_age19_23_b01_memory_014",
+          "keyword": "boundary"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "warmth",
+      "weight": 0.214,
+      "evidence": [
+        {
+          "source_id": "embry_age19_23_b01_memory_048",
+          "keyword": "family"
+        },
+        {
+          "source_id": "embry_age19_23_b01_memory_048",
+          "keyword": "close"
+        },
+        {
+          "source_id": "embry_age19_23_b01_memory_014",
+          "keyword": "close"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "hesitance",
+      "weight": 0.143,
+      "evidence": [
+        {
+          "source_id": "embry_age19_23_b01_memory_048",
+          "keyword": "uncertain"
+        },
+        {
+          "source_id": "embry_age19_23_b01_memory_015",
+          "keyword": "uncertain"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "reflection",
+      "weight": 0.071,
+      "evidence": [
+        {
+          "source_id": "embry_age19_23_b01_memory_014",
+          "keyword": "choice"
+        }
+      ]
+    }
+  ]
+}

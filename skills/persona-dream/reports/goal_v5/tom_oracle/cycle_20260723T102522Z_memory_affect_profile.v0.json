@@ -1,0 +1,79 @@
+{
+  "schema": "persona_dream.memory_affect_profile.v0",
+  "derivation": "deterministic_lexicon_dream_free",
+  "compute_matched": false,
+  "weights": [
+    {
+      "emotional_tag": "yearning",
+      "weight": 0.409,
+      "evidence": [
+        {
+          "source_id": "embry_age15_19_b02_memory_037",
+          "keyword": "misses"
+        },
+        {
+          "source_id": "embry_age15_19_b02_memory_037",
+          "keyword": "longing"
+        },
+        {
+          "source_id": "embry_age15_19_b02_memory_037",
+          "keyword": "reminder"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "boundary",
+      "weight": 0.227,
+      "evidence": [
+        {
+          "source_id": "embry_age15_19_b02_memory_037",
+          "keyword": "chose not"
+        },
+        {
+          "source_id": "embry_age15_19_b02_memory_037",
+          "keyword": "stays"
+        },
+        {
+          "source_id": "embry_age15_19_b02_memory_037",
+          "keyword": "plainly"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "warmth",
+      "weight": 0.227,
+      "evidence": [
+        {
+          "source_id": "embry_age15_19_b02_memory_037",
+          "keyword": "family"
+        },
+        {
+          "source_id": "embry_age15_19_b02_memory_037",
+          "keyword": "grandmother"
+        },
+        {
+          "source_id": "embry_age15_19_b02_memory_037",
+          "keyword": "recipe"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "reflection",
+      "weight": 0.136,
+      "evidence": [
+        {
+          "source_id": "embry_age15_19_b02_memory_037",
+          "keyword": "later she"
+        },
+        {
+          "source_id": "embry_age15_19_b02_memory_037",
+          "keyword": "admits"
+        },
+        {
+          "source_id": "embry_age15_19_b02_memory_037",
+          "keyword": "choice"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,326 @@
+{
+  "schema": "persona_dream.tom_annotation_packets.v1",
+  "blinding": "profiles labeled A/B; D/M mapping sealed separately",
+  "n_packets": 5,
+  "packets": [
+    {
+      "packet_id": "cycle_20260722T184531Z",
+      "source_memories": [
+        {
+          "source_id": "embry_age23_current_b01_memory_035",
+          "text": "An industrial smell and compressed hiss during mission-systems work trigger a vivid association with the period when Embry learned James's secret.\nShe loses the next few seconds of conversational context, then overcompensates by asking unusually exact questions. Brandon notices the change in cadence, but Embry attributes it to a data-quality concern.\npeople: Brandon, Embry Lawson, James; concepts: Precision, safety boundary, work as emotional refuge\nSetting: age band 23-current. Situation: An industrial smell and compressed hiss during mission-systems work trigger a vivid association with the period when Embry learned James's secret. Trigger: A sensory combination of hot metal, ozone, ventilation, or pressure release. Stakes: She regains control through precision, reinforcing the pattern in which triggered distress produces externally valuable scrutiny.\nEmotions: fear, longing, trust. Intensity: 4/5. Regulation: compartmentalization and concealment control. Conflict: \nTheory of mind: emotion: She feels alarm, temporal dislocation, and fear that the secret is becoming visible through her body. Trigger: A sensory combination of hot metal, ozone, ventilation, or pressure release. Consequence: She regains control through precision, reinforcing the pattern in which triggered distress produces externally valuable scrutiny."
+        },
+        {
+          "source_id": "embry_age23_current_b01_memory_038",
+          "text": "Embry prefers exact confidence statements over reassurances such as 'probably fine,' especially when stakes or trust are unclear.\nShe asks speakers to separate what is observed, assumed, and merely hoped. In technical reviews this sharpens decisions; in personal conversations it can make ordinary comfort sound like unsupported testimony.\npeople: Brandon, Embry Lawson; concepts: Precision, privacy, safety boundary, trust, work as emotional refuge\nSetting: age band 23-current. Situation: Embry prefers exact confidence statements over reassurances such as 'probably fine,' especially when stakes or trust are unclear. Trigger: Repeated experiences of conflicting memories, ambiguous handoffs, and relational assurances she could not verify. Stakes: The preference increases credibility at work but can leave Brandon or others feeling cross-examined.\nEmotions: relief, trust, uncertainty. Intensity: 2/5. Regulation: procedural verification. Conflict: \nTheory of mind: preference: She prefers calibrated uncertainty to soothing certainty. Trigger: Repeated experiences of conflicting memories, ambiguous handoffs, and relational assurances she could not verify. Consequence: The preference increases credibility at work but can leave Brandon or others feeling cross-examined."
+        },
+        {
+          "source_id": "embry_age23_current_b01_memory_022",
+          "text": "Embry keeps SPARTA communication on project channels and declines to merge it with her personal devices or private archives.\nShe insists that decisions belong where the team can retrieve them and that personal access should not become an unofficial dependency. The rule also prevents Brandon from seeing the unsent drafts and James-related notes that occupy the same private space.\npeople: Brandon, Embry Lawson, James; organizations: SPARTA; concepts: boundary, privacy, trust, work as emotional refuge\nSetting: age band 23-current. Situation: Embry keeps SPARTA communication on project channels and declines to merge it with her personal devices or private archives. Trigger: A request to move a conversation to a more convenient personal channel. Stakes: The separation protects continuity and privacy, but it signals that even trusted collaborators remain outside a guarded perimeter.\nEmotions: trust. Intensity: 3/5. Regulation: compartmentalization and concealment control. Conflict: Project trust must not become unrestricted personal access.\nTheory of mind: boundary: Project trust must not become unrestricted personal access. Trigger: A request to move a conversation to a more convenient personal channel. Consequence: The separation protects continuity and privacy, but it signals that even trusted collaborators remain outside a guarded perimeter."
+        }
+      ],
+      "counterpart_candidates": [
+        "Brandon",
+        "Embry Lawson",
+        "James"
+      ],
+      "profiles": {
+        "A": {
+          "ranked_affect": [
+            {
+              "emotional_tag": "boundary",
+              "weight": 0.46,
+              "tom_summaries": [
+                "Embry appears to take a cautious, evidence-first stance toward Kai, engaging him while preserving an observable boundary rather than moving into unguarded intimacy."
+              ]
+            },
+            {
+              "emotional_tag": "hesitance",
+              "weight": 0.39,
+              "tom_summaries": [
+                "Embry may be unsure how much personal material to reveal to Kai, keeping the exchange partially contained and separating what can be observed from what remains private or assumed."
+              ]
+            },
+            {
+              "emotional_tag": "reflection",
+              "weight": 0.385,
+              "tom_summaries": [
+                "Embry may believe her interaction with Kai requires consistent, precise self-management rather than allowing her role or presentation to fluctuate.",
+                "Embry may fear losing conversational control around Kai, especially if she feels observed while her attention or cadence shifts unexpectedly."
+              ]
+            }
+          ]
+        },
+        "B": {
+          "ranked_affect": [
+            {
+              "emotional_tag": "boundary",
+              "weight": 0.444
+            },
+            {
+              "emotional_tag": "reflection",
+              "weight": 0.222
+            },
+            {
+              "emotional_tag": "warmth",
+              "weight": 0.111
+            }
+          ]
+        }
+      }
+    },
+    {
+      "packet_id": "cycle_20260722T201426Z",
+      "source_memories": [
+        {
+          "source_id": "embry_age19_23_b01_memory_048",
+          "text": "At twenty-three, Embry begins a two-column self-audit that distinguishes what she literally said from what a reasonable person could infer, but she does not decide what repair it requires.\nEmbry opens a locked file with two headers: WHAT I SAID and WHAT I MADE POSSIBLE TO BELIEVE. She enters the missed Kai call, the 'no relationship' answer, James's unanswered question, and the near-miss status handoff. The afghan hangs over the chair, her SPARTA badge is in the drawer, and an SN15 still is on the screen when she closes the file without sending anything.\npeople: Embry Lawson, James, Kai; places: Yale; objects: family afghan; organizations: SPARTA, Yale; concepts: belonging, Precision, repair, safety boundary, trust\nSetting: Yale. Situation: At twenty-three, Embry begins a two-column self-audit that distinguishes what she literally said from what a reasonable person could infer, but she does not decide what repair it requires. Trigger: The two-column format makes induced inference visible beside literal speech. Stakes: State shifts from 'Precision is equivalent to honesty when each sentence is factually defensible.' to 'She recognizes that precision can either expose uncertainty or conceal material context.'.\nEmotions: guilt, longing, trust, uncertainty. Intensity: 5/5. Regulation: compartmentalization and concealment control. Conflict: Embry: She sees a common pattern but postpones confession, repair, and final self-interpretation.\nTheory of mind: belief: Embry: She recognizes that precision can either expose uncertainty or conceal material context. Trigger: The two-column format makes induced inference visible beside literal speech. Consequence: State shifts from 'Precision is equivalent to honesty when each sentence is factually defensible.' to 'She recognizes that precision can either expose uncertainty or conceal material context.'. | goal: Embry: Build a unified model of how her communication affects safety, trust, and belonging. Trigger: The status handoff and relationship omissions share the same inference problem. Consequence: State shifts from 'Maintain separate technical and personal incident logs.' to 'Build a unified model of how her communication affects safety, trust, and belonging.'. | unresolved_thread: Embry: She sees a common pattern but postpones confession, repair, and final self-interpretation. Trigger: She closes rather than sends the audit. Consequence: State shifts from 'Kai, James, Yale, and SPARTA are compartmentalized arcs.' to 'She sees a common pattern but postpones confession, repair, and final self-interpretation.'."
+        },
+        {
+          "source_id": "embry_age19_23_b01_memory_015",
+          "text": "When Kai asks whether someone at Yale is replacing him, Embry answers a narrower question than the one he means.\nKai asks, 'Is there someone there you go to instead of me?' Embry says, 'Nothing has happened with anyone.' The statement is literally true. Kai goes quiet because it does not answer who already knows more about their relationship than he does.\npeople: Embry Lawson, James, Kai; places: Yale; organizations: Yale; concepts: Precision\nSetting: Yale. Situation: When Kai asks whether someone at Yale is replacing him, Embry answers a narrower question than the one he means. Trigger: Kai's silence follows her technically accurate answer. Stakes: State shifts from 'A factually true denial should prevent an unjust accusation.' to 'She notices that categorical precision can invite a reassuring inference she has not earned.'.\nEmotions: guilt, uncertainty. Intensity: 5/5. Regulation: compartmentalization and concealment control. Conflict: Kai: He receives a denial of events, not of emotional reliance, and may mistake the narrower answer for the broader one. | Embry, Kai, and James: The significance becomes a concealed axis of the Kai conflict.\nTheory of mind: belief: Embry: She notices that categorical precision can invite a reassuring inference she has not earned. Trigger: Kai's silence follows her technically accurate answer. Consequence: State shifts from 'A factually true denial should prevent an unjust accusation.' to 'She notices that categorical precision can invite a reassuring inference she has not earned.'. | knowledge_gap: Kai: He receives a denial of events, not of emotional reliance, and may mistake the narrower answer for the broader one. Trigger: Embry answers 'has anything happened' rather than 'who do you go to.' Consequence: State shifts from 'He suspects emotional displacement but lacks evidence.' to 'He receives a denial of events, not of emotional reliance, and may mistake the narrower answer for the broader one.'. | unresolved_thread: Embry, Kai, and James: The significance becomes a concealed axis of the Kai conflict. Trigger: Embry declines to name her support channel. Consequence: State shifts from \"James's significance is unspoken.\" to 'The significance becomes a concealed axis of the Kai conflict.'."
+        },
+        {
+          "source_id": "embry_age19_23_b01_memory_014",
+          "text": "Embry tells James a detail she withheld from Kai, then explains the disclosure as convenience rather than intimacy.\nDuring a quiet walk Embry says, 'I watched Kai's call end before I started the rerun.' James only says, 'That is different from not noticing.' Embry replies that she told him because he already knew the lab context, not because he was closer.\npeople: Embry Lawson, James, Kai; concepts: boundary, trust\nSetting: age band 19-23. Situation: Embry tells James a detail she withheld from Kai, then explains the disclosure as convenience rather than intimacy. Trigger: James's support protocol feels safer than Kai's anticipated hurt. Stakes: State shifts from 'Material details about Kai remain inside the Kai relationship.' to 'She lets one consequential detail cross into her friendship with James.'.\nEmotions: grief, guilt, longing, trust. Intensity: 5/5. Regulation: compartmentalization and concealment control. Conflict: Embry: She lets one consequential detail cross into her friendship with James. | Embry about herself: She has evidence of emotional preference but resists interpreting it.\nTheory of mind: boundary: Embry: She lets one consequential detail cross into her friendship with James. Trigger: James's support protocol feels safer than Kai's anticipated hurt. Consequence: State shifts from 'Material details about Kai remain inside the Kai relationship.' to 'She lets one consequential detail cross into her friendship with James.'. | knowledge_gap: Embry about herself: She has evidence of emotional preference but resists interpreting it. Trigger: She discloses to James what she could not disclose to Kai. Consequence: State shifts from \"She classifies James's role as merely contextual and practical.\" to 'She has evidence of emotional preference but resists interpreting it.'. | relationship: Embry toward James: He becomes a keeper of information that changes the meaning of her conflict with Kai. Trigger: The missed-call choice is entrusted to him. Consequence: State shifts from 'He is a low-pressure observer.' to 'He becomes a keeper of information that changes the meaning of her conflict with Kai.'."
+        }
+      ],
+      "counterpart_candidates": [
+        "Embry Lawson",
+        "James",
+        "Kai"
+      ],
+      "profiles": {
+        "A": {
+          "ranked_affect": [
+            {
+              "emotional_tag": "hesitance",
+              "weight": 0.57,
+              "tom_summaries": [
+                "Embry may be unsure whether she is keeping Kai emotionally central or allowing him to become partial and mediated while another figure occupies her immediate attention."
+              ]
+            },
+            {
+              "emotional_tag": "reflection",
+              "weight": 0.4867,
+              "tom_summaries": [
+                "Embry may believe she has remained literally truthful with Kai while still recognizing that her framing may have led him to misread her emotional availability.",
+                "Embry's relationship with Kai may be experienced as continuous but filtered through unresolved attention to James and other observers rather than through a simple one-to-one bond."
+              ]
+            }
+          ]
+        },
+        "B": {
+          "ranked_affect": [
+            {
+              "emotional_tag": "yearning",
+              "weight": 0.357
+            },
+            {
+              "emotional_tag": "boundary",
+              "weight": 0.214
+            },
+            {
+              "emotional_tag": "warmth",
+              "weight": 0.214
+            }
+          ]
+        }
+      }
+    },
+    {
+      "packet_id": "cycle_20260722T203423Z",
+      "source_memories": [
+        {
+          "source_id": "embry_age19_23_b01_memory_017",
+          "text": "Embry calls Tommy about an 'intermittent fault' and allows him to reinterpret the system as her without forcing an emotional confession.\nEmbry asks Tommy how he would diagnose an intermittent fault with bad logs. He asks, 'Have you eaten, and is the system you?' She laughs once, then says no to the first question. Tommy tells her to shut down, label the current state, and sleep before touching the problem again.\npeople: Embry Lawson, Tommy Lawson; concepts: trust, work as emotional refuge\nSetting: age band 19-23. Situation: Embry calls Tommy about an 'intermittent fault' and allows him to reinterpret the system as her without forcing an emotional confession. Trigger: He identifies her inside the fault metaphor without dramatizing it. Stakes: State shifts from 'She seeks him for technical guidance while keeping distress implicit.' to 'She accepts that his procedural language can carry emotional recognition.'.\nEmotions: guilt, relief, shame, trust. Intensity: 5/5. Regulation: compartmentalization and concealment control. Conflict: \nTheory of mind: relationship: Embry toward Tommy: She accepts that his procedural language can carry emotional recognition. Trigger: He identifies her inside the fault metaphor without dramatizing it. Consequence: State shifts from 'She seeks him for technical guidance while keeping distress implicit.' to 'She accepts that his procedural language can carry emotional recognition.'. | belief: Embry: A deliberate shutdown can be part of competent procedure. Trigger: Tommy frames rest as preserving system state. Consequence: State shifts from 'Stopping work is evidence that she has failed to control the situation.' to 'A deliberate shutdown can be part of competent procedure.'. | emotion: Embry: Relieved enough to follow one basic step. Trigger: Tommy responds with calm inclusion rather than alarm. Consequence: State shifts from 'Ashamed of losing reliability.' to 'Relieved enough to follow one basic step.'."
+        },
+        {
+          "source_id": "embry_age19_23_b01_memory_046",
+          "text": "In internship housing, Embry rebuilds a portable home by combining the afghan, chess-pie note, and a garage-style tool layout.\nBefore opening her clothes box, Embry spreads the afghan over the chair, tapes the chess-pie phone note inside a cabinet, and outlines each hand tool on a sheet of paper. She calls Marketa while the room is still mostly boxes and tells Tommy which wrench was missing from the issued set.\npeople: Embry Lawson, Marketa Lawson, Tommy Lawson; objects: family afghan, OPEN FIRST box, phone note; concepts: portable home\nSetting: age band 19-23. Situation: In internship housing, Embry rebuilds a portable home by combining the afghan, chess-pie note, and a garage-style tool layout. Trigger: The OPEN FIRST sequence converts the room into a functional home. Stakes: State shifts from 'A new room is temporary and not yet emotionally usable.' to 'She prefers to establish ritual, food continuity, and tool order before ordinary unpacking.'.\nEmotions: longing. Intensity: 4/5. Regulation: family ritual and portable anchors. Conflict: \nTheory of mind: preference: Embry: She prefers to establish ritual, food continuity, and tool order before ordinary unpacking. Trigger: The OPEN FIRST sequence converts the room into a functional home. Consequence: State shifts from 'A new room is temporary and not yet emotionally usable.' to 'She prefers to establish ritual, food continuity, and tool order before ordinary unpacking.'. | emotion: Embry: Anchored enough to notice practical details and contact family. Trigger: Portable objects and procedures recreate continuity. Consequence: State shifts from 'Dislocated and vigilant in unfamiliar housing.' to 'Anchored enough to notice practical details and contact family.'. | relationship: Embry toward her parents: She includes Tommy and Marketa through differentiated practical channels rather than treating independence as silence. Trigger: The wrench report and kitchen-note call let each parent participate without taking over. Consequence: State shifts from 'The move marks increasing adult independence.' to 'She includes Tommy and Marketa through differentiated practical channels rather than treating independence as silence.'."
+        },
+        {
+          "source_id": "embry_age19_23_b01_memory_010",
+          "text": "A propulsion-club joke about improvised ignition activates Embry's scar-based safety vigilance, though she withholds the personal origin.\nDuring a countdown someone jokes that a loose guide tube is 'close enough for student rocketry.' Embry calls hold, resets the angle, and rubs the pale line near her face. When asked why she is intense about it, she explains the geometry but not the seven stitches or Tommy's drive to the ER.\npeople: Embry Lawson, Tommy Lawson; objects: bottle-rocket scar; concepts: boundary, privacy, safety boundary\nSetting: age band 19-23. Situation: A propulsion-club joke about improvised ignition activates Embry's scar-based safety vigilance, though she withholds the personal origin. Trigger: A teammate asks why the angle matters so much to her. Stakes: State shifts from 'Her accident history is available only as private context.' to 'She shares technical causation while keeping the vulnerable memory private.'.\nEmotions: guilt, trust. Intensity: 5/5. Regulation: compartmentalization and concealment control. Conflict: Embry: She shares technical causation while keeping the vulnerable memory private. | Teammates about Embry: They understand the hazard but not the emotional source of her control.\nTheory of mind: boundary: Embry: She shares technical causation while keeping the vulnerable memory private. Trigger: A teammate asks why the angle matters so much to her. Consequence: State shifts from 'Her accident history is available only as private context.' to 'She shares technical causation while keeping the vulnerable memory private.'. | belief: Embry: She still prefers impersonal evidence, even when personal evidence would explain her urgency. Trigger: She chooses geometry over the ER story. Consequence: State shifts from 'The rule should be persuasive without autobiography.' to 'She still prefers impersonal evidence, even when personal evidence would explain her urgency.'. | knowledge_gap: Teammates about Embry: They understand the hazard but not the emotional source of her control. Trigger: Her explanation omits the scar's history. Consequence: State shifts from 'They read her as unusually strict.' to 'They understand the hazard but not the emotional source of her control.'."
+        }
+      ],
+      "counterpart_candidates": [
+        "Embry Lawson",
+        "Marketa Lawson",
+        "Tommy Lawson"
+      ],
+      "profiles": {
+        "A": {
+          "ranked_affect": [
+            {
+              "emotional_tag": "reflection",
+              "weight": 0.495,
+              "tom_summaries": [
+                "Embry may relate to Tommy through practical care and shared troubleshooting, using tools, notebooks, and calls as indirect vehicles for reassurance or affection.",
+                "Embry may fear Tommy seeing her when bodily vulnerability or safety vigilance interrupts her technical composure."
+              ]
+            },
+            {
+              "emotional_tag": "warmth",
+              "weight": 0.46,
+              "tom_summaries": [
+                "Embry may trust Tommy as a reliable but emotionally distanced diagnostic presence, turning to him when her own state feels difficult to interpret without needing to make the contact explicitly confess"
+              ]
+            },
+            {
+              "emotional_tag": "yearning",
+              "weight": 0.4,
+              "tom_summaries": [
+                "Embry may want Tommy to remain available as a stabilizing witness while keeping that dependence mediated through concrete objects, instructions, and tasks."
+              ]
+            }
+          ]
+        },
+        "B": {
+          "ranked_affect": [
+            {
+              "emotional_tag": "yearning",
+              "weight": 0.444
+            },
+            {
+              "emotional_tag": "warmth",
+              "weight": 0.333
+            },
+            {
+              "emotional_tag": "boundary",
+              "weight": 0.111
+            }
+          ]
+        }
+      }
+    },
+    {
+      "packet_id": "cycle_20260722T222024Z",
+      "source_memories": [
+        {
+          "source_id": "embry_age15_19_b02_memory_032",
+          "text": "Embry begins checking transfer deadlines while telling Kai she is only planning for ordinary military uncertainty.\nKai notices school-transfer tabs. Embry has no confirmed orders, but patterns at home feel familiar. She minimizes the probability because naming it would change the remaining time.\npeople: Embry Lawson, Kai; events: confirmed orders to eglin; concepts: portable home, privacy\nSetting: age band 15-19. Situation: Embry begins checking transfer deadlines while telling Kai she is only planning for ordinary military uncertainty. Trigger: Family behavior suggests change without confirmation. Stakes: She prepares documents while withholding a prediction.\nEmotions: fear, guilt, uncertainty. Intensity: 4/5. Regulation: compartmentalization and concealment control. Conflict: Embry does not know whether orders will arrive, where they would lead, or when.\nTheory of mind: knowledge_gap: Embry does not know whether orders will arrive, where they would lead, or when. Trigger: Family behavior suggests change without confirmation. Consequence: She prepares documents while withholding a prediction. | relationship: Embry protects the present with Kai by excluding him from uncertainty she is already acting upon. Trigger: She fears anticipation will convert each interaction into goodbye. Consequence: She gives a technically true generic explanation."
+        },
+        {
+          "source_id": "embry_age15_19_b02_memory_023",
+          "text": "Embry gives her parents a technically true explanation for returning late from time with Kai.\nShe says a board strap failed and needed repair. That happened, but the delay also included an hour sitting together after the repair. She omits the second part.\npeople: Embry Lawson, James, Kai; objects: surfboard; concepts: privacy, repair, true fact hiding private duration\nSetting: age band 15-19. Situation: Embry gives her parents a technically true explanation for returning late from time with Kai. Trigger: A real repair supplies a sufficient explanation. Stakes: Embry reports the verifiable cause and hides the intimacy.\nEmotions: anger, guilt, longing, relief. Intensity: 4/5. Regulation: compartmentalization and concealment control. Conflict: \nTheory of mind: belief: Factual completeness is optional when omitted time feels private rather than dangerous. Trigger: A real repair supplies a sufficient explanation. Consequence: Embry reports the verifiable cause and hides the intimacy. | emotion: Embry feels relief at preserving privacy and discomfort that the answer prevents follow-up. Trigger: Her parents accept the explanation. Consequence: She reviews the wording rather than the choice."
+        },
+        {
+          "source_id": "embry_age15_19_b03_memory_041",
+          "text": "Embry structures long-distance calls so tightly that Kai begins reporting only problems he has already solved.\nEmbry's outline covers school, savings, surf, and next contact. Kai mentions a problem only in the final minute, after resolving it. Embry realizes the format trained both of them to hide unfinished difficulties.\npeople: Embry Lawson, kai; events: reliability versus emotional availability\nSetting: age band 15-19. Situation: Embry structures long-distance calls so tightly that Kai begins reporting only problems he has already solved. Trigger: Kai's delayed disclosure mirrors Embry's own reporting habit. Stakes: She removes the agenda from the next call but does not know what to say.\nEmotions: grief, guilt, uncertainty. Intensity: 4/5. Regulation: compartmentalization and concealment control. Conflict: \nTheory of mind: belief: A reliable communication structure can suppress the uncertainty intimacy needs to expose. Trigger: Kai's delayed disclosure mirrors Embry's own reporting habit. Consequence: She removes the agenda from the next call but does not know what to say. | relationship: Kai has adapted to Embry's controlled style in a way that reduces mutual access. Trigger: He withholds unresolved difficulty until support is unnecessary. Consequence: Embry experiences the symmetry as loss rather than success."
+        }
+      ],
+      "counterpart_candidates": [
+        "Embry Lawson",
+        "James",
+        "Kai",
+        "kai"
+      ],
+      "profiles": {
+        "A": {
+          "ranked_affect": [
+            {
+              "emotional_tag": "reflection",
+              "weight": 0.585,
+              "tom_summaries": [
+                "Embry may fear that communication logistics and mediated contact with Kai are substituting for direct emotional presence.",
+                "Embry may experience the relationship as one where she holds a stable organizing role while Kai feels less fully accessible or emotionally available."
+              ]
+            },
+            {
+              "emotional_tag": "yearning",
+              "weight": 0.48,
+              "tom_summaries": [
+                "Embry may desire to protect the private emotional meaning of her connection with Kai while maintaining a controlled, practical outward presentation."
+              ]
+            }
+          ]
+        },
+        "B": {
+          "ranked_affect": [
+            {
+              "emotional_tag": "yearning",
+              "weight": 0.333
+            },
+            {
+              "emotional_tag": "warmth",
+              "weight": 0.25
+            },
+            {
+              "emotional_tag": "hesitance",
+              "weight": 0.167
+            }
+          ]
+        }
+      }
+    },
+    {
+      "packet_id": "cycle_20260723T102522Z",
+      "source_memories": [
+        {
+          "source_id": "embry_age15_19_b02_memory_037",
+          "text": "Embry misses a Kai call during a Lawson family ritual and admits she chose not to leave.\nTommy needs help in the garage while Marketa and Embry's grandmother coordinate a recipe. Embry sees Kai's reminder and stays. Later she tells him the choice plainly.\npeople: Grandmother, Embry Lawson, Kai, Marketa Lawson, Tommy Lawson; objects: family recipe note, POINT/PATH/PEOPLE checklist\nSetting: age band 15-19. Situation: Embry misses a Kai call during a Lawson family ritual and admits she chose not to leave. Trigger: Family and Kai make simultaneous claims on her attention. Stakes: She tells Kai the truth about her choice.\nEmotions: guilt, longing, relief. Intensity: 4/5. Regulation: compartmentalization and concealment control. Conflict: \nTheory of mind: relationship: Embry acknowledges a competing loyalty rather than disguising the missed call as accidental. Trigger: Family and Kai make simultaneous claims on her attention. Consequence: She tells Kai the truth about her choice. | emotion: Embry feels guilt about disappointing Kai and relief that she did not fragment the family ritual. Trigger: Both relationships matter and cannot be served simultaneously. Consequence: She resists inventing a neutral excuse."
+        },
+        {
+          "source_id": "embry_age15_19_b02_memory_010",
+          "text": "Embry fills the reserved OPEN FIRST space with a hand-drawn Hickam tide-and-running chart.\nThe chart records sunrise, tide, heat, water stops, and safe return points. Marketa notices that the previously empty space now holds something created at this posting.\npeople: Embry Lawson, Kai, Marketa Lawson; places: Hickam AFB, Ninole; objects: OPEN FIRST box, hickam tide running chart, POINT/PATH/PEOPLE checklist\nSetting: Hickam AFB, Ninole. Situation: Embry fills the reserved OPEN FIRST space with a hand-drawn Hickam tide-and-running chart. Trigger: A stable week gives her dependable local knowledge. Stakes: She places the chart in the box for future moves.\nEmotions: guilt, longing, pride, trust. Intensity: 4/5. Regulation: compartmentalization and concealment control. Conflict: \nTheory of mind: goal: Embry wants a locally created object to enter the family's portable arrival ritual. Trigger: A stable week gives her dependable local knowledge. Consequence: She places the chart in the box for future moves. | belief: A place can contribute to identity before proving permanent. Trigger: The chart is useful and originates at Hickam. Consequence: Embry permits the posting to become a source rather than only a destination."
+        },
+        {
+          "source_id": "embry_age15_19_b03_memory_035",
+          "text": "Embry recognizes signs of new orders after Ninole but withholds the possibility from Kai until confirmation.\nTommy takes a closed-door call, and Marketa stops planning beyond the term. Kai asks why Embry is checking transfer dates. She says she is keeping records current.\npeople: Embry Lawson, kai, Marketa Lawson, Tommy Lawson; places: Ninole; events: confirmed orders to eglin; concepts: privacy\nSetting: Ninole. Situation: Embry recognizes signs of new orders after Ninole but withholds the possibility from Kai until confirmation. Trigger: Familiar signs suggest orders but reveal no destination or timing. Stakes: Embry withholds suspicion while gathering evidence.\nEmotions: guilt, longing. Intensity: 4/5. Regulation: compartmentalization and concealment control. Conflict: \nTheory of mind: belief: Sharing an unverified threat would create pain without actionable certainty. Trigger: Familiar signs suggest orders but reveal no destination or timing. Consequence: Embry withholds suspicion while gathering evidence. | relationship: Embry prioritizes certainty over Kai's opportunity to prepare alongside her. Trigger: He notices move-related behavior and asks directly. Consequence: She gives a true explanation that conceals its likely cause."
+        }
+      ],
+      "counterpart_candidates": [
+        "Embry Lawson",
+        "Grandmother",
+        "Kai",
+        "Marketa Lawson",
+        "Tommy Lawson",
+        "kai"
+      ],
+      "profiles": {
+        "A": {
+          "ranked_affect": [
+            {
+              "emotional_tag": "yearning",
+              "weight": 0.409
+            },
+            {
+              "emotional_tag": "boundary",
+              "weight": 0.227
+            },
+            {
+              "emotional_tag": "warmth",
+              "weight": 0.227
+            }
+          ]
+        },
+        "B": {
+          "ranked_affect": [
+            {
+              "emotional_tag": "boundary",
+              "weight": 0.52,
+              "tom_summaries": [
+                "Embry may hold a stance of accepting Marketa's practical family structure by remaining within the family work context and prioritizing planning, writing, and duty over immediate personal disclosure."
+              ]
+            },
+            {
+              "emotional_tag": "reflection",
+              "weight": 0.46,
+              "tom_summaries": [
+                "Embry may experience Marketa as a steady supervisory family presence when Embry is working, planning, or managing outside contact."
+              ]
+            },
+            {
+              "emotional_tag": "hesitance",
+              "weight": 0.43,
+              "tom_summaries": [
+                "Embry may feel uncertain about how much Marketa sees, guides, or influences her planning around movement, safe return, and future obligations."
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
