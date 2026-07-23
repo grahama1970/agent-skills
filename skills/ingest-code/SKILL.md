@@ -90,6 +90,10 @@ patterns. Basename-only patterns such as `*.py` are recursive. Blank, absolute,
 parent-traversing, or otherwise unsafe values exit with status 2 before
 scanning.
 
+With both `--dry-run` and `--treesitter`, `ingest-code` runs the validated
+Tree-sitter extraction path and prints the `code_symbols` records that would be
+upserted. It performs no memory writes and writes no `.ingest-code.json` marker.
+
 ### `rescan` — Incremental Rescan (Scheduler Job)
 
 ```bash

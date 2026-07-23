@@ -1328,16 +1328,15 @@ def _resolved_file_manifest(
     return frozenset(resolved_files)
 
 
-def _store_treesitter_symbols_for_directory(
+def _extract_treesitter_records_for_directory(
     directory: Path,
     codebase_root: Path,
     scope: str,
-    verification_samples: Optional[list[dict[str, str]]] = None,
     *,
     allowed_files: Collection[Path],
     mtime_after: datetime | None = None,
-) -> int:
-    """Scan one configured directory and upsert structured code symbols to memory."""
+) -> tuple[CodeSymbolRecord, ...]:
+    """Extract validated code-symbol records without writing to memory."""
     treesitter_script = find_treesitter_skill()
     if not treesitter_script:
         raise TreeSitterScanError(f"Tree-sitter skill not found for {directory}")
@@ -1387,7 +1386,7 @@ def _store_treesitter_symbols_for_directory(
     if scan_results is None:
         raise TreeSitterScanError(f"Tree-sitter scan produced malformed output for {directory}")
     if not scan_results:
-        return 0
+        return ()
 
     repo = resolved_codebase_root.name
     branch = _current_branch(resolved_codebase_root)
@@ -1436,10 +1435,31 @@ def _store_treesitter_symbols_for_directory(
                 continue
             records.append(record)
 
+    return tuple(records)
+
+
+def _store_treesitter_symbols_for_directory(
+    directory: Path,
+    codebase_root: Path,
+    scope: str,
+    verification_samples: Optional[list[dict[str, str]]] = None,
+    *,
+    allowed_files: Collection[Path],
+    mtime_after: datetime | None = None,
+) -> int:
+    """Scan one configured directory and upsert structured code symbols to memory."""
+    records = _extract_treesitter_records_for_directory(
+        directory,
+        codebase_root,
+        scope,
+        allowed_files=allowed_files,
+        mtime_after=mtime_after,
+    )
     if not records:
         return 0
 
-    result = CodeMemoryClient().upsert_code_symbols(records)
+    resolved_directory = directory.resolve(strict=True)
+    result = CodeMemoryClient().upsert_code_symbols(list(records))
     if result.errors:
         detail = "; ".join(result.errors[:5])
         raise TreeSitterScanError(
@@ -1452,6 +1472,27 @@ def _store_treesitter_symbols_for_directory(
             verification_samples.append(_code_symbol_verification_sample(record))
 
     return result.stored
+
+
+def _code_symbol_preview_key(record: CodeSymbolRecord) -> tuple[str, int, int, str, str]:
+    """Sort code-symbol preview output deterministically."""
+    return (
+        record.path,
+        record.start_line,
+        record.end_line,
+        record.symbol_kind,
+        record.qualified_name,
+    )
+
+
+def _print_code_symbol_dry_run_preview(records: Sequence[CodeSymbolRecord]) -> None:
+    """Print code-symbol records that would be upserted."""
+    for record in sorted(records, key=_code_symbol_preview_key):
+        print(
+            f"  [CODE_SYMBOL] {record.path}:{record.start_line}-{record.end_line} "
+            f"{record.symbol_kind} {record.qualified_name}",
+            flush=True,
+        )
 
 
 def _treesitter_query(run_sh: Path, filepath: Path, query: str) -> list[dict]:
@@ -2242,17 +2283,39 @@ def scan(
             )
 
     # --- Phase 4: Structured code symbol index ---
+    code_symbols_extracted = 0
     code_symbols_stored = 0
     code_symbol_scan_roots: list[Path] = []
     completed_code_symbol_scan_roots: list[Path] = []
     discovered_file_manifest = _resolved_file_manifest(files, path)
     if treesitter and code_index and not cwe_only:
-        print("\n--- Phase 4: Upserting structured code symbols ---", flush=True)
+        print("\n--- Phase 4: Structured code symbols ---", flush=True)
+        verification_samples: list[dict[str, str]] = []
+        code_symbol_scan_roots = _extract_configured_scan_roots(path)
         if dry_run:
-            print("  [DRY RUN] treesitter code_symbols upsert skipped", flush=True)
+            for scan_root in code_symbol_scan_roots:
+                try:
+                    records = _extract_treesitter_records_for_directory(
+                        scan_root,
+                        path,
+                        scope,
+                        allowed_files=discovered_file_manifest,
+                    )
+                except TreeSitterScanError as exc:
+                    print(
+                        json.dumps({
+                            "error": "Tree-sitter code-symbol indexing failed",
+                            "scan_root": str(scan_root),
+                            "detail": str(exc),
+                        }),
+                        file=sys.stderr,
+                    )
+                    raise SystemExit(1) from exc
+                code_symbols_extracted += len(records)
+                completed_code_symbol_scan_roots.append(scan_root)
+                _print_code_symbol_dry_run_preview(records)
+                print(f"Code index: {len(records)} symbols extracted from {scan_root}", flush=True)
         else:
-            verification_samples: list[dict[str, str]] = []
-            code_symbol_scan_roots = _extract_configured_scan_roots(path)
             for scan_root in code_symbol_scan_roots:
                 try:
                     root_stored = _store_treesitter_symbols_for_directory(
@@ -2272,6 +2335,7 @@ def scan(
                         file=sys.stderr,
                     )
                     raise SystemExit(1) from exc
+                code_symbols_extracted += root_stored
                 code_symbols_stored += root_stored
                 completed_code_symbol_scan_roots.append(scan_root)
                 print(f"Code index: {root_stored} symbols stored from {scan_root}", flush=True)
@@ -2287,6 +2351,7 @@ def scan(
         "cwe_summary": cwe_summary,
         "edges_found": edges_total,
         "edges_stored": edges_stored,
+        "code_symbols_extracted": code_symbols_extracted,
         "code_symbols_stored": code_symbols_stored,
         "dry_run": dry_run,
     }
