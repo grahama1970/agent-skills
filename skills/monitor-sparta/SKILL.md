@@ -130,6 +130,29 @@ Expensive health-check rule:
   `change_detected`, `force_requested`, or `snapshot_only` so agents can tell
   whether they are looking at a durable snapshot or an active audit.
 
+Notification contract:
+
+- `/monitor-sparta` health checks must emit operator-friendly notification copy
+  next to raw machine fields. UI surfaces must not invent coverage-gap wording
+  from dimensions, counts, or generic gate states.
+- Each failed check should keep `dimension`, `message`, and structured detail
+  fields for diagnostics, and may add:
+
+```json
+{
+  "notification": {
+    "title": "Invalid QRA reasoning",
+    "body": "4,703 QRAs have invalid reasoning",
+    "severity": "degraded",
+    "actionLabel": "Open QRA reasoning gaps",
+    "target": "coverage:qra_reasoning_coverage"
+  }
+}
+```
+
+- `notification.body` is the preferred high-density billboard text. The UI may
+  fall back to `message` only when `notification` is absent.
+
 Prompt Health lane rule:
 
 1. Run the local prompt-health scanner on prompt units, not isolated user
