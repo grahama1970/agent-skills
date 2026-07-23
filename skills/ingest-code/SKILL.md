@@ -79,8 +79,11 @@ Options:
   --no-code-index    Disable structured code-symbol upserts
   --dry-run          Preview without writing to /memory
   --scope            Memory scope (default: "code")
-  --batch-size       Files per CWE scan batch (default: 50)
+  --batch-size       Positive number of files per CWE scan batch (default: 50)
 ```
+
+Invalid `scan --batch-size` values exit with status 2 before scanning. The
+value must be a positive integer.
 
 ### `rescan` — Incremental Rescan (Scheduler Job)
 

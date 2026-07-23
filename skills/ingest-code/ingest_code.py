@@ -104,6 +104,10 @@ class RescanSinceError(ValueError):
     """The rescan --since value is invalid."""
 
 
+class ScanBatchSizeError(ValueError):
+    """The scan --batch-size value is invalid."""
+
+
 def load_taxonomy_module():
     """Load the taxonomy module for bridge tag + CWE extraction."""
     taxonomy_paths = [
@@ -1815,6 +1819,13 @@ def _exit_invalid_since(since: str | None, exc: RescanSinceError) -> None:
     raise SystemExit(2) from exc
 
 
+def _validate_scan_batch_size(batch_size: int) -> int:
+    """Require a positive CWE file-batch size."""
+    if isinstance(batch_size, bool) or batch_size < 1:
+        raise ScanBatchSizeError("--batch-size must be a positive integer")
+    return batch_size
+
+
 def _resolve_in_repo_file(path: Path, codebase_root: Path) -> Path | None:
     """Resolve an existing file and require repository containment."""
     try:
@@ -2008,9 +2019,22 @@ def scan(
     code_index: bool = typer.Option(True, "--code-index/--no-code-index", help="Upsert treesitter symbols to memory code_symbols"),
     dry_run: bool = typer.Option(False, "--dry-run", help="Show what would be stored without writing"),
     scope: str = typer.Option("code", help="Memory scope for storage"),
-    batch_size: int = typer.Option(50, help="Files per batch"),
+    batch_size: int = typer.Option(50, help="Positive number of files per CWE scan batch"),
 ):
     """Scan a codebase for functional knowledge and CWE mappings, store in /memory."""
+    try:
+        batch_size = _validate_scan_batch_size(batch_size)
+    except ScanBatchSizeError as exc:
+        print(
+            json.dumps({
+                "error": "Invalid scan --batch-size value",
+                "batch_size": batch_size,
+                "detail": str(exc),
+            }),
+            file=sys.stderr,
+        )
+        raise SystemExit(2) from exc
+
     try:
         path = _resolve_codebase_directory(path)
     except ValueError as exc:
