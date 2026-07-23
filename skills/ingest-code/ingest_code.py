@@ -63,7 +63,7 @@ except ImportError:
 # Default file patterns for scanning
 DEFAULT_GLOB_PATTERNS = [
     "*.py", "*.c", "*.cpp", "*.h", "*.hpp",
-    "*.rs", "*.go", "*.java", "*.ts", "*.js",
+    "*.rs", "*.go", "*.java", "*.ts", "*.tsx", "*.js", "*.jsx",
     "*.rb", "*.php", "*.swift", "*.kt", "*.scala"
 ]
 

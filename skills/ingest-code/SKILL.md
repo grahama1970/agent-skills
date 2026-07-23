@@ -71,7 +71,7 @@ for memory-backed code retrieval. Prefer absolute repository paths.
 ./run.sh scan <path> [OPTIONS]
 
 Options:
-  --glob, -g         File patterns (default: *.py *.ts *.js *.rs *.go *.java *.c *.cpp)
+  --glob, -g         File patterns (default: *.py *.ts *.tsx *.js *.jsx *.rs *.go *.java *.c *.cpp)
   --cwe-only         Skip Phase 1, only run CWE scan
   --validate         Run LLM validation on CWE matches
   --treesitter       Run Tree-sitter scan for structured code symbols
