@@ -1312,6 +1312,128 @@ def _parse_treesitter_scan_output(stdout: str) -> list[dict[str, Any]] | None:
     return data if isinstance(data, list) else None
 
 
+def _treesitter_schema_error(location: str, detail: str) -> TreeSitterScanError:
+    return TreeSitterScanError(
+        f"Tree-sitter result schema invalid at {location}: {detail}"
+    )
+
+
+def _validate_treesitter_text_field(
+    value: object,
+    location: str,
+    *,
+    required: bool,
+) -> str | None:
+    """Validate a Tree-sitter string/null field."""
+    if value is None and not required:
+        return None
+    if not isinstance(value, str):
+        raise _treesitter_schema_error(location, "expected nonblank string")
+    stripped = value.strip()
+    if not stripped:
+        raise _treesitter_schema_error(location, "expected nonblank string")
+    return stripped
+
+
+def _validate_treesitter_line(
+    value: object,
+    location: str,
+    *,
+    minimum: int,
+) -> int:
+    """Validate a Tree-sitter source line number."""
+    if isinstance(value, bool) or not isinstance(value, int) or value < minimum:
+        raise _treesitter_schema_error(location, "expected positive integer")
+    return value
+
+
+def _validate_treesitter_scan_results(
+    scan_results: list[Any],
+) -> tuple[dict[str, Any], ...]:
+    """Validate and normalize the complete Tree-sitter result envelope."""
+    normalized_entries: list[dict[str, Any]] = []
+
+    for file_index, file_entry in enumerate(scan_results):
+        file_location = f"files[{file_index}]"
+        if not isinstance(file_entry, dict):
+            raise _treesitter_schema_error(file_location, "expected object")
+
+        path = _validate_treesitter_text_field(
+            file_entry.get("path"),
+            f"{file_location}.path",
+            required=True,
+        )
+        assert path is not None
+
+        if "symbols" not in file_entry or not isinstance(file_entry["symbols"], list):
+            raise _treesitter_schema_error(f"{file_location}.symbols", "expected array")
+
+        normalized_entry = dict(file_entry)
+        normalized_entry["path"] = path
+        language = normalized_entry.get("language")
+        if language is not None:
+            normalized_entry["language"] = _validate_treesitter_text_field(
+                language,
+                f"{file_location}.language",
+                required=False,
+            )
+
+        normalized_symbols: list[dict[str, Any]] = []
+        for symbol_index, symbol in enumerate(file_entry["symbols"]):
+            symbol_location = f"{file_location}.symbols[{symbol_index}]"
+            if not isinstance(symbol, dict):
+                raise _treesitter_schema_error(symbol_location, "expected object")
+
+            kind = _validate_treesitter_text_field(
+                symbol.get("kind"),
+                f"{symbol_location}.kind",
+                required=True,
+            )
+            name = _validate_treesitter_text_field(
+                symbol.get("name"),
+                f"{symbol_location}.name",
+                required=True,
+            )
+            assert kind is not None
+            assert name is not None
+
+            start_line = _validate_treesitter_line(
+                symbol.get("start_line"),
+                f"{symbol_location}.start_line",
+                minimum=1,
+            )
+            raw_end_line = symbol.get("end_line")
+            if raw_end_line is None:
+                end_line = start_line
+            else:
+                end_line = _validate_treesitter_line(
+                    raw_end_line,
+                    f"{symbol_location}.end_line",
+                    minimum=start_line,
+                )
+
+            normalized_symbol = dict(symbol)
+            normalized_symbol.update({
+                "kind": kind,
+                "name": name,
+                "start_line": start_line,
+                "end_line": end_line,
+            })
+            for field_name in ("signature", "docstring", "parent", "parent_symbol"):
+                if field_name in normalized_symbol and normalized_symbol[field_name] is not None:
+                    if not isinstance(normalized_symbol[field_name], str):
+                        raise _treesitter_schema_error(
+                            f"{symbol_location}.{field_name}",
+                            "expected string or null",
+                        )
+            normalized_symbols.append(normalized_symbol)
+
+        normalized_entry["symbols"] = normalized_symbols
+        normalized_entries.append(normalized_entry)
+
+    return tuple(normalized_entries)
+
+
 def _resolve_treesitter_result_path(raw_path: object, scan_root: Path) -> Path | None:
     """Resolve one Tree-sitter result path and require scan-root containment."""
     if not isinstance(raw_path, str) or not raw_path.strip():
@@ -1409,7 +1531,8 @@ def _extract_treesitter_records_for_directory(
     scan_results = _parse_treesitter_scan_output(result.stdout)
     if scan_results is None:
         raise TreeSitterScanError(f"Tree-sitter scan produced malformed output for {directory}")
-    if not scan_results:
+    validated_results = _validate_treesitter_scan_results(scan_results)
+    if not validated_results:
         return ()
 
     repo = resolved_codebase_root.name
@@ -1418,7 +1541,7 @@ def _extract_treesitter_records_for_directory(
     exclude_dirs = _configured_exclude_dirs(resolved_codebase_root)
     allowed_file_paths = _resolved_file_manifest(tuple(allowed_files), resolved_codebase_root)
     records: list[CodeSymbolRecord] = []
-    for file_entry in scan_results:
+    for file_entry in validated_results:
         file_path_raw = file_entry.get("path")
         if isinstance(file_path_raw, str):
             lexical_path = Path(file_path_raw)

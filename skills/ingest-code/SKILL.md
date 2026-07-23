@@ -94,6 +94,10 @@ With both `--dry-run` and `--treesitter`, `ingest-code` runs the validated
 Tree-sitter extraction path and prints the `code_symbols` records that would be
 upserted. It performs no memory writes and writes no `.ingest-code.json` marker.
 
+Malformed Tree-sitter file or symbol records fail the command with status 1
+before code-symbol preview or persistence; they are never treated as an empty
+successful scan.
+
 ### `rescan` — Incremental Rescan (Scheduler Job)
 
 ```bash
