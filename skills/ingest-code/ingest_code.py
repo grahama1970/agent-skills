@@ -1208,6 +1208,21 @@ def _git_ls_files(codebase_path: Path, patterns: list[str]) -> list[Path]:
     return files
 
 
+def _path_is_within_scan_roots(path: Path, scan_roots: Sequence[Path]) -> bool:
+    """Return whether a candidate file lives under one configured scan root."""
+    try:
+        resolved_path = path.resolve()
+    except OSError:
+        return False
+    for root in scan_roots:
+        try:
+            resolved_path.relative_to(root.resolve())
+        except ValueError:
+            continue
+        return True
+    return False
+
+
 def collect_files(codebase_path: Path, patterns: list[str], mtime_after: Optional[datetime] = None) -> list[Path]:
     """Collect files matching patterns, respecting .gitignore and .monitor-codebase.json."""
     config = _load_monitor_config(codebase_path)
@@ -1223,23 +1238,23 @@ def collect_files(codebase_path: Path, patterns: list[str], mtime_after: Optiona
     # Use git ls-files if in a git repo (respects .gitignore)
     use_git = _is_git_repo(codebase_path)
 
-    for root in scan_roots:
-        if use_git and root == codebase_path:
-            # Use git ls-files for the main codebase root
-            git_files = _git_ls_files(root, patterns)
-            for f in git_files:
-                if any(skip in f.parts for skip in exclude_dirs):
-                    continue
-                if mtime_after:
-                    try:
-                        file_mtime = datetime.fromtimestamp(f.stat().st_mtime)
-                        if file_mtime < mtime_after:
-                            continue
-                    except OSError:
+    if use_git:
+        for f in _git_ls_files(codebase_path, patterns):
+            if not _path_is_within_scan_roots(f, scan_roots):
+                continue
+            if any(skip in f.parts for skip in exclude_dirs):
+                continue
+            if mtime_after:
+                try:
+                    file_mtime = datetime.fromtimestamp(f.stat().st_mtime)
+                    if file_mtime < mtime_after:
                         continue
-                files.append(f)
-        else:
-            # Fallback to rglob for non-git or scoped subdirectories
+                except OSError:
+                    continue
+            files.append(f)
+    else:
+        for root in scan_roots:
+            # Fallback to rglob for non-git directories
             for pattern in patterns:
                 for f in root.rglob(pattern):
                     if any(skip in f.parts for skip in exclude_dirs):

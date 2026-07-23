@@ -14,6 +14,8 @@ import sys
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
 MODULE_PATH = Path(__file__).resolve().parents[1] / "ingest_code.py"
 sys.path.insert(0, str(MODULE_PATH.parent))
 spec = importlib.util.spec_from_file_location("ingest_code", MODULE_PATH)
@@ -45,6 +47,26 @@ def test_collect_files_respects_gitignore_and_monitor_include_dirs(tmp_path: Pat
     assert "src/keep.py" in rel
     assert "ignored/skip.py" not in rel
     assert "other/outside.py" not in rel
+
+
+@pytest.mark.parametrize("root_source", ["monitor", "env"])
+def test_scoped_git_scan_respects_gitignore(root_source: str, monkeypatch, tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    (repo / "src" / "generated").mkdir(parents=True)
+    (repo / "src" / "keep.py").write_text("def keep():\n    return 1\n")
+    (repo / "src" / "generated" / "ignored.py").write_text("def ignored():\n    return 1\n")
+    (repo / ".gitignore").write_text("src/generated/\n")
+    _git(repo, "init")
+
+    if root_source == "monitor":
+        (repo / ".monitor-codebase.json").write_text(json.dumps({"include_dirs": ["src"]}))
+    else:
+        monkeypatch.setenv("CODE_SYMBOLS_SCAN_INCLUDE_DIRS", "src")
+
+    files = ingest_code.collect_files(repo, ["*.py"])
+    rel = {p.relative_to(repo).as_posix() for p in files}
+
+    assert rel == {"src/keep.py"}
 
 
 def test_scan_roots_can_be_overridden_by_env(monkeypatch, tmp_path: Path) -> None:
