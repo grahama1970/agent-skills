@@ -771,6 +771,20 @@ def _extract_configured_scan_roots(codebase_path: Path) -> list[Path]:
     return [codebase_path.resolve()]
 
 
+def _resolve_codebase_directory(path: Path) -> Path:
+    """Return a canonical existing codebase directory or raise ValueError."""
+    expanded = path.expanduser()
+    try:
+        resolved = expanded.resolve(strict=True)
+    except OSError as exc:
+        raise ValueError(f"Codebase path does not exist or is inaccessible: {path}") from exc
+
+    if not resolved.is_dir():
+        raise ValueError(f"Codebase path is not a directory: {path}")
+
+    return resolved
+
+
 def _marker_path(path: Path) -> Path:
     """Return the canonical ingest-code marker path for a directory or marker path."""
     if path.name == ".ingest-code.json":
@@ -1395,6 +1409,12 @@ def scan(
     batch_size: int = typer.Option(50, help="Files per batch"),
 ):
     """Scan a codebase for functional knowledge and CWE mappings, store in /memory."""
+    try:
+        path = _resolve_codebase_directory(path)
+    except ValueError as exc:
+        print(json.dumps({"error": str(exc)}), file=sys.stderr)
+        raise SystemExit(2) from exc
+
     taxonomy = load_taxonomy_module()
     memory_script = find_memory_skill()
 
@@ -1629,7 +1649,15 @@ def rescan(
         print('{"error": "No codebases specified"}', file=sys.stderr)
         raise SystemExit(1)
 
-    print(f"Rescanning {len(codebases)} codebase(s)")
+    resolved_codebases: list[Path] = []
+    for raw_codebase in codebases:
+        try:
+            resolved_codebases.append(_resolve_codebase_directory(Path(raw_codebase)))
+        except ValueError as exc:
+            print(json.dumps({"error": str(exc)}), file=sys.stderr)
+            raise SystemExit(2) from exc
+
+    print(f"Rescanning {len(resolved_codebases)} codebase(s)")
     if mtime_threshold:
         print(f"Only files modified since: {mtime_threshold.isoformat()}")
 
@@ -1644,10 +1672,9 @@ def rescan(
     total_ts_symbols = 0
     verifiable_samples: list[dict[str, str]] = []
 
-    for codebase_path in codebases:
-        path = Path(codebase_path)
+    for path in resolved_codebases:
         files = collect_files(path, DEFAULT_GLOB_PATTERNS, mtime_after=mtime_threshold)
-        print(f"Found {len(files)} files in {codebase_path}")
+        print(f"Found {len(files)} files in {path}")
 
         for filepath in files:
             # Knowledge extraction
@@ -1696,7 +1723,7 @@ def rescan(
             raise SystemExit(1)
 
     print(json.dumps({
-        "codebases_scanned": len(codebases),
+        "codebases_scanned": len(resolved_codebases),
         "knowledge_stored": total_knowledge,
         "cwe_stored": total_cwes,
         "treesitter_symbols": total_ts_symbols,

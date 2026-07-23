@@ -389,3 +389,113 @@ def test_treesitter_store_rejects_scan_root_outside_codebase(monkeypatch, tmp_pa
 
     assert stored == 0
     assert subprocess_was_called is False
+
+
+@pytest.mark.parametrize("invalid_kind", ["missing", "file"])
+def test_scan_rejects_invalid_codebase_before_external_work(
+    invalid_kind: str,
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
+    invalid_path = tmp_path / "missing"
+    if invalid_kind == "file":
+        invalid_path = tmp_path / "not-a-directory.py"
+        invalid_path.write_text("def nope():\n    return 1\n")
+
+    called = {
+        "find_memory_skill": False,
+        "load_taxonomy_module": False,
+        "collect_files": False,
+    }
+
+    def fail_find_memory_skill():
+        called["find_memory_skill"] = True
+        raise AssertionError("memory lookup should not run for an invalid codebase")
+
+    def fail_load_taxonomy_module():
+        called["load_taxonomy_module"] = True
+        raise AssertionError("taxonomy loading should not run for an invalid codebase")
+
+    def fail_collect_files(*args, **kwargs):
+        called["collect_files"] = True
+        raise AssertionError("file discovery should not run for an invalid codebase")
+
+    monkeypatch.setattr(ingest_code, "find_memory_skill", fail_find_memory_skill)
+    monkeypatch.setattr(ingest_code, "load_taxonomy_module", fail_load_taxonomy_module)
+    monkeypatch.setattr(ingest_code, "collect_files", fail_collect_files)
+
+    with pytest.raises(SystemExit) as exc_info:
+        ingest_code.scan(
+            path=invalid_path,
+            glob=[],
+            cwe_only=False,
+            validate=False,
+            treesitter=False,
+            code_index=True,
+            dry_run=False,
+            scope="code",
+            batch_size=50,
+        )
+
+    assert exc_info.value.code == 2
+    assert called == {
+        "find_memory_skill": False,
+        "load_taxonomy_module": False,
+        "collect_files": False,
+    }
+    assert list(tmp_path.rglob(".ingest-code.json")) == []
+
+
+def test_rescan_prevalidates_all_codebases_before_processing(monkeypatch, tmp_path: Path) -> None:
+    valid_repo = tmp_path / "valid-repo"
+    missing_repo = tmp_path / "missing-repo"
+    valid_repo.mkdir()
+
+    called = {
+        "find_memory_skill": False,
+        "load_taxonomy_module": False,
+        "collect_files": False,
+    }
+
+    def fail_find_memory_skill():
+        called["find_memory_skill"] = True
+        raise AssertionError("memory lookup should not run before all codebases validate")
+
+    def fail_load_taxonomy_module():
+        called["load_taxonomy_module"] = True
+        raise AssertionError("taxonomy loading should not run before all codebases validate")
+
+    def fail_collect_files(*args, **kwargs):
+        called["collect_files"] = True
+        raise AssertionError("valid repository should not be scanned after a later invalid codebase")
+
+    monkeypatch.setattr(ingest_code, "find_memory_skill", fail_find_memory_skill)
+    monkeypatch.setattr(ingest_code, "load_taxonomy_module", fail_load_taxonomy_module)
+    monkeypatch.setattr(ingest_code, "collect_files", fail_collect_files)
+
+    with pytest.raises(SystemExit) as exc_info:
+        ingest_code.rescan(
+            since=None,
+            validate=False,
+            treesitter=False,
+            code_index=True,
+            verify_embeddings=False,
+            scope="code",
+            codebase=[str(valid_repo), str(missing_repo)],
+        )
+
+    assert exc_info.value.code == 2
+    assert called == {
+        "find_memory_skill": False,
+        "load_taxonomy_module": False,
+        "collect_files": False,
+    }
+    assert not (valid_repo / ".ingest-code.json").exists()
+
+
+def test_resolve_codebase_directory_canonicalizes_relative_path(monkeypatch, tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    monkeypatch.chdir(tmp_path)
+
+    assert ingest_code._resolve_codebase_directory(Path("repo")) == repo.resolve()
