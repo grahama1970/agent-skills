@@ -2565,6 +2565,41 @@ def _collect_files_or_exit(
         raise SystemExit(1) from exc
 
 
+def _normalized_tag_values(value: object) -> list[str]:
+    """Return nonblank string tags while preserving encounter order."""
+    if isinstance(value, str):
+        candidates = [value]
+    elif isinstance(value, (list, tuple)):
+        candidates = list(value)
+    else:
+        return []
+
+    tags: list[str] = []
+    for candidate in candidates:
+        if not isinstance(candidate, str):
+            continue
+        tag = candidate.strip()
+        if tag:
+            tags.append(tag)
+    return tags
+
+
+def _merge_taxonomy_tags(
+    existing_tags: object,
+    bridge_tags: object,
+    collection_tags: object,
+) -> list[str]:
+    """Append taxonomy tags without disturbing extractor tag order."""
+    candidates = _normalized_tag_values(existing_tags)
+    candidates.extend(_normalized_tag_values(bridge_tags))
+
+    if isinstance(collection_tags, dict):
+        for key in sorted(collection_tags, key=lambda value: str(value)):
+            candidates.extend(_normalized_tag_values(collection_tags[key]))
+
+    return list(dict.fromkeys(candidates))
+
+
 def enrich_with_taxonomy(items: list[dict], taxonomy_module) -> list[dict]:
     """Run /taxonomy on each knowledge item to add bridge_tags + collection_tags.
 
@@ -2583,20 +2618,13 @@ def enrich_with_taxonomy(items: list[dict], taxonomy_module) -> list[dict]:
             # Taxonomy on the solution text (richer than the problem/question)
             text = item.get("solution", "")[:3000]
             result = extract_fn(text, collection="operational", fast=True)
-            bridge = result.get("bridge_tags", [])
-            collection = result.get("collection_tags", {})
-            # Flatten collection_tags dict values into a list
-            coll_flat = []
-            for tag_list in collection.values():
-                if isinstance(tag_list, list):
-                    coll_flat.extend(tag_list)
-                elif isinstance(tag_list, str):
-                    coll_flat.append(tag_list)
-            # Merge into existing tags (deduplicate)
-            existing = set(item.get("tags", []))
-            existing.update(bridge)
-            existing.update(coll_flat)
-            item["tags"] = list(existing)
+            if not isinstance(result, dict):
+                continue
+            item["tags"] = _merge_taxonomy_tags(
+                item.get("tags", []),
+                result.get("bridge_tags", []),
+                result.get("collection_tags", {}),
+            )
         except Exception:
             pass  # Keep original tags on failure
 
