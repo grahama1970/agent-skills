@@ -68,7 +68,7 @@ health trends over time.
 | `create-pr [--base main] [--title ...]` | Create PR with violation summary from latest nightly |
 | `pr-comment <pr_number> [project]` | Add violation summary comment to an existing PR |
 | `visualize <project> [--format svg\|png\|pdf]` | Generate dependency graph + health charts via /create-figure |
-| `schedule` | Register nightly scan with /scheduler |
+| `schedule` | Register continuous scan with /scheduler, roughly every 30 minutes |
 
 ## Machine-Readable Finding Contract
 
@@ -183,7 +183,7 @@ with `command: "audit"`, `changed_files`, `changed_files_count`, `base_ref`, and
 
 ## Change Detection
 
-Projects are tracked by git HEAD hash. On `scan --all`:
+Projects are tracked by git HEAD hash plus tracked worktree status. On `scan --all`:
 - **Changed projects** → full 11-step scan
 - **Unchanged projects** → light scan (project-state only)
 - **`--force`** → full scan regardless of changes
@@ -198,7 +198,7 @@ Projects are tracked by git HEAD hash. On `scan --all`:
 | 4 | `quality_checks.py` | AST-based and file-content checks: Python, TypeScript, Rust, prompt templates, inline prompts, regex classifiers, tests, hardcoded paths, bespoke AQL |
 | 4.5 | `/security-scan` | Secrets detection (gitleaks), dependency vulnerabilities (pip-audit/trivy), SAST (Semgrep) |
 | 5 | `autofix_docstrings.py` | Auto-generate missing docstrings via /treesitter + /scillm (**--fix only**, scan is read-only) |
-| 6 | `/ingest-code --treesitter` | CWE scan + treesitter symbol extraction + semantic embedding via `/memory learn` (embedding-at-insert contract) |
+| 6 | `/ingest-code rescan --treesitter --code-index --scope monitor-<project>` | CWE scan + treesitter symbol extraction + semantic embedding via `/memory learn` (embedding-at-insert contract) |
 | 6.1 | `embedding_coverage.py` | Compare expected source files against Qdrant-synced `code_symbols` records for the `monitor-<project>` scope |
 | 7 | `/skills-ci` | Full skills-ci scan (only if project has skills/ or .pi/skills/ dir) |
 | 8 | `/dogpile` | Research improvements for top violations (only if >5 issues found) |

@@ -222,7 +222,7 @@ scoped_find() {
 
 list_all_projects() {
   if [[ ! -f "$INBOX_REGISTRY" ]]; then echo "ERROR: No registry at $INBOX_REGISTRY" >&2; return 1; fi
-  python3 -c "import json; [print(k) for k in json.load(open('$INBOX_REGISTRY')).keys()]"
+  python3 "$SKILL_DIR/monitor_registry.py" list-enabled --registry "$INBOX_REGISTRY"
 }
 
 detect_best_practices() {
@@ -499,7 +499,7 @@ scan_project() {
   if [[ -f "$last_run_file" ]]; then
     since=$(cat "$last_run_file")
   fi
-  local ingest_args=(rescan --since "$since" --treesitter --scope "monitor-$project_name")
+  local ingest_args=(rescan --since "$since" --treesitter --code-index --scope "monitor-$project_name")
   for d in $scan_dirs; do
     ingest_args+=(-c "$d")
   done
@@ -855,7 +855,7 @@ PY
 
 light_scan_project() {
   # For unchanged projects: refresh project-state only. No violations scan,
-  # no dogpile (too expensive for 28 projects nightly), no code modification.
+  # no dogpile (too expensive for continuous background scans), no code modification.
   local project_name="$1"
   local project_path
   project_path=$(resolve_project_path "$project_name")
@@ -870,7 +870,7 @@ light_scan_project() {
 }
 
 has_project_changed() {
-  # Check if project has new commits since last full scan
+  # Check if project has new commits or tracked worktree changes since last full scan
   local project_name="$1"
   local project_path
   project_path=$(resolve_project_path "$project_name") || return 0  # scan if can't resolve
@@ -878,19 +878,21 @@ has_project_changed() {
 
   if [[ ! -d "$project_path/.git" ]]; then return 0; fi  # always scan non-git
 
-  local current_hash
+  local current_hash worktree_state current_signature
   current_hash=$(git -C "$project_path" rev-parse HEAD 2>/dev/null)
   if [[ -z "$current_hash" ]]; then return 0; fi
+  worktree_state=$(git -C "$project_path" status --porcelain --untracked-files=no 2>/dev/null || true)
+  current_signature=$(printf '%s\n%s\n' "$current_hash" "$worktree_state" | sha256sum | awk '{print $1}')
 
   if [[ -f "$hash_file" ]]; then
     local stored_hash
     stored_hash=$(cat "$hash_file")
-    if [[ "$current_hash" == "$stored_hash" ]]; then
+    if [[ "$current_signature" == "$stored_hash" ]]; then
       return 1  # unchanged
     fi
   fi
 
-  echo "$current_hash" > "$hash_file"
+  echo "$current_signature" > "$hash_file"
   return 0  # changed
 }
 
@@ -955,12 +957,12 @@ cmd_schedule() {
 
   run_skill scheduler register \
     --name "monitor-codebase" \
-    --cron "0 3 * * *" \
+    --cron "*/30 * * * *" \
     --command "$SKILL_DIR/run.sh scan --all" \
     --workdir "$PI_MONO" \
     --timeout "$timeout" \
-    --description "Nightly codebase health scan for all registered projects"
-  echo "Registered nightly scan at 03:00 UTC (timeout: ${timeout}s for $total projects)"
+    --description "Continuous codebase health scan every 30 minutes for all registered projects"
+  echo "Registered continuous scan every 30 minutes (timeout: ${timeout}s for $total projects)"
 }
 
 cmd_estimate() {
@@ -1242,6 +1244,6 @@ case "${1:-help}" in
     echo "  create-pr [--base main] [--title ...]  Create PR with violation summary"
     echo "  pr-comment <pr_number> [project]  Add violation comment to a PR"
     echo "  visualize <project> [--format svg|png|pdf]  Generate dep graph + health charts"
-    echo "  schedule                      Register nightly scan with calculated timeout"
+    echo "  schedule                      Register continuous 30-minute scan with calculated timeout"
     ;;
 esac
