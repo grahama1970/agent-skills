@@ -106,3 +106,28 @@ credentials/cost/identity policy; never counted as implementation progress.
    detail for voice affect. If the dream intermediate is valued for reasons
    outside voice (interpretability, agent identity, research interest),
    state that now so it isn't retroactively invoked to soften a null.
+
+## Tickets filed (2026-07-23, operator-authorized; read back via gh issue list)
+
+grahama1970/chatterbox (issues were disabled on the repo — enabled first):
+- #1 applied-control receipts for timing levers
+- #2 chatterbox_tags handling on Turbo (document + verify)
+- #3 reproducibility control (seed / deterministic mode / repeat-group id)
+- #4 silent tone normalization / silent affect-param handling (bug)
+- #5 embedding/reference-audio emotion conditioning research (V6 horizon)
+- #6 stage-preset separation review (optimization, low priority)
+
+grahama1970/agent-skills:
+- #977 GOAL_V5 prereg binds the resolved dissents.
+
+## Dissent resolutions (bound in agent-skills#977)
+
+1. Pivot rule: the interval-based futility rule is BINDING (pivot only if the
+   upper 80% context-clustered CI bound for D-over-M falls below the sealed
+   minimally-useful rate, initially 58%); the simple significance-null
+   estimate is recorded as an advisory flag; the pilot is capped at one round
+   of listener spend as the budget guard.
+2. Dream non-voice value: the prereg carries a mandatory pre-study operator
+   declaration field for any non-voice value of the dream intermediate; left
+   empty, the default stands — D≈M demotes the dream intermediate for
+   voice-affect claims with no retroactive softening.
