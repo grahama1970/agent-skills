@@ -140,6 +140,11 @@ Malformed CWE scanner results fail with status 1 before CWE preview or
 persistence and prevent the completed marker. A valid empty `cwe_mappings`
 array remains a successful zero-finding result.
 
+Built-in CWE pattern scanning runs with or without the optional taxonomy module.
+When taxonomy is available, it may provide bridge tags and Phase 1 enrichment.
+When absent, only that enrichment is omitted. `scan --cwe-only` still runs the
+built-in CWE scan.
+
 ### `rescan` — Incremental Rescan (Scheduler Job)
 
 ```bash

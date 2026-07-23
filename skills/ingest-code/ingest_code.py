@@ -3270,60 +3270,62 @@ def scan(
     files_with_cwes = 0
     cwe_summary: dict[str, int] = {}
 
-    if taxonomy:
-        print("\n--- Phase 2: CWE scanning ---", flush=True)
-        cwe_files = [f for f in files if f.suffix not in (".md", ".mdx")]
-        cwe_monitor = Monitor(None, name="ingest-code-cwe", desc="CWE scanning", total=len(cwe_files)) if Monitor else None
-        scanned = 0
+    print("\n--- Phase 2: CWE scanning ---", flush=True)
+    if taxonomy is None:
+        print(
+            "Taxonomy module not found — running built-in CWE patterns without taxonomy bridge tags",
+            flush=True,
+        )
+    cwe_files = [f for f in files if f.suffix not in (".md", ".mdx")]
+    cwe_monitor = Monitor(None, name="ingest-code-cwe", desc="CWE scanning", total=len(cwe_files)) if Monitor else None
+    scanned = 0
 
-        for i in range(0, len(cwe_files), batch_size):
-            batch = cwe_files[i:i + batch_size]
-            for filepath in batch:
-                try:
-                    result = _scan_file_cwe_checked(filepath, taxonomy, validate)
-                except SourceReadError as exc:
-                    _exit_source_read_failure(codebase=path, phase="cwe", exc=exc)
-                except CweScanResultError as exc:
-                    _exit_cwe_result_failure(codebase=path, exc=exc)
-                scanned += 1
-                cwes = result.get("cwe_mappings", [])
-                if cwes:
-                    files_with_cwes += 1
-                    total_cwes += len(cwes)
-                    for cwe in cwes:
-                        cwe_id = cwe.get("cwe_id", "unknown")
-                        cwe_summary[cwe_id] = cwe_summary.get(cwe_id, 0) + 1
-                        if dry_run:
-                            print(f"  [CWE] {filepath.name}: {cwe_id}", flush=True)
-                        elif memory_script:
-                            cwe_name = cwe.get("name", "")
-                            category = cwe.get("category", "")
-                            tags = ["ingest-code", "cwe", cwe_id, category, filepath.suffix.lstrip(".")]
-                            ok = _learn(
-                                memory_script,
-                                f"What CWEs are relevant to {filepath.name}?",
-                                f"{cwe_id} ({cwe_name}) - Category: {category}. File: {filepath}",
-                                scope, tags,
-                            )
-                            if ok:
-                                cwe_stored += 1
-                if cwe_monitor:
-                    cwe_monitor.update(1, item=filepath.name)
-                if scanned % 100 == 0:
-                    print(f"  Progress: {scanned} scanned, {total_cwes} CWEs in {files_with_cwes} files", flush=True)
+    for i in range(0, len(cwe_files), batch_size):
+        batch = cwe_files[i:i + batch_size]
+        for filepath in batch:
+            try:
+                result = _scan_file_cwe_checked(filepath, taxonomy, validate)
+            except SourceReadError as exc:
+                _exit_source_read_failure(codebase=path, phase="cwe", exc=exc)
+            except CweScanResultError as exc:
+                _exit_cwe_result_failure(codebase=path, exc=exc)
+            scanned += 1
+            cwes = result.get("cwe_mappings", [])
+            if cwes:
+                files_with_cwes += 1
+                total_cwes += len(cwes)
+                for cwe in cwes:
+                    cwe_id = cwe.get("cwe_id", "unknown")
+                    cwe_summary[cwe_id] = cwe_summary.get(cwe_id, 0) + 1
+                    if dry_run:
+                        print(f"  [CWE] {filepath.name}: {cwe_id}", flush=True)
+                    elif memory_script:
+                        cwe_name = cwe.get("name", "")
+                        category = cwe.get("category", "")
+                        tags = ["ingest-code", "cwe", cwe_id, category, filepath.suffix.lstrip(".")]
+                        ok = _learn(
+                            memory_script,
+                            f"What CWEs are relevant to {filepath.name}?",
+                            f"{cwe_id} ({cwe_name}) - Category: {category}. File: {filepath}",
+                            scope, tags,
+                        )
+                        if ok:
+                            cwe_stored += 1
+            if cwe_monitor:
+                cwe_monitor.update(1, item=filepath.name)
+            if scanned % 100 == 0:
+                print(f"  Progress: {scanned} scanned, {total_cwes} CWEs in {files_with_cwes} files", flush=True)
 
-        if cwe_monitor:
-            cwe_monitor._update(final=True)
-        print(f"CWEs: {cwe_stored} stored, {total_cwes} found in {files_with_cwes} files", flush=True)
-        if not dry_run:
-            _abort_if_memory_writes_incomplete(
-                phase="cwe",
-                attempted=total_cwes,
-                stored=cwe_stored,
-                codebase=path,
-            )
-    else:
-        print("Taxonomy module not found — skipping CWE scan (knowledge extraction still runs)", flush=True)
+    if cwe_monitor:
+        cwe_monitor._update(final=True)
+    print(f"CWEs: {cwe_stored} stored, {total_cwes} found in {files_with_cwes} files", flush=True)
+    if not dry_run:
+        _abort_if_memory_writes_incomplete(
+            phase="cwe",
+            attempted=total_cwes,
+            stored=cwe_stored,
+            codebase=path,
+        )
 
     # --- Phase 3: Relationship extraction (import graph edges) ---
     edges_stored = 0
@@ -3559,7 +3561,7 @@ def rescan(
                     })
 
         for filepath in files:
-            if taxonomy and filepath.suffix not in (".md", ".mdx"):
+            if filepath.suffix not in (".md", ".mdx"):
                 try:
                     result = _scan_file_cwe_checked(filepath, taxonomy, validate)
                 except SourceReadError as exc:
