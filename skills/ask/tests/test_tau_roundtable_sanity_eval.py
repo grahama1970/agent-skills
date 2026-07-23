@@ -314,6 +314,105 @@ def test_worker_webgpt_receipt_includes_transport_summary(tmp_path: Path) -> Non
     ]
 
 
+def test_worker_webgpt_accepts_recovered_focus_changed_response(tmp_path: Path) -> None:
+    request_file = tmp_path / "request.json"
+    request_file.write_text(json.dumps({"request": "Ask webgpt to create records."}), encoding="utf-8")
+    artifact_dir = tmp_path / "node-artifacts" / "handler-webgpt"
+    artifact_dir.mkdir(parents=True)
+    args = SimpleNamespace(
+        node_id="handler-webgpt",
+        handler="webgpt",
+        topology="sequential",
+        request_file=str(request_file),
+        browser_oracle_project="tau",
+        next_agent="handler-webclaude",
+        artifact_dir=str(artifact_dir),
+        surf_run=str(tmp_path / "surf-run.sh"),
+        browser_oracle_run=str(tmp_path / "browser-oracle-run.sh"),
+        scillm_base_url="http://127.0.0.1:4001",
+        scillm_api_key="",
+        prior_node=[],
+        timeout=300,
+        stable_polls=2,
+        no_activate=True,
+        evidence=[],
+        codex_workspace="",
+    )
+    summary_payload = {
+        "schema": "surf.webgpt_transport_summary.v1",
+        "artifact_dir": str(artifact_dir),
+        "requested_tab_id": "837360999",
+        "requested_url": "https://chatgpt.com/c/example",
+        "controlled_tab_id": "837360999",
+        "submitted_to_chatgpt": True,
+        "prepared_prompt_is_transport_proof": False,
+        "response_raw_path": str(artifact_dir / "response.raw.md"),
+        "response_meta_path": str(artifact_dir / "response.meta.json"),
+        "sentinel": "<<<WEBGPT_DONE:test>>>",
+        "raw_sentinel_present": True,
+        "focus_changed": True,
+        "final_transport_state": "completed_with_focus_drift",
+        "next_command": f"surf webgpt.recover --artifact-dir {artifact_dir} --audit",
+        "needs_attention": None,
+    }
+
+    def fake_run_cmd(command: list[str], *, cwd: Path, timeout: int) -> tau_roundtable_worker.CmdResult:
+        if "resolve" in command:
+            return tau_roundtable_worker.CmdResult(
+                command,
+                0,
+                json.dumps({"tab_id": "837360999", "conversation_url": "https://chatgpt.com/c/example"}),
+                "",
+                0.01,
+            )
+        if "webgpt.submit" in command:
+            response_path = Path(command[command.index("--output") + 1])
+            raw_path = Path(command[command.index("--raw-output") + 1])
+            meta_path = Path(command[command.index("--meta-output") + 1])
+            response_path.write_text("valid recovered creator output\n", encoding="utf-8")
+            raw_path.write_text("valid recovered creator output\n<<<WEBGPT_DONE:test>>>\n", encoding="utf-8")
+            meta_path.write_text(
+                json.dumps(
+                    {
+                        "status": "recovered_focus_changed",
+                        "failure": None,
+                        "proof_status": "response_proven",
+                        "response_proof_status": "response_proven",
+                        "controlled_tab_id": "837360999",
+                        "raw_contains_sentinel": True,
+                        "clean_contains_sentinel": False,
+                        "focus_changed": True,
+                        "transport_degraded": True,
+                        "focus_drift_warning": "focus_stolen_despite_no_activate",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            (artifact_dir / "webgpt_transport_summary.json").write_text(
+                json.dumps(summary_payload),
+                encoding="utf-8",
+            )
+            return tau_roundtable_worker.CmdResult(command, 0, "", "", 0.01)
+        return tau_roundtable_worker.CmdResult(command, 99, "", "unexpected command", 0.01)
+
+    original_run_cmd = tau_roundtable_worker._run_cmd
+    tau_roundtable_worker._run_cmd = fake_run_cmd
+    try:
+        result = tau_roundtable_worker._run_handler(args, {}, artifact_dir)
+    finally:
+        tau_roundtable_worker._run_cmd = original_run_cmd
+
+    assert result["exit_code"] == 0
+    receipt = json.loads((artifact_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    assert receipt["status"] == "PASS"
+    assert receipt["failure"] is None
+    assert receipt["submit_meta"]["status"] == "recovered_focus_changed"
+    assert receipt["submit_meta"]["proof_status"] == "response_proven"
+    assert receipt["submit_meta"]["focus_drift_warning"] == "focus_stolen_despite_no_activate"
+    assert receipt["webgpt_transport_summary"]["final_transport_state"] == "completed_with_focus_drift"
+    assert result["handoff"]["result"]["status"] == "PASS"
+
+
 def test_worker_prior_receipts_marks_missing_upstream_not_ready(tmp_path: Path) -> None:
     receipts = tau_roundtable_worker._load_prior_receipts(tmp_path, ["handler-webgpt"])
 

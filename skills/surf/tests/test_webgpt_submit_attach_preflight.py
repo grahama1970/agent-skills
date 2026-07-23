@@ -1036,7 +1036,9 @@ esac
     assert (tmp_path / "response.md").read_text(encoding="utf-8") == "external reviewer verdict\n"
     meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
     assert meta["status"] == "recovered_focus_changed"
-    assert meta["failure"] == "focus_stolen_despite_no_activate"
+    assert meta["failure"] is None
+    assert meta["focus_drift_warning"] == "focus_stolen_despite_no_activate"
+    assert meta["proof_status"] == "response_proven"
     assert meta["controlled_tab_id"] == "837352334"
     assert meta["controlled_tab_id_mismatch"] is False
     assert meta["raw_contains_sentinel"] is True

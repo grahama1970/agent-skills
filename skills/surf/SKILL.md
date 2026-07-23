@@ -393,12 +393,17 @@ Behavior:
   `submitted_to_chatgpt`. Project agents must key their next step off
   `proof_status`, not off vague stderr text or file existence.
 - `proof_status: response_proven` means the controlled tab returned the current
-  sentinel-bearing assistant response. `not_submitted` means Surf failed before
-  the main prompt was submitted. `delivery_not_proven` means prompt delivery was
-  not proven. `submitted_no_response_proof` means ChatGPT accepted the prompt
-  but Surf did not capture sentinel-bearing assistant output. `wrong_tab`,
-  `degraded_focus`, and `project_session_unproven` are hard stop states unless
-  the caller is explicitly doing recovery.
+  sentinel-bearing assistant response. This includes
+  `status: recovered_focus_changed` when tab identity, sentinel proof, and clean
+  output integrity all hold; in that case preserve `focus_drift_warning` and do
+  not claim clean background-focus invariance. `not_submitted` means Surf failed
+  before the main prompt was submitted. `delivery_not_proven` means prompt
+  delivery was not proven. `submitted_no_response_proof` means ChatGPT accepted
+  the prompt but Surf did not capture sentinel-bearing assistant output.
+  `wrong_tab`, `degraded_focus`, and `project_session_unproven` are hard stop
+  states unless the caller is explicitly doing recovery; `degraded_focus` is for
+  focus drift without proven current sentinel output, not for recovered completed
+  output.
 - If only `.submitted.md` exists, treat the round as
   `NEEDS_ATTENTION: missing_webgpt_transport_artifacts`. If the receipt still
   says `prepared_prompt`, ChatGPT acceptance has not been proven.
@@ -516,7 +521,8 @@ wrapper that consumes it:
 - **Recovered focus drift:** if the controlled tab returns assistant-only text
   with the current sentinel and clean output is uncontaminated, but focus changed
   during or after the run, Surf writes the raw/clean/meta artifacts and reports
-  `status: recovered_focus_changed`, `transport_degraded: true`, and
+  `status: recovered_focus_changed`, `proof_status: response_proven`,
+  `transport_degraded: true`, `focus_drift_warning`, and
   `focus_invariant_ok: false`. The response is usable degraded transport
   evidence, but it is not clean background-mode proof.
 - **Transport failure:** missing/invalid controlled tab, failed preflight,

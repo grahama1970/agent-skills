@@ -309,14 +309,18 @@ if status in {"completed", "recovered_focus_changed"} and project_shell_target a
     meta["status"] = status
     meta["failure"] = failure
 
-if failure in {"focus_stolen_mid_submit", "focus_stolen_despite_no_activate"}:
-    proof_status = "degraded_focus"
-    diagnosis = "The controlled tab returned sentinel output, but browser focus changed during no-activate mode."
-    action = "Preserve as degraded transport evidence only; rerun in a dedicated reviewer window for clean background proof."
-elif status in {"completed", "recovered_focus_changed"} and raw_has and not clean_has:
+if status in {"completed", "recovered_focus_changed"} and raw_has and not clean_has:
     proof_status = "response_proven"
-    diagnosis = "ChatGPT returned the current sentinel-bearing assistant response from the controlled tab."
-    action = "Use raw_output, output, and meta_output as Surf transport evidence; reconcile reviewer content against deterministic local proof."
+    if status == "recovered_focus_changed":
+        diagnosis = "ChatGPT returned the current sentinel-bearing assistant response from the controlled tab; focus changed during no-activate mode, so background focus proof is degraded."
+        action = "Use raw_output, output, and meta_output as response evidence; preserve focus_drift_warning and do not claim clean background focus invariance."
+    else:
+        diagnosis = "ChatGPT returned the current sentinel-bearing assistant response from the controlled tab."
+        action = "Use raw_output, output, and meta_output as Surf transport evidence; reconcile reviewer content against deterministic local proof."
+elif failure in {"focus_stolen_mid_submit", "focus_stolen_despite_no_activate"}:
+    proof_status = "degraded_focus"
+    diagnosis = "Browser focus changed during no-activate mode before Surf could prove a sentinel-bearing controlled-tab response."
+    action = "Use webgpt.extract if ChatGPT already finished, or rerun in a dedicated reviewer window for clean background proof."
 elif failure == "project_conversation_url_unproven":
     proof_status = "project_session_unproven"
     diagnosis = "Surf saw sentinel output, but the target was a ChatGPT project shell and no distinct conversation URL was proven."
@@ -2156,7 +2160,13 @@ elif response_integrity_ok and focus_violation:
     status = "recovered_focus_changed"
 else:
     status = "failed"
+focus_drift_warning = None
+if status == "recovered_focus_changed":
+    focus_drift_warning = "focus_stolen_mid_submit" if focus_stolen_mid else "focus_stolen_despite_no_activate"
+
 if status == "completed":
+    failure = None
+elif status == "recovered_focus_changed":
     failure = None
 elif focus_violation and focus_stolen_mid:
     failure = "focus_stolen_mid_submit"
@@ -2207,6 +2217,7 @@ pathlib.Path(meta).write_text(json.dumps({
     "active_tab_after": focus_after["activeTabId"],
     "focus_changed": focus_changed,
     "focus_stolen_mid_submit": focus_stolen_mid,
+    "focus_drift_warning": focus_drift_warning,
     "focus_invariant_ok": not focus_violation,
     "transport_degraded": bool(status == "recovered_focus_changed"),
     "recovered_output": bool(status == "recovered_focus_changed"),
