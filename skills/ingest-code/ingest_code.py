@@ -1135,22 +1135,29 @@ class _PythonLexicalCollector(ast.NodeVisitor):
     def __init__(self, root: ast.AST) -> None:
         self.root = root
         self.local_variables: set[str] = set()
+        self.excluded_bindings: set[str] = set()
         self.called_symbols: set[str] = set()
         self.string_literals: set[str] = set()
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+        if node is not self.root:
+            self._add_local_binding(node.name)
         self._visit_function_header(node)
         if node is self.root:
             for statement in node.body:
                 self.visit(statement)
 
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+        if node is not self.root:
+            self._add_local_binding(node.name)
         self._visit_function_header(node)
         if node is self.root:
             for statement in node.body:
                 self.visit(statement)
 
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        if node is not self.root:
+            self._add_local_binding(node.name)
         self._visit_class_header(node)
         if node is self.root:
             for statement in node.body:
@@ -1163,7 +1170,51 @@ class _PythonLexicalCollector(ast.NodeVisitor):
 
     def visit_Name(self, node: ast.Name) -> None:
         if isinstance(node.ctx, ast.Store):
-            self.local_variables.add(node.id)
+            self._add_local_binding(node.id)
+
+    def visit_Import(self, node: ast.Import) -> None:
+        for alias in node.names:
+            name = alias.asname or alias.name.split(".", 1)[0]
+            self._add_local_binding(name)
+
+    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
+        for alias in node.names:
+            if alias.name == "*":
+                continue
+            name = alias.asname or alias.name
+            self._add_local_binding(name)
+
+    def visit_ExceptHandler(self, node: ast.ExceptHandler) -> None:
+        if node.name:
+            self._add_local_binding(node.name)
+        if node.type is not None:
+            self.visit(node.type)
+        for statement in node.body:
+            self.visit(statement)
+
+    def visit_MatchAs(self, node: ast.MatchAs) -> None:
+        if node.name:
+            self._add_local_binding(node.name)
+        if node.pattern is not None:
+            self.visit(node.pattern)
+
+    def visit_MatchStar(self, node: ast.MatchStar) -> None:
+        if node.name:
+            self._add_local_binding(node.name)
+
+    def visit_MatchMapping(self, node: ast.MatchMapping) -> None:
+        if node.rest:
+            self._add_local_binding(node.rest)
+        for key in node.keys:
+            self.visit(key)
+        for pattern in node.patterns:
+            self.visit(pattern)
+
+    def visit_Global(self, node: ast.Global) -> None:
+        self.excluded_bindings.update(node.names)
+
+    def visit_Nonlocal(self, node: ast.Nonlocal) -> None:
+        self.excluded_bindings.update(node.names)
 
     def visit_Call(self, node: ast.Call) -> None:
         call_name = _name_from_call(node.func)
@@ -1215,6 +1266,13 @@ class _PythonLexicalCollector(ast.NodeVisitor):
             if default is not None:
                 self.visit(default)
 
+    def _add_local_binding(self, name: str) -> None:
+        if name:
+            self.local_variables.add(name)
+
+    def normalized_local_variables(self) -> list[str]:
+        return sorted(self.local_variables - self.excluded_bindings)
+
 
 def _extract_python_symbol_details(
     filepath: Path,
@@ -1261,7 +1319,7 @@ def _extract_python_symbol_details(
         "end_line": getattr(node, "end_lineno", start_line),
         "docstring": ast.get_docstring(node) or "",
         "parameters": parameters,
-        "local_variables": sorted(lexical_collector.local_variables),
+        "local_variables": lexical_collector.normalized_local_variables(),
         "called_symbols": sorted(lexical_collector.called_symbols),
         "string_literals": sorted(lexical_collector.string_literals),
         "parent_symbol": parent_symbol,

@@ -298,6 +298,9 @@ variadic, keyword-only, and keyword-variadic arguments in declaration order,
 while preserving the existing omission of a parameter literally named `self`.
 Python lexical fields are declaration-scoped; they include nested declaration
 headers but exclude nested function, class, and lambda bodies.
+For Python, `local_variables` includes names bound in the selected declaration's
+scope, including nested declaration names, imports, exception aliases, and
+pattern captures, not only assignment-target `Name(Store)` nodes.
 
 ## Directory Filtering
 
