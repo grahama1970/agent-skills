@@ -1,0 +1,442 @@
+{
+  "acoustic_gate_finding": {
+    "implication": "chatterbox stage-preset deltas (temperature 0.70-0.90 etc.) are acoustically weak relative to render-to-render stochasticity on a single sentence. Dream-weight tuning at the tone-selection layer cannot currently produce a measurable prosodic effect; the emotional realization mechanism itself (sampling presets) is the bottleneck. Options: wider preset separation (chatterbox-side), pause/pace strategy (pause_after_ms is deterministic), text-side delivery cues, or reference-audio/exaggeration conditioning.",
+    "statement": "At n=5 medians, no arm's shift vs flat exceeds the same-parameter single-render spread on any metric (e.g. dream f0_sd shift +5.43 Hz vs flat same-param spread 21.21 Hz; wrong arm, parameter-identical to flat, differs by 26.4 Hz in median f0_mean). The single-render v1 reading (dream arm steadier pitch) did NOT replicate.",
+    "status": "NOT_SEPARABLE_AT_N5",
+    "supersedes": "four_arm_acoustic_receipt.v1.json single-render interpretation"
+  },
+  "arms": {
+    "dream": {
+      "tags": {
+        "pace": "steady",
+        "tone": "firm_boundary"
+      },
+      "wavs": [
+        "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/dream_r0.wav",
+        "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/dream_r1.wav",
+        "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/dream_r2.wav",
+        "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/dream_r3.wav",
+        "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/dream_r4.wav"
+      ]
+    },
+    "flat": {
+      "tags": {},
+      "wavs": [
+        "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/flat_r0.wav",
+        "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/flat_r1.wav",
+        "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/flat_r2.wav",
+        "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/flat_r3.wav",
+        "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/flat_r4.wav"
+      ]
+    },
+    "static": {
+      "tags": {
+        "tone": "memory_confident"
+      },
+      "wavs": [
+        "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/static_r0.wav",
+        "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/static_r1.wav",
+        "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/static_r2.wav",
+        "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/static_r3.wav",
+        "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/static_r4.wav"
+      ]
+    },
+    "wrong": {
+      "tags": {
+        "pace": "measured",
+        "tone": "calm_precise"
+      },
+      "wavs": [
+        "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/wrong_r0.wav",
+        "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/wrong_r1.wav",
+        "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/wrong_r2.wav",
+        "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/wrong_r3.wav",
+        "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/wrong_r4.wav"
+      ]
+    }
+  },
+  "caveat": "acoustic gate only; perceived affect requires the blinded human read",
+  "created_at": "2026-07-23T14:35:42Z",
+  "deltas_vs_flat_medians": {
+    "dream": {
+      "duration_s": 0.16,
+      "f0_mean_hz": -2.7,
+      "f0_range_hz": 29.33,
+      "f0_sd_hz": 5.43,
+      "speech_rate_proxy_syl_s": -0.19
+    },
+    "static": {
+      "duration_s": 0.24,
+      "f0_mean_hz": -16.4,
+      "f0_range_hz": -14.94,
+      "f0_sd_hz": -7.48,
+      "speech_rate_proxy_syl_s": -0.28
+    },
+    "wrong": {
+      "duration_s": 0.0,
+      "f0_mean_hz": -26.4,
+      "f0_range_hz": -38.54,
+      "f0_sd_hz": -10.92,
+      "speech_rate_proxy_syl_s": 0.0
+    }
+  },
+  "design_note": "wrong arm (calm_precise) maps to chatterbox neutral stage = identical sampling params to flat, making it a same-parameter control; spreads bound single-render synthesis variance.",
+  "dream_composed_tone": "firm_boundary",
+  "dream_profile": "marketa (boundary 0.52)",
+  "dream_vs_wrong_separation_medians": {
+    "duration_s": 0.16,
+    "f0_mean_hz": 23.7,
+    "f0_sd_hz": 16.35,
+    "speech_rate_proxy_syl_s": 0.19
+  },
+  "live": true,
+  "metrics_medians": {
+    "dream": {
+      "duration_s": 4.76,
+      "duration_s_spread": 1.52,
+      "f0_mean_hz": 226.39,
+      "f0_mean_hz_spread": 47.51,
+      "f0_range_hz": 148.08,
+      "f0_range_hz_spread": 102.22,
+      "f0_sd_hz": 52.57,
+      "f0_sd_hz_spread": 38.63,
+      "low_energy_fraction": 0.203,
+      "low_energy_fraction_spread": 0.004,
+      "rms_mean": 0.028,
+      "rms_mean_spread": 0.011,
+      "rms_sd": 0.019,
+      "rms_sd_spread": 0.007,
+      "speech_rate_proxy_syl_s": 5.59,
+      "speech_rate_proxy_syl_s_spread": 1.58,
+      "voiced_fraction": 0.703,
+      "voiced_fraction_spread": 0.169
+    },
+    "flat": {
+      "duration_s": 4.6,
+      "duration_s_spread": 1.36,
+      "f0_mean_hz": 229.09,
+      "f0_mean_hz_spread": 31.63,
+      "f0_range_hz": 118.75,
+      "f0_range_hz_spread": 60.85,
+      "f0_sd_hz": 47.14,
+      "f0_sd_hz_spread": 21.21,
+      "low_energy_fraction": 0.203,
+      "low_energy_fraction_spread": 0.001,
+      "rms_mean": 0.027,
+      "rms_mean_spread": 0.003,
+      "rms_sd": 0.02,
+      "rms_sd_spread": 0.004,
+      "speech_rate_proxy_syl_s": 5.78,
+      "speech_rate_proxy_syl_s_spread": 1.63,
+      "voiced_fraction": 0.708,
+      "voiced_fraction_spread": 0.135
+    },
+    "static": {
+      "duration_s": 4.84,
+      "duration_s_spread": 0.88,
+      "f0_mean_hz": 212.69,
+      "f0_mean_hz_spread": 33.1,
+      "f0_range_hz": 103.81,
+      "f0_range_hz_spread": 42.19,
+      "f0_sd_hz": 39.66,
+      "f0_sd_hz_spread": 16.79,
+      "low_energy_fraction": 0.203,
+      "low_energy_fraction_spread": 0.002,
+      "rms_mean": 0.028,
+      "rms_mean_spread": 0.008,
+      "rms_sd": 0.019,
+      "rms_sd_spread": 0.007,
+      "speech_rate_proxy_syl_s": 5.5,
+      "speech_rate_proxy_syl_s_spread": 1.04,
+      "voiced_fraction": 0.714,
+      "voiced_fraction_spread": 0.148
+    },
+    "wrong": {
+      "duration_s": 4.6,
+      "duration_s_spread": 1.12,
+      "f0_mean_hz": 202.69,
+      "f0_mean_hz_spread": 24.71,
+      "f0_range_hz": 80.21,
+      "f0_range_hz_spread": 42.69,
+      "f0_sd_hz": 36.22,
+      "f0_sd_hz_spread": 25.06,
+      "low_energy_fraction": 0.203,
+      "low_energy_fraction_spread": 0.003,
+      "rms_mean": 0.026,
+      "rms_mean_spread": 0.008,
+      "rms_sd": 0.019,
+      "rms_sd_spread": 0.005,
+      "speech_rate_proxy_syl_s": 5.78,
+      "speech_rate_proxy_syl_s_spread": 1.19,
+      "voiced_fraction": 0.787,
+      "voiced_fraction_spread": 0.124
+    }
+  },
+  "n_renders_per_arm": 5,
+  "per_render_metrics": {
+    "dream": [
+      {
+        "duration_s": 5.88,
+        "f0_mean_hz": 227.37,
+        "f0_range_hz": 160.05,
+        "f0_sd_hz": 61.63,
+        "low_energy_fraction": 0.203,
+        "rms_mean": 0.02055,
+        "rms_sd": 0.01649,
+        "speech_rate_proxy_syl_s": 4.52,
+        "voiced_fraction": 0.656
+      },
+      {
+        "duration_s": 4.48,
+        "f0_mean_hz": 198.21,
+        "f0_range_hz": 59.67,
+        "f0_sd_hz": 23.0,
+        "low_energy_fraction": 0.204,
+        "rms_mean": 0.03141,
+        "rms_sd": 0.02392,
+        "speech_rate_proxy_syl_s": 5.94,
+        "voiced_fraction": 0.825
+      },
+      {
+        "duration_s": 4.76,
+        "f0_mean_hz": 212.6,
+        "f0_range_hz": 102.11,
+        "f0_sd_hz": 39.23,
+        "low_energy_fraction": 0.201,
+        "rms_mean": 0.02534,
+        "rms_sd": 0.01915,
+        "speech_rate_proxy_syl_s": 5.59,
+        "voiced_fraction": 0.674
+      },
+      {
+        "duration_s": 4.36,
+        "f0_mean_hz": 245.72,
+        "f0_range_hz": 161.89,
+        "f0_sd_hz": 58.21,
+        "low_energy_fraction": 0.2,
+        "rms_mean": 0.02915,
+        "rms_sd": 0.01791,
+        "speech_rate_proxy_syl_s": 6.1,
+        "voiced_fraction": 0.707
+      },
+      {
+        "duration_s": 5.24,
+        "f0_mean_hz": 226.39,
+        "f0_range_hz": 148.08,
+        "f0_sd_hz": 52.57,
+        "low_energy_fraction": 0.203,
+        "rms_mean": 0.02806,
+        "rms_sd": 0.02067,
+        "speech_rate_proxy_syl_s": 5.08,
+        "voiced_fraction": 0.703
+      }
+    ],
+    "flat": [
+      {
+        "duration_s": 5.44,
+        "f0_mean_hz": 240.15,
+        "f0_range_hz": 135.37,
+        "f0_sd_hz": 52.01,
+        "low_energy_fraction": 0.203,
+        "rms_mean": 0.02593,
+        "rms_sd": 0.02175,
+        "speech_rate_proxy_syl_s": 4.89,
+        "voiced_fraction": 0.652
+      },
+      {
+        "duration_s": 5.12,
+        "f0_mean_hz": 232.23,
+        "f0_range_hz": 106.97,
+        "f0_sd_hz": 47.14,
+        "low_energy_fraction": 0.203,
+        "rms_mean": 0.02716,
+        "rms_sd": 0.01974,
+        "speech_rate_proxy_syl_s": 5.2,
+        "voiced_fraction": 0.651
+      },
+      {
+        "duration_s": 4.6,
+        "f0_mean_hz": 211.96,
+        "f0_range_hz": 118.75,
+        "f0_sd_hz": 48.2,
+        "low_energy_fraction": 0.204,
+        "rms_mean": 0.02786,
+        "rms_sd": 0.02137,
+        "speech_rate_proxy_syl_s": 5.78,
+        "voiced_fraction": 0.722
+      },
+      {
+        "duration_s": 4.28,
+        "f0_mean_hz": 208.52,
+        "f0_range_hz": 80.46,
+        "f0_sd_hz": 30.8,
+        "low_energy_fraction": 0.204,
+        "rms_mean": 0.02862,
+        "rms_sd": 0.01739,
+        "speech_rate_proxy_syl_s": 6.21,
+        "voiced_fraction": 0.786
+      },
+      {
+        "duration_s": 4.08,
+        "f0_mean_hz": 229.09,
+        "f0_range_hz": 141.31,
+        "f0_sd_hz": 45.85,
+        "low_energy_fraction": 0.203,
+        "rms_mean": 0.0268,
+        "rms_sd": 0.01745,
+        "speech_rate_proxy_syl_s": 6.52,
+        "voiced_fraction": 0.708
+      }
+    ],
+    "static": [
+      {
+        "duration_s": 4.52,
+        "f0_mean_hz": 203.79,
+        "f0_range_hz": 103.81,
+        "f0_sd_hz": 39.66,
+        "low_energy_fraction": 0.203,
+        "rms_mean": 0.02392,
+        "rms_sd": 0.0184,
+        "speech_rate_proxy_syl_s": 5.88,
+        "voiced_fraction": 0.623
+      },
+      {
+        "duration_s": 5.2,
+        "f0_mean_hz": 236.89,
+        "f0_range_hz": 83.57,
+        "f0_sd_hz": 34.21,
+        "low_energy_fraction": 0.201,
+        "rms_mean": 0.03205,
+        "rms_sd": 0.02185,
+        "speech_rate_proxy_syl_s": 5.12,
+        "voiced_fraction": 0.75
+      },
+      {
+        "duration_s": 4.32,
+        "f0_mean_hz": 217.77,
+        "f0_range_hz": 125.76,
+        "f0_sd_hz": 51.0,
+        "low_energy_fraction": 0.202,
+        "rms_mean": 0.02417,
+        "rms_sd": 0.0151,
+        "speech_rate_proxy_syl_s": 6.16,
+        "voiced_fraction": 0.64
+      },
+      {
+        "duration_s": 4.84,
+        "f0_mean_hz": 207.32,
+        "f0_range_hz": 125.68,
+        "f0_sd_hz": 47.91,
+        "low_energy_fraction": 0.203,
+        "rms_mean": 0.02782,
+        "rms_sd": 0.01905,
+        "speech_rate_proxy_syl_s": 5.5,
+        "voiced_fraction": 0.714
+      },
+      {
+        "duration_s": 4.92,
+        "f0_mean_hz": 212.69,
+        "f0_range_hz": 94.01,
+        "f0_sd_hz": 35.49,
+        "low_energy_fraction": 0.203,
+        "rms_mean": 0.0311,
+        "rms_sd": 0.02025,
+        "speech_rate_proxy_syl_s": 5.41,
+        "voiced_fraction": 0.771
+      }
+    ],
+    "wrong": [
+      {
+        "duration_s": 5.6,
+        "f0_mean_hz": 204.1,
+        "f0_range_hz": 93.2,
+        "f0_sd_hz": 39.4,
+        "low_energy_fraction": 0.202,
+        "rms_mean": 0.02609,
+        "rms_sd": 0.02072,
+        "speech_rate_proxy_syl_s": 4.75,
+        "voiced_fraction": 0.692
+      },
+      {
+        "duration_s": 4.6,
+        "f0_mean_hz": 182.84,
+        "f0_range_hz": 84.42,
+        "f0_sd_hz": 46.83,
+        "low_energy_fraction": 0.204,
+        "rms_mean": 0.02276,
+        "rms_sd": 0.0176,
+        "speech_rate_proxy_syl_s": 5.78,
+        "voiced_fraction": 0.796
+      },
+      {
+        "duration_s": 4.52,
+        "f0_mean_hz": 202.69,
+        "f0_range_hz": 50.51,
+        "f0_sd_hz": 21.77,
+        "low_energy_fraction": 0.203,
+        "rms_mean": 0.03045,
+        "rms_sd": 0.02208,
+        "speech_rate_proxy_syl_s": 5.88,
+        "voiced_fraction": 0.816
+      },
+      {
+        "duration_s": 5.08,
+        "f0_mean_hz": 194.12,
+        "f0_range_hz": 80.21,
+        "f0_sd_hz": 36.22,
+        "low_energy_fraction": 0.201,
+        "rms_mean": 0.02296,
+        "rms_sd": 0.01723,
+        "speech_rate_proxy_syl_s": 5.24,
+        "voiced_fraction": 0.745
+      },
+      {
+        "duration_s": 4.48,
+        "f0_mean_hz": 207.55,
+        "f0_range_hz": 75.54,
+        "f0_sd_hz": 28.54,
+        "low_energy_fraction": 0.204,
+        "rms_mean": 0.02746,
+        "rms_sd": 0.01921,
+        "speech_rate_proxy_syl_s": 5.94,
+        "voiced_fraction": 0.787
+      }
+    ]
+  },
+  "schema": "persona_dream.four_arm_acoustic_receipt.v2",
+  "sentence": "I looked at what you sent, and I think we should take it one step at a time, together.",
+  "variance_calibration": {
+    "duration_s": {
+      "dream_median_shift_vs_flat": 0.16,
+      "flat_spread": 1.36,
+      "wrong_spread": 1.12
+    },
+    "f0_mean_hz": {
+      "dream_median_shift_vs_flat": -2.7,
+      "flat_spread": 31.63,
+      "wrong_spread": 24.71
+    },
+    "f0_range_hz": {
+      "dream_median_shift_vs_flat": 29.33,
+      "flat_spread": 60.85,
+      "wrong_spread": 42.69
+    },
+    "f0_sd_hz": {
+      "dream_median_shift_vs_flat": 5.43,
+      "flat_spread": 21.21,
+      "wrong_spread": 25.06
+    },
+    "speech_rate_proxy_syl_s": {
+      "dream_median_shift_vs_flat": -0.19,
+      "flat_spread": 1.63,
+      "wrong_spread": 1.19
+    },
+    "voiced_fraction": {
+      "dream_median_shift_vs_flat": -0.005,
+      "flat_spread": 0.135,
+      "wrong_spread": 0.124
+    }
+  },
+  "wrong_composed_tone": "calm_precise",
+  "wrong_profile": "tommy (reflection)"
+}

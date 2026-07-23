@@ -14,20 +14,20 @@
       "intent_tone": "deflect_calm",
       "matrix_status": "failed",
       "render": {
-        "audio_bytes": 272718,
+        "audio_bytes": 265038,
         "audio_on_disk": true,
         "failed_gates": [],
         "ok": true
       },
       "shuffled_family": "boundary",
-      "shuffled_tone": "considered_boundary"
+      "shuffled_tone": "deflect_calm"
     },
     {
       "baseline_tone": "careful_concerned",
       "dream_class": "expressive_bias",
       "dream_family": "gentle",
-      "dream_tone": "gentle_firm",
-      "dream_vs_shuffled_differs": true,
+      "dream_tone": "careful_concerned",
+      "dream_vs_shuffled_differs": false,
       "expected_family": "gentle",
       "gate": true,
       "gate_rule": "failing case composes into expected family",
@@ -36,13 +36,13 @@
       "intent_tone": "careful_concerned",
       "matrix_status": "failed",
       "render": {
-        "audio_bytes": 240078,
+        "audio_bytes": 295758,
         "audio_on_disk": true,
         "failed_gates": [],
         "ok": true
       },
       "shuffled_family": "gentle",
-      "shuffled_tone": "gentle_considered"
+      "shuffled_tone": "careful_concerned"
     },
     {
       "baseline_tone": "deflect_calm",
@@ -58,13 +58,13 @@
       "intent_tone": "deflect_calm",
       "matrix_status": "passed",
       "render": {
-        "audio_bytes": 289998,
+        "audio_bytes": 255438,
         "audio_on_disk": true,
         "failed_gates": [],
         "ok": true
       },
       "shuffled_family": "boundary",
-      "shuffled_tone": "considered_boundary",
+      "shuffled_tone": "deflect_calm",
       "situational_family": "boundary",
       "upstream_finding": "/intent classified this prompt as deflect_calm (boundary family) but the matrix expects warm \u2014 upstream situational classifier drift; NOT the composer's to repair (webgpt r3 dissent honored)"
     },
@@ -80,7 +80,7 @@
       "intent_tone": "one_at_a_time_interrupt",
       "matrix_status": "failed",
       "render": {
-        "audio_bytes": 163278,
+        "audio_bytes": 172878,
         "audio_on_disk": true,
         "failed_gates": [],
         "ok": true
@@ -88,7 +88,7 @@
       "shuffled_tone": "one_at_a_time_interrupt"
     }
   ],
-  "created_at": "2026-07-23T14:12:46Z",
+  "created_at": "2026-07-23T14:33:51Z",
   "dream_profile": "dream_auto_cycle_20260723T102522Z",
   "live": true,
   "passed": true,

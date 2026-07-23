@@ -38,7 +38,7 @@ check("dispositional_floor", r["tone"] == "firm_boundary"
 
 # 4. never change a right answer: warm situational + boundary dream stays WARM family
 r = pac.compose({"tone": "warm_deescalate"}, DREAM)
-check("right_answer_family_preserved", r["tone"] == "warm_direct",
+check("right_answer_family_preserved", r["tone"] == "neutral_warm",
       {"final": r["tone"], "note": "boundary dream colors warm family, does not leave it"})
 
 # 5. unknown label passthrough: prior cannot apply
@@ -58,10 +58,28 @@ check("thermal_dampening", fired is True
 
 # 7b. missing /intent policy fails closed to careful (best-practices contract)
 r = pac.compose(None, DREAM)
-check("missing_policy_fail_closed", r["tone"] == "careful"
+check("missing_policy_fail_closed", r["tone"] == "memory_uncertain"
       and r["composition_receipt"]["class"] == "missing_policy_fail_closed"
       and r["composition_receipt"]["cue_policy"] == "intent_missing_voice_delivery_policy",
       {"final": r["tone"]})
+
+# 7c. vocabulary compliance: every composer output tone is a member of
+# chatterbox ALLOWED_TONES parsed from the presets file on disk (Amendment 1).
+import ast, os
+presets_path = os.path.expanduser(
+    "~/workspace/experiments/chatterbox/src/chatterbox/agent/presets.py")
+tree = ast.parse(open(presets_path).read())
+allowed = None
+for node in ast.walk(tree):
+    if isinstance(node, ast.Assign) and getattr(node.targets[0], "id", "") == "ALLOWED_TONES":
+        allowed = set(ast.literal_eval(node.value))
+outputs = {t for fams in pac.TAG_FAMILY_TONE.values() for t, _ in fams.values()}
+outputs |= {t for t, _ in pac.TAG_FLOOR_TONE.values()}
+outputs.add(pac.MISSING_POLICY_TONE[0])
+check("output_vocabulary_in_chatterbox_allowed_tones",
+      allowed is not None and outputs <= allowed,
+      {"outputs": sorted(outputs),
+       "outside_allowed": sorted(outputs - (allowed or set()))})
 
 # 7. provenance always present
 check("provenance_present", all(

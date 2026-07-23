@@ -56,45 +56,59 @@ EXPRESSIVE_FAMILY = {
     "concerned": "gentle",
     "empathetic": "gentle",
     "reassuring": "warm",
+    # canonical families for chatterbox ALLOWED_TONES used as composer outputs
+    # (GOAL_V4 Amendment 1) — keeps the family gate collision-free.
+    "neutral_warm": "warm",
+    "playful_light": "warm",
+    "calm_precise": "reflective",
+    "serious_low_energy": "reflective",
+    "curious_searching": "reflective",
+    "wait_presence": "reflective",
+    "memory_uncertain": "gentle",
+    "grief_safe": "gentle",
 }
 DEFAULT_TONES = {"memory_confident", "neutral", "satisfied"}
 # best-practices-chatterbox-agent: if /intent returns NO voice policy at all,
 # fail closed to careful and record the gap — the dream floor applies only
 # when /intent DID return a (bland) policy, i.e. we stay inside its policy.
-MISSING_POLICY_TONE = ("careful", "measured")
+MISSING_POLICY_TONE = ("memory_uncertain", "measured")
 
 # dream emotional tag -> (per-family tone realization, pace)
 # Rows: dream tag; columns: situational family. The dream COLORS within the
 # family; it never leaves it.
+# GOAL_V4 Amendment 1: every output tone is a chatterbox ALLOWED_TONES member
+# (anything else is silently normalized to neutral_warm and never reaches the
+# sampling presets). Coloring is carried by which allowed tone (hence which
+# delivery stage/preset) is selected, plus pace.
 TAG_FAMILY_TONE = {
     "boundary":   {"boundary": ("firm_boundary", "steady"),
-                   "gentle": ("gentle_firm", "measured"),
-                   "warm": ("warm_direct", "steady"),
-                   "reflective": ("firm_reflective", "measured")},
-    "warmth":     {"boundary": ("warm_boundary", "steady"),
-                   "gentle": ("gentle_supportive", "relaxed"),
-                   "warm": ("warm_open", "relaxed"),
-                   "reflective": ("warm_reflective", "relaxed")},
-    "hesitance":  {"boundary": ("careful_boundary", "measured"),
-                   "gentle": ("gentle_tentative", "measured"),
-                   "warm": ("warm_careful", "measured"),
-                   "reflective": ("hesitant_reflective", "measured")},
-    "yearning":   {"boundary": ("earnest_boundary", "steady"),
-                   "gentle": ("gentle_earnest", "measured"),
-                   "warm": ("yearning_warm", "measured"),
-                   "reflective": ("wistful_reflective", "measured")},
-    "reflection": {"boundary": ("considered_boundary", "steady"),
-                   "gentle": ("gentle_considered", "measured"),
-                   "warm": ("warm_considered", "measured"),
-                   "reflective": ("neutral_reflective", "measured")},
+                   "gentle": ("careful_concerned", "measured"),
+                   "warm": ("neutral_warm", "steady"),
+                   "reflective": ("calm_precise", "measured")},
+    "warmth":     {"boundary": ("deflect_calm", "steady"),
+                   "gentle": ("careful_concerned", "relaxed"),
+                   "warm": ("neutral_warm", "relaxed"),
+                   "reflective": ("curious_searching", "relaxed")},
+    "hesitance":  {"boundary": ("deflect_calm", "measured"),
+                   "gentle": ("memory_uncertain", "measured"),
+                   "warm": ("neutral_warm", "measured"),
+                   "reflective": ("wait_presence", "measured")},
+    "yearning":   {"boundary": ("firm_boundary", "measured"),
+                   "gentle": ("careful_concerned", "measured"),
+                   "warm": ("neutral_warm", "measured"),
+                   "reflective": ("curious_searching", "measured")},
+    "reflection": {"boundary": ("deflect_calm", "steady"),
+                   "gentle": ("careful_concerned", "measured"),
+                   "warm": ("neutral_warm", "measured"),
+                   "reflective": ("calm_precise", "measured")},
 }
 # dispositional floor: dream tag -> (tone, pace) when situation is bland
 TAG_FLOOR_TONE = {
     "boundary": ("firm_boundary", "steady"),
-    "warmth": ("warm_open", "relaxed"),
-    "hesitance": ("hesitant_reflective", "measured"),
-    "yearning": ("yearning_warm", "measured"),
-    "reflection": ("neutral_reflective", "measured"),
+    "warmth": ("neutral_warm", "relaxed"),
+    "hesitance": ("memory_uncertain", "measured"),
+    "yearning": ("curious_searching", "measured"),
+    "reflection": ("calm_precise", "measured"),
 }
 THERMAL_THRESHOLD = 0.6
 THERMAL_CONSECUTIVE = 3
