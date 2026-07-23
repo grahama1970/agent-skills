@@ -1113,6 +1113,22 @@ def _find_python_parent_symbol(tree: ast.AST, start_line: int, node: ast.AST) ->
     return parent.name
 
 
+def _python_parameter_names(node: ast.FunctionDef | ast.AsyncFunctionDef) -> list[str]:
+    """Return Python parameter names in declaration order."""
+    args = node.args
+    ordered_args: list[ast.arg] = [
+        *args.posonlyargs,
+        *args.args,
+    ]
+    if args.vararg is not None:
+        ordered_args.append(args.vararg)
+    ordered_args.extend(args.kwonlyargs)
+    if args.kwarg is not None:
+        ordered_args.append(args.kwarg)
+
+    return [arg.arg for arg in ordered_args if arg.arg != "self"]
+
+
 def _extract_python_symbol_details(
     filepath: Path,
     kind: str,
@@ -1148,7 +1164,7 @@ def _extract_python_symbol_details(
     node = candidates[0]
     parameters: list[str] = []
     if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-        parameters = [arg.arg for arg in node.args.args if arg.arg != "self"]
+        parameters = _python_parameter_names(node)
 
     local_variables: set[str] = set()
     called_symbols: set[str] = set()
@@ -1169,7 +1185,7 @@ def _extract_python_symbol_details(
     return {
         "end_line": getattr(node, "end_lineno", start_line),
         "docstring": ast.get_docstring(node) or "",
-        "parameters": sorted(parameters),
+        "parameters": parameters,
         "local_variables": sorted(local_variables),
         "called_symbols": sorted(called_symbols),
         "string_literals": sorted(string_literals),

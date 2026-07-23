@@ -293,6 +293,10 @@ Identifier-heavy fields are emitted as lexical terms such as
 and split identifier tokens. These are inputs to `/memory`'s code retrieval
 backend.
 
+Python parameter payloads cover positional-only, positional-or-keyword,
+variadic, keyword-only, and keyword-variadic arguments in declaration order,
+while preserving the existing omission of a parameter literally named `self`.
+
 ## Directory Filtering
 
 **Git repositories:** When scanning a git repo, `/ingest-code` uses `git ls-files` which automatically respects `.gitignore`. Files ignored by git are excluded from ingestion.
