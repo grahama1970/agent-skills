@@ -1542,34 +1542,46 @@ def _is_git_repo(path: Path) -> bool:
         return False
 
 
-def _git_glob_pathspec(pattern: str) -> str | None:
-    """Translate one rglob-style relative pattern to a Git glob pathspec."""
+def _normalize_scan_glob(pattern: str) -> str | None:
+    """Return a safe repository-relative glob pattern."""
     normalized = str(pattern).strip().replace("\\", "/")
 
     while normalized.startswith("./"):
         normalized = normalized[2:]
 
-    if not normalized:
+    if not normalized or normalized == "." or "\x00" in normalized:
         return None
 
     parsed = PurePosixPath(normalized)
     if parsed.is_absolute() or ".." in parsed.parts:
         return None
 
+    if re.match(r"^[A-Za-z]:/", normalized):
+        return None
+
     if "/" not in normalized:
         normalized = f"**/{normalized}"
+
+    return normalized
+
+
+def _git_glob_pathspec(pattern: str) -> str | None:
+    """Translate one safe relative glob pattern to a Git glob pathspec."""
+    normalized = _normalize_scan_glob(pattern)
+    if normalized is None:
+        return None
 
     return f":(glob){normalized}"
 
 
 def _git_ls_files(codebase_path: Path, patterns: list[str]) -> list[Path]:
     """Return existing tracked or unignored files matching scan patterns."""
-    pathspecs = [
-        pathspec
+    normalized_patterns = list(dict.fromkeys(
+        normalized
         for pattern in patterns
-        if (pathspec := _git_glob_pathspec(pattern)) is not None
-    ]
-    pathspecs = list(dict.fromkeys(pathspecs))
+        if (normalized := _normalize_scan_glob(pattern)) is not None
+    ))
+    pathspecs = [f":(glob){pattern}" for pattern in normalized_patterns]
     if not pathspecs:
         return []
 
@@ -1634,6 +1646,11 @@ def collect_files(codebase_path: Path, patterns: list[str], mtime_after: Optiona
     files: list[Path] = []
     codebase_root = codebase_path.resolve()
     exclude_dirs = _configured_exclude_dirs(codebase_root)
+    normalized_patterns = list(dict.fromkeys(
+        normalized
+        for pattern in patterns
+        if (normalized := _normalize_scan_glob(pattern)) is not None
+    ))
 
     # Determine scan roots — either scoped dirs or full codebase
     scan_roots = _extract_configured_scan_roots(codebase_root)
@@ -1642,7 +1659,7 @@ def collect_files(codebase_path: Path, patterns: list[str], mtime_after: Optiona
     use_git = _is_git_repo(codebase_root)
 
     if use_git:
-        for f in _git_ls_files(codebase_root, patterns):
+        for f in _git_ls_files(codebase_root, normalized_patterns):
             if not _path_is_within_scan_roots(f, scan_roots):
                 continue
             if _path_is_excluded(f, codebase_root, exclude_dirs):
@@ -1651,15 +1668,21 @@ def collect_files(codebase_path: Path, patterns: list[str], mtime_after: Optiona
                 continue
             files.append(f)
     else:
-        for root in scan_roots:
-            # Fallback to rglob for non-git directories
-            for pattern in patterns:
-                for f in root.rglob(pattern):
-                    if _path_is_excluded(f, codebase_root, exclude_dirs):
-                        continue
-                    if not _path_modified_at_or_after(f, mtime_after):
-                        continue
-                    files.append(f)
+        for pattern in normalized_patterns:
+            try:
+                candidates = codebase_root.glob(pattern)
+            except (OSError, ValueError, NotImplementedError):
+                continue
+            for f in candidates:
+                if not f.is_file():
+                    continue
+                if not _path_is_within_scan_roots(f, scan_roots):
+                    continue
+                if _path_is_excluded(f, codebase_root, exclude_dirs):
+                    continue
+                if not _path_modified_at_or_after(f, mtime_after):
+                    continue
+                files.append(f)
 
     # Also include markdown docs at project root (always)
     for md_name in ["CONTEXT.md", "README.md", "CLAUDE.md", "MEMORY.md", "AGENTS.md"]:

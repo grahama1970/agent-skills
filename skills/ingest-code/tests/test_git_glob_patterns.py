@@ -63,6 +63,8 @@ def test_git_scan_honors_repository_relative_recursive_glob(tmp_path: Path) -> N
             },
         ),
         ("src/*.py", {"src/app.py"}),
+        ("./src/**/*.py", {"src/app.py", "src/nested/deep.py"}),
+        ("src\\**\\*.py", {"src/app.py", "src/nested/deep.py"}),
         (
             "src/**/*.py",
             {
@@ -113,6 +115,56 @@ def test_unsafe_git_globs_do_not_broaden_scan(pattern: str, tmp_path: Path) -> N
 
     assert ingest_code._git_glob_pathspec(pattern) is None
     assert ingest_code._git_ls_files(repo, [pattern]) == []
+
+
+def test_non_git_parent_traversal_glob_cannot_escape_repository(tmp_path: Path) -> None:
+    outside = tmp_path / "outside.py"
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    outside.write_text("def outside():\n    return 1\n")
+    (repo / "app.py").write_text("def app():\n    return 1\n")
+
+    files = ingest_code.collect_files(repo, ["../*.py"])
+
+    assert outside not in files
+    assert files == []
+
+
+@pytest.mark.parametrize("pattern", ["", "   ", ".", "/tmp/*.py", "C:\\tmp\\*.py"])
+def test_non_git_absolute_blank_and_dot_globs_fail_closed(pattern: str, tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / "app.py").write_text("def app():\n    return 1\n")
+
+    assert ingest_code._normalize_scan_glob(pattern) is None
+    assert ingest_code.collect_files(repo, [pattern]) == []
+
+
+def test_non_git_scoped_root_uses_repository_relative_glob(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / "src" / "nested").mkdir(parents=True)
+    (repo / "other").mkdir()
+    (repo / ".monitor-codebase.json").write_text('{"include_dirs": ["src"]}\n')
+    (repo / "src" / "app.py").write_text("def app():\n    return 1\n")
+    (repo / "src" / "nested" / "deep.py").write_text("def deep():\n    return 1\n")
+    (repo / "other" / "outside.py").write_text("def outside():\n    return 1\n")
+
+    files = ingest_code.collect_files(repo, ["src/**/*.py"])
+
+    assert _relative_files(repo, files) == {"src/app.py", "src/nested/deep.py"}
+
+
+def test_non_git_glob_returns_files_only(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / "src" / "nested").mkdir(parents=True)
+    (repo / "src" / "app.py").write_text("def app():\n    return 1\n")
+
+    files = ingest_code.collect_files(repo, ["**/*"])
+
+    assert _relative_files(repo, files) == {"src/app.py"}
+    assert all(path.is_file() for path in files)
 
 
 def test_git_glob_omits_deleted_index_entries(tmp_path: Path) -> None:
