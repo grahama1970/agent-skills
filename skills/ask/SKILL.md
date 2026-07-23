@@ -360,8 +360,17 @@ Rules for the calling agent:
 5. **Round N+1** (concurrent again): request text = synthesis of ALL prior
    positions (attributed per seat) + the research brief + the open questions,
    identical for every seat. Repeat 3-5 until convergence or 3 rounds.
-6. **Close**: commit per-round responses as artifacts; report converged
-   recommendations and any surviving dissent (attributed) to the human.
+6. **Close — executable slices, not prose**: a roundtable is INCOMPLETE
+   until its converged plan is converted into an executable slice manifest
+   committed to the project's evidence repo. Each slice states: owner
+   (`codex-loop` | `project-agent-script` | `human`), the concrete artifact
+   or command it produces, and a machine-checkable acceptance test. The
+   final round's prompt should ask each seat to propose or amend slices
+   directly (owner + artifact + acceptance), so the panel emits
+   implementation, not advice. Then commit per-round responses as
+   artifacts and report the slice manifest plus any surviving dissent
+   (attributed) to the human. Prose-only convergence is a protocol
+   violation (operator, 2026-07-23).
 
 Known traps: prompt text containing `~<digits>` (e.g. "~20 pages") trips
 surf's path preflight (agent-skills#973) — write "about 20"; ChatGPT project
