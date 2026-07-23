@@ -1,0 +1,138 @@
+{
+  "activated": false,
+  "active_tab_after": 837360649,
+  "active_tab_before": 837360873,
+  "agent_action": "Preserve as degraded transport evidence only; rerun in a dedicated reviewer window for clean background proof.",
+  "agent_diagnosis": "The controlled tab returned sentinel output, but browser focus changed during no-activate mode.",
+  "background_hidden_polls": null,
+  "background_poll_count": null,
+  "chatgpt_rate_limit": {
+    "action": null,
+    "dismiss_attempted": false,
+    "dismissed": false,
+    "error": null,
+    "exhausted": null,
+    "retry_attempted": false,
+    "retry_attempts": null,
+    "wait_seconds": null
+  },
+  "chatgpt_too_many_requests_detected": false,
+  "clean_chars": 15821,
+  "clean_contains_sentinel": false,
+  "clean_contamination_markers": [],
+  "controlled_tab_id": "837360856",
+  "controlled_tab_id_mismatch": false,
+  "conversation_max_length_detected": false,
+  "conversation_max_length_rollover": {
+    "action": null,
+    "attempted": false,
+    "error": null,
+    "from_tab_id": null,
+    "to_tab_id": null
+  },
+  "conversation_url": "https://chatgpt.com/g/g-p-6a2d6f0882fc8191b3d9c40b349dd193-dream/c/6a60aa24-ede4-83ea-ae32-ba2b13a12f94",
+  "current_url": "https://chatgpt.com/g/g-p-6a2d6f0882fc8191b3d9c40b349dd193-dream/c/6a60aa24-ede4-83ea-ae32-ba2b13a12f94",
+  "document_hidden_at_completion": null,
+  "extract_fallback_meta": null,
+  "extract_fallback_raw": null,
+  "extract_fallback_reason": null,
+  "extract_fallback_used": false,
+  "failure": "focus_stolen_despite_no_activate",
+  "finished_at": "2026-07-23T14:49:06Z",
+  "focus_changed": true,
+  "focus_invariant_ok": false,
+  "focus_mid_log": "/tmp/surf-webgpt-focus-mid.eLVWPz.log",
+  "focus_stolen_mid_submit": false,
+  "focused_window_after": 837360027,
+  "focused_window_before": 837360872,
+  "hidden_recovery_used": null,
+  "input": "skills/persona-dream/reports/goal_v4/roundtable/r1/bundle.md",
+  "no_activate": true,
+  "notification_assisted_wait_completion_proof": false,
+  "notification_assisted_wait_reason": "disabled",
+  "notification_assisted_wait_requested": false,
+  "observed_requested_reasoning": "Pro",
+  "output": "skills/persona-dream/reports/goal_v4/roundtable/r1/webgpt.md",
+  "page_text_contains_sentinel": null,
+  "prompt_path_preflight": {
+    "agent_action": "Prompt contains local filesystem path references that may not resolve in the browser. Submission allowed (--warn-only). Verify the paths are documentation text, not file attachments.",
+    "browser_submit_allowed": true,
+    "local_paths": [
+      {
+        "exists_locally": false,
+        "path": "/tau/voice-render"
+      }
+    ],
+    "reason": "web_review_bundle_warning",
+    "safe_default": "provide_concatenated_text_or_small_zip",
+    "schema": "surf.webgpt_prompt_preflight.v1",
+    "status": "warn"
+  },
+  "proof_status": "degraded_focus",
+  "raw_chars": 15866,
+  "raw_contains_sentinel": true,
+  "raw_output": "skills/persona-dream/reports/goal_v4/roundtable/r1/webgpt.raw.md",
+  "reasoning_selection_error": null,
+  "reasoning_selection_status": "selected",
+  "recovered_output": true,
+  "requested_model": null,
+  "requested_reasoning": "Pro",
+  "requested_tab_id": "837360856",
+  "requested_url": null,
+  "response_proof_status": "response_proven",
+  "response_source": null,
+  "roundtrip_preflight": null,
+  "roundtrip_preflight_exit_code": 0,
+  "roundtrip_preflight_output_dir": null,
+  "roundtrip_preflight_required": false,
+  "selected_reasoning": "Pro",
+  "sentinel": "<<<WEBGPT_DONE:20260723T144201Z:be8ed305>>>",
+  "stable_polls": 3,
+  "started_at": "2026-07-23T14:42:02Z",
+  "status": "recovered_focus_changed",
+  "stderr_log": "/tmp/surf-webgpt-submit-stderr.st92cq.log",
+  "submitted_output": "skills/persona-dream/reports/goal_v4/roundtable/r1/webgpt.md.submitted.md",
+  "submitted_to_chatgpt": true,
+  "surf_doctor_request_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/roundtable/r1/webgpt.meta.surf-doctor-request.json",
+  "tab_identity_preflight": {
+    "chatgpt_tabs_count": 17,
+    "checks": [
+      {
+        "detail": "837360856",
+        "name": "tab_id_valid",
+        "ok": true
+      },
+      {
+        "detail": "ok",
+        "name": "tab_open_chatgpt",
+        "ok": true
+      },
+      {
+        "detail": "expected_url matched tab 837360856",
+        "name": "expected_url_matches_tab",
+        "ok": true
+      },
+      {
+        "detail": "verified",
+        "name": "tab_identity_verified_or_allowed",
+        "ok": true
+      }
+    ],
+    "error": null,
+    "expected_title": null,
+    "expected_url": "https://chatgpt.com/g/g-p-6a2d6f0882fc8191b3d9c40b349dd193-dream/c/6a60aa24-ede4-83ea-ae32-ba2b13a12f94",
+    "ok": true,
+    "source": "tab-id",
+    "tab": {
+      "id": "837360856",
+      "title": "Dream - Persona Dream Asessment 5",
+      "url": "https://chatgpt.com/g/g-p-6a2d6f0882fc8191b3d9c40b349dd193-dream/c/6a60aa24-ede4-83ea-ae32-ba2b13a12f94"
+    },
+    "tab_id": "837360856"
+  },
+  "tab_url": "https://chatgpt.com/g/g-p-6a2d6f0882fc8191b3d9c40b349dd193-dream/c/6a60aa24-ede4-83ea-ae32-ba2b13a12f94",
+  "tab_was_created": false,
+  "timeout_s": 2400,
+  "transport_degraded": true,
+  "visibility_state_at_completion": null
+}

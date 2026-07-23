@@ -3,6 +3,31 @@
 **Last updated:** 2026-07-22 UTC (PCTOM-R strict objective bundle with v25-26 evidence) by agent
 **Status:** Active development
 
+## 2026-07-23 — Amendment 1, n=5 acoustic finding, roundtable 4 converged
+
+- GOAL_V4 Amendment 1: composer output vocabulary remapped onto chatterbox
+  ALLOWED_TONES (15-tone closed set; `normalize_tone()` silently converts
+  unknown labels to neutral_warm — original V4.1 labels were acoustically
+  inert). Fixture probe parses ALLOWED_TONES from the chatterbox presets file
+  on disk (9/9 pass). Missing /intent policy now fails closed to
+  memory_uncertain per best-practices-chatterbox-agent.
+- VERIFIED: TURBO_IGNORED_PARAMS rejects exaggeration/cfg_weight — the
+  classic chatterbox emotion knob is unavailable on Turbo; synthesis-side
+  affect = sampling presets only, plus deterministic pace/pause/text levers.
+- n=5 four-arm probe (receipt v2): NO arm's median shift vs flat exceeds
+  same-parameter render variance (flat f0_sd spread 21.2 Hz; param-identical
+  flat/wrong arms differ 26.4 Hz median f0_mean). Supersedes the v1
+  single-render reading. Presets are a sub-variance affect channel.
+- Roundtable 4 (webgpt/webclaude/webkimi, 2 rounds, converged):
+  see reports/goal_v4/roundtable/SYNTHESIS.md. Verdicts: pipeline MET,
+  accuracy PARTIALLY MET (semantic-fidelity oracle owed), runtime
+  composition MET, acoustic effect NOT MET for presets, perception OPEN,
+  dream-beyond-memory OPEN. GOAL_V5 charter converged: answer-invariance
+  fixture -> 480-render timing+tags reach screen -> ToM annotation ->
+  cross-turn F/M/D/S listener kill-test with D>M primary. Surviving dissent
+  for operator: pivot rule (futility-interval vs simple-null) and whether
+  the dream intermediate has non-voice value worth stating pre-study.
+
 ## Current Understanding
 
 - 2026-07-23 (GOAL_V4 COMPLETE — DREAMS SHAPE EMBRY'S LIVE VOICE, TESTED
