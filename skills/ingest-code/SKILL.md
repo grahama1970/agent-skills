@@ -119,6 +119,12 @@ duplicate source-symbol records count once. Conflicting records for the same
 path, qualified name, and start line fail with status 1 and produce no
 completed marker.
 
+When taxonomy support is available, both `scan` and `rescan` enrich the
+complete functional-knowledge batch before the first knowledge write for that
+codebase. Taxonomy exceptions or malformed tag results exit with status 1,
+prevent later phases and the completed marker, and are not silently treated as
+empty enrichment. Absence of the taxonomy module remains nonfatal.
+
 Every discovered source file used by a requested phase must remain readable. A
 read failure exits with status 1 and prevents the completed marker. Readable
 files with unsupported or syntactically invalid content may still produce zero

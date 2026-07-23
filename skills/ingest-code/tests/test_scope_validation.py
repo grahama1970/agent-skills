@@ -19,6 +19,11 @@ sys.modules[spec.name] = ingest_code
 spec.loader.exec_module(ingest_code)
 
 
+class _EmptyTaxonomy:
+    def extract_taxonomy(self, *args, **kwargs):
+        return {"bridge_tags": [], "collection_tags": {}}
+
+
 def _scan_args(repo: Path, **overrides) -> dict:
     options = {
         "path": repo,
@@ -102,7 +107,7 @@ def test_scan_propagates_normalized_scope(monkeypatch, tmp_path: Path) -> None:
     source.write_text("def app():\n    return 1\n")
     scopes: list[tuple[str, str]] = []
     monkeypatch.setattr(ingest_code, "find_memory_skill", lambda: tmp_path / "memory.py")
-    monkeypatch.setattr(ingest_code, "load_taxonomy_module", lambda: object())
+    monkeypatch.setattr(ingest_code, "load_taxonomy_module", lambda: _EmptyTaxonomy())
     monkeypatch.setattr(ingest_code, "_collect_files_or_exit", lambda *args, **kwargs: [source])
     monkeypatch.setattr(
         ingest_code,
@@ -144,7 +149,7 @@ def test_rescan_propagates_normalized_scope(monkeypatch, tmp_path: Path) -> None
     source.write_text("def app():\n    return 1\n")
     scopes: list[tuple[str, str]] = []
     monkeypatch.setattr(ingest_code, "find_memory_skill", lambda: tmp_path / "memory.py")
-    monkeypatch.setattr(ingest_code, "load_taxonomy_module", lambda: object())
+    monkeypatch.setattr(ingest_code, "load_taxonomy_module", lambda: _EmptyTaxonomy())
     monkeypatch.setattr(ingest_code, "_collect_files_or_exit", lambda *args, **kwargs: [source])
     monkeypatch.setattr(
         ingest_code,

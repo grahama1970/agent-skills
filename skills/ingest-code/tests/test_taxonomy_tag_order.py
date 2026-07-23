@@ -112,18 +112,19 @@ def test_enrichment_exception_preserves_original_tags() -> None:
     tags = ["codebase", "function", "load_config"]
     item = {"problem": "p", "solution": "s", "tags": list(tags)}
 
-    result = ingest_code.enrich_with_taxonomy([item], _RaisingTaxonomy())
+    with pytest.raises(ingest_code.TaxonomyEnrichmentError):
+        ingest_code.enrich_with_taxonomy([item], _RaisingTaxonomy())
 
-    assert result == [item]
     assert item["tags"] == tags
 
 
 @pytest.mark.parametrize("taxonomy_result", [None, ["security"], "security"])
-def test_non_dictionary_taxonomy_result_preserves_original_tags(taxonomy_result) -> None:
+def test_non_dictionary_taxonomy_result_fails_closed(taxonomy_result) -> None:
     tags = ["codebase", "function", "load_config"]
     item = {"problem": "p", "solution": "s", "tags": list(tags)}
 
-    ingest_code.enrich_with_taxonomy([item], _Taxonomy(taxonomy_result))
+    with pytest.raises(ingest_code.TaxonomyEnrichmentError):
+        ingest_code.enrich_with_taxonomy([item], _Taxonomy(taxonomy_result))
 
     assert item["tags"] == tags
 
@@ -135,11 +136,12 @@ def test_repeated_enrichment_is_idempotent() -> None:
         "collection_tags": {"operational": ["stable", "security"]},
     })
 
-    ingest_code.enrich_with_taxonomy([item], taxonomy)
-    first = list(item["tags"])
-    ingest_code.enrich_with_taxonomy([item], taxonomy)
+    enriched = ingest_code.enrich_with_taxonomy([item], taxonomy)[0]
+    first = list(enriched["tags"])
+    enriched_again = ingest_code.enrich_with_taxonomy([enriched], taxonomy)[0]
 
-    assert item["tags"] == first == ["codebase", "security", "stable"]
+    assert item["tags"] == ["codebase"]
+    assert enriched_again["tags"] == first == ["codebase", "security", "stable"]
 
 
 def test_enriched_lesson_payload_has_stable_tags() -> None:
@@ -153,12 +155,12 @@ def test_enriched_lesson_payload_has_stable_tags() -> None:
         "collection_tags": {"z": ["runtime"], "a": ["operational", "security"]},
     })
 
-    ingest_code.enrich_with_taxonomy([item], taxonomy)
+    enriched = ingest_code.enrich_with_taxonomy([item], taxonomy)[0]
     document = ingest_code._build_lesson_document(
-        item["problem"],
-        item["solution"],
+        enriched["problem"],
+        enriched["solution"],
         "code",
-        item["tags"],
+        enriched["tags"],
     )
 
     assert document["tags"] == [

@@ -171,6 +171,15 @@ class CweScanResultError(RuntimeError):
         super().__init__(f"Invalid CWE result at {location} for {filepath}: {detail}")
 
 
+class TaxonomyEnrichmentError(RuntimeError):
+    """Taxonomy enrichment failed or returned an invalid result."""
+
+    def __init__(self, *, item_index: int, problem: str, detail: str) -> None:
+        self.item_index = item_index
+        self.problem = problem[:160]
+        super().__init__(f"Taxonomy enrichment failed for item {item_index}: {detail}")
+
+
 def _read_source_text(filepath: Path) -> str:
     """Read source text or raise a path-qualified failure."""
     try:
@@ -207,6 +216,26 @@ def _exit_cwe_result_failure(*, codebase: Path, exc: CweScanResultError) -> NoRe
             "codebase": str(codebase),
             "file": str(exc.filepath),
             "location": exc.location,
+            "detail": str(exc),
+        }),
+        file=sys.stderr,
+    )
+    raise SystemExit(1) from exc
+
+
+def _exit_taxonomy_enrichment_failure(
+    *,
+    codebase: Path,
+    exc: TaxonomyEnrichmentError,
+) -> NoReturn:
+    """Emit the structured CLI error for invalid taxonomy enrichment results."""
+    print(
+        json.dumps({
+            "error": "Taxonomy enrichment failed",
+            "phase": "taxonomy_enrichment",
+            "codebase": str(codebase),
+            "item_index": exc.item_index,
+            "problem": exc.problem,
             "detail": str(exc),
         }),
         file=sys.stderr,
@@ -2749,6 +2778,81 @@ def _normalized_tag_values(value: object) -> list[str]:
     return tags
 
 
+def _taxonomy_tag_values(
+    value: object,
+    *,
+    location: str,
+    item_index: int,
+    problem: str,
+) -> object:
+    """Validate supported taxonomy tag value shapes before normalizing tags."""
+    if value is None:
+        return []
+
+    if isinstance(value, str):
+        return value
+
+    if isinstance(value, (list, tuple)):
+        for index, tag in enumerate(value):
+            if not isinstance(tag, str):
+                raise TaxonomyEnrichmentError(
+                    item_index=item_index,
+                    problem=problem,
+                    detail=f"{location}[{index}] expected string",
+                )
+        return list(value)
+
+    raise TaxonomyEnrichmentError(
+        item_index=item_index,
+        problem=problem,
+        detail=f"{location} expected string or array of strings",
+    )
+
+
+def _validate_taxonomy_enrichment_result(
+    result: object,
+    *,
+    item_index: int,
+    problem: str,
+) -> tuple[object, object]:
+    """Validate the taxonomy enrichment envelope consumed by ingest-code."""
+    if not isinstance(result, dict):
+        raise TaxonomyEnrichmentError(
+            item_index=item_index,
+            problem=problem,
+            detail="result expected object",
+        )
+
+    bridge_tags = _taxonomy_tag_values(
+        result.get("bridge_tags"),
+        location="bridge_tags",
+        item_index=item_index,
+        problem=problem,
+    )
+
+    collection_tags = result.get("collection_tags")
+    if collection_tags is None:
+        return bridge_tags, {}
+
+    if not isinstance(collection_tags, dict):
+        raise TaxonomyEnrichmentError(
+            item_index=item_index,
+            problem=problem,
+            detail="collection_tags expected object",
+        )
+
+    normalized_collections: dict[object, object] = {}
+    for key, tag_value in collection_tags.items():
+        normalized_collections[key] = _taxonomy_tag_values(
+            tag_value,
+            location=f"collection_tags[{key!r}]",
+            item_index=item_index,
+            problem=problem,
+        )
+
+    return bridge_tags, normalized_collections
+
+
 def _merge_taxonomy_tags(
     existing_tags: object,
     bridge_tags: object,
@@ -2775,25 +2879,41 @@ def enrich_with_taxonomy(items: list[dict], taxonomy_module) -> list[dict]:
         return items
 
     extract_fn = getattr(taxonomy_module, "extract_taxonomy", None)
-    if not extract_fn:
-        return items
+    if not callable(extract_fn):
+        raise TaxonomyEnrichmentError(
+            item_index=-1,
+            problem="",
+            detail="taxonomy module has no callable extract_taxonomy",
+        )
 
-    for item in items:
+    enriched_items: list[dict] = []
+    for index, item in enumerate(items):
+        problem = str(item.get("problem", ""))
         try:
             # Taxonomy on the solution text (richer than the problem/question)
-            text = item.get("solution", "")[:3000]
+            text = str(item.get("solution", ""))[:3000]
             result = extract_fn(text, collection="operational", fast=True)
-            if not isinstance(result, dict):
-                continue
-            item["tags"] = _merge_taxonomy_tags(
-                item.get("tags", []),
-                result.get("bridge_tags", []),
-                result.get("collection_tags", {}),
-            )
-        except Exception:
-            pass  # Keep original tags on failure
+        except Exception as exc:
+            raise TaxonomyEnrichmentError(
+                item_index=index,
+                problem=problem,
+                detail=str(exc),
+            ) from exc
 
-    return items
+        bridge_tags, collection_tags = _validate_taxonomy_enrichment_result(
+            result,
+            item_index=index,
+            problem=problem,
+        )
+        enriched_item = dict(item)
+        enriched_item["tags"] = _merge_taxonomy_tags(
+            item.get("tags", []),
+            bridge_tags,
+            collection_tags,
+        )
+        enriched_items.append(enriched_item)
+
+    return enriched_items
 
 
 def extract_knowledge(filepath: Path) -> list[dict]:
@@ -2909,7 +3029,10 @@ def scan(
 
         # Phase 1a½: Enrich with taxonomy bridge tags (fast keyword mode, ~10ms/item)
         if taxonomy:
-            all_items = enrich_with_taxonomy(all_items, taxonomy)
+            try:
+                all_items = enrich_with_taxonomy(all_items, taxonomy)
+            except TaxonomyEnrichmentError as exc:
+                _exit_taxonomy_enrichment_failure(codebase=path, exc=exc)
             print(f"  Enriched {knowledge_total} items with taxonomy bridge tags", flush=True)
 
         if dry_run:
@@ -3223,26 +3346,32 @@ def rescan(
         code_symbol_scan_roots: list[Path] = []
         completed_code_symbol_scan_roots: list[Path] = []
 
+        all_items: list[dict] = []
         for filepath in files:
-            # Knowledge extraction
             try:
-                extracted_items = extract_knowledge(filepath)
+                all_items.extend(extract_knowledge(filepath))
             except SourceReadError as exc:
                 _exit_source_read_failure(codebase=path, phase="knowledge", exc=exc)
 
-            for item in extracted_items:
-                codebase_knowledge_attempted += 1
-                if _learn(memory_script, item["problem"], item["solution"], scope, item["tags"]):
-                    total_knowledge += 1
-                    codebase_knowledge += 1
-                    verify_name = _extract_verification_name(item["tags"])
-                    if verify_name:
-                        verifiable_samples.append({
-                            "name": verify_name,
-                            "problem": item["problem"],
-                        })
+        if taxonomy:
+            try:
+                all_items = enrich_with_taxonomy(all_items, taxonomy)
+            except TaxonomyEnrichmentError as exc:
+                _exit_taxonomy_enrichment_failure(codebase=path, exc=exc)
 
-            # CWE scanning
+        for item in all_items:
+            codebase_knowledge_attempted += 1
+            if _learn(memory_script, item["problem"], item["solution"], scope, item["tags"]):
+                total_knowledge += 1
+                codebase_knowledge += 1
+                verify_name = _extract_verification_name(item["tags"])
+                if verify_name:
+                    verifiable_samples.append({
+                        "name": verify_name,
+                        "problem": item["problem"],
+                    })
+
+        for filepath in files:
             if taxonomy and filepath.suffix not in (".md", ".mdx"):
                 try:
                     result = _scan_file_cwe_checked(filepath, taxonomy, validate)
