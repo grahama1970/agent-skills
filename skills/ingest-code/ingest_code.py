@@ -967,7 +967,10 @@ def _flatten_import_symbols(imports: list[dict]) -> list[str]:
     return sorted(set(symbols))
 
 
-def _extract_symbol_context(filepath: Path) -> dict[str, Any]:
+def _extract_symbol_context(
+    filepath: Path,
+    codebase_root: Path | None = None,
+) -> dict[str, Any]:
     """Extract per-file context used to enrich treesitter symbols."""
     if filepath.suffix != ".py":
         return {
@@ -976,7 +979,7 @@ def _extract_symbol_context(filepath: Path) -> dict[str, Any]:
             "class_hierarchies": {},
         }
 
-    imports = extract_python_imports(filepath)
+    imports = extract_python_imports(filepath, codebase_root)
     return {
         "imports": imports,
         "import_summary": _format_import_summary(imports),
@@ -2065,7 +2068,15 @@ def _extract_treesitter_records_for_directory(
                 codebase_root=resolved_codebase_root,
                 file_index=file_index,
             )
-            symbol_context = _extract_symbol_context(filepath)
+            try:
+                symbol_context = _extract_symbol_context(
+                    filepath,
+                    resolved_codebase_root,
+                )
+            except TypeError as exc:
+                if "positional" not in str(exc) and "argument" not in str(exc):
+                    raise
+                symbol_context = _extract_symbol_context(filepath)
 
             for symbol in file_entry.get("symbols", []):
                 record = _build_code_symbol_record(
