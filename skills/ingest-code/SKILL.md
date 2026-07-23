@@ -85,6 +85,11 @@ Options:
 Invalid `scan --batch-size` values exit with status 2 before scanning. The
 value must be a positive integer.
 
+Live full scans use `INGEST_WORKERS` for concurrent compatibility-lesson
+writes. Missing or blank values default to 8. Non-integer, zero, or negative
+values exit with status 2 before repository discovery. The setting is unused
+by dry-run and CWE-only scans.
+
 `--scope` must be a nonblank string. Leading and trailing whitespace is removed.
 Invalid values exit with status 2 before repository discovery or memory writes.
 

@@ -76,6 +76,8 @@ SKIP_DIRS = {
 
 MEMORY_SOCKET_PATH = "/run/user/1000/embry/memory.sock"
 SCAN_INCLUDE_DIRS_ENV = "CODE_SYMBOLS_SCAN_INCLUDE_DIRS"
+INGEST_WORKERS_ENV = "INGEST_WORKERS"
+DEFAULT_INGEST_WORKERS = 8
 CODE_SYMBOL_VERIFICATION_TOP_K = 5
 _VERIFICATION_IDENTITY_FIELDS = (
     "repo",
@@ -106,6 +108,10 @@ class RescanSinceError(ValueError):
 
 class ScanBatchSizeError(ValueError):
     """The scan --batch-size value is invalid."""
+
+
+class IngestWorkersError(ValueError):
+    """The INGEST_WORKERS override is invalid."""
 
 
 class ScanGlobError(ValueError):
@@ -2400,6 +2406,42 @@ def _validate_scan_batch_size(batch_size: int) -> int:
     return batch_size
 
 
+def _resolve_ingest_workers(raw_value: str | None = None) -> int:
+    """Resolve a positive live knowledge-write worker count."""
+    raw = os.environ.get(INGEST_WORKERS_ENV) if raw_value is None else raw_value
+
+    if raw is None or not raw.strip():
+        return DEFAULT_INGEST_WORKERS
+
+    try:
+        workers = int(raw.strip())
+    except ValueError as exc:
+        raise IngestWorkersError(
+            f"{INGEST_WORKERS_ENV} must be a positive integer"
+        ) from exc
+
+    if workers < 1:
+        raise IngestWorkersError(
+            f"{INGEST_WORKERS_ENV} must be a positive integer"
+        )
+
+    return workers
+
+
+def _exit_invalid_ingest_workers(exc: IngestWorkersError) -> NoReturn:
+    """Emit the structured CLI error for invalid INGEST_WORKERS values."""
+    print(
+        json.dumps({
+            "error": "Invalid INGEST_WORKERS value",
+            "environment": INGEST_WORKERS_ENV,
+            "value": os.environ.get(INGEST_WORKERS_ENV),
+            "detail": str(exc),
+        }),
+        file=sys.stderr,
+    )
+    raise SystemExit(2) from exc
+
+
 def _resolve_in_repo_file(path: Path, codebase_root: Path) -> Path | None:
     """Resolve an existing file and require repository containment."""
     try:
@@ -2625,6 +2667,13 @@ def scan(
     except MemoryScopeError as exc:
         _exit_invalid_memory_scope(scope, exc)
 
+    knowledge_workers = DEFAULT_INGEST_WORKERS
+    if not dry_run and not cwe_only:
+        try:
+            knowledge_workers = _resolve_ingest_workers()
+        except IngestWorkersError as exc:
+            _exit_invalid_ingest_workers(exc)
+
     try:
         path = _resolve_codebase_directory(path)
     except ValueError as exc:
@@ -2675,7 +2724,6 @@ def scan(
                 print(f"  [K] {item['problem']}")
         else:
             # Phase 1b: Store via threaded HTTP learns (I/O-bound, GPU embedding)
-            workers = int(os.environ.get("INGEST_WORKERS", "8"))
             _lock = threading.Lock()
 
             def _learn_item(item: dict) -> bool:
@@ -2684,9 +2732,9 @@ def scan(
                     scope, item["tags"],
                 )
 
-            print(f"  Storing with {workers} threads...", flush=True)
+            print(f"  Storing with {knowledge_workers} threads...", flush=True)
             store_monitor = Monitor(None, name="ingest-code-store", desc="Storing to memory", total=knowledge_total) if Monitor else None
-            with ThreadPoolExecutor(max_workers=workers) as pool:
+            with ThreadPoolExecutor(max_workers=knowledge_workers) as pool:
                 futures = {pool.submit(_learn_item, item): i for i, item in enumerate(all_items)}
                 done_count = 0
                 for future in as_completed(futures):
