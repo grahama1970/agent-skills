@@ -88,6 +88,10 @@ _VERIFICATION_IDENTITY_FIELDS = (
 )
 
 
+class TreeSitterScanError(RuntimeError):
+    """Tree-sitter extraction or persistence did not complete."""
+
+
 def load_taxonomy_module():
     """Load the taxonomy module for bridge tag + CWE extraction."""
     taxonomy_paths = [
@@ -1120,24 +1124,22 @@ def build_marker_status(path: Path) -> dict[str, Any]:
     return status
 
 
-def _parse_treesitter_scan_output(stdout: str) -> list[dict[str, Any]]:
+def _parse_treesitter_scan_output(stdout: str) -> list[dict[str, Any]] | None:
     """Parse treesitter scan output, skipping human summary lines."""
     payload = stdout.strip()
     if not payload:
-        return []
+        return None
 
     json_start = payload.find("[")
     if json_start < 0:
-        return []
+        return None
 
     try:
         data = json.loads(payload[json_start:])
     except json.JSONDecodeError:
-        return []
+        return None
 
-    if isinstance(data, list):
-        return data
-    return []
+    return data if isinstance(data, list) else None
 
 
 def _resolve_treesitter_result_path(raw_path: object, scan_root: Path) -> Path | None:
@@ -1192,24 +1194,19 @@ def _store_treesitter_symbols_for_directory(
     """Scan one configured directory and upsert structured code symbols to memory."""
     treesitter_script = find_treesitter_skill()
     if not treesitter_script:
-        print(f"Treesitter skill not found for {directory}", file=sys.stderr, flush=True)
-        return 0
+        raise TreeSitterScanError(f"Tree-sitter skill not found for {directory}")
 
     try:
         resolved_directory = directory.resolve(strict=True)
         resolved_codebase_root = codebase_root.resolve(strict=True)
         resolved_directory.relative_to(resolved_codebase_root)
     except (OSError, RuntimeError, ValueError):
-        print(
-            f"Treesitter scan root is outside codebase or unavailable: {directory}",
-            file=sys.stderr,
-            flush=True,
+        raise TreeSitterScanError(
+            f"Tree-sitter scan root is outside codebase or unavailable: {directory}"
         )
-        return 0
 
     if not resolved_directory.is_dir():
-        print(f"Treesitter scan root is not a directory: {directory}", file=sys.stderr, flush=True)
-        return 0
+        raise TreeSitterScanError(f"Tree-sitter scan root is not a directory: {directory}")
 
     cmd = [
         "bash",
@@ -1233,16 +1230,16 @@ def _store_treesitter_symbols_for_directory(
             env={k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"},
         )
     except subprocess.TimeoutExpired:
-        print(f"Treesitter scan timed out for {directory}", file=sys.stderr, flush=True)
-        return 0
+        raise TreeSitterScanError(f"Tree-sitter scan timed out for {directory}")
 
     if result.returncode != 0:
         stderr = result.stderr.strip()
-        if stderr:
-            print(f"Treesitter scan failed for {directory}: {stderr}", file=sys.stderr, flush=True)
-        return 0
+        detail = f": {stderr}" if stderr else ""
+        raise TreeSitterScanError(f"Tree-sitter scan failed for {directory}{detail}")
 
     scan_results = _parse_treesitter_scan_output(result.stdout)
+    if scan_results is None:
+        raise TreeSitterScanError(f"Tree-sitter scan produced malformed output for {directory}")
     if not scan_results:
         return 0
 
@@ -1293,9 +1290,16 @@ def _store_treesitter_symbols_for_directory(
                 continue
             records.append(record)
 
+    if not records:
+        return 0
+
     result = CodeMemoryClient().upsert_code_symbols(records)
-    for error in result.errors[:5]:
-        print(f"  [WARN] {error}", file=sys.stderr, flush=True)
+    if result.errors:
+        detail = "; ".join(result.errors[:5])
+        raise TreeSitterScanError(
+            f"Tree-sitter memory write incomplete for {resolved_directory}: "
+            f"stored={result.stored} attempted={result.attempted}; {detail}"
+        )
 
     if verification_samples is not None:
         for record in result.stored_records:
@@ -1809,13 +1813,24 @@ def scan(
             verification_samples: list[dict[str, str]] = []
             code_symbol_scan_roots = _extract_configured_scan_roots(path)
             for scan_root in code_symbol_scan_roots:
-                root_stored = _store_treesitter_symbols_for_directory(
-                    scan_root,
-                    path,
-                    scope,
-                    verification_samples=verification_samples,
-                    allowed_files=discovered_file_manifest,
-                )
+                try:
+                    root_stored = _store_treesitter_symbols_for_directory(
+                        scan_root,
+                        path,
+                        scope,
+                        verification_samples=verification_samples,
+                        allowed_files=discovered_file_manifest,
+                    )
+                except TreeSitterScanError as exc:
+                    print(
+                        json.dumps({
+                            "error": "Tree-sitter code-symbol indexing failed",
+                            "scan_root": str(scan_root),
+                            "detail": str(exc),
+                        }),
+                        file=sys.stderr,
+                    )
+                    raise SystemExit(1) from exc
                 code_symbols_stored += root_stored
                 completed_code_symbol_scan_roots.append(scan_root)
                 print(f"Code index: {root_stored} symbols stored from {scan_root}", flush=True)
@@ -1957,14 +1972,25 @@ def rescan(
         if treesitter and code_index:
             code_symbol_scan_roots = _extract_configured_scan_roots(path)
             for scan_root in code_symbol_scan_roots:
-                root_stored = _store_treesitter_symbols_for_directory(
-                    scan_root,
-                    path,
-                    scope,
-                    verification_samples=verifiable_samples,
-                    allowed_files=discovered_file_manifest,
-                    mtime_after=mtime_threshold,
-                )
+                try:
+                    root_stored = _store_treesitter_symbols_for_directory(
+                        scan_root,
+                        path,
+                        scope,
+                        verification_samples=verifiable_samples,
+                        allowed_files=discovered_file_manifest,
+                        mtime_after=mtime_threshold,
+                    )
+                except TreeSitterScanError as exc:
+                    print(
+                        json.dumps({
+                            "error": "Tree-sitter code-symbol indexing failed",
+                            "scan_root": str(scan_root),
+                            "detail": str(exc),
+                        }),
+                        file=sys.stderr,
+                    )
+                    raise SystemExit(1) from exc
                 codebase_ts_symbols += root_stored
                 completed_code_symbol_scan_roots.append(scan_root)
                 print(f"Treesitter: {root_stored} symbols stored from {scan_root}", flush=True)

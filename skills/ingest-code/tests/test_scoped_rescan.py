@@ -463,14 +463,14 @@ def test_treesitter_store_rejects_scan_root_outside_codebase(monkeypatch, tmp_pa
     monkeypatch.setattr(ingest_code, "find_treesitter_skill", lambda: run_sh)
     monkeypatch.setattr(ingest_code.subprocess, "run", fake_run)
 
-    stored = ingest_code._store_treesitter_symbols_for_directory(
-        external_root,
-        repo,
-        "test",
-        allowed_files=frozenset(),
-    )
+    with pytest.raises(ingest_code.TreeSitterScanError):
+        ingest_code._store_treesitter_symbols_for_directory(
+            external_root,
+            repo,
+            "test",
+            allowed_files=frozenset(),
+        )
 
-    assert stored == 0
     assert subprocess_was_called is False
 
 
