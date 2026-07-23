@@ -733,8 +733,10 @@ def extract_python_knowledge(filepath: Path, content: str) -> list[dict]:
         })
     else:
         # Always create a module-level entry (needed for edge matching)
-        top_level = [n.name for n in ast.iter_child_nodes(tree)
-                     if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))]
+        top_level = [
+            node.name
+            for node in _python_module_scope_declarations(tree, ancestry_by_node)
+        ]
         if top_level:
             summary = f"Module: {filepath}\n\nDefines: {', '.join(top_level[:20])}"
             items.append({
@@ -779,14 +781,14 @@ def extract_python_knowledge(filepath: Path, content: str) -> list[dict]:
             if node.name.startswith("_") and not node.name.startswith("__"):
                 continue  # Skip private functions
             func_doc = ast.get_docstring(node) or ""
-            if not func_doc and node.col_offset > 0:
+            if not func_doc and ancestry:
                 continue  # Skip undocumented nested functions
             desc = _python_declaration_signature(node).removesuffix(":")
             desc += f"\nQualified name: {qualified_name}"
             desc += f"\nKind: {structural_kind}"
             if func_doc:
                 desc += f"\n\n{func_doc[:800]}"
-            if func_doc or node.col_offset == 0:
+            if func_doc or not ancestry:
                 items.append({
                     "problem": f"What does {qualified_name}() do in {rel_path}?",
                     "solution": f"File: {filepath}\n\n{desc}",
@@ -1137,6 +1139,27 @@ def _python_qualified_name(
 ) -> str:
     """Return source-oriented dotted ancestry for a Python declaration."""
     return ".".join((*[declaration.name for declaration in ancestry], node.name))
+
+
+def _python_module_scope_declarations(
+    tree: ast.AST,
+    ancestry_by_node: dict[ast.AST, tuple[PythonDeclaration, ...]],
+) -> list[PythonDeclaration]:
+    """Return declarations with no named lexical ancestry in source order."""
+    declarations = [
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
+        and not ancestry_by_node.get(node, ())
+    ]
+    return sorted(
+        declarations,
+        key=lambda node: (
+            _python_declaration_start(node),
+            getattr(node, "col_offset", 0),
+            node.name,
+        ),
+    )
 
 
 def _python_structural_symbol_kind(

@@ -276,6 +276,8 @@ qualified names such as `Outer.Inner` and `Service.method.helper` in their
 questions and additive `qualified:<name>` tags while retaining bare-name tags.
 Those lessons include `Kind: class|method|function` and additive
 `kind:<kind>` tags; broad legacy `class` and `function` tags are retained.
+Python Phase 1 module-scope discovery is determined by named lexical ancestry,
+not indentation or module-level control-flow nesting.
 
 ### CWE Metadata
 
