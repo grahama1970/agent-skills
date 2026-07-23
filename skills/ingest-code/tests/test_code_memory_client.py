@@ -193,3 +193,36 @@ def test_upsert_code_symbols_mixed_singleton_recovery(monkeypatch) -> None:
     assert result.errors == []
     assert fake.batch_sizes == [2, 1, 1]
     assert legacy_calls == ["second"]
+
+
+def test_upsert_code_symbols_reports_exact_stored_records(monkeypatch) -> None:
+    fake = FakeHttpClient(fail_names={"a", "c"})
+    client = CodeMemoryClient()
+    monkeypatch.setattr(client, "_client", lambda: fake)
+    legacy_calls: list[str] = []
+    records = [_record("a"), _record("b"), _record("c")]
+
+    def record_legacy_fallback(record, *args, **kwargs):
+        legacy_calls.append(record.qualified_name)
+        return record.qualified_name == "c"
+
+    monkeypatch.setattr(client, "store_legacy_code_symbol", record_legacy_fallback)
+
+    result = client.upsert_code_symbols(records, batch_size=3)
+
+    assert result.attempted == 3
+    assert result.stored == 2
+    assert result.stored_records == (records[1], records[2])
+    assert len(result.errors) == 1
+    assert "a" in result.errors[0]
+    assert fake.batch_names == [["a", "b", "c"], ["a"], ["b", "c"], ["b"], ["c"]]
+    assert legacy_calls == ["a", "c"]
+
+
+def test_empty_upsert_returns_no_stored_records() -> None:
+    result = CodeMemoryClient().upsert_code_symbols([])
+
+    assert result.stored == 0
+    assert result.attempted == 0
+    assert result.stored_records == ()
+    assert result.errors == []

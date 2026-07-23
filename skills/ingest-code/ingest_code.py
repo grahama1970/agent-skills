@@ -1111,7 +1111,7 @@ def _store_treesitter_symbols_for_directory(
         print(f"  [WARN] {error}", file=sys.stderr, flush=True)
 
     if verification_samples is not None:
-        for record in records[:result.stored]:
+        for record in result.stored_records:
             verification_samples.append({
                 "name": record.symbol_name,
                 "problem": record.problem,

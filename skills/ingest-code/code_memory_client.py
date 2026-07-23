@@ -22,6 +22,11 @@ class MemoryWriteResult:
     errors: list[str]
 
 
+@dataclass(frozen=True)
+class CodeSymbolWriteResult(MemoryWriteResult):
+    stored_records: tuple[CodeSymbolRecord, ...]
+
+
 class CodeMemoryClient:
     """Small Unix-socket client for memory-owned code indexing."""
 
@@ -38,7 +43,7 @@ class CodeMemoryClient:
         records: list[CodeSymbolRecord],
         collection: str = "code_symbols",
         batch_size: int | None = None,
-    ) -> MemoryWriteResult:
+    ) -> CodeSymbolWriteResult:
         """Upsert structured code symbols, falling back to legacy lessons per record.
 
         Failed multi-record upsert batches are split before using the legacy
@@ -46,18 +51,16 @@ class CodeMemoryClient:
         descendant record stores successfully.
         """
         if not records:
-            return MemoryWriteResult(stored=0, attempted=0, errors=[])
+            return CodeSymbolWriteResult(stored=0, attempted=0, errors=[], stored_records=())
 
         effective_batch_size = self._resolve_batch_size(batch_size)
-        stored = 0
+        stored_records: list[CodeSymbolRecord] = []
         errors: list[str] = []
 
         def store_batch(batch: list[CodeSymbolRecord], client: httpx.Client) -> None:
-            nonlocal stored
-
             upsert_error = self._upsert_batch(batch, collection=collection, client=client)
             if upsert_error is None:
-                stored += len(batch)
+                stored_records.extend(batch)
                 return
 
             if len(batch) > 1:
@@ -68,7 +71,7 @@ class CodeMemoryClient:
 
             record = batch[0]
             if self.store_legacy_code_symbol(record, client=client):
-                stored += 1
+                stored_records.append(record)
                 return
 
             errors.append(
@@ -80,7 +83,12 @@ class CodeMemoryClient:
             for i in range(0, len(records), effective_batch_size):
                 store_batch(records[i : i + effective_batch_size], client)
 
-        return MemoryWriteResult(stored=stored, attempted=len(records), errors=errors)
+        return CodeSymbolWriteResult(
+            stored=len(stored_records),
+            attempted=len(records),
+            errors=errors,
+            stored_records=tuple(stored_records),
+        )
 
     def _resolve_batch_size(self, requested: int | None) -> int:
         """Resolve the per-call upsert batch size defensively."""

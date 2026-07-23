@@ -251,6 +251,7 @@ def test_treesitter_store_resolves_relative_scan_roots(monkeypatch, tmp_path: Pa
                 stored=len(records),
                 attempted=len(records),
                 errors=[],
+                stored_records=tuple(records),
             )
 
     def fake_run(*args, **kwargs):
@@ -287,6 +288,70 @@ def test_treesitter_store_resolves_relative_scan_roots(monkeypatch, tmp_path: Pa
 
     assert stored == 1
     assert samples[0]["name"] == "app"
+
+
+def test_treesitter_verification_samples_use_exact_stored_records(monkeypatch, tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    first = repo / "first.py"
+    second = repo / "second.py"
+    first.write_text("def first():\n    return 1\n")
+    second.write_text("def second():\n    return 2\n")
+    run_sh = tmp_path / "run.sh"
+    run_sh.write_text("#!/usr/bin/env bash\n")
+    captured_records = []
+
+    class FakeClient:
+        def upsert_code_symbols(self, records):
+            captured_records.extend(records)
+            return SimpleNamespace(
+                stored=1,
+                attempted=len(records),
+                errors=[],
+                stored_records=(records[1],),
+            )
+
+    def symbol(name: str) -> dict:
+        return {
+            "kind": "function",
+            "name": name,
+            "start_line": 1,
+            "end_line": 2,
+            "signature": f"def {name}(): ...",
+        }
+
+    def fake_run(cmd, **kwargs):
+        class Result:
+            stderr = ""
+
+        result = Result()
+        if cmd[0] == "git":
+            result.returncode = 1
+            result.stdout = ""
+            return result
+
+        result.returncode = 0
+        result.stdout = json.dumps([
+            {"path": str(first.resolve()), "language": "python", "symbols": [symbol("first")]},
+            {"path": str(second.resolve()), "language": "python", "symbols": [symbol("second")]},
+        ])
+        return result
+
+    monkeypatch.setattr(ingest_code, "find_treesitter_skill", lambda: run_sh)
+    monkeypatch.setattr(ingest_code.subprocess, "run", fake_run)
+    monkeypatch.setattr(ingest_code, "CodeMemoryClient", lambda: FakeClient())
+
+    samples: list[dict[str, str]] = []
+    stored = ingest_code._store_treesitter_symbols_for_directory(repo, repo, "test", samples)
+
+    assert stored == 1
+    assert [record.symbol_name for record in captured_records] == ["first", "second"]
+    assert samples == [
+        {
+            "name": captured_records[1].symbol_name,
+            "problem": captured_records[1].problem,
+        }
+    ]
 
 
 def test_treesitter_store_filters_uncontained_result_paths(monkeypatch, tmp_path: Path) -> None:
@@ -327,6 +392,7 @@ def test_treesitter_store_filters_uncontained_result_paths(monkeypatch, tmp_path
                 stored=len(records),
                 attempted=len(records),
                 errors=[],
+                stored_records=tuple(records),
             )
 
     def fake_run(cmd, **kwargs):
