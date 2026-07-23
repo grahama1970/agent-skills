@@ -189,6 +189,43 @@ grep -roh 'data-qid="[^"]*"' src/components/ | sort -u  # ← 124 qids
 ```
 **Why:** Components render conditionally. A `data-qid` in TSX source only exists in the DOM when that component is mounted. Test manifests must reflect what the user can actually see and click, not what exists in source code.
 
+### WRONG: Patch the file that matches a phrase while ignoring the visible owner
+```bash
+# Human screenshot shows a header logo still visible.
+rg -n "SPARTA_CORE|exact-svg-path" src
+# Edit the first matching file, then claim success from an isolated screenshot.
+```
+
+This is local-file tunnel vision. A visible element can come from a global shell,
+distance-mode wrapper, shared navigation component, or conditionally mounted
+subtree. Matching one string or one SVG path does not prove ownership of the
+element in the user's current view.
+
+### RIGHT: Map screenshot → live DOM → source owner before editing
+```bash
+# 1. Inspect the actual user-visible tab/view, not only an isolated browser.
+surf js "return JSON.stringify({
+  url: location.href,
+  qids: Array.from(document.querySelectorAll('[data-qid]')).map(e => ({
+    qid: e.getAttribute('data-qid'),
+    text: (e.innerText || e.textContent || '').trim().slice(0, 120)
+  }))
+}, null, 2)" --tab-id <USER_TAB_ID>
+
+# 2. Search globally for all likely owners, not only the first literal match.
+rg -n "\\.svg|<svg|visible text|data-qid|ComponentName|exact path fragment" \
+  src --glob '*.tsx' --glob '*.jsx' -S
+
+# 3. Verify every relevant state that shares the component.
+# Example: if 10ft hides a brand anchor, lean-in must still keep it unless the
+# user explicitly asked to remove it there too.
+```
+**Why:** UI ownership is stateful. For distance-mode, responsive, tabbed, or
+shared-shell React surfaces, verify the mode in the user's tab and preserve
+other modes deliberately. If the human disproves a UI claim with a screenshot,
+the next proof must include live-tab DOM evidence plus a screenshot of that same
+view; isolated CDP proof is not enough by itself.
+
 ### WRONG: Static `data-qid` on dynamic list items
 ```tsx
 // Every entry gets the same qid — selector matches multiple elements
