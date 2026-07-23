@@ -141,6 +141,31 @@ def _learn(memory_script: Path, problem: str, solution: str, scope: str, tags: l
     return _learn_http(problem, solution, scope, tags)
 
 
+def _abort_if_memory_writes_incomplete(
+    *,
+    phase: str,
+    attempted: int,
+    stored: int,
+    codebase: Path,
+) -> None:
+    """Exit nonzero when a required memory-write phase is incomplete."""
+    if attempted == stored:
+        return
+
+    print(
+        json.dumps({
+            "error": "Memory write incomplete",
+            "phase": phase,
+            "codebase": str(codebase),
+            "attempted": attempted,
+            "stored": stored,
+            "failed": max(attempted - stored, 0),
+        }),
+        file=sys.stderr,
+    )
+    raise SystemExit(1)
+
+
 def _recall_http(query: str, k: int = 1) -> dict[str, Any]:
     """Query /memory recall over the Unix socket."""
     transport = httpx.HTTPTransport(uds=MEMORY_SOCKET_PATH)
@@ -1734,6 +1759,13 @@ def scan(
                 store_monitor._update(final=True)
 
         print(f"Knowledge: {knowledge_stored} stored of {knowledge_total} extracted ({failed} blocked)", flush=True)
+        if not dry_run:
+            _abort_if_memory_writes_incomplete(
+                phase="knowledge",
+                attempted=knowledge_total,
+                stored=knowledge_stored,
+                codebase=path,
+            )
 
     # --- Phase 2: CWE scanning ---
     total_cwes = 0
@@ -1781,6 +1813,13 @@ def scan(
         if cwe_monitor:
             cwe_monitor._update(final=True)
         print(f"CWEs: {cwe_stored} stored, {total_cwes} found in {files_with_cwes} files", flush=True)
+        if not dry_run:
+            _abort_if_memory_writes_incomplete(
+                phase="cwe",
+                attempted=total_cwes,
+                stored=cwe_stored,
+                codebase=path,
+            )
     else:
         print("Taxonomy module not found — skipping CWE scan (knowledge extraction still runs)", flush=True)
 
@@ -1799,6 +1838,13 @@ def scan(
             if edge_monitor:
                 edge_monitor._update(final=True)
             print(f"Edges: {edges_stored} stored of {edges_total} found", flush=True)
+        if not dry_run:
+            _abort_if_memory_writes_incomplete(
+                phase="edges",
+                attempted=edges_total,
+                stored=edges_stored,
+                codebase=path,
+            )
 
     # --- Phase 4: Structured code symbol index ---
     code_symbols_stored = 0
@@ -1941,12 +1987,15 @@ def rescan(
         codebase_knowledge = 0
         codebase_cwes = 0
         codebase_ts_symbols = 0
+        codebase_knowledge_attempted = 0
+        codebase_cwes_attempted = 0
         code_symbol_scan_roots: list[Path] = []
         completed_code_symbol_scan_roots: list[Path] = []
 
         for filepath in files:
             # Knowledge extraction
             for item in extract_knowledge(filepath):
+                codebase_knowledge_attempted += 1
                 if _learn(memory_script, item["problem"], item["solution"], scope, item["tags"]):
                     total_knowledge += 1
                     codebase_knowledge += 1
@@ -1963,10 +2012,24 @@ def rescan(
                 for cwe in result.get("cwe_mappings", []):
                     cwe_id = cwe.get("cwe_id", "unknown")
                     tags = ["ingest-code", "cwe", cwe_id, filepath.suffix.lstrip(".")]
+                    codebase_cwes_attempted += 1
                     if _learn(memory_script, f"What CWEs are relevant to {filepath.name}?",
                               f"{cwe_id} ({cwe.get('name', '')}) - File: {filepath}", scope, tags):
                         total_cwes += 1
                         codebase_cwes += 1
+
+        _abort_if_memory_writes_incomplete(
+            phase="knowledge",
+            attempted=codebase_knowledge_attempted,
+            stored=codebase_knowledge,
+            codebase=path,
+        )
+        _abort_if_memory_writes_incomplete(
+            phase="cwe",
+            attempted=codebase_cwes_attempted,
+            stored=codebase_cwes,
+            codebase=path,
+        )
 
         # Treesitter symbol extraction (per codebase, not per file)
         if treesitter and code_index:
