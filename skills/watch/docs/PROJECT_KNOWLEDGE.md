@@ -77,12 +77,14 @@ Whisper: Start talking, I am not sure if we are on the air.
 
 ## Pyannote Diarization Boundary
 
-Status: `CONTRACT_DEFINED_NOT_IMPLEMENTED`.
+Status: `SERVICE_AND_PIPELINE_INTEGRATED_WITH_LIVE_E2E_GATE`.
 
 Watch needs a separate acoustic diarization lane for "who spoke when" because
 ordinary SRT/caption files often lack reliable speaker identity and Whisper
-segments are timestamped text, not speaker turns. The selected contract is a
-future localhost pyannote Community-1 service pinned to pyannote.audio `4.0.7`.
+segments are timestamped text, not speaker turns. The implemented provider is a
+localhost pyannote Community-1 service pinned to pyannote.audio `4.0.7`; the
+immutable live gate requires the Dockerized CUDA service and a real media e2e
+Watch run.
 
 Contract artifacts:
 
@@ -198,7 +200,7 @@ Aliases: `grandma`→`Granny`, `kid`→`Thurman Merman`, `santa`→`Willie T. So
 - 2026-07-01: Watch row 5 character annotation workflow now treats human keyframes as durable identity seeds. Visible keyframes are stored in memory collection watch_keyframe_annotations with movie_metadata, actor_metadata, interpolation metadata, scene_context_refs, training_role, detector links when available, and qdrant_refs pointing to watch_track_crop_embeddings_jina_v5_1024; raw vectors stay in Qdrant, not Arango. Runtime interpolation/hold is computed in the Watch UI and offscreen stop markers end a character scan without deleting earlier keyframes. Delete/Backspace on a held/interpolated visible box should insert an offscreen stop at the playhead; exact keyframe deletion marks that keyframe deleted. Evidence from row 5 Bad Santa check: memory HTTP /list returned 8 active row 5 Willie docs, 6 visible keyframes, 2 offscreen stop markers, and 6 visible keyframes with Qdrant crop pointers; live Watch UI rehydrated 8 saved boxes from memory.
 - 2026-07-07: Watch world-model architecture: YOLOAnalytics supplies detector boxes/tracks only; Watch owns temporal identity sequences, unassign/stop control points, interpolation between explicit labels, Qdrant/Memory crop recall, readiness counters, and escalation to Tau for deeper sequence analysis. Qdrant/Memory suggestions are tentative evidence, not accepted truth, until a human or accepted policy confirms them. For high-risk streaming domains, Watch should write durable evidence records and confidence-scored recommendations for human review, not targeting or autonomous engagement decisions.
 - 2026-07-20: Immutable YOLO identity goal scope: row 9 is the narrow live Memory/Qdrant canary for tentative Marcus crop suggestion; row 10 accept/stop/reassign/reload is deterministic browser-gated behavior over a proof-only asset to avoid contaminating canonical Bad Santa identity memory. Broad handoff coverage remains pending. RTSP, drone, F36, production identity accuracy, and full streaming runtime are not implemented by this gate. Durable proof manifests live under `skills/watch/proofs/immutable-goal/<git-sha>/manifest.json`.
-- 2026-07-23: Pyannote diarization scope: Watch has contract artifacts for a future anonymous speaker topology lane, including failure receipts and source-timeline focused-range rules. This is not runtime support. The next implementation slice should add either the persistent pyannote service or the model-free speaker-attribution algorithm, not both at once.
+- 2026-07-23: Pyannote diarization scope: Watch now has a persistent localhost pyannote Community-1 service, Watch-side client receipts, model-free transcript/caption speaker attribution, report and Memory scene speaker fields, and an immutable live e2e gate (`npm --prefix skills/watch/ui run test:pyannote-immutable-live`). The lane remains anonymous acoustic evidence only; it must not promote `SPEAKER_00` style clusters to character or real-world identity.
 
 ## Recent Decisions
 

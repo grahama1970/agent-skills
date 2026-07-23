@@ -98,8 +98,10 @@ deduplicate. Focused clips and explicit `--fps` runs do not use rolling windows.
 
 ## Speaker Diarization Contract
 
-Watch has a contract for pyannote Community-1 speaker diarization, but runtime
-support is not implemented yet.
+Watch supports pyannote Community-1 speaker diarization through a persistent
+localhost service. The immutable live proof includes an e2e sanity check that
+generates a local video with real audio, calls the Dockerized CUDA pyannote
+service, and verifies Watch writes anonymous speaker evidence into reports.
 
 The intended role is anonymous "who spoke when" evidence:
 
@@ -119,16 +121,16 @@ docs/architecture/schemas/watch_diarization.schema.json
 docs/architecture/schemas/watch_speaker_attribution.schema.json
 ```
 
-Future `diarization.json` receipts must keep both regular and exclusive
-speaker turns. The exclusive track is for transcript reconciliation; regular
-turns retain overlap evidence.
+`diarization.json` receipts keep both regular and exclusive speaker turns. The
+exclusive track is for transcript reconciliation; regular turns retain overlap
+evidence.
 
 Anonymous labels such as `SPEAKER_00` and `SPEAKER_01` are not character names,
 actor names, narrators, or real-world identities. They may only become
 candidate evidence for a later identity claim, and accepted identity still
 belongs to the existing Watch identity ledger.
 
-Planned CLI flags are:
+CLI flags are:
 
 ```text
 --diarization auto|pyannote|none
@@ -138,8 +140,11 @@ Planned CLI flags are:
 --require-diarization
 ```
 
-These flags are documented as planned contract surface only until the pyannote
-service and Watch pipeline integration are committed with tests and live proof.
+Mocked tests are wiring-only evidence. Runtime support is gated by:
+
+```bash
+npm --prefix skills/watch/ui run test:pyannote-immutable-live
+```
 
 ## Choosing Frame Sampling
 
@@ -346,6 +351,7 @@ Immutable backend and live browser gates:
 npm --prefix skills/watch/ui run test:backend-immutable
 npm --prefix skills/watch/ui run test:memory-suggestion-live
 npm --prefix skills/watch/ui run test:immutable-browser-live
+npm --prefix skills/watch/ui run test:pyannote-immutable-live
 npm --prefix skills/watch/ui run prove:immutable-goal
 ```
 

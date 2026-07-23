@@ -11,7 +11,10 @@ jobs:
         working-directory: skills/watch/ui
     env:
       MEMORY_DAEMON_URL: http://127.0.0.1:8601
+      WATCH_DIARIZATION_HEALTH_URL: http://127.0.0.1:9001/healthz
+      WATCH_DIARIZATION_URL: http://127.0.0.1:9001/v1/audio/diarizations
       WATCH_IMMUTABLE_REPORT_PATH: ${{ vars.WATCH_IMMUTABLE_REPORT_PATH }}
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -21,6 +24,21 @@ jobs:
           cache-dependency-path: skills/watch/ui/package-lock.json
       - name: Require report path
         run: test -n "$WATCH_IMMUTABLE_REPORT_PATH"
+      - name: Require Hugging Face token
+        run: test -n "$HF_TOKEN"
+      - name: Start pyannote diarization service
+        working-directory: skills/watch
+        run: docker compose -f docker/docker-compose.yml --profile diarization up -d --build diarization
+      - name: Wait for pyannote service
+        run: |
+          for i in $(seq 1 120); do
+            if curl -fsS "$WATCH_DIARIZATION_HEALTH_URL" | node -e "let s='';process.stdin.on('data',d=>s+=d);process.stdin.on('end',()=>{const h=JSON.parse(s); if (h.ok === true && h.model_loaded === true && h.device === 'cuda') process.exit(0); process.exit(1)})"; then
+              exit 0
+            fi
+            sleep 5
+          done
+          curl -fsS "$WATCH_DIARIZATION_HEALTH_URL"
+          exit 1
       - run: npm ci
       - run: npm run playwright:install
       - run: npm run prove:immutable-goal

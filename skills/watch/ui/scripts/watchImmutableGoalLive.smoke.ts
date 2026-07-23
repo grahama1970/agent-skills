@@ -59,6 +59,7 @@ async function main(): Promise<void> {
     { name: 'npm_run_build', args: ['run', 'build'] },
     { name: 'npm_run_test_memory_suggestion_live', args: ['run', 'test:memory-suggestion-live'] },
     { name: 'npm_run_test_immutable_browser_live', args: ['run', 'test:immutable-browser-live'] },
+    { name: 'npm_run_test_pyannote_immutable_live', args: ['run', 'test:pyannote-immutable-live'] },
   ]
   const results = []
   for (const command of commands) {
@@ -89,6 +90,12 @@ async function main(): Promise<void> {
     '03-row10-after-stop-unassigned.png',
     '04-row10-willie-reassigned.png',
     '05-row10-reloaded.png',
+    'pyannote-immutable-e2e/source-video.mp4',
+    'pyannote-immutable-e2e/source-audio.wav',
+    'pyannote-immutable-e2e/captions.srt',
+    'pyannote-immutable-e2e/pyannote-diarization.json',
+    'pyannote-immutable-e2e/pyannote-report-speaker-rows.json',
+    'pyannote-immutable-e2e/pyannote-e2e-summary.json',
   ]
   for (const artifact of requiredArtifacts) {
     const artifactPath = path.join(proofDir, artifact)
@@ -100,6 +107,12 @@ async function main(): Promise<void> {
   assert.equal(row10Receipt.labels?.track_15?.characterName, 'Willie')
   assert.ok(row10Receipt.events?.some((event: any) => event.action === 'reject_box'))
   assert.ok(row10Receipt.events?.filter((event: any) => event.action === 'accept').every((event: any) => event.memory_sync?.state === 'stored'))
+  const pyannoteSummary = JSON.parse(await import('node:fs/promises').then(({ readFile }) => readFile(path.join(proofDir, 'pyannote-immutable-e2e/pyannote-e2e-summary.json'), 'utf-8')))
+  assert.equal(pyannoteSummary.mocked, false)
+  assert.equal(pyannoteSummary.live, true)
+  assert.equal(pyannoteSummary.service?.device, 'cuda')
+  assert.equal(pyannoteSummary.assertions?.diarization_receipt_complete, true)
+  assert.equal(pyannoteSummary.assertions?.anonymous_speakers_not_promoted_to_identity, true)
 
   if (persistProof) {
     await writeProofManifest({
@@ -127,6 +140,9 @@ async function main(): Promise<void> {
           reload_hydration_passed: true,
           memory_sync_stored: true,
           suggestion_query_did_not_mutate_receipt: true,
+          pyannote_live_cuda_diarization: true,
+          anonymous_speaker_evidence_written: true,
+          pyannote_does_not_promote_identity: true,
         },
       },
     })

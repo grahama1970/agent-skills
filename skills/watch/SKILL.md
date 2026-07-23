@@ -250,7 +250,11 @@ Boundary rules:
 - Missing diarization must produce a structured receipt when diarization is
   attempted; auto mode may continue without speaker attribution.
 
-Planned CLI options are not available yet:
+Runtime support is implemented through the local pyannote Community-1 service
+and the Watch CLI. The live immutable gate exercises real media, the Dockerized
+CUDA pyannote service, Watch report generation, and anonymous speaker evidence.
+
+Available CLI options:
 
 ```text
 --diarization auto|pyannote|none
@@ -260,9 +264,9 @@ Planned CLI options are not available yet:
 --require-diarization
 ```
 
-Do not claim pyannote support from this contract alone. Runtime support requires
-the future service, client, attribution, report, memory, UI, and live-fixture
-proof artifacts.
+Do not claim pyannote support from mocked tests alone. Runtime support requires
+the live pyannote gate and its proof artifacts under the immutable goal proof
+directory.
 
 ## Immutable YOLO Identity Ledger Contract
 
@@ -285,6 +289,7 @@ npm --prefix skills/watch/ui run typecheck
 npm --prefix skills/watch/ui run build
 npm --prefix skills/watch/ui run test:memory-suggestion-live
 npm --prefix skills/watch/ui run test:immutable-browser-live
+npm --prefix skills/watch/ui run test:pyannote-immutable-live
 npm --prefix skills/watch/ui run prove:immutable-goal
 ```
 

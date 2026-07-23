@@ -17,6 +17,7 @@
     "test:backend-immutable": "npm run test:yolo-label-receipt && npm run test:receipt-concurrency && npm run test:detector-isolation",
     "playwright:install": "playwright install chromium",
     "test:immutable-browser-live": "tsx scripts/watchImmutableGoalBrowserLive.smoke.ts",
+    "test:pyannote-immutable-live": "tsx scripts/watchPyannoteImmutableLive.smoke.ts",
     "test:immutable-goal-live": "tsx scripts/watchImmutableGoalLive.smoke.ts",
     "prove:immutable-goal": "tsx scripts/watchImmutableGoalLive.smoke.ts --persist-proof",
     "typecheck": "tsc --noEmit"
