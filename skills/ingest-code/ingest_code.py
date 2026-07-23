@@ -1076,14 +1076,19 @@ def _python_declaration_start(node: ast.AST) -> int:
     return min((line for line in starts if line > 0), default=0)
 
 
-def _python_node_matches_symbol_start(node: ast.AST, start_line: int) -> bool:
-    """Match a Tree-sitter start to a def/class or its decorators."""
-    declaration_start = _python_declaration_start(node)
-    definition_line = getattr(node, "lineno", 0)
-    return (
-        declaration_start > 0
-        and declaration_start <= start_line <= definition_line
+def _python_declaration_match_lines(node: ast.AST) -> frozenset[int]:
+    """Return syntactic entry lines that can identify a declaration."""
+    starts = [getattr(node, "lineno", 0)]
+    starts.extend(
+        getattr(decorator, "lineno", 0)
+        for decorator in getattr(node, "decorator_list", ())
     )
+    return frozenset(line for line in starts if line > 0)
+
+
+def _python_node_matches_symbol_start(node: ast.AST, start_line: int) -> bool:
+    """Match a Tree-sitter start to a declaration entry marker."""
+    return start_line in _python_declaration_match_lines(node)
 
 
 PythonDeclaration = ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef

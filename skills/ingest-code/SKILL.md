@@ -315,6 +315,10 @@ Exact Python AST matches canonicalize record line ranges, code slices, hashes,
 and identity to the first syntactic decorator line, or to the declaration line
 when undecorated, regardless of whether Tree-sitter reports the decorator or
 definition line.
+Exact Python AST matching accepts only discrete declaration marker lines: the
+definition line and each decorator expression start line. Decorator interior
+lines, blank lines, comment-only lines, and body lines are not exact matches and
+therefore preserve Tree-sitter fallback metadata.
 Exact Python AST matches also canonicalize `parent_symbol` to the immediate
 lexical parent function, async function, or class. Tree-sitter parent metadata
 is preserved only when Python parsing or exact AST matching fails.
