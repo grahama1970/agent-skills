@@ -1,0 +1,46 @@
+{
+  "schema": "watch.diarization.v1",
+  "status": "complete",
+  "provider": "pyannote",
+  "model": "pyannote/speaker-diarization-community-1",
+  "library_version": "4.0.7",
+  "device": "cuda",
+  "source_audio_path": "/tmp/watch-focused/audio.wav",
+  "source_audio_sha256": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+  "analysis_range": {
+    "start_seconds": 168.0,
+    "end_seconds": 192.0,
+    "timeline_offset_seconds": 168.0
+  },
+  "duration_seconds": 24.0,
+  "speaker_count": 2,
+  "speakers": [
+    "SPEAKER_00",
+    "SPEAKER_01"
+  ],
+  "turns": [
+    {
+      "start": 168.5,
+      "end": 174.0,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "start": 175.2,
+      "end": 182.4,
+      "speaker": "SPEAKER_01"
+    }
+  ],
+  "exclusive_turns": [
+    {
+      "start": 168.5,
+      "end": 174.0,
+      "speaker": "SPEAKER_00"
+    },
+    {
+      "start": 175.2,
+      "end": 182.4,
+      "speaker": "SPEAKER_01"
+    }
+  ],
+  "elapsed_seconds": 2.4
+}

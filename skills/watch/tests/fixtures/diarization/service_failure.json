@@ -1,0 +1,9 @@
+{
+  "schema": "watch.diarization.v1",
+  "status": "unavailable",
+  "provider": "pyannote",
+  "model": "pyannote/speaker-diarization-community-1",
+  "error_code": "DIARIZATION_SERVICE_UNAVAILABLE",
+  "error": "connection refused",
+  "safe_default": "continue_without_speaker_attribution"
+}

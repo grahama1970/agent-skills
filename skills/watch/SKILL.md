@@ -54,6 +54,9 @@ Watch any video (URL or local file) and get:
 5. **HTML inspection table** — thumbnails, visual description status, playable video/audio controls where local paths are available
 6. **Structured report** — frames manifest + transcript + pacing metrics
 
+Planned diarization is a separate audio evidence lane, not a visual watcher and
+not a character-identification model. See "Diarization Contract" below.
+
 ## Quick Start
 
 ```bash
@@ -200,6 +203,66 @@ extracted watch evidence first -> Brave corroboration second
 
 If Brave finds a fact that extraction does not, that is a coverage gap, not an
 answer.
+
+## Diarization Contract
+
+Status: `CONTRACT_DEFINED_NOT_IMPLEMENTED`.
+
+Watch should use pyannote when the task includes determining who spoke when.
+The contract is defined, but the runtime service and pipeline integration are
+not implemented in this skill yet.
+
+Evidence layers remain separate:
+
+```text
+SRT/captions = subtitle, script, and cue evidence
+Whisper      = acoustic text evidence
+pyannote     = anonymous who-spoke-when evidence
+YOLO/tracks  = visual person observations
+human review = accepted identity decision
+```
+
+The durable schemas are:
+
+```text
+docs/architecture/schemas/watch_diarization.schema.json
+docs/architecture/schemas/watch_speaker_attribution.schema.json
+```
+
+The contract constants live in:
+
+```text
+scripts/diarization_contract.py
+```
+
+Boundary rules:
+
+- `SPEAKER_00`, `SPEAKER_01`, and similar labels are anonymous acoustic
+  clusters, stable only within one diarization artifact.
+- Anonymous speaker labels are not actor, character, narrator, or real-world
+  identity.
+- Speaker-to-character mappings must remain candidate evidence until accepted
+  through the existing Watch identity ledger.
+- Pyannote must not mutate SRT text, Whisper text, YOLO receipts, accepted
+  labels, or Memory identity state.
+- Focused runs must persist source-timeline speaker timestamps, not
+  clip-relative timestamps.
+- Missing diarization must produce a structured receipt when diarization is
+  attempted; auto mode may continue without speaker attribution.
+
+Planned CLI options are not available yet:
+
+```text
+--diarization auto|pyannote|none
+--num-speakers INTEGER
+--min-speakers INTEGER
+--max-speakers INTEGER
+--require-diarization
+```
+
+Do not claim pyannote support from this contract alone. Runtime support requires
+the future service, client, attribution, report, memory, UI, and live-fixture
+proof artifacts.
 
 ## Immutable YOLO Identity Ledger Contract
 

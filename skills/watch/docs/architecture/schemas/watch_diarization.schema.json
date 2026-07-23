@@ -1,0 +1,196 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "watch_diarization.schema.json",
+  "title": "Watch Diarization Artifact",
+  "type": "object",
+  "required": [
+    "schema",
+    "status",
+    "provider"
+  ],
+  "properties": {
+    "schema": {
+      "const": "watch.diarization.v1"
+    },
+    "status": {
+      "enum": [
+        "complete",
+        "disabled",
+        "unavailable",
+        "failed"
+      ]
+    },
+    "provider": {
+      "enum": [
+        "pyannote"
+      ]
+    },
+    "model": {
+      "type": "string"
+    },
+    "library_version": {
+      "type": "string"
+    },
+    "device": {
+      "type": "string"
+    },
+    "source_audio_path": {
+      "type": "string"
+    },
+    "source_audio_sha256": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "analysis_range": {
+      "type": "object",
+      "required": [
+        "start_seconds",
+        "end_seconds",
+        "timeline_offset_seconds"
+      ],
+      "properties": {
+        "start_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "end_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "timeline_offset_seconds": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "duration_seconds": {
+      "type": "number",
+      "minimum": 0
+    },
+    "speaker_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "speakers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/speaker_id"
+      },
+      "uniqueItems": true
+    },
+    "turns": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/turn"
+      }
+    },
+    "exclusive_turns": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/turn"
+      }
+    },
+    "elapsed_seconds": {
+      "type": "number",
+      "minimum": 0
+    },
+    "error_code": {
+      "enum": [
+        "DIARIZATION_DISABLED",
+        "DIARIZATION_SERVICE_UNAVAILABLE",
+        "DIARIZATION_AUTH_REQUIRED",
+        "DIARIZATION_MODEL_LOAD_FAILED",
+        "DIARIZATION_TIMEOUT",
+        "DIARIZATION_AUDIO_INVALID",
+        "DIARIZATION_DURATION_EXCEEDED",
+        "DIARIZATION_NO_SPEECH",
+        "DIARIZATION_INFERENCE_FAILED"
+      ]
+    },
+    "error": {
+      "type": "string"
+    },
+    "safe_default": {
+      "enum": [
+        "continue_without_speaker_attribution"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "const": "complete"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "model",
+          "library_version",
+          "device",
+          "source_audio_path",
+          "source_audio_sha256",
+          "analysis_range",
+          "duration_seconds",
+          "speaker_count",
+          "speakers",
+          "turns",
+          "exclusive_turns",
+          "elapsed_seconds"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": {
+            "enum": [
+              "disabled",
+              "unavailable",
+              "failed"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "error_code",
+          "error",
+          "safe_default"
+        ]
+      }
+    }
+  ],
+  "$defs": {
+    "speaker_id": {
+      "type": "string",
+      "pattern": "^SPEAKER_[0-9]{2}$"
+    },
+    "turn": {
+      "type": "object",
+      "required": [
+        "start",
+        "end",
+        "speaker"
+      ],
+      "properties": {
+        "start": {
+          "type": "number",
+          "minimum": 0
+        },
+        "end": {
+          "type": "number",
+          "minimum": 0
+        },
+        "speaker": {
+          "$ref": "#/$defs/speaker_id"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

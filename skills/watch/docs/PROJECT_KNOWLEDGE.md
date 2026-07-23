@@ -7,6 +7,7 @@
   - `watch_content` — per-scene rows with timecode, SRT text, Whisper text, visual descriptions, divergence category, persona tag
   - `persona_memory` — "Embry watched Movie Title" record with `persona_id`, `answer_text`, `retrieval_text`, `watch_history` tag
 - **Whisper:** Dedicated Docker container `hwdsl2/whisper-server:cuda` on port 9000 (GPU-accelerated). Falls back to local faster-whisper on CPU only when Docker is unreachable.
+- **Diarization:** Contract defined for a future pyannote Community-1 audio evidence lane. It must produce anonymous speaker turns and transcript attribution, but it is not implemented in the Watch runtime yet.
 
 ## Real-Time Entity Tracking Direction
 
@@ -73,6 +74,36 @@ No generic similarity ratio. No `unknown_diff` or `minor_diff` noise. Memory `an
 SRT: Start talking. I'm not sure if we're on the air.
 Whisper: Start talking, I am not sure if we are on the air.
 ```
+
+## Pyannote Diarization Boundary
+
+Status: `CONTRACT_DEFINED_NOT_IMPLEMENTED`.
+
+Watch needs a separate acoustic diarization lane for "who spoke when" because
+ordinary SRT/caption files often lack reliable speaker identity and Whisper
+segments are timestamped text, not speaker turns. The selected contract is a
+future localhost pyannote Community-1 service pinned to pyannote.audio `4.0.7`.
+
+Contract artifacts:
+
+- `docs/architecture/watch_diarization_contract.md`
+- `docs/architecture/schemas/watch_diarization.schema.json`
+- `docs/architecture/schemas/watch_speaker_attribution.schema.json`
+- `scripts/diarization_contract.py`
+- `tests/fixtures/diarization/`
+
+The pyannote lane must remain anonymous acoustic evidence:
+
+```text
+SPEAKER_00 != Willie
+SPEAKER_01 != Marcus
+SPEAKER_02 != narrator
+```
+
+Any speaker-to-character relation is a candidate requiring separate evidence
+and human acceptance through the existing Watch identity ledger. Pyannote must
+not alter SRT text, Whisper text, YOLO receipts, accepted labels, or Memory
+identity state.
 
 ## Scene Detection
 
@@ -167,6 +198,7 @@ Aliases: `grandma`→`Granny`, `kid`→`Thurman Merman`, `santa`→`Willie T. So
 - 2026-07-01: Watch row 5 character annotation workflow now treats human keyframes as durable identity seeds. Visible keyframes are stored in memory collection watch_keyframe_annotations with movie_metadata, actor_metadata, interpolation metadata, scene_context_refs, training_role, detector links when available, and qdrant_refs pointing to watch_track_crop_embeddings_jina_v5_1024; raw vectors stay in Qdrant, not Arango. Runtime interpolation/hold is computed in the Watch UI and offscreen stop markers end a character scan without deleting earlier keyframes. Delete/Backspace on a held/interpolated visible box should insert an offscreen stop at the playhead; exact keyframe deletion marks that keyframe deleted. Evidence from row 5 Bad Santa check: memory HTTP /list returned 8 active row 5 Willie docs, 6 visible keyframes, 2 offscreen stop markers, and 6 visible keyframes with Qdrant crop pointers; live Watch UI rehydrated 8 saved boxes from memory.
 - 2026-07-07: Watch world-model architecture: YOLOAnalytics supplies detector boxes/tracks only; Watch owns temporal identity sequences, unassign/stop control points, interpolation between explicit labels, Qdrant/Memory crop recall, readiness counters, and escalation to Tau for deeper sequence analysis. Qdrant/Memory suggestions are tentative evidence, not accepted truth, until a human or accepted policy confirms them. For high-risk streaming domains, Watch should write durable evidence records and confidence-scored recommendations for human review, not targeting or autonomous engagement decisions.
 - 2026-07-20: Immutable YOLO identity goal scope: row 9 is the narrow live Memory/Qdrant canary for tentative Marcus crop suggestion; row 10 accept/stop/reassign/reload is deterministic browser-gated behavior over a proof-only asset to avoid contaminating canonical Bad Santa identity memory. Broad handoff coverage remains pending. RTSP, drone, F36, production identity accuracy, and full streaming runtime are not implemented by this gate. Durable proof manifests live under `skills/watch/proofs/immutable-goal/<git-sha>/manifest.json`.
+- 2026-07-23: Pyannote diarization scope: Watch has contract artifacts for a future anonymous speaker topology lane, including failure receipts and source-timeline focused-range rules. This is not runtime support. The next implementation slice should add either the persistent pyannote service or the model-free speaker-attribution algorithm, not both at once.
 
 ## Recent Decisions
 

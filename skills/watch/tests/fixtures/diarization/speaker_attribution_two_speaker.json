@@ -1,0 +1,80 @@
+{
+  "schema": "watch.speaker_attribution.v1",
+  "status": "complete",
+  "transcript_source": "whisper",
+  "diarization_schema": "watch.diarization.v1",
+  "diarization_artifact_path": "diarization.json",
+  "segment_count": 3,
+  "assigned_count": 2,
+  "mixed_count": 1,
+  "unassigned_count": 0,
+  "segments": [
+    {
+      "text": "What are you doing here?",
+      "start": 0.5,
+      "duration": 2.0,
+      "speaker": "SPEAKER_00",
+      "speaker_source": "pyannote_exclusive",
+      "speaker_status": "assigned",
+      "speaker_overlap_seconds": 2.0,
+      "speaker_overlap_ratio": 1.0,
+      "speaker_candidates": [
+        {
+          "speaker": "SPEAKER_00",
+          "overlap_seconds": 2.0,
+          "overlap_ratio": 1.0
+        }
+      ],
+      "overlapping_speech": false
+    },
+    {
+      "text": "I was just looking around.",
+      "start": 3.3,
+      "duration": 1.8,
+      "speaker": "SPEAKER_01",
+      "speaker_source": "pyannote_exclusive",
+      "speaker_status": "assigned",
+      "speaker_overlap_seconds": 1.8,
+      "speaker_overlap_ratio": 1.0,
+      "speaker_candidates": [
+        {
+          "speaker": "SPEAKER_01",
+          "overlap_seconds": 1.8,
+          "overlap_ratio": 1.0
+        }
+      ],
+      "overlapping_speech": false
+    },
+    {
+      "text": "Wait, both of you stop.",
+      "start": 2.4,
+      "duration": 1.4,
+      "speaker": "SPEAKER_01",
+      "speaker_source": "pyannote_exclusive",
+      "speaker_status": "multiple",
+      "speaker_overlap_seconds": 1.3,
+      "speaker_overlap_ratio": 0.929,
+      "speaker_candidates": [
+        {
+          "speaker": "SPEAKER_00",
+          "overlap_seconds": 0.1,
+          "overlap_ratio": 0.071
+        },
+        {
+          "speaker": "SPEAKER_01",
+          "overlap_seconds": 1.3,
+          "overlap_ratio": 0.929
+        }
+      ],
+      "overlapping_speech": true
+    }
+  ],
+  "identity_boundary": {
+    "anonymous_speakers_are_identity": false,
+    "promotion_allowed": false,
+    "notes": [
+      "SPEAKER_00 is an anonymous acoustic cluster, not a character.",
+      "SPEAKER_01 is an anonymous acoustic cluster, not a real-world identity."
+    ]
+  }
+}

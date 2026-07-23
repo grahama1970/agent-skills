@@ -1,0 +1,185 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "watch_speaker_attribution.schema.json",
+  "title": "Watch Speaker Attribution Artifact",
+  "type": "object",
+  "required": [
+    "schema",
+    "status",
+    "transcript_source",
+    "diarization_schema",
+    "diarization_artifact_path",
+    "segment_count",
+    "assigned_count",
+    "mixed_count",
+    "unassigned_count",
+    "segments",
+    "identity_boundary"
+  ],
+  "properties": {
+    "schema": {
+      "const": "watch.speaker_attribution.v1"
+    },
+    "status": {
+      "enum": [
+        "complete",
+        "unavailable"
+      ]
+    },
+    "transcript_source": {
+      "type": "string"
+    },
+    "diarization_schema": {
+      "const": "watch.diarization.v1"
+    },
+    "diarization_artifact_path": {
+      "type": "string"
+    },
+    "segment_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "assigned_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "mixed_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "unassigned_count": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "segments": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/segment"
+      }
+    },
+    "identity_boundary": {
+      "type": "object",
+      "required": [
+        "anonymous_speakers_are_identity",
+        "promotion_allowed",
+        "notes"
+      ],
+      "properties": {
+        "anonymous_speakers_are_identity": {
+          "const": false
+        },
+        "promotion_allowed": {
+          "const": false
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "speaker_id": {
+      "type": "string",
+      "pattern": "^SPEAKER_[0-9]{2}$"
+    },
+    "speaker_candidate": {
+      "type": "object",
+      "required": [
+        "speaker",
+        "overlap_seconds",
+        "overlap_ratio"
+      ],
+      "properties": {
+        "speaker": {
+          "$ref": "#/$defs/speaker_id"
+        },
+        "overlap_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "overlap_ratio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "segment": {
+      "type": "object",
+      "required": [
+        "text",
+        "start",
+        "duration",
+        "speaker",
+        "speaker_source",
+        "speaker_status",
+        "speaker_overlap_seconds",
+        "speaker_overlap_ratio",
+        "speaker_candidates",
+        "overlapping_speech"
+      ],
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "start": {
+          "type": "number",
+          "minimum": 0
+        },
+        "duration": {
+          "type": "number",
+          "minimum": 0
+        },
+        "speaker": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/speaker_id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "speaker_source": {
+          "enum": [
+            "pyannote_exclusive",
+            "pyannote_regular_overlap",
+            "none"
+          ]
+        },
+        "speaker_status": {
+          "enum": [
+            "assigned",
+            "multiple",
+            "unassigned"
+          ]
+        },
+        "speaker_overlap_seconds": {
+          "type": "number",
+          "minimum": 0
+        },
+        "speaker_overlap_ratio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "speaker_candidates": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/speaker_candidate"
+          }
+        },
+        "overlapping_speech": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

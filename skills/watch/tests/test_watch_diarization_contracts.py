@@ -1,0 +1,78 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+from jsonschema import Draft202012Validator
+
+from skills.watch.scripts.diarization_contract import (
+    DEFAULT_DIARIZATION_MODEL,
+    DIARIZATION_ERROR_CODES,
+    DIARIZATION_GAPS,
+    DIARIZATION_MODES,
+    IDENTITY_BOUNDARY_RULES,
+    PINNED_PYANNOTE_AUDIO_VERSION,
+)
+
+ROOT = Path(__file__).resolve().parents[3]
+SCHEMAS = ROOT / "skills" / "watch" / "docs" / "architecture" / "schemas"
+FIXTURES = ROOT / "skills" / "watch" / "tests" / "fixtures" / "diarization"
+
+
+def load_json(path: Path) -> dict:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def validator(name: str) -> Draft202012Validator:
+    schema = load_json(SCHEMAS / name)
+    Draft202012Validator.check_schema(schema)
+    return Draft202012Validator(schema)
+
+
+def test_diarization_schema_accepts_success_and_failure_fixtures():
+    v = validator("watch_diarization.schema.json")
+    for name in [
+        "two_speaker.json",
+        "overlap.json",
+        "no_speech.json",
+        "focused_range.json",
+        "service_failure.json",
+    ]:
+        errors = sorted(v.iter_errors(load_json(FIXTURES / name)), key=lambda e: e.path)
+        assert errors == []
+
+
+def test_speaker_attribution_schema_keeps_identity_boundary_explicit():
+    v = validator("watch_speaker_attribution.schema.json")
+    payload = load_json(FIXTURES / "speaker_attribution_two_speaker.json")
+    errors = sorted(v.iter_errors(payload), key=lambda e: e.path)
+    assert errors == []
+    assert payload["identity_boundary"]["anonymous_speakers_are_identity"] is False
+    assert payload["identity_boundary"]["promotion_allowed"] is False
+    assert not any("Marcus" in segment.get("speaker", "") for segment in payload["segments"] if segment["speaker"])
+
+
+def test_focused_range_turns_use_source_timeline_not_clip_relative_time():
+    payload = load_json(FIXTURES / "focused_range.json")
+    start = payload["analysis_range"]["start_seconds"]
+    end = payload["analysis_range"]["end_seconds"]
+    assert payload["analysis_range"]["timeline_offset_seconds"] == start
+    for turn in payload["turns"] + payload["exclusive_turns"]:
+        assert start <= turn["start"] < turn["end"] <= end
+
+
+def test_diarization_error_codes_have_gap_names_and_safe_defaults():
+    assert "auto" in DIARIZATION_MODES
+    assert "pyannote" in DIARIZATION_MODES
+    assert "none" in DIARIZATION_MODES
+    assert DEFAULT_DIARIZATION_MODEL == "pyannote/speaker-diarization-community-1"
+    assert PINNED_PYANNOTE_AUDIO_VERSION == "4.0.7"
+    assert len(DIARIZATION_ERROR_CODES) == 9
+    assert len(DIARIZATION_GAPS) == len(DIARIZATION_ERROR_CODES)
+    assert set(DIARIZATION_GAPS) == {code.lower() for code in DIARIZATION_ERROR_CODES}
+
+
+def test_identity_boundary_rules_forbid_speaker_cluster_promotion():
+    assert "anonymous_speaker_labels_are_not_character_identity" in IDENTITY_BOUNDARY_RULES
+    assert "anonymous_speaker_labels_are_not_actor_identity" in IDENTITY_BOUNDARY_RULES
+    assert "speaker_to_character_mapping_must_remain_candidate_until_human_acceptance" in IDENTITY_BOUNDARY_RULES

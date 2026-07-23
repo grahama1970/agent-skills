@@ -23,6 +23,7 @@ Every useful run should produce some combination of:
 | `frames/` | JPEG scene markers or uniform samples |
 | `frames_manifest.json` | Frame paths, timestamps, sampling mode, duration, and budget |
 | `transcript.json` | Caption/SRT/Whisper transcript segments |
+| `diarization.json` | Planned anonymous speaker turns when diarization is implemented |
 | `scenes.json` | Optional SRT emotion, tag, or query matches |
 | `report.md` | Human-readable run report |
 | `report.json` | Structured scene element table and run metadata |
@@ -83,6 +84,8 @@ source URL, file, or title
   -> scene-change or uniform frame extraction
   -> transcript routing
        YouTube captions / local SRT / scillm Whisper fallback
+  -> planned diarization lane
+       pyannote anonymous speaker turns, when implemented
   -> optional SRT emotion, tag, or query matching
   -> scene element table
   -> report.md, report.json, report.html, frames_manifest.json
@@ -92,6 +95,51 @@ source URL, file, or title
 For videos at least 10 minutes long, full-video scene-change extraction uses
 rolling windows: 5-minute chunks with 3-second overlap, then merge and
 deduplicate. Focused clips and explicit `--fps` runs do not use rolling windows.
+
+## Speaker Diarization Contract
+
+Watch has a contract for pyannote Community-1 speaker diarization, but runtime
+support is not implemented yet.
+
+The intended role is anonymous "who spoke when" evidence:
+
+```text
+SRT/captions = subtitle, script, and cue evidence
+Whisper      = acoustic text evidence
+pyannote     = anonymous who-spoke-when evidence
+YOLO/tracks  = visual person observations
+human review = accepted identity decision
+```
+
+The contract files are:
+
+```text
+docs/architecture/watch_diarization_contract.md
+docs/architecture/schemas/watch_diarization.schema.json
+docs/architecture/schemas/watch_speaker_attribution.schema.json
+```
+
+Future `diarization.json` receipts must keep both regular and exclusive
+speaker turns. The exclusive track is for transcript reconciliation; regular
+turns retain overlap evidence.
+
+Anonymous labels such as `SPEAKER_00` and `SPEAKER_01` are not character names,
+actor names, narrators, or real-world identities. They may only become
+candidate evidence for a later identity claim, and accepted identity still
+belongs to the existing Watch identity ledger.
+
+Planned CLI flags are:
+
+```text
+--diarization auto|pyannote|none
+--num-speakers INTEGER
+--min-speakers INTEGER
+--max-speakers INTEGER
+--require-diarization
+```
+
+These flags are documented as planned contract surface only until the pyannote
+service and Watch pipeline integration are committed with tests and live proof.
 
 ## Choosing Frame Sampling
 
