@@ -1,0 +1,93 @@
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+from jsonschema import Draft202012Validator
+
+SERVICE_DIR = Path(__file__).resolve().parents[1] / "services" / "diarization"
+sys.path.insert(0, str(SERVICE_DIR))
+
+from engine import build_receipt, normalize_speaker_labels, turns_from_annotation  # noqa: E402
+
+ROOT = Path(__file__).resolve().parents[3]
+SCHEMAS = ROOT / "skills" / "watch" / "docs" / "architecture" / "schemas"
+
+
+class Segment:
+    def __init__(self, start: float, end: float):
+        self.start = start
+        self.end = end
+
+
+class Annotation:
+    def __init__(self, rows):
+        self.rows = rows
+
+    def itertracks(self, yield_label=False):
+        assert yield_label is True
+        for start, end, speaker in self.rows:
+            yield Segment(start, end), None, speaker
+
+
+class Output:
+    speaker_diarization = Annotation([(2.0, 3.0, "alice"), (0.0, 1.0, "bob")])
+    exclusive_speaker_diarization = Annotation([(0.0, 1.0, "bob"), (1.0, 2.0, "alice")])
+
+
+def validate_receipt(payload: dict) -> None:
+    schema = json.loads((SCHEMAS / "watch_diarization.schema.json").read_text(encoding="utf-8"))
+    validator = Draft202012Validator(schema)
+    errors = sorted(validator.iter_errors(payload), key=lambda error: error.path)
+    assert errors == []
+
+
+def test_turns_from_annotation_sorts_by_time():
+    turns = turns_from_annotation(Annotation([(2.0, 3.0, "alice"), (0.0, 1.0, "bob")]))
+
+    assert turns == [
+        {"start": 0.0, "end": 1.0, "speaker": "bob"},
+        {"start": 2.0, "end": 3.0, "speaker": "alice"},
+    ]
+
+
+def test_normalize_speaker_labels_uses_first_chronological_appearance_across_outputs():
+    regular = [{"start": 2.0, "end": 3.0, "speaker": "alice"}]
+    exclusive = [{"start": 0.0, "end": 1.0, "speaker": "bob"}, {"start": 1.0, "end": 2.0, "speaker": "alice"}]
+
+    normalized_regular, normalized_exclusive = normalize_speaker_labels(regular, exclusive)
+
+    assert normalized_exclusive[0]["speaker"] == "SPEAKER_00"
+    assert normalized_exclusive[1]["speaker"] == "SPEAKER_01"
+    assert normalized_regular[0]["speaker"] == "SPEAKER_01"
+
+
+def test_build_receipt_returns_schema_valid_source_timeline_receipt(tmp_path: Path):
+    audio = tmp_path / "audio.wav"
+    audio.write_bytes(b"fake wav")
+
+    receipt = build_receipt(
+        audio,
+        Output(),
+        model="pyannote/speaker-diarization-community-1",
+        device="cpu",
+        timeline_offset_seconds=10.0,
+        elapsed_seconds=0.25,
+    )
+
+    validate_receipt(receipt)
+    assert receipt["source_audio_sha256"].startswith("sha256:")
+    assert receipt["analysis_range"] == {
+        "start_seconds": 10.0,
+        "end_seconds": 13.0,
+        "timeline_offset_seconds": 10.0,
+    }
+    assert receipt["turns"] == [
+        {"start": 10.0, "end": 11.0, "speaker": "SPEAKER_00"},
+        {"start": 12.0, "end": 13.0, "speaker": "SPEAKER_01"},
+    ]
+    assert receipt["exclusive_turns"] == [
+        {"start": 10.0, "end": 11.0, "speaker": "SPEAKER_00"},
+        {"start": 11.0, "end": 12.0, "speaker": "SPEAKER_01"},
+    ]

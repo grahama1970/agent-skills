@@ -22,6 +22,38 @@ services:
       - whisper
       - all
 
+  diarization:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.diarization
+    container_name: watch-diarization
+    restart: always
+    ports:
+      - "127.0.0.1:9001:9001"
+    environment:
+      - HF_TOKEN=${HF_TOKEN}
+      - PYANNOTE_MODEL=${PYANNOTE_MODEL:-pyannote/speaker-diarization-community-1}
+      - PYANNOTE_DEVICE=${PYANNOTE_DEVICE:-cuda}
+      - PYANNOTE_METRICS_ENABLED=0
+      - HF_HOME=/models/huggingface
+    volumes:
+      - pyannote-models:/models/huggingface
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9001/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    profiles:
+      - diarization
+      - all
+
   watch-ui:
     build:
       context: ..
@@ -44,6 +76,7 @@ services:
 
 volumes:
   whisper-data:
+  pyannote-models:
   watch-data:
 
 networks:

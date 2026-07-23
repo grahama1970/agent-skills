@@ -1,0 +1,15 @@
+[project]
+name = "watch-diarization-service"
+version = "0.1.0"
+description = "Watch local pyannote Community-1 diarization service"
+requires-python = ">=3.12"
+dependencies = [
+    "pyannote.audio==4.0.7",
+    "fastapi",
+    "uvicorn[standard]",
+    "python-multipart",
+    "soundfile",
+]
+
+[tool.setuptools]
+py-modules = ["app", "engine", "models"]
