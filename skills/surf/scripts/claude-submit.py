@@ -91,6 +91,7 @@ def main() -> int:
     started_at = _now()
     focus_before = _focus_state()
     requested_tab_id = _resolve_tab(args.tab_id, args.url)
+    content_script_recovery: list[dict[str, Any]] = []
     if args.no_activate and not requested_tab_id:
         _write_failed_meta(
             meta_path,
@@ -113,8 +114,10 @@ def main() -> int:
     try:
         if not requested_tab_id:
             raise SubmitFailure("No Claude tab id supplied, resolved, or remembered.")
+        _ensure_claude_content_script_ready(requested_tab_id, content_script_recovery)
         _assert_claude_tab(requested_tab_id, args.url)
         attachment = _attach_file(requested_tab_id, attach_file) if attach_file else None
+        _ensure_claude_content_script_ready(requested_tab_id, content_script_recovery)
         _submit_prompt(requested_tab_id, submitted_prompt)
         raw_text = _wait_for_sentinel(
             requested_tab_id,
@@ -142,6 +145,7 @@ def main() -> int:
             raw_text=raw_text,
             attach_file=attach_file,
             attachment=attachment,
+            content_script_recovery=content_script_recovery,
         )
         meta_path.write_text(json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         TAB_STATE_FILE.write_text(str(requested_tab_id).strip() + "\n", encoding="utf-8")
@@ -168,6 +172,7 @@ def main() -> int:
             str(exc),
             requested_tab_id=requested_tab_id,
             raw_text=raw_text,
+            content_script_recovery=content_script_recovery,
         )
         print(str(exc), file=sys.stderr)
         return 4
@@ -322,6 +327,7 @@ def _success_meta(
     raw_text: str,
     attach_file: Path | None = None,
     attachment: dict[str, Any] | None = None,
+    content_script_recovery: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     contamination = [
         needle
@@ -368,6 +374,7 @@ def _success_meta(
         "active_tab_before": focus_before.get("activeTabId"),
         "active_tab_after": focus_after.get("activeTabId"),
         "focus_changed": focus_changed,
+        "content_script_recovery": content_script_recovery or [],
         "started_at": started_at,
         "finished_at": finished_at,
     }
@@ -387,6 +394,7 @@ def _write_failed_meta(
     *,
     requested_tab_id: str,
     raw_text: str = "",
+    content_script_recovery: list[dict[str, Any]] | None = None,
 ) -> None:
     meta = {
         "status": "failed",
@@ -406,6 +414,7 @@ def _write_failed_meta(
         "clean_chars": 0,
         "controlled_tab_id": requested_tab_id or None,
         "no_activate": bool(args.no_activate),
+        "content_script_recovery": content_script_recovery or [],
         "started_at": started_at,
         "finished_at": finished_at,
     }
@@ -443,11 +452,71 @@ def _focus_state() -> dict[str, Any]:
     }
 
 
+def _ensure_claude_content_script_ready(tab_id: str, recovery_events: list[dict[str, Any]]) -> None:
+    probe = _run_surf(["read", "--tab-id", tab_id], timeout=60)
+    if probe.returncode == 0 and not _is_content_script_missing(probe):
+        return
+    if not _is_content_script_missing(probe):
+        _raise_surf_failure(["read", "--tab-id", tab_id], probe)
+
+    event: dict[str, Any] = {
+        "status": "content_script_missing",
+        "tab_id": tab_id,
+        "detected_at": _now(),
+        "probe_stderr": probe.stderr.strip()[:1000],
+        "probe_stdout": probe.stdout.strip()[:1000],
+        "action": "tab.reload --hard",
+    }
+    recovery_events.append(event)
+
+    reload_proc = _run_surf(["tab.reload", "--hard", "--tab-id", tab_id], timeout=60)
+    event["reload_returncode"] = reload_proc.returncode
+    event["reload_stdout"] = reload_proc.stdout.strip()[:1000]
+    event["reload_stderr"] = reload_proc.stderr.strip()[:1000]
+    if reload_proc.returncode != 0:
+        event["status"] = "reload_failed"
+        _raise_surf_failure(["tab.reload", "--hard", "--tab-id", tab_id], reload_proc)
+
+    deadline = time.time() + int(os.environ.get("SURF_CLAUDE_CONTENT_SCRIPT_READY_TIMEOUT", "45"))
+    attempt = 0
+    last_probe = probe
+    while time.time() < deadline:
+        attempt += 1
+        time.sleep(min(1 + attempt, 5))
+        last_probe = _run_surf(["read", "--tab-id", tab_id], timeout=60)
+        if last_probe.returncode == 0 and not _is_content_script_missing(last_probe):
+            event["status"] = "recovered"
+            event["ready_attempts"] = attempt
+            event["recovered_at"] = _now()
+            return
+
+    event["status"] = "recovery_failed"
+    event["ready_attempts"] = attempt
+    event["last_probe_stdout"] = last_probe.stdout.strip()[:1000]
+    event["last_probe_stderr"] = last_probe.stderr.strip()[:1000]
+    raise SubmitFailure(
+        "Claude content script was not loaded; reloaded the controlled tab but it did not become readable again"
+    )
+
+
 def _surf(args: list[str], *, timeout: int) -> subprocess.CompletedProcess[str]:
-    proc = subprocess.run([str(RUN_SH), *args], capture_output=True, text=True, timeout=timeout)
+    proc = _run_surf(args, timeout=timeout)
     if proc.returncode != 0:
-        raise SubmitFailure(proc.stderr.strip() or proc.stdout.strip() or f"surf {' '.join(args)} failed")
+        _raise_surf_failure(args, proc)
     return proc
+
+
+def _run_surf(args: list[str], *, timeout: int) -> subprocess.CompletedProcess[str]:
+    return subprocess.run([str(RUN_SH), *args], capture_output=True, text=True, timeout=timeout)
+
+
+def _raise_surf_failure(args: list[str], proc: subprocess.CompletedProcess[str]) -> None:
+    raise SubmitFailure(proc.stderr.strip() or proc.stdout.strip() or f"surf {' '.join(args)} failed")
+
+
+def _is_content_script_missing(proc: subprocess.CompletedProcess[str]) -> bool:
+    haystack = f"{proc.stdout}\n{proc.stderr}".lower()
+    return "content script not loaded" in haystack
 
 
 def _find_ref(text: str, pattern: str) -> str:

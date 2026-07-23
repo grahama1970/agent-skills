@@ -786,6 +786,16 @@ Same sentinel proof contract as WebGPT where `*.submit` applies. Requires surf-c
 
 Tab ids from `surf tab.list` filtered to `gemini.google.com` or `kimi.com`. Always pass explicit `--tab-id` when the human named a tab. Prefer `/ask webgemini`, `/ask webkimi`, `/ask webperplexity` for artifacts and bundle validation.
 
+`claude.submit` is the Surf transport used by `$ask`/Tau `webclaude` nodes. A
+Claude tab can lose its Surf content script while another long browser node is
+running. Before submitting, `claude.submit` probes the explicit controlled tab;
+if Surf reports `Content script not loaded`, it hard-reloads that same tab once,
+waits for the content script/readability to return, and records the
+`content_script_recovery` metadata. This recovery never opens a fallback tab or
+silently chooses a different Claude session. If same-tab reload does not restore
+readability, the run fails before prompt submission and the caller must refresh
+or rebind the Claude reviewer tab.
+
 ### Web oracle sanity (all browser backends)
 
 When webgpt / webgemini / webkimi / webperplexity break frequently, run one
