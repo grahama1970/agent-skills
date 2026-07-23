@@ -287,6 +287,13 @@ def upsert_scene_elements(
             tags.append(f"divergence:{diff['category']}")
         if row.get("total_chunks"):
             tags.append(f"chunk:{int(row['chunk_index']) + 1}-of-{row['total_chunks']}")
+        speaker_ids = [str(s) for s in row.get("speaker_ids", []) if str(s)]
+        if speaker_ids or row.get("speaker_attribution_status"):
+            tags.append("diarized")
+        for speaker_id in speaker_ids:
+            tags.append(f"speaker:{speaker_id}")
+        if row.get("overlapping_speech"):
+            tags.append("overlapping_speech")
         srt_text = (row.get("srt_text") or "").strip()
         whisper_text = (row.get("text") or "").strip()
         doc = {
@@ -309,6 +316,17 @@ def upsert_scene_elements(
             "scope": "watch_history",
             "tags": tags,
         }
+        if speaker_ids or row.get("speaker_attribution_status"):
+            doc.update(
+                {
+                    "speaker_ids": speaker_ids,
+                    "speaker_turns": json.dumps(row.get("speaker_turns", [])),
+                    "speaker_attribution_status": row.get("speaker_attribution_status", ""),
+                    "overlapping_speech": bool(row.get("overlapping_speech", False)),
+                    "diarization_source": row.get("diarization_source", ""),
+                    "diarization_artifact_path": row.get("diarization_artifact_path", ""),
+                }
+            )
         for chunk_field in ("chunk_index", "total_chunks", "chunk_start_seconds", "chunk_end_seconds"):
             if chunk_field in row:
                 doc[chunk_field] = row[chunk_field]

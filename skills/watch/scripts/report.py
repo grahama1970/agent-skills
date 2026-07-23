@@ -133,8 +133,8 @@ def write_markdown_report(
     if scene_elements:
         lines.append("## Scene Element Table")
         lines.append("")
-        lines.append("| Timecode | Text | Scene marker image | Movie segment | Sound |")
-        lines.append("| --- | --- | --- | --- | --- |")
+        lines.append("| Timecode | Text | Speakers | Scene marker image | Movie segment | Sound |")
+        lines.append("| --- | --- | --- | --- | --- | --- |")
         for row in scene_elements:
             lines.append(
                 "| "
@@ -142,6 +142,7 @@ def write_markdown_report(
                     [
                         _md_cell(row["timecode"]),
                         _md_cell(row["text"]),
+                        _md_cell(_speaker_label(row)),
                         _md_cell(row["scene_marker_image"]),
                         _md_cell(row["movie_segment"]),
                         _md_cell(row["sound"]),
@@ -169,7 +170,8 @@ def write_markdown_report(
         lines.append("```")
         for seg in transcript["segments"]:
             ts = _format_ts(seg["start"])
-            lines.append(f"[{ts}] {seg['text']}")
+            prefix = f"[{_segment_speaker_label(seg)}] " if _segment_speaker_label(seg) else ""
+            lines.append(f"[{ts}] {prefix}{seg['text']}")
         lines.append("```")
         lines.append("")
 
@@ -242,6 +244,8 @@ audio{width:220px;max-width:22vw}
 .status{font-weight:600}
 .missing{color:#9a3412}
 .ok{color:#166534}
+.speaker-chip{display:inline-block;border:1px solid #94a3b8;background:#f8fafc;border-radius:4px;padding:1px 5px;margin:0 3px 3px 0;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:11px}
+.speaker-note{font-size:11px;color:#57606a;margin-top:4px}
 .evidence{border:1px solid #d0d7de;background:#fff;margin:0 0 18px;padding:10px 12px;font-size:13px}
 .evidence div{margin:4px 0}
 """
@@ -288,7 +292,7 @@ audio{width:220px;max-width:22vw}
         lines.append("</div>")
     lines.extend([
         "<table>",
-        "<thead><tr><th>Timecode</th><th>English SRT / Captions</th><th>Open-Whisper Transcript</th><th>Scene Marker</th><th>Visual Evidence</th><th>Movie Segment</th><th>Sound</th></tr></thead>",
+        "<thead><tr><th>Timecode</th><th>English SRT / Captions</th><th>Open-Whisper Transcript</th><th>Speakers</th><th>Scene Marker</th><th>Visual Evidence</th><th>Movie Segment</th><th>Sound</th></tr></thead>",
         "<tbody>",
     ])
     for row in rows:
@@ -305,6 +309,7 @@ audio{width:220px;max-width:22vw}
             f"<td>{escape(row.get('timecode', ''))}</td>",
             f"<td>{_caption_cell(captions, row.get('srt_text', ''))}</td>",
             f"<td>{_whisper_cell(transcript, row.get('text', ''))}</td>",
+            f"<td>{_speaker_cell(row)}</td>",
             "<td>",
             f"<img src=\"{escape(img_path)}\" alt=\"scene marker at {escape(row.get('timecode', ''))}\">" if img_path else "",
             f"<div class=\"path\">{escape(img_path)}</div>",
@@ -484,6 +489,7 @@ def build_scene_elements(
             "audio_path": audio_path or "",
             "sound_description_source": "transcript" if transcript and transcript.get("segments") else "none",
         }
+        row.update(_speaker_evidence_for_segment(transcript, captions, start, end))
         # Propagate rolling window chunk metadata from frame
         for chunk_field in ("chunk_index", "total_chunks", "chunk_start_seconds", "chunk_end_seconds"):
             if chunk_field in frame:
@@ -527,6 +533,155 @@ def _sound_for_segment(transcript: dict | None, start: float, end: float, audio_
     if _text_for_segment(transcript, start, end).startswith("No transcript"):
         return "No speech captured; soundtrack not analyzed"
     return f"Speech/dialogue from {transcript.get('source', 'transcript')}; soundtrack not analyzed"
+
+
+def _speaker_evidence_for_segment(
+    transcript: dict | None,
+    captions: dict | None,
+    start: float,
+    end: float,
+) -> dict:
+    evidence = _speaker_evidence_from_doc(transcript, "transcript", start, end)
+    if evidence:
+        return evidence
+    return _speaker_evidence_from_doc(captions, "captions", start, end)
+
+
+def _speaker_evidence_from_doc(source_doc: dict | None, source_name: str, start: float, end: float) -> dict:
+    if not source_doc or not source_doc.get("segments"):
+        return {}
+
+    speaker_ids: list[str] = []
+    speaker_turns: list[dict] = []
+    statuses: list[str] = []
+    overlapping_speech = False
+    saw_attribution = False
+    diarization_sources: list[str] = []
+
+    for segment in source_doc.get("segments", []):
+        if not _segment_has_speaker_attribution(segment):
+            continue
+        seg_start = float(segment.get("start", 0.0) or 0.0)
+        seg_duration = max(0.0, float(segment.get("duration", 0.0) or 0.0))
+        seg_end = seg_start + seg_duration
+        if not _segment_overlaps(start, end, seg_start, seg_end):
+            continue
+
+        saw_attribution = True
+        status = str(segment.get("speaker_status") or "unassigned")
+        statuses.append(status)
+        overlapping_speech = overlapping_speech or bool(segment.get("overlapping_speech"))
+        source = str(segment.get("speaker_source") or "none")
+        if source not in diarization_sources:
+            diarization_sources.append(source)
+
+        speaker = segment.get("speaker")
+        if isinstance(speaker, str) and speaker:
+            if speaker not in speaker_ids:
+                speaker_ids.append(speaker)
+            speaker_turns.append(
+                {
+                    "speaker": speaker,
+                    "start": _round_seconds(max(start, seg_start)),
+                    "end": _round_seconds(min(end, seg_end)),
+                }
+            )
+        for candidate in segment.get("speaker_candidates") or []:
+            candidate_speaker = candidate.get("speaker")
+            if isinstance(candidate_speaker, str) and candidate_speaker and candidate_speaker not in speaker_ids:
+                speaker_ids.append(candidate_speaker)
+
+    if not saw_attribution:
+        return {}
+
+    if "multiple" in statuses:
+        status = "multiple"
+    elif "assigned" in statuses:
+        status = "assigned"
+    else:
+        status = "unassigned"
+    diarization_source = source_doc.get("diarization_source") or (
+        ", ".join(diarization_sources) if diarization_sources else "none"
+    )
+
+    return {
+        "speaker_ids": speaker_ids,
+        "speaker_turns": speaker_turns,
+        "speaker_attribution_status": status,
+        "overlapping_speech": overlapping_speech,
+        "speaker_attribution_source": source_name,
+        "diarization_source": diarization_source,
+        "diarization_artifact_path": source_doc.get("diarization_artifact_path", ""),
+    }
+
+
+def _segment_has_speaker_attribution(segment: dict) -> bool:
+    return any(
+        key in segment
+        for key in ("speaker", "speaker_status", "speaker_source", "speaker_candidates", "overlapping_speech")
+    )
+
+
+def _segment_overlaps(row_start: float, row_end: float, segment_start: float, segment_end: float) -> bool:
+    if segment_end == segment_start:
+        return row_start <= segment_start <= row_end
+    return segment_end >= row_start and segment_start <= row_end
+
+
+def _speaker_label(row: dict) -> str:
+    speakers = row.get("speaker_ids") or []
+    if speakers:
+        label = " + ".join(str(speaker) for speaker in speakers)
+    elif row.get("speaker_attribution_status"):
+        label = "unassigned"
+    else:
+        return ""
+    if row.get("overlapping_speech"):
+        label = f"{label} (overlap)"
+    return label
+
+
+def _segment_speaker_label(segment: dict) -> str:
+    speaker = segment.get("speaker")
+    if isinstance(speaker, str) and speaker:
+        label = speaker
+    elif segment.get("speaker_status") == "unassigned":
+        label = "unassigned"
+    else:
+        return ""
+    if segment.get("speaker_status") == "multiple":
+        candidates = [
+            str(candidate.get("speaker"))
+            for candidate in segment.get("speaker_candidates") or []
+            if candidate.get("speaker")
+        ]
+        if candidates:
+            label = " + ".join(candidates)
+    return label
+
+
+def _speaker_cell(row: dict) -> str:
+    speakers = row.get("speaker_ids") or []
+    if not speakers and not row.get("speaker_attribution_status"):
+        return '<span class="missing">No speaker attribution</span>'
+    chips = "".join(f'<span class="speaker-chip">{escape(str(speaker))}</span>' for speaker in speakers)
+    if not chips:
+        chips = '<span class="missing">unassigned</span>'
+    notes = []
+    if row.get("speaker_attribution_status"):
+        notes.append(f"status: {row.get('speaker_attribution_status')}")
+    if row.get("overlapping_speech"):
+        notes.append("overlapping speech")
+    if row.get("diarization_source"):
+        notes.append(f"source: {row.get('diarization_source')}")
+    if row.get("speaker_attribution_source"):
+        notes.append(f"via {row.get('speaker_attribution_source')}")
+    note = f'<div class="speaker-note">{escape("; ".join(notes))}</div>' if notes else ""
+    return chips + note
+
+
+def _round_seconds(value: float) -> float:
+    return round(float(value), 3)
 
 
 def _truncate(value: str, limit: int) -> str:
