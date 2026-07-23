@@ -771,6 +771,51 @@ def _extract_configured_scan_roots(codebase_path: Path) -> list[Path]:
     return [codebase_path.resolve()]
 
 
+def _configured_exclude_dirs(codebase_root: Path) -> tuple[str, ...]:
+    """Return hardcoded and monitor-configured repository-relative exclusions."""
+    entries: list[str] = sorted(SKIP_DIRS)
+    config = _load_monitor_config(codebase_root)
+    raw_entries = config.get("exclude_dirs", []) if isinstance(config, dict) else []
+    if isinstance(raw_entries, list):
+        for raw in raw_entries:
+            if not isinstance(raw, str):
+                continue
+            entry = raw.strip().replace("\\", "/")
+            if not entry:
+                continue
+            candidate = Path(entry)
+            if candidate.is_absolute() or ".." in candidate.parts:
+                continue
+            entries.append(entry)
+
+    return tuple(dict.fromkeys(entries))
+
+
+def _path_is_excluded(path: Path, codebase_root: Path, exclude_dirs: Sequence[str]) -> bool:
+    """Return whether a path is inside a configured repository exclusion."""
+    root = codebase_root.resolve()
+
+    try:
+        lexical_path = Path(os.path.abspath(path))
+        relative = lexical_path.relative_to(root)
+    except (OSError, ValueError):
+        return True
+
+    directory_parts = relative.parts[:-1]
+    for entry in exclude_dirs:
+        entry_parts = Path(entry).parts
+        if not entry_parts:
+            continue
+
+        if len(entry_parts) == 1:
+            if entry_parts[0] in directory_parts:
+                return True
+        elif directory_parts[: len(entry_parts)] == entry_parts:
+            return True
+
+    return False
+
+
 def _resolve_codebase_directory(path: Path) -> Path:
     """Return a canonical existing codebase directory or raise ValueError."""
     expanded = path.expanduser()
@@ -1020,9 +1065,17 @@ def _store_treesitter_symbols_for_directory(
     repo = resolved_codebase_root.name
     branch = _current_branch(resolved_codebase_root)
     commit = _current_commit(resolved_codebase_root)
+    exclude_dirs = _configured_exclude_dirs(resolved_codebase_root)
     records: list[CodeSymbolRecord] = []
     for file_entry in scan_results:
         file_path_raw = file_entry.get("path")
+        if isinstance(file_path_raw, str):
+            lexical_path = Path(file_path_raw)
+            if not lexical_path.is_absolute():
+                lexical_path = resolved_directory / lexical_path
+            if _path_is_excluded(lexical_path, resolved_codebase_root, exclude_dirs):
+                continue
+
         filepath = _resolve_treesitter_result_path(file_path_raw, resolved_directory)
         if filepath is None:
             print(
@@ -1030,6 +1083,8 @@ def _store_treesitter_symbols_for_directory(
                 file=sys.stderr,
                 flush=True,
             )
+            continue
+        if _path_is_excluded(filepath, resolved_codebase_root, exclude_dirs):
             continue
         if not _path_modified_at_or_after(filepath, mtime_after):
             continue
@@ -1291,24 +1346,21 @@ def _path_modified_at_or_after(path: Path, threshold: datetime | None) -> bool:
 
 def collect_files(codebase_path: Path, patterns: list[str], mtime_after: Optional[datetime] = None) -> list[Path]:
     """Collect files matching patterns, respecting .gitignore and .monitor-codebase.json."""
-    config = _load_monitor_config(codebase_path)
-    exclude_dirs = SKIP_DIRS.copy()
-    if config:
-        exclude_dirs.update(config.get("exclude_dirs", []))
-
     files: list[Path] = []
+    codebase_root = codebase_path.resolve()
+    exclude_dirs = _configured_exclude_dirs(codebase_root)
 
     # Determine scan roots — either scoped dirs or full codebase
-    scan_roots = _extract_configured_scan_roots(codebase_path)
+    scan_roots = _extract_configured_scan_roots(codebase_root)
 
     # Use git ls-files if in a git repo (respects .gitignore)
-    use_git = _is_git_repo(codebase_path)
+    use_git = _is_git_repo(codebase_root)
 
     if use_git:
-        for f in _git_ls_files(codebase_path, patterns):
+        for f in _git_ls_files(codebase_root, patterns):
             if not _path_is_within_scan_roots(f, scan_roots):
                 continue
-            if any(skip in f.parts for skip in exclude_dirs):
+            if _path_is_excluded(f, codebase_root, exclude_dirs):
                 continue
             if not _path_modified_at_or_after(f, mtime_after):
                 continue
@@ -1318,7 +1370,7 @@ def collect_files(codebase_path: Path, patterns: list[str], mtime_after: Optiona
             # Fallback to rglob for non-git directories
             for pattern in patterns:
                 for f in root.rglob(pattern):
-                    if any(skip in f.parts for skip in exclude_dirs):
+                    if _path_is_excluded(f, codebase_root, exclude_dirs):
                         continue
                     if not _path_modified_at_or_after(f, mtime_after):
                         continue
@@ -1326,16 +1378,16 @@ def collect_files(codebase_path: Path, patterns: list[str], mtime_after: Optiona
 
     # Also include markdown docs at project root (always)
     for md_name in ["CONTEXT.md", "README.md", "CLAUDE.md", "MEMORY.md", "AGENTS.md"]:
-        md_path = codebase_path / md_name
+        md_path = codebase_root / md_name
         if md_path.exists() and _path_modified_at_or_after(md_path, mtime_after) and md_path not in files:
             files.append(md_path)
     # Recurse for local/docs/*.md and local/*.md
-    for local_dir in [codebase_path / "local" / "docs", codebase_path / "local"]:
+    for local_dir in [codebase_root / "local" / "docs", codebase_root / "local"]:
         if local_dir.exists():
             for md in local_dir.glob("*.md"):
                 if _path_modified_at_or_after(md, mtime_after) and md not in files:
                     files.append(md)
-    docs_dir = codebase_path / "docs"
+    docs_dir = codebase_root / "docs"
     if docs_dir.exists():
         for md in docs_dir.glob("*.md"):
             if _path_modified_at_or_after(md, mtime_after) and md not in files:
