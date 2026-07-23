@@ -26,7 +26,7 @@ from collections.abc import Collection
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 from pathlib import Path, PurePosixPath
-from typing import Any, Optional, Sequence
+from typing import Any, NoReturn, Optional, Sequence
 
 import httpx
 
@@ -118,6 +118,56 @@ class ScanGlobError(ValueError):
             f"--glob entry {index + 1} is not a safe "
             f"repository-relative pattern: {pattern!r}"
         )
+
+
+class SourceReadError(RuntimeError):
+    """A discovered source file could not be read."""
+
+    def __init__(self, filepath: Path, detail: str) -> None:
+        self.filepath = filepath
+        super().__init__(f"Could not read discovered source file {filepath}: {detail}")
+
+
+def _read_source_text(filepath: Path) -> str:
+    """Read source text or raise a path-qualified failure."""
+    try:
+        return filepath.read_text(errors="ignore")
+    except (OSError, UnicodeError) as exc:
+        raise SourceReadError(filepath, str(exc)) from exc
+
+
+def _exit_source_read_failure(
+    *,
+    codebase: Path,
+    phase: str,
+    exc: SourceReadError,
+) -> NoReturn:
+    print(
+        json.dumps({
+            "error": "Source file read failed",
+            "phase": phase,
+            "codebase": str(codebase),
+            "file": str(exc.filepath),
+            "detail": str(exc),
+        }),
+        file=sys.stderr,
+    )
+    raise SystemExit(1) from exc
+
+
+def _scan_file_cwe_checked(
+    filepath: Path,
+    taxonomy: Any,
+    validate: bool,
+) -> dict[str, Any]:
+    result = scan_file_cwe(filepath, taxonomy, validate)
+    if not isinstance(result, dict):
+        return {}
+
+    error = result.get("error")
+    if error:
+        raise SourceReadError(filepath, str(error))
+    return result
 
 
 def load_taxonomy_module():
@@ -679,10 +729,10 @@ def _build_symbol_tags(kind: str, name: str, file_stem: str) -> list[str]:
 
 def _extract_python_class_hierarchies(filepath: Path) -> dict[str, list[str]]:
     """Extract Python class base names keyed by class name."""
+    content = _read_source_text(filepath)
     try:
-        content = filepath.read_text(errors="ignore")
         tree = ast.parse(content)
-    except (SyntaxError, Exception):
+    except (SyntaxError, ValueError):
         return {}
 
     hierarchies: dict[str, list[str]] = {}
@@ -803,10 +853,7 @@ def _content_hash(text: str) -> str:
 def _source_slice(filepath: Path, start_line: int, end_line: int) -> str:
     if start_line <= 0:
         return ""
-    try:
-        lines = filepath.read_text(errors="ignore").splitlines()
-    except Exception:
-        return ""
+    lines = _read_source_text(filepath).splitlines()
     if end_line < start_line:
         end_line = start_line
     return "\n".join(lines[start_line - 1 : end_line])
@@ -839,10 +886,10 @@ def _extract_python_symbol_details(
     start_line: int,
 ) -> dict[str, Any]:
     """Extract richer Python symbol details for memory-backed hybrid retrieval."""
+    content = _read_source_text(filepath)
     try:
-        content = filepath.read_text(errors="ignore")
         tree = ast.parse(content)
-    except (SyntaxError, Exception):
+    except (SyntaxError, ValueError):
         return {}
 
     candidates: list[ast.AST] = []
@@ -1440,10 +1487,7 @@ def _source_line_count(filepath: Path) -> int:
         with filepath.open("rb") as source:
             return sum(1 for _ in source)
     except OSError as exc:
-        raise TreeSitterScanError(
-            "Tree-sitter source could not be read for range validation: "
-            f"{filepath}: {exc}"
-        ) from exc
+        raise SourceReadError(filepath, str(exc)) from exc
 
 
 def _validate_treesitter_source_ranges(
@@ -1604,28 +1648,33 @@ def _extract_treesitter_records_for_directory(
 
         if not file_entry["symbols"]:
             continue
-        _validate_treesitter_source_ranges(
-            file_entry["symbols"],
-            filepath=filepath,
-            codebase_root=resolved_codebase_root,
-            file_index=file_index,
-        )
-        symbol_context = _extract_symbol_context(filepath)
-
-        for symbol in file_entry.get("symbols", []):
-            record = _build_code_symbol_record(
-                symbol=symbol,
+        try:
+            _validate_treesitter_source_ranges(
+                file_entry["symbols"],
                 filepath=filepath,
                 codebase_root=resolved_codebase_root,
-                scope=scope,
-                repo=repo,
-                branch=branch,
-                commit=commit,
-                imports=symbol_context["imports"],
+                file_index=file_index,
             )
-            if record is None:
-                continue
-            records.append(record)
+            symbol_context = _extract_symbol_context(filepath)
+
+            for symbol in file_entry.get("symbols", []):
+                record = _build_code_symbol_record(
+                    symbol=symbol,
+                    filepath=filepath,
+                    codebase_root=resolved_codebase_root,
+                    scope=scope,
+                    repo=repo,
+                    branch=branch,
+                    commit=commit,
+                    imports=symbol_context["imports"],
+                )
+                if record is None:
+                    continue
+                records.append(record)
+        except SourceReadError as exc:
+            raise TreeSitterScanError(
+                f"Tree-sitter source read failed for {filepath}: {exc}"
+            ) from exc
 
     return tuple(records)
 
@@ -1706,10 +1755,10 @@ def _treesitter_query(run_sh: Path, filepath: Path, query: str) -> list[dict]:
 
 def extract_python_imports(filepath: Path) -> list[dict]:
     """Extract import relationships from a Python file using AST (fast, no treesitter needed)."""
+    content = _read_source_text(filepath)
     try:
-        content = filepath.read_text(errors="ignore")
         tree = ast.parse(content)
-    except (SyntaxError, Exception):
+    except (SyntaxError, ValueError):
         return []
 
     imports = []
@@ -2258,10 +2307,7 @@ def enrich_with_taxonomy(items: list[dict], taxonomy_module) -> list[dict]:
 
 def extract_knowledge(filepath: Path) -> list[dict]:
     """Extract functional knowledge from any file type."""
-    try:
-        content = filepath.read_text(errors="ignore")
-    except Exception:
-        return []
+    content = _read_source_text(filepath)
 
     # Markdown documentation
     if filepath.suffix in (".md", ".mdx"):
@@ -2349,9 +2395,12 @@ def scan(
         # Phase 1a: Extract all knowledge items (CPU-bound, fast)
         all_items: list[dict] = []
         file_iter = Monitor(files, name="ingest-code-extract", desc="Extracting knowledge", total=len(files)) if Monitor else files
-        for filepath in file_iter:
-            items = extract_knowledge(filepath)
-            all_items.extend(items)
+        try:
+            for filepath in file_iter:
+                items = extract_knowledge(filepath)
+                all_items.extend(items)
+        except SourceReadError as exc:
+            _exit_source_read_failure(codebase=path, phase="knowledge", exc=exc)
         knowledge_total = len(all_items)
         print(f"  Extracted {knowledge_total} knowledge items from {len(files)} files", flush=True)
 
@@ -2420,7 +2469,10 @@ def scan(
         for i in range(0, len(cwe_files), batch_size):
             batch = cwe_files[i:i + batch_size]
             for filepath in batch:
-                result = scan_file_cwe(filepath, taxonomy, validate)
+                try:
+                    result = _scan_file_cwe_checked(filepath, taxonomy, validate)
+                except SourceReadError as exc:
+                    _exit_source_read_failure(codebase=path, phase="cwe", exc=exc)
                 scanned += 1
                 cwes = result.get("cwe_mappings", [])
                 if cwes:
@@ -2467,7 +2519,10 @@ def scan(
 
     if not cwe_only:
         print("\n--- Phase 3: Extracting code relationships ---", flush=True)
-        edges = extract_edges(files, path)
+        try:
+            edges = extract_edges(files, path)
+        except SourceReadError as exc:
+            _exit_source_read_failure(codebase=path, phase="edges", exc=exc)
         edges_total = len(edges)
         print(f"  Found {edges_total} internal dependency edges", flush=True)
         if edges_total > 0:
@@ -2661,7 +2716,12 @@ def rescan(
 
         for filepath in files:
             # Knowledge extraction
-            for item in extract_knowledge(filepath):
+            try:
+                extracted_items = extract_knowledge(filepath)
+            except SourceReadError as exc:
+                _exit_source_read_failure(codebase=path, phase="knowledge", exc=exc)
+
+            for item in extracted_items:
                 codebase_knowledge_attempted += 1
                 if _learn(memory_script, item["problem"], item["solution"], scope, item["tags"]):
                     total_knowledge += 1
@@ -2675,7 +2735,10 @@ def rescan(
 
             # CWE scanning
             if taxonomy and filepath.suffix not in (".md", ".mdx"):
-                result = scan_file_cwe(filepath, taxonomy, validate)
+                try:
+                    result = _scan_file_cwe_checked(filepath, taxonomy, validate)
+                except SourceReadError as exc:
+                    _exit_source_read_failure(codebase=path, phase="cwe", exc=exc)
                 for cwe in result.get("cwe_mappings", []):
                     cwe_id = cwe.get("cwe_id", "unknown")
                     tags = ["ingest-code", "cwe", cwe_id, filepath.suffix.lstrip(".")]

@@ -106,6 +106,11 @@ Tree-sitter source locations must resolve to real lines in the discovered file.
 Out-of-bounds or unreadable source ranges fail with status 1 before code-symbol
 preview or persistence.
 
+Every discovered source file used by a requested phase must remain readable. A
+read failure exits with status 1 and prevents the completed marker. Readable
+files with unsupported or syntactically invalid content may still produce zero
+records.
+
 ### `rescan` — Incremental Rescan (Scheduler Job)
 
 ```bash
