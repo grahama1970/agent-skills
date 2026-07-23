@@ -1758,6 +1758,48 @@ def _path_modified_at_or_after(path: Path, threshold: datetime | None) -> bool:
         return False
 
 
+def _resolve_in_repo_file(path: Path, codebase_root: Path) -> Path | None:
+    """Resolve an existing file and require repository containment."""
+    try:
+        root = codebase_root.resolve(strict=True)
+        resolved = path.resolve(strict=True)
+        resolved.relative_to(root)
+    except (OSError, RuntimeError, ValueError):
+        return None
+
+    return resolved if resolved.is_file() else None
+
+
+def _resolve_in_repo_directory(path: Path, codebase_root: Path) -> Path | None:
+    """Resolve an existing directory and require repository containment."""
+    try:
+        root = codebase_root.resolve(strict=True)
+        resolved = path.resolve(strict=True)
+        resolved.relative_to(root)
+    except (OSError, RuntimeError, ValueError):
+        return None
+
+    return resolved if resolved.is_dir() else None
+
+
+def _append_explicit_markdown(
+    files: list[Path],
+    candidate: Path,
+    codebase_root: Path,
+    mtime_after: datetime | None,
+) -> None:
+    """Append one explicit in-repository Markdown file if eligible."""
+    resolved = _resolve_in_repo_file(candidate, codebase_root)
+    if resolved is None:
+        return
+    if resolved.suffix.lower() not in {".md", ".mdx"}:
+        return
+    if not _path_modified_at_or_after(resolved, mtime_after):
+        return
+    if resolved not in files:
+        files.append(resolved)
+
+
 def collect_files(codebase_path: Path, patterns: list[str], mtime_after: Optional[datetime] = None) -> list[Path]:
     """Collect files matching patterns, respecting .gitignore and .monitor-codebase.json."""
     files: list[Path] = []
@@ -1802,20 +1844,18 @@ def collect_files(codebase_path: Path, patterns: list[str], mtime_after: Optiona
 
     # Also include markdown docs at project root (always)
     for md_name in ["CONTEXT.md", "README.md", "CLAUDE.md", "MEMORY.md", "AGENTS.md"]:
-        md_path = codebase_root / md_name
-        if md_path.exists() and _path_modified_at_or_after(md_path, mtime_after) and md_path not in files:
-            files.append(md_path)
+        _append_explicit_markdown(files, codebase_root / md_name, codebase_root, mtime_after)
     # Recurse for local/docs/*.md and local/*.md
     for local_dir in [codebase_root / "local" / "docs", codebase_root / "local"]:
-        if local_dir.exists():
-            for md in local_dir.glob("*.md"):
-                if _path_modified_at_or_after(md, mtime_after) and md not in files:
-                    files.append(md)
-    docs_dir = codebase_root / "docs"
-    if docs_dir.exists():
-        for md in docs_dir.glob("*.md"):
-            if _path_modified_at_or_after(md, mtime_after) and md not in files:
-                files.append(md)
+        resolved_dir = _resolve_in_repo_directory(local_dir, codebase_root)
+        if resolved_dir is None:
+            continue
+        for md in resolved_dir.glob("*.md"):
+            _append_explicit_markdown(files, md, codebase_root, mtime_after)
+    resolved_docs_dir = _resolve_in_repo_directory(codebase_root / "docs", codebase_root)
+    if resolved_docs_dir is not None:
+        for md in resolved_docs_dir.glob("*.md"):
+            _append_explicit_markdown(files, md, codebase_root, mtime_after)
 
     return sorted(set(files))
 
