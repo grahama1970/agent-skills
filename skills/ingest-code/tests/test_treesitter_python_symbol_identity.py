@@ -121,7 +121,10 @@ def test_same_named_methods_use_correct_parent_class(monkeypatch, tmp_path: Path
     assert record.called_symbols == ["beta"]
 
 
-def test_nested_class_method_uses_innermost_parent(monkeypatch, tmp_path: Path) -> None:
+def test_nested_class_method_uses_full_lexical_qualified_name(
+    monkeypatch,
+    tmp_path: Path,
+) -> None:
     repo = tmp_path / "repo"
     source = _write(
         repo,
@@ -135,7 +138,9 @@ def test_nested_class_method_uses_innermost_parent(monkeypatch, tmp_path: Path) 
     records = _extract_records(monkeypatch, tmp_path, repo, source, [_symbol("run", start_line=3)])
 
     assert len(records) == 1
-    assert records[0].qualified_name == "Inner.run"
+    assert records[0].qualified_name == "Outer.Inner.run"
+    details = ingest_code._extract_python_symbol_details(source, "function", "run", 3)
+    assert details["parent_symbol"] == "Inner"
 
 
 def test_decorated_function_matches_decorator_start_line(tmp_path: Path) -> None:

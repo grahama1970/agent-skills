@@ -315,6 +315,9 @@ definition line.
 Exact Python AST matches also canonicalize `parent_symbol` to the immediate
 lexical parent function, async function, or class. Tree-sitter parent metadata
 is preserved only when Python parsing or exact AST matching fails.
+For exact Python AST matches, `qualified_name` uses the complete named lexical
+ancestry such as `Outer.Inner.run` or `Service.method.helper`; repository path
+continues to supply module location, and `parent_symbol` remains immediate.
 
 ## Directory Filtering
 

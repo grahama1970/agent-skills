@@ -1086,9 +1086,9 @@ def _python_node_matches_symbol_start(node: ast.AST, start_line: int) -> bool:
     )
 
 
-def _find_python_parent_symbol(tree: ast.AST, node: ast.AST) -> Optional[str]:
-    """Return the immediate named lexical parent for a declaration node."""
-    parent_by_node: dict[ast.AST, str] = {}
+def _find_python_symbol_ancestry(tree: ast.AST, node: ast.AST) -> tuple[str, ...]:
+    """Return the complete named lexical ancestry for a declaration node."""
+    ancestry_by_node: dict[ast.AST, tuple[str, ...]] = {}
     active_declarations: list[ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef] = []
 
     class ParentVisitor(ast.NodeVisitor):
@@ -1106,13 +1106,15 @@ def _find_python_parent_symbol(tree: ast.AST, node: ast.AST) -> Optional[str]:
             candidate: ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef,
         ) -> None:
             if active_declarations:
-                parent_by_node[candidate] = active_declarations[-1].name
+                ancestry_by_node[candidate] = tuple(
+                    declaration.name for declaration in active_declarations
+                )
             active_declarations.append(candidate)
             self.generic_visit(candidate)
             active_declarations.pop()
 
     ParentVisitor().visit(tree)
-    return parent_by_node.get(node)
+    return ancestry_by_node.get(node, ())
 
 
 def _python_parameter_names(node: ast.FunctionDef | ast.AsyncFunctionDef) -> list[str]:
@@ -1364,7 +1366,8 @@ def _extract_python_symbol_details(
     lexical_collector = _PythonLexicalCollector(node)
     lexical_collector.visit(node)
 
-    parent_symbol = _find_python_parent_symbol(tree, node)
+    ancestry = _find_python_symbol_ancestry(tree, node)
+    parent_symbol = ancestry[-1] if ancestry else None
     return {
         "start_line": _python_declaration_start(node),
         "end_line": getattr(node, "end_lineno", start_line),
@@ -1374,6 +1377,7 @@ def _extract_python_symbol_details(
         "called_symbols": sorted(lexical_collector.called_symbols),
         "string_literals": sorted(lexical_collector.string_literals),
         "parent_symbol": parent_symbol,
+        "qualified_name": ".".join((*ancestry, node.name)),
     }
 
 
@@ -1402,6 +1406,7 @@ def _build_code_symbol_record(
     local_variables: list[str] = []
     called_symbols: list[str] = []
     string_literals: list[str] = []
+    ast_qualified_name = ""
 
     if filepath.suffix == ".py":
         details = _extract_python_symbol_details(filepath, kind, name, start_line)
@@ -1414,11 +1419,14 @@ def _build_code_symbol_record(
             local_variables = list(details.get("local_variables", []))
             called_symbols = list(details.get("called_symbols", []))
             string_literals = list(details.get("string_literals", []))
+            ast_qualified_name = str(details.get("qualified_name") or "").strip()
 
-    code = _source_slice(filepath, start_line, end_line)
-    qualified_name = ".".join(part for part in [parent_symbol, name] if part)
+    qualified_name = ast_qualified_name or ".".join(
+        part for part in [parent_symbol, name] if part
+    )
     if not qualified_name:
         qualified_name = name
+    code = _source_slice(filepath, start_line, end_line)
 
     rel_path = _relative_path(filepath, codebase_root)
     tags = _build_symbol_tags(kind, name, filepath.stem)
