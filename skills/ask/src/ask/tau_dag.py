@@ -459,6 +459,20 @@ def run_tau_dag_bundle(
     receipt = _read_json(receipt_path) if receipt_path.exists() else None
     status = str(receipt.get("status") if isinstance(receipt, dict) else "UNKNOWN")
     node_provider_receipts = _collect_node_provider_receipts(run_dir / "node-artifacts")
+    # Semantic review verdicts must bubble to the bundle: a reviewer node that
+    # returns VERDICT: NEEDS_ATTENTION/FAIL completes its transport (node PASS)
+    # but the bundle must not read as PASS, or callers ship unreviewed defects.
+    review_verdicts: dict[str, str] = {}
+    for item in node_provider_receipts:
+        node_receipt = _read_json(Path(str(item.get("path")))) if item.get("path") else None
+        if isinstance(node_receipt, dict) and node_receipt.get("requires_verdict"):
+            verdict = node_receipt.get("verdict")
+            if verdict:
+                review_verdicts[str(item.get("node_id"))] = str(verdict)
+    _verdict_rank = {"PASS": 0, "NEEDS_ATTENTION": 1, "FAIL": 2}
+    worst_verdict = max(review_verdicts.values(), key=lambda v: _verdict_rank.get(v, 1), default=None)
+    if worst_verdict and worst_verdict != "PASS" and status == "PASS":
+        status = worst_verdict
     provider_live = bool(
         isinstance(receipt, dict) and receipt.get("provider_live") is True
     ) or any(item.get("provider_live") is True for item in node_provider_receipts)
