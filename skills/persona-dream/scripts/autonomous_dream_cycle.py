@@ -117,35 +117,116 @@ def select_cluster(out: Path) -> dict:
             if tag.startswith("person:") and tag not in SELF_TAGS:
                 groups[(m.group(1), tag)].add(key)
 
-    def record_sha(doc):
-        slim = {k: v for k, v in doc.items() if not k.startswith("_") or k == "_key"}
-        return sha256_text(json.dumps(slim, sort_keys=True, default=str))
+    # GOAL_V3 Amendment 2 (operator 2026-07-23): "different variation of the
+    # same dream is human and agentic"; humans hold one memory with BOTH
+    # positive and negative valence and resolve the conflict by traversing the
+    # graph to associated memories. Dreaming is therefore NOT one-shot per
+    # cluster. Seed from a valence-CONFLICTED memory, traverse that
+    # counterpart's own graph edges to gather associates (isolation preserved:
+    # traversal stays WITHIN the seed counterpart; cross-counterpart traversal
+    # needs the counterpart gate amended via tau and is NOT done here), and the
+    # VARIATION is which valence dominates + which associative path is taken.
+    # A used cluster is re-dreamable as a NEW variation; only an EXACT prior
+    # variation (same members + same emphasis) is blocked.
+    POS = {"trust", "longing", "pride", "relief"}
+    NEG = {"grief", "guilt", "fear", "anger", "shame", "uncertainty"}
 
-    candidates = []
+    def emo_set(d):
+        return {e.strip() for e in (d.get("emotion") or "").split(",") if e.strip()}
+
+    def conflict_score(d):
+        e = emo_set(d)
+        return ((len(e & POS) > 0) + (len(e & NEG) > 0), len(e))
+
+    edges_by_src: dict[str, list[str]] = defaultdict(list)
+    for key, doc in roots.items():
+        for e in (doc.get("graph_edges_raw") or []):
+            if isinstance(e, dict) and e.get("target_memory_id"):
+                edges_by_src[key].append(e["target_memory_id"])
+
+    def traverse(seed_key, members, k=3):
+        order, seen, frontier = [seed_key], {seed_key}, [seed_key]
+        while frontier and len(order) < k:
+            nxt = []
+            for s in frontier:
+                for tgt in edges_by_src.get(s, []):
+                    if tgt in members and tgt not in seen:
+                        seen.add(tgt); order.append(tgt); nxt.append(tgt)
+                        if len(order) >= k:
+                            break
+                if len(order) >= k:
+                    break
+            frontier = nxt
+        for m in sorted(members):          # deterministic pad if traversal short
+            if len(order) >= k:
+                break
+            if m not in seen:
+                order.append(m); seen.add(m)
+        return order[:k]
+
+    ledger_path = ROOT / "reports/goal_v5/variation_ledger.json"
+    ledger = (json.loads(ledger_path.read_text())
+              if ledger_path.exists() else {"variation_keys": []})
+    done_keys = set(ledger["variation_keys"])
+
+    clusters = []
     for (band, tag), members in groups.items():
         if len(members) < 3:
             continue
         cluster_id = f"{band}:{tag}"
-        scored = sorted(({"member": k, "score": sha256_text(seed + record_sha(roots[k]))}
-                         for k in members), key=lambda s: s["score"])
-        selected = [s["member"] for s in scored[:3]]
-        candidates.append({"cluster_id": cluster_id, "age_band": band,
-                           "order_hash": sha256_text(seed + cluster_id),
-                           "selected": selected,
-                           "already_used": bool(set(selected) & used)})
-    candidates.sort(key=lambda c: (AGE_BAND_RECENCY.index(c["age_band"]), c["order_hash"]))
-    fresh = [c for c in candidates if not c["already_used"]]
-    if not fresh:
-        raise SystemExit("BLOCKED_CYCLE_NO_UNUSED_CLUSTERS")
-    chosen = fresh[0]
+        clusters.append({"cluster_id": cluster_id, "age_band": band, "tag": tag,
+                         "members": members,
+                         "order_hash": sha256_text(seed + cluster_id),
+                         "used_overlap": len(members & used)})
+    # never-dreamed clusters first, then least-dreamed (variation mode)
+    clusters.sort(key=lambda c: (c["used_overlap"] > 0,
+                                 AGE_BAND_RECENCY.index(c["age_band"]),
+                                 c["used_overlap"], c["order_hash"]))
+    if not clusters:
+        raise SystemExit("BLOCKED_CYCLE_NO_ELIGIBLE_CLUSTERS")
+
+    chosen = None
+    for cl in clusters:
+        members = cl["members"]
+        conflicted = sorted(members, key=lambda m: (conflict_score(roots[m]),
+                                                    sha256_text(seed + m)),
+                            reverse=True)
+        for vi, seed_key in enumerate(conflicted):
+            variation_index = cl["used_overlap"] + vi
+            emphasis = "negative" if variation_index % 2 == 1 else "positive"
+            selected = traverse(seed_key, members, k=3)
+            vkey = sha256_text(cl["cluster_id"] + "|" + "|".join(sorted(selected))
+                               + "|" + emphasis)
+            if vkey in done_keys:
+                continue
+            chosen = {"cluster_id": cl["cluster_id"], "age_band": cl["age_band"],
+                      "selected": selected, "seed_memory": seed_key,
+                      "valence_emphasis": emphasis,
+                      "variation_index": variation_index,
+                      "variation_key": vkey,
+                      "used_overlap": cl["used_overlap"],
+                      "order_hash": cl["order_hash"]}
+            break
+        if chosen:
+            break
+    if chosen is None:
+        raise SystemExit("BLOCKED_CYCLE_ALL_VARIATIONS_EXHAUSTED")
+
+    ledger["variation_keys"].append(chosen["variation_key"])
+    ledger_path.parent.mkdir(parents=True, exist_ok=True)
+    ledger_path.write_text(json.dumps(ledger, indent=2) + "\n")
+
     chosen_docs = {k: roots[k] for k in chosen["selected"]}
     (out / "selection_receipt.v1.json").write_text(json.dumps({
-        "schema": "persona_dream.cycle_selection_receipt.v1",
+        "schema": "persona_dream.cycle_selection_receipt.v2",
         "loop_guard_excluded_tainted_residue": len(tainted),
         "seed_source": "GOAL_V3.md sha256", "seed": seed,
-        "candidates_considered": len(candidates),
-        "skipped_already_used": len(candidates) - len(fresh),
-        "chosen": {k: chosen[k] for k in ("cluster_id", "selected")},
+        "selection_mode": "conflict_seeded_intra_counterpart_traversal",
+        "clusters_considered": len(clusters),
+        "cluster_was_previously_dreamed": chosen["used_overlap"] > 0,
+        "chosen": {k: chosen[k] for k in ("cluster_id", "selected", "seed_memory",
+                                          "valence_emphasis", "variation_index",
+                                          "variation_key")},
     }, indent=2, sort_keys=True) + "\n")
     return {"cluster": chosen, "docs": chosen_docs}
 
@@ -198,11 +279,22 @@ def compose_and_render(adapter, phase_c, subgate, sel: dict, out: Path) -> dict:
         f"## {k}\n{d.get('retrieval_text')}" for k, d in sel["docs"].items())
     person_tag = sel["cluster"]["cluster_id"].split(":person:")[1]
     other = person_tag.replace("_", " ").title()
+    emphasis = sel["cluster"].get("valence_emphasis", "positive")
+    vindex = sel["cluster"].get("variation_index", 0)
+    emphasis_line = (
+        f"This is dream VARIATION #{vindex} of this experience. Humans re-dream "
+        f"the same memories differently; the SAME memories are held with both "
+        f"positive and negative feeling. For THIS variation, let the "
+        f"{emphasis.upper()} reading dominate the emotional arc — surface the "
+        + ("warmth, trust, longing, or relief latent in these memories"
+           if emphasis == "positive" else
+           "grief, guilt, fear, anger, or shame latent in these memories")
+        + ". Do not change the facts; change which feeling the dream leans into.\n\n")
     prompt = (
         "You are composing Embry's synthetic dream as a 4-panel storyboard. "
         "Ground the dream ONLY in these root memories (the dream recombines "
         "and heightens them; it is synthetic, never literal history):\n"
-        + reading + "\n\n"
+        + reading + "\n\n" + emphasis_line +
         "Compose a dream synopsis (2-3 sentences) and EXACTLY 4 storyboard "
         "panels. Embry must appear foreground with her face visible in every "
         f"panel; {other} appears in at least 2 panels. Return strict JSON: "
