@@ -2299,6 +2299,51 @@ def _resolve_unique_python_module(
     return candidates[0] if len(candidates) == 1 else None
 
 
+def _dependency_edge_identity(edge: dict[str, Any]) -> tuple[str, str, str, str]:
+    """Identify one concrete import relationship."""
+    return (
+        str(Path(edge["from_file"]).resolve()),
+        str(Path(edge["to_file"]).resolve()),
+        str(edge["edge_type"]),
+        str(edge["module"]),
+    )
+
+
+def _normalized_edge_names(value: object) -> tuple[str, ...]:
+    """Return unique imported names in deterministic order."""
+    if not isinstance(value, (list, tuple)):
+        return ()
+
+    return tuple(sorted({
+        name.strip()
+        for name in value
+        if isinstance(name, str) and name.strip()
+    }))
+
+
+def _canonicalize_dependency_edges(edges: Sequence[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Collapse duplicate import edges and merge imported names."""
+    names_by_identity: dict[tuple[str, str, str, str], set[str]] = {}
+
+    for edge in edges:
+        identity = _dependency_edge_identity(edge)
+        names_by_identity.setdefault(identity, set()).update(
+            _normalized_edge_names(edge.get("names", []))
+        )
+
+    return [
+        {
+            "from_file": from_file,
+            "to_file": to_file,
+            "edge_type": edge_type,
+            "module": module,
+            "names": sorted(names_by_identity[identity]),
+        }
+        for identity in sorted(names_by_identity)
+        for from_file, to_file, edge_type, module in [identity]
+    ]
+
+
 def extract_edges(
     files: list[Path],
     codebase_root: Path,
@@ -2330,7 +2375,7 @@ def extract_edges(
                 "names": imp.get("names", []),
             })
 
-    return edges
+    return _canonicalize_dependency_edges(edges)
 
 
 def _edge_preview_key(edge: dict[str, Any]) -> tuple[str, str, str, str]:
@@ -2344,6 +2389,7 @@ def _edge_preview_key(edge: dict[str, Any]) -> tuple[str, str, str, str]:
 
 def store_edges(edges: list[dict], scope: str = "code", dry_run: bool = False, monitor=None) -> int:
     """Store dependency edges in /memory via batch HTTP endpoint."""
+    edges = _canonicalize_dependency_edges(edges)
     if dry_run:
         for edge in sorted(edges, key=_edge_preview_key):
             from_name = Path(edge["from_file"]).name
