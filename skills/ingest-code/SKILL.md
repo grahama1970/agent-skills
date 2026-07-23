@@ -325,6 +325,11 @@ Exact Python AST matches canonicalize `docstring` to the cleaned semantic AST
 docstring. Source quoting and indentation remain represented in `code`; stale
 Tree-sitter docstrings are preserved only when Python parsing or exact AST
 matching fails.
+Exact Python AST matches canonicalize `signature` to a one-line semantic AST
+signature for classes, functions, async functions, and methods. Decorators,
+comments, original whitespace, and body text remain represented in `code`;
+stale Tree-sitter signatures are preserved only when Python parsing or exact
+AST matching fails.
 
 ## Directory Filtering
 

@@ -1133,6 +1133,33 @@ def _python_structural_symbol_kind(
     return "function"
 
 
+def _python_type_params_suffix(node: PythonDeclaration) -> str:
+    """Return a rendered Python 3.12 type-parameter suffix when present."""
+    type_params = getattr(node, "type_params", ())
+    if not type_params:
+        return ""
+    return f"[{', '.join(ast.unparse(type_param) for type_param in type_params)}]"
+
+
+def _python_declaration_signature(node: PythonDeclaration) -> str:
+    """Return a one-line semantic signature for a Python declaration."""
+    type_params = _python_type_params_suffix(node)
+    if isinstance(node, ast.ClassDef):
+        bases = [ast.unparse(base) for base in node.bases]
+        for keyword in node.keywords:
+            value = ast.unparse(keyword.value)
+            if keyword.arg is None:
+                bases.append(f"**{value}")
+            else:
+                bases.append(f"{keyword.arg}={value}")
+        base_clause = f"({', '.join(bases)})" if bases else ""
+        return f"class {node.name}{type_params}{base_clause}:"
+
+    prefix = "async def" if isinstance(node, ast.AsyncFunctionDef) else "def"
+    returns = f" -> {ast.unparse(node.returns)}" if node.returns is not None else ""
+    return f"{prefix} {node.name}{type_params}({ast.unparse(node.args)}){returns}:"
+
+
 def _python_parameter_names(node: ast.FunctionDef | ast.AsyncFunctionDef) -> list[str]:
     """Return Python parameter names in declaration order."""
     args = node.args
@@ -1381,6 +1408,7 @@ def _extract_python_symbol_details(
     return {
         "start_line": _python_declaration_start(node),
         "end_line": getattr(node, "end_lineno", start_line),
+        "signature": _python_declaration_signature(node),
         "docstring": ast.get_docstring(node, clean=True) or "",
         "symbol_kind": _python_structural_symbol_kind(node, ancestry),
         "parameters": parameters,
@@ -1427,6 +1455,7 @@ def _build_code_symbol_record(
             kind = str(details.get("symbol_kind") or kind)
             start_line = int(details.get("start_line") or start_line)
             end_line = int(details.get("end_line") or end_line)
+            signature = str(details.get("signature") or "")
             docstring = str(details.get("docstring") or "")
             parent_symbol = details.get("parent_symbol") or ""
             parameters = list(details.get("parameters", []))
