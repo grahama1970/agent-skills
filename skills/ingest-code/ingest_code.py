@@ -115,18 +115,32 @@ def find_memory_skill() -> Optional[Path]:
     return sock if sock.exists() else None
 
 
+def _build_lesson_document(
+    problem: str,
+    solution: str,
+    scope: str,
+    tags: list[str],
+) -> dict[str, Any]:
+    """Build a generic memory compatibility lesson."""
+    return {
+        "problem": problem,
+        "solution": solution,
+        "scope": scope,
+        "tags": list(tags),
+    }
+
+
 def _learn_http(problem: str, solution: str, scope: str, tags: list[str]) -> bool:
     """Store a lesson in /memory via Unix socket httpx."""
     try:
         transport = httpx.HTTPTransport(uds=MEMORY_SOCKET_PATH)
         with httpx.Client(transport=transport, base_url="http://localhost", timeout=15.0) as client:
-            document = {
-                "problem": problem,
-                "solution": solution,
-                "scope": scope,
-                "tags": tags,
-                "code_symbol": True,
-            }
+            document = _build_lesson_document(
+                problem=problem,
+                solution=solution,
+                scope=scope,
+                tags=tags,
+            )
             resp = client.post("/store", json={"document": document})
             if 200 <= resp.status_code < 300:
                 return True
