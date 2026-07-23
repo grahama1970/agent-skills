@@ -189,6 +189,49 @@ grep -roh 'data-qid="[^"]*"' src/components/ | sort -u  # ← 124 qids
 ```
 **Why:** Components render conditionally. A `data-qid` in TSX source only exists in the DOM when that component is mounted. Test manifests must reflect what the user can actually see and click, not what exists in source code.
 
+### WRONG: Rebuilding a chat/control well inside a large page monolith
+```tsx
+// One 2,000-line route component owns the grid, data cards, alerts, voice UI,
+// chat well, prompt copy, timers, command registry, and distance-mode branches.
+function KioskDistanceView() {
+  return (
+    <>
+      <MetricGrid />
+      <aside>{/* chat well markup and state inline */}</aside>
+    </>
+  )
+}
+```
+
+This makes a small chat revert dangerous. A request such as "put the orb back"
+can accidentally mutate grid layout, alert cards, distance-mode headers, or
+other unrelated UI because all concerns share one file and one style object.
+
+### RIGHT: Extract volatile wells before non-trivial UX iteration
+```tsx
+function KioskDistanceView() {
+  return (
+    <>
+      <MetricGrid />
+      <EmbryKioskChatWell
+        sharedOrbState={sharedOrbState}
+        commands={commands}
+        onSelectPage={onSelectPage}
+      />
+    </>
+  )
+}
+```
+
+**Why:** Chat wells, voice panels, drawers, artifact inspectors, and other
+high-churn control surfaces need their own component boundary before design
+iteration. Preserve the accepted component or restore it with `git show` /
+`git revert` instead of re-bespoking it inside the page. The parent route should
+compose the well and pass data/actions; it should not own the well's markup,
+prompt copy, timers, visual state machine, and command registry. If the human
+asks to revert a chat/control surface, first identify the last known-good
+component commit and make the revert path explicit before applying new edits.
+
 ### WRONG: Static `data-qid` on dynamic list items
 ```tsx
 // Every entry gets the same qid — selector matches multiple elements
