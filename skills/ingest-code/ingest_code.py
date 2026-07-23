@@ -1066,15 +1066,51 @@ def _name_from_call(node: ast.AST) -> str:
     return ""
 
 
+def _python_declaration_start(node: ast.AST) -> int:
+    """Return the first physical line belonging to a declaration."""
+    starts = [getattr(node, "lineno", 0)]
+    starts.extend(
+        getattr(decorator, "lineno", 0)
+        for decorator in getattr(node, "decorator_list", ())
+    )
+    return min((line for line in starts if line > 0), default=0)
+
+
+def _python_node_matches_symbol_start(node: ast.AST, start_line: int) -> bool:
+    """Match a Tree-sitter start to a def/class or its decorators."""
+    declaration_start = _python_declaration_start(node)
+    definition_line = getattr(node, "lineno", 0)
+    return (
+        declaration_start > 0
+        and declaration_start <= start_line <= definition_line
+    )
+
+
 def _find_python_parent_symbol(tree: ast.AST, start_line: int, node: ast.AST) -> Optional[str]:
+    containers: list[ast.ClassDef] = []
+
     for candidate in ast.walk(tree):
         if not isinstance(candidate, ast.ClassDef):
             continue
+        if candidate is node:
+            continue
         candidate_start = getattr(candidate, "lineno", 0)
         candidate_end = getattr(candidate, "end_lineno", 0)
-        if candidate_start <= start_line <= candidate_end and candidate is not node:
-            return candidate.name
-    return None
+        if candidate_start <= start_line <= candidate_end:
+            containers.append(candidate)
+
+    if not containers:
+        return None
+
+    parent = min(
+        containers,
+        key=lambda candidate: (
+            getattr(candidate, "end_lineno", 0)
+            - getattr(candidate, "lineno", 0),
+            -getattr(candidate, "lineno", 0),
+        ),
+    )
+    return parent.name
 
 
 def _extract_python_symbol_details(
@@ -1090,21 +1126,26 @@ def _extract_python_symbol_details(
     except (SyntaxError, ValueError):
         return {}
 
-    candidates: list[ast.AST] = []
     node_types: tuple[type, ...]
     if kind == "class":
         node_types = (ast.ClassDef,)
     else:
         node_types = (ast.FunctionDef, ast.AsyncFunctionDef)
 
-    for node in ast.walk(tree):
-        if isinstance(node, node_types) and getattr(node, "name", "") == name:
-            candidates.append(node)
+    candidates = [
+        node
+        for node in ast.walk(tree)
+        if (
+            isinstance(node, node_types)
+            and getattr(node, "name", "") == name
+            and _python_node_matches_symbol_start(node, start_line)
+        )
+    ]
 
-    if not candidates:
+    if len(candidates) != 1:
         return {}
 
-    node = min(candidates, key=lambda candidate: abs(getattr(candidate, "lineno", 0) - start_line))
+    node = candidates[0]
     parameters: list[str] = []
     if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
         parameters = [arg.arg for arg in node.args.args if arg.arg != "self"]
