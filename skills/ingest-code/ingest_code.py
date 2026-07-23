@@ -1138,6 +1138,7 @@ class _PythonLexicalCollector(ast.NodeVisitor):
         self.excluded_bindings: set[str] = set()
         self.called_symbols: set[str] = set()
         self.string_literals: set[str] = set()
+        self._binding_suppression_depth = 0
 
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         if node is not self.root:
@@ -1169,7 +1170,7 @@ class _PythonLexicalCollector(ast.NodeVisitor):
             self.visit(node.body)
 
     def visit_Name(self, node: ast.Name) -> None:
-        if isinstance(node.ctx, ast.Store):
+        if isinstance(node.ctx, ast.Store) and self._binding_suppression_depth == 0:
             self._add_local_binding(node.id)
 
     def visit_Import(self, node: ast.Import) -> None:
@@ -1215,6 +1216,18 @@ class _PythonLexicalCollector(ast.NodeVisitor):
 
     def visit_Nonlocal(self, node: ast.Nonlocal) -> None:
         self.excluded_bindings.update(node.names)
+
+    def visit_ListComp(self, node: ast.ListComp) -> None:
+        self._visit_comprehension(node.generators, node.elt)
+
+    def visit_SetComp(self, node: ast.SetComp) -> None:
+        self._visit_comprehension(node.generators, node.elt)
+
+    def visit_GeneratorExp(self, node: ast.GeneratorExp) -> None:
+        self._visit_comprehension(node.generators, node.elt)
+
+    def visit_DictComp(self, node: ast.DictComp) -> None:
+        self._visit_comprehension(node.generators, node.key, node.value)
 
     def visit_Call(self, node: ast.Call) -> None:
         call_name = _name_from_call(node.func)
@@ -1265,6 +1278,26 @@ class _PythonLexicalCollector(ast.NodeVisitor):
         for default in arguments.kw_defaults:
             if default is not None:
                 self.visit(default)
+
+    def _visit_comprehension(
+        self,
+        generators: list[ast.comprehension],
+        *result_expressions: ast.AST,
+    ) -> None:
+        for generator in generators:
+            self._visit_binding_suppressed(generator.target)
+            self.visit(generator.iter)
+            for condition in generator.ifs:
+                self.visit(condition)
+        for expression in result_expressions:
+            self.visit(expression)
+
+    def _visit_binding_suppressed(self, node: ast.AST) -> None:
+        self._binding_suppression_depth += 1
+        try:
+            self.visit(node)
+        finally:
+            self._binding_suppression_depth -= 1
 
     def _add_local_binding(self, name: str) -> None:
         if name:

@@ -301,6 +301,10 @@ headers but exclude nested function, class, and lambda bodies.
 For Python, `local_variables` includes names bound in the selected declaration's
 scope, including nested declaration names, imports, exception aliases, and
 pattern captures, not only assignment-target `Name(Store)` nodes.
+Python comprehension iteration targets are excluded from the containing
+declaration's `local_variables`, while direct comprehension calls, literals,
+filters, iterables, result expressions, and walrus-bound names remain lexical
+context for the containing declaration.
 
 ## Directory Filtering
 
