@@ -166,7 +166,7 @@ def test_custom_scan_glob_limits_treesitter_records(monkeypatch, tmp_path: Path)
     py_file.write_text("def app():\n    return 1\n")
     js_file.write_text("export function app() { return 1; }\n")
     allowed_files = ingest_code._resolved_file_manifest(
-        ingest_code.collect_files(repo, ["*.py"]),
+        ingest_code.collect_files(repo, ["src/**/*.py"]),
         repo,
     )
     captured_records = []

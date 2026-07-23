@@ -25,7 +25,7 @@ import threading
 from collections.abc import Collection
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Optional, Sequence
 
 import httpx
@@ -1542,33 +1542,64 @@ def _is_git_repo(path: Path) -> bool:
         return False
 
 
-def _git_ls_files(codebase_path: Path, patterns: list[str]) -> list[Path]:
-    """Use git ls-files to get tracked files (respects .gitignore)."""
-    # Build set of extensions from patterns like "*.py" -> ".py"
-    extensions = set()
-    for pattern in patterns:
-        if pattern.startswith("*."):
-            extensions.add(pattern[1:])  # "*.py" -> ".py"
+def _git_glob_pathspec(pattern: str) -> str | None:
+    """Translate one rglob-style relative pattern to a Git glob pathspec."""
+    normalized = str(pattern).strip().replace("\\", "/")
 
-    files = []
+    while normalized.startswith("./"):
+        normalized = normalized[2:]
+
+    if not normalized:
+        return None
+
+    parsed = PurePosixPath(normalized)
+    if parsed.is_absolute() or ".." in parsed.parts:
+        return None
+
+    if "/" not in normalized:
+        normalized = f"**/{normalized}"
+
+    return f":(glob){normalized}"
+
+
+def _git_ls_files(codebase_path: Path, patterns: list[str]) -> list[Path]:
+    """Return existing tracked or unignored files matching scan patterns."""
+    pathspecs = [
+        pathspec
+        for pattern in patterns
+        if (pathspec := _git_glob_pathspec(pattern)) is not None
+    ]
+    pathspecs = list(dict.fromkeys(pathspecs))
+    if not pathspecs:
+        return []
+
     try:
-        # Get all tracked + untracked-but-not-ignored files
         result = subprocess.run(
-            ["git", "ls-files", "--cached", "--others", "--exclude-standard"],
+            [
+                "git",
+                "ls-files",
+                "--cached",
+                "--others",
+                "--exclude-standard",
+                "--",
+                *pathspecs,
+            ],
             cwd=str(codebase_path),
             capture_output=True,
             text=True,
             timeout=60,
         )
-        if result.returncode == 0:
-            for line in result.stdout.strip().split("\n"):
-                if line:
-                    path = codebase_path / line
-                    # Filter by extension
-                    if path.suffix in extensions:
-                        files.append(path)
     except Exception:
-        pass
+        return []
+
+    if result.returncode != 0:
+        return []
+
+    files: list[Path] = []
+    for line in result.stdout.splitlines():
+        candidate = codebase_path / line
+        if candidate.is_file():
+            files.append(candidate)
     return files
 
 
