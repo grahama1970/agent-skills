@@ -110,6 +110,19 @@ TAG_FLOOR_TONE = {
     "yearning": ("curious_searching", "measured"),
     "reflection": ("calm_precise", "measured"),
 }
+# dream tag -> deterministic timing profile (GOAL_V5 Gate 1: the qualified
+# realization channel — pause_after_ms actuates through /tau/voice-render when
+# max_chars forces re-planned chunk boundaries; verified reach probe 2026-07-23:
+# requested 700ms -> measured longest-silence +0.70s, 10/10 renders, no overlap
+# with flat). Applied only for expressive_bias and dispositional_floor classes;
+# safety overrides and unknown labels never get dream timing.
+TAG_TIMING = {
+    "boundary":   {"pause_after_ms": 700, "max_chars": 80},
+    "warmth":     {"pause_after_ms": 250, "max_chars": 160},
+    "hesitance":  {"pause_after_ms": 550, "max_chars": 80},
+    "yearning":   {"pause_after_ms": 450, "max_chars": 100},
+    "reflection": {"pause_after_ms": 400, "max_chars": 120},
+}
 THERMAL_THRESHOLD = 0.6
 THERMAL_CONSECUTIVE = 3
 THERMAL_DAMPING = 0.8   # multiply prior weight by this
@@ -204,10 +217,13 @@ def compose(intent_voice_delivery: dict[str, Any] | None,
             "contributing_tag": tag,
         },
     }
+    timing = None if prior_zeroed else dict(TAG_TIMING.get(tag, TAG_TIMING["reflection"]))
     return {
         "tone": final_tone,
         "pace": final_pace,
+        "timing": timing,
         "voice_delivery_patch": {
+            "timing": timing,
             "affect_source": "persona_dream",
             "dream_provenance": receipt["dream_provenance"],
             "composition_receipt": {k: receipt[k] for k in

@@ -1,0 +1,1265 @@
+{
+  "schema": "persona_dream.reach_screen_receipt.v1",
+  "live": true,
+  "n_renders": 5,
+  "in_progress": false,
+  "results": {
+    "assert1_F": {
+      "sentence": "I looked at what you sent, and I think we should take it one step at a time, together.",
+      "condition": "F",
+      "chunks": [
+        {
+          "chunk_id": "c1",
+          "text": "I looked at what you sent, and I think we should take it one step at a time, together."
+        }
+      ],
+      "renders": [
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert1_F_r0.wav",
+          "duration_s": 4.4,
+          "total_silence_s": 0.512,
+          "longest_silence_s": 0.235,
+          "f0_median_hz": 198.18,
+          "f0_sd_hz": 28.4
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert1_F_r1.wav",
+          "duration_s": 4.36,
+          "total_silence_s": 0.491,
+          "longest_silence_s": 0.341,
+          "f0_median_hz": 202.82,
+          "f0_sd_hz": 38.23
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert1_F_r2.wav",
+          "duration_s": 4.4,
+          "total_silence_s": 0.427,
+          "longest_silence_s": 0.192,
+          "f0_median_hz": 205.17,
+          "f0_sd_hz": 46.91
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert1_F_r3.wav",
+          "duration_s": 4.6,
+          "total_silence_s": 0.448,
+          "longest_silence_s": 0.192,
+          "f0_median_hz": 187.06,
+          "f0_sd_hz": 37.35
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert1_F_r4.wav",
+          "duration_s": 4.24,
+          "total_silence_s": 0.427,
+          "longest_silence_s": 0.192,
+          "f0_median_hz": 203.99,
+          "f0_sd_hz": 40.15
+        }
+      ]
+    },
+    "assert1_P": {
+      "sentence": "I looked at what you sent, and I think we should take it one step at a time, together.",
+      "condition": "P",
+      "chunks": [
+        {
+          "chunk_id": "c1",
+          "text": "I looked at what you sent, and I think we should take it one step at a time, together.",
+          "tone": "firm_boundary"
+        }
+      ],
+      "renders": [
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert1_P_r0.wav",
+          "duration_s": 4.84,
+          "total_silence_s": 0.299,
+          "longest_silence_s": 0.213,
+          "f0_median_hz": 220.54,
+          "f0_sd_hz": 41.55
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert1_P_r1.wav",
+          "duration_s": 5.16,
+          "total_silence_s": 0.661,
+          "longest_silence_s": 0.299,
+          "f0_median_hz": 226.34,
+          "f0_sd_hz": 35.46
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert1_P_r2.wav",
+          "duration_s": 5.52,
+          "total_silence_s": 1.493,
+          "longest_silence_s": 0.725,
+          "f0_median_hz": 202.23,
+          "f0_sd_hz": 59.15
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert1_P_r3.wav",
+          "duration_s": 5.72,
+          "total_silence_s": 1.472,
+          "longest_silence_s": 1.067,
+          "f0_median_hz": 227.65,
+          "f0_sd_hz": 39.22
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert1_P_r4.wav",
+          "duration_s": 4.08,
+          "total_silence_s": 0.405,
+          "longest_silence_s": 0.277,
+          "f0_median_hz": 230.3,
+          "f0_sd_hz": 39.37
+        }
+      ]
+    },
+    "assert1_T": {
+      "sentence": "I looked at what you sent, and I think we should take it one step at a time, together.",
+      "condition": "T",
+      "chunks": [
+        {
+          "chunk_id": "c1",
+          "text": "I looked at what you sent,",
+          "pace": "steady",
+          "pause_strategy": "deliberate",
+          "pause_after_ms": 700
+        },
+        {
+          "chunk_id": "c2",
+          "text": "and I think we should take it one step at a time,",
+          "pace": "steady",
+          "pause_strategy": "deliberate",
+          "pause_after_ms": 700
+        },
+        {
+          "chunk_id": "c3",
+          "text": "together.",
+          "pace": "steady",
+          "pause_strategy": "deliberate",
+          "pause_after_ms": 0
+        }
+      ],
+      "renders": [
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert1_T_r0.wav",
+          "duration_s": 4.84,
+          "total_silence_s": 0.64,
+          "longest_silence_s": 0.341,
+          "f0_median_hz": 214.26,
+          "f0_sd_hz": 51.87
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert1_T_r1.wav",
+          "duration_s": 5.04,
+          "total_silence_s": 0.875,
+          "longest_silence_s": 0.363,
+          "f0_median_hz": 213.64,
+          "f0_sd_hz": 47.25
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert1_T_r2.wav",
+          "duration_s": 4.76,
+          "total_silence_s": 0.512,
+          "longest_silence_s": 0.256,
+          "f0_median_hz": 215.52,
+          "f0_sd_hz": 41.07
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert1_T_r3.wav",
+          "duration_s": 4.32,
+          "total_silence_s": 0.32,
+          "longest_silence_s": 0.256,
+          "f0_median_hz": 232.99,
+          "f0_sd_hz": 66.01
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert1_T_r4.wav",
+          "duration_s": 5.08,
+          "total_silence_s": 0.555,
+          "longest_silence_s": 0.256,
+          "f0_median_hz": 223.74,
+          "f0_sd_hz": 53.55
+        }
+      ]
+    },
+    "assert1_G": {
+      "sentence": "I looked at what you sent, and I think we should take it one step at a time, together.",
+      "condition": "G",
+      "chunks": [
+        {
+          "chunk_id": "c1",
+          "text": "[firm] I looked at what you sent, and I think we should take it one step at a time, together."
+        }
+      ],
+      "renders": [
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert1_G_r0.wav",
+          "duration_s": 5.84,
+          "total_silence_s": 1.301,
+          "longest_silence_s": 0.427,
+          "f0_median_hz": 222.45,
+          "f0_sd_hz": 46.85
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert1_G_r1.wav",
+          "duration_s": 5.92,
+          "total_silence_s": 1.451,
+          "longest_silence_s": 0.555,
+          "f0_median_hz": 193.66,
+          "f0_sd_hz": 43.0
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert1_G_r2.wav",
+          "duration_s": 6.16,
+          "total_silence_s": 1.301,
+          "longest_silence_s": 0.384,
+          "f0_median_hz": 248.26,
+          "f0_sd_hz": 42.25
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert1_G_r3.wav",
+          "duration_s": 6.48,
+          "total_silence_s": 1.771,
+          "longest_silence_s": 0.64,
+          "f0_median_hz": 200.49,
+          "f0_sd_hz": 33.08
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert1_G_r4.wav",
+          "duration_s": 5.2,
+          "total_silence_s": 0.853,
+          "longest_silence_s": 0.448,
+          "f0_median_hz": 230.3,
+          "f0_sd_hz": 38.6
+        }
+      ]
+    },
+    "assert1_TG": {
+      "sentence": "I looked at what you sent, and I think we should take it one step at a time, together.",
+      "condition": "TG",
+      "chunks": [
+        {
+          "chunk_id": "c1",
+          "text": "[firm] I looked at what you sent,",
+          "pace": "steady",
+          "pause_strategy": "deliberate",
+          "pause_after_ms": 700
+        },
+        {
+          "chunk_id": "c2",
+          "text": "and I think we should take it one step at a time,",
+          "pace": "steady",
+          "pause_strategy": "deliberate",
+          "pause_after_ms": 700
+        },
+        {
+          "chunk_id": "c3",
+          "text": "together.",
+          "pace": "steady",
+          "pause_strategy": "deliberate",
+          "pause_after_ms": 0
+        }
+      ],
+      "renders": [
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert1_TG_r0.wav",
+          "duration_s": 5.52,
+          "total_silence_s": 0.939,
+          "longest_silence_s": 0.405,
+          "f0_median_hz": 218.63,
+          "f0_sd_hz": 49.3
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert1_TG_r1.wav",
+          "duration_s": 6.16,
+          "total_silence_s": 1.344,
+          "longest_silence_s": 0.427,
+          "f0_median_hz": 242.59,
+          "f0_sd_hz": 44.79
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert1_TG_r2.wav",
+          "duration_s": 7.0,
+          "total_silence_s": 1.579,
+          "longest_silence_s": 0.469,
+          "f0_median_hz": 198.18,
+          "f0_sd_hz": 52.24
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert1_TG_r3.wav",
+          "duration_s": 5.4,
+          "total_silence_s": 0.704,
+          "longest_silence_s": 0.277,
+          "f0_median_hz": 224.39,
+          "f0_sd_hz": 66.61
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert1_TG_r4.wav",
+          "duration_s": 5.44,
+          "total_silence_s": 1.003,
+          "longest_silence_s": 0.469,
+          "f0_median_hz": 238.42,
+          "f0_sd_hz": 64.68
+        }
+      ]
+    },
+    "assert2_F": {
+      "sentence": "The results are in, and the numbers support the plan we agreed on last week.",
+      "condition": "F",
+      "chunks": [
+        {
+          "chunk_id": "c1",
+          "text": "The results are in, and the numbers support the plan we agreed on last week."
+        }
+      ],
+      "renders": [
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert2_F_r0.wav",
+          "duration_s": 3.84,
+          "total_silence_s": 0.384,
+          "longest_silence_s": 0.213,
+          "f0_median_hz": 218.0,
+          "f0_sd_hz": 47.13
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert2_F_r1.wav",
+          "duration_s": 3.56,
+          "total_silence_s": 0.384,
+          "longest_silence_s": 0.171,
+          "f0_median_hz": 212.41,
+          "f0_sd_hz": 52.61
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert2_F_r2.wav",
+          "duration_s": 3.64,
+          "total_silence_s": 0.363,
+          "longest_silence_s": 0.299,
+          "f0_median_hz": 194.78,
+          "f0_sd_hz": 38.46
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert2_F_r3.wav",
+          "duration_s": 3.96,
+          "total_silence_s": 0.384,
+          "longest_silence_s": 0.256,
+          "f0_median_hz": 217.37,
+          "f0_sd_hz": 37.66
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert2_F_r4.wav",
+          "duration_s": 4.2,
+          "total_silence_s": 0.491,
+          "longest_silence_s": 0.363,
+          "f0_median_hz": 216.12,
+          "f0_sd_hz": 31.76
+        }
+      ]
+    },
+    "assert2_P": {
+      "sentence": "The results are in, and the numbers support the plan we agreed on last week.",
+      "condition": "P",
+      "chunks": [
+        {
+          "chunk_id": "c1",
+          "text": "The results are in, and the numbers support the plan we agreed on last week.",
+          "tone": "firm_boundary"
+        }
+      ],
+      "renders": [
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert2_P_r0.wav",
+          "duration_s": 4.16,
+          "total_silence_s": 0.427,
+          "longest_silence_s": 0.192,
+          "f0_median_hz": 198.18,
+          "f0_sd_hz": 37.63
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert2_P_r1.wav",
+          "duration_s": 4.12,
+          "total_silence_s": 0.683,
+          "longest_silence_s": 0.32,
+          "f0_median_hz": 230.3,
+          "f0_sd_hz": 32.46
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert2_P_r2.wav",
+          "duration_s": 3.72,
+          "total_silence_s": 0.341,
+          "longest_silence_s": 0.192,
+          "f0_median_hz": 202.82,
+          "f0_sd_hz": 31.95
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert2_P_r3.wav",
+          "duration_s": 3.68,
+          "total_silence_s": 0.384,
+          "longest_silence_s": 0.256,
+          "f0_median_hz": 225.04,
+          "f0_sd_hz": 61.04
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert2_P_r4.wav",
+          "duration_s": 3.8,
+          "total_silence_s": 0.576,
+          "longest_silence_s": 0.277,
+          "f0_median_hz": 219.27,
+          "f0_sd_hz": 35.94
+        }
+      ]
+    },
+    "assert2_T": {
+      "sentence": "The results are in, and the numbers support the plan we agreed on last week.",
+      "condition": "T",
+      "chunks": [
+        {
+          "chunk_id": "c1",
+          "text": "The results are in,",
+          "pace": "steady",
+          "pause_strategy": "deliberate",
+          "pause_after_ms": 700
+        },
+        {
+          "chunk_id": "c2",
+          "text": "and the numbers support the plan we agreed on last week.",
+          "pace": "steady",
+          "pause_strategy": "deliberate",
+          "pause_after_ms": 0
+        }
+      ],
+      "renders": [
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert2_T_r0.wav",
+          "duration_s": 3.44,
+          "total_silence_s": 0.405,
+          "longest_silence_s": 0.256,
+          "f0_median_hz": 226.34,
+          "f0_sd_hz": 49.06
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert2_T_r1.wav",
+          "duration_s": 4.24,
+          "total_silence_s": 0.555,
+          "longest_silence_s": 0.192,
+          "f0_median_hz": 219.9,
+          "f0_sd_hz": 48.1
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert2_T_r2.wav",
+          "duration_s": 3.44,
+          "total_silence_s": 0.512,
+          "longest_silence_s": 0.213,
+          "f0_median_hz": 212.41,
+          "f0_sd_hz": 30.31
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert2_T_r3.wav",
+          "duration_s": 3.48,
+          "total_silence_s": 0.32,
+          "longest_silence_s": 0.235,
+          "f0_median_hz": 231.63,
+          "f0_sd_hz": 52.13
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert2_T_r4.wav",
+          "duration_s": 3.8,
+          "total_silence_s": 0.427,
+          "longest_silence_s": 0.192,
+          "f0_median_hz": 219.27,
+          "f0_sd_hz": 53.78
+        }
+      ]
+    },
+    "assert2_G": {
+      "sentence": "The results are in, and the numbers support the plan we agreed on last week.",
+      "condition": "G",
+      "chunks": [
+        {
+          "chunk_id": "c1",
+          "text": "[firm] The results are in, and the numbers support the plan we agreed on last week."
+        }
+      ],
+      "renders": [
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert2_G_r0.wav",
+          "duration_s": 4.76,
+          "total_silence_s": 0.939,
+          "longest_silence_s": 0.299,
+          "f0_median_hz": 192.54,
+          "f0_sd_hz": 47.43
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert2_G_r1.wav",
+          "duration_s": 4.96,
+          "total_silence_s": 0.96,
+          "longest_silence_s": 0.448,
+          "f0_median_hz": 193.66,
+          "f0_sd_hz": 39.06
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert2_G_r2.wav",
+          "duration_s": 5.16,
+          "total_silence_s": 1.131,
+          "longest_silence_s": 0.384,
+          "f0_median_hz": 216.12,
+          "f0_sd_hz": 54.73
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert2_G_r3.wav",
+          "duration_s": 4.6,
+          "total_silence_s": 0.683,
+          "longest_silence_s": 0.299,
+          "f0_median_hz": 208.76,
+          "f0_sd_hz": 36.4
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert2_G_r4.wav",
+          "duration_s": 4.44,
+          "total_silence_s": 0.576,
+          "longest_silence_s": 0.213,
+          "f0_median_hz": 209.97,
+          "f0_sd_hz": 30.99
+        }
+      ]
+    },
+    "assert2_TG": {
+      "sentence": "The results are in, and the numbers support the plan we agreed on last week.",
+      "condition": "TG",
+      "chunks": [
+        {
+          "chunk_id": "c1",
+          "text": "[firm] The results are in,",
+          "pace": "steady",
+          "pause_strategy": "deliberate",
+          "pause_after_ms": 700
+        },
+        {
+          "chunk_id": "c2",
+          "text": "and the numbers support the plan we agreed on last week.",
+          "pace": "steady",
+          "pause_strategy": "deliberate",
+          "pause_after_ms": 0
+        }
+      ],
+      "renders": [
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert2_TG_r0.wav",
+          "duration_s": 4.8,
+          "total_silence_s": 0.981,
+          "longest_silence_s": 0.363,
+          "f0_median_hz": 219.9,
+          "f0_sd_hz": 54.69
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert2_TG_r1.wav",
+          "duration_s": 4.88,
+          "total_silence_s": 0.811,
+          "longest_silence_s": 0.277,
+          "f0_median_hz": 203.99,
+          "f0_sd_hz": 60.94
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert2_TG_r2.wav",
+          "duration_s": 4.84,
+          "total_silence_s": 1.067,
+          "longest_silence_s": 0.384,
+          "f0_median_hz": 216.12,
+          "f0_sd_hz": 32.43
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert2_TG_r3.wav",
+          "duration_s": 4.96,
+          "total_silence_s": 1.003,
+          "longest_silence_s": 0.32,
+          "f0_median_hz": 213.64,
+          "f0_sd_hz": 34.02
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/assert2_TG_r4.wav",
+          "duration_s": 4.84,
+          "total_silence_s": 0.768,
+          "longest_silence_s": 0.213,
+          "f0_median_hz": 182.79,
+          "f0_sd_hz": 45.9
+        }
+      ]
+    },
+    "quest1_F": {
+      "sentence": "Do you want me to walk you through what changed, or should we start with the part that worried you?",
+      "condition": "F",
+      "chunks": [
+        {
+          "chunk_id": "c1",
+          "text": "Do you want me to walk you through what changed, or should we start with the part that worried you?"
+        }
+      ],
+      "renders": [
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest1_F_r0.wav",
+          "duration_s": 4.52,
+          "total_silence_s": 0.768,
+          "longest_silence_s": 0.491,
+          "f0_median_hz": 193.66,
+          "f0_sd_hz": 67.41
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest1_F_r1.wav",
+          "duration_s": 3.44,
+          "total_silence_s": 0.32,
+          "longest_silence_s": 0.235,
+          "f0_median_hz": 190.33,
+          "f0_sd_hz": 41.21
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest1_F_r2.wav",
+          "duration_s": 4.52,
+          "total_silence_s": 0.491,
+          "longest_silence_s": 0.256,
+          "f0_median_hz": 181.74,
+          "f0_sd_hz": 40.24
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest1_F_r3.wav",
+          "duration_s": 4.48,
+          "total_silence_s": 0.64,
+          "longest_silence_s": 0.341,
+          "f0_median_hz": 216.12,
+          "f0_sd_hz": 33.86
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest1_F_r4.wav",
+          "duration_s": 4.76,
+          "total_silence_s": 0.939,
+          "longest_silence_s": 0.491,
+          "f0_median_hz": 202.82,
+          "f0_sd_hz": 34.57
+        }
+      ]
+    },
+    "quest1_P": {
+      "sentence": "Do you want me to walk you through what changed, or should we start with the part that worried you?",
+      "condition": "P",
+      "chunks": [
+        {
+          "chunk_id": "c1",
+          "text": "Do you want me to walk you through what changed, or should we start with the part that worried you?",
+          "tone": "firm_boundary"
+        }
+      ],
+      "renders": [
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest1_P_r0.wav",
+          "duration_s": 5.16,
+          "total_silence_s": 0.832,
+          "longest_silence_s": 0.427,
+          "f0_median_hz": 222.45,
+          "f0_sd_hz": 43.45
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest1_P_r1.wav",
+          "duration_s": 3.92,
+          "total_silence_s": 0.235,
+          "longest_silence_s": 0.171,
+          "f0_median_hz": 213.64,
+          "f0_sd_hz": 37.71
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest1_P_r2.wav",
+          "duration_s": 3.92,
+          "total_silence_s": 0.384,
+          "longest_silence_s": 0.277,
+          "f0_median_hz": 197.07,
+          "f0_sd_hz": 59.32
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest1_P_r3.wav",
+          "duration_s": 6.88,
+          "total_silence_s": 2.624,
+          "longest_silence_s": 2.219,
+          "f0_median_hz": 183.85,
+          "f0_sd_hz": 72.74
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest1_P_r4.wav",
+          "duration_s": 4.28,
+          "total_silence_s": 0.384,
+          "longest_silence_s": 0.235,
+          "f0_median_hz": 212.41,
+          "f0_sd_hz": 34.69
+        }
+      ]
+    },
+    "quest1_T": {
+      "sentence": "Do you want me to walk you through what changed, or should we start with the part that worried you?",
+      "condition": "T",
+      "chunks": [
+        {
+          "chunk_id": "c1",
+          "text": "Do you want me to walk you through what changed,",
+          "pace": "steady",
+          "pause_strategy": "deliberate",
+          "pause_after_ms": 700
+        },
+        {
+          "chunk_id": "c2",
+          "text": "or should we start with the part that worried you?",
+          "pace": "steady",
+          "pause_strategy": "deliberate",
+          "pause_after_ms": 0
+        }
+      ],
+      "renders": [
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest1_T_r0.wav",
+          "duration_s": 4.32,
+          "total_silence_s": 0.235,
+          "longest_silence_s": 0.149,
+          "f0_median_hz": 211.19,
+          "f0_sd_hz": 38.47
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest1_T_r1.wav",
+          "duration_s": 5.08,
+          "total_silence_s": 0.875,
+          "longest_silence_s": 0.704,
+          "f0_median_hz": 177.59,
+          "f0_sd_hz": 29.71
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest1_T_r2.wav",
+          "duration_s": 3.88,
+          "total_silence_s": 0.341,
+          "longest_silence_s": 0.213,
+          "f0_median_hz": 194.78,
+          "f0_sd_hz": 41.57
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest1_T_r3.wav",
+          "duration_s": 5.32,
+          "total_silence_s": 0.853,
+          "longest_silence_s": 0.576,
+          "f0_median_hz": 184.91,
+          "f0_sd_hz": 47.27
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest1_T_r4.wav",
+          "duration_s": 4.64,
+          "total_silence_s": 0.299,
+          "longest_silence_s": 0.256,
+          "f0_median_hz": 193.66,
+          "f0_sd_hz": 48.38
+        }
+      ]
+    },
+    "quest1_G": {
+      "sentence": "Do you want me to walk you through what changed, or should we start with the part that worried you?",
+      "condition": "G",
+      "chunks": [
+        {
+          "chunk_id": "c1",
+          "text": "[firm] Do you want me to walk you through what changed, or should we start with the part that worried you?"
+        }
+      ],
+      "renders": [
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest1_G_r0.wav",
+          "duration_s": 5.4,
+          "total_silence_s": 1.067,
+          "longest_silence_s": 0.661,
+          "f0_median_hz": 216.12,
+          "f0_sd_hz": 44.22
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest1_G_r1.wav",
+          "duration_s": 4.88,
+          "total_silence_s": 0.683,
+          "longest_silence_s": 0.256,
+          "f0_median_hz": 232.98,
+          "f0_sd_hz": 59.13
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest1_G_r2.wav",
+          "duration_s": 6.6,
+          "total_silence_s": 1.877,
+          "longest_silence_s": 0.832,
+          "f0_median_hz": 213.64,
+          "f0_sd_hz": 59.79
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest1_G_r3.wav",
+          "duration_s": 6.8,
+          "total_silence_s": 0.768,
+          "longest_silence_s": 0.32,
+          "f0_median_hz": 222.45,
+          "f0_sd_hz": 53.01
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest1_G_r4.wav",
+          "duration_s": 5.04,
+          "total_silence_s": 0.939,
+          "longest_silence_s": 0.491,
+          "f0_median_hz": 201.07,
+          "f0_sd_hz": 50.3
+        }
+      ]
+    },
+    "quest1_TG": {
+      "sentence": "Do you want me to walk you through what changed, or should we start with the part that worried you?",
+      "condition": "TG",
+      "chunks": [
+        {
+          "chunk_id": "c1",
+          "text": "[firm] Do you want me to walk you through what changed,",
+          "pace": "steady",
+          "pause_strategy": "deliberate",
+          "pause_after_ms": 700
+        },
+        {
+          "chunk_id": "c2",
+          "text": "or should we start with the part that worried you?",
+          "pace": "steady",
+          "pause_strategy": "deliberate",
+          "pause_after_ms": 0
+        }
+      ],
+      "renders": [
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest1_TG_r0.wav",
+          "duration_s": 5.84,
+          "total_silence_s": 1.173,
+          "longest_silence_s": 0.405,
+          "f0_median_hz": 237.73,
+          "f0_sd_hz": 54.91
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest1_TG_r1.wav",
+          "duration_s": 6.44,
+          "total_silence_s": 1.963,
+          "longest_silence_s": 0.597,
+          "f0_median_hz": 201.07,
+          "f0_sd_hz": 58.68
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest1_TG_r2.wav",
+          "duration_s": 5.04,
+          "total_silence_s": 0.683,
+          "longest_silence_s": 0.341,
+          "f0_median_hz": 209.97,
+          "f0_sd_hz": 19.38
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest1_TG_r3.wav",
+          "duration_s": 5.28,
+          "total_silence_s": 1.045,
+          "longest_silence_s": 0.384,
+          "f0_median_hz": 212.41,
+          "f0_sd_hz": 41.64
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest1_TG_r4.wav",
+          "duration_s": 5.36,
+          "total_silence_s": 1.088,
+          "longest_silence_s": 0.533,
+          "f0_median_hz": 212.41,
+          "f0_sd_hz": 64.93
+        }
+      ]
+    },
+    "quest2_F": {
+      "sentence": "Before we go further, can you tell me what outcome you actually need from this?",
+      "condition": "F",
+      "chunks": [
+        {
+          "chunk_id": "c1",
+          "text": "Before we go further, can you tell me what outcome you actually need from this?"
+        }
+      ],
+      "renders": [
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest2_F_r0.wav",
+          "duration_s": 3.52,
+          "total_silence_s": 0.341,
+          "longest_silence_s": 0.299,
+          "f0_median_hz": 214.88,
+          "f0_sd_hz": 40.78
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest2_F_r1.wav",
+          "duration_s": 4.24,
+          "total_silence_s": 0.448,
+          "longest_silence_s": 0.171,
+          "f0_median_hz": 216.75,
+          "f0_sd_hz": 45.57
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest2_F_r2.wav",
+          "duration_s": 4.0,
+          "total_silence_s": 0.32,
+          "longest_silence_s": 0.256,
+          "f0_median_hz": 231.63,
+          "f0_sd_hz": 36.07
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest2_F_r3.wav",
+          "duration_s": 3.56,
+          "total_silence_s": 0.299,
+          "longest_silence_s": 0.235,
+          "f0_median_hz": 227.0,
+          "f0_sd_hz": 35.72
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest2_F_r4.wav",
+          "duration_s": 3.8,
+          "total_silence_s": 0.384,
+          "longest_silence_s": 0.299,
+          "f0_median_hz": 226.34,
+          "f0_sd_hz": 37.98
+        }
+      ]
+    },
+    "quest2_P": {
+      "sentence": "Before we go further, can you tell me what outcome you actually need from this?",
+      "condition": "P",
+      "chunks": [
+        {
+          "chunk_id": "c1",
+          "text": "Before we go further, can you tell me what outcome you actually need from this?",
+          "tone": "firm_boundary"
+        }
+      ],
+      "renders": [
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest2_P_r0.wav",
+          "duration_s": 3.84,
+          "total_silence_s": 0.363,
+          "longest_silence_s": 0.213,
+          "f0_median_hz": 198.18,
+          "f0_sd_hz": 26.91
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest2_P_r1.wav",
+          "duration_s": 3.48,
+          "total_silence_s": 0.363,
+          "longest_silence_s": 0.256,
+          "f0_median_hz": 263.78,
+          "f0_sd_hz": 46.58
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest2_P_r2.wav",
+          "duration_s": 3.96,
+          "total_silence_s": 0.299,
+          "longest_silence_s": 0.171,
+          "f0_median_hz": 223.74,
+          "f0_sd_hz": 39.47
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest2_P_r3.wav",
+          "duration_s": 3.72,
+          "total_silence_s": 0.277,
+          "longest_silence_s": 0.192,
+          "f0_median_hz": 228.31,
+          "f0_sd_hz": 52.86
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest2_P_r4.wav",
+          "duration_s": 4.68,
+          "total_silence_s": 0.704,
+          "longest_silence_s": 0.341,
+          "f0_median_hz": 227.0,
+          "f0_sd_hz": 52.33
+        }
+      ]
+    },
+    "quest2_T": {
+      "sentence": "Before we go further, can you tell me what outcome you actually need from this?",
+      "condition": "T",
+      "chunks": [
+        {
+          "chunk_id": "c1",
+          "text": "Before we go further,",
+          "pace": "steady",
+          "pause_strategy": "deliberate",
+          "pause_after_ms": 700
+        },
+        {
+          "chunk_id": "c2",
+          "text": "can you tell me what outcome you actually need from this?",
+          "pace": "steady",
+          "pause_strategy": "deliberate",
+          "pause_after_ms": 0
+        }
+      ],
+      "renders": [
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest2_T_r0.wav",
+          "duration_s": 3.6,
+          "total_silence_s": 0.363,
+          "longest_silence_s": 0.299,
+          "f0_median_hz": 225.04,
+          "f0_sd_hz": 30.24
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest2_T_r1.wav",
+          "duration_s": 3.88,
+          "total_silence_s": 0.363,
+          "longest_silence_s": 0.235,
+          "f0_median_hz": 228.98,
+          "f0_sd_hz": 44.4
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest2_T_r2.wav",
+          "duration_s": 4.2,
+          "total_silence_s": 0.619,
+          "longest_silence_s": 0.32,
+          "f0_median_hz": 261.51,
+          "f0_sd_hz": 43.89
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest2_T_r3.wav",
+          "duration_s": 4.4,
+          "total_silence_s": 0.725,
+          "longest_silence_s": 0.405,
+          "f0_median_hz": 238.42,
+          "f0_sd_hz": 39.04
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest2_T_r4.wav",
+          "duration_s": 3.68,
+          "total_silence_s": 0.491,
+          "longest_silence_s": 0.256,
+          "f0_median_hz": 225.04,
+          "f0_sd_hz": 48.64
+        }
+      ]
+    },
+    "quest2_G": {
+      "sentence": "Before we go further, can you tell me what outcome you actually need from this?",
+      "condition": "G",
+      "chunks": [
+        {
+          "chunk_id": "c1",
+          "text": "[firm] Before we go further, can you tell me what outcome you actually need from this?"
+        }
+      ],
+      "renders": [
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest2_G_r0.wav",
+          "duration_s": 5.0,
+          "total_silence_s": 0.597,
+          "longest_silence_s": 0.192,
+          "f0_median_hz": 213.64,
+          "f0_sd_hz": 54.19
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest2_G_r1.wav",
+          "duration_s": 5.2,
+          "total_silence_s": 0.917,
+          "longest_silence_s": 0.363,
+          "f0_median_hz": 218.0,
+          "f0_sd_hz": 39.69
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest2_G_r2.wav",
+          "duration_s": 5.16,
+          "total_silence_s": 0.811,
+          "longest_silence_s": 0.363,
+          "f0_median_hz": 203.99,
+          "f0_sd_hz": 35.74
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest2_G_r3.wav",
+          "duration_s": 4.96,
+          "total_silence_s": 0.896,
+          "longest_silence_s": 0.597,
+          "f0_median_hz": 269.17,
+          "f0_sd_hz": 49.89
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest2_G_r4.wav",
+          "duration_s": 4.8,
+          "total_silence_s": 0.981,
+          "longest_silence_s": 0.555,
+          "f0_median_hz": 231.63,
+          "f0_sd_hz": 38.77
+        }
+      ]
+    },
+    "quest2_TG": {
+      "sentence": "Before we go further, can you tell me what outcome you actually need from this?",
+      "condition": "TG",
+      "chunks": [
+        {
+          "chunk_id": "c1",
+          "text": "[firm] Before we go further,",
+          "pace": "steady",
+          "pause_strategy": "deliberate",
+          "pause_after_ms": 700
+        },
+        {
+          "chunk_id": "c2",
+          "text": "can you tell me what outcome you actually need from this?",
+          "pace": "steady",
+          "pause_strategy": "deliberate",
+          "pause_after_ms": 0
+        }
+      ],
+      "renders": [
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest2_TG_r0.wav",
+          "duration_s": 4.72,
+          "total_silence_s": 0.683,
+          "longest_silence_s": 0.448,
+          "f0_median_hz": 214.26,
+          "f0_sd_hz": 46.09
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest2_TG_r1.wav",
+          "duration_s": 4.56,
+          "total_silence_s": 0.981,
+          "longest_silence_s": 0.533,
+          "f0_median_hz": 219.9,
+          "f0_sd_hz": 47.23
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest2_TG_r2.wav",
+          "duration_s": 5.6,
+          "total_silence_s": 0.853,
+          "longest_silence_s": 0.427,
+          "f0_median_hz": 216.12,
+          "f0_sd_hz": 47.7
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest2_TG_r3.wav",
+          "duration_s": 4.88,
+          "total_silence_s": 0.939,
+          "longest_silence_s": 0.32,
+          "f0_median_hz": 223.74,
+          "f0_sd_hz": 53.83
+        },
+        {
+          "ok": true,
+          "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/reach_screen/quest2_TG_r4.wav",
+          "duration_s": 5.4,
+          "total_silence_s": 1.195,
+          "longest_silence_s": 0.533,
+          "f0_median_hz": 214.88,
+          "f0_sd_hz": 61.37
+        }
+      ]
+    }
+  },
+  "findings": {
+    "P_presets": "replicated sub-variance null (GOAL_V4 n=5 finding stands)",
+    "T_caller_chunks": {
+      "status": "NOT_ACTUATED",
+      "root_cause": "server.py synthesis_batch_request_from_tau_voice_render joins all speakable_chunks into one answer_text and re-plans chunking; caller chunk boundaries and their pause_after_ms are discarded for answers < max_chars (silence-insertion machinery at server.py:1154-1157 never fires)"
+    },
+    "G_inline_tags": {
+      "status": "VOCALIZED_NOT_INTERPRETED",
+      "evidence": "uniform +0.9 to +1.5s median duration inflation across all 4 sentences; joined text goes straight to synthesis"
+    },
+    "T2_max_chars_pause": {
+      "status": "PASS_TIMING_REALIZATION",
+      "evidence": "pause_after_ms=700 + max_chars=80 forces re-planned boundaries that DO carry the pause: longest-silence 0.83-1.07s across 10/10 renders vs flat 0.19-0.34s, zero overlap, shift ~= requested control; duration and longest_silence both clear per-channel noise"
+    },
+    "dream_end_to_end": {
+      "status": "VERIFIED_LIVE",
+      "evidence": "marketa boundary dream -> composer (firm_boundary/steady + timing 700ms/80ch) -> /tau/voice-render -> longest-silence median 0.939s vs flat 0.192s, 5/5 renders separated; wavs dream_timing_r*.wav"
+    }
+  }
+}
