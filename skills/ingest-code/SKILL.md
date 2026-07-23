@@ -373,6 +373,11 @@ metadata. It is evidence that the local command completed its current workflow.
 It is not proof of a future memory snapshot, durable run receipt, Qdrant
 reconciliation, embedding completeness, or DAG state.
 
+`code_index.treesitter` means at least one configured Tree-sitter scan root
+completed successfully. It does not merely echo the `--treesitter` option. A
+successful zero-symbol scan may therefore have `treesitter: true`,
+`enabled: false`, and `symbols_stored: 0`.
+
 Dry runs do not write to `/memory` and do not write this marker.
 
 The marker is also stored in `/memory` with tags `["ingest-code", "indexed-codebase", <stem>, <path>]` for discovery via recall.

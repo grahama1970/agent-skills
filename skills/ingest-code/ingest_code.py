@@ -1373,6 +1373,11 @@ def _marker_path(path: Path) -> Path:
     return path / ".ingest-code.json"
 
 
+def _treesitter_completed(completed_scan_roots: Sequence[str | Path]) -> bool:
+    """Return whether Tree-sitter completed at least one configured root."""
+    return bool(completed_scan_roots)
+
+
 def _write_ingest_marker(
     path: Path,
     files_scanned: int,
@@ -1545,6 +1550,10 @@ def _validate_marker_code_index(value: object, errors: list[str]) -> dict[str, A
     collection = code_index.get("collection")
     if collection is not None and collection != "code_symbols":
         errors.append('code_index.collection must be "code_symbols" when present')
+
+    treesitter = code_index.get("treesitter")
+    if treesitter is not None and not isinstance(treesitter, bool):
+        errors.append("code_index.treesitter must be a boolean when present")
 
     code_index["enabled"] = bool(enabled)
     code_index["symbols_stored"] = int(symbols_stored)
@@ -3430,7 +3439,7 @@ def scan(
             cwe_stored=cwe_stored,
             edges_stored=edges_stored,
             code_symbols_stored=code_symbols_stored,
-            treesitter=treesitter,
+            treesitter=_treesitter_completed(completed_code_symbol_scan_roots),
             scope=scope,
             scan_roots=code_symbol_scan_roots,
             completed_scan_roots=completed_code_symbol_scan_roots,
@@ -3613,6 +3622,7 @@ def rescan(
             "knowledge_stored": codebase_knowledge,
             "cwe_stored": codebase_cwes,
             "code_symbols_stored": codebase_ts_symbols,
+            "treesitter_completed": _treesitter_completed(completed_code_symbol_scan_roots),
             "scan_roots": code_symbol_scan_roots,
             "completed_scan_roots": completed_code_symbol_scan_roots,
         })
@@ -3634,7 +3644,7 @@ def rescan(
             cwe_stored=marker["cwe_stored"],
             edges_stored=0,
             code_symbols_stored=marker["code_symbols_stored"],
-            treesitter=treesitter,
+            treesitter=marker["treesitter_completed"],
             scope=scope,
             scan_roots=marker["scan_roots"],
             completed_scan_roots=marker["completed_scan_roots"],
