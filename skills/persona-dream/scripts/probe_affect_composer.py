@@ -56,6 +56,13 @@ check("thermal_dampening", fired is True
       and r2["composition_receipt"]["prior_effective_weight"] == round(0.7 * 0.8, 4),
       {"fired": fired, "damped_weight": r2["composition_receipt"]["prior_effective_weight"]})
 
+# 7b. missing /intent policy fails closed to careful (best-practices contract)
+r = pac.compose(None, DREAM)
+check("missing_policy_fail_closed", r["tone"] == "careful"
+      and r["composition_receipt"]["class"] == "missing_policy_fail_closed"
+      and r["composition_receipt"]["cue_policy"] == "intent_missing_voice_delivery_policy",
+      {"final": r["tone"]})
+
 # 7. provenance always present
 check("provenance_present", all(
     pac.compose({"tone": t}, DREAM)["composition_receipt"]["dream_provenance"]["dream_node_key"] == "dream_fixture"

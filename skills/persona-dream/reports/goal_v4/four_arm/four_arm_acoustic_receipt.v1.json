@@ -1,0 +1,127 @@
+{
+  "arms": {
+    "dream": {
+      "tags": {
+        "pace": "steady",
+        "tone": "firm_boundary"
+      },
+      "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/dream.wav"
+    },
+    "flat": {
+      "tags": {},
+      "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/flat.wav"
+    },
+    "static": {
+      "tags": {
+        "tone": "memory_confident"
+      },
+      "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/static.wav"
+    },
+    "wrong": {
+      "tags": {
+        "pace": "measured",
+        "tone": "neutral_reflective"
+      },
+      "wav": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v4/four_arm/wrong.wav"
+    }
+  },
+  "caveat": "single-render acoustic probe; synthesis variance not yet calibrated (panel: n>=3 medians before frozen thresholds); perceived affect requires the blinded human read",
+  "created_at": "2026-07-23T14:11:45Z",
+  "deltas_vs_flat": {
+    "dream": {
+      "duration_s": 0.4,
+      "f0_mean_hz": 0.39,
+      "f0_range_hz": -23.21,
+      "f0_sd_hz": -12.44,
+      "speech_rate_proxy_syl_s": -0.55
+    },
+    "static": {
+      "duration_s": 0.4,
+      "f0_mean_hz": 12.61,
+      "f0_range_hz": -4.42,
+      "f0_sd_hz": 1.46,
+      "speech_rate_proxy_syl_s": -0.55
+    },
+    "wrong": {
+      "duration_s": 0.08,
+      "f0_mean_hz": -1.62,
+      "f0_range_hz": -13.09,
+      "f0_sd_hz": -6.75,
+      "speech_rate_proxy_syl_s": -0.12
+    }
+  },
+  "dream_composed_tone": "firm_boundary",
+  "dream_profile": "dream_auto_cycle_20260723T102522Z",
+  "dream_vs_wrong_separation": {
+    "duration_s": 0.32,
+    "f0_mean_hz": 2.01,
+    "f0_sd_hz": 5.69,
+    "speech_rate_proxy_syl_s": 0.43
+  },
+  "live": true,
+  "metrics": {
+    "dream": {
+      "duration_s": 4.6,
+      "f0_mean_hz": 229.88,
+      "f0_range_hz": 87.43,
+      "f0_sd_hz": 32.03,
+      "low_energy_fraction": 0.204,
+      "rms_mean": 0.02718,
+      "rms_sd": 0.01773,
+      "speech_rate_proxy_syl_s": 5.78,
+      "voiced_fraction": 0.745
+    },
+    "flat": {
+      "duration_s": 4.2,
+      "f0_mean_hz": 229.49,
+      "f0_range_hz": 110.64,
+      "f0_sd_hz": 44.47,
+      "low_energy_fraction": 0.203,
+      "rms_mean": 0.03412,
+      "rms_sd": 0.02348,
+      "speech_rate_proxy_syl_s": 6.33,
+      "voiced_fraction": 0.614
+    },
+    "static": {
+      "duration_s": 4.6,
+      "f0_mean_hz": 242.1,
+      "f0_range_hz": 106.22,
+      "f0_sd_hz": 45.93,
+      "low_energy_fraction": 0.204,
+      "rms_mean": 0.02501,
+      "rms_sd": 0.01689,
+      "speech_rate_proxy_syl_s": 5.78,
+      "voiced_fraction": 0.671
+    },
+    "wrong": {
+      "duration_s": 4.28,
+      "f0_mean_hz": 227.87,
+      "f0_range_hz": 97.55,
+      "f0_sd_hz": 37.72,
+      "low_energy_fraction": 0.204,
+      "rms_mean": 0.029,
+      "rms_sd": 0.02149,
+      "speech_rate_proxy_syl_s": 6.21,
+      "voiced_fraction": 0.701
+    }
+  },
+  "schema": "persona_dream.four_arm_acoustic_receipt.v1",
+  "sentence": "I looked at what you sent, and I think we should take it one step at a time, together.",
+  "wrong_composed_tone": "neutral_reflective",
+  "wrong_profile": "dream_auto_cycle_20260722T203423Z",
+  "chatterbox_grounded_interpretation": {
+    "verified_from": "chatterbox src/chatterbox/agent/presets.py (ALLOWED_TONES, normalize_tone, STAGE_PRESETS)",
+    "facts": [
+      "chatterbox accepts a closed 15-tone vocabulary; any other tone label silently normalizes to neutral_warm -> neutral stage -> default sampling params (temperature 0.80).",
+      "dream arm tone firm_boundary IS in ALLOWED_TONES -> deflecting stage -> temperature 0.70, top_p 0.90, repetition_penalty 1.24: a real synthesis-parameter change.",
+      "wrong-dream arm tone neutral_reflective is NOT in ALLOWED_TONES -> normalized to neutral_warm -> SAME sampling params as the flat arm. The wrong arm is therefore an accidental second flat control."
+    ],
+    "reading": {
+      "same_param_variance_estimate_f0_sd_hz": 6.75,
+      "note": "flat (44.47) vs wrong (37.72) rendered with identical sampling params; their 6.75 Hz F0-SD gap estimates single-render synthesis variance.",
+      "dream_shift_f0_sd_hz": 12.44,
+      "note2": "dream arm F0-SD shift (44.47->32.03) is ~1.8x the same-param variance estimate: directionally real (lower temperature narrows prosodic variance, consistent with firm/steady), but single renders cannot separate it with confidence. n>=3 medians required, per panel.",
+      "tuning_consequence": "most TAG_FAMILY_TONE/TAG_FLOOR_TONE output labels are outside ALLOWED_TONES and are acoustically inert at the sampling layer; dream-weight tuning must first remap composer output onto the allowed tone vocabulary or the coloring never reaches synthesis."
+    }
+  }
+}

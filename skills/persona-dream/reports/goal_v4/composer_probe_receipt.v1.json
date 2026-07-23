@@ -12,6 +12,12 @@
       },
       "passed": true
     },
+    "missing_policy_fail_closed": {
+      "detail": {
+        "final": "careful"
+      },
+      "passed": true
+    },
     "provenance_present": {
       "detail": {},
       "passed": true
@@ -44,7 +50,7 @@
       "passed": true
     }
   },
-  "created_at": "2026-07-23T13:54:47Z",
+  "created_at": "2026-07-23T14:12:39Z",
   "gate_source": "persona_affect_composer.compose (real function)",
   "passed": true,
   "schema": "persona_dream.composer_probe_receipt.v1"

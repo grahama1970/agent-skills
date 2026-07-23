@@ -57,7 +57,11 @@ EXPRESSIVE_FAMILY = {
     "empathetic": "gentle",
     "reassuring": "warm",
 }
-DEFAULT_TONES = {"memory_confident", "neutral", "satisfied", ""}
+DEFAULT_TONES = {"memory_confident", "neutral", "satisfied"}
+# best-practices-chatterbox-agent: if /intent returns NO voice policy at all,
+# fail closed to careful and record the gap — the dream floor applies only
+# when /intent DID return a (bland) policy, i.e. we stay inside its policy.
+MISSING_POLICY_TONE = ("careful", "measured")
 
 # dream emotional tag -> (per-family tone realization, pace)
 # Rows: dream tag; columns: situational family. The dream COLORS within the
@@ -127,7 +131,10 @@ def compose(intent_voice_delivery: dict[str, Any] | None,
         effective_weight = round(weight * THERMAL_DAMPING, 4)
         state["damped_turns_remaining"] -= 1
 
-    if situational in SAFETY_TONES:
+    if not situational:
+        klass, (final_tone, final_pace) = "missing_policy_fail_closed", MISSING_POLICY_TONE
+        floor, prior_zeroed = False, True
+    elif situational in SAFETY_TONES:
         klass, final_tone, final_pace, floor = "safety_override", situational, ivd.get("pace"), False
         prior_zeroed = True
     elif situational in DEFAULT_TONES:
@@ -169,6 +176,8 @@ def compose(intent_voice_delivery: dict[str, Any] | None,
         "prior_effective_weight": effective_weight,
         "prior_zeroed": prior_zeroed,
         "dispositional_floor_fired": floor,
+        "cue_policy": ("intent_missing_voice_delivery_policy"
+                       if klass == "missing_policy_fail_closed" else None),
         "final_tone": final_tone,
         "final_pace": final_pace,
         "thermal": {"fired": thermal_fired,
