@@ -94,7 +94,10 @@ def test_functional_knowledge_keeps_method_receiver_in_full_signature(
         "        return value\n",
     )
 
-    item = _function_item(ingest_code.extract_python_knowledge(source, source.read_text()), "run")
+    item = _function_item(
+        ingest_code.extract_python_knowledge(source, source.read_text()),
+        "Service.run",
+    )
 
     assert _description_first_line(item) == "def run(self, value)"
 

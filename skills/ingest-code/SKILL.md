@@ -271,6 +271,9 @@ Python functional-knowledge function and class declarations use the same
 one-line semantic AST signature renderer as exact code-symbol records,
 including argument kinds, defaults, annotations, async functions, return
 annotations, class bases, metaclasses, and class keyword arguments.
+Python functional-knowledge function and class declarations also use source
+qualified names such as `Outer.Inner` and `Service.method.helper` in their
+questions and additive `qualified:<name>` tags while retaining bare-name tags.
 
 ### CWE Metadata
 

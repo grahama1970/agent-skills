@@ -721,6 +721,7 @@ def extract_python_knowledge(filepath: Path, content: str) -> list[dict]:
         tree = ast.parse(content)
     except SyntaxError:
         return items
+    ancestry_by_node = _python_symbol_ancestry_map(tree)
 
     # Module-level docstring — most important knowledge
     module_doc = ast.get_docstring(tree)
@@ -745,34 +746,56 @@ def extract_python_knowledge(filepath: Path, content: str) -> list[dict]:
     # Classes with docstrings
     for node in ast.walk(tree):
         if isinstance(node, ast.ClassDef):
+            qualified_name = _python_qualified_name(
+                node,
+                ancestry_by_node.get(node, ()),
+            )
             class_doc = ast.get_docstring(node) or ""
             methods = [n.name for n in node.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))]
             if class_doc or len(methods) >= 3:
                 desc = _python_declaration_signature(node).removesuffix(":")
+                desc += f"\nQualified name: {qualified_name}"
                 desc += f"\nMethods: {', '.join(methods[:15])}"
                 if class_doc:
                     desc += f"\n\n{class_doc[:1000]}"
                 items.append({
-                    "problem": f"What is the {node.name} class in {rel_path}?",
+                    "problem": f"What is the {qualified_name} class in {rel_path}?",
                     "solution": f"File: {filepath}\n\n{desc}",
-                    "tags": ["codebase", "class", node.name, filepath.stem],
+                    "tags": [
+                        "codebase",
+                        "class",
+                        node.name,
+                        filepath.stem,
+                        f"qualified:{qualified_name}",
+                    ],
                 })
 
         # Top-level functions with docstrings (skip private helpers)
         elif isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            qualified_name = _python_qualified_name(
+                node,
+                ancestry_by_node.get(node, ()),
+            )
             if node.name.startswith("_") and not node.name.startswith("__"):
                 continue  # Skip private functions
             func_doc = ast.get_docstring(node) or ""
             if not func_doc and node.col_offset > 0:
                 continue  # Skip undocumented nested functions
             desc = _python_declaration_signature(node).removesuffix(":")
+            desc += f"\nQualified name: {qualified_name}"
             if func_doc:
                 desc += f"\n\n{func_doc[:800]}"
             if func_doc or node.col_offset == 0:
                 items.append({
-                    "problem": f"What does {node.name}() do in {rel_path}?",
+                    "problem": f"What does {qualified_name}() do in {rel_path}?",
                     "solution": f"File: {filepath}\n\n{desc}",
-                    "tags": ["codebase", "function", node.name, filepath.stem],
+                    "tags": [
+                        "codebase",
+                        "function",
+                        node.name,
+                        filepath.stem,
+                        f"qualified:{qualified_name}",
+                    ],
                 })
 
     return items
@@ -1066,11 +1089,10 @@ def _python_node_matches_symbol_start(node: ast.AST, start_line: int) -> bool:
 PythonDeclaration = ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef
 
 
-def _find_python_symbol_ancestry(
+def _python_symbol_ancestry_map(
     tree: ast.AST,
-    node: ast.AST,
-) -> tuple[PythonDeclaration, ...]:
-    """Return the complete named lexical ancestry for a declaration node."""
+) -> dict[ast.AST, tuple[PythonDeclaration, ...]]:
+    """Return complete named lexical ancestry for each Python declaration."""
     ancestry_by_node: dict[ast.AST, tuple[PythonDeclaration, ...]] = {}
     active_declarations: list[PythonDeclaration] = []
 
@@ -1095,7 +1117,24 @@ def _find_python_symbol_ancestry(
             active_declarations.pop()
 
     ParentVisitor().visit(tree)
+    return ancestry_by_node
+
+
+def _find_python_symbol_ancestry(
+    tree: ast.AST,
+    node: ast.AST,
+) -> tuple[PythonDeclaration, ...]:
+    """Return the complete named lexical ancestry for a declaration node."""
+    ancestry_by_node = _python_symbol_ancestry_map(tree)
     return ancestry_by_node.get(node, ())
+
+
+def _python_qualified_name(
+    node: PythonDeclaration,
+    ancestry: tuple[PythonDeclaration, ...],
+) -> str:
+    """Return source-oriented dotted ancestry for a Python declaration."""
+    return ".".join((*[declaration.name for declaration in ancestry], node.name))
 
 
 def _python_structural_symbol_kind(
@@ -1422,9 +1461,7 @@ def _extract_python_symbol_details(
         "called_symbols": sorted(lexical_collector.called_symbols),
         "string_literals": sorted(lexical_collector.string_literals),
         "parent_symbol": parent_symbol,
-        "qualified_name": ".".join(
-            (*[declaration.name for declaration in ancestry], node.name)
-        ),
+        "qualified_name": _python_qualified_name(node, ancestry),
     }
 
 
