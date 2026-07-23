@@ -2964,6 +2964,33 @@ def _merge_taxonomy_tags(
     return list(dict.fromkeys(candidates))
 
 
+def _build_cwe_lesson_payload(
+    filepath: Path,
+    cwe: dict[str, Any],
+    bridge_tags: object,
+) -> dict[str, Any]:
+    """Build the canonical compatibility lesson for one CWE finding."""
+    cwe_id = cwe["cwe_id"]
+    cwe_name = cwe.get("name", "")
+    category = cwe.get("category", "")
+    extension = filepath.suffix.lstrip(".")
+
+    base_tags = ["ingest-code", "cwe", cwe_id]
+    if category:
+        base_tags.append(category)
+    if extension:
+        base_tags.append(extension)
+
+    finding = f"{cwe_id} ({cwe_name})" if cwe_name else cwe_id
+    category_text = f" - Category: {category}" if category else ""
+
+    return {
+        "problem": f"What CWEs are relevant to {filepath.name}?",
+        "solution": f"{finding}{category_text}. File: {filepath}",
+        "tags": _merge_taxonomy_tags(base_tags, bridge_tags, {}),
+    }
+
+
 def enrich_with_taxonomy(items: list[dict], taxonomy_module) -> list[dict]:
     """Run /taxonomy on each knowledge item to add bridge_tags + collection_tags.
 
@@ -3292,6 +3319,7 @@ def scan(
             scanned += 1
             cwes = result.get("cwe_mappings", [])
             if cwes:
+                bridge_tags = result.get("bridge_tags", [])
                 files_with_cwes += 1
                 total_cwes += len(cwes)
                 for cwe in cwes:
@@ -3300,14 +3328,13 @@ def scan(
                     if dry_run:
                         print(f"  [CWE] {filepath.name}: {cwe_id}", flush=True)
                     elif memory_script:
-                        cwe_name = cwe.get("name", "")
-                        category = cwe.get("category", "")
-                        tags = ["ingest-code", "cwe", cwe_id, category, filepath.suffix.lstrip(".")]
+                        payload = _build_cwe_lesson_payload(filepath, cwe, bridge_tags)
                         ok = _learn(
                             memory_script,
-                            f"What CWEs are relevant to {filepath.name}?",
-                            f"{cwe_id} ({cwe_name}) - Category: {category}. File: {filepath}",
-                            scope, tags,
+                            payload["problem"],
+                            payload["solution"],
+                            scope,
+                            payload["tags"],
                         )
                         if ok:
                             cwe_stored += 1
@@ -3568,12 +3595,17 @@ def rescan(
                     _exit_source_read_failure(codebase=path, phase="cwe", exc=exc)
                 except CweScanResultError as exc:
                     _exit_cwe_result_failure(codebase=path, exc=exc)
+                bridge_tags = result.get("bridge_tags", [])
                 for cwe in result.get("cwe_mappings", []):
-                    cwe_id = cwe.get("cwe_id", "unknown")
-                    tags = ["ingest-code", "cwe", cwe_id, filepath.suffix.lstrip(".")]
+                    payload = _build_cwe_lesson_payload(filepath, cwe, bridge_tags)
                     codebase_cwes_attempted += 1
-                    if _learn(memory_script, f"What CWEs are relevant to {filepath.name}?",
-                              f"{cwe_id} ({cwe.get('name', '')}) - File: {filepath}", scope, tags):
+                    if _learn(
+                        memory_script,
+                        payload["problem"],
+                        payload["solution"],
+                        scope,
+                        payload["tags"],
+                    ):
                         total_cwes += 1
                         codebase_cwes += 1
 

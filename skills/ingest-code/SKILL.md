@@ -145,6 +145,10 @@ When taxonomy is available, it may provide bridge tags and Phase 1 enrichment.
 When absent, only that enrichment is omitted. `scan --cwe-only` still runs the
 built-in CWE scan.
 
+`scan` and `rescan` use the same CWE compatibility payload. CWE ID, name,
+category, source file, and validated taxonomy bridge tags are propagated
+deterministically; empty taxonomy enrichment does not alter the base CWE tags.
+
 ### `rescan` — Incremental Rescan (Scheduler Job)
 
 ```bash
