@@ -1276,10 +1276,229 @@ def _write_required_ingest_marker(
         raise SystemExit(1) from exc
 
 
+def _disabled_code_index() -> dict[str, bool]:
+    return {"enabled": False}
+
+
+def _invalid_marker_status(errors: Sequence[str]) -> dict[str, Any]:
+    return {
+        "status": "invalid",
+        "run_status": None,
+        "completed": False,
+        "scope": None,
+        "scan_roots": [],
+        "completed_scan_roots": [],
+        "code_index": _disabled_code_index(),
+        "validation_errors": list(errors),
+    }
+
+
+def _is_nonnegative_int(value: object) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool) and value >= 0
+
+
+def _marker_string_list(value: object, field: str, errors: list[str]) -> list[str]:
+    if not isinstance(value, list):
+        errors.append(f"{field} must be an array")
+        return []
+
+    normalized: list[str] = []
+    for index, item in enumerate(value):
+        if not isinstance(item, str) or not item.strip():
+            errors.append(f"{field}[{index}] must be a nonblank string")
+            continue
+        normalized.append(item.strip())
+    return normalized
+
+
+def _marker_iso_timestamp(value: object, field: str, errors: list[str]) -> str | None:
+    if not isinstance(value, str) or not value.strip():
+        errors.append(f"{field} must be a nonblank ISO timestamp")
+        return None
+
+    timestamp = value.strip()
+    try:
+        datetime.fromisoformat(timestamp)
+    except ValueError:
+        errors.append(f"{field} must be a valid ISO timestamp")
+    return timestamp
+
+
+def _marker_nonblank_string(value: object, field: str, errors: list[str]) -> str | None:
+    if not isinstance(value, str) or not value.strip():
+        errors.append(f"{field} must be a nonblank string")
+        return None
+    return value.strip()
+
+
+def _marker_nonnegative_count(value: object, field: str, errors: list[str]) -> int:
+    if not _is_nonnegative_int(value):
+        errors.append(f"{field} must be a nonnegative integer")
+        return 0
+    return int(value)
+
+
+def _validate_marker_code_index(value: object, errors: list[str]) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        errors.append("code_index must be an object")
+        return _disabled_code_index()
+
+    code_index = dict(value)
+    enabled = code_index.get("enabled")
+    if not isinstance(enabled, bool):
+        errors.append("code_index.enabled must be a boolean")
+        enabled = False
+
+    symbols_stored = code_index.get("symbols_stored")
+    if not _is_nonnegative_int(symbols_stored):
+        errors.append("code_index.symbols_stored must be a nonnegative integer")
+        symbols_stored = 0
+
+    if isinstance(enabled, bool) and enabled != (symbols_stored > 0):
+        errors.append("code_index.enabled must match symbols_stored > 0")
+
+    backend = code_index.get("backend")
+    if backend is not None and backend != "memory":
+        errors.append('code_index.backend must be "memory" when present')
+
+    collection = code_index.get("collection")
+    if collection is not None and collection != "code_symbols":
+        errors.append('code_index.collection must be "code_symbols" when present')
+
+    code_index["enabled"] = bool(enabled)
+    code_index["symbols_stored"] = int(symbols_stored)
+    return code_index
+
+
+def _marker_roots_within_repo(
+    values: Sequence[str],
+    field: str,
+    repo_root: Path,
+    errors: list[str],
+) -> set[str]:
+    normalized: set[str] = set()
+    for index, raw in enumerate(values):
+        candidate = Path(raw)
+        if not candidate.is_absolute():
+            candidate = repo_root / candidate
+        try:
+            resolved = candidate.resolve()
+            resolved.relative_to(repo_root)
+        except (OSError, RuntimeError, ValueError):
+            errors.append(f"{field}[{index}] must resolve inside the marker repository")
+            continue
+        normalized.add(str(resolved))
+    return normalized
+
+
+def _validate_completed_marker(
+    payload: dict[str, Any],
+    marker_path: Path,
+    *,
+    legacy: bool,
+) -> tuple[dict[str, Any], list[str]]:
+    errors: list[str] = []
+    repo_root = marker_path.parent.resolve()
+
+    ingested_at = _marker_iso_timestamp(payload.get("ingested_at"), "ingested_at", errors)
+    marker_path_value = _marker_nonblank_string(payload.get("path"), "path", errors)
+    stem = _marker_nonblank_string(payload.get("stem"), "stem", errors)
+    scope = _marker_nonblank_string(payload.get("scope"), "scope", errors)
+
+    if marker_path_value:
+        try:
+            if Path(marker_path_value).expanduser().resolve() != repo_root:
+                errors.append("path must match the marker repository")
+        except OSError:
+            errors.append("path must resolve to the marker repository")
+
+    if stem and stem != repo_root.name:
+        errors.append("stem must match the marker repository name")
+
+    status = dict(payload)
+    for field in ("files_scanned", "knowledge_stored", "cwe_stored", "edges_stored"):
+        status[field] = _marker_nonnegative_count(payload.get(field), field, errors)
+
+    status["code_index"] = _validate_marker_code_index(payload.get("code_index"), errors)
+    status["ingested_at"] = ingested_at
+    status["path"] = str(repo_root)
+    status["stem"] = repo_root.name
+    status["scope"] = scope
+    status["run_status"] = "complete"
+    status["completed"] = True
+
+    if legacy:
+        status["scan_roots"] = []
+        status["completed_scan_roots"] = []
+        return status, errors
+
+    _marker_iso_timestamp(payload.get("started_at"), "started_at", errors)
+    if payload.get("completed") is not True:
+        errors.append("completed must be true for a complete marker")
+
+    scan_roots = _marker_string_list(payload.get("scan_roots"), "scan_roots", errors)
+    completed_scan_roots = _marker_string_list(
+        payload.get("completed_scan_roots"),
+        "completed_scan_roots",
+        errors,
+    )
+    scan_root_set = _marker_roots_within_repo(scan_roots, "scan_roots", repo_root, errors)
+    completed_root_set = _marker_roots_within_repo(
+        completed_scan_roots,
+        "completed_scan_roots",
+        repo_root,
+        errors,
+    )
+    for completed_root in completed_root_set:
+        if completed_root not in scan_root_set:
+            errors.append("completed_scan_roots entries must also appear in scan_roots")
+            break
+
+    status["scan_roots"] = scan_roots
+    status["completed_scan_roots"] = completed_scan_roots
+    return status, errors
+
+
+def _normalize_incomplete_marker(
+    payload: dict[str, Any],
+    run_status: str,
+) -> tuple[dict[str, Any], list[str]]:
+    errors: list[str] = []
+    status = dict(payload)
+    status["status"] = run_status
+    status["run_status"] = run_status
+    status["completed"] = False
+    status["scope"] = payload.get("scope") if isinstance(payload.get("scope"), str) else None
+
+    if "scan_roots" in payload:
+        status["scan_roots"] = _marker_string_list(payload.get("scan_roots"), "scan_roots", errors)
+    else:
+        status["scan_roots"] = []
+
+    if "completed_scan_roots" in payload:
+        status["completed_scan_roots"] = _marker_string_list(
+            payload.get("completed_scan_roots"),
+            "completed_scan_roots",
+            errors,
+        )
+    else:
+        status["completed_scan_roots"] = []
+
+    code_index = payload.get("code_index")
+    if code_index is None:
+        status["code_index"] = _disabled_code_index()
+    elif isinstance(code_index, dict):
+        status["code_index"] = code_index
+    else:
+        errors.append("code_index must be an object")
+        status["code_index"] = _disabled_code_index()
+
+    return status, errors
+
+
 def build_marker_status(path: Path) -> dict[str, Any]:
     """Read the ingest-code marker status without raising for missing or bad files."""
     marker_path = _marker_path(path)
-    disabled_code_index = {"enabled": False}
     if not marker_path.exists():
         return {
             "status": "missing",
@@ -1288,7 +1507,7 @@ def build_marker_status(path: Path) -> dict[str, Any]:
             "scope": None,
             "scan_roots": [],
             "completed_scan_roots": [],
-            "code_index": disabled_code_index,
+            "code_index": _disabled_code_index(),
         }
 
     try:
@@ -1297,47 +1516,23 @@ def build_marker_status(path: Path) -> dict[str, Any]:
         payload = None
 
     if not isinstance(payload, dict):
-        return {
-            "status": "invalid",
-            "run_status": None,
-            "completed": False,
-            "scope": None,
-            "scan_roots": [],
-            "completed_scan_roots": [],
-            "code_index": disabled_code_index,
-        }
+        return _invalid_marker_status(["marker must be a JSON object"])
 
-    status = dict(payload)
-    run_status = status.get("run_status") or "complete"
-    if run_status == "complete":
-        public_status = "fresh"
-        completed = True
-    elif run_status == "running":
-        public_status = "running"
-        completed = False
-    elif run_status == "failed":
-        public_status = "failed"
-        completed = False
+    raw_run_status = payload.get("run_status")
+    if raw_run_status is None:
+        status, errors = _validate_completed_marker(payload, marker_path, legacy=True)
+    elif raw_run_status == "complete":
+        status, errors = _validate_completed_marker(payload, marker_path, legacy=False)
+    elif raw_run_status in {"running", "failed"}:
+        status, errors = _normalize_incomplete_marker(payload, raw_run_status)
     else:
-        public_status = "invalid"
-        completed = False
+        return _invalid_marker_status(["run_status must be running, complete, or failed"])
 
-    code_index = status.get("code_index")
-    if not isinstance(code_index, dict):
-        code_index = disabled_code_index
+    if errors:
+        return _invalid_marker_status(errors[:20])
 
-    status.update({
-        "status": public_status,
-        "run_status": run_status,
-        "completed": completed,
-        "scan_roots": status.get("scan_roots") if isinstance(status.get("scan_roots"), list) else [],
-        "completed_scan_roots": (
-            status.get("completed_scan_roots")
-            if isinstance(status.get("completed_scan_roots"), list)
-            else []
-        ),
-        "code_index": code_index,
-    })
+    if status["run_status"] == "complete":
+        status["status"] = "fresh"
     return status
 
 

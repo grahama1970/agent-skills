@@ -333,6 +333,12 @@ Normalized marker status:
 | `fresh` | The marker reports `run_status: complete` and `completed: true` |
 | `failed` | The marker reports a failed run |
 
+`fresh` is returned only for a structurally valid completed marker. A JSON
+object is not sufficient by itself. Completed markers require repository
+identity, nonnegative scan counts, scope, and internally consistent code-index metadata.
+A legacy marker without `run_status` remains supported only when its
+legacy marker fields are valid.
+
 The marker records local scan status, scope, completed roots, and code-index
 metadata. It is evidence that the local command completed its current workflow.
 It is not proof of a future memory snapshot, durable run receipt, Qdrant
