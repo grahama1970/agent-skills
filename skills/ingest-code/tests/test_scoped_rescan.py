@@ -287,3 +287,105 @@ def test_treesitter_store_resolves_relative_scan_roots(monkeypatch, tmp_path: Pa
 
     assert stored == 1
     assert samples[0]["name"] == "app"
+
+
+def test_treesitter_store_filters_uncontained_result_paths(monkeypatch, tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    src = repo / "src"
+    other = repo / "other"
+    src.mkdir(parents=True)
+    other.mkdir()
+    inside = src / "inside.py"
+    outside = other / "outside.py"
+    external = tmp_path / "external.py"
+    escape = src / "escape.py"
+    inside.write_text("def inside():\n    return 1\n")
+    outside.write_text("def outside():\n    return 2\n")
+    external.write_text("def external():\n    return 3\n")
+    try:
+        escape.symlink_to(external)
+    except OSError as exc:
+        pytest.skip(f"platform cannot create symlink for escape-path test: {exc}")
+
+    run_sh = tmp_path / "run.sh"
+    run_sh.write_text("#!/usr/bin/env bash\n")
+    captured_records = []
+
+    def symbol(name: str) -> dict:
+        return {
+            "kind": "function",
+            "name": name,
+            "start_line": 1,
+            "end_line": 2,
+            "signature": f"def {name}(): ...",
+        }
+
+    class FakeClient:
+        def upsert_code_symbols(self, records):
+            captured_records.extend(records)
+            return SimpleNamespace(
+                stored=len(records),
+                attempted=len(records),
+                errors=[],
+            )
+
+    def fake_run(cmd, **kwargs):
+        class Result:
+            returncode = 0
+            stdout = json.dumps([
+                {
+                    "path": "inside.py",
+                    "language": "python",
+                    "symbols": [symbol("inside")],
+                },
+                {
+                    "path": str(outside.resolve()),
+                    "language": "python",
+                    "symbols": [symbol("outside")],
+                },
+                {
+                    "path": str(external.resolve()),
+                    "language": "python",
+                    "symbols": [symbol("external")],
+                },
+                {
+                    "path": str(escape),
+                    "language": "python",
+                    "symbols": [symbol("escape")],
+                },
+            ])
+            stderr = ""
+
+        return Result()
+
+    monkeypatch.setattr(ingest_code, "find_treesitter_skill", lambda: run_sh)
+    monkeypatch.setattr(ingest_code.subprocess, "run", fake_run)
+    monkeypatch.setattr(ingest_code, "CodeMemoryClient", lambda: FakeClient())
+
+    stored = ingest_code._store_treesitter_symbols_for_directory(src, repo, "test")
+
+    assert stored == 1
+    assert [record.path for record in captured_records] == ["src/inside.py"]
+
+
+def test_treesitter_store_rejects_scan_root_outside_codebase(monkeypatch, tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    external_root = tmp_path / "external-root"
+    repo.mkdir()
+    external_root.mkdir()
+    run_sh = tmp_path / "run.sh"
+    run_sh.write_text("#!/usr/bin/env bash\n")
+    subprocess_was_called = False
+
+    def fake_run(*args, **kwargs):
+        nonlocal subprocess_was_called
+        subprocess_was_called = True
+        raise AssertionError("Tree-sitter subprocess should not run for an out-of-codebase scan root")
+
+    monkeypatch.setattr(ingest_code, "find_treesitter_skill", lambda: run_sh)
+    monkeypatch.setattr(ingest_code.subprocess, "run", fake_run)
+
+    stored = ingest_code._store_treesitter_symbols_for_directory(external_root, repo, "test")
+
+    assert stored == 0
+    assert subprocess_was_called is False

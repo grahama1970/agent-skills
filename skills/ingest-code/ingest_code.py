@@ -919,6 +919,25 @@ def _parse_treesitter_scan_output(stdout: str) -> list[dict[str, Any]]:
     return []
 
 
+def _resolve_treesitter_result_path(raw_path: object, scan_root: Path) -> Path | None:
+    """Resolve one Tree-sitter result path and require scan-root containment."""
+    if not isinstance(raw_path, str) or not raw_path.strip():
+        return None
+
+    try:
+        resolved_root = scan_root.resolve(strict=True)
+        candidate = Path(raw_path)
+        if not candidate.is_absolute():
+            candidate = resolved_root / candidate
+
+        resolved_path = candidate.resolve(strict=True)
+        resolved_path.relative_to(resolved_root)
+    except (OSError, RuntimeError, ValueError):
+        return None
+
+    return resolved_path if resolved_path.is_file() else None
+
+
 def _store_treesitter_symbols_for_directory(
     directory: Path,
     codebase_root: Path,
@@ -931,8 +950,21 @@ def _store_treesitter_symbols_for_directory(
         print(f"Treesitter skill not found for {directory}", file=sys.stderr, flush=True)
         return 0
 
-    resolved_directory = directory.resolve()
-    resolved_codebase_root = codebase_root.resolve()
+    try:
+        resolved_directory = directory.resolve(strict=True)
+        resolved_codebase_root = codebase_root.resolve(strict=True)
+        resolved_directory.relative_to(resolved_codebase_root)
+    except (OSError, RuntimeError, ValueError):
+        print(
+            f"Treesitter scan root is outside codebase or unavailable: {directory}",
+            file=sys.stderr,
+            flush=True,
+        )
+        return 0
+
+    if not resolved_directory.is_dir():
+        print(f"Treesitter scan root is not a directory: {directory}", file=sys.stderr, flush=True)
+        return 0
 
     cmd = [
         "bash",
@@ -975,10 +1007,15 @@ def _store_treesitter_symbols_for_directory(
     records: list[CodeSymbolRecord] = []
     for file_entry in scan_results:
         file_path_raw = file_entry.get("path")
-        if not file_path_raw:
+        filepath = _resolve_treesitter_result_path(file_path_raw, resolved_directory)
+        if filepath is None:
+            print(
+                f"  [WARN] Skipping Tree-sitter result outside scan root: {file_path_raw}",
+                file=sys.stderr,
+                flush=True,
+            )
             continue
 
-        filepath = Path(file_path_raw)
         symbol_context = _extract_symbol_context(filepath)
 
         for symbol in file_entry.get("symbols", []):
