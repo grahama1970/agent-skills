@@ -346,12 +346,7 @@ def test_treesitter_verification_samples_use_exact_stored_records(monkeypatch, t
 
     assert stored == 1
     assert [record.symbol_name for record in captured_records] == ["first", "second"]
-    assert samples == [
-        {
-            "name": captured_records[1].symbol_name,
-            "problem": captured_records[1].problem,
-        }
-    ]
+    assert samples == [ingest_code._code_symbol_verification_sample(captured_records[1])]
 
 
 def test_treesitter_store_filters_uncontained_result_paths(monkeypatch, tmp_path: Path) -> None:

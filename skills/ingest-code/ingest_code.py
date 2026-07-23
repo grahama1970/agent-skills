@@ -76,6 +76,7 @@ SKIP_DIRS = {
 
 MEMORY_SOCKET_PATH = "/run/user/1000/embry/memory.sock"
 SCAN_INCLUDE_DIRS_ENV = "CODE_SYMBOLS_SCAN_INCLUDE_DIRS"
+CODE_SYMBOL_VERIFICATION_TOP_K = 5
 
 
 def load_taxonomy_module():
@@ -179,6 +180,119 @@ def _recall_item_matches_name(item: dict[str, Any], name: str) -> bool:
     return any(lower_name in str(value).lower() for value in haystacks if value)
 
 
+def _code_symbol_verification_sample(record: CodeSymbolRecord) -> dict[str, str]:
+    """Build a path-qualified embedding verification sample for one stored symbol."""
+    return {
+        "name": record.symbol_name,
+        "problem": record.problem,
+        "repo": record.repo,
+        "path": record.path,
+        "qualified_name": record.qualified_name,
+        "start_line": str(record.start_line),
+        "end_line": str(record.end_line),
+    }
+
+
+def _verification_query(sample: dict[str, str]) -> str:
+    """Build a recall query for a verification sample."""
+    path = sample.get("path", "").strip()
+    if not path:
+        return sample["name"]
+
+    qualified_name = sample.get("qualified_name", "").strip() or sample["name"]
+    start_line = sample.get("start_line", "").strip()
+    end_line = sample.get("end_line", "").strip()
+    locator = path
+    if start_line and end_line:
+        locator = f"{path}:{start_line}-{end_line}"
+
+    parts = [
+        qualified_name,
+        locator,
+        sample.get("repo", "").strip(),
+    ]
+    return " ".join(dict.fromkeys(part for part in parts if part))
+
+
+def _normalize_verification_path(value: object) -> str:
+    return str(value or "").strip().replace("\\", "/")
+
+
+def _verification_identity_sources(item: dict[str, Any]) -> list[dict[str, Any]]:
+    sources: list[dict[str, Any]] = [item]
+    for key in ("metadata", "document", "payload"):
+        value = item.get(key)
+        if isinstance(value, dict):
+            sources.append(value)
+            metadata = value.get("metadata")
+            if isinstance(metadata, dict):
+                sources.append(metadata)
+    return sources
+
+
+def _verification_text(item: dict[str, Any]) -> str:
+    texts: list[str] = []
+    for source in _verification_identity_sources(item):
+        for key in ("problem", "solution", "title", "text"):
+            value = source.get(key)
+            if value:
+                texts.append(str(value))
+    return "\n".join(texts)
+
+
+def _recall_item_matches_sample(item: dict[str, Any], sample: dict[str, str]) -> bool:
+    """Check a recall item against generic or path-qualified sample identity."""
+    expected_path = _normalize_verification_path(sample.get("path", ""))
+    if not expected_path:
+        return _recall_item_matches_name(item, sample["name"])
+
+    expected_name = sample.get("qualified_name", "").strip() or sample["name"]
+    expected_repo = sample.get("repo", "").strip()
+    expected_start = sample.get("start_line", "").strip()
+    expected_end = sample.get("end_line", "").strip()
+    text = _verification_text(item)
+    sources = _verification_identity_sources(item)
+
+    paths = {
+        _normalize_verification_path(source.get("path"))
+        for source in sources
+        if source.get("path")
+    }
+    path_match = expected_path in paths or f"File: {expected_path}:" in text
+    if not path_match:
+        return False
+
+    names = {
+        str(source.get(key, "")).strip()
+        for source in sources
+        for key in ("qualified_name", "symbol_name", "name")
+        if source.get(key)
+    }
+    name_match = expected_name in names or f"Qualified name: {expected_name}" in text
+    if not name_match:
+        return False
+
+    if expected_start and expected_end:
+        field_line_match = any(
+            str(source.get("start_line", "")).strip() == expected_start
+            and str(source.get("end_line", "")).strip() == expected_end
+            for source in sources
+        )
+        text_line_match = f"{expected_path}:{expected_start}-{expected_end}" in text
+        if not field_line_match and not text_line_match:
+            return False
+
+    repos = {
+        str(source.get("repo", "")).strip()
+        for source in sources
+        if source.get("repo")
+    }
+    if expected_repo and repos and expected_repo not in repos:
+        return False
+
+    return True
+
+
 def verify_embedding_recall(samples: list[dict[str, str]], sample_size: int = 10) -> dict[str, Any]:
     """Spot-check stored symbol entries by recalling them with their symbol name."""
     if not samples:
@@ -197,21 +311,29 @@ def verify_embedding_recall(samples: list[dict[str, str]], sample_size: int = 10
     for sample in chosen:
         name = sample["name"]
         problem = sample["problem"]
+        query = _verification_query(sample)
+        top_k = CODE_SYMBOL_VERIFICATION_TOP_K if sample.get("path") else 1
         try:
-            result = _recall_http(name, k=1)
+            result = _recall_http(query, k=top_k)
             items = _recall_items(result)
-            if items and _recall_item_matches_name(items[0], name):
+            if any(_recall_item_matches_sample(item, sample) for item in items):
                 passed += 1
             else:
                 failures.append({
                     "name": name,
                     "problem": problem,
+                    "path": sample.get("path", ""),
+                    "qualified_name": sample.get("qualified_name", ""),
+                    "query": query,
                     "reason": "recall did not return matching entry",
                 })
         except Exception as exc:
             failures.append({
                 "name": name,
                 "problem": problem,
+                "path": sample.get("path", ""),
+                "qualified_name": sample.get("qualified_name", ""),
+                "query": query,
                 "reason": str(exc),
             })
 
@@ -1112,10 +1234,7 @@ def _store_treesitter_symbols_for_directory(
 
     if verification_samples is not None:
         for record in result.stored_records:
-            verification_samples.append({
-                "name": record.symbol_name,
-                "problem": record.problem,
-            })
+            verification_samples.append(_code_symbol_verification_sample(record))
 
     return result.stored
 
