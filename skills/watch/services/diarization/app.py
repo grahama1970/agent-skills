@@ -4,6 +4,7 @@ import tempfile
 from pathlib import Path
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.responses import JSONResponse
 
 from engine import DiarizationEngine
 
@@ -45,7 +46,11 @@ async def diarize(
     except HTTPException:
         raise
     except RuntimeError as exc:
-        raise HTTPException(status_code=503, detail=str(exc)) from exc
+        status_code, error_code = classify_runtime_error(str(exc))
+        return JSONResponse(
+            status_code=status_code,
+            content=failure_receipt(error_code, str(exc)),
+        )
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"diarization inference failed: {exc}") from exc
     finally:
@@ -69,3 +74,23 @@ def speaker_count_validation_error(
         if value is not None and value <= 0:
             return f"{name} must be positive"
     return None
+
+
+def classify_runtime_error(message: str) -> tuple[int, str]:
+    lowered = message.lower()
+    if "401 client error" in lowered or "gated" in lowered or "restricted" in lowered or "authentication token" in lowered:
+        return 403, "DIARIZATION_AUTH_REQUIRED"
+    if "model" in lowered and "load" in lowered:
+        return 503, "DIARIZATION_MODEL_LOAD_FAILED"
+    return 500, "DIARIZATION_INFERENCE_FAILED"
+
+
+def failure_receipt(error_code: str, error: str) -> dict:
+    return {
+        "schema": "watch.diarization.v1",
+        "status": "unavailable" if error_code in {"DIARIZATION_AUTH_REQUIRED", "DIARIZATION_MODEL_LOAD_FAILED"} else "failed",
+        "provider": "pyannote",
+        "error_code": error_code,
+        "error": error,
+        "safe_default": "continue_without_speaker_attribution",
+    }

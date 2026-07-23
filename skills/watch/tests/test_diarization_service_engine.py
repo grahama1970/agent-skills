@@ -9,6 +9,7 @@ from jsonschema import Draft202012Validator
 SERVICE_DIR = Path(__file__).resolve().parents[1] / "services" / "diarization"
 sys.path.insert(0, str(SERVICE_DIR))
 
+from app import classify_runtime_error, failure_receipt  # noqa: E402
 from engine import build_receipt, normalize_speaker_labels, turns_from_annotation  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -91,3 +92,15 @@ def test_build_receipt_returns_schema_valid_source_timeline_receipt(tmp_path: Pa
         {"start": 10.0, "end": 11.0, "speaker": "SPEAKER_00"},
         {"start": 11.0, "end": 12.0, "speaker": "SPEAKER_01"},
     ]
+
+
+def test_service_auth_failure_maps_to_structured_receipt():
+    status_code, error_code = classify_runtime_error(
+        "401 Client Error. Cannot access gated repo. authentication token required"
+    )
+    receipt = failure_receipt(error_code, "Cannot access gated repo")
+
+    validate_receipt(receipt)
+    assert status_code == 403
+    assert receipt["status"] == "unavailable"
+    assert receipt["error_code"] == "DIARIZATION_AUTH_REQUIRED"
