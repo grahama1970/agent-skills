@@ -162,6 +162,15 @@ class SourceReadError(RuntimeError):
         super().__init__(f"Could not read discovered source file {filepath}: {detail}")
 
 
+class CweScanResultError(RuntimeError):
+    """The local CWE scanner returned an invalid result."""
+
+    def __init__(self, filepath: Path, location: str, detail: str) -> None:
+        self.filepath = filepath
+        self.location = location
+        super().__init__(f"Invalid CWE result at {location} for {filepath}: {detail}")
+
+
 def _read_source_text(filepath: Path) -> str:
     """Read source text or raise a path-qualified failure."""
     try:
@@ -189,19 +198,87 @@ def _exit_source_read_failure(
     raise SystemExit(1) from exc
 
 
+def _exit_cwe_result_failure(*, codebase: Path, exc: CweScanResultError) -> NoReturn:
+    """Emit the structured CLI error for invalid CWE scanner results."""
+    print(
+        json.dumps({
+            "error": "CWE scan result invalid",
+            "phase": "cwe",
+            "codebase": str(codebase),
+            "file": str(exc.filepath),
+            "location": exc.location,
+            "detail": str(exc),
+        }),
+        file=sys.stderr,
+    )
+    raise SystemExit(1) from exc
+
+
+def _validate_cwe_scan_result(filepath: Path, result: object) -> dict[str, Any]:
+    """Validate and normalize one local CWE scan result."""
+    if not isinstance(result, dict):
+        raise CweScanResultError(filepath, "result", "expected object")
+
+    error = result.get("error")
+    if error:
+        raise SourceReadError(filepath, str(error))
+
+    mappings = result.get("cwe_mappings")
+    if not isinstance(mappings, list):
+        raise CweScanResultError(filepath, "cwe_mappings", "expected array")
+
+    normalized_mappings: list[dict[str, Any]] = []
+    for index, mapping in enumerate(mappings):
+        location = f"cwe_mappings[{index}]"
+        if not isinstance(mapping, dict):
+            raise CweScanResultError(filepath, location, "expected object")
+
+        cwe_id = mapping.get("cwe_id")
+        if (
+            not isinstance(cwe_id, str)
+            or not re.fullmatch(r"CWE-[1-9]\d*", cwe_id.strip())
+        ):
+            raise CweScanResultError(
+                filepath,
+                f"{location}.cwe_id",
+                "expected CWE-<positive integer>",
+            )
+
+        normalized = dict(mapping)
+        normalized["cwe_id"] = cwe_id.strip()
+        for field in ("name", "category"):
+            value = normalized.get(field, "")
+            if not isinstance(value, str):
+                raise CweScanResultError(filepath, f"{location}.{field}", "expected string when present")
+            normalized[field] = value.strip()
+        normalized_mappings.append(normalized)
+
+    normalized_result = dict(result)
+    normalized_result["cwe_mappings"] = normalized_mappings
+
+    if "bridge_tags" in normalized_result:
+        bridge_tags = normalized_result["bridge_tags"]
+        if not isinstance(bridge_tags, list) or any(
+            not isinstance(tag, str)
+            for tag in bridge_tags
+        ):
+            raise CweScanResultError(filepath, "bridge_tags", "expected array of strings")
+
+    if (
+        "worth_remembering" in normalized_result
+        and not isinstance(normalized_result["worth_remembering"], bool)
+    ):
+        raise CweScanResultError(filepath, "worth_remembering", "expected boolean")
+
+    return normalized_result
+
+
 def _scan_file_cwe_checked(
     filepath: Path,
     taxonomy: Any,
     validate: bool,
 ) -> dict[str, Any]:
-    result = scan_file_cwe(filepath, taxonomy, validate)
-    if not isinstance(result, dict):
-        return {}
-
-    error = result.get("error")
-    if error:
-        raise SourceReadError(filepath, str(error))
-    return result
+    return _validate_cwe_scan_result(filepath, scan_file_cwe(filepath, taxonomy, validate))
 
 
 def load_taxonomy_module():
@@ -2898,6 +2975,8 @@ def scan(
                     result = _scan_file_cwe_checked(filepath, taxonomy, validate)
                 except SourceReadError as exc:
                     _exit_source_read_failure(codebase=path, phase="cwe", exc=exc)
+                except CweScanResultError as exc:
+                    _exit_cwe_result_failure(codebase=path, exc=exc)
                 scanned += 1
                 cwes = result.get("cwe_mappings", [])
                 if cwes:
@@ -3169,6 +3248,8 @@ def rescan(
                     result = _scan_file_cwe_checked(filepath, taxonomy, validate)
                 except SourceReadError as exc:
                     _exit_source_read_failure(codebase=path, phase="cwe", exc=exc)
+                except CweScanResultError as exc:
+                    _exit_cwe_result_failure(codebase=path, exc=exc)
                 for cwe in result.get("cwe_mappings", []):
                     cwe_id = cwe.get("cwe_id", "unknown")
                     tags = ["ingest-code", "cwe", cwe_id, filepath.suffix.lstrip(".")]

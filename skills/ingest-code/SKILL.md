@@ -124,6 +124,10 @@ read failure exits with status 1 and prevents the completed marker. Readable
 files with unsupported or syntactically invalid content may still produce zero
 records.
 
+Malformed CWE scanner results fail with status 1 before CWE preview or
+persistence and prevent the completed marker. A valid empty `cwe_mappings`
+array remains a successful zero-finding result.
+
 ### `rescan` — Incremental Rescan (Scheduler Job)
 
 ```bash
