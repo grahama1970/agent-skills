@@ -957,6 +957,8 @@ def _store_treesitter_symbols_for_directory(
     codebase_root: Path,
     scope: str,
     verification_samples: Optional[list[dict[str, str]]] = None,
+    *,
+    mtime_after: datetime | None = None,
 ) -> int:
     """Scan one configured directory and upsert structured code symbols to memory."""
     treesitter_script = find_treesitter_skill()
@@ -1028,6 +1030,8 @@ def _store_treesitter_symbols_for_directory(
                 file=sys.stderr,
                 flush=True,
             )
+            continue
+        if not _path_modified_at_or_after(filepath, mtime_after):
             continue
 
         symbol_context = _extract_symbol_context(filepath)
@@ -1274,6 +1278,17 @@ def _path_is_within_scan_roots(path: Path, scan_roots: Sequence[Path]) -> bool:
     return False
 
 
+def _path_modified_at_or_after(path: Path, threshold: datetime | None) -> bool:
+    """Return whether a path mtime is at or after a threshold."""
+    if threshold is None:
+        return True
+
+    try:
+        return path.stat().st_mtime >= threshold.timestamp()
+    except (OSError, OverflowError, ValueError):
+        return False
+
+
 def collect_files(codebase_path: Path, patterns: list[str], mtime_after: Optional[datetime] = None) -> list[Path]:
     """Collect files matching patterns, respecting .gitignore and .monitor-codebase.json."""
     config = _load_monitor_config(codebase_path)
@@ -1295,13 +1310,8 @@ def collect_files(codebase_path: Path, patterns: list[str], mtime_after: Optiona
                 continue
             if any(skip in f.parts for skip in exclude_dirs):
                 continue
-            if mtime_after:
-                try:
-                    file_mtime = datetime.fromtimestamp(f.stat().st_mtime)
-                    if file_mtime < mtime_after:
-                        continue
-                except OSError:
-                    continue
+            if not _path_modified_at_or_after(f, mtime_after):
+                continue
             files.append(f)
     else:
         for root in scan_roots:
@@ -1310,27 +1320,25 @@ def collect_files(codebase_path: Path, patterns: list[str], mtime_after: Optiona
                 for f in root.rglob(pattern):
                     if any(skip in f.parts for skip in exclude_dirs):
                         continue
-                    if mtime_after:
-                        file_mtime = datetime.fromtimestamp(f.stat().st_mtime)
-                        if file_mtime < mtime_after:
-                            continue
+                    if not _path_modified_at_or_after(f, mtime_after):
+                        continue
                     files.append(f)
 
     # Also include markdown docs at project root (always)
     for md_name in ["CONTEXT.md", "README.md", "CLAUDE.md", "MEMORY.md", "AGENTS.md"]:
         md_path = codebase_path / md_name
-        if md_path.exists() and md_path not in files:
+        if md_path.exists() and _path_modified_at_or_after(md_path, mtime_after) and md_path not in files:
             files.append(md_path)
     # Recurse for local/docs/*.md and local/*.md
     for local_dir in [codebase_path / "local" / "docs", codebase_path / "local"]:
         if local_dir.exists():
             for md in local_dir.glob("*.md"):
-                if md not in files:
+                if _path_modified_at_or_after(md, mtime_after) and md not in files:
                     files.append(md)
     docs_dir = codebase_path / "docs"
     if docs_dir.exists():
         for md in docs_dir.glob("*.md"):
-            if md not in files:
+            if _path_modified_at_or_after(md, mtime_after) and md not in files:
                 files.append(md)
 
     return sorted(set(files))
@@ -1715,6 +1723,7 @@ def rescan(
                     path,
                     scope,
                     verification_samples=verifiable_samples,
+                    mtime_after=mtime_threshold,
                 )
                 codebase_ts_symbols += root_stored
                 completed_code_symbol_scan_roots.append(scan_root)
