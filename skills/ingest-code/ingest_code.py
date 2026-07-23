@@ -108,6 +108,18 @@ class ScanBatchSizeError(ValueError):
     """The scan --batch-size value is invalid."""
 
 
+class ScanGlobError(ValueError):
+    """An explicit scan --glob value is invalid."""
+
+    def __init__(self, pattern: str, index: int) -> None:
+        self.pattern = pattern
+        self.index = index
+        super().__init__(
+            f"--glob entry {index + 1} is not a safe "
+            f"repository-relative pattern: {pattern!r}"
+        )
+
+
 def load_taxonomy_module():
     """Load the taxonomy module for bridge tag + CWE extraction."""
     taxonomy_paths = [
@@ -1686,6 +1698,20 @@ def _normalize_scan_glob(pattern: str) -> str | None:
     return normalized
 
 
+def _validate_explicit_scan_globs(patterns: Sequence[str]) -> list[str]:
+    """Validate, normalize, and deduplicate explicit CLI glob values."""
+    normalized_patterns: list[str] = []
+
+    for index, pattern in enumerate(patterns):
+        normalized = _normalize_scan_glob(pattern)
+        if normalized is None:
+            raise ScanGlobError(pattern, index)
+        if normalized not in normalized_patterns:
+            normalized_patterns.append(normalized)
+
+    return normalized_patterns
+
+
 def _git_glob_pathspec(pattern: str) -> str | None:
     """Translate one safe relative glob pattern to a Git glob pathspec."""
     normalized = _normalize_scan_glob(pattern)
@@ -2036,6 +2062,20 @@ def scan(
         raise SystemExit(2) from exc
 
     try:
+        patterns = _validate_explicit_scan_globs(glob) if glob else list(DEFAULT_GLOB_PATTERNS)
+    except ScanGlobError as exc:
+        print(
+            json.dumps({
+                "error": "Invalid scan --glob value",
+                "glob": exc.pattern,
+                "index": exc.index,
+                "detail": str(exc),
+            }),
+            file=sys.stderr,
+        )
+        raise SystemExit(2) from exc
+
+    try:
         path = _resolve_codebase_directory(path)
     except ValueError as exc:
         print(json.dumps({"error": str(exc)}), file=sys.stderr)
@@ -2052,8 +2092,6 @@ def scan(
         print('{"error": "Memory skill not found"}', file=sys.stderr)
         raise SystemExit(1)
 
-    # Collect files
-    patterns = list(glob) if glob else DEFAULT_GLOB_PATTERNS
     files = _collect_files_or_exit(path, patterns)
     print(f"Found {len(files)} files to scan in {path}", flush=True)
 

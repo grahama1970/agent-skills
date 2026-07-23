@@ -71,7 +71,7 @@ for memory-backed code retrieval. Prefer absolute repository paths.
 ./run.sh scan <path> [OPTIONS]
 
 Options:
-  --glob, -g         File patterns (default: *.py *.ts *.tsx *.js *.jsx *.rs *.go *.java *.c *.cpp)
+  --glob, -g         Repeatable repository-relative file patterns (default: *.py *.ts *.tsx *.js *.jsx *.rs *.go *.java *.c *.cpp)
   --cwe-only         Skip Phase 1, only run CWE scan
   --validate         Run LLM validation on CWE matches
   --treesitter       Run Tree-sitter scan for structured code symbols
@@ -84,6 +84,11 @@ Options:
 
 Invalid `scan --batch-size` values exit with status 2 before scanning. The
 value must be a positive integer.
+
+Explicit `scan --glob` values must be positive repository-relative glob
+patterns. Basename-only patterns such as `*.py` are recursive. Blank, absolute,
+parent-traversing, or otherwise unsafe values exit with status 2 before
+scanning.
 
 ### `rescan` — Incremental Rescan (Scheduler Job)
 
