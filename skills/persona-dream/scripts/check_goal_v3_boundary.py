@@ -134,7 +134,7 @@ def main() -> int:
                     recon["visibility_state"] = "pending"
                 ok_all = ok_all and p15h.authored_sha(recon) == mhash[key]
                 checked += 1
-            tom_hashes_ok = ok_all and checked > 0
+            tom_hashes_ok = ok_all and checked == len(expected) and checked > 0
         except Exception:
             tom_hashes_ok = False
         counterpart_ok = (bool(targets) and toms_resolved == len(expected)
@@ -143,7 +143,18 @@ def main() -> int:
                           and selection_bound and roots_tagged and tom_hashes_ok)
         # frame sha recompute from disk
         frames = cycle.get("frames") or []
+        def arcface_bound(f):
+            arc = cyc_dir / "frames" / f"{f['panel_id']}.attempt_{int(f['attempt']):02d}_arcface.json"
+            if not arc.exists():
+                return False
+            v = json.loads(arc.read_text())
+            ent = (v.get("entity_results") or [{}])[0]
+            return (v.get("status") == "PASS" and v.get("live") is True
+                    and v.get("mocked") is False and v.get("threshold") == 0.421
+                    and str(v.get("frame_sha256", "")).endswith(f["frame_sha256"])
+                    and float(ent.get("best_cosine") or 0) >= 0.421)
         frames_ok = (len(frames) == 4
+                     and all(arcface_bound(f) for f in frames)
                      and [f.get("panel_id") for f in frames] == ["sb_001", "sb_002", "sb_003", "sb_004"]
                      and all(str(f["frame"]).startswith(str(cyc_dir)) for f in frames)
                      and all(Path(f["frame"]).exists()
@@ -189,12 +200,19 @@ def main() -> int:
         "state": "PASS" if v3_3 else "MISSING",
         "path": str(cycle_path.relative_to(SKILL)) if cycle_path else "none"}
 
-    # ---- v3_2 recomputed ----
+    # ---- v3_2: RERUN the real probes live (never trust stored receipts) ----
     v3_2 = False
-    probe = None
+    closure_run = subprocess.run(
+        [sys.executable, str(SKILL / "scripts/probe_edge_closure_gate.py")],
+        capture_output=True, text=True, timeout=300)
+    counterpart_run = subprocess.run(
+        [sys.executable, str(SKILL / "scripts/probe_counterpart_gate.py")],
+        capture_output=True, text=True, timeout=60)
     ppath = GV3 / "edge_closure_gate_probe_receipt.v1.json"
-    if ppath.exists():
-        probe = json.loads(ppath.read_text())
+    probe = json.loads(ppath.read_text()) if ppath.exists() else None
+    REQUIRED_CASES = {"dangling_vertex", "missing_endpoint", "malformed_ref",
+                      "both_endpoints_absent", "both_endpoints_null",
+                      "edge_targeting_endpointless_edge", "edge_to_edge"}
     grounding = None
     if cycle:
         pm = _load("pilot_metrics")
@@ -202,12 +220,14 @@ def main() -> int:
         m2 = pm.m2_grounding(p15, cycle["commit_manifest_key"], cycle_path.parent,
                              "embry", stored("persona_memory", cycle["dream_node_key"]).get("dream_id"))
         grounding = m2.get("fraction_resolved")
-    probe_ok = bool(probe and probe.get("passed")
+    probe_ok = bool(closure_run.returncode == 0 and probe and probe.get("passed")
                     and probe.get("probe_dream_key_absent_from_store")
-                    and len(probe.get("cases") or {}) >= 4
+                    and set((probe.get("cases") or {}).keys()) >= REQUIRED_CASES
                     and all(c.get("blocked") for c in probe["cases"].values()))
-    v3_2 = probe_ok and grounding == 1.0
-    notes.append({"closure_negative_cases": len((probe or {}).get("cases") or {}),
+    v3_2 = probe_ok and counterpart_run.returncode == 0 and grounding == 1.0
+    notes.append({"closure_probe_rerun_exit": closure_run.returncode,
+                  "counterpart_probe_rerun_exit": counterpart_run.returncode,
+                  "closure_negative_cases": len((probe or {}).get("cases") or {}),
                   "grounding_recomputed_live": grounding})
     results["v3_2_citation_closure"] = {
         "state": "PASS" if v3_2 else "MISSING",
@@ -235,8 +255,24 @@ def main() -> int:
                                     capture_output=True, text=True, timeout=30)
                 dur = float(pr.stdout.strip() or 0)
             temp_sent = "temperature" in json.loads(prof.read_text()).get("synthesis_params", {}) if prof.exists() else False
-            v3_1 = profile_ok and wav_ok and dur > 0.2 and temp_sent
+            # re-derive the deterministic profile from live ToM candidates
+            derivation_ok = False
+            try:
+                dvw = _load("dream_voice_weights")
+                node2 = dvw.stored("persona_memory", cycle["dream_node_key"])
+                rederived = dvw.build_profile(node2, dvw.load_tom_candidates(node2))
+                stored_prof = json.loads(prof.read_text())
+                derivation_ok = (
+                    [(w["emotional_tag"], w["tone"], w["weight"]) for w in rederived["weights"]]
+                    == [(w["emotional_tag"], w["tone"], w["weight"]) for w in stored_prof["weights"]]
+                    and rederived["synthesis_params"] == stored_prof["synthesis_params"])
+            except SystemExit:
+                derivation_ok = False
+            except Exception:
+                derivation_ok = False
+            v3_1 = profile_ok and wav_ok and dur > 0.2 and temp_sent and derivation_ok
             notes.append({"profile_sha_recomputed": profile_ok,
+                          "profile_rederived_from_live_tom": derivation_ok,
                           "wav_sha_recomputed": wav_ok, "wav_duration_reprobed": dur})
     results["v3_1_dream_voice_weights"] = {
         "state": "PASS" if v3_1 else "MISSING",

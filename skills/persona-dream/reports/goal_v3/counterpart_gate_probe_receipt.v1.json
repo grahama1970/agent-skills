@@ -35,7 +35,7 @@
       "passed": true
     }
   },
-  "created_at": "2026-07-22T22:19:48Z",
+  "created_at": "2026-07-23T11:13:21Z",
   "gate_source": "autonomous_dream_cycle.counterpart_violations (real gate)",
   "passed": true,
   "schema": "persona_dream.counterpart_gate_probe_receipt.v1"
