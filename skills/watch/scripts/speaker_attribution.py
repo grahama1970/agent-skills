@@ -8,10 +8,13 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import Any
 
-from skills.watch.scripts.diarization_contract import (
-    DIARIZATION_SCHEMA,
-    SPEAKER_ATTRIBUTION_SCHEMA,
-)
+try:
+    from skills.watch.scripts.diarization_contract import (
+        DIARIZATION_SCHEMA,
+        SPEAKER_ATTRIBUTION_SCHEMA,
+    )
+except ModuleNotFoundError:
+    from diarization_contract import DIARIZATION_SCHEMA, SPEAKER_ATTRIBUTION_SCHEMA
 
 
 def attribute_speakers(

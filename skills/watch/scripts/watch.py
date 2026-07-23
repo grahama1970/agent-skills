@@ -46,6 +46,8 @@ from storage import (
 )
 from transcribe import transcribe_video, parse_captions, filter_segments, align_segments_to_reference, extract_subtitles, has_text_subtitles
 from diff_intelligence import build_diff_intelligence
+from diarization import diarize_audio, failure_receipt
+from speaker_attribution import attribute_speakers
 from config import MOVIE_LIBRARY
 
 _CAST_CACHE: dict[str, dict[str, str]] = {}
@@ -266,6 +268,11 @@ def run_watch(
     tag: str | None = None,
     query: str | None = None,
     whisper: bool = True,
+    diarization: str = "auto",
+    num_speakers: int | None = None,
+    min_speakers: int | None = None,
+    max_speakers: int | None = None,
+    require_diarization: bool = False,
     doc2qra: bool = False,
     persona: str | None = None,
     out_dir: str | None = None,
@@ -527,6 +534,31 @@ def run_watch(
         gaps.append("playable_clip_generation_failed")
 
     now = __import__("datetime").datetime.now(__import__("datetime").timezone.utc).isoformat()
+    diarization_receipt = None
+    if diarization != "none" and audio_path:
+        diarization_receipt = diarize_audio(
+            audio_path,
+            mode=diarization,
+            num_speakers=num_speakers,
+            min_speakers=min_speakers,
+            max_speakers=max_speakers,
+            duration_seconds=full_duration,
+        )
+        (work / "diarization.json").write_text(json.dumps(diarization_receipt, indent=2))
+        if diarization_receipt.get("status") == "complete":
+            transcript = _apply_speaker_attribution(transcript, diarization_receipt)
+            captions = _apply_speaker_attribution(captions, diarization_receipt)
+            if transcript:
+                (work / "transcript.json").write_text(json.dumps(transcript, indent=2))
+        else:
+            code = str(diarization_receipt.get("error_code", "DIARIZATION_INFERENCE_FAILED")).lower()
+            if diarization == "pyannote" or require_diarization:
+                gaps.append(code)
+    elif diarization != "none" and require_diarization:
+        diarization_receipt = failure_receipt("failed", "DIARIZATION_AUDIO_INVALID", "no audio artifact available for diarization")
+        (work / "diarization.json").write_text(json.dumps(diarization_receipt, indent=2))
+        gaps.append("diarization_audio_invalid")
+
     scene_elements = build_scene_elements(playable_frames, full_duration, transcript, visual_descriptions, audio_path, captions)
     diff_intel = build_diff_intelligence(scene_elements)
     cast_map = _fetch_cast_map(title)
@@ -631,7 +663,30 @@ def run_watch(
     if require_visual_descriptions and visual_gate_failed:
         logger.error("visual description gate failed; see {}", work / "visual_description_receipt.json")
         return 1
+    if require_diarization and diarization_receipt and diarization_receipt.get("status") != "complete":
+        logger.error("diarization gate failed; see {}", work / "diarization.json")
+        return 1
     return 0
+
+
+def _apply_speaker_attribution(source_doc: dict | None, diarization_receipt: dict | None) -> dict | None:
+    attribution = attribute_speakers(source_doc, diarization_receipt)
+    if not attribution or not source_doc:
+        return source_doc
+    enriched = dict(source_doc)
+    enriched["segments"] = attribution["segments"]
+    enriched["speaker_attribution"] = {
+        "schema": attribution["schema"],
+        "status": attribution["status"],
+        "segment_count": attribution["segment_count"],
+        "assigned_count": attribution["assigned_count"],
+        "mixed_count": attribution["mixed_count"],
+        "unassigned_count": attribution["unassigned_count"],
+        "identity_boundary": attribution["identity_boundary"],
+    }
+    enriched["diarization_source"] = diarization_receipt.get("model", "pyannote")
+    enriched["diarization_artifact_path"] = "diarization.json"
+    return enriched
 
 def _print_summary(source, title, duration, meta, frames, sampling_mode, transcript, scenes, emotion_analysis, qra_result, work):
     m, s = divmod(int(duration), 60)
