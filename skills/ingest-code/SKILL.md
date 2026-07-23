@@ -321,6 +321,10 @@ continues to supply module location, and `parent_symbol` remains immediate.
 Exact Python AST matches also canonicalize `symbol_kind`: classes are `class`,
 functions directly enclosed by a class are `method`, and all other functions or
 async functions are `function`.
+Exact Python AST matches canonicalize `docstring` to the cleaned semantic AST
+docstring. Source quoting and indentation remain represented in `code`; stale
+Tree-sitter docstrings are preserved only when Python parsing or exact AST
+matching fails.
 
 ## Directory Filtering
 

@@ -1381,7 +1381,7 @@ def _extract_python_symbol_details(
     return {
         "start_line": _python_declaration_start(node),
         "end_line": getattr(node, "end_lineno", start_line),
-        "docstring": ast.get_docstring(node) or "",
+        "docstring": ast.get_docstring(node, clean=True) or "",
         "symbol_kind": _python_structural_symbol_kind(node, ancestry),
         "parameters": parameters,
         "local_variables": lexical_collector.normalized_local_variables(),
@@ -1427,7 +1427,7 @@ def _build_code_symbol_record(
             kind = str(details.get("symbol_kind") or kind)
             start_line = int(details.get("start_line") or start_line)
             end_line = int(details.get("end_line") or end_line)
-            docstring = docstring or details.get("docstring", "")
+            docstring = str(details.get("docstring") or "")
             parent_symbol = details.get("parent_symbol") or ""
             parameters = list(details.get("parameters", []))
             local_variables = list(details.get("local_variables", []))
