@@ -92,6 +92,10 @@ class TreeSitterScanError(RuntimeError):
     """Tree-sitter extraction or persistence did not complete."""
 
 
+class ScanConfigError(ValueError):
+    """The repository-local ingest scan configuration is invalid."""
+
+
 def load_taxonomy_module():
     """Load the taxonomy module for bridge tag + CWE extraction."""
     taxonomy_paths = [
@@ -962,6 +966,27 @@ def _resolve_existing_scan_roots(codebase_path: Path, entries: Sequence[str]) ->
     return roots
 
 
+def _configured_include_entries(config: dict[str, Any]) -> tuple[str, ...] | None:
+    """Return validated include_dirs entries when explicitly configured."""
+    if "include_dirs" not in config:
+        return None
+
+    raw_entries = config["include_dirs"]
+    if not isinstance(raw_entries, list):
+        raise ScanConfigError("include_dirs must be a JSON array of strings")
+
+    if not raw_entries:
+        return None
+
+    entries: list[str] = []
+    for raw in raw_entries:
+        if not isinstance(raw, str) or not raw.strip():
+            raise ScanConfigError("include_dirs entries must be nonblank strings")
+        entries.append(raw.strip())
+
+    return tuple(entries)
+
+
 def _extract_configured_scan_roots(codebase_path: Path) -> list[Path]:
     """Resolve scan roots from env override or .monitor-codebase.json include_dirs."""
     env_roots = os.environ.get(SCAN_INCLUDE_DIRS_ENV)
@@ -969,10 +994,10 @@ def _extract_configured_scan_roots(codebase_path: Path) -> list[Path]:
         return _resolve_existing_scan_roots(codebase_path, env_roots.split(","))
 
     config = _load_monitor_config(codebase_path)
-    if config and config.get("include_dirs"):
-        roots = _resolve_existing_scan_roots(codebase_path, config["include_dirs"])
-        if roots:
-            return roots
+    if config:
+        include_entries = _configured_include_entries(config)
+        if include_entries is not None:
+            return _resolve_existing_scan_roots(codebase_path, include_entries)
     return [codebase_path.resolve()]
 
 
@@ -1517,15 +1542,42 @@ def store_edges(edges: list[dict], scope: str = "code", dry_run: bool = False, m
 # Main scan pipeline
 # ---------------------------------------------------------------------------
 
-def _load_monitor_config(codebase_path: Path) -> Optional[dict]:
+def _load_monitor_config(codebase_path: Path) -> Optional[dict[str, Any]]:
     """Load .monitor-codebase.json if present."""
     config_file = codebase_path / ".monitor-codebase.json"
-    if config_file.exists():
-        try:
-            return json.loads(config_file.read_text())
-        except Exception:
-            pass
-    return None
+    if not config_file.exists():
+        return None
+
+    try:
+        payload = json.loads(config_file.read_text())
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ScanConfigError(f"Could not parse {config_file}: {exc}") from exc
+
+    if not isinstance(payload, dict):
+        raise ScanConfigError(f"{config_file} must contain a JSON object")
+
+    return payload
+
+
+def _preflight_scan_config(codebase_path: Path) -> None:
+    """Validate repo-local scan configuration before external work starts."""
+    config = _load_monitor_config(codebase_path)
+    if config and not (os.environ.get(SCAN_INCLUDE_DIRS_ENV) or "").strip():
+        _configured_include_entries(config)
+
+
+def _exit_invalid_scan_config(codebase_path: Path, exc: ScanConfigError) -> None:
+    """Emit the structured CLI error for invalid scan configuration."""
+    print(
+        json.dumps({
+            "error": "Invalid ingest scan configuration",
+            "codebase": str(codebase_path.resolve()),
+            "config": str(codebase_path.resolve() / ".monitor-codebase.json"),
+            "detail": str(exc),
+        }),
+        file=sys.stderr,
+    )
+    raise SystemExit(2) from exc
 
 
 def _is_git_repo(path: Path) -> bool:
@@ -1782,6 +1834,10 @@ def scan(
     except ValueError as exc:
         print(json.dumps({"error": str(exc)}), file=sys.stderr)
         raise SystemExit(2) from exc
+    try:
+        _preflight_scan_config(path)
+    except ScanConfigError as exc:
+        _exit_invalid_scan_config(path, exc)
 
     taxonomy = load_taxonomy_module()
     memory_script = find_memory_skill()
@@ -2055,6 +2111,11 @@ def rescan(
         except ValueError as exc:
             print(json.dumps({"error": str(exc)}), file=sys.stderr)
             raise SystemExit(2) from exc
+    for path in resolved_codebases:
+        try:
+            _preflight_scan_config(path)
+        except ScanConfigError as exc:
+            _exit_invalid_scan_config(path, exc)
 
     print(f"Rescanning {len(resolved_codebases)} codebase(s)")
     if mtime_threshold:
