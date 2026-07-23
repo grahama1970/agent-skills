@@ -100,6 +100,10 @@ class FileDiscoveryError(RuntimeError):
     """The codebase file set could not be determined safely."""
 
 
+class RescanSinceError(ValueError):
+    """The rescan --since value is invalid."""
+
+
 def load_taxonomy_module():
     """Load the taxonomy module for bridge tag + CWE extraction."""
     taxonomy_paths = [
@@ -1758,6 +1762,59 @@ def _path_modified_at_or_after(path: Path, threshold: datetime | None) -> bool:
         return False
 
 
+def _parse_since_threshold(
+    since: str | None,
+    *,
+    now: datetime | None = None,
+) -> datetime | None:
+    """Parse rescan --since into an mtime threshold."""
+    if since is None:
+        return None
+
+    raw = since.strip()
+    if not raw:
+        raise RescanSinceError("--since must not be blank")
+
+    relative = re.fullmatch(r"([1-9]\d*)([dh])", raw.lower())
+    if relative:
+        count = int(relative.group(1))
+        reference = now or datetime.now()
+        try:
+            if relative.group(2) == "d":
+                return reference - timedelta(days=count)
+            return reference - timedelta(hours=count)
+        except OverflowError as exc:
+            raise RescanSinceError(f"--since duration is too large: {since}") from exc
+
+    iso_value = raw[:-1] + "+00:00" if raw.endswith(("Z", "z")) else raw
+    try:
+        return datetime.fromisoformat(iso_value)
+    except ValueError as exc:
+        raise RescanSinceError(
+            "--since must be a positive integer followed by 'h' or 'd', "
+            "or an ISO-8601 date/time"
+        ) from exc
+
+
+def _exit_invalid_since(since: str | None, exc: RescanSinceError) -> None:
+    """Emit the structured CLI error for invalid rescan --since values."""
+    print(
+        json.dumps({
+            "error": "Invalid rescan --since value",
+            "since": since,
+            "detail": str(exc),
+            "accepted_formats": [
+                "12h",
+                "1d",
+                "2026-07-23",
+                "2026-07-23T12:00:00+00:00",
+            ],
+        }),
+        file=sys.stderr,
+    )
+    raise SystemExit(2) from exc
+
+
 def _resolve_in_repo_file(path: Path, codebase_root: Path) -> Path | None:
     """Resolve an existing file and require repository containment."""
     try:
@@ -2210,14 +2267,10 @@ def rescan(
     codebase: list[str] = typer.Option([], "-c", "--codebase", help="Codebase paths to rescan"),
 ):
     """Nightly rescan for living document updates. Designed for /scheduler."""
-    mtime_threshold = None
-    if since:
-        if since.endswith("d"):
-            mtime_threshold = datetime.now() - timedelta(days=int(since[:-1]))
-        elif since.endswith("h"):
-            mtime_threshold = datetime.now() - timedelta(hours=int(since[:-1]))
-        else:
-            mtime_threshold = datetime.fromisoformat(since)
+    try:
+        mtime_threshold = _parse_since_threshold(since)
+    except RescanSinceError as exc:
+        _exit_invalid_since(since, exc)
 
     codebases = list(codebase) if codebase else []
     if not codebases:

@@ -10,7 +10,10 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
 MODULE_PATH = Path(__file__).resolve().parents[1] / "ingest_code.py"
+SKILL_PATH = MODULE_PATH.parent / "SKILL.md"
 sys.path.insert(0, str(MODULE_PATH.parent))
 spec = importlib.util.spec_from_file_location("ingest_code", MODULE_PATH)
 assert spec and spec.loader
@@ -21,6 +24,139 @@ spec.loader.exec_module(ingest_code)
 
 def _set_mtime(path: Path, timestamp: float) -> None:
     os.utime(path, (timestamp, timestamp))
+
+
+def test_parse_since_relative_values_from_fixed_now() -> None:
+    fixed = datetime(2026, 7, 23, 12, 0, 0)
+
+    assert ingest_code._parse_since_threshold("1d", now=fixed) == datetime(2026, 7, 22, 12, 0, 0)
+    assert ingest_code._parse_since_threshold("12h", now=fixed) == datetime(2026, 7, 23, 0, 0, 0)
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        "2026-07-23",
+        "2026-07-23T12:00:00",
+        "2026-07-23T12:00:00+00:00",
+        "2026-07-23T12:00:00Z",
+    ],
+)
+def test_parse_since_accepts_iso_forms(raw: str) -> None:
+    assert ingest_code._parse_since_threshold(raw) is not None
+
+
+@pytest.mark.parametrize(
+    "raw",
+    [
+        "",
+        "   ",
+        "d",
+        "h",
+        "0d",
+        "0h",
+        "-1d",
+        "1.5d",
+        "1w",
+        "yesterday",
+        "999999999999999999999d",
+    ],
+)
+def test_parse_since_rejects_invalid_relative_values(raw: str) -> None:
+    with pytest.raises(ingest_code.RescanSinceError):
+        ingest_code._parse_since_threshold(raw)
+
+
+def test_invalid_since_exits_before_external_work(monkeypatch, tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    called = {
+        "resolve": False,
+        "preflight": False,
+        "find_memory_skill": False,
+        "collect_files": False,
+        "learn": False,
+        "marker": False,
+    }
+
+    def fail_resolve(*args, **kwargs):
+        called["resolve"] = True
+        raise AssertionError("codebase resolution should not run for invalid --since")
+
+    def fail_preflight(*args, **kwargs):
+        called["preflight"] = True
+        raise AssertionError("config preflight should not run for invalid --since")
+
+    def fail_find_memory_skill(*args, **kwargs):
+        called["find_memory_skill"] = True
+        raise AssertionError("memory lookup should not run for invalid --since")
+
+    def fail_collect_files(*args, **kwargs):
+        called["collect_files"] = True
+        raise AssertionError("file discovery should not run for invalid --since")
+
+    def fail_learn(*args, **kwargs):
+        called["learn"] = True
+        raise AssertionError("memory writes should not run for invalid --since")
+
+    def fail_marker(*args, **kwargs):
+        called["marker"] = True
+        raise AssertionError("marker writes should not run for invalid --since")
+
+    monkeypatch.setattr(ingest_code, "_resolve_codebase_directory", fail_resolve)
+    monkeypatch.setattr(ingest_code, "_preflight_scan_config", fail_preflight)
+    monkeypatch.setattr(ingest_code, "find_memory_skill", fail_find_memory_skill)
+    monkeypatch.setattr(ingest_code, "collect_files", fail_collect_files)
+    monkeypatch.setattr(ingest_code, "_learn", fail_learn)
+    monkeypatch.setattr(ingest_code, "_write_required_ingest_marker", fail_marker)
+
+    with pytest.raises(SystemExit) as exc_info:
+        ingest_code.rescan(
+            since="-1d",
+            validate=False,
+            treesitter=False,
+            code_index=True,
+            verify_embeddings=False,
+            scope="code",
+            codebase=[str(repo)],
+        )
+
+    assert exc_info.value.code == 2
+    assert called == {
+        "resolve": False,
+        "preflight": False,
+        "find_memory_skill": False,
+        "collect_files": False,
+        "learn": False,
+        "marker": False,
+    }
+
+
+def test_invalid_since_cannot_write_zero_result_marker(tmp_path: Path) -> None:
+    repo = tmp_path / "repo"
+    repo.mkdir()
+
+    with pytest.raises(SystemExit) as exc_info:
+        ingest_code.rescan(
+            since="-1d",
+            validate=False,
+            treesitter=False,
+            code_index=True,
+            verify_embeddings=False,
+            scope="code",
+            codebase=[str(repo)],
+        )
+
+    assert exc_info.value.code == 2
+    assert not (repo / ".ingest-code.json").exists()
+
+
+def test_skill_docs_describe_since_formats_and_exit_status() -> None:
+    text = SKILL_PATH.read_text()
+
+    assert "12h" in text
+    assert "7d" in text
+    assert "ISO-8601" in text
+    assert "status 2" in text
 
 
 def test_collect_files_applies_since_to_explicit_markdown(tmp_path: Path) -> None:

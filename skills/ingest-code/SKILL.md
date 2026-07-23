@@ -88,7 +88,7 @@ Options:
 ./run.sh rescan [OPTIONS]
 
 Options:
-  --since            Only files modified since (ISO date or "1d", "7d")
+  --since            Only files modified since a positive whole-number duration ("12h", "7d") or ISO-8601 date/time
   -c, --codebase     Codebase path(s) to rescan (repeatable)
   --validate         Run LLM validation
   --treesitter       Run Tree-sitter scan for structured code symbols
@@ -96,6 +96,11 @@ Options:
   --no-code-index    Disable structured code-symbol upserts
   --scope            Memory scope
 ```
+
+Invalid `--since` values exit with status 2 before scanning. Accepted forms
+include positive whole-number durations such as `12h` and `7d`, ISO-8601 dates
+such as `2026-07-23`, and ISO-8601 date/times such as
+`2026-07-23T12:00:00+00:00`.
 
 ## Agent Rules
 
