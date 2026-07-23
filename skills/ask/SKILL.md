@@ -17,6 +17,9 @@ triggers:
   - persona review
   - CAE gap review
   - browser oracle
+  - create browser tab
+  - close browser tab
+  - fresh reviewer tab
   - ask DAG
   - Tau DAG
 provides:
@@ -181,9 +184,136 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
   `$browser-oracle` from Tau command specs. Use `--handler-project
   handler=project` when the browser-oracle project differs from the handler
   name, for example `--handler-project webgpt=tau`.
+- **Browser tab lifecycle**: agents may create, bind, use, and close fresh
+  browser reviewer tabs for `$ask` runs through `$surf` and `$browser-oracle`;
+  see the Browser Tab Lifecycle section below. The user should not have to
+  manually babysit disposable reviewer tabs.
 - **Evidence**: `--json` returns the Ask Tau bundle path, provider/handler gate,
   and Tau execution receipt when `--execute` is used. Preserve `dag.json`,
   command specs, node receipts, and join receipts.
+
+## Browser Tab Lifecycle
+
+Use this when a browser-backed handler needs a new tab, when the remembered tab
+is stale, or when a roundtable needs isolated temporary seats. `$ask` still owns
+the orchestration; `$browser-oracle` owns binding/registry state; `$surf` owns
+browser transport, tab inventory, and tab closing.
+
+### Decision Model
+
+| Need | Behavior |
+| --- | --- |
+| Existing project reviewer tab is healthy | Resolve and use it; do not create a duplicate. |
+| Human supplied a tab id or URL | Preflight it against live `surf tab.list --json`; bind only after identity is proven. |
+| No binding exists and the run needs a browser handler | Create a fresh disposable binding with `browser-oracle open-bind`. |
+| Handler is part of a concurrent roundtable | Use one browser tab/binding per browser seat unless the human explicitly requests shared state. |
+| Tab was created only for this run | Close it with `surf tab.close <tab_id>` and unbind it after artifacts are collected. |
+| Tab is manual, pre-existing, or human-owned | Do not close or unbind it unless the user explicitly says to. |
+
+### Create, Use, Close Runbook
+
+1. **Inventory live tabs first**. URL is the identity truth; listing order is
+   not.
+
+   ```bash
+   skills/surf/run.sh tab.list --json
+   ```
+
+2. **Resolve an existing binding before creating anything**.
+
+   ```bash
+   backend=webclaude  # or webkimi, webgemini, webgpt
+   skills/browser-oracle/run.sh resolve \
+     --from <repo-or-skill-dir> \
+     --backend "$backend" \
+     --json
+   skills/browser-oracle/run.sh doctor \
+     --from <repo-or-skill-dir> \
+     --backend "$backend" \
+     --json
+   ```
+
+3. **Create a disposable reviewer tab only when resolve/doctor is missing or
+   stale**. Use a unique project name that includes the run target and backend,
+   and mark the binding `--auto` unless the human wants it to persist.
+
+   ```bash
+   backend=webclaude  # or webkimi, webgemini, webgpt
+   skills/browser-oracle/run.sh open-bind <ask-run-project> \
+     --backend "$backend" \
+     --url "<provider-home-or-conversation-url>" \
+     --auto \
+     --json
+   ```
+
+   For WebGPT, `open-bind` defaults to an isolated reviewer window through
+   `$browser-oracle`. For other browser backends it still records the new tab id
+   and URL under `~/.pi/<backend>-projects/<ask-run-project>.json`.
+
+4. **Verify the new binding before the Ask run**.
+
+   ```bash
+   backend=webclaude  # or webkimi, webgemini, webgpt
+   skills/browser-oracle/run.sh resolve \
+     --project <ask-run-project> \
+     --backend "$backend" \
+     --json
+   ```
+
+   The JSON must show the expected `tab_id` and URL. If the tab id is missing,
+   ambiguous, or URL-mismatched, stop with `NEEDS_ATTENTION` and do not submit.
+
+5. **Use the bound tab through `$ask`/Tau, not raw Surf**. Pass the project
+   mapping so the handler node controls the intended tab.
+
+   ```bash
+   cd skills/ask
+   ./run.sh tau-dag "<full request>" \
+     --repo <repo> \
+     --target <target> \
+     --handler webclaude \
+     --handler-project webclaude=<ask-run-project> \
+     --execute \
+     --json
+   ```
+
+   For multi-seat browser runs, repeat `--handler-project
+   backend=<ask-run-project>` for each browser handler.
+
+6. **Preserve evidence before cleanup**. Keep the Ask/Tau artifacts, handler
+   node receipt, `browser_oracle` binding fields, Surf metadata, response text,
+   and any downloaded files before closing a tab.
+
+7. **Close only disposable tabs created for this run**.
+
+   ```bash
+   backend=webclaude  # or webkimi, webgemini, webgpt
+   skills/surf/run.sh tab.close <tab_id>
+   skills/browser-oracle/run.sh unbind <ask-run-project> \
+     --backend "$backend"
+   ```
+
+   After closing, run `skills/surf/run.sh tab.list --json` and confirm the tab
+   id is absent. Report `closed_tab_id`, backend, project name, and the artifact
+   directory. If close fails or the tab still appears, report
+   `NEEDS_ATTENTION: disposable_browser_tab_not_closed`.
+
+### Lifecycle Rules
+
+- Prefer long-lived manual project bindings for repeated reviewer relationships;
+  prefer disposable `--auto` bindings for one-off browser seats, experiments,
+  and concurrent roundtables.
+- Do not close a manual binding, a tab supplied by the human, or a tab that
+  existed before the current Ask run unless the human explicitly says to close
+  it.
+- Do not use `surf tab.new` alone for `$ask` handler orchestration. If a new tab
+  will be used by `$ask`, create or bind it through `$browser-oracle` so Tau
+  command specs can resolve the same tab deterministically.
+- If a provider navigates to a new conversation URL after first submit, update
+  or rebind the browser-oracle project before the next round and preserve both
+  the old and new URLs in the run artifacts.
+- Cleanup is not proof of reviewer correctness. Browser output remains reviewer
+  evidence and still needs deterministic local reconciliation before closure.
 
 ## Roundtable Collaboration Protocol (operator directive 2026-07-22)
 
@@ -212,7 +342,8 @@ Rules for the calling agent:
 
 1. **Bind each seat's tab** (once per panel; verify tab URLs first with
    `skills/surf/run.sh tab.list --json` — the URL, not the listing order, is
-   the identity truth):
+   the identity truth; for fresh disposable seats use the Browser Tab Lifecycle
+   runbook above):
    `skills/browser-oracle/run.sh bind <project-name> --backend webgpt|webclaude|webkimi --tab-id <id> --url "<conversation-url>"`
    Verify with `... resolve --backend <b> --project <name> --json` (expect the
    tab_id back).
