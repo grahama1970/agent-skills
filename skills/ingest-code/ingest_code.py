@@ -2043,7 +2043,17 @@ def _extract_treesitter_records_for_directory(
             continue
         if _path_is_excluded(filepath, resolved_codebase_root, exclude_dirs):
             continue
-        if not _path_modified_at_or_after(filepath, mtime_after):
+        try:
+            modified_in_scope = _path_modified_at_or_after(
+                filepath,
+                mtime_after,
+            )
+        except FileDiscoveryError as exc:
+            raise TreeSitterScanError(
+                f"Tree-sitter modification-time check failed "
+                f"for {filepath}: {exc}"
+            ) from exc
+        if not modified_in_scope:
             continue
 
         if not file_entry["symbols"]:
@@ -2640,14 +2650,26 @@ def _path_is_within_scan_roots(path: Path, scan_roots: Sequence[Path]) -> bool:
 
 
 def _path_modified_at_or_after(path: Path, threshold: datetime | None) -> bool:
-    """Return whether a path mtime is at or after a threshold."""
+    """Compare source mtime to a cutoff, failing on unreadable metadata."""
     if threshold is None:
         return True
 
     try:
-        return path.stat().st_mtime >= threshold.timestamp()
-    except (OSError, OverflowError, ValueError):
-        return False
+        cutoff = threshold.timestamp()
+    except (OverflowError, ValueError) as exc:
+        raise FileDiscoveryError(
+            f"invalid modification-time threshold "
+            f"{threshold.isoformat()}: {exc}"
+        ) from exc
+
+    try:
+        modified_at = path.stat().st_mtime
+    except OSError as exc:
+        raise FileDiscoveryError(
+            f"could not read modification time for {path}: {exc}"
+        ) from exc
+
+    return modified_at >= cutoff
 
 
 def _parse_since_threshold(

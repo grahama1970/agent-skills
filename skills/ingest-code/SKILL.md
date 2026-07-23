@@ -169,6 +169,10 @@ include positive whole-number durations such as `12h` and `7d`, ISO-8601 dates
 such as `2026-07-23`, and ISO-8601 date/times such as
 `2026-07-23T12:00:00+00:00`.
 
+Modification-time metadata must be readable for every candidate evaluated by
+`--since`. A stat or timestamp-conversion failure exits with status 1 and
+prevents memory writes and completed markers; it is not treated as an unchanged file.
+
 ## Agent Rules
 
 Agents must:
