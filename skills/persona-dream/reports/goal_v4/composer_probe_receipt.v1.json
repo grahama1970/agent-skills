@@ -1,0 +1,51 @@
+{
+  "cases": {
+    "dispositional_floor": {
+      "detail": {
+        "final": "firm_boundary"
+      },
+      "passed": true
+    },
+    "expressive_bias_stays_in_family": {
+      "detail": {
+        "final": "firm_boundary"
+      },
+      "passed": true
+    },
+    "provenance_present": {
+      "detail": {},
+      "passed": true
+    },
+    "right_answer_family_preserved": {
+      "detail": {
+        "final": "warm_direct",
+        "note": "boundary dream colors warm family, does not leave it"
+      },
+      "passed": true
+    },
+    "safety_override": {
+      "detail": {
+        "class": "safety_override",
+        "final": "one_at_a_time_interrupt"
+      },
+      "passed": true
+    },
+    "thermal_dampening": {
+      "detail": {
+        "damped_weight": 0.56,
+        "fired": true
+      },
+      "passed": true
+    },
+    "unknown_label_passthrough": {
+      "detail": {
+        "final": "sarcastic_unknown_tone"
+      },
+      "passed": true
+    }
+  },
+  "created_at": "2026-07-23T13:54:47Z",
+  "gate_source": "persona_affect_composer.compose (real function)",
+  "passed": true,
+  "schema": "persona_dream.composer_probe_receipt.v1"
+}

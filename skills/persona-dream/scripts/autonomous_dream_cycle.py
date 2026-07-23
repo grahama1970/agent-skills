@@ -93,6 +93,16 @@ def select_cluster(out: Path) -> dict:
     seed = sha256_text((ROOT / "GOAL_V3.md").read_text())
     docs = fetch_embry_docs()
     roots = {d["_key"]: d for d in docs if re.match(r"embry_age\d", d["_key"])}
+    # GOAL_V4.3 loop guard: never dream about dream-colored experience.
+    # Any residue record carrying persona_dream affect provenance (written by
+    # the composer's voice_delivery patch when conversation turns become
+    # memories) is excluded from dream selection — severs the
+    # dream->speech->memory->dream amplification path (roundtable r3).
+    tainted = {k for k, d in roots.items()
+               if (d.get("affect_source") == "persona_dream"
+                   or (d.get("voice_delivery") or {}).get("affect_source") == "persona_dream"
+                   or d.get("dream_provenance"))}
+    roots = {k: v for k, v in roots.items() if k not in tainted}
     used: set[str] = set()
     for d in docs:
         if d.get("kind") in ("synthetic_dream_memory", "synthetic_reflection_memory") \
@@ -131,6 +141,7 @@ def select_cluster(out: Path) -> dict:
     chosen_docs = {k: roots[k] for k in chosen["selected"]}
     (out / "selection_receipt.v1.json").write_text(json.dumps({
         "schema": "persona_dream.cycle_selection_receipt.v1",
+        "loop_guard_excluded_tainted_residue": len(tainted),
         "seed_source": "GOAL_V3.md sha256", "seed": seed,
         "candidates_considered": len(candidates),
         "skipped_already_used": len(candidates) - len(fresh),

@@ -1,5 +1,18 @@
 # Persona Dream
 
+## Current state (2026-07-23)
+
+The loop is real end-to-end: Embry dreams autonomously from her own memories
+(6 dreams, 5 unattended cycles, provenance-gated: see GOAL_V3.md +
+reports/goal_v3/), and as of GOAL_V4 her dreams COLOR HER LIVE VOICE through
+`persona_affect_composer.v1` (memory /intent -> composer -> /tau/voice-render),
+under the frozen rule: color the tone, never change a right answer, never
+touch safety/interruption decisions, never dream about dream-colored words.
+Proof: `python3 scripts/check_goal_v4_boundary.py --json` (re-drives live).
+Open research question: perceived affect (blind listener study, prereg'd) —
+see reports/goal_v3/roundtable/ for the 3-round design convergence.
+
+
 ![Persona Dream card](../../docs/assets/project-cards/persona-dream.webp)
 
 > **Can an AI persona dream about what has happened to it, watch the dream it

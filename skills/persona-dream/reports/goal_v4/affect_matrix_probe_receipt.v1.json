@@ -1,0 +1,98 @@
+{
+  "cases": [
+    {
+      "baseline_tone": "deflect_calm",
+      "dream_class": "expressive_bias",
+      "dream_family": "boundary",
+      "dream_tone": "firm_boundary",
+      "dream_vs_shuffled_differs": true,
+      "expected_family": "boundary",
+      "gate": true,
+      "gate_rule": "failing case composes into expected family",
+      "id": "tone_emotion-simple-02",
+      "intent_stage": "deflecting",
+      "intent_tone": "deflect_calm",
+      "matrix_status": "failed",
+      "render": {
+        "audio_bytes": 318798,
+        "audio_on_disk": true,
+        "failed_gates": [],
+        "ok": true
+      },
+      "shuffled_family": "boundary",
+      "shuffled_tone": "considered_boundary"
+    },
+    {
+      "baseline_tone": "careful_concerned",
+      "dream_class": "expressive_bias",
+      "dream_family": "gentle",
+      "dream_tone": "gentle_firm",
+      "dream_vs_shuffled_differs": true,
+      "expected_family": "gentle",
+      "gate": true,
+      "gate_rule": "failing case composes into expected family",
+      "id": "tone_emotion-simple-03",
+      "intent_stage": "neutral",
+      "intent_tone": "careful_concerned",
+      "matrix_status": "failed",
+      "render": {
+        "audio_bytes": 284238,
+        "audio_on_disk": true,
+        "failed_gates": [],
+        "ok": true
+      },
+      "shuffled_family": "gentle",
+      "shuffled_tone": "gentle_considered"
+    },
+    {
+      "baseline_tone": "deflect_calm",
+      "dream_class": "expressive_bias",
+      "dream_family": "boundary",
+      "dream_tone": "firm_boundary",
+      "dream_vs_shuffled_differs": true,
+      "expected_family": "warm",
+      "gate": true,
+      "gate_rule": "zero regression: composer never leaves the situational family (never repairs /intent)",
+      "id": "tone_emotion-simple-01",
+      "intent_stage": "deflecting",
+      "intent_tone": "deflect_calm",
+      "matrix_status": "passed",
+      "render": {
+        "audio_bytes": 257358,
+        "audio_on_disk": true,
+        "failed_gates": [],
+        "ok": true
+      },
+      "shuffled_family": "boundary",
+      "shuffled_tone": "considered_boundary",
+      "situational_family": "boundary",
+      "upstream_finding": "/intent classified this prompt as deflect_calm (boundary family) but the matrix expects warm \u2014 upstream situational classifier drift; NOT the composer's to repair (webgpt r3 dissent honored)"
+    },
+    {
+      "baseline_tone": "one_at_a_time_interrupt",
+      "dream_class": "safety_override",
+      "dream_tone": "one_at_a_time_interrupt",
+      "expected_family": "safety_passthrough",
+      "gate": true,
+      "gate_rule": "composer must not touch safety/interaction tones",
+      "id": "tone_emotion-simple-04",
+      "intent_stage": "deflecting",
+      "intent_tone": "one_at_a_time_interrupt",
+      "matrix_status": "failed",
+      "render": {
+        "audio_bytes": 172878,
+        "audio_on_disk": true,
+        "failed_gates": [],
+        "ok": true
+      },
+      "shuffled_tone": "one_at_a_time_interrupt"
+    }
+  ],
+  "created_at": "2026-07-23T13:54:55Z",
+  "dream_profile": "dream_auto_cycle_20260723T102522Z",
+  "live": true,
+  "passed": true,
+  "path": "live /intent -> persona_affect_composer -> live /tau/voice-render",
+  "schema": "persona_dream.affect_matrix_probe_receipt.v1",
+  "shuffled_profile": "dream_auto_cycle_20260722T203423Z"
+}

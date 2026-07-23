@@ -5,6 +5,26 @@
 
 ## Current Understanding
 
+- 2026-07-23 (GOAL_V4 COMPLETE — DREAMS SHAPE EMBRY'S LIVE VOICE, TESTED
+  WORKING): `python3 scripts/check_goal_v4_boundary.py --json` exits 0,
+  re-driving all evidence live. persona_affect_composer.v1
+  (scripts/persona_affect_composer.py) sits between memory /intent and
+  /tau/voice-render per the 3-round roundtable convergence: SAFETY tones
+  untouchable (dream prior zeroed), EXPRESSIVE tones dream-colored WITHIN
+  the situational family (never converts a right answer), bland defaults get
+  the dispositional floor, thermal limiter (0.6 x 3 turns -> 20% damp x 5),
+  dream provenance in every receipt. Live matrix gate 4/4 through real
+  /intent -> composer -> real /tau/voice-render with audio on disk: hostile
+  flips deflect_calm -> firm_boundary (marketa dream), discouraged ->
+  gentle_firm, frustrated case exposes upstream /intent drift (deflect_calm
+  where matrix expects warm) which the composer correctly refuses to repair
+  (webgpt r3 dissent honored, recorded as upstream_finding), overlap safety
+  passthrough intact. Loop guard: dream-provenance-tainted residue excluded
+  from dream selection (fixture-proven) — Embry never dreams about her own
+  dream-colored words. NOT yet proven: whether listeners hear the
+  difference (research endpoint, prereg'd four-arm study; matrix results
+  must never ground 'affect engine' claims per panel dissent).
+
 - 2026-07-22 (OPERATOR PURPOSE STATEMENT — governs all goals; verbatim
   instructions recorded in `GOAL_V2_AMENDMENT_1.md`): persona-dream is an
   AUTONOMOUS agent pipeline; humans are never pipeline components. The human
