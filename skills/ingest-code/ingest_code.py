@@ -1160,20 +1160,48 @@ def _python_declaration_signature(node: PythonDeclaration) -> str:
     return f"{prefix} {node.name}{type_params}({ast.unparse(node.args)}){returns}:"
 
 
-def _python_parameter_names(node: ast.FunctionDef | ast.AsyncFunctionDef) -> list[str]:
-    """Return Python parameter names in declaration order."""
+def _python_decorator_terminal_name(node: ast.AST) -> str:
+    """Return the terminal name for a direct decorator expression."""
+    if isinstance(node, ast.Call):
+        node = node.func
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        return node.attr
+    return ""
+
+
+def _python_is_staticmethod(node: ast.FunctionDef | ast.AsyncFunctionDef) -> bool:
+    """Return whether a declaration has a direct staticmethod decorator."""
+    return any(
+        _python_decorator_terminal_name(decorator) == "staticmethod"
+        for decorator in node.decorator_list
+    )
+
+
+def _python_parameter_names(
+    node: ast.FunctionDef | ast.AsyncFunctionDef,
+    structural_kind: str,
+) -> list[str]:
+    """Return caller-facing Python parameter names in declaration order."""
     args = node.args
     ordered_args: list[ast.arg] = [
         *args.posonlyargs,
         *args.args,
     ]
+    if (
+        structural_kind == "method"
+        and ordered_args
+        and not _python_is_staticmethod(node)
+    ):
+        ordered_args = ordered_args[1:]
     if args.vararg is not None:
         ordered_args.append(args.vararg)
     ordered_args.extend(args.kwonlyargs)
     if args.kwarg is not None:
         ordered_args.append(args.kwarg)
 
-    return [arg.arg for arg in ordered_args if arg.arg != "self"]
+    return [arg.arg for arg in ordered_args]
 
 
 class _PythonLexicalCollector(ast.NodeVisitor):
@@ -1396,21 +1424,22 @@ def _extract_python_symbol_details(
         return {}
 
     node = candidates[0]
+    ancestry = _find_python_symbol_ancestry(tree, node)
+    structural_kind = _python_structural_symbol_kind(node, ancestry)
     parameters: list[str] = []
     if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-        parameters = _python_parameter_names(node)
+        parameters = _python_parameter_names(node, structural_kind)
 
     lexical_collector = _PythonLexicalCollector(node)
     lexical_collector.visit(node)
 
-    ancestry = _find_python_symbol_ancestry(tree, node)
     parent_symbol = ancestry[-1].name if ancestry else None
     return {
         "start_line": _python_declaration_start(node),
         "end_line": getattr(node, "end_lineno", start_line),
         "signature": _python_declaration_signature(node),
         "docstring": ast.get_docstring(node, clean=True) or "",
-        "symbol_kind": _python_structural_symbol_kind(node, ancestry),
+        "symbol_kind": structural_kind,
         "parameters": parameters,
         "local_variables": lexical_collector.normalized_local_variables(),
         "called_symbols": sorted(lexical_collector.called_symbols),

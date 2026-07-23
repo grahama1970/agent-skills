@@ -295,7 +295,10 @@ backend.
 
 Python parameter payloads cover positional-only, positional-or-keyword,
 variadic, keyword-only, and keyword-variadic arguments in declaration order,
-while preserving the existing omission of a parameter literally named `self`.
+while omitting only the first explicit positional receiver for non-static direct
+class methods. Static methods, top-level functions, nested functions,
+keyword-only parameters, varargs, and kwargs preserve literal names such as
+`self` or `cls`.
 Python lexical fields are declaration-scoped; they include nested declaration
 headers but exclude nested function, class, and lambda bodies.
 For Python, `local_variables` includes names bound in the selected declaration's
