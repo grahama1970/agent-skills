@@ -308,6 +308,10 @@ context for the containing declaration.
 Selected Python declaration headers contribute calls and literals but not
 body-local bindings; nested declaration headers still bind into the selected
 enclosing declaration's scope.
+Exact Python AST matches canonicalize record line ranges, code slices, hashes,
+and identity to the first syntactic decorator line, or to the declaration line
+when undecorated, regardless of whether Tree-sitter reports the decorator or
+definition line.
 
 ## Directory Filtering
 

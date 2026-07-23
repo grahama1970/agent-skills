@@ -1364,6 +1364,7 @@ def _extract_python_symbol_details(
 
     parent_symbol = _find_python_parent_symbol(tree, getattr(node, "lineno", start_line), node)
     return {
+        "start_line": _python_declaration_start(node),
         "end_line": getattr(node, "end_lineno", start_line),
         "docstring": ast.get_docstring(node) or "",
         "parameters": parameters,
@@ -1402,6 +1403,7 @@ def _build_code_symbol_record(
 
     if filepath.suffix == ".py":
         details = _extract_python_symbol_details(filepath, kind, name, start_line)
+        start_line = int(details.get("start_line") or start_line)
         end_line = int(details.get("end_line") or end_line)
         docstring = docstring or details.get("docstring", "")
         parent_symbol = parent_symbol or details.get("parent_symbol") or ""
