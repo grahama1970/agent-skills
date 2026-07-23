@@ -1143,7 +1143,7 @@ class _PythonLexicalCollector(ast.NodeVisitor):
     def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
         if node is not self.root:
             self._add_local_binding(node.name)
-        self._visit_function_header(node)
+        self._visit_function_header(node, suppress_bindings=node is self.root)
         if node is self.root:
             for statement in node.body:
                 self.visit(statement)
@@ -1151,7 +1151,7 @@ class _PythonLexicalCollector(ast.NodeVisitor):
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
         if node is not self.root:
             self._add_local_binding(node.name)
-        self._visit_function_header(node)
+        self._visit_function_header(node, suppress_bindings=node is self.root)
         if node is self.root:
             for statement in node.body:
                 self.visit(statement)
@@ -1159,7 +1159,7 @@ class _PythonLexicalCollector(ast.NodeVisitor):
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
         if node is not self.root:
             self._add_local_binding(node.name)
-        self._visit_class_header(node)
+        self._visit_class_header(node, suppress_bindings=node is self.root)
         if node is self.root:
             for statement in node.body:
                 self.visit(statement)
@@ -1244,22 +1244,37 @@ class _PythonLexicalCollector(ast.NodeVisitor):
     def _visit_function_header(
         self,
         node: ast.FunctionDef | ast.AsyncFunctionDef,
+        *,
+        suppress_bindings: bool = False,
     ) -> None:
+        visit = self._visit_binding_suppressed if suppress_bindings else self.visit
         for decorator in node.decorator_list:
-            self.visit(decorator)
-        self._visit_arguments(node.args)
+            visit(decorator)
+        self._visit_arguments(node.args, suppress_bindings=suppress_bindings)
         if node.returns is not None:
-            self.visit(node.returns)
+            visit(node.returns)
 
-    def _visit_class_header(self, node: ast.ClassDef) -> None:
+    def _visit_class_header(
+        self,
+        node: ast.ClassDef,
+        *,
+        suppress_bindings: bool = False,
+    ) -> None:
+        visit = self._visit_binding_suppressed if suppress_bindings else self.visit
         for decorator in node.decorator_list:
-            self.visit(decorator)
+            visit(decorator)
         for base in node.bases:
-            self.visit(base)
+            visit(base)
         for keyword in node.keywords:
-            self.visit(keyword.value)
+            visit(keyword.value)
 
-    def _visit_arguments(self, arguments: ast.arguments) -> None:
+    def _visit_arguments(
+        self,
+        arguments: ast.arguments,
+        *,
+        suppress_bindings: bool = False,
+    ) -> None:
+        visit = self._visit_binding_suppressed if suppress_bindings else self.visit
         ordered_args = [
             *arguments.posonlyargs,
             *arguments.args,
@@ -1272,12 +1287,12 @@ class _PythonLexicalCollector(ast.NodeVisitor):
 
         for arg in ordered_args:
             if arg.annotation is not None:
-                self.visit(arg.annotation)
+                visit(arg.annotation)
         for default in arguments.defaults:
-            self.visit(default)
+            visit(default)
         for default in arguments.kw_defaults:
             if default is not None:
-                self.visit(default)
+                visit(default)
 
     def _visit_comprehension(
         self,

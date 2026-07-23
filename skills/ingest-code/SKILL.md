@@ -305,6 +305,9 @@ Python comprehension iteration targets are excluded from the containing
 declaration's `local_variables`, while direct comprehension calls, literals,
 filters, iterables, result expressions, and walrus-bound names remain lexical
 context for the containing declaration.
+Selected Python declaration headers contribute calls and literals but not
+body-local bindings; nested declaration headers still bind into the selected
+enclosing declaration's scope.
 
 ## Directory Filtering
 
