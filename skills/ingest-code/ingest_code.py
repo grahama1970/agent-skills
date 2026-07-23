@@ -768,11 +768,7 @@ def extract_python_knowledge(filepath: Path, content: str) -> list[dict]:
             func_doc = ast.get_docstring(node) or ""
             if not func_doc and node.col_offset > 0:
                 continue  # Skip undocumented nested functions
-            args = _extract_func_args(node)
-            returns = _extract_return_annotation(node)
-            desc = f"{'async ' if isinstance(node, ast.AsyncFunctionDef) else ''}def {node.name}({args})"
-            if returns:
-                desc += f" -> {returns}"
+            desc = _python_declaration_signature(node).removesuffix(":")
             if func_doc:
                 desc += f"\n\n{func_doc[:800]}"
             if func_doc or node.col_offset == 0:
@@ -792,27 +788,6 @@ def _name_from_node(node) -> str:
     elif isinstance(node, ast.Attribute):
         return f"{_name_from_node(node.value)}.{node.attr}"
     return "?"
-
-
-def _extract_func_args(node) -> str:
-    """Extract function argument signature."""
-    args = []
-    for arg in node.args.args:
-        name = arg.arg
-        if name == "self":
-            continue
-        ann = ""
-        if arg.annotation:
-            ann = f": {_name_from_node(arg.annotation)}"
-        args.append(f"{name}{ann}")
-    return ", ".join(args[:8])  # Cap at 8 args for readability
-
-
-def _extract_return_annotation(node) -> str:
-    """Extract return type annotation."""
-    if node.returns:
-        return _name_from_node(node.returns)
-    return ""
 
 
 # ---------------------------------------------------------------------------
