@@ -747,11 +747,8 @@ def extract_python_knowledge(filepath: Path, content: str) -> list[dict]:
         if isinstance(node, ast.ClassDef):
             class_doc = ast.get_docstring(node) or ""
             methods = [n.name for n in node.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))]
-            bases = [_name_from_node(b) for b in node.bases]
             if class_doc or len(methods) >= 3:
-                desc = f"Class {node.name}"
-                if bases:
-                    desc += f" (inherits: {', '.join(bases)})"
+                desc = _python_declaration_signature(node).removesuffix(":")
                 desc += f"\nMethods: {', '.join(methods[:15])}"
                 if class_doc:
                     desc += f"\n\n{class_doc[:1000]}"

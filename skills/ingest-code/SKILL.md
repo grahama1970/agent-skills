@@ -267,9 +267,10 @@ these internal HTTP calls manually.
 | Markdown sections | Code-related architecture notes, decisions, and local docs |
 | TS/JS exports | Exported symbols and component names |
 
-Python functional-knowledge function signatures use the same one-line semantic
-AST signature renderer as exact code-symbol records, including argument kinds,
-defaults, annotations, async functions, and return annotations.
+Python functional-knowledge function and class declarations use the same
+one-line semantic AST signature renderer as exact code-symbol records,
+including argument kinds, defaults, annotations, async functions, return
+annotations, class bases, metaclasses, and class keyword arguments.
 
 ### CWE Metadata
 
