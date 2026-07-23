@@ -179,6 +179,7 @@ def test_qualified_tag_is_additive_and_selection_policy_is_unchanged(
         "run",
         "app",
         "qualified:Service.run",
+        "kind:method",
     ]
     assert "What does _private() do in app.py?" not in _problems(items)
 
