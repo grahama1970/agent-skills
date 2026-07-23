@@ -96,6 +96,10 @@ class ScanConfigError(ValueError):
     """The repository-local ingest scan configuration is invalid."""
 
 
+class FileDiscoveryError(RuntimeError):
+    """The codebase file set could not be determined safely."""
+
+
 def load_taxonomy_module():
     """Load the taxonomy module for bridge tag + CWE extraction."""
     taxonomy_paths = [
@@ -1582,16 +1586,42 @@ def _exit_invalid_scan_config(codebase_path: Path, exc: ScanConfigError) -> None
 
 def _is_git_repo(path: Path) -> bool:
     """Check if path is inside a git repository."""
+    git_marker = _nearest_git_marker(path)
     try:
         result = subprocess.run(
-            ["git", "rev-parse", "--git-dir"],
+            ["git", "rev-parse", "--is-inside-work-tree"],
             cwd=str(path),
             capture_output=True,
+            text=True,
             timeout=5,
         )
-        return result.returncode == 0
-    except Exception:
+    except (OSError, subprocess.SubprocessError) as exc:
+        if git_marker is not None:
+            raise FileDiscoveryError(f"git repository probe failed: {exc}") from exc
         return False
+
+    if result.returncode == 0 and result.stdout.strip() == "true":
+        return True
+    if git_marker is not None:
+        stderr = (result.stderr or "").strip()[:500]
+        detail = f"git repository probe failed with exit {result.returncode}"
+        if stderr:
+            detail = f"{detail}: {stderr}"
+        raise FileDiscoveryError(detail)
+    return False
+
+
+def _nearest_git_marker(path: Path) -> Path | None:
+    """Return the nearest .git marker at or above a path."""
+    try:
+        resolved = path.resolve()
+    except OSError:
+        return None
+    for directory in (resolved, *resolved.parents):
+        marker = directory / ".git"
+        if marker.exists():
+            return marker
+    return None
 
 
 def _normalize_scan_glob(pattern: str) -> str | None:
@@ -1653,11 +1683,15 @@ def _git_ls_files(codebase_path: Path, patterns: list[str]) -> list[Path]:
             text=True,
             timeout=60,
         )
-    except Exception:
-        return []
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise FileDiscoveryError(f"git ls-files failed: {exc}") from exc
 
     if result.returncode != 0:
-        return []
+        stderr = (result.stderr or "").strip()[:500]
+        detail = f"git ls-files failed with exit {result.returncode}"
+        if stderr:
+            detail = f"{detail}: {stderr}"
+        raise FileDiscoveryError(detail)
 
     files: list[Path] = []
     for line in result.stdout.splitlines():
@@ -1722,19 +1756,18 @@ def collect_files(codebase_path: Path, patterns: list[str], mtime_after: Optiona
     else:
         for pattern in normalized_patterns:
             try:
-                candidates = codebase_root.glob(pattern)
-            except (OSError, ValueError, NotImplementedError):
-                continue
-            for f in candidates:
-                if not f.is_file():
-                    continue
-                if not _path_is_within_scan_roots(f, scan_roots):
-                    continue
-                if _path_is_excluded(f, codebase_root, exclude_dirs):
-                    continue
-                if not _path_modified_at_or_after(f, mtime_after):
-                    continue
-                files.append(f)
+                for f in codebase_root.glob(pattern):
+                    if not f.is_file():
+                        continue
+                    if not _path_is_within_scan_roots(f, scan_roots):
+                        continue
+                    if _path_is_excluded(f, codebase_root, exclude_dirs):
+                        continue
+                    if not _path_modified_at_or_after(f, mtime_after):
+                        continue
+                    files.append(f)
+            except (OSError, ValueError, NotImplementedError) as exc:
+                raise FileDiscoveryError(f"non-git glob failed for pattern {pattern!r}: {exc}") from exc
 
     # Also include markdown docs at project root (always)
     for md_name in ["CONTEXT.md", "README.md", "CLAUDE.md", "MEMORY.md", "AGENTS.md"]:
@@ -1754,6 +1787,27 @@ def collect_files(codebase_path: Path, patterns: list[str], mtime_after: Optiona
                 files.append(md)
 
     return sorted(set(files))
+
+
+def _collect_files_or_exit(
+    codebase: Path,
+    patterns: list[str],
+    *,
+    mtime_after: datetime | None = None,
+) -> list[Path]:
+    """Collect files or emit the command-level discovery failure."""
+    try:
+        return collect_files(codebase, patterns, mtime_after=mtime_after)
+    except FileDiscoveryError as exc:
+        print(
+            json.dumps({
+                "error": "File discovery failed",
+                "codebase": str(codebase),
+                "detail": str(exc),
+            }),
+            file=sys.stderr,
+        )
+        raise SystemExit(1) from exc
 
 
 def enrich_with_taxonomy(items: list[dict], taxonomy_module) -> list[dict]:
@@ -1848,7 +1902,7 @@ def scan(
 
     # Collect files
     patterns = list(glob) if glob else DEFAULT_GLOB_PATTERNS
-    files = collect_files(path, patterns)
+    files = _collect_files_or_exit(path, patterns)
     print(f"Found {len(files)} files to scan in {path}", flush=True)
 
     # --- Phase 1: Functional knowledge extraction ---
@@ -2121,6 +2175,11 @@ def rescan(
     if mtime_threshold:
         print(f"Only files modified since: {mtime_threshold.isoformat()}")
 
+    discovered_codebases: list[tuple[Path, list[Path], frozenset[Path]]] = []
+    for path in resolved_codebases:
+        files = _collect_files_or_exit(path, DEFAULT_GLOB_PATTERNS, mtime_after=mtime_threshold)
+        discovered_codebases.append((path, files, _resolved_file_manifest(files, path)))
+
     memory_script = find_memory_skill()
     if not memory_script:
         print('{"error": "Memory skill not found"}', file=sys.stderr)
@@ -2133,9 +2192,7 @@ def rescan(
     verifiable_samples: list[dict[str, str]] = []
     pending_markers: list[dict[str, Any]] = []
 
-    for path in resolved_codebases:
-        files = collect_files(path, DEFAULT_GLOB_PATTERNS, mtime_after=mtime_threshold)
-        discovered_file_manifest = _resolved_file_manifest(files, path)
+    for path, files, discovered_file_manifest in discovered_codebases:
         print(f"Found {len(files)} files in {path}")
         codebase_knowledge = 0
         codebase_cwes = 0
