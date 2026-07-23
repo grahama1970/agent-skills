@@ -1056,24 +1056,48 @@ def _extract_configured_scan_roots(codebase_path: Path) -> list[Path]:
     return [codebase_path.resolve()]
 
 
-def _configured_exclude_dirs(codebase_root: Path) -> tuple[str, ...]:
-    """Return hardcoded and monitor-configured repository-relative exclusions."""
-    entries: list[str] = sorted(SKIP_DIRS)
-    config = _load_monitor_config(codebase_root)
-    raw_entries = config.get("exclude_dirs", []) if isinstance(config, dict) else []
-    if isinstance(raw_entries, list):
-        for raw in raw_entries:
-            if not isinstance(raw, str):
-                continue
-            entry = raw.strip().replace("\\", "/")
-            if not entry:
-                continue
-            candidate = Path(entry)
-            if candidate.is_absolute() or ".." in candidate.parts:
-                continue
+def _configured_exclude_entries(config: dict[str, Any]) -> tuple[str, ...]:
+    """Validate repository-relative exclude_dirs entries."""
+    if "exclude_dirs" not in config:
+        return ()
+
+    raw_entries = config["exclude_dirs"]
+    if not isinstance(raw_entries, list):
+        raise ScanConfigError("exclude_dirs must be a JSON array of strings")
+
+    entries: list[str] = []
+    for raw in raw_entries:
+        if not isinstance(raw, str):
+            raise ScanConfigError("exclude_dirs entries must be nonblank strings")
+
+        entry = raw.strip().replace("\\", "/")
+        while entry.startswith("./"):
+            entry = entry[2:]
+        entry = entry.rstrip("/")
+
+        if not entry or entry == "." or "\x00" in entry:
+            raise ScanConfigError(
+                "exclude_dirs entries must be nonblank repository-relative directory paths"
+            )
+
+        candidate = PurePosixPath(entry)
+        if candidate.is_absolute() or ".." in candidate.parts or re.match(r"^[A-Za-z]:/", entry):
+            raise ScanConfigError(f"unsafe exclude_dirs entry: {raw!r}")
+
+        if any(character in entry for character in "*?["):
+            raise ScanConfigError(f"exclude_dirs does not accept glob syntax: {raw!r}")
+
+        if entry not in entries:
             entries.append(entry)
 
-    return tuple(dict.fromkeys(entries))
+    return tuple(entries)
+
+
+def _configured_exclude_dirs(codebase_root: Path) -> tuple[str, ...]:
+    """Return hardcoded and monitor-configured repository-relative exclusions."""
+    config = _load_monitor_config(codebase_root)
+    configured = _configured_exclude_entries(config) if config is not None else ()
+    return tuple(dict.fromkeys([*sorted(SKIP_DIRS), *configured]))
 
 
 def _path_is_excluded(path: Path, codebase_root: Path, exclude_dirs: Sequence[str]) -> bool:
@@ -1658,8 +1682,11 @@ def _load_monitor_config(codebase_path: Path) -> Optional[dict[str, Any]]:
 def _preflight_scan_config(codebase_path: Path) -> None:
     """Validate repo-local scan configuration before external work starts."""
     config = _load_monitor_config(codebase_path)
-    if config and not (os.environ.get(SCAN_INCLUDE_DIRS_ENV) or "").strip():
+    if config is None:
+        return
+    if not (os.environ.get(SCAN_INCLUDE_DIRS_ENV) or "").strip():
         _configured_include_entries(config)
+    _configured_exclude_entries(config)
 
 
 def _exit_invalid_scan_config(codebase_path: Path, exc: ScanConfigError) -> None:

@@ -163,6 +163,10 @@ CODE_SYMBOLS_SCAN_INCLUDE_DIRS="src,scripts" \
 `.gitignore` and the hardcoded skip directories; the environment variable only
 overrides include roots.
 
+`exclude_dirs` must be a JSON array of nonblank repository-relative directory
+names or paths. Absolute paths, parent traversal, and glob syntax are invalid
+and exit with status 2 before scanning.
+
 ## Processing
 
 Current processing is local and command-driven:
@@ -250,7 +254,9 @@ The nightly pipeline calls `rescan` with scoped directories from `.monitor-codeb
 }
 ```
 
-The `exclude_dirs` list is additive — it supplements both `.gitignore` and the hardcoded skip directories.
+The `exclude_dirs` list is additive — it supplements both `.gitignore` and the
+hardcoded skip directories. Entries must be nonblank repository-relative
+directory names or paths, not absolute paths, parent traversal, or glob syntax.
 
 ## Output Format
 

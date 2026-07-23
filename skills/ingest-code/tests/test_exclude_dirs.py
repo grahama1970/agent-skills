@@ -138,7 +138,7 @@ def test_absolute_parent_directories_do_not_trigger_repository_exclusions(tmp_pa
     assert files == [keep]
 
 
-def test_unsafe_configured_exclude_entries_are_ignored(tmp_path: Path) -> None:
+def test_unsafe_configured_exclude_entries_are_rejected(tmp_path: Path) -> None:
     repo = tmp_path / "repo"
     keep = repo / "src" / "keep.py"
     keep.parent.mkdir(parents=True)
@@ -153,6 +153,5 @@ def test_unsafe_configured_exclude_entries_are_ignored(tmp_path: Path) -> None:
         ],
     }))
 
-    files = ingest_code.collect_files(repo, ["*.py"])
-
-    assert files == [keep]
+    with pytest.raises(ingest_code.ScanConfigError):
+        ingest_code.collect_files(repo, ["*.py"])
