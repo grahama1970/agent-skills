@@ -117,12 +117,13 @@ def main() -> int:
             snap = {s["document"]["_key"]: s["document"]
                     for s in proof["final_write_set_snapshot"]}
             mdoc = stored("persona_dream_commit_manifests", dream_commit) or {}
-            mhash = {e["key"]: e.get("payload_sha256") for e in mdoc.get("record_index", [])}
+            mhash = {e["key"]: e.get("payload_sha256") for e in mdoc.get("record_index", [])
+                     if e.get("collection") == "tom_candidates"}
             p15h = _load("phase15_dream_persistence")
             checked = 0
             ok_all = True
             for key, authored in snap.items():
-                if key not in mhash or "tom" not in str(key):
+                if key not in mhash:
                     continue
                 doc = stored("tom_candidates", key)
                 if not doc:

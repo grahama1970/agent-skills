@@ -1,0 +1,41 @@
+{
+  "dream_synopsis": "Embry dreams that the Lawson family ritual, the Hickam tide-running chart, and Kai\u2019s unanswered call fold into one room where every choice becomes a marked route. The dream heightens her guilt and relief: she keeps her face composed while the people she loves become competing points on the same impossible map.",
+  "panels": [
+    {
+      "action": "Kai\u2019s call pulses silently on Embry\u2019s phone as the recipe note stretches into a tide chart; Embry looks toward the door, then back to the family ritual, choosing not to step away.",
+      "mood": "guilty, suspended, intimate",
+      "panel_id": "sb_001",
+      "setting": "A dream-blended Lawson kitchen and garage, with the POINT/PATH/PEOPLE checklist pinned beside a steaming recipe note.",
+      "shot": "Foreground close-up of Embry Lawson, face fully visible, lit by the glow of a phone reminder; over her shoulder, Marketa Lawson and Embry\u2019s grandmother hover at a kitchen counter with a family recipe note while Tommy Lawson\u2019s silhouette waits near a garage doorway.",
+      "start_frame_description": "Embry stands in the foreground gripping her phone at chest height, her face visible and tense; Marketa is behind her measuring from the recipe note as if it were a map.",
+      "time_range": "0.0-2.5s"
+    },
+    {
+      "action": "Embry sketches the Hickam tide-and-running chart directly onto the OPEN FIRST space, and each line becomes a path leading either toward Kai\u2019s ringing phone or back to her family.",
+      "mood": "longing, pride, fragile trust",
+      "panel_id": "sb_002",
+      "setting": "A dream version of Hickam AFB and Ninole compressed into a packing room where the floor ripples like tidewater and the walls show sunrise, heat, water stops, and safe return points.",
+      "shot": "Foreground medium shot of Embry, face visible and intent, drawing lines across a blank OPEN FIRST box; Marketa Lawson stands beside her, watching with quiet recognition.",
+      "start_frame_description": "Embry\u2019s face is visible in profile-turned-front as she bends over the OPEN FIRST box with a marker; Marketa\u2019s hand rests near the edge of the box, not stopping her.",
+      "time_range": "2.5-5.0s"
+    },
+    {
+      "action": "Kai\u2019s voice asks why she is checking dates, but he appears only as a shadow on the far side of the paper paths; Embry says she is keeping records current while her eyes track signs of new orders.",
+      "mood": "concealed, watchful, aching",
+      "panel_id": "sb_003",
+      "setting": "A Ninole hallway that transforms into a records room, with transfer dates drifting like loose paper and the words POINT, PATH, PEOPLE rearranging themselves.",
+      "shot": "Foreground close-up of Embry\u2019s face reflected in a glossy checklist; behind her, Tommy Lawson takes a closed-door call while Marketa Lawson stops mid-planning with a calendar frozen open beyond the term.",
+      "start_frame_description": "Embry faces the viewer in the foreground, expression controlled, holding a pencil over transfer dates; Marketa is visible behind her, closing a planner without speaking.",
+      "time_range": "5.0-7.5s"
+    },
+    {
+      "action": "Embry finally speaks into the unanswered call, admitting she chose not to leave; the tide chart folds itself into the family recipe note and slides into the OPEN FIRST box as the phone light dims.",
+      "mood": "honest, mournful, relieved",
+      "panel_id": "sb_004",
+      "setting": "A synthetic threshold where the Lawson kitchen, Hickam shoreline, Ninole hallway, and garage doorway overlap under a charted sunrise.",
+      "shot": "Foreground frontal shot of Embry, face fully visible, standing between a glowing phone and the OPEN FIRST box; Marketa Lawson, Tommy Lawson, and the grandmother blur behind her into a single warm household shape.",
+      "start_frame_description": "Embry stands closest to the viewer, face visible with guilt and relief held together; behind her, Marketa watches as the recipe note and tide chart merge in midair.",
+      "time_range": "7.5-10.0s"
+    }
+  ]
+}

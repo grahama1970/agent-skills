@@ -1,0 +1,17 @@
+{
+  "frozen_at": "2026-07-23T10:25:29Z",
+  "frozen_before_dream_composition": true,
+  "negative_control": "Best soil conditions for growing tomatoes in a backyard vegetable garden.",
+  "negative_control_root_overlap": [],
+  "probes": [
+    "Embry skips Kai\u2019s call during a Lawson family ritual and later admits she chose to stay with family.",
+    "Embry puts a handmade Hickam tide and running chart into the OPEN FIRST moving box.",
+    "Embry notices signs of new orders after Ninole but hides the possibility from Kai until it is confirmed."
+  ],
+  "roots": [
+    "embry_age15_19_b02_memory_010",
+    "embry_age15_19_b02_memory_037",
+    "embry_age15_19_b03_memory_035"
+  ],
+  "schema": "persona_dream.cycle_instruments.v1"
+}

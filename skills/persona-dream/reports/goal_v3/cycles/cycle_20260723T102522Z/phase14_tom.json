@@ -1,0 +1,120 @@
+{
+  "accepted_count": 3,
+  "accepted_tom_candidates": [
+    {
+      "candidate_id": "tom-001",
+      "confidence": 0.48,
+      "emotional_intensity": 0.46,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-001",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age15_19_b02_memory_037",
+        "embry_age15_19_b02_memory_010"
+      ],
+      "statement": "Embry may experience Marketa as a steady supervisory family presence when Embry is working, planning, or managing outside contact.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "marketa",
+      "tom_state_type": "relationship_state",
+      "watch_observation_refs": [
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004",
+        "identity_temporal_continuity_review"
+      ]
+    },
+    {
+      "candidate_id": "tom-002",
+      "confidence": 0.42,
+      "emotional_intensity": 0.52,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-002",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age15_19_b02_memory_037",
+        "embry_age15_19_b03_memory_035"
+      ],
+      "statement": "Embry may hold a stance of accepting Marketa's practical family structure by remaining within the family work context and prioritizing planning, writing, and duty over immediate personal disclosure.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "marketa",
+      "tom_state_type": "stance",
+      "watch_observation_refs": [
+        "frame_0001",
+        "frame_0002",
+        "frame_0003"
+      ]
+    },
+    {
+      "candidate_id": "tom-003",
+      "confidence": 0.39,
+      "emotional_intensity": 0.43,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-003",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age15_19_b02_memory_010",
+        "embry_age15_19_b03_memory_035"
+      ],
+      "statement": "Embry may feel uncertain about how much Marketa sees, guides, or influences her planning around movement, safe return, and future obligations.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "marketa",
+      "tom_state_type": "uncertainty",
+      "watch_observation_refs": [
+        "frame_0002",
+        "frame_0003",
+        "frame_0004"
+      ]
+    }
+  ],
+  "candidate_receipts": [
+    {
+      "candidate_id": "tom-001",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-001",
+      "reasons": []
+    },
+    {
+      "candidate_id": "tom-002",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-002",
+      "reasons": []
+    },
+    {
+      "candidate_id": "tom-003",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-003",
+      "reasons": []
+    }
+  ],
+  "candidate_source": "llm_via_tau",
+  "canonical_memory_write_allowed": false,
+  "dream_id": "auto_cycle_20260723T102522Z",
+  "generated_at": "2026-07-23T10:42:59.901182+00:00",
+  "had_rejections": false,
+  "interpretation_sha256": "sha256:dbed47323523f5af722038e57d4b0bd5c69508c285f6613b306758e8361e4f37",
+  "live": true,
+  "live_route_attempted": true,
+  "live_route_failed": false,
+  "mocked": false,
+  "proposed_candidate_count": 3,
+  "rejected_count": 0,
+  "revision_id": "cycle_20260723T102522Z",
+  "run_id": "goal-v3",
+  "schema": "persona_dream.tom_validation_receipt.v1",
+  "status": "PASS_TOM_VALIDATION_LIVE",
+  "tau_routing": {
+    "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+    "http_status": 200,
+    "live_call_performed": true,
+    "model": "gpt-5.5",
+    "output_contract_sha256": "sha256:cdca7d6845ba5905353704db083e49ec40ce00451e5a60e2004b434b0a3fc5f6",
+    "prompt_sha256": "sha256:65a45abafcff3dd3df8d34504640e4a04136895ea9b6c90d5c701fee678b33ad",
+    "route": "tau:persona-dream-text-reasoning",
+    "status": "PASS",
+    "tau_receipt_schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "schema": "persona_dream.residue_links.v1",
+  "idea_id": "auto_cycle_20260723T102522Z",
+  "items": [
+    {
+      "collection": "persona_memory",
+      "persona_id": "embry",
+      "source_id": "embry_age15_19_b02_memory_037",
+      "source_path": "gmo:persona_memory/embry_age15_19_b02_memory_037",
+      "text": "Embry misses a Kai call during a Lawson family ritual and admits she chose not to leave.\nTommy needs help in the garage while Marketa and Embry's grandmother coordinate a recipe. Embry sees Kai's reminder and stays. Later she tells him the choice plainly.\npeople: Grandmother, Embry Lawson, Kai, Marketa Lawson, Tommy Lawson; objects: family recipe note, POINT/PATH/PEOPLE checklist\nSetting: age band 15-19. Situation: Embry misses a Kai call during a Lawson family ritual and admits she chose not to leave. Trigger: Family and Kai make simultaneous claims on her attention. Stakes: She tells Kai the truth about her choice.\nEmotions: guilt, longing, relief. Intensity: 4/5. Regulation: compartmentalization and concealment control. Conflict: \nTheory of mind: relationship: Embry acknowledges a competing loyalty rather than disguising the missed call as accidental. Trigger: Family and Kai make simultaneous claims on her attention. Consequence: She tells Kai the truth about her choice. | emotion: Embry feels guilt about disappointing Kai and relief that she did not fragment the family ritual. Trigger: Both relationships matter and cannot be served simultaneously. Consequence: She resists inventing a neutral excuse."
+    },
+    {
+      "collection": "persona_memory",
+      "persona_id": "embry",
+      "source_id": "embry_age15_19_b02_memory_010",
+      "source_path": "gmo:persona_memory/embry_age15_19_b02_memory_010",
+      "text": "Embry fills the reserved OPEN FIRST space with a hand-drawn Hickam tide-and-running chart.\nThe chart records sunrise, tide, heat, water stops, and safe return points. Marketa notices that the previously empty space now holds something created at this posting.\npeople: Embry Lawson, Kai, Marketa Lawson; places: Hickam AFB, Ninole; objects: OPEN FIRST box, hickam tide running chart, POINT/PATH/PEOPLE checklist\nSetting: Hickam AFB, Ninole. Situation: Embry fills the reserved OPEN FIRST space with a hand-drawn Hickam tide-and-running chart. Trigger: A stable week gives her dependable local knowledge. Stakes: She places the chart in the box for future moves.\nEmotions: guilt, longing, pride, trust. Intensity: 4/5. Regulation: compartmentalization and concealment control. Conflict: \nTheory of mind: goal: Embry wants a locally created object to enter the family's portable arrival ritual. Trigger: A stable week gives her dependable local knowledge. Consequence: She places the chart in the box for future moves. | belief: A place can contribute to identity before proving permanent. Trigger: The chart is useful and originates at Hickam. Consequence: Embry permits the posting to become a source rather than only a destination."
+    },
+    {
+      "collection": "persona_memory",
+      "persona_id": "embry",
+      "source_id": "embry_age15_19_b03_memory_035",
+      "source_path": "gmo:persona_memory/embry_age15_19_b03_memory_035",
+      "text": "Embry recognizes signs of new orders after Ninole but withholds the possibility from Kai until confirmation.\nTommy takes a closed-door call, and Marketa stops planning beyond the term. Kai asks why Embry is checking transfer dates. She says she is keeping records current.\npeople: Embry Lawson, kai, Marketa Lawson, Tommy Lawson; places: Ninole; events: confirmed orders to eglin; concepts: privacy\nSetting: Ninole. Situation: Embry recognizes signs of new orders after Ninole but withholds the possibility from Kai until confirmation. Trigger: Familiar signs suggest orders but reveal no destination or timing. Stakes: Embry withholds suspicion while gathering evidence.\nEmotions: guilt, longing. Intensity: 4/5. Regulation: compartmentalization and concealment control. Conflict: \nTheory of mind: belief: Sharing an unverified threat would create pain without actionable certainty. Trigger: Familiar signs suggest orders but reveal no destination or timing. Consequence: Embry withholds suspicion while gathering evidence. | relationship: Embry prioritizes certainty over Kai's opportunity to prepare alongside her. Trigger: He notices move-related behavior and asks directly. Consequence: She gives a true explanation that conceals its likely cause."
+    }
+  ]
+}

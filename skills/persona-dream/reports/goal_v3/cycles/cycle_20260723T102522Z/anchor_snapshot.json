@@ -1,0 +1,11 @@
+{
+  "anchors": {
+    "dream_dream_successor_943b01ecd9a3": "70950daadeb2160ed3c54a2aeabf407171e7be6299d5efa397b63657c9a47429",
+    "embry_age15_19_b02_memory_010": "1036c0cbf8b75d0fb4d209c6228cba155a62e65a33fb87a1dd0598d489ad031f",
+    "embry_age15_19_b02_memory_037": "b34852438852c936b284c79b52839775ad6695073077e662df2eae509ace8fac",
+    "embry_age15_19_b03_memory_035": "ce0c9cc1466819deacf3b8fe6cb12b2bf2852bd561ab24ab9eaeddd001c39c4e"
+  },
+  "collection": "persona_memory",
+  "created_at": "2026-07-23T10:25:22Z",
+  "schema": "persona_dream.pilot_m4_anchor_snapshot.v1"
+}
