@@ -2041,28 +2041,49 @@ def extract_python_imports(filepath: Path) -> list[dict]:
     return imports
 
 
-def build_module_index(files: list[Path], codebase_root: Path) -> dict[str, Path]:
-    """Build a mapping from Python module dotted path → file path."""
-    index: dict[str, Path] = {}
-    for fp in files:
-        if fp.suffix != ".py":
+def build_module_index(files: list[Path], codebase_root: Path) -> dict[str, tuple[Path, ...]]:
+    """Map each Python module alias to all matching repository files."""
+    root = codebase_root.resolve()
+    candidates: dict[str, set[Path]] = {}
+
+    for filepath in files:
+        if filepath.suffix != ".py":
             continue
         try:
-            rel = fp.relative_to(codebase_root)
-        except ValueError:
+            resolved = filepath.resolve(strict=True)
+            relative = resolved.relative_to(root)
+        except (OSError, RuntimeError, ValueError):
             continue
+
         # Convert path to module: src/extractor/pipeline/steps/s05.py → src.extractor.pipeline.steps.s05
-        parts = list(rel.parts)
+        parts = list(relative.parts)
         if parts[-1] == "__init__.py":
             parts = parts[:-1]
         else:
-            parts[-1] = parts[-1].replace(".py", "")
-        dotted = ".".join(parts)
-        index[dotted] = fp
+            parts[-1] = resolved.stem
+
+        if not parts:
+            continue
+
         # Also index without common prefixes (src.extractor → extractor)
-        for i in range(1, len(parts)):
-            index[".".join(parts[i:])] = fp
-    return index
+        for index in range(len(parts)):
+            alias = ".".join(parts[index:])
+            if alias:
+                candidates.setdefault(alias, set()).add(resolved)
+
+    return {
+        alias: tuple(sorted(paths, key=lambda path: path.as_posix()))
+        for alias, paths in sorted(candidates.items())
+    }
+
+
+def _resolve_unique_python_module(
+    module_index: dict[str, tuple[Path, ...]],
+    module: str,
+) -> Path | None:
+    """Return the only matching file for a Python import alias."""
+    candidates = module_index.get(module, ())
+    return candidates[0] if len(candidates) == 1 else None
 
 
 def extract_edges(
@@ -2085,8 +2106,8 @@ def extract_edges(
         for imp in imports:
             module = imp["module"]
             # Try to resolve to a file in this codebase
-            target = module_index.get(module)
-            if not target or target == filepath:
+            target = _resolve_unique_python_module(module_index, module)
+            if target is None or target == filepath.resolve():
                 continue  # External dep or self-import
             edges.append({
                 "from_file": str(filepath),
