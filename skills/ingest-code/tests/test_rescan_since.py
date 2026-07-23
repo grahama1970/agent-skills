@@ -105,7 +105,13 @@ def test_treesitter_store_filters_results_by_since_threshold(monkeypatch, tmp_pa
     monkeypatch.setattr(ingest_code, "CodeMemoryClient", lambda: FakeClient())
     monkeypatch.setattr(ingest_code, "_extract_symbol_context", fake_extract_symbol_context)
 
-    stored = ingest_code._store_treesitter_symbols_for_directory(src, repo, "test", mtime_after=threshold)
+    stored = ingest_code._store_treesitter_symbols_for_directory(
+        src,
+        repo,
+        "test",
+        allowed_files=frozenset({old_file.resolve(), new_file.resolve()}),
+        mtime_after=threshold,
+    )
 
     assert stored == 1
     assert [record.path for record in captured_records] == ["src/new.py"]
@@ -128,7 +134,15 @@ def test_rescan_passes_since_threshold_to_treesitter(monkeypatch, tmp_path: Path
         collect_thresholds.append(mtime_after)
         return []
 
-    def fake_store(scan_root: Path, codebase_root: Path, scope: str, verification_samples=None, *, mtime_after=None):
+    def fake_store(
+        scan_root: Path,
+        codebase_root: Path,
+        scope: str,
+        verification_samples=None,
+        *,
+        allowed_files,
+        mtime_after=None,
+    ):
         treesitter_thresholds.append(mtime_after)
         return 0
 

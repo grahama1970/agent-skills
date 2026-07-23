@@ -284,7 +284,13 @@ def test_treesitter_store_resolves_relative_scan_roots(monkeypatch, tmp_path: Pa
     monkeypatch.setattr(ingest_code, "CodeMemoryClient", lambda: FakeClient())
 
     samples: list[dict[str, str]] = []
-    stored = ingest_code._store_treesitter_symbols_for_directory(Path("repo"), Path("repo"), "test", samples)
+    stored = ingest_code._store_treesitter_symbols_for_directory(
+        Path("repo"),
+        Path("repo"),
+        "test",
+        samples,
+        allowed_files=frozenset({source.resolve()}),
+    )
 
     assert stored == 1
     assert samples[0]["name"] == "app"
@@ -342,7 +348,13 @@ def test_treesitter_verification_samples_use_exact_stored_records(monkeypatch, t
     monkeypatch.setattr(ingest_code, "CodeMemoryClient", lambda: FakeClient())
 
     samples: list[dict[str, str]] = []
-    stored = ingest_code._store_treesitter_symbols_for_directory(repo, repo, "test", samples)
+    stored = ingest_code._store_treesitter_symbols_for_directory(
+        repo,
+        repo,
+        "test",
+        samples,
+        allowed_files=frozenset({first.resolve(), second.resolve()}),
+    )
 
     assert stored == 1
     assert [record.symbol_name for record in captured_records] == ["first", "second"]
@@ -423,7 +435,12 @@ def test_treesitter_store_filters_uncontained_result_paths(monkeypatch, tmp_path
     monkeypatch.setattr(ingest_code.subprocess, "run", fake_run)
     monkeypatch.setattr(ingest_code, "CodeMemoryClient", lambda: FakeClient())
 
-    stored = ingest_code._store_treesitter_symbols_for_directory(src, repo, "test")
+    stored = ingest_code._store_treesitter_symbols_for_directory(
+        src,
+        repo,
+        "test",
+        allowed_files=frozenset({inside.resolve(), outside.resolve(), external.resolve(), escape.resolve()}),
+    )
 
     assert stored == 1
     assert [record.path for record in captured_records] == ["src/inside.py"]
@@ -446,7 +463,12 @@ def test_treesitter_store_rejects_scan_root_outside_codebase(monkeypatch, tmp_pa
     monkeypatch.setattr(ingest_code, "find_treesitter_skill", lambda: run_sh)
     monkeypatch.setattr(ingest_code.subprocess, "run", fake_run)
 
-    stored = ingest_code._store_treesitter_symbols_for_directory(external_root, repo, "test")
+    stored = ingest_code._store_treesitter_symbols_for_directory(
+        external_root,
+        repo,
+        "test",
+        allowed_files=frozenset(),
+    )
 
     assert stored == 0
     assert subprocess_was_called is False

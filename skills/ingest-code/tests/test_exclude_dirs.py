@@ -80,7 +80,12 @@ def _run_mocked_treesitter(monkeypatch, tmp_path: Path, repo: Path, keep: Path, 
     monkeypatch.setattr(ingest_code, "CodeMemoryClient", lambda: FakeClient())
     monkeypatch.setattr(ingest_code, "_extract_symbol_context", fake_extract_symbol_context)
 
-    stored = ingest_code._store_treesitter_symbols_for_directory(repo / "src", repo, "test")
+    stored = ingest_code._store_treesitter_symbols_for_directory(
+        repo / "src",
+        repo,
+        "test",
+        allowed_files=frozenset({keep.resolve(), skip.resolve()}),
+    )
     return stored, captured_records, context_paths
 
 

@@ -22,6 +22,7 @@ import re
 import subprocess
 import sys
 import threading
+from collections.abc import Collection
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -1158,12 +1159,34 @@ def _resolve_treesitter_result_path(raw_path: object, scan_root: Path) -> Path |
     return resolved_path if resolved_path.is_file() else None
 
 
+def _resolved_file_manifest(
+    files: Sequence[Path],
+    codebase_root: Path,
+) -> frozenset[Path]:
+    """Return canonical in-repository files eligible for this ingest run."""
+    root = codebase_root.resolve()
+    resolved_files: set[Path] = set()
+
+    for path in files:
+        try:
+            resolved = path.resolve(strict=True)
+            resolved.relative_to(root)
+        except (OSError, RuntimeError, ValueError):
+            continue
+
+        if resolved.is_file():
+            resolved_files.add(resolved)
+
+    return frozenset(resolved_files)
+
+
 def _store_treesitter_symbols_for_directory(
     directory: Path,
     codebase_root: Path,
     scope: str,
     verification_samples: Optional[list[dict[str, str]]] = None,
     *,
+    allowed_files: Collection[Path],
     mtime_after: datetime | None = None,
 ) -> int:
     """Scan one configured directory and upsert structured code symbols to memory."""
@@ -1227,6 +1250,7 @@ def _store_treesitter_symbols_for_directory(
     branch = _current_branch(resolved_codebase_root)
     commit = _current_commit(resolved_codebase_root)
     exclude_dirs = _configured_exclude_dirs(resolved_codebase_root)
+    allowed_file_paths = _resolved_file_manifest(tuple(allowed_files), resolved_codebase_root)
     records: list[CodeSymbolRecord] = []
     for file_entry in scan_results:
         file_path_raw = file_entry.get("path")
@@ -1244,6 +1268,8 @@ def _store_treesitter_symbols_for_directory(
                 file=sys.stderr,
                 flush=True,
             )
+            continue
+        if filepath not in allowed_file_paths:
             continue
         if _path_is_excluded(filepath, resolved_codebase_root, exclude_dirs):
             continue
@@ -1774,6 +1800,7 @@ def scan(
     code_symbols_stored = 0
     code_symbol_scan_roots: list[Path] = []
     completed_code_symbol_scan_roots: list[Path] = []
+    discovered_file_manifest = _resolved_file_manifest(files, path)
     if treesitter and code_index and not cwe_only:
         print("\n--- Phase 4: Upserting structured code symbols ---", flush=True)
         if dry_run:
@@ -1787,6 +1814,7 @@ def scan(
                     path,
                     scope,
                     verification_samples=verification_samples,
+                    allowed_files=discovered_file_manifest,
                 )
                 code_symbols_stored += root_stored
                 completed_code_symbol_scan_roots.append(scan_root)
@@ -1893,6 +1921,7 @@ def rescan(
 
     for path in resolved_codebases:
         files = collect_files(path, DEFAULT_GLOB_PATTERNS, mtime_after=mtime_threshold)
+        discovered_file_manifest = _resolved_file_manifest(files, path)
         print(f"Found {len(files)} files in {path}")
         codebase_knowledge = 0
         codebase_cwes = 0
@@ -1933,6 +1962,7 @@ def rescan(
                     path,
                     scope,
                     verification_samples=verifiable_samples,
+                    allowed_files=discovered_file_manifest,
                     mtime_after=mtime_threshold,
                 )
                 codebase_ts_symbols += root_stored
