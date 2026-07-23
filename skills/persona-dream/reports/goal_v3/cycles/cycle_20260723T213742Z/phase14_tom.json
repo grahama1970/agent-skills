@@ -1,0 +1,144 @@
+{
+  "accepted_count": 4,
+  "accepted_tom_candidates": [
+    {
+      "candidate_id": "tom-001",
+      "confidence": 0.58,
+      "emotional_intensity": 0.62,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-001",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age15_19_b01_memory_002"
+      ],
+      "statement": "Embry may want to reach Maya indirectly through a competent technical explanation or presentation, using rocket-related imagery as a substitute for an unsent communication.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "maya",
+      "tom_state_type": "desire",
+      "watch_observation_refs": [
+        "frame_0001",
+        "frame_0002",
+        "frame_0004"
+      ]
+    },
+    {
+      "candidate_id": "tom-002",
+      "confidence": 0.52,
+      "emotional_intensity": 0.71,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-002",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age15_19_b03_memory_002",
+        "embry_age15_19_b01_memory_002"
+      ],
+      "statement": "Embry may experience Maya as emotionally close but unreachable, preserved near rocket-related memory while remaining outside Embry's fully embodied present world.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "maya",
+      "tom_state_type": "relationship_state",
+      "watch_observation_refs": [
+        "frame_0003"
+      ]
+    },
+    {
+      "candidate_id": "tom-003",
+      "confidence": 0.49,
+      "emotional_intensity": 0.56,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-003",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age15_19_b01_memory_005",
+        "embry_age15_19_b01_memory_002"
+      ],
+      "statement": "Embry may fear that openly naming Maya or acknowledging the loss would weaken her controlled self-presentation, leading her to rely on formal and technical substitutes for direct emotion.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "maya",
+      "tom_state_type": "fear",
+      "watch_observation_refs": [
+        "frame_0002",
+        "frame_0004"
+      ]
+    },
+    {
+      "candidate_id": "tom-004",
+      "confidence": 0.46,
+      "emotional_intensity": 0.48,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-004",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age15_19_b01_memory_005",
+        "embry_age15_19_b03_memory_002"
+      ],
+      "statement": "Embry may believe that maintaining a competent role is the safest continuous identity for her to hold in relation to Maya's absence.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "maya",
+      "tom_state_type": "belief",
+      "watch_observation_refs": [
+        "identity_temporal_continuity_review",
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004"
+      ]
+    }
+  ],
+  "candidate_receipts": [
+    {
+      "candidate_id": "tom-001",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-001",
+      "reasons": []
+    },
+    {
+      "candidate_id": "tom-002",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-002",
+      "reasons": []
+    },
+    {
+      "candidate_id": "tom-003",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-003",
+      "reasons": []
+    },
+    {
+      "candidate_id": "tom-004",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-004",
+      "reasons": []
+    }
+  ],
+  "candidate_source": "llm_via_tau",
+  "canonical_memory_write_allowed": false,
+  "dream_id": "auto_cycle_20260723T213742Z",
+  "generated_at": "2026-07-23T21:51:11.470216+00:00",
+  "had_rejections": false,
+  "interpretation_sha256": "sha256:7575328a0eebb55a940285c366ebed283b0efda94544f2fca2dcc21ecb6d70de",
+  "live": true,
+  "live_route_attempted": true,
+  "live_route_failed": false,
+  "mocked": false,
+  "proposed_candidate_count": 4,
+  "rejected_count": 0,
+  "revision_id": "cycle_20260723T213742Z",
+  "run_id": "goal-v3",
+  "schema": "persona_dream.tom_validation_receipt.v1",
+  "status": "PASS_TOM_VALIDATION_LIVE",
+  "tau_routing": {
+    "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+    "http_status": 200,
+    "live_call_performed": true,
+    "model": "gpt-5.5",
+    "output_contract_sha256": "sha256:cdca7d6845ba5905353704db083e49ec40ce00451e5a60e2004b434b0a3fc5f6",
+    "prompt_sha256": "sha256:1c701ef0ac11b5b71604594da7d6042810959d9b9a1fc1b1c1a4b88eb48c4794",
+    "route": "tau:persona-dream-text-reasoning",
+    "status": "PASS",
+    "tau_receipt_schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1"
+  }
+}

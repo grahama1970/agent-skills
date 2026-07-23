@@ -1,0 +1,41 @@
+{
+  "dream_synopsis": "Embry dreams of a kitchen that is also a half-packed room, where a recipe call, a photograph, and a torn traveling afghan keep asking her to name what she is trying to protect. Kai is present through hands, texture, and food, while Grandmother Unresolved Nana Or Grammy gently turns every concealed edge into a visible mend.",
+  "panels": [
+    {
+      "action": "Embry steadies the bowl while Kai's hands enter from the side to fold the mixture; Grandmother Unresolved Nana Or Grammy asks who is holding the bowl, and Embry answers only that Kai is helping.",
+      "mood": "tender, guarded, quietly guilty",
+      "panel_id": "sb_001",
+      "setting": "A dream-kitchen blended with a moving-box corner, family recipe note pinned to an open cardboard flap.",
+      "shot": "Foreground close-up of Embry facing camera, her face fully visible, lit by the glow of a phone propped against a mixing bowl; Grandmother Unresolved Nana Or Grammy appears on the phone screen behind the bowl.",
+      "start_frame_description": "Embry's eyes flick between the phone screen and Kai's hands as flour hangs in the air like dust from a packed room.",
+      "time_range": "0.0-2.5s"
+    },
+    {
+      "action": "Embry asks whether the damaged row should vanish, but Grandmother Unresolved Nana Or Grammy reinforces the tear in a bright visible line, saying without words that the cloth held there.",
+      "mood": "aching, intimate, reparative",
+      "panel_id": "sb_002",
+      "setting": "The kitchen table has become a sewing table, with a moving-box staple caught in the torn edge of the family afghan.",
+      "shot": "Medium shot with Embry in the foreground, face visible in three-quarter view, clutching the traveling afghan against her chest; Grandmother Unresolved Nana Or Grammy sits behind her with a needle and contrasting strand.",
+      "start_frame_description": "Embry looks down at the snagged afghan, then up toward the viewer, shame and longing crossing her face as the contrasting thread begins to glow.",
+      "time_range": "2.5-5.0s"
+    },
+    {
+      "action": "Embry types Kai's name, deletes it, then types 'A friend here'; the saved photograph duplicates itself, one copy bright and one copy hidden under the afghan's visible mend.",
+      "mood": "conflicted, careful, grief-touched",
+      "panel_id": "sb_003",
+      "setting": "A dim counter where cooked greens steam beside the family recipe note and the mended afghan folded like a placemat.",
+      "shot": "Foreground close-up of Embry's face reflected in a phone screen; behind the reflection is a photograph of collards with Kai's hand holding a spoon, while Grandmother Unresolved Nana Or Grammy's text bubble asks who it is.",
+      "start_frame_description": "Embry's thumb hovers over the send button as her reflected mouth tightens, the word Kai briefly visible before it disappears.",
+      "time_range": "5.0-7.5s"
+    },
+    {
+      "action": "Kai's unseen hands pass Embry the spoon and the repaired edge at once; Embry does not name him, but she lets the objects remain together on the table as the visible mend stretches across the photograph like a border that holds instead of hides.",
+      "mood": "suspended, trusting, unresolved",
+      "panel_id": "sb_004",
+      "setting": "A synthetic family kitchen-room made of recipe paper, cardboard seams, and woven afghan threads, with no clear wall between private and public space.",
+      "shot": "Wide but intimate frontal shot with Embry in the foreground, face fully visible, seated between the glowing phone, the bowl, the collards, and the mended afghan; Grandmother Unresolved Nana Or Grammy appears both on the phone screen and as a soft figure at the table's far end.",
+      "start_frame_description": "Embry looks straight ahead, face open but uncertain, while the contrasting thread crosses the table toward the spoon and the phone screen waits in silence.",
+      "time_range": "7.5-10.0s"
+    }
+  ]
+}

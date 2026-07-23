@@ -1,0 +1,63 @@
+{
+  "schema": "persona_dream.memory_affect_profile.v0",
+  "derivation": "deterministic_lexicon_dream_free",
+  "compute_matched": false,
+  "weights": [
+    {
+      "emotional_tag": "warmth",
+      "weight": 0.538,
+      "evidence": [
+        {
+          "source_id": "embry_age15_19_b02_memory_022",
+          "keyword": "family"
+        },
+        {
+          "source_id": "embry_age15_19_b02_memory_022",
+          "keyword": "grandmother"
+        },
+        {
+          "source_id": "embry_age15_19_b02_memory_022",
+          "keyword": "recipe"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "yearning",
+      "weight": 0.308,
+      "evidence": [
+        {
+          "source_id": "embry_age15_19_b02_memory_022",
+          "keyword": "call"
+        },
+        {
+          "source_id": "embry_age15_19_b03_memory_003",
+          "keyword": "longing"
+        },
+        {
+          "source_id": "embry_age15_19_b03_memory_023",
+          "keyword": "wants"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "boundary",
+      "weight": 0.077,
+      "evidence": [
+        {
+          "source_id": "embry_age15_19_b02_memory_022",
+          "keyword": "boundary"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "reflection",
+      "weight": 0.077,
+      "evidence": [
+        {
+          "source_id": "embry_age15_19_b03_memory_003",
+          "keyword": "chooses"
+        }
+      ]
+    }
+  ]
+}

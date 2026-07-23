@@ -1,0 +1,41 @@
+{
+  "dream_synopsis": "Embry dreams of a quiet launch yard where safety rules become glowing lines on the ground and every mistake turns into a sequence she can follow. Tommy\u2019s calm voice and practiced hands transform fear into procedure: stop, make safe, repair what can be repaired.",
+  "panels": [
+    {
+      "action": "Tommy calmly names the launch rules\u2014angle, distance, eye protection, clear zone\u2014while Embry repeats the boundary back, her expression serious but trusting.",
+      "mood": "controlled, instructional, quietly safe",
+      "panel_id": "sb_001",
+      "setting": "A dreamlike Langley AFB backyard blended with a marked practice zone, the grass overlaid with luminous boundary lines and a clear-zone circle.",
+      "shot": "Foreground close-up of Embry Lawson facing camera, her face clearly visible behind oversized eye protection; Tommy Lawson stands just behind her shoulder, also visible, pointing toward a small launcher angled safely away.",
+      "start_frame_description": "Embry fills the foreground, looking toward the viewer with wide, attentive eyes; behind her, Tommy\u2019s hand hovers over the launcher without touching it, and glowing lines trace where bodies may stand.",
+      "time_range": "0.0-2.5s"
+    },
+    {
+      "action": "Embry freezes at the spill, and Tommy guides the three-part rule: stop, make safe, then repair what can be repaired. Embry carefully moves her hands away first, then begins sorting the harmless pieces inside the glowing boundary.",
+      "mood": "focused, guilty, reassured",
+      "panel_id": "sb_002",
+      "setting": "The same backyard shifts into a soft, dim workshop-like space, with the launch boundary still glowing around them as a safety perimeter.",
+      "shot": "Foreground medium close-up of Embry\u2019s face visible as she kneels beside a scattered spill of tiny screws that sparkle like stars; Tommy Lawson is beside her, calm and steady, holding one palm up in a stop gesture.",
+      "start_frame_description": "Embry\u2019s face is in the foreground, tense with guilt but listening; Tommy\u2019s calm profile is visible beside her as the screws float briefly before settling into neat little piles.",
+      "time_range": "2.5-5.0s"
+    },
+    {
+      "action": "A sudden bright streak crosses the sky without showing impact, and Embry is scared and bleeding; Tommy secures the space, gives simple concrete instructions, and calmly moves her toward the car.",
+      "mood": "frightened but contained, procedural, protective",
+      "panel_id": "sb_003",
+      "setting": "A dream-composite Langley AFB yard dissolving into the interior outline of a car, the glowing safety boundary bending into the shape of a road toward the emergency room.",
+      "shot": "Foreground close-up of Embry turned toward camera, her face visible and frightened, with one hand pressed safely against herself; Tommy Lawson appears in the background opening a car door with deliberate composure.",
+      "start_frame_description": "Embry dominates the frame, eyes wet and startled but fixed on Tommy\u2019s calm direction; behind her, the clear-zone lines fold inward like guardrails leading to the open car door.",
+      "time_range": "5.0-7.5s"
+    },
+    {
+      "action": "Embry watches the rules recombine around her: stop, make safe, repair what can be repaired. Tommy drives without panic, and the dream turns the road into a quiet procedure for surviving fear.",
+      "mood": "trusting, subdued, resilient",
+      "panel_id": "sb_004",
+      "setting": "Inside a car moving through a dreamlike night version of Langley AFB, the road marked by the same luminous safety boundary lines leading toward the ER.",
+      "shot": "Foreground close-up of Embry\u2019s face visible through the car window, calmer now, reflected with faint images of the launcher angle, sorted screws, and glowing boundary lines; Tommy Lawson is partially visible at the wheel, focused ahead.",
+      "start_frame_description": "Embry\u2019s face fills the foreground glass reflection, breathing steadying; Tommy\u2019s calm hands are visible on the wheel while the glowing road lines converge ahead.",
+      "time_range": "7.5-10.0s"
+    }
+  ]
+}

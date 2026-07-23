@@ -1,0 +1,71 @@
+{
+  "schema": "persona_dream.memory_affect_profile.v0",
+  "derivation": "deterministic_lexicon_dream_free",
+  "compute_matched": false,
+  "weights": [
+    {
+      "emotional_tag": "boundary",
+      "weight": 0.375,
+      "evidence": [
+        {
+          "source_id": "embry_age10_15_b01_memory_009",
+          "keyword": "boundary"
+        },
+        {
+          "source_id": "embry_age10_15_b01_memory_009",
+          "keyword": "limit"
+        },
+        {
+          "source_id": "embry_age10_15_b01_memory_004",
+          "keyword": "stays"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "warmth",
+      "weight": 0.312,
+      "evidence": [
+        {
+          "source_id": "embry_age10_15_b01_memory_009",
+          "keyword": "family"
+        },
+        {
+          "source_id": "embry_age10_15_b01_memory_009",
+          "keyword": "grandmother"
+        },
+        {
+          "source_id": "embry_age10_15_b01_memory_009",
+          "keyword": "shared"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "yearning",
+      "weight": 0.25,
+      "evidence": [
+        {
+          "source_id": "embry_age10_15_b01_memory_009",
+          "keyword": "call"
+        },
+        {
+          "source_id": "embry_age10_15_b01_memory_004",
+          "keyword": "longing"
+        },
+        {
+          "source_id": "embry_age10_15_b01_memory_004",
+          "keyword": "call"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "hesitance",
+      "weight": 0.062,
+      "evidence": [
+        {
+          "source_id": "embry_age10_15_b01_memory_004",
+          "keyword": "uncertain"
+        }
+      ]
+    }
+  ]
+}

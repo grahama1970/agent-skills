@@ -1,0 +1,41 @@
+{
+  "dream_synopsis": "Embry dreams that every torn thing in her small world\u2014the stuffed animal, the backpack, and the classroom paper model\u2014shares one bright seam. A grandmother whose name shifts between Nana and Grammy keeps appearing beside her, showing that keeping something can mean letting the repair be seen.",
+  "panels": [
+    {
+      "action": "Grandmother begins closing the stuffed animal\u2019s seam while Embry watches, fearful but still, as if afraid the toy might disappear if she looks away.",
+      "mood": "tender, anxious, cautiously comforting",
+      "panel_id": "sb_001",
+      "setting": "A softly distorted childhood room where the walls seem stitched from familiar fabric scraps.",
+      "shot": "Close foreground shot of Embry facing camera, eyes wide and anxious, clutching a beloved stuffed animal with an open seam; Grandmother sits just behind her, hands entering the frame with needle and thread.",
+      "start_frame_description": "Embry\u2019s face fills the foreground, lit by a warm sewing-lamp glow; the torn stuffed animal is pressed under her chin, and Grandmother\u2019s blurred but visible figure leans in behind her.",
+      "time_range": "0.0-2.5s"
+    },
+    {
+      "action": "Embry nods almost imperceptibly, choosing the patch instead of a new backpack, while Grandmother presses the fabric over the tear like a portable promise.",
+      "mood": "uncertain, intimate, quietly steady",
+      "panel_id": "sb_002",
+      "setting": "A dreamlike threshold between a kitchen table and a school hallway, with the table surface extending into a classroom floor.",
+      "shot": "Medium foreground shot of Embry facing camera with a torn backpack held against her chest; Grandmother stands beside her, partly behind, presenting a visible patch of familiar fabric.",
+      "start_frame_description": "Embry is foregrounded with her face visible and uncertain; the backpack tear gapes open, and Grandmother\u2019s hands hold a patterned patch near the rip.",
+      "time_range": "2.5-5.0s"
+    },
+    {
+      "action": "Embry\u2019s paper model tears, and after a flash of guilt she pulls tape across the rip, leaving the seam clear instead of hiding it or starting over.",
+      "mood": "tense, focused, privately brave",
+      "panel_id": "sb_003",
+      "setting": "A classroom near the end of class, desks stretching too long into the distance, paper models scattered like small fragile buildings.",
+      "shot": "Close foreground shot of Embry at a classroom desk, face visible in three-quarter view, with the repaired backpack patch glowing faintly at her side; Grandmother appears as a semi-transparent reflection in the desk surface.",
+      "start_frame_description": "Embry leans over the torn paper model in the foreground, lips pressed tight; the tape roll waits beside her hand, and Grandmother\u2019s reflected outline watches calmly from the tabletop.",
+      "time_range": "5.0-7.5s"
+    },
+    {
+      "action": "Embry presents the repaired model without hiding the tape, while the stuffed animal and backpack rest nearby, all visibly mended and still hers.",
+      "mood": "relieved, fragile, accepting",
+      "panel_id": "sb_004",
+      "setting": "The classroom dissolves back into the stitched room, with backpack fabric, toy thread, and paper tape forming one continuous visible seam across the background.",
+      "shot": "Frontal foreground shot of Embry holding the taped paper model up for view, her face visible and softened with relief; Grandmother stands behind her near the edge of the classroom light.",
+      "start_frame_description": "Embry stands in the foreground facing forward, the repaired paper model lifted at chest height; behind her, Grandmother smiles faintly beside the stitched wall.",
+      "time_range": "7.5-10.0s"
+    }
+  ]
+}

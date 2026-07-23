@@ -1,0 +1,17 @@
+{
+  "schema": "persona_dream.identity_face_embedding_subgate.v1",
+  "status": "FAIL",
+  "authority": "embedding_cosine",
+  "model": "insightface:buffalo_l:w600k_r50",
+  "reviewer_source": "insightface:buffalo_l:cosine",
+  "threshold": 0.421,
+  "failure_code": "FAIL_FACE_EMBEDDING_IDENTITY_MISMATCH",
+  "frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T210642Z/frames/sb_001.attempt_04.png",
+  "entity_results": [],
+  "blocking_findings": [
+    "FAIL_FACE_EMBEDDING_IDENTITY_MISMATCH: candidate detection error: No module named 'insightface'"
+  ],
+  "candidate_faces_detected": 0,
+  "mocked": false,
+  "live": true
+}

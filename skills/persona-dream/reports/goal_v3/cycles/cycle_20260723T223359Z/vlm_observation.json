@@ -1,0 +1,44 @@
+{
+  "raw": "{\"frames\":[{\"index\":1,\"people\":[\"A young woman in a navy shirt in the foreground looking toward the camera\",\"A second young woman in dark clothing seated behind her holding a translucent tablet\"],\"activity\":\"The two women appear to be reviewing technical information at a worktable with tools and rocket-related parts nearby.\",\"setting\":\"Outdoor workshop or test area at sunset with tables, equipment, vegetation, and a small rocket-like structure in the background.\",\"tone\":\"Focused and serious\"},{\"index\":2,\"people\":[\"A young woman in a navy shirt leaning over a rocket-shaped metal object\",\"A second young woman in a gray shirt pointing at fins on the object\"],\"activity\":\"They are examining or assembling a metallic model rocket or projectile on a workshop table.\",\"setting\":\"Indoor workshop with drafting diagrams, tools, parts, and workbenches visible.\",\"tone\":\"Concentrated and collaborative\"},{\"index\":3,\"people\":[\"A young woman in a navy shirt holding a clipboard in the foreground\",\"A second young woman in a gray shirt standing behind her with one hand on her hip and one hand on equipment\"],\"activity\":\"They appear to be checking or recording results on a marked outdoor field.\",\"setting\":\"Grassy field with white measurement lines, small markers, trees, and a fence in the background.\",\"tone\":\"Observant and evaluative\"},{\"index\":4,\"people\":[\"A young woman in a navy shirt in the foreground looking sideways\"],\"activity\":\"She is watching a rocket launch in the distance.\",\"setting\":\"Nighttime desert or open test range with a bright rocket plume rising from a launch pad.\",\"tone\":\"Dramatic and tense\"}]}",
+  "frames": [
+    {
+      "index": 1,
+      "people": [
+        "A young woman in a navy shirt in the foreground looking toward the camera",
+        "A second young woman in dark clothing seated behind her holding a translucent tablet"
+      ],
+      "activity": "The two women appear to be reviewing technical information at a worktable with tools and rocket-related parts nearby.",
+      "setting": "Outdoor workshop or test area at sunset with tables, equipment, vegetation, and a small rocket-like structure in the background.",
+      "tone": "Focused and serious"
+    },
+    {
+      "index": 2,
+      "people": [
+        "A young woman in a navy shirt leaning over a rocket-shaped metal object",
+        "A second young woman in a gray shirt pointing at fins on the object"
+      ],
+      "activity": "They are examining or assembling a metallic model rocket or projectile on a workshop table.",
+      "setting": "Indoor workshop with drafting diagrams, tools, parts, and workbenches visible.",
+      "tone": "Concentrated and collaborative"
+    },
+    {
+      "index": 3,
+      "people": [
+        "A young woman in a navy shirt holding a clipboard in the foreground",
+        "A second young woman in a gray shirt standing behind her with one hand on her hip and one hand on equipment"
+      ],
+      "activity": "They appear to be checking or recording results on a marked outdoor field.",
+      "setting": "Grassy field with white measurement lines, small markers, trees, and a fence in the background.",
+      "tone": "Observant and evaluative"
+    },
+    {
+      "index": 4,
+      "people": [
+        "A young woman in a navy shirt in the foreground looking sideways"
+      ],
+      "activity": "She is watching a rocket launch in the distance.",
+      "setting": "Nighttime desert or open test range with a bright rocket plume rising from a launch pad.",
+      "tone": "Dramatic and tense"
+    }
+  ]
+}

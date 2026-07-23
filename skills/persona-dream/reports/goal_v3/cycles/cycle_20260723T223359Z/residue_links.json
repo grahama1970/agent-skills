@@ -1,0 +1,27 @@
+{
+  "schema": "persona_dream.residue_links.v1",
+  "idea_id": "auto_cycle_20260723T223359Z",
+  "items": [
+    {
+      "collection": "persona_memory",
+      "persona_id": "embry",
+      "source_id": "embry_age04_10_b01_memory_046",
+      "source_path": "gmo:persona_memory/embry_age04_10_b01_memory_046",
+      "text": "By about age ten, Maya approaches Embry without mocking the scar and proposes building a small rocket together under shared safety rules.\nCandidate scene: Maya accepts the checklist but asks for divided roles and a stopping point. She treats Embry as a collaborator, not a fragile observer or sole safety officer.\npeople: Embry Lawson, Maya Chen; objects: bottle-rocket scar, POINT/PATH/PEOPLE checklist; concepts: belonging, boundary, safety boundary, work as emotional refuge\nSetting: age band 04-10. Situation: By about age ten, Maya approaches Embry without mocking the scar and proposes building a small rocket together under shared safety rules. Trigger: Maya offers a rocket project and respects the first safety boundary. Stakes: A cautious friendship forms around shared work rather than instant emotional disclosure.\nEmotions: longing, trust. Intensity: 4/5. Regulation: procedural verification. Conflict: \nTheory of mind: relationship: Embry wants Maya's friendship but tests whether closeness can coexist with bounded risk. Trigger: Maya offers a rocket project and respects the first safety boundary. Consequence: A cautious friendship forms around shared work rather than instant emotional disclosure."
+    },
+    {
+      "collection": "persona_memory",
+      "persona_id": "embry",
+      "source_id": "embry_age04_10_b01_memory_048",
+      "source_path": "gmo:persona_memory/embry_age04_10_b01_memory_048",
+      "text": "Embry and Maya complete a carefully supervised launch, with Embry using a finite checklist and allowing Maya to hold a real role; the balance between Precision and trust remains unresolved.\nCandidate scene: Embry checks the agreed safety conditions once with a shared verification, steps to the chosen distance, and does not demand certainty about every variable. The launch may succeed, but the deeper outcome is cautious belonging rather than cure.\npeople: Embry Lawson, Maya Chen; objects: bottle-rocket scar, POINT/PATH/PEOPLE checklist; concepts: belonging, Precision, safety boundary, trust, verification\nSetting: age band 04-10. Situation: Embry and Maya complete a carefully supervised launch, with Embry using a finite checklist and allowing Maya to hold a real role; the balance between Precision and trust remains unresolved. Trigger: Maya remains present through preparation, correction, and launch. Stakes: Precision begins shifting from solitary overcontrol toward bounded care, while the scar's meaning stays open.\nEmotions: fear, longing, trust, uncertainty. Intensity: 4/5. Regulation: procedural verification. Conflict: Embry can share risk and responsibility, but she has not stopped fearing irreversible error.\nTheory of mind: unresolved_thread: Embry can share risk and responsibility, but she has not stopped fearing irreversible error. Trigger: Maya remains present through preparation, correction, and launch. Consequence: Precision begins shifting from solitary overcontrol toward bounded care, while the scar's meaning stays open."
+    },
+    {
+      "collection": "persona_memory",
+      "persona_id": "embry",
+      "source_id": "embry_age04_10_b01_memory_047",
+      "source_path": "gmo:persona_memory/embry_age04_10_b01_memory_047",
+      "text": "During the build, Maya makes or notices a non-dangerous error, and the two repair it without abandoning the project or assigning blame.\nCandidate scene: a fin is misaligned or a measurement is copied incorrectly before launch. Maya names it, Embry pauses, they repair it, and both remain part of the work.\npeople: Embry Lawson, Maya Chen; concepts: repair, safety boundary, work as emotional refuge\nSetting: age band 04-10. Situation: During the build, Maya makes or notices a non-dangerous error, and the two repair it without abandoning the project or assigning blame. Trigger: A visible, non-dangerous build mistake occurs within agreed safety limits. Stakes: Repairable error becomes a shared relational experience instead of Embry's private burden.\nEmotions: anger, guilt, trust. Intensity: 4/5. Regulation: compartmentalization and concealment control. Conflict: \nTheory of mind: belief: Embry revises the belief that any error predicts catastrophe or exclusion. Trigger: A visible, non-dangerous build mistake occurs within agreed safety limits. Consequence: Repairable error becomes a shared relational experience instead of Embry's private burden."
+    }
+  ]
+}

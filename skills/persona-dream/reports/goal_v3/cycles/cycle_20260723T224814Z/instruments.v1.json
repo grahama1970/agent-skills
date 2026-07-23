@@ -1,0 +1,17 @@
+{
+  "frozen_at": "2026-07-23T22:48:19Z",
+  "frozen_before_dream_composition": true,
+  "negative_control": "How do coral reefs recover after ocean bleaching events",
+  "negative_control_root_overlap": [],
+  "probes": [
+    "Marketa keeps a first-night box accessible so temporary quarters work before unpacking",
+    "Embry uses a picture card with carry open first and later categories before a move",
+    "Marketa gives Embry the job of counting and labeling open-first moving boxes"
+  ],
+  "roots": [
+    "embry_age04_10_b01_memory_001",
+    "embry_age04_10_b01_memory_002",
+    "embry_age04_10_b01_memory_014"
+  ],
+  "schema": "persona_dream.cycle_instruments.v1"
+}

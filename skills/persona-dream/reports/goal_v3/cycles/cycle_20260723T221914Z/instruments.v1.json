@@ -1,0 +1,17 @@
+{
+  "frozen_at": "2026-07-23T22:19:22Z",
+  "frozen_before_dream_composition": true,
+  "negative_control": "best telescope settings for photographing Saturn\u2019s rings",
+  "negative_control_root_overlap": [],
+  "probes": [
+    "Embry\u2019s grandmother mends a torn stuffed animal seam instead of replacing it",
+    "Embry keeps using a torn backpack after Nana or Grammy patches it with familiar fabric",
+    "Embry tapes a ripped classroom paper model and turns it in rather than starting over"
+  ],
+  "roots": [
+    "embry_age04_10_b01_memory_007",
+    "embry_age04_10_b01_memory_018",
+    "embry_age04_10_b01_memory_029"
+  ],
+  "schema": "persona_dream.cycle_instruments.v1"
+}

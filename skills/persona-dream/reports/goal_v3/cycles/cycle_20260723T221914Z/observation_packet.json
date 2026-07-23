@@ -1,0 +1,89 @@
+{
+  "schema": "persona_dream.cycle_storyboard_observation_packet.v1",
+  "status": "ACCEPTED_STORYBOARD_OBSERVATION",
+  "evidence_origin": "storyboard_frames",
+  "evidence_class": "synthetic_dream",
+  "source_video_sha256": "sha256:d5fed6391ced7bfb4d56dd4725d445e640ef09aa90e69e946f026bbb256fa1ae",
+  "source_revision_id": "cycle_20260723T221914Z",
+  "frame_evidence": [
+    {
+      "index": 1,
+      "timestamp_seconds": 0.0,
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "panel_id": "sb_001",
+      "frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T221914Z/frames/sb_001.attempt_01.png",
+      "frame_sha256": "981750c436505390b96a3f30363da70366abd7730a92fe91365d7ca6566f4957",
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T221914Z/frames/sb_001.attempt_01.png",
+      "sha256": "981750c436505390b96a3f30363da70366abd7730a92fe91365d7ca6566f4957",
+      "observed_entities": [
+        "young woman in a navy shirt holding a teddy bear",
+        "older gray-haired woman behind her sewing or mending"
+      ]
+    },
+    {
+      "index": 2,
+      "timestamp_seconds": 2.5,
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "panel_id": "sb_002",
+      "frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T221914Z/frames/sb_002.attempt_01.png",
+      "frame_sha256": "72621b327126177ef7a47828ace213dc09222471c703ec5a499e913b43592aa4",
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T221914Z/frames/sb_002.attempt_01.png",
+      "sha256": "72621b327126177ef7a47828ace213dc09222471c703ec5a499e913b43592aa4",
+      "observed_entities": [
+        "older gray-haired woman seated beside a young woman",
+        "young woman in a navy shirt holding a blue backpack"
+      ]
+    },
+    {
+      "index": 3,
+      "timestamp_seconds": 5.0,
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "panel_id": "sb_003",
+      "frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T221914Z/frames/sb_003.attempt_01.png",
+      "frame_sha256": "28d08f78c8ce1c3d540733f682e38b053df28f779082e53cf7776f309c4fbe95",
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T221914Z/frames/sb_003.attempt_01.png",
+      "sha256": "28d08f78c8ce1c3d540733f682e38b053df28f779082e53cf7776f309c4fbe95",
+      "observed_entities": [
+        "young woman in a navy shirt at a table",
+        "older gray-haired woman visible in the background/reflection"
+      ]
+    },
+    {
+      "index": 4,
+      "timestamp_seconds": 7.5,
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "panel_id": "sb_004",
+      "frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T221914Z/frames/sb_004.attempt_01.png",
+      "frame_sha256": "2357b23975a66665d16a18c6353e0c72b478cb6a98ebdffd5017b90d8c7ae554",
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T221914Z/frames/sb_004.attempt_01.png",
+      "sha256": "2357b23975a66665d16a18c6353e0c72b478cb6a98ebdffd5017b90d8c7ae554",
+      "observed_entities": [
+        "young woman in a navy shirt holding a folded paper bird",
+        "older gray-haired woman standing in the background"
+      ]
+    }
+  ],
+  "transcript_facts": [],
+  "step_hooks": {
+    "step_36_identity_temporal_continuity": {
+      "identity_window_seconds": [
+        0.0,
+        10.0
+      ],
+      "vision_review": {
+        "model": "insightface:buffalo_l (authority) + gpt-5.5 montage (advisory)",
+        "verdict": "PASS",
+        "raw_output_tail": "all 4 frames passed ArcFace vs embry_contact_sheet_v3"
+      }
+    }
+  },
+  "coverage_gaps": [
+    "no audio track: storyboard frames are the visual artifact",
+    "no inter-frame motion",
+    "Grandmother identity advisory (no reference sheet)"
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "schema": "persona_dream.memory_affect_profile.v0",
+  "derivation": "deterministic_lexicon_dream_free",
+  "compute_matched": false,
+  "weights": [
+    {
+      "emotional_tag": "boundary",
+      "weight": 0.5,
+      "evidence": [
+        {
+          "source_id": "embry_age04_10_b01_memory_039",
+          "keyword": "boundary"
+        },
+        {
+          "source_id": "embry_age04_10_b01_memory_032",
+          "keyword": "boundary"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "warmth",
+      "weight": 0.25,
+      "evidence": [
+        {
+          "source_id": "embry_age04_10_b01_memory_032",
+          "keyword": "shared"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "yearning",
+      "weight": 0.25,
+      "evidence": [
+        {
+          "source_id": "embry_age04_10_b01_memory_032",
+          "keyword": "call"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "candidates_considered": 22,
+  "chosen": {
+    "cluster_id": "age04_10:person:marketa_lawson",
+    "selected": [
+      "embry_age04_10_b01_memory_001",
+      "embry_age04_10_b01_memory_014",
+      "embry_age04_10_b01_memory_002"
+    ]
+  },
+  "loop_guard_excluded_tainted_residue": 0,
+  "schema": "persona_dream.cycle_selection_receipt.v1",
+  "seed": "1c252d02141ae136d927a112b3160f2e5ca256197148833d8e7e0718e9f454c4",
+  "seed_source": "GOAL_V3.md sha256",
+  "skipped_already_used": 21
+}

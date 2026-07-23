@@ -1,0 +1,57 @@
+{
+  "dream_node_key": "dream_auto_cycle_20260723T220612Z",
+  "mapping": "frozen in scripts/dream_voice_weights.py (TOM_TO_VOICE)",
+  "persona_id": "embry",
+  "schema": "persona_dream.dream_voice_weight_profile.v1",
+  "synthesis_params": {
+    "temperature": 0.822
+  },
+  "tom_state_types": [
+    "belief",
+    "fear",
+    "relationship_state",
+    "trust"
+  ],
+  "weights": [
+    {
+      "emotional_tag": "warmth",
+      "pace": "relaxed",
+      "sources": [
+        {
+          "emotional_intensity": 0.68,
+          "statement": "Embry may trust Tommy as a steady safety figure who remains present and takes responsible action during a frightening incident.",
+          "tom_key": "dream:embry:auto_cycle_20260723T220612Z:tom:tom-001",
+          "tom_state_type": "trust"
+        }
+      ],
+      "tone": "warm_open",
+      "weight": 0.68
+    },
+    {
+      "emotional_tag": "reflection",
+      "pace": "measured",
+      "sources": [
+        {
+          "emotional_intensity": 0.55,
+          "statement": "Embry may believe Tommy responds to problems through practical care: stabilizing the situation, moving safely, and addressing what can be fixed.",
+          "tom_key": "dream:embry:auto_cycle_20260723T220612Z:tom:tom-002",
+          "tom_state_type": "belief"
+        },
+        {
+          "emotional_intensity": 0.52,
+          "statement": "Embry may experience her relationship with Tommy as one in which she is protected across a continuous, embodied event.",
+          "tom_key": "dream:embry:auto_cycle_20260723T220612Z:tom:tom-003",
+          "tom_state_type": "relationship_state"
+        },
+        {
+          "emotional_intensity": 0.74,
+          "statement": "Embry may fear that safety boundaries can still fail even when Tommy teaches or enforces them.",
+          "tom_key": "dream:embry:auto_cycle_20260723T220612Z:tom:tom-004",
+          "tom_state_type": "fear"
+        }
+      ],
+      "tone": "neutral_reflective",
+      "weight": 0.6033
+    }
+  ]
+}

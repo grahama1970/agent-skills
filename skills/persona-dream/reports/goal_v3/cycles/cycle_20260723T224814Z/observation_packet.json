@@ -1,0 +1,88 @@
+{
+  "schema": "persona_dream.cycle_storyboard_observation_packet.v1",
+  "status": "ACCEPTED_STORYBOARD_OBSERVATION",
+  "evidence_origin": "storyboard_frames",
+  "evidence_class": "synthetic_dream",
+  "source_video_sha256": "sha256:e2c597b9cb1eab9d9a7cfecf70b6be9525a92f59633d655b94e1b87834556dda",
+  "source_revision_id": "cycle_20260723T224814Z",
+  "frame_evidence": [
+    {
+      "index": 1,
+      "timestamp_seconds": 0.0,
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "panel_id": "sb_001",
+      "frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T224814Z/frames/sb_001.attempt_01.png",
+      "frame_sha256": "b1f4fd6ebef1732bcdffb5dee90114d0c0b1ab7eb5b76bcf3d3045c45d738b0b",
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T224814Z/frames/sb_001.attempt_01.png",
+      "sha256": "b1f4fd6ebef1732bcdffb5dee90114d0c0b1ab7eb5b76bcf3d3045c45d738b0b",
+      "observed_entities": [
+        "young woman in a navy shirt facing the camera",
+        "same or similar young woman kneeling by a cardboard box"
+      ]
+    },
+    {
+      "index": 2,
+      "timestamp_seconds": 2.5,
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "panel_id": "sb_002",
+      "frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T224814Z/frames/sb_002.attempt_01.png",
+      "frame_sha256": "0106ee5d5823e652163aab1160a5cef8d21133b33fc80b241e6960ad1ab0f4e6",
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T224814Z/frames/sb_002.attempt_01.png",
+      "sha256": "0106ee5d5823e652163aab1160a5cef8d21133b33fc80b241e6960ad1ab0f4e6",
+      "observed_entities": [
+        "young woman in a navy shirt holding a small card",
+        "middle-aged woman gesturing beside her"
+      ]
+    },
+    {
+      "index": 3,
+      "timestamp_seconds": 5.0,
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "panel_id": "sb_003",
+      "frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T224814Z/frames/sb_003.attempt_01.png",
+      "frame_sha256": "5d432dacc91720f210a14160a54943c5a6421b7584e1c3d51e60ea8d6dac3d5c",
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T224814Z/frames/sb_003.attempt_01.png",
+      "sha256": "5d432dacc91720f210a14160a54943c5a6421b7584e1c3d51e60ea8d6dac3d5c",
+      "observed_entities": [
+        "young woman in a navy shirt handling a large cardboard box",
+        "woman standing in the background"
+      ]
+    },
+    {
+      "index": 4,
+      "timestamp_seconds": 7.5,
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "panel_id": "sb_004",
+      "frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T224814Z/frames/sb_004.attempt_01.png",
+      "frame_sha256": "cdf895502138250c6a6d7b87fb0ea01c2446e87f609085df77049a9abae46ae5",
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T224814Z/frames/sb_004.attempt_01.png",
+      "sha256": "cdf895502138250c6a6d7b87fb0ea01c2446e87f609085df77049a9abae46ae5",
+      "observed_entities": [
+        "young woman in a navy shirt sitting near boxes"
+      ]
+    }
+  ],
+  "transcript_facts": [],
+  "step_hooks": {
+    "step_36_identity_temporal_continuity": {
+      "identity_window_seconds": [
+        0.0,
+        10.0
+      ],
+      "vision_review": {
+        "model": "insightface:buffalo_l (authority) + gpt-5.5 montage (advisory)",
+        "verdict": "PASS",
+        "raw_output_tail": "all 4 frames passed ArcFace vs embry_contact_sheet_v3"
+      }
+    }
+  },
+  "coverage_gaps": [
+    "no audio track: storyboard frames are the visual artifact",
+    "no inter-frame motion",
+    "Marketa Lawson identity advisory (no reference sheet)"
+  ]
+}

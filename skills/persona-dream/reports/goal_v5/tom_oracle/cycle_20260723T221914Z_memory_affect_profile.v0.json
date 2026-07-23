@@ -1,0 +1,59 @@
+{
+  "schema": "persona_dream.memory_affect_profile.v0",
+  "derivation": "deterministic_lexicon_dream_free",
+  "compute_matched": false,
+  "weights": [
+    {
+      "emotional_tag": "warmth",
+      "weight": 0.556,
+      "evidence": [
+        {
+          "source_id": "embry_age04_10_b01_memory_007",
+          "keyword": "grandmother"
+        },
+        {
+          "source_id": "embry_age04_10_b01_memory_007",
+          "keyword": "close"
+        },
+        {
+          "source_id": "embry_age04_10_b01_memory_029",
+          "keyword": "helps"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "hesitance",
+      "weight": 0.222,
+      "evidence": [
+        {
+          "source_id": "embry_age04_10_b01_memory_007",
+          "keyword": "uncertain"
+        },
+        {
+          "source_id": "embry_age04_10_b01_memory_029",
+          "keyword": "uncertain"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "yearning",
+      "weight": 0.111,
+      "evidence": [
+        {
+          "source_id": "embry_age04_10_b01_memory_018",
+          "keyword": "wants"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "reflection",
+      "weight": 0.111,
+      "evidence": [
+        {
+          "source_id": "embry_age04_10_b01_memory_029",
+          "keyword": "chooses"
+        }
+      ]
+    }
+  ]
+}

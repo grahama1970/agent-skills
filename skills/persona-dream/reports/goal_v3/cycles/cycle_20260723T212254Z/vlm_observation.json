@@ -1,0 +1,49 @@
+{
+  "raw": "{\"frames\":[{\"index\":1,\"people\":[\"young woman in navy shirt holding a metal mixing bowl\",\"partial view of another person's arm stirring or reaching into the bowl\",\"older woman visible on a smartphone screen\"],\"activity\":\"The young woman sits at a kitchen table with cardboard boxes around her while someone mixes or handles ingredients in the bowl; a video call is open on a phone.\",\"setting\":\"bright home kitchen with moving boxes, sink, window, and tabletop items\",\"tone\":\"quiet, focused, transitional\"},{\"index\":2,\"people\":[\"young woman in navy shirt holding a crocheted blanket\",\"older woman seated behind her crocheting\"],\"activity\":\"The young woman looks forward while clutching a handmade blanket; the older woman works with yarn in the background.\",\"setting\":\"warm kitchen or dining area with craft supplies, yarn, and home decor\",\"tone\":\"somber, intimate, reflective\"},{\"index\":3,\"people\":[\"young woman in navy shirt looking down at a phone\",\"woman visible on the phone screen\",\"older woman visible in a framed photograph\"],\"activity\":\"The young woman studies a phone near a table covered with notes, printed photos, greens, a bowl, and a steaming pan of food.\",\"setting\":\"dim rustic kitchen or worktable area with cooking ingredients, photographs, and handmade textile\",\"tone\":\"serious, investigative, contemplative\"},{\"index\":4,\"people\":[\"young woman in navy shirt seated at a table\",\"older woman in the background seated at another table\",\"older woman visible on a smartphone screen\",\"partial view of another person's hand at the table\"],\"activity\":\"The young woman sits at a mosaic-like table with papers, a spoon, a blanket, and greens while a video call phone stands nearby and others are present around the room.\",\"setting\":\"earth-toned rustic interior with tiled or stone walls, wooden chairs, and a dining/work table\",\"tone\":\"tense, thoughtful, subdued\"}]}",
+  "frames": [
+    {
+      "index": 1,
+      "people": [
+        "young woman in navy shirt holding a metal mixing bowl",
+        "partial view of another person's arm stirring or reaching into the bowl",
+        "older woman visible on a smartphone screen"
+      ],
+      "activity": "The young woman sits at a kitchen table with cardboard boxes around her while someone mixes or handles ingredients in the bowl; a video call is open on a phone.",
+      "setting": "bright home kitchen with moving boxes, sink, window, and tabletop items",
+      "tone": "quiet, focused, transitional"
+    },
+    {
+      "index": 2,
+      "people": [
+        "young woman in navy shirt holding a crocheted blanket",
+        "older woman seated behind her crocheting"
+      ],
+      "activity": "The young woman looks forward while clutching a handmade blanket; the older woman works with yarn in the background.",
+      "setting": "warm kitchen or dining area with craft supplies, yarn, and home decor",
+      "tone": "somber, intimate, reflective"
+    },
+    {
+      "index": 3,
+      "people": [
+        "young woman in navy shirt looking down at a phone",
+        "woman visible on the phone screen",
+        "older woman visible in a framed photograph"
+      ],
+      "activity": "The young woman studies a phone near a table covered with notes, printed photos, greens, a bowl, and a steaming pan of food.",
+      "setting": "dim rustic kitchen or worktable area with cooking ingredients, photographs, and handmade textile",
+      "tone": "serious, investigative, contemplative"
+    },
+    {
+      "index": 4,
+      "people": [
+        "young woman in navy shirt seated at a table",
+        "older woman in the background seated at another table",
+        "older woman visible on a smartphone screen",
+        "partial view of another person's hand at the table"
+      ],
+      "activity": "The young woman sits at a mosaic-like table with papers, a spoon, a blanket, and greens while a video call phone stands nearby and others are present around the room.",
+      "setting": "earth-toned rustic interior with tiled or stone walls, wooden chairs, and a dining/work table",
+      "tone": "tense, thoughtful, subdued"
+    }
+  ]
+}

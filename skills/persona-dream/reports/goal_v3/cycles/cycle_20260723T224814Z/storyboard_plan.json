@@ -1,0 +1,41 @@
+{
+  "dream_synopsis": "Embry dreams of a temporary room made of stacked moving boxes, where the only steady light comes from an OPEN FIRST box. As Marketa turns uncertainty into picture categories and labels, the room rearranges itself into a small portable home that Embry can verify one step at a time.",
+  "panels": [
+    {
+      "action": "Marketa opens the OPEN FIRST box before any decorative boxes, and warm lamplight spreads across the floor like a boundary for safety.",
+      "mood": "quiet relief, low-intensity uncertainty becoming manageable",
+      "panel_id": "sb_001",
+      "setting": "A dreamlike temporary quarters room, half-formed from plain moving boxes, with bedding, toiletries, a lamp, and one familiar comfort object glowing softly inside the open box.",
+      "shot": "Foreground close-up of Embry Lawson facing camera, her eyes wide but calm; Marketa Lawson is visible behind her kneeling beside a clearly marked OPEN FIRST box.",
+      "start_frame_description": "Embry stands in the foreground with her face fully visible, hands near her chest, watching Marketa lift the box flaps as the larger shipment looms in soft, indistinct stacks behind them.",
+      "time_range": "0.0-2.5s"
+    },
+    {
+      "action": "Marketa gives Embry the picture card, and the dream turns the categories into visible shelves where confusing packed objects sort themselves without urgency.",
+      "mood": "procedural calm, uncertainty divided into steps",
+      "panel_id": "sb_002",
+      "setting": "The boxed room stretches into three floating lanes labeled carry, open first, and later, each lane drawn like a simple child\u2019s checklist path.",
+      "shot": "Medium shot with Embry foreground, face visible in three-quarter view, holding a picture card; Marketa stands beside her, pointing gently to three symbols.",
+      "start_frame_description": "Embry\u2019s face is clearly visible as she studies the card; Marketa\u2019s hand hovers near the carry, open first, and later categories, not rushing her to feel settled.",
+      "time_range": "2.5-5.0s"
+    },
+    {
+      "action": "Embry counts the boxes designated to open first and places labels on them, each label making a soft click as the room becomes easier to read.",
+      "mood": "small competence, participation replacing helplessness",
+      "panel_id": "sb_003",
+      "setting": "A corridor of boxes in the temporary room, each blank until Embry counts it and gives it a label; the POINT/PATH/PEOPLE checklist floats faintly like a guide above the floor.",
+      "shot": "Foreground close-up of Embry facing camera, concentrating as she presses a bright OPEN FIRST label onto a box; Marketa is partially visible in the background watching.",
+      "start_frame_description": "Embry\u2019s face is fully visible, brows slightly knit with focus, one hand holding the label and the other resting on the box edge while Marketa remains nearby as a steady presence.",
+      "time_range": "5.0-7.5s"
+    },
+    {
+      "action": "Embry checks the final category on the picture card, and the labeled boxes settle into a complete first-night arrangement around her.",
+      "mood": "settled relief, continuity packed and reopened",
+      "panel_id": "sb_004",
+      "setting": "The temporary quarters have transformed into a portable home made from labeled boxes, with bedding unfolded, toiletries aligned, the lamp on, and the familiar comfort object placed within reach.",
+      "shot": "Centered medium close-up of Embry in the foreground, face visible and softly lit by the lamp; Marketa is not in frame, but the organized boxes surround Embry like walls of a tiny room.",
+      "start_frame_description": "Embry looks directly ahead with a relieved expression, holding the completed picture checklist while the OPEN FIRST box glows beside her like an anchor.",
+      "time_range": "7.5-10.0s"
+    }
+  ]
+}

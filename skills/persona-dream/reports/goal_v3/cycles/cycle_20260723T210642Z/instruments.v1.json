@@ -1,0 +1,17 @@
+{
+  "frozen_at": "2026-07-23T21:06:46Z",
+  "frozen_before_dream_composition": true,
+  "negative_control": "best practices for calibrating industrial wind turbine blade sensors",
+  "negative_control_root_overlap": [],
+  "probes": [
+    "Embry lets Kai join her grandmother\u2019s recipe call but doesn\u2019t correct the friend label",
+    "Grandmother repairs Embry\u2019s torn traveling afghan with a visible contrasting mend",
+    "Embry sends grandmother a photo of Kai\u2019s collards but identifies him only as a school friend"
+  ],
+  "roots": [
+    "embry_age15_19_b02_memory_022",
+    "embry_age15_19_b03_memory_003",
+    "embry_age15_19_b03_memory_023"
+  ],
+  "schema": "persona_dream.cycle_instruments.v1"
+}

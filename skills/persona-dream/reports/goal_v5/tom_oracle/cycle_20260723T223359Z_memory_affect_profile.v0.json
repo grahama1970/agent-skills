@@ -1,0 +1,75 @@
+{
+  "schema": "persona_dream.memory_affect_profile.v0",
+  "derivation": "deterministic_lexicon_dream_free",
+  "compute_matched": false,
+  "weights": [
+    {
+      "emotional_tag": "boundary",
+      "weight": 0.333,
+      "evidence": [
+        {
+          "source_id": "embry_age04_10_b01_memory_046",
+          "keyword": "boundary"
+        },
+        {
+          "source_id": "embry_age04_10_b01_memory_048",
+          "keyword": "boundary"
+        },
+        {
+          "source_id": "embry_age04_10_b01_memory_048",
+          "keyword": "stays"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "warmth",
+      "weight": 0.333,
+      "evidence": [
+        {
+          "source_id": "embry_age04_10_b01_memory_046",
+          "keyword": "together"
+        },
+        {
+          "source_id": "embry_age04_10_b01_memory_046",
+          "keyword": "shared"
+        },
+        {
+          "source_id": "embry_age04_10_b01_memory_046",
+          "keyword": "close"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "yearning",
+      "weight": 0.2,
+      "evidence": [
+        {
+          "source_id": "embry_age04_10_b01_memory_046",
+          "keyword": "longing"
+        },
+        {
+          "source_id": "embry_age04_10_b01_memory_046",
+          "keyword": "wants"
+        },
+        {
+          "source_id": "embry_age04_10_b01_memory_048",
+          "keyword": "longing"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "hesitance",
+      "weight": 0.133,
+      "evidence": [
+        {
+          "source_id": "embry_age04_10_b01_memory_048",
+          "keyword": "uncertain"
+        },
+        {
+          "source_id": "embry_age04_10_b01_memory_047",
+          "keyword": "pause"
+        }
+      ]
+    }
+  ]
+}

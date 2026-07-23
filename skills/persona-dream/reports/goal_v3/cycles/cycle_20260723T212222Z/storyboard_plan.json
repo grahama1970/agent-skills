@@ -1,0 +1,41 @@
+{
+  "dream_synopsis": "Embry dreams of a kitchen that is also a moving box, where a recipe call, a saved photograph, and a torn traveling afghan fold into one ritual of naming and repair. Each time Grandmother Unresolved Nana Or Grammy asks who is helping, Embry lets Kai\u2019s hands enter the family work but keeps his place covered by softer words, while the cloth answers with a visible contrasting mend.",
+  "panels": [
+    {
+      "action": "Kai\u2019s hands hold the bowl from just behind Embry, stirring as Grandmother Unresolved Nana Or Grammy asks who is holding it; Embry answers that Kai is helping, then presses her lips together when the word friend floats from the phone like steam.",
+      "mood": "tender, guilty, guarded",
+      "panel_id": "sb_001",
+      "setting": "A small kitchen made of stacked moving boxes; a mixing bowl rests on a family recipe note, and the traveling afghan hangs like a curtain behind Embry.",
+      "shot": "Close foreground portrait of Embry facing camera, her face fully visible, with a glowing phone screen beside her cheek showing Grandmother Unresolved Nana Or Grammy on a recipe call.",
+      "start_frame_description": "Embry\u2019s face is lit by the phone and bowl, eyes lowered in concentration; Grandmother Unresolved Nana Or Grammy\u2019s face fills the screen, and Kai\u2019s hands are visible at the bowl without his full body being defined.",
+      "time_range": "0.0-2.5s"
+    },
+    {
+      "action": "Embry lifts the torn row as if asking whether to remove it, but Grandmother Unresolved Nana Or Grammy threads a bright contrasting strand through the damage, making the mend deliberately visible.",
+      "mood": "quietly aching, restorative",
+      "panel_id": "sb_002",
+      "setting": "The kitchen floor has become a flattened moving box; a metal staple glints where it has snagged the afghan\u2019s edge.",
+      "shot": "Medium shot with Embry in the foreground, face visible in three-quarter view, kneeling over the traveling afghan while Grandmother Unresolved Nana Or Grammy sits just behind her.",
+      "start_frame_description": "Embry\u2019s face shows shame and longing as she holds the torn cloth toward the viewer; Grandmother Unresolved Nana Or Grammy\u2019s hands enter the tear with a needle and a strand that does not match.",
+      "time_range": "2.5-5.0s"
+    },
+    {
+      "action": "Embry tries to send a photograph of Kai\u2019s collards; the typed name 'Kai' appears, erases itself, and becomes 'A friend here,' while a separate copy of the image slides under the afghan\u2019s contrasting mend.",
+      "mood": "grieving, controlled, intimate",
+      "panel_id": "sb_003",
+      "setting": "A table set with collards, the family recipe note, and the repaired afghan folded beneath the plate like a placemat.",
+      "shot": "Over-the-shoulder digital close-up, but Embry remains foregrounded with her face visible reflected in the phone screen.",
+      "start_frame_description": "Embry\u2019s reflected face hovers over the message field, eyes wet but controlled; in the photo, a spoon is held by Kai\u2019s hand, and Grandmother Unresolved Nana Or Grammy\u2019s question about who is holding it waits unanswered at the top of the screen.",
+      "time_range": "5.0-7.5s"
+    },
+    {
+      "action": "Grandmother Unresolved Nana Or Grammy holds up the visibly mended afghan like a backdrop; Kai\u2019s hands offer the bowl from the side, and Embry allows both the bowl and the repair into frame but leaves the label unspoken as the word friend settles gently on the cloth.",
+      "mood": "loving, unresolved, softly tense",
+      "panel_id": "sb_004",
+      "setting": "The kitchen, phone call, photograph, recipe note, moving box, collards, bowl, and traveling afghan merge into a single suspended family ritual space.",
+      "shot": "Wide dream tableau with Embry large in the foreground, face fully visible, looking toward the viewer while the others remain arranged behind her.",
+      "start_frame_description": "Embry stands front and center, face illuminated by warm kitchen light, with the contrasting mend crossing the space behind her; Grandmother Unresolved Nana Or Grammy is clearly present holding the afghan, and Kai is present only through helping hands at the bowl.",
+      "time_range": "7.5-10.0s"
+    }
+  ]
+}

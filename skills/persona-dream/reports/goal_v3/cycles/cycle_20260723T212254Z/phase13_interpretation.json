@@ -1,0 +1,392 @@
+{
+  "accepted_interpretations": [
+    {
+      "alternative_explanation": "The renderer may have simply combined visual motifs from recipe calls, phone screens, and table scenes without encoding any specific anxiety about relationship disclosure.",
+      "cites_renderer_review": false,
+      "confidence": 0.58,
+      "emotional_intensity": 0.62,
+      "favored_explanation": "psychological",
+      "interpretation_id": "interpretation-001",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "frame_0001",
+        "frame_0003",
+        "frame_0004"
+      ],
+      "source_memory_refs": [
+        "embry_age15_19_b02_memory_022",
+        "embry_age15_19_b03_memory_023"
+      ],
+      "statement": "Embry may feel unresolved about how openly to define Kai to her grandmother: the bowl/phone/table imagery repeats situations where Kai-like participation is visible to the grandmother while Embry keeps the relationship label indirect.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "grandmother",
+      "tom_state_type": "uncertainty",
+      "uncertainty": "The rendered frames do not identify the partial arm or hand as Kai, and there is no audio or text showing what Embry says in the scene."
+    },
+    {
+      "alternative_explanation": "The blanket and crocheting may be a generic visual substitution for the afghan-repair memory rather than a symbol of emotional repair or trust.",
+      "cites_renderer_review": false,
+      "confidence": 0.51,
+      "emotional_intensity": 0.55,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-002",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "frame_0002"
+      ],
+      "source_memory_refs": [
+        "embry_age15_19_b03_memory_003"
+      ],
+      "statement": "Embry may experience her grandmother as a safe witness to imperfect or mended parts of family life, suggested by the crocheted blanket/afghan imagery and the grandmother crocheting behind her.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "grandmother",
+      "tom_state_type": "trust",
+      "uncertainty": "The observation names a crocheted blanket rather than definitively the traveling afghan, and the grandmother identity remains advisory rather than reference-confirmed."
+    },
+    {
+      "alternative_explanation": "Because there is no inter-frame motion or audio, the images may be a static storyboard montage of memory elements rather than a psychologically meaningful structure about distance.",
+      "cites_renderer_review": false,
+      "confidence": 0.64,
+      "emotional_intensity": 0.48,
+      "favored_explanation": "psychological",
+      "interpretation_id": "interpretation-003",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004"
+      ],
+      "source_memory_refs": [
+        "embry_age15_19_b02_memory_022",
+        "embry_age15_19_b03_memory_003",
+        "embry_age15_19_b03_memory_023"
+      ],
+      "statement": "Embry's relationship to her grandmother may be mediated by distance and artifacts: phone screens, photographs, bowls, and textile objects suggest a bond maintained through shared domestic practices rather than direct co-presence.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "grandmother",
+      "tom_state_type": "relationship_state",
+      "uncertainty": "The frames alternate between grandmother on a phone screen, in the background, and in a framed photograph, so it is unclear whether the dream intends literal co-presence, memory, or montage."
+    },
+    {
+      "alternative_explanation": "The continuity result may only indicate successful character rendering, while the repeated grandmother-related objects and screens are context assembly from source memories.",
+      "cites_renderer_review": true,
+      "confidence": 0.46,
+      "emotional_intensity": 0.42,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-004",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "identity_temporal_continuity_review",
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004"
+      ],
+      "source_memory_refs": [
+        "embry_age15_19_b02_memory_022",
+        "embry_age15_19_b03_memory_003",
+        "embry_age15_19_b03_memory_023"
+      ],
+      "statement": "The stable rendering of Embry across all frames may tentatively support that these scenes center on Embry's own continuity of self while revisiting grandmother-linked memories of food, textiles, and relationship disclosure.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "grandmother",
+      "tom_state_type": "belief",
+      "uncertainty": "The identity review only confirms visual continuity against the contact sheet; it does not prove that the montage has a psychological intention or that the older woman is the same grandmother across frames."
+    }
+  ],
+  "blockers": [],
+  "candidates": [
+    {
+      "alternative_explanation": "The renderer may have simply combined visual motifs from recipe calls, phone screens, and table scenes without encoding any specific anxiety about relationship disclosure.",
+      "cites_renderer_review": false,
+      "confidence": 0.58,
+      "emotional_intensity": 0.62,
+      "favored_explanation": "psychological",
+      "interpretation_id": "interpretation-001",
+      "observation_refs": [
+        "frame_0001",
+        "frame_0003",
+        "frame_0004"
+      ],
+      "source_memory_refs": [
+        "embry_age15_19_b02_memory_022",
+        "embry_age15_19_b03_memory_023"
+      ],
+      "statement": "Embry may feel unresolved about how openly to define Kai to her grandmother: the bowl/phone/table imagery repeats situations where Kai-like participation is visible to the grandmother while Embry keeps the relationship label indirect.",
+      "subject": "embry",
+      "target": "grandmother",
+      "tom_state_type": "uncertainty",
+      "uncertainty": "The rendered frames do not identify the partial arm or hand as Kai, and there is no audio or text showing what Embry says in the scene."
+    },
+    {
+      "alternative_explanation": "The blanket and crocheting may be a generic visual substitution for the afghan-repair memory rather than a symbol of emotional repair or trust.",
+      "cites_renderer_review": false,
+      "confidence": 0.51,
+      "emotional_intensity": 0.55,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-002",
+      "observation_refs": [
+        "frame_0002"
+      ],
+      "source_memory_refs": [
+        "embry_age15_19_b03_memory_003"
+      ],
+      "statement": "Embry may experience her grandmother as a safe witness to imperfect or mended parts of family life, suggested by the crocheted blanket/afghan imagery and the grandmother crocheting behind her.",
+      "subject": "embry",
+      "target": "grandmother",
+      "tom_state_type": "trust",
+      "uncertainty": "The observation names a crocheted blanket rather than definitively the traveling afghan, and the grandmother identity remains advisory rather than reference-confirmed."
+    },
+    {
+      "alternative_explanation": "Because there is no inter-frame motion or audio, the images may be a static storyboard montage of memory elements rather than a psychologically meaningful structure about distance.",
+      "cites_renderer_review": false,
+      "confidence": 0.64,
+      "emotional_intensity": 0.48,
+      "favored_explanation": "psychological",
+      "interpretation_id": "interpretation-003",
+      "observation_refs": [
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004"
+      ],
+      "source_memory_refs": [
+        "embry_age15_19_b02_memory_022",
+        "embry_age15_19_b03_memory_003",
+        "embry_age15_19_b03_memory_023"
+      ],
+      "statement": "Embry's relationship to her grandmother may be mediated by distance and artifacts: phone screens, photographs, bowls, and textile objects suggest a bond maintained through shared domestic practices rather than direct co-presence.",
+      "subject": "embry",
+      "target": "grandmother",
+      "tom_state_type": "relationship_state",
+      "uncertainty": "The frames alternate between grandmother on a phone screen, in the background, and in a framed photograph, so it is unclear whether the dream intends literal co-presence, memory, or montage."
+    },
+    {
+      "alternative_explanation": "The continuity result may only indicate successful character rendering, while the repeated grandmother-related objects and screens are context assembly from source memories.",
+      "cites_renderer_review": true,
+      "confidence": 0.46,
+      "emotional_intensity": 0.42,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-004",
+      "observation_refs": [
+        "identity_temporal_continuity_review",
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004"
+      ],
+      "source_memory_refs": [
+        "embry_age15_19_b02_memory_022",
+        "embry_age15_19_b03_memory_003",
+        "embry_age15_19_b03_memory_023"
+      ],
+      "statement": "The stable rendering of Embry across all frames may tentatively support that these scenes center on Embry's own continuity of self while revisiting grandmother-linked memories of food, textiles, and relationship disclosure.",
+      "subject": "embry",
+      "target": "grandmother",
+      "tom_state_type": "belief",
+      "uncertainty": "The identity review only confirms visual continuity against the contact sheet; it does not prove that the montage has a psychological intention or that the older woman is the same grandmother across frames."
+    }
+  ],
+  "dream_id": "auto_cycle_20260723T212254Z",
+  "generated_at": "2026-07-23T21:37:01.349012+00:00",
+  "honesty_rule": {
+    "identity_drift_dual_explanation_present": false,
+    "renderer_defect_favored_on_drift": false
+  },
+  "intended_dream": {},
+  "live": true,
+  "llm": {
+    "caller_skill": "persona-dream",
+    "candidate_count": 4,
+    "direct_scillm_call": false,
+    "model": "gpt-5.5",
+    "provider": "scillm",
+    "route": "tau:persona-dream-text-reasoning",
+    "tau_routing": {
+      "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+      "http_status": 200,
+      "live_call_performed": true,
+      "model": "gpt-5.5",
+      "output_contract_sha256": "sha256:97bbf92bb8eb1d13cb7a43a0975b2c62885880a6818689f7ec5dedd6e532c140",
+      "prompt_sha256": "sha256:4d55f5033c2a5ef8925889822ae1d06869172ad9fe5e4b7a2a9b3fcd4884aa31",
+      "route": "tau:persona-dream-text-reasoning",
+      "status": "PASS",
+      "tau_receipt_schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1"
+    }
+  },
+  "mocked": false,
+  "observation_index": [
+    {
+      "observation_id": "frame_0001",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 1 at t=0.0s; windows=identity; entities=['young woman in navy shirt holding a metal mixing bowl', \"partial view of another person's arm stirring or reaching into the bowl\", 'older woman visible on a smartphone screen']",
+      "timestamp_seconds": 0.0
+    },
+    {
+      "observation_id": "frame_0002",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 2 at t=2.5s; windows=identity; entities=['young woman in navy shirt holding a crocheted blanket', 'older woman seated behind her crocheting']",
+      "timestamp_seconds": 2.5
+    },
+    {
+      "observation_id": "frame_0003",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 3 at t=5.0s; windows=identity; entities=['young woman in navy shirt looking down at a phone', 'woman visible on the phone screen', 'older woman visible in a framed photograph']",
+      "timestamp_seconds": 5.0
+    },
+    {
+      "observation_id": "frame_0004",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 4 at t=7.5s; windows=identity; entities=['young woman in navy shirt seated at a table', 'older woman in the background seated at another table', 'older woman visible on a smartphone screen', \"partial view of another person's hand at the table\"]",
+      "timestamp_seconds": 7.5
+    },
+    {
+      "observation_id": "identity_temporal_continuity_review",
+      "observation_type": "renderer_continuity_review",
+      "renderer_defect_verdict": "PASS",
+      "renderer_review": true,
+      "summary": "Identity continuity review over window [0.0, 10.0] (model=insightface:buffalo_l (authority) + gpt-5.5 montage (advisory), verdict=PASS): all 4 frames passed ArcFace vs embry_contact_sheet_v3"
+    },
+    {
+      "observation_id": "coverage_gap_00",
+      "observation_type": "coverage_gap",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "no audio track: storyboard frames are the visual artifact"
+    },
+    {
+      "observation_id": "coverage_gap_01",
+      "observation_type": "coverage_gap",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "no inter-frame motion"
+    },
+    {
+      "observation_id": "coverage_gap_02",
+      "observation_type": "coverage_gap",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Grandmother Unresolved Nana Or Grammy identity advisory (no reference sheet)"
+    }
+  ],
+  "observation_packet_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T212254Z/observation_packet.json",
+  "observation_packet_sha256": "sha256:05009e9d9c17386354aaf983791d8386cf6e0debfdc58614c1f9f0bf817700af",
+  "persona_id": "embry",
+  "provider_live": true,
+  "recall_receipts": [
+    {
+      "collections": [
+        "persona_memory"
+      ],
+      "confidence": 0.894,
+      "found": true,
+      "question": "What memories explain why Embry trusts Grandmother Unresolved Nana Or Grammy about surf safety boundaries and hazards at the lineup?",
+      "residue_source_ids_confirmed": [],
+      "returned_keys": [
+        "embry_age10_15_b01_memory_009",
+        "persona_dream_phase_06_script_contract_embry_kai_kahaluu_2024",
+        "embry_age19_23_b01_memory_010",
+        "persona_dream_phase_03_crew_contract_embry_kai_kahaluu_2024",
+        "embry-kai-sick-day_02_story_story_contract_843592d16ce27a53",
+        "embry_age19_23_b01_memory_024",
+        "embry_age23_current_b01_memory_038",
+        "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698"
+      ],
+      "tags": [
+        "persona:embry"
+      ]
+    },
+    {
+      "collections": [
+        "persona_memory"
+      ],
+      "confidence": 0.849,
+      "found": true,
+      "question": "What memory shows Grandmother Unresolved Nana Or Grammy giving Embry operational surf knowledge while respecting her decisions?",
+      "residue_source_ids_confirmed": [
+        "embry_age15_19_b03_memory_003",
+        "embry_age15_19_b03_memory_023"
+      ],
+      "returned_keys": [
+        "embry_age10_15_b01_memory_009",
+        "persona_dream_phase_06_script_contract_embry_kai_kahaluu_2024",
+        "embry_age15_19_b03_memory_003",
+        "persona_dream_phase_03_crew_contract_embry_kai_kahaluu_2024",
+        "embry_age15_19_b03_memory_023",
+        "embry-kai-sick-day_02_story_story_contract_843592d16ce27a53",
+        "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024",
+        "embry_age15_19_b01_memory_006"
+      ],
+      "tags": [
+        "persona:embry"
+      ]
+    },
+    {
+      "collections": [
+        "persona_memory"
+      ],
+      "confidence": 0.886,
+      "found": true,
+      "question": "Why does Embry pause before crossing into surf traffic near Grandmother Unresolved Nana Or Grammy?",
+      "residue_source_ids_confirmed": [
+        "embry_age15_19_b02_memory_022",
+        "embry_age15_19_b03_memory_003",
+        "embry_age15_19_b03_memory_023"
+      ],
+      "returned_keys": [
+        "embry_age10_15_b01_memory_009",
+        "embry_age15_19_b02_memory_022",
+        "embry_age15_19_b03_memory_023",
+        "embry_age15_19_b03_memory_003",
+        "embry_age04_10_b01_memory_007",
+        "embry_age15_19_b01_memory_008",
+        "embry_age04_10_b01_memory_029",
+        "embry_age15_19_b01_memory_006"
+      ],
+      "tags": [
+        "persona:embry"
+      ]
+    }
+  ],
+  "rejected_interpretations": [],
+  "revision_id": "cycle_20260723T212254Z",
+  "run_id": "goal-v3",
+  "schema": "persona_dream.dream_self_interpretation.v1",
+  "source_memory_bindings": [
+    {
+      "collection": "persona_memory",
+      "memory_text_sha256": "sha256:231c49ad3221983a964ba81c92ea7e42f9e1300158b86fbc75a8cd449b0d2055",
+      "persona_id": "embry",
+      "recall_confirmed": true,
+      "source_id": "embry_age15_19_b02_memory_022"
+    },
+    {
+      "collection": "persona_memory",
+      "memory_text_sha256": "sha256:42e497cfa3eec43e58cfabcd67a8a861d1e39798b612bea05ac256f377ee08a5",
+      "persona_id": "embry",
+      "recall_confirmed": true,
+      "source_id": "embry_age15_19_b03_memory_003"
+    },
+    {
+      "collection": "persona_memory",
+      "memory_text_sha256": "sha256:06316dbf8b1ef26005e4e172aa0e28e6563fbb6f02e0847169136842515c2cd8",
+      "persona_id": "embry",
+      "recall_confirmed": true,
+      "source_id": "embry_age15_19_b03_memory_023"
+    }
+  ],
+  "status": "PASS_SELF_INTERPRETATION"
+}

@@ -1,0 +1,17 @@
+{
+  "frozen_at": "2026-07-23T21:06:24Z",
+  "frozen_before_dream_composition": true,
+  "negative_control": "How do black holes emit Hawking radiation near the event horizon?",
+  "negative_control_root_overlap": [],
+  "probes": [
+    "Embry lets Kai join a grandmother\u2019s cooking call but avoids defining whether he is more than a friend.",
+    "Grandmother visibly mends Embry\u2019s torn traveling afghan with contrasting thread instead of hiding the repair.",
+    "Embry sends her grandmother a photo of Kai\u2019s collards but identifies him only as a school friend."
+  ],
+  "roots": [
+    "embry_age15_19_b02_memory_022",
+    "embry_age15_19_b03_memory_003",
+    "embry_age15_19_b03_memory_023"
+  ],
+  "schema": "persona_dream.cycle_instruments.v1"
+}

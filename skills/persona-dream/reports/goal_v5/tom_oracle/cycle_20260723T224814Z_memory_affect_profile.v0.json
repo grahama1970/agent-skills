@@ -1,0 +1,49 @@
+{
+  "schema": "persona_dream.memory_affect_profile.v0",
+  "derivation": "deterministic_lexicon_dream_free",
+  "compute_matched": false,
+  "weights": [
+    {
+      "emotional_tag": "warmth",
+      "weight": 0.333,
+      "evidence": [
+        {
+          "source_id": "embry_age04_10_b01_memory_001",
+          "keyword": "family"
+        },
+        {
+          "source_id": "embry_age04_10_b01_memory_001",
+          "keyword": "comfort"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "hesitance",
+      "weight": 0.333,
+      "evidence": [
+        {
+          "source_id": "embry_age04_10_b01_memory_014",
+          "keyword": "uncertain"
+        },
+        {
+          "source_id": "embry_age04_10_b01_memory_002",
+          "keyword": "uncertain"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "yearning",
+      "weight": 0.333,
+      "evidence": [
+        {
+          "source_id": "embry_age04_10_b01_memory_014",
+          "keyword": "wants"
+        },
+        {
+          "source_id": "embry_age04_10_b01_memory_002",
+          "keyword": "wants"
+        }
+      ]
+    }
+  ]
+}

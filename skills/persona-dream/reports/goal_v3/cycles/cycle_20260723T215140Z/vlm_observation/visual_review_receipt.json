@@ -1,0 +1,87 @@
+{
+  "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+  "blocking_findings": [],
+  "created_at": "2026-07-23T22:05:09Z",
+  "duration_seconds": 0.266015,
+  "events_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T215140Z/vlm_observation/panel_reviewer_events.jsonl",
+  "http_status": 200,
+  "image_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T215140Z/vlm_observation/tau_vlm_composite.png",
+  "live": true,
+  "live_call_performed": true,
+  "mocked": false,
+  "model": "gpt-5.5",
+  "parsed_response": {
+    "frames": [
+      {
+        "activity": "The foreground woman holds yarn or knitting needles while looking off to the side; the background woman stands near a sink with papers.",
+        "index": 1,
+        "people": [
+          "young woman in navy shirt in foreground",
+          "woman in gray shirt in background holding papers"
+        ],
+        "setting": "cluttered workshop or garage space with a sink, shelves, boxes, and tools",
+        "tone": "serious and tense"
+      },
+      {
+        "activity": "The foreground woman studies a large sheet of paper while the background woman stands near a small file cabinet or work area.",
+        "index": 2,
+        "people": [
+          "young woman in navy shirt in foreground",
+          "woman in dark green shirt in background"
+        ],
+        "setting": "dim workshop or studio with desks, laptop, papers, boxes, and wall notes",
+        "tone": "focused and somber"
+      },
+      {
+        "activity": "A woman faces the bathroom mirror, appearing to look at herself or down toward the sink.",
+        "index": 3,
+        "people": [
+          "young woman in navy shirt seen in a mirror",
+          "side-profile reflection of a woman at the sink"
+        ],
+        "setting": "bathroom with mirror, sink counter, toothbrushes, towel, jewelry, and toiletries",
+        "tone": "introspective and weary"
+      },
+      {
+        "activity": "The foreground woman works with yarn or knitting needles while the background woman sits on or near boxes watching quietly.",
+        "index": 4,
+        "people": [
+          "young woman in navy shirt in foreground",
+          "woman in dark shirt seated in background"
+        ],
+        "setting": "cluttered workshop or storage room with boxes, table, tools, and a small lit lamp",
+        "tone": "quiet and contemplative"
+      }
+    ]
+  },
+  "passed_entities": [],
+  "receipt_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T215140Z/vlm_observation/visual_review_receipt.json",
+  "request": {
+    "messages": "<redacted-image-url-request>",
+    "model": "gpt-5.5",
+    "response_format": {
+      "type": "json_object"
+    },
+    "scillm_metadata": {
+      "caller": "tau",
+      "proof": "persona-dream-panel-review",
+      "role": "panel-reviewer"
+    },
+    "stream": true,
+    "stream_heartbeat_s": 15.0,
+    "stream_progress_events": true,
+    "temperature": 0
+  },
+  "response_content": "{\"frames\":[{\"index\":1,\"people\":[\"young woman in navy shirt in foreground\",\"woman in gray shirt in background holding papers\"],\"activity\":\"The foreground woman holds yarn or knitting needles while looking off to the side; the background woman stands near a sink with papers.\",\"setting\":\"cluttered workshop or garage space with a sink, shelves, boxes, and tools\",\"tone\":\"serious and tense\"},{\"index\":2,\"people\":[\"young woman in navy shirt in foreground\",\"woman in dark green shirt in background\"],\"activity\":\"The foreground woman studies a large sheet of paper while the background woman stands near a small file cabinet or work area.\",\"setting\":\"dim workshop or studio with desks, laptop, papers, boxes, and wall notes\",\"tone\":\"focused and somber\"},{\"index\":3,\"people\":[\"young woman in navy shirt seen in a mirror\",\"side-profile reflection of a woman at the sink\"],\"activity\":\"A woman faces the bathroom mirror, appearing to look at herself or down toward the sink.\",\"setting\":\"bathroom with mirror, sink counter, toothbrushes, towel, jewelry, and toiletries\",\"tone\":\"introspective and weary\"},{\"index\":4,\"people\":[\"young woman in navy shirt in foreground\",\"woman in dark shirt seated in background\"],\"activity\":\"The foreground woman works with yarn or knitting needles while the background woman sits on or near boxes watching quietly.\",\"setting\":\"cluttered workshop or storage room with boxes, table, tools, and a small lit lamp\",\"tone\":\"quiet and contemplative\"}]}",
+  "review_prompt_sha256": "sha256:3f06d228504c819f65ea49a7c27fb145e1bf1a80f61d0dd8d8bfcaf4710c4a34",
+  "role": "panel-reviewer",
+  "schema": "tau.persona_dream.scillm_vlm_review_receipt.v1",
+  "status": "NEEDS_CHANGES",
+  "stream": true,
+  "stream_done_seen": true,
+  "stream_event_count": 310,
+  "stream_heartbeat_count": 0,
+  "stream_last_event_type": "done",
+  "summary": "Scillm VLM review completed.",
+  "surface": "scillm.chat_completions.image_url"
+}

@@ -1,0 +1,21 @@
+{
+  "attach_file": null,
+  "attachment": null,
+  "clean_chars": 0,
+  "clean_contains_sentinel": false,
+  "controlled_tab_id": "837360812",
+  "failure": "timed out waiting for marker '<<<CLAUDE_DONE:20260723T231241Z:499a3298>>>'",
+  "finished_at": "2026-07-23T23:17:45Z",
+  "input": "skills/persona-dream/reports/goal_v5/roundtable/r1/bundle.md",
+  "no_activate": true,
+  "output": "skills/persona-dream/reports/goal_v5/roundtable/r1/webclaude.md",
+  "raw_chars": 35252,
+  "raw_contains_sentinel": true,
+  "raw_output": "skills/persona-dream/reports/goal_v5/roundtable/r1/webclaude.md.raw.md",
+  "requested_tab_id": "837360812",
+  "requested_url": null,
+  "sentinel": "<<<CLAUDE_DONE:20260723T231241Z:499a3298>>>",
+  "started_at": "2026-07-23T23:12:41Z",
+  "status": "failed",
+  "submitted_output": "skills/persona-dream/reports/goal_v5/roundtable/r1/webclaude.md.submitted.md"
+}

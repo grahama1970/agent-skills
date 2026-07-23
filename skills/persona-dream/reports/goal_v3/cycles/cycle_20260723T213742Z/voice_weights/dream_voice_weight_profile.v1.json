@@ -1,0 +1,57 @@
+{
+  "dream_node_key": "dream_auto_cycle_20260723T213742Z",
+  "mapping": "frozen in scripts/dream_voice_weights.py (TOM_TO_VOICE)",
+  "persona_id": "embry",
+  "schema": "persona_dream.dream_voice_weight_profile.v1",
+  "synthesis_params": {
+    "temperature": 0.813
+  },
+  "tom_state_types": [
+    "belief",
+    "desire",
+    "fear",
+    "relationship_state"
+  ],
+  "weights": [
+    {
+      "emotional_tag": "yearning",
+      "pace": "measured",
+      "sources": [
+        {
+          "emotional_intensity": 0.62,
+          "statement": "Embry may want to reach Maya indirectly through a competent technical explanation or presentation, using rocket-related imagery as a substitute for an unsent communication.",
+          "tom_key": "dream:embry:auto_cycle_20260723T213742Z:tom:tom-001",
+          "tom_state_type": "desire"
+        }
+      ],
+      "tone": "yearning_warm",
+      "weight": 0.62
+    },
+    {
+      "emotional_tag": "reflection",
+      "pace": "measured",
+      "sources": [
+        {
+          "emotional_intensity": 0.71,
+          "statement": "Embry may experience Maya as emotionally close but unreachable, preserved near rocket-related memory while remaining outside Embry's fully embodied present world.",
+          "tom_key": "dream:embry:auto_cycle_20260723T213742Z:tom:tom-002",
+          "tom_state_type": "relationship_state"
+        },
+        {
+          "emotional_intensity": 0.56,
+          "statement": "Embry may fear that openly naming Maya or acknowledging the loss would weaken her controlled self-presentation, leading her to rely on formal and technical substitutes for direct emotion.",
+          "tom_key": "dream:embry:auto_cycle_20260723T213742Z:tom:tom-003",
+          "tom_state_type": "fear"
+        },
+        {
+          "emotional_intensity": 0.48,
+          "statement": "Embry may believe that maintaining a competent role is the safest continuous identity for her to hold in relation to Maya's absence.",
+          "tom_key": "dream:embry:auto_cycle_20260723T213742Z:tom:tom-004",
+          "tom_state_type": "belief"
+        }
+      ],
+      "tone": "neutral_reflective",
+      "weight": 0.5833
+    }
+  ]
+}

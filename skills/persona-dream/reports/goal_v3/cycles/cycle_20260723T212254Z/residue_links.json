@@ -1,0 +1,27 @@
+{
+  "schema": "persona_dream.residue_links.v1",
+  "idea_id": "auto_cycle_20260723T212254Z",
+  "items": [
+    {
+      "collection": "persona_memory",
+      "persona_id": "embry",
+      "source_id": "embry_age15_19_b02_memory_022",
+      "source_path": "gmo:persona_memory/embry_age15_19_b02_memory_022",
+      "text": "Embry lets Kai participate in a grandmother's recipe call but leaves his public status undefined.\nHer grandmother asks who is holding the bowl. Embry says Kai is helping. Kai describes the texture accurately; Embry does not correct the word friend when her grandmother uses it.\npeople: Grandmother, grandmother unresolved nana or grammy, Embry Lawson, Kai; objects: family recipe note; concepts: boundary\nSetting: age band 15-19. Situation: Embry lets Kai participate in a grandmother's recipe call but leaves his public status undefined. Trigger: The recipe call exposes Kai's presence. Stakes: She lets him speak but does not clarify the label.\nEmotions: guilt, trust. Intensity: 4/5. Regulation: compartmentalization and concealment control. Conflict: Embry is not ready to convert private intimacy into a family-recognized role.\nTheory of mind: relationship: Embry permits direct participation in family ritual while maintaining an undefined public relationship. Trigger: The recipe call exposes Kai's presence. Consequence: She lets him speak but does not clarify the label. | boundary: Embry is not ready to convert private intimacy into a family-recognized role. Trigger: Her grandmother supplies a narrower safe label. Consequence: Embry leaves it uncorrected."
+    },
+    {
+      "collection": "persona_memory",
+      "persona_id": "embry",
+      "source_id": "embry_age15_19_b03_memory_003",
+      "source_path": "gmo:persona_memory/embry_age15_19_b03_memory_003",
+      "text": "A grandmother repairs a torn edge of Embry's traveling afghan without hiding the visible mend.\nThe afghan catches on a moving-box staple. Embry asks whether the damaged row should be removed. Her grandmother reinforces it with a contrasting strand and says a repair should show where the cloth held.\npeople: Grandmother, grandmother unresolved nana or grammy, Embry Lawson; objects: family afghan, traveling afghan; concepts: portable home, repair\nSetting: age band 15-19. Situation: A grandmother repairs a torn edge of Embry's traveling afghan without hiding the visible mend. Trigger: Her grandmother chooses reinforcement over invisible restoration. Stakes: Embry keeps the contrasting mend rather than replacing the afghan.\nEmotions: guilt, longing, shame. Intensity: 4/5. Regulation: compartmentalization and concealment control. Conflict: \nTheory of mind: belief: Embry briefly accepts that visible repair can preserve continuity without pretending damage never occurred. Trigger: Her grandmother chooses reinforcement over invisible restoration. Consequence: Embry keeps the contrasting mend rather than replacing the afghan. | relationship: Embry experiences collaborative repair as permission to bring damaged things back into use without shame. Trigger: Her grandmother treats the tear as ordinary and recoverable. Consequence: The afghan remains an active home anchor instead of becoming archived."
+    },
+    {
+      "collection": "persona_memory",
+      "persona_id": "embry",
+      "source_id": "embry_age15_19_b03_memory_023",
+      "source_path": "gmo:persona_memory/embry_age15_19_b03_memory_023",
+      "text": "Embry sends her grandmother a photograph of Kai's collards but calls him only a school friend.\nHer grandmother asks who is holding the spoon. Embry types Kai's name, deletes it, and answers, 'A friend here.' She saves the photograph separately.\npeople: Grandmother, grandmother unresolved nana or grammy, Embry Lawson, James, kai\nSetting: age band 15-19. Situation: Embry sends her grandmother a photograph of Kai's collards but calls him only a school friend. Trigger: The photograph invites identification of its other participant. Stakes: She shares the result but narrows his role.\nEmotions: grief, guilt. Intensity: 4/5. Regulation: compartmentalization and concealment control. Conflict: \nTheory of mind: relationship: Embry wants to connect Kai with family tradition without making the relationship publicly consequential. Trigger: The photograph invites identification of its other participant. Consequence: She shares the result but narrows his role. | belief: Naming a relationship can expose it to expectations and future loss before Embry is ready. Trigger: Her grandmother's question would move Kai into family knowledge. Consequence: Embry uses categorical truth to preserve control over meaning."
+    }
+  ]
+}

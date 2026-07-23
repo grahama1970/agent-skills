@@ -1,0 +1,45 @@
+{
+  "raw": "{\"frames\":[{\"index\":1,\"people\":[\"woman in clear safety glasses and blue shirt in foreground\",\"man in dark shirt standing behind her\"],\"activity\":\"The woman faces forward while the man gestures toward a marked glowing circle and lines on the grass; a small rocket-like object stands on a tripod nearby.\",\"setting\":\"Outdoor grassy yard or field bordered by trees and a fence, with illuminated line markings on the ground.\",\"tone\":\"focused and investigative\"},{\"index\":2,\"people\":[\"woman in blue shirt kneeling on the floor\",\"man in dark clothing crouched or seated at the edge of the frame\"],\"activity\":\"The woman kneels inside a glowing circular line while debris or small fragments are scattered around; the man holds up a hand as if explaining or cautioning.\",\"setting\":\"Dim indoor workshop or garage with tools and shelves in the background.\",\"tone\":\"tense and analytical\"},{\"index\":3,\"people\":[\"woman in blue shirt with visible dirt or injuries\",\"man standing by an open car door\"],\"activity\":\"The woman stands in the foreground with a hand on her chest, looking distressed, while the man stands beside an open car door behind her.\",\"setting\":\"Roadway or bridge area at dusk with fences, cloudy sky, traffic lights, and a bright streak in the sky.\",\"tone\":\"alarmed and urgent\"},{\"index\":4,\"people\":[\"woman in blue shirt in the front passenger seat\",\"man driving the car\"],\"activity\":\"The two people sit in a moving car at night; the man drives while the woman looks ahead through the windshield.\",\"setting\":\"Inside a car on a lit bridge or roadway at night, with reflections of city or bridge lights on the glass.\",\"tone\":\"serious and suspenseful\"}]}",
+  "frames": [
+    {
+      "index": 1,
+      "people": [
+        "woman in clear safety glasses and blue shirt in foreground",
+        "man in dark shirt standing behind her"
+      ],
+      "activity": "The woman faces forward while the man gestures toward a marked glowing circle and lines on the grass; a small rocket-like object stands on a tripod nearby.",
+      "setting": "Outdoor grassy yard or field bordered by trees and a fence, with illuminated line markings on the ground.",
+      "tone": "focused and investigative"
+    },
+    {
+      "index": 2,
+      "people": [
+        "woman in blue shirt kneeling on the floor",
+        "man in dark clothing crouched or seated at the edge of the frame"
+      ],
+      "activity": "The woman kneels inside a glowing circular line while debris or small fragments are scattered around; the man holds up a hand as if explaining or cautioning.",
+      "setting": "Dim indoor workshop or garage with tools and shelves in the background.",
+      "tone": "tense and analytical"
+    },
+    {
+      "index": 3,
+      "people": [
+        "woman in blue shirt with visible dirt or injuries",
+        "man standing by an open car door"
+      ],
+      "activity": "The woman stands in the foreground with a hand on her chest, looking distressed, while the man stands beside an open car door behind her.",
+      "setting": "Roadway or bridge area at dusk with fences, cloudy sky, traffic lights, and a bright streak in the sky.",
+      "tone": "alarmed and urgent"
+    },
+    {
+      "index": 4,
+      "people": [
+        "woman in blue shirt in the front passenger seat",
+        "man driving the car"
+      ],
+      "activity": "The two people sit in a moving car at night; the man drives while the woman looks ahead through the windshield.",
+      "setting": "Inside a car on a lit bridge or roadway at night, with reflections of city or bridge lights on the glass.",
+      "tone": "serious and suspenseful"
+    }
+  ]
+}

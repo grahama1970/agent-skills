@@ -1,0 +1,147 @@
+{
+  "accepted_count": 4,
+  "accepted_tom_candidates": [
+    {
+      "candidate_id": "tom-001",
+      "confidence": 0.72,
+      "emotional_intensity": 0.68,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-001",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age04_10_b01_memory_039"
+      ],
+      "statement": "Embry may trust Tommy as a steady safety figure who remains present and takes responsible action during a frightening incident.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "tommy",
+      "tom_state_type": "trust",
+      "watch_observation_refs": [
+        "frame_0001",
+        "frame_0003",
+        "frame_0004"
+      ]
+    },
+    {
+      "candidate_id": "tom-002",
+      "confidence": 0.63,
+      "emotional_intensity": 0.55,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-002",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age04_10_b01_memory_013",
+        "embry_age04_10_b01_memory_039"
+      ],
+      "statement": "Embry may believe Tommy responds to problems through practical care: stabilizing the situation, moving safely, and addressing what can be fixed.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "tommy",
+      "tom_state_type": "belief",
+      "watch_observation_refs": [
+        "frame_0002",
+        "frame_0003",
+        "frame_0004"
+      ]
+    },
+    {
+      "candidate_id": "tom-003",
+      "confidence": 0.58,
+      "emotional_intensity": 0.52,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-003",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age04_10_b01_memory_039",
+        "embry_age04_10_b01_memory_032"
+      ],
+      "statement": "Embry may experience her relationship with Tommy as one in which she is protected across a continuous, embodied event.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "tommy",
+      "tom_state_type": "relationship_state",
+      "watch_observation_refs": [
+        "identity_temporal_continuity_review",
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004"
+      ]
+    },
+    {
+      "candidate_id": "tom-004",
+      "confidence": 0.46,
+      "emotional_intensity": 0.74,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-004",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age04_10_b01_memory_032",
+        "embry_age04_10_b01_memory_039"
+      ],
+      "statement": "Embry may fear that safety boundaries can still fail even when Tommy teaches or enforces them.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "tommy",
+      "tom_state_type": "fear",
+      "watch_observation_refs": [
+        "frame_0001",
+        "frame_0003",
+        "frame_0004"
+      ]
+    }
+  ],
+  "candidate_receipts": [
+    {
+      "candidate_id": "tom-001",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-001",
+      "reasons": []
+    },
+    {
+      "candidate_id": "tom-002",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-002",
+      "reasons": []
+    },
+    {
+      "candidate_id": "tom-003",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-003",
+      "reasons": []
+    },
+    {
+      "candidate_id": "tom-004",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-004",
+      "reasons": []
+    }
+  ],
+  "candidate_source": "llm_via_tau",
+  "canonical_memory_write_allowed": false,
+  "dream_id": "auto_cycle_20260723T220612Z",
+  "generated_at": "2026-07-23T22:18:53.951082+00:00",
+  "had_rejections": false,
+  "interpretation_sha256": "sha256:4de3051bbf80b3e23cdaf276fed1829da66645e6466d30b68ec78f1e6bb4af9f",
+  "live": true,
+  "live_route_attempted": true,
+  "live_route_failed": false,
+  "mocked": false,
+  "proposed_candidate_count": 4,
+  "rejected_count": 0,
+  "revision_id": "cycle_20260723T220612Z",
+  "run_id": "goal-v3",
+  "schema": "persona_dream.tom_validation_receipt.v1",
+  "status": "PASS_TOM_VALIDATION_LIVE",
+  "tau_routing": {
+    "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+    "http_status": 200,
+    "live_call_performed": true,
+    "model": "gpt-5.5",
+    "output_contract_sha256": "sha256:cdca7d6845ba5905353704db083e49ec40ce00451e5a60e2004b434b0a3fc5f6",
+    "prompt_sha256": "sha256:73b25a8411c88c9fe1851372827b139361de8f75be2d5ae76eb30769b606e202",
+    "route": "tau:persona-dream-text-reasoning",
+    "status": "PASS",
+    "tau_receipt_schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1"
+  }
+}

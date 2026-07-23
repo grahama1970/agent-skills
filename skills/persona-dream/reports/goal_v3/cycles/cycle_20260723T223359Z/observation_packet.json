@@ -1,0 +1,88 @@
+{
+  "schema": "persona_dream.cycle_storyboard_observation_packet.v1",
+  "status": "ACCEPTED_STORYBOARD_OBSERVATION",
+  "evidence_origin": "storyboard_frames",
+  "evidence_class": "synthetic_dream",
+  "source_video_sha256": "sha256:efdb99ef6da0a319780e88207f52640beb3b9b5257054c8f31aad235d58aab34",
+  "source_revision_id": "cycle_20260723T223359Z",
+  "frame_evidence": [
+    {
+      "index": 1,
+      "timestamp_seconds": 0.0,
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "panel_id": "sb_001",
+      "frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T223359Z/frames/sb_001.attempt_01.png",
+      "frame_sha256": "4a63fca1a3cfe28924526c74de7e9b8317845bf40ee596a5e0247b81c74dac13",
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T223359Z/frames/sb_001.attempt_01.png",
+      "sha256": "4a63fca1a3cfe28924526c74de7e9b8317845bf40ee596a5e0247b81c74dac13",
+      "observed_entities": [
+        "A young woman in a navy shirt in the foreground looking toward the camera",
+        "A second young woman in dark clothing seated behind her holding a translucent tablet"
+      ]
+    },
+    {
+      "index": 2,
+      "timestamp_seconds": 2.5,
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "panel_id": "sb_002",
+      "frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T223359Z/frames/sb_002.attempt_01.png",
+      "frame_sha256": "eeb36156664e9b60f0fe3185ca24e854c127fe0194ff62bc05a1e9d5e5a877c4",
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T223359Z/frames/sb_002.attempt_01.png",
+      "sha256": "eeb36156664e9b60f0fe3185ca24e854c127fe0194ff62bc05a1e9d5e5a877c4",
+      "observed_entities": [
+        "A young woman in a navy shirt leaning over a rocket-shaped metal object",
+        "A second young woman in a gray shirt pointing at fins on the object"
+      ]
+    },
+    {
+      "index": 3,
+      "timestamp_seconds": 5.0,
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "panel_id": "sb_003",
+      "frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T223359Z/frames/sb_003.attempt_01.png",
+      "frame_sha256": "d6eaa91772c336c715fd4b5bb3374a719cd5abc4dd762f75c937e82f6a31ea42",
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T223359Z/frames/sb_003.attempt_01.png",
+      "sha256": "d6eaa91772c336c715fd4b5bb3374a719cd5abc4dd762f75c937e82f6a31ea42",
+      "observed_entities": [
+        "A young woman in a navy shirt holding a clipboard in the foreground",
+        "A second young woman in a gray shirt standing behind her with one hand on her hip and one hand on equipment"
+      ]
+    },
+    {
+      "index": 4,
+      "timestamp_seconds": 7.5,
+      "in_identity_window": true,
+      "in_speaker_window": false,
+      "panel_id": "sb_004",
+      "frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T223359Z/frames/sb_004.attempt_01.png",
+      "frame_sha256": "b568b3814edb1181f2f392886bf736392b7506d3c7f85a24c32c98d42e82f2a9",
+      "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T223359Z/frames/sb_004.attempt_01.png",
+      "sha256": "b568b3814edb1181f2f392886bf736392b7506d3c7f85a24c32c98d42e82f2a9",
+      "observed_entities": [
+        "A young woman in a navy shirt in the foreground looking sideways"
+      ]
+    }
+  ],
+  "transcript_facts": [],
+  "step_hooks": {
+    "step_36_identity_temporal_continuity": {
+      "identity_window_seconds": [
+        0.0,
+        10.0
+      ],
+      "vision_review": {
+        "model": "insightface:buffalo_l (authority) + gpt-5.5 montage (advisory)",
+        "verdict": "PASS",
+        "raw_output_tail": "all 4 frames passed ArcFace vs embry_contact_sheet_v3"
+      }
+    }
+  },
+  "coverage_gaps": [
+    "no audio track: storyboard frames are the visual artifact",
+    "no inter-frame motion",
+    "Maya Chen identity advisory (no reference sheet)"
+  ]
+}

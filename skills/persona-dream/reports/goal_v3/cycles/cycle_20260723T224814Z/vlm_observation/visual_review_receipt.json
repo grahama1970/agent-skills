@@ -1,0 +1,86 @@
+{
+  "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+  "blocking_findings": [],
+  "created_at": "2026-07-23T22:59:53Z",
+  "duration_seconds": 0.26967,
+  "events_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T224814Z/vlm_observation/panel_reviewer_events.jsonl",
+  "http_status": 200,
+  "image_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T224814Z/vlm_observation/tau_vlm_composite.png",
+  "live": true,
+  "live_call_performed": true,
+  "mocked": false,
+  "model": "gpt-5.5",
+  "parsed_response": {
+    "frames": [
+      {
+        "activity": "The woman appears serious in the foreground while another view shows her opening a box labeled \"OPEN FIRST\" with a teddy bear inside.",
+        "index": 1,
+        "people": [
+          "young woman in a navy shirt facing the camera",
+          "same or similar young woman kneeling by a cardboard box"
+        ],
+        "setting": "dim bedroom or moving room with bed, lamp, toiletries, and stacked cardboard boxes",
+        "tone": "quiet, somber, reflective"
+      },
+      {
+        "activity": "The younger woman looks down at a card while the older woman points toward organized wall shelves with household items and icons.",
+        "index": 2,
+        "people": [
+          "young woman in a navy shirt holding a small card",
+          "middle-aged woman gesturing beside her"
+        ],
+        "setting": "bright organized room with colorful shelves holding bags, boxes, towels, and plush toys",
+        "tone": "instructive, concerned, practical"
+      },
+      {
+        "activity": "The young woman places or presses an \"OPEN FIRST\" label on a large moving box while another woman watches behind her.",
+        "index": 3,
+        "people": [
+          "young woman in a navy shirt handling a large cardboard box",
+          "woman standing in the background"
+        ],
+        "setting": "indoor moving/storage area with many cardboard boxes stacked around",
+        "tone": "serious, focused, transitional"
+      },
+      {
+        "activity": "The woman holds up a hand-drawn checklist or labeled card while sitting among packed boxes and belongings.",
+        "index": 4,
+        "people": [
+          "young woman in a navy shirt sitting near boxes"
+        ],
+        "setting": "bedroom or packing area with bed, lamp, open box, stuffed animals, toiletries, and cardboard boxes",
+        "tone": "calm, organized, slightly melancholic"
+      }
+    ]
+  },
+  "passed_entities": [],
+  "receipt_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T224814Z/vlm_observation/visual_review_receipt.json",
+  "request": {
+    "messages": "<redacted-image-url-request>",
+    "model": "gpt-5.5",
+    "response_format": {
+      "type": "json_object"
+    },
+    "scillm_metadata": {
+      "caller": "tau",
+      "proof": "persona-dream-panel-review",
+      "role": "panel-reviewer"
+    },
+    "stream": true,
+    "stream_heartbeat_s": 15.0,
+    "stream_progress_events": true,
+    "temperature": 0
+  },
+  "response_content": "{\"frames\":[{\"index\":1,\"people\":[\"young woman in a navy shirt facing the camera\",\"same or similar young woman kneeling by a cardboard box\"],\"activity\":\"The woman appears serious in the foreground while another view shows her opening a box labeled \\\"OPEN FIRST\\\" with a teddy bear inside.\",\"setting\":\"dim bedroom or moving room with bed, lamp, toiletries, and stacked cardboard boxes\",\"tone\":\"quiet, somber, reflective\"},{\"index\":2,\"people\":[\"young woman in a navy shirt holding a small card\",\"middle-aged woman gesturing beside her\"],\"activity\":\"The younger woman looks down at a card while the older woman points toward organized wall shelves with household items and icons.\",\"setting\":\"bright organized room with colorful shelves holding bags, boxes, towels, and plush toys\",\"tone\":\"instructive, concerned, practical\"},{\"index\":3,\"people\":[\"young woman in a navy shirt handling a large cardboard box\",\"woman standing in the background\"],\"activity\":\"The young woman places or presses an \\\"OPEN FIRST\\\" label on a large moving box while another woman watches behind her.\",\"setting\":\"indoor moving/storage area with many cardboard boxes stacked around\",\"tone\":\"serious, focused, transitional\"},{\"index\":4,\"people\":[\"young woman in a navy shirt sitting near boxes\"],\"activity\":\"The woman holds up a hand-drawn checklist or labeled card while sitting among packed boxes and belongings.\",\"setting\":\"bedroom or packing area with bed, lamp, open box, stuffed animals, toiletries, and cardboard boxes\",\"tone\":\"calm, organized, slightly melancholic\"}]}",
+  "review_prompt_sha256": "sha256:3f06d228504c819f65ea49a7c27fb145e1bf1a80f61d0dd8d8bfcaf4710c4a34",
+  "role": "panel-reviewer",
+  "schema": "tau.persona_dream.scillm_vlm_review_receipt.v1",
+  "status": "NEEDS_CHANGES",
+  "stream": true,
+  "stream_done_seen": true,
+  "stream_event_count": 321,
+  "stream_heartbeat_count": 0,
+  "stream_last_event_type": "done",
+  "summary": "Scillm VLM review completed.",
+  "surface": "scillm.chat_completions.image_url"
+}

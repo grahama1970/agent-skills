@@ -1,0 +1,17 @@
+{
+  "frozen_at": "2026-07-23T21:51:45Z",
+  "frozen_before_dream_composition": true,
+  "negative_control": "best techniques for growing tomatoes in a hydroponic greenhouse",
+  "negative_control_root_overlap": [],
+  "probes": [
+    "Embry\u2019s grandmother hears tense knitting over a Sunday speakerphone call and tells her to loosen a row without asking what is wrong",
+    "Embry notices signs of new military orders before her parents announce the Eglin move and quietly starts packing finished books",
+    "At a sleepover Maya asks about Embry\u2019s nose scar from a bottle rocket, and Embry shares the facts but avoids saying she was scared"
+  ],
+  "roots": [
+    "embry_age10_15_b01_memory_002",
+    "embry_age10_15_b01_memory_004",
+    "embry_age10_15_b01_memory_009"
+  ],
+  "schema": "persona_dream.cycle_instruments.v1"
+}

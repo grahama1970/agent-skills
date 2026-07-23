@@ -1,0 +1,117 @@
+{
+  "accepted_count": 3,
+  "accepted_tom_candidates": [
+    {
+      "candidate_id": "tom-001",
+      "confidence": 0.48,
+      "emotional_intensity": 0.55,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-001",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age10_15_b01_memory_002"
+      ],
+      "statement": "Embry may have a tentative trust boundary with Maya, allowing factual visibility while keeping more vulnerable shame or distress private.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "maya",
+      "tom_state_type": "trust",
+      "watch_observation_refs": [
+        "frame_0003"
+      ]
+    },
+    {
+      "candidate_id": "tom-002",
+      "confidence": 0.42,
+      "emotional_intensity": 0.45,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-002",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age10_15_b01_memory_004",
+        "embry_age10_15_b01_memory_002"
+      ],
+      "statement": "Embry may maintain a self-protective stance toward Maya, preserving a coherent outward identity while quietly managing uncertainty rather than seeking reassurance.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "maya",
+      "tom_state_type": "stance",
+      "watch_observation_refs": [
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004",
+        "identity_temporal_continuity_review"
+      ]
+    },
+    {
+      "candidate_id": "tom-003",
+      "confidence": 0.36,
+      "emotional_intensity": 0.5,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-003",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "embry_age10_15_b01_memory_009",
+        "embry_age10_15_b01_memory_002"
+      ],
+      "statement": "Embry may fear being observed or interpreted by Maya before she is ready to disclose the vulnerable reason behind her discomfort.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "maya",
+      "tom_state_type": "fear",
+      "watch_observation_refs": [
+        "frame_0001",
+        "frame_0002",
+        "frame_0004"
+      ]
+    }
+  ],
+  "candidate_receipts": [
+    {
+      "candidate_id": "tom-001",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-001",
+      "reasons": []
+    },
+    {
+      "candidate_id": "tom-002",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-002",
+      "reasons": []
+    },
+    {
+      "candidate_id": "tom-003",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-003",
+      "reasons": []
+    }
+  ],
+  "candidate_source": "llm_via_tau",
+  "canonical_memory_write_allowed": false,
+  "dream_id": "auto_cycle_20260723T215140Z",
+  "generated_at": "2026-07-23T22:05:50.368878+00:00",
+  "had_rejections": false,
+  "interpretation_sha256": "sha256:22dd3e120495b5149cada07026088c3e48f411a661a45f7188b8c59c0203a456",
+  "live": true,
+  "live_route_attempted": true,
+  "live_route_failed": false,
+  "mocked": false,
+  "proposed_candidate_count": 3,
+  "rejected_count": 0,
+  "revision_id": "cycle_20260723T215140Z",
+  "run_id": "goal-v3",
+  "schema": "persona_dream.tom_validation_receipt.v1",
+  "status": "PASS_TOM_VALIDATION_LIVE",
+  "tau_routing": {
+    "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+    "http_status": 200,
+    "live_call_performed": true,
+    "model": "gpt-5.5",
+    "output_contract_sha256": "sha256:cdca7d6845ba5905353704db083e49ec40ce00451e5a60e2004b434b0a3fc5f6",
+    "prompt_sha256": "sha256:ce954366969cbd4247ff97ae1e85b8b1bbcdbafc3a7832b683fbd208f15c0c6c",
+    "route": "tau:persona-dream-text-reasoning",
+    "status": "PASS",
+    "tau_receipt_schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1"
+  }
+}

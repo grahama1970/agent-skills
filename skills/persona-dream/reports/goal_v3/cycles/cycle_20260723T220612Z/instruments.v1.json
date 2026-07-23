@@ -1,0 +1,17 @@
+{
+  "frozen_at": "2026-07-23T22:06:16Z",
+  "frozen_before_dream_composition": true,
+  "negative_control": "best techniques for baking sourdough bread at high altitude",
+  "negative_control_root_overlap": [],
+  "probes": [
+    "Tommy calmly takes Embry to the ER after a bottle-rocket injury at Langley AFB",
+    "Embry learns Tommy\u2019s rule for mistakes: stop, make safe, then repair what can be fixed",
+    "Tommy teaches Embry rocket safety with launcher angle, eye protection, distance, and a clear zone"
+  ],
+  "roots": [
+    "embry_age04_10_b01_memory_013",
+    "embry_age04_10_b01_memory_032",
+    "embry_age04_10_b01_memory_039"
+  ],
+  "schema": "persona_dream.cycle_instruments.v1"
+}

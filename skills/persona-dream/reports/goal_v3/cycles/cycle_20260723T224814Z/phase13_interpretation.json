@@ -1,0 +1,391 @@
+{
+  "accepted_interpretations": [
+    {
+      "alternative_explanation": "The scene may simply be a literal rendering of the source memories about moving boxes, a card, and Marketa helping Embry, without implying a deeper trust state.",
+      "cites_renderer_review": false,
+      "confidence": 0.68,
+      "emotional_intensity": 0.52,
+      "favored_explanation": "psychological",
+      "interpretation_id": "interpretation-001",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "frame_0002",
+        "frame_0003",
+        "frame_0004"
+      ],
+      "source_memory_refs": [
+        "embry_age04_10_b01_memory_001",
+        "embry_age04_10_b01_memory_014",
+        "embry_age04_10_b01_memory_002"
+      ],
+      "statement": "Embry may associate Marketa with making disruption feel survivable through practical, bounded preparation: the repeated boxes, the small card, and Marketa\u2019s nearby guidance suggest trust in Marketa\u2019s ability to turn a move into manageable steps rather than emotional chaos.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "marketa",
+      "tom_state_type": "trust",
+      "uncertainty": "The intended dream is empty, and the rendered sequence has no audio or motion, so the emotional tone must be inferred only from static visual elements."
+    },
+    {
+      "alternative_explanation": "The card may be a visual prop chosen to represent the checklist memory in a straightforward way, with no added meaning about Embry\u2019s belief regarding Marketa.",
+      "cites_renderer_review": false,
+      "confidence": 0.62,
+      "emotional_intensity": 0.46,
+      "favored_explanation": "psychological",
+      "interpretation_id": "interpretation-002",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "frame_0002",
+        "frame_0003"
+      ],
+      "source_memory_refs": [
+        "embry_age04_10_b01_memory_014",
+        "embry_age04_10_b01_memory_002"
+      ],
+      "statement": "Embry may believe that Marketa\u2019s care is expressed through precision and structure rather than reassurance: the card and box-handling echo the memory of categories such as carry, open first, and later, where Marketa helps Embry mark progress without demanding that she feel settled immediately.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "marketa",
+      "tom_state_type": "belief",
+      "uncertainty": "It is unresolved whether the card is specifically the remembered picture card or only a generic small card produced by the renderer."
+    },
+    {
+      "alternative_explanation": "The identity continuity review may only show that the renderer kept Embry visually consistent across frames; the apparent relational continuity with Marketa may be a byproduct of staging the remembered move scenes.",
+      "cites_renderer_review": true,
+      "confidence": 0.57,
+      "emotional_intensity": 0.43,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-003",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004",
+        "identity_temporal_continuity_review"
+      ],
+      "source_memory_refs": [
+        "embry_age04_10_b01_memory_001",
+        "embry_age04_10_b01_memory_014",
+        "embry_age04_10_b01_memory_002"
+      ],
+      "statement": "Because the identity continuity review confirms the young woman consistently matches Embry across the rendered frames, the sequence can tentatively be read as centering Embry\u2019s stable relationship to Marketa across stages of moving: kneeling by boxes, receiving or holding a card, handling a box, and sitting near boxes all keep Embry visually anchored in Marketa\u2019s practical moving rituals.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "marketa",
+      "tom_state_type": "relationship_state",
+      "uncertainty": "The continuity review passes Embry identity, but Marketa\u2019s identity is only advisory elsewhere, so the relational reading depends on matching the background or gesturing woman to the remembered Marketa context."
+    },
+    {
+      "alternative_explanation": "The renderer may simply depict Embry performing the remembered actions of labeling, counting, and opening-first preparation, without indicating a desire for closeness or inclusion.",
+      "cites_renderer_review": false,
+      "confidence": 0.54,
+      "emotional_intensity": 0.49,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-004",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004"
+      ],
+      "source_memory_refs": [
+        "embry_age04_10_b01_memory_002",
+        "embry_age04_10_b01_memory_014"
+      ],
+      "statement": "Embry may desire a form of closeness with Marketa that comes through participation: being near boxes, handling a box, and holding a small card suggest wanting to be included in the move through a small, safe job rather than being left passive while adults manage everything.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "marketa",
+      "tom_state_type": "desire",
+      "uncertainty": "The static frames do not show Embry\u2019s facial affect or any explicit request for inclusion, so desire is inferred from task proximity and remembered participation."
+    }
+  ],
+  "blockers": [],
+  "candidates": [
+    {
+      "alternative_explanation": "The scene may simply be a literal rendering of the source memories about moving boxes, a card, and Marketa helping Embry, without implying a deeper trust state.",
+      "cites_renderer_review": false,
+      "confidence": 0.68,
+      "emotional_intensity": 0.52,
+      "favored_explanation": "psychological",
+      "interpretation_id": "interpretation-001",
+      "observation_refs": [
+        "frame_0002",
+        "frame_0003",
+        "frame_0004"
+      ],
+      "source_memory_refs": [
+        "embry_age04_10_b01_memory_001",
+        "embry_age04_10_b01_memory_014",
+        "embry_age04_10_b01_memory_002"
+      ],
+      "statement": "Embry may associate Marketa with making disruption feel survivable through practical, bounded preparation: the repeated boxes, the small card, and Marketa\u2019s nearby guidance suggest trust in Marketa\u2019s ability to turn a move into manageable steps rather than emotional chaos.",
+      "subject": "embry",
+      "target": "marketa",
+      "tom_state_type": "trust",
+      "uncertainty": "The intended dream is empty, and the rendered sequence has no audio or motion, so the emotional tone must be inferred only from static visual elements."
+    },
+    {
+      "alternative_explanation": "The card may be a visual prop chosen to represent the checklist memory in a straightforward way, with no added meaning about Embry\u2019s belief regarding Marketa.",
+      "cites_renderer_review": false,
+      "confidence": 0.62,
+      "emotional_intensity": 0.46,
+      "favored_explanation": "psychological",
+      "interpretation_id": "interpretation-002",
+      "observation_refs": [
+        "frame_0002",
+        "frame_0003"
+      ],
+      "source_memory_refs": [
+        "embry_age04_10_b01_memory_014",
+        "embry_age04_10_b01_memory_002"
+      ],
+      "statement": "Embry may believe that Marketa\u2019s care is expressed through precision and structure rather than reassurance: the card and box-handling echo the memory of categories such as carry, open first, and later, where Marketa helps Embry mark progress without demanding that she feel settled immediately.",
+      "subject": "embry",
+      "target": "marketa",
+      "tom_state_type": "belief",
+      "uncertainty": "It is unresolved whether the card is specifically the remembered picture card or only a generic small card produced by the renderer."
+    },
+    {
+      "alternative_explanation": "The identity continuity review may only show that the renderer kept Embry visually consistent across frames; the apparent relational continuity with Marketa may be a byproduct of staging the remembered move scenes.",
+      "cites_renderer_review": true,
+      "confidence": 0.57,
+      "emotional_intensity": 0.43,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-003",
+      "observation_refs": [
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004",
+        "identity_temporal_continuity_review"
+      ],
+      "source_memory_refs": [
+        "embry_age04_10_b01_memory_001",
+        "embry_age04_10_b01_memory_014",
+        "embry_age04_10_b01_memory_002"
+      ],
+      "statement": "Because the identity continuity review confirms the young woman consistently matches Embry across the rendered frames, the sequence can tentatively be read as centering Embry\u2019s stable relationship to Marketa across stages of moving: kneeling by boxes, receiving or holding a card, handling a box, and sitting near boxes all keep Embry visually anchored in Marketa\u2019s practical moving rituals.",
+      "subject": "embry",
+      "target": "marketa",
+      "tom_state_type": "relationship_state",
+      "uncertainty": "The continuity review passes Embry identity, but Marketa\u2019s identity is only advisory elsewhere, so the relational reading depends on matching the background or gesturing woman to the remembered Marketa context."
+    },
+    {
+      "alternative_explanation": "The renderer may simply depict Embry performing the remembered actions of labeling, counting, and opening-first preparation, without indicating a desire for closeness or inclusion.",
+      "cites_renderer_review": false,
+      "confidence": 0.54,
+      "emotional_intensity": 0.49,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-004",
+      "observation_refs": [
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004"
+      ],
+      "source_memory_refs": [
+        "embry_age04_10_b01_memory_002",
+        "embry_age04_10_b01_memory_014"
+      ],
+      "statement": "Embry may desire a form of closeness with Marketa that comes through participation: being near boxes, handling a box, and holding a small card suggest wanting to be included in the move through a small, safe job rather than being left passive while adults manage everything.",
+      "subject": "embry",
+      "target": "marketa",
+      "tom_state_type": "desire",
+      "uncertainty": "The static frames do not show Embry\u2019s facial affect or any explicit request for inclusion, so desire is inferred from task proximity and remembered participation."
+    }
+  ],
+  "dream_id": "auto_cycle_20260723T224814Z",
+  "generated_at": "2026-07-23T23:00:34.825536+00:00",
+  "honesty_rule": {
+    "identity_drift_dual_explanation_present": false,
+    "renderer_defect_favored_on_drift": false
+  },
+  "intended_dream": {},
+  "live": true,
+  "llm": {
+    "caller_skill": "persona-dream",
+    "candidate_count": 4,
+    "direct_scillm_call": false,
+    "model": "gpt-5.5",
+    "provider": "scillm",
+    "route": "tau:persona-dream-text-reasoning",
+    "tau_routing": {
+      "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+      "http_status": 200,
+      "live_call_performed": true,
+      "model": "gpt-5.5",
+      "output_contract_sha256": "sha256:97bbf92bb8eb1d13cb7a43a0975b2c62885880a6818689f7ec5dedd6e532c140",
+      "prompt_sha256": "sha256:0e48c07eace93dbf3521fd9d333d06542776961489a92545bcd01ae5f9fa6bfe",
+      "route": "tau:persona-dream-text-reasoning",
+      "status": "PASS",
+      "tau_receipt_schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1"
+    }
+  },
+  "mocked": false,
+  "observation_index": [
+    {
+      "observation_id": "frame_0001",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 1 at t=0.0s; windows=identity; entities=['young woman in a navy shirt facing the camera', 'same or similar young woman kneeling by a cardboard box']",
+      "timestamp_seconds": 0.0
+    },
+    {
+      "observation_id": "frame_0002",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 2 at t=2.5s; windows=identity; entities=['young woman in a navy shirt holding a small card', 'middle-aged woman gesturing beside her']",
+      "timestamp_seconds": 2.5
+    },
+    {
+      "observation_id": "frame_0003",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 3 at t=5.0s; windows=identity; entities=['young woman in a navy shirt handling a large cardboard box', 'woman standing in the background']",
+      "timestamp_seconds": 5.0
+    },
+    {
+      "observation_id": "frame_0004",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 4 at t=7.5s; windows=identity; entities=['young woman in a navy shirt sitting near boxes']",
+      "timestamp_seconds": 7.5
+    },
+    {
+      "observation_id": "identity_temporal_continuity_review",
+      "observation_type": "renderer_continuity_review",
+      "renderer_defect_verdict": "PASS",
+      "renderer_review": true,
+      "summary": "Identity continuity review over window [0.0, 10.0] (model=insightface:buffalo_l (authority) + gpt-5.5 montage (advisory), verdict=PASS): all 4 frames passed ArcFace vs embry_contact_sheet_v3"
+    },
+    {
+      "observation_id": "coverage_gap_00",
+      "observation_type": "coverage_gap",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "no audio track: storyboard frames are the visual artifact"
+    },
+    {
+      "observation_id": "coverage_gap_01",
+      "observation_type": "coverage_gap",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "no inter-frame motion"
+    },
+    {
+      "observation_id": "coverage_gap_02",
+      "observation_type": "coverage_gap",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Marketa Lawson identity advisory (no reference sheet)"
+    }
+  ],
+  "observation_packet_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T224814Z/observation_packet.json",
+  "observation_packet_sha256": "sha256:5111d54c15b409f00398c6416ff51d8f69e29cd71bbbbc23812be7f9dc775c1c",
+  "persona_id": "embry",
+  "provider_live": true,
+  "recall_receipts": [
+    {
+      "collections": [
+        "persona_memory"
+      ],
+      "confidence": 0.902,
+      "found": true,
+      "question": "What memories explain why Embry trusts Marketa Lawson about surf safety boundaries and hazards at the lineup?",
+      "residue_source_ids_confirmed": [],
+      "returned_keys": [
+        "embry_age19_23_b01_memory_010",
+        "persona_dream_phase_03_crew_contract_embry_kai_kahaluu_2024",
+        "persona_dream_phase_06_script_contract_embry_kai_kahaluu_2024",
+        "embry-kai-sick-day_02_story_story_contract_843592d16ce27a53",
+        "embry_age19_23_b01_memory_043",
+        "embry_age23_current_b01_memory_038",
+        "embry_age15_19_b03_memory_019",
+        "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698"
+      ],
+      "tags": [
+        "persona:embry"
+      ]
+    },
+    {
+      "collections": [
+        "persona_memory"
+      ],
+      "confidence": 0.87,
+      "found": true,
+      "question": "What memory shows Marketa Lawson giving Embry operational surf knowledge while respecting her decisions?",
+      "residue_source_ids_confirmed": [],
+      "returned_keys": [
+        "embry_age15_19_b03_memory_014",
+        "persona_dream_phase_06_script_contract_embry_kai_kahaluu_2024",
+        "embry_age15_19_b02_memory_039",
+        "persona_dream_phase_03_crew_contract_embry_kai_kahaluu_2024",
+        "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024",
+        "embry_age19_23_b01_memory_007",
+        "embry-kai-sick-day_02_story_story_contract_843592d16ce27a53",
+        "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698"
+      ],
+      "tags": [
+        "persona:embry"
+      ]
+    },
+    {
+      "collections": [
+        "persona_memory"
+      ],
+      "confidence": 0.871,
+      "found": true,
+      "question": "Why does Embry pause before crossing into surf traffic near Marketa Lawson?",
+      "residue_source_ids_confirmed": [
+        "embry_age04_10_b01_memory_001"
+      ],
+      "returned_keys": [
+        "embry_age15_19_b01_memory_008",
+        "embry_age15_19_b03_memory_040",
+        "embry_age10_15_b01_memory_004",
+        "embry_age19_23_b01_memory_012",
+        "embry_age04_10_b01_memory_019",
+        "persona_dream_phase_06_script_contract_embry_kai_kahaluu_2024",
+        "embry_age04_10_b01_memory_001",
+        "dream_pilot_r1_f"
+      ],
+      "tags": [
+        "persona:embry"
+      ]
+    }
+  ],
+  "rejected_interpretations": [],
+  "revision_id": "cycle_20260723T224814Z",
+  "run_id": "goal-v3",
+  "schema": "persona_dream.dream_self_interpretation.v1",
+  "source_memory_bindings": [
+    {
+      "collection": "persona_memory",
+      "memory_text_sha256": "sha256:49db04a304c407dc5d98ce3dc0268d79ef0e7bdff3c552be3a885b94756ed617",
+      "persona_id": "embry",
+      "recall_confirmed": true,
+      "source_id": "embry_age04_10_b01_memory_001"
+    },
+    {
+      "collection": "persona_memory",
+      "memory_text_sha256": "sha256:e3a4d65f24446e6e5f77237646ecebcc7c326073c70aaf9fb02b18386e38adb7",
+      "persona_id": "embry",
+      "recall_confirmed": false,
+      "source_id": "embry_age04_10_b01_memory_014"
+    },
+    {
+      "collection": "persona_memory",
+      "memory_text_sha256": "sha256:f170c6d2e1e1e44b683b52b40903db6438e22ec89edd587638287aa480a55125",
+      "persona_id": "embry",
+      "recall_confirmed": false,
+      "source_id": "embry_age04_10_b01_memory_002"
+    }
+  ],
+  "status": "PASS_SELF_INTERPRETATION"
+}

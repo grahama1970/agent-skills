@@ -1,7 +1,7 @@
 {
   "schema": "persona_dream.tom_annotation_packets.v1",
   "blinding": "profiles labeled A/B; D/M mapping sealed separately",
-  "n_packets": 5,
+  "n_packets": 12,
   "packets": [
     {
       "packet_id": "cycle_20260722T184531Z",
@@ -316,6 +316,457 @@
               "weight": 0.43,
               "tom_summaries": [
                 "Embry may feel uncertain about how much Marketa sees, guides, or influences her planning around movement, safe return, and future obligations."
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "packet_id": "cycle_20260723T212254Z",
+      "source_memories": [
+        {
+          "source_id": "embry_age15_19_b02_memory_022",
+          "text": "Embry lets Kai participate in a grandmother's recipe call but leaves his public status undefined.\nHer grandmother asks who is holding the bowl. Embry says Kai is helping. Kai describes the texture accurately; Embry does not correct the word friend when her grandmother uses it.\npeople: Grandmother, grandmother unresolved nana or grammy, Embry Lawson, Kai; objects: family recipe note; concepts: boundary\nSetting: age band 15-19. Situation: Embry lets Kai participate in a grandmother's recipe call but leaves his public status undefined. Trigger: The recipe call exposes Kai's presence. Stakes: She lets him speak but does not clarify the label.\nEmotions: guilt, trust. Intensity: 4/5. Regulation: compartmentalization and concealment control. Conflict: Embry is not ready to convert private intimacy into a family-recognized role.\nTheory of mind: relationship: Embry permits direct participation in family ritual while maintaining an undefined public relationship. Trigger: The recipe call exposes Kai's presence. Consequence: She lets him speak but does not clarify the label. | boundary: Embry is not ready to convert private intimacy into a family-recognized role. Trigger: Her grandmother supplies a narrower safe label. Consequence: Embry leaves it uncorrected."
+        },
+        {
+          "source_id": "embry_age15_19_b03_memory_003",
+          "text": "A grandmother repairs a torn edge of Embry's traveling afghan without hiding the visible mend.\nThe afghan catches on a moving-box staple. Embry asks whether the damaged row should be removed. Her grandmother reinforces it with a contrasting strand and says a repair should show where the cloth held.\npeople: Grandmother, grandmother unresolved nana or grammy, Embry Lawson; objects: family afghan, traveling afghan; concepts: portable home, repair\nSetting: age band 15-19. Situation: A grandmother repairs a torn edge of Embry's traveling afghan without hiding the visible mend. Trigger: Her grandmother chooses reinforcement over invisible restoration. Stakes: Embry keeps the contrasting mend rather than replacing the afghan.\nEmotions: guilt, longing, shame. Intensity: 4/5. Regulation: compartmentalization and concealment control. Conflict: \nTheory of mind: belief: Embry briefly accepts that visible repair can preserve continuity without pretending damage never occurred. Trigger: Her grandmother chooses reinforcement over invisible restoration. Consequence: Embry keeps the contrasting mend rather than replacing the afghan. | relationship: Embry experiences collaborative repair as permission to bring damaged things back into use without shame. Trigger: Her grandmother treats the tear as ordinary and recoverable. Consequence: The afghan remains an active home anchor instead of becoming archived."
+        },
+        {
+          "source_id": "embry_age15_19_b03_memory_023",
+          "text": "Embry sends her grandmother a photograph of Kai's collards but calls him only a school friend.\nHer grandmother asks who is holding the spoon. Embry types Kai's name, deletes it, and answers, 'A friend here.' She saves the photograph separately.\npeople: Grandmother, grandmother unresolved nana or grammy, Embry Lawson, James, kai\nSetting: age band 15-19. Situation: Embry sends her grandmother a photograph of Kai's collards but calls him only a school friend. Trigger: The photograph invites identification of its other participant. Stakes: She shares the result but narrows his role.\nEmotions: grief, guilt. Intensity: 4/5. Regulation: compartmentalization and concealment control. Conflict: \nTheory of mind: relationship: Embry wants to connect Kai with family tradition without making the relationship publicly consequential. Trigger: The photograph invites identification of its other participant. Consequence: She shares the result but narrows his role. | belief: Naming a relationship can expose it to expectations and future loss before Embry is ready. Trigger: Her grandmother's question would move Kai into family knowledge. Consequence: Embry uses categorical truth to preserve control over meaning."
+        }
+      ],
+      "counterpart_candidates": [
+        "Embry Lawson",
+        "Grandmother",
+        "James",
+        "Kai",
+        "grandmother unresolved nana or grammy",
+        "guilt. Intensity: 4/5. Regulation: compartmentalization and concealment control. Conflict: \nTheory of mind: relationship: Embry wants to connect Kai with family tradition without making the relationship publicly consequential. Trigger: The photograph invites identification of its other participant. Consequence: She shares the result but narrows his role. | belief: Naming a relationship can expose it to expectations and future loss before Embry is ready. Trigger: Her grandmother's question would move Kai into family knowledge. Consequence: Embry uses categorical truth to preserve control over meaning."
+      ],
+      "profiles": {
+        "A": {
+          "ranked_affect": [
+            {
+              "emotional_tag": "hesitance",
+              "weight": 0.62,
+              "tom_summaries": [
+                "Embry may be uncertain about how explicitly to present or define Kai-related relationship meaning to her grandmother, keeping the label indirect even when Kai-like presence is visible in shared domest"
+              ]
+            },
+            {
+              "emotional_tag": "warmth",
+              "weight": 0.55,
+              "tom_summaries": [
+                "Embry may trust her grandmother as a safe witness to repaired or imperfect family feeling, with the crocheted blanket imagery suggesting comfort and acceptance."
+              ]
+            },
+            {
+              "emotional_tag": "reflection",
+              "weight": 0.45,
+              "tom_summaries": [
+                "Embry may experience her bond with her grandmother as sustained through domestic artifacts and mediated contact rather than simple direct presence.",
+                "Embry may believe her grandmother-linked memories help anchor a continuous sense of self across revisited themes of food, textiles, and relationship disclosure."
+              ]
+            }
+          ]
+        },
+        "B": {
+          "ranked_affect": [
+            {
+              "emotional_tag": "warmth",
+              "weight": 0.538
+            },
+            {
+              "emotional_tag": "yearning",
+              "weight": 0.308
+            },
+            {
+              "emotional_tag": "boundary",
+              "weight": 0.077
+            }
+          ]
+        }
+      }
+    },
+    {
+      "packet_id": "cycle_20260723T213742Z",
+      "source_memories": [
+        {
+          "source_id": "embry_age15_19_b03_memory_002",
+          "text": "Embry preserves an old voicemail from Maya while deleting other messages during a phone transfer.\nA years-old voicemail contains Maya laughing about a failed rocket ignition. Embry exports it under a neutral filename, deletes the visible message, and never calls the number attached.\npeople: Embry Lawson, Maya Chen; objects: maya voicemail archive; events: embry maya post move contact\nSetting: age band 15-19. Situation: Embry preserves an old voicemail from Maya while deleting other messages during a phone transfer. Trigger: The phone transfer forces a keep-or-delete decision. Stakes: She keeps the audio but removes it from ordinary view.\nEmotions: uncertainty. Intensity: 2/5. Regulation: controlled action and selective disclosure. Conflict: Embry has not decided whether preserving Maya's voice is remembrance, preparation for contact, or refusal to let the friendship end.\nTheory of mind: unresolved_thread: Embry has not decided whether preserving Maya's voice is remembrance, preparation for contact, or refusal to let the friendship end. Trigger: The phone transfer forces a keep-or-delete decision. Consequence: She keeps the audio but removes it from ordinary view. | goal: Embry wants continued access to the relationship without risking a new interaction she cannot control. Trigger: The voicemail offers closeness without uncertainty about Maya's present response. Consequence: She archives the file instead of calling."
+        },
+        {
+          "source_id": "embry_age15_19_b01_memory_002",
+          "text": "Embry writes Maya a detailed launch update but never sends it, preserving the friendship as an unresolved possibility rather than risking confirmation that it has changed.\nEmbry photographs a repaired rocket fin and drafts a message explaining the failure, the fix, and the new launch conditions. She deletes the opening sentence three times because none of them explains the years of silence. She saves the photographs in a folder labeled MAYA but closes the message without sending it.\npeople: Embry Lawson, maya chen; places: Yale; objects: unsent maya launch update; organizations: Yale; events: embry maya post move contact; concepts: belonging, repair\nSetting: Yale. Situation: Embry writes Maya a detailed launch update but never sends it, preserving the friendship as an unresolved possibility rather than risking confirmation that it has changed. Trigger: A technical success recreates the kind of event they once shared. Stakes: She preserves the material for future contact while leaving the relationship inactive.\nEmotions: grief, guilt, longing, uncertainty. Intensity: 5/5. Regulation: compartmentalization and concealment control. Conflict: Embry still wants contact with Maya but has not decided how to resume a relationship altered by distance and time.\nTheory of mind: unresolved_thread: Embry still wants contact with Maya but has not decided how to resume a relationship altered by distance and time. Trigger: A technical success recreates the kind of event they once shared. Consequence: She preserves the material for future contact while leaving the relationship inactive. | goal: Embry wants any renewed contact to acknowledge the gap without exposing how much the friendship still matters to her. Trigger: A purely technical update feels emotionally incomplete, while a personal opening feels too vulnerable. Consequence: She postpones contact until she can formulate a message that controls both risks. | belief: An unsent possibility is less painful than a response proving that belonging cannot be restored. Trigger: She cannot predict whether Maya would welcome, resent, or ignore the message. Consequence: Embry chooses preservation over resolution."
+        },
+        {
+          "source_id": "embry_age15_19_b01_memory_005",
+          "text": "At her new DOD school, Embry develops a concise self-introduction that communicates competence while excluding the attachments and losses behind the move.\nBy the third classroom introduction, Embry uses the same three sentences: her father is Air Force, she transferred from Virginia, and she likes mechanical systems. She does not mention Maya, the scar, or how many addresses came before this one. When another military student asks where home is, Embry says South Carolina because it is the answer requiring the fewest follow-up questions.\npeople: Embry Lawson, Maya Chen; places: hickam dod school candidate, Yale; objects: bottle-rocket scar; organizations: USAF, Yale; concepts: stealth, boundary, grief, portable home, trust, controlled self presentation\nSetting: Yale, hickam dod school candidate. Situation: At her new DOD school, Embry develops a concise self-introduction that communicates competence while excluding the attachments and losses behind the move. Trigger: Repeated introductions invite strangers to define her through moves and family service. Stakes: She creates a stable, efficient account of herself.\nEmotions: anger, grief, guilt, longing, pride, trust. Intensity: 5/5. Regulation: compartmentalization and concealment control. Conflict: Embry treats prior attachments, the scar's emotional meaning, and move-related grief as information new peers have not earned.\nTheory of mind: goal: Embry wants to become legible and competent in the new school without surrendering control over vulnerable history. Trigger: Repeated introductions invite strangers to define her through moves and family service. Consequence: She creates a stable, efficient account of herself. | boundary: Embry treats prior attachments, the scar's emotional meaning, and move-related grief as information new peers have not earned. Trigger: Open-ended questions could expose personal history before trust exists. Consequence: She supplies accurate but deliberately narrow facts. | belief: A controlled introduction reduces the cost of starting over because competence is more portable than biography. Trigger: Another school requires her to explain who she is to strangers. Consequence: Self-presentation becomes a reusable adaptation mechanism and emotional shield."
+        }
+      ],
+      "counterpart_candidates": [
+        "Embry Lawson",
+        "Maya Chen",
+        "maya chen"
+      ],
+      "profiles": {
+        "A": {
+          "ranked_affect": [
+            {
+              "emotional_tag": "yearning",
+              "weight": 0.62,
+              "tom_summaries": [
+                "Embry may want to reach Maya indirectly through a competent technical explanation or presentation, using rocket-related imagery as a substitute for an unsent communication."
+              ]
+            },
+            {
+              "emotional_tag": "reflection",
+              "weight": 0.5833,
+              "tom_summaries": [
+                "Embry may experience Maya as emotionally close but unreachable, preserved near rocket-related memory while remaining outside Embry's fully embodied present world.",
+                "Embry may fear that openly naming Maya or acknowledging the loss would weaken her controlled self-presentation, leading her to rely on formal and technical substitutes for direct emotion."
+              ]
+            }
+          ]
+        },
+        "B": {
+          "ranked_affect": [
+            {
+              "emotional_tag": "yearning",
+              "weight": 0.353
+            },
+            {
+              "emotional_tag": "warmth",
+              "weight": 0.294
+            },
+            {
+              "emotional_tag": "boundary",
+              "weight": 0.118
+            }
+          ]
+        }
+      }
+    },
+    {
+      "packet_id": "cycle_20260723T215140Z",
+      "source_memories": [
+        {
+          "source_id": "embry_age10_15_b01_memory_009",
+          "text": "During a Sunday call, Embry's grandmother recognizes distress through the sound of over-tight knitting, but Embry accepts practical correction while withholding the reason she cannot relax.\nEmbry keeps the phone on speaker while knitting in the Eglin garage. Her grandmother hears the needles clicking too sharply and asks whether she is pulling the yarn tight again. Embry says the pattern needs structure. Her grandmother tells her to loosen one row, not unravel the whole thing. Embry does, but does not mention Maya or the prayer card in the tool box.\npeople: Grandmother, grandmother unresolved nana or grammy, Embry Lawson, Maya Chen; places: Eglin AFB; events: embry maya post move contact; concepts: boundary, care without forced disclosure, privacy, repair, trust\nSetting: Eglin AFB. Situation: During a Sunday call, Embry's grandmother recognizes distress through the sound of over-tight knitting, but Embry accepts practical correction while withholding the reason she cannot relax. Trigger: Her grandmother detects tension through a familiar shared craft without demanding disclosure. Stakes: Embry follows the repair advice while preserving emotional privacy.\nEmotions: grief, trust. Intensity: 3/5. Regulation: family ritual and portable anchors. Conflict: Embry permits help with the visible task while withholding the private emotional cause of the problem.\nTheory of mind: relationship: Embry trusts her grandmother to notice strain and offer practical care, but not yet enough to explain the underlying loss. Trigger: Her grandmother detects tension through a familiar shared craft without demanding disclosure. Consequence: Embry follows the repair advice while preserving emotional privacy. | boundary: Embry permits help with the visible task while withholding the private emotional cause of the problem. Trigger: The conversation approaches why her knitting has become unusually tight. Consequence: She redirects to pattern structure and limits the exchange to practical correction."
+        },
+        {
+          "source_id": "embry_age10_15_b01_memory_004",
+          "text": "Embry recognizes the signs of new orders before her parents announce the Eglin move and responds by quietly preparing rather than asking for reassurance.\nA manila folder stays beside Marketa's laptop, Tommy takes two low-voiced calls in the garage, and the calendar suddenly has fewer plans written past the next month. Embry does not ask whether they are moving. She starts placing books she has finished into a box and leaves Maya's drawer untouched.\npeople: Embry Lawson, Marketa Lawson, Maya Chen, Tommy Lawson; places: Eglin AFB; objects: maya labeled drawer\nSetting: Eglin AFB. Situation: Embry recognizes the signs of new orders before her parents announce the Eglin move and responds by quietly preparing rather than asking for reassurance. Trigger: She recognizes familiar administrative and behavioral signs from prior moves. Stakes: She prepares reversible parts of her life while avoiding a question her parents may not yet be able to answer.\nEmotions: fear, grief, longing, uncertainty. Intensity: 3/5. Regulation: scheduling and maintenance planning. Conflict: Embry suspects that new orders exist but does not know the destination, timing, or whether the move is final.\nTheory of mind: knowledge_gap: Embry suspects that new orders exist but does not know the destination, timing, or whether the move is final. Trigger: She recognizes familiar administrative and behavioral signs from prior moves. Consequence: She prepares reversible parts of her life while avoiding a question her parents may not yet be able to answer. | emotion: Embry feels anticipatory loss and fear but converts them into controlled packing behavior. Trigger: The possibility of losing daily life with Maya becomes plausible before it is confirmed. Consequence: She appears practical while privately monitoring every sign that the move is real."
+        },
+        {
+          "source_id": "embry_age10_15_b01_memory_002",
+          "text": "When Maya asks about the nose scar during a sleepover, Embry gives a factual account but withholds the shame attached to it, establishing an early trust-gated privacy boundary.\nMaya notices the silver-white line while they brush their teeth and asks what happened. Embry says it was a bottle rocket, she held it wrong, and the emergency room gave her seven stitches. When Maya asks whether she was scared, Embry rinses the sink, says the bleeding was inconvenient, and redirects them to the unfinished rocket fins.\npeople: Embry Lawson, maya chen; places: Eglin AFB; objects: bottle-rocket scar, bottle rocket; concepts: scar facts without shame, boundary, privacy, trust\nSetting: Eglin AFB. Situation: When Maya asks about the nose scar during a sleepover, Embry gives a factual account but withholds the shame attached to it, establishing an early trust-gated privacy boundary. Trigger: Maya shifts from asking what happened to asking how Embry felt. Stakes: Embry redirects the conversation to a shared technical task while preserving the friendship.\nEmotions: anger, fear, guilt, shame, trust. Intensity: 4/5. Regulation: compartmentalization and concealment control. Conflict: Embry is willing to disclose the physical facts of the scar but not the fear and self-blame attached to it.\nTheory of mind: boundary: Embry is willing to disclose the physical facts of the scar but not the fear and self-blame attached to it. Trigger: Maya shifts from asking what happened to asking how Embry felt. Consequence: Embry redirects the conversation to a shared technical task while preserving the friendship. | relationship: Embry trusts Maya more than most peers but still does not believe closeness automatically grants access to her most vulnerable interpretation of an event. Trigger: Maya receives a fuller factual answer than a stranger would, but not the emotional account. Consequence: Their friendship deepens within an unspoken limit on emotional disclosure."
+        }
+      ],
+      "counterpart_candidates": [
+        "Embry Lawson",
+        "Grandmother",
+        "Marketa Lawson",
+        "Maya Chen",
+        "Tommy Lawson",
+        "grandmother unresolved nana or grammy"
+      ],
+      "profiles": {
+        "A": {
+          "ranked_affect": [
+            {
+              "emotional_tag": "boundary",
+              "weight": 0.375
+            },
+            {
+              "emotional_tag": "warmth",
+              "weight": 0.312
+            },
+            {
+              "emotional_tag": "yearning",
+              "weight": 0.25
+            }
+          ]
+        },
+        "B": {
+          "ranked_affect": [
+            {
+              "emotional_tag": "warmth",
+              "weight": 0.55,
+              "tom_summaries": [
+                "Embry may have a tentative trust boundary with Maya, allowing factual visibility while keeping more vulnerable shame or distress private."
+              ]
+            },
+            {
+              "emotional_tag": "reflection",
+              "weight": 0.5,
+              "tom_summaries": [
+                "Embry may fear being observed or interpreted by Maya before she is ready to disclose the vulnerable reason behind her discomfort."
+              ]
+            },
+            {
+              "emotional_tag": "boundary",
+              "weight": 0.45,
+              "tom_summaries": [
+                "Embry may maintain a self-protective stance toward Maya, preserving a coherent outward identity while quietly managing uncertainty rather than seeking reassurance."
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "packet_id": "cycle_20260723T220612Z",
+      "source_memories": [
+        {
+          "source_id": "embry_age04_10_b01_memory_039",
+          "text": "Tommy secures the scene and calmly drives Embry to the emergency room.\nCandidate scene anchored to fixed canon: Tommy acts without panic, gives Embry concrete instructions, and drives her from the Langley AFB backyard to the ER.\npeople: Embry Lawson, Tommy Lawson; places: Langley AFB; concepts: safety boundary\nSetting: Langley AFB. Situation: Tommy secures the scene and calmly drives Embry to the emergency room. Trigger: She is bleeding and frightened after the bottle-rocket strike. Stakes: His procedural care becomes inseparable from her memory of surviving the event.\nEmotions: trust. Intensity: 2/5. Regulation: controlled action and selective disclosure. Conflict: \nTheory of mind: relationship: Embry experiences Tommy's calm action as safety when words cannot undo the injury. Trigger: She is bleeding and frightened after the bottle-rocket strike. Consequence: His procedural care becomes inseparable from her memory of surviving the event."
+        },
+        {
+          "source_id": "embry_age04_10_b01_memory_013",
+          "text": "Tommy gives Embry a three-part response to small mistakes: stop, make safe, then repair what can be repaired.\nCandidate scene: the sequence is attached to the screw spill and practiced with a harmless misplaced part. It is an action rule, not a promise that no harm will occur.\npeople: Embry Lawson, Tommy Lawson; concepts: repair\nSetting: age band 04-10. Situation: Tommy gives Embry a three-part response to small mistakes: stop, make safe, then repair what can be repaired. Trigger: Tommy names a repeatable cleanup sequence. Stakes: The rule becomes both resilience tool and later fuel for excessive checking.\nEmotions: guilt, trust. Intensity: 4/5. Regulation: compartmentalization and concealment control. Conflict: \nTheory of mind: belief: Embry believes a mistake can have a procedure after it happens. Trigger: Tommy names a repeatable cleanup sequence. Consequence: The rule becomes both resilience tool and later fuel for excessive checking."
+        },
+        {
+          "source_id": "embry_age04_10_b01_memory_032",
+          "text": "Tommy demonstrates launcher angle, eye protection, distance, and a clear zone during a child-appropriate rocket activity.\nCandidate scene: he names where bodies may stand, who calls the launch, and when the setup is considered safe. Embry repeats the boundary back.\npeople: Embry Lawson, Tommy Lawson; concepts: boundary, safety boundary\nSetting: age band 04-10. Situation: Tommy demonstrates launcher angle, eye protection, distance, and a clear zone during a child-appropriate rocket activity. Trigger: Tommy prepares a supervised rocket activity. Stakes: Safety procedure becomes part of shared enjoyment rather than exclusion.\nEmotions: trust. Intensity: 2/5. Regulation: controlled action and selective disclosure. Conflict: Embry knows launches require angle control, distance, and a clear zone.\nTheory of mind: boundary: Embry knows launches require angle control, distance, and a clear zone. Trigger: Tommy prepares a supervised rocket activity. Consequence: Safety procedure becomes part of shared enjoyment rather than exclusion."
+        }
+      ],
+      "counterpart_candidates": [
+        "Embry Lawson",
+        "Tommy Lawson"
+      ],
+      "profiles": {
+        "A": {
+          "ranked_affect": [
+            {
+              "emotional_tag": "warmth",
+              "weight": 0.68,
+              "tom_summaries": [
+                "Embry may trust Tommy as a steady safety figure who remains present and takes responsible action during a frightening incident."
+              ]
+            },
+            {
+              "emotional_tag": "reflection",
+              "weight": 0.6033,
+              "tom_summaries": [
+                "Embry may believe Tommy responds to problems through practical care: stabilizing the situation, moving safely, and addressing what can be fixed.",
+                "Embry may experience her relationship with Tommy as one in which she is protected across a continuous, embodied event."
+              ]
+            }
+          ]
+        },
+        "B": {
+          "ranked_affect": [
+            {
+              "emotional_tag": "boundary",
+              "weight": 0.5
+            },
+            {
+              "emotional_tag": "warmth",
+              "weight": 0.25
+            },
+            {
+              "emotional_tag": "yearning",
+              "weight": 0.25
+            }
+          ]
+        }
+      }
+    },
+    {
+      "packet_id": "cycle_20260723T221914Z",
+      "source_memories": [
+        {
+          "source_id": "embry_age04_10_b01_memory_007",
+          "text": "A grandmother Embry may remember as Nana or Grammy repairs a torn seam on a beloved stuffed animal instead of replacing it.\nCandidate scene: the grandmother closes the seam while explaining that keeping something can include mending it. Her exact identity remains unresolved.\npeople: Grammy, Grandmother, Nana, Embry Lawson; concepts: repair\nSetting: age band 04-10. Situation: A grandmother Embry may remember as Nana or Grammy repairs a torn seam on a beloved stuffed animal instead of replacing it. Trigger: The stuffed animal's seam opens during a disruptive period. Stakes: Watching repair converts distress into cautious relief.\nEmotions: fear, guilt, relief, uncertainty. Intensity: 4/5. Regulation: compartmentalization and concealment control. Conflict: \nTheory of mind: emotion: Embry fears damage means losing a beloved object. Trigger: The stuffed animal's seam opens during a disruptive period. Consequence: Watching repair converts distress into cautious relief."
+        },
+        {
+          "source_id": "embry_age04_10_b01_memory_029",
+          "text": "A grandmother helps patch Embry's torn backpack with a visible piece of familiar fabric.\nCandidate scene: Embry chooses repair over replacement. The patch carries continuity into school, though the grandmother may be Nana or Grammy and the exact craft remains unresolved.\npeople: Grammy, Grandmother, Nana, Embry Lawson; concepts: repair\nSetting: age band 04-10. Situation: A grandmother helps patch Embry's torn backpack with a visible piece of familiar fabric. Trigger: The backpack tears during a period of change. Stakes: The visible patch becomes both practical repair and relational continuity.\nEmotions: uncertainty. Intensity: 2/5. Regulation: controlled action and selective disclosure. Conflict: \nTheory of mind: relationship: Embry experiences the grandmother's repair as a portable bond. Trigger: The backpack tears during a period of change. Consequence: The visible patch becomes both practical repair and relational continuity."
+        },
+        {
+          "source_id": "embry_age04_10_b01_memory_018",
+          "text": "When a classroom paper model tears, Embry tapes the tear visibly and submits it instead of starting over.\nCandidate scene: she first wants a fresh sheet, then remembers that the repaired toy remained hers. She reinforces the tear and lets the seam show.\npeople: Grandmother, Embry Lawson; concepts: repair, work as emotional refuge\nSetting: age band 04-10. Situation: When a classroom paper model tears, Embry tapes the tear visibly and submits it instead of starting over. Trigger: The model tears near the end of class. Stakes: Submitting it generalizes the grandmother's lesson beyond sentimental objects.\nEmotions: guilt. Intensity: 4/5. Regulation: compartmentalization and concealment control. Conflict: \nTheory of mind: belief: Embry can temporarily accept that repaired work still counts. Trigger: The model tears near the end of class. Consequence: Submitting it generalizes the grandmother's lesson beyond sentimental objects."
+        }
+      ],
+      "counterpart_candidates": [
+        "Embry Lawson",
+        "Grammy",
+        "Grandmother",
+        "Nana"
+      ],
+      "profiles": {
+        "A": {
+          "ranked_affect": [
+            {
+              "emotional_tag": "warmth",
+              "weight": 0.556
+            },
+            {
+              "emotional_tag": "hesitance",
+              "weight": 0.222
+            },
+            {
+              "emotional_tag": "yearning",
+              "weight": 0.111
+            }
+          ]
+        },
+        "B": {
+          "ranked_affect": [
+            {
+              "emotional_tag": "warmth",
+              "weight": 0.68,
+              "tom_summaries": [
+                "Embry may trust the grandmother as a caretaker who responds to damaged beloved things with repair and preservation rather than disposal."
+              ]
+            },
+            {
+              "emotional_tag": "reflection",
+              "weight": 0.53,
+              "tom_summaries": [
+                "Embry may believe the grandmother sees visible repair as acceptable continuity, allowing a patched object to remain part of daily life rather than needing replacement.",
+                "Embry may hold the grandmother as an emotionally important but not fully resolved advisory figure connected to repair and continuity in her sense of self."
+              ]
+            },
+            {
+              "emotional_tag": "boundary",
+              "weight": 0.46,
+              "tom_summaries": [
+                "Embry may adopt the grandmother's repair-oriented stance, treating visible mending as something she can stand behind rather than hide."
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "packet_id": "cycle_20260723T223359Z",
+      "source_memories": [
+        {
+          "source_id": "embry_age04_10_b01_memory_046",
+          "text": "By about age ten, Maya approaches Embry without mocking the scar and proposes building a small rocket together under shared safety rules.\nCandidate scene: Maya accepts the checklist but asks for divided roles and a stopping point. She treats Embry as a collaborator, not a fragile observer or sole safety officer.\npeople: Embry Lawson, Maya Chen; objects: bottle-rocket scar, POINT/PATH/PEOPLE checklist; concepts: belonging, boundary, safety boundary, work as emotional refuge\nSetting: age band 04-10. Situation: By about age ten, Maya approaches Embry without mocking the scar and proposes building a small rocket together under shared safety rules. Trigger: Maya offers a rocket project and respects the first safety boundary. Stakes: A cautious friendship forms around shared work rather than instant emotional disclosure.\nEmotions: longing, trust. Intensity: 4/5. Regulation: procedural verification. Conflict: \nTheory of mind: relationship: Embry wants Maya's friendship but tests whether closeness can coexist with bounded risk. Trigger: Maya offers a rocket project and respects the first safety boundary. Consequence: A cautious friendship forms around shared work rather than instant emotional disclosure."
+        },
+        {
+          "source_id": "embry_age04_10_b01_memory_048",
+          "text": "Embry and Maya complete a carefully supervised launch, with Embry using a finite checklist and allowing Maya to hold a real role; the balance between Precision and trust remains unresolved.\nCandidate scene: Embry checks the agreed safety conditions once with a shared verification, steps to the chosen distance, and does not demand certainty about every variable. The launch may succeed, but the deeper outcome is cautious belonging rather than cure.\npeople: Embry Lawson, Maya Chen; objects: bottle-rocket scar, POINT/PATH/PEOPLE checklist; concepts: belonging, Precision, safety boundary, trust, verification\nSetting: age band 04-10. Situation: Embry and Maya complete a carefully supervised launch, with Embry using a finite checklist and allowing Maya to hold a real role; the balance between Precision and trust remains unresolved. Trigger: Maya remains present through preparation, correction, and launch. Stakes: Precision begins shifting from solitary overcontrol toward bounded care, while the scar's meaning stays open.\nEmotions: fear, longing, trust, uncertainty. Intensity: 4/5. Regulation: procedural verification. Conflict: Embry can share risk and responsibility, but she has not stopped fearing irreversible error.\nTheory of mind: unresolved_thread: Embry can share risk and responsibility, but she has not stopped fearing irreversible error. Trigger: Maya remains present through preparation, correction, and launch. Consequence: Precision begins shifting from solitary overcontrol toward bounded care, while the scar's meaning stays open."
+        },
+        {
+          "source_id": "embry_age04_10_b01_memory_047",
+          "text": "During the build, Maya makes or notices a non-dangerous error, and the two repair it without abandoning the project or assigning blame.\nCandidate scene: a fin is misaligned or a measurement is copied incorrectly before launch. Maya names it, Embry pauses, they repair it, and both remain part of the work.\npeople: Embry Lawson, Maya Chen; concepts: repair, safety boundary, work as emotional refuge\nSetting: age band 04-10. Situation: During the build, Maya makes or notices a non-dangerous error, and the two repair it without abandoning the project or assigning blame. Trigger: A visible, non-dangerous build mistake occurs within agreed safety limits. Stakes: Repairable error becomes a shared relational experience instead of Embry's private burden.\nEmotions: anger, guilt, trust. Intensity: 4/5. Regulation: compartmentalization and concealment control. Conflict: \nTheory of mind: belief: Embry revises the belief that any error predicts catastrophe or exclusion. Trigger: A visible, non-dangerous build mistake occurs within agreed safety limits. Consequence: Repairable error becomes a shared relational experience instead of Embry's private burden."
+        }
+      ],
+      "counterpart_candidates": [
+        "Embry Lawson",
+        "Maya Chen"
+      ],
+      "profiles": {
+        "A": {
+          "ranked_affect": [
+            {
+              "emotional_tag": "boundary",
+              "weight": 0.333
+            },
+            {
+              "emotional_tag": "warmth",
+              "weight": 0.333
+            },
+            {
+              "emotional_tag": "yearning",
+              "weight": 0.2
+            }
+          ]
+        },
+        "B": {
+          "ranked_affect": [
+            {
+              "emotional_tag": "warmth",
+              "weight": 0.56,
+              "tom_summaries": [
+                "Embry may be developing tentative trust in Maya as a collaborator when her participation occurs within a shared, visible structure around the rocket task."
+              ]
+            },
+            {
+              "emotional_tag": "boundary",
+              "weight": 0.44,
+              "tom_summaries": [
+                "Embry may be taking a controlled-cooperation stance toward Maya, allowing her active proximity while relying on checklist-like structure for safety."
+              ]
+            },
+            {
+              "emotional_tag": "reflection",
+              "weight": 0.42,
+              "tom_summaries": [
+                "Embry may believe that errors involving Maya can be identified and repaired without blame while both remain engaged in the activity.",
+                "Embry and Maya may be in a relatively stable collaborative relationship state across the observed sequence, rather than appearing as disconnected participants in separate scenes."
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "packet_id": "cycle_20260723T224814Z",
+      "source_memories": [
+        {
+          "source_id": "embry_age04_10_b01_memory_001",
+          "text": "During a military-family move, Marketa keeps a clearly marked first-night box within reach so temporary quarters can function before full unpacking.\nCandidate scene: bedding, toiletries, a lamp, and one familiar comfort object are separated from the larger shipment. Marketa treats preparation as ordinary care and does not promise that the move will feel easy.\npeople: Embry Lawson, Marketa Lawson; concepts: portable home\nSetting: age band 04-10. Situation: During a military-family move, Marketa keeps a clearly marked first-night box within reach so temporary quarters can function before full unpacking. Trigger: Marketa opens the first-night box before decorative boxes. Stakes: Embry looks for organized rituals when places change.\nEmotions: relief. Intensity: 2/5. Regulation: family ritual and portable anchors. Conflict: \nTheory of mind: relationship: Embry begins to associate Marketa with continuity that can be packed and reopened. Trigger: Marketa opens the first-night box before decorative boxes. Consequence: Embry looks for organized rituals when places change."
+        },
+        {
+          "source_id": "embry_age04_10_b01_memory_014",
+          "text": "Before another move, Marketa gives Embry a picture card with three categories: carry, open first, and later.\nCandidate scene: Marketa converts a large transition into manageable steps. Embry marks progress without being asked to predict when she will feel settled.\npeople: Embry Lawson, Marketa Lawson; objects: OPEN FIRST box, POINT/PATH/PEOPLE checklist; concepts: Precision\nSetting: age band 04-10. Situation: Before another move, Marketa gives Embry a picture card with three categories: carry, open first, and later. Trigger: Rooms become partially packed and hard to read. Stakes: Visible categories strengthen her reliance on procedures and completion checks.\nEmotions: uncertainty. Intensity: 2/5. Regulation: procedural verification. Conflict: \nTheory of mind: goal: Embry wants uncertainty divided into steps she can complete. Trigger: Rooms become partially packed and hard to read. Consequence: Visible categories strengthen her reliance on procedures and completion checks."
+        },
+        {
+          "source_id": "embry_age04_10_b01_memory_002",
+          "text": "Marketa lets Embry count and place labels on the boxes designated to open first.\nCandidate scene: Embry receives a small, bounded job rather than adult responsibility for the move. Counting labels turns waiting into participation.\npeople: Embry Lawson, Marketa Lawson; objects: OPEN FIRST box, POINT/PATH/PEOPLE checklist; concepts: portable home, Precision\nSetting: age band 04-10. Situation: Marketa lets Embry count and place labels on the boxes designated to open first. Trigger: Marketa assigns a concrete labeling task. Stakes: Participation lowers helplessness and seeds later checklist behavior.\nEmotions: uncertainty. Intensity: 2/5. Regulation: procedural verification. Conflict: \nTheory of mind: goal: Embry wants a useful role in making the next home ready. Trigger: Marketa assigns a concrete labeling task. Consequence: Participation lowers helplessness and seeds later checklist behavior."
+        }
+      ],
+      "counterpart_candidates": [
+        "Embry Lawson",
+        "Marketa Lawson"
+      ],
+      "profiles": {
+        "A": {
+          "ranked_affect": [
+            {
+              "emotional_tag": "warmth",
+              "weight": 0.333
+            },
+            {
+              "emotional_tag": "hesitance",
+              "weight": 0.333
+            },
+            {
+              "emotional_tag": "yearning",
+              "weight": 0.333
+            }
+          ]
+        },
+        "B": {
+          "ranked_affect": [
+            {
+              "emotional_tag": "warmth",
+              "weight": 0.52,
+              "tom_summaries": [
+                "Embry may trust Marketa to make moving feel manageable by breaking disruption into concrete, bounded steps."
+              ]
+            },
+            {
+              "emotional_tag": "yearning",
+              "weight": 0.48,
+              "tom_summaries": [
+                "Embry may want closeness with Marketa through being included in small, safe moving tasks."
+              ]
+            },
+            {
+              "emotional_tag": "reflection",
+              "weight": 0.445,
+              "tom_summaries": [
+                "Embry may believe Marketa shows care through structured, precise help rather than overt emotional reassurance.",
+                "Embry's relationship with Marketa may be organized around practical moving rituals that keep Embry anchored through change."
               ]
             }
           ]

@@ -1,0 +1,371 @@
+{
+  "accepted_interpretations": [
+    {
+      "alternative_explanation": "The renderer may have simply depicted a generic older woman sewing behind a child holding a teddy bear because the source memory explicitly mentions a grandmother repairing a stuffed animal.",
+      "cites_renderer_review": false,
+      "confidence": 0.62,
+      "emotional_intensity": 0.68,
+      "favored_explanation": "psychological",
+      "interpretation_id": "interpretation-001",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "frame_0001"
+      ],
+      "source_memory_refs": [
+        "embry_age04_10_b01_memory_007"
+      ],
+      "statement": "Embry may experience the grandmother figure as a trustworthy caretaker who preserves damaged beloved things rather than discarding them, with the teddy bear and mending imagery suggesting repair as an act of attachment and continuity.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "grandmother",
+      "tom_state_type": "trust",
+      "uncertainty": "The grandmother's exact identity is unresolved, and the intended dream was empty, so this is inferred only from the rendered visual match to the memory."
+    },
+    {
+      "alternative_explanation": "The backpack may be a straightforward visual prop generated from the backpack memory, without implying any deeper belief about continuity or repair.",
+      "cites_renderer_review": false,
+      "confidence": 0.57,
+      "emotional_intensity": 0.54,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-002",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "frame_0002"
+      ],
+      "source_memory_refs": [
+        "embry_age04_10_b01_memory_029"
+      ],
+      "statement": "Embry may believe that the grandmother teaches repair as a visible, acceptable form of continuity, where a patched backpack can remain part of her school life rather than being replaced.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "grandmother",
+      "tom_state_type": "belief",
+      "uncertainty": "The frame shows a backpack and older woman but does not show the patching action directly, so the repair lesson is a tentative association with the memory rather than a confirmed dream event."
+    },
+    {
+      "alternative_explanation": "The paper bird may be a generic classroom craft image generated from the paper-model memory, while the grandmother was included because she appears across the memory set.",
+      "cites_renderer_review": false,
+      "confidence": 0.49,
+      "emotional_intensity": 0.46,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-003",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "frame_0004"
+      ],
+      "source_memory_refs": [
+        "embry_age04_10_b01_memory_018"
+      ],
+      "statement": "Embry may carry the grandmother's repair ethic into her own work, treating visible mending as something she can submit or stand behind rather than conceal, as suggested by the paper bird and the grandmother's background presence.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "grandmother",
+      "tom_state_type": "stance",
+      "uncertainty": "The paper object is described as folded, not explicitly torn or taped, and the grandmother is only in the background, so the link to visible repair is interpretive."
+    },
+    {
+      "alternative_explanation": "The stable young-woman identity may reflect the renderer's reference-sheet success, while the uncertain grandmother identity may result from the lack of a grandmother reference sheet rather than a psychological ambiguity.",
+      "cites_renderer_review": true,
+      "confidence": 0.43,
+      "emotional_intensity": 0.52,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-004",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "identity_temporal_continuity_review",
+        "coverage_gap_02",
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004"
+      ],
+      "source_memory_refs": [
+        "embry_age04_10_b01_memory_007",
+        "embry_age04_10_b01_memory_029",
+        "embry_age04_10_b01_memory_018"
+      ],
+      "statement": "Because Embry's identity is visually continuous across the frames while the grandmother remains an advisory, unresolved identity, the dream may be organizing a stable self around a less certain but emotionally important grandmother-role associated with repair.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "grandmother",
+      "tom_state_type": "relationship_state",
+      "uncertainty": "The continuity review confirms Embry's visual identity but not the grandmother's identity; the Nana-versus-Grammy ambiguity is present in the memories and cannot be resolved from the observations."
+    }
+  ],
+  "blockers": [],
+  "candidates": [
+    {
+      "alternative_explanation": "The renderer may have simply depicted a generic older woman sewing behind a child holding a teddy bear because the source memory explicitly mentions a grandmother repairing a stuffed animal.",
+      "cites_renderer_review": false,
+      "confidence": 0.62,
+      "emotional_intensity": 0.68,
+      "favored_explanation": "psychological",
+      "interpretation_id": "interpretation-001",
+      "observation_refs": [
+        "frame_0001"
+      ],
+      "source_memory_refs": [
+        "embry_age04_10_b01_memory_007"
+      ],
+      "statement": "Embry may experience the grandmother figure as a trustworthy caretaker who preserves damaged beloved things rather than discarding them, with the teddy bear and mending imagery suggesting repair as an act of attachment and continuity.",
+      "subject": "embry",
+      "target": "grandmother",
+      "tom_state_type": "trust",
+      "uncertainty": "The grandmother's exact identity is unresolved, and the intended dream was empty, so this is inferred only from the rendered visual match to the memory."
+    },
+    {
+      "alternative_explanation": "The backpack may be a straightforward visual prop generated from the backpack memory, without implying any deeper belief about continuity or repair.",
+      "cites_renderer_review": false,
+      "confidence": 0.57,
+      "emotional_intensity": 0.54,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-002",
+      "observation_refs": [
+        "frame_0002"
+      ],
+      "source_memory_refs": [
+        "embry_age04_10_b01_memory_029"
+      ],
+      "statement": "Embry may believe that the grandmother teaches repair as a visible, acceptable form of continuity, where a patched backpack can remain part of her school life rather than being replaced.",
+      "subject": "embry",
+      "target": "grandmother",
+      "tom_state_type": "belief",
+      "uncertainty": "The frame shows a backpack and older woman but does not show the patching action directly, so the repair lesson is a tentative association with the memory rather than a confirmed dream event."
+    },
+    {
+      "alternative_explanation": "The paper bird may be a generic classroom craft image generated from the paper-model memory, while the grandmother was included because she appears across the memory set.",
+      "cites_renderer_review": false,
+      "confidence": 0.49,
+      "emotional_intensity": 0.46,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-003",
+      "observation_refs": [
+        "frame_0004"
+      ],
+      "source_memory_refs": [
+        "embry_age04_10_b01_memory_018"
+      ],
+      "statement": "Embry may carry the grandmother's repair ethic into her own work, treating visible mending as something she can submit or stand behind rather than conceal, as suggested by the paper bird and the grandmother's background presence.",
+      "subject": "embry",
+      "target": "grandmother",
+      "tom_state_type": "stance",
+      "uncertainty": "The paper object is described as folded, not explicitly torn or taped, and the grandmother is only in the background, so the link to visible repair is interpretive."
+    },
+    {
+      "alternative_explanation": "The stable young-woman identity may reflect the renderer's reference-sheet success, while the uncertain grandmother identity may result from the lack of a grandmother reference sheet rather than a psychological ambiguity.",
+      "cites_renderer_review": true,
+      "confidence": 0.43,
+      "emotional_intensity": 0.52,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-004",
+      "observation_refs": [
+        "identity_temporal_continuity_review",
+        "coverage_gap_02",
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004"
+      ],
+      "source_memory_refs": [
+        "embry_age04_10_b01_memory_007",
+        "embry_age04_10_b01_memory_029",
+        "embry_age04_10_b01_memory_018"
+      ],
+      "statement": "Because Embry's identity is visually continuous across the frames while the grandmother remains an advisory, unresolved identity, the dream may be organizing a stable self around a less certain but emotionally important grandmother-role associated with repair.",
+      "subject": "embry",
+      "target": "grandmother",
+      "tom_state_type": "relationship_state",
+      "uncertainty": "The continuity review confirms Embry's visual identity but not the grandmother's identity; the Nana-versus-Grammy ambiguity is present in the memories and cannot be resolved from the observations."
+    }
+  ],
+  "dream_id": "auto_cycle_20260723T221914Z",
+  "generated_at": "2026-07-23T22:33:26.435864+00:00",
+  "honesty_rule": {
+    "identity_drift_dual_explanation_present": false,
+    "renderer_defect_favored_on_drift": false
+  },
+  "intended_dream": {},
+  "live": true,
+  "llm": {
+    "caller_skill": "persona-dream",
+    "candidate_count": 4,
+    "direct_scillm_call": false,
+    "model": "gpt-5.5",
+    "provider": "scillm",
+    "route": "tau:persona-dream-text-reasoning",
+    "tau_routing": {
+      "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+      "http_status": 200,
+      "live_call_performed": true,
+      "model": "gpt-5.5",
+      "output_contract_sha256": "sha256:97bbf92bb8eb1d13cb7a43a0975b2c62885880a6818689f7ec5dedd6e532c140",
+      "prompt_sha256": "sha256:eee11e45ca77dff697c19065bead8e85c84a45cf81b2ad539d158c4ef9a0c2f1",
+      "route": "tau:persona-dream-text-reasoning",
+      "status": "PASS",
+      "tau_receipt_schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1"
+    }
+  },
+  "mocked": false,
+  "observation_index": [
+    {
+      "observation_id": "frame_0001",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 1 at t=0.0s; windows=identity; entities=['young woman in a navy shirt holding a teddy bear', 'older gray-haired woman behind her sewing or mending']",
+      "timestamp_seconds": 0.0
+    },
+    {
+      "observation_id": "frame_0002",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 2 at t=2.5s; windows=identity; entities=['older gray-haired woman seated beside a young woman', 'young woman in a navy shirt holding a blue backpack']",
+      "timestamp_seconds": 2.5
+    },
+    {
+      "observation_id": "frame_0003",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 3 at t=5.0s; windows=identity; entities=['young woman in a navy shirt at a table', 'older gray-haired woman visible in the background/reflection']",
+      "timestamp_seconds": 5.0
+    },
+    {
+      "observation_id": "frame_0004",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 4 at t=7.5s; windows=identity; entities=['young woman in a navy shirt holding a folded paper bird', 'older gray-haired woman standing in the background']",
+      "timestamp_seconds": 7.5
+    },
+    {
+      "observation_id": "identity_temporal_continuity_review",
+      "observation_type": "renderer_continuity_review",
+      "renderer_defect_verdict": "PASS",
+      "renderer_review": true,
+      "summary": "Identity continuity review over window [0.0, 10.0] (model=insightface:buffalo_l (authority) + gpt-5.5 montage (advisory), verdict=PASS): all 4 frames passed ArcFace vs embry_contact_sheet_v3"
+    },
+    {
+      "observation_id": "coverage_gap_00",
+      "observation_type": "coverage_gap",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "no audio track: storyboard frames are the visual artifact"
+    },
+    {
+      "observation_id": "coverage_gap_01",
+      "observation_type": "coverage_gap",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "no inter-frame motion"
+    },
+    {
+      "observation_id": "coverage_gap_02",
+      "observation_type": "coverage_gap",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Grandmother identity advisory (no reference sheet)"
+    }
+  ],
+  "observation_packet_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T221914Z/observation_packet.json",
+  "observation_packet_sha256": "sha256:7e05fe612d98be4f6940e5aa9f8fcf63600a99699db6fee50e4bc0dd9958f090",
+  "persona_id": "embry",
+  "provider_live": true,
+  "recall_receipts": [
+    {
+      "collections": [
+        "persona_memory"
+      ],
+      "confidence": 0.91,
+      "found": true,
+      "question": "What memories explain why Embry trusts Grandmother about surf safety boundaries and hazards at the lineup?",
+      "residue_source_ids_confirmed": [],
+      "returned_keys": [
+        "persona_dream_phase_03_crew_contract_embry_kai_kahaluu_2024",
+        "persona_dream_phase_06_script_contract_embry_kai_kahaluu_2024",
+        "embry_age19_23_b01_memory_010",
+        "embry-kai-sick-day_02_story_story_contract_843592d16ce27a53",
+        "embry_age19_23_b01_memory_038",
+        "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024",
+        "embry_age19_23_b01_memory_043",
+        "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698"
+      ],
+      "tags": [
+        "persona:embry"
+      ]
+    },
+    {
+      "collections": [
+        "persona_memory"
+      ],
+      "confidence": 0.93,
+      "found": true,
+      "question": "What memory shows Grandmother giving Embry operational surf knowledge while respecting her decisions?",
+      "residue_source_ids_confirmed": [],
+      "returned_keys": [
+        "persona_dream_phase_06_script_contract_embry_kai_kahaluu_2024",
+        "persona_dream_phase_03_crew_contract_embry_kai_kahaluu_2024",
+        "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024",
+        "embry_age15_19_b02_memory_039",
+        "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698",
+        "embry-kai-sick-day_02_story_story_contract_843592d16ce27a53",
+        "embry_age15_19_b03_memory_014",
+        "embry_age19_23_b01_memory_007"
+      ],
+      "tags": [
+        "persona:embry"
+      ]
+    },
+    {
+      "collections": [
+        "persona_memory"
+      ],
+      "confidence": 0.876,
+      "found": true,
+      "question": "Why does Embry pause before crossing into surf traffic near Grandmother?",
+      "residue_source_ids_confirmed": [],
+      "returned_keys": [
+        "embry_age15_19_b01_memory_008",
+        "persona_dream_phase_06_script_contract_embry_kai_kahaluu_2024",
+        "embry-kai-sick-day_02_story_story_contract_843592d16ce27a53",
+        "dream_dream_successor_943b01ecd9a3",
+        "embry_age10_15_b01_memory_009",
+        "embry_age10_15_b02_memory_005",
+        "embry_age10_15_b02_memory_019",
+        "embry_age15_19_b01_memory_005"
+      ],
+      "tags": [
+        "persona:embry"
+      ]
+    }
+  ],
+  "rejected_interpretations": [],
+  "revision_id": "cycle_20260723T221914Z",
+  "run_id": "goal-v3",
+  "schema": "persona_dream.dream_self_interpretation.v1",
+  "source_memory_bindings": [
+    {
+      "collection": "persona_memory",
+      "memory_text_sha256": "sha256:9395d9b02391cb11da6f8ab4e8f21d9de85bdb7869f4dfe378d7284bd68bc31f",
+      "persona_id": "embry",
+      "recall_confirmed": false,
+      "source_id": "embry_age04_10_b01_memory_007"
+    },
+    {
+      "collection": "persona_memory",
+      "memory_text_sha256": "sha256:d54709653da9d4bf9f235ca43b4b8a5427b4ef0a7553e40d0c99e41f4da450b7",
+      "persona_id": "embry",
+      "recall_confirmed": false,
+      "source_id": "embry_age04_10_b01_memory_029"
+    },
+    {
+      "collection": "persona_memory",
+      "memory_text_sha256": "sha256:e6f2562d0a7dbbf3b165d772639dfe1da2672562a4f556a0a8d266a212b1b857",
+      "persona_id": "embry",
+      "recall_confirmed": false,
+      "source_id": "embry_age04_10_b01_memory_018"
+    }
+  ],
+  "status": "PASS_SELF_INTERPRETATION"
+}

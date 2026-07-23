@@ -1,0 +1,44 @@
+{
+  "raw": "{\"frames\":[{\"index\":1,\"people\":[\"young woman in a navy shirt facing the camera\",\"same or similar young woman kneeling by a cardboard box\"],\"activity\":\"The woman appears serious in the foreground while another view shows her opening a box labeled \\\"OPEN FIRST\\\" with a teddy bear inside.\",\"setting\":\"dim bedroom or moving room with bed, lamp, toiletries, and stacked cardboard boxes\",\"tone\":\"quiet, somber, reflective\"},{\"index\":2,\"people\":[\"young woman in a navy shirt holding a small card\",\"middle-aged woman gesturing beside her\"],\"activity\":\"The younger woman looks down at a card while the older woman points toward organized wall shelves with household items and icons.\",\"setting\":\"bright organized room with colorful shelves holding bags, boxes, towels, and plush toys\",\"tone\":\"instructive, concerned, practical\"},{\"index\":3,\"people\":[\"young woman in a navy shirt handling a large cardboard box\",\"woman standing in the background\"],\"activity\":\"The young woman places or presses an \\\"OPEN FIRST\\\" label on a large moving box while another woman watches behind her.\",\"setting\":\"indoor moving/storage area with many cardboard boxes stacked around\",\"tone\":\"serious, focused, transitional\"},{\"index\":4,\"people\":[\"young woman in a navy shirt sitting near boxes\"],\"activity\":\"The woman holds up a hand-drawn checklist or labeled card while sitting among packed boxes and belongings.\",\"setting\":\"bedroom or packing area with bed, lamp, open box, stuffed animals, toiletries, and cardboard boxes\",\"tone\":\"calm, organized, slightly melancholic\"}]}",
+  "frames": [
+    {
+      "index": 1,
+      "people": [
+        "young woman in a navy shirt facing the camera",
+        "same or similar young woman kneeling by a cardboard box"
+      ],
+      "activity": "The woman appears serious in the foreground while another view shows her opening a box labeled \"OPEN FIRST\" with a teddy bear inside.",
+      "setting": "dim bedroom or moving room with bed, lamp, toiletries, and stacked cardboard boxes",
+      "tone": "quiet, somber, reflective"
+    },
+    {
+      "index": 2,
+      "people": [
+        "young woman in a navy shirt holding a small card",
+        "middle-aged woman gesturing beside her"
+      ],
+      "activity": "The younger woman looks down at a card while the older woman points toward organized wall shelves with household items and icons.",
+      "setting": "bright organized room with colorful shelves holding bags, boxes, towels, and plush toys",
+      "tone": "instructive, concerned, practical"
+    },
+    {
+      "index": 3,
+      "people": [
+        "young woman in a navy shirt handling a large cardboard box",
+        "woman standing in the background"
+      ],
+      "activity": "The young woman places or presses an \"OPEN FIRST\" label on a large moving box while another woman watches behind her.",
+      "setting": "indoor moving/storage area with many cardboard boxes stacked around",
+      "tone": "serious, focused, transitional"
+    },
+    {
+      "index": 4,
+      "people": [
+        "young woman in a navy shirt sitting near boxes"
+      ],
+      "activity": "The woman holds up a hand-drawn checklist or labeled card while sitting among packed boxes and belongings.",
+      "setting": "bedroom or packing area with bed, lamp, open box, stuffed animals, toiletries, and cardboard boxes",
+      "tone": "calm, organized, slightly melancholic"
+    }
+  ]
+}

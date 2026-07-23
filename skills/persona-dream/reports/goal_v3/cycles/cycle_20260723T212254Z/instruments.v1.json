@@ -1,0 +1,17 @@
+{
+  "frozen_at": "2026-07-23T21:22:59Z",
+  "frozen_before_dream_composition": true,
+  "negative_control": "How do black holes affect the orbital paths of nearby stars",
+  "negative_control_root_overlap": [],
+  "probes": [
+    "Embry lets Kai join her grandmother\u2019s recipe call but avoids defining him beyond a friend",
+    "Grandmother visibly mends Embry\u2019s torn traveling afghan with contrasting thread instead of hiding the repair",
+    "Embry sends her grandmother a photo of Kai\u2019s collards but identifies him only as a school friend"
+  ],
+  "roots": [
+    "embry_age15_19_b02_memory_022",
+    "embry_age15_19_b03_memory_003",
+    "embry_age15_19_b03_memory_023"
+  ],
+  "schema": "persona_dream.cycle_instruments.v1"
+}
