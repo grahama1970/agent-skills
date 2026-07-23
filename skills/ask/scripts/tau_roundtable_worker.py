@@ -98,6 +98,8 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
     response_text = ""
     resolve_payload: dict[str, Any] = {}
     submit_meta: dict[str, Any] = {}
+    transport_summary: dict[str, Any] = {}
+    transport_summary_path: Path | None = None
     binding_refresh: dict[str, Any] | None = None
     failure = ""
     recovery_packet: dict[str, Any] | None = None
@@ -176,6 +178,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             commands.append(submit.summary())
             if meta_path.is_file():
                 submit_meta = _read_json(meta_path)
+            transport_summary_path, transport_summary = _load_webgpt_transport_summary(artifact_dir)
             if submit.returncode != 0:
                 raise RuntimeError(submit.stderr or submit.stdout or f"{HANDLER_SUBMIT_COMMANDS[handler]} failed")
             response_text = response_path.read_text(encoding="utf-8")
@@ -265,6 +268,8 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
         "response_path": str(response_path),
         "raw_response_path": str(raw_path),
         "meta_path": str(meta_path),
+        "transport_summary_path": str(transport_summary_path) if transport_summary_path else None,
+        "webgpt_transport_summary": transport_summary or None,
         "prompt_path": str(prompt_path),
         "recovery_packet_path": str(recovery_packet_path) if recovery_packet else None,
         "response_chars": len(response_text),
@@ -291,6 +296,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             "provider_transport": "$surf",
             "handler": handler,
             "transport": HANDLER_SUBMIT_COMMANDS.get(handler, f"{handler}.local"),
+            "transport_summary_path": str(transport_summary_path) if transport_summary_path else None,
         },
     }
     receipt_path.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -318,6 +324,17 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             "meta_path": str(meta_path),
         },
     ]
+    if transport_summary_path:
+        evidence.append(
+            {
+                "kind": "webgpt_transport_summary",
+                "node_id": args.node_id,
+                "handler": handler,
+                "path": str(transport_summary_path),
+                "final_transport_state": transport_summary.get("final_transport_state"),
+                "next_command": transport_summary.get("next_command"),
+            }
+        )
     if prior_receipts:
         evidence.append(
             {
@@ -357,12 +374,15 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
                 "binding_path": binding_refresh.get("binding_path"),
             }
         )
+    artifacts = [receipt_path, prompt_path, response_path, raw_path, meta_path, recovery_packet_path]
+    if transport_summary_path:
+        artifacts.append(transport_summary_path)
     handoff = _handoff(
         args,
         start,
         status=status,
         summary=f"{args.node_id} {status.lower()} via {HANDLER_SUBMIT_COMMANDS.get(handler, handler)}.",
-        artifacts=[receipt_path, prompt_path, response_path, raw_path, meta_path, recovery_packet_path],
+        artifacts=artifacts,
         evidence=evidence,
     )
     return {"exit_code": 0 if ok else 1, "handoff": handoff}
@@ -1380,6 +1400,19 @@ def _read_json(path: Path) -> dict[str, Any]:
     if not isinstance(payload, dict):
         raise RuntimeError(f"JSON root is not an object: {path}")
     return payload
+
+
+def _load_webgpt_transport_summary(artifact_dir: Path) -> tuple[Path | None, dict[str, Any]]:
+    summary_path = artifact_dir / "webgpt_transport_summary.json"
+    if not summary_path.is_file():
+        return None, {}
+    try:
+        payload = _read_json(summary_path)
+    except (OSError, json.JSONDecodeError, RuntimeError):
+        return None, {}
+    if payload.get("schema") != "surf.webgpt_transport_summary.v1":
+        return None, {}
+    return summary_path, payload
 
 
 def _parse_json_object(text: str) -> dict[str, Any]:
