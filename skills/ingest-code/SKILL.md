@@ -98,6 +98,10 @@ Malformed Tree-sitter file or symbol records fail the command with status 1
 before code-symbol preview or persistence; they are never treated as an empty
 successful scan.
 
+Tree-sitter source locations must resolve to real lines in the discovered file.
+Out-of-bounds or unreadable source ranges fail with status 1 before code-symbol
+preview or persistence.
+
 ### `rescan` — Incremental Rescan (Scheduler Job)
 
 ```bash

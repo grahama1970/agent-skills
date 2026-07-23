@@ -1434,6 +1434,43 @@ def _validate_treesitter_scan_results(
     return tuple(normalized_entries)
 
 
+def _source_line_count(filepath: Path) -> int:
+    """Count physical source lines without decoding the file."""
+    try:
+        with filepath.open("rb") as source:
+            return sum(1 for _ in source)
+    except OSError as exc:
+        raise TreeSitterScanError(
+            "Tree-sitter source could not be read for range validation: "
+            f"{filepath}: {exc}"
+        ) from exc
+
+
+def _validate_treesitter_source_ranges(
+    symbols: Sequence[dict[str, Any]],
+    *,
+    filepath: Path,
+    codebase_root: Path,
+    file_index: int,
+) -> None:
+    """Require every reported symbol range to exist in the source file."""
+    if not symbols:
+        return
+
+    line_count = _source_line_count(filepath)
+    relative_path = _relative_path(filepath, codebase_root)
+
+    for symbol_index, symbol in enumerate(symbols):
+        for field_name in ("start_line", "end_line"):
+            value = symbol[field_name]
+            if value > line_count:
+                raise TreeSitterScanError(
+                    "Tree-sitter source range invalid at "
+                    f"files[{file_index}].symbols[{symbol_index}].{field_name} "
+                    f"for {relative_path}: {value} exceeds file line count {line_count}"
+                )
+
+
 def _resolve_treesitter_result_path(raw_path: object, scan_root: Path) -> Path | None:
     """Resolve one Tree-sitter result path and require scan-root containment."""
     if not isinstance(raw_path, str) or not raw_path.strip():
@@ -1541,7 +1578,7 @@ def _extract_treesitter_records_for_directory(
     exclude_dirs = _configured_exclude_dirs(resolved_codebase_root)
     allowed_file_paths = _resolved_file_manifest(tuple(allowed_files), resolved_codebase_root)
     records: list[CodeSymbolRecord] = []
-    for file_entry in validated_results:
+    for file_index, file_entry in enumerate(validated_results):
         file_path_raw = file_entry.get("path")
         if isinstance(file_path_raw, str):
             lexical_path = Path(file_path_raw)
@@ -1565,6 +1602,14 @@ def _extract_treesitter_records_for_directory(
         if not _path_modified_at_or_after(filepath, mtime_after):
             continue
 
+        if not file_entry["symbols"]:
+            continue
+        _validate_treesitter_source_ranges(
+            file_entry["symbols"],
+            filepath=filepath,
+            codebase_root=resolved_codebase_root,
+            file_index=file_index,
+        )
         symbol_context = _extract_symbol_context(filepath)
 
         for symbol in file_entry.get("symbols", []):
