@@ -125,6 +125,12 @@ codebase. Taxonomy exceptions or malformed tag results exit with status 1,
 prevent later phases and the completed marker, and are not silently treated as
 empty enrichment. Absence of the taxonomy module remains nonfatal.
 
+Functional-knowledge extractors must return an array of records containing
+nonblank `problem` and `solution` strings and a nonempty string-tag array.
+Malformed extractor output exits with status 1 before taxonomy enrichment,
+preview, persistence, or marker creation. A valid empty array is a successful
+zero-knowledge result.
+
 Every discovered source file used by a requested phase must remain readable. A
 read failure exits with status 1 and prevents the completed marker. Readable
 files with unsupported or syntactically invalid content may still produce zero

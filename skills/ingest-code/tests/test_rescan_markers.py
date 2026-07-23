@@ -52,10 +52,10 @@ def test_rescan_writes_distinct_marker_for_each_codebase(monkeypatch, tmp_path: 
 
     def fake_extract_knowledge(filepath: Path):
         if filepath == file_a:
-            return [{"problem": "a1", "solution": "A1", "tags": []}]
+            return [{"problem": "a1", "solution": "A1", "tags": ["a1"]}]
         return [
-            {"problem": "b1", "solution": "B1", "tags": []},
-            {"problem": "b2", "solution": "B2", "tags": []},
+            {"problem": "b1", "solution": "B1", "tags": ["b1"]},
+            {"problem": "b2", "solution": "B2", "tags": ["b2"]},
         ]
 
     monkeypatch.setattr(ingest_code, "collect_files", fake_collect_files)

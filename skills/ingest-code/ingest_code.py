@@ -180,6 +180,25 @@ class TaxonomyEnrichmentError(RuntimeError):
         super().__init__(f"Taxonomy enrichment failed for item {item_index}: {detail}")
 
 
+class KnowledgeItemError(RuntimeError):
+    """A functional-knowledge extractor returned invalid output."""
+
+    def __init__(
+        self,
+        *,
+        filepath: Path,
+        item_index: int,
+        location: str,
+        detail: str,
+    ) -> None:
+        self.filepath = filepath
+        self.item_index = item_index
+        self.location = location
+        super().__init__(
+            f"Invalid knowledge result at {location} for {filepath}: {detail}"
+        )
+
+
 def _read_source_text(filepath: Path) -> str:
     """Read source text or raise a path-qualified failure."""
     try:
@@ -236,6 +255,27 @@ def _exit_taxonomy_enrichment_failure(
             "codebase": str(codebase),
             "item_index": exc.item_index,
             "problem": exc.problem,
+            "detail": str(exc),
+        }),
+        file=sys.stderr,
+    )
+    raise SystemExit(1) from exc
+
+
+def _exit_knowledge_item_failure(
+    *,
+    codebase: Path,
+    exc: KnowledgeItemError,
+) -> NoReturn:
+    """Emit the structured CLI error for invalid knowledge extractor results."""
+    print(
+        json.dumps({
+            "error": "Functional knowledge result invalid",
+            "phase": "knowledge",
+            "codebase": str(codebase),
+            "file": str(exc.filepath),
+            "item_index": exc.item_index,
+            "location": exc.location,
             "detail": str(exc),
         }),
         file=sys.stderr,
@@ -2932,6 +2972,94 @@ def extract_knowledge(filepath: Path) -> list[dict]:
     return extract_generic_knowledge(filepath, content)
 
 
+def _validate_knowledge_items(
+    filepath: Path,
+    result: object,
+) -> tuple[dict[str, Any], ...]:
+    """Validate and normalize one file's functional-knowledge records."""
+    if not isinstance(result, list):
+        raise KnowledgeItemError(
+            filepath=filepath,
+            item_index=-1,
+            location="result",
+            detail="expected array",
+        )
+
+    normalized_items: list[dict[str, Any]] = []
+    for index, item in enumerate(result):
+        location = f"items[{index}]"
+        if not isinstance(item, dict):
+            raise KnowledgeItemError(
+                filepath=filepath,
+                item_index=index,
+                location=location,
+                detail="expected object",
+            )
+
+        problem = item.get("problem")
+        if not isinstance(problem, str) or not problem.strip():
+            raise KnowledgeItemError(
+                filepath=filepath,
+                item_index=index,
+                location=f"{location}.problem",
+                detail="expected nonblank string",
+            )
+
+        solution = item.get("solution")
+        if not isinstance(solution, str) or not solution.strip():
+            raise KnowledgeItemError(
+                filepath=filepath,
+                item_index=index,
+                location=f"{location}.solution",
+                detail="expected nonblank string",
+            )
+
+        tags = item.get("tags")
+        if not isinstance(tags, list) or not tags:
+            raise KnowledgeItemError(
+                filepath=filepath,
+                item_index=index,
+                location=f"{location}.tags",
+                detail="expected nonempty array of strings",
+            )
+
+        normalized_tags: list[str] = []
+        for tag_index, tag in enumerate(tags):
+            if not isinstance(tag, str) or not tag.strip():
+                raise KnowledgeItemError(
+                    filepath=filepath,
+                    item_index=index,
+                    location=f"{location}.tags[{tag_index}]",
+                    detail="expected nonblank string",
+                )
+            normalized_tags.append(tag.strip())
+
+        normalized = dict(item)
+        normalized["problem"] = problem.strip()
+        normalized["solution"] = solution.strip()
+        normalized["tags"] = list(dict.fromkeys(normalized_tags))
+        normalized_items.append(normalized)
+
+    return tuple(normalized_items)
+
+
+def _extract_validated_knowledge(filepath: Path) -> tuple[dict[str, Any], ...]:
+    """Extract and validate functional-knowledge records for one file."""
+    try:
+        result = extract_knowledge(filepath)
+    except SourceReadError:
+        raise
+    except Exception as exc:
+        raise KnowledgeItemError(
+            filepath=filepath,
+            item_index=-1,
+            location="extractor",
+            detail=f"{type(exc).__name__}: {exc}",
+        ) from exc
+
+    return _validate_knowledge_items(filepath, result)
+
+
 cli = typer.Typer(help="Ingest codebases into /memory for knowledge extraction and CWE scanning.")
 
 
@@ -3020,10 +3148,12 @@ def scan(
         file_iter = Monitor(files, name="ingest-code-extract", desc="Extracting knowledge", total=len(files)) if Monitor else files
         try:
             for filepath in file_iter:
-                items = extract_knowledge(filepath)
+                items = _extract_validated_knowledge(filepath)
                 all_items.extend(items)
         except SourceReadError as exc:
             _exit_source_read_failure(codebase=path, phase="knowledge", exc=exc)
+        except KnowledgeItemError as exc:
+            _exit_knowledge_item_failure(codebase=path, exc=exc)
         knowledge_total = len(all_items)
         print(f"  Extracted {knowledge_total} knowledge items from {len(files)} files", flush=True)
 
@@ -3349,9 +3479,11 @@ def rescan(
         all_items: list[dict] = []
         for filepath in files:
             try:
-                all_items.extend(extract_knowledge(filepath))
+                all_items.extend(_extract_validated_knowledge(filepath))
             except SourceReadError as exc:
                 _exit_source_read_failure(codebase=path, phase="knowledge", exc=exc)
+            except KnowledgeItemError as exc:
+                _exit_knowledge_item_failure(codebase=path, exc=exc)
 
         if taxonomy:
             try:

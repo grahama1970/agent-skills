@@ -81,8 +81,8 @@ def test_scan_knowledge_write_failure_exits_before_later_phases(
         ingest_code,
         "extract_knowledge",
         lambda *args, **kwargs: [
-            {"problem": "one", "solution": "One", "tags": []},
-            {"problem": "two", "solution": "Two", "tags": []},
+            {"problem": "one", "solution": "One", "tags": ["one"]},
+            {"problem": "two", "solution": "Two", "tags": ["two"]},
         ],
     )
     monkeypatch.setattr(ingest_code, "_learn", lambda *args, **kwargs: next(learn_results))
@@ -200,7 +200,7 @@ def test_rescan_late_codebase_write_failure_writes_no_pending_markers(
     monkeypatch.setattr(
         ingest_code,
         "extract_knowledge",
-        lambda *args, **kwargs: [{"problem": "item", "solution": "Item", "tags": []}],
+        lambda *args, **kwargs: [{"problem": "item", "solution": "Item", "tags": ["item"]}],
     )
     monkeypatch.setattr(ingest_code, "_learn", lambda *args, **kwargs: next(learn_results))
     monkeypatch.setattr(ingest_code, "_write_ingest_marker", lambda *args, **kwargs: marker_calls.append(args))
@@ -240,7 +240,7 @@ def test_scan_dry_run_does_not_apply_live_write_completeness_gate(
     monkeypatch.setattr(
         ingest_code,
         "extract_knowledge",
-        lambda *args, **kwargs: [{"problem": "item", "solution": "Item", "tags": []}],
+        lambda *args, **kwargs: [{"problem": "item", "solution": "Item", "tags": ["item"]}],
     )
     monkeypatch.setattr(ingest_code, "extract_edges", lambda *args, **kwargs: [])
     monkeypatch.setattr(ingest_code, "_learn", lambda *args, **kwargs: memory_calls.append(args))
