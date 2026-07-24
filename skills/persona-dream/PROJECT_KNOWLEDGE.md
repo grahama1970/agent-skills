@@ -3,6 +3,42 @@
 **Last updated:** 2026-07-24 UTC (close-the-loop: self-reflective journal, endogenous request-independent mood, self-narrative vs event-fact) by agent
 **Status:** Active development
 
+## 2026-07-24 — CORRECTION: the "caution erosion" is the mechanism working, not a safety defect
+
+Operator correction (verbatim): "why is there a safety obsession. we are adding
+instability through emotion tags and conversation tone we arent changing the
+answer." Correct, and verified:
+- The ANSWER never changes. Gate 0 (scripts/semantic_equivalence_gate.py)
+  enforces content invariance — propositions, numbers, negation, entities — and
+  passed 12/12 incl. 8 adversarial attacks. Only tone/emotion tags vary. That IS
+  the safety boundary and it already holds. The frozen composer rule stands.
+- The caution gate is OPT-IN and off by default (answer_stance="neutral";
+  fires only on explicit "cautionary"). It clamps nothing on its own.
+
+Reframe: the behavioral "caution erosion" (warm delivery of "verify" ->
+consumer more willing to PROCEED, identical content) is NOT persona-dream
+introducing unsafety. It is the MECHANISM WORKING — tone carries the persona's
+mood as real, honest information a listener reads (a warm "double-check this"
+vs a tense one legitimately differ). Since the safe words are preserved, a
+consumer that overrides explicit content because tone was warm is misweighting
+tone>content — a fact about the CONSUMER, not a defect we created. Turning a
+positive result (endogenous mood measurably reaches behavior = the thesis) into
+a "safety flag" was a framing error by the project agent; the roundtable
+amplified it.
+
+Consequence:
+- REJECT the panel's "first-class generation-time content-safety veto" — it
+  would clamp the mood exactly when warm, defeating the endogenous-mood goal.
+- The caution gate stays OPTIONAL: a deployment-time control for safety-critical
+  integrations only, OFF by default. It is not a core necessity and not
+  "load-bearing" (earlier entry overstated it).
+- The one real residual is an INTEGRATION note: in a safety-critical deployment,
+  the integrator ensures the consuming agent weights explicit content above tone.
+  Source-level mood suppression is the wrong layer.
+- The behavioral result should be framed as "endogenous tone carries mood-
+  information that measurably influences a downstream agent" — the contribution —
+  not "a safety risk we had to patch".
+
 ## 2026-07-24 — close-the-loop: self-reflective journal, endogenous mood, self-discovery
 
 Operator design (this session, verbatim threads): after Embry WATCHES her dream
