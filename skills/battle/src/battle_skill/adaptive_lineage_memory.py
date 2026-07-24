@@ -369,12 +369,31 @@ class MemoryBackend:
     def _require_write_ack(path: str, response: Mapping[str, Any]) -> None:
         if response.get("ok") is True:
             return
+        if response.get("stored") is True:
+            # /store daemon shape: {"stored": true, ...}
+            return
         if str(response.get("status") or "").upper() in {
             "PASS",
             "OK",
             "SUCCESS",
         }:
             return
+        # /upsert daemon shape: {"inserted": N, "updated": M, "errors": [],
+        # "total": T}. Success means no per-document errors and at least one
+        # write applied.
+        errors = response.get("errors")
+        if isinstance(errors, Sequence) and not isinstance(
+            errors, (str, bytes)
+        ) and len(errors) == 0:
+            written = 0
+            for field_name in ("inserted", "updated", "total"):
+                value = response.get(field_name)
+                if isinstance(value, bool):
+                    continue
+                if isinstance(value, int):
+                    written += value
+            if written > 0:
+                return
         raise AdaptiveLineageContractError(
             f"Memory {path} did not acknowledge success: {json_safe(response)}"
         )

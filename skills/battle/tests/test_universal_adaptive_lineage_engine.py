@@ -3,7 +3,10 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Mapping
 
+import pytest
+
 from battle_skill.adaptive_lineage_engine import (
+    AdaptiveLineageContractError,
     AdaptiveLineageEngine,
     GenerationRequest,
     JudgedPopulation,
@@ -470,3 +473,50 @@ def test_materialize_only_emits_n_and_skips_review_judge_oracle(
     assert receipt["judge_skipped"] is True
     assert receipt["oracle_skipped"] is True
     assert not any(call["path"] == "/store" for call in fake.calls)
+
+
+# Real /memory daemon ack shapes, captured live 2026-07-24 against
+# http://127.0.0.1:8601. The daemon does NOT return {"ok": true}; it returns
+# these two shapes. _require_write_ack must accept both, or every real write
+# raises even though it persisted (confirmed live: POST /list showed total:1
+# after an upsert whose ack the pre-fix check rejected).
+def test_require_write_ack_accepts_real_store_daemon_shape() -> None:
+    MemoryBackend._require_write_ack(
+        "/store",
+        {
+            "stored": True,
+            "collection": COLLECTION,
+            "_key": "k",
+            "deprecated": True,
+        },
+    )
+
+
+def test_require_write_ack_accepts_real_upsert_daemon_shape() -> None:
+    for applied in ({"inserted": 1, "updated": 0}, {"inserted": 0, "updated": 1}):
+        MemoryBackend._require_write_ack(
+            "/upsert",
+            {
+                "collection": COLLECTION,
+                **applied,
+                "errors": [],
+                "total": 1,
+                "writeahead_path": "artifacts/memory_upsert_writeahead/x.jsonl",
+            },
+        )
+
+
+def test_require_write_ack_rejects_upsert_with_per_document_errors() -> None:
+    with pytest.raises(AdaptiveLineageContractError):
+        MemoryBackend._require_write_ack(
+            "/upsert",
+            {"inserted": 0, "updated": 0, "errors": ["boom"], "total": 1},
+        )
+
+
+def test_require_write_ack_rejects_upsert_that_wrote_nothing() -> None:
+    with pytest.raises(AdaptiveLineageContractError):
+        MemoryBackend._require_write_ack(
+            "/upsert",
+            {"inserted": 0, "updated": 0, "errors": [], "total": 0},
+        )
