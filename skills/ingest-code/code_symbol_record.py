@@ -74,14 +74,20 @@ class CodeSymbolRecord:
         return f"cs_{hashlib.sha256(basis.encode('utf-8')).hexdigest()[:40]}"
 
     @property
+    def source_locator(self) -> str:
+        path = self.path.strip().replace("\\", "/")
+        if self.start_line > 0 and self.end_line >= self.start_line:
+            return f"{path}:{self.start_line}-{self.end_line}"
+        return path
+
+    @property
     def problem(self) -> str:
         problem_name = self.qualified_name.strip() or self.symbol_name
-        problem_path = self.path.strip().replace("\\", "/")
-        return f"What is {problem_name} in {problem_path}?"
+        return f"What is {problem_name} in {self.source_locator}?"
 
     @property
     def solution(self) -> str:
-        parts = [f"File: {self.path}:{self.start_line}-{self.end_line}"]
+        parts = [f"File: {self.source_locator}"]
         parts.append(f"Kind: {self.symbol_kind}")
         parts.append(f"Qualified name: {self.qualified_name}")
         if self.signature:
