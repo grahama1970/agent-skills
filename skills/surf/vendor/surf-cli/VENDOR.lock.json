@@ -31,7 +31,9 @@
       "extension_lifecycle_commands",
       "gemini_tab_provider_command",
       "kimi_tab_provider_command",
-      "provider_tab_no_activate_proof"
+      "provider_tab_no_activate_proof",
+      "kimi_provider_capacity_busy_fail_closed",
+      "provider_tab_stderr_metadata"
     ]
   },
   "content_identity": {
@@ -40,6 +42,6 @@
       "VENDOR.lock.json"
     ],
     "file_count": 120,
-    "sha256": "a936a20741c75411322920f80cf96880b60fa02acbe7b42ce47d63597371eded"
+    "sha256": "9ef2af8f7b8fc1ffcd996e96b0022fcad13a27510bef101502a9133c187b3eb6"
   }
 }

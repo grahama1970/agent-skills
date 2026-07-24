@@ -3752,10 +3752,25 @@ async function handleResponse(response) {
     for (const [key, val] of Object.entries(data.paths)) {
       console.log(`${key}: ${val}`);
     }
-  } else if ((tool === "chatgpt" || tool === "gemini" || tool === "gemini_tab" || tool === "kimi_tab") && data?.response) {
+  } else if ((tool === "chatgpt" || tool === "chatgpt.extract" || tool === "gemini" || tool === "gemini_tab" || tool === "kimi_tab") && data?.response) {
     console.log(data.response);
     if (data.imagePath) {
       console.log(`\nImage saved: ${data.imagePath}`);
+    }
+    if (data.tabId) {
+      console.error(`Tab ID: ${data.tabId}`);
+    }
+    if (data.controlledTabId) {
+      console.error(`ControlledTabID: ${data.controlledTabId}`);
+    }
+    if (data.activated !== undefined) {
+      console.error(`Activated: ${data.activated}`);
+    }
+    if (data.tabWasCreated !== undefined) {
+      console.error(`TabWasCreated: ${data.tabWasCreated}`);
+    }
+    if (data.noActivate !== undefined) {
+      console.error(`NoActivate: ${data.noActivate}`);
     }
     console.error(`\n[${data.model || 'unknown'} | ${((data.tookMs || 0) / 1000).toFixed(1)}s]`);
   } else if (tool === "aistudio" && data?.response) {

@@ -23,5 +23,7 @@ patchset for agent-skills WebGPT and provider-tab contracts, including:
 - `gemini_tab` and `kimi_tab` native provider commands used by the skill
   wrapper scripts
 - no-activate provider-tab creation metadata for background proof
+- Kimi capacity-busy detection that fails closed on provider overload messages
+- provider-tab stderr metadata consumed by downstream wrapper scripts
 
 Run `surf vendor.status --json` to inspect the recorded tree identity.

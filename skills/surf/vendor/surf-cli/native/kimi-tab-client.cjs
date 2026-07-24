@@ -153,6 +153,11 @@ const assistantSnapshotExpression = (sentinel) => {
       || Boolean(document.querySelector('[class*="loading"]'))
       || Boolean(document.querySelector('[class*="typing"]'))
       || Boolean(document.querySelector('[aria-busy="true"]'));
+    const lowerPageText = pageText.toLowerCase();
+    const providerBusy = lowerPageText.includes('system is currently busy')
+      || lowerPageText.includes('capacity is busy')
+      || lowerPageText.includes('temporarily busy')
+      || lowerPageText.includes('please try again later');
     let text = '';
     let source = 'page-text';
     if (last) {
@@ -171,6 +176,7 @@ const assistantSnapshotExpression = (sentinel) => {
       text,
       stopVisible,
       finished: !stopVisible && text.length > 0,
+      providerBusy,
       source,
       pageTextContainsSentinel,
       sentinelMatch,
@@ -581,6 +587,9 @@ async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
     if (!snapshot) {
       await delay(400);
       continue;
+    }
+    if (snapshot.providerBusy) {
+      throw new Error("Kimi provider capacity busy: system is currently busy; capacity is busy");
     }
     if (snapshot.stopVisible) {
       sawGenerating = true;
