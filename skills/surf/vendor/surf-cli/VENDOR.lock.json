@@ -1,5 +1,5 @@
 {
-  "recorded_at": "2026-07-24T12:36:00Z",
+  "recorded_at": "2026-07-24T19:29:00Z",
   "source_kind": "upstream_v2.9.0_with_downstream_webgpt_provider_patchset",
   "upstream_repository": "https://github.com/nicobailon/surf-cli.git",
   "upstream_ref": "refs/tags/v2.9.0",
@@ -18,21 +18,35 @@
       "native/host.cjs",
       "native/kimi-tab-client.cjs",
       "src/service-worker/index.ts",
+      "test/chatgpt-cloudflare-recovery.test.cjs",
+      "test/chatgpt-resume-wait.test.cjs",
+      "test/chatgpt-selection-fallback.test.cjs",
+      "test/chatgpt-submit-acceptance.test.cjs",
       "test/unit/host-helpers.test.ts",
-      "test/unit/service-worker/window-handlers.test.ts"
+      "test/unit/service-worker/chatgpt-no-activate.test.ts",
+      "test/unit/service-worker/window-handlers.test.ts",
+      "test/unit/tab-recovery-state-cli.test.cjs",
+      "test/unit/tab-recovery-state-download.test.cjs",
+      "test/unit/tab-recovery-state-extension.test.cjs"
     ],
     "contracts": [
       "conversation_max_length_detection",
       "too_many_requests_detection",
       "assert_ready_for_new_prompt_export",
       "sentinel_stable_stall_wait_for_response_export",
+      "cloudflare_challenge_recovery_export",
+      "exact_sentinel_assistant_snapshot_export",
+      "optional_selection_unavailable_uses_current_setting",
       "chatgpt_extract_recovery_command",
+      "tab_recovery_state_read_only_guards",
+      "tab_new_background_preserves_active_tab",
       "focus_state_command",
       "extension_lifecycle_commands",
       "gemini_tab_provider_command",
       "kimi_tab_provider_command",
       "provider_tab_no_activate_proof",
       "kimi_provider_capacity_busy_fail_closed",
+      "kimi_provider_busy_prompt_echo_exclusion",
       "provider_tab_stderr_metadata"
     ]
   },
@@ -41,7 +55,7 @@
     "excludes": [
       "VENDOR.lock.json"
     ],
-    "file_count": 120,
-    "sha256": "9ef2af8f7b8fc1ffcd996e96b0022fcad13a27510bef101502a9133c187b3eb6"
+    "file_count": 129,
+    "sha256": "4b9becde5e5c6abec0f8488ac940c05f23ca1466d1bbde4eeeff01a9ea2703e2"
   }
 }
