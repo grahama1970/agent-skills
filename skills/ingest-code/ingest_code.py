@@ -1261,24 +1261,21 @@ class _PythonLexicalCollector(ast.NodeVisitor):
             self._add_local_binding(node.name)
         self._visit_function_header(node, suppress_bindings=node is self.root)
         if node is self.root:
-            for statement in node.body:
-                self.visit(statement)
+            self._visit_root_body(node)
 
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
         if node is not self.root:
             self._add_local_binding(node.name)
         self._visit_function_header(node, suppress_bindings=node is self.root)
         if node is self.root:
-            for statement in node.body:
-                self.visit(statement)
+            self._visit_root_body(node)
 
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
         if node is not self.root:
             self._add_local_binding(node.name)
         self._visit_class_header(node, suppress_bindings=node is self.root)
         if node is self.root:
-            for statement in node.body:
-                self.visit(statement)
+            self._visit_root_body(node)
 
     def visit_Lambda(self, node: ast.Lambda) -> None:
         self._visit_arguments(node.args)
@@ -1383,6 +1380,16 @@ class _PythonLexicalCollector(ast.NodeVisitor):
             visit(base)
         for keyword in node.keywords:
             visit(keyword.value)
+
+    def _visit_root_body(
+        self,
+        node: ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef,
+    ) -> None:
+        body = node.body
+        if body and ast.get_docstring(node, clean=False) is not None:
+            body = body[1:]
+        for statement in body:
+            self.visit(statement)
 
     def _visit_arguments(
         self,

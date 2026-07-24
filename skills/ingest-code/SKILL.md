@@ -313,6 +313,9 @@ keyword-only parameters, varargs, and kwargs preserve literal names such as
 `self` or `cls`.
 Python lexical fields are declaration-scoped; they include nested declaration
 headers but exclude nested function, class, and lambda bodies.
+Python `string_literals` excludes only the selected declaration's semantic
+docstring statement; other assigned, argument, and standalone string literals
+remain lexical context.
 For Python, `local_variables` includes names bound in the selected declaration's
 scope, including nested declaration names, imports, exception aliases, and
 pattern captures, not only assignment-target `Name(Store)` nodes.
