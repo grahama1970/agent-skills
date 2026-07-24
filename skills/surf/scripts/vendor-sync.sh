@@ -148,16 +148,33 @@ except Exception:
     print("")
 PY
 )"
-  python3 - "$LOCK_FILE" "$VENDOR_DIR" << PY
+  python3 - "$LOCK_FILE" "$VENDOR_DIR" "$FORK_JSON" << PY
 import hashlib, json, pathlib, sys
 
 lock_path = pathlib.Path(sys.argv[1])
 vendor = pathlib.Path(sys.argv[2])
+fork_json = pathlib.Path(sys.argv[3])
 excludes = ["VENDOR.lock.json"]
+try:
+    cfg = json.loads(fork_json.read_text())
+    excludes.extend(cfg.get("rsync_excludes") or [])
+except Exception:
+    pass
+
+def is_excluded(path):
+    rel = path.relative_to(vendor).as_posix()
+    for item in excludes:
+        item = str(item).strip().rstrip("/")
+        if not item:
+            continue
+        if rel == item or rel.startswith(item + "/"):
+            return True
+    return False
+
 digest = hashlib.sha256()
 files = sorted(
     path for path in vendor.rglob("*")
-    if path.is_file() and path.relative_to(vendor).as_posix() not in excludes
+    if path.is_file() and not is_excluded(path)
 )
 for path in files:
     data = path.read_bytes()
@@ -177,7 +194,7 @@ lock = {
     "package_version": "${VERSION}",
     "content_identity": {
         "algorithm": "sha256(relative_path_nul_size_nul_content)",
-        "excludes": excludes,
+        "excludes": sorted(set(excludes)),
         "file_count": len(files),
         "sha256": digest.hexdigest(),
     },

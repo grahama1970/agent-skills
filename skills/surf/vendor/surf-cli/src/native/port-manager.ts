@@ -20,17 +20,17 @@ export function sendToNativeHost(msg: any): Promise<any> {
       reject(new Error("Native host not connected"));
       return;
     }
-    
+
     if (msg.type === "API_REQUEST") {
       nativePort.postMessage(msg);
       resolve({ sent: true });
       return;
     }
-    
+
     const id = ++nativeRequestId;
     pendingNativeRequests.set(id, { resolve, reject });
     nativePort.postMessage({ ...msg, id });
-    
+
     setTimeout(() => {
       if (pendingNativeRequests.has(id)) {
         pendingNativeRequests.delete(id);

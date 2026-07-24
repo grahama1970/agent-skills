@@ -172,6 +172,111 @@ describe("window command handlers", () => {
     });
   });
 
+  describe("RESIZE_WINDOW", () => {
+    it("keeps current height for width-only resize", async () => {
+      const chrome = (globalThis as any).chrome;
+      chrome.tabs.get.mockResolvedValue({ windowId: 123 });
+      chrome.windows.get.mockResolvedValue({ id: 123, width: 1440, height: 900 });
+      chrome.windows.update.mockResolvedValue({ width: 375, height: 900 });
+
+      const result = await handleMessage(
+        {
+          type: "RESIZE_WINDOW",
+          tabId: 456,
+          width: 375,
+        },
+        {},
+      );
+
+      expect(chrome.tabs.get).toHaveBeenCalledWith(456);
+      expect(chrome.windows.get).toHaveBeenCalledWith(123);
+      expect(chrome.windows.update).toHaveBeenCalledWith(123, { width: 375, height: 900 });
+      expect(result).toMatchObject({ success: true, width: 375, height: 900 });
+    });
+
+    it("requires at least one window dimension", async () => {
+      await expect(
+        handleMessage(
+          {
+            type: "RESIZE_WINDOW",
+            tabId: 456,
+          },
+          {},
+        ),
+      ).rejects.toThrow("width or height required");
+    });
+  });
+
+  describe("GET_FOCUS_STATE", () => {
+    it("returns focused window and active tab identity", async () => {
+      const chrome = (globalThis as any).chrome;
+      chrome.windows.getLastFocused.mockResolvedValue({ id: 123 });
+      chrome.tabs.query.mockResolvedValue([
+        { id: 456, url: "https://chatgpt.com/c/example", active: true },
+      ]);
+
+      const result = await handleMessage({ type: "GET_FOCUS_STATE" }, {});
+
+      expect(chrome.windows.getLastFocused).toHaveBeenCalledWith({ populate: false });
+      expect(chrome.tabs.query).toHaveBeenCalledWith({ active: true, windowId: 123 });
+      expect(result).toEqual({
+        focusedWindowId: 123,
+        activeTabId: 456,
+        activeTabUrl: "https://chatgpt.com/c/example",
+      });
+    });
+  });
+
+  describe("extension lifecycle", () => {
+    it("responds to PING", async () => {
+      const result = await handleMessage({ type: "PING" }, {});
+
+      expect(result).toEqual({ success: true, status: "connected" });
+    });
+
+    it("schedules runtime reload", async () => {
+      const chrome = (globalThis as any).chrome;
+
+      const result = await handleMessage({ type: "EXTENSION_RELOAD" }, {});
+
+      expect(result).toEqual({
+        success: true,
+        reloading: true,
+        message: "Extension reload scheduled",
+      });
+      await new Promise(resolve => setTimeout(resolve, 75));
+      expect(chrome.runtime.reload).toHaveBeenCalled();
+    });
+  });
+
+  describe("downstream provider tab handlers", () => {
+    it("opens Gemini without activation when requested", async () => {
+      const chrome = (globalThis as any).chrome;
+      chrome.tabs.create.mockResolvedValue({ id: 837360717 });
+
+      const result = await handleMessage({ type: "GEMINI_NEW_TAB", noActivate: true }, {});
+
+      expect(chrome.tabs.create).toHaveBeenCalledWith({
+        url: "https://gemini.google.com/app",
+        active: false,
+      });
+      expect(result).toEqual({ tabId: 837360717, activated: false });
+    });
+
+    it("opens Kimi without activation when requested", async () => {
+      const chrome = (globalThis as any).chrome;
+      chrome.tabs.create.mockResolvedValue({ id: 837360718 });
+
+      const result = await handleMessage({ type: "KIMI_NEW_TAB", noActivate: true }, {});
+
+      expect(chrome.tabs.create).toHaveBeenCalledWith({
+        url: "https://www.kimi.com/",
+        active: false,
+      });
+      expect(result).toEqual({ tabId: 837360718, activated: false });
+    });
+  });
+
   describe("tab commands with windowId", () => {
     describe("LIST_TABS", () => {
       it("filters by windowId when provided", async () => {

@@ -162,6 +162,7 @@ fi
 submit_status=0
 submit_pid=""
 submit_started_with_setsid=0
+rate_limit_wait_s="${SURF_WEBGPT_ROUNDTRIP_RATE_LIMIT_WAIT_SECONDS:-${SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS:-300}}"
 cleanup_submit_child() {
   if [[ -n "${submit_pid:-}" ]] && kill -0 "$submit_pid" 2>/dev/null; then
     if [[ "$submit_started_with_setsid" -eq 1 ]]; then
@@ -184,11 +185,15 @@ handle_termination() {
 trap handle_termination TERM INT HUP
 trap cleanup_submit_child EXIT
 if command -v setsid >/dev/null 2>&1; then
-  env SURF_WEBGPT_EXTRACT_FALLBACK_BUDGET="${SURF_WEBGPT_ROUNDTRIP_EXTRACT_FALLBACK_BUDGET:-1}" \
+  env \
+    SURF_WEBGPT_EXTRACT_FALLBACK_BUDGET="${SURF_WEBGPT_ROUNDTRIP_EXTRACT_FALLBACK_BUDGET:-1}" \
+    SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS="$rate_limit_wait_s" \
     setsid "${submit_cmd[@]}" > "$output_dir/webgpt-submit.stdout.log" 2> "$stderr_log" &
   submit_started_with_setsid=1
 else
-  env SURF_WEBGPT_EXTRACT_FALLBACK_BUDGET="${SURF_WEBGPT_ROUNDTRIP_EXTRACT_FALLBACK_BUDGET:-1}" \
+  env \
+    SURF_WEBGPT_EXTRACT_FALLBACK_BUDGET="${SURF_WEBGPT_ROUNDTRIP_EXTRACT_FALLBACK_BUDGET:-1}" \
+    SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS="$rate_limit_wait_s" \
     "${submit_cmd[@]}" > "$output_dir/webgpt-submit.stdout.log" 2> "$stderr_log" &
 fi
 submit_pid=$!

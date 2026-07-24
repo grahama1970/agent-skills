@@ -185,14 +185,14 @@ function findDevice(name) {
   if (DEVICE_PRESETS[name]) {
     return { name, preset: DEVICE_PRESETS[name] };
   }
-  
+
   // Check aliases (case-insensitive, no spaces)
   const normalized = name.toLowerCase().replace(/\s+/g, "");
   if (DEVICE_ALIASES[normalized]) {
     const deviceName = DEVICE_ALIASES[normalized];
     return { name: deviceName, preset: DEVICE_PRESETS[deviceName] };
   }
-  
+
   // Fuzzy match by partial name
   const lowerName = name.toLowerCase();
   for (const [deviceName, preset] of Object.entries(DEVICE_PRESETS)) {
@@ -200,7 +200,7 @@ function findDevice(name) {
       return { name: deviceName, preset };
     }
   }
-  
+
   return null;
 }
 

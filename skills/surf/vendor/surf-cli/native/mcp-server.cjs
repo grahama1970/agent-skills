@@ -1,11 +1,12 @@
 #!/usr/bin/env node
-const net = require("net");
 const { McpServer } = require("@modelcontextprotocol/sdk/server/mcp.js");
 const { StdioServerTransport } = require("@modelcontextprotocol/sdk/server/stdio.js");
 const { z } = require("zod");
-
-const SOCKET_PATH = "/tmp/surf.sock";
-const REQUEST_TIMEOUT = 30000;
+const { formatSocketError } = require("./socket-path.cjs");
+const { selectEndpoint } = require("./endpoint.cjs");
+const { openClientTransport } = require("./client-transport.cjs");
+const { resolveRequestDeadlineMs } = require("./host-sessions.cjs");
+const { prepareRemoteTool, validateLocalToolPaths } = require("./file-transfer.cjs");
 
 const TOOL_SCHEMAS = {
   navigate: {
@@ -263,60 +264,56 @@ const TOOL_SCHEMAS = {
       query: z.string().describe("Question about the page"),
       mode: z.enum(["find", "summary", "extract"]).optional().describe("Query mode")
     }
+  },
+  chatgpt: {
+    desc: "Ask ChatGPT through the browser session",
+    schema: {
+      query: z.string().describe("Question or prompt"),
+      model: z.string().optional().describe("ChatGPT model"),
+      "with-page": z.boolean().optional().describe("Include current page context"),
+      file: z.string().optional().describe("One attachment path"),
+      timeout: z.number().optional().describe("Timeout in seconds")
+    }
+  },
+  gemini: {
+    desc: "Ask Gemini or generate/edit one image",
+    schema: {
+      query: z.string().optional().describe("Question or image prompt"),
+      model: z.string().optional().describe("Gemini model"),
+      "with-page": z.boolean().optional().describe("Include current page context"),
+      file: z.string().optional().describe("One attachment path"),
+      "edit-image": z.string().optional().describe("One image input path"),
+      "generate-image": z.string().optional().describe("One generated image output path"),
+      output: z.string().optional().describe("Edited image output path"),
+      youtube: z.string().optional().describe("YouTube URL"),
+      "aspect-ratio": z.string().optional().describe("Image aspect ratio"),
+      timeout: z.number().optional().describe("Timeout in seconds")
+    }
+  },
+  "network.export": {
+    desc: "Export captured network requests",
+    schema: {
+      output: z.string().optional().describe("Output file path"),
+      jsonl: z.boolean().optional().describe("Write JSONL"),
+      har: z.boolean().optional().describe("Write HAR 1.2")
+    }
   }
 };
 
-function sendSocketRequest(tool, args = {}) {
-  return new Promise((resolve, reject) => {
-    const sock = net.createConnection(SOCKET_PATH, () => {
-      const req = {
-        type: "tool_request",
-        method: "execute_tool",
-        params: { tool, args },
-        id: "mcp-" + Date.now() + "-" + Math.random()
-      };
-      sock.write(JSON.stringify(req) + "\n");
-    });
-
-    let buf = "";
-    const timeout = setTimeout(() => {
-      sock.destroy();
-      reject(new Error("Request timeout"));
-    }, REQUEST_TIMEOUT);
-
-    sock.on("data", (d) => {
-      buf += d.toString();
-      const lines = buf.split("\n");
-      buf = lines.pop();
-      for (const line of lines) {
-        if (!line.trim()) continue;
-        try {
-          clearTimeout(timeout);
-          const resp = JSON.parse(line);
-          sock.end();
-          resolve(resp);
-        } catch {
-          clearTimeout(timeout);
-          sock.end();
-          reject(new Error("Invalid JSON response"));
-        }
-      }
-    });
-
-    sock.on("error", (e) => {
-      clearTimeout(timeout);
-      if (e.code === "ENOENT") {
-        reject(new Error("Socket not found. Is Chrome running with the surf extension?"));
-      } else {
-        reject(e);
-      }
-    });
-
-    sock.on("close", () => {
-      clearTimeout(timeout);
-      reject(new Error("Socket closed unexpectedly"));
-    });
-  });
+async function sendSocketRequest(tool, args = {}, endpoint = selectEndpoint([]).endpoint) {
+  const requestTimeoutMs = resolveRequestDeadlineMs(tool, args);
+  const transport = await openClientTransport(endpoint, { requestTimeoutMs });
+  try {
+    const prepared = endpoint.kind === "remote" ? prepareRemoteTool(tool, args) : (() => { const normalized = validateLocalToolPaths(tool, args); return { args: normalized, uploads: [], downloads: [] }; })();
+    return await transport.request({
+      type: "tool_request",
+      method: "execute_tool",
+      params: { tool, args: prepared.args },
+      id: "mcp-" + Date.now() + "-" + Math.random(),
+    }, requestTimeoutMs, prepared);
+  } finally {
+    await transport.close();
+  }
 }
 
 function formatResult(resp) {
@@ -348,7 +345,8 @@ function formatResult(resp) {
 }
 
 class PiChromeMcpServer {
-  constructor() {
+  constructor(endpoint = selectEndpoint([]).endpoint) {
+    this.endpoint = endpoint;
     this.server = new McpServer({
       name: "surf",
       version: "1.0.0"
@@ -370,7 +368,7 @@ class PiChromeMcpServer {
         schemaObj,
         async (args) => {
           try {
-            const resp = await sendSocketRequest(name, args);
+            const resp = await sendSocketRequest(name, args, this.endpoint);
             return formatResult(resp);
           } catch (err) {
             return {
@@ -389,7 +387,7 @@ class PiChromeMcpServer {
       "page://current",
       async (uri) => {
         try {
-          const resp = await sendSocketRequest("page.read", {});
+          const resp = await sendSocketRequest("page.read", {}, this.endpoint);
           const text = resp.result?.content?.[0]?.text || "No content";
           return {
             contents: [{
@@ -415,7 +413,7 @@ class PiChromeMcpServer {
       "tabs://list",
       async (uri) => {
         try {
-          const resp = await sendSocketRequest("tab.list", {});
+          const resp = await sendSocketRequest("tab.list", {}, this.endpoint);
           const text = resp.result?.content?.[0]?.text || "[]";
           return {
             contents: [{
@@ -441,7 +439,7 @@ class PiChromeMcpServer {
       "console://messages",
       async (uri) => {
         try {
-          const resp = await sendSocketRequest("console", {});
+          const resp = await sendSocketRequest("console", {}, this.endpoint);
           const text = resp.result?.content?.[0]?.text || "No messages";
           return {
             contents: [{
@@ -467,7 +465,7 @@ class PiChromeMcpServer {
       "network://requests",
       async (uri) => {
         try {
-          const resp = await sendSocketRequest("network", {});
+          const resp = await sendSocketRequest("network", {}, this.endpoint);
           const text = resp.result?.content?.[0]?.text || "No requests";
           return {
             contents: [{
@@ -508,4 +506,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { PiChromeMcpServer };
+module.exports = { PiChromeMcpServer, TOOL_SCHEMAS };

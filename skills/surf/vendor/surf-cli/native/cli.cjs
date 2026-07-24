@@ -1,17 +1,315 @@
 #!/usr/bin/env node
-const net = require("net");
 const fs = require("fs");
-const { execSync } = require("child_process");
+const path = require("path");
+const os = require("os");
+const { execFileSync, execSync } = require("child_process");
 const { loadConfig, getConfigPath, createStarterConfig } = require("./config.cjs");
 const networkFormatters = require("./formatters/network.cjs");
 const networkStore = require("./network-store.cjs");
+const { parseDoCommands } = require("./do-parser.cjs");
+const { executeDoSteps } = require("./do-executor.cjs");
+const { openClientTransport } = require("./client-transport.cjs");
+const { version: VERSION } = require("../package.json");
 
-const SOCKET_PATH = "/tmp/surf.sock";
+const IS_WIN = process.platform === "win32";
+const { SURF_TMP, formatSocketError } = require("./socket-path.cjs");
+const { acquireBrowserLock } = require("./browser-lock.cjs");
+const { selectEndpoint, connectEndpoint, formatEndpointError } = require("./endpoint.cjs");
+const { createFrameParser, createSocketWriter, writeFrame } = require("./remote-transport.cjs");
+const { resolveRequestDeadlineMs, toolRequiresBrowserLease } = require("./host-sessions.cjs");
+const { AUTO_SCREENSHOT_TOOLS, prepareRemoteTool, validateLocalToolPaths } = require("./file-transfer.cjs");
+const { authorizeClient, listClients, revokeClient, getStateDir } = require("./remote-auth.cjs");
+if (IS_WIN) { try { fs.mkdirSync(SURF_TMP, { recursive: true }); } catch {} }
+
+function parseBrowserLockOptions(noLockFlag) {
+  const noLock = noLockFlag || process.env.SURF_NO_LOCK === "1" || process.env.SURF_NO_LOCK === "true";
+  let timeoutMs;
+  if (process.env.SURF_LOCK_TIMEOUT_MS !== undefined) {
+    timeoutMs = Number(process.env.SURF_LOCK_TIMEOUT_MS);
+    if (!Number.isFinite(timeoutMs) || timeoutMs < 0) {
+      console.error("Error: SURF_LOCK_TIMEOUT_MS must be a non-negative number");
+      process.exit(1);
+    }
+  }
+  return { noLock, timeoutMs };
+}
+
+function installBrowserLock({ noLock, timeoutMs }, endpoint) {
+  let releaseBrowserLock = () => {};
+  if (!noLock) {
+    try {
+      const lock = acquireBrowserLock(endpoint.key, SURF_TMP, { timeoutMs });
+      releaseBrowserLock = lock.release;
+    } catch (error) {
+      console.error("Error:", error && error.message ? error.message : String(error));
+      process.exit(1);
+    }
+  }
+
+  const release = () => {
+    const releaseCurrent = releaseBrowserLock;
+    releaseBrowserLock = () => {};
+    releaseCurrent();
+  };
+
+  process.once("exit", release);
+  process.once("SIGINT", () => {
+    release();
+    process.exit(130);
+  });
+  process.once("SIGTERM", () => {
+    release();
+    process.exit(143);
+  });
+}
+
+// ============================================================================
+// Workflow Resolution and Management
+// ============================================================================
+
+/**
+ * Get workflow search directories
+ * @returns {Array<{path: string, scope: string}>}
+ */
+function getWorkflowDirs() {
+  return [
+    { path: path.join(process.cwd(), '.surf', 'workflows'), scope: 'project' },
+    { path: path.join(os.homedir(), '.surf', 'workflows'), scope: 'user' },
+  ];
+}
+
+/**
+ * Resolve a workflow by name or path
+ * @param {string} nameOrPath - Workflow name or file path
+ * @returns {{ type: 'inline'|'file'|'not_found', content?: string, path?: string, name?: string }}
+ */
+function resolveWorkflow(nameOrPath) {
+  // Check if it's an inline workflow (contains pipe)
+  if (nameOrPath.includes('|')) {
+    return { type: 'inline', content: nameOrPath };
+  }
+
+  // Check if it's a direct file path (with extension or path separator)
+  if (nameOrPath.includes('/') || nameOrPath.includes('\\') || nameOrPath.endsWith('.json')) {
+    if (fs.existsSync(nameOrPath)) {
+      return { type: 'file', path: nameOrPath };
+    }
+    return { type: 'not_found', name: nameOrPath };
+  }
+
+  // Look up by name in workflow directories
+  const searchDirs = getWorkflowDirs();
+
+  for (const { path: dir } of searchDirs) {
+    const filePath = path.join(dir, `${nameOrPath}.json`);
+    if (fs.existsSync(filePath)) {
+      return { type: 'file', path: filePath };
+    }
+  }
+
+  return { type: 'not_found', name: nameOrPath };
+}
+
+/**
+ * List all available workflows
+ * @returns {Array<{name: string, description: string, scope: string, path: string, args?: object}>}
+ */
+function listWorkflows() {
+  const workflows = [];
+  const searchDirs = getWorkflowDirs();
+
+  for (const { path: dir, scope } of searchDirs) {
+    if (fs.existsSync(dir)) {
+      try {
+        const files = fs.readdirSync(dir).filter(f => f.endsWith('.json'));
+        for (const file of files) {
+          const filePath = path.join(dir, file);
+          try {
+            const content = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+            workflows.push({
+              name: content.name || file.replace('.json', ''),
+              description: content.description || '',
+              scope,
+              path: filePath,
+              args: content.args,
+              stepCount: content.steps?.length || 0,
+            });
+          } catch {
+            // Skip invalid JSON files
+          }
+        }
+      } catch {
+        // Skip inaccessible directories
+      }
+    }
+  }
+
+  return workflows;
+}
+
+/**
+ * Get detailed info about a workflow
+ * @param {string} name - Workflow name
+ * @returns {{ error?: string, name?: string, description?: string, args?: object, steps?: Array, path?: string }}
+ */
+function getWorkflowInfo(name) {
+  const resolved = resolveWorkflow(name);
+
+  if (resolved.type === 'not_found') {
+    return { error: `Workflow not found: ${name}` };
+  }
+
+  if (resolved.type === 'inline') {
+    return { error: 'Cannot get info for inline workflows' };
+  }
+
+  try {
+    const content = JSON.parse(fs.readFileSync(resolved.path, 'utf8'));
+    return {
+      name: content.name || name,
+      description: content.description || '',
+      args: content.args || {},
+      steps: content.steps || [],
+      path: resolved.path,
+    };
+  } catch (e) {
+    return { error: `Failed to parse workflow: ${e.message}` };
+  }
+}
+
+/**
+ * Validate workflow args against schema
+ * @param {object} workflow - Workflow with args schema
+ * @param {object} providedArgs - User-provided args
+ * @returns {string[]} - Array of error messages
+ */
+function validateWorkflowArgs(workflow, providedArgs) {
+  const errors = [];
+  if (workflow.args) {
+    for (const [name, spec] of Object.entries(workflow.args)) {
+      if (spec.required && providedArgs[name] === undefined) {
+        errors.push(`Missing required argument: --${name}`);
+      }
+    }
+  }
+  return errors;
+}
+
+/**
+ * Apply default values to workflow args
+ * @param {object} workflow - Workflow with args schema
+ * @param {object} providedArgs - User-provided args
+ * @returns {object} - Args with defaults applied
+ */
+function applyArgDefaults(workflow, providedArgs) {
+  const vars = { ...providedArgs };
+  if (workflow.args) {
+    for (const [name, spec] of Object.entries(workflow.args)) {
+      if (vars[name] === undefined && spec.default !== undefined) {
+        vars[name] = spec.default;
+      }
+    }
+  }
+  return vars;
+}
+
+/**
+ * Validate a workflow JSON file
+ * @param {string} filePath - Path to workflow file
+ * @returns {{ valid: boolean, error?: string, workflow?: object }}
+ */
+function validateWorkflowFile(filePath) {
+  if (!fs.existsSync(filePath)) {
+    return { valid: false, error: `File not found: ${filePath}` };
+  }
+
+  try {
+    const content = fs.readFileSync(filePath, 'utf8');
+    const workflow = JSON.parse(content);
+
+    // Basic structure validation
+    if (!workflow.steps || !Array.isArray(workflow.steps)) {
+      return { valid: false, error: "Workflow must have a 'steps' array" };
+    }
+
+    if (workflow.steps.length === 0) {
+      return { valid: false, error: "Workflow has no steps" };
+    }
+
+    // Validate each step
+    for (let i = 0; i < workflow.steps.length; i++) {
+      const step = workflow.steps[i];
+
+      // Check for loops
+      if (step.repeat !== undefined || step.each !== undefined) {
+        if (!step.steps || !Array.isArray(step.steps)) {
+          return { valid: false, error: `Step ${i + 1}: loop must have a 'steps' array` };
+        }
+        continue;
+      }
+
+      // Regular step must have tool/cmd
+      if (!step.tool && !step.cmd) {
+        return { valid: false, error: `Step ${i + 1}: must have 'tool' field` };
+      }
+    }
+
+    // Validate args schema if present
+    if (workflow.args && typeof workflow.args !== 'object') {
+      return { valid: false, error: "'args' must be an object" };
+    }
+
+    return { valid: true, workflow };
+  } catch (e) {
+    return { valid: false, error: `Invalid JSON: ${e.message}` };
+  }
+}
+
+/**
+ * Format a step for display
+ * @param {object} step - Workflow step
+ * @param {number} indent - Indentation level
+ * @returns {string}
+ */
+function formatStep(step, indent = 0) {
+  const pad = '  '.repeat(indent);
+
+  if (step.repeat !== undefined) {
+    const lines = [`${pad}repeat ${step.repeat} times:`];
+    for (const s of step.steps || []) {
+      lines.push(formatStep(s, indent + 1));
+    }
+    if (step.until) {
+      lines.push(`${pad}  until: ${step.until.tool || step.until.cmd}`);
+    }
+    return lines.join('\n');
+  }
+
+  if (step.each !== undefined) {
+    const lines = [`${pad}each ${step.each} as ${step.as || 'item'}:`];
+    for (const s of step.steps || []) {
+      lines.push(formatStep(s, indent + 1));
+    }
+    return lines.join('\n');
+  }
+
+  const tool = step.tool || step.cmd;
+  const args = step.args || {};
+  const argStr = Object.entries(args)
+    .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
+    .join(' ');
+
+  let line = `${pad}${tool}`;
+  if (argStr) line += ` ${argStr}`;
+  if (step.as) line += ` → ${step.as}`;
+
+  return line;
+}
 
 // Cross-platform image resize (macOS: sips, Linux: ImageMagick)
 function resizeImage(filePath, maxSize) {
   const platform = process.platform;
-  
+
   try {
     if (platform === "darwin") {
       // macOS: use sips
@@ -21,12 +319,13 @@ function resizeImage(filePath, maxSize) {
       const height = parseInt(sizeInfo.match(/pixelHeight:\s*(\d+)/)?.[1] || "0", 10);
       return { success: true, width, height };
     } else {
-      // Linux/other: use ImageMagick (try IM6 first, then IM7)
+      // Linux/Windows: use ImageMagick (try IM6 first, then IM7)
+      const resizeArg = IS_WIN ? `"${maxSize}x${maxSize}>"` : `${maxSize}x${maxSize}\\>`;
       try {
-        execSync(`convert "${filePath}" -resize ${maxSize}x${maxSize}\\> "${filePath}"`, { stdio: "pipe" });
+        execSync(`convert "${filePath}" -resize ${resizeArg} "${filePath}"`, { stdio: "pipe" });
       } catch {
         // IM7 uses 'magick' as main command
-        execSync(`magick "${filePath}" -resize ${maxSize}x${maxSize}\\> "${filePath}"`, { stdio: "pipe" });
+        execSync(`magick "${filePath}" -resize ${resizeArg} "${filePath}"`, { stdio: "pipe" });
       }
       // Get dimensions (IM7 may need 'magick identify' instead of just 'identify')
       let sizeInfo;
@@ -42,19 +341,58 @@ function resizeImage(filePath, maxSize) {
     return { success: false, error: e.message };
   }
 }
-const args = process.argv.slice(2);
-const VERSION = "2.0.0";
+let args = process.argv.slice(2);
+if (args[0] === "remote") {
+  const remoteArgs = args.slice(1);
+  const subcommand = remoteArgs[0];
+  const stateDir = getStateDir();
+  try {
+    if (subcommand === "authorize") {
+      const label = remoteArgs[1];
+      const outputIndex = remoteArgs.indexOf("--output");
+      const output = outputIndex === -1 ? undefined : remoteArgs[outputIndex + 1];
+      if (!label || !output || output.startsWith("--")) throw new Error("Usage: surf remote authorize <label> --output <credential-file>");
+      const client = authorizeClient(label, output, stateDir);
+      console.log(`Authorized remote client: ${client.label}`);
+      console.log(`Credential: ${client.output}`);
+      process.exit(0);
+    }
+    if (subcommand === "list") {
+      const clients = listClients(stateDir);
+      if (clients.length === 0) console.log("No authorized remote clients.");
+      else for (const client of clients) console.log(`${client.label}\t${client.id}\t${client.createdAt}`);
+      process.exit(0);
+    }
+    if (subcommand === "revoke") {
+      const label = remoteArgs[1];
+      if (!label || label.startsWith("--")) throw new Error("Usage: surf remote revoke <label>");
+      revokeClient(label, stateDir);
+      console.log(`Revoked remote client: ${label}`);
+      process.exit(0);
+    }
+    console.error("Usage: surf remote authorize <label> --output <credential-file> | list | revoke <label>");
+    process.exit(1);
+  } catch (error) {
+    console.error(`Error: ${error.message}`);
+    process.exit(1);
+  }
+}
+
+let endpoint;
+try {
+  ({ args, endpoint } = selectEndpoint(args));
+} catch (error) {
+  console.error(`Error: ${error.message}`);
+  process.exit(1);
+}
 
 const ALIASES = {
   snap: "screenshot",
-  "screenshot-container": "snap-container",
   read: "page.read",
-  text: "page.text",
   find: "search",
   go: "navigate",
   net: "network",
   "network.dump": "network.get",
-  "tab.activate": "tab.switch",
 };
 
 const REMOVED_COMMANDS = {
@@ -100,40 +438,22 @@ const TOOLS = {
         opts: {
           "with-page": "Include current page context",
           model: "Model: gpt-4o, o1, etc.",
-          reasoning: "Reasoning dropdown label: Pro, Heavy Reasoning, etc.",
           file: "Attach file",
-          timeout: "Timeout in seconds (default: 2700 = 45min)",
-          sentinel: "Wait until the final assistant message contains this exact marker",
-          "stable-polls": "Number of unchanged polls after sentinel before returning",
-          "keep-tab": "Keep the controlled ChatGPT tab open and return its tab id",
-          "no-activate": "Do not foreground the controlled tab or its window (requires --target-tab-id)"
+          timeout: "Timeout in seconds (default: 2700 = 45min)"
         },
         examples: [
           { cmd: 'chatgpt "explain this code"', desc: "Basic query" },
           { cmd: 'chatgpt "summarize" --with-page', desc: "With page context" },
           { cmd: 'chatgpt "review" --file code.ts', desc: "With file" },
           { cmd: 'chatgpt "analyze" --model gpt-4o', desc: "Specify model" },
-          { cmd: 'chatgpt "analyze" --reasoning "Heavy Reasoning"', desc: "Specify reasoning effort" },
         ]
       },
-      "chatgpt.extract": {
-        desc: "Extract the last assistant DOM message from an existing ChatGPT tab",
-        args: [],
+      "gemini": {
+        desc: "Send prompt to Gemini (uses browser cookies)",
+        args: ["query"],
         opts: {
-          "tab-id": "Controlled ChatGPT tab id",
-          sentinel: "Require/report this completion marker in assistant DOM text",
-          timeout: "CDP extraction timeout in seconds (default: 12)"
-        },
-        examples: [
-          { cmd: 'chatgpt.extract --tab-id 837343543 --sentinel "<<<WEBGPT_DONE:...>>>"', desc: "Recover completed WebGPT output" },
-        ]
-      },
-      "gemini": { 
-        desc: "Send prompt to Gemini (uses browser cookies)", 
-        args: ["query"], 
-        opts: { 
           "with-page": "Include current page context",
-          model: "Model: gemini-3-pro (default), gemini-2.5-pro, gemini-2.5-flash",
+          model: "Model: gemini-3.1-pro (default), gemini-3.5-flash, gemini-3.1-flash-lite",
           file: "Attach file to analyze",
           "generate-image": "Generate image and save to path",
           "edit-image": "Edit existing image (use with --output)",
@@ -167,9 +487,59 @@ const TOOLS = {
           { cmd: 'perplexity "latest AI news" --model sonar', desc: "Specify model (Pro)" },
         ]
       },
-      "ai": { 
-        desc: "Analyze page with AI (requires GOOGLE_API_KEY)", 
-        args: ["query"], 
+      "grok": {
+        desc: "Query Grok AI with real-time X/Twitter data access (uses browser session)",
+        args: ["query"],
+        opts: {
+          "with-page": "Include current page context",
+          model: "Model: auto, fast (default), expert, grok-4.20-beta",
+          "deep-search": "Enable DeepSearch for X post searching",
+          timeout: "Timeout in seconds (default: 300)",
+          validate: "Check Grok UI and scrape available models (no query sent)",
+          "save-models": "Save discovered models to surf.json config"
+        },
+        examples: [
+          { cmd: 'grok "what are the latest AI agent trends on X"', desc: "Search X posts" },
+          { cmd: 'grok "analyze @username recent activity"', desc: "Profile analysis" },
+          { cmd: 'grok "summarize this page" --with-page', desc: "With page context" },
+          { cmd: 'grok "find viral AI posts" --deep-search', desc: "DeepSearch mode" },
+          { cmd: 'grok "quick question" --model fast', desc: "Faster model" },
+          { cmd: 'grok --validate', desc: "Check UI and list available models" },
+          { cmd: 'grok --validate --save-models', desc: "Save discovered models to settings" },
+        ]
+      },
+      "aistudio": {
+        desc: "Query via Google AI Studio (uses browser session)",
+        args: ["query"],
+        opts: {
+          "with-page": "Include current page context",
+          model: "Model (best-effort): pass an AI Studio model id like gemini-3.1-pro-preview, gemini-3-flash-preview, gemini-flash-lite-latest. If invalid, AI Studio uses the last-selected UI model",
+          timeout: "Timeout in seconds (default: 300)"
+        },
+        examples: [
+          { cmd: 'aistudio "explain quantum computing"', desc: "Basic query" },
+          { cmd: 'aistudio "redteam this" --with-page', desc: "With page context" },
+          { cmd: 'aistudio "quick answer" --model gemini-3-flash-preview', desc: "Model selection" },
+        ]
+      },
+      "aistudio.build": {
+        desc: "Build an app via Google AI Studio App Builder (uses browser session)",
+        args: ["query"],
+        opts: {
+          model: "Model override for Advanced Settings (e.g. gemini-3.1-pro-preview)",
+          output: "Directory to extract the downloaded zip",
+          timeout: "Build timeout in seconds (default: 600)",
+          "keep-open": "Keep the AI Studio tab open after completion",
+        },
+        examples: [
+          { cmd: 'aistudio.build "build a portfolio site"', desc: "Build with defaults" },
+          { cmd: 'aistudio.build "todo app with auth" --model gemini-3.1-pro-preview', desc: "Build with model override" },
+          { cmd: 'aistudio.build "crm dashboard" --output ./out', desc: "Build and extract to directory" },
+        ]
+      },
+      "ai": {
+        desc: "Analyze page with AI (requires GOOGLE_API_KEY)",
+        args: ["query"],
         opts: { mode: "Query mode: find|summary|extract (auto-detected)" },
         examples: [
           { cmd: 'ai "find the login button"', desc: "Find element" },
@@ -179,57 +549,54 @@ const TOOLS = {
       },
     }
   },
-  extension: {
-    desc: "Extension lifecycle",
-    commands: {
-      "extension.ping": { desc: "Ping the Surf service worker", args: [], examples: [{ cmd: "extension.ping --json", desc: "Health check" }] },
-      "extension.reload": { desc: "Reload Surf extension (chrome.runtime.reload)", args: [], examples: [{ cmd: "extension.reload", desc: "Reload after npm run build" }] },
-    }
-  },
   tab: {
     desc: "Tab management",
     commands: {
       "tab.list": { desc: "List all open tabs", args: [], examples: [{ cmd: "tab.list", desc: "Show all tabs" }] },
-      "tab.recovery-state": {
-        desc: "Read guarded recovery state for one exact tab",
+      "focus.state": {
+        desc: "Get focused window id and active tab id",
         args: [],
-        examples: [{ cmd: "tab.recovery-state --tab-id 123 --json", desc: "Inspect without activating or mutating the tab" }]
+        examples: [{ cmd: "focus.state --json", desc: "Report which tab/window is foreground" }]
       },
-      "focus.state": { desc: "Get focused window id and active tab id", args: [], examples: [{ cmd: "focus.state --json", desc: "Report which tab/window is foreground" }] },
-      "tab.new": { 
-        desc: "Open new tab", 
-        args: ["url"], 
-        opts: { urls: "Open multiple URLs", background: "Open without activating the new tab" },
+      "tab.new": {
+        desc: "Open new tab",
+        args: ["url"],
+        opts: { urls: "Open multiple URLs" },
         examples: [
           { cmd: 'tab.new "https://google.com"', desc: "Open single tab" },
-          { cmd: 'tab.new "https://google.com" --background', desc: "Open without changing focus" },
           { cmd: 'tab.new --urls "https://a.com" "https://b.com"', desc: "Open multiple" },
         ]
       },
-      "tab.switch": { 
-        desc: "Switch to tab by ID or name", 
+      "tab.switch": {
+        desc: "Switch to tab by ID or name",
         args: ["id"],
         examples: [
           { cmd: "tab.switch 123", desc: "Switch by ID" },
           { cmd: 'tab.switch "myTab"', desc: "Switch by name" },
         ]
       },
-      "tab.close": { 
-        desc: "Close tab by ID or name", 
-        args: ["id"], 
+      "tab.close": {
+        desc: "Close tab by ID or name",
+        args: ["id"],
         opts: { ids: "Close multiple tabs" },
         examples: [{ cmd: "tab.close 123", desc: "Close tab" }]
       },
-      "tab.name": { 
-        desc: "Register current tab with a name", 
+      "tab.move": {
+        desc: "Move tab to another window",
+        args: ["id"],
+        opts: { ids: "Move multiple tabs", "to-window": "Destination window ID", index: "Destination index" },
+        examples: [{ cmd: "tab.move 123 --to-window 456", desc: "Move tab to window" }]
+      },
+      "tab.name": {
+        desc: "Register current tab with a name",
         args: ["name"],
         examples: [{ cmd: 'tab.name "dashboard"', desc: "Name current tab" }]
       },
       "tab.unname": { desc: "Unregister a named tab", args: ["name"] },
       "tab.named": { desc: "List all named tabs", args: [] },
-      "tab.group": { 
-        desc: "Create/add to tab group", 
-        args: [], 
+      "tab.group": {
+        desc: "Create/add to tab group",
+        args: [],
         opts: { name: "Group name", tabs: "Tab IDs (comma-separated)", color: "Group color" },
         examples: [
           { cmd: 'tab.group --name "Work" --color blue', desc: "Group current tab" },
@@ -238,9 +605,9 @@ const TOOLS = {
       },
       "tab.ungroup": { desc: "Remove tabs from group", args: [], opts: { tabs: "Tab IDs (comma-separated)" } },
       "tab.groups": { desc: "List all tab groups", args: [] },
-      "tab.reload": { 
-        desc: "Reload current tab", 
-        args: [], 
+      "tab.reload": {
+        desc: "Reload current tab",
+        args: [],
         opts: { hard: "Bypass cache" },
         examples: [
           { cmd: "tab.reload", desc: "Soft reload" },
@@ -249,33 +616,49 @@ const TOOLS = {
       },
     }
   },
+  extension: {
+    desc: "Extension lifecycle",
+    commands: {
+      "extension.ping": {
+        desc: "Ping the Surf service worker",
+        args: [],
+        examples: [{ cmd: "extension.ping --json", desc: "Health check" }]
+      },
+      "extension.reload": {
+        desc: "Reload Surf extension",
+        args: [],
+        examples: [{ cmd: "extension.reload --json", desc: "Reload after extension.build" }]
+      },
+    }
+  },
   nav: {
     desc: "Navigation",
     commands: {
-      "navigate": { 
-        desc: "Go to URL", 
+      "navigate": {
+        desc: "Go to URL",
         args: ["url"],
         examples: [{ cmd: 'navigate "https://example.com"', desc: "Go to URL" }]
       },
       "go": { desc: "Alias for navigate", args: ["url"], alias: "navigate" },
-      "back": { 
-        desc: "Go back in history", 
+      "back": {
+        desc: "Go back in history",
         args: [],
         examples: [{ cmd: "back", desc: "Browser back" }]
       },
-      "forward": { 
-        desc: "Go forward in history", 
+      "forward": {
+        desc: "Go forward in history",
         args: [],
         examples: [{ cmd: "forward", desc: "Browser forward" }]
       },
-      "screenshot": { 
-        desc: "Capture screenshot (auto-saves to /tmp by default)", 
-        args: [], 
-        opts: { 
-          output: "Save to file", 
-          selector: "Capture specific element", 
-          annotate: "Draw element labels", 
-          fullpage: "Capture full page", 
+      "screenshot": {
+        desc: "Capture screenshot (auto-saves to /tmp by default)",
+        args: [],
+        opts: {
+          output: "Save to file",
+          selector: "Capture specific element",
+          annotate: "Draw element labels",
+          fullpage: "Capture full page",
+          "full-page": "Capture full page (alias for --fullpage)",
           "max-height": "Max height for fullpage (default: 4000)",
           full: "Skip resize, save at full resolution",
           "max-size": "Max dimension in px (default: 1200)",
@@ -289,37 +672,65 @@ const TOOLS = {
           { cmd: "snap", desc: "Alias for screenshot" },
         ]
       },
-      "snap": { desc: "Alias for screenshot (auto-saves to /tmp)", args: [], alias: "screenshot" },
-      "snap-container": {
-        desc: "Capture and stitch a nested scroll container",
-        args: ["selector"],
+      "record": {
+        desc: "Capture screenshot frames over time and assemble an animated GIF",
+        args: [],
         opts: {
-          output: "Save to file",
-          nearest: "Use nearest scrollable ancestor (default: true)",
-          "max-segments": "Maximum vertical segments (default: 80)",
-          "settle-ms": "Wait after each scroll step (default: 80)"
+          output: "GIF output path (default: /tmp/surf-record-*.gif)",
+          duration: "Capture duration in ms (default: 2000, max: 10000)",
+          fps: "Frames per second (default: 10, max: 30)",
+          trigger: "Optional action before capture: click:<selector> or scroll:<target>",
+          rect: "Crop rectangle x,y,width,height"
         },
         examples: [
-          { cmd: 'snap-container "[data-qid=\\"pane\\"]" --output /tmp/pane.png', desc: "Stitch a scroll pane" }
+          { cmd: "record --duration 2000 --fps 10 --output /tmp/anim.gif", desc: "Record a 2s GIF" },
+          { cmd: 'record --trigger "click:#btn" --output /tmp/click.gif', desc: "Click, then record" },
         ]
       },
-      "screenshot-container": { desc: "Alias for snap-container", args: ["selector"], alias: "snap-container" },
+      "animate-audit": {
+        desc: "Sample matching elements over time and return a JSON animation timeline",
+        args: [],
+        opts: {
+          selector: "CSS selector to sample (required)",
+          duration: "Capture duration in ms (default: 2000, max: 10000)",
+          fps: "Samples per second (default: 10, max: 30)"
+        },
+        examples: [
+          { cmd: 'animate-audit --selector ".thing" --duration 2000 --fps 10', desc: "Capture a bounded JSON timeline" },
+        ]
+      },
+      "perf-audit": {
+        desc: "Capture layout shift, event, long task, and animation-frame performance entries",
+        args: [],
+        opts: {
+          duration: "Capture duration in ms (default: 3000, max: 10000)",
+          trigger: "Optional action before capture: click:<selector> or scroll:<target>",
+          output: "Save JSON to file"
+        },
+        examples: [
+          { cmd: 'perf-audit --duration 3000 --trigger "click:.cta" --output /tmp/perf.json', desc: "Capture a performance snapshot" },
+        ]
+      },
+      "snap": { desc: "Alias for screenshot (auto-saves to /tmp)", args: [], alias: "screenshot" },
     }
   },
   scroll: {
     desc: "Scrolling",
     commands: {
-      "scroll": { 
-        desc: "Scroll in direction", 
-        args: [], 
+      "scroll": {
+        desc: "Scroll in direction",
+        args: ["direction", "pixels"],
         opts: { direction: "up|down|left|right", amount: "Scroll amount (1-10)" },
-        examples: [{ cmd: "scroll --direction down --amount 3", desc: "Scroll down" }]
+        examples: [
+          { cmd: "scroll down 800", desc: "Scroll down 800px" },
+          { cmd: "scroll --direction down --amount 3", desc: "Scroll down" },
+        ]
       },
       "scroll.top": { desc: "Scroll to top of page", args: [], opts: { selector: "Target specific container" } },
       "scroll.bottom": { desc: "Scroll to bottom of page", args: [], opts: { selector: "Target specific container" } },
-      "scroll.to": { 
-        desc: "Scroll element into view", 
-        args: [], 
+      "scroll.to": {
+        desc: "Scroll element into view",
+        args: [],
         opts: { ref: "Element ref" },
         examples: [{ cmd: "scroll.to --ref e5", desc: "Scroll to element" }]
       },
@@ -329,15 +740,16 @@ const TOOLS = {
   page: {
     desc: "Page inspection",
     commands: {
-      "page.read": { 
-        desc: "Get accessibility tree + visible text", 
-        args: [], 
-        opts: { 
-          all: "Include all elements", 
-          ref: "Get specific element", 
+      "page.read": {
+        desc: "Get accessibility tree + visible text",
+        args: [],
+        opts: {
+          all: "Include all elements",
+          ref: "Get specific element",
           "no-text": "Exclude visible text content",
           depth: "Maximum tree depth (default: unlimited)",
           compact: "Remove empty structural elements",
+          "max-bytes": "Maximum visible text bytes",
         },
         examples: [
           { cmd: "page.read", desc: "Interactive elements + text content" },
@@ -345,7 +757,7 @@ const TOOLS = {
           { cmd: "page.read --no-text", desc: "Interactive elements only (no text)" },
           { cmd: "page.read --depth 3", desc: "Limit to 3 levels deep" },
           { cmd: "page.read --compact", desc: "Skip empty containers" },
-          { cmd: "page.read --depth 3 --compact", desc: "Shallow + compact (60% smaller)" },
+          { cmd: "page.read --depth 3 --compact --max-bytes 2000", desc: "Shallow + compact output" },
           { cmd: "read", desc: "Alias" },
         ]
       },
@@ -360,7 +772,7 @@ const TOOLS = {
       "locate.role": {
         desc: "Find element by ARIA role",
         args: ["role"],
-        opts: { 
+        opts: {
           name: "Element name/text",
           action: "Action to perform (click|fill|hover|text)",
           value: "Value for fill action",
@@ -432,14 +844,14 @@ const TOOLS = {
   wait: {
     desc: "Waiting",
     commands: {
-      "wait": { 
-        desc: "Wait N seconds", 
+      "wait": {
+        desc: "Wait N seconds",
         args: ["duration"],
         examples: [{ cmd: "wait 2", desc: "Wait 2 seconds" }]
       },
-      "wait.element": { 
-        desc: "Wait for element to appear", 
-        args: ["selector"], 
+      "wait.element": {
+        desc: "Wait for element to appear",
+        args: ["selector"],
         opts: { timeout: "Timeout in ms" },
         examples: [
           { cmd: 'wait.element ".loading"', desc: "Wait for element" },
@@ -447,9 +859,9 @@ const TOOLS = {
         ]
       },
       "wait.network": { desc: "Wait for network idle", args: [], opts: { timeout: "Timeout in ms" } },
-      "wait.url": { 
-        desc: "Wait for URL to match", 
-        args: ["pattern"], 
+      "wait.url": {
+        desc: "Wait for URL to match",
+        args: ["pattern"],
         opts: { timeout: "Timeout in ms" },
         examples: [{ cmd: 'wait.url "/dashboard"', desc: "Wait for URL pattern" }]
       },
@@ -460,15 +872,15 @@ const TOOLS = {
   input: {
     desc: "Input actions",
     commands: {
-      "click": { 
-        desc: "Click element or coordinates", 
-        args: ["ref"], 
-        opts: { 
-          ref: "Element ref", 
-          x: "X coordinate", 
-          y: "Y coordinate", 
-          button: "left|right|double|triple", 
-          selector: "CSS selector", 
+      "click": {
+        desc: "Click element or coordinates",
+        args: ["ref"],
+        opts: {
+          ref: "Element ref",
+          x: "X coordinate",
+          y: "Y coordinate",
+          button: "left|right|double|triple",
+          selector: "CSS selector",
           index: "Which match (0-indexed) for selector",
         },
         examples: [
@@ -478,15 +890,15 @@ const TOOLS = {
           { cmd: "click --x 100 --y 200", desc: "Click coordinates" },
         ]
       },
-      "type": { 
-        desc: "Type text (uses form.fill when --ref provided for better modal/form support)", 
-        args: ["text"], 
-        opts: { 
+      "type": {
+        desc: "Type text (uses form.fill when --ref provided for better modal/form support)",
+        args: ["text"],
+        opts: {
           into: "Target selector",
-          ref: "Element ref (uses JS DOM method, more reliable for modals)", 
-          submit: "Press enter after", 
-          clear: "Clear first", 
-          method: "cdp|js (default: cdp, but ref uses JS automatically)" 
+          ref: "Element ref (uses JS DOM method, more reliable for modals)",
+          submit: "Press enter after",
+          clear: "Clear first",
+          method: "cdp|js (cursor typing uses CDP; selector/ref targets use JS)"
         },
         examples: [
           { cmd: 'type "hello world"', desc: "Type at cursor (CDP events)" },
@@ -495,9 +907,9 @@ const TOOLS = {
         ]
       },
       "smart_type": { desc: "Type into specific element (js method)", args: [], opts: { selector: "CSS selector", text: "Text to type", clear: "Clear first (default: true)", submit: "Submit after" } },
-      "key": { 
-        desc: "Press key", 
-        args: ["key"], 
+      "key": {
+        desc: "Press key",
+        args: ["key"],
         examples: [
           { cmd: "key Enter", desc: "Press Enter" },
           { cmd: "key Escape", desc: "Press Escape" },
@@ -512,9 +924,9 @@ const TOOLS = {
   js: {
     desc: "JavaScript execution",
     commands: {
-      "js": { 
-        desc: "Execute JavaScript (use 'return' for values)", 
-        args: ["code"], 
+      "js": {
+        desc: "Execute JavaScript (use 'return' for values)",
+        args: ["code"],
         opts: { file: "Run JS from file" },
         examples: [
           { cmd: 'js "return document.title"', desc: "Get title" },
@@ -527,9 +939,9 @@ const TOOLS = {
   dev: {
     desc: "Dev tools",
     commands: {
-      "console": { 
-        desc: "Read console messages", 
-        args: [], 
+      "console": {
+        desc: "Read console messages",
+        args: [],
         opts: { clear: "Clear after reading", stream: "Continuous output", level: "Filter by level (log,warn,error)", limit: "Max messages" },
         examples: [
           { cmd: "console", desc: "Get recent messages" },
@@ -542,10 +954,10 @@ const TOOLS = {
   network: {
     desc: "Network capture",
     commands: {
-      "network": { 
-        desc: "List captured network requests", 
-        args: [], 
-        opts: { 
+      "network": {
+        desc: "List captured network requests",
+        args: [],
+        opts: {
           origin: "Filter by origin (domain)",
           method: "Filter by method (GET,POST,...)",
           status: "Filter by status (200, 4xx, 5xx)",
@@ -570,16 +982,16 @@ const TOOLS = {
           { cmd: "network -v", desc: "Verbose with headers" },
         ]
       },
-      "network.get": { 
-        desc: "Get full details for a request", 
+      "network.get": {
+        desc: "Get full details for a request",
         args: ["id"],
         opts: {},
         examples: [
           { cmd: "network.get r_001", desc: "Get request details" }
         ]
       },
-      "network.body": { 
-        desc: "Get response body (for piping)", 
+      "network.body": {
+        desc: "Get response body (for piping)",
         args: ["id"],
         opts: { request: "Get request body instead" },
         examples: [
@@ -587,24 +999,24 @@ const TOOLS = {
           { cmd: "network.body r_001 | jq .", desc: "Pipe JSON to jq" }
         ]
       },
-      "network.curl": { 
-        desc: "Generate curl command for request", 
+      "network.curl": {
+        desc: "Generate curl command for request",
         args: ["id"],
         opts: {},
         examples: [
           { cmd: "network.curl r_001", desc: "Generate curl" }
         ]
       },
-      "network.origins": { 
-        desc: "List captured origins with stats", 
+      "network.origins": {
+        desc: "List captured origins with stats",
         args: [],
         opts: { "by-tab": "Group by tab" },
         examples: [
           { cmd: "network.origins", desc: "List origins" }
         ]
       },
-      "network.clear": { 
-        desc: "Clear captured requests", 
+      "network.clear": {
+        desc: "Clear captured requests",
         args: [],
         opts: { before: "Clear before timestamp/duration", origin: "Clear specific origin" },
         examples: [
@@ -612,24 +1024,24 @@ const TOOLS = {
           { cmd: "network.clear --before 1h", desc: "Clear older than 1 hour" }
         ]
       },
-      "network.stats": { 
-        desc: "Show capture statistics", 
+      "network.stats": {
+        desc: "Show capture statistics",
         args: [],
         opts: {},
         examples: [
           { cmd: "network.stats", desc: "Show stats" }
         ]
       },
-      "network.export": { 
-        desc: "Export captured requests", 
+      "network.export": {
+        desc: "Export captured requests",
         args: [],
         opts: { jsonl: "Export as JSONL", output: "Output file path" },
         examples: [
           { cmd: "network.export --jsonl --output /tmp/requests.jsonl", desc: "Export as JSONL" }
         ]
       },
-      "network.path": { 
-        desc: "Get file paths for request data", 
+      "network.path": {
+        desc: "Get file paths for request data",
         args: ["id"],
         opts: {},
         examples: [
@@ -641,9 +1053,19 @@ const TOOLS = {
   health: {
     desc: "Health checks",
     commands: {
-      "health": { 
-        desc: "Wait for URL or element", 
-        args: [], 
+      "doctor": {
+        desc: "Diagnose native host manifests and socket connectivity",
+        args: [],
+        opts: { browser: "Browser to inspect (default: chrome)", target: "auto|linux|windows", socket: "Socket path to check", json: "Raw diagnostic JSON" },
+        examples: [
+          { cmd: "doctor", desc: "Check default Chrome setup" },
+          { cmd: "doctor --browser all", desc: "Check all supported browsers" },
+          { cmd: "doctor --json", desc: "Machine-readable diagnostics" },
+        ]
+      },
+      "health": {
+        desc: "Wait for URL or element",
+        args: [],
         opts: { url: "URL to check (expects 200)", selector: "CSS selector to wait for", expect: "Expected status code (default: 200)", timeout: "Timeout in ms" },
         examples: [
           { cmd: 'health --url "https://api.example.com"', desc: "Check URL" },
@@ -662,9 +1084,9 @@ const TOOLS = {
     desc: "Browser dialog handling",
     commands: {
       "dialog.accept": { desc: "Accept current dialog", args: [], opts: { text: "Text for prompt input" } },
-      "dialog.dismiss": { 
-        desc: "Dismiss current dialog", 
-        args: [], 
+      "dialog.dismiss": {
+        desc: "Dismiss current dialog",
+        args: [],
         opts: { all: "Dismiss all dialogs repeatedly" },
         examples: [
           { cmd: "dialog.dismiss", desc: "Dismiss once" },
@@ -728,9 +1150,9 @@ const TOOLS = {
   upload: {
     desc: "File upload",
     commands: {
-      "upload": { 
-        desc: "Upload file(s) to input", 
-        args: [], 
+      "upload": {
+        desc: "Upload file(s) to input",
+        args: [],
         opts: { ref: "Element ref", files: "File path(s) comma-separated" },
         examples: [{ cmd: 'upload --ref e5 --files "/path/to/file.pdf"', desc: "Upload file" }]
       },
@@ -739,8 +1161,8 @@ const TOOLS = {
   frame: {
     desc: "Iframe handling",
     commands: {
-      "frame.list": { 
-        desc: "List all frames in page", 
+      "frame.list": {
+        desc: "List all frames in page",
         args: [],
         examples: [{ cmd: "frame.list", desc: "Show frame tree" }]
       },
@@ -763,9 +1185,9 @@ const TOOLS = {
         args: [],
         examples: [{ cmd: "frame.main", desc: "Exit iframe context" }]
       },
-      "frame.js": { 
-        desc: "Execute JS in specific frame", 
-        args: ["code"], 
+      "frame.js": {
+        desc: "Execute JS in specific frame",
+        args: ["code"],
         opts: { id: "Frame ID from frame.list", file: "Run JS from file" },
         examples: [
           { cmd: 'frame.js "return document.title" --id frame1', desc: "JS in specific frame" },
@@ -776,25 +1198,37 @@ const TOOLS = {
   cookie: {
     desc: "Cookie management",
     commands: {
-      "cookie.list": { 
-        desc: "List all cookies for current tab's domain", 
+      "cookie.list": {
+        desc: "List all cookies for current tab's domain",
         args: [],
-        examples: [{ cmd: "cookie.list", desc: "Show all cookies" }]
+        examples: [
+          { cmd: "cookie list", desc: "Show all cookies" },
+          { cmd: "cookie.list", desc: "Dot command form" },
+        ]
       },
-      "cookie.get": { desc: "Get specific cookie", args: [], opts: { name: "Cookie name" } },
-      "cookie.set": { 
-        desc: "Set a cookie", 
-        args: [], 
+      "cookie.get": {
+        desc: "Get specific cookie",
+        args: [],
+        opts: { name: "Cookie name" },
+        examples: [{ cmd: "cookie get session", desc: "Get cookie" }]
+      },
+      "cookie.set": {
+        desc: "Set a cookie",
+        args: [],
         opts: { name: "Cookie name", value: "Cookie value", expires: "Expiry date (optional)" },
-        examples: [{ cmd: 'cookie.set --name "session" --value "abc123"', desc: "Set cookie" }]
+        examples: [
+          { cmd: 'cookie set --name "session" --value "abc123"', desc: "Set cookie" },
+          { cmd: 'cookie.set --name "session" --value "abc123"', desc: "Dot command form" },
+        ]
       },
-      "cookie.clear": { 
-        desc: "Clear cookies", 
-        args: [], 
+      "cookie.clear": {
+        desc: "Clear cookies",
+        args: [],
         opts: { name: "Specific cookie (optional)", all: "Clear all for domain" },
         examples: [
-          { cmd: 'cookie.clear --name "session"', desc: "Clear one" },
-          { cmd: "cookie.clear --all", desc: "Clear all" },
+          { cmd: 'cookie delete "session"', desc: "Clear one" },
+          { cmd: "cookie clear --all", desc: "Clear all" },
+          { cmd: 'cookie.clear --name "session"', desc: "Dot command form" },
         ]
       },
     }
@@ -802,9 +1236,9 @@ const TOOLS = {
   search: {
     desc: "Text search",
     commands: {
-      "search": { 
-        desc: "Search for text in page", 
-        args: ["term"], 
+      "search": {
+        desc: "Search for text in page",
+        args: ["term"],
         opts: { "case-sensitive": "Case-sensitive match", limit: "Max results" },
         examples: [
           { cmd: 'search "login"', desc: "Find text" },
@@ -818,9 +1252,9 @@ const TOOLS = {
   batch: {
     desc: "Batch execution",
     commands: {
-      "batch": { 
-        desc: "Execute multiple actions", 
-        args: [], 
+      "batch": {
+        desc: "Execute multiple actions",
+        args: [],
         opts: { actions: "JSON array of actions", file: "Path to actions JSON file" },
         examples: [
           { cmd: 'batch --actions \'[{"type":"click","ref":"e1"},{"type":"wait","ms":500}]\'', desc: "Inline actions" },
@@ -829,12 +1263,58 @@ const TOOLS = {
       },
     }
   },
+  workflow: {
+    desc: "Workflow execution and management",
+    commands: {
+      "do": {
+        desc: "Execute multiple commands as a single workflow",
+        args: ["commands"],
+        opts: {
+          file: "Load workflow from JSON file",
+          "on-error": "stop (default) | continue",
+          "no-auto-wait": "Disable automatic waits between steps",
+          "step-delay": "Delay between steps in ms (default: 100)",
+          "dry-run": "Parse and validate without executing"
+        },
+        examples: [
+          { cmd: 'do \'go "https://example.com" | click e5 | screenshot\'', desc: "Inline workflow" },
+          { cmd: 'do -f login.json', desc: "From JSON file" },
+          { cmd: 'do github-login --email "x" --password "y"', desc: "Named workflow with args" },
+          { cmd: 'do \'go "url" | click e5\' --dry-run', desc: "Validate without running" },
+        ]
+      },
+      "workflow.list": {
+        desc: "List available workflows",
+        args: [],
+        opts: {},
+        examples: [
+          { cmd: 'workflow.list', desc: "Show all workflows" },
+        ]
+      },
+      "workflow.info": {
+        desc: "Show workflow details and arguments",
+        args: ["name"],
+        opts: {},
+        examples: [
+          { cmd: 'workflow.info github-login', desc: "Show workflow details" },
+        ]
+      },
+      "workflow.validate": {
+        desc: "Validate workflow JSON file",
+        args: ["file"],
+        opts: {},
+        examples: [
+          { cmd: 'workflow.validate ./my-flow.json', desc: "Check JSON validity" },
+        ]
+      },
+    }
+  },
   zoom: {
     desc: "Zoom control",
     commands: {
-      "zoom": { 
-        desc: "Get or set zoom level", 
-        args: [], 
+      "zoom": {
+        desc: "Get or set zoom level",
+        args: [],
         opts: { level: "Zoom level (e.g., 1.5 for 150%)", reset: "Reset to default zoom" },
         examples: [
           { cmd: "zoom", desc: "Get current zoom" },
@@ -847,11 +1327,14 @@ const TOOLS = {
   resize: {
     desc: "Window management",
     commands: {
-      "resize": { 
-        desc: "Resize browser window", 
-        args: [], 
+      "resize": {
+        desc: "Resize browser window",
+        args: ["width", "height"],
         opts: { width: "Window width", height: "Window height" },
-        examples: [{ cmd: "resize --width 1280 --height 720", desc: "Set size" }]
+        examples: [
+          { cmd: "resize 1280 720", desc: "Set size" },
+          { cmd: "resize --width 1280 --height 720", desc: "Set size with flags" },
+        ]
       },
     }
   },
@@ -866,14 +1349,14 @@ const TOOLS = {
   history: {
     desc: "Browser history",
     commands: {
-      "history.list": { 
-        desc: "Recent history", 
-        args: [], 
+      "history.list": {
+        desc: "Recent history",
+        args: [],
         opts: { limit: "Max results" },
         examples: [{ cmd: "history.list --limit 20", desc: "Last 20 items" }]
       },
-      "history.search": { 
-        desc: "Search history", 
+      "history.search": {
+        desc: "Search history",
         args: ["query"],
         examples: [{ cmd: 'history.search "github"', desc: "Search history" }]
       },
@@ -882,10 +1365,10 @@ const TOOLS = {
   window: {
     desc: "Window management (isolate agent from your browsing)",
     commands: {
-      "window.new": { 
-        desc: "Create new browser window", 
-        args: ["url"], 
-        opts: { 
+      "window.new": {
+        desc: "Create new browser window",
+        args: ["url"],
+        opts: {
           width: "Window width",
           height: "Window height",
           incognito: "Open incognito window",
@@ -897,28 +1380,28 @@ const TOOLS = {
           { cmd: 'window.new --incognito', desc: "Incognito window" },
         ]
       },
-      "window.list": { 
-        desc: "List all browser windows", 
+      "window.list": {
+        desc: "List all browser windows",
         args: [],
         opts: { tabs: "Include tab details" },
         examples: [{ cmd: "window.list", desc: "Show all windows" }]
       },
-      "window.focus": { 
-        desc: "Focus a window by ID", 
+      "window.focus": {
+        desc: "Focus a window by ID",
         args: ["id"],
         examples: [{ cmd: "window.focus 123", desc: "Focus window" }]
       },
-      "window.close": { 
-        desc: "Close a window by ID", 
+      "window.close": {
+        desc: "Close a window by ID",
         args: ["id"],
         examples: [{ cmd: "window.close 123", desc: "Close window" }]
       },
-      "window.resize": { 
-        desc: "Resize or reposition a window", 
-        args: [], 
-        opts: { 
-          id: "Window ID (required)", 
-          width: "Window width", 
+      "window.resize": {
+        desc: "Resize or reposition a window",
+        args: [],
+        opts: {
+          id: "Window ID (required)",
+          width: "Window width",
           height: "Window height",
           left: "Window X position",
           top: "Window Y position",
@@ -965,10 +1448,17 @@ Use --index to select from multiple matches:
     content: `Cookies are scoped to the current tab's domain.
 
 Commands:
-  cookie.list           List all cookies
-  cookie.get --name X   Get specific cookie
-  cookie.set            Set a cookie
-  cookie.clear          Clear cookies
+  cookie list           List all cookies
+  cookie get X          Get specific cookie
+  cookie set            Set a cookie
+  cookie clear --all    Clear all cookies
+  cookie delete X       Clear one cookie
+
+Dot commands remain supported:
+  cookie.list
+  cookie.get --name X
+  cookie.set
+  cookie.clear
 
 Notes:
   - HttpOnly cookies are accessible
@@ -1000,6 +1490,7 @@ Commands:
   screenshot --output file.png                          Basic screenshot
   screenshot --annotate --output file.png               With element labels
   screenshot --fullpage --output file.png               Full page capture
+  screenshot --full-page --output file.png              Full page capture (alias)
   screenshot --annotate --fullpage --output file.png    Full page with labels
   snap                                                  Auto-save to /tmp
 
@@ -1007,6 +1498,7 @@ Options:
   --output      Save path
   --annotate    Draw element refs
   --fullpage    Capture entire page
+  --full-page   Capture entire page (alias)
   --max-height  Max height for fullpage (default: 4000)`
   },
   automation: {
@@ -1029,7 +1521,7 @@ Wait for dynamic content:
 
 Scroll and capture:
   scroll.bottom
-  screenshot --fullpage --output full.png`
+  screenshot --full-page --output full.png`
   },
   windows: {
     title: "Window Isolation",
@@ -1048,7 +1540,7 @@ All commands in that window:
 
 Manage windows:
   surf window.list              # List all windows
-  surf window.list --tabs       # Include tab details  
+  surf window.list --tabs       # Include tab details
   surf window.focus 123         # Bring window to front
   surf window.close 123         # Close when done
 
@@ -1141,23 +1633,22 @@ Exclude text content:
 };
 
 const ALL_SOCKET_TOOLS = [
-  "ai", "screenshot", "navigate",
+  "ai", "screenshot", "record", "animate-audit", "perf-audit", "navigate",
   "form_input", "find_and_type", "autocomplete", "set_value", "smart_type",
   "scroll_to_position", "get_scroll_info", "close_dialogs", "page_state",
   "javascript_tool", "health", "smoke",
   "click_type", "click_type_submit", "type", "key", "type_submit",
   "scroll", "scroll_to", "hover", "left_click_drag", "drag", "wait",
-  "computer", "snap-container", "screenshot-container",
+  "computer",
   "page.read", "page.text", "page.state",
   "locate.role", "locate.text", "locate.label",
-  "extension.ping", "extension.reload",
-  "tab.list", "tab.recovery-state", "tab.new", "tab.switch", "tab.close", "tab.name", "tab.unname", "tab.named",
+  "tab.list", "focus.state", "tab.new", "tab.switch", "tab.close", "tab.move", "tab.name", "tab.unname", "tab.named",
   "tab.group", "tab.ungroup", "tab.groups", "tab.reload",
   "scroll.top", "scroll.bottom", "scroll.to", "scroll.info",
   "wait.element", "wait.network", "wait.url", "wait.dom", "wait.load",
   "click", "hover", "drag",
-  "js", "console", "network", 
-  "network.get", "network.body", "network.curl", "network.origins", 
+  "js", "console", "network",
+  "network.get", "network.body", "network.curl", "network.origins",
   "network.clear", "network.stats", "network.export", "network.path",
   "dialog.accept", "dialog.dismiss", "dialog.info",
   "emulate.network", "emulate.cpu", "emulate.geo", "emulate.device", "emulate.viewport", "emulate.touch",
@@ -1172,6 +1663,8 @@ const ALL_SOCKET_TOOLS = [
   "bookmark.add", "bookmark.remove", "bookmark.list",
   "history.list", "history.search",
   "window.new", "window.list", "window.focus", "window.close", "window.resize",
+  "chatgpt", "chatgpt.extract", "gemini", "gemini_tab", "kimi_tab", "perplexity", "grok", "aistudio", "aistudio.build",
+  "extension.ping", "extension.reload",
 ];
 
 // See also suggestions for related commands
@@ -1200,7 +1693,9 @@ const SEE_ALSO = {
   "perf.metrics": ["perf.start", "console", "network"],
   "navigate": ["wait.load", "page.read"],
   "screenshot": ["page.read", "scroll.bottom for fullpage"],
-  "snap-container": ["screenshot", "scroll.info"],
+  "record": ["screenshot", "animate-audit", "perf-audit"],
+  "animate-audit": ["screenshot", "record", "perf-audit", "js"],
+  "perf-audit": ["record", "animate-audit", "perf.metrics", "console"],
   "search": ["locate.text", "page.read"],
   "wait.element": ["wait.load", "wait.network"],
   "wait.load": ["wait.element", "wait.network"],
@@ -1220,10 +1715,14 @@ Common Commands:
   click <ref>        Click element by ref or selector
   type <text>        Type text at cursor or into element
   screenshot         Capture screenshot (alias: snap)
+  record             Capture screenshot frames into an animated GIF
+  animate-audit      JSON timeline of element animation/style samples
+  perf-audit         PerformanceObserver snapshot for motion/jank debugging
   page.read          Get page accessibility tree (alias: read)
   locate.role <role> Find element by ARIA role
   search <term>      Search for text in page (alias: find)
   window.new <url>   Create isolated browser window
+  doctor             Diagnose native host/socket setup
   wait <seconds>     Wait N seconds
 
 Quick Examples:
@@ -1237,12 +1736,45 @@ Quick Examples:
   surf window.new "https://example.com" && surf --window-id 123 go "https://other.com"
 
 More Help:
+  --remote <host>:<port>    Route requests to a remote native host
+  --remote-credential <path>  Use a mode-0600 Ed25519 remote credential file
+  surf remote authorize <label> --output <path>
+  surf remote list | surf remote revoke <label>
   surf --help-full           All commands
+  surf --llm-context         Compact reference for AI agents
   surf --help-topic <topic>  Topic guide (refs, semantic, frames, devices...)
   surf <command> --help      Command details
   surf --find <query>        Search for commands
   surf --about <topic>       Learn about a topic
 `);
+};
+
+const showLlmContext = () => {
+  console.log(`SURF CLI LLM CONTEXT
+Purpose: control Chrome from shell. Commands are \`surf <command> [args] [options]\`.
+Core loop: navigate -> wait/read -> act -> screenshot/read.
+Navigate: surf navigate "https://example.com"    # alias: surf go "..."
+Wait after navigation: surf wait 2                # or wait.load for load complete
+Read DOM/refs: surf page.read --depth 3 --compact # alias: surf read
+Refs: use e1/e2 refs from page.read; prefer refs over CSS when available.
+Click ref: surf click e5
+Click selector/coords: surf click --selector ".btn" | surf click 100 200
+Type: surf type "text" --submit                  # use --ref e5 to target a field
+Screenshot: surf screenshot /tmp/shot.png         # auto-saves to /tmp if no path
+Full page screenshot: surf screenshot --full-page /tmp/full.png
+Record animation: surf record --duration 2000 --fps 10 --output /tmp/anim.gif
+Animation audit: surf animate-audit --selector ".thing" --duration 2000 --fps 10
+Performance audit: surf perf-audit --duration 3000 --trigger "click:.cta" --output /tmp/perf.json
+JavaScript: surf js "return document.title"
+Scroll: surf scroll down 800 | surf scroll up 400 | surf scroll bottom | surf scroll top
+Find by semantics: surf locate.role button --name "Submit" --action click
+Device/viewport: surf emulate.device "iPhone 14" | surf resize 375 812
+Cookies: surf cookie list | surf cookie get "name" | surf cookie delete "name"
+Window isolation: surf window.new "https://example.com" then pass --window-id <id>
+Concurrency: surf serializes commands per socket; use --no-lock only for intentional bypass
+Doctor: surf doctor --browser all              # native host/socket diagnostics
+Workflow: surf do 'go "https://example.com" | wait 2 | read | click e5 | screenshot'
+More help: surf --help-full | surf <command> --help | surf --help-topic refs | surf --find <query>`);
 };
 
 const showFullHelp = () => {
@@ -1264,11 +1796,19 @@ Usage: surf <command> [args] [options]
   console.log(`Aliases: snap -> screenshot, read -> page.read, find -> search, go -> navigate
 
 Options:
+  --remote <host>:<port>       Route requests to a remote native host
+  --remote-credential <path>   Use a mode-0600 Ed25519 remote credential file
   --tab-id <id>     Target specific tab
   --window-id <id>  Target specific window (isolate from your browsing)
   --json            Output raw JSON
   --auto-capture    On error: capture screenshot + console to /tmp
   --soft-fail       On error: warn and exit 0 (for non-critical commands)
+  --no-lock         Bypass the per-socket browser request lock
+
+Remote Credentials (run on the browser host):
+  surf remote authorize <label> --output <credential-file>
+  surf remote list
+  surf remote revoke <label>
 
 Script Mode:
   surf --script <file>     Run workflow from JSON
@@ -1377,7 +1917,7 @@ const showToolHelp = (toolName) => {
 const fuzzyFind = (query) => {
   const terms = query.toLowerCase().split(/\s+/);
   const results = [];
-  
+
   for (const [groupName, group] of Object.entries(TOOLS)) {
     for (const [cmd, info] of Object.entries(group.commands)) {
       if (info.alias) continue;
@@ -1388,7 +1928,7 @@ const fuzzyFind = (query) => {
       }
     }
   }
-  
+
   return results.sort((a, b) => b.score - a.score);
 };
 
@@ -1436,6 +1976,11 @@ const showAllTools = () => {
   console.log(`\n  Total: ${ALL_SOCKET_TOOLS.length} commands\n`);
 };
 
+if (args[0] === "--llm-context") {
+  showLlmContext();
+  process.exit(0);
+}
+
 if (args.length === 0 || args[0] === "--help" || args[0] === "-h") {
   showBasicHelp();
   process.exit(0);
@@ -1480,7 +2025,7 @@ if (args[0] === "server") {
     process.exit(0);
   }
   const { PiChromeMcpServer } = require("./mcp-server.cjs");
-  const server = new PiChromeMcpServer();
+  const server = new PiChromeMcpServer(endpoint);
   server.start().catch((err) => {
     console.error("MCP Server error:", err.message);
     process.exit(1);
@@ -1489,17 +2034,22 @@ if (args[0] === "server") {
 }
 
 if (args[0] === "extension-path" || args[0] === "path") {
-  const path = require("path");
-  const distPath = path.resolve(__dirname, "../dist");
+  const distPath = process.env.SURF_EXTENSION_PATH || path.resolve(__dirname, "../dist");
   console.log(distPath);
   process.exit(0);
+}
+
+if (args[0] === "doctor") {
+  const { runDoctorCli } = require("./doctor.cjs");
+  runDoctorCli(args.slice(1), endpoint).then((code) => process.exit(code));
+  return;
 }
 
 if (args[0] === "install") {
   const { spawnSync } = require("child_process");
   const scriptPath = require("path").resolve(__dirname, "../scripts/install-native-host.cjs");
   const installArgs = args.slice(1);
-  
+
   if (installArgs.length === 0 || installArgs[0] === "--help" || installArgs[0] === "-h") {
     console.log(`
 Usage: surf install <extension-id> [options]
@@ -1512,13 +2062,18 @@ Arguments:
 
 Options:
   -b, --browser   Browser(s) to install for (default: chrome)
-                  Values: chrome, chromium, brave, edge, arc, all
+                  Values: chrome, chromium, brave, edge, arc, helium, all
                   Multiple: --browser chrome,brave
+  --target        Install target: auto, linux, windows
+                  On WSL2, auto installs for Windows Chrome. Use linux for WSLg/Linux browsers.
+  --listen <tailscale-ip>:<port>
+                  Requires surf remote authorize <label> --output <path> first.
 
 Examples:
   surf install hnfbepgmaoklhekckbpjnleifhahkcpl
   surf install hnfbepgmaoklhekckbpjnleifhahkcpl --browser brave
   surf install hnfbepgmaoklhekckbpjnleifhahkcpl --browser all
+  surf install hnfbepgmaoklhekckbpjnleifhahkcpl --target linux
 `);
     process.exit(0);
   }
@@ -1533,7 +2088,7 @@ if (args[0] === "uninstall") {
   const { spawnSync } = require("child_process");
   const scriptPath = require("path").resolve(__dirname, "../scripts/uninstall-native-host.cjs");
   const uninstallArgs = args.slice(1);
-  
+
   if (uninstallArgs.includes("--help") || uninstallArgs.includes("-h")) {
     console.log(`
 Usage: surf uninstall [options]
@@ -1542,13 +2097,16 @@ Remove native messaging host configuration.
 
 Options:
   -b, --browser   Browser(s) to uninstall from (default: chrome)
-                  Values: chrome, chromium, brave, edge, arc, all
+                  Values: chrome, chromium, brave, edge, arc, helium, all
   -a, --all       Uninstall from all browsers and remove wrapper
+  --target        Install target to remove: auto, linux, windows
+                  On WSL2, auto removes Windows-browser manifests. Use linux for WSLg/Linux browsers.
 
 Examples:
   surf uninstall
   surf uninstall --browser brave
   surf uninstall --all
+  surf uninstall --target linux
 `);
     process.exit(0);
   }
@@ -1653,44 +2211,24 @@ if (args.includes("--script")) {
     process.exit(1);
   }
 
+  let scriptTransport;
   const sendScriptRequest = (toolName, toolArgs = {}) => {
-    return new Promise((resolve, reject) => {
-      const sock = net.createConnection(SOCKET_PATH, () => {
-        const req = {
-          type: "tool_request",
-          method: "execute_tool",
-          params: { tool: toolName, args: toolArgs },
-          id: "cli-" + Date.now() + "-" + Math.random(),
-        };
-        if (scriptTabId) req.tabId = parseInt(scriptTabId, 10);
-        sock.write(JSON.stringify(req) + "\n");
-      });
-      let buf = "";
-      sock.on("data", (d) => {
-        buf += d.toString();
-        const lines = buf.split("\n");
-        buf = lines.pop();
-        for (const line of lines) {
-          if (!line.trim()) continue;
-          try {
-            const resp = JSON.parse(line);
-            sock.end();
-            resolve(resp);
-          } catch {
-            sock.end();
-            reject(new Error("Invalid JSON"));
-          }
-        }
-      });
-      sock.on("error", (e) => reject(e));
-      let timeoutId;
-      timeoutId = setTimeout(() => { sock.destroy(); reject(new Error("Timeout")); }, 30000);
-      sock.on("close", () => clearTimeout(timeoutId));
-    });
+    const req = {
+      type: "tool_request",
+      method: "execute_tool",
+      params: { tool: toolName, args: toolArgs },
+      id: "cli-" + Date.now() + "-" + Math.random(),
+    };
+    if (scriptTabId) req.tabId = parseInt(scriptTabId, 10);
+    const prepared = endpoint.kind === "remote" ? prepareRemoteTool(toolName, toolArgs) : (() => { const args = validateLocalToolPaths(toolName, toolArgs); return { args, uploads: [], downloads: [] }; })();
+    req.params.args = prepared.args;
+    return scriptTransport.request(req, resolveRequestDeadlineMs(toolName, prepared.args), prepared);
   };
 
   const runScript = async () => {
-    const total = script.steps.length;
+    try {
+      if (!dryRun) scriptTransport = await openClientTransport(endpoint);
+      const total = script.steps.length;
     const results = [];
     let failed = 0;
 
@@ -1748,16 +2286,405 @@ if (args.includes("--script")) {
       console.log(`Summary: ${passed} passed, ${failed} failed, ${total} total`);
     }
 
-    process.exit(failed > 0 ? 1 : 0);
+      return failed > 0 ? 1 : 0;
+    } finally {
+      await scriptTransport?.close();
+    }
   };
 
-  runScript();
+  if (!dryRun) {
+    installBrowserLock(parseBrowserLockOptions(args.includes("--no-lock")), endpoint);
+  }
+
+  runScript()
+    .then((code) => process.exit(code))
+    .catch((error) => {
+      console.error(`Error: ${error.message}`);
+      process.exit(1);
+    });
   return;
 }
 
-const BOOLEAN_FLAGS = ["auto-capture", "json", "stream", "dry-run", "stop-on-error", "fail-fast", "clear", "submit", "all", "case-sensitive", "hard", "annotate", "fullpage", "reset", "no-screenshot", "full", "soft-fail", "has-body", "exclude-static", "v", "vv", "request", "by-tab", "har", "jsonl", "no-save", "keep-tab", "no-activate"];
+// Handle `surf do` workflow command
+// Must be parsed before general parseArgs since it uses its own arg handling
+if (args[0] === "do") {
+  const doArgs = args.slice(1);
+  let commandsInput = null;
+  let fileInput = null;
+  let dryRun = false;
+  let onError = "stop";
+  let noAutoWait = false;
+  let stepDelay = 100;
+  let wantJson = false;
+  let tabId = undefined;
+  let windowId = undefined;
 
-const AUTO_SCREENSHOT_TOOLS = ["click", "type", "key", "smart_type", "form.fill", "form_input", "drag", "hover", "scroll", "scroll.top", "scroll.bottom", "scroll.to", "dialog.accept", "dialog.dismiss", "js", "eval"];
+  // Reserved flags that aren't workflow args
+  const reservedFlags = ['file', 'f', 'dry-run', 'on-error', 'no-auto-wait', 'step-delay', 'json', 'tab-id', 'window-id', 'no-lock'];
+
+  // Workflow-specific args (collected for variable substitution)
+  const workflowArgs = {};
+
+  // Parse do-specific arguments
+  for (let i = 0; i < doArgs.length; i++) {
+    const arg = doArgs[i];
+    if (arg === "--file" || arg === "-f") {
+      fileInput = doArgs[i + 1];
+      i++;
+    } else if (arg === "--dry-run") {
+      dryRun = true;
+    } else if (arg === "--on-error") {
+      onError = doArgs[i + 1] || "stop";
+      i++;
+    } else if (arg === "--no-auto-wait") {
+      noAutoWait = true;
+    } else if (arg === "--step-delay") {
+      const parsed = parseInt(doArgs[i + 1], 10);
+      stepDelay = isNaN(parsed) ? 100 : parsed;
+      i++;
+    } else if (arg === "--json") {
+      wantJson = true;
+    } else if (arg === "--tab-id") {
+      tabId = parseInt(doArgs[i + 1], 10);
+      i++;
+    } else if (arg === "--window-id") {
+      windowId = parseInt(doArgs[i + 1], 10);
+      i++;
+    } else if (arg.startsWith("--")) {
+      // Workflow-specific arg (e.g., --email, --password)
+      const key = arg.slice(2);
+      if (!reservedFlags.includes(key)) {
+        const next = doArgs[i + 1];
+        if (next !== undefined && !next.startsWith("--")) {
+          // Type coercion
+          let val = next;
+          if (val === "true") val = true;
+          else if (val === "false") val = false;
+          else if (/^-?\d+$/.test(val)) val = parseInt(val, 10);
+          else if (/^-?\d+\.\d+$/.test(val)) val = parseFloat(val);
+          workflowArgs[key] = val;
+          i++;
+        } else {
+          workflowArgs[key] = true;
+        }
+      }
+    } else if (!arg.startsWith("-")) {
+      commandsInput = arg;
+    }
+  }
+
+  if (!commandsInput && !fileInput) {
+    console.error("Error: commands string, workflow name, or --file required");
+    console.error('Usage: surf do \'go "url" | click e5\'');
+    console.error("       surf do --file workflow.json");
+    console.error("       surf do my-workflow --arg1 value1 --arg2 value2");
+    process.exit(1);
+  }
+
+  let steps;
+  let workflow = null; // Full workflow object (for arg validation)
+  let workflowName = null;
+
+  try {
+    if (fileInput) {
+      // Explicit file path via --file
+      if (!fs.existsSync(fileInput)) {
+        console.error(`Error: File not found: ${fileInput}`);
+        process.exit(1);
+      }
+      const content = fs.readFileSync(fileInput, "utf8");
+      workflow = JSON.parse(content);
+      workflowName = workflow.name || fileInput;
+    } else {
+      // Resolve: inline | file path | named workflow
+      const resolved = resolveWorkflow(commandsInput);
+
+      if (resolved.type === 'inline') {
+        // Inline pipe syntax
+        steps = parseDoCommands(resolved.content);
+      } else if (resolved.type === 'file') {
+        // Found workflow file
+        const content = fs.readFileSync(resolved.path, "utf8");
+        workflow = JSON.parse(content);
+        workflowName = workflow.name || commandsInput;
+      } else {
+        // Not found - try parsing as inline (might be a single command)
+        steps = parseDoCommands(commandsInput);
+        if (steps.length === 0) {
+          console.error(`Error: Workflow not found: ${commandsInput}`);
+          console.error(`Searched in:`);
+          for (const { path: dir } of getWorkflowDirs()) {
+            console.error(`  ${dir}`);
+          }
+          console.error(`\nRun 'surf workflow.list' to see available workflows.`);
+          process.exit(1);
+        }
+      }
+    }
+
+    // Process workflow file if loaded
+    if (workflow) {
+      if (!workflow.steps || !Array.isArray(workflow.steps)) {
+        throw new Error("Workflow must have a 'steps' array");
+      }
+
+      // Validate required args
+      const argErrors = validateWorkflowArgs(workflow, workflowArgs);
+      if (argErrors.length > 0) {
+        console.error("Error: Missing required arguments:");
+        argErrors.forEach(e => console.error(`  ${e}`));
+        if (workflow.args) {
+          console.error(`\nWorkflow arguments:`);
+          for (const [name, spec] of Object.entries(workflow.args)) {
+            const req = spec.required ? ' (required)' : '';
+            const def = spec.default !== undefined ? ` [default: ${spec.default}]` : '';
+            const desc = spec.desc || spec.description || '';
+            console.error(`  --${name}${req}${def}${desc ? ` - ${desc}` : ''}`);
+          }
+        }
+        console.error(`\nRun 'surf workflow.info ${workflowName}' for details.`);
+        process.exit(1);
+      }
+
+      // Convert steps: support both { tool, args } and { cmd, args } formats
+      // Also preserve loop steps as-is
+      steps = workflow.steps.map(s => {
+        if (s.repeat !== undefined || s.each !== undefined) {
+          // Loop step - convert nested steps recursively
+          const convertSteps = (stepsArr) => stepsArr.map(ns => {
+            if (ns.repeat !== undefined || ns.each !== undefined) {
+              // Recursively convert nested loop steps and until condition
+              return {
+                ...ns,
+                steps: convertSteps(ns.steps || []),
+                until: ns.until ? { cmd: ns.until.tool || ns.until.cmd, args: ns.until.args || {} } : undefined
+              };
+            }
+            return { cmd: ns.tool || ns.cmd, args: ns.args || {}, as: ns.as };
+          });
+          return {
+            ...s,
+            steps: convertSteps(s.steps || []),
+            until: s.until ? { cmd: s.until.tool || s.until.cmd, args: s.until.args || {} } : undefined
+          };
+        }
+        return { cmd: s.tool || s.cmd, args: s.args || {}, as: s.as };
+      });
+    }
+  } catch (e) {
+    console.error(`Error: Failed to parse workflow: ${e.message}`);
+    process.exit(1);
+  }
+
+  if (!steps || steps.length === 0) {
+    console.error("Error: No commands found in workflow");
+    process.exit(1);
+  }
+
+  // Apply arg defaults
+  const vars = workflow ? applyArgDefaults(workflow, workflowArgs) : workflowArgs;
+
+  // Validate with --dry-run
+  if (dryRun) {
+    if (workflowName) {
+      console.log(`Workflow: ${workflowName}`);
+      if (workflow?.description) console.log(`Description: ${workflow.description}`);
+    }
+    console.log(`\nWould execute ${steps.length} steps:`);
+    steps.forEach((s, i) => {
+      console.log(`  ${i + 1}. ${formatStep(s)}`);
+    });
+    if (Object.keys(vars).length > 0) {
+      console.log(`\nVariables:`);
+      for (const [k, v] of Object.entries(vars)) {
+        console.log(`  ${k} = ${JSON.stringify(v)}`);
+      }
+    }
+    process.exit(0);
+  }
+
+  installBrowserLock(parseBrowserLockOptions(doArgs.includes("--no-lock")), endpoint);
+
+  if (!wantJson) {
+    if (workflowName) {
+      console.log(`Running workflow: ${workflowName} (${steps.length} steps)...\n`);
+    } else {
+      console.log(`Running workflow (${steps.length} steps)...\n`);
+    }
+  }
+
+  const runWorkflow = async () => {
+    let transport;
+    try {
+      transport = await openClientTransport(endpoint);
+      const result = await executeDoSteps(steps, {
+      onError,
+      autoWait: !noAutoWait,
+      stepDelay,
+      quiet: wantJson,
+      vars,
+      context: {
+        tabId,
+        windowId,
+        endpoint,
+        transport,
+      },
+      });
+
+    // Print summary
+    if (wantJson) {
+      console.log(JSON.stringify(result, null, 2));
+      return result.status === "completed" ? 0 : 1;
+    }
+
+    console.log("");
+    if (result.status === "completed") {
+      console.log(`Completed: ${result.completedSteps}/${result.totalSteps} steps (${result.totalMs}ms)`);
+      return 0;
+    } else if (result.status === "partial") {
+      console.log(`Partial: ${result.completedSteps}/${result.totalSteps} steps completed, ${result.failed} failed`);
+      return 1;
+    } else {
+      console.error(`Failed: ${result.completedSteps}/${result.totalSteps} steps completed`);
+      if (result.error) console.error(`Error: ${result.error}`);
+      return 1;
+      }
+    } finally {
+      transport?.close();
+    }
+  };
+
+  runWorkflow()
+    .then((code) => process.exit(code))
+    .catch((error) => {
+      console.error(`Error: ${error.message}`);
+      process.exit(1);
+    });
+  return;
+}
+
+// Handle workflow management commands
+if (args[0] === "workflow.list") {
+  const workflows = listWorkflows();
+
+  if (workflows.length === 0) {
+    console.log("No workflows found.");
+    console.log(`\nWorkflow directories:`);
+    for (const { path: dir, scope } of getWorkflowDirs()) {
+      console.log(`  ${scope}: ${dir}`);
+    }
+    console.log(`\nCreate a workflow JSON file in one of these directories.`);
+    process.exit(0);
+  }
+
+  // Group by scope
+  const byScope = { project: [], user: [] };
+  for (const w of workflows) {
+    byScope[w.scope].push(w);
+  }
+
+  if (byScope.user.length > 0) {
+    console.log(`User Workflows (~/.surf/workflows/):`);
+    for (const w of byScope.user) {
+      const desc = w.description ? ` - ${w.description}` : '';
+      console.log(`  ${w.name.padEnd(20)} ${desc}`);
+    }
+    console.log("");
+  }
+
+  if (byScope.project.length > 0) {
+    console.log(`Project Workflows (./.surf/workflows/):`);
+    for (const w of byScope.project) {
+      const desc = w.description ? ` - ${w.description}` : '';
+      console.log(`  ${w.name.padEnd(20)} ${desc}`);
+    }
+    console.log("");
+  }
+
+  console.log(`Run 'surf workflow.info <name>' for details.`);
+  process.exit(0);
+}
+
+if (args[0] === "workflow.info") {
+  const name = args[1];
+  if (!name) {
+    console.error("Error: workflow name required");
+    console.error("Usage: surf workflow.info <name>");
+    process.exit(1);
+  }
+
+  const info = getWorkflowInfo(name);
+  if (info.error) {
+    console.error(`Error: ${info.error}`);
+    process.exit(1);
+  }
+
+  console.log(`${info.name}${info.description ? ` - ${info.description}` : ''}`);
+  console.log("");
+
+  // Arguments
+  if (info.args && Object.keys(info.args).length > 0) {
+    console.log("Arguments:");
+    for (const [argName, spec] of Object.entries(info.args)) {
+      const req = spec.required ? ' (required)' : '';
+      const def = spec.default !== undefined ? ` [default: ${spec.default}]` : '';
+      const desc = spec.desc || spec.description || '';
+      console.log(`  --${argName}${req}${def}`);
+      if (desc) console.log(`      ${desc}`);
+    }
+    console.log("");
+  }
+
+  // Steps
+  console.log(`Steps (${info.steps.length}):`);
+  info.steps.forEach((step, i) => {
+    console.log(`  ${i + 1}. ${formatStep(step)}`);
+  });
+  console.log("");
+
+  // Location
+  console.log(`Location: ${info.path}`);
+  console.log("");
+
+  // Example run command
+  const argExample = Object.entries(info.args || {})
+    .filter(([_, spec]) => spec.required)
+    .map(([name, _]) => `--${name} "..."`)
+    .join(' ');
+  console.log(`Run:`);
+  console.log(`  surf do ${name}${argExample ? ' ' + argExample : ''}`);
+
+  process.exit(0);
+}
+
+if (args[0] === "workflow.validate") {
+  const filePath = args[1];
+  if (!filePath) {
+    console.error("Error: file path required");
+    console.error("Usage: surf workflow.validate <file>");
+    process.exit(1);
+  }
+
+  const result = validateWorkflowFile(filePath);
+
+  if (result.valid) {
+    console.log(`✓ Valid workflow: ${filePath}`);
+    console.log(`  Name: ${result.workflow.name || '(unnamed)'}`);
+    console.log(`  Steps: ${result.workflow.steps.length}`);
+    if (result.workflow.args) {
+      const argCount = Object.keys(result.workflow.args).length;
+      const reqCount = Object.values(result.workflow.args).filter(a => a.required).length;
+      console.log(`  Args: ${argCount} (${reqCount} required)`);
+    }
+    process.exit(0);
+  } else {
+    console.error(`✗ Invalid workflow: ${filePath}`);
+    console.error(`  Error: ${result.error}`);
+    process.exit(1);
+  }
+}
+
+const BOOLEAN_FLAGS = ["auto-capture", "json", "stream", "dry-run", "stop-on-error", "fail-fast", "clear", "submit", "all", "case-sensitive", "hard", "annotate", "fullpage", "full-page", "reset", "no-screenshot", "full", "soft-fail", "has-body", "exclude-static", "v", "vv", "request", "by-tab", "har", "jsonl", "no-save", "no-auto-wait", "no-lock", "keep-tab", "no-activate"];
 
 const parseArgs = (rawArgs) => {
   const result = { positional: [], options: {} };
@@ -1785,8 +2712,12 @@ const parseArgs = (rawArgs) => {
       result.options.v = true;
     } else if (arg === "-vv") {
       result.options.vv = true;
+    } else if (arg === "-f" && rawArgs[i + 1] && !rawArgs[i + 1].startsWith("-")) {
+      // -f takes a file path argument (for surf do -f <file>)
+      result.options.file = rawArgs[i + 1];
+      i++;
     } else if (arg.startsWith("-") && arg.length === 2) {
-      // Short flag like -n, -f
+      // Short flag like -n
       result.options[arg.slice(1)] = true;
     } else {
       result.positional.push(arg);
@@ -1798,6 +2729,22 @@ const parseArgs = (rawArgs) => {
 let { positional, options } = parseArgs(args);
 let tool = positional[0];
 let firstArg = positional[1];
+
+if (tool === "cookie" && firstArg) {
+  const cookieSubcommands = {
+    list: "cookie.list",
+    get: "cookie.get",
+    set: "cookie.set",
+    clear: "cookie.clear",
+    delete: "cookie.clear",
+  };
+  const cookieTool = cookieSubcommands[firstArg];
+  if (cookieTool) {
+    tool = cookieTool;
+    positional = [tool, ...positional.slice(2)];
+    firstArg = positional[1];
+  }
+}
 
 if (!tool) {
   console.error("Error: No command specified");
@@ -1815,10 +2762,15 @@ tool = ALIASES[tool] || tool;
 // Auto-save screenshots to temp file when no --output specified
 // This ensures agents always get a usable file path, not just an in-memory ID
 // Can be disabled with --no-save flag or autoSaveScreenshots: false in surf.json
+if (options["full-page"] === true) {
+  options.fullpage = true;
+  delete options["full-page"];
+}
+
 const config = loadConfig();
 const autoSaveEnabled = config.autoSaveScreenshots !== false && !options["no-save"];
-if (tool === "screenshot" && !options.output && !options.savePath && autoSaveEnabled) {
-  options.savePath = `/tmp/surf-snap-${Date.now()}.png`;
+if (tool === "screenshot" && !options.output && !options.savePath && firstArg === undefined && autoSaveEnabled) {
+  options.savePath = path.join(SURF_TMP, `surf-snap-${Date.now()}.png`);
 }
 
 if (tool === "smoke") {
@@ -1851,11 +2803,13 @@ if (tool === "smoke") {
 const PRIMARY_ARG_MAP = {
   ai: "query",
   gemini: "query",
+  chatgpt: "query",
   gemini_tab: "query",
   kimi_tab: "query",
-  chatgpt: "query",
-  "chatgpt.extract": null,
   perplexity: "query",
+  grok: "query",
+  aistudio: "query",
+  "aistudio.build": "query",
   navigate: "url",
   go: "url",
   js: "code",
@@ -1869,6 +2823,7 @@ const PRIMARY_ARG_MAP = {
   "tab.switch": "id",
   close_tab: "tab_id",
   "tab.close": "id",
+  "tab.move": "id",
   "tab.name": "name",
   "tab.unname": "name",
   scroll_to_position: "position",
@@ -1878,12 +2833,12 @@ const PRIMARY_ARG_MAP = {
   "emulate.cpu": "rate",
   search: "term",
   find: "term",
+  "cookie.get": "name",
+  "cookie.clear": "name",
   "wait.element": "selector",
   "wait.url": "pattern",
   zoom: "level",
   "history.search": "query",
-  "snap-container": "selector",
-  "screenshot-container": "selector",
   "network.get": "id",
   "network.body": "id",
   "network.curl": "id",
@@ -1900,7 +2855,20 @@ const PRIMARY_ARG_MAP = {
   "select": "selector",
 };
 
-const toolArgs = { ...options };
+let toolArgs = { ...options };
+
+if (tool === "scroll" && firstArg) {
+  if (firstArg === "top" || firstArg === "bottom") {
+    tool = `scroll.${firstArg}`;
+    firstArg = undefined;
+  } else if (["up", "down", "left", "right"].includes(firstArg)) {
+    if (toolArgs.direction === undefined) toolArgs.direction = firstArg;
+    if (positional[2] !== undefined && /^-?\d+$/.test(positional[2]) && toolArgs.amount === undefined && toolArgs.scroll_amount === undefined) {
+      toolArgs.scroll_pixels = parseInt(positional[2], 10);
+    }
+    firstArg = undefined;
+  }
+}
 
 if (tool === "click" && firstArg) {
   if (/^e\d+$/.test(firstArg)) {
@@ -1911,6 +2879,30 @@ if (tool === "click" && firstArg) {
     toolArgs.y = parseInt(positional[2], 10);
     firstArg = undefined;
   }
+}
+
+if (tool === "resize") {
+  if (firstArg !== undefined && toolArgs.width === undefined) {
+    let val = firstArg;
+    if (/^-?\d+$/.test(val)) val = parseInt(val, 10);
+    toolArgs.width = val;
+  }
+  if (positional[2] !== undefined && toolArgs.height === undefined) {
+    let val = positional[2];
+    if (/^-?\d+$/.test(val)) val = parseInt(val, 10);
+    toolArgs.height = val;
+  }
+  firstArg = undefined;
+}
+
+if (tool === "screenshot" && firstArg !== undefined && toolArgs.output === undefined && toolArgs.savePath === undefined) {
+  toolArgs.savePath = firstArg;
+  firstArg = undefined;
+}
+
+if (tool === "record" && firstArg !== undefined && toolArgs.output === undefined) {
+  toolArgs.output = firstArg;
+  firstArg = undefined;
 }
 
 if (firstArg !== undefined) {
@@ -1924,12 +2916,23 @@ if (firstArg !== undefined) {
   }
 }
 
-if (tool === "js" && toolArgs.file) {
+if ((tool === "js" || tool === "frame.js") && toolArgs.file) {
   try {
     toolArgs.code = fs.readFileSync(toolArgs.file, "utf8");
     delete toolArgs.file;
   } catch (e) {
     console.error(`Error: Failed to read file: ${e.message}`);
+    process.exit(1);
+  }
+}
+
+if (tool === "batch" && toolArgs.file) {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(toolArgs.file, "utf8"));
+    toolArgs.actions = parsed;
+    delete toolArgs.file;
+  } catch (e) {
+    console.error(`Error: Failed to read batch file: ${e.message}`);
     process.exit(1);
   }
 }
@@ -1952,17 +2955,13 @@ if (toolArgs.into && !toolArgs.selector) {
 
 const globalOpts = {};
 if (toolArgs["tab-id"] !== undefined) {
-  const tid = toolArgs["tab-id"];
-  if (!Number.isSafeInteger(tid) || tid <= 0) {
-    console.error("Error: --tab-id must be a positive integer");
+  const tid = parseInt(toolArgs["tab-id"], 10);
+  if (isNaN(tid)) {
+    console.error("Error: --tab-id must be a number");
     process.exit(1);
   }
   globalOpts.tabId = tid;
   delete toolArgs["tab-id"];
-}
-if (tool === "tab.recovery-state" && !globalOpts.tabId) {
-  console.error("Error: tab.recovery-state requires --tab-id");
-  process.exit(1);
 }
 if (toolArgs["window-id"] !== undefined) {
   const wid = parseInt(toolArgs["window-id"], 10);
@@ -1989,24 +2988,41 @@ delete toolArgs["no-screenshot"];
 const softFail = toolArgs["soft-fail"] === true;
 delete toolArgs["soft-fail"];
 
+const lockOptions = parseBrowserLockOptions(toolArgs["no-lock"] === true || !toolRequiresBrowserLease(tool));
+delete toolArgs["no-lock"];
+
 if (!noScreenshot && AUTO_SCREENSHOT_TOOLS.includes(tool)) {
   toolArgs.autoScreenshot = true;
 }
 
 const outputPath = toolArgs.output;
 delete toolArgs.output;
+if (tool === "aistudio.build" && outputPath) {
+  toolArgs.output = path.resolve(outputPath);
+}
+if (tool === "gemini") {
+  if (outputPath !== undefined) toolArgs.output = outputPath;
+  if (toolArgs.model) {
+    const known = ["gemini-3.1-pro", "gemini-3.5-flash", "gemini-3.1-flash-lite"];
+    if (!known.includes(toolArgs.model)) {
+      process.stderr.write(
+        `warning: unknown Gemini model "${toolArgs.model}"; using "gemini-3.1-pro". Available: ${known.join(", ")}\n`,
+      );
+    }
+  }
+}
+if (tool === "network.export" && outputPath !== undefined) {
+  toolArgs.output = outputPath;
+}
 
-if ((tool === "screenshot" || tool === "snap-container" || tool === "screenshot-container") && outputPath) {
-  if (typeof outputPath !== "string") {
-    console.error("Error: --output requires a file path");
-    process.exit(1);
-  }
+if ((tool === "screenshot" || tool === "record" || tool === "perf-audit") && outputPath && typeof outputPath !== "string") {
+  console.error("Error: --output requires a file path");
+  process.exit(1);
+}
+
+if (tool === "screenshot" && outputPath) {
   toolArgs.savePath = outputPath;
-  if (tool === "snap-container" || tool === "screenshot-container") {
-    toolArgs.full = options.full !== false;
-  } else if (options.full) {
-    toolArgs.full = true;
-  }
+  if (options.full) toolArgs.full = true;
   if (options["max-size"]) toolArgs["max-size"] = options["max-size"];
 }
 
@@ -2020,7 +3036,9 @@ const streamMode = toolArgs.stream === true;
 delete toolArgs.stream;
 
 const streamLevel = toolArgs.level;
-delete toolArgs.level;
+if (tool === "console" || tool === "network") {
+  delete toolArgs.level;
+}
 
 const streamFilter = toolArgs.filter;
 delete toolArgs.filter;
@@ -2028,11 +3046,15 @@ delete toolArgs.filter;
 let finalTool = tool;
 if (methodFlag === "js") {
   if (tool === "type") {
-    if (!toolArgs.selector) {
-      console.error("Error: --selector or --into required for type with --method js");
-      process.exit(1);
+    if (toolArgs.ref) {
+      finalTool = "type";
+    } else {
+      if (!toolArgs.selector) {
+        console.error("Error: --selector, --into, or --ref required for type with --method js");
+        process.exit(1);
+      }
+      finalTool = "smart_type";
     }
-    finalTool = "smart_type";
   } else if (tool === "click") {
     if (!toolArgs.selector) {
       console.error("Error: --selector required for click with --method js");
@@ -2043,8 +3065,13 @@ if (methodFlag === "js") {
     finalTool = "js";
   }
 } else if (methodFlag === "cdp") {
+  if (tool === "type" && (toolArgs.selector || toolArgs.ref)) {
+    console.error("Error: --method cdp types at the current focus and cannot be combined with --into, --selector, or --ref");
+    process.exit(1);
+  }
   if (tool === "smart_type") {
-    finalTool = "type";
+    console.error("Error: smart_type uses the JS input path and cannot be combined with --method cdp");
+    process.exit(1);
   }
 }
 
@@ -2062,8 +3089,10 @@ if (streamMode && (tool === "console" || tool === "network")) {
 
   let connectionTimeout = null;
   let receivedData = false;
+  let streamWriter;
 
-  const sock = net.createConnection(SOCKET_PATH, () => {
+  const sock = connectEndpoint(endpoint, () => {
+    streamWriter = createSocketWriter(sock, { onOverflow: ({ error }) => sock.destroy(error) });
     const req = {
       type: "stream_request",
       streamType,
@@ -2071,7 +3100,11 @@ if (streamMode && (tool === "console" || tool === "network")) {
       id: "cli-stream-" + Date.now(),
       ...globalOpts,
     };
-    sock.write(JSON.stringify(req) + "\n");
+    streamWriter.send(req).catch((error) => sock.destroy(error));
+    if (connectionTimeout) {
+      clearTimeout(connectionTimeout);
+      connectionTimeout = null;
+    }
     connectionTimeout = setTimeout(() => {
       if (!receivedData) {
         console.error("Error: Stream connection timeout (10s) - no data received");
@@ -2081,61 +3114,62 @@ if (streamMode && (tool === "console" || tool === "network")) {
     }, 10000);
   });
 
-  let buf = "";
-  sock.on("data", (d) => {
-    if (!receivedData) {
-      receivedData = true;
-      if (connectionTimeout) {
-        clearTimeout(connectionTimeout);
-        connectionTimeout = null;
+  connectionTimeout = setTimeout(() => {
+    console.error(`Error: Stream connection timeout (10s) - could not connect to ${endpoint.display}`);
+    sock.destroy();
+    process.exit(1);
+  }, 10000);
+
+  const parser = createFrameParser({
+    onFrame(msg) {
+      if (!receivedData) {
+        receivedData = true;
+        if (connectionTimeout) {
+          clearTimeout(connectionTimeout);
+          connectionTimeout = null;
+        }
       }
-    }
-    buf += d.toString();
-    const lines = buf.split("\n");
-    buf = lines.pop();
-    for (const line of lines) {
-      if (!line.trim()) continue;
-      try {
-        const msg = JSON.parse(line);
-        if (msg.error) {
-          console.error("Error:", msg.error);
-          sock.end();
-          process.exit(1);
-        }
-        if (msg.type === "extension_disconnected") {
-          console.error(msg.message);
-          sock.end();
-          process.exit(1);
-        }
-        if (msg.type === "stream_started") {
-          continue;
-        }
-        if (msg.type === "console_event") {
-          const { level, text, timestamp } = msg;
-          if (streamLevel && level !== streamLevel) continue;
-          console.log(`[console] [${level}] ${formatTime(timestamp)} ${text}`);
-        } else if (msg.type === "network_event") {
-          const { method, url, status, duration } = msg;
-          if (streamFilter && !url.includes(streamFilter)) continue;
-          const statusStr = status !== undefined ? status : "...";
-          const durationStr = duration !== undefined ? ` (${duration}ms)` : "";
-          console.log(`[network] ${method} ${url} ${statusStr}${durationStr}`);
-        }
-      } catch {}
-    }
+      if (msg.error) {
+        console.error("Error:", msg.error);
+        sock.end();
+        process.exit(1);
+      }
+      if (msg.type === "extension_disconnected") {
+        console.error(msg.message);
+        sock.end();
+        process.exit(1);
+      }
+      if (msg.type === "stream_started") return;
+      if (msg.type === "console_event") {
+        const { level, text, timestamp } = msg;
+        if (streamLevel && level !== streamLevel) return;
+        console.log(`[console] [${level}] ${formatTime(timestamp)} ${text}`);
+      } else if (msg.type === "network_event") {
+        const { method, url, status, duration } = msg;
+        if (streamFilter && !url.includes(streamFilter)) return;
+        const statusStr = status !== undefined ? status : "...";
+        const durationStr = duration !== undefined ? ` (${duration}ms)` : "";
+        console.log(`[network] ${method} ${url} ${statusStr}${durationStr}`);
+      }
+    },
+    onError(error) {
+      if (connectionTimeout) clearTimeout(connectionTimeout);
+      console.error("Error:", error.message);
+      sock.destroy();
+      process.exit(1);
+    },
   });
+  sock.on("data", (data) => parser.push(data));
 
   sock.on("error", (e) => {
-    if (e.code === "ENOENT") {
-      console.error("Error: Socket not found. Is Chrome running with the extension?");
-    } else {
-      console.error("Error:", e.message);
-    }
+    if (connectionTimeout) clearTimeout(connectionTimeout);
+    console.error("Error:", formatEndpointError(e, endpoint, formatSocketError));
     process.exit(1);
   });
 
   process.on("SIGINT", () => {
-    sock.write(JSON.stringify({ type: "stream_stop" }) + "\n");
+    if (connectionTimeout) clearTimeout(connectionTimeout);
+    streamWriter?.send({ type: "stream_stop" }).catch(() => {});
     sock.end();
     process.exit(0);
   });
@@ -2143,6 +3177,17 @@ if (streamMode && (tool === "console" || tool === "network")) {
   return;
 }
 
+let transferPlan;
+try {
+  transferPlan = endpoint.kind === "remote" ? prepareRemoteTool(finalTool, toolArgs) : (() => { const args = validateLocalToolPaths(finalTool, toolArgs); return { args, uploads: [], downloads: [] }; })();
+} catch (error) {
+  const message = finalTool === "record" && endpoint.kind === "remote"
+    ? `record is not supported with remote endpoint ${endpoint.display}`
+    : error.message;
+  console.error(`Error: ${message}`);
+  process.exit(1);
+}
+toolArgs = transferPlan.args;
 const request = {
   type: "tool_request",
   method: "execute_tool",
@@ -2151,57 +3196,71 @@ const request = {
   ...globalOpts,
 };
 
-const sendRequest = (toolName, toolArgs = {}, timeoutMs = 5000) => {
-  return new Promise((resolve, reject) => {
-    const sock = net.createConnection(SOCKET_PATH, () => {
-      const req = {
-        type: "tool_request",
-        method: "execute_tool",
-        params: { tool: toolName, args: toolArgs },
-        id: "cli-" + Date.now() + "-" + Math.random(),
-        ...globalOpts,
-      };
-      sock.write(JSON.stringify(req) + "\n");
-    });
-    let buf = "";
-    sock.on("data", (d) => {
-      buf += d.toString();
-      const lines = buf.split("\n");
-      buf = lines.pop();
-      for (const line of lines) {
-        if (!line.trim()) continue;
-        try {
-          const resp = JSON.parse(line);
-          if (resp.type === "extension_disconnected") {
-            sock.end();
-            reject(new Error(resp.message));
-            return;
-          }
-          sock.end();
-          resolve(resp);
-        } catch {
-          sock.end();
-          reject(new Error("Invalid JSON"));
-        }
-      }
-    });
-    sock.on("error", (e) => reject(e));
-    let timeoutId;
-    timeoutId = setTimeout(() => { sock.destroy(); reject(new Error("Timeout")); }, timeoutMs);
-    sock.on("close", () => clearTimeout(timeoutId));
-  });
+const sendRequest = async (toolName, toolArgs = {}, timeoutMs = 5000) => {
+  const transport = await openClientTransport(endpoint, { requestTimeoutMs: timeoutMs });
+  try {
+    const prepared = endpoint.kind === "remote" ? prepareRemoteTool(toolName, toolArgs) : (() => { const args = validateLocalToolPaths(toolName, toolArgs); return { args, uploads: [], downloads: [] }; })();
+    return await transport.request({
+      type: "tool_request",
+      method: "execute_tool",
+      params: { tool: toolName, args: prepared.args },
+      id: "cli-" + Date.now() + "-" + Math.random(),
+      ...globalOpts,
+    }, timeoutMs, prepared);
+  } finally {
+    await transport.close();
+  }
 };
+
+function parseRecordNumber(value, fallback, name, min, max) {
+  if (value === undefined) return fallback;
+  if (typeof value === "boolean") throw new Error(`${name} must be a number`);
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < min || parsed > max) {
+    throw new Error(`${name} must be between ${min} and ${max}`);
+  }
+  return parsed;
+}
+
+function parseRecordRect(value) {
+  if (value === undefined) return null;
+  if (typeof value !== "string") throw new Error("rect must be x,y,width,height");
+  const parts = value.split(",").map((part) => Number(part.trim()));
+  if (parts.length !== 4 || parts.some((part) => !Number.isFinite(part))) {
+    throw new Error("rect must be x,y,width,height");
+  }
+  const [x, y, width, height] = parts;
+  if (x < 0 || y < 0 || width <= 0 || height <= 0) {
+    throw new Error("rect must use non-negative x/y and positive width/height");
+  }
+  return { x, y, width, height, crop: `${width}x${height}+${x}+${y}` };
+}
+
+function assertToolOk(response, context) {
+  if (!response?.error) return;
+  const message = response.error.content?.[0]?.text || response.error.message || JSON.stringify(response.error);
+  throw new Error(`${context}: ${message}`);
+}
+
+function writeStdout(text) {
+  return new Promise((resolve, reject) => {
+    process.stdout.write(text, (error) => {
+      if (error) reject(error);
+      else resolve();
+    });
+  });
+}
 
 function waitForSurfSocket(maxWaitMs = 60000) {
   return new Promise((resolve, reject) => {
     const started = Date.now();
     const tick = () => {
       try {
-        if (fs.existsSync(SOCKET_PATH)) {
+        if (fs.existsSync(endpoint.socketPath || "/tmp/surf.sock")) {
           resolve(true);
           return;
         }
-      } catch (e) {
+      } catch {
         // keep polling
       }
       if (Date.now() - started >= maxWaitMs) {
@@ -2241,10 +3300,106 @@ async function attemptChatgptRecovery() {
   );
 }
 
+function assembleRecordGif(framePaths, output, fps, rect) {
+  const delay = Math.max(1, Math.round(100 / fps));
+  const args = ["-delay", String(delay), "-loop", "0", ...framePaths];
+  if (rect) args.push("-crop", rect.crop, "+repage");
+  args.push(output);
+
+  try {
+    execFileSync("magick", args, { stdio: "pipe" });
+    return "magick";
+  } catch (magickError) {
+    try {
+      execFileSync("convert", args, { stdio: "pipe" });
+      return "convert";
+    } catch (convertError) {
+      const detail = convertError && convertError.message ? convertError.message : String(convertError);
+      throw new Error(`Failed to assemble GIF with ImageMagick. Install ImageMagick (magick or convert). Last error: ${detail}`);
+    }
+  }
+}
+
+async function runRecord() {
+  const durationMs = parseRecordNumber(toolArgs.duration, 2000, "duration", 100, 10000);
+  const fps = parseRecordNumber(toolArgs.fps, 10, "fps", 1, 30);
+  const rect = parseRecordRect(toolArgs.rect);
+  const output = path.resolve(outputPath || path.join(SURF_TMP, `surf-record-${Date.now()}.gif`));
+  const frameCount = Math.max(1, Math.ceil((durationMs / 1000) * fps));
+  const frameDir = fs.mkdtempSync(path.join(SURF_TMP, "surf-record-"));
+  const framePaths = [];
+  let trigger = null;
+
+  try {
+    if (toolArgs.trigger !== undefined) {
+      trigger = await runRecordTrigger(toolArgs.trigger);
+    }
+
+    const startedAt = Date.now();
+    for (let i = 0; i < frameCount; i++) {
+      const framePath = path.join(frameDir, `frame-${String(i).padStart(4, "0")}.png`);
+      const response = await sendRequest("screenshot", {
+        savePath: framePath,
+        full: toolArgs.full,
+        "max-size": toolArgs["max-size"],
+      }, 30000);
+      assertToolOk(response, `record frame ${i + 1}`);
+      framePaths.push(framePath);
+
+      if (i < frameCount - 1) {
+        const nextFrameAt = startedAt + Math.round(((i + 1) * durationMs) / frameCount);
+        const waitMs = nextFrameAt - Date.now();
+        if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, waitMs));
+      }
+    }
+
+    fs.mkdirSync(path.dirname(output), { recursive: true });
+    const imageMagick = assembleRecordGif(framePaths, output, fps, rect);
+    const result = { output, frames: framePaths.length, durationMs, fps, imageMagick, ...(trigger && { trigger }), ...(rect && { rect: { x: rect.x, y: rect.y, width: rect.width, height: rect.height } }) };
+
+    if (wantJson) {
+      console.log(JSON.stringify(result, null, 2));
+    } else {
+      console.log(`Saved recording to ${output} (${result.frames} frames, ${durationMs}ms @ ${fps}fps)`);
+    }
+  } finally {
+    fs.rmSync(frameDir, { recursive: true, force: true });
+  }
+}
+
+async function runRecordTrigger(trigger) {
+  if (typeof trigger !== "string") throw new Error("trigger must be action:target");
+  const separator = trigger.indexOf(":");
+  if (separator === -1) throw new Error("trigger must be action:target");
+  const action = trigger.slice(0, separator).trim();
+  const target = trigger.slice(separator + 1).trim();
+  if (!action || !target) throw new Error("trigger must be action:target");
+
+  if (action === "click") {
+    const response = await sendRequest("click", { selector: target }, 30000);
+    assertToolOk(response, "record trigger");
+    return { action, selector: target };
+  }
+
+  if (action === "scroll") {
+    let response;
+    if (["up", "down", "left", "right"].includes(target)) {
+      response = await sendRequest("scroll", { direction: target }, 30000);
+    } else if (target === "top" || target === "bottom") {
+      response = await sendRequest(`scroll.${target}`, {}, 30000);
+    } else {
+      response = await sendRequest("scroll.bottom", { selector: target }, 30000);
+    }
+    assertToolOk(response, "record trigger");
+    return { action, target };
+  }
+
+  throw new Error("trigger action must be click or scroll");
+}
 
 const performAutoCapture = async () => {
   const timestamp = Date.now();
-  const screenshotPath = `/tmp/surf-error-${timestamp}.png`;
+  const screenshotPath = path.join(SURF_TMP, `surf-error-${timestamp}.png`);
 
   try {
     const [screenshotResp, consoleResp] = await Promise.all([
@@ -2278,15 +3433,29 @@ const performAutoCapture = async () => {
   }
 };
 
-const socket = net.createConnection(SOCKET_PATH, () => {
-  socket.write(JSON.stringify(request) + "\n");
-});
+if (finalTool === "record") {
+  if (endpoint.kind === "remote") {
+    console.error(`Error: record is not supported with remote endpoint ${endpoint.display}`);
+    process.exit(1);
+  }
+  installBrowserLock(lockOptions, endpoint);
+  runRecord()
+    .then(() => process.exit(0))
+    .catch((error) => {
+      console.error("Error:", error && error.message ? error.message : String(error));
+      process.exit(1);
+    });
+  return;
+}
 
+installBrowserLock(lockOptions, endpoint);
+let socket;
+let timeout;
 let responseFinished = false;
 let recoveryStarted = false;
 
 function startChatgptRecovery(reason) {
-  if (recoveryStarted || responseFinished || tool !== "chatgpt") {
+  if (recoveryStarted || responseFinished || tool !== "chatgpt" || endpoint.kind === "remote") {
     if (!responseFinished) {
       console.error(reason || "Error: Surf connection closed before response");
       process.exit(1);
@@ -2294,6 +3463,7 @@ function startChatgptRecovery(reason) {
     return;
   }
   recoveryStarted = true;
+  clearTimeout(timeout);
   attemptChatgptRecovery()
     .then((resp) => {
       handleResponse(resp).catch((err) => {
@@ -2302,67 +3472,68 @@ function startChatgptRecovery(reason) {
       });
     })
     .catch((err) => {
-      console.error((reason || "Surf connection lost") + " Recovery failed: " + err.message);
+      console.error(`${reason || "Surf connection lost"} Recovery failed: ${err.message}`);
       process.exit(1);
     });
 }
 
-const AI_TOOLS = ["smoke", "chatgpt", "chatgpt.extract", "gemini", "gemini_tab", "kimi_tab", "perplexity", "ai"];
-const requestedTimeout = Number.isFinite(request?.params?.args?.timeout)
-  ? request.params.args.timeout
-  : null;
-const requestedTimeoutMs = requestedTimeout == null
-  ? null
-  : requestedTimeout < 10000
-    ? requestedTimeout * 1000
-    : requestedTimeout;
-const requestTimeout = AI_TOOLS.includes(tool)
-  ? Math.max(300000, (requestedTimeoutMs || 2700000) + 30000)
-  : 30000;
-const timeout = setTimeout(() => {
+if (endpoint.kind === "remote") {
+  socket = { end() {}, destroy() {} };
+  const requestTimeout = resolveRequestDeadlineMs(tool, toolArgs);
+  openClientTransport(endpoint, { requestTimeoutMs: requestTimeout })
+    .then(async (transport) => {
+      try {
+        const response = await transport.request(request, requestTimeout, transferPlan);
+        await handleResponse(response);
+      } finally {
+        await transport.close();
+      }
+    })
+    .catch((error) => {
+      console.error(`Error: ${error.message}`);
+      process.exit(1);
+    });
+  return;
+}
+
+socket = connectEndpoint(endpoint, () => {
+  writeFrame(socket, request).catch((error) => socket.destroy(error));
+});
+
+const requestTimeout = resolveRequestDeadlineMs(tool, options);
+timeout = setTimeout(() => {
   console.error(`Error: Request timed out (${requestTimeout / 1000}s)`);
   socket.destroy();
   process.exit(1);
 }, requestTimeout);
 
-let buffer = "";
-
-socket.on("data", (data) => {
-  buffer += data.toString();
-  const lines = buffer.split("\n");
-  buffer = lines.pop();
-
-  for (const line of lines) {
-    if (!line.trim()) continue;
-    try {
-      const msg = JSON.parse(line);
-      
-      if (msg.type === "extension_disconnected") {
-        clearTimeout(timeout);
-        startChatgptRecovery(msg.message);
-        return;
-      }
-      
-      handleResponse(msg).catch((err) => {
-        console.error("Handler error:", err.message);
-        process.exit(1);
-      });
-    } catch (e) {
-      console.error("Invalid JSON response:", line);
-      process.exit(1);
+const responseParser = createFrameParser({
+  onFrame(msg) {
+    if (msg.type === "extension_disconnected") {
+      clearTimeout(timeout);
+      socket.end();
+      startChatgptRecovery(msg.message);
+      return;
     }
-  }
+    if (msg.id !== request.id) return;
+    handleResponse(msg).catch((err) => {
+      console.error("Handler error:", err.message);
+      process.exit(1);
+    });
+  },
+  onError(error) {
+    clearTimeout(timeout);
+    console.error("Invalid response frame:", error.message);
+    socket.destroy();
+    process.exit(1);
+  },
 });
+
+socket.on("data", (data) => responseParser.push(data));
 
 socket.on("error", (err) => {
   clearTimeout(timeout);
-  if (err.code === "ENOENT") {
-    console.error("Error: Socket not found. Is Chrome running with the extension?");
-  } else if (err.code === "ECONNREFUSED") {
-    console.error("Error: Connection refused. Native host not running.");
-  } else {
-    console.error("Error:", err.message);
-  }
+  console.error("Error:", formatEndpointError(err, endpoint, formatSocketError));
   process.exit(1);
 });
 
@@ -2374,16 +3545,15 @@ socket.on("close", () => {
 });
 
 async function handleResponse(response) {
-  responseFinished = true;
   clearTimeout(timeout);
+  responseFinished = true;
 
   if (response.error) {
     const errContent = response.error.content?.[0]?.text || JSON.stringify(response.error);
     if (softFail) {
       console.warn("Warning:", errContent);
       socket.end();
-      process.exitCode = 0;
-      return;
+      process.exit(0);
     }
     console.error("Error:", errContent);
 
@@ -2392,12 +3562,11 @@ async function handleResponse(response) {
     }
 
     socket.end();
-    process.exitCode = 1;
-    return;
+    process.exit(1);
   }
 
   const result = response.result?.content?.[0]?.text;
-  
+
   let data;
   try {
     data = result ? JSON.parse(result) : response.result;
@@ -2405,22 +3574,38 @@ async function handleResponse(response) {
     data = result || response.result;
   }
 
+  if (tool === 'aistudio' && typeof data === 'string') {
+    data = { response: data };
+  }
+
+  if (tool === "perf-audit" && outputPath) {
+    const saveTo = path.resolve(outputPath);
+    fs.mkdirSync(path.dirname(saveTo), { recursive: true });
+    fs.writeFileSync(saveTo, JSON.stringify(data ?? null, null, 2));
+    if (!wantJson) {
+      await writeStdout(`Saved perf audit to ${saveTo}\n`);
+      socket.end();
+      process.exitCode = 0;
+      return;
+    }
+  }
+
   if (wantJson) {
-    console.log(JSON.stringify(data, null, 2));
+    await writeStdout(`${JSON.stringify(data ?? null, null, 2)}\n`);
     socket.end();
     process.exitCode = 0;
     return;
   }
 
   if (tool === "screenshot" && data?.base64 && (outputPath || toolArgs.savePath)) {
-    const saveTo = outputPath || toolArgs.savePath;
+    const saveTo = transferPlan.downloads?.[0]?.destination || toolArgs.savePath || outputPath;
     fs.writeFileSync(saveTo, Buffer.from(data.base64, "base64"));
-    
+
     const skipResize = options.full || toolArgs.full;
     const maxSize = parseInt(options["max-size"] || toolArgs["max-size"] || "1200", 10);
     const origWidth = data.width || 0;
     const origHeight = data.height || 0;
-    
+
     if (!skipResize && (origWidth > maxSize || origHeight > maxSize)) {
       const result = resizeImage(saveTo, maxSize);
       if (result.success) {
@@ -2441,41 +3626,37 @@ async function handleResponse(response) {
     if (Array.isArray(tabs)) {
       if (tabs.length === 0) {
         if (globalOpts.windowId) {
-          console.log(`No tabs in window ${globalOpts.windowId}. Window may not exist - use 'surf window.list' to verify.`);
+          await writeStdout(`No tabs in window ${globalOpts.windowId}. Window may not exist - use 'surf window.list' to verify.\n`);
         } else {
-          console.log("No tabs found.");
+          await writeStdout("No tabs found.\n");
         }
       } else {
-        for (const t of tabs) {
-          console.log(`${t.id}\t${t.title}\t${t.url}`);
-        }
+        await writeStdout(`${tabs.map((t) => `${t.id}\t${t.title}\t${t.url}`).join("\n")}\n`);
       }
     } else {
-      console.log(JSON.stringify(data, null, 2));
+      await writeStdout(`${JSON.stringify(data, null, 2)}\n`);
     }
   } else if (tool === "tab.named") {
     const named = data?.tabs || data?.namedTabs || data || [];
     if (Array.isArray(named)) {
       if (named.length === 0) {
-        console.log("No named tabs");
+        await writeStdout("No named tabs\n");
       } else {
-        for (const t of named) {
-          console.log(`${t.name}\t${t.tabId}\t${t.title || ""}\t${t.url || ""}`);
-        }
+        await writeStdout(`${named.map((t) => `${t.name}\t${t.tabId}\t${t.title || ""}\t${t.url || ""}`).join("\n")}\n`);
       }
     } else {
-      console.log(JSON.stringify(data, null, 2));
+      await writeStdout(`${JSON.stringify(data, null, 2)}\n`);
     }
   } else if (tool === "ai" && data?.aiResult) {
     if (data.mode === "find") {
-      console.log(data.ref || "NOT_FOUND");
+      await writeStdout(`${data.ref || "NOT_FOUND"}\n`);
     } else {
-      console.log(data.content);
+      await writeStdout(`${data.content}\n`);
     }
   } else if (tool === "page.read" && data?.pageContent) {
-    console.log(data.pageContent);
+    await writeStdout(`${data.pageContent}\n`);
   } else if (tool === "page.text" && data?.text) {
-    console.log(data.text);
+    await writeStdout(`${data.text}\n`);
   } else if (tool === "emulate.device" && data?.devices) {
     console.log("Available devices:\n");
     const devices = data.devices;
@@ -2487,9 +3668,9 @@ async function handleResponse(response) {
   } else if (tool === "js") {
     if (data?.result !== undefined) {
       const val = data.result.value ?? data.result;
-      console.log(typeof val === "string" ? val : JSON.stringify(val, null, 2));
+      await writeStdout(`${typeof val === "string" ? val : JSON.stringify(val, null, 2)}\n`);
     } else {
-      console.log(JSON.stringify(data, null, 2));
+      await writeStdout(`${JSON.stringify(data, null, 2)}\n`);
     }
   } else if (tool === "health") {
     if (data?.success) {
@@ -2502,12 +3683,12 @@ async function handleResponse(response) {
         console.log(`OK${timeStr}`);
       }
     } else {
-      console.log(JSON.stringify(data, null, 2));
+      await writeStdout(`${JSON.stringify(data, null, 2)}\n`);
     }
   } else if (tool === "smoke" && data?.results) {
     const results = data.results;
     const summary = data.summary || { pass: 0, fail: 0, total: results.length };
-    
+
     for (const r of results) {
       const status = r.status === "pass" ? "PASS" : "FAIL";
       const timeStr = r.time ? ` (${r.time}ms)` : "";
@@ -2519,14 +3700,13 @@ async function handleResponse(response) {
         }
       }
     }
-    
+
     console.log("");
     console.log(`Summary: ${summary.pass} passed, ${summary.fail} failed, ${summary.total} total`);
-    
+
     if (summary.fail > 0) {
       socket.end();
-      process.exitCode = 1;
-      return;
+      process.exit(1);
     }
   } else if (tool === "zoom" && data?.zoom !== undefined) {
     console.log(`Zoom: ${Math.round(data.zoom * 100)}%`);
@@ -2535,12 +3715,12 @@ async function handleResponse(response) {
   } else if (tool === "network" && (data?.entries || data?.requests)) {
     // Network list - handle both new (entries) and old (requests) formats
     const items = data.entries || data.requests || [];
-    
+
     if (items.length === 0) {
       console.log("No network requests captured");
     } else if (data._format === 'raw') {
       // Raw JSON output - print entries array directly
-      console.log(JSON.stringify(items, null, 2));
+      await writeStdout(`${JSON.stringify(items, null, 2)}\n`);
     } else {
       // Simple compact format for now
       for (const req of items) {
@@ -2555,7 +3735,7 @@ async function handleResponse(response) {
     console.log(networkFormatters.formatEntry(data.entry));
   } else if (tool === "network.body" && data?.body !== undefined) {
     // Raw body for piping
-    process.stdout.write(data.body);
+    await writeStdout(data.body);
   } else if (tool === "network.curl" && data?.curl) {
     console.log(data.curl);
   } else if (tool === "network.curl" && data?.entry) {
@@ -2580,6 +3760,9 @@ async function handleResponse(response) {
     if (data.tabId) {
       console.error(`Tab ID: ${data.tabId}`);
     }
+    if (data.controlledTabId) {
+      console.error(`ControlledTabID: ${data.controlledTabId}`);
+    }
     if (data.activated !== undefined) {
       console.error(`Activated: ${data.activated}`);
     }
@@ -2589,21 +3772,31 @@ async function handleResponse(response) {
     if (data.noActivate !== undefined) {
       console.error(`NoActivate: ${data.noActivate}`);
     }
-    if (data.attachment !== undefined) {
-      console.error(`Attachment: ${JSON.stringify(data.attachment)}`);
+    console.error(`\n[${data.model || 'unknown'} | ${((data.tookMs || 0) / 1000).toFixed(1)}s]`);
+  } else if (tool === "aistudio" && data?.response) {
+    console.log(data.response);
+
+    const meta = [];
+    if (data.model) meta.push(data.model);
+    if (data.thinkingTime) meta.push(`thought ${data.thinkingTime}s`);
+    if (Number.isFinite(data.tookMs)) meta.push(`${(data.tookMs / 1000).toFixed(1)}s`);
+    if (meta.length > 0) {
+      console.error(`\n[${meta.join(' | ')}]`);
     }
-    if (data.requestedModel) console.error(`RequestedModel: ${data.requestedModel}`);
-    if (data.selectedModel) console.error(`SelectedModel: ${data.selectedModel}`);
-    if (data.modelSelectionStatus) console.error(`ModelSelectionStatus: ${data.modelSelectionStatus}`);
-    if (data.modelSelectionError) console.error(`ModelSelectionError: ${data.modelSelectionError}`);
-    if (data.requestedReasoning) console.error(`RequestedReasoning: ${data.requestedReasoning}`);
-    if (data.selectedReasoning) console.error(`SelectedReasoning: ${data.selectedReasoning}`);
-    if (data.reasoningSelectionStatus) console.error(`ReasoningSelectionStatus: ${data.reasoningSelectionStatus}`);
-    if (data.reasoningSelectionError) console.error(`ReasoningSelectionError: ${data.reasoningSelectionError}`);
-    const meta = [data.model || 'unknown'];
-    if (data.reasoning) meta.push(data.reasoning);
-    meta.push(`${((data.tookMs || 0) / 1000).toFixed(1)}s`);
-    console.error(`\n[${meta.join(' | ')}]`);
+  } else if (tool === "aistudio.build" && data?.zipPath) {
+    console.error(`Downloaded: ${data.zipPath}`);
+    if (data.extractedPath) {
+      console.error(`Extracted: ${data.extractedPath}`);
+      console.error("");
+    }
+
+    const meta = [];
+    if (data.model) meta.push(data.model);
+    if (Number.isFinite(data.buildDuration)) meta.push(`built ${data.buildDuration}s`);
+    if (Number.isFinite(data.tookMs)) meta.push(`${(data.tookMs / 1000).toFixed(1)}s total`);
+    if (meta.length > 0) {
+      console.error(`[${meta.join(" | ")}]`);
+    }
   } else if (tool === "perplexity" && data?.response) {
     console.log(data.response);
     const meta = [];
@@ -2633,16 +3826,6 @@ async function handleResponse(response) {
         console.log("\n[hint] Use --window-id <id> to isolate commands to a specific window");
       }
     }
-  } else if (tool === "extension.ping" && options.json) {
-    console.log(JSON.stringify(data, null, 2));
-  } else if (tool === "extension.ping") {
-    console.log(data?.status || "connected");
-  } else if (tool === "extension.reload") {
-    if (options.json) {
-      console.log(JSON.stringify(data, null, 2));
-    } else {
-      console.log(data?.message || "Extension reload scheduled");
-    }
   } else if (typeof data === "string") {
     console.log(data);
   } else if (data?.success === true) {
@@ -2651,18 +3834,16 @@ async function handleResponse(response) {
     if (softFail) {
       console.warn("Warning:", data.error);
       socket.end();
-      process.exitCode = 0;
-      return;
+      process.exit(0);
     }
     console.error("Error:", data.error);
     if (autoCapture) {
       await performAutoCapture();
     }
     socket.end();
-    process.exitCode = 1;
-    return;
+    process.exit(1);
   } else {
-    console.log(JSON.stringify(data, null, 2));
+    await writeStdout(`${JSON.stringify(data, null, 2)}\n`);
   }
 
   socket.end();

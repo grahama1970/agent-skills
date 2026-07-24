@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shlex
 import sys
 from pathlib import Path
 from typing import Any
@@ -25,13 +26,18 @@ PREFERRED_RAW_NAMES = (
 PREFERRED_RECEIPT_NAMES = (
     "02_response.receipt.json",
     "02_roundtrip_response.md.receipt.json",
+    "response.md.receipt.json",
     "response.receipt.json",
 )
 PREFERRED_SUBMITTED_NAMES = (
     "submitted.md",
     "02_response.submitted.md",
     "02_roundtrip_response.submitted.md",
+    "response.md.submitted.md",
     "response.submitted.md",
+)
+PREFERRED_INFLIGHT_NAMES = (
+    "webgpt_inflight.json",
 )
 
 
@@ -67,19 +73,23 @@ def discover_artifacts(directory: Path) -> dict[str, Path | None]:
     directory = directory.resolve()
     meta = _first_existing(directory, PREFERRED_META_NAMES)
     meta_data = _read_json(meta)
-    raw = _resolve_path(
-        directory,
-        str(meta_data.get("raw_output") or ""),
-        PREFERRED_RAW_NAMES,
-    )
     receipt = _resolve_path(
         directory,
         str(meta_data.get("receipt_output") or ""),
         PREFERRED_RECEIPT_NAMES,
     )
+    receipt_data = _read_json(receipt)
+    inflight = _first_existing(directory, PREFERRED_INFLIGHT_NAMES)
+    inflight_data = _read_json(inflight)
+    path_hints = {**inflight_data, **receipt_data, **meta_data}
+    raw = _resolve_path(
+        directory,
+        str(path_hints.get("raw_output") or ""),
+        PREFERRED_RAW_NAMES,
+    )
     submitted = _resolve_path(
         directory,
-        str(meta_data.get("submitted_output") or ""),
+        str(path_hints.get("submitted_output") or ""),
         PREFERRED_SUBMITTED_NAMES,
     )
     return {
@@ -88,7 +98,43 @@ def discover_artifacts(directory: Path) -> dict[str, Path | None]:
         "raw": raw,
         "receipt": receipt,
         "submitted": submitted,
+        "inflight": inflight,
     }
+
+
+def _target_path(directory: Path, *values: Any, fallback_name: str) -> Path:
+    for value in values:
+        if value:
+            path = Path(str(value))
+            if not path.is_absolute():
+                path = directory / path
+            return path
+    return directory / fallback_name
+
+
+def _extract_command(
+    *,
+    requested_tab_id: str,
+    sentinel: str,
+    output_path: Path,
+    raw_path: Path,
+    meta_path: Path,
+) -> str:
+    parts = [
+        "surf",
+        "webgpt.extract",
+        "--tab-id",
+        requested_tab_id,
+        "--output",
+        str(output_path),
+        "--raw-output",
+        str(raw_path),
+        "--meta-output",
+        str(meta_path),
+        "--sentinel",
+        sentinel,
+    ]
+    return " ".join(shlex.quote(part) for part in parts)
 
 
 def _submitted_to_chatgpt(meta: dict[str, Any], receipt: dict[str, Any], raw_path: Path | None) -> bool:
@@ -166,6 +212,24 @@ def build_recovery(
     raw_has_sentinel = bool(meta.get("raw_contains_sentinel"))
     failure = str(meta.get("failure") or "")
     needs_attention = _needs_attention_code(state, meta, raw_path, meta_path)
+    output_target = _target_path(
+        directory,
+        meta.get("output"),
+        receipt.get("output"),
+        fallback_name="02_response.md",
+    )
+    raw_target = _target_path(
+        directory,
+        meta.get("raw_output"),
+        receipt.get("raw_output"),
+        fallback_name="02_response.raw.md",
+    )
+    meta_target = _target_path(
+        directory,
+        meta.get("meta_output"),
+        receipt.get("meta_output"),
+        fallback_name="02_response.meta.json",
+    )
 
     reason = str(meta.get("agent_diagnosis") or "")
     next_command = ""
@@ -192,12 +256,12 @@ def build_recovery(
     elif state == "submitted_only":
         reason = reason or "Prompt was submitted but response transport proof is not available yet."
         if requested_tab_id and sentinel:
-            next_command = (
-                f"surf webgpt.extract --tab-id {requested_tab_id} "
-                f"--output {directory / '02_response.md'} "
-                f"--raw-output {directory / '02_response.raw.md'} "
-                f"--meta-output {directory / '02_response.meta.json'} "
-                f"--sentinel '{sentinel}'"
+            next_command = _extract_command(
+                requested_tab_id=requested_tab_id,
+                sentinel=sentinel,
+                output_path=output_target,
+                raw_path=raw_target,
+                meta_path=meta_target,
             )
         else:
             next_command = f"surf webgpt.recover --artifact-dir {directory}"
@@ -205,12 +269,12 @@ def build_recovery(
     elif state == "missing_sentinel":
         reason = reason or "Response text exists but current sentinel is missing or stale."
         if requested_tab_id and sentinel and raw_path and raw_path.exists():
-            next_command = (
-                f"surf webgpt.extract --tab-id {requested_tab_id} "
-                f"--output {directory / '02_response.md'} "
-                f"--raw-output {directory / '02_response.raw.md'} "
-                f"--meta-output {directory / '02_response.meta.json'} "
-                f"--sentinel '{sentinel}'"
+            next_command = _extract_command(
+                requested_tab_id=requested_tab_id,
+                sentinel=sentinel,
+                output_path=output_target,
+                raw_path=raw_target,
+                meta_path=meta_target,
             )
             do_not_do.append("do_not_accept_stale_sentinel_as_current_turn_proof")
         elif needs_attention:
@@ -227,7 +291,16 @@ def build_recovery(
             )
     elif state == "missing_response_artifacts" or needs_attention:
         reason = reason or "Submitted run is missing raw/meta transport artifacts."
-        next_command = needs_attention or "NEEDS_ATTENTION: missing_webgpt_transport_artifacts"
+        if requested_tab_id and sentinel:
+            next_command = _extract_command(
+                requested_tab_id=requested_tab_id,
+                sentinel=sentinel,
+                output_path=output_target,
+                raw_path=raw_target,
+                meta_path=meta_target,
+            )
+        else:
+            next_command = needs_attention or "NEEDS_ATTENTION: missing_webgpt_transport_artifacts"
         do_not_do.extend(["do_not_claim_completion", "do_not_retry_submit_blindly"])
     elif failure in {"tab_identity_preflight_failed", "controlled_tab_id_mismatch"}:
         reason = reason or "Tab identity proof failed for the requested reviewer tab."
@@ -241,10 +314,12 @@ def build_recovery(
         )
         next_command = f"surf webgpt.preflight {tab_args}"
         if requested_tab_id and sentinel and not raw_has_sentinel:
-            next_command = (
-                f"surf webgpt.extract --tab-id {requested_tab_id} "
-                f"--output {directory / '02_response.md'} "
-                f"--sentinel '{sentinel}'"
+            next_command = _extract_command(
+                requested_tab_id=requested_tab_id,
+                sentinel=sentinel,
+                output_path=output_target,
+                raw_path=raw_target,
+                meta_path=meta_target,
             )
         do_not_do.append("do_not_retry_submit_without_preflight")
     else:
@@ -277,7 +352,10 @@ def build_transport_summary(
     submitted_file = submitted_path or discovered["submitted"]
 
     meta = _read_json(meta_file)
-    receipt = _read_json(receipt_file)
+    receipt = {
+        **_read_json(discovered["inflight"]),
+        **_read_json(receipt_file),
+    }
 
     if raw_file is None and meta.get("raw_output"):
         candidate = directory / str(meta["raw_output"])
@@ -349,7 +427,10 @@ def write_transport_summary(
 def recover(directory: Path) -> dict[str, Any]:
     discovered = discover_artifacts(directory)
     meta = _read_json(discovered["meta"])
-    receipt = _read_json(discovered["receipt"])
+    receipt = {
+        **_read_json(discovered["inflight"]),
+        **_read_json(discovered["receipt"]),
+    }
     recovery = build_recovery(
         directory=directory.resolve(),
         meta=meta,
@@ -362,6 +443,8 @@ def recover(directory: Path) -> dict[str, Any]:
     recovery["artifact_dir"] = str(directory.resolve())
     recovery["response_raw_path"] = str(discovered["raw"]) if discovered["raw"] else None
     recovery["response_meta_path"] = str(discovered["meta"]) if discovered["meta"] else None
+    recovery["response_receipt_path"] = str(discovered["receipt"]) if discovered["receipt"] else None
+    recovery["inflight_path"] = str(discovered["inflight"]) if discovered["inflight"] else None
     return recovery
 
 

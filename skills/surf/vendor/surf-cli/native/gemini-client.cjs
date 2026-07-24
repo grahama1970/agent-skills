@@ -1,11 +1,12 @@
 /**
  * Gemini Web Client for surf-cli
- * 
+ *
  * Cookie-based client for gemini.google.com (no API key required).
  * Adapted from Oracle's gemini-web module.
  */
 
 const https = require("https");
+const { abortError, abortableDelay, raceAbort, throwIfAborted } = require("./abort.cjs");
 const fs = require("fs");
 const path = require("path");
 
@@ -22,16 +23,16 @@ const USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36
 
 const MODEL_HEADER_NAME = "x-goog-ext-525001261-jspb";
 const MODEL_HEADERS = {
-  "gemini-3-pro": '[1,null,null,null,"9d8ca3786ebdfbea",null,null,0,[4]]',
-  "gemini-2.5-pro": '[1,null,null,null,"4af6c7f5da75d65d",null,null,0,[4]]',
-  "gemini-2.5-flash": '[1,null,null,null,"9ec249fc9ad08861",null,null,0,[4]]',
+  "gemini-3.1-pro": '[1,null,null,null,"e6fa609c3fa255c0",null,null,0,[4]]',
+  "gemini-3.5-flash": '[1,null,null,null,"56fdd199312815e2",null,null,0,[4]]',
+  "gemini-3.1-flash-lite": '[1,null,null,null,"8c46e95b1a07cecc",null,null,0,[4]]',
 };
 
 const REQUIRED_COOKIES = ["__Secure-1PSID", "__Secure-1PSIDTS"];
 
 const ALL_COOKIE_NAMES = [
   "__Secure-1PSID",
-  "__Secure-1PSIDTS", 
+  "__Secure-1PSIDTS",
   "__Secure-1PSIDCC",
   "__Secure-1PAPISID",
   "NID",
@@ -91,15 +92,13 @@ function hasRequiredCookies(cookieMap) {
   return REQUIRED_COOKIES.every(name => Boolean(cookieMap[name]));
 }
 
-function delay(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 // ============================================================================
 // HTTP Helpers
 // ============================================================================
 
-function httpsGet(url, headers, binary = false) {
+function httpsGet(url, headers, opts = {}) {
+  const { binary = false, timeoutMs = 30000, log = null, label = "httpsGet", signal } = opts;
+  throwIfAborted(signal);
   return new Promise((resolve, reject) => {
     const urlObj = new URL(url);
     const options = {
@@ -111,57 +110,108 @@ function httpsGet(url, headers, binary = false) {
         "user-agent": USER_AGENT,
         ...headers,
       },
+      rejectUnauthorized: false, // Required for Gemini API
+      timeout: timeoutMs,
     };
 
     const req = https.request(options, (res) => {
+      if (log) log(`${label}: response ${res.statusCode} ${urlObj.hostname}${urlObj.pathname}`);
       const chunks = [];
       res.on("data", chunk => chunks.push(chunk));
       res.on("end", () => {
         const buffer = Buffer.concat(chunks);
-        resolve({ 
-          status: res.statusCode, 
-          headers: res.headers, 
+        resolve({
+          status: res.statusCode,
+          headers: res.headers,
           text: binary ? null : buffer.toString("utf-8"),
           buffer: binary ? buffer : null,
         });
       });
+      res.on("error", (err) => {
+        if (log) log(`${label}: response error ${err.message}`);
+        reject(err);
+      });
     });
 
-    req.on("error", reject);
+    const onAbort = () => req.destroy(abortError(signal, "Request cancelled"));
+    signal?.addEventListener("abort", onAbort, { once: true });
+    req.on("timeout", () => {
+      req.destroy(new Error(`${label}: request timeout after ${timeoutMs}ms`));
+    });
+    req.on("error", (err) => {
+      signal?.removeEventListener("abort", onAbort);
+      if (log) log(`${label}: request error ${err.message}`);
+      reject(err);
+    });
+    req.on("close", () => signal?.removeEventListener("abort", onAbort));
     req.end();
   });
 }
 
-function httpsPost(url, headers, body) {
+function httpsPost(url, headers, body, opts = {}) {
+  return httpsSend("POST", url, headers, body, opts);
+}
+
+function httpsPut(url, headers, body, opts = {}) {
+  return httpsSend("PUT", url, headers, body, opts);
+}
+
+function httpsSend(method, url, headers, body, opts = {}) {
+  const { timeoutMs = 30000, log = null, label = "httpsSend", signal } = opts;
+  throwIfAborted(signal);
   return new Promise((resolve, reject) => {
     const urlObj = new URL(url);
+    const bodyBuffer = body == null
+      ? null
+      : Buffer.isBuffer(body)
+        ? body
+        : Buffer.from(String(body), "utf-8");
+    const hasLength = Object.keys(headers || {}).some((key) => key.toLowerCase() === "content-length");
     const options = {
       hostname: urlObj.hostname,
       port: 443,
       path: urlObj.pathname + urlObj.search,
-      method: "POST",
+      method,
       headers: {
         "user-agent": USER_AGENT,
         ...headers,
+        ...(bodyBuffer && !hasLength ? { "content-length": String(bodyBuffer.length) } : {}),
       },
+      rejectUnauthorized: false, // Required for Gemini API
+      timeout: timeoutMs,
     };
 
     const req = https.request(options, (res) => {
+      if (log) log(`${label}: response ${res.statusCode} ${urlObj.hostname}${urlObj.pathname}`);
       let data = "";
       res.on("data", chunk => data += chunk);
       res.on("end", () => resolve({ status: res.statusCode, headers: res.headers, text: data }));
+      res.on("error", (err) => {
+        if (log) log(`${label}: response error ${err.message}`);
+        reject(err);
+      });
     });
 
-    req.on("error", reject);
-    if (body) req.write(body);
+    const onAbort = () => req.destroy(abortError(signal, "Request cancelled"));
+    signal?.addEventListener("abort", onAbort, { once: true });
+    req.on("timeout", () => {
+      req.destroy(new Error(`${label}: request timeout after ${timeoutMs}ms`));
+    });
+    req.on("error", (err) => {
+      signal?.removeEventListener("abort", onAbort);
+      if (log) log(`${label}: request error ${err.message}`);
+      reject(err);
+    });
+    req.on("close", () => signal?.removeEventListener("abort", onAbort));
+    if (bodyBuffer) req.write(bodyBuffer);
     req.end();
   });
 }
 
-async function fetchWithRedirects(url, headers, maxRedirects = 10, binary = false) {
+async function fetchWithRedirects(url, headers, maxRedirects = 10, binary = false, opts = {}) {
   let current = url;
   for (let i = 0; i <= maxRedirects; i++) {
-    const res = await httpsGet(current, headers, binary);
+    const res = await httpsGet(current, headers, { ...opts, binary, label: opts.label || "httpsGet" });
     if (res.status >= 300 && res.status < 400 && res.headers.location) {
       current = new URL(res.headers.location, current).toString();
       continue;
@@ -175,9 +225,12 @@ async function fetchWithRedirects(url, headers, maxRedirects = 10, binary = fals
 // Gemini API Functions
 // ============================================================================
 
-async function fetchGeminiAccessToken(cookieMap) {
+async function fetchGeminiAccessToken(cookieMap, opts = {}) {
   const cookieHeader = buildCookieHeader(cookieMap);
-  const res = await fetchWithRedirects(GEMINI_APP_URL, { cookie: cookieHeader });
+  const res = await fetchWithRedirects(GEMINI_APP_URL, { cookie: cookieHeader }, 10, false, {
+    ...opts,
+    label: opts.label || "geminiAccessToken",
+  });
   const html = res.text;
 
   const tokens = ["SNlM0e", "thykhd"];
@@ -185,11 +238,37 @@ async function fetchGeminiAccessToken(cookieMap) {
     const match = html.match(new RegExp(`"${key}":"(.*?)"`));
     if (match?.[1]) return match[1];
   }
-  
+
   throw new Error("Unable to authenticate with Gemini. Make sure you're signed into gemini.google.com in Chrome.");
 }
 
 function trimGeminiJsonEnvelope(text) {
+  // Handle streaming chunk format: )]}\n\n<size>\n<json>\n<size>\n<json>...
+  const lines = text.split("\n");
+  const chunks = [];
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line || line === ")]}'" || /^\d+$/.test(line)) continue;
+    if (line.startsWith("[")) {
+      chunks.push(line);
+    }
+  }
+
+  if (chunks.length > 1) {
+    const merged = [];
+    for (const chunk of chunks) {
+      try {
+        const parsed = JSON.parse(chunk);
+        if (Array.isArray(parsed)) {
+          merged.push(...parsed);
+        }
+      } catch {
+        // ignore
+      }
+    }
+    return JSON.stringify(merged);
+  }
+
   const start = text.indexOf("[");
   const end = text.lastIndexOf("]");
   if (start === -1 || end === -1 || end <= start) {
@@ -220,9 +299,42 @@ function extractGgdlUrls(rawText) {
 }
 
 function ensureFullSizeImageUrl(url) {
-  if (url.includes("=s2048")) return url;
-  if (url.includes("=s")) return url;
+  if (url.includes("=s")) return url; // Already has size parameter
   return `${url}=s2048`;
+}
+
+function getFirstStringAtPaths(value, paths) {
+  for (const pathParts of paths) {
+    const found = getNestedValue(value, pathParts, "");
+    if (typeof found === "string" && found.trim()) return found;
+  }
+  return "";
+}
+
+const GEMINI_TEXT_PATHS = [
+  [1, 0],
+  [1, 0, 0],
+  [1, 0, 1],
+  [1, 1, 0],
+  [2, 0],
+  [22, 0],
+];
+
+const GEMINI_CARD_CONTENT_RE = /^http:\/\/googleusercontent\.com\/card_content\/\d+/;
+const GEMINI_CARD_ALT_PATHS = [[22, 0], [1, 1, 0], [2, 0]];
+
+function resolveCandidateText(candidate) {
+  const textRaw = getFirstStringAtPaths(candidate, GEMINI_TEXT_PATHS);
+  if (GEMINI_CARD_CONTENT_RE.test(textRaw)) {
+    return getFirstStringAtPaths(candidate, GEMINI_CARD_ALT_PATHS) || textRaw;
+  }
+  return textRaw;
+}
+
+// An unresolved card_content placeholder URL is not answer text; score it zero.
+function candidateTextScore(candidate) {
+  const resolved = resolveCandidateText(candidate);
+  return GEMINI_CARD_CONTENT_RE.test(resolved) ? 0 : resolved.length;
 }
 
 function parseGeminiStreamGenerateResponse(rawText) {
@@ -230,9 +342,10 @@ function parseGeminiStreamGenerateResponse(rawText) {
   const errorCode = extractErrorCode(responseJson);
 
   const parts = Array.isArray(responseJson) ? responseJson : [];
-  let bodyIndex = 0;
   let body = null;
-  
+  let bestTextLength = -1;
+
+  // Stream chunks are cumulative; the longest text is the most complete answer.
   for (let i = 0; i < parts.length; i++) {
     const partBody = getNestedValue(parts[i], [2], null);
     if (!partBody) continue;
@@ -240,9 +353,14 @@ function parseGeminiStreamGenerateResponse(rawText) {
       const parsed = JSON.parse(partBody);
       const candidateList = getNestedValue(parsed, [4], []);
       if (Array.isArray(candidateList) && candidateList.length > 0) {
-        bodyIndex = i;
-        body = parsed;
-        break;
+        if (!body) {
+          body = parsed;
+        }
+        const score = candidateTextScore(candidateList[0]);
+        if (score > bestTextLength) {
+          bestTextLength = score;
+          body = parsed;
+        }
       }
     } catch {
       // ignore
@@ -251,11 +369,7 @@ function parseGeminiStreamGenerateResponse(rawText) {
 
   const candidateList = getNestedValue(body, [4], []);
   const firstCandidate = candidateList[0];
-  const textRaw = getNestedValue(firstCandidate, [1, 0], "");
-  const cardContent = /^http:\/\/googleusercontent\.com\/card_content\/\d+/.test(textRaw);
-  const text = cardContent
-    ? (getNestedValue(firstCandidate, [22, 0], null) ?? textRaw)
-    : textRaw;
+  const text = resolveCandidateText(firstCandidate);
   const thoughts = getNestedValue(firstCandidate, [37, 0, 0], null);
   const metadata = getNestedValue(body, [1], []);
 
@@ -274,27 +388,23 @@ function parseGeminiStreamGenerateResponse(rawText) {
     });
   }
 
-  // Generated images
-  const hasGenerated = Boolean(getNestedValue(firstCandidate, [12, 7, 0], null));
-  if (hasGenerated) {
-    let imgBody = null;
-    for (let i = bodyIndex; i < parts.length; i++) {
-      const partBody = getNestedValue(parts[i], [2], null);
-      if (!partBody) continue;
-      try {
-        const parsed = JSON.parse(partBody);
-        const candidateImages = getNestedValue(parsed, [4, 0, 12, 7, 0], null);
-        if (candidateImages != null) {
-          imgBody = parsed;
-          break;
-        }
-      } catch {
-        // ignore
+  // Keep the last chunk with a non-empty image list; a trailing empty must not erase it.
+  let imgBody = null;
+  for (let i = 0; i < parts.length; i++) {
+    const partBody = getNestedValue(parts[i], [2], null);
+    if (!partBody) continue;
+    try {
+      const parsed = JSON.parse(partBody);
+      const imgs = getNestedValue(parsed, [4, 0, 12, 7, 0], null);
+      if (Array.isArray(imgs) && imgs.length > 0) {
+        imgBody = parsed;
       }
+    } catch {
+      // ignore
     }
-
-    const imgCandidate = getNestedValue(imgBody ?? body, [4, 0], null);
-    const generated = getNestedValue(imgCandidate, [12, 7, 0], []);
+  }
+  if (imgBody) {
+    const generated = getNestedValue(imgBody, [4, 0, 12, 7, 0], []);
     for (const genImage of generated) {
       const url = getNestedValue(genImage, [0, 3, 3], null);
       if (!url) continue;
@@ -314,45 +424,64 @@ function parseGeminiStreamGenerateResponse(rawText) {
 // File Upload
 // ============================================================================
 
-async function uploadGeminiFile(filePath) {
+async function uploadGeminiFile(filePath, cookieMap, opts = {}) {
   const absPath = path.resolve(process.cwd(), filePath);
   const data = fs.readFileSync(absPath);
   const fileName = path.basename(absPath);
-  
-  // Build multipart form data manually
-  const boundary = "----FormBoundary" + Math.random().toString(36).slice(2);
-  const header = `--${boundary}\r\nContent-Disposition: form-data; name="file"; filename="${fileName}"\r\nContent-Type: application/octet-stream\r\n\r\n`;
-  const footer = `\r\n--${boundary}--\r\n`;
-  
-  const body = Buffer.concat([
-    Buffer.from(header, "utf-8"),
-    data,
-    Buffer.from(footer, "utf-8"),
-  ]);
+  const cookieHeader = buildCookieHeader(cookieMap);
 
-  const res = await httpsPost(GEMINI_UPLOAD_URL, {
-    "content-type": `multipart/form-data; boundary=${boundary}`,
+  // Step 1: Initiate resumable upload
+  const initRes = await httpsPut(GEMINI_UPLOAD_URL, {
+    "authorization": "Basic c2F2ZXM6cyNMdGhlNmxzd2F2b0RsN3J1d1U=",
+    "content-type": "application/x-www-form-urlencoded;charset=UTF-8",
+    "cookie": cookieHeader,
     "push-id": GEMINI_UPLOAD_PUSH_ID,
-  }, body);
+    "referer": "https://gemini.google.com/",
+    "x-goog-upload-command": "start",
+    "x-goog-upload-header-content-length": String(data.length),
+    "x-goog-upload-header-content-type": "application/octet-stream",
+    "x-goog-upload-protocol": "resumable",
+    "x-tenant-id": "bard-storage",
+  }, data, { ...opts, label: opts.label || "geminiUploadInit" });
 
-  if (res.status < 200 || res.status >= 300) {
-    throw new Error(`File upload failed: ${res.status} (${res.text.slice(0, 200)})`);
+  const uploadId = initRes.headers["x-guploader-uploadid"];
+  if (!uploadId) {
+    throw new Error(`File upload init failed: no upload ID (${initRes.status})`);
   }
 
-  return { id: res.text, name: fileName };
+  // Step 2: Upload data and finalize
+  const uploadUrl = `${GEMINI_UPLOAD_URL}?upload_id=${encodeURIComponent(uploadId)}&upload_protocol=resumable`;
+  const finalRes = await httpsPut(uploadUrl, {
+    "content-type": "application/octet-stream",
+    "cookie": cookieHeader,
+    "origin": "https://gemini.google.com",
+    "referer": "https://gemini.google.com/",
+    "x-goog-upload-command": "upload, finalize",
+    "x-goog-upload-offset": "0",
+    "x-tenant-id": "bard-storage",
+  }, data, { ...opts, label: opts.label || "geminiUpload" });
+
+  if (finalRes.status < 200 || finalRes.status >= 300) {
+    throw new Error(`File upload failed: ${finalRes.status} (${finalRes.text.slice(0, 200)})`);
+  }
+
+  return { id: finalRes.text, name: fileName };
 }
 
 // ============================================================================
 // Image Download
 // ============================================================================
 
-async function downloadGeminiImage(url, cookieMap, outputPath) {
+async function downloadGeminiImage(url, cookieMap, outputPath, opts = {}) {
   const cookieHeader = buildCookieHeader(cookieMap);
   const fullUrl = ensureFullSizeImageUrl(url);
-  
+
   // Use binary mode for image download
-  const res = await fetchWithRedirects(fullUrl, { cookie: cookieHeader }, 10, true);
-  
+  const res = await fetchWithRedirects(fullUrl, { cookie: cookieHeader }, 10, true, {
+    ...opts,
+    label: opts.label || "geminiImageDownload",
+  });
+
   if (res.status < 200 || res.status >= 300) {
     throw new Error(`Failed to download image: ${res.status}`);
   }
@@ -361,23 +490,56 @@ async function downloadGeminiImage(url, cookieMap, outputPath) {
   if (dir && !fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
-  
+
   // Write binary buffer directly
   fs.writeFileSync(outputPath, res.buffer);
 }
 
-async function saveFirstGeminiImage(output, cookieMap, outputPath) {
-  // Try generated or web images first
-  const genOrWeb = output.images.find(img => img.kind === "generated") ?? output.images[0];
-  if (genOrWeb?.url) {
-    await downloadGeminiImage(genOrWeb.url, cookieMap, outputPath);
+async function downloadGeminiImageViaExtension(url, outputPath, opts = {}) {
+  const { fetchUrl, log } = opts;
+  const fullUrl = ensureFullSizeImageUrl(url);
+
+  const result = await fetchUrl(fullUrl);
+  if (!result || result.error) throw new Error(`Image download failed: ${result?.error || "no response"}`);
+  if (!result.b64) throw new Error("Image download returned no data");
+
+  const dir = path.dirname(outputPath);
+  if (dir && !fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+
+  fs.writeFileSync(outputPath, Buffer.from(result.b64, "base64"));
+}
+
+async function saveFirstGeminiImage(output, cookieMap, outputPath, opts = {}) {
+  const useExtensionDownload = !!opts.fetchUrl;
+  const img = output.images?.find(i => i.kind === "generated") ?? output.images?.[0];
+
+  if (img?.b64) {
+    const dir = path.dirname(outputPath);
+    if (dir && !fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.writeFileSync(outputPath, Buffer.from(img.b64, "base64"));
     return { saved: true, imageCount: output.images.length };
   }
 
-  // Fall back to gg-dl URLs in raw response
-  const ggdl = extractGgdlUrls(output.rawResponseText);
+  if (img?.url) {
+    if (useExtensionDownload) {
+      await downloadGeminiImageViaExtension(img.url, outputPath, opts);
+    } else {
+      await downloadGeminiImage(img.url, cookieMap, outputPath, opts);
+    }
+    return { saved: true, imageCount: output.images.length };
+  }
+
+  const ggdl = extractGgdlUrls(output.rawResponseText || "");
   if (ggdl[0]) {
-    await downloadGeminiImage(ggdl[0], cookieMap, outputPath);
+    if (useExtensionDownload) {
+      await downloadGeminiImageViaExtension(ggdl[0], outputPath, opts);
+    } else {
+      await downloadGeminiImage(ggdl[0], cookieMap, outputPath, opts);
+    }
     return { saved: true, imageCount: ggdl.length };
   }
 
@@ -390,7 +552,7 @@ async function saveFirstGeminiImage(output, cookieMap, outputPath) {
 
 function buildGeminiFReqPayload(prompt, uploaded, chatMetadata) {
   const promptPayload = uploaded.length > 0
-    ? [prompt, 0, null, uploaded.map(file => [[file.id, 1]])]
+    ? [prompt, 0, null, uploaded.map(file => [[file.id, 1], file.name])]
     : [prompt];
 
   const innerList = [promptPayload, null, chatMetadata ?? null];
@@ -398,16 +560,17 @@ function buildGeminiFReqPayload(prompt, uploaded, chatMetadata) {
 }
 
 async function runGeminiWebOnce(input) {
-  const { prompt, files, model, cookieMap, chatMetadata } = input;
+  const { prompt, files, model, cookieMap, chatMetadata, timeoutMs = 30000, log = null, signal } = input;
+  throwIfAborted(signal);
   const cookieHeader = buildCookieHeader(cookieMap);
-  
+
   // 1. Get access token
-  const at = await fetchGeminiAccessToken(cookieMap);
+  const at = await fetchGeminiAccessToken(cookieMap, { timeoutMs, log, label: "geminiAccessToken", signal });
 
   // 2. Upload files
   const uploaded = [];
   for (const file of files ?? []) {
-    uploaded.push(await uploadGeminiFile(file));
+    uploaded.push(await uploadGeminiFile(file, cookieMap, { timeoutMs, log, label: "geminiUpload", signal }));
   }
 
   // 3. Build request
@@ -419,15 +582,16 @@ async function runGeminiWebOnce(input) {
   // 4. Send request
   const res = await httpsPost(GEMINI_STREAM_GENERATE_URL, {
     "content-type": "application/x-www-form-urlencoded;charset=utf-8",
+    "host": "gemini.google.com",
     "origin": "https://gemini.google.com",
     "referer": "https://gemini.google.com/",
     "x-same-domain": "1",
     "cookie": cookieHeader,
-    [MODEL_HEADER_NAME]: MODEL_HEADERS[model] || MODEL_HEADERS["gemini-3-pro"],
-  }, params.toString());
+    [MODEL_HEADER_NAME]: MODEL_HEADERS[model] || MODEL_HEADERS["gemini-3.1-pro"],
+  }, params.toString(), { timeoutMs, log, label: "geminiStreamGenerate", signal });
 
   const rawResponseText = res.text;
-  
+
   if (res.status < 200 || res.status >= 300) {
     return {
       rawResponseText,
@@ -471,15 +635,230 @@ async function runGeminiWebOnce(input) {
 }
 
 async function runGeminiWebWithFallback(input) {
+  throwIfAborted(input.signal);
   const attempt = await runGeminiWebOnce(input);
-  
+
   // Auto-fallback to flash if model unavailable
-  if (isModelUnavailable(attempt.errorCode) && input.model !== "gemini-2.5-flash") {
-    const fallback = await runGeminiWebOnce({ ...input, model: "gemini-2.5-flash" });
-    return { ...fallback, effectiveModel: "gemini-2.5-flash" };
+  if (isModelUnavailable(attempt.errorCode) && input.model !== "gemini-3.5-flash") {
+    const fallback = await runGeminiWebOnce({ ...input, model: "gemini-3.5-flash" });
+    return { ...fallback, effectiveModel: "gemini-3.5-flash" };
   }
-  
+
   return { ...attempt, effectiveModel: input.model };
+}
+
+// ============================================================================
+// In-Page Execution (for image generation)
+// ============================================================================
+
+async function runGeminiWebViaPage(input) {
+  const { prompt, files, model, timeoutMs = 120000, log = null, createTab, closeTab, jsEval, fetchUrl, uploadFile, signal } = input;
+  throwIfAborted(signal);
+  const guardedUploadFile = uploadFile
+    ? (...args) => raceAbort(() => uploadFile(...args), signal)
+    : uploadFile;
+  const guardedFetchUrl = fetchUrl
+    ? (...args) => raceAbort(() => fetchUrl(...args), signal)
+    : fetchUrl;
+
+  if (!createTab || !closeTab || !jsEval) {
+    throw new Error("In-page execution requires createTab, closeTab, and jsEval callbacks");
+  }
+
+  let tabId = null;
+  try {
+    if (log) log("Creating Gemini tab...");
+    const tabResult = await raceAbort(createTab, signal);
+    tabId = tabResult?.tabId;
+    if (!tabId) throw new Error("Failed to create Gemini tab");
+    if (log) log(`Gemini tab created: ${tabId}`);
+    await abortableDelay(12000, signal);
+
+    if (files?.length && uploadFile) {
+      const absFiles = files.map(f => path.resolve(process.cwd(), f));
+      if (log) log(`Uploading ${absFiles.length} file(s) via file chooser...`);
+      const result = await guardedUploadFile(tabId, absFiles);
+      if (result?.error) throw new Error(`File upload failed: ${result.error}`);
+      if (log) log("File uploaded, waiting for processing...");
+      await abortableDelay(3000, signal);
+    }
+
+    const checkJsResult = (result, context) => {
+      if (result?.error) throw new Error(`${context}: ${result.error}`);
+      if (result?.output === undefined) throw new Error(`${context}: no output`);
+      return result.output;
+    };
+
+    // Type prompt
+    const promptJson = JSON.stringify(prompt);
+    if (log) log("Typing prompt...");
+    const typeResult = await jsEval(tabId, `(() => {
+      const editor = document.querySelector('.ql-editor[contenteditable=true]');
+      if (!editor) return JSON.stringify({ error: "No editor found on page" });
+      editor.focus();
+      document.execCommand('selectAll', false, null);
+      document.execCommand('insertText', false, ${promptJson});
+      return JSON.stringify({ ok: true, len: editor.textContent.length });
+    })()`);
+    const typed = JSON.parse(JSON.parse(checkJsResult(typeResult, "Type prompt")));
+    if (typed.error) throw new Error(typed.error);
+
+    const beforeResult = await jsEval(tabId, `(() => {
+      const imageKey = (img) => {
+        const url = img.currentSrc || img.src || "";
+        return url + "|" + img.naturalWidth + "x" + img.naturalHeight;
+      };
+      const baselineKeys = Array.from(document.images)
+        .filter((img) => {
+          const url = img.currentSrc || img.src || "";
+          return img.naturalWidth >= 512
+            && img.naturalHeight >= 512
+            && (url.includes("gg-dl") || url.startsWith("blob:"));
+        })
+        .map(imageKey);
+      return JSON.stringify(baselineKeys);
+    })()`);
+    const baselineImageKeys = JSON.parse(JSON.parse(checkJsResult(beforeResult, "Count images")) || "[]");
+
+    if (log) log("Submitting...");
+    const sendResult = await jsEval(tabId, `(() => {
+      const btn = document.querySelector('button[aria-label="Send message"]');
+      if (!btn) return 'no-btn';
+      btn.click();
+      return 'sent';
+    })()`);
+    const sendVal = JSON.parse(checkJsResult(sendResult, "Click send"));
+    if (sendVal === "no-btn") throw new Error("Send button not found on Gemini page");
+
+    // Poll for response
+    if (log) log("Waiting for response...");
+    const deadline = Date.now() + timeoutMs;
+    let imageEntries = [];
+    let responseText = "";
+
+    while (Date.now() < deadline) {
+      await abortableDelay(2000, signal);
+      const pollResult = await jsEval(tabId, `(async () => {
+        const baselineKeys = new Set(${JSON.stringify(baselineImageKeys)});
+        const imageKey = (img) => {
+          const url = img.currentSrc || img.src || "";
+          return url + "|" + img.naturalWidth + "x" + img.naturalHeight;
+        };
+        const generatedImgs = Array.from(document.images)
+          .filter((img) => {
+            const url = img.currentSrc || img.src || "";
+            return img.naturalWidth >= 512
+              && img.naturalHeight >= 512
+              && (url.includes("gg-dl") || url.startsWith("blob:"));
+          })
+          .filter((img) => !baselineKeys.has(imageKey(img)));
+        window.__surfGeminiBlobImages = window.__surfGeminiBlobImages || [];
+        window.__surfGeminiBlobImageIndexes = window.__surfGeminiBlobImageIndexes || Object.create(null);
+        const images = await Promise.all(generatedImgs.map(async (img) => {
+          const url = img.currentSrc || img.src || "";
+          if (!url.startsWith("blob:")) return { url };
+          const key = imageKey(img);
+          if (Number.isInteger(window.__surfGeminiBlobImageIndexes[key])) {
+            return { url, blobIndex: window.__surfGeminiBlobImageIndexes[key], type: "image/png" };
+          }
+          const canvas = document.createElement("canvas");
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) throw new Error("Canvas context unavailable");
+          ctx.drawImage(img, 0, 0);
+          const dataUrl = canvas.toDataURL("image/png");
+          const blobIndex = window.__surfGeminiBlobImages.push({
+            url,
+            b64: dataUrl.split(",")[1],
+            type: "image/png",
+          }) - 1;
+          window.__surfGeminiBlobImageIndexes[key] = blobIndex;
+          return { url, blobIndex, type: "image/png" };
+        }));
+        const loading = !!document.querySelector('mat-progress-bar, .loading-indicator, message-loading');
+        const turns = document.querySelectorAll('message-content');
+        const lastTurn = turns.length ? turns[turns.length - 1] : null;
+        const text = lastTurn ? lastTurn.textContent?.trim() : "";
+        return JSON.stringify({ images, loading, text, turns: turns.length });
+      })()`);
+      const poll = JSON.parse(JSON.parse(checkJsResult(pollResult, "Poll response")));
+      const newImgs = poll.images || [];
+
+      if (newImgs.length > 0) {
+        imageEntries = newImgs;
+        responseText = poll.text || "";
+        if (log) log(`Found ${newImgs.length} generated image(s)`);
+        break;
+      }
+      if (!poll.loading && poll.text && poll.turns > 0) {
+        responseText = poll.text;
+        break;
+      }
+    }
+
+    if (!imageEntries.length && !responseText) {
+      throw new Error("Gemini response timed out");
+    }
+
+    // Download URL-backed images via extension; read blob images from the page in chunks.
+    const images = [];
+    for (const img of imageEntries) {
+      if (Number.isInteger(img?.blobIndex)) {
+        let b64 = "";
+        let offset = 0;
+        const chunkSize = 40000;
+        let type = img.type || "image/png";
+        while (true) {
+          const chunkResult = await jsEval(tabId, `(() => {
+            const item = window.__surfGeminiBlobImages?.[${img.blobIndex}];
+            if (!item) return JSON.stringify({ error: "Blob image not found" });
+            return JSON.stringify({
+              chunk: item.b64.slice(${offset}, ${offset + chunkSize}),
+              done: ${offset + chunkSize} >= item.b64.length,
+              type: item.type || "image/png",
+              url: item.url,
+            });
+          })()`);
+          const chunk = JSON.parse(JSON.parse(checkJsResult(chunkResult, "Read blob image chunk")));
+          if (chunk.error) throw new Error(chunk.error);
+          b64 += chunk.chunk || "";
+          type = chunk.type || type;
+          if (chunk.done) break;
+          offset += chunkSize;
+        }
+        images.push({ url: img.url, b64, type });
+        continue;
+      }
+      if (img?.url && fetchUrl) {
+        if (log) log(`Downloading image (${img.url.slice(0, 60)}...)...`);
+        const dlResult = await guardedFetchUrl(img.url);
+        if (dlResult?.b64) {
+          images.push({ url: img.url, b64: dlResult.b64, type: dlResult.type || "image/png" });
+        }
+      } else if (img?.url) {
+        images.push({ url: img.url });
+      }
+    }
+
+    return {
+      text: responseText,
+      thoughts: null,
+      metadata: null,
+      images,
+      effectiveModel: model,
+      _pageTabId: tabId,
+    };
+  } catch (err) {
+    if (tabId) {
+      try {
+        await closeTab(tabId);
+      } catch (closeError) {
+        log?.(`Failed to close Gemini tab ${tabId}: ${closeError?.message || closeError}`);
+      }
+    }
+    throw err;
+  }
 }
 
 // ============================================================================
@@ -489,37 +868,52 @@ async function runGeminiWebWithFallback(input) {
 async function query(options) {
   const {
     prompt,
-    model = "gemini-3-pro",
+    model = "gemini-3.1-pro",
     file,
     generateImage,
     editImage,
     output,
     youtube,
     aspectRatio,
-    timeout = 300000,
     getCookies,
+    createTab,
+    closeTab,
+    jsEval,
+    fetchUrl,
+    uploadFile,
+    timeout = 300000,
     log = () => {},
+    signal,
   } = options;
+  throwIfAborted(signal);
+  const hasPageCallbacks = !!(createTab && closeTab && jsEval);
+  const guardedJsEval = (...args) => raceAbort(() => jsEval(...args), signal);
 
   const startTime = Date.now();
   log("Starting Gemini query");
 
   // 1. Get cookies from Chrome
-  const cookieResponse = await getCookies();
+  const cookieResponse = await raceAbort(getCookies, signal);
   const cookies = cookieResponse?.cookies;
   if (!Array.isArray(cookies)) {
     throw new Error("Failed to get cookies from Chrome. Make sure the extension is loaded and Chrome is running.");
   }
   const cookieMap = buildCookieMap(cookies);
-  
+
   if (!hasRequiredCookies(cookieMap)) {
     throw new Error("Gemini login required. Sign into gemini.google.com in Chrome and try again.");
   }
-  
+
   log(`Got ${Object.keys(cookieMap).length} Gemini cookies`);
 
   // 2. Resolve model
-  const resolvedModel = MODEL_HEADERS[model] ? model : "gemini-3-pro";
+  let resolvedModel;
+  if (MODEL_HEADERS[model]) {
+    resolvedModel = model;
+  } else {
+    resolvedModel = "gemini-3.1-pro";
+    log(`Unknown Gemini model "${model}"; using "${resolvedModel}"`);
+  }
 
   // 3. Build prompt
   let fullPrompt = prompt || "";
@@ -542,56 +936,98 @@ async function query(options) {
 
   try {
     if (editImage) {
-      // Two-turn conversation for image editing
-      log("Uploading image for editing...");
-      const intro = await runGeminiWebWithFallback({
-        prompt: "Here is an image to edit",
+      // Image editing
+      if (!hasPageCallbacks) {
+        throw new Error("Image editing requires the Chrome extension. Make sure it's loaded.");
+      }
+
+      log("Uploading and editing image...");
+      const out = await runGeminiWebViaPage({
+        prompt: fullPrompt,
         files: [editImage],
         model: resolvedModel,
-        cookieMap,
-        chatMetadata: null,
-      });
-      
-      log("Sending edit request...");
-      const editPrompt = `Use image generation tool to ${fullPrompt}`;
-      const out = await runGeminiWebWithFallback({
-        prompt: editPrompt,
-        files,
-        model: resolvedModel,
-        cookieMap,
-        chatMetadata: intro.metadata,
+        timeoutMs: timeout,
+        log,
+        createTab,
+        closeTab,
+        jsEval: guardedJsEval,
+        fetchUrl,
+        uploadFile,
+        signal,
       });
 
       response = out;
-      
+
       // Save output image
       const outputPath = output || generateImage || "edited.png";
-      const imageSave = await saveFirstGeminiImage(out, cookieMap, outputPath);
-      if (!imageSave.saved) {
-        throw new Error(`No images generated. Response: ${out.text?.slice(0, 200) || "(empty)"}`);
+      const saveOpts = { timeoutMs: timeout, log, signal };
+      if (fetchUrl) saveOpts.fetchUrl = fetchUrl;
+      try {
+        const imageSave = await saveFirstGeminiImage(out, cookieMap, outputPath, saveOpts);
+        if (!imageSave.saved) {
+          throw new Error(`No images generated. Response: ${out.text?.slice(0, 200) || "(empty)"}`);
+        }
+      } finally {
+        if (out._pageTabId && closeTab) {
+          try {
+            await closeTab(out._pageTabId);
+          } catch (closeError) {
+            log(`Failed to close Gemini tab ${out._pageTabId}: ${closeError?.message || closeError}`);
+          }
+        }
       }
       imagePath = outputPath;
-      
+
     } else if (generateImage) {
       // Image generation
       log("Generating image...");
-      const out = await runGeminiWebWithFallback({
-        prompt: fullPrompt,
-        files,
-        model: resolvedModel,
-        cookieMap,
-        chatMetadata: null,
-      });
+      let out;
+      if (hasPageCallbacks) {
+        out = await runGeminiWebViaPage({
+          prompt: fullPrompt,
+          model: resolvedModel,
+          timeoutMs: timeout,
+          log,
+          createTab,
+          closeTab,
+          jsEval: guardedJsEval,
+          fetchUrl,
+          signal,
+        });
+      } else {
+        out = await runGeminiWebWithFallback({
+          prompt: fullPrompt,
+          files,
+          model: resolvedModel,
+          cookieMap,
+          chatMetadata: null,
+          timeoutMs: timeout,
+          log,
+          signal,
+        });
+      }
 
       response = out;
-      
+
       // Save output image
-      const imageSave = await saveFirstGeminiImage(out, cookieMap, generateImage);
-      if (!imageSave.saved) {
-        throw new Error(`No images generated. Response: ${out.text?.slice(0, 200) || "(empty)"}`);
+      const saveOpts = { timeoutMs: timeout, log, signal };
+      if (fetchUrl) saveOpts.fetchUrl = fetchUrl;
+      try {
+        const imageSave = await saveFirstGeminiImage(out, cookieMap, generateImage, saveOpts);
+        if (!imageSave.saved) {
+          throw new Error(`No images generated. Response: ${out.text?.slice(0, 200) || "(empty)"}`);
+        }
+      } finally {
+        if (out._pageTabId && closeTab) {
+          try {
+            await closeTab(out._pageTabId);
+          } catch (closeError) {
+            log(`Failed to close Gemini tab ${out._pageTabId}: ${closeError?.message || closeError}`);
+          }
+        }
       }
       imagePath = generateImage;
-      
+
     } else {
       // Text query
       log("Sending text query...");
@@ -601,11 +1037,15 @@ async function query(options) {
         model: resolvedModel,
         cookieMap,
         chatMetadata: null,
+        timeoutMs: timeout,
+        log,
+        signal,
       });
 
       response = out;
     }
   } catch (error) {
+    if (error?.code === "SURF_REQUEST_ABORTED") throw error;
     throw new Error(`Gemini request failed: ${error.message}`);
   }
 
@@ -627,10 +1067,12 @@ async function query(options) {
 // ============================================================================
 
 module.exports = {
+  httpsGet,
   query,
   hasRequiredCookies,
   buildCookieMap,
   parseGeminiStreamGenerateResponse,
+  runGeminiWebViaPage,
   REQUIRED_COOKIES,
   ALL_COOKIE_NAMES,
   GEMINI_APP_URL,

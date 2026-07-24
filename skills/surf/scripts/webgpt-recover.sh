@@ -12,6 +12,7 @@ Usage:
 Options:
   --artifact-dir DIR   Round/run artifact directory containing meta/raw/receipt files.
   --audit              Alias for recover; prints audit-oriented recovery JSON.
+  --finalize           Deprecated compatibility no-op; recover never resubmits.
   --help, -h           Show this help.
 USAGE
 }
@@ -23,6 +24,7 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --artifact-dir) artifact_dir="${2:-}"; shift 2 ;;
     --audit) audit=1; shift ;;
+    --finalize) shift ;;
     --help|-h) usage; exit 0 ;;
     *) echo "Unknown argument: $1" >&2; usage >&2; exit 2 ;;
   esac

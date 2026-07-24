@@ -202,6 +202,7 @@ Orchestration belongs in **`/ask`**. This skill provides **transport + proof** o
 | **Prose** | `$ask webkimi` | `kimi.submit` | Chrome; `kimi.com` tab |
 | **Design** | `$ask webgemini` | `gemini.submit` | Chrome; `gemini.google.com` tab |
 | **Research** | `$ask webperplexity` | `perplexity` | One-shot; not for multi-round review |
+| **X/Grok** | `$ask webgrok` or Tau `--handler webgrok` | `grok.submit` | Chrome; `grok.com`/`x.com/i/grok`; requires signed-in Grok access |
 | **Cursor IDE** | `$ask cursor-browser` | `cursor-browser.submit` | **viewId**; requires cursor-browser-bridge |
 
 In **Cursor**, when ChatGPT runs in the embedded Browser pane, use **`cursor-browser`** (self-contained). For **external Chrome** sessions, use the matching `*.submit` command with an explicit tab id.
@@ -758,7 +759,7 @@ surf cursor-browser.submit \
 - `controlled_view_id` in meta JSON is the **viewId**.
 
 
-### WebGemini / WebKimi / WebPerplexity (Chrome)
+### WebGemini / WebKimi / WebGrok / WebPerplexity (Chrome)
 
 Same sentinel proof contract as WebGPT where `*.submit` applies. Requires surf-cli extension (`/tmp/surf.sock`).
 
@@ -766,9 +767,23 @@ Same sentinel proof contract as WebGPT where `*.submit` applies. Requires surf-c
 |---|---|
 | "review design in Gemini", "ask Gemini about UX" | `surf gemini.submit --input REQ.md --output RESP.md --tab-id <id> [--no-activate]` |
 | "review prose in Kimi", "writing critique in Kimi" | `surf kimi.submit --input REQ.md --output RESP.md --tab-id <id> [--no-activate]` |
+| "ask Grok", "use WebGrok", "Grok seat" | `surf grok.submit --input REQ.md --output RESP.md [--tab-id <id>]` |
 | "research on Perplexity", "what is current about X" | `surf perplexity "question" [--no-activate]` (one-shot; no `--tab-id`) |
 
-Tab ids from `surf tab.list` filtered to `gemini.google.com` or `kimi.com`. Always pass explicit `--tab-id` when the human named a tab. Prefer `/ask webgemini`, `/ask webkimi`, `/ask webperplexity` for artifacts and bundle validation.
+Tab ids from `surf tab.list` filtered to `gemini.google.com`, `kimi.com`, `grok.com`, or `x.com`. Always pass explicit `--tab-id` when the human named a tab. Prefer `/ask webgemini`, `/ask webkimi`, `/ask webgrok`, `/ask webperplexity` for artifacts and bundle validation.
+
+`kimi.submit` defaults to Kimi **Instant** with **Reasoning High**. Do not use
+K3 for project-agent seats unless the human explicitly requests it. If Instant
+or Reasoning High cannot be selected or confirmed by the Kimi UI, the provider
+transport must fail closed instead of silently inheriting K3 from the tab.
+
+`grok.submit` is a downstream sentinel wrapper around upstream `surf grok`. It
+creates raw/clean/meta artifacts like the other submit wrappers. Current
+upstream Grok transport validates a live Grok/X tab before submit but does not
+yet provide the same exact-tab mutation guarantee as `webgpt.submit`; metadata
+records `tab_bound_control_proof:
+preflight_only_raw_grok_transport_not_exact_tab_targeted` until upstream Grok
+supports first-class `--tab-id`.
 
 ### Web oracle sanity (all browser backends)
 

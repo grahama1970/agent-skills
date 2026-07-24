@@ -29,7 +29,7 @@ export interface NetworkEntry {
   ts: number;                    // Request start timestamp (ms)
   duration?: number;             // Total time (ms)
   ttfb?: number;                 // Time to first byte (ms)
-  
+
   // Request
   method: string;
   url: string;
@@ -37,23 +37,23 @@ export interface NetworkEntry {
   requestHeaders: Record<string, string>;
   requestBody?: string;          // POST/PUT body
   requestBodySize?: number;
-  
-  // Response  
+
+  // Response
   status?: number;
   statusText?: string;
   mimeType?: string;
   responseHeaders?: Record<string, string>;
   responseBody?: string;         // Will be fetched via getResponseBody
   responseBodySize?: number;
-  
+
   // Metadata
   tabId: number;
   tabUrl?: string;               // Page URL that initiated request
   type?: string;                 // "xhr", "fetch", "document", etc.
-  
+
   // Flags
   flags: string[];               // ["binary", "truncated", "protobuf", "failed"]
-  
+
   // Internal tracking
   _requestId: string;            // CDP requestId for lazy loading
   _responseReceived: boolean;    // Whether response was received
@@ -154,27 +154,20 @@ export class CDPController {
 
   async attach(tabId: number): Promise<void> {
     if (this.targets.has(tabId)) return;
-    
+
     const target: Debuggee = { tabId };
     try {
       await chrome.debugger.attach(target, "1.3");
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
+      if (message.includes("Already attached")) {
+        this.targets.set(tabId, target);
+        return;
+      }
       if (message.includes("Cannot access") || message.includes("Cannot attach")) {
         throw new Error(`Cannot control this page. Chrome restricts automation on chrome://, extensions, and web store pages.`);
       }
-      if (message.includes("Another debugger is already attached")) {
-        try {
-          await chrome.debugger.detach(target);
-          await new Promise((resolve) => setTimeout(resolve, 250));
-          await chrome.debugger.attach(target, "1.3");
-        } catch (retryErr) {
-          const retryMessage = retryErr instanceof Error ? retryErr.message : String(retryErr);
-          throw new Error(`Failed to attach debugger: ${retryMessage}`);
-        }
-      } else {
-        throw new Error(`Failed to attach debugger: ${message}`);
-      }
+      throw new Error(`Failed to attach debugger: ${message}`);
     }
     this.targets.set(tabId, target);
 
@@ -357,7 +350,7 @@ export class CDPController {
       this.networkEntries.set(tabId, new Map());
     }
     const entriesMap = this.networkEntries.get(tabId)!;
-    
+
     // Generate unique ID
     const seq = ++this.networkEntrySeq;
     const entryId = `r_${timestamp}_${seq}`;
@@ -397,7 +390,7 @@ export class CDPController {
       const oldestKey = entriesMap.keys().next().value;
       if (oldestKey) entriesMap.delete(oldestKey);
     }
-    
+
     entriesMap.set(params.requestId, entry);
   }
 
@@ -442,18 +435,18 @@ export class CDPController {
     const entry = entriesMap?.get(params.requestId);
     if (entry && params.response) {
       const response = params.response;
-      
+
       // Calculate TTFB (time to first byte)
       const startTime = this.networkRequestStartTimes.get(params.requestId);
       const now = params.timestamp ? params.timestamp * 1000 : Date.now();
       if (startTime) {
         entry.ttfb = Math.round(now - startTime);
       }
-      
+
       entry.status = response.status;
       entry.statusText = response.statusText;
       entry.mimeType = response.mimeType;
-      
+
       // Extract response headers
       const responseHeaders: Record<string, string> = {};
       if (response.headers) {
@@ -462,19 +455,19 @@ export class CDPController {
         }
       }
       entry.responseHeaders = responseHeaders;
-      
+
       // Check if binary type
       if (this.isBinaryType(response.mimeType)) {
         entry.flags.push('binary');
       }
-      
+
       // Check for protobuf
-      if (response.mimeType?.includes('protobuf') || 
+      if (response.mimeType?.includes('protobuf') ||
           response.mimeType?.includes('x-protobuf') ||
           response.mimeType?.includes('application/grpc')) {
         entry.flags.push('protobuf');
       }
-      
+
       entry._responseReceived = true;
     }
   }
@@ -514,7 +507,7 @@ export class CDPController {
         entry.duration = Math.round(now - startTime);
       }
       this.networkRequestStartTimes.delete(params.requestId);
-      
+
       entry.status = 0;
       entry.flags.push('failed');
       entry._loadingFinished = true;
@@ -543,7 +536,7 @@ export class CDPController {
       }
 
       // Fetch response body for small non-static responses (< 16KB)
-      const shouldFetchBody = 
+      const shouldFetchBody =
         !this.isStaticAsset(existing.mimeType) &&
         !this.isBinaryType(existing.mimeType) &&
         (params.encodedDataLength || 0) <= CDPController.MAX_INLINE_BODY_SIZE;
@@ -553,7 +546,7 @@ export class CDPController {
           const result = await this.send(tabId, "Network.getResponseBody", {
             requestId: params.requestId,
           });
-          
+
           if (result.base64Encoded) {
             try {
               existing.responseBody = atob(result.body);
@@ -563,7 +556,7 @@ export class CDPController {
           } else {
             existing.responseBody = result.body;
           }
-          
+
           // Truncate if too large
           if (existing.responseBody && existing.responseBody.length > CDPController.MAX_INLINE_BODY_SIZE) {
             existing.responseBody = existing.responseBody.slice(0, CDPController.MAX_INLINE_BODY_SIZE);
@@ -592,7 +585,7 @@ export class CDPController {
     entry._loadingFinished = true;
 
     // Decide whether to fetch body inline
-    const shouldFetchBody = 
+    const shouldFetchBody =
       !this.isStaticAsset(entry.mimeType) &&
       !this.isBinaryType(entry.mimeType) &&
       (params.encodedDataLength || 0) <= CDPController.MAX_INLINE_BODY_SIZE;
@@ -602,7 +595,7 @@ export class CDPController {
         const result = await this.send(tabId, "Network.getResponseBody", {
           requestId: params.requestId,
         });
-        
+
         if (result.base64Encoded) {
           // Decode base64 for text content
           try {
@@ -614,7 +607,7 @@ export class CDPController {
         } else {
           entry.responseBody = result.body;
         }
-        
+
         // Check if truncated
         if (entry.responseBody && entry.responseBody.length > CDPController.MAX_INLINE_BODY_SIZE) {
           entry.responseBody = entry.responseBody.slice(0, CDPController.MAX_INLINE_BODY_SIZE);
@@ -740,7 +733,7 @@ export class CDPController {
   }
 
   async emulateDevice(
-    tabId: number, 
+    tabId: number,
     device: { width: number; height: number; deviceScaleFactor: number; mobile: boolean; touch?: boolean; userAgent?: string }
   ): Promise<{ success: boolean; error?: string }> {
     await this.ensureAttached(tabId);
@@ -752,14 +745,14 @@ export class CDPController {
         deviceScaleFactor: device.deviceScaleFactor,
         mobile: device.mobile,
       });
-      
+
       // Set user agent if provided
       if (device.userAgent) {
         await this.send(tabId, "Emulation.setUserAgentOverride", {
           userAgent: device.userAgent,
         });
       }
-      
+
       // Enable touch if specified
       if (device.touch) {
         await this.send(tabId, "Emulation.setTouchEmulationEnabled", {
@@ -767,7 +760,7 @@ export class CDPController {
           maxTouchPoints: 5,
         });
       }
-      
+
       return { success: true };
     } catch (e) {
       return { success: false, error: e instanceof Error ? e.message : String(e) };
@@ -787,21 +780,21 @@ export class CDPController {
   }
 
   async emulateViewport(
-    tabId: number, 
+    tabId: number,
     options: { width?: number; height?: number; deviceScaleFactor?: number; mobile?: boolean }
   ): Promise<{ success: boolean; error?: string }> {
     await this.ensureAttached(tabId);
     try {
       // Get current viewport size as defaults
       const viewport = await this.getViewportSize(tabId);
-      
+
       await this.send(tabId, "Emulation.setDeviceMetricsOverride", {
         width: options.width || viewport.width,
         height: options.height || viewport.height,
         deviceScaleFactor: options.deviceScaleFactor || 1,
         mobile: options.mobile || false,
       });
-      
+
       return { success: true };
     } catch (e) {
       return { success: false, error: e instanceof Error ? e.message : String(e) };
@@ -1034,7 +1027,7 @@ export class CDPController {
     // First try the full entries map
     const entriesMap = this.networkEntries.get(tabId);
     let entries: NetworkEntry[] = [];
-    
+
     if (entriesMap && entriesMap.size > 0) {
       entries = Array.from(entriesMap.values());
     } else {
@@ -1092,12 +1085,12 @@ export class CDPController {
     error?: string;
   }> {
     await this.ensureAttached(tabId);
-    
+
     try {
       const result = await this.send(tabId, "Network.getResponseBody", {
         requestId,
       });
-      
+
       return {
         success: true,
         body: result.body,
@@ -1153,22 +1146,30 @@ export class CDPController {
     try {
       await this.send(tabId, "Runtime.enable");
     } catch (e) {}
-    
+
     return this.send(tabId, "Runtime.evaluate", {
       expression,
       returnByValue: true,
       awaitPromise: true,
-      timeout: 10000,
+      timeout: 30000,
     });
   }
 
-  private async send(tabId: number, method: string, params?: object): Promise<any> {
+  private async send(
+    tabId: number,
+    method: string,
+    params?: { [key: string]: unknown },
+  ): Promise<any> {
     await this.ensureAttached(tabId);
     const target = this.targets.get(tabId)!;
     return chrome.debugger.sendCommand(target, method, params);
   }
 
-  async sendCommand(tabId: number, method: string, params?: object): Promise<any> {
+  async sendCommand(
+    tabId: number,
+    method: string,
+    params?: { [key: string]: unknown },
+  ): Promise<any> {
     return this.send(tabId, method, params);
   }
 
@@ -1408,7 +1409,7 @@ export class CDPController {
 
   private getKeyDefinition(key: string): KeyDefinition | null {
     const lowerKey = key.toLowerCase();
-    
+
     if (KEY_DEFINITIONS[lowerKey]) {
       return KEY_DEFINITIONS[lowerKey];
     }
@@ -1428,7 +1429,7 @@ export class CDPController {
 
   parseModifiers(modifierString?: string): number {
     if (!modifierString) return 0;
-    
+
     let result = 0;
     const parts = modifierString.toLowerCase().split("+");
     for (const part of parts) {

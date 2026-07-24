@@ -21,6 +21,7 @@ type ChromeMock = {
     get: ReturnType<typeof vi.fn>;
     create: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
+    move: ReturnType<typeof vi.fn>;
     remove: ReturnType<typeof vi.fn>;
     sendMessage: ReturnType<typeof vi.fn>;
     onUpdated: {
@@ -46,6 +47,7 @@ type ChromeMock = {
     };
   };
   webNavigation: {
+    getAllFrames: ReturnType<typeof vi.fn>;
     onCompleted: {
       addListener: ReturnType<typeof vi.fn>;
       removeListener: ReturnType<typeof vi.fn>;
@@ -72,6 +74,7 @@ type ChromeMock = {
     connectNative: ReturnType<typeof vi.fn>;
     lastError: null | { message: string };
     getURL: ReturnType<typeof vi.fn>;
+    reload: ReturnType<typeof vi.fn>;
     id: string;
   };
   storage: {
@@ -99,6 +102,7 @@ type ChromeMock = {
     get: ReturnType<typeof vi.fn>;
     getAll: ReturnType<typeof vi.fn>;
     getCurrent: ReturnType<typeof vi.fn>;
+    getLastFocused: ReturnType<typeof vi.fn>;
   };
   scripting: {
     executeScript: ReturnType<typeof vi.fn>;
@@ -119,6 +123,7 @@ export function createChromeMock(): ChromeMock {
       get: vi.fn().mockResolvedValue(null),
       create: vi.fn().mockResolvedValue({ id: 1 }),
       update: vi.fn().mockResolvedValue({}),
+      move: vi.fn().mockResolvedValue({}),
       remove: vi.fn().mockResolvedValue(undefined),
       sendMessage: vi.fn().mockResolvedValue(undefined),
       onUpdated: {
@@ -144,6 +149,7 @@ export function createChromeMock(): ChromeMock {
       },
     },
     webNavigation: {
+      getAllFrames: vi.fn().mockResolvedValue([]),
       onCompleted: {
         addListener: vi.fn(),
         removeListener: vi.fn(),
@@ -175,6 +181,7 @@ export function createChromeMock(): ChromeMock {
       }),
       lastError: null,
       getURL: vi.fn((path: string) => `chrome-extension://mock-id/${path}`),
+      reload: vi.fn(),
       id: "mock-extension-id",
     },
     storage: {
@@ -202,6 +209,7 @@ export function createChromeMock(): ChromeMock {
       get: vi.fn().mockResolvedValue(null),
       getAll: vi.fn().mockResolvedValue([]),
       getCurrent: vi.fn().mockResolvedValue({ id: 1 }),
+      getLastFocused: vi.fn().mockResolvedValue({ id: 1 }),
     },
     scripting: {
       executeScript: vi.fn().mockResolvedValue([]),
@@ -256,6 +264,7 @@ export function createMockTab(overrides: Partial<chrome.tabs.Tab> = {}): chrome.
     status: "complete",
     discarded: false,
     autoDiscardable: true,
+    frozen: false,
     groupId: -1,
     ...overrides,
   };

@@ -9,6 +9,3 @@ dist/
 coverage/
 .playwright-mcp/
 FEATURE_COMPARISON.md
-
-# Fork-specific local content (not for upstream)
-local/

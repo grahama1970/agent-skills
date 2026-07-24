@@ -30,6 +30,7 @@ sentinel=""
 timeout_s=12
 wait_for_sentinel=0
 stable_polls=3
+stable_polls_seen=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -40,7 +41,7 @@ while [[ $# -gt 0 ]]; do
     --sentinel) sentinel="${2:-}"; shift 2 ;;
     --timeout) timeout_s="${2:-}"; shift 2 ;;
     --wait) wait_for_sentinel=1; shift ;;
-    --stable-polls) stable_polls="${2:-}"; shift 2 ;;
+    --stable-polls) stable_polls="${2:-}"; stable_polls_seen=1; shift 2 ;;
     --help|-h) usage; exit 0 ;;
     *) echo "Unknown argument: $1" >&2; usage >&2; exit 2 ;;
   esac
@@ -56,6 +57,16 @@ if [[ ! "$tab_id" =~ ^[0-9]+$ ]]; then
   exit 2
 fi
 requested_tab_id="$tab_id"
+
+auto_sentinel=0
+if [[ "$sentinel" == "auto" ]]; then
+  auto_sentinel=1
+  sentinel=""
+  wait_for_sentinel=1
+fi
+if [[ "$stable_polls_seen" -eq 1 && -z "$sentinel" ]]; then
+  wait_for_sentinel=1
+fi
 
 raw_output="${raw_output:-${output}.raw.md}"
 meta_output="${meta_output:-${output}.meta.json}"
@@ -82,9 +93,9 @@ finished_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 cp "$raw_tmp" "$raw_output"
 
 if [[ $status -ne 0 ]]; then
-  python3 - "$meta_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "$status" "$requested_tab_id" <<'PY'
+  python3 - "$meta_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "$status" "$requested_tab_id" "$auto_sentinel" <<'PY'
 import json, pathlib, sys
-meta, out, raw, err, sentinel, started, finished, status, tab_id = sys.argv[1:]
+meta, out, raw, err, sentinel, started, finished, status, tab_id, auto_sentinel = sys.argv[1:]
 pathlib.Path(meta).write_text(json.dumps({
     "status": "failed",
     "exit_code": int(status),
@@ -92,6 +103,7 @@ pathlib.Path(meta).write_text(json.dumps({
     "raw_output": raw,
     "stderr_log": err,
     "sentinel": sentinel or None,
+    "sentinel_auto_recovery": auto_sentinel == "1",
     "requested_tab_id": tab_id,
     "controlled_tab_id": tab_id,
     "started_at": started,
@@ -112,7 +124,8 @@ pathlib.Path(meta).write_text(json.dumps({
     "output": out,
     "raw_output": raw,
     "stderr_log": err,
-    "sentinel": sentinel,
+    "sentinel": sentinel or None,
+    "sentinel_auto_recovery": False,
     "requested_tab_id": tab_id,
     "controlled_tab_id": tab_id,
     "raw_contains_sentinel": sentinel in raw_text,
@@ -140,9 +153,9 @@ if sentinel:
 pathlib.Path(out_path).write_text(text if text.endswith("\n") else text + "\n")
 PY
 
-python3 - "$meta_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "$requested_tab_id" <<'PY'
+python3 - "$meta_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "$requested_tab_id" "$auto_sentinel" <<'PY'
 import json, pathlib, sys
-meta, out, raw, err, sentinel, started, finished, tab_id = sys.argv[1:]
+meta, out, raw, err, sentinel, started, finished, tab_id, auto_sentinel = sys.argv[1:]
 raw_text = pathlib.Path(raw).read_text()
 out_text = pathlib.Path(out).read_text()
 pathlib.Path(meta).write_text(json.dumps({
@@ -151,6 +164,7 @@ pathlib.Path(meta).write_text(json.dumps({
     "raw_output": raw,
     "stderr_log": err,
     "sentinel": sentinel or None,
+    "sentinel_auto_recovery": auto_sentinel == "1",
     "requested_tab_id": tab_id,
     "controlled_tab_id": tab_id,
     "response_source": "assistant-dom",

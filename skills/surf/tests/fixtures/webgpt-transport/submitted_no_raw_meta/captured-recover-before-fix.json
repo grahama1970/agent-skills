@@ -1,0 +1,24 @@
+{
+  "state": "unknown",
+  "reason": "Submitted run is missing raw/meta transport artifacts.",
+  "next_command": "NEEDS_ATTENTION: missing_webgpt_transport_artifacts",
+  "do_not_do": [
+    "do_not_claim_completion",
+    "do_not_retry_submit_blindly"
+  ],
+  "needs_attention": "NEEDS_ATTENTION: missing_webgpt_transport_artifacts",
+  "claim": {
+    "available": false,
+    "tab_id": null,
+    "sentinel": null,
+    "output": "02_response.md",
+    "raw_output": "02_response.raw.md",
+    "meta_output": "02_response.meta.json",
+    "wait": true,
+    "stable_polls": 3
+  },
+  "schema": "surf.webgpt_recover.v1",
+  "artifact_dir": "issue-981-handler-webgpt",
+  "response_raw_path": null,
+  "response_meta_path": null
+}

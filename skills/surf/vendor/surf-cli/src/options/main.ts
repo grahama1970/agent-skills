@@ -2,7 +2,7 @@ const app = document.getElementById("app")!;
 
 app.innerHTML = `
   <h1 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1.5rem;">Surf Settings</h1>
-  
+
   <section style="margin-bottom: 2rem;">
     <h2 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem;">Debug Mode</h2>
     <label style="display: flex; align-items: center; gap: 0.5rem;">
@@ -10,7 +10,7 @@ app.innerHTML = `
       <span>Enable debug logging</span>
     </label>
   </section>
-  
+
   <section style="margin-bottom: 2rem;">
     <h2 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem;">Static Indicator</h2>
     <label style="display: flex; align-items: center; gap: 0.5rem;">
@@ -21,7 +21,7 @@ app.innerHTML = `
       How often the static indicator checks if Surf is still active (5-60 seconds).
     </p>
   </section>
-  
+
   <section style="margin-bottom: 2rem;">
     <h2 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 1rem;">About</h2>
     <p class="muted">
