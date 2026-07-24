@@ -16,7 +16,7 @@ const { SURF_TMP, formatSocketError } = require("./socket-path.cjs");
 const { acquireBrowserLock } = require("./browser-lock.cjs");
 const { selectEndpoint, connectEndpoint, formatEndpointError } = require("./endpoint.cjs");
 const { createFrameParser, createSocketWriter, writeFrame } = require("./remote-transport.cjs");
-const { resolveRequestDeadlineMs } = require("./host-sessions.cjs");
+const { resolveRequestDeadlineMs, toolRequiresBrowserLease } = require("./host-sessions.cjs");
 const { AUTO_SCREENSHOT_TOOLS, prepareRemoteTool, validateLocalToolPaths } = require("./file-transfer.cjs");
 const { authorizeClient, listClients, revokeClient, getStateDir } = require("./remote-auth.cjs");
 if (IS_WIN) { try { fs.mkdirSync(SURF_TMP, { recursive: true }); } catch {} }
@@ -2988,7 +2988,7 @@ delete toolArgs["no-screenshot"];
 const softFail = toolArgs["soft-fail"] === true;
 delete toolArgs["soft-fail"];
 
-const lockOptions = parseBrowserLockOptions(toolArgs["no-lock"] === true);
+const lockOptions = parseBrowserLockOptions(toolArgs["no-lock"] === true || !toolRequiresBrowserLease(tool));
 delete toolArgs["no-lock"];
 
 if (!noScreenshot && AUTO_SCREENSHOT_TOOLS.includes(tool)) {

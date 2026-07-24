@@ -24,6 +24,17 @@ const PROVIDER_DEFAULT_TIMEOUT_SECONDS = {
   grok: 300,
   perplexity: 120,
 };
+const LEASE_BYPASS_TOOLS = new Set([
+  "extension.ping",
+  "focus.state",
+  "tab.list",
+  "tab.named",
+  "window.list",
+]);
+
+function toolRequiresBrowserLease(tool) {
+  return !LEASE_BYPASS_TOOLS.has(tool);
+}
 
 function resolveRequestDeadlineMs(tool, args = {}) {
   const defaultSeconds = PROVIDER_DEFAULT_TIMEOUT_SECONDS[tool];
@@ -117,7 +128,7 @@ class HostSessionManager {
     context.stream = false;
   }
 
-  beginRequest(context, { id, tool, deadlineMs }) {
+  beginRequest(context, { id, tool, deadlineMs, requiresLease = true }) {
     if (context.closed) return Promise.reject(new Error("connection is closed"));
     if (context.workTimer) {
       clearTimeout(context.workTimer);
@@ -139,12 +150,19 @@ class HostSessionManager {
       startedAt: Date.now(),
       deadlineMs: Math.min(Math.max(deadlineMs || DEFAULT_DEADLINE_MS, 1), MAX_DEADLINE_MS),
       queued: true,
+      requiresLease,
       settled: false,
       controller,
       signal: controller.signal,
       tombstoned: false,
     };
     context.activeRequest = request;
+    if (!requiresLease) {
+      request.queued = false;
+      request.timer = setTimeout(() => this.onRequestTimeout(context, request), request.deadlineMs);
+      this.audit({ event: "lease", context, request, outcome: "bypassed" });
+      return Promise.resolve(request);
+    }
     const grant = () => {
       if (context.closed) return Promise.reject(new Error("connection closed while waiting for browser lease"));
       request.queued = false;
@@ -266,9 +284,11 @@ module.exports = {
   AUTHENTICATED_IDLE_MS,
   DEFAULT_DEADLINE_MS,
   HostSessionManager,
+  LEASE_BYPASS_TOOLS,
   MAX_DEADLINE_MS,
   PROVIDER_DEFAULT_TIMEOUT_SECONDS,
   resolveRequestDeadlineMs,
+  toolRequiresBrowserLease,
   LEASE_IDLE_MS,
   MAX_CONNECTIONS,
   MAX_PRINCIPAL_CONNECTIONS,

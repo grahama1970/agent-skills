@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 const {
   AUTHENTICATED_IDLE_MS,
   HostSessionManager,
+  LEASE_BYPASS_TOOLS,
   LEASE_IDLE_MS,
   MAX_CONNECTIONS,
   MAX_PRINCIPAL_CONNECTIONS,
@@ -10,6 +11,7 @@ const {
   MAX_WAITERS,
   QUEUE_TIMEOUT_MS,
   resolveRequestDeadlineMs,
+  toolRequiresBrowserLease,
 } = require("../../native/host-sessions.cjs") as {
   HostSessionManager: new (
     options?: Record<string, unknown>,
@@ -21,7 +23,7 @@ const {
     ): void;
     beginRequest(
       context: Record<string, unknown>,
-      options: { id: string; tool: string; deadlineMs?: number },
+      options: { id: string; tool: string; deadlineMs?: number; requiresLease?: boolean },
     ): Promise<Record<string, unknown>>;
     canRespond(context: Record<string, unknown>, id: string): boolean;
     complete(context: Record<string, unknown>, id: string, outcome?: string): void;
@@ -31,12 +33,14 @@ const {
   };
   AUTHENTICATED_IDLE_MS: number;
   LEASE_IDLE_MS: number;
+  LEASE_BYPASS_TOOLS: Set<string>;
   MAX_CONNECTIONS: number;
   MAX_PRINCIPAL_CONNECTIONS: number;
   MAX_REMOTE_CONNECTIONS: number;
   MAX_WAITERS: number;
   QUEUE_TIMEOUT_MS: number;
   resolveRequestDeadlineMs(tool: string, args?: Record<string, unknown>): number;
+  toolRequiresBrowserLease(tool: string): boolean;
 };
 
 const contexts: Array<Record<string, unknown>> = [];
@@ -197,6 +201,54 @@ describe("host session manager", () => {
     sessions.complete(first, "held");
     sessions.close(first);
     sessions.close(second);
+  });
+
+  it("lets explicit observation requests bypass a held browser lease", async () => {
+    const sessions = manager();
+    const owner = connection(sessions);
+    const observer = connection(sessions);
+    const queuedContext = connection(sessions);
+    await sessions.beginRequest(owner, { id: "held", tool: "chatgpt" });
+
+    const observed = await sessions.beginRequest(observer, {
+      id: "observe",
+      tool: "tab.list",
+      requiresLease: false,
+    });
+    let queuedGranted = false;
+    const queued = sessions.beginRequest(queuedContext, { id: "queued", tool: "click" }).then(() => {
+      queuedGranted = true;
+    });
+    await Promise.resolve();
+
+    expect(observed.id).toBe("observe");
+    expect(queuedGranted).toBe(false);
+    sessions.complete(observer, "observe");
+    await Promise.resolve();
+    expect(queuedGranted).toBe(false);
+
+    sessions.complete(owner, "held");
+    await queued;
+    expect(queuedGranted).toBe(true);
+    sessions.complete(queuedContext, "queued");
+    sessions.close(owner);
+    sessions.close(observer);
+    sessions.close(queuedContext);
+  });
+
+  it("classifies only safe observation tools as browser-lease bypasses", () => {
+    expect([...LEASE_BYPASS_TOOLS].sort()).toEqual([
+      "extension.ping",
+      "focus.state",
+      "tab.list",
+      "tab.named",
+      "window.list",
+    ]);
+    expect(toolRequiresBrowserLease("tab.list")).toBe(false);
+    expect(toolRequiresBrowserLease("extension.ping")).toBe(false);
+    expect(toolRequiresBrowserLease("chatgpt")).toBe(true);
+    expect(toolRequiresBrowserLease("click")).toBe(true);
+    expect(toolRequiresBrowserLease("tab.reload")).toBe(true);
   });
 
   it("does not audit queued disconnects as abandoned active work", async () => {

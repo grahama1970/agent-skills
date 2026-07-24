@@ -23,7 +23,7 @@ const { SOCKET_PATH, SURF_TMP } = require("./socket-path.cjs");
 const { parseListenEndpoint } = require("./listener.cjs");
 const { getStateDir } = require("./remote-auth.cjs");
 const { createFrameParser, createServerAuthSession, createSocketWriter, isClientAuthorized, writeFrame, MAX_FRAME_BYTES } = require("./remote-transport.cjs");
-const { HostSessionManager, resolveRequestDeadlineMs } = require("./host-sessions.cjs");
+const { HostSessionManager, resolveRequestDeadlineMs, toolRequiresBrowserLease } = require("./host-sessions.cjs");
 const { abortError, throwIfAborted } = require("./abort.cjs");
 const { BoundedAiQueue } = require("./ai-queue.cjs");
 const { RequestPendingMap } = require("./request-pending.cjs");
@@ -1886,7 +1886,12 @@ const handleClient = (socket) => {
       let request;
       try {
         const deadlineMs = TEST_REQUEST_DEADLINE_MS || resolveRequestDeadlineMs(tool, msg.params?.args);
-        request = await sessionManager.beginRequest(context, { id: msg.id, tool, deadlineMs });
+        request = await sessionManager.beginRequest(context, {
+          id: msg.id,
+          tool,
+          deadlineMs,
+          requiresLease: toolRequiresBrowserLease(tool),
+        });
         request.context = context;
       } catch (error) {
         if (transferState) await discardRequestTransfers(msg, transferState);

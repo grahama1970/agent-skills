@@ -1157,4 +1157,65 @@ describe("CLI argument parsing", () => {
       cleanupSocket(socketPath);
     }
   });
+
+  it("auto-bypasses the browser lock for observation commands", async () => {
+    const socketPath = createSocketPath();
+    cleanupSocket(socketPath);
+    let requestCount = 0;
+    let resolveFirstRequest!: () => void;
+    let resolveSecondRequest!: () => void;
+    const firstRequest = new Promise<void>((resolve) => {
+      resolveFirstRequest = resolve;
+    });
+    const secondRequest = new Promise<void>((resolve) => {
+      resolveSecondRequest = resolve;
+    });
+
+    const server = net.createServer((socket: any) => {
+      let buffer = "";
+      socket.on("data", (chunk: { toString(): string }) => {
+        buffer += chunk.toString();
+        const lineEnd = buffer.indexOf("\n");
+        if (lineEnd === -1) {
+          return;
+        }
+
+        const request = JSON.parse(buffer.slice(0, lineEnd));
+        buffer = buffer.slice(lineEnd + 1);
+        requestCount++;
+        if (requestCount === 1) {
+          resolveFirstRequest();
+          setTimeout(() => {
+            socket.write(`${JSON.stringify({ id: request.id, result: { text: "first" } })}\n`);
+            socket.end();
+          }, 300);
+          return;
+        }
+
+        resolveSecondRequest();
+        socket.write(`${JSON.stringify({ id: request.id, result: { tabs: [] } })}\n`);
+        socket.end();
+      });
+    });
+
+    await new Promise<void>((resolve, reject) => {
+      server.on("error", reject);
+      server.listen(socketPath, resolve);
+    });
+
+    try {
+      const first = spawnCliWithSocket(["page.text"], socketPath);
+      await waitFor(firstRequest, 1000, "first request");
+      const second = spawnCliWithSocket(["tab.list"], socketPath);
+      await waitFor(secondRequest, 200, "second observation request");
+      const [firstDone, secondDone] = await Promise.all([first.done, second.done]);
+
+      expect(firstDone.code).toBe(0);
+      expect(secondDone.code).toBe(0);
+      expect(requestCount).toBe(2);
+    } finally {
+      server.close();
+      cleanupSocket(socketPath);
+    }
+  });
 });
