@@ -14,7 +14,7 @@
       "intent_tone": "deflect_calm",
       "matrix_status": "failed",
       "render": {
-        "audio_bytes": 314958,
+        "audio_bytes": 301518,
         "audio_on_disk": true,
         "failed_gates": [],
         "ok": true
@@ -36,7 +36,7 @@
       "intent_tone": "careful_concerned",
       "matrix_status": "failed",
       "render": {
-        "audio_bytes": 286158,
+        "audio_bytes": 276558,
         "audio_on_disk": true,
         "failed_gates": [],
         "ok": true
@@ -58,7 +58,7 @@
       "intent_tone": "deflect_calm",
       "matrix_status": "passed",
       "render": {
-        "audio_bytes": 278478,
+        "audio_bytes": 234318,
         "audio_on_disk": true,
         "failed_gates": [],
         "ok": true
@@ -80,7 +80,7 @@
       "intent_tone": "one_at_a_time_interrupt",
       "matrix_status": "failed",
       "render": {
-        "audio_bytes": 145998,
+        "audio_bytes": 153678,
         "audio_on_disk": true,
         "failed_gates": [],
         "ok": true
@@ -88,8 +88,8 @@
       "shuffled_tone": "one_at_a_time_interrupt"
     }
   ],
-  "created_at": "2026-07-23T21:02:16Z",
-  "dream_profile": "dream_auto_cycle_20260723T102522Z",
+  "created_at": "2026-07-24T01:46:53Z",
+  "dream_profile": "dream_auto_cycle_20260723T234851Z",
   "live": true,
   "passed": true,
   "path": "live /intent -> persona_affect_composer -> live /tau/voice-render",
