@@ -349,6 +349,10 @@ elif failure == "chatgpt_empty_response_after_submit":
     proof_status = "submitted_no_response_proof" if submitted else "delivery_not_proven"
     diagnosis = "ChatGPT accepted or was invoked for the controlled tab, but Surf captured an empty response after the wait budget; this often indicates long-conversation degradation without the visible max-length banner."
     action = "Do not treat this as a parser or download failure. Bind or create a fresh ChatGPT conversation for the next attempt and preserve this meta as the degradation receipt."
+elif failure == "partial_response_still_generating":
+    proof_status = "submitted_response_still_generating" if submitted else "delivery_not_proven"
+    diagnosis = "ChatGPT started rendering a response, but Surf captured only a tiny non-sentinel fragment; the assistant turn is not complete enough to finalize."
+    action = "Do not use output as proof or commit extracted records. Wait for the same controlled tab to finish, then run webgpt.extract with the exact sentinel."
 elif failure == "stale_cdp_on_explicit_tab":
     proof_status = "not_submitted"
     diagnosis = "Surf could not attach CDP to the explicitly requested tab in no-activate mode."
@@ -1699,9 +1703,8 @@ fi
 if ! grep -Fq "$sentinel" "$raw_output"; then
   attempt_extract_fallback "missing_sentinel" || true
   if ! grep -Fq "$sentinel" "$raw_output"; then
-    cp "$raw_output" "$output"
   python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" "${identity_preflight_json:-}" "$roundtrip_preflight" "$roundtrip_preflight_status" "$roundtrip_preflight_dir" "$roundtrip_preflight_json" <<'PY'
-import json, pathlib, sys
+import json, os, pathlib, sys
 meta, inp, submitted, out, raw, err, sentinel, started, finished, requested_tab_id, target_url, model, reasoning, identity_s, roundtrip_required_s, roundtrip_status_s, roundtrip_dir, roundtrip_s = sys.argv[1:]
 try:
     identity = json.loads(identity_s) if identity_s else None
@@ -1712,7 +1715,6 @@ try:
 except Exception:
     roundtrip = {"status": "invalid_json", "stdout_tail": (roundtrip_s or "")[-2000:]}
 raw_text = pathlib.Path(raw).read_text() if pathlib.Path(raw).exists() else ""
-out_text = pathlib.Path(out).read_text() if pathlib.Path(out).exists() else ""
 stderr_text = pathlib.Path(err).read_text() if pathlib.Path(err).exists() else ""
 response_timed_out = None
 timeout_error = None
@@ -1798,11 +1800,38 @@ empty_response_after_submit = (
     and not conversation_max_length_detected
     and (response_timed_out is True or bool(timeout_error) or "Response timeout" in stderr_text or "timed out" in stderr_text.lower())
 )
-failure = "chatgpt_empty_response_after_submit" if empty_response_after_submit else "missing_sentinel"
-blocker = "BLOCKED_WEBGPT_EMPTY_RESPONSE_AFTER_SUBMIT" if empty_response_after_submit else None
-recommended_action = "retry_with_fresh_chatgpt_conversation" if empty_response_after_submit else None
+try:
+    min_final_raw_chars = int(os.environ.get("SURF_WEBGPT_MIN_FINAL_RAW_CHARS", "32"))
+except Exception:
+    min_final_raw_chars = 32
+partial_response_still_generating = (
+    bool(raw_text.strip())
+    and len(raw_text) < max(1, min_final_raw_chars)
+    and sentinel not in raw_text
+)
+if partial_response_still_generating:
+    pathlib.Path(out).write_text("", encoding="utf-8")
+else:
+    pathlib.Path(out).write_text(raw_text, encoding="utf-8")
+out_text = pathlib.Path(out).read_text() if pathlib.Path(out).exists() else ""
+if empty_response_after_submit:
+    failure = "chatgpt_empty_response_after_submit"
+elif partial_response_still_generating:
+    failure = "partial_response_still_generating"
+else:
+    failure = "missing_sentinel"
+blocker = (
+    "BLOCKED_WEBGPT_EMPTY_RESPONSE_AFTER_SUBMIT" if empty_response_after_submit
+    else "BLOCKED_WEBGPT_PARTIAL_RESPONSE_STILL_GENERATING" if partial_response_still_generating
+    else None
+)
+recommended_action = (
+    "retry_with_fresh_chatgpt_conversation" if empty_response_after_submit
+    else "wait_and_recover_same_tab_with_webgpt_extract" if partial_response_still_generating
+    else None
+)
 pathlib.Path(meta).write_text(json.dumps({
-    "status": "failed" if empty_response_after_submit else "missing_sentinel",
+    "status": "failed" if (empty_response_after_submit or partial_response_still_generating) else "missing_sentinel",
     "failure": failure,
     "blocker": blocker,
     "recommended_action": recommended_action,
@@ -1833,6 +1862,8 @@ pathlib.Path(meta).write_text(json.dumps({
     "raw_chars": len(raw_text),
     "clean_chars": len(out_text),
     "raw_response_advisory": bool(raw_text),
+    "partial_response_still_generating": partial_response_still_generating,
+    "min_final_raw_chars": min_final_raw_chars,
     "conversation_max_length_detected": conversation_max_length_detected,
     "conversation_max_length_rollover": {
         "attempted": bool(conversation_max_length_rollover_from_tab or conversation_max_length_rollover_to_tab or conversation_max_length_rollover_error),
