@@ -1,0 +1,223 @@
+{
+  "schema": "persona_dream.conflict_is_personality.v1",
+  "n": 13,
+  "theory": "operator 2026-07-24: conflict/instability IS personality; groundedness/stability is the wrong axis for the dream's contribution",
+  "dream_vs_memory": {
+    "mean_affect_entropy": {
+      "D": 0.969,
+      "M": 0.513
+    },
+    "holds_both_valences": {
+      "D": "5/13",
+      "M": "2/13"
+    },
+    "mean_conflict_balance": {
+      "D": 0.119,
+      "M": 0.03
+    }
+  },
+  "finding": "On conflict/instability the dream decisively exceeds the flat extractive memory-reading (entropy ~2x, holds-both-valences 2.5x, conflict-balance ~4x). This is the axis where D>M, complementing the D~=M grounding null: dreams add TENSION not GROUNDEDNESS.",
+  "caveats": [
+    "profile-structure metric (the dream's affect profile is more internally conflicted); NOT yet a perceived-personality or behavioral measure",
+    "valence sign map is a coarse 5-tag heuristic",
+    "n=13",
+    "the variation engine (Amendment 2: same memory dreamed +/- emphasis) is instability made mechanical and is the natural next measurement unit"
+  ],
+  "per_cycle": [
+    {
+      "cycle": "cycle_20260722T184531Z",
+      "D": {
+        "n_tags": 3,
+        "entropy": 1.095,
+        "holds_both_valences": false,
+        "conflict_balance": 0.0
+      },
+      "M": {
+        "n_tags": 1,
+        "entropy": -0.0,
+        "holds_both_valences": false,
+        "conflict_balance": 0.0
+      }
+    },
+    {
+      "cycle": "cycle_20260722T201426Z",
+      "D": {
+        "n_tags": 2,
+        "entropy": 0.69,
+        "holds_both_valences": false,
+        "conflict_balance": 0.0
+      },
+      "M": {
+        "n_tags": 2,
+        "entropy": 0.655,
+        "holds_both_valences": false,
+        "conflict_balance": 0.0
+      }
+    },
+    {
+      "cycle": "cycle_20260722T203423Z",
+      "D": {
+        "n_tags": 3,
+        "entropy": 1.095,
+        "holds_both_valences": false,
+        "conflict_balance": 0.0
+      },
+      "M": {
+        "n_tags": 2,
+        "entropy": 0.678,
+        "holds_both_valences": false,
+        "conflict_balance": 0.0
+      }
+    },
+    {
+      "cycle": "cycle_20260722T222024Z",
+      "D": {
+        "n_tags": 2,
+        "entropy": 0.688,
+        "holds_both_valences": false,
+        "conflict_balance": 0.0
+      },
+      "M": {
+        "n_tags": 2,
+        "entropy": 0.689,
+        "holds_both_valences": false,
+        "conflict_balance": 0.0
+      }
+    },
+    {
+      "cycle": "cycle_20260723T102522Z",
+      "D": {
+        "n_tags": 3,
+        "entropy": 1.095,
+        "holds_both_valences": false,
+        "conflict_balance": 0.0
+      },
+      "M": {
+        "n_tags": 2,
+        "entropy": 0.666,
+        "holds_both_valences": false,
+        "conflict_balance": 0.0
+      }
+    },
+    {
+      "cycle": "cycle_20260723T212254Z",
+      "D": {
+        "n_tags": 3,
+        "entropy": 1.09,
+        "holds_both_valences": true,
+        "conflict_balance": 0.34
+      },
+      "M": {
+        "n_tags": 3,
+        "entropy": 1.099,
+        "holds_both_valences": false,
+        "conflict_balance": 0.0
+      }
+    },
+    {
+      "cycle": "cycle_20260723T213742Z",
+      "D": {
+        "n_tags": 2,
+        "entropy": 0.693,
+        "holds_both_valences": false,
+        "conflict_balance": 0.0
+      },
+      "M": {
+        "n_tags": 1,
+        "entropy": -0.0,
+        "holds_both_valences": false,
+        "conflict_balance": 0.0
+      }
+    },
+    {
+      "cycle": "cycle_20260723T215140Z",
+      "D": {
+        "n_tags": 3,
+        "entropy": 1.095,
+        "holds_both_valences": true,
+        "conflict_balance": 0.3
+      },
+      "M": {
+        "n_tags": 1,
+        "entropy": -0.0,
+        "holds_both_valences": false,
+        "conflict_balance": 0.0
+      }
+    },
+    {
+      "cycle": "cycle_20260723T220612Z",
+      "D": {
+        "n_tags": 2,
+        "entropy": 0.691,
+        "holds_both_valences": false,
+        "conflict_balance": 0.0
+      },
+      "M": {
+        "n_tags": 2,
+        "entropy": 0.673,
+        "holds_both_valences": false,
+        "conflict_balance": 0.0
+      }
+    },
+    {
+      "cycle": "cycle_20260723T221914Z",
+      "D": {
+        "n_tags": 3,
+        "entropy": 1.085,
+        "holds_both_valences": true,
+        "conflict_balance": 0.275
+      },
+      "M": {
+        "n_tags": 1,
+        "entropy": -0.0,
+        "holds_both_valences": false,
+        "conflict_balance": 0.0
+      }
+    },
+    {
+      "cycle": "cycle_20260723T223359Z",
+      "D": {
+        "n_tags": 3,
+        "entropy": 1.09,
+        "holds_both_valences": true,
+        "conflict_balance": 0.31
+      },
+      "M": {
+        "n_tags": 3,
+        "entropy": 1.047,
+        "holds_both_valences": true,
+        "conflict_balance": 0.19
+      }
+    },
+    {
+      "cycle": "cycle_20260723T224814Z",
+      "D": {
+        "n_tags": 3,
+        "entropy": 1.097,
+        "holds_both_valences": false,
+        "conflict_balance": 0.0
+      },
+      "M": {
+        "n_tags": 2,
+        "entropy": 0.5,
+        "holds_both_valences": true,
+        "conflict_balance": 0.2
+      }
+    },
+    {
+      "cycle": "cycle_20260723T234851Z",
+      "D": {
+        "n_tags": 3,
+        "entropy": 1.098,
+        "holds_both_valences": true,
+        "conflict_balance": 0.327
+      },
+      "M": {
+        "n_tags": 2,
+        "entropy": 0.66,
+        "holds_both_valences": false,
+        "conflict_balance": 0.0
+      }
+    }
+  ]
+}
