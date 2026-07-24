@@ -27,6 +27,22 @@ def _load(name):
 
 adapter = _load("tau_text_reasoning_adapter")
 adc = _load("autonomous_dream_cycle")
+journal_schema = _load("journal_schema")
+
+
+def fetch_persona_docs(persona: str) -> list[dict]:
+    """Cross-project memory fetch: page persona_memory for ANY persona_id (the
+    Embry-specific fetch_embry_docs is a fixture instance of this)."""
+    docs, off = [], 0
+    while True:
+        page = adc.post("/list", {"collection": "persona_memory",
+                                  "filters": {"persona_id": persona},
+                                  "limit": 100, "offset": off})
+        docs += page.get("documents", [])
+        off += 100
+        if off >= page.get("total", 0):
+            break
+    return docs
 
 
 def _edge_targets(doc) -> list[str]:
@@ -126,19 +142,20 @@ def build_prompt(cyc: Path, docs: dict) -> dict:
             "web_size": len(web)}
 
 
-def persist_persona_journal(entry: dict, cyc: Path) -> dict:
+def persist_persona_journal(entry: dict, cyc: Path, persona: str) -> dict:
     """Write the journal as a first-class document in the persona_journal /memory
     collection (parallel to persona_memory) via GMO /upsert, then EXACT read-back.
     The entry INCLUDES its multi-hop memory web (people/places/objects + ToM) and
     its dream FRAMES (the intense non-textual content) with a multimodal
-    qdrant-embedding hint, so Embry can later RECALL it by image/mood, not only
-    text. Kept OUT of persona_memory so it never re-seeds a dream (loop guard)."""
-    key = f"embry_journal_{cyc.name}"
+    qdrant-embedding hint, so the persona can later RECALL it by image/mood, not
+    only text. Kept OUT of persona_memory so it never re-seeds a dream (loop
+    guard). Cross-project: keyed by the given persona, not a hardcoded one."""
+    key = f"{persona}_journal_{cyc.name}"
     frames = sorted(str(p) for p in (cyc / "frames").glob("sb_*.attempt_01.png"))
     contact = cyc / "storyboard_contact_sheet.png"
     doc = dict(entry)
     doc["_key"] = key
-    doc["persona_id"] = adc.PERSONA
+    doc["persona_id"] = persona
     doc["collection"] = "persona_journal"
     doc["text"] = entry["journal"]
     doc["retrieval_text"] = entry["journal"]
@@ -168,11 +185,20 @@ def persist_persona_journal(entry: dict, cyc: Path) -> dict:
         return {"persisted": False, "key": key, "error": str(e)[:200]}
 
 
+def _arg(flag: str, default: str | None = None) -> str | None:
+    return sys.argv[sys.argv.index(flag) + 1] if flag in sys.argv else default
+
+
 def main():
     if "--cycle" not in sys.argv:
-        raise SystemExit("usage: write_dream_journal.py --cycle <name>")
-    cyc = ROOT / "reports/goal_v3/cycles" / sys.argv[sys.argv.index("--cycle") + 1]
-    docs = {d["_key"]: d for d in adc.fetch_embry_docs()}
+        raise SystemExit("usage: write_dream_journal.py --cycle <name> "
+                         "[--persona <id>] [--cycles-dir <rel_path>]")
+    # Cross-project by default: persona and cycles dir are parameters; the
+    # Embry/goal_v3 values are just the default fixture instance.
+    persona = _arg("--persona", adc.PERSONA)
+    cycles_dir = _arg("--cycles-dir", "reports/goal_v3/cycles")
+    cyc = ROOT / cycles_dir / sys.argv[sys.argv.index("--cycle") + 1]
+    docs = {d["_key"]: d for d in fetch_persona_docs(persona)}
     meta = build_prompt(cyc, docs)
     parsed, _ = adapter.dispatch_text_reasoning(
         meta["prompt"], "persona-dream-journal",
@@ -182,7 +208,8 @@ def main():
     if not parsed or not parsed.get("journal"):
         raise SystemExit("BLOCKED_JOURNAL_NO_PARSE")
     entry = {
-        "schema": "persona_dream.dream_journal.v1",
+        "schema": "persona_dream.persona_journal.v1",
+        "persona_id": persona,
         "cycle": meta["cycle"],
         "valence_emphasis": meta["emphasis"],
         "competing_affect": meta["tags"],
@@ -218,12 +245,18 @@ def main():
         "memory_web_size": meta["web_size"],
         "source_memory_ids": meta["seed_ids"],
     }
+    # A journal is a strict JSON schema, not just prose: fail closed if the
+    # entry does not validate BEFORE it is written or persisted.
+    errs = journal_schema.validate_journal_entry(entry)
+    if errs:
+        raise SystemExit(f"BLOCKED_JOURNAL_SCHEMA_INVALID: {errs}")
     (cyc / "dream_journal.v1.json").write_text(json.dumps(entry, indent=2) + "\n")
     (cyc / "dream_journal.md").write_text(
-        f"# Embry's journal — {meta['cycle']} ({meta['emphasis']} emphasis)\n\n"
+        f"# {persona.capitalize()}'s journal — {meta['cycle']} "
+        f"({meta['emphasis']} emphasis)\n\n"
         f"{entry['journal']}\n\n---\n*Unresolved: {entry['unresolved_tension']}*\n"
         f"*(synthetic dream reflection; dream-provenance, not a dream seed)*\n")
-    persist = persist_persona_journal(entry, cyc)
+    persist = persist_persona_journal(entry, cyc, persona)
     print(f"journal written ({len(entry['journal'].split())} words) | "
           f"memory-web hops entities={entry['memory_web_size']}")
     print("MOOD:", entry["session_mood"]["mood_label"], "|",

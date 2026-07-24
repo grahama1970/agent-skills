@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "persona_dream.persona_journal.v1",
+  "description": "Cross-project persona journal entry. After a persona WATCHES its dream it writes a first-person reflection that DEEPENS (never resolves) the seeding conflict. This is the SELF-NARRATIVE layer: the persona may invent its own inner life but never new event-facts about real people, and the entry carries dream provenance so it is excluded from future dream seeding (loop guard). A journal is not just prose; every entry must validate against this strict schema before it is written or persisted to the persona_journal /memory collection. Persona-agnostic: persona_id is a free string, not bound to any one persona.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "persona_id",
+    "cycle",
+    "journal",
+    "unresolved_tension",
+    "expanded_understanding",
+    "session_mood",
+    "affect_source",
+    "dream_provenance",
+    "memory_kind",
+    "canon_status",
+    "never_promote_to_event_fact",
+    "asserts_only_own_inner_state",
+    "memory_web_entities",
+    "tom_summary",
+    "memory_web_size",
+    "source_memory_ids"
+  ],
+  "properties": {
+    "schema": { "const": "persona_dream.persona_journal.v1" },
+    "persona_id": { "type": "string", "minLength": 1 },
+    "cycle": { "type": "string", "minLength": 1 },
+    "valence_emphasis": { "type": ["string", "null"] },
+    "competing_affect": {
+      "type": "array",
+      "description": "The affective tags pulling against each other, each an [emotional_tag, weight] pair.",
+      "items": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "prefixItems": [
+          { "type": "string", "minLength": 1 },
+          { "type": "number" }
+        ]
+      }
+    },
+    "journal": { "type": "string", "minLength": 1 },
+    "unresolved_tension": { "type": "string", "minLength": 1 },
+    "expanded_understanding": { "type": "string", "minLength": 1 },
+    "session_mood": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mood_label",
+        "mood_description",
+        "carried_tension",
+        "source_cycle",
+        "affect_source"
+      ],
+      "properties": {
+        "mood_label": { "type": "string", "minLength": 1 },
+        "mood_description": { "type": "string", "minLength": 1 },
+        "carried_tension": { "type": "string" },
+        "source_cycle": { "type": "string", "minLength": 1 },
+        "affect_source": { "const": "persona_dream" }
+      }
+    },
+    "affect_source": { "const": "persona_dream" },
+    "dream_provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["cycle", "kind", "excluded_from_dream_seeding"],
+      "properties": {
+        "cycle": { "type": "string", "minLength": 1 },
+        "kind": { "const": "dream_journal" },
+        "excluded_from_dream_seeding": { "const": true }
+      }
+    },
+    "memory_kind": { "const": "self_narrative" },
+    "canon_status": { "const": "synthetic_self_reflection" },
+    "never_promote_to_event_fact": { "const": true },
+    "asserts_only_own_inner_state": { "const": true },
+    "memory_web_entities": { "type": "string" },
+    "tom_summary": { "type": "string" },
+    "memory_web_size": { "type": "integer", "minimum": 0 },
+    "source_memory_ids": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  }
+}
