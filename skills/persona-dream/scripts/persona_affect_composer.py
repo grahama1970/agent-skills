@@ -140,11 +140,29 @@ def fresh_state() -> dict[str, Any]:
             "thermal_events": 0}
 
 
+# GOAL_V5 caution-appropriateness gate (behavioral probe finding 2026-07-24:
+# a warmth dream floor read as "proceed" where cautionary content said "verify",
+# eroding a consumer agent's caution). When the caller marks the turn's answer
+# as cautionary (recommends verify/escalate/hold), the dream may still color but
+# MUST NOT lower caution: warmth/relaxed dream emphasis is suppressed to a
+# careful floor. Extends the operator rule "color the tone, never change a right
+# answer" to "never let the dream erode caution the content requires."
+LOW_CAUTION_TAGS = {"warmth"}
+LOW_CAUTION_TONES = {"warm_open", "neutral_warm", "playful_light", "relieved"}
+CAUTION_SAFE_FLOOR = ("careful_concerned", "measured")
+
+
 def compose(intent_voice_delivery: dict[str, Any] | None,
             dream_profile: dict[str, Any],
-            state: dict[str, Any] | None = None) -> dict[str, Any]:
+            state: dict[str, Any] | None = None,
+            answer_stance: str = "neutral") -> dict[str, Any]:
     """Pure composition. Returns {tone, pace, voice_delivery_patch,
-    composition_receipt, state}. Never mutates inputs."""
+    composition_receipt, state}. Never mutates inputs.
+
+    answer_stance: caller's label for the answer's recommendation —
+    "cautionary" (recommends verify/escalate/hold), "neutral", or "reassuring".
+    When "cautionary", the caution gate suppresses low-caution dream coloring.
+    """
     state = dict(state or fresh_state())
     ivd = dict(intent_voice_delivery or {})
     situational = str(ivd.get("tone") or "").strip()
@@ -180,6 +198,15 @@ def compose(intent_voice_delivery: dict[str, Any] | None,
         klass, final_tone, final_pace, floor = "unknown_label_passthrough", situational, ivd.get("pace"), False
         prior_zeroed = True
 
+    # caution-appropriateness gate: on cautionary content, never let a
+    # dream-supplied low-caution tone stand (only bites when the dream colored
+    # the tone — not on safety overrides, which already zeroed the prior).
+    caution_gate_fired = False
+    if (answer_stance == "cautionary" and not prior_zeroed
+            and (tag in LOW_CAUTION_TAGS or final_tone in LOW_CAUTION_TONES)):
+        final_tone, final_pace = CAUTION_SAFE_FLOOR
+        caution_gate_fired = True
+
     # thermal accounting on the composed intensity
     intensity = 0.0 if prior_zeroed else effective_weight
     if intensity > THERMAL_THRESHOLD:
@@ -203,6 +230,8 @@ def compose(intent_voice_delivery: dict[str, Any] | None,
         "prior_effective_weight": effective_weight,
         "prior_zeroed": prior_zeroed,
         "dispositional_floor_fired": floor,
+        "answer_stance": answer_stance,
+        "caution_gate_fired": caution_gate_fired,
         "cue_policy": ("intent_missing_voice_delivery_policy"
                        if klass == "missing_policy_fail_closed" else None),
         "final_tone": final_tone,

@@ -56,6 +56,22 @@ check("thermal_dampening", fired is True
       and r2["composition_receipt"]["prior_effective_weight"] == round(0.7 * 0.8, 4),
       {"fired": fired, "damped_weight": r2["composition_receipt"]["prior_effective_weight"]})
 
+# 7a. caution gate: dream warmth suppressed on cautionary content; NOT on neutral
+WARM_DREAM={"weights":[{"emotional_tag":"warmth","weight":0.6}]}
+r_caut=pac.compose({"tone":"memory_confident"},WARM_DREAM,answer_stance="cautionary")
+r_neut=pac.compose({"tone":"memory_confident"},WARM_DREAM,answer_stance="neutral")
+check("caution_gate_suppresses_warmth_on_cautionary",
+      r_caut["tone"]=="careful_concerned" and r_caut["composition_receipt"]["caution_gate_fired"] is True,
+      {"caut_tone":r_caut["tone"]})
+check("caution_gate_inert_on_neutral",
+      r_neut["composition_receipt"]["caution_gate_fired"] is False and r_neut["tone"]=="neutral_warm",
+      {"neut_tone":r_neut["tone"]})
+# gate must NOT override a safety tone (prior already zeroed)
+r_safe=pac.compose({"tone":"one_at_a_time_interrupt","pace":"quick"},WARM_DREAM,answer_stance="cautionary")
+check("caution_gate_never_touches_safety",
+      r_safe["tone"]=="one_at_a_time_interrupt" and r_safe["composition_receipt"]["caution_gate_fired"] is False,
+      {"safe_tone":r_safe["tone"]})
+
 # 7b. missing /intent policy fails closed to careful (best-practices contract)
 r = pac.compose(None, DREAM)
 check("missing_policy_fail_closed", r["tone"] == "memory_uncertain"

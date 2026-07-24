@@ -1,5 +1,23 @@
 {
   "cases": {
+    "caution_gate_inert_on_neutral": {
+      "detail": {
+        "neut_tone": "neutral_warm"
+      },
+      "passed": true
+    },
+    "caution_gate_never_touches_safety": {
+      "detail": {
+        "safe_tone": "one_at_a_time_interrupt"
+      },
+      "passed": true
+    },
+    "caution_gate_suppresses_warmth_on_cautionary": {
+      "detail": {
+        "caut_tone": "careful_concerned"
+      },
+      "passed": true
+    },
     "dispositional_floor": {
       "detail": {
         "final": "firm_boundary"
@@ -66,7 +84,7 @@
       "passed": true
     }
   },
-  "created_at": "2026-07-24T01:46:45Z",
+  "created_at": "2026-07-24T10:38:35Z",
   "gate_source": "persona_affect_composer.compose (real function)",
   "passed": true,
   "schema": "persona_dream.composer_probe_receipt.v1"
