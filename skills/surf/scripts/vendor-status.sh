@@ -44,10 +44,26 @@ if Path(lock_path).exists():
     if expected:
         digest = hashlib.sha256()
         excludes = set(identity.get("excludes") or ["VENDOR.lock.json"])
+        try:
+            cfg = json.loads(Path(fork_json).read_text())
+            excludes.update(cfg.get("rsync_excludes") or [])
+        except Exception:
+            pass
+
+        def is_excluded(path):
+            rel = path.relative_to(vendor).as_posix()
+            for item in excludes:
+                item = str(item).strip().rstrip("/")
+                if not item:
+                    continue
+                if rel == item or rel.startswith(item + "/"):
+                    return True
+            return False
+
         files = sorted(
             path for path in vendor.rglob("*")
             if path.is_file()
-            and path.relative_to(vendor).as_posix() not in excludes
+            and not is_excluded(path)
         )
         for path in files:
             data = path.read_bytes()
@@ -59,6 +75,7 @@ if Path(lock_path).exists():
         payload["content_identity"] = {
             "file_count": len(files),
             "sha256": digest.hexdigest(),
+            "effective_excludes": sorted(excludes),
         }
         payload["content_identity_matches"] = digest.hexdigest() == expected
 

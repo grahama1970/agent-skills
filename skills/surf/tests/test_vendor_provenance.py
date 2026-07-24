@@ -14,10 +14,15 @@ VENDOR_SYNC = SKILL_DIR / "scripts/vendor-sync.sh"
 
 def content_hash(root: Path, excludes: set[str]) -> tuple[str, int]:
     digest = hashlib.sha256()
+
+    def is_excluded(path: Path) -> bool:
+        rel = path.relative_to(root).as_posix()
+        return any(rel == item.rstrip("/") or rel.startswith(item.rstrip("/") + "/") for item in excludes)
+
     files = sorted(
         path
         for path in root.rglob("*")
-        if path.is_file() and path.relative_to(root).as_posix() not in excludes
+        if path.is_file() and not is_excluded(path)
     )
     for path in files:
         data = path.read_bytes()
@@ -35,8 +40,13 @@ def test_vendor_status_honors_declared_content_excludes(tmp_path: Path) -> None:
     (vendor / "package.json").write_text('{"version":"1.0.0"}\n')
     (vendor / "included.txt").write_text("included\n")
     (vendor / "ignored.txt").write_text("ignored before hashing\n")
+    (vendor / "node_modules/pkg").mkdir(parents=True)
+    (vendor / "node_modules/pkg/index.js").write_text("generated dependency\n")
+    (vendor / "dist/service-worker").mkdir(parents=True)
+    (vendor / "dist/service-worker/index.js").write_text("generated bundle\n")
     excludes = {"VENDOR.lock.json", "ignored.txt"}
-    sha256, count = content_hash(vendor, excludes)
+    effective_excludes = excludes | {"node_modules", "dist"}
+    sha256, count = content_hash(vendor, effective_excludes)
     (vendor / "VENDOR.lock.json").write_text(json.dumps({
         "content_identity": {
             "excludes": sorted(excludes),
@@ -45,6 +55,8 @@ def test_vendor_status_honors_declared_content_excludes(tmp_path: Path) -> None:
         }
     }))
     (vendor / "ignored.txt").write_text("changed but still excluded\n")
+    (vendor / "node_modules/pkg/index.js").write_text("changed generated dependency\n")
+    (vendor / "dist/service-worker/index.js").write_text("changed generated bundle\n")
     env = os.environ.copy()
     env["SURF_CLI_PATH"] = str(vendor)
 
@@ -56,6 +68,8 @@ def test_vendor_status_honors_declared_content_excludes(tmp_path: Path) -> None:
     payload = json.loads(proc.stdout)
     assert payload["content_identity_matches"] is True
     assert payload["content_identity"]["file_count"] == count
+    assert "node_modules" in payload["content_identity"]["effective_excludes"]
+    assert "dist" in payload["content_identity"]["effective_excludes"]
 
 
 def test_vendor_sync_writes_current_content_identity_schema(tmp_path: Path) -> None:
@@ -80,6 +94,9 @@ def test_vendor_sync_writes_current_content_identity_schema(tmp_path: Path) -> N
     assert "synced_at" not in lock
     assert lock["package_version"] == "9.9.9"
     assert lock["clean_upstream_copy"] is False
-    sha256, count = content_hash(vendor, {"VENDOR.lock.json"})
+    lock_excludes = set(lock["content_identity"]["excludes"])
+    assert "node_modules" in lock_excludes
+    assert "dist" in lock_excludes
+    sha256, count = content_hash(vendor, lock_excludes)
     assert lock["content_identity"]["sha256"] == sha256
     assert lock["content_identity"]["file_count"] == count

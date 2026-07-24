@@ -53,7 +53,20 @@
   "content_identity": {
     "algorithm": "sha256(relative_path_nul_size_nul_content)",
     "excludes": [
-      "VENDOR.lock.json"
+      ".agent",
+      ".agents",
+      ".claude",
+      ".codex",
+      ".git",
+      ".github",
+      ".kilocode",
+      ".pi",
+      ".playwright-mcp",
+      "VENDOR.lock.json",
+      "coverage",
+      "dist",
+      "local",
+      "node_modules"
     ],
     "file_count": 129,
     "sha256": "4b9becde5e5c6abec0f8488ac940c05f23ca1466d1bbde4eeeff01a9ea2703e2"
