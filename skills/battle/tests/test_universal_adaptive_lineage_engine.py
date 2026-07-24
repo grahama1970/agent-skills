@@ -38,8 +38,10 @@ def generation_request(
     population_size: int = 3,
     role: str = "red",
     materialize_only: bool = False,
+    context: Mapping[str, Any] | None = None,
 ) -> GenerationRequest:
     return GenerationRequest(
+        context=dict(context or {}),
         battle_id=BATTLE_ID,
         lineage_id=LINEAGE_ID,
         run_id=f"run-{role}-g{generation}",
@@ -425,6 +427,178 @@ def test_primitive_backed_oracle_plugs_all_four_verified_helpers(
     assert calls == ["population", "review", "judge", "select"]
     assert receipt["oracle"]["survivor_id"] == "p-2"
     assert receipt["bad_genetic_material"]["bad_count"] == 2
+
+
+def test_verified_hooks_drive_the_real_canary_primitive_contract(
+    tmp_path: Path,
+) -> None:
+    """Pin the LIVE signatures and shapes of the four canary primitives.
+
+    Captured 2026-07-24 from battle_skill.adaptive_red_blue_lineage_canary::
+
+      _population_genomes(*, battle_id, run_id, generation, generation_dir,
+                          manifest) -> {"red": [...], "blue": [...]}
+      _review_population(*, ..., manifest, target_identity_sha256,
+                         docker_image, genomes)
+                      -> (reviewed_manifest, {"red": [...], "blue": [...]})
+      _judge_population(*, generation_dir, scenario, docker_image,
+                        reviewed_manifest, review_pipelines) -> dict
+      _select_survivor(judge, team) -> dict
+
+    The primitives are two-team and interleave good/bad specimens inside each
+    team list by ``status``; the engine is role-scoped. Arena facts (manifest,
+    scenario, docker_image, target_identity_sha256) reach them only through
+    request.context.
+    """
+
+    seen: dict[str, Any] = {}
+    manifest = {"teams": [{"team": "blue", "worker_id": "blue-0"}]}
+    scenario = {"battle_id": BATTLE_ID, "cwe": "CWE-22"}
+
+    def population_genomes(
+        *,
+        battle_id: str,
+        run_id: str,
+        generation: int,
+        generation_dir: Path,
+        manifest: dict[str, Any],
+    ) -> dict[str, list[dict[str, Any]]]:
+        seen["population_manifest"] = manifest
+        return {
+            "red": [{"worker_id": "red-0", "status": "PASS"}],
+            "blue": [
+                {"worker_id": "blue-0", "status": "PASS"},
+                {"worker_id": "blue-1", "status": "PASS"},
+                {"worker_id": "blue-2", "status": "BAD", "reason": "no genome"},
+            ],
+        }
+
+    def review_population(
+        *,
+        battle_id: str,
+        run_id: str,
+        generation: int,
+        generation_dir: Path,
+        manifest: dict[str, Any],
+        target_identity_sha256: str,
+        docker_image: str,
+        genomes: dict[str, list[dict[str, Any]]],
+    ) -> tuple[dict[str, Any], dict[str, list[dict[str, Any]]]]:
+        seen["review_genomes"] = genomes
+        seen["target_identity_sha256"] = target_identity_sha256
+        seen["review_docker_image"] = docker_image
+        return (
+            {"reviewed": True, "teams": manifest["teams"]},
+            {
+                "red": [{"worker_id": "red-0", "status": "PASS"}],
+                "blue": [
+                    {"worker_id": "blue-0", "status": "PASS"},
+                    {"worker_id": "blue-1", "status": "BLOCKED"},
+                ],
+            },
+        )
+
+    def judge_population(
+        *,
+        generation_dir: Path,
+        scenario: dict[str, Any],
+        docker_image: str,
+        reviewed_manifest: dict[str, Any],
+        review_pipelines: dict[str, list[dict[str, Any]]],
+    ) -> dict[str, Any]:
+        seen["judge_scenario"] = scenario
+        seen["judge_reviewed_manifest"] = reviewed_manifest
+        seen["judge_review_pipelines"] = review_pipelines
+        # Live Judge payload: pair-keyed replay attempts.
+        return {
+            "attempts": [
+                {"pair_id": "red-0__blue-0", "verdict": "BLUE_SUCCESS"},
+                {"pair_id": "red-0__blue-1", "verdict": "RED_SUCCESS"},
+            ]
+        }
+
+    def select_survivor(judge: dict[str, Any], team: str) -> dict[str, Any]:
+        seen["select_judge"] = judge
+        seen["select_team"] = team
+        # Live _select_survivor return shape.
+        return {
+            "team": team,
+            "population_size": 2,
+            "survivor_worker_ids": ["blue-0"],
+            "selected_survivor": "blue-0",
+            "bad_worker_ids": ["blue-1"],
+            "bad_genetic_material_rate": 0.5,
+            "outcomes": {
+                "blue-0": {"won": True, "verdicts": ["BLUE_SUCCESS"]},
+                "blue-1": {"won": False, "verdicts": ["RED_SUCCESS"]},
+            },
+        }
+
+    bundle = PrimitiveBundle(
+        population_genomes=population_genomes,
+        review_population=review_population,
+        judge_population=judge_population,
+        select_survivor=select_survivor,
+    )
+    memory, _fake = backend_with_root()
+    receipt = AdaptiveLineageEngine(
+        population_hooks=VerifiedPopulationHooks(bundle),
+        oracle=PrimitiveBackedOracle(bundle),
+        memory_hooks=memory,
+    ).run_generation(
+        generation_request(
+            tmp_path,
+            role="blue",
+            context={
+                "manifest": manifest,
+                "scenario": scenario,
+                "docker_image": "python:3.12-slim",
+                "target_identity_sha256": "abc123",
+            },
+        )
+    )
+
+    # Arena facts reached the primitives through request.context.
+    assert seen["population_manifest"] == manifest
+    assert seen["target_identity_sha256"] == "abc123"
+    assert seen["review_docker_image"] == "python:3.12-slim"
+    assert seen["judge_scenario"] == scenario
+
+    # review received the team-keyed genome map, not a flattened item list.
+    assert set(seen["review_genomes"]) == {"red", "blue"}
+
+    # judge received review's 2-tuple payload, split correctly.
+    assert seen["judge_reviewed_manifest"]["reviewed"] is True
+    assert set(seen["judge_review_pipelines"]) == {"red", "blue"}
+
+    # The oracle received the Judge's own pair-keyed payload and this role's team.
+    assert [a["pair_id"] for a in seen["select_judge"]["attempts"]] == [
+        "red-0__blue-0",
+        "red-0__blue-1",
+    ]
+    assert seen["select_team"] == "blue"
+
+    # The worker-id survivor is honored even though the Judge payload is
+    # pair-keyed, so the id is absent from the judged items by construction.
+    assert receipt["oracle"]["survivor_id"] == "blue-0"
+
+    # Bad genetic material accumulates across the whole generation: blue-2 died
+    # at the population stage (no valid strategy_genome) and blue-1 died at the
+    # Judge (replayed, never won). Only blue-0 survived.
+    assert receipt["bad_genetic_material"]["bad_count"] == 2
+
+    # Role scoping: red specimens are never this lineage's population, and the
+    # review 2-tuple was not misread as (items, bad).
+    assert receipt["population"]["generated_count"] == 3
+
+    # Bad specimens stay IN the population (a generation materializes N, most
+    # of them bad) while still being recorded as bad genetic material.
+    assert seen["review_genomes"]["blue"] == [
+        {"worker_id": "blue-0", "status": "PASS"},
+        {"worker_id": "blue-1", "status": "PASS"},
+        {"worker_id": "blue-2", "status": "BAD", "reason": "no genome"},
+    ]
+    assert receipt["oracle"]["survivor_id"] == "blue-0"
 
 
 def test_materialize_only_emits_n_and_skips_review_judge_oracle(
