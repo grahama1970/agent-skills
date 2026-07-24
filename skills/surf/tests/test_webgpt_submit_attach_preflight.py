@@ -745,9 +745,8 @@ case "${{1:-}}" in
       echo "Error: ChatGPT is rate limited: too many requests; you've hit your limit. Please try again later." >&2
       exit 1
     fi
-    echo 'still blocked by provider limit without sentinel'
-    echo 'ResponseSource: assistant-dom' >&2
-    exit 0
+    echo 'Error: ChatGPT is rate limited: too many requests; retry still blocked' >&2
+    exit 42
     ;;
   *)
     echo "unexpected command: $*" >&2
@@ -760,12 +759,13 @@ esac
 
     assert proc.returncode != 0
     meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
-    assert meta["status"] == "missing_sentinel"
-    assert meta["failure"] == "missing_sentinel"
+    assert meta["status"] == "failed"
+    assert meta["failure"] == "submit_failed"
     assert meta["blocker"] == "BLOCKED_WEBGPT_PROVIDER_RATE_LIMIT"
     assert meta["recommended_action"] == "wait_for_chatgpt_rate_limit_cooldown_before_retry"
     assert meta["proof_status"] == "rate_limited"
     assert meta["chatgpt_too_many_requests_detected"] is True
+    assert meta["chatgpt_rate_limit"]["error"] == "retry_failed_exit_42"
 
 
 def test_webgpt_submit_clicks_start_new_chat_same_tab_on_conversation_max_length(tmp_path: Path) -> None:

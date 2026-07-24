@@ -786,10 +786,11 @@ attempt_conversation_max_length_rollover() {
         write_submit_receipt "submitted_to_chatgpt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "true"
         write_webgpt_heartbeat "submitted" "conversation_max_length_same_tab_rollover" "$receipt_output" "$raw_output" "$timeout_s"
         return 0
+      else
+        local same_tab_status=$?
+        conversation_rollover_error="same_tab_resubmit_failed_exit_${same_tab_status}"
+        echo "ConversationMaxLengthRolloverError: ${conversation_rollover_error}" >> "$stderr_log"
       fi
-      local same_tab_status=$?
-      conversation_rollover_error="same_tab_resubmit_failed_exit_${same_tab_status}"
-      echo "ConversationMaxLengthRolloverError: ${conversation_rollover_error}" >> "$stderr_log"
     else
       conversation_rollover_error="same_tab_start_new_chat_click_failed"
       {
@@ -918,13 +919,14 @@ attempt_chatgpt_too_many_requests_cooldown() {
     write_webgpt_heartbeat "submitted" "rate_limit_cooldown_retry" "$receipt_output" "$raw_output" "$timeout_s"
     echo "ChatGPTRateLimitExhausted: false" >> "$stderr_log"
     return 0
+  else
+    local retry_status=$?
+    {
+      echo "ChatGPTRateLimitExhausted: true"
+      echo "ChatGPTRateLimitError: retry_failed_exit_${retry_status}"
+    } >> "$stderr_log"
+    return "$retry_status"
   fi
-  local retry_status=$?
-  {
-    echo "ChatGPTRateLimitExhausted: true"
-    echo "ChatGPTRateLimitError: retry_failed_exit_${retry_status}"
-  } >> "$stderr_log"
-  return "$retry_status"
 }
 # Dedicated reviewer tab (inactive). Avoids reusing global state or auto-picking
 # the newest chatgpt.com tab (often the user's foreground conversation).
@@ -1631,14 +1633,17 @@ failure = "conversation_max_length_rollover_failed" if conversation_max_length_d
     )
 )
 blocker = "BLOCKED_WEBGPT_CONVERSATION_FULL" if conversation_max_length_detected else (
-    "BLOCKED_WEBGPT_EMPTY_RESPONSE_AFTER_SUBMIT" if empty_response_after_submit else (
-        "BLOCKED_WEBGPT_CLOUDFLARE_CHALLENGE" if cloudflare_challenge_detected else None
+    "BLOCKED_WEBGPT_PROVIDER_RATE_LIMIT" if chatgpt_too_many_requests_detected else (
+        "BLOCKED_WEBGPT_EMPTY_RESPONSE_AFTER_SUBMIT" if empty_response_after_submit else (
+            "BLOCKED_WEBGPT_CLOUDFLARE_CHALLENGE" if cloudflare_challenge_detected else None
+        )
     )
 )
 recommended_action = "retry_with_fresh_chatgpt_conversation" if (
     conversation_max_length_detected or empty_response_after_submit
 ) else (
-    "complete_cloudflare_challenge_in_controlled_browser_tab" if cloudflare_challenge_detected else None
+    "wait_for_chatgpt_rate_limit_cooldown_before_retry" if chatgpt_too_many_requests_detected
+    else "complete_cloudflare_challenge_in_controlled_browser_tab" if cloudflare_challenge_detected else None
 )
 pathlib.Path(meta).write_text(json.dumps({
     "status": "failed",
