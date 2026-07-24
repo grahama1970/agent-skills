@@ -807,12 +807,12 @@ function handleToolRequest(msg, socket, requestContext = requestStorage.getStore
         cdpEvaluate: (tabId, expression) => requestCallExtension(
           requestContext,
           "cdp_evaluate",
-          { type: isKimi ? "KIMI_EVALUATE" : "CHATGPT_EVALUATE", tabId, expression },
+          { type: "CHATGPT_EVALUATE", tabId, expression },
         ),
         cdpCommand: (tabId, method, params) => requestCallExtension(
           requestContext,
           "cdp_command",
-          { type: isKimi ? "KIMI_CDP_COMMAND" : "CHATGPT_CDP_COMMAND", tabId, method, params },
+          { type: "CHATGPT_CDP_COMMAND", tabId, method, params },
         ),
         uploadFile: (tabId, filePaths) => requestCallExtension(
           requestContext,
@@ -971,12 +971,12 @@ function handleToolRequest(msg, socket, requestContext = requestStorage.getStore
         cdpEvaluate: (tabId, expression) => requestCallExtension(
           requestContext,
           "cdp_evaluate",
-          { type: "CHATGPT_EVALUATE", tabId, expression },
+          { type: isKimi ? "KIMI_EVALUATE" : "CHATGPT_EVALUATE", tabId, expression },
         ),
         cdpCommand: (tabId, method, params) => requestCallExtension(
           requestContext,
           "cdp_command",
-          { type: "CHATGPT_CDP_COMMAND", tabId, method, params },
+          { type: isKimi ? "KIMI_CDP_COMMAND" : "CHATGPT_CDP_COMMAND", tabId, method, params },
         ),
         log: (msg) => log(`[${tag}] ${msg}`),
       });
