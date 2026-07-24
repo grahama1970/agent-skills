@@ -1,7 +1,50 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-24 UTC (close-the-loop: self-reflective journal, endogenous request-independent mood, self-narrative vs event-fact) by agent
+**Last updated:** 2026-07-24 UTC (re-grounded persona roundtable + Continuity Ledger design) by agent
 **Status:** Active development
+
+## 2026-07-24 — RE-GROUNDED persona roundtable (3 seats) + Continuity Ledger design
+
+Frame reset (operator: "you keep focusing on wrong assumptions"): persona-dream
+is a PERSONA TO BUILD (Embry, README: "dream, watch, learn, and still remain
+recognizably itself"), NOT a hypothesis to validate. All the D-vs-M / fair-panel
+/ publishability apparatus was the wrong frame. 3-seat roundtable (kimi, claude,
+chatgpt) run via chrome-MCP fallback (surf submit regressed, #985); converged.
+See reports/goal_v5/roundtable_persona/SYNTHESIS.md.
+
+Converged design:
+- CORE = a held contradiction + voice, not a trait list. Formulation: "Embry
+  moves toward being witnessed while protecting her right to remain partly
+  unknowable" (witness vs capture). Stored as RULES OF TRANSFORMATION, not
+  phrases. Multi-RATE architecture; nothing silently overwrites the core:
+  canon (immutable) < identity_core (rare) < arc_state (gradual) < mood (fast).
+  Mood FOREGROUNDS which part of the existing conflict is near the surface;
+  never adds a trait.
+- CHANGE = reinterpretation, not revision (she never stops being guarded; she
+  re-describes what the guarding is for). One small arc_delta per cycle, each
+  carrying a "STILL TRUE" clause -> additive not substitutive. Core conflicts
+  deepen but NEVER resolve.
+- ALIVE = mood is pressure not announcement; bound at session start, counter-
+  emotion, asymmetric cost, competence stable / presence changes.
+- NEXT BUILD (2-of-3: claude+gpt over kimi's mood-first): a versioned Embry
+  CONTINUITY LEDGER (embry.continuity_state.v1): identity_core{central_desire,
+  central_defense, values, persistent_conflicts, relational_stance, voice_laws}
+  + arc_state{current_self_claims, active_tensions, earned_permissions,
+  contested_beliefs, unresolved_questions, recurring_avoidances,
+  recent_arc_deltas} + provenance. Read by dream/journal/mood/(voice); journal
+  appends ONE arc_delta/cycle; may update arc_state, may NOT alter canon or
+  silently replace the core. Then mood-into-voice becomes expression of
+  continuity, not acting.
+- DISSENT surfaced: (1) craft RECOGNITION-CHECK (pick her real journal entry
+  from a forgery; identify her across two moods) as the honest, non-benchmark
+  answer to "recognizably itself"; (2) one value-spine line "at her worst she
+  WITHDRAWS, she does not WOUND" (character rule, not a safety gate) — reconciles
+  the safety question as character; (3) anniversary mood source premature until
+  the ledger exists.
+
+Transport note: surf 2.9 engine update (#985) broke kimi.submit/claude.submit
+("Unknown tool"); roundtable seats now dispatchable via chrome-MCP (navigate +
+type ASCII-clean single block + send + get_page_text). Works, slower.
 
 ## 2026-07-24 — CORRECTION: the "caution erosion" is the mechanism working, not a safety defect
 
