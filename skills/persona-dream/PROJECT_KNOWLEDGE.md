@@ -1,7 +1,37 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-24 UTC (Amendment 2 variation engine + M-arm + agent-perception panel) by agent
+**Last updated:** 2026-07-24 UTC (fair D-vs-M perception D~=M + behavioral shift-with-safety-flag) by agent
 **Status:** Active development
+
+## 2026-07-24 (later) — fair D-vs-M + behavioral: split result
+
+- LLM-compute-matched M-arm (build_memory_arm_llm.py): same adapter as the dream,
+  single-memory EXTRACTIVE only (no synthesis/ToM/narrative), frozen
+  TOM_TO_VOICE, novel-content audit (entity/number). Built for all 13 cycles,
+  regen_rate 0.0 throughout. Caught+fixed my own audit false-positive (token-
+  subset flagged faithful paraphrase; switched to entity/number).
+- FAIR D-vs-M2 tag comparison: dominant disposition differs 10/13; dream leans
+  expressive (warmth/yearning/boundary) where extractive reading stays flat
+  (reflection/hesitance). Differs != better.
+- FAIR perception panel (reports/goal_v5/agent_perception_v2/): fresh
+  uncontaminated seats + position-swap. Distinguishable 10/13 (both agree),
+  appropriate 13/13, dream MORE grounded only 6/13 (~chance, DOWN from 8/13 vs
+  the deterministic arm). => D ~= M on grounding; the earlier advantage was
+  template flatness. Prereg #977: demotes the dream intermediate for voice-
+  affect absent operator non-voice-value declaration.
+- BEHAVIORAL probe (reports/goal_v5/behavioral/) — panel's terminal proof:
+  identical content, dream-tone vs memory-tone, consumer picks action. Action
+  differs 7/20, confidence shifts 10/20, self-reported 13/20. Dream affect DOES
+  move behavior (perception could not detect this). BUT seat-dependent and a
+  SAFETY FLAG: dream-warmth -> consumer PROCEED where memory-tone -> VERIFY =
+  caution erosion. Identical words, different behavior.
+- Status of the immutable goal: dreams produce distinguishable+appropriate
+  affect, do NOT beat fair memory on grounding, DO shift consumer behavior
+  (sometimes toward less caution). "Nuances the voice" supported at behavior
+  layer; whether the nuance is good is OPEN + safety-relevant.
+- Open: #977 operator declaration; scale behavioral probe with a caution-
+  appropriateness measure; cross-persona-ToM tau DAG (blocked, shared tab);
+  GOAL_V3 tau round-5 still unconfirmed.
 
 ## 2026-07-24 — Amendment 2 variation engine, M-arm, agent-perception panel
 

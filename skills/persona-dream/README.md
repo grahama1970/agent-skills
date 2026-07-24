@@ -20,13 +20,33 @@ dreams connected by theory-of-mind are designed (GOAL_V3_AMENDMENT_2.md) and
 routed to a tau creator/reviewer DAG, not cowboy-edited.
 
 Research question — does the dream matter vs plain memory, judged by the AGENT
-that consumes the affect (persona-dream is for agents, not humans)? First
-evidence: a 2-seat blinded agent panel (kimi+claude) found dream-derived and
-direct-memory dispositions DISTINGUISHABLE in 12/13 cycles (both judges agree),
-and the dream read as more experience-grounded than direct memory in 8/13
-(judges agree per-cycle). See reports/goal_v5/agent_perception/. Caveat: the
-direct-memory (M) arm is still a deterministic crosswalk, not yet
-LLM-compute-matched, so D>M is suggestive, not the fair final test.
+that consumes the affect (persona-dream is for agents, not humans)? The fair
+test is now run and the result is split:
+
+- PERCEPTION (fair): against an LLM-compute-matched, extractive direct-memory
+  arm (`build_memory_arm_llm.py`; novel-content audit, regen 0.0), a 2-seat
+  blinded position-swapped panel on FRESH seats found dream vs memory
+  DISTINGUISHABLE 10/13 (both agree), both APPROPRIATE 13/13, but dream MORE
+  experience-grounded only 6/13 (~chance). The earlier 8/13 "grounding
+  advantage" was largely the deterministic template's flatness. On grounding,
+  D ≈ M — the dream does not beat a fair memory-reading. Per prereg #977 this
+  demotes the dream intermediate for the voice-affect claim absent an operator
+  declaration of non-voice value. See reports/goal_v5/agent_perception_v2/.
+- BEHAVIOR (terminal proof, panel-preferred): same identical content delivered
+  under dream-tone vs memory-tone, consumer agent picks proceed/verify/escalate.
+  Action DIFFERED 7/20, confidence shifted 10/20, self-reported shift 13/20 —
+  dream affect DOES move downstream behavior where perception could not detect
+  it. BUT seat-dependent (kimi shifted action, gpt shifted confidence) and a
+  SAFETY FLAG: dream-warmth pushed the consumer toward PROCEED where the
+  memory-tone said VERIFY — possible caution erosion, not a clean win. Identical
+  words, different behavior. See reports/goal_v5/behavioral/. n=20, 2 seats.
+
+Net: dreams produce distinguishable, appropriate affect that does not beat a
+fair memory-reading on grounding but does shift consumer behavior — sometimes
+toward less caution. Whether that behavioral nuance is valuable or a risk is
+open and safety-relevant. Open items: the #977 operator declaration; scale the
+behavioral probe with a caution-appropriateness measure; the cross-persona-ToM
+tau DAG (blocked on the shared browser tab).
 
 
 ![Persona Dream card](../../docs/assets/project-cards/persona-dream.webp)
