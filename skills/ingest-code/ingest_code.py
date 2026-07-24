@@ -883,13 +883,22 @@ def extract_generic_knowledge(filepath: Path, content: str) -> list[dict]:
 # Markdown knowledge extraction (CONTEXT.md, MEMORY.md, README.md)
 # ---------------------------------------------------------------------------
 
-def extract_markdown_knowledge(filepath: Path, content: str) -> list[dict]:
+def extract_markdown_knowledge(
+    filepath: Path,
+    content: str,
+    codebase_root: Path | None = None,
+) -> list[dict]:
     """Extract knowledge from markdown documentation files.
 
     These are the richest sources — CONTEXT.md, README.md, MEMORY.md contain
     architectural decisions, bug fixes, and operational knowledge.
     """
     items: list[dict] = []
+    source_identity = (
+        filepath.name
+        if codebase_root is None
+        else _relative_path(filepath, codebase_root)
+    )
 
     # Split by headers and create one item per section
     sections = re.split(r'^(#{1,3}\s+.+)$', content, flags=re.MULTILINE)
@@ -909,8 +918,8 @@ def extract_markdown_knowledge(filepath: Path, content: str) -> list[dict]:
         # Truncate very long sections
         body = section[:2000]
         items.append({
-            "problem": f"What does '{current_header}' say in {filepath.name}?",
-            "solution": f"File: {filepath}\nSection: {current_header}\n\n{body}",
+            "problem": f"What does '{current_header}' say in {source_identity}?",
+            "solution": f"File: {source_identity}\nSection: {current_header}\n\n{body}",
             "tags": ["codebase", "documentation", filepath.stem, current_header.lower().replace(" ", "-")[:30]],
         })
 
@@ -3653,7 +3662,7 @@ def extract_knowledge(
 
     # Markdown documentation
     if filepath.suffix in (".md", ".mdx"):
-        return extract_markdown_knowledge(filepath, content)
+        return extract_markdown_knowledge(filepath, content, codebase_root)
 
     # Python
     if filepath.suffix == ".py":

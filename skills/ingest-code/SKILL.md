@@ -288,6 +288,9 @@ Every successfully parsed Python file emits exactly one module lesson,
 including import-only, assignment-only, pass-only, and empty modules.
 Python source decoding honors encoding cookies and UTF-8 BOMs and fails closed
 on invalid or conflicting Python encoding declarations.
+Markdown section lessons use repository-relative file identities during `scan`
+and `rescan`; direct helper calls without a repository root retain basename
+identities.
 
 ### CWE Metadata
 
