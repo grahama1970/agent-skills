@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -315,7 +316,7 @@ def test_transport_summary_completed() -> None:
     assert summary["raw_sentinel_present"] is True
 
 
-def test_roundtrip_preflight_bounds_rate_limit_wait_for_child_submit(tmp_path: Path) -> None:
+def test_roundtrip_preflight_uses_surf_rate_limit_wait_for_child_submit(tmp_path: Path) -> None:
     calls = tmp_path / "calls.log"
     env_log = tmp_path / "env.log"
     fake_run = tmp_path / "run.sh"
@@ -367,6 +368,10 @@ esac
     )
     fake_run.chmod(0o755)
 
+    base_env = os.environ.copy()
+    base_env.pop("SURF_WEBGPT_ROUNDTRIP_RATE_LIMIT_WAIT_SECONDS", None)
+    base_env.pop("SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS", None)
+
     proc = subprocess.run(
         [
             "bash",
@@ -383,7 +388,7 @@ esac
             "--json",
         ],
         env={
-            **__import__("os").environ,
+            **base_env,
             "SURF_RUN_SH": str(fake_run),
             "SURF_DISPATCH_SH": str(fake_run),
         },
@@ -396,7 +401,7 @@ esac
     assert proc.returncode == 0, proc.stderr
     payload = json.loads(proc.stdout)
     assert payload["status"] == "pass"
-    assert "rate_wait=5" in env_log.read_text(encoding="utf-8")
+    assert "rate_wait=300" in env_log.read_text(encoding="utf-8")
 
     env_log.write_text("", encoding="utf-8")
     proc_override = subprocess.run(
@@ -415,7 +420,7 @@ esac
             "--json",
         ],
         env={
-            **__import__("os").environ,
+            **base_env,
             "SURF_RUN_SH": str(fake_run),
             "SURF_DISPATCH_SH": str(fake_run),
             "SURF_WEBGPT_ROUNDTRIP_RATE_LIMIT_WAIT_SECONDS": "7",

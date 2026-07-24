@@ -131,6 +131,24 @@ def throttle_roundtrips(last_at: float | None, interval_s: int) -> float:
     return time.monotonic()
 
 
+def configured_rate_limit_wait_seconds() -> int:
+    """Return the Surf WebGPT provider-throttle cooldown used by roundtrips."""
+    for name in ("SURF_WEBGPT_ROUNDTRIP_RATE_LIMIT_WAIT_SECONDS", "SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS"):
+        raw = os.environ.get(name, "").strip()
+        if raw:
+            try:
+                return max(0, int(raw))
+            except ValueError:
+                continue
+    return 300
+
+
+def roundtrip_process_timeout(timeout_s: int, roundtrip_timeout: int, *, submits: int = 1) -> int:
+    """Budget parent process time for Surf's bounded rate-limit wait plus submit timeout."""
+    cooldown = configured_rate_limit_wait_seconds()
+    return max(timeout_s, (roundtrip_timeout + cooldown + 30) * max(1, submits))
+
+
 app = typer.Typer(add_completion=False, help="Opt-in LIVE WebGPT transport sanity (background-only).")
 
 
@@ -576,7 +594,11 @@ def main(
                     "--timeout", str(roundtrip_timeout), "--output-dir", str(reviewer_dir),
                     *binding_cli_args(binding),
                 ]
-                run = run_subprocess(cmd, cwd=SURF_ROOT, timeout_seconds=max(timeout_s, roundtrip_timeout + 30))
+                run = run_subprocess(
+                    cmd,
+                    cwd=SURF_ROOT,
+                    timeout_seconds=roundtrip_process_timeout(timeout_s, roundtrip_timeout),
+                )
                 ok, detail = validate_roundtrip(parse_json_blob(run["stdout"]))
                 detail = f"{detail} exit={run['exit_code']}"
                 if ok and reviewer_dir.exists():
@@ -701,7 +723,11 @@ def main(
                     "--timeout", str(roundtrip_timeout), "--output-dir", str(bb_dir),
                     *binding_cli_args(binding),
                 ]
-                run = run_subprocess(cmd, cwd=SURF_ROOT, timeout_seconds=max(timeout_s, roundtrip_timeout + 30))
+                run = run_subprocess(
+                    cmd,
+                    cwd=SURF_ROOT,
+                    timeout_seconds=roundtrip_process_timeout(timeout_s, roundtrip_timeout),
+                )
                 run_ok, run_detail = validate_roundtrip(parse_json_blob(run["stdout"]))
                 runs_detail.append(f"run{idx}={run_detail}")
                 ok = ok and run_ok
@@ -722,7 +748,14 @@ def main(
                 "--timeout", str(roundtrip_timeout), "--output-dir", str(e2e_dir),
                 *binding_cli_args(binding),
             ]
-            run = run_subprocess(cmd, cwd=SURF_ROOT, timeout_seconds=max(timeout_s, roundtrip_timeout * 3 + 180))
+            run = run_subprocess(
+                cmd,
+                cwd=SURF_ROOT,
+                timeout_seconds=max(
+                    timeout_s,
+                    roundtrip_process_timeout(timeout_s, roundtrip_timeout, submits=3) + 90,
+                ),
+            )
             payload = parse_json_blob(run["stdout"])
             ok = run["exit_code"] == 0 and isinstance(payload, dict) and payload.get("status") == "pass"
             detail = (
