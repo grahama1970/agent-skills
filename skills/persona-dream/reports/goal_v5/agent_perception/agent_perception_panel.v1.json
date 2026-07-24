@@ -1,0 +1,84 @@
+{
+  "schema": "persona_dream.agent_perception_panel.v1",
+  "judges": [
+    "kimi",
+    "claude"
+  ],
+  "n_judges": 2,
+  "n_packets": 13,
+  "panel_majority_distinguishable": "12/13",
+  "both_judges_agree_distinguishable": "12/13",
+  "panel_majority_dream_more_grounded_than_memory": "8/13",
+  "caveats": [
+    "2 independent agent seats (kimi, claude); 3rd tab-contended (#980).",
+    "M-arm deterministic-crosswalk, not LLM-compute-matched \u2014 D>M fairness caveat stands.",
+    "agent-consumer delivery-metadata layer, categorical, n=13; engineering tier not confirmatory."
+  ],
+  "rows": [
+    [
+      "T184531Z",
+      "dist 0/2",
+      "D-grnd 0/2"
+    ],
+    [
+      "T201426Z",
+      "dist 2/2",
+      "D-grnd 2/2"
+    ],
+    [
+      "T203423Z",
+      "dist 2/2",
+      "D-grnd 2/2"
+    ],
+    [
+      "T222024Z",
+      "dist 2/2",
+      "D-grnd 0/2"
+    ],
+    [
+      "T102522Z",
+      "dist 2/2",
+      "D-grnd 0/2"
+    ],
+    [
+      "T212254Z",
+      "dist 2/2",
+      "D-grnd 2/2"
+    ],
+    [
+      "T213742Z",
+      "dist 2/2",
+      "D-grnd 2/2"
+    ],
+    [
+      "T215140Z",
+      "dist 2/2",
+      "D-grnd 0/2"
+    ],
+    [
+      "T220612Z",
+      "dist 2/2",
+      "D-grnd 2/2"
+    ],
+    [
+      "T221914Z",
+      "dist 2/2",
+      "D-grnd 2/2"
+    ],
+    [
+      "T223359Z",
+      "dist 2/2",
+      "D-grnd 2/2"
+    ],
+    [
+      "T224814Z",
+      "dist 2/2",
+      "D-grnd 2/2"
+    ],
+    [
+      "T234851Z",
+      "dist 2/2",
+      "D-grnd 0/2"
+    ]
+  ]
+}

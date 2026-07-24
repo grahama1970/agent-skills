@@ -1,0 +1,20 @@
+{
+  "schema": "surf.webgpt_inflight.v1",
+  "status": "prepared_prompt",
+  "submitted_to_chatgpt": false,
+  "prepared_prompt_is_transport_proof": false,
+  "input": "skills/persona-dream/reports/goal_v5/agent_perception/judge_bundle.md",
+  "submitted_output": "skills/persona-dream/reports/goal_v5/agent_perception/judge_webgpt.md.submitted.md",
+  "output": "skills/persona-dream/reports/goal_v5/agent_perception/judge_webgpt.md",
+  "raw_output": "skills/persona-dream/reports/goal_v5/agent_perception/judge_webgpt.md.raw.md",
+  "meta_output": "skills/persona-dream/reports/goal_v5/agent_perception/judge_webgpt.meta.json",
+  "receipt_output": "skills/persona-dream/reports/goal_v5/agent_perception/judge_webgpt.md.receipt.json",
+  "sentinel": "<<<WEBGPT_DONE:20260724T021624Z:0700e327>>>",
+  "requested_tab_id": "837360896",
+  "requested_url": null,
+  "requested_model": null,
+  "requested_reasoning": "Pro",
+  "submit_pid": 1564220,
+  "updated_at": "2026-07-24T02:16:24Z",
+  "recovery_command": "surf webgpt.recover --artifact-dir skills/persona-dream/reports/goal_v5/agent_perception --finalize"
+}

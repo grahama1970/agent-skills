@@ -1,0 +1,13 @@
+{
+  "schema": "surf.webgpt_heartbeat.v1",
+  "updated_at": "2026-07-24T02:16:24Z",
+  "submitted_at": null,
+  "last_browser_observation_at": "2026-07-24T02:16:24Z",
+  "phase": "prompt_prepared",
+  "page_state": "waiting",
+  "last_artifact_written": "skills/persona-dream/reports/goal_v5/agent_perception/judge_webgpt.md.submitted.md",
+  "next_expected_artifact": "skills/persona-dream/reports/goal_v5/agent_perception/judge_webgpt.md.raw.md",
+  "timeout_remaining_seconds": 2400,
+  "sentinel": "<<<WEBGPT_DONE:20260724T021624Z:0700e327>>>",
+  "prepared_prompt_is_transport_proof": false
+}

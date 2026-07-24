@@ -1,0 +1,22 @@
+{
+  "agent_action": "Wait for the active run to finish or use a separate explicitly verified tab.",
+  "agent_diagnosis": "Another Surf WebGPT submit is already controlling the requested tab.",
+  "failure": "concurrent_submit_same_tab",
+  "finished_at": "2026-07-24T02:16:24Z",
+  "input": "skills/persona-dream/reports/goal_v5/agent_perception/judge_bundle.md",
+  "lock_path": "/tmp/surf-webgpt-tab-837360896.lock",
+  "output": "skills/persona-dream/reports/goal_v5/agent_perception/judge_webgpt.md",
+  "proof_status": "not_submitted",
+  "raw_output": "skills/persona-dream/reports/goal_v5/agent_perception/judge_webgpt.md.raw.md",
+  "requested_model": null,
+  "requested_reasoning": "Pro",
+  "requested_tab_id": "837360896",
+  "requested_url": null,
+  "sentinel": "<<<WEBGPT_DONE:20260724T021624Z:0700e327>>>",
+  "started_at": "2026-07-24T02:16:24Z",
+  "status": "failed",
+  "stderr_log": "/tmp/surf-webgpt-submit-stderr.U1kGGV.log",
+  "submitted_output": "skills/persona-dream/reports/goal_v5/agent_perception/judge_webgpt.md.submitted.md",
+  "submitted_to_chatgpt": false,
+  "surf_doctor_request_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/agent_perception/judge_webgpt.meta.surf-doctor-request.json"
+}
