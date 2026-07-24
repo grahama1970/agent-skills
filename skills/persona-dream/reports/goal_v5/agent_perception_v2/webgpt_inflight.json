@@ -1,0 +1,20 @@
+{
+  "schema": "surf.webgpt_inflight.v1",
+  "status": "submitted_to_chatgpt",
+  "submitted_to_chatgpt": true,
+  "prepared_prompt_is_transport_proof": false,
+  "input": "skills/persona-dream/reports/goal_v5/agent_perception_v2/judge_bundle.md",
+  "submitted_output": "skills/persona-dream/reports/goal_v5/agent_perception_v2/judge_gpt.md.submitted.md",
+  "output": "skills/persona-dream/reports/goal_v5/agent_perception_v2/judge_gpt.md",
+  "raw_output": "skills/persona-dream/reports/goal_v5/agent_perception_v2/judge_gpt.md.raw.md",
+  "meta_output": "skills/persona-dream/reports/goal_v5/agent_perception_v2/judge_gpt.meta.json",
+  "receipt_output": "skills/persona-dream/reports/goal_v5/agent_perception_v2/judge_gpt.md.receipt.json",
+  "sentinel": "<<<WEBGPT_DONE:20260724T025612Z:b801eb44>>>",
+  "requested_tab_id": "837360927",
+  "requested_url": null,
+  "requested_model": null,
+  "requested_reasoning": "Pro",
+  "submit_pid": 1958272,
+  "updated_at": "2026-07-24T02:56:19Z",
+  "recovery_command": "surf webgpt.recover --artifact-dir skills/persona-dream/reports/goal_v5/agent_perception_v2 --finalize"
+}

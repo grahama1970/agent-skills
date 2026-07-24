@@ -1,0 +1,94 @@
+{
+  "schema": "persona_dream.agent_perception_panel_v2.v1",
+  "judges": [
+    "kimi",
+    "gpt"
+  ],
+  "n_judges": 2,
+  "arm": "FAIR: dream vs LLM-compute-matched extractive M2 arm; fresh uncontaminated seats; position-swapped",
+  "n": 13,
+  "distinguishable_majority": "10/13",
+  "both_agree_distinguishable": "10/13",
+  "dream_more_grounded_majority": "6/13",
+  "more_grounded_appropriate_majority": "13/13",
+  "rows": [
+    [
+      "T184531Z",
+      "dist2/2",
+      "Dgrnd2/2",
+      "appr2/2"
+    ],
+    [
+      "T201426Z",
+      "dist0/2",
+      "Dgrnd0/2",
+      "appr2/2"
+    ],
+    [
+      "T203423Z",
+      "dist0/2",
+      "Dgrnd0/2",
+      "appr2/2"
+    ],
+    [
+      "T222024Z",
+      "dist2/2",
+      "Dgrnd0/2",
+      "appr2/2"
+    ],
+    [
+      "T102522Z",
+      "dist2/2",
+      "Dgrnd0/2",
+      "appr2/2"
+    ],
+    [
+      "T212254Z",
+      "dist2/2",
+      "Dgrnd2/2",
+      "appr2/2"
+    ],
+    [
+      "T213742Z",
+      "dist2/2",
+      "Dgrnd2/2",
+      "appr2/2"
+    ],
+    [
+      "T215140Z",
+      "dist2/2",
+      "Dgrnd1/2",
+      "appr2/2"
+    ],
+    [
+      "T220612Z",
+      "dist2/2",
+      "Dgrnd2/2",
+      "appr2/2"
+    ],
+    [
+      "T221914Z",
+      "dist2/2",
+      "Dgrnd2/2",
+      "appr2/2"
+    ],
+    [
+      "T223359Z",
+      "dist0/2",
+      "Dgrnd0/2",
+      "appr2/2"
+    ],
+    [
+      "T224814Z",
+      "dist2/2",
+      "Dgrnd2/2",
+      "appr2/2"
+    ],
+    [
+      "T234851Z",
+      "dist2/2",
+      "Dgrnd1/2",
+      "appr2/2"
+    ]
+  ]
+}
