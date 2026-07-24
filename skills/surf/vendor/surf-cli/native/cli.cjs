@@ -553,6 +553,11 @@ const TOOLS = {
     desc: "Tab management",
     commands: {
       "tab.list": { desc: "List all open tabs", args: [], examples: [{ cmd: "tab.list", desc: "Show all tabs" }] },
+      "focus.state": {
+        desc: "Get focused window id and active tab id",
+        args: [],
+        examples: [{ cmd: "focus.state --json", desc: "Report which tab/window is foreground" }]
+      },
       "tab.new": {
         desc: "Open new tab",
         args: ["url"],
@@ -608,6 +613,21 @@ const TOOLS = {
           { cmd: "tab.reload", desc: "Soft reload" },
           { cmd: "tab.reload --hard", desc: "Hard reload (bypass cache)" },
         ]
+      },
+    }
+  },
+  extension: {
+    desc: "Extension lifecycle",
+    commands: {
+      "extension.ping": {
+        desc: "Ping the Surf service worker",
+        args: [],
+        examples: [{ cmd: "extension.ping --json", desc: "Health check" }]
+      },
+      "extension.reload": {
+        desc: "Reload Surf extension",
+        args: [],
+        examples: [{ cmd: "extension.reload --json", desc: "Reload after extension.build" }]
       },
     }
   },
@@ -1622,7 +1642,7 @@ const ALL_SOCKET_TOOLS = [
   "computer",
   "page.read", "page.text", "page.state",
   "locate.role", "locate.text", "locate.label",
-  "tab.list", "tab.new", "tab.switch", "tab.close", "tab.move", "tab.name", "tab.unname", "tab.named",
+  "tab.list", "focus.state", "tab.new", "tab.switch", "tab.close", "tab.move", "tab.name", "tab.unname", "tab.named",
   "tab.group", "tab.ungroup", "tab.groups", "tab.reload",
   "scroll.top", "scroll.bottom", "scroll.to", "scroll.info",
   "wait.element", "wait.network", "wait.url", "wait.dom", "wait.load",
@@ -1643,6 +1663,7 @@ const ALL_SOCKET_TOOLS = [
   "bookmark.add", "bookmark.remove", "bookmark.list",
   "history.list", "history.search",
   "window.new", "window.list", "window.focus", "window.close", "window.resize",
+  "extension.ping", "extension.reload",
 ];
 
 // See also suggestions for related commands

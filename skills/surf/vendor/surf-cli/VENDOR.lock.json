@@ -11,13 +11,18 @@
   "patchset": {
     "name": "agent-skills-webgpt-compat",
     "files": [
-      "native/chatgpt-client.cjs"
+      "native/chatgpt-client.cjs",
+      "native/cli.cjs",
+      "native/host-helpers.cjs",
+      "src/service-worker/index.ts"
     ],
     "contracts": [
       "conversation_max_length_detection",
       "too_many_requests_detection",
       "assert_ready_for_new_prompt_export",
-      "sentinel_stable_stall_wait_for_response_export"
+      "sentinel_stable_stall_wait_for_response_export",
+      "focus_state_command",
+      "extension_lifecycle_commands"
     ]
   },
   "content_identity": {
@@ -26,6 +31,6 @@
       "VENDOR.lock.json"
     ],
     "file_count": 118,
-    "sha256": "eccb5be34ef17572ae5609f81b25ae0473eb95dfea62843ccd49afb6d24aacb3"
+    "sha256": "b2bdf26ee8e775f7e81d401f9b67ac7cdd8d08afc53731da5debdfe34c0110ee"
   }
 }

@@ -74,6 +74,7 @@ type ChromeMock = {
     connectNative: ReturnType<typeof vi.fn>;
     lastError: null | { message: string };
     getURL: ReturnType<typeof vi.fn>;
+    reload: ReturnType<typeof vi.fn>;
     id: string;
   };
   storage: {
@@ -101,6 +102,7 @@ type ChromeMock = {
     get: ReturnType<typeof vi.fn>;
     getAll: ReturnType<typeof vi.fn>;
     getCurrent: ReturnType<typeof vi.fn>;
+    getLastFocused: ReturnType<typeof vi.fn>;
   };
   scripting: {
     executeScript: ReturnType<typeof vi.fn>;
@@ -179,6 +181,7 @@ export function createChromeMock(): ChromeMock {
       }),
       lastError: null,
       getURL: vi.fn((path: string) => `chrome-extension://mock-id/${path}`),
+      reload: vi.fn(),
       id: "mock-extension-id",
     },
     storage: {
@@ -206,6 +209,7 @@ export function createChromeMock(): ChromeMock {
       get: vi.fn().mockResolvedValue(null),
       getAll: vi.fn().mockResolvedValue([]),
       getCurrent: vi.fn().mockResolvedValue({ id: 1 }),
+      getLastFocused: vi.fn().mockResolvedValue({ id: 1 }),
     },
     scripting: {
       executeScript: vi.fn().mockResolvedValue([]),

@@ -207,6 +207,48 @@ describe("window command handlers", () => {
     });
   });
 
+  describe("GET_FOCUS_STATE", () => {
+    it("returns focused window and active tab identity", async () => {
+      const chrome = (globalThis as any).chrome;
+      chrome.windows.getLastFocused.mockResolvedValue({ id: 123 });
+      chrome.tabs.query.mockResolvedValue([
+        { id: 456, url: "https://chatgpt.com/c/example", active: true },
+      ]);
+
+      const result = await handleMessage({ type: "GET_FOCUS_STATE" }, {});
+
+      expect(chrome.windows.getLastFocused).toHaveBeenCalledWith({ populate: false });
+      expect(chrome.tabs.query).toHaveBeenCalledWith({ active: true, windowId: 123 });
+      expect(result).toEqual({
+        focusedWindowId: 123,
+        activeTabId: 456,
+        activeTabUrl: "https://chatgpt.com/c/example",
+      });
+    });
+  });
+
+  describe("extension lifecycle", () => {
+    it("responds to PING", async () => {
+      const result = await handleMessage({ type: "PING" }, {});
+
+      expect(result).toEqual({ success: true, status: "connected" });
+    });
+
+    it("schedules runtime reload", async () => {
+      const chrome = (globalThis as any).chrome;
+
+      const result = await handleMessage({ type: "EXTENSION_RELOAD" }, {});
+
+      expect(result).toEqual({
+        success: true,
+        reloading: true,
+        message: "Extension reload scheduled",
+      });
+      await new Promise(resolve => setTimeout(resolve, 75));
+      expect(chrome.runtime.reload).toHaveBeenCalled();
+    });
+  });
+
   describe("tab commands with windowId", () => {
     describe("LIST_TABS", () => {
       it("filters by windowId when provided", async () => {

@@ -85,6 +85,11 @@ describe("mapToolToMessage", () => {
       expect(msg.type).toBe("LIST_TABS");
     });
 
+    it("maps focus.state to GET_FOCUS_STATE", () => {
+      const msg = helpers.mapToolToMessage("focus.state", {});
+      expect(msg.type).toBe("GET_FOCUS_STATE");
+    });
+
     it("maps tab.new with url", () => {
       const msg = helpers.mapToolToMessage("tab.new", { url: "https://example.com" });
       expect(msg.type).toBe("NEW_TAB");
@@ -103,6 +108,18 @@ describe("mapToolToMessage", () => {
         windowId: "456",
         index: "0",
       });
+    });
+  });
+
+  describe("extension lifecycle commands", () => {
+    it("maps extension.ping to PING", () => {
+      const msg = helpers.mapToolToMessage("extension.ping", {});
+      expect(msg.type).toBe("PING");
+    });
+
+    it("maps extension.reload to EXTENSION_RELOAD", () => {
+      const msg = helpers.mapToolToMessage("extension.reload", {});
+      expect(msg.type).toBe("EXTENSION_RELOAD");
     });
   });
 

@@ -16,5 +16,8 @@ patchset for agent-skills WebGPT contracts, including:
 - ChatGPT too-many-requests detection
 - exported readiness helper for downstream WebGPT pre-submit checks
 - exported sentinel/stable-stall response polling compatibility
+- `focus.state` command support for WebGPT background-mode proof
+- `extension.ping` and `extension.reload` command support for skill-managed
+  extension refresh
 
 Run `surf vendor.status --json` to inspect the recorded tree identity.

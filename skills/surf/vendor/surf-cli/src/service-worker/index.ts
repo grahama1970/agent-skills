@@ -3554,6 +3554,44 @@ export async function handleMessage(
       };
     }
 
+    case "GET_FOCUS_STATE": {
+      let focusedWindowId: number | null = null;
+      let activeTabId: number | null = null;
+      let activeTabUrl: string | null = null;
+
+      try {
+        const window = await chrome.windows.getLastFocused({ populate: false });
+        focusedWindowId = typeof window.id === "number" ? window.id : null;
+
+        if (focusedWindowId !== null) {
+          const tabs = await chrome.tabs.query({ active: true, windowId: focusedWindowId });
+          const activeTab = tabs[0];
+          activeTabId = typeof activeTab?.id === "number" ? activeTab.id : null;
+          activeTabUrl = typeof activeTab?.url === "string" ? activeTab.url : null;
+        }
+      } catch {
+        // Focus state is proof metadata; return nullable fields instead of
+        // failing unrelated browser commands when Chrome focus is unavailable.
+      }
+
+      return { focusedWindowId, activeTabId, activeTabUrl };
+    }
+
+    case "PING": {
+      return { success: true, status: "connected" };
+    }
+
+    case "EXTENSION_RELOAD": {
+      setTimeout(() => {
+        try {
+          chrome.runtime.reload();
+        } catch (error) {
+          debugLog("EXTENSION_RELOAD failed:", error);
+        }
+      }, 50);
+      return { success: true, reloading: true, message: "Extension reload scheduled" };
+    }
+
     default:
       throw new Error(`Unknown message type: ${message.type}`);
   }
@@ -3577,6 +3615,7 @@ const COMMANDS_WITHOUT_TAB = new Set([
   "AISTUDIO_NEW_TAB", "AISTUDIO_CLOSE_TAB", "AISTUDIO_EVALUATE", "AISTUDIO_CDP_COMMAND",
   "DOWNLOADS_SEARCH",
   "WINDOW_NEW", "WINDOW_LIST", "WINDOW_FOCUS", "WINDOW_CLOSE", "WINDOW_RESIZE",
+  "GET_FOCUS_STATE", "PING", "EXTENSION_RELOAD",
   "EMULATE_DEVICE_LIST"
 ]);
 

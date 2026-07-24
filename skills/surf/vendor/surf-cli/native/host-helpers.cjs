@@ -786,6 +786,8 @@ function mapToolToMessage(tool, args, tabId) {
       return { type: "CLOSE_TAB", tabId: a.tab_id || a.tabId, tabIds: a.tab_ids || a.tabIds };
     case "tab.list":
       return { type: "LIST_TABS" };
+    case "focus.state":
+      return { type: "GET_FOCUS_STATE" };
     case "tab.new":
       return { type: "NEW_TAB", url: a.url, urls: a.urls };
     case "tab.switch": {
@@ -1012,6 +1014,10 @@ function mapToolToMessage(tool, args, tabId) {
       return mapComputerAction({ ...a, action: tool }, tabId);
     case "click":
       return mapComputerAction({ ...a, action: "left_click" }, tabId);
+    case "extension.ping":
+      return { type: "PING" };
+    case "extension.reload":
+      return { type: "EXTENSION_RELOAD" };
     case "cookie.list":
       return { type: "COOKIE_LIST", ...baseMsg };
     case "cookie.get":
