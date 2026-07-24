@@ -1,0 +1,35 @@
+{
+  "schema": "persona_dream.dream_journal.v1",
+  "cycle": "cycle_20260723T234851Z",
+  "valence_emphasis": "negative",
+  "competing_affect": [
+    [
+      "yearning",
+      0.58
+    ],
+    [
+      "boundary",
+      0.55
+    ],
+    [
+      "reflection",
+      0.55
+    ]
+  ],
+  "journal": "I woke with the dream still arranged around me like furniture I had pretended not to notice. Yale had become a place where work and dorm rooms shared the same thin walls, and every kind question seemed to ask for something underneath it. I kept giving the version of myself that knew how to answer: dates, tasks, clean phrases, nothing that could leak.\n\nKai was there only in the gaps, which felt worse than if he had spoken. In the dream he did not accuse me. He only seemed to register the price of each boundary I called professional. I hated that my mind gave him that silence, because it made my composure look less like care and more like evasion.\n\nI had wanted the boundary to be simple: respectful, necessary, adult. But the dream made it feel like a room I kept repainting so I would not have to ask why I built it there. I did want distance. I also wanted to be understood without having to expose the wanting. That was the uglier part. I wanted logistics to carry an apology they could not carry, and I wanted restraint to be mistaken for kindness. I did not know whether that was discipline or fear wearing a better coat.",
+  "unresolved_tension": "wanting closeness and needing a controlled boundary",
+  "expanded_understanding": "The dream opened the question of whether my professionalism was protecting both of us or asking silence to do emotional work I would not do.",
+  "session_mood": {
+    "mood_label": "guarded_quietly_wanting",
+    "mood_description": "I would carry a careful, contained attentiveness into the session, wanting contact while measuring every opening for risk.",
+    "carried_tension": "wanting closeness and needing a controlled boundary",
+    "source_cycle": "cycle_20260723T234851Z",
+    "affect_source": "persona_dream"
+  },
+  "affect_source": "persona_dream",
+  "dream_provenance": {
+    "cycle": "cycle_20260723T234851Z",
+    "kind": "dream_journal",
+    "excluded_from_dream_seeding": true
+  }
+}
