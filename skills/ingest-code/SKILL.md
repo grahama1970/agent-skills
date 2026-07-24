@@ -291,6 +291,9 @@ on invalid or conflicting Python encoding declarations.
 Markdown section lessons use repository-relative file identities during `scan`
 and `rescan`; direct helper calls without a repository root retain basename
 identities.
+Generic non-Python module-comment and TS/JS export lessons use
+repository-relative file identities during `scan` and `rescan`; direct helper
+calls without a repository root retain basename identities.
 
 ### CWE Metadata
 

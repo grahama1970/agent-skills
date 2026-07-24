@@ -843,9 +843,18 @@ def _name_from_node(node) -> str:
 # Generic knowledge extraction (non-Python files)
 # ---------------------------------------------------------------------------
 
-def extract_generic_knowledge(filepath: Path, content: str) -> list[dict]:
+def extract_generic_knowledge(
+    filepath: Path,
+    content: str,
+    codebase_root: Path | None = None,
+) -> list[dict]:
     """Extract knowledge from non-Python files using regex heuristics."""
     items: list[dict] = []
+    source_identity = (
+        filepath.name
+        if codebase_root is None
+        else _relative_path(filepath, codebase_root)
+    )
     lines = content.split("\n")
 
     # Look for file-level documentation comment blocks
@@ -862,8 +871,8 @@ def extract_generic_knowledge(filepath: Path, content: str) -> list[dict]:
     if len(doc_lines) >= 2:
         doc = " ".join(doc_lines)[:1000]
         items.append({
-            "problem": f"What does {filepath.name} do?",
-            "solution": f"File: {filepath}\n\n{doc}",
+            "problem": f"What does {source_identity} do?",
+            "solution": f"File: {source_identity}\n\n{doc}",
             "tags": ["codebase", "module", filepath.stem],
         })
 
@@ -871,8 +880,8 @@ def extract_generic_knowledge(filepath: Path, content: str) -> list[dict]:
     if filepath.suffix in (".ts", ".tsx", ".js", ".jsx"):
         for m in re.finditer(r'export\s+(?:default\s+)?(?:function|class|const)\s+(\w+)', content):
             items.append({
-                "problem": f"What is {m.group(1)} in {filepath.name}?",
-                "solution": f"File: {filepath}\nExported symbol: {m.group(1)}",
+                "problem": f"What is {m.group(1)} in {source_identity}?",
+                "solution": f"File: {source_identity}\nExported symbol: {m.group(1)}",
                 "tags": ["codebase", "export", m.group(1), filepath.stem],
             })
 
@@ -3669,7 +3678,7 @@ def extract_knowledge(
         return extract_python_knowledge(filepath, content, codebase_root)
 
     # TypeScript, JavaScript, etc.
-    return extract_generic_knowledge(filepath, content)
+    return extract_generic_knowledge(filepath, content, codebase_root=codebase_root)
 
 
 def _validate_knowledge_items(
