@@ -237,7 +237,7 @@ def build_instruments(adapter, sel: dict, out: Path) -> dict:
         '\nReturn strict JSON: {"probes": ["...","...","..."], "negative_control": "..."}'
     )
     parsed, receipt = adapter.dispatch_text_reasoning(
-        prompt, "embry-cycle-instruments",
+        prompt, "persona-cycle-instruments",
         output_contract={"probes": ["3 strings"], "negative_control": "string"})
     probes = [str(x).strip() for x in (parsed or {}).get("probes") or [] if str(x).strip()]
     neg = str((parsed or {}).get("negative_control") or "").strip()
@@ -299,7 +299,7 @@ def compose_and_render(adapter, phase_c, subgate, profile, sel: dict, out: Path)
         '"action": "...", "start_frame_description": "...", "mood": "..."}, '
         "... 4 panels total]}")
     parsed, receipt = adapter.dispatch_text_reasoning(
-        prompt, "embry-cycle-storyboard",
+        prompt, "persona-cycle-storyboard",
         output_contract={"dream_synopsis": "string", "panels": ["4 panel objects"]})
     if parsed is None or len(parsed.get("panels", [])) != PANEL_COUNT:
         raise SystemExit(f"BLOCKED_CYCLE_STORYBOARD: {json.dumps(receipt)[:200]}")
@@ -485,10 +485,12 @@ def main() -> int:
     p14 = _load("phase14_tom_validation")
     p15 = _load("phase15_dream_persistence")
     pm = _load("pilot_metrics")
-    # anchors snapshot (dream-004 node + this cycle's roots) BEFORE the run
+    # anchors snapshot BEFORE the run: this cycle's own root memories are the
+    # per-cycle identity invariant (the dream must not mutate its source canon).
+    # Persona-agnostic — no hardcoded persona-specific anchor node.
     anchor_proc = subprocess.run(
         [sys.executable, str(ROOT / "scripts/pilot_metrics.py"), "snapshot-anchors",
-         "--keys", ",".join(["dream_dream_successor_943b01ecd9a3"] + roots),
+         "--keys", ",".join(roots),
          "--out", str(out / "anchor_snapshot.json")],
         capture_output=True, text=True)
     if anchor_proc.returncode != 0:
@@ -498,7 +500,7 @@ def main() -> int:
     instruments = build_instruments(adapter, sel, out)
 
     # 3. dream + frames
-    art = compose_and_render(adapter, phase_c, subgate, sel, out)
+    art = compose_and_render(adapter, phase_c, subgate, profile, sel, out)
 
     # 4. observation packet
     vlm_frames = observe(composite, art, out)
@@ -524,9 +526,17 @@ def main() -> int:
         "step_hooks": {"step_36_identity_temporal_continuity": {
             "identity_window_seconds": [0.0, 10.0],
             "vision_review": {
-                "model": "insightface:buffalo_l (authority) + gpt-5.5 montage (advisory)",
+                "model": ("insightface:buffalo_l (authority) + gpt-5.5 montage (advisory)"
+                          if art["identity_gate"] == "arcface"
+                          else "gpt-5.5 montage (advisory); no face reference — ungated"),
                 "verdict": "PASS",
-                "raw_output_tail": "all 4 frames passed ArcFace vs embry_contact_sheet_v3"}}},
+                "identity_gate": art["identity_gate"],
+                "raw_output_tail": (
+                    f"all {len(art['frames'])} frames passed ArcFace vs "
+                    f"{Path(profile.reference_sheet).name}"
+                    if art["identity_gate"] == "arcface" else
+                    f"{len(art['frames'])} frames rendered ungated "
+                    f"({art['persona_name']} has no face reference sheet)")}}},
         "coverage_gaps": [
             "no audio track: storyboard frames are the visual artifact",
             "no inter-frame motion",
@@ -537,7 +547,7 @@ def main() -> int:
     residue = {
         "schema": "persona_dream.residue_links.v1",
         "idea_id": dream_id,
-        "items": [{"collection": "persona_memory", "persona_id": PERSONA,
+        "items": [{"collection": "persona_memory", "persona_id": persona_id,
                    "source_id": k, "source_path": f"gmo:persona_memory/{k}",
                    "text": str(d.get("retrieval_text") or "")}
                   for k, d in sel["docs"].items()],
@@ -549,7 +559,9 @@ def main() -> int:
     # (round-1 tau review CRITICAL: default Embry-Kai contract leaked; Brandon
     # roots produced Kai-targeted ToM). The counterpart comes from the cluster.
     cc = _load("persona_dream_cognition_contract")
-    counterpart_id = sel["cluster"]["cluster_id"].split(":person:")[1].split("_")[0]
+    # full counterpart id (not first token): Horus counterparts are multi-token
+    # (yngmay_singh, hastur_sejanus); truncating would break the counterpart gate.
+    counterpart_id = sel["cluster"]["cluster_id"].split(":person:")[1]
     contract = cc.load_contract()
     contract = json.loads(json.dumps(contract))
     contract["contract_id"] = f"cycle_{counterpart_id}_lane_v1"
@@ -564,7 +576,7 @@ def main() -> int:
                           "locus": "the settings of the selected root memories"}
     (out / "cycle_cognition_contract.json").write_text(json.dumps(contract, indent=2) + "\n")
     interp = p13.run_phase13(packet_path, residue_path, None, None,
-                             dream_id, cycle_id, "goal-v3", PERSONA, live=True,
+                             dream_id, cycle_id, "goal-v3", persona_id, live=True,
                              contract=contract)
     p13.write_json(out / "phase13_interpretation.json", interp)
     if not interp["status"].startswith("PASS") or not interp["accepted_interpretations"]:
@@ -585,19 +597,19 @@ def main() -> int:
     # 6. persist WITH watch vertices, closure-gated
     root_ids = sorted({b.get("source_id") for b in interp.get("source_memory_bindings", [])
                        if b.get("source_id")})
-    causal = p15.build_causal_family_fields(PERSONA, dream_id, root_ids, None)
+    causal = p15.build_causal_family_fields(persona_id, dream_id, root_ids, None)
     causal["goal_v3_cycle"] = cycle_id
     dream_doc = p15.build_dream_memory_document(
-        dream_id, cycle_id, "goal-v3", PERSONA, packet, interp, tom,
+        dream_id, cycle_id, "goal-v3", persona_id, packet, interp, tom,
         causal_fields=causal)
     dream_doc["evidence_class"] = "synthetic_dream"
-    dream_doc["tags"] = [f"persona:{PERSONA}", "synthetic_dream", "persona_dream",
+    dream_doc["tags"] = [f"persona:{persona_id}", "synthetic_dream", "persona_dream",
                          "goal_v3_autonomous_cycle"]
     watch_vertices = p15.build_watch_evidence_vertices(
         packet, interp, dream_id, f"storyboard_{art['media_sha'][:32]}",
-        None, persona_id=PERSONA, causal_fields=causal)
+        None, persona_id=persona_id, causal_fields=causal)
     interp_vertices = p15.build_interpretation_vertices(
-        interp, PERSONA, dream_id, causal_fields=causal)
+        interp, persona_id, dream_id, causal_fields=causal)
     return_id = f"storyboard_{art['media_sha'][:32]}"
     allowed, blockers = p15.canonical_write_decision(packet, True, return_id)
     if not allowed:
@@ -620,7 +632,7 @@ def main() -> int:
         raise SystemExit(f"BLOCKED_CYCLE_ACTIVATION: {act.get('outcome')}")
 
     # 7. evaluate
-    m2 = pm.m2_grounding(p15, manifest["key"], out, PERSONA, dream_id)
+    m2 = pm.m2_grounding(p15, manifest["key"], out, persona_id, dream_id)
     m3 = pm.m3_distinction(adapter, dream_doc["_key"])
     m4 = pm.m4_identity(p15, manifest["key"], out / "anchor_snapshot.json")
     ranks = {}

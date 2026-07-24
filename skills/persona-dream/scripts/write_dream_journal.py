@@ -57,11 +57,40 @@ def _edge_targets(doc) -> list[str]:
     return out
 
 
-def traverse_memory_web(seed_ids, docs, hops: int = 2) -> list[dict]:
+def _node_entities(d: dict) -> str:
+    """Schema-agnostic readable entity string: entity_text (Embry) OR the
+    entities dict flattened (Horus)."""
+    if d.get("entity_text"):
+        return str(d["entity_text"])
+    ent = d.get("entities") or {}
+    if isinstance(ent, dict):
+        vals = []
+        for v in ent.values():
+            if isinstance(v, list):
+                vals += [str(x).split(":", 1)[-1].replace("_", " ") for x in v if x]
+        return ", ".join(dict.fromkeys(vals))  # de-duped, order-preserving
+    return ""
+
+
+def _node_tom(d: dict) -> str:
+    tom = d.get("tom_content")
+    if tom:
+        return str(tom)[:240]
+    ec = d.get("emotional_context")
+    if isinstance(ec, dict):
+        b = ec.get("evidence_basis") or ec.get("primary_state")
+        if b and str(b).strip().lower() != "not stated in source":
+            return str(b)[:240]
+    return str(d.get("event_context") or "")[:240]
+
+
+def traverse_memory_web(seed_ids, docs, profile=None, entity_index=None,
+                        hops: int = 2, max_nodes: int = 40) -> list[dict]:
     """Multi-hop /memory graph traversal from the dream's source memories.
-    Returns, per reached node, the real characters/places/objects (entity_text)
-    and the clear theory-of-mind (tom_content) — the grounded web the journal
-    reflects across. Deterministic BFS, de-duplicated, hop-labeled."""
+    Hops via inline memory->memory edges AND (schema-agnostic) the shared ENTITY
+    graph — the only bridge that survives differing corpus edge schemas, so the
+    web is grounded for ANY persona, not only Embry. Deterministic BFS,
+    de-duplicated, hop-labeled, bounded so a common entity cannot explode it."""
     seen, frontier, web = set(seed_ids), list(seed_ids), []
     for h in range(hops + 1):
         nxt = []
@@ -69,38 +98,54 @@ def traverse_memory_web(seed_ids, docs, hops: int = 2) -> list[dict]:
             d = docs.get(k) or {}
             web.append({
                 "memory_id": k, "hop": h,
-                "entities": d.get("entity_text") or "",
+                "entities": _node_entities(d),
                 "tom_state_type": d.get("tom_state_type"),
-                "tom": (d.get("tom_content") or "")[:240],
-                "claim": (d.get("claim_text") or d.get("text") or "")[:160],
+                "tom": _node_tom(d),
+                "claim": (d.get("claim_text") or d.get("retrieval_text")
+                          or d.get("event_summary") or d.get("text") or "")[:160],
             })
-            for t in _edge_targets(d):
+            neighbors = list(_edge_targets(d))
+            if profile is not None and entity_index is not None:
+                shared = []
+                for ent in profile.entities_of(d):
+                    shared += sorted(entity_index.get(ent, set()))[:4]
+                neighbors += shared
+            for t in neighbors:
                 if t not in seen:
                     seen.add(t); nxt.append(t)
         frontier = nxt
-        if not frontier:
+        if not frontier or len(web) >= max_nodes:
             break
-    return web
+    return web[:max_nodes]
 
 
-def build_prompt(cyc: Path, docs: dict) -> dict:
+def build_prompt(cyc: Path, docs: dict, profile=None, persona_name: str = "Embry") -> dict:
     sb = json.loads((cyc / "storyboard_plan.json").read_text())
     sel = json.loads((cyc / "selection_receipt.v1.json").read_text())["chosen"]
     tom = json.loads((cyc / "phase14_tom.json").read_text()).get("accepted_tom_candidates", [])
     w = json.loads((cyc / "voice_weights/dream_voice_weight_profile.v1.json").read_text())["weights"]
     residue = json.loads((cyc / "residue_links.json").read_text())["items"]
     seed_ids = [i["source_id"] for i in residue]
-    web = traverse_memory_web(seed_ids, docs, hops=2)   # multi-hop /memory graph
+    # schema-agnostic entity index so the web is grounded for ANY persona
+    entity_index = {}
+    if profile is not None:
+        idx = {}
+        for k, d in docs.items():
+            for ent in profile.entities_of(d):
+                idx.setdefault(ent, set()).add(k)
+        entity_index = idx
+    web = traverse_memory_web(seed_ids, docs, profile=profile,
+                              entity_index=entity_index, hops=2)
     tags = [(x["emotional_tag"], x["weight"]) for x in w]
     states = "\n".join(f"- {t.get('tom_state_type')}: {t.get('statement')}" for t in tom[:5])
     competing = ", ".join(f"{t}({round(v,2)})" for t, v in tags)
     web_lines = "\n".join(
-        f"- (hop {n['hop']}) {n['entities']} | she felt [{n['tom_state_type']}]: {n['tom']}"
+        f"- (hop {n['hop']}) {n['entities']} | I felt [{n['tom_state_type']}]: {n['tom']}"
         for n in web if n["entities"] or n["tom"])
     prompt = (
-        "You are Embry, writing a short private journal entry the morning after "
-        "this dream. Write in FIRST PERSON, past tense, plainly — a self "
-        "reflecting on itself, not a report.\n\n"
+        f"You are {persona_name}, writing a short private journal entry the "
+        "morning after this dream. Write in FIRST PERSON, past tense, plainly — "
+        "a self reflecting on itself, not a report.\n\n"
         f"The dream (synthetic, not literal memory): {sb.get('dream_synopsis','')}\n\n"
         f"What the dream stirred in you, in tension with itself: {competing}.\n"
         f"Inferred inner states:\n{states}\n\n"
@@ -198,8 +243,12 @@ def main():
     persona = _arg("--persona", adc.PERSONA)
     cycles_dir = _arg("--cycles-dir", "reports/goal_v3/cycles")
     cyc = ROOT / cycles_dir / sys.argv[sys.argv.index("--cycle") + 1]
-    docs = {d["_key"]: d for d in fetch_persona_docs(persona)}
-    meta = build_prompt(cyc, docs)
+    persona_docs = fetch_persona_docs(persona)
+    docs = {d["_key"]: d for d in persona_docs}
+    profiles = _load("persona_profiles")
+    profile = profiles.build_profile(persona, persona_docs)
+    persona_name = persona.replace("_", " ").title()
+    meta = build_prompt(cyc, docs, profile=profile, persona_name=persona_name)
     parsed, _ = adapter.dispatch_text_reasoning(
         meta["prompt"], "persona-dream-journal",
         output_contract={"journal": "string", "unresolved_tension": "string",
@@ -252,7 +301,7 @@ def main():
         raise SystemExit(f"BLOCKED_JOURNAL_SCHEMA_INVALID: {errs}")
     (cyc / "dream_journal.v1.json").write_text(json.dumps(entry, indent=2) + "\n")
     (cyc / "dream_journal.md").write_text(
-        f"# {persona.capitalize()}'s journal — {meta['cycle']} "
+        f"# {persona_name}'s journal — {meta['cycle']} "
         f"({meta['emphasis']} emphasis)\n\n"
         f"{entry['journal']}\n\n---\n*Unresolved: {entry['unresolved_tension']}*\n"
         f"*(synthetic dream reflection; dream-provenance, not a dream seed)*\n")
