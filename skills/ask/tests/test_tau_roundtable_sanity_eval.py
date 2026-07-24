@@ -531,6 +531,64 @@ def test_browser_failure_classifier_marks_provider_limit_distinct() -> None:
     )
 
 
+def test_browser_failure_classifier_marks_unknown_tool_as_runtime_mismatch() -> None:
+    failure_code = tau_roundtable_worker._classify_browser_failure(
+        failure="Error: Unknown tool: text",
+        response_text="",
+        raw_text="",
+        prompt_text="short prompt",
+        submit_meta={
+            "status": "failed",
+            "failure": "Error: Unknown tool: text",
+        },
+        commands=[
+            {
+                "returncode": 4,
+                "stderr_excerpt": "Error: Unknown tool: text",
+            }
+        ],
+    )
+
+    assert failure_code == tau_roundtable_worker.BROWSER_TOOL_UNSUPPORTED
+    assert (
+        tau_roundtable_worker._auto_retry_blocked_reason(
+            failure_code=failure_code,
+            bundle_paths=["/tmp/review-bundle.md"],
+            can_attach=True,
+        )
+        == "surf_runtime_command_mismatch_requires_repair"
+    )
+
+
+def test_browser_failure_classifier_marks_invalid_tab_id_as_identity_failure() -> None:
+    failure_code = tau_roundtable_worker._classify_browser_failure(
+        failure="Error: Invalid tab ID: 837359725. Use 'surf tab.list' to see available tabs.",
+        response_text="",
+        raw_text="",
+        prompt_text="short prompt",
+        submit_meta={
+            "status": "failed",
+            "failure": "Error: Invalid tab ID: 837359725. Use 'surf tab.list' to see available tabs.",
+        },
+        commands=[
+            {
+                "returncode": 1,
+                "stderr_excerpt": "Error: Invalid tab ID: 837359725. Use 'surf tab.list' to see available tabs.",
+            }
+        ],
+    )
+
+    assert failure_code == tau_roundtable_worker.BROWSER_TAB_IDENTITY_MISMATCH
+    assert (
+        tau_roundtable_worker._auto_retry_blocked_reason(
+            failure_code=failure_code,
+            bundle_paths=["/tmp/review-bundle.md"],
+            can_attach=True,
+        )
+        == "browser_tab_identity_rebind_required"
+    )
+
+
 def test_worker_prior_receipts_marks_missing_upstream_not_ready(tmp_path: Path) -> None:
     receipts = tau_roundtable_worker._load_prior_receipts(tmp_path, ["handler-webgpt"])
 

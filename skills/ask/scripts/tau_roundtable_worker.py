@@ -38,6 +38,7 @@ WEBGPT_BINDING_STALE_BLOCKER = "BLOCKED_WEBGPT_BINDING_STALE"
 BROWSER_TAB_IDENTITY_MISMATCH = "browser_tab_identity_mismatch"
 BROWSER_ACCESS_BLOCKED = "browser_access_blocked"
 BROWSER_PROVIDER_RATE_LIMITED = "browser_provider_rate_limited"
+BROWSER_TOOL_UNSUPPORTED = "browser_tool_unsupported"
 
 
 def main() -> int:
@@ -664,6 +665,7 @@ def _browser_failure_recovery_packet(
             BROWSER_TAB_IDENTITY_MISMATCH,
             BROWSER_ACCESS_BLOCKED,
             BROWSER_PROVIDER_RATE_LIMITED,
+            BROWSER_TOOL_UNSUPPORTED,
         }
         and bool(bundle_paths)
         and can_attach
@@ -752,6 +754,8 @@ def _classify_browser_failure(
         return BROWSER_ACCESS_BLOCKED
     if _looks_browser_provider_rate_limited(haystack, submit_meta):
         return BROWSER_PROVIDER_RATE_LIMITED
+    if _looks_browser_tool_unsupported(haystack):
+        return BROWSER_TOOL_UNSUPPORTED
     if _looks_repo_access_blocked(haystack):
         return "repo_access_blocked"
     if _looks_tab_identity_mismatch(haystack, submit_meta):
@@ -853,6 +857,16 @@ def _looks_browser_provider_rate_limited(text: str, meta: dict[str, Any]) -> boo
     return any(marker in text for marker in markers)
 
 
+def _looks_browser_tool_unsupported(text: str) -> bool:
+    markers = (
+        "unknown tool:",
+        "unknown command:",
+        "unsupported tool",
+        "unsupported command",
+    )
+    return any(marker in text for marker in markers)
+
+
 def _looks_tab_identity_mismatch(text: str, meta: dict[str, Any]) -> bool:
     failure = str(meta.get("failure") or "").lower()
     if "url mismatch" in failure or "tab identity" in failure:
@@ -862,6 +876,8 @@ def _looks_tab_identity_mismatch(text: str, meta: dict[str, Any]) -> bool:
         "expected_url_mismatch",
         "tab_identity_preflight_failed",
         "controlled_tab_id_mismatch",
+        "invalid tab id",
+        "tab not found",
         "wrong_tab",
         "requested tab",
     )
@@ -1101,6 +1117,7 @@ def _recovery_reason(failure_code: str) -> str:
         BROWSER_TAB_IDENTITY_MISMATCH: "The browser-oracle binding or requested tab does not match the live browser tab URL.",
         BROWSER_ACCESS_BLOCKED: "The browser provider presented an access challenge before the request could be submitted.",
         BROWSER_PROVIDER_RATE_LIMITED: "The browser provider accepted routing but reported a provider-side request limit.",
+        BROWSER_TOOL_UNSUPPORTED: "The Surf wrapper called a browser tool name that the installed surf-cli runtime does not support.",
         "repo_access_blocked": "The browser reviewer appears unable to read the referenced repository or local path.",
         "missing_sentinel": "The browser transport did not produce the expected completion sentinel.",
         "prompt_too_large_or_stalled": "The browser submit appears to have timed out, stalled, or exceeded prompt size limits.",
@@ -1121,6 +1138,8 @@ def _auto_retry_blocked_reason(
         return "browser_access_challenge_requires_human_browser_recovery"
     if failure_code == BROWSER_PROVIDER_RATE_LIMITED:
         return "browser_provider_rate_limit_requires_backoff"
+    if failure_code == BROWSER_TOOL_UNSUPPORTED:
+        return "surf_runtime_command_mismatch_requires_repair"
     if not bundle_paths:
         return "missing_local_readable_bundle"
     if not can_attach:
@@ -1142,6 +1161,8 @@ def _fallback_instruction(failure_code: str, *, has_bundle: bool, can_attach: bo
         return "Complete the provider access challenge in the controlled browser tab, rerun Surf preflight, then rerun the Tau DAG node."
     if failure_code == BROWSER_PROVIDER_RATE_LIMITED:
         return "Back off this browser provider until the limit clears; use a different handler or rerun later with the same verified tab."
+    if failure_code == BROWSER_TOOL_UNSUPPORTED:
+        return "Repair the Surf wrapper/provider adapter command mapping, then rerun the Tau DAG node. Do not retry the same browser call unchanged."
     if has_bundle and not can_attach:
         return (
             f"Do not auto-retry {handler}: the current Surf transport does not expose --attach-file for this handler. "

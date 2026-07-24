@@ -713,6 +713,10 @@ fi
 if surf_cli_available; then
     if [[ -f "$LOCAL_CLI" ]]; then
         "$SKILL_DIR/scripts/ensure-surf-cli.sh"
+        if [[ "$1" == "text" ]]; then
+            shift
+            exec node "$LOCAL_CLI" page.text "$@"
+        fi
         exec node "$LOCAL_CLI" "$@"
     fi
     echo "Error: surf-cli socket present but CLI missing at $LOCAL_CLI" >&2

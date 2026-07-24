@@ -48,7 +48,7 @@ case "${{1:-}}" in
   focus.state)
     printf '{{"focusedWindowId":1,"activeTabId":837360812}}\\n'
     ;;
-  text)
+  page.text)
     sentinel="$(cat {str(sentinel_file)!r} 2>/dev/null || true)"
     printf 'https://claude.ai/chat/example\\nprior-response.md\\nClaude responded:\\nAttached review complete\\n%s\\n' "$sentinel"
     ;;
@@ -163,7 +163,7 @@ case "${{1:-}}" in
   tab.reload)
     printf '{{"success":true}}\\n'
     ;;
-  text)
+  page.text)
     sentinel="$(cat {str(sentinel_file)!r} 2>/dev/null || true)"
     printf 'https://claude.ai/chat/example\\nClaude responded:\\nRecovered review complete\\n%s\\n' "$sentinel"
     ;;
@@ -277,7 +277,7 @@ case "${{1:-}}" in
   focus.state)
     printf '{{"focusedWindowId":1,"activeTabId":837360812}}\\n'
     ;;
-  text)
+  page.text)
     count="$(cat {str(text_count_file)!r} 2>/dev/null || printf '0')"
     count="$((count + 1))"
     printf '%s' "$count" > {str(text_count_file)!r}
@@ -379,7 +379,7 @@ case "${{1:-}}" in
   focus.state)
     printf '{{"focusedWindowId":1,"activeTabId":837360921}}\\n'
     ;;
-  text)
+  page.text)
     sentinel="$(cat {str(sentinel_file)!r} 2>/dev/null || true)"
     printf 'Claude responded:\\nTransition accepted\\n%s\\n' "$sentinel"
     ;;

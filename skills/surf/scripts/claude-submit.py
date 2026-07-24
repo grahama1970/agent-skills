@@ -159,7 +159,7 @@ def main() -> int:
         finished = _now()
         raw_text = ""
         try:
-            raw_text = _surf(["text", "--tab-id", requested_tab_id], timeout=30).stdout
+            raw_text = _page_text(requested_tab_id, timeout=30)
             raw_path.write_text(raw_text, encoding="utf-8")
         except Exception:
             raw_path.write_text("", encoding="utf-8")
@@ -279,7 +279,7 @@ def _assert_claude_tab(tab_id: str, expect_url: str) -> dict[str, Any]:
             identity["live_url"] = url
             return identity
     try:
-        page_text = _surf(["text", "--tab-id", tab_id], timeout=30).stdout
+        page_text = _page_text(tab_id, timeout=30)
         if "claude.ai" not in page_text:
             raise SubmitFailure(
                 f"tab {tab_id} is not a Claude tab",
@@ -387,7 +387,7 @@ def _attach_file(tab_id: str, attach_file: Path) -> dict[str, Any]:
 def _wait_for_attachment(tab_id: str, filename: str) -> bool:
     deadline = time.time() + 60
     while time.time() < deadline:
-        text = _surf(["text", "--tab-id", tab_id], timeout=60).stdout
+        text = _page_text(tab_id, timeout=60)
         if filename in text:
             return True
         time.sleep(2)
@@ -400,7 +400,7 @@ def _wait_for_sentinel(tab_id: str, sentinel: str, *, timeout_seconds: int, stab
     stable = 0
     last_text = ""
     while time.time() < deadline:
-        last_text = _surf(["text", "--tab-id", tab_id], timeout=60).stdout
+        last_text = _page_text(tab_id, timeout=60)
         latest_response = _latest_claude_response(last_text)
         if sentinel in latest_response and "Claude is responding" not in last_text:
             digest = hashlib.sha256(last_text.encode("utf-8")).hexdigest()
@@ -648,6 +648,10 @@ def _surf(args: list[str], *, timeout: int) -> subprocess.CompletedProcess[str]:
     if proc.returncode != 0:
         _raise_surf_failure(args, proc)
     return proc
+
+
+def _page_text(tab_id: str, *, timeout: int) -> str:
+    return _surf(["page.text", "--tab-id", tab_id], timeout=timeout).stdout
 
 
 def _run_surf(args: list[str], *, timeout: int) -> subprocess.CompletedProcess[str]:
