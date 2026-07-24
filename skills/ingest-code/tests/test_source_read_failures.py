@@ -105,14 +105,14 @@ def _fail_read_for(target: Path):
 def test_read_source_text_wraps_oserror_with_path(monkeypatch, tmp_path: Path) -> None:
     source = tmp_path / "app.py"
     source.write_text("def app():\n    return 1\n")
-    original_read_text = Path.read_text
+    original_tokenize_open = ingest_code.tokenize.open
 
-    def fail_read_text(self, *args, **kwargs):
-        if self == source:
+    def fail_tokenize_open(filepath, *args, **kwargs):
+        if Path(filepath) == source:
             raise PermissionError("permission denied")
-        return original_read_text(self, *args, **kwargs)
+        return original_tokenize_open(filepath, *args, **kwargs)
 
-    monkeypatch.setattr(Path, "read_text", fail_read_text)
+    monkeypatch.setattr(ingest_code.tokenize, "open", fail_tokenize_open)
 
     with pytest.raises(ingest_code.SourceReadError) as exc_info:
         ingest_code._read_source_text(source)

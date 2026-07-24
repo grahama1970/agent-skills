@@ -22,6 +22,7 @@ import re
 import subprocess
 import sys
 import threading
+import tokenize
 from collections.abc import Collection
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta
@@ -217,8 +218,11 @@ class KnowledgeItemError(RuntimeError):
 def _read_source_text(filepath: Path) -> str:
     """Read source text or raise a path-qualified failure."""
     try:
+        if filepath.suffix == ".py":
+            with tokenize.open(filepath) as source:
+                return source.read()
         return filepath.read_text(errors="ignore")
-    except (OSError, UnicodeError) as exc:
+    except (OSError, SyntaxError, UnicodeError, LookupError) as exc:
         raise SourceReadError(filepath, str(exc)) from exc
 
 
