@@ -19,7 +19,8 @@ Options:
   --sentinel auto|MARKER    Completion marker. Default: auto.
   --stable-polls N          Unchanged polls after sentinel before returning. Default: 3.
   --timeout SECONDS         Browser wait timeout. Default: 300.
-  --model MODEL             Optional Kimi model selector label.
+  --model MODEL             Kimi model selector label. Default: Instant.
+  --reasoning LEVEL         Kimi reasoning selector label. Default: High.
   --tab-id ID               Use this exact Chrome tab as the controlled Kimi tab.
   --url URL                 Resolve an already-open Kimi tab by exact URL.
   --no-activate             Background controlled-tab mode. Do not foreground
@@ -41,7 +42,8 @@ submitted_output=""
 sentinel="auto"
 stable_polls=3
 timeout_s=300
-model=""
+model="${SURF_KIMI_DEFAULT_MODEL:-Instant}"
+reasoning="${SURF_KIMI_DEFAULT_REASONING:-High}"
 tab_id=""
 target_url=""
 no_activate=0
@@ -60,6 +62,7 @@ while [[ $# -gt 0 ]]; do
     --stable-polls) stable_polls="${2:-}"; shift 2 ;;
     --timeout) timeout_s="${2:-}"; shift 2 ;;
     --model) model="${2:-}"; shift 2 ;;
+    --reasoning) reasoning="${2:-}"; shift 2 ;;
     --tab-id) tab_id="${2:-}"; shift 2 ;;
     --url) target_url="${2:-}"; shift 2 ;;
     --no-activate) no_activate=1; shift ;;
@@ -113,6 +116,9 @@ raw_tmp="$(mktemp /tmp/surf-kimi-submit-raw.XXXXXX.md)"
 args=(kimi_tab "$submitted_prompt" --sentinel "$sentinel" --stable-polls "$stable_polls" --timeout "$timeout_s" --keep-tab)
 if [[ -n "$model" ]]; then
   args+=(--model "$model")
+fi
+if [[ -n "$reasoning" ]]; then
+  args+=(--reasoning "$reasoning")
 fi
 if [[ -n "$tab_id" ]]; then
   requested_tab_id="$(printf '%s' "$tab_id" | tr -cd '0-9' | head -c 20 || true)"
@@ -188,12 +194,26 @@ focus_after_json="$("$RUN_SH" focus.state --json 2>/dev/null || true)"
 cp "$raw_tmp" "$raw_output"
 
 if [[ $status -ne 0 ]]; then
-  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "$status" "${requested_tab_id:-}" "$target_url" <<'PY'
+  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "$status" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" <<'PY'
 import json, pathlib, sys
-meta, inp, submitted, out, raw, err, sentinel, started, finished, status, requested_tab_id, target_url = sys.argv[1:]
+meta, inp, submitted, out, raw, err, sentinel, started, finished, status, requested_tab_id, target_url, requested_model, requested_reasoning = sys.argv[1:]
+stderr_text = pathlib.Path(err).read_text() if pathlib.Path(err).exists() else ""
+lower_stderr = stderr_text.lower()
+kimi_provider_capacity_busy = (
+    "kimi provider capacity busy" in lower_stderr
+    or "system is currently busy" in lower_stderr
+    or "capacity is busy" in lower_stderr
+    or "please try again later" in lower_stderr
+)
 pathlib.Path(meta).write_text(json.dumps({
     "status": "failed",
     "exit_code": int(status),
+    "failure": "kimi_provider_capacity_busy" if kimi_provider_capacity_busy else None,
+    "blocker": "BLOCKED_KIMI_PROVIDER_CAPACITY" if kimi_provider_capacity_busy else None,
+    "proof_status": "provider_capacity_limited" if kimi_provider_capacity_busy else "failed",
+    "kimi_provider_capacity_busy": kimi_provider_capacity_busy,
+    "submitted_to_kimi": True if kimi_provider_capacity_busy else None,
+    "recommended_action": "wait_for_provider_capacity_or_use_another_browser_handler" if kimi_provider_capacity_busy else None,
     "input": inp,
     "submitted_output": submitted,
     "output": out,
@@ -202,6 +222,8 @@ pathlib.Path(meta).write_text(json.dumps({
     "sentinel": sentinel,
     "requested_tab_id": requested_tab_id or None,
     "requested_url": target_url or None,
+    "requested_model": requested_model or None,
+    "requested_reasoning": requested_reasoning or None,
     "started_at": started,
     "finished_at": finished,
 }, indent=2) + "\n")
@@ -211,9 +233,9 @@ PY
 fi
 
 if ! grep -Fq "$sentinel" "$raw_output"; then
-  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" <<'PY'
+  python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" <<'PY'
 import json, pathlib, sys
-meta, inp, submitted, out, raw, err, sentinel, started, finished, requested_tab_id, target_url = sys.argv[1:]
+meta, inp, submitted, out, raw, err, sentinel, started, finished, requested_tab_id, target_url, requested_model, requested_reasoning = sys.argv[1:]
 pathlib.Path(meta).write_text(json.dumps({
     "status": "missing_sentinel",
     "input": inp,
@@ -224,6 +246,8 @@ pathlib.Path(meta).write_text(json.dumps({
     "sentinel": sentinel,
     "requested_tab_id": requested_tab_id or None,
     "requested_url": target_url or None,
+    "requested_model": requested_model or None,
+    "requested_reasoning": requested_reasoning or None,
     "started_at": started,
     "finished_at": finished,
 }, indent=2) + "\n")
@@ -246,19 +270,24 @@ clean = text[:idx].rstrip() + "\n"
 pathlib.Path(out_path).write_text(clean)
 PY
 
-python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$stable_polls" "$timeout_s" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$no_activate" "$focus_before_json" "$focus_after_json" "$attach_file_abs" <<'PY'
+python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$stable_polls" "$timeout_s" "$started_at" "$finished_at" "${requested_tab_id:-}" "$target_url" "$no_activate" "$focus_before_json" "$focus_after_json" "$attach_file_abs" "$model" "$reasoning" <<'PY'
 import json, pathlib, sys
-meta, inp, submitted, out, raw, err, sentinel, stable, timeout_s, started, finished, requested_tab_id, target_url, no_activate_s, focus_before_s, focus_after_s, attach_file = sys.argv[1:]
+meta, inp, submitted, out, raw, err, sentinel, stable, timeout_s, started, finished, requested_tab_id, target_url, no_activate_s, focus_before_s, focus_after_s, attach_file, requested_model, requested_reasoning = sys.argv[1:]
 raw_text = pathlib.Path(raw).read_text()
 out_text = pathlib.Path(out).read_text()
 stderr_text = pathlib.Path(err).read_text() if pathlib.Path(err).exists() else ""
 tab_id = None
+tab_id_source = None
 activated = None
 tab_was_created = None
 attachment = None
 for line in reversed(stderr_text.splitlines()):
     if line.startswith("Tab ID:") and tab_id is None:
         tab_id = line.split(":", 1)[1].strip()
+        tab_id_source = "stderr"
+    elif line.startswith("ControlledTabID:") and tab_id is None:
+        tab_id = line.split(":", 1)[1].strip()
+        tab_id_source = "stderr_controlled_tab_id"
     elif line.startswith("Activated:") and activated is None:
         activated = line.split(":", 1)[1].strip() == "true"
     elif line.startswith("TabWasCreated:") and tab_was_created is None:
@@ -271,6 +300,9 @@ for line in reversed(stderr_text.splitlines()):
             attachment = {"parse_error": True, "raw": payload}
     if tab_id is not None and activated is not None and tab_was_created is not None and (not attach_file or attachment is not None):
         break
+if tab_id is None and requested_tab_id:
+    tab_id = requested_tab_id
+    tab_id_source = "requested_tab_id_fallback"
 contamination = []
 for needle in [
     "Skip to content",
@@ -344,6 +376,8 @@ pathlib.Path(meta).write_text(json.dumps({
     "sentinel": sentinel,
     "requested_tab_id": requested_tab_id or None,
     "requested_url": target_url or None,
+    "requested_model": requested_model or None,
+    "requested_reasoning": requested_reasoning or None,
     "attach_file": attach_file or None,
     "attachment": attachment,
     "attachment_missing": attachment_missing,
@@ -356,6 +390,7 @@ pathlib.Path(meta).write_text(json.dumps({
     "raw_chars": len(raw_text),
     "clean_chars": len(out_text),
     "controlled_tab_id": tab_id,
+    "controlled_tab_id_source": tab_id_source,
     "controlled_tab_id_mismatch": tab_mismatch,
     "no_activate": no_activate,
     "tab_was_created": tab_was_created,
