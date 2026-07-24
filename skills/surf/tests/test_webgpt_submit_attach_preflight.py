@@ -721,6 +721,53 @@ esac
     assert invocation_log.read_text(encoding="utf-8").count("chatgpt ") == 2
 
 
+def test_webgpt_submit_provider_limit_without_sentinel_sets_rate_limit_blocker(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    chatgpt_count_file = tmp_path / "chatgpt-count"
+    fake_run = f"""#!/usr/bin/env bash
+set -euo pipefail
+case "${{1:-}}" in
+  tab.list)
+    printf '837352334\\tRate limited\\thttps://chatgpt.com/c/example\\n'
+    ;;
+  focus.state)
+    printf '{{"active_tab_id":"123","active_window_id":"456"}}\\n'
+    ;;
+  js)
+    printf '"cdp-ok"\\n'
+    ;;
+  chatgpt)
+    count="$(cat {str(chatgpt_count_file)!r} 2>/dev/null || printf '0')"
+    count="$((count + 1))"
+    printf '%s' "$count" > {str(chatgpt_count_file)!r}
+    if [[ "$count" -eq 1 ]]; then
+      echo "Error: ChatGPT is rate limited: too many requests; you've hit your limit. Please try again later." >&2
+      exit 1
+    fi
+    echo 'still blocked by provider limit without sentinel'
+    echo 'ResponseSource: assistant-dom' >&2
+    exit 0
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+
+    proc = run_submit(tmp_path, archive, fake_run)
+
+    assert proc.returncode != 0
+    meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["status"] == "missing_sentinel"
+    assert meta["failure"] == "missing_sentinel"
+    assert meta["blocker"] == "BLOCKED_WEBGPT_PROVIDER_RATE_LIMIT"
+    assert meta["recommended_action"] == "wait_for_chatgpt_rate_limit_cooldown_before_retry"
+    assert meta["proof_status"] == "rate_limited"
+    assert meta["chatgpt_too_many_requests_detected"] is True
+
+
 def test_webgpt_submit_clicks_start_new_chat_same_tab_on_conversation_max_length(tmp_path: Path) -> None:
     archive = tmp_path / "five.zip"
     make_zip(archive, 5)

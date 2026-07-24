@@ -1812,8 +1812,16 @@ empty_response_after_submit = (
     and (response_timed_out is True or bool(timeout_error) or "Response timeout" in stderr_text or "timed out" in stderr_text.lower())
 )
 failure = "chatgpt_empty_response_after_submit" if empty_response_after_submit else "missing_sentinel"
-blocker = "BLOCKED_WEBGPT_EMPTY_RESPONSE_AFTER_SUBMIT" if empty_response_after_submit else None
-recommended_action = "retry_with_fresh_chatgpt_conversation" if empty_response_after_submit else None
+blocker = (
+    "BLOCKED_WEBGPT_PROVIDER_RATE_LIMIT" if chatgpt_too_many_requests_detected
+    else "BLOCKED_WEBGPT_EMPTY_RESPONSE_AFTER_SUBMIT" if empty_response_after_submit
+    else None
+)
+recommended_action = (
+    "wait_for_chatgpt_rate_limit_cooldown_before_retry" if chatgpt_too_many_requests_detected
+    else "retry_with_fresh_chatgpt_conversation" if empty_response_after_submit
+    else None
+)
 pathlib.Path(meta).write_text(json.dumps({
     "status": "failed" if empty_response_after_submit else "missing_sentinel",
     "failure": failure,
