@@ -3,6 +3,58 @@
 **Last updated:** 2026-07-24 UTC (fair D-vs-M perception D~=M + behavioral shift-with-safety-flag) by agent
 **Status:** Active development
 
+## 2026-07-24 — reference bibliography (gathered via /brave-search this session)
+
+Research neighbors — dreaming / sleep / memory consolidation in LLM agents
+(persona-dream's novelty is AFFECT + downstream BEHAVIORAL effect, which none
+of these measure — they target knowledge consolidation / self-improvement):
+- Language Models Need Sleep: Learning to Self-Modify and Consolidate Memories
+  — arXiv 2606.03979 (closest neighbor: "Sleep" = consolidate then "dream" by
+  generating synthetic experiences; ours dreams for disposition, not knowledge).
+- Learning to Forget: Sleep-Inspired Memory Consolidation (SleepGate) — arXiv
+  2603.14517.
+- A computational account of dreaming: learning and memory consolidation —
+  arXiv 2602.04095.
+- Active Dreaming Memory: Biologically-Inspired Episodic Consolidation for
+  Lifelong Learning in Autonomous Agents — engrXiv preprint 5919.
+- Memory for Autonomous LLM Agents: Mechanisms, Evaluation, Emerging Frontiers
+  — arXiv 2603.07670.
+
+Agentic-memory affect + evaluation:
+- MemEmo: Evaluating Emotion in Memory Systems of Agents — arXiv 2602.23944
+  (memory→affect efficacy "inconclusive" in current work).
+- Dynamic Affective Memory Management for Personalized LLM Agents — arXiv
+  2510.27418 (Bayesian entropy-minimizing affect-memory updates; M-arm cousin).
+- Anatomy of Agentic Memory: Taxonomy and Empirical Analysis — arXiv 2602.19320
+  (LLM-as-judge is the more reliable memory-eval protocol).
+
+Evaluation methodology (used to design the fair panel + behavioral probe):
+- Reliability without Validity: Large-Scale LLM-as-a-Judge Evaluation (21
+  judges) — arXiv 2606.19544 (position bias; agreeing judges = one verdict
+  bought thrice; audit agreement/consistency/bias).
+- ToM and Self-Attributions of Mentality are Dissociable in LLMs — arXiv
+  2603.28925 (a judge's disposition label is an attribution, not proof of
+  functional effect — motivated moving to the behavioral test).
+
+Voice / TTS / chatterbox (practical integration goal):
+- Chatterbox (Resemble AI, MIT, open-source) — resemble.ai; documented gap:
+  "no fixed voice identity unless guided by an audio prompt or fixed seed";
+  nonverbal tags "unpredictable/inconsistent" (maps to our chatterbox #2/#3).
+- chatterbox-fastrtc-realtime-emotion (dwain-barnes, GitHub) — real-time
+  context→emotion; the per-utterance competitor to our dispositional prior.
+- A model of vocal persona: context, perception, production — Frontiers Comp Sci
+  2025 (fcomp.2025.1575296): users want control over whether/how emotion reaches
+  the voice + a flagged SOURCE of misalignment (maps to our caution-erosion flag).
+- Task-vector arithmetic for emotional expressivity in LM-TTS — arXiv 2606.05367
+  (speaker-embedding emotion steering; chatterbox #5 research horizon).
+- TED-TTS (2601.03170), SpeechEQ (2606.25990), Artificial Emotion survey
+  (2508.10286) — expressive/duration control, multi-turn emotional benchmarks,
+  and the caution that extrinsic per-utterance conditioning traps affect in
+  human linguistic categories.
+
+Note: arXiv IDs transcribed from /brave-search result listings this session; not
+independently fetched/verified per-ID. Verify before citing in any publication.
+
 ## 2026-07-24 (later) — fair D-vs-M + behavioral: split result
 
 - LLM-compute-matched M-arm (build_memory_arm_llm.py): same adapter as the dream,
