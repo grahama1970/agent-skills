@@ -1,18 +1,31 @@
 {
-  "recorded_at": "2026-07-16T16:55:00Z",
-  "source_kind": "downstream_modified_vendor_tree",
+  "recorded_at": "2026-07-24T11:25:57Z",
+  "source_kind": "upstream_v2.9.0_with_downstream_webgpt_patchset",
   "upstream_repository": "https://github.com/nicobailon/surf-cli.git",
-  "upstream_base_commit": "3acf60f98f3a2a8679774ec6f3ecc88433b0e2fb",
+  "upstream_ref": "refs/tags/v2.9.0",
+  "upstream_commit": "38e1ef4515bef0aaee4848a257fb237bad053f9d",
   "downstream_repository": "https://github.com/grahama1970/agent-skills.git",
-  "last_vendor_import_commit": "ee9e4b1ac",
+  "downstream_issue": "https://github.com/grahama1970/agent-skills/issues/983",
   "clean_upstream_copy": false,
-  "package_version": "2.2.0",
+  "package_version": "2.9.0",
+  "patchset": {
+    "name": "agent-skills-webgpt-compat",
+    "files": [
+      "native/chatgpt-client.cjs"
+    ],
+    "contracts": [
+      "conversation_max_length_detection",
+      "too_many_requests_detection",
+      "assert_ready_for_new_prompt_export",
+      "sentinel_stable_stall_wait_for_response_export"
+    ]
+  },
   "content_identity": {
     "algorithm": "sha256(relative_path_nul_size_nul_content)",
     "excludes": [
       "VENDOR.lock.json"
     ],
-    "file_count": 73,
-    "sha256": "c0a024254a7b9c98bca427148c03232e8e0e02964353a8055e80d560b17b9201"
+    "file_count": 118,
+    "sha256": "eccb5be34ef17572ae5609f81b25ae0473eb95dfea62843ccd49afb6d24aacb3"
   }
 }

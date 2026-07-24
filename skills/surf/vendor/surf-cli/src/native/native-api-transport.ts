@@ -12,13 +12,13 @@ let streamIdCounter = 0;
 
 export function handleNativeApiResponse(msg: any): boolean {
   const { type, streamId } = msg;
-  
+
   if (!streamId || !streamCallbacks.has(streamId)) {
     return false;
   }
-  
+
   const callbacks = streamCallbacks.get(streamId)!;
-  
+
   switch (type) {
     case "API_RESPONSE_START":
       callbacks.onStart(msg.status, msg.headers);
@@ -49,9 +49,9 @@ export async function nativeApiFetch(
   callbacks: ApiStreamCallbacks
 ): Promise<void> {
   const streamId = `stream_${++streamIdCounter}_${Date.now()}`;
-  
+
   streamCallbacks.set(streamId, callbacks);
-  
+
   try {
     await sendToNativeHost({
       type: "API_REQUEST",

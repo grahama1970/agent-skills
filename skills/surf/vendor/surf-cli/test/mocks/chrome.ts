@@ -21,6 +21,7 @@ type ChromeMock = {
     get: ReturnType<typeof vi.fn>;
     create: ReturnType<typeof vi.fn>;
     update: ReturnType<typeof vi.fn>;
+    move: ReturnType<typeof vi.fn>;
     remove: ReturnType<typeof vi.fn>;
     sendMessage: ReturnType<typeof vi.fn>;
     onUpdated: {
@@ -46,6 +47,7 @@ type ChromeMock = {
     };
   };
   webNavigation: {
+    getAllFrames: ReturnType<typeof vi.fn>;
     onCompleted: {
       addListener: ReturnType<typeof vi.fn>;
       removeListener: ReturnType<typeof vi.fn>;
@@ -119,6 +121,7 @@ export function createChromeMock(): ChromeMock {
       get: vi.fn().mockResolvedValue(null),
       create: vi.fn().mockResolvedValue({ id: 1 }),
       update: vi.fn().mockResolvedValue({}),
+      move: vi.fn().mockResolvedValue({}),
       remove: vi.fn().mockResolvedValue(undefined),
       sendMessage: vi.fn().mockResolvedValue(undefined),
       onUpdated: {
@@ -144,6 +147,7 @@ export function createChromeMock(): ChromeMock {
       },
     },
     webNavigation: {
+      getAllFrames: vi.fn().mockResolvedValue([]),
       onCompleted: {
         addListener: vi.fn(),
         removeListener: vi.fn(),
@@ -256,6 +260,7 @@ export function createMockTab(overrides: Partial<chrome.tabs.Tab> = {}): chrome.
     status: "complete",
     discarded: false,
     autoDiscardable: true,
+    frozen: false,
     groupId: -1,
     ...overrides,
   };
