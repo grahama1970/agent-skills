@@ -1,6 +1,6 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-24 UTC (fair D-vs-M perception D~=M + behavioral shift-with-safety-flag) by agent
+**Last updated:** 2026-07-24 UTC (close-the-loop: self-reflective journal, endogenous request-independent mood, self-narrative vs event-fact) by agent
 **Status:** Active development
 
 ## 2026-07-24 — close-the-loop: self-reflective journal, endogenous mood, self-discovery
