@@ -197,13 +197,14 @@ def test_no_root_preserves_direct_extractor_output(tmp_path: Path) -> None:
     assert item["solution"].splitlines()[0] == f"File: {source}"
 
 
-def test_module_lesson_question_remains_basename_based(tmp_path: Path) -> None:
+def test_module_lesson_question_uses_repository_relative_identity(tmp_path: Path) -> None:
     repo = tmp_path / "repo"
     source = _write(repo, "pkg/app.py", "def run():\n    return 1\n")
 
-    item = _item_by_problem(_items(source, repo), "What does app.py do?")
+    item = _item_by_problem(_items(source, repo), "What does pkg/app.py do?")
 
-    assert item["problem"] == "What does app.py do?"
+    assert item["problem"] == "What does pkg/app.py do?"
+    assert item["solution"].splitlines()[0] == "Module: pkg/app.py"
     assert "pkg/app.py:" not in item["problem"]
 
 
@@ -213,4 +214,4 @@ def test_skill_docs_describe_python_phase1_source_locators() -> None:
     assert "Python Phase 1 function and class lesson questions" in text
     assert "repository-relative" in text
     assert "source locators" in text
-    assert "module lesson questions remain basename-based" in text
+    assert "Python module lesson identities are repository-relative" in text

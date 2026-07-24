@@ -719,7 +719,8 @@ def extract_python_knowledge(
         tags: Taxonomy tags for /memory
     """
     items: list[dict] = []
-    rel_path = filepath.name  # Just filename for concise questions
+    rel_path = filepath.name  # Direct helper calls keep concise questions.
+    module_identity = _python_module_identity(filepath, codebase_root)
 
     try:
         tree = ast.parse(content)
@@ -731,8 +732,8 @@ def extract_python_knowledge(
     module_doc = ast.get_docstring(tree)
     if module_doc and len(module_doc) > 20:
         items.append({
-            "problem": f"What does {rel_path} do?",
-            "solution": f"Module: {filepath}\n\n{module_doc[:2000]}",
+            "problem": f"What does {module_identity} do?",
+            "solution": f"Module: {module_identity}\n\n{module_doc[:2000]}",
             "tags": ["codebase", "module", filepath.stem],
         })
     else:
@@ -741,14 +742,14 @@ def extract_python_knowledge(
             for node in _python_module_scope_declarations(tree, ancestry_by_node)
         ]
         if top_level:
-            summary = f"Module: {filepath}\n\nDefines: {', '.join(top_level[:20])}"
+            summary = f"Module: {module_identity}\n\nDefines: {', '.join(top_level[:20])}"
         else:
             summary = (
-                f"Module: {filepath}\n\n"
+                f"Module: {module_identity}\n\n"
                 "No module docstring or named declarations."
             )
         items.append({
-            "problem": f"What does {rel_path} do?",
+            "problem": f"What does {module_identity} do?",
             "solution": summary,
             "tags": ["codebase", "module", filepath.stem],
         })
@@ -1194,6 +1195,16 @@ def _python_functional_source_locator(
     if start_line > 0 and end_line >= start_line:
         return f"{path}:{start_line}-{end_line}"
     return path
+
+
+def _python_module_identity(
+    filepath: Path,
+    codebase_root: Path | None,
+) -> str:
+    """Return the whole-file identity used by Python module lessons."""
+    if codebase_root is None:
+        return filepath.name
+    return _relative_path(filepath, codebase_root)
 
 
 def _python_structural_symbol_kind(
@@ -2961,13 +2972,19 @@ def _edge_preview_key(edge: dict[str, Any]) -> tuple[str, str, str, str]:
     )
 
 
-def store_edges(edges: list[dict], scope: str = "code", dry_run: bool = False, monitor=None) -> int:
+def store_edges(
+    edges: list[dict],
+    scope: str = "code",
+    dry_run: bool = False,
+    monitor=None,
+    codebase_root: Path | None = None,
+) -> int:
     """Store dependency edges in /memory via batch HTTP endpoint."""
     edges = _canonicalize_dependency_edges(edges)
     if dry_run:
         for edge in sorted(edges, key=_edge_preview_key):
-            from_name = Path(edge["from_file"]).name
-            to_name = Path(edge["to_file"]).name
+            from_name = _python_module_identity(Path(edge["from_file"]), codebase_root)
+            to_name = _python_module_identity(Path(edge["to_file"]), codebase_root)
             names = ", ".join(edge.get("names", [])[:3])
             print(f"  [EDGE] {from_name} → {to_name} (imports {names})")
             if monitor:
@@ -2978,8 +2995,8 @@ def store_edges(edges: list[dict], scope: str = "code", dry_run: bool = False, m
     # (lessons may be stored as scope="code" or scope="extractor")
     batch = []
     for edge in edges:
-        from_name = Path(edge["from_file"]).name
-        to_name = Path(edge["to_file"]).name
+        from_name = _python_module_identity(Path(edge["from_file"]), codebase_root)
+        to_name = _python_module_identity(Path(edge["to_file"]), codebase_root)
         batch.append({
             "from_title": f"What does {from_name} do?",
             "to_title": f"What does {to_name} do?",
@@ -3974,7 +3991,13 @@ def scan(
         if edges_total > 0:
             edge_description = "Previewing edges" if dry_run else "Storing edges"
             edge_monitor = Monitor(None, name="ingest-code-edges", desc=edge_description, total=edges_total) if Monitor else None
-            edges_stored = store_edges(edges, scope=scope, dry_run=dry_run, monitor=edge_monitor)
+            edges_stored = store_edges(
+                edges,
+                scope=scope,
+                dry_run=dry_run,
+                monitor=edge_monitor,
+                codebase_root=path,
+            )
             if edge_monitor:
                 edge_monitor._update(final=True)
             if dry_run:

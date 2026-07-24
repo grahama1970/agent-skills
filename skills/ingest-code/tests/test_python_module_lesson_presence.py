@@ -49,7 +49,7 @@ def test_import_only_python_file_emits_module_lesson(tmp_path: Path) -> None:
 
     assert item["problem"] == "What does app.py do?"
     assert item["solution"] == (
-        f"Module: {source}\n\nNo module docstring or named declarations."
+        "Module: app.py\n\nNo module docstring or named declarations."
     )
 
 
@@ -80,7 +80,7 @@ def test_long_module_docstring_output_is_unchanged(tmp_path: Path) -> None:
 
     item = _module_item(source)
 
-    assert item["solution"] == f"Module: {source}\n\n{doc}"
+    assert item["solution"] == f"Module: app.py\n\n{doc}"
 
 
 def test_named_declaration_summary_output_is_unchanged(tmp_path: Path) -> None:
@@ -97,7 +97,7 @@ def test_named_declaration_summary_output_is_unchanged(tmp_path: Path) -> None:
 
     item = _module_item(source)
 
-    assert item["solution"] == f"Module: {source}\n\nDefines: run, Service"
+    assert item["solution"] == "Module: app.py\n\nDefines: run, Service"
 
 
 def test_python_file_emits_exactly_one_module_lesson(tmp_path: Path) -> None:

@@ -280,8 +280,10 @@ Python Phase 1 module-scope discovery is determined by named lexical ancestry,
 not indentation or module-level control-flow nesting.
 Python Phase 1 function and class lesson questions use repository-relative
 source locators such as `pkg/app.py:10-14` during `scan` and `rescan`, while
-direct helper calls without a repository root retain basename questions and
-module lesson questions remain basename-based for relationship matching.
+direct helper calls without a repository root retain basename questions.
+Python module lesson identities are repository-relative and range-free during
+`scan` and `rescan`; edge endpoint titles use the same module identity for
+relationship matching.
 Every successfully parsed Python file emits exactly one module lesson,
 including import-only, assignment-only, pass-only, and empty modules.
 
