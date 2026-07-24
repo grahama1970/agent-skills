@@ -598,11 +598,11 @@ esac
     assert meta["raw_response_advisory"] is True
 
 
-def test_webgpt_submit_provider_limit_preflight_fails_closed_before_submit(tmp_path: Path) -> None:
+def test_webgpt_submit_visible_provider_limit_uses_bounded_cooldown_retry(tmp_path: Path) -> None:
     archive = tmp_path / "five.zip"
     make_zip(archive, 5)
     invocation_log = tmp_path / "surf-invocations.log"
-    js_count_file = tmp_path / "js-count"
+    chatgpt_count_file = tmp_path / "chatgpt-count"
     fake_run = f"""#!/usr/bin/env bash
 set -euo pipefail
 printf '%s\\n' "$*" >> {str(invocation_log)!r}
@@ -614,18 +614,40 @@ case "${{1:-}}" in
     printf '{{"active_tab_id":"123","active_window_id":"456"}}\\n'
     ;;
   js)
-    count="$(cat {str(js_count_file)!r} 2>/dev/null || printf '0')"
-    count="$((count + 1))"
-    printf '%s' "$count" > {str(js_count_file)!r}
-    if [[ "$count" -eq 1 ]]; then
+    if [[ "$*" == *"cdp-ok"* ]]; then
       printf '"cdp-ok"\\n'
     else
-      printf '"provider-limit-detected"\\n'
+      echo "no visible Got it modal on hit-your-limit page" >&2
+      exit 12
     fi
     ;;
   chatgpt)
-    echo 'chatgpt should not be invoked when provider limit is visible before submit' >&2
-    exit 44
+    count="$(cat {str(chatgpt_count_file)!r} 2>/dev/null || printf '0')"
+    count="$((count + 1))"
+    printf '%s' "$count" > {str(chatgpt_count_file)!r}
+    sentinel=""
+    target_tab=""
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --sentinel) sentinel="${{2:-}}"; shift 2 ;;
+        --target-tab-id) target_tab="${{2:-}}"; shift 2 ;;
+        *) shift ;;
+      esac
+    done
+    if [[ "$count" -eq 1 ]]; then
+      echo "Error: ChatGPT is rate limited: too many requests; you've hit your limit. Please try again later." >&2
+      exit 1
+    fi
+    if [[ "$target_tab" != "837352334" ]]; then
+      echo "expected same-tab retry target 837352334, got $target_tab" >&2
+      exit 43
+    fi
+    printf 'same tab response after hit-your-limit cooldown\\n%s\\n' "$sentinel"
+    echo 'Tab ID: 837352334' >&2
+    echo 'Activated: false' >&2
+    echo 'TabWasCreated: false' >&2
+    echo 'ResponseSource: assistant-dom' >&2
+    exit 0
     ;;
   *)
     echo "unexpected command: $*" >&2
@@ -636,16 +658,22 @@ esac
 
     proc = run_submit(tmp_path, archive, fake_run)
 
-    assert proc.returncode == 7
-    assert "provider limit is visible" in proc.stderr
+    assert proc.returncode == 0, proc.stderr
+    assert (tmp_path / "response.md").read_text(encoding="utf-8") == (
+        "same tab response after hit-your-limit cooldown\n"
+    )
     meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
-    assert meta["status"] == "failed"
-    assert meta["failure"] == "chatgpt_provider_limit_preflight"
-    assert meta["proof_status"] == "rate_limited"
-    assert meta["submitted_to_chatgpt"] is False
+    assert meta["status"] == "completed"
+    assert meta["requested_tab_id"] == "837352334"
+    assert meta["controlled_tab_id"] == "837352334"
     assert meta["chatgpt_too_many_requests_detected"] is True
-    assert meta["chatgpt_rate_limit"]["exhausted"] is True
-    assert "chatgpt " not in invocation_log.read_text(encoding="utf-8")
+    assert meta["chatgpt_rate_limit"]["wait_seconds"] == 0
+    assert meta["chatgpt_rate_limit"]["retry_attempts"] == 1
+    assert meta["chatgpt_rate_limit"]["dismiss_attempted"] is True
+    assert meta["chatgpt_rate_limit"]["dismissed"] is False
+    assert meta["chatgpt_rate_limit"]["retry_attempted"] is True
+    assert meta["chatgpt_rate_limit"]["exhausted"] is False
+    assert invocation_log.read_text(encoding="utf-8").count("chatgpt ") == 2
 
 
 def test_webgpt_submit_clicks_start_new_chat_same_tab_on_conversation_max_length(tmp_path: Path) -> None:
@@ -993,9 +1021,13 @@ if (!client.detectsTooManyRequests("Too many requests\\n\\nYou’re making reque
   console.error('expected curly apostrophe rate-limit modal to be detected');
   process.exit(2);
 }}
+if (!client.detectsTooManyRequests("You've hit your limit. Please try again later. Retry")) {{
+  console.error('expected hit-your-limit retry copy to be detected');
+  process.exit(3);
+}}
 if (client.detectsTooManyRequests("Please wait a few minutes before trying again.")) {{
   console.error('wait text alone must not trigger rate-limit handling');
-  process.exit(3);
+  process.exit(4);
 }}
 """,
         encoding="utf-8",

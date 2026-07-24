@@ -1307,66 +1307,6 @@ PY
   fi
   rm -f -- "$cdp_probe_err" "${cdp_retry_err:-}"
 
-  provider_limit_state="$("$RUN_SH" js "const text = (document.body?.innerText || document.body?.textContent || '').toLowerCase().replace(/[\\u2018\\u2019]/g, \"'\").replace(/\\s+/g, ' ').trim(); const limited = ((text.includes('too many requests') || text.includes(\"you've hit your limit\") || text.includes('you have hit your limit')) && (text.includes(\"you're making requests too quickly\") || text.includes('you are making requests too quickly') || text.includes('temporarily limited access to your conversations') || text.includes('please wait a few minutes before trying again') || text.includes('please try again later'))); return limited ? 'provider-limit-detected' : 'provider-limit-clear';" --no-activate --tab-id "$requested_tab_id" 2>/dev/null || true)"
-  if [[ "$provider_limit_state" == "provider-limit-detected" || "$provider_limit_state" == '"provider-limit-detected"' ]]; then
-    failed_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-    {
-      echo "ChatGPTTooManyRequestsDetected: true"
-      echo "ChatGPTRateLimitAction: provider_limit_preflight_no_submit"
-      echo "ChatGPTRateLimitRetryAttempted: false"
-      echo "ChatGPTRateLimitExhausted: true"
-      echo "ChatGPTRateLimitError: provider_limit_visible_before_submit"
-    } >> "$stderr_log"
-    python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$requested_tab_id" "$target_url" "$model" "$reasoning" "${identity_preflight_json:-}" "$failed_at" <<'PY'
-import json, pathlib, sys
-(
-    meta, inp, submitted, out, raw, err, sentinel, requested_tab_id,
-    target_url, model, reasoning, identity_s, failed_at,
-) = sys.argv[1:]
-try:
-    identity = json.loads(identity_s) if identity_s else None
-except Exception:
-    identity = {"ok": False, "error": "identity_meta_parse_failed"}
-pathlib.Path(meta).write_text(json.dumps({
-    "status": "failed",
-    "failure": "chatgpt_provider_limit_preflight",
-    "blocker": "BLOCKED_WEBGPT_PROVIDER_RATE_LIMIT",
-    "recommended_action": "wait_for_provider_limit_or_use_another_browser_handler",
-    "input": inp,
-    "submitted_output": submitted,
-    "output": out,
-    "raw_output": raw,
-    "stderr_log": err,
-    "sentinel": sentinel,
-    "requested_tab_id": requested_tab_id,
-    "requested_url": target_url or None,
-    "requested_model": model or None,
-    "requested_reasoning": reasoning or None,
-    "tab_identity_preflight": identity,
-    "submitted_to_chatgpt": False,
-    "chatgpt_too_many_requests_detected": True,
-    "chatgpt_rate_limit": {
-        "wait_seconds": None,
-        "retry_attempts": None,
-        "dismiss_attempted": False,
-        "dismissed": False,
-        "action": "provider_limit_preflight_no_submit",
-        "retry_attempted": False,
-        "exhausted": True,
-        "error": "provider_limit_visible_before_submit",
-    },
-    "raw_contains_sentinel": False,
-    "clean_contains_sentinel": False,
-    "raw_chars": 0,
-    "clean_chars": 0,
-    "started_at": failed_at,
-    "finished_at": failed_at,
-}, indent=2) + "\n", encoding="utf-8")
-PY
-    enrich_agent_diagnosis
-    echo "webgpt.submit blocked: ChatGPT provider limit is visible in controlled tab $requested_tab_id; no prompt submitted." >&2
-    exit 7
-  fi
 fi
 
 if [[ "$no_activate" -eq 1 ]]; then
