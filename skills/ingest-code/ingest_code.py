@@ -3592,12 +3592,20 @@ def _build_cwe_lesson_payload(
     filepath: Path,
     cwe: dict[str, Any],
     bridge_tags: object,
+    *,
+    codebase_root: Path | None = None,
 ) -> dict[str, Any]:
     """Build the canonical compatibility lesson for one CWE finding."""
     cwe_id = cwe["cwe_id"]
     cwe_name = cwe.get("name", "")
     category = cwe.get("category", "")
     extension = filepath.suffix.lstrip(".")
+    if codebase_root is None:
+        problem_identity = filepath.name
+        solution_identity = str(filepath)
+    else:
+        problem_identity = _relative_path(filepath, codebase_root)
+        solution_identity = problem_identity
 
     base_tags = ["ingest-code", "cwe", cwe_id]
     if category:
@@ -3609,8 +3617,8 @@ def _build_cwe_lesson_payload(
     category_text = f" - Category: {category}" if category else ""
 
     return {
-        "problem": f"What CWEs are relevant to {filepath.name}?",
-        "solution": f"{finding}{category_text}. File: {filepath}",
+        "problem": f"What CWEs are relevant to {problem_identity}?",
+        "solution": f"{finding}{category_text}. File: {solution_identity}",
         "tags": _merge_taxonomy_tags(base_tags, bridge_tags, {}),
     }
 
@@ -3972,7 +3980,12 @@ def scan(
                     if dry_run:
                         print(f"  [CWE] {filepath.name}: {cwe_id}", flush=True)
                     elif memory_script:
-                        payload = _build_cwe_lesson_payload(filepath, cwe, bridge_tags)
+                        payload = _build_cwe_lesson_payload(
+                            filepath,
+                            cwe,
+                            bridge_tags,
+                            codebase_root=path,
+                        )
                         ok = _learn(
                             memory_script,
                             payload["problem"],
@@ -4247,7 +4260,12 @@ def rescan(
                     _exit_cwe_result_failure(codebase=path, exc=exc)
                 bridge_tags = result.get("bridge_tags", [])
                 for cwe in result.get("cwe_mappings", []):
-                    payload = _build_cwe_lesson_payload(filepath, cwe, bridge_tags)
+                    payload = _build_cwe_lesson_payload(
+                        filepath,
+                        cwe,
+                        bridge_tags,
+                        codebase_root=path,
+                    )
                     codebase_cwes_attempted += 1
                     if _learn(
                         memory_script,

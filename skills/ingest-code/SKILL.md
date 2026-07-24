@@ -302,6 +302,9 @@ when taxonomy support is available.
 Built-in CWE scanning uses Python encoding-cookie and UTF-8 BOM decoding in
 full, CWE-only, and rescan workflows. Invalid or conflicting Python encoding
 declarations fail closed before CWE preview, persistence, or marker creation.
+CWE compatibility lessons use repository-relative file identities during `scan`
+and `rescan` and do not include checkout-local absolute paths.
+Direct helper calls without a repository root retain their legacy output.
 
 ### Structured Code Symbols
 
