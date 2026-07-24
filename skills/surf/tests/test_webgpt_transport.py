@@ -9,6 +9,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 TRANSPORT = REPO_ROOT / "skills/surf/scripts/lib/webgpt_transport.py"
 WEBGPT_SUBMIT = REPO_ROOT / "skills/surf/scripts/webgpt-submit.sh"
 WEBGPT_RECOVER = REPO_ROOT / "skills/surf/scripts/webgpt-recover.sh"
+WEBGPT_ROUNDTRIP_PREFLIGHT = REPO_ROOT / "skills/surf/scripts/webgpt-roundtrip-preflight.sh"
 TRANSPORT_FIXTURES = REPO_ROOT / "skills/surf/tests/fixtures/webgpt-transport"
 
 
@@ -312,6 +313,123 @@ def test_transport_summary_completed() -> None:
     summary = write_summary(round_dir)
     assert summary["final_transport_state"] == "completed"
     assert summary["raw_sentinel_present"] is True
+
+
+def test_roundtrip_preflight_bounds_rate_limit_wait_for_child_submit(tmp_path: Path) -> None:
+    calls = tmp_path / "calls.log"
+    env_log = tmp_path / "env.log"
+    fake_run = tmp_path / "run.sh"
+    fake_run.write_text(
+        f"""#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\\n' "$*" >> {str(calls)!r}
+case "${{1:-}}" in
+  focus.state)
+    printf '{{"active_tab_id":"123","active_window_id":"456"}}\\n'
+    ;;
+  tab.list)
+    if printf '%s\\n' "$@" | grep -q -- '--json'; then
+      printf '[{{"id":837352334,"title":"Reviewer","url":"https://chatgpt.com/c/example"}}]\\n'
+    else
+      printf '837352334\\tReviewer\\thttps://chatgpt.com/c/example\\n'
+    fi
+    ;;
+  webgpt.preflight)
+    printf '{{"status":"pass","tab_id":"837352334","url":"https://chatgpt.com/c/example"}}\\n'
+    ;;
+  js)
+    if printf '%s\\n' "$*" | grep -q 'cdp-ok'; then
+      printf 'cdp-ok\\n'
+    else
+      printf '"ok"\\n'
+    fi
+    ;;
+  chatgpt)
+    printf 'rate_wait=%s\\n' "${{SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS:-unset}}" >> {str(env_log)!r}
+    sentinel=""
+    while [[ $# -gt 0 ]]; do
+      if [[ "$1" == "--sentinel" ]]; then
+        sentinel="${{2:-}}"
+        break
+      fi
+      shift
+    done
+    printf 'pong %s\\n' "$sentinel"
+    printf 'Tab ID: 837352334\\nActivated: false\\nTabWasCreated: false\\nResponseSource: assistant-dom\\n' >&2
+    ;;
+  *)
+    printf 'unexpected command: %s\\n' "$*" >&2
+    exit 99
+    ;;
+esac
+""",
+        encoding="utf-8",
+    )
+    fake_run.chmod(0o755)
+
+    proc = subprocess.run(
+        [
+            "bash",
+            str(WEBGPT_ROUNDTRIP_PREFLIGHT),
+            "--tab-id",
+            "837352334",
+            "--expect-url",
+            "https://chatgpt.com/c/example",
+            "--no-activate",
+            "--timeout",
+            "5",
+            "--output-dir",
+            str(tmp_path / "roundtrip"),
+            "--json",
+        ],
+        env={
+            **__import__("os").environ,
+            "SURF_RUN_SH": str(fake_run),
+            "SURF_DISPATCH_SH": str(fake_run),
+        },
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    payload = json.loads(proc.stdout)
+    assert payload["status"] == "pass"
+    assert "rate_wait=5" in env_log.read_text(encoding="utf-8")
+
+    env_log.write_text("", encoding="utf-8")
+    proc_override = subprocess.run(
+        [
+            "bash",
+            str(WEBGPT_ROUNDTRIP_PREFLIGHT),
+            "--tab-id",
+            "837352334",
+            "--expect-url",
+            "https://chatgpt.com/c/example",
+            "--no-activate",
+            "--timeout",
+            "5",
+            "--output-dir",
+            str(tmp_path / "roundtrip-override"),
+            "--json",
+        ],
+        env={
+            **__import__("os").environ,
+            "SURF_RUN_SH": str(fake_run),
+            "SURF_DISPATCH_SH": str(fake_run),
+            "SURF_WEBGPT_ROUNDTRIP_RATE_LIMIT_WAIT_SECONDS": "7",
+            "SURF_WEBGPT_RATE_LIMIT_WAIT_SECONDS": "300",
+        },
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc_override.returncode == 0, proc_override.stderr
+    assert json.loads(proc_override.stdout)["status"] == "pass"
+    assert "rate_wait=7" in env_log.read_text(encoding="utf-8")
 
 
 def test_recover_finalize_claims_orphaned_submitted_receipt(tmp_path: Path) -> None:
