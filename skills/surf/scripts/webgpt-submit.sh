@@ -675,9 +675,9 @@ attempt_extract_fallback() {
   extract_raw="$(mktemp /tmp/surf-webgpt-submit-extract-raw.XXXXXX.md)"
   extract_meta="$(mktemp /tmp/surf-webgpt-submit-extract-meta.XXXXXX.json)"
   extract_err="$(mktemp /tmp/surf-webgpt-submit-extract-stderr.XXXXXX.log)"
-  local per_attempt_timeout="${SURF_WEBGPT_EXTRACT_FALLBACK_TIMEOUT:-30}"
-  local retry_interval="${SURF_WEBGPT_EXTRACT_FALLBACK_INTERVAL:-15}"
-  local retry_budget="${SURF_WEBGPT_EXTRACT_FALLBACK_BUDGET:-180}"
+  local per_attempt_timeout="${SURF_WEBGPT_EXTRACT_FALLBACK_TIMEOUT:-12}"
+  local retry_interval="${SURF_WEBGPT_EXTRACT_FALLBACK_INTERVAL:-3}"
+  local retry_budget="${SURF_WEBGPT_EXTRACT_FALLBACK_BUDGET:-45}"
   local started_at="$SECONDS"
   local attempt=0
   while (( SECONDS - started_at < retry_budget )); do
