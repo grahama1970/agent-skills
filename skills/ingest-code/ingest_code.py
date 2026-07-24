@@ -33,7 +33,7 @@ import httpx
 
 from code_memory_client import CodeMemoryClient
 from code_symbol_record import CodeSymbolRecord
-from ingest_code_cwe import scan_file_cwe
+from ingest_code_cwe import CweTaxonomyError, scan_file_cwe
 
 try:
     import typer
@@ -366,7 +366,11 @@ def _scan_file_cwe_checked(
     taxonomy: Any,
     validate: bool,
 ) -> dict[str, Any]:
-    return _validate_cwe_scan_result(filepath, scan_file_cwe(filepath, taxonomy, validate))
+    try:
+        result = scan_file_cwe(filepath, taxonomy, validate)
+    except CweTaxonomyError as exc:
+        raise CweScanResultError(filepath, "taxonomy", str(exc)) from exc
+    return _validate_cwe_scan_result(filepath, result)
 
 
 def load_taxonomy_module():

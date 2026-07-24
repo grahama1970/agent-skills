@@ -49,12 +49,36 @@ CWE_PATTERNS: dict[str, tuple[str, str, list[str]]] = {
 }
 
 
+class CweTaxonomyError(RuntimeError):
+    """Taxonomy bridge extraction for a CWE scan failed."""
+
+
 def _read_cwe_source_text(filepath: Path) -> str:
     """Read source text using Python's declared encoding when applicable."""
     if filepath.suffix == ".py":
         with tokenize.open(filepath) as source:
             return source.read()
     return filepath.read_text(errors="ignore")
+
+
+def _extract_cwe_bridge_tags(content: str, taxonomy_module: Any) -> object:
+    """Extract taxonomy bridge tags for CWE enrichment."""
+    if taxonomy_module is None:
+        return []
+
+    extract_fn = getattr(taxonomy_module, "extract_taxonomy", None)
+    if not callable(extract_fn):
+        raise CweTaxonomyError("taxonomy module has no callable extract_taxonomy")
+
+    try:
+        result = extract_fn(content, collection="sparta", fast=True)
+    except Exception as exc:
+        raise CweTaxonomyError(f"{type(exc).__name__}: {exc}") from exc
+
+    if not isinstance(result, dict):
+        raise CweTaxonomyError("taxonomy result expected object")
+
+    return result.get("bridge_tags", [])
 
 
 def scan_file_cwe(filepath: Path, taxonomy_module: Any, validate: bool = False) -> dict:
@@ -83,13 +107,7 @@ def scan_file_cwe(filepath: Path, taxonomy_module: Any, validate: bool = False) 
                 break  # One match per CWE is enough
 
     # Get bridge tags from taxonomy for context
-    bridge_tags = []
-    if taxonomy_module:
-        try:
-            result = taxonomy_module.extract_taxonomy(content, collection="sparta", fast=True)
-            bridge_tags = result.get("bridge_tags", [])
-        except Exception:
-            pass
+    bridge_tags = _extract_cwe_bridge_tags(content, taxonomy_module)
 
     return {
         "file": str(filepath),

@@ -305,6 +305,9 @@ declarations fail closed before CWE preview, persistence, or marker creation.
 CWE compatibility lessons use repository-relative file identities during `scan`
 and `rescan` and do not include checkout-local absolute paths.
 Direct helper calls without a repository root retain their legacy output.
+Absence of the optional taxonomy module remains nonfatal for built-in CWE
+scanning. When a taxonomy module is present, a missing callable, raised exception, non-object result, or malformed bridge tags fails with status 1
+before CWE preview, persistence, or marker creation.
 
 ### Structured Code Symbols
 
