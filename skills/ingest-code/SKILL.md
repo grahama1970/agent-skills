@@ -299,6 +299,9 @@ calls without a repository root retain basename identities.
 
 `/taxonomy` extracts security-relevant patterns and CWE mappings per source file
 when taxonomy support is available.
+Built-in CWE scanning uses Python encoding-cookie and UTF-8 BOM decoding in
+full, CWE-only, and rescan workflows. Invalid or conflicting Python encoding
+declarations fail closed before CWE preview, persistence, or marker creation.
 
 ### Structured Code Symbols
 

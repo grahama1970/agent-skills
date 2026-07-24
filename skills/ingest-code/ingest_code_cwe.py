@@ -5,6 +5,7 @@ Used by the main ingest_code.py scan pipeline for Phase 2 (CWE scanning).
 """
 
 import re
+import tokenize
 from pathlib import Path
 from typing import Any
 
@@ -48,6 +49,14 @@ CWE_PATTERNS: dict[str, tuple[str, str, list[str]]] = {
 }
 
 
+def _read_cwe_source_text(filepath: Path) -> str:
+    """Read source text using Python's declared encoding when applicable."""
+    if filepath.suffix == ".py":
+        with tokenize.open(filepath) as source:
+            return source.read()
+    return filepath.read_text(errors="ignore")
+
+
 def scan_file_cwe(filepath: Path, taxonomy_module: Any, validate: bool = False) -> dict:
     """Scan a single file for CWE mappings using regex pattern rules.
 
@@ -55,7 +64,7 @@ def scan_file_cwe(filepath: Path, taxonomy_module: Any, validate: bool = False) 
     bridge_tags for context enrichment.
     """
     try:
-        content = filepath.read_text(errors="ignore")[:15000]
+        content = _read_cwe_source_text(filepath)[:15000]
     except Exception as e:
         return {"error": str(e), "cwe_mappings": []}
 
