@@ -234,12 +234,20 @@ def _derive_band_recency(strategy: str, docs: list[dict]) -> list[str]:
     return sorted(counts, key=lambda b: (tmax.get(b, 0), counts[b]), reverse=True)
 
 
+# prefixes that mark a NON-face reference sheet (props, creatures, sets) so a
+# scene's prop/creature/environment sheet is never mistaken for a persona face.
+_NON_FACE_SHEET = ("prop_", "creature_", "surface_", "environment",
+                   "tyranid_environment", "warp_eye", "railing", "set_")
+
+
 def _discover_reference_sheet(persona_id: str) -> Path | None:
     """Discover a face reference for the ArcFace identity gate from the persona
-    media root (None if absent). Two asset conventions: an explicit
-    *contact_sheet*.png (Embry), or a dream cast identity_pack front/three_quarter
-    face (Horus's first dream shipped cast/HORUS/identity_pack/front.png). Identity
-    packs are matched to THIS persona by path token so a counterpart's pack (e.g.
+    media root (None if absent). Asset conventions, in preference order: an
+    explicit *contact_sheet*.png (Embry), a *reference_sheet*.png face sheet
+    (adopted from a cross-persona scene package), or a dream cast identity_pack
+    front/three_quarter face (Horus's first dream). Scoped to MEDIA_ROOT/<persona>
+    so a scene's PROP/CREATURE reference sheets are out of scope; identity packs
+    are matched to THIS persona by path token so a counterpart's pack (e.g.
     SANGUINIUS) is never mistaken for the dreamer's face."""
     short = persona_id.split("_")[0].lower()
     tokens = {persona_id.lower(), short}
@@ -248,9 +256,11 @@ def _discover_reference_sheet(persona_id: str) -> Path | None:
         root = MEDIA_ROOT / base
         if not root.exists():
             continue
-        cs = sorted(root.rglob("*contact_sheet*.png"))
-        if cs:
-            return cs[-1]
+        for pat in ("*contact_sheet*.png", "*reference_sheet*.png"):
+            hits = [p for p in sorted(root.rglob(pat))
+                    if not any(nf in p.name.lower() for nf in _NON_FACE_SHEET)]
+            if hits:
+                return hits[-1]
         packs = []
         for p in root.rglob("*.png"):
             parts = {x.lower() for x in p.parts}
