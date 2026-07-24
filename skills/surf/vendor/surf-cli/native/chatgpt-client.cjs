@@ -283,11 +283,25 @@ async function waitForPageLoad(cdp, timeoutMs = 45000, signal) {
 async function isCloudflareBlocked(cdp) {
   const title = await evaluate(cdp, "document.title.toLowerCase()");
   if (title && title.includes("just a moment")) return true;
-  const hasScript = await evaluate(
+  const state = await evaluate(
     cdp,
-    `Boolean(document.querySelector('${SELECTORS.cloudflareScript}'))`
+    `(() => {
+      const text = String(document.body?.innerText || '').toLowerCase().replace(/\\s+/g, ' ');
+      const hasChallengeScript = Boolean(document.querySelector('${SELECTORS.cloudflareScript}'));
+      const hasVisibleChallenge =
+        text.includes('checking your browser') ||
+        text.includes('verify you are human') ||
+        text.includes('review the security of your connection') ||
+        text.includes('needs to review the security') ||
+        text.includes('cf-challenge') ||
+        text.includes('cloudflare');
+      const hasChatGptShell =
+        text.includes('chatgpt') ||
+        Boolean(document.querySelector('#prompt-textarea, [data-testid="composer-textarea"], [data-message-author-role]'));
+      return { hasChallengeScript, hasVisibleChallenge, hasChatGptShell };
+    })()`
   );
-  return hasScript;
+  return Boolean(state?.hasVisibleChallenge) && (state?.hasChatGptShell !== true || title.includes("just a moment"));
 }
 
 async function checkLoginStatus(cdp) {
