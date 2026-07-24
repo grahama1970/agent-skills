@@ -352,6 +352,11 @@ signature for classes, functions, async functions, and methods. Decorators,
 comments, original whitespace, and body text remain represented in `code`;
 stale Tree-sitter signatures are preserved only when Python parsing or exact
 AST matching fails.
+Exact Python AST matches scope `imports` to module imports, imports declared in
+the selected declaration, and imports from enclosing function or async-function
+declarations. They exclude sibling declaration imports, nested declaration body
+imports, and enclosing class namespace imports; file-wide imports remain the
+fallback when Python parsing or exact AST matching fails.
 
 ## Directory Filtering
 

@@ -1450,6 +1450,7 @@ def _extract_python_symbol_details(
     kind: str,
     name: str,
     start_line: int,
+    codebase_root: Path | None = None,
 ) -> dict[str, Any]:
     """Extract richer Python symbol details for memory-backed hybrid retrieval."""
     content = _read_source_text(filepath)
@@ -1474,6 +1475,13 @@ def _extract_python_symbol_details(
     node = candidates[0]
     ancestry = _find_python_symbol_ancestry(tree, node)
     structural_kind = _python_structural_symbol_kind(node, ancestry)
+    imports = _python_imports_visible_to_symbol(
+        tree,
+        filepath,
+        codebase_root,
+        node,
+        ancestry,
+    )
     parameters: list[str] = []
     if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
         parameters = _python_parameter_names(node, structural_kind)
@@ -1492,6 +1500,7 @@ def _extract_python_symbol_details(
         "local_variables": lexical_collector.normalized_local_variables(),
         "called_symbols": sorted(lexical_collector.called_symbols),
         "string_literals": sorted(lexical_collector.string_literals),
+        "imports": imports,
         "parent_symbol": parent_symbol,
         "qualified_name": _python_qualified_name(node, ancestry),
     }
@@ -1525,7 +1534,13 @@ def _build_code_symbol_record(
     ast_qualified_name = ""
 
     if filepath.suffix == ".py":
-        details = _extract_python_symbol_details(filepath, kind, name, start_line)
+        details = _extract_python_symbol_details(
+            filepath,
+            kind,
+            name,
+            start_line,
+            codebase_root,
+        )
         if details:
             kind = str(details.get("symbol_kind") or kind)
             start_line = int(details.get("start_line") or start_line)
@@ -1537,6 +1552,7 @@ def _build_code_symbol_record(
             local_variables = list(details.get("local_variables", []))
             called_symbols = list(details.get("called_symbols", []))
             string_literals = list(details.get("string_literals", []))
+            imports = list(details.get("imports", []))
             ast_qualified_name = str(details.get("qualified_name") or "").strip()
 
     qualified_name = ast_qualified_name or ".".join(
@@ -2629,6 +2645,134 @@ def _resolve_relative_python_imports(
     return imports
 
 
+def _python_import_records_for_node(
+    *,
+    filepath: Path,
+    codebase_root: Path | None,
+    node: ast.Import | ast.ImportFrom,
+) -> list[dict[str, Any]]:
+    """Normalize one Python import node into ingest-code import records."""
+    if isinstance(node, ast.ImportFrom):
+        names = [alias.name for alias in node.names]
+        if node.level > 0 and codebase_root is not None:
+            return _resolve_relative_python_imports(
+                filepath=filepath,
+                codebase_root=codebase_root,
+                level=node.level,
+                module=node.module,
+                names=names,
+                line=node.lineno,
+            )
+        if node.module:
+            return [{
+                "module": node.module,
+                "names": names,
+                "line": node.lineno,
+            }]
+        return []
+
+    imports: list[dict[str, Any]] = []
+    for alias in node.names:
+        imports.append({
+            "module": alias.name,
+            "names": [],
+            "line": node.lineno,
+        })
+    return imports
+
+
+def _sort_python_import_records(imports: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Return deterministic, duplicate-free import records."""
+    unique: dict[tuple[str, tuple[str, ...], int], dict[str, Any]] = {}
+    for item in imports:
+        module = str(item.get("module", ""))
+        names = tuple(str(name) for name in item.get("names", []))
+        line = int(item.get("line") or 0)
+        unique.setdefault(
+            (module, names, line),
+            {
+                "module": module,
+                "names": list(names),
+                "line": line,
+            },
+        )
+    return [
+        item
+        for _, item in sorted(
+            unique.items(),
+            key=lambda entry: entry[0],
+        )
+    ]
+
+
+def _python_import_ancestry_map(
+    tree: ast.AST,
+) -> dict[ast.Import | ast.ImportFrom, tuple[PythonDeclaration, ...]]:
+    """Return active named-declaration ancestry for each Python import node."""
+    ancestry_by_node: dict[ast.Import | ast.ImportFrom, tuple[PythonDeclaration, ...]] = {}
+    active_declarations: list[PythonDeclaration] = []
+
+    class ImportVisitor(ast.NodeVisitor):
+        def visit_FunctionDef(self, candidate: ast.FunctionDef) -> None:
+            self._visit_declaration(candidate)
+
+        def visit_AsyncFunctionDef(self, candidate: ast.AsyncFunctionDef) -> None:
+            self._visit_declaration(candidate)
+
+        def visit_ClassDef(self, candidate: ast.ClassDef) -> None:
+            self._visit_declaration(candidate)
+
+        def visit_Import(self, node: ast.Import) -> None:
+            ancestry_by_node[node] = tuple(active_declarations)
+
+        def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
+            ancestry_by_node[node] = tuple(active_declarations)
+
+        def _visit_declaration(
+            self,
+            candidate: ast.FunctionDef | ast.AsyncFunctionDef | ast.ClassDef,
+        ) -> None:
+            active_declarations.append(candidate)
+            self.generic_visit(candidate)
+            active_declarations.pop()
+
+    ImportVisitor().visit(tree)
+    return ancestry_by_node
+
+
+def _python_imports_visible_to_symbol(
+    tree: ast.AST,
+    filepath: Path,
+    codebase_root: Path | None,
+    node: PythonDeclaration,
+    ancestry: tuple[PythonDeclaration, ...],
+) -> list[dict[str, Any]]:
+    """Return static imports visible to an exact Python declaration."""
+    selected_scope = (*ancestry, node)
+    enclosing_function_scopes = {
+        tuple(ancestry[: index + 1])
+        for index, declaration in enumerate(ancestry)
+        if isinstance(declaration, (ast.FunctionDef, ast.AsyncFunctionDef))
+    }
+    visible_imports: list[dict[str, Any]] = []
+
+    for import_node, import_ancestry in _python_import_ancestry_map(tree).items():
+        if (
+            not import_ancestry
+            or import_ancestry == selected_scope
+            or import_ancestry in enclosing_function_scopes
+        ):
+            visible_imports.extend(
+                _python_import_records_for_node(
+                    filepath=filepath,
+                    codebase_root=codebase_root,
+                    node=import_node,
+                )
+            )
+
+    return _sort_python_import_records(visible_imports)
+
+
 def extract_python_imports(filepath: Path, codebase_root: Path | None = None) -> list[dict]:
     """Extract import relationships from a Python file using AST (fast, no treesitter needed)."""
     content = _read_source_text(filepath)
@@ -2639,32 +2783,14 @@ def extract_python_imports(filepath: Path, codebase_root: Path | None = None) ->
 
     imports = []
     for node in ast.walk(tree):
-        if isinstance(node, ast.ImportFrom):
-            names = [alias.name for alias in node.names]
-            if node.level > 0 and codebase_root is not None:
-                imports.extend(
-                    _resolve_relative_python_imports(
-                        filepath=filepath,
-                        codebase_root=codebase_root,
-                        level=node.level,
-                        module=node.module,
-                        names=names,
-                        line=node.lineno,
-                    )
+        if isinstance(node, (ast.ImportFrom, ast.Import)):
+            imports.extend(
+                _python_import_records_for_node(
+                    filepath=filepath,
+                    codebase_root=codebase_root,
+                    node=node,
                 )
-            elif node.module:
-                imports.append({
-                    "module": node.module,
-                    "names": names,
-                    "line": node.lineno,
-                })
-        elif isinstance(node, ast.Import):
-            for alias in node.names:
-                imports.append({
-                    "module": alias.name,
-                    "names": [],
-                    "line": node.lineno,
-                })
+            )
     return imports
 
 
