@@ -736,18 +736,22 @@ def extract_python_knowledge(
             "tags": ["codebase", "module", filepath.stem],
         })
     else:
-        # Always create a module-level entry (needed for edge matching)
         top_level = [
             node.name
             for node in _python_module_scope_declarations(tree, ancestry_by_node)
         ]
         if top_level:
             summary = f"Module: {filepath}\n\nDefines: {', '.join(top_level[:20])}"
-            items.append({
-                "problem": f"What does {rel_path} do?",
-                "solution": summary,
-                "tags": ["codebase", "module", filepath.stem],
-            })
+        else:
+            summary = (
+                f"Module: {filepath}\n\n"
+                "No module docstring or named declarations."
+            )
+        items.append({
+            "problem": f"What does {rel_path} do?",
+            "solution": summary,
+            "tags": ["codebase", "module", filepath.stem],
+        })
 
     # Classes with docstrings
     for node in ast.walk(tree):
