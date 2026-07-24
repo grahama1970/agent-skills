@@ -77,7 +77,8 @@ class CodeSymbolRecord:
     @property
     def problem(self) -> str:
         file_name = Path(self.path).name
-        return f"What is {self.symbol_name} in {file_name}?"
+        problem_name = self.qualified_name.strip() or self.symbol_name
+        return f"What is {problem_name} in {file_name}?"
 
     @property
     def solution(self) -> str:
