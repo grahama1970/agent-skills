@@ -227,7 +227,7 @@ def test_rescan_applies_taxonomy_enrichment_to_knowledge_writes(monkeypatch, tmp
     monkeypatch.setattr(
         ingest_code,
         "_learn",
-        lambda _script, problem, _solution, _scope, tags: learned.append((problem, list(tags))) or True,
+        lambda _script, problem, _solution, _scope, tags, **_kwargs: learned.append((problem, list(tags))) or True,
     )
     monkeypatch.setattr(ingest_code, "_write_required_ingest_marker", lambda *args, **kwargs: tmp_path / "marker")
 
@@ -249,13 +249,13 @@ def test_scan_and_rescan_produce_identical_enriched_tags(monkeypatch, tmp_path: 
     monkeypatch.setattr(ingest_code, "scan_file_cwe", lambda *args, **kwargs: {"cwe_mappings": []})
     monkeypatch.setattr(ingest_code, "extract_edges", lambda *args, **kwargs: [])
     monkeypatch.setattr(ingest_code, "_write_required_ingest_marker", lambda *args, **kwargs: tmp_path / "marker")
-    monkeypatch.setattr(ingest_code, "_learn", lambda _script, _problem, _solution, _scope, tags: scan_tags.append(list(tags)) or True)
+    monkeypatch.setattr(ingest_code, "_learn", lambda _script, _problem, _solution, _scope, tags, **_kwargs: scan_tags.append(list(tags)) or True)
     monkeypatch.setattr(ingest_code, "_learn_http", lambda *args, **kwargs: True)
 
     ingest_code.scan(**_scan_args(repo))
 
     monkeypatch.setattr(ingest_code, "load_taxonomy_module", lambda: _Taxonomy([taxonomy_result]))
-    monkeypatch.setattr(ingest_code, "_learn", lambda _script, _problem, _solution, _scope, tags: rescan_tags.append(list(tags)) or True)
+    monkeypatch.setattr(ingest_code, "_learn", lambda _script, _problem, _solution, _scope, tags, **_kwargs: rescan_tags.append(list(tags)) or True)
 
     ingest_code.rescan(**_rescan_args([repo]))
 
@@ -307,7 +307,7 @@ def test_missing_taxonomy_module_preserves_unenriched_behavior(monkeypatch, tmp_
     _install_scan_common(monkeypatch, tmp_path, source, None)
     monkeypatch.setattr(ingest_code, "extract_edges", lambda *args, **kwargs: [])
     monkeypatch.setattr(ingest_code, "_write_required_ingest_marker", lambda *args, **kwargs: tmp_path / "marker")
-    monkeypatch.setattr(ingest_code, "_learn", lambda _script, _problem, _solution, _scope, tags: learned.append(list(tags)) or True)
+    monkeypatch.setattr(ingest_code, "_learn", lambda _script, _problem, _solution, _scope, tags, **_kwargs: learned.append(list(tags)) or True)
     monkeypatch.setattr(ingest_code, "_learn_http", lambda *args, **kwargs: True)
 
     ingest_code.scan(**_scan_args(repo))

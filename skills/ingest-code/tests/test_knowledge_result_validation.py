@@ -298,7 +298,7 @@ def test_scan_and_rescan_write_identically_normalized_items(monkeypatch, tmp_pat
     monkeypatch.setattr(
         ingest_code,
         "_learn",
-        lambda _script, problem, solution, _scope, tags: scan_writes.append((problem, solution, list(tags))) or True,
+        lambda _script, problem, solution, _scope, tags, **_kwargs: scan_writes.append((problem, solution, list(tags))) or True,
     )
 
     ingest_code.scan(**_scan_args(repo))
@@ -306,7 +306,7 @@ def test_scan_and_rescan_write_identically_normalized_items(monkeypatch, tmp_pat
     monkeypatch.setattr(
         ingest_code,
         "_learn",
-        lambda _script, problem, solution, _scope, tags: rescan_writes.append((problem, solution, list(tags))) or True,
+        lambda _script, problem, solution, _scope, tags, **_kwargs: rescan_writes.append((problem, solution, list(tags))) or True,
     )
 
     ingest_code.rescan(**_rescan_args([repo]))

@@ -73,6 +73,21 @@ def test_generic_lesson_document_omits_code_symbol_classification() -> None:
     assert "metadata" not in document
 
 
+def test_code_metadata_lesson_document_is_explicitly_classified() -> None:
+    document = ingest_code._build_lesson_document(
+        problem="problem",
+        solution="solution",
+        scope="code",
+        tags=["codebase"],
+        code_metadata=True,
+    )
+
+    assert document["code_symbol"] is True
+    assert document["tags"] == ["codebase"]
+    assert "type" not in document
+    assert "metadata" not in document
+
+
 def test_learn_http_store_payload_is_generic_lesson(monkeypatch) -> None:
     requests = []
     _install_fake_http(monkeypatch, [200], requests)
@@ -93,6 +108,34 @@ def test_learn_http_store_payload_is_generic_lesson(monkeypatch) -> None:
         )
     ]
     _assert_no_code_symbol_classification(requests[0][1])
+
+
+def test_learn_http_store_payload_marks_code_metadata_when_requested(monkeypatch) -> None:
+    requests = []
+    _install_fake_http(monkeypatch, [200], requests)
+
+    assert ingest_code._learn_http(
+        "problem",
+        "solution",
+        "scope",
+        ["tag"],
+        code_metadata=True,
+    ) is True
+
+    assert requests == [
+        (
+            "/store",
+            {
+                "document": {
+                    "problem": "problem",
+                    "solution": "solution",
+                    "scope": "scope",
+                    "tags": ["tag"],
+                    "code_symbol": True,
+                }
+            },
+        )
+    ]
 
 
 def test_learn_http_fallback_payload_is_generic_lesson(monkeypatch) -> None:

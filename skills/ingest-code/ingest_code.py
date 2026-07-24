@@ -401,17 +401,29 @@ def _build_lesson_document(
     solution: str,
     scope: str,
     tags: list[str],
+    *,
+    code_metadata: bool = False,
 ) -> dict[str, Any]:
     """Build a generic memory compatibility lesson."""
-    return {
+    document = {
         "problem": problem,
         "solution": solution,
         "scope": scope,
         "tags": list(tags),
     }
+    if code_metadata:
+        document["code_symbol"] = True
+    return document
 
 
-def _learn_http(problem: str, solution: str, scope: str, tags: list[str]) -> bool:
+def _learn_http(
+    problem: str,
+    solution: str,
+    scope: str,
+    tags: list[str],
+    *,
+    code_metadata: bool = False,
+) -> bool:
     """Store a lesson in /memory via Unix socket httpx."""
     try:
         transport = httpx.HTTPTransport(uds=MEMORY_SOCKET_PATH)
@@ -421,6 +433,7 @@ def _learn_http(problem: str, solution: str, scope: str, tags: list[str]) -> boo
                 solution=solution,
                 scope=scope,
                 tags=tags,
+                code_metadata=code_metadata,
             )
             resp = client.post("/store", json={"document": document})
             if 200 <= resp.status_code < 300:
@@ -431,9 +444,17 @@ def _learn_http(problem: str, solution: str, scope: str, tags: list[str]) -> boo
         return False
 
 
-def _learn(memory_script: Path, problem: str, solution: str, scope: str, tags: list[str]) -> bool:
+def _learn(
+    memory_script: Path,
+    problem: str,
+    solution: str,
+    scope: str,
+    tags: list[str],
+    *,
+    code_metadata: bool = False,
+) -> bool:
     """Store a lesson in /memory via Unix socket httpx."""
-    return _learn_http(problem, solution, scope, tags)
+    return _learn_http(problem, solution, scope, tags, code_metadata=code_metadata)
 
 
 def _abort_if_memory_writes_incomplete(
@@ -3914,6 +3935,7 @@ def scan(
                 return _learn(
                     memory_script, item["problem"], item["solution"],
                     scope, item["tags"],
+                    code_metadata=True,
                 )
 
             print(f"  Storing with {knowledge_workers} threads...", flush=True)
@@ -3996,6 +4018,7 @@ def scan(
                             payload["solution"],
                             scope,
                             payload["tags"],
+                            code_metadata=True,
                         )
                         if ok:
                             cwe_stored += 1
@@ -4244,7 +4267,14 @@ def rescan(
 
         for item in all_items:
             codebase_knowledge_attempted += 1
-            if _learn(memory_script, item["problem"], item["solution"], scope, item["tags"]):
+            if _learn(
+                memory_script,
+                item["problem"],
+                item["solution"],
+                scope,
+                item["tags"],
+                code_metadata=True,
+            ):
                 total_knowledge += 1
                 codebase_knowledge += 1
                 verify_name = _extract_verification_name(item["tags"])
@@ -4277,6 +4307,7 @@ def rescan(
                         payload["solution"],
                         scope,
                         payload["tags"],
+                        code_metadata=True,
                     ):
                         total_cwes += 1
                         codebase_cwes += 1
