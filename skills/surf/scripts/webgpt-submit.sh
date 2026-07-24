@@ -349,6 +349,10 @@ elif failure == "chatgpt_empty_response_after_submit":
     proof_status = "submitted_no_response_proof" if submitted else "delivery_not_proven"
     diagnosis = "ChatGPT accepted or was invoked for the controlled tab, but Surf captured an empty response after the wait budget; this often indicates long-conversation degradation without the visible max-length banner."
     action = "Do not treat this as a parser or download failure. Bind or create a fresh ChatGPT conversation for the next attempt and preserve this meta as the degradation receipt."
+elif failure == "cloudflare_challenge":
+    proof_status = "browser_access_blocked"
+    diagnosis = "The controlled ChatGPT tab is blocked by a Cloudflare browser-access challenge before Surf can prove prompt delivery."
+    action = "Complete the Cloudflare challenge in the controlled browser tab, then rerun the same explicit tab or URL target."
 elif failure == "stale_cdp_on_explicit_tab":
     proof_status = "not_submitted"
     diagnosis = "Surf could not attach CDP to the explicitly requested tab in no-activate mode."
@@ -1620,20 +1624,29 @@ empty_response_after_submit = (
     and not conversation_max_length_detected
     and (response_timed_out is True or bool(timeout_error) or "Response timeout" in stderr_text or "timed out" in stderr_text.lower())
 )
+cloudflare_challenge_detected = "cloudflare challenge" in stderr_text.lower()
 failure = "conversation_max_length_rollover_failed" if conversation_max_length_detected else (
-    "chatgpt_empty_response_after_submit" if empty_response_after_submit else "submit_failed"
+    "chatgpt_empty_response_after_submit" if empty_response_after_submit else (
+        "cloudflare_challenge" if cloudflare_challenge_detected else "submit_failed"
+    )
 )
 blocker = "BLOCKED_WEBGPT_CONVERSATION_FULL" if conversation_max_length_detected else (
-    "BLOCKED_WEBGPT_EMPTY_RESPONSE_AFTER_SUBMIT" if empty_response_after_submit else None
+    "BLOCKED_WEBGPT_EMPTY_RESPONSE_AFTER_SUBMIT" if empty_response_after_submit else (
+        "BLOCKED_WEBGPT_CLOUDFLARE_CHALLENGE" if cloudflare_challenge_detected else None
+    )
 )
 recommended_action = "retry_with_fresh_chatgpt_conversation" if (
     conversation_max_length_detected or empty_response_after_submit
-) else None
+) else (
+    "complete_cloudflare_challenge_in_controlled_browser_tab" if cloudflare_challenge_detected else None
+)
 pathlib.Path(meta).write_text(json.dumps({
     "status": "failed",
     "failure": failure,
     "blocker": blocker,
     "recommended_action": recommended_action,
+    "browser_access_blocked": cloudflare_challenge_detected,
+    "cloudflare_challenge_detected": cloudflare_challenge_detected,
     "chatgpt_ready_error": chatgpt_ready_error,
     "exit_code": int(status),
     "input": inp,
@@ -2228,7 +2241,7 @@ if status == "recovered_focus_changed":
 if status == "completed":
     failure = None
 elif status == "recovered_focus_changed":
-    failure = None
+    failure = focus_drift_warning
 elif focus_violation and focus_stolen_mid:
     failure = "focus_stolen_mid_submit"
 elif focus_violation:

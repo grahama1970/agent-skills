@@ -598,6 +598,51 @@ esac
     assert meta["raw_response_advisory"] is True
 
 
+def test_webgpt_submit_cloudflare_challenge_fails_closed_without_extract_retry(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    invocation_log = tmp_path / "surf-invocations.log"
+    fake_run = f"""#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\\n' "$*" >> {str(invocation_log)!r}
+case "${{1:-}}" in
+  tab.list)
+    printf '837352334\\tCloudflare check\\thttps://chatgpt.com/c/example\\n'
+    ;;
+  focus.state)
+    printf '{{"active_tab_id":"123","active_window_id":"456"}}\\n'
+    ;;
+  js)
+    printf '"cdp-ok"\\n'
+    ;;
+  chatgpt)
+    echo 'Error: Cloudflare challenge detected - complete in browser' >&2
+    exit 1
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+
+    proc = run_submit(tmp_path, archive, fake_run)
+
+    assert proc.returncode == 1
+    assert "Cloudflare challenge detected" in proc.stderr
+    meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["status"] == "failed"
+    assert meta["failure"] == "cloudflare_challenge"
+    assert meta["blocker"] == "BLOCKED_WEBGPT_CLOUDFLARE_CHALLENGE"
+    assert meta["recommended_action"] == "complete_cloudflare_challenge_in_controlled_browser_tab"
+    assert meta["proof_status"] == "browser_access_blocked"
+    assert meta["submitted_to_chatgpt"] is False
+    assert meta["browser_access_blocked"] is True
+    assert meta["cloudflare_challenge_detected"] is True
+    invocations = invocation_log.read_text(encoding="utf-8")
+    assert "chatgpt " in invocations
+
+
 def test_webgpt_submit_visible_provider_limit_uses_bounded_cooldown_retry(tmp_path: Path) -> None:
     archive = tmp_path / "five.zip"
     make_zip(archive, 5)
@@ -1150,7 +1195,7 @@ esac
     assert (tmp_path / "response.md").read_text(encoding="utf-8") == "external reviewer verdict\n"
     meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
     assert meta["status"] == "recovered_focus_changed"
-    assert meta["failure"] is None
+    assert meta["failure"] == "focus_stolen_despite_no_activate"
     assert meta["focus_drift_warning"] == "focus_stolen_despite_no_activate"
     assert meta["proof_status"] == "response_proven"
     assert meta["controlled_tab_id"] == "837352334"
