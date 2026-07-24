@@ -304,9 +304,9 @@ Identifier-heavy fields are emitted as lexical terms such as
 `symbol:build_evidence_case`, `param:enable_llm`, `call:execute_llm_request`,
 and split identifier tokens. These are inputs to `/memory`'s code retrieval
 backend.
-Code-symbol compatibility questions use source-qualified identity when
-available, while retaining the bare `symbol_name`, `symbol:<name>` lexical
-term, and existing tags.
+Code-symbol compatibility questions use source-qualified declaration identity
+and repository-relative file identity when available, while retaining the bare
+`symbol_name`, `symbol:<name>` lexical term, and existing tags.
 
 Python parameter payloads cover positional-only, positional-or-keyword,
 variadic, keyword-only, and keyword-variadic arguments in declaration order,

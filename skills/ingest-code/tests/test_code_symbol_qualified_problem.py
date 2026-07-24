@@ -40,53 +40,52 @@ def _record(
     )
 
 
-def test_nested_symbol_problem_uses_qualified_name() -> None:
+def test_nested_symbol_problem_uses_repository_relative_path() -> None:
     record = _record(qualified_name="Service.run")
 
-    assert record.problem == "What is Service.run in app.py?"
+    assert record.problem == "What is Service.run in pkg/app.py?"
 
 
-def test_same_bare_names_in_different_ancestries_have_distinct_problems() -> None:
-    alpha = _record(qualified_name="Alpha.run")
-    beta = _record(qualified_name="Beta.run")
+def test_same_qualified_symbol_in_same_basename_different_directories_has_distinct_problems() -> None:
+    api = _record(qualified_name="Service.run", path="api/app.py")
+    worker = _record(qualified_name="Service.run", path="worker/app.py")
 
-    assert alpha.symbol_name == beta.symbol_name == "run"
-    assert alpha.problem == "What is Alpha.run in app.py?"
-    assert beta.problem == "What is Beta.run in app.py?"
-    assert alpha.problem != beta.problem
+    assert api.problem == "What is Service.run in api/app.py?"
+    assert worker.problem == "What is Service.run in worker/app.py?"
+    assert api.problem != worker.problem
 
 
-def test_top_level_symbol_problem_remains_unchanged() -> None:
-    record = _record(symbol_name="run", qualified_name="run")
+def test_top_level_root_file_problem_remains_unchanged() -> None:
+    record = _record(symbol_name="run", qualified_name="run", path="app.py")
 
     assert record.problem == "What is run in app.py?"
 
 
-def test_blank_qualified_name_falls_back_to_symbol_name() -> None:
+def test_blank_qualified_name_fallback_still_uses_repository_path() -> None:
     record = _record(symbol_name="run", qualified_name="  ")
 
-    assert record.problem == "What is run in app.py?"
+    assert record.problem == "What is run in pkg/app.py?"
 
 
-def test_structured_and_legacy_documents_share_qualified_problem() -> None:
+def test_structured_and_legacy_documents_share_path_qualified_problem() -> None:
     record = _record(qualified_name="Service.run")
 
     structured = record.to_document()
     legacy = record.to_legacy_lesson_document()
 
-    assert structured["problem"] == "What is Service.run in app.py?"
-    assert legacy["problem"] == "What is Service.run in app.py?"
+    assert structured["problem"] == "What is Service.run in pkg/app.py?"
+    assert legacy["problem"] == "What is Service.run in pkg/app.py?"
     assert structured["symbol_name"] == "run"
     assert structured["qualified_name"] == "Service.run"
     assert "symbol:run" in structured["lexical_terms"]
     assert "qualified:Service.run" in structured["lexical_terms"]
 
 
-def test_verification_sample_carries_qualified_problem() -> None:
+def test_verification_sample_carries_path_qualified_problem() -> None:
     record = _record(qualified_name="Service.run")
 
     sample = ingest_code._code_symbol_verification_sample(record)
 
     assert sample["name"] == "run"
     assert sample["qualified_name"] == "Service.run"
-    assert sample["problem"] == "What is Service.run in app.py?"
+    assert sample["problem"] == "What is Service.run in pkg/app.py?"

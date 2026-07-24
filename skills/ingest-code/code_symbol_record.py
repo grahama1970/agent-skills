@@ -5,7 +5,6 @@ from __future__ import annotations
 import hashlib
 import re
 from dataclasses import dataclass, field
-from pathlib import Path
 
 
 def split_identifier(value: str) -> list[str]:
@@ -76,9 +75,9 @@ class CodeSymbolRecord:
 
     @property
     def problem(self) -> str:
-        file_name = Path(self.path).name
         problem_name = self.qualified_name.strip() or self.symbol_name
-        return f"What is {problem_name} in {file_name}?"
+        problem_path = self.path.strip().replace("\\", "/")
+        return f"What is {problem_name} in {problem_path}?"
 
     @property
     def solution(self) -> str:
