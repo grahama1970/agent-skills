@@ -141,8 +141,13 @@ def select_cluster(out: Path) -> dict:
     edges_by_src: dict[str, list[str]] = defaultdict(list)
     for key, doc in roots.items():
         for e in (doc.get("graph_edges_raw") or []):
-            if isinstance(e, dict) and e.get("target_memory_id"):
-                edges_by_src[key].append(e["target_memory_id"])
+            # BOTH corpus edge conventions: ~half of edged memories key targets
+            # as target_memory_id, the other half as target_id. Reading one
+            # silently drops the other half's associations.
+            if isinstance(e, dict):
+                tgt = e.get("target_memory_id") or e.get("target_id")
+                if tgt:
+                    edges_by_src[key].append(tgt)
 
     def traverse(seed_key, members, k=3):
         order, seen, frontier = [seed_key], {seed_key}, [seed_key]
