@@ -392,6 +392,11 @@ def validate_roundtrip(payload: dict[str, Any] | None, *, strict: bool = True) -
     warnings = payload.get("warnings") if isinstance(payload.get("warnings"), list) else []
     sentinel_ok = bool(diagnosis.get("raw_contains_sentinel") or meta.get("raw_contains_sentinel"))
     tab_ok = bool(meta.get("controlled_tab_id"))
+    if meta.get("proof_status") == "rate_limited" or meta.get("blocker") == "BLOCKED_WEBGPT_PROVIDER_RATE_LIMIT":
+        return False, (
+            f"rate_limited blocker={meta.get('blocker')} "
+            f"failure={meta.get('failure')} submitted={meta.get('submitted_to_chatgpt')}"
+        )
     if status == "pass":
         if meta.get("focus_invariant_ok") is False:
             return False, "false_pass:focus_drift"
