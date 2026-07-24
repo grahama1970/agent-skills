@@ -5,7 +5,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
+import signal
 import subprocess
 import sys
 import time
@@ -1124,8 +1126,53 @@ class CmdResult:
 
 def _run_cmd(command: list[str], *, cwd: Path, timeout: int) -> CmdResult:
     started = time.time()
-    proc = subprocess.run(command, cwd=cwd, capture_output=True, text=True, timeout=timeout)
-    return CmdResult(command, proc.returncode, proc.stdout, proc.stderr, time.time() - started)
+    proc = subprocess.Popen(
+        command,
+        cwd=cwd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        start_new_session=True,
+    )
+    try:
+        stdout, stderr = proc.communicate(timeout=timeout)
+        return CmdResult(command, proc.returncode, stdout, stderr, time.time() - started)
+    except subprocess.TimeoutExpired:
+        _terminate_process_group(proc.pid)
+        try:
+            stdout, stderr = proc.communicate(timeout=5)
+        except subprocess.TimeoutExpired:
+            _kill_process_group(proc.pid)
+            stdout, stderr = proc.communicate()
+        stderr = (
+            (stderr or "")
+            + f"\n[tau-worker] command timed out after {timeout}s; killed process group rooted at pid {proc.pid}\n"
+        )
+        return CmdResult(command, 124, stdout or "", stderr, time.time() - started)
+
+
+def _terminate_process_group(pid: int) -> None:
+    try:
+        os.killpg(pid, signal.SIGTERM)
+    except ProcessLookupError:
+        return
+    except PermissionError:
+        try:
+            os.kill(pid, signal.SIGTERM)
+        except ProcessLookupError:
+            return
+
+
+def _kill_process_group(pid: int) -> None:
+    try:
+        os.killpg(pid, signal.SIGKILL)
+    except ProcessLookupError:
+        return
+    except PermissionError:
+        try:
+            os.kill(pid, signal.SIGKILL)
+        except ProcessLookupError:
+            return
 
 
 def _run_codex_handler(

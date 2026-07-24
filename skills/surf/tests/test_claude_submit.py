@@ -247,3 +247,106 @@ esac
     invocations = invocation_log.read_text(encoding="utf-8")
     assert "tab.reload --hard --tab-id 837360812" in invocations
     assert invocations.count("read --tab-id 837360812") >= 2
+
+
+def test_claude_submit_finalizes_raw_sentinel_after_wait_failure(tmp_path: Path) -> None:
+    request = tmp_path / "request.md"
+    response = tmp_path / "response.md"
+    raw = tmp_path / "response.raw.md"
+    meta = tmp_path / "response.meta.json"
+    fake_run = tmp_path / "surf-run.sh"
+    invocation_log = tmp_path / "surf-invocations.log"
+    sentinel_file = tmp_path / "sentinel.txt"
+    text_count_file = tmp_path / "text-count.txt"
+
+    request.write_text("Review the generated records.\n", encoding="utf-8")
+    fake_run.write_text(
+        f"""#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\\n' "$*" >> {str(invocation_log)!r}
+case "${{1:-}}" in
+  focus.state)
+    printf '{{"focusedWindowId":1,"activeTabId":837360812}}\\n'
+    ;;
+  text)
+    count="$(cat {str(text_count_file)!r} 2>/dev/null || printf '0')"
+    count="$((count + 1))"
+    printf '%s' "$count" > {str(text_count_file)!r}
+    sentinel="$(cat {str(sentinel_file)!r} 2>/dev/null || true)"
+    if [[ "$count" -le 2 ]]; then
+      printf 'https://claude.ai/chat/example\\nClaude is responding\\nClaude responded:\\nCompleted review\\n%s\\n' "$sentinel"
+    else
+      printf 'https://claude.ai/chat/example\\nClaude responded:\\nCompleted review\\n%s\\n' "$sentinel"
+    fi
+    ;;
+  read)
+    printf 'textbox "Write your prompt to Claude" [e1]\\n'
+    printf 'button "Send message" [e2]\\n'
+    ;;
+  click|key)
+    printf 'ok\\n'
+    ;;
+  type)
+    python3 - "${{2:-}}" {str(sentinel_file)!r} <<'PY'
+import pathlib
+import re
+import sys
+
+match = re.search(r"<<<CLAUDE_DONE:[^>]+>>>", sys.argv[1], re.S)
+if match:
+    pathlib.Path(sys.argv[2]).write_text(match.group(0), encoding="utf-8")
+PY
+    printf 'typed\\n'
+    ;;
+  *)
+    echo "unexpected surf command: $*" >&2
+    exit 99
+    ;;
+esac
+""",
+        encoding="utf-8",
+    )
+    fake_run.chmod(0o755)
+
+    env = os.environ.copy()
+    env["SURF_RUN_SH"] = str(fake_run)
+    proc = subprocess.run(
+        [
+            "python3",
+            str(CLAUDE_SUBMIT),
+            "--input",
+            str(request),
+            "--output",
+            str(response),
+            "--raw-output",
+            str(raw),
+            "--meta-output",
+            str(meta),
+            "--tab-id",
+            "837360812",
+            "--url",
+            "https://claude.ai/chat/example",
+            "--stable-polls",
+            "3",
+            "--timeout",
+            "1",
+            "--no-activate",
+        ],
+        cwd=tmp_path,
+        env=env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    assert response.read_text(encoding="utf-8").strip() == "Completed review"
+    assert "<<<CLAUDE_DONE:" in raw.read_text(encoding="utf-8")
+    payload = json.loads(meta.read_text(encoding="utf-8"))
+    assert payload["status"] == "completed"
+    assert payload["raw_contains_sentinel"] is True
+    assert payload["clean_contains_sentinel"] is False
+    assert payload["recovered_after_failure"] is True
+    assert "timed out waiting for marker" in payload["recovery_failure"]
+    assert payload["response_source"] == "post_failure_text_capture"

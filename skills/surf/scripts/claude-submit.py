@@ -159,6 +159,38 @@ def main() -> int:
             raw_path.write_text(raw_text, encoding="utf-8")
         except Exception:
             raw_path.write_text("", encoding="utf-8")
+        if sentinel in raw_text:
+            try:
+                clean_text = _clean_response(raw_text, sentinel)
+                output_path.write_text(clean_text, encoding="utf-8")
+                focus_after = _focus_state()
+                meta = _success_meta(
+                    args=args,
+                    input_path=input_path,
+                    output_path=output_path,
+                    raw_path=raw_path,
+                    submitted_path=submitted_path,
+                    sentinel=sentinel,
+                    started_at=started_at,
+                    finished_at=finished,
+                    requested_tab_id=requested_tab_id,
+                    focus_before=focus_before,
+                    focus_after=focus_after,
+                    clean_text=clean_text,
+                    raw_text=raw_text,
+                    attach_file=attach_file,
+                    attachment=None,
+                    content_script_recovery=content_script_recovery,
+                )
+                meta["recovered_after_failure"] = True
+                meta["recovery_failure"] = str(exc)
+                meta["response_source"] = "post_failure_text_capture"
+                meta_path.write_text(json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+                TAB_STATE_FILE.write_text(str(requested_tab_id).strip() + "\n", encoding="utf-8")
+                print(json.dumps(meta, indent=2, sort_keys=True))
+                return 0 if meta["status"] == "completed" else 5
+            except Exception:
+                pass
         _write_failed_meta(
             meta_path,
             args,

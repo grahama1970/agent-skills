@@ -802,6 +802,38 @@ esac
     assert meta["raw_response_advisory"] is True
 
 
+def test_webgpt_submit_empty_timeout_has_distinct_fresh_conversation_failure(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    fake_run = (
+        FAKE_RUN_PREAMBLE
+        + """  chatgpt)
+    echo 'Tab ID: 837352334' >&2
+    echo 'ResponseSource: assistant-dom' >&2
+    echo 'ResponseTimedOut: true' >&2
+    echo 'TimeoutError: Request timed out (12s)' >&2
+    exit 0
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+    )
+
+    proc = run_submit(tmp_path, archive, fake_run)
+
+    assert proc.returncode == 4
+    meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["status"] == "failed"
+    assert meta["failure"] == "chatgpt_empty_response_after_submit"
+    assert meta["blocker"] == "BLOCKED_WEBGPT_EMPTY_RESPONSE_AFTER_SUBMIT"
+    assert meta["recommended_action"] == "retry_with_fresh_chatgpt_conversation"
+    assert meta["raw_chars"] == 0
+    assert meta["proof_status"] in {"submitted_no_response_proof", "delivery_not_proven"}
+
+
 def test_chatgpt_client_stable_stall_returns_partial_without_full_timeout(tmp_path: Path) -> None:
     node_script = tmp_path / "stable-stall.js"
     client_path = REPO_ROOT / "skills/surf/vendor/surf-cli/native/chatgpt-client.cjs"

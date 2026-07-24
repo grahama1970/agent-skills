@@ -5,7 +5,9 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import json
+import os
 import sys
+import time
 from types import SimpleNamespace
 from pathlib import Path
 
@@ -52,6 +54,49 @@ def test_join_command_checker_rejects_empty_args(tmp_path: Path) -> None:
 
     spec_path.write_text(json.dumps({"command": ["python", "worker.py"]}), encoding="utf-8")
     assert tau_roundtable_sanity_eval._join_command_has_no_empty_args(tmp_path) is True
+
+
+def test_worker_run_cmd_timeout_kills_descendant_process_group(tmp_path: Path) -> None:
+    child_pid_path = tmp_path / "child.pid"
+    script = tmp_path / "spawn-child.py"
+    script.write_text(
+        """
+import pathlib
+import subprocess
+import sys
+import time
+
+child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])
+pathlib.Path(sys.argv[1]).write_text(str(child.pid), encoding="utf-8")
+time.sleep(30)
+""",
+        encoding="utf-8",
+    )
+
+    result = tau_roundtable_worker._run_cmd(
+        [sys.executable, str(script), str(child_pid_path)],
+        cwd=tmp_path,
+        timeout=1,
+    )
+
+    assert result.returncode == 124
+    assert "killed process group" in result.stderr
+    child_pid = int(child_pid_path.read_text(encoding="utf-8"))
+    for _ in range(20):
+        if not _pid_exists(child_pid):
+            break
+        time.sleep(0.1)
+    assert not _pid_exists(child_pid)
+
+
+def _pid_exists(pid: int) -> bool:
+    try:
+        os.kill(pid, 0)
+        return True
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
 
 
 def test_sequential_chain_checker_requires_handler_order() -> None:

@@ -345,6 +345,10 @@ elif failure in {"BLOCKED_WEBGPT_CONVERSATION_FULL", "conversation_max_length_ro
     proof_status = "not_submitted"
     diagnosis = "The controlled ChatGPT conversation reached its maximum length and Surf could not prove rollover resubmission."
     action = "Inspect conversation_max_length_rollover metadata; retry with the same tab if Start new chat is available, or bind a fresh ChatGPT conversation."
+elif failure == "chatgpt_empty_response_after_submit":
+    proof_status = "submitted_no_response_proof" if submitted else "delivery_not_proven"
+    diagnosis = "ChatGPT accepted or was invoked for the controlled tab, but Surf captured an empty response after the wait budget; this often indicates long-conversation degradation without the visible max-length banner."
+    action = "Do not treat this as a parser or download failure. Bind or create a fresh ChatGPT conversation for the next attempt and preserve this meta as the degradation receipt."
 elif failure == "stale_cdp_on_explicit_tab":
     proof_status = "not_submitted"
     diagnosis = "Surf could not attach CDP to the explicitly requested tab in no-activate mode."
@@ -1327,13 +1331,51 @@ set +e
 run_submit() {
   if command -v timeout >/dev/null 2>&1; then
     hard_timeout_s=$((timeout_s + 60))
-    timeout --kill-after=10s "${hard_timeout_s}s" "$RUN_SH" "${args[@]}"
+    if command -v setsid >/dev/null 2>&1; then
+      setsid timeout --kill-after=10s "${hard_timeout_s}s" "$RUN_SH" "${args[@]}"
+    else
+      timeout --kill-after=10s "${hard_timeout_s}s" "$RUN_SH" "${args[@]}"
+    fi
   else
     "$RUN_SH" "${args[@]}"
   fi
 }
 run_submit > "$raw_tmp" 2> "$stderr_log" &
 submit_pid=$!
+
+terminate_process_tree() {
+  local pid="${1:-}"
+  if [[ -z "$pid" ]] || ! kill -0 "$pid" 2>/dev/null; then
+    return 0
+  fi
+  pkill -TERM -P "$pid" 2>/dev/null || true
+  kill -TERM -- "-$pid" 2>/dev/null || true
+  kill -TERM "$pid" 2>/dev/null || true
+  sleep 1
+  pkill -KILL -P "$pid" 2>/dev/null || true
+  kill -KILL -- "-$pid" 2>/dev/null || true
+  kill -KILL "$pid" 2>/dev/null || true
+}
+
+stop_background_watcher() {
+  local pid="${1:-}"
+  if [[ -z "$pid" ]]; then
+    return 0
+  fi
+  pkill -TERM -P "$pid" 2>/dev/null || true
+  kill "$pid" 2>/dev/null || true
+}
+
+cleanup_submit_processes() {
+  local rc=$?
+  trap - EXIT INT TERM HUP
+  stop_background_watcher "${poll_pid:-}"
+  stop_background_watcher "${receipt_pid:-}"
+  terminate_process_tree "${submit_pid:-}"
+  cleanup_surf_tab_lock 2>/dev/null || true
+  exit "$rc"
+}
+trap cleanup_submit_processes EXIT INT TERM HUP
 receipt_marker="$(mktemp /tmp/surf-webgpt-submit-receipt.XXXXXX.mark)"
 (
   while kill -0 "$submit_pid" 2>/dev/null; do
@@ -1389,18 +1431,12 @@ poll_interval="${SURF_WEBGPT_FOCUS_POLL_INTERVAL:-15}"
 poll_pid=$!
 wait "$submit_pid"
 status=$?
-stop_background_watcher() {
-  local pid="${1:-}"
-  if [[ -z "$pid" ]]; then
-    return 0
-  fi
-  pkill -TERM -P "$pid" 2>/dev/null || true
-  kill "$pid" 2>/dev/null || true
-}
 stop_background_watcher "$poll_pid"
 stop_background_watcher "$receipt_pid"
 wait "$poll_pid" 2>/dev/null || true
 wait "$receipt_pid" 2>/dev/null || true
+trap - EXIT INT TERM HUP
+trap cleanup_surf_tab_lock EXIT
 set -e
 finished_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 if [[ $status -eq 0 ]]; then
@@ -1578,11 +1614,25 @@ for line in reversed(stderr_text.splitlines()):
         chatgpt_rate_limit_exhausted = line.split(":", 1)[1].strip() == "true"
     elif line.startswith("ChatGPTRateLimitError:") and chatgpt_rate_limit_error is None:
         chatgpt_rate_limit_error = line.split(":", 1)[1].strip() or None
+empty_response_after_submit = (
+    not raw_text.strip()
+    and not conversation_max_length_detected
+    and (response_timed_out is True or bool(timeout_error) or "Response timeout" in stderr_text or "timed out" in stderr_text.lower())
+)
+failure = "conversation_max_length_rollover_failed" if conversation_max_length_detected else (
+    "chatgpt_empty_response_after_submit" if empty_response_after_submit else "submit_failed"
+)
+blocker = "BLOCKED_WEBGPT_CONVERSATION_FULL" if conversation_max_length_detected else (
+    "BLOCKED_WEBGPT_EMPTY_RESPONSE_AFTER_SUBMIT" if empty_response_after_submit else None
+)
+recommended_action = "retry_with_fresh_chatgpt_conversation" if (
+    conversation_max_length_detected or empty_response_after_submit
+) else None
 pathlib.Path(meta).write_text(json.dumps({
     "status": "failed",
-    "failure": "conversation_max_length_rollover_failed" if conversation_max_length_detected else "submit_failed",
-    "blocker": "BLOCKED_WEBGPT_CONVERSATION_FULL" if conversation_max_length_detected else None,
-    "recommended_action": "retry_with_fresh_chatgpt_conversation" if conversation_max_length_detected else None,
+    "failure": failure,
+    "blocker": blocker,
+    "recommended_action": recommended_action,
     "chatgpt_ready_error": chatgpt_ready_error,
     "exit_code": int(status),
     "input": inp,
@@ -1742,9 +1792,19 @@ for line in reversed(stderr_text.splitlines()):
         chatgpt_rate_limit_exhausted = line.split(":", 1)[1].strip() == "true"
     elif line.startswith("ChatGPTRateLimitError:") and chatgpt_rate_limit_error is None:
         chatgpt_rate_limit_error = line.split(":", 1)[1].strip() or None
+empty_response_after_submit = (
+    not raw_text.strip()
+    and not conversation_max_length_detected
+    and (response_timed_out is True or bool(timeout_error) or "Response timeout" in stderr_text or "timed out" in stderr_text.lower())
+)
+failure = "chatgpt_empty_response_after_submit" if empty_response_after_submit else "missing_sentinel"
+blocker = "BLOCKED_WEBGPT_EMPTY_RESPONSE_AFTER_SUBMIT" if empty_response_after_submit else None
+recommended_action = "retry_with_fresh_chatgpt_conversation" if empty_response_after_submit else None
 pathlib.Path(meta).write_text(json.dumps({
-    "status": "missing_sentinel",
-    "failure": "missing_sentinel",
+    "status": "failed" if empty_response_after_submit else "missing_sentinel",
+    "failure": failure,
+    "blocker": blocker,
+    "recommended_action": recommended_action,
     "input": inp,
     "submitted_output": submitted,
     "output": out,
