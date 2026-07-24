@@ -38,7 +38,7 @@ S = maximally distant, magnitude-matched shuffled dream affect.
 ## Operator declaration — non-voice value of the dream intermediate
 ## (dissent resolution 2, agent-skills#977)
 
-Status: PENDING_OPERATOR.
+Status: RESOLVED 2026-07-24 (operator non-voice-value declaration recorded below).
 
 If the dream machinery (image-grounded rendering, ArcFace gating, ToM phases)
 has value to the operator beyond voice affect — interpretability, agent
@@ -48,7 +48,30 @@ recruitment. If this field is empty at listener time, the default stands:
 > A D≈M result demotes the dream intermediate to an implementation detail
 > for voice-affect claims, with no retroactive softening.
 
-Operator statement: (none recorded yet)
+Operator statement (recorded 2026-07-24, from the operator's explicit session
+directive): "we have two goals: (1) practical integration with chatterbox and
+building a persona personality and (2) create a cutting edge research project."
+
+Interpretation and consequence (bound):
+- The operator has declared NON-VOICE VALUE for the dream intermediate: it is
+  goal (2)'s cutting-edge research contribution (experience-grounded
+  dispositional affect and its downstream behavioral effect on a consumer
+  agent — a lane the sleep/dream-consolidation literature does not occupy).
+- Therefore the D≈M-on-grounding result does NOT trigger the default demotion.
+  The dream machinery is RETAINED — not for beating a fair memory-reading on
+  perceived groundedness (it does not: fair panel = 6/13, ~chance), but for its
+  declared research value and, concretely, the behavioral finding: dream-tone
+  changes a consumer agent's action/confidence under identical content (probe:
+  action differs 7/20, confidence 10/20), including a caution-erosion direction
+  that is itself a safety-relevant research result.
+- What is NOT softened: the empirical voice-affect-GROUNDING claim remains
+  D≈M. The declaration retains the machinery; it does not overturn the
+  measurement. Any future write-up must state grounding as ~chance and rest the
+  contribution on the behavioral effect + safety finding.
+
+#977 RESOLVED: declaration recorded; dissent-2 default overridden by operator
+non-voice-value declaration; dissent-1 pivot rule (interval-based futility,
+58% floor, one-round listener cap) remains in force for any scaled study.
 
 ## Preconditions before listener recruitment (SEALED)
 
