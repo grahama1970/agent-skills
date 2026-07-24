@@ -2,9 +2,11 @@ from embry_voice_control.embry_chat import (
     build_tau_response_plan,
     chunk_tone_arc,
     normalize_tts_text,
+    resolve_chatterbox_audio_path,
     split_speakable_text,
     split_speakable_with_emotion_close,
 )
+from embry_voice_control.listener_turn import strip_wake_word
 
 
 def test_grounded_compliance_memory_answer_is_used() -> None:
@@ -69,3 +71,18 @@ def test_emotion_close_remains_in_final_chunk() -> None:
 
     assert chunks[-1] == "[happy]"
     assert all(len(chunk) <= 180 for chunk in chunks)
+
+
+def test_chatterbox_out_path_resolves_from_host_out_env(tmp_path, monkeypatch) -> None:
+    host_out = tmp_path / "chatterbox-logs"
+    host_out.mkdir()
+    audio = host_out / "render.wav"
+    audio.write_bytes(b"RIFF")
+    monkeypatch.setenv("CHATTERBOX_HOST_OUT_DIR", str(host_out))
+
+    assert resolve_chatterbox_audio_path("/out/render.wav") == audio
+
+
+def test_strip_wake_word_supports_hey_embry_and_embry() -> None:
+    assert strip_wake_word("Embry open review queue") == "open review queue"
+    assert strip_wake_word("Hey, Embry, open review queue.") == "open review queue."

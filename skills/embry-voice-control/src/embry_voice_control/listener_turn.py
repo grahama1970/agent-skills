@@ -61,7 +61,7 @@ def normalize_text(text: str) -> str:
 def strip_wake_word(transcript: str) -> str:
     """Remove the leading Embry wake word from a transcript."""
     stripped = transcript.strip()
-    return re.sub(r"^\s*embry[\s,.:;-]+", "", stripped, flags=re.IGNORECASE).strip()
+    return re.sub(r"^\s*(?:hey[\s,.:;-]+)?embry[\s,.:;-]+", "", stripped, flags=re.IGNORECASE).strip()
 
 
 def normalize_url(base_url: str, suffix: str) -> str:

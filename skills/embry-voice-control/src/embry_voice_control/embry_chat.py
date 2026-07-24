@@ -12,6 +12,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
 import shutil
@@ -43,6 +44,30 @@ DEFAULT_EMBRY_REF_AUDIO = Path(
 )
 DEFAULT_CHATTERBOX_CONTAINER_REF_DIR = "/work/persona_dream_voice_refs"
 DEFAULT_EXPECTED_ANSWER = "paris"
+
+
+def chatterbox_host_out_dir_candidates(out_dir: Path | None = None) -> list[Path]:
+    """Return host directories that may back Chatterbox's container /out mount."""
+    candidates: list[Path] = []
+    env_dir = os.environ.get("CHATTERBOX_HOST_OUT_DIR")
+    if env_dir:
+        candidates.append(Path(env_dir).expanduser())
+    if out_dir is not None:
+        candidates.append(out_dir)
+    candidates.append(DEFAULT_CHATTERBOX_OUT_DIR)
+    try:
+        candidates.append(Path(__file__).resolve().parents[5] / "chatterbox" / "logs")
+    except IndexError:
+        pass
+
+    unique: list[Path] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        key = str(candidate)
+        if key not in seen:
+            unique.append(candidate)
+            seen.add(key)
+    return unique
 
 
 def now_iso() -> str:
@@ -279,7 +304,7 @@ def build_tau_response_plan(
     }
 
 
-def resolve_chatterbox_audio_path(value: Any, out_dir: Path = DEFAULT_CHATTERBOX_OUT_DIR) -> Path | None:
+def resolve_chatterbox_audio_path(value: Any, out_dir: Path | None = None) -> Path | None:
     """Resolve Chatterbox audio response values into a host-readable path."""
     if not isinstance(value, str) or not value.strip():
         return None
@@ -288,9 +313,10 @@ def resolve_chatterbox_audio_path(value: Any, out_dir: Path = DEFAULT_CHATTERBOX
     path = Path(raw)
     if path.is_absolute():
         candidates.append(path)
-    if raw.startswith("/out/"):
-        candidates.append(out_dir / raw.removeprefix("/out/"))
-    candidates.append(out_dir / raw.lstrip("/"))
+    for host_out_dir in chatterbox_host_out_dir_candidates(out_dir):
+        if raw.startswith("/out/"):
+            candidates.append(host_out_dir / raw.removeprefix("/out/"))
+        candidates.append(host_out_dir / raw.lstrip("/"))
     for candidate in candidates:
         if candidate.exists():
             return candidate
@@ -387,6 +413,10 @@ def run_embry_chat_static_query_live(
         "played": False,
         "reason": "play_local was false",
     }
+    memory_answer_classification = classify_memory_answer(answer_result, turn_text=turn_text)
+    expected_tts_render_text = normalize_tts_text(str(response_plan["answer_text"]))
+    if response_plan["route_taken"] == "memory_answer":
+        expected_tts_render_text += " [happy]"
     normalized_answer = normalize_text(str(response_plan["answer_text"]))
     checks = {
         "listener_receipt_passed": bool(nested_value(listener_receipt, "acceptance.pass")),
@@ -402,12 +432,16 @@ def run_embry_chat_static_query_live(
         "memory_answer_called": answer_status is not None and 200 <= answer_status < 300,
         "memory_answer_call_index_2": True,
         "memory_intent_action_query": action_from(intent_result) == "QUERY",
-        "memory_answer_miss_not_used_as_answer": classify_memory_answer(answer_result, turn_text=turn_text).startswith("memory_miss"),
+        "memory_answer_miss_not_used_as_answer": (
+            memory_answer_classification == "memory_answer"
+            or memory_answer_classification.startswith("memory_miss")
+            and response_plan["route_taken"] != "memory_answer"
+        ),
         "tau_subagent_embry_chat": response_plan["subagent"] == "embry-chat",
-        "tau_route_static_answer": response_plan["route_taken"] == "static_answer",
+        "tau_route_allowed": response_plan["route_taken"] in {"memory_answer", "static_answer"},
         "brave_search_not_called": response_plan["brave_search_called"] is False,
         "answer_mentions_expected": normalize_text(expected_answer) in normalized_answer,
-        "tts_render_text_matches_tau_plan": response_plan["tts_render_text"] == response_plan["answer_text"],
+        "tts_render_text_matches_tau_plan": response_plan["tts_render_text"] == expected_tts_render_text,
         "chatterbox_http_2xx": chatterbox_status is not None and 200 <= chatterbox_status < 300,
         "chatterbox_status_ok": chatterbox_response.get("ok") is True,
         "chatterbox_audio_exists": final_audio_path is not None and final_audio_path.exists(),
