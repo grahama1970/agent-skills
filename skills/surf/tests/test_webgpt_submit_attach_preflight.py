@@ -598,6 +598,56 @@ esac
     assert meta["raw_response_advisory"] is True
 
 
+def test_webgpt_submit_provider_limit_preflight_fails_closed_before_submit(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    invocation_log = tmp_path / "surf-invocations.log"
+    js_count_file = tmp_path / "js-count"
+    fake_run = f"""#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\\n' "$*" >> {str(invocation_log)!r}
+case "${{1:-}}" in
+  tab.list)
+    printf '837352334\\tRate limited\\thttps://chatgpt.com/c/example\\n'
+    ;;
+  focus.state)
+    printf '{{"active_tab_id":"123","active_window_id":"456"}}\\n'
+    ;;
+  js)
+    count="$(cat {str(js_count_file)!r} 2>/dev/null || printf '0')"
+    count="$((count + 1))"
+    printf '%s' "$count" > {str(js_count_file)!r}
+    if [[ "$count" -eq 1 ]]; then
+      printf '"cdp-ok"\\n'
+    else
+      printf '"provider-limit-detected"\\n'
+    fi
+    ;;
+  chatgpt)
+    echo 'chatgpt should not be invoked when provider limit is visible before submit' >&2
+    exit 44
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+
+    proc = run_submit(tmp_path, archive, fake_run)
+
+    assert proc.returncode == 7
+    assert "provider limit is visible" in proc.stderr
+    meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["status"] == "failed"
+    assert meta["failure"] == "chatgpt_provider_limit_preflight"
+    assert meta["proof_status"] == "rate_limited"
+    assert meta["submitted_to_chatgpt"] is False
+    assert meta["chatgpt_too_many_requests_detected"] is True
+    assert meta["chatgpt_rate_limit"]["exhausted"] is True
+    assert "chatgpt " not in invocation_log.read_text(encoding="utf-8")
+
+
 def test_webgpt_submit_clicks_start_new_chat_same_tab_on_conversation_max_length(tmp_path: Path) -> None:
     archive = tmp_path / "five.zip"
     make_zip(archive, 5)
