@@ -587,7 +587,21 @@ class PrimitiveBackedOracle:
                 "outcomes": json_safe(outcomes.get(worker_id, {})),
             }
         bad_workers = raw.get("bad_worker_ids") or []
+        # Every worker the Judge scored as a win is viable. The ones that were
+        # not selected are retained runners-up, never bad genetic material:
+        # they blocked the exploit (Blue) or landed it (Red).
+        runners_up = [
+            {
+                "worker_id": str(worker),
+                "candidate_id": str(worker),
+                "team": str(raw.get("team") or request.role),
+                "outcomes": json_safe(outcomes.get(str(worker), {})),
+            }
+            for worker in (raw.get("survivor_worker_ids") or [])
+            if str(worker) != str(selected or "")
+        ]
         return OracleSelection(
+            runners_up=runners_up,
             survivor=survivor,
             bad_genetic_material={
                 "schema": "battle.verified_primitive_bad_material.v1",

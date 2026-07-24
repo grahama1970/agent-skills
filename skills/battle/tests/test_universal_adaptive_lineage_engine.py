@@ -520,7 +520,7 @@ def test_verified_hooks_drive_the_real_canary_primitive_contract(
         return {
             "attempts": [
                 {"pair_id": "red-0__blue-0", "verdict": "BLUE_SUCCESS"},
-                {"pair_id": "red-0__blue-1", "verdict": "RED_SUCCESS"},
+                {"pair_id": "red-0__blue-1", "verdict": "BLUE_SUCCESS"},
             ]
         }
 
@@ -531,13 +531,13 @@ def test_verified_hooks_drive_the_real_canary_primitive_contract(
         return {
             "team": team,
             "population_size": 2,
-            "survivor_worker_ids": ["blue-0"],
+            "survivor_worker_ids": ["blue-0", "blue-1"],
             "selected_survivor": "blue-0",
-            "bad_worker_ids": ["blue-1"],
-            "bad_genetic_material_rate": 0.5,
+            "bad_worker_ids": [],
+            "bad_genetic_material_rate": 0.0,
             "outcomes": {
                 "blue-0": {"won": True, "verdicts": ["BLUE_SUCCESS"]},
-                "blue-1": {"won": False, "verdicts": ["RED_SUCCESS"]},
+                "blue-1": {"won": True, "verdicts": ["BLUE_SUCCESS"]},
             },
         }
 
@@ -593,10 +593,17 @@ def test_verified_hooks_drive_the_real_canary_primitive_contract(
     # pair-keyed, so the id is absent from the judged items by construction.
     assert receipt["oracle"]["survivor_id"] == "blue-0"
 
-    # Bad genetic material accumulates across the whole generation: blue-2 died
-    # at the population stage (no valid strategy_genome) and blue-1 died at the
-    # Judge (replayed, never won). Only blue-0 survived.
-    assert receipt["bad_genetic_material"]["bad_count"] == 2
+    # blue-0 and blue-1 BOTH blocked the exploit, so both are viable. Only
+    # blue-0 reproduces; blue-1 is a RETAINED RUNNER-UP, not bad genetic
+    # material (GOAL_ADAPTIVE_LINEAGE.md: "The runner-up G1 is retained and
+    # shown."). blue-2 is the only genuinely bad specimen -- it never produced
+    # a valid strategy_genome, which is what SKILL.md calls bad material.
+    bad = receipt["bad_genetic_material"]
+    assert bad["retained_runner_up_ids"] == ["blue-1"]
+    assert [s["candidate_id"] for s in bad["specimens"]] == ["blue-2"]
+    assert bad["bad_count"] == 1
+    assert bad["bad_rate"] == 1 / 3
+    assert bad["all_bad"] is False
 
     # Role scoping: red specimens are never this lineage's population, and the
     # review 2-tuple was not misread as (items, bad).
