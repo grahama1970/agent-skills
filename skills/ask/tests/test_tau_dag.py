@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 from ask.tau_dag import compile_tau_dag_bundle, infer_compile_input, resolve_scillm_model_route
 
 
 TAU_ROOT = Path("/home/graham/workspace/experiments/tau")
+ASK_ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_incomplete_tau_dag_request_routes_to_interview(tmp_path: Path) -> None:
@@ -279,6 +281,215 @@ def test_roundtable_handler_project_overrides_are_written_to_command_specs(tmp_p
     )
     command = command_spec["command"]
     assert command[command.index("--browser-oracle-project") + 1] == "tau"
+
+
+def test_compete_mixed_handlers_compile_to_isolated_candidate_dag(tmp_path: Path) -> None:
+    request = infer_compile_input(
+        "Compete webgpt, webclaude, and gpt-5.5-high on this focused implementation.",
+        repo="local/agent-skills",
+        target="ask-compete",
+        handlers=["webgpt", "webclaude", "gpt-5.5-high"],
+        handler_projects=["webgpt=tau"],
+        criteria=["skill-contract", "deterministic-proof"],
+        topology="concurrent",
+        workflow_mode="compete",
+        output_root=tmp_path,
+    )
+
+    bundle = compile_tau_dag_bundle(request)
+
+    assert bundle["status"] == "READY"
+    dag = bundle["dag"]
+    assert dag["schema"] == "tau.dag_contract.v1"
+    assert dag["context"]["workflow_mode"] == "compete"
+    assert dag["context"]["transport_adapter"] == "handler_neutral_adapter"
+    assert dag["context"]["handlers"] == ["webgpt", "webclaude", "gpt-5.5-high"]
+    assert dag["edges"] == [
+        {"from": "handler-webgpt", "to": "join"},
+        {"from": "handler-webclaude", "to": "join"},
+        {"from": "handler-gpt-5-5-high", "to": "join"},
+        {"from": "join", "to": "human"},
+    ]
+    candidates = [node for node in dag["nodes"] if str(node["id"]).startswith("handler-")]
+    assert candidates
+    assert all(node["context"]["workflow_mode"] == "compete" for node in candidates)
+    assert all(node["context"]["isolation_required"] is True for node in candidates)
+    assert all(node["context"]["prompt_contract"]["isolation_required"] is True for node in candidates)
+    join = next(node for node in dag["nodes"] if node["id"] == "join")
+    assert join["context"]["role"] == "compete_evaluator"
+    assert "compete_scorecard" in join["required_evidence"]
+    assert "winner_revision_request" in join["required_evidence"]
+    assert join["join"]["fail_closed_on_tie"] is True
+    command_spec = json.loads(
+        Path(bundle["command_spec_root"], "handler-webgpt", "tau-dispatch-command.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    command = command_spec["command"]
+    assert command[command.index("--workflow-mode") + 1] == "compete"
+    assert command[command.index("--browser-oracle-project") + 1] == "tau"
+
+
+def test_compete_requires_two_concurrent_handlers(tmp_path: Path) -> None:
+    request = infer_compile_input(
+        "Compete webgpt on this focused implementation.",
+        repo="local/agent-skills",
+        target="ask-compete",
+        handlers=["webgpt"],
+        topology="sequential",
+        workflow_mode="compete",
+        output_root=tmp_path,
+    )
+
+    bundle = compile_tau_dag_bundle(request)
+
+    assert bundle["status"] == "NEEDS_INTERVIEW"
+    assert {"handlers", "topology"} <= set(bundle["missing_fields"])
+
+
+def test_compete_join_fails_closed_without_explicit_verified_features(tmp_path: Path) -> None:
+    request_path = tmp_path / "request.json"
+    request_path.write_text(
+        json.dumps({"request": "Implement the feature in isolation."}) + "\n",
+        encoding="utf-8",
+    )
+    artifacts = tmp_path / "node-artifacts"
+    for node_id, handler in (("handler-webgpt", "webgpt"), ("handler-webclaude", "webclaude")):
+        node_dir = artifacts / node_id
+        node_dir.mkdir(parents=True)
+        response_path = node_dir / "response.md"
+        response_path.write_text("## Position\nCandidate answer without explicit feature markers.\n", encoding="utf-8")
+        (node_dir / "node-receipt.json").write_text(
+            json.dumps(
+                {
+                    "schema": "ask.tau_dag_handler_receipt.v1",
+                    "node_id": node_id,
+                    "handler": handler,
+                    "status": "PASS",
+                    "ok": True,
+                    "mocked": False,
+                    "live": True,
+                    "provider_live": True,
+                    "response_path": str(response_path),
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+    join_dir = artifacts / "join"
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(ASK_ROOT / "scripts" / "tau_roundtable_worker.py"),
+            "--node-id",
+            "join",
+            "--handler",
+            "join",
+            "--topology",
+            "concurrent",
+            "--workflow-mode",
+            "compete",
+            "--request-file",
+            str(request_path),
+            "--artifact-dir",
+            str(join_dir),
+            "--surf-run",
+            "/bin/false",
+            "--browser-oracle-run",
+            "/bin/false",
+        ],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert completed.returncode == 1, completed.stderr
+    receipt = json.loads((join_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    scorecard = json.loads((join_dir / "compete-scorecard.json").read_text(encoding="utf-8"))
+    assert receipt["status"] == "NEEDS_ATTENTION"
+    assert scorecard["status"] == "NEEDS_ATTENTION"
+    assert "winner_tie_requires_project_agent_review" in scorecard["blockers"]
+    assert "no_explicit_verified_features_to_promote" in scorecard["blockers"]
+
+
+def test_compete_join_promotes_only_explicit_verified_features(tmp_path: Path) -> None:
+    request_path = tmp_path / "request.json"
+    request_path.write_text(json.dumps({"request": "Implement the feature in isolation."}) + "\n", encoding="utf-8")
+    artifacts = tmp_path / "node-artifacts"
+    cases = [
+        ("handler-webgpt", "webgpt", ["VERIFIED_FEATURE: keeps Ask as a Tau DAG compiler"]),
+        (
+            "handler-webclaude",
+            "webclaude",
+            [
+                "VERIFIED_FEATURE: keeps Ask as a Tau DAG compiler",
+                "VERIFIED_FEATURE: emits a bounded winner revision request",
+            ],
+        ),
+    ]
+    for node_id, handler, lines in cases:
+        node_dir = artifacts / node_id
+        node_dir.mkdir(parents=True)
+        response_path = node_dir / "response.md"
+        response_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        (node_dir / "node-receipt.json").write_text(
+            json.dumps(
+                {
+                    "schema": "ask.tau_dag_handler_receipt.v1",
+                    "node_id": node_id,
+                    "handler": handler,
+                    "status": "PASS",
+                    "ok": True,
+                    "mocked": False,
+                    "live": True,
+                    "provider_live": True,
+                    "response_path": str(response_path),
+                }
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+    join_dir = artifacts / "join"
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(ASK_ROOT / "scripts" / "tau_roundtable_worker.py"),
+            "--node-id",
+            "join",
+            "--handler",
+            "join",
+            "--topology",
+            "concurrent",
+            "--workflow-mode",
+            "compete",
+            "--request-file",
+            str(request_path),
+            "--artifact-dir",
+            str(join_dir),
+            "--surf-run",
+            "/bin/false",
+            "--browser-oracle-run",
+            "/bin/false",
+        ],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    scorecard = json.loads((join_dir / "compete-scorecard.json").read_text(encoding="utf-8"))
+    revision_request = (join_dir / "winner-revision-request.md").read_text(encoding="utf-8")
+    assert scorecard["status"] == "PASS"
+    assert scorecard["winner_handler"] == "webclaude"
+    assert scorecard["verified_features"] == [
+        "keeps Ask as a Tau DAG compiler",
+        "emits a bounded winner revision request",
+    ]
+    assert "Do not import unverified candidate claims." in revision_request
 
 
 def test_command_spec_blocks_provider_execution_without_opt_in(tmp_path: Path) -> None:

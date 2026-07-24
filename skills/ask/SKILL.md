@@ -17,17 +17,16 @@ triggers:
   - persona review
   - CAE gap review
   - browser oracle
-  - create browser tab
-  - close browser tab
-  - fresh reviewer tab
   - ask DAG
   - Tau DAG
+  - compete
+  - bakeoff
 provides:
   - >
     Executable ask runtime for memory-backed answers, oracle calls, reviews,
     supported browser-backed review, Tau single-handler and roundtable
-    workflows, persona workflows, image generation, ask/scillm-style DAG runs,
-    and strict Tau DAG runs.
+    workflows, Tau compete/bakeoff workflows, persona workflows, image
+    generation, ask/scillm-style DAG runs, and strict Tau DAG runs.
   - >
     Evidence artifacts for each run: request, status, events, and mode-specific
     review outputs.
@@ -113,9 +112,9 @@ ask artifacts.
   missing, and delegates execution and live status/viewer polling to `$tau`.
 - Treat modern roundtable and creator-reviewer loops as prompt-to-Tau-DAG. The
   user should only need to name handlers and shape: single call, concurrent
-  roundtable, sequential roundtable, or explicit multi-step DAG. It must not
-  matter to the user whether a handler is browser-backed or API-backed except
-  for the handler/model name they request.
+  roundtable, creator-reviewer pipeline, compete/bakeoff, or explicit
+  multi-step DAG. It must not matter to the user whether a handler is
+  browser-backed or API-backed except for the handler/model name they request.
 - Pass the bundle to the documented ask mode. Do not compress a review target
   into an informal prompt when the mode has a target option.
 - Report artifact paths as evidence. Browser reviewers or model
@@ -147,25 +146,18 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
   path for "ask webclaude", "ask webkimi", "ask webgemini", "ask webgpt", or one
   API-backed model such as `gpt-5.5`, `claude-sonnet-4-6`, or another model
   routed by `$tau` through `$scillm`.
-- **Roundtable**: use repeatable `--handler` values and `--topology concurrent`
-  or `--topology sequential`. A roundtable compiles to `tau.dag_contract.v1`
-  with handler nodes and a join node.
-- **Roundtable reporting**: after processing results, report each handler's
-  unique insights, disagreements, corrections to prior handlers, and shared
-  conclusions separately. Do not collapse WebGPT/WebClaude/WebKimi/etc. into a
-  vague consensus before exposing what each contributed and which artifact path
-  supports it.
-- **Provider web research**: when the user's question depends on current
-  external facts, literature, docs, pricing, releases, or other time-sensitive
-  context, instruct each browser-backed provider to use its own web search or
-  browsing capability when available and to state whether web research was used.
-  Preserve those source-backed insights per handler instead of treating one
-  provider's web search as shared evidence for all providers.
 - **Roundtable (deliberation panel)**: repeatable `--handler` values with
   `--topology concurrent` — ALWAYS concurrent; see the Roundtable
   Collaboration Protocol below. Equal context demands that every seat answers
   the same shared prompt; a sequential chain is a PIPELINE, not a roundtable.
   Compiles to `tau.dag_contract.v1` with handler nodes and a join node.
+- **Compete / bakeoff (isolated candidates)**: use `./run.sh compete` when the
+  user wants multiple web/API handlers to solve the same task in isolation,
+  then have the project agent compare the results, harvest only locally
+  verified features, pick a clear winner when the evidence supports one, and
+  prepare a bounded winner revision request. This is NOT a roundtable:
+  competitors do not see each other's first-round output. Browser handlers and
+  `$scillm` model names are mixed with the same `--handler` flag.
 - **Creator-reviewer loop (pipeline, not a roundtable)**: use `--topology
   sequential` and list the creator handler first, then reviewer handlers. Downstream handlers receive prior
   handler receipts and response excerpts. If the request asks for pass/fail
@@ -184,136 +176,77 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
   `$browser-oracle` from Tau command specs. Use `--handler-project
   handler=project` when the browser-oracle project differs from the handler
   name, for example `--handler-project webgpt=tau`.
-- **Browser tab lifecycle**: agents may create, bind, use, and close fresh
-  browser reviewer tabs for `$ask` runs through `$surf` and `$browser-oracle`;
-  see the Browser Tab Lifecycle section below. The user should not have to
-  manually babysit disposable reviewer tabs.
 - **Evidence**: `--json` returns the Ask Tau bundle path, provider/handler gate,
   and Tau execution receipt when `--execute` is used. Preserve `dag.json`,
   command specs, node receipts, and join receipts.
 
-## Browser Tab Lifecycle
+## Compete / Bakeoff Protocol
 
-Use this when a browser-backed handler needs a new tab, when the remembered tab
-is stale, or when a roundtable needs isolated temporary seats. `$ask` still owns
-the orchestration; `$browser-oracle` owns binding/registry state; `$surf` owns
-browser transport, tab inventory, and tab closing.
+Use compete when the user asks for independent implementations, an approach
+bakeoff, or a winner chosen from multiple candidate handlers. Do not use
+roundtable for this: roundtable seats are collaborators with shared context,
+while compete candidates are isolated.
 
-### Decision Model
+Canonical compile command:
 
-| Need | Behavior |
+```bash
+./run.sh compete "Implement the focused patch. Return concrete reusable features as VERIFIED_FEATURE: lines only when locally checkable." \
+  --repo local/agent-skills \
+  --target ask-compete \
+  --handler webgpt \
+  --handler webclaude \
+  --handler gpt-5.5-high \
+  --handler-project webgpt=tau \
+  --criterion skill-contract \
+  --criterion deterministic-proof \
+  --json
+```
+
+Live execution adds `--execute` and uses the same Tau dispatch path as
+roundtable. Browser handlers run through `$surf` and `$browser-oracle`; API
+handler names route through `$tau` to `$scillm`.
+
+Project-agent responsibilities after a compete run:
+
+1. Read `dag.json`, command specs, each candidate `node-receipt.json`, each
+   `response.md`, `join/compete-scorecard.json`, and
+   `join/winner-revision-request.md`.
+2. Check every candidate against the current codebase, relevant `SKILL.md`
+   contracts, allowed files, and deterministic proof commands.
+3. Treat candidate `VERIFIED_FEATURE:` lines as claims until locally checked.
+   Promote only features the project agent can verify against repository state.
+4. Accept a winner only when there is a clear receipt-backed and locally
+   checked advantage. If there is a tie, missing candidate receipt, provider
+   blocker, unclear patch, or no local proof, report `NEEDS_ATTENTION`.
+5. Send the winner revision request only after pruning unverified features. The
+   winner should keep its own implementation as the base and add only the
+   explicitly verified features from other candidates.
+
+Compete is fail-closed by design:
+
+| Condition | Behavior |
 | --- | --- |
-| Existing project reviewer tab is healthy | Resolve and use it; do not create a duplicate. |
-| Human supplied a tab id or URL | Preflight it against live `surf tab.list --json`; bind only after identity is proven. |
-| No binding exists and the run needs a browser handler | Create a fresh disposable binding with `browser-oracle open-bind`. |
-| Handler is part of a concurrent roundtable | Use one browser tab/binding per browser seat unless the human explicitly requests shared state. |
-| Tab was created only for this run | Close it with `surf tab.close <tab_id>` and unbind it after artifacts are collected. |
-| Tab is manual, pre-existing, or human-owned | Do not close or unbind it unless the user explicitly says to. |
+| Fewer than two handlers | Emits an `$interview` packet instead of a DAG |
+| Non-concurrent topology | Emits an `$interview` packet; isolation requires concurrent candidates |
+| Missing candidate receipt | Join reports `NEEDS_ATTENTION` |
+| Candidate claims a feature without local proof | Project agent must not promote it |
+| Tie or no clear winner | Report `NEEDS_ATTENTION`; do not fabricate a winner |
+| Winner revision packet exists | It is a next request, not proof that revision was submitted |
 
-### Create, Use, Close Runbook
+Required compete artifacts:
 
-1. **Inventory live tabs first**. URL is the identity truth; listing order is
-   not.
+- `request.json`
+- `dag.json`
+- `command-specs/<candidate>/tau-dispatch-command.json`
+- `node-artifacts/<candidate>/node-receipt.json`
+- `node-artifacts/<candidate>/response.md`
+- `node-artifacts/join/compete-scorecard.json`
+- `node-artifacts/join/winner-revision-request.md`
 
-   ```bash
-   skills/surf/run.sh tab.list --json
-   ```
-
-2. **Resolve an existing binding before creating anything**.
-
-   ```bash
-   backend=webclaude  # or webkimi, webgemini, webgpt
-   skills/browser-oracle/run.sh resolve \
-     --from <repo-or-skill-dir> \
-     --backend "$backend" \
-     --json
-   skills/browser-oracle/run.sh doctor \
-     --from <repo-or-skill-dir> \
-     --backend "$backend" \
-     --json
-   ```
-
-3. **Create a disposable reviewer tab only when resolve/doctor is missing or
-   stale**. Use a unique project name that includes the run target and backend,
-   and mark the binding `--auto` unless the human wants it to persist.
-
-   ```bash
-   backend=webclaude  # or webkimi, webgemini, webgpt
-   skills/browser-oracle/run.sh open-bind <ask-run-project> \
-     --backend "$backend" \
-     --url "<provider-home-or-conversation-url>" \
-     --auto \
-     --json
-   ```
-
-   For WebGPT, `open-bind` defaults to an isolated reviewer window through
-   `$browser-oracle`. For other browser backends it still records the new tab id
-   and URL under `~/.pi/<backend>-projects/<ask-run-project>.json`.
-
-4. **Verify the new binding before the Ask run**.
-
-   ```bash
-   backend=webclaude  # or webkimi, webgemini, webgpt
-   skills/browser-oracle/run.sh resolve \
-     --project <ask-run-project> \
-     --backend "$backend" \
-     --json
-   ```
-
-   The JSON must show the expected `tab_id` and URL. If the tab id is missing,
-   ambiguous, or URL-mismatched, stop with `NEEDS_ATTENTION` and do not submit.
-
-5. **Use the bound tab through `$ask`/Tau, not raw Surf**. Pass the project
-   mapping so the handler node controls the intended tab.
-
-   ```bash
-   cd skills/ask
-   ./run.sh tau-dag "<full request>" \
-     --repo <repo> \
-     --target <target> \
-     --handler webclaude \
-     --handler-project webclaude=<ask-run-project> \
-     --execute \
-     --json
-   ```
-
-   For multi-seat browser runs, repeat `--handler-project
-   backend=<ask-run-project>` for each browser handler.
-
-6. **Preserve evidence before cleanup**. Keep the Ask/Tau artifacts, handler
-   node receipt, `browser_oracle` binding fields, Surf metadata, response text,
-   and any downloaded files before closing a tab.
-
-7. **Close only disposable tabs created for this run**.
-
-   ```bash
-   backend=webclaude  # or webkimi, webgemini, webgpt
-   skills/surf/run.sh tab.close <tab_id>
-   skills/browser-oracle/run.sh unbind <ask-run-project> \
-     --backend "$backend"
-   ```
-
-   After closing, run `skills/surf/run.sh tab.list --json` and confirm the tab
-   id is absent. Report `closed_tab_id`, backend, project name, and the artifact
-   directory. If close fails or the tab still appears, report
-   `NEEDS_ATTENTION: disposable_browser_tab_not_closed`.
-
-### Lifecycle Rules
-
-- Prefer long-lived manual project bindings for repeated reviewer relationships;
-  prefer disposable `--auto` bindings for one-off browser seats, experiments,
-  and concurrent roundtables.
-- Do not close a manual binding, a tab supplied by the human, or a tab that
-  existed before the current Ask run unless the human explicitly says to close
-  it.
-- Do not use `surf tab.new` alone for `$ask` handler orchestration. If a new tab
-  will be used by `$ask`, create or bind it through `$browser-oracle` so Tau
-  command specs can resolve the same tab deterministically.
-- If a provider navigates to a new conversation URL after first submit, update
-  or rebind the browser-oracle project before the next round and preserve both
-  the old and new URLs in the run artifacts.
-- Cleanup is not proof of reviewer correctness. Browser output remains reviewer
-  evidence and still needs deterministic local reconciliation before closure.
+Do not claim compete success from model prose. Closure still requires local
+deterministic evidence: tests, schema checks, endpoint responses, screenshots,
+database/query evidence, or generated artifact validation appropriate to the
+task.
 
 ## Roundtable Collaboration Protocol (operator directive 2026-07-22)
 
@@ -342,8 +275,7 @@ Rules for the calling agent:
 
 1. **Bind each seat's tab** (once per panel; verify tab URLs first with
    `skills/surf/run.sh tab.list --json` — the URL, not the listing order, is
-   the identity truth; for fresh disposable seats use the Browser Tab Lifecycle
-   runbook above):
+   the identity truth):
    `skills/browser-oracle/run.sh bind <project-name> --backend webgpt|webclaude|webkimi --tab-id <id> --url "<conversation-url>"`
    Verify with `... resolve --backend <b> --project <name> --json` (expect the
    tab_id back).
@@ -437,6 +369,7 @@ Use the narrowest mode that matches the user request.
 | Oracle answer | `./run.sh ask "<question>" --oracle ... --json` | Choose backend/model/persona explicitly when requested. |
 | Single named handler | `./run.sh tau-dag "<request>" --handler <handler-or-model> --json` | Browser handlers use `$surf`; non-browser handlers are `$scillm` model names routed by Tau. Add `--execute` for live transport. |
 | Multi-handler roundtable | `./run.sh tau-dag "<request>" --handler webclaude --handler gpt-5.5 ... --topology <concurrent|sequential> --json` | Roundtable is prompt-to-Tau-DAG. Preserve `dag.json`, command specs, handler receipts, and join receipts. |
+| Compete / bakeoff | `./run.sh compete "<task>" --handler webgpt --handler webclaude --handler gpt-5.5-high --criterion deterministic-proof --json` | Isolated candidates plus compete scorecard and winner revision request. Browser/API handlers are peers. Project agent must locally verify features before promotion. |
 | Creator-reviewer loop | `./run.sh tau-dag "<request>" --handler <creator> --handler <reviewer> --topology sequential --json` | The reviewer receives prior handler receipts. Pass/fail requests require a verdict in the reviewer response. |
 | Supported direct browser oracle | documented browser mode such as `webgemini`, `webkimi`, `webperplexity`, or `cursor-browser` | Use only when the user asks for that direct mode; attach local target content when browser cannot read paths. |
 | Deep review | `./run.sh ask "<question>" --deep-review --deep-review-target <path> ... --json` | Pass complete target bundle; return `review.md` and `review.json`. |
@@ -462,21 +395,31 @@ browser handlers through `$surf`/`$browser-oracle` command specs.
 - A browser tab cannot inspect bare local paths unless the runtime attaches file
   contents or serves an artifact URL. Include readable target content in the
   bundle when needed.
-- Browser handler failures must emit
-  `ask.browser_failure_recovery_packet.v1` in the node artifact directory when
-  they can be classified as `repo_access_blocked`, `missing_sentinel`,
-  `prompt_too_large_or_stalled`, `stale_raw_capture`,
-  `browser_tab_identity_mismatch`, `browser_access_blocked`, or
-  `browser_provider_rate_limited`. The packet must include `failure_code`,
-  `local_readable_bundle_paths`, `auto_retry_allowed`,
-  `auto_retry_blocked_reason`, `next_command`, and `fallback_instruction`.
-- Browser auto-retry is allowed only when `$ask` can read a local bundle file
-  and the selected Surf handler supports `--attach-file`. A private GitHub URL,
-  a bare local path inside the prompt, or a stale raw capture is not enough.
-  Without a readable bundle, fail closed and return the recovery packet.
 - Use the configured tab id when available. If the tab is missing, wrong, stale,
   or cannot be proven to match the requested reviewer, stop with
   `NEEDS_ATTENTION`.
+- **Browser tab lifecycle for browser handlers**:
+  1. Create or reuse a provider tab with `$surf`: `skills/surf/run.sh tab.new
+     "https://chatgpt.com/"`, `... tab.new "https://claude.ai/"`, `... tab.new
+     "https://www.kimi.com/"`, or `... tab.new "https://gemini.google.com/app"`.
+  2. List and verify the live URL with `skills/surf/run.sh tab.list --json`.
+     Treat the URL and tab id together as the tab identity; never rely on tab
+     order.
+  3. Bind that identity with `$browser-oracle`:
+     `skills/browser-oracle/run.sh bind <project> --backend
+     webgpt|webclaude|webkimi|webgemini --tab-id <id> --url "<live-url>"
+     --manual --json`.
+  4. Resolve before each live Ask run:
+     `skills/browser-oracle/run.sh resolve --backend <backend> --project
+     <project> --json`; pass non-default mappings with
+     `--handler-project <handler>=<project>`.
+  5. Execute through `$ask`/Tau, not raw Surf:
+     `./run.sh tau-dag "<request>" --handler <handler> --execute --json`.
+  6. Close temporary tabs only after their receipts are no longer needed:
+     `skills/surf/run.sh tab.close <id>` when supported by the installed Surf
+     version, otherwise use the provider-specific close command documented by
+     `$surf`. Do not close a tab bound to an active browser-oracle project
+     unless the binding is being replaced.
 - If a WebGPT/Tau browser-handler receipt or Surf metadata reports
   `conversation_max_length_detected` or `conversation_max_length_rollover`, treat
   it as Surf's controlled-tab conversation rollover path. Do not reclassify it
@@ -535,6 +478,7 @@ When a reference file is selected, read it completely before running that mode.
 ./run.sh ask "Review this target" --deep-review --deep-review-target path/to/file --json
 ./run.sh tau-dag "Ask webclaude to answer this prompt" --repo local/ask --target single-webclaude --handler webclaude --json
 ./run.sh tau-dag "Roundtable webclaude, webkimi, webgemini, and webgpt concurrently, then join" --repo local/ask --target roundtable-web --handler webclaude --handler webkimi --handler webgemini --handler webgpt --handler-project webgpt=tau --topology concurrent --json
+./run.sh compete "Implement a focused patch independently, then emit a scorecard and winner revision request" --repo local/ask --target compete-web-api --handler webgpt --handler webclaude --handler gpt-5.5-high --handler-project webgpt=tau --criterion skill-contract --criterion deterministic-proof --json
 ./run.sh tau-dag "Solve X with two GPT 5.6 xhigh solvers, then Claude Fable reviews" --repo local/tau --target issue-123 --solver-model gpt-5.6-xhigh --solver-model gpt-5.6-xhigh --reviewer-model claude-fable --criterion correctness --criterion maintainability --json
 ./run.sh tau-dag "Solve X" --repo local/tau --target issue-123 --solver-model gpt-5.6-xhigh --solver-model gpt-5.6-xhigh --reviewer-model claude-fable --criterion correctness --criterion maintainability --execute --local-fixture --viewer-link --json
 ./run.sh status --run <ask_id> --json
@@ -551,6 +495,7 @@ uv run python scripts/webkimi_sanity_eval.py --plan-only
 uv run python scripts/webkimi_sanity_eval.py --allow-live --project webkimi
 uv run python scripts/tau_roundtable_sanity_eval.py --plan-only
 uv run python scripts/tau_roundtable_sanity_eval.py --allow-live --output-root /tmp/ask-roundtable-live --timeout-seconds 1800 --json
+uv run python scripts/tau_compete_sanity_eval.py --json
 uv run python scripts/dag_negative_sanity.py
 uv run python scripts/dag_e2e_sanity.py
 uv run python scripts/tau_dag_e2e_sanity.py --json

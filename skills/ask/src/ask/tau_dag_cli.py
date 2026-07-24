@@ -46,6 +46,10 @@ def run(
         str,
         typer.Option("--topology", help="Roundtable topology: concurrent or sequential."),
     ] = "",
+    workflow_mode: Annotated[
+        str,
+        typer.Option("--workflow-mode", help="Workflow mode: roundtable or compete."),
+    ] = "roundtable",
     join_handler: Annotated[
         str,
         typer.Option("--join-handler", help="Roundtable join/adjudicator handler label."),
@@ -125,6 +129,7 @@ def run(
         criteria=criterion,
         handlers=handler,
         topology=topology,
+        workflow_mode=workflow_mode,
         join_handler=join_handler,
         handler_projects=handler_project,
         handler_workspaces=handler_workspace,
@@ -153,6 +158,7 @@ def run(
                 "provider_live": False,
                 "handlers": list(input_payload.handlers),
                 "topology": input_payload.topology,
+                "workflow_mode": input_payload.workflow_mode,
                 "handler_projects": list(input_payload.handler_projects),
                 "message": "Handler DAG emitted; live Surf/browser execution happens when Tau executes the DAG.",
             }
@@ -207,6 +213,133 @@ def run(
             isinstance(provider_gate, dict) and provider_gate.get("provider_live") is True
         )
         or bool(isinstance(execution, dict) and execution.get("provider_live") is True),
+        "bundle": bundle,
+        "provider_gate": provider_gate,
+        "execution": execution,
+    }
+    if json_output:
+        typer.echo(json.dumps(output, indent=2, sort_keys=True))
+    else:
+        _print_text(output)
+    raise typer.Exit(exit_code)
+
+
+@app.command("compete")
+def compete(
+    request: Annotated[
+        str,
+        typer.Argument(help="Task to give to isolated competitors."),
+    ],
+    repo: Annotated[str, typer.Option("--repo", help="Repository/project binding.")] = "",
+    target: Annotated[str, typer.Option("--target", help="Issue, task, path, or work target.")] = "",
+    handler: Annotated[
+        list[str] | None,
+        typer.Option("--handler", help="Competitor handler/model. Repeat for multiple competitors."),
+    ] = None,
+    handler_project: Annotated[
+        list[str] | None,
+        typer.Option("--handler-project", help="Browser-oracle project override as handler=project."),
+    ] = None,
+    handler_workspace: Annotated[
+        list[str] | None,
+        typer.Option("--handler-workspace", help="Workspace binding for local-CLI handlers as handler=/path."),
+    ] = None,
+    criterion: Annotated[
+        list[str] | None,
+        typer.Option("--criterion", help="Evaluation criterion. Repeat for multiple criteria."),
+    ] = None,
+    ask_id: Annotated[str | None, typer.Option("--ask-id", help="Stable artifact id.")] = None,
+    output_root: Annotated[
+        Path,
+        typer.Option("--run-output-root", help="Directory for ask Tau DAG artifacts."),
+    ] = DEFAULT_OUTPUT_ROOT,
+    execute: Annotated[bool, typer.Option("--execute", help="Execute the emitted compete DAG with Tau.")] = False,
+    poll: Annotated[bool, typer.Option("--poll/--no-poll", help="Poll Tau run-status after execution.")] = True,
+    viewer_link: Annotated[
+        bool,
+        typer.Option("--viewer-link", help="Ask Tau for a React Flow DAG viewer link."),
+    ] = False,
+    scillm_base_url: Annotated[
+        str,
+        typer.Option("--scillm-base-url", help="SciLLM container service base URL."),
+    ] = os.environ.get("SCILLM_BASE_URL", DEFAULT_SCILLM_BASE_URL),
+    scillm_api_key: Annotated[
+        str,
+        typer.Option("--scillm-api-key", help="SciLLM bearer token."),
+    ] = default_scillm_api_key(),
+    tau_project_root: Annotated[
+        Path,
+        typer.Option("--tau-project-root", help="Tau project root used for uv run tau."),
+    ] = DEFAULT_TAU_PROJECT_ROOT,
+    poll_timeout_seconds: Annotated[
+        float,
+        typer.Option("--poll-timeout-seconds", help="Maximum status polling time."),
+    ] = 120.0,
+    poll_interval_seconds: Annotated[
+        float,
+        typer.Option("--poll-interval-seconds", help="Polling interval."),
+    ] = 1.0,
+    json_output: Annotated[bool, typer.Option("--json", help="Emit JSON output.")] = False,
+) -> None:
+    input_payload = infer_compile_input(
+        request.strip(),
+        repo=repo,
+        target=target,
+        criteria=criterion,
+        handlers=handler,
+        topology="concurrent",
+        workflow_mode="compete",
+        join_handler="join",
+        handler_projects=handler_project,
+        handler_workspaces=handler_workspace,
+        ask_id=ask_id,
+        output_root=output_root,
+        local_fixture=False,
+        scillm_base_url=scillm_base_url,
+        scillm_api_key=scillm_api_key,
+        tau_project_root=tau_project_root,
+    )
+    bundle = compile_tau_dag_bundle(input_payload)
+    provider_gate = None
+    execution = None
+    exit_code = 0
+    if bundle.get("status") == "NEEDS_INTERVIEW":
+        exit_code = 2
+    else:
+        provider_gate = {
+            "schema": "ask.tau_dag_compete_handler_gate.v1",
+            "status": "READY",
+            "ok": True,
+            "mocked": False,
+            "live": False,
+            "provider_live": False,
+            "handlers": list(input_payload.handlers),
+            "topology": input_payload.topology,
+            "workflow_mode": input_payload.workflow_mode,
+            "handler_projects": list(input_payload.handler_projects),
+            "message": "Compete DAG emitted; live handler execution happens when Tau executes the DAG.",
+        }
+        gate_path = Path(str(bundle["run_dir"])) / "provider-gate.json"
+        gate_path.write_text(json.dumps(provider_gate, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        provider_gate["path"] = str(gate_path)
+        if execute:
+            execution = run_tau_dag_bundle(
+                bundle,
+                tau_project_root=tau_project_root,
+                poll=poll,
+                poll_interval_seconds=poll_interval_seconds,
+                poll_timeout_seconds=poll_timeout_seconds,
+                viewer_link=viewer_link,
+            )
+            if execution.get("ok") is not True:
+                exit_code = 4
+    output = {
+        "schema": "ask.tau_dag_cli_result.v1",
+        "status": execution.get("status") if isinstance(execution, dict) else bundle.get("status"),
+        "ok": exit_code == 0,
+        "mocked": False,
+        "live": bool(isinstance(execution, dict) and execution.get("live") is True),
+        "provider_live": bool(isinstance(execution, dict) and execution.get("provider_live") is True),
         "bundle": bundle,
         "provider_gate": provider_gate,
         "execution": execution,

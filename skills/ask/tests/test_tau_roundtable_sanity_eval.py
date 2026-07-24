@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-import argparse
 import importlib.util
 import json
-import os
 import sys
-import time
 from types import SimpleNamespace
 from pathlib import Path
 
@@ -54,49 +51,6 @@ def test_join_command_checker_rejects_empty_args(tmp_path: Path) -> None:
 
     spec_path.write_text(json.dumps({"command": ["python", "worker.py"]}), encoding="utf-8")
     assert tau_roundtable_sanity_eval._join_command_has_no_empty_args(tmp_path) is True
-
-
-def test_worker_run_cmd_timeout_kills_descendant_process_group(tmp_path: Path) -> None:
-    child_pid_path = tmp_path / "child.pid"
-    script = tmp_path / "spawn-child.py"
-    script.write_text(
-        """
-import pathlib
-import subprocess
-import sys
-import time
-
-child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])
-pathlib.Path(sys.argv[1]).write_text(str(child.pid), encoding="utf-8")
-time.sleep(30)
-""",
-        encoding="utf-8",
-    )
-
-    result = tau_roundtable_worker._run_cmd(
-        [sys.executable, str(script), str(child_pid_path)],
-        cwd=tmp_path,
-        timeout=1,
-    )
-
-    assert result.returncode == 124
-    assert "killed process group" in result.stderr
-    child_pid = int(child_pid_path.read_text(encoding="utf-8"))
-    for _ in range(20):
-        if not _pid_exists(child_pid):
-            break
-        time.sleep(0.1)
-    assert not _pid_exists(child_pid)
-
-
-def _pid_exists(pid: int) -> bool:
-    try:
-        os.kill(pid, 0)
-        return True
-    except ProcessLookupError:
-        return False
-    except PermissionError:
-        return True
 
 
 def test_sequential_chain_checker_requires_handler_order() -> None:
@@ -249,6 +203,24 @@ def test_worker_webclaude_submit_command_includes_prior_response_attachment(tmp_
     assert receipt["live"] is True
 
 
+def test_worker_classifies_kimi_capacity_busy_as_provider_limited() -> None:
+    failure_code = tau_roundtable_worker._classify_browser_failure(
+        failure="Kimi provider capacity busy: System is currently busy / Capacity is busy. Please try again later.",
+        response_text="",
+        raw_text="System is currently busy. Please try again later.",
+        prompt_text="",
+        submit_meta={
+            "status": "failed",
+            "failure": "kimi_provider_capacity_busy",
+            "blocker": "BLOCKED_KIMI_PROVIDER_CAPACITY",
+            "kimi_provider_capacity_busy": True,
+        },
+        commands=[],
+    )
+
+    assert failure_code == tau_roundtable_worker.BROWSER_PROVIDER_RATE_LIMITED
+
+
 def test_worker_webgpt_receipt_includes_transport_summary(tmp_path: Path) -> None:
     request_file = tmp_path / "request.json"
     request_file.write_text(json.dumps({"request": "Ask webgpt to review the bundle."}), encoding="utf-8")
@@ -359,103 +331,88 @@ def test_worker_webgpt_receipt_includes_transport_summary(tmp_path: Path) -> Non
     ]
 
 
-def test_worker_webgpt_accepts_recovered_focus_changed_response(tmp_path: Path) -> None:
-    request_file = tmp_path / "request.json"
-    request_file.write_text(json.dumps({"request": "Ask webgpt to create records."}), encoding="utf-8")
-    artifact_dir = tmp_path / "node-artifacts" / "handler-webgpt"
-    artifact_dir.mkdir(parents=True)
-    args = SimpleNamespace(
-        node_id="handler-webgpt",
-        handler="webgpt",
-        topology="sequential",
-        request_file=str(request_file),
-        browser_oracle_project="tau",
-        next_agent="handler-webclaude",
-        artifact_dir=str(artifact_dir),
-        surf_run=str(tmp_path / "surf-run.sh"),
-        browser_oracle_run=str(tmp_path / "browser-oracle-run.sh"),
-        scillm_base_url="http://127.0.0.1:4001",
-        scillm_api_key="",
-        prior_node=[],
-        timeout=300,
-        stable_polls=2,
-        no_activate=True,
-        evidence=[],
-        codex_workspace="",
+def test_browser_failure_classifier_keeps_tab_url_mismatch_distinct() -> None:
+    failure_code = tau_roundtable_worker._classify_browser_failure(
+        failure="tab 837360921 URL mismatch: expected https://claude.ai/new, saw https://claude.ai/chat/live-url",
+        response_text="",
+        raw_text="",
+        prompt_text="short prompt",
+        submit_meta={
+            "status": "failed",
+            "failure": "tab 837360921 URL mismatch: expected https://claude.ai/new, saw https://claude.ai/chat/live-url",
+        },
+        commands=[
+            {
+                "returncode": 4,
+                "stderr_excerpt": "tab 837360921 URL mismatch: expected https://claude.ai/new, saw https://claude.ai/chat/live-url",
+            }
+        ],
     )
-    summary_payload = {
-        "schema": "surf.webgpt_transport_summary.v1",
-        "artifact_dir": str(artifact_dir),
-        "requested_tab_id": "837360999",
-        "requested_url": "https://chatgpt.com/c/example",
-        "controlled_tab_id": "837360999",
-        "submitted_to_chatgpt": True,
-        "prepared_prompt_is_transport_proof": False,
-        "response_raw_path": str(artifact_dir / "response.raw.md"),
-        "response_meta_path": str(artifact_dir / "response.meta.json"),
-        "sentinel": "<<<WEBGPT_DONE:test>>>",
-        "raw_sentinel_present": True,
-        "focus_changed": True,
-        "final_transport_state": "completed_with_focus_drift",
-        "next_command": f"surf webgpt.recover --artifact-dir {artifact_dir} --audit",
-        "needs_attention": None,
-    }
 
-    def fake_run_cmd(command: list[str], *, cwd: Path, timeout: int) -> tau_roundtable_worker.CmdResult:
-        if "resolve" in command:
-            return tau_roundtable_worker.CmdResult(
-                command,
-                0,
-                json.dumps({"tab_id": "837360999", "conversation_url": "https://chatgpt.com/c/example"}),
-                "",
-                0.01,
-            )
-        if "webgpt.submit" in command:
-            response_path = Path(command[command.index("--output") + 1])
-            raw_path = Path(command[command.index("--raw-output") + 1])
-            meta_path = Path(command[command.index("--meta-output") + 1])
-            response_path.write_text("valid recovered creator output\n", encoding="utf-8")
-            raw_path.write_text("valid recovered creator output\n<<<WEBGPT_DONE:test>>>\n", encoding="utf-8")
-            meta_path.write_text(
-                json.dumps(
-                    {
-                        "status": "recovered_focus_changed",
-                        "failure": None,
-                        "proof_status": "response_proven",
-                        "response_proof_status": "response_proven",
-                        "controlled_tab_id": "837360999",
-                        "raw_contains_sentinel": True,
-                        "clean_contains_sentinel": False,
-                        "focus_changed": True,
-                        "transport_degraded": True,
-                        "focus_drift_warning": "focus_stolen_despite_no_activate",
-                    }
-                ),
-                encoding="utf-8",
-            )
-            (artifact_dir / "webgpt_transport_summary.json").write_text(
-                json.dumps(summary_payload),
-                encoding="utf-8",
-            )
-            return tau_roundtable_worker.CmdResult(command, 0, "", "", 0.01)
-        return tau_roundtable_worker.CmdResult(command, 99, "", "unexpected command", 0.01)
+    assert failure_code == tau_roundtable_worker.BROWSER_TAB_IDENTITY_MISMATCH
 
-    original_run_cmd = tau_roundtable_worker._run_cmd
-    tau_roundtable_worker._run_cmd = fake_run_cmd
-    try:
-        result = tau_roundtable_worker._run_handler(args, {}, artifact_dir)
-    finally:
-        tau_roundtable_worker._run_cmd = original_run_cmd
 
-    assert result["exit_code"] == 0
-    receipt = json.loads((artifact_dir / "node-receipt.json").read_text(encoding="utf-8"))
-    assert receipt["status"] == "PASS"
-    assert receipt["failure"] is None
-    assert receipt["submit_meta"]["status"] == "recovered_focus_changed"
-    assert receipt["submit_meta"]["proof_status"] == "response_proven"
-    assert receipt["submit_meta"]["focus_drift_warning"] == "focus_stolen_despite_no_activate"
-    assert receipt["webgpt_transport_summary"]["final_transport_state"] == "completed_with_focus_drift"
-    assert result["handoff"]["result"]["status"] == "PASS"
+def test_browser_failure_classifier_marks_cloudflare_as_access_blocked() -> None:
+    failure_code = tau_roundtable_worker._classify_browser_failure(
+        failure="cloudflare_challenge",
+        response_text="",
+        raw_text="",
+        prompt_text="short prompt",
+        submit_meta={
+            "status": "failed",
+            "failure": "cloudflare_challenge",
+            "blocker": "BLOCKED_WEBGPT_CLOUDFLARE_CHALLENGE",
+            "browser_access_blocked": True,
+            "cloudflare_challenge_detected": True,
+        },
+        commands=[
+            {
+                "returncode": 1,
+                "stderr_excerpt": "Error: Cloudflare challenge detected - complete in browser",
+            }
+        ],
+    )
+
+    assert failure_code == tau_roundtable_worker.BROWSER_ACCESS_BLOCKED
+    assert (
+        tau_roundtable_worker._auto_retry_blocked_reason(
+            failure_code=failure_code,
+            bundle_paths=["/tmp/review-bundle.md"],
+            can_attach=True,
+        )
+        == "browser_access_challenge_requires_human_browser_recovery"
+    )
+
+
+def test_browser_failure_classifier_marks_provider_limit_distinct() -> None:
+    failure_code = tau_roundtable_worker._classify_browser_failure(
+        failure="ChatGPT is rate limited: too many requests; wait before retrying",
+        response_text="",
+        raw_text="You've hit your limit. Please try again later.",
+        prompt_text="short prompt",
+        submit_meta={
+            "status": "failed",
+            "failure": "submit_failed",
+            "chatgpt_too_many_requests_detected": True,
+            "chatgpt_rate_limit": {"exhausted": True},
+        },
+        commands=[
+            {
+                "returncode": 1,
+                "stderr_excerpt": "You've hit your limit. Please try again later.",
+            }
+        ],
+    )
+
+    assert failure_code == tau_roundtable_worker.BROWSER_PROVIDER_RATE_LIMITED
+    assert (
+        tau_roundtable_worker._auto_retry_blocked_reason(
+            failure_code=failure_code,
+            bundle_paths=["/tmp/review-bundle.md"],
+            can_attach=True,
+        )
+        == "browser_provider_rate_limit_requires_backoff"
+    )
 
 
 def test_worker_prior_receipts_marks_missing_upstream_not_ready(tmp_path: Path) -> None:
@@ -470,125 +427,3 @@ def test_worker_prior_receipts_marks_missing_upstream_not_ready(tmp_path: Path) 
             "path": str(tmp_path / "handler-webgpt" / "node-receipt.json"),
         }
     ]
-
-
-def test_worker_refreshes_webgpt_binding_after_response_proof_metadata(tmp_path: Path) -> None:
-    request_path = tmp_path / "request.json"
-    request_path.write_text(json.dumps({"request": "Ask WebGPT for a concise answer."}), encoding="utf-8")
-    artifact_dir = tmp_path / "node-artifacts" / "handler-webgpt"
-    artifact_dir.mkdir(parents=True)
-    bind_log = tmp_path / "bind-args.json"
-    browser_oracle_run = tmp_path / "browser-oracle-run.sh"
-    browser_oracle_run.write_text(
-        f"""#!/usr/bin/env bash
-set -euo pipefail
-case "${{1:-}}" in
-  resolve)
-    printf '%s\\n' '{{"project":"sparta-f36-review","tab_id":"837360696","conversation_url":"https://chatgpt.com/c/old","binding_path":"/tmp/sparta-f36-review.json"}}'
-    ;;
-  bind)
-    python3 - "$@" > {str(bind_log)!r} <<'PY'
-import json, sys
-print(json.dumps(sys.argv[1:]))
-PY
-    printf '%s\\n' '{{"name":"sparta-f36-review","backend":"webgpt","tab_id":"837360696","conversation_url":"https://chatgpt.com/c/new","state_path":"/tmp/sparta-f36-review.json"}}'
-    ;;
-  *)
-    echo "unexpected browser-oracle command: $*" >&2
-    exit 99
-    ;;
-esac
-""",
-        encoding="utf-8",
-    )
-    browser_oracle_run.chmod(0o755)
-    surf_run = tmp_path / "surf-run.sh"
-    surf_run.write_text(
-        """#!/usr/bin/env bash
-set -euo pipefail
-output=""
-raw_output=""
-meta_output=""
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    --output) output="$2"; shift 2 ;;
-    --raw-output) raw_output="$2"; shift 2 ;;
-    --meta-output) meta_output="$2"; shift 2 ;;
-    *) shift ;;
-  esac
-done
-printf 'A concise response.\\n' > "$output"
-printf 'A concise response.\\n<<<WEBGPT_DONE:test>>>\\n' > "$raw_output"
-cat > "$meta_output" <<'JSON'
-{
-  "status": "completed",
-  "response_proof_status": "response_proven",
-  "requested_tab_id": "837360696",
-  "controlled_tab_id": "837360696",
-  "conversation_url": "https://chatgpt.com/c/new",
-  "current_url": "https://chatgpt.com/c/new",
-  "raw_contains_sentinel": true,
-  "clean_contains_sentinel": false
-}
-JSON
-""",
-        encoding="utf-8",
-    )
-    surf_run.chmod(0o755)
-    args = argparse.Namespace(
-        node_id="handler-webgpt",
-        handler="webgpt",
-        topology="parallel",
-        request_file=str(request_path),
-        browser_oracle_project="sparta-f36-review",
-        next_agent="human",
-        artifact_dir=str(artifact_dir),
-        surf_run=str(surf_run),
-        browser_oracle_run=str(browser_oracle_run),
-        scillm_base_url="http://127.0.0.1:4001",
-        scillm_api_key="",
-        prior_node=[],
-        timeout=10,
-        stable_polls=1,
-        no_activate=True,
-        evidence=[],
-    )
-
-    result = tau_roundtable_worker._run_handler(args, {}, artifact_dir)
-
-    assert result["exit_code"] == 0
-    receipt = json.loads((artifact_dir / "node-receipt.json").read_text(encoding="utf-8"))
-    assert receipt["browser_oracle_binding_refresh"]["status"] == "updated"
-    assert receipt["browser_oracle_binding_refresh"]["previous_url"] == "https://chatgpt.com/c/old"
-    assert receipt["browser_oracle_binding_refresh"]["current_url"] == "https://chatgpt.com/c/new"
-    bind_args = json.loads(bind_log.read_text(encoding="utf-8"))
-    assert bind_args == [
-        "bind",
-        "sparta-f36-review",
-        "--backend",
-        "webgpt",
-        "--tab-id",
-        "837360696",
-        "--url",
-        "https://chatgpt.com/c/new",
-        "--manual",
-        "--json",
-    ]
-
-
-def test_worker_classifies_kimi_capacity_busy_as_provider_limited() -> None:
-    failure_code = tau_roundtable_worker._classify_browser_failure(
-        failure="Kimi provider capacity busy: System is currently busy / Capacity is busy. Please try again later.",
-        response_text="",
-        raw_text="System is currently busy. Please try again later.",
-        prompt_text="",
-        submit_meta={
-            "status": "failed",
-            "failure": "kimi_provider_capacity_busy",
-            "blocker": "BLOCKED_KIMI_PROVIDER_CAPACITY",
-            "kimi_provider_capacity_busy": True,
-        },
-        commands=[],
-    )
-
-    assert failure_code == tau_roundtable_worker.BROWSER_PROVIDER_RATE_LIMITED

@@ -45,6 +45,7 @@ def main() -> int:
     parser.add_argument("--node-id", required=True)
     parser.add_argument("--handler", required=True)
     parser.add_argument("--topology", required=True)
+    parser.add_argument("--workflow-mode", default="roundtable", choices=["roundtable", "compete"])
     parser.add_argument("--request-file", required=True)
     parser.add_argument("--browser-oracle-project", default="")
     parser.add_argument("--next-agent", default="human")
@@ -90,6 +91,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             handler,
             prior_receipts=prior_receipts,
             requires_verdict=_requires_verdict(request_text, prior_receipts),
+            workflow_mode=getattr(args, "workflow_mode", "roundtable"),
             # API (scillm) handlers have no attachment channel and no path
             # preflight: give them the full prior response including the diff.
             inline_full=handler not in HANDLER_SUBMIT_COMMANDS and handler != "codex",
@@ -672,10 +674,11 @@ def _looks_browser_access_blocked(text: str, meta: dict[str, Any]) -> bool:
     if meta.get("browser_access_blocked") is True or meta.get("cloudflare_challenge_detected") is True:
         return True
     markers = (
-        "cloudflare_challenge",
         "cloudflare challenge",
-        "just a moment",
-        "challenge-platform",
+        "blocked_webgpt_cloudflare_challenge",
+        "complete in browser",
+        "verify you are human",
+        "checking if the site connection is secure",
         "browser_access_blocked",
     )
     return any(marker in text for marker in markers)
@@ -1015,6 +1018,8 @@ def _fallback_instruction(failure_code: str, *, has_bundle: bool, can_attach: bo
 
 
 def _run_join(args: argparse.Namespace, start: dict[str, Any], artifact_dir: Path) -> dict[str, Any]:
+    if args.workflow_mode == "compete":
+        return _run_compete_join(args, start, artifact_dir)
     receipt_path = artifact_dir / "node-receipt.json"
     summary_path = artifact_dir / "roundtable-summary.md"
     node_artifacts_root = artifact_dir.parent
@@ -1094,6 +1099,199 @@ def _run_join(args: argparse.Namespace, start: dict[str, Any], artifact_dir: Pat
     return {"exit_code": 0 if ok else 1, "handoff": handoff}
 
 
+def _run_compete_join(args: argparse.Namespace, start: dict[str, Any], artifact_dir: Path) -> dict[str, Any]:
+    receipt_path = artifact_dir / "node-receipt.json"
+    scorecard_path = artifact_dir / "compete-scorecard.json"
+    revision_path = artifact_dir / "winner-revision-request.md"
+    summary_path = artifact_dir / "compete-summary.md"
+    node_artifacts_root = artifact_dir.parent
+    handler_receipts = []
+    blockers = []
+    for path in sorted(node_artifacts_root.glob("handler-*/node-receipt.json")):
+        receipt = _read_json(path)
+        if receipt.get("schema") != "ask.tau_dag_handler_receipt.v1":
+            continue
+        response_path = Path(str(receipt.get("response_path") or ""))
+        response_text = response_path.read_text(encoding="utf-8") if response_path.is_file() else ""
+        verified_features = _extract_verified_features(response_text)
+        candidate = {
+            "node_id": receipt.get("node_id"),
+            "handler": receipt.get("handler"),
+            "status": receipt.get("status"),
+            "ok": receipt.get("ok") is True,
+            "live": receipt.get("live") is True,
+            "provider_live": receipt.get("provider_live") is True,
+            "response_path": str(response_path) if response_path else "",
+            "verified_features": verified_features,
+            "feature_count": len(verified_features),
+            "failure": receipt.get("failure") or "",
+        }
+        handler_receipts.append(candidate)
+        if candidate["ok"] is not True:
+            blockers.append(f"{candidate['node_id']}: {candidate['failure'] or candidate['status']}")
+
+    selectable = [item for item in handler_receipts if item["ok"] is True]
+    selectable.sort(key=lambda item: (item["feature_count"], item["provider_live"], item["live"]), reverse=True)
+    winner = selectable[0] if selectable else None
+    tied = bool(len(selectable) > 1 and selectable[0]["feature_count"] == selectable[1]["feature_count"])
+    winner_handler = str(winner.get("handler") or "") if winner and not tied else ""
+    if tied:
+        blockers.append("winner_tie_requires_project_agent_review")
+    if not winner_handler:
+        blockers.append("no_clear_winner_from_receipts")
+
+    all_verified_features: list[str] = []
+    for candidate in handler_receipts:
+        for feature in candidate["verified_features"]:
+            if feature not in all_verified_features:
+                all_verified_features.append(feature)
+    if not all_verified_features:
+        blockers.append("no_explicit_verified_features_to_promote")
+    status = "PASS" if winner_handler and not blockers else "NEEDS_ATTENTION"
+    ok = status == "PASS"
+
+    revision_lines = [
+        "# Winner Revision Request",
+        "",
+        f"Status: {status}",
+        f"Winner handler: {winner_handler or 'NEEDS_ATTENTION'}",
+        "",
+        "Task:",
+        _read_json(Path(args.request_file)).get("request", ""),
+        "",
+        "Verified features to consider:",
+    ]
+    if all_verified_features:
+        revision_lines.extend(f"- {feature}" for feature in all_verified_features)
+    else:
+        revision_lines.append("- NEEDS_ATTENTION: no candidate emitted explicit VERIFIED_FEATURE lines.")
+    revision_lines.extend(
+        [
+            "",
+            "Instructions to the winner:",
+            "- Keep the winning implementation as the base.",
+            "- Add only the listed verified features that still pass local deterministic checks.",
+            "- Do not import unverified candidate claims.",
+            "- Return changed files, commands run, proof artifacts, and unresolved blockers.",
+        ]
+    )
+    revision_path.write_text("\n".join(str(line) for line in revision_lines).rstrip() + "\n", encoding="utf-8")
+
+    scorecard = {
+        "schema": "ask.tau_dag_compete_scorecard.v1",
+        "created_at": _now(),
+        "status": status,
+        "ok": ok,
+        "mocked": False,
+        "live": any(item["live"] for item in handler_receipts),
+        "provider_live": ok and all(item["provider_live"] for item in handler_receipts),
+        "winner_handler": winner_handler,
+        "winner_node_id": winner.get("node_id") if winner and winner_handler else "",
+        "selection_basis": "deterministic_receipts_and_explicit_verified_feature_markers",
+        "candidates": handler_receipts,
+        "verified_features": all_verified_features,
+        "blockers": blockers,
+        "revision_request_path": str(revision_path),
+        "proof_scope": {
+            "proves": [
+                "Candidate node receipts were collected.",
+                "The scorecard fail-closed when no clear receipt-backed winner existed.",
+                "Only explicit VERIFIED_FEATURE markers were promoted into the revision packet.",
+            ],
+            "does_not_prove": [
+                "The winning candidate is semantically best.",
+                "The verified feature markers are true without project-agent codebase checks.",
+                "The winner revision request has been submitted to a model.",
+            ],
+        },
+    }
+    scorecard_path.write_text(json.dumps(scorecard, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    summary_path.write_text(_compete_summary(scorecard) + "\n", encoding="utf-8")
+    receipt = {
+        "schema": "ask.tau_dag_compete_join_receipt.v1",
+        "created_at": _now(),
+        "node_id": args.node_id,
+        "handler": args.handler,
+        "topology": args.topology,
+        "workflow_mode": args.workflow_mode,
+        "status": status,
+        "ok": ok,
+        "mocked": False,
+        "live": scorecard["live"],
+        "provider_live": scorecard["provider_live"],
+        "scorecard_path": str(scorecard_path),
+        "revision_request_path": str(revision_path),
+        "summary_path": str(summary_path),
+        "handler_response_index": handler_receipts,
+        "unresolved_gaps": blockers,
+        "provider_receipt": {
+            "schema": "ask.tau_dag_provider_route_receipt.v1",
+            "status": status,
+            "ok": ok,
+            "mocked": False,
+            "live": scorecard["live"],
+            "provider_live": scorecard["provider_live"],
+            "route": "tau_compete_join_adapter",
+            "execution_owner": "$tau",
+            "provider_transport": "$surf_or_scillm",
+        },
+    }
+    receipt_path.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    handoff = _handoff(
+        args,
+        start,
+        status=status,
+        summary=f"Compete join {status.lower()} over {len(handler_receipts)} candidate receipts.",
+        artifacts=[receipt_path, scorecard_path, revision_path, summary_path],
+        evidence=[
+            {"kind": "compete_scorecard", "path": str(scorecard_path), "status": status},
+            {"kind": "verified_feature_packet", "count": len(all_verified_features), "items": all_verified_features},
+            {"kind": "winner_revision_request", "path": str(revision_path), "winner_handler": winner_handler},
+            {"kind": "unresolved_gaps", "items": blockers},
+        ],
+    )
+    return {"exit_code": 0 if ok else 1, "handoff": handoff}
+
+
+def _extract_verified_features(text: str) -> list[str]:
+    features: list[str] = []
+    for line in text.splitlines():
+        match = re.match(r"\s*(?:[-*]\s*)?VERIFIED_FEATURE\s*:\s*(.+?)\s*$", line, flags=re.IGNORECASE)
+        if match:
+            feature = match.group(1).strip()
+            if feature and feature not in features:
+                features.append(feature)
+    return features
+
+
+def _compete_summary(scorecard: dict[str, Any]) -> str:
+    lines = [
+        "# Tau Compete Join",
+        "",
+        f"- status: `{scorecard.get('status')}`",
+        f"- winner: `{scorecard.get('winner_handler') or 'NEEDS_ATTENTION'}`",
+        f"- candidates: `{len(scorecard.get('candidates') or [])}`",
+        "",
+        "## Candidates",
+        "",
+    ]
+    for candidate in scorecard.get("candidates") or []:
+        lines.extend(
+            [
+                f"### {candidate.get('handler')}",
+                "",
+                f"- status: `{candidate.get('status')}`",
+                f"- features: `{candidate.get('feature_count')}`",
+                f"- response: `{candidate.get('response_path')}`",
+                "",
+            ]
+        )
+    if scorecard.get("blockers"):
+        lines.extend(["## Blockers", ""])
+        lines.extend(f"- {item}" for item in scorecard.get("blockers") or [])
+    return "\n".join(lines).rstrip()
+
+
 def _handler_prompt(
     request_text: str,
     handler: str,
@@ -1101,16 +1299,29 @@ def _handler_prompt(
     prior_receipts: list[dict[str, Any]] | None = None,
     requires_verdict: bool = False,
     inline_full: bool = False,
+    workflow_mode: str = "roundtable",
 ) -> str:
     prior_receipts = prior_receipts or []
     lines = [
-        "You are one participant in a Tau-managed roundtable.",
+        (
+            "You are one isolated competitor in a Tau-managed implementation competition."
+            if workflow_mode == "compete"
+            else "You are one participant in a Tau-managed roundtable."
+        ),
         f"Handler: {handler}",
         "",
         "Request:",
         request_text,
         "",
     ]
+    if workflow_mode == "compete":
+        lines.extend(
+            [
+                "Isolation rule: work from the shared task only. Do not assume any other competitor output.",
+                "Return any reusable ideas as lines that start exactly with `VERIFIED_FEATURE:` only when the feature is concrete enough for the project agent to verify locally.",
+                "",
+            ]
+        )
     if prior_receipts:
         lines.extend(["Prior handler receipts to use as input:", ""])
         for receipt in prior_receipts:

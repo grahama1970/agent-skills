@@ -115,6 +115,7 @@ class TauDagCompileInput:
     criteria: tuple[str, ...]
     handlers: tuple[str, ...] = ()
     topology: str = "concurrent"
+    workflow_mode: str = "roundtable"
     join_handler: str = "join"
     handler_projects: tuple[str, ...] = ()
     handler_workspaces: tuple[str, ...] = ()
@@ -136,6 +137,7 @@ def infer_compile_input(
     criteria: list[str] | None = None,
     handlers: list[str] | None = None,
     topology: str = "",
+    workflow_mode: str = "roundtable",
     join_handler: str = "join",
     handler_projects: list[str] | None = None,
     handler_workspaces: list[str] | None = None,
@@ -174,6 +176,7 @@ def infer_compile_input(
         criteria=tuple(item.strip() for item in (criteria or []) if item.strip()),
         handlers=tuple(inferred_handlers),
         topology=_normalize_topology(topology or ("sequential" if "sequential" in lower else "concurrent")),
+        workflow_mode=_normalize_workflow_mode(workflow_mode),
         join_handler=_normalize_handler(join_handler) if join_handler else "join",
         handler_projects=tuple(item.strip() for item in (handler_projects or []) if item.strip()),
         handler_workspaces=tuple(item.strip() for item in (handler_workspaces or []) if item.strip()),
@@ -203,6 +206,23 @@ def missing_dag_fields(input: TauDagCompileInput) -> list[dict[str, Any]]:
                     expects="concurrent|sequential",
                 )
             )
+        if input.workflow_mode == "compete":
+            if len(input.handlers) < 2:
+                missing.append(
+                    _question(
+                        "handlers",
+                        "Compete mode needs at least two isolated competitor handlers.",
+                        expects="list[str]",
+                    )
+                )
+            if input.topology != "concurrent":
+                missing.append(
+                    _question(
+                        "topology",
+                        "Compete mode requires concurrent topology so candidates receive isolated equal context.",
+                        expects="concurrent",
+                    )
+                )
         return missing
     if not input.solver_models:
         missing.append(
@@ -321,6 +341,7 @@ def compile_tau_dag_bundle(input: TauDagCompileInput) -> dict[str, Any]:
             "criteria": list(input.criteria),
             "handlers": list(input.handlers),
             "topology": input.topology,
+            "workflow_mode": input.workflow_mode,
             "join_handler": input.join_handler,
             "handler_projects": list(input.handler_projects),
             "local_fixture": input.local_fixture,
@@ -383,10 +404,11 @@ def compile_tau_dag_bundle(input: TauDagCompileInput) -> dict[str, Any]:
             ],
             "does_not_prove": [
                 "Provider/model calls have succeeded.",
-                "The Tau DAG has been executed.",
-                "Semantic quality of solver or reviewer outputs.",
-                "Browser handlers have run unless a later Tau execution receipt proves the adapter node.",
-            ],
+            "The Tau DAG has been executed.",
+            "Semantic quality of solver or reviewer outputs.",
+            "Browser handlers have run unless a later Tau execution receipt proves the adapter node.",
+            "Compete mode has selected a semantically correct winner unless local deterministic checks and receipts prove it.",
+        ],
         },
     }
     _write_json(run_dir / "compile-status.json", final_bundle)
@@ -819,6 +841,7 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
         "goal_hash": _goal_hash(input),
     }
     handler_nodes: list[dict[str, Any]] = []
+    is_compete = input.workflow_mode == "compete"
     for handler, node_id in zip(input.handlers, _handler_node_ids(input.handlers)):
         prior_nodes = _roundtable_prior_nodes(input, node_id)
         required_evidence = [
@@ -839,6 +862,7 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
                 "depends_on": prior_nodes,
                 "context": {
                     "role": "roundtable_handler",
+                    "workflow_mode": input.workflow_mode,
                     "handler": handler,
                     "handler_policy": _handler_policy(handler),
                     "prompt_contract": _roundtable_handler_prompt_contract(
@@ -852,6 +876,7 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
                     "prior_nodes": prior_nodes,
                     "requires_prior_receipts": bool(prior_nodes),
                     "requires_verdict": bool(prior_nodes) and _roundtable_requires_verdict(input.request),
+                    "isolation_required": is_compete,
                 },
             }
         )
@@ -872,13 +897,28 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
             "topology": input.topology,
         },
         "context": {
-            "role": "roundtable_join",
+            "role": "compete_evaluator" if is_compete else "roundtable_join",
+            "workflow_mode": input.workflow_mode,
             "prompt_contract": _roundtable_join_prompt_contract(input),
             "request": input.request,
             "handlers": list(input.handlers),
             "topology": input.topology,
         },
     }
+    if is_compete:
+        join_node["required_evidence"] = [
+            "compete_scorecard",
+            "verified_feature_packet",
+            "winner_revision_request",
+            "unresolved_gaps",
+        ]
+        join_node["join"] = {
+            "requires_completed": [node["id"] for node in handler_nodes],
+            "reconciles_evidence": True,
+            "topology": input.topology,
+            "selection_policy": "deterministic_receipts_first_then_project_agent_review",
+            "fail_closed_on_tie": True,
+        }
     edges: list[dict[str, str]] = []
     if input.topology == "sequential":
         previous = ""
@@ -913,6 +953,7 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
             "transport_adapter": "handler_neutral_adapter",
             "roundtable_adapter": "tau_roundtable_handler_adapter",
             "execution_mode": "surf_browser_adapter",
+            "workflow_mode": input.workflow_mode,
             "roundtable_topology": input.topology,
             "handlers": list(input.handlers),
             "handler_projects": {
@@ -928,7 +969,7 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
         "required_evidence": [
             "handler_response_receipt",
             "normalized_handler_receipt",
-            "roundtable_join_receipt",
+            "compete_scorecard" if is_compete else "roundtable_join_receipt",
         ],
         "fail_closed_on": [
             *FAIL_CLOSED_ON,
@@ -1005,6 +1046,8 @@ def _write_roundtable_command_spec(
         handler,
         "--topology",
         input.topology,
+        "--workflow-mode",
+        input.workflow_mode,
         "--request-file",
         str(run_dir / "request.json"),
         "--next-agent",
@@ -1206,6 +1249,24 @@ def _roundtable_handler_prompt_contract(
 ) -> dict[str, Any]:
     prior_nodes = prior_nodes or []
     requires_verdict = bool(prior_nodes) and _roundtable_requires_verdict(input.request)
+    if input.workflow_mode == "compete":
+        return {
+            "schema": "ask.tau_dag_prompt_contract.v1",
+            "system": "You are an isolated Tau-managed competitor. Do not rely on other candidates.",
+            "user_template": (
+                f"Competition request: {input.request}\n"
+                f"Competitor: {handler}\n"
+                "Work independently from the same input bundle. Return: implementation or patch plan, "
+                "evidence, risks, reusable features, and any blocker. Do not claim final success; "
+                "the project agent must verify against the codebase and skill contracts."
+            ),
+            "handler": handler,
+            "prior_nodes": [],
+            "requires_prior_receipts": False,
+            "requires_verdict": False,
+            "verdict_schema": None,
+            "isolation_required": True,
+        }
     return {
         "schema": "ask.tau_dag_prompt_contract.v1",
         "system": "You are a Tau-managed roundtable handler. Return receipt-backed findings only.",
@@ -1224,6 +1285,21 @@ def _roundtable_handler_prompt_contract(
 
 
 def _roundtable_join_prompt_contract(input: TauDagCompileInput) -> dict[str, Any]:
+    if input.workflow_mode == "compete":
+        return {
+            "schema": "ask.tau_dag_prompt_contract.v1",
+            "system": "You are a Tau compete evaluator. Prefer deterministic local proof over model claims.",
+            "user_template": (
+                f"Competition request: {input.request}\n"
+                f"Competitors: {', '.join(input.handlers)}\n"
+                "Produce a scorecard, reject unverified features, name a winner only when receipts and "
+                "project-agent checks justify it, and emit a bounded winner revision request."
+            ),
+            "topology": input.topology,
+            "requires_scorecard": True,
+            "requires_winner_revision_request": True,
+            "fail_closed_status": "NEEDS_ATTENTION",
+        }
     return {
         "schema": "ask.tau_dag_prompt_contract.v1",
         "system": "You are a Tau join node. Reconcile handler receipts without hiding gaps.",
@@ -1437,6 +1513,7 @@ def _goal_hash(input: TauDagCompileInput) -> str:
         "criteria": list(input.criteria),
         "handlers": list(input.handlers),
         "topology": input.topology,
+        "workflow_mode": input.workflow_mode,
         "join_handler": input.join_handler,
         "handler_projects": list(input.handler_projects),
     }
@@ -1481,8 +1558,15 @@ def _normalize_topology(value: str) -> str:
     return normalized if normalized in ROUNDTABLE_TOPOLOGIES else value.strip().lower()
 
 
+def _normalize_workflow_mode(value: str) -> str:
+    normalized = value.strip().lower() or "roundtable"
+    if normalized in {"competition", "compete", "bakeoff"}:
+        return "compete"
+    return "roundtable"
+
+
 def _infer_roundtable_handlers(lower_request: str) -> list[str]:
-    if "roundtable" not in lower_request and "handler" not in lower_request:
+    if "roundtable" not in lower_request and "handler" not in lower_request and "compete" not in lower_request:
         return []
     matches: list[tuple[int, str]] = []
     for name in [*ROUNDTABLE_HANDLERS, *_HANDLER_ALIASES]:
