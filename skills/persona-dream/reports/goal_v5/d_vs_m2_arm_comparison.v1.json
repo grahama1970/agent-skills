@@ -1,0 +1,114 @@
+{
+  "schema": "persona_dream.d_vs_m2_arm_comparison.v1",
+  "n": 13,
+  "arm_M2": "LLM-compute-matched extractive M-arm (build_memory_arm_llm.py)",
+  "dominant_tag_differs": "10/13",
+  "max_novel_content_regen_rate": 0.0,
+  "note": "FAIR contrast: both arms use the same LLM adapter; M2 is extractive-only (no synthesis/ToM/narrative), enforced by novel-content audit (all regen 0.0). Compare dominant tag; weight scales now comparable (both native 0-1).",
+  "comparison": [
+    {
+      "cycle": "T184531Z",
+      "D_tag": "boundary",
+      "D_w": 0.46,
+      "M2_tag": "reflection",
+      "M2_w": 0.2667,
+      "differs": true
+    },
+    {
+      "cycle": "T201426Z",
+      "D_tag": "hesitance",
+      "D_w": 0.57,
+      "M2_tag": "hesitance",
+      "M2_w": 0.35,
+      "differs": false
+    },
+    {
+      "cycle": "T203423Z",
+      "D_tag": "reflection",
+      "D_w": 0.495,
+      "M2_tag": "reflection",
+      "M2_w": 0.425,
+      "differs": false
+    },
+    {
+      "cycle": "T222024Z",
+      "D_tag": "reflection",
+      "D_w": 0.585,
+      "M2_tag": "hesitance",
+      "M2_w": 0.3,
+      "differs": true
+    },
+    {
+      "cycle": "T102522Z",
+      "D_tag": "boundary",
+      "D_w": 0.52,
+      "M2_tag": "hesitance",
+      "M2_w": 0.4,
+      "differs": true
+    },
+    {
+      "cycle": "T212254Z",
+      "D_tag": "hesitance",
+      "D_w": 0.62,
+      "M2_tag": "boundary",
+      "M2_w": 0.2,
+      "differs": true
+    },
+    {
+      "cycle": "T213742Z",
+      "D_tag": "yearning",
+      "D_w": 0.62,
+      "M2_tag": "reflection",
+      "M2_w": 0.5167,
+      "differs": true
+    },
+    {
+      "cycle": "T215140Z",
+      "D_tag": "warmth",
+      "D_w": 0.55,
+      "M2_tag": "reflection",
+      "M2_w": 0.4833,
+      "differs": true
+    },
+    {
+      "cycle": "T220612Z",
+      "D_tag": "warmth",
+      "D_w": 0.68,
+      "M2_tag": "reflection",
+      "M2_w": 0.15,
+      "differs": true
+    },
+    {
+      "cycle": "T221914Z",
+      "D_tag": "warmth",
+      "D_w": 0.68,
+      "M2_tag": "reflection",
+      "M2_w": 0.3,
+      "differs": true
+    },
+    {
+      "cycle": "T223359Z",
+      "D_tag": "warmth",
+      "D_w": 0.56,
+      "M2_tag": "warmth",
+      "M2_w": 0.45,
+      "differs": false
+    },
+    {
+      "cycle": "T224814Z",
+      "D_tag": "warmth",
+      "D_w": 0.52,
+      "M2_tag": "yearning",
+      "M2_w": 0.2,
+      "differs": true
+    },
+    {
+      "cycle": "T234851Z",
+      "D_tag": "yearning",
+      "D_w": 0.58,
+      "M2_tag": "reflection",
+      "M2_w": 0.675,
+      "differs": true
+    }
+  ]
+}

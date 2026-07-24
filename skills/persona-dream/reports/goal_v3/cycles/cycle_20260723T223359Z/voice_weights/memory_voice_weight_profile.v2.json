@@ -1,0 +1,66 @@
+{
+  "schema": "persona_dream.memory_voice_weight_profile.v2",
+  "dream_node_key": "memory_arm_llm_cycle_20260723T223359Z",
+  "persona_id": "embry",
+  "tom_state_types": [
+    "desire",
+    "stance",
+    "trust"
+  ],
+  "weights": [
+    {
+      "emotional_tag": "warmth",
+      "tone": "warm_open",
+      "pace": "relaxed",
+      "weight": 0.45,
+      "sources": [
+        {
+          "tom_key": "embry_age04_10_b01_memory_048:trust",
+          "tom_state_type": "trust",
+          "emotional_intensity": 0.45,
+          "statement": "Embry allows Maya to hold a real role, while the balance between Precision and trust remains unresolved."
+        }
+      ]
+    },
+    {
+      "emotional_tag": "yearning",
+      "tone": "yearning_warm",
+      "pace": "measured",
+      "weight": 0.4,
+      "sources": [
+        {
+          "tom_key": "embry_age04_10_b01_memory_046:desire",
+          "tom_state_type": "desire",
+          "emotional_intensity": 0.4,
+          "statement": "Maya proposes building a small rocket together with Embry under shared safety rules, without mocking the scar."
+        }
+      ]
+    },
+    {
+      "emotional_tag": "boundary",
+      "tone": "firm_boundary",
+      "pace": "steady",
+      "weight": 0.2,
+      "sources": [
+        {
+          "tom_key": "embry_age04_10_b01_memory_047:stance",
+          "tom_state_type": "stance",
+          "emotional_intensity": 0.2,
+          "statement": "Maya and the other person treat the error as non-dangerous, repair it, and do not abandon the project or assign blame."
+        }
+      ]
+    }
+  ],
+  "synthesis_params": {
+    "temperature": 0.735
+  },
+  "mapping": "frozen in scripts/dream_voice_weights.py (TOM_TO_VOICE)",
+  "arm": "M_llm_compute_matched",
+  "derivation": "same LLM adapter as the dream arm; single-memory extractive affect reading; forbidden cross-memory synthesis/ToM/narrative; frozen TOM_TO_VOICE + mean-intensity formula",
+  "novel_content_regeneration_rate": 0.0,
+  "source_memory_ids": [
+    "embry_age04_10_b01_memory_046",
+    "embry_age04_10_b01_memory_048",
+    "embry_age04_10_b01_memory_047"
+  ]
+}

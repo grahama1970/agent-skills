@@ -1,0 +1,57 @@
+{
+  "schema": "persona_dream.memory_voice_weight_profile.v2",
+  "dream_node_key": "memory_arm_llm_cycle_20260723T234851Z",
+  "persona_id": "embry",
+  "tom_state_types": [
+    "avoidance",
+    "stance"
+  ],
+  "weights": [
+    {
+      "emotional_tag": "reflection",
+      "tone": "neutral_reflective",
+      "pace": "measured",
+      "weight": 0.675,
+      "sources": [
+        {
+          "tom_key": "embry_age23_current_b01_memory_001:avoidance",
+          "tom_state_type": "avoidance",
+          "emotional_intensity": 0.6,
+          "statement": "Embry is in a state of controlled retreat, treating departure as containment rather than recovery."
+        },
+        {
+          "tom_key": "embry_age23_current_b01_memory_003:avoidance",
+          "tom_state_type": "avoidance",
+          "emotional_intensity": 0.75,
+          "statement": "Embry avoids contact beyond practical matters and refuses conversations requiring her to narrate the triangle with James and Kai."
+        }
+      ]
+    },
+    {
+      "emotional_tag": "boundary",
+      "tone": "firm_boundary",
+      "pace": "steady",
+      "weight": 0.4,
+      "sources": [
+        {
+          "tom_key": "embry_age23_current_b01_memory_012:stance",
+          "tom_state_type": "stance",
+          "emotional_intensity": 0.4,
+          "statement": "Embry sets a workplace boundary: colleagues may know her standards and availability, but not the history behind them."
+        }
+      ]
+    }
+  ],
+  "synthesis_params": {
+    "temperature": 0.825
+  },
+  "mapping": "frozen in scripts/dream_voice_weights.py (TOM_TO_VOICE)",
+  "arm": "M_llm_compute_matched",
+  "derivation": "same LLM adapter as the dream arm; single-memory extractive affect reading; forbidden cross-memory synthesis/ToM/narrative; frozen TOM_TO_VOICE + mean-intensity formula",
+  "novel_content_regeneration_rate": 0.0,
+  "source_memory_ids": [
+    "embry_age23_current_b01_memory_012",
+    "embry_age23_current_b01_memory_001",
+    "embry_age23_current_b01_memory_003"
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "schema": "persona_dream.memory_voice_weight_profile.v2",
+  "dream_node_key": "memory_arm_llm_cycle_20260723T220612Z",
+  "persona_id": "embry",
+  "tom_state_types": [
+    "emotion",
+    "obligation",
+    "stance"
+  ],
+  "weights": [
+    {
+      "emotional_tag": "reflection",
+      "tone": "neutral_reflective",
+      "pace": "measured",
+      "weight": 0.15,
+      "sources": [
+        {
+          "tom_key": "embry_age04_10_b01_memory_039:emotion",
+          "tom_state_type": "emotion",
+          "emotional_intensity": 0.2,
+          "statement": "Tommy is calm while securing the scene and driving Embry to the emergency room."
+        },
+        {
+          "tom_key": "embry_age04_10_b01_memory_013:obligation",
+          "tom_state_type": "obligation",
+          "emotional_intensity": 0.1,
+          "statement": "Tommy gives a three-part response to small mistakes: stop, make safe, then repair what can be repaired."
+        }
+      ]
+    },
+    {
+      "emotional_tag": "boundary",
+      "tone": "firm_boundary",
+      "pace": "steady",
+      "weight": 0.1,
+      "sources": [
+        {
+          "tom_key": "embry_age04_10_b01_memory_032:stance",
+          "tom_state_type": "stance",
+          "emotional_intensity": 0.1,
+          "statement": "Tommy demonstrates launcher angle, eye protection, distance, and a clear zone during the rocket activity."
+        }
+      ]
+    }
+  ],
+  "synthesis_params": {
+    "temperature": 0.66
+  },
+  "mapping": "frozen in scripts/dream_voice_weights.py (TOM_TO_VOICE)",
+  "arm": "M_llm_compute_matched",
+  "derivation": "same LLM adapter as the dream arm; single-memory extractive affect reading; forbidden cross-memory synthesis/ToM/narrative; frozen TOM_TO_VOICE + mean-intensity formula",
+  "novel_content_regeneration_rate": 0.0,
+  "source_memory_ids": [
+    "embry_age04_10_b01_memory_039",
+    "embry_age04_10_b01_memory_013",
+    "embry_age04_10_b01_memory_032"
+  ]
+}
