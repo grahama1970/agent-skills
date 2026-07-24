@@ -249,6 +249,34 @@ describe("window command handlers", () => {
     });
   });
 
+  describe("downstream provider tab handlers", () => {
+    it("opens Gemini without activation when requested", async () => {
+      const chrome = (globalThis as any).chrome;
+      chrome.tabs.create.mockResolvedValue({ id: 837360717 });
+
+      const result = await handleMessage({ type: "GEMINI_NEW_TAB", noActivate: true }, {});
+
+      expect(chrome.tabs.create).toHaveBeenCalledWith({
+        url: "https://gemini.google.com/app",
+        active: false,
+      });
+      expect(result).toEqual({ tabId: 837360717, activated: false });
+    });
+
+    it("opens Kimi without activation when requested", async () => {
+      const chrome = (globalThis as any).chrome;
+      chrome.tabs.create.mockResolvedValue({ id: 837360718 });
+
+      const result = await handleMessage({ type: "KIMI_NEW_TAB", noActivate: true }, {});
+
+      expect(chrome.tabs.create).toHaveBeenCalledWith({
+        url: "https://www.kimi.com/",
+        active: false,
+      });
+      expect(result).toEqual({ tabId: 837360718, activated: false });
+    });
+  });
+
   describe("tab commands with windowId", () => {
     describe("LIST_TABS", () => {
       it("filters by windowId when provided", async () => {

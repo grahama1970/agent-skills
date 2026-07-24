@@ -3322,10 +3322,10 @@ export async function handleMessage(
     case "GEMINI_NEW_TAB": {
       const tab = await chrome.tabs.create({
         url: "https://gemini.google.com/app",
-        active: true,
+        active: message.noActivate !== true,
       });
       if (!tab.id) throw new Error("Failed to create tab");
-      return { tabId: tab.id };
+      return { tabId: tab.id, activated: message.noActivate !== true };
     }
 
     case "GEMINI_CLOSE_TAB": {
@@ -3336,6 +3336,28 @@ export async function handleMessage(
         } catch {}
         try {
           await chrome.tabs.remove(geminiTabId);
+        } catch {}
+      }
+      return { success: true };
+    }
+
+    case "KIMI_NEW_TAB": {
+      const tab = await chrome.tabs.create({
+        url: "https://www.kimi.com/",
+        active: message.noActivate !== true,
+      });
+      if (!tab.id) throw new Error("Failed to create tab");
+      return { tabId: tab.id, activated: message.noActivate !== true };
+    }
+
+    case "KIMI_CLOSE_TAB": {
+      const kimiTabId = message.tabId;
+      if (kimiTabId) {
+        try {
+          await cdp.detach(kimiTabId);
+        } catch {}
+        try {
+          await chrome.tabs.remove(kimiTabId);
         } catch {}
       }
       return { success: true };
@@ -3611,7 +3633,7 @@ const COMMANDS_WITHOUT_TAB = new Set([
   "GET_CHATGPT_COOKIES", "GET_GOOGLE_COOKIES", "GET_TWITTER_COOKIES",
   "PERPLEXITY_NEW_TAB", "PERPLEXITY_CLOSE_TAB", "PERPLEXITY_EVALUATE", "PERPLEXITY_CDP_COMMAND",
   "GROK_NEW_TAB", "GROK_CLOSE_TAB", "GROK_EVALUATE", "GROK_CDP_COMMAND",
-  "GEMINI_NEW_TAB", "GEMINI_CLOSE_TAB", "GEMINI_FETCH_URL", "AI_UPLOAD_FILE_TO_TAB", "UPLOAD_FILE_TO_TAB",
+  "GEMINI_NEW_TAB", "GEMINI_CLOSE_TAB", "GEMINI_FETCH_URL", "KIMI_NEW_TAB", "KIMI_CLOSE_TAB", "AI_UPLOAD_FILE_TO_TAB", "UPLOAD_FILE_TO_TAB",
   "AISTUDIO_NEW_TAB", "AISTUDIO_CLOSE_TAB", "AISTUDIO_EVALUATE", "AISTUDIO_CDP_COMMAND",
   "DOWNLOADS_SEARCH",
   "WINDOW_NEW", "WINDOW_LIST", "WINDOW_FOCUS", "WINDOW_CLOSE", "WINDOW_RESIZE",

@@ -123,6 +123,69 @@ describe("mapToolToMessage", () => {
     });
   });
 
+  describe("downstream provider commands", () => {
+    it("maps chatgpt.extract with exact target tab and sentinel wait options", () => {
+      const msg = helpers.mapToolToMessage("chatgpt.extract", {
+        "tab-id": "837360585",
+        sentinel: "<<<WEBGPT_DONE:test>>>",
+        wait: true,
+        "stable-polls": "4",
+        "no-activate": true,
+        timeout: "17",
+      });
+
+      expect(msg).toMatchObject({
+        type: "CHATGPT_EXTRACT",
+        targetTabId: 837360585,
+        sentinel: "<<<WEBGPT_DONE:test>>>",
+        wait: true,
+        stablePolls: 4,
+        noActivate: true,
+        timeout: 17000,
+      });
+    });
+
+    it("maps gemini_tab without activating the browser tab", () => {
+      const msg = helpers.mapToolToMessage("gemini_tab", {
+        query: "review this",
+        "target-tab-id": "837360717",
+        sentinel: "<<<GEMINI_DONE:test>>>",
+        "stable-polls": "3",
+        "keep-tab": true,
+        "no-activate": true,
+      });
+
+      expect(msg).toMatchObject({
+        type: "GEMINI_TAB_QUERY",
+        query: "review this",
+        targetTabId: 837360717,
+        sentinel: "<<<GEMINI_DONE:test>>>",
+        stablePolls: 3,
+        keepTab: true,
+        noActivate: true,
+      });
+    });
+
+    it("maps kimi_tab without activating the browser tab", () => {
+      const msg = helpers.mapToolToMessage("kimi_tab", {
+        query: "review this",
+        "target-tab-id": "837360718",
+        sentinel: "<<<KIMI_DONE:test>>>",
+        "keep-tab": true,
+        "no-activate": true,
+      });
+
+      expect(msg).toMatchObject({
+        type: "KIMI_TAB_QUERY",
+        query: "review this",
+        targetTabId: 837360718,
+        sentinel: "<<<KIMI_DONE:test>>>",
+        keepTab: true,
+        noActivate: true,
+      });
+    });
+  });
+
   describe("aistudio commands", () => {
     it("maps aistudio to AISTUDIO_QUERY with default model", () => {
       const msg = helpers.mapToolToMessage("aistudio", { query: "hi" });

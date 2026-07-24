@@ -9,6 +9,8 @@ const https = require("https");
 const { execSync } = require("child_process");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const chatgptClient = require("./chatgpt-client.cjs");
+const geminiTabClient = require("./gemini-tab-client.cjs");
+const kimiTabClient = require("./kimi-tab-client.cjs");
 const geminiClient = require("./gemini-client.cjs");
 const perplexityClient = require("./perplexity-client.cjs");
 const grokClient = require("./grok-client.cjs");
@@ -729,6 +731,149 @@ function handleToolRequest(msg, socket, requestContext = requestStorage.getStore
         response: result.response,
         model: result.model,
         tookMs: result.tookMs
+      }, null);
+    }).catch((err) => {
+      sendToolResponse(socket, originalId, null, err.message);
+    });
+
+    return;
+  }
+
+  if (extensionMsg.type === "CHATGPT_EXTRACT") {
+    const requestedTabId = Number.parseInt(extensionMsg.targetTabId || extensionMsg.tabId, 10);
+    if (!Number.isFinite(requestedTabId) || requestedTabId <= 0) {
+      sendToolResponse(socket, originalId, null, "--tab-id required");
+      return;
+    }
+
+    queueAiRequest(async () => {
+      const result = await chatgptClient.extractAssistantResponse({
+        tabId: requestedTabId,
+        signal: requestContext.signal,
+        sentinel: extensionMsg.sentinel,
+        timeout: extensionMsg.timeout,
+        wait: extensionMsg.wait === true,
+        stablePolls: extensionMsg.stablePolls,
+        noActivate: extensionMsg.noActivate === true,
+        cdpEvaluate: (tabId, expression) => requestCallExtension(
+          requestContext,
+          "cdp_evaluate",
+          { type: "CHATGPT_EVALUATE", tabId, expression },
+        ),
+      });
+
+      return result;
+    }).then((result) => {
+      sendToolResponse(socket, originalId, {
+        response: result.response,
+        tabId: result.tabId,
+        controlledTabId: result.controlledTabId,
+        messageId: result.messageId,
+        responseSource: result.responseSource,
+        sentinel: result.sentinel,
+        hasSentinel: result.hasSentinel,
+        pageTextContainsSentinel: result.pageTextContainsSentinel,
+        stopVisible: result.stopVisible,
+        finished: result.finished,
+        turnIndex: result.turnIndex,
+        documentHiddenAtCompletion: result.documentHiddenAtCompletion,
+        visibilityStateAtCompletion: result.visibilityStateAtCompletion,
+        backgroundHiddenPolls: result.backgroundHiddenPolls,
+        backgroundPollCount: result.backgroundPollCount,
+        hiddenRecoveryUsed: result.hiddenRecoveryUsed,
+      }, null);
+    }).catch((err) => {
+      sendToolResponse(socket, originalId, null, err.message);
+    });
+
+    return;
+  }
+
+  if (extensionMsg.type === "GEMINI_TAB_QUERY" || extensionMsg.type === "KIMI_TAB_QUERY") {
+    const {
+      query,
+      model,
+      file,
+      timeout,
+      sentinel,
+      stablePolls,
+      keepTab,
+      noActivate,
+      targetTabId,
+    } = extensionMsg;
+    const isKimi = extensionMsg.type === "KIMI_TAB_QUERY";
+    const client = isKimi ? kimiTabClient : geminiTabClient;
+    const tag = isKimi ? "kimi_tab" : "gemini_tab";
+
+    queueAiRequest(async () => {
+      const selectedTabId = Number.isFinite(Number(targetTabId)) ? Number(targetTabId) : undefined;
+      const result = await client.query({
+        prompt: query,
+        signal: requestContext.signal,
+        model,
+        file,
+        timeout: timeout || 300000,
+        sentinel,
+        stablePolls,
+        keepTab: keepTab === true,
+        noActivate: noActivate === true,
+        createTab: async () => {
+          if (selectedTabId) {
+            return {
+              tabId: selectedTabId,
+              reused: true,
+              activated: false,
+              tabWasCreated: false,
+            };
+          }
+          const tab = await requestCallExtension(
+            requestContext,
+            "new_tab",
+            { type: isKimi ? "KIMI_NEW_TAB" : "GEMINI_NEW_TAB", noActivate: noActivate === true },
+          );
+          return {
+            tabId: tab.tabId,
+            activated: tab.activated === true,
+            tabWasCreated: true,
+          };
+        },
+        closeTab: (tabIdToClose) => requestCallExtension(
+          requestContext,
+          "close_tab",
+          { type: isKimi ? "KIMI_CLOSE_TAB" : "GEMINI_CLOSE_TAB", tabId: tabIdToClose },
+          45000,
+          true,
+        ),
+        cdpEvaluate: (tabId, expression) => requestCallExtension(
+          requestContext,
+          "cdp_evaluate",
+          { type: "CHATGPT_EVALUATE", tabId, expression },
+        ),
+        cdpCommand: (tabId, method, params) => requestCallExtension(
+          requestContext,
+          "cdp_command",
+          { type: "CHATGPT_CDP_COMMAND", tabId, method, params },
+        ),
+        log: (msg) => log(`[${tag}] ${msg}`),
+      });
+
+      return result;
+    }).then((result) => {
+      sendToolResponse(socket, originalId, {
+        response: result.response,
+        model: result.model,
+        tookMs: result.tookMs,
+        tabId: result.tabId,
+        controlledTabId: result.controlledTabId,
+        conversationUrl: result.conversationUrl,
+        messageId: result.messageId,
+        responseSource: result.responseSource,
+        sentinel: result.sentinel,
+        hasSentinel: result.hasSentinel,
+        activated: result.activated,
+        tabWasCreated: result.tabWasCreated,
+        noActivate: result.noActivate,
+        attachment: result.attachment,
       }, null);
     }).catch((err) => {
       sendToolResponse(socket, originalId, null, err.message);

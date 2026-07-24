@@ -1107,6 +1107,18 @@ function mapToolToMessage(tool, args, tabId) {
         timeout: a.timeout ? parseInt(a.timeout, 10) * 1000 : 2700000,
         ...baseMsg
       };
+    case "chatgpt.extract":
+      if (!a["tab-id"] && !a.tabId && !baseMsg.tabId) throw new Error("--tab-id required");
+      return {
+        type: "CHATGPT_EXTRACT",
+        targetTabId: parseInt(a["tab-id"] || a.tabId || baseMsg.tabId, 10),
+        sentinel: a.sentinel,
+        wait: a.wait === true,
+        stablePolls: a["stable-polls"] !== undefined ? parseInt(a["stable-polls"], 10) : undefined,
+        noActivate: a["no-activate"] === true,
+        timeout: a.timeout ? parseInt(a.timeout, 10) * 1000 : 12000,
+        ...baseMsg
+      };
     case "gemini":
       if (!a.query && !a["generate-image"]) throw new Error("query required");
       return {
@@ -1121,6 +1133,36 @@ function mapToolToMessage(tool, args, tabId) {
         youtube: a.youtube,
         aspectRatio: a["aspect-ratio"],
         timeout: a.timeout ? parseInt(a.timeout, 10) * 1000 : 300000,
+        ...baseMsg
+      };
+    case "gemini_tab":
+      if (!a.query) throw new Error("query required");
+      return {
+        type: "GEMINI_TAB_QUERY",
+        query: a.query,
+        model: a.model,
+        file: a.file,
+        timeout: a.timeout ? parseInt(a.timeout, 10) * 1000 : 300000,
+        sentinel: a.sentinel,
+        stablePolls: a["stable-polls"] !== undefined ? parseInt(a["stable-polls"], 10) : undefined,
+        keepTab: a["keep-tab"] || false,
+        noActivate: a["no-activate"] || false,
+        targetTabId: a["target-tab-id"] !== undefined ? parseInt(a["target-tab-id"], 10) : tabId,
+        ...baseMsg
+      };
+    case "kimi_tab":
+      if (!a.query) throw new Error("query required");
+      return {
+        type: "KIMI_TAB_QUERY",
+        query: a.query,
+        model: a.model,
+        file: a.file,
+        timeout: a.timeout ? parseInt(a.timeout, 10) * 1000 : 300000,
+        sentinel: a.sentinel,
+        stablePolls: a["stable-polls"] !== undefined ? parseInt(a["stable-polls"], 10) : undefined,
+        keepTab: a["keep-tab"] || false,
+        noActivate: a["no-activate"] || false,
+        targetTabId: a["target-tab-id"] !== undefined ? parseInt(a["target-tab-id"], 10) : tabId,
         ...baseMsg
       };
     case "perplexity":

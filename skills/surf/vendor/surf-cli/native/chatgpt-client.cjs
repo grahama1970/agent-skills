@@ -39,12 +39,16 @@ function detectsConversationMaxLength(text) {
 function detectsTooManyRequests(text) {
   const normalized = normalizeProviderMessage(text);
   if (!normalized) return false;
-  const hasTitle = normalized.includes("too many requests");
+  const hasTitle =
+    normalized.includes("too many requests") ||
+    normalized.includes("you've hit your limit") ||
+    normalized.includes("you have hit your limit");
   const hasThrottle =
     normalized.includes("you're making requests too quickly") ||
     normalized.includes("you are making requests too quickly") ||
     normalized.includes("temporarily limited access to your conversations") ||
-    normalized.includes("please wait a few minutes before trying again");
+    normalized.includes("please wait a few minutes before trying again") ||
+    normalized.includes("please try again later");
   return hasTitle && hasThrottle;
 }
 
@@ -367,12 +371,17 @@ async function assertReadyForNewPrompt(cdp, signal) {
       const detectsTooManyRequests = (text) => {
         const normalized = normalizeProviderMessage(text);
         if (!normalized) return false;
-        const hasTitle = normalized.includes('too many requests');
+        const hasTitle = (
+          normalized.includes('too many requests') ||
+          normalized.includes("you've hit your limit") ||
+          normalized.includes('you have hit your limit')
+        );
         const hasThrottle = (
           normalized.includes("you're making requests too quickly") ||
           normalized.includes('you are making requests too quickly') ||
           normalized.includes('temporarily limited access to your conversations') ||
-          normalized.includes('please wait a few minutes before trying again')
+          normalized.includes('please wait a few minutes before trying again') ||
+          normalized.includes('please try again later')
         );
         return hasTitle && hasThrottle;
       };
@@ -987,6 +996,72 @@ async function waitForResponse(
   throw new Error("Response timeout");
 }
 
+async function extractAssistantResponse(options) {
+  const {
+    tabId,
+    sentinel,
+    timeout = 12000,
+    wait = false,
+    stablePolls,
+    noActivate,
+    cdpEvaluate,
+    signal,
+  } = options;
+  if (!tabId) throw new Error("--tab-id required");
+  if (!cdpEvaluate) throw new Error("cdpEvaluate callback required");
+  throwIfAborted(signal);
+  const cdp = (expr) => raceAbort(() => cdpEvaluate(tabId, expr), signal);
+
+  if (await isCloudflareBlocked(cdp)) {
+    throw new Error("Cloudflare challenge detected - complete in browser");
+  }
+
+  if (wait || sentinel) {
+    const response = await waitForResponse(
+      cdp,
+      timeout,
+      { sentinel, stablePolls, noActivate },
+      undefined,
+      signal
+    );
+    return {
+      response: response.text,
+      tabId,
+      controlledTabId: tabId,
+      messageId: response.messageId || null,
+      responseSource: response.source || "assistant-dom",
+      sentinel,
+      hasSentinel: response.hasSentinel === true || (sentinel ? response.text.includes(sentinel) : true),
+      pageTextContainsSentinel: response.pageTextContainsSentinel === true,
+      stopVisible: response.stopVisible === true,
+      finished: true,
+      turnIndex: response.turnIndex,
+      documentHiddenAtCompletion: response.documentHiddenAtCompletion === true,
+      visibilityStateAtCompletion: response.visibilityStateAtCompletion || null,
+      backgroundHiddenPolls: response.backgroundHiddenPolls || 0,
+      backgroundPollCount: response.backgroundPollCount || 0,
+      hiddenRecoveryUsed: response.hiddenRecoveryUsed === true,
+    };
+  }
+
+  const snapshot = normalizeResponseSnapshot(await readChatGPTResponseSnapshot(cdp));
+  const latest = snapshot.latestAssistant;
+  const text = latest?.text || "";
+  return {
+    response: text,
+    tabId,
+    controlledTabId: tabId,
+    messageId: latest?.messageId || null,
+    responseSource: latest?.source || "assistant-dom",
+    sentinel,
+    hasSentinel: sentinel ? text.includes(sentinel) : Boolean(text),
+    pageTextContainsSentinel: false,
+    stopVisible: snapshot.stopVisible === true,
+    finished: Boolean(text) && snapshot.stopVisible !== true,
+    turnIndex: latest?.turnIndex,
+  };
+}
+
 async function query(options) {
   const {
     prompt,
@@ -1097,6 +1172,7 @@ async function query(options) {
 
 module.exports = {
   query,
+  extractAssistantResponse,
   hasRequiredCookies,
   cleanChatGPTResponseText,
   extractLatestAssistantSnapshot,

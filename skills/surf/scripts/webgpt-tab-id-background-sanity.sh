@@ -100,7 +100,7 @@ if [[ "$tab_id" == "$active_before" ]]; then
 fi
 
 set +e
-js_out="$("$RUN_SH" js --tab-id "$tab_id" 'return { title: document.title, url: location.href, host: location.hostname }' 2>>"$log")"
+js_out="$("$RUN_SH" js --tab-id "$tab_id" '({ title: document.title, url: location.href, host: location.hostname })' 2>>"$log")"
 js_status=$?
 click_out="$("$RUN_SH" click --selector body --tab-id "$tab_id" --no-screenshot 2>>"$log")"
 click_status=$?

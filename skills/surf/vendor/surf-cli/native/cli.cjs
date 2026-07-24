@@ -1663,6 +1663,7 @@ const ALL_SOCKET_TOOLS = [
   "bookmark.add", "bookmark.remove", "bookmark.list",
   "history.list", "history.search",
   "window.new", "window.list", "window.focus", "window.close", "window.resize",
+  "chatgpt", "chatgpt.extract", "gemini", "gemini_tab", "kimi_tab", "perplexity", "grok", "aistudio", "aistudio.build",
   "extension.ping", "extension.reload",
 ];
 
@@ -2683,7 +2684,7 @@ if (args[0] === "workflow.validate") {
   }
 }
 
-const BOOLEAN_FLAGS = ["auto-capture", "json", "stream", "dry-run", "stop-on-error", "fail-fast", "clear", "submit", "all", "case-sensitive", "hard", "annotate", "fullpage", "full-page", "reset", "no-screenshot", "full", "soft-fail", "has-body", "exclude-static", "v", "vv", "request", "by-tab", "har", "jsonl", "no-save", "no-auto-wait", "no-lock"];
+const BOOLEAN_FLAGS = ["auto-capture", "json", "stream", "dry-run", "stop-on-error", "fail-fast", "clear", "submit", "all", "case-sensitive", "hard", "annotate", "fullpage", "full-page", "reset", "no-screenshot", "full", "soft-fail", "has-body", "exclude-static", "v", "vv", "request", "by-tab", "har", "jsonl", "no-save", "no-auto-wait", "no-lock", "keep-tab", "no-activate"];
 
 const parseArgs = (rawArgs) => {
   const result = { positional: [], options: {} };
@@ -2803,6 +2804,8 @@ const PRIMARY_ARG_MAP = {
   ai: "query",
   gemini: "query",
   chatgpt: "query",
+  gemini_tab: "query",
+  kimi_tab: "query",
   perplexity: "query",
   grok: "query",
   aistudio: "query",
@@ -3239,6 +3242,64 @@ function assertToolOk(response, context) {
   throw new Error(`${context}: ${message}`);
 }
 
+function writeStdout(text) {
+  return new Promise((resolve, reject) => {
+    process.stdout.write(text, (error) => {
+      if (error) reject(error);
+      else resolve();
+    });
+  });
+}
+
+function waitForSurfSocket(maxWaitMs = 60000) {
+  return new Promise((resolve, reject) => {
+    const started = Date.now();
+    const tick = () => {
+      try {
+        if (fs.existsSync(endpoint.socketPath || "/tmp/surf.sock")) {
+          resolve(true);
+          return;
+        }
+      } catch {
+        // keep polling
+      }
+      if (Date.now() - started >= maxWaitMs) {
+        reject(new Error(`Surf socket did not return within ${maxWaitMs / 1000}s`));
+        return;
+      }
+      setTimeout(tick, 500);
+    };
+    tick();
+  });
+}
+
+async function attemptChatgptRecovery() {
+  const tabId = globalOpts.tabId || toolArgs["target-tab-id"];
+  const sentinel = toolArgs.sentinel;
+  if (!tabId || !sentinel) {
+    throw new Error("chatgpt recovery requires --tab-id and --sentinel");
+  }
+  console.error("Surf extension disconnected mid-poll; waiting for host reconnect...");
+  await waitForSurfSocket(60000);
+  console.error("Recovering ChatGPT response via chatgpt.extract...");
+  const extractTimeoutMs = Math.max(
+    30000,
+    Number.parseInt(toolArgs.timeout, 10) * 1000 || 120000
+  );
+  return sendRequest(
+    "chatgpt.extract",
+    {
+      "tab-id": tabId,
+      sentinel,
+      timeout: Math.ceil(extractTimeoutMs / 1000),
+      wait: true,
+      "stable-polls": Number.parseInt(toolArgs["stable-polls"], 10) || 3,
+      "no-activate": true,
+    },
+    extractTimeoutMs + 10000
+  );
+}
+
 function assembleRecordGif(framePaths, output, fps, rect) {
   const delay = Math.max(1, Math.round(100 / fps));
   const args = ["-delay", String(delay), "-loop", "0", ...framePaths];
@@ -3390,6 +3451,31 @@ if (finalTool === "record") {
 installBrowserLock(lockOptions, endpoint);
 let socket;
 let timeout;
+let responseFinished = false;
+let recoveryStarted = false;
+
+function startChatgptRecovery(reason) {
+  if (recoveryStarted || responseFinished || tool !== "chatgpt" || endpoint.kind === "remote") {
+    if (!responseFinished) {
+      console.error(reason || "Error: Surf connection closed before response");
+      process.exit(1);
+    }
+    return;
+  }
+  recoveryStarted = true;
+  clearTimeout(timeout);
+  attemptChatgptRecovery()
+    .then((resp) => {
+      handleResponse(resp).catch((err) => {
+        console.error("Recovery handler error:", err.message);
+        process.exit(1);
+      });
+    })
+    .catch((err) => {
+      console.error(`${reason || "Surf connection lost"} Recovery failed: ${err.message}`);
+      process.exit(1);
+    });
+}
 
 if (endpoint.kind === "remote") {
   socket = { end() {}, destroy() {} };
@@ -3425,9 +3511,9 @@ const responseParser = createFrameParser({
   onFrame(msg) {
     if (msg.type === "extension_disconnected") {
       clearTimeout(timeout);
-      console.error(msg.message);
       socket.end();
-      process.exit(1);
+      startChatgptRecovery(msg.message);
+      return;
     }
     if (msg.id !== request.id) return;
     handleResponse(msg).catch((err) => {
@@ -3453,10 +3539,14 @@ socket.on("error", (err) => {
 
 socket.on("close", () => {
   clearTimeout(timeout);
+  if (!responseFinished) {
+    startChatgptRecovery("Error: Surf connection closed before response");
+  }
 });
 
 async function handleResponse(response) {
   clearTimeout(timeout);
+  responseFinished = true;
 
   if (response.error) {
     const errContent = response.error.content?.[0]?.text || JSON.stringify(response.error);
@@ -3493,16 +3583,18 @@ async function handleResponse(response) {
     fs.mkdirSync(path.dirname(saveTo), { recursive: true });
     fs.writeFileSync(saveTo, JSON.stringify(data ?? null, null, 2));
     if (!wantJson) {
-      console.log(`Saved perf audit to ${saveTo}`);
+      await writeStdout(`Saved perf audit to ${saveTo}\n`);
       socket.end();
-      process.exit(0);
+      process.exitCode = 0;
+      return;
     }
   }
 
   if (wantJson) {
-    console.log(JSON.stringify(data ?? null, null, 2));
+    await writeStdout(`${JSON.stringify(data ?? null, null, 2)}\n`);
     socket.end();
-    process.exit(0);
+    process.exitCode = 0;
+    return;
   }
 
   if (tool === "screenshot" && data?.base64 && (outputPath || toolArgs.savePath)) {
@@ -3534,41 +3626,37 @@ async function handleResponse(response) {
     if (Array.isArray(tabs)) {
       if (tabs.length === 0) {
         if (globalOpts.windowId) {
-          console.log(`No tabs in window ${globalOpts.windowId}. Window may not exist - use 'surf window.list' to verify.`);
+          await writeStdout(`No tabs in window ${globalOpts.windowId}. Window may not exist - use 'surf window.list' to verify.\n`);
         } else {
-          console.log("No tabs found.");
+          await writeStdout("No tabs found.\n");
         }
       } else {
-        for (const t of tabs) {
-          console.log(`${t.id}\t${t.title}\t${t.url}`);
-        }
+        await writeStdout(`${tabs.map((t) => `${t.id}\t${t.title}\t${t.url}`).join("\n")}\n`);
       }
     } else {
-      console.log(JSON.stringify(data, null, 2));
+      await writeStdout(`${JSON.stringify(data, null, 2)}\n`);
     }
   } else if (tool === "tab.named") {
     const named = data?.tabs || data?.namedTabs || data || [];
     if (Array.isArray(named)) {
       if (named.length === 0) {
-        console.log("No named tabs");
+        await writeStdout("No named tabs\n");
       } else {
-        for (const t of named) {
-          console.log(`${t.name}\t${t.tabId}\t${t.title || ""}\t${t.url || ""}`);
-        }
+        await writeStdout(`${named.map((t) => `${t.name}\t${t.tabId}\t${t.title || ""}\t${t.url || ""}`).join("\n")}\n`);
       }
     } else {
-      console.log(JSON.stringify(data, null, 2));
+      await writeStdout(`${JSON.stringify(data, null, 2)}\n`);
     }
   } else if (tool === "ai" && data?.aiResult) {
     if (data.mode === "find") {
-      console.log(data.ref || "NOT_FOUND");
+      await writeStdout(`${data.ref || "NOT_FOUND"}\n`);
     } else {
-      console.log(data.content);
+      await writeStdout(`${data.content}\n`);
     }
   } else if (tool === "page.read" && data?.pageContent) {
-    console.log(data.pageContent);
+    await writeStdout(`${data.pageContent}\n`);
   } else if (tool === "page.text" && data?.text) {
-    console.log(data.text);
+    await writeStdout(`${data.text}\n`);
   } else if (tool === "emulate.device" && data?.devices) {
     console.log("Available devices:\n");
     const devices = data.devices;
@@ -3580,9 +3668,9 @@ async function handleResponse(response) {
   } else if (tool === "js") {
     if (data?.result !== undefined) {
       const val = data.result.value ?? data.result;
-      console.log(typeof val === "string" ? val : JSON.stringify(val, null, 2));
+      await writeStdout(`${typeof val === "string" ? val : JSON.stringify(val, null, 2)}\n`);
     } else {
-      console.log(JSON.stringify(data, null, 2));
+      await writeStdout(`${JSON.stringify(data, null, 2)}\n`);
     }
   } else if (tool === "health") {
     if (data?.success) {
@@ -3595,7 +3683,7 @@ async function handleResponse(response) {
         console.log(`OK${timeStr}`);
       }
     } else {
-      console.log(JSON.stringify(data, null, 2));
+      await writeStdout(`${JSON.stringify(data, null, 2)}\n`);
     }
   } else if (tool === "smoke" && data?.results) {
     const results = data.results;
@@ -3632,7 +3720,7 @@ async function handleResponse(response) {
       console.log("No network requests captured");
     } else if (data._format === 'raw') {
       // Raw JSON output - print entries array directly
-      console.log(JSON.stringify(items, null, 2));
+      await writeStdout(`${JSON.stringify(items, null, 2)}\n`);
     } else {
       // Simple compact format for now
       for (const req of items) {
@@ -3647,7 +3735,7 @@ async function handleResponse(response) {
     console.log(networkFormatters.formatEntry(data.entry));
   } else if (tool === "network.body" && data?.body !== undefined) {
     // Raw body for piping
-    process.stdout.write(data.body);
+    await writeStdout(data.body);
   } else if (tool === "network.curl" && data?.curl) {
     console.log(data.curl);
   } else if (tool === "network.curl" && data?.entry) {
@@ -3664,7 +3752,7 @@ async function handleResponse(response) {
     for (const [key, val] of Object.entries(data.paths)) {
       console.log(`${key}: ${val}`);
     }
-  } else if ((tool === "chatgpt" || tool === "gemini") && data?.response) {
+  } else if ((tool === "chatgpt" || tool === "gemini" || tool === "gemini_tab" || tool === "kimi_tab") && data?.response) {
     console.log(data.response);
     if (data.imagePath) {
       console.log(`\nImage saved: ${data.imagePath}`);
@@ -3740,9 +3828,10 @@ async function handleResponse(response) {
     socket.end();
     process.exit(1);
   } else {
-    console.log(JSON.stringify(data, null, 2));
+    await writeStdout(`${JSON.stringify(data, null, 2)}\n`);
   }
 
   socket.end();
-  process.exit(0);
+  process.exitCode = 0;
+  return;
 }

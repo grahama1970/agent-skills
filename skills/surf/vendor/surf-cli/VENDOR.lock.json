@@ -1,6 +1,6 @@
 {
-  "recorded_at": "2026-07-24T11:25:57Z",
-  "source_kind": "upstream_v2.9.0_with_downstream_webgpt_patchset",
+  "recorded_at": "2026-07-24T12:36:00Z",
+  "source_kind": "upstream_v2.9.0_with_downstream_webgpt_provider_patchset",
   "upstream_repository": "https://github.com/nicobailon/surf-cli.git",
   "upstream_ref": "refs/tags/v2.9.0",
   "upstream_commit": "38e1ef4515bef0aaee4848a257fb237bad053f9d",
@@ -9,20 +9,29 @@
   "clean_upstream_copy": false,
   "package_version": "2.9.0",
   "patchset": {
-    "name": "agent-skills-webgpt-compat",
+    "name": "agent-skills-webgpt-provider-compat",
     "files": [
       "native/chatgpt-client.cjs",
       "native/cli.cjs",
+      "native/gemini-tab-client.cjs",
       "native/host-helpers.cjs",
-      "src/service-worker/index.ts"
+      "native/host.cjs",
+      "native/kimi-tab-client.cjs",
+      "src/service-worker/index.ts",
+      "test/unit/host-helpers.test.ts",
+      "test/unit/service-worker/window-handlers.test.ts"
     ],
     "contracts": [
       "conversation_max_length_detection",
       "too_many_requests_detection",
       "assert_ready_for_new_prompt_export",
       "sentinel_stable_stall_wait_for_response_export",
+      "chatgpt_extract_recovery_command",
       "focus_state_command",
-      "extension_lifecycle_commands"
+      "extension_lifecycle_commands",
+      "gemini_tab_provider_command",
+      "kimi_tab_provider_command",
+      "provider_tab_no_activate_proof"
     ]
   },
   "content_identity": {
@@ -30,7 +39,7 @@
     "excludes": [
       "VENDOR.lock.json"
     ],
-    "file_count": 118,
-    "sha256": "b2bdf26ee8e775f7e81d401f9b67ac7cdd8d08afc53731da5debdfe34c0110ee"
+    "file_count": 120,
+    "sha256": "a936a20741c75411322920f80cf96880b60fa02acbe7b42ce47d63597371eded"
   }
 }
