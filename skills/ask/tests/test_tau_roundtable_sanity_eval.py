@@ -574,3 +574,21 @@ JSON
         "--manual",
         "--json",
     ]
+
+
+def test_worker_classifies_kimi_capacity_busy_as_provider_limited() -> None:
+    failure_code = tau_roundtable_worker._classify_browser_failure(
+        failure="Kimi provider capacity busy: System is currently busy / Capacity is busy. Please try again later.",
+        response_text="",
+        raw_text="System is currently busy. Please try again later.",
+        prompt_text="",
+        submit_meta={
+            "status": "failed",
+            "failure": "kimi_provider_capacity_busy",
+            "blocker": "BLOCKED_KIMI_PROVIDER_CAPACITY",
+            "kimi_provider_capacity_busy": True,
+        },
+        commands=[],
+    )
+
+    assert failure_code == tau_roundtable_worker.BROWSER_PROVIDER_RATE_LIMITED

@@ -465,8 +465,10 @@ browser handlers through `$surf`/`$browser-oracle` command specs.
 - Browser handler failures must emit
   `ask.browser_failure_recovery_packet.v1` in the node artifact directory when
   they can be classified as `repo_access_blocked`, `missing_sentinel`,
-  `prompt_too_large_or_stalled`, or `stale_raw_capture`. The packet must include
-  `failure_code`, `local_readable_bundle_paths`, `auto_retry_allowed`,
+  `prompt_too_large_or_stalled`, `stale_raw_capture`,
+  `browser_tab_identity_mismatch`, `browser_access_blocked`, or
+  `browser_provider_rate_limited`. The packet must include `failure_code`,
+  `local_readable_bundle_paths`, `auto_retry_allowed`,
   `auto_retry_blocked_reason`, `next_command`, and `fallback_instruction`.
 - Browser auto-retry is allowed only when `$ask` can read a local bundle file
   and the selected Surf handler supports `--attach-file`. A private GitHub URL,
@@ -495,6 +497,12 @@ browser handlers through `$surf`/`$browser-oracle` command specs.
   only that browser handler node `NEEDS_ATTENTION` or rate-limited and let the
   outer scheduler back off; do not launch parallel WebGPT attempts to bypass
   the throttle.
+- If a WebKimi/Tau browser-handler receipt or Surf metadata reports
+  `kimi_provider_capacity_busy`, `BLOCKED_KIMI_PROVIDER_CAPACITY`, or
+  `proof_status: provider_capacity_limited`, classify only that browser handler
+  as `browser_provider_rate_limited`. Preserve the recovery packet and use a
+  different handler or rerun later; do not keep submitting Kimi prompts into a
+  capacity-busy tab.
 - Do not use raw `surf` as a substitute for `$ask`; use it only for transport
   debugging, direct project-level WebGPT workflows, or Tau command specs emitted
   by `./run.sh tau-dag`.

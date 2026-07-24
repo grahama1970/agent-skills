@@ -3363,6 +3363,17 @@ export async function handleMessage(
       return { success: true };
     }
 
+    case "KIMI_CDP_COMMAND": {
+      const { method, params } = message;
+      const result = await cdp.sendCommand(message.tabId, method, params || {});
+      return result;
+    }
+
+    case "KIMI_EVALUATE": {
+      const result = await cdp.evaluateScript(message.tabId, message.expression);
+      return result;
+    }
+
     case "AI_UPLOAD_FILE_TO_TAB":
     case "UPLOAD_FILE_TO_TAB": {
       const { tabId: uploadTabId, filePaths } = message;
@@ -3633,7 +3644,7 @@ const COMMANDS_WITHOUT_TAB = new Set([
   "GET_CHATGPT_COOKIES", "GET_GOOGLE_COOKIES", "GET_TWITTER_COOKIES",
   "PERPLEXITY_NEW_TAB", "PERPLEXITY_CLOSE_TAB", "PERPLEXITY_EVALUATE", "PERPLEXITY_CDP_COMMAND",
   "GROK_NEW_TAB", "GROK_CLOSE_TAB", "GROK_EVALUATE", "GROK_CDP_COMMAND",
-  "GEMINI_NEW_TAB", "GEMINI_CLOSE_TAB", "GEMINI_FETCH_URL", "KIMI_NEW_TAB", "KIMI_CLOSE_TAB", "AI_UPLOAD_FILE_TO_TAB", "UPLOAD_FILE_TO_TAB",
+  "GEMINI_NEW_TAB", "GEMINI_CLOSE_TAB", "GEMINI_FETCH_URL", "KIMI_NEW_TAB", "KIMI_CLOSE_TAB", "KIMI_EVALUATE", "KIMI_CDP_COMMAND", "AI_UPLOAD_FILE_TO_TAB", "UPLOAD_FILE_TO_TAB",
   "AISTUDIO_NEW_TAB", "AISTUDIO_CLOSE_TAB", "AISTUDIO_EVALUATE", "AISTUDIO_CDP_COMMAND",
   "DOWNLOADS_SEARCH",
   "WINDOW_NEW", "WINDOW_LIST", "WINDOW_FOCUS", "WINDOW_CLOSE", "WINDOW_RESIZE",

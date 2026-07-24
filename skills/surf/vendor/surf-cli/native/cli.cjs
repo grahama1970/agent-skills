@@ -3772,6 +3772,9 @@ async function handleResponse(response) {
     if (data.noActivate !== undefined) {
       console.error(`NoActivate: ${data.noActivate}`);
     }
+    if (tool === "kimi_tab" && data.attachment) {
+      console.error(`Attachment: ${JSON.stringify(data.attachment)}`);
+    }
     console.error(`\n[${data.model || 'unknown'} | ${((data.tookMs || 0) / 1000).toFixed(1)}s]`);
   } else if (tool === "aistudio" && data?.response) {
     console.log(data.response);

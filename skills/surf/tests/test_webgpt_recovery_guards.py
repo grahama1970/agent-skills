@@ -9,7 +9,9 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 EXTRACT = REPO_ROOT / "skills/surf/scripts/webgpt-extract.sh"
 SUBMIT = REPO_ROOT / "skills/surf/scripts/webgpt-submit.sh"
 CLI = REPO_ROOT / "skills/surf/vendor/surf-cli/native/cli.cjs"
+HOST = REPO_ROOT / "skills/surf/vendor/surf-cli/native/host.cjs"
 KIMI_CLIENT = REPO_ROOT / "skills/surf/vendor/surf-cli/native/kimi-tab-client.cjs"
+SERVICE_WORKER = REPO_ROOT / "skills/surf/vendor/surf-cli/src/service-worker/index.ts"
 
 
 def test_extract_rejects_malformed_tab_id_before_browser_call(tmp_path: Path) -> None:
@@ -75,6 +77,9 @@ def test_kimi_provider_capacity_busy_fails_fast() -> None:
     assert "system is currently busy" in source
     assert "capacity is busy" in source
     assert "Kimi provider capacity busy" in source
+    assert "promptNeedle" in source
+    assert 'type: "keyDown"' in source
+    assert 'key: "Enter"' in source
 
 
 def test_kimi_formatter_emits_controlled_tab_metadata() -> None:
@@ -85,6 +90,16 @@ def test_kimi_formatter_emits_controlled_tab_metadata() -> None:
     assert "controlledTabId" in formatter
     assert "Activated:" in formatter
     assert "TabWasCreated:" in formatter
+
+def test_kimi_uses_dedicated_service_worker_cdp_messages() -> None:
+    host_source = HOST.read_text(encoding="utf-8")
+    worker_source = SERVICE_WORKER.read_text(encoding="utf-8")
+
+    assert '"KIMI_EVALUATE"' in host_source
+    assert '"KIMI_CDP_COMMAND"' in host_source
+    assert 'case "KIMI_EVALUATE"' in worker_source
+    assert 'case "KIMI_CDP_COMMAND"' in worker_source
+    assert '"KIMI_EVALUATE", "KIMI_CDP_COMMAND"' in worker_source
 
 
 def test_nonzero_submit_with_exact_sentinel_recovery_reaches_finalization(tmp_path: Path) -> None:

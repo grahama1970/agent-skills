@@ -67,6 +67,12 @@ const assistantSnapshotExpression = (sentinel) => {
     const SENTINEL = ${sentinelLiteral};
     const STOP_SELECTOR = '${SELECTORS.stopButton}';
     const pageText = (document.body?.innerText || document.body?.textContent || '').trim();
+    const lowerPageText = pageText.toLowerCase();
+    const providerBusy = (
+      lowerPageText.includes('system is currently busy')
+      || lowerPageText.includes('capacity is busy')
+      || lowerPageText.includes('please try again later')
+    );
     const findSentinel = (text) => {
       if (!SENTINEL || !text) return null;
       const variants = [SENTINEL, ...(SENTINEL.endsWith('>>>') ? [SENTINEL.slice(0, -1)] : [])];
@@ -180,6 +186,7 @@ const assistantSnapshotExpression = (sentinel) => {
       source,
       pageTextContainsSentinel,
       sentinelMatch,
+      providerBusy,
     };
   })()`;
 };
@@ -468,16 +475,20 @@ async function typePrompt(cdp, inputCdp, prompt) {
   await delay(300);
 }
 
-async function clickSend(cdp, inputCdp) {
+async function clickSend(cdp, inputCdp, prompt = "") {
+  const promptNeedle = JSON.stringify((prompt || "").trim().slice(0, 120));
   const promptSelectors = JSON.stringify(SELECTORS.promptTextarea.split(", ").map((s) => s.trim()));
   const sendSelectors = JSON.stringify(
-    SELECTORS.sendButton.split(", ").map((s) => s.trim()).concat([
+    [
+      '.chat-input .send-button-container',
+      '.chat-input [class*="send-button"]',
+      ...SELECTORS.sendButton.split(", ").map((s) => s.trim()),
       'button[aria-label*="Send"]',
       'button[aria-label*="send"]',
       'button[data-test-id="send-button"]',
-    ]),
+    ],
   );
-  const deadline = Date.now() + 8000;
+  const deadline = Date.now() + 20000;
   while (Date.now() < deadline) {
     const result = await evaluate(
       cdp,
@@ -485,13 +496,27 @@ async function clickSend(cdp, inputCdp) {
         ${buildClickDispatcher()}
         const promptSelectors = ${promptSelectors};
         const sendSelectors = ${sendSelectors};
+        const promptNeedle = ${promptNeedle};
         let prompt = null;
         for (const selector of promptSelectors) {
           prompt = document.querySelector(selector);
           if (prompt) break;
         }
+        const composerText = () => {
+          const composer = document.querySelector('.chat-input') || prompt;
+          return (composer?.innerText || composer?.textContent || composer?.value || '').trim();
+        };
+        const submitted = () => {
+          if (document.querySelector('${SELECTORS.stopButton}')) return true;
+          if (!promptNeedle) return false;
+          return !composerText().includes(promptNeedle);
+        };
         const tryButton = (button) => {
           if (!button) return null;
+          const rect = button.getBoundingClientRect();
+          const visible = rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.right > 0
+            && rect.top < window.innerHeight && rect.left < window.innerWidth;
+          if (!visible) return null;
           const disabled = button.hasAttribute('disabled')
             || button.getAttribute('aria-disabled') === 'true'
             || button.getAttribute('data-disabled') === 'true';
@@ -502,7 +527,7 @@ async function clickSend(cdp, inputCdp) {
         for (const selector of sendSelectors) {
           const button = document.querySelector(selector);
           const status = tryButton(button);
-          if (status === 'clicked') return 'clicked-global';
+          if (status === 'clicked') return submitted() ? 'submitted-global' : 'clicked-global';
           if (status === 'disabled') return 'disabled';
         }
         if (prompt) {
@@ -514,7 +539,7 @@ async function clickSend(cdp, inputCdp) {
               const label = (button.textContent || '').trim().toLowerCase();
               if (aria.includes('send') || label === 'send') {
                 const status = tryButton(button);
-                if (status === 'clicked') return 'clicked-near';
+                if (status === 'clicked') return submitted() ? 'submitted-near' : 'clicked-near';
                 if (status === 'disabled') return 'disabled';
               }
             }
@@ -524,7 +549,24 @@ async function clickSend(cdp, inputCdp) {
         return 'missing';
       })()`
     );
-    if (result === "clicked-global" || result === "clicked-near") return true;
+    if (result === "submitted-global" || result === "submitted-near") return true;
+    if (result === "clicked-global" || result === "clicked-near") {
+      await delay(500);
+      const submitted = await evaluate(
+        cdp,
+        `(() => {
+          const needle = ${promptNeedle};
+          if (document.querySelector('${SELECTORS.stopButton}')) return true;
+          if (!needle) return false;
+          const composer = document.querySelector('.chat-input')
+            || document.querySelector(${JSON.stringify(SELECTORS.promptTextarea)});
+          const text = (composer?.innerText || composer?.textContent || composer?.value || '').trim();
+          return !text.includes(needle);
+        })()`,
+      ).catch(() => false);
+      if (submitted) return true;
+      continue;
+    }
     if (result === "disabled") {
       await delay(150);
       continue;
@@ -554,7 +596,15 @@ async function clickSend(cdp, inputCdp) {
     await delay(250);
     const generating = await evaluate(
       cdp,
-      `Boolean(document.querySelector('${SELECTORS.stopButton}'))`,
+      `(() => {
+        const needle = ${promptNeedle};
+        if (document.querySelector('${SELECTORS.stopButton}')) return true;
+        if (!needle) return false;
+        const composer = document.querySelector('.chat-input')
+          || document.querySelector(${JSON.stringify(SELECTORS.promptTextarea)});
+        const text = (composer?.innerText || composer?.textContent || composer?.value || '').trim();
+        return !text.includes(needle);
+      })()`,
     ).catch(() => false);
     if (generating) return true;
   }
@@ -593,6 +643,9 @@ async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
     }
     if (snapshot.stopVisible) {
       sawGenerating = true;
+    }
+    if (snapshot.providerBusy) {
+      throw new Error("Kimi provider capacity busy: System is currently busy / Capacity is busy. Please try again later.");
     }
     const currentText = snapshot.text || "";
     const currentLength = currentText.length;
@@ -715,7 +768,7 @@ async function query(options) {
     const baseline = await assistantSnapshot(cdp, null).catch(() => ({ text: "" }));
     await typePrompt(cdp, inputCdp, prompt);
     log("Prompt typed");
-    await clickSend(cdp, inputCdp);
+    await clickSend(cdp, inputCdp, prompt);
     log("Prompt sent, waiting for response...");
     const genDeadline = Date.now() + 20000;
     while (Date.now() < genDeadline) {

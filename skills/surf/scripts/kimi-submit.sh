@@ -191,9 +191,23 @@ if [[ $status -ne 0 ]]; then
   python3 - "$meta_output" "$input" "$submitted_output" "$output" "$raw_output" "$stderr_log" "$sentinel" "$started_at" "$finished_at" "$status" "${requested_tab_id:-}" "$target_url" <<'PY'
 import json, pathlib, sys
 meta, inp, submitted, out, raw, err, sentinel, started, finished, status, requested_tab_id, target_url = sys.argv[1:]
+stderr_text = pathlib.Path(err).read_text() if pathlib.Path(err).exists() else ""
+lower_stderr = stderr_text.lower()
+kimi_provider_capacity_busy = (
+    "kimi provider capacity busy" in lower_stderr
+    or "system is currently busy" in lower_stderr
+    or "capacity is busy" in lower_stderr
+    or "please try again later" in lower_stderr
+)
 pathlib.Path(meta).write_text(json.dumps({
     "status": "failed",
     "exit_code": int(status),
+    "failure": "kimi_provider_capacity_busy" if kimi_provider_capacity_busy else None,
+    "blocker": "BLOCKED_KIMI_PROVIDER_CAPACITY" if kimi_provider_capacity_busy else None,
+    "proof_status": "provider_capacity_limited" if kimi_provider_capacity_busy else "failed",
+    "kimi_provider_capacity_busy": kimi_provider_capacity_busy,
+    "submitted_to_kimi": True if kimi_provider_capacity_busy else None,
+    "recommended_action": "wait_for_provider_capacity_or_use_another_browser_handler" if kimi_provider_capacity_busy else None,
     "input": inp,
     "submitted_output": submitted,
     "output": out,

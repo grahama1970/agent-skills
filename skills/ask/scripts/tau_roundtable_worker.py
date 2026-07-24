@@ -35,6 +35,9 @@ ATTACH_FILE_HANDLERS = {"webgpt", "webkimi", "webgemini"}
 RECOVERY_PACKET_SCHEMA = "ask.browser_failure_recovery_packet.v1"
 WEBGPT_CONVERSATION_FULL_BLOCKER = "BLOCKED_WEBGPT_CONVERSATION_FULL"
 WEBGPT_BINDING_STALE_BLOCKER = "BLOCKED_WEBGPT_BINDING_STALE"
+BROWSER_TAB_IDENTITY_MISMATCH = "browser_tab_identity_mismatch"
+BROWSER_ACCESS_BLOCKED = "browser_access_blocked"
+BROWSER_PROVIDER_RATE_LIMITED = "browser_provider_rate_limited"
 
 
 def main() -> int:
@@ -508,7 +511,14 @@ def _browser_failure_recovery_packet(
     bundle_paths = _local_readable_bundle_paths(prompt_text, request_payload)
     can_attach = handler in ATTACH_FILE_HANDLERS
     auto_retry_allowed = (
-        failure_code not in {WEBGPT_CONVERSATION_FULL_BLOCKER, WEBGPT_BINDING_STALE_BLOCKER}
+        failure_code
+        not in {
+            WEBGPT_CONVERSATION_FULL_BLOCKER,
+            WEBGPT_BINDING_STALE_BLOCKER,
+            BROWSER_TAB_IDENTITY_MISMATCH,
+            BROWSER_ACCESS_BLOCKED,
+            BROWSER_PROVIDER_RATE_LIMITED,
+        }
         and bool(bundle_paths)
         and can_attach
     )
@@ -592,8 +602,14 @@ def _classify_browser_failure(
         return WEBGPT_CONVERSATION_FULL_BLOCKER
     if _webgpt_stale_binding_details(submit_meta):
         return WEBGPT_BINDING_STALE_BLOCKER
+    if _looks_browser_access_blocked(haystack, submit_meta):
+        return BROWSER_ACCESS_BLOCKED
+    if _looks_browser_provider_rate_limited(haystack, submit_meta):
+        return BROWSER_PROVIDER_RATE_LIMITED
     if _looks_repo_access_blocked(haystack):
         return "repo_access_blocked"
+    if _looks_tab_identity_mismatch(haystack, submit_meta):
+        return BROWSER_TAB_IDENTITY_MISMATCH
     if _looks_stale_raw_capture(haystack, submit_meta):
         return "stale_raw_capture"
     if _looks_prompt_too_large_or_stalled(haystack):
@@ -648,6 +664,59 @@ def _looks_repo_access_blocked(text: str) -> bool:
         "unreadable local filesystem paths",
         "local path",
         "no such file or directory",
+    )
+    return any(marker in text for marker in markers)
+
+
+def _looks_browser_access_blocked(text: str, meta: dict[str, Any]) -> bool:
+    if meta.get("browser_access_blocked") is True or meta.get("cloudflare_challenge_detected") is True:
+        return True
+    markers = (
+        "cloudflare_challenge",
+        "cloudflare challenge",
+        "just a moment",
+        "challenge-platform",
+        "browser_access_blocked",
+    )
+    return any(marker in text for marker in markers)
+
+
+def _looks_browser_provider_rate_limited(text: str, meta: dict[str, Any]) -> bool:
+    if meta.get("chatgpt_too_many_requests_detected") is True:
+        return True
+    if meta.get("kimi_provider_capacity_busy") is True:
+        return True
+    rate_limit = meta.get("chatgpt_rate_limit")
+    if isinstance(rate_limit, dict) and rate_limit.get("exhausted") is True:
+        return True
+    markers = (
+        "too many requests",
+        "you've hit your limit",
+        "you have hit your limit",
+        "please try again later",
+        "system is currently busy",
+        "capacity is busy",
+        "kimi_provider_capacity_busy",
+        "blocked_kimi_provider_capacity",
+        "provider_capacity_limited",
+        "temporarily limited access",
+        "rate_limited",
+        "browser_provider_rate_limited",
+    )
+    return any(marker in text for marker in markers)
+
+
+def _looks_tab_identity_mismatch(text: str, meta: dict[str, Any]) -> bool:
+    failure = str(meta.get("failure") or "").lower()
+    if "url mismatch" in failure or "tab identity" in failure:
+        return True
+    markers = (
+        "url mismatch: expected",
+        "expected_url_mismatch",
+        "tab_identity_preflight_failed",
+        "controlled_tab_id_mismatch",
+        "wrong_tab",
+        "requested tab",
     )
     return any(marker in text for marker in markers)
 
@@ -882,6 +951,9 @@ def _recovery_reason(failure_code: str) -> str:
     return {
         WEBGPT_CONVERSATION_FULL_BLOCKER: "The controlled ChatGPT conversation is at its maximum length and cannot accept the WebGPT round.",
         WEBGPT_BINDING_STALE_BLOCKER: "The browser-oracle binding points at a stale ChatGPT URL; the controlled tab is open at a different live URL.",
+        BROWSER_TAB_IDENTITY_MISMATCH: "The browser-oracle binding or requested tab does not match the live browser tab URL.",
+        BROWSER_ACCESS_BLOCKED: "The browser provider presented an access challenge before the request could be submitted.",
+        BROWSER_PROVIDER_RATE_LIMITED: "The browser provider accepted routing but reported a provider-side request limit.",
         "repo_access_blocked": "The browser reviewer appears unable to read the referenced repository or local path.",
         "missing_sentinel": "The browser transport did not produce the expected completion sentinel.",
         "prompt_too_large_or_stalled": "The browser submit appears to have timed out, stalled, or exceeded prompt size limits.",
@@ -896,6 +968,12 @@ def _auto_retry_blocked_reason(
         return "conversation_full_requires_fresh_chatgpt_conversation"
     if failure_code == WEBGPT_BINDING_STALE_BLOCKER:
         return "browser_oracle_binding_stale_rebind_required"
+    if failure_code == BROWSER_TAB_IDENTITY_MISMATCH:
+        return "browser_tab_identity_rebind_required"
+    if failure_code == BROWSER_ACCESS_BLOCKED:
+        return "browser_access_challenge_requires_human_browser_recovery"
+    if failure_code == BROWSER_PROVIDER_RATE_LIMITED:
+        return "browser_provider_rate_limit_requires_backoff"
     if not bundle_paths:
         return "missing_local_readable_bundle"
     if not can_attach:
@@ -911,6 +989,12 @@ def _fallback_instruction(failure_code: str, *, has_bundle: bool, can_attach: bo
         )
     if failure_code == WEBGPT_BINDING_STALE_BLOCKER:
         return "Run the next_command to rebind browser-oracle to the live ChatGPT tab URL, then rerun the Tau DAG node."
+    if failure_code == BROWSER_TAB_IDENTITY_MISMATCH:
+        return "Rebind the browser-oracle project to the live tab URL or choose the correct tab, then rerun the Tau DAG node."
+    if failure_code == BROWSER_ACCESS_BLOCKED:
+        return "Complete the provider access challenge in the controlled browser tab, rerun Surf preflight, then rerun the Tau DAG node."
+    if failure_code == BROWSER_PROVIDER_RATE_LIMITED:
+        return "Back off this browser provider until the limit clears; use a different handler or rerun later with the same verified tab."
     if has_bundle and not can_attach:
         return (
             f"Do not auto-retry {handler}: the current Surf transport does not expose --attach-file for this handler. "
