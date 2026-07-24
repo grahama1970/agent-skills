@@ -35,7 +35,7 @@ from .adaptive_lineage_engine import (
 MEMORY_COLLECTION = "battle_lineage_graph"
 MEMORY_NODE_SCHEMA = "battle.lineage_memory_node.v2"
 MEMORY_RECALL_SCHEMA = "battle.lineage_memory_recall.v2"
-MEMORY_WRITEBACK_SCHEMA = "battle.lineage_survivor_writeback.v2"
+MEMORY_WRITEBACK_SCHEMA = "battle.lineage_survivor_writeback.v3"
 CANONICAL_ROLES = (
     "arena-creator",
     "red",
@@ -487,13 +487,14 @@ class MemoryBackend:
             },
         }
 
-        survivor_ack = self.store_document(
+        # A generation reproduces two nodes at once (the survivor and the
+        # generation's bad genetic material), so this is a batch write. The
+        # /memory contract is explicit: "/upsert for batches. Use /store only
+        # for a single document write." Batching also makes the pair atomic
+        # from the daemon's point of view instead of two independent writes.
+        write_ack = self.upsert_documents(
             collection=self.collection,
-            document=survivor_document,
-        )
-        bad_ack = self.store_document(
-            collection=self.collection,
-            document=bad_document,
+            documents=[survivor_document, bad_document],
         )
         return {
             "schema": MEMORY_WRITEBACK_SCHEMA,
@@ -504,8 +505,7 @@ class MemoryBackend:
             "survivor_tags": survivor_document["tags"],
             "bad_genetic_material_tags": bad_document["tags"],
             "scope": scope.as_dict(),
-            "survivor_store_ack": json_safe(survivor_ack),
-            "bad_material_store_ack": json_safe(bad_ack),
+            "write_ack": json_safe(write_ack),
             "deterministic_keys": True,
             "daemon_owned_multihop": True,
         }

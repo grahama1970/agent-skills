@@ -227,7 +227,9 @@ def test_a_all_bad_generation_is_common_valid_terminal(tmp_path: Path) -> None:
     assert receipt["bad_genetic_material"]["bad_count"] == 9
     assert receipt["bad_genetic_material"]["bad_rate"] == 1.0
     assert receipt["bad_genetic_material"]["all_bad"] is True
-    assert not any(call["path"] == "/store" for call in fake.calls)
+    assert not any(
+        call["path"] in ("/store", "/upsert") for call in fake.calls
+    )
 
 
 def test_b_rare_survivor_is_stored_then_inherited_next_generation(
@@ -252,13 +254,18 @@ def test_b_rare_survivor_is_stored_then_inherited_next_generation(
     assert first["status"] == "ACTIVE"
     assert first["stop_reason"] == "survivor_reproduced"
     assert first["bad_genetic_material"]["bad_rate"] == (5 - 1) / 5
-    assert first["reproduction"]["survivor_store_ack"]["ok"] is True
-    store_calls = [call for call in fake.calls if call["path"] == "/store"]
-    assert len(store_calls) == 2
-    assert store_calls[0]["json"]["document"]["node_kind"] == "survivor"
-    assert "visibility:public" in store_calls[0]["json"]["document"]["tags"]
-    assert store_calls[1]["json"]["document"]["node_kind"] == "bad_genetic_material"
-    assert "visibility:role-only" in store_calls[1]["json"]["document"]["tags"]
+    # A generation reproduces the survivor and its bad genetic material
+    # together, so the write is ONE batched /upsert, not two /store calls
+    # (/memory contract: "/upsert for batches, /store only for a single doc").
+    assert not any(call["path"] == "/store" for call in fake.calls)
+    upsert_calls = [call for call in fake.calls if call["path"] == "/upsert"]
+    assert len(upsert_calls) == 1
+    written = upsert_calls[0]["json"]["documents"]
+    assert len(written) == 2
+    assert written[0]["node_kind"] == "survivor"
+    assert "visibility:public" in written[0]["tags"]
+    assert written[1]["node_kind"] == "bad_genetic_material"
+    assert "visibility:role-only" in written[1]["tags"]
 
     inherited = memory.recall(
         request=generation_request(
@@ -724,7 +731,9 @@ def test_materialize_only_emits_n_and_skips_review_judge_oracle(
     assert receipt["review_skipped"] is True
     assert receipt["judge_skipped"] is True
     assert receipt["oracle_skipped"] is True
-    assert not any(call["path"] == "/store" for call in fake.calls)
+    assert not any(
+        call["path"] in ("/store", "/upsert") for call in fake.calls
+    )
 
 
 # Real /memory daemon ack shapes, captured live 2026-07-24 against
