@@ -1,7 +1,35 @@
 # Project Knowledge: persona-dream
 
-**Last updated:** 2026-07-22 UTC (PCTOM-R strict objective bundle with v25-26 evidence) by agent
+**Last updated:** 2026-07-24 UTC (Amendment 2 variation engine + M-arm + agent-perception panel) by agent
 **Status:** Active development
+
+## 2026-07-24 — Amendment 2 variation engine, M-arm, agent-perception panel
+
+- GOAL_V3 Amendment 2: dreaming is variation, not one-shot. select_cluster now
+  seeds from a valence-conflicted memory (202/312 carry both +/- emotion),
+  graph-traverses WITHIN the counterpart (192 cross-memory edges exist), and
+  records valence_emphasis + variation_index + variation_key lineage. Used
+  clusters re-dreamable; only exact prior variations blocked. Counterpart
+  isolation + loop guard preserved. Proven end-to-end:
+  cycle_20260723T234851Z (re-dream of age23_current:kai, variation #3, negative
+  emphasis) = PASS_AUTONOMOUS_CYCLE. Batch this session: 7 new dreams -> 13
+  total. NO_UNUSED_CLUSTERS ceiling was hit at 12 before the amendment.
+- Cross-persona-via-ToM (GOAL_V3_AMENDMENT_2.md): designed, compiled as a tau
+  creator/reviewer DAG (webgpt->webkimi->join). Execution blocked on shared
+  ChatGPT tab held by a concurrent SPARTA job -> filed agent-skills#980. NOT run.
+- M-arm (scripts/build_memory_arm.py): compute-matched direct-memory affect for
+  all 13 cycles, reusing the dream arm's TOM_TO_VOICE map + mean-intensity
+  formula, ToM sourced from source memories (crosswalked into ALLOWED_TOM_STATES,
+  intensity 1-5 normalized to 0-1). CAVEAT: deterministic crosswalk, NOT
+  LLM-compute-matched -> D>M not yet a fair test.
+- Agent-perception panel (reports/goal_v5/agent_perception/): 2 blinded agent
+  seats (kimi, claude) — persona-dream is for AGENTS, the affect consumer is an
+  agent, no humans needed. Distinguishable D vs M 12/13 (both agree);
+  dream more experience-grounded than direct memory 8/13 (agree per-cycle);
+  both independently flagged the pre-fix Brandon/Kai cycle as the lone
+  indistinguishable one.
+- Next: LLM-compute-matched M-arm (fair D>M), run the tau cross-persona DAG when
+  the tab frees, scale the agent panel. GOAL_V3 tau round-5 still unconfirmed.
 
 ## 2026-07-23 — chatterbox fixed all six filed tickets; fixes verified live
 

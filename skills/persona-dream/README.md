@@ -1,16 +1,32 @@
 # Persona Dream
 
-## Current state (2026-07-23)
+## Current state (2026-07-24)
 
 The loop is real end-to-end: Embry dreams autonomously from her own memories
-(6 dreams, 5 unattended cycles, provenance-gated: see GOAL_V3.md +
-reports/goal_v3/), and as of GOAL_V4 her dreams COLOR HER LIVE VOICE through
-`persona_affect_composer.v1` (memory /intent -> composer -> /tau/voice-render),
-under the frozen rule: color the tone, never change a right answer, never
-touch safety/interruption decisions, never dream about dream-colored words.
-Proof: `python3 scripts/check_goal_v4_boundary.py --json` (re-drives live).
-Open research question: perceived affect (blind listener study, prereg'd) —
-see reports/goal_v3/roundtable/ for the 3-round design convergence.
+(13 dreams now; provenance-gated: GOAL_V3.md + reports/goal_v3/), and as of
+GOAL_V4 her dreams COLOR HER LIVE VOICE through `persona_affect_composer.v1`
+(memory /intent -> composer -> /tau/voice-render), under the frozen rule: color
+the tone, never change a right answer, never touch safety/interruption, never
+dream about dream-colored words. Proof: `python3
+scripts/check_goal_v4_boundary.py --json` (re-drives live, PASS).
+
+GOAL_V3 Amendment 2 (dreaming is variation, not one-shot): a used memory
+cluster is now re-dreamable as a distinct VARIATION — seeded from a
+valence-conflicted memory, graph-traversed within the counterpart, with the
+valence emphasis (positive/negative) that dominates recorded as lineage. The
+old NO_UNUSED_CLUSTERS ceiling is lifted; proven by a re-dream cycle that
+passed all gates (reports/goal_v3/cycles/cycle_20260723T234851Z). Cross-persona
+dreams connected by theory-of-mind are designed (GOAL_V3_AMENDMENT_2.md) and
+routed to a tau creator/reviewer DAG, not cowboy-edited.
+
+Research question — does the dream matter vs plain memory, judged by the AGENT
+that consumes the affect (persona-dream is for agents, not humans)? First
+evidence: a 2-seat blinded agent panel (kimi+claude) found dream-derived and
+direct-memory dispositions DISTINGUISHABLE in 12/13 cycles (both judges agree),
+and the dream read as more experience-grounded than direct memory in 8/13
+(judges agree per-cycle). See reports/goal_v5/agent_perception/. Caveat: the
+direct-memory (M) arm is still a deterministic crosswalk, not yet
+LLM-compute-matched, so D>M is suggestive, not the fair final test.
 
 
 ![Persona Dream card](../../docs/assets/project-cards/persona-dream.webp)
