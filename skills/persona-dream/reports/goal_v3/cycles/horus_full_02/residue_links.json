@@ -1,0 +1,27 @@
+{
+  "schema": "persona_dream.residue_links.v1",
+  "idea_id": "auto_horus_full_02",
+  "items": [
+    {
+      "collection": "persona_memory",
+      "persona_id": "horus_lupercal",
+      "source_id": "horus_false_gods_b05c_memory_009",
+      "source_path": "gmo:persona_memory/horus_false_gods_b05c_memory_009",
+      "text": "Horus Lupercal False Gods memory: Abaddon said 'They're traitors.'. Source record false_gods_ch06-c01-r001; key recall terms include horus_lupercal, false_gods_ch06, c01, who_said_theyre_traitors, abaddon."
+    },
+    {
+      "collection": "persona_memory",
+      "persona_id": "horus_lupercal",
+      "source_id": "horus_batch02_shard11_unresolved_who_broadcasting_signal_93333e834b",
+      "source_path": "gmo:persona_memory/horus_batch02_shard11_unresolved_who_broadcasting_signal_93333e834b",
+      "text": "The wrecked spaceship on Davin's moon: After Abaddon's declaration that nothing could have survived the crash, Horus asks who is broadcasting the signal, a question the source leaves unresolved."
+    },
+    {
+      "collection": "persona_memory",
+      "persona_id": "horus_lupercal",
+      "source_id": "horus_batch02_shard16_knowledge_gap_false_gods_ch07_lines_391_401_horus_knowledge_gap_raw_f60235ffea",
+      "source_path": "gmo:persona_memory/horus_batch02_shard16_knowledge_gap_false_gods_ch07_lines_391_401_horus_knowledge_gap_raw_f60235ffea",
+      "text": "Tember's flagship wreck: Abaddon says nothing could have survived the crash, and Horus asks who is broadcasting the signal."
+    }
+  ]
+}

@@ -1,0 +1,1937 @@
+{
+  "all_exact_reread_match": true,
+  "canonical_plan_sha256": "sha256:243249752243c6c0d25007de95c8d63b6318a73ac2ef97b11c2e9ee26b0ee879",
+  "commit_manifest": {
+    "active": true,
+    "compensation_reread_match": null,
+    "exact_reread_match": true,
+    "key": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+    "manifest_sha256": "sha256:b1ecc88ffcd3444a4bec7ef555e700af0d4bc666152dca4980bcc093d66fc1c6",
+    "published_all_exact_reread_match": true,
+    "receipt": {
+      "collection": "persona_dream_commit_manifests",
+      "exact_reread_match": true,
+      "key": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+      "reread_content_sha256": "sha256:b1ecc88ffcd3444a4bec7ef555e700af0d4bc666152dca4980bcc093d66fc1c6",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:b1ecc88ffcd3444a4bec7ef555e700af0d4bc666152dca4980bcc093d66fc1c6"
+    },
+    "record_count": 36,
+    "retroactive_commit": false
+  },
+  "edge_keys": [
+    "dream_auto_horus_full_01__derived_from__horus_false_gods_b05b_memory_024",
+    "dream_auto_horus_full_01__derived_from__horus_false_gods_b05f_memory_010",
+    "dream_auto_horus_full_01__derived_from__horus_false_gods_b05f_memory_011",
+    "dream_auto_horus_full_01__observed_in_scene__frame_0001",
+    "dream_auto_horus_full_01__observed_in_scene__frame_0002",
+    "dream_auto_horus_full_01__observed_in_scene__frame_0003",
+    "dream_auto_horus_full_01__observed_in_scene__frame_0004",
+    "dream_auto_horus_full_01__observed_in_scene__identity_temporal_continuity_review",
+    "dream_auto_horus_full_01__supports_interpretation__tom-001",
+    "dream_auto_horus_full_01__supports_interpretation__tom-002",
+    "dream_auto_horus_full_01__supports_interpretation__tom-003",
+    "dream:horus_lupercal:auto_horus_full_01:watch:frame_0001__grounds_interpretation__interpretation-001",
+    "dream:horus_lupercal:auto_horus_full_01:watch:frame_0002__grounds_interpretation__interpretation-001",
+    "dream:horus_lupercal:auto_horus_full_01:watch:frame_0003__grounds_interpretation__interpretation-001",
+    "dream:horus_lupercal:auto_horus_full_01:watch:frame_0004__grounds_interpretation__interpretation-001",
+    "dream:horus_lupercal:auto_horus_full_01:watch:frame_0002__grounds_interpretation__interpretation-002",
+    "dream:horus_lupercal:auto_horus_full_01:watch:frame_0003__grounds_interpretation__interpretation-002",
+    "dream:horus_lupercal:auto_horus_full_01:watch:frame_0004__grounds_interpretation__interpretation-002",
+    "dream:horus_lupercal:auto_horus_full_01:watch:frame_0001__grounds_interpretation__interpretation-003",
+    "dream:horus_lupercal:auto_horus_full_01:watch:frame_0003__grounds_interpretation__interpretation-003",
+    "dream:horus_lupercal:auto_horus_full_01:watch:identity_temporal_continuity_review__grounds_interpretation__interpretation-003",
+    "dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-001__supports_interpretation__tom-001",
+    "dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-002__supports_interpretation__tom-002",
+    "dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-003__supports_interpretation__tom-003"
+  ],
+  "edge_receipts": [
+    {
+      "collection": "persona_memory_edges",
+      "exact_reread_match": true,
+      "key": "dream_auto_horus_full_01__derived_from__horus_false_gods_b05b_memory_024",
+      "reread_content_sha256": "sha256:a3427f761bca0dc059bd1322117cb8c3961e66a4afe90719af13190f6591c18d",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:a3427f761bca0dc059bd1322117cb8c3961e66a4afe90719af13190f6591c18d"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "exact_reread_match": true,
+      "key": "dream_auto_horus_full_01__derived_from__horus_false_gods_b05f_memory_010",
+      "reread_content_sha256": "sha256:a9a3c0ab8db6a337b06a1590d73c9d6dfdbc3e20736f5a44a904fd2309235b61",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:a9a3c0ab8db6a337b06a1590d73c9d6dfdbc3e20736f5a44a904fd2309235b61"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "exact_reread_match": true,
+      "key": "dream_auto_horus_full_01__derived_from__horus_false_gods_b05f_memory_011",
+      "reread_content_sha256": "sha256:f349408fff81774c6a1589263444dcba4818f8332ec769ed7c963181e96c799e",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:f349408fff81774c6a1589263444dcba4818f8332ec769ed7c963181e96c799e"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "exact_reread_match": true,
+      "key": "dream_auto_horus_full_01__observed_in_scene__frame_0001",
+      "reread_content_sha256": "sha256:eb955449ab48e23f68b4d677c36134116c5b5ab74893d7e6b762c73db18b81d4",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:eb955449ab48e23f68b4d677c36134116c5b5ab74893d7e6b762c73db18b81d4"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "exact_reread_match": true,
+      "key": "dream_auto_horus_full_01__observed_in_scene__frame_0002",
+      "reread_content_sha256": "sha256:fa1dbfb9c41296a26d034263f4ecd96951ee13b9305bfcb5efbd6a2784dfe787",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:fa1dbfb9c41296a26d034263f4ecd96951ee13b9305bfcb5efbd6a2784dfe787"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "exact_reread_match": true,
+      "key": "dream_auto_horus_full_01__observed_in_scene__frame_0003",
+      "reread_content_sha256": "sha256:c9fa77329f1e82fa69457c7e34b8bb28f6a99358e5b2ab2413a44549c8a2cb9f",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:c9fa77329f1e82fa69457c7e34b8bb28f6a99358e5b2ab2413a44549c8a2cb9f"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "exact_reread_match": true,
+      "key": "dream_auto_horus_full_01__observed_in_scene__frame_0004",
+      "reread_content_sha256": "sha256:2419198b24e9e21b99675907a1a7963ac23bd8d4be8f8486c0b120faf52a6035",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:2419198b24e9e21b99675907a1a7963ac23bd8d4be8f8486c0b120faf52a6035"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "exact_reread_match": true,
+      "key": "dream_auto_horus_full_01__observed_in_scene__identity_temporal_continuity_review",
+      "reread_content_sha256": "sha256:b23d013f5ce1f422833576a4101b45f16806b23c85b0eacec396da5d3596bd41",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:b23d013f5ce1f422833576a4101b45f16806b23c85b0eacec396da5d3596bd41"
+    },
+    {
+      "collection": "tom_edges",
+      "exact_reread_match": true,
+      "key": "dream_auto_horus_full_01__supports_interpretation__tom-001",
+      "reread_content_sha256": "sha256:c83b05acd0a782e22631a1913eb67b638378e97afc8a60a998b5747c9c37bdb6",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:c83b05acd0a782e22631a1913eb67b638378e97afc8a60a998b5747c9c37bdb6"
+    },
+    {
+      "collection": "tom_edges",
+      "exact_reread_match": true,
+      "key": "dream_auto_horus_full_01__supports_interpretation__tom-002",
+      "reread_content_sha256": "sha256:15b26ae05b34665756b73007317feaaf1ff79baf87ee38f057bbeec660cab645",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:15b26ae05b34665756b73007317feaaf1ff79baf87ee38f057bbeec660cab645"
+    },
+    {
+      "collection": "tom_edges",
+      "exact_reread_match": true,
+      "key": "dream_auto_horus_full_01__supports_interpretation__tom-003",
+      "reread_content_sha256": "sha256:189b5f525274000a6e5cf379ca740286b84de3aabfeaa8f02563dd3d15ecb306",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:189b5f525274000a6e5cf379ca740286b84de3aabfeaa8f02563dd3d15ecb306"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "exact_reread_match": true,
+      "key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0001__grounds_interpretation__interpretation-001",
+      "reread_content_sha256": "sha256:17deb3113b196ae56b7e87225647d965c5861778ff8ef054640b90610d013a2d",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:17deb3113b196ae56b7e87225647d965c5861778ff8ef054640b90610d013a2d"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "exact_reread_match": true,
+      "key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0002__grounds_interpretation__interpretation-001",
+      "reread_content_sha256": "sha256:8fe2e3889a86365af4050519d924cee90e0373f387c91099fa39830186da1b40",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:8fe2e3889a86365af4050519d924cee90e0373f387c91099fa39830186da1b40"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "exact_reread_match": true,
+      "key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0003__grounds_interpretation__interpretation-001",
+      "reread_content_sha256": "sha256:6911011af40e023f574ba7e7eb4003174a5d079dd6e9ab0290f4823946672fb7",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:6911011af40e023f574ba7e7eb4003174a5d079dd6e9ab0290f4823946672fb7"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "exact_reread_match": true,
+      "key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0004__grounds_interpretation__interpretation-001",
+      "reread_content_sha256": "sha256:e1da150826706ef298e36ad8ae7ef5c56ac3e995cc6005594389c7ef62cb89cf",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:e1da150826706ef298e36ad8ae7ef5c56ac3e995cc6005594389c7ef62cb89cf"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "exact_reread_match": true,
+      "key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0002__grounds_interpretation__interpretation-002",
+      "reread_content_sha256": "sha256:695f81d1e486d5b948598b6ab5e7c43a91e565e1f6d3346eddd98f9437845c6d",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:695f81d1e486d5b948598b6ab5e7c43a91e565e1f6d3346eddd98f9437845c6d"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "exact_reread_match": true,
+      "key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0003__grounds_interpretation__interpretation-002",
+      "reread_content_sha256": "sha256:dae6901e39eb19be0ffca260335c87a49a0e74057e8795c6f2bfd6196bcfc6fc",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:dae6901e39eb19be0ffca260335c87a49a0e74057e8795c6f2bfd6196bcfc6fc"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "exact_reread_match": true,
+      "key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0004__grounds_interpretation__interpretation-002",
+      "reread_content_sha256": "sha256:44ff623b092811a1224d8f8741e5d42790e8494e834469165a6f34f1e56389a0",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:44ff623b092811a1224d8f8741e5d42790e8494e834469165a6f34f1e56389a0"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "exact_reread_match": true,
+      "key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0001__grounds_interpretation__interpretation-003",
+      "reread_content_sha256": "sha256:ae815dbabf184c0818f70cdf6cee3571774ae7fbbbd1d643d3a2c2770a7a4fc3",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:ae815dbabf184c0818f70cdf6cee3571774ae7fbbbd1d643d3a2c2770a7a4fc3"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "exact_reread_match": true,
+      "key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0003__grounds_interpretation__interpretation-003",
+      "reread_content_sha256": "sha256:7079e4f5186ce91697978be6aba553f0e24646fee5b2c71313a1bfc20adffa4a",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:7079e4f5186ce91697978be6aba553f0e24646fee5b2c71313a1bfc20adffa4a"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "exact_reread_match": true,
+      "key": "dream:horus_lupercal:auto_horus_full_01:watch:identity_temporal_continuity_review__grounds_interpretation__interpretation-003",
+      "reread_content_sha256": "sha256:29936ebd22f13b8f8d6500d1975db067a036cdb014f40c78a8b94091c406ef6e",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:29936ebd22f13b8f8d6500d1975db067a036cdb014f40c78a8b94091c406ef6e"
+    },
+    {
+      "collection": "tom_edges",
+      "exact_reread_match": true,
+      "key": "dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-001__supports_interpretation__tom-001",
+      "reread_content_sha256": "sha256:1d54c8d8b48d64d63ebde0f6b3230871ded411f2f81b6323cb4ff308387a5384",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:1d54c8d8b48d64d63ebde0f6b3230871ded411f2f81b6323cb4ff308387a5384"
+    },
+    {
+      "collection": "tom_edges",
+      "exact_reread_match": true,
+      "key": "dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-002__supports_interpretation__tom-002",
+      "reread_content_sha256": "sha256:c3364a588d6f3cc823338a7db1a301fd00e78ce064bc3f1bdb878896a54ad128",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:c3364a588d6f3cc823338a7db1a301fd00e78ce064bc3f1bdb878896a54ad128"
+    },
+    {
+      "collection": "tom_edges",
+      "exact_reread_match": true,
+      "key": "dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-003__supports_interpretation__tom-003",
+      "reread_content_sha256": "sha256:542ed75ebedc330c7bd55615e8497f35c5011c7503387d44cd8eacfaeae2a099",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:542ed75ebedc330c7bd55615e8497f35c5011c7503387d44cd8eacfaeae2a099"
+    }
+  ],
+  "expected_record_count": 36,
+  "final_commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+  "final_write_set_snapshot": [
+    {
+      "collection": "persona_memory",
+      "document": {
+        "_key": "dream_auto_horus_full_01",
+        "accepted_interpretation_ids": [
+          "interpretation-001",
+          "interpretation-002",
+          "interpretation-003"
+        ],
+        "accepted_tom_candidate_ids": [
+          "tom-001",
+          "tom-002",
+          "tom-003"
+        ],
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "created_at": "2026-07-24T13:36:50.828809+00:00",
+        "derivation_depth": 1,
+        "dream_id": "auto_horus_full_01",
+        "evidence_class": "synthetic_dream",
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "kind": "synthetic_dream_memory",
+        "literal_historical_event": false,
+        "observation_packet_sha256": "sha256:b2b3138f55e0a0a7a2f70a5fc47812e31b60b3d840e60c3b12fa4d475b77796b",
+        "persona_id": "horus_lupercal",
+        "provenance": {
+          "evidence_origin": "storyboard_frames",
+          "observation_status": "ACCEPTED_STORYBOARD_OBSERVATION",
+          "source_revision_id": "horus_full_01"
+        },
+        "retrieval_text": "Horus may be positioning himself as the stern center of command over massed human soldiery, with the repeated foreground dominance suggesting an internalized stance of authority and martial control toward the troops behind him. The scale and density of the soldiers behind Horus may tentatively reflect concern about overwhelming numbers or the burden of facing mass rebellion, echoing the memory of perhaps ten thousand rebellious army soldiers. Because identity continuity passed across the visual sequence, the persistent image of Horus before ordered ranks may support a tentative belief-state reading that he sees himself as consistently bound to military hierarchy and disciplined formations.",
+        "revision_id": "horus_full_01",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "run_id": "goal-v3",
+        "source_memory_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "source_video_sha256": "sha256:9784309c71b16cc8a91f0b7cc4d2815f22f8d107d1daf7fcb1dbb78c0973d463",
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "tags": [
+          "persona:horus_lupercal",
+          "synthetic_dream",
+          "persona_dream",
+          "goal_v3_autonomous_cycle"
+        ],
+        "tom_state_types": [
+          "belief",
+          "fear",
+          "stance"
+        ],
+        "visibility_state": "pending"
+      },
+      "key": "dream_auto_horus_full_01",
+      "kind": "dream_node",
+      "payload_sha256": "sha256:a405007fb70bba5f406bae09f65bf9b1475a37607a04865a4ddc9030aae8c027"
+    },
+    {
+      "collection": "tom_candidates",
+      "document": {
+        "_key": "dream:horus_lupercal:auto_horus_full_01:tom:tom-001",
+        "candidate_id": "tom-001",
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "confidence": 0.58,
+        "derivation_depth": 1,
+        "emotional_intensity": 0.62,
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "literal_historical_event": false,
+        "parent_interpretation_id": "interpretation-001",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "schema": "persona_dream.tom_candidate.v1",
+        "source_memory_refs": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010"
+        ],
+        "statement": "Horus appears to adopt a stance of stern authority and martial control toward the massed soldiers behind him.",
+        "subject": "horus_lupercal",
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "target": "unnamed_soldiers",
+        "tom_state_type": "stance",
+        "visibility_state": "pending",
+        "watch_observation_refs": [
+          "frame_0001",
+          "frame_0002",
+          "frame_0003",
+          "frame_0004"
+        ]
+      },
+      "key": "dream:horus_lupercal:auto_horus_full_01:tom:tom-001",
+      "kind": "tom_node",
+      "payload_sha256": "sha256:e0d99fa1ce09bd1b1c47d1b0188b20563358efd923cd0f9a4d5eac14fd0b8927"
+    },
+    {
+      "collection": "tom_candidates",
+      "document": {
+        "_key": "dream:horus_lupercal:auto_horus_full_01:tom:tom-002",
+        "candidate_id": "tom-002",
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "confidence": 0.46,
+        "derivation_depth": 1,
+        "emotional_intensity": 0.55,
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "literal_historical_event": false,
+        "parent_interpretation_id": "interpretation-002",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "schema": "persona_dream.tom_candidate.v1",
+        "source_memory_refs": [
+          "horus_false_gods_b05b_memory_024"
+        ],
+        "statement": "Horus may feel concern or fear toward the sheer number of soldiers, as if their mass evokes the burden of confronting rebellion.",
+        "subject": "horus_lupercal",
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "target": "unnamed_soldiers",
+        "tom_state_type": "fear",
+        "visibility_state": "pending",
+        "watch_observation_refs": [
+          "frame_0002",
+          "frame_0003",
+          "frame_0004"
+        ]
+      },
+      "key": "dream:horus_lupercal:auto_horus_full_01:tom:tom-002",
+      "kind": "tom_node",
+      "payload_sha256": "sha256:e8521fe3e587d0a28b95501dfb2919ffe7d346d96942cb03917bf82bf909d8f9"
+    },
+    {
+      "collection": "tom_candidates",
+      "document": {
+        "_key": "dream:horus_lupercal:auto_horus_full_01:tom:tom-003",
+        "candidate_id": "tom-003",
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "confidence": 0.42,
+        "derivation_depth": 1,
+        "emotional_intensity": 0.4,
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "literal_historical_event": false,
+        "parent_interpretation_id": "interpretation-003",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "schema": "persona_dream.tom_candidate.v1",
+        "source_memory_refs": [
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "statement": "Horus may believe himself to be consistently bound to military hierarchy and disciplined formations represented by the soldiers before and behind him.",
+        "subject": "horus_lupercal",
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "target": "unnamed_soldiers",
+        "tom_state_type": "belief",
+        "visibility_state": "pending",
+        "watch_observation_refs": [
+          "identity_temporal_continuity_review",
+          "frame_0001",
+          "frame_0003"
+        ]
+      },
+      "key": "dream:horus_lupercal:auto_horus_full_01:tom:tom-003",
+      "kind": "tom_node",
+      "payload_sha256": "sha256:35a418ab5d076e0ca046f48ccd2749046b62ee6612667047a20bb51e29a22a26"
+    },
+    {
+      "collection": "persona_dream_interpretations",
+      "document": {
+        "_key": "dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-001",
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "cites_renderer_review": false,
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "confidence": 0.58,
+        "derivation_depth": 1,
+        "dream_id": "auto_horus_full_01",
+        "emotional_intensity": 0.62,
+        "favored_explanation": "psychological",
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "interpretation_id": "interpretation-001",
+        "kind": "persona_dream_interpretation",
+        "literal_historical_event": false,
+        "observation_refs": [
+          "frame_0001",
+          "frame_0002",
+          "frame_0003",
+          "frame_0004"
+        ],
+        "persona_id": "horus_lupercal",
+        "renderer_alternative": "The renderer may simply have produced a standard heroic military composition with a central armored figure and background soldiers, without implying a psychological stance.",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "source_memory_refs": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010"
+        ],
+        "statement": "Horus may be positioning himself as the stern center of command over massed human soldiery, with the repeated foreground dominance suggesting an internalized stance of authority and martial control toward the troops behind him.",
+        "subject": "horus_lupercal",
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "target": "unnamed_soldiers",
+        "tom_state_type": "stance",
+        "uncertainty": "The intended dream is empty, so it is unclear whether the command posture was deliberately specified or emerged from generic martial imagery; the soldiers are unnamed and only visually advisory.",
+        "visibility_state": "pending"
+      },
+      "key": "dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-001",
+      "kind": "interpretation_vertex",
+      "payload_sha256": "sha256:4efa3db8152754220bfd8dd777baaa33fc34003557f8075d710295efa25b7707"
+    },
+    {
+      "collection": "persona_dream_interpretations",
+      "document": {
+        "_key": "dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-002",
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "cites_renderer_review": false,
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "confidence": 0.46,
+        "derivation_depth": 1,
+        "dream_id": "auto_horus_full_01",
+        "emotional_intensity": 0.55,
+        "favored_explanation": "undetermined",
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "interpretation_id": "interpretation-002",
+        "kind": "persona_dream_interpretation",
+        "literal_historical_event": false,
+        "observation_refs": [
+          "frame_0002",
+          "frame_0003",
+          "frame_0004"
+        ],
+        "persona_id": "horus_lupercal",
+        "renderer_alternative": "The large background army may be a literal visual extrapolation from the source memory about many soldiers, not a sign of anxiety or fear.",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "source_memory_refs": [
+          "horus_false_gods_b05b_memory_024"
+        ],
+        "statement": "The scale and density of the soldiers behind Horus may tentatively reflect concern about overwhelming numbers or the burden of facing mass rebellion, echoing the memory of perhaps ten thousand rebellious army soldiers.",
+        "subject": "horus_lupercal",
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "target": "unnamed_soldiers",
+        "tom_state_type": "fear",
+        "uncertainty": "The frames show a large army but do not clearly mark them as enemies, rebels, or threats; Horus\u2019s stern expression could indicate command rather than fear.",
+        "visibility_state": "pending"
+      },
+      "key": "dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-002",
+      "kind": "interpretation_vertex",
+      "payload_sha256": "sha256:155daf0a475bf32b19f05584d98bd1d9f3f9c9bfe8b68b80de34fefd431c6ad3"
+    },
+    {
+      "collection": "persona_dream_interpretations",
+      "document": {
+        "_key": "dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-003",
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "cites_renderer_review": true,
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "confidence": 0.42,
+        "derivation_depth": 1,
+        "dream_id": "auto_horus_full_01",
+        "emotional_intensity": 0.4,
+        "favored_explanation": "undetermined",
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "interpretation_id": "interpretation-003",
+        "kind": "persona_dream_interpretation",
+        "literal_historical_event": false,
+        "observation_refs": [
+          "identity_temporal_continuity_review",
+          "frame_0001",
+          "frame_0003"
+        ],
+        "persona_id": "horus_lupercal",
+        "renderer_alternative": "The continuity pass may only indicate successful face/identity rendering against the reference image, while the soldiers and formation are generic background elements derived from military context.",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "source_memory_refs": [
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "statement": "Because identity continuity passed across the visual sequence, the persistent image of Horus before ordered ranks may support a tentative belief-state reading that he sees himself as consistently bound to military hierarchy and disciplined formations.",
+        "subject": "horus_lupercal",
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "target": "unnamed_soldiers",
+        "tom_state_type": "belief",
+        "uncertainty": "The continuity review only confirms that the foreground identity remained consistent; it does not prove that the stable composition has symbolic intent, and the absence of motion limits temporal interpretation.",
+        "visibility_state": "pending"
+      },
+      "key": "dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-003",
+      "kind": "interpretation_vertex",
+      "payload_sha256": "sha256:7c4824265198c564b8a0b0346c02c9b4045624c19b5b518020544c9df4e7f78b"
+    },
+    {
+      "collection": "persona_dream_watch_evidence",
+      "document": {
+        "_key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0001",
+        "adjudication_receipt_sha256": null,
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "confidence": null,
+        "derivation_depth": 1,
+        "dream_id": "auto_horus_full_01",
+        "evidence_artifacts": [
+          {
+            "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/horus_full_01/frames/sb_001.attempt_01.png",
+            "sha256": "3083b0990168ee7dc9ae1051c47c4d56aabc9275616359ba02c3e05016a7a8b7"
+          }
+        ],
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "kind": "persona_dream_watch_evidence",
+        "observation_id": "frame_0001",
+        "observation_type": "frame",
+        "persona_id": "horus_lupercal",
+        "psychological_interpretation_performed": false,
+        "return_id": "storyboard_9784309c71b16cc8a91f0b7cc4d2815f",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "source_video_sha256": "sha256:9784309c71b16cc8a91f0b7cc4d2815f22f8d107d1daf7fcb1dbb78c0973d463",
+        "statement": "Frame 1 at t=0.0s; windows=identity; entities=['a stern armored man in the foreground', 'rows of helmeted soldiers behind him']",
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "time_range": [
+          0.0,
+          0.0
+        ],
+        "visibility_state": "pending"
+      },
+      "key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0001",
+      "kind": "watch_vertex",
+      "payload_sha256": "sha256:7cc57625251b69a020f2d6e1d1f4d50bf562605d586962d5f0f5a19ae82edabc"
+    },
+    {
+      "collection": "persona_dream_watch_evidence",
+      "document": {
+        "_key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0002",
+        "adjudication_receipt_sha256": null,
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "confidence": null,
+        "derivation_depth": 1,
+        "dream_id": "auto_horus_full_01",
+        "evidence_artifacts": [
+          {
+            "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/horus_full_01/frames/sb_002.attempt_01.png",
+            "sha256": "83e5bd34a254ae0556eac59b8802df724ec109915ad8575a6ead3e728c815300"
+          }
+        ],
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "kind": "persona_dream_watch_evidence",
+        "observation_id": "frame_0002",
+        "observation_type": "frame",
+        "persona_id": "horus_lupercal",
+        "psychological_interpretation_performed": false,
+        "return_id": "storyboard_9784309c71b16cc8a91f0b7cc4d2815f",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "source_video_sha256": "sha256:9784309c71b16cc8a91f0b7cc4d2815f22f8d107d1daf7fcb1dbb78c0973d463",
+        "statement": "Frame 2 at t=2.5s; windows=identity; entities=['a stern armored man in the foreground', 'a massive army of soldiers filling the background']",
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "time_range": [
+          2.5,
+          2.5
+        ],
+        "visibility_state": "pending"
+      },
+      "key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0002",
+      "kind": "watch_vertex",
+      "payload_sha256": "sha256:adc382505f0d4129613aee53fd56b06a7032e8613fa7158ef4aa6fe979d10dca"
+    },
+    {
+      "collection": "persona_dream_watch_evidence",
+      "document": {
+        "_key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0003",
+        "adjudication_receipt_sha256": null,
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "confidence": null,
+        "derivation_depth": 1,
+        "dream_id": "auto_horus_full_01",
+        "evidence_artifacts": [
+          {
+            "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/horus_full_01/frames/sb_003.attempt_01.png",
+            "sha256": "d5a798aae97c513bee917d7f94c39d6277e53f985b71895cc0bb3759254e617f"
+          }
+        ],
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "kind": "persona_dream_watch_evidence",
+        "observation_id": "frame_0003",
+        "observation_type": "frame",
+        "persona_id": "horus_lupercal",
+        "psychological_interpretation_performed": false,
+        "return_id": "storyboard_9784309c71b16cc8a91f0b7cc4d2815f",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "source_video_sha256": "sha256:9784309c71b16cc8a91f0b7cc4d2815f22f8d107d1daf7fcb1dbb78c0973d463",
+        "statement": "Frame 3 at t=5.0s; windows=identity; entities=['an armored man in the foreground looking to the side', 'large formations of soldiers arranged in lines behind him']",
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "time_range": [
+          5.0,
+          5.0
+        ],
+        "visibility_state": "pending"
+      },
+      "key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0003",
+      "kind": "watch_vertex",
+      "payload_sha256": "sha256:5f16d698e5ae0e4ce01ef463ef79ff92fcd6a0ef30abfed07123b6a131b66533"
+    },
+    {
+      "collection": "persona_dream_watch_evidence",
+      "document": {
+        "_key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0004",
+        "adjudication_receipt_sha256": null,
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "confidence": null,
+        "derivation_depth": 1,
+        "dream_id": "auto_horus_full_01",
+        "evidence_artifacts": [
+          {
+            "path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/horus_full_01/frames/sb_004.attempt_01.png",
+            "sha256": "0b1d0372449f530d9008b9c3b031eea26dd4ea1939849f58fb2270bbc1d092ba"
+          }
+        ],
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "kind": "persona_dream_watch_evidence",
+        "observation_id": "frame_0004",
+        "observation_type": "frame",
+        "persona_id": "horus_lupercal",
+        "psychological_interpretation_performed": false,
+        "return_id": "storyboard_9784309c71b16cc8a91f0b7cc4d2815f",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "source_video_sha256": "sha256:9784309c71b16cc8a91f0b7cc4d2815f22f8d107d1daf7fcb1dbb78c0973d463",
+        "statement": "Frame 4 at t=7.5s; windows=identity; entities=['a stern armored man in the foreground', 'helmeted soldiers clustered behind him']",
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "time_range": [
+          7.5,
+          7.5
+        ],
+        "visibility_state": "pending"
+      },
+      "key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0004",
+      "kind": "watch_vertex",
+      "payload_sha256": "sha256:3bd78ec42bf7316af36491c13bc52f95be257504395409ae161ce8a1ab2d3397"
+    },
+    {
+      "collection": "persona_dream_watch_evidence",
+      "document": {
+        "_key": "dream:horus_lupercal:auto_horus_full_01:watch:identity_temporal_continuity_review",
+        "adjudication_receipt_sha256": null,
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "confidence": null,
+        "derivation_depth": 1,
+        "dream_id": "auto_horus_full_01",
+        "evidence_artifacts": [],
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "kind": "persona_dream_watch_evidence",
+        "observation_id": "identity_temporal_continuity_review",
+        "observation_type": "renderer_continuity_review",
+        "persona_id": "horus_lupercal",
+        "psychological_interpretation_performed": false,
+        "return_id": "storyboard_9784309c71b16cc8a91f0b7cc4d2815f",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "source_video_sha256": "sha256:9784309c71b16cc8a91f0b7cc4d2815f22f8d107d1daf7fcb1dbb78c0973d463",
+        "statement": "Identity continuity review over window [0.0, 10.0] (model=insightface:buffalo_l (authority) + gpt-5.5 montage (advisory), verdict=PASS): all 4 frames passed ArcFace vs front.png",
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "time_range": [
+          0.0,
+          10.0
+        ],
+        "visibility_state": "pending"
+      },
+      "key": "dream:horus_lupercal:auto_horus_full_01:watch:identity_temporal_continuity_review",
+      "kind": "watch_vertex",
+      "payload_sha256": "sha256:d33543e98fea94f2ab98d5a2abd4130b7eddaa5a153eca2379008d1041360dbe"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "document": {
+        "_from": "persona_memory/dream_auto_horus_full_01",
+        "_key": "dream_auto_horus_full_01__derived_from__horus_false_gods_b05b_memory_024",
+        "_to": "persona_memory/horus_false_gods_b05b_memory_024",
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "derivation_depth": 1,
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "literal_historical_event": false,
+        "relationship_type": "derived_from",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "visibility_state": "pending"
+      },
+      "key": "dream_auto_horus_full_01__derived_from__horus_false_gods_b05b_memory_024",
+      "kind": "edge",
+      "payload_sha256": "sha256:a3427f761bca0dc059bd1322117cb8c3961e66a4afe90719af13190f6591c18d"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "document": {
+        "_from": "persona_memory/dream_auto_horus_full_01",
+        "_key": "dream_auto_horus_full_01__derived_from__horus_false_gods_b05f_memory_010",
+        "_to": "persona_memory/horus_false_gods_b05f_memory_010",
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "derivation_depth": 1,
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "literal_historical_event": false,
+        "relationship_type": "derived_from",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "visibility_state": "pending"
+      },
+      "key": "dream_auto_horus_full_01__derived_from__horus_false_gods_b05f_memory_010",
+      "kind": "edge",
+      "payload_sha256": "sha256:a9a3c0ab8db6a337b06a1590d73c9d6dfdbc3e20736f5a44a904fd2309235b61"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "document": {
+        "_from": "persona_memory/dream_auto_horus_full_01",
+        "_key": "dream_auto_horus_full_01__derived_from__horus_false_gods_b05f_memory_011",
+        "_to": "persona_memory/horus_false_gods_b05f_memory_011",
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "derivation_depth": 1,
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "literal_historical_event": false,
+        "relationship_type": "derived_from",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "visibility_state": "pending"
+      },
+      "key": "dream_auto_horus_full_01__derived_from__horus_false_gods_b05f_memory_011",
+      "kind": "edge",
+      "payload_sha256": "sha256:f349408fff81774c6a1589263444dcba4818f8332ec769ed7c963181e96c799e"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "document": {
+        "_from": "persona_memory/dream_auto_horus_full_01",
+        "_key": "dream_auto_horus_full_01__observed_in_scene__frame_0001",
+        "_to": "persona_dream_watch_evidence/dream:horus_lupercal:auto_horus_full_01:watch:frame_0001",
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "derivation_depth": 1,
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "relationship_type": "observed_in_scene",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "visibility_state": "pending",
+        "watch_observation_id": "frame_0001"
+      },
+      "key": "dream_auto_horus_full_01__observed_in_scene__frame_0001",
+      "kind": "edge",
+      "payload_sha256": "sha256:eb955449ab48e23f68b4d677c36134116c5b5ab74893d7e6b762c73db18b81d4"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "document": {
+        "_from": "persona_memory/dream_auto_horus_full_01",
+        "_key": "dream_auto_horus_full_01__observed_in_scene__frame_0002",
+        "_to": "persona_dream_watch_evidence/dream:horus_lupercal:auto_horus_full_01:watch:frame_0002",
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "derivation_depth": 1,
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "relationship_type": "observed_in_scene",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "visibility_state": "pending",
+        "watch_observation_id": "frame_0002"
+      },
+      "key": "dream_auto_horus_full_01__observed_in_scene__frame_0002",
+      "kind": "edge",
+      "payload_sha256": "sha256:fa1dbfb9c41296a26d034263f4ecd96951ee13b9305bfcb5efbd6a2784dfe787"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "document": {
+        "_from": "persona_memory/dream_auto_horus_full_01",
+        "_key": "dream_auto_horus_full_01__observed_in_scene__frame_0003",
+        "_to": "persona_dream_watch_evidence/dream:horus_lupercal:auto_horus_full_01:watch:frame_0003",
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "derivation_depth": 1,
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "relationship_type": "observed_in_scene",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "visibility_state": "pending",
+        "watch_observation_id": "frame_0003"
+      },
+      "key": "dream_auto_horus_full_01__observed_in_scene__frame_0003",
+      "kind": "edge",
+      "payload_sha256": "sha256:c9fa77329f1e82fa69457c7e34b8bb28f6a99358e5b2ab2413a44549c8a2cb9f"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "document": {
+        "_from": "persona_memory/dream_auto_horus_full_01",
+        "_key": "dream_auto_horus_full_01__observed_in_scene__frame_0004",
+        "_to": "persona_dream_watch_evidence/dream:horus_lupercal:auto_horus_full_01:watch:frame_0004",
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "derivation_depth": 1,
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "relationship_type": "observed_in_scene",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "visibility_state": "pending",
+        "watch_observation_id": "frame_0004"
+      },
+      "key": "dream_auto_horus_full_01__observed_in_scene__frame_0004",
+      "kind": "edge",
+      "payload_sha256": "sha256:2419198b24e9e21b99675907a1a7963ac23bd8d4be8f8486c0b120faf52a6035"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "document": {
+        "_from": "persona_memory/dream_auto_horus_full_01",
+        "_key": "dream_auto_horus_full_01__observed_in_scene__identity_temporal_continuity_review",
+        "_to": "persona_dream_watch_evidence/dream:horus_lupercal:auto_horus_full_01:watch:identity_temporal_continuity_review",
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "derivation_depth": 1,
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "relationship_type": "observed_in_scene",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "visibility_state": "pending",
+        "watch_observation_id": "identity_temporal_continuity_review"
+      },
+      "key": "dream_auto_horus_full_01__observed_in_scene__identity_temporal_continuity_review",
+      "kind": "edge",
+      "payload_sha256": "sha256:b23d013f5ce1f422833576a4101b45f16806b23c85b0eacec396da5d3596bd41"
+    },
+    {
+      "collection": "tom_edges",
+      "document": {
+        "_from": "persona_memory/dream_auto_horus_full_01",
+        "_key": "dream_auto_horus_full_01__supports_interpretation__tom-001",
+        "_to": "tom_candidates/dream:horus_lupercal:auto_horus_full_01:tom:tom-001",
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "confidence": 0.58,
+        "derivation_depth": 1,
+        "emotional_intensity": 0.62,
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "literal_historical_event": false,
+        "relationship_type": "supports_interpretation",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "tom_state_type": "stance",
+        "visibility_state": "pending"
+      },
+      "key": "dream_auto_horus_full_01__supports_interpretation__tom-001",
+      "kind": "edge",
+      "payload_sha256": "sha256:c83b05acd0a782e22631a1913eb67b638378e97afc8a60a998b5747c9c37bdb6"
+    },
+    {
+      "collection": "tom_edges",
+      "document": {
+        "_from": "persona_memory/dream_auto_horus_full_01",
+        "_key": "dream_auto_horus_full_01__supports_interpretation__tom-002",
+        "_to": "tom_candidates/dream:horus_lupercal:auto_horus_full_01:tom:tom-002",
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "confidence": 0.46,
+        "derivation_depth": 1,
+        "emotional_intensity": 0.55,
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "literal_historical_event": false,
+        "relationship_type": "supports_interpretation",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "tom_state_type": "fear",
+        "visibility_state": "pending"
+      },
+      "key": "dream_auto_horus_full_01__supports_interpretation__tom-002",
+      "kind": "edge",
+      "payload_sha256": "sha256:15b26ae05b34665756b73007317feaaf1ff79baf87ee38f057bbeec660cab645"
+    },
+    {
+      "collection": "tom_edges",
+      "document": {
+        "_from": "persona_memory/dream_auto_horus_full_01",
+        "_key": "dream_auto_horus_full_01__supports_interpretation__tom-003",
+        "_to": "tom_candidates/dream:horus_lupercal:auto_horus_full_01:tom:tom-003",
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "confidence": 0.42,
+        "derivation_depth": 1,
+        "emotional_intensity": 0.4,
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "literal_historical_event": false,
+        "relationship_type": "supports_interpretation",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "tom_state_type": "belief",
+        "visibility_state": "pending"
+      },
+      "key": "dream_auto_horus_full_01__supports_interpretation__tom-003",
+      "kind": "edge",
+      "payload_sha256": "sha256:189b5f525274000a6e5cf379ca740286b84de3aabfeaa8f02563dd3d15ecb306"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "document": {
+        "_from": "persona_dream_watch_evidence/dream:horus_lupercal:auto_horus_full_01:watch:frame_0001",
+        "_key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0001__grounds_interpretation__interpretation-001",
+        "_to": "persona_dream_interpretations/dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-001",
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "derivation_depth": 1,
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "interpretation_id": "interpretation-001",
+        "relationship_type": "grounds_interpretation",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "visibility_state": "pending",
+        "watch_observation_id": "frame_0001"
+      },
+      "key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0001__grounds_interpretation__interpretation-001",
+      "kind": "edge",
+      "payload_sha256": "sha256:17deb3113b196ae56b7e87225647d965c5861778ff8ef054640b90610d013a2d"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "document": {
+        "_from": "persona_dream_watch_evidence/dream:horus_lupercal:auto_horus_full_01:watch:frame_0002",
+        "_key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0002__grounds_interpretation__interpretation-001",
+        "_to": "persona_dream_interpretations/dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-001",
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "derivation_depth": 1,
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "interpretation_id": "interpretation-001",
+        "relationship_type": "grounds_interpretation",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "visibility_state": "pending",
+        "watch_observation_id": "frame_0002"
+      },
+      "key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0002__grounds_interpretation__interpretation-001",
+      "kind": "edge",
+      "payload_sha256": "sha256:8fe2e3889a86365af4050519d924cee90e0373f387c91099fa39830186da1b40"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "document": {
+        "_from": "persona_dream_watch_evidence/dream:horus_lupercal:auto_horus_full_01:watch:frame_0003",
+        "_key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0003__grounds_interpretation__interpretation-001",
+        "_to": "persona_dream_interpretations/dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-001",
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "derivation_depth": 1,
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "interpretation_id": "interpretation-001",
+        "relationship_type": "grounds_interpretation",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "visibility_state": "pending",
+        "watch_observation_id": "frame_0003"
+      },
+      "key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0003__grounds_interpretation__interpretation-001",
+      "kind": "edge",
+      "payload_sha256": "sha256:6911011af40e023f574ba7e7eb4003174a5d079dd6e9ab0290f4823946672fb7"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "document": {
+        "_from": "persona_dream_watch_evidence/dream:horus_lupercal:auto_horus_full_01:watch:frame_0004",
+        "_key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0004__grounds_interpretation__interpretation-001",
+        "_to": "persona_dream_interpretations/dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-001",
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "derivation_depth": 1,
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "interpretation_id": "interpretation-001",
+        "relationship_type": "grounds_interpretation",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "visibility_state": "pending",
+        "watch_observation_id": "frame_0004"
+      },
+      "key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0004__grounds_interpretation__interpretation-001",
+      "kind": "edge",
+      "payload_sha256": "sha256:e1da150826706ef298e36ad8ae7ef5c56ac3e995cc6005594389c7ef62cb89cf"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "document": {
+        "_from": "persona_dream_watch_evidence/dream:horus_lupercal:auto_horus_full_01:watch:frame_0002",
+        "_key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0002__grounds_interpretation__interpretation-002",
+        "_to": "persona_dream_interpretations/dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-002",
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "derivation_depth": 1,
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "interpretation_id": "interpretation-002",
+        "relationship_type": "grounds_interpretation",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "visibility_state": "pending",
+        "watch_observation_id": "frame_0002"
+      },
+      "key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0002__grounds_interpretation__interpretation-002",
+      "kind": "edge",
+      "payload_sha256": "sha256:695f81d1e486d5b948598b6ab5e7c43a91e565e1f6d3346eddd98f9437845c6d"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "document": {
+        "_from": "persona_dream_watch_evidence/dream:horus_lupercal:auto_horus_full_01:watch:frame_0003",
+        "_key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0003__grounds_interpretation__interpretation-002",
+        "_to": "persona_dream_interpretations/dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-002",
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "derivation_depth": 1,
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "interpretation_id": "interpretation-002",
+        "relationship_type": "grounds_interpretation",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "visibility_state": "pending",
+        "watch_observation_id": "frame_0003"
+      },
+      "key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0003__grounds_interpretation__interpretation-002",
+      "kind": "edge",
+      "payload_sha256": "sha256:dae6901e39eb19be0ffca260335c87a49a0e74057e8795c6f2bfd6196bcfc6fc"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "document": {
+        "_from": "persona_dream_watch_evidence/dream:horus_lupercal:auto_horus_full_01:watch:frame_0004",
+        "_key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0004__grounds_interpretation__interpretation-002",
+        "_to": "persona_dream_interpretations/dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-002",
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "derivation_depth": 1,
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "interpretation_id": "interpretation-002",
+        "relationship_type": "grounds_interpretation",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "visibility_state": "pending",
+        "watch_observation_id": "frame_0004"
+      },
+      "key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0004__grounds_interpretation__interpretation-002",
+      "kind": "edge",
+      "payload_sha256": "sha256:44ff623b092811a1224d8f8741e5d42790e8494e834469165a6f34f1e56389a0"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "document": {
+        "_from": "persona_dream_watch_evidence/dream:horus_lupercal:auto_horus_full_01:watch:frame_0001",
+        "_key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0001__grounds_interpretation__interpretation-003",
+        "_to": "persona_dream_interpretations/dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-003",
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "derivation_depth": 1,
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "interpretation_id": "interpretation-003",
+        "relationship_type": "grounds_interpretation",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "visibility_state": "pending",
+        "watch_observation_id": "frame_0001"
+      },
+      "key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0001__grounds_interpretation__interpretation-003",
+      "kind": "edge",
+      "payload_sha256": "sha256:ae815dbabf184c0818f70cdf6cee3571774ae7fbbbd1d643d3a2c2770a7a4fc3"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "document": {
+        "_from": "persona_dream_watch_evidence/dream:horus_lupercal:auto_horus_full_01:watch:frame_0003",
+        "_key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0003__grounds_interpretation__interpretation-003",
+        "_to": "persona_dream_interpretations/dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-003",
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "derivation_depth": 1,
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "interpretation_id": "interpretation-003",
+        "relationship_type": "grounds_interpretation",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "visibility_state": "pending",
+        "watch_observation_id": "frame_0003"
+      },
+      "key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0003__grounds_interpretation__interpretation-003",
+      "kind": "edge",
+      "payload_sha256": "sha256:7079e4f5186ce91697978be6aba553f0e24646fee5b2c71313a1bfc20adffa4a"
+    },
+    {
+      "collection": "persona_memory_edges",
+      "document": {
+        "_from": "persona_dream_watch_evidence/dream:horus_lupercal:auto_horus_full_01:watch:identity_temporal_continuity_review",
+        "_key": "dream:horus_lupercal:auto_horus_full_01:watch:identity_temporal_continuity_review__grounds_interpretation__interpretation-003",
+        "_to": "persona_dream_interpretations/dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-003",
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "derivation_depth": 1,
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "interpretation_id": "interpretation-003",
+        "relationship_type": "grounds_interpretation",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "visibility_state": "pending",
+        "watch_observation_id": "identity_temporal_continuity_review"
+      },
+      "key": "dream:horus_lupercal:auto_horus_full_01:watch:identity_temporal_continuity_review__grounds_interpretation__interpretation-003",
+      "kind": "edge",
+      "payload_sha256": "sha256:29936ebd22f13b8f8d6500d1975db067a036cdb014f40c78a8b94091c406ef6e"
+    },
+    {
+      "collection": "tom_edges",
+      "document": {
+        "_from": "persona_dream_interpretations/dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-001",
+        "_key": "dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-001__supports_interpretation__tom-001",
+        "_to": "tom_candidates/dream:horus_lupercal:auto_horus_full_01:tom:tom-001",
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "confidence": 0.58,
+        "derivation_depth": 1,
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "interpretation_id": "interpretation-001",
+        "literal_historical_event": false,
+        "relationship_type": "supports_interpretation",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "tom_candidate_id": "tom-001",
+        "tom_state_type": "stance",
+        "visibility_state": "pending"
+      },
+      "key": "dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-001__supports_interpretation__tom-001",
+      "kind": "edge",
+      "payload_sha256": "sha256:1d54c8d8b48d64d63ebde0f6b3230871ded411f2f81b6323cb4ff308387a5384"
+    },
+    {
+      "collection": "tom_edges",
+      "document": {
+        "_from": "persona_dream_interpretations/dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-002",
+        "_key": "dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-002__supports_interpretation__tom-002",
+        "_to": "tom_candidates/dream:horus_lupercal:auto_horus_full_01:tom:tom-002",
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "confidence": 0.46,
+        "derivation_depth": 1,
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "interpretation_id": "interpretation-002",
+        "literal_historical_event": false,
+        "relationship_type": "supports_interpretation",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "tom_candidate_id": "tom-002",
+        "tom_state_type": "fear",
+        "visibility_state": "pending"
+      },
+      "key": "dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-002__supports_interpretation__tom-002",
+      "kind": "edge",
+      "payload_sha256": "sha256:c3364a588d6f3cc823338a7db1a301fd00e78ce064bc3f1bdb878896a54ad128"
+    },
+    {
+      "collection": "tom_edges",
+      "document": {
+        "_from": "persona_dream_interpretations/dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-003",
+        "_key": "dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-003__supports_interpretation__tom-003",
+        "_to": "tom_candidates/dream:horus_lupercal:auto_horus_full_01:tom:tom-003",
+        "causal_family_id": "cf_c62cfebea128b1b1",
+        "commit_id": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+        "confidence": 0.42,
+        "derivation_depth": 1,
+        "goal_v3_cycle": "horus_full_01",
+        "independent_evidence_count": 3,
+        "interpretation_id": "interpretation-003",
+        "literal_historical_event": false,
+        "relationship_type": "supports_interpretation",
+        "root_event_ids": [
+          "horus_false_gods_b05b_memory_024",
+          "horus_false_gods_b05f_memory_010",
+          "horus_false_gods_b05f_memory_011"
+        ],
+        "synthetic_depth": 1,
+        "synthetic_origin": true,
+        "tom_candidate_id": "tom-003",
+        "tom_state_type": "belief",
+        "visibility_state": "pending"
+      },
+      "key": "dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-003__supports_interpretation__tom-003",
+      "kind": "edge",
+      "payload_sha256": "sha256:542ed75ebedc330c7bd55615e8497f35c5011c7503387d44cd8eacfaeae2a099"
+    }
+  ],
+  "idempotency_key": "5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+  "interpretation_vertex_keys": [
+    "dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-001",
+    "dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-002",
+    "dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-003"
+  ],
+  "interpretation_vertex_receipts": [
+    {
+      "collection": "persona_dream_interpretations",
+      "exact_reread_match": true,
+      "key": "dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-001",
+      "reread_content_sha256": "sha256:4efa3db8152754220bfd8dd777baaa33fc34003557f8075d710295efa25b7707",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:4efa3db8152754220bfd8dd777baaa33fc34003557f8075d710295efa25b7707"
+    },
+    {
+      "collection": "persona_dream_interpretations",
+      "exact_reread_match": true,
+      "key": "dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-002",
+      "reread_content_sha256": "sha256:155daf0a475bf32b19f05584d98bd1d9f3f9c9bfe8b68b80de34fefd431c6ad3",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:155daf0a475bf32b19f05584d98bd1d9f3f9c9bfe8b68b80de34fefd431c6ad3"
+    },
+    {
+      "collection": "persona_dream_interpretations",
+      "exact_reread_match": true,
+      "key": "dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-003",
+      "reread_content_sha256": "sha256:7c4824265198c564b8a0b0346c02c9b4045624c19b5b518020544c9df4e7f78b",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:7c4824265198c564b8a0b0346c02c9b4045624c19b5b518020544c9df4e7f78b"
+    }
+  ],
+  "node_keys": [
+    "dream_auto_horus_full_01",
+    "dream:horus_lupercal:auto_horus_full_01:tom:tom-001",
+    "dream:horus_lupercal:auto_horus_full_01:tom:tom-002",
+    "dream:horus_lupercal:auto_horus_full_01:tom:tom-003"
+  ],
+  "node_receipts": [
+    {
+      "collection": "persona_memory",
+      "exact_reread_match": true,
+      "key": "dream_auto_horus_full_01",
+      "reread_content_sha256": "sha256:a405007fb70bba5f406bae09f65bf9b1475a37607a04865a4ddc9030aae8c027",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:a405007fb70bba5f406bae09f65bf9b1475a37607a04865a4ddc9030aae8c027"
+    },
+    {
+      "collection": "tom_candidates",
+      "exact_reread_match": true,
+      "key": "dream:horus_lupercal:auto_horus_full_01:tom:tom-001",
+      "reread_content_sha256": "sha256:e0d99fa1ce09bd1b1c47d1b0188b20563358efd923cd0f9a4d5eac14fd0b8927",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:e0d99fa1ce09bd1b1c47d1b0188b20563358efd923cd0f9a4d5eac14fd0b8927"
+    },
+    {
+      "collection": "tom_candidates",
+      "exact_reread_match": true,
+      "key": "dream:horus_lupercal:auto_horus_full_01:tom:tom-002",
+      "reread_content_sha256": "sha256:e8521fe3e587d0a28b95501dfb2919ffe7d346d96942cb03917bf82bf909d8f9",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:e8521fe3e587d0a28b95501dfb2919ffe7d346d96942cb03917bf82bf909d8f9"
+    },
+    {
+      "collection": "tom_candidates",
+      "exact_reread_match": true,
+      "key": "dream:horus_lupercal:auto_horus_full_01:tom:tom-003",
+      "reread_content_sha256": "sha256:35a418ab5d076e0ca046f48ccd2749046b62ee6612667047a20bb51e29a22a26",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:35a418ab5d076e0ca046f48ccd2749046b62ee6612667047a20bb51e29a22a26"
+    }
+  ],
+  "publish_all_exact_reread_match": true,
+  "quarantine": null,
+  "records_written": 36,
+  "resumed_from_prior_commit": false,
+  "staging_all_exact_reread_match": true,
+  "staging_proof": {
+    "all_exact_reread_match": true,
+    "collection": "persona_dream_canonical_staging",
+    "expected_count": 36,
+    "quarantined": false,
+    "receipts": [
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:a405007fb70bba5f406bae09f65bf9b1475a37607a04865a4ddc9030aae8c027",
+        "record_kind": "dream_node",
+        "reread_payload_sha256": "sha256:a405007fb70bba5f406bae09f65bf9b1475a37607a04865a4ddc9030aae8c027",
+        "staging_key": "stg_5d402a8d8f12d442_d02be2b0ad9da79ec40b9d9d",
+        "target_collection": "persona_memory",
+        "target_key": "dream_auto_horus_full_01"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:e0d99fa1ce09bd1b1c47d1b0188b20563358efd923cd0f9a4d5eac14fd0b8927",
+        "record_kind": "tom_node",
+        "reread_payload_sha256": "sha256:e0d99fa1ce09bd1b1c47d1b0188b20563358efd923cd0f9a4d5eac14fd0b8927",
+        "staging_key": "stg_5d402a8d8f12d442_a040b03c5d0d34abcad19303",
+        "target_collection": "tom_candidates",
+        "target_key": "dream:horus_lupercal:auto_horus_full_01:tom:tom-001"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:e8521fe3e587d0a28b95501dfb2919ffe7d346d96942cb03917bf82bf909d8f9",
+        "record_kind": "tom_node",
+        "reread_payload_sha256": "sha256:e8521fe3e587d0a28b95501dfb2919ffe7d346d96942cb03917bf82bf909d8f9",
+        "staging_key": "stg_5d402a8d8f12d442_3b2b8ea74f279892447856f5",
+        "target_collection": "tom_candidates",
+        "target_key": "dream:horus_lupercal:auto_horus_full_01:tom:tom-002"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:35a418ab5d076e0ca046f48ccd2749046b62ee6612667047a20bb51e29a22a26",
+        "record_kind": "tom_node",
+        "reread_payload_sha256": "sha256:35a418ab5d076e0ca046f48ccd2749046b62ee6612667047a20bb51e29a22a26",
+        "staging_key": "stg_5d402a8d8f12d442_f5ddab20b9410c5f95b7f93b",
+        "target_collection": "tom_candidates",
+        "target_key": "dream:horus_lupercal:auto_horus_full_01:tom:tom-003"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:4efa3db8152754220bfd8dd777baaa33fc34003557f8075d710295efa25b7707",
+        "record_kind": "interpretation_vertex",
+        "reread_payload_sha256": "sha256:4efa3db8152754220bfd8dd777baaa33fc34003557f8075d710295efa25b7707",
+        "staging_key": "stg_5d402a8d8f12d442_374feb29785bdada4f698d7a",
+        "target_collection": "persona_dream_interpretations",
+        "target_key": "dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-001"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:155daf0a475bf32b19f05584d98bd1d9f3f9c9bfe8b68b80de34fefd431c6ad3",
+        "record_kind": "interpretation_vertex",
+        "reread_payload_sha256": "sha256:155daf0a475bf32b19f05584d98bd1d9f3f9c9bfe8b68b80de34fefd431c6ad3",
+        "staging_key": "stg_5d402a8d8f12d442_9fc7429b742b272bc9dc0ccd",
+        "target_collection": "persona_dream_interpretations",
+        "target_key": "dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-002"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:7c4824265198c564b8a0b0346c02c9b4045624c19b5b518020544c9df4e7f78b",
+        "record_kind": "interpretation_vertex",
+        "reread_payload_sha256": "sha256:7c4824265198c564b8a0b0346c02c9b4045624c19b5b518020544c9df4e7f78b",
+        "staging_key": "stg_5d402a8d8f12d442_413bf6083ae9425f87d0ea44",
+        "target_collection": "persona_dream_interpretations",
+        "target_key": "dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-003"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:7cc57625251b69a020f2d6e1d1f4d50bf562605d586962d5f0f5a19ae82edabc",
+        "record_kind": "watch_vertex",
+        "reread_payload_sha256": "sha256:7cc57625251b69a020f2d6e1d1f4d50bf562605d586962d5f0f5a19ae82edabc",
+        "staging_key": "stg_5d402a8d8f12d442_a1e0eb08d3a256259137210a",
+        "target_collection": "persona_dream_watch_evidence",
+        "target_key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0001"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:adc382505f0d4129613aee53fd56b06a7032e8613fa7158ef4aa6fe979d10dca",
+        "record_kind": "watch_vertex",
+        "reread_payload_sha256": "sha256:adc382505f0d4129613aee53fd56b06a7032e8613fa7158ef4aa6fe979d10dca",
+        "staging_key": "stg_5d402a8d8f12d442_7122f81c4cfa6f7f25de076c",
+        "target_collection": "persona_dream_watch_evidence",
+        "target_key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0002"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:5f16d698e5ae0e4ce01ef463ef79ff92fcd6a0ef30abfed07123b6a131b66533",
+        "record_kind": "watch_vertex",
+        "reread_payload_sha256": "sha256:5f16d698e5ae0e4ce01ef463ef79ff92fcd6a0ef30abfed07123b6a131b66533",
+        "staging_key": "stg_5d402a8d8f12d442_7501a786e448dea13be83edd",
+        "target_collection": "persona_dream_watch_evidence",
+        "target_key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0003"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:3bd78ec42bf7316af36491c13bc52f95be257504395409ae161ce8a1ab2d3397",
+        "record_kind": "watch_vertex",
+        "reread_payload_sha256": "sha256:3bd78ec42bf7316af36491c13bc52f95be257504395409ae161ce8a1ab2d3397",
+        "staging_key": "stg_5d402a8d8f12d442_b8f7d81e78fc2dc1f0123b1c",
+        "target_collection": "persona_dream_watch_evidence",
+        "target_key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0004"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:d33543e98fea94f2ab98d5a2abd4130b7eddaa5a153eca2379008d1041360dbe",
+        "record_kind": "watch_vertex",
+        "reread_payload_sha256": "sha256:d33543e98fea94f2ab98d5a2abd4130b7eddaa5a153eca2379008d1041360dbe",
+        "staging_key": "stg_5d402a8d8f12d442_95aad56a211343c8b38817ab",
+        "target_collection": "persona_dream_watch_evidence",
+        "target_key": "dream:horus_lupercal:auto_horus_full_01:watch:identity_temporal_continuity_review"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:a3427f761bca0dc059bd1322117cb8c3961e66a4afe90719af13190f6591c18d",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:a3427f761bca0dc059bd1322117cb8c3961e66a4afe90719af13190f6591c18d",
+        "staging_key": "stg_5d402a8d8f12d442_fec25627a975ff3c627025e8",
+        "target_collection": "persona_memory_edges",
+        "target_key": "dream_auto_horus_full_01__derived_from__horus_false_gods_b05b_memory_024"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:a9a3c0ab8db6a337b06a1590d73c9d6dfdbc3e20736f5a44a904fd2309235b61",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:a9a3c0ab8db6a337b06a1590d73c9d6dfdbc3e20736f5a44a904fd2309235b61",
+        "staging_key": "stg_5d402a8d8f12d442_aeb33bdf2f8d3706e0431e0b",
+        "target_collection": "persona_memory_edges",
+        "target_key": "dream_auto_horus_full_01__derived_from__horus_false_gods_b05f_memory_010"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:f349408fff81774c6a1589263444dcba4818f8332ec769ed7c963181e96c799e",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:f349408fff81774c6a1589263444dcba4818f8332ec769ed7c963181e96c799e",
+        "staging_key": "stg_5d402a8d8f12d442_5d529fed0333658e11a6a7b4",
+        "target_collection": "persona_memory_edges",
+        "target_key": "dream_auto_horus_full_01__derived_from__horus_false_gods_b05f_memory_011"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:eb955449ab48e23f68b4d677c36134116c5b5ab74893d7e6b762c73db18b81d4",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:eb955449ab48e23f68b4d677c36134116c5b5ab74893d7e6b762c73db18b81d4",
+        "staging_key": "stg_5d402a8d8f12d442_917dad4d33cc01e3d8e4f620",
+        "target_collection": "persona_memory_edges",
+        "target_key": "dream_auto_horus_full_01__observed_in_scene__frame_0001"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:fa1dbfb9c41296a26d034263f4ecd96951ee13b9305bfcb5efbd6a2784dfe787",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:fa1dbfb9c41296a26d034263f4ecd96951ee13b9305bfcb5efbd6a2784dfe787",
+        "staging_key": "stg_5d402a8d8f12d442_1bc522685080f5e9049c0763",
+        "target_collection": "persona_memory_edges",
+        "target_key": "dream_auto_horus_full_01__observed_in_scene__frame_0002"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:c9fa77329f1e82fa69457c7e34b8bb28f6a99358e5b2ab2413a44549c8a2cb9f",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:c9fa77329f1e82fa69457c7e34b8bb28f6a99358e5b2ab2413a44549c8a2cb9f",
+        "staging_key": "stg_5d402a8d8f12d442_41b03cb5fce12f9f86e78666",
+        "target_collection": "persona_memory_edges",
+        "target_key": "dream_auto_horus_full_01__observed_in_scene__frame_0003"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:2419198b24e9e21b99675907a1a7963ac23bd8d4be8f8486c0b120faf52a6035",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:2419198b24e9e21b99675907a1a7963ac23bd8d4be8f8486c0b120faf52a6035",
+        "staging_key": "stg_5d402a8d8f12d442_e7ade976c23adb46bbc0e871",
+        "target_collection": "persona_memory_edges",
+        "target_key": "dream_auto_horus_full_01__observed_in_scene__frame_0004"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:b23d013f5ce1f422833576a4101b45f16806b23c85b0eacec396da5d3596bd41",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:b23d013f5ce1f422833576a4101b45f16806b23c85b0eacec396da5d3596bd41",
+        "staging_key": "stg_5d402a8d8f12d442_488bbbf6588c64f87823fe85",
+        "target_collection": "persona_memory_edges",
+        "target_key": "dream_auto_horus_full_01__observed_in_scene__identity_temporal_continuity_review"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:c83b05acd0a782e22631a1913eb67b638378e97afc8a60a998b5747c9c37bdb6",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:c83b05acd0a782e22631a1913eb67b638378e97afc8a60a998b5747c9c37bdb6",
+        "staging_key": "stg_5d402a8d8f12d442_091c82fdbda5dbe3f37dd15c",
+        "target_collection": "tom_edges",
+        "target_key": "dream_auto_horus_full_01__supports_interpretation__tom-001"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:15b26ae05b34665756b73007317feaaf1ff79baf87ee38f057bbeec660cab645",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:15b26ae05b34665756b73007317feaaf1ff79baf87ee38f057bbeec660cab645",
+        "staging_key": "stg_5d402a8d8f12d442_2df07bb459ef9fbbcc94375b",
+        "target_collection": "tom_edges",
+        "target_key": "dream_auto_horus_full_01__supports_interpretation__tom-002"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:189b5f525274000a6e5cf379ca740286b84de3aabfeaa8f02563dd3d15ecb306",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:189b5f525274000a6e5cf379ca740286b84de3aabfeaa8f02563dd3d15ecb306",
+        "staging_key": "stg_5d402a8d8f12d442_53f9a249f6d330f6b5644b44",
+        "target_collection": "tom_edges",
+        "target_key": "dream_auto_horus_full_01__supports_interpretation__tom-003"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:17deb3113b196ae56b7e87225647d965c5861778ff8ef054640b90610d013a2d",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:17deb3113b196ae56b7e87225647d965c5861778ff8ef054640b90610d013a2d",
+        "staging_key": "stg_5d402a8d8f12d442_a51e56d1153352a73206b99a",
+        "target_collection": "persona_memory_edges",
+        "target_key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0001__grounds_interpretation__interpretation-001"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:8fe2e3889a86365af4050519d924cee90e0373f387c91099fa39830186da1b40",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:8fe2e3889a86365af4050519d924cee90e0373f387c91099fa39830186da1b40",
+        "staging_key": "stg_5d402a8d8f12d442_a49b70cdd4c07a61bd6ba6b0",
+        "target_collection": "persona_memory_edges",
+        "target_key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0002__grounds_interpretation__interpretation-001"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:6911011af40e023f574ba7e7eb4003174a5d079dd6e9ab0290f4823946672fb7",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:6911011af40e023f574ba7e7eb4003174a5d079dd6e9ab0290f4823946672fb7",
+        "staging_key": "stg_5d402a8d8f12d442_bdc610d2c3ac5fab9c43dcaf",
+        "target_collection": "persona_memory_edges",
+        "target_key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0003__grounds_interpretation__interpretation-001"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:e1da150826706ef298e36ad8ae7ef5c56ac3e995cc6005594389c7ef62cb89cf",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:e1da150826706ef298e36ad8ae7ef5c56ac3e995cc6005594389c7ef62cb89cf",
+        "staging_key": "stg_5d402a8d8f12d442_2a52a5782fdf18efe0d9bec1",
+        "target_collection": "persona_memory_edges",
+        "target_key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0004__grounds_interpretation__interpretation-001"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:695f81d1e486d5b948598b6ab5e7c43a91e565e1f6d3346eddd98f9437845c6d",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:695f81d1e486d5b948598b6ab5e7c43a91e565e1f6d3346eddd98f9437845c6d",
+        "staging_key": "stg_5d402a8d8f12d442_6321025878d588d0051e7db3",
+        "target_collection": "persona_memory_edges",
+        "target_key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0002__grounds_interpretation__interpretation-002"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:dae6901e39eb19be0ffca260335c87a49a0e74057e8795c6f2bfd6196bcfc6fc",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:dae6901e39eb19be0ffca260335c87a49a0e74057e8795c6f2bfd6196bcfc6fc",
+        "staging_key": "stg_5d402a8d8f12d442_855d37ae64f5d6f2e7d3f35d",
+        "target_collection": "persona_memory_edges",
+        "target_key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0003__grounds_interpretation__interpretation-002"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:44ff623b092811a1224d8f8741e5d42790e8494e834469165a6f34f1e56389a0",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:44ff623b092811a1224d8f8741e5d42790e8494e834469165a6f34f1e56389a0",
+        "staging_key": "stg_5d402a8d8f12d442_45dc07bc23e94ee82e0fae80",
+        "target_collection": "persona_memory_edges",
+        "target_key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0004__grounds_interpretation__interpretation-002"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:ae815dbabf184c0818f70cdf6cee3571774ae7fbbbd1d643d3a2c2770a7a4fc3",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:ae815dbabf184c0818f70cdf6cee3571774ae7fbbbd1d643d3a2c2770a7a4fc3",
+        "staging_key": "stg_5d402a8d8f12d442_118be89546e6d1cb517404d3",
+        "target_collection": "persona_memory_edges",
+        "target_key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0001__grounds_interpretation__interpretation-003"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:7079e4f5186ce91697978be6aba553f0e24646fee5b2c71313a1bfc20adffa4a",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:7079e4f5186ce91697978be6aba553f0e24646fee5b2c71313a1bfc20adffa4a",
+        "staging_key": "stg_5d402a8d8f12d442_d14716ac9dbc29f8e4ec74f3",
+        "target_collection": "persona_memory_edges",
+        "target_key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0003__grounds_interpretation__interpretation-003"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:29936ebd22f13b8f8d6500d1975db067a036cdb014f40c78a8b94091c406ef6e",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:29936ebd22f13b8f8d6500d1975db067a036cdb014f40c78a8b94091c406ef6e",
+        "staging_key": "stg_5d402a8d8f12d442_a49b5f09abe9c48d0e91cbf6",
+        "target_collection": "persona_memory_edges",
+        "target_key": "dream:horus_lupercal:auto_horus_full_01:watch:identity_temporal_continuity_review__grounds_interpretation__interpretation-003"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:1d54c8d8b48d64d63ebde0f6b3230871ded411f2f81b6323cb4ff308387a5384",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:1d54c8d8b48d64d63ebde0f6b3230871ded411f2f81b6323cb4ff308387a5384",
+        "staging_key": "stg_5d402a8d8f12d442_0f88c9d65739a3e9ac75e4f0",
+        "target_collection": "tom_edges",
+        "target_key": "dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-001__supports_interpretation__tom-001"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:c3364a588d6f3cc823338a7db1a301fd00e78ce064bc3f1bdb878896a54ad128",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:c3364a588d6f3cc823338a7db1a301fd00e78ce064bc3f1bdb878896a54ad128",
+        "staging_key": "stg_5d402a8d8f12d442_4fe7afbe526887ba0ecf4d2b",
+        "target_collection": "tom_edges",
+        "target_key": "dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-002__supports_interpretation__tom-002"
+      },
+      {
+        "exact_reread_match": true,
+        "payload_sha256": "sha256:542ed75ebedc330c7bd55615e8497f35c5011c7503387d44cd8eacfaeae2a099",
+        "record_kind": "edge",
+        "reread_payload_sha256": "sha256:542ed75ebedc330c7bd55615e8497f35c5011c7503387d44cd8eacfaeae2a099",
+        "staging_key": "stg_5d402a8d8f12d442_4ff2d913e13bd7ecf1a25e66",
+        "target_collection": "tom_edges",
+        "target_key": "dream:horus_lupercal:auto_horus_full_01:interpretation:interpretation-003__supports_interpretation__tom-003"
+      }
+    ],
+    "staged_count": 36
+  },
+  "tom_node_keys": [
+    "dream:horus_lupercal:auto_horus_full_01:tom:tom-001",
+    "dream:horus_lupercal:auto_horus_full_01:tom:tom-002",
+    "dream:horus_lupercal:auto_horus_full_01:tom:tom-003"
+  ],
+  "watch_vertex_keys": [
+    "dream:horus_lupercal:auto_horus_full_01:watch:frame_0001",
+    "dream:horus_lupercal:auto_horus_full_01:watch:frame_0002",
+    "dream:horus_lupercal:auto_horus_full_01:watch:frame_0003",
+    "dream:horus_lupercal:auto_horus_full_01:watch:frame_0004",
+    "dream:horus_lupercal:auto_horus_full_01:watch:identity_temporal_continuity_review"
+  ],
+  "watch_vertex_receipts": [
+    {
+      "collection": "persona_dream_watch_evidence",
+      "exact_reread_match": true,
+      "key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0001",
+      "reread_content_sha256": "sha256:7cc57625251b69a020f2d6e1d1f4d50bf562605d586962d5f0f5a19ae82edabc",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:7cc57625251b69a020f2d6e1d1f4d50bf562605d586962d5f0f5a19ae82edabc"
+    },
+    {
+      "collection": "persona_dream_watch_evidence",
+      "exact_reread_match": true,
+      "key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0002",
+      "reread_content_sha256": "sha256:adc382505f0d4129613aee53fd56b06a7032e8613fa7158ef4aa6fe979d10dca",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:adc382505f0d4129613aee53fd56b06a7032e8613fa7158ef4aa6fe979d10dca"
+    },
+    {
+      "collection": "persona_dream_watch_evidence",
+      "exact_reread_match": true,
+      "key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0003",
+      "reread_content_sha256": "sha256:5f16d698e5ae0e4ce01ef463ef79ff92fcd6a0ef30abfed07123b6a131b66533",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:5f16d698e5ae0e4ce01ef463ef79ff92fcd6a0ef30abfed07123b6a131b66533"
+    },
+    {
+      "collection": "persona_dream_watch_evidence",
+      "exact_reread_match": true,
+      "key": "dream:horus_lupercal:auto_horus_full_01:watch:frame_0004",
+      "reread_content_sha256": "sha256:3bd78ec42bf7316af36491c13bc52f95be257504395409ae161ce8a1ab2d3397",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:3bd78ec42bf7316af36491c13bc52f95be257504395409ae161ce8a1ab2d3397"
+    },
+    {
+      "collection": "persona_dream_watch_evidence",
+      "exact_reread_match": true,
+      "key": "dream:horus_lupercal:auto_horus_full_01:watch:identity_temporal_continuity_review",
+      "reread_content_sha256": "sha256:d33543e98fea94f2ab98d5a2abd4130b7eddaa5a153eca2379008d1041360dbe",
+      "reread_found": true,
+      "store_ok": true,
+      "written_content_sha256": "sha256:d33543e98fea94f2ab98d5a2abd4130b7eddaa5a153eca2379008d1041360dbe"
+    }
+  ]
+}

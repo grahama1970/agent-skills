@@ -1,0 +1,118 @@
+{
+  "accepted_count": 3,
+  "accepted_tom_candidates": [
+    {
+      "candidate_id": "tom-001",
+      "confidence": 0.58,
+      "emotional_intensity": 0.62,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-001",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "horus_false_gods_b05b_memory_024",
+        "horus_false_gods_b05f_memory_010"
+      ],
+      "statement": "Horus appears to adopt a stance of stern authority and martial control toward the massed soldiers behind him.",
+      "subject": "horus_lupercal",
+      "synthetic_origin": true,
+      "target": "unnamed_soldiers",
+      "tom_state_type": "stance",
+      "watch_observation_refs": [
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004"
+      ]
+    },
+    {
+      "candidate_id": "tom-002",
+      "confidence": 0.46,
+      "emotional_intensity": 0.55,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-002",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "horus_false_gods_b05b_memory_024"
+      ],
+      "statement": "Horus may feel concern or fear toward the sheer number of soldiers, as if their mass evokes the burden of confronting rebellion.",
+      "subject": "horus_lupercal",
+      "synthetic_origin": true,
+      "target": "unnamed_soldiers",
+      "tom_state_type": "fear",
+      "watch_observation_refs": [
+        "frame_0002",
+        "frame_0003",
+        "frame_0004"
+      ]
+    },
+    {
+      "candidate_id": "tom-003",
+      "confidence": 0.42,
+      "emotional_intensity": 0.4,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-003",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "horus_false_gods_b05f_memory_010",
+        "horus_false_gods_b05f_memory_011"
+      ],
+      "statement": "Horus may believe himself to be consistently bound to military hierarchy and disciplined formations represented by the soldiers before and behind him.",
+      "subject": "horus_lupercal",
+      "synthetic_origin": true,
+      "target": "unnamed_soldiers",
+      "tom_state_type": "belief",
+      "watch_observation_refs": [
+        "identity_temporal_continuity_review",
+        "frame_0001",
+        "frame_0003"
+      ]
+    }
+  ],
+  "candidate_receipts": [
+    {
+      "candidate_id": "tom-001",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-001",
+      "reasons": []
+    },
+    {
+      "candidate_id": "tom-002",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-002",
+      "reasons": []
+    },
+    {
+      "candidate_id": "tom-003",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-003",
+      "reasons": []
+    }
+  ],
+  "candidate_source": "llm_via_tau",
+  "canonical_memory_write_allowed": false,
+  "dream_id": "auto_horus_full_01",
+  "generated_at": "2026-07-24T13:37:01.454415+00:00",
+  "had_rejections": false,
+  "interpretation_sha256": "sha256:e880fe3b1a50b5a5cdbdbbbdd8ca1456584ec9aafbb887638e0e78455430428a",
+  "live": true,
+  "live_route_attempted": true,
+  "live_route_failed": false,
+  "mocked": false,
+  "proposed_candidate_count": 3,
+  "rejected_count": 0,
+  "revision_id": "horus_full_01",
+  "run_id": "goal-v3",
+  "schema": "persona_dream.tom_validation_receipt.v1",
+  "status": "PASS_TOM_VALIDATION_LIVE",
+  "tau_routing": {
+    "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+    "http_status": 200,
+    "live_call_performed": true,
+    "model": "gpt-5.5",
+    "output_contract_sha256": "sha256:cdca7d6845ba5905353704db083e49ec40ce00451e5a60e2004b434b0a3fc5f6",
+    "prompt_sha256": "sha256:292048cdf75426e9e67e1a705d921b3c974bf938d54308287c7389e392075291",
+    "route": "tau:persona-dream-text-reasoning",
+    "status": "PASS",
+    "tau_receipt_schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1"
+  }
+}

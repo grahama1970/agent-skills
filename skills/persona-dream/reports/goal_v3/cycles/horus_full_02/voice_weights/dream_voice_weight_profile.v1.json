@@ -1,0 +1,58 @@
+{
+  "dream_node_key": "dream_auto_horus_full_02",
+  "mapping": "frozen in scripts/dream_voice_weights.py (TOM_TO_VOICE)",
+  "persona_id": "horus_lupercal",
+  "schema": "persona_dream.dream_voice_weight_profile.v1",
+  "synthesis_params": {
+    "temperature": 0.765
+  },
+  "tom_state_types": [
+    "relationship_state",
+    "trust",
+    "uncertainty"
+  ],
+  "weights": [
+    {
+      "emotional_tag": "hesitance",
+      "pace": "measured",
+      "sources": [
+        {
+          "emotional_intensity": 0.55,
+          "statement": "Horus may be uncertain about Abaddon's confident claim that nothing could have survived, especially when unresolved evidence such as a broadcast signal contradicts that certainty.",
+          "tom_key": "dream:horus_lupercal:auto_horus_full_02:tom:tom-002",
+          "tom_state_type": "uncertainty"
+        }
+      ],
+      "tone": "hesitant_reflective",
+      "weight": 0.55
+    },
+    {
+      "emotional_tag": "warmth",
+      "pace": "relaxed",
+      "sources": [
+        {
+          "emotional_intensity": 0.48,
+          "statement": "Horus may trust his own perception more than Abaddon's declarations when confronting ambiguous evidence such as the mysterious broadcast signal.",
+          "tom_key": "dream:horus_lupercal:auto_horus_full_02:tom:tom-003",
+          "tom_state_type": "trust"
+        }
+      ],
+      "tone": "warm_open",
+      "weight": 0.48
+    },
+    {
+      "emotional_tag": "reflection",
+      "pace": "measured",
+      "sources": [
+        {
+          "emotional_intensity": 0.42,
+          "statement": "Horus may regard Abaddon as a close but subordinate companion whose certainty remains secondary to Horus's own central authority.",
+          "tom_key": "dream:horus_lupercal:auto_horus_full_02:tom:tom-001",
+          "tom_state_type": "relationship_state"
+        }
+      ],
+      "tone": "neutral_reflective",
+      "weight": 0.42
+    }
+  ]
+}

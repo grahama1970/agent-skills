@@ -1,0 +1,37 @@
+{
+  "schema": "persona_dream.identity_face_embedding_subgate.v1",
+  "status": "PASS",
+  "authority": "embedding_cosine",
+  "model": "insightface:buffalo_l:w600k_r50",
+  "reviewer_source": "insightface:buffalo_l:cosine",
+  "threshold": 0.421,
+  "failure_code": "FAIL_FACE_EMBEDDING_IDENTITY_MISMATCH",
+  "frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/horus_full_01/frames/sb_003.attempt_01.png",
+  "frame_sha256": "sha256:d5a798aae97c513bee917d7f94c39d6277e53f985b71895cc0bb3759254e617f",
+  "entity_results": [
+    {
+      "entity": "Horus Lupercal",
+      "status": "PASS",
+      "verdict": "SAME",
+      "best_cosine": 0.735299,
+      "threshold": 0.421,
+      "candidate_bbox": [
+        695.5,
+        130.9,
+        994.1,
+        524.0
+      ],
+      "candidate_det_score": 0.8527,
+      "candidate_detected_sex": "M",
+      "expected_sex": null,
+      "reference_face_count": 1,
+      "pairwise_cosine": [
+        0.735299
+      ]
+    }
+  ],
+  "blocking_findings": [],
+  "candidate_faces_detected": 4,
+  "mocked": false,
+  "live": true
+}

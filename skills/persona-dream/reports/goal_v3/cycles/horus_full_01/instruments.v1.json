@@ -1,0 +1,17 @@
+{
+  "frozen_at": "2026-07-24T13:26:56Z",
+  "frozen_before_dream_composition": true,
+  "negative_control": "How do coral reef ecosystems recover after ocean bleaching events?",
+  "negative_control_root_overlap": [],
+  "probes": [
+    "What atmospheric gear did Imperial Army soldiers carry in Horus Lupercal\u2019s False Gods account?",
+    "In False Gods, what did intelligence say the Astartes might face among rebellious army troops?",
+    "Who commanded nearly two hundred warriors each behind the Astartes in the Mourneval passage?"
+  ],
+  "roots": [
+    "horus_false_gods_b05b_memory_024",
+    "horus_false_gods_b05f_memory_010",
+    "horus_false_gods_b05f_memory_011"
+  ],
+  "schema": "persona_dream.cycle_instruments.v1"
+}

@@ -1,0 +1,75 @@
+{
+  "anchors_unchanged": true,
+  "arcface_cosines": [
+    0.793457,
+    0.772924,
+    0.863841,
+    0.822244
+  ],
+  "cluster": "false_gods:person:abaddon",
+  "commit_manifest_key": "commit_a5f2f71d2e9ad99904d512885daf749313d3689cf05195b3c9a6e571c92947a7",
+  "counterpart_gate": "all accepted p13/p14 targets in {counterpart, unknown_person}",
+  "counterpart_id": "abaddon",
+  "created_at": "2026-07-24T14:30:00Z",
+  "cycle_id": "horus_full_02",
+  "distinction": {
+    "literal_occurrence_status": "DENIED",
+    "passed": true,
+    "record_class": "SYNTHETIC_DREAM"
+  },
+  "dream_node_key": "dream_auto_horus_full_02",
+  "frames": [
+    {
+      "attempt": 1,
+      "best_cosine": 0.793457,
+      "frame": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/horus_full_02/frames/sb_001.attempt_01.png",
+      "frame_sha256": "22ec5622e479eccdbf62eafdee4ede4819579d0e74acd6536864052d202ef6e8",
+      "identity_gate": "arcface_pass",
+      "panel_id": "sb_001"
+    },
+    {
+      "attempt": 1,
+      "best_cosine": 0.772924,
+      "frame": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/horus_full_02/frames/sb_002.attempt_01.png",
+      "frame_sha256": "070964a438c09f81e5af9b8e09ebcfb55fe930a3cb3fa7909f6ee070bee12f0b",
+      "identity_gate": "arcface_pass",
+      "panel_id": "sb_002"
+    },
+    {
+      "attempt": 1,
+      "best_cosine": 0.863841,
+      "frame": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/horus_full_02/frames/sb_003.attempt_01.png",
+      "frame_sha256": "d28fc93244c811428659974b12790dcdff7c3bf5668488f6c005fc508c5d6ef9",
+      "identity_gate": "arcface_pass",
+      "panel_id": "sb_003"
+    },
+    {
+      "attempt": 1,
+      "best_cosine": 0.822244,
+      "frame": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/horus_full_02/frames/sb_004.attempt_01.png",
+      "frame_sha256": "06a9dfb260fe9f31eb4c4df4f081851cbce756a89c2c3d2dddee93b86754c9d7",
+      "identity_gate": "arcface_pass",
+      "panel_id": "sb_004"
+    }
+  ],
+  "grounding_fraction": 1.0,
+  "human_touches": 0,
+  "image_calls": 4,
+  "instruments_frozen_before_dream": true,
+  "instruments_sha256": "1327acd1ac0419c2c7e94b5182389296b2b2126f21c3639c3a22abb43c834cf8",
+  "media_sha256": "6f0b451e9ad6e0ffbecc32b3f3cdfab5d1a574ad37aa0edca24dc31013b47bee",
+  "negative_control_absent_top10": true,
+  "recall_probe_ranks": {
+    "probe_1": null,
+    "probe_2": 6,
+    "probe_3": 5
+  },
+  "roots": [
+    "horus_batch02_shard11_unresolved_who_broadcasting_signal_93333e834b",
+    "horus_batch02_shard16_knowledge_gap_false_gods_ch07_lines_391_401_horus_knowledge_gap_raw_f60235ffea",
+    "horus_false_gods_b05c_memory_009"
+  ],
+  "schema": "persona_dream.autonomous_cycle_receipt.v1",
+  "status": "PASS_AUTONOMOUS_CYCLE",
+  "voice_weights_receipt": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/horus_full_02/voice_weights/dream_voice_weights_receipt.v1.json"
+}

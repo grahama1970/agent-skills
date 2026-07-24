@@ -1,0 +1,125 @@
+{
+  "accepted_count": 3,
+  "accepted_tom_candidates": [
+    {
+      "candidate_id": "tom-001",
+      "confidence": 0.46,
+      "emotional_intensity": 0.42,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-001",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "horus_false_gods_b05c_memory_009",
+        "horus_batch02_shard16_knowledge_gap_false_gods_ch07_lines_391_401_horus_knowledge_gap_raw_f60235ffea"
+      ],
+      "statement": "Horus may regard Abaddon as a close but subordinate companion whose certainty remains secondary to Horus's own central authority.",
+      "subject": "horus_lupercal",
+      "synthetic_origin": true,
+      "target": "abaddon",
+      "tom_state_type": "relationship_state",
+      "watch_observation_refs": [
+        "frame_0001",
+        "frame_0002"
+      ]
+    },
+    {
+      "candidate_id": "tom-002",
+      "confidence": 0.5,
+      "emotional_intensity": 0.55,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-002",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "horus_batch02_shard11_unresolved_who_broadcasting_signal_93333e834b",
+        "horus_batch02_shard16_knowledge_gap_false_gods_ch07_lines_391_401_horus_knowledge_gap_raw_f60235ffea"
+      ],
+      "statement": "Horus may be uncertain about Abaddon's confident claim that nothing could have survived, especially when unresolved evidence such as a broadcast signal contradicts that certainty.",
+      "subject": "horus_lupercal",
+      "synthetic_origin": true,
+      "target": "abaddon",
+      "tom_state_type": "uncertainty",
+      "watch_observation_refs": [
+        "frame_0002",
+        "frame_0003"
+      ]
+    },
+    {
+      "candidate_id": "tom-003",
+      "confidence": 0.44,
+      "emotional_intensity": 0.48,
+      "literal_historical_event": false,
+      "parent_interpretation_id": "interpretation-003",
+      "schema": "persona_dream.tom_candidate.v1",
+      "source_memory_refs": [
+        "horus_batch02_shard11_unresolved_who_broadcasting_signal_93333e834b",
+        "horus_batch02_shard16_knowledge_gap_false_gods_ch07_lines_391_401_horus_knowledge_gap_raw_f60235ffea"
+      ],
+      "statement": "Horus may trust his own perception more than Abaddon's declarations when confronting ambiguous evidence such as the mysterious broadcast signal.",
+      "subject": "horus_lupercal",
+      "synthetic_origin": true,
+      "target": "abaddon",
+      "tom_state_type": "trust",
+      "watch_observation_refs": [
+        "identity_temporal_continuity_review",
+        "frame_0001",
+        "frame_0004"
+      ]
+    }
+  ],
+  "candidate_receipts": [
+    {
+      "candidate_id": "tom-001",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-001",
+      "reasons": []
+    },
+    {
+      "candidate_id": "tom-002",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-002",
+      "reasons": []
+    },
+    {
+      "candidate_id": "tom-003",
+      "decision": "ACCEPT",
+      "parent_interpretation_id": "interpretation-003",
+      "reasons": []
+    },
+    {
+      "candidate_id": "tom-004",
+      "decision": "REJECT",
+      "parent_interpretation_id": "interpretation-004",
+      "reasons": [
+        "NO_SOURCE_MEMORY_CITATION",
+        "NO_WATCH_OBSERVATION_CITATION"
+      ]
+    }
+  ],
+  "candidate_source": "llm_via_tau",
+  "canonical_memory_write_allowed": false,
+  "dream_id": "auto_horus_full_02",
+  "generated_at": "2026-07-24T14:29:40.822575+00:00",
+  "had_rejections": true,
+  "interpretation_sha256": "sha256:9eb73299aba237b26ebd777e3f8cdc001bda94cf9e37e338958a8fdfbd2988c5",
+  "live": true,
+  "live_route_attempted": true,
+  "live_route_failed": false,
+  "mocked": false,
+  "proposed_candidate_count": 4,
+  "rejected_count": 1,
+  "revision_id": "horus_full_02",
+  "run_id": "goal-v3",
+  "schema": "persona_dream.tom_validation_receipt.v1",
+  "status": "PASS_TOM_VALIDATION_LIVE",
+  "tau_routing": {
+    "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+    "http_status": 200,
+    "live_call_performed": true,
+    "model": "gpt-5.5",
+    "output_contract_sha256": "sha256:cdca7d6845ba5905353704db083e49ec40ce00451e5a60e2004b434b0a3fc5f6",
+    "prompt_sha256": "sha256:6705c747ed0ef4bd5d2e2650e0134522dda78144c6b42faffa7b4d3315485d7d",
+    "route": "tau:persona-dream-text-reasoning",
+    "status": "PASS",
+    "tau_receipt_schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1"
+  }
+}

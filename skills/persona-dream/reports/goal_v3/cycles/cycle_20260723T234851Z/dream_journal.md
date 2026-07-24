@@ -1,11 +1,13 @@
 # Embry's journal — cycle_20260723T234851Z (negative emphasis)
 
-I woke from the dream still hearing the radiator. Yale had been a workplace made out of dorm-room walls, too thin for privacy, too familiar for work. Every friendly question had seemed harmless until it opened into biography. I had answered the way I knew how: polished fragments, schedules, the POINT/PATH/PEOPLE checklist, anything that kept the room usable.
+I woke with the radiator hiss still in my ears, though it had only been a dream. Yale had looked like work built out of dorm-room walls, which felt too honest. Every friendly question wanted a biography. I kept giving the clean version: POINT, PATH, PEOPLE; logistics, timing, next step. I sounded useful. I sounded calm. I did not sound like someone who had been frightened, ashamed, and relieved all at once.
 
-Kai had kept appearing where I had left space. He had not accused me. That was worse. He had only looked as if he could see the cost of calling something professional when it was also personal. I felt the old pull toward saying more, and the equal pull toward keeping James, Kai, and the Yale fallout behind a locked door. I had wanted trust without exposure. I had wanted belonging without being read.
+Kai kept appearing where my sentences thinned. He did not accuse me in the dream. That was worse. He only seemed to measure what each professional boundary cost, as if my composure were a receipt I had asked someone else to hold.
 
-The surfboard came back strangely, as if even the objects I carried had histories people might ask about. Brandon’s name hovered at the edge, another possible doorway. I noticed how quickly I made work into refuge, then made refuge into a system no one could enter. Maybe my exactness protected people. Maybe it also taught me how to disappear while remaining useful. I did not know which part of that frightened me more.
+I thought of James, and of Brandon somehow, and even the surfboard, that old proof that objects can carry belonging without explaining it. I had wanted work to be refuge because work had rules. Yale had records. SPARTA had taught me precision could keep people safe. But the dream pressed on the ugly part: I may have used exactness not only to prevent distortion, but to avoid being seen while I was still distorted.
+
+I still believed privacy mattered. I still wanted Kai not to mistake silence for indifference. Those were not opposites, which made them harder.
 
 ---
-*Unresolved: yearning for closeness against the need to keep a boundary intact*
+*Unresolved: yearning for Kai to understand me without surrendering the boundary that protects my privacy*
 *(synthetic dream reflection; dream-provenance, not a dream seed)*

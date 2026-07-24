@@ -1,0 +1,27 @@
+{
+  "schema": "persona_dream.residue_links.v1",
+  "idea_id": "auto_horus_full_01",
+  "items": [
+    {
+      "collection": "persona_memory",
+      "persona_id": "horus_lupercal",
+      "source_id": "horus_false_gods_b05f_memory_011",
+      "source_path": "gmo:persona_memory/horus_false_gods_b05f_memory_011",
+      "text": "Horus Lupercal False Gods memory: Each Imperial Army soldier was equipped with re-breather apparatus. Source record false_gods_ch06-c07-r004; key recall terms include horus_lupercal, false_gods_ch06, c07, what_equipment_did_the_imperial_army_soldiers_have_for_the_atmosphere, re_breather_apparatus."
+    },
+    {
+      "collection": "persona_memory",
+      "persona_id": "horus_lupercal",
+      "source_id": "horus_false_gods_b05b_memory_024",
+      "source_path": "gmo:persona_memory/horus_false_gods_b05b_memory_024",
+      "text": "Horus Lupercal False Gods memory: According to intelligence, the Astartes would be facing perhaps ten thousand rebellious army soldiers. Source record false_gods_ch05-c08-r004; key recall terms include horus_lupercal, false_gods_ch05, c08, according_to_intelligence_what_would_the_astartes_be_facing, perhaps_ten_thousand_rebellious_army_soldiers."
+    },
+    {
+      "collection": "persona_memory",
+      "persona_id": "horus_lupercal",
+      "source_id": "horus_false_gods_b05f_memory_010",
+      "source_path": "gmo:persona_memory/horus_false_gods_b05f_memory_010",
+      "text": "Horus Lupercal False Gods memory: Each member of the Mourneval led nearly two hundred warriors. Source record false_gods_ch06-c07-r003; key recall terms include horus_lupercal, false_gods_ch06, c07, who_led_the_soldiers_behind_the_astartes, each_member_of_the_mourneval."
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "frozen_at": "2026-07-24T14:12:34Z",
+  "frozen_before_dream_composition": true,
+  "negative_control": "What ingredients are needed to make a classic banana smoothie?",
+  "negative_control_root_overlap": [],
+  "probes": [
+    "Who said \u201cThey\u2019re traitors\u201d in False Gods chapter 6?",
+    "After Abaddon says nothing survived the crash on Davin\u2019s moon, what does Horus ask about the signal?",
+    "In the Tember flagship wreck scene, who questions who is broadcasting after Abaddon says nothing could have lived?"
+  ],
+  "roots": [
+    "horus_batch02_shard11_unresolved_who_broadcasting_signal_93333e834b",
+    "horus_batch02_shard16_knowledge_gap_false_gods_ch07_lines_391_401_horus_knowledge_gap_raw_f60235ffea",
+    "horus_false_gods_b05c_memory_009"
+  ],
+  "schema": "persona_dream.cycle_instruments.v1"
+}

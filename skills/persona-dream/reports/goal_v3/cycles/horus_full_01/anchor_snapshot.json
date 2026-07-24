@@ -1,0 +1,10 @@
+{
+  "anchors": {
+    "horus_false_gods_b05b_memory_024": "f3a470d8ec7407e6b84ad377e890ccb6b13ee64200a5421104f8655da1d6a525",
+    "horus_false_gods_b05f_memory_010": "a5e9cdbb7dbfb856612aede6f291116f0711308a86d2eb5b829d053ec3818dc4",
+    "horus_false_gods_b05f_memory_011": "d16f8de10bf92cb102f4c67545153c47a49e747a5115ea8ad4268497dc13671f"
+  },
+  "collection": "persona_memory",
+  "created_at": "2026-07-24T13:26:52Z",
+  "schema": "persona_dream.pilot_m4_anchor_snapshot.v1"
+}

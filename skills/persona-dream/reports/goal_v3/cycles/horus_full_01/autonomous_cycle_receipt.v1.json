@@ -1,0 +1,75 @@
+{
+  "anchors_unchanged": true,
+  "arcface_cosines": [
+    0.816489,
+    0.848816,
+    0.735299,
+    0.91893
+  ],
+  "cluster": "false_gods:person:unnamed_soldiers",
+  "commit_manifest_key": "commit_5d402a8d8f12d4428701f67d45a28d58fefbc0d0260e503d2dfc76b2f1798402",
+  "counterpart_gate": "all accepted p13/p14 targets in {counterpart, unknown_person}",
+  "counterpart_id": "unnamed_soldiers",
+  "created_at": "2026-07-24T13:37:20Z",
+  "cycle_id": "horus_full_01",
+  "distinction": {
+    "literal_occurrence_status": "DENIED",
+    "passed": true,
+    "record_class": "SYNTHETIC_DREAM"
+  },
+  "dream_node_key": "dream_auto_horus_full_01",
+  "frames": [
+    {
+      "attempt": 1,
+      "best_cosine": 0.816489,
+      "frame": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/horus_full_01/frames/sb_001.attempt_01.png",
+      "frame_sha256": "3083b0990168ee7dc9ae1051c47c4d56aabc9275616359ba02c3e05016a7a8b7",
+      "identity_gate": "arcface_pass",
+      "panel_id": "sb_001"
+    },
+    {
+      "attempt": 1,
+      "best_cosine": 0.848816,
+      "frame": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/horus_full_01/frames/sb_002.attempt_01.png",
+      "frame_sha256": "83e5bd34a254ae0556eac59b8802df724ec109915ad8575a6ead3e728c815300",
+      "identity_gate": "arcface_pass",
+      "panel_id": "sb_002"
+    },
+    {
+      "attempt": 1,
+      "best_cosine": 0.735299,
+      "frame": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/horus_full_01/frames/sb_003.attempt_01.png",
+      "frame_sha256": "d5a798aae97c513bee917d7f94c39d6277e53f985b71895cc0bb3759254e617f",
+      "identity_gate": "arcface_pass",
+      "panel_id": "sb_003"
+    },
+    {
+      "attempt": 1,
+      "best_cosine": 0.91893,
+      "frame": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/horus_full_01/frames/sb_004.attempt_01.png",
+      "frame_sha256": "0b1d0372449f530d9008b9c3b031eea26dd4ea1939849f58fb2270bbc1d092ba",
+      "identity_gate": "arcface_pass",
+      "panel_id": "sb_004"
+    }
+  ],
+  "grounding_fraction": 1.0,
+  "human_touches": 0,
+  "image_calls": 4,
+  "instruments_frozen_before_dream": true,
+  "instruments_sha256": "cf556ed433bd279f10b5cbcff6da8cb1eb7bb8fd3836df8fd6c0ad493ac143e6",
+  "media_sha256": "9784309c71b16cc8a91f0b7cc4d2815f22f8d107d1daf7fcb1dbb78c0973d463",
+  "negative_control_absent_top10": true,
+  "recall_probe_ranks": {
+    "probe_1": null,
+    "probe_2": null,
+    "probe_3": null
+  },
+  "roots": [
+    "horus_false_gods_b05b_memory_024",
+    "horus_false_gods_b05f_memory_010",
+    "horus_false_gods_b05f_memory_011"
+  ],
+  "schema": "persona_dream.autonomous_cycle_receipt.v1",
+  "status": "PASS_AUTONOMOUS_CYCLE",
+  "voice_weights_receipt": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/horus_full_01/voice_weights/dream_voice_weights_receipt.v1.json"
+}

@@ -1,0 +1,14 @@
+{
+  "status": "failed",
+  "exit_code": 1,
+  "input": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/roundtable_direction/r1/bundle.ascii.md",
+  "submitted_output": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/roundtable_direction/r1/webkimi.response.md.submitted.md",
+  "output": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/roundtable_direction/r1/webkimi.response.md",
+  "raw_output": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/roundtable_direction/r1/webkimi.response.md.raw.md",
+  "stderr_log": "/tmp/surf-kimi-submit-stderr.a1praN.log",
+  "sentinel": "<<<KIMI_DONE:20260724T162913Z:1df43cf0>>>",
+  "requested_tab_id": "837360893",
+  "requested_url": null,
+  "started_at": "2026-07-24T16:29:14Z",
+  "finished_at": "2026-07-24T16:29:14Z"
+}

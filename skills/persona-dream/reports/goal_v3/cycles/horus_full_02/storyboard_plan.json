@@ -1,0 +1,41 @@
+{
+  "dream_synopsis": "In a synthetic dream of Davin\u2019s moon, the wrecked flagship becomes a lantern in the dark rather than a tomb. Abaddon\u2019s certainty and Horus\u2019s unanswered question recombine into a moment of trust: even amid ruin, a signal still calls, and Horus feels relief that something may yet be reached.",
+  "panels": [
+    {
+      "action": "Abaddon looks toward the wreck and says, with grave certainty, \u201cThey\u2019re traitors,\u201d but the words arrive muted, as if softened by distance.",
+      "mood": "solemn but trusting, with warmth beneath the accusation",
+      "panel_id": "sb_001",
+      "setting": "A dream-heightened plain on Davin\u2019s moon, with the wrecked spaceship fused into the horizon like a broken crown.",
+      "shot": "Foreground close-up of Horus Lupercal, face visible, lit by a soft green-white pulse; Abaddon stands just behind his shoulder in partial profile.",
+      "start_frame_description": "Horus fills the foreground, eyes steady and reflective; behind him, Abaddon\u2019s armor catches the signal-light while the crashed flagship glows faintly through drifting dust.",
+      "time_range": "0.0-2.5s"
+    },
+    {
+      "action": "Abaddon declares that nothing could have survived the crash, yet the broadcast continues to shimmer across Horus\u2019s face.",
+      "mood": "guarded relief, companionship in uncertainty",
+      "panel_id": "sb_002",
+      "setting": "The wreck\u2019s torn hull looms ahead, its jagged ribs pulsing like a beacon rather than a ruin.",
+      "shot": "Medium close-up on Horus in the foreground, face visible and turned toward the source of the signal; Abaddon appears beside him, closer now, his expression firm but protective.",
+      "start_frame_description": "Horus stands in crisp focus at the front of the frame, lips parted as if listening; Abaddon is visible at his side, both of them framed by the luminous wreckage.",
+      "time_range": "2.5-5.0s"
+    },
+    {
+      "action": "Horus asks, \u201cWho is broadcasting the signal?\u201d and the question echoes without an answer, not as dread but as invitation.",
+      "mood": "longing, curiosity, fragile hope",
+      "panel_id": "sb_003",
+      "setting": "Inside the dream-version of Tember\u2019s flagship wreck, where corridors bend into open starlight and signal-lines hang like warm threads.",
+      "shot": "Tight foreground portrait of Horus, face fully visible, eyes reflecting a waveform of light; Abaddon is absent from the frame.",
+      "start_frame_description": "Horus\u2019s face dominates the frame, calm and intent; behind him, broken consoles emit a gentle rhythmic glow like a heartbeat.",
+      "time_range": "5.0-7.5s"
+    },
+    {
+      "action": "Horus does not receive an answer, but he relaxes slightly, reassured by Abaddon\u2019s presence and by the persistence of the signal.",
+      "mood": "relief, trust, and unresolved but hopeful anticipation",
+      "panel_id": "sb_004",
+      "setting": "The lunar dust and the flagship wreck dissolve into a quiet expanse of light, the broadcast continuing from beyond the frame.",
+      "shot": "Foreground three-quarter close-up of Horus, face visible and softly illuminated; Abaddon stands behind him in clear view, watching the same unseen signal.",
+      "start_frame_description": "Horus is closest to the viewer, his expression easing into resolve; Abaddon remains behind him, steady and loyal, while the wreck\u2019s glow surrounds them both.",
+      "time_range": "7.5-10.0s"
+    }
+  ]
+}
