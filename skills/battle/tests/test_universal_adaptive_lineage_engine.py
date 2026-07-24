@@ -540,6 +540,10 @@ def test_verified_hooks_drive_the_real_canary_primitive_contract(
         judge_population=judge_population,
         select_survivor=select_survivor,
     )
+    # The live Judge replays against the arena target in the generation dir.
+    tmp_path.joinpath(
+        "generation-0001", "arena", "team-public", "target"
+    ).mkdir(parents=True)
     memory, _fake = backend_with_root()
     receipt = AdaptiveLineageEngine(
         population_hooks=VerifiedPopulationHooks(bundle),
@@ -599,6 +603,80 @@ def test_verified_hooks_drive_the_real_canary_primitive_contract(
         {"worker_id": "blue-2", "status": "BAD", "reason": "no genome"},
     ]
     assert receipt["oracle"]["survivor_id"] == "blue-0"
+
+
+def test_judge_stage_fails_closed_without_the_arena_it_replays_against(
+    tmp_path: Path,
+) -> None:
+    """The live Judge copies <generation_dir>/arena/team-public/target.
+
+    Unmet, that surfaced as a bare FileNotFoundError from shutil.copytree only
+    AFTER every specimen had been compiled in Docker. Name the requirement
+    instead, and only for the live judge contract.
+    """
+
+    def judge_population(
+        *,
+        generation_dir: Path,
+        scenario: dict[str, Any],
+        docker_image: str,
+        reviewed_manifest: dict[str, Any],
+        review_pipelines: dict[str, list[dict[str, Any]]],
+    ) -> dict[str, Any]:
+        raise AssertionError("judge must not run without its arena")
+
+    hooks = VerifiedPopulationHooks(
+        PrimitiveBundle(
+            population_genomes=lambda **_: {"blue": []},
+            review_population=lambda **_: ({}, {"blue": []}),
+            judge_population=judge_population,
+            select_survivor=lambda judge, team: {},
+        )
+    )
+    request = generation_request(tmp_path, role="blue")
+    empty = PopulationStageResult(items=())
+
+    with pytest.raises(AdaptiveLineageContractError, match="arena target"):
+        hooks.judge(
+            request=request,
+            recall=RecallResult(),
+            generated=empty,
+            reviewed=empty,
+        )
+
+    # Staging the arena clears the preflight; the judge is reached and fails on
+    # its own contract instead (this fake declares the live signature but the
+    # request carries none of the arena facts it needs).
+    request.out_dir.joinpath(
+        "generation-0001", "arena", "team-public", "target"
+    ).mkdir(parents=True)
+    with pytest.raises(AdaptiveLineageContractError, match="unsupported arguments"):
+        hooks.judge(
+            request=request,
+            recall=RecallResult(),
+            generated=empty,
+            reviewed=empty,
+        )
+
+    # The preflight is gated on the live judge contract, so a fake judge that
+    # does not replay against an arena is never asked for one.
+    plain_hooks = VerifiedPopulationHooks(
+        PrimitiveBundle(
+            population_genomes=lambda **_: {"blue": []},
+            review_population=lambda **_: ({}, {"blue": []}),
+            judge_population=lambda **_: {"judged_population": []},
+            select_survivor=lambda judge, team: {},
+        )
+    )
+    assert (
+        plain_hooks.judge(
+            request=generation_request(tmp_path / "no-arena", role="blue"),
+            recall=RecallResult(),
+            generated=empty,
+            reviewed=empty,
+        ).items
+        == ()
+    )
 
 
 def test_materialize_only_emits_n_and_skips_review_judge_oracle(

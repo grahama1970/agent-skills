@@ -306,6 +306,41 @@ def _split_team_population(
     return items, bad
 
 
+_JUDGE_ARENA_TARGET = ("arena", "team-public", "target")
+
+
+def _require_judge_arena(
+    judge_population: Callable[..., Any], generation_dir: Any
+) -> None:
+    """Fail closed when the generation dir carries no arena for the Judge.
+
+    The live Judge replays each Red x Blue pair against the arena target and
+    copies ``<generation_dir>/arena/team-public/target``. The canary's own flow
+    runs a generation inside the arena-bearing run directory, so this coupling
+    is implicit; when it is unmet the failure surfaces from deep inside
+    ``shutil.copytree`` as a bare FileNotFoundError, after every specimen has
+    already been compiled in Docker. Name the requirement instead.
+
+    Only the live Judge contract needs this, so the check is gated on the
+    primitive's own signature rather than applied to every judge callable.
+    """
+
+    if not isinstance(generation_dir, Path):
+        return
+    parameters = inspect.signature(judge_population).parameters
+    if not {"scenario", "docker_image"}.issubset(parameters):
+        return
+    target = generation_dir.joinpath(*_JUDGE_ARENA_TARGET)
+    if target.exists():
+        return
+    raise AdaptiveLineageContractError(
+        "judge stage requires the arena target at "
+        f"{target}; the generation directory must carry the battle's arena "
+        "(run the generation inside the arena-bearing run directory, or stage "
+        "that battle's arena/ tree there before judging)"
+    )
+
+
 def _judge_attempts_by_worker(
     raw: Any, *, role: str
 ) -> list[Mapping[str, Any]] | None:
@@ -451,6 +486,9 @@ class VerifiedPopulationHooks:
         if isinstance(reviewed.raw, tuple) and len(reviewed.raw) == 2:
             kwargs["reviewed_manifest"] = reviewed.raw[0]
             kwargs["review_pipelines"] = reviewed.raw[1]
+        _require_judge_arena(
+            self.bundle.judge_population, kwargs.get("generation_dir")
+        )
         raw = _invoke_compatible(self.bundle.judge_population, kwargs)
         live_items = _judge_attempts_by_worker(raw, role=request.role)
         if live_items is not None:
