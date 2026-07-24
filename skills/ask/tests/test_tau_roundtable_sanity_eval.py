@@ -203,6 +203,122 @@ def test_worker_webclaude_submit_command_includes_prior_response_attachment(tmp_
     assert receipt["live"] is True
 
 
+def test_worker_webclaude_refreshes_binding_after_new_url_materializes(tmp_path: Path) -> None:
+    request_file = tmp_path / "request.json"
+    request_file.write_text(json.dumps({"request": "Ask webclaude to answer this."}), encoding="utf-8")
+    artifact_dir = tmp_path / "node-artifacts" / "handler-webclaude"
+    artifact_dir.mkdir(parents=True)
+    args = SimpleNamespace(
+        node_id="handler-webclaude",
+        handler="webclaude",
+        topology="concurrent",
+        request_file=str(request_file),
+        browser_oracle_project="webclaude",
+        next_agent="join",
+        artifact_dir=str(artifact_dir),
+        surf_run=str(tmp_path / "surf-run.sh"),
+        browser_oracle_run=str(tmp_path / "browser-oracle-run.sh"),
+        scillm_base_url="http://127.0.0.1:4001",
+        scillm_api_key="",
+        prior_node=[],
+        timeout=300,
+        stable_polls=2,
+        no_activate=True,
+        evidence=[],
+        codex_workspace="",
+    )
+    seen_commands: list[list[str]] = []
+
+    def fake_run_cmd(command: list[str], *, cwd: Path, timeout: int) -> tau_roundtable_worker.CmdResult:
+        seen_commands.append(command)
+        if "resolve" in command:
+            return tau_roundtable_worker.CmdResult(
+                command,
+                0,
+                json.dumps({"tab_id": "837360921", "conversation_url": "https://claude.ai/new"}),
+                "",
+                0.01,
+            )
+        if "tab.list" in command:
+            return tau_roundtable_worker.CmdResult(
+                command,
+                0,
+                json.dumps(
+                    [
+                        {
+                            "id": 837360921,
+                            "url": "https://claude.ai/chat/9909bd8e-145d-4be5-8a21-2d3b69152e53",
+                            "title": "Claude",
+                        }
+                    ]
+                ),
+                "",
+                0.01,
+            )
+        if "bind" in command:
+            return tau_roundtable_worker.CmdResult(
+                command,
+                0,
+                json.dumps({"state_path": str(tmp_path / "webclaude.json")}),
+                "",
+                0.01,
+            )
+        if "claude.submit" in command:
+            response_path = Path(command[command.index("--output") + 1])
+            raw_path = Path(command[command.index("--raw-output") + 1])
+            meta_path = Path(command[command.index("--meta-output") + 1])
+            response_path.write_text("Claude answered.\n", encoding="utf-8")
+            raw_path.write_text("Claude answered.\n<<<CLAUDE_DONE:test>>>\n", encoding="utf-8")
+            meta_path.write_text(
+                json.dumps(
+                    {
+                        "status": "completed",
+                        "requested_tab_id": "837360921",
+                        "controlled_tab_id": "837360921",
+                        "raw_contains_sentinel": True,
+                        "current_url": "https://claude.ai/chat/9909bd8e-145d-4be5-8a21-2d3b69152e53",
+                    }
+                ),
+                encoding="utf-8",
+            )
+            return tau_roundtable_worker.CmdResult(command, 0, "", "", 0.01)
+        return tau_roundtable_worker.CmdResult(command, 99, "", "unexpected command", 0.01)
+
+    original_run_cmd = tau_roundtable_worker._run_cmd
+    tau_roundtable_worker._run_cmd = fake_run_cmd
+    try:
+        result = tau_roundtable_worker._run_handler(args, {}, artifact_dir)
+    finally:
+        tau_roundtable_worker._run_cmd = original_run_cmd
+
+    assert result["exit_code"] == 0
+    submit_command = next(command for command in seen_commands if "claude.submit" in command)
+    assert submit_command[submit_command.index("--url") + 1] == (
+        "https://claude.ai/chat/9909bd8e-145d-4be5-8a21-2d3b69152e53"
+    )
+    bind_command = next(command for command in seen_commands if "bind" in command)
+    assert bind_command == [
+        str(args.browser_oracle_run),
+        "bind",
+        "webclaude",
+        "--backend",
+        "webclaude",
+        "--tab-id",
+        "837360921",
+        "--url",
+        "https://claude.ai/chat/9909bd8e-145d-4be5-8a21-2d3b69152e53",
+        "--manual",
+        "--json",
+    ]
+    receipt = json.loads((artifact_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    assert receipt["status"] == "PASS"
+    assert receipt["browser_oracle_binding_refresh"]["status"] == "updated"
+    assert (
+        receipt["browser_oracle_binding_refresh"]["current_url"]
+        == "https://claude.ai/chat/9909bd8e-145d-4be5-8a21-2d3b69152e53"
+    )
+
+
 def test_worker_classifies_kimi_capacity_busy_as_provider_limited() -> None:
     failure_code = tau_roundtable_worker._classify_browser_failure(
         failure="Kimi provider capacity busy: System is currently busy / Capacity is busy. Please try again later.",

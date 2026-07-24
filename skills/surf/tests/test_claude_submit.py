@@ -42,6 +42,9 @@ def test_claude_submit_accepts_attach_file_and_records_upload_metadata(tmp_path:
 set -euo pipefail
 printf '%s\\n' "$*" >> {str(invocation_log)!r}
 case "${{1:-}}" in
+  tab.list)
+    printf '[{{"id":837360812,"url":"https://claude.ai/chat/example","title":"Claude"}}]\\n'
+    ;;
   focus.state)
     printf '{{"focusedWindowId":1,"activeTabId":837360812}}\\n'
     ;;
@@ -151,6 +154,9 @@ def test_claude_submit_recovers_missing_content_script_with_same_tab_reload(tmp_
 set -euo pipefail
 printf '%s\\n' "$*" >> {str(invocation_log)!r}
 case "${{1:-}}" in
+  tab.list)
+    printf '[{{"id":837360812,"url":"https://claude.ai/chat/example","title":"Claude"}}]\\n'
+    ;;
   focus.state)
     printf '{{"focusedWindowId":1,"activeTabId":837360812}}\\n'
     ;;
@@ -265,6 +271,9 @@ def test_claude_submit_finalizes_raw_sentinel_after_wait_failure(tmp_path: Path)
 set -euo pipefail
 printf '%s\\n' "$*" >> {str(invocation_log)!r}
 case "${{1:-}}" in
+  tab.list)
+    printf '[{{"id":837360812,"url":"https://claude.ai/chat/example","title":"Claude"}}]\\n'
+    ;;
   focus.state)
     printf '{{"focusedWindowId":1,"activeTabId":837360812}}\\n'
     ;;
@@ -350,3 +359,158 @@ esac
     assert payload["recovered_after_failure"] is True
     assert "timed out waiting for marker" in payload["recovery_failure"]
     assert payload["response_source"] == "post_failure_text_capture"
+
+
+def test_claude_submit_accepts_new_tab_materialized_chat_url(tmp_path: Path) -> None:
+    request = tmp_path / "request.md"
+    response = tmp_path / "response.md"
+    meta = tmp_path / "response.meta.json"
+    fake_run = tmp_path / "surf-run.sh"
+    sentinel_file = tmp_path / "sentinel.txt"
+
+    request.write_text("Review this.\n", encoding="utf-8")
+    fake_run.write_text(
+        f"""#!/usr/bin/env bash
+set -euo pipefail
+case "${{1:-}}" in
+  tab.list)
+    printf '[{{"id":837360921,"url":"https://claude.ai/chat/live-url","title":"Claude"}}]\\n'
+    ;;
+  focus.state)
+    printf '{{"focusedWindowId":1,"activeTabId":837360921}}\\n'
+    ;;
+  text)
+    sentinel="$(cat {str(sentinel_file)!r} 2>/dev/null || true)"
+    printf 'Claude responded:\\nTransition accepted\\n%s\\n' "$sentinel"
+    ;;
+  read)
+    printf 'textbox "Write your prompt to Claude" [e1]\\n'
+    printf 'button "Send message" [e2]\\n'
+    ;;
+  click|key)
+    printf 'ok\\n'
+    ;;
+  type)
+    python3 - "${{2:-}}" {str(sentinel_file)!r} <<'PY'
+import pathlib
+import re
+import sys
+
+match = re.search(r"<<<CLAUDE_DONE:[^>]+>>>", sys.argv[1], re.S)
+if match:
+    pathlib.Path(sys.argv[2]).write_text(match.group(0), encoding="utf-8")
+PY
+    printf 'typed\\n'
+    ;;
+  *)
+    echo "unexpected surf command: $*" >&2
+    exit 99
+    ;;
+esac
+""",
+        encoding="utf-8",
+    )
+    fake_run.chmod(0o755)
+
+    env = os.environ.copy()
+    env["SURF_RUN_SH"] = str(fake_run)
+    proc = subprocess.run(
+        [
+            "python3",
+            str(CLAUDE_SUBMIT),
+            "--input",
+            str(request),
+            "--output",
+            str(response),
+            "--meta-output",
+            str(meta),
+            "--tab-id",
+            "837360921",
+            "--url",
+            "https://claude.ai/new",
+            "--timeout",
+            "5",
+            "--stable-polls",
+            "0",
+            "--no-activate",
+        ],
+        cwd=tmp_path,
+        env=env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    assert response.read_text(encoding="utf-8").strip() == "Transition accepted"
+    payload = json.loads(meta.read_text(encoding="utf-8"))
+    assert payload["status"] == "completed"
+    assert payload["current_url"] == "https://claude.ai/chat/live-url"
+    assert payload["tab_identity_preflight"]["accepted_url_transition"] is True
+    assert payload["tab_identity_preflight"]["reason"] == "claude_new_tab_materialized_chat"
+
+
+def test_claude_submit_chat_url_mismatch_still_fails_closed(tmp_path: Path) -> None:
+    request = tmp_path / "request.md"
+    response = tmp_path / "response.md"
+    meta = tmp_path / "response.meta.json"
+    fake_run = tmp_path / "surf-run.sh"
+
+    request.write_text("Review this.\n", encoding="utf-8")
+    fake_run.write_text(
+        """#!/usr/bin/env bash
+set -euo pipefail
+case "${1:-}" in
+  tab.list)
+    printf '[{"id":837360921,"url":"https://claude.ai/chat/live-url","title":"Claude"}]\\n'
+    ;;
+  focus.state)
+    printf '{"focusedWindowId":1,"activeTabId":837360921}\\n'
+    ;;
+  *)
+    echo "unexpected surf command: $*" >&2
+    exit 99
+    ;;
+esac
+""",
+        encoding="utf-8",
+    )
+    fake_run.chmod(0o755)
+
+    env = os.environ.copy()
+    env["SURF_RUN_SH"] = str(fake_run)
+    proc = subprocess.run(
+        [
+            "python3",
+            str(CLAUDE_SUBMIT),
+            "--input",
+            str(request),
+            "--output",
+            str(response),
+            "--meta-output",
+            str(meta),
+            "--tab-id",
+            "837360921",
+            "--url",
+            "https://claude.ai/chat/expected-url",
+            "--timeout",
+            "5",
+            "--no-activate",
+        ],
+        cwd=tmp_path,
+        env=env,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert proc.returncode == 4
+    assert "URL mismatch: expected https://claude.ai/chat/expected-url, saw https://claude.ai/chat/live-url" in proc.stderr
+    payload = json.loads(meta.read_text(encoding="utf-8"))
+    assert payload["failure"] == (
+        "tab 837360921 URL mismatch: expected https://claude.ai/chat/expected-url, "
+        "saw https://claude.ai/chat/live-url"
+    )
+    assert payload["tab_identity_preflight"]["error"] == "expected_url_mismatch"

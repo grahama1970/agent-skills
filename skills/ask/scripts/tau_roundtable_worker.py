@@ -151,6 +151,15 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             url = str(resolve_payload.get("conversation_url") or "")
             if not tab_id:
                 raise RuntimeError(f"browser-oracle project {project!r} resolved without tab_id")
+            binding_refresh = _refresh_browser_binding_before_submit(
+                args,
+                project=project,
+                tab_id=tab_id,
+                previous_url=url,
+                commands=commands,
+            )
+            if binding_refresh.get("status") == "updated" and binding_refresh.get("current_url"):
+                url = str(binding_refresh["current_url"])
 
             submit_cmd = [
                 str(args.surf_run),
@@ -189,7 +198,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             if submit.returncode != 0:
                 raise RuntimeError(submit.stderr or submit.stdout or f"{HANDLER_SUBMIT_COMMANDS[handler]} failed")
             response_text = response_path.read_text(encoding="utf-8")
-            binding_refresh = _refresh_webgpt_binding_after_proven_submit(
+            post_submit_refresh = _refresh_browser_binding_after_proven_submit(
                 args,
                 project=project,
                 tab_id=tab_id,
@@ -197,6 +206,10 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
                 submit_meta=submit_meta,
                 commands=commands,
             )
+            if post_submit_refresh.get("status") == "updated" or (
+                not binding_refresh or binding_refresh.get("status") != "updated"
+            ):
+                binding_refresh = post_submit_refresh
         else:
             response_text, submit_meta = _run_scillm_handler(
                 args,
@@ -395,7 +408,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
     return {"exit_code": 0 if ok else 1, "handoff": handoff}
 
 
-def _refresh_webgpt_binding_after_proven_submit(
+def _refresh_browser_binding_after_proven_submit(
     args: argparse.Namespace,
     *,
     project: str,
@@ -404,9 +417,10 @@ def _refresh_webgpt_binding_after_proven_submit(
     submit_meta: dict[str, Any],
     commands: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    if str(args.handler) != "webgpt":
-        return {"status": "skipped", "reason": "handler_not_webgpt"}
-    current_url = _proven_live_webgpt_conversation_url(submit_meta)
+    handler = str(args.handler)
+    if handler not in {"webgpt", "webclaude"}:
+        return {"status": "skipped", "reason": "handler_not_refreshable"}
+    current_url = _proven_live_browser_conversation_url(handler, submit_meta)
     if not current_url:
         return {"status": "skipped", "reason": "no_proven_live_conversation_url"}
     if _same_url(previous_url, current_url):
@@ -417,12 +431,60 @@ def _refresh_webgpt_binding_after_proven_submit(
             "current_url": current_url,
             "previous_url": previous_url or None,
         }
+    return _bind_browser_oracle_url(
+        args,
+        project=project,
+        tab_id=tab_id,
+        backend=HANDLER_BACKENDS[handler],
+        previous_url=previous_url,
+        current_url=current_url,
+        commands=commands,
+    )
+
+
+def _refresh_browser_binding_before_submit(
+    args: argparse.Namespace,
+    *,
+    project: str,
+    tab_id: str,
+    previous_url: str,
+    commands: list[dict[str, Any]],
+) -> dict[str, Any]:
+    handler = str(args.handler)
+    if handler != "webclaude":
+        return {"status": "skipped", "reason": "handler_not_presubmit_refreshable"}
+    live_url = _live_tab_url(args.surf_run, tab_id, commands=commands)
+    if not live_url:
+        return {"status": "skipped", "reason": "live_tab_url_unavailable"}
+    if not _is_claude_new_to_chat_transition(previous_url, live_url):
+        return {"status": "skipped", "reason": "not_safe_provider_url_transition", "live_url": live_url}
+    return _bind_browser_oracle_url(
+        args,
+        project=project,
+        tab_id=tab_id,
+        backend=HANDLER_BACKENDS[handler],
+        previous_url=previous_url,
+        current_url=live_url,
+        commands=commands,
+    )
+
+
+def _bind_browser_oracle_url(
+    args: argparse.Namespace,
+    *,
+    project: str,
+    tab_id: str,
+    backend: str,
+    previous_url: str,
+    current_url: str,
+    commands: list[dict[str, Any]],
+) -> dict[str, Any]:
     bind_cmd = [
         str(args.browser_oracle_run),
         "bind",
         project,
         "--backend",
-        "webgpt",
+        backend,
         "--tab-id",
         tab_id,
         "--url",
@@ -434,7 +496,7 @@ def _refresh_webgpt_binding_after_proven_submit(
     commands.append(bind.summary())
     if bind.returncode != 0:
         raise RuntimeError(
-            "BLOCKED_WEBGPT_BINDING_REFRESH_FAILED: "
+            "BLOCKED_BROWSER_BINDING_REFRESH_FAILED: "
             + (bind.stderr.strip() or bind.stdout.strip() or "browser-oracle bind failed")
         )
     payload = _parse_json_object(bind.stdout)
@@ -447,6 +509,35 @@ def _refresh_webgpt_binding_after_proven_submit(
         "binding_path": payload.get("state_path"),
         "browser_oracle": payload,
     }
+
+
+def _live_tab_url(surf_run: str, tab_id: str, *, commands: list[dict[str, Any]]) -> str:
+    tab_list = _run_cmd([str(surf_run), "tab.list", "--json"], cwd=Path(surf_run).parent, timeout=60)
+    commands.append(tab_list.summary())
+    if tab_list.returncode != 0:
+        return ""
+    try:
+        payload = json.loads(tab_list.stdout)
+    except json.JSONDecodeError:
+        return ""
+    if isinstance(payload, dict):
+        payload = payload.get("tabs", [])
+    if not isinstance(payload, list):
+        return ""
+    for tab in payload:
+        if not isinstance(tab, dict):
+            continue
+        if str(tab.get("id") or "") == str(tab_id):
+            return str(tab.get("url") or "").strip()
+    return ""
+
+
+def _proven_live_browser_conversation_url(handler: str, meta: dict[str, Any]) -> str:
+    if handler == "webgpt":
+        return _proven_live_webgpt_conversation_url(meta)
+    if handler == "webclaude":
+        return _proven_live_claude_conversation_url(meta)
+    return ""
 
 
 def _proven_live_webgpt_conversation_url(meta: dict[str, Any]) -> str:
@@ -469,6 +560,35 @@ def _proven_live_webgpt_conversation_url(meta: dict[str, Any]) -> str:
     return ""
 
 
+def _proven_live_claude_conversation_url(meta: dict[str, Any]) -> str:
+    if not isinstance(meta, dict):
+        return ""
+    if str(meta.get("status") or "") != "completed":
+        return ""
+    requested_tab = str(meta.get("requested_tab_id") or "")
+    controlled_tab = str(meta.get("controlled_tab_id") or "")
+    if requested_tab and controlled_tab and requested_tab != controlled_tab:
+        return ""
+    if meta.get("raw_contains_sentinel") is not True:
+        return ""
+    candidates = [
+        str(meta.get("current_url") or "").strip(),
+        str(meta.get("conversation_url") or "").strip(),
+        str(meta.get("tab_url") or "").strip(),
+        str(meta.get("final_url") or "").strip(),
+    ]
+    identity = meta.get("tab_identity_preflight")
+    if isinstance(identity, dict):
+        candidates.append(str(identity.get("live_url") or "").strip())
+        tab = identity.get("tab")
+        if isinstance(tab, dict):
+            candidates.append(str(tab.get("url") or "").strip())
+    for url in candidates:
+        if _is_claude_conversation_url(url):
+            return url
+    return ""
+
+
 def _is_chatgpt_conversation_url(url: str) -> bool:
     if not url:
         return False
@@ -479,6 +599,30 @@ def _is_chatgpt_conversation_url(url: str) -> bool:
         return False
     parts = [part for part in parsed.path.split("/") if part]
     return "c" in parts and parts[-1] != "project"
+
+
+def _is_claude_conversation_url(url: str) -> bool:
+    if not url:
+        return False
+    parsed = urllib.parse.urlparse(url)
+    if parsed.scheme != "https":
+        return False
+    if parsed.netloc not in {"claude.ai", "www.claude.ai"}:
+        return False
+    parts = [part for part in parsed.path.split("/") if part]
+    return len(parts) >= 2 and parts[0] == "chat" and bool(parts[1])
+
+
+def _is_claude_new_to_chat_transition(expected_url: str, live_url: str) -> bool:
+    expected = urllib.parse.urlparse(str(expected_url or "").strip())
+    live = urllib.parse.urlparse(str(live_url or "").strip())
+    if expected.netloc not in {"claude.ai", "www.claude.ai"}:
+        return False
+    if live.netloc not in {"claude.ai", "www.claude.ai"}:
+        return False
+    expected_path = expected.path.rstrip("/")
+    live_path = live.path.rstrip("/")
+    return expected_path in {"", "/new"} and live_path.startswith("/chat/")
 
 
 def _same_url(left: str, right: str) -> bool:

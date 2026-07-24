@@ -24,7 +24,9 @@ TAB_STATE_FILE = Path(os.environ.get("SURF_CLAUDE_TAB_STATE", "/tmp/surf-claude-
 
 
 class SubmitFailure(RuntimeError):
-    pass
+    def __init__(self, message: str, *, metadata: dict[str, Any] | None = None) -> None:
+        super().__init__(message)
+        self.metadata = metadata or {}
 
 
 def main() -> int:
@@ -91,6 +93,7 @@ def main() -> int:
     started_at = _now()
     focus_before = _focus_state()
     requested_tab_id = _resolve_tab(args.tab_id, args.url)
+    tab_identity_preflight: dict[str, Any] = {}
     content_script_recovery: list[dict[str, Any]] = []
     if args.no_activate and not requested_tab_id:
         _write_failed_meta(
@@ -114,8 +117,8 @@ def main() -> int:
     try:
         if not requested_tab_id:
             raise SubmitFailure("No Claude tab id supplied, resolved, or remembered.")
+        tab_identity_preflight = _assert_claude_tab(requested_tab_id, args.url)
         _ensure_claude_content_script_ready(requested_tab_id, content_script_recovery)
-        _assert_claude_tab(requested_tab_id, args.url)
         attachment = _attach_file(requested_tab_id, attach_file) if attach_file else None
         _ensure_claude_content_script_ready(requested_tab_id, content_script_recovery)
         _submit_prompt(requested_tab_id, submitted_prompt)
@@ -146,6 +149,7 @@ def main() -> int:
             attach_file=attach_file,
             attachment=attachment,
             content_script_recovery=content_script_recovery,
+            tab_identity_preflight=tab_identity_preflight,
         )
         meta_path.write_text(json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         TAB_STATE_FILE.write_text(str(requested_tab_id).strip() + "\n", encoding="utf-8")
@@ -181,6 +185,7 @@ def main() -> int:
                     attach_file=attach_file,
                     attachment=None,
                     content_script_recovery=content_script_recovery,
+                    tab_identity_preflight=tab_identity_preflight,
                 )
                 meta["recovered_after_failure"] = True
                 meta["recovery_failure"] = str(exc)
@@ -205,6 +210,8 @@ def main() -> int:
             requested_tab_id=requested_tab_id,
             raw_text=raw_text,
             content_script_recovery=content_script_recovery,
+            failure_metadata=getattr(exc, "metadata", {}),
+            tab_identity_preflight=tab_identity_preflight,
         )
         print(str(exc), file=sys.stderr)
         return 4
@@ -229,27 +236,109 @@ def _remembered_tab() -> str:
     return re.sub(r"[^0-9]", "", TAB_STATE_FILE.read_text(encoding="utf-8"))[:20]
 
 
-def _assert_claude_tab(tab_id: str, expect_url: str) -> None:
+def _assert_claude_tab(tab_id: str, expect_url: str) -> dict[str, Any]:
+    for tab in _tab_list():
+        if str(tab.get("id")) == str(tab_id):
+            url = str(tab.get("url") or "")
+            identity = {
+                "ok": True,
+                "expected_tab_id": str(tab_id),
+                "expected_url": expect_url or None,
+                "tab": tab,
+                "accepted_url_transition": False,
+            }
+            if "claude.ai" not in url:
+                identity.update({"ok": False, "error": "not_claude_tab", "live_url": url})
+                raise SubmitFailure(
+                    f"tab {tab_id} is not a Claude tab: {url}",
+                    metadata={"tab_identity_preflight": identity},
+                )
+            if expect_url and _normalize_url(url) != _normalize_url(expect_url):
+                if _is_claude_new_to_chat_transition(expect_url, url):
+                    identity.update(
+                        {
+                            "accepted_url_transition": True,
+                            "expected_url": expect_url,
+                            "live_url": url,
+                            "reason": "claude_new_tab_materialized_chat",
+                        }
+                    )
+                    return identity
+                identity.update(
+                    {
+                        "ok": False,
+                        "error": "expected_url_mismatch",
+                        "expected_url": expect_url,
+                        "live_url": url,
+                    }
+                )
+                raise SubmitFailure(
+                    f"tab {tab_id} URL mismatch: expected {expect_url}, saw {url}",
+                    metadata={"tab_identity_preflight": identity},
+                )
+            identity["live_url"] = url
+            return identity
     try:
         page_text = _surf(["text", "--tab-id", tab_id], timeout=30).stdout
         if "claude.ai" not in page_text:
-            raise SubmitFailure(f"tab {tab_id} is not a Claude tab")
+            raise SubmitFailure(
+                f"tab {tab_id} is not a Claude tab",
+                metadata={
+                    "tab_identity_preflight": {
+                        "ok": False,
+                        "error": "not_claude_tab",
+                        "expected_tab_id": str(tab_id),
+                        "expected_url": expect_url or None,
+                    }
+                },
+            )
         if expect_url and _normalize_url(expect_url) not in page_text:
-            raise SubmitFailure(f"tab {tab_id} URL mismatch: expected {expect_url}")
-        return
+            raise SubmitFailure(
+                f"tab {tab_id} URL mismatch: expected {expect_url}",
+                metadata={
+                    "tab_identity_preflight": {
+                        "ok": False,
+                        "error": "expected_url_mismatch",
+                        "expected_tab_id": str(tab_id),
+                        "expected_url": expect_url,
+                    }
+                },
+            )
+        return {
+            "ok": True,
+            "expected_tab_id": str(tab_id),
+            "expected_url": expect_url or None,
+            "live_url": None,
+            "accepted_url_transition": False,
+            "source": "page_text_fallback",
+        }
     except SubmitFailure:
         raise
     except Exception:
         pass
-    for tab in _tab_list():
-        if str(tab.get("id")) == str(tab_id):
-            url = str(tab.get("url") or "")
-            if "claude.ai" not in url:
-                raise SubmitFailure(f"tab {tab_id} is not a Claude tab: {url}")
-            if expect_url and _normalize_url(url) != _normalize_url(expect_url):
-                raise SubmitFailure(f"tab {tab_id} URL mismatch: expected {expect_url}, saw {url}")
-            return
-    raise SubmitFailure(f"Claude tab {tab_id} not found in surf tab.list")
+    raise SubmitFailure(
+        f"Claude tab {tab_id} not found in surf tab.list",
+        metadata={
+            "tab_identity_preflight": {
+                "ok": False,
+                "error": "tab_not_found",
+                "expected_tab_id": str(tab_id),
+                "expected_url": expect_url or None,
+            }
+        },
+    )
+
+
+def _is_claude_new_to_chat_transition(expected_url: str, live_url: str) -> bool:
+    expected = _parse_url(expected_url)
+    live = _parse_url(live_url)
+    if expected.netloc not in {"claude.ai", "www.claude.ai"}:
+        return False
+    if live.netloc not in {"claude.ai", "www.claude.ai"}:
+        return False
+    expected_path = expected.path.rstrip("/")
+    live_path = live.path.rstrip("/")
+    return expected_path in {"", "/new"} and live_path.startswith("/chat/")
 
 
 def _submit_prompt(tab_id: str, prompt: str) -> None:
@@ -360,6 +449,7 @@ def _success_meta(
     attach_file: Path | None = None,
     attachment: dict[str, Any] | None = None,
     content_script_recovery: list[dict[str, Any]] | None = None,
+    tab_identity_preflight: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     contamination = [
         needle
@@ -385,6 +475,8 @@ def _success_meta(
         "sentinel": sentinel,
         "requested_tab_id": requested_tab_id,
         "requested_url": args.url or None,
+        "current_url": _live_url_from_identity(tab_identity_preflight),
+        "tab_identity_preflight": tab_identity_preflight or None,
         "attach_file": str(attach_file.resolve()) if attach_file else None,
         "attachment": attachment,
         "attachment_missing": bool(attach_file and not attachment),
@@ -427,7 +519,11 @@ def _write_failed_meta(
     requested_tab_id: str,
     raw_text: str = "",
     content_script_recovery: list[dict[str, Any]] | None = None,
+    failure_metadata: dict[str, Any] | None = None,
+    tab_identity_preflight: dict[str, Any] | None = None,
 ) -> None:
+    failure_metadata = failure_metadata or {}
+    tab_identity = failure_metadata.get("tab_identity_preflight") or tab_identity_preflight
     meta = {
         "status": "failed",
         "failure": failure,
@@ -438,6 +534,8 @@ def _write_failed_meta(
         "sentinel": sentinel,
         "requested_tab_id": requested_tab_id or None,
         "requested_url": args.url or None,
+        "current_url": _live_url_from_identity(tab_identity),
+        "tab_identity_preflight": tab_identity or None,
         "attach_file": str(Path(args.attach_file).expanduser()) if args.attach_file else None,
         "attachment": None,
         "raw_contains_sentinel": sentinel in raw_text,
@@ -451,6 +549,20 @@ def _write_failed_meta(
         "finished_at": finished_at,
     }
     meta_path.write_text(json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _live_url_from_identity(identity: dict[str, Any] | None) -> str | None:
+    if not isinstance(identity, dict):
+        return None
+    live_url = str(identity.get("live_url") or "").strip()
+    if live_url:
+        return live_url
+    tab = identity.get("tab")
+    if isinstance(tab, dict):
+        live_url = str(tab.get("url") or "").strip()
+        if live_url:
+            return live_url
+    return None
 
 
 def _tab_list() -> list[dict[str, Any]]:
@@ -558,6 +670,12 @@ def _find_ref(text: str, pattern: str) -> str:
 
 def _normalize_url(url: str) -> str:
     return url.strip().rstrip("/")
+
+
+def _parse_url(url: str) -> Any:
+    import urllib.parse
+
+    return urllib.parse.urlparse(url.strip())
 
 
 def _now() -> str:
