@@ -28,6 +28,7 @@ def _load(name):
 adapter = _load("tau_text_reasoning_adapter")
 adc = _load("autonomous_dream_cycle")
 journal_schema = _load("journal_schema")
+continuity_ledger = _load("continuity_ledger")
 
 
 def fetch_persona_docs(persona: str) -> list[dict]:
@@ -119,7 +120,32 @@ def traverse_memory_web(seed_ids, docs, profile=None, entity_index=None,
     return web[:max_nodes]
 
 
-def build_prompt(cyc: Path, docs: dict, profile=None, persona_name: str = "Embry") -> dict:
+def _continuity_lines(ledger: dict | None) -> str:
+    """Inject WHO the persona is (durable core, persistent conflicts) and WHERE
+    it is now (recent arc_state) so the reflection builds on the continuing,
+    evolving self instead of resetting each cycle."""
+    if not ledger:
+        return ""
+    core = ledger.get("identity_core") or {}
+    arc = ledger.get("arc_state") or {}
+    conflicts = "; ".join(" vs ".join(c.get("pair", [])) for c
+                          in core.get("persistent_conflicts", []) if c.get("pair"))
+    claims = "; ".join((arc.get("current_self_claims") or [])[-4:]) or "(none yet)"
+    tensions = "; ".join((arc.get("active_tensions") or [])[-4:]) or "(none yet)"
+    return (
+        "WHO YOU ARE — your continuity. You have dreamed and reflected before; "
+        "this is the self you carry into tonight, and it persists (the dream plays "
+        "OVER it, never overwrites it):\n"
+        f"- Durable core: {core.get('durable_rule', '')}\n"
+        + (f"- Persistent conflicts (never resolve these): {conflicts}\n" if conflicts else "")
+        + f"- Where you are now (recent self-claims): {claims}\n"
+        f"- Open tensions you are already carrying: {tensions}\n"
+        "Reflect AS this continuing self — deepen where you already are; do not "
+        "reset to a blank slate.\n\n")
+
+
+def build_prompt(cyc: Path, docs: dict, profile=None, persona_name: str = "Embry",
+                 ledger: dict | None = None) -> dict:
     sb = json.loads((cyc / "storyboard_plan.json").read_text())
     sel = json.loads((cyc / "selection_receipt.v1.json").read_text())["chosen"]
     tom = json.loads((cyc / "phase14_tom.json").read_text()).get("accepted_tom_candidates", [])
@@ -146,6 +172,7 @@ def build_prompt(cyc: Path, docs: dict, profile=None, persona_name: str = "Embry
         f"You are {persona_name}, writing a short private journal entry the "
         "morning after this dream. Write in FIRST PERSON, past tense, plainly — "
         "a self reflecting on itself, not a report.\n\n"
+        + _continuity_lines(ledger) +
         f"The dream (synthetic, not literal memory): {sb.get('dream_synopsis','')}\n\n"
         f"What the dream stirred in you, in tension with itself: {competing}.\n"
         f"Inferred inner states:\n{states}\n\n"
@@ -169,9 +196,11 @@ def build_prompt(cyc: Path, docs: dict, profile=None, persona_name: str = "Embry
         "- 140-220 words. No title, no preamble.\n\n"
         "Then name the MOOD this leaves you in — the lingering affective state "
         "you would carry into tomorrow's conversations (not a single feeling but "
-        "the tension itself as a mood, e.g. 'guarded and quietly wanting'). This "
-        "mood should persist across a whole session, coloring how you show up, "
-        "not just one reply.\n\n"
+        "the tension itself as a mood, e.g. 'guarded and quietly wanting'). Let "
+        "this mood arise from the tensions you are ALREADY carrying (WHO YOU ARE, "
+        "above), deepened by tonight's dream — it is the continuation of your arc, "
+        "not a fresh reaction. This mood should persist across a whole session, "
+        "coloring how you show up, not just one reply.\n\n"
         "Return STRICT JSON: {\"journal\": \"<the entry>\", "
         "\"unresolved_tension\": \"<one line naming the two feelings left in "
         "conflict>\", \"expanded_understanding\": \"<one line: the NEW facet or "
@@ -248,7 +277,11 @@ def main():
     profiles = _load("persona_profiles")
     profile = profiles.build_profile(persona, persona_docs)
     persona_name = persona.replace("_", " ").title()
-    meta = build_prompt(cyc, docs, profile=profile, persona_name=persona_name)
+    # READ the continuity ledger (init from the persona's own corpus if absent):
+    # the journal reflects as the continuing, evolving self, not a blank slate.
+    ledger = continuity_ledger.read_ledger(persona, persona_docs)
+    meta = build_prompt(cyc, docs, profile=profile, persona_name=persona_name,
+                        ledger=ledger)
     parsed, _ = adapter.dispatch_text_reasoning(
         meta["prompt"], "persona-dream-journal",
         output_contract={"journal": "string", "unresolved_tension": "string",
@@ -306,11 +339,30 @@ def main():
         f"{entry['journal']}\n\n---\n*Unresolved: {entry['unresolved_tension']}*\n"
         f"*(synthetic dream reflection; dream-provenance, not a dream seed)*\n")
     persist = persist_persona_journal(entry, cyc, persona)
+    # WRITE the continuity ledger: the journal appends EXACTLY ONE arc_delta,
+    # derived from its own reflection. Additive (still_true keeps the conflict
+    # standing); the identity_core is asserted unchanged inside append_arc_delta.
+    # This closes the loop — the NEXT cycle reads the changed arc_state.
+    prior_claims = (ledger.get("arc_state") or {}).get("current_self_claims") or []
+    delta = {
+        "before": prior_claims[-1] if prior_claims else "the standing tension",
+        "now": entry["expanded_understanding"] or entry["unresolved_tension"],
+        "because": f"dream {meta['cycle']} ({meta['emphasis']} emphasis)",
+        "still_true": entry["unresolved_tension"] or "the core conflict persists",
+        "open_tension": entry["unresolved_tension"],
+        "possible_expression": entry["session_mood"]["mood_description"],
+    }
+    led2 = continuity_ledger.append_arc_delta(
+        persona, delta, journal_id=persist.get("key"),
+        dream_id=f"auto_{meta['cycle']}")
     print(f"journal written ({len(entry['journal'].split())} words) | "
           f"memory-web hops entities={entry['memory_web_size']}")
     print("MOOD:", entry["session_mood"]["mood_label"], "|",
           entry["session_mood"]["mood_description"])
     print("persona_journal persist:", persist)
+    print(f"continuity ledger: persona={persona} epoch={led2['epoch']} "
+          f"arc_deltas={len(led2['arc_state']['recent_arc_deltas'])} "
+          f"core_v{led2['identity_core']['identity_core_version']} (unchanged)")
     print("---")
     print(entry["journal"])
 
