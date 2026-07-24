@@ -3,6 +3,34 @@
 **Last updated:** 2026-07-24 UTC (fair D-vs-M perception D~=M + behavioral shift-with-safety-flag) by agent
 **Status:** Active development
 
+## 2026-07-24 — REFRAME: conflict/instability IS personality (operator theory, supported)
+
+Operator theory: "the theory is that conflict/instability is personality."
+This reframes the GOAL_V5 evaluation. All session I measured the dream on
+GROUNDEDNESS/stability (is the dream disposition more grounded than memory?) and
+got D~=M (fair panel 6/13). Under this theory that was the WRONG axis:
+groundedness is the opposite of what personality is. The M-arm is flat BY DESIGN
+(single-memory extractive, no synthesis) so it concentrates to one reading; the
+dream, seeded from valence-CONFLICTED memories (202/312 hold both +/-) and
+recombining them (Amendment 2 variation engine = instability made mechanical),
+holds the tension.
+
+Tested on the 13 existing D vs M2 profiles (reports/goal_v5/conflict_is_
+personality.v1.json): on the CONFLICT axis the dream decisively beats the flat
+memory-reading — mean affect entropy 0.97 vs 0.51 (~2x spread); holds BOTH
+valences at once 5/13 vs 2/13 (2.5x); mean conflict balance 0.119 vs 0.030
+(~4x). So: dreams add TENSION, not GROUNDEDNESS. D~=M on grounding and D>>M on
+conflict are the SAME fact read on two axes.
+
+Consequence: the right evaluation for "does the dream give Embry a personality"
+is a CONFLICT/instability measure, not a groundedness or single-disposition
+measure. Perception/behavioral re-runs should ask "which voice sounds like it
+holds competing feelings / has an inner life" not "which is more grounded".
+Caveats: profile-structure metric only (not yet perceived-personality or
+behavioral); coarse 5-tag valence map; n=13. Next: re-run the agent panel with a
+conflict/personality question; treat the variation engine (same memory, +/-
+emphasis) as the instability unit of measurement.
+
 ## 2026-07-24 — reference bibliography (gathered via /brave-search this session)
 
 Research neighbors — dreaming / sleep / memory consolidation in LLM agents
