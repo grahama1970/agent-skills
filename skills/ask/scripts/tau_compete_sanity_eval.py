@@ -95,6 +95,8 @@ def _summarize(
         _check("join_requires_revision_request", "winner_revision_request" in (join.get("required_evidence") or []), {"join": join}),
         _check("command_specs_exist", _command_specs_exist(command_root), {"command_spec_root": str(command_root) if command_root else None}),
         _check("command_specs_mark_compete", _command_specs_mark_compete(command_root), {"command_spec_root": str(command_root) if command_root else None}),
+        _check("webclaude_compete_model_policy", _webclaude_model_policy(dag), {"node": _node(dag, "handler-webclaude")}),
+        _check("webclaude_command_requests_opus_5_high", _webclaude_command_requests_model(command_root), {"command_spec_root": str(command_root) if command_root else None}),
     ]
     ok = all(item["ok"] for item in checks)
     return {
@@ -108,6 +110,7 @@ def _summarize(
             "/ask run.sh compete CLI",
             "strict tau.dag_contract.v1 artifact emission",
             "mixed browser/API handler command spec generation",
+            "webclaude compete browser model preference propagation",
             "compete scorecard and winner revision contract",
         ],
         "what_remains_unverified": [
@@ -172,6 +175,28 @@ def _command_specs_mark_compete(root: Path | None) -> bool:
         if command[command.index("--workflow-mode") + 1] != "compete":
             return False
     return True
+
+
+def _webclaude_model_policy(dag: dict[str, Any]) -> bool:
+    node = _node(dag, "handler-webclaude")
+    context = node.get("context") if isinstance(node.get("context"), dict) else {}
+    policy = context.get("handler_policy") if isinstance(context.get("handler_policy"), dict) else {}
+    prompt_contract = context.get("prompt_contract") if isinstance(context.get("prompt_contract"), dict) else {}
+    return (
+        policy.get("model_preference") == "Opus 5 High"
+        and policy.get("model_preference_scope") == "ask_compete_default"
+        and prompt_contract.get("model_preference") == "Opus 5 High"
+    )
+
+
+def _webclaude_command_requests_model(root: Path | None) -> bool:
+    if root is None:
+        return False
+    spec = _read_json(root / "handler-webclaude" / "tau-dispatch-command.json")
+    command = spec.get("command") if isinstance(spec.get("command"), list) else []
+    if "--browser-model-preference" not in command:
+        return False
+    return command[command.index("--browser-model-preference") + 1] == "Opus 5 High"
 
 
 def _read_json(path: Path | None) -> dict[str, Any]:

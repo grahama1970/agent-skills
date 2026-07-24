@@ -26,6 +26,7 @@ DEFAULT_SCILLM_BASE_URL = "http://127.0.0.1:4001"
 DEFAULT_SCILLM_API_KEY = ""
 DEFAULT_TAU_PROJECT_ROOT = Path("/home/graham/workspace/experiments/tau")
 DEFAULT_OUTPUT_ROOT = Path(".ask_artifacts/tau-dag-runs")
+COMPETE_WEBCLAUDE_MODEL = "Opus 5 High"
 TERMINAL_STATUSES = {"PASS", "BLOCKED", "FAILED", "ERROR"}
 ROUNDTABLE_TOPOLOGIES = {"concurrent", "sequential"}
 ROUNDTABLE_HANDLERS = {
@@ -864,7 +865,7 @@ def _build_roundtable_tau_dag(input: TauDagCompileInput, *, run_dir: Path) -> di
                     "role": "roundtable_handler",
                     "workflow_mode": input.workflow_mode,
                     "handler": handler,
-                    "handler_policy": _handler_policy(handler),
+                    "handler_policy": _handler_policy(handler, workflow_mode=input.workflow_mode),
                     "prompt_contract": _roundtable_handler_prompt_contract(
                         input,
                         handler=handler,
@@ -1085,6 +1086,9 @@ def _write_roundtable_command_spec(
                 "codex handler requires --handler-workspace codex=/path/to/worktree"
             )
         command.extend(["--codex-workspace", workspace])
+    model_preference = str(handler_policy.get("model_preference") or "")
+    if model_preference:
+        command.extend(["--browser-model-preference", model_preference])
     for evidence in node.get("required_evidence", []):
         command.extend(["--evidence", str(evidence)])
     payload = {
@@ -1161,12 +1165,18 @@ def _model_policy(model: str, *, base_url: str = DEFAULT_SCILLM_BASE_URL) -> dic
     return payload
 
 
-def _handler_policy(handler: str) -> dict[str, Any]:
+def _handler_policy(handler: str, *, workflow_mode: str = "roundtable") -> dict[str, Any]:
     if handler in ROUNDTABLE_HANDLERS:
         policy = dict(ROUNDTABLE_HANDLERS[handler])
         policy["id"] = handler
         policy["execution_owner"] = "$tau"
         policy["receipt_schema"] = "ask.tau_dag_handler_receipt.v1"
+        if workflow_mode == "compete" and handler == "webclaude":
+            policy["model_preference"] = COMPETE_WEBCLAUDE_MODEL
+            policy["model_preference_scope"] = "ask_compete_default"
+            policy["model_preference_reason"] = (
+                "Competition mode defaults the webclaude browser seat to Claude Opus 5 High."
+            )
         return policy
     return {
         "id": handler,
@@ -1250,17 +1260,25 @@ def _roundtable_handler_prompt_contract(
     prior_nodes = prior_nodes or []
     requires_verdict = bool(prior_nodes) and _roundtable_requires_verdict(input.request)
     if input.workflow_mode == "compete":
+        policy = _handler_policy(handler, workflow_mode=input.workflow_mode)
+        model_preference = str(policy.get("model_preference") or "")
+        user_template = (
+            f"Competition request: {input.request}\n"
+            f"Competitor: {handler}\n"
+        )
+        if model_preference:
+            user_template += f"Browser model preference: {model_preference}\n"
+        user_template += (
+            "Work independently from the same input bundle. Return: implementation or patch plan, "
+            "evidence, risks, reusable features, and any blocker. Do not claim final success; "
+            "the project agent must verify against the codebase and skill contracts."
+        )
         return {
             "schema": "ask.tau_dag_prompt_contract.v1",
             "system": "You are an isolated Tau-managed competitor. Do not rely on other candidates.",
-            "user_template": (
-                f"Competition request: {input.request}\n"
-                f"Competitor: {handler}\n"
-                "Work independently from the same input bundle. Return: implementation or patch plan, "
-                "evidence, risks, reusable features, and any blocker. Do not claim final success; "
-                "the project agent must verify against the codebase and skill contracts."
-            ),
+            "user_template": user_template,
             "handler": handler,
+            "model_preference": model_preference or None,
             "prior_nodes": [],
             "requires_prior_receipts": False,
             "requires_verdict": False,

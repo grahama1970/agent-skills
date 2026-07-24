@@ -315,6 +315,10 @@ def test_compete_mixed_handlers_compile_to_isolated_candidate_dag(tmp_path: Path
     assert all(node["context"]["workflow_mode"] == "compete" for node in candidates)
     assert all(node["context"]["isolation_required"] is True for node in candidates)
     assert all(node["context"]["prompt_contract"]["isolation_required"] is True for node in candidates)
+    claude = next(node for node in candidates if node["context"]["handler"] == "webclaude")
+    assert claude["context"]["handler_policy"]["model_preference"] == "Opus 5 High"
+    assert claude["context"]["handler_policy"]["model_preference_scope"] == "ask_compete_default"
+    assert claude["context"]["prompt_contract"]["model_preference"] == "Opus 5 High"
     join = next(node for node in dag["nodes"] if node["id"] == "join")
     assert join["context"]["role"] == "compete_evaluator"
     assert "compete_scorecard" in join["required_evidence"]
@@ -328,6 +332,13 @@ def test_compete_mixed_handlers_compile_to_isolated_candidate_dag(tmp_path: Path
     command = command_spec["command"]
     assert command[command.index("--workflow-mode") + 1] == "compete"
     assert command[command.index("--browser-oracle-project") + 1] == "tau"
+    claude_command_spec = json.loads(
+        Path(bundle["command_spec_root"], "handler-webclaude", "tau-dispatch-command.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    claude_command = claude_command_spec["command"]
+    assert claude_command[claude_command.index("--browser-model-preference") + 1] == "Opus 5 High"
 
 
 def test_compete_requires_two_concurrent_handlers(tmp_path: Path) -> None:

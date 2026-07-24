@@ -61,6 +61,7 @@ def main() -> int:
     parser.add_argument("--no-activate", action="store_true")
     parser.add_argument("--evidence", action="append", default=[])
     parser.add_argument("--codex-workspace", default="")
+    parser.add_argument("--browser-model-preference", default="")
     args = parser.parse_args()
 
     start = _read_stdin_handoff()
@@ -93,6 +94,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             prior_receipts=prior_receipts,
             requires_verdict=_requires_verdict(request_text, prior_receipts),
             workflow_mode=getattr(args, "workflow_mode", "roundtable"),
+            model_preference=getattr(args, "browser_model_preference", ""),
             # API (scillm) handlers have no attachment channel and no path
             # preflight: give them the full prior response including the diff.
             inline_full=handler not in HANDLER_SUBMIT_COMMANDS and handler != "codex",
@@ -185,6 +187,9 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
                     submit_cmd.extend(["--expect-url", url])
                 else:
                     submit_cmd.extend(["--url", url])
+            model_preference = str(getattr(args, "browser_model_preference", "") or "")
+            if handler == "webclaude" and model_preference:
+                submit_cmd.extend(["--model", model_preference])
             for prior in prior_receipts:
                 prior_response = str(prior.get("response_path") or "")
                 if prior_response and Path(prior_response).is_file():
@@ -292,6 +297,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
         "transport_summary_path": str(transport_summary_path) if transport_summary_path else None,
         "webgpt_transport_summary": transport_summary or None,
         "prompt_path": str(prompt_path),
+        "browser_model_preference": str(getattr(args, "browser_model_preference", "") or "") or None,
         "recovery_packet_path": str(recovery_packet_path) if recovery_packet else None,
         "response_chars": len(response_text),
         "browser_oracle": resolve_payload,
@@ -317,6 +323,7 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             "provider_transport": "$surf",
             "handler": handler,
             "transport": HANDLER_SUBMIT_COMMANDS.get(handler, f"{handler}.local"),
+            "browser_model_preference": str(getattr(args, "browser_model_preference", "") or "") or None,
             "transport_summary_path": str(transport_summary_path) if transport_summary_path else None,
         },
     }
@@ -1465,6 +1472,7 @@ def _handler_prompt(
     requires_verdict: bool = False,
     inline_full: bool = False,
     workflow_mode: str = "roundtable",
+    model_preference: str = "",
 ) -> str:
     prior_receipts = prior_receipts or []
     lines = [
@@ -1487,6 +1495,17 @@ def _handler_prompt(
                 "",
             ]
         )
+        if model_preference:
+            lines.extend(
+                [
+                    f"Browser model preference: {model_preference}",
+                    (
+                        "Use that browser model if the provider UI exposes a selector. "
+                        "If it is unavailable, state the limitation in Blockers."
+                    ),
+                    "",
+                ]
+            )
     if prior_receipts:
         lines.extend(["Prior handler receipts to use as input:", ""])
         for receipt in prior_receipts:

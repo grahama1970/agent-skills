@@ -164,6 +164,7 @@ def test_worker_webclaude_submit_command_includes_prior_response_attachment(tmp_
         no_activate=True,
         evidence=[],
         codex_workspace="",
+        browser_model_preference="Opus 5 High",
     )
     seen_commands: list[list[str]] = []
 
@@ -197,10 +198,13 @@ def test_worker_webclaude_submit_command_includes_prior_response_attachment(tmp_
     assert result["exit_code"] == 0
     submit_command = next(command for command in seen_commands if "claude.submit" in command)
     assert submit_command[submit_command.index("--attach-file") + 1] == str(prior_response)
+    assert submit_command[submit_command.index("--model") + 1] == "Opus 5 High"
     receipt = json.loads((artifact_dir / "node-receipt.json").read_text(encoding="utf-8"))
     assert receipt["status"] == "PASS"
     assert receipt["mocked"] is False
     assert receipt["live"] is True
+    assert receipt["browser_model_preference"] == "Opus 5 High"
+    assert receipt["provider_receipt"]["browser_model_preference"] == "Opus 5 High"
 
 
 def test_worker_webclaude_refreshes_binding_after_new_url_materializes(tmp_path: Path) -> None:

@@ -206,6 +206,13 @@ Live execution adds `--execute` and uses the same Tau dispatch path as
 roundtable. Browser handlers run through `$surf` and `$browser-oracle`; API
 handler names route through `$tau` to `$scillm`.
 
+When a compete run includes `webclaude`, `$ask` defaults that browser seat to
+`Opus 5 High`. The DAG records this as `handler_policy.model_preference`, the
+Tau command spec passes `--browser-model-preference "Opus 5 High"`, and
+`claude.submit` records `requested_model`. This is an auditable preference, not
+proof that the Claude UI selector changed; model selection is only proven if
+Surf records the live UI model state.
+
 Project-agent responsibilities after a compete run:
 
 1. Read `dag.json`, command specs, each candidate `node-receipt.json`, each

@@ -44,6 +44,11 @@ def main() -> int:
     parser.add_argument("--timeout", type=int, default=300)
     parser.add_argument("--tab-id", default="")
     parser.add_argument("--url", default="")
+    parser.add_argument(
+        "--model",
+        default="",
+        help="Optional Claude browser model preference label, for example 'Opus 5 High'.",
+    )
     parser.add_argument("--no-activate", action="store_true")
     parser.add_argument(
         "--attach-file",
@@ -73,10 +78,21 @@ def main() -> int:
         sentinel = f"<<<CLAUDE_DONE:{datetime.now(UTC).strftime('%Y%m%dT%H%M%SZ')}:{secrets.token_hex(4)}>>>"
 
     prompt = input_path.read_text(encoding="utf-8")
+    model_instruction: list[str] = []
+    if args.model:
+        model_instruction = [
+            f"Requested Claude model preference: {args.model}",
+            (
+                "If the current Claude UI is not using that model and you cannot switch models, "
+                "say so under Blockers before answering."
+            ),
+            "",
+        ]
     submitted_prompt = "\n".join(
         [
             prompt.rstrip(),
             "",
+            *model_instruction,
             "---",
             "",
             "For transport verification, answer the request normally, then append a final",
@@ -477,6 +493,14 @@ def _success_meta(
         "requested_url": args.url or None,
         "current_url": _live_url_from_identity(tab_identity_preflight),
         "tab_identity_preflight": tab_identity_preflight or None,
+        "requested_model": args.model or None,
+        "model_preference": args.model or None,
+        "model_selection_proven": False,
+        "model_selection_note": (
+            "Claude submit records the requested browser model preference; it does not prove the web UI selected that model."
+            if args.model
+            else None
+        ),
         "attach_file": str(attach_file.resolve()) if attach_file else None,
         "attachment": attachment,
         "attachment_missing": bool(attach_file and not attachment),
@@ -536,6 +560,14 @@ def _write_failed_meta(
         "requested_url": args.url or None,
         "current_url": _live_url_from_identity(tab_identity),
         "tab_identity_preflight": tab_identity or None,
+        "requested_model": args.model or None,
+        "model_preference": args.model or None,
+        "model_selection_proven": False,
+        "model_selection_note": (
+            "Claude submit records the requested browser model preference; it does not prove the web UI selected that model."
+            if args.model
+            else None
+        ),
         "attach_file": str(Path(args.attach_file).expanduser()) if args.attach_file else None,
         "attachment": None,
         "raw_contains_sentinel": sentinel in raw_text,
