@@ -21,9 +21,9 @@ const { AUTO_SCREENSHOT_TOOLS, prepareRemoteTool, validateLocalToolPaths } = req
 const { authorizeClient, listClients, revokeClient, getStateDir } = require("./remote-auth.cjs");
 if (IS_WIN) { try { fs.mkdirSync(SURF_TMP, { recursive: true }); } catch {} }
 
-function parseBrowserLockOptions(noLockFlag) {
+function parseBrowserLockOptions(noLockFlag, defaultTimeoutMs) {
   const noLock = noLockFlag || process.env.SURF_NO_LOCK === "1" || process.env.SURF_NO_LOCK === "true";
-  let timeoutMs;
+  let timeoutMs = defaultTimeoutMs;
   if (process.env.SURF_LOCK_TIMEOUT_MS !== undefined) {
     timeoutMs = Number(process.env.SURF_LOCK_TIMEOUT_MS);
     if (!Number.isFinite(timeoutMs) || timeoutMs < 0) {
@@ -32,6 +32,20 @@ function parseBrowserLockOptions(noLockFlag) {
     }
   }
   return { noLock, timeoutMs };
+}
+
+function parseBrowserLockTimeoutMs(value, fallbackMs) {
+  if (value === undefined) return fallbackMs;
+  if (typeof value === "boolean") {
+    console.error("Error: --lock-timeout requires seconds");
+    process.exit(1);
+  }
+  const seconds = Number(value);
+  if (!Number.isFinite(seconds) || seconds < 0) {
+    console.error("Error: --lock-timeout must be a non-negative number of seconds");
+    process.exit(1);
+  }
+  return seconds * 1000;
 }
 
 function installBrowserLock({ noLock, timeoutMs }, endpoint) {
@@ -1810,6 +1824,7 @@ Options:
   --auto-capture    On error: capture screenshot + console to /tmp
   --soft-fail       On error: warn and exit 0 (for non-critical commands)
   --no-lock         Bypass the per-socket browser request lock
+  --lock-timeout S  Wait up to S seconds for the browser lock (defaults to request timeout)
 
 Remote Credentials (run on the browser host):
   surf remote authorize <label> --output <credential-file>
@@ -2326,7 +2341,7 @@ if (args[0] === "do") {
   let windowId = undefined;
 
   // Reserved flags that aren't workflow args
-  const reservedFlags = ['file', 'f', 'dry-run', 'on-error', 'no-auto-wait', 'step-delay', 'json', 'tab-id', 'window-id', 'no-lock'];
+  const reservedFlags = ['file', 'f', 'dry-run', 'on-error', 'no-auto-wait', 'step-delay', 'json', 'tab-id', 'window-id', 'no-lock', 'lock-timeout'];
 
   // Workflow-specific args (collected for variable substitution)
   const workflowArgs = {};
@@ -3001,8 +3016,14 @@ delete toolArgs["no-screenshot"];
 const softFail = toolArgs["soft-fail"] === true;
 delete toolArgs["soft-fail"];
 
-const lockOptions = parseBrowserLockOptions(toolArgs["no-lock"] === true || !toolRequiresBrowserLease(tool));
+const requestTimeout = resolveRequestDeadlineMs(tool, toolArgs);
+const lockTimeoutMs = parseBrowserLockTimeoutMs(toolArgs["lock-timeout"], requestTimeout);
+const lockOptions = parseBrowserLockOptions(
+  toolArgs["no-lock"] === true || !toolRequiresBrowserLease(tool),
+  lockTimeoutMs,
+);
 delete toolArgs["no-lock"];
+delete toolArgs["lock-timeout"];
 
 if (!noScreenshot && AUTO_SCREENSHOT_TOOLS.includes(tool)) {
   toolArgs.autoScreenshot = true;
@@ -3492,7 +3513,6 @@ function startChatgptRecovery(reason) {
 
 if (endpoint.kind === "remote") {
   socket = { end() {}, destroy() {} };
-  const requestTimeout = resolveRequestDeadlineMs(tool, toolArgs);
   openClientTransport(endpoint, { requestTimeoutMs: requestTimeout })
     .then(async (transport) => {
       try {
@@ -3513,7 +3533,6 @@ socket = connectEndpoint(endpoint, () => {
   writeFrame(socket, request).catch((error) => socket.destroy(error));
 });
 
-const requestTimeout = resolveRequestDeadlineMs(tool, options);
 timeout = setTimeout(() => {
   console.error(`Error: Request timed out (${requestTimeout / 1000}s)`);
   socket.destroy();

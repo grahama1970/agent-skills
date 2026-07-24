@@ -11,7 +11,7 @@ const REQUEST_ID_LIMIT = 128;
 const TOOL_NAME_LIMIT = 128;
 const LEASE_IDLE_MS = 5000;
 const AUTHENTICATED_IDLE_MS = 15000;
-const QUEUE_TIMEOUT_MS = 60000;
+const DEFAULT_QUEUE_TIMEOUT_MS = 60000;
 const DEFAULT_DEADLINE_MS = 60000;
 const MAX_DEADLINE_MS = 50 * 60 * 1000;
 const CLEANUP_GRACE_MS = 60000;
@@ -38,13 +38,13 @@ function toolRequiresBrowserLease(tool) {
 
 function resolveRequestDeadlineMs(tool, args = {}) {
   const defaultSeconds = PROVIDER_DEFAULT_TIMEOUT_SECONDS[tool];
-  if (defaultSeconds === undefined) return DEFAULT_DEADLINE_MS;
   const requestedSeconds = Number(
     args && typeof args === "object" && !Array.isArray(args) ? args.timeout : undefined,
   );
   const seconds = Number.isFinite(requestedSeconds) && requestedSeconds > 0
     ? requestedSeconds
     : defaultSeconds;
+  if (seconds === undefined) return DEFAULT_DEADLINE_MS;
   return Math.min(seconds * 1000 + CLEANUP_GRACE_MS, MAX_DEADLINE_MS);
 }
 
@@ -188,7 +188,7 @@ class HostSessionManager {
         if (context.activeRequest === request) context.activeRequest = null;
         this.audit({ event: "lease", context, request, outcome: "queue-timeout" });
         reject(new Error("timed out waiting for browser lease"));
-      }, QUEUE_TIMEOUT_MS);
+      }, request.deadlineMs || DEFAULT_QUEUE_TIMEOUT_MS);
       this.waiters.push(waiter);
       this.audit({ event: "lease", context, request, outcome: "queued" });
     }).then(() => grant());
@@ -298,6 +298,6 @@ module.exports = {
   MAX_STREAMS_PER_PRINCIPAL,
   TOOL_NAME_LIMIT,
   MAX_WAITERS,
-  QUEUE_TIMEOUT_MS,
+  QUEUE_TIMEOUT_MS: DEFAULT_QUEUE_TIMEOUT_MS,
   REQUEST_ID_LIMIT,
 };

@@ -203,6 +203,30 @@ describe("host session manager", () => {
     sessions.close(second);
   });
 
+  it("uses the request deadline for queued lease timeout", async () => {
+    vi.useFakeTimers();
+    const sessions = manager();
+    const first = connection(sessions);
+    const second = connection(sessions);
+    await sessions.beginRequest(first, { id: "held", tool: "click" });
+    let rejected = false;
+    const waiting = sessions
+      .beginRequest(second, { id: "queued", tool: "click", deadlineMs: QUEUE_TIMEOUT_MS * 2 })
+      .catch((error) => {
+        rejected = true;
+        throw error;
+      });
+    await Promise.resolve();
+    await vi.advanceTimersByTimeAsync(QUEUE_TIMEOUT_MS);
+    expect(rejected).toBe(false);
+    const assertion = expect(waiting).rejects.toThrow("timed out waiting");
+    await vi.advanceTimersByTimeAsync(QUEUE_TIMEOUT_MS);
+    await assertion;
+    sessions.complete(first, "held");
+    sessions.close(first);
+    sessions.close(second);
+  });
+
   it("lets explicit observation requests bypass a held browser lease", async () => {
     const sessions = manager();
     const owner = connection(sessions);
@@ -278,6 +302,7 @@ describe("host session manager", () => {
 
   it("resolves browser and provider deadlines in milliseconds with grace and a cap", () => {
     expect(resolveRequestDeadlineMs("click")).toBe(60000);
+    expect(resolveRequestDeadlineMs("click", { timeout: 10 })).toBe(10000 + 60000);
     expect(resolveRequestDeadlineMs("chatgpt")).toBe(2700000 + 60000);
     expect(resolveRequestDeadlineMs("gemini", { timeout: 10 })).toBe(10000 + 60000);
     expect(resolveRequestDeadlineMs("aistudio.build")).toBe(600000 + 60000);

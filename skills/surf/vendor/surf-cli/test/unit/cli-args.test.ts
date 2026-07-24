@@ -1158,6 +1158,62 @@ describe("CLI argument parsing", () => {
     }
   });
 
+  it("honors --lock-timeout while waiting for a held browser lock", async () => {
+    const socketPath = createSocketPath();
+    cleanupSocket(socketPath);
+    let requestCount = 0;
+    let resolveFirstRequest!: () => void;
+    const firstRequest = new Promise<void>((resolve) => {
+      resolveFirstRequest = resolve;
+    });
+
+    const server = net.createServer((socket: any) => {
+      let buffer = "";
+      socket.on("data", (chunk: { toString(): string }) => {
+        buffer += chunk.toString();
+        const lineEnd = buffer.indexOf("\n");
+        if (lineEnd === -1) {
+          return;
+        }
+
+        const request = JSON.parse(buffer.slice(0, lineEnd));
+        buffer = buffer.slice(lineEnd + 1);
+        requestCount++;
+        resolveFirstRequest();
+        setTimeout(() => {
+          socket.write(
+            `${JSON.stringify({ id: request.id, result: { content: [{ type: "text", text: "first" }] } })}\n`,
+          );
+          socket.end();
+        }, 300);
+      });
+    });
+
+    await new Promise<void>((resolve, reject) => {
+      server.on("error", reject);
+      server.listen(socketPath, resolve);
+    });
+
+    try {
+      const first = spawnCliWithSocket(["page.text"], socketPath);
+      await waitFor(firstRequest, 1000, "first request");
+      const secondDone = await spawnCliWithSocket([
+        "page.state",
+        "--lock-timeout",
+        "0.05",
+      ], socketPath).done;
+      const firstDone = await first.done;
+
+      expect(secondDone.code).toBe(1);
+      expect(secondDone.stderr).toContain("Timed out waiting for browser lock");
+      expect(firstDone.code).toBe(0);
+      expect(requestCount).toBe(1);
+    } finally {
+      server.close();
+      cleanupSocket(socketPath);
+    }
+  });
+
   it("auto-bypasses the browser lock for observation commands", async () => {
     const socketPath = createSocketPath();
     cleanupSocket(socketPath);
