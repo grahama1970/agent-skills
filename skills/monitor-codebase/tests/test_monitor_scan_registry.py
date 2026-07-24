@@ -30,6 +30,13 @@ def test_schedule_runs_continuous_roughly_every_30_minutes() -> None:
     assert "Continuous codebase health scan every 30 minutes" in text
 
 
+def test_schedule_uses_current_timeout_estimator_cli() -> None:
+    text = RUN_SH.read_text()
+    assert 'estimate_timeout.py" estimate --full "$total" --light 0' in text
+    assert 'estimate_timeout.py" estimate --full "$full" --light "$light" --json' in text
+    assert '--timeout "$timeout"' not in text
+
+
 def test_change_detection_includes_tracked_worktree_state() -> None:
     text = RUN_SH.read_text()
     assert "status --porcelain --untracked-files=no" in text

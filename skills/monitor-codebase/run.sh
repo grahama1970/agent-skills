@@ -953,14 +953,13 @@ cmd_schedule() {
   local total=${#projects[@]}
   # Worst case: all projects changed → all full scans
   local timeout
-  timeout=$(python3 "$COMMON/estimate_timeout.py" --full "$total" --light 0)
+  timeout=$(python3 "$COMMON/estimate_timeout.py" estimate --full "$total" --light 0)
 
   run_skill scheduler register \
     --name "monitor-codebase" \
     --cron "*/30 * * * *" \
     --command "$SKILL_DIR/run.sh scan --all" \
     --workdir "$PI_MONO" \
-    --timeout "$timeout" \
     --description "Continuous codebase health scan every 30 minutes for all registered projects"
   echo "Registered continuous scan every 30 minutes (timeout: ${timeout}s for $total projects)"
 }
@@ -988,7 +987,7 @@ cmd_estimate() {
   done
 
   local result
-  result=$(python3 "$COMMON/estimate_timeout.py" --full "$full" --light "$light" --json)
+  result=$(python3 "$COMMON/estimate_timeout.py" estimate --full "$full" --light "$light" --json)
   local timeout
   timeout=$(echo "$result" | python3 -c "import json,sys; print(json.load(sys.stdin)['timeout_seconds'])")
   local human
