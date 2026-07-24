@@ -288,7 +288,7 @@ async function isCloudflareBlocked(cdp) {
     `(() => {
       const text = String(document.body?.innerText || '').toLowerCase().replace(/\\s+/g, ' ');
       const hasChallengeScript = Boolean(document.querySelector('${SELECTORS.cloudflareScript}'));
-      const hasVisibleChallenge =
+      const hasChallengeText =
         text.includes('checking your browser') ||
         text.includes('verify you are human') ||
         text.includes('review the security of your connection') ||
@@ -298,10 +298,39 @@ async function isCloudflareBlocked(cdp) {
       const hasChatGptShell =
         text.includes('chatgpt') ||
         Boolean(document.querySelector('#prompt-textarea, [data-testid="composer-textarea"], [data-message-author-role]'));
-      return { hasChallengeScript, hasVisibleChallenge, hasChatGptShell };
+      return { hasChallengeScript, hasChallengeText, hasVisibleChallenge: hasChallengeText, hasChatGptShell };
     })()`
   );
-  return Boolean(state?.hasVisibleChallenge) && (state?.hasChatGptShell !== true || title.includes("just a moment"));
+  return Boolean(state?.hasChallengeText || state?.hasVisibleChallenge) &&
+    (state?.hasChatGptShell !== true || title.includes("just a moment"));
+}
+
+async function recoverCloudflareChallenge(cdp, inputCdp, log, options = {}) {
+  const {
+    maxReloads = 1,
+    reloadWaitMs = 2000,
+    pageLoadTimeoutMs = 45000,
+  } = options;
+
+  if (!(await isCloudflareBlocked(cdp))) return { detected: false, reloads: 0 };
+
+  for (let reloads = 1; reloads <= maxReloads; reloads += 1) {
+    log?.(`Cloudflare challenge detected; hard reloading controlled tab (${reloads}/${maxReloads})`);
+    await inputCdp("Page.reload", { ignoreCache: true });
+    if (reloadWaitMs > 0) await delay(reloadWaitMs);
+    await waitForPageLoad(cdp, pageLoadTimeoutMs);
+    if (!(await isCloudflareBlocked(cdp))) {
+      log?.(`Cloudflare challenge cleared after ${reloads} hard reload(s)`);
+      return { detected: true, reloads, recovered: true };
+    }
+  }
+
+  const error = new Error(
+    `Cloudflare challenge persisted after ${maxReloads} automatic hard reload(s)`
+  );
+  error.code = "cloudflare_challenge_persisted";
+  error.cloudflareRecovery = { detected: true, reloads: maxReloads, recovered: false };
+  throw error;
 }
 
 async function checkLoginStatus(cdp) {
@@ -721,7 +750,7 @@ async function attemptOptionalSelection(kind, requested, selectFn, log, recoverF
     };
   } catch (err) {
     const message = err?.message || String(err);
-    log(`${kind} selector unavailable for ${requested}: ${message}; continuing with current setting`);
+    log?.(`${kind} selection unavailable for ${requested}; preserving current browser setting and continuing with current setting: ${message}`);
     if (typeof recoverFn === "function") {
       await recoverFn().catch(() => {});
     }
@@ -733,6 +762,99 @@ async function attemptOptionalSelection(kind, requested, selectFn, log, recoverF
     };
   }
 }
+
+const assistantSnapshotExpression = (sentinel, baselineAssistantCount = 0) => {
+  const baseline = Number.isFinite(baselineAssistantCount) && baselineAssistantCount >= 0
+    ? Math.floor(baselineAssistantCount)
+    : 0;
+  const sentinelLiteral = JSON.stringify(sentinel || null);
+  return `(() => {
+    const BASELINE = ${baseline};
+    const SENTINEL = ${sentinelLiteral};
+    const CONVERSATION_SELECTOR = ${JSON.stringify(SELECTORS.conversationTurn)};
+    const ASSISTANT_SELECTOR = ${JSON.stringify(SELECTORS.assistantMessage)};
+    const CONTENT_SELECTORS = ${JSON.stringify(SELECTORS.assistantContent.split(", "))};
+    const STOP_SELECTOR = ${JSON.stringify(SELECTORS.stopButton)};
+    const FINISHED_SELECTOR = ${JSON.stringify(SELECTORS.finishedActions)};
+    const pageText = document.body?.innerText || document.body?.textContent || '';
+    const findSentinel = (text) => SENTINEL && String(text || '').includes(SENTINEL) ? SENTINEL : null;
+    const conversationTurns = Array.from(document.querySelectorAll(CONVERSATION_SELECTOR));
+    let assistantTurns = conversationTurns.filter((node) => {
+      if (!(node instanceof HTMLElement)) return false;
+      const role = (node.getAttribute('data-message-author-role') || '').toLowerCase();
+      const turn = (node.getAttribute('data-turn') || '').toLowerCase();
+      return role === 'assistant' || turn === 'assistant' || Boolean(node.querySelector(ASSISTANT_SELECTOR));
+    });
+    if (assistantTurns.length === 0) {
+      assistantTurns = Array.from(document.querySelectorAll(ASSISTANT_SELECTOR));
+    }
+    const newAssistantTurns = assistantTurns.slice(BASELINE);
+    let lastAssistantTurn = newAssistantTurns.length ? newAssistantTurns[newAssistantTurns.length - 1] : null;
+    let baselineFallback = false;
+    if (!lastAssistantTurn && SENTINEL && assistantTurns.length) {
+      for (let idx = assistantTurns.length - 1; idx >= 0; idx--) {
+        const candidate = assistantTurns[idx];
+        const candidateText = (candidate?.innerText || candidate?.textContent || '').trim();
+        if (findSentinel(candidateText)) {
+          lastAssistantTurn = candidate;
+          baselineFallback = true;
+          break;
+        }
+      }
+    }
+    if (!lastAssistantTurn) {
+      return {
+        text: '',
+        stopVisible: Boolean(document.querySelector(STOP_SELECTOR)),
+        finished: false,
+        source: 'awaiting-assistant-turn',
+        pageTextContainsSentinel: false,
+        documentHidden: document.hidden === true,
+        visibilityState: document.visibilityState || null,
+        baselineAssistantCount: BASELINE,
+        newAssistantTurnCount: 0,
+      };
+    }
+    const messageRoot = lastAssistantTurn.querySelector?.(ASSISTANT_SELECTOR) || lastAssistantTurn;
+    let contentRoot = null;
+    for (const selector of CONTENT_SELECTORS) {
+      const match = selector === '[dir="auto"]'
+        ? (messageRoot.matches?.(selector) ? messageRoot : null)
+        : (messageRoot.matches?.(selector) ? messageRoot : messageRoot.querySelector?.(selector));
+      if (match) {
+        contentRoot = match;
+        break;
+      }
+    }
+    const contentText = ((contentRoot || messageRoot)?.innerText || (contentRoot || messageRoot)?.textContent || '').trim();
+    const turnText = (messageRoot?.innerText || messageRoot?.textContent || '').trim();
+    const contentSentinel = findSentinel(contentText);
+    const turnSentinel = findSentinel(turnText);
+    let text = SENTINEL && !contentSentinel && turnSentinel ? turnText : contentText;
+    let source = baselineFallback ? 'assistant-dom-baseline-fallback' : 'assistant-dom';
+    if (SENTINEL && findSentinel(turnText) && !findSentinel(text)) {
+      const idx = turnText.lastIndexOf(SENTINEL);
+      if (idx >= 0) {
+        text = turnText.slice(Math.max(0, idx - 12000), idx + SENTINEL.length).trim();
+        source = 'page-text-fallback';
+      }
+    }
+    return {
+      text,
+      stopVisible: Boolean(document.querySelector(STOP_SELECTOR)),
+      finished: Boolean(lastAssistantTurn.querySelector?.(FINISHED_SELECTOR)),
+      messageId: messageRoot.getAttribute?.('data-message-id') || null,
+      turnIndex: assistantTurns.length - 1,
+      source,
+      pageTextContainsSentinel: Boolean(SENTINEL && findSentinel(turnText || pageText)),
+      sentinelMatch: findSentinel(text),
+      documentHidden: document.hidden === true,
+      visibilityState: document.visibilityState || null,
+      baselineAssistantCount: BASELINE,
+      newAssistantTurnCount: newAssistantTurns.length,
+    };
+  })()`;
+};
 
 async function typePrompt(cdp, inputCdp, prompt, signal) {
   throwIfAborted(signal);
@@ -1238,7 +1360,13 @@ async function extractAssistantResponse(options) {
   throwIfAborted(signal);
   const cdp = (expr) => raceAbort(() => cdpEvaluate(tabId, expr), signal);
 
-  if (await isCloudflareBlocked(cdp)) {
+  let cloudflareBlocked = false;
+  try {
+    cloudflareBlocked = await isCloudflareBlocked(cdp);
+  } catch (_error) {
+    cloudflareBlocked = false;
+  }
+  if (cloudflareBlocked) {
     throw new Error("Cloudflare challenge detected - complete in browser");
   }
 
@@ -1333,9 +1461,7 @@ async function query(options) {
   try {
     await waitForPageLoad(cdp, 45000, signal);
     log("Page loaded");
-    if (await isCloudflareBlocked(cdp)) {
-      throw new Error("Cloudflare challenge detected - complete in browser");
-    }
+    await recoverCloudflareChallenge(cdp, inputCdp, log, { signal });
     const loginStatus = await checkLoginStatus(cdp);
     if (loginStatus.status === 0) {
       throw new Error(
@@ -1469,8 +1595,12 @@ module.exports = {
   resolveChatGPTModelMenuOption,
   isNewAssistantContent,
   isChatGPTResponseComplete,
+  assistantSnapshotExpression,
   assertReadyForNewPrompt,
   waitForSubmitAccepted,
+  typePrompt,
+  recoverCloudflareChallenge,
+  attemptOptionalSelection,
   waitForResponse,
   detectsConversationMaxLength,
   detectsTooManyRequests,

@@ -553,6 +553,11 @@ const TOOLS = {
     desc: "Tab management",
     commands: {
       "tab.list": { desc: "List all open tabs", args: [], examples: [{ cmd: "tab.list", desc: "Show all tabs" }] },
+      "tab.recovery-state": {
+        desc: "Read guarded recovery state for one exact tab",
+        args: [],
+        examples: [{ cmd: "tab.recovery-state --tab-id 123 --json", desc: "Inspect without activating or mutating the tab" }]
+      },
       "focus.state": {
         desc: "Get focused window id and active tab id",
         args: [],
@@ -561,9 +566,10 @@ const TOOLS = {
       "tab.new": {
         desc: "Open new tab",
         args: ["url"],
-        opts: { urls: "Open multiple URLs" },
+        opts: { urls: "Open multiple URLs", background: "Open without activating the new tab" },
         examples: [
           { cmd: 'tab.new "https://google.com"', desc: "Open single tab" },
+          { cmd: 'tab.new "https://google.com" --background', desc: "Open without changing focus" },
           { cmd: 'tab.new --urls "https://a.com" "https://b.com"', desc: "Open multiple" },
         ]
       },
@@ -1642,7 +1648,7 @@ const ALL_SOCKET_TOOLS = [
   "computer",
   "page.read", "page.text", "page.state",
   "locate.role", "locate.text", "locate.label",
-  "tab.list", "focus.state", "tab.new", "tab.switch", "tab.close", "tab.move", "tab.name", "tab.unname", "tab.named",
+  "tab.list", "tab.recovery-state", "focus.state", "tab.new", "tab.switch", "tab.close", "tab.move", "tab.name", "tab.unname", "tab.named",
   "tab.group", "tab.ungroup", "tab.groups", "tab.reload",
   "scroll.top", "scroll.bottom", "scroll.to", "scroll.info",
   "wait.element", "wait.network", "wait.url", "wait.dom", "wait.load",
@@ -2955,13 +2961,20 @@ if (toolArgs.into && !toolArgs.selector) {
 
 const globalOpts = {};
 if (toolArgs["tab-id"] !== undefined) {
-  const tid = parseInt(toolArgs["tab-id"], 10);
-  if (isNaN(tid)) {
-    console.error("Error: --tab-id must be a number");
+  const rawTid = toolArgs["tab-id"];
+  const tid = typeof rawTid === "number"
+    ? rawTid
+    : (/^\d+$/.test(String(rawTid)) ? Number(rawTid) : NaN);
+  if (!Number.isSafeInteger(tid) || tid <= 0) {
+    console.error("Error: --tab-id must be a positive integer");
     process.exit(1);
   }
   globalOpts.tabId = tid;
   delete toolArgs["tab-id"];
+}
+if (tool === "tab.recovery-state" && !globalOpts.tabId) {
+  console.error("Error: tab.recovery-state requires --tab-id");
+  process.exit(1);
 }
 if (toolArgs["window-id"] !== undefined) {
   const wid = parseInt(toolArgs["window-id"], 10);

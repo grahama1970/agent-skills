@@ -181,18 +181,20 @@ const assistantSnapshotExpression = (sentinel) => {
     const pageTextContainsSentinel = Boolean(findSentinel(pageText));
     const lowerPageText = pageText.toLowerCase();
     const lowerResponseText = text.toLowerCase();
+    const promptNeedle = 'if kimi provider capacity is busy';
+    const promptEchoLooksBusy = lowerResponseText.includes(promptNeedle);
     const providerBusyInPage = lowerPageText.includes('system is currently busy')
       || lowerPageText.includes('please try again later') && (
         lowerPageText.includes('system is currently busy')
         || lowerPageText.includes('temporarily busy')
         || lowerPageText.includes('high demand')
       );
-    const providerBusyInResponse = lowerResponseText.includes('system is currently busy')
+    const providerBusyInResponse = !promptEchoLooksBusy && (lowerResponseText.includes('system is currently busy')
       || lowerResponseText.includes('please try again later') && (
         lowerResponseText.includes('system is currently busy')
         || lowerResponseText.includes('temporarily busy')
         || lowerResponseText.includes('high demand')
-      );
+      ));
     return {
       text,
       stopVisible,
