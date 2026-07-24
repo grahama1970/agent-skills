@@ -1,0 +1,104 @@
+{
+  "schema": "persona_dream.memory_voice_weight_profile.v1",
+  "dream_node_key": "memory_arm_cycle_20260722T203423Z",
+  "persona_id": "embry",
+  "tom_state_types": [
+    "belief",
+    "emotion",
+    "preference",
+    "relationship_state",
+    "stance",
+    "uncertainty"
+  ],
+  "weights": [
+    {
+      "emotional_tag": "boundary",
+      "tone": "firm_boundary",
+      "pace": "steady",
+      "weight": 1.0,
+      "sources": [
+        {
+          "tom_key": "embry_age19_23_b01_memory_010:stance",
+          "tom_state_type": "stance",
+          "emotional_intensity": 1.0,
+          "statement": "boundary: Embry: She shares technical causation while keeping the vulnerable memory private. Trigger: A teammate asks why the angle matters so much to her. Consequence: State shifts from 'Her accident"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "hesitance",
+      "tone": "hesitant_reflective",
+      "pace": "measured",
+      "weight": 1.0,
+      "sources": [
+        {
+          "tom_key": "embry_age19_23_b01_memory_010:uncertainty",
+          "tom_state_type": "uncertainty",
+          "emotional_intensity": 1.0,
+          "statement": "boundary: Embry: She shares technical causation while keeping the vulnerable memory private. Trigger: A teammate asks why the angle matters so much to her. Consequence: State shifts from 'Her accident"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "reflection",
+      "tone": "neutral_reflective",
+      "pace": "measured",
+      "weight": 0.9143,
+      "sources": [
+        {
+          "tom_key": "embry_age19_23_b01_memory_017:belief",
+          "tom_state_type": "belief",
+          "emotional_intensity": 1.0,
+          "statement": "relationship: Embry toward Tommy: She accepts that his procedural language can carry emotional recognition. Trigger: He identifies her inside the fault metaphor without dramatizing it. Consequence: St"
+        },
+        {
+          "tom_key": "embry_age19_23_b01_memory_017:emotion",
+          "tom_state_type": "emotion",
+          "emotional_intensity": 1.0,
+          "statement": "relationship: Embry toward Tommy: She accepts that his procedural language can carry emotional recognition. Trigger: He identifies her inside the fault metaphor without dramatizing it. Consequence: St"
+        },
+        {
+          "tom_key": "embry_age19_23_b01_memory_017:relationship_state",
+          "tom_state_type": "relationship_state",
+          "emotional_intensity": 1.0,
+          "statement": "relationship: Embry toward Tommy: She accepts that his procedural language can carry emotional recognition. Trigger: He identifies her inside the fault metaphor without dramatizing it. Consequence: St"
+        },
+        {
+          "tom_key": "embry_age19_23_b01_memory_046:emotion",
+          "tom_state_type": "emotion",
+          "emotional_intensity": 0.8,
+          "statement": "preference: Embry: She prefers to establish ritual, food continuity, and tool order before ordinary unpacking. Trigger: The OPEN FIRST sequence converts the room into a functional home. Consequence: S"
+        },
+        {
+          "tom_key": "embry_age19_23_b01_memory_046:preference",
+          "tom_state_type": "preference",
+          "emotional_intensity": 0.8,
+          "statement": "preference: Embry: She prefers to establish ritual, food continuity, and tool order before ordinary unpacking. Trigger: The OPEN FIRST sequence converts the room into a functional home. Consequence: S"
+        },
+        {
+          "tom_key": "embry_age19_23_b01_memory_046:relationship_state",
+          "tom_state_type": "relationship_state",
+          "emotional_intensity": 0.8,
+          "statement": "preference: Embry: She prefers to establish ritual, food continuity, and tool order before ordinary unpacking. Trigger: The OPEN FIRST sequence converts the room into a functional home. Consequence: S"
+        },
+        {
+          "tom_key": "embry_age19_23_b01_memory_010:belief",
+          "tom_state_type": "belief",
+          "emotional_intensity": 1.0,
+          "statement": "boundary: Embry: She shares technical causation while keeping the vulnerable memory private. Trigger: A teammate asks why the angle matters so much to her. Consequence: State shifts from 'Her accident"
+        }
+      ]
+    }
+  ],
+  "synthesis_params": {
+    "temperature": 0.9
+  },
+  "mapping": "frozen in scripts/dream_voice_weights.py (TOM_TO_VOICE)",
+  "arm": "M_direct_memory",
+  "derivation": "compute_matched: identical TOM_TO_VOICE mapping and mean-intensity weight formula as the dream arm, ToM sourced from source memories not the dream",
+  "source_memory_ids": [
+    "embry_age19_23_b01_memory_017",
+    "embry_age19_23_b01_memory_046",
+    "embry_age19_23_b01_memory_010"
+  ]
+}

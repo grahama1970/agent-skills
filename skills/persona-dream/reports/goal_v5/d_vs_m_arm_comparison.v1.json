@@ -1,0 +1,118 @@
+{
+  "schema": "persona_dream.d_vs_m_arm_comparison.v1",
+  "n_cycles": 13,
+  "dominant_tag_differs_count": 12,
+  "arm_M": "deterministic crosswalk of source-memory ToM tags into ALLOWED_TOM_STATES, then identical TOM_TO_VOICE mapping + mean-intensity weight formula as the dream arm",
+  "comparison": [
+    {
+      "cycle": "cycle_20260722T184531Z",
+      "D_tag": "boundary",
+      "D_weight": 0.46,
+      "M_tag": "boundary",
+      "M_weight": 0.6,
+      "dominant_tag_differs": false
+    },
+    {
+      "cycle": "cycle_20260722T201426Z",
+      "D_tag": "hesitance",
+      "D_weight": 0.57,
+      "M_tag": "boundary",
+      "M_weight": 1.0,
+      "dominant_tag_differs": true
+    },
+    {
+      "cycle": "cycle_20260722T203423Z",
+      "D_tag": "reflection",
+      "D_weight": 0.495,
+      "M_tag": "boundary",
+      "M_weight": 1.0,
+      "dominant_tag_differs": true
+    },
+    {
+      "cycle": "cycle_20260722T222024Z",
+      "D_tag": "reflection",
+      "D_weight": 0.585,
+      "M_tag": "hesitance",
+      "M_weight": 0.8,
+      "dominant_tag_differs": true
+    },
+    {
+      "cycle": "cycle_20260723T102522Z",
+      "D_tag": "boundary",
+      "D_weight": 0.52,
+      "M_tag": "reflection",
+      "M_weight": 0.8,
+      "dominant_tag_differs": true
+    },
+    {
+      "cycle": "cycle_20260723T212254Z",
+      "D_tag": "hesitance",
+      "D_weight": 0.62,
+      "M_tag": "boundary",
+      "M_weight": 0.8,
+      "dominant_tag_differs": true
+    },
+    {
+      "cycle": "cycle_20260723T213742Z",
+      "D_tag": "yearning",
+      "D_weight": 0.62,
+      "M_tag": "boundary",
+      "M_weight": 1.0,
+      "dominant_tag_differs": true
+    },
+    {
+      "cycle": "cycle_20260723T215140Z",
+      "D_tag": "warmth",
+      "D_weight": 0.55,
+      "M_tag": "boundary",
+      "M_weight": 0.7,
+      "dominant_tag_differs": true
+    },
+    {
+      "cycle": "cycle_20260723T220612Z",
+      "D_tag": "warmth",
+      "D_weight": 0.68,
+      "M_tag": "reflection",
+      "M_weight": 0.6,
+      "dominant_tag_differs": true
+    },
+    {
+      "cycle": "cycle_20260723T221914Z",
+      "D_tag": "warmth",
+      "D_weight": 0.68,
+      "M_tag": "reflection",
+      "M_weight": 0.6667,
+      "dominant_tag_differs": true
+    },
+    {
+      "cycle": "cycle_20260723T223359Z",
+      "D_tag": "warmth",
+      "D_weight": 0.56,
+      "M_tag": "hesitance",
+      "M_weight": 0.8,
+      "dominant_tag_differs": true
+    },
+    {
+      "cycle": "cycle_20260723T224814Z",
+      "D_tag": "warmth",
+      "D_weight": 0.52,
+      "M_tag": "reflection",
+      "M_weight": 0.4,
+      "dominant_tag_differs": true
+    },
+    {
+      "cycle": "cycle_20260723T234851Z",
+      "D_tag": "yearning",
+      "D_weight": 0.58,
+      "M_tag": "boundary",
+      "M_weight": 0.8,
+      "dominant_tag_differs": true
+    }
+  ],
+  "caveats": [
+    "M-arm is DETERMINISTIC-crosswalk, NOT yet LLM-compute-matched: the dream arm's ToM is LLM-interpreted; a fully fair D-vs-M requires running the same phase-13 LLM interpretation on the raw memories (a model call, not yet authorized/run).",
+    "Intensity scales are not identical: memory emotional_intensity is 1-5 normalized /5; dream candidates are native 0-1. Compare DOMINANT TAG (categorical) as the primary signal, not weight magnitudes, until scales are reconciled.",
+    "This is an engineering artifact, not the listener endpoint; perceived D-vs-M still requires the blinded human study."
+  ],
+  "reading": "Dominant tone differs between dream and direct-memory in 12/13 cycles, indicating the dream step is not a pass-through of stored memory ToM. Direction only; magnitude and perception unproven."
+}

@@ -1,0 +1,57 @@
+{
+  "schema": "persona_dream.memory_voice_weight_profile.v1",
+  "dream_node_key": "memory_arm_cycle_20260723T223359Z",
+  "persona_id": "embry",
+  "tom_state_types": [
+    "belief",
+    "relationship_state",
+    "uncertainty"
+  ],
+  "weights": [
+    {
+      "emotional_tag": "hesitance",
+      "tone": "hesitant_reflective",
+      "pace": "measured",
+      "weight": 0.8,
+      "sources": [
+        {
+          "tom_key": "embry_age04_10_b01_memory_048:uncertainty",
+          "tom_state_type": "uncertainty",
+          "emotional_intensity": 0.8,
+          "statement": "unresolved_thread: Embry can share risk and responsibility, but she has not stopped fearing irreversible error. Trigger: Maya remains present through preparation, correction, and launch. Consequence: "
+        }
+      ]
+    },
+    {
+      "emotional_tag": "reflection",
+      "tone": "neutral_reflective",
+      "pace": "measured",
+      "weight": 0.8,
+      "sources": [
+        {
+          "tom_key": "embry_age04_10_b01_memory_046:relationship_state",
+          "tom_state_type": "relationship_state",
+          "emotional_intensity": 0.8,
+          "statement": "relationship: Embry wants Maya's friendship but tests whether closeness can coexist with bounded risk. Trigger: Maya offers a rocket project and respects the first safety boundary. Consequence: A caut"
+        },
+        {
+          "tom_key": "embry_age04_10_b01_memory_047:belief",
+          "tom_state_type": "belief",
+          "emotional_intensity": 0.8,
+          "statement": "belief: Embry revises the belief that any error predicts catastrophe or exclusion. Trigger: A visible, non-dangerous build mistake occurs within agreed safety limits. Consequence: Repairable error bec"
+        }
+      ]
+    }
+  ],
+  "synthesis_params": {
+    "temperature": 0.84
+  },
+  "mapping": "frozen in scripts/dream_voice_weights.py (TOM_TO_VOICE)",
+  "arm": "M_direct_memory",
+  "derivation": "compute_matched: identical TOM_TO_VOICE mapping and mean-intensity weight formula as the dream arm, ToM sourced from source memories not the dream",
+  "source_memory_ids": [
+    "embry_age04_10_b01_memory_046",
+    "embry_age04_10_b01_memory_048",
+    "embry_age04_10_b01_memory_047"
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "schema": "persona_dream.memory_voice_weight_profile.v1",
+  "dream_node_key": "memory_arm_cycle_20260723T221914Z",
+  "persona_id": "embry",
+  "tom_state_types": [
+    "belief",
+    "emotion",
+    "relationship_state"
+  ],
+  "weights": [
+    {
+      "emotional_tag": "reflection",
+      "tone": "neutral_reflective",
+      "pace": "measured",
+      "weight": 0.6667,
+      "sources": [
+        {
+          "tom_key": "embry_age04_10_b01_memory_007:emotion",
+          "tom_state_type": "emotion",
+          "emotional_intensity": 0.8,
+          "statement": "emotion: Embry fears damage means losing a beloved object. Trigger: The stuffed animal's seam opens during a disruptive period. Consequence: Watching repair converts distress into cautious relief."
+        },
+        {
+          "tom_key": "embry_age04_10_b01_memory_029:relationship_state",
+          "tom_state_type": "relationship_state",
+          "emotional_intensity": 0.4,
+          "statement": "relationship: Embry experiences the grandmother's repair as a portable bond. Trigger: The backpack tears during a period of change. Consequence: The visible patch becomes both practical repair and rel"
+        },
+        {
+          "tom_key": "embry_age04_10_b01_memory_018:belief",
+          "tom_state_type": "belief",
+          "emotional_intensity": 0.8,
+          "statement": "belief: Embry can temporarily accept that repaired work still counts. Trigger: The model tears near the end of class. Consequence: Submitting it generalizes the grandmother's lesson beyond sentimental"
+        }
+      ]
+    }
+  ],
+  "synthesis_params": {
+    "temperature": 0.84
+  },
+  "mapping": "frozen in scripts/dream_voice_weights.py (TOM_TO_VOICE)",
+  "arm": "M_direct_memory",
+  "derivation": "compute_matched: identical TOM_TO_VOICE mapping and mean-intensity weight formula as the dream arm, ToM sourced from source memories not the dream",
+  "source_memory_ids": [
+    "embry_age04_10_b01_memory_007",
+    "embry_age04_10_b01_memory_029",
+    "embry_age04_10_b01_memory_018"
+  ]
+}

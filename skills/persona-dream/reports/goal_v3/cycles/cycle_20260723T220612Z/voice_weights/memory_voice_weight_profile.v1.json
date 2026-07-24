@@ -1,0 +1,57 @@
+{
+  "schema": "persona_dream.memory_voice_weight_profile.v1",
+  "dream_node_key": "memory_arm_cycle_20260723T220612Z",
+  "persona_id": "embry",
+  "tom_state_types": [
+    "belief",
+    "relationship_state",
+    "stance"
+  ],
+  "weights": [
+    {
+      "emotional_tag": "reflection",
+      "tone": "neutral_reflective",
+      "pace": "measured",
+      "weight": 0.6,
+      "sources": [
+        {
+          "tom_key": "embry_age04_10_b01_memory_039:relationship_state",
+          "tom_state_type": "relationship_state",
+          "emotional_intensity": 0.4,
+          "statement": "relationship: Embry experiences Tommy's calm action as safety when words cannot undo the injury. Trigger: She is bleeding and frightened after the bottle-rocket strike. Consequence: His procedural car"
+        },
+        {
+          "tom_key": "embry_age04_10_b01_memory_013:belief",
+          "tom_state_type": "belief",
+          "emotional_intensity": 0.8,
+          "statement": "belief: Embry believes a mistake can have a procedure after it happens. Trigger: Tommy names a repeatable cleanup sequence. Consequence: The rule becomes both resilience tool and later fuel for excess"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "boundary",
+      "tone": "firm_boundary",
+      "pace": "steady",
+      "weight": 0.4,
+      "sources": [
+        {
+          "tom_key": "embry_age04_10_b01_memory_032:stance",
+          "tom_state_type": "stance",
+          "emotional_intensity": 0.4,
+          "statement": "boundary: Embry knows launches require angle control, distance, and a clear zone. Trigger: Tommy prepares a supervised rocket activity. Consequence: Safety procedure becomes part of shared enjoyment r"
+        }
+      ]
+    }
+  ],
+  "synthesis_params": {
+    "temperature": 0.84
+  },
+  "mapping": "frozen in scripts/dream_voice_weights.py (TOM_TO_VOICE)",
+  "arm": "M_direct_memory",
+  "derivation": "compute_matched: identical TOM_TO_VOICE mapping and mean-intensity weight formula as the dream arm, ToM sourced from source memories not the dream",
+  "source_memory_ids": [
+    "embry_age04_10_b01_memory_039",
+    "embry_age04_10_b01_memory_013",
+    "embry_age04_10_b01_memory_032"
+  ]
+}

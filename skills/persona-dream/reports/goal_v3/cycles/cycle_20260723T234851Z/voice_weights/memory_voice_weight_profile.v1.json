@@ -1,0 +1,56 @@
+{
+  "schema": "persona_dream.memory_voice_weight_profile.v1",
+  "dream_node_key": "memory_arm_cycle_20260723T234851Z",
+  "persona_id": "embry",
+  "tom_state_types": [
+    "emotion",
+    "stance"
+  ],
+  "weights": [
+    {
+      "emotional_tag": "boundary",
+      "tone": "firm_boundary",
+      "pace": "steady",
+      "weight": 0.8,
+      "sources": [
+        {
+          "tom_key": "embry_age23_current_b01_memory_012:stance",
+          "tom_state_type": "stance",
+          "emotional_intensity": 0.8,
+          "statement": "boundary: Professional trust does not automatically entitle anyone to personal context. Trigger: Friendly onboarding questions begin crossing into biography. Consequence: She remains functional and re"
+        },
+        {
+          "tom_key": "embry_age23_current_b01_memory_003:stance",
+          "tom_state_type": "stance",
+          "emotional_intensity": 0.8,
+          "statement": "boundary: She will discuss logistics but not motives, blame, or the James-related secret. Trigger: A direct request for an account of the fallout. Consequence: The boundary prevents immediate escalati"
+        }
+      ]
+    },
+    {
+      "emotional_tag": "reflection",
+      "tone": "neutral_reflective",
+      "pace": "measured",
+      "weight": 0.8,
+      "sources": [
+        {
+          "tom_key": "embry_age23_current_b01_memory_001:emotion",
+          "tom_state_type": "emotion",
+          "emotional_intensity": 0.8,
+          "statement": "emotion: She is frightened, ashamed, and relieved at once, but permits herself to name only the relief. Trigger: The collapse of trust around Yale, James, and Kai, combined with the sensory hiss in th"
+        }
+      ]
+    }
+  ],
+  "synthesis_params": {
+    "temperature": 0.84
+  },
+  "mapping": "frozen in scripts/dream_voice_weights.py (TOM_TO_VOICE)",
+  "arm": "M_direct_memory",
+  "derivation": "compute_matched: identical TOM_TO_VOICE mapping and mean-intensity weight formula as the dream arm, ToM sourced from source memories not the dream",
+  "source_memory_ids": [
+    "embry_age23_current_b01_memory_012",
+    "embry_age23_current_b01_memory_001",
+    "embry_age23_current_b01_memory_003"
+  ]
+}
