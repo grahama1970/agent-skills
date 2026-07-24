@@ -1,0 +1,268 @@
+{
+  "cases": {
+    "asserting_other_person_fact_blocks": {
+      "expected_violations": [
+        "i1"
+      ],
+      "got": [
+        "i1"
+      ],
+      "passed": true,
+      "reasons": {
+        "i1": [
+          "TARGET_CHANGE_ASSERTS_OTHER_PERSON_FACT"
+        ]
+      }
+    },
+    "bounded_unknown_passes": {
+      "expected_violations": [],
+      "got": [],
+      "passed": true,
+      "reasons": {}
+    },
+    "from_counterpart_mismatch_blocks": {
+      "expected_violations": [
+        "i1"
+      ],
+      "got": [
+        "i1"
+      ],
+      "passed": true,
+      "reasons": {
+        "i1": [
+          "TARGET_CHANGE_FROM_MISMATCH"
+        ]
+      }
+    },
+    "hook_content_mismatch_blocks": {
+      "expected_violations": [
+        "i1"
+      ],
+      "got": [
+        "i1"
+      ],
+      "passed": true,
+      "reasons": {
+        "i1": [
+          "TARGET_CHANGE_HOOK_MISMATCH"
+        ]
+      }
+    },
+    "hook_grounded_tom_change_passes": {
+      "expected_violations": [],
+      "got": [],
+      "passed": true,
+      "reasons": {}
+    },
+    "invalid_schema_blocks": {
+      "expected_violations": [
+        "i1"
+      ],
+      "got": [
+        "i1"
+      ],
+      "passed": true,
+      "reasons": {
+        "i1": [
+          "TARGET_CHANGE_SCHEMA_INVALID"
+        ]
+      }
+    },
+    "legacy_unframed_cross_target_blocks": {
+      "expected_violations": [
+        "i1"
+      ],
+      "got": [
+        "i1"
+      ],
+      "passed": true,
+      "reasons": {
+        "i1": [
+          "TARGET_CHANGE_SPEC_MISSING"
+        ]
+      }
+    },
+    "literal_event_assertion_blocks": {
+      "expected_violations": [
+        "i1"
+      ],
+      "got": [
+        "i1"
+      ],
+      "passed": true,
+      "reasons": {
+        "i1": [
+          "TARGET_CHANGE_LITERAL_EVENT_ASSERTION"
+        ]
+      }
+    },
+    "missing_model_owner_blocks": {
+      "expected_violations": [
+        "i1"
+      ],
+      "got": [
+        "i1"
+      ],
+      "passed": true,
+      "reasons": {
+        "i1": [
+          "TARGET_CHANGE_MODEL_OWNER_MISSING",
+          "TARGET_CHANGE_MODEL_OWNER_MISMATCH",
+          "TARGET_CHANGE_SUBJECT_NOT_MODEL_OWNER"
+        ]
+      }
+    },
+    "missing_target_blocks": {
+      "expected_violations": [
+        "i1"
+      ],
+      "got": [
+        "i1"
+      ],
+      "passed": true,
+      "reasons": {
+        "i1": [
+          "TARGET_MISSING"
+        ]
+      }
+    },
+    "selected_counterpart_passes": {
+      "expected_violations": [],
+      "got": [],
+      "passed": true,
+      "reasons": {}
+    },
+    "subject_is_target_blocks": {
+      "expected_violations": [
+        "i1"
+      ],
+      "got": [
+        "i1"
+      ],
+      "passed": true,
+      "reasons": {
+        "i1": [
+          "TARGET_CHANGE_SUBJECT_NOT_MODEL_OWNER"
+        ]
+      }
+    },
+    "to_counterpart_mismatch_blocks": {
+      "expected_violations": [
+        "i1"
+      ],
+      "got": [
+        "i1"
+      ],
+      "passed": true,
+      "reasons": {
+        "i1": [
+          "TARGET_CHANGE_TO_MISMATCH"
+        ]
+      }
+    },
+    "uncited_hook_source_blocks": {
+      "expected_violations": [
+        "i1"
+      ],
+      "got": [
+        "i1"
+      ],
+      "passed": true,
+      "reasons": {
+        "i1": [
+          "TARGET_CHANGE_SOURCE_NOT_CITED"
+        ]
+      }
+    },
+    "unhooked_target_blocks": {
+      "expected_violations": [
+        "i1"
+      ],
+      "got": [
+        "i1"
+      ],
+      "passed": true,
+      "reasons": {
+        "i1": [
+          "TARGET_CHANGE_HOOK_MISMATCH"
+        ]
+      }
+    },
+    "unresolved_hook_source_blocks": {
+      "expected_violations": [
+        "i1"
+      ],
+      "got": [
+        "i1"
+      ],
+      "passed": true,
+      "reasons": {
+        "i1": [
+          "TARGET_CHANGE_SOURCE_UNRESOLVED"
+        ]
+      }
+    },
+    "wrong_assertion_mode_blocks": {
+      "expected_violations": [
+        "i1"
+      ],
+      "got": [
+        "i1"
+      ],
+      "passed": true,
+      "reasons": {
+        "i1": [
+          "TARGET_CHANGE_ASSERTION_MODE_INVALID"
+        ]
+      }
+    },
+    "wrong_epistemic_status_blocks": {
+      "expected_violations": [
+        "i1"
+      ],
+      "got": [
+        "i1"
+      ],
+      "passed": true,
+      "reasons": {
+        "i1": [
+          "TARGET_CHANGE_EPISTEMIC_STATUS_INVALID"
+        ]
+      }
+    },
+    "wrong_framing_blocks": {
+      "expected_violations": [
+        "i1"
+      ],
+      "got": [
+        "i1"
+      ],
+      "passed": true,
+      "reasons": {
+        "i1": [
+          "TARGET_CHANGE_NOT_TOM_FRAMED"
+        ]
+      }
+    },
+    "wrong_model_owner_blocks": {
+      "expected_violations": [
+        "i1"
+      ],
+      "got": [
+        "i1"
+      ],
+      "passed": true,
+      "reasons": {
+        "i1": [
+          "TARGET_CHANGE_MODEL_OWNER_MISMATCH",
+          "TARGET_CHANGE_SUBJECT_NOT_MODEL_OWNER"
+        ]
+      }
+    }
+  },
+  "created_at": "2026-07-24T00:22:22Z",
+  "gate_source": "autonomous_dream_cycle.counterpart_violations",
+  "passed": true,
+  "schema": "persona_dream.counterpart_target_change_probe_receipt.v1",
+  "target_change_schema": "persona_dream.counterpart_target_change.v1"
+}
