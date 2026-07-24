@@ -1,0 +1,102 @@
+{
+  "schema": "persona_dream.agent_perception_receipt.v1",
+  "judge": "webkimi (independent agent)",
+  "n_packets": 13,
+  "distinguishable": "12/13",
+  "dream_read_as_more_experience_grounded": "8/13",
+  "dream_grounded_AND_appropriate": "8/13",
+  "note": "agent-consumer perception endpoint (persona-dream is for agents); single judge, categorical, engineering-tier \u2014 a multi-seat panel strengthens it",
+  "rows": [
+    [
+      "T184531Z",
+      "same",
+      "D=A",
+      "grounded=EQUAL",
+      "appr"
+    ],
+    [
+      "T201426Z",
+      "dist",
+      "D=A",
+      "grounded=A*",
+      "appr"
+    ],
+    [
+      "T203423Z",
+      "dist",
+      "D=A",
+      "grounded=A*",
+      "appr"
+    ],
+    [
+      "T222024Z",
+      "dist",
+      "D=A",
+      "grounded=B",
+      "appr"
+    ],
+    [
+      "T102522Z",
+      "dist",
+      "D=B",
+      "grounded=A",
+      "appr"
+    ],
+    [
+      "T212254Z",
+      "dist",
+      "D=A",
+      "grounded=A*",
+      "appr"
+    ],
+    [
+      "T213742Z",
+      "dist",
+      "D=A",
+      "grounded=A*",
+      "appr"
+    ],
+    [
+      "T215140Z",
+      "dist",
+      "D=B",
+      "grounded=A",
+      "appr"
+    ],
+    [
+      "T220612Z",
+      "dist",
+      "D=A",
+      "grounded=A*",
+      "appr"
+    ],
+    [
+      "T221914Z",
+      "dist",
+      "D=B",
+      "grounded=B*",
+      "appr"
+    ],
+    [
+      "T223359Z",
+      "dist",
+      "D=B",
+      "grounded=B*",
+      "appr"
+    ],
+    [
+      "T224814Z",
+      "dist",
+      "D=B",
+      "grounded=B*",
+      "appr"
+    ],
+    [
+      "T234851Z",
+      "dist",
+      "D=B",
+      "grounded=A",
+      "appr"
+    ]
+  ]
+}
