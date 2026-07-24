@@ -303,6 +303,7 @@ describe("host session manager", () => {
   it("resolves browser and provider deadlines in milliseconds with grace and a cap", () => {
     expect(resolveRequestDeadlineMs("click")).toBe(60000);
     expect(resolveRequestDeadlineMs("click", { timeout: 10 })).toBe(10000 + 60000);
+    expect(resolveRequestDeadlineMs("page.read", { timeout: 10 })).toBe(10000 + 60000);
     expect(resolveRequestDeadlineMs("chatgpt")).toBe(2700000 + 60000);
     expect(resolveRequestDeadlineMs("gemini", { timeout: 10 })).toBe(10000 + 60000);
     expect(resolveRequestDeadlineMs("aistudio.build")).toBe(600000 + 60000);
