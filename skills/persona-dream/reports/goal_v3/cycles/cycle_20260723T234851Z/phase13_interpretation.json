@@ -1,0 +1,377 @@
+{
+  "accepted_interpretations": [
+    {
+      "alternative_explanation": "The renderer may have simply placed the main character in focus and then shown her doing travel-related actions without implying emotional containment.",
+      "cites_renderer_review": false,
+      "confidence": 0.46,
+      "emotional_intensity": 0.55,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-001",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "frame_0001",
+        "frame_0002"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_012",
+        "embry_age23_current_b01_memory_001"
+      ],
+      "statement": "Embry may be representing herself as carefully composed and externally legible while keeping the emotionally relevant history with Kai inaccessible; the sharp, centered presentation and later controlled tasks suggest a stance of polished containment rather than open disclosure.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "kai",
+      "tom_state_type": "stance",
+      "uncertainty": "The intended dream is empty, so it is unclear whether the centered portrait and packing/writing imagery were meant as symbolic choices or merely generated scene content."
+    },
+    {
+      "alternative_explanation": "The device screen may be a generic visual prop inserted to create activity in the frame, with no intended relational meaning.",
+      "cites_renderer_review": false,
+      "confidence": 0.41,
+      "emotional_intensity": 0.62,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-002",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "frame_0003"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_003",
+        "embry_age23_current_b01_memory_001"
+      ],
+      "statement": "The phone or tablet face may tentatively point to Embry's fear of direct relational confrontation with Kai: contact appears mediated through a device rather than face-to-face, matching memories of limiting contact to practical replies and refusing to narrate the triangle.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "kai",
+      "tom_state_type": "fear",
+      "uncertainty": "The face on the screen is not identified, and the observation does not confirm whether the displayed person is Kai, James, or someone else."
+    },
+    {
+      "alternative_explanation": "The pass verdict may only indicate that the renderer kept the same character model consistent across frames, not that Embry's psyche is emphasizing stable self-presentation.",
+      "cites_renderer_review": true,
+      "confidence": 0.5,
+      "emotional_intensity": 0.48,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-003",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "identity_temporal_continuity_review",
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_012",
+        "embry_age23_current_b01_memory_003"
+      ],
+      "statement": "Because the identity continuity review passes across all frames, the repeated young woman can be read as a stable Embry figure moving through different modes of concealment, task focus, mediated contact, and carrying a case, suggesting she believes consistency of presentation is safer than emotional explanation.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "kai",
+      "tom_state_type": "belief",
+      "uncertainty": "The continuity review confirms visual identity stability, but it does not itself establish symbolic intent or specify the meaning of the suitcase, paper, device, or black case."
+    },
+    {
+      "alternative_explanation": "The scene may simply depict travel preparation or work materials, with background figures added for visual composition rather than psychological meaning.",
+      "cites_renderer_review": false,
+      "confidence": 0.44,
+      "emotional_intensity": 0.58,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-004",
+      "literal_historical_event": false,
+      "observation_refs": [
+        "frame_0002",
+        "frame_0004"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_001",
+        "embry_age23_current_b01_memory_003"
+      ],
+      "statement": "The suitcase, writing, doorway figure, and black case may reflect a desire to convert emotionally tangled relationships into organized logistics: packing, documenting, carrying, and leaving become safer substitutes for explaining what happened with Kai.",
+      "subject": "embry",
+      "synthetic_origin": true,
+      "target": "kai",
+      "tom_state_type": "desire",
+      "uncertainty": "The doorway man and seated young man are not identified, and the dream lacks audio or motion, limiting certainty about whether this is departure, work, or ordinary domestic activity."
+    }
+  ],
+  "blockers": [],
+  "candidates": [
+    {
+      "alternative_explanation": "The renderer may have simply placed the main character in focus and then shown her doing travel-related actions without implying emotional containment.",
+      "cites_renderer_review": false,
+      "confidence": 0.46,
+      "emotional_intensity": 0.55,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-001",
+      "observation_refs": [
+        "frame_0001",
+        "frame_0002"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_012",
+        "embry_age23_current_b01_memory_001"
+      ],
+      "statement": "Embry may be representing herself as carefully composed and externally legible while keeping the emotionally relevant history with Kai inaccessible; the sharp, centered presentation and later controlled tasks suggest a stance of polished containment rather than open disclosure.",
+      "subject": "embry",
+      "target": "kai",
+      "tom_state_type": "stance",
+      "uncertainty": "The intended dream is empty, so it is unclear whether the centered portrait and packing/writing imagery were meant as symbolic choices or merely generated scene content."
+    },
+    {
+      "alternative_explanation": "The device screen may be a generic visual prop inserted to create activity in the frame, with no intended relational meaning.",
+      "cites_renderer_review": false,
+      "confidence": 0.41,
+      "emotional_intensity": 0.62,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-002",
+      "observation_refs": [
+        "frame_0003"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_003",
+        "embry_age23_current_b01_memory_001"
+      ],
+      "statement": "The phone or tablet face may tentatively point to Embry's fear of direct relational confrontation with Kai: contact appears mediated through a device rather than face-to-face, matching memories of limiting contact to practical replies and refusing to narrate the triangle.",
+      "subject": "embry",
+      "target": "kai",
+      "tom_state_type": "fear",
+      "uncertainty": "The face on the screen is not identified, and the observation does not confirm whether the displayed person is Kai, James, or someone else."
+    },
+    {
+      "alternative_explanation": "The pass verdict may only indicate that the renderer kept the same character model consistent across frames, not that Embry's psyche is emphasizing stable self-presentation.",
+      "cites_renderer_review": true,
+      "confidence": 0.5,
+      "emotional_intensity": 0.48,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-003",
+      "observation_refs": [
+        "identity_temporal_continuity_review",
+        "frame_0001",
+        "frame_0002",
+        "frame_0003",
+        "frame_0004"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_012",
+        "embry_age23_current_b01_memory_003"
+      ],
+      "statement": "Because the identity continuity review passes across all frames, the repeated young woman can be read as a stable Embry figure moving through different modes of concealment, task focus, mediated contact, and carrying a case, suggesting she believes consistency of presentation is safer than emotional explanation.",
+      "subject": "embry",
+      "target": "kai",
+      "tom_state_type": "belief",
+      "uncertainty": "The continuity review confirms visual identity stability, but it does not itself establish symbolic intent or specify the meaning of the suitcase, paper, device, or black case."
+    },
+    {
+      "alternative_explanation": "The scene may simply depict travel preparation or work materials, with background figures added for visual composition rather than psychological meaning.",
+      "cites_renderer_review": false,
+      "confidence": 0.44,
+      "emotional_intensity": 0.58,
+      "favored_explanation": "undetermined",
+      "interpretation_id": "interpretation-004",
+      "observation_refs": [
+        "frame_0002",
+        "frame_0004"
+      ],
+      "source_memory_refs": [
+        "embry_age23_current_b01_memory_001",
+        "embry_age23_current_b01_memory_003"
+      ],
+      "statement": "The suitcase, writing, doorway figure, and black case may reflect a desire to convert emotionally tangled relationships into organized logistics: packing, documenting, carrying, and leaving become safer substitutes for explaining what happened with Kai.",
+      "subject": "embry",
+      "target": "kai",
+      "tom_state_type": "desire",
+      "uncertainty": "The doorway man and seated young man are not identified, and the dream lacks audio or motion, limiting certainty about whether this is departure, work, or ordinary domestic activity."
+    }
+  ],
+  "dream_id": "auto_cycle_20260723T234851Z",
+  "generated_at": "2026-07-24T00:01:35.275706+00:00",
+  "honesty_rule": {
+    "identity_drift_dual_explanation_present": false,
+    "renderer_defect_favored_on_drift": false
+  },
+  "intended_dream": {},
+  "live": true,
+  "llm": {
+    "caller_skill": "persona-dream",
+    "candidate_count": 4,
+    "direct_scillm_call": false,
+    "model": "gpt-5.5",
+    "provider": "scillm",
+    "route": "tau:persona-dream-text-reasoning",
+    "tau_routing": {
+      "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+      "http_status": 200,
+      "live_call_performed": true,
+      "model": "gpt-5.5",
+      "output_contract_sha256": "sha256:97bbf92bb8eb1d13cb7a43a0975b2c62885880a6818689f7ec5dedd6e532c140",
+      "prompt_sha256": "sha256:4e8baa53726fa03aa0037e235ef920719c8a70fa0e6d8a0ba4850fedd2f82e9f",
+      "route": "tau:persona-dream-text-reasoning",
+      "status": "PASS",
+      "tau_receipt_schema": "tau.persona_dream.scillm_text_reasoning_receipt.v1"
+    }
+  },
+  "mocked": false,
+  "observation_index": [
+    {
+      "observation_id": "frame_0001",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 1 at t=0.0s; windows=identity; entities=['A young woman in a navy shirt is centered in sharp focus, facing the camera', 'Several blurred adults sit behind her at a table']",
+      "timestamp_seconds": 0.0
+    },
+    {
+      "observation_id": "frame_0002",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 2 at t=2.5s; windows=identity; entities=['The same young woman in a navy shirt leans over an open suitcase, writing on paper', 'A man stands in the open doorway in the background']",
+      "timestamp_seconds": 2.5
+    },
+    {
+      "observation_id": "frame_0003",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 3 at t=5.0s; windows=identity; entities=['The young woman in a navy shirt is shown close-up in profile', 'A face is visible on the screen of a phone or tablet she is holding']",
+      "timestamp_seconds": 5.0
+    },
+    {
+      "observation_id": "frame_0004",
+      "observation_type": "frame",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Frame 4 at t=7.5s; windows=identity; entities=['The young woman in a navy shirt stands near the foreground holding a black case', 'A young man sits at the far end of the long table']",
+      "timestamp_seconds": 7.5
+    },
+    {
+      "observation_id": "identity_temporal_continuity_review",
+      "observation_type": "renderer_continuity_review",
+      "renderer_defect_verdict": "PASS",
+      "renderer_review": true,
+      "summary": "Identity continuity review over window [0.0, 10.0] (model=insightface:buffalo_l (authority) + gpt-5.5 montage (advisory), verdict=PASS): all 4 frames passed ArcFace vs embry_contact_sheet_v3"
+    },
+    {
+      "observation_id": "coverage_gap_00",
+      "observation_type": "coverage_gap",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "no audio track: storyboard frames are the visual artifact"
+    },
+    {
+      "observation_id": "coverage_gap_01",
+      "observation_type": "coverage_gap",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "no inter-frame motion"
+    },
+    {
+      "observation_id": "coverage_gap_02",
+      "observation_type": "coverage_gap",
+      "renderer_defect_verdict": null,
+      "renderer_review": false,
+      "summary": "Kai identity advisory (no reference sheet)"
+    }
+  ],
+  "observation_packet_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T234851Z/observation_packet.json",
+  "observation_packet_sha256": "sha256:ddbad3f87c118e99c4ed69788fd146d9280f3337b5fc002e8292e0083106f3ad",
+  "persona_id": "embry",
+  "provider_live": true,
+  "recall_receipts": [
+    {
+      "collections": [
+        "persona_memory"
+      ],
+      "confidence": 0.924,
+      "found": true,
+      "question": "What memories explain why Embry trusts Kai about surf safety boundaries and hazards at the lineup?",
+      "residue_source_ids_confirmed": [],
+      "returned_keys": [
+        "persona_dream_phase_03_crew_contract_embry_kai_kahaluu_2024",
+        "persona_dream_phase_06_script_contract_embry_kai_kahaluu_2024",
+        "persona_dream_phase_02_story_interaction_matrix_embry_kai_kahaluu_2024",
+        "embry-kai-sick-day_02_story_story_contract_843592d16ce27a53",
+        "embry_age19_23_b01_memory_010",
+        "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698",
+        "dream_dream_successor_943b01ecd9a3",
+        "embry_age19_23_b01_memory_014"
+      ],
+      "tags": [
+        "persona:embry"
+      ]
+    },
+    {
+      "collections": [
+        "persona_memory"
+      ],
+      "confidence": 0.917,
+      "found": true,
+      "question": "What memory shows Kai giving Embry operational surf knowledge while respecting her decisions?",
+      "residue_source_ids_confirmed": [],
+      "returned_keys": [
+        "persona_dream_phase_06_script_contract_embry_kai_kahaluu_2024",
+        "persona_dream_phase_03_crew_contract_embry_kai_kahaluu_2024",
+        "embry_age19_23_b01_memory_007",
+        "embry-kai-sick-day_02_story_story_contract_843592d16ce27a53",
+        "embry_age19_23_b01_memory_012",
+        "embry_age15_19_b01_memory_012",
+        "embry_age15_19_b03_memory_014",
+        "embry-kai-sick-day_06_script_script_contract_645e15b899c8f698"
+      ],
+      "tags": [
+        "persona:embry"
+      ]
+    },
+    {
+      "collections": [
+        "persona_memory"
+      ],
+      "confidence": 0.898,
+      "found": true,
+      "question": "Why does Embry pause before crossing into surf traffic near Kai?",
+      "residue_source_ids_confirmed": [],
+      "returned_keys": [
+        "embry_age15_19_b01_memory_008",
+        "embry_age19_23_b01_memory_012",
+        "embry_age19_23_b01_memory_014",
+        "embry_age15_19_b01_memory_012",
+        "embry_age15_19_b03_memory_041",
+        "persona_dream_phase_06_script_contract_embry_kai_kahaluu_2024",
+        "embry_age15_19_b03_memory_044",
+        "embry_age15_19_b03_memory_040"
+      ],
+      "tags": [
+        "persona:embry"
+      ]
+    }
+  ],
+  "rejected_interpretations": [],
+  "revision_id": "cycle_20260723T234851Z",
+  "run_id": "goal-v3",
+  "schema": "persona_dream.dream_self_interpretation.v1",
+  "source_memory_bindings": [
+    {
+      "collection": "persona_memory",
+      "memory_text_sha256": "sha256:eb0185500da9d24651b15ef5991556606134ac7f4769c5d208ae4ab450b47c74",
+      "persona_id": "embry",
+      "recall_confirmed": false,
+      "source_id": "embry_age23_current_b01_memory_012"
+    },
+    {
+      "collection": "persona_memory",
+      "memory_text_sha256": "sha256:1fd923ef94cf014aa5b3c3755330ad74bec9203db943fb434c36a8ec7b0aead5",
+      "persona_id": "embry",
+      "recall_confirmed": false,
+      "source_id": "embry_age23_current_b01_memory_001"
+    },
+    {
+      "collection": "persona_memory",
+      "memory_text_sha256": "sha256:dddf20f63295d59b3d53796fe20fc7492d68e94c15267a3749274a4c7d502a6d",
+      "persona_id": "embry",
+      "recall_confirmed": false,
+      "source_id": "embry_age23_current_b01_memory_003"
+    }
+  ],
+  "status": "PASS_SELF_INTERPRETATION"
+}

@@ -1,0 +1,65 @@
+{
+  "dream_node_key": "dream_auto_cycle_20260723T234851Z",
+  "mapping": "frozen in scripts/dream_voice_weights.py (TOM_TO_VOICE)",
+  "persona_id": "embry",
+  "schema": "persona_dream.dream_voice_weight_profile.v1",
+  "synthesis_params": {
+    "temperature": 0.786
+  },
+  "tom_state_types": [
+    "belief",
+    "desire",
+    "fear",
+    "stance"
+  ],
+  "weights": [
+    {
+      "emotional_tag": "yearning",
+      "pace": "measured",
+      "sources": [
+        {
+          "emotional_intensity": 0.58,
+          "statement": "Embry may desire to manage the emotionally tangled situation with Kai through organized logistics rather than direct explanation.",
+          "tom_key": "dream:embry:auto_cycle_20260723T234851Z:tom:tom-004",
+          "tom_state_type": "desire"
+        }
+      ],
+      "tone": "yearning_warm",
+      "weight": 0.58
+    },
+    {
+      "emotional_tag": "boundary",
+      "pace": "steady",
+      "sources": [
+        {
+          "emotional_intensity": 0.55,
+          "statement": "Embry appears to hold a stance of polished containment toward Kai, favoring controlled self-presentation over emotionally open disclosure.",
+          "tom_key": "dream:embry:auto_cycle_20260723T234851Z:tom:tom-001",
+          "tom_state_type": "stance"
+        }
+      ],
+      "tone": "firm_boundary",
+      "weight": 0.55
+    },
+    {
+      "emotional_tag": "reflection",
+      "pace": "measured",
+      "sources": [
+        {
+          "emotional_intensity": 0.62,
+          "statement": "Embry may fear direct relational confrontation with Kai, preferring mediated or practical contact over face-to-face emotional explanation.",
+          "tom_key": "dream:embry:auto_cycle_20260723T234851Z:tom:tom-002",
+          "tom_state_type": "fear"
+        },
+        {
+          "emotional_intensity": 0.48,
+          "statement": "Embry may believe that maintaining a consistent, composed presentation toward Kai is safer than offering emotional explanation.",
+          "tom_key": "dream:embry:auto_cycle_20260723T234851Z:tom:tom-003",
+          "tom_state_type": "belief"
+        }
+      ],
+      "tone": "neutral_reflective",
+      "weight": 0.55
+    }
+  ]
+}

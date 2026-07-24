@@ -1,0 +1,45 @@
+{
+  "schema": "persona_dream.identity_face_embedding_subgate.v1",
+  "status": "PASS",
+  "authority": "embedding_cosine",
+  "model": "insightface:buffalo_l:w600k_r50",
+  "reviewer_source": "insightface:buffalo_l:cosine",
+  "threshold": 0.421,
+  "failure_code": "FAIL_FACE_EMBEDDING_IDENTITY_MISMATCH",
+  "frame_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T234851Z/frames/sb_002.attempt_01.png",
+  "frame_sha256": "sha256:3f70770dd795acde8339f2cf63fd74390e0561f8f6df7ec92e4af8780b559020",
+  "entity_results": [
+    {
+      "entity": "Embry",
+      "status": "PASS",
+      "verdict": "SAME",
+      "best_cosine": 0.798848,
+      "threshold": 0.421,
+      "candidate_bbox": [
+        668.6,
+        74.4,
+        833.0,
+        290.3
+      ],
+      "candidate_det_score": 0.8968,
+      "candidate_detected_sex": "F",
+      "expected_sex": "F",
+      "reference_face_count": 9,
+      "pairwise_cosine": [
+        0.703885,
+        0.681683,
+        0.745782,
+        0.739037,
+        0.798848,
+        0.660831,
+        0.670011,
+        0.452798,
+        0.530286
+      ]
+    }
+  ],
+  "blocking_findings": [],
+  "candidate_faces_detected": 2,
+  "mocked": false,
+  "live": true
+}

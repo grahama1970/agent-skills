@@ -1,0 +1,87 @@
+{
+  "api_key_source": "docker:scillm-proxy:SCILLM_MASTER_KEY",
+  "blocking_findings": [],
+  "created_at": "2026-07-24T00:01:01Z",
+  "duration_seconds": 0.278503,
+  "events_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T234851Z/vlm_observation/panel_reviewer_events.jsonl",
+  "http_status": 200,
+  "image_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T234851Z/vlm_observation/tau_vlm_composite.png",
+  "live": true,
+  "live_call_performed": true,
+  "mocked": false,
+  "model": "gpt-5.5",
+  "parsed_response": {
+    "frames": [
+      {
+        "activity": "The woman stands or sits forward while the people behind appear to be watching or waiting at a meeting table.",
+        "index": 1,
+        "people": [
+          "A young woman in a navy shirt is centered in sharp focus, facing the camera",
+          "Several blurred adults sit behind her at a table"
+        ],
+        "setting": "A bright indoor room with tall windows, a table, chairs, and office-like or meeting-room furnishings.",
+        "tone": "Serious and tense"
+      },
+      {
+        "activity": "The woman is packing or organizing notebooks and papers in a suitcase while writing; the man watches from the doorway.",
+        "index": 2,
+        "people": [
+          "The same young woman in a navy shirt leans over an open suitcase, writing on paper",
+          "A man stands in the open doorway in the background"
+        ],
+        "setting": "A plain indoor room with a desk or table, an open suitcase, a chair, and an open door.",
+        "tone": "Focused and guarded"
+      },
+      {
+        "activity": "The woman touches or swipes on the device screen while looking down at it.",
+        "index": 3,
+        "people": [
+          "The young woman in a navy shirt is shown close-up in profile",
+          "A face is visible on the screen of a phone or tablet she is holding"
+        ],
+        "setting": "A dim interior space with dark walls, a table surface, and a staircase or shadowed background.",
+        "tone": "Somber and introspective"
+      },
+      {
+        "activity": "The woman holds a locked document case while standing beside a table lined with similar cases and papers; the man sits at the far end.",
+        "index": 4,
+        "people": [
+          "The young woman in a navy shirt stands near the foreground holding a black case",
+          "A young man sits at the far end of the long table"
+        ],
+        "setting": "A formal wood-paneled room with a long conference table, chairs, windows, and multiple black cases arranged on the table.",
+        "tone": "Suspenseful and formal"
+      }
+    ]
+  },
+  "passed_entities": [],
+  "receipt_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v3/cycles/cycle_20260723T234851Z/vlm_observation/visual_review_receipt.json",
+  "request": {
+    "messages": "<redacted-image-url-request>",
+    "model": "gpt-5.5",
+    "response_format": {
+      "type": "json_object"
+    },
+    "scillm_metadata": {
+      "caller": "tau",
+      "proof": "persona-dream-panel-review",
+      "role": "panel-reviewer"
+    },
+    "stream": true,
+    "stream_heartbeat_s": 15.0,
+    "stream_progress_events": true,
+    "temperature": 0
+  },
+  "response_content": "{\"frames\":[{\"index\":1,\"people\":[\"A young woman in a navy shirt is centered in sharp focus, facing the camera\",\"Several blurred adults sit behind her at a table\"],\"activity\":\"The woman stands or sits forward while the people behind appear to be watching or waiting at a meeting table.\",\"setting\":\"A bright indoor room with tall windows, a table, chairs, and office-like or meeting-room furnishings.\",\"tone\":\"Serious and tense\"},{\"index\":2,\"people\":[\"The same young woman in a navy shirt leans over an open suitcase, writing on paper\",\"A man stands in the open doorway in the background\"],\"activity\":\"The woman is packing or organizing notebooks and papers in a suitcase while writing; the man watches from the doorway.\",\"setting\":\"A plain indoor room with a desk or table, an open suitcase, a chair, and an open door.\",\"tone\":\"Focused and guarded\"},{\"index\":3,\"people\":[\"The young woman in a navy shirt is shown close-up in profile\",\"A face is visible on the screen of a phone or tablet she is holding\"],\"activity\":\"The woman touches or swipes on the device screen while looking down at it.\",\"setting\":\"A dim interior space with dark walls, a table surface, and a staircase or shadowed background.\",\"tone\":\"Somber and introspective\"},{\"index\":4,\"people\":[\"The young woman in a navy shirt stands near the foreground holding a black case\",\"A young man sits at the far end of the long table\"],\"activity\":\"The woman holds a locked document case while standing beside a table lined with similar cases and papers; the man sits at the far end.\",\"setting\":\"A formal wood-paneled room with a long conference table, chairs, windows, and multiple black cases arranged on the table.\",\"tone\":\"Suspenseful and formal\"}]}",
+  "review_prompt_sha256": "sha256:3f06d228504c819f65ea49a7c27fb145e1bf1a80f61d0dd8d8bfcaf4710c4a34",
+  "role": "panel-reviewer",
+  "schema": "tau.persona_dream.scillm_vlm_review_receipt.v1",
+  "status": "NEEDS_CHANGES",
+  "stream": true,
+  "stream_done_seen": true,
+  "stream_event_count": 371,
+  "stream_heartbeat_count": 0,
+  "stream_last_event_type": "done",
+  "summary": "Scillm VLM review completed.",
+  "surface": "scillm.chat_completions.image_url"
+}

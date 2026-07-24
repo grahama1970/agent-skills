@@ -1,0 +1,17 @@
+{
+  "frozen_at": "2026-07-23T23:48:56Z",
+  "frozen_before_dream_composition": true,
+  "negative_control": "best soil conditions for growing tomatoes in a backyard garden",
+  "negative_control_root_overlap": [],
+  "probes": [
+    "Embry deflects coworkers\u2019 personal questions at Yale by sharing polished fragments while hiding James, Kai, and the breakdown",
+    "Embry leaves Yale after the fallout by packing notebooks, silencing James and Kai, and turning distress into a checklist",
+    "Embry responds to requests about what happened with James and Kai only with logistics like returning a borrowed key"
+  ],
+  "roots": [
+    "embry_age23_current_b01_memory_001",
+    "embry_age23_current_b01_memory_003",
+    "embry_age23_current_b01_memory_012"
+  ],
+  "schema": "persona_dream.cycle_instruments.v1"
+}

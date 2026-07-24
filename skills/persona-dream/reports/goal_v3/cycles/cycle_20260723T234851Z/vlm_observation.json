@@ -1,0 +1,45 @@
+{
+  "raw": "{\"frames\":[{\"index\":1,\"people\":[\"A young woman in a navy shirt is centered in sharp focus, facing the camera\",\"Several blurred adults sit behind her at a table\"],\"activity\":\"The woman stands or sits forward while the people behind appear to be watching or waiting at a meeting table.\",\"setting\":\"A bright indoor room with tall windows, a table, chairs, and office-like or meeting-room furnishings.\",\"tone\":\"Serious and tense\"},{\"index\":2,\"people\":[\"The same young woman in a navy shirt leans over an open suitcase, writing on paper\",\"A man stands in the open doorway in the background\"],\"activity\":\"The woman is packing or organizing notebooks and papers in a suitcase while writing; the man watches from the doorway.\",\"setting\":\"A plain indoor room with a desk or table, an open suitcase, a chair, and an open door.\",\"tone\":\"Focused and guarded\"},{\"index\":3,\"people\":[\"The young woman in a navy shirt is shown close-up in profile\",\"A face is visible on the screen of a phone or tablet she is holding\"],\"activity\":\"The woman touches or swipes on the device screen while looking down at it.\",\"setting\":\"A dim interior space with dark walls, a table surface, and a staircase or shadowed background.\",\"tone\":\"Somber and introspective\"},{\"index\":4,\"people\":[\"The young woman in a navy shirt stands near the foreground holding a black case\",\"A young man sits at the far end of the long table\"],\"activity\":\"The woman holds a locked document case while standing beside a table lined with similar cases and papers; the man sits at the far end.\",\"setting\":\"A formal wood-paneled room with a long conference table, chairs, windows, and multiple black cases arranged on the table.\",\"tone\":\"Suspenseful and formal\"}]}",
+  "frames": [
+    {
+      "index": 1,
+      "people": [
+        "A young woman in a navy shirt is centered in sharp focus, facing the camera",
+        "Several blurred adults sit behind her at a table"
+      ],
+      "activity": "The woman stands or sits forward while the people behind appear to be watching or waiting at a meeting table.",
+      "setting": "A bright indoor room with tall windows, a table, chairs, and office-like or meeting-room furnishings.",
+      "tone": "Serious and tense"
+    },
+    {
+      "index": 2,
+      "people": [
+        "The same young woman in a navy shirt leans over an open suitcase, writing on paper",
+        "A man stands in the open doorway in the background"
+      ],
+      "activity": "The woman is packing or organizing notebooks and papers in a suitcase while writing; the man watches from the doorway.",
+      "setting": "A plain indoor room with a desk or table, an open suitcase, a chair, and an open door.",
+      "tone": "Focused and guarded"
+    },
+    {
+      "index": 3,
+      "people": [
+        "The young woman in a navy shirt is shown close-up in profile",
+        "A face is visible on the screen of a phone or tablet she is holding"
+      ],
+      "activity": "The woman touches or swipes on the device screen while looking down at it.",
+      "setting": "A dim interior space with dark walls, a table surface, and a staircase or shadowed background.",
+      "tone": "Somber and introspective"
+    },
+    {
+      "index": 4,
+      "people": [
+        "The young woman in a navy shirt stands near the foreground holding a black case",
+        "A young man sits at the far end of the long table"
+      ],
+      "activity": "The woman holds a locked document case while standing beside a table lined with similar cases and papers; the man sits at the far end.",
+      "setting": "A formal wood-paneled room with a long conference table, chairs, windows, and multiple black cases arranged on the table.",
+      "tone": "Suspenseful and formal"
+    }
+  ]
+}

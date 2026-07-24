@@ -1,0 +1,27 @@
+{
+  "schema": "persona_dream.residue_links.v1",
+  "idea_id": "auto_cycle_20260723T234851Z",
+  "items": [
+    {
+      "collection": "persona_memory",
+      "persona_id": "embry",
+      "source_id": "embry_age23_current_b01_memory_012",
+      "source_path": "gmo:persona_memory/embry_age23_current_b01_memory_012",
+      "text": "Embry establishes a workplace boundary: colleagues may know her standards and availability, but not the history that produced them.\nShe answers personal questions with polished fragments\u2014she studied at Yale, had a difficult transition, prefers early hours\u2014without naming James, Kai, or the breakdown. The fragments are true but arranged to prevent follow-up.\npeople: Brandon, Embry Lawson, James, Kai; places: Yale; objects: surfboard; organizations: Yale; concepts: belonging, boundary, privacy, trust, work as emotional refuge\nSetting: Yale. Situation: Embry establishes a workplace boundary: colleagues may know her standards and availability, but not the history that produced them. Trigger: Friendly onboarding questions begin crossing into biography. Stakes: She remains functional and respected, but coworkers cannot easily distinguish privacy from lack of trust.\nEmotions: grief, longing, trust, uncertainty. Intensity: 4/5. Regulation: technical work as regulation. Conflict: Professional trust does not automatically entitle anyone to personal context.\nTheory of mind: boundary: Professional trust does not automatically entitle anyone to personal context. Trigger: Friendly onboarding questions begin crossing into biography. Consequence: She remains functional and respected, but coworkers cannot easily distinguish privacy from lack of trust."
+    },
+    {
+      "collection": "persona_memory",
+      "persona_id": "embry",
+      "source_id": "embry_age23_current_b01_memory_001",
+      "source_path": "gmo:persona_memory/embry_age23_current_b01_memory_001",
+      "text": "Embry leaves the Yale aftermath in a state of controlled retreat, treating departure as containment rather than recovery.\nCandidate scene: Embry packs technical notebooks before clothes, silences messages from James and Kai, and writes a departure checklist because sequencing objects feels safer than sequencing what happened. The room's radiator hiss becomes attached to the moment she decides not to explain herself.\npeople: Embry Lawson, James, Kai; places: Yale; objects: POINT/PATH/PEOPLE checklist; organizations: Yale; concepts: privacy, trust, work as emotional refuge\nSetting: Yale. Situation: Embry leaves the Yale aftermath in a state of controlled retreat, treating departure as containment rather than recovery. Trigger: The collapse of trust around Yale, James, and Kai, combined with the sensory hiss in the room. Stakes: She converts an emotional rupture into a logistics problem and begins an adult habit of hiding distress inside competent action.\nEmotions: grief, guilt, relief, shame, trust. Intensity: 4/5. Regulation: procedural verification. Conflict: \nTheory of mind: emotion: She is frightened, ashamed, and relieved at once, but permits herself to name only the relief. Trigger: The collapse of trust around Yale, James, and Kai, combined with the sensory hiss in the room. Consequence: She converts an emotional rupture into a logistics problem and begins an adult habit of hiding distress inside competent action."
+    },
+    {
+      "collection": "persona_memory",
+      "persona_id": "embry",
+      "source_id": "embry_age23_current_b01_memory_003",
+      "source_path": "gmo:persona_memory/embry_age23_current_b01_memory_003",
+      "text": "Embry limits contact to practical matters and refuses conversations that require her to narrate the triangle with James and Kai.\nCandidate scene: when a message asks what really happened, Embry replies only with where a borrowed key can be returned. She experiences the narrow answer as honoring a boundary, while the recipient may experience it as calculated cruelty.\npeople: Embry Lawson, James, Kai; objects: POINT/PATH/PEOPLE checklist; concepts: boundary, privacy\nSetting: age band 23-current. Situation: Embry limits contact to practical matters and refuses conversations that require her to narrate the triangle with James and Kai. Trigger: A direct request for an account of the fallout. Stakes: The boundary prevents immediate escalation but also lets other people build explanations in the vacuum.\nEmotions: guilt, longing. Intensity: 4/5. Regulation: compartmentalization and concealment control. Conflict: She will discuss logistics but not motives, blame, or the James-related secret.\nTheory of mind: boundary: She will discuss logistics but not motives, blame, or the James-related secret. Trigger: A direct request for an account of the fallout. Consequence: The boundary prevents immediate escalation but also lets other people build explanations in the vacuum."
+    }
+  ]
+}

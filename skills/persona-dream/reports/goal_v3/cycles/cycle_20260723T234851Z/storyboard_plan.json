@@ -1,0 +1,41 @@
+{
+  "dream_synopsis": "Embry dreams Yale has become a workplace made of dorm-room walls, where every friendly question opens into the hiss of the radiator and the names she will not say. She keeps answering with polished fragments and logistics, but Kai keeps appearing in the gaps, silently measuring the cost of every boundary she calls professional.",
+  "panels": [
+    {
+      "action": "Embry answers calmly with fragments\u2014Yale, early hours, difficult transition\u2014while the radiator hiss grows louder than the voices.",
+      "mood": "controlled dread, shame under professionalism",
+      "panel_id": "sb_001",
+      "setting": "A synthetic Yale office that also resembles her old room, with a radiator under a conference table and a surfboard leaning like an out-of-place witness against the wall.",
+      "shot": "Tight foreground close-up of Embry facing camera, her face clearly visible and tense; behind her, onboarding colleagues blur into a semicircle of indistinct mouths asking questions.",
+      "start_frame_description": "Embry stands rigid in the foreground with a polished half-smile, eyes bright with contained fear; behind her, the room bends between workplace and Yale aftermath.",
+      "time_range": "0.0-2.5s"
+    },
+    {
+      "action": "Embry packs notebooks in exact order while her phone vibrates with silenced messages from James and Kai; she presses the phone facedown and writes another checkbox instead of responding.",
+      "mood": "guilt, retreat, emotional containment",
+      "panel_id": "sb_002",
+      "setting": "A Yale room with office fluorescent lighting, packed technical notebooks stacked before any clothes, the POINT/PATH/PEOPLE checklist pinned to the wall.",
+      "shot": "Medium foreground shot of Embry kneeling over an open suitcase, face visible as she looks up toward the viewer; Kai stands in the background doorway, partially lit, watching without speaking.",
+      "start_frame_description": "Embry\u2019s face is framed above the suitcase, jaw clenched; Kai is visible behind her in the doorway, his presence turning the room\u2019s silence accusatory.",
+      "time_range": "2.5-5.0s"
+    },
+    {
+      "action": "A message asks what really happened; Embry types only where the borrowed key can be returned, then hesitates as Kai\u2019s reflected face remains in the unanswered space.",
+      "mood": "withheld longing, fear of escalation, cruel precision",
+      "panel_id": "sb_003",
+      "setting": "A narrow workspace floating in darkness, with Yale hallway tiles under the desk and the radiator hiss threading through the air.",
+      "shot": "Foreground close-up of Embry at a desk, face visible in profile and reflected in a dark phone screen; Kai\u2019s face appears in the phone reflection behind the text field.",
+      "start_frame_description": "Embry\u2019s fingers hover over the phone; her reflected eyes look exhausted while Kai\u2019s ghostlike reflection occupies the part of the screen where an explanation should be.",
+      "time_range": "5.0-7.5s"
+    },
+    {
+      "action": "Embry declares a boundary\u2014standards and availability, not history\u2014but the words appear as locked boxes on the table; Kai reaches toward one box, and Embry pulls it closer to herself with visible anguish.",
+      "mood": "grief-dominated boundary, anger, isolation",
+      "panel_id": "sb_004",
+      "setting": "A dreamlike Yale meeting room where the POINT/PATH/PEOPLE checklist stretches across the table like a legal document, and the radiator hisses beneath every seat.",
+      "shot": "Frontal foreground shot of Embry, face fully visible, standing at the head of a conference table shaped like a checklist; Kai sits at the far end, visible and silent, while a shadowed empty chair suggests James without revealing him.",
+      "start_frame_description": "Embry faces forward with anger and grief breaking through her composed expression; Kai is clearly visible beyond the checklist-table, separated from her by sealed boxes labeled with fragments instead of explanations.",
+      "time_range": "7.5-10.0s"
+    }
+  ]
+}
