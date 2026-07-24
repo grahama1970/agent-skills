@@ -14,23 +14,27 @@ SUMMARY_NAME = "webgpt_transport_summary.json"
 PREFERRED_META_NAMES = (
     "02_response.meta.json",
     "02_roundtrip_response.meta.json",
+    "response.md.meta.json",
     "response.meta.json",
     "roundtrip-preflight.json",
 )
 PREFERRED_RAW_NAMES = (
     "02_response.raw.md",
     "02_roundtrip_response.raw.md",
+    "response.md.raw.md",
     "response.raw.md",
 )
 PREFERRED_RECEIPT_NAMES = (
     "02_response.receipt.json",
     "02_roundtrip_response.md.receipt.json",
+    "response.md.receipt.json",
     "response.receipt.json",
 )
 PREFERRED_SUBMITTED_NAMES = (
     "submitted.md",
     "02_response.submitted.md",
     "02_roundtrip_response.submitted.md",
+    "response.md.submitted.md",
     "response.submitted.md",
 )
 PREFERRED_INFLIGHT_NAMES = (
@@ -105,12 +109,24 @@ def _submitted_to_chatgpt(meta: dict[str, Any], receipt: dict[str, Any], raw_pat
     return False
 
 
+def _raw_contains_sentinel(meta: dict[str, Any], receipt: dict[str, Any], raw_path: Path | None) -> bool:
+    if meta.get("raw_contains_sentinel") is True:
+        return True
+    sentinel = str(meta.get("sentinel") or receipt.get("sentinel") or "")
+    if not sentinel or raw_path is None or not raw_path.exists():
+        return False
+    try:
+        return sentinel in raw_path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return False
+
+
 def _transport_state(meta: dict[str, Any], receipt: dict[str, Any], raw_path: Path | None, meta_path: Path | None) -> str:
     status = str(meta.get("status") or "")
     failure = str(meta.get("failure") or "")
     submitted = _submitted_to_chatgpt(meta, receipt, raw_path)
     receipt_status = str(receipt.get("status") or "")
-    raw_has_sentinel = bool(meta.get("raw_contains_sentinel"))
+    raw_has_sentinel = _raw_contains_sentinel(meta, receipt, raw_path)
 
     if status == "missing_sentinel" or failure == "missing_sentinel":
         return "missing_sentinel"
@@ -119,8 +135,12 @@ def _transport_state(meta: dict[str, Any], receipt: dict[str, Any], raw_path: Pa
         or (receipt_status and receipt_status != "submitted_to_chatgpt")
     ):
         return "prepared_prompt_only"
+    if status == "recovered_focus_changed" and not raw_has_sentinel:
+        return "missing_sentinel"
     if status == "recovered_focus_changed":
         return "completed_with_focus_drift"
+    if status == "completed" and not raw_has_sentinel:
+        return "missing_sentinel"
     if status == "completed" and meta.get("focus_changed"):
         return "completed_with_focus_drift"
     if status == "completed":
@@ -168,7 +188,7 @@ def build_recovery(
         or ""
     ).strip()
     requested_url = str(meta.get("requested_url") or receipt.get("requested_url") or "").strip()
-    raw_has_sentinel = bool(meta.get("raw_contains_sentinel"))
+    raw_has_sentinel = _raw_contains_sentinel(meta, receipt, raw_path)
     failure = str(meta.get("failure") or "")
     needs_attention = _needs_attention_code(state, meta, raw_path, meta_path)
     output_path = Path(str(meta.get("output") or receipt.get("output") or directory / "02_response.md"))
@@ -371,7 +391,7 @@ def build_transport_summary(
         "response_receipt_path": str(receipt_file) if receipt_file else None,
         "submitted_path": str(submitted_file) if submitted_file else None,
         "sentinel": sentinel or None,
-        "raw_sentinel_present": bool(meta.get("raw_contains_sentinel")),
+        "raw_sentinel_present": _raw_contains_sentinel(meta, receipt, raw_file),
         "focus_changed": meta.get("focus_changed"),
         "transport_degraded": bool(meta.get("transport_degraded")),
         "raw_response_advisory": bool(meta.get("raw_response_advisory")),

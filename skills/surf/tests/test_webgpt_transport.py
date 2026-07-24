@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -8,6 +9,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 TRANSPORT = REPO_ROOT / "skills/surf/scripts/lib/webgpt_transport.py"
 WEBGPT_SUBMIT = REPO_ROOT / "skills/surf/scripts/webgpt-submit.sh"
 WEBGPT_RECOVER = REPO_ROOT / "skills/surf/scripts/webgpt-recover.sh"
+TRANSPORT_FIXTURES = REPO_ROOT / "skills/surf/tests/fixtures/webgpt-transport"
 
 
 def write_round(
@@ -165,6 +167,98 @@ def test_transport_summary_missing_response_artifacts() -> None:
     assert summary["final_transport_state"] == "missing_response_artifacts"
     assert summary["needs_attention"] == "NEEDS_ATTENTION: missing_webgpt_transport_artifacts"
     assert summary["next_command"].startswith("NEEDS_ATTENTION:")
+
+
+def test_recover_claims_ask_tau_submitted_no_raw_meta_fixture(tmp_path: Path) -> None:
+    round_dir = tmp_path / "submitted_no_raw_meta"
+    shutil.copytree(TRANSPORT_FIXTURES / "submitted_no_raw_meta", round_dir)
+
+    summary = write_summary(round_dir)
+
+    assert summary["final_transport_state"] == "missing_response_artifacts"
+    assert summary["submitted_to_chatgpt"] is True
+    assert summary["requested_tab_id"] == "837360896"
+    assert summary["sentinel"] == "<<<WEBGPT_DONE:20260724T020405Z:e516d90f>>>"
+    assert summary["needs_attention"] is None
+    assert summary["claim"]["available"] is True
+    assert summary["claim"]["output"] == str(round_dir / "response.md")
+    assert summary["claim"]["raw_output"] == str(round_dir / "response.raw.md")
+    assert summary["claim"]["meta_output"] == str(round_dir / "response.meta.json")
+    assert "webgpt.extract --tab-id 837360896" in summary["next_command"]
+    assert "--sentinel '<<<WEBGPT_DONE:20260724T020405Z:e516d90f>>>'" in summary["next_command"]
+    assert summary["response_receipt_path"] == str(round_dir / "response.md.receipt.json")
+    assert summary["submitted_path"] == str(round_dir / "response.md.submitted.md")
+
+    recover = run_recover(round_dir)
+
+    assert recover["state"] == "missing_response_artifacts"
+    assert recover["needs_attention"] is None
+    assert recover["claim"]["available"] is True
+    assert recover["next_command"] == summary["next_command"]
+
+    captured_before = json.loads(
+        (TRANSPORT_FIXTURES / "submitted_no_raw_meta" / "captured-recover-before-fix.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert captured_before["state"] == "unknown"
+    assert captured_before["next_command"] == "NEEDS_ATTENTION: missing_webgpt_transport_artifacts"
+
+    captured_extract = json.loads(
+        (TRANSPORT_FIXTURES / "submitted_no_raw_meta" / "captured-extract-meta.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert captured_extract["controlled_tab_id"] == "837360896"
+    assert captured_extract["status"] == "completed"
+
+
+def test_transport_summary_recognizes_ask_tau_manual_extract_paths(tmp_path: Path) -> None:
+    round_dir = tmp_path / "round-manual-extract"
+    round_dir.mkdir(parents=True)
+    sentinel = "<<<WEBGPT_DONE:20260724T020405Z:e516d90f>>>"
+    (round_dir / "response.md.receipt.json").write_text(
+        json.dumps(
+            {
+                "schema": "surf.webgpt_submit_receipt.v1",
+                "status": "submitted_to_chatgpt",
+                "submitted_to_chatgpt": True,
+                "sentinel": sentinel,
+                "requested_tab_id": "837360896",
+                "output": "response.md",
+                "raw_output": "response.raw.md",
+                "meta_output": "response.meta.json",
+                "submitted_output": "response.md.submitted.md",
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    (round_dir / "response.md.raw.md").write_text(f"Recovered answer\n{sentinel}\n", encoding="utf-8")
+    (round_dir / "response.md.meta.json").write_text(
+        json.dumps(
+            {
+                "status": "completed",
+                "sentinel": None,
+                "requested_tab_id": "837360896",
+                "controlled_tab_id": "837360896",
+                "raw_output": "response.md.raw.md",
+                "raw_contains_sentinel": False,
+            },
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+    summary = write_summary(round_dir)
+
+    assert summary["final_transport_state"] == "completed"
+    assert summary["raw_sentinel_present"] is True
+    assert summary["sentinel"] == sentinel
+    assert summary["response_raw_path"] == str(round_dir / "response.md.raw.md")
+    assert summary["response_meta_path"] == str(round_dir / "response.md.meta.json")
 
 
 def test_transport_summary_inflight_orphan_is_claimable(tmp_path: Path) -> None:

@@ -1,0 +1,13 @@
+{
+  "schema": "surf.webgpt_heartbeat.v1",
+  "updated_at": "2026-07-24T02:17:09Z",
+  "submitted_at": "2026-07-24T02:04:07Z",
+  "last_browser_observation_at": "2026-07-24T02:17:09Z",
+  "phase": "generating",
+  "page_state": "waiting_for_sentinel",
+  "last_artifact_written": "response.md.receipt.json",
+  "next_expected_artifact": "response.raw.md",
+  "timeout_remaining_seconds": 118,
+  "sentinel": "<<<WEBGPT_DONE:20260724T020405Z:e516d90f>>>",
+  "prepared_prompt_is_transport_proof": false
+}
