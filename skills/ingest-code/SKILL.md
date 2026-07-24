@@ -278,6 +278,10 @@ Those lessons include `Kind: class|method|function` and additive
 `kind:<kind>` tags; broad legacy `class` and `function` tags are retained.
 Python Phase 1 module-scope discovery is determined by named lexical ancestry,
 not indentation or module-level control-flow nesting.
+Python Phase 1 function and class lesson questions use repository-relative
+source locators such as `pkg/app.py:10-14` during `scan` and `rescan`, while
+direct helper calls without a repository root retain basename questions and
+module lesson questions remain basename-based for relationship matching.
 
 ### CWE Metadata
 

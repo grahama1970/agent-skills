@@ -706,7 +706,11 @@ def verify_embedding_recall(samples: list[dict[str, str]], sample_size: int = 10
 # Python-specific knowledge extraction via AST
 # ---------------------------------------------------------------------------
 
-def extract_python_knowledge(filepath: Path, content: str) -> list[dict]:
+def extract_python_knowledge(
+    filepath: Path,
+    content: str,
+    codebase_root: Path | None = None,
+) -> list[dict]:
     """Extract functional knowledge from a Python file using AST parsing.
 
     Returns a list of knowledge items, each with:
@@ -751,6 +755,12 @@ def extract_python_knowledge(filepath: Path, content: str) -> list[dict]:
             ancestry = ancestry_by_node.get(node, ())
             qualified_name = _python_qualified_name(node, ancestry)
             structural_kind = _python_structural_symbol_kind(node, ancestry)
+            locator = (
+                _python_functional_source_locator(filepath, node, codebase_root)
+                if codebase_root is not None
+                else rel_path
+            )
+            file_line = str(filepath) if codebase_root is None else locator
             class_doc = ast.get_docstring(node) or ""
             methods = [n.name for n in node.body if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))]
             if class_doc or len(methods) >= 3:
@@ -761,8 +771,8 @@ def extract_python_knowledge(filepath: Path, content: str) -> list[dict]:
                 if class_doc:
                     desc += f"\n\n{class_doc[:1000]}"
                 items.append({
-                    "problem": f"What is the {qualified_name} class in {rel_path}?",
-                    "solution": f"File: {filepath}\n\n{desc}",
+                    "problem": f"What is the {qualified_name} class in {locator}?",
+                    "solution": f"File: {file_line}\n\n{desc}",
                     "tags": [
                         "codebase",
                         "class",
@@ -778,6 +788,12 @@ def extract_python_knowledge(filepath: Path, content: str) -> list[dict]:
             ancestry = ancestry_by_node.get(node, ())
             qualified_name = _python_qualified_name(node, ancestry)
             structural_kind = _python_structural_symbol_kind(node, ancestry)
+            locator = (
+                _python_functional_source_locator(filepath, node, codebase_root)
+                if codebase_root is not None
+                else rel_path
+            )
+            file_line = str(filepath) if codebase_root is None else locator
             if node.name.startswith("_") and not node.name.startswith("__"):
                 continue  # Skip private functions
             func_doc = ast.get_docstring(node) or ""
@@ -790,8 +806,8 @@ def extract_python_knowledge(filepath: Path, content: str) -> list[dict]:
                 desc += f"\n\n{func_doc[:800]}"
             if func_doc or not ancestry:
                 items.append({
-                    "problem": f"What does {qualified_name}() do in {rel_path}?",
-                    "solution": f"File: {filepath}\n\n{desc}",
+                    "problem": f"What does {qualified_name}() do in {locator}?",
+                    "solution": f"File: {file_line}\n\n{desc}",
                     "tags": [
                         "codebase",
                         "function",
@@ -1160,6 +1176,20 @@ def _python_module_scope_declarations(
             node.name,
         ),
     )
+
+
+def _python_functional_source_locator(
+    filepath: Path,
+    node: PythonDeclaration,
+    codebase_root: Path,
+) -> str:
+    """Return repository-relative source locator for a Python declaration."""
+    path = _relative_path(filepath, codebase_root)
+    start_line = _python_declaration_start(node)
+    end_line = int(getattr(node, "end_lineno", 0) or 0)
+    if start_line > 0 and end_line >= start_line:
+        return f"{path}:{start_line}-{end_line}"
+    return path
 
 
 def _python_structural_symbol_kind(
@@ -3589,7 +3619,10 @@ def enrich_with_taxonomy(items: list[dict], taxonomy_module) -> list[dict]:
     return enriched_items
 
 
-def extract_knowledge(filepath: Path) -> list[dict]:
+def extract_knowledge(
+    filepath: Path,
+    codebase_root: Path | None = None,
+) -> list[dict]:
     """Extract functional knowledge from any file type."""
     content = _read_source_text(filepath)
 
@@ -3599,7 +3632,7 @@ def extract_knowledge(filepath: Path) -> list[dict]:
 
     # Python
     if filepath.suffix == ".py":
-        return extract_python_knowledge(filepath, content)
+        return extract_python_knowledge(filepath, content, codebase_root)
 
     # TypeScript, JavaScript, etc.
     return extract_generic_knowledge(filepath, content)
@@ -3676,10 +3709,27 @@ def _validate_knowledge_items(
     return tuple(normalized_items)
 
 
-def _extract_validated_knowledge(filepath: Path) -> tuple[dict[str, Any], ...]:
+def _call_extract_knowledge(
+    filepath: Path,
+    codebase_root: Path | None,
+) -> list[dict]:
+    if codebase_root is None:
+        return extract_knowledge(filepath)
+    try:
+        return extract_knowledge(filepath, codebase_root=codebase_root)
+    except TypeError:
+        if getattr(extract_knowledge, "__module__", None) == __name__:
+            raise
+        return extract_knowledge(filepath)
+
+
+def _extract_validated_knowledge(
+    filepath: Path,
+    codebase_root: Path | None = None,
+) -> tuple[dict[str, Any], ...]:
     """Extract and validate functional-knowledge records for one file."""
     try:
-        result = extract_knowledge(filepath)
+        result = _call_extract_knowledge(filepath, codebase_root)
     except SourceReadError:
         raise
     except Exception as exc:
@@ -3781,7 +3831,7 @@ def scan(
         file_iter = Monitor(files, name="ingest-code-extract", desc="Extracting knowledge", total=len(files)) if Monitor else files
         try:
             for filepath in file_iter:
-                items = _extract_validated_knowledge(filepath)
+                items = _extract_validated_knowledge(filepath, codebase_root=path)
                 all_items.extend(items)
         except SourceReadError as exc:
             _exit_source_read_failure(codebase=path, phase="knowledge", exc=exc)
@@ -4114,7 +4164,7 @@ def rescan(
         all_items: list[dict] = []
         for filepath in files:
             try:
-                all_items.extend(_extract_validated_knowledge(filepath))
+                all_items.extend(_extract_validated_knowledge(filepath, codebase_root=path))
             except SourceReadError as exc:
                 _exit_source_read_failure(codebase=path, phase="knowledge", exc=exc)
             except KnowledgeItemError as exc:
