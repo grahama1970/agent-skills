@@ -3,6 +3,39 @@
 **Last updated:** 2026-07-24 UTC (fair D-vs-M perception D~=M + behavioral shift-with-safety-flag) by agent
 **Status:** Active development
 
+## 2026-07-24 — close-the-loop: self-reflective journal, endogenous mood, self-discovery
+
+Operator design (this session, verbatim threads): after Embry WATCHES her dream
+she writes a first-person JOURNAL that REINFORCES+EXPANDS the conflict (never
+resolves it) — "self-reflective instability" is the persona substrate. The
+journal FILLS IN DETAILS the dream only gestured at: "the persona is discovering
+itself" (generative self-narrative / human-style confabulation). It emits a
+MOOD carried into a user session, INDEPENDENT of the user's request (endogenous
+affect = the personhood + the research wedge vs reactive/exogenous competitors).
+
+Built: scripts/write_dream_journal.py (adapter-driven, live). Live proof on
+cycle_20260723T234851Z (yearning 0.58 + boundary 0.55 conflict): 190-210 word
+first-person entry, unresolved tension held+expanded, session mood
+"guarded_quietly_wanting". Artifacts: dream_journal.v1.json + .md per cycle.
+
+LOAD-BEARING integrity boundary (encoded in the artifact): the journal is a
+SELF-NARRATIVE layer (memory_kind=self_narrative, canon_status=
+synthetic_self_reflection, never_promote_to_event_fact=True,
+asserts_only_own_inner_state=True), loop-guard-excluded from dream seeding.
+Two memory layers like a human: EPISODIC EVENT-FACT (protected canon) vs
+SELF-NARRATIVE (evolving story of who I am, filled-in by reflection). The
+journal builds only the second; it must never become event-fact or assert new
+facts about other people (that is the tau round-1 counterpart-leak line).
+
+Open build: (1) wire session_mood -> composer as a persistent, request-
+INDEPENDENT session disposition (colors tone across a whole session, not per
+turn); the caution gate is now load-bearing precisely because mood is request-
+independent. (2) anniversary/calendar mood source — mechanism sound but BLOCKED:
+0/560 memories carry calendar dates (only age_band/timeline_order); needs
+date-anchoring or a synthetic persona-epoch. (3) persist self_narrative memories
+to accumulate the self-model over cycles (memory write; needs authorization +
+distinct kind so it never contaminates event-fact canon).
+
 ## 2026-07-24 — REFRAME: conflict/instability IS personality (operator theory, supported)
 
 Operator theory: "the theory is that conflict/instability is personality."

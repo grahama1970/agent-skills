@@ -105,6 +105,15 @@ def main():
         "affect_source": "persona_dream",
         "dream_provenance": {"cycle": meta["cycle"], "kind": "dream_journal",
                              "excluded_from_dream_seeding": True},
+        # SELF-NARRATIVE layer, NOT episodic event-fact. The journal fills in
+        # Embry's own inner detail (self-discovery / confabulation). It may
+        # enrich identity/mood/self-retrieval but must NEVER be promoted to
+        # event-fact canon or assert new facts about other people (that would be
+        # the counterpart-leak the GOAL_V3 gate prevents).
+        "memory_kind": "self_narrative",
+        "canon_status": "synthetic_self_reflection",
+        "never_promote_to_event_fact": True,
+        "asserts_only_own_inner_state": True,
     }
     (cyc / "dream_journal.v1.json").write_text(json.dumps(entry, indent=2) + "\n")
     (cyc / "dream_journal.md").write_text(
