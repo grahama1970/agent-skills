@@ -1,0 +1,55 @@
+{
+  "agent_action": "Release the existing debugger attachment or reload Surf, then retry the same explicit tab.",
+  "agent_diagnosis": "Surf could not attach CDP to the explicitly requested tab in no-activate mode.",
+  "cdp_probe_stderr": "Error: SyntaxError: Unexpected token 'return'\n",
+  "cdp_retry_attempted": true,
+  "cdp_retry_stderr": "Error: Unknown tool: extension.reload\nError: Unknown tool: extension.ping\nError: Unknown tool: extension.ping\nError: Unknown tool: extension.ping\nError: Unknown tool: extension.ping\nError: Unknown tool: extension.ping\nError: Unknown tool: extension.ping\nError: Unknown tool: extension.ping\nError: Unknown tool: extension.ping\nError: Unknown tool: extension.ping\nError: Unknown tool: extension.ping\nError: Unknown tool: extension.ping\nError: Unknown tool: extension.ping\nError: Unknown tool: extension.ping\nError: Unknown tool: extension.ping\nError: Unknown tool: extension.ping\nError: Unknown tool: extension.ping\nError: Unknown tool: extension.ping\nError: Unknown tool: extension.ping\nError: Unknown tool: extension.ping\nError: Unknown tool: extension.ping\nError: Unknown tool: extension.ping\nError: Unknown tool: extension.ping\nError: Unknown tool: extension.ping\nError: Unknown tool: extension.ping\nError: Unknown tool: extension.ping\nError: Unknown tool: extension.ping\nError: Unknown tool: extension.ping\nError: Unknown tool: extension.ping\nError: Unknown tool: extension.ping\nError: Unknown tool: extension.ping\nError: SyntaxError: Unexpected token 'return'\n",
+  "failure": "stale_cdp_on_explicit_tab",
+  "finished_at": "2026-07-24T11:35:33Z",
+  "input": "skills/persona-dream/reports/goal_v5/roundtable_research/r1/bundle.md",
+  "output": "skills/persona-dream/reports/goal_v5/roundtable_research/r1/webgpt.md",
+  "proof_status": "not_submitted",
+  "raw_output": "skills/persona-dream/reports/goal_v5/roundtable_research/r1/webgpt.md.raw.md",
+  "requested_model": null,
+  "requested_reasoning": "Pro",
+  "requested_tab_id": "837360927",
+  "requested_url": null,
+  "sentinel": "<<<WEBGPT_DONE:20260724T113515Z:e355710f>>>",
+  "started_at": "2026-07-24T11:35:33Z",
+  "status": "failed",
+  "stderr_log": "/tmp/surf-webgpt-submit-stderr.rF0hU8.log",
+  "submitted_output": "skills/persona-dream/reports/goal_v5/roundtable_research/r1/webgpt.md.submitted.md",
+  "submitted_to_chatgpt": false,
+  "surf_doctor_request_path": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/roundtable_research/r1/webgpt.meta.surf-doctor-request.json",
+  "tab_identity_preflight": {
+    "chatgpt_tabs_count": 23,
+    "checks": [
+      {
+        "detail": "837360927",
+        "name": "tab_id_valid",
+        "ok": true
+      },
+      {
+        "detail": "ok",
+        "name": "tab_open_chatgpt",
+        "ok": true
+      },
+      {
+        "detail": "allowed",
+        "name": "tab_identity_verified_or_allowed",
+        "ok": true
+      }
+    ],
+    "error": null,
+    "expected_title": null,
+    "expected_url": null,
+    "ok": true,
+    "source": "tab-id",
+    "tab": {
+      "id": "837360927",
+      "title": "Agent Evaluation Disposition",
+      "url": "https://chatgpt.com/c/6a62d452-f90c-83ea-ae5d-f98c7f2c15c3"
+    },
+    "tab_id": "837360927"
+  }
+}

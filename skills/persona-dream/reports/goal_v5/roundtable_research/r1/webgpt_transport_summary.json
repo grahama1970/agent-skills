@@ -1,0 +1,38 @@
+{
+  "schema": "surf.webgpt_transport_summary.v1",
+  "artifact_dir": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/roundtable_research/r1",
+  "requested_tab_id": "837360927",
+  "requested_url": null,
+  "controlled_tab_id": null,
+  "submit_receipt_status": "prepared_prompt",
+  "submitted_to_chatgpt": false,
+  "prepared_prompt_is_transport_proof": false,
+  "response_raw_path": "skills/persona-dream/reports/goal_v5/roundtable_research/r1/webgpt.md.raw.md",
+  "response_meta_path": "skills/persona-dream/reports/goal_v5/roundtable_research/r1/webgpt.meta.json",
+  "response_receipt_path": "skills/persona-dream/reports/goal_v5/roundtable_research/r1/webgpt.md.receipt.json",
+  "submitted_path": "skills/persona-dream/reports/goal_v5/roundtable_research/r1/webgpt.md.submitted.md",
+  "sentinel": "<<<WEBGPT_DONE:20260724T113515Z:e355710f>>>",
+  "raw_sentinel_present": false,
+  "focus_changed": null,
+  "transport_degraded": false,
+  "raw_response_advisory": false,
+  "final_transport_state": "prepared_prompt_only",
+  "proof_status": "not_submitted",
+  "agent_diagnosis": "Surf could not attach CDP to the explicitly requested tab in no-activate mode.",
+  "agent_action": "Release the existing debugger attachment or reload Surf, then retry the same explicit tab.",
+  "next_command": "surf webgpt.preflight --tab-id 837360927 && surf webgpt.submit --input skills/persona-dream/reports/goal_v5/roundtable_research/r1/webgpt.md.submitted.md --output /home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/roundtable_research/r1/02_response.md",
+  "do_not_do": [
+    "do_not_treat_prepared_prompt_as_completion_proof"
+  ],
+  "needs_attention": null,
+  "claim": {
+    "available": false,
+    "tab_id": "837360927",
+    "sentinel": "<<<WEBGPT_DONE:20260724T113515Z:e355710f>>>",
+    "output": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/roundtable_research/r1/skills/persona-dream/reports/goal_v5/roundtable_research/r1/webgpt.md",
+    "raw_output": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/roundtable_research/r1/skills/persona-dream/reports/goal_v5/roundtable_research/r1/webgpt.md.raw.md",
+    "meta_output": "/home/graham/workspace/experiments/agent-skills-main/skills/persona-dream/reports/goal_v5/roundtable_research/r1/skills/persona-dream/reports/goal_v5/roundtable_research/r1/webgpt.meta.json",
+    "wait": true,
+    "stable_polls": 3
+  }
+}
