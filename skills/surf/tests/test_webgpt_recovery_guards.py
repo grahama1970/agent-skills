@@ -9,6 +9,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 EXTRACT = REPO_ROOT / "skills/surf/scripts/webgpt-extract.sh"
 SUBMIT = REPO_ROOT / "skills/surf/scripts/webgpt-submit.sh"
 CLI = REPO_ROOT / "skills/surf/vendor/surf-cli/native/cli.cjs"
+KIMI_CLIENT = REPO_ROOT / "skills/surf/vendor/surf-cli/native/kimi-tab-client.cjs"
 
 
 def test_extract_rejects_malformed_tab_id_before_browser_call(tmp_path: Path) -> None:
@@ -65,6 +66,25 @@ def test_native_reconnect_waits_on_same_tab_without_activation() -> None:
     assert "wait: true" in recovery
     assert '"no-activate": true' in recovery
     assert '"stable-polls"' in recovery
+
+
+def test_kimi_provider_capacity_busy_fails_fast() -> None:
+    source = KIMI_CLIENT.read_text(encoding="utf-8")
+
+    assert "providerBusy" in source
+    assert "system is currently busy" in source
+    assert "capacity is busy" in source
+    assert "Kimi provider capacity busy" in source
+
+
+def test_kimi_formatter_emits_controlled_tab_metadata() -> None:
+    source = CLI.read_text(encoding="utf-8")
+    formatter = source.split('tool === "kimi_tab"', 1)[1].split('tool === "aistudio"', 1)[0]
+
+    assert "Tab ID:" in formatter
+    assert "controlledTabId" in formatter
+    assert "Activated:" in formatter
+    assert "TabWasCreated:" in formatter
 
 
 def test_nonzero_submit_with_exact_sentinel_recovery_reaches_finalization(tmp_path: Path) -> None:
@@ -137,6 +157,83 @@ esac
     assert payload["extract_fallback_reason"] == "submit_failed"
     assert sentinel in output.with_suffix(".md.raw.md").read_text(encoding="utf-8")
     assert sentinel not in output.read_text(encoding="utf-8")
+    invocation_text = calls.read_text(encoding="utf-8")
+    assert "chatgpt.extract" in invocation_text
+    assert "tab.new" not in invocation_text
+    assert "key Enter" not in invocation_text
+
+
+def test_missing_sentinel_submit_uses_extract_fallback_before_final_failure(tmp_path: Path) -> None:
+    sentinel = "<<<WEBGPT_DONE:missing-sentinel-recovery>>>"
+    request = tmp_path / "request.md"
+    output = tmp_path / "response.md"
+    meta = tmp_path / "response.meta.json"
+    calls = tmp_path / "calls.log"
+    fake_run = tmp_path / "run.sh"
+    request.write_text("recover completed same-tab response\n", encoding="utf-8")
+    fake_run.write_text(
+        f'''#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n' "$*" >> {str(calls)!r}
+case "${{1:-}}" in
+  tab.list)
+    printf '837352334\\tRecovery Test\\thttps://chatgpt.com/c/example\\n'
+    ;;
+  focus.state)
+    printf '{{"active_tab_id":"123","active_window_id":"456"}}\\n'
+    ;;
+  js)
+    printf 'cdp-ok\\n'
+    ;;
+  tab.activate)
+    exit 0
+    ;;
+  chatgpt)
+    printf 'Position\\n\\n[\\n'
+    printf 'Tab ID: 837352334\\nResponseSource: assistant-dom\\n' >&2
+    exit 0
+    ;;
+  chatgpt.extract)
+    printf 'recovered completed response\\n{sentinel}\\n'
+    ;;
+  *)
+    printf 'unexpected command: %s\\n' "$*" >&2
+    exit 99
+    ;;
+esac
+''',
+        encoding="utf-8",
+    )
+    fake_run.chmod(0o755)
+    env = os.environ.copy()
+    env.update({
+        "SURF_RUN_SH": str(fake_run),
+        "SURF_WEBGPT_EXTRACT_FALLBACK_BUDGET": "5",
+    })
+
+    proc = subprocess.run(
+        [
+            "bash", str(SUBMIT), "--input", str(request), "--output", str(output),
+            "--meta-output", str(meta), "--sentinel", sentinel, "--tab-id", "837352334",
+            "--expect-url", "https://chatgpt.com/c/example", "--no-activate", "--timeout", "5",
+        ],
+        cwd=tmp_path,
+        env=env,
+        text=True,
+        capture_output=True,
+        timeout=30,
+        check=False,
+    )
+
+    assert proc.returncode == 0, proc.stderr
+    assert output.read_text(encoding="utf-8") == "recovered completed response\n"
+    payload = __import__("json").loads(meta.read_text(encoding="utf-8"))
+    assert payload["status"] in {"completed", "recovered_focus_changed"}
+    assert payload["response_proof_status"] == "response_proven"
+    assert payload["extract_fallback_used"] is True
+    assert payload["extract_fallback_reason"] == "missing_sentinel"
+    assert payload["raw_contains_sentinel"] is True
+    assert payload["clean_contains_sentinel"] is False
     invocation_text = calls.read_text(encoding="utf-8")
     assert "chatgpt.extract" in invocation_text
     assert "tab.new" not in invocation_text

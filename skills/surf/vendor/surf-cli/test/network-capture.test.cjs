@@ -2,7 +2,7 @@
 /**
  * Comprehensive tests for network capture functionality
  * Run: node test/network-capture.test.cjs
- * 
+ *
  * Tests:
  * - Basic capture (compact format)
  * - Method filtering (--method)
@@ -26,8 +26,8 @@ let failed = 0;
 
 function run(cmd, opts = {}) {
   try {
-    return execSync(`${CLI} ${cmd}`, { 
-      encoding: "utf8", 
+    return execSync(`${CLI} ${cmd}`, {
+      encoding: "utf8",
       timeout: opts.timeout || 15000,
       stdio: opts.stdio || ['pipe', 'pipe', 'pipe']
     }).trim();
@@ -142,7 +142,7 @@ console.log("─".repeat(70));
 test("Filter by method: --method POST", () => {
   const output = run(`network --method POST --tab-id ${tabId}`);
   assertIncludes(output, "POST", "Should include POST requests");
-  assert(!output.includes("GET ") || output.split("\n").every(l => !l.includes("GET ") || l.includes("POST")), 
+  assert(!output.includes("GET ") || output.split("\n").every(l => !l.includes("GET ") || l.includes("POST")),
     "Should only show POST requests");
 });
 
@@ -168,7 +168,7 @@ test("Filter by status: --status 404", () => {
 test("Filter by content-type: --content-type json", () => {
   const output = run(`network --content-type json -v --tab-id ${tabId}`);
   // JSON responses should be shown
-  assert(output.includes("json") || output.includes("application/json") || output.length > 0, 
+  assert(output.includes("json") || output.includes("application/json") || output.length > 0,
     "Should filter by content type");
 });
 
@@ -291,7 +291,7 @@ test("Persists entries to /tmp/surf/requests.jsonl", () => {
   // Trigger verbose mode to ensure persistence (full data required)
   run(`network -v --tab-id ${tabId}`);
   sleep(1500);  // Allow time for async writes to complete
-  
+
   assert(fs.existsSync(PERSISTENCE_FILE), "requests.jsonl should exist");
 });
 
@@ -299,7 +299,7 @@ test("Persistence file contains valid JSONL", () => {
   const content = fs.readFileSync(PERSISTENCE_FILE, "utf8");
   const lines = content.trim().split("\n").filter(l => l);
   assert(lines.length > 0, "Should have entries");
-  
+
   // Each line should be valid JSON
   for (const line of lines.slice(0, 3)) {
     const entry = JSON.parse(line);
@@ -313,7 +313,7 @@ test("Persisted entries have full data (headers, body)", () => {
   const content = fs.readFileSync(PERSISTENCE_FILE, "utf8");
   const lines = content.trim().split("\n").filter(l => l);
   const entry = JSON.parse(lines[0]);
-  
+
   assert(entry.requestHeaders, "Should have requestHeaders");
   assert(entry.responseHeaders, "Should have responseHeaders");
 });
@@ -322,7 +322,7 @@ test("Custom path via SURF_NETWORK_PATH env", () => {
   // This tests that the env var is respected (we don't actually change it in test)
   const networkStore = require("../native/network-store.cjs");
   const defaultPath = networkStore.getBasePath();
-  assert(defaultPath === "/tmp/surf" || defaultPath.includes("surf"), 
+  assert(defaultPath === "/tmp/surf" || defaultPath.includes("surf"),
     "Should have default path");
 });
 
@@ -369,7 +369,7 @@ test("network.get with entry.id format (r_xxx)", () => {
   const listOutput = run(`network -v --tab-id ${tabId}`);
   const idMatch = listOutput.match(/ID:\s+(r_[\d._]+)/);
   assert(idMatch, "Should find entry ID in verbose output");
-  
+
   const entryId = idMatch[1];
   const output = run(`network.get ${entryId} --tab-id ${tabId}`);
   assertIncludes(output, entryId, "Should return entry with matching ID");

@@ -1,9 +1,11 @@
 /**
  * Perplexity Web Client for surf-cli
- * 
+ *
  * CDP-based client for perplexity.ai using browser automation.
  * Similar approach to the ChatGPT client.
  */
+
+const { abortableDelay, raceAbort, throwIfAborted } = require("./abort.cjs");
 
 const PERPLEXITY_URL = "https://www.perplexity.ai/";
 
@@ -11,8 +13,8 @@ const PERPLEXITY_URL = "https://www.perplexity.ai/";
 // Helpers
 // ============================================================================
 
-function delay(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+function delay(ms, signal) {
+  return abortableDelay(ms, signal);
 }
 
 function buildClickDispatcher() {
@@ -36,8 +38,8 @@ function buildClickDispatcher() {
 async function evaluate(cdp, expression) {
   const result = await cdp(expression);
   if (result.exceptionDetails) {
-    const desc = result.exceptionDetails.exception?.description || 
-                 result.exceptionDetails.text || 
+    const desc = result.exceptionDetails.exception?.description ||
+                 result.exceptionDetails.text ||
                  "Evaluation failed";
     throw new Error(desc);
   }
@@ -68,32 +70,32 @@ async function waitForPageLoad(cdp, timeoutMs = 30000) {
 async function checkLoginStatus(cdp) {
   const result = await evaluate(cdp, `(() => {
     const buttons = Array.from(document.querySelectorAll('button, a'));
-    
+
     // Look for sign-in indicators (not logged in)
     const hasSignIn = buttons.some(b => {
       const text = (b.textContent || '').toLowerCase().trim();
       return text === 'sign in' || text === 'log in';
     });
-    
+
     // Look for account menu (logged in)
     const hasAccount = buttons.some(b => {
       const text = (b.textContent || '').toLowerCase();
       const label = (b.getAttribute('aria-label') || '').toLowerCase();
       return text.includes('account') || label.includes('account') || label.includes('profile');
     });
-    
+
     // Check for upgrade button (logged in but not Pro)
     const hasUpgrade = buttons.some(b => {
       const text = (b.textContent || '').toLowerCase().trim();
       return text === 'upgrade';
     });
-    
-    return { 
+
+    return {
       loggedIn: hasAccount || hasUpgrade || !hasSignIn,
       isPro: hasAccount && !hasUpgrade,
     };
   })()`);
-  
+
   return result || { loggedIn: false, isPro: false };
 }
 
@@ -101,17 +103,17 @@ async function waitForPromptReady(cdp, timeoutMs = 20000) {
   // Wait for page to be interactive and Perplexity's React app to hydrate
   // Instead of complex element detection, just wait for the page to settle
   const deadline = Date.now() + timeoutMs;
-  
+
   // First wait for basic page ready
   while (Date.now() < deadline) {
     const state = await evaluate(cdp, `document.readyState`);
     if (state === 'complete') break;
     await delay(200);
   }
-  
+
   // Extra wait for React hydration
   await delay(2000);
-  
+
   // Try to verify the page has the expected structure
   const verified = await evaluate(cdp, `(() => {
     // Check if we're on Perplexity and the page is loaded
@@ -120,11 +122,11 @@ async function waitForPromptReady(cdp, timeoutMs = 20000) {
                      document.body.innerText.includes('Ask a follow-up');
     return { ready: isPerplexity || hasInput, url: location.href };
   })()`);
-  
+
   if (verified && verified.ready) {
     return verified;
   }
-  
+
   // Even if verification fails, proceed anyway after timeout
   // since the page might have different text
   return { ready: true, fallback: true };
@@ -136,13 +138,13 @@ async function waitForPromptReady(cdp, timeoutMs = 20000) {
 
 async function selectMode(cdp, mode) {
   const normalizedMode = mode.toLowerCase();
-  
+
   const result = await evaluate(cdp, `(() => {
     ${buildClickDispatcher()}
-    
+
     const targetMode = ${JSON.stringify(normalizedMode)};
     const radios = document.querySelectorAll('[role=radio]');
-    
+
     for (const radio of radios) {
       const text = (radio.textContent || '').toLowerCase().trim();
       if (text.includes(targetMode)) {
@@ -156,14 +158,14 @@ async function selectMode(cdp, mode) {
         return { success: true, mode: text };
       }
     }
-    
+
     return { success: false, error: 'Mode not found' };
   })()`);
-  
+
   if (!result || !result.success) {
     throw new Error(`Failed to select mode: ${result?.error || 'unknown'}`);
   }
-  
+
   await delay(300);
   return result.mode;
 }
@@ -172,120 +174,136 @@ async function selectModel(cdp, model, timeoutMs = 8000) {
   // Click the model selector button
   const buttonClicked = await evaluate(cdp, `(() => {
     ${buildClickDispatcher()}
-    
+
     const buttons = Array.from(document.querySelectorAll('button'));
     const modelBtn = buttons.find(b => {
       const text = (b.textContent || '').toLowerCase();
-      return text.includes('choose a model') || 
+      return text.includes('choose a model') ||
              text.includes('model') ||
              (text.includes('sonar') || text.includes('gpt') || text.includes('claude'));
     });
-    
+
     if (!modelBtn) return { success: false, error: 'Model button not found' };
-    
+
     dispatchClickSequence(modelBtn);
     return { success: true };
   })()`);
-  
+
   if (!buttonClicked || !buttonClicked.success) {
     throw new Error(`Model selector not found: ${buttonClicked?.error}`);
   }
-  
+
   await delay(500);
-  
-  // Select from menu
+
+  // Select from menu - loop in Node.js to avoid CDP timeout issues
   const normalizedModel = model.toLowerCase().replace(/[^a-z0-9]/g, '');
-  
-  const result = await evaluate(cdp, `(async () => {
-    ${buildClickDispatcher()}
-    
-    const targetModel = ${JSON.stringify(normalizedModel)};
-    const normalize = (text) => (text || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-    const deadline = Date.now() + ${timeoutMs};
-    
-    while (Date.now() < deadline) {
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    const result = await evaluate(cdp, `(() => {
+      ${buildClickDispatcher()}
+
+      const targetModel = ${JSON.stringify(normalizedModel)};
+      const normalize = (text) => (text || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
       const menuItems = document.querySelectorAll('[role=menuitem], [role=menuitemradio], [role=option]');
-      
+
       if (menuItems.length === 0) {
-        await new Promise(r => setTimeout(r, 100));
-        continue;
+        return { found: false, waiting: true };
       }
-      
+
       let bestMatch = null;
       let bestScore = 0;
-      
+
       for (const item of menuItems) {
         const text = normalize(item.textContent || '');
         let score = 0;
-        
+
         if (text.includes(targetModel)) score = 100;
         else if (targetModel.includes(text) && text.length > 3) score = 50;
-        
+
         if (score > bestScore) {
           bestScore = score;
           bestMatch = item;
         }
       }
-      
+
       if (bestMatch) {
         dispatchClickSequence(bestMatch);
-        await new Promise(r => setTimeout(r, 200));
-        return { success: true, model: bestMatch.textContent?.trim() };
+        return { found: true, success: true, model: bestMatch.textContent?.trim() };
       }
-      
-      await new Promise(r => setTimeout(r, 100));
+
+      return { found: true, success: false, error: 'No matching model in menu' };
+    })()`);
+
+    if (result && result.found) {
+      if (result.success) {
+        await delay(200);
+        return result.model;
+      }
+      // Items found but no match - close menu and throw
+      await evaluate(cdp, `document.body.click()`);
+      throw new Error(`Failed to select model: ${result?.error}`);
     }
-    
-    // Close menu by clicking elsewhere
-    document.body.click();
-    return { success: false, error: 'Model not found in menu' };
-  })()`);
-  
-  if (!result || !result.success) {
-    throw new Error(`Failed to select model: ${result?.error}`);
+
+    await delay(100);
   }
-  
-  return result.model;
+
+  // Timeout - close menu
+  await evaluate(cdp, `document.body.click()`);
+  throw new Error(`Failed to select model: timeout waiting for menu`);
 }
 
 // ============================================================================
 // Input and Submission
 // ============================================================================
 
-async function findComposer(cdp) {
-  return evaluate(cdp, `(() => {
-    ${buildClickDispatcher()}
-    const isVisible = (el) => {
-      if (!el || !el.offsetParent) return false;
-      const r = el.getBoundingClientRect();
-      return r.width > 40 && r.height > 16;
-    };
-    const candidates = Array.from(document.querySelectorAll('textarea, [contenteditable=true], [role=textbox]'))
-      .filter(isVisible);
-    if (!candidates.length) return { success: false, error: 'composer not found' };
-    const scored = candidates.map((el) => {
-      const r = el.getBoundingClientRect();
-      return { el, score: r.bottom * 2 + r.width };
-    }).sort((a, b) => b.score - a.score);
-    const target = scored[0].el;
-    dispatchClickSequence(target);
-    target.focus?.();
-    return { success: true, method: 'composer', tag: target.tagName };
-  })()`);
-}
-
 async function typePrompt(cdp, inputCdp, prompt) {
-  const clicked = await findComposer(cdp);
-  if (!clicked || !clicked.success) {
-    throw new Error(clicked?.error || 'Could not find Perplexity composer');
-  }
+  // Click on the input area to focus it
+  // Perplexity uses a complex input - just click in the general area
+  const clicked = await evaluate(cdp, `(() => {
+    ${buildClickDispatcher()}
+
+    // Strategy 1: Find element with "Ask anything" placeholder text
+    const allElements = document.querySelectorAll('*');
+    for (const el of allElements) {
+      const text = el.textContent || '';
+      const placeholder = el.getAttribute('placeholder') || el.getAttribute('aria-placeholder') || '';
+      if ((placeholder.includes('Ask') || text === 'Ask anything') && el.offsetParent) {
+        dispatchClickSequence(el);
+        el.focus?.();
+        return { success: true, method: 'placeholder' };
+      }
+    }
+
+    // Strategy 2: Find textarea or contenteditable
+    const inputs = document.querySelectorAll('textarea, [contenteditable=true], [role=textbox]');
+    for (const el of inputs) {
+      if (el.offsetParent) {
+        dispatchClickSequence(el);
+        el.focus?.();
+        return { success: true, method: 'input' };
+      }
+    }
+
+    // Strategy 3: Click in the center of the page (where input usually is)
+    const centerX = window.innerWidth / 2;
+    const centerY = window.innerHeight / 2;
+    const centerEl = document.elementFromPoint(centerX, centerY);
+    if (centerEl) {
+      dispatchClickSequence(centerEl);
+      return { success: true, method: 'center' };
+    }
+
+    return { success: false, error: 'Could not find input' };
+  })()`);
 
   await delay(500);
-  
+
   // Type using CDP Input API (this works regardless of element type)
   await inputCdp("Input.insertText", { text: prompt });
   await delay(300);
-  
+
   // Backspace then re-add last char to reveal submit button
   await inputCdp("Input.dispatchKeyEvent", {
     type: "keyDown",
@@ -302,7 +320,7 @@ async function typePrompt(cdp, inputCdp, prompt) {
     nativeVirtualKeyCode: 8,
   });
   await delay(100);
-  
+
   // Re-add last character
   const lastChar = prompt.slice(-1);
   await inputCdp("Input.insertText", { text: lastChar });
@@ -310,24 +328,26 @@ async function typePrompt(cdp, inputCdp, prompt) {
 }
 
 async function submitPrompt(cdp, inputCdp) {
-  const clicked = await evaluate(cdp, `(() => {
-    ${buildClickDispatcher()}
-    const isEnabled = (btn) => btn && !btn.disabled && btn.getAttribute('aria-disabled') !== 'true';
-    const visible = (btn) => {
-      if (!btn || !btn.offsetParent) return false;
-      const r = btn.getBoundingClientRect();
-      return r.width > 0 && r.height > 0;
-    };
-    const submitButtons = Array.from(document.querySelectorAll('button[aria-label=Submit]')).filter(visible);
-    const btn = submitButtons.find(isEnabled) || submitButtons[0];
-    if (btn && isEnabled(btn)) {
-      dispatchClickSequence(btn);
-      return { success: true, method: 'submit_button' };
-    }
-    return { success: false, reason: 'submit_not_ready' };
-  })()`);
+  // Get submit button coordinates
+  const btnInfo = await evaluate(cdp, "(function() { const btn = document.querySelector('button[aria-label=Submit]'); if (!btn) return null; const r = btn.getBoundingClientRect(); return { x: r.x + r.width/2, y: r.y + r.height/2 }; })()");
 
-  if (!clicked || !clicked.success) {
+  if (btnInfo && btnInfo.x && btnInfo.y) {
+    // Click using CDP
+    await inputCdp("Input.dispatchMouseEvent", {
+      type: "mousePressed",
+      x: btnInfo.x,
+      y: btnInfo.y,
+      button: "left",
+      clickCount: 1
+    });
+    await inputCdp("Input.dispatchMouseEvent", {
+      type: "mouseReleased",
+      x: btnInfo.x,
+      y: btnInfo.y,
+      button: "left",
+      clickCount: 1
+    });
+  } else {
     // Fallback: press Enter
     await inputCdp("Input.dispatchKeyEvent", {
       type: "keyDown",
@@ -345,7 +365,7 @@ async function submitPrompt(cdp, inputCdp) {
       nativeVirtualKeyCode: 13,
     });
   }
-  
+
   await delay(500);
 }
 
@@ -353,14 +373,34 @@ async function submitPrompt(cdp, inputCdp) {
 // Response Handling
 // ============================================================================
 
-async function waitForResponse(cdp, timeoutMs = 120000) {
+function extractPerplexityResponseText() {
+  const selectors = [
+    '[id^="markdown-content"]',
+    '[data-testid="answer"]',
+    'article',
+    '.prose',
+  ];
+
+  for (const selector of selectors) {
+    const elements = Array.from(document.querySelectorAll(selector));
+    for (let i = elements.length - 1; i >= 0; i--) {
+      const text = elements[i].innerText?.trim() || '';
+      if (text) return text;
+    }
+  }
+
+  return '';
+}
+
+async function waitForResponse(cdp, timeoutMs = 120000, signal) {
+  throwIfAborted(signal);
   const deadline = Date.now() + timeoutMs;
   let previousText = '';
   let stableCycles = 0;
   const requiredStableCycles = 10;
   let lastChangeAt = Date.now();
   const minStableMs = 2500;
-  
+
   // First, wait for navigation to search results page
   const navDeadline = Date.now() + 15000;
   while (Date.now() < navDeadline) {
@@ -368,17 +408,16 @@ async function waitForResponse(cdp, timeoutMs = 120000) {
     if (url && url.includes('/search/')) {
       break;
     }
-    await delay(200);
+    await delay(200, signal);
   }
-  
+
   // Wait a bit for the response area to render
-  await delay(1000);
-  
+  await delay(1000, signal);
+
   // Now poll for response completion
   while (Date.now() < deadline) {
     const snapshot = await evaluate(cdp, `(function() {
-      const prose = document.querySelector('.prose');
-      const text = prose ? prose.innerText : '';
+      const text = (${extractPerplexityResponseText.toString()})();
       const hasStop = !!document.querySelector('button[aria-label*=stop], button[aria-label*=Stop]');
       const hasCopy = !!document.querySelector('button[aria-label*=copy], button[aria-label*=Copy]');
       const hasRelated = document.body.innerText.indexOf('Related') > -1;
@@ -392,14 +431,14 @@ async function waitForResponse(cdp, timeoutMs = 120000) {
         url: location.href
       };
     })()`);
-    
+
     if (!snapshot) {
-      await delay(300);
+      await delay(300, signal);
       continue;
     }
-    
+
     const currentText = snapshot.text || '';
-    
+
     // Track text changes
     if (currentText !== previousText && currentText.length > previousText.length) {
       previousText = currentText;
@@ -408,9 +447,9 @@ async function waitForResponse(cdp, timeoutMs = 120000) {
     } else {
       stableCycles++;
     }
-    
+
     const stableMs = Date.now() - lastChangeAt;
-    
+
     // Response is complete if:
     // 1. Not generating (no stop button)
     // 2. Has action buttons OR Related section OR follow-up input OR stable for long enough
@@ -418,27 +457,27 @@ async function waitForResponse(cdp, timeoutMs = 120000) {
     const isStable = stableCycles >= requiredStableCycles && stableMs >= minStableMs;
     const hasCompletionIndicators = snapshot.hasActions || snapshot.hasRelated || snapshot.hasFollowUp;
     const isDone = !snapshot.generating && (hasCompletionIndicators || isStable);
-    
+
     if (isDone && currentText.trim().length > 0) {
       // Clean up the response text
       let cleanText = currentText;
-      
+
       // Remove "Related" section if present at the end
       const relatedIdx = cleanText.lastIndexOf('\nRelated\n');
       if (relatedIdx > 0) {
         cleanText = cleanText.substring(0, relatedIdx).trim();
       }
-      
+
       return {
         text: cleanText,
         sources: snapshot.sourcesCount,
         url: snapshot.url,
       };
     }
-    
-    await delay(300);
+
+    await delay(300, signal);
   }
-  
+
   // Timeout - return whatever we have
   if (previousText.trim().length > 0) {
     return {
@@ -448,7 +487,7 @@ async function waitForResponse(cdp, timeoutMs = 120000) {
       partial: true,
     };
   }
-  
+
   throw new Error("Response timeout - Perplexity did not complete in time");
 }
 
@@ -462,75 +501,78 @@ async function query(options) {
     model,
     mode = 'search',
     timeout = 120000,
-    keepTab = true,
     createTab,
     closeTab,
     cdpEvaluate,
     cdpCommand,
     log = () => {},
+    signal,
   } = options;
-  
+  throwIfAborted(signal);
+
   const startTime = Date.now();
   log("Starting Perplexity query");
-  
+
   // Create tab
-  const tabInfo = await createTab();
+  const tabInfo = await raceAbort(createTab, signal);
   log(`createTab returned: ${JSON.stringify(tabInfo)}`);
   const { tabId } = tabInfo || {};
-  
+
   if (!tabId) {
     throw new Error(`Failed to create Perplexity tab: ${JSON.stringify(tabInfo)}`);
   }
   log(`Created tab ${tabId}`);
-  
-  const cdp = (expr) => cdpEvaluate(tabId, expr);
-  const inputCdp = (method, params) => cdpCommand(tabId, method, params);
-  
+
+  const cdp = (expr) => raceAbort(() => cdpEvaluate(tabId, expr), signal);
+  const inputCdp = (method, params) => raceAbort(() => cdpCommand(tabId, method, params), signal);
+
   try {
     // Wait for page load
     await waitForPageLoad(cdp);
     log("Page loaded");
-    
+
     // Check login status (informational)
     const loginStatus = await checkLoginStatus(cdp);
     log(`Login: ${loginStatus.loggedIn ? 'yes' : 'anonymous'}${loginStatus.isPro ? ' (Pro)' : ''}`);
-    
+
     // Wait for input
     await waitForPromptReady(cdp);
     log("Prompt ready");
-    
+
     // Select mode if not default
     if (mode && mode.toLowerCase() !== 'search') {
       try {
         const selectedMode = await selectMode(cdp, mode);
         log(`Mode: ${selectedMode}`);
       } catch (e) {
+        if (signal?.aborted) throw e;
         log(`Mode selection failed: ${e.message}`);
       }
     }
-    
+
     // Select model if specified
     if (model) {
       try {
         const selectedModel = await selectModel(cdp, model);
         log(`Model: ${selectedModel}`);
       } catch (e) {
+        if (signal?.aborted) throw e;
         log(`Model selection failed: ${e.message}`);
       }
     }
-    
+
     // Type prompt
     await typePrompt(cdp, inputCdp, prompt);
     log("Prompt typed");
-    
+
     // Submit
     await submitPrompt(cdp, inputCdp);
     log("Submitted, waiting for response...");
-    
+
     // Wait for response
-    const response = await waitForResponse(cdp, timeout);
+    const response = await waitForResponse(cdp, timeout, signal);
     log(`Response: ${response.text.length} chars, ${response.sources} sources${response.partial ? ' (partial)' : ''}`);
-    
+
     return {
       response: response.text,
       sources: response.sources,
@@ -539,14 +581,14 @@ async function query(options) {
       mode: mode || 'search',
       partial: response.partial || false,
       tookMs: Date.now() - startTime,
-      tabId,
-      keepTab,
     };
   } finally {
-    if (!keepTab) {
-      await closeTab(tabId).catch(() => {});
+    try {
+      await closeTab(tabId);
+    } catch (error) {
+      log(`Failed to close Perplexity tab ${tabId}: ${error?.message || error}`);
     }
   }
 }
 
-module.exports = { query, PERPLEXITY_URL };
+module.exports = { query, PERPLEXITY_URL, waitForResponse, extractPerplexityResponseText };

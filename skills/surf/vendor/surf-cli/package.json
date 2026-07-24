@@ -1,6 +1,6 @@
 {
   "name": "surf-cli",
-  "version": "2.2.0",
+  "version": "2.9.0",
   "description": "CLI for AI agents to control Chrome. Zero config, agent-agnostic, battle-tested.",
   "keywords": [
     "chrome",
@@ -30,6 +30,7 @@
     "native/",
     "scripts/",
     "dist/",
+    "skills/",
     "README.md",
     "LICENSE"
   ],
@@ -42,6 +43,7 @@
     "lint:test": "biome check test/",
     "format": "biome format --write .",
     "test": "vitest run",
+    "test:e2e:chrome": "node test/e2e/real-chrome.mjs",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
@@ -50,21 +52,22 @@
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
-    "@modelcontextprotocol/sdk": "^1.7.0",
+    "@modelcontextprotocol/sdk": "^1.26.0",
     "buffer": "^6.0.3",
     "crypto-browserify": "^3.12.1",
     "events": "^3.3.0",
     "stream-browserify": "^3.0.0",
-    "vite-plugin-node-polyfills": "^0.24.0",
-    "zod": "^4.3.5"
+    "vite-plugin-node-polyfills": "^0.28.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.3.11",
-    "@types/chrome": "^0.0.287",
-    "@vitest/coverage-v8": "^4.0.16",
-    "@vitest/ui": "^4.0.16",
-    "typescript": "^5.7.2",
-    "vite": "^7.3.1",
-    "vitest": "^4.0.16"
+    "@biomejs/biome": "^2.5.4",
+    "@types/chrome": "^0.2.2",
+    "@vitest/coverage-v8": "^4.1.9",
+    "@vitest/ui": "^4.1.9",
+    "puppeteer": "25.3.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.1.4",
+    "vitest": "^4.1.9"
   }
 }

@@ -21,6 +21,18 @@ const STARTER_CONFIG = {
   }
 };
 
+// Grok models can be customized in surf.json if X.com UI changes:
+// {
+//   "grok": {
+//     "models": {
+//       "auto": { "id": "auto", "name": "Auto" },
+//       "fast": { "id": "fast", "name": "Fast" },
+//       "expert": { "id": "expert", "name": "Expert" },
+//       "grok-4.20-beta": { "id": "grok-4.20-beta", "name": "Grok 4.20 Beta" }
+//     }
+//   }
+// }
+
 function findConfigPath() {
   const cwdPath = path.join(process.cwd(), CONFIG_NAME);
   if (fs.existsSync(cwdPath)) {

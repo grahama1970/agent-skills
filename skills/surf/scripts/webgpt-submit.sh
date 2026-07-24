@@ -258,6 +258,7 @@ meta_output="${meta_output:-${output}.meta.json}"
 receipt_output="${receipt_output:-${output}.receipt.json}"
 submitted_output="${submitted_output:-${output}.submitted.md}"
 mkdir -p "$(dirname "$output")" "$(dirname "$raw_output")" "$(dirname "$meta_output")" "$(dirname "$receipt_output")" "$(dirname "$submitted_output")"
+inflight_output="$(dirname "$meta_output")/webgpt_inflight.json"
 
 
 
@@ -308,14 +309,18 @@ if status in {"completed", "recovered_focus_changed"} and project_shell_target a
     meta["status"] = status
     meta["failure"] = failure
 
-if failure in {"focus_stolen_mid_submit", "focus_stolen_despite_no_activate"}:
-    proof_status = "degraded_focus"
-    diagnosis = "The controlled tab returned sentinel output, but browser focus changed during no-activate mode."
-    action = "Preserve as degraded transport evidence only; rerun in a dedicated reviewer window for clean background proof."
-elif status in {"completed", "recovered_focus_changed"} and raw_has and not clean_has:
+if status in {"completed", "recovered_focus_changed"} and raw_has and not clean_has:
     proof_status = "response_proven"
-    diagnosis = "ChatGPT returned the current sentinel-bearing assistant response from the controlled tab."
-    action = "Use raw_output, output, and meta_output as Surf transport evidence; reconcile reviewer content against deterministic local proof."
+    if status == "recovered_focus_changed":
+        diagnosis = "ChatGPT returned the current sentinel-bearing assistant response from the controlled tab; focus changed during no-activate mode, so background focus proof is degraded."
+        action = "Use raw_output, output, and meta_output as response evidence; preserve focus_drift_warning and do not claim clean background focus invariance."
+    else:
+        diagnosis = "ChatGPT returned the current sentinel-bearing assistant response from the controlled tab."
+        action = "Use raw_output, output, and meta_output as Surf transport evidence; reconcile reviewer content against deterministic local proof."
+elif failure in {"focus_stolen_mid_submit", "focus_stolen_despite_no_activate"}:
+    proof_status = "degraded_focus"
+    diagnosis = "Browser focus changed during no-activate mode before Surf could prove a sentinel-bearing controlled-tab response."
+    action = "Use webgpt.extract if ChatGPT already finished, or rerun in a dedicated reviewer window for clean background proof."
 elif failure == "project_conversation_url_unproven":
     proof_status = "project_session_unproven"
     diagnosis = "Surf saw sentinel output, but the target was a ChatGPT project shell and no distinct conversation URL was proven."
@@ -336,6 +341,14 @@ elif failure == "roundtrip_preflight_failed":
     proof_status = "not_submitted"
     diagnosis = "The small sentinel roundtrip failed, so Surf blocked the main prompt before submission."
     action = "Inspect roundtrip_preflight_output_dir, repair tab visibility/state, or use a foreground/fresh reviewer tab before retrying."
+elif failure in {"BLOCKED_WEBGPT_CONVERSATION_FULL", "conversation_max_length_rollover_failed"}:
+    proof_status = "not_submitted"
+    diagnosis = "The controlled ChatGPT conversation reached its maximum length and Surf could not prove rollover resubmission."
+    action = "Inspect conversation_max_length_rollover metadata; retry with the same tab if Start new chat is available, or bind a fresh ChatGPT conversation."
+elif failure == "chatgpt_empty_response_after_submit":
+    proof_status = "submitted_no_response_proof" if submitted else "delivery_not_proven"
+    diagnosis = "ChatGPT accepted or was invoked for the controlled tab, but Surf captured an empty response after the wait budget; this often indicates long-conversation degradation without the visible max-length banner."
+    action = "Do not treat this as a parser or download failure. Bind or create a fresh ChatGPT conversation for the next attempt and preserve this meta as the degradation receipt."
 elif failure == "stale_cdp_on_explicit_tab":
     proof_status = "not_submitted"
     diagnosis = "Surf could not attach CDP to the explicitly requested tab in no-activate mode."
@@ -584,7 +597,61 @@ pathlib.Path(receipt).write_text(json.dumps({
 PY
 }
 
+write_inflight_marker() {
+  local status="$1"
+  local marker_at="$2"
+  local accepted="${3:-false}"
+  python3 - "$inflight_output" "$status" "$marker_at" "$accepted" "$input" "$submitted_output" "$output" "$raw_output" "$meta_output" "$receipt_output" "$sentinel" "${requested_tab_id:-}" "$target_url" "$model" "$reasoning" "$$" <<'PY'
+import json
+import os
+import pathlib
+import sys
+import tempfile
+
+(
+    marker, status, marker_at, accepted_s, inp, submitted, out, raw, meta, receipt,
+    sentinel, requested_tab_id, target_url, model, reasoning, pid,
+) = sys.argv[1:]
+payload = {
+    "schema": "surf.webgpt_inflight.v1",
+    "status": status,
+    "submitted_to_chatgpt": accepted_s == "true",
+    "prepared_prompt_is_transport_proof": False,
+    "input": inp,
+    "submitted_output": submitted,
+    "output": out,
+    "raw_output": raw,
+    "meta_output": meta,
+    "receipt_output": receipt,
+    "sentinel": sentinel,
+    "requested_tab_id": requested_tab_id or None,
+    "requested_url": target_url or None,
+    "requested_model": model or None,
+    "requested_reasoning": reasoning or None,
+    "submit_pid": int(pid),
+    "updated_at": marker_at,
+    "recovery_command": (
+        f"surf webgpt.recover --artifact-dir {pathlib.Path(meta).parent} --finalize"
+    ),
+}
+path = pathlib.Path(marker)
+path.parent.mkdir(parents=True, exist_ok=True)
+fd, tmp_name = tempfile.mkstemp(prefix=f".{path.name}.", suffix=".tmp", dir=str(path.parent))
+try:
+    with os.fdopen(fd, "w", encoding="utf-8") as handle:
+        json.dump(payload, handle, indent=2)
+        handle.write("\n")
+    os.replace(tmp_name, path)
+finally:
+    try:
+        os.unlink(tmp_name)
+    except FileNotFoundError:
+        pass
+PY
+}
+
 write_submit_receipt "prepared_prompt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "false"
+write_inflight_marker "prepared_prompt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "false"
 write_webgpt_heartbeat "prompt_prepared" "waiting" "$submitted_output" "$raw_output" "$timeout_s"
 
 stderr_log="$(mktemp /tmp/surf-webgpt-submit-stderr.XXXXXX.log)"
@@ -608,9 +675,9 @@ attempt_extract_fallback() {
   extract_raw="$(mktemp /tmp/surf-webgpt-submit-extract-raw.XXXXXX.md)"
   extract_meta="$(mktemp /tmp/surf-webgpt-submit-extract-meta.XXXXXX.json)"
   extract_err="$(mktemp /tmp/surf-webgpt-submit-extract-stderr.XXXXXX.log)"
-  local per_attempt_timeout="${SURF_WEBGPT_EXTRACT_FALLBACK_TIMEOUT:-30}"
-  local retry_interval="${SURF_WEBGPT_EXTRACT_FALLBACK_INTERVAL:-15}"
-  local retry_budget="${SURF_WEBGPT_EXTRACT_FALLBACK_BUDGET:-180}"
+  local per_attempt_timeout="${SURF_WEBGPT_EXTRACT_FALLBACK_TIMEOUT:-12}"
+  local retry_interval="${SURF_WEBGPT_EXTRACT_FALLBACK_INTERVAL:-3}"
+  local retry_budget="${SURF_WEBGPT_EXTRACT_FALLBACK_BUDGET:-45}"
   local started_at="$SECONDS"
   local attempt=0
   while (( SECONDS - started_at < retry_budget )); do
@@ -672,7 +739,7 @@ strip_chatgpt_target_args() {
 }
 
 attempt_conversation_max_length_rollover() {
-  if ! grep -Fq "ChatGPT conversation reached maximum length" "$stderr_log"; then
+  if ! grep -Eq "ChatGPT conversation reached maximum length|BLOCKED_WEBGPT_CONVERSATION_FULL" "$stderr_log"; then
     return 1
   fi
   conversation_rollover_attempted=1
@@ -987,6 +1054,7 @@ fi
 # written before tab/url discovery so callers can see prompt preparation early;
 # this second write records the actual intended controlled tab when available.
 write_submit_receipt "prepared_prompt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "false"
+write_inflight_marker "prepared_prompt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "false"
 
 if [[ -n "${requested_tab_id:-}" ]]; then
   surf_tab_lock_path="/tmp/surf-webgpt-tab-${requested_tab_id}.lock"
@@ -1238,6 +1306,7 @@ PY
     exit 6
   fi
   rm -f -- "$cdp_probe_err" "${cdp_retry_err:-}"
+
 fi
 
 if [[ "$no_activate" -eq 1 ]]; then
@@ -1263,18 +1332,57 @@ set +e
 run_submit() {
   if command -v timeout >/dev/null 2>&1; then
     hard_timeout_s=$((timeout_s + 60))
-    timeout --kill-after=10s "${hard_timeout_s}s" "$RUN_SH" "${args[@]}"
+    if command -v setsid >/dev/null 2>&1; then
+      setsid timeout --kill-after=10s "${hard_timeout_s}s" "$RUN_SH" "${args[@]}"
+    else
+      timeout --kill-after=10s "${hard_timeout_s}s" "$RUN_SH" "${args[@]}"
+    fi
   else
     "$RUN_SH" "${args[@]}"
   fi
 }
 run_submit > "$raw_tmp" 2> "$stderr_log" &
 submit_pid=$!
+
+terminate_process_tree() {
+  local pid="${1:-}"
+  if [[ -z "$pid" ]] || ! kill -0 "$pid" 2>/dev/null; then
+    return 0
+  fi
+  pkill -TERM -P "$pid" 2>/dev/null || true
+  kill -TERM -- "-$pid" 2>/dev/null || true
+  kill -TERM "$pid" 2>/dev/null || true
+  sleep 1
+  pkill -KILL -P "$pid" 2>/dev/null || true
+  kill -KILL -- "-$pid" 2>/dev/null || true
+  kill -KILL "$pid" 2>/dev/null || true
+}
+
+stop_background_watcher() {
+  local pid="${1:-}"
+  if [[ -z "$pid" ]]; then
+    return 0
+  fi
+  pkill -TERM -P "$pid" 2>/dev/null || true
+  kill "$pid" 2>/dev/null || true
+}
+
+cleanup_submit_processes() {
+  local rc=$?
+  trap - EXIT INT TERM HUP
+  stop_background_watcher "${poll_pid:-}"
+  stop_background_watcher "${receipt_pid:-}"
+  terminate_process_tree "${submit_pid:-}"
+  cleanup_surf_tab_lock 2>/dev/null || true
+  exit "$rc"
+}
+trap cleanup_submit_processes EXIT INT TERM HUP
 receipt_marker="$(mktemp /tmp/surf-webgpt-submit-receipt.XXXXXX.mark)"
 (
   while kill -0 "$submit_pid" 2>/dev/null; do
     if [[ -f "$host_log_file" ]] && grep -F "Prompt accepted: sentinel=$sentinel" "$host_log_file" >/dev/null 2>&1; then
       write_submit_receipt "submitted_to_chatgpt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "true"
+      write_inflight_marker "submitted_to_chatgpt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "true"
       write_webgpt_heartbeat "submitted" "generating" "$receipt_output" "$raw_output" "$timeout_s"
       printf 'submitted_to_chatgpt\n' > "$receipt_marker"
       exit 0
@@ -1290,6 +1398,7 @@ receipt_marker="$(mktemp /tmp/surf-webgpt-submit-receipt.XXXXXX.mark)"
   done
   if [[ -f "$host_log_file" ]] && grep -F "Prompt accepted: sentinel=$sentinel" "$host_log_file" >/dev/null 2>&1; then
     write_submit_receipt "submitted_to_chatgpt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "true"
+    write_inflight_marker "submitted_to_chatgpt" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "true"
     printf 'submitted_to_chatgpt\n' > "$receipt_marker"
   fi
 ) &
@@ -1323,18 +1432,12 @@ poll_interval="${SURF_WEBGPT_FOCUS_POLL_INTERVAL:-15}"
 poll_pid=$!
 wait "$submit_pid"
 status=$?
-stop_background_watcher() {
-  local pid="${1:-}"
-  if [[ -z "$pid" ]]; then
-    return 0
-  fi
-  pkill -TERM -P "$pid" 2>/dev/null || true
-  kill "$pid" 2>/dev/null || true
-}
 stop_background_watcher "$poll_pid"
 stop_background_watcher "$receipt_pid"
 wait "$poll_pid" 2>/dev/null || true
 wait "$receipt_pid" 2>/dev/null || true
+trap - EXIT INT TERM HUP
+trap cleanup_surf_tab_lock EXIT
 set -e
 finished_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 if [[ $status -eq 0 ]]; then
@@ -1425,13 +1528,15 @@ response_timed_out = None
 timeout_error = None
 response_source = None
 conversation_url = None
+current_url = None
 extract_fallback_used = False
 extract_fallback_reason = None
 extract_fallback_raw = None
 extract_fallback_meta = None
 tab_id = None
 chatgpt_ready_error = None
-conversation_max_length_detected = False
+conversation_full_blocked = "BLOCKED_WEBGPT_CONVERSATION_FULL" in stderr_text
+conversation_max_length_detected = conversation_full_blocked
 conversation_max_length_rollover_from_tab = None
 conversation_max_length_rollover_to_tab = None
 conversation_max_length_rollover_action = None
@@ -1464,6 +1569,8 @@ for line in reversed(stderr_text.splitlines()):
         response_source = line.split(":", 1)[1].strip()
     elif line.startswith("ConversationUrl:") and conversation_url is None:
         conversation_url = line.split(":", 1)[1].strip()
+    elif line.startswith("CurrentUrl:") and current_url is None:
+        current_url = line.split(":", 1)[1].strip()
     elif line.startswith("Tab ID:") and tab_id is None:
         tab_id = line.split(":", 1)[1].strip()
     elif line.startswith("ExtractFallback:") and not extract_fallback_used:
@@ -1508,9 +1615,25 @@ for line in reversed(stderr_text.splitlines()):
         chatgpt_rate_limit_exhausted = line.split(":", 1)[1].strip() == "true"
     elif line.startswith("ChatGPTRateLimitError:") and chatgpt_rate_limit_error is None:
         chatgpt_rate_limit_error = line.split(":", 1)[1].strip() or None
+empty_response_after_submit = (
+    not raw_text.strip()
+    and not conversation_max_length_detected
+    and (response_timed_out is True or bool(timeout_error) or "Response timeout" in stderr_text or "timed out" in stderr_text.lower())
+)
+failure = "conversation_max_length_rollover_failed" if conversation_max_length_detected else (
+    "chatgpt_empty_response_after_submit" if empty_response_after_submit else "submit_failed"
+)
+blocker = "BLOCKED_WEBGPT_CONVERSATION_FULL" if conversation_max_length_detected else (
+    "BLOCKED_WEBGPT_EMPTY_RESPONSE_AFTER_SUBMIT" if empty_response_after_submit else None
+)
+recommended_action = "retry_with_fresh_chatgpt_conversation" if (
+    conversation_max_length_detected or empty_response_after_submit
+) else None
 pathlib.Path(meta).write_text(json.dumps({
     "status": "failed",
-    "failure": "submit_failed",
+    "failure": failure,
+    "blocker": blocker,
+    "recommended_action": recommended_action,
     "chatgpt_ready_error": chatgpt_ready_error,
     "exit_code": int(status),
     "input": inp,
@@ -1530,6 +1653,8 @@ pathlib.Path(meta).write_text(json.dumps({
     "roundtrip_preflight": roundtrip,
     "controlled_tab_id": tab_id,
     "conversation_url": conversation_url,
+    "current_url": current_url or conversation_url,
+    "tab_url": current_url or conversation_url,
     "response_source": response_source,
     "response_timed_out": response_timed_out,
     "timeout_error": timeout_error,
@@ -1593,6 +1718,7 @@ response_timed_out = None
 timeout_error = None
 response_source = None
 conversation_url = None
+current_url = None
 extract_fallback_used = False
 extract_fallback_reason = None
 extract_fallback_raw = None
@@ -1621,6 +1747,8 @@ for line in reversed(stderr_text.splitlines()):
         response_source = line.split(":", 1)[1].strip()
     elif line.startswith("ConversationUrl:") and conversation_url is None:
         conversation_url = line.split(":", 1)[1].strip()
+    elif line.startswith("CurrentUrl:") and current_url is None:
+        current_url = line.split(":", 1)[1].strip()
     elif line.startswith("Tab ID:") and tab_id is None:
         tab_id = line.split(":", 1)[1].strip()
     elif line.startswith("ExtractFallback:") and not extract_fallback_used:
@@ -1665,9 +1793,19 @@ for line in reversed(stderr_text.splitlines()):
         chatgpt_rate_limit_exhausted = line.split(":", 1)[1].strip() == "true"
     elif line.startswith("ChatGPTRateLimitError:") and chatgpt_rate_limit_error is None:
         chatgpt_rate_limit_error = line.split(":", 1)[1].strip() or None
+empty_response_after_submit = (
+    not raw_text.strip()
+    and not conversation_max_length_detected
+    and (response_timed_out is True or bool(timeout_error) or "Response timeout" in stderr_text or "timed out" in stderr_text.lower())
+)
+failure = "chatgpt_empty_response_after_submit" if empty_response_after_submit else "missing_sentinel"
+blocker = "BLOCKED_WEBGPT_EMPTY_RESPONSE_AFTER_SUBMIT" if empty_response_after_submit else None
+recommended_action = "retry_with_fresh_chatgpt_conversation" if empty_response_after_submit else None
 pathlib.Path(meta).write_text(json.dumps({
-    "status": "missing_sentinel",
-    "failure": "missing_sentinel",
+    "status": "failed" if empty_response_after_submit else "missing_sentinel",
+    "failure": failure,
+    "blocker": blocker,
+    "recommended_action": recommended_action,
     "input": inp,
     "submitted_output": submitted,
     "output": out,
@@ -1685,6 +1823,8 @@ pathlib.Path(meta).write_text(json.dumps({
     "roundtrip_preflight": roundtrip,
     "controlled_tab_id": tab_id,
     "conversation_url": conversation_url,
+    "current_url": current_url or conversation_url,
+    "tab_url": current_url or conversation_url,
     "response_source": response_source,
     "response_timed_out": response_timed_out,
     "timeout_error": timeout_error,
@@ -1898,6 +2038,7 @@ activated = None
 tab_was_created = None
 response_source = None
 conversation_url = None
+current_url = None
 page_text_contains_sentinel = None
 document_hidden_at_completion = None
 visibility_state_at_completion = None
@@ -1940,6 +2081,8 @@ for line in reversed(stderr_text.splitlines()):
         response_source = line.split(":", 1)[1].strip()
     elif line.startswith("ConversationUrl:") and conversation_url is None:
         conversation_url = line.split(":", 1)[1].strip()
+    elif line.startswith("CurrentUrl:") and current_url is None:
+        current_url = line.split(":", 1)[1].strip()
     elif line.startswith("PageTextContainsSentinel:") and page_text_contains_sentinel is None:
         page_text_contains_sentinel = line.split(":", 1)[1].strip() == "true"
     elif line.startswith("DocumentHiddenAtCompletion:") and document_hidden_at_completion is None:
@@ -2078,7 +2221,13 @@ elif response_integrity_ok and focus_violation:
     status = "recovered_focus_changed"
 else:
     status = "failed"
+focus_drift_warning = None
+if status == "recovered_focus_changed":
+    focus_drift_warning = "focus_stolen_mid_submit" if focus_stolen_mid else "focus_stolen_despite_no_activate"
+
 if status == "completed":
+    failure = None
+elif status == "recovered_focus_changed":
     failure = None
 elif focus_violation and focus_stolen_mid:
     failure = "focus_stolen_mid_submit"
@@ -2129,6 +2278,7 @@ pathlib.Path(meta).write_text(json.dumps({
     "active_tab_after": focus_after["activeTabId"],
     "focus_changed": focus_changed,
     "focus_stolen_mid_submit": focus_stolen_mid,
+    "focus_drift_warning": focus_drift_warning,
     "focus_invariant_ok": not focus_violation,
     "transport_degraded": bool(status == "recovered_focus_changed"),
     "recovered_output": bool(status == "recovered_focus_changed"),
@@ -2159,6 +2309,8 @@ pathlib.Path(meta).write_text(json.dumps({
     "extract_fallback_raw": extract_fallback_raw,
     "extract_fallback_meta": extract_fallback_meta,
     "conversation_url": conversation_url,
+    "current_url": current_url or conversation_url,
+    "tab_url": current_url or conversation_url,
     "page_text_contains_sentinel": page_text_contains_sentinel,
     "document_hidden_at_completion": document_hidden_at_completion,
     "visibility_state_at_completion": visibility_state_at_completion,

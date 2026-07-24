@@ -1,45 +1,24 @@
-const fs = require("fs");
 const path = require("path");
-const crypto = require("crypto");
+const { abortableDelay, raceAbort, throwIfAborted } = require("./abort.cjs");
 
 const CHATGPT_URL = "https://chatgpt.com/";
 
 const SELECTORS = {
-  promptTextarea: '#prompt-textarea, [data-testid="composer-textarea"], textarea[name="prompt-textarea"], [role="textbox"][aria-label*="Chat"], [role="textbox"][contenteditable="true"], [contenteditable="true"][data-virtualkeyboard="true"]',
+  promptTextarea: '#prompt-textarea, [data-testid="composer-textarea"], textarea[name="prompt-textarea"], .ProseMirror, [contenteditable="true"][data-virtualkeyboard="true"]',
   sendButton: 'button[data-testid="send-button"], button[data-testid*="composer-send"], form button[type="submit"]',
   modelButton: '[data-testid="model-switcher-dropdown-button"]',
   reasoningButton: 'button[data-testid*="reason"], button[aria-label*="reason" i], button[aria-label*="thinking" i], button[aria-label*="effort" i]',
   menuContainer: '[role="menu"], [data-radix-collection-root]',
   menuItem: 'button, [role="menuitem"], [role="menuitemradio"], [data-testid*="model-switcher-"]',
-  assistantMessage: '[data-message-author-role="assistant"], [data-turn="assistant"]',
-  stopButton: '[data-testid="stop-button"]',
-  finishedActions: 'button[data-testid="copy-turn-action-button"], button[data-testid="good-response-turn-action-button"]',
-  conversationTurn: 'article[data-testid^="conversation-turn"], div[data-testid^="conversation-turn"]',
-  fileInput: 'input[type="file"]',
+  assistantMessage: '[data-message-author-role="assistant"], [data-turn="assistant"], [data-testid*="assistant-message"], [data-testid*="assistant-turn"], [data-testid*="assistant-response"]',
+  assistantContent: '.markdown, [data-message-content], .prose, [class*="markdown"], [dir="auto"]',
+  stopButton: '[data-testid="stop-button"], [data-testid*="stop"], button[aria-label*="Stop"], button[aria-label*="stop"]',
+  finishedActions: 'button[data-testid="copy-turn-action-button"], button[data-testid="good-response-turn-action-button"], button[data-testid*="turn-action"], button[aria-label*="Copy"], button[aria-label*="copy"], button[aria-label*="Read aloud"], button[aria-label*="read aloud"]',
+  conversationTurn: '[data-testid^="conversation-turn"], [data-testid*="conversation-turn"]',
   cloudflareScript: 'script[src*="/challenge-platform/"]',
 };
 
-function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-const BACKGROUND_WAKE_EVERY_POLLS = 5;
-const CONVERSATION_MAX_LENGTH_NEEDLES = [
-  "you've reached the maximum length for this conversation",
-  "you have reached the maximum length for this conversation",
-  "maximum length for this conversation",
-  "keep talking by starting a new chat",
-  "start a new chat",
-];
-const TOO_MANY_REQUESTS_NEEDLES = [
-  "too many requests",
-  "you're making requests too quickly",
-  "you are making requests too quickly",
-  "temporarily limited access to your conversations",
-  "please wait a few minutes before trying again",
-];
-
-function normalizeChatgptStateText(text) {
+function normalizeProviderMessage(text) {
   return String(text || "")
     .toLowerCase()
     .replace(/[\u2018\u2019]/g, "'")
@@ -48,81 +27,55 @@ function normalizeChatgptStateText(text) {
 }
 
 function detectsConversationMaxLength(text) {
-  const normalized = normalizeChatgptStateText(text);
+  const normalized = normalizeProviderMessage(text);
   if (!normalized) return false;
-  const reachedLimit = CONVERSATION_MAX_LENGTH_NEEDLES
-    .slice(0, 3)
-    .some((needle) => normalized.includes(needle));
-  const newChatInstruction = CONVERSATION_MAX_LENGTH_NEEDLES
-    .slice(3)
-    .some((needle) => normalized.includes(needle));
+  const reachedLimit =
+    normalized.includes("you've reached the maximum length for this conversation") ||
+    normalized.includes("you have reached the maximum length for this conversation") ||
+    normalized.includes("maximum length for this conversation");
+  const newChatInstruction =
+    normalized.includes("keep talking by starting a new chat") ||
+    normalized.includes("start a new chat");
   return reachedLimit && newChatInstruction;
 }
 
 function detectsTooManyRequests(text) {
-  const normalized = normalizeChatgptStateText(text);
+  const normalized = normalizeProviderMessage(text);
   if (!normalized) return false;
-  const hasTitle = normalized.includes("too many requests");
-  const hasThrottle = TOO_MANY_REQUESTS_NEEDLES
-    .slice(1)
-    .some((needle) => normalized.includes(needle));
+  const hasTitle =
+    normalized.includes("too many requests") ||
+    normalized.includes("you've hit your limit") ||
+    normalized.includes("you have hit your limit");
+  const hasThrottle =
+    normalized.includes("you're making requests too quickly") ||
+    normalized.includes("you are making requests too quickly") ||
+    normalized.includes("temporarily limited access to your conversations") ||
+    normalized.includes("please wait a few minutes before trying again") ||
+    normalized.includes("please try again later");
   return hasTitle && hasThrottle;
 }
 
-function conversationMaxLengthError(state = {}) {
+function conversationMaxLengthError(state) {
   const error = new Error(
-    "ChatGPT conversation reached maximum length; start a new chat is required",
+    "ChatGPT conversation reached maximum length; start a new chat is required"
   );
   error.code = "chatgpt_conversation_max_length";
-  error.chatgptPageState = state;
+  error.chatgptPageState = state || null;
   return error;
 }
 
-function tooManyRequestsError(state = {}) {
+function tooManyRequestsError(state) {
   const error = new Error(
-    "ChatGPT is rate limited: too many requests; wait before retrying",
+    "ChatGPT is rate limited: too many requests; wait before retrying"
   );
   error.code = "chatgpt_too_many_requests";
-  error.chatgptPageState = state;
+  error.chatgptPageState = state || null;
   return error;
 }
 
-async function wakeBackgroundTab(inputCdp, log, reason = "poll") {
-  if (!inputCdp) return false;
-  try {
-    await inputCdp("Page.setWebLifecycleState", { state: "active" });
-    log?.(`Background tab lifecycle set to active (${reason})`);
-    return true;
-  } catch (err) {
-    log?.(`Page.setWebLifecycleState skipped (${reason}): ${err?.message || err}`);
-    return false;
-  }
+function delay(ms, signal) {
+  return abortableDelay(ms, signal);
 }
-
-async function nudgeBackgroundRendering(cdp, inputCdp, log, reason = "poll") {
-  await wakeBackgroundTab(inputCdp, log, reason);
-  try {
-    await evaluate(
-      cdp,
-      `(() => {
-        try {
-          document.dispatchEvent(new Event('visibilitychange'));
-          if (typeof document.onvisibilitychange === 'function') {
-            document.onvisibilitychange(new Event('visibilitychange'));
-          }
-        } catch (_) {}
-        return {
-          documentHidden: document.hidden === true,
-          visibilityState: document.visibilityState || null,
-          documentHasFocus: typeof document.hasFocus === 'function' ? document.hasFocus() : null,
-        };
-      })()`,
-    );
-  } catch (err) {
-    log?.(`Background render nudge skipped (${reason}): ${err?.message || err}`);
-  }
-}
-
 
 function buildClickDispatcher() {
   return `function dispatchClickSequence(target){
@@ -144,22 +97,167 @@ function buildClickDispatcher() {
 
 function hasRequiredCookies(cookies) {
   if (!cookies || !Array.isArray(cookies)) return false;
-  const hasValue = (c) => Boolean(c && c.value);
-  const legacy = cookies.find(
-    (c) => c.name === "__Secure-next-auth.session-token" && hasValue(c)
-  );
-  if (legacy) return true;
-  // NextAuth may shard large session cookies as .0, .1, ...
   return cookies.some(
-    (c) => /^__Secure-next-auth\.session-token\.\d+$/.test(c.name) && hasValue(c)
+    (c) =>
+      typeof c?.name === "string" &&
+      Boolean(c.value) &&
+      (c.name === "__Secure-next-auth.session-token" ||
+        /^__Secure-next-auth\.session-token\.\d+$/.test(c.name))
   );
 }
 
-async function evaluate(cdp, expression) {
+function cleanChatGPTResponseText(rawText) {
+  if (!rawText) return "";
+
+  const chromeLines = new Set([
+    "copy",
+    "good response",
+    "bad response",
+    "read aloud",
+    "edit",
+    "retry",
+    "continue generating",
+    "share",
+  ]);
+
+  const lines = [];
+  let inCodeFence = false;
+
+  for (const line of String(rawText).replace(/\r\n?/g, "\n").split("\n")) {
+    const trimmed = line.trim();
+    const isFenceLine = trimmed.startsWith("```");
+    const normalizedLine = inCodeFence || isFenceLine ? line.replace(/[\t ]+$/g, "") : line;
+
+    lines.push({
+      text: normalizedLine,
+      trimmed,
+      isChrome: trimmed.length > 0 && chromeLines.has(trimmed.toLowerCase()),
+      inCodeFence,
+      isFenceLine,
+    });
+
+    if (isFenceLine) {
+      inCodeFence = !inCodeFence;
+    }
+  }
+
+  while (lines.length > 0 && lines[0].trimmed.length === 0) {
+    lines.shift();
+  }
+  while (lines.length > 0 && lines[lines.length - 1].trimmed.length === 0) {
+    lines.pop();
+  }
+
+  let trailingChromeStart = lines.length;
+  while (trailingChromeStart > 0) {
+    const line = lines[trailingChromeStart - 1];
+    if (line.inCodeFence || line.isFenceLine || !line.isChrome) break;
+    trailingChromeStart--;
+  }
+
+  const trailingChromeCount = lines.length - trailingChromeStart;
+  if (trailingChromeCount >= 2) {
+    lines.splice(trailingChromeStart);
+  }
+
+  while (lines.length > 0 && lines[0].trimmed.length === 0) {
+    lines.shift();
+  }
+  while (lines.length > 0 && lines[lines.length - 1].trimmed.length === 0) {
+    lines.pop();
+  }
+
+  return lines.map((line) => line.text).join("\n");
+}
+
+function extractLatestAssistantSnapshot(candidates) {
+  if (!Array.isArray(candidates)) return null;
+
+  let latestEmptyAssistant = null;
+
+  for (let i = candidates.length - 1; i >= 0; i--) {
+    const candidate = candidates[i];
+    if (!candidate?.isAssistant) continue;
+
+    const snapshot = {
+      ...candidate,
+      text: cleanChatGPTResponseText(candidate?.text || ""),
+      turnIndex: i,
+    };
+
+    if (snapshot.text) {
+      return snapshot;
+    }
+
+    if (!latestEmptyAssistant) {
+      latestEmptyAssistant = snapshot;
+    }
+  }
+
+  return latestEmptyAssistant;
+}
+
+function normalizeResponseSnapshot(rawSnapshot) {
+  const candidates = rawSnapshot?.candidates;
+  return {
+    latestAssistant: extractLatestAssistantSnapshot(candidates),
+    assistantCount: Array.isArray(candidates)
+      ? candidates.filter((candidate) => candidate?.isAssistant).length
+      : 0,
+    stopVisible: Boolean(rawSnapshot?.stopVisible),
+    pageText: rawSnapshot?.pageText || "",
+    documentHidden: rawSnapshot?.documentHidden === true,
+    visibilityState: rawSnapshot?.visibilityState || null,
+  };
+}
+
+function isNewAssistantContent(
+  latestAssistant,
+  baselineAssistant,
+  assistantCount = 0,
+  baselineAssistantCount = 0
+) {
+  if (!latestAssistant) return false;
+  if (!baselineAssistant) return true;
+  if (latestAssistant.messageId && baselineAssistant.messageId) {
+    if (latestAssistant.messageId !== baselineAssistant.messageId) {
+      return true;
+    }
+  }
+
+  const currentText = latestAssistant.text || "";
+  const baselineText = baselineAssistant.text || "";
+
+  if (assistantCount > baselineAssistantCount) {
+    if (latestAssistant.turnIndex !== baselineAssistant.turnIndex) {
+      return true;
+    }
+    if (currentText !== baselineText) {
+      return true;
+    }
+    return false;
+  }
+
+  if (currentText !== baselineText) {
+    return true;
+  }
+  return false;
+}
+
+function isChatGPTResponseComplete(snapshot, stableCycles, stableMs) {
+  if (!snapshot?.text) return false;
+  if (snapshot.stopVisible) return false;
+  if (snapshot.hasFinishedActions) return true;
+  return stableCycles >= 6 && stableMs >= 1200;
+}
+
+async function evaluate(cdp, expression, signal) {
+  throwIfAborted(signal);
   const result = await cdp(expression);
+  throwIfAborted(signal);
   if (result.exceptionDetails) {
-    const desc = result.exceptionDetails.exception?.description || 
-                 result.exceptionDetails.text || 
+    const desc = result.exceptionDetails.exception?.description ||
+                 result.exceptionDetails.text ||
                  "Evaluation failed";
     throw new Error(desc);
   }
@@ -169,295 +267,15 @@ async function evaluate(cdp, expression) {
   return result.result?.value;
 }
 
-function withTimeout(promise, timeoutMs, label) {
-  let timeoutId;
-  const timeout = new Promise((_, reject) => {
-    timeoutId = setTimeout(() => reject(new Error(`${label} timed out after ${timeoutMs}ms`)), timeoutMs);
-  });
-  return Promise.race([promise, timeout]).finally(() => clearTimeout(timeoutId));
-}
-
-function isoNow() {
-  return new Date().toISOString();
-}
-
-function sha256Text(text) {
-  return crypto.createHash("sha256").update(text || "", "utf8").digest("hex");
-}
-
-function tailExcerpt(text, maxChars = 700) {
-  const value = String(text || "");
-  if (value.length <= maxChars) return value;
-  return value.slice(value.length - maxChars);
-}
-
-function heartbeatEventsPath(heartbeatFile) {
-  if (!heartbeatFile) return null;
-  const parsed = path.parse(String(heartbeatFile));
-  return path.join(parsed.dir, `${parsed.name}.events.jsonl`);
-}
-
-function writeAssistantHeartbeat(heartbeatFile, event) {
-  if (!heartbeatFile) return;
-  try {
-    const file = String(heartbeatFile);
-    const dir = path.dirname(file);
-    fs.mkdirSync(dir, { recursive: true });
-    let existing = fs.existsSync(file)
-      ? JSON.parse(fs.readFileSync(file, "utf8"))
-      : {};
-    const sentinelChanged = Boolean(
-      event.sentinel && existing.sentinel && existing.sentinel !== event.sentinel
-    );
-    if (sentinelChanged) existing = {};
-    const assistantText = String(event.assistantText || "");
-    const observedAt = isoNow();
-    const assistant = {
-      observed_at: observedAt,
-      changed_at: event.changedAtIso || null,
-      poll_count: event.pollCount,
-      message_chars: assistantText.length,
-      message_sha256: sha256Text(assistantText),
-      tail_excerpt: tailExcerpt(assistantText),
-      sentinel_seen: event.sentinelSeen === true,
-      page_sentinel_seen: event.pageSentinelSeen === true,
-      stable_poll_count: event.stableCycles,
-      required_stable_polls: event.requiredStableCycles,
-      stable_ms: event.stableMs,
-      message_id: event.messageId || null,
-      turn_index: Number.isFinite(event.turnIndex) ? event.turnIndex : null,
-      source: event.source || null,
-      stop_visible: event.stopVisible === true,
-      finished_actions_visible: event.finished === true,
-      document_hidden: event.documentHidden === true,
-      visibility_state: event.visibilityState || null,
-      background_hidden_polls: event.hiddenPolls || 0,
-      hidden_recovery_used: event.hiddenRecoveryUsed === true,
-    };
-    const payload = {
-      ...existing,
-      schema: existing.schema || "surf.webgpt_heartbeat.v1",
-      sentinel: event.sentinel || existing.sentinel || null,
-      stream_schema: "surf.webgpt_assistant_stream.v1",
-      updated_at: observedAt,
-      last_browser_observation_at: observedAt,
-      phase: event.phase || existing.phase || "generating",
-      page_state: event.pageState || existing.page_state || "waiting_for_sentinel",
-      assistant_message_chars: assistant.message_chars,
-      assistant_message_sha256: assistant.message_sha256,
-      assistant_tail_excerpt: assistant.tail_excerpt,
-      assistant_last_changed_at: assistant.changed_at,
-      assistant_sentinel_seen: assistant.sentinel_seen,
-      assistant_page_sentinel_seen: assistant.page_sentinel_seen,
-      assistant_stable_poll_count: assistant.stable_poll_count,
-      assistant_required_stable_polls: assistant.required_stable_polls,
-      assistant_stable_ms: assistant.stable_ms,
-      assistant_message_id: assistant.message_id,
-      assistant_turn_index: assistant.turn_index,
-      assistant_source: assistant.source,
-      assistant_stop_visible: assistant.stop_visible,
-      assistant_finished_actions_visible: assistant.finished_actions_visible,
-      assistant_document_hidden: assistant.document_hidden,
-      assistant_visibility_state: assistant.visibility_state,
-      assistant_background_hidden_polls: assistant.background_hidden_polls,
-      assistant_hidden_recovery_used: assistant.hidden_recovery_used,
-      assistant_observation: assistant,
-      assistant_event_log: heartbeatEventsPath(file),
-      prepared_prompt_is_transport_proof: false,
-    };
-    const tmp = `${file}.${process.pid}.${Date.now()}.tmp`;
-    fs.writeFileSync(tmp, `${JSON.stringify(payload, null, 2)}\n`, "utf8");
-    fs.renameSync(tmp, file);
-    const eventPath = heartbeatEventsPath(file);
-    if (eventPath) {
-      if (sentinelChanged) fs.writeFileSync(eventPath, "", "utf8");
-      const eventPayload = {
-        schema: "surf.webgpt_assistant_stream_event.v1",
-        event: "assistant_snapshot",
-        observed_at: observedAt,
-        phase: payload.phase,
-        page_state: payload.page_state,
-        assistant,
-      };
-      fs.appendFileSync(eventPath, `${JSON.stringify(eventPayload)}\n`, "utf8");
-    }
-  } catch (_) {
-    // Heartbeat must never change WebGPT transport behavior or proof semantics.
-  }
-}
-
-const assistantSnapshotExpression = (sentinel, baselineAssistantCount = 0) => {
-  const baseline = Number.isFinite(baselineAssistantCount) && baselineAssistantCount >= 0
-    ? Math.floor(baselineAssistantCount)
-    : 0;
-  const sentinelLiteral = JSON.stringify(sentinel || null);
-  return `(() => {
-    const BASELINE = ${baseline};
-    const SENTINEL = ${sentinelLiteral};
-    const CONVERSATION_SELECTOR = '${SELECTORS.conversationTurn}';
-    const ASSISTANT_SELECTOR = '${SELECTORS.assistantMessage}';
-    const STOP_SELECTOR = '${SELECTORS.stopButton}';
-    const FINISHED_SELECTOR = '${SELECTORS.finishedActions}';
-    const detectsConversationMaxLength = (text) => {
-      const normalized = String(text || '')
-        .toLowerCase()
-        .replace(/[\\u2018\\u2019]/g, "'")
-        .replace(/\\s+/g, ' ')
-        .trim();
-      if (!normalized) return false;
-      const reachedLimit = (
-        normalized.includes("you've reached the maximum length for this conversation") ||
-        normalized.includes('you have reached the maximum length for this conversation') ||
-        normalized.includes('maximum length for this conversation')
-      );
-      const newChatInstruction = (
-        normalized.includes('keep talking by starting a new chat') ||
-        normalized.includes('start a new chat')
-      );
-      return reachedLimit && newChatInstruction;
-    };
-    const detectsTooManyRequests = (text) => {
-      const normalized = String(text || '')
-        .toLowerCase()
-        .replace(/[\\u2018\\u2019]/g, "'")
-        .replace(/\\s+/g, ' ')
-        .trim();
-      if (!normalized) return false;
-      const hasTitle = normalized.includes('too many requests');
-      const hasThrottle = (
-        normalized.includes("you're making requests too quickly") ||
-        normalized.includes('you are making requests too quickly') ||
-        normalized.includes('temporarily limited access to your conversations') ||
-        normalized.includes('please wait a few minutes before trying again')
-      );
-      return hasTitle && hasThrottle;
-    };
-    const pageText = document.body?.innerText || document.body?.textContent || '';
-    const conversationMaxLengthDetected = detectsConversationMaxLength(pageText);
-    const conversationMaxLengthTail = conversationMaxLengthDetected ? pageText.slice(-1200) : '';
-    const tooManyRequestsDetected = detectsTooManyRequests(pageText);
-    const tooManyRequestsTail = tooManyRequestsDetected ? pageText.slice(-1200) : '';
-    const isAssistantTurn = (node) => {
-      if (!(node instanceof HTMLElement)) return false;
-      const role = (node.getAttribute('data-message-author-role') || '').toLowerCase();
-      if (role === 'assistant') return true;
-      const turn = (node.getAttribute('data-turn') || '').toLowerCase();
-      if (turn === 'assistant') return true;
-      return Boolean(node.querySelector(ASSISTANT_SELECTOR));
-    };
-    const directAssistantTurns = Array.from(document.querySelectorAll(ASSISTANT_SELECTOR))
-      .filter((node) => node instanceof HTMLElement);
-    const conversationTurns = Array.from(document.querySelectorAll(CONVERSATION_SELECTOR));
-    const assistantTurns = directAssistantTurns.length
-      ? directAssistantTurns
-      : conversationTurns.filter((node) => isAssistantTurn(node));
-    const newAssistantTurns = assistantTurns.slice(BASELINE);
-    let baselineFallback = false;
-    let lastAssistantTurn = newAssistantTurns.length
-      ? newAssistantTurns[newAssistantTurns.length - 1]
-      : null;
-    const sentinelVariants = SENTINEL ? [SENTINEL] : [];
-    const findSentinel = (text) => sentinelVariants.find((marker) => text.includes(marker)) || null;
-    if (!lastAssistantTurn && SENTINEL && assistantTurns.length) {
-      // ChatGPT can mutate an already-counted assistant container after we capture the
-      // baseline. The per-submit sentinel is unique, so only fall back when that exact
-      // marker is present in an existing assistant turn.
-      for (let idx = assistantTurns.length - 1; idx >= 0; idx--) {
-        const candidate = assistantTurns[idx];
-        const candidateText = (candidate?.innerText || candidate?.textContent || '').trim();
-        if (findSentinel(candidateText)) {
-          lastAssistantTurn = candidate;
-          baselineFallback = true;
-          break;
-        }
-      }
-    }
-    const documentHidden = document.hidden === true;
-    const visibilityState = document.visibilityState || null;
-    const documentHasFocus = typeof document.hasFocus === 'function' ? document.hasFocus() : null;
-    if (!lastAssistantTurn) {
-      return {
-        text: '',
-        stopVisible: Boolean(document.querySelector(STOP_SELECTOR)),
-        finished: false,
-        source: 'awaiting-assistant-turn',
-        pageTextContainsSentinel: false,
-        conversationMaxLengthDetected,
-        conversationMaxLengthTail,
-        tooManyRequestsDetected,
-        tooManyRequestsTail,
-        documentHidden,
-        visibilityState,
-        documentHasFocus,
-        baselineAssistantCount: BASELINE,
-        newAssistantTurnCount: 0,
-      };
-    }
-    const messageRoot = lastAssistantTurn.querySelector(ASSISTANT_SELECTOR) || lastAssistantTurn;
-    const contentRoot = messageRoot.querySelector('.markdown') ||
-                       messageRoot.querySelector('[data-message-content]') ||
-                       messageRoot.querySelector('.prose') ||
-                       messageRoot;
-    const contentText = (contentRoot?.innerText || contentRoot?.textContent || '').trim();
-    const turnText = (messageRoot?.innerText || messageRoot?.textContent || '').trim();
-    const contentSentinel = findSentinel(contentText);
-    const turnSentinel = findSentinel(turnText);
-    let text = SENTINEL && !contentSentinel && turnSentinel
-      ? turnText
-      : contentText;
-    const sentinelMatch = findSentinel(text);
-    const stopVisible = Boolean(document.querySelector(STOP_SELECTOR));
-    const finished = Boolean(lastAssistantTurn.querySelector(FINISHED_SELECTOR));
-    const messageId = messageRoot.getAttribute('data-message-id') || null;
-    const turnTextForSentinel = turnText || contentText || '';
-    const pageTextContainsSentinel = Boolean(SENTINEL && findSentinel(turnTextForSentinel));
-    let source = baselineFallback ? 'assistant-dom-baseline-fallback' : 'assistant-dom';
-    if (SENTINEL && pageTextContainsSentinel && !findSentinel(text)) {
-      const marker = findSentinel(turnTextForSentinel);
-      const idx = marker ? turnTextForSentinel.lastIndexOf(marker) : -1;
-      if (idx >= 0) {
-        text = turnTextForSentinel.slice(Math.max(0, idx - 12000), idx + marker.length).trim();
-        source = 'page-text-fallback';
-      }
-    }
-    return {
-      text,
-      stopVisible,
-      finished,
-      messageId,
-      turnIndex: assistantTurns.length - 1,
-      source,
-      pageTextContainsSentinel,
-      sentinelMatch,
-      conversationMaxLengthDetected,
-      conversationMaxLengthTail,
-      tooManyRequestsDetected,
-      tooManyRequestsTail,
-      documentHidden,
-      visibilityState,
-      documentHasFocus,
-      baselineAssistantCount: BASELINE,
-      newAssistantTurnCount: newAssistantTurns.length,
-    };
-  })()`;
-};
-
-async function assistantSnapshot(cdp, sentinel, timeoutMs = 12000, baselineAssistantCount = 0) {
-  return withTimeout(
-    evaluate(cdp, assistantSnapshotExpression(sentinel, baselineAssistantCount)),
-    timeoutMs,
-    "ChatGPT assistant DOM snapshot",
-  );
-}
-
-async function waitForPageLoad(cdp, timeoutMs = 45000) {
+async function waitForPageLoad(cdp, timeoutMs = 45000, signal) {
+  throwIfAborted(signal);
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     const ready = await evaluate(cdp, "document.readyState");
     if (ready === "complete" || ready === "interactive") {
       return;
     }
-    await delay(100);
+    await delay(100, signal);
   }
   throw new Error("Page did not load in time");
 }
@@ -468,42 +286,22 @@ async function isCloudflareBlocked(cdp) {
   const state = await evaluate(
     cdp,
     `(() => {
-      const text = document.body?.innerText || "";
-      const hasChallengeText = /verify you are human|checking your browser|just a moment|cloudflare|turnstile/i.test(text);
-      const hasComposer = Boolean(document.querySelector('${SELECTORS.promptTextarea}'));
-      const hasConversation = Boolean(document.querySelector('${SELECTORS.assistantMessage}'));
-      const hasScript = Boolean(document.querySelector('${SELECTORS.cloudflareScript}'));
-      return { hasChallengeText, hasComposer, hasConversation, hasScript };
+      const text = String(document.body?.innerText || '').toLowerCase().replace(/\\s+/g, ' ');
+      const hasChallengeScript = Boolean(document.querySelector('${SELECTORS.cloudflareScript}'));
+      const hasVisibleChallenge =
+        text.includes('checking your browser') ||
+        text.includes('verify you are human') ||
+        text.includes('review the security of your connection') ||
+        text.includes('needs to review the security') ||
+        text.includes('cf-challenge') ||
+        text.includes('cloudflare');
+      const hasChatGptShell =
+        text.includes('chatgpt') ||
+        Boolean(document.querySelector('#prompt-textarea, [data-testid="composer-textarea"], [data-message-author-role]'));
+      return { hasChallengeScript, hasVisibleChallenge, hasChatGptShell };
     })()`
   );
-  return Boolean(state?.hasChallengeText && !state?.hasComposer && !state?.hasConversation);
-}
-
-async function recoverCloudflareChallenge(cdp, inputCdp, log, options = {}) {
-  const {
-    maxReloads = 1,
-    reloadWaitMs = 2000,
-    pageLoadTimeoutMs = 45000,
-  } = options;
-  if (!(await isCloudflareBlocked(cdp))) return { detected: false, reloads: 0 };
-
-  for (let reloads = 1; reloads <= maxReloads; reloads += 1) {
-    log?.(`Cloudflare challenge detected; hard reloading controlled tab (${reloads}/${maxReloads})`);
-    await inputCdp("Page.reload", { ignoreCache: true });
-    if (reloadWaitMs > 0) await delay(reloadWaitMs);
-    await waitForPageLoad(cdp, pageLoadTimeoutMs);
-    if (!(await isCloudflareBlocked(cdp))) {
-      log?.(`Cloudflare challenge cleared after ${reloads} hard reload(s)`);
-      return { detected: true, reloads, recovered: true };
-    }
-  }
-
-  const error = new Error(
-    `Cloudflare challenge persisted after ${maxReloads} automatic hard reload(s)`,
-  );
-  error.code = "cloudflare_challenge_persisted";
-  error.cloudflareRecovery = { detected: true, reloads: maxReloads, recovered: false };
-  throw error;
+  return Boolean(state?.hasVisibleChallenge) && (state?.hasChatGptShell !== true || title.includes("just a moment"));
 }
 
 async function checkLoginStatus(cdp) {
@@ -511,17 +309,17 @@ async function checkLoginStatus(cdp) {
     cdp,
     `(async () => {
       try {
-        const response = await fetch('/backend-api/me', { 
-          cache: 'no-store', 
-          credentials: 'include' 
+        const response = await fetch('/backend-api/me', {
+          cache: 'no-store',
+          credentials: 'include'
         });
         const hasLoginCta = Array.from(document.querySelectorAll('a[href*="/auth/login"], button'))
           .some(el => {
             const text = (el.textContent || '').toLowerCase().trim();
             return text.startsWith('log in') || text.startsWith('sign in');
           });
-        return { 
-          status: response.status, 
+        return {
+          status: response.status,
           hasLoginCta,
           url: location.href
         };
@@ -533,7 +331,8 @@ async function checkLoginStatus(cdp) {
   return result || { status: 0 };
 }
 
-async function waitForPromptReady(cdp, timeoutMs = 30000) {
+async function waitForPromptReady(cdp, timeoutMs = 30000, signal) {
+  throwIfAborted(signal);
   const deadline = Date.now() + timeoutMs;
   const selectors = JSON.stringify(SELECTORS.promptTextarea.split(", "));
   while (Date.now() < deadline) {
@@ -551,29 +350,32 @@ async function waitForPromptReady(cdp, timeoutMs = 30000) {
       })()`
     );
     if (found) return true;
-    await delay(200);
+    await delay(200, signal);
   }
   return false;
 }
 
-async function assertReadyForNewPrompt(cdp) {
+async function assertReadyForNewPrompt(cdp, signal) {
+  throwIfAborted(signal);
   const state = await evaluate(
     cdp,
     `(() => {
-      const STOP_SELECTOR = '${SELECTORS.stopButton}';
-      const SEND_SELECTOR = '${SELECTORS.sendButton}';
-      const PROMPT_SELECTOR = '${SELECTORS.promptTextarea}';
+      const STOP_SELECTOR = ${JSON.stringify(SELECTORS.stopButton)};
+      const SEND_SELECTOR = ${JSON.stringify(SELECTORS.sendButton)};
+      const PROMPT_SELECTOR = ${JSON.stringify(SELECTORS.promptTextarea)};
       const stop = document.querySelector(STOP_SELECTOR);
       const send = document.querySelector(SEND_SELECTOR);
       const prompt = document.querySelector(PROMPT_SELECTOR);
       const promptText = prompt ? (prompt.innerText || prompt.value || prompt.textContent || '').trim() : '';
-      const visibleText = (document.body?.innerText || '').slice(-4000);
+      const pageText = document.body?.innerText || '';
+      const visibleText = pageText.slice(-4000);
+      const normalizeProviderMessage = (text) => String(text || '')
+        .toLowerCase()
+        .replace(/[\\u2018\\u2019]/g, "'")
+        .replace(/\\s+/g, ' ')
+        .trim();
       const detectsConversationMaxLength = (text) => {
-        const normalized = String(text || '')
-          .toLowerCase()
-          .replace(/[\\u2018\\u2019]/g, "'")
-          .replace(/\\s+/g, ' ')
-          .trim();
+        const normalized = normalizeProviderMessage(text);
         if (!normalized) return false;
         const reachedLimit = (
           normalized.includes("you've reached the maximum length for this conversation") ||
@@ -587,22 +389,22 @@ async function assertReadyForNewPrompt(cdp) {
         return reachedLimit && newChatInstruction;
       };
       const detectsTooManyRequests = (text) => {
-        const normalized = String(text || '')
-          .toLowerCase()
-          .replace(/[\\u2018\\u2019]/g, "'")
-          .replace(/\\s+/g, ' ')
-          .trim();
+        const normalized = normalizeProviderMessage(text);
         if (!normalized) return false;
-        const hasTitle = normalized.includes('too many requests');
+        const hasTitle = (
+          normalized.includes('too many requests') ||
+          normalized.includes("you've hit your limit") ||
+          normalized.includes('you have hit your limit')
+        );
         const hasThrottle = (
           normalized.includes("you're making requests too quickly") ||
           normalized.includes('you are making requests too quickly') ||
           normalized.includes('temporarily limited access to your conversations') ||
-          normalized.includes('please wait a few minutes before trying again')
+          normalized.includes('please wait a few minutes before trying again') ||
+          normalized.includes('please try again later')
         );
         return hasTitle && hasThrottle;
       };
-      const pageText = document.body?.innerText || '';
       const buttons = Array.from(document.querySelectorAll('button'))
         .map((button) => ({
           text: (button.innerText || button.textContent || '').trim(),
@@ -651,7 +453,8 @@ async function assertReadyForNewPrompt(cdp) {
         title: document.title || '',
         url: location.href || '',
       };
-    })()`
+    })()`,
+    signal
   );
   if (state?.conversationMaxLengthDetected) {
     throw conversationMaxLengthError(state);
@@ -660,44 +463,56 @@ async function assertReadyForNewPrompt(cdp) {
     throw tooManyRequestsError(state);
   }
   if (state?.stopVisible) {
-    const err = new Error("ChatGPT page is busy before submit: stop button is visible; wait, extract the existing response, or use a fresh reviewer tab");
-    err.chatgptPageState = state;
-    throw err;
+    const error = new Error(
+      "ChatGPT page is busy before submit: stop button is visible; wait, extract the existing response, or use a fresh reviewer tab"
+    );
+    error.chatgptPageState = state;
+    throw error;
   }
   if (!state?.promptPresent) {
-    const err = new Error("ChatGPT prompt composer not present before submit");
-    err.chatgptPageState = state || null;
-    throw err;
+    const error = new Error("ChatGPT prompt composer not present before submit");
+    error.chatgptPageState = state || null;
+    throw error;
   }
   if (state?.promptChars > 0) {
-    const err = new Error("ChatGPT prompt composer is not empty before submit; clear the draft or use a fresh reviewer tab");
-    err.chatgptPageState = state;
-    throw err;
+    const error = new Error(
+      "ChatGPT prompt composer is not empty before submit; clear the draft or use a fresh reviewer tab"
+    );
+    error.chatgptPageState = state;
+    throw error;
   }
   return state;
 }
 
-async function attemptOptionalSelection(kind, requested, selector, log, onUnavailable) {
-  if (!requested) {
-    return { requested: null, selected: null, status: null, error: null };
-  }
-  try {
-    const selected = await selector(requested);
-    return { requested, selected, status: "selected", error: null };
-  } catch (error) {
-    const message = error?.message || String(error);
-    if (onUnavailable) await onUnavailable().catch(() => {});
-    log?.(`${kind} selection unavailable for ${requested}; preserving current browser setting: ${message}`);
-    return {
-      requested,
-      selected: null,
-      status: "unavailable_using_current",
-      error: message,
-    };
-  }
+function normalizeChatGPTModelChoice(desiredModel) {
+  const normalized = String(desiredModel || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+
+  if (["instant", "gpt53"].includes(normalized)) return "instant";
+  if (["thinking", "gpt54thinking"].includes(normalized)) return "thinking";
+  if (["pro", "gpt54pro"].includes(normalized)) return "pro";
+
+  return normalized;
 }
 
-async function selectModel(cdp, desiredModel, timeoutMs = 8000) {
+function resolveChatGPTModelMenuOption(items, desiredModel) {
+  if (!Array.isArray(items)) return null;
+
+  const targetModel = normalizeChatGPTModelChoice(desiredModel);
+
+  return items.find((item) => {
+    if (item?.role !== "menuitemradio") return false;
+    if (typeof item?.testId !== "string" || !item.testId.startsWith("model-switcher-")) return false;
+
+    const label = normalizeChatGPTModelChoice(item.label || "");
+    const testId = normalizeChatGPTModelChoice(item.testId.replace(/^model-switcher-/, ""));
+    return label === targetModel || testId === targetModel;
+  }) || null;
+}
+
+async function selectModel(cdp, desiredModel, timeoutMs = 8000, signal) {
+  throwIfAborted(signal);
   const modelButton = await evaluate(
     cdp,
     `(() => {
@@ -716,56 +531,73 @@ async function selectModel(cdp, desiredModel, timeoutMs = 8000) {
       if (btn) dispatchClickSequence(btn);
     })()`
   );
-  await delay(300);
-  const normalizedModel = desiredModel.toLowerCase().replace(/[^a-z0-9]/g, "");
-  const result = await evaluate(
-    cdp,
-    `(async () => {
-      ${buildClickDispatcher()}
-      const TIMEOUT_MS = ${timeoutMs};
-      const targetModel = ${JSON.stringify(normalizedModel)};
-      const menuSelector = '${SELECTORS.menuContainer}';
-      const itemSelector = '${SELECTORS.menuItem}';
-      const normalize = (text) => (text || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-      const deadline = Date.now() + TIMEOUT_MS;
-      while (Date.now() < deadline) {
-        const menu = document.querySelector(menuSelector);
+  await delay(300, signal);
+
+  const normalizedModel = normalizeChatGPTModelChoice(desiredModel);
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    const result = await evaluate(
+      cdp,
+      `(() => {
+        const menu = document.querySelector('[role="menu"][data-radix-menu-content]');
         if (!menu) {
-          await new Promise(r => setTimeout(r, 100));
-          continue;
+          return { found: false, waiting: true };
         }
-        const items = Array.from(menu.querySelectorAll(itemSelector));
-        let bestMatch = null;
-        let bestScore = 0;
-        for (const item of items) {
-          const text = normalize(item.textContent || '');
-          const testId = normalize(item.getAttribute('data-testid') || '');
-          let score = 0;
-          if (text.includes(targetModel) || testId.includes(targetModel)) score = 100;
-          else if (targetModel.includes(text) || targetModel.includes(testId)) score = 50;
-          if (score > bestScore) {
-            bestScore = score;
-            bestMatch = item;
-          }
-        }
-        if (bestMatch) {
-          dispatchClickSequence(bestMatch);
-          await new Promise(r => setTimeout(r, 200));
-          return { success: true, label: bestMatch.textContent?.trim() };
-        }
-        await new Promise(r => setTimeout(r, 100));
+
+        return {
+          found: true,
+          items: Array.from(menu.children).map((item) => {
+            const primary = item.querySelector?.('.min-w-0 > span');
+            return {
+              role: item.getAttribute?.('role') || null,
+              label: (primary?.textContent || item.getAttribute?.('aria-label') || item.textContent || '').trim(),
+              testId: item.getAttribute?.('data-testid') || null,
+            };
+          }),
+        };
+      })()`
+    );
+
+    if (result && result.found) {
+      const match = resolveChatGPTModelMenuOption(result.items, normalizedModel);
+      if (match) {
+        await evaluate(
+          cdp,
+          `(() => {
+            ${buildClickDispatcher()}
+            const menu = document.querySelector('[role="menu"][data-radix-menu-content]');
+            const item = menu?.querySelector('[data-testid="${match.testId}"]');
+            if (item) dispatchClickSequence(item);
+          })()`
+        );
+        await delay(200, signal);
+        return match.label;
       }
-      return { success: false, error: 'Model option not found' };
-    })()`
-  );
-  if (!result || !result.success) {
-    throw new Error(`Model not found: ${desiredModel}`);
+
+      const available = Array.isArray(result.items)
+        ? result.items
+            .filter((item) => item?.role === "menuitemradio" && typeof item?.testId === "string" && item.testId.startsWith("model-switcher-"))
+            .map((item) => item.label)
+            .filter(Boolean)
+            .join(", ")
+        : "";
+      throw new Error(
+        available
+          ? `Model not found: ${desiredModel}. Available: ${available}`
+          : `Model not found: ${desiredModel}`
+      );
+    }
+
+    await delay(100, signal);
   }
-  return result.label;
+
+  throw new Error(`Model not found: ${desiredModel} (timeout)`);
 }
 
-async function selectReasoning(cdp, desiredReasoning, timeoutMs = 8000) {
-  const normalizedReasoning = desiredReasoning.toLowerCase().replace(/[^a-z0-9]/g, "");
+async function selectReasoning(cdp, desiredReasoning, timeoutMs = 8000, signal) {
+  throwIfAborted(signal);
+  const normalizedReasoning = String(desiredReasoning || "").toLowerCase().replace(/[^a-z0-9]/g, "");
   const clicked = await evaluate(
     cdp,
     `(() => {
@@ -806,12 +638,13 @@ async function selectReasoning(cdp, desiredReasoning, timeoutMs = 8000) {
         };
       }
       return { success: false, error: 'Reasoning selector button not found' };
-    })()`
+    })()`,
+    signal
   );
   if (!clicked || !clicked.success) {
     throw new Error(`Reasoning selector button not found for: ${desiredReasoning}`);
   }
-  await delay(300);
+  await delay(300, signal);
   const result = await evaluate(
     cdp,
     `(async () => {
@@ -860,7 +693,8 @@ async function selectReasoning(cdp, desiredReasoning, timeoutMs = 8000) {
         await new Promise(r => setTimeout(r, 100));
       }
       return { success: false, error: 'Reasoning option not found' };
-    })()`
+    })()`,
+    signal
   );
   if (!result || !result.success) {
     throw new Error(`Reasoning option not found: ${desiredReasoning}`);
@@ -868,96 +702,42 @@ async function selectReasoning(cdp, desiredReasoning, timeoutMs = 8000) {
   return result.label;
 }
 
-async function attachFile(cdp, inputCdp, filePath, log = () => {}) {
-  const fs = require("fs");
-  const path = require("path");
-  const absolutePath = path.resolve(filePath);
-  if (!fs.existsSync(absolutePath)) {
-    throw new Error(`File not found: ${absolutePath}`);
+async function attemptOptionalSelection(kind, requested, selectFn, log, recoverFn) {
+  if (!requested) {
+    return {
+      requested: null,
+      selected: null,
+      status: "not_requested",
+      error: null,
+    };
   }
-
-  // Wait for a file input to appear. ChatGPT lazily mounts the hidden
-  // <input type="file"> when the composer attach button is interactable;
-  // recent revs mount it unconditionally, but we poll defensively.
-  const selectorJson = JSON.stringify(SELECTORS.fileInput);
-  const deadline = Date.now() + 5000;
-  let found = false;
-  while (Date.now() < deadline) {
-    const probe = await evaluate(
-      cdp,
-      `(() => !!document.querySelector(${selectorJson}))()`,
-    );
-    if (probe) {
-      found = true;
-      break;
+  try {
+    const selected = await selectFn(requested);
+    return {
+      requested,
+      selected: selected || requested,
+      status: "selected",
+      error: null,
+    };
+  } catch (err) {
+    const message = err?.message || String(err);
+    log(`${kind} selector unavailable for ${requested}: ${message}; continuing with current setting`);
+    if (typeof recoverFn === "function") {
+      await recoverFn().catch(() => {});
     }
-    await delay(150);
+    return {
+      requested,
+      selected: null,
+      status: "unavailable_using_current",
+      error: message,
+    };
   }
-  if (!found) {
-    throw new Error(
-      "ChatGPT file input (input[type=\"file\"]) not present in the DOM; ChatGPT may have moved or hidden the attach control.",
-    );
-  }
-
-  // Resolve the file input via CDP DOM traversal so we can call
-  // DOM.setFileInputFiles with a real nodeId. Runtime.evaluate can return
-  // a remoteObjectId but CDP setFileInputFiles requires either nodeId or
-  // backendNodeId on most Chrome builds, so we go through DOM.querySelector.
-  const doc = await inputCdp("DOM.getDocument", { depth: 0, pierce: false });
-  if (!doc || !doc.root || typeof doc.root.nodeId !== "number") {
-    throw new Error("DOM.getDocument did not return a usable root nodeId");
-  }
-  const node = await inputCdp("DOM.querySelector", {
-    nodeId: doc.root.nodeId,
-    selector: SELECTORS.fileInput,
-  });
-  if (!node || !node.nodeId) {
-    throw new Error("DOM.querySelector returned no nodeId for the ChatGPT file input");
-  }
-  await inputCdp("DOM.setFileInputFiles", {
-    files: [absolutePath],
-    nodeId: node.nodeId,
-  });
-
-  // Give ChatGPT a moment to process the file (it reads, hashes, sometimes
-  // uploads). If the attachment is not yet visible after a brief wait we
-  // surface the failure so the caller can decide to retry rather than send
-  // a prompt that references a missing attachment.
-  const previewDeadline = Date.now() + 20000;
-  while (Date.now() < previewDeadline) {
-    const preview = await evaluate(
-      cdp,
-      `(() => {
-        const previewSelectors = [
-          '[data-testid*="attachment"]',
-          'div[role="img"][aria-label]',
-          'div[data-testid="composer-attachments"] div',
-          'form div[draggable="true"]',
-        ];
-        for (const sel of previewSelectors) {
-          if (document.querySelector(sel)) return true;
-        }
-        return false;
-      })()`,
-    );
-    if (preview) {
-      log(`File attachment preview visible`);
-      return { attached: true };
-    }
-    await delay(250);
-  }
-  // No preview shown, but the input file was set. Proceed; ChatGPT often
-  // accepts files without a visible thumbnail (especially text/markdown).
-  log(`File attachment set (no preview detected within 20s; proceeding)`);
-  return { attached: true, previewVisible: false };
 }
 
-
-async function typePrompt(cdp, inputCdp, prompt) {
+async function typePrompt(cdp, inputCdp, prompt, signal) {
+  throwIfAborted(signal);
   const selectors = JSON.stringify(SELECTORS.promptTextarea.split(", "));
   const encodedPrompt = JSON.stringify(prompt);
-  const promptStart = JSON.stringify(prompt.slice(0, Math.min(prompt.length, 160)));
-  const promptEnd = JSON.stringify(prompt.slice(Math.max(0, prompt.length - 160)));
   const focused = await evaluate(
     cdp,
     `(() => {
@@ -985,80 +765,18 @@ async function typePrompt(cdp, inputCdp, prompt) {
   if (!focused) {
     throw new Error("Failed to focus prompt textarea");
   }
-  await inputCdp("Input.dispatchKeyEvent", {
-    type: "keyDown",
-    key: "Control",
-    code: "ControlLeft",
-    windowsVirtualKeyCode: 17,
-    nativeVirtualKeyCode: 17,
-    modifiers: 2,
-  });
-  await inputCdp("Input.dispatchKeyEvent", {
-    type: "keyDown",
-    key: "a",
-    code: "KeyA",
-    windowsVirtualKeyCode: 65,
-    nativeVirtualKeyCode: 65,
-    modifiers: 2,
-  });
-  await inputCdp("Input.dispatchKeyEvent", {
-    type: "keyUp",
-    key: "a",
-    code: "KeyA",
-    windowsVirtualKeyCode: 65,
-    nativeVirtualKeyCode: 65,
-    modifiers: 2,
-  });
-  await inputCdp("Input.dispatchKeyEvent", {
-    type: "keyUp",
-    key: "Control",
-    code: "ControlLeft",
-    windowsVirtualKeyCode: 17,
-    nativeVirtualKeyCode: 17,
-  });
-  await inputCdp("Input.dispatchKeyEvent", {
-    type: "keyDown",
-    key: "Backspace",
-    code: "Backspace",
-    windowsVirtualKeyCode: 8,
-    nativeVirtualKeyCode: 8,
-  });
-  await inputCdp("Input.dispatchKeyEvent", {
-    type: "keyUp",
-    key: "Backspace",
-    code: "Backspace",
-    windowsVirtualKeyCode: 8,
-    nativeVirtualKeyCode: 8,
-  });
-  await delay(100);
   await inputCdp("Input.insertText", { text: prompt });
-  await delay(300);
-  let verified = await evaluate(
+  await delay(300, signal);
+  const verified = await evaluate(
     cdp,
     `(() => {
       const selectors = ${selectors};
-      const promptStart = ${promptStart};
-      const promptEnd = ${promptEnd};
-      const normalize = (text) => String(text || '').replace(/\\s+/g, ' ').trim();
-      const normalizedStart = normalize(promptStart);
-      const normalizedEnd = normalize(promptEnd);
-      const hasPrompt = (text) => {
-        const normalized = normalize(text);
-        return Boolean(normalized && normalized.includes(normalizedStart) && normalized.includes(normalizedEnd));
-      };
       for (const selector of selectors) {
         const node = document.querySelector(selector);
         if (!node) continue;
         const text = node.innerText || node.value || node.textContent || '';
-        if (hasPrompt(text)) return true;
+        if (text.trim().length > 0) return true;
       }
-      const active = document.activeElement;
-      const activeText = active ? (active.innerText || active.value || active.textContent || '') : '';
-      if (hasPrompt(activeText)) return true;
-      const activeForm = active?.closest?.('form, main, [data-testid*="composer"], #composer-background');
-      const activeFormText = activeForm ? (activeForm.innerText || activeForm.textContent || '') : '';
-      if (hasPrompt(activeFormText)) return true;
-      if (hasPrompt(document.body?.innerText || document.body?.textContent || '')) return true;
       return false;
     })()`
   );
@@ -1066,95 +784,23 @@ async function typePrompt(cdp, inputCdp, prompt) {
     await evaluate(
       cdp,
       `(() => {
-        const selectors = ${selectors};
-        for (const selector of selectors) {
-          const node = document.querySelector(selector);
-          if (!node) continue;
-          if ('value' in node) {
-            node.value = ${encodedPrompt};
-          } else {
-            node.textContent = ${encodedPrompt};
-          }
-          node.dispatchEvent(new InputEvent('beforeinput', { bubbles: true, data: ${encodedPrompt}, inputType: 'insertFromPaste' }));
-          node.dispatchEvent(new InputEvent('input', { bubbles: true, data: ${encodedPrompt}, inputType: 'insertFromPaste' }));
-          return true;
+        const editor = document.querySelector('#prompt-textarea');
+        const fallback = document.querySelector('textarea[name="prompt-textarea"]');
+        if (fallback) {
+          fallback.value = ${encodedPrompt};
+          fallback.dispatchEvent(new InputEvent('input', { bubbles: true, data: ${encodedPrompt}, inputType: 'insertFromPaste' }));
         }
-        return false;
-      })()`
-    );
-    await delay(300);
-    verified = await evaluate(
-      cdp,
-      `(() => {
-        const selectors = ${selectors};
-        const promptStart = ${promptStart};
-        const promptEnd = ${promptEnd};
-        const normalize = (text) => String(text || '').replace(/\\s+/g, ' ').trim();
-        const normalizedStart = normalize(promptStart);
-        const normalizedEnd = normalize(promptEnd);
-        const hasPrompt = (text) => {
-          const normalized = normalize(text);
-          return Boolean(normalized && normalized.includes(normalizedStart) && normalized.includes(normalizedEnd));
-        };
-        for (const selector of selectors) {
-          const node = document.querySelector(selector);
-          if (!node) continue;
-          const text = node.innerText || node.value || node.textContent || '';
-          if (hasPrompt(text)) return true;
+        if (editor) {
+          editor.textContent = ${encodedPrompt};
+          editor.dispatchEvent(new InputEvent('input', { bubbles: true, data: ${encodedPrompt}, inputType: 'insertFromPaste' }));
         }
-        const active = document.activeElement;
-        const activeText = active ? (active.innerText || active.value || active.textContent || '') : '';
-        if (hasPrompt(activeText)) return true;
-        const activeForm = active?.closest?.('form, main, [data-testid*="composer"], #composer-background');
-        const activeFormText = activeForm ? (activeForm.innerText || activeForm.textContent || '') : '';
-        if (hasPrompt(activeFormText)) return true;
-        if (hasPrompt(document.body?.innerText || document.body?.textContent || '')) return true;
-        return false;
       })()`
     );
   }
-  if (!verified) {
-    throw new Error("Failed to replace ChatGPT prompt composer with submitted WebGPT request");
-  }
 }
 
-
-async function captureAssistantBaseline(cdp) {
-  const expr = `(() => {
-    const ASSISTANT_SELECTOR = '${SELECTORS.assistantMessage}';
-    const CONVERSATION_SELECTOR = '${SELECTORS.conversationTurn}';
-    const isAssistantTurn = (node) => {
-      if (!(node instanceof HTMLElement)) return false;
-      const role = (node.getAttribute('data-message-author-role') || '').toLowerCase();
-      if (role === 'assistant') return true;
-      const turn = (node.getAttribute('data-turn') || '').toLowerCase();
-      if (turn === 'assistant') return true;
-      return Boolean(node.querySelector(ASSISTANT_SELECTOR));
-    };
-    const directAssistantTurns = Array.from(document.querySelectorAll(ASSISTANT_SELECTOR))
-      .filter((node) => node instanceof HTMLElement);
-    const conversationTurns = Array.from(document.querySelectorAll(CONVERSATION_SELECTOR));
-    const assistantTurns = directAssistantTurns.length
-      ? directAssistantTurns
-      : conversationTurns.filter((node) => isAssistantTurn(node));
-    const last = assistantTurns.length ? assistantTurns[assistantTurns.length - 1] : null;
-    const userTurns = Array.from(document.querySelectorAll('[data-message-author-role="user"], [data-turn="user"]'))
-      .filter((node) => node instanceof HTMLElement);
-    return {
-      assistantCount: assistantTurns.length,
-      lastMessageId: last ? (last.getAttribute('data-message-id') || null) : null,
-      userCount: userTurns.length,
-    };
-  })()`;
-  const value = await evaluate(cdp, expr);
-  return {
-    assistantCount: Number.isFinite(value?.assistantCount) ? value.assistantCount : 0,
-    lastMessageId: value?.lastMessageId || null,
-    userCount: Number.isFinite(value?.userCount) ? value.userCount : 0,
-  };
-}
-
-async function clickSend(cdp, inputCdp) {
+async function clickSend(cdp, inputCdp, signal) {
+  throwIfAborted(signal);
   const selectors = SELECTORS.sendButton.split(", ");
   const selectorsJson = JSON.stringify(selectors);
   const deadline = Date.now() + 8000;
@@ -1170,7 +816,7 @@ async function clickSend(cdp, inputCdp) {
           if (button) break;
         }
         if (!button) return 'missing';
-        const disabled = button.hasAttribute('disabled') || 
+        const disabled = button.hasAttribute('disabled') ||
                         button.getAttribute('aria-disabled') === 'true' ||
                         button.getAttribute('data-disabled') === 'true';
         if (disabled) return 'disabled';
@@ -1180,7 +826,7 @@ async function clickSend(cdp, inputCdp) {
     );
     if (result === "clicked") return true;
     if (result === "missing") break;
-    await delay(100);
+    await delay(100, signal);
   }
   await inputCdp("Input.dispatchKeyEvent", {
     type: "keyDown",
@@ -1200,7 +846,8 @@ async function clickSend(cdp, inputCdp) {
   return true;
 }
 
-async function waitForSubmitAccepted(cdp, prompt, timeoutMs = 10000, baseline = {}) {
+async function waitForSubmitAccepted(cdp, prompt, timeoutMs = 10000, baseline = {}, signal) {
+  throwIfAborted(signal);
   const promptStart = JSON.stringify(prompt.slice(0, Math.min(prompt.length, 160)));
   const promptEnd = JSON.stringify(prompt.slice(Math.max(0, prompt.length - 160)));
   const baselineAssistantCount = Number.isFinite(baseline.assistantCount) ? baseline.assistantCount : 0;
@@ -1230,166 +877,214 @@ async function waitForSubmitAccepted(cdp, prompt, timeoutMs = 10000, baseline = 
           userCount: userTurns.length,
           lastUserContainsPrompt: Boolean(lastUserText && lastUserText.includes(promptStart) && lastUserText.includes(promptEnd)),
         };
-      })()`
+      })()`,
+      signal
     );
     const assistantAdvanced = Number(lastState?.assistantCount || 0) > baselineAssistantCount;
     const userTurnAdvanced = Number(lastState?.userCount || 0) > baselineUserCount && lastState?.lastUserContainsPrompt === true;
     if (lastState?.stopVisible || assistantAdvanced || userTurnAdvanced) {
       return { accepted: true, ...lastState };
     }
-    await delay(200);
+    await delay(200, signal);
   }
   const err = new Error("ChatGPT did not accept submitted prompt: prompt remained in the composer after send");
   err.chatgptSubmitState = lastState || null;
   throw err;
 }
 
-async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
-  const sentinel = options.sentinel || null;
-  const baselineAssistantCount = Number.isFinite(options.baselineAssistantCount)
-    ? options.baselineAssistantCount
-    : 0;
-  const noActivate = options.noActivate === true;
-  const inputCdp = options.inputCdp || null;
-  const log = options.log || (() => {});
-  const activateTabForRecovery = typeof options.activateTabForRecovery === "function"
-    ? options.activateTabForRecovery
-    : null;
-  const heartbeatFile = options.heartbeatFile || null;
-  const hiddenRecoveryPolls = Number.parseInt(process.env.SURF_WEBGPT_HIDDEN_RECOVERY_POLLS || "25", 10);
-  const hiddenRecoveryIdleMs = Number.parseInt(process.env.SURF_WEBGPT_HIDDEN_RECOVERY_IDLE_MS || "30000", 10);
-  const stableStallMs = Number.parseInt(process.env.SURF_WEBGPT_STABLE_STALL_MS || "0", 10);
-  const deadline = Date.now() + timeoutMs;
-  let previousText = "";
-  let stableCycles = 0;
-  const requiredStableCycles = Number.isInteger(options.stablePolls) && options.stablePolls > 0
-    ? options.stablePolls
-    : 6;
-  const minStableMs = 1200;
-  let lastChangeAt = Date.now();
-  let lastSnapshotError = null;
-  let pollCount = 0;
-  let hiddenPolls = 0;
-  let hiddenRecoveryUsed = false;
-  let lastVisibilityState = null;
-  let lastDocumentHidden = null;
-  let lastNonEmptySnapshot = null;
-  if (noActivate) {
-    await nudgeBackgroundRendering(cdp, inputCdp, log, "start");
-  }
-  while (Date.now() < deadline) {
-    pollCount++;
-    if (noActivate && (pollCount === 1 || pollCount % BACKGROUND_WAKE_EVERY_POLLS === 0)) {
-      await nudgeBackgroundRendering(cdp, inputCdp, log, `poll-${pollCount}`);
-    }
-    let snapshot;
-    try {
-      snapshot = await assistantSnapshot(cdp, sentinel, 12000, baselineAssistantCount);
-      lastSnapshotError = null;
-    } catch (err) {
-      lastSnapshotError = err;
-      await delay(400);
-      continue;
-    }
-    if (!snapshot) {
-      await delay(400);
-      continue;
-    }
-    if (snapshot.conversationMaxLengthDetected === true) {
-      throw conversationMaxLengthError({
-        conversationMaxLengthTail: snapshot.conversationMaxLengthTail || "",
-        source: snapshot.source || "page-text",
-        documentHidden: snapshot.documentHidden === true,
-        visibilityState: snapshot.visibilityState || null,
-      });
-    }
-    if (snapshot.tooManyRequestsDetected === true) {
-      throw tooManyRequestsError({
-        tooManyRequestsTail: snapshot.tooManyRequestsTail || "",
-        source: snapshot.source || "page-text",
-        documentHidden: snapshot.documentHidden === true,
-        visibilityState: snapshot.visibilityState || null,
-      });
-    }
-    if (snapshot.documentHidden === true) {
-      hiddenPolls++;
-      if (noActivate) {
-        await nudgeBackgroundRendering(cdp, inputCdp, log, `hidden-poll-${pollCount}`);
-        const idleMs = Date.now() - lastChangeAt;
-        const pageHasSentinelNow = sentinel ? snapshot.pageTextContainsSentinel === true : false;
-        const assistantHasSentinelNow = sentinel
-          ? ((snapshot.text || "").includes(sentinel) || snapshot.sentinelMatch === sentinel)
-          : false;
-        if (
-          !hiddenRecoveryUsed
-          && activateTabForRecovery
-          && hiddenPolls >= hiddenRecoveryPolls
-          && idleMs >= hiddenRecoveryIdleMs
-          && !assistantHasSentinelNow
-          && !pageHasSentinelNow
-        ) {
-          hiddenRecoveryUsed = true;
-          log(`Hidden-tab stall recovery: activating controlled tab after hidden_polls=${hiddenPolls} idle_ms=${idleMs}`);
-          try {
-            await activateTabForRecovery();
-            await delay(1500);
-            await nudgeBackgroundRendering(cdp, inputCdp, log, "post-activate-recovery");
-            lastChangeAt = Date.now();
-          } catch (err) {
-            log(`Hidden-tab stall recovery failed: ${err?.message || err}`);
+async function readChatGPTResponseSnapshot(cdp) {
+  return evaluate(
+    cdp,
+    `(() => {
+      const scope = document.querySelector('main') || document;
+      const CONVERSATION_SELECTOR = ${JSON.stringify(SELECTORS.conversationTurn)};
+      const ASSISTANT_SELECTOR = ${JSON.stringify(SELECTORS.assistantMessage)};
+      const CONTENT_SELECTORS = ${JSON.stringify(SELECTORS.assistantContent.split(", "))};
+      const STOP_SELECTOR = ${JSON.stringify(SELECTORS.stopButton)};
+      const FINISHED_SELECTOR = ${JSON.stringify(SELECTORS.finishedActions)};
+
+      const toCandidate = (turnNode, messageRoot = null) => {
+        const resolvedMessageRoot = messageRoot || (turnNode.matches?.(ASSISTANT_SELECTOR)
+          ? turnNode
+          : turnNode.querySelector(ASSISTANT_SELECTOR));
+        const searchRoot = resolvedMessageRoot || turnNode;
+        let contentRoot = null;
+
+        for (const selector of CONTENT_SELECTORS) {
+          const match = selector === '[dir="auto"]'
+            ? (searchRoot.matches?.(selector) ? searchRoot : null)
+            : (searchRoot.matches?.(selector) ? searchRoot : searchRoot.querySelector(selector));
+          if (match) {
+            contentRoot = match;
+            break;
           }
         }
+
+        const role =
+          resolvedMessageRoot?.getAttribute('data-message-author-role') ||
+          turnNode.getAttribute('data-message-author-role') ||
+          null;
+        const turn =
+          resolvedMessageRoot?.getAttribute('data-turn') ||
+          turnNode.getAttribute('data-turn') ||
+          null;
+        const isAssistant =
+          role === 'assistant' ||
+          turn === 'assistant' ||
+          resolvedMessageRoot !== null;
+        const text = (contentRoot || turnNode).innerText || (contentRoot || turnNode).textContent || '';
+        const messageId =
+          resolvedMessageRoot?.getAttribute('data-message-id') ||
+          turnNode.getAttribute('data-message-id') ||
+          null;
+        const hasFinishedActions = Boolean(turnNode.querySelector(FINISHED_SELECTOR));
+
+        return {
+          role,
+          turn,
+          isAssistant,
+          text,
+          messageId,
+          hasFinishedActions,
+        };
+      };
+
+      let candidates = Array.from(scope.querySelectorAll(CONVERSATION_SELECTOR)).map((turnNode) =>
+        toCandidate(turnNode)
+      );
+
+      if (candidates.length === 0) {
+        candidates = Array.from(scope.querySelectorAll(ASSISTANT_SELECTOR)).map((messageRoot) =>
+          toCandidate(messageRoot, messageRoot)
+        );
       }
+
+      return {
+        candidates,
+        stopVisible: Boolean(scope.querySelector(STOP_SELECTOR)),
+        pageText: document.body?.innerText || '',
+        documentHidden: document.hidden === true,
+        visibilityState: document.visibilityState || null,
+      };
+    })()`
+  );
+}
+
+function normalizeDirectAssistantSnapshot(rawValue) {
+  if (!rawValue || typeof rawValue !== "object") return null;
+  const text = cleanChatGPTResponseText(rawValue.text || "");
+  return {
+    ...rawValue,
+    text,
+    stopVisible: Boolean(rawValue.stopVisible),
+    finished: rawValue.finished === true || rawValue.hasFinishedActions === true,
+    pageTextContainsSentinel: rawValue.pageTextContainsSentinel === true,
+    documentHidden: rawValue.documentHidden === true,
+    visibilityState: rawValue.visibilityState || null,
+    source: rawValue.source || "assistant-dom",
+  };
+}
+
+async function readDirectAssistantSnapshot(cdp, sentinel, signal) {
+  const value = await evaluate(
+    cdp,
+    `(() => {
+      const pageText = document.body?.innerText || '';
+      return {
+        text: '',
+        pageTextContainsSentinel: ${JSON.stringify(Boolean(sentinel))} ? pageText.includes(${JSON.stringify(sentinel || "")}) : false,
+        documentHidden: document.hidden === true,
+        visibilityState: document.visibilityState || null,
+        source: 'page-state'
+      };
+    })()`,
+    signal
+  );
+  return normalizeDirectAssistantSnapshot(value);
+}
+
+async function waitForSentinelResponse(cdp, timeoutMs = 2700000, options = {}, signal) {
+  throwIfAborted(signal);
+  const sentinel = options.sentinel || null;
+  const deadline = Date.now() + timeoutMs;
+  const requiredStableCycles =
+    Number.isInteger(options.stablePolls) && options.stablePolls > 0
+      ? options.stablePolls
+      : 6;
+  const minStableMs = 1200;
+  const stableStallMs = Number.parseInt(process.env.SURF_WEBGPT_STABLE_STALL_MS || "0", 10);
+  let previousText = "";
+  let stableCycles = 0;
+  let lastChangeAt = Date.now();
+  let lastNonEmptySnapshot = null;
+  let pollCount = 0;
+
+  while (Date.now() < deadline) {
+    pollCount++;
+    let snapshot = null;
+    try {
+      const raw = await readChatGPTResponseSnapshot(cdp);
+      if (raw && typeof raw === "object" && typeof raw.text === "string" && !Array.isArray(raw.candidates)) {
+        snapshot = normalizeDirectAssistantSnapshot(raw);
+      } else {
+        const normalized = normalizeResponseSnapshot(raw);
+        const latest = normalized.latestAssistant;
+        snapshot = {
+          text: latest?.text || "",
+          messageId: latest?.messageId || null,
+          turnIndex: latest?.turnIndex,
+          stopVisible: normalized.stopVisible === true,
+          finished: latest?.hasFinishedActions === true || normalized.stopVisible !== true,
+          source: latest?.source || "assistant-dom",
+          pageTextContainsSentinel: sentinel ? String(normalized.pageText || "").includes(sentinel) : false,
+          documentHidden: normalized.documentHidden === true,
+          visibilityState: normalized.visibilityState || null,
+          conversationMaxLengthDetected: detectsConversationMaxLength(normalized.pageText || ""),
+          tooManyRequestsDetected: detectsTooManyRequests(normalized.pageText || ""),
+        };
+      }
+    } catch (_error) {
+      snapshot = await readDirectAssistantSnapshot(cdp, sentinel, signal).catch(() => null);
     }
-    lastVisibilityState = snapshot.visibilityState || null;
-    lastDocumentHidden = snapshot.documentHidden === true;
+
+    if (!snapshot) {
+      await delay(400, signal);
+      continue;
+    }
+    if (snapshot.conversationMaxLengthDetected === true || detectsConversationMaxLength(snapshot.text)) {
+      throw conversationMaxLengthError(snapshot);
+    }
+    if (snapshot.tooManyRequestsDetected === true || detectsTooManyRequests(snapshot.text)) {
+      throw tooManyRequestsError(snapshot);
+    }
+
     const currentText = snapshot.text || "";
-    const currentLength = currentText.length;
-    if (currentLength > 0) {
+    if (currentText) {
       lastNonEmptySnapshot = { ...snapshot };
     }
     if (currentText !== previousText) {
       previousText = currentText;
       stableCycles = 0;
       lastChangeAt = Date.now();
-    } else {
+    } else if (currentText) {
       stableCycles++;
+    } else {
+      stableCycles = 0;
+      lastChangeAt = Date.now();
     }
+
     const stableMs = Date.now() - lastChangeAt;
-    const hasAssistantSentinel = sentinel
-      ? ((snapshot.text || "").includes(sentinel) || snapshot.sentinelMatch === sentinel)
+    const hasSentinel = sentinel
+      ? currentText.includes(sentinel) || snapshot.sentinelMatch === sentinel
       : true;
-    const pageHasSentinel = sentinel ? snapshot.pageTextContainsSentinel === true : false;
-    const hasSentinel = sentinel ? hasAssistantSentinel : true;
-    writeAssistantHeartbeat(heartbeatFile, {
-      phase: hasSentinel ? "sentinel_seen" : "generating",
-      pageState: hasSentinel ? "stabilizing_response" : "waiting_for_sentinel",
-      assistantText: currentText,
-      sentinelSeen: hasAssistantSentinel,
-      pageSentinelSeen: pageHasSentinel,
-      stableCycles,
-      requiredStableCycles,
-      stableMs,
-      changedAtIso: new Date(lastChangeAt).toISOString(),
-      messageId: snapshot.messageId,
-      turnIndex: snapshot.turnIndex,
-      source: snapshot.source,
-      stopVisible: snapshot.stopVisible,
-      finished: snapshot.finished,
-      documentHidden: snapshot.documentHidden,
-      visibilityState: snapshot.visibilityState,
-      hiddenPolls,
-      hiddenRecoveryUsed,
-      pollCount,
-      sentinel,
-    });
+
     if (
-      sentinel
-      && stableStallMs > 0
-      && currentLength > 0
-      && !hasAssistantSentinel
-      && stableCycles >= requiredStableCycles
-      && stableMs >= stableStallMs
+      sentinel &&
+      stableStallMs > 0 &&
+      currentText &&
+      !hasSentinel &&
+      stableCycles >= requiredStableCycles &&
+      stableMs >= stableStallMs
     ) {
       const error = new Error(`Stable assistant response stalled without sentinel after ${stableMs}ms`);
       error.partialResponse = {
@@ -1399,124 +1094,197 @@ async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
         sentinel,
         hasSentinel: false,
         source: snapshot.source || "assistant-dom",
-        pageTextContainsSentinel: pageHasSentinel,
+        pageTextContainsSentinel: snapshot.pageTextContainsSentinel === true,
         documentHiddenAtCompletion: snapshot.documentHidden === true,
         visibilityStateAtCompletion: snapshot.visibilityState || null,
-        backgroundHiddenPolls: hiddenPolls,
+        backgroundHiddenPolls: snapshot.documentHidden === true ? pollCount : 0,
         backgroundPollCount: pollCount,
-        hiddenRecoveryUsed,
+        hiddenRecoveryUsed: false,
       };
       throw error;
     }
-    // Background/hidden tabs often keep [data-testid=stop-button] in the DOM until the tab
-    // is focused, even after the assistant message is complete. In --no-activate mode we
-    // trust a stable sentinel on the post-submit assistant turn instead of stop-button absence.
-    const stopGateOk = !snapshot.stopVisible
-      || (noActivate && hasSentinel && (snapshot.finished || pageHasSentinel || snapshot.source === 'page-text-fallback'));
-    if (stopGateOk && hasSentinel) {
-      const stableEnough = stableCycles >= requiredStableCycles && stableMs >= minStableMs;
-      const finishedVisible = snapshot.finished;
-      const responseComplete = sentinel ? stableEnough : (finishedVisible || stableEnough);
-      if (responseComplete && currentLength > 0) {
-        return {
-          text: snapshot.text,
-          messageId: snapshot.messageId,
-          turnIndex: snapshot.turnIndex,
-          sentinel,
-          hasSentinel,
-          source: snapshot.source,
-          pageTextContainsSentinel: snapshot.pageTextContainsSentinel,
-          documentHiddenAtCompletion: snapshot.documentHidden === true,
-          visibilityStateAtCompletion: snapshot.visibilityState || null,
-          backgroundHiddenPolls: hiddenPolls,
-          backgroundPollCount: pollCount,
-          hiddenRecoveryUsed,
-        };
-      }
+
+    const stableEnough = stableCycles >= requiredStableCycles && stableMs >= minStableMs;
+    const stopGateOk = !snapshot.stopVisible || (sentinel && hasSentinel);
+    if (currentText && hasSentinel && stopGateOk && (sentinel ? stableEnough : snapshot.finished || stableEnough)) {
+      return {
+        text: currentText,
+        messageId: snapshot.messageId || null,
+        turnIndex: snapshot.turnIndex,
+        sentinel,
+        hasSentinel,
+        source: snapshot.source || "assistant-dom",
+        pageTextContainsSentinel: snapshot.pageTextContainsSentinel === true,
+        documentHiddenAtCompletion: snapshot.documentHidden === true,
+        visibilityStateAtCompletion: snapshot.visibilityState || null,
+        backgroundHiddenPolls: snapshot.documentHidden === true ? pollCount : 0,
+        backgroundPollCount: pollCount,
+        hiddenRecoveryUsed: false,
+      };
     }
-    await delay(400);
+
+    await delay(400, signal);
   }
-  const detail = lastSnapshotError ? `; last snapshot error: ${lastSnapshotError.message}` : "";
-  const hiddenDetail = noActivate
-    ? `; hidden_polls=${hiddenPolls}; last_visibility=${lastVisibilityState || "unknown"}; document_hidden=${lastDocumentHidden}`
-    : "";
-  const err = new Error(`Response timeout${hiddenDetail}${detail}`);
+
+  const error = new Error("Response timeout");
   if (lastNonEmptySnapshot?.text) {
-    err.partialResponse = {
+    error.partialResponse = {
       text: lastNonEmptySnapshot.text,
       messageId: lastNonEmptySnapshot.messageId || null,
       turnIndex: lastNonEmptySnapshot.turnIndex,
       sentinel,
-      hasSentinel: false,
+      hasSentinel: sentinel ? lastNonEmptySnapshot.text.includes(sentinel) : true,
       source: lastNonEmptySnapshot.source || "assistant-dom",
       pageTextContainsSentinel: lastNonEmptySnapshot.pageTextContainsSentinel === true,
       documentHiddenAtCompletion: lastNonEmptySnapshot.documentHidden === true,
       visibilityStateAtCompletion: lastNonEmptySnapshot.visibilityState || null,
-      backgroundHiddenPolls: hiddenPolls,
+      backgroundHiddenPolls: 0,
       backgroundPollCount: pollCount,
-      hiddenRecoveryUsed,
-      timeout: true,
-      timeoutError: err.message,
+      hiddenRecoveryUsed: false,
     };
   }
-  throw err;
+  throw error;
+}
+
+async function waitForResponse(
+  cdp,
+  timeoutMs = 2700000,
+  baselineAssistant,
+  baselineAssistantCount,
+  signal
+) {
+  if (
+    baselineAssistant &&
+    typeof baselineAssistant === "object" &&
+    !("text" in baselineAssistant) &&
+    (baselineAssistant.sentinel || baselineAssistant.stablePolls || baselineAssistant.noActivate)
+  ) {
+    return waitForSentinelResponse(cdp, timeoutMs, baselineAssistant, signal);
+  }
+  throwIfAborted(signal);
+  const deadline = Date.now() + timeoutMs;
+  let previousText = "";
+  let stableCycles = 0;
+  let lastChangeAt = Date.now();
+
+  previousText = baselineAssistant?.text || "";
+  lastChangeAt = Date.now();
+
+  while (Date.now() < deadline) {
+    const snapshot = await readChatGPTResponseSnapshot(cdp);
+
+    if (!snapshot) {
+      await delay(400, signal);
+      continue;
+    }
+
+    const { latestAssistant, assistantCount, stopVisible } = normalizeResponseSnapshot(snapshot);
+    const currentText = latestAssistant?.text || "";
+    const hasNewAssistantContent = isNewAssistantContent(
+      latestAssistant,
+      baselineAssistant,
+      assistantCount,
+      baselineAssistantCount
+    );
+
+    if (!hasNewAssistantContent) {
+      await delay(400, signal);
+      continue;
+    }
+
+    if (currentText !== previousText) {
+      previousText = currentText;
+      stableCycles = 0;
+      lastChangeAt = Date.now();
+    } else if (currentText) {
+      stableCycles++;
+    } else {
+      stableCycles = 0;
+      lastChangeAt = Date.now();
+    }
+
+    const stableMs = Date.now() - lastChangeAt;
+    const completionSnapshot = latestAssistant
+      ? { ...latestAssistant, stopVisible }
+      : { text: "", stopVisible, hasFinishedActions: false };
+
+    if (isChatGPTResponseComplete(completionSnapshot, stableCycles, stableMs)) {
+      return {
+        text: latestAssistant.text,
+        messageId: latestAssistant.messageId,
+        turnIndex: latestAssistant.turnIndex,
+      };
+    }
+
+    await delay(400, signal);
+  }
+
+  throw new Error("Response timeout");
 }
 
 async function extractAssistantResponse(options) {
   const {
     tabId,
     sentinel,
-    cdpEvaluate,
     timeout = 12000,
     wait = false,
-    stablePolls = 3,
-    noActivate = false,
+    stablePolls,
+    noActivate,
+    cdpEvaluate,
+    signal,
   } = options;
-  if (!tabId) {
-    throw new Error("tabId required");
+  if (!tabId) throw new Error("--tab-id required");
+  if (!cdpEvaluate) throw new Error("cdpEvaluate callback required");
+  throwIfAborted(signal);
+  const cdp = (expr) => raceAbort(() => cdpEvaluate(tabId, expr), signal);
+
+  if (await isCloudflareBlocked(cdp)) {
+    throw new Error("Cloudflare challenge detected - complete in browser");
   }
-  const cdp = (expr) => cdpEvaluate(tabId, expr);
-  if (wait) {
-    if (!sentinel) throw new Error("sentinel required with chatgpt.extract --wait");
-    const result = await waitForResponse(cdp, timeout, {
-      sentinel,
-      stablePolls,
-      noActivate,
-      baselineAssistantCount: 0,
-    });
+
+  if (wait || sentinel) {
+    const response = await waitForResponse(
+      cdp,
+      timeout,
+      { sentinel, stablePolls, noActivate },
+      undefined,
+      signal
+    );
     return {
-      response: result.text,
+      response: response.text,
       tabId,
       controlledTabId: tabId,
-      messageId: result.messageId || null,
-      responseSource: result.source || "assistant-dom",
+      messageId: response.messageId || null,
+      responseSource: response.source || "assistant-dom",
       sentinel,
-      hasSentinel: result.hasSentinel === true,
-      pageTextContainsSentinel: result.pageTextContainsSentinel === true,
-      documentHiddenAtCompletion: result.documentHiddenAtCompletion === true,
-      visibilityStateAtCompletion: result.visibilityStateAtCompletion || null,
-      stopVisible: false,
+      hasSentinel: response.hasSentinel === true || (sentinel ? response.text.includes(sentinel) : true),
+      pageTextContainsSentinel: response.pageTextContainsSentinel === true,
+      stopVisible: response.stopVisible === true,
       finished: true,
-      turnIndex: result.turnIndex,
+      turnIndex: response.turnIndex,
+      documentHiddenAtCompletion: response.documentHiddenAtCompletion === true,
+      visibilityStateAtCompletion: response.visibilityStateAtCompletion || null,
+      backgroundHiddenPolls: response.backgroundHiddenPolls || 0,
+      backgroundPollCount: response.backgroundPollCount || 0,
+      hiddenRecoveryUsed: response.hiddenRecoveryUsed === true,
     };
   }
-  const snapshot = await assistantSnapshot(cdp, sentinel, timeout);
-  const text = snapshot?.text || "";
-  const hasSentinel = sentinel ? text.includes(sentinel) : false;
+
+  const snapshot = normalizeResponseSnapshot(await readChatGPTResponseSnapshot(cdp));
+  const latest = snapshot.latestAssistant;
+  const text = latest?.text || "";
   return {
     response: text,
     tabId,
     controlledTabId: tabId,
-    messageId: snapshot?.messageId || null,
-    responseSource: snapshot?.source || "assistant-dom",
-    sentinel: sentinel || null,
-    hasSentinel,
-    pageTextContainsSentinel: snapshot?.pageTextContainsSentinel === true,
-    documentHiddenAtCompletion: snapshot?.documentHidden === true,
-    visibilityStateAtCompletion: snapshot?.visibilityState || null,
-    stopVisible: snapshot?.stopVisible === true,
-    finished: snapshot?.finished === true,
-    turnIndex: snapshot?.turnIndex,
+    messageId: latest?.messageId || null,
+    responseSource: latest?.source || "assistant-dom",
+    sentinel,
+    hasSentinel: sentinel ? text.includes(sentinel) : Boolean(text),
+    pageTextContainsSentinel: false,
+    stopVisible: snapshot.stopVisible === true,
+    finished: Boolean(text) && snapshot.stopVisible !== true,
+    turnIndex: latest?.turnIndex,
   };
 }
 
@@ -1537,85 +1305,106 @@ async function query(options) {
     closeTab,
     cdpEvaluate,
     cdpCommand,
+    uploadFile,
     log = () => {},
+    signal,
   } = options;
+  throwIfAborted(signal);
+  const guardedUploadFile = uploadFile
+    ? (...args) => raceAbort(() => uploadFile(...args), signal)
+    : uploadFile;
   const startTime = Date.now();
   log("Starting ChatGPT query");
-  const { cookies } = await getCookies();
+  const { cookies } = await raceAbort(getCookies, signal);
   if (!hasRequiredCookies(cookies)) {
     throw new Error("ChatGPT login required");
   }
   log(`Got ${cookies.length} cookies`);
-  const tabInfo = await createTab();
+  const tabInfo = await raceAbort(createTab, signal);
   const { tabId } = tabInfo;
   if (!tabId) {
     throw new Error("Failed to create ChatGPT tab");
   }
-  log(`Created tab ${tabId}`);
-  if (typeof options.pinControlledTab === "function") {
-    try {
-      await options.pinControlledTab(tabId);
-      log(`Pinned controlled tab ${tabId} (autoDiscardable=false)`);
-    } catch (err) {
-      log(`Pin controlled tab skipped: ${err?.message || err}`);
-    }
-  }
-  const activateTabForRecovery = noActivate && typeof options.activateTab === "function"
-    ? () => options.activateTab(tabId)
-    : null;
-  
-  const cdp = (expr) => cdpEvaluate(tabId, expr);
-  const inputCdp = (method, params) => cdpCommand(tabId, method, params);
-  
+  log(`${tabInfo.reused ? "Using" : "Created"} tab ${tabId}`);
+
+  const cdp = (expr) => raceAbort(() => cdpEvaluate(tabId, expr), signal);
+  const inputCdp = (method, params) => raceAbort(() => cdpCommand(tabId, method, params), signal);
+
   try {
-    await waitForPageLoad(cdp);
+    await waitForPageLoad(cdp, 45000, signal);
     log("Page loaded");
-    await recoverCloudflareChallenge(cdp, inputCdp, log);
+    if (await isCloudflareBlocked(cdp)) {
+      throw new Error("Cloudflare challenge detected - complete in browser");
+    }
     const loginStatus = await checkLoginStatus(cdp);
+    if (loginStatus.status === 0) {
+      throw new Error(
+        loginStatus.error
+          ? `ChatGPT login check failed: ${loginStatus.error}`
+          : "ChatGPT login check failed"
+      );
+    }
     if (loginStatus.status !== 200 || loginStatus.hasLoginCta) {
       throw new Error("ChatGPT login required");
     }
     log("Login verified");
-    const promptReady = await waitForPromptReady(cdp);
+    const promptReady = await waitForPromptReady(cdp, 30000, signal);
     if (!promptReady) {
       throw new Error("Prompt textarea not ready");
     }
-    await assertReadyForNewPrompt(cdp);
+    await assertReadyForNewPrompt(cdp, signal);
     log("Prompt ready");
     const modelSelection = await attemptOptionalSelection(
-      "Model", model, (value) => selectModel(cdp, value), log,
-      () => inputCdp("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 }),
+      "Model",
+      model,
+      (value) => selectModel(cdp, value, 8000, signal),
+      log,
+      () => inputCdp("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 })
     );
     const reasoningSelection = await attemptOptionalSelection(
-      "Reasoning", reasoning, (value) => selectReasoning(cdp, value), log,
-      () => inputCdp("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 }),
+      "Reasoning",
+      reasoning,
+      (value) => selectReasoning(cdp, value, 8000, signal),
+      log,
+      () => inputCdp("Input.dispatchKeyEvent", { type: "keyDown", key: "Escape", code: "Escape", windowsVirtualKeyCode: 27 })
     );
     if (file) {
-      await attachFile(cdp, inputCdp, file, log);
-      log(`File attached: ${file}`);
+      if (!uploadFile) {
+        throw new Error("ChatGPT file upload unavailable: native host did not provide upload callback");
+      }
+      const files = Array.isArray(file) ? file : [file];
+      const absFiles = files.map((filePath) => path.resolve(process.cwd(), filePath));
+      log(`Uploading ${absFiles.length} file(s) to ChatGPT...`);
+      const uploadResult = await guardedUploadFile(tabId, absFiles);
+      if (uploadResult?.error) {
+        throw new Error(`ChatGPT file upload failed: ${uploadResult.error}`);
+      }
+      if (!uploadResult?.success) {
+        throw new Error("ChatGPT file upload failed: upload did not report success");
+      }
+      log("File uploaded, waiting for ChatGPT attachment processing...");
+      await delay(1500, signal);
     }
-    await typePrompt(cdp, inputCdp, prompt);
+    await typePrompt(cdp, inputCdp, prompt, signal);
     log("Prompt typed");
-    const assistantBaseline = await captureAssistantBaseline(cdp);
-    log(`Assistant baseline count: ${assistantBaseline.assistantCount}`);
-    await clickSend(cdp, inputCdp);
-    const submitState = await waitForSubmitAccepted(cdp, prompt, 10000, assistantBaseline);
-    log(`Prompt accepted: sentinel=${sentinel || ''} stopVisible=${submitState.stopVisible} composerChars=${submitState.composerChars}`);
+    const baseline = normalizeResponseSnapshot(await readChatGPTResponseSnapshot(cdp));
+    await clickSend(cdp, inputCdp, signal);
+    const submitState = await waitForSubmitAccepted(cdp, prompt, 10000, baseline, signal);
+    log(`Prompt accepted: sentinel=${sentinel || ""} stopVisible=${submitState.stopVisible} composerChars=${submitState.composerChars}`);
     log("Prompt sent, waiting for response...");
     let response;
     let responseTimedOut = false;
     let timeoutError = null;
     try {
-      response = await waitForResponse(cdp, timeout, {
-        sentinel,
-        stablePolls,
-        noActivate,
-        inputCdp,
-        log,
-        baselineAssistantCount: assistantBaseline.assistantCount,
-        activateTabForRecovery,
-        heartbeatFile,
-      });
+      response = await waitForResponse(
+        cdp,
+        timeout,
+        sentinel || stablePolls || noActivate
+          ? { sentinel, stablePolls, noActivate, heartbeatFile }
+          : baseline.latestAssistant,
+        baseline.assistantCount,
+        signal
+      );
     } catch (err) {
       if (!err.partialResponse?.text) {
         throw err;
@@ -1625,11 +1414,11 @@ async function query(options) {
       timeoutError = err.message;
       log(`Response timed out; preserving partial assistant text (${response.text.length} chars)`);
     }
-    const conversationUrl = await evaluate(cdp, "window.location.href").catch(() => null);
+    const conversationUrl = await evaluate(cdp, "window.location.href", signal).catch(() => null);
     log(`Response received (${response.text.length} chars)`);
     return {
       response: response.text,
-      model: modelSelection.selected || "current",
+      model: modelSelection.selected || model || "current",
       requestedModel: modelSelection.requested,
       selectedModel: modelSelection.selected,
       modelSelectionStatus: modelSelection.status,
@@ -1642,10 +1431,10 @@ async function query(options) {
       tabId,
       controlledTabId: tabId,
       conversationUrl,
-      messageId: response.messageId,
-      responseSource: response.source,
-      sentinel,
-      hasSentinel: response.hasSentinel,
+      messageId: response.messageId || null,
+      responseSource: response.source || "assistant-dom",
+      sentinel: sentinel || null,
+      hasSentinel: response.hasSentinel === true || (sentinel ? response.text.includes(sentinel) : true),
       pageTextContainsSentinel: response.pageTextContainsSentinel === true,
       documentHiddenAtCompletion: response.documentHiddenAtCompletion === true,
       visibilityStateAtCompletion: response.visibilityStateAtCompletion || null,
@@ -1661,7 +1450,11 @@ async function query(options) {
     };
   } finally {
     if (!keepTab) {
-      await closeTab(tabId).catch(() => {});
+      try {
+        await closeTab(tabId);
+      } catch (error) {
+        log(`Failed to close ChatGPT tab ${tabId}: ${error?.message || error}`);
+      }
     }
   }
 }
@@ -1670,14 +1463,16 @@ module.exports = {
   query,
   extractAssistantResponse,
   hasRequiredCookies,
-  CHATGPT_URL,
-  assistantSnapshotExpression,
+  cleanChatGPTResponseText,
+  extractLatestAssistantSnapshot,
+  normalizeChatGPTModelChoice,
+  resolveChatGPTModelMenuOption,
+  isNewAssistantContent,
+  isChatGPTResponseComplete,
   assertReadyForNewPrompt,
   waitForSubmitAccepted,
-  typePrompt,
-  recoverCloudflareChallenge,
-  attemptOptionalSelection,
   waitForResponse,
   detectsConversationMaxLength,
   detectsTooManyRequests,
+  CHATGPT_URL,
 };

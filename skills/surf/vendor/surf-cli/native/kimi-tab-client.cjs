@@ -2,7 +2,7 @@ const KIMI_TAB_URL = "https://www.kimi.com/";
 
 const SELECTORS = {
   promptTextarea: 'textarea[placeholder*="Ask anything"], textarea[placeholder*="follow-up"], textarea[placeholder*="Add a follow-up"], div[class*="editorContentEditable"], [contenteditable="true"][role="textbox"], [contenteditable="true"]',
-  sendButton: '#send-button, button[id="send-button"], [class*="send-btn"], [class*="send-button"], button[aria-label*="Send"], button[aria-label*="send"], button[type="submit"]:not([disabled])',
+  sendButton: '#send-button, button[id="send-button"], [class*="send-btn"], button[aria-label*="Send"], button[aria-label*="send"], button[type="submit"]:not([disabled])',
   stopButton: 'button[aria-label*="Stop"], button[aria-label*="Cancel"], button[aria-label*="stop"], button[aria-label*="Stop generation"]',
   assistantMessage: '[class*="markdown"], [class*="Markdown"], .markdown-body, .prose, [data-role="assistant"], article, [class*="assistant"]',
   conversationTurn: '[class*="message"], [class*="Message"], article',
@@ -153,6 +153,11 @@ const assistantSnapshotExpression = (sentinel) => {
       || Boolean(document.querySelector('[class*="loading"]'))
       || Boolean(document.querySelector('[class*="typing"]'))
       || Boolean(document.querySelector('[aria-busy="true"]'));
+    const lowerPageText = pageText.toLowerCase();
+    const providerBusy = lowerPageText.includes('system is currently busy')
+      || lowerPageText.includes('capacity is busy')
+      || lowerPageText.includes('temporarily busy')
+      || lowerPageText.includes('please try again later');
     let text = '';
     let source = 'page-text';
     if (last) {
@@ -171,6 +176,7 @@ const assistantSnapshotExpression = (sentinel) => {
       text,
       stopVisible,
       finished: !stopVisible && text.length > 0,
+      providerBusy,
       source,
       pageTextContainsSentinel,
       sentinelMatch,
@@ -263,71 +269,228 @@ async function waitForPromptReady(cdp, timeoutMs = 45000) {
   return false;
 }
 
-async function selectModel(cdp, desiredModel, timeoutMs = 8000) {
-  const modelButton = await evaluate(
-    cdp,
-    `(() => {
-      const btn = document.querySelector('${SELECTORS.modelButton}');
-      return btn ? true : false;
-    })()`
-  );
-  if (!modelButton) {
-    throw new Error("Model selector button not found");
+function normalizePreferenceLabel(value) {
+  return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function preferenceTargets(kind, requested) {
+  const normalized = normalizePreferenceLabel(requested);
+  if (kind === "model" && ["instant", "kimiinstant"].includes(normalized)) {
+    return ["instant"];
   }
-  await evaluate(
-    cdp,
-    `(() => {
-      ${buildClickDispatcher()}
-      const btn = document.querySelector('${SELECTORS.modelButton}');
-      if (btn) dispatchClickSequence(btn);
-    })()`
-  );
-  await delay(300);
-  const normalizedModel = desiredModel.toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (kind === "reasoning" && ["high", "reasoninghigh", "thinkhigh", "thinkinghigh"].includes(normalized)) {
+    return ["reasoninghigh", "thinkinghigh", "high"];
+  }
+  return [normalized].filter(Boolean);
+}
+
+async function selectPreference(cdp, kind, requested, timeoutMs = 8000) {
+  const targets = preferenceTargets(kind, requested);
+  if (targets.length === 0) {
+    return { status: "skipped", requested: requested || null };
+  }
   const result = await evaluate(
     cdp,
     `(async () => {
       ${buildClickDispatcher()}
-      const TIMEOUT_MS = ${timeoutMs};
-      const targetModel = ${JSON.stringify(normalizedModel)};
-      const menuSelector = '${SELECTORS.menuContainer}';
-      const itemSelector = '${SELECTORS.menuItem}';
+      const kind = ${JSON.stringify(kind)};
+      const requested = ${JSON.stringify(requested)};
+      const targets = ${JSON.stringify(targets)};
+      const timeoutMs = ${timeoutMs};
       const normalize = (text) => (text || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-      const deadline = Date.now() + TIMEOUT_MS;
-      while (Date.now() < deadline) {
-        const menu = document.querySelector(menuSelector);
-        if (!menu) {
-          await new Promise(r => setTimeout(r, 100));
-          continue;
-        }
-        const items = Array.from(menu.querySelectorAll(itemSelector));
-        let bestMatch = null;
-        let bestScore = 0;
-        for (const item of items) {
-          const text = normalize(item.textContent || '');
-          const testId = normalize(item.getAttribute('data-testid') || '');
-          let score = 0;
-          if (text.includes(targetModel) || testId.includes(targetModel)) score = 100;
-          else if (targetModel.includes(text) || targetModel.includes(testId)) score = 50;
-          if (score > bestScore) {
-            bestScore = score;
-            bestMatch = item;
+      const compactLabel = (el) => {
+        const parts = [
+          el.textContent || '',
+          el.getAttribute?.('aria-label') || '',
+          el.getAttribute?.('title') || '',
+          el.getAttribute?.('data-testid') || '',
+        ].map((part) => String(part || '').replace(/\\s+/g, ' ').trim()).filter(Boolean);
+        const label = [...new Set(parts)].join(' ').trim();
+        if (!label || label.length > 160) return '';
+        if (/[{}]|@keyframes|#/.test(label)) return '';
+        return label;
+      };
+      const textOf = (el) => normalize([
+        compactLabel(el),
+        el.getAttribute?.('aria-label') || '',
+        el.getAttribute?.('title') || '',
+        el.getAttribute?.('data-testid') || '',
+      ].join(' '));
+      const wordCount = (label) => label.split(/\\s+/).filter(Boolean).length;
+      const visible = (el) => {
+        if (!(el instanceof HTMLElement)) return false;
+        const style = getComputedStyle(el);
+        return style.display !== 'none'
+          && style.visibility !== 'hidden'
+          && Number(style.opacity || '1') > 0
+          && el.getBoundingClientRect().width > 0
+          && el.getBoundingClientRect().height > 0;
+      };
+      const hasTarget = (el) => {
+        const label = compactLabel(el);
+        const text = textOf(el);
+        if (!label || wordCount(label) > 4) return false;
+        return targets.some((target) => {
+          if (target === 'high') {
+            return ['high', 'reasoninghigh', 'thinkinghigh'].includes(text);
           }
+          return text === target || text.includes(target);
+        });
+      };
+      const candidateLabels = (nodes) => {
+        const labels = [];
+        const seen = new Set();
+        for (const node of nodes) {
+          const label = compactLabel(node);
+          if (!label || seen.has(label)) continue;
+          seen.add(label);
+          labels.push(label);
+          if (labels.length >= 50) break;
         }
-        if (bestMatch) {
-          dispatchClickSequence(bestMatch);
-          await new Promise(r => setTimeout(r, 200));
-          return { success: true, label: bestMatch.textContent?.trim() };
+        return labels;
+      };
+      const buttonLike = () => Array.from(document.querySelectorAll(
+        'button,[role="button"],[aria-haspopup="listbox"],[aria-haspopup="menu"],[data-state],[class*="model"],[class*="reason"],[class*="thinking"]'
+      )).filter((el) => visible(el) && compactLabel(el));
+      const selectable = () => Array.from(document.querySelectorAll(
+        '[role="option"],[role="menuitem"],[role="menuitemradio"],li,button,[role="button"],div,span,p'
+      )).filter((el) => visible(el) && compactLabel(el));
+      const textNodeParents = () => {
+        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+        const out = [];
+        const seen = new Set();
+        let node;
+        while ((node = walker.nextNode())) {
+          const label = String(node.nodeValue || '').replace(/\\s+/g, ' ').trim();
+          if (!label || label.length > 80) continue;
+          const parent = node.parentElement;
+          if (!parent || seen.has(parent) || !visible(parent)) continue;
+          seen.add(parent);
+          out.push(parent);
         }
-        await new Promise(r => setTimeout(r, 100));
+        return out;
+      };
+      const clickNodeAndParents = (node) => {
+        let current = node;
+        for (let depth = 0; depth < 5 && current; depth++) {
+          if (current instanceof HTMLElement && visible(current)) {
+            dispatchClickSequence(current);
+          }
+          current = current.parentElement;
+        }
+      };
+      const hoverNodeAndParents = (node) => {
+        let current = node;
+        for (let depth = 0; depth < 5 && current; depth++) {
+          if (current instanceof HTMLElement && visible(current)) {
+            const rect = current.getBoundingClientRect();
+            const clientX = rect.left + Math.max(2, Math.min(rect.width - 2, rect.width * 0.85));
+            const clientY = rect.top + Math.max(2, Math.min(rect.height - 2, rect.height / 2));
+            for (const type of ['pointerover', 'pointerenter', 'mouseover', 'mouseenter', 'pointermove', 'mousemove']) {
+              const common = { bubbles: true, cancelable: true, view: window, clientX, clientY };
+              let event;
+              if (type.startsWith('pointer') && 'PointerEvent' in window) {
+                event = new PointerEvent(type, { ...common, pointerId: 1, pointerType: 'mouse' });
+              } else {
+                event = new MouseEvent(type, common);
+              }
+              current.dispatchEvent(event);
+            }
+          }
+          current = current.parentElement;
+        }
+      };
+      const clickFirstReasoningSubmenu = async () => {
+        if (kind !== 'reasoning') return null;
+        const nodes = selectable().concat(textNodeParents());
+        let submenu = nodes.find((el) => {
+          const text = textOf(el);
+          const label = compactLabel(el);
+          return label && wordCount(label) <= 6 && (
+            text.includes('thinkingeffort') || text.includes('reasoningeffort')
+          );
+        });
+        if (!submenu) {
+          submenu = nodes.find((el) => {
+            const text = textOf(el);
+            let parent = el.parentElement;
+            let parentText = '';
+            for (let depth = 0; depth < 5 && parent; depth++) {
+              parentText += textOf(parent);
+              parent = parent.parentElement;
+            }
+            return text === 'standard' && (
+              parentText.includes('thinkingeffort') || parentText.includes('reasoningeffort')
+            );
+          });
+        }
+        if (!submenu) return null;
+        hoverNodeAndParents(submenu);
+        await new Promise(r => setTimeout(r, 350));
+        clickNodeAndParents(submenu);
+        hoverNodeAndParents(submenu);
+        await new Promise(r => setTimeout(r, 350));
+        return compactLabel(submenu);
+      };
+      const current = buttonLike().find(hasTarget);
+      if (current && !current.getAttribute('aria-expanded')) {
+        return { status: 'already_selected', requested, label: compactLabel(current) };
       }
-      return { success: false, error: 'Model option not found' };
+      const submenuClicks = [];
+      const openers = buttonLike()
+        .filter((el) => {
+          const text = textOf(el);
+          if (kind === 'model') return text.includes('model') || text.includes('instant') || text.includes('kimi') || text.includes('k2') || text.includes('k3');
+          return text.includes('reason') || text.includes('thinking') || text.includes('standard') || text.includes('high') || text.includes('low') || text.includes('auto');
+        })
+        .sort((a, b) => {
+          const score = (el) => {
+            const text = textOf(el);
+            let total = 0;
+            if (hasTarget(el)) total += 100;
+            if (kind === 'model' && text.includes('k3')) total += 20;
+            if (kind === 'model' && text.includes('model')) total += 10;
+            if (kind === 'reasoning' && (text.includes('reason') || text.includes('thinking'))) total += 20;
+            return -total;
+          };
+          return score(a) - score(b);
+        });
+      const deadline = Date.now() + timeoutMs;
+      for (const opener of openers.slice(0, 8)) {
+        dispatchClickSequence(opener);
+        await new Promise(r => setTimeout(r, 250));
+        const submenuLabel = await clickFirstReasoningSubmenu();
+        if (submenuLabel) submenuClicks.push(submenuLabel);
+        const openerDeadline = Math.min(deadline, Date.now() + 2500);
+        while (Date.now() < openerDeadline) {
+          const match = selectable().concat(textNodeParents()).find(hasTarget);
+          if (match) {
+            clickNodeAndParents(match);
+            await new Promise(r => setTimeout(r, 300));
+            return { status: 'selected', requested, label: compactLabel(match) };
+          }
+          await new Promise(r => setTimeout(r, 100));
+        }
+      }
+      const buttons = buttonLike();
+      const choices = selectable();
+      const buttonLabels = candidateLabels(buttons);
+      const selectableLabels = candidateLabels(choices);
+      const allLabels = candidateLabels(selectable().concat(textNodeParents()));
+      const interestingLabels = allLabels.filter((label) => /thinking|reasoning|standard|high|instant|k3/i.test(label)).slice(0, 80);
+      return { status: 'not_found', requested, submenuClicks, buttonLabels, selectableLabels, interestingLabels };
     })()`
   );
-  if (!result || !result.success) {
-    throw new Error(`Model not found: ${desiredModel}`);
+  if (!result || result.status === "not_found") {
+    const candidates = result ? `; candidates=${JSON.stringify({
+      interesting: result.interestingLabels || [],
+      submenuClicks: result.submenuClicks || [],
+      buttons: result.buttonLabels || [],
+      selectable: result.selectableLabels || [],
+    }).slice(0, 4000)}` : "";
+    throw new Error(`Kimi ${kind} option not confirmed: requested ${requested}${candidates}`);
   }
-  return result.label;
+  return result;
 }
 
 async function attachFile(cdp, inputCdp, filePath, log = () => {}) {
@@ -338,40 +501,9 @@ async function attachFile(cdp, inputCdp, filePath, log = () => {}) {
     throw new Error(`File not found: ${absolutePath}`);
   }
 
-  const openedToolkit = await evaluate(
-    cdp,
-    `(() => {
-      ${buildClickDispatcher()}
-      if (document.querySelector(${JSON.stringify(SELECTORS.fileInput)})) {
-        return { inputPresent: true, clicked: false };
-      }
-      const selectors = [
-        '.toolkit-trigger-btn',
-        '[class*="toolkit-trigger"]',
-        '[aria-label*="Attach"]',
-        '[aria-label*="Upload"]',
-        '[aria-label*="Add file"]',
-        '[title*="Attach"]',
-        '[title*="Upload"]',
-        '[title*="Add file"]',
-      ];
-      for (const selector of selectors) {
-        const node = document.querySelector(selector);
-        if (node && dispatchClickSequence(node)) {
-          return { inputPresent: false, clicked: true, selector };
-        }
-      }
-      return { inputPresent: false, clicked: false };
-    })()`,
-  );
-  if (openedToolkit?.clicked) {
-    log(`Opened Kimi attachment toolkit with ${openedToolkit.selector}`);
-    await delay(500);
-  }
-
-  // Wait for Kimi's file input to appear. Kimi usually mounts it with the
-  // composer toolkit popover; if it is absent, the caller must not send a
-  // prompt that claims an attachment exists.
+  // Wait for a file input to appear. ChatGPT lazily mounts the hidden
+  // <input type="file"> when the composer attach button is interactable;
+  // recent revs mount it unconditionally, but we poll defensively.
   const selectorJson = JSON.stringify(SELECTORS.fileInput);
   const deadline = Date.now() + 5000;
   let found = false;
@@ -388,7 +520,7 @@ async function attachFile(cdp, inputCdp, filePath, log = () => {}) {
   }
   if (!found) {
     throw new Error(
-      "Kimi file input (input[type=\"file\"]) not present in the DOM; Kimi may require opening the attachment menu first.",
+      "ChatGPT file input (input[type=\"file\"]) not present in the DOM; ChatGPT may have moved or hidden the attach control.",
     );
   }
 
@@ -405,14 +537,14 @@ async function attachFile(cdp, inputCdp, filePath, log = () => {}) {
     selector: SELECTORS.fileInput,
   });
   if (!node || !node.nodeId) {
-    throw new Error("DOM.querySelector returned no nodeId for the Kimi file input");
+    throw new Error("DOM.querySelector returned no nodeId for the ChatGPT file input");
   }
   await inputCdp("DOM.setFileInputFiles", {
     files: [absolutePath],
     nodeId: node.nodeId,
   });
 
-  // Give Kimi a moment to process the file (it reads, hashes, sometimes
+  // Give ChatGPT a moment to process the file (it reads, hashes, sometimes
   // uploads). If the attachment is not yet visible after a brief wait we
   // surface the failure so the caller can decide to retry rather than send
   // a prompt that references a missing attachment.
@@ -422,13 +554,6 @@ async function attachFile(cdp, inputCdp, filePath, log = () => {}) {
       cdp,
       `(() => {
         const previewSelectors = [
-          '[class*="attachment"]',
-          '[class*="file"]',
-          '[class*="upload"]',
-          '[class*="image"]',
-          '[class*="preview"]',
-          '[class*="chat-input-prepend"] *',
-          '[class*="chat-input-inline-prepend"] *',
           '[data-testid*="attachment"]',
           'div[role="img"][aria-label]',
           'div[data-testid="composer-attachments"] div',
@@ -446,9 +571,9 @@ async function attachFile(cdp, inputCdp, filePath, log = () => {}) {
     }
     await delay(250);
   }
-  // No preview shown, but the input file was set. Return this explicitly so
-  // wrappers can treat attachment support as unproven or failed.
-  log(`File attachment set (no Kimi preview detected within 20s)`);
+  // No preview shown, but the input file was set. Proceed; ChatGPT often
+  // accepts files without a visible thumbnail (especially text/markdown).
+  log(`File attachment set (no preview detected within 20s; proceeding)`);
   return { attached: true, previewVisible: false };
 }
 
@@ -500,20 +625,16 @@ async function typePrompt(cdp, inputCdp, prompt) {
   await delay(300);
 }
 
-async function clickSend(cdp, inputCdp, prompt = "") {
-  const promptNeedle = JSON.stringify((prompt || "").trim().slice(0, 120));
+async function clickSend(cdp, inputCdp) {
   const promptSelectors = JSON.stringify(SELECTORS.promptTextarea.split(", ").map((s) => s.trim()));
   const sendSelectors = JSON.stringify(
-    [
-      '.chat-input .send-button-container',
-      '.chat-input [class*="send-button"]',
-      ...SELECTORS.sendButton.split(", ").map((s) => s.trim()),
+    SELECTORS.sendButton.split(", ").map((s) => s.trim()).concat([
       'button[aria-label*="Send"]',
       'button[aria-label*="send"]',
       'button[data-test-id="send-button"]',
-    ],
+    ]),
   );
-  const deadline = Date.now() + 20000;
+  const deadline = Date.now() + 8000;
   while (Date.now() < deadline) {
     const result = await evaluate(
       cdp,
@@ -521,27 +642,13 @@ async function clickSend(cdp, inputCdp, prompt = "") {
         ${buildClickDispatcher()}
         const promptSelectors = ${promptSelectors};
         const sendSelectors = ${sendSelectors};
-        const promptNeedle = ${promptNeedle};
         let prompt = null;
         for (const selector of promptSelectors) {
           prompt = document.querySelector(selector);
           if (prompt) break;
         }
-        const composerText = () => {
-          const composer = document.querySelector('.chat-input') || prompt;
-          return (composer?.innerText || composer?.textContent || composer?.value || '').trim();
-        };
-        const submitted = () => {
-          if (document.querySelector('${SELECTORS.stopButton}')) return true;
-          if (!promptNeedle) return false;
-          return !composerText().includes(promptNeedle);
-        };
         const tryButton = (button) => {
           if (!button) return null;
-          const rect = button.getBoundingClientRect();
-          const visible = rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.right > 0
-            && rect.top < window.innerHeight && rect.left < window.innerWidth;
-          if (!visible) return null;
           const disabled = button.hasAttribute('disabled')
             || button.getAttribute('aria-disabled') === 'true'
             || button.getAttribute('data-disabled') === 'true';
@@ -552,7 +659,7 @@ async function clickSend(cdp, inputCdp, prompt = "") {
         for (const selector of sendSelectors) {
           const button = document.querySelector(selector);
           const status = tryButton(button);
-          if (status === 'clicked') return submitted() ? 'submitted-global' : 'clicked-global';
+          if (status === 'clicked') return 'clicked-global';
           if (status === 'disabled') return 'disabled';
         }
         if (prompt) {
@@ -564,7 +671,7 @@ async function clickSend(cdp, inputCdp, prompt = "") {
               const label = (button.textContent || '').trim().toLowerCase();
               if (aria.includes('send') || label === 'send') {
                 const status = tryButton(button);
-                if (status === 'clicked') return submitted() ? 'submitted-near' : 'clicked-near';
+                if (status === 'clicked') return 'clicked-near';
                 if (status === 'disabled') return 'disabled';
               }
             }
@@ -574,24 +681,7 @@ async function clickSend(cdp, inputCdp, prompt = "") {
         return 'missing';
       })()`
     );
-    if (result === "submitted-global" || result === "submitted-near") return true;
-    if (result === "clicked-global" || result === "clicked-near") {
-      await delay(500);
-      const submitted = await evaluate(
-        cdp,
-        `(() => {
-          const needle = ${promptNeedle};
-          if (document.querySelector('${SELECTORS.stopButton}')) return true;
-          if (!needle) return false;
-          const composer = document.querySelector('.chat-input')
-            || document.querySelector(${JSON.stringify(SELECTORS.promptTextarea)});
-          const text = (composer?.innerText || composer?.textContent || composer?.value || '').trim();
-          return !text.includes(needle);
-        })()`,
-      ).catch(() => false);
-      if (submitted) return true;
-      continue;
-    }
+    if (result === "clicked-global" || result === "clicked-near") return true;
     if (result === "disabled") {
       await delay(150);
       continue;
@@ -654,6 +744,9 @@ async function waitForResponse(cdp, timeoutMs = 2700000, options = {}) {
     if (!snapshot) {
       await delay(400);
       continue;
+    }
+    if (snapshot.providerBusy) {
+      throw new Error("Kimi provider capacity busy: system is currently busy; capacity is busy");
     }
     if (snapshot.stopVisible) {
       sawGenerating = true;
@@ -743,6 +836,7 @@ async function query(options) {
   const {
     prompt,
     model,
+    reasoning,
     file,
     timeout = 2700000,
     sentinel,
@@ -767,7 +861,6 @@ async function query(options) {
   
   const cdp = (expr) => cdpEvaluate(tabId, expr);
   const inputCdp = (method, params) => cdpCommand(tabId, method, params);
-  let attachment = null;
   
   try {
     await waitForPageLoad(cdp);
@@ -777,14 +870,14 @@ async function query(options) {
       throw new Error("Prompt textarea not ready");
     }
     log("Prompt ready");
+    const modelSelection = model ? await selectPreference(cdp, "model", model) : { status: "skipped" };
+    if (model) log(`Kimi model selection: ${modelSelection.status} ${modelSelection.label || model}`);
+    const reasoningSelection = reasoning ? await selectPreference(cdp, "reasoning", reasoning) : { status: "skipped" };
+    if (reasoning) log(`Kimi reasoning selection: ${reasoningSelection.status} ${reasoningSelection.label || reasoning}`);
     const baseline = await assistantSnapshot(cdp, null).catch(() => ({ text: "" }));
-    if (file) {
-      attachment = await attachFile(cdp, inputCdp, file, log);
-      log(`File attached: ${file}`);
-    }
     await typePrompt(cdp, inputCdp, prompt);
     log("Prompt typed");
-    await clickSend(cdp, inputCdp, prompt);
+    await clickSend(cdp, inputCdp);
     log("Prompt sent, waiting for response...");
     const genDeadline = Date.now() + 20000;
     while (Date.now() < genDeadline) {
@@ -797,7 +890,12 @@ async function query(options) {
     log(`Response received (${response.text.length} chars)`);
     return {
       response: response.text,
-      model: model || "current",
+      model: modelSelection?.label || model || "current",
+      requestedModel: model || null,
+      reasoning: reasoningSelection?.label || reasoning || null,
+      requestedReasoning: reasoning || null,
+      modelSelectionStatus: modelSelection?.status || null,
+      reasoningSelectionStatus: reasoningSelection?.status || null,
       tabId,
       controlledTabId: tabId,
       conversationUrl,
@@ -809,7 +907,6 @@ async function query(options) {
       activated: tabInfo.activated === true,
       tabWasCreated: tabInfo.tabWasCreated === true,
       noActivate: noActivate === true,
-      attachment,
     };
   } finally {
     if (!keepTab) {
@@ -818,4 +915,4 @@ async function query(options) {
   }
 }
 
-module.exports = { query, extractAssistantResponse, KIMI_TAB_URL };
+module.exports = { query, extractAssistantResponse, KIMI_TAB_URL, preferenceTargets };

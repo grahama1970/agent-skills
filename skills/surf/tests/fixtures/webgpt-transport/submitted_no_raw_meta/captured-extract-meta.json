@@ -1,0 +1,16 @@
+{
+  "status": "completed",
+  "output": "response.md",
+  "raw_output": "response.md.raw.md",
+  "stderr_log": "/tmp/surf-webgpt-extract-stderr.0vCyI6.log",
+  "sentinel": null,
+  "requested_tab_id": "837360896",
+  "controlled_tab_id": "837360896",
+  "response_source": "assistant-dom",
+  "raw_contains_sentinel": false,
+  "clean_contains_sentinel": false,
+  "raw_chars": 7820,
+  "clean_chars": 7820,
+  "started_at": "2026-07-24T02:18:09Z",
+  "finished_at": "2026-07-24T02:18:09Z"
+}

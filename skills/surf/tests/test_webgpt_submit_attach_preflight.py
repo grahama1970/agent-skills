@@ -120,9 +120,10 @@ def test_prompt_preflight_does_not_treat_tilde_digit_approximation_as_path(tmp_p
 def test_webgpt_submit_allows_warn_preflight_and_records_metadata(tmp_path: Path) -> None:
     archive = tmp_path / "five.zip"
     make_zip(archive, 5)
+    tab_id = "837352441"
     fake_run = (
-        FAKE_RUN_PREAMBLE
-        + """  chatgpt)
+        FAKE_RUN_PREAMBLE.replace("837352334", tab_id)
+        + f"""  chatgpt)
     sentinel=""
     while [[ $# -gt 0 ]]; do
       if [[ "$1" == "--sentinel" ]]; then
@@ -132,7 +133,7 @@ def test_webgpt_submit_allows_warn_preflight_and_records_metadata(tmp_path: Path
       shift
     done
     printf 'warning allowed response\\n%s\\n' "$sentinel"
-    echo 'Tab ID: 837352334' >&2
+    echo 'Tab ID: {tab_id}' >&2
     echo 'Activated: false' >&2
     echo 'TabWasCreated: false' >&2
     echo 'ResponseSource: assistant-dom' >&2
@@ -150,6 +151,7 @@ esac
         tmp_path,
         archive,
         fake_run,
+        tab_id=tab_id,
         request_text="Review this prose mention of /tmp/nonexistent-webgpt-warning-only.\n",
     )
 
@@ -322,12 +324,13 @@ def test_webgpt_submit_no_activate_stale_cdp_recovers_same_tab_after_extension_r
     make_zip(archive, 5)
     invocation_log = tmp_path / "surf-invocations.log"
     js_count_file = tmp_path / "js-count"
+    tab_id = "837352442"
     fake_run = f"""#!/usr/bin/env bash
 set -euo pipefail
 printf '%s\\n' "$*" >> {str(invocation_log)!r}
 case "${{1:-}}" in
   tab.list)
-    printf '837352334\\tAgentic Research - Boris Loop\\thttps://chatgpt.com/c/example\\n'
+    printf '{tab_id}\\tAgentic Research - Boris Loop\\thttps://chatgpt.com/c/example\\n'
     ;;
   focus.state)
     printf '{{"active_tab_id":"123","active_window_id":"456"}}\\n'
@@ -337,7 +340,7 @@ case "${{1:-}}" in
     count="$((count + 1))"
     printf '%s' "$count" > {str(js_count_file)!r}
     if [[ "$count" -eq 1 ]]; then
-      echo 'Error: Failed to attach debugger: Another debugger is already attached to the tab with id: 837352334.' >&2
+      echo 'Error: Failed to attach debugger: Another debugger is already attached to the tab with id: {tab_id}.' >&2
       exit 1
     fi
     printf '"cdp-ok"\\n'
@@ -355,7 +358,7 @@ case "${{1:-}}" in
       shift
     done
     printf 'same tab response\\n%s\\n' "$sentinel"
-    echo 'Tab ID: 837352334' >&2
+    echo 'Tab ID: {tab_id}' >&2
     echo 'Activated: false' >&2
     echo 'TabWasCreated: false' >&2
     echo 'ResponseSource: assistant-dom' >&2
@@ -372,14 +375,14 @@ case "${{1:-}}" in
 esac
 """
 
-    proc = run_submit(tmp_path, archive, fake_run)
+    proc = run_submit(tmp_path, archive, fake_run, tab_id=tab_id)
 
     assert proc.returncode == 0
     assert (tmp_path / "response.md").read_text(encoding="utf-8") == "same tab response\n"
     meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
     assert meta["status"] == "completed"
-    assert meta["requested_tab_id"] == "837352334"
-    assert meta["controlled_tab_id"] == "837352334"
+    assert meta["requested_tab_id"] == tab_id
+    assert meta["controlled_tab_id"] == tab_id
     assert meta["raw_contains_sentinel"] is True
     assert meta["clean_contains_sentinel"] is False
     invocations = invocation_log.read_text(encoding="utf-8")
@@ -591,6 +594,129 @@ esac
     assert meta["raw_chars"] > 0
     assert meta["clean_chars"] > 0
     assert meta["raw_response_advisory"] is True
+
+
+def test_webgpt_submit_cloudflare_challenge_fails_closed_without_extract_retry(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    invocation_log = tmp_path / "surf-invocations.log"
+    fake_run = f"""#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\\n' "$*" >> {str(invocation_log)!r}
+case "${{1:-}}" in
+  tab.list)
+    printf '837352334\\tCloudflare check\\thttps://chatgpt.com/c/example\\n'
+    ;;
+  focus.state)
+    printf '{{"active_tab_id":"123","active_window_id":"456"}}\\n'
+    ;;
+  js)
+    printf '"cdp-ok"\\n'
+    ;;
+  chatgpt)
+    echo 'Error: Cloudflare challenge detected - complete in browser' >&2
+    exit 1
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+
+    proc = run_submit(tmp_path, archive, fake_run)
+
+    assert proc.returncode == 1
+    assert "Cloudflare challenge detected" in proc.stderr
+    meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["status"] == "failed"
+    assert meta["failure"] == "cloudflare_challenge"
+    assert meta["blocker"] == "BLOCKED_WEBGPT_CLOUDFLARE_CHALLENGE"
+    assert meta["recommended_action"] == "complete_cloudflare_challenge_in_controlled_browser_tab"
+    assert meta["proof_status"] == "browser_access_blocked"
+    assert meta["submitted_to_chatgpt"] is False
+    assert meta["browser_access_blocked"] is True
+    assert meta["cloudflare_challenge_detected"] is True
+    invocations = invocation_log.read_text(encoding="utf-8")
+    assert "chatgpt " in invocations
+
+
+def test_webgpt_submit_visible_provider_limit_uses_bounded_cooldown_retry(tmp_path: Path) -> None:
+    archive = tmp_path / "five.zip"
+    make_zip(archive, 5)
+    invocation_log = tmp_path / "surf-invocations.log"
+    chatgpt_count_file = tmp_path / "chatgpt-count"
+    fake_run = f"""#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\\n' "$*" >> {str(invocation_log)!r}
+case "${{1:-}}" in
+  tab.list)
+    printf '837352334\\tRate limited\\thttps://chatgpt.com/c/example\\n'
+    ;;
+  focus.state)
+    printf '{{"active_tab_id":"123","active_window_id":"456"}}\\n'
+    ;;
+  js)
+    if [[ "$*" == *"cdp-ok"* ]]; then
+      printf '"cdp-ok"\\n'
+    else
+      echo "no visible Got it modal on hit-your-limit page" >&2
+      exit 12
+    fi
+    ;;
+  chatgpt)
+    count="$(cat {str(chatgpt_count_file)!r} 2>/dev/null || printf '0')"
+    count="$((count + 1))"
+    printf '%s' "$count" > {str(chatgpt_count_file)!r}
+    sentinel=""
+    target_tab=""
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        --sentinel) sentinel="${{2:-}}"; shift 2 ;;
+        --target-tab-id) target_tab="${{2:-}}"; shift 2 ;;
+        *) shift ;;
+      esac
+    done
+    if [[ "$count" -eq 1 ]]; then
+      echo "Error: ChatGPT is rate limited: too many requests; you've hit your limit. Please try again later." >&2
+      exit 1
+    fi
+    if [[ "$target_tab" != "837352334" ]]; then
+      echo "expected same-tab retry target 837352334, got $target_tab" >&2
+      exit 43
+    fi
+    printf 'same tab response after hit-your-limit cooldown\\n%s\\n' "$sentinel"
+    echo 'Tab ID: 837352334' >&2
+    echo 'Activated: false' >&2
+    echo 'TabWasCreated: false' >&2
+    echo 'ResponseSource: assistant-dom' >&2
+    exit 0
+    ;;
+  *)
+    echo "unexpected command: $*" >&2
+    exit 99
+    ;;
+esac
+"""
+
+    proc = run_submit(tmp_path, archive, fake_run)
+
+    assert proc.returncode == 0, proc.stderr
+    assert (tmp_path / "response.md").read_text(encoding="utf-8") == (
+        "same tab response after hit-your-limit cooldown\n"
+    )
+    meta = json.loads((tmp_path / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["status"] == "completed"
+    assert meta["requested_tab_id"] == "837352334"
+    assert meta["controlled_tab_id"] == "837352334"
+    assert meta["chatgpt_too_many_requests_detected"] is True
+    assert meta["chatgpt_rate_limit"]["wait_seconds"] == 0
+    assert meta["chatgpt_rate_limit"]["retry_attempts"] == 1
+    assert meta["chatgpt_rate_limit"]["dismiss_attempted"] is True
+    assert meta["chatgpt_rate_limit"]["dismissed"] is False
+    assert meta["chatgpt_rate_limit"]["retry_attempted"] is True
+    assert meta["chatgpt_rate_limit"]["exhausted"] is False
+    assert invocation_log.read_text(encoding="utf-8").count("chatgpt ") == 2
 
 
 def test_webgpt_submit_clicks_start_new_chat_same_tab_on_conversation_max_length(tmp_path: Path) -> None:
@@ -905,6 +1031,10 @@ if (!client.detectsTooManyRequests("Too many requests\\n\\nYou're making request
 if (!client.detectsTooManyRequests("Too many requests\\n\\nYou’re making requests too quickly. We’ve temporarily limited access to your conversations to protect your data.")) {{
   console.error('expected curly apostrophe rate-limit modal to be detected');
   process.exit(2);
+}}
+if (!client.detectsTooManyRequests("You've hit your limit. Please try again later.")) {{
+  console.error('expected hit-your-limit banner to be detected');
+  process.exit(4);
 }}
 if (client.detectsTooManyRequests("Please wait a few minutes before trying again.")) {{
   console.error('wait text alone must not trigger rate-limit handling');
