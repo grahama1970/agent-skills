@@ -18,6 +18,23 @@ function createReadyChatGptEvaluate(
     if (expression.includes("fetch('/backend-api/me'")) {
       return { result: { value: loginStatus } };
     }
+    if (expression.includes("activeStopLabel") && expression.includes("tooManyRequestsDetected")) {
+      return {
+        result: {
+          value: {
+            stopVisible: false,
+            sendPresent: true,
+            sendDisabled: false,
+            promptPresent: true,
+            promptChars: 0,
+            documentHidden: false,
+            visibilityState: "visible",
+            conversationMaxLengthDetected: false,
+            tooManyRequestsDetected: false,
+          },
+        },
+      };
+    }
     if (expression.includes("const selectors") && expression.includes("prompt-textarea")) {
       return { result: { value: true } };
     }

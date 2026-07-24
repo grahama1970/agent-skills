@@ -3131,9 +3131,10 @@ export async function handleMessage(
     }
 
     case "CHATGPT_NEW_TAB": {
+      const noActivate = message.noActivate === true;
       const tab = await chrome.tabs.create({
         url: "https://chatgpt.com/",
-        active: true,
+        active: !noActivate,
       });
       if (!tab.id) throw new Error("Failed to create tab");
       const currentTab = await chrome.tabs.get(tab.id);
@@ -3155,7 +3156,7 @@ export async function handleMessage(
       await cdp.attach(tab.id);
       // Wait for JS runtime to be ready after CDP attach
       await waitForRuntimeReady(tab.id, 10000);
-      return { tabId: tab.id };
+      return { tabId: tab.id, activated: !noActivate, tabWasCreated: true };
     }
 
     case "CHATGPT_CLOSE_TAB": {

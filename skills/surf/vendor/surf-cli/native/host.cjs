@@ -666,7 +666,20 @@ function handleToolRequest(msg, socket, requestContext = requestStorage.getStore
   }
 
   if (extensionMsg.type === "CHATGPT_QUERY") {
-    const { query, model, withPage, file, timeout } = extensionMsg;
+    const {
+      query,
+      model,
+      reasoning,
+      withPage,
+      file,
+      timeout,
+      sentinel,
+      stablePolls,
+      keepTab,
+      noActivate,
+      targetTabId,
+      heartbeatFile,
+    } = extensionMsg;
 
     queueAiRequest(async () => {
       let pageContext = null;
@@ -694,18 +707,102 @@ function handleToolRequest(msg, socket, requestContext = requestStorage.getStore
         prompt: fullPrompt,
         signal: requestContext.signal,
         model,
+        reasoning,
         file,
         timeout,
+        sentinel,
+        stablePolls,
+        keepTab: keepTab === true,
+        noActivate: noActivate === true,
+        heartbeatFile,
         getCookies: () => requestCallExtension(
           requestContext,
           "get_cookies",
           { type: "GET_CHATGPT_COOKIES" },
         ),
-        createTab: () => requestCallExtension(
-          requestContext,
-          "create_tab",
-          { type: "CHATGPT_NEW_TAB" },
-        ),
+        createTab: async () => {
+          if (keepTab !== true) {
+            return requestCallExtension(
+              requestContext,
+              "create_tab",
+              { type: "CHATGPT_NEW_TAB", noActivate: noActivate === true },
+            );
+          }
+
+          const requestedTabId = Number.parseInt(targetTabId || extensionMsg.tabId, 10);
+          if (Number.isFinite(requestedTabId) && requestedTabId > 0) {
+            if (noActivate === true) {
+              return {
+                tabId: requestedTabId,
+                reused: true,
+                activated: false,
+                tabWasCreated: false,
+              };
+            }
+
+            try {
+              const switched = await requestCallExtension(
+                requestContext,
+                "switch_tab",
+                { type: "SWITCH_TAB", tabId: requestedTabId },
+              );
+              if (switched?.error) throw new Error(switched.error);
+              return {
+                tabId: requestedTabId,
+                reused: true,
+                activated: true,
+                tabWasCreated: false,
+              };
+            } catch (_error) {
+              return requestCallExtension(
+                requestContext,
+                "create_tab",
+                { type: "CHATGPT_NEW_TAB", noActivate: noActivate === true },
+              );
+            }
+          }
+
+          const tabsResult = await requestCallExtension(
+            requestContext,
+            "list_tabs",
+            { type: "LIST_TABS" },
+          );
+          const tabs = tabsResult?.tabs || [];
+          const chatgptTab = tabs
+            .filter((tab) => typeof tab.url === "string" && tab.url.startsWith("https://chatgpt.com/"))
+            .sort((a, b) => (b.id || 0) - (a.id || 0))[0];
+
+          if (!chatgptTab?.id) {
+            return requestCallExtension(
+              requestContext,
+              "create_tab",
+              { type: "CHATGPT_NEW_TAB", noActivate: noActivate === true },
+            );
+          }
+
+          if (noActivate === true) {
+            return {
+              tabId: chatgptTab.id,
+              reused: true,
+              url: chatgptTab.url,
+              activated: false,
+              tabWasCreated: false,
+            };
+          }
+
+          await requestCallExtension(
+            requestContext,
+            "switch_tab",
+            { type: "SWITCH_TAB", tabId: chatgptTab.id },
+          );
+          return {
+            tabId: chatgptTab.id,
+            reused: true,
+            url: chatgptTab.url,
+            activated: true,
+            tabWasCreated: false,
+          };
+        },
         closeTab: (tabIdToClose) => requestCallExtension(requestContext, "close_tab", { type: "CHATGPT_CLOSE_TAB", tabId: tabIdToClose }, 45000, true),
         cdpEvaluate: (tabId, expression) => requestCallExtension(
           requestContext,
@@ -730,6 +827,33 @@ function handleToolRequest(msg, socket, requestContext = requestStorage.getStore
       sendToolResponse(socket, originalId, {
         response: result.response,
         model: result.model,
+        requestedModel: result.requestedModel,
+        selectedModel: result.selectedModel,
+        modelSelectionStatus: result.modelSelectionStatus,
+        modelSelectionError: result.modelSelectionError,
+        reasoning: result.reasoning,
+        requestedReasoning: result.requestedReasoning,
+        selectedReasoning: result.selectedReasoning,
+        reasoningSelectionStatus: result.reasoningSelectionStatus,
+        reasoningSelectionError: result.reasoningSelectionError,
+        tabId: result.tabId,
+        controlledTabId: result.controlledTabId,
+        conversationUrl: result.conversationUrl,
+        messageId: result.messageId,
+        responseSource: result.responseSource,
+        sentinel: result.sentinel,
+        hasSentinel: result.hasSentinel,
+        pageTextContainsSentinel: result.pageTextContainsSentinel,
+        documentHiddenAtCompletion: result.documentHiddenAtCompletion,
+        visibilityStateAtCompletion: result.visibilityStateAtCompletion,
+        backgroundHiddenPolls: result.backgroundHiddenPolls,
+        backgroundPollCount: result.backgroundPollCount,
+        hiddenRecoveryUsed: result.hiddenRecoveryUsed,
+        responseTimedOut: result.responseTimedOut,
+        timeoutError: result.timeoutError,
+        activated: result.activated,
+        tabWasCreated: result.tabWasCreated,
+        noActivate: result.noActivate,
         tookMs: result.tookMs
       }, null);
     }).catch((err) => {

@@ -124,6 +124,35 @@ describe("mapToolToMessage", () => {
   });
 
   describe("downstream provider commands", () => {
+    it("maps chatgpt with exact target tab, sentinel, reasoning, and heartbeat options", () => {
+      const msg = helpers.mapToolToMessage("chatgpt", {
+        query: "review this",
+        model: "gpt-5.4-pro",
+        reasoning: "Pro",
+        "target-tab-id": "837360585",
+        sentinel: "<<<WEBGPT_DONE:test>>>",
+        "stable-polls": "3",
+        "keep-tab": true,
+        "no-activate": true,
+        "heartbeat-file": "/tmp/webgpt-heartbeat.json",
+        timeout: "17",
+      });
+
+      expect(msg).toMatchObject({
+        type: "CHATGPT_QUERY",
+        query: "review this",
+        model: "gpt-5.4-pro",
+        reasoning: "Pro",
+        targetTabId: 837360585,
+        sentinel: "<<<WEBGPT_DONE:test>>>",
+        stablePolls: 3,
+        keepTab: true,
+        noActivate: true,
+        heartbeatFile: "/tmp/webgpt-heartbeat.json",
+        timeout: 17000,
+      });
+    });
+
     it("maps chatgpt.extract with exact target tab and sentinel wait options", () => {
       const msg = helpers.mapToolToMessage("chatgpt.extract", {
         "tab-id": "837360585",

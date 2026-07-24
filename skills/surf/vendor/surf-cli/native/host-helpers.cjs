@@ -1102,8 +1102,15 @@ function mapToolToMessage(tool, args, tabId) {
         type: "CHATGPT_QUERY",
         query: a.query,
         model: a.model,
+        reasoning: a.reasoning,
         withPage: a["with-page"],
         file: a.file,
+        sentinel: a.sentinel,
+        stablePolls: a["stable-polls"] !== undefined ? parseInt(a["stable-polls"], 10) : undefined,
+        keepTab: a["keep-tab"] === true,
+        noActivate: a["no-activate"] === true,
+        targetTabId: a["target-tab-id"] !== undefined ? parseInt(a["target-tab-id"], 10) : undefined,
+        heartbeatFile: a["heartbeat-file"],
         timeout: a.timeout ? parseInt(a.timeout, 10) * 1000 : 2700000,
         ...baseMsg
       };
