@@ -16,11 +16,15 @@ need_build=false
 dist_manifest="${SURF_CLI_PATH}/dist/manifest.json"
 src_sw="${SURF_CLI_PATH}/src/service-worker/index.ts"
 dist_sw="${SURF_CLI_PATH}/dist/service-worker/index.js"
+native_host="${SURF_CLI_PATH}/native/host.cjs"
 
 if [[ ! -f "${dist_manifest}" ]]; then
   need_build=true
 elif [[ -f "${src_sw}" && -f "${dist_sw}" ]]; then
   if [[ "${src_sw}" -nt "${dist_sw}" ]]; then
+    need_build=true
+  fi
+  if [[ -f "${native_host}" && "${native_host}" -nt "${dist_sw}" ]]; then
     need_build=true
   fi
 fi
