@@ -41,11 +41,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 GMO = "http://127.0.0.1:8601"
-PERSONA = "embry"
-AGE_BAND_RECENCY = ["age23_current", "age19_23", "age15_19", "age10_15", "age04_10"]
-SELF_TAGS = {"person:embry", "person:embry_lawson"}
-EMBRY_SHEET = Path("/mnt/storage12tb/media/personas/embry/assets/contact_sheets/"
-                   "embry-gpt-image-2-v3/images/embry_contact_sheet_v3.png")
+PERSONA = "embry"  # default persona; overridden by --persona via the profile
 MAX_ATTEMPTS = 5
 PANEL_COUNT = 4
 STOPWORDS = set("the a an and or of to in on for with her his she he it its is was are be as at by from that this".split())
@@ -69,11 +65,11 @@ def sha256_text(text: str) -> str:
     return hashlib.sha256(text.encode()).hexdigest()
 
 
-def fetch_embry_docs() -> list[dict]:
+def fetch_persona_docs(persona_id: str) -> list[dict]:
     docs, off = [], 0
     while True:
         page = post("/list", {"collection": "persona_memory",
-                              "filters": {"persona_id": PERSONA},
+                              "filters": {"persona_id": persona_id},
                               "limit": 100, "offset": off})
         docs += page.get("documents", [])
         off += 100
@@ -89,15 +85,20 @@ def counterpart_violations(claims: list, counterpart_id: str, id_field: str) -> 
     return [c.get(id_field) for c in claims if str(c.get("target")) not in allowed]
 
 
-def select_cluster(out: Path) -> dict:
+def select_cluster(profile, out: Path, persist_ledger: bool = True) -> dict:
+    """Persona-agnostic conflict-seeded selection. Every persona/corpus-specific
+    decision (which docs are roots, the recency band, who the counterparts are,
+    the valence-conflict score, and how to traverse) is delegated to the profile,
+    so this ONE engine serves ANY persona. The Embry profile reproduces the
+    original age-band/emotion logic; the generic profile covers book/entity/ToM
+    corpora and traverses via the shared ENTITY graph (memory -> entity ->
+    memory), the only bridge that survives differing edge schemas."""
     seed = sha256_text((ROOT / "GOAL_V3.md").read_text())
-    docs = fetch_embry_docs()
-    roots = {d["_key"]: d for d in docs if re.match(r"embry_age\d", d["_key"])}
-    # GOAL_V4.3 loop guard: never dream about dream-colored experience.
-    # Any residue record carrying persona_dream affect provenance (written by
-    # the composer's voice_delivery patch when conversation turns become
-    # memories) is excluded from dream selection — severs the
-    # dream->speech->memory->dream amplification path (roundtable r3).
+    docs = fetch_persona_docs(profile.persona_id)
+    roots = profile.roots(docs)
+    # GOAL_V4.3 loop guard (persona-independent): never dream about dream-colored
+    # experience. Residue carrying persona_dream affect provenance is excluded
+    # from selection — severs dream->speech->memory->dream amplification.
     tainted = {k for k, d in roots.items()
                if (d.get("affect_source") == "persona_dream"
                    or (d.get("voice_delivery") or {}).get("affect_source") == "persona_dream"
@@ -108,54 +109,37 @@ def select_cluster(out: Path) -> dict:
         if d.get("kind") in ("synthetic_dream_memory", "synthetic_reflection_memory") \
                 and d.get("visibility_state") in ("active", None):
             used.update(d.get("source_memory_ids") or [])
+
+    # Counterpart-anchored clusters (band, counterpart), schema-agnostic: the
+    # band and counterpart set both come from the profile.
     groups: dict[tuple[str, str], set[str]] = defaultdict(set)
     for key, doc in roots.items():
-        m = re.match(r"embry_(age[0-9_a-z]+?)_b\d+_memory_\d+$", key)
-        if not m:
+        band = profile.band(key, doc)
+        if band is None:
             continue
-        for tag in doc.get("tags") or []:
-            if tag.startswith("person:") and tag not in SELF_TAGS:
-                groups[(m.group(1), tag)].add(key)
+        for tag in profile.counterparts(doc):
+            groups[(band, tag)].add(key)
 
-    # GOAL_V3 Amendment 2 (operator 2026-07-23): "different variation of the
-    # same dream is human and agentic"; humans hold one memory with BOTH
-    # positive and negative valence and resolve the conflict by traversing the
-    # graph to associated memories. Dreaming is therefore NOT one-shot per
-    # cluster. Seed from a valence-CONFLICTED memory, traverse that
-    # counterpart's own graph edges to gather associates (isolation preserved:
-    # traversal stays WITHIN the seed counterpart; cross-counterpart traversal
-    # needs the counterpart gate amended via tau and is NOT done here), and the
-    # VARIATION is which valence dominates + which associative path is taken.
-    # A used cluster is re-dreamable as a NEW variation; only an EXACT prior
-    # variation (same members + same emphasis) is blocked.
-    POS = {"trust", "longing", "pride", "relief"}
-    NEG = {"grief", "guilt", "fear", "anger", "shame", "uncertainty"}
-
-    def emo_set(d):
-        return {e.strip() for e in (d.get("emotion") or "").split(",") if e.strip()}
-
-    def conflict_score(d):
-        e = emo_set(d)
-        return ((len(e & POS) > 0) + (len(e & NEG) > 0), len(e))
-
-    edges_by_src: dict[str, list[str]] = defaultdict(list)
+    # Entity index for the schema-agnostic entity-mediated walk. Inline
+    # memory->memory edges differ per corpus (and don't cross personas); the
+    # entity graph is the shared substrate, so memory -> entity -> memory is the
+    # traversal that works for ANY persona.
+    entity_index: dict[str, set[str]] = defaultdict(set)
     for key, doc in roots.items():
-        for e in (doc.get("graph_edges_raw") or []):
-            # BOTH corpus edge conventions: ~half of edged memories key targets
-            # as target_memory_id, the other half as target_id. Reading one
-            # silently drops the other half's associations.
-            if isinstance(e, dict):
-                tgt = e.get("target_memory_id") or e.get("target_id")
-                if tgt:
-                    edges_by_src[key].append(tgt)
+        for ent in profile.entities_of(doc):
+            entity_index[ent].add(key)
 
+    # GOAL_V3 Amendment 2: dreaming is NOT one-shot per cluster. Seed from a
+    # valence-CONFLICTED memory, traverse that counterpart's associates
+    # (isolation preserved: traversal stays WITHIN the seed counterpart), and the
+    # VARIATION is which valence dominates + which associative path is taken.
     def traverse(seed_key, members, k=3):
         order, seen, frontier = [seed_key], {seed_key}, [seed_key]
         while frontier and len(order) < k:
             nxt = []
             for s in frontier:
-                for tgt in edges_by_src.get(s, []):
-                    if tgt in members and tgt not in seen:
+                for tgt in profile.intra_neighbors(s, roots[s], members, entity_index):
+                    if tgt not in seen:
                         seen.add(tgt); order.append(tgt); nxt.append(tgt)
                         if len(order) >= k:
                             break
@@ -179,13 +163,13 @@ def select_cluster(out: Path) -> dict:
         if len(members) < 3:
             continue
         cluster_id = f"{band}:{tag}"
-        clusters.append({"cluster_id": cluster_id, "age_band": band, "tag": tag,
-                         "members": members,
+        clusters.append({"cluster_id": cluster_id, "band": band, "age_band": band,
+                         "tag": tag, "members": members,
                          "order_hash": sha256_text(seed + cluster_id),
                          "used_overlap": len(members & used)})
     # never-dreamed clusters first, then least-dreamed (variation mode)
     clusters.sort(key=lambda c: (c["used_overlap"] > 0,
-                                 AGE_BAND_RECENCY.index(c["age_band"]),
+                                 profile.recency_index(c["band"]),
                                  c["used_overlap"], c["order_hash"]))
     if not clusters:
         raise SystemExit("BLOCKED_CYCLE_NO_ELIGIBLE_CLUSTERS")
@@ -193,7 +177,7 @@ def select_cluster(out: Path) -> dict:
     chosen = None
     for cl in clusters:
         members = cl["members"]
-        conflicted = sorted(members, key=lambda m: (conflict_score(roots[m]),
+        conflicted = sorted(members, key=lambda m: (profile.conflict_score(roots[m]),
                                                     sha256_text(seed + m)),
                             reverse=True)
         for vi, seed_key in enumerate(conflicted):
@@ -204,7 +188,8 @@ def select_cluster(out: Path) -> dict:
                                + "|" + emphasis)
             if vkey in done_keys:
                 continue
-            chosen = {"cluster_id": cl["cluster_id"], "age_band": cl["age_band"],
+            chosen = {"cluster_id": cl["cluster_id"], "band": cl["band"],
+                      "age_band": cl["age_band"],
                       "selected": selected, "seed_memory": seed_key,
                       "valence_emphasis": emphasis,
                       "variation_index": variation_index,
@@ -217,13 +202,18 @@ def select_cluster(out: Path) -> dict:
     if chosen is None:
         raise SystemExit("BLOCKED_CYCLE_ALL_VARIATIONS_EXHAUSTED")
 
-    ledger["variation_keys"].append(chosen["variation_key"])
-    ledger_path.parent.mkdir(parents=True, exist_ok=True)
-    ledger_path.write_text(json.dumps(ledger, indent=2) + "\n")
+    if persist_ledger:
+        ledger["variation_keys"].append(chosen["variation_key"])
+        ledger_path.parent.mkdir(parents=True, exist_ok=True)
+        ledger_path.write_text(json.dumps(ledger, indent=2) + "\n")
 
     chosen_docs = {k: roots[k] for k in chosen["selected"]}
     (out / "selection_receipt.v1.json").write_text(json.dumps({
         "schema": "persona_dream.cycle_selection_receipt.v2",
+        "persona_id": profile.persona_id,
+        "selector_strategy": profile.strategy,
+        "traversal": ("inline_memory_edges" if profile.strategy
+                      == "age_band_counterpart" else "entity_mediated"),
         "loop_guard_excluded_tainted_residue": len(tainted),
         "seed_source": "GOAL_V3.md sha256", "seed": seed,
         "selection_mode": "conflict_seeded_intra_counterpart_traversal",
@@ -279,11 +269,12 @@ def build_instruments(adapter, sel: dict, out: Path) -> dict:
     return instruments
 
 
-def compose_and_render(adapter, phase_c, subgate, sel: dict, out: Path) -> dict:
+def compose_and_render(adapter, phase_c, subgate, profile, sel: dict, out: Path) -> dict:
     reading = "\n\n".join(
         f"## {k}\n{d.get('retrieval_text')}" for k, d in sel["docs"].items())
     person_tag = sel["cluster"]["cluster_id"].split(":person:")[1]
     other = person_tag.replace("_", " ").title()
+    persona_name = profile.persona_id.replace("_", " ").title()
     emphasis = sel["cluster"].get("valence_emphasis", "positive")
     vindex = sel["cluster"].get("variation_index", 0)
     emphasis_line = (
@@ -296,13 +287,13 @@ def compose_and_render(adapter, phase_c, subgate, sel: dict, out: Path) -> dict:
            "grief, guilt, fear, anger, or shame latent in these memories")
         + ". Do not change the facts; change which feeling the dream leans into.\n\n")
     prompt = (
-        "You are composing Embry's synthetic dream as a 4-panel storyboard. "
-        "Ground the dream ONLY in these root memories (the dream recombines "
-        "and heightens them; it is synthetic, never literal history):\n"
+        f"You are composing {persona_name}'s synthetic dream as a 4-panel "
+        "storyboard. Ground the dream ONLY in these root memories (the dream "
+        "recombines and heightens them; it is synthetic, never literal history):\n"
         + reading + "\n\n" + emphasis_line +
         "Compose a dream synopsis (2-3 sentences) and EXACTLY 4 storyboard "
-        "panels. Embry must appear foreground with her face visible in every "
-        f"panel; {other} appears in at least 2 panels. Return strict JSON: "
+        f"panels. {persona_name} must appear foreground with their face visible "
+        f"in every panel; {other} appears in at least 2 panels. Return strict JSON: "
         '{"dream_synopsis": "...", "panels": [{"panel_id": "sb_001", '
         '"time_range": "0.0-2.5s", "shot": "...", "setting": "...", '
         '"action": "...", "start_frame_description": "...", "mood": "..."}, '
@@ -314,7 +305,13 @@ def compose_and_render(adapter, phase_c, subgate, sel: dict, out: Path) -> dict:
         raise SystemExit(f"BLOCKED_CYCLE_STORYBOARD: {json.dumps(receipt)[:200]}")
     (out / "storyboard_plan.json").write_text(json.dumps(parsed, indent=2) + "\n")
 
-    embedder = subgate.InsightFaceEmbedder()
+    # Identity gate is per-persona: with a discovered face reference sheet the
+    # ArcFace subgate runs (as for Embry); without one (e.g. horus_lupercal has
+    # no face asset) frames render ungated and are marked as such — the cycle
+    # still produces the dream, honestly flagged, rather than failing closed.
+    gate_on = profile.has_identity_gate
+    sheet = profile.reference_sheet
+    embedder = subgate.InsightFaceEmbedder() if gate_on else None
     frames_dir = out / "frames"
     frames_dir.mkdir(exist_ok=True)
     accepted, image_calls = [], 0
@@ -326,27 +323,31 @@ def compose_and_render(adapter, phase_c, subgate, sel: dict, out: Path) -> dict:
         if panel_id in seen_ids:
             raise SystemExit(f"BLOCKED_CYCLE_DUPLICATE_PANEL_ID: {panel_id}")
         seen_ids.add(panel_id)
+        ref_line = (
+            "Reference asset attached as a MANDATORY identity input (ACTUAL IMAGE "
+            f"INPUT — view this file before generating and match {persona_name}'s "
+            f"face to it): {sheet}\n" if gate_on else
+            f"No face reference exists for {persona_name}; render {persona_name} "
+            "consistently across all four panels as the clear foreground subject.\n")
         base = (
             "Create a single cinematic storyboard frame. Real storyboard frame — "
             "not a contact sheet, not a collage, no rendered text.\n"
-            "MANDATORY CHARACTER IDENTITY (HIGHEST PRIORITY): Embry clearly "
-            "visible, large in the foreground, face readable in three-quarter "
-            "view, strongly matched to her reference contact sheet: adult woman "
-            "around 30, warm light-tan complexion, brown hair tied back, "
-            "expressive brown eyes, softly rounded jaw, navy blue top; face "
-            "sharp, well-lit, unoccluded, chest-up.\n"
-            f"{other} appears per the panel action; no identity reference "
-            "exists for this person — render consistently, secondary to Embry.\n"
-            "Reference asset attached as a MANDATORY identity input (ACTUAL "
-            "IMAGE INPUT — view this file before generating and match Embry's "
-            f"face to it): {EMBRY_SHEET}\n"
+            f"MANDATORY CHARACTER IDENTITY (HIGHEST PRIORITY): {persona_name} "
+            "clearly visible, large in the foreground, face readable in "
+            "three-quarter view"
+            + (", strongly matched to the attached reference contact sheet"
+               if gate_on else "")
+            + "; face sharp, well-lit, unoccluded, chest-up.\n"
+            f"{other} appears per the panel action; render consistently, "
+            f"secondary to {persona_name}.\n"
+            + ref_line +
             f"PANEL {panel_id} ({panel.get('time_range','')}): {panel.get('shot','')}\n"
             f"SETTING: {panel.get('setting','')}\nACTION: {panel.get('action','')}\n"
             f"FRAME: {panel.get('start_frame_description','')}\nMOOD: {panel.get('mood','')}\n"
             "STYLE: realistic cinematic storyboard frame, natural light, "
-            "emotionally grounded. NEGATIVE: no missing Embry, no generic "
-            "woman substituted, no back-facing-only Embry, no contact sheet, "
-            "no collage, no text overlays.\n"
+            f"emotionally grounded. NEGATIVE: no missing {persona_name}, no "
+            f"generic substitute, no back-facing-only {persona_name}, no contact "
+            "sheet, no collage, no text overlays.\n"
             "OUTPUT: one 16:9 photorealistic storyboard frame, 1536x864.")
         findings: list[str] = []
         ok = None
@@ -355,26 +356,32 @@ def compose_and_render(adapter, phase_c, subgate, sel: dict, out: Path) -> dict:
             gp = base if attempt == 1 else base + (
                 f"\nSURGICAL REPAIR (attempt {attempt}) — previous render failed "
                 "the face-embedding identity gate: " + "; ".join(findings) +
-                "\nMUST: view the attached Embry contact sheet again and match "
-                "her face exactly; face large, sharp, three-quarter view.")
+                f"\nMUST: view the attached {persona_name} contact sheet again and "
+                "match the face exactly; face large, sharp, three-quarter view.")
             gen = phase_c._generate(gp, png, frames_dir, panel_id, attempt)
             image_calls += 1
             if not gen.get("ok"):
                 findings = [f"generation failed rc={gen.get('returncode')}"]
                 continue
+            if not gate_on:
+                ok = {"panel_id": panel_id, "frame": str(png),
+                      "frame_sha256": hashlib.sha256(png.read_bytes()).hexdigest(),
+                      "attempt": attempt, "best_cosine": None,
+                      "identity_gate": "skipped_no_reference_sheet"}
+                break
             verdict = subgate.run_face_embedding_subgate(
-                frame_path=png, references={"Embry": EMBRY_SHEET},
-                required_entities=["Embry"], embedder=embedder)
+                frame_path=png, references={persona_name: sheet},
+                required_entities=[persona_name], embedder=embedder)
             (frames_dir / f"{panel_id}.attempt_{attempt:02d}_arcface.json").write_text(
                 json.dumps(verdict, indent=2, default=str) + "\n")
             if verdict.get("status") == "PASS":
                 ok = {"panel_id": panel_id, "frame": str(png),
                       "frame_sha256": hashlib.sha256(png.read_bytes()).hexdigest(),
-                      "attempt": attempt,
+                      "attempt": attempt, "identity_gate": "arcface_pass",
                       "best_cosine": (verdict.get("entity_results") or [{}])[0].get("best_cosine")}
                 break
             findings = [str(f) for f in (verdict.get("blocking_findings") or
-                                         ["Embry not reference-verifiable"])]
+                                         [f"{persona_name} not reference-verifiable"])]
         if ok is None:
             raise SystemExit(f"BLOCKED_CYCLE_IDENTITY_GATE: {panel_id}: {findings}")
         accepted.append(ok)
@@ -390,7 +397,8 @@ def compose_and_render(adapter, phase_c, subgate, sel: dict, out: Path) -> dict:
     return {"plan": parsed, "frames": accepted, "image_calls": image_calls,
             "sheet": sheet_png,
             "media_sha": hashlib.sha256(sheet_png.read_bytes()).hexdigest(),
-            "other_person": other}
+            "other_person": other, "persona_name": persona_name,
+            "identity_gate": "arcface" if gate_on else "skipped_no_reference_sheet"}
 
 
 def observe(composite, art: dict, out: Path) -> list:
@@ -438,11 +446,36 @@ def observe(composite, art: dict, out: Path) -> list:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--cycle-id", default=None)
+    parser.add_argument("--persona", default=PERSONA,
+                        help="persona_id to dream for (default embry)")
+    parser.add_argument("--select-only", action="store_true",
+                        help="run only the persona-agnostic selection stage "
+                             "(no paid render / phases); writes selection_receipt")
     args = parser.parse_args()
     cycle_id = args.cycle_id or time.strftime("cycle_%Y%m%dT%H%M%SZ", time.gmtime())
     out = ROOT / "reports/goal_v3/cycles" / cycle_id
     out.mkdir(parents=True, exist_ok=True)
     dream_id = f"auto_{cycle_id}"
+
+    profiles = _load("persona_profiles")
+    persona_id = args.persona
+    # profile is DISCOVERED from the persona's own corpus + filesystem
+    profile = profiles.build_profile(persona_id, fetch_persona_docs(persona_id))
+
+    # 1. select (persona-agnostic). Proof runs (--select-only) must NOT consume
+    # a variation from the ledger.
+    sel = select_cluster(profile, out, persist_ledger=not args.select_only)
+    roots = sorted(sel["docs"])
+    if args.select_only:
+        print(json.dumps({"stage": "select_only", "persona_id": persona_id,
+                          "strategy": profile.strategy,
+                          "has_identity_gate": profile.has_identity_gate,
+                          "cluster": sel["cluster"]["cluster_id"],
+                          "selected": sel["cluster"]["selected"],
+                          "valence_emphasis": sel["cluster"]["valence_emphasis"],
+                          "selection_receipt": str(out / "selection_receipt.v1.json")},
+                         indent=2))
+        return 0
 
     adapter = _load("tau_text_reasoning_adapter")
     phase_c = _load("phase_c_regenerate_storyboard_frames")
@@ -452,10 +485,6 @@ def main() -> int:
     p14 = _load("phase14_tom_validation")
     p15 = _load("phase15_dream_persistence")
     pm = _load("pilot_metrics")
-
-    # 1. select
-    sel = select_cluster(out)
-    roots = sorted(sel["docs"])
     # anchors snapshot (dream-004 node + this cycle's roots) BEFORE the run
     anchor_proc = subprocess.run(
         [sys.executable, str(ROOT / "scripts/pilot_metrics.py"), "snapshot-anchors",
