@@ -530,6 +530,10 @@ if [[ "$1" == "kimi.submit" ]]; then
     exec "$SKILL_DIR/scripts/kimi-submit.sh" "${@:2}"
 fi
 
+if [[ "$1" == "grok.submit" ]]; then
+    exec "$SKILL_DIR/scripts/grok-submit.sh" "${@:2}"
+fi
+
 if [[ "$1" == "claude.submit" ]]; then
     exec python3 "$SKILL_DIR/scripts/claude-submit.py" "${@:2}"
 fi
@@ -637,6 +641,7 @@ if [[ "$1" == "--help" || "$1" == "-h" || -z "$1" ]]; then
     echo "WebGPT Handoff:"
     echo "  surf webgpt.submit --input request.md --output response.md"
     echo "  surf claude.submit --input request.md --output response.md"
+    echo "  surf grok.submit --input request.md --output response.md"
     echo "  surf webgpt.extract --tab-id ID --output response.md"
     echo "  surf webgpt.prompt-preflight --input FILE --json  Block unreadable local-path prompts"
     echo "  surf webgpt.heartbeat read --artifact-dir DIR  Long-run progress JSON"
