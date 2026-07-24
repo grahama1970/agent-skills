@@ -14,7 +14,7 @@
       "intent_tone": "deflect_calm",
       "matrix_status": "failed",
       "render": {
-        "audio_bytes": 301518,
+        "audio_bytes": 251598,
         "audio_on_disk": true,
         "failed_gates": [],
         "ok": true
@@ -36,7 +36,7 @@
       "intent_tone": "careful_concerned",
       "matrix_status": "failed",
       "render": {
-        "audio_bytes": 276558,
+        "audio_bytes": 247758,
         "audio_on_disk": true,
         "failed_gates": [],
         "ok": true
@@ -58,7 +58,7 @@
       "intent_tone": "deflect_calm",
       "matrix_status": "passed",
       "render": {
-        "audio_bytes": 234318,
+        "audio_bytes": 263118,
         "audio_on_disk": true,
         "failed_gates": [],
         "ok": true
@@ -80,7 +80,7 @@
       "intent_tone": "one_at_a_time_interrupt",
       "matrix_status": "failed",
       "render": {
-        "audio_bytes": 153678,
+        "audio_bytes": 157518,
         "audio_on_disk": true,
         "failed_gates": [],
         "ok": true
@@ -88,7 +88,7 @@
       "shuffled_tone": "one_at_a_time_interrupt"
     }
   ],
-  "created_at": "2026-07-24T01:46:53Z",
+  "created_at": "2026-07-24T10:38:42Z",
   "dream_profile": "dream_auto_cycle_20260723T234851Z",
   "live": true,
   "passed": true,
