@@ -480,24 +480,40 @@ def test_chutes_prefixed_handler_is_canonicalized_before_scillm_dispatch(tmp_pat
     assert command[command.index("--provider-hint") + 1] == "chutes"
 
 
-def test_oauth_only_xhigh_handler_fails_preflight_before_scillm_dispatch(tmp_path: Path) -> None:
+def test_xhigh_handler_compiles_to_tau_subagent_transport(tmp_path: Path) -> None:
     request = infer_compile_input(
         "Ask gpt-5.5-xhigh to review this project-agent bundle.",
         repo="local/ask",
-        target="oauth-handler-route",
-        immutable_goal="The requested handler route is classified before any provider dispatch.",
+        target="subagent-handler-route",
+        immutable_goal="The requested handler route is emitted as a Tau subagent node.",
         handlers=["gpt-5.5-xhigh"],
         output_root=tmp_path,
     )
 
     bundle = compile_tau_dag_bundle(request)
 
-    assert bundle["status"] == "NEEDS_INTERVIEW"
-    assert "handler_routes" in bundle["missing_fields"]
-    question = next(item for item in bundle["questions"] if item["field"] == "handler_routes")
-    assert "OAuth/Codex-only" in question["question"]
-    assert "gpt-5.5-xhigh" in question["question"]
-    assert not (Path(bundle["run_dir"]) / "command-specs" / "handler-gpt-5-5-xhigh").exists()
+    assert bundle["status"] == "READY"
+    node = bundle["dag"]["nodes"][0]
+    policy = node["context"]["handler_policy"]
+    assert policy["transport_owner"] == "$tau"
+    assert policy["transport"] == "subagent-runner.codex_exec"
+    assert policy["runtime"] == "local_subagent"
+    assert policy["model_policy"]["provider_transport"] == "$subagent-runner"
+    assert policy["model_policy"]["requested_model"] == "gpt-5.5-xhigh"
+    assert policy["model_policy"]["model"] == "gpt-5.5"
+    assert policy["model_policy"]["reasoning_effort"] == "xhigh"
+    command_spec = json.loads(
+        Path(bundle["command_spec_root"], "handler-gpt-5-5-xhigh", "tau-dispatch-command.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    command = command_spec["command"]
+    assert command[command.index("--handler") + 1] == "gpt-5.5-xhigh"
+    assert command[command.index("--subagent-model") + 1] == "gpt-5.5"
+    assert command[command.index("--subagent-reasoning-effort") + 1] == "xhigh"
+    assert command[command.index("--subagent-requested-model") + 1] == "gpt-5.5-xhigh"
+    assert command_spec["mutates"] is False
+    assert command_spec["timeout_s"] == 1800
 
 
 def test_supported_high_api_handler_still_compiles_to_scillm(tmp_path: Path) -> None:
@@ -520,6 +536,90 @@ def test_supported_high_api_handler_still_compiles_to_scillm(tmp_path: Path) -> 
     )
     command = command_spec["command"]
     assert command[command.index("--handler") + 1] == "gpt-5.5-high"
+
+
+def test_tau_worker_dispatches_xhigh_handler_through_subagent_runner(tmp_path: Path) -> None:
+    request_path = tmp_path / "request.json"
+    request_path.write_text(json.dumps({"request": "What is 2+2?"}) + "\n", encoding="utf-8")
+    artifact_dir = tmp_path / "node-artifacts" / "handler-gpt-5-5-xhigh"
+    fake_runner = tmp_path / "subagent-runner"
+    fake_runner.write_text(
+        """#!/usr/bin/env python3
+import json
+import sys
+from pathlib import Path
+
+if sys.argv[1:2] != ["start"]:
+    raise SystemExit(2)
+spec = json.loads(Path(sys.argv[2]).read_text())
+session = Path(spec["output_dir"]) / "session-1"
+session.mkdir(parents=True, exist_ok=True)
+(session / "status.json").write_text(json.dumps({
+    "status": "completed",
+    "status_reason": "fixture completed",
+}) + "\\n")
+(session / "result.json").write_text(json.dumps({
+    "final_message": "2 + 2 = 4.",
+    "final_message_status": "ok",
+    "duration_seconds": 0.01,
+}) + "\\n")
+(session / "transcript.log").write_text("2 + 2 = 4.\\n")
+print(json.dumps({"artifact_dir": str(session), "status": "starting"}))
+raise SystemExit(0)
+""",
+        encoding="utf-8",
+    )
+    fake_runner.chmod(0o755)
+
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(ASK_ROOT / "scripts" / "tau_roundtable_worker.py"),
+            "--node-id",
+            "handler-gpt-5-5-xhigh",
+            "--handler",
+            "gpt-5.5-xhigh",
+            "--topology",
+            "concurrent",
+            "--request-file",
+            str(request_path),
+            "--artifact-dir",
+            str(artifact_dir),
+            "--surf-run",
+            "/bin/false",
+            "--browser-oracle-run",
+            "/bin/false",
+            "--subagent-runner",
+            str(fake_runner),
+            "--subagent-model",
+            "gpt-5.5",
+            "--subagent-reasoning-effort",
+            "xhigh",
+            "--subagent-requested-model",
+            "gpt-5.5-xhigh",
+            "--timeout",
+            "5",
+            "--stable-polls",
+            "1",
+            "--no-activate",
+        ],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    receipt = json.loads((artifact_dir / "node-receipt.json").read_text(encoding="utf-8"))
+    assert receipt["status"] == "PASS"
+    assert receipt["ok"] is True
+    assert receipt["provider_receipt"]["provider_transport"] == "$subagent-runner"
+    assert receipt["provider_receipt"]["transport"] == "subagent-runner.codex_exec"
+    assert receipt["provider_receipt"]["model"] == "gpt-5.5"
+    assert receipt["provider_receipt"]["requested_model"] == "gpt-5.5-xhigh"
+    meta = json.loads((artifact_dir / "response.meta.json").read_text(encoding="utf-8"))
+    assert meta["transport"] == "subagent-runner.codex_exec"
+    assert meta["reasoning_effort"] == "xhigh"
 
 
 def test_natural_mixed_concurrent_web_and_chutes_prompt_compiles_to_tau_dag(tmp_path: Path) -> None:

@@ -49,13 +49,14 @@ shape or sanity command is needed.
   --handler gpt-5.5 --handler webclaude \
   --topology sequential --execute --json
 
-# OAuth/Codex-only xhigh handler labels fail preflight until a native lane exists.
+# OAuth/Codex subagent handler. This routes through Tau to /subagent-runner,
+# not through SciLLM and not through the mutating codex workspace lane.
 ./run.sh tau-dag "Ask gpt-5.5-xhigh to review this bundle." \
-  --repo local/ask --target oauth-handler-preflight \
-  --immutable-goal "The requested handler route is classified before dispatch." \
+  --repo local/ask --target subagent-handler-route \
+  --immutable-goal "The requested handler route is emitted as a Tau subagent node." \
   --handler gpt-5.5-xhigh --json
 
-# Local Codex CLI workspace lane. This is the supported non-SciLLM Codex handler.
+# Local Codex CLI workspace lane. This is the mutating coder handler.
 ./run.sh tau-dag "Ask codex to make the focused patch, then ask webclaude to review it." \
   --repo local/ask --target codex-webclaude-pipeline \
   --immutable-goal "The Codex workspace diff is produced and reviewed against the acceptance bar." \

@@ -74,6 +74,7 @@ ROUNDTABLE_HANDLERS = {
         "proof_required": "workspace_git_diff",
     },
 }
+SUBAGENT_HANDLER_MODEL_PREFIXES = ("gpt-", "codex-")
 _HANDLER_ALIASES = {
     "chatgpt": "webgpt",
     "gpt": "webgpt",
@@ -224,22 +225,6 @@ def missing_dag_fields(input: TauDagCompileInput) -> list[dict[str, Any]]:
     if not input.target:
         missing.append(_question("target", "Which issue, task, file, or work target should the DAG bind to?"))
     if input.handlers:
-        unsupported_handlers = unsupported_handler_routes(input)
-        if unsupported_handlers:
-            missing.append(
-                _question(
-                    "handler_routes",
-                    (
-                        "These handler route(s) look like OAuth/Codex-only model selectors, not "
-                        f"SciLLM API handlers: {', '.join(unsupported_handlers)}. "
-                        "Ask does not yet have a native OAuth-backed Codex/subagent Tau lane for "
-                        "those labels. Use --handler codex with --handler-workspace codex=/path "
-                        "for the local Codex CLI workspace lane, choose a supported browser "
-                        "handler, or use a SciLLM-compatible API handler such as gpt-5.5-high."
-                    ),
-                    expects="supported_handler_route",
-                )
-            )
         if not input.immutable_goal:
             missing.append(
                 _question(
@@ -317,21 +302,6 @@ def unsupported_model_routes(input: TauDagCompileInput) -> list[str]:
         lower = model.lower().strip()
         if lower.startswith(("webgpt", "$webgpt", "chatgpt", "$chatgpt")):
             unsupported.append(model)
-    return sorted(set(unsupported))
-
-
-def unsupported_handler_routes(input: TauDagCompileInput) -> list[str]:
-    """Return handler labels that must not be silently routed to scillm.chat."""
-
-    unsupported: list[str] = []
-    for index, handler in enumerate(input.handlers):
-        if handler in ROUNDTABLE_HANDLERS:
-            continue
-        if _handler_provider_hint(input, index):
-            continue
-        lower = handler.lower().strip()
-        if lower.endswith("-xhigh"):
-            unsupported.append(handler)
     return sorted(set(unsupported))
 
 
@@ -1386,6 +1356,7 @@ def _write_roundtable_command_spec(
     handler_policy = node_context.get("handler_policy") if isinstance(node_context.get("handler_policy"), dict) else {}
     node_id = str(node["id"])
     handler = str(handler_policy.get("id") or node.get("agent") or node_id)
+    is_subagent_handler = str(handler_policy.get("transport") or "") == "subagent-runner.codex_exec"
     command = [
         sys.executable,
         str(worker_path),
@@ -1415,7 +1386,7 @@ def _write_roundtable_command_spec(
         # codex coder orders carry mandatory finish sequences (wheel build +
         # fixture suite + gate-document extractions + cargo test) that alone
         # take ~20 min; 3000s starved a real repair mid-flight (2026-07-22).
-        "5400" if handler == "codex" else ("900" if handler == "webgpt" else "300"),
+        "5400" if handler == "codex" else ("1500" if is_subagent_handler else ("900" if handler == "webgpt" else "300")),
         "--stable-polls",
         "2",
         "--no-activate",
@@ -1433,6 +1404,20 @@ def _write_roundtable_command_spec(
     model_preference = str(handler_policy.get("model_preference") or "")
     if model_preference:
         command.extend(["--browser-model-preference", model_preference])
+    if str(handler_policy.get("transport") or "") == "subagent-runner.codex_exec":
+        model_policy = handler_policy.get("model_policy") if isinstance(handler_policy.get("model_policy"), dict) else {}
+        command.extend(
+            [
+                "--subagent-runner",
+                str(ASK_SKILL_ROOT.parent / "subagent-runner" / "run.sh"),
+                "--subagent-model",
+                str(model_policy.get("model") or handler_policy.get("model") or handler),
+                "--subagent-reasoning-effort",
+                str(model_policy.get("reasoning_effort") or handler_policy.get("reasoning_effort") or "high"),
+                "--subagent-requested-model",
+                str(model_policy.get("requested_model") or handler_policy.get("requested_model") or handler),
+            ]
+        )
     if handler == "codex":
         workspace = _handler_workspace(input, handler)
         if not workspace:
@@ -1445,13 +1430,13 @@ def _write_roundtable_command_spec(
     payload = {
         "command": command,
         "cwd": str(run_dir),
-        "timeout_s": 6000 if handler == "codex" else (1200 if handler == "webgpt" else 420),
+        "timeout_s": 6000 if handler == "codex" else (1800 if is_subagent_handler else (1200 if handler == "webgpt" else 420)),
         "requires_network": node_id != "join",
         "mutates": handler == "codex",
         "requires_clean_worktree": False,
         "compile_only": False,
         "runtime_note": (
-            "This command dispatches a live Tau roundtable adapter node through Surf/browser-oracle."
+            "This command dispatches a live Tau roundtable adapter node through the handler-neutral transport."
         ),
     }
     spec_path = root / node_id / "tau-dispatch-command.json"
@@ -1529,6 +1514,22 @@ def _handler_policy(handler: str, *, provider_hint: str = "", workflow_mode: str
                 "Competition mode defaults the webclaude browser seat to Claude Opus 5 High."
             )
         return policy
+    if _is_subagent_handler(handler, provider_hint):
+        model_policy = _subagent_model_policy(handler)
+        return {
+            "id": handler,
+            "transport_owner": "$tau",
+            "transport": "subagent-runner.codex_exec",
+            "runtime": "local_subagent",
+            "model": model_policy["model"],
+            "requested_model": model_policy["requested_model"],
+            "reasoning_effort": model_policy["reasoning_effort"],
+            "provider_hint": provider_hint,
+            "model_policy": model_policy,
+            "proof_required": "subagent_runner_result_receipt",
+            "execution_owner": "$tau",
+            "receipt_schema": "ask.tau_dag_handler_receipt.v1",
+        }
     return {
         "id": handler,
         "transport_owner": "$tau",
@@ -1540,6 +1541,32 @@ def _handler_policy(handler: str, *, provider_hint: str = "", workflow_mode: str
         "proof_required": "scillm_provider_receipt",
         "execution_owner": "$tau",
         "receipt_schema": "ask.tau_dag_handler_receipt.v1",
+    }
+
+
+def _is_subagent_handler(handler: str, provider_hint: str = "") -> bool:
+    if provider_hint:
+        return False
+    lowered = handler.strip().lower()
+    return lowered.endswith("-xhigh") and lowered.startswith(SUBAGENT_HANDLER_MODEL_PREFIXES)
+
+
+def _subagent_model_policy(handler: str) -> dict[str, str]:
+    requested = handler.strip()
+    lowered = requested.lower()
+    reasoning_effort = "xhigh" if lowered.endswith("-xhigh") else "high"
+    model = requested[: -(len(reasoning_effort) + 1)] if lowered.endswith(f"-{reasoning_effort}") else requested
+    return {
+        "provider": "openai_oauth",
+        "requested_model": requested,
+        "model": model,
+        "auth": "codex_oauth",
+        "reasoning_effort": reasoning_effort,
+        "requested_reasoning_effort": reasoning_effort,
+        "service": "codex_cli_subagent",
+        "base_url": "local_codex_cli",
+        "execution_owner": "$tau",
+        "provider_transport": "$subagent-runner",
     }
 
 

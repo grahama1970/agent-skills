@@ -77,6 +77,10 @@ def main() -> int:
     parser.add_argument("--evidence", action="append", default=[])
     parser.add_argument("--codex-workspace", default="")
     parser.add_argument("--browser-model-preference", default="")
+    parser.add_argument("--subagent-runner", default="")
+    parser.add_argument("--subagent-model", default="")
+    parser.add_argument("--subagent-reasoning-effort", default="")
+    parser.add_argument("--subagent-requested-model", default="")
     args = parser.parse_args()
 
     start = _read_stdin_handoff()
@@ -137,7 +141,17 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
         ]
         if prior_failures:
             raise RuntimeError("prior_handler_receipts_not_ready: " + "; ".join(prior_failures))
-        if handler == "codex":
+        if _is_subagent_handler_args(args):
+            response_text, submit_meta, subagent_commands = _run_subagent_handler(
+                args,
+                prompt_path=prompt_path,
+                response_path=response_path,
+                raw_path=raw_path,
+                meta_path=meta_path,
+                artifact_dir=artifact_dir,
+            )
+            commands.extend(subagent_commands)
+        elif handler == "codex":
             response_text, submit_meta, codex_commands = _run_codex_handler(
                 args,
                 prompt_path=prompt_path,
@@ -355,10 +369,10 @@ def _run_handler(args: argparse.Namespace, start: dict[str, Any], artifact_dir: 
             "provider_live": provider_live,
             "route": "tau_roundtable_handler_adapter",
             "execution_owner": "$tau",
-            "provider_transport": "$surf" if handler in HANDLER_SUBMIT_COMMANDS else "$scillm",
+            "provider_transport": _provider_transport_for_args(args, handler),
             "handler": handler,
             "provider_hint": str(getattr(args, "provider_hint", "") or "") or None,
-            "transport": HANDLER_SUBMIT_COMMANDS.get(handler, "scillm.chat"),
+            "transport": _transport_for_args(args, handler),
             "model": submit_meta.get("model") if handler not in HANDLER_SUBMIT_COMMANDS else None,
             "requested_model": submit_meta.get("requested_handler") if handler not in HANDLER_SUBMIT_COMMANDS else None,
             "browser_model_preference": str(getattr(args, "browser_model_preference", "") or "") or None,
@@ -2087,6 +2101,177 @@ def _kill_process_group(pid: int) -> None:
             os.kill(pid, signal.SIGKILL)
         except ProcessLookupError:
             return
+
+
+def _is_subagent_handler_args(args: argparse.Namespace) -> bool:
+    return bool(str(getattr(args, "subagent_model", "") or "").strip())
+
+
+def _provider_transport_for_args(args: argparse.Namespace, handler: str) -> str:
+    if handler in HANDLER_SUBMIT_COMMANDS:
+        return "$surf"
+    if _is_subagent_handler_args(args):
+        return "$subagent-runner"
+    return "$scillm"
+
+
+def _transport_for_args(args: argparse.Namespace, handler: str) -> str:
+    if handler in HANDLER_SUBMIT_COMMANDS:
+        return HANDLER_SUBMIT_COMMANDS[handler]
+    if _is_subagent_handler_args(args):
+        return "subagent-runner.codex_exec"
+    return "scillm.chat"
+
+
+def _run_subagent_handler(
+    args: argparse.Namespace,
+    *,
+    prompt_path: Path,
+    response_path: Path,
+    raw_path: Path,
+    meta_path: Path,
+    artifact_dir: Path,
+) -> tuple[str, dict[str, Any], list[dict[str, Any]]]:
+    """Run a non-mutating Tau subagent handler through /subagent-runner."""
+
+    runner = Path(str(getattr(args, "subagent_runner", "") or "")).expanduser()
+    if not runner.is_file():
+        raise RuntimeError(f"subagent-runner not found: {runner}")
+    model = str(getattr(args, "subagent_model", "") or args.handler).strip()
+    requested_model = str(getattr(args, "subagent_requested_model", "") or args.handler).strip()
+    reasoning_effort = str(getattr(args, "subagent_reasoning_effort", "") or "high").strip()
+    subagent_root = artifact_dir / "subagent-runner"
+    subagent_root.mkdir(parents=True, exist_ok=True)
+    answer_file = artifact_dir / "subagent-answer.txt"
+    spec_file = artifact_dir / "subagent-spec.json"
+    prompt_text = prompt_path.read_text(encoding="utf-8")
+    answer_file.write_text("", encoding="utf-8")
+    task_id = f"ask-tau-{_safe_fragment(args.node_id)}-{int(time.time())}"
+    command = [
+        "bash",
+        "-lc",
+        (
+            'codex exec --model "$ASK_TAU_SUBAGENT_MODEL" '
+            '-c "model_reasoning_effort=\\"$ASK_TAU_SUBAGENT_REASONING\\"" '
+            '--sandbox read-only '
+            '--skip-git-repo-check '
+            '--cd "$ASK_TAU_SUBAGENT_CWD" '
+            '--output-last-message "$ASK_TAU_SUBAGENT_ANSWER_FILE" '
+            '--color never '
+            '- < "$ASK_TAU_SUBAGENT_PROMPT_FILE"'
+        ),
+    ]
+    spec = {
+        "task_id": task_id,
+        "title": f"/ask Tau subagent handler {args.node_id}",
+        "prompt": " ",
+        "backend": "codex",
+        "command": command,
+        "cwd": str(Path.cwd()),
+        "output_dir": str(subagent_root),
+        "timeout_seconds": int(args.timeout),
+        "idle_timeout_seconds": int(max(30, min(args.timeout, 300))),
+        "env": {
+            "ASK_TAU_SUBAGENT_MODEL": model,
+            "ASK_TAU_SUBAGENT_REQUESTED_MODEL": requested_model,
+            "ASK_TAU_SUBAGENT_REASONING": reasoning_effort,
+            "ASK_TAU_SUBAGENT_CWD": str(Path.cwd()),
+            "ASK_TAU_SUBAGENT_ANSWER_FILE": str(answer_file),
+            "ASK_TAU_SUBAGENT_PROMPT_FILE": str(prompt_path),
+            "SUBAGENT_RUNNER_FINAL_MESSAGE_FILE": str(answer_file),
+            "SUBAGENT_RUNNER_IDLE_MODE": "heartbeat",
+            "SUBAGENT_RUNNER_HEARTBEAT_INTERVAL": "30",
+        },
+        "tags": ["ask", "tau", "roundtable", "subagent-runner", model, reasoning_effort],
+    }
+    spec_file.write_text(json.dumps(spec, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+    started = _run_cmd([str(runner), "start", str(spec_file)], cwd=runner.parent, timeout=30)
+    commands: list[dict[str, Any]] = [started.summary()]
+    if started.returncode != 0:
+        raise RuntimeError(f"subagent-runner start failed: {started.stderr or started.stdout}")
+    start_payload = _parse_json_object(started.stdout)
+    session_dir = Path(str(start_payload.get("artifact_dir") or ""))
+    if not session_dir.is_dir():
+        raise RuntimeError("subagent-runner did not return a readable artifact_dir")
+    state = _wait_for_subagent_session(session_dir, timeout=int(args.timeout))
+    result = _read_subagent_result(session_dir)
+    if str(state.get("status") or "") != "completed":
+        transcript = _read_text(session_dir / "transcript.log")[-2000:]
+        raise RuntimeError(
+            f"subagent-runner session {state.get('status')}: {state.get('status_reason', '')}\n{transcript}"
+        )
+
+    response = str(result.get("final_message") or "").strip()
+    if not response:
+        response = answer_file.read_text(encoding="utf-8", errors="replace").strip()
+    if not response:
+        response = _read_text(session_dir / "transcript.log").strip()
+    if not response:
+        raise RuntimeError("subagent-runner completed without answer output")
+
+    raw_path.write_text(response, encoding="utf-8")
+    response_path.write_text(response, encoding="utf-8")
+    meta = {
+        "schema": "ask.subagent_handler_meta.v1",
+        "handler": args.handler,
+        "requested_handler": requested_model,
+        "requested_model": requested_model,
+        "model": model,
+        "reasoning_effort": reasoning_effort,
+        "requested_reasoning_effort": reasoning_effort,
+        "transport": "subagent-runner.codex_exec",
+        "provider_transport": "$subagent-runner",
+        "subagent_runner": str(runner),
+        "session_dir": str(session_dir),
+        "spec_path": str(spec_file),
+        "answer_file": str(answer_file),
+        "status": state.get("status"),
+        "duration_seconds": result.get("duration_seconds"),
+        "finished_at": _now(),
+    }
+    meta_path.write_text(json.dumps(meta, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return response, meta, commands
+
+
+def _wait_for_subagent_session(session_dir: Path, *, timeout: int) -> dict[str, Any]:
+    status_path = session_dir / "status.json"
+    deadline = time.monotonic() + timeout
+    last_state: dict[str, Any] = {}
+    terminal = {"completed", "failed", "cancelled", "timed_out", "stalled"}
+    while time.monotonic() < deadline:
+        if status_path.is_file():
+            try:
+                state = _read_json(status_path)
+            except (OSError, json.JSONDecodeError, RuntimeError):
+                time.sleep(0.2)
+                continue
+            last_state = state
+            if str(state.get("status") or "") in terminal:
+                return state
+        time.sleep(0.5)
+    raise RuntimeError(f"subagent-runner session timeout after {timeout}s: {last_state}")
+
+
+def _read_subagent_result(session_dir: Path) -> dict[str, Any]:
+    result_path = session_dir / "result.json"
+    if not result_path.is_file():
+        return {}
+    try:
+        return _read_json(result_path)
+    except (OSError, json.JSONDecodeError, RuntimeError):
+        return {}
+
+
+def _read_text(path: Path) -> str:
+    if not path.is_file():
+        return ""
+    return path.read_text(encoding="utf-8", errors="replace")
+
+
+def _safe_fragment(value: str) -> str:
+    cleaned = re.sub(r"[^a-zA-Z0-9_.-]+", "-", value.strip()).strip("-")
+    return cleaned[:64] or "handler"
 
 
 def _run_codex_handler(

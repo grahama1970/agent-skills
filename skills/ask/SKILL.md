@@ -192,22 +192,23 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
   `webgemini`, and `webgrok`. Aliases normalize as `gpt -> webgpt`,
   `claude -> webclaude`, `kimi -> webkimi`, `gemini -> webgemini`, and
   `grok -> webgrok`.
-- **Supported API handlers**: any explicit non-browser handler label is treated
-  as a `$scillm` model name and emitted as a Tau-owned `scillm.chat` adapter
-  node. `$ask` does not decide provider internals. For Chutes exact models,
-  project agents may write `chutes <provider/model>: <prompt>`; `$ask`
-  canonicalizes that to one API handler with `provider_hint=chutes` before Tau
-  writes the DAG. Do not pass the transport prefix as the model id: use
-  `deepseek-ai/DeepSeek-V3.2-TEE`, not `chutes/deepseek-ai/DeepSeek-V3.2-TEE`.
-  OAuth/Codex-only selector labels such as `gpt-5.5-xhigh` are not silently
-  downrouted through `scillm.chat` when used as handlers. Until a native
-  OAuth-backed Codex/subagent Tau lane exists for those labels, `$ask` fails
-  preflight with `NEEDS_INTERVIEW`. Use `--handler codex --handler-workspace
-  codex=/path/to/worktree` for the local Codex CLI workspace lane, a supported
-  browser handler such as `webgpt`/`webclaude`, or a SciLLM-compatible API
-  handler such as `gpt-5.5-high`.
+- **Supported local/API handlers**: explicit non-browser handler labels are
+  routed by Tau according to their transport. SciLLM-compatible model labels,
+  such as `gpt-5.5-high`, emit Tau-owned `scillm.chat` adapter nodes.
+  OAuth/Codex subagent selectors such as `gpt-5.5-xhigh` emit Tau-owned
+  `subagent-runner.codex_exec` nodes and preserve `xhigh` as the requested
+  reasoning effort. For Chutes exact models, project agents may write
+  `chutes <provider/model>: <prompt>`; `$ask` canonicalizes that to one API
+  handler with `provider_hint=chutes` before Tau writes the DAG. Do not pass
+  the transport prefix as the model id: use `deepseek-ai/DeepSeek-V3.2-TEE`,
+  not `chutes/deepseek-ai/DeepSeek-V3.2-TEE`.
   Mixed web/API panels may use natural concurrent syntax:
   `concurrently webgpt, webclaude, webkimi and chutes deepseek-ai/DeepSeek-V3.2-TEE <prompt>`.
+- **Subagent versus Codex workspace lane**: `--handler gpt-5.5-xhigh` is an
+  answer/review subagent call through Tau and `/subagent-runner`; it is
+  non-mutating and does not require a workspace binding. `--handler codex`
+  is the local Codex CLI coder lane; it requires `--handler-workspace
+  codex=/path/to/worktree` and must produce a real git diff.
 - **Browser transport**: browser handlers execute through `$surf` and
   `$browser-oracle` from Tau command specs. Use `--handler-project
   handler=project` when the browser-oracle project differs from the handler
@@ -251,11 +252,12 @@ Canonical compile command:
 
 Live execution adds `--execute` and uses the same Tau dispatch path as
 roundtable. Browser handlers run through `$surf` and `$browser-oracle`; API
-handler names route through `$tau` to `$scillm`. All-browser compete runs run a
-bounded browser transport gate before Tau launch; if Surf/native-host or
-browser-oracle bindings are unavailable, Ask returns `BLOCKED`/`NEEDS_ATTENTION`
-style receipts with terminal candidate and join statuses instead of starting a
-long Tau run that leaves handlers `RUNNING` and join `PENDING`.
+handler names route through `$tau` to either `$scillm` or `/subagent-runner`
+depending on the handler transport. All-browser compete runs run a bounded
+browser transport gate before Tau launch; if Surf/native-host or browser-oracle
+bindings are unavailable, Ask returns `BLOCKED`/`NEEDS_ATTENTION` style
+receipts with terminal candidate and join statuses instead of starting a long
+Tau run that leaves handlers `RUNNING` and join `PENDING`.
 
 Project-agent responsibilities after a compete run:
 
