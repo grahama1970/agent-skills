@@ -73,14 +73,16 @@ def transcript_goal_claim(text: str, *, project_root: Path | None = None) -> dic
 
 
 def goal_allows_stop(text: str, *, goal_found: bool, has_early_markers: bool, project_root: Path | None = None) -> bool:
-    if has_early_markers:
-        return False
     if exhausted_blocker_claim(text, project_root=project_root):
         return True
     claim = transcript_goal_claim(text, project_root=project_root)
+    if claim["state"] == "achieved":
+        return True
+    if has_early_markers:
+        return False
     if not goal_found and claim["state"] == "none":
         return True
-    return claim["state"] == "achieved"
+    return False
 
 
 def exhausted_blocker_claim(text: str, *, project_root: Path | None = None) -> bool:

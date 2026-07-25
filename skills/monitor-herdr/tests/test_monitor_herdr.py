@@ -925,6 +925,40 @@ def test_existing_project_receipt_allows_achieved_stop(tmp_path: Path) -> None:
     assert monitor.transcript_goal_claim(text, project_root=tmp_path)["state"] == "achieved"
 
 
+def test_achieved_receipt_suppresses_soft_remaining_work_marker(tmp_path: Path) -> None:
+    receipt = tmp_path / ".codex" / "ui-verification" / "latest.json"
+    receipt.parent.mkdir(parents=True)
+    receipt.write_text('{"ok":true}', encoding="utf-8")
+    (tmp_path / "GOAL.md").write_text("Finish feature.", encoding="utf-8")
+    pane = {
+        "agent": "codex",
+        "agent_status": "done",
+        "cwd": str(tmp_path),
+        "pane_id": "w11:pS",
+    }
+    text = f"""
+    Status/Phase: Stop-condition proof completed.
+    Immutable Goal: ACHIEVED_WITH_RECEIPT:{receipt}
+    Evidence: {receipt}; command=verify-ui-cdp
+    Next: STOP_ALLOWED because the immutable goal has a fresh receipt.
+    What remains outside the immutable goal is a future optional audit.
+    Disposition: DONE_WITH_RECEIPT
+    """
+
+    candidate = monitor.classify_pane(
+        FakeHerdr(text),
+        pane,
+        cwd_prefix=str(tmp_path.parent),
+        include_agents={"codex"},
+        stopped_statuses={"done"},
+        only_obvious_early_stops=False,
+    )
+
+    assert candidate is not None
+    assert candidate["action"] == "observe_only"
+    assert candidate["classification"] == "goal_stop_allowed"
+
+
 def test_existing_receipt_without_evidence_line_does_not_allow_stop(tmp_path: Path) -> None:
     receipt = tmp_path / ".codex" / "ui-verification" / "latest.json"
     receipt.parent.mkdir(parents=True)
@@ -1152,6 +1186,29 @@ def test_completion_between_selection_and_send_sends_nothing_with_valid_receipt(
     client = FakeCompletionBeforeSendHerdr(
         f"Immutable Goal: ACHIEVED_WITH_RECEIPT:{receipt}\n"
         f"Evidence: receipt={receipt}; command=verify-ui-cdp\n"
+        "Disposition: DONE_WITH_RECEIPT\n"
+    )
+    original_wait = monitor.wait_for_agent_idle
+    monitor.wait_for_agent_idle = lambda pane_id, socket_path=None: {"ok": True, "exit_code": 0}
+    try:
+        result = monitor.send_prompt(client, "w11:p8", "RESTART CHECK FROM monitor-herdr", project_root=tmp_path)
+    finally:
+        monitor.wait_for_agent_idle = original_wait
+
+    assert result["skipped"] is True
+    assert result["skip_reason"] == "pre_submit_stop_allowed"
+    assert result["input_modified"] is False
+    assert client.enter_count == 0
+
+
+def test_completion_before_send_with_soft_remaining_marker_sends_nothing(tmp_path: Path) -> None:
+    receipt = tmp_path / "receipt.json"
+    receipt.write_text("{}", encoding="utf-8")
+    client = FakeCompletionBeforeSendHerdr(
+        f"Immutable Goal: ACHIEVED_WITH_RECEIPT:{receipt}\n"
+        f"Evidence: receipt={receipt}; command=verify-ui-cdp\n"
+        "Next: STOP_ALLOWED because the immutable goal has a fresh receipt.\n"
+        "What remains outside the immutable goal is a future optional audit.\n"
         "Disposition: DONE_WITH_RECEIPT\n"
     )
     original_wait = monitor.wait_for_agent_idle
