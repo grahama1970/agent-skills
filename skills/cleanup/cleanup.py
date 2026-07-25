@@ -104,7 +104,7 @@ def log_warning(message: str) -> None:
 
 
 def log_info(message: str) -> None:
-    print(f"[INFO] {message}")
+    print(f"[INFO] {message}", file=sys.stderr)
 
 
 def run_command(cmd: List[str], check: bool = True) -> Tuple[bool, str]:
