@@ -25,6 +25,11 @@ export interface VoiceAuditionRequest {
   deliveryStage?: unknown
   pauseBeforeMs?: unknown
   pauseAfterMs?: unknown
+  // Weighted-emotion inputs from persona-dream arc_state (operator model:
+  // verdict -> emotion; intensity is a WEIGHT on the emotion). Optional; when
+  // absent, defaults are derived from `tone`.
+  intensity?: unknown
+  valence?: unknown
 }
 
 export interface VoiceAuditionPort {

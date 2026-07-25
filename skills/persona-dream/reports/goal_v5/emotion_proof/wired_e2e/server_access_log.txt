@@ -1,0 +1,6 @@
+INFO:     172.27.0.1:43290 - "POST /synthesize-emotion HTTP/1.1" 200 OK
+INFO:     172.27.0.1:58978 - "POST /synthesize-emotion HTTP/1.1" 200 OK
+INFO:     172.27.0.1:53856 - "POST /synthesize-emotion HTTP/1.1" 200 OK
+INFO:     172.27.0.1:57946 - "POST /synthesize-emotion HTTP/1.1" 200 OK
+INFO:     172.27.0.1:57946 - "POST /synthesize-emotion HTTP/1.1" 200 OK
+INFO:     172.27.0.1:57946 - "POST /synthesize-emotion HTTP/1.1" 200 OK
