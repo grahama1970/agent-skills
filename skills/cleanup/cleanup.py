@@ -26,8 +26,11 @@ from pathlib import Path
 from datetime import datetime
 from typing import Any, List, Dict, Set, Tuple, Optional
 
+from dotenv import load_dotenv
 import typer
 
+
+load_dotenv(override=False)
 
 # ── Archive destination (12TB storage) ──────────────────────────────────────
 ARCHIVE_ROOT = Path(os.getenv(
@@ -210,6 +213,14 @@ def _is_source_or_project_path(path: str) -> bool:
     }
 
 
+def _is_source_dependency_candidate(path: str) -> bool:
+    """Return True for untracked files that can satisfy tracked runtime imports."""
+    suffix = Path(path).suffix.lower()
+    if suffix not in {".py", ".pyi", ".toml", ".yaml", ".yml", ".json", ".sh"}:
+        return False
+    return _top_path(path) in {"src", "tests", "scripts", "configs", "docker", ".github"}
+
+
 def classify_worktree_entry(entry: Dict[str, str]) -> Dict[str, Any]:
     """Classify one dirty worktree entry for cleanup/worktree triage.
 
@@ -246,6 +257,11 @@ def classify_worktree_entry(entry: Dict[str, str]) -> Dict[str, Any]:
         action = "review_before_commit_or_restore"
         risk = "high"
         reason = "tracked deletion must not be accepted without owner intent"
+    elif not tracked and _is_source_dependency_candidate(path):
+        bucket = "project_dependency_review"
+        action = "do_not_quarantine_run_readiness_then_commit_or_leave"
+        risk = "high"
+        reason = "untracked source/config can satisfy tracked imports or runtime contracts"
     elif _is_root_file(path) and path not in EXPECTED_ROOT_FILES:
         bucket = "root_stray_review"
         action = "archive_or_move_before_commit"
@@ -325,7 +341,9 @@ def generate_worktree_audit_markdown(audit: Dict[str, Any]) -> str:
     lines.append(
         "Only commit entries that form a coherent reviewed change set. Do not "
         "auto-stage `project_work_review`, `tracked_deletion_review`, or "
-        "`agent_runtime_state` entries."
+        "`agent_runtime_state` entries. Do not quarantine "
+        "`project_dependency_review` entries until package import and project "
+        "readiness checks have passed before and after the move."
     )
     lines.append("")
     return "\n".join(lines)

@@ -1,0 +1,3 @@
+version: 1
+webgpt:
+  default: skill-best-practices-project-state

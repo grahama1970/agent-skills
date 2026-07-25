@@ -29,6 +29,7 @@ htmlcov/
 
 # Agent artifacts (created by skills/webgpt, skills/ask, etc.)
 .artifacts/
+.cleanup/
 .ask/
 .ask_artifacts/
 .webgpt/

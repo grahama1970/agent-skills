@@ -1,0 +1,4 @@
+interface:
+  display_name: "Project State Best Practices"
+  short_description: "Receipt-backed PROJECT_STATE.md workflow"
+  default_prompt: "Create a receipt-backed PROJECT_STATE.md using local evidence, project knowledge, research, and external review."

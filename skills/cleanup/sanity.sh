@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -eo pipefail
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+export UV_PROJECT_ENVIRONMENT="${UV_PROJECT_ENVIRONMENT:-/tmp/cleanup-skill-venv}"
+export PYTHONPYCACHEPREFIX="${PYTHONPYCACHEPREFIX:-/tmp/cleanup-skill-pycache}"
 echo "=== Cleanup Skill Sanity ==="
 [[ -f "$SCRIPT_DIR/SKILL.md" ]] && echo "  [PASS] SKILL.md exists" || { echo "  [FAIL] SKILL.md missing"; exit 1; }
 [[ -f "$SCRIPT_DIR/cleanup.py" ]] && echo "  [PASS] cleanup.py exists" || { echo "  [FAIL] cleanup.py missing"; exit 1; }

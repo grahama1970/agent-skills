@@ -225,11 +225,14 @@ class TestCleanup:
 
         artifact = cleanup.classify_worktree_entry({"xy": "??", "path": "artifacts/proof.json", "raw": "?? artifacts/proof.json"})
         source = cleanup.classify_worktree_entry({"xy": " M", "path": "src/app.py", "raw": " M src/app.py"})
+        untracked_source = cleanup.classify_worktree_entry({"xy": "??", "path": "src/pkg/new_runtime.py", "raw": "?? src/pkg/new_runtime.py"})
         deletion = cleanup.classify_worktree_entry({"xy": " D", "path": "docs/old.md", "raw": " D docs/old.md"})
         agent_state = cleanup.classify_worktree_entry({"xy": "??", "path": ".codex/log.json", "raw": "?? .codex/log.json"})
 
         self.assert_equal(artifact["bucket"], "generated_or_archive", "Artifacts should be archive bucket")
         self.assert_equal(source["bucket"], "project_work_review", "Source edits require project work review")
+        self.assert_equal(untracked_source["bucket"], "project_dependency_review", "Untracked source requires dependency review")
+        self.assert_equal(untracked_source["risk"], "high", "Untracked source is high risk until readiness proves otherwise")
         self.assert_equal(deletion["bucket"], "tracked_deletion_review", "Tracked deletions require review")
         self.assert_equal(agent_state["bucket"], "agent_runtime_state", "Agent state requires review/ignore")
     
