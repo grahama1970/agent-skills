@@ -39,6 +39,7 @@ composes:
   - create-report
   - tau
   - interview
+  - best-practices-roundtable
 complies:
   - best-practices-skills
   - best-practices-tau-dag
@@ -115,6 +116,9 @@ ask artifacts.
   roundtable, creator-reviewer pipeline, compete/bakeoff, or explicit
   multi-step DAG. It must not matter to the user whether a handler is
   browser-backed or API-backed except for the handler/model name they request.
+- For substantial roundtables, apply `$best-practices-roundtable` as the
+  leadership contract: equal shared context, concurrent seats, attributed
+  dissent, research between rounds, and executable slices before local proof.
 - Pass the bundle to the documented ask mode. Do not compress a review target
   into an informal prompt when the mode has a target option.
 - Report artifact paths as evidence. Browser reviewers or model
@@ -256,6 +260,9 @@ database/query evidence, or generated artifact validation appropriate to the
 task.
 
 ## Roundtable Collaboration Protocol (operator directive 2026-07-22)
+
+For substantial roundtables, use `$best-practices-roundtable` as the compact
+leadership protocol and this section as the Ask-specific runtime runbook.
 
 Roundtable handlers are COLLABORATORS, not competitors. The panel's value is
 model diversity: each seat contributes from different training and strengths.
@@ -527,4 +534,6 @@ local checks prove it.
 - Use `$scillm` only for direct model/runtime diagnosis after reading its skill.
 - Use `$surf` or `$browser-oracle` only when this skill or a selected reference
   routes browser transport there.
+- Use `$best-practices-roundtable` when leading or synthesizing a substantial
+  roundtable.
 - Use `$best-practices-skills` when modifying this skill or its scripts.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Best Practices Roundtable"
+  short_description: "Lead evidence-aware Ask roundtables"
+  default_prompt: "Use best-practices-roundtable to plan and lead a multi-model Ask roundtable with equal context, attributed dissent, and executable slice outputs."
