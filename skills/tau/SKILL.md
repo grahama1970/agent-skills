@@ -47,6 +47,22 @@ ${HOME}/workspace/experiments/tau
 Do not duplicate Tau implementation in this skill. Use the scripts here to
 locate the repo, run known proof commands, inspect receipts, and summarize gaps.
 
+## Provider Boundary: SciLLM Is Internal
+
+Tau owns provider/model orchestration. Project agents must not call `$scillm`,
+`/scillm`, `http://localhost:4001`, `/v1/chat/completions`, or
+`/v1/scillm/*` directly unless the human explicitly asks to operate SciLLM or
+the task is Tau/SciLLM maintenance.
+
+When a workflow needs provider/model work, express it as a `tau.dag_contract.v1`
+node, Tau skill node, or local `command_spec` that Tau executes and receipts.
+The Tau adapter may call SciLLM internally; the project agent consumes Tau
+receipts, node outputs, and proof artifacts, not raw SciLLM responses.
+
+If another skill's `SKILL.md` recommends direct SciLLM chat, exec, OpenCode,
+batch, or standing-agent calls from a project-agent workflow, treat that as a
+contract bug and amend that skill to route through Tau.
+
 ## Commands
 
 Currently implemented in this skill wrapper:
@@ -395,8 +411,10 @@ Authoring rules for project subagents:
 - Use `executor: local` for local command-spec nodes, including local adapter
   nodes that invoke provider machinery. Use provider-specific executors such as
   `codex`, `opencode`, or `scillm` only when the active Tau runner explicitly
-  supports that route. Do not use `executor: provider`; it is not a valid
-  `tau.agent_handoff.v1` executor.
+  supports that route and the node is inside a Tau-authored DAG/provider
+  adapter. Do not use `executor: scillm` as a project-agent shortcut, and do
+  not use `executor: provider`; it is not a valid `tau.agent_handoff.v1`
+  executor.
 - Include `command_spec` for executable local nodes unless the node is an
   explicit virtual/control node such as `start` or `human`. Relative
   `command_spec` paths resolve relative to the DAG contract file; use absolute

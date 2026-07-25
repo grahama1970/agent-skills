@@ -60,6 +60,20 @@ taxonomy:
 
 Build structured **Claims-Arguments-Evidence (CAE)** trees. This is an **agent-driven** skill — you (the agent) orchestrate existing skills, reason about results, and make all judgment calls. The Python code is a thin data collector.
 
+## PROVIDER BOUNDARY
+
+Do not call `$scillm`, `/scillm`, `http://localhost:4001`,
+`/v1/chat/completions`, or `/v1/scillm/*` directly from a
+`/create-evidence-case` project-agent workflow. Provider/model execution is
+owned by Tau. If model rendering, batch review, shadow collection, or provider
+delegation is required, express it as a Tau DAG contract, Tau skill node, or
+the owning skill's Tau-mediated runtime and consume the resulting receipts.
+
+Direct SciLLM use is allowed only for Tau/SciLLM maintenance or when the human
+explicitly asks to operate SciLLM itself. A CAE verdict must remain grounded in
+Memory recall, `/extract-entities` proof packets, same-technique checks, and
+deterministic gates; raw model output is never evidence.
+
 ## INPUT/OUTPUT MODEL (v4.2)
 
 **Input**: Any control from `sparta_controls` (SPARTA, NIST, CWE, CAPEC) OR a raw question.
@@ -341,7 +355,11 @@ Matching builds the edges; formal proofs prove they're functionally valid.
 
 **Live mode**: YOU are the engine. Call `/memory recall` for data, do decomposition + entity analysis + same-technique check + verdict in your reasoning. No `/assistant classify` calls needed — you ARE the classifier. `/lean4-prove` Docker compilation is near-instant.
 
-**Batch mode**: `EvidenceCaseRunner` in `runner.py` proxies for you using `/assistant` classifiers. Use `/scillm` shadow for nightly training data collection (latency acceptable). Run via `run_question_bank.py`.
+**Batch mode**: `EvidenceCaseRunner` in `runner.py` proxies for you using
+owned data collectors and deterministic gates. For nightly training-data
+collection or model/provider shadowing, route the work through Tau and preserve
+Tau receipts; do not call `/scillm` directly from this skill workflow. Run via
+`run_question_bank.py`.
 
 ## CORE PRINCIPLE
 
@@ -620,6 +638,8 @@ from runner import (
 - **Do NOT write deterministic if/else for coverage** — language is too variable, YOU decide
 - **Do NOT assume one QRA matches the full question** — decompose and query per component
 - **Do NOT skip the same-technique check** — this is the core criterion
+- **Do NOT call `/scillm` directly** — provider/model work belongs behind Tau
+  receipts unless the human explicitly asks for SciLLM maintenance
 
 See [EXAMPLES.md](references/EXAMPLES.md) for worked examples of SATISFIED and INCONCLUSIVE verdicts.
 

@@ -1,10 +1,12 @@
 ---
 name: scillm
 description: >
-  Universal LLM proxy on localhost:4001. Surfaces: chat/batch completions,
-  scillm exec, OpenCode serve (coding delegate), OpenCode transport (DAG/SSE),
-  standing Codex agents. Chutes, Gemini, Claude/Codex OAuth, OpenCode Go, Ollama.
-  Auto-routes by model name. ZIP/PDF, JSON repair, batch pools.
+  Internal Tau-owned LLM proxy on localhost:4001. Surfaces: chat/batch
+  completions, scillm exec, OpenCode serve (coding delegate), OpenCode
+  transport (DAG/SSE), standing Codex agents. Chutes, Gemini, Claude/Codex
+  OAuth, OpenCode Go, Ollama. Auto-routes by model name. ZIP/PDF, JSON repair,
+  batch pools. Project agents must not call this skill directly unless the
+  human explicitly asks to operate SciLLM or the work is Tau/SciLLM maintenance.
 allowed-tools: Bash, Read
 triggers:
   - batch LLM calls
@@ -56,16 +58,30 @@ taxonomy:
   - llm
 ---
 
-# scillm — One Endpoint for All LLM Calls
+# scillm — Internal Tau Provider Sidecar
 
 **Human onboarding:** [README.md](../../README.md) · **Repo contracts:** [docs/SCILLM_OPENCODE_SERVE.md](../../docs/SCILLM_OPENCODE_SERVE.md), [docs/SCILLM_OPENCODE_TRANSPORT_V1.md](../../docs/SCILLM_OPENCODE_TRANSPORT_V1.md), [docs/interactive-agents/](../../docs/interactive-agents/)
 
 ## Critical Operating Rules
 
+- **Project-agent boundary:** Do not invoke `$scillm`, `/scillm`,
+  `http://localhost:4001`, `/v1/chat/completions`, `/v1/scillm/exec`,
+  `/v1/scillm/opencode/*`, or `/v1/scillm/agents/*` directly during ordinary
+  project work. SciLLM is a Tau-owned provider sidecar.
+- **Allowed direct use:** Direct SciLLM calls are allowed only when the human
+  explicitly asks to operate/debug SciLLM itself, when maintaining Tau/SciLLM
+  internals, or inside a Tau-authored DAG/provider adapter that records the
+  required receipts.
+- **Default routing:** For model/provider work in another skill, express the
+  need as a Tau DAG contract, Tau skill node, or the owning skill's
+  Tau-mediated runtime. Do not paste SciLLM curl examples into project-agent
+  workflows.
 - **Batch calls:** `httpx.AsyncClient` + `asyncio.create_task` + `asyncio.as_completed(tasks)` unless the user explicitly requests `asyncio.gather` or strict input-order completion.
 - **No default gather** for `/scillm` batches. Reorder by `id` / `scillm_metadata` after completion if needed.
 - **Batch metadata:** Every batch item needs `scillm_metadata.batch_id` and `scillm_metadata.item_id`.
-- **Pick a surface first** (below). Wrong surface = wrong tool loop or missing artifacts.
+- **Pick a surface first** (below) only when you are operating inside the
+  allowed direct-use boundary. Wrong surface = wrong tool loop or missing
+  artifacts.
 
 ## Setup (one-time per provider)
 
@@ -86,7 +102,7 @@ Rebuild: `docker compose -p scillm -f deploy/docker/compose.scillm.core.yml up -
 **Auth:** `GET /v1/scillm/auth` with the configured local proxy key.
 For this repo's local proxy scripts, resolve it as `${SCILLM_MASTER_KEY:-${LITELLM_MASTER_KEY:-${SCILLM_PROXY_KEY:-sk-dev-proxy-123}}}`; the dev default works only when the running proxy has not rotated `SCILLM_MASTER_KEY`/`LITELLM_MASTER_KEY`.
 
-## Invocation surfaces (pick one)
+## Invocation surfaces (Tau/SciLLM maintainers only)
 
 | Need | Use | Do **not** use |
 |------|-----|----------------|
@@ -111,7 +127,11 @@ Exec profiles: [references/exec-workers.md](references/exec-workers.md) · [docs
 
 ## How to call
 
-**Chat (default):** `POST http://localhost:4001/v1/chat/completions` — OpenAI format. Auth: configured proxy bearer, `X-Caller-Skill: <project>`.
+These examples are for Tau provider adapters and SciLLM maintenance. Project
+agents should route through Tau instead of copying these calls into task
+workflows.
+
+**Chat:** `POST http://localhost:4001/v1/chat/completions` — OpenAI format. Auth: configured proxy bearer, `X-Caller-Skill: <project>`.
 
 ```bash
 SCILLM_PROXY_KEY="${SCILLM_MASTER_KEY:-${LITELLM_MASTER_KEY:-${SCILLM_PROXY_KEY:-sk-dev-proxy-123}}}"
@@ -137,19 +157,22 @@ Never put `opencode-go/kimi-k2.6` in `"agent"` — that is a **chat model**. Nev
 
 **Verify serve:** `bash scripts/sanity_opencode_serve.sh` (from scillm repo root).
 
-**Slash wrapper:** `/scillm "…"` · `/scillm --model moonshot-text "…"`
+**Slash wrapper:** `/scillm "…"` · `/scillm --model moonshot-text "…"` for
+explicit SciLLM operations only.
 
-## Project-agent workflow (OpenCode serve)
+## Project-Agent Routing Boundary
 
-OpenCode serve does **not** replace `/memory`, `/dogpile`, `/debugger`, or chat `/scillm`.
+Project agents should not choose SciLLM surfaces directly. Use Tau as the
+orchestration and receipt boundary for provider/model work.
 
 ```text
 1. /memory recall --brief --q "<task>"
 2. /dogpile … (if novel/ambiguous) → paste into prompt
 3. /debugger (if stuck or hidden runtime state) → breakpoint proof before patch
-4. POST /v1/scillm/opencode/runs  → optional skills: ["memory","debugger","scillm",…]
-5. Validate artifacts; project agent merges or fork-retries
-6. /memory store lesson (after verified fix)
+4. Create or run a Tau DAG / Tau skill node for provider work
+5. Tau provider adapter may call SciLLM and must return receipts
+6. Validate artifacts; project agent merges or fork-retries
+7. /memory store lesson (after verified fix)
 ```
 
 | Skill | Who runs | Connection |
@@ -157,7 +180,7 @@ OpenCode serve does **not** replace `/memory`, `/dogpile`, `/debugger`, or chat 
 | `/memory` | Project agent (+ optional `skills[]`) | Ground `prompt`; store after success |
 | `/dogpile` | Project agent first | Paste synthesis into `prompt` |
 | `/debugger` | Project agent when stuck | Proof before asking serve to patch |
-| `/scillm` | Project or OpenCode via skill | Sidecar `localhost:4001` only |
+| `/scillm` | Tau provider adapter or SciLLM maintainer | Sidecar `localhost:4001` only, with receipts |
 
 ## Models and routing (summary)
 
@@ -206,6 +229,9 @@ Full table: [references/ops-endpoints.md](references/ops-endpoints.md)
 | `/dogpile` | Research before hard problems; optional `"dogpile"` in `skills[]` |
 | `/debugger` | Breakpoint proof before patch; `/opencode/serve/debugger/run` |
 | `/task-monitor` | Long-run monitoring |
-| `/create-evidence-case`, `/analytics`, `/create-figure`, `/llm-eval-lab` | Chat completions |
+| `/create-evidence-case`, `/analytics`, `/create-figure`, `/llm-eval-lab` | Tau-mediated provider lane, skill-local deterministic path, or explicit SciLLM maintenance only |
 
-All composable skills call **`http://localhost:4001`** — no direct provider APIs.
+Composable skills must not instruct project agents to call
+**`http://localhost:4001`** directly. If a provider/model call is needed, route
+it through Tau or keep it inside the skill's owned runtime with explicit proof
+boundaries.
