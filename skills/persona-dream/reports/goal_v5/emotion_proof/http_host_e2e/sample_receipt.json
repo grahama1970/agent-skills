@@ -1,0 +1,78 @@
+{
+  "schema": "persona_dream.voice_audition_receipt.v1",
+  "created_at": "2026-07-25T22:46:23.081Z",
+  "mocked": false,
+  "live": true,
+  "character": "embry",
+  "answer_text": "I already told you where I stand. Do not ask me again.",
+  "answer_text_sha256": "87873e4a6ace4521fa4fbbb206862a3c0b244331f588e0e54ca36e0292226d80",
+  "tts_render_text": "I already told you where I stand. Do not ask me again.",
+  "tts_render_text_sha256": "87873e4a6ace4521fa4fbbb206862a3c0b244331f588e0e54ca36e0292226d80",
+  "tone": "firm_boundary",
+  "delivery_stage": "deflecting",
+  "paralinguistic_cue": "",
+  "chatterbox_tags": [],
+  "selected_paralinguistic_cue": "",
+  "inline_paralinguistic_cue": "",
+  "pause_before_ms": 0,
+  "pause_after_ms": 0,
+  "ref_audio": "/home/graham/workspace/experiments/chatterbox/persona_dream_voice_refs/embry_authorized_ref_30s_8s.wav",
+  "chatterbox_ref_audio": "/work/persona_dream_voice_refs/embry_authorized_ref_30s_8s.wav",
+  "chatterbox_agent_url": "http://127.0.0.1:8018",
+  "chatterbox_endpoint": "synthesize-emotion",
+  "emotion_knobs": {
+    "exaggeration": 1.11,
+    "cfg_weight": 0.36,
+    "temperature": 0.7,
+    "intensity": 0.9,
+    "valence": -0.7
+  },
+  "chatterbox_receipt": {
+    "ok": true,
+    "mocked": false,
+    "live": true,
+    "engine": "chatterbox_base",
+    "honors_exaggeration_cfg_weight": true,
+    "requested_device": "cuda",
+    "base_model_load_seconds": 9.745,
+    "text": "I already told you where I stand. Do not ask me again.",
+    "reference_audio": "/work/persona_dream_voice_refs/embry_authorized_ref_30s_8s.wav",
+    "params": {
+      "exaggeration": 1.11,
+      "cfg_weight": 0.36,
+      "temperature": 0.7
+    },
+    "generation_seconds": 3.077,
+    "audio": "/out/dream-embry-1785019579936.wav",
+    "audio_metrics": {
+      "path": "/out/dream-embry-1785019579936.wav",
+      "exists": true,
+      "bytes": 182478,
+      "sha256": "b01c969bde34248808334b0b0ee138a5a3ce24955b6ed8a379efd27aeecdef0f",
+      "ffprobe": {
+        "cmd": [
+          "ffprobe",
+          "-hide_banner",
+          "-v",
+          "error",
+          "-show_entries",
+          "format=duration,size",
+          "-show_entries",
+          "stream=codec_name,sample_rate,channels",
+          "-of",
+          "json",
+          "/out/dream-embry-1785019579936.wav"
+        ],
+        "returncode": 0,
+        "stdout": "{\n    \"programs\": [\n\n    ],\n    \"streams\": [\n        {\n            \"codec_name\": \"pcm_s16le\",\n            \"sample_rate\": \"24000\",\n            \"channels\": 1\n        }\n    ],\n    \"format\": {\n        \"duration\": \"3.800000\",\n        \"size\": \"182478\"\n    }\n}\n",
+        "stderr": ""
+      },
+      "codec_name": "pcm_s16le",
+      "sample_rate": 24000,
+      "channels": 1,
+      "duration_seconds": 3.8,
+      "ffprobe_size": 182478
+    }
+  },
+  "output_wav": "/tmp/claude-1000/-home-graham-workspace-experiments-agent-skills/c0318d3c-2f9f-41b6-8596-efe36691b16f/scratchpad/hosttest/out/dream-voice-auditions/2026-07-25T22-46-23-081Z-embry-87873e4a6ace.wav"
+}

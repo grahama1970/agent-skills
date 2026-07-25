@@ -1,0 +1,17 @@
+{
+  "schema": "persona-dream.http_host_e2e_proof.v1",
+  "date": "2026-07-25",
+  "claim": "The FULL persona-dream HTTP route POST /voices/audition -> createPersonaDreamRouter -> voiceAudition adapter -> live /synthesize-emotion honors weighted emotion end-to-end. The last unexercised rung is now proven.",
+  "how": "Real createPersonaDreamRouter mounted on express (tsx over the unmodified server/src), listening 127.0.0.1:3099; real chatterbox server :8018. boot.ts included.",
+  "cases": [
+    {"name": "http_w02", "route": "POST /voices/audition", "tone": "firm_boundary", "intensity": 0.2, "knobs": {"exaggeration": 0.48, "cfg_weight": 0.36}, "dur_s": 3.72, "rms_dbfs": -35.10, "sha12": "31aa89be2452"},
+    {"name": "http_w09", "route": "POST /voices/audition", "tone": "firm_boundary", "intensity": 0.9, "knobs": {"exaggeration": 1.11, "cfg_weight": 0.36}, "dur_s": 3.80, "rms_dbfs": -25.66, "sha12": "b01c969bde34"}
+  ],
+  "weight_isolation": "same tone firm_boundary, intensity 0.2 -> 0.9 through the full HTTP route: -35.10 -> -25.66 dBFS (+9.44 dB), distinct sha.",
+  "independent_verification": [
+    "stdlib WAV measurement of the route output files (this receipt's numbers)",
+    "adapter receipt: chatterbox_endpoint=synthesize-emotion, server engine=chatterbox_base, honors=true (sample_receipt.json)"
+  ],
+  "status": "All three persona-dream render rungs now proven live: (1) voiceAudition adapter, (2) /tau/voice-render, (3) full HTTP host route.",
+  "remaining": "memory.intent emits flat memory_confident (separate memory-service classifier); the weight is currently sourced from persona-dream arc_state rather than intent."
+}
