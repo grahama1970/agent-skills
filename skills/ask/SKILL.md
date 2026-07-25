@@ -40,6 +40,7 @@ composes:
   - tau
   - interview
   - best-practices-roundtable
+  - best-practices-competition
 complies:
   - best-practices-skills
   - best-practices-tau-dag
@@ -119,6 +120,12 @@ ask artifacts.
 - For substantial roundtables, apply `$best-practices-roundtable` as the
   leadership contract: equal shared context, concurrent seats, attributed
   dissent, research between rounds, and executable slices before local proof.
+- For substantial compete/bakeoff workflows, apply
+  `$best-practices-competition`: isolated candidates, identical task packets,
+  local feature verification, evidence-backed winner selection, and bounded
+  winner revision requests. Do not share participant information between
+  candidate lanes or rounds; help each lane only with its own review, local
+  evidence, and permitted research tools.
 - Pass the bundle to the documented ask mode. Do not compress a review target
   into an informal prompt when the mode has a target option.
 - Report artifact paths as evidence. Browser reviewers or model
@@ -186,10 +193,16 @@ Use `./run.sh tau-dag` for current handler/model orchestration.
 
 ## Compete / Bakeoff Protocol
 
+For substantial competitions, use `$best-practices-competition` as the compact
+leadership protocol and this section as the Ask-specific runtime runbook.
+
 Use compete when the user asks for independent implementations, an approach
 bakeoff, or a winner chosen from multiple candidate handlers. Do not use
 roundtable for this: roundtable seats are collaborators with shared context,
 while compete candidates are isolated.
+Between candidate iterations, the project agent may use `$brave-search`,
+`$github-search`, or `$dogpile` to help a candidate unblock, but it must not
+share another candidate's output, approach, score, or failure analysis.
 
 Canonical compile command:
 
@@ -460,4 +473,6 @@ local checks prove it.
   routes browser transport there.
 - Use `$best-practices-roundtable` when leading or synthesizing a substantial
   roundtable.
+- Use `$best-practices-competition` when leading or judging a substantial
+  compete/bakeoff workflow.
 - Use `$best-practices-skills` when modifying this skill or its scripts.

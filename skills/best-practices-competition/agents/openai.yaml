@@ -1,0 +1,4 @@
+interface:
+  display_name: "Best Practices Competition"
+  short_description: "Lead Ask compete and bakeoff runs"
+  default_prompt: "Use best-practices-competition to run an Ask competition with isolated candidates, local evidence checks, winner selection, and bounded revision requests."
