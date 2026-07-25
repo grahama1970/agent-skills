@@ -539,7 +539,7 @@ EVIDENCE_CASE:
                         "response_format": {"type": "json_object"},
                         "temperature": 0.2,
                     },
-                    timeout=30,
+                    timeout=60,
                 )
                 try:
                     resp.raise_for_status()
@@ -620,12 +620,57 @@ EVIDENCE_CASE:
             except Exception as exc:
                 logger.warning("scillm render attempt {} failed: {}", attempt, exc)
                 if attempt == self.MAX_RENDER_RETRIES:
-                    raise ScillmRenderError(
-                        f"SciLLM render failed after {attempt} attempts: {exc}"
-                    ) from exc
+                    return self._deterministic_render_fallback(evidence_case, str(exc))
 
-        raise ScillmRenderError(
-            f"SciLLM render failed validation after {self.MAX_RENDER_RETRIES} attempts"
+        return self._deterministic_render_fallback(
+            evidence_case,
+            f"SciLLM render failed validation after {self.MAX_RENDER_RETRIES} attempts",
+        )
+
+    def _deterministic_render_fallback(self, evidence_case: dict, reason: str) -> str:
+        """Render a bounded non-LLM answer from the already-validated evidence case."""
+        status = evidence_case.get("review_status")
+        glossary = [
+            item for item in evidence_case.get("glossary", [])
+            if isinstance(item, dict)
+        ]
+        qra_items = [
+            item for item in evidence_case.get("prior_qra_evidence", [])
+            if isinstance(item, dict)
+        ]
+        citations = [
+            str(item.get("id"))
+            for item in glossary
+            if item.get("id")
+        ][:6]
+        if status != "passed":
+            failed = [
+                str(item.get("entity"))
+                for item in evidence_case.get("entity_resolution", [])
+                if item.get("status") != "resolved" and item.get("entity")
+            ]
+            detail = f" Unresolved entities: {', '.join(failed)}." if failed else ""
+            return (
+                "NOT_SATISFIED: the evidence case did not pass its grounding "
+                f"and recall gates.{detail} Renderer fallback reason: {reason}"
+            )
+
+        primary = glossary[0] if glossary else {}
+        primary_id = primary.get("id") or primary.get("control_id") or "the grounded control"
+        primary_name = primary.get("name") or primary_id
+        evidence_bits = []
+        for item in qra_items[:3]:
+            text = item.get("answer") or item.get("qra_text") or item.get("text") or ""
+            if text:
+                evidence_bits.append(str(text).strip().replace("\n", " ")[:220])
+        evidence_text = " ".join(evidence_bits)
+        if evidence_text:
+            evidence_text = " Supporting evidence states: " + evidence_text
+        citation_text = f" Citations: {', '.join(citations)}." if citations else ""
+        return (
+            f"ANSWERABLE: {primary_id} ({primary_name}) is grounded in "
+            "sparta_controls and the evidence case found supporting QRA evidence."
+            f"{evidence_text}{citation_text} Renderer fallback reason: {reason}"
         )
 
     def _build_evidence_case(
